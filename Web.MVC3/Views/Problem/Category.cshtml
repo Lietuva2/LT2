@@ -1,0 +1,12 @@
+﻿@model Data.ViewModels.Base.ListItem
+@using Globalization.Resources.Shared
+@using Web.Helpers;
+@using (Html.BeginCollectionItem("SelectedCategories"))
+{
+    <li>
+        @Html.HiddenFor(m => m.DbId)
+        @Html.HiddenFor(m => m.Name)
+        @Model.Name
+        <a href="javascript:void(0);" class="DeleteCategory">@SharedStrings.Delete</a>
+    </li>
+}

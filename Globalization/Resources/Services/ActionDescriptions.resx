@@ -1,0 +1,312 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <!-- 
+    Microsoft ResX Schema 
+    
+    Version 2.0
+    
+    The primary goals of this format is to allow a simple XML format 
+    that is mostly human readable. The generation and parsing of the 
+    various data types are done through the TypeConverter classes 
+    associated with the data types.
+    
+    Example:
+    
+    ... ado.net/XML headers & schema ...
+    <resheader name="resmimetype">text/microsoft-resx</resheader>
+    <resheader name="version">2.0</resheader>
+    <resheader name="reader">System.Resources.ResXResourceReader, System.Windows.Forms, ...</resheader>
+    <resheader name="writer">System.Resources.ResXResourceWriter, System.Windows.Forms, ...</resheader>
+    <data name="Name1"><value>this is my long string</value><comment>this is a comment</comment></data>
+    <data name="Color1" type="System.Drawing.Color, System.Drawing">Blue</data>
+    <data name="Bitmap1" mimetype="application/x-microsoft.net.object.binary.base64">
+        <value>[base64 mime encoded serialized .NET Framework object]</value>
+    </data>
+    <data name="Icon1" type="System.Drawing.Icon, System.Drawing" mimetype="application/x-microsoft.net.object.bytearray.base64">
+        <value>[base64 mime encoded string representing a byte array form of the .NET Framework object]</value>
+        <comment>This is a comment</comment>
+    </data>
+                
+    There are any number of "resheader" rows that contain simple 
+    name/value pairs.
+    
+    Each data row contains a name, and value. The row also contains a 
+    type or mimetype. Type corresponds to a .NET class that support 
+    text/value conversion through the TypeConverter architecture. 
+    Classes that don't support this are serialized and stored with the 
+    mimetype set.
+    
+    The mimetype is used for serialized objects, and tells the 
+    ResXResourceReader how to depersist the object. This is currently not 
+    extensible. For a given mimetype the value must be set accordingly:
+    
+    Note - application/x-microsoft.net.object.binary.base64 is the format 
+    that the ResXResourceWriter will generate, however the reader can 
+    read any of the formats listed below.
+    
+    mimetype: application/x-microsoft.net.object.binary.base64
+    value   : The object must be serialized with 
+            : System.Runtime.Serialization.Formatters.Binary.BinaryFormatter
+            : and then encoded with base64 encoding.
+    
+    mimetype: application/x-microsoft.net.object.soap.base64
+    value   : The object must be serialized with 
+            : System.Runtime.Serialization.Formatters.Soap.SoapFormatter
+            : and then encoded with base64 encoding.
+
+    mimetype: application/x-microsoft.net.object.bytearray.base64
+    value   : The object must be serialized into a byte array 
+            : using a System.ComponentModel.TypeConverter
+            : and then encoded with base64 encoding.
+    -->
+  <xsd:schema id="root" xmlns="" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:msdata="urn:schemas-microsoft-com:xml-msdata">
+    <xsd:import namespace="http://www.w3.org/XML/1998/namespace" />
+    <xsd:element name="root" msdata:IsDataSet="true">
+      <xsd:complexType>
+        <xsd:choice maxOccurs="unbounded">
+          <xsd:element name="metadata">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" />
+              </xsd:sequence>
+              <xsd:attribute name="name" use="required" type="xsd:string" />
+              <xsd:attribute name="type" type="xsd:string" />
+              <xsd:attribute name="mimetype" type="xsd:string" />
+              <xsd:attribute ref="xml:space" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="assembly">
+            <xsd:complexType>
+              <xsd:attribute name="alias" type="xsd:string" />
+              <xsd:attribute name="name" type="xsd:string" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="data">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+                <xsd:element name="comment" type="xsd:string" minOccurs="0" msdata:Ordinal="2" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" msdata:Ordinal="1" />
+              <xsd:attribute name="type" type="xsd:string" msdata:Ordinal="3" />
+              <xsd:attribute name="mimetype" type="xsd:string" msdata:Ordinal="4" />
+              <xsd:attribute ref="xml:space" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="resheader">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" />
+            </xsd:complexType>
+          </xsd:element>
+        </xsd:choice>
+      </xsd:complexType>
+    </xsd:element>
+  </xsd:schema>
+  <resheader name="resmimetype">
+    <value>text/microsoft-resx</value>
+  </resheader>
+  <resheader name="version">
+    <value>2.0</value>
+  </resheader>
+  <resheader name="reader">
+    <value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <resheader name="writer">
+    <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <data name="ChangedProfilePicture" xml:space="preserve">
+    <value>{0} pasikeitė savo nuotrauką</value>
+  </data>
+  <data name="CommentCommented" xml:space="preserve">
+    <value>{0} pateikė komentarą apie piliečio {2} argumentą dėl {1}</value>
+  </data>
+  <data name="Commented" xml:space="preserve">
+    <value>{0} argumentavo teisės aktą {1}</value>
+  </data>
+  <data name="DelegatedVote" xml:space="preserve">
+    <value>{0} klausimais, susijusiais su {3}, bus atstovaujamas piliečio {2}</value>
+  </data>
+  <data name="IdeaCommented" xml:space="preserve">
+    <value>{0} argumentavo sprendimą {1}</value>
+  </data>
+  <data name="IdeaCommentLiked" xml:space="preserve">
+    <value>{0} sutinka su {2} argumentu dėl {1}</value>
+  </data>
+  <data name="IdeaCreated" xml:space="preserve">
+    <value>{0} pateikė naują pasiūlymą {1}</value>
+  </data>
+  <data name="IdeaEdited" xml:space="preserve">
+    <value>{0} pakoregavo pasiūlymą {1}</value>
+  </data>
+  <data name="IdeaVersionAdded" xml:space="preserve">
+    <value>{0} pasiūlė naują sprendimą pasiūlymui {1}</value>
+  </data>
+  <data name="IdeaVersionLiked" xml:space="preserve">
+    <value>{0} palaiko pasiūlymo {1} sprendimą</value>
+  </data>
+  <data name="IdeaViewed" xml:space="preserve">
+    <value>{0} peržiūrėjo pasiūlymą {1}</value>
+  </data>
+  <data name="IssueCreated" xml:space="preserve">
+    <value>{0} pateikė balsavimui naują teisės aktą {1}</value>
+  </data>
+  <data name="IssueEdited" xml:space="preserve">
+    <value>{0} paredagavo balsavimą {1}</value>
+  </data>
+  <data name="IssueViewed" xml:space="preserve">
+    <value>{0} peržiūrėjo balsavimą {1}</value>
+  </data>
+  <data name="LikedCategory" xml:space="preserve">
+    <value>{0} domisi kategorija (-jom) {3}</value>
+  </data>
+  <data name="LikedComment" xml:space="preserve">
+    <value>{0} sutinka su {2} argumentu dėl {1}</value>
+  </data>
+  <data name="LikedUser" xml:space="preserve">
+    <value>{0} domisi sistemos naudotojo {2} veikla</value>
+  </data>
+  <data name="ProfileImportedFromLinkedIn" xml:space="preserve">
+    <value>{0} importavo savo paskyros duomenis iš LinkedIn</value>
+  </data>
+  <data name="SummaryVersionAdded" xml:space="preserve">
+    <value>{0} sukūrė naują balsavimo {1} aprašymo versiją</value>
+  </data>
+  <data name="UpdatedContacts" xml:space="preserve">
+    <value>{0} atnaujino savo kontaktus</value>
+  </data>
+  <data name="UpdatedEducationAndWork" xml:space="preserve">
+    <value>{0} atnaujino savo išsilavinimą ir darbo patirtį</value>
+  </data>
+  <data name="UpdatedInterests" xml:space="preserve">
+    <value>{0} atnaujino savo domėjimosi sritis</value>
+  </data>
+  <data name="UpdatedPersonalInfo" xml:space="preserve">
+    <value>{0} atnaujino savo asmeninę informaciją</value>
+  </data>
+  <data name="UserProfileViewed" xml:space="preserve">
+    <value>{0} peržiūrėjo piliečio (-ės) {2} informaciją</value>
+  </data>
+  <data name="Voted" xml:space="preserve">
+    <value>{0} balsavo dėl {1}</value>
+  </data>
+  <data name="JoinedProject" xml:space="preserve">
+    <value>{0} prisijungė prie projekto {1} įgyvendinimo</value>
+  </data>
+  <data name="ToDoAdded" xml:space="preserve">
+    <value>{0} paskyrė {2} naują projekto {1} užduotį</value>
+  </data>
+  <data name="ToDoCommentAdded" xml:space="preserve">
+    <value>{0} komentavo projekto {1} užduotį {4}</value>
+  </data>
+  <data name="ToDoEdited" xml:space="preserve">
+    <value>{0} paredagavo {2} skirtą projekto {1} užduotį</value>
+  </data>
+  <data name="ToDoFinished" xml:space="preserve">
+    <value>{0} atliko projekto {1} užduotį</value>
+  </data>
+  <data name="IdeaStateChanged" xml:space="preserve">
+    <value>{0} pakeitė pasiūlymo {1} būseną</value>
+  </data>
+  <data name="IssueOfficialyVoted" xml:space="preserve">
+    <value>{0} pažymėjo, kad valdžia balsavo dėl {1}</value>
+  </data>
+  <data name="UserCreated" xml:space="preserve">
+    <value>{0} prisijungė prie Lietuva 2.0</value>
+  </data>
+  <data name="IdeaVersionEdited" xml:space="preserve">
+    <value>{0} paredagavo pasiūlymo {1} sprendimą</value>
+  </data>
+  <data name="OrganizationJoined" xml:space="preserve">
+    <value>{0} prisijungė prie organizacijos {5}</value>
+  </data>
+  <data name="OrganizationCreated" xml:space="preserve">
+    <value>{0} sukūrė naują organizaciją {5}</value>
+  </data>
+  <data name="OrganizationJoining" xml:space="preserve">
+    <value>{0} pretenduoja tapti organizacijos {5} nariu</value>
+  </data>
+  <data name="OrganizationLiked" xml:space="preserve">
+    <value>{0} palaiko organizaciją {5}</value>
+  </data>
+  <data name="OrganizationToDoAdded" xml:space="preserve">
+    <value>{0} paskyrė {2} naują organizacijos {5} projekto {1} užduotį</value>
+  </data>
+  <data name="OrganizationToDoCommentAdded" xml:space="preserve">
+    <value>{0} komentavo organizacijos {5} projekto {1} užduotį {4}</value>
+  </data>
+  <data name="OrganizationToDoEdited" xml:space="preserve">
+    <value>{0} paredagavo {2} skirtą organizacijos {5} projekto {1} užduotį</value>
+  </data>
+  <data name="OrganizationToDoFinished" xml:space="preserve">
+    <value>{0} atliko organizacijos {5} projekto {1} užduotį</value>
+  </data>
+  <data name="OrganizationUpdated" xml:space="preserve">
+    <value>{0} atnaujino organizacijos {5} duomenis</value>
+  </data>
+  <data name="OrganizationMemberRolesUpdated" xml:space="preserve">
+    <value>{0} atnaujino organizacijos {5} narių informaciją</value>
+  </data>
+  <data name="OrganizationProjectAdded" xml:space="preserve">
+    <value>{0} sukūrė naują organizacijos {5} projektą {1}</value>
+  </data>
+  <data name="OrganizationProjectStateChanged" xml:space="preserve">
+    <value>{0} pakeitė organizacijos {5} projekto {1} būseną</value>
+  </data>
+  <data name="OrganizationMemberAdded" xml:space="preserve">
+    <value>{2} buvo piliečio {0} paskirtas(-i) organizacijos {5} nariu (-ais)</value>
+  </data>
+  <data name="OrganizationViewed" xml:space="preserve">
+    <value>{0} peržiūrėjo organizacijos {5} informaciją</value>
+  </data>
+  <data name="ProjectMemberAdded" xml:space="preserve">
+    <value>{2} buvo piliečio {0} paskirtas(-i) projekto {1} komandos nariu (-ais)</value>
+  </data>
+  <data name="CommentCommentLiked" xml:space="preserve">
+    <value>{0} sutinka su {2} pateiktu {1} argumento komentaru</value>
+  </data>
+  <data name="ProblemCommented" xml:space="preserve">
+    <value>{0} komentavo pasisakymą</value>
+  </data>
+  <data name="ProblemCreated" xml:space="preserve">
+    <value>{0} pasisakė</value>
+  </data>
+  <data name="ProblemIdeaAssigned" xml:space="preserve">
+    <value>{0} susiejo pasiūlymą {4} su pasisakymu</value>
+  </data>
+  <data name="ProblemVoted" xml:space="preserve">
+    <value>{0} palaiko pasisakymą</value>
+  </data>
+  <data name="ProblemCommentLiked" xml:space="preserve">
+    <value>{0} sutinka su piliečio {2} komentaru</value>
+  </data>
+  <data name="UserAwarded" xml:space="preserve">
+    <value>{2} gavo Lietuva 2.0 titulą</value>
+  </data>
+  <data name="UserCommented" xml:space="preserve">
+    <value>{0} pareiškė savo nuomonę apie pilietį {1}</value>
+  </data>
+  <data name="UserCommentLiked" xml:space="preserve">
+    <value>{0} sutinka su {2} nuomone apie pilietį {1}</value>
+  </data>
+  <data name="ToDoTaken" xml:space="preserve">
+    <value>{0} ėmėsi vykdyti projekto {1} užduotį</value>
+  </data>
+  <data name="OrganizationToDoTaken" xml:space="preserve">
+    <value>{0} ėmėsi vykdyti organizacijos {5} projekto {1} užduotį</value>
+  </data>
+  <data name="ProblemDevoted" xml:space="preserve">
+    <value>{0} nepalaiko pasisakymo</value>
+  </data>
+  <data name="RelatedIdeaAdded" xml:space="preserve">
+    <value>{0} susiejo pasiūlymą {1} su kitu pasiūlymu (-ais)</value>
+  </data>
+  <data name="RelatedIssueAdded" xml:space="preserve">
+    <value>{0} susiejo pasiūlymą {1} su balsavimu(-ais)</value>
+  </data>
+  <data name="OrganizationMemberRejected" xml:space="preserve">
+    <value>{2} buvo piliečio {0} pašalintas iš kandidatų į organizacijos {5} narius</value>
+  </data>
+</root>

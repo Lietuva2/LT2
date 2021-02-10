@@ -1,0 +1,16 @@
+﻿@using Globalization.Resources.Services
+@{
+    ViewBag.Title = Errors.Error;
+}
+
+<h2 class="alt">@Errors.UnexpectedError</h2>
+<div class="clear">
+</div>
+<div>
+    <img src="@Links.Content.Images.s_gif" alt="" />
+</div>
+<div class="column">
+    <p>
+        @Html.Raw(Errors.Sorry)
+    </p>
+</div>

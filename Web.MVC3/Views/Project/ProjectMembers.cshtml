@@ -1,0 +1,113 @@
+﻿@model Data.ViewModels.Project.ProjectTeamModel
+@using Framework.Strings;
+@using Globalization.Resources.Project
+@using Globalization.Resources.Shared
+@using Web.Helpers
+<ul id="listMembers">
+    @for (int i = 0; i < Model.Members.Count; i++)
+    {
+        <li data-role="deleteContainer">
+            @Html.ActionLink(Model.Members[i].FullName, MVC.Account.Details(Model.Members[i].ObjectId, Model.Members[i].FullName.ToSeoUrl(), null))
+            <span class="details">@Model.Members[i].Role</span>
+            @if (Model.IsCurrentUserInvolved)
+            {
+                <span class="hide" data-role="delete"><a href="@Url.Action(MVC.Project.RemoveMember(Model.Id, Model.Members[i].ObjectId))">
+                    <img style="height: 12px;" src="@Links.Content.Images.cross_png" />
+                </a></span>
+            }
+        </li>
+    }
+</ul>
+@if (Model.IsCurrentUserInvolved)
+{
+    <table id="listUnconfirmedMembers">
+        @for (int i = 0; i < Model.UnconfirmedMembers.Count; i++)
+        {
+            <tr>
+                <td>
+                    @Html.ActionLink(Model.UnconfirmedMembers[i].FullName, MVC.Account.Details(Model.UnconfirmedMembers[i].ObjectId, Model.UnconfirmedMembers[i].FullName.ToSeoUrl(), null))
+                </td>
+                <td>
+                    <a data-role="Confirm" href="@Url.Action(MVC.Project.ConfirmMember(Model.Id, Model.UnconfirmedMembers[i].ObjectId))">@SharedStrings.Confirm</a>
+                </td>
+            </tr>
+        }
+    </table>
+}
+@if (Model.IsCurrentUserInvolved)
+{
+    <div class="clear">
+        @Html.Button(new ButtonHelperModel()
+   {
+       Text = Resource.AssignRoles,
+       Type = ButtonHelperModel.Types.Link,
+       Id = "lnkEditMembers",
+       Href = Url.Action(MVC.Project.GetProjectMembersEdit(Model.Id)),
+       ImageUrl = Links.Content.Images.user_edit_png
+   })
+    </div>
+    if (!string.IsNullOrEmpty(Model.OrganizationId))
+    {
+        <div class="clear">
+        @using (Html.BeginForm(MVC.Project.AddOrganizationMembers(Model.Id), FormMethod.Post))
+        {
+                @Html.AntiForgeryToken()
+                @Html.Button(new ButtonHelperModel()
+           {
+               Text = Resource.AddOrganizationMembers,
+               ImageUrl = Links.Content.Images.user_add_png
+           })
+        }
+        </div>
+    }
+    <br />
+    <hr />
+    <div>
+        @using (Html.BeginForm(MVC.Project.AddInvitedUser(), FormMethod.Post, new { id = "formInviteUser" }))
+        {
+            @Html.AntiForgeryToken()
+            <div>
+                @Resource.InviteToJoin:</div>
+            <div title="@Resource.InviteToJoinHelp"
+                style="float: left;">
+                @Html.AutoComplete("InvitedUser", "UserId", MVC.Account.SuggestUser(), null, "function(){$('#divMemberContainer').members('invite');}", false)
+            </div>
+            @Html.Button(new ButtonHelperModel()
+       {
+           Id = "btnAdd",
+           Text = SharedStrings.AddShort,
+           ImageUrl = Links.Content.Images.user_add_png
+       })
+           
+        }
+        
+        <div class="clear">
+        </div>
+        @using (Html.BeginForm(MVC.Project.InviteUsers(), FormMethod.Post, new { id = "formInviteUsers" }))
+        {
+            @Html.AntiForgeryToken()
+            @Html.HiddenFor(m => m.Id)
+            <ul id="listUsersToInvite">
+                @foreach (var user in Model.UsersToInvite)
+                {
+                    Html.RenderPartial(MVC.Shared.Views.InvitedUser, user);
+                }
+            </ul>
+            @Html.Buttons(id: "btnInvite", saveText: Resource.Approve)
+        }
+        @if (Model.InvitedUsers.Any())
+        {
+            <hr />
+            <div>
+                @Resource.AlreadyInvited:
+                @foreach (var user in Model.InvitedUsers)
+                {
+                    <div>
+                        <span style="margin-right: 5px">@user.InvitedUser</span>
+                        @Html.ActionLink(Resource.Repeat, MVC.Project.ReInvite(Model.Id, user.InvitedUser), new { @class = "lnkReInvite", title = Resource.RepeatHelp })
+                    </div>
+                }
+            </div>
+        }
+    </div>
+}

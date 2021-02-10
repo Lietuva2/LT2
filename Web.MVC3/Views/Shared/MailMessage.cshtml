@@ -1,0 +1,41 @@
+﻿@using Globalization.Resources.Account
+<div id="dialog-message" title="@Resource.ContactUs" class="hide">
+    @using (Html.BeginForm())
+    {
+        <div id="divMessage">
+            @Resource.MessageSent
+        </div>
+        <div id="divMessageForm">
+            <table class="mailmessage">
+                @if (string.IsNullOrEmpty(ViewBag.CurrentUser.Email))
+                {
+                    <tr>
+                        <td>
+                            @Resource.YourEmail
+                        </td>
+                        <td>
+                            @Html.TextBox("AddressFrom", null, new { @class="txt_l"})
+                        </td>
+                    </tr>
+                }
+                <tr>
+                    <td>
+                        @Resource.Subject
+                    </td>
+                    <td>
+                        @Html.TextBox("Subject", Resource.DefaultSubject, new { @class="txt_l"})
+                    </td>
+                </tr>
+                <tr>
+                    <td>
+                        @Resource.Message
+                    </td>
+                    <td>
+                        @Html.TextArea("MailMessage", new { cols=60, rows = 5 })
+                    </td>
+                </tr>
+            </table>
+            @Html.Hidden("MessageToUserObjectId")
+        </div>
+    }
+</div>

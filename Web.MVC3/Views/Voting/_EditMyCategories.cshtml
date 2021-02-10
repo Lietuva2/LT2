@@ -1,0 +1,66 @@
+﻿@model IList<Data.ViewModels.Voting.CategorySelectModel>
+@using Globalization.Resources.Voting
+@using Globalization.Resources.Shared
+@using Web.Helpers
+@{
+    ViewBag.Title = Resource.PageTitleCategories;
+}
+@section Head
+{
+    <style type="text/css">
+        label {
+            font-weight: normal;
+            color: black;
+        }
+    </style>
+}
+@section Scripts{
+    <script type="text/javascript">
+        function onPageLoad() {
+            $('#chkSelectAll').on('click', function (e) {
+                $('input:checkbox').attr('checked', $(this).is(':checked'));
+            });
+        }
+    </script>
+}
+<span class="block">@Html.BackLink(Url, MVC.Voting.Index())</span>
+<h2 class="heading">@Resource.TitleCategories</h2>
+<p>
+    @Resource.CategoriesNotice
+</p>
+<p>
+    @Resource.CategoriesNotice1
+</p>
+@using (Html.BeginForm())
+{
+    @Html.AntiForgeryToken()
+    <div style="width: 50%; float: left;">
+        <span>
+                <input id="chkSelectAll" type="checkbox" value="true">
+                @Resource.SelectAllCategories
+        </span>
+        <br />
+        @for (int i = 0; i < Model.Count / 2; i++)
+        {
+            @Html.HiddenFor(m => m[i].CategoryId)
+            <label>
+                @Html.CheckBoxFor(c => c[i].IsSelected)
+                @Model[i].CategoryName
+            </label>
+        }
+    </div>
+    <div style="width: 50%; float: right;">
+        @for (int i = Model.Count / 2; i < Model.Count; i++)
+        {
+            @Html.HiddenFor(m => m[i].CategoryId)
+            <label>
+                @Html.CheckBoxFor(c => c[i].IsSelected)
+                @Model[i].CategoryName
+            </label>
+        }
+    </div>
+    <div class="clear">
+    </div>
+    <br />
+    @Html.Buttons()
+}

@@ -1,0 +1,105 @@
+﻿@model Data.ViewModels.Sponsor.DonateModel
+@using Web.Helpers
+@{
+    var canConfirmIdentity = ViewBag.CurrentUser.IsAuthenticated && !ViewBag.CurrentUser.IsUnique;
+    var selectedAmount = Model.Amount > 0 ? Model.Amount : (canConfirmIdentity ? 100 : 1000);
+}
+
+<script type="text/javascript">
+    $(document).ready(bindOnAmountSelect);
+
+    function bindOnAmountSelect() {
+        $('#AmountSelect input[type="radio"]').change(function (e) {
+            if ($(this).val()) {
+                $('#amountOtherContainer').hide();
+                $('#Amount').val($(this).val());
+            }
+            else {
+                $('#amountOtherContainer').show();
+                $('#amountOtherContainer input').change();
+            }
+        });
+
+        $('#AmountOther').change(function () {
+            $('#Amount').val(parseInt(parseFloat($(this).val().replace(',', '.')) * 100), 10);
+        });
+    }
+</script>
+
+@using (Html.BeginForm(MVC.Sponsor.Donate()))
+{
+    <div id="AmountSelect" style="margin-bottom: 16px;">
+        @Html.LabelFor(m => m.Amount, "Suma")
+        <label class="normal">
+            <input type="radio" name="AmountSelect" value="50" @(selectedAmount == 50 ? "checked='checked'" : "") />0.5 Eur</label>
+        <label class="normal">
+            <input type="radio" name="AmountSelect" value="100" @(selectedAmount == 100 ? "checked='checked'" : "") />1 Eur</label>
+        <label class="normal">
+            <input type="radio" name="AmountSelect" value="200" @(selectedAmount == 200 ? "checked='checked'" : "") />2 Eur</label>
+        <label class="normal">
+            <input type="radio" name="AmountSelect" value="500" @(selectedAmount == 500 ? "checked='checked'" : "") />5 Eur</label><br />
+        <label class="normal">
+            <input type="radio" name="AmountSelect" value="1000"  @(selectedAmount == 1000 ? "checked='checked'" : "") />10 Eur</label>
+        <label class="normal">
+            <input type="radio" name="AmountSelect" value="2000" @(selectedAmount == 2000 ? "checked='checked'" : "") />20 Eur</label>
+        <label class="normal">
+            <input type="radio" name="AmountSelect" value="5000" @(selectedAmount == 5000 ? "checked='checked'" : "") />50 Eur</label>
+        <label class="normal">
+            <input type="radio" name="AmountSelect" value="10000" @(selectedAmount == 10000 ? "checked='checked'" : "") />100 Eur</label><br />
+        <label class="normal">
+            <input type="radio" name="AmountSelect" value="" />Kita</label>
+        <span id="amountOtherContainer" class="hide">
+            @Html.TextBox("AmountOther", "100") Eur
+        </span>
+        @Html.Hidden("Amount", canConfirmIdentity ? "100" : "1000")
+    </div>
+    if (!string.IsNullOrEmpty(Model.FirstName))
+    {
+    @Html.HiddenFor(m => m.FirstName)
+    }
+    else
+    {
+    <div>
+        @Html.LabelFor(m => m.FirstName, "Vardas")
+        @Html.TextBoxFor(m => m.FirstName)
+    </div>
+    }
+    if (!string.IsNullOrEmpty(Model.LastName))
+    {
+    @Html.HiddenFor(m => m.LastName)
+    }
+    else
+    {
+    <div>
+        @Html.LabelFor(m => m.LastName, "Pavardė")
+        @Html.TextBoxFor(m => m.LastName)
+    </div>
+    }
+    if (!string.IsNullOrEmpty(Model.Email))
+    {
+    @Html.HiddenFor(m => m.Email)
+    }
+    else
+    {
+    <div>
+        @Html.LabelFor(m => m.Email, "El. paštas")
+        @Html.TextBoxFor(m => m.Email)
+        @Html.ValidationMessageFor(m => m.Email)
+    </div>
+    }
+    if (ViewBag.CurrentUser.IsAuthenticated && !ViewBag.CurrentUser.IsUnique)
+    {
+    <div>
+        @Html.LabelFor(m => m.PersonCode, "Asmens kodas", new Dictionary<string, object>() { { "class", "fl" } })
+        @Html.Partial(MVC.Shared.Views._Help, "Jūsų įvestas asmens kodas bus sutikrintas su pervedimą atlikusio asmens kodu, ir jiems sutapus, Jūsų tapatybė bus patvirtinta. Jeigu asmens kodo nepateiksite, tapsite mūsų rėmėju, bet tapatybė nebus patvirtinta.")
+        <div class="clear"></div>
+        @Html.TextBoxFor(m => m.PersonCode, new Dictionary<string, object>() { { "autocomplete", "off" } })
+        @Html.ValidationMessageFor(m => m.PersonCode)
+        @Html.HiddenFor(m => m.IsPersonCodeRequired)
+    </div>
+    }
+    
+    @Html.HiddenFor(m => m.PaymentType)
+         
+    @Html.Buttons(2, Url.Action(MVC.Common.Start()), "Vykdyti")
+}

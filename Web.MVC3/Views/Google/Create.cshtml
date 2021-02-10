@@ -1,0 +1,34 @@
+﻿@using System.Threading
+@using Globalization.Resources.Google
+@using Services.Infrastructure
+@using Web.Helpers
+@model List<Data.ViewModels.Base.UrlViewModel>
+<div data-role="googleDocs" class="clear">
+    <label class="fl">@Resource.Documents</label>
+    @Html.Partial(MVC.Shared.Views._Help, Resource.DocumentsHelp)
+    <ul id="listAttachments" style="margin-bottom: 0px;">
+        @foreach (var website in Model)
+        {
+            @Html.Partial(MVC.Shared.Views.Attachment, website, new ViewDataDictionary() { { "deletable", true } })
+        }
+    </ul>
+    <div class="clearfix">
+        @if (ViewBag.IsGoogleAuthenticated)
+        {
+            @Html.Buttons(new ButtonHelperModel() { Text = Resource.CreateDocument, Href = Url.Action(MVC.Google.CreateDoc()), Id = "lnkCreateDoc", ImageUrl = Links.Content.Images.edit_png, Type = ButtonHelperModel.Types.Link },
+                            new ButtonHelperModel() { Id = "lnkOpenDoc", Text = Resource.Open, CssClass = "hide", HtmlAttributes = new Dictionary<string, object>() { { "target", "_blank" } }, ImageUrl = Links.Content.Images.folder_open_16_png, Type = ButtonHelperModel.Types.Link },
+                  new ButtonHelperModel() { Text = Resource.UploadDocument, Href = Url.Action(MVC.Google.SelectDocs()), Id = "lnkSelectDoc", ImageUrl = CustomAppSettings.GoogleDocIconUrl, Type = ButtonHelperModel.Types.Link })
+        }
+
+
+        @Html.Button(new ButtonHelperModel()
+                         {
+                             Id = "lnkGoogleAuth",
+                             CssClass = ViewBag.IsGoogleAuthenticated ? "hide" : "",
+                             Text = Resource.ConnectToGoogleDrive,
+                             Href = Url.Action(MVC.Google.GoogleAuth(Request.RawUrl, CancellationToken.None)),
+                             ImageUrl = Links.Content.Images.drive_icon_png,
+                             Type = ButtonHelperModel.Types.Link
+                         })
+    </div>
+</div>

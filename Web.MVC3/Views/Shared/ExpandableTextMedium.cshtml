@@ -1,0 +1,28 @@
+﻿@using Framework.Mvc.Strings
+@using Globalization.Resources.Shared
+@using Web.Helpers
+@model string
+@{ var len = 500;
+   if (Model.Length > len)
+   {
+       var plain = Model.GetPlainText(firstParagraphOnly:false);
+       len = len + Model.Length - plain.Length;
+   }}
+<div class="text_expandable richtext">
+    @if (Model.Length > len)
+    {
+        var pair = Html.GetExpandableTextPair(Model, len);
+        if (pair.Second == null)
+        {
+            @Html.Raw(pair.First)
+        }
+        else
+        {
+            @Html.Raw(pair.First)<span class="text_expanded_hide">...</span><span class="text_expanded_show richtext">@Html.Raw(pair.Second)</span><span class="text_expanded_link"> <a href="javascript:void(0};">@SharedStrings.More</a></span>
+        }
+    }
+    else
+    {
+        @Html.Raw(Model)
+    }
+</div>

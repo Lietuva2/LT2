@@ -1,0 +1,60 @@
+﻿@{
+    Layout = "";
+}
+<!DOCTYPE html>
+@using Web.Helpers;
+<html>
+<head>
+    <title>Darbai - Martynas Šimelis</title>
+    <link href="@Links.Content.CSS.print_css" rel="stylesheet" type="text/css" media="print" />
+    <link href="@Links.Content.CSS.screen_css" rel="stylesheet" type="text/css" />
+    <link href="@Links.Content.CSS.site_css" rel="stylesheet" type="text/css" />
+    <!--[if lt IE 8]><link rel="stylesheet" href="@Links.Content.CSS.ie_css" type="text/css" media="screen, projection"><![endif]-->
+    <script type="text/javascript">
+        var _gaq = _gaq || [];
+        _gaq.push(['_setAccount', 'UA-266484-11']);
+        _gaq.push(['_trackPageview']);
+
+        (function () {
+            var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+            ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+            var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+        })();
+    </script>
+</head>
+<body>
+    <div class="background_green">
+    </div>
+    <div class="background_lightgreen">
+    </div>
+    <div class="container">
+        <div id="header" class="span-24 last">
+            <h2 style="color: White;">
+                Martynas Šimelis
+            </h2>
+        </div>
+        <div id="left_nav" class="span-4">
+            <ul class="main_nav">
+                <li>@Html.ActionLink("Stipendija", MVC.Martynas_Simelis.Award())</li>
+                <li>@Html.ActionLink("Biografija", MVC.Martynas_Simelis.Biography())</li>
+                <li>@Html.ActionLink("Darbai", MVC.Martynas_Simelis.Portfolio())</li>
+            </ul>
+        </div>
+        <div id="main" class="span-20 last">
+            <div class="in_brd page_content">
+                <h2 class="heading">
+                    Darbai</h2>
+                <div style="height: 15px;">
+                </div>
+                <div class="uitabContainer">
+                    <object data="@Url.Content("~/Martyno darbai ir mintys.pdf")#view=FitH" type="application/pdf" width="718" height="500">
+                      <p>Spauskite <a href="@Url.Content("~/Martyno darbai ir mintys.pdf")">čia</a>, norėdami parsisiųsti Martyno darbus.</p>
+                    </object>
+                </div>
+            </div>
+        </div>
+        <div class="span-24 last">
+        </div>
+    </div>
+</body>
+</html>

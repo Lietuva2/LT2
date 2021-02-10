@@ -1,0 +1,125 @@
+﻿@using Framework.Enums
+@using Framework.Strings
+@using PagedList
+@using PagedList.Mvc
+@using Web.Helpers
+@model Data.ViewModels.Sponsor.WebToPayModel
+@{
+    ViewBag.Title = "Parama";
+}
+@section Head
+{
+    <style type="text/css">
+        td {
+            vertical-align: middle;
+            width: 200px;
+            text-align: left;
+        }
+
+        table {
+            width: auto;
+        }
+    </style>
+}
+@section Scripts
+{
+    <script type='text/javascript'>
+        function onPageLoad() {
+            $('[name="gift"]').change(function(e) {
+                $.helpers.loadAsync(e, '@Url.Action(MVC.Sponsor.SaveGift(Model.orderid, null))', { giftId: $(this).val() }, function(result) {
+
+                });
+            });
+
+            @if (!string.IsNullOrEmpty(Model.personcode) && Model.PaymentType == "vb2")
+            {
+                <text>
+            $('form').on('submit', function (e) {
+                if (!confirm('Nepamirškite pažymėti varnelės "Sutinku, kad mano asmens kodas būtų perduotas lėšų gavėjui"!')) {
+                    return $.helpers.cancelEvent(e);
+                }
+            });
+                </text>
+            }
+        }
+    </script>
+    <script type="text/javascript" charset="utf-8">
+        var wtpQualitySign_projectId = 22724;
+        var wtpQualitySign_language = "lt";
+    </script>
+    <script src="https://www.webtopay.com/new/js/project/wtpQualitySigns.js" type="text/javascript" charset="utf-8"></script>
+
+}
+<h2 class="heading">Parama</h2>
+@if (Model.Gifts.Any())
+{
+    <h3>Pasirinkite suvenyrą
+    </h3>
+    <p>
+        Dėkodami už Jūsų dosnumą, mes pasistengsim pristatyti Jums Jūsų pasirinktą suvenyrą:
+    </p>
+    <table>
+        <tr>
+            <td>
+                <input type="radio" name="gift" value="" checked="checked" />
+                Aš tik noriu paremti
+            </td>
+            <td></td>
+        </tr>
+        @foreach (var gift in Model.Gifts)
+        {
+            <tr>
+                <td>
+                    <input type="radio" name="gift" value="@gift.Id"/>
+                    @gift.Name
+                </td>
+                <td>
+                    <img src="@gift.Url" title="@gift.Name" style="height: 100px;" alt="@gift.Name"/>
+                </td>
+            </tr>
+        }
+    </table>
+}
+@if (string.IsNullOrEmpty(Model.personcode))
+{
+    <p>Mokėjimą galite atlikti pervedę norimą sumą tiesiai į VšĮ LT2.0 sąskaitą banke - šiuo būdu mus pasieks didžiausia jūsų paramos dalis:</p>
+    <p>
+        @Html.Partial(MVC.About.Views.Requisites)
+    </p>
+    <p>
+        Jūsų patogumui taip pat siūlome mokėjimą atlikti naudojantis mokejimai.lt paslaugomis (mus pasieks ~80% Jūsų paramos):
+    </p>
+}
+@if (!string.IsNullOrEmpty(Model.personcode) && Model.PaymentType == "vb2")
+{
+    <p>
+        <b>Atlikdami pervedimą pažymėkite varnelę "Sutinku, kad mano asmens kodas būtų perduotas lėšų gavėjui"!</b>
+        Kitaip Jūsų tapatybė nebus patvirtinta.
+    </p>
+}
+<div>
+    <form action="https://www.mokejimai.lt/pay/" method="POST">
+        @Html.Hidden("data", Model.data)
+        @Html.Hidden("sign", Model.sign)
+        <div>
+            Vardas: @Model.firstname
+        </div>
+        <div>
+            Pavardė: @Model.lastname
+        </div>
+        <div>
+            El. paštas: @Model.email
+        </div>
+        <div>
+            Suma: @Model.AmountLTL Eur
+        </div>
+        @if (!string.IsNullOrEmpty(Model.personcode))
+        {
+            <div>
+                Asmens kodas: @Model.personcode
+            </div>
+        }
+        <br />
+        @Html.Buttons(2, Url.Action(MVC.Sponsor.About()), "Mokėti")
+    </form>
+</div>

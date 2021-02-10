@@ -1,0 +1,111 @@
+﻿@model Data.ViewModels.Account.ContactsEditModel
+@using Globalization.Resources.Account
+@using Globalization.Resources.Shared
+@using Web.Helpers;
+<fieldset>
+    <div class="uiHeader">
+        <span>@Resource.ContactsLegend</span>
+    </div>
+    @using (Html.BeginForm(MVC.Account.SaveContacts()))
+    {
+        @Html.AntiForgeryToken()
+        @Html.HiddenFor(m => m.UserObjectId)
+
+        <table class="tbl_data tbl_editc">
+            <tbody>
+                <tr>
+                    <th class="lbl lbl_list">@Resource.Email
+                    </th>
+                    <td class="data" data-role="parent-container">
+                        <div class="itemsContainer clearfix">
+                            @foreach (var item in Model.Emails)
+                            {
+                                Html.RenderPartial(MVC.Account.Views._Email, item);
+                            }
+                        </div>
+                        <span class="uiblock">@Html.ActionLink(SharedStrings.Add, MVC.Account.AddEmail(), new { @class = "add" })</span>
+                        <div class="clear">@Html.ValidationMessageFor(m => m.Emails)</div>
+                    </td>
+                </tr>
+                <tr>
+                    <th class="lbl lbl_list">@Resource.PhoneNumbers
+                    </th>
+                    <td class="data" data-role="parent-container">
+                        <div class="itemsContainer clearfix">
+                            @foreach (var number in Model.PhoneNumbers)
+                            {
+                                Html.RenderPartial(MVC.Account.Views.PhoneNumber, number);
+                            }
+                        </div>
+                        <span class="uiblock">@Html.ActionLink(SharedStrings.Add, MVC.Account.AddPhoneNumber(), new { @class = "add" })</span>
+                    </td>
+                </tr>
+                <tr>
+                    <th class="lbl">@Resource.CurrentLocation
+                    </th>
+                    <td class="data">
+                        <div class="fields_container">
+                            <p class="uiblock">
+                                <span class="block">@Resource.City</span>
+                                @Html.AutoCompleteFor(m => m.City, MVC.Address.GetCities(), new Dictionary<string, string> { { "municipality", "$('.autocomplete_Municipality')" }, { "country", "$('.autocomplete_Country')" } }, false)
+                                @Html.ValidationMessageFor(model => model.City)
+                            </p>
+                            <p class="uiblock">
+                                <span class="block">@Resource.Municipality</span>
+                                @Html.AutoCompleteFor(m => m.Municipality, MVC.Address.GetMunicipalities(), new Dictionary<string, string> { { "country", "$('.autocomplete_Country')" } }, false)
+                                @Html.ValidationMessageFor(model => model.Municipality)
+                            </p>
+                            <p class="uiblock">
+                                <span class="block">@Resource.Country</span>
+                                @Html.AutoCompleteFor(m => m.Country, MVC.Address.GetCountries(), null, false)
+                                @Html.ValidationMessageFor(model => model.Country)
+                            </p>
+                        </div>
+                    </td>
+                </tr>
+                <tr>
+                    <th class="lbl">@Resource.OriginLacation
+                    </th>
+                    <td class="data">
+                        <div class="fields_container">
+                            <p class="uiblock">
+                                <span class="block">@Resource.City</span>
+                                @Html.AutoCompleteFor(m => m.OriginCity, MVC.Address.GetCities(), new Dictionary<string, string> { { "municipality", "$('.autocomplete_OriginMunicipality')" }, { "country", "$('.autocomplete_OriginCountry')" } }, false)
+                                @Html.ValidationMessageFor(model => model.OriginCity)
+                            </p>
+                            <p class="uiblock">
+                                <span class="block">@Resource.Municipality</span>
+                                @Html.AutoCompleteFor(m => m.OriginMunicipality, MVC.Address.GetMunicipalities(), new Dictionary<string, string> { { "country", "$('.autocomplete_OriginCountry')" } }, false)
+                                @Html.ValidationMessageFor(model => model.OriginMunicipality)
+                            </p>
+                            <p class="uiblock">
+                                <span class="block">@Resource.Country</span>
+                                @Html.AutoCompleteFor(m => m.OriginCountry, MVC.Address.GetCountries(), null, false)
+                                @Html.ValidationMessageFor(model => model.OriginCountry)
+                            </p>
+                        </div>
+                    </td>
+                </tr>
+                <tr>
+                    <th class="lbl lbl_list">@Resource.Websites
+                    </th>
+                    <td class="data" data-role="parent-container">
+                        <div class="itemsContainer clearfix">
+                            @foreach (var website in Model.WebSites)
+                            {
+                                Html.RenderPartial(MVC.Shared.Views.WebSite, website);
+                            }
+                        </div>
+                        <span class="uiblock">@Html.ActionLink(SharedStrings.Add, MVC.Common.AddWebSite(Model.WebSites.Count, "WebSites"), new { @class = "add" })</span>
+                    </td>
+                </tr>
+                <tr>
+                    <th></th>
+                    <td class="actions data">
+                        @Html.Buttons(2, Url.Action(MVC.Account.Contacts(Model.UserObjectId)))
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+    }
+</fieldset>

@@ -1,0 +1,23 @@
+﻿@using Globalization.Resources.Voting
+@using Web.Helpers
+@model Data.ViewModels.Base.RelatedIdeaListItem
+<li data-role="deleteContainer">
+    @using (Html.BeginCollectionItem("RelatedIdeas"))
+    {
+        @Html.HiddenFor(m => m.ObjectId)
+        @Html.HiddenFor(m => m.Name)
+        <span>
+            @Html.Raw(Model.Name)
+        </span>
+        <span>
+            @Html.CheckBoxFor(m => m.ChangeState)
+            @Resource.ChangeState
+        </span>
+        <span class="hide" data-role="delete">
+            <a href="javascript:void(0);">
+                <img style="height:12px;" src="@Links.Content.Images.cross_png" />
+            </a>
+        </span>
+        
+    }
+</li>

@@ -1,0 +1,30 @@
+﻿@using Globalization.Resources.About
+@{
+    ViewBag.Title = Resource.RoadMapTitle;
+}
+
+<h2 class="heading">@Resource.AboutProject</h2>
+<div style="height:15px;"></div>
+@Html.Partial(MVC.About.Views.Menu, 5)
+<div class="uitabContainer">
+    <p style="padding:15px 0 2px;">
+        Mūsų ateities planus kuriate Jūs - savo patarimais, įžvalgom, poreikiais. Štai keletas pagrindinių naujovių, laukiančių mūsų ateityje: 
+    </p>
+    <ul>
+        <li>
+            <b>Motyvacinė sistema (virtualūs pinigai)</b> - ripplepay.com ideologija paremtas virtualių pinigų "bankas", kuriuo naudodamiesi bendruomenės nariai keisis paslaugomis ir įvertins vieni kitų pastangas.
+        </li>
+        <li>
+            <b>Verslui skirtas modulis</b> - idėjos vystomos organizacijoje kodiniu pavadinimu <a href="https://www.lietuva2.lt/Organizacija/verslas-2-0/4f60452c0a1d0d0d089745fa?view=Info" target="_blank">Verslas 2.0</a>
+        </li>
+        <li>
+            <b>Rinkimų modulis</b> - <a href="@Url.Action(MVC.Idea.Details("4f2868df0a1d0d08943af194", null, "4f28f1820a1d0d08943b468f"))" target="_blank">politikų reitingavimo sistema</a>.
+        </li>
+        <li>
+            <b>Balso delegavimas srities ekspertams</b> - "utopinė" vizija sukurti tikros atstovaujamosios demokratijos sąlygas, kai pasitikėdamas tam tikru ekspertu tam tikrais valstybės valdymo klausimais (pvz. finansai, švietimas ir pan.) aš patikiu jam priimti su šia sritim susijusius sprendimus, dėl kurių neturiu aiškios asmeninės nuomonės. 
+        </li>
+    </ul>
+    <p>
+        Plačiau su projekto eiga galite susipažinti puslapyje @Html.ActionLink("Lietuva 2.0 sistemos tobulinimas", MVC.Project.ToDos("4db5ef960a1d0d02d822c1cb"))
+    </p>
+</div>

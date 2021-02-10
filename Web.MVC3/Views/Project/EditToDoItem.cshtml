@@ -1,0 +1,45 @@
+﻿@model Data.ViewModels.Project.EditToDoModel
+@using Globalization.Resources.Project
+@using Globalization.Resources.Shared
+@using Globalization.Resources.Shared;
+@using Web.Helpers
+<div id="editItem" class="editItem">
+    @using (Html.BeginForm(MVC.Project.EditToDo(), FormMethod.Post, new { id = "formEditToDo" }))
+    {
+        @Html.AntiForgeryToken()
+        @Html.HiddenFor(m => m.ProjectId)
+        @Html.HiddenFor(m => m.Id)
+        @Html.TextAreaFor(m => m.Subject)
+        @Html.ValidationMessageFor(m => m.Subject)
+        <span class="span-3">
+            @Html.LabelFor(m => m.IsPrivate, Resource.Visibility)
+            @Html.CheckBoxFor(m => m.IsPrivate)
+            @Resource.TeamOnly
+        </span>
+        <span class="span-5">
+            @Html.LabelFor(m => m.DueDate)
+            @Html.EditorFor(m => m.DueDate)
+        </span>
+        <span class="span-4">
+            @Html.LabelFor(m => m.ResponsibleUserId)
+            @Html.DropDownListFor(m => m.ResponsibleUserId, Model.ResponsibleUsers)
+        </span>
+        <div class="clear">
+            @Html.LabelFor(m => m.MileStoneId)
+            @Html.DropDownListFor(m => m.MileStoneId, Model.Milestones, new { @class = "txt_milestones" })
+        </div>
+        <div>
+            @Html.Buttons(new List<ButtonHelperModel>()
+                        {
+                            new ButtonHelperModel()
+                                {
+                                    Id="btnEdit",
+                                },
+                            new CancelButtonHelperModel()
+                                {
+                                }
+                        })
+        </div>
+        <div class="clear"></div>
+    }
+</div>

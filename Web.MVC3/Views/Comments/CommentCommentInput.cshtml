@@ -1,0 +1,16 @@
+﻿@model Data.ViewModels.Comments.CommentView
+@using Data.Enums
+@using Globalization.Resources.Shared
+@using Globalization.Resources.Voting
+@using Web.Helpers
+
+@using (Html.BeginForm("AddCommentComment", Html.GetControllerNameByEntryType(Model.EntryType), new RouteValueDictionary { { "EntryId", Model.EntryId }, { "Id", Model.Id } }, FormMethod.Post, new Dictionary<string, object>() { { "class", "no-padding" }, { "data-role", "commentcommentinput" } }))
+{
+    @Html.AntiForgeryToken()
+    <div style="margin: 3px 3px 2px 0px;">
+        @Html.TextAreaFor(m => m.CommentText)
+        @Html.Buttons()
+        @Html.ValidationMessageFor(m => m.CommentText)
+        <div class="clear"></div>
+    </div>
+}

@@ -1,0 +1,22 @@
+﻿@model Data.ViewModels.Base.UrlViewModel
+@using Web.Helpers
+@using (Html.BeginCollectionItem("Attachments"))
+{
+    <li data-role="deleteContainer">
+        @Html.HiddenFor(m => m.Url)
+        @Html.HiddenFor(m => m.Title)
+        @Html.HiddenFor(m => m.IconUrl)
+        <a class="attachment" rel="nofollow" href='@Model.Url' hreflang="lt" target="_blank">
+            @if(!string.IsNullOrEmpty(Model.IconUrl))
+            {
+                <img src="@Model.IconUrl" class="icon" />
+            }
+            @Model.Title
+        </a>
+        @if (ViewData["deletable"] == null || (bool)ViewData["deletable"] == true)
+        {
+            <span class="hide" data-role="delete"><a href="javascript:void(0);">
+                                                      <img style="height: 12px;" src="@Links.Content.Images.cross_png"/></a> </span>
+        }
+    </li>
+}

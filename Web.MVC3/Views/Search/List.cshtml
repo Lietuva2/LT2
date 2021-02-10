@@ -1,0 +1,43 @@
+﻿@model IEnumerable<Data.ViewModels.Search.SearchIndexModel>
+@using Data.Enums
+@using Framework.Lists;
+@using Framework.Mvc.Strings
+@using Globalization.Resources.Search;
+@using Framework.Strings;
+@using Web.Helpers;
+@foreach (var result in Model)
+{
+    <li style="margin-top: 8px;">
+        <div class="newsfeedPhoto">
+            <div class="@result.Type.ToString()"></div>
+        </div>
+        <h3 style="margin: 0px 0 16px 8px;">
+            @{switch (result.Type)
+              {
+                  case Data.Enums.EntryTypes.Idea:
+                      @Html.ActionLinkWithReturnUrl(result.Subject, MVC.Idea.Details(result.Id, result.Subject.ToSeoUrl(), null));
+                      break;
+                  case Data.Enums.EntryTypes.Issue:
+                      @Html.ActionLinkWithReturnUrl(result.Subject, MVC.Voting.Details(result.Id, result.Subject.ToSeoUrl()));
+                      break;
+                  case Data.Enums.EntryTypes.User:
+                      @Html.ActionLinkWithReturnUrl(result.Subject, MVC.Account.Details(result.Id, result.Subject.ToSeoUrl(), null));
+                      break;
+                  case Data.Enums.EntryTypes.Organization:
+                      @Html.ActionLinkWithReturnUrl(result.Subject, MVC.Organization.Details(result.Id, result.Subject.ToSeoUrl(), null, null, null, null));
+                      break;
+                  case Data.Enums.EntryTypes.Problem:
+                      @Html.ActionLinkWithReturnUrl(!string.IsNullOrEmpty(result.Subject.GetPlainText()) ? result.Subject.GetPlainText() : Resource.Empty, MVC.Problem.Index(null, null, null, result.Id))
+                      break;
+              }
+            }
+        </h3>
+        <div class="clear">
+        </div>
+        <div>
+            @Html.Raw(result.HighlightedText.GetPlainText())
+        </div>
+        <div class="clear">
+        </div>
+    </li>
+}

@@ -1,0 +1,79 @@
+﻿@model Data.ViewModels.Voting.VotingIndexModel
+@{
+    ViewBag.Title = Resource.TitleIndex;
+}
+@using Globalization.Resources.Shared
+@using Globalization.Resources.Voting
+@using Services.Enums
+@using Web.Helpers
+@section Head
+{
+}
+@section Scripts
+{
+    <script type='text/javascript'>
+        function onPageLoad() {
+            $('#list').showmore();
+
+            CreateCategorySelector('@Url.Action(MVC.Voting.FilterPage())', '@Url.Action(MVC.Voting.SaveMyCategories())');
+
+            initializeInfiniteScroll();
+            
+            $('#list').voting({
+                isAmbasador: @((ViewBag.CurrentUser.CanPostToFacebook && ViewBag.CurrentUser.IsUnique).ToString().ToLower()),
+                supportMessage: '@ViewBag.CurrentUser.VotedText',
+                facebookUrl: '@Url.ActionAbsolute(MVC.Voting.Details())' + '/{0}',
+                forceFbLogin: @(ViewBag.CurrentUser.PostPermissionGranted ? "false" : "true")
+            });
+        }
+    </script>
+}
+<div class="clearfix">
+    <h2 class="heading">@Resource.TitleIndex</h2>
+    <span class="index_links">
+        @if (Model.IsEditable)
+        {
+            <a href="@Html.GetUrl(MVC.Voting.Create())" title="@Resource.CreateTooltip">@Resource.Create</a>
+        }
+        @Html.ActionLink(Menu.Results, MVC.Voting.Results())
+    </span>
+</div>
+@if (ViewBag.FilteredCategoryIds == null)
+{
+    <p>
+        <form id="formCategories">
+            @Html.AntiForgeryToken()
+            @Html.Partial(MVC.Idea.Views.CategorySelector, Model.SelectedCategories, new ViewDataDictionary(ViewData) {{"view", Model.ListView}})
+        </form>
+    </p>
+    <div class="clear"></div>
+}
+<div class="clearfix">
+    <p class="fl">
+        @Html.ActionLink(Resource.FilterInteresting, MVC.Voting.Index(IssueListViews.Interesting, null, null), new Dictionary<string, object> {{"class", Model.ListView == (int) IssueListViews.Interesting ? "highlight" : ""}})
+        
+        &nbsp; @Html.ActionLink(Resource.FilterOther, MVC.Voting.Index(IssueListViews.Other, null, null), new Dictionary<string, object> {{"class", Model.ListView == (int) IssueListViews.Other ? "highlight" : ""}})
+    </p>
+    <p class="fr">
+        @Html.ActionLink(Resource.SortNearest, MVC.Voting.Index(null, IssueListSorts.Nearest, null), new Dictionary<string, object> { { "class", (IssueListSorts)Model.ListSort == IssueListSorts.Nearest ? "highlight" : "" } })
+        &nbsp; @Html.ActionLink(Resource.SortActive, MVC.Voting.Index(null, IssueListSorts.MostActive, null), new Dictionary<string, object> { { "class", (IssueListSorts)Model.ListSort == IssueListSorts.MostActive ? "highlight" : "" } })
+    </p>
+    <p class="fr itemsCounter">@SharedStrings.TotalCount: <span id="spanTotalCount">@Model.TotalCount</span></p>
+</div>
+    @if (!Model.NoMunicipalities)
+    {
+        <ul id="list" class="m_list">
+            @{ Html.RenderPartial(MVC.Voting.Views.List, Model.Items.List);}
+        </ul>
+    }
+    else
+    {
+        <p>
+            @SharedStrings.NoCities
+        </p>
+    }
+
+@if (Model.Items.HasMoreElements)
+{
+    @Html.ActionLink(SharedStrings.More, MVC.Voting.GetNextPage(), new { id = "lnkShowMore" })
+}

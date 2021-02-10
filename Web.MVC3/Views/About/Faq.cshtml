@@ -1,0 +1,124 @@
+﻿@using Globalization.Resources.About
+@{
+    ViewBag.Title = Resource.FaqTitle;
+}
+@section Scripts
+{
+    <script type='text/javascript'>
+        function onPageLoad() {
+            $('.uitabContainer a').on('click', function (e) {
+                $(this).next().slideToggle();
+            });
+        }
+    </script>
+}
+<h2 class="heading">@Resource.AboutProject</h2>
+<div style="height:15px;"></div>
+@Html.Partial(MVC.About.Views.Menu, 1)
+<br />
+<div class="uitabContainer">
+    <ol>
+        <li>
+            <a href="javascript:void(0);">Kas už viso šito "stovi"?</a>
+            <div class="hide">Svetainę Lietuva 2.0 sukūrė ir vysto VšĮ LT2.0 - nepriklausoma, idėjiniais ir visuomeniniais pagrindais veikianti pelno nesiekianti organizacija, kurios nariu gali tapt ir Tu! Prisiregistruok, būk aktyvus, parašyk mums laišką, apibūdinantį Tavo motyvaciją ir kompetencijas, ir Tu tapsi vienu iš mūsų! 
+                Siekiame išlikti politiškai neutralūs ir atstovauti visos visuomenės, o ne jos grupių, interesą, todėl į komandą kviečiame kuo įvairesnių pažiūrų, visuomenės interesą gebančius iškelti aukščiau asmeninių ambicijų, asmenis.</div>
+        </li>
+        <li>
+            <a href="javascript:void(0);">Kas yra VšĮ LT2.0 steigėjai ir dalininkai, kokie jų interesai?</a>
+            <div class="hide">VšĮ LT2.0 steigėjų ir dalininkų tikslas yra sukurti portalą, kuris taptų pripažinta, patikima, tikslia, atitinkančia kintančius poreikius visuomenės nuomonės bei iniciatyvų surinkimo ir išgryninimo aplinka, skatinančia joje veikiančių narių iniciatyvą ir pritraukiančia naujus narius.
+                VšĮ LT2.0 steigėjų ir dalininkų sąrašas: <br />
+                <a href="@Url.Content("~/donatas-simelis")">Donatas Šimelis</a><br />
+                <a href="@Url.Content("~/giedrius-karaliunas")">Giedrius Karaliūnas</a><br />
+                <a href="@Url.Content("~/simonas-audickas")">Simonas Audickas</a><br />
+                <a href="@Url.Content("~/aldas-glemza")">Aldas Glemža</a><br />
+                <a href="@Url.Content("~/audrone-simeliene")">Audronė Šimelienė</a><br />
+                Savanorių, daugiau ar mažiau prisidėjusių prie projekto įgyvendinimo, sąrašas, yra <a href="@Url.Content("~/Organizacija/lietuva-2-0/4e6d2d890a1d0d0aecf9a5b1?view=Members")">čia</a>
+            </div>
+        </li>
+        <li>
+            <a href="javascript:void(0);">Kas administruoja Lietuva 2.0 turinį?</a>
+            <div class="hide">
+                Šios svetainės turinį kuria ir administruoja Lietuva 2.0 bendruomenė - registruoti naudotojai. VšĮ LT2.0 pagrindinė veikla nėra turinio kūrimas ir jo administravimas - mes, kurdami šią platformą, siekiame suteikti Jums galimybę pasiekti savo tikslus.
+                Būdami aktyvūs, Jūs įgysite vis daugiau teisių valdyti ne tik savo, bet ir kitų svetainės naudotojų pateiktą turinį, o užsitikrinusių bendruomenės pasitikėjimą naudotojų (ekspertų) pasisakymai bus labiau matomi nei likusiųjų.
+                Todėl būkite aktyvūs, nes Lietuva 2.0 - tai puiki galimybė iškilti naujiems veidams Lietuvos politikos padangėje, o kompetentingiems, turintiems ką pasiūlyti visuomenės veikėjams - būti išgirstiems ir įvertintiems.
+            </div>
+        </li>
+        <li>
+            <a href="javascript:void(0);">Kodėl norėdamas palaikyti iniciatyvas turiu pateikti savo asmens duomenis?</a>
+            <div class="hide">Nes to reikalauja galiojantys LR įstatymai. VšĮ LT2.0, bendradarbiaudama su VRK ir kitomis valstybinėmis institucijomis, siūlo Jums galimybę įdedant minimalias pastangas maksimaliai dalyvauti valstybės valdyme ir realizuoti savo konstitucines teises.
+                Tam mes privalome vadovautis <a href="http://www3.lrs.lt/pls/inter2/dokpaieska.showdoc_l?p_id=389915" target="_blank">LR referendumo įstatymu</a>, <a href="http://www3.lrs.lt/pls/inter2/dokpaieska.showdoc_l?p_id=389915" target="_blank">LR piliečių įstatymų leidybos iniciatyvos įstatymu</a> ir kitais galiojančiais LR teisės aktais, kurie reikalauja pateikti iniciatyvas palaikančiųjų piliečių asmens duomenis.
+                VšĮ LT2.0 užtikrina, kad Jūsų duomenys nebus naudojami jokiais kitais tikslais ir nebus perduoti trečioms šalims, bei dirba prie to, kad reikalaujamų duomenų kiekis būtų kiek įmanoma sumažintas.
+            </div>
+        </li>
+        <li>
+            <a href="javascript:void(0);">Paaiškinkite, prašau, svetainėje naudojamą terminologiją.</a>
+            <div class="hide">
+                <ul>
+                    <li>
+                        <b>Pasisakymas</b> - bet kas, kas mūsų bendruomenės nariams rūpi, neduoda ramybės, kuo jie nori pasidalinti. Pasisakymai vadinami Problemomis, kai jie yra susieti su sumanymais arba balsavimais, t.y. apibūdina problemas, kurias pastarieji sprendžia. 
+                        Pasisakymus galima sulyginti su politikos ir visuomenės veikėjų Facebook'e generuojamu turiniu.
+                        Pagrindinis skirtumas - Lietuva 2.0 pasisakymams, iškeliantiems aktualias problemas, gali būti pasiūlomi sprendimo būdai, be to, iškeltų problemų aktualumas yra reitinguojamas kitų Lietuva 2.0 bendruomenės narių.
+                    </li>
+                    <li>
+                        <b>Sumanymas</b> - siūlomų iškeltos problemos sprendimų paketas. Sumanymas apima tiek pačią problemą, tiek vieną ar daugiau ją sprendžiančių pasiūlymų.
+                    </li>
+                    <li>
+                        <b>Pasiūlymas</b> - konkretus problemos sprendimo būdas arba tiesiog bet kokia Jums šovusi <b>įgyvendinama</b> idėja.
+                    </li>
+                    <li>
+                        <b>Alternatyvūs pasiūlymai</b> - tą pačią problemą sprendžiantys pasiūlymai, konkuruojantys tarpusavyje. Įgyvendinus vieną iš alternatyvių pasiūlymų, kitus įgyvendinti tampa nebeįmanoma arba neprasminga.
+                    </li>
+                    <li>
+                        <b>Susiję sumanymai</b> - tą pačią problemą sprendžiantys pasiūlymai, kurių kiekvienas prisideda prie problemos sprendimo, tačiau vienas kitam netrukdo ir dėl palaikymo nekonkuruoja. Kiekvienas iš susijusių sumanymų gali būti įgyvendintas nepriklausomai nuo kitų.
+                    </li>
+                    <li>
+                        <b>Balsavimai</b> - visuomenei aktualūs valdžios svarstomi klausimai, kuriais Lietuva 2.0 bendruomenė turi savo nuomonę ir nori ją pristatyti savo atstovams valdžioje, padedant geriau atstovauti visuomenės interesą. Tai gali būti bet koks tiek seimo, tiek savivaldybių tarybų svarstomas klausimas, kuris kažkam pasirodė įdomus ir aktualus.
+                    </li>
+                    <li>
+                        <b>Organizacijos</b> - tiek realios, LR registruoti juridiniai asmenys, tiek virtualios, niekur kitur neregistruotos piliečių grupės. Kaip organizaciją registruoti ir vykdyti jos veiklą galite savo NVO, UAB, politines partijas, valstybines institucijas, gyvenamojo namo bendruomenes, šeimos narius ar bet kokius kitus darinius, kurių veiklai vykdyti būtų naudingos Lietuva 2.0 siūlomos pasiūlymo vystymo, balsavimo, bei projektų valdymo galimybės.
+                    </li>
+                    <li>
+                        <b>Projektai</b> - bet kokia sudėtingesnė veikla, kuriai įvykdyti reikalingas daugiau nei vienas žingsnis. Lietuva 2.0 projektai yra vykdomi įgyvendinant pasiūlymus arba vykdant organizacijų veiklą.
+                    </li>
+                </ul>
+            </div>
+        </li>
+        <li>
+            <a href="javascript:void(0);">Kaip išsilaiko Lietuva 2.0?</a>
+            <div class="hide">
+                Lietuva 2.0 veikia idėjiniais ir visuomeniniais pagrindais, ir yra finansuojama savanoriška bendruomenės narių <a href="@Url.Action(MVC.Sponsor.About())" target="_blank">parama</a>.
+                Programavimo darbai mums nekainuoja - idėjos autoriai ir iniciatoriai yra IT profesionalai, kuriems ši veikla atrodo pakankamai prasminga ir įdomi, kad būtų galima ja užsiimti be atlygio.
+                Viešinimo veiklas vykdo savanoriai, taip pat dirbantys be atlygio.
+                Taigi, šiuo metu turime tik svetainės talpinimo kaštus bei minimalias išlaidas spaudos ir kitiems viešinimo darbams, kurių negalime atlikti patys. Siekdami maksimalaus skaidrumo, visas mūsų sąskaitos operacijas pateikiame Jums <a href="@Url.Action(MVC.Sponsor.Index())" target="_blank">viešai</a>.
+                Ateičiai, be abejo, esame numatę pajamų šaltinių, kurie užtikrintų svetainės ilgaamžiškumą ir kokybę, neatsisakant pagrindinių jos kūrimo tikslų ir nepriklausomumo, nešališkumo principų.
+            </div>
+        </li>
+        <li>
+            <a href="javascript:void(0);">Ar užsiregistravęs pradėsiu gauti didelį kiekį nepageidaujamų el. laiškų?</a>
+            <div class="hide">Ne, Lietuva 2.0 labai rūpi kiekvieno bendruomenės nario privatumas ir mes darome viską, kad Jūs negautumėte nė vieno nepageidaujamo laiško.
+                Automatiniu būdu Jums yra siunčiami tik laiškai apie naujai aprašytus į Jus dominančias kategorijas patenkančius sumanymus ir balsavimus. Nenorėdami gauti el. laiškų, Jūs galite jų atsisakyti savo asmeniniame puslapyje, skiltyje "Kontaktinė informacija".
+            </div>
+        </li>
+        <li>
+            <a href="javascript:void(0);">Kaip galiu pašalinti savo paskyrą?</a>
+            <div class="hide">Norėdami pašalinti savo paskyrą, <a href="javascript:void(0);" class="ContactUs">susisiekite su mumis</a>, aprašydami noro pašalinti paskyrą priežastis. Paskyrą ir visus Naudotojo asmens duomenis pilnai pašalinsime pasibaigus paskutiniam balsavimui, dėl kurio Naudotojas yra pareiškęs savo nuomonę, bet ne vėliau kaip už 3 mėnesių nuo prašymo gavimo. Neaktyvius naudotojus šaliname automatiškai, prieš tai juos įspėję, o gavę prašymą paprastai reaguojame tą pačią darbo dieną.
+            </div>
+        </li>
+        <li>
+            <a href="javascript:void(0);">Kokiais tikslais/paskirtimi LR ADA duomenų bazėje yra nurodytas asmens duomenų rinkimas su leistinu tikslu/paskirtimi "Tiesioginė rinkodara"?</a>
+            <div class="hide">Tiesioginės rinkodaros tikslas yra reikalingas norint saugoti naudotojų el. pašto adresą ir, jiems davus leidimą, šiuo adresu siųsti el. laiškus. Mūsų atveju tiesioginė rinkodara apima laiškus, informuojančius apie naujai aprašytus sumanymus ar balsavimus, kuriuos siunčiame atitinkamom kategorijom besidomintiems naudotojams.
+            </div>
+        </li>
+        <li>
+            <a href="javascript:void(0);">Kokiomis sąlygomis duomenys ir sistema yra saugomi - pas kokį tiekėją, kokios technologinės priemonės ir pan.?</a>
+            <div class="hide">Duomenys yra saugomi UAB Blue Bridge duomenų centre, kuris tenkina aukščiausius (valstybinėms) informacinėms sistemoms keliamus saugumo reikalavimus (trečias lygis pagal <a target="_blank" href="http://tar.tic.lt/Default.aspx?id=2&item=results&aktoid=CD87BAC8-7707-424B-9184-997E1157C9CE">Bendruosius reikalavimus organizacinėms ir techninėms duomenų saugumo priemonėms</a>). Naudojamų techninių ir organizacinių priemonių aprašą esame pateikę ADA, kuriuo remiantis jie ir išdavė mums leidimą tvarkyti ypatingus asmens duomenis.
+            </div>
+        </li>
+        <li>
+            <a href="javascript:void(0);">Kodėl vienas iniciatyvas galima pasirašyti prisijungiant per el. valdžios vartus, o kitų - ne?</a>
+            <div class="hide">Šiuo metu prisijungimas prie el. valdžios vartų galimas tik pagal trišalę sutartį tarp Informacinės visuomenės plėtros komiteto (IVPK), Vyriausiosios rinkimų komisijos (VRK) ir VšĮ LT2.0. Ši sutartis leidžia naudoti el. valdžios vartus tik toms iniciatyvoms, kurių iniciatyvinės grupės
+                 vadovaujantis Referendumų įstatymu yra įregistruotos VRK, bei yra išduoti parašų rinkimo lapai. Tikimės, kad ateityje el. valdžios vartus naudoti galėsime ir kitoms portalo funkcijoms užtikrinti.
+            </div>
+        </li>
+    </ol>
+</div>
