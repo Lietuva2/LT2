@@ -1,0 +1,32 @@
+﻿@model Data.ViewModels.Project.CommentModel
+@using Globalization.Resources.Shared;
+@using Globalization.Resources.Voting;
+@using Web.Helpers;
+@using Framework.Strings;
+<li data-role="deleteContainer" style="position: relative;">
+    <div style="background-color: #FFC;">
+        <span class="comment_author"><a href='@Url.ActionWithReturnUrl(MVC.Account.Details(Model.AuthorObjectId, Model.AuthorFullName.ToSeoUrl(), null))'>@Model.AuthorFullName</a>
+        </span><span class="comment_date">
+            @Model.CommentDate
+        </span>
+        @if(Model.IsDeletable)
+        {
+            <span data-role="delete" style="float:right; display:none;">
+                <a href="@Url.Action(MVC.Project.DeleteComment(Model.ProjectId, Model.MileStoneId, Model.ToDoId, Model.Id))">
+                    <img src="@Links.Content.Images.cross_png" />
+                </a>
+            </span>
+        }
+    </div>
+    <div class="clear">
+    </div>
+    <div class="comment_body">
+        @Html.Raw(Model.CommentText)
+    </div>
+    @if (Model.Attachments.Count > 0)
+    {
+        @Html.Partial(MVC.Google.Views.DocsList, Model.Attachments)
+    }
+    <div class="clear">
+    </div>
+</li>

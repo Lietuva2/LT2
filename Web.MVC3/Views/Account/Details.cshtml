@@ -1,0 +1,610 @@
+﻿@model Data.ViewModels.Account.UserAccountViewModel
+@using Data.Enums
+@using Globalization.Resources.Account
+@using Globalization.Resources.Shared
+@using Web.Helpers;
+@using Framework.Strings;
+@{
+    ViewBag.Title = string.Format(Resource.PageTitleAccount, Model.FullName);
+}
+@section Head
+{
+    <style type="text/css">
+        .buttons {
+            padding: 0px;
+        }
+
+        .VoteButton {
+            text-transform: none;
+        }
+    </style>
+    <meta property="og:type" content="profile" />
+}
+@section Scripts
+{
+    <script type='text/javascript'>
+        @if (TempData["Ambasador"] != null && (bool)TempData["Ambasador"])
+        {
+            <text>
+        window.fbAsyncInitCallback = function () {
+            $.helpers.postToFacebook('@Resource.BecameAmbassador', null, null, null, false);
+        };
+             </text>
+        }
+
+        function bindInnerList() {
+            $('#list').on('click', '.lnkShowInnerList', function (e) {
+                var link = $(e.target);
+                var el = $('.relatedInnerList', $(e.target).parent());
+
+                if (el.is(':visible')) {
+                    el.slideUp();
+                }
+                else {
+                    el.slideDown();
+                }
+
+                createExpandableText(el);
+                return cancelEvent(e);
+            });
+        }
+
+        function onPageLoad() {
+            @if (Model.View == Data.Enums.UserViews.Activity)
+            {
+                <text>
+            bindInnerList();
+            </text>
+            }
+            @if (Model.IsCurrentUser)
+            {
+                <text>
+            $('.sectionContainer').section();
+            $('.avatar').photo();
+
+            $('#contactsContainer').remote('@Url.Action(MVC.Remote.GetRemoteTitle())');
+
+            @*$('#lnkImport').linkdialog({
+                dialogSelector: "#dialog-confirm",
+                closeText: JavaScriptLibraryResources.Cancel,
+                buttons: [{
+                    text: JavaScriptLibraryResources.Yes,
+                    click: function () {
+                        $(this).dialog("close");
+                        window.location.href = '@Url.Action(MVC.Account.ImportProfileFromLinkedin(true))';
+                    }
+                },
+                            {
+                                text: JavaScriptLibraryResources.No,
+                                click: function () {
+                                    $(this).dialog("close");
+                                    window.location.href = '@Url.Action(MVC.Account.ImportProfileFromLinkedin(false))';
+                                }
+                            }]
+            });*@
+                        $('#tabContainer').deleteButton();
+                 @if (ViewBag.CurrentUser.IsUnique)
+                 {
+                     <text>
+            $('#lnkConfirmIdentity').linkdialog({
+                dialogSelector: "#dialog-confirm-user",
+                addCloseButton: false
+            });
+                    </text>
+                 }
+
+            $('#lnkFacebookConnect').on('click', function (e) {
+                $.helpers.facebookConfirm(e, '@Url.Action(MVC.Account.SetFacebookId())');
+            });
+                </text>
+            }
+
+            CreateAjaxDialog($('.lnkUsers'), '@Globalization.Resources.Idea.Resource.SupportersList');
+
+            initializeInfiniteScroll();
+            initializeInfiniteScroll('#lnkShowMoreComments');
+
+            CreateAjaxDialog($('a[data-title]'));
+
+            @if (Model.CanSendMessage)
+            {
+                <text>
+            CreateSendMessageDialog($('#btnSendMessage'), $('#dialog-message'), '@Url.Action(MVC.Account.SendMessage())', '@Model.FullName', '@Model.UserObjectId');
+            $('#btnChat').on('click', function () {
+                $().chat('chat', '@Model.UserObjectId', '@Model.FullName');
+            });
+                </text>
+            }
+
+            $('#menuUser').ajaxTabs({
+                callback: function (result) {
+                    $('#tabContainer').html(result.Content);
+                    createExpandableText($('#list'));
+                    @if (Model.IsCurrentUser)
+                    {
+                        <text>
+                    $('.sectionContainer').section();
+                    </text>
+                    }
+                    $('input.url').remote('@Url.Action(MVC.Remote.GetRemoteTitle())');
+                    bindCommentsEvents();
+                    bindInnerList();
+                }
+            });
+
+            function bindCommentsEvents() {
+                @if (ViewBag.IsAuthenticated)
+                {
+                    <text>
+                $('div#divCommentsContainer').CommentsInput().Comments().liking();
+                </text>
+                }
+                $('div#divCommentsContainer').CommentsRead();
+                createExpandableText($('#listComments'));
+                $('#menuComments').ajaxTabs({
+                    callback: function (res) {
+                        $('#listComments').html(res.Content);
+
+                        var link = $('#lnkShowMoreComments');
+                        link.attr('href', res.UpdatedHref);
+                        res.HasMoreElements ? link.show() : link.hide();
+                        link.showmore('reset');
+
+                        createExpandableText($('#listComments'));
+                    }
+                });
+            }
+
+            $('#list').showmore({ data: { userObjectId: '@Model.UserObjectId' } });
+            @if (ViewBag.IsAuthenticated)
+            {
+                if (Model.View == Data.Enums.UserViews.Comments)
+                {
+                    @:bindCommentsEvents();
+                }
+
+                <text>
+
+            $('.like').like();
+
+            $('#btnDelete').click(function (e) {
+                if (!confirm(JavaScriptLibraryResources.ConfirmDelete)) {
+                    return cancelEvent(e);
+                }
+            });
+
+            $('#btnVoteFor').linkdialog({
+                dialogSelector: '#dialog-vote', addCloseButton: false, openCallback: function () {
+                    $('#dialog-vote #forAgainst').val('@ForAgainst.For');
+                    $('#dialog-vote #CommentText').attr('placeholder', '@Resource.PossitiveCommentPlaceholder');
+                    $('#dialog-vote button').text("@Resource.PossitiveCommentButton").removeClass('negative');
+                }
+            });
+
+            $('#btnVoteAgainst').linkdialog({
+                dialogSelector: '#dialog-vote', addCloseButton: false, openCallback: function () {
+                    $('#dialog-vote #forAgainst').val('@ForAgainst.Against');
+                    $('#dialog-vote #CommentText').attr('placeholder', '@Resource.NegativeCommentPlaceholder');
+                    $('#dialog-vote button').text("@Resource.NegativeCommentButton").addClass('negative');
+                }
+            });
+
+                    </text>
+            }
+        }
+    </script>
+}
+<span class="block">
+    @Html.BackLink()
+</span>
+<h2 class="heading">@Model.FullName</h2>
+<div id="dialog-confirm" title="@Resource.ConfirmOverwrite?" class="hide">
+    <p>
+        <span class="ui-icon ui-icon-alert" style="float: left; margin: 0 7px 20px 0;"></span>@Resource.OverwriteOnImport
+    </p>
+</div>
+@if (ViewBag.CurrentUser.IsUnique && ViewBag.CurrentUser.IsConfirmedThisSession)
+{
+    @Html.Partial(MVC.Account.Views.ConfirmIdentity)
+}
+<div>
+    <div class="likeParent">
+        <span id="spanLike" class='@(!Model.IsLiked && !Model.IsCurrentUser && ViewBag.IsAuthenticated ? string.Empty : "hide")' title='@Resource.LikeUserToolTip'>
+            @Html.Button(new ButtonHelperModel() { CssClass = "positive like accountButton", ImageUrl = Links.Content.Images.user_add_png, Text = Resource.Like, Type = ButtonHelperModel.Types.Link, Id = "btnLikeUser", Href = Url.Action(MVC.Account.LikeUser(Model.UserObjectId)) })
+        </span>
+        <span id="spanUnlike" class='@(Model.IsLiked && !Model.IsCurrentUser && ViewBag.IsAuthenticated ? string.Empty : "hide")'>
+            @Html.Button(new ButtonHelperModel() { CssClass = "negative like accountButton", ImageUrl = Links.Content.Images.user_delete_png, Text = Resource.Unlike, Type = ButtonHelperModel.Types.Link, Id = "btnUnlikeUser", Href = Url.Action(MVC.Account.UnlikeUser(Model.UserObjectId)) })
+        </span>
+    </div>
+    @if (Model.CanSendMessage)
+    {
+        <span id="spanSendMessage">
+            @Html.Button(new ButtonHelperModel() { CssClass = "accountButton", ImageUrl = Links.Content.Images.email_small_png, Text = Resource.SendMessage, Type = ButtonHelperModel.Types.Link, Id = "btnSendMessage" })
+        </span>
+        @Html.Button(new ButtonHelperModel() { CssClass = "accountButton", ImageUrl = Model.IsOnline ? Links.Content.Images.online_png : Links.Content.Images.offline_png, Text = Resource.Chat, Type = ButtonHelperModel.Types.Link, Id = "btnChat" })
+    }
+    @if (ViewBag.CurrentUser.IsAuthenticated && !Model.IsCurrentUser)
+    {
+        if (!Model.IsBlocked)
+        {
+        @Html.Button(new ButtonHelperModel() { CssClass = "negative accountButton", ImageUrl = Links.Content.Images.user_gray_png, Text = Resource.Block, Type = ButtonHelperModel.Types.Link, Href = Url.Action(MVC.Account.BlockUser(Model.UserObjectId)) })
+        }
+        else
+        {
+        @Html.Button(new ButtonHelperModel() { CssClass = "positive accountButton", ImageUrl = Links.Content.Images.user_gray_png, Text = Resource.Unblock, Type = ButtonHelperModel.Types.Link, Href = Url.Action(MVC.Account.UnblockUser(Model.UserObjectId)) })
+        }
+    }
+
+    @if (ViewBag.CurrentUser.Role == Framework.Enums.UserRoles.Admin)
+    {
+        if (!Model.IsCurrentUser)
+        {
+            @Html.Button(new ButtonHelperModel() {CssClass = "negative accountButton", ImageUrl = Links.Content.Images.user_delete_png, Text = SharedStrings.Delete, Type = ButtonHelperModel.Types.Link, Id = "btnDelete", Href = Url.Action(MVC.Account.DeleteUser(Model.UserObjectId))})
+        }
+        if (!Model.IsPolitician)
+        {
+        @Html.Button(new ButtonHelperModel() { CssClass = "positive accountButton", ImageUrl = Links.Content.Images.user_gray_png, Text = Resource.Politician, Type = ButtonHelperModel.Types.Link, Href = Url.Action(MVC.Account.Politician(Model.UserObjectId, true)) })
+        }
+        else
+        {
+        @Html.Button(new ButtonHelperModel() { CssClass = "negative accountButton", ImageUrl = Links.Content.Images.user_gray_png, Text = Resource.NotPolitician, Type = ButtonHelperModel.Types.Link, Href = Url.Action(MVC.Account.Politician(Model.UserObjectId, false)) })
+        }
+        if (!Model.IsUnique)
+        {
+            if (!Model.RequireUniqueAuthentication)
+            {
+        @Html.Button(new ButtonHelperModel() { CssClass = "negative accountButton", ImageUrl = Links.Content.Images.user_gray_png, Text = Resource.RequireUnique, Type = ButtonHelperModel.Types.Link, Href = Url.Action(MVC.Account.RequireUniqueAuthentication(Model.UserObjectId, true)) })
+            }
+            else
+            {
+        @Html.Button(new ButtonHelperModel() { CssClass = "positive accountButton", ImageUrl = Links.Content.Images.user_gray_png, Text = Resource.RequireUniqueCancel, Type = ButtonHelperModel.Types.Link, Href = Url.Action(MVC.Account.RequireUniqueAuthentication(Model.UserObjectId, false)) })
+            }
+        }
+    }
+    @if (Model.IsCurrentUser)
+    {
+        if (!Model.IsAmbasador)
+        {
+        @Html.Button(new ButtonHelperModel() { CssClass = "positive", ImageUrl = Links.Content.Images.user_go_png, Text = Resource.BecomeAmbassador, Type = ButtonHelperModel.Types.Link, Href = Url.Action(MVC.Account.Ambasador()) })
+        }
+        else
+        {
+        @Html.Button(new ButtonHelperModel() { CssClass = "negative", ImageUrl = Links.Content.Images.user_delete_png, Text = Resource.BecomeAmbassadorCancel, Type = ButtonHelperModel.Types.Link, Href = Url.Action(MVC.Account.CancelAmbasador()) })
+        }
+        if (ViewBag.CurrentUser.IsUnique)
+        {
+        @Html.Button(new ButtonHelperModel() { CssClass = "positive accountButton", ImageUrl = Links.Content.Images.group_key_png, Text = Resource.Reconfirm, Type = ButtonHelperModel.Types.Link, Id = "lnkConfirmIdentity" })
+        }
+        if (ViewBag.CurrentUser.FacebookId == null ||
+            ViewBag.CurrentUser.IsConnectedToFacebook == false ||
+            (ViewBag.CurrentUser.ConnectedFacebookId != null && ViewBag.CurrentUser.FacebookId != ViewBag.CurrentUser.ConnectedFacebookId))
+        {
+        @Html.Button(new ButtonHelperModel() { CssClass = "accountButton", ImageUrl = Links.Content.Images.facebook_png, Text = Resource.ConnectFacebook, Type = ButtonHelperModel.Types.Link, Id = "lnkFacebookConnect" })
+        }
+        @Html.Button(new ButtonHelperModel() { CssClass = "accountButton", ImageUrl = Links.Content.Images.group_key_png, Text = Resource.ChangePassword, Type = ButtonHelperModel.Types.Link, Href = Url.Action(MVC.Account.ChangePassword()) })
+        @Html.Button(new ButtonHelperModel() { CssClass = "negative accountButton", ImageUrl = Links.Content.Images.user_delete_png, Text = Resource.DeleteProfile, Type = ButtonHelperModel.Types.Link, Href = Url.Action(MVC.Account.DeleteUserRequest()) })
+    }
+</div>
+<div class="clear" style="height: 10px;">
+</div>
+<div class="uiblock avatar">
+    @if (Model.IsCurrentUser)
+    {
+        <a href="javascript:void(0);" id="lnkChangePhoto">
+            <img id="imgProfilePhoto" alt="" src='@(Model.HasProfilePicture ? Url.Action(MVC.File.GetProfilePicture(Model.UserObjectId)) : Links.Content.Images.nophoto_avatar_gif)' />
+        </a>
+        <div id="formFileUploadContainer" class='hide'>
+            @using (Html.BeginForm(MVC.Account.SaveProfilePicture(), FormMethod.Post, new Dictionary<string, object> { { "enctype", "multipart/form-data" }, { "id", "formFileUpload" } }))
+            {
+                <fieldset>
+                    <legend class="fl">@Resource.ProfilePictureLegend</legend>
+                    @Html.Partial(MVC.Shared.Views._Help, @Resource.ProfilePictureTip)
+                    <input type="file" name="hpf" id="hpf" width="200" style="width: 200px;" />
+                    <div id="uploaderContainer" class="hide">
+                        <img src="@Links.Content.Images.ajax_upload_gif" alt="" />
+                    </div>
+                    <input type="hidden" name="userObjectId" id="userObjectId" value="@Model.UserObjectId" />
+                    <a id="lnkCancelPhotoEdit" class='@(Model.HasProfilePicture ? "" : "hide")' href="javascript:void(0);">@SharedStrings.Cancel</a>
+                </fieldset>
+            }
+        </div>
+    }
+    else
+    {
+        <img id="imgProfilePhoto" alt="" src='@(Model.HasProfilePicture ? Url.Action(MVC.File.GetProfilePicture(Model.UserObjectId)) : Links.Content.Images.nophoto_avatar_gif)' />
+    }
+    @if (Model.View == UserViews.Info && !Model.IsCurrentUser && ViewBag.IsAuthenticated)
+    {
+        <div id="voting">
+            @Html.Buttons(new List<ButtonHelperModel>()
+                        {
+                            new ButtonHelperModel()
+                                {
+                                    Id = "btnVoteFor",
+                                    Type = ButtonHelperModel.Types.Link,
+                                    CssClass = "VoteButton",
+                                    Text = Resource.PossitiveCommentButton,
+                                    ImageUrl = Links.Content.Images.thumb_up_png
+                                },
+                            new ButtonHelperModel()
+                                {
+                                    Id = "btnVoteAgainst",
+                                    Type = ButtonHelperModel.Types.Link,
+                                    CssClass = "VoteButton",
+                                    Text = Resource.NegativeCommentButton,
+                                    ImageUrl = Links.Content.Images.thumb_down_png
+                                }
+                        })
+        </div>
+        <div class="clear" style="height: 5px">
+        </div>
+    }
+    @{ Html.RenderPartial(MVC.Shared.Views.Share, Model.ShortLink); }
+    <div id="awards">
+        @foreach (var award in Model.Awards)
+        {
+            var url = string.Empty;
+            switch (award)
+            {
+                case (int)UserAwards.CoreTeam:
+                    url = Links.Content.Images.award_team_gif;
+                    break;
+                case (int)UserAwards.Ambasador:
+                    url = Links.Content.Images.award_ambasador_jpg;
+                    break;
+                case (int)UserAwards.FullProfile:
+                    url = Links.Content.Images.award_fullprofile_gif;
+                    break;
+                case (int)UserAwards.Signatory:
+                    url = Links.Content.Images.award_signatory_gif;
+                    break;
+                case (int)UserAwards.Sponsor:
+                    url = Links.Content.Images.award_sponsor_jpg;
+                    break;
+                case (int)UserAwards.Unique:
+                    url = Links.Content.Images.award_unique_gif;
+                    break;
+            }
+            var title = Globalization.Resources.Services.UserAward.ResourceManager.GetString(((UserAwards)award).ToString());
+            <img src="@url" title="@title" alt="@title" />
+        }
+    </div>
+</div>
+<div class="uiblock profiledata">
+    @if (Model.IsActivityVisible)
+    {
+        <table class="tbl_data">
+            <tbody>
+                @if (Model.IsReputationVisible)
+                {
+                    <tr>
+                        <th class="lbl">@Resource.Reputation
+                        </th>
+                        <td class="data">
+                            @for (int i = Model.Reputation / 10; i > 0; i = i / 10)
+                            {
+                                <img style="background-color: gold" src="@Links.Content.Images.stars_png"/>
+                            }
+                            @Html.ActionLink(Model.Reputation.ToString(), MVC.Account.Details(Model.UserObjectId, Model.FullName, UserViews.Reputation))
+                        </td>
+                    </tr>
+                }
+                <tr>
+                    <th class="lbl">@Resource.Activity
+                    </th>
+                    <td class="data">
+                        @for (int i = 0; i < Model.Status - 1; i++)
+                        {
+                            <img style="background-color: gold" src="@Links.Content.Images.stars_png"/>
+                        }
+                        <a href="@Url.Action(MVC.Account.GetMyPointsPerCategory(Model.UserObjectId))" data-title="@Resource.PointsPerCategory">
+                            @Model.Points
+                        </a>
+                    </td>
+                </tr>
+                @if (!string.IsNullOrEmpty(Model.IdeasCount) || !string.IsNullOrEmpty(Model.IssuesCount) || !string.IsNullOrEmpty(Model.ProblemsCount))
+                {
+                    <tr>
+                        <th class="lbl">@Resource.IdeasCount
+                        </th>
+                        <td class="data">
+                            <a id="lnkIdeasCount" href="@Url.Action(MVC.Idea.GetCreatedIdeas(Model.UserObjectId))" data-title="@Resource.MyIdeas">@Model.IdeasCount</a>
+                            <a id="lnkIssuesCount" href="@Url.Action(MVC.Voting.GetCreatedIssues(Model.UserObjectId))" data-title="@Resource.MyIssues">@Model.IssuesCount</a>
+                            <a id="lnkInvolvedIdeasCount" href="@Url.Action(MVC.Problem.GetCreatedProblems(Model.UserObjectId))" data-title="@Resource.MyProblems">@Model.ProblemsCount</a>
+                        </td>
+                    </tr>
+                }
+                @if (!string.IsNullOrEmpty(Model.VotesCount))
+                {
+                    <tr>
+                        <th class="lbl">@Resource.VotesCount
+                        </th>
+                        <td class="data">
+                            <a id="lnkVotesCount" href="@Url.Action(MVC.Voting.GetVotedIssues(Model.UserObjectId))" data-title="@Resource.MyVotes">@Model.VotesCount</a>
+                        </td>
+                    </tr>
+                }
+                @if (!string.IsNullOrEmpty(Model.CommentsCount))
+                {
+                    <tr>
+                        <th class="lbl">@Resource.CommentsCount
+                        </th>
+                        <td class="data">
+                            <a id="lnkCommentsCount" href="@Url.Action(MVC.Voting.GetCommentedIssues(Model.UserObjectId))" data-title="@Resource.MyComments">@Model.CommentsCount</a>
+                        </td>
+                    </tr>
+                }
+                @if (!string.IsNullOrEmpty(Model.InvolvedIdeasCount))
+                {
+                    <tr>
+                        <th class="lbl">@Resource.InvolvedIdeasCount
+                        </th>
+                        <td class="data">
+                            <a id="lnkInvolvedIdeasCount" href="@Url.Action(MVC.Idea.GetInvolvedIdeas(Model.UserObjectId))" data-title="@Resource.MyInvolvedIdeas">@Model.InvolvedIdeasCount</a>
+                        </td>
+                    </tr>
+                }
+                @if (!string.IsNullOrEmpty(Model.MyProjectCount))
+                {
+                    <tr>
+                        <th class="lbl">@Resource.MyProjects
+                        </th>
+                        <td class="data">
+                            <a id="lnkMyProjects" href="@Url.Action(MVC.Project.GetMyProjects(Model.UserObjectId))" data-title="@Resource.MyProjectsTitle">@Model.MyProjectCount</a>
+                        </td>
+                    </tr>
+                }
+                @if (!string.IsNullOrEmpty(Model.MemberSince))
+                {
+                    <tr>
+                        <th class="lbl">@Resource.MemberSince
+                        </th>
+                        <td class="data">@Model.MemberSince
+                        </td>
+                    </tr>
+                }
+                @if (!string.IsNullOrEmpty(Model.UsersThatLikeMe))
+                {
+                    <tr>
+                        <th class="lbl">@Resource.LikedBy
+                        </th>
+                        <td class="data">
+                            <a id="lnkUsersThatLikeMe" href="@Url.Action(MVC.Account.GetUsersThatLikeMe(Model.UserObjectId))" data-title="@Resource.LikedBy">@Model.UsersThatLikeMe</a>
+                        </td>
+                    </tr>
+                    <tr class="spacer">
+                        <td colspan="2">
+                            <hr />
+                        </td>
+                    </tr>
+                }
+                @if (Model.MemberOfOrganizations.Any())
+                {
+                    <tr>
+                        <th class="lbl">
+                            @Resource.MemberOfOrganizations
+                        </th>
+                        <td class="data">
+                            <div>
+                                @foreach (var member in Model.MemberOfOrganizations)
+                                {
+                                    <a href="@Url.Action(MVC.Organization.Details(member.ObjectId, member.Name.ToSeoUrl(), null, null, null, null))" target="_blank">@member.Name</a>
+                                }
+                            </div>
+                        </td>
+                    </tr>
+                }
+                @if (!string.IsNullOrEmpty(Model.Categories) || Model.LikedUsers.Any() || Model.MemberOfOrganizations.Any() || Model.IsCurrentUser)
+                {
+                    <tr>
+                        <th class="lbl">
+
+                            @Resource.MeInterested
+                        </th>
+                        <td class="data">
+                            @if (Model.LikedUsers.Count > 0)
+                            {
+                                <div>
+                                    @foreach (var user in Model.LikedUsers)
+                                    {
+                                        <a href="@Url.Action(MVC.Account.Details(user.ObjectId, user.Name.ToSeoUrl(), null))" target="_blank">@user.Name</a>
+                                    }
+                                </div>
+                            }
+                        </td>
+                    </tr>
+                            if (Model.LikedUsers.Count > 0)
+                            {
+                    <tr class="spacer">
+                        <td colspan="2">
+                            <hr />
+                        </td>
+                    </tr>
+                            }
+                }
+
+                @if (Model.LikedOrganizations.Any())
+                {
+                    <tr>
+                        <th class="lbl"></th>
+                        <td class="data">
+
+                            <div>
+                                @foreach (var member in Model.LikedOrganizations)
+                                {
+                                    <a href="@Url.Action(MVC.Organization.Details(member.ObjectId, member.Name.ToSeoUrl(), null, null, null, null))" target="_blank">@member.Name</a>
+                                }
+                            </div>
+                        </td>
+                    </tr>
+                    <tr class="spacer">
+                        <td colspan="2">
+                            <hr />
+                        </td>
+                    </tr>
+                }
+                <tr>
+                    <th class="lbl"></th>
+                    <td class="data">
+                        @if (!string.IsNullOrEmpty(Model.Categories) || Model.IsCurrentUser)
+                        {
+                            <a id="lnkCategories" href="@Url.Action(MVC.Account.GetMyCategories(Model.UserObjectId))" data-title="@Resource.MyCategories">@Model.Categories</a>
+                        }
+
+                        @if (Model.IsCurrentUser)
+                        {
+                            <span class="block">@Html.ActionLinkWithReturnUrl(SharedStrings.Edit, MVC.Voting.EditMyCategories())</span>
+                        }
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+    }
+</div>
+<div class="clear">
+</div>
+@if (Model.IsProfileVisible)
+{
+    <ul id="menuUser" class="tabmenu">
+        <li>@Html.ActionLink(Resource.UserInfo, MVC.Account.Details(Model.UserObjectId, Model.FullName, UserViews.Info), new Dictionary<string, object>() { { "class", "tabitem" + (Model.View == Data.Enums.UserViews.Info ? " highlight" : string.Empty) }, { "data-url", Url.Action(MVC.Account.GetUserInfo(Model.UserObjectId)) } })</li>
+        <li>@Html.ActionLink(Resource.Comments, MVC.Account.Details(Model.UserObjectId, Model.FullName, UserViews.Comments), new Dictionary<string, object>() { { "class", "tabitem" + (Model.View == Data.Enums.UserViews.Comments ? " highlight" : string.Empty) }, { "data-url", Url.Action(MVC.Account.GetCommentsModel(Model.UserObjectId)) } })</li>
+        @if (Model.IsActivityVisible)
+        {<li>@Html.ActionLink(Resource.UserActivity, MVC.Account.Details(Model.UserObjectId, Model.FullName, UserViews.Activity), new Dictionary<string, object>() { { "class", "tabitem" + (Model.View == Data.Enums.UserViews.Activity ? " highlight" : string.Empty) }, { "data-url", Url.Action(MVC.NewsFeed.GetUserActivity(Model.UserObjectId)) }, { "id", "lnkUserActivity" } })</li>}
+        @if (Model.IsReputationVisible)
+        {<li>@Html.ActionLink(Resource.UserReputation, MVC.Account.Details(Model.UserObjectId, Model.FullName, UserViews.Reputation), new Dictionary<string, object>() { { "class", "tabitem" + (Model.View == Data.Enums.UserViews.Reputation ? " highlight" : string.Empty) }, { "data-url", Url.Action(MVC.NewsFeed.GetUserReputation(Model.UserObjectId)) }, { "id", "lnkUserReputation" } })</li>}
+        @if (@Model.IsCurrentUser)
+        {<li>@Html.ActionLink(Resource.Settings, MVC.Account.Details(Model.UserObjectId, Model.FullName, UserViews.Settings), new Dictionary<string, object>() { { "class", "tabitem" + (Model.View == Data.Enums.UserViews.Settings ? " highlight" : string.Empty) }, { "data-url", Url.Action(MVC.Account.Settings(Model.UserObjectId)) }, { "id", "lnkSettings" } })</li>}
+    </ul>
+    <div id="tabContainer" class="uitabContainer">
+        @if (Model.View == Data.Enums.UserViews.Info)
+        {
+            Html.RenderPartial(MVC.Account.Views.UserInfo, Model);
+        }
+        else if (Model.View == Data.Enums.UserViews.Activity)
+        {
+            Html.RenderPartial(MVC.NewsFeed.Views.UserActivityListContainer, Model.UserActivityList);
+        }
+        else if (Model.View == Data.Enums.UserViews.Settings)
+        {
+            Html.RenderPartial(MVC.Account.Views.Settings, Model.Settings);
+        }
+        else if (Model.View == Data.Enums.UserViews.Comments)
+        {
+            Html.RenderPartial(MVC.Comments.Views.TypedComments, Model.Comments);
+        }
+        else if (Model.View == Data.Enums.UserViews.Reputation)
+        {
+            Html.RenderPartial(MVC.NewsFeed.Views.UserReputationListContainer, Model.UserActivityList);
+        }
+    </div>
+}
+<div class="clear">
+</div>
+<div id="dialog-vote" class="hide" title="@Resource.CommentTitle">
+    @using (Html.BeginForm(MVC.Account.AddComment().AddRouteValue("EntryId", Model.UserObjectId)))
+    {
+        @Html.TextArea("CommentText", new { cols = "80", rows = "4", style = "margin-bottom: 0;", placeholder = Resource.PossitiveCommentPlaceholder })
+        @Html.Hidden("forAgainst")
+        @Html.Buttons(1, saveText: Resource.PossitiveCommentButton)
+    }
+</div>

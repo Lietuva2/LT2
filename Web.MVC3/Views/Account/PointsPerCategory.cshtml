@@ -1,0 +1,23 @@
+﻿@using Globalization.Resources.Account
+@model List<Data.ViewModels.Account.PointsPerCategoryModel>
+<table>
+    <tr>
+        <th>
+            @Resource.Category
+        </th>
+        <th>
+            @Resource.Points
+        </th>
+    </tr>
+    @foreach(var ppc in Model)
+    {
+        <tr>
+            <td>
+                @ppc.CategoryName
+            </td>
+            <td>
+                @ppc.Points
+            </td>
+        </tr>
+    }
+</table>

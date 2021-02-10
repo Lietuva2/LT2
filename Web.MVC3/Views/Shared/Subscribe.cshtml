@@ -1,0 +1,45 @@
+﻿@using Data.Enums
+@using Globalization.Resources.Shared
+@using Web.Helpers
+@model Data.ViewModels.Base.SubscribeModel
+@if (Model != null)
+{
+    if (Model.Type == EntryTypes.Idea || Model.Type == EntryTypes.Issue)
+    {
+        if (Model.Subscribed)
+        {
+    @Html.Button(new ButtonHelperModel()
+                {
+                    Href = Url.Action(MVC.Common.Unsubscribe(Model.Id, Model.Type)),
+                    Text = SharedStrings.Unsubscribe,
+                    HtmlAttributes = new Dictionary<string, object>() { { "data-role", "subscribe" } },
+                    ImageUrl = Links.Content.Images.note_delete_png,
+                    Type = ButtonHelperModel.Types.Link,
+                    CssClass = "accountButton"
+                })
+        }
+        else
+        {
+    @Html.Button(new ButtonHelperModel()
+{
+    Href = Url.Action(MVC.Common.Subscribe(Model.Id, Model.Type)),
+    Text = SharedStrings.Subscribe,
+    HtmlAttributes = new Dictionary<string, object>() { { "data-role", "subscribe" } },
+    ImageUrl = Links.Content.Images.note_add_png,
+    Type = ButtonHelperModel.Types.Link,
+    CssClass = "accountButton"
+})
+        }
+    }
+    else
+    {
+        if (Model.Subscribed)
+        {
+    @Html.ActionLink(SharedStrings.UnsubscribeShort, MVC.Common.Unsubscribe(Model.Id, Model.Type), new Dictionary<string, object>() { { "data-role", "subscribe" } })
+        }
+        else
+        {
+    @Html.ActionLink(SharedStrings.SubscribeShort, MVC.Common.Subscribe(Model.Id, Model.Type), new Dictionary<string, object>() { { "data-role", "subscribe" } })
+        }
+    }
+}

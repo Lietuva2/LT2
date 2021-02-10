@@ -1,0 +1,23 @@
+﻿@model Data.ViewModels.Project.MileStoneModel
+@using Globalization.Resources.Project
+@using Globalization.Resources.Shared
+@using Web.Helpers;
+@using Globalization.Resources.Shared;
+<div class="itemContainer@(Model.IsLate ? " late" : "")@(Model.IsFinished ? " finished" : "")">
+    @if (Model.IsEditable)
+    {
+        <div class="controls hoverVisible">
+            @Html.ImageLink(Url.Action(MVC.Project.DeleteMileStone(Model.ProjectId, Model.MileStoneId)), "imgDelete", SharedStrings.Delete, Links.Content.Images.delete_ico_png, "imgDelete")
+            @Html.ImageLink(Url.Action(MVC.Project.GetMileStoneEdit(Model.ProjectId, Model.MileStoneId)), "imgEdit", SharedStrings.Edit, Links.Content.Images.edit_ico_png, "lnkEditItem")
+        </div>
+    }
+    <div class='@(Model.IsEditable ? "mileStoneItem" : "")'>
+    @Html.HiddenFor(m => m.MileStoneId, new { @class = "hiddenId" })
+    @Model.Subject
+    <span class="details">
+        @(Model.Date.HasValue ? " "+Resource.Until+" " + Model.Date.Value.ToShortDateString() : string.Empty)
+    </span>
+    </div>
+    <div class="editFormContainer editMileStoneContainer">
+    </div>
+</div>

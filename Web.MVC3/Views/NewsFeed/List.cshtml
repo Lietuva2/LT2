@@ -1,0 +1,107 @@
+﻿@model IEnumerable<Data.ViewModels.NewsFeed.NewsFeedItemModel>
+@using Data.Enums
+@using Framework.Lists;
+@using Framework.Other
+@using Framework.Strings
+@using Globalization.Resources.NewsFeed;
+@using Web.Helpers;
+@using Services.Enums;
+@foreach (var item in Model)
+{
+    if (string.IsNullOrEmpty(item.ActionDescription))
+    {
+        continue;
+    }
+    var objectId = item.Problem != null ? item.Problem.Id : item.Comment != null ? item.Comment.Id : null;
+    <li data-role="deleteContainer" style="position: relative;" data-objectId="@objectId">
+
+        @if (item.NewsFeedTypeId == (int)NewsFeedTypes.NewsFeed || item.UserDbId == ViewBag.CurrentUser.DbId)
+        {
+            <div class="hide" data-role="delete" style="position: absolute; right: 0px;">
+                <a href="@Url.Action(MVC.NewsFeed.Delete(item.UserDbId, item.ObjectId, item.ActionTypeId, item.RelatedObjectId, Url.Encode(item.RawText.LimitLength(SpecificHtmlHelpers.TextLengthInQueryString, null)), item.IsPrivate, item.OrganizationId))">
+                    <img src="@Links.Content.Images.cross_png" />
+                </a>
+            </div>
+        }
+        @{ var emphasize = item.ActionTypeId.In((int)ActionTypes.IdeaCreated, (int)ActionTypes.IdeaVersionAdded, (int)ActionTypes.IssueCreated); }
+        @if (emphasize)
+        {
+            <div class="fl" title="@item.EntryTypeTooltip">
+                <a href="@Url.Action(MVC.Account.Details(item.UserObjectId, item.UserFullName.ToSeoUrl(), null))">
+                    <img alt="" src='@Url.Action(MVC.File.GetUserPicture(item.ProfilePictureThumbId))' />
+                </a>
+            </div>
+        }
+        else
+        {
+            if ((item.EntryType ?? EntryTypes.User) == EntryTypes.User)
+            {
+            <div class="newsfeedAvatar" title="@item.EntryTypeTooltip">
+                <a href="@Url.Action(MVC.Account.Details(item.UserObjectId, item.UserFullName.ToSeoUrl(), null))">
+                    <img alt="" src='@Url.Action(MVC.File.GetUserPicture(item.ProfilePictureThumbId))' />
+                </a>
+            </div>
+            }
+            else if (item.EntryType == EntryTypes.Organization && !string.IsNullOrEmpty(item.OrganizationId))
+            {
+            <div class="newsfeedAvatar" title="@item.EntryTypeTooltip">
+                <a href="@Url.Action(MVC.Organization.Details(item.OrganizationId, item.OrganizationName.ToSeoUrl(), null, null, null, null))">
+                    <img alt="" src='@Url.Action(MVC.File.GetOrganizationPicture(item.ProfilePictureThumbId))' />
+                </a>
+            </div>
+            }
+            else
+            {
+            <div class="newsfeedPhoto" title="@item.EntryTypeTooltip">
+                <div class="@((item.EntryType ?? EntryTypes.User).ToString())"></div>
+            </div>
+            }
+        }
+        @if (item.Reputation.HasValue)
+        {
+            <div class="reputation">
+                @(item.Reputation > 0 ? "+" : "")
+                @item.Reputation
+            </div>
+        }
+        <div class="newsFeedItem @(emphasize ? "bigNewsFeedItem" : "")">
+            <div style="width: 100%;">@Html.GetNewsFeedEntry(item)
+            </div>
+            @if (!string.IsNullOrEmpty(item.Text) && item.Comment == null && item.Problem == null)
+            {
+                <text>
+                @{ Html.RenderPartial(MVC.Shared.Views.ExpandableTextSmall, item.Text); }
+                </text>
+            }
+            <div class="m_list_d" style="margin-top: 2px; padding-left: 0;">
+                <div>
+                    <span title='@item.Date'>@string.Format(Resource.Ago, @item.TimePassed)</span>
+                </div>
+            </div>
+            @if (item.Problem != null)
+            {
+                <div>
+                    @Html.Partial(MVC.Problem.Views.ListItem, item.Problem)
+                </div>
+            }
+            @if (item.Comment != null)
+            {
+                <div>
+                    @{Html.RenderPartial(MVC.Comments.Views._Comment, item.Comment);}
+                </div>
+            }
+            else
+            {
+            }
+            @if (item.InnerList != null && item.InnerList.Count > 0)
+            {
+                <a href="javascript:void(0);" class="lnkShowInnerList">@Resource.RelatedItems: @item.InnerList.Count</a>
+                <ul class="relatedInnerList hide">
+                    @{ Html.RenderPartial(MVC.NewsFeed.Views.List, item.InnerList); }
+                </ul>
+            }
+        </div>
+        <div class="clear"></div>
+        <hr class="newsfeed_separator" />
+    </li>
+}

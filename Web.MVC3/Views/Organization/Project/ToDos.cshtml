@@ -1,0 +1,120 @@
+﻿@model Data.ViewModels.Organization.Project.ProjectToDosModel
+@{
+    ViewBag.Title = Model.Subject + " - " + Resource.PageTitleToDo;
+}
+@using Data.Enums
+@using Globalization.Resources.Project
+@using Globalization.Resources.Shared
+@using Web.Helpers
+@using Framework.Strings;
+@section Head
+{
+}
+@section Scripts
+{
+    <script type="text/javascript">
+        function onPageLoad() {
+            @if(Model.IsEditable)
+            {
+            <text>
+                setupDatePicker();
+                $(document).todos();
+            </text>
+            }
+            
+            $('a[data-role="showFinished"]').on('click', function (e) {
+                $(this).parents('.mileStoneItemContainer, #listToDos').find('.finishedToDos').slideToggle();
+            });
+        }
+    </script>
+}
+<h3>
+    @Html.Raw(string.Format(Globalization.Resources.Organization.Project.Resource.OrganizationProject, Html.ActionLink(Model.OrganizationName, MVC.Organization.Details(Model.OrganizationId, Model.OrganizationName.ToSeoUrl(), OrganizationViews.Projects, null, null, null)), Model.Subject))
+</h3>
+<br />
+@{Html.RenderPartial(MVC.Organization.Views.Project.Menu, Model.Id, new ViewDataDictionary() { { "index", "0" }, { "isEditable", Model.IsEditable }, { "OrganizationId", Model.OrganizationId } });}
+<br />
+<div>
+@Globalization.Resources.Organization.Project.Resource.ProjectState: @Model.State
+@if (!string.IsNullOrEmpty(Model.StateDescription))
+{
+    <div class="richtext">
+        @Html.Raw(Model.StateDescription)
+    </div>
+}
+</div>
+<div>
+    <div id="listToDos" class='toDos@(Model.IsEditable ? " controlSpace1" : "")' data-reorder-url="@Url.Action(MVC.Organization.ReorderToDos(Model.OrganizationId, Model.Id, 0, 0))">
+        @for (int i = 0; i < Model.ToDos.Count; i++)
+        {
+            Html.RenderPartial(MVC.Organization.Views.Project.ToDoItem, Model.ToDos[i]);
+        }
+    </div>
+    @if (Model.IsEditable)
+    {
+    <div class="insertToDo">
+        <div id="divInsertLink" data-role="insert-todo" class='@(Model.AnyToDos() ? "" : "hide")'>
+            <a href="javascript:void(0);" id="lnkInsertToDo">@SharedStrings.Add</a>
+        </div>
+        <div id="divInsertForm" class='todo_form @(Model.AnyToDos() ? "hide" : "")'>
+            @using (Html.BeginForm(MVC.Organization.AddToDo(), FormMethod.Post, new { id = "formToDo" }))
+            {
+                
+                @Html.AntiForgeryToken()
+                @Html.HiddenFor(m => m.Id)
+                @Html.HiddenFor(m => m.OrganizationId)
+                <span>                
+                    @Html.LabelFor(m => m.InsertSubject, Resource.EnterTask)
+                    @Html.TextAreaFor(m => m.InsertSubject, new { @class = "txt_tasksubject" })
+                    @Html.ValidationMessageFor(m => m.InsertSubject)
+                </span>
+                if (!Model.IsPrivate)
+                {
+                     <span class="span-3">
+                         @Html.LabelFor(m => m.InsertToDoIsPrivate, Resource.Visibility)
+                         @Html.CheckBoxFor(m => m.InsertToDoIsPrivate) @Resource.MembersOnly
+                     </span>
+                }
+                else
+                {
+                    @Html.HiddenFor(m => m.InsertToDoIsPrivate)
+                }
+                <span class="span-5">                
+                    @Html.LabelFor(m => m.InsertDueDate, Resource.DueDate)
+                    @Html.EditorFor(m => m.InsertDueDate)
+                </span>
+                <span class="span-4">                
+                    @Html.LabelFor(m => m.InsertResponsibleUsers, Resource.ResponsibleUserId)
+                    @Html.DropDownListFor(m => m.InsertResponsibleUserId, Model.InsertResponsibleUsers)
+                </span>
+                <div class="clear"></div>
+                <div style="margin-bottom: 6px;">                
+                    @Html.LabelFor(m => m.InsertSendNotifications, Resource.SendMail)
+                    @Html.CheckBoxFor(m => m.InsertSendNotifications) @Resource.SendNotifications
+                </div>
+                <div class="clear">
+                    @Html.Buttons(new List<ButtonHelperModel>()
+                        {
+                            new ButtonHelperModel()
+                                {
+                                    Id="btnSubmit",
+                                },
+                            new CancelButtonHelperModel()
+                                {
+                                    HtmlAttributes = new Dictionary<string, object>(){{"data-role", "cancel-insert"}}
+                                }
+                        })
+                </div>
+                <div class="clear"></div>
+            }
+        </div>
+    </div>
+    <div class="clear"></div>
+    }
+    <div id="listFinishedToDos" class='finishedToDos@(Model.IsEditable ? " controlSpace1" : "")'>
+        @for (int i = 0; i < Model.FinishedToDos.Count; i++)
+        {
+            Html.RenderPartial(MVC.Organization.Views.Project.FinishedToDoItem, Model.FinishedToDos[i]);
+        }
+    </div>
+</div>

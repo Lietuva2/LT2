@@ -1,0 +1,42 @@
+﻿@model Data.ViewModels.Project.ProjectTeamModel
+@using Globalization.Resources.Project
+@using Globalization.Resources.Shared
+@using Globalization.Resources.Shared;
+@using Framework.Strings;
+@using Web.Helpers
+
+@using (Html.BeginForm(MVC.Project.SaveProjectMembers()))
+{
+    @Html.AntiForgeryToken()
+    <table id="listMembers">
+        <tr>
+            <th colspan="2">   
+                @Html.HiddenFor(m => m.Id)
+                @Html.LabelFor(m => m.Id, Resource.EnterRoles)
+            </th>
+        </tr>
+        @for (int i = 0; i < Model.Members.Count; i++)
+        {
+            @Html.HiddenFor(m => m.Members[i].ObjectId)
+            <tr>
+                <td class="member">
+                    @Html.ActionLink(Model.Members[i].FullName, MVC.Account.Details(Model.Members[i].ObjectId, Model.Members[i].FullName.ToSeoUrl(), null))
+                </td>
+                <td class="role">
+                    @Html.TextBoxFor(m => m.Members[i].Role)
+                </td>
+            </tr>
+        }
+    </table>
+    @Html.Buttons(new List<ButtonHelperModel>()
+                            {
+                                new ButtonHelperModel()
+                                    {
+                                        Id="btnSubmit",
+                                    },
+                                new CancelButtonHelperModel()
+                                    {
+                                        Href = Url.Action(MVC.Project.CancelProjectMembersEdit(Model.Id))
+                                    }
+                            })
+}

@@ -1,0 +1,101 @@
+﻿@model Data.ViewModels.Account.ContactsViewModel
+@using Globalization.Resources.Account
+@using Globalization.Resources.Shared
+<fieldset>
+    <div class="uiHeader">
+        <div>
+            <span>@Resource.ContactsLegend</span>
+            @if (ViewBag.IsAuthenticated && Model.IsCurrentUser)
+            {
+                @Html.ActionLink(SharedStrings.Edit, MVC.Account.EditContacts(Model.UserObjectId), new { @class = "edit" })
+            }
+        </div>
+    </div>
+    <table class="tbl_data">
+        <tbody>
+            @if (Model.Emails.Count > 0 || Model.IsCurrentUser)
+            {
+                <tr>
+                    <th class="lbl">@Resource.Email
+                    </th>
+                    <td class="data">
+                        <ul>
+                            @foreach (var email in Model.Emails)
+                            {
+                                <li class="@(!email.IsConfirmed ? "red" : string.Empty)">
+                                    @email.Email
+                                    @if (Model.IsCurrentUser)
+                                    {
+                                        if (email.SendMail && email.IsConfirmed)
+                                        {
+                                        <div>
+                                            @Resource.AgreeGetEmails
+                                        </div>
+                                        }
+                                        if (!email.IsConfirmed)
+                                        {
+                                        <div>
+                                            <a data-role="SendConfirmation" href="@Url.Action(MVC.Account.SendEmailConfirmation(email.Email))">@Resource.SendConfirmationCode</a>
+                                            <div data-role="SendingSuccess" class="success hide">@Resource.ConfirmationSent</div>
+                                        </div>
+                                        }
+                                    }
+                                </li>
+                            }
+                        </ul>
+                    </td>
+                </tr>
+            }
+            @if (Model.PhoneNumbers.Count > 0 || Model.IsCurrentUser)
+            {
+                <tr>
+                    <th class="lbl">@Resource.PhoneNumbers
+                    </th>
+                    <td class="data">
+                        <ul>
+                            @foreach (var number in Model.PhoneNumbers)
+                            {
+                                <li>
+                                    @number.TypeName: @number.Number
+                                </li>
+                            }
+                        </ul>
+                    </td>
+                </tr>
+            }
+            @if (!string.IsNullOrEmpty(Model.CurrentLocation) || Model.IsCurrentUser)
+            {
+                <tr>
+                    <th class="lbl">@Resource.CurrentLocation
+                    </th>
+                    <td class="data">@Model.CurrentLocation
+                    </td>
+                </tr>
+            }
+            @if (!string.IsNullOrEmpty(Model.OriginLocation) || Model.IsCurrentUser)
+            {
+                <tr>
+                    <th class="lbl">@Resource.OriginLacation
+                    </th>
+                    <td class="data">@Model.OriginLocation
+                    </td>
+                </tr>
+            }
+            @if (Model.WebSites.Count > 0 || Model.IsCurrentUser)
+            {
+                <tr>
+                    <th class="lbl">@Resource.Websites
+                    </th>
+                    <td class="data">
+                        <ul>
+                            @foreach (var website in Model.WebSites)
+                            {
+                                <li><a href='@website.Url' target="_blank">@website.Title</a> </li>
+                            }
+                        </ul>
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+</fieldset>

@@ -1,0 +1,25 @@
+﻿@model Data.ViewModels.Project.MileStoneModel
+@using Globalization.Resources.Project
+@using Web.Helpers;
+@using Globalization.Resources.Shared;
+<div class="mileStoneItemContainer">
+    <div class='@(Model.IsEditable ? "mileStone" : "")'>
+        <span class="mileStoneTitle">@Model.Subject</span>
+        <span class="details">@(Model.Date.HasValue ? " iki " + Model.Date.Value.ToShortDateString() : string.Empty)</span>
+        &nbsp;<a href="javascript:void(0);" data-role="showFinished"><img src="@Links.Content.Images.expand_gif" alt="@Resource.Expand" title="@Resource.Expand"/></a>
+    </div>
+    <div class="toDos innerList" data-reorder-url="@Url.Action(MVC.Project.ReorderToDos(Model.ProjectId, null, 0, 0))">
+        <input type="hidden" class="hiddenMileStoneId" value="@Model.MileStoneId" />
+        @for (int i = 0; i < Model.ToDos.Count; i++)
+        {
+            Html.RenderPartial(MVC.Project.Views.ToDoItem, Model.ToDos[i]);
+        }
+    </div>
+    <div class="finishedToDos innerList hide">
+        <input type="hidden" class="hiddenMileStoneId" value="@Model.MileStoneId" />
+        @for (int i = 0; i < Model.FinishedToDos.Count; i++)
+        {
+            Html.RenderPartial(MVC.Project.Views.FinishedToDoItem, Model.FinishedToDos[i]);
+        }
+    </div>
+</div>

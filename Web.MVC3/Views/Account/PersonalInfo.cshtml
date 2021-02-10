@@ -1,0 +1,40 @@
+﻿@model Data.ViewModels.Account.PersonalInfoViewModel
+@using Globalization.Resources.Account
+@using Globalization.Resources.Shared
+
+<fieldset>
+    <div class="uiHeader">
+    <div>
+    <span>@Resource.PersonalInfoLegend</span>
+    @if (ViewBag.IsAuthenticated && Model.IsCurrentUser)
+    {
+        @Html.ActionLink(SharedStrings.Edit, MVC.Account.EditPersonalInfo(Model.UserObjectId), new { @class = "edit" })
+    }
+    </div>
+    </div>
+    <table class="tbl_data"> 
+    <tbody>
+    @if (Model.IsCurrentUser)
+    {
+    <tr>
+    <th class="lbl">@Resource.UserName</th>
+    <td class="data">@Model.UserName</td>
+    </tr>
+    }
+    @if ((!string.IsNullOrEmpty(Model.BirthDate) || Model.IsCurrentUser))
+    {
+    <tr>
+    <th class="lbl">@Resource.BirthDate</th>
+    <td class="data">@Model.BirthDate</td>
+    </tr>
+    }
+    @if (!string.IsNullOrEmpty(Model.EmploymentStatusName) || Model.IsCurrentUser)
+    {
+    <tr>
+    <th class="lbl">@Resource.EmploymentStatusName</th>
+    <td class="data">@Model.EmploymentStatusName</td>
+    </tr>
+    }
+    </tbody>
+    </table>
+ </fieldset>

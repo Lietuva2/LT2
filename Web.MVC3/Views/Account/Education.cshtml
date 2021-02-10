@@ -1,0 +1,23 @@
+﻿@model Data.ViewModels.Account.EducationAndWorkEditModel
+@using Globalization.Resources.Account
+@using Globalization.Resources.Shared
+@using Globalization.Resources.Shared;
+@using Globalization.Resources.Account;
+    <div class="fields_container clearfix">
+        <p class="uiblock">
+            <span class="block">@Resource.School</span>
+            @Html.TextBoxFor(m => m.Educations[Model.EditIndex].SchoolName, new { @class = "txt_m" })
+            @Html.HiddenFor(m => m.Educations[Model.EditIndex].Id) 
+            @Html.HiddenFor(m => m.Educations[Model.EditIndex].IsDeleted, new { @class="hiddenIsDeleted" })
+        </p>
+        <p class="uiblock">
+            <span class="block">@Resource.FieldOfStudy</span>
+            @Html.TextBoxFor(m => m.Educations[Model.EditIndex].FieldOfStudy, new { @class = "txt_m" })
+        </p>
+        <p class="uiblock">
+            <span class="block">@Resource.To</span>
+            @Html.DropDownListFor(m => m.Educations[Model.EditIndex].YearTo, new SelectList(Model.Years as System.Collections.IEnumerable, "Value", "Text",
+                                                     Model.Educations[Model.EditIndex].YearTo))
+        </p>
+        <p class="uiblock"><br /><a href="javascript:void(0)" class="delete">@SharedStrings.Delete</a></p>
+    </div>

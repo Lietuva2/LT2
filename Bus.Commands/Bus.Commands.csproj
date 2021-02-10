@@ -1,0 +1,104 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
+    <ProductVersion>8.0.30703</ProductVersion>
+    <SchemaVersion>2.0</SchemaVersion>
+    <ProjectGuid>{195394E4-8258-48E6-9A86-FD2B14FD6988}</ProjectGuid>
+    <OutputType>Library</OutputType>
+    <AppDesignerFolder>Properties</AppDesignerFolder>
+    <RootNamespace>Bus.Commands</RootNamespace>
+    <AssemblyName>LT2.Bus.Commands</AssemblyName>
+    <TargetFrameworkVersion>v4.5</TargetFrameworkVersion>
+    <FileAlignment>512</FileAlignment>
+    <SccProjectName>SAK</SccProjectName>
+    <SccLocalPath>SAK</SccLocalPath>
+    <SccAuxPath>SAK</SccAuxPath>
+    <SccProvider>SAK</SccProvider>
+    <TargetFrameworkProfile />
+    <SolutionDir Condition="$(SolutionDir) == '' Or $(SolutionDir) == '*Undefined*'">..\</SolutionDir>
+    <RestorePackages>true</RestorePackages>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+    <DebugSymbols>true</DebugSymbols>
+    <DebugType>full</DebugType>
+    <Optimize>false</Optimize>
+    <OutputPath>bin\Debug\</OutputPath>
+    <DefineConstants>DEBUG;TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+    <Prefer32Bit>false</Prefer32Bit>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
+    <DebugType>pdbonly</DebugType>
+    <Optimize>true</Optimize>
+    <OutputPath>bin\Release\</OutputPath>
+    <DefineConstants>TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+    <Prefer32Bit>false</Prefer32Bit>
+  </PropertyGroup>
+  <ItemGroup>
+    <Reference Include="log4net, Version=1.2.15.0, Culture=neutral, PublicKeyToken=669e0ddf0bb1aa2a, processorArchitecture=MSIL">
+      <HintPath>..\packages\log4net.2.0.5\lib\net45-full\log4net.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="System" />
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="Command.cs" />
+    <Compile Include="CommentDeletedCommand.cs" />
+    <Compile Include="ChangePasswordCommand.cs" />
+    <Compile Include="UserConfirmedCommand.cs" />
+    <Compile Include="IdeaResolvedCommand.cs" />
+    <Compile Include="SendIdeaCreatedNotificationCommand.cs" />
+    <Compile Include="ProblemCommand.cs" />
+    <Compile Include="ToDoDeletedCommand.cs" />
+    <Compile Include="ToDoUnfinishedCommand.cs" />
+    <Compile Include="VoteCancelledCommand.cs" />
+    <Compile Include="ActionCommand.cs" />
+    <Compile Include="CommentUnlikedCommand.cs" />
+    <Compile Include="ProjectMemberAddCommand.cs" />
+    <Compile Include="ProjectInviteCommand.cs" />
+    <Compile Include="OrganizationMemberAddCommand.cs" />
+    <Compile Include="OrganizationInviteCommand.cs" />
+    <Compile Include="OrganizationProjectCommand.cs" />
+    <Compile Include="OrganizationCommand.cs" />
+    <Compile Include="SendPrivateMessageCommand.cs" />
+    <Compile Include="EmailChangedCommand.cs" />
+    <Compile Include="ProjectCommand.cs" />
+    <Compile Include="NotificationViewedCommand.cs" />
+    <Compile Include="IdeaVersionViewedCommand.cs" />
+    <Compile Include="IdeaCommand.cs" />
+    <Compile Include="IssueCommand.cs" />
+    <Compile Include="UserCommand.cs" />
+    <Compile Include="RelatedUserCommand.cs" />
+    <Compile Include="LikedCategoriesCommand.cs" />
+    <Compile Include="UserCreatedCommand.cs" />
+    <Compile Include="Properties\AssemblyInfo.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\Data\Data.csproj">
+      <Project>{2AA33DAA-3E89-4F4B-882C-C392CEC521BE}</Project>
+      <Name>Data</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\Framework\Framework.csproj">
+      <Project>{f032c987-f6d8-4171-a00c-37cc2da979fe}</Project>
+      <Name>Framework</Name>
+    </ProjectReference>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="app.config" />
+    <None Include="packages.config" />
+  </ItemGroup>
+  <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
+  <Import Project="$(SolutionDir)\.nuget\NuGet.targets" Condition="Exists('$(SolutionDir)\.nuget\NuGet.targets')" />
+  <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
+       Other similar extension points exist, see Microsoft.Common.targets.
+  <Target Name="BeforeBuild">
+  </Target>
+  <Target Name="AfterBuild">
+  </Target>
+  -->
+</Project>

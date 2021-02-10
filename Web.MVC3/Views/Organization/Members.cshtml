@@ -1,0 +1,97 @@
+﻿@model Data.ViewModels.Organization.OrganizationViewModel
+@using Framework.Strings;
+@using Globalization.Resources.Organization
+@using Globalization.Resources.Shared
+@using Web.Helpers
+Viso narių: @Model.MembersCount
+<div id="divMemberContainer">
+    @{ Html.RenderPartial(MVC.Organization.Views.ConfirmedMembers, Model.Members); }
+</div>
+@if (Model.IsEditable)
+{
+    <table id="listUnconfirmedMembers" class="table_narrow">
+        @for (int i = 0; i < Model.UnconfirmedMembers.Count; i++)
+        {
+            <tr data-role="deleteContainer">
+                <td>
+                    @Html.ActionLink(Model.UnconfirmedMembers[i].FullName, MVC.Account.Details(Model.UnconfirmedMembers[i].ObjectId, Model.UnconfirmedMembers[i].FullName.ToSeoUrl(), null))
+                </td>
+                <td>
+                    <a data-role="Confirm" href="@Url.Action(MVC.Organization.ConfirmMember(Model.ObjectId, Model.UnconfirmedMembers[i].ObjectId))">@SharedStrings.Confirm</a>
+                </td>
+                <td>
+                    <a data-role="Reject" href="@Url.Action(MVC.Organization.RejectMember(Model.ObjectId, Model.UnconfirmedMembers[i].ObjectId))">@SharedStrings.Cancel</a>
+                </td>
+            </tr>
+        }
+    </table>
+    <div class="clear">
+        @Html.Button(new ButtonHelperModel(){Type = ButtonHelperModel.Types.Link, Id = "lnkEditMembers", Href = Url.Action(MVC.Organization.GetMembersEdit(Model.ObjectId)), Text = SharedStrings.Edit, ImageUrl = Links.Content.Images.edit_png})
+    </div>
+    <div class="clear"></div>
+    <br/>
+    <hr />
+    <a id="lnkShowInvitations" href="javascript:void(0);">@Resource.Invitations</a>
+    <div id="invitations" class="hide">
+        @using (Html.BeginForm(MVC.Organization.AddInvitedUser(), FormMethod.Post, new { id = "formInviteUser" }))
+        {
+            <label class="fl">
+                @Resource.RegisteredMembers:</label>
+            @Html.Partial(MVC.Shared.Views._Help, Resource.RegisteredMembersHelp)
+            <div class="clear"></div>
+            <div style="float: left;">
+                @Html.AutoComplete("InvitedUser", "UserId", MVC.Account.SuggestUser(), null, "function(){$('#tabContainer').members('invite');}", true)
+            </div>
+            @Html.Button(new ButtonHelperModel()
+       {
+           Id = "btnAdd",
+           Text = SharedStrings.AddShort,
+           ImageUrl = Links.Content.Images.user_add_png
+       })
+        }
+        <div class="clear"></div>
+        @using (Html.BeginForm(MVC.Organization.InviteUsers(), FormMethod.Post, new { id = "formInviteUsers" }))
+        {
+            @Html.HiddenFor(m => m.ObjectId)
+            <ul id="listUsersToInvite">
+                @foreach (var user in Model.UsersToInvite)
+                {
+                    Html.RenderPartial(MVC.Shared.Views.InvitedUser, user);
+                }
+            </ul>
+            <label>
+                <div class="fl">@Resource.EmailAddresses</div>
+                @Html.Partial(MVC.Shared.Views._Help, Resource.EmailAddressesHelp)
+                @Html.TextAreaFor(m => m.InvitedUserEmails, new Dictionary<string, object>() { { "class", "txt_l" } })
+            </label>
+            <label>
+                <div class="fl">@Resource.InvitationMessage</div>
+                @Html.Partial(MVC.Shared.Views._Help, Resource.InvitationMessageHelp)
+                @Html.TextAreaFor(m => m.CustomInvitationText, new Dictionary<string, object>() { { "class", "txt_l" } })
+            </label>
+            <br/>
+            @Html.Buttons(saveText: Resource.Invite, id: "btnInvite")
+            <div class="clear"></div>
+            <br/>
+        }
+        @if (Model.InvitedUsers.Any())
+        {
+            <hr />
+            <div id="invitedUsers">
+                @Resource.AlreadyInvited:
+                @foreach (var user in Model.InvitedUsers)
+                {
+                    <div data-role="deleteContainer">
+                        <span style="margin-right: 5px">@user.InvitedUser</span>
+                        @Html.ActionLink(Resource.Repeat, MVC.Organization.ReInvite(Model.ObjectId, user.InvitedUser), new { @class = "lnkReInvite", title = Resource.RepeatHelp })
+                        <span class="hide" data-role="delete">
+                            <a href="@Url.Action(MVC.Organization.DeleteInvitedUser(Model.ObjectId, user.InvitedUser))">
+                                <img style="height:12px;" src="@Links.Content.Images.cross_png" />
+                            </a>
+                        </span>
+                    </div>
+                }
+            </div>
+        }
+    </div>
+}

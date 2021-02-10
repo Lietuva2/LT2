@@ -1,0 +1,27 @@
+﻿@using Globalization.Resources.Idea
+@using Web.Helpers
+@model IEnumerable<SelectListItem>
+<div class="fl">
+    <div class="fl">
+        @{ var attrs = new Dictionary<string, object>() {{"class", "hide"}};
+           if (ViewBag.view == 1)
+           {
+               attrs.Add("disabled", "disabled");
+           }
+         }
+        @Html.ListBox("selectedCategoryIds", Model, attrs)
+    </div>
+    @if (ViewBag.IsAuthenticated)
+    {
+        <div class="fl">
+            @Html.ImageLink(string.Empty, "lnkSaveCategories", Resource.SaveSelection, Links.Content.Images.save_gif, Session["SelectedCategories"] == null ? "hide" : "")
+            @Html.ImageLink(Url.Action(MVC.Idea.RevertDefaultCategories(Request.RawUrl)), "lnkRevert", Resource.RevertToDefaultCategories, Links.Content.Images.arrow_undo_png, Session["SelectedCategories"] == null ? "hide" : "")
+            <span id="spanMessage"></span>
+        </div>
+    }
+</div>
+<style type="text/css">
+    .categories .ctag {
+        cursor: pointer;
+    }
+</style>

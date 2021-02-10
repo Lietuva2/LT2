@@ -1,0 +1,27 @@
+﻿@using Data.Enums
+@using Globalization.Resources.Voting
+@using Web.Helpers
+@model Data.ViewModels.Voting.VotingStatisticsViewModel
+<div class="ui-progressbar ui-widget ui-widget-content progressbar @Html.GetDecisionClass(Model.OfficialVote)" title="@(Model.OfficialVote == ForAgainst.For ? Globalization.Resources.Voting.Resource.OfficialVoteFor : (Model.OfficialVote == ForAgainst.Against ? Globalization.Resources.Voting.Resource.OfficialVoteAgainst : ""))">
+    <div style="width: @Model.SupportPercentage%; float:left;" class="ui-progressbar-value progressbar-header progressbar-for">
+        <span class="progress-percent-left">
+            @if (Model.VotesCount == 0)
+            {
+                <span>Nebalsuota</span>
+            }
+            else
+            {
+                <span title="@Html.GetUniqueUsersTip(Model.SupportingVotesCount, Model.SupportingAdditionalVotesCount)">@Model.SupportPercentage%</span>
+            }
+        </span>
+    </div>
+    <div style="width: @(100 - Model.SupportPercentage)%; float: right;" class="ui-progressbar-value progressbar-header progressbar-against">
+        <span class="progress-percent-right">
+            @if (Model.VotesCount > 0)
+            {
+
+                <span title="@Html.GetUniqueUsersTip(Model.NonSupportingVotesCount, Model.NonSupportingAdditionalVotesCount)">@(100 - Model.SupportPercentage)%</span>
+            }
+        </span>
+    </div>
+</div>

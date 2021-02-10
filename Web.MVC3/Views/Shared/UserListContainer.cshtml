@@ -1,0 +1,11 @@
+﻿@model Data.ViewModels.Base.UserListContainerModel
+@using Globalization.Resources.Shared
+@using Globalization.Resources.Shared;
+@using Framework.Lists
+<ul id="list">
+    @Html.Partial(MVC.Shared.Views.UserList, Model.List.List)
+</ul>
+@if (Model.List.HasMoreElements && Model.ActionResult != null)
+{
+    @Html.ActionLink(SharedStrings.More, Model.ActionResult, new { id = "lnkShowMoreDialog" })
+}

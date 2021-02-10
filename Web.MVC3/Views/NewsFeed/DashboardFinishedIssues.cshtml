@@ -1,0 +1,22 @@
+﻿@model Data.ViewModels.Voting.VotingResultsModel
+@using Data.Enums
+@using Framework.Strings
+@using Globalization.Resources.NewsFeed
+@using Globalization.Resources.Shared
+@using Web.Helpers
+<div class="dashboard-header">
+    @Html.ActionLink(Resource.PublicVoting, MVC.Voting.GetActiveDashboard(), new Dictionary<string, object>{{"data-role", "tab-link"}, {"class", "fl"}})
+    <h3 class="fr">
+        @Resource.FinishedVoting
+    </h3>
+    
+    <div class="clear">
+    </div>
+</div>
+<div id="listIssues">
+    @Html.Partial(MVC.NewsFeed.Views.FinishedIssuesList, Model)
+</div>
+@if (Model.Items.HasMoreElements)
+{
+    <p>@Html.ActionLink(SharedStrings.More, MVC.Voting.GetMoreTopFinishedIssues(), new {id = "lnkShowMoreIssues"})</p>
+}

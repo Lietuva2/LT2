@@ -1,0 +1,54 @@
+﻿@model Data.ViewModels.Organization.Project.ToDoModel
+@using Data.Enums
+@using Globalization.Resources.Project
+@using Globalization.Resources.Shared
+@using Web.Helpers;
+@using Framework.Strings;
+<div class='itemContainer@(Model.IsLate ? " late" : "")@(Model.IsPrivate ? " private" : "")'>
+    @if (Model.IsEditable)
+    {
+        <div class="controls unfinishedControls hoverVisible">
+            @Html.ImageLink(Url.Action(MVC.Organization.DeleteToDo(Model.OrganizationId, Model.ProjectId, Model.ToDoId)), "imgDelete", SharedStrings.Delete, Links.Content.Images.delete_ico_png, "imgDelete")
+            @Html.ImageLink(Url.Action(MVC.Organization.GetToDoEdit(Model.OrganizationId, Model.ProjectId, Model.ToDoId)), "imgEdit", SharedStrings.Edit, Links.Content.Images.edit_ico_png, "lnkEditItem")
+            <span class="dragHandle">
+                <img src="@Links.Content.Images.move_up_down_ico_png" alt="Tempti" style="cursor:move" />
+            </span>
+        </div>
+    }
+    <div class='@(Model.IsEditable ? "todoItem": "")'>
+    @Html.HiddenFor(m => m.ToDoId, new { @class = "hiddenId" })
+    @if (Model.IsEditable)
+    {
+        @Html.CheckBoxFor(m => m.IsFinished, new Dictionary<string, object> { {"class", "chkFinish"}, {"data-url", Url.Action(MVC.Organization.FinishTodo(Model.OrganizationId, Model.ProjectId, Model.ToDoId)) }})
+    }
+    <span class="toDoText">
+    @Html.ActionLink(Model.Subject, MVC.Organization.Comments(Model.OrganizationId, Model.ProjectId, Model.ToDoId))
+    </span>
+    @if (!string.IsNullOrEmpty(Model.ResponsibleUserId) && Model.ResponsibleUserId != TodoAssignedTo.Unasigned)
+    {
+        @Html.ActionLink(Model.ResponsibleUserFullName, MVC.Account.Details(Model.ResponsibleUserId, Model.ResponsibleUserFullName.ToSeoUrl(), null))
+    }
+    else
+    {
+        @Model.ResponsibleUserFullName
+    }
+    @if (Model.ResponsibleUserId == TodoAssignedTo.Unasigned && Model.IsEditable)
+    {
+        <span class="todoVisibleButtons">
+            @Html.ImageLink(Url.Action(MVC.Organization.TakeToDo(Model.OrganizationId, Model.ProjectId, Model.ToDoId)), "imgTake", Resource.TakeTask, Links.Content.Images.left_arrow_ico_png, "lnkTakeItem")
+        </span>
+    }
+    <span class="details">
+    @(Model.DueDate.HasValue ? " " + Resource.Until+ " " + Model.DueDate.Value.ToShortDateString() : string.Empty)
+    </span>
+    <span class='commentIcon@(Model.IsEditable ? (Model.CommentsCount == 0 ? " hoverVisible" : "") : (Model.CommentsCount == 0 ? " hide" : ""))'>
+        @Html.ImageLink(Url.Action(MVC.Organization.Comments(Model.OrganizationId, Model.ProjectId, Model.ToDoId)), "imgComments", SharedStrings.Comments, Links.Content.Images.comments_gif, "")
+        @if (Model.CommentsCount > 0)
+        {
+            @Model.CommentsCount
+        }
+    </span>
+    </div>
+    <div class="editFormContainer editToDoContainer">
+    </div>
+</div>

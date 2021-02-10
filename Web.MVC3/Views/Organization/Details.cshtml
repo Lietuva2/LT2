@@ -1,0 +1,328 @@
+﻿@model Data.ViewModels.Organization.OrganizationViewModel
+@using Data.Enums
+@using Globalization.Resources.Organization
+@using Globalization.Resources.Shared
+@using Services.Enums
+@using Web.Helpers;
+@using Framework.Strings;
+@{
+    ViewBag.Title = string.Format(Resource.PageTitle, Model.Name);
+}
+@section Head
+{
+    <meta property="og:type" content="lietuva:organization" />
+    <style type="text/css">
+        #listMembers td {
+            padding-left: 4px;
+        }
+    </style>
+}
+@section Scripts
+{
+    @if (Model.View == Data.Enums.OrganizationViews.Members && Model.IsEditable)
+    {
+        @Html.RegisterCkeditorScripts()
+    }
+    @if (Model.View == Data.Enums.OrganizationViews.Ideas && Model.IsEditable)
+    {
+        @Html.RegisterCkeditorScripts()
+        <script src="https://www.google.com/jsapi" charset="utf-8"></script>
+        <script type='text/javascript'>
+            google.load('picker', '1', { 'language': '@SharedStrings.LanguageCodeShort' });
+        </script>
+    }
+    <script type='text/javascript'>
+        function onPageLoad() {
+            @if (Model.IsEditable)
+            {
+                <text>
+            $('.sectionContainer').section();
+            $('.avatar').photo();
+
+            $('#list,#listMembers,#invitedUsers').deleteButton();
+            $('#contactsContainer').remote('@Url.Action(MVC.Remote.GetRemoteTitle())');
+
+            </text>
+            }
+            @if (Model.IsContributable)
+            {
+                if (Model.View == Data.Enums.OrganizationViews.Members)
+                {
+                    <text>
+                    $('#CustomInvitationText').richtext();
+                    $('#tabContainer').members();
+                    </text>
+                }
+                <text>
+            $('#btnAddProject').click(function(e){
+                $('#divAddProjectContainer').show();
+                $(e.target).hide();
+            });
+
+            $('#btnSaveProject').click(function (e) {
+                var form = $(e.target).parents('form:first');
+                loadAsync(e, form.attr('action'), form.serialize(), function (result) {
+                    if (result.error) {
+                        alert(result.error);
+                    }
+                    else {
+                        $('#listProjects').append(result.Content);
+                        form.find('input:text').val('');
+                    }
+                });
+                return cancelEvent(e);
+            });
+            </text>
+            }
+            
+            @if (ViewBag.IsAuthenticated)
+            {
+                <text>
+            $('.like').like();
+
+            $('#btnJoin').like({
+                callback: function() {
+                    $('#spanUnlike, #spanLike').addClass('hide');
+                    $('#divSep').hide();
+                    $('#approveMessage').show();
+                }
+            });
+
+            $('#btnLeave').like({
+                callback: function() {
+                    $('#spanUnlike').removeClass('hide');
+                    $('#divSep').show();
+                    $('#approveMessage').hide();
+                }
+            });
+            </text>
+            }
+            CreateAjaxDialog($('.lnkUsers'), '@Globalization.Resources.Idea.Resource.SupportersList');
+            initializeInfiniteScroll();
+
+            $('#list').showmore({ data: { organizationId: '@Model.ObjectId' },
+                callback: function (html) {
+                    $('div.text_expandable', html).expandable();
+                    addthis.toolbox('.addthis_toolbox');
+                } });
+            @if (Model.View == Data.Enums.OrganizationViews.Ideas)
+            {
+                <text>
+            $('#list').voting({
+                isAmbasador: @ViewBag.CurrentUser.CanPostToFacebook.ToString().ToLower(),
+                supportMessage: '@ViewBag.CurrentUser.SupportedIdeaText',
+                facebookUrl: '@Url.ActionAbsolute(MVC.Idea.Details())'+ '/{0}',
+                forceFbLogin: @(ViewBag.CurrentUser.PostPermissionGranted ? "false" : "true"),
+                versionsSelector: 'div[data-role="versions"]:visible',
+                getVersionsUrl: '@Url.Action(MVC.Idea.GetVersions())',
+                dialogSelector: '#dialog-version-input'
+            });
+            </text>
+            }
+            @if (Model.View == Data.Enums.OrganizationViews.Issues)
+            {
+                <text>
+            $('#list').voting({
+                isAmbasador: @((ViewBag.CurrentUser.CanPostToFacebook && ViewBag.CurrentUser.IsUnique).ToString().ToLower()),
+                supportMessage: '@ViewBag.CurrentUser.VotedText',
+                facebookUrl: '@Url.ActionAbsolute(MVC.Voting.Details())' + '/{0}',
+                forceFbLogin: @(ViewBag.CurrentUser.PostPermissionGranted ? "false" : "true")
+                });
+            </text>
+            }
+            @if (Model.View == OrganizationViews.Problems)
+            {
+                <text>
+            $('#list').problems({
+                addIdeaUrl: '@Url.Action(MVC.Problem.AddRelatedIdea())'
+            });
+                @if (ViewBag.IsAuthenticated)
+                {
+                <text>
+            $('#list').Comments({ listSelector: '.listComments' }).liking();
+                </text>
+                }
+            $('#list').CommentsRead({ prepend: true, commentsListSelector: '.listComments', commentsListContainerSelector: '.comments', showMoreOnScroll: false });
+                </text>
+            }
+
+            $('#projectFilter a').on('click', function(e) {
+                $('#projectFilter a').removeClass('highlight');
+                $(this).addClass('highlight');
+
+                $.helpers.loadAsync(e, $(this).attr('href'), null, function(result) {
+                    $('#listProjects').html(result.Content);
+                });
+
+                return $.helpers.cancelEvent(e);
+            });
+
+            $('#lnkDelete').on('click', function(e) {
+                if (!confirm(JavaScriptLibraryResources.ConfirmDelete)) {
+                    return $.helpers.cancelEvent(e);
+                }
+            });
+        }
+
+        function voted(link) {
+            $(link).parent().html("");
+            if (!$(link).attr('data-private') || $(link).attr('data-private') == 'false') {
+                $.helpers.postToFacebook('@Globalization.Resources.Voting.Resource.FacebookPostMessage', '@Url.ActionAbsolute(MVC.Voting.Details())' + '/' + $(link).attr('data-id'), @(ViewBag.CurrentUser.PostPermissionGranted ? "false" : "true"));
+            }
+        }
+    </script>
+}
+<div>
+    @Html.BackLink()
+</div>
+<div class="page_header clearfix">
+    <h2 class="heading fl" style="width: 480px; margin-bottom: 0;">@Model.Name</h2>
+    @if (Model.IsDeletable)
+    {
+        <div style="margin-right: 20px;">
+            @Html.ActionLink(SharedStrings.Delete, MVC.Organization.Delete(Model.ObjectId), new { id = "lnkDelete" })
+        </div>
+    }
+    <div class="likeParent">
+        <span id="spanLike" class='@(Model.IsLikeable ? string.Empty : "hide")'>
+            <a id="btnLike" title="@Resource.LikeOrganizationToolTip" class="like" href="@Url.Action(MVC.Organization.Like(Model.ObjectId))">@Resource.Like</a>
+        </span><span id="spanUnlike" class='@(Model.IsUnlikeable ? string.Empty : "hide")'>
+            <a id="btnUnlike" title="@Resource.UnlikeToolTip" class="like" href="@Url.Action(MVC.Organization.Unlike(Model.ObjectId))">@Resource.Unlike</a>
+        </span>
+    </div>
+    <div id="divSep" class="clear @(Model.IsJoinable ? "" : "hide")"></div>
+    <div class="likeParent">
+        <span id="spanJoin" class='@(Model.IsJoinable ? string.Empty : "hide")'>
+            @Html.Button(new ButtonHelperModel() { Type = ButtonHelperModel.Types.Link, CssClass = "join", Id = "btnJoin", Href = Url.Action(MVC.Organization.Join(Model.ObjectId)), Text = Resource.Join, ImageUrl = Links.Content.Images.user_add_png, HtmlAttributes = new Dictionary<string, object>() { { "title", Resource.JoinOrganizationToolTip } } })
+        </span><span id="spanLeave" class='@(Model.IsLeavable ? string.Empty : "hide")'>
+            <a id="btnLeave" title="@Resource.LeaveToolTip" class="join" href="@Url.Action(MVC.Organization.Leave(Model.ObjectId))">@Resource.Leave</a>
+        </span>
+    </div>
+</div>
+<div id="approveMessage" class="@Html.GetVisibilityClassString(Model.WaitingForApprove)">
+    <div class="notice">
+        @Resource.WaitForApproval
+    </div>
+</div>
+<br />
+<div class="uiblock avatar">
+    @if (Model.IsEditable)
+    {
+        <a href="javascript:void(0);" id="lnkChangePhoto">
+            <img id="imgProfilePhoto" alt="" src='@(Model.HasProfilePicture ? Url.Action(MVC.File.GetOrganizationLogo(Model.ObjectId)) : Links.Content.Images.nophoto_avatar_gif)' />
+        </a>
+        <div id="formFileUploadContainer" class='hide'>
+            @using (Html.BeginForm(MVC.Organization.SaveProfilePicture(), FormMethod.Post, new Dictionary<string, object> { { "enctype", "multipart/form-data" }, { "id", "formFileUpload" } }))
+            {
+                <fieldset>
+                    <legend>@Resource.ProfilePictureLegend</legend>
+                    <input type="file" name="hpf" id="hpf" />
+                    <div id="uploaderContainer" class="hide">
+                        <img src="@Links.Content.Images.ajax_upload_gif" alt="" />
+                    </div>
+                    <input type="hidden" name="objectId" id="objectId" value="@Model.ObjectId" />
+                    <a id="lnkCancelPhotoEdit" class='@(Model.HasProfilePicture ? "" : "hide")' href="javascript:void(0);">@SharedStrings.Cancel</a>
+                </fieldset>
+            }
+        </div>
+    }
+    else
+    {
+        <img id="imgProfilePhoto" alt="" src='@(Model.HasProfilePicture ? Url.Action(MVC.File.GetOrganizationLogo(Model.ObjectId)) : Links.Content.Images.nophoto_avatar_gif)' />
+    }
+</div>
+<div class="uiblock profiledata">
+    <table class="tbl_data">
+        <tbody>
+            <tr>
+                <th class="lbl">@Resource.Type
+                </th>
+                <td class="data">@Model.Info.Type
+                </td>
+            </tr>
+            <tr>
+                        <th class="lbl">@Resource.NumberOfSupporters
+                        </th>
+                        <td class="data">@Model.SupportersCount
+                        </td>
+                    </tr>
+            @if (!string.IsNullOrEmpty(Model.Info.Description))
+            {
+                <tr>
+                    <th class="lbl">@Resource.Description
+                    </th>
+                    <td class="data">
+                        @Html.Raw(Model.Info.Description)
+                    </td>
+                </tr>
+            }
+            <tr>
+                <th class="lbl">@Resource.Email
+                </th>
+                <td class="data">
+                    <a href="mailto:@Model.Contacts.Email">@Html.Raw(Model.Contacts.Email)</a>
+                </td>
+            </tr>
+            @if (Model.Contacts.WebSites.Count > 0)
+            {
+                <tr>
+                    <th class="lbl">@Resource.Websites
+                    </th>
+                    <td class="data">
+                        <ul>
+                            @foreach (var website in Model.Contacts.WebSites)
+                            {
+                                <li><a href='@website.Url' target="_blank">@website.Title</a> </li>
+                            }
+                        </ul>
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+</div>
+<div class="clear">
+</div>
+<ul class="tabmenu">
+    <li>@Html.ActionLink(Resource.OrganizationInfo, MVC.Organization.Details(Model.ObjectId, Model.Name.ToSeoUrl(), Data.Enums.OrganizationViews.Info, null, null, null), new { @class = "tabitem" + (Model.View == Data.Enums.OrganizationViews.Info ? " highlight" : string.Empty) })</li>
+    <li>@Html.ActionLink(Resource.OrganizationProblems, MVC.Organization.Details(Model.ObjectId, Model.Name.ToSeoUrl(), Data.Enums.OrganizationViews.Problems, null, null, (ProblemListSorts?)Model.Problems.ListSort), new { @class = "tabitem" + (Model.View == Data.Enums.OrganizationViews.Problems ? " highlight" : string.Empty) })</li>
+    <li>@Html.ActionLink(Resource.OrganizationIdeas, MVC.Organization.Details(Model.ObjectId, Model.Name.ToSeoUrl(), Data.Enums.OrganizationViews.Ideas, (IdeaListSorts?)Model.Ideas.IdeaListSort, null, null), new { @class = "tabitem" + (Model.View == Data.Enums.OrganizationViews.Ideas ? " highlight" : string.Empty) })</li>
+    <li>@Html.ActionLink(Resource.OrganizationIssues, MVC.Organization.Details(Model.ObjectId, Model.Name.ToSeoUrl(), Data.Enums.OrganizationViews.Issues, null, (IssueListSorts?)Model.Issues.ListSort, null), new { @class = "tabitem" + (Model.View == Data.Enums.OrganizationViews.Issues ? " highlight" : string.Empty) })</li>
+    <li>@Html.ActionLink(Resource.OrganizationProjects, MVC.Organization.Details(Model.ObjectId, Model.Name.ToSeoUrl(), Data.Enums.OrganizationViews.Projects, null, null, null), new { @class = "tabitem" + (Model.View == Data.Enums.OrganizationViews.Projects ? " highlight" : string.Empty) })</li>
+    <li>@Html.ActionLink(Resource.OrganizationMembers, MVC.Organization.Details(Model.ObjectId, Model.Name.ToSeoUrl(), Data.Enums.OrganizationViews.Members, null, null, null), new { @class = "tabitem" + (Model.View == Data.Enums.OrganizationViews.Members ? " highlight" : string.Empty) })</li>
+    <li>@Html.ActionLink(Resource.OrganizationActivity, MVC.Organization.Details(Model.ObjectId, Model.Name.ToSeoUrl(), Data.Enums.OrganizationViews.Activity, null, null, null), new { id = "lnkActivity", @class = "tabitem" + (Model.View == Data.Enums.OrganizationViews.Activity ? " highlight" : string.Empty) })</li>
+</ul>
+<div id="tabContainer" class="uitabContainer clearfix">
+    @if (Model.View == Data.Enums.OrganizationViews.Info)
+    {
+        Html.RenderPartial(MVC.Organization.Views.OrganizationInfo, Model);
+    }
+    else if (Model.View == Data.Enums.OrganizationViews.Activity)
+    {
+        Html.RenderPartial(MVC.NewsFeed.Views.OrganizationActivityListContainer, Model.ActivityList);
+    }
+    else if (Model.View == Data.Enums.OrganizationViews.Members)
+    {
+        Html.RenderPartial(MVC.Organization.Views.Members, Model);
+    }
+    else if (Model.View == Data.Enums.OrganizationViews.Projects)
+    {
+        Html.RenderPartial(MVC.Organization.Views.Project.Projects, Model.Projects);
+    }
+    else if (Model.View == Data.Enums.OrganizationViews.Ideas)
+    {
+        Html.RenderPartial(MVC.Organization.Views.Ideas, Model.Ideas);
+    }
+    else if (Model.View == Data.Enums.OrganizationViews.Issues)
+    {
+        Html.RenderPartial(MVC.Organization.Views.Issues, Model.Issues);
+    }
+    else if (Model.View == Data.Enums.OrganizationViews.Results)
+    {
+        Html.RenderPartial(MVC.Organization.Views.Results, Model.Results);
+    }
+    else if (Model.View == Data.Enums.OrganizationViews.Problems)
+    {
+        Html.RenderPartial(MVC.Organization.Views.Problems, Model.Problems);
+    }
+</div>

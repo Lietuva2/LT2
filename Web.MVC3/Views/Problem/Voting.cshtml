@@ -1,0 +1,27 @@
+﻿@model Data.ViewModels.Problem.VoteResultModel
+@using Data.Enums
+@using Globalization.Resources.Problem
+<table class="problem_voting_table">
+    <tr>
+        <td>
+            <span class="emphasize">
+                <em class="votesCount">@Html.ActionLink(Model.VotesCount.ToString(), MVC.Problem.GetProblemSupporters(Model.Id), new { @class = "lnkUsers" })</em>
+            </span>
+        </td>
+        <td>
+            <table>
+                <tr>
+                    <td>
+                        <a href="@Url.Action(MVC.Problem.VoteFor(Model.Id))" class="vote problem_vote @(Model.CurrentVote == ForAgainst.For ? "problem_voted_for" : "problem_vote_for")" title="@Resource.Upvote"></a>
+                    </td>
+                </tr>
+                <tr>
+                    <td>
+                        <a href="@Url.Action(MVC.Problem.VoteAgainst(Model.Id))" class="vote problem_vote @(Model.CurrentVote == ForAgainst.Against ? "problem_voted_against" : "problem_vote_against")" title="@Resource.Downvote"></a>
+                    </td>
+                </tr>
+            </table>
+
+        </td>
+    </tr>
+</table>

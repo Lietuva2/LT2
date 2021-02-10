@@ -1,0 +1,39 @@
+﻿@model Data.ViewModels.Project.ToDoModel
+@using Data.Enums
+@using Globalization.Resources.Shared
+@using Web.Helpers;
+@using Globalization.Resources.Shared;
+@using Framework.Strings;
+<div class='itemContainer@(Model.IsPrivate ? " private" : "")'>
+    @if (Model.IsEditable)
+    {
+        <div class="controls finishedControls hoverVisible">
+            @Html.ImageLink(Url.Action(MVC.Project.DeleteToDo(Model.ProjectId, Model.MileStoneId, Model.ToDoId)), "imgDelete", SharedStrings.Delete, Links.Content.Images.delete_ico_png, "imgDelete")
+        </div>
+    }
+    <div class='finished @(Model.IsEditable ? "finishedTodoItem" : "")'>
+        @if (Model.IsEditable)
+        {
+            @Html.CheckBoxFor(m => m.IsFinished, new Dictionary<string, object> { {"class", "chkFinish"}, {"data-url", Url.Action(MVC.Project.FinishTodo(Model.ProjectId, Model.MileStoneId, Model.ToDoId)) }})
+        }
+        @Model.FinishDate.Value.ToShortDateString()
+        <span class="toDoText">
+        @Html.ActionLink(Model.Subject, MVC.Project.Comments(Model.ProjectId, Model.MileStoneId, Model.ToDoId))
+        </span>
+        @if (!string.IsNullOrEmpty(Model.ResponsibleUserId) && Model.ResponsibleUserId != TodoAssignedTo.Unasigned)
+        {
+            @Html.ActionLink(Model.ResponsibleUserFullName, MVC.Account.Details(Model.ResponsibleUserId, Model.ResponsibleUserFullName.ToSeoUrl(), null))
+        }
+        else
+        {
+            @Model.ResponsibleUserFullName
+        }
+        <span class='commentIcon@(Model.IsEditable ? (Model.CommentsCount == 0 ? " hoverVisible" : "") : (Model.CommentsCount == 0 ? " hide" : ""))'>
+        @Html.ImageLink(Url.Action(MVC.Project.Comments(Model.ProjectId, Model.MileStoneId, Model.ToDoId)), "imgComments", SharedStrings.Comments, Links.Content.Images.comments_gif, "")
+        @if (Model.CommentsCount > 0)
+        {
+            @Model.CommentsCount
+        }
+        </span>
+    </div>
+</div>

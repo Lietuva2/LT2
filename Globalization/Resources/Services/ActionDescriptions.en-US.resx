@@ -1,0 +1,312 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+	<!-- 
+    Microsoft ResX Schema 
+    
+    Version 2.0
+    
+    The primary goals of this format is to allow a simple XML format 
+    that is mostly human readable. The generation and parsing of the 
+    various data types are done through the TypeConverter classes 
+    associated with the data types.
+    
+    Example:
+    
+    ... ado.net/XML headers & schema ...
+    <resheader name="resmimetype">text/microsoft-resx</resheader>
+    <resheader name="version">2.0</resheader>
+    <resheader name="reader">System.Resources.ResXResourceReader, System.Windows.Forms, ...</resheader>
+    <resheader name="writer">System.Resources.ResXResourceWriter, System.Windows.Forms, ...</resheader>
+    <data name="Name1"><value>this is my long string</value><comment>this is a comment</comment></data>
+    <data name="Color1" type="System.Drawing.Color, System.Drawing">Blue</data>
+    <data name="Bitmap1" mimetype="application/x-microsoft.net.object.binary.base64">
+        <value>[base64 mime encoded serialized .NET Framework object]</value>
+    </data>
+    <data name="Icon1" type="System.Drawing.Icon, System.Drawing" mimetype="application/x-microsoft.net.object.bytearray.base64">
+        <value>[base64 mime encoded string representing a byte array form of the .NET Framework object]</value>
+        <comment>This is a comment</comment>
+    </data>
+                
+    There are any number of "resheader" rows that contain simple 
+    name/value pairs.
+    
+    Each data row contains a name, and value. The row also contains a 
+    type or mimetype. Type corresponds to a .NET class that support 
+    text/value conversion through the TypeConverter architecture. 
+    Classes that don't support this are serialized and stored with the 
+    mimetype set.
+    
+    The mimetype is used for serialized objects, and tells the 
+    ResXResourceReader how to depersist the object. This is currently not 
+    extensible. For a given mimetype the value must be set accordingly:
+    
+    Note - application/x-microsoft.net.object.binary.base64 is the format 
+    that the ResXResourceWriter will generate, however the reader can 
+    read any of the formats listed below.
+    
+    mimetype: application/x-microsoft.net.object.binary.base64
+    value   : The object must be serialized with 
+            : System.Runtime.Serialization.Formatters.Binary.BinaryFormatter
+            : and then encoded with base64 encoding.
+    
+    mimetype: application/x-microsoft.net.object.soap.base64
+    value   : The object must be serialized with 
+            : System.Runtime.Serialization.Formatters.Soap.SoapFormatter
+            : and then encoded with base64 encoding.
+
+    mimetype: application/x-microsoft.net.object.bytearray.base64
+    value   : The object must be serialized into a byte array 
+            : using a System.ComponentModel.TypeConverter
+            : and then encoded with base64 encoding.
+    -->
+	<xsd:schema id="root" xmlns="" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:msdata="urn:schemas-microsoft-com:xml-msdata">
+		<xsd:import namespace="http://www.w3.org/XML/1998/namespace" />
+		<xsd:element name="root" msdata:IsDataSet="true">
+			<xsd:complexType>
+				<xsd:choice maxOccurs="unbounded">
+					<xsd:element name="metadata">
+						<xsd:complexType>
+							<xsd:sequence>
+								<xsd:element name="value" type="xsd:string" minOccurs="0" />
+							</xsd:sequence>
+							<xsd:attribute name="name" use="required" type="xsd:string" />
+							<xsd:attribute name="type" type="xsd:string" />
+							<xsd:attribute name="mimetype" type="xsd:string" />
+							<xsd:attribute ref="xml:space" />
+						</xsd:complexType>
+					</xsd:element>
+					<xsd:element name="assembly">
+						<xsd:complexType>
+							<xsd:attribute name="alias" type="xsd:string" />
+							<xsd:attribute name="name" type="xsd:string" />
+						</xsd:complexType>
+					</xsd:element>
+					<xsd:element name="data">
+						<xsd:complexType>
+							<xsd:sequence>
+								<xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+								<xsd:element name="comment" type="xsd:string" minOccurs="0" msdata:Ordinal="2" />
+							</xsd:sequence>
+							<xsd:attribute name="name" type="xsd:string" use="required" msdata:Ordinal="1" />
+							<xsd:attribute name="type" type="xsd:string" msdata:Ordinal="3" />
+							<xsd:attribute name="mimetype" type="xsd:string" msdata:Ordinal="4" />
+							<xsd:attribute ref="xml:space" />
+						</xsd:complexType>
+					</xsd:element>
+					<xsd:element name="resheader">
+						<xsd:complexType>
+							<xsd:sequence>
+								<xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+							</xsd:sequence>
+							<xsd:attribute name="name" type="xsd:string" use="required" />
+						</xsd:complexType>
+					</xsd:element>
+				</xsd:choice>
+			</xsd:complexType>
+		</xsd:element>
+	</xsd:schema>
+	<resheader name="resmimetype">
+		<value>text/microsoft-resx</value>
+	</resheader>
+	<resheader name="version">
+		<value>2.0</value>
+	</resheader>
+	<resheader name="reader">
+		<value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+	</resheader>
+	<resheader name="writer">
+		<value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+	</resheader>
+	<data name="ChangedProfilePicture" xml:space="preserve">
+    <value>{0} changed profile picture</value>
+  </data>
+	<data name="CommentCommented" xml:space="preserve">
+    <value>{0} commented on the {2}'s argument about {1}</value>
+  </data>
+	<data name="Commented" xml:space="preserve">
+    <value>{0} argued about the issue {1}</value>
+  </data>
+	<data name="DelegatedVote" xml:space="preserve">
+    <value>{0} matters relating to the {3}, will be represented by a citizen {2}</value>
+  </data>
+	<data name="IdeaCommented" xml:space="preserve">
+    <value>{0} argued about the idea {1}</value>
+  </data>
+	<data name="IdeaCommentLiked" xml:space="preserve">
+    <value>{0} likes the {2}'s argument about {1}</value>
+  </data>
+	<data name="IdeaCreated" xml:space="preserve">
+    <value>{0} proposed a new idea {1}</value>
+  </data>
+	<data name="IdeaEdited" xml:space="preserve">
+    <value>{0} edited the idea {1}</value>
+  </data>
+	<data name="IdeaVersionAdded" xml:space="preserve">
+    <value>{0} proposed a new solution for the idea {1}</value>
+  </data>
+	<data name="IdeaVersionLiked" xml:space="preserve">
+    <value>{0} supports the solution of the idea {1}</value>
+  </data>
+	<data name="IdeaViewed" xml:space="preserve">
+    <value>{0} viewed the idea {1}</value>
+  </data>
+	<data name="IssueCreated" xml:space="preserve">
+    <value>{0} described a new issue {1}</value>
+  </data>
+	<data name="IssueEdited" xml:space="preserve">
+    <value>{0} edited the issue {1}</value>
+  </data>
+	<data name="IssueViewed" xml:space="preserve">
+    <value>{0} viewed the issue {1}</value>
+  </data>
+	<data name="LikedCategory" xml:space="preserve">
+    <value>{0} is interested in the category(s) {3}</value>
+  </data>
+	<data name="LikedComment" xml:space="preserve">
+    <value>{0} likes the {2}'s argument about {1}</value>
+  </data>
+	<data name="LikedUser" xml:space="preserve">
+    <value>{0} is following {2}'s activity</value>
+  </data>
+	<data name="ProfileImportedFromLinkedIn" xml:space="preserve">
+    <value>{0} imported their account data from LinkedIn</value>
+  </data>
+	<data name="SummaryVersionAdded" xml:space="preserve">
+    <value>{0} has created a new version of the summary of the issue {1}</value>
+  </data>
+	<data name="UpdatedContacts" xml:space="preserve">
+    <value>{0} has updated their contacts</value>
+  </data>
+	<data name="UpdatedEducationAndWork" xml:space="preserve">
+    <value>{0} has updated their education and work experience</value>
+  </data>
+	<data name="UpdatedInterests" xml:space="preserve">
+    <value>{0} has updated their areas of interest</value>
+  </data>
+	<data name="UpdatedPersonalInfo" xml:space="preserve">
+    <value>{0} has updated their personal information</value>
+  </data>
+	<data name="UserProfileViewed" xml:space="preserve">
+    <value>{0} viewed the {2}'s profile</value>
+  </data>
+	<data name="Voted" xml:space="preserve">
+    <value>{0} voted for {1}</value>
+  </data>
+	<data name="JoinedProject" xml:space="preserve">
+    <value>{0} joined the project {1} implementation </value>
+  </data>
+	<data name="ToDoAdded" xml:space="preserve">
+    <value>{0} has appointed {2} a  new project's {1} task</value>
+  </data>
+	<data name="ToDoCommentAdded" xml:space="preserve">
+    <value>{0} commented on project's {1} task {4}</value>
+  </data>
+	<data name="ToDoEdited" xml:space="preserve">
+    <value>{0} has edited {2}'s task for a project {1}</value>
+  </data>
+	<data name="ToDoFinished" xml:space="preserve">
+    <value>{0} has completed the task of the project {1}</value>
+  </data>
+	<data name="IdeaStateChanged" xml:space="preserve">
+    <value>{0} changed the state of the idea {1}</value>
+  </data>
+	<data name="IssueOfficialyVoted" xml:space="preserve">
+    <value>{0} pointed out that the Government voted for {1}</value>
+  </data>
+	<data name="UserCreated" xml:space="preserve">
+    <value>{0} joined Lithuania 2.0</value>
+  </data>
+	<data name="IdeaVersionEdited" xml:space="preserve">
+    <value>{0} has edited ideas {1} solution</value>
+  </data>
+	<data name="OrganizationJoined" xml:space="preserve">
+    <value>{0} has joined the Organization {5}</value>
+  </data>
+	<data name="OrganizationCreated" xml:space="preserve">
+    <value>{0} has created a new organization, {5}</value>
+  </data>
+	<data name="OrganizationJoining" xml:space="preserve">
+    <value>{0} want to join the organization {5}</value>
+  </data>
+	<data name="OrganizationLiked" xml:space="preserve">
+    <value>{0} supports organization {5}</value>
+  </data>
+	<data name="OrganizationToDoAdded" xml:space="preserve">
+    <value>{0} appointed {2} a new {5}'s project's {1} task</value>
+  </data>
+	<data name="OrganizationToDoCommentAdded" xml:space="preserve">
+    <value>{0} commented on the {5}'s project's {1} task {4}</value>
+  </data>
+	<data name="OrganizationToDoEdited" xml:space="preserve">
+    <value>{0} edited {2}'s project's {1} task for the organisation {5}</value>
+  </data>
+	<data name="OrganizationToDoFinished" xml:space="preserve">
+    <value>{0} completed {5}'s project's {1} task</value>
+  </data>
+	<data name="OrganizationUpdated" xml:space="preserve">
+    <value>{0} has updated {5}'s data</value>
+  </data>
+	<data name="OrganizationMemberRolesUpdated" xml:space="preserve">
+    <value>{0} updated the {5}'s members</value>
+  </data>
+	<data name="OrganizationProjectAdded" xml:space="preserve">
+    <value>{0} has created a new {5}'s project {1}</value>
+  </data>
+	<data name="OrganizationProjectStateChanged" xml:space="preserve">
+    <value>{0} has changed the status of the {5}'s project {1}</value>
+  </data>
+	<data name="OrganizationMemberAdded" xml:space="preserve">
+    <value>{2} were appointed by {0} to be a member of {5}</value>
+  </data>
+	<data name="OrganizationViewed" xml:space="preserve">
+    <value>{0} viewed {5}'s information</value>
+  </data>
+	<data name="ProjectMemberAdded" xml:space="preserve">
+    <value>{2} was appointed by {0} to the team member of the project {1}</value>
+  </data>
+	<data name="CommentCommentLiked" xml:space="preserve">
+    <value>{0} likes the {2}'s comment about the {1}'s argument</value>
+  </data>
+	<data name="ProblemCommented" xml:space="preserve">
+    <value>{0} commented a problem</value>
+  </data>
+	<data name="ProblemCreated" xml:space="preserve">
+    <value>{0} shouted about the problem</value>
+  </data>
+	<data name="ProblemIdeaAssigned" xml:space="preserve">
+    <value>{0} linked the idea {4} with a problem</value>
+  </data>
+	<data name="ProblemVoted" xml:space="preserve">
+    <value>{0} agrees with a problem</value>
+  </data>
+	<data name="ProblemCommentLiked" xml:space="preserve">
+    <value>{0} likes the {2}'s comment</value>
+  </data>
+	<data name="UserAwarded" xml:space="preserve">
+    <value>{2} has been awarded a title</value>
+  </data>
+	<data name="UserCommented" xml:space="preserve">
+    <value>{0} stated his opinion about {1}</value>
+  </data>
+	<data name="UserCommentLiked" xml:space="preserve">
+    <value>{0} agrees with the {2}'s opinion about {1}</value>
+  </data>
+	<data name="ToDoTaken" xml:space="preserve">
+    <value>{0} has taken to carry out the task of the project {1}</value>
+  </data>
+	<data name="OrganizationToDoTaken" xml:space="preserve">
+    <value>{0} has taken to carry out the task of the {5}'s project {1}</value>
+  </data>
+	<data name="ProblemDevoted" xml:space="preserve">
+    <value>{0} disagrees with the problem</value>
+  </data>
+	<data name="RelatedIdeaAdded" xml:space="preserve">
+    <value>{0} linked the idea {1} with another idea</value>
+  </data>
+	<data name="RelatedIssueAdded" xml:space="preserve">
+    <value>{0} linked the idea {1} with the issue</value>
+  </data>
+	<data name="OrganizationMemberRejected" xml:space="preserve">
+    <value>{2} was rejected from the members of {5} by {0}</value>
+  </data>
+</root>

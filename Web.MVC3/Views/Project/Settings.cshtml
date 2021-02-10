@@ -1,0 +1,65 @@
+﻿@model Data.ViewModels.Project.SettingsModel
+@{
+    ViewBag.Title = Model.Subject + " - " + Resource.PageTitleSettings;
+}
+@using Data.Enums
+@using Framework.Mvc.Strings
+@using Globalization.Resources.Project
+@using Web.Helpers
+@using Framework.Strings;
+@section Head
+{
+}
+@section Scripts
+{
+    @Html.RegisterCkeditorScripts()
+    <script type='text/javascript'>
+        function onPageLoad() {
+            $('.richtexteditor').richtext();
+        }
+    </script>
+}
+<h3>
+    @Html.Raw(string.Format(Resource.IdeaTask, Html.ActionLink(Model.Subject.HtmlDecode(), MVC.Idea.Details(Model.IdeaId, Model.Subject.ToSeoUrl(), null))))
+</h3>
+<br />
+@{Html.RenderPartial(MVC.Project.Views.Menu, Model.Id, new ViewDataDictionary() { { "index", "3" } });}
+<br />
+<div>
+    @using (Html.BeginForm())
+    {
+        @Html.AntiForgeryToken()
+        @Html.HiddenFor(m => m.Id)
+        <table id="settings">
+            <tr>
+                <th>@Html.LabelFor(m => m.State, Resource.ProjectState)</th>
+                <td>
+                @for (int i = 0; i < Model.ProjectStates.Count; i++)
+                {
+                    <div>
+                    @Html.RadioButtonFor(m => m.State, Model.ProjectStates[i].Value)
+                    @Model.ProjectStates[i].Text
+                    </div>
+                }
+                </td>
+            </tr>
+            <tr>
+                <th>@Html.LabelFor(m => m.Description, Resource.StateDescription)</th>
+                <td>@Html.TextAreaFor(m => m.Description, new {@class="txt_prDescription richtexteditor" })
+                    @Html.ValidationMessageFor(m => m.Description)</td>
+            </tr>
+            <tr>
+                <th>@Html.LabelFor(m => m.IsPrivate, Resource.IsOpen)</th>
+                <td>@Html.CheckBoxFor(m => m.IsPrivate) @Resource.RequireConfirmation</td>
+            </tr>
+            <tr>
+                <td>
+                 
+                </td>
+                <td>
+                    @Html.Buttons()
+                </td>
+            </tr>
+        </table> 
+    }
+</div>

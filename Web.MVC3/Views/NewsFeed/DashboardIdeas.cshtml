@@ -1,0 +1,13 @@
+﻿@model Data.ViewModels.Idea.IdeaIndexModel
+@using Framework.Strings
+@using Globalization.Resources.NewsFeed
+@using Globalization.Resources.Shared
+@using Web.Helpers
+
+<div id="listIdeas">
+    @Html.Partial(MVC.NewsFeed.Views.IdeasList, Model)
+</div>
+@if (Model.Items.HasMoreElements)
+{
+    <p>@Html.ActionLink(SharedStrings.More, MVC.Idea.GetMoreResolvedIdeas(), new { id = "lnkShowMoreIdeas" })</p>
+}

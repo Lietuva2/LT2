@@ -1,0 +1,25 @@
+﻿@model Data.ViewModels.Comments.CommentView
+@using Data.Enums
+@using Globalization.Resources.Voting
+@using Web.Helpers
+
+@using (Html.BeginForm(MVC.Voting.AddComment().AddRouteValues(new RouteValueDictionary { { "EntryId", Model.EntryId }, { "ForAgainst", Model.ForAgainst } }), FormMethod.Post, new { @class = "no-padding" }))
+{
+    @Html.AntiForgeryToken()
+    @Html.TextAreaFor(m => m.CommentText, new Dictionary<string, object>() { { "style", "margin-bottom: 0;" } })
+    if (ViewBag.CurrentUser.IsAmbasador)
+    {
+    <div class="clear"></div>
+    <label class="normal">
+        @Html.CheckBox("chkPostToFacebook", false)
+        @Globalization.Resources.Problem.Resource.PostToFacebook
+    </label>
+    }
+    @Html.Button(new ButtonHelperModel()
+                           {
+                               Text = Model.ButtonText,
+                               ImageUrl = Model.ForAgainst == ForAgainst.For ? Links.Content.Images.tick_png : Links.Content.Images.tick_red_png
+                           })
+    @Html.ValidationMessageFor(m => m.CommentText)
+    <div class="clear"></div>
+}

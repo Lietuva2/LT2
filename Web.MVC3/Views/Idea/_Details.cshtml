@@ -1,0 +1,738 @@
+﻿@model Data.ViewModels.Idea.IdeaViewModel
+@using Data.Enums
+@using Data.ViewModels.Account
+@using Data.ViewModels.Comments
+@using Framework.Enums
+@using Framework.Mvc.Strings
+@using Framework.Other
+@using Globalization.Resources.Idea
+@using Globalization.Resources.Shared
+@using Web.Helpers
+@using Framework.Strings;
+@{
+    ViewBag.Title = Model.Subject.HtmlDecode() + " - " + Resource.PageTitleDetails;
+    ViewBag.GroupChatTitle = Model.Subject.HtmlDecode();
+    ViewBag.PageDescription = Model.CurrentVersion.Text.GetPlainText();
+
+    var isOrg = !string.IsNullOrEmpty(Model.CurrentVersion.OrganizationId) && !Model.IsPrivateToOrganization;
+    var creatorUrl = isOrg ? Url.Action(MVC.Organization.Details(Model.CurrentVersion.OrganizationId, (Model.CurrentVersion.OrganizationName ?? string.Empty).ToSeoUrl(), null, null, null, null)) :
+                         Url.Action(MVC.Account.Details(Model.CurrentVersion.CreatorObjectId, Model.CurrentVersion.CreatorFullName.ToSeoUrl(), null));
+}
+
+@section Head
+{
+    <style type="text/css">
+    </style>
+    <meta property="og:type" content="lietuva:idea" />
+}
+@section Scripts
+{
+    @if (ViewBag.IsAuthenticated)
+    {
+        @Html.RegisterCkeditorScripts()
+        <script src="https://www.google.com/jsapi" charset="utf-8"></script>
+        <script type='text/javascript'>
+            google.load('picker', '1', { 'language': '@SharedStrings.LanguageCodeShort' });
+        </script>
+    }
+    <script type='text/javascript'>
+        function onPageLoad() {
+            @if (ViewBag.IsAuthenticated)
+            {
+                <text>
+            setupDatePicker();
+
+            $('div#divCommentsContainer').CommentsInput({ data: { versionId: function() { return $('#hiddenCurrentVersionId').val(); } } });
+
+            $('#listComments').Comments().liking();
+            $('#listAttachments').deleteButton();
+
+            initTooltips();
+            CreateSavingDialog($('#btnClose'), $('#dialog-close'), function() { window.location.reload(); });
+            CreateSavingDialog($('#btnRealized'), $('#dialog-realized'), function() { window.location.reload(); });
+
+            var form = $('form', $('#dialog-resolve'));
+
+            function callback(result) {
+                if (result === true) {
+                    window.location.reload();
+                } else if (result.Error) {
+                    $.helpers.handleUniqueUserError(result);
+
+                    return false;
+                } else if (result.resolveError) {
+                    alert(result.resolveError);
+                }
+            }
+
+            $('#btnResolve').linkdialog({
+                modal: false,
+                height: 620,
+                width: 600,
+                dialogSelector: '#dialog-resolve',
+                buttons: [
+                    {
+                        text: JavaScriptLibraryResources.Save,
+                        click: function(e) {
+                            updateEditorElements();
+                            loadAsync(e, form.attr('action'), form.serialize(), callback);
+                        },
+                        className: "save"
+                    }, {
+                        text: JavaScriptLibraryResources.Cancel,
+                        click: function(e) {
+                            loadAsync(e, form.attr('action'), { Cancel: true }, callback);
+                        },
+                        className: "save"
+                    }
+                ]
+            });
+
+            $('#btnJoin').click(function(e) {
+                if (!confirm('@Resource.ApproveCommitmentToRealize')) {
+                    return cancelEvent(e);
+                }
+            });
+
+            $('#RequiredVotesSelect').change(function(e) {
+                if ($(this).val()) {
+                    $('#RequiredVotes').hide().val($(this).val());
+                } else {
+                    $('#RequiredVotes').show();
+                }
+            });
+
+            $('#InitiativeType').change(function(e) {
+                if ($(this).val() == '@InitiativeTypes.AdvisoryReferendum' || $(this).val() == '@InitiativeTypes.CompulsoryReferendum') {
+                    $('#RequiredVotesSelect').val('300000').change();
+                    $('#Deadline').datepicker("setDate", new Date().addMonths(4));
+                } else if ($(this).val() == '@InitiativeTypes.Law') {
+                    $('#RequiredVotesSelect').val('50000').change();
+                    $('#Deadline').datepicker("setDate", new Date().addMonths(2));
+                }
+            });
+
+            $('#btnSendMails').hijack(function(result) {
+                if (result) {
+                    this.hide();
+                }
+            }, { confirmMessage: $('#btnSendMails').attr('title') + '\n' + '@SharedStrings.ConfirmSendMail' });
+
+            @if (!Request.Browser.IsMobileDevice) {
+                <text>$().chat('enable', '@Model.Id');</text>
+            }
+
+            CreateAjaxDialog('#lnkChooseIdea', '@Resource.RelatedIdeas', 360);
+            CreateAjaxDialog('#lnkChooseIssue', '@Resource.RelatedIssues', 360);
+
+            </text>
+            }
+
+            @if (Model.State == IdeaStates.Resolved)
+            {
+                @:$('#main').stickem({ item: '.innerStatistics', container: '#leftContainer' });
+            }
+
+            $('#wiki').voting({
+                showVersionCallback: function() {
+                    var tabByVersion = $('#tabByVersion');
+                    if (tabByVersion.is('.highlight')) {
+                        tabByVersion.click();
+                    }
+                },
+                isAmbasador: @(ViewBag.CurrentUser.CanPostToFacebook && !Model.IsPrivateToOrganization && (bool?)TempData["Saved"] != true ? "true" : "false"),
+                supportMessage: '@ViewBag.CurrentUser.SupportedIdeaText',
+                facebookUrl: '@Url.ActionAbsolute(MVC.Idea.Details(Model.Id, null, null))',
+                forceFbLogin: @(ViewBag.CurrentUser.PostPermissionGranted ? "false" : "true"),
+                dialogSelector: '#dialog-version-input',
+                organizationId: '@Model.OrganizationId',
+                isPrivateToOrganization: @(Model.IsPrivateToOrganization ? "true" : "false"),
+                hover: true,
+                hoverTargetSelector: ".hoverableText",
+                showVersionsButtonSelector: "a[data-role='ShowVersions']",
+                summaryVersionsSelector: '.summaryVersions',
+                highlightOnHover: false,
+                versionTextSelector: '.hoverableText .richtext',
+                editSelector: '.editVersion',
+                versionTextContainerSelector: '[data-role="versionTextContainer"]'
+            });
+
+            CreateAjaxDialog('a.lnkUsers', '@Globalization.Resources.Idea.Resource.SupportersList');
+
+            $('#listComments').CommentsRead();
+
+            $('ul.tabmenu').ajaxTabs({
+                data: { versionId: function() { return $('#hiddenCurrentVersionId').val(); } },
+                callback: function(result) {
+                    $('#listComments').html(result.Content);
+
+                    var link = $('#lnkShowMoreComments');
+                    link.attr('href', result.UpdatedHref);
+                    result.HasMoreElements ? link.show() : link.hide();
+                    link.showmore('reset');
+
+                    createExpandableText($('#listComments'));
+                }
+            });
+
+
+            $('#btnShowIdeas').on('click', function(e) {
+                $(this).hide();
+                $('#divSummaryText').slideDown();
+                $('#divVersionsContainer').slideDown();
+            });
+
+            $('a[data-role="problem"]').hijack(function(result) {
+                var item = $('li[data-problemid="' + result.Id + '"]');
+                item.html(result.Content);
+                item.problems({ addIdeaUrl: '@Url.Action(MVC.Problem.AddRelatedIdea())' });
+                createExpandableText(item);
+                @if (ViewBag.IsAuthenticated)
+                {
+                    <text>
+                item.Comments().liking();
+                </text>
+                }
+                item.CommentsRead({ prepend: true, commentsListSelector: '.listComments', commentsListContainerSelector: '.comments', showMoreOnScroll: false });
+                CreateAjaxDialog('a.lnkUsers', '@Globalization.Resources.Idea.Resource.SupportersList');
+            });
+
+            $('#btnChooseSolution').linkdialog({
+                isAjax: false,
+                modal: true,
+                closeText: JavaScriptLibraryResources.OK,
+                openCallback: function() {
+                    $('#divDialogContent').html('@Html.Raw(Resource.ChooseIdea)');
+                },
+                closeCallback: function() {
+                    $.helpers.scrollToElement("#divVersionsContainer", 300);
+                }
+            });
+        }
+    </script>
+}
+<div data-role="add_idea_hidden" class="hide">
+    @Html.AutoComplete("txtIdea", "IdeaId", MVC.Idea.GetMatchedIdeas(), "txt_90", "function(){$('#list').problems('select');}", true, new Dictionary<string, object> { { "placeholder", Globalization.Resources.Problem.Resource.SelectIdea
+                                                                                                                                                                        } })
+</div>
+<div id="wiki">
+    <div id="leftContainer">
+        <div class="span-13">
+            <span>@Html.BackLink((Uri)ViewBag.LastListUrl)</span> <span style="float: right;">
+                @if (Model.IsEditable)
+                {
+                    @Html.ActionLinkWithReturnUrl(SharedStrings.Edit, MVC.Idea.Edit(Model.Id))
+                }
+            </span>
+            <div class="clear">
+            </div>
+            <h2 class="d_h2">
+                <a href="@Url.Action(MVC.Idea.PreviousIdea(Model.Id))" title="@Resource.Next" class="arrow_previous">
+                    <img src="@Links.Content.Images.previous_png" alt="@SharedStrings.Previous" />
+                </a> <a href="@Url.Action(MVC.Idea.NextIdea(Model.Id))" title="@Resource.Next" class="arrow_next">
+                    <img src="@Links.Content.Images.forward_png" alt="@SharedStrings.Next" />
+                </a>
+                @Html.Raw(Model.Subject)
+            </h2>
+            @if (Model.IsPrivateToOrganization)
+            {
+                <div style="float: right;">
+                    <img src="@Links.Content.Images.blind_png" alt="@Globalization.Resources.Organization.Resource.PrivateToOrganization" title="@Globalization.Resources.Organization.Resource.PrivateToOrganization" />
+                </div>
+            }
+            <div class="details">
+                <span class="author">
+                    @if (!Model.IsImpersonal)
+                    {
+                        <a href="@creatorUrl" id="lnkCreatedBy">@(isOrg ? Model.CurrentVersion.OrganizationName : Model.CurrentVersion.CreatorFullName)</a>
+                    }
+                    else
+                    {
+                        @Resource.Impersonal
+                    }, <span id="lblCreatedOn">
+                        @Model.CurrentVersion.CreatedOn.ToLongDateString()
+                </span>
+            </span>
+            <div class="ctags">
+                @foreach (var category in Model.Categories)
+                {
+                    <span class="ctag">@category</span>
+                }
+                @if (!string.IsNullOrEmpty(Model.Municipality))
+                {
+                    <span class="ctag">@Model.Municipality</span>
+                }
+            </div>
+            <div class="clear">
+            </div>
+        </div>
+        @Html.ValidationSummary()
+        <div>
+            <span class="@Html.GetStateCssClass(Model.State)">@MvcHtmlString.Create(Html.GetIdeaStateString(Model.State, Model.InitiativeType))</span>
+        </div>
+        @{var problemsCount = (string.IsNullOrEmpty(Model.Aim) ? 0 : 1) + Model.Problems.Count;}
+        @if (problemsCount == 1)
+        {
+            <h3>@Resource.Problem</h3>
+        }
+        else if (problemsCount > 1)
+        {
+            <h3>@Resource.Problems</h3>
+        }
+        @if (!string.IsNullOrEmpty(Model.Aim))
+        {
+            <div class="richtext">
+                @Html.Raw(Model.Aim)
+            </div>
+            if (problemsCount > 1)
+            {
+                <hr />
+            }
+        }
+        @if (Model.Problems.Any())
+        {
+            <ul>
+                @foreach (var problem in Model.Problems)
+                {
+                    var subject = problem.Subject;
+                    if (!string.IsNullOrEmpty(Model.Aim) || Model.Problems.IndexOf(problem) > 0)
+                    {
+                        subject = subject.LimitLength(150);
+                    }
+                    <li data-problemid="@problem.Id">
+                        <div class="richtext">
+                            @Html.Raw(subject)
+                            @Html.ActionLink(Globalization.Resources.Voting.Resource.Expand, MVC.Problem.Single(problem.Id), new Dictionary<string, object> { { "data-role", "problem" } })
+                        </div>
+                        @if (problemsCount > 1 && Model.Problems.IndexOf(problem) < Model.Problems.Count - 1)
+                        {
+                            <hr />
+                        }
+                    </li>
+                }
+            </ul>
+        }
+        @if (!string.IsNullOrEmpty(Model.FinalVersionId))
+        {
+            <h3>@Resource.Solution</h3>
+            <div class="richtext">
+                @Html.Raw(Model.CurrentVersion.Text)
+            </div>
+        }
+        @if (!string.IsNullOrEmpty(Model.Resolution))
+        {
+            <h3>@Resource.Resolution</h3>
+            <div class="richtext" style="margin-bottom: 8px;">
+                @Html.Raw(Model.Resolution)
+            </div>
+        }
+        @if (Model.Urls.Count > 0)
+        {
+            <h3>@Resource.Urls</h3>
+            <div style="margin-bottom: 5px;">
+                <ul>
+                    @foreach (var website in Model.Urls)
+                    {
+                        <li>
+                            <a class="external" rel="nofollow" href='@website.Url' hreflang="lt" target="_blank">@website.Title</a>
+                        </li>
+                    }
+                </ul>
+            </div>
+        }
+    </div>
+    @if (Model.IsDraft)
+    {
+        <div class="span-5 last">
+            <div class="draft">
+                <span>@Resource.Draft</span>
+            </div>
+            @if (Model.UserObjectId == ViewBag.CurrentUser.Id)
+            {
+                using (Html.BeginForm(MVC.Idea.Publish(Model.Id)))
+                {
+                    @Html.AntiForgeryToken()
+                    @Html.Button(new ButtonHelperModel() { CssClass = "positive accountButton", Text = SharedStrings.Publish })
+                }
+            }
+        </div>
+    }
+    else
+    {
+        <div class="span-5 last">
+            <div class="innerStatistics">
+                @if (Model.Versions.Count > 1 && Model.State != IdeaStates.Resolved)
+                {
+                    <div data-role="votingButtons" class="voting">
+                        @Html.Button(new ButtonHelperModel()
+                   {
+                       CssClass = "accountButton",
+                       Type = ButtonHelperModel.Types.Link,
+                       Text = Resource.ChooseSolution,
+                       ImageUrl = null,
+                       Id = "btnChooseSolution"
+                   })
+                    </div>
+                }
+                else
+                {
+                    <div data-role="votingButtons" class="BigVoteButton GreenButton">
+                        @Html.Partial(MVC.Idea.Views.VotingButtons)
+                    </div>
+                }
+                <div id='divVotingStatistics' style="margin-top: 1.5em;">
+                    @Html.Partial(MVC.Idea.Views.VotingStatistics)
+                </div>
+                @Html.Partial(MVC.Shared.Views.Share, Model.ShortLink)
+                <div class="statistics_buttons">
+                    @if (Model.State == IdeaStates.Resolved)
+                    {
+                        @Html.Button(new ButtonHelperModel() { CssClass = "accountButton lnkUsers", Text = Resource.SignersList, Href = Url.Action(MVC.Idea.GetUniqueSupporters(Model.Id)), Type = ButtonHelperModel.Types.Link, ImageUrl = Links.Content.Images.page_text_gif })
+                        <div class="clear"></div>
+                    }
+                    @if (!string.IsNullOrEmpty(Model.ProjectId))
+                    {
+                        @Html.Button(new ButtonHelperModel() { CssClass = "accountButton", Text = Resource.Realizing, Href = Url.Action(MVC.Project.ToDos(Model.ProjectId)), Type = ButtonHelperModel.Types.Link, ImageUrl = Links.Content.Images.cog_go_png })
+                        <div class="clear"></div>
+                    }
+                    else if (Model.IsJoinable)
+                    {
+                        using (Html.BeginForm(MVC.Idea.JoinIdeaRealization(Model.Id), FormMethod.Post))
+                        {
+                            @Html.AntiForgeryToken()
+                            @Html.Button(new ButtonHelperModel() { CssClass = "positive accountButton", Text = Resource.Join, Id = "btnJoin", ImageUrl = Links.Content.Images.cog_add_png })
+                            <div class="clear"></div>
+                        }
+                    }
+                    @if (Model.IsEditable && (Model.State != IdeaStates.Realized && Model.State != IdeaStates.Closed))
+                    {
+                        @Html.Button(new ButtonHelperModel() { Type = ButtonHelperModel.Types.Link, CssClass = "positive accountButton", Text = Resource.FinalResolution, Id = "btnResolve", ImageUrl = Links.Content.Images.accept_png })
+                        <div class="clear"></div>
+                    }
+                    @if (Model.IsEditable && (Model.State == IdeaStates.New || Model.State == IdeaStates.Realized))
+                    {
+                        @Html.Button(new ButtonHelperModel() { Type = ButtonHelperModel.Types.Link, CssClass = "positive accountButton", Text = Resource.Realized, Id = "btnRealized", ImageUrl = Links.Content.Images.accept_png })
+                        <div class="clear"></div>
+                    }
+                    @if ((Model.State == IdeaStates.New || Model.State == IdeaStates.Closed) && Model.IsEditable)
+                    {
+                        @Html.Button(new ButtonHelperModel() { Type = ButtonHelperModel.Types.Link, CssClass = "negative accountButton", Text = Resource.CloseIdea, Id = "btnClose", ImageUrl = Links.Content.Images.stop_png })
+                        <div class="clear"></div>
+                    }
+                    @if ((Model.State == IdeaStates.Closed) && Model.IsEditable)
+                    {
+                        @Html.Button(new ButtonHelperModel() { Type = ButtonHelperModel.Types.Link, CssClass = "positive accountButton", Text = Resource.OpenIdea, ImageUrl = Links.Content.Images.accept_png, Href = Url.Action(MVC.Idea.OpenIdea(Model.Id)) })
+                        <div class="clear"></div>
+                    }
+                    @if (Model.IsMailSendable)
+                    {
+                        @Html.Button(new ButtonHelperModel() { Type = ButtonHelperModel.Types.Link, CssClass = "accountButton", Text = Resource.SendMails, Id = "btnSendMails", ImageUrl = Links.Content.Images.email_small_png, Href = Url.Action(MVC.Idea.SendNotification(Model.Id)), HtmlAttributes = new Dictionary<string, object>() { { "title", SharedStrings.SendMailTip } } })
+                        <div class="clear"></div>
+                    }
+                    @if (Model.Subscribe != null)
+                    {
+                        @Html.Partial(MVC.Shared.Views.Subscribe, Model.Subscribe)
+                        <div class="clear"></div>
+                    }
+                    @if (!string.IsNullOrEmpty(Model.OrganizationId) && Model.IsPrivateToOrganization && Model.IsContributable)
+                    {
+                        @Html.Button(new ButtonHelperModel() { Type = ButtonHelperModel.Types.Link, CssClass = "accountButton", Text = Resource.MakePublic, Id = "btnMakePublic", ImageUrl = Links.Content.Images.group_key_png, Href = Url.Action(MVC.Idea.MakePublic(Model.Id)) })
+                        <div class="clear"></div>
+
+                    }
+                    @if (ViewBag.CurrentUser.Role == UserRoles.Admin)
+                    {
+                        if (!Model.PromoteToFrontPage)
+                        {
+                            @Html.Button(new ButtonHelperModel() { Type = ButtonHelperModel.Types.Link, CssClass = "accountButton", Text = Resource.PromoteToFrontPage, ImageUrl = Links.Content.Images.thumb_up_png, Href = Url.Action(MVC.Idea.PromoteToFrontPage(Model.Id, true)) })
+                        }
+                        else
+                        {
+                            @Html.Button(new ButtonHelperModel() { Type = ButtonHelperModel.Types.Link, CssClass = "accountButton", Text = Resource.DemoteFromFrontPage, ImageUrl = null, Href = Url.Action(MVC.Idea.PromoteToFrontPage(Model.Id, false)) })
+                        }
+                        
+                        <div class="clear"></div>
+                    }
+                </div>
+            </div>
+        </div>
+    }
+    <div class="clear">
+    </div>
+    @if (!string.IsNullOrEmpty(Model.StateDescription))
+    {
+        if (Model.State == IdeaStates.Realized)
+        {
+            <h3>@Resource.RealizationDescription</h3>
+        }
+        else if (Model.State == IdeaStates.Closed)
+        {
+            <h3>@Resource.ClosingDescription</h3>
+        }
+        else
+        {
+            <h3>Kaip įgyvendinama?</h3>
+        }
+        <div class="richtext">
+            @Html.Raw(Model.StateDescription)
+        </div>
+    }
+</div>
+
+@{var hideIdeas = !string.IsNullOrEmpty(Model.Resolution) || !string.IsNullOrEmpty(Model.FinalVersionId);}
+@if (Model.Versions.Count > 1 || !hideIdeas || Model.IsEditable)
+{
+    if (hideIdeas)
+    {
+        <div style="margin-top: 10px; margin-bottom: 8px;">
+            <a href="javascript:void(0);" id="btnShowIdeas">@Resource.ShowAllSolutions</a>
+        </div>
+    }
+    <div id="divVersionsContainer" class="@(hideIdeas ? "hide" : "")">
+        <div class="uiHeader">
+            <span>@Resource.Solutions</span>
+        </div>
+        <div id='divSummaryVersions' class='ideaVersions'>
+            @{ Html.RenderPartial(MVC.Idea.Views._Versions, Model); }
+        </div>
+    </div>
+}
+<div id="dialog-version-input" title="@Resource.DescribeSolution" class="hide">
+    @Html.Partial(MVC.Idea.Views.VersionInput)
+</div>
+</div>
+@if (Model.RelatedIdeas.Any())
+{
+    <div class="uiHeader clear">
+        <span>@Resource.RelatedIdeas</span>
+    </div>
+    <table class="tbl_ideas">
+        <thead>
+            <tr>
+                <th>
+                    @Resource.Idea
+            </th>
+            <th>
+                @Resource.State
+        </th>
+        <th>
+            @Resource.SupportedBy
+    </th>
+    <th></th>
+</tr>
+</thead>
+@foreach (var idea in Model.RelatedIdeas)
+{
+    <tr>
+        <td style="max-width: 400px;">
+            @Html.ActionLink(idea.Name, MVC.Idea.Details(idea.ObjectId, idea.Name.ToSeoUrl(), null), new { target = "_blank" })
+        </td>
+        <td>
+            <span class="last @Html.GetStateCssClass(idea.State)">@Html.GetIdeaStateString(idea.State, idea.InitiativeType)</span>
+        </td>
+        <td>
+            @idea.SupportersCount
+        </td>
+    </tr>
+}
+</table>
+}
+@if (ViewBag.IsAuthenticated && Model.RelatedIdeas.Any() && ViewBag.FilteredCategoryIds == null)
+{
+    <div class="@(Model.RelatedIdeas.Any() || Model.IsClosed ? "" : "fr")">
+        @Html.Button(new ButtonHelperModel()
+   {
+       Id = "lnkChooseIdea",
+       CssClass = "button_choose",
+       Text = Resource.RelateIdeas,
+       Type = ButtonHelperModel.Types.Link,
+       ImageUrl = Links.Content.Images.add_png,
+       Href = Url.Action(MVC.Idea.GetRelatedIdeaDialog(Model.Id))
+   })
+    </div>
+}
+@if (Model.RelatedIssues.Any())
+{
+    <div class="uiHeader clear">
+        <span>@Resource.RelatedIssues</span>
+    </div>
+    <div style="margin-bottom: 1.4em;">
+        @foreach (var issue in Model.RelatedIssues)
+        {
+            <div>
+                @Html.ActionLink(issue.Name, MVC.Voting.Details(issue.ObjectId, issue.Name.ToSeoUrl()), new { target = "_blank" })
+            </div>
+        }
+    </div>
+}
+@if (ViewBag.IsAuthenticated && ViewBag.FilteredCategoryIds == null)
+{
+    <div class="@(Model.RelatedIssues.Any() || Model.IsClosed ? "" : "fr")">
+        @Html.Button(new ButtonHelperModel()
+   {
+       Id = "lnkChooseIssue",
+       Text = Resource.RelateIssues,
+       Type = ButtonHelperModel.Types.Link,
+       ImageUrl = Links.Content.Images.add_png,
+       Href = Url.Action(MVC.Idea.GetRelatedIssueDialog(Model.Id))
+   })
+    </div>
+    if (!Model.RelatedIdeas.Any())
+    {
+        <div class="@(Model.RelatedIssues.Any() || Model.IsClosed ? "" : "fr")">
+            @Html.Button(new ButtonHelperModel()
+   {
+       Id = "lnkChooseIdea",
+       CssClass = "button_choose",
+       Text = Resource.RelateIdeas,
+       Type = ButtonHelperModel.Types.Link,
+       ImageUrl = Links.Content.Images.add_png,
+       Href = Url.Action(MVC.Idea.GetRelatedIdeaDialog(Model.Id))
+   })
+        </div>
+    }
+
+}
+<div class="clear"></div>
+@if ((!Model.IsClosed && ViewBag.IsAuthenticated) || (Model.Comments.Comments.List.Count()) > 0)
+{
+    @Html.Partial(MVC.Comments.Views.TypedComments, Model.Comments)
+}
+<div>
+    <a href="#">@SharedStrings.ToTop</a>
+</div>
+@if (Model.IsEditable)
+{
+    if (Model.State == IdeaStates.New || Model.State == IdeaStates.Closed)
+    {
+        <div id="dialog-close" title="@Resource.EnterClosingDescription" class="hide">
+            @using (Html.BeginForm(MVC.Idea.CloseIdea(Model.Id, null, false), FormMethod.Post))
+            {
+                @Html.AntiForgeryToken()
+                @Html.TextArea("ClosingReason", new { cols = 50, rows = 5, @class = "richtexteditor" })
+                <label title="@Resource.Depersonate">
+                    @Html.CheckBox("depersonate", false)
+                    @Resource.DepersonateShort
+                </label>
+            }
+        </div>
+    }
+    if (Model.State == IdeaStates.New || Model.State == IdeaStates.Realized)
+    {
+        <div id="dialog-realized" title="@Resource.RealizationDescription" class="hide">
+            @using (Html.BeginForm(MVC.Idea.IdeaRealized(Model.Id, null), FormMethod.Post))
+            {
+                @Html.AntiForgeryToken()
+                @Html.TextArea("StateDescription", new { cols = 50, rows = 5, @class = "richtexteditor" })
+            }
+        </div>
+    }
+    if (Model.State != IdeaStates.Realized && Model.State != IdeaStates.Closed)
+    {
+        <div id="dialog-resolve" title="@Resource.EnterResolution" class="hide">
+            @using (Html.BeginForm(MVC.Idea.ResolveIdea().AddRouteValue("IdeaId", Model.Id), FormMethod.Post))
+            {
+                @Html.AntiForgeryToken()
+                <div class="clear">
+                    @if (!ViewBag.CurrentUser.IsUnique)
+                    {
+                        <div class="popup">
+                            <div class="popup_border error">
+                                <div>@Resource.MustBeUnique</div>
+                            </div>
+                        </div>
+                    }
+                    <div class="popup">
+                        <div class="popup_border notice">
+                            <div>@Resource.CannotChangeState</div>
+                        </div>
+                    </div>
+                    <label for="finalVersionId">@Resource.Solution</label>
+                    @Html.DropDownList("finalVersionId", Model.VersionSelectList)
+                    @Html.ValidationMessage("finalVersionId")
+                </div>
+                <div class="fl">
+                    <label for="InitiativeType">@Resource.InitiativeType</label>
+                    @Html.DropDownForEnum(m => m.InitiativeType, Globalization.Resources.Services.InitiativeTypes.ResourceManager, Globalization.Resources.Services.InitiativeTypes.Default)
+                </div>
+                var selectedOther = Model.RequiredVotes.HasValue && !Model.RequiredVotes.In(0, 100, 1000, 10000, 50000, 300000);
+                <div class="inline_element">
+                    @Html.Label("RequiredVotesSelect", Resource.RequiredVotes)
+                    @Html.DropDownList("RequiredVotesSelect", new List<SelectListItem>()
+                        {
+                            new SelectListItem()
+                                {
+                                    Text = "100",
+                                    Value = "100",
+                                    Selected = Model.RequiredVotes == 100
+                                },
+                            new SelectListItem()
+                                {
+                                    Text = "1.000",
+                                    Value = "1000",
+                                    Selected = Model.RequiredVotes == 1000
+                                },
+                            new SelectListItem()
+                                {
+                                    Text = "10.000",
+                                    Value = "10000",
+                                    Selected = Model.RequiredVotes == 10000
+                                },
+                            new SelectListItem()
+                                {
+                                    Text = "50.000",
+                                    Value = "50000",
+                                    Selected = Model.RequiredVotes == 50000
+                                },
+                            new SelectListItem()
+                                {
+                                    Text = "300.000",
+                                    Value = "300000",
+                                    Selected = Model.RequiredVotes == 300000
+                                },
+                            new SelectListItem()
+                                {
+                                    Text = SharedStrings.Other,
+                                    Value = "",
+                                    Selected = selectedOther
+                                }
+                        })
+                    @Html.TextBox("RequiredVotes", Model.RequiredVotes ?? 100, new Dictionary<string, object>() { { "class", selectedOther ? "" : "hide" } })
+                </div>
+                <div class="inline_element">
+                    <label for="Deadline">
+                        @Resource.Deadline
+                    </label>
+                    @Html.Editor("Deadline", "DateTime")
+                    @Html.ValidationMessage("Deadline")
+                    @Html.Editor("DeadlineTime", "TimeSpan")
+                    @Html.ValidationMessage("DeadlineTime")
+                </div>
+                <div class="clear">
+                </div>
+                <label for="VrkUrl">
+                    @Resource.OfficialUrl
+                </label>
+                @Html.TextBox("OfficialUrl", Model.OfficialUrl, new Dictionary<string, object>() { { "class", "txt_xl" } })
+                <div class="clear">
+                </div>
+                <label for="finalVersionId" class="fl">
+                    @Resource.Resolution
+                </label>
+                @Html.Partial(MVC.Shared.Views._Help, Resource.ResolutionVotesInvalidation)
+                @Html.TextArea("resolution", new { cols = 50, rows = 5, @class = "richtexteditor" })
+                <label class="normal">@Html.CheckBox("SendMail", false) @Resource.SendMails</label>
+            }
+        </div>
+    }
+}
+@if (TempData["OpenAdditinalUniqueInfoDialog"] != null)
+{
+
+    @Html.Partial(MVC.Account.Views.AdditionalUniqueInfo, (AdditionalUniqueInfoModel)TempData["OpenAdditinalUniqueInfoDialog"])
+    <script type="text/javascript">
+        $(document).ready(function () {
+            $.helpers.openAdditionalUniqueInfoForm();
+        });
+    </script>
+}

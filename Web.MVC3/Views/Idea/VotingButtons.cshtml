@@ -1,0 +1,38 @@
+﻿@model Data.ViewModels.Idea.IdeaViewModel
+@using Data.Enums
+@using Globalization.Resources.Idea
+@using Web.Helpers
+@using Globalization.Resources.Shared
+
+@{
+    var disabled = false;//Model.Versions.Count > 1 && Model.State != IdeaStates.Resolved;
+}
+@if (!Model.IsClosed && Model.IsLikeable)
+{
+    <div id="divVoting" class='voting'>
+        @Html.Button(new ButtonHelperModel()
+                    {
+                        Disabled = disabled,
+                        CssClass = "VoteButton accountButton",
+                        Href = Url.Action(MVC.Idea.Vote(Model.Id, Model.CurrentVersion.Id)),
+                        Type = ButtonHelperModel.Types.Link,
+                        Text = Model.State == IdeaStates.Resolved ? Resource.Sign : Resource.Support,
+                        ImageUrl = null
+                    })
+    </div>
+}
+@if ((ViewBag.IsAuthenticated || ViewBag.CurrentUser.IsUnique) && !Model.IsLikeable)
+{
+    <div id="divVoted" class="voted">
+        @Html.Button(new ButtonHelperModel()
+       {
+           CssClass = "accountButton",
+           Href = Url.Action(MVC.Idea.CancelVote(Model.Id, Model.CurrentVersion.Id)),
+           Type = ButtonHelperModel.Types.Link,
+           Text = Resource.CancelSupport,
+           ImageUrl = Links.Content.Images.arrow_undo_png,
+           Id = "linkChangedMyMind",
+           Disabled = Model.IsClosed
+       })
+    </div>
+}

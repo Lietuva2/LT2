@@ -1,0 +1,321 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <!-- 
+    Microsoft ResX Schema 
+    
+    Version 2.0
+    
+    The primary goals of this format is to allow a simple XML format 
+    that is mostly human readable. The generation and parsing of the 
+    various data types are done through the TypeConverter classes 
+    associated with the data types.
+    
+    Example:
+    
+    ... ado.net/XML headers & schema ...
+    <resheader name="resmimetype">text/microsoft-resx</resheader>
+    <resheader name="version">2.0</resheader>
+    <resheader name="reader">System.Resources.ResXResourceReader, System.Windows.Forms, ...</resheader>
+    <resheader name="writer">System.Resources.ResXResourceWriter, System.Windows.Forms, ...</resheader>
+    <data name="Name1"><value>this is my long string</value><comment>this is a comment</comment></data>
+    <data name="Color1" type="System.Drawing.Color, System.Drawing">Blue</data>
+    <data name="Bitmap1" mimetype="application/x-microsoft.net.object.binary.base64">
+        <value>[base64 mime encoded serialized .NET Framework object]</value>
+    </data>
+    <data name="Icon1" type="System.Drawing.Icon, System.Drawing" mimetype="application/x-microsoft.net.object.bytearray.base64">
+        <value>[base64 mime encoded string representing a byte array form of the .NET Framework object]</value>
+        <comment>This is a comment</comment>
+    </data>
+                
+    There are any number of "resheader" rows that contain simple 
+    name/value pairs.
+    
+    Each data row contains a name, and value. The row also contains a 
+    type or mimetype. Type corresponds to a .NET class that support 
+    text/value conversion through the TypeConverter architecture. 
+    Classes that don't support this are serialized and stored with the 
+    mimetype set.
+    
+    The mimetype is used for serialized objects, and tells the 
+    ResXResourceReader how to depersist the object. This is currently not 
+    extensible. For a given mimetype the value must be set accordingly:
+    
+    Note - application/x-microsoft.net.object.binary.base64 is the format 
+    that the ResXResourceWriter will generate, however the reader can 
+    read any of the formats listed below.
+    
+    mimetype: application/x-microsoft.net.object.binary.base64
+    value   : The object must be serialized with 
+            : System.Runtime.Serialization.Formatters.Binary.BinaryFormatter
+            : and then encoded with base64 encoding.
+    
+    mimetype: application/x-microsoft.net.object.soap.base64
+    value   : The object must be serialized with 
+            : System.Runtime.Serialization.Formatters.Soap.SoapFormatter
+            : and then encoded with base64 encoding.
+
+    mimetype: application/x-microsoft.net.object.bytearray.base64
+    value   : The object must be serialized into a byte array 
+            : using a System.ComponentModel.TypeConverter
+            : and then encoded with base64 encoding.
+    -->
+  <xsd:schema id="root" xmlns="" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:msdata="urn:schemas-microsoft-com:xml-msdata">
+    <xsd:import namespace="http://www.w3.org/XML/1998/namespace" />
+    <xsd:element name="root" msdata:IsDataSet="true">
+      <xsd:complexType>
+        <xsd:choice maxOccurs="unbounded">
+          <xsd:element name="metadata">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" />
+              </xsd:sequence>
+              <xsd:attribute name="name" use="required" type="xsd:string" />
+              <xsd:attribute name="type" type="xsd:string" />
+              <xsd:attribute name="mimetype" type="xsd:string" />
+              <xsd:attribute ref="xml:space" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="assembly">
+            <xsd:complexType>
+              <xsd:attribute name="alias" type="xsd:string" />
+              <xsd:attribute name="name" type="xsd:string" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="data">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+                <xsd:element name="comment" type="xsd:string" minOccurs="0" msdata:Ordinal="2" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" msdata:Ordinal="1" />
+              <xsd:attribute name="type" type="xsd:string" msdata:Ordinal="3" />
+              <xsd:attribute name="mimetype" type="xsd:string" msdata:Ordinal="4" />
+              <xsd:attribute ref="xml:space" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="resheader">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" />
+            </xsd:complexType>
+          </xsd:element>
+        </xsd:choice>
+      </xsd:complexType>
+    </xsd:element>
+  </xsd:schema>
+  <resheader name="resmimetype">
+    <value>text/microsoft-resx</value>
+  </resheader>
+  <resheader name="version">
+    <value>2.0</value>
+  </resheader>
+  <resheader name="reader">
+    <value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <resheader name="writer">
+    <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <data name="Address" xml:space="preserve">
+    <value>Address</value>
+  </data>
+  <data name="ContactsLegend" xml:space="preserve">
+    <value>Contact information</value>
+  </data>
+  <data name="CreateNew" xml:space="preserve">
+    <value>To create a new</value>
+  </data>
+  <data name="CreateNewToolTip" xml:space="preserve">
+    <value>To create a new organization</value>
+  </data>
+  <data name="Description" xml:space="preserve">
+    <value>Description</value>
+  </data>
+  <data name="DescriptionIsRequired" xml:space="preserve">
+    <value>Enter a description</value>
+  </data>
+  <data name="Email" xml:space="preserve">
+    <value>E-mail</value>
+  </data>
+  <data name="EmailIsRequired" xml:space="preserve">
+    <value>Please enter your e-mail</value>
+  </data>
+  <data name="EmailRegexpIsNotValid" xml:space="preserve">
+    <value>Invalid e-mail format</value>
+  </data>
+  <data name="FoundedOn" xml:space="preserve">
+    <value>Operating from the</value>
+  </data>
+  <data name="Goals" xml:space="preserve">
+    <value>Objectives</value>
+  </data>
+  <data name="InfoLegend" xml:space="preserve">
+    <value>Information about the Organization</value>
+  </data>
+  <data name="InsertSubjectIsRequired" xml:space="preserve">
+    <value>Enter a description</value>
+  </data>
+  <data name="Join" xml:space="preserve">
+    <value>To become a Member</value>
+  </data>
+  <data name="JoinOrganizationToolTip" xml:space="preserve">
+    <value>To become a member of the organization. Will need the approval of the existing members of the organization.</value>
+  </data>
+  <data name="Leave" xml:space="preserve">
+    <value>Leave the Organization</value>
+  </data>
+  <data name="LeaveToolTip" xml:space="preserve">
+    <value>Get out of the Organization</value>
+  </data>
+  <data name="Like" xml:space="preserve">
+    <value>I Support The</value>
+  </data>
+  <data name="LikeOrganizationToolTip" xml:space="preserve">
+    <value>I support this organization, I want to be infromuojamas about its activities</value>
+  </data>
+  <data name="MemberActivity" xml:space="preserve">
+    <value>The activities of the</value>
+  </data>
+  <data name="Mission" xml:space="preserve">
+    <value>Mission</value>
+  </data>
+  <data name="Name" xml:space="preserve">
+    <value>Name</value>
+  </data>
+  <data name="NameIsRequired" xml:space="preserve">
+    <value>Enter the name of</value>
+  </data>
+  <data name="OrganizationActivity" xml:space="preserve">
+    <value>Activity</value>
+  </data>
+  <data name="OrganizationIdeas" xml:space="preserve">
+    <value>Ideas</value>
+  </data>
+  <data name="OrganizationInfo" xml:space="preserve">
+    <value>Information</value>
+  </data>
+  <data name="OrganizationIssues" xml:space="preserve">
+    <value>Issues</value>
+  </data>
+  <data name="OrganizationMembers" xml:space="preserve">
+    <value>Members</value>
+  </data>
+  <data name="OrganizationProjects" xml:space="preserve">
+    <value>Projects</value>
+  </data>
+  <data name="PageTitle" xml:space="preserve">
+    <value>{0}-Organisation</value>
+  </data>
+  <data name="PhoneNumber" xml:space="preserve">
+    <value>Phone No.</value>
+  </data>
+  <data name="PhoneNumberRegexpIsNotValid" xml:space="preserve">
+    <value>Invalid phone number format</value>
+  </data>
+  <data name="ProfilePictureLegend" xml:space="preserve">
+    <value>Organization's logo</value>
+  </data>
+  <data name="Type" xml:space="preserve">
+    <value>Type</value>
+  </data>
+  <data name="Unlike" xml:space="preserve">
+    <value>Undo support</value>
+  </data>
+  <data name="UnlikeToolTip" xml:space="preserve">
+    <value>No longer want to be informed about the activities of the Organization</value>
+  </data>
+  <data name="UrlIsRequired" xml:space="preserve">
+    <value>Enter the reference</value>
+  </data>
+  <data name="Vision" xml:space="preserve">
+    <value>Vision</value>
+  </data>
+  <data name="Websites" xml:space="preserve">
+    <value>Links</value>
+  </data>
+  <data name="WebSiteTitle" xml:space="preserve">
+    <value>Name</value>
+  </data>
+  <data name="WebSiteUrl" xml:space="preserve">
+    <value>Link</value>
+  </data>
+  <data name="OrganizationProblems" xml:space="preserve">
+    <value>Problems</value>
+  </data>
+  <data name="PrivateToOrganization" xml:space="preserve">
+    <value>Visible only to members of the Organization</value>
+  </data>
+  <data name="AlreadyInvited" xml:space="preserve">
+    <value>Already invited</value>
+  </data>
+  <data name="Create" xml:space="preserve">
+    <value>To Create A</value>
+  </data>
+  <data name="CreateTitle" xml:space="preserve">
+    <value>The new organization</value>
+  </data>
+  <data name="EmailAddresses" xml:space="preserve">
+    <value>E-mail addresses</value>
+  </data>
+  <data name="EmailAddressesHelp" xml:space="preserve">
+    <value>Please enter one email address per line</value>
+  </data>
+  <data name="IndexTitle" xml:space="preserve">
+    <value>Organizations</value>
+  </data>
+  <data name="InvitationMessage" xml:space="preserve">
+    <value>Message</value>
+  </data>
+  <data name="InvitationMessageHelp" xml:space="preserve">
+    <value>Enter the message you want to include in your invitation</value>
+  </data>
+  <data name="Invitations" xml:space="preserve">
+    <value>Invitations</value>
+  </data>
+  <data name="Invite" xml:space="preserve">
+    <value>Invite</value>
+  </data>
+  <data name="InvitedBy" xml:space="preserve">
+    <value>Called</value>
+  </data>
+  <data name="MemberIsPublic" xml:space="preserve">
+    <value>Visible to public</value>
+  </data>
+  <data name="NumberOfSupporters" xml:space="preserve">
+    <value>Number of supporters</value>
+  </data>
+  <data name="Organizations" xml:space="preserve">
+    <value>Organizcijos</value>
+  </data>
+  <data name="Position" xml:space="preserve">
+    <value>Function</value>
+  </data>
+  <data name="RegisteredMembers" xml:space="preserve">
+    <value>Registered members</value>
+  </data>
+  <data name="RegisteredMembersHelp" xml:space="preserve">
+    <value>Enter the user name, the registered name of Lithuania 2.0</value>
+  </data>
+  <data name="Repeat" xml:space="preserve">
+    <value>Repeat</value>
+  </data>
+  <data name="RepeatHelp" xml:space="preserve">
+    <value>Send an invitation again</value>
+  </data>
+  <data name="Role" xml:space="preserve">
+    <value>Role</value>
+  </data>
+  <data name="WaitForApproval" xml:space="preserve">
+    <value>Please wait while Your membership in the Organization will be approved. If you are not a member of the Organization, we recommend that you fill up with your paskytą, and send a cover letter.</value>
+  </data>
+  <data name="AdministratorRequired" xml:space="preserve">
+    <value>Must remain at least one administrator</value>
+  </data>
+  <data name="CannotCreate" xml:space="preserve">
+    <value>To create an organization, you need to confirm identity</value>
+  </data>
+  <data name="ProjectDeleteFailed" xml:space="preserve">
+    <value>The project could not be removed.</value>
+  </data>
+</root>

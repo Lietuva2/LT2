@@ -1,0 +1,29 @@
+﻿@model IEnumerable<Data.ViewModels.Base.UserListModel>
+@using Framework.Lists;
+@using Framework.Strings;
+@using Globalization.Resources.Account;
+@using Web.Helpers;
+@foreach (var item in Model)
+{
+        <li>
+            <p>
+                @if (item.Date.HasValue)
+                {
+                    @item.Date.Value
+                }
+                @if (!string.IsNullOrEmpty(item.Id))
+                {
+                    @Html.ActionLink(item.FullName, MVC.Account.Details(item.Id, item.FullName.ToSeoUrl(), null), new {target = "_blank"})
+                }
+                else
+                {
+                    @item.FullName
+                }
+                @if (item.IsCurrent)
+                {
+                    @Html.CheckBox("IsPublic", item.IsPublic, new Dictionary<string, object>() {{"data-role", "isPublicCheck"}, {"data-url", item.SetIsPublicUrl}, {"title", Resource.VotesArePublic}})
+                }
+            </p>
+            <hr />
+        </li>
+}
