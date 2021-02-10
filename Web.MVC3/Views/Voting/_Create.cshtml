@@ -1,0 +1,264 @@
+﻿@model Data.ViewModels.Voting.VotingCreateEditModel
+@using Data.ViewModels.Base
+@using Framework.Mvc.Strings
+@using Globalization.Resources.Voting
+@using Globalization.Resources.Shared
+@using Globalization.Resources.Voting
+@using Web.Helpers
+@{
+    if (Model.IsEdit)
+    {
+        ViewBag.Title = string.Format(Resource.EditTitle, Model.Subject.HtmlDecode());
+    }
+    else
+    {
+        ViewBag.Title = Resource.PageTitleCreate;
+    }
+}
+@section Head
+{
+}
+@section Scripts
+{
+    @Html.RegisterCkeditorScripts()
+    <script type="text/javascript">
+        function onPageLoad() {
+            initTooltips();
+            setupDatePicker();
+            $('.richtexteditor').richtext();
+
+            $('select').dropDownMultiList();
+
+            $('input[type=radio]').click(function (e) {
+                if ($(e.target).val() == '') {
+                    $('#IsPrivateToOrganization').removeAttr('checked');
+                }
+            });
+
+            $('#divUrls').section().remote('@Url.Action(MVC.Remote.GetRemoteTitle())');
+            $('#ideaList').deleteButton();
+
+            $('#lnkShowDetails').on('click', function (e) {
+                $('#divDetails').show();
+                $(this).hide();
+            });
+
+            $('#lnkAddProblem').on('click', function (e) {
+                $('#divAddProblem').toggle();
+                $('#lnkAddProblem').toggle();
+                $.helpers.cancelEvent(e);
+            });
+        }
+
+        function onProblemSelect() {
+            $.helpers.loadAsync(null, '@Url.Action(MVC.Problem.AddRelatedProblem())', { id: $('#ProblemId').val() }, addProblemCallback);
+        }
+
+        function addProblemCallback(result) {
+            var html = $(result.Content).appendTo($('#relatedProblems'));
+            $.helpers.flash(html);
+            $('#txtProblem').val('');
+            $('#divAddProblem').toggle();
+            $('#lnkAddProblem').toggle();
+        }
+
+        function onIdeaSelect() {
+            $.helpers.loadAsync(null, '@Url.Action(MVC.Voting.AddRelatedIdea())', { id: $('#RelatedIdeaId').val(), name: $('#RelatedIdeaText').val() }, function (result) {
+                var html = $(result.Content).appendTo($('#ideaList'));
+                $.helpers.flash(html);
+                $('#RelatedIdeaId').val('');
+                $('#RelatedIdeaText').val('');
+            });
+        }
+    </script>
+}<span class="block">@Html.BackLink()</span>
+<h2 class="heading">
+    @if (Model.IsEdit)
+    {
+        <text>
+        @Html.Raw(Model.Subject)
+        </text>
+    }
+    else
+    {
+        <text>
+        @Resource.TitleCreate
+        </text>
+    }
+</h2>
+<div class="popup_border notice" style="position: relative">
+    <span class="ui-icon ui-icon-alert" style="float: left; margin: 10px 7px 20px 0;"></span>
+    @Resource.VotingCreationNotice 
+</div>
+@using (Html.BeginForm(Model.IsEdit ? MVC.Voting.Edit() : MVC.Voting.Create(), FormMethod.Post))
+{
+    @Html.AntiForgeryToken()
+    <fieldset>
+        <div style="margin-bottom: 1em;">
+            @Html.LabelFor(model => model.Problems, Resource.Problems, new { @class = "fl" })
+            @Html.Partial(MVC.Shared.Views._Help, Resource.ProblemsHelp)
+            <ul id="relatedProblems" style="margin: 0;">
+                @foreach (var problem in Model.Problems)
+                {
+                    @Html.Partial(MVC.Problem.Views.Problem, problem)
+                }
+            </ul>
+            <div id="divAddProblem" class="hide">
+                @Html.AutoComplete("txtProblem", "ProblemId", MVC.Problem.GetMatchedProblems(), "txt_xl", "onProblemSelect", true, new Dictionary<string, object> { { "placeholder", Resource.AssignProblem } })
+            </div>
+            @Html.Button(new ButtonHelperModel()
+                {
+                    Id = "lnkAddProblem",
+                    Text = SharedStrings.AddShort,
+                    ImageUrl = Links.Content.Images.add_png
+                })
+            <div class="clear">
+            </div>
+        </div>
+        @Html.LabelFor(model => model.Subject, new { @class = "fl" })<span class="required">*</span>
+        @Html.Partial(MVC.Shared.Views._Help, Resource.SubjectHelp)
+        @Html.TextAreaFor(model => model.Subject, new { cols = 60, rows = 2 })
+        @Html.ValidationMessageFor(model => model.Subject)
+        @Html.LabelFor(model => model.Summary, new { @class = "fl" })<span class="required">*</span>
+        @Html.Partial(MVC.Shared.Views._Help, Resource.SummaryHelp)
+        @if (!Model.IsEdit)
+        {
+            <text>
+            <div>
+                @Html.TextAreaFor(model => model.Summary, new { cols = 60, rows = 3, @class = "richtexteditor" })
+            </div>
+            <div class="clear">
+                @Html.ValidationMessageFor(model => model.Summary)
+            </div>
+            </text>
+        }
+        else
+        {
+            <div>
+                @Html.Raw(Model.Summary)
+                @Html.HiddenFor(m => m.Summary)
+            </div>
+        }
+        @if (ViewBag.FilteredCategoryIds == null)
+        {
+            <div id="selectCategory" class="fl">
+                @Html.LabelFor(model => model.CategoryIds, new {@class = "fl"})<span class="required">*</span>
+                @Html.Partial(MVC.Shared.Views._Help, Resource.CategoryIdsHelp)
+                <div class="clear"></div>
+                @Html.ListBoxFor(m => m.CategoryIds, Model.Categories, new {id = "categorySelect", @class = "categoryInputDdl hide"})
+                <div class="clear"></div>
+                @Html.ValidationMessageFor(model => model.CategoryIds)
+            </div>
+        }
+        @if (ViewBag.Municipality == null)
+        {
+            <div class="@(ViewBag.FilteredCategoryIds == null ? "fr" : "")">
+                @Html.LabelFor(model => model.MunicipalityId, new { @class = "fl" })<span class="required">*</span>
+                @Html.Partial(MVC.Shared.Views._Help, Resource.MunicipalityIdHelp)
+                <div class="clear"></div>
+                @Html.DropDownListFor(m => m.MunicipalityId, Model.Municipalities, new Dictionary<string, object>() { { "class", "municipalityInputDdl" } })
+                <div class="clear"></div>
+                @Html.ValidationMessageFor(model => model.MunicipalityId)
+            </div>
+        }
+        <div id="divUrls" data-role="parent-container" class="clear clearfix">
+            @Html.LabelFor(model => model.Urls, new { @class = "fl" })
+            @Html.Partial(MVC.Shared.Views._Help, Resource.UrlsHelp)
+            <div class="itemsContainer">
+                @foreach (var website in Model.Urls)
+                {
+                    Html.RenderPartial(MVC.Shared.Views.WebSite, website);
+                }
+            </div>
+
+            <span class="uiblock">
+                @Html.Button(new ButtonHelperModel()
+                    {
+                        Text = Resource.AddUrl,
+                        Href = Url.Action(MVC.Common.AddWebSite(Model.Urls.Count)),
+                        CssClass = "add",
+                        Type = ButtonHelperModel.Types.Link,
+                        ImageUrl = Links.Content.Images.add_png
+                    })
+            </span>
+        </div>
+        @Html.ValidationMessageFor(m => m.Urls)
+        <br />
+        <a href="javascript:void(0);" id="lnkShowDetails" class="@Html.GetVisibilityClassString(Request.HttpMethod != "POST")">@SharedStrings.ExtendedView</a>
+        <div id="divDetails" class="@Html.GetVisibilityClassString(Request.HttpMethod == "POST")">
+            @Html.LabelFor(model => model.Deadline, new { @class = "fl" })
+            @Html.Partial(MVC.Shared.Views._Help, Resource.DeadlineHelp)
+            <div>
+                @Html.EditorFor(model => model.Deadline)
+                @Html.ValidationMessageFor(model => model.Deadline)
+                @Html.EditorFor(model => model.DeadlineTime)
+                @Html.ValidationMessageFor(model => model.DeadlineTime)
+            </div>
+            @Html.LabelFor(model => model.RelatedIdeas, new { @class = "fl" })
+            @Html.Partial(MVC.Shared.Views._Help, Resource.RelatedIdeasHelp)
+            <div id="selectRelatedIdea">
+                @Html.AutoComplete("RelatedIdeaText", "RelatedIdeaId", MVC.Idea.GetMatchedIdeas(), "txt_xl", "onIdeaSelect", true, new Dictionary<string, object> { { "placeholder", Resource.SelectRelatedIdea } })
+                @Html.ValidationMessageFor(model => model.RelatedIdeas)
+                <ul id="ideaList">
+                    @foreach (RelatedIdeaListItem idea in Model.RelatedIdeas)
+                    {
+                        @Html.Partial(MVC.Voting.Views.RelatedIdea, idea)
+                    }
+                </ul>
+            </div>
+
+            @if (!string.IsNullOrEmpty(Model.OrganizationId))
+            {
+                <div>
+                    @Html.LabelFor(m => m.OrganizationName)
+                    @Html.HiddenFor(m => m.OrganizationId)
+                    @Model.OrganizationName
+                </div>
+                <label>@Resource.Visibility</label>
+                @Html.RadioButtonListForEnum(m => m.Visibility, Globalization.Resources.Services.ObjectVisibility.ResourceManager, new Dictionary<string, object>() { { "class", "normal" } })
+            }
+            else if ((Model.Organizations != null && Model.Organizations.Any()))
+            {
+                @Html.HiddenFor(m => m.IsPrivateToOrganization)
+                if (!Model.IsEdit)
+                {
+                @Html.LabelFor(m => m.OrganizationId, new { @class = "fl" })
+                @Html.Partial(MVC.Shared.Views._Help, Resource.OrganizationIdHelp)
+                <div class="clear"></div>
+                    foreach (var o in Model.Organizations)
+                    {
+                <label class="normal">
+                    @Html.RadioButtonFor(m => m.OrganizationId, o.Value)
+                    @o.Text
+                </label>
+                <br />
+                    }
+                }
+                
+@*if (!Model.IsEdit || !string.IsNullOrEmpty(Model.OrganizationId))
+                {
+                <div id="divPrivateToOrganization">
+                    <label class="normal">
+                        @Html.CheckBoxFor(m => m.IsPrivateToOrganization)
+                        matomas tik organizacijai
+                    </label>
+                </div>
+                @Html.ValidationMessageFor(model => model.IsPrivateToOrganization)
+                }*@
+            }
+            <br />
+            <label class="normal">
+                @Html.CheckBoxFor(m => m.AllowSummaryWiki)
+                @Resource.AllowSummaryWiki
+            </label>
+            <br />
+            <label class="normal">
+                @Html.CheckBoxFor(m => m.AllowNeutralVotes)
+                @Resource.AllowNeutralVotes
+            </label>
+        </div>
+        <div class="actions">
+            @Html.Buttons(2)
+        </div>
+    </fieldset>
+}

@@ -1,0 +1,87 @@
+﻿@{
+    Layout = "";
+}
+<!DOCTYPE html>
+@using Globalization.Resources.Shared;
+<html>
+<head>
+    <title>Biografija - Martynas Šimelis</title>
+    <link href="@Links.Content.CSS.print_css" rel="stylesheet" type="text/css" media="print" />
+    <link href="@Links.Content.CSS.screen_css" rel="stylesheet" type="text/css" />
+    <link href="@Links.Content.CSS.site_css" rel="stylesheet" type="text/css" />
+    <!--[if lt IE 8]><link rel="stylesheet" href="@Links.Content.CSS.ie_css" type="text/css" media="screen, projection"><![endif]-->
+    <script type="text/javascript">
+        var _gaq = _gaq || [];
+        _gaq.push(['_setAccount', 'UA-266484-11']);
+        _gaq.push(['_trackPageview']);
+
+        (function () {
+            var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+            ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+            var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+        })();
+    </script>
+</head>
+<body>
+    <div class="background_green">
+    </div>
+    <div class="background_lightgreen">
+    </div>
+    <div class="container">
+        <div id="header" class="span-24 last">
+            <h2 style="color: White;">
+                Martynas Šimelis
+            </h2>
+        </div>
+        <div id="left_nav" class="span-4">
+            <ul class="main_nav">
+                <li>@Html.ActionLink("Stipendija", MVC.Martynas_Simelis.Award())</li>
+                <li>@Html.ActionLink("Biografija", MVC.Martynas_Simelis.Biography())</li>
+                <li>@Html.ActionLink("Darbai", MVC.Martynas_Simelis.Portfolio())</li>
+            </ul>
+        </div>
+        <div id="main" class="span-20 last">
+            <div class="in_brd page_content">
+                <h2 class="heading">
+                    Biografija</h2>
+                <div style="height: 15px;">
+                </div>
+                <div  style="float: left; margin-right: 20px;">
+                    <img src="@Links.Content.Images.Martynas.martynas_simelis1_jpg" width="200px" alt="Martynas Šimelis" />
+                </div>
+                <p>
+                    Martynas Šimelis gimė 1982 m. gegužės 25 dieną. Nuo pirmos klasės lankė Kauno berniukų
+                    ir jaunuolių chorinio dainavimo mokyklą "Varpelis", šoko pramoginius šokius. Vyresnėse
+                    mokyklos klasėse lankė tautinių šokių būrelį. 2000 m. baigė Kauno "Saulės" gimnaziją,
+                    įstojo į Kauno Medicinos Universiteto (dabar - Lietuvos Sveikatos Mokslų Universitetas)
+                    Odontologijos fakultetą. 2005 m. baigė Bendros praktikos gydytojo odontologo specialybę,
+                    atliko internatūrą Kauno Šilainių poliklinikoje. 2006 m. įstojo į antrinę ortopedinės
+                    odontologijos rezidentūrą, kurią 2009 m. baigė.
+                </p>
+                <ul>
+                    <li>2007 m., 2008 m., 2009 m. lankė Endodontijos kursus Maileferio gamykloje, mokymo
+                        laboratorijoje (Šveicarija).</li>
+                    <li>2008m. dalyvavo pirmajame Europos mikroskopinės odontologijos asociacijos suvažiavime Amsterdame.</li>
+                    <li>Nuo 2005m. dalyvavo ir skaitė pranešimus įvairiose konferencijose ir seminaruose Lietuvoje.</li>
+                    <li>Publikavo straipsnius „Stomatologijos“, „Stominfo“ žurnaluose.</li>
+                </ul>
+                <ul>
+                    <li>Nuo 2006m. dirbo Kauno Medicinos universitete, dantų ir žandikaulių ortopedijos
+                        klinikoje, asistento pareigose;</li>
+                    <li>Nuo 2006 m. dirbo Individualioje S. Matelionio įmonėje, gyd. odontologo pareigose;</li>
+                    <li>Nuo 2008 m. dirbo klinikoje „Aukštėja“, gyd. endodontologo pareigose.</li>
+                </ul>
+                <p>
+                    Buvo aktyvus krepšinio fanas, Lietuvos patriotas, puikus draugas, 
+                    kolega, neeilinis Žmogus.
+                </p>
+                <p>
+                    Žuvo 2010 m. balandžio 11 d., nesulaukęs nė 28 metų.
+                </p>
+            </div>
+        </div>
+        <div class="span-24 last">
+        </div>
+    </div>
+</body>
+</html>

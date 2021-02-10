@@ -1,0 +1,40 @@
+﻿@model Data.ViewModels.Account.InterestsViewModel
+@using Globalization.Resources.Account
+@using Globalization.Resources.Shared
+
+<fieldset>
+    <div class="uiHeader">
+    <div>
+    <span>@Resource.InterestsLegend</span>
+    @if (ViewBag.IsAuthenticated && Model.IsCurrentUser)
+    {
+        @Html.ActionLink(SharedStrings.Edit, MVC.Account.EditInterests(Model.UserObjectId), new { @class = "edit" })
+    }
+    </div>
+    </div>
+    <table class="tbl_data">
+    <tbody>
+    @if (!string.IsNullOrEmpty(Model.PoliticalViews) || Model.IsCurrentUser)
+    {
+    <tr>
+        <th class="lbl">@Resource.PoliticalViews</th>
+        <td class="data">@Html.Raw(Model.PoliticalViews)</td>
+    </tr>
+    }
+    @if (!string.IsNullOrEmpty(Model.Groups) || Model.IsCurrentUser)
+    {
+        <tr>
+        <th class="lbl">@Resource.Groups</th>
+        <td class="data">@Html.Raw(Model.Groups)</td>
+        </tr>
+    }
+    @if (!string.IsNullOrEmpty(Model.Interests) || Model.IsCurrentUser)
+    {
+        <tr>
+            <th class="lbl">@Resource.Interests</th>
+            <td class="data">@Html.Raw(Model.Interests)</td>
+        </tr>
+    }
+    </tbody>
+    </table>
+</fieldset>

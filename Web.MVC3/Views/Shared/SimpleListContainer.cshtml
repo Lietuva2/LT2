@@ -1,0 +1,11 @@
+﻿@model Data.ViewModels.Base.SimpleListContainerModel
+@using Globalization.Resources.Shared
+@using Globalization.Resources.Shared;
+@using Framework.Lists
+<ul id="list">
+    @{Html.RenderPartial(MVC.Shared.Views.SimpleList, Model.List.List);}
+</ul>
+@if (Model.List.HasMoreElements)
+{
+    @Html.ActionLink(SharedStrings.More, Model.ActionResult, new { id = "lnkShowMoreDialog" })
+}

@@ -1,0 +1,418 @@
+﻿@model Data.ViewModels.Voting.VotingViewModel
+@{
+    ViewBag.Title = Model.Subject.HtmlDecode() + " - " + Resource.PageTitleDetails;
+    ViewBag.GroupChatTitle = Model.Subject.HtmlDecode();
+    ViewBag.PageDescription = Model.Summary.GetPlainText();
+
+    var isOrg = !string.IsNullOrEmpty(Model.OrganizationId) && !Model.IsPrivateToOrganization;
+    var creatorUrl = isOrg ? Url.Action(MVC.Organization.Details(Model.OrganizationId, (Model.OrganizationName ?? string.Empty).ToSeoUrl(), null, null, null, null)) :
+                         Url.Action(MVC.Account.Details(Model.UserObjectId, Model.UserFullName.ToSeoUrl(), null));
+}
+@using Data.Enums
+@using Data.ViewModels.Account
+@using Data.ViewModels.Comments
+@using Framework.Enums
+@using Framework.Mvc.Strings
+@using Globalization.Resources.Shared
+@using Globalization.Resources.Voting
+@using Web.Helpers
+@using Framework.Strings;
+@section Head
+{
+    <style type="text/css">
+        .no-padding .buttons {
+            padding-top: 3px;
+        }
+    </style>
+    <meta property="og:type" content="lietuva:law" />
+}
+@section Scripts
+{
+    @if (ViewBag.IsAuthenticated)
+    {
+        @Html.RegisterCkeditorScripts()
+    }
+    <script type='text/javascript'>
+        @if ((bool?) TempData["Saved"] == true && ViewBag.CurrentUser.CanPostToFacebook && !Model.IsPrivateToOrganization)
+        {
+            <text>
+        window.fbAsyncInitCallback = function () {
+            $.helpers.postToFacebook("@Resource.FacebookPostMessage",
+            '@Url.ActionAbsolute(MVC.Voting.Details(Model.Id, null))',
+                        @(ViewBag.CurrentUser.PostPermissionGranted ? "false" : "true"));
+        };
+                </text>
+        }
+
+        function onPageLoad() {
+            @if (ViewBag.IsAuthenticated)
+            {
+                <text>
+            $('div#divPositiveComments').CommentsInput({ callback: function (result) { if(result.VotingStatistics) {
+                $('#divVotingStatistics').html(result.VotingStatistics);
+            }
+            }, listSelector: "#listPositiveComments" });
+            $('div#divNegativeComments').CommentsInput({ callback: function (result) { if(result.VotingStatistics) {
+                $('#divVotingStatistics').html(result.VotingStatistics);
+            }
+            }, listSelector: "#listNegativeComments" });
+
+            $('#divCommentsContainer').Comments().liking();
+            initTooltips();
+
+            CreateSavingDialog($('#btnOfficialVoteFor'), $('#dialog-voted'), function () { window.location.reload(); }, function () {
+                $('#forAgainst').val('@ForAgainst.For');
+            });
+            CreateSavingDialog($('#btnOfficialVoteAgainst'), $('#dialog-voted'), function () { window.location.reload(); }, function () {
+                $('#forAgainst').val('@ForAgainst.Against');
+            });
+
+            $('#btnSendMails').hijack(function(result){
+                if(result){
+                    this.hide();
+                }
+            }, {confirmMessage: $('#btnSendMails').attr('title') + '\n' + '@SharedStrings.ConfirmSendMail'});
+
+            $('#btnDelete').on('click', function(e){
+                if(!confirm(JavaScriptLibraryResources.ConfirmDelete)){
+                    return cancelEvent(e);
+                }
+            });
+
+            @if (!Request.Browser.IsMobileDevice) {
+                <text>$().chat('enable', '@Model.Id');</text>
+            }
+            </text>
+            }
+
+            $('#divCommentsContainer').CommentsRead({ commentsListContainerSelector: '.commentsContainer' });
+
+            $('#wiki').voting({
+                hover: true,
+                isAmbasador: @(ViewBag.CurrentUser.CanPostToFacebook && ViewBag.CurrentUser.IsUnique && !Model.IsPrivateToOrganization && (bool?) TempData["Saved"] != true ? "true" : "false"),
+                supportMessage: '@ViewBag.CurrentUser.VotedText',
+                facebookUrl: '@Url.ActionAbsolute(MVC.Voting.Details(Model.Id, null))',
+                forceFbLogin: @(ViewBag.CurrentUser.PostPermissionGranted ? "false" : "true"),
+                allowNewVersion: false
+            });
+
+            CreateUserAjaxDialog($('.lnkUsers'));
+
+            $('a[data-role="problem"]').hijack(function(result) {
+                var item = $('li[data-problemid="' + result.Id + '"]');
+                item.html(result.Content);
+                item.problems({ addIdeaUrl: '@Url.Action(MVC.Problem.AddRelatedIdea())' });
+                createExpandableText(item);
+                @if (ViewBag.IsAuthenticated)
+                {
+                    <text>
+                item.Comments().liking();
+                </text>
+                }
+                item.CommentsRead({ prepend: true, commentsListSelector: '.listComments', commentsListContainerSelector: '.comments', showMoreOnScroll: false });
+                CreateUserAjaxDialog('a.lnkUsers');
+            });
+        }
+    </script>
+}
+<div data-role="add_idea_hidden" class="hide">
+    @Html.AutoComplete("txtIdea", "IdeaId", MVC.Idea.GetMatchedIdeas(), "txt_90", "function(){$('#list').problems('select');}", true, new Dictionary<string, object> { { "placeholder", Resource.SelectIdea } })
+</div>
+<div id="wiki">
+    <div class="span-13">
+        <span>@Html.BackLink((Uri)ViewBag.LastListUrl)</span>
+        <span style="float: right;">
+            @if (Model.IsEditable)
+            {
+                <text>
+                @Html.ActionLinkWithReturnUrl(SharedStrings.Edit, MVC.Voting.Edit(Model.Id))
+                </text>
+            }
+        </span>
+        <div class="clear">
+        </div>
+        <h2 class="d_h2">
+            <a href="@Url.Action(MVC.Voting.PreviousIssue(Model.Id))" title="@Resource.NextIssue" class="arrow_previous">
+                <img src="@Links.Content.Images.previous_png" alt="@SharedStrings.Previous"/></a>
+            <a href="@Url.Action(MVC.Voting.NextIssue(Model.Id))" title="@Resource.NextIssue" class="arrow_next">
+                <img src="@Links.Content.Images.forward_png" alt="@SharedStrings.Next"/></a>
+            @Html.Raw(Model.Subject)
+        </h2>
+        @if (Model.IsPrivateToOrganization)
+        {
+            <div style="float: right;">
+                <img src="@Links.Content.Images.blind_png" alt="@Resource.IsPrivate" title="@Resource.IsPrivate" />
+            </div>
+        }
+        <div class="clear">
+        </div>
+        <div class="details">
+            <span>
+                <a href="@creatorUrl" id="lnkCreatedBy">@(isOrg ? Model.OrganizationName : Model.UserFullName)</a>, @Model.Date.ToLongDateString()
+            </span>
+            <div class="ctags">
+                @foreach (var category in Model.Categories)
+                {
+                    <span class="ctag">@category</span>
+                }
+                @if (!string.IsNullOrEmpty(Model.Municipality))
+                {
+                    <span class="ctag">@Model.Municipality</span>
+                }
+            </div>
+            <div class="clear">
+            </div>
+        </div>
+        @if (Model.Problems.Any())
+        {
+            <h3>@Resource.Problems</h3>
+            <ul>
+                @foreach (var problem in Model.Problems)
+                {
+                    <li data-problemid="@problem.Id">
+                        <div class="richtext">
+                            @Html.Raw(problem.Subject)
+                            @Html.ActionLink(Resource.Expand, MVC.Problem.Single(problem.Id), new Dictionary<string, object> { { "_target", "blank" }, { "data-role", "problem" } })
+                        </div>
+                        <hr />
+                    </li>
+                }
+            </ul>
+            <h3>@Resource.Summary</h3>
+        }
+        @{
+            var allowSummaryEdit = !Model.IsVotingFinished && (ViewBag.IsAuthenticated && Model.AllowSummaryWiki || Model.UserObjectId == ViewBag.CurrentUser.Id || ViewBag.CurrentUser.Role == UserRoles.Admin);
+        }
+        <div id='divSummaryText'>
+            <div id="summary">
+                <span id='spanVersionText' class="richtext summarytext">@Html.Raw(Model.Summary)</span>
+                <span class="summaryHover edit_actions" style="display: none;">
+                    @if (allowSummaryEdit)
+                    {
+                        <a href='@Url.Action(MVC.Voting.Details(Model.Id, Model.Subject.ToSeoUrl()))' id="lnkEditVersion">@SharedStrings.Edit</a>
+                    }
+                    <a href="javascript:void(0);" id="lnkShowVersions">@Resource.VersionHistory</a></span>
+            </div>
+            <div id='divSummaryVersions' class="hide summaryVersions">
+                @{Html.RenderPartial(MVC.Voting.Views._Versions, Model);}
+            </div>
+            @if (allowSummaryEdit)
+            {
+                <div id='editSummary' class="clearfix" style='display: none;' showtip="true" title="@Resource.EditSummaryHelp">
+                    <div class="popup_border notice" style="position: relative">
+                        <span class="ui-icon ui-icon-alert" style="float: left; margin: 10px 7px 20px 0;"></span>
+                        @Resource.SummaryNotice
+                    </div>
+                    @using (Html.BeginForm(MVC.Voting.AddVersion(Model.Id, null), FormMethod.Post, new { id = "formVersion" }))
+                    {
+                        @Html.ValidationSummary()
+                        @Html.AntiForgeryToken()
+                        @Html.TextAreaFor(m => m.Summary, 6, 60, new { id = "txtVersionSummary", @class = "richtexteditor" })
+                        @Html.ValidationMessageFor(m => m.Summary)
+                        ;
+                        <div>
+                            @Html.Buttons(new ButtonHelperModel()
+                       {
+                           Text = Resource.SaveVersion
+                       },
+                                          new CancelButtonHelperModel()
+                                          {
+                                              Id = "btnCancel"
+                                          })
+                        </div>
+                    }
+                </div>
+            }
+        </div>
+        @if (!string.IsNullOrEmpty(Model.OfficialVotingDescription))
+        {
+            <h3>@Resource.OfficialVote</h3>
+            <div class="richtext">
+                @Html.Raw(Model.OfficialVotingDescription)
+            </div>
+        }
+        @if (Model.Urls.Count > 0)
+        {
+            <h3>@Resource.Urls</h3>
+            <div style="margin-bottom: 5px;">
+                <ul>
+                    @foreach (var website in Model.Urls)
+                    {
+                        <li><a class="external" rel="nofollow" href='@website.Url' hreflang="lt" target="_blank">@website.Title</a> </li>
+                    }
+                </ul>
+            </div>
+        }
+    </div>
+    <div class="span-5 last">
+        <div class="innerStatistics">
+            <div id='divVotingStatistics'>
+                @{Html.RenderPartial(MVC.Voting.Views.VotingStatistics, (Data.ViewModels.Voting.VotingStatisticsViewModel)Model);}
+            </div>
+            @{Html.RenderPartial(MVC.Shared.Views.Share, Model.ShortLink);}
+            <div class="statistics_buttons">
+                @if (Model.OfficialVote == ForAgainst.Neutral && Model.IsEditable)
+                {
+                    using (Html.BeginForm(MVC.Voting.OfficialVote(Model.Id, ForAgainst.For, null), FormMethod.Post))
+                    {
+                    @Html.AntiForgeryToken()
+                    @Html.Button(new ButtonHelperModel()
+               {
+                   CssClass = "accountButton",
+                   Id = "btnOfficialVoteFor",
+                   Text = Resource.OfficialVoteFor,
+                   ImageUrl = Links.Content.Images.accept_png
+               })
+                    }
+                    using (Html.BeginForm(MVC.Voting.OfficialVote(Model.Id, ForAgainst.Against, null), FormMethod.Post))
+                    {
+                    @Html.AntiForgeryToken()
+                    @Html.Button(new ButtonHelperModel()
+               {
+                   CssClass = "accountButton",
+                   Id = "btnOfficialVoteAgainst",
+                   Text = Resource.OfficialVoteAgainst,
+                   ImageUrl = Links.Content.Images.stop_png
+               })
+                    }
+                }
+                @if (Model.IsMailSendable)
+                {
+                    @Html.Button(new ButtonHelperModel() { Type = ButtonHelperModel.Types.Link, CssClass = "accountButton", Text = Resource.SendMails, Id = "btnSendMails", ImageUrl = Links.Content.Images.email_small_png, Href = Url.Action(MVC.Voting.SendNotification(Model.Id)), HtmlAttributes = new Dictionary<string, object>(){{"title", SharedStrings.SendMailTip}}})
+                    <br />
+                }
+                @if (Model.OfficialVote != ForAgainst.Neutral && Model.IsEditable)
+                {
+                    using (Html.BeginForm(MVC.Voting.OfficialVote(Model.Id, ForAgainst.Neutral, null), FormMethod.Post))
+                    {
+                    @Html.AntiForgeryToken()
+                    @Html.Button(new ButtonHelperModel()
+               {
+                   CssClass = "accountButton",
+                   Id = "btnOfficialVoteCancel",
+                   Text = SharedStrings.Cancel,
+                   ImageUrl = Links.Content.Images.arrow_undo_png
+               })
+                    }
+                }
+                @if (Model.Subscribe != null)
+                {
+                    <div>
+                        @Html.Partial(MVC.Shared.Views.Subscribe, Model.Subscribe)
+                    </div>
+                }
+                @if (ViewBag.IsAuthenticated && !Model.RelatedIdeas.Any())
+                {
+                    @Html.Button(new ButtonHelperModel() { Type = ButtonHelperModel.Types.Link, Text = Resource.RelateIdea, ImageUrl = Links.Content.Images.add_png, Href = Url.Action(MVC.Idea.Create(issueId: Model.Id)), CssClass = "accountButton" })
+                }
+                @if (Model.IsEditable && Model.IsVotingFinished && Model.IsPrivateToOrganization)
+                {
+                    @Html.Button(new ButtonHelperModel() { Type = ButtonHelperModel.Types.Link, Text = Resource.GenerateReport, ImageUrl = Links.Content.Images.page_text_gif, Href = Url.Action(MVC.Voting.GenerateReport(Model.Id)), CssClass = "accountButton" })
+                }
+                @if (Model.IsDeletable)
+                {
+                    @Html.Button(new ButtonHelperModel() {Id = "btnDelete", Type = ButtonHelperModel.Types.Link, Text = SharedStrings.Delete, ImageUrl = Links.Content.Images.delete_ico_png, Href = Url.Action(MVC.Voting.Delete(Model.Id)), CssClass = "accountButton negative" })
+                }
+            </div>
+        </div>
+    </div>
+</div>
+<div class="clear">
+</div>
+@if (Model.RelatedIdeas.Any())
+{
+    <div class="uiHeader">
+        <span>@Resource.RelatedIdeas</span>
+    </div>
+    <div>
+        @foreach (var idea in Model.RelatedIdeas)
+        {
+            <div>
+                @Html.ActionLink(idea.Name, MVC.Idea.Details(idea.ObjectId, idea.Name.ToSeoUrl(), null), new { target = "_blank" })
+            </div>
+        }
+    </div>
+        if (ViewBag.IsAuthenticated)
+        {
+    <div class="clearfix" style="margin-top: 8px;">
+        @Html.Button(new ButtonHelperModel() { Type = ButtonHelperModel.Types.Link, Text = Resource.CreateRelatedIdea, ImageUrl = Links.Content.Images.add_png, Href = Url.Action(MVC.Idea.Create(issueId: Model.Id)) })
+    </div>
+        }
+}
+
+@if (!ViewBag.IsAuthenticated && !Model.IsVotingFinished)
+{
+    <div class="clear tbl_edit" style="padding: 10px 10px 10px 10px; margin: 10px 0 10px 0;">
+        @Html.Raw(string.Format(Resource.LoginToComment, Html.ActionLink(Resource.Login, MVC.Account.Login(Request.RawUrl))))
+    </div>
+    <br />
+}
+@if ((!Model.IsVotingFinished && ViewBag.IsAuthenticated) || (Model.PositiveComments.List.Count() + Model.NegativeComments.List.Count()) > 0)
+{
+    <div class="uiHeader">
+        <span>@Resource.Comments</span>
+    </div>
+    if (ViewBag.IsAuthenticated)
+    {
+    <div>
+        @Resource.CommentNotice
+    </div>
+    }
+    <div id="divCommentsContainer" class="uiBody comments-container">
+        <div id="divPositiveComments" class="commentsContainer span-9">
+            <span class="fieldTitle">
+                @Resource.SupportingComments (@Model.PositiveCommentsCount)
+            </span>
+            @if (ViewBag.IsAuthenticated)
+            {
+                Html.RenderPartial(MVC.Comments.Views.CommentInput, new CommentView() { EntryId = Model.Id, ForAgainst = ForAgainst.For, ButtonText = SharedStrings.Save });
+            }
+            <div id="listPositiveComments" class="listComments votingComments">
+                @{Html.RenderPartial(MVC.Comments.Views._CommentList, Model.PositiveComments.List);}
+            </div>
+            @if (Model.PositiveComments.HasMoreElements)
+            {
+                @Html.ActionLink(SharedStrings.More, MVC.Voting.GetMoreComments(Model.Id, ForAgainst.For, null), new { id = "lnkShowMorePositiveComments", @class = "lnkShowMoreComments" })
+            }
+        </div>
+        <div id="divNegativeComments" class="commentsContainer span-9 last">
+            <span class="fieldTitle">
+                @Resource.NonSupportingComments (@Model.NegativeCommentsCount)
+            </span>
+            @if (ViewBag.IsAuthenticated)
+            {
+                Html.RenderPartial(MVC.Comments.Views.CommentInput, new CommentView() { EntryId = Model.Id, ForAgainst = ForAgainst.Against, ButtonText = SharedStrings.Save });
+            }
+            <div id="listNegativeComments" class="listComments votingComments">
+                @{Html.RenderPartial(MVC.Comments.Views._CommentList, Model.NegativeComments.List);
+                }
+            </div>
+            @if (Model.NegativeComments.HasMoreElements)
+            {
+                @Html.ActionLink(SharedStrings.More, MVC.Voting.GetMoreComments(Model.Id, ForAgainst.Against, null), new { id = "lnkShowMoreNegativeComments", @class = "lnkShowMoreComments" })
+            }
+        </div>
+        <div class="clear">
+        </div>
+    </div>
+}
+<div>
+    <a href="#">@SharedStrings.ToTop</a>
+</div>
+<div id="dialog-voted" title="@Resource.OfficialVote" class="hide">
+    @using (Html.BeginForm(MVC.Voting.OfficialVote(Model.Id, ForAgainst.Neutral, null), FormMethod.Post))
+    {
+        @Html.AntiForgeryToken()
+        @Html.Hidden("forAgainst")
+        @Html.TextArea("Description", new { cols = 50, rows = 5, @class = "richtexteditor" })
+    }
+</div>
+@if (TempData["OpenAdditinalUniqueInfoDialog"] != null)
+{
+    @Html.Partial(MVC.Account.Views.AdditionalUniqueInfo, (AdditionalUniqueInfoModel)TempData["OpenAdditinalUniqueInfoDialog"])
+    <script type="text/javascript">
+        $(document).ready(function () {
+            $.helpers.openAdditionalUniqueInfoForm();
+        });
+    </script>
+}

@@ -1,0 +1,13 @@
+﻿<script type="text/javascript">
+    function FacebookAuth() {
+        $("#dialog-Facebook").dialog("open");
+        $.helpers.facebookLogin(getAndPostUserData, false, false);
+    }
+
+    function getAndPostUserData(response) {
+        if (response.authResponse) {
+            $('#accessToken').val(response.authResponse.accessToken);
+            $('#formFacebookLogin').submit();
+        }
+    }
+</script>

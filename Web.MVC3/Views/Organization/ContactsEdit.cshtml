@@ -1,0 +1,65 @@
+﻿@model Data.ViewModels.Organization.ContactsEditModel
+@using Globalization.Resources.Organization
+@using Globalization.Resources.Shared
+@using Web.Helpers;
+<fieldset>
+    <div class="uiHeader">
+        <span>@Resource.ContactsLegend</span>
+    </div>
+    @using (Html.BeginForm(MVC.Organization.SaveContacts()))
+    {
+        @Html.AntiForgeryToken()
+        @Html.HiddenFor(m => m.ObjectId)
+
+        <table class="tbl_data tbl_editc">
+            <tbody>
+                <tr>
+                    <th class="lbl" style="padding-top: 0px">@Resource.Email
+                    </th>
+                    <td class="data" style="padding-bottom: 0px">
+                        @Html.TextBoxFor(m => m.Email)
+                        @Html.ValidationMessageFor(model => model.Email)
+                    </td>
+                </tr>
+                <tr>
+                    <th class="lbl" style="padding-top: 0px">@Resource.PhoneNumber
+                    </th>
+                    <td class="data" style="padding-bottom: 0px">
+                        @Html.TextBoxFor(m => m.PhoneNumber, new { @class = "txt_l" })
+                        @Html.ValidationMessageFor(model => model.PhoneNumber)
+                    </td>
+                </tr>
+                <tr>
+                    <th class="lbl" style="padding-top: 0px">@Resource.Address
+                    </th>
+                    <td class="data" style="padding-bottom: 0px">
+                        @Html.TextBoxFor(m => m.Address, new { @class = "txt_xl" })
+                        @Html.ValidationMessageFor(model => model.Address)
+                    </td>
+                </tr>
+                <tr>
+                    <th class="lbl">@Resource.Websites
+                    </th>
+                    <td class="data" data-role="parent-container">
+                        <div class="itemsContainer">
+                            @foreach (var website in Model.WebSites)
+                            {
+                                Html.RenderPartial(MVC.Shared.Views.WebSite, website);
+                            }
+                        </div>
+                        <div class="clear">
+                        </div>
+                        <span class="uiblock">@Html.ActionLink(SharedStrings.Add, MVC.Common.AddWebSite(Model.WebSites.Count, "WebSites"), new { @class = "add" })</span>
+                    </td>
+                </tr>
+                <tr>
+                    <th>
+                    </th>
+                    <td class="actions data">
+                        @Html.Buttons(2, Url.Action(MVC.Organization.Contacts(Model.ObjectId)))
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+    }
+</fieldset>

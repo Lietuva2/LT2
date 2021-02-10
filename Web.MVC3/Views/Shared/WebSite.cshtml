@@ -1,0 +1,28 @@
+﻿@model Data.ViewModels.Base.UrlEditModel
+@using Globalization.Resources.Organization
+@using Globalization.Resources.Shared
+@using Web.Helpers
+
+@using (Html.BeginCollectionItem(Model.ListName))
+{
+    <div class="fields_container">
+        <p class="uiblock">
+            <span class="block">@Resource.WebSiteUrl</span>
+            @Html.HiddenFor(m => m.Id)
+            @Html.TextBoxFor(m => m.Url, new { @class = "remoteurl txt_xl" })
+        </p>
+        <p class="uiblock">
+            <br />
+            <a href="javascript:void(0)" class="delete">@SharedStrings.Delete</a></p>
+        <div class="clear"></div>
+        <div>
+            @Html.ValidationMessageFor(m => m.Url)
+        </div>
+        <p class="uiblock">
+            <span class="block">@Resource.WebSiteTitle</span>
+            @Html.TextBoxFor(m => m.Title, new { @class = "urltitle txt_xl" })
+        </p>
+        <hr />
+        <div class="clear"></div>
+    </div>
+}

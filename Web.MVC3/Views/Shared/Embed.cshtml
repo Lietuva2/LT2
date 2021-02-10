@@ -1,0 +1,39 @@
+﻿@model Data.ViewModels.Base.EmbedModel
+@if (!Model.IsEmpty)
+{
+    <div class="clear"></div>
+    if (Model.Type == "photo")
+    {
+    <div class="item photo">
+        <a class="title" href="@Model.Url" target="_blank">@Model.Title</a>
+        <div class="media image">
+            <img title="@Model.Title" src="@Url.Action(MVC.Remote.GetImage(Model.Url))"/>
+        </div>
+        <div class="">
+            <p class="description">@Model.Description</p>
+        </div>
+        <div class="clearfix">
+        </div>
+    </div>
+    }
+    else
+    {
+    <div class="item" data-preview='@(Model.Html ?? "")'>
+        <div class="attributes">
+            @if(!string.IsNullOrEmpty(Model.Thumbnail_Url))
+            {
+                <div class="thumbnail @Model.Type">
+                    <a href="@Model.Url" target="_blank">
+                        <img title="@Model.Title" src="@Url.Action(MVC.Remote.GetImage(Model.Thumbnail_Url))"/>
+                        <span class="overlay"></span></a>
+                </div>
+            }
+            <a class="title" href="@Model.Url" target="_blank">@Model.Title</a>
+            <p class="description">@Model.Description</p>
+            <div class="clear">
+            </div>
+        </div>
+    </div>
+    
+    }
+}

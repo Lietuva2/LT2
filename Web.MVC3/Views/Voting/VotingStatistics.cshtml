@@ -1,0 +1,86 @@
+﻿@model Data.ViewModels.Voting.VotingStatisticsViewModel
+@using Data.Enums
+@using Globalization.Resources.Voting
+@using Web.Helpers
+@using Globalization.Resources.Shared
+@{
+    bool canVote = (!Model.Vote.HasValue && !Model.AdditionalVote.HasValue) || (!ViewBag.CurrentUser.IsAuthenticated && !ViewBag.CurrentUser.IsUnique);
+}
+@if (!Model.IsVotingFinished)
+{
+    var buttons = new List<ButtonHelperModel>()
+                                                                                       {
+                                                                                           new ButtonHelperModel()
+                                                                                               {
+                                                                                                   Id="btnVoteFor",
+                                                                                                   Href = Url.Action(MVC.Voting.VoteFor(Model.Id)),
+                                                                                                   Type = ButtonHelperModel.Types.Link,
+                                                                                                   CssClass	= Model.AllowNeutralVotes ? "VoteButton" : "VoteButton button_voting",
+                                                                                                   Text = Resource.For,
+                                                                                                   ImageUrl = Links.Content.Images.thumb_up_png
+                                                                                               }};
+    if (Model.AllowNeutralVotes)
+    {
+        buttons.Add(new ButtonHelperModel()
+        {
+            Id = "btnVoteNeutral",
+            Href = Url.Action(MVC.Voting.VoteNeutral(Model.Id)),
+            Type = ButtonHelperModel.Types.Link,
+            CssClass = "VoteButton",
+            ImageUrl = Links.Content.Images.thumb_updown_png,
+            HtmlAttributes = new Dictionary<string, object>() { { "title", Resource.VoteNeutral } },
+            Text = string.Empty
+        });
+    }
+    buttons.Add(new ButtonHelperModel()
+    {
+        Id = "btnVoteAgainst",
+        Href = Url.Action(MVC.Voting.VoteAgainst(Model.Id)),
+        Type = ButtonHelperModel.Types.Link,
+        CssClass = Model.AllowNeutralVotes ? "VoteButton" : "VoteButton button_voting",
+        Text = Resource.Against,
+        ImageUrl = Links.Content.Images.thumb_down_png
+    });
+    if (canVote)
+    {
+    <div id="divVoting" class="voting @(Model.AllowNeutralVotes ? "buttons_narrow" : "")">
+        @Html.Buttons(buttons)
+    </div>
+    }
+    else
+    {
+    <div id="divVoted" class="voted">
+        @Html.Button(new ButtonHelperModel()
+            {
+                CssClass = "accountButton",
+                Href = Url.Action(MVC.Voting.CancelVote(Model.Id)),
+                Type = ButtonHelperModel.Types.Link,
+                Text = Resource.CancelVote + " " + (Model.Vote == ForAgainst.For ? Resource.For : Model.Vote == ForAgainst.Against ? Resource.Against : string.Empty),
+                ImageUrl = Links.Content.Images.arrow_undo_png,
+                Id = "linkChangedMyMind",
+                Disabled = Model.IsVotingFinished
+            }
+             )
+    </div>
+    }
+}
+@if (Model.Deadline.HasValue && !Model.IsVotingFinished)
+{
+    <p class="m_list_d" title="@Model.Deadline">
+        @string.Format(Resource.TimeLeft, Model.TimeLeft)
+    </p>
+}
+@if (Model.SupportPercentage.HasValue)
+{
+    @Html.Partial(MVC.Voting.Views.Progress, Model)
+}
+<p class="m_list_d">
+    @{
+        var additionalVotesCount = Model.SupportingAdditionalVotesCount + Model.NonSupportingAdditionalVotesCount + Model.NeutralAdditionalVotesCount;
+    }
+    @Resource.TotalVotes : @Model.VotesCount
+    @if (additionalVotesCount > 0)
+    {
+        <span style="font-size: 0.8em;">+ @additionalVotesCount</span>
+    }
+</p>

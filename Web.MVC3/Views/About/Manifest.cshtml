@@ -1,0 +1,16 @@
+﻿@using Globalization.Resources.About
+@{
+    ViewBag.Title = Resource.ManifestTitle;
+}
+
+<h2 class="heading">@Resource.AboutProject</h2>
+<div style="height:15px;"></div>
+@Html.Partial(MVC.About.Views.Menu, 2)
+<div class="uitabContainer">
+    <p style="padding:15px 0 2px;">
+        Visi Lietuva 2.0 bendruomenės nariai pasirašo šį manifestą:
+    </p>
+    <div>
+        @Html.Partial(MVC.Account.Views.ManifestPartial)
+    </div>
+</div>

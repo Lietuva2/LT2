@@ -1,0 +1,109 @@
+﻿@model Data.ViewModels.Idea.IdeaIndexModel
+@{
+    ViewBag.Title = Resource.PageTitleIndex;
+}
+@using Globalization.Resources.Idea
+@using Globalization.Resources.Shared
+@using Services.Enums
+@using Web.Helpers
+@section Head
+{
+}
+@section Scripts
+{
+    @if (ViewBag.IsAuthenticated)
+    {
+        @Html.RegisterCkeditorScripts()
+        <script src="https://www.google.com/jsapi" charset="utf-8"></script>
+        <script type='text/javascript'>
+            google.load('picker', '1', { 'language': '@SharedStrings.LanguageCodeShort' });
+        </script>
+    }
+    <script type='text/javascript'>
+        function onPageLoad() {
+            $('#list').showmore();
+
+            CreateCategorySelector('@Url.Action(MVC.Idea.FilterPage())', '@Url.Action(MVC.Idea.SaveMyCategories())');
+
+            CreateStateSelector('@Url.Action(MVC.Idea.FilterPage())');
+
+            initializeInfiniteScroll();
+            
+            $('#list').voting({
+                isAmbasador: @ViewBag.CurrentUser.CanPostToFacebook.ToString().ToLower(),
+                supportMessage: '@ViewBag.CurrentUser.SupportedIdeaText',
+                facebookUrl: '@Url.ActionAbsolute(MVC.Idea.Details())' + '/{0}',
+                forceFbLogin: @(ViewBag.CurrentUser.PostPermissionGranted ? "false" : "true"),
+                versionsSelector: 'div[data-role="versions"]:visible',
+                getVersionsUrl: '@Url.Action(MVC.Idea.GetVersions())',
+                dialogSelector: '#dialog-version-input'
+            });
+            $('.richtexteditor').richtext();
+
+            CreateAjaxDialog('a.lnkUsers', '@Globalization.Resources.Idea.Resource.SupportersList');
+        }
+    </script>
+}
+<div id="dialog-version-input" title="@Resource.DescribeSolution" class="hide">
+    </div>
+<div class="clearfix">
+    @*@Html.Partial(MVC.Idea.Views._MainIdeaVoting)*@
+    <h2 class="heading">@Resource.TitleIndex</h2>
+    <span class="index_links">
+        @if (Model.IsEditable)
+        {
+            <a href="@Html.GetUrl(MVC.Idea.Create())" title="@Resource.CreateTooltip">@Resource.Create</a>
+        }
+        @Html.ActionLink(Menu.IdeaPriorities, MVC.Idea.Prioritizer())
+    </span>
+</div>
+<p>
+    <form id="formCategories">
+        @Html.AntiForgeryToken()
+        @if (ViewBag.FilteredCategoryIds == null)
+        {
+            @Html.Partial(MVC.Idea.Views.CategorySelector, Model.SelectedCategories, new ViewDataDictionary(ViewData) {{"view", Model.IdeaListView}})
+            <span style="margin-left: 20px;">
+                @Html.ListBox("selectedStateIds", Model.SelectedStates, new {@class = "hide"})
+            </span>
+        }
+        else
+        {
+            @Html.ListBox("selectedStateIds", Model.SelectedStates, new { @class = "hide" })
+        }
+    </form>
+</p>
+<div class="clearfix">
+    <p class="fl">
+        @Html.ActionLink(Resource.FilterInteresting, MVC.Idea.Index(IdeaListViews.Interesting, null, null), new Dictionary<string, object> { { "class", Model.IdeaListView == (int)IdeaListViews.Interesting ? "highlight" : "" } })
+        @if (ViewBag.IsAuthenticated)
+        {
+            <text>&nbsp;</text>
+            @Html.ActionLink(Resource.FilterSubscribed, MVC.Idea.Index(IdeaListViews.Subscribed, null, null), new Dictionary<string, object> { { "class", Model.IdeaListView == (int)IdeaListViews.Subscribed ? "highlight" : "" } })
+        }
+        &nbsp; @Html.ActionLink(Resource.FilterOther, MVC.Idea.Index(IdeaListViews.Other, null, null), new Dictionary<string, object> { { "class", Model.IdeaListView == (int)IdeaListViews.Other ? "highlight" : "" } })
+    </p>
+    <p class="fr">
+        @Html.ActionLink(Resource.SortNearest, MVC.Idea.Index(null, IdeaListSorts.MostRecent, null), new Dictionary<string, object> { { "class", Model.IdeaListSort == (int)IdeaListSorts.MostRecent ? "highlight" : "" } })
+        &nbsp; @Html.ActionLink(Resource.SortActive, MVC.Idea.Index(null, IdeaListSorts.MostActive, null), new Dictionary<string, object> { { "class", Model.IdeaListSort == (int)IdeaListSorts.MostActive ? "highlight" : "" } })
+    </p>
+    <p class="fr itemsCounter">@SharedStrings.TotalCount: <span id="spanTotalCount">@Model.TotalCount</span></p>
+</div>
+
+@if (!Model.NoMunicipalities)
+{
+    <ul id="list" class="m_list">
+        @{ Html.RenderPartial(MVC.Idea.Views.List, Model.Items.List);}
+    </ul>
+}
+else
+{
+    <p>
+        @SharedStrings.NoCities
+    </p>
+}
+
+@if (Model.Items.HasMoreElements)
+{
+    @Html.ActionLink(SharedStrings.More, MVC.Idea.GetNextPage(), new { id = "lnkShowMore" })
+}

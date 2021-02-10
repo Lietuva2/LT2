@@ -1,0 +1,45 @@
+﻿@model Data.ViewModels.Account.UserAccountViewModel
+@using Globalization.Resources.Account
+@using Globalization.Resources.Shared;
+@using Web.Helpers;
+
+@if(Model.IsCurrentUser)
+{
+    <div style="color:#666">
+        <p><b>@Resource.AttentionToSecurity</b> @Resource.InfoVisibilityBySettings
+        </p>
+        <p style="font-style: italic;">
+            @Html.Raw(Resource.PublicDataWarning)
+        </p>
+    </div>
+}
+@if (Model.PersonalInfo.IsFilled || Model.IsCurrentUser)
+{
+    if (Model.IsCurrentUser && !Model.PersonalInfo.IsFilled && !Model.EducationAndWork.IsFilled && !Model.Interests.IsFilled && !Model.Contacts.IsFilled)
+    {
+        <div style="margin-top: 10px;">
+            @Html.ActionLink(Resource.ImportFromLinkedIn, MVC.Account.ImportProfileFromLinkedin(true), new { id = "lnkImport" })
+        </div>
+    }
+    <div class="sectionContainer">
+        @{Html.RenderPartial(MVC.Account.Views.PersonalInfo, Model.PersonalInfo);}
+    </div>
+}
+@if (Model.EducationAndWork.IsFilled || Model.IsCurrentUser)
+{
+    <div class="sectionContainer">
+        @{Html.RenderPartial(MVC.Account.Views.EducationAndWork, Model.EducationAndWork);}
+    </div>
+}
+@if (Model.Interests.IsFilled || Model.IsCurrentUser)
+{
+    <div class="sectionContainer">
+        @{Html.RenderPartial(MVC.Account.Views.Interests, Model.Interests);}
+    </div>
+}
+@if (Model.Contacts.IsFilled || Model.IsCurrentUser)
+{
+    <div id="contactsContainer" class="sectionContainer">
+        @{Html.RenderPartial(MVC.Account.Views.Contacts, Model.Contacts);}
+    </div>
+}

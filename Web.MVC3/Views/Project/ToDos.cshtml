@@ -1,0 +1,96 @@
+﻿@model Data.ViewModels.Project.ProjectToDosModel
+@{
+    ViewBag.Title = Model.Subject + " - " + Resource.PageTitleToDo;
+}
+@using Data.Enums
+@using Framework.Mvc.Strings
+@using Globalization.Resources.Project
+@using Globalization.Resources.Shared
+@using Framework.Strings;
+@section Head
+{
+}
+@section Scripts
+{
+    <script type="text/javascript">
+        function onPageLoad() {
+            @if(Model.IsEditable)
+            {
+            <text>
+                setupDatePicker();
+                $(document).todos();
+            </text>
+            }
+            
+            $('a[data-role="showFinished"]').on('click', function (e) {
+                $(this).parents('.mileStoneItemContainer, #listToDos').find('.finishedToDos').slideToggle();
+            });
+        }
+    </script>
+}
+<h3>
+    @Html.Raw(string.Format(Resource.IdeaTask, Html.ActionLink(Model.Subject.HtmlDecode(), MVC.Idea.Details(Model.IdeaId, Model.Subject.ToSeoUrl(), null))))
+</h3>
+@{Html.RenderPartial(MVC.Project.Views.PendingConfirmationMessage, Model.IsPendingConfirmation);}
+@{Html.RenderPartial(MVC.Project.Views.JoinProject, new Data.ViewModels.Project.JoinProjectModel() { IdeaId = Model.IdeaId, IsJoinable = Model.IsJoinable });}
+<br />
+@{Html.RenderPartial(MVC.Project.Views.Menu, Model.Id, new ViewDataDictionary() { { "index", "0" }, { "isEditable", Model.IsCurrentUserInvolved } });}
+<br />
+<div>
+@Resource.State: @Model.State
+@if (!string.IsNullOrEmpty(Model.StateDescription))
+{
+    <div class="richtext">
+        @Html.Raw(Model.StateDescription)
+    </div>
+}
+</div>
+<div id="listMileStones" class='@(Model.IsEditable ? " controlSpace1" : "")'>
+    @for (int i = 0; i < Model.MileStones.Count; i++)
+    {
+        Html.RenderPartial(MVC.Project.Views.MileStone, Model.MileStones[i]);
+        if (Model.IsEditable)
+        {
+        <div class="controlSpace2">
+            @Html.Partial(MVC.Project.Views.InsertToDo, Model, new ViewDataDictionary() { { "MileStoneId", Model.MileStones[i].MileStoneId } })
+        </div>
+        }
+    }
+</div>
+<div id="listToDos" class='@(Model.IsEditable ? " controlSpace1" : "")'>
+    <div class='@(Model.IsEditable ? "mileStone" : "")'>
+        <span class="mileStoneTitle">@Resource.CommonTask</span>
+        &nbsp;<a href="javascript:void(0);" data-role="showFinished"><img src="@Links.Content.Images.expand_gif" alt="@Resource.Expand" title="@Resource.Expand"/></a>
+    </div>
+    <div class="toDos innerList" data-reorder-url="@Url.Action(MVC.Project.ReorderToDos(Model.Id, null, 0, 0))">
+        @for (int i = 0; i < Model.ToDos.Count; i++)
+        {
+            Html.RenderPartial(MVC.Project.Views.ToDoItem, Model.ToDos[i]);
+        }
+    </div>
+    <div id="listFinishedToDos">
+        <div class="finishedToDos innerList hide">
+            @for (int i = 0; i < Model.FinishedToDos.Count; i++)
+            {
+                Html.RenderPartial(MVC.Project.Views.FinishedToDoItem, Model.FinishedToDos[i]);
+
+            }
+        </div>
+    </div>
+</div>
+@if (Model.IsEditable)
+{
+    @Html.Partial(MVC.Project.Views.InsertToDo, Model)
+}
+<div id="listFinishedMileStones" class='@(Model.IsEditable ? " controlSpace1" : "")'>
+    @for (int i = 0; i < Model.FinishedMileStones.Count; i++)
+    {
+        Html.RenderPartial(MVC.Project.Views.MileStone, Model.FinishedMileStones[i]);
+        if (Model.IsEditable)
+        {
+        <div class="controlSpace2">
+            @Html.Partial(MVC.Project.Views.InsertToDo, Model, new ViewDataDictionary() { { "MileStoneId", Model.FinishedMileStones[i].MileStoneId } })
+        </div>
+        }
+    }
+</div>

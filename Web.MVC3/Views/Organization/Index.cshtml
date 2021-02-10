@@ -1,0 +1,94 @@
+﻿@model Data.ViewModels.Organization.OrganizationIndexModel
+@using Framework.Strings
+@using Globalization.Resources.Organization
+@using Web.Helpers;
+@{
+    ViewBag.Title = Resource.IndexTitle;
+}
+@section Head
+{
+    <style type="text/css">
+        .m_list h3 {
+            margin: 0;
+        }
+    </style>
+}
+@section Scripts
+{
+}
+<h2 class="heading">@Resource.Organizations</h2>
+<div style="margin-bottom: 10px;">
+    @Html.ActionLink(Resource.CreateNew, MVC.Organization.Create())
+</div>
+
+<div id="list">
+    @foreach (var item in Model.Items)
+    {
+        <div class="uiblock avatar">
+            <a href="@Url.Action(MVC.Organization.Details(item.Id, item.Name.ToSeoUrl(), null, null, null, null))">
+                <img id="imgProfilePhoto" alt="" src='@(item.HasPicture ? Url.Action(MVC.File.GetOrganizationLogo(item.Id)) : Links.Content.Images.nophoto_avatar_gif)' />
+            </a>
+        </div>
+        <div class="uiblock profiledata">
+            <table class="tbl_data">
+                <tbody>
+                    <tr>
+                        <div class="m_list">
+                            <h3>
+                                @Html.ActionLink(item.Name, MVC.Organization.Details(item.Id, item.Name.ToSeoUrl(), null, null, null, null))
+                            </h3>
+                        </div>
+                    </tr>
+                    <tr>
+                        <th class="lbl">@Resource.Type
+                        </th>
+                        <td class="data">@item.Info.Type
+                        </td>
+                    </tr>
+                    <tr>
+                        <th class="lbl">@Resource.NumberOfSupporters
+                        </th>
+                        <td class="data">@item.MembersCount
+                        </td>
+                    </tr>
+                    @if (!string.IsNullOrEmpty(item.Info.Description))
+                    {
+                        <tr>
+                            <th class="lbl">@Resource.Description
+                            </th>
+                            <td class="data">
+                                @Html.Raw(item.Info.Description)
+                            </td>
+                        </tr>
+                    }
+                    @if (!string.IsNullOrEmpty(item.Contacts.Email))
+                    {
+                        <tr>
+                            <th class="lbl">@Resource.Email
+                            </th>
+                            <td class="data">
+                                <a href="mailto:@item.Contacts.Email">@Html.Raw(item.Contacts.Email)</a>
+                            </td>
+                        </tr>
+                    }
+                    @if (item.Contacts.WebSites.Count > 0)
+                    {
+                        <tr>
+                            <th class="lbl">@Resource.Websites
+                            </th>
+                            <td class="data">
+                                <ul>
+                                    @foreach (var website in item.Contacts.WebSites)
+                                    {
+                                        <li><a href='@website.Url' target="_blank">@website.Title</a> </li>
+                                    }
+                                </ul>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+        <div class="clear"></div>
+    }
+</div>

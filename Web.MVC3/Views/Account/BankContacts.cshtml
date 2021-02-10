@@ -1,0 +1,68 @@
+﻿@model Data.ViewModels.Account.BankLinkModel.BankContacts
+<div>
+    @if (Model.Donate != null)
+    {
+        <span>
+            Šiuo metu tapatybę patvirtinti galime tik gavę Jūsų vienkartinį bankinį pervedimą, nes @Model.Name bankas atsisakė suteikti mums nemokamas tapatybės nustatymo paslaugas.
+            @if (Model.CanConfirmByDonate)
+            {
+                @:Atlikę pervedimą ir gavę laišką apie patvirtintą tapatybę, galėsite pasirašyti iniciatyvas.
+            }
+            <a href="javascript:void(0);" showtip="true" title="Atlikę bet kokio dydžio pervedimą, Jūs gausite rėmėjo titulą. Nusprendę paremti mus didesne suma, galėsite pasirinkti gauti norimą suvenyrą. Mokėjimas yra vienkartinis, tai padarę, visam laikui tapsite pilnateisiu Lietuva 2.0 bendruomenės nariu!">Plačiau</a>
+        </span>
+        if (Model.Name == "SEB")
+         {
+             <p>
+                 <b>Atlikdami pervedimą, būtinai pažymėkite varnelę "Sutinku, kad mano asmens kodas būtų perduotas lėšų gavėjui"!</b>
+             </p>
+         }
+        if (Model.Name == "Swedbank")
+        {
+            <p>
+                <b>Atlikdami pervedimą, būtinai pažymėkite varnelę "Sutinku, kad mano asmens kodas būtų perduotas lėšų gavėjui"!</b>
+                <img src="~/Content/Images/swedbank_agree_personcode.jpg" />
+            </p>
+        }
+        @Html.Partial(MVC.Sponsor.Views._DonateForm, Model.Donate)
+        <div class="clear"></div>
+        <div style="margin-top: 8px;" class="LoginOptionSeparator">
+            ARBA
+        </div>
+    }
+    else if (ViewBag.CurrentUser.IsAuthenticated == false && Model.CanConfirmByDonate)
+    {
+        <p></p>
+	if (Request.UrlReferrer == null || !Request.UrlReferrer.ToString().Contains("/login")){
+	<p>
+            @Html.ActionLink("Prisijunkite", MVC.Account.Login()), norėdami patvirtinti tapatybę bankiniu pervedimu.
+        </p>
+}
+else{
+	<p>
+            Prisijunkite, norėdami patvirtinti tapatybę bankiniu pervedimu.
+        </p>
+}
+        
+	
+        <div style="margin-top: 8px;" class="LoginOptionSeparator">
+            ARBA
+        </div>
+    }
+    else
+    {
+        <p>
+            @Model.Name bankas atsisakė suteikti mums nemokamas tapatybės nustatymo paslaugas. 
+        </p>
+    }
+
+    <p>
+        Paprašykite, kad @Model.Name bankas suteiktų tapatybės nustatymo paslaugas VšĮ LT2.0, ir mes kaip mat sudarysime galimybę nemokamai patvirtinti tapatybę per @Model.Name banką:
+    </p>
+    <ul style="list-style-type: disc; margin-left: 18px;">
+
+        <li>Spauskite ant šios nuorodos, ir išsiųskite laišką: <a href="mailto:@Model.Email?subject=Dėl Lietuva 2.0&body=Sveiki,%0D%0A%0D%0APrašau leisti VšĮ LT2.0 naudotis Jūsų tapatybės nustatymo paslaugomis portale www.lietuva2.lt.%0D%0A%0D%0AAčiū,%0D%0AJūsų klientas" showtip="true" title="Jeigu paspaudus nuorodą įsijungia naudojimui neparuošta programa, o Jūs naudojatės internetiniu paštu, tokiu kaip Gmail, įsidiekite šią <a href='http://download-codeplex.sec.s-msft.com/Download/Release?ProjectName=gmaildefault&DownloadId=481849&FileTime=129910910913070000&Build=19612'>programą</a>">@Model.Email</a>
+        </li>
+        <li>Paaiškinkite situaciją paskambinę @Model.Name banko telefonu <b>@Model.PhoneNumber</b>;
+        </li>
+    </ul>
+</div>

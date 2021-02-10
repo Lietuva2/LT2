@@ -1,0 +1,34 @@
+﻿@model Data.ViewModels.Idea.IdeaIndexModel
+
+@using Data.Enums
+@using Globalization.Resources.Idea
+@using Globalization.Resources.Shared
+@using Framework.Lists
+@using Services.Enums
+@using Web.Helpers
+@using Globalization.Resources.Idea
+@if (Model.IsEditable)
+{
+    <div><a href="@Html.GetUrl(MVC.Idea.Create(Model.OrganizationId))" title="@Resource.CreateTooltip">@Resource.Create</a></div>
+    <div id="dialog-version-input" title="@Globalization.Resources.Idea.Resource.DescribeSolution" class="hide">
+    </div>
+}
+@if (Model.Items.List.Any())
+{
+    <div class="clearfix">
+        <p class="fl">
+            @Html.ActionLink(Resource.SortNearest, MVC.Organization.Details(Model.OrganizationId, null, OrganizationViews.Ideas, IdeaListSorts.MostRecent, null, null), new Dictionary<string, object> {{"class", Model.IdeaListSort == (int) IdeaListSorts.MostRecent ? "highlight" : ""}})
+            &nbsp; @Html.ActionLink(Resource.SortActive, MVC.Organization.Details(Model.OrganizationId, null, OrganizationViews.Ideas, IdeaListSorts.MostActive, null, null), new Dictionary<string, object> {{"class", Model.IdeaListSort == (int) IdeaListSorts.MostActive ? "highlight" : ""}})
+        </p>
+        <p class="fr itemsCounter">@SharedStrings.TotalCount: <span id="spanTotalCount">@Model.TotalCount</span></p>
+    </div>
+}
+<div class="clear"></div>
+<ul id="list" class="m_list">
+    @{ Html.RenderPartial(MVC.Idea.Views.List, Model.Items.List);}
+</ul>
+
+@if (Model.Items.HasMoreElements)
+{
+    @Html.ActionLink(SharedStrings.More, "GetNextPage", "Idea", new { organizationId = Model.OrganizationId}, new { id = "lnkShowMore" })
+}

@@ -1,0 +1,12 @@
+﻿@model ExpandableList<Data.ViewModels.NewsFeed.NewsFeedItemModel>
+@using Globalization.Resources.Shared
+@using Globalization.Resources.Shared;
+@using Framework.Lists
+
+<ul id="list" class="feed_list">
+    @{Html.RenderPartial(MVC.NewsFeed.Views.List, Model.List);}
+</ul>
+@if (Model.HasMoreElements)
+{
+    @Html.ActionLink(SharedStrings.More, MVC.NewsFeed.GetNextUserActivityPage(), new { id = "lnkShowMore" })
+}

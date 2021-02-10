@@ -1,0 +1,11 @@
+﻿@using Globalization.Resources.Shared
+@using Web.Helpers
+@Html.Button(new ButtonHelperModel()
+                                   {
+                                       CssClass = "btn btn-sm btn-success w100p VoteButton",
+                                       Href = "javascript:void(0);",
+                                       Type = ButtonHelperModel.Types.Link,
+                                       Text = SharedStrings.ThankYou + "!",
+                                       ImageUrl = null,
+                                       Disabled = true
+                                   }, "buttons fr w30p")

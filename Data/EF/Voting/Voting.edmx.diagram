@@ -1,0 +1,63 @@
+<?xml version="1.0" encoding="utf-8"?>
+<edmx:Edmx Version="3.0" xmlns:edmx="http://schemas.microsoft.com/ado/2009/11/edmx">
+ <!-- EF Designer content (DO NOT EDIT MANUALLY BELOW HERE) -->
+  <edmx:Designer xmlns="http://schemas.microsoft.com/ado/2009/11/edmx">
+    <!-- Diagram content (shape and connector positions) -->
+    <edmx:Diagrams>
+      <Diagram DiagramId="e11aa98a0a654a7dac62cb5645dcb290" Name="Diagram1" ZoomLevel="73">
+        <EntityTypeShape EntityType="VotingModel.Comment" Width="1.5" PointX="3.75" PointY="31.375" IsExpanded="true" />
+        <EntityTypeShape EntityType="VotingModel.CommentSupporter" Width="1.5" PointX="6" PointY="30.125" IsExpanded="true" />
+        <EntityTypeShape EntityType="VotingModel.Embed" Width="1.5" PointX="1.5" PointY="0.75" IsExpanded="true" />
+        <EntityTypeShape EntityType="VotingModel.IdeaCategory" Width="1.5" PointX="3" PointY="6.625" IsExpanded="true" />
+        <EntityTypeShape EntityType="VotingModel.IdeaComment" Width="1.5" PointX="6" PointY="14.625" IsExpanded="true" />
+        <EntityTypeShape EntityType="VotingModel.IdeaIssue" Width="1.5" PointX="3" PointY="11.875" IsExpanded="true" />
+        <EntityTypeShape EntityType="VotingModel.IdeaPriority" Width="1.5" PointX="3" PointY="14.5" IsExpanded="true" />
+        <EntityTypeShape EntityType="VotingModel.Idea" Width="1.5" PointX="0.75" PointY="12.75" IsExpanded="true" />
+        <EntityTypeShape EntityType="VotingModel.IdeaVersion" Width="1.5" PointX="3" PointY="17.375" IsExpanded="true" />
+        <EntityTypeShape EntityType="VotingModel.IdeaVersionView" Width="1.5" PointX="5.25" PointY="18.25" IsExpanded="true" />
+        <EntityTypeShape EntityType="VotingModel.IdeaVote" Width="1.5" PointX="3" PointY="21.5" IsExpanded="true" />
+        <EntityTypeShape EntityType="VotingModel.IssueCategory" Width="1.5" PointX="11" PointY="3.125" IsExpanded="true" />
+        <EntityTypeShape EntityType="VotingModel.IssueComment" Width="1.5" PointX="6" PointY="32.5" IsExpanded="true" />
+        <EntityTypeShape EntityType="VotingModel.IssueVersion" Width="1.5" PointX="11" PointY="5.5" IsExpanded="true" />
+        <EntityTypeShape EntityType="VotingModel.ProblemCategory" Width="1.5" PointX="6" PointY="6" IsExpanded="true" />
+        <EntityTypeShape EntityType="VotingModel.ProblemComment" Width="1.5" PointX="8" PointY="17.875" IsExpanded="true" />
+        <EntityTypeShape EntityType="VotingModel.ProblemIdea" Width="1.5" PointX="6" PointY="11.75" IsExpanded="true" />
+        <EntityTypeShape EntityType="VotingModel.ProblemIssue" Width="1.5" PointX="6" PointY="8.375" IsExpanded="true" />
+        <EntityTypeShape EntityType="VotingModel.Problem" Width="1.5" PointX="3.75" PointY="1.625" IsExpanded="true" />
+        <EntityTypeShape EntityType="VotingModel.ProblemSupporter" Width="1.5" PointX="6" PointY="3" IsExpanded="true" />
+        <EntityTypeShape EntityType="VotingModel.RelatedIdea" Width="1.5" PointX="3" PointY="28.5" IsExpanded="true" />
+        <EntityTypeShape EntityType="VotingModel.UserComment" Width="1.5" PointX="6" PointY="38" IsExpanded="true" />
+        <EntityTypeShape EntityType="VotingModel.Vote" Width="1.5" PointX="11" PointY="8.5" IsExpanded="true" />
+        <AssociationConnector Association="VotingModel.FK_Comment_ParentComment" ManuallyRouted="false" />
+        <AssociationConnector Association="VotingModel.FK_Comments_Embed" ManuallyRouted="false" />
+        <AssociationConnector Association="VotingModel.FK_CommentSupporters_Comments" ManuallyRouted="false" />
+        <AssociationConnector Association="VotingModel.FK_IdeaComments_Comments" ManuallyRouted="false" />
+        <AssociationConnector Association="VotingModel.FK_IssueComments_Comments" ManuallyRouted="false" />
+        <AssociationConnector Association="VotingModel.FK_ProblemComments_Comments" ManuallyRouted="false" />
+        <AssociationConnector Association="VotingModel.FK_UserComments_Comments" ManuallyRouted="false" />
+        <AssociationConnector Association="VotingModel.FK_Problems_Embed" ManuallyRouted="false" />
+        <AssociationConnector Association="VotingModel.FK_IdeaCategories_Ideas" ManuallyRouted="false" />
+        <AssociationConnector Association="VotingModel.FK_IdeaComments_Ideas" ManuallyRouted="false" />
+        <AssociationConnector Association="VotingModel.FK_IdeaIssues_Ideas" ManuallyRouted="false" />
+        <AssociationConnector Association="VotingModel.FK_IdeaPriorities_Idea" ManuallyRouted="false" />
+        <AssociationConnector Association="VotingModel.FK_Ideas_IdeaVersions" ManuallyRouted="false" />
+        <AssociationConnector Association="VotingModel.FK_IdeaVersions_Idea" ManuallyRouted="false" />
+        <AssociationConnector Association="VotingModel.FK_IdeaVotes_Ideas" ManuallyRouted="false" />
+        <AssociationConnector Association="VotingModel.FK_ProblemIdeas_Idea" ManuallyRouted="false" />
+        <AssociationConnector Association="VotingModel.FK_RelatedIdeas_Ideas" ManuallyRouted="false" />
+        <AssociationConnector Association="VotingModel.FK_RelatedIdeas_RelatedIdeas" ManuallyRouted="false" />
+        <AssociationConnector Association="VotingModel.FK_IdeaVersionView_IdeaVersions" ManuallyRouted="false" />
+        <AssociationConnector Association="VotingModel.FK_ProblemCategories_Problems" ManuallyRouted="false" />
+        <AssociationConnector Association="VotingModel.FK_ProblemComments_Problems" ManuallyRouted="false" />
+        <AssociationConnector Association="VotingModel.FK_ProblemIdeas_Problems" ManuallyRouted="false" />
+        <AssociationConnector Association="VotingModel.FK_ProblemIssues_Problems" ManuallyRouted="false" />
+        <AssociationConnector Association="VotingModel.FK_ProblemSupporters_Problems" ManuallyRouted="false" />
+        <EntityTypeShape EntityType="VotingModel.Issue" Width="1.5" PointX="0.54256100046567668" PointY="6.5702485323745048" />
+        <AssociationConnector Association="VotingModel.FK_IssueCategories_Ideas" />
+        <AssociationConnector Association="VotingModel.FK_IssueVersions_Issue" />
+        <AssociationConnector Association="VotingModel.FK_IssueVote" />
+        <EntityTypeShape EntityType="VotingModel.ShortLink" Width="1.5" PointX="6.605283488801347" PointY="2.4576949041605438" />
+      </Diagram>
+    </edmx:Diagrams>
+  </edmx:Designer>
+</edmx:Edmx>

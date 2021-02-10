@@ -1,0 +1,16 @@
+﻿@model Data.ViewModels.Account.ConfirmPersonCodeModel
+@using Web.Helpers
+<div>
+    @using (Html.BeginForm(MVC.Account.ConfirmPersonCode(), FormMethod.Post, new Dictionary<string, object>() { { "id", "formConfirmPersonCode" } }))
+    {
+        <div id="formPersonCodeContent">
+            @Html.AntiForgeryToken()
+            @Html.ValidationSummary()
+            @Html.LabelFor(m => m.PersonCode)
+            @Html.TextBoxFor(m => m.PersonCode, new Dictionary<string, object>(){{"autocomplete", "off"}})
+            @Html.ValidationMessageFor(m => m.PersonCode)
+            @Html.HiddenFor(m => m.ReturnUrl)
+            @Html.Buttons()
+        </div>
+    }
+</div>

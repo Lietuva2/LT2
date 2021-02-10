@@ -1,0 +1,150 @@
+﻿@model Data.ViewModels.Idea.IdeaViewModel
+@using Data.Enums
+@using Globalization.Resources.Idea
+@using Globalization.Resources.Shared
+@using Web.Helpers;
+@using Framework.Strings;
+@{
+    var isIdeaVotable = !Model.IsClosed && !Model.IsDraft && Model.State != IdeaStates.Resolved;
+}
+<table class="tbl_ideas">
+    <thead>
+        <tr>
+            <th></th>
+            <th>
+                @Resource.VersionNoAndSubject
+        </th>
+        <th>
+            @Resource.CreatedBy
+    </th>
+    <th>
+        @Resource.SolutionSupportedBy
+</th>
+<th></th>
+</tr>
+</thead>
+<tbody>
+    @foreach (var version in Model.Versions)
+    {
+        <tr class='versionContainer @(version.IsViewedByCurrentUser ? "" : "bold") @(version.Id == Model.CurrentVersion.Id ? "selected" : "")'>
+            <td>
+                @if (isIdeaVotable)
+                {
+                    if (!version.IsLikedByCurrentUser)
+                    {
+                        <a href="@Url.Action(MVC.Idea.Vote(Model.Id, version.Id))" class="problem_vote VoteButton problem_vote_for" title="@Resource.Support" data-id="@Model.Id" data-private="@Model.IsPrivateToOrganization" data-href="@Url.Action(MVC.Idea.Vote(Model.Id, version.Id))"></a>
+                    }
+                    else
+                    {
+                        <a href="@Url.Action(MVC.Idea.CancelVote(Model.Id, Model.CurrentVersion.Id))" class="problem_vote VoteButton problem_voted_for" title="@Resource.CancelVote" data-id="@Model.Id" data-private="@Model.IsPrivateToOrganization" data-href="@Url.Action(MVC.Idea.CancelVote(Model.Id, Model.CurrentVersion.Id))"></a>
+                    }
+                }
+            </td>
+            <td>
+                @Html.ActionLink(version.Number + ". " + Server.HtmlDecode(version.Subject), MVC.Idea.Details(Model.Id, Model.Subject, version.Id), new Dictionary<string, object> { { "class", "version" }, { "data-id", version.Id }, { "data-url", Url.Action(MVC.Idea.GetVersion(Model.Id, version.Id)) } })
+            </td>
+            <td>
+                <div style="white-space: nowrap">
+                    @if (!Model.IsImpersonal)
+                    {
+                        if (!string.IsNullOrEmpty(version.OrganizationId) && !Model.IsPrivateToOrganization)
+                        {
+                            @Html.ActionLinkWithReturnUrl(version.OrganizationName, MVC.Organization.Details(version.OrganizationId, version.OrganizationName.ToSeoUrl(), null, null, null, null))
+                        }
+                        else
+                        {
+                            @Html.ActionLinkWithReturnUrl(version.CreatorFullName, MVC.Account.Details(version.CreatorObjectId, version.CreatorFullName.ToSeoUrl(), null))
+                        }
+                    }
+                    else
+                    {
+                        @Globalization.Resources.Idea.Resource.Impersonal
+                    }
+                </div>
+            </td>
+            <td style="text-align: center;">
+                <div style="white-space: nowrap">
+                    <a href="@Url.Action(MVC.Idea.GetSupporters(Model.Id, version.Id))" class="lnkUsers" title="@Html.GetUniqueUsersTip(version.SupportingConfirmedUserCount, version.SupportingUnconfirmedUserCount)">
+                        @version.SupportingUserCount
+                    </a>
+                </div>
+            </td>
+            <td>
+                @if (version.IsEditable)
+                {
+                    <div style="white-space: nowrap">
+                        <a href="@Url.Action(MVC.Idea.GetVersion(Model.Id, version.Id))" data-id="@version.Id" data-url="@Url.Action(MVC.Idea.GetVersion(Model.Id, version.Id))" class="editVersion">
+                            <img src="@Links.Content.Images.edit_ico_png" />
+                        </a>
+                        <a href="@Url.Action(MVC.Idea.DeleteVersion(Model.Id, version.Id))" class="deleteVersion">
+                            <img src="@Links.Content.Images.delete_ico_png" />
+                        </a>
+                    </div>
+                }
+            </td>
+        </tr>
+            <tr data-role="textRow">
+                <td colspan="5">
+                    <div class="ideaText" data-role="versionTextContainer">
+                        <div class="hoverableText">
+                            @if (Model.CurrentVersion.Id == version.Id)
+                            {
+                                <div class='richtext'>
+                                    @Html.Raw(version.Text)
+                                </div>
+                            }
+                            else
+                            {
+                                @Html.Partial(MVC.Shared.Views.ExpandableTextMedium, version.Text)
+                            }
+                            @{
+                                var showVersions = version.History.Count > 1;
+                            }
+                            @if (showVersions)
+                            {
+                                <span class="summaryHover edit_actions" style="display: none;">
+                                    <a href="javascript:void(0);" data-role="ShowVersions">@Resource.VersionHistory</a>
+                                </span>
+                            }
+                        </div>
+                        @if (showVersions)
+                        {
+                            <div class="hide summaryVersions">
+                                <ul>
+                                    @foreach (var history in version.History)
+                                    {
+                                        <li class='@Html.Raw(history == version.History.Last() ? "selected" : "") versionContainer'>
+                                            @Html.ActionLink(history.Subject + ", " + history.CreatedOn, MVC.Idea.Details(Model.Id, Model.Subject.ToSeoUrl(), version.Id), new Dictionary<string, object> { { "class", "version" }, { "data-url", Url.Action(MVC.Idea.GetText(Model.Id, version.Id, history.Id)) } }),
+                                            @Html.ActionLinkWithReturnUrl(history.CreatorFullName, MVC.Account.Details(history.CreatorObjectId, history.CreatorFullName.ToSeoUrl(), null))
+                                            <div class="fr">
+                                                @Html.RadioButton("historyId1", history.Id, new Dictionary<string, object>() { { "title", Resource.CompareFrom } })
+                                                @Html.RadioButton("historyId2", history.Id, new Dictionary<string, object>() { { "title", Resource.CompareTo } })
+                                            </div>
+                                            <div class="clear"></div>
+                                        </li>
+                                    }
+                                </ul>
+                                @Html.Button(new ButtonHelperModel() { Id = "btnCompareVersions", Type = ButtonHelperModel.Types.Link, Text = Resource.Compare, Href = Url.Action(MVC.Idea.CompareHistoryVersions(Model.Id, version.Id, null, null)) })
+                            </div>
+                        }
+                        <div data-role="listDocsContainer">
+                            @if (version.Attachments.Count > 0 && Model.CurrentVersion.Id == version.Id)
+                            {
+                                @Html.Partial(MVC.Google.Views.DocsList, version.Attachments)
+                            }
+                        </div>
+                    </div>
+                </td>
+            </tr>
+                                }
+    @if (!Model.IsClosed && Model.State != IdeaStates.Resolved && ViewBag.IsAuthenticated && (Model.AllowPublicAlternativeIdeas || Model.IsEditable))
+    {
+        <tr>
+            <td colspan="3">
+                <input type="text" placeholder="@Resource.AddIdea" id="lnkNewVersion" class="txt_xl" />
+            </td>
+            <td colspan="2"></td>
+        </tr>
+    }
+</tbody>
+</table>

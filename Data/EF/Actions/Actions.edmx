@@ -1,0 +1,920 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<edmx:Edmx Version="3.0" xmlns:edmx="http://schemas.microsoft.com/ado/2009/11/edmx">
+  <!-- EF Runtime content -->
+  <edmx:Runtime>
+    <!-- SSDL content -->
+    <edmx:StorageModels>
+    <Schema Namespace="ActionsModel.Store" Provider="System.Data.SqlClient" ProviderManifestToken="2008" Alias="Self" xmlns:store="http://schemas.microsoft.com/ado/2007/12/edm/EntityStoreSchemaGenerator" xmlns:customannotation="http://schemas.microsoft.com/ado/2013/11/edm/customannotation" xmlns="http://schemas.microsoft.com/ado/2009/11/edm/ssdl">
+        <EntityType Name="ActionCategories">
+          <Key>
+            <PropertyRef Name="Id" />
+          </Key>
+          <Property Name="Id" Type="int" StoreGeneratedPattern="Identity" Nullable="false" />
+          <Property Name="ActionId" Type="int" Nullable="false" />
+          <Property Name="CategoryId" Type="smallint" Nullable="false" />
+        </EntityType>
+        <EntityType Name="Actions">
+          <Key>
+            <PropertyRef Name="Id" />
+          </Key>
+          <Property Name="Id" Type="int" StoreGeneratedPattern="Identity" Nullable="false" />
+          <Property Name="Date" Type="datetime" Nullable="false" />
+          <Property Name="ActionTypeId" Type="smallint" Nullable="false" />
+          <Property Name="ActionTypeName" Type="nvarchar" MaxLength="50" />
+          <Property Name="UserId" Type="int" Nullable="false" />
+          <Property Name="UserObjectId" Type="char" MaxLength="24" />
+          <Property Name="UserFullName" Type="nvarchar" MaxLength="200" />
+          <Property Name="ObjectId" Type="char" MaxLength="24" />
+          <Property Name="Subject" Type="nvarchar(max)" />
+          <Property Name="RelatedUserObjectId" Type="char" MaxLength="24" />
+          <Property Name="RelatedUserFullName" Type="nvarchar" MaxLength="200" />
+          <Property Name="RelatedObjectId" Type="char" MaxLength="24" />
+          <Property Name="RelatedSubject" Type="nvarchar(max)" />
+          <Property Name="Text" Type="nvarchar(max)" />
+          <Property Name="Link" Type="varchar" MaxLength="2000" />
+          <Property Name="RelatedLink" Type="varchar" MaxLength="2000" />
+          <Property Name="IsDeleted" Type="bit" Nullable="false" />
+          <Property Name="OrganizationId" Type="char" MaxLength="24" />
+          <Property Name="OrganizationName" Type="nvarchar" MaxLength="500" />
+          <Property Name="IsPrivate" Type="bit" Nullable="false" />
+          <Property Name="RelatedRelatedObjectId" Type="char" MaxLength="24" />
+          <Property Name="EntryTypeId" Type="smallint" />
+          <Property Name="MunicipalityId" Type="int" />
+          <Property Name="LikedUserObjectId" Type="char" MaxLength="24" />
+          <Property Name="IsGrouped" Type="bit" Nullable="false" />
+          <Property Name="GroupId" Type="int" />
+        </EntityType>
+        <EntityType Name="ActionTypes">
+          <Key>
+            <PropertyRef Name="Id" />
+          </Key>
+          <Property Name="Id" Type="smallint" Nullable="false" />
+          <Property Name="Name" Type="nvarchar" MaxLength="50" Nullable="false" />
+          <Property Name="Points" Type="int" Nullable="false" />
+          <Property Name="Reputation" Type="int" />
+        </EntityType>
+        <EntityType Name="Categories">
+          <Key>
+            <PropertyRef Name="Id" />
+          </Key>
+          <Property Name="Id" Type="smallint" Nullable="false" />
+          <Property Name="Name" Type="nvarchar" MaxLength="50" Nullable="false" />
+        </EntityType>
+        <EntityType Name="Categories_Translation">
+          <Key>
+            <PropertyRef Name="Id" />
+          </Key>
+          <Property Name="Id" Type="int" StoreGeneratedPattern="Identity" Nullable="false" />
+          <Property Name="CategoryId" Type="smallint" Nullable="false" />
+          <Property Name="LanguageCode" Type="varchar" MaxLength="50" Nullable="false" />
+          <Property Name="Name" Type="nvarchar" MaxLength="50" Nullable="false" />
+        </EntityType>
+        <EntityType Name="InterestingCategories">
+          <Key>
+            <PropertyRef Name="Id" />
+          </Key>
+          <Property Name="Id" Type="int" StoreGeneratedPattern="Identity" Nullable="false" />
+          <Property Name="CategoryId" Type="smallint" Nullable="false" />
+          <Property Name="UserId" Type="int" Nullable="false" />
+        </EntityType>
+        <EntityType Name="Messages">
+          <Key>
+            <PropertyRef Name="Id" />
+          </Key>
+          <Property Name="Id" Type="int" StoreGeneratedPattern="Identity" Nullable="false" />
+          <Property Name="From" Type="nvarchar" MaxLength="500" Nullable="false" />
+          <Property Name="To" Type="nvarchar" MaxLength="500" Nullable="false" />
+          <Property Name="FromDisplayName" Type="nvarchar" MaxLength="500" Nullable="false" />
+          <Property Name="ToDisplayName" Type="nvarchar" MaxLength="500" Nullable="false" />
+          <Property Name="FromUserObjectId" Type="nchar" MaxLength="24" />
+          <Property Name="ToUserObjectId" Type="nchar" MaxLength="24" />
+          <Property Name="Body" Type="nvarchar(max)" Nullable="false" />
+          <Property Name="Date" Type="datetime" Nullable="false" />
+          <Property Name="Error" Type="nvarchar(max)" />
+          <Property Name="Subject" Type="nvarchar(max)" Nullable="false" />
+        </EntityType>
+        <EntityType Name="Notifications">
+          <Key>
+            <PropertyRef Name="Id" />
+          </Key>
+          <Property Name="Id" Type="int" StoreGeneratedPattern="Identity" Nullable="false" />
+          <Property Name="IsRead" Type="bit" Nullable="false" />
+          <Property Name="ActionId" Type="int" Nullable="false" />
+          <Property Name="UserId" Type="int" Nullable="false" />
+        </EntityType>
+        <EntityType Name="Subscribtions">
+          <Key>
+            <PropertyRef Name="Id" />
+          </Key>
+          <Property Name="Id" Type="int" StoreGeneratedPattern="Identity" Nullable="false" />
+          <Property Name="ObjectId" Type="char" MaxLength="24" Nullable="false" />
+          <Property Name="UserId" Type="int" Nullable="false" />
+          <Property Name="Subscribed" Type="bit" Nullable="false" />
+          <Property Name="EntryTypeId" Type="int" />
+        </EntityType>
+        <EntityType Name="UserInterestingOrganization">
+          <Key>
+            <PropertyRef Name="UserId" />
+            <PropertyRef Name="OrganizationId" />
+          </Key>
+          <Property Name="UserId" Type="int" Nullable="false" />
+          <Property Name="OrganizationId" Type="nchar" MaxLength="24" Nullable="false" />
+          <Property Name="IsMember" Type="bit" Nullable="false" />
+          <Property Name="IsConfirmed" Type="bit" Nullable="false" />
+          <Property Name="Role" Type="nvarchar" MaxLength="500" />
+          <Property Name="Permission" Type="int" Nullable="false" />
+          <Property Name="IsPrivate" Type="bit" Nullable="false" />
+          <Property Name="InvitedByUserId" Type="int" />
+          <Property Name="VoteCount" Type="int" Nullable="false" />
+        </EntityType>
+        <EntityType Name="UserInterestingUser">
+          <Key>
+            <PropertyRef Name="InterestedUsersId" />
+            <PropertyRef Name="InterestingUsersId" />
+          </Key>
+          <Property Name="InterestedUsersId" Type="int" Nullable="false" />
+          <Property Name="InterestingUsersId" Type="int" Nullable="false" />
+          <Property Name="CategoryId" Type="smallint" />
+        </EntityType>
+        <!--Errors Found During Generation:
+warning 6002: The table/view 'LT2_Actions.dbo.ActionView' does not have a primary key defined. The key has been inferred and the definition was created as a read-only table/view.-->
+        <EntityType Name="ActionView">
+          <Key>
+            <PropertyRef Name="ActionTypeId" />
+            <PropertyRef Name="UserId" />
+            <PropertyRef Name="IsPrivate" />
+          </Key>
+          <Property Name="ActionTypeName" Type="nvarchar" MaxLength="50" />
+          <Property Name="ActionTypeId" Type="smallint" Nullable="false" />
+          <Property Name="Date" Type="datetime" />
+          <Property Name="UserId" Type="int" Nullable="false" />
+          <Property Name="UserObjectId" Type="char" MaxLength="24" />
+          <Property Name="UserFullName" Type="nvarchar" MaxLength="200" />
+          <Property Name="ObjectId" Type="char" MaxLength="24" />
+          <Property Name="Subject" Type="nvarchar" MaxLength="200" />
+          <Property Name="RelatedUserObjectId" Type="char" MaxLength="24" />
+          <Property Name="RelatedUserFullName" Type="nvarchar" MaxLength="200" />
+          <Property Name="RelatedObjectId" Type="char" MaxLength="24" />
+          <Property Name="Text" Type="nvarchar(max)" />
+          <Property Name="UserCount" Type="int" />
+          <Property Name="Link" Type="varchar" MaxLength="500" />
+          <Property Name="RelatedLink" Type="varchar" MaxLength="500" />
+          <Property Name="RelatedSubject" Type="nvarchar" MaxLength="200" />
+          <Property Name="OrganizationId" Type="char" MaxLength="24" />
+          <Property Name="OrganizationName" Type="nvarchar" MaxLength="500" />
+          <Property Name="IsPrivate" Type="bit" Nullable="false" />
+          <Property Name="RelatedRelatedObjectId" Type="char" MaxLength="24" />
+          <Property Name="EntryTypeId" Type="smallint" />
+          <Property Name="MunicipalityId" Type="int" />
+          <Property Name="LikedUserObjectId" Type="char" MaxLength="24" />
+        </EntityType>
+        <!--Errors Found During Generation:
+warning 6002: The table/view 'LT2_Actions.dbo.OrganizationActionView' does not have a primary key defined. The key has been inferred and the definition was created as a read-only table/view.-->
+        <EntityType Name="OrganizationActionView">
+          <Key>
+            <PropertyRef Name="ActionTypeId" />
+            <PropertyRef Name="UserId" />
+            <PropertyRef Name="IsPrivate" />
+          </Key>
+          <Property Name="ActionTypeName" Type="nvarchar" MaxLength="50" />
+          <Property Name="ActionTypeId" Type="smallint" Nullable="false" />
+          <Property Name="Date" Type="datetime" />
+          <Property Name="UserId" Type="int" Nullable="false" />
+          <Property Name="UserObjectId" Type="char" MaxLength="24" />
+          <Property Name="UserFullName" Type="nvarchar" MaxLength="200" />
+          <Property Name="ObjectId" Type="char" MaxLength="24" />
+          <Property Name="Subject" Type="nvarchar" MaxLength="200" />
+          <Property Name="RelatedUserObjectId" Type="char" MaxLength="24" />
+          <Property Name="RelatedUserFullName" Type="nvarchar" MaxLength="200" />
+          <Property Name="RelatedObjectId" Type="char" MaxLength="24" />
+          <Property Name="Text" Type="nvarchar(max)" />
+          <Property Name="UserCount" Type="int" />
+          <Property Name="Link" Type="varchar" MaxLength="500" />
+          <Property Name="RelatedLink" Type="varchar" MaxLength="500" />
+          <Property Name="RelatedSubject" Type="nvarchar" MaxLength="200" />
+          <Property Name="OrganizationId" Type="char" MaxLength="24" />
+          <Property Name="OrganizationName" Type="nvarchar" MaxLength="500" />
+          <Property Name="IsPrivate" Type="bit" Nullable="false" />
+          <Property Name="RelatedRelatedObjectId" Type="char" MaxLength="24" />
+          <Property Name="EntryTypeId" Type="smallint" />
+          <Property Name="MunicipalityId" Type="int" />
+        </EntityType>
+        <Association Name="FK_ActionCategories_Actions">
+          <End Role="Actions" Type="Self.Actions" Multiplicity="1" />
+          <End Role="ActionCategories" Type="Self.ActionCategories" Multiplicity="*" />
+          <ReferentialConstraint>
+            <Principal Role="Actions">
+              <PropertyRef Name="Id" />
+            </Principal>
+            <Dependent Role="ActionCategories">
+              <PropertyRef Name="ActionId" />
+            </Dependent>
+          </ReferentialConstraint>
+        </Association>
+        <Association Name="FK_ActionCategories_Categories">
+          <End Role="Categories" Type="Self.Categories" Multiplicity="1" />
+          <End Role="ActionCategories" Type="Self.ActionCategories" Multiplicity="*" />
+          <ReferentialConstraint>
+            <Principal Role="Categories">
+              <PropertyRef Name="Id" />
+            </Principal>
+            <Dependent Role="ActionCategories">
+              <PropertyRef Name="CategoryId" />
+            </Dependent>
+          </ReferentialConstraint>
+        </Association>
+        <Association Name="FK_ActionNotification">
+          <End Role="Actions" Type="Self.Actions" Multiplicity="1">
+            <OnDelete Action="Cascade" />
+          </End>
+          <End Role="Notifications" Type="Self.Notifications" Multiplicity="*" />
+          <ReferentialConstraint>
+            <Principal Role="Actions">
+              <PropertyRef Name="Id" />
+            </Principal>
+            <Dependent Role="Notifications">
+              <PropertyRef Name="ActionId" />
+            </Dependent>
+          </ReferentialConstraint>
+        </Association>
+        <Association Name="FK_ActionTypeAction">
+          <End Role="ActionTypes" Type="Self.ActionTypes" Multiplicity="1" />
+          <End Role="Actions" Type="Self.Actions" Multiplicity="*" />
+          <ReferentialConstraint>
+            <Principal Role="ActionTypes">
+              <PropertyRef Name="Id" />
+            </Principal>
+            <Dependent Role="Actions">
+              <PropertyRef Name="ActionTypeId" />
+            </Dependent>
+          </ReferentialConstraint>
+        </Association>
+        <Association Name="FK_Categories_Translation_Categories">
+          <End Role="Categories" Type="Self.Categories" Multiplicity="1" />
+          <End Role="Categories_Translation" Type="Self.Categories_Translation" Multiplicity="*" />
+          <ReferentialConstraint>
+            <Principal Role="Categories">
+              <PropertyRef Name="Id" />
+            </Principal>
+            <Dependent Role="Categories_Translation">
+              <PropertyRef Name="CategoryId" />
+            </Dependent>
+          </ReferentialConstraint>
+        </Association>
+        <Association Name="FK_InterestingCategoriesCategories">
+          <End Role="Categories" Type="Self.Categories" Multiplicity="1" />
+          <End Role="InterestingCategories" Type="Self.InterestingCategories" Multiplicity="*" />
+          <ReferentialConstraint>
+            <Principal Role="Categories">
+              <PropertyRef Name="Id" />
+            </Principal>
+            <Dependent Role="InterestingCategories">
+              <PropertyRef Name="CategoryId" />
+            </Dependent>
+          </ReferentialConstraint>
+        </Association>
+        <Function Name="LikeUser" Aggregate="false" BuiltIn="false" NiladicFunction="false" IsComposable="false" ParameterTypeSemantics="AllowImplicitConversion" Schema="dbo">
+          <Parameter Name="interestedUserId" Type="int" Mode="In" />
+          <Parameter Name="interestingUserId" Type="int" Mode="In" />
+        </Function>
+        <EntityContainer Name="ActionsModelStoreContainer">
+          <EntitySet Name="ActionCategories" EntityType="Self.ActionCategories" Schema="dbo" store:Type="Tables" />
+          <EntitySet Name="Actions" EntityType="Self.Actions" Schema="dbo" store:Type="Tables" />
+          <EntitySet Name="ActionTypes" EntityType="Self.ActionTypes" Schema="dbo" store:Type="Tables" />
+          <EntitySet Name="Categories" EntityType="Self.Categories" Schema="dbo" store:Type="Tables" />
+          <EntitySet Name="Categories_Translation" EntityType="Self.Categories_Translation" Schema="dbo" store:Type="Tables" />
+          <EntitySet Name="InterestingCategories" EntityType="Self.InterestingCategories" Schema="dbo" store:Type="Tables" />
+          <EntitySet Name="Messages" EntityType="Self.Messages" Schema="dbo" store:Type="Tables" />
+          <EntitySet Name="Notifications" EntityType="Self.Notifications" Schema="dbo" store:Type="Tables" />
+          <EntitySet Name="Subscribtions" EntityType="Self.Subscribtions" Schema="dbo" store:Type="Tables" />
+          <EntitySet Name="UserInterestingOrganization" EntityType="Self.UserInterestingOrganization" Schema="dbo" store:Type="Tables" />
+          <EntitySet Name="UserInterestingUser" EntityType="Self.UserInterestingUser" Schema="dbo" store:Type="Tables" />
+          <EntitySet Name="ActionView" EntityType="Self.ActionView" store:Type="Views" store:Schema="dbo">
+            <DefiningQuery>SELECT 
+    [ActionView].[ActionTypeName] AS [ActionTypeName], 
+    [ActionView].[ActionTypeId] AS [ActionTypeId], 
+    [ActionView].[Date] AS [Date], 
+    [ActionView].[UserId] AS [UserId], 
+    [ActionView].[UserObjectId] AS [UserObjectId], 
+    [ActionView].[UserFullName] AS [UserFullName], 
+    [ActionView].[ObjectId] AS [ObjectId], 
+    [ActionView].[Subject] AS [Subject], 
+    [ActionView].[RelatedUserObjectId] AS [RelatedUserObjectId], 
+    [ActionView].[RelatedUserFullName] AS [RelatedUserFullName], 
+    [ActionView].[RelatedObjectId] AS [RelatedObjectId], 
+    [ActionView].[Text] AS [Text], 
+    [ActionView].[UserCount] AS [UserCount], 
+    [ActionView].[Link] AS [Link], 
+    [ActionView].[RelatedLink] AS [RelatedLink], 
+    [ActionView].[RelatedSubject] AS [RelatedSubject], 
+    [ActionView].[OrganizationId] AS [OrganizationId], 
+    [ActionView].[OrganizationName] AS [OrganizationName], 
+    [ActionView].[IsPrivate] AS [IsPrivate], 
+    [ActionView].[RelatedRelatedObjectId] AS [RelatedRelatedObjectId], 
+    [ActionView].[EntryTypeId] AS [EntryTypeId], 
+    [ActionView].[MunicipalityId] AS [MunicipalityId], 
+    [ActionView].[LikedUserObjectId] AS [LikedUserObjectId]
+    FROM [dbo].[ActionView] AS [ActionView]</DefiningQuery>
+          </EntitySet>
+          <EntitySet Name="OrganizationActionView" EntityType="Self.OrganizationActionView" store:Type="Views" store:Schema="dbo">
+            <DefiningQuery>SELECT 
+    [OrganizationActionView].[ActionTypeName] AS [ActionTypeName], 
+    [OrganizationActionView].[ActionTypeId] AS [ActionTypeId], 
+    [OrganizationActionView].[Date] AS [Date], 
+    [OrganizationActionView].[UserId] AS [UserId], 
+    [OrganizationActionView].[UserObjectId] AS [UserObjectId], 
+    [OrganizationActionView].[UserFullName] AS [UserFullName], 
+    [OrganizationActionView].[ObjectId] AS [ObjectId], 
+    [OrganizationActionView].[Subject] AS [Subject], 
+    [OrganizationActionView].[RelatedUserObjectId] AS [RelatedUserObjectId], 
+    [OrganizationActionView].[RelatedUserFullName] AS [RelatedUserFullName], 
+    [OrganizationActionView].[RelatedObjectId] AS [RelatedObjectId], 
+    [OrganizationActionView].[Text] AS [Text], 
+    [OrganizationActionView].[UserCount] AS [UserCount], 
+    [OrganizationActionView].[Link] AS [Link], 
+    [OrganizationActionView].[RelatedLink] AS [RelatedLink], 
+    [OrganizationActionView].[RelatedSubject] AS [RelatedSubject], 
+    [OrganizationActionView].[OrganizationId] AS [OrganizationId], 
+    [OrganizationActionView].[OrganizationName] AS [OrganizationName], 
+    [OrganizationActionView].[IsPrivate] AS [IsPrivate], 
+    [OrganizationActionView].[RelatedRelatedObjectId] AS [RelatedRelatedObjectId], 
+    [OrganizationActionView].[EntryTypeId] AS [EntryTypeId], 
+    [OrganizationActionView].[MunicipalityId] AS [MunicipalityId]
+    FROM [dbo].[OrganizationActionView] AS [OrganizationActionView]</DefiningQuery>
+          </EntitySet>
+          <AssociationSet Name="FK_ActionCategories_Actions" Association="Self.FK_ActionCategories_Actions">
+            <End Role="Actions" EntitySet="Actions" />
+            <End Role="ActionCategories" EntitySet="ActionCategories" />
+          </AssociationSet>
+          <AssociationSet Name="FK_ActionCategories_Categories" Association="Self.FK_ActionCategories_Categories">
+            <End Role="Categories" EntitySet="Categories" />
+            <End Role="ActionCategories" EntitySet="ActionCategories" />
+          </AssociationSet>
+          <AssociationSet Name="FK_ActionNotification" Association="Self.FK_ActionNotification">
+            <End Role="Actions" EntitySet="Actions" />
+            <End Role="Notifications" EntitySet="Notifications" />
+          </AssociationSet>
+          <AssociationSet Name="FK_ActionTypeAction" Association="Self.FK_ActionTypeAction">
+            <End Role="ActionTypes" EntitySet="ActionTypes" />
+            <End Role="Actions" EntitySet="Actions" />
+          </AssociationSet>
+          <AssociationSet Name="FK_Categories_Translation_Categories" Association="Self.FK_Categories_Translation_Categories">
+            <End Role="Categories" EntitySet="Categories" />
+            <End Role="Categories_Translation" EntitySet="Categories_Translation" />
+          </AssociationSet>
+          <AssociationSet Name="FK_InterestingCategoriesCategories" Association="Self.FK_InterestingCategoriesCategories">
+            <End Role="Categories" EntitySet="Categories" />
+            <End Role="InterestingCategories" EntitySet="InterestingCategories" />
+          </AssociationSet>
+        </EntityContainer>
+      </Schema></edmx:StorageModels>
+    <!-- CSDL content -->
+    <edmx:ConceptualModels>
+      <Schema Namespace="ActionsModel" Alias="Self" p1:UseStrongSpatialTypes="false" xmlns:annotation="http://schemas.microsoft.com/ado/2009/02/edm/annotation" xmlns:p1="http://schemas.microsoft.com/ado/2009/02/edm/annotation" xmlns="http://schemas.microsoft.com/ado/2009/11/edm">
+        <EntityContainer Name="ActionsEntities" p1:LazyLoadingEnabled="false">
+          <FunctionImport Name="LikeUser">
+            <Parameter Name="interestedUserId" Mode="In" Type="Int32" />
+            <Parameter Name="interestingUserId" Mode="In" Type="Int32" />
+          </FunctionImport>
+          <EntitySet Name="ActionTypes" EntityType="ActionsModel.ActionType" />
+          <EntitySet Name="Categories" EntityType="ActionsModel.Category" />
+          <EntitySet Name="Categories_Translation" EntityType="ActionsModel.Categories_Translation" />
+          <EntitySet Name="InterestingCategories" EntityType="ActionsModel.InterestingCategory" />
+          <EntitySet Name="Messages" EntityType="ActionsModel.Message" />
+          <EntitySet Name="Notifications" EntityType="ActionsModel.Notification" />
+          <EntitySet Name="Subscribtions" EntityType="ActionsModel.Subscribtion" />
+          <EntitySet Name="UserInterestingOrganizations" EntityType="ActionsModel.UserInterestingOrganization" />
+          <EntitySet Name="UserInterestingUsers" EntityType="ActionsModel.UserInterestingUser" />
+          <EntitySet Name="ActionViews" EntityType="ActionsModel.ActionView" />
+          <EntitySet Name="OrganizationActionViews" EntityType="ActionsModel.OrganizationActionView" />
+          <AssociationSet Name="FK_Categories_Translation_Categories" Association="ActionsModel.FK_Categories_Translation_Categories">
+            <End Role="Category" EntitySet="Categories" />
+            <End Role="Categories_Translation" EntitySet="Categories_Translation" />
+          </AssociationSet>
+          <AssociationSet Name="FK_InterestingCategoriesCategories" Association="ActionsModel.FK_InterestingCategoriesCategories">
+            <End Role="Category" EntitySet="Categories" />
+            <End Role="InterestingCategory" EntitySet="InterestingCategories" />
+          </AssociationSet>
+          <EntitySet Name="Actions" EntityType="ActionsModel.Action" />
+          <AssociationSet Name="FK_ActionNotification" Association="ActionsModel.FK_ActionNotification">
+            <End Role="Action" EntitySet="Actions" />
+            <End Role="Notification" EntitySet="Notifications" />
+          </AssociationSet>
+          <AssociationSet Name="FK_ActionTypeAction" Association="ActionsModel.FK_ActionTypeAction">
+            <End Role="ActionType" EntitySet="ActionTypes" />
+            <End Role="Action" EntitySet="Actions" />
+          </AssociationSet>
+          <EntitySet Name="ActionCategories" EntityType="ActionsModel.ActionCategory" />
+          <AssociationSet Name="FK_ActionCategories_Actions" Association="ActionsModel.FK_ActionCategories_Actions">
+            <End Role="Action" EntitySet="Actions" />
+            <End Role="ActionCategory" EntitySet="ActionCategories" />
+          </AssociationSet>
+          <AssociationSet Name="FK_ActionCategories_Categories" Association="ActionsModel.FK_ActionCategories_Categories">
+            <End Role="Category" EntitySet="Categories" />
+            <End Role="ActionCategory" EntitySet="ActionCategories" />
+          </AssociationSet>
+        </EntityContainer>
+        <EntityType Name="ActionType">
+          <Key>
+            <PropertyRef Name="Id" />
+          </Key>
+          <Property Type="Int16" Name="Id" Nullable="false" />
+          <Property Type="String" Name="Name" Nullable="false" MaxLength="50" FixedLength="false" Unicode="true" />
+          <Property Type="Int32" Name="Points" Nullable="false" />
+          <Property Type="Int32" Name="Reputation" />
+          <NavigationProperty Name="Actions" Relationship="ActionsModel.FK_ActionTypeAction" FromRole="ActionType" ToRole="Action" />
+        </EntityType>
+        <EntityType Name="Category">
+          <Key>
+            <PropertyRef Name="Id" />
+          </Key>
+          <Property Type="Int16" Name="Id" Nullable="false" />
+          <Property Type="String" Name="Name" Nullable="false" MaxLength="50" FixedLength="false" Unicode="true" />
+          <NavigationProperty Name="Categories_Translation" Relationship="ActionsModel.FK_Categories_Translation_Categories" FromRole="Category" ToRole="Categories_Translation" />
+          <NavigationProperty Name="InterestingCategories" Relationship="ActionsModel.FK_InterestingCategoriesCategories" FromRole="Category" ToRole="InterestingCategory" />
+          <NavigationProperty Name="ActionCategories" Relationship="ActionsModel.FK_ActionCategories_Categories" FromRole="Category" ToRole="ActionCategory" />
+        </EntityType>
+        <EntityType Name="Categories_Translation">
+          <Key>
+            <PropertyRef Name="Id" />
+          </Key>
+          <Property Type="Int32" Name="Id" Nullable="false" annotation:StoreGeneratedPattern="Identity" />
+          <Property Type="Int16" Name="CategoryId" Nullable="false" />
+          <Property Type="String" Name="LanguageCode" Nullable="false" MaxLength="50" FixedLength="false" Unicode="false" />
+          <Property Type="String" Name="Name" Nullable="false" MaxLength="50" FixedLength="false" Unicode="true" />
+          <NavigationProperty Name="Category" Relationship="ActionsModel.FK_Categories_Translation_Categories" FromRole="Categories_Translation" ToRole="Category" />
+        </EntityType>
+        <EntityType Name="InterestingCategory">
+          <Key>
+            <PropertyRef Name="Id" />
+          </Key>
+          <Property Type="Int32" Name="Id" Nullable="false" annotation:StoreGeneratedPattern="Identity" />
+          <Property Type="Int16" Name="CategoryId" Nullable="false" />
+          <Property Type="Int32" Name="UserId" Nullable="false" />
+          <NavigationProperty Name="Category" Relationship="ActionsModel.FK_InterestingCategoriesCategories" FromRole="InterestingCategory" ToRole="Category" />
+        </EntityType>
+        <EntityType Name="Message">
+          <Key>
+            <PropertyRef Name="Id" />
+          </Key>
+          <Property Type="Int32" Name="Id" Nullable="false" annotation:StoreGeneratedPattern="Identity" />
+          <Property Type="String" Name="From" Nullable="false" MaxLength="500" FixedLength="false" Unicode="true" />
+          <Property Type="String" Name="To" Nullable="false" MaxLength="500" FixedLength="false" Unicode="true" />
+          <Property Type="String" Name="FromDisplayName" Nullable="false" MaxLength="500" FixedLength="false" Unicode="true" />
+          <Property Type="String" Name="ToDisplayName" Nullable="false" MaxLength="500" FixedLength="false" Unicode="true" />
+          <Property Type="String" Name="FromUserObjectId" MaxLength="24" FixedLength="true" Unicode="true" />
+          <Property Type="String" Name="ToUserObjectId" MaxLength="24" FixedLength="true" Unicode="true" />
+          <Property Type="String" Name="Body" Nullable="false" MaxLength="Max" FixedLength="false" Unicode="true" />
+          <Property Type="DateTime" Name="Date" Nullable="false" Precision="3" />
+          <Property Type="String" Name="Error" MaxLength="Max" FixedLength="false" Unicode="true" />
+          <Property Type="String" Name="Subject" Nullable="false" MaxLength="Max" FixedLength="false" Unicode="true" />
+        </EntityType>
+        <EntityType Name="Notification">
+          <Key>
+            <PropertyRef Name="Id" />
+          </Key>
+          <Property Type="Int32" Name="Id" Nullable="false" annotation:StoreGeneratedPattern="Identity" />
+          <Property Type="Boolean" Name="IsRead" Nullable="false" />
+          <Property Type="Int32" Name="ActionId" Nullable="false" />
+          <Property Type="Int32" Name="UserId" Nullable="false" />
+          <NavigationProperty Name="Action" Relationship="ActionsModel.FK_ActionNotification" FromRole="Notification" ToRole="Action" />
+        </EntityType>
+        <EntityType Name="Subscribtion">
+          <Key>
+            <PropertyRef Name="Id" />
+          </Key>
+          <Property Type="Int32" Name="Id" Nullable="false" annotation:StoreGeneratedPattern="Identity" />
+          <Property Type="String" Name="ObjectId" Nullable="false" MaxLength="24" FixedLength="true" Unicode="false" />
+          <Property Type="Int32" Name="UserId" Nullable="false" />
+          <Property Type="Boolean" Name="Subscribed" Nullable="false" />
+          <Property Type="Int32" Name="EntryTypeId" />
+        </EntityType>
+        <EntityType Name="UserInterestingOrganization">
+          <Key>
+            <PropertyRef Name="UserId" />
+            <PropertyRef Name="OrganizationId" />
+          </Key>
+          <Property Type="Int32" Name="UserId" Nullable="false" />
+          <Property Type="String" Name="OrganizationId" Nullable="false" MaxLength="24" FixedLength="true" Unicode="true" />
+          <Property Type="Boolean" Name="IsMember" Nullable="false" />
+          <Property Type="Boolean" Name="IsConfirmed" Nullable="false" />
+          <Property Type="String" Name="Role" MaxLength="500" FixedLength="false" Unicode="true" />
+          <Property Type="Int32" Name="Permission" Nullable="false" />
+          <Property Type="Boolean" Name="IsPrivate" Nullable="false" />
+          <Property Type="Int32" Name="InvitedByUserId" />
+          <Property Name="VoteCount" Type="Int32" Nullable="false" />
+        </EntityType>
+        <EntityType Name="UserInterestingUser">
+          <Key>
+            <PropertyRef Name="InterestedUsersId" />
+            <PropertyRef Name="InterestingUsersId" />
+          </Key>
+          <Property Type="Int32" Name="InterestedUsersId" Nullable="false" />
+          <Property Type="Int32" Name="InterestingUsersId" Nullable="false" />
+          <Property Type="Int16" Name="CategoryId" />
+        </EntityType>
+        <EntityType Name="ActionView">
+          <Key>
+            <PropertyRef Name="ActionTypeId" />
+            <PropertyRef Name="UserId" />
+            <PropertyRef Name="IsPrivate" />
+          </Key>
+          <Property Type="String" Name="ActionTypeName" MaxLength="50" FixedLength="false" Unicode="true" />
+          <Property Type="Int16" Name="ActionTypeId" Nullable="false" />
+          <Property Type="DateTime" Name="Date" Precision="3" />
+          <Property Type="Int32" Name="UserId" Nullable="false" />
+          <Property Type="String" Name="UserObjectId" MaxLength="24" FixedLength="true" Unicode="false" />
+          <Property Type="String" Name="UserFullName" MaxLength="200" FixedLength="false" Unicode="true" />
+          <Property Type="String" Name="ObjectId" MaxLength="24" FixedLength="true" Unicode="false" />
+          <Property Type="String" Name="Subject" MaxLength="200" FixedLength="false" Unicode="true" />
+          <Property Type="String" Name="RelatedUserObjectId" MaxLength="24" FixedLength="true" Unicode="false" />
+          <Property Type="String" Name="RelatedUserFullName" MaxLength="200" FixedLength="false" Unicode="true" />
+          <Property Type="String" Name="RelatedObjectId" MaxLength="24" FixedLength="true" Unicode="false" />
+          <Property Type="String" Name="Text" MaxLength="Max" FixedLength="false" Unicode="true" />
+          <Property Type="Int32" Name="UserCount" />
+          <Property Type="String" Name="Link" MaxLength="500" FixedLength="false" Unicode="false" />
+          <Property Type="String" Name="RelatedLink" MaxLength="500" FixedLength="false" Unicode="false" />
+          <Property Type="String" Name="RelatedSubject" MaxLength="200" FixedLength="false" Unicode="true" />
+          <Property Type="String" Name="OrganizationId" MaxLength="24" FixedLength="true" Unicode="false" />
+          <Property Type="String" Name="OrganizationName" MaxLength="500" FixedLength="false" Unicode="true" />
+          <Property Type="Boolean" Name="IsPrivate" Nullable="false" />
+          <Property Type="String" Name="RelatedRelatedObjectId" MaxLength="24" FixedLength="true" Unicode="false" />
+          <Property Type="Int16" Name="EntryTypeId" />
+          <Property Type="Int32" Name="MunicipalityId" />
+          <Property Type="String" Name="LikedUserObjectId" MaxLength="24" FixedLength="true" Unicode="false" />
+        </EntityType>
+        <EntityType Name="OrganizationActionView">
+          <Key>
+            <PropertyRef Name="ActionTypeId" />
+            <PropertyRef Name="UserId" />
+            <PropertyRef Name="IsPrivate" />
+          </Key>
+          <Property Type="String" Name="ActionTypeName" MaxLength="50" FixedLength="false" Unicode="true" />
+          <Property Type="Int16" Name="ActionTypeId" Nullable="false" />
+          <Property Type="DateTime" Name="Date" Precision="3" />
+          <Property Type="Int32" Name="UserId" Nullable="false" />
+          <Property Type="String" Name="UserObjectId" MaxLength="24" FixedLength="true" Unicode="false" />
+          <Property Type="String" Name="UserFullName" MaxLength="200" FixedLength="false" Unicode="true" />
+          <Property Type="String" Name="ObjectId" MaxLength="24" FixedLength="true" Unicode="false" />
+          <Property Type="String" Name="Subject" MaxLength="200" FixedLength="false" Unicode="true" />
+          <Property Type="String" Name="RelatedUserObjectId" MaxLength="24" FixedLength="true" Unicode="false" />
+          <Property Type="String" Name="RelatedUserFullName" MaxLength="200" FixedLength="false" Unicode="true" />
+          <Property Type="String" Name="RelatedObjectId" MaxLength="24" FixedLength="true" Unicode="false" />
+          <Property Type="String" Name="Text" MaxLength="Max" FixedLength="false" Unicode="true" />
+          <Property Type="Int32" Name="UserCount" />
+          <Property Type="String" Name="Link" MaxLength="500" FixedLength="false" Unicode="false" />
+          <Property Type="String" Name="RelatedLink" MaxLength="500" FixedLength="false" Unicode="false" />
+          <Property Type="String" Name="RelatedSubject" MaxLength="200" FixedLength="false" Unicode="true" />
+          <Property Type="String" Name="OrganizationId" MaxLength="24" FixedLength="true" Unicode="false" />
+          <Property Type="String" Name="OrganizationName" MaxLength="500" FixedLength="false" Unicode="true" />
+          <Property Type="Boolean" Name="IsPrivate" Nullable="false" />
+          <Property Type="String" Name="RelatedRelatedObjectId" MaxLength="24" FixedLength="true" Unicode="false" />
+          <Property Type="Int16" Name="EntryTypeId" />
+          <Property Type="Int32" Name="MunicipalityId" />
+        </EntityType>
+        <Association Name="FK_Categories_Translation_Categories">
+          <End Type="ActionsModel.Category" Role="Category" Multiplicity="1" />
+          <End Type="ActionsModel.Categories_Translation" Role="Categories_Translation" Multiplicity="*" />
+          <ReferentialConstraint>
+            <Principal Role="Category">
+              <PropertyRef Name="Id" />
+            </Principal>
+            <Dependent Role="Categories_Translation">
+              <PropertyRef Name="CategoryId" />
+            </Dependent>
+          </ReferentialConstraint>
+        </Association>
+        <Association Name="FK_InterestingCategoriesCategories">
+          <End Type="ActionsModel.Category" Role="Category" Multiplicity="1" />
+          <End Type="ActionsModel.InterestingCategory" Role="InterestingCategory" Multiplicity="*" />
+          <ReferentialConstraint>
+            <Principal Role="Category">
+              <PropertyRef Name="Id" />
+            </Principal>
+            <Dependent Role="InterestingCategory">
+              <PropertyRef Name="CategoryId" />
+            </Dependent>
+          </ReferentialConstraint>
+        </Association>
+        <EntityType Name="Action">
+          <Key>
+            <PropertyRef Name="Id" />
+          </Key>
+          <Property Type="Int32" Name="Id" Nullable="false" annotation:StoreGeneratedPattern="Identity" />
+          <Property Type="DateTime" Name="Date" Nullable="false" Precision="3" />
+          <Property Type="Int16" Name="ActionTypeId" Nullable="false" />
+          <Property Type="String" Name="ActionTypeName" MaxLength="50" FixedLength="false" Unicode="true" />
+          <Property Type="Int32" Name="UserId" Nullable="false" />
+          <Property Type="String" Name="UserObjectId" MaxLength="24" FixedLength="true" Unicode="false" />
+          <Property Type="String" Name="UserFullName" MaxLength="200" FixedLength="false" Unicode="true" />
+          <Property Type="String" Name="ObjectId" MaxLength="24" FixedLength="true" Unicode="false" />
+          <Property Type="String" Name="Subject" MaxLength="Max" FixedLength="false" Unicode="true" />
+          <Property Type="String" Name="RelatedUserObjectId" MaxLength="24" FixedLength="true" Unicode="false" />
+          <Property Type="String" Name="RelatedUserFullName" MaxLength="200" FixedLength="false" Unicode="true" />
+          <Property Type="String" Name="RelatedObjectId" MaxLength="24" FixedLength="true" Unicode="false" />
+          <Property Type="String" Name="RelatedSubject" MaxLength="Max" FixedLength="false" Unicode="true" />
+          <Property Type="String" Name="Text" MaxLength="Max" FixedLength="false" Unicode="true" />
+          <Property Type="String" Name="Link" MaxLength="2000" FixedLength="false" Unicode="false" />
+          <Property Type="String" Name="RelatedLink" MaxLength="2000" FixedLength="false" Unicode="false" />
+          <Property Type="Boolean" Name="IsDeleted" Nullable="false" />
+          <Property Type="String" Name="OrganizationId" MaxLength="24" FixedLength="true" Unicode="false" />
+          <Property Type="String" Name="OrganizationName" MaxLength="500" FixedLength="false" Unicode="true" />
+          <Property Type="Boolean" Name="IsPrivate" Nullable="false" />
+          <Property Type="String" Name="RelatedRelatedObjectId" MaxLength="24" FixedLength="true" Unicode="false" />
+          <Property Type="Int16" Name="EntryTypeId" />
+          <Property Type="Int32" Name="MunicipalityId" />
+          <Property Type="String" Name="LikedUserObjectId" MaxLength="24" FixedLength="true" Unicode="false" />
+          <Property Type="Boolean" Name="IsGrouped" Nullable="false" />
+          <Property Type="Int32" Name="GroupId" />
+          <NavigationProperty Name="Notifications" Relationship="ActionsModel.FK_ActionNotification" FromRole="Action" ToRole="Notification" />
+          <NavigationProperty Name="ActionType" Relationship="ActionsModel.FK_ActionTypeAction" FromRole="Action" ToRole="ActionType" />
+          <NavigationProperty Name="ActionCategories" Relationship="ActionsModel.FK_ActionCategories_Actions" FromRole="Action" ToRole="ActionCategory" />
+        </EntityType>
+        <Association Name="FK_ActionNotification">
+          <End Type="ActionsModel.Action" Role="Action" Multiplicity="1">
+            <OnDelete Action="Cascade" />
+          </End>
+          <End Type="ActionsModel.Notification" Role="Notification" Multiplicity="*" />
+          <ReferentialConstraint>
+            <Principal Role="Action">
+              <PropertyRef Name="Id" />
+            </Principal>
+            <Dependent Role="Notification">
+              <PropertyRef Name="ActionId" />
+            </Dependent>
+          </ReferentialConstraint>
+        </Association>
+        <Association Name="FK_ActionTypeAction">
+          <End Type="ActionsModel.ActionType" Role="ActionType" Multiplicity="1" />
+          <End Type="ActionsModel.Action" Role="Action" Multiplicity="*" />
+          <ReferentialConstraint>
+            <Principal Role="ActionType">
+              <PropertyRef Name="Id" />
+            </Principal>
+            <Dependent Role="Action">
+              <PropertyRef Name="ActionTypeId" />
+            </Dependent>
+          </ReferentialConstraint>
+        </Association>
+        <EntityType Name="ActionCategory">
+          <Key>
+            <PropertyRef Name="Id" />
+          </Key>
+          <Property Name="Id" Type="Int32" Nullable="false" annotation:StoreGeneratedPattern="Identity" />
+          <Property Name="ActionId" Type="Int32" Nullable="false" />
+          <Property Name="CategoryId" Type="Int16" Nullable="false" />
+          <NavigationProperty Name="Action" Relationship="ActionsModel.FK_ActionCategories_Actions" FromRole="ActionCategory" ToRole="Action" />
+          <NavigationProperty Name="Category" Relationship="ActionsModel.FK_ActionCategories_Categories" FromRole="ActionCategory" ToRole="Category" />
+        </EntityType>
+        <Association Name="FK_ActionCategories_Actions">
+          <End Type="ActionsModel.Action" Role="Action" Multiplicity="1" />
+          <End Type="ActionsModel.ActionCategory" Role="ActionCategory" Multiplicity="*" />
+          <ReferentialConstraint>
+            <Principal Role="Action">
+              <PropertyRef Name="Id" />
+            </Principal>
+            <Dependent Role="ActionCategory">
+              <PropertyRef Name="ActionId" />
+            </Dependent>
+          </ReferentialConstraint>
+        </Association>
+        <Association Name="FK_ActionCategories_Categories">
+          <End Type="ActionsModel.Category" Role="Category" Multiplicity="1" />
+          <End Type="ActionsModel.ActionCategory" Role="ActionCategory" Multiplicity="*" />
+          <ReferentialConstraint>
+            <Principal Role="Category">
+              <PropertyRef Name="Id" />
+            </Principal>
+            <Dependent Role="ActionCategory">
+              <PropertyRef Name="CategoryId" />
+            </Dependent>
+          </ReferentialConstraint>
+        </Association>
+        </Schema>
+    </edmx:ConceptualModels>
+    <!-- C-S mapping content -->
+    <edmx:Mappings>
+      <Mapping Space="C-S" xmlns="http://schemas.microsoft.com/ado/2009/11/mapping/cs">
+        <EntityContainerMapping StorageEntityContainer="ActionsModelStoreContainer" CdmEntityContainer="ActionsEntities">
+          <FunctionImportMapping FunctionImportName="LikeUser" FunctionName="ActionsModel.Store.LikeUser" />
+          <EntitySetMapping Name="ActionTypes">
+            <EntityTypeMapping TypeName="ActionsModel.ActionType">
+              <MappingFragment StoreEntitySet="ActionTypes">
+                <ScalarProperty Name="Reputation" ColumnName="Reputation" />
+                <ScalarProperty Name="Points" ColumnName="Points" />
+                <ScalarProperty Name="Name" ColumnName="Name" />
+                <ScalarProperty Name="Id" ColumnName="Id" />
+              </MappingFragment>
+            </EntityTypeMapping>
+          </EntitySetMapping>
+          <EntitySetMapping Name="Categories">
+            <EntityTypeMapping TypeName="ActionsModel.Category">
+              <MappingFragment StoreEntitySet="Categories">
+                <ScalarProperty Name="Name" ColumnName="Name" />
+                <ScalarProperty Name="Id" ColumnName="Id" />
+              </MappingFragment>
+            </EntityTypeMapping>
+          </EntitySetMapping>
+          <EntitySetMapping Name="Categories_Translation">
+            <EntityTypeMapping TypeName="ActionsModel.Categories_Translation">
+              <MappingFragment StoreEntitySet="Categories_Translation">
+                <ScalarProperty Name="Name" ColumnName="Name" />
+                <ScalarProperty Name="LanguageCode" ColumnName="LanguageCode" />
+                <ScalarProperty Name="CategoryId" ColumnName="CategoryId" />
+                <ScalarProperty Name="Id" ColumnName="Id" />
+              </MappingFragment>
+            </EntityTypeMapping>
+          </EntitySetMapping>
+          <EntitySetMapping Name="InterestingCategories">
+            <EntityTypeMapping TypeName="ActionsModel.InterestingCategory">
+              <MappingFragment StoreEntitySet="InterestingCategories">
+                <ScalarProperty Name="UserId" ColumnName="UserId" />
+                <ScalarProperty Name="CategoryId" ColumnName="CategoryId" />
+                <ScalarProperty Name="Id" ColumnName="Id" />
+              </MappingFragment>
+            </EntityTypeMapping>
+          </EntitySetMapping>
+          <EntitySetMapping Name="Messages">
+            <EntityTypeMapping TypeName="ActionsModel.Message">
+              <MappingFragment StoreEntitySet="Messages">
+                <ScalarProperty Name="Subject" ColumnName="Subject" />
+                <ScalarProperty Name="Error" ColumnName="Error" />
+                <ScalarProperty Name="Date" ColumnName="Date" />
+                <ScalarProperty Name="Body" ColumnName="Body" />
+                <ScalarProperty Name="ToUserObjectId" ColumnName="ToUserObjectId" />
+                <ScalarProperty Name="FromUserObjectId" ColumnName="FromUserObjectId" />
+                <ScalarProperty Name="ToDisplayName" ColumnName="ToDisplayName" />
+                <ScalarProperty Name="FromDisplayName" ColumnName="FromDisplayName" />
+                <ScalarProperty Name="To" ColumnName="To" />
+                <ScalarProperty Name="From" ColumnName="From" />
+                <ScalarProperty Name="Id" ColumnName="Id" />
+              </MappingFragment>
+            </EntityTypeMapping>
+          </EntitySetMapping>
+          <EntitySetMapping Name="Notifications">
+            <EntityTypeMapping TypeName="ActionsModel.Notification">
+              <MappingFragment StoreEntitySet="Notifications">
+                <ScalarProperty Name="UserId" ColumnName="UserId" />
+                <ScalarProperty Name="ActionId" ColumnName="ActionId" />
+                <ScalarProperty Name="IsRead" ColumnName="IsRead" />
+                <ScalarProperty Name="Id" ColumnName="Id" />
+              </MappingFragment>
+            </EntityTypeMapping>
+          </EntitySetMapping>
+          <EntitySetMapping Name="Subscribtions">
+            <EntityTypeMapping TypeName="ActionsModel.Subscribtion">
+              <MappingFragment StoreEntitySet="Subscribtions">
+                <ScalarProperty Name="EntryTypeId" ColumnName="EntryTypeId" />
+                <ScalarProperty Name="Subscribed" ColumnName="Subscribed" />
+                <ScalarProperty Name="UserId" ColumnName="UserId" />
+                <ScalarProperty Name="ObjectId" ColumnName="ObjectId" />
+                <ScalarProperty Name="Id" ColumnName="Id" />
+              </MappingFragment>
+            </EntityTypeMapping>
+          </EntitySetMapping>
+          <EntitySetMapping Name="UserInterestingOrganizations">
+            <EntityTypeMapping TypeName="ActionsModel.UserInterestingOrganization">
+              <MappingFragment StoreEntitySet="UserInterestingOrganization">
+                <ScalarProperty Name="VoteCount" ColumnName="VoteCount" />
+                <ScalarProperty Name="InvitedByUserId" ColumnName="InvitedByUserId" />
+                <ScalarProperty Name="IsPrivate" ColumnName="IsPrivate" />
+                <ScalarProperty Name="Permission" ColumnName="Permission" />
+                <ScalarProperty Name="Role" ColumnName="Role" />
+                <ScalarProperty Name="IsConfirmed" ColumnName="IsConfirmed" />
+                <ScalarProperty Name="IsMember" ColumnName="IsMember" />
+                <ScalarProperty Name="OrganizationId" ColumnName="OrganizationId" />
+                <ScalarProperty Name="UserId" ColumnName="UserId" />
+              </MappingFragment>
+            </EntityTypeMapping>
+          </EntitySetMapping>
+          <EntitySetMapping Name="UserInterestingUsers">
+            <EntityTypeMapping TypeName="ActionsModel.UserInterestingUser">
+              <MappingFragment StoreEntitySet="UserInterestingUser">
+                <ScalarProperty Name="CategoryId" ColumnName="CategoryId" />
+                <ScalarProperty Name="InterestingUsersId" ColumnName="InterestingUsersId" />
+                <ScalarProperty Name="InterestedUsersId" ColumnName="InterestedUsersId" />
+              </MappingFragment>
+            </EntityTypeMapping>
+          </EntitySetMapping>
+          <EntitySetMapping Name="ActionViews">
+            <EntityTypeMapping TypeName="ActionsModel.ActionView">
+              <MappingFragment StoreEntitySet="ActionView">
+                <ScalarProperty Name="LikedUserObjectId" ColumnName="LikedUserObjectId" />
+                <ScalarProperty Name="MunicipalityId" ColumnName="MunicipalityId" />
+                <ScalarProperty Name="EntryTypeId" ColumnName="EntryTypeId" />
+                <ScalarProperty Name="RelatedRelatedObjectId" ColumnName="RelatedRelatedObjectId" />
+                <ScalarProperty Name="IsPrivate" ColumnName="IsPrivate" />
+                <ScalarProperty Name="OrganizationName" ColumnName="OrganizationName" />
+                <ScalarProperty Name="OrganizationId" ColumnName="OrganizationId" />
+                <ScalarProperty Name="RelatedSubject" ColumnName="RelatedSubject" />
+                <ScalarProperty Name="RelatedLink" ColumnName="RelatedLink" />
+                <ScalarProperty Name="Link" ColumnName="Link" />
+                <ScalarProperty Name="UserCount" ColumnName="UserCount" />
+                <ScalarProperty Name="Text" ColumnName="Text" />
+                <ScalarProperty Name="RelatedObjectId" ColumnName="RelatedObjectId" />
+                <ScalarProperty Name="RelatedUserFullName" ColumnName="RelatedUserFullName" />
+                <ScalarProperty Name="RelatedUserObjectId" ColumnName="RelatedUserObjectId" />
+                <ScalarProperty Name="Subject" ColumnName="Subject" />
+                <ScalarProperty Name="ObjectId" ColumnName="ObjectId" />
+                <ScalarProperty Name="UserFullName" ColumnName="UserFullName" />
+                <ScalarProperty Name="UserObjectId" ColumnName="UserObjectId" />
+                <ScalarProperty Name="UserId" ColumnName="UserId" />
+                <ScalarProperty Name="Date" ColumnName="Date" />
+                <ScalarProperty Name="ActionTypeId" ColumnName="ActionTypeId" />
+                <ScalarProperty Name="ActionTypeName" ColumnName="ActionTypeName" />
+              </MappingFragment>
+            </EntityTypeMapping>
+          </EntitySetMapping>
+          <EntitySetMapping Name="OrganizationActionViews">
+            <EntityTypeMapping TypeName="ActionsModel.OrganizationActionView">
+              <MappingFragment StoreEntitySet="OrganizationActionView">
+                <ScalarProperty Name="MunicipalityId" ColumnName="MunicipalityId" />
+                <ScalarProperty Name="EntryTypeId" ColumnName="EntryTypeId" />
+                <ScalarProperty Name="RelatedRelatedObjectId" ColumnName="RelatedRelatedObjectId" />
+                <ScalarProperty Name="IsPrivate" ColumnName="IsPrivate" />
+                <ScalarProperty Name="OrganizationName" ColumnName="OrganizationName" />
+                <ScalarProperty Name="OrganizationId" ColumnName="OrganizationId" />
+                <ScalarProperty Name="RelatedSubject" ColumnName="RelatedSubject" />
+                <ScalarProperty Name="RelatedLink" ColumnName="RelatedLink" />
+                <ScalarProperty Name="Link" ColumnName="Link" />
+                <ScalarProperty Name="UserCount" ColumnName="UserCount" />
+                <ScalarProperty Name="Text" ColumnName="Text" />
+                <ScalarProperty Name="RelatedObjectId" ColumnName="RelatedObjectId" />
+                <ScalarProperty Name="RelatedUserFullName" ColumnName="RelatedUserFullName" />
+                <ScalarProperty Name="RelatedUserObjectId" ColumnName="RelatedUserObjectId" />
+                <ScalarProperty Name="Subject" ColumnName="Subject" />
+                <ScalarProperty Name="ObjectId" ColumnName="ObjectId" />
+                <ScalarProperty Name="UserFullName" ColumnName="UserFullName" />
+                <ScalarProperty Name="UserObjectId" ColumnName="UserObjectId" />
+                <ScalarProperty Name="UserId" ColumnName="UserId" />
+                <ScalarProperty Name="Date" ColumnName="Date" />
+                <ScalarProperty Name="ActionTypeId" ColumnName="ActionTypeId" />
+                <ScalarProperty Name="ActionTypeName" ColumnName="ActionTypeName" />
+              </MappingFragment>
+            </EntityTypeMapping>
+          </EntitySetMapping>
+          <EntitySetMapping Name="Actions">
+            <EntityTypeMapping TypeName="ActionsModel.Action">
+              <MappingFragment StoreEntitySet="Actions">
+                <ScalarProperty Name="GroupId" ColumnName="GroupId" />
+                <ScalarProperty Name="IsGrouped" ColumnName="IsGrouped" />
+                <ScalarProperty Name="LikedUserObjectId" ColumnName="LikedUserObjectId" />
+                <ScalarProperty Name="MunicipalityId" ColumnName="MunicipalityId" />
+                <ScalarProperty Name="EntryTypeId" ColumnName="EntryTypeId" />
+                <ScalarProperty Name="RelatedRelatedObjectId" ColumnName="RelatedRelatedObjectId" />
+                <ScalarProperty Name="IsPrivate" ColumnName="IsPrivate" />
+                <ScalarProperty Name="OrganizationName" ColumnName="OrganizationName" />
+                <ScalarProperty Name="OrganizationId" ColumnName="OrganizationId" />
+                <ScalarProperty Name="IsDeleted" ColumnName="IsDeleted" />
+                <ScalarProperty Name="RelatedLink" ColumnName="RelatedLink" />
+                <ScalarProperty Name="Link" ColumnName="Link" />
+                <ScalarProperty Name="Text" ColumnName="Text" />
+                <ScalarProperty Name="RelatedSubject" ColumnName="RelatedSubject" />
+                <ScalarProperty Name="RelatedObjectId" ColumnName="RelatedObjectId" />
+                <ScalarProperty Name="RelatedUserFullName" ColumnName="RelatedUserFullName" />
+                <ScalarProperty Name="RelatedUserObjectId" ColumnName="RelatedUserObjectId" />
+                <ScalarProperty Name="Subject" ColumnName="Subject" />
+                <ScalarProperty Name="ObjectId" ColumnName="ObjectId" />
+                <ScalarProperty Name="UserFullName" ColumnName="UserFullName" />
+                <ScalarProperty Name="UserObjectId" ColumnName="UserObjectId" />
+                <ScalarProperty Name="UserId" ColumnName="UserId" />
+                <ScalarProperty Name="ActionTypeName" ColumnName="ActionTypeName" />
+                <ScalarProperty Name="ActionTypeId" ColumnName="ActionTypeId" />
+                <ScalarProperty Name="Date" ColumnName="Date" />
+                <ScalarProperty Name="Id" ColumnName="Id" />
+              </MappingFragment>
+            </EntityTypeMapping>
+          </EntitySetMapping>
+          <EntitySetMapping Name="ActionCategories">
+            <EntityTypeMapping TypeName="ActionsModel.ActionCategory">
+              <MappingFragment StoreEntitySet="ActionCategories">
+                <ScalarProperty Name="CategoryId" ColumnName="CategoryId" />
+                <ScalarProperty Name="ActionId" ColumnName="ActionId" />
+                <ScalarProperty Name="Id" ColumnName="Id" />
+              </MappingFragment>
+            </EntityTypeMapping>
+          </EntitySetMapping>
+          </EntityContainerMapping>
+      </Mapping>
+    </edmx:Mappings>
+  </edmx:Runtime>
+  <!-- EF Designer content (DO NOT EDIT MANUALLY BELOW HERE) -->
+  <Designer xmlns="http://schemas.microsoft.com/ado/2009/11/edmx">
+    <Connection>
+      <DesignerInfoPropertySet>
+        <DesignerProperty Name="MetadataArtifactProcessing" Value="EmbedInOutputAssembly" />
+      </DesignerInfoPropertySet>
+    </Connection>
+    <Options>
+      <DesignerInfoPropertySet>
+        <DesignerProperty Name="ValidateOnBuild" Value="true" />
+        <DesignerProperty Name="EnablePluralization" Value="True" />
+        <DesignerProperty Name="IncludeForeignKeysInModel" Value="True" />
+        <DesignerProperty Name="CodeGenerationStrategy" Value="None" />
+        <DesignerProperty Name="UseLegacyProvider" Value="False" />
+      </DesignerInfoPropertySet>
+    </Options>
+    <!-- Diagram content (shape and connector positions) -->
+    <Diagrams></Diagrams>
+  </Designer>
+</edmx:Edmx>

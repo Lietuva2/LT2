@@ -1,0 +1,55 @@
+﻿@model Data.ViewModels.Organization.InfoViewModel
+@using Globalization.Resources.Organization
+@using Globalization.Resources.Shared
+@using Web.Helpers
+
+<fieldset>
+    <div class="uiHeader">
+    <div>
+    <span>@Resource.InfoLegend</span>
+    @if (Model.IsEditable)
+    {
+        @Html.ActionLink(SharedStrings.Edit, MVC.Organization.EditInfo(Model.ObjectId), new { @class = "edit" })
+    }
+    </div>
+    </div>
+    <table class="tbl_data"> 
+        <tbody>
+            @if (!string.IsNullOrEmpty(Model.Description) || Model.IsEditable)
+            {
+            <tr>
+            <th class="lbl">@Resource.Description</th>
+            <td class="data">@Html.Raw(Model.Description)</td>
+            </tr>
+            }
+            @if (!string.IsNullOrEmpty(Model.Vision) || Model.IsEditable)
+            {
+                <tr>
+                    <th class="lbl">@Resource.Vision</th>
+                    <td class="data">@Html.Raw(Model.Vision)</td>
+                </tr>
+            }
+            @if (!string.IsNullOrEmpty(Model.Mission) || Model.IsEditable)
+            {
+                <tr>
+                    <th class="lbl">@Resource.Mission</th>
+                    <td class="data">@Html.Raw(Model.Mission)</td>
+                </tr>
+            }
+            @if (!string.IsNullOrEmpty(Model.Goals) || Model.IsEditable)
+            {
+                <tr>
+                    <th class="lbl">@Resource.Goals</th>
+                    <td class="data">@Html.Raw(Model.Goals)</td>
+                </tr>
+            }
+            @if (!string.IsNullOrEmpty(Model.FoundedOn) || Model.IsEditable)
+            {
+                <tr>
+                    <th class="lbl">@Resource.FoundedOn</th>
+                    <td class="data">@Model.FoundedOn</td>
+                </tr>
+            }
+        </tbody>
+    </table>
+ </fieldset>

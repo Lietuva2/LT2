@@ -1,0 +1,38 @@
+﻿@model Data.ViewModels.Project.ProjectTeamModel
+@{
+    ViewBag.Title = Model.Subject + " - " + Resource.PageTitleTeam;
+}
+@using Data.Enums
+@using Framework.Mvc.Strings
+@using Globalization.Resources.Project
+@using Framework.Strings;
+@section Head
+{
+}
+@section Scripts
+{
+    <script type="text/javascript">
+        function onPageLoad() {
+            @if(Model.IsCurrentUserInvolved)
+            {
+            <text>
+                $('#divMemberContainer').members().deleteButton();
+            </text>
+            }
+        }
+    </script>
+}
+
+<h3>
+    @Html.Raw(string.Format(Resource.IdeaTask, Html.ActionLink(Model.Subject.HtmlDecode(), MVC.Idea.Details(Model.IdeaId, Model.Subject.ToSeoUrl(), null))))
+</h3>
+@{Html.RenderPartial(MVC.Project.Views.PendingConfirmationMessage, Model.IsPendingConfirmation);}
+@{Html.RenderPartial(MVC.Project.Views.JoinProject, new Data.ViewModels.Project.JoinProjectModel(){IdeaId = Model.IdeaId, IsJoinable = Model.IsJoinable});}
+<br />
+@{Html.RenderPartial(MVC.Project.Views.Menu, Model.Id, new ViewDataDictionary() { { "index", "2" }, { "isEditable", Model.IsCurrentUserInvolved } });}
+<br />
+<div>
+    <div id="divMemberContainer">
+        @{Html.RenderPartial(MVC.Project.Views.ProjectMembers, Model);}
+    </div>
+</div>

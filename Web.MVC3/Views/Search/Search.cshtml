@@ -1,0 +1,56 @@
+﻿@model Data.ViewModels.Search.SearchModel
+           @{
+    ViewBag.Title = Resource.PageTitle;
+}
+@using Globalization.Resources.Search
+@using Globalization.Resources.Shared
+@using Globalization.Resources.Shared
+@using Framework.Lists
+@using Services.Enums
+@using Web.Helpers
+@using Globalization.Resources.Search
+@section Head{
+    <style type="text/css">
+        .buttons button {
+            margin: -2px 0 0 2px;
+        }
+    </style>
+}
+@section Scripts
+{
+<script type='text/javascript'>
+    function onPageLoad() {
+        $('#list').showmore();
+        initializeInfiniteScroll();
+    }
+</script>
+}
+<h2 class="heading">@Resource.Title</h2>
+<div class="clear"></div>
+<div>
+    <img src="@Links.Content.Images.s_gif" alt="" />
+</div>
+<div class="clearfix searchForm">
+    @using (Html.BeginForm(MVC.Search.Search(), FormMethod.Get))
+                {
+                    <input type="text" id="searchText" name="searchText" size="40" style="float:left;" value="@Model.SearchPhrase" />
+                    @Html.Button(new ButtonHelperModel()
+                                                                          {
+                                                                              Text = Resource.Search,
+                                                                              ImageUrl = Links.Content.Images.page_white_find_png
+                                                                          })
+                }
+</div>
+@if (!string.IsNullOrEmpty(Model.Message))
+{
+    <div>
+        @Model.Message
+    </div>
+}
+<ul id="list" class="m_list">
+    @{Html.RenderPartial(MVC.Search.Views.List, Model.ExpandableList);}
+</ul>
+@if (Model.ExpandableList.HasNextPage)
+{
+@Html.ActionLink(SharedStrings.More, MVC.Search.GetNextPage(), new { id = "lnkShowMore" })
+}

@@ -1,0 +1,227 @@
+﻿@model Data.ViewModels.Account.SettingsModel
+@using Globalization.Resources.Account;
+@using Globalization.Resources.Shared;
+@using Web.Helpers;
+<fieldset>
+    @using (Html.BeginForm(MVC.Account.SaveSettings()))
+    {
+        @Html.AntiForgeryToken()
+        @Html.HiddenFor(m => m.UserObjectId)
+        <div class="uiHeader">
+            <span>@Resource.Visibility</span>
+        </div>
+        <table class="tbl_data tbl_edit">
+            <tbody>
+                <tr>
+                    <th class="lbl">
+                        @Resource.Lists
+                    </th>
+                    <td class="data">
+                        <label class="normal">
+                            @Html.CheckBoxFor(m => m.Settings.VotesArePublic)
+                            @Resource.VotesArePublicAll
+                        </label>
+                    </td>
+                </tr>
+                <tr>
+                    <th class="lbl">
+                        @Resource.NewsLetterFreq
+                    </th>
+                    <td class="data">
+                        @Html.DropDownForEnum(m => m.Settings.NewsLetterFrequency, Globalization.Resources.Services.NewsLetterFreq.ResourceManager)
+                    </td>
+                </tr>
+                <tr>
+                    <th class="lbl">
+                        @Resource.ProfileVisibleTo
+                    </th>
+                    <td class="data">
+                        @Html.DropDownForEnum(m => m.Settings.Visibility, Globalization.Resources.Services.DetailsVisibility.ResourceManager)
+                    </td>
+                </tr>
+                <tr>
+                    <th class="lbl">@Resource.UserName
+                    </th>
+                    <td class="data">
+                        @Html.DropDownForEnum(m => m.Settings.DetailsVisibility.UserName, Globalization.Resources.Services.DetailsVisibility.ResourceManager)
+                    </td>
+                </tr>
+                <tr>
+                    <th class="lbl">@Resource.BirthDate
+                    </th>
+                    <td class="data">
+                        @Html.DropDownForEnum(m => m.Settings.DetailsVisibility.BirthDate, Globalization.Resources.Services.DetailsVisibility.ResourceManager)
+                    </td>
+                </tr>
+                <tr>
+                    <th class="lbl">@Resource.Citizenship
+                    </th>
+                    <td class="data">
+                        @Html.DropDownForEnum(m => m.Settings.DetailsVisibility.Citizenship, Globalization.Resources.Services.DetailsVisibility.ResourceManager)
+                    </td>
+                </tr>
+                <tr>
+                    <th class="lbl">@Resource.Nationality
+                    </th>
+                    <td class="data">
+                        @Html.DropDownForEnum(m => m.Settings.DetailsVisibility.Nationality, Globalization.Resources.Services.DetailsVisibility.ResourceManager)
+                    </td>
+                </tr>
+                <tr>
+                    <th class="lbl">@Resource.EmploymentStatusName
+                    </th>
+                    <td class="data">
+                        @Html.DropDownForEnum(m => m.Settings.DetailsVisibility.EmploymentStatus, Globalization.Resources.Services.DetailsVisibility.ResourceManager)
+                    </td>
+                </tr>
+                <tr>
+                    <th class="lbl">@Resource.MaritalStatusName
+                    </th>
+                    <td class="data">
+                        @Html.DropDownForEnum(m => m.Settings.DetailsVisibility.MaritalStatus, Globalization.Resources.Services.DetailsVisibility.ResourceManager)
+                    </td>
+                </tr>
+                <tr>
+                    <th class="lbl">@Resource.Summary
+                    </th>
+                    <td class="data">
+                        @Html.DropDownForEnum(m => m.Settings.DetailsVisibility.Summary, Globalization.Resources.Services.DetailsVisibility.ResourceManager)
+                    </td>
+                </tr>
+                <tr>
+                    <th class="lbl">@Resource.Specialties
+                    </th>
+                    <td class="data">
+                        @Html.DropDownForEnum(m => m.Settings.DetailsVisibility.Specialties, Globalization.Resources.Services.DetailsVisibility.ResourceManager)
+                    </td>
+                </tr>
+                <tr>
+                    <th class="lbl">@Resource.Education
+                    </th>
+                    <td class="data">
+                        @Html.DropDownForEnum(m => m.Settings.DetailsVisibility.Educations, Globalization.Resources.Services.DetailsVisibility.ResourceManager)
+                    </td>
+                </tr>
+                <tr>
+                    <th class="lbl">@Resource.Positions
+                    </th>
+                    <td class="data">
+                        @Html.DropDownForEnum(m => m.Settings.DetailsVisibility.Positions, Globalization.Resources.Services.DetailsVisibility.ResourceManager)
+                    </td>
+                </tr>
+                <tr>
+                    <th class="lbl">@Resource.MemberOfParties
+                    </th>
+                    <td class="data">
+                        @Html.DropDownForEnum(m => m.Settings.DetailsVisibility.MemberOfParties, Globalization.Resources.Services.DetailsVisibility.ResourceManager)
+                    </td>
+                </tr>
+                <tr>
+                    <th class="lbl">@Resource.PoliticalViews
+                    </th>
+                    <td class="data">
+                        @Html.DropDownForEnum(m => m.Settings.DetailsVisibility.PoliticalViews, Globalization.Resources.Services.DetailsVisibility.ResourceManager)
+                    </td>
+                </tr>
+                <tr>
+                    <th class="lbl">@Resource.Groups
+                    </th>
+                    <td class="data">
+                        @Html.DropDownForEnum(m => m.Settings.DetailsVisibility.Groups, Globalization.Resources.Services.DetailsVisibility.ResourceManager)
+                    </td>
+                </tr>
+                <tr>
+                    <th class="lbl">@Resource.Interests
+                    </th>
+                    <td class="data">
+                        @Html.DropDownForEnum(m => m.Settings.DetailsVisibility.Interests, Globalization.Resources.Services.DetailsVisibility.ResourceManager)
+                    </td>
+                </tr>
+                <tr>
+                    <th class="lbl">@Resource.Awards
+                    </th>
+                    <td class="data">
+                        @Html.DropDownForEnum(m => m.Settings.DetailsVisibility.Awards, Globalization.Resources.Services.DetailsVisibility.ResourceManager)
+                    </td>
+                </tr>
+                <tr>
+                    <th class="lbl">@Resource.Email
+                    </th>
+                    <td class="data">
+                        @Html.DropDownForEnum(m => m.Settings.DetailsVisibility.Email, Globalization.Resources.Services.DetailsVisibility.ResourceManager)
+                    </td>
+                </tr>
+                <tr>
+                    <th class="lbl">@Resource.CurrentLocation
+                    </th>
+                    <td class="data">
+                        @Html.DropDownForEnum(m => m.Settings.DetailsVisibility.Address, Globalization.Resources.Services.DetailsVisibility.ResourceManager)
+                    </td>
+                </tr>
+                <tr>
+                    <th class="lbl">@Resource.OriginLacation
+                    </th>
+                    <td class="data">
+                        @Html.DropDownForEnum(m => m.Settings.DetailsVisibility.OriginAddress, Globalization.Resources.Services.DetailsVisibility.ResourceManager)
+                    </td>
+                </tr>
+                <tr>
+                    <th class="lbl">@Resource.Websites
+                    </th>
+                    <td class="data">
+                        @Html.DropDownForEnum(m => m.Settings.DetailsVisibility.WebSites, Globalization.Resources.Services.DetailsVisibility.ResourceManager)
+                    </td>
+                </tr>
+                <tr>
+                    <th class="lbl">@Resource.PhoneNumbers
+                    </th>
+                    <td class="data">
+                        @Html.DropDownForEnum(m => m.Settings.DetailsVisibility.PhoneNumbers, Globalization.Resources.Services.DetailsVisibility.ResourceManager)
+                    </td>
+                </tr>
+                <tr>
+                    <th class="lbl">@Resource.MemberSince
+                    </th>
+                    <td class="data">
+                        @Html.DropDownForEnum(m => m.Settings.DetailsVisibility.MemberSince, Globalization.Resources.Services.DetailsVisibility.ResourceManager)
+                    </td>
+                </tr>
+                <tr>
+                    <th class="lbl">@Resource.ProfilePictureLegend
+                    </th>
+                    <td class="data">
+                        @Html.DropDownForEnum(m => m.Settings.DetailsVisibility.Photo, Globalization.Resources.Services.DetailsVisibility.ResourceManager)
+                    </td>
+                </tr>
+                <tr>
+                    <th class="lbl">@Resource.UserActivity
+                    </th>
+                    <td class="data">
+                        @Html.DropDownForEnum(m => m.Settings.DetailsVisibility.Activity, Globalization.Resources.Services.DetailsVisibility.ResourceManager)
+                    </td>
+                </tr>
+                <tr>
+                    <th class="lbl">@Resource.UserReputation
+                    </th>
+                    <td class="data">
+                        @Html.DropDownForEnum(m => m.Settings.DetailsVisibility.Reputation, Globalization.Resources.Services.DetailsVisibility.ResourceManager)
+                    </td>
+                </tr>
+                <tr>
+                    <th class="lbl">@Resource.Contact
+                    </th>
+                    <td class="data">
+                        @Html.DropDownForEnum(m => m.Settings.DetailsVisibility.Contact, Globalization.Resources.Services.DetailsVisibility.ResourceManager)
+                    </td>
+                </tr>
+                <tr>
+                    <th>
+                    </th>
+                    <td class="actions data">
+                        @Html.Buttons()
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+    }
+</fieldset>

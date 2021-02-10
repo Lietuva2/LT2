@@ -1,0 +1,11 @@
+﻿@using Globalization.Resources.Account
+@using Web.Helpers
+@model Data.ViewModels.Account.AdditionalUniqueInfoModel
+<script type="text/javascript">
+    $(document).ready(function() {
+        initTooltips();
+    });
+</script>
+<div id="dialog-additional-info" title="@Resource.AdditionalUniqueInfoTitle" class="hide">
+    @Html.Partial(MVC.Account.Views.AdditionalUniqueInfoContents)
+</div>

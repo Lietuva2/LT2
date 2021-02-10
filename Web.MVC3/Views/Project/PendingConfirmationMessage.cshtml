@@ -1,0 +1,11 @@
+﻿@model bool
+@using Globalization.Resources.Project
+
+@if (Model)
+{
+    <div id="failureMessage" class="popup">
+            <div class="popup_border notice">
+                <div>@Resource.PendingConfirmation</div>
+            </div>
+    </div>
+}

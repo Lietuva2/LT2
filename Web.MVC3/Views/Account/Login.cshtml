@@ -1,0 +1,8 @@
+﻿@model Data.ViewModels.Account.UserLoginModel
+@using Globalization.Resources.Account
+@using Globalization.Resources.Shared
+@using Web.Helpers
+@{
+    ViewBag.Title = Resource.PageTitleLogin;
+}
+@{Html.RenderPartial(MVC.Account.Views.LoginPartial, Model);}

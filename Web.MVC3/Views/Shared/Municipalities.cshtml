@@ -1,0 +1,13 @@
+﻿@using Globalization.Resources.Account
+@model List<Services.Session.MunicipalityInfo>
+<ul>
+    <li>
+        <a href="@Url.Action("Municipality", "Address", new { returnTo = ViewBag.ReturnTo })">@Resource.AllCountry</a>
+    </li>
+    @foreach(var item in Model)
+    {
+        <li>
+            <a href="@Url.Action("Municipality", "Address", new { name=item.ShortName, returnTo = ViewBag.ReturnTo })">@item.Name</a>
+        </li>
+    }
+</ul>
