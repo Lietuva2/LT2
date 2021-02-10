@@ -1,0 +1,14 @@
+﻿@model Data.ViewModels.Problem.ProblemIndexItemModel
+@using Globalization.Resources.Shared
+@using Web.Helpers;
+
+<li>
+    @using (Html.BeginCollectionItem("Problems"))
+    {
+        @Html.HiddenFor(m => m.Id)
+        @Html.HiddenFor(m => m.Text)
+        <span>
+        @Html.Raw(Model.Text)
+        </span>
+    }
+</li>

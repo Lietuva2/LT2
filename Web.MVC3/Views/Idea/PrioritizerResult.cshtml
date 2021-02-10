@@ -1,0 +1,46 @@
+﻿@model Data.ViewModels.Idea.PrioritizerResultModel
+@using Globalization.Resources.Idea
+@using Globalization.Resources.Idea
+@using Globalization.Resources.Shared
+@using Framework.Strings;
+@using Web.Helpers
+@{
+    ViewBag.Title = Resource.TotalResultPageTitle;
+}
+
+<h2 class="heading">@Resource.TotalResultTitle</h2>
+@if (Model.Items.Count > 0)
+{
+<p>
+    @Resource.PrioritizerResultDescription
+</p>
+<table>
+        @for (int i = 0; i < Model.Items.Count; i++)
+        {
+        <tr>
+            <td>
+                @Html.ActionLink(Model.Items[i].Subject, MVC.Idea.Details(Model.Items[i].Id, Model.Items[i].Subject.ToSeoUrl(), null), new { target = "_blank" })
+            </td>
+            <td>
+                @Model.Items[i].PercentString
+            </td>
+        </tr>
+        }
+</table>
+}
+<p>
+    @Resource.TotalPrioritizerResultDescription
+</p>
+<table>
+    @for (int i = 0; i < Model.TotalItems.Count; i++)
+        {
+        <tr>
+            <td>
+                @Html.ActionLink(Model.TotalItems[i].Subject, MVC.Idea.Details(Model.TotalItems[i].Id, Model.TotalItems[i].Subject.ToSeoUrl(), null), new { target = "_blank" })
+            </td>
+            <td>
+                @Model.TotalItems[i].PercentString
+            </td>
+        </tr>
+        }
+</table>

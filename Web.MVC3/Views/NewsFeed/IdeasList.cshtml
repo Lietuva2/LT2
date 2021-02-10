@@ -1,0 +1,8 @@
+﻿@model Data.ViewModels.Idea.IdeaIndexModel
+@using Framework.Strings
+@using Globalization.Resources.Idea
+@using Web.Helpers
+@foreach (var idea in Model.Items.List)
+{
+    @Html.Partial(MVC.NewsFeed.Views.DashboardIdea, idea)
+}

@@ -1,0 +1,89 @@
+﻿@model Data.ViewModels.Account.EducationAndWorkViewModel
+@using Globalization.Resources.Account
+@using Globalization.Resources.Shared
+@using Globalization.Resources.Account;
+@using Globalization.Resources.Shared;
+
+<fieldset>
+    <div class="uiHeader">
+    <div>
+    <span>@Resource.EducationAndWorkLegent</span>
+    @if (ViewBag.IsAuthenticated && Model.IsCurrentUser)
+    {
+        @Html.ActionLink(SharedStrings.Edit, MVC.Account.EditEducationAndWork(Model.UserObjectId), new { @class = "edit" })
+    }
+    </div>
+    </div>
+    <table class="tbl_data"> 
+    <tbody>
+    @if (!string.IsNullOrEmpty(Model.Summary) || Model.IsCurrentUser)
+    {
+        <tr>
+            <th class="lbl">@Resource.Summary</th>
+            <td class="data">@Html.Raw(Model.Summary)</td>
+        </tr>
+    }
+    @if (!string.IsNullOrEmpty(Model.Specialties) || Model.IsCurrentUser)
+    {
+        <tr>
+            <th class="lbl">@Resource.Specialties</th>
+            <td class="data">@Html.Raw(Model.Specialties)</td>
+        </tr>
+    }
+    @if (Model.Educations.Count > 0 || Model.IsCurrentUser)
+    {<tr>
+        <th class="lbl">@Resource.Education</th>
+        <td class="data">
+            <ul>
+                @foreach (var e in Model.Educations)
+                {
+                    <li>
+                    
+                        @if (!string.IsNullOrEmpty(e.FieldOfStudy))
+                        {
+                            @e.FieldOfStudy
+                            <text>@@</text>
+                        }
+                        @e.SchoolName'@e.YearTo
+                    </li>
+                }
+            </ul>
+        </td>
+    </tr>
+    }
+    @if (Model.Positions.Count > 0 || Model.IsCurrentUser)
+    {
+    <tr>
+        <th class="lbl">@Resource.Positions</th>
+        <td class="data">
+            <ul>
+                @foreach (var p in Model.Positions)
+                {
+                    <li>
+                        @p.StartDate - @p.EndDate : @(!string.IsNullOrEmpty(p.Title) ? p.Title + ",": "") @p.CompanyName
+                    </li>
+                }
+            </ul>
+        </td>
+    </tr>
+    }
+    @if (Model.MemberOfParties.Count > 0 || Model.IsCurrentUser)
+    {
+    <tr>
+        <th class="lbl">@Resource.MemberOfParties</th>
+        <td class="data">
+            <ul>
+                @foreach (var p in Model.MemberOfParties)
+                {
+                    <li>
+                        @p.StartDate - @p.EndDate : @p.PartyName
+                    </li>
+                }
+            </ul>
+        </td>
+    </tr>
+    }
+    </tbody>
+    </table>
+</fieldset>
+

@@ -1,0 +1,27 @@
+﻿@{
+    Layout = null;
+}
+
+<!DOCTYPE html>
+
+<html>
+<head>
+    <meta name="viewport" content="width=device-width" />
+    <title>Default</title>
+</head>
+<body>
+    <div>
+        <form action="@("https://www.lietuva2.lt" + Request.RawUrl)" method="@Request.HttpMethod">
+            @foreach(string key in Request.Form)
+            {
+                <input type="hidden" name="@key" value="@Request.Form[key]" />
+            }
+            
+                <input type="submit" name="Redirect" value="Redirect"/>
+        </form>
+    </div>
+    <script type="text/javascript">
+        //document.getElementsByTagName("form")[0].submit();
+    </script>
+</body>
+</html>

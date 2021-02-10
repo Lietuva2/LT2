@@ -1,0 +1,32 @@
+﻿@using Globalization.Resources.About
+@{
+    ViewBag.Title = Resource.AboutTitle;
+}
+
+<h2 class="heading">@Resource.AboutProject</h2>
+<div style="height: 15px;"></div>
+@Html.Partial(MVC.About.Views.Menu, 0)
+<div class="uitabContainer">
+    <div style="padding: 15px 0 2px;">
+        @Html.Partial(MVC.About.Views.AboutText)
+        <p>
+            @Resource.LegalBase
+        </p>
+        <iframe width="728" height="440" src="https://www.youtube.com/embed/SSkX-HgV_2A?rel=0" frameborder="0" allowfullscreen=""></iframe>
+        <p>
+            @Html.Raw(Resource.SecureAndReliable)
+        </p>
+    </div>
+    <p class="process_scheme">
+        <a href="http://www.youtube.com/watch?v=IWJCNuu-4x4" target="_blank" title="@Resource.ClickForIntroVideo">
+            <img src="@Links.Content.Images.process_scheme_png" alt="@Resource.ProcessVisualization" />
+            <span class="play"></span>
+        </a>
+    </p>
+    <p>
+        @Html.Raw(string.Format(Resource.FindMoreVideos, Html.ActionLink(Resource.MenuVideo, MVC.About.Video())))
+    </p>
+    <p>
+        @Resource.DetailedPresentation: <a href="http://blog.lietuva2.lt/lietuva-2-0-pristatymas/" target="_blank">http://blog.lietuva2.lt/lietuva-2-0-pristatymas/</a>
+    </p>
+</div>

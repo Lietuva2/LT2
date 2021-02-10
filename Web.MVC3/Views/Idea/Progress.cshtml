@@ -1,0 +1,24 @@
+﻿@model Data.ViewModels.Idea.ProgressViewModel
+           @using Data.Enums
+@using Globalization.Resources.Idea
+<div data-role="progressbar" class="progressbar-title">
+    <div class="votes-Count">
+        @Model.RequiredVotes
+    </div>
+    <div class="ui-progressbar ui-widget ui-widget-content progessbar-content progessbar-content-transparent progressbar progressbar-gradient">
+        @if (Model.NumberSupporters > 0)
+        {
+            <div style="width: @Model.SupportPercentage%;" class="ui-progressbar-value progressbar-header fl ui-progressbar-value-green">
+                <a href="@Url.Action(MVC.Idea.GetUniqueSupporters(Model.Id))" class="lnkUsers" title="@Resource.NumberOfVotes">
+                    @Model.NumberSupporters
+                </a>
+
+            </div>
+        }
+        @if (Model.SupportPercentage < 100)
+        {
+            <div style="width: @(100 - Model.SupportPercentage)%;" class="ui-progressbar-value progressbar-header progressbar-background fr">
+            </div>
+        }
+    </div>
+</div>

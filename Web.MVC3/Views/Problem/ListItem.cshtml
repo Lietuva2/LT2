@@ -1,0 +1,153 @@
+﻿@model Data.ViewModels.Problem.ProblemIndexItemModel
+@using Data.Enums
+@using Data.ViewModels.Base
+@using Framework.Lists
+@using Framework.Strings
+@using Globalization.Resources.Problem
+@using Web.Helpers
+@{
+    var problem = Model;
+    var isOrg = !string.IsNullOrEmpty(problem.OrganizationId) && !problem.IsPrivate;
+    var creatorUrl = isOrg ? Url.Action(MVC.Organization.Details(problem.OrganizationId, (problem.OrganizationName ?? string.Empty).ToSeoUrl(), null, null, null, null)) :
+                         Url.Action(MVC.Account.Details(problem.UserObjectId, problem.UserFullName.ToSeoUrl(), null));
+}
+<a href="@creatorUrl">
+    <img alt="" src='@(isOrg? Url.Action(MVC.File.GetOrganizationPicture(problem.ProfilePictureThumbId)) : Url.Action(MVC.File.GetUserPicture(problem.ProfilePictureThumbId)))' class="thumb" />
+</a>
+<div class="problem_container" data-role="deleteContainer">
+    @if (problem.CanDelete)
+    {
+        <div class="hide" data-role="delete" style="position: absolute; right: 0px;">
+            <a href="@Url.Action(MVC.Problem.Delete(problem.Id))">
+                <img src="@Links.Content.Images.cross_png" />
+            </a>
+        </div>
+    }
+    <span class="bold">
+        <a href="@creatorUrl">@(isOrg ? problem.OrganizationName ?? Resource.Organization : problem.UserFullName)</a>
+    </span>
+    <div class="problem_item_container" data-problemId="@problem.Id">
+        <div class="problem_item">
+            <span class="problem_text">
+                @Html.Partial(MVC.Shared.Views.ExpandableTextMedium, problem.Text)
+            </span>
+        </div>
+        <div class="problem_voting">
+            <div data-role="vote">
+                @Html.Partial(MVC.Problem.Views.Voting, problem.Votes)
+            </div>
+        </div>
+    </div>
+
+    <div class="clear"></div>
+    @Html.Partial(MVC.Shared.Views.Embed, problem.Embed)
+    <div class="@Html.GetVisibilityClassString(!problem.RenderCollapsed)" data-role="expander">
+        <div class="categories">
+            <div class="details">
+                @problem.Date.ToLongDateString()
+            </div>
+            <div class="fr addthis_toolbox">
+                <a class="addthis_button_compact" addthis:url="@Url.ActionAbsolute(MVC.Problem.Single(problem.Id))"></a>
+            </div>
+            @if (Model.Subscribe != null)
+            {
+                <div class="fr" style="margin-right: 4px;">
+                    @Html.Partial(MVC.Shared.Views.Subscribe, Model.Subscribe)
+                </div>
+            }
+            <p class="m_list_d">
+                @foreach (var category in problem.Categories)
+                {
+                    <span class="ctag" data-id="@category.Value">@category.Text</span>
+                }
+                @if (!string.IsNullOrEmpty(Model.Municipality))
+                {
+                    <span class="ctag">@Model.Municipality</span>
+                }
+            </p>
+        </div>
+    </div>
+    <div class="@Html.GetVisibilityClassString(!problem.RenderCollapsed) problem_solutions" data-role="expander">
+        <h6>@Resource.Solutions</h6>
+        <ul data-role="relatedIdeas" class="relatedIdeas">
+            @Html.Partial(MVC.Problem.Views.Idea, problem.RelatedIdeas)
+        </ul>
+        <div class="add_idea hide clearfix">
+            <div data-role="add_idea" class="hide">
+            </div>
+            @Html.Buttons(new ButtonHelperModel()
+                {
+                    CssClass = "button_choose",
+                    Text = Resource.RelateIdea,
+                    Type = ButtonHelperModel.Types.Link,
+                    ImageUrl = Links.Content.Images.page_white_find_png,
+                    Href = null
+                }, new ButtonHelperModel()
+                    {
+                        Text = Resource.CreateIdea,
+                        Type = ButtonHelperModel.Types.Link,
+                        Href = Url.Action(MVC.Idea.Create(problem.IsPrivate ? problem.OrganizationId : null, null, problem.Id)),
+                        ImageUrl = Links.Content.Images.add_png
+                    }, new ButtonHelperModel()
+                        {
+                            Text = Resource.CreateIssue,
+                            Type = ButtonHelperModel.Types.Link,
+                            Href = Url.Action(MVC.Voting.Create(problem.IsPrivate ? problem.OrganizationId : null, null, problem.Id)),
+                            ImageUrl = Links.Content.Images.add_png
+                        })
+        </div>
+        <hr style="margin: 0;" />
+        @if (ViewBag.IsAuthenticated)
+        {
+            <a href="javascript:void(0);" data-role="add_idea" data-problem-id="@problem.Id">@Resource.OfferSolution</a>
+        }
+        else
+        {
+            @Html.ActionLink(Resource.OfferSolution, MVC.Idea.Create(null, null, problem.Id))
+        }
+    </div>
+    <div class="@Html.GetVisibilityClassString(!problem.RenderCollapsed)" data-role="expander">
+        <div class="problem_item_details clear">
+            <div class="comments">
+                @if (problem.Comments.HasMoreElements)
+                {
+                    <div class="coloredInnterList moreComments">
+                        @Html.ActionLink(Resource.MoreComments + " (" + problem.CommentsCount + ")", MVC.Problem.GetMoreComments(problem.Id, null), new { @class = "lnkShowMoreComments" })
+                    </div>
+                }
+                <div class="coloredInnterList">
+                    <div class="listComments">
+                        @{ Html.RenderPartial(MVC.Comments.Views._CommentList, problem.Comments.List); }
+                    </div>
+                    @if (ViewBag.IsAuthenticated)
+                    {
+                        <div>
+                            @Html.ActionLink(Resource.Comment, MVC.Problem.AddComment(), new { @class = problem.Comments.List.Any() ? "lnkAddComment" : "lnkAddComment hide" })
+                        </div>
+                        <div class="comment_input clearfix @(problem.Comments.List.Any() ? "hide" : "")">
+                            @using (Html.BeginForm(MVC.Problem.AddComment().AddRouteValue("EntryId", problem.Id)))
+                            {
+                                <div style="width: 100%;">
+                                    @Html.AntiForgeryToken()
+                                    @Html.TextArea("CommentText", string.Empty, new RouteValueDictionary() { { "data-val", "true" }, { "data-val-required", Resource.EnterComment } })
+                                    @Html.Button(new ButtonHelperModel()
+                                {
+                                    Text = Resource.Comment
+                                })
+                                    @Html.ValidationMessage("CommentText")
+                                </div>
+                            }
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+    @if (problem.RenderCollapsed)
+    {
+        <div class="coloredInnterList clear" data-role="collapsed">
+            @Html.Partial(MVC.Comments.Views._CommentList, problem.Comments.List.OrderByDescending(c => c.CommentDate).Take(1))
+        </div>
+        <a href="javascript:void(0);" data-role="expand_problem">@Resource.Expand (@problem.CommentsCount)</a>
+    }
+</div>

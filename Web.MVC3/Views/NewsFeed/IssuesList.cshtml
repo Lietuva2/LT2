@@ -1,0 +1,54 @@
+﻿@model Data.ViewModels.Voting.VotingIndexModel
+@using Data.Enums
+@using Framework.Mvc.Strings
+@using Framework.Strings
+@using Globalization.Resources.Shared
+@using Web.Helpers
+@foreach (var issue in Model.Items.List)
+{
+    <h4>
+        @Html.ActionLink(issue.Subject.HtmlDecode(), MVC.Voting.Details(issue.Id, issue.Subject.ToSeoUrl()))
+        <a class="btn btn-plain btn-sm text-muted" href="@Url.Action(MVC.Voting.Details(issue.Id, issue.Subject.ToSeoUrl()))"><i data-icon="c"></i><span class="title">@issue.CommentsCount</span></a>
+    </h4>
+    @*<p>
+            @issue.Text
+        </p>*@
+    <div data-role="unique-voting" class="clearfix margin">
+        @if (issue.VoteButtonVisible)
+        {
+            <div data-role="votebutton" class="fr w30p">
+                @Html.Buttons(new List<ButtonHelperModel>()
+                {
+                    new ButtonHelperModel()
+                    {
+                        Href = Url.Action(MVC.Voting.VoteFor(issue.Id)),
+                        Type = ButtonHelperModel.Types.Link,
+                        CssClass = "btn btn-success VoteButton button_voting",
+                        Text = Globalization.Resources.Voting.Resource.VoteFor,
+                        ImageUrl = null,
+                        HtmlAttributes = new Dictionary<string, object> {{"data-id", issue.Id}, {"data-private", issue.IsPrivate ? "true" : "false"}, {"data-role", "vote"}}
+                    },
+                    new ButtonHelperModel()
+                    {
+                        Href = Url.Action(MVC.Voting.VoteAgainst(issue.Id)),
+                        Type = ButtonHelperModel.Types.Link,
+                        CssClass = "btn btn-success VoteButton",
+                        Text = Globalization.Resources.Voting.Resource.VoteAgainst,
+                        ImageUrl = null,
+                        HtmlAttributes = new Dictionary<string, object> {{"data-id", issue.Id}, {"data-private", issue.IsPrivate ? "true" : "false"}, {"data-role", "vote"}}
+                    }
+                }, "buttons btn-group btn-group-sm")
+            </div>
+    <div data-role="thank-you">
+    </div>
+        }
+        else
+        {
+            @Html.Partial(MVC.Voting.Views.ButtonThankYou)
+        }
+        <div data-role="progressbar" class="fl w70p">
+            @Html.Partial(MVC.Voting.Views.Progress, issue.Progress)
+        </div>
+    </div>
+    <hr />
+}

@@ -1,0 +1,43 @@
+﻿@model IEnumerable<Data.ViewModels.Base.SimpleListModel>
+@using Framework.Lists;
+@using Framework.Mvc.Strings
+@using Framework.Strings;
+@using Globalization.Resources.NewsFeed;
+@using Web.Helpers;
+@foreach (var item in Model)
+{
+    <li>
+        <p>
+            @if (!string.IsNullOrEmpty(item.Id))
+            {
+                var action = MVC.Common.Start();
+                switch (item.Type)
+                {
+                    case Data.Enums.EntryTypes.Idea:
+                        action = MVC.Idea.Details(item.Id, item.Subject.ToSeoUrl(), null);
+                        break;
+                    case Data.Enums.EntryTypes.Issue:
+                        action = MVC.Voting.Details(item.Id, item.Subject.ToSeoUrl());
+                        break;
+                    case Data.Enums.EntryTypes.User:
+                        action = MVC.Account.Details(item.Id, item.Subject.ToSeoUrl(), null);
+                        break;
+                    case Data.Enums.EntryTypes.Project:
+                        action = MVC.Project.ToDos(item.Id);
+                        break;
+                    case Data.Enums.EntryTypes.Problem:
+                        action = MVC.Problem.Index().AddRouteValue("problemId", item.Id);
+                        break;
+                }
+
+                @Html.ActionLink(item.Subject.GetPlainText(), action, new {target = "_blank"})
+            }
+            else
+            {
+                @item.Subject
+            }
+                                
+        </p>
+        <hr />
+    </li>
+}

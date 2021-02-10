@@ -1,0 +1,297 @@
+﻿@model Data.ViewModels.NewsFeed.NewsFeedIndexModel
+@{
+    ViewBag.Title = Resource.PageTitle;
+}
+@using Data.Enums
+@using Framework.Mvc.Strings
+@using Globalization.Resources.NewsFeed
+@using Globalization.Resources.Shared
+@using Framework.Lists
+@using Framework.Strings;
+@using Services.Enums
+@using Web.Helpers
+@using Globalization.Resources.NewsFeed
+@section Head
+{
+    <style type="text/css">
+        #categoryList li {
+            display: inline;
+            list-style-type: none;
+            padding-right: 5px;
+        }
+    </style>
+}
+@section Scripts
+{
+    <script type='text/javascript'>
+        function onPageLoad() {
+            $('#list').problems({
+                addIdeaUrl: '@Url.Action(MVC.Problem.AddRelatedIdea())'
+            });
+
+            @if (ViewBag.IsAuthenticated)
+            {
+                <text>
+            $('#list').Comments().liking();
+            </text>
+            }
+            $('#list').CommentsRead({ prepend: true, commentsListSelector: '.listComments', commentsListContainerSelector: '.comments', showMoreOnScroll: false });
+            $('#list').showmore();
+
+            CreateUserAjaxDialog($('.lnkUsers'));
+            initializeInfiniteScroll();
+
+
+            var lastQueryDate = '@DateTime.Now';
+
+            var liToFlash;
+            var doGetNews = false;
+            setInterval(getUnreadNews, 60000);
+
+            $('.lnkShowInnerList').live('click', function(e) {
+                var link = $(e.target);
+                var el = $('.relatedInnerList', $(e.target).parent());
+
+                if (el.is(':visible')) {
+                    el.slideUp();
+                } else {
+                    el.slideDown();
+                }
+
+                createExpandableText(el);
+                return cancelEvent(e);
+            });
+
+            if (typeof(document.onfocusin) != 'undefined') {
+                document.onfocusin = onFocus;
+            } else {
+                $(window).on('focus', onFocus);
+            }
+
+
+            function onFocus(e) {
+                isFocused = true;
+                if (doGetNews) {
+                    getUnreadNews();
+                }
+                doGetNews = false;
+            }
+
+            function getUnreadNews() {
+                if (isFocused) {
+
+                    loadAsync(null, '@Url.Action(MVC.NewsFeed.GetUnreadNews(DateTime.Now, (NewsFeedListViews)ViewData["NewsFeedListView"]))',
+                        { lastQueryDate: lastQueryDate, view: '@((NewsFeedListViews)ViewData["NewsFeedListView"])' },
+                        function(result) {
+
+                            var removedHeight = 0;
+                            var objectIds = $("<div>" + result.Content + "</div>").find('[data-objectId]');
+                            //remove old item about the same comment
+                            objectIds.each(function() {
+                                var objectId = $(this).attr('data-objectId');
+                                if (objectId) {
+                                    var parent = $('[data-objectId=' + objectId + ']');
+                                    var txt = parent.find('textarea');
+                                    if ((txt.length > 0 && txt.val().length <= 0) || @(ViewBag.CurrentUser.IsAuthenticated ? "false" : "true")) {
+                                        removedHeight += parent.height();
+                                        parent.remove();
+                                    }
+                            }
+                            });
+
+                    var el = $(result.Content).prependTo($('#list'));
+
+                    window.scrollBy(0, el.height() - removedHeight);
+
+                    var li = el.filter('li');
+                    if (isFocused) {
+                        $.helpers.flash(li);
+                    }
+
+                    if (isFocused || !liToFlash || liToFlash.length == 0) {
+                        setTimeout(function() {
+                            document.title = originalTitle;
+                        }, 500);
+                    }
+
+
+                    createExpandableText(el);
+
+                    lastQueryDate = result.Date;
+                    }, false, false, function(response) {
+                        lastQueryDate = '@DateTime.Now';
+                    });
+                } else {
+                        doGetNews = true;
+                }
+            }
+        }
+    </script>
+}
+
+<div data-role="add_idea_hidden" class="hide">
+    @Html.AutoComplete("txtIdea", "IdeaId", MVC.Idea.GetMatchedIdeas(), "txt_90", "function(){$('#list').problems('select');}", true, new Dictionary<string, object> { { "placeholder", Globalization.Resources.Shared.SharedStrings.Search } })
+</div>
+@*@Html.Partial(MVC.Idea.Views._MainIdeaVoting)*@
+<h2 class="heading">@Resource.Title</h2>
+<div class="clear"></div>
+
+@if (ViewBag.FilteredCategoryIds == null)
+{
+    <p class="content_views">
+        @if (ViewBag.IsAuthenticated)
+        {
+            @Html.RouteLink(Resource.MyNews, "MyNewsFeed", (object)null, new { @class = (NewsFeedListViews)ViewData["NewsFeedListView"] == NewsFeedListViews.MyNews ? "highlight" : "" })
+        }
+        <text>&nbsp;</text>
+        @Html.RouteLink(Resource.AllNews, "AllNewsFeed", (object)null, new { @class = (NewsFeedListViews)ViewData["NewsFeedListView"] == NewsFeedListViews.AllNews ? "highlight" : "" })
+        <text>&nbsp;</text>
+        @Html.RouteLink(Resource.PolNews, "PolNewsFeed", (object)null, new { @class = (NewsFeedListViews)ViewData["NewsFeedListView"] == NewsFeedListViews.PolNews ? "highlight" : "" })
+    </p>
+}
+<div class="clear">
+</div>
+<div class="span-14 feed-content">
+    @if (ViewBag.IsAuthenticated && ViewBag.FilteredCategoryIds == null)
+    {
+        @Html.Partial(MVC.Problem.Views.ProblemInput, Model.ProblemInput)
+    }
+    @{Html.RenderPartial(MVC.NewsFeed.Views.ListContainer);}
+</div>
+@if (ViewBag.FilteredCategoryIds == null)
+{
+    <div class="span-4 last whatsnew" style="width: 168px;">
+        @if (ViewBag.IsAuthenticated)
+        {
+            <h3 style="float: left;">@Resource.SideBarIdeas</h3>
+            @Html.ActionLink(Resource.New, MVC.Idea.Create(), new { style = "float:right;" })
+            <hr />
+            if (Model.UrgentMessages.Where(m => m.Type == Data.ViewModels.NewsFeed.UrgentMessageTypes.RandomIdeas).Count() > 0)
+            {
+                <ul class="sidebarList">
+                    @for (int i = 0; i < Model.UrgentMessages.Count(); i++)
+                    {
+                        if (Model.UrgentMessages[i].Type == Data.ViewModels.NewsFeed.UrgentMessageTypes.RandomIdeas)
+                        {
+                            <li>
+                                @Html.ActionLink(Model.UrgentMessages[i].Subject.HtmlDecode(), MVC.Idea.Details(Model.UrgentMessages[i].ObjectId, Model.UrgentMessages[i].Subject.ToSeoUrl(), null), new { title = Model.UrgentMessages[i].Subject })
+                            </li>
+                        }
+                    }
+                </ul>
+
+            }
+        }
+        @if (ViewBag.IsAuthenticated)
+        {
+            <div>
+                <h3 style="float: left;">@Resource.SideBarIssues</h3>
+                @Html.ActionLink(Resource.New, MVC.Voting.Create(), new { style = "float:right;" })
+                <hr />
+                @if (Model.UrgentMessages.Where(m => m.Type == Data.ViewModels.NewsFeed.UrgentMessageTypes.RandomIssues).Count() > 0)
+                {
+                    <ul class="sidebarList">
+                        @for (int i = 0; i < Model.UrgentMessages.Count(); i++)
+                        {
+                            if (Model.UrgentMessages[i].Type == Data.ViewModels.NewsFeed.UrgentMessageTypes.RandomIssues)
+                            {
+                                <li>
+                                    @Html.ActionLink(Model.UrgentMessages[i].Subject.HtmlDecode(), MVC.Voting.Details(Model.UrgentMessages[i].ObjectId, Model.UrgentMessages[i].Subject.ToSeoUrl()), new { title = Model.UrgentMessages[i].Subject })
+                                </li>
+                            }
+                        }
+                    </ul>
+                }
+            </div>
+        }
+        <div>
+            @if (Model.UrgentMessages.Where(m => m.Type == Data.ViewModels.NewsFeed.UrgentMessageTypes.UnreadIdeaVersions).Count() > 0)
+            {
+                <h3>@Resource.NewVersions</h3>
+                <hr />
+                <ul class="sidebarList">
+                    @for (int i = 0; i < Model.UrgentMessages.Count(); i++)
+                    {
+                        if (Model.UrgentMessages[i].Type == Data.ViewModels.NewsFeed.UrgentMessageTypes.UnreadIdeaVersions)
+                        {
+                            <li>
+                                @Html.ActionLink(Model.UrgentMessages[i].Subject.HtmlDecode(), MVC.Idea.Details(Model.UrgentMessages[i].ObjectId, Model.UrgentMessages[i].Subject.ToSeoUrl(), null), new { title = Model.UrgentMessages[i].Subject })
+                            </li>
+                        }
+                    }
+                </ul>
+            }
+        </div>
+        <div>
+            @if (Model.UrgentMessages.Where(m => m.Type == Data.ViewModels.NewsFeed.UrgentMessageTypes.MyProjects).Count() > 0)
+            {
+                <h3>@Resource.MyProjects</h3>
+                <hr />
+                <ul class="sidebarList">
+                    @for (int i = 0; i < Model.UrgentMessages.Count(); i++)
+                    {
+                        if (Model.UrgentMessages[i].Type == Data.ViewModels.NewsFeed.UrgentMessageTypes.MyProjects)
+                        {
+                            <li class="sidebarListItem">
+                                <a class="ellipsis" href="@Url.Action(MVC.Project.ToDos(Model.UrgentMessages[i].ObjectId))" title="@Model.UrgentMessages[i].Subject">
+                                    @Model.UrgentMessages[i].Subject.HtmlDecode()
+
+                                </a>
+                                @if (@Model.UrgentMessages[i].Count.HasValue)
+                                {
+                                    <span class="highlight @(Model.UrgentMessages[i].Highlight ? "late" : "")">@Model.UrgentMessages[i].Count</span>
+
+                                }
+                            </li>
+                        }
+                    }
+                </ul>
+            }
+        </div>
+        @if (ViewBag.IsAuthenticated)
+        {
+            <div>
+                <h3>@Resource.MyOrganizations</h3>
+                <hr />
+                <ul class="sidebarList parentlist">
+                    @if (Model.UrgentMessages.Where(m => m.Type == Data.ViewModels.NewsFeed.UrgentMessageTypes.MyOrganizations).Count() > 0)
+                    {
+                        for (int i = 0; i < Model.UrgentMessages.Count(); i++)
+                        {
+                            if (Model.UrgentMessages[i].Type == Data.ViewModels.NewsFeed.UrgentMessageTypes.MyOrganizations)
+                            {
+                                <li style="border: none;">
+                                    @Html.ActionLink(Model.UrgentMessages[i].Subject.HtmlDecode(), MVC.Organization.Details(Model.UrgentMessages[i].ObjectId, Model.UrgentMessages[i].Subject.ToSeoUrl(), OrganizationViews.Info, null, null, null), new { title = Model.UrgentMessages[i].Subject })
+                                    @if (Model.UrgentMessages[i].Items.Count() > 0)
+                                    {
+                                        <ul>
+                                            @foreach (var item in Model.UrgentMessages[i].Items)
+                                            {
+                                                <li class="sidebarListItem">
+                                                    <a class="ellipsis" href="@Url.Action(MVC.Organization.ToDos(Model.UrgentMessages[i].ObjectId, item.ObjectId))" title="@item.Subject">
+                                                        @item.Subject.HtmlDecode()
+                                                    </a>
+                                                    @if (item.Count.HasValue)
+                                                    {
+                                                        <span class="highlight @(item.Highlight ? "late" : "")">@item.Count</span>
+                                                    }
+                                                </li>
+                                            }
+                                        </ul>
+                                    }
+                                </li>
+                            }
+                        }
+                    }
+                    else
+                    {
+                        @Html.ActionLink("Sukurti naują", MVC.Organization.Create())
+                    }
+                </ul>
+            </div>
+        }
+
+    </div>
+}
+<div class="clear">
+</div>

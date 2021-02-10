@@ -1,0 +1,121 @@
+﻿@using Globalization.Resources.Account
+@using Web.Helpers
+@model Data.ViewModels.Account.AdditionalUniqueInfoModel
+
+<p>
+    @if (Model.DocumentNoRequired)
+    {
+        @Resource.AdditionalUniqueInfoReferenduumMessage
+    }
+    else
+    {
+        @Resource.AdditionalUniqueInfoLawMessage
+    }
+    
+</p>
+@using (Html.BeginForm(MVC.Account.SaveAdditionalUniqueInfo()))
+{
+    <fieldset>
+        @Html.AntiForgeryToken()
+        <table>
+            <thead>
+                <tr>
+                    <th>
+                        <label>@Resource.FirstName</label></th>
+                    <th>
+                        <label>@Resource.LastName</label></th>
+                    <th>
+                        <label>@Resource.PersonCode</label></th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>
+                        @if (!ViewBag.CurrentUser.IsUnique)
+                        {
+                            @Html.TextBoxFor(m => m.FirstName)
+                            <br />
+                            @Html.ValidationMessageFor(m => m.FirstName)
+                        }
+                        else
+                        {
+                            @ViewBag.CurrentUser.FirstName
+                            @Html.Hidden("FirstName", (string)ViewBag.CurrentUser.FirstName)
+                        }
+                    </td>
+                    <td>
+                        @if (!ViewBag.CurrentUser.IsUnique)
+                        {
+                            @Html.TextBoxFor(m => m.LastName)
+                            <br />
+                            @Html.ValidationMessageFor(m => m.LastName)
+                        }
+                        else
+                        {
+                            @ViewBag.CurrentUser.LastName
+                            @Html.Hidden("LastName", (string)ViewBag.CurrentUser.LastName)
+                        }
+                    </td>
+                    <td>
+                        @if (!ViewBag.CurrentUser.IsUnique)
+                        {
+                            @Html.TextBoxFor(m => m.PersonCode)
+                            <br />
+                            @Html.ValidationMessageFor(m => m.PersonCode)
+                        }
+                        else
+                        {
+                            @ViewBag.CurrentUser.PersonCode
+                            @Html.Hidden("PersonCode", (string)ViewBag.CurrentUser.PersonCode)
+                        }
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+        <div id="documentNoContainer" class="@(Model.DocumentNoRequired ? "" : "hide")">
+            @Html.LabelFor(m => m.DocumentNo, @Resource.DocumentNo)
+            @Html.TextBoxFor(m => m.DocumentNo)
+            @Html.ValidationMessageFor(model => model.DocumentNo)
+        </div>
+        @Html.HiddenFor(m => m.DocumentNoRequired)
+        <div class="fields_container clearfix">
+            <p class="uiblock fl">
+                @Html.LabelFor(m => m.City, Globalization.Resources.Account.Resource.City)
+                @Html.AutoCompleteFor(m => m.City, MVC.Address.GetCities(), new Dictionary<string, string> { { "municipality", "$('.autocomplete_Municipality')" }, { "country", "$('.autocomplete_Country')" } }, false)
+                @Html.ValidationMessageFor(model => model.City)
+            </p>
+            <p class="uiblock fl">
+                @Html.LabelFor(m => m.City, Globalization.Resources.Account.Resource.Municipality)
+                @Html.AutoCompleteFor(m => m.Municipality, MVC.Address.GetMunicipalities(), new Dictionary<string, string> { { "country", "$('.autocomplete_Country')" } }, false)
+                @Html.ValidationMessageFor(model => model.Municipality)
+            </p>
+            <p class="uiblock fl">
+                @Html.LabelFor(m => m.City, Globalization.Resources.Account.Resource.Country)
+                @Html.AutoCompleteFor(m => m.Country, MVC.Address.GetCountries(), null, false)
+                @Html.ValidationMessageFor(model => model.Country)
+            </p>
+        </div>
+        @Html.LabelFor(m => m.AddressLine, @Resource.AddressLine)
+        @Html.TextBoxFor(m => m.AddressLine, new Dictionary<string, object> { { "class", "txt_l" } })
+        @Html.ValidationMessageFor(model => model.AddressLine)
+        <div>
+            @*<label class="normal">@Html.CheckBoxFor(m => m.AllowSaveForNextUse) Išsaugoti duomenis kitam kartui</label><div style="display:inline-block; margin-top:4px;">@Html.Partial(MVC.Shared.Views._Help, "Pažymėjus šią varnelę, šiame langelyje Jūsų pateikti duomenys ateityje, pasirašant už kitas iniciatyvas, bus užkraunami automatiškai, ir jokiais kitais tikslais nenaudojami")</div><br />*@
+            <label class="normal">@Html.CheckBoxFor(m => m.VotesArePublic) @Resource.VotesArePublic</label><div style="display:inline-block; margin-top:4px;">@Html.Partial(MVC.Shared.Views._Help, Resource.VotesArePublicDescription)</div><br />
+            <label class="normal">@Html.CheckBoxFor(m => m.AcceptTerms) Esu susipažinęs su pasirašomu @(Model.DocumentNoRequired ? "referendumo" : "įstatymo") @(!string.IsNullOrEmpty(Model.OfficialUrl) ? Html.Raw("<a href='" + Model.OfficialUrl + "' target='_blank'>tekstu</a>") : Html.Raw("tekstu")), reikalavimu pasirašyti tik vieną<div style="display:inline-block; margin-top:4px;">@Html.Partial(MVC.Shared.Views._Help, "Pasirašius ir ant popierinių parašų rinkimo lapų, ir el. būdu, visi Jūsų parašai bus anuliuoti")</div>
+                    <br />
+                kartą ir kitomis @(Model.DocumentNoRequired ? Html.Raw("<a href='http://www3.lrs.lt/pls/inter2/dokpaieska.showdoc_l?p_id=437639' target='_blank'>Referendumo įstatyme</a>") : Html.Raw("<a href='http://www3.lrs.lt/pls/inter2/dokpaieska.showdoc_l?p_id=111993' target='_blank'>Piliečių įstatymų leidybos iniciatyvos įstatyme</a>")) numatytomis pasirašymo sąlygomis</label>
+            <div>
+                @Html.ValidationMessageFor(m => m.AcceptTerms)
+            </div>
+            @Html.HiddenFor(m => m.OfficialUrl)
+        </div>
+        <div style="margin-top: 8px;">
+            @Html.Buttons(saveText: Globalization.Resources.Idea.Resource.Sign)
+        </div>
+        <div class="clear"></div>
+        <div class="grey" style="margin-top: 16px;">
+            @Resource.PrivacyStatement
+            @Resource.ReadOur <a href="https://docs.google.com/a/lietuva2.lt/document/d/18uU0q1DkHvE1TOK5UABZt8HasR5m3BXPOthHpaEWe8A/edit#" target="_blank">@Resource.PrivacyPolicy.ToLower()</a>.
+        </div>
+    </fieldset>
+}

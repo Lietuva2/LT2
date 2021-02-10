@@ -1,0 +1,321 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <!-- 
+    Microsoft ResX Schema 
+    
+    Version 2.0
+    
+    The primary goals of this format is to allow a simple XML format 
+    that is mostly human readable. The generation and parsing of the 
+    various data types are done through the TypeConverter classes 
+    associated with the data types.
+    
+    Example:
+    
+    ... ado.net/XML headers & schema ...
+    <resheader name="resmimetype">text/microsoft-resx</resheader>
+    <resheader name="version">2.0</resheader>
+    <resheader name="reader">System.Resources.ResXResourceReader, System.Windows.Forms, ...</resheader>
+    <resheader name="writer">System.Resources.ResXResourceWriter, System.Windows.Forms, ...</resheader>
+    <data name="Name1"><value>this is my long string</value><comment>this is a comment</comment></data>
+    <data name="Color1" type="System.Drawing.Color, System.Drawing">Blue</data>
+    <data name="Bitmap1" mimetype="application/x-microsoft.net.object.binary.base64">
+        <value>[base64 mime encoded serialized .NET Framework object]</value>
+    </data>
+    <data name="Icon1" type="System.Drawing.Icon, System.Drawing" mimetype="application/x-microsoft.net.object.bytearray.base64">
+        <value>[base64 mime encoded string representing a byte array form of the .NET Framework object]</value>
+        <comment>This is a comment</comment>
+    </data>
+                
+    There are any number of "resheader" rows that contain simple 
+    name/value pairs.
+    
+    Each data row contains a name, and value. The row also contains a 
+    type or mimetype. Type corresponds to a .NET class that support 
+    text/value conversion through the TypeConverter architecture. 
+    Classes that don't support this are serialized and stored with the 
+    mimetype set.
+    
+    The mimetype is used for serialized objects, and tells the 
+    ResXResourceReader how to depersist the object. This is currently not 
+    extensible. For a given mimetype the value must be set accordingly:
+    
+    Note - application/x-microsoft.net.object.binary.base64 is the format 
+    that the ResXResourceWriter will generate, however the reader can 
+    read any of the formats listed below.
+    
+    mimetype: application/x-microsoft.net.object.binary.base64
+    value   : The object must be serialized with 
+            : System.Runtime.Serialization.Formatters.Binary.BinaryFormatter
+            : and then encoded with base64 encoding.
+    
+    mimetype: application/x-microsoft.net.object.soap.base64
+    value   : The object must be serialized with 
+            : System.Runtime.Serialization.Formatters.Soap.SoapFormatter
+            : and then encoded with base64 encoding.
+
+    mimetype: application/x-microsoft.net.object.bytearray.base64
+    value   : The object must be serialized into a byte array 
+            : using a System.ComponentModel.TypeConverter
+            : and then encoded with base64 encoding.
+    -->
+  <xsd:schema id="root" xmlns="" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:msdata="urn:schemas-microsoft-com:xml-msdata">
+    <xsd:import namespace="http://www.w3.org/XML/1998/namespace" />
+    <xsd:element name="root" msdata:IsDataSet="true">
+      <xsd:complexType>
+        <xsd:choice maxOccurs="unbounded">
+          <xsd:element name="metadata">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" />
+              </xsd:sequence>
+              <xsd:attribute name="name" use="required" type="xsd:string" />
+              <xsd:attribute name="type" type="xsd:string" />
+              <xsd:attribute name="mimetype" type="xsd:string" />
+              <xsd:attribute ref="xml:space" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="assembly">
+            <xsd:complexType>
+              <xsd:attribute name="alias" type="xsd:string" />
+              <xsd:attribute name="name" type="xsd:string" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="data">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+                <xsd:element name="comment" type="xsd:string" minOccurs="0" msdata:Ordinal="2" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" msdata:Ordinal="1" />
+              <xsd:attribute name="type" type="xsd:string" msdata:Ordinal="3" />
+              <xsd:attribute name="mimetype" type="xsd:string" msdata:Ordinal="4" />
+              <xsd:attribute ref="xml:space" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="resheader">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" />
+            </xsd:complexType>
+          </xsd:element>
+        </xsd:choice>
+      </xsd:complexType>
+    </xsd:element>
+  </xsd:schema>
+  <resheader name="resmimetype">
+    <value>text/microsoft-resx</value>
+  </resheader>
+  <resheader name="version">
+    <value>2.0</value>
+  </resheader>
+  <resheader name="reader">
+    <value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <resheader name="writer">
+    <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <data name="Address" xml:space="preserve">
+    <value>Adresas</value>
+  </data>
+  <data name="ContactsLegend" xml:space="preserve">
+    <value>Kontaktinė informacija</value>
+  </data>
+  <data name="CreateNew" xml:space="preserve">
+    <value>Sukurti naują</value>
+  </data>
+  <data name="CreateNewToolTip" xml:space="preserve">
+    <value>Sukurti naują organizaciją</value>
+  </data>
+  <data name="Description" xml:space="preserve">
+    <value>Aprašymas</value>
+  </data>
+  <data name="DescriptionIsRequired" xml:space="preserve">
+    <value>Įveskite aprašymą</value>
+  </data>
+  <data name="Email" xml:space="preserve">
+    <value>El. paštas</value>
+  </data>
+  <data name="EmailIsRequired" xml:space="preserve">
+    <value>Įveskite el. paštą</value>
+  </data>
+  <data name="EmailRegexpIsNotValid" xml:space="preserve">
+    <value>Neteisingas el. pašto formatas</value>
+  </data>
+  <data name="FoundedOn" xml:space="preserve">
+    <value>Veiklą vykdo nuo</value>
+  </data>
+  <data name="Goals" xml:space="preserve">
+    <value>Tikslai</value>
+  </data>
+  <data name="InfoLegend" xml:space="preserve">
+    <value>Informacija apie organizaciją</value>
+  </data>
+  <data name="InsertSubjectIsRequired" xml:space="preserve">
+    <value>Įveskite aprašymą</value>
+  </data>
+  <data name="Join" xml:space="preserve">
+    <value>Tapti nariu</value>
+  </data>
+  <data name="JoinOrganizationToolTip" xml:space="preserve">
+    <value>Tapti organizacijos nariu. Reikės esamų organizacijos narių patvirtinimo.</value>
+  </data>
+  <data name="Leave" xml:space="preserve">
+    <value>Palikti organizaciją</value>
+  </data>
+  <data name="LeaveToolTip" xml:space="preserve">
+    <value>Išeiti iš organizacijos</value>
+  </data>
+  <data name="Like" xml:space="preserve">
+    <value>Palaikau</value>
+  </data>
+  <data name="LikeOrganizationToolTip" xml:space="preserve">
+    <value>Palaikau šią organizaciją, noriu būti infromuojamas apie jos veiklą</value>
+  </data>
+  <data name="MemberActivity" xml:space="preserve">
+    <value>Narių veikla</value>
+  </data>
+  <data name="Mission" xml:space="preserve">
+    <value>Misija</value>
+  </data>
+  <data name="Name" xml:space="preserve">
+    <value>Pavadinimas</value>
+  </data>
+  <data name="NameIsRequired" xml:space="preserve">
+    <value>Įveskite pavadinimą</value>
+  </data>
+  <data name="OrganizationActivity" xml:space="preserve">
+    <value>Veikla</value>
+  </data>
+  <data name="OrganizationIdeas" xml:space="preserve">
+    <value>Pasiūlymai</value>
+  </data>
+  <data name="OrganizationInfo" xml:space="preserve">
+    <value>Informacija</value>
+  </data>
+  <data name="OrganizationIssues" xml:space="preserve">
+    <value>Balsavimai</value>
+  </data>
+  <data name="OrganizationMembers" xml:space="preserve">
+    <value>Nariai</value>
+  </data>
+  <data name="OrganizationProjects" xml:space="preserve">
+    <value>Projektai</value>
+  </data>
+  <data name="PageTitle" xml:space="preserve">
+    <value>{0} - Organizacija</value>
+  </data>
+  <data name="PhoneNumber" xml:space="preserve">
+    <value>Tel. nr.</value>
+  </data>
+  <data name="PhoneNumberRegexpIsNotValid" xml:space="preserve">
+    <value>Neteisingas tel. numerio formatas</value>
+  </data>
+  <data name="ProfilePictureLegend" xml:space="preserve">
+    <value>Organizacijos logo</value>
+  </data>
+  <data name="Type" xml:space="preserve">
+    <value>Tipas</value>
+  </data>
+  <data name="Unlike" xml:space="preserve">
+    <value>Atšaukti palaikymą</value>
+  </data>
+  <data name="UnlikeToolTip" xml:space="preserve">
+    <value>Nebenoriu būti informuojamas apie organizacijos veiklą</value>
+  </data>
+  <data name="UrlIsRequired" xml:space="preserve">
+    <value>Įveskite nuorodą</value>
+  </data>
+  <data name="Vision" xml:space="preserve">
+    <value>Vizija</value>
+  </data>
+  <data name="Websites" xml:space="preserve">
+    <value>Nuorodos</value>
+  </data>
+  <data name="WebSiteTitle" xml:space="preserve">
+    <value>Pavadinimas</value>
+  </data>
+  <data name="WebSiteUrl" xml:space="preserve">
+    <value>Nuoroda</value>
+  </data>
+  <data name="OrganizationProblems" xml:space="preserve">
+    <value>Pasisakymai</value>
+  </data>
+  <data name="PrivateToOrganization" xml:space="preserve">
+    <value>Matomas tik organizacijos nariams</value>
+  </data>
+  <data name="AlreadyInvited" xml:space="preserve">
+    <value>Jau pakviesti</value>
+  </data>
+  <data name="Create" xml:space="preserve">
+    <value>Sukurti</value>
+  </data>
+  <data name="CreateTitle" xml:space="preserve">
+    <value>Nauja organizacija</value>
+  </data>
+  <data name="EmailAddresses" xml:space="preserve">
+    <value>El. pašto adresai</value>
+  </data>
+  <data name="EmailAddressesHelp" xml:space="preserve">
+    <value>Įveskite po vieną organizacijos nario el. pašto adresą eilutėje</value>
+  </data>
+  <data name="IndexTitle" xml:space="preserve">
+    <value>Organizacijos</value>
+  </data>
+  <data name="InvitationMessage" xml:space="preserve">
+    <value>Žinutė</value>
+  </data>
+  <data name="InvitationMessageHelp" xml:space="preserve">
+    <value>Įveskite žinutę, kurią norite įtraukti į pakvietimą</value>
+  </data>
+  <data name="Invitations" xml:space="preserve">
+    <value>Kvietimai</value>
+  </data>
+  <data name="Invite" xml:space="preserve">
+    <value>Kviesti</value>
+  </data>
+  <data name="InvitedBy" xml:space="preserve">
+    <value>Pakvietė</value>
+  </data>
+  <data name="MemberIsPublic" xml:space="preserve">
+    <value>Matomas viešai</value>
+  </data>
+  <data name="NumberOfSupporters" xml:space="preserve">
+    <value>Palaikančiųjų skaičius</value>
+  </data>
+  <data name="Organizations" xml:space="preserve">
+    <value>Organizacijos</value>
+  </data>
+  <data name="Position" xml:space="preserve">
+    <value>Pareigos</value>
+  </data>
+  <data name="RegisteredMembers" xml:space="preserve">
+    <value>Registruoti nariai</value>
+  </data>
+  <data name="RegisteredMembersHelp" xml:space="preserve">
+    <value>Įveskite registruoto Lietuva 2.0 naudotojo vardą, pavardę</value>
+  </data>
+  <data name="Repeat" xml:space="preserve">
+    <value>Pakartoti</value>
+  </data>
+  <data name="RepeatHelp" xml:space="preserve">
+    <value>Siųsti pakvietimą dar kartą</value>
+  </data>
+  <data name="Role" xml:space="preserve">
+    <value>Rolė</value>
+  </data>
+  <data name="WaitForApproval" xml:space="preserve">
+    <value>Palaukite, kol Jūsų narystė organizacijoje bus patvirtinta. Jeigu nesate organizacijos narys, rekomenduojame užsipildyti savo paskyrą bei išsiųsti motyvacinį laišką organizacijos vadovui.</value>
+  </data>
+  <data name="AdministratorRequired" xml:space="preserve">
+    <value>Turi likti bent vienas administratorius</value>
+  </data>
+  <data name="CannotCreate" xml:space="preserve">
+    <value>Norėdami sukurti organizaciją, turite patvirtinti tapatybę</value>
+  </data>
+  <data name="ProjectDeleteFailed" xml:space="preserve">
+    <value>Projekto pašalinti nepavyko.</value>
+  </data>
+</root>

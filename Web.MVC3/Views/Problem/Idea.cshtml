@@ -1,0 +1,17 @@
+﻿@model List<Data.ViewModels.Problem.ProblemIdeaListModel>
+@using Framework.Mvc.Strings
+@using Framework.Strings
+ @foreach (var idea in Model)
+ {
+    <li data-role="deleteContainer">
+        @Html.ActionLink(idea.Subject.HtmlDecode(), MVC.Idea.Details(idea.Id, idea.Subject.ToSeoUrl(), null))
+        @if (idea.CanDelete)
+        {
+            <span class="hide" data-role="delete">
+                <a href="@Url.Action(MVC.Problem.DeleteRelatedIdea(idea.Id, idea.ProblemId))">
+                    <img style="height:12px;" src="@Links.Content.Images.cross_png" />
+                </a>
+            </span>
+        }
+    </li>  
+ }

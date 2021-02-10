@@ -1,0 +1,33 @@
+﻿@model Data.ViewModels.Project.EditMileStoneModel
+@using Globalization.Resources.Project
+@using Globalization.Resources.Shared
+@using Globalization.Resources.Shared;
+@using Web.Helpers
+<div id="editItem" class="editItem">
+    @using (Html.BeginForm(MVC.Project.EditMileStone(), FormMethod.Post, new { id = "formEdit" }))
+    {
+        @Html.AntiForgeryToken()
+        @Html.HiddenFor(m => m.ProjectId)
+        @Html.HiddenFor(m => m.Id)
+        <span>
+            @Html.TextAreaFor(m => m.Subject)
+            @Html.ValidationMessageFor(m => m.Subject)
+        </span>
+        <span>
+        @Html.LabelFor(m => m.Date, Resource.DueDate)
+        @Html.EditorFor(m => m.Date)
+        </span>
+        <div class="clearfix">
+            @Html.Buttons(new List<ButtonHelperModel>()
+                            {
+                                new ButtonHelperModel()
+                                    {
+                                        Id="btnEdit",
+                                    },
+                                new CancelButtonHelperModel()
+                                    {
+                                    }
+                            })
+        </div>
+    }
+</div>

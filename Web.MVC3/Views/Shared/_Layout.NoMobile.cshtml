@@ -1,0 +1,483 @@
+﻿<!DOCTYPE html>
+@using System.Web.Optimization
+@using Data.ViewModels.Account
+@using Framework.Enums
+@using Globalization.Resources.Shared
+@using Globalization.Resources.About;
+@using Framework.Strings;
+@using Services.Infrastructure
+@using Web.Helpers;
+<html itemscope itemtype="http://schema.org/Article">
+<head prefix="og: http://ogp.me/ns# fb: http://ogp.me/ns/fb# lietuva: http://ogp.me/ns/fb/lietuva#">
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+    @if (!string.IsNullOrEmpty(ViewBag.Title))
+    {
+        <meta property="og:title" content="@ViewBag.Title - @(ViewBag.Municipality != null ? ViewBag.Municipality.Name + " - " : string.Empty)@CustomAppSettings.SiteName" />
+    }
+    else
+    {
+        <meta property="og:title" content="@Globalization.Resources.NewsFeed.Resource.Slogan" />	
+    }
+    <meta property="og:url" content="@Url.ToAbsoluteUrl(Request.RawUrl)" />
+    <meta property="og:image" content="@Url.ToAbsoluteUrl(Links.Content.Images.lt2_200x200_png)" />
+    <meta property="og:site_name" content="Lietuva 2.0" />
+    <meta property="fb:app_id" content="204111066276450" />
+    @{ var pageDescription = ViewBag.PageDescription ?? Resource.SiteDescription; }
+    <meta name="description" content="@pageDescription" />
+    <meta itemprop="description" content="@pageDescription">
+    <meta property="og:description" content="@pageDescription" />
+
+    @if (!string.IsNullOrEmpty(ViewBag.Title))
+    {
+        <title>@ViewBag.Title - @(ViewBag.Municipality != null ? ViewBag.Municipality.Name + " - " : string.Empty)@CustomAppSettings.SiteName</title>
+    }
+    <link href="@Links.Content.CSS.print_css" rel="stylesheet" type="text/css" media="print" />
+    @Html.RegisterCommonCss()
+    <!--[if lt IE 8]><link rel="stylesheet" href="@Links.Content.CSS.ie_css" type="text/css" media="screen, projection"><![endif]-->
+    <link href='https://fonts.googleapis.com/css?family=Open+Sans:400,700&subset=latin-ext,latin' rel='stylesheet' type='text/css'>
+    @Web.Helpers.HtmlHelpers.EnableJavascriptGlobalization(Url)
+    @Scripts.Render("~/libraries/js")
+    @Html.RegisterCommonScripts()
+    @RenderSection("Head", required: false)
+    <script type="text/javascript">
+        var lt2FbPageId = '@System.Configuration.ConfigurationManager.AppSettings["FbPageId"]';
+        var _gaq = _gaq || [];
+        _gaq.push(['_setAccount', 'UA-266484-11']);
+        _gaq.push(['_trackPageview']);
+
+        (function () {
+            var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+            ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+            var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+        })();
+    </script>
+</head>
+<body>
+    <div id="fb-root">
+    </div>
+    @if (HttpContext.Current.IsDebuggingEnabled)
+    {
+        @Html.Partial(MVC.Shared.Views._ViewSwitcher)
+    }
+    <div class="background_green">
+    </div>
+    <div class="background_lightgreen">
+    </div>
+    <div class="container">
+        <div id="header" class="span-24 last">
+            <div class="span-4 posrel">
+                <h1 style="float: left;">
+                    <a href='@Url.Action(MVC.NewsFeed.Default(ViewBag.CurrentUser.LanguageCode))'>
+                        <img src="@Links.Content.Images.logo_png" style="margin-top: -4px; margin-left: 4px;" alt="Lietuva 2.0" />
+                    </a>
+                </h1>
+
+                <div class="municipalityTitle">
+                    <a href="@Url.Action(MVC.Address.GetAllMunicipalities(Request.RawUrl))" id="lnkChangeMunicipality" data-title="@Resource.SelectMunicipality">@(ViewBag.Municipality != null ? ViewBag.Municipality.Name : "Lietuva")</a>
+                </div>
+            </div>
+            <div class="search span-10">
+                @using (Html.BeginForm(MVC.Search.Search(), FormMethod.Get))
+                {
+                    <table id="tblsearch">
+                        <tr>
+                            <td>
+                                <input type="text" id="searchText" name="searchText" size="40" class="noFocus" style="float: left" />
+                                <a href="#" onclick="$(this).parents('form').submit();">
+                                    <img src="@Links.Content.Images.search_png" style="margin-top: 4px; margin-left: -22px;" alt="@Globalization.Resources.Search.Resource.Search" title="@Globalization.Resources.Search.Resource.Search"/>
+                                </a>
+                            </td>
+                        </tr>
+                    </table>
+                }
+            </div>
+            <div class="donate donatecenter">
+                <div>
+                    @Html.ActionLink(Globalization.Resources.Sponsor.Resource.Donate, MVC.Sponsor.About())
+                </div>
+            </div>
+            <div class="span-10 last header">
+                <div class="global_links">
+                    @if (ViewBag.IsAuthenticated != null)
+                    {
+                        if (!ViewBag.IsAuthenticated)
+                        {
+                            if (ViewBag.CurrentUser.IsUnique)
+                            {
+                        @Html.ActionLink(Globalization.Resources.Account.Resource.Logout, MVC.Account.Logout())
+                        <a href="@Url.Action(MVC.Account.Login(Request.RawUrl))">@ViewBag.CurrentUser.FullName</a>
+                            }
+                            else
+                            {
+                        @Html.ActionLink(Globalization.Resources.Account.Resource.Login, MVC.Account.Login(Request.RawUrl))
+                            }
+                        }
+                        else
+                        {
+                        @Html.ActionLink(Globalization.Resources.Account.Resource.Logout, MVC.Account.Logout(), new Dictionary<string, object>() { { "id", "lnkLogOut" } })
+                        <a href="@Url.Action(MVC.Account.ActionNames.Details, MVC.Account.Name, new RouteValueDictionary { { "userObjectId", ViewBag.CurrentUser.Id }, { "fullName", Framework.Strings.StringExtensions.ToSeoUrl(ViewBag.CurrentUser.FullName) } })">@ViewBag.CurrentUser.FullName</a>
+                        }
+                        <a href="@Url.Action(MVC.Account.GetLanguages(Request.RawUrl))" id="lnkChangeLanguage" data-title="@Globalization.Resources.Account.Resource.ChooseLanguage">@ViewBag.LanguageName</a>
+                    }
+                    <span id="email"><a id="lnkContactUs" class="ContactUs" href="?#" title="@Globalization.Resources.Account.Resource.ContactUs">
+                        <img src="@Links.Content.Images.email_png" alt="@Globalization.Resources.Account.Resource.ContactUs" />
+                    </a></span>
+                </div>
+            </div>
+        </div>
+        <div id="left_nav" class="span-4">
+            <ul class="main_nav">
+                <li>
+                    <img class="menuIcon" src='@Links.Content.Images.menu_icons_newsfeed_png' alt='@Menu.NewsFeed' /><a href='@Url.RouteUrl("MyNewsFeed")'>@Menu.NewsFeed</a>
+                    <span id="unreadNewsCount" class="highlight @(Session["UnreadNewsCount"] == null ? "hide" : "")">@Session["UnreadNewsCount"]</span>
+                </li>
+                <li>
+                    <img class="menuIcon" src='@Links.Content.Images.menu_icons_problems_png' alt='@Menu.Problem' /><a href='@Url.Action(MVC.Problem.Index())'>@Menu.Problem</a></li>
+                <li>
+                    @if (ViewBag.IsAuthenticated != null && ViewBag.IsAuthenticated)
+                    {
+                        <a class="menuAdd" href="@Url.Action(MVC.Idea.Create())">+</a>
+                    }
+                    <img class="menuIcon" src='@Links.Content.Images.menu_icons_ideas_png' alt='@Menu.Ideas' /><a href='@Url.Action(MVC.Idea.Index())'>@Menu.Ideas</a>
+                </li>
+                <li>
+                    @if (ViewBag.IsAuthenticated != null && ViewBag.IsAuthenticated)
+                    {
+                        <a class="menuAdd" href="@Url.Action(MVC.Voting.Create())">+</a>
+                    }
+                    <img class="menuIcon" src='@Links.Content.Images.menu_icons_voting_png' alt='@Menu.Issues' /><a href='@Url.Action(MVC.Voting.Index())'>@Menu.Issues</a>
+                </li>
+                <li>
+                    <img class="menuIcon" src='@Links.Content.Images.menu_icons_orgs_png' alt='@Menu.Organizations' /><a href='@Url.Action(MVC.Organization.Index())'>@Menu.Organizations</a></li>
+                <li>
+                    <img class="menuIcon" src='@Links.Content.Images.menu_icons_blog_png' alt='@Menu.Blog' /><a target="_blank" href='http://blog.lietuva2.lt'>@Menu.Blog</a></li>
+                <li>
+                    <img class="menuIcon" src='@Links.Content.Images.chat_ico_png' alt='@Menu.Chat' /><a href='@Url.Action(MVC.Chat.Index())'>@Menu.Chat</a></li>
+                <li>
+                    <img class="menuIcon" src='@Links.Content.Images.menu_icons_about_png' alt='@Menu.About' /><a href='@Url.Action(MVC.About.About())'>@Menu.About</a></li>
+                <li class="goToTop">
+                    <img class="menuIcon" src='@Links.Content.Images.bullet_arrow_up_png' alt='@SharedStrings.ToTop' /><a href='#'>@SharedStrings.ToTop</a></li>
+                <li>Čia mobilus layoutas</li>
+            </ul>
+
+            <div id="chat" class="hide">
+                <div id="groupChat" class="chatgroup">
+                    <div data-action='groupchat' data-chatid='@ViewContext.RouteData.Values["id"]' data-chatname='@ViewBag.GroupChatTitle'>
+                        @Html.Button(new ButtonHelperModel() { ImageUrl = Links.Content.Images.chat_ico_png, Text = Globalization.Resources.Chat.Resource.StartChat })
+                        @Html.Partial(MVC.Shared.Views._Help, Globalization.Resources.Chat.Resource.GroupChatTip)
+                        <div class="clear"></div>
+                    </div>
+                </div>
+                <div class="chatgroup">
+                    <div class="chatHeader">
+                        <div class="fl">
+                            <img src="@Links.Content.Images.user_ico_png" />
+                            @Globalization.Resources.Chat.Resource.OnlineUsers
+                        </div>
+                        @Html.Partial(MVC.Shared.Views._Help, Globalization.Resources.Chat.Resource.ChatTip)
+                        <div class="clear"></div>
+                    </div>
+                    <ul id="activeUsers">
+                    </ul>
+                </div>
+            </div>
+            @if (ViewBag.CurrentUser.FacebookPageLiked != true)
+            {
+                <div id="fb-like-box" style="margin-left: -50px;">
+                    <div class="fb-like-box" data-href="https://www.facebook.com/lietuva2" data-width="200" data-colorscheme="light" data-show-faces="true" data-header="false" data-stream="false" data-show-border="false"></div>
+                </div>
+            }
+        </div>
+        <div id="main" class="span-20 last">
+            <div class="in_brd page_content">
+                @{Html.RenderMessage();}
+                @if (TempData["VoteSuccess"] != null)
+                {
+                    <div class="success big-text" style="width: 694px;">
+                        <p>
+                            @Globalization.Resources.Idea.Resource.SignSuccess
+                        </p>
+                        <div>
+                            @Globalization.Resources.Idea.Resource.InviteFriendsToSign
+                            <div style="margin-top: 8px;">
+                                <div class="addthis_toolbox addthis_default_style addthis_32x32_style">
+                                    <a class="addthis_button_facebook" addthis:url="@TempData["VoteSuccess"]"></a>
+                                    <a class="addthis_button_twitter" addthis:url="@TempData["VoteSuccess"]"></a>
+                                    <a class="addthis_button_google_plusone_share" addthis:url="@TempData["VoteSuccess"]"></a>
+                                    <a class="addthis_button_linkedin" addthis:url="@TempData["VoteSuccess"]"></a>
+                                    <a class="addthis_button_email" addthis:url="@TempData["VoteSuccess"]"></a>
+                                    <a class="addthis_button_compact" addthis:url="@TempData["VoteSuccess"]"></a>
+                                    <a class="addthis_counter addthis_bubble_style" addthis:url="@TempData["VoteSuccess"]"></a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                }
+                @if (ViewBag.CurrentUser.IsAuthenticated &&
+                         !ViewBag.CurrentUser.IsUnique && !Request.RawUrl.Contains("Sponsor"))
+                {
+                    <script type="text/javascript">
+                        $(document).ready(function () {
+                            $('#lnkConfirmIdentity').linkdialog({
+                                dialogSelector: "#dialog-confirm-user",
+                                addCloseButton: false
+                            });
+                        });
+                    </script>
+                    <div id="confirmMessage" class="popup">
+                        <div class="popup_border notice">
+                            <div>
+                                @if (ViewBag.CurrentUser.RequireUniqueAuthentication)
+                                {
+                                    @Globalization.Resources.Account.Resource.ConfirmIdentityRequired
+                                }
+                                else
+                                {
+                                    @Globalization.Resources.Account.Resource.ConfirmIdentityReason
+                                    @Html.Partial(MVC.Shared.Views._Help, Globalization.Resources.Account.Resource.ConfirmIdentityReasonTip)
+                                }
+                            </div>
+                            @Html.Button(new ButtonHelperModel() { CssClass = "positive", ImageUrl = Links.Content.Images.group_key_png, Text = Globalization.Resources.Account.Resource.ConfirmIdentity, Type = ButtonHelperModel.Types.Link, Id = "lnkConfirmIdentity" })
+                            <div class="clear"></div>
+                        </div>
+                    </div>
+                }
+                @if (!ViewBag.IsAuthenticated && ViewBag.CurrentUser.IsUnique)
+                {
+                    <div id="loginMessage" class="popup">
+                        <div class="popup_border notice">
+                            @if (ViewBag.CurrentUser.IsViispConfirmed)
+                            {
+                                <div>
+                                    @Globalization.Resources.Account.Resource.UniqueViispNotRegistered @Html.ActionLink(Globalization.Resources.Account.Resource.SignUp.ToLower(), MVC.Account.Login()).
+                                </div>
+                            }
+                            else
+                            {
+                                <div>
+                                    @Globalization.Resources.Account.Resource.UniqueNotRegistered @Html.ActionLink(Globalization.Resources.Account.Resource.SignUp.ToLower(), MVC.Account.Login()).  
+                                </div>
+                            }
+                        </div>
+                    </div>
+                }
+                @Html.AntiForgeryToken()
+
+                @RenderBody()
+
+                @{Html.RenderPartial(MVC.Shared.Views.MailMessage);}
+                @{Html.RenderPartial(MVC.Shared.Views.Dialog);}
+                @if (!ViewBag.CurrentUser.IsUnique || !ViewBag.CurrentUser.IsConfirmedThisSession)
+                {
+                    @Html.Partial(MVC.Account.Views.ConfirmIdentityViisp)
+                }
+                @*@if (!string.IsNullOrEmpty(CustomAppSettings.ViispPid))
+                {
+                    @Html.Partial(MVC.Account.Views.ConfirmIdentityViisp)
+                }*@
+                <div class="clear"></div>
+            </div>
+        </div>
+        <div class="span-24 last">
+        </div>
+    </div>
+</body>
+<!--[if lt IE 8]><script src="http://ajax.cdnjs.com/ajax/libs/json2/20110223/json2.js" type="text/javascript"></script><![endif]-->
+
+@if (ViewBag.IsAuthenticated)
+{
+    if (!Request.Browser.IsMobileDevice)
+    {
+        <script src="@Links.Scripts.jquery_signalR_2_2_0_js" type="text/javascript"></script>
+        <script src="@Url.Content("~/signalr/hubs")"></script>
+        @Scripts.Render("~/chat/js");
+    }
+    
+    @Html.RegisterExtraScripts()
+}
+@RenderSection("Scripts", required: false)
+<script type="text/javascript">
+    window.fbAsyncInit = function () {
+            @if (ViewBag.CurrentUser.IsAuthenticated && ViewBag.CurrentUser.ConnectedFacebookId == null && ViewBag.CurrentUser.IsConnectedToFacebook == null)
+            {
+                <text>
+        $.helpers.facebookStatusCheck('@Url.Action(MVC.Account.SetFacebookStatus())');
+                </text>
+            }
+
+        if (window.fbAsyncInitCallback) {
+            window.fbAsyncInitCallback();
+        }
+
+        @if (ViewBag.CurrentUser.FacebookPageLiked == null)
+        {
+            <text>
+        FB.getLoginStatus(function (status) {
+            if (status.status === 'connected') {
+                FB.api('/me/likes/' + lt2FbPageId, function (response) {
+                    if (response.data) {
+                        if (!$.helpers.isEmpty(response.data)) {
+                            $.helpers.loadAsync(null, '@Url.Action(MVC.Account.SetFacebookPageLiked(true))');
+                            return;
+                        }
+                    }
+                    $.helpers.loadAsync(null, '@Url.Action(MVC.Account.SetFacebookPageLiked(false))');
+                });
+            }
+            else{
+                $.helpers.loadAsync(null, '@Url.Action(MVC.Account.SetFacebookPageLiked(false))');
+            }
+        });
+            </text>
+        }
+        else if (ViewBag.CurrentUser.FacebookPageLiked == false)
+        {
+            <text>
+        FB.Event.subscribe('edge.create',
+            function(href, widget) {
+                $.helpers.loadAsync(null, '@Url.Action(MVC.Account.SetFacebookPageLiked(true))');
+            }
+            );
+            </text>
+        }
+    };
+
+    (function (d) {
+        var js, id = 'facebook-jssdk'; if (d.getElementById(id)) { return; }
+        js = d.createElement('script'); js.id = id; js.async = true;
+        js.src = "//connect.facebook.net/lt_LT/all.js#xfbml=1&appId=@(System.Configuration.ConfigurationManager.AppSettings["FbAppId"] ?? "204111066276450")";
+        d.getElementsByTagName('head')[0].appendChild(js);
+    }(document));
+
+    var isFocused = true;
+    var originalTitle = document.title + '';
+
+    $(document).ready(function () {
+        if ($.validator) {
+            $.validator.setDefaults({ errorClass: "field-validation-error" });
+        }
+
+        if ($.fn.googleDocs) {
+            $.fn.googleDocs.defaults.appId = '@CustomAppSettings.GoogleAppId';
+        }
+
+        $.helpers.settings.loaderHtml = '<span class="loader"><img alt="" src="@Links.Content.Images.ajax_loader_gif" /></span>';
+        $.helpers.settings.relativeRoot = '@Url.Content("~")';
+        $.helpers.settings.loginPopupUrl = '@Url.Action(MVC.Account.LoginPopup())';
+        $.helpers.settings.confirmPersonCodeUrl = '@Url.Action(MVC.Account.GetConfirmPersonCodeForm())';
+        $.helpers.settings.embedlyKey = '@System.Configuration.ConfigurationManager.AppSettings["EmbedlyKey"]';
+        $.helpers.settings.debug = @HttpContext.Current.IsDebuggingEnabled.ToString().ToLower();
+
+        CreateSendMessageDialog($('.ContactUs'), $('#dialog-message'), '@Url.Action(MVC.Account.SendMessage())', '@SharedStrings.SiteName', '');
+        CreateAjaxDialog($('#lnkChangeLanguage'));
+        CreateAjaxDialog($('#lnkChangeMunicipality'));
+
+        if (typeof addthis != "undefined") {
+            addthis.init();
+        }
+
+        @if (ViewBag.IsAuthenticated)
+        {
+                <text>
+        function getUnreadNewsCount() {
+            loadAsync(null, '@Url.Action(MVC.NewsFeed.GetUnreadNewsCount())', null, function(result) {
+                if (result.Count > 0) {
+                    $('#unreadNewsCount').text(result.Count).show();
+                    if(isFocused == false){
+                        setTimeout(function () {
+                            document.title = "(" + result.Count + ")" + originalTitle;
+                        }, 500);
+                    }
+                } else {
+                    $('#unreadNewsCount').hide();
+                }
+            });
+        }
+        setInterval(getUnreadNewsCount, 200000);
+            </text>
+        <text>
+        if (typeof (document.onfocusin) != 'undefined') {
+            document.onfocusin = restoreTitle;
+            document.onfocusout = onBlur;
+        }
+        else {
+            $(window).focus(restoreTitle);
+            $(window).blur(onBlur);
+        }
+
+        function restoreTitle(){
+            setTimeout(function () {
+                document.title = originalTitle;
+            }, 500);
+        }
+
+        function onBlur(e) {
+            isFocused = false;
+        }
+
+        @if (ViewBag.CurrentUser.TutorialShown == false)
+        {
+            <text>
+        $.helpers.loadAsync(null, '@Url.Action(MVC.Account.ShowTutorial())', null, function(result){
+            $('#divDialogContent').html(result.Content);
+            var dialog = $('#dialog');
+            dialog.parent().find('.ui-dialog-title').text('@Resource.TutorialVideoTitle');
+            $('#dialog').dialog({buttons:[
+                {text: "@Globalization.Resources.About.Resource.Understood",
+                    click: function () {
+                        $(this).dialog("close");
+                        $('#tutorialFrame').attr("src","");
+                    }}],
+                autoOpen: true,
+                width:660,
+                height:620
+            });
+        });
+            </text>
+        }
+
+        @if(!Request.Browser.IsMobileDevice){
+            <text>
+                $('#chat').chat({ userProfileUrl: '@Url.RouteUrlRaw("RawUser")/', myName: '@ViewBag.CurrentUser.FullName', currentUserId: '@ViewBag.CurrentUser.Id', debug: @HttpContext.Current.IsDebuggingEnabled.ToString().ToLower() });
+                $('#lnkLogOut').on('click', function(){
+                    $().chat('stopAllClients');
+                });
+            </text>
+        }
+            </text>
+        }
+
+        if (typeof (onPageLoad) == 'function') {
+            onPageLoad();
+        }
+            @if (TempData["OpenConfirmIdentityDialog"] != null && (bool)TempData["OpenConfirmIdentityDialog"] == true)
+            {
+                <text>
+        $.helpers.identifyUser();
+        </text>
+            }
+        @if (TempData["OpenViispDialog"] != null && (bool)TempData["OpenViispDialog"] == true)
+        {
+                <text>
+        $.helpers.identifyUserViisp();
+        </text>
+        }
+    });
+        @if (ViewBag.CurrentUser.IsAmbasador)
+        {
+            <text>
+    $.helpers.settings.setFacebookPermissionGrantedUrl = '@Url.Action(MVC.Account.SetFacebookPermissionGranted())';
+    $.helpers.settings.setPostedToFacebookUrl = '@Url.Action(MVC.Account.SetPostedToFacebook())';
+
+    </text>
+        }
+</script>
+<script type="text/javascript">
+    var addthis_config = {
+        "data_track_clickback": true,
+        ui_language: "lt",
+        services_compact: 'facebook,google_plusone_share,twitter,linkedin,email'
+    };
+</script>
+<script type="text/javascript" src="https://s7.addthis.com/js/300/addthis_widget.js#pubid=satanod&async=1"></script>
+</html>

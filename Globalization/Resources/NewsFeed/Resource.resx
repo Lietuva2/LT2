@@ -1,0 +1,295 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <!-- 
+    Microsoft ResX Schema 
+    
+    Version 2.0
+    
+    The primary goals of this format is to allow a simple XML format 
+    that is mostly human readable. The generation and parsing of the 
+    various data types are done through the TypeConverter classes 
+    associated with the data types.
+    
+    Example:
+    
+    ... ado.net/XML headers & schema ...
+    <resheader name="resmimetype">text/microsoft-resx</resheader>
+    <resheader name="version">2.0</resheader>
+    <resheader name="reader">System.Resources.ResXResourceReader, System.Windows.Forms, ...</resheader>
+    <resheader name="writer">System.Resources.ResXResourceWriter, System.Windows.Forms, ...</resheader>
+    <data name="Name1"><value>this is my long string</value><comment>this is a comment</comment></data>
+    <data name="Color1" type="System.Drawing.Color, System.Drawing">Blue</data>
+    <data name="Bitmap1" mimetype="application/x-microsoft.net.object.binary.base64">
+        <value>[base64 mime encoded serialized .NET Framework object]</value>
+    </data>
+    <data name="Icon1" type="System.Drawing.Icon, System.Drawing" mimetype="application/x-microsoft.net.object.bytearray.base64">
+        <value>[base64 mime encoded string representing a byte array form of the .NET Framework object]</value>
+        <comment>This is a comment</comment>
+    </data>
+                
+    There are any number of "resheader" rows that contain simple 
+    name/value pairs.
+    
+    Each data row contains a name, and value. The row also contains a 
+    type or mimetype. Type corresponds to a .NET class that support 
+    text/value conversion through the TypeConverter architecture. 
+    Classes that don't support this are serialized and stored with the 
+    mimetype set.
+    
+    The mimetype is used for serialized objects, and tells the 
+    ResXResourceReader how to depersist the object. This is currently not 
+    extensible. For a given mimetype the value must be set accordingly:
+    
+    Note - application/x-microsoft.net.object.binary.base64 is the format 
+    that the ResXResourceWriter will generate, however the reader can 
+    read any of the formats listed below.
+    
+    mimetype: application/x-microsoft.net.object.binary.base64
+    value   : The object must be serialized with 
+            : System.Runtime.Serialization.Formatters.Binary.BinaryFormatter
+            : and then encoded with base64 encoding.
+    
+    mimetype: application/x-microsoft.net.object.soap.base64
+    value   : The object must be serialized with 
+            : System.Runtime.Serialization.Formatters.Soap.SoapFormatter
+            : and then encoded with base64 encoding.
+
+    mimetype: application/x-microsoft.net.object.bytearray.base64
+    value   : The object must be serialized into a byte array 
+            : using a System.ComponentModel.TypeConverter
+            : and then encoded with base64 encoding.
+    -->
+  <xsd:schema id="root" xmlns="" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:msdata="urn:schemas-microsoft-com:xml-msdata">
+    <xsd:import namespace="http://www.w3.org/XML/1998/namespace" />
+    <xsd:element name="root" msdata:IsDataSet="true">
+      <xsd:complexType>
+        <xsd:choice maxOccurs="unbounded">
+          <xsd:element name="metadata">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" />
+              </xsd:sequence>
+              <xsd:attribute name="name" use="required" type="xsd:string" />
+              <xsd:attribute name="type" type="xsd:string" />
+              <xsd:attribute name="mimetype" type="xsd:string" />
+              <xsd:attribute ref="xml:space" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="assembly">
+            <xsd:complexType>
+              <xsd:attribute name="alias" type="xsd:string" />
+              <xsd:attribute name="name" type="xsd:string" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="data">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+                <xsd:element name="comment" type="xsd:string" minOccurs="0" msdata:Ordinal="2" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" msdata:Ordinal="1" />
+              <xsd:attribute name="type" type="xsd:string" msdata:Ordinal="3" />
+              <xsd:attribute name="mimetype" type="xsd:string" msdata:Ordinal="4" />
+              <xsd:attribute ref="xml:space" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="resheader">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" />
+            </xsd:complexType>
+          </xsd:element>
+        </xsd:choice>
+      </xsd:complexType>
+    </xsd:element>
+  </xsd:schema>
+  <resheader name="resmimetype">
+    <value>text/microsoft-resx</value>
+  </resheader>
+  <resheader name="version">
+    <value>2.0</value>
+  </resheader>
+  <resheader name="reader">
+    <value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <resheader name="writer">
+    <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <data name="AboutMore" xml:space="preserve">
+    <value>Sužinoti daugiau</value>
+  </data>
+  <data name="Ago" xml:space="preserve">
+    <value>Prieš {0}</value>
+  </data>
+  <data name="AllNews" xml:space="preserve">
+    <value>Visos naujienos</value>
+  </data>
+  <data name="AndSomeMore" xml:space="preserve">
+    <value>ir dar &lt;a href="{1}" class="lnkUsers" style="font-weight:bold;"&gt;{0}&lt;/a&gt;</value>
+  </data>
+  <data name="Categories" xml:space="preserve">
+    <value>Rodomos kategorijos</value>
+  </data>
+  <data name="CommentsCount" xml:space="preserve">
+    <value>Komentarų skaičius</value>
+  </data>
+  <data name="Create" xml:space="preserve">
+    <value>Įtraukti naują</value>
+  </data>
+  <data name="CreateTooltip" xml:space="preserve">
+    <value>Įtraukti naują balsavimą</value>
+  </data>
+  <data name="FinishedInitiatives" xml:space="preserve">
+    <value>Baigtos iniciatyvos</value>
+  </data>
+  <data name="FinishedVoting" xml:space="preserve">
+    <value>Pasibaigę balsavimai</value>
+  </data>
+  <data name="Ideas" xml:space="preserve">
+    <value>pasiūlymus</value>
+  </data>
+  <data name="Issues" xml:space="preserve">
+    <value>klausimais</value>
+  </data>
+  <data name="Login" xml:space="preserve">
+    <value>Prisijunkite prie mūsų</value>
+  </data>
+  <data name="MostActiveOrganizations" xml:space="preserve">
+    <value>Aktyviausios organizacijos</value>
+  </data>
+  <data name="MostActiveProjects" xml:space="preserve">
+    <value>Aktyviausi projektai</value>
+  </data>
+  <data name="MyNews" xml:space="preserve">
+    <value>Aktualios naujienos</value>
+  </data>
+  <data name="MyOrganizations" xml:space="preserve">
+    <value>Mano organizacijos</value>
+  </data>
+  <data name="MyProjects" xml:space="preserve">
+    <value>Mano projektai</value>
+  </data>
+  <data name="New" xml:space="preserve">
+    <value>Naujas</value>
+  </data>
+  <data name="NewsFeedRss" xml:space="preserve">
+    <value>Aktualių naujienų srautas</value>
+  </data>
+  <data name="NewVersions" xml:space="preserve">
+    <value>Nauji sprendimai</value>
+  </data>
+  <data name="NumberUsers" xml:space="preserve">
+    <value>&lt;a href="{1}" class="lnkUsers" style="font-weight:bold;"&gt;{0}&lt;/a&gt;</value>
+  </data>
+  <data name="PageTitle" xml:space="preserve">
+    <value>Veikalapis</value>
+  </data>
+  <data name="PageTitleStartPage" xml:space="preserve">
+    <value>Pradinis puslapis</value>
+  </data>
+  <data name="PublicInitiatives" xml:space="preserve">
+    <value>Piliečių iniciatyvos</value>
+  </data>
+  <data name="PublicVoting" xml:space="preserve">
+    <value>Politikų iniciatyvos</value>
+  </data>
+  <data name="RelatedItems" xml:space="preserve">
+    <value>Susijusių veiksmų</value>
+  </data>
+  <data name="SideBarIdeas" xml:space="preserve">
+    <value>Pasiūlymai</value>
+  </data>
+  <data name="SideBarIssues" xml:space="preserve">
+    <value>Balsavimai</value>
+  </data>
+  <data name="Slogan" xml:space="preserve">
+    <value>Lietuva 2.0 - čia sprendi Tu!</value>
+  </data>
+  <data name="SortActive" xml:space="preserve">
+    <value>Aktyviausi</value>
+  </data>
+  <data name="SortNearest" xml:space="preserve">
+    <value>Artimiausi</value>
+  </data>
+  <data name="Suggestions" xml:space="preserve">
+    <value>pasiūlymais</value>
+  </data>
+  <data name="TimeLeft" xml:space="preserve">
+    <value>Liko</value>
+  </data>
+  <data name="Title" xml:space="preserve">
+    <value>Veikalapis</value>
+  </data>
+  <data name="ViewsCount" xml:space="preserve">
+    <value>Peržiūrų skaičius</value>
+  </data>
+  <data name="VotesCount" xml:space="preserve">
+    <value>Viso balsavo</value>
+  </data>
+  <data name="Welcome" xml:space="preserve">
+    <value>&lt;h3&gt;Sveikiname prisijungus!&lt;/h3&gt;&lt;br/&gt;&lt;p&gt;Šiame puslapyje būsite informuojami apie visą Jus dominančių asmenų veiklą, naujus įrašus, susijusius su Jus dominančiomis kategorijomis bei nauja veikla, susijusia su įrašais, prie kurių Jūs prisidėjote (balsavote, komentavote ar pan.).&lt;/p&gt;&lt;br/&gt;&lt;p&gt;Kviečiame susipažinti su jau pateiktais {0}, prisidėti prie jų vystymo, pateikti savo {1} bei balsuoti Jums aktualiais {2}!&lt;/p&gt;&lt;br/&gt;&lt;p&gt;Visą naujausių įvykių portale srautą galite peržiūrėti  skyriuje {3}&lt;/p&gt;</value>
+  </data>
+  <data name="ReputationsUpdated" xml:space="preserve">
+    <value>Reputacijos sėkmingai atnaujintos</value>
+  </data>
+  <data name="StartTour" xml:space="preserve">
+    <value>Susipažinkite su Lietuva 2.0!</value>
+  </data>
+  <data name="ForHimself" xml:space="preserve">
+    <value>sau</value>
+  </data>
+  <data name="ForTaking" xml:space="preserve">
+    <value>pasirinkimui</value>
+  </data>
+  <data name="ForTheTeam" xml:space="preserve">
+    <value>visai projekto komandai</value>
+  </data>
+  <data name="NewActivity" xml:space="preserve">
+    <value>Narių veikla</value>
+  </data>
+  <data name="PolNews" xml:space="preserve">
+    <value>Politikų tribūna</value>
+  </data>
+  <data name="AlreadyRegistered" xml:space="preserve">
+    <value>Geresnę Lietuvą jau kuria</value>
+  </data>
+  <data name="LT2Definition" xml:space="preserve">
+    <value>Lietuva 2.0 - tai socialinis tinklas, kuriame sąmoningi Lietuvos piliečiai patys kuria
+Lietuvą tokią, kokią ją nori matyti</value>
+  </data>
+  <data name="Or" xml:space="preserve">
+    <value>arba</value>
+  </data>
+  <data name="SloganNew" xml:space="preserve">
+    <value>Kurkime Lietuvą kartu!</value>
+  </data>
+  <data name="Subhead" xml:space="preserve">
+    <value>balsuok, argumentuok ir siūlyk sumanymus, kaip paversti Lietuvą geresne šalimi</value>
+  </data>
+  <data name="IdeasTitle" xml:space="preserve">
+    <value>Siūlyk</value>
+  </data>
+  <data name="VotingTitle" xml:space="preserve">
+    <value>Balsuok</value>
+  </data>
+  <data name="IdeaDescription" xml:space="preserve">
+    <value>Lietuva 2.0 bendruomenės siūlymai, kaip Lietuvą padaryti geresne šalimi, laukiantys Jūsų palaikymo, el. parašo arba kitokio indėlio tam, kad galėtų būti įgyvendinti.</value>
+  </data>
+  <data name="VotingDescription" xml:space="preserve">
+    <value>Visuomenei aktualūs valdžios svarstomi klausimai, kuriais Lietuva 2.0 bendruomenė turi savo nuomonę ir nori ją pristatyti savo atstovams valdžioje, padedant geriau atstovauti visuomenės interesą.</value>
+  </data>
+  <data name="IdeaBottomDescription" xml:space="preserve">
+    <value>Siūlyti savo sumanymus Lietuva 2.0 gali ir Tu. Prisijunk prie mūsų, ir siūlyk sprendimus, kurie padarys Lietuvą geresne šalimi!</value>
+  </data>
+  <data name="VotingBottomDescription" xml:space="preserve">
+    <value>Suprantama kalba aprašyti ir Lietuva 2.0 bendruomenės balsavimui pateikti šiuo metu valdžios svarstomus klausimus gali ir Tu! Prisijunk prie mūsų, ir neleisk išrinktiesiems savivaliauti!</value>
+  </data>
+  <data name="ConnectWithFacebook" xml:space="preserve">
+    <value>Prisijungti su facebook</value>
+  </data>
+  <data name="FollowUs" xml:space="preserve">
+    <value>Sekite mus</value>
+  </data>
+</root>

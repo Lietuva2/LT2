@@ -1,0 +1,129 @@
+﻿@model Data.ViewModels.Comments.CommentView
+@using Data.Enums
+@using Data.ViewModels.Comments
+@using Globalization
+@using Globalization.Resources.Shared
+@using Globalization.Resources.Comments
+@using Links
+@using Web.Helpers;
+@using Framework.Strings;
+@{
+    var visibleCommentsCount = 5;
+    var authorUrl = Url.ActionWithReturnUrl(MVC.Account.Details(Model.AuthorObjectId, Model.AuthorFullName.ToSeoUrl(), null));
+}
+<div data-role="deleteContainer" class="comment">
+    @if (Model.IsCreatedByCurrentUser)
+    {
+        <div class="hide" data-role="delete" style="position: absolute; right: 0px;">
+            <a href="@Url.Action("DeleteComment", Html.GetControllerNameByEntryType(Model.EntryType), new RouteValueDictionary() { { "id", Model.EntryId }, { "commentId", Model.Id } })">
+                <img src="@Links.Content.Images.cross_png" />
+            </a>
+        </div>
+    }
+    <a href="@authorUrl">
+        <img alt="" src='@Url.Action(MVC.File.GetUserPicture(Model.ProfilePictureThumbId))' class="thumb" />
+    </a>
+    <div class="comment_container">
+        <div class="comment_author" style="width: 100%;">
+            <a href='@authorUrl'>@Model.AuthorFullName</a>
+            @if (Model.ForAgainst == Data.Enums.ForAgainst.For)
+            {
+                <text> @Resource.Supports.ToLower()</text>
+            }
+            else if (Model.ForAgainst == Data.Enums.ForAgainst.Against)
+            {
+                <text> @Resource.Criticizes.ToLower()</text>
+            }
+            else if (Model.ForAgainst == Data.Enums.ForAgainst.Suggest)
+            {
+                <text> @Resource.Suggests.ToLower()</text>
+                if (!string.IsNullOrEmpty(Model.RelatedVersion))
+                {
+                <text> @Resource.HowToRealize.ToLower()</text>
+                }
+            }
+            else
+            {
+                <text> @Resource.Writes.ToLower()</text>
+                if (!string.IsNullOrEmpty(Model.RelatedVersion))
+                {
+                <text> @Resource.About</text>
+                }
+            }
+            @if (!string.IsNullOrEmpty(Model.RelatedVersion))
+            {
+                @Resource.IdeaNo
+                @Model.RelatedVersion
+            }
+            <span>:</span>
+        </div>
+        <div class="comment_body">
+            @{Html.RenderPartial(MVC.Shared.Views.ExpandableTextMedium, Model.CommentText);}
+        </div>
+        @if (Model.Embed != null)
+        {
+            @Html.Partial(MVC.Shared.Views.Embed, Model.Embed)
+        }
+        <div class="clear"></div>
+        <div class="m_list_d">
+            <span class="comment_number">@Model.Number</span>
+            @Model.CommentDateString
+            @if (Model.EntryId == ViewBag.CurrentUser.Id)
+            {
+                if (!Model.IsHidden)
+                {
+                @Html.ActionLink(Resource.Hide, "HideComment", Html.GetControllerNameByEntryType(Model.EntryType), new RouteValueDictionary { { "id", Model.EntryId }, { "commentId", Model.Id } }, new Dictionary<string, object>() { { "data-role", "show-hide-text" } })
+                }
+                else
+                {
+                @Html.ActionLink(Resource.Show, "ShowComment", Html.GetControllerNameByEntryType(Model.EntryType), new RouteValueDictionary { { "id", Model.EntryId }, { "commentId", Model.Id } }, new Dictionary<string, object>() { { "data-role", "show-hide-text" } })
+                }
+            }
+            <div class="fr likeContainer">
+                @{Html.RenderPartial(MVC.Comments.Views.Like, Model.Liking);}
+            </div>
+            @if (Model.IsCommentable && Model.Subscribe != null)
+            {
+                <div class="fr" data-role="subscribe-container" style="margin-right: 4px;">
+                    @Html.Partial(MVC.Shared.Views.Subscribe, Model.Subscribe)
+                    <span style="position: relative; bottom: 3px;">. </span>
+                </div>
+            }
+        </div>
+        @if (Model.IsCommentable || Model.Comments.Any())
+        {
+            <div class="commentCommentsContainer">
+                @if (Model.Comments.Count > visibleCommentsCount)
+                {
+                    <div class="coloredInnterList moreComments">
+                        <a href="javascript:void(0)" class="expandComments" title="@Resource.ShowAllComments">@Resource.ShowAll @GlobalizedSentences.GetCommentsWhatString(Model.Comments.Count())</a>
+                    </div>
+                }
+                <div class="coloredInnterList innerList hiddenInnerList @(Model.Comments.Count > visibleCommentsCount ? "hide" : "")">
+                    @foreach (var comment in Model.Comments.Take(Model.Comments.Count - visibleCommentsCount))
+                    {
+                        Html.RenderPartial(MVC.Comments.Views._CommentComment, comment);
+                    }
+                </div>
+
+                <div class="comment_input_container @(Model.Comments.Any() ? "coloredInnterList" : "")">
+                    <div class="innerList">
+                        @foreach (var comment in Model.Comments.Skip(Model.Comments.Count - visibleCommentsCount))
+                        {
+                            Html.RenderPartial(MVC.Comments.Views._CommentComment, comment);
+                        }
+                    </div>
+                    @if (Model.IsCommentable)
+                    {
+                        <div class="addComment">
+                            <a href="javascript:void(0)" class="commentacomment">@Resource.AddCommentComment</a>
+                        </div>
+                        <div class="comment_input coloredInnterList hide">
+                            @Html.Partial(MVC.Comments.Views.CommentCommentInput, new CommentView() { EntryId = Model.EntryId, Id = Model.Id, EntryType = Model.EntryType })
+                        </div>
+                    }
+                </div>
+            </div>
+        }
+    </div>
+</div>

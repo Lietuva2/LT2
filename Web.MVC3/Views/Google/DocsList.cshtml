@@ -1,0 +1,9 @@
+﻿@model List<Data.ViewModels.Base.UrlViewModel>
+<div style="margin-bottom: 5px;">
+    <ul data-role="listDocs">
+        @foreach (var website in Model)
+        {
+            @Html.Partial(MVC.Shared.Views.Attachment, website, new ViewDataDictionary(){{"deletable", true}})
+        }
+    </ul>
+</div>
