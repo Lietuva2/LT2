@@ -1,0 +1,1309 @@
+<title>Lietuva 2.0 Whitepaper</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400;12..96,500;12..96,600;12..96,700;12..96,800&family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;1,6..72,400&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+:root{
+  --bg:#f4f7f3; --surface:#ffffff; --surface-2:#eaf0e8; --surface-3:#dde6db;
+  --ink:#13201a; --ink-2:#44524a; --muted:#6f7c75; --line:#d3dcd3; --line-strong:#b6c3b8;
+  --brand:#1f6b3a; --brand-ink:#ffffff; --brand-soft:#dcebdc; --leaf:#7cc242; --slate:#a7b1ac;
+  --link:#1f6b3a;
+  --v-for:#2a78d6; --v-against:#e34948; --v-abstain:#b5b4ae; --v-absent:#c9ccc6;
+  --s-seimas:#4a3aa7; --s-platform:#2e9a4a;
+  --warn-bg:#fff4d6; --warn-ink:#6b4d00;
+  --shadow:0 1px 2px rgba(19,32,26,.06),0 8px 24px rgba(19,32,26,.08);
+  --f-display:"Bricolage Grotesque","Segoe UI",system-ui,sans-serif;
+  --f-body:"Newsreader",Georgia,"Times New Roman",serif;
+  --f-mono:"IBM Plex Mono",ui-monospace,Menlo,Consolas,monospace;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    color-scheme:dark;
+    --bg:#0e1411; --surface:#151d18; --surface-2:#1c2620; --surface-3:#243029;
+    --ink:#e6eee8; --ink-2:#b0beb5; --muted:#84928a; --line:#28352d; --line-strong:#3a4a40;
+    --brand:#3f9a5c; --brand-ink:#ffffff; --brand-soft:#1f3326; --leaf:#8fd158; --slate:#6d7872;
+    --link:#7fd08f;
+    --v-for:#3987e5; --v-against:#e66767; --v-abstain:#6b6a66; --v-absent:#3a423d;
+    --s-seimas:#9085e9; --s-platform:#3fae5a;
+    --warn-bg:#3a2f10; --warn-ink:#f3d58a;
+    --shadow:0 1px 2px rgba(0,0,0,.3),0 8px 24px rgba(0,0,0,.35);
+  }
+}
+:root[data-theme="dark"]{
+  color-scheme:dark;
+  --bg:#0e1411; --surface:#151d18; --surface-2:#1c2620; --surface-3:#243029;
+  --ink:#e6eee8; --ink-2:#b0beb5; --muted:#84928a; --line:#28352d; --line-strong:#3a4a40;
+  --brand:#3f9a5c; --brand-ink:#ffffff; --brand-soft:#1f3326; --leaf:#8fd158; --slate:#6d7872;
+  --link:#7fd08f;
+  --v-for:#3987e5; --v-against:#e66767; --v-abstain:#6b6a66; --v-absent:#3a423d;
+  --s-seimas:#9085e9; --s-platform:#3fae5a;
+  --warn-bg:#3a2f10; --warn-ink:#f3d58a;
+  --shadow:0 1px 2px rgba(0,0,0,.3),0 8px 24px rgba(0,0,0,.35);
+}
+
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+@media (prefers-reduced-motion: reduce){html{scroll-behavior:auto}*{animation:none!important;transition:none!important}}
+body{background:var(--bg);color:var(--ink);font-family:var(--f-body);font-size:19px;line-height:1.6;padding-inline:20px;padding-block:0 64px}
+a{color:var(--link);text-underline-offset:3px}
+:focus-visible{outline:2px solid var(--brand);outline-offset:2px;border-radius:4px}
+h1,h2,h3,h4{font-family:var(--f-display);line-height:1.12;text-wrap:balance;margin:0;color:var(--ink)}
+h2{font-size:clamp(30px,4vw,42px);font-weight:700;letter-spacing:-.02em}
+h3{font-size:23px;font-weight:650;letter-spacing:-.01em}
+h4{font-size:17px;font-weight:650}
+p{margin:0}
+.mono{font-family:var(--f-mono);font-size:.82em;letter-spacing:0}
+.eyebrow{font-family:var(--f-display);font-size:13px;font-weight:600;letter-spacing:.09em;text-transform:uppercase;color:var(--brand)}
+.muted{color:var(--muted)}
+.tnum{font-variant-numeric:tabular-nums}
+
+/* ---------- page frame ---------- */
+.topbar{position:sticky;top:env(safe-area-inset-top,0px);z-index:20;margin-inline:-20px;padding:10px 20px;background:color-mix(in oklab,var(--bg) 88%,transparent);backdrop-filter:blur(10px);border-bottom:1px solid var(--line);display:flex;align-items:center;gap:16px}
+.topbar .brandmark{display:flex;align-items:center;gap:10px;text-decoration:none;color:var(--ink);font-family:var(--f-display);font-weight:700;font-size:18px}
+.topbar .brandmark svg{width:30px;height:30px}
+.topbar nav{margin-left:auto;display:flex;gap:18px;font-family:var(--f-display);font-size:14px;overflow-x:auto;scrollbar-width:none}
+.topbar nav a{color:var(--ink-2);text-decoration:none;white-space:nowrap}
+.topbar nav a:hover{color:var(--brand)}
+@media (max-width:760px){.topbar nav{display:none}}
+
+.layout{max-width:1180px;margin:0 auto;display:grid;grid-template-columns:220px minmax(0,1fr);gap:56px}
+@media (max-width:1060px){.layout{grid-template-columns:minmax(0,1fr)}.toc{display:none}}
+.toc{position:sticky;top:84px;align-self:start;padding-top:40px;font-family:var(--f-display);font-size:14px}
+.toc ol{list-style:none;padding:0;margin:12px 0 0;display:grid;gap:2px;counter-reset:toc}
+.toc li{counter-increment:toc}
+.toc a{display:grid;grid-template-columns:26px 1fr;padding:5px 8px;border-radius:6px;text-decoration:none;color:var(--ink-2)}
+.toc a::before{content:counter(toc,decimal-leading-zero);font-family:var(--f-mono);font-size:11px;color:var(--muted);padding-top:3px}
+.toc a:hover,.toc a.on{background:var(--surface-2);color:var(--ink)}
+.toc a.on::before{color:var(--brand)}
+
+main{min-width:0}
+.prose{max-width:680px}
+.prose p+p{margin-top:1em}
+.prose ul,.prose ol{padding-left:1.2em;margin:1em 0 0}
+.prose li+li{margin-top:.45em}
+section.chapter{padding-top:84px;scroll-margin-top:60px}
+section.chapter>header{display:grid;gap:12px;margin-bottom:28px;max-width:720px}
+section.chapter>header .lede{font-size:21px;color:var(--ink-2)}
+
+/* ---------- hero ---------- */
+.hero{padding-top:48px;display:grid;grid-template-columns:minmax(0,1.05fr) minmax(0,1fr);gap:48px;align-items:center}
+@media (max-width:900px){.hero{grid-template-columns:minmax(0,1fr)}}
+.hero-logo{display:flex;align-items:center;gap:14px;margin-bottom:28px}
+.hero-logo svg{width:64px;height:64px}
+.hero-logo .wm{font-family:var(--f-display);font-weight:800;font-size:30px;letter-spacing:-.02em;line-height:1}
+.hero-logo .wm span{color:var(--brand)}
+.hero-logo .tag{font-family:var(--f-display);font-size:13px;color:var(--muted);margin-top:4px;letter-spacing:.02em}
+.hero h1{font-size:clamp(40px,6vw,68px);font-weight:800;letter-spacing:-.035em;line-height:1.02}
+.hero h1 em{font-style:normal;color:var(--brand)}
+.hero .lede{font-size:22px;color:var(--ink-2);margin-top:22px;max-width:560px}
+.hero-meta{display:flex;flex-wrap:wrap;gap:8px 20px;margin-top:26px;font-family:var(--f-display);font-size:14px;color:var(--muted)}
+.hero-meta b{color:var(--ink);font-weight:600}
+.notice{margin-top:28px;display:flex;gap:10px;padding:12px 14px;border-radius:10px;background:var(--warn-bg);color:var(--warn-ink);font-family:var(--f-display);font-size:14px;line-height:1.45;max-width:560px}
+.notice svg{flex:none;width:18px;height:18px;margin-top:1px}
+
+.hemi-card{background:var(--surface);border:1px solid var(--line);border-radius:18px;padding:22px;box-shadow:var(--shadow);font-family:var(--f-display)}
+.hemi-card .bill-id{font-family:var(--f-mono);font-size:12px;color:var(--muted)}
+.hemi-card h3{font-size:19px;margin-top:4px}
+.hemi-wrap{position:relative;margin-top:14px}
+.hemi-wrap svg{width:100%;height:auto;display:block}
+.hemi-center{position:absolute;left:0;right:0;bottom:4px;text-align:center}
+.hemi-center .big{font-size:30px;font-weight:800;letter-spacing:-.02em}
+.hemi-center .small{font-size:12px;color:var(--muted)}
+.legend{display:flex;flex-wrap:wrap;gap:6px 14px;font-family:var(--f-display);font-size:13px;color:var(--ink-2)}
+.legend i{display:inline-block;width:10px;height:10px;border-radius:50%;margin-right:6px;vertical-align:-1px}
+.legend i.ring{background:transparent!important;box-shadow:inset 0 0 0 2px var(--v-absent)}
+.split-bars{display:grid;gap:12px;margin-top:16px;padding-top:16px;border-top:1px solid var(--line)}
+.sbar-row{display:grid;grid-template-columns:118px 1fr;gap:10px;align-items:center;font-size:13px}
+.sbar-row .lbl{color:var(--ink-2);line-height:1.2}
+.sbar-row .lbl b{display:block;color:var(--ink);font-weight:600}
+.sbar{display:flex;height:22px;gap:2px;border-radius:5px;overflow:hidden}
+.sbar span{display:flex;align-items:center;justify-content:center;color:#fff;font-size:11.5px;font-weight:600;min-width:0;white-space:nowrap;overflow:hidden}
+.sbar .f{background:var(--v-for)} .sbar .a{background:var(--v-against)} .sbar .n{background:var(--v-abstain);color:var(--ink)}
+.verdict{margin-top:14px;display:flex;align-items:center;gap:8px;font-size:13.5px;color:var(--ink-2)}
+.chip{display:inline-flex;align-items:center;gap:6px;padding:3px 9px;border-radius:999px;font-family:var(--f-display);font-size:12px;font-weight:600;line-height:1.5;border:1px solid var(--line-strong);color:var(--ink-2);background:var(--surface)}
+.chip.gap{background:var(--warn-bg);color:var(--warn-ink);border-color:transparent}
+.chip.ok{background:var(--brand-soft);color:var(--brand);border-color:transparent}
+:root[data-theme="dark"] .chip.ok{color:var(--link)}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]) .chip.ok{color:var(--link)}}
+
+/* ---------- pillars ---------- */
+.pillars{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:14px;margin-top:8px}
+@media (max-width:980px){.pillars{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media (max-width:520px){.pillars{grid-template-columns:minmax(0,1fr)}}
+.pillar{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:18px;display:grid;gap:8px;align-content:start}
+.pillar .verb{font-family:var(--f-display);font-size:26px;font-weight:800;letter-spacing:-.02em;color:var(--brand)}
+.pillar p{font-size:16px;line-height:1.5;color:var(--ink-2)}
+.pillar .src{font-family:var(--f-display);font-size:12.5px;color:var(--muted);border-top:1px dashed var(--line);padding-top:8px;margin-top:4px}
+
+/* ---------- tables ---------- */
+.tbl-wrap{overflow-x:auto;margin-top:24px;border:1px solid var(--line);border-radius:14px;background:var(--surface)}
+table.cmp{border-collapse:collapse;width:100%;min-width:620px;font-family:var(--f-display);font-size:14.5px;line-height:1.45}
+table.cmp th,table.cmp td{text-align:left;padding:12px 16px;border-bottom:1px solid var(--line);vertical-align:top}
+table.cmp thead th{font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);font-weight:600;background:var(--surface-2)}
+table.cmp tbody th{font-weight:600;color:var(--ink);width:150px}
+table.cmp td.old{color:var(--muted)}
+table.cmp tr:last-child>*{border-bottom:0}
+
+/* ---------- diagram ---------- */
+figure{margin:28px 0 0}
+figure .fig{overflow-x:auto;background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:18px}
+figure svg{display:block;width:100%;height:auto;min-width:720px;color:var(--ink)}
+figcaption{font-family:var(--f-display);font-size:14px;color:var(--muted);margin-top:10px;max-width:680px}
+
+/* ---------- mockup frames ---------- */
+.mock{margin-top:32px;border-radius:14px;border:1px solid var(--line-strong);background:var(--surface);box-shadow:var(--shadow);overflow:hidden;font-family:var(--f-display);font-size:15px;line-height:1.45}
+.mock-bar{display:flex;align-items:center;gap:12px;padding:9px 14px;background:var(--surface-2);border-bottom:1px solid var(--line)}
+.mock-bar .dots{display:flex;gap:6px}
+.mock-bar .dots i{width:10px;height:10px;border-radius:50%;background:var(--line-strong)}
+.mock-bar .url{flex:1;min-width:0;background:var(--surface);border:1px solid var(--line);border-radius:7px;padding:3px 10px;font-family:var(--f-mono);font-size:12px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.mock-label{display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap;margin-top:32px;font-family:var(--f-display);font-size:13px;color:var(--muted)}
+.mock-label b{color:var(--ink);font-weight:600}
+.mock-label+.mock{margin-top:10px}
+.app-nav{display:flex;align-items:center;gap:18px;padding:12px 20px;border-bottom:1px solid var(--line);flex-wrap:wrap}
+.app-nav .logo{display:flex;align-items:center;gap:8px;font-weight:800}
+.app-nav .logo svg{width:24px;height:24px}
+.app-nav a{color:var(--ink-2);text-decoration:none;font-size:14px}
+.app-nav a.on{color:var(--ink);font-weight:600;box-shadow:inset 0 -2px 0 var(--brand);padding-bottom:3px}
+.app-nav .me{margin-left:auto;display:flex;align-items:center;gap:8px;font-size:13px;color:var(--muted)}
+.avatar{width:28px;height:28px;border-radius:50%;display:inline-grid;place-items:center;font-size:12px;font-weight:700;color:#fff;flex:none}
+
+/* bill page */
+.bill{display:grid;grid-template-columns:minmax(0,1fr) 320px;gap:0}
+@media (max-width:880px){.bill{grid-template-columns:minmax(0,1fr)}}
+.bill-main{padding:22px 24px;border-right:1px solid var(--line);min-width:0}
+@media (max-width:880px){.bill-main{border-right:0;border-bottom:1px solid var(--line)}}
+.bill-crumbs{display:flex;flex-wrap:wrap;gap:6px 10px;align-items:center;font-size:13px;color:var(--muted)}
+.bill-main h3{font-size:25px;margin-top:10px;letter-spacing:-.015em}
+.stages{display:flex;gap:4px;margin-top:16px;flex-wrap:wrap}
+.stage{flex:1 1 110px;padding:8px 10px;border-radius:8px;background:var(--surface-2);font-size:12.5px;line-height:1.3;color:var(--muted)}
+.stage b{display:block;color:var(--ink-2);font-weight:600;font-size:13px}
+.stage.done{background:var(--brand-soft)} .stage.done b{color:var(--ink)}
+.stage.next{outline:2px solid var(--brand);outline-offset:-2px;background:var(--surface)} .stage.next b{color:var(--ink)}
+.tabs{display:flex;gap:4px;margin-top:20px;border-bottom:1px solid var(--line);overflow-x:auto}
+.tabs button{font:inherit;font-size:14px;background:none;border:0;padding:9px 12px;color:var(--ink-2);cursor:pointer;border-bottom:2px solid transparent;margin-bottom:-1px;white-space:nowrap}
+.tabs button[aria-selected="true"]{color:var(--ink);font-weight:600;border-bottom-color:var(--brand)}
+.tabpanel{padding-top:16px}
+.ai-flag{display:flex;flex-wrap:wrap;align-items:center;gap:8px;font-size:12.5px;color:var(--muted);margin-bottom:12px}
+.ai-flag .chip{font-size:11.5px}
+.sum-list{display:grid;gap:10px;margin:0;padding:0;list-style:none}
+.sum-list li{display:grid;grid-template-columns:22px 1fr;gap:8px;font-size:15px}
+.sum-list li::before{content:"";width:8px;height:8px;border-radius:2px;background:var(--brand);margin:8px 0 0 6px}
+.cite{font-family:var(--f-mono);font-size:11px;color:var(--link);background:var(--brand-soft);border-radius:4px;padding:0 5px;margin-left:4px;white-space:nowrap}
+.who{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;margin-top:16px}
+@media (max-width:560px){.who{grid-template-columns:minmax(0,1fr)}}
+.who div{background:var(--surface-2);border-radius:10px;padding:10px 12px;font-size:13px;color:var(--ink-2)}
+.who b{display:block;font-size:20px;color:var(--ink);letter-spacing:-.01em}
+.args{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+@media (max-width:560px){.args{grid-template-columns:1fr}}
+.args h4{font-size:14px;display:flex;align-items:center;gap:8px}
+.args h4 i{width:10px;height:10px;border-radius:50%}
+.args ul{margin:8px 0 0;padding-left:18px;font-size:14px;color:var(--ink-2)}
+.args li+li{margin-top:6px}
+.diff{font-family:var(--f-mono);font-size:12.5px;line-height:1.6;background:var(--surface-2);border-radius:10px;padding:12px 14px;overflow-x:auto}
+.diff del{color:var(--v-against);text-decoration:line-through}
+.diff ins{color:var(--v-for);text-decoration:none;font-weight:500}
+.tl{list-style:none;margin:0;padding:0;display:grid;gap:0}
+.tl li{display:grid;grid-template-columns:92px 14px 1fr;gap:12px;font-size:14px;padding-bottom:12px;position:relative}
+.tl li .d{font-family:var(--f-mono);font-size:12px;color:var(--muted);padding-top:2px}
+.tl li .dot{width:12px;height:12px;border-radius:50%;background:var(--surface);border:2px solid var(--line-strong);margin-top:5px;position:relative;z-index:1}
+.tl li.done .dot{background:var(--brand);border-color:var(--brand)}
+.tl li::after{content:"";position:absolute;left:111px;top:18px;bottom:0;width:2px;background:var(--line)}
+.tl li:last-child::after{display:none}
+
+.bill-side{padding:22px 20px;background:color-mix(in oklab,var(--surface-2) 45%,var(--surface));display:grid;gap:16px;align-content:start}
+.side-h{font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);font-weight:600}
+.deadline{display:flex;justify-content:space-between;align-items:baseline;font-size:13px;color:var(--ink-2)}
+.deadline b{font-size:17px;color:var(--ink)}
+.my-status{border-radius:12px;padding:12px 14px;border:1px solid var(--line);background:var(--surface);font-size:13.5px;line-height:1.45}
+.my-status .st{display:flex;align-items:center;gap:8px;font-weight:600;font-size:14px}
+.my-status .st i{width:10px;height:10px;border-radius:50%;flex:none}
+.vote-btns{display:grid;grid-template-columns:repeat(3,1fr);gap:6px}
+.vote-btns button{font:inherit;font-size:14px;font-weight:600;padding:10px 6px;border-radius:9px;border:1.5px solid var(--line-strong);background:var(--surface);color:var(--ink);cursor:pointer;transition:background .15s,border-color .15s}
+.vote-btns button:hover{border-color:var(--ink-2)}
+.vote-btns button[aria-pressed="true"][data-v="for"]{background:var(--v-for);border-color:var(--v-for);color:#fff}
+.vote-btns button[aria-pressed="true"][data-v="against"]{background:var(--v-against);border-color:var(--v-against);color:#fff}
+.vote-btns button[aria-pressed="true"][data-v="abstain"]{background:var(--v-abstain);border-color:var(--v-abstain);color:var(--ink)}
+.linkbtn{font:inherit;font-size:13px;background:none;border:0;padding:0;color:var(--link);cursor:pointer;text-decoration:underline;text-underline-offset:3px}
+.seg{display:inline-flex;background:var(--surface-2);border-radius:9px;padding:3px;gap:2px}
+.seg button{font:inherit;font-size:12.5px;border:0;background:none;padding:5px 10px;border-radius:7px;color:var(--ink-2);cursor:pointer}
+.seg button[aria-pressed="true"]{background:var(--surface);color:var(--ink);font-weight:600;box-shadow:0 1px 2px rgba(0,0,0,.08)}
+.tally{display:grid;gap:10px}
+.tally .row{display:grid;gap:5px;font-size:13px}
+.tally .row .top{display:flex;justify-content:space-between;color:var(--ink-2)}
+.tally .row .top b{color:var(--ink)}
+.tally .note{font-size:12px;color:var(--muted);line-height:1.4}
+
+/* annotations */
+.annot{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:14px 24px;margin-top:18px;font-family:var(--f-display);font-size:14.5px;line-height:1.45;color:var(--ink-2)}
+.annot div{display:grid;grid-template-columns:26px 1fr;gap:8px}
+.annot .n{width:22px;height:22px;border-radius:50%;background:var(--ink);color:var(--bg);font-size:12px;font-weight:700;display:grid;place-items:center}
+.annot b{color:var(--ink)}
+
+/* delegation simulator */
+.sim{margin-top:32px;display:grid;grid-template-columns:minmax(0,1.1fr) minmax(0,1fr);gap:0;border:1px solid var(--line-strong);border-radius:16px;overflow:hidden;background:var(--surface);box-shadow:var(--shadow);font-family:var(--f-display);font-size:14.5px}
+@media (max-width:900px){.sim{grid-template-columns:minmax(0,1fr)}}
+.sim-cfg{padding:22px;border-right:1px solid var(--line);display:grid;gap:18px;align-content:start}
+@media (max-width:900px){.sim-cfg{border-right:0;border-bottom:1px solid var(--line)}}
+.sim-out{padding:22px;background:color-mix(in oklab,var(--surface-2) 55%,var(--surface));display:grid;gap:14px;align-content:start}
+.topics{display:flex;flex-wrap:wrap;gap:6px}
+.topics button{font:inherit;font-size:13.5px;padding:6px 12px;border-radius:999px;border:1px solid var(--line-strong);background:var(--surface);color:var(--ink-2);cursor:pointer}
+.topics button[aria-pressed="true"]{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+.ladder{display:grid;gap:10px}
+.rung{border:1px solid var(--line);border-radius:12px;padding:12px 14px;display:grid;gap:10px;background:var(--surface)}
+.rung-h{display:flex;justify-content:space-between;align-items:baseline;gap:10px;flex-wrap:wrap}
+.rung-h .t{font-weight:700;font-size:14px}
+.rung-h .t small{font-weight:500;color:var(--muted);font-size:12.5px;margin-left:6px}
+.dlg{display:grid;grid-template-columns:28px minmax(0,1fr) auto;gap:10px;align-items:center}
+.dlg .nm{line-height:1.25;min-width:0}
+.dlg .nm b{font-weight:600;display:inline-flex;align-items:center;gap:5px}
+.dlg .nm small{display:block;color:var(--muted);font-size:12px}
+.badge-v{width:14px;height:14px;flex:none}
+.wt{font-family:var(--f-mono);font-size:12px;color:var(--muted);background:var(--surface-2);padding:1px 6px;border-radius:5px}
+select{font:inherit;font-size:13px;padding:5px 8px;border-radius:8px;border:1px solid var(--line-strong);background:var(--surface);color:var(--ink);max-width:100%}
+.ctl-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+@media (max-width:480px){.ctl-grid{grid-template-columns:minmax(0,1fr)}}
+.ctl{display:grid;gap:4px;font-size:12.5px;color:var(--muted)}
+.trace{list-style:none;margin:0;padding:0;display:grid;gap:8px}
+.trace li{display:grid;grid-template-columns:24px 1fr;gap:10px;font-size:14px;line-height:1.4;padding:10px 12px;border-radius:10px;background:var(--surface);border:1px solid var(--line)}
+.trace li .ic{width:22px;height:22px;border-radius:50%;display:grid;place-items:center;font-size:12px;font-weight:700;background:var(--surface-3);color:var(--ink-2)}
+.trace li.hit{border-color:var(--brand)}
+.trace li.hit .ic{background:var(--brand);color:var(--brand-ink)}
+.trace li.skip{opacity:.62}
+.trace li.pend .ic{background:var(--warn-bg);color:var(--warn-ink)}
+.result{border-radius:12px;padding:14px;background:var(--surface);border:1px solid var(--line-strong);display:grid;gap:10px}
+.result .h{font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);font-weight:600}
+.result .v{font-size:22px;font-weight:800;letter-spacing:-.01em}
+.result .sbar{height:26px}
+
+/* rules */
+.rules{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px;margin-top:28px}
+@media (max-width:720px){.rules{grid-template-columns:minmax(0,1fr)}}
+.rule{border-top:2px solid var(--ink);padding-top:12px}
+.rule h4{font-size:16px}
+.rule p{font-size:16.5px;color:var(--ink-2);margin-top:6px;line-height:1.5}
+
+/* politician profile */
+.prof{display:grid;grid-template-columns:300px minmax(0,1fr);gap:0}
+@media (max-width:880px){.prof{grid-template-columns:minmax(0,1fr)}}
+.prof-side{padding:22px;border-right:1px solid var(--line);display:grid;gap:14px;align-content:start}
+@media (max-width:880px){.prof-side{border-right:0;border-bottom:1px solid var(--line)}}
+.prof-id{display:flex;gap:14px;align-items:center}
+.prof-id .avatar{width:64px;height:64px;font-size:22px}
+.prof-id h3{font-size:21px;display:flex;align-items:center;gap:6px}
+.prof-id h3 svg{width:20px;height:20px}
+.prof-id p{font-size:13px;color:var(--muted);margin-top:2px}
+.verified{display:flex;gap:8px;align-items:flex-start;font-size:12.5px;line-height:1.4;color:var(--ink-2);background:var(--brand-soft);border-radius:10px;padding:10px 12px}
+.verified svg{width:16px;height:16px;flex:none;margin-top:1px}
+.kv{display:grid;grid-template-columns:1fr auto;gap:8px 12px;font-size:13.5px;color:var(--ink-2)}
+.kv b{color:var(--ink);text-align:right}
+.trust{display:grid;gap:8px}
+.trust .r{display:grid;grid-template-columns:96px 1fr 52px;gap:8px;align-items:center;font-size:13px;color:var(--ink-2)}
+.trust .bar{height:8px;border-radius:4px;background:var(--surface-2);overflow:hidden}
+.trust .bar span{display:block;height:100%;background:var(--brand);border-radius:4px}
+.trust .r b{text-align:right;color:var(--ink);font-variant-numeric:tabular-nums}
+.prof-main{padding:22px;display:grid;gap:14px;align-content:start;min-width:0}
+.vrec{border:1px solid var(--line);border-radius:12px;padding:14px;display:grid;gap:10px}
+.vrec-h{display:flex;justify-content:space-between;align-items:flex-start;gap:10px;flex-wrap:wrap}
+.vrec-h .t{font-weight:600;font-size:15px}
+.vrec-h .t small{display:block;font-family:var(--f-mono);font-size:11.5px;color:var(--muted);font-weight:400}
+.vpill{display:inline-flex;align-items:center;gap:6px;padding:3px 10px;border-radius:999px;font-size:12px;font-weight:700;color:#fff}
+.vpill.for{background:var(--v-for)} .vpill.against{background:var(--v-against)} .vpill.abstain{background:var(--v-abstain);color:var(--ink)}
+.cmp3{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;font-size:12.5px;color:var(--muted)}
+.cmp3>div{background:var(--surface-2);border-radius:8px;padding:8px 10px;display:grid;gap:4px}
+.cmp3 b{color:var(--ink);font-size:13.5px}
+.explain{font-family:var(--f-body);font-size:15.5px;line-height:1.5;color:var(--ink-2);border-left:3px solid var(--brand);padding-left:12px}
+
+/* incentive list */
+.incent{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:0;margin-top:28px;border-top:1px solid var(--line)}
+@media (max-width:720px){.incent{grid-template-columns:minmax(0,1fr)}}
+.incent>div{padding:18px 18px 18px 0;border-bottom:1px solid var(--line);display:grid;gap:6px;align-content:start}
+.incent>div:nth-child(odd){padding-right:28px}
+@media (min-width:721px){.incent>div:nth-child(even){padding-left:28px;border-left:1px solid var(--line)}}
+.incent h4{font-size:17px}
+.incent p{font-size:16.5px;color:var(--ink-2);line-height:1.5}
+.incent .for{font-family:var(--f-display);font-size:12px;color:var(--muted);letter-spacing:.04em}
+
+/* dashboard */
+.dash{padding:20px;display:grid;grid-template-columns:repeat(12,minmax(0,1fr));gap:14px}
+.panel{grid-column:span 12;border:1px solid var(--line);border-radius:12px;padding:16px;display:grid;gap:12px;align-content:start;min-width:0}
+.panel .ph{display:flex;justify-content:space-between;align-items:baseline;gap:10px;flex-wrap:wrap}
+.panel .ph h4{font-size:15px}
+.panel .ph span{font-size:12px;color:var(--muted)}
+@media (min-width:900px){.span-7{grid-column:span 7}.span-5{grid-column:span 5}}
+.filters{grid-column:span 12;display:flex;flex-wrap:wrap;gap:8px;align-items:center;font-size:13px;color:var(--muted)}
+.kpis{grid-column:span 12;display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:14px}
+@media (max-width:760px){.kpis{grid-template-columns:repeat(2,minmax(0,1fr))}}
+.kpi{border:1px solid var(--line);border-radius:12px;padding:14px;display:grid;gap:2px}
+.kpi .k{font-size:12px;color:var(--muted)}
+.kpi .v{font-size:28px;font-weight:800;letter-spacing:-.02em;font-variant-numeric:tabular-nums}
+.kpi .s{font-size:12px;color:var(--ink-2)}
+.dots-chart{overflow-x:auto}
+.dots-chart svg{width:100%;height:auto;display:block;min-width:480px}
+.cohesion{display:grid;gap:9px}
+.coh{display:grid;grid-template-columns:110px 1fr 44px;gap:10px;align-items:center;font-size:13px}
+.coh .bar{height:14px;background:var(--surface-2);border-radius:0 4px 4px 0;position:relative}
+.coh .bar span{position:absolute;left:0;top:0;bottom:0;background:var(--ink-2);border-radius:0 4px 4px 0}
+.coh b{text-align:right;font-variant-numeric:tabular-nums}
+.match-list{display:grid;gap:8px}
+.match{display:grid;grid-template-columns:28px minmax(0,1fr) 110px 44px;gap:10px;align-items:center;font-size:13.5px}
+.match .nm small{display:block;color:var(--muted);font-size:12px}
+.match .bar{height:8px;background:var(--surface-2);border-radius:4px;overflow:hidden}
+.match .bar span{display:block;height:100%;background:var(--brand)}
+.match b{text-align:right;font-variant-numeric:tabular-nums}
+.tview{font-size:12.5px}
+.tview summary{cursor:pointer;color:var(--link)}
+.tview table{border-collapse:collapse;margin-top:8px;width:100%;font-variant-numeric:tabular-nums}
+.tview th,.tview td{text-align:left;padding:4px 8px;border-bottom:1px solid var(--line)}
+
+/* phone */
+.phones{display:flex;flex-wrap:wrap;gap:28px;margin-top:32px;align-items:flex-start}
+.phone{width:320px;max-width:100%;border-radius:34px;border:8px solid var(--ink);background:var(--surface);box-shadow:var(--shadow);overflow:hidden;font-family:var(--f-display);font-size:14px}
+.phone .notch{height:24px;display:flex;justify-content:center;align-items:center;background:var(--surface)}
+.phone .notch i{width:84px;height:6px;border-radius:3px;background:var(--line-strong)}
+.phone .scr{padding:6px 16px 18px;display:grid;gap:12px}
+.phone h4{font-size:19px;letter-spacing:-.01em}
+.phone .sub{font-size:12.5px;color:var(--muted)}
+.cand{display:grid;grid-template-columns:36px minmax(0,1fr) auto;gap:10px;align-items:center;padding:10px;border:1px solid var(--line);border-radius:12px}
+.cand .avatar{width:36px;height:36px}
+.cand .nm{line-height:1.25;min-width:0}
+.cand .nm b{font-weight:600;display:inline-flex;gap:4px;align-items:center}
+.cand .nm small{display:block;color:var(--muted);font-size:11.5px}
+.cand .pct{font-size:18px;font-weight:800;font-variant-numeric:tabular-nums}
+.cand .basis{grid-column:2/4;font-size:11.5px;color:var(--muted);display:flex;gap:6px;flex-wrap:wrap}
+.qcard{border:1px solid var(--line);border-radius:12px;padding:12px;display:grid;gap:10px}
+.qcard .q{font-weight:600;line-height:1.3}
+.qcard .ans{display:grid;grid-template-columns:repeat(3,1fr);gap:6px}
+.qcard .ans span{text-align:center;padding:7px 4px;border:1px solid var(--line-strong);border-radius:8px;font-size:12.5px}
+.qcard .ans span.sel{background:var(--v-for);border-color:var(--v-for);color:#fff;font-weight:600}
+.phone-note{flex:1 1 300px;min-width:0;font-size:18px}
+
+/* architecture + roadmap */
+.adapters{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:14px;margin-top:28px}
+@media (max-width:900px){.adapters{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media (max-width:480px){.adapters{grid-template-columns:minmax(0,1fr)}}
+.adapter{border:1px solid var(--line);border-radius:12px;padding:16px;background:var(--surface);display:grid;gap:8px;align-content:start;font-family:var(--f-display)}
+.adapter h4{font-size:16px}
+.adapter .src{font-family:var(--f-mono);font-size:11.5px;color:var(--muted);word-break:break-word}
+.adapter p{font-size:14px;color:var(--ink-2);line-height:1.45}
+.adapter .lvl{font-size:12px;font-weight:600}
+.road{margin-top:28px;display:grid;gap:0;border-left:2px solid var(--line);margin-left:6px}
+.road>div{display:grid;grid-template-columns:150px minmax(0,1fr);gap:18px;padding:0 0 26px 22px;position:relative}
+@media (max-width:620px){.road>div{grid-template-columns:minmax(0,1fr);gap:4px}}
+.road>div::before{content:"";position:absolute;left:-8px;top:6px;width:14px;height:14px;border-radius:50%;background:var(--bg);border:2px solid var(--brand)}
+.road>div.now::before{background:var(--brand)}
+.road .when{font-family:var(--f-display);font-weight:700;font-size:15px}
+.road .when small{display:block;font-weight:500;color:var(--muted);font-size:12.5px}
+.road h4{font-size:17px}
+.road p{font-size:16.5px;color:var(--ink-2);margin-top:4px;line-height:1.5}
+.road .milestone{display:inline-block;margin-top:8px}
+
+.qs{counter-reset:q;display:grid;gap:14px;margin-top:24px;padding:0;list-style:none}
+.qs li{counter-increment:q;display:grid;grid-template-columns:38px minmax(0,1fr);gap:10px;font-size:18px}
+.qs li::before{content:"Q" counter(q);font-family:var(--f-mono);font-size:13px;color:var(--brand);padding-top:5px}
+.qs li small{display:block;font-family:var(--f-display);font-size:13.5px;color:var(--muted);margin-top:2px}
+
+.two{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:28px;margin-top:24px}
+@media (max-width:760px){.two{grid-template-columns:minmax(0,1fr)}}
+.box{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:20px;display:grid;gap:10px;align-content:start}
+.box h4{font-size:17px}
+.box ul{margin:0;padding-left:18px;font-size:16.5px;color:var(--ink-2);line-height:1.5}
+.box li+li{margin-top:6px}
+
+footer.end{margin-top:96px;padding-top:28px;border-top:1px solid var(--line);font-family:var(--f-display);font-size:13.5px;color:var(--muted);display:flex;flex-wrap:wrap;gap:10px 28px;align-items:center}
+footer.end svg{width:28px;height:28px}
+
+/* tooltip */
+#tip{position:fixed;z-index:50;pointer-events:none;background:var(--ink);color:var(--bg);font-family:var(--f-display);font-size:12.5px;line-height:1.4;padding:7px 10px;border-radius:8px;max-width:240px;opacity:0;transform:translateY(4px);transition:opacity .12s,transform .12s}
+#tip.on{opacity:1;transform:none}
+</style>
+
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <defs>
+    <symbol id="logo" viewBox="0 0 48 48">
+      <path d="M8 3h19a5 5 0 0 1 5 5v11a5 5 0 0 1-5 5H13l-7 6v-6.4A5 5 0 0 1 3 19V8a5 5 0 0 1 5-5z" fill="var(--slate)"/>
+      <path d="M22 10h20a5 5 0 0 1 5 5v12a5 5 0 0 1-5 5H29l-7 6v-6.3A5 5 0 0 1 17 27V15a5 5 0 0 1 5-5z" fill="var(--leaf)" stroke="var(--bg)" stroke-width="2"/>
+      <path d="M11 22h17a5 5 0 0 1 5 5v10a5 5 0 0 1-5 5H17l-7 5.5v-5.8A5 5 0 0 1 6 37V27a5 5 0 0 1 5-5z" fill="var(--brand)" stroke="var(--bg)" stroke-width="2"/>
+    </symbol>
+    <symbol id="vbadge" viewBox="0 0 20 20">
+      <path d="M10 1.5l2.2 1.6 2.7-.1.9 2.6 2.2 1.6-.8 2.6.8 2.6-2.2 1.6-.9 2.6-2.7-.1L10 18.5l-2.2-1.6-2.7.1-.9-2.6-2.2-1.6.8-2.6-.8-2.6 2.2-1.6.9-2.6 2.7.1z" fill="var(--brand)"/>
+      <path d="M6.6 10.2l2.3 2.3 4.6-4.8" fill="none" stroke="#fff" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+    </symbol>
+  </defs>
+</svg>
+
+<div class="topbar">
+  <a class="brandmark" href="#top"><svg aria-hidden="true"><use href="#logo"/></svg>Lietuva 2.0</a>
+  <nav aria-label="Sections">
+    <a href="#idea">Idea</a><a href="#bill">Bill page</a><a href="#delegation">Delegation</a><a href="#politicians">Politicians</a><a href="#analytics">Analytics</a><a href="#elections">Elections</a><a href="#roadmap">Roadmap</a>
+  </nav>
+</div>
+
+<div class="layout" id="top">
+  <aside class="toc" aria-label="Contents">
+    <div class="eyebrow">Contents</div>
+    <ol>
+      <li><a href="#idea">The idea</a></li>
+      <li><a href="#why">Why this, why now</a></li>
+      <li><a href="#legacy">From 2.0 then to 2.0 now</a></li>
+      <li><a href="#lifecycle">Life of a bill</a></li>
+      <li><a href="#bill">The bill page</a></li>
+      <li><a href="#delegation">Vote delegation</a></li>
+      <li><a href="#politicians">Politicians on board</a></li>
+      <li><a href="#analytics">Analytics</a></li>
+      <li><a href="#elections">Election mode</a></li>
+      <li><a href="#beyond">Beyond the Seimas</a></li>
+      <li><a href="#trust">Trust and privacy</a></li>
+      <li><a href="#roadmap">Roadmap</a></li>
+      <li><a href="#feedback">Your feedback</a></li>
+    </ol>
+  </aside>
+
+  <main>
+    <!-- HERO -->
+    <section class="hero">
+      <div>
+        <div class="hero-logo">
+          <svg aria-label="Lietuva 2.0 logo" role="img"><use href="#logo"/></svg>
+          <div><div class="wm">Lietuva <span>2.0</span></div><div class="tag">Parliament monitoring and public engagement</div></div>
+        </div>
+        <h1>See how the Seimas votes. <em>Then cast your own vote.</em></h1>
+        <p class="lede">Lietuva 2.0 turns every bill in the Seimas into something a citizen can read in two minutes, vote on, or hand to someone they trust. Then it shows, vote by vote, how far Parliament is from the people it represents.</p>
+        <div class="hero-meta"><span><b>Whitepaper</b> · draft for discussion</span><span><b>September 2026</b></span><span>Open source · GPL-3.0</span></div>
+        <div class="notice" role="note">
+          <svg viewBox="0 0 20 20" aria-hidden="true"><circle cx="10" cy="10" r="8.5" fill="none" stroke="currentColor" stroke-width="1.6"/><path d="M10 5.5v5.5M10 13.6v.9" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
+          <span>All MPs, factions, bills and numbers in this paper are fictional. They show what the product would look like, not how any real politician voted.</span>
+        </div>
+      </div>
+
+      <div class="hemi-card" aria-label="Example result card">
+        <div class="bill-id">XVP-0412 · Final vote (Priėmimas)</div>
+        <h3>Amendment to the Law on Personal Income Tax</h3>
+        <div class="hemi-wrap">
+          <svg id="hemi" viewBox="0 0 440 236" role="img" aria-label="Seat chart of 141 Seimas members: 78 for, 41 against, 12 abstained, 10 did not vote"></svg>
+          <div class="hemi-center"><div class="big tnum">78 : 41</div><div class="small">Adopted</div></div>
+        </div>
+        <div class="legend" style="margin-top:10px">
+          <span><i style="background:var(--v-for)"></i>For</span>
+          <span><i style="background:var(--v-against)"></i>Against</span>
+          <span><i style="background:var(--v-abstain)"></i>Abstained</span>
+          <span><i class="ring"></i>Did not vote</span>
+        </div>
+        <div class="split-bars">
+          <div class="sbar-row"><div class="lbl"><b>Seimas</b>131 MPs voting</div>
+            <div class="sbar" data-tip="Seimas: 60% for, 31% against, 9% abstained"><span class="f" style="flex:78">60%</span><span class="a" style="flex:41">31%</span><span class="n" style="flex:12"></span></div></div>
+          <div class="sbar-row"><div class="lbl"><b>Lietuva 2.0</b>33,780 votes</div>
+            <div class="sbar" data-tip="Platform, incl. delegated votes: 44% for, 49% against, 7% abstained"><span class="f" style="flex:44">44%</span><span class="a" style="flex:49">49%</span><span class="n" style="flex:7"></span></div></div>
+        </div>
+        <div class="verdict"><span class="chip gap">Gap: 16 points</span> The Seimas adopted a bill that most platform users opposed.</div>
+      </div>
+    </section>
+
+    <!-- 1 IDEA -->
+    <section class="chapter" id="idea">
+      <header>
+        <div class="eyebrow">01 · The idea</div>
+        <h2>A parliament monitor with a vote attached</h2>
+        <p class="lede">Lietuva 2.0 does four things, in this order. Each one works without the next, so the product is useful from the first release.</p>
+      </header>
+      <div class="pillars">
+        <div class="pillar"><div class="verb">Follow</div><p>Every bill registered in the Seimas appears automatically, with its stage, its next vote and how each MP and faction voted so far.</p><div class="src">Seimas open data, e-seimas.lrs.lt</div></div>
+        <div class="pillar"><div class="verb">Understand</div><p>An AI summary explains what changes, who is affected and the main arguments on both sides, with every claim linked to the article it comes from.</p><div class="src">Generated once per bill version, editable by the community</div></div>
+        <div class="pillar"><div class="verb">Decide</div><p>Vote yourself, or let people you trust vote for you on topics you don't follow. Your own vote always wins.</p><div class="src">Delegation per topic: people first, then MPs or parties</div></div>
+        <div class="pillar"><div class="verb">Compare</div><p>See where the Seimas and its citizens agree, which factions vote as a block, and which MPs vote the way you would.</p><div class="src">Most useful in the months before an election</div></div>
+      </div>
+    </section>
+
+    <!-- 2 WHY -->
+    <section class="chapter" id="why">
+      <header>
+        <div class="eyebrow">02 · Why this, why now</div>
+        <h2>Everything is public, yet almost nobody reads it</h2>
+      </header>
+      <div class="prose">
+        <p>The Seimas already publishes a lot. Bills, amendments, agendas and every roll-call vote are online, some of them as machine-readable open data. But a bill is published as a legal diff against a law most people have never read. A single bill can be voted on a dozen times, from presentation (<i>pateikimas</i>) through consideration (<i>svarstymas</i>) to adoption (<i>priėmimas</i>), plus separate votes on amendments. The information exists, but few people can follow it.</p>
+        <p>So for four years most citizens judge Parliament from headlines, and then vote on one day. Politicians in turn hear from the loudest voices, not from a broad and steady signal.</p>
+        <p>Three things have changed since the first Lietuva 2.0:</p>
+        <ul>
+          <li><b>Language models can read legislation.</b> A neutral, sourced summary of a 40-page bill now costs cents and takes seconds. Ten years ago it needed a volunteer lawyer.</li>
+          <li><b>Delegation is a proven idea.</b> "Liquid democracy" tools have been tried by parties and cities across Europe. What was missing is a link to real parliamentary votes, so that a delegation actually means something.</li>
+          <li><b>The data exists.</b> The Seimas open-data services expose MPs, factions, sittings and individual votes. That lets us import Parliament's record directly instead of typing it in by hand.</li>
+        </ul>
+      </div>
+    </section>
+
+    <!-- 3 LEGACY -->
+    <section class="chapter" id="legacy">
+      <header>
+        <div class="eyebrow">03 · From 2.0 then to 2.0 now</div>
+        <h2>Same name, same mission, rebuilt from scratch</h2>
+        <p class="lede">The original Lietuva 2.0 already had the core loop: problems, ideas, issues to vote on and an "official result" to compare against. What held it back was manual work and heavy identity checks.</p>
+      </header>
+      <div class="tbl-wrap">
+        <table class="cmp">
+          <thead><tr><th scope="col"></th><th scope="col">Original Lietuva 2.0</th><th scope="col">Lietuva 2.0 now</th></tr></thead>
+          <tbody>
+            <tr><th scope="row">What you vote on</th><td class="old">Issues created by hand by users and organisations</td><td>Every bill imported automatically from the Seimas, and later from councils, the Government and the European Parliament</td></tr>
+            <tr><th scope="row">Parliament's result</th><td class="old">One "official vote" typed in by an administrator</td><td>Every MP's vote, per stage, imported the same day</td></tr>
+            <tr><th scope="row">Explanation</th><td class="old">A wiki summary written by volunteers</td><td>An AI draft with citations, corrected and extended by the community</td></tr>
+            <tr><th scope="row">Your vote</th><td class="old">Direct only</td><td>Direct, or delegated per topic to people, MPs or parties</td></tr>
+            <tr><th scope="row">Identity</th><td class="old">Bank or state e-ID login; personal code, address and document number stored with each vote</td><td>Email and phone. No personal codes stored. Verified badges for politicians and organisations</td></tr>
+            <tr><th scope="row">Results</th><td class="old">A single support percentage</td><td>Seimas vs citizens, faction cohesion, MP match scores, election mode</td></tr>
+            <tr><th scope="row">Technology</th><td class="old">ASP.NET MVC 3 on .NET 4.5, SQL Server and MongoDB</td><td>A modern web and mobile stack with an open public API</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="prose" style="margin-top:22px">
+        <p>We keep the ideas that worked: topic categories that people follow, arguments for and against attached to comments, versioned summaries, and the link from a citizen's idea to the vote that decides it. We do not port the old code.</p>
+      </div>
+    </section>
+
+    <!-- 4 LIFECYCLE -->
+    <section class="chapter" id="lifecycle">
+      <header>
+        <div class="eyebrow">04 · Life of a bill</div>
+        <h2>The public vote runs alongside the Seimas</h2>
+        <p class="lede">A bill opens for public voting the day it is registered and closes when the Seimas holds its final vote. That timing decides what "your vote" means at each moment.</p>
+      </header>
+      <figure>
+        <div class="fig">
+          <svg viewBox="0 0 960 300" role="img" aria-label="Timeline: the Seimas moves a bill from registration through presentation, consideration and adoption. In parallel, Lietuva 2.0 publishes a summary, opens voting, collects direct and delegate votes, sends a reminder before the final vote, freezes the public result, imports MP votes and resolves delegations to MPs.">
+            <defs>
+              <marker id="ar" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="currentColor"/></marker>
+            </defs>
+            <g font-family="Bricolage Grotesque, system-ui, sans-serif" font-size="12.5" fill="currentColor">
+              <text x="0" y="22" font-weight="700" font-size="13" letter-spacing=".06em">SEIMAS</text>
+              <line x1="0" y1="70" x2="950" y2="70" stroke="currentColor" stroke-opacity=".35" stroke-width="2"/>
+              <g>
+                <circle cx="60" cy="70" r="8" fill="currentColor"/><text x="60" y="48" text-anchor="middle" font-weight="600">Registered</text><text x="60" y="98" text-anchor="middle" opacity=".7">XVP-0412</text>
+                <circle cx="280" cy="70" r="8" fill="currentColor"/><text x="280" y="48" text-anchor="middle" font-weight="600">Presentation</text><text x="280" y="98" text-anchor="middle" opacity=".7">first vote</text>
+                <circle cx="500" cy="70" r="8" fill="currentColor"/><text x="500" y="48" text-anchor="middle" font-weight="600">Consideration</text><text x="500" y="98" text-anchor="middle" opacity=".7">committee + vote</text>
+                <circle cx="760" cy="70" r="10" fill="var(--brand)"/><text x="760" y="48" text-anchor="middle" font-weight="700">Adoption</text><text x="760" y="98" text-anchor="middle" opacity=".7">final vote</text>
+                <circle cx="920" cy="70" r="8" fill="none" stroke="currentColor" stroke-width="2"/><text x="920" y="48" text-anchor="middle" font-weight="600">Signed</text>
+              </g>
+              <text x="0" y="148" font-weight="700" font-size="13" letter-spacing=".06em" fill="var(--brand)">LIETUVA 2.0</text>
+              <rect x="60" y="176" width="700" height="34" rx="8" fill="var(--brand-soft)"/>
+              <text x="410" y="198" text-anchor="middle" font-weight="600">Public voting open: direct votes and votes from trusted people count live</text>
+              <rect x="760" y="176" width="190" height="34" rx="8" fill="none" stroke="var(--brand)" stroke-width="1.5" stroke-dasharray="4 3"/>
+              <text x="855" y="198" text-anchor="middle" font-weight="600">MP delegations resolve</text>
+              <line x1="60" y1="80" x2="60" y2="172" stroke="currentColor" stroke-opacity=".5" marker-end="url(#ar)"/>
+              <text x="68" y="136" opacity=".8">imports text, AI summary</text>
+              <line x1="280" y1="80" x2="280" y2="172" stroke="currentColor" stroke-opacity=".5" marker-end="url(#ar)"/>
+              <text x="288" y="136" opacity=".8">stage votes imported</text>
+              <line x1="680" y1="172" x2="680" y2="236" stroke="currentColor" stroke-opacity=".5"/>
+              <text x="680" y="252" text-anchor="middle" opacity=".8">reminder 48 h before:</text>
+              <text x="680" y="268" text-anchor="middle" opacity=".8">"your vote is delegated, check it"</text>
+              <line x1="760" y1="82" x2="760" y2="172" stroke="var(--brand)" stroke-width="2" marker-end="url(#ar)"/>
+              <text x="768" y="136" fill="var(--brand)" font-weight="600">MP votes imported</text>
+              <line x1="760" y1="210" x2="760" y2="236" stroke="currentColor" stroke-opacity=".5"/>
+              <text x="770" y="252" opacity=".8">public result frozen,</text>
+              <text x="770" y="268" opacity=".8">comparison published</text>
+            </g>
+          </svg>
+        </div>
+        <figcaption>Delegations to people count while voting is open. Delegations to MPs and parties can only resolve once the Seimas has voted, so every bill has a "before" result (the signal MPs see) and an "after" result (what citizens' chosen representatives actually did for them).</figcaption>
+      </figure>
+    </section>
+
+    <!-- 5 BILL PAGE -->
+    <section class="chapter" id="bill">
+      <header>
+        <div class="eyebrow">05 · The bill page</div>
+        <h2>Two minutes to understand, one tap to vote</h2>
+        <p class="lede">This is the page most people will see, usually from a shared link or a notification. It is interactive: switch the tabs, cast a vote, and compare the result before and after the Seimas vote.</p>
+      </header>
+
+      <div class="mock-label"><span><b>Mockup</b> · Bill page, desktop</span><span>Interactive</span></div>
+      <div class="mock">
+        <div class="mock-bar"><div class="dots"><i></i><i></i><i></i></div><div class="url">lietuva20.lt/seimas/XVP-0412</div></div>
+        <div class="app-nav">
+          <span class="logo"><svg aria-hidden="true"><use href="#logo"/></svg>Lietuva 2.0</span>
+          <a class="on">Seimas</a><a>Municipality</a><a>EU Parliament</a><a>My delegates</a>
+          <span class="me"><span class="avatar" style="background:#8a6d3b">DS</span>Economy · Education followed</span>
+        </div>
+        <div class="bill">
+          <div class="bill-main">
+            <div class="bill-crumbs"><span class="mono">XVP-0412</span><span class="chip">Economy</span><span class="chip">Taxes</span><span>Registered 14 Apr 2026 · Initiated by the Government</span></div>
+            <h3>Amendment to the Law on Personal Income Tax: progressive rate for incomes above 60 average wages</h3>
+            <div class="stages" aria-label="Legislative stages">
+              <div class="stage done"><b>Presentation</b>Passed 71 : 38</div>
+              <div class="stage done"><b>Committee</b>Budget and Finance</div>
+              <div class="stage done"><b>Consideration</b>Passed 74 : 44</div>
+              <div class="stage next"><b>Adoption</b><span id="stageTxt">Thu 24 Sep, 14:00</span></div>
+            </div>
+            <div class="tabs" role="tablist" aria-label="Bill sections">
+              <button role="tab" aria-selected="true" aria-controls="tp-sum" id="t-sum">AI summary</button>
+              <button role="tab" aria-selected="false" aria-controls="tp-chg" id="t-chg" tabindex="-1">What changes</button>
+              <button role="tab" aria-selected="false" aria-controls="tp-arg" id="t-arg" tabindex="-1">Arguments</button>
+              <button role="tab" aria-selected="false" aria-controls="tp-tl" id="t-tl" tabindex="-1">Timeline</button>
+            </div>
+            <div class="tabpanel" role="tabpanel" id="tp-sum" aria-labelledby="t-sum">
+              <div class="ai-flag"><span class="chip">AI-generated</span>From the text registered 3 Sep 2026 · reviewed by 4 community editors · <button class="linkbtn" type="button">Suggest a correction</button></div>
+              <ul class="sum-list">
+                <li><span>Adds a third income-tax band: income above 60 average monthly wages a year is taxed at 32% instead of 20%.<span class="cite">Art. 6(1)</span></span></li>
+                <li><span>Dividends and income from selling shares are counted towards the same threshold.<span class="cite">Art. 6(3)</span></span></li>
+                <li><span>Takes effect on 1 January 2027. Revenue goes to the state budget, with no earmarking.<span class="cite">Art. 3</span></span></li>
+              </ul>
+              <div class="who">
+                <div><b class="tnum">≈ 9,400</b>taxpayers affected (Ministry of Finance estimate)</div>
+                <div><b class="tnum">€ 118 m</b>expected extra revenue a year</div>
+                <div><b>Nobody</b>below the threshold pays less or more</div>
+              </div>
+            </div>
+            <div class="tabpanel" role="tabpanel" id="tp-chg" aria-labelledby="t-chg" hidden>
+              <div class="ai-flag"><span class="chip">Official text</span>Consolidated comparison with the law in force</div>
+              <div class="diff">Art. 6(1) The rate of income tax shall be 20 per cent, <del>except for income specified in paragraph 2</del><ins>except for income specified in paragraphs 2 and 2¹</ins>.<br><ins>2¹. Income exceeding 60 average monthly wages in a tax period shall be taxed at 32 per cent.</ins><br>Art. 6(3) <ins>Income referred to in Article 17(1)(8) shall be included when calculating the threshold in paragraph 2¹.</ins></div>
+            </div>
+            <div class="tabpanel" role="tabpanel" id="tp-arg" aria-labelledby="t-arg" hidden>
+              <div class="ai-flag"><span class="chip">AI-generated</span>Drawn from the explanatory note, committee conclusions and 212 user comments</div>
+              <div class="args">
+                <div><h4><i style="background:var(--v-for)"></i>For</h4><ul><li>High earners pay a lower effective rate than wage earners today.</li><li>Funds defence spending without raising VAT.</li><li>Close to rates in neighbouring countries.</li></ul></div>
+                <div><h4><i style="background:var(--v-against)"></i>Against</h4><ul><li>Encourages founders to move tax residence abroad.</li><li>Counting share sales hits one-off events such as selling a family business.</li><li>Revenue estimate assumes no change in behaviour.</li></ul></div>
+              </div>
+            </div>
+            <div class="tabpanel" role="tabpanel" id="tp-tl" aria-labelledby="t-tl" hidden>
+              <ol class="tl">
+                <li class="done"><span class="d">14 Apr</span><span class="dot"></span><span>Registered by the Government. Public voting opened on Lietuva 2.0.</span></li>
+                <li class="done"><span class="d">7 May</span><span class="dot"></span><span>Presentation vote passed 71 : 38. Platform at the time: 41% for.</span></li>
+                <li class="done"><span class="d">3 Sep</span><span class="dot"></span><span>Budget and Finance Committee amended Art. 6(3). Summary regenerated.</span></li>
+                <li class="done"><span class="d">15 Sep</span><span class="dot"></span><span>Consideration vote passed 74 : 44.</span></li>
+                <li><span class="d">24 Sep</span><span class="dot"></span><span>Final vote (adoption). Public result will be frozen.</span></li>
+              </ol>
+            </div>
+          </div>
+
+          <div class="bill-side">
+            <div class="deadline"><span class="side-h">Your vote</span><span>closes in <b class="tnum" id="closes">22 h</b></span></div>
+            <div class="my-status" id="myStatus"></div>
+            <div class="vote-btns" role="group" aria-label="Cast your vote">
+              <button type="button" data-v="for" aria-pressed="false">For</button>
+              <button type="button" data-v="against" aria-pressed="false">Against</button>
+              <button type="button" data-v="abstain" aria-pressed="false">Abstain</button>
+            </div>
+            <div style="display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap">
+              <span class="side-h">Result</span>
+              <div class="seg" role="group" aria-label="Result view">
+                <button type="button" data-phase="before" aria-pressed="true">Before Seimas</button>
+                <button type="button" data-phase="after" aria-pressed="false">After</button>
+              </div>
+            </div>
+            <div class="tally" id="tally"></div>
+          </div>
+        </div>
+      </div>
+      <div class="annot">
+        <div><span class="n">1</span><span><b>Stages, not single votes.</b> One bill, many Seimas votes. The page follows the bill and highlights the next vote that matters.</span></div>
+        <div><span class="n">2</span><span><b>Sourced summary.</b> Every sentence links to an article. Editors can correct it, and the version history is public.</span></div>
+        <div><span class="n">3</span><span><b>Your vote, explained.</b> You always see whose vote you are carrying, and one tap replaces it with your own.</span></div>
+        <div><span class="n">4</span><span><b>Two results.</b> Direct votes before the Seimas vote; direct plus MP-delegated votes after it.</span></div>
+      </div>
+    </section>
+
+    <!-- 6 DELEGATION -->
+    <section class="chapter" id="delegation">
+      <header>
+        <div class="eyebrow">06 · Vote delegation</div>
+        <h2>Trust someone per topic, and still keep the last word</h2>
+        <p class="lede">Nobody can read every bill. For each topic you choose whose judgement to follow: first people you trust on the platform, then MPs or parties as a fallback. If you vote yourself, your vote replaces all of it.</p>
+      </header>
+
+      <div class="sim" id="sim">
+        <div class="sim-cfg">
+          <div>
+            <div class="side-h" style="margin-bottom:8px">Topic of the bill</div>
+            <div class="topics" role="group" aria-label="Topic">
+              <button type="button" data-topic="economy" aria-pressed="true">Economy</button>
+              <button type="button" data-topic="education" aria-pressed="false">Education</button>
+              <button type="button" data-topic="other" aria-pressed="false">Everything else</button>
+            </div>
+          </div>
+          <div class="ladder" id="ladder"></div>
+          <div>
+            <div class="side-h" style="margin-bottom:8px">Try a scenario</div>
+            <div class="ctl-grid" id="ctls"></div>
+          </div>
+        </div>
+        <div class="sim-out">
+          <div class="side-h">How your vote is resolved</div>
+          <ol class="trace" id="trace"></ol>
+          <div class="result" id="result"></div>
+        </div>
+      </div>
+
+      <div class="rules">
+        <div class="rule"><h4>Your own vote always wins</h4><p>Voting yourself, even at the last minute, replaces every delegation for that bill. You can also change a vote until voting closes.</p></div>
+        <div class="rule"><h4>Two levels, in order</h4><p>Level 1 is people and organisations on the platform. Level 2 is MPs, factions or parties. Level 2 is used only if nobody at level 1 voted.</p></div>
+        <div class="rule"><h4>Weights split one vote</h4><p>A level can hold several delegates with weights, for example 60% an MP and 40% a party. If one of them is absent, their share is spread over the others.</p></div>
+        <div class="rule"><h4>No chains</h4><p>If your delegate delegated their own vote, it does not pass on to you. You get your fallback instead. This keeps results explainable and stops power piling up invisibly.</p></div>
+        <div class="rule"><h4>Delegates act in public</h4><p>Anyone can become a delegate, but delegates' votes are public. The people who delegate to them stay private, and only the total count is shown.</p></div>
+        <div class="rule"><h4>Nothing resolves, nothing counts</h4><p>If no delegate voted, your vote is not counted. We never assign a vote by default.</p></div>
+      </div>
+    </section>
+
+    <!-- 7 POLITICIANS -->
+    <section class="chapter" id="politicians">
+      <header>
+        <div class="eyebrow">07 · Politicians on board</div>
+        <h2>Why a politician would want to be here</h2>
+        <p class="lede">MPs' votes are imported whether they join or not. Joining gives them a verified profile and tools that are useful for their work. Every politician gets the same tools for free, and nobody can pay for reach.</p>
+      </header>
+
+      <div class="mock-label"><span><b>Mockup</b> · Verified MP profile</span><span>Fictional MP</span></div>
+      <div class="mock">
+        <div class="mock-bar"><div class="dots"><i></i><i></i><i></i></div><div class="url">lietuva20.lt/p/jonas-petraitis</div></div>
+        <div class="prof">
+          <div class="prof-side">
+            <div class="prof-id">
+              <span class="avatar" style="background:#4a3aa7">JP</span>
+              <div><h3>Jonas Petraitis <svg aria-label="Verified"><use href="#vbadge"/></svg></h3><p>MP · Reform Party faction · Žirmūnai constituency</p></div>
+            </div>
+            <div class="verified"><svg aria-hidden="true"><use href="#vbadge"/></svg><span>Verified through the official lrs.lt email address on 2 Feb 2026. Posts and explanations are written by the MP or their office.</span></div>
+            <div class="kv">
+              <span>Attendance at votes</span><b class="tnum">94%</b>
+              <span>Voted with own faction</span><b class="tnum">88%</b>
+              <span>Votes explained</span><b class="tnum">31 of 44</b>
+              <span>Said one thing, voted another</span><b class="tnum">1</b>
+            </div>
+            <div>
+              <div class="side-h" style="margin-bottom:8px">Citizens who delegate to him</div>
+              <div class="trust">
+                <div class="r"><span>Economy</span><div class="bar"><span style="width:100%"></span></div><b>2,140</b></div>
+                <div class="r"><span>Energy</span><div class="bar"><span style="width:38%"></span></div><b>812</b></div>
+                <div class="r"><span>Education</span><div class="bar"><span style="width:14%"></span></div><b>296</b></div>
+              </div>
+            </div>
+          </div>
+          <div class="prof-main">
+            <div class="side-h">Recent votes</div>
+            <div class="vrec">
+              <div class="vrec-h"><div class="t">Personal Income Tax, progressive rate<small>XVP-0412 · adoption · 24 Sep</small></div><span class="vpill against">Against</span></div>
+              <div class="cmp3">
+                <div>Stated position<b>Against, 2 Sep</b></div>
+                <div>His faction<b>22 of 30 against</b></div>
+                <div>His constituency<b>58% against</b></div>
+              </div>
+              <p class="explain">"I support a higher contribution from top earners, but counting one-off share sales will push family businesses to sell abroad. I proposed an amendment that excludes them; it was rejected in committee."</p>
+            </div>
+            <div class="vrec">
+              <div class="vrec-h"><div class="t">Solar parks on agricultural land<small>XVP-0655 · adoption · 10 Sep</small></div><span class="vpill for">For</span></div>
+              <div class="cmp3">
+                <div>Stated position<b>None</b></div>
+                <div>His faction<b>19 of 30 for</b></div>
+                <div>His constituency<b>44% for</b></div>
+              </div>
+              <p class="explain muted" style="border-left-color:var(--line-strong)">No explanation yet. 812 delegates were notified of this vote.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="incent">
+        <div><span class="for">FOR EVERY POLITICIAN</span><h4>Explain your vote where people see it</h4><p>A short explanation attached to each recorded vote appears on the bill page and in every delegator's notification. It reaches people who chose to trust you, without ads and without an algorithm deciding who sees it.</p></div>
+        <div><span class="for">FOR EVERY POLITICIAN</span><h4>A continuous poll of your constituency</h4><p>Aggregated opinion of users in your constituency or municipality, by topic and by bill. Groups under 50 people are never shown, so no individual can be identified.</p></div>
+        <div><span class="for">FOR EVERY POLITICIAN</span><h4>A visible mandate between elections</h4><p>"2,140 citizens trust me on the economy" is a number that grows or shrinks with each vote. It rewards consistency and good explanations, not the loudest voice.</p></div>
+        <div><span class="for">FOR EVERY POLITICIAN</span><h4>Test a proposal before registering it</h4><p>Post a draft or an idea and get structured feedback: arguments for and against, the objections that come up most, and early support by topic and region.</p></div>
+        <div><span class="for">FOR CANDIDATES</span><h4>Get into the election match</h4><p>Candidates without a Seimas record answer how they would have voted on 20–30 key bills. Their answers are compared with voters' positions, so newcomers are on equal terms with MPs.</p></div>
+        <div><span class="for">FOR EVERY POLITICIAN</span><h4>A right of reply</h4><p>Politicians can respond to any AI summary or statistic about them. The reply is shown next to it. The methodology behind every number is public.</p></div>
+      </div>
+      <div class="prose" style="margin-top:24px">
+        <p><b>Verification.</b> MPs are verified through their official lrs.lt email address, council members through their municipality's address, and candidates against the Central Electoral Commission (VRK) list with confirmation from their party. Parties, NGOs, unions and business associations can get a verified organisation badge and act as delegates.</p>
+      </div>
+    </section>
+
+    <!-- 8 ANALYTICS -->
+    <section class="chapter" id="analytics">
+      <header>
+        <div class="eyebrow">08 · Analytics</div>
+        <h2>Where Parliament and citizens part ways</h2>
+        <p class="lede">Every chart is built from two sources: the official record and platform votes. Hover the charts for exact numbers, or open the table view.</p>
+      </header>
+
+      <div class="mock-label"><span><b>Mockup</b> · Seimas dashboard</span><span>Illustrative data · XV Seimas, spring and autumn 2026 sessions</span></div>
+      <div class="mock">
+        <div class="mock-bar"><div class="dots"><i></i><i></i><i></i></div><div class="url">lietuva20.lt/seimas/analytics</div></div>
+        <div class="dash">
+          <div class="filters"><span>Showing</span>
+            <select id="f-period" aria-label="Period"><option>XV Seimas, 2026</option><option>Whole term</option></select>
+            <select id="f-topic" aria-label="Topic"><option>All topics</option><option>Economy</option><option>Education</option></select>
+            <select id="f-users" aria-label="Which users"><option>All platform users</option><option>Accounts older than 30 days</option></select>
+          </div>
+          <div class="kpis">
+            <div class="kpi"><span class="k">Final votes this year</span><span class="v">164</span><span class="s">on 118 bills</span></div>
+            <div class="kpi"><span class="k">Seimas and citizens agreed</span><span class="v">71%</span><span class="s">of final votes</span></div>
+            <div class="kpi"><span class="k">Platform votes cast</span><span class="v">412k</span><span class="s">38% of them delegated</span></div>
+            <div class="kpi"><span class="k">MPs verified</span><span class="v">46</span><span class="s">of 141</span></div>
+          </div>
+          <div class="panel span-7">
+            <div class="ph"><h4>Share of votes "for": Seimas vs platform</h4><span>Final votes on selected bills</span></div>
+            <div class="legend"><span><i style="background:var(--s-seimas)"></i>Seimas</span><span><i style="background:var(--s-platform)"></i>Lietuva 2.0 users</span></div>
+            <div class="dots-chart"><svg id="dotplot" viewBox="0 0 560 300" role="img" aria-label="Dot plot comparing the share of votes for in the Seimas and on the platform for six bills"></svg></div>
+            <details class="tview"><summary>Table view</summary><table id="dotTable"><thead><tr><th>Bill</th><th>Seimas for</th><th>Platform for</th><th>Seimas outcome</th></tr></thead><tbody></tbody></table></details>
+          </div>
+          <div class="panel span-5">
+            <div class="ph"><h4>Faction cohesion</h4><span>% of votes cast with the faction majority</span></div>
+            <div class="cohesion" id="cohesion"></div>
+            <p style="font-size:12.5px;color:var(--muted)">A faction below 85% is often split. Hover a bar for its three most divisive votes.</p>
+          </div>
+          <div class="panel span-12">
+            <div class="ph"><h4>Who votes the way you do</h4><span>Based on 37 final votes where you voted directly</span></div>
+            <div class="match-list" id="matches"></div>
+          </div>
+        </div>
+      </div>
+      <div class="annot">
+        <div><span class="n">1</span><span><b>Distance, not a verdict.</b> The gap between the dots is the story. We show it neutrally and never label an MP as good or bad.</span></div>
+        <div><span class="n">2</span><span><b>Honest samples.</b> Platform results are labelled as "Lietuva 2.0 users" with the sample size. They are not presented as the whole population.</span></div>
+        <div><span class="n">3</span><span><b>Personal match.</b> Computed on your device from your own votes and public MP records.</span></div>
+      </div>
+    </section>
+
+    <!-- 9 ELECTIONS -->
+    <section class="chapter" id="elections">
+      <header>
+        <div class="eyebrow">09 · Election mode</div>
+        <h2>A voting guide built on actual votes</h2>
+        <p class="lede">Voting advice tools usually ask parties what they intend to do. Lietuva 2.0 can also show what they actually did, because the record is already there.</p>
+      </header>
+      <div class="phones">
+        <div class="phone" aria-label="Mockup: election match on a phone">
+          <div class="notch"><i></i></div>
+          <div class="scr">
+            <div class="sub">Seimas elections · 8 Oct 2028 · Žirmūnai constituency</div>
+            <h4>Your closest matches</h4>
+            <div class="seg" role="group" aria-label="Match basis"><button type="button" aria-pressed="true">Record</button><button type="button" aria-pressed="false">Promises</button></div>
+            <div class="cand"><span class="avatar" style="background:#1f6b3a">OJ</span><div class="nm"><b>Ona Jonaitienė <svg class="badge-v"><use href="#vbadge"/></svg></b><small>Civic Union · sitting MP</small></div><span class="pct">82%</span><div class="basis"><span>41 shared votes</span><span>· 3 big disagreements</span></div></div>
+            <div class="cand"><span class="avatar" style="background:#8a4a8a">PK</span><div class="nm"><b>Paulius Kairys <svg class="badge-v"><use href="#vbadge"/></svg></b><small>New Centre · candidate</small></div><span class="pct">74%</span><div class="basis"><span>28 answered positions</span></div></div>
+            <div class="cand"><span class="avatar" style="background:#4a3aa7">JP</span><div class="nm"><b>Jonas Petraitis <svg class="badge-v"><use href="#vbadge"/></svg></b><small>Reform Party · sitting MP</small></div><span class="pct">61%</span><div class="basis"><span>44 shared votes</span></div></div>
+            <div class="qcard"><span class="sub">Improve your match · 12 of 30 answered</span><span class="q">Should the first cycle of higher education be tuition-free? (XVP-0587)</span><div class="ans"><span class="sel">For</span><span>Against</span><span>Skip</span></div></div>
+          </div>
+        </div>
+        <div class="phone-note prose">
+          <p>Election mode switches on about six months before an election. It adds:</p>
+          <ul>
+            <li><b>Record-based match</b> for sitting MPs and parties, using the bills you voted on.</li>
+            <li><b>Answered positions</b> for new candidates on the same key bills, marked as promises.</li>
+            <li><b>A "promises vs record" view</b> for each party: what it said in 2024 and how its faction voted since.</li>
+            <li><b>Constituency pages</b> listing every candidate in your single-member constituency with the same facts.</li>
+          </ul>
+          <p>Upcoming dates: municipal council elections in spring 2027 and Seimas elections in October 2028. A full term of imported votes will be available by then.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- 10 BEYOND -->
+    <section class="chapter" id="beyond">
+      <header>
+        <div class="eyebrow">10 · Beyond the Seimas</div>
+        <h2>One model for every body that votes</h2>
+        <p class="lede">A municipal council, the Government and the European Parliament all do the same thing: a group of people votes on a proposal. We store them in one shared format and write a small adapter for each source.</p>
+      </header>
+      <div class="adapters">
+        <div class="adapter"><span class="lvl" style="color:var(--brand)">First release</span><h4>Seimas</h4><span class="src">apps.lrs.lt/sip · e-seimas.lrs.lt</span><p>Official XML open data for MPs, factions, sittings and per-MP votes; bill texts and versions from e-seimas.</p></div>
+        <div class="adapter"><span class="lvl" style="color:var(--brand)">Pilot, 2–3 councils</span><h4>Municipal councils</h4><span class="src">council portals, PDF minutes</span><p>Varies across the 60 municipalities. Start where results are published in a structured form; elsewhere extract from minutes with AI and a human check.</p></div>
+        <div class="adapter"><span class="lvl muted">Later</span><h4>European Parliament</h4><span class="src">EP roll-call open data</span><p>Roll-call votes are public. Useful for following Lithuania's 11 MEPs and their groups.</p></div>
+        <div class="adapter"><span class="lvl muted">Later</span><h4>Government</h4><span class="src">TAR, Government sittings</span><p>The Government decides collectively and has no individual votes, so we compare the public vote with the decision only.</p></div>
+      </div>
+
+      <figure>
+        <div class="fig">
+          <svg viewBox="0 0 980 320" role="img" aria-label="Architecture: source adapters feed one civic data store. An AI pipeline writes summaries and topics into it. The vote and delegation engine reads the store and platform votes and writes results. Analytics read results. The web app, mobile app and open API read from analytics and the store.">
+            <defs>
+              <marker id="ar2" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="currentColor"/></marker>
+            </defs>
+            <g font-family="Bricolage Grotesque, system-ui, sans-serif" font-size="12.5" fill="currentColor">
+              <g>
+                <rect x="10" y="30" width="150" height="40" rx="8" fill="none" stroke="currentColor" stroke-opacity=".5"/><text x="85" y="55" text-anchor="middle">Seimas adapter</text>
+                <rect x="10" y="84" width="150" height="40" rx="8" fill="none" stroke="currentColor" stroke-opacity=".5"/><text x="85" y="109" text-anchor="middle">Council adapters</text>
+                <rect x="10" y="138" width="150" height="40" rx="8" fill="none" stroke="currentColor" stroke-opacity=".5"/><text x="85" y="163" text-anchor="middle">EP adapter</text>
+                <rect x="10" y="192" width="150" height="40" rx="8" fill="none" stroke="currentColor" stroke-opacity=".5" stroke-dasharray="4 3"/><text x="85" y="217" text-anchor="middle">Government adapter</text>
+                <text x="85" y="258" text-anchor="middle" opacity=".7">nightly + on sitting days</text>
+              </g>
+              <line x1="160" y1="50" x2="248" y2="118" stroke="currentColor" stroke-opacity=".6" marker-end="url(#ar2)"/>
+              <line x1="160" y1="104" x2="248" y2="126" stroke="currentColor" stroke-opacity=".6" marker-end="url(#ar2)"/>
+              <line x1="160" y1="158" x2="248" y2="134" stroke="currentColor" stroke-opacity=".6" marker-end="url(#ar2)"/>
+              <line x1="160" y1="212" x2="248" y2="142" stroke="currentColor" stroke-opacity=".6" marker-end="url(#ar2)"/>
+              <text x="204" y="80" text-anchor="middle" opacity=".8">normalise</text>
+
+              <rect x="250" y="90" width="190" height="80" rx="10" fill="var(--brand-soft)" stroke="var(--brand)" stroke-width="1.5"/>
+              <text x="345" y="118" text-anchor="middle" font-weight="700">Civic data store</text>
+              <text x="345" y="138" text-anchor="middle" opacity=".8">bodies · people · groups</text>
+              <text x="345" y="155" text-anchor="middle" opacity=".8">bills · stages · vote events</text>
+
+              <rect x="250" y="226" width="190" height="52" rx="10" fill="none" stroke="currentColor" stroke-opacity=".5"/>
+              <text x="345" y="248" text-anchor="middle" font-weight="600">AI pipeline</text>
+              <text x="345" y="266" text-anchor="middle" opacity=".8">summaries · topics · stage links</text>
+              <line x1="320" y1="226" x2="320" y2="172" stroke="currentColor" stroke-opacity=".6" marker-end="url(#ar2)"/>
+              <line x1="370" y1="172" x2="370" y2="224" stroke="currentColor" stroke-opacity=".6" marker-end="url(#ar2)"/>
+              <text x="314" y="203" text-anchor="end" opacity=".8">writes</text>
+              <text x="376" y="203" opacity=".8">new text</text>
+
+              <rect x="530" y="30" width="190" height="52" rx="10" fill="none" stroke="currentColor" stroke-opacity=".5"/>
+              <text x="625" y="52" text-anchor="middle" font-weight="600">Platform votes</text>
+              <text x="625" y="70" text-anchor="middle" opacity=".8">direct · delegations</text>
+
+              <rect x="530" y="120" width="190" height="60" rx="10" fill="none" stroke="var(--brand)" stroke-width="2"/>
+              <text x="625" y="146" text-anchor="middle" font-weight="700">Vote &amp; delegation engine</text>
+              <text x="625" y="165" text-anchor="middle" opacity=".8">resolves each user's vote</text>
+              <line x1="625" y1="82" x2="625" y2="118" stroke="currentColor" stroke-opacity=".6" marker-end="url(#ar2)"/>
+              <line x1="440" y1="140" x2="528" y2="148" stroke="currentColor" stroke-opacity=".6" marker-end="url(#ar2)"/>
+              <text x="484" y="132" text-anchor="middle" opacity=".8">MP votes</text>
+
+              <rect x="530" y="226" width="190" height="52" rx="10" fill="none" stroke="currentColor" stroke-opacity=".5"/>
+              <text x="625" y="248" text-anchor="middle" font-weight="600">Analytics</text>
+              <text x="625" y="266" text-anchor="middle" opacity=".8">gaps · cohesion · matches</text>
+              <line x1="625" y1="180" x2="625" y2="224" stroke="currentColor" stroke-opacity=".6" marker-end="url(#ar2)"/>
+              <text x="631" y="206" opacity=".8">results</text>
+
+              <rect x="810" y="60" width="160" height="40" rx="8" fill="none" stroke="currentColor" stroke-opacity=".5"/><text x="890" y="85" text-anchor="middle">Web app</text>
+              <rect x="810" y="130" width="160" height="40" rx="8" fill="none" stroke="currentColor" stroke-opacity=".5"/><text x="890" y="155" text-anchor="middle">Mobile app + alerts</text>
+              <rect x="810" y="200" width="160" height="40" rx="8" fill="none" stroke="currentColor" stroke-opacity=".5"/><text x="890" y="225" text-anchor="middle">Open API</text>
+              <line x1="720" y1="246" x2="808" y2="86" stroke="currentColor" stroke-opacity=".6" marker-end="url(#ar2)"/>
+              <line x1="720" y1="252" x2="808" y2="154" stroke="currentColor" stroke-opacity=".6" marker-end="url(#ar2)"/>
+              <line x1="720" y1="258" x2="808" y2="222" stroke="currentColor" stroke-opacity=".6" marker-end="url(#ar2)"/>
+              <text x="890" y="272" text-anchor="middle" opacity=".7">journalists, researchers,</text>
+              <text x="890" y="288" text-anchor="middle" opacity=".7">other civic tools</text>
+            </g>
+          </svg>
+        </div>
+        <figcaption>Adding a new body means writing one adapter. Everything to the right of the data store (summaries, voting, delegation, analytics, apps) works for it automatically. The data model follows the open Popolo civic-data standard, so the API is useful to others as well.</figcaption>
+      </figure>
+    </section>
+
+    <!-- 11 TRUST -->
+    <section class="chapter" id="trust">
+      <header>
+        <div class="eyebrow">11 · Trust and privacy</div>
+        <h2>Open accounts, careful results</h2>
+        <p class="lede">We are dropping bank-level login so that joining takes a minute. That makes the platform an opinion signal, not a referendum, and we present it that way.</p>
+      </header>
+      <div class="two">
+        <div class="box"><h4>Keeping results honest</h4><ul>
+          <li>One account per verified phone number, plus rate limits and bot detection.</li>
+          <li>Results can be filtered to accounts older than 30 days, which damps sudden campaigns.</li>
+          <li>Coordinated bursts, such as thousands of new accounts voting on one bill, are flagged publicly on the bill.</li>
+          <li>Delegate totals are public, so a concentration of delegated votes is visible.</li>
+          <li>An optional stronger identity tier can be added later without changing the model.</li>
+        </ul></div>
+        <div class="box"><h4>Protecting voters</h4><ul>
+          <li>Political opinions are special-category data under GDPR. Votes are private by default and stored with explicit consent.</li>
+          <li>No personal codes, addresses or document numbers are stored.</li>
+          <li>Aggregates by constituency or group appear only above 50 people.</li>
+          <li>Data is hosted in the EU. Users can export or delete everything they have given us.</li>
+        </ul></div>
+        <div class="box"><h4>Keeping AI accountable</h4><ul>
+          <li>Every AI text is labelled, versioned and linked to the articles it is based on.</li>
+          <li>Prompts and the neutrality rules for summaries are published.</li>
+          <li>Community editors and politicians can correct or reply, and every change is visible in the history.</li>
+        </ul></div>
+        <div class="box"><h4>Staying neutral</h4><ul>
+          <li>No advertising and no paid promotion, including during election campaigns.</li>
+          <li>Every politician and party gets the same tools on the same terms.</li>
+          <li>The code stays open source under GPL-3.0, as it is today. The methodology behind every statistic is public.</li>
+        </ul></div>
+      </div>
+    </section>
+
+    <!-- 12 ROADMAP -->
+    <section class="chapter" id="roadmap">
+      <header>
+        <div class="eyebrow">12 · Roadmap</div>
+        <h2>From a Seimas monitor to election mode by 2028</h2>
+      </header>
+      <div class="road">
+        <div class="now"><div class="when">Q4 2026<small>now</small></div><div><h4>Validate the idea</h4><p>This whitepaper, interviews with politicians and stakeholders, and a working import of Seimas votes from the start of the current term (November 2024).</p></div></div>
+        <div><div class="when">Q1–Q2 2027</div><div><h4>Seimas monitor, alpha</h4><p>Bill pages, AI summaries, MP and faction records, and direct public voting. Closed pilot with invited politicians.</p><span class="chip milestone">Municipal elections, spring 2027: light candidate pages in pilot councils</span></div></div>
+        <div><div class="when">Q3–Q4 2027</div><div><h4>Delegation and verified profiles</h4><p>Delegation engine, verified MP and organisation badges, vote explanations, notifications, and the public beta.</p></div></div>
+        <div><div class="when">H1 2028</div><div><h4>More bodies, open API</h4><p>Two or three municipal councils, European Parliament votes, and the public API for journalists and researchers.</p></div></div>
+        <div><div class="when">Q2–Q3 2028</div><div><h4>Election mode</h4><p>Candidate positions, record-based match and constituency pages ahead of the Seimas elections.</p><span class="chip milestone">Seimas elections, October 2028</span></div></div>
+      </div>
+    </section>
+
+    <!-- 13 FEEDBACK -->
+    <section class="chapter" id="feedback">
+      <header>
+        <div class="eyebrow">13 · Your feedback</div>
+        <h2>What we want to learn from you</h2>
+        <p class="lede">This is a draft for a small group of politicians and stakeholders. Honest answers to these questions will shape the first release more than anything else.</p>
+      </header>
+      <ol class="qs">
+        <li><span>Would you explain your votes on a platform like this? What would stop you?<small>For MPs and council members</small></span></li>
+        <li><span>Which of the benefits in chapter 7 would actually change how you work, and which are nice to have?<small>For politicians and their offices</small></span></li>
+        <li><span>Does delegating to a person first and an MP second feel fair and understandable? What would you change?<small>For everyone</small></span></li>
+        <li><span>Which statistic in chapter 8 could be misleading or unfair, and how should we present it instead?<small>For everyone</small></span></li>
+        <li><span>Would your organisation act as a public delegate on its topic?<small>For NGOs, unions and associations</small></span></li>
+        <li><span>Which municipality would be the right pilot, and who there should we talk to?<small>For local politicians</small></span></li>
+      </ol>
+      <footer class="end">
+        <svg aria-hidden="true"><use href="#logo"/></svg>
+        <span>Lietuva 2.0 · whitepaper draft, September 2026</span>
+        <span>Source code: github.com/simelis/LT2</span>
+        <span>All people, factions, bills and figures in the mockups are fictional.</span>
+      </footer>
+    </section>
+  </main>
+</div>
+
+<div id="tip" role="tooltip"></div>
+
+<script>
+(function(){
+  const $ = (s,r=document)=>r.querySelector(s);
+  const $$ = (s,r=document)=>Array.from(r.querySelectorAll(s));
+  const NS="http://www.w3.org/2000/svg";
+  const el=(n,a={})=>{const e=document.createElementNS(NS,n);for(const k in a)e.setAttribute(k,a[k]);return e;};
+
+  /* ---------- tooltip ---------- */
+  const tip=$("#tip");
+  function showTip(t,x,y){tip.textContent=t;tip.classList.add("on");const w=tip.offsetWidth,h=tip.offsetHeight;let L=x+14,T=y+14;if(L+w>innerWidth-8)L=x-w-14;if(T+h>innerHeight-8)T=y-h-14;tip.style.left=L+"px";tip.style.top=T+"px";}
+  function hideTip(){tip.classList.remove("on");}
+  document.addEventListener("pointermove",e=>{const t=e.target.closest&&e.target.closest("[data-tip]");if(t)showTip(t.getAttribute("data-tip"),e.clientX,e.clientY);else hideTip();});
+  document.addEventListener("pointerleave",hideTip);
+
+  /* ---------- hemicycle ---------- */
+  const factions=[
+    {n:"Social Forum",s:26,v:[22,1,2,1]},
+    {n:"Civic Union",s:38,v:[34,0,2,2]},
+    {n:"Rural Alliance",s:21,v:[15,2,3,1]},
+    {n:"New Centre",s:18,v:[1,14,2,1]},
+    {n:"Reform Party",s:30,v:[3,22,2,3]},
+    {n:"Non-attached",s:8,v:[3,2,1,2]}
+  ];
+  (function drawHemi(){
+    const svg=$("#hemi"); const cx=220, cy=226, R0=92, R1=212, rows=8, total=141;
+    const radii=[];for(let i=0;i<rows;i++)radii.push(R0+(R1-R0)*i/(rows-1));
+    const sum=radii.reduce((a,b)=>a+b,0);
+    let counts=radii.map(r=>Math.round(total*r/sum));
+    let diff=total-counts.reduce((a,b)=>a+b,0);counts[rows-1]+=diff;
+    const seats=[];
+    radii.forEach((r,i)=>{const n=counts[i];for(let j=0;j<n;j++){const a=Math.PI-(Math.PI*(j+0.5)/n);seats.push({x:cx+r*Math.cos(a),y:cy-r*Math.sin(a),a});}});
+    seats.sort((p,q)=>q.a-p.a);
+    const keys=["for","against","abstain","absent"];
+    const labels={for:"For",against:"Against",abstain:"Abstained",absent:"Did not vote"};
+    let k=0;
+    factions.forEach(f=>{
+      const list=[];keys.forEach((key,i)=>{for(let c=0;c<f.v[i];c++)list.push(key);});
+      const sl=seats.slice(k,k+f.s).sort((p,q)=>Math.hypot(p.x-cx,p.y-cy)-Math.hypot(q.x-cx,q.y-cy));
+      // assign by radius so each faction wedge reads inner to outer: for, against, abstain, absent
+      sl.forEach((s,i)=>{s.f=f.n;s.vote=list[i];});
+      k+=f.s;
+    });
+    seats.forEach(s=>{
+      const c=el("circle",{cx:s.x.toFixed(1),cy:s.y.toFixed(1),r:6.2});
+      if(s.vote==="absent"){c.setAttribute("fill","none");c.setAttribute("stroke","var(--v-absent)");c.setAttribute("stroke-width","2");c.setAttribute("r","5.2");}
+      else c.setAttribute("fill","var(--v-"+s.vote+")");
+      c.setAttribute("data-tip",s.f+" · "+labels[s.vote]);
+      svg.appendChild(c);
+    });
+  })();
+
+  /* ---------- tabs ---------- */
+  const tabs=$$('[role="tab"]');
+  tabs.forEach(t=>t.addEventListener("click",()=>selectTab(t)));
+  tabs.forEach((t,i)=>t.addEventListener("keydown",e=>{if(e.key==="ArrowRight"||e.key==="ArrowLeft"){e.preventDefault();const n=tabs[(i+(e.key==="ArrowRight"?1:-1)+tabs.length)%tabs.length];selectTab(n);n.focus();}}));
+  function selectTab(t){tabs.forEach(x=>{const on=x===t;x.setAttribute("aria-selected",on);x.tabIndex=on?0:-1;$("#"+x.getAttribute("aria-controls")).hidden=!on;});}
+
+  /* ---------- bill page vote ---------- */
+  const bill={mine:null,phase:"before"};
+  const base={before:{f:4120,a:6860,n:870,deleg:{f:1240,a:1880,n:190}},after:{f:4120,a:6860,n:870,deleg:{f:1240,a:1880,n:190},mp:{f:9570,a:7330,n:1100}}};
+  const VLBL={for:"For",against:"Against",abstain:"Abstain"};
+  function renderBill(){
+    const st=$("#myStatus");
+    if(bill.mine){
+      st.innerHTML='<div class="st"><i style="background:var(--v-'+bill.mine+')"></i>You voted '+VLBL[bill.mine].toLowerCase()+'</div><div style="margin-top:4px;color:var(--ink-2)">Your own vote replaces your Economy delegation for this bill. You can change it until voting closes.</div><div style="margin-top:6px"><button class="linkbtn" type="button" id="undo">Withdraw my vote and use delegation</button></div>';
+      $("#undo").addEventListener("click",()=>{bill.mine=null;renderBill();});
+    } else {
+      st.innerHTML='<div class="st"><i style="background:var(--v-against)"></i>Delegated: against</div><div style="margin-top:4px;color:var(--ink-2)">Rūta Mockutė, whom you trust on Economy, voted <b>against</b> on 19 Sep. Your vote follows hers unless you vote yourself.</div>';
+    }
+    $$(".vote-btns button").forEach(b=>b.setAttribute("aria-pressed",b.dataset.v===bill.mine));
+    $$(".seg button[data-phase]").forEach(b=>b.setAttribute("aria-pressed",b.dataset.phase===bill.phase));
+    const B=base[bill.phase];
+    // user contributes 1 vote; when not voted directly, the delegated 'against' is already inside deleg totals
+    let dF=B.f,dA=B.a,dN=B.n;
+    let gF=B.deleg.f,gA=B.deleg.a,gN=B.deleg.n;
+    if(bill.mine){gA-=1; if(bill.mine==="for")dF++; else if(bill.mine==="against")dA++; else dN++;}
+    const direct=[dF,dA,dN];
+    let rows=[];
+    const pct=(x,t)=>Math.round(100*x/t);
+    const bar=(f,a,n,tipTxt)=>{const t=f+a+n;return '<div class="sbar" data-tip="'+tipTxt+'"><span class="f" style="flex:'+f+'">'+(pct(f,t)>=12?pct(f,t)+'%':'')+'</span><span class="a" style="flex:'+a+'">'+(pct(a,t)>=12?pct(a,t)+'%':'')+'</span><span class="n" style="flex:'+n+'"></span></div>';};
+    const fmt=n=>n.toLocaleString("en-US");
+    const t1=dF+dA+dN;
+    rows.push('<div class="row"><div class="top"><span>Direct votes</span><b class="tnum">'+fmt(t1)+'</b></div>'+bar(dF,dA,dN,"Direct: "+pct(dF,t1)+"% for, "+pct(dA,t1)+"% against, "+pct(dN,t1)+"% abstain")+'</div>');
+    const f2=dF+gF,a2=dA+gA,n2=dN+gN,t2=f2+a2+n2;
+    rows.push('<div class="row"><div class="top"><span>+ votes via trusted people</span><b class="tnum">'+fmt(t2)+'</b></div>'+bar(f2,a2,n2,"With people-delegations: "+pct(f2,t2)+"% for, "+pct(a2,t2)+"% against")+'</div>');
+    if(bill.phase==="after"){
+      const m=B.mp;const f3=f2+m.f,a3=a2+m.a,n3=n2+m.n,t3=f3+a3+n3;
+      rows.push('<div class="row"><div class="top"><span>+ votes via MPs and parties</span><b class="tnum">'+fmt(t3)+'</b></div>'+bar(f3,a3,n3,"All votes: "+pct(f3,t3)+"% for, "+pct(a3,t3)+"% against")+'</div>');
+      rows.push('<div class="row"><div class="top"><span>Seimas final vote</span><b class="tnum">131 MPs</b></div>'+bar(78,41,12,"Seimas: 78 for, 41 against, 12 abstained")+'</div>');
+      rows.push('<p class="note">MP-delegated votes resolved from the official record on 24 Sep. The public result is now frozen.</p>');
+      $("#stageTxt").textContent="Adopted 78 : 41"; $("#closes").textContent="closed";
+      $$(".vote-btns button").forEach(b=>b.disabled=true);
+    } else {
+      rows.push('<p class="note">Votes delegated to MPs and parties (about 18,000) resolve after the Seimas votes. Switch to "After" to preview.</p>');
+      $("#stageTxt").textContent="Thu 24 Sep, 14:00"; $("#closes").textContent="22 h";
+      $$(".vote-btns button").forEach(b=>b.disabled=false);
+    }
+    $("#tally").innerHTML=rows.join("");
+  }
+  $$(".vote-btns button").forEach(b=>b.addEventListener("click",()=>{bill.mine=(bill.mine===b.dataset.v)?null:b.dataset.v;renderBill();}));
+  $$(".seg button[data-phase]").forEach(b=>b.addEventListener("click",()=>{bill.phase=b.dataset.phase;renderBill();}));
+  renderBill();
+
+  /* ---------- delegation simulator ---------- */
+  const people={
+    ruta:{nm:"Rūta Mockutė",sub:"Economist · public delegate · 3,310 followers",av:"RM",c:"#8a6d3b",kind:"person"},
+    teach:{nm:"Teachers' Association",sub:"Verified organisation · public delegate",av:"TA",c:"#1c5cab",kind:"org",ver:true},
+    tomas:{nm:"Tomas Vaitkus",sub:"Friend · delegates his own vote onward",av:"TV",c:"#6b6a66",kind:"person"},
+    jp:{nm:"Jonas Petraitis",sub:"MP · Reform Party",av:"JP",c:"#4a3aa7",kind:"mp",ver:true},
+    rp:{nm:"Reform Party",sub:"Party · follows faction majority",av:"RP",c:"#4a3aa7",kind:"party"},
+    oj:{nm:"Ona Jonaitienė",sub:"MP · Civic Union",av:"OJ",c:"#1f6b3a",kind:"mp",ver:true},
+    cu:{nm:"Civic Union",sub:"Party · follows faction majority",av:"CU",c:"#1f6b3a",kind:"party"}
+  };
+  const cfg={
+    economy:{l1:[{id:"ruta",w:100}],l2:[{id:"jp",w:60},{id:"rp",w:40}]},
+    education:{l1:[{id:"teach",w:50},{id:"tomas",w:50}],l2:[{id:"oj",w:100}]},
+    other:{l1:[],l2:[{id:"cu",w:100}]}
+  };
+  const scen={topic:"economy",mine:"none",phase:"after",v:{ruta:"none",teach:"for",tomas:"delegated",jp:"against",rp:"for",oj:"for",cu:"for"}};
+  const OPTS={person:[["none","Didn't vote"],["for","For"],["against","Against"],["abstain","Abstain"]],
+    personChain:[["delegated","Delegated onward"],["none","Didn't vote"],["for","For"],["against","Against"]],
+    mp:[["for","For"],["against","Against"],["abstain","Abstained"],["absent","Absent"]],
+    party:[["for","Majority for"],["against","Majority against"],["abstain","Majority abstained"]]};
+  const W=(v)=>({for:"for",against:"against",abstain:"abstain"}[v]||null);
+
+  function renderSim(){
+    $$(".topics button").forEach(b=>b.setAttribute("aria-pressed",b.dataset.topic===scen.topic));
+    const c=cfg[scen.topic];
+    const dlg=(d)=>{const p=people[d.id];return '<div class="dlg"><span class="avatar" style="background:'+p.c+'">'+p.av+'</span><span class="nm"><b>'+p.nm+(p.ver?' <svg class="badge-v" aria-label="Verified"><use href="#vbadge"/></svg>':'')+'</b><small>'+p.sub+'</small></span><span class="wt">'+d.w+'%</span></div>';};
+    $("#ladder").innerHTML=
+      '<div class="rung"><div class="rung-h"><span class="t">Level 1 · People I trust<small>count live</small></span></div>'+(c.l1.length?c.l1.map(dlg).join(""):'<span class="muted" style="font-size:13px">Nobody set for this topic</span>')+'</div>'+
+      '<div class="rung"><div class="rung-h"><span class="t">Level 2 · MPs and parties<small>after the Seimas vote</small></span></div>'+c.l2.map(dlg).join("")+'</div>';
+    // controls
+    const sel=(id,label,opts,val)=>'<label class="ctl" for="s-'+id+'">'+label+'<select id="s-'+id+'" data-k="'+id+'">'+opts.map(o=>'<option value="'+o[0]+'"'+(o[0]===val?' selected':'')+'>'+o[1]+'</option>').join("")+'</select></label>';
+    let h=sel("mine","My own vote",[["none","I didn't vote"],["for","For"],["against","Against"],["abstain","Abstain"]],scen.mine);
+    h+=sel("phase","Seimas status",[["before","Before the final vote"],["after","After the final vote"]],scen.phase);
+    c.l1.forEach(d=>{h+=sel(d.id,people[d.id].nm,d.id==="tomas"?OPTS.personChain:OPTS.person,scen.v[d.id]);});
+    c.l2.forEach(d=>{h+=sel(d.id,people[d.id].nm,OPTS[people[d.id].kind],scen.v[d.id]);});
+    $("#ctls").innerHTML=h;
+    $$("#ctls select").forEach(s=>s.addEventListener("change",()=>{const k=s.dataset.k;if(k==="mine")scen.mine=s.value;else if(k==="phase")scen.phase=s.value;else scen.v[k]=s.value;renderSim();}));
+    resolve();
+  }
+  function blend(list){const tot=list.reduce((a,x)=>a+x.w,0);const r={for:0,against:0,abstain:0};list.forEach(x=>{r[x.v]+=x.w/tot;});return r;}
+  function resolve(){
+    const c=cfg[scen.topic];const steps=[];let out=null,src="";
+    const nm=id=>people[id].nm;
+    if(scen.mine!=="none"){
+      steps.push({cls:"hit",ic:"✓",t:"<b>You voted "+scen.mine+".</b> Your own vote replaces every delegation."});
+      out={[scen.mine]:1};src="your own vote";
+      steps.push({cls:"skip",ic:"–",t:"Level 1 and level 2 are not used."});
+    } else {
+      steps.push({cls:"skip",ic:"–",t:"You didn't vote yourself, so your delegation for <b>"+({economy:"Economy",education:"Education",other:"everything else"}[scen.topic])+"</b> is used."});
+      // level 1
+      if(!c.l1.length){steps.push({cls:"skip",ic:"1",t:"No trusted people set for this topic. Moving to level 2."});}
+      else{
+        const voted=[];const notes=[];
+        c.l1.forEach(d=>{const v=scen.v[d.id];if(W(v))voted.push({v,w:d.w,id:d.id});else if(v==="delegated")notes.push(nm(d.id)+" delegated their own vote, which does not pass on (no chains)");else notes.push(nm(d.id)+" didn't vote");});
+        if(voted.length){
+          const r=blend(voted);out=r;src="level 1";
+          const desc=voted.map(x=>nm(x.id)+" voted "+x.v).join("; ");
+          const rew=voted.length<c.l1.length?" Their share is reweighted to 100%.":"";
+          steps.push({cls:"hit",ic:"1",t:"<b>"+desc+".</b>"+(notes.length?" "+notes.join("; ")+".":"")+rew});
+          steps.push({cls:"skip",ic:"2",t:"Level 2 is not needed."});
+        } else {
+          steps.push({cls:"skip",ic:"1",t:notes.join("; ")+". Moving to level 2."});
+        }
+      }
+      if(!out){
+        if(scen.phase==="before"){
+          steps.push({cls:"pend",ic:"…",t:"<b>Waiting for the Seimas.</b> Level 2 resolves after the final vote, from the official record. Until then your vote is not in the live tally."});
+          src="pending";
+        } else {
+          const voted=[];const notes=[];
+          c.l2.forEach(d=>{const v=scen.v[d.id];if(W(v))voted.push({v,w:d.w,id:d.id});else notes.push(nm(d.id)+" was absent");});
+          if(voted.length){out=blend(voted);src="level 2";steps.push({cls:"hit",ic:"2",t:"<b>"+voted.map(x=>nm(x.id)+(people[x.id].kind==="party"?" majority voted ":" voted ")+x.v+" ("+x.w+"%)").join("; ")+".</b>"+(notes.length?" "+notes.join("; ")+"; their share is spread over the rest.":"")});}
+          else{steps.push({cls:"skip",ic:"2",t:notes.join("; ")+". Nobody left to follow."});src="none";}
+        }
+      }
+    }
+    $("#trace").innerHTML=steps.map(s=>'<li class="'+s.cls+'"><span class="ic">'+s.ic+'</span><span>'+s.t+'</span></li>').join("");
+    let html='<span class="h">Your vote counts as</span>';
+    if(out){
+      const f=Math.round((out.for||0)*100),a=Math.round((out.against||0)*100),n=100-f-a;
+      const parts=[];if(f)parts.push(f+"% for");if(a)parts.push(a+"% against");if(n)parts.push(n+"% abstain");
+      const single=parts.length===1;
+      html+='<span class="v">'+(single?({for:"1 vote for",against:"1 vote against",abstain:"1 abstention"}[f?"for":a?"against":"abstain"]):parts.join(" · "))+'</span>';
+      html+='<div class="sbar" data-tip="'+parts.join(", ")+'"><span class="f" style="flex:'+f+'">'+(f>=15?f+'%':'')+'</span><span class="a" style="flex:'+a+'">'+(a>=15?a+'%':'')+'</span><span class="n" style="flex:'+n+'"></span></div>';
+      html+='<span class="muted" style="font-size:12.5px">Resolved from '+src+'. You receive a notification with the explanation.</span>';
+    } else if(src==="pending"){
+      html+='<span class="v">Pending</span><span class="muted" style="font-size:12.5px">You get a reminder 48 hours before the vote, in case you want to vote yourself.</span>';
+    } else {
+      html+='<span class="v">Not counted</span><span class="muted" style="font-size:12.5px">None of your delegates voted. We never assign a vote by default.</span>';
+    }
+    $("#result").innerHTML=html;
+  }
+  $$(".topics button").forEach(b=>b.addEventListener("click",()=>{scen.topic=b.dataset.topic;scen.mine="none";renderSim();}));
+  renderSim();
+
+  /* ---------- dot plot ---------- */
+  const bills=[
+    {id:"XVP-0587",t:"Tuition-free first cycle",s:48,p:81,o:"Rejected"},
+    {id:"XVP-0701",t:"Dental cover for 65+",s:72,p:88,o:"Adopted"},
+    {id:"XVP-0633",t:"Defence at 3.5% of GDP",s:91,p:77,o:"Adopted"},
+    {id:"XVP-0690",t:"Excise on sugary drinks",s:52,p:49,o:"Adopted"},
+    {id:"XVP-0412",t:"Progressive income tax",s:60,p:44,o:"Adopted"},
+    {id:"XVP-0655",t:"Solar parks on farmland",s:55,p:41,o:"Adopted"}
+  ];
+  (function dot(){
+    const svg=$("#dotplot");const L=190,R=540,top=24,rowH=42;
+    const x=v=>L+(R-L)*v/100;
+    const g=el("g",{"font-family":"Bricolage Grotesque, system-ui, sans-serif","font-size":"12"});
+    [0,25,50,75,100].forEach(v=>{
+      g.appendChild(el("line",{x1:x(v),x2:x(v),y1:top-6,y2:top+rowH*bills.length-14,stroke:"var(--line)","stroke-width":v===50?1.5:1,"stroke-dasharray":v===50?"":"2 3"}));
+      const t=el("text",{x:x(v),y:top+rowH*bills.length+4,"text-anchor":"middle",fill:"var(--muted)"});t.textContent=v+"%";g.appendChild(t);
+    });
+    const m=el("text",{x:x(50),y:12,"text-anchor":"middle",fill:"var(--muted)","font-size":"11"});m.textContent="majority";g.appendChild(m);
+    bills.forEach((b,i)=>{
+      const y=top+i*rowH+8;
+      const hit=el("rect",{x:0,y:y-18,width:560,height:rowH-4,fill:"transparent"});
+      hit.setAttribute("data-tip",b.t+" ("+b.id+"): Seimas "+b.s+"% for, platform "+b.p+"% for. Gap "+Math.abs(b.s-b.p)+" points. "+b.o+".");
+      g.appendChild(hit);
+      const t1=el("text",{x:0,y:y-2,fill:"var(--ink)","font-weight":"600"});t1.textContent=b.t;g.appendChild(t1);
+      const t2=el("text",{x:0,y:y+13,fill:"var(--muted)","font-family":"IBM Plex Mono, monospace","font-size":"10.5"});t2.textContent=b.id+" · "+b.o;g.appendChild(t2);
+      g.appendChild(el("line",{x1:x(Math.min(b.s,b.p)),x2:x(Math.max(b.s,b.p)),y1:y,y2:y,stroke:"var(--line-strong)","stroke-width":3,"stroke-linecap":"round"}));
+      g.appendChild(el("circle",{cx:x(b.s),cy:y,r:6.5,fill:"var(--s-seimas)",stroke:"var(--surface)","stroke-width":2}));
+      g.appendChild(el("circle",{cx:x(b.p),cy:y,r:6.5,fill:"var(--s-platform)",stroke:"var(--surface)","stroke-width":2}));
+      if(i===0){
+        const a=el("text",{x:x(b.s),y:y-11,"text-anchor":"middle",fill:"var(--ink-2)","font-size":"11"});a.textContent="Seimas";g.appendChild(a);
+        const c=el("text",{x:x(b.p),y:y-11,"text-anchor":"middle",fill:"var(--ink-2)","font-size":"11"});c.textContent="Users";g.appendChild(c);
+      }
+    });
+    svg.appendChild(g);
+    $("#dotTable tbody").innerHTML=bills.map(b=>"<tr><td>"+b.t+" ("+b.id+")</td><td>"+b.s+"%</td><td>"+b.p+"%</td><td>"+b.o+"</td></tr>").join("");
+  })();
+
+  /* ---------- cohesion ---------- */
+  const coh=[
+    {n:"Civic Union",v:96,d:"Excise on sugary drinks; Solar parks; Tuition-free first cycle"},
+    {n:"Reform Party",v:93,d:"Solar parks; Defence at 3.5%; Dental cover for 65+"},
+    {n:"Social Forum",v:91,d:"Progressive income tax; Defence at 3.5%; Excise on sugary drinks"},
+    {n:"New Centre",v:88,d:"Tuition-free first cycle; Solar parks; Progressive income tax"},
+    {n:"Rural Alliance",v:84,d:"Solar parks on farmland; Excise on sugary drinks; Progressive income tax"}
+  ];
+  $("#cohesion").innerHTML=coh.map(c=>{const w=(c.v-70)/30*100;return '<div class="coh" data-tip="'+c.n+': '+c.v+'%. Most divisive: '+c.d+'"><span>'+c.n+'</span><div class="bar"><span style="width:'+w+'%"></span></div><b>'+c.v+'%</b></div>';}).join("")+'<div class="coh" aria-hidden="true" style="font-size:11px;color:var(--muted)"><span></span><div style="display:flex;justify-content:space-between"><span>70%</span><span>85%</span><span>100%</span></div><span></span></div>';
+
+  /* ---------- matches ---------- */
+  const mt=[
+    {av:"OJ",c:"#1f6b3a",n:"Ona Jonaitienė",s:"MP · Civic Union",v:82},
+    {av:"CU",c:"#1f6b3a",n:"Civic Union faction",s:"38 MPs",v:76},
+    {av:"PP",c:"#8a4a8a",n:"Petras Petraitis",s:"MP · New Centre",v:71},
+    {av:"JP",c:"#4a3aa7",n:"Jonas Petraitis",s:"MP · Reform Party · your Economy delegate",v:61},
+    {av:"RP",c:"#4a3aa7",n:"Reform Party faction",s:"30 MPs",v:54}
+  ];
+  $("#matches").innerHTML=mt.map(m=>'<div class="match" data-tip="'+m.n+': agreed with you on '+Math.round(m.v*37/100)+' of 37 votes"><span class="avatar" style="background:'+m.c+'">'+m.av+'</span><span class="nm">'+m.n+'<small>'+m.s+'</small></span><div class="bar"><span style="width:'+m.v+'%"></span></div><b>'+m.v+'%</b></div>').join("");
+
+  /* ---------- toc highlight ---------- */
+  const links=$$(".toc a");const secs=links.map(a=>$(a.getAttribute("href")));
+  if("IntersectionObserver" in window){
+    const io=new IntersectionObserver(es=>{es.forEach(e=>{if(e.isIntersecting){links.forEach(l=>l.classList.toggle("on",l.getAttribute("href")==="#"+e.target.id));}});},{rootMargin:"-30% 0px -60% 0px"});
+    secs.forEach(s=>s&&io.observe(s));
+  }
+})();
+</script>
