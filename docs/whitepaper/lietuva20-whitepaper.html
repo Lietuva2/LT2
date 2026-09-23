@@ -833,7 +833,7 @@ footer.end svg{width:28px;height:28px}
             <div class="kpi"><span class="k">Patvirtinti Seimo nariai</span><span class="v">46</span><span class="s">iš 141</span></div>
           </div>
           <div class="panel span-7">
-            <div class="ph"><h4>Balsų „už“ dalis: Seimas ir platforma</h4><span>Galutiniai balsavimai dėl atrinktų projektų</span></div>
+            <div class="ph"><h4>Balsų „už“ dalis: Seimas ir platforma</h4><span>Linija ties 50 % – dauguma</span></div>
             <div class="legend"><span><i style="background:var(--s-seimas)"></i>Seimas</span><span><i style="background:var(--s-platform)"></i>Lietuva 2.0 naudotojai</span></div>
             <div class="dots-chart"><svg id="dotplot" viewBox="0 0 560 300" role="img" aria-label="Taškinis grafikas, lyginantis balsų už dalį Seime ir platformoje šešiems projektams"></svg></div>
             <details class="tview"><summary>Rodyti lentelę</summary><table id="dotTable"><thead><tr><th>Projektas</th><th>Seime už</th><th>Platformoje už</th><th>Seimo sprendimas</th></tr></thead><tbody></tbody></table></details>
@@ -1258,7 +1258,7 @@ footer.end svg{width:28px;height:28px}
       g.appendChild(el("line",{x1:x(v),x2:x(v),y1:top-6,y2:top+rowH*bills.length-14,stroke:"var(--line)","stroke-width":v===50?1.5:1,"stroke-dasharray":v===50?"":"2 3"}));
       const t=el("text",{x:x(v),y:top+rowH*bills.length+4,"text-anchor":"middle",fill:"var(--muted)"});t.textContent=v+" %";g.appendChild(t);
     });
-    const m=el("text",{x:x(50),y:12,"text-anchor":"middle",fill:"var(--muted)","font-size":"11"});m.textContent="daugumos riba";g.appendChild(m);
+    
     bills.forEach((b,i)=>{
       const y=top+i*rowH+8;
       const hit=el("rect",{x:0,y:y-18,width:560,height:rowH-4,fill:"transparent"});
