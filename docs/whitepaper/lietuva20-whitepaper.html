@@ -634,10 +634,10 @@ footer.end svg{width:28px;height:28px}
         <div class="split-bars">
           <div class="sbar-row"><div class="lbl"><b>Seimas</b>balsavo 131 SN</div>
             <div class="sbar" data-tip="Seimas: 60 % už, 31 % prieš, 9 % susilaikė"><span class="f" style="flex:78">60 %</span><span class="a" style="flex:41">31 %</span><span class="n" style="flex:12"></span></div></div>
-          <div class="sbar-row"><div class="lbl"><b>Lietuva 2.0</b>33 780 balsų</div>
-            <div class="sbar" data-tip="Platforma, įskaitant deleguotus balsus: 44 % už, 49 % prieš, 7 % susilaikė"><span class="f" style="flex:44">44 %</span><span class="a" style="flex:49">49 %</span><span class="n" style="flex:7"></span></div></div>
+          <div class="sbar-row"><div class="lbl"><b>Lietuva 2.0</b>15 160 balsų, LT2</div>
+            <div class="sbar" data-tip="LT2 rezultatas (tiesioginiai ir deleguoti LT2 balsai): 35 % už, 58 % prieš, 7 % susilaikė"><span class="f" style="flex:35">35 %</span><span class="a" style="flex:58">58 %</span><span class="n" style="flex:7"></span></div></div>
         </div>
-        <div class="verdict"><span class="chip gap">Atotrūkis: 16 p. p.</span> Seimas priėmė projektą, kuriam dauguma platformos naudotojų nepritarė.</div>
+        <div class="verdict"><span class="chip gap">Atotrūkis: 25 p. p.</span> Seimas priėmė projektą, kuriam dauguma platformos naudotojų nepritarė.</div>
       </div>
     </section>
 
@@ -890,7 +890,7 @@ footer.end svg{width:28px;height:28px}
             </g>
           </svg>
         </div>
-        <figcaption>Kol balsavimas atviras, skaičiuojami tiesioginiai balsai ir patikėtinių balsai LT2. Šis LT2 rezultatas galutinis, kai Seimas balsuoja. Papildomas rezultatas „Po Seimo“ įskaičiuoja ir patikėtinius Seimo narius, kurie LT2 nebalsavo, pagal jų oficialų balsą Seime. LT2 rezultato jis nekeičia.</figcaption>
+        <figcaption>Kol balsavimas atviras, skaičiuojami tiesioginiai balsai ir patikėtinių balsai LT2. Šis LT2 rezultatas galutinis, kai Seimas balsuoja. Papildomas rezultatas „Po Seimo“ įskaičiuoja ir patikėtinius Seimo narius, kurie LT2 nebalsavo, pagal jų oficialų balsą Seime. LT2 rezultato jis nekeičia ir palyginimui su Seimu nenaudojamas: jame yra patių Seimo narių balsai, todėl atotrūkis dirbtinai mažėtų. Visi palyginimai su Seimu remiasi LT2 rezultatu.</figcaption>
       </figure>
     </section>
 
@@ -1472,7 +1472,7 @@ footer.end svg{width:28px;height:28px}
   }
   function renderInitForm(){
     const b=initBills.find(x=>x.id===initSel);const f=$("#initForm");
-    if(b.live){f.innerHTML='<div class="side-h">'+b.id+'</div><div class="okbox"><b>Dėl šio projekto jau balsuojama.</b><br>33 780 balsų · balsavimą inicijavo Rūta Mockutė. Antras balsavimas dėl to paties projekto nekuriamas – galite prisijungti prie esamo.</div><button class="btn-primary" type="button">Atidaryti balsavimą</button>';return;}
+    if(b.live){f.innerHTML='<div class="side-h">'+b.id+'</div><div class="okbox"><b>Dėl šio projekto jau balsuojama.</b><br>15 160 balsų · balsavimą inicijavo Rūta Mockutė. Antras balsavimas dėl to paties projekto nekuriamas – galite prisijungti prie esamo.</div><button class="btn-primary" type="button">Atidaryti balsavimą</button>';return;}
     f.innerHTML='<div class="side-h">Naujas visuomenės balsavimas</div>'+
       '<div class="bill-crumbs"><span class="mono">'+b.id+'</span><span>'+b.full+' · '+b.stage+'</span><a href="https://e-seimas.lrs.lt/">tekstas e-seime</a></div>'+
       (b.tech?'<div class="warnbox"><b>DI vertinimu, projektas techninio pobūdžio.</b> Jis nekeičia žmonių teisių ar pareigų, todėl visuomenei greičiausiai mažai aktualus.</div>':'')+
@@ -1612,7 +1612,7 @@ footer.end svg{width:28px;height:28px}
     {id:"XVP-0701",t:"Dantų protezavimas 65+",s:72,p:88,o:"Priimta"},
     {id:"XVP-0633",t:"Gynybai – 3,5 % BVP",s:91,p:77,o:"Priimta"},
     {id:"XVP-0690",t:"Akcizas saldintiems gėrimams",s:52,p:49,o:"Priimta"},
-    {id:"XVP-0412",t:"Progresinis pajamų mokestis",s:60,p:44,o:"Priimta"},
+    {id:"XVP-0412",t:"Progresinis pajamų mokestis",s:60,p:35,o:"Priimta"},
     {id:"XVP-0655",t:"Saulės parkai ūkio žemėje",s:55,p:41,o:"Priimta"}
   ];
   (function dot(){
