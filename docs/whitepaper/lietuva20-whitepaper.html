@@ -737,13 +737,7 @@ footer.end svg{width:28px;height:28px}
               <button type="button" data-v="against" aria-pressed="false">Prieš</button>
               <button type="button" data-v="abstain" aria-pressed="false">Susilaikau</button>
             </div>
-            <div style="display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap">
-              <span class="side-h">Rezultatas</span>
-              <div class="seg" role="group" aria-label="Rezultato vaizdas">
-                <button type="button" data-phase="before" aria-pressed="true">Prieš Seimą</button>
-                <button type="button" data-phase="after" aria-pressed="false">Po Seimo</button>
-              </div>
-            </div>
+            <span class="side-h">Rezultatas</span>
             <div class="tally" id="tally"></div>
           </div>
         </div>
@@ -1421,7 +1415,6 @@ footer.end svg{width:28px;height:28px}
       st.innerHTML='<div class="st"><i style="background:var(--v-against)"></i>Deleguota: prieš</div><div style="margin-top:4px;color:var(--ink-2)">2 iš 3 jūsų patikėtinių balsavo <b>prieš</b> (Rūta Mockutė, Reformų partija), Jonas Petraitis dar nebalsavo. Jūsų balsas seka jų daugumą, nebent balsuosite patys.</div>';
     }
     $$(".vote-btns button").forEach(b=>b.setAttribute("aria-pressed",b.dataset.v===bill.mine));
-    $$(".seg button[data-phase]").forEach(b=>b.setAttribute("aria-pressed",b.dataset.phase===bill.phase));
     const B=base[bill.phase];
     let dF=B.f,dA=B.a,dN=B.n;
     let gF=B.deleg.f,gA=B.deleg.a,gN=B.deleg.n;
@@ -1441,14 +1434,13 @@ footer.end svg{width:28px;height:28px}
       $("#stageTxt").textContent="Priimta 78 : 41"; $("#closes").textContent="baigta";
       $$(".vote-btns button").forEach(b=>b.disabled=true);
     } else {
-      rows.push('<p class="note">Balsai, patikėti Seimo nariams, kurie LT2 nebalsavo (apie 18 000), rodomi „Po Seimo“ pagal jų oficialų balsą. Perjunkite, kad pamatytumėte.</p>');
+      rows.push('<p class="note">Kai Seimas balsuos, čia automatiškai atsiras Seimo sprendimas ir rezultatas „Po Seimo“: jame įskaičiuojami ir balsai, patikėti Seimo nariams, kurie LT2 nebalsavo (apie 18 000), pagal jų oficialų balsą.</p>');
       $("#stageTxt").textContent="Rugs. 24 d., 14:00"; $("#closes").textContent="22 val.";
       $$(".vote-btns button").forEach(b=>b.disabled=false);
     }
     $("#tally").innerHTML=rows.join("");
   }
   $$(".vote-btns button").forEach(b=>b.addEventListener("click",()=>{bill.mine=(bill.mine===b.dataset.v)?null:b.dataset.v;renderBill();}));
-  $$(".seg button[data-phase]").forEach(b=>b.addEventListener("click",()=>{bill.phase=b.dataset.phase;renderBill();}));
   renderBill();
 
   /* ---------- initiation ---------- */
