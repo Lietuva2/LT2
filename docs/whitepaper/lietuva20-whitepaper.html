@@ -529,6 +529,28 @@ footer.end svg{width:28px;height:28px}
 .chain .none{color:var(--muted)}
 .clicks{font-family:var(--f-display);font-size:13px;color:var(--ink-2);display:flex;justify-content:space-between;align-items:baseline}
 .clicks b{font-size:22px;color:var(--ink);font-variant-numeric:tabular-nums}
+
+.rep{display:grid;grid-template-columns:28px minmax(0,1fr) auto;gap:10px;align-items:start;padding:10px 0;border-bottom:1px solid var(--line)}
+.rep:last-child{border-bottom:0}
+.rep .nm{font-size:14px;line-height:1.3}
+.rep .nm small{display:block;color:var(--muted);font-size:12px}
+.rep .tags{display:flex;flex-wrap:wrap;gap:4px;margin-top:6px}
+.rep .tags button{font:inherit;font-size:11.5px;padding:2px 8px;border-radius:999px;border:1px solid var(--line-strong);background:var(--surface);color:var(--ink-2);cursor:pointer}
+.rep .tags button[aria-pressed="true"]{background:var(--brand-soft);border-color:var(--brand);color:var(--ink)}
+.rep .ctl3{display:flex;gap:4px}
+.rep .ctl3 button{font:inherit;font-size:12px;width:26px;height:26px;border-radius:7px;border:1px solid var(--line-strong);background:var(--surface);color:var(--ink-2);cursor:pointer}
+.rep .ctl3 button:disabled{opacity:.35;cursor:default}
+.rank{font-family:var(--f-mono);font-size:11px;color:var(--muted)}
+.prev{border:1px solid var(--line);border-radius:10px;padding:10px 12px;background:var(--surface);display:grid;gap:4px;font-size:13px}
+.prev b{font-size:13.5px}
+.prev .tg{display:flex;gap:4px;flex-wrap:wrap}
+.prev .tg span{font-size:11px;padding:1px 7px;border-radius:999px;background:var(--surface-2);color:var(--muted)}
+.prev .who{color:var(--ink-2)}
+.partytbl{width:100%;border-collapse:collapse;font-size:13px;font-variant-numeric:tabular-nums}
+.partytbl th,.partytbl td{padding:6px 8px;border-bottom:1px solid var(--line);text-align:right}
+.partytbl th:first-child,.partytbl td:first-child{text-align:left}
+.partytbl th{font-size:11.5px;color:var(--muted);font-weight:600;letter-spacing:.04em}
+.partytbl td.gap{font-weight:700;color:var(--warn-ink);background:var(--warn-bg)}
 </style>
 
 <svg width="0" height="0" style="position:absolute" aria-hidden="true">
@@ -758,61 +780,51 @@ footer.end svg{width:28px;height:28px}
     <section class="chapter" id="delegation">
       <header>
         <div class="eyebrow">04 · Balso delegavimas</div>
-        <h2>Pasitikėkite kitais pagal temą, bet paskutinis žodis lieka jums</h2>
-        <p class="lede">Visų projektų niekas neperskaitys. Delegavimas nustatomas vieną kartą: pasirinkus partiją, visos temos padengtos vienu paspaudimu, o Seimo narius pagal temas pasiūlome patys. Bet kurį pasirinkimą galima pakeisti.</p>
+        <h2>Pasitikėkite keliais žmonėmis, bet paskutinis žodis lieka jums</h2>
+        <p class="lede">Pasirenkate 1–3 patikėtinius: žmogų, organizaciją, Seimo narį ar partiją. Jei patys nebalsuojate, jūsų balsą lemia jų dauguma. Daugiau nieko nustatinėti nereikia.</p>
       </header>
 
-      <h3>Kaip nustatyti delegavimą</h3>
-      <div class="mock-label"><span><b>Maketas</b> · Delegavimo nustatymas</span><span>Interaktyvus</span></div>
+      <div class="mock-label"><span><b>Maketas</b> · Mano patikėtiniai</span><span>Interaktyvus</span></div>
       <div class="mock">
-        <div class="mock-bar"><div class="dots"><i></i><i></i><i></i></div><div class="url">lietuva20.lt/delegavimas</div></div>
+        <div class="mock-bar"><div class="dots"><i></i><i></i><i></i></div><div class="url">lietuva20.lt/patiketiniai</div></div>
         <div class="wz">
           <div class="wz-main">
             <div class="step">
-              <div class="step-h"><b>1. Partija</b><span>Atsarginis pasirinkimas visoms temoms</span></div>
-              <div class="parties" id="wzParties" role="group" aria-label="Partija"></div>
+              <div class="step-h"><b>Mano patikėtiniai</b><span>Eilė lemia tik lygiųjų atveju</span></div>
+              <div id="repList"></div>
             </div>
-            <div class="step off" id="wzStep2">
-              <div class="step-h"><b>2. Seimo nariai ir ministrai pagal temas</b><span id="wzS2note">Pirmiausia pasirinkite partiją</span></div>
-              <div id="wzTopics" style="display:grid;gap:8px"></div>
-            </div>
-            <div class="step" id="wzStep3">
-              <div class="step-h"><b>3. Žmonės ir organizacijos</b><span>Neprivaloma</span></div>
+            <div class="step" id="repAdd">
+              <div class="step-h"><b>Pridėti patikėtinį</b><span id="repLimit">iki 3</span></div>
               <div class="utabs" role="group" aria-label="Sąrašas">
-                <button type="button" data-t="party" aria-pressed="true">Pasirinkę tą pačią partiją</button>
+                <button type="button" data-t="sug" aria-pressed="true">Siūlomi</button>
                 <button type="button" data-t="top" aria-pressed="false">Daugiausia patikėtojų</button>
                 <button type="button" data-t="search" aria-pressed="false">Paieška</button>
               </div>
-              <input class="search" id="wzSearch" type="search" placeholder="Ieškoti žmogaus, organizacijos, Seimo nario" aria-label="Ieškoti" hidden>
-              <div id="wzUsers" style="display:grid;gap:8px"></div>
+              <input class="search" id="repSearch" type="search" placeholder="Ieškoti žmogaus, organizacijos, Seimo nario, partijos" aria-label="Ieškoti" hidden>
+              <div id="repCands" style="display:grid;gap:8px"></div>
             </div>
+            <label class="fld" for="repParty">Mano partija (neprivaloma – naudojama siūlymams ir rėmėjų statistikai)
+              <select id="repParty"><option value="">Nenurodyta</option><option>Pilietinė sąjunga</option><option selected>Reformų partija</option><option>Socialinis forumas</option><option>Kaimo aljansas</option><option>Naujasis centras</option></select>
+            </label>
           </div>
           <div class="wz-side">
-            <div class="clicks"><span class="side-h">Jūsų delegavimas</span><span>paspaudimų: <b id="wzClicks">0</b></span></div>
-            <div id="wzSummary" style="display:grid;gap:8px"></div>
+            <div class="clicks"><span class="side-h">Kas balsuotų už jus</span><span>paspaudimų: <b id="repClicks">0</b></span></div>
+            <div id="repPrev" style="display:grid;gap:8px"></div>
           </div>
         </div>
       </div>
       <div class="annot">
-        <div><span class="n">1</span><span><b>Viena partija – visos temos.</b> Po pirmo paspaudimo delegavimas jau veikia visose temose.</span></div>
-        <div><span class="n">2</span><span><b>Siūlymai pagal komitetus.</b> Kiekvienai temai siūlomas pasirinktos partijos Seimo narys, dirbantis atitinkamame komitete. Ministras pasirenkamas iš to paties sąrašo.</span></div>
-        <div><span class="n">3</span><span><b>Žmonės – pagal bendrus pasirinkimus.</b> Siūlomi patikėtiniai, pasirinkę tą pačią partiją, ir tie, kuriais pasitiki daugiausia žmonių.</span></div>
-        <div><span class="n">4</span><span><b>Galima pasirinkti bet ką.</b> Paieška apima visus Seimo narius, ministrus, patvirtintas organizacijas ir viešus patikėtinius.</span></div>
-      </div>
-      <div class="prose" style="margin-top:22px">
-        <p>Komitetų narystė ir Vyriausybės sudėtis imamos iš oficialių duomenų. Kai Seimo narys pakeičia komitetą ar frakciją, siūlymai atnaujinami, o jūs gaunate pranešimą ir galite patvirtinti ar pakeisti pasirinkimą. Jūsų delegavimas yra privatus: kitiems rodomas tik bendras patikėtinio patikėtojų skaičius.</p>
+        <div><span class="n">1</span><span><b>Temos užsipildo pačios.</b> Patikėtinis, nurodęs savo sritis, pridedamas toms sritims, kitaip – visoms temoms. Pakeisti galima vienu paspaudimu.</span></div>
+        <div><span class="n">2</span><span><b>Siūlomi pirmiausia aktyvūs.</b> Pirmi siūlomi LT2 balsuojantys politikai, tada pagal temų patirtį, komitetus, jūsų partiją ir patikėtojų skaičių. Paieška apima visus.</span></div>
+        <div><span class="n">3</span><span><b>Iškart matote pasekmes.</b> Dešinėje – kas balsuotų už jus dėl skirtingų projektų.</span></div>
       </div>
 
       <h3 style="margin-top:44px">Kaip nustatomas jūsų balsas</h3>
       <div class="sim" id="sim">
         <div class="sim-cfg">
           <div>
-            <div class="side-h" style="margin-bottom:8px">Projekto tema</div>
-            <div class="topics" role="group" aria-label="Tema">
-              <button type="button" data-topic="economy" aria-pressed="true">Ekonomika</button>
-              <button type="button" data-topic="education" aria-pressed="false">Švietimas</button>
-              <button type="button" data-topic="other" aria-pressed="false">Visa kita</button>
-            </div>
+            <div class="side-h" style="margin-bottom:8px">Projektas</div>
+            <div class="topics" role="group" aria-label="Projektas" id="simBills"></div>
           </div>
           <div class="ladder" id="ladder"></div>
           <div>
@@ -828,12 +840,12 @@ footer.end svg{width:28px;height:28px}
       </div>
 
       <div class="rules">
-        <div class="rule"><h4>Jūsų balsas visada svarbiausias</h4><p>Balsuodami patys, net paskutinę minutę, pakeičiate visus to projekto delegavimus. Balsą galite keisti, kol balsavimas nesibaigė.</p></div>
-        <div class="rule"><h4>Trys lygiai, eilės tvarka</h4><p>1 – žmonės ir organizacijos platformoje, 2 – Seimo nariai ir ministrai, 3 – partija. Naudojamas pirmas lygis, kuriame kas nors balsavo. Jei niekas nebalsavo, balsas neįskaičiuojamas: balso pagal nutylėjimą nepriskiriame.</p></div>
-        <div class="rule"><h4>Svoriai dalija vieną balsą</h4><p>Lygyje gali būti keli patikėtiniai su svoriais, pvz., 60 % vienas Seimo narys ir 40 % kitas. Jei kuris nors nedalyvauja, jo dalis paskirstoma kitiems.</p></div>
-        <div class="rule"><h4>Jokių grandinių</h4><p>Jei jūsų patikėtinis pats delegavo savo balsą, jums jis neperduodamas – taikomas kitas jūsų lygis. Taip rezultatai lieka paaiškinami, o galia nesikaupia nematomai.</p></div>
+        <div class="rule"><h4>Jūsų balsas visada svarbiausias</h4><p>Balsuodami patys, net paskutinę minutę, pakeičiate delegavimą tam projektui. Balsą galite keisti, kol balsavimas nesibaigė.</p></div>
+        <div class="rule"><h4>Sprendžia patikėtinių dauguma</h4><p>Skaičiuojami tik LT2 balsavę patikėtiniai. Lygiųjų atveju lemia aukščiau sąraše esantis. Jei nebalsavo nė vienas, balsas neįskaičiuojamas: balso pagal nutylėjimą nepriskiriame.</p></div>
+        <div class="rule"><h4>Temos – nebūtinos</h4><p>Projektas turi kelias temų žymas. Susiaurintas patikėtinis taikomas, jei sutampa bent viena jų. Netiksli žyma daug nepakenkia: prieš balsavimo pabaigą matote, kieno balsą nešate.</p></div>
+        <div class="rule"><h4>Partija kaip patikėtinis</h4><p>Partijos balsas – jos politikų, balsavusių LT2, dauguma. Ministrai ir kiti politikai – tokie patys patikėtiniai kaip visi. Vyriausybės išvada dėl projekto rodoma tik kaip informacija.</p></div>
+        <div class="rule"><h4>Jokių grandinių</h4><p>Jei jūsų patikėtinis pats nebalsavo, o delegavo savo balsą, jis jums neperduodamas – skaičiuojami kiti jūsų patikėtiniai. Taip rezultatai lieka paaiškinami, o galia nesikaupia nematomai.</p></div>
         <div class="rule"><h4>Patikėtiniai veikia viešai</h4><p>Patikėtiniu gali tapti kiekvienas, bet patikėtinių balsai vieši. Jiems balsą patikėję žmonės lieka anonimiški.</p></div>
-        <div class="rule"><h4>Ministrai</h4><p>Jei ministras yra Seimo narys, imamas jo balsas Seime. Kitu atveju – jo nurodyta pozicija platformoje arba oficiali Vyriausybės išvada dėl projekto, kai ji pateikiama.</p></div>
       </div>
     </section>
 
@@ -862,9 +874,9 @@ footer.end svg{width:28px;height:28px}
               </g>
               <text x="0" y="148" font-weight="700" font-size="13" letter-spacing=".06em" fill="var(--brand)">LIETUVA 2.0</text>
               <rect x="60" y="176" width="700" height="34" rx="8" fill="var(--brand-soft)"/>
-              <text x="410" y="198" text-anchor="middle" font-weight="600">Balsavimas atviras: tiesioginiai ir patikėtinių žmonių balsai skaičiuojami iškart</text>
+              <text x="410" y="198" text-anchor="middle" font-weight="600">Balsavimas atviras: tiesioginiai balsai ir patikėtinių LT2 balsai skaičiuojami iškart</text>
               <rect x="760" y="176" width="190" height="34" rx="8" fill="none" stroke="var(--brand)" stroke-width="1.5" stroke-dasharray="4 3"/>
-              <text x="855" y="198" text-anchor="middle" font-weight="600">Priskiriami SN balsai</text>
+              <text x="855" y="198" text-anchor="middle" font-weight="600">„Po Seimo“ rezultatas</text>
               <line x1="60" y1="80" x2="60" y2="172" stroke="currentColor" stroke-opacity=".5" marker-end="url(#ar)"/>
               <text x="68" y="118" opacity=".8">inicijuojamas balsavimas,</text><text x="68" y="133" opacity=".8">paruošta DI santrauka</text>
               <line x1="280" y1="80" x2="280" y2="172" stroke="currentColor" stroke-opacity=".5" marker-end="url(#ar)"/>
@@ -880,7 +892,7 @@ footer.end svg{width:28px;height:28px}
             </g>
           </svg>
         </div>
-        <figcaption>Balsai, patikėti žmonėms, skaičiuojami, kol balsavimas atviras. Seimo nariams ir partijoms patikėti balsai gali būti priskirti tik Seimui balsavus. Todėl kiekvienas projektas turi rezultatą „prieš“ (signalą, kurį mato Seimo nariai) ir rezultatą „po“ (ką piliečių pasirinkti atstovai iš tiesų padarė jų vardu).</figcaption>
+        <figcaption>Kol balsavimas atviras, skaičiuojami tiesioginiai balsai ir patikėtinių balsai LT2. Šis LT2 rezultatas galutinis, kai Seimas balsuoja. Papildomas rezultatas „Po Seimo“ įskaičiuoja ir patikėtinius Seimo narius, kurie LT2 nebalsavo, pagal jų oficialų balsą Seime. LT2 rezultato jis nekeičia.</figcaption>
       </figure>
     </section>
 
@@ -1010,7 +1022,7 @@ footer.end svg{width:28px;height:28px}
               <span>Balsavo kaip frakcija</span><b class="tnum">88 %</b>
               <span>Paaiškinti balsavimai</span><b class="tnum">31 iš 44</b>
               <span>Atsakyta į klausimus</span><b class="tnum">84 %</b>
-              <span>Balsavo pagal nurodytą poziciją</span><b class="tnum">43 iš 44</b>
+              <span>Seime balsavo taip pat kaip LT2</span><b class="tnum">43 iš 44</b>
             </div>
             <div>
               <div class="side-h" style="margin-bottom:8px">Jam balsą patikėję piliečiai</div>
@@ -1026,7 +1038,7 @@ footer.end svg{width:28px;height:28px}
             <div class="vrec">
               <div class="vrec-h"><div class="t">Progresinis gyventojų pajamų mokestis<small>XVP-0412 · priėmimas · 09-24</small></div><span class="vpill against">Prieš</span></div>
               <div class="cmp3">
-                <div>Nurodyta pozicija<b>Prieš, 09-02</b></div>
+                <div>LT2 balsas<b>Prieš, 09-02</b></div>
                 <div>Jo frakcija<b>22 iš 30 prieš</b></div>
                 <div>Jam patikėję, balsavę patys<b>312 · 71 % kaip jis</b></div>
               </div>
@@ -1035,7 +1047,7 @@ footer.end svg{width:28px;height:28px}
             <div class="vrec">
               <div class="vrec-h"><div class="t">Saulės parkai žemės ūkio paskirties žemėje<small>XVP-0655 · priėmimas · 09-10</small></div><span class="vpill for">Už</span></div>
               <div class="cmp3">
-                <div>Nurodyta pozicija<b>Nėra</b></div>
+                <div>LT2 balsas<b>Nebalsavo</b></div>
                 <div>Jo frakcija<b>19 iš 30 už</b></div>
                 <div>Jam patikėję, balsavę patys<b>88 · 38 % kaip jis</b></div>
               </div>
@@ -1049,12 +1061,12 @@ footer.end svg{width:28px;height:28px}
         <div><span class="for">VISIEMS POLITIKAMS</span><h4>Kalbėkitės su savo auditorija</h4><p>Žmonės jums rašo klausimus ir pasisakymus, o jūs atsakote vieną kartą visiems. Kaip tai veikia – 6 skyriuje.</p></div>
         <div><span class="for">VISIEMS POLITIKAMS</span><h4>Paaiškinkite savo balsą ten, kur jis matomas</h4><p>Paaiškinimas prie kiekvieno balsavimo rodomas projekto puslapyje ir pasiekia visus jums balsą patikėjusius, be reklamos ir algoritmų.</p></div>
         <div><span class="for">VISIEMS POLITIKAMS</span><h4>Matykite, kur jumis pasitikintys nesutinka</h4><p>Prie kiekvieno balsavimo matote, kiek jums balsą patikėjusių žmonių balsavo patys ir kiek jų pasirinko kitaip nei jūs. Tai veikia ir išrinktiems pagal partijos sąrašą, ir dar tik kandidatuojantiems.</p></div>
-        <div><span class="for">VISIEMS POLITIKAMS</span><h4>Matomas mandatas tarp rinkimų</h4><p>„Ekonomikos klausimais manimi pasitiki 2 140 piliečių“ – skaičius, kuris auga arba mažėja po kiekvieno balsavimo. Jis atlygina už nuoseklumą ir gerus paaiškinimus, o ne už garsiausią balsą.</p></div>
+        <div><span class="for">VISIEMS POLITIKAMS</span><h4>Jūsų balsas LT2 – su jumis pasitikinčiųjų balsais</h4><p>Kai balsuojate LT2, jūsų balsas iškart lemia jums balsą patikėjusių žmonių balsus, pvz., 2 140 ekonomikos klausimais. Šis skaičius auga arba mažėja po kiekvieno balsavimo ir atlygina už nuoseklumą bei gerus paaiškinimus.</p></div>
         <div><span class="for">KANDIDATAMS</span><h4>Patekite į rinkimų palyginimą</h4><p>Naujokai be Seimo balsavimų istorijos varžosi lygiomis sąlygomis su Seimo nariais. Kaip – 9 skyriuje.</p></div>
-        <div><span class="for">VISIEMS POLITIKAMS</span><h4>Teisė atsakyti</h4><p>Jei nesutinkate su DI santrauka apie projektą, kurį teikėte, ar su rodikliu savo profilyje, pvz., „Balsavo pagal nurodytą poziciją“, parašykite atsakymą. Jis prisegamas tiesiai po ta santrauka ar rodikliu ir matomas visiems, kurie juos mato.</p></div>
+        <div><span class="for">VISIEMS POLITIKAMS</span><h4>Teisė atsakyti</h4><p>Jei nesutinkate su DI santrauka apie projektą, kurį teikėte, ar su rodikliu savo profilyje, pvz., „Seime balsavo taip pat kaip LT2“, parašykite atsakymą. Jis prisegamas tiesiai po ta santrauka ar rodikliu ir matomas visiems, kurie juos mato.</p></div>
       </div>
       <div class="prose" style="margin-top:24px">
-        <p><b>Pozicijos ir balsai.</b> Prieš balsavimą politikas gali pažymėti poziciją dėl projekto: už, prieš arba susilaikys. Iki balsavimo ją galima keisti, o pakeitimas rodomas viešai su priežastimi. Paskutinė pozicija mechaniškai, be DI, palyginama su oficialiu balsu; nedalyvavimas nelaikomas neatitikimu. Rodiklis rodomas, kai pozicijos pažymėtos bent 10 balsavimų, o kiekvienas neatitikimas – tik prie konkretaus balsavimo, su politiko paaiškinimu.</p>
+        <p><b>LT2 ir Seimo balsai.</b> Politikas balsuoja LT2 kaip ir visi, o jo balsas iškart skaičiuojamas jam balsą patikėjusiems. Iki Seimo balsavimo jį galima keisti. Po Seimo balsavimo LT2 balsas mechaniškai, be DI, palyginamas su oficialiu; nedalyvavimas nelaikomas neatitikimu. Rodiklis „Seime balsavo taip pat kaip LT2“ rodomas, kai politikas LT2 balsavo bent 10 kartų. Neatitikimas matomas prie konkretaus balsavimo, su politiko paaiškinimu, o patikėtojai gauna pranešimą.</p>
         <p><b>Tapatybės patvirtinimas.</b> Seimo nariai patvirtinami per oficialų lrs.lt el. pašto adresą, savivaldybių tarybų nariai – per savivaldybės adresą, kandidatai – pagal Vyriausiosios rinkimų komisijos (VRK) sąrašus ir partijos patvirtinimą. Partijos, NVO, profesinės sąjungos ir verslo asociacijos gali gauti patvirtintos organizacijos ženklelį ir tapti patikėtiniais.</p>
       </div>
     </section>
@@ -1094,6 +1106,19 @@ footer.end svg{width:28px;height:28px}
             <div class="ph"><h4>Frakcijų vieningumas</h4><span>% balsų kartu su frakcijos dauguma</span></div>
             <div class="cohesion" id="cohesion"></div>
             <p style="font-size:12.5px;color:var(--muted)">Frakcija, kurios rodiklis mažesnis nei 85 %, dažnai būna susiskaldžiusi. Užveskite pelę ant juostos, kad pamatytumėte tris labiausiai ją skaldžiusius balsavimus.</p>
+          </div>
+          <div class="panel span-12">
+            <div class="ph"><h4>Partijos: frakcija Seime, politikai ir rėmėjai LT2</h4><span>Balsų „už“ dalis · XVP-0412, progresinis pajamų mokestis</span></div>
+            <div style="overflow-x:auto"><table class="partytbl">
+              <thead><tr><th>Partija</th><th>Frakcija Seime</th><th>Politikai LT2</th><th>Rėmėjai LT2</th></tr></thead>
+              <tbody>
+                <tr><td>Pilietinė sąjunga</td><td>89 %</td><td>82 %</td><td class="gap">58 %</td></tr>
+                <tr><td>Socialinis forumas</td><td>85 %</td><td>88 %</td><td>71 %</td></tr>
+                <tr><td>Kaimo aljansas</td><td>71 %</td><td>64 %</td><td class="gap">39 %</td></tr>
+                <tr><td>Reformų partija</td><td>10 %</td><td>12 %</td><td>21 %</td></tr>
+                <tr><td>Naujasis centras</td><td>6 %</td><td>10 %</td><td>24 %</td></tr>
+              </tbody></table></div>
+            <p style="font-size:12.5px;color:var(--muted)">Rėmėjai – naudotojai, profilyje pažymėję partiją. Pažymėta, kai rėmėjai nuo frakcijos skiriasi daugiau nei 20 p. p.</p>
           </div>
           <div class="panel span-12">
             <div class="ph"><h4>Kas balsuoja taip kaip jūs</h4><span>Pagal 37 galutinius balsavimus, kuriuose balsavote patys</span></div>
@@ -1309,7 +1334,7 @@ footer.end svg{width:28px;height:28px}
       <ol class="qs">
         <li><span>Ar paaiškintumėte savo balsavimus tokioje platformoje? Kas jus sulaikytų?<small>Seimo ir tarybų nariams</small></span></li>
         <li><span>Kurios 6 ir 7 skyrių galimybės iš tiesų pakeistų jūsų darbą, o kurios tik malonus priedas?<small>Politikams ir jų biurams</small></span></li>
-        <li><span>Ar delegavimas pirma žmogui, o po to Seimo nariui atrodo teisingas ir suprantamas? Ką keistumėte?<small>Visiems</small></span></li>
+        <li><span>Ar delegavimas 1–3 patikėtiniams, kai sprendžia jų dauguma, atrodo teisingas ir suprantamas? Ką keistumėte?<small>Visiems</small></span></li>
         <li><span>Kuri 8 skyriaus statistika galėtų klaidinti ar būti nesąžininga, ir kaip ją reikėtų pateikti?<small>Visiems</small></span></li>
         <li><span>Ar sugrupuoti pasisakymai jūsų biurui būtų patogesni nei dabartiniai el. laiškai ir peticijos?<small>Politikams ir jų biurams</small></span></li>
         <li><span>Ar jūsų organizacija sutiktų tapti viešu patikėtiniu savo srities klausimais?<small>NVO, profesinėms sąjungoms ir asociacijoms</small></span></li>
@@ -1392,10 +1417,10 @@ footer.end svg{width:28px;height:28px}
   function renderBill(){
     const st=$("#myStatus");
     if(bill.mine){
-      st.innerHTML='<div class="st"><i style="background:var(--v-'+bill.mine+')"></i>Jūsų balsas: '+MYV[bill.mine]+'</div><div style="margin-top:4px;color:var(--ink-2)">Jūsų balsas šiam projektui pakeičia ekonomikos temos delegavimą. Pakeisti jį galite, kol balsavimas nesibaigė.</div><div style="margin-top:6px"><button class="linkbtn" type="button" id="undo">Atšaukti balsą ir grąžinti delegavimą</button></div>';
+      st.innerHTML='<div class="st"><i style="background:var(--v-'+bill.mine+')"></i>Jūsų balsas: '+MYV[bill.mine]+'</div><div style="margin-top:4px;color:var(--ink-2)">Jūsų balsas šiam projektui pakeičia delegavimą. Pakeisti jį galite, kol balsavimas nesibaigė.</div><div style="margin-top:6px"><button class="linkbtn" type="button" id="undo">Atšaukti balsą ir grąžinti delegavimą</button></div>';
       $("#undo").addEventListener("click",()=>{bill.mine=null;renderBill();});
     } else {
-      st.innerHTML='<div class="st"><i style="background:var(--v-against)"></i>Deleguota: prieš</div><div style="margin-top:4px;color:var(--ink-2)">Rūta Mockutė, kuria pasitikite ekonomikos klausimais, rugsėjo 19 d. balsavo <b>prieš</b>. Jūsų balsas seka jos balsą, nebent balsuosite patys.</div>';
+      st.innerHTML='<div class="st"><i style="background:var(--v-against)"></i>Deleguota: prieš</div><div style="margin-top:4px;color:var(--ink-2)">2 iš 3 jūsų patikėtinių balsavo <b>prieš</b> (Rūta Mockutė, Reformų partija), Jonas Petraitis dar nebalsavo. Jūsų balsas seka jų daugumą, nebent balsuosite patys.</div>';
     }
     $$(".vote-btns button").forEach(b=>b.setAttribute("aria-pressed",b.dataset.v===bill.mine));
     $$(".seg button[data-phase]").forEach(b=>b.setAttribute("aria-pressed",b.dataset.phase===bill.phase));
@@ -1409,16 +1434,16 @@ footer.end svg{width:28px;height:28px}
     const t1=dF+dA+dN;
     rows.push('<div class="row"><div class="top"><span>Tiesioginiai balsai</span><b class="tnum">'+fmt(t1)+'</b></div>'+bar(dF,dA,dN,"Tiesioginiai: "+pct(dF,t1)+" % už, "+pct(dA,t1)+" % prieš, "+pct(dN,t1)+" % susilaikė")+'</div>');
     const f2=dF+gF,a2=dA+gA,n2=dN+gN,t2=f2+a2+n2;
-    rows.push('<div class="row"><div class="top"><span>+ per patikėtinius žmones</span><b class="tnum">'+fmt(t2)+'</b></div>'+bar(f2,a2,n2,"Su žmonėms patikėtais balsais: "+pct(f2,t2)+" % už, "+pct(a2,t2)+" % prieš")+'</div>');
+    rows.push('<div class="row"><div class="top"><span>+ deleguoti balsai (LT2)</span><b class="tnum">'+fmt(t2)+'</b></div>'+bar(f2,a2,n2,"Su deleguotais balsais: "+pct(f2,t2)+" % už, "+pct(a2,t2)+" % prieš")+'</div>');
     if(bill.phase==="after"){
       const m=B.mp;const f3=f2+m.f,a3=a2+m.a,n3=n2+m.n,t3=f3+a3+n3;
-      rows.push('<div class="row"><div class="top"><span>+ per Seimo narius ir partijas</span><b class="tnum">'+fmt(t3)+'</b></div>'+bar(f3,a3,n3,"Visi balsai: "+pct(f3,t3)+" % už, "+pct(a3,t3)+" % prieš")+'</div>');
+      rows.push('<div class="row"><div class="top"><span>+ Seimo nariai, LT2 nebalsavę</span><b class="tnum">'+fmt(t3)+'</b></div>'+bar(f3,a3,n3,"Visi balsai: "+pct(f3,t3)+" % už, "+pct(a3,t3)+" % prieš")+'</div>');
       rows.push('<div class="row"><div class="top"><span>Seimo galutinis balsavimas</span><b class="tnum">131 SN</b></div>'+bar(78,41,12,"Seimas: 78 už, 41 prieš, 12 susilaikė")+'</div>');
-      rows.push('<p class="note">Seimo nariams deleguoti balsai priskirti pagal oficialius rugsėjo 24 d. rezultatus. Visuomenės rezultatas užfiksuotas.</p>');
+      rows.push('<p class="note">LT2 rezultatas užfiksuotas rugsėjo 24 d. Paskutinė eilutė papildomai įskaičiuoja Seimo narius, kurie LT2 nebalsavo, pagal jų oficialų balsą.</p>');
       $("#stageTxt").textContent="Priimta 78 : 41"; $("#closes").textContent="baigta";
       $$(".vote-btns button").forEach(b=>b.disabled=true);
     } else {
-      rows.push('<p class="note">Seimo nariams ir partijoms patikėti balsai (apie 18 000) bus priskirti po Seimo balsavimo. Perjunkite į „Po Seimo“, kad pamatytumėte.</p>');
+      rows.push('<p class="note">Balsai, patikėti Seimo nariams, kurie LT2 nebalsavo (apie 18 000), rodomi „Po Seimo“ pagal jų oficialų balsą. Perjunkite, kad pamatytumėte.</p>');
       $("#stageTxt").textContent="Rugs. 24 d., 14:00"; $("#closes").textContent="22 val.";
       $$(".vote-btns button").forEach(b=>b.disabled=false);
     }
@@ -1472,146 +1497,111 @@ footer.end svg{width:28px;height:28px}
   /* ---------- want to know ---------- */
   $$(".want").forEach(b=>b.addEventListener("click",()=>{const on=b.getAttribute("aria-pressed")!=="true";b.setAttribute("aria-pressed",on);b.textContent="Noriu žinoti · "+(+b.dataset.n+(on?1:0));}));
 
-  /* ---------- delegation setup wizard ---------- */
-  const WP=[{id:"cu",n:"Pilietinė sąjunga",c:"#1f6b3a",coal:1},{id:"rp",n:"Reformų partija",c:"#4a3aa7"},{id:"sf",n:"Socialinis forumas",c:"#b5452a",coal:1},{id:"ka",n:"Kaimo aljansas",c:"#8a6d3b",coal:1},{id:"nc",n:"Naujasis centras",c:"#8a4a8a"}];
-  const WT=[
-    {t:"Ekonomika ir mokesčiai",com:"Biudžeto ir finansų komitetas",min:"finansų ministras"},
-    {t:"Švietimas",com:"Švietimo ir mokslo komitetas",min:"švietimo, mokslo ir sporto ministrė"},
-    {t:"Sveikata",com:"Sveikatos reikalų komitetas",min:"sveikatos apsaugos ministras"},
-    {t:"Gynyba",com:"Nacionalinio saugumo ir gynybos komitetas",min:"krašto apsaugos ministrė"},
-    {t:"Energetika ir aplinka",com:"Aplinkos apsaugos komitetas",min:"energetikos ministras"},
-    {t:"Socialiniai reikalai",com:"Socialinių reikalų ir darbo komitetas",min:"socialinės apsaugos ir darbo ministrė"},
-    {t:"Teisė",com:"Teisės ir teisėtvarkos komitetas",min:"teisingumo ministras"},
-    {t:"Užsienio politika",com:"Užsienio reikalų komitetas",min:"užsienio reikalų ministras"}];
-  const FM=["Jonas","Petras","Tomas","Paulius","Andrius","Darius","Linas","Marius"],FF=["Ona","Rūta","Eglė","Inga","Laura","Vaida","Giedrė","Rasa"];
-  const SN=[["Petraitis","Petraitienė"],["Jonaitis","Jonaitienė"],["Kairys","Kairienė"],["Vaitkus","Vaitkienė"],["Antanaitis","Antanaitienė"],["Stankus","Stankienė"],["Adomaitis","Adomaitienė"],["Rimkus","Rimkienė"]];
-  function mpName(pi,ti){const f=(pi+ti)%2;return (f?FF:FM)[(pi*3+ti)%8]+" "+SN[(pi*5+ti*3)%8][f];}
-  function mp(pi,ti){if(WP[pi].id==="rp"&&ti===0)return "Jonas Petraitis";if(WP[pi].id==="cu"&&ti===1)return "Ona Jonaitienė";return mpName(pi,ti);}
-  const coalIdx=WP.map((p,i)=>p.coal?i:-1).filter(i=>i>=0);
-  function minister(ti){const pi=coalIdx[ti%coalIdx.length];return {n:mpName(pi,ti+4),p:WP[pi].n};}
-  const WU=[
-    {n:"Rūta Mockutė",d:"Ekonomistė",party:"rp",topics:[0],cnt:3310,c:"#8a6d3b",av:"RM"},
-    {n:"Mokytojų asociacija",d:"Patvirtinta organizacija",party:null,topics:[1],cnt:5120,c:"#1c5cab",av:"MA",ver:1},
-    {n:"Sveikatos politikos forumas",d:"Patvirtinta organizacija",party:null,topics:[2],cnt:2890,c:"#2e7d6b",av:"SF",ver:1},
-    {n:"Tomas Vaitkus",d:"Energetikos inžinierius",party:"cu",topics:[4],cnt:640,c:"#6b6a66",av:"TV"},
-    {n:"Eglė Rimkienė",d:"Advokatė",party:"cu",topics:[6],cnt:1180,c:"#8a4a8a",av:"ER"},
-    {n:"Darius Stankus",d:"Atsargos karininkas",party:"rp",topics:[3],cnt:2210,c:"#4a3aa7",av:"DS"},
-    {n:"Laura Adomaitienė",d:"Socialinė darbuotoja",party:"sf",topics:[5],cnt:970,c:"#b5452a",av:"LA"}];
-  const wz={party:null,pick:{},people:new Set(),tab:"party",clicks:0};
-  function wzRender(){
-    $("#wzParties").innerHTML=WP.map((p,i)=>'<button type="button" data-i="'+i+'" aria-pressed="'+(wz.party===i)+'"><i style="background:'+p.c+'"></i>'+p.n+'</button>').join("");
-    $$("#wzParties button").forEach(b=>b.addEventListener("click",()=>{wz.clicks++;wz.party=+b.dataset.i;wz.pick={};wzRender();}));
-    const on=wz.party!==null;$("#wzStep2").classList.toggle("off",!on);
-    $("#wzS2note").textContent=on?"Užpildyta pagal komitetus – pakeiskite, jei norite":"Pirmiausia pasirinkite partiją";
-    $("#wzTopics").innerHTML=on?WT.map((t,ti)=>{
-      const sug=mp(wz.party,ti),m=minister(ti),cur=wz.pick[ti]??"s";
-      const others=WP.map((p,pi)=>pi===wz.party?"":'<option value="o'+pi+'"'+(cur==="o"+pi?" selected":"")+'>'+mp(pi,ti)+' ('+p.n+')</option>').join("");
-      return '<label class="trow" for="wz-t'+ti+'"><span>'+t.t+'<small>'+(cur==="s"?t.com:cur==="m"?"Vyriausybė":cur==="n"?"tik partija":"kitas komiteto narys")+'</small></span><select id="wz-t'+ti+'" data-ti="'+ti+'">'+
-        '<optgroup label="Siūloma"><option value="s"'+(cur==="s"?" selected":"")+'>'+sug+' – komiteto narys</option></optgroup>'+
-        '<optgroup label="Vyriausybė"><option value="m"'+(cur==="m"?" selected":"")+'>'+m.n+', '+t.min+' ('+m.p+')</option></optgroup>'+
-        '<optgroup label="Kitų frakcijų komiteto nariai">'+others+'</optgroup>'+
-        '<option value="n"'+(cur==="n"?" selected":"")+'>Niekas – tik partija</option></select></label>';}).join(""):"";
-    $$("#wzTopics select").forEach(x=>x.addEventListener("change",()=>{wz.clicks++;wz.pick[x.dataset.ti]=x.value;wzRender();}));
-    $$("#wzStep3 .utabs button").forEach(b=>b.setAttribute("aria-pressed",b.dataset.t===wz.tab));
-    $("#wzSearch").hidden=wz.tab!=="search";
-    let list=[...WU];
-    if(wz.tab==="party")list=on?WU.filter(u=>u.party===WP[wz.party].id||u.party===null):[];
-    if(wz.tab==="top")list.sort((a,b)=>b.cnt-a.cnt);
-    if(wz.tab==="search"){const q=($("#wzSearch").value||"").toLowerCase();list=q?WU.filter(u=>(u.n+" "+u.d).toLowerCase().includes(q)):[];}
-    $("#wzUsers").innerHTML=list.length?list.slice(0,4).map(u=>'<div class="urow"><span class="avatar" style="background:'+u.c+'">'+u.av+'</span><span>'+u.n+(u.ver?' <svg class="badge-v" aria-label="Patvirtinta"><use href="#vbadge"/></svg>':'')+'<small>'+u.d+' · '+u.topics.map(t=>WT[t].t).join(", ")+' · '+fmt(u.cnt)+' patikėtojų</small></span><button type="button" data-n="'+u.n+'" aria-pressed="'+wz.people.has(u.n)+'">'+(wz.people.has(u.n)?"Patikėta":"Patikėti")+'</button></div>').join(""):
-      '<span style="font-size:13px;color:var(--muted)">'+(wz.tab==="party"?"Pasirinkite partiją, kad pamatytumėte siūlymus":wz.tab==="search"?"Įveskite vardą ar sritį":"")+'</span>';
-    $$("#wzUsers .urow button").forEach(b=>b.addEventListener("click",()=>{wz.clicks++;wz.people.has(b.dataset.n)?wz.people.delete(b.dataset.n):wz.people.add(b.dataset.n);wzRender();}));
-    $("#wzClicks").textContent=wz.clicks;
-    $("#wzSummary").innerHTML=on?WT.map((t,ti)=>{
-      const ppl=WU.filter(u=>wz.people.has(u.n)&&u.topics.includes(ti)).map(u=>u.n);
-      const cur=wz.pick[ti]??"s";const l2=cur==="s"?mp(wz.party,ti):cur==="m"?minister(ti).n:cur==="n"?null:mp(+cur.slice(1),ti);
-      return '<div class="sumrow"><b>'+t.t+'</b><div class="chain">'+(ppl.length?'<span>'+ppl.join(", ")+'</span>':'')+(l2?'<span>'+l2+'</span>':'')+'<span>'+WP[wz.party].n+'</span></div></div>';}).join("")
-      :'<span style="font-size:13px;color:var(--muted)">Kol partija nepasirinkta, jūsų balsas skaičiuojamas tik tada, kai balsuojate patys.</span>';
+  /* ---------- my delegates ---------- */
+  const TOP=["Ekonomika","Mokesčiai","Švietimas","Sveikata","Socialiniai reikalai","Gynyba","Energetika","Teisė"];
+  const CAND=[
+    {id:"jp",n:"Jonas Petraitis",d:"Seimo narys · Reformų partija · balsuoja LT2",av:"JP",c:"#4a3aa7",cnt:2140,act:1,ver:1,party:"Reformų partija",exp:["Ekonomika","Mokesčiai"]},
+    {id:"ruta",n:"Rūta Mockutė",d:"Ekonomistė · vieša patikėtinė",av:"RM",c:"#8a6d3b",cnt:3310,exp:["Ekonomika"]},
+    {id:"rp",n:"Reformų partija",d:"Partija · jos politikų dauguma LT2",av:"RP",c:"#4a3aa7",cnt:8120,party:"Reformų partija"},
+    {id:"ma",n:"Mokytojų asociacija",d:"Patvirtinta organizacija",av:"MA",c:"#1c5cab",cnt:5120,ver:1,exp:["Švietimas"]},
+    {id:"oj",n:"Ona Jonaitienė",d:"Seimo narė · Pilietinė sąjunga · balsuoja LT2",av:"OJ",c:"#1f6b3a",cnt:1760,act:1,ver:1,party:"Pilietinė sąjunga",exp:["Švietimas"]},
+    {id:"spf",n:"Sveikatos politikos forumas",d:"Patvirtinta organizacija",av:"SF",c:"#2e7d6b",cnt:2890,ver:1,exp:["Sveikata"]},
+    {id:"ds",n:"Darius Stankus",d:"Atsargos karininkas",av:"DS",c:"#6b6a66",cnt:2210,exp:["Gynyba"]}];
+  const PBILLS=[{t:"Progresinis pajamų mokestis",tags:["Ekonomika","Mokesčiai"]},{t:"Dantų protezavimas 65+",tags:["Sveikata","Socialiniai reikalai"]},{t:"Nemokamos studijos",tags:["Švietimas"]}];
+  const R={list:[{id:"ruta",topics:["Ekonomika"]},{id:"jp",topics:null}],tab:"sug",clicks:0,edit:null};
+  const cand=id=>CAND.find(c=>c.id===id);
+  function applies(r,tags){return !r.topics||r.topics.some(t=>tags.includes(t));}
+  function repRender(){
+    $("#repList").innerHTML=R.list.length?R.list.map((r,k)=>{const c=cand(r.id);
+      return '<div class="rep"><span class="avatar" style="background:'+c.c+'">'+c.av+'</span><div class="nm"><span class="rank">'+(k+1)+'.</span> '+c.n+(c.ver?' <svg class="badge-v" aria-label="Patvirtinta"><use href="#vbadge"/></svg>':'')+'<small>'+c.d+'</small>'+
+        '<div class="tags">'+(R.edit===k?'<button type="button" data-k="'+k+'" data-t="*" aria-pressed="'+(!r.topics)+'">Visos temos</button>'+TOP.map(t=>'<button type="button" data-k="'+k+'" data-t="'+t+'" aria-pressed="'+(!!r.topics&&r.topics.includes(t))+'">'+t+'</button>').join("")+'<button type="button" data-k="'+k+'" data-t="done" aria-pressed="false">Baigti</button>'
+          :(r.topics?r.topics.map(t=>'<button type="button" data-k="'+k+'" data-t="edit" aria-pressed="true">'+t+'</button>').join(""):'<button type="button" data-k="'+k+'" data-t="edit" aria-pressed="true">Visos temos</button>')+'<button type="button" data-k="'+k+'" data-t="edit" aria-pressed="false">Keisti…</button>')+'</div></div>'+
+        '<div class="ctl3"><button type="button" data-k="'+k+'" data-m="up" aria-label="Aukštyn"'+(k===0?' disabled':'')+'>↑</button><button type="button" data-k="'+k+'" data-m="down" aria-label="Žemyn"'+(k===R.list.length-1?' disabled':'')+'>↓</button><button type="button" data-k="'+k+'" data-m="del" aria-label="Pašalinti">×</button></div></div>';}).join(""):
+      '<span style="font-size:13px;color:var(--muted)">Dar nėra patikėtinių – jūsų balsas skaičiuojamas tik tada, kai balsuojate patys.</span>';
+    $$("#repList .tags button").forEach(b=>b.addEventListener("click",()=>{R.clicks++;const r=R.list[+b.dataset.k],t=b.dataset.t;
+      if(t==="edit"){R.edit=+b.dataset.k;}else if(t==="done"){R.edit=null;}else if(t==="*"){r.topics=null;}else{r.topics=r.topics||[];r.topics=r.topics.includes(t)?r.topics.filter(x=>x!==t):[...r.topics,t];if(!r.topics.length)r.topics=null;}repRender();}));
+    $$("#repList .ctl3 button").forEach(b=>b.addEventListener("click",()=>{R.clicks++;const k=+b.dataset.k,m=b.dataset.m;
+      if(m==="del")R.list.splice(k,1);else{const k2=m==="up"?k-1:k+1;[R.list[k],R.list[k2]]=[R.list[k2],R.list[k]];}R.edit=null;repRender();}));
+    $$("#repAdd .utabs button").forEach(b=>b.setAttribute("aria-pressed",b.dataset.t===R.tab));
+    $("#repSearch").hidden=R.tab!=="search";
+    const full=R.list.length>=3;$("#repLimit").textContent=full?"pasiektas limitas – 3":"iki 3";
+    const party=$("#repParty").value;
+    let cs=CAND.filter(c=>!R.list.some(r=>r.id===c.id));
+    if(R.tab==="sug")cs.sort((a,b)=>(b.act||0)-(a.act||0)||((b.party===party)-(a.party===party))||b.cnt-a.cnt);
+    if(R.tab==="top")cs.sort((a,b)=>b.cnt-a.cnt);
+    if(R.tab==="search"){const q=($("#repSearch").value||"").toLowerCase();cs=q?cs.filter(c=>(c.n+" "+c.d).toLowerCase().includes(q)):[];}
+    $("#repCands").innerHTML=cs.length?cs.slice(0,3).map(c=>'<div class="urow"><span class="avatar" style="background:'+c.c+'">'+c.av+'</span><span>'+c.n+(c.ver?' <svg class="badge-v" aria-label="Patvirtinta"><use href="#vbadge"/></svg>':'')+'<small>'+c.d+(c.exp?' · '+c.exp.join(", "):'')+' · '+fmt(c.cnt)+' patikėtojų</small></span><button type="button" data-id="'+c.id+'"'+(full?' disabled':'')+'>Pridėti</button></div>').join("")+(R.tab!=="search"?'<button class="linkbtn" type="button" id="repMore" style="justify-self:start">Rodyti daugiau</button>':''):
+      '<span style="font-size:13px;color:var(--muted)">'+(R.tab==="search"?"Įveskite vardą, organizaciją ar partiją":"Visi siūlomi jau pridėti")+'</span>';
+    $$("#repCands .urow button").forEach(b=>b.addEventListener("click",()=>{R.clicks++;const c=cand(b.dataset.id);R.list.push({id:c.id,topics:c.exp?[...c.exp]:null});repRender();}));
+    $("#repClicks").textContent=R.clicks;
+    $("#repPrev").innerHTML=PBILLS.map(b=>{const who=R.list.filter(r=>applies(r,b.tags)).map(r=>cand(r.id).n);
+      return '<div class="prev"><b>'+b.t+'</b><div class="tg">'+b.tags.map(t=>'<span>'+t+'</span>').join("")+'</div><span class="who">'+(who.length?"Sprendžia dauguma: "+who.join(", "):"Nėra patikėtinių – balsuokite patys")+'</span></div>';}).join("");
   }
-  $$("#wzStep3 .utabs button").forEach(b=>b.addEventListener("click",()=>{wz.tab=b.dataset.t;wzRender();}));
-  $("#wzSearch").addEventListener("input",wzRender);
-  wzRender();
+  $$("#repAdd .utabs button").forEach(b=>b.addEventListener("click",()=>{R.tab=b.dataset.t;repRender();}));
+  $("#repSearch").addEventListener("input",repRender);
+  $("#repParty").addEventListener("change",()=>{R.clicks++;repRender();});
+  repRender();
 
-  /* ---------- delegation simulator (3 levels) ---------- */
-  const people={
-    ruta:{nm:"Rūta Mockutė",sub:"Ekonomistė · vieša patikėtinė · 3 310 patikėtojų",av:"RM",c:"#8a6d3b",kind:"person"},
-    teach:{nm:"Mokytojų asociacija",sub:"Patvirtinta organizacija",av:"MA",c:"#1c5cab",kind:"person",ver:true},
-    tomas:{nm:"Tomas Vaitkus",sub:"Draugas · savo balsą delegavo toliau",av:"TV",c:"#6b6a66",kind:"person"},
-    jp:{nm:"Jonas Petraitis",sub:"Seimo narys · Biudžeto ir finansų komitetas",av:"JP",c:"#4a3aa7",kind:"mp",ver:true},
-    rp:{nm:"Reformų partija",gen:"Reformų partijos",sub:"Partija · pagal frakcijos daugumą",av:"RP",c:"#4a3aa7",kind:"party"},
-    oj:{nm:"Ona Jonaitienė",sub:"Seimo narė · Švietimo ir mokslo komitetas",av:"OJ",c:"#1f6b3a",kind:"mp",ver:true},
-    cu:{nm:"Pilietinė sąjunga",gen:"Pilietinės sąjungos",sub:"Partija · pagal frakcijos daugumą",av:"PS",c:"#1f6b3a",kind:"party"}
-  };
-  const LVN=["1 lygis · Žmonės ir organizacijos","2 lygis · Seimo nariai ir ministrai","3 lygis · Partija"];
-  const LVS=["skaičiuojama iškart","po Seimo balsavimo","po Seimo balsavimo"];
-  const cfg={
-    economy:[[{id:"ruta",w:100}],[{id:"jp",w:100}],[{id:"rp",w:100}]],
-    education:[[{id:"teach",w:50},{id:"tomas",w:50}],[{id:"oj",w:100}],[{id:"cu",w:100}]],
-    other:[[],[],[{id:"cu",w:100}]]
-  };
-  const TOPIC={economy:"Ekonomika",education:"Švietimas",other:"Visa kita"};
-  const scen={topic:"economy",mine:"none",phase:"after",v:{ruta:"none",teach:"for",tomas:"delegated",jp:"absent",rp:"for",oj:"for",cu:"for"}};
-  const OPTS={person:[["none","Nebalsavo"],["for","Už"],["against","Prieš"],["abstain","Susilaikė"]],
-    personChain:[["delegated","Delegavo toliau"],["none","Nebalsavo"],["for","Už"],["against","Prieš"]],
-    mp:[["for","Už"],["against","Prieš"],["abstain","Susilaikė"],["absent","Nedalyvavo"]],
-    party:[["for","Dauguma už"],["against","Dauguma prieš"],["abstain","Dauguma susilaikė"]]};
-  const W=(v)=>({for:"for",against:"against",abstain:"abstain"}[v]||null);
-  const verb=v=>v==="abstain"?"susilaikė":"balsavo "+(v==="for"?"už":"prieš");
-
+  /* ---------- delegation simulator (majority of delegates) ---------- */
+  const SREPS=[{id:"ruta",n:"Rūta Mockutė",sub:"Ekonomistė · tik ekonomika",av:"RM",c:"#8a6d3b",topics:["Ekonomika"]},
+               {id:"jp",n:"Jonas Petraitis",sub:"Seimo narys · visos temos",av:"JP",c:"#4a3aa7",topics:null,mp:1,ver:1},
+               {id:"rp",n:"Reformų partija",sub:"Partija · jos politikų dauguma LT2 · visos temos",av:"RP",c:"#4a3aa7",topics:null}];
+  const SBILLS=[{id:0,t:"Pajamų mokestis",tags:["Ekonomika","Mokesčiai"]},{id:1,t:"Dantų protezavimas",tags:["Sveikata"]},{id:2,t:"Nemokamos studijos",tags:["Švietimas"]}];
+  const scen={bill:0,mine:"none",phase:"before",v:{ruta:"against",jp:"none",rp:"against"},off:{jp:"for"}};
+  const VL={for:"už",against:"prieš",abstain:"susilaikė"};
   function renderSim(){
-    $$(".topics button").forEach(b=>b.setAttribute("aria-pressed",b.dataset.topic===scen.topic));
-    const c=cfg[scen.topic];
-    const dlg=(d)=>{const p=people[d.id];return '<div class="dlg"><span class="avatar" style="background:'+p.c+'">'+p.av+'</span><span class="nm"><b>'+p.nm+(p.ver?' <svg class="badge-v" aria-label="Patvirtinta"><use href="#vbadge"/></svg>':'')+'</b><small>'+p.sub+'</small></span><span class="wt">'+d.w+' %</span></div>';};
-    $("#ladder").innerHTML=c.map((items,L)=>'<div class="rung"><div class="rung-h"><span class="t">'+LVN[L]+'<small>'+LVS[L]+'</small></span></div>'+(items.length?items.map(dlg).join(""):'<span class="muted" style="font-size:13px">Šiai temai nieko nepasirinkta</span>')+'</div>').join("");
+    $("#simBills").innerHTML=SBILLS.map(b=>'<button type="button" data-b="'+b.id+'" aria-pressed="'+(scen.bill===b.id)+'">'+b.t+'</button>').join("");
+    $$("#simBills button").forEach(b=>b.addEventListener("click",()=>{scen.bill=+b.dataset.b;scen.mine="none";renderSim();}));
+    const bill=SBILLS[scen.bill];
+    $("#ladder").innerHTML='<div class="rung"><div class="rung-h"><span class="t">Mano patikėtiniai<small>žymos: '+bill.tags.join(", ")+'</small></span></div>'+SREPS.map((p,k)=>{const ap=applies(p,bill.tags);
+      return '<div class="dlg" style="'+(ap?'':'opacity:.45')+'"><span class="avatar" style="background:'+p.c+'">'+p.av+'</span><span class="nm"><b>'+(k+1)+'. '+p.n+(p.ver?' <svg class="badge-v" aria-label="Patvirtinta"><use href="#vbadge"/></svg>':'')+'</b><small>'+p.sub+'</small></span><span class="wt">'+(ap?'taikomas':'netaikomas')+'</span></div>';}).join("")+'</div>';
     const sel=(id,label,opts,val)=>'<label class="ctl" for="s-'+id+'">'+label+'<select id="s-'+id+'" data-k="'+id+'">'+opts.map(o=>'<option value="'+o[0]+'"'+(o[0]===val?' selected':'')+'>'+o[1]+'</option>').join("")+'</select></label>';
+    const LTV=[["none","LT2 nebalsavo"],["for","Už"],["against","Prieš"],["abstain","Susilaikė"]];
     let h=sel("mine","Mano balsas",[["none","Nebalsavau"],["for","Už"],["against","Prieš"],["abstain","Susilaikau"]],scen.mine);
     h+=sel("phase","Seimo balsavimas",[["before","Dar neįvyko"],["after","Jau įvyko"]],scen.phase);
-    c.flat().forEach(d=>{const p=people[d.id];h+=sel(d.id,p.nm,d.id==="tomas"?OPTS.personChain:OPTS[p.kind],scen.v[d.id]);});
+    SREPS.filter(p=>applies(p,bill.tags)).forEach(p=>{h+=sel(p.id,p.n+" · LT2",LTV,scen.v[p.id]);if(p.mp&&scen.phase==="after")h+=sel("off-"+p.id,p.n+" · Seime",[["for","Už"],["against","Prieš"],["abstain","Susilaikė"],["none","Nedalyvavo"]],scen.off[p.id]);});
     $("#ctls").innerHTML=h;
-    $$("#ctls select").forEach(x=>x.addEventListener("change",()=>{const k=x.dataset.k;if(k==="mine")scen.mine=x.value;else if(k==="phase")scen.phase=x.value;else scen.v[k]=x.value;renderSim();}));
+    $$("#ctls select").forEach(x=>x.addEventListener("change",()=>{const k=x.dataset.k;if(k==="mine")scen.mine=x.value;else if(k==="phase")scen.phase=x.value;else if(k.startsWith("off-"))scen.off[k.slice(4)]=x.value;else scen.v[k]=x.value;renderSim();}));
     resolve();
   }
-  function blend(list){const tot=list.reduce((a,x)=>a+x.w,0);const r={for:0,against:0,abstain:0};list.forEach(x=>{r[x.v]+=x.w/tot;});return r;}
+  function majority(votes){ // votes: [{v,rank,n}]
+    const cnt={};votes.forEach(x=>cnt[x.v]=(cnt[x.v]||0)+1);
+    const max=Math.max(...Object.values(cnt));const top=Object.keys(cnt).filter(k=>cnt[k]===max);
+    if(top.length===1)return {v:top[0],tie:false,cnt};
+    const first=votes.filter(x=>top.includes(x.v)).sort((a,b)=>a.rank-b.rank)[0];
+    return {v:first.v,tie:true,by:first.n,cnt};
+  }
   function resolve(){
-    const c=cfg[scen.topic];const steps=[];let out=null,src="none";
-    const nm=id=>people[id].nm;
+    const bill=SBILLS[scen.bill];const steps=[];let lt=null,po=null,pending=false;
+    const ap=SREPS.map((p,k)=>({...p,rank:k})).filter(p=>applies(p,bill.tags));
     if(scen.mine!=="none"){
-      steps.push({cls:"hit",ic:"✓",t:"<b>Balsavote patys: "+({for:"už",against:"prieš",abstain:"susilaikėte"}[scen.mine])+".</b> Jūsų balsas pakeičia visus delegavimus."});
-      out={[scen.mine]:1};src="jūsų pačių balsą";
+      steps.push({cls:"hit",ic:"✓",t:"<b>Balsavote patys: "+({for:"už",against:"prieš",abstain:"susilaikėte"}[scen.mine])+".</b> Jūsų balsas pakeičia delegavimą."});lt=scen.mine;
     } else {
-      steps.push({cls:"skip",ic:"–",t:"Patys nebalsavote, todėl taikomas jūsų delegavimas temai <b>„"+TOPIC[scen.topic]+"“</b>."});
-      for(let L=0;L<3;L++){
-        const items=c[L];
-        if(!items.length){steps.push({cls:"skip",ic:String(L+1),t:(L+1)+" lygyje nieko nepasirinkta."});continue;}
-        if(L>0&&scen.phase==="before"){steps.push({cls:"pend",ic:"…",t:"<b>Laukiama Seimo.</b> "+(L+1)+" lygis nustatomas po galutinio balsavimo pagal oficialius rezultatus. Iki tol jūsų balsas neįskaičiuojamas į einamąjį rezultatą."});src="pending";break;}
-        const voted=[],notes=[];
-        items.forEach(d=>{const v=scen.v[d.id],p=people[d.id];if(W(v))voted.push({v,w:d.w,id:d.id});else if(v==="delegated")notes.push(p.nm+" savo balsą delegavo toliau, bet jis neperduodamas (grandinių nėra)");else notes.push(p.nm+(p.kind==="mp"?" nedalyvavo":" nebalsavo"));});
-        if(voted.length){
-          out=blend(voted);src=(L+1)+" lygį";
-          const desc=voted.map(x=>{const p=people[x.id];return (p.kind==="party"?p.gen+" dauguma ":p.nm+" ")+verb(x.v)+(items.length>1?" ("+x.w+" %)":"");}).join("; ");
-          steps.push({cls:"hit",ic:String(L+1),t:"<b>"+desc+".</b>"+(notes.length?" "+notes.join("; ")+" – jų dalis paskirstoma kitiems.":"")});
-          if(L<2)steps.push({cls:"skip",ic:"–",t:"Tolesnių lygių nereikia."});
-          break;
-        }
-        steps.push({cls:"skip",ic:String(L+1),t:notes.join("; ")+"."+(L<2?" Pereinama į "+(L+2)+" lygį.":" Nebeliko, kuo remtis.")});
+      const skip=SREPS.filter(p=>!applies(p,bill.tags)).map(p=>p.n);
+      steps.push({cls:"skip",ic:"–",t:"Patys nebalsavote. Projekto žymos: "+bill.tags.join(", ")+". Taikomi: <b>"+ap.map(p=>p.n).join(", ")+"</b>"+(skip.length?"; "+skip.join(", ")+" netaikomas.":".")});
+      const voted=ap.filter(p=>scen.v[p.id]!=="none").map(p=>({v:scen.v[p.id],rank:p.rank,n:p.n}));
+      const not=ap.filter(p=>scen.v[p.id]==="none").map(p=>p.n);
+      if(voted.length){
+        const m=majority(voted);lt=m.v;
+        steps.push({cls:"hit",ic:"Σ",t:"<b>"+voted.map(x=>x.n+" – "+VL[x.v]).join("; ")+".</b>"+(not.length?" "+not.join(", ")+" LT2 nebalsavo.":"")+(m.tie?" Lygiosios – lemia aukščiau sąraše esantis "+m.by+".":" Dauguma: "+VL[m.v]+".")});
+      } else if(scen.phase==="before"){
+        pending=true;steps.push({cls:"pend",ic:"…",t:"<b>Nė vienas patikėtinis dar nebalsavo.</b> Balsavimas atviras – jūsų statusas „Deleguota: laukiama“."});
+      } else {
+        steps.push({cls:"skip",ic:"–",t:"Nė vienas patikėtinis LT2 nebalsavo, todėl LT2 rezultate jūsų balsas neįskaičiuotas."});
+      }
+      if(scen.phase==="after"){
+        const pv=ap.map(p=>{let v=scen.v[p.id];if(v==="none"&&p.mp&&scen.off[p.id]!=="none")v=scen.off[p.id]+"*";return {v:v.replace("*",""),off:v.endsWith("*"),rank:p.rank,n:p.n};}).filter(x=>x.v!=="none");
+        if(pv.some(x=>x.off)){const m=majority(pv);po=m.v;steps.push({cls:"hit",ic:"S",t:"<b>„Po Seimo“:</b> "+pv.filter(x=>x.off).map(x=>x.n+" LT2 nebalsavo, Seime – "+VL[x.v]).join("; ")+". Su juo dauguma: "+VL[m.v]+(m.tie?" (lygiosios, lemia "+m.by+")":"")+"."});}
       }
     }
     $("#trace").innerHTML=steps.map(x=>'<li class="'+x.cls+'"><span class="ic">'+x.ic+'</span><span>'+x.t+'</span></li>').join("");
-    let html='<span class="h">Jūsų balsas skaičiuojamas kaip</span>';
-    if(out){
-      const f=Math.round((out.for||0)*100),a=Math.round((out.against||0)*100),n=100-f-a;
-      const parts=[];if(f)parts.push(f+" % už");if(a)parts.push(a+" % prieš");if(n)parts.push(n+" % susilaiko");
-      html+='<span class="v">'+(parts.length===1?({for:"1 balsas už",against:"1 balsas prieš",abstain:"1 susilaikymas"}[f?"for":a?"against":"abstain"]):parts.join(" · "))+'</span>';
-      html+='<div class="sbar" data-tip="'+parts.join(", ")+'"><span class="f" style="flex:'+f+'">'+(f>=15?f+' %':'')+'</span><span class="a" style="flex:'+a+'">'+(a>=15?a+' %':'')+'</span><span class="n" style="flex:'+n+'"></span></div>';
-      html+='<span class="muted" style="font-size:12.5px">Nustatyta pagal '+src+'. Gausite pranešimą su paaiškinimu.</span>';
-    } else if(src==="pending"){
-      html+='<span class="v">Laukiama</span><span class="muted" style="font-size:12.5px">Likus 48 val. iki balsavimo gausite priminimą, jei norėtumėte balsuoti patys.</span>';
-    } else {
-      html+='<span class="v">Neįskaičiuotas</span><span class="muted" style="font-size:12.5px">Nė vienas jūsų patikėtinis nebalsavo.</span>';
-    }
+    const pill=v=>'<span class="vpill '+v+'">'+({for:"Už",against:"Prieš",abstain:"Susilaikė"}[v])+'</span>';
+    let html='<span class="h">LT2 rezultate jūsų balsas</span>';
+    html+='<span class="v">'+(lt?pill(lt):pending?"Laukiama":"Neįskaičiuotas")+'</span>';
+    if(scen.phase==="after"&&scen.mine==="none")html+='<span class="h" style="margin-top:6px">„Po Seimo“</span><span class="v">'+(po?pill(po):lt?pill(lt)+' <span class="muted" style="font-size:13px;font-weight:400">sutampa</span>':'Neįskaičiuotas')+'</span>';
+    html+='<span class="muted" style="font-size:12.5px">'+(pending?"Likus 48 val. iki balsavimo gausite priminimą, jei norėtumėte balsuoti patys.":"Gausite pranešimą su paaiškinimu, kieno balsai lėmė rezultatą.")+'</span>';
     $("#result").innerHTML=html;
   }
-  $$(".topics button").forEach(b=>b.addEventListener("click",()=>{scen.topic=b.dataset.topic;scen.mine="none";renderSim();}));
   renderSim();
 
   /* ---------- dot plot ---------- */

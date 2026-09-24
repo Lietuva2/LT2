@@ -455,6 +455,10 @@ footer.end svg{width:28px;height:28px}
 .road3 p{font-size:16.5px;color:var(--ink-2);line-height:1.5}
 .cta{display:flex;flex-wrap:wrap;gap:12px 24px;align-items:center;margin-top:28px;padding:18px 20px;border-radius:14px;background:var(--brand-soft);font-family:var(--f-display);font-size:15px}
 .cta a{font-weight:600}
+.extbl{width:100%;border-collapse:collapse;font-family:var(--f-display);font-size:14px}
+.extbl th,.extbl td{text-align:left;padding:10px 10px;border-bottom:1px solid var(--line);vertical-align:top}
+.extbl th{font-size:12px;color:var(--muted);font-weight:600}
+.extbl small{display:block;font-size:12px;color:var(--muted)}
 </style>
 
 <svg width="0" height="0" style="position:absolute" aria-hidden="true">
@@ -525,25 +529,17 @@ footer.end svg{width:28px;height:28px}
     <header>
       <div class="eyebrow">Balso delegavimas</div>
       <h2>Patikėkite balsą, bet paskutinis žodis lieka jums</h2>
-      <p class="lede">Pirmiausia pasirenkate partiją – vienu paspaudimu padengiamos visos temos. Seimo narius pagal temas pasiūlome pagal jų komitetus, o patikėtinius žmones galite pridėti patys. Naudojamas pirmas lygis, kuriame kas nors balsavo.</p>
+      <p class="lede">Pasirenkate 1–3 patikėtinius: žmogų, organizaciją, Seimo narį ar partiją. Jei patys nebalsuojate, jūsų balsą lemia jų dauguma LT2. Lygiųjų atveju – aukščiau sąraše esantis.</p>
     </header>
-    <div class="flow" id="flow">
-      <div class="node" data-n="me"><span class="lv">Pirmiausia</span><b>Jūsų balsas</b><small>visada svarbiausias</small></div>
-      <div class="node" data-n="l1"><span class="lv">1 lygis</span><b>Rūta Mockutė</b><small>ekonomistė, jūsų patikėtinė</small></div>
-      <div class="node" data-n="l2"><span class="lv">2 lygis</span><b>Jonas Petraitis</b><small>Biudžeto ir finansų komiteto narys</small></div>
-      <div class="node" data-n="l3"><span class="lv">3 lygis</span><b>Reformų partija</b><small>frakcijos dauguma</small></div>
-      <div class="node" data-n="none"><span class="lv">Kitu atveju</span><b>Neįskaičiuojama</b><small>balso pagal nutylėjimą nėra</small></div>
-    </div>
-    <div class="mini">
-      <div class="qrow">
-        <div class="q">Ar balsavote patys?
-          <div class="seg" role="group" aria-label="Ar balsavote patys"><button type="button" data-q="me" data-a="no" aria-pressed="true">Ne</button><button type="button" data-q="me" data-a="už" aria-pressed="false">Už</button><button type="button" data-q="me" data-a="prieš" aria-pressed="false">Prieš</button></div></div>
-        <div class="q">Ar balsavo Rūta?
-          <div class="seg" role="group" aria-label="Ar balsavo patikėtinė"><button type="button" data-q="l1" data-a="no" aria-pressed="true">Ne</button><button type="button" data-q="l1" data-a="už" aria-pressed="false">Už</button><button type="button" data-q="l1" data-a="prieš" aria-pressed="false">Prieš</button></div></div>
-        <div class="q">Ar Seimas jau balsavo?
-          <div class="seg" role="group" aria-label="Ar Seimas balsavo"><button type="button" data-q="seimas" data-a="no" aria-pressed="false">Ne</button><button type="button" data-q="seimas" data-a="yes" aria-pressed="true">Taip, J. Petraitis prieš</button><button type="button" data-q="seimas" data-a="absent" aria-pressed="false">Taip, jis nedalyvavo</button></div></div>
-      </div>
-      <div class="outcome" id="outcome" aria-live="polite"></div>
+    <div class="chartcard">
+      <div class="legend"><span>Pavyzdys: 1. Rūta Mockutė (tik ekonomika) · 2. Jonas Petraitis (visos temos) · 3. Reformų partija (visos temos)</span></div>
+      <div style="overflow-x:auto"><table class="extbl">
+        <thead><tr><th>Projektas</th><th>Taikomi patikėtiniai</th><th>Kaip jie balsavo LT2</th><th>Jūsų balsas</th></tr></thead>
+        <tbody>
+          <tr><td>Pajamų mokestis<small>Ekonomika</small></td><td>Rūta, Jonas, partija</td><td>prieš, už, prieš</td><td><b>Prieš</b><small>dauguma</small></td></tr>
+          <tr><td>Dantų protezavimas<small>Sveikata</small></td><td>Jonas, partija</td><td>nebalsavo, už</td><td><b>Už</b></td></tr>
+          <tr><td>Nemokamos studijos<small>Švietimas</small></td><td>Jonas, partija</td><td>už, prieš</td><td><b>Už</b><small>lygiosios – Jonas aukščiau</small></td></tr>
+        </tbody></table></div>
     </div>
   </section>
 
@@ -630,22 +626,7 @@ footer.end svg{width:28px;height:28px}
       c.setAttribute("data-tip",s.f+" · "+labels[s.vote]);svg.appendChild(c);});
   })();
 
-  /* mini delegation */
-  const st={me:"no",l1:"no",seimas:"yes"};
-  function render(){
-    $$(".mini .seg button").forEach(b=>b.setAttribute("aria-pressed",st[b.dataset.q]===b.dataset.a));
-    let used,txt;
-    if(st.me!=="no"){used="me";txt="Jūsų balsas: <b>"+st.me+"</b>. Jūs balsavote patys, todėl delegavimas nenaudojamas.";}
-    else if(st.l1!=="no"){used="l1";txt="Jūsų balsas skaičiuojamas kaip <b>"+st.l1+"</b>, nes taip balsavo Rūta. Tai įskaičiuojama iškart.";}
-    else if(st.seimas==="yes"){used="l2";txt="Jūsų balsas skaičiuojamas kaip <b>prieš</b>, nes taip Seime balsavo Jonas Petraitis.";}
-    else if(st.seimas==="absent"){used="l3";txt="Jonas Petraitis nedalyvavo, todėl jūsų balsas skaičiuojamas kaip <b>už</b> – taip balsavo Reformų partijos frakcijos dauguma.";}
-    else {used=null;txt="<b>Laukiama.</b> Rūta nebalsavo, o Seimas dar nebalsavo. Likus 48 val. gausite priminimą balsuoti patiems.";}
-    const order=["me","l1","l2","l3","none"];const idx=used?order.indexOf(used):1;
-    $$("#flow .node").forEach((n,i)=>{n.classList.toggle("used",n.dataset.n===used);n.classList.toggle("off",i>idx);});
-    $("#outcome").innerHTML=txt;
-  }
-  $$(".mini .seg button").forEach(b=>b.addEventListener("click",()=>{st[b.dataset.q]=b.dataset.a;render();}));
-  render();
+
 
   /* dot plot */
   const bills=[
