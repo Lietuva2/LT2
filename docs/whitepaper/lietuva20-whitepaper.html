@@ -468,6 +468,28 @@ footer.end svg{width:28px;height:28px}
 @media (max-width:820px){.exp{grid-template-columns:minmax(0,1fr)}}
 .exp h4{font-size:17px}
 .exp-stats{font-family:var(--f-display)}
+
+.status-flow{list-style:none;margin:22px 0 0;padding:0;display:flex;flex-wrap:wrap;gap:8px;align-items:center;font-family:var(--f-display);font-size:13.5px}
+.status-flow li{display:flex;align-items:center;gap:8px}
+.status-flow li span{padding:6px 12px;border-radius:999px;background:var(--surface);border:1px solid var(--line-strong);color:var(--ink-2)}
+.status-flow li.end span{background:var(--brand-soft);border-color:transparent;color:var(--ink);font-weight:600}
+.status-flow li+li::before{content:"→";color:var(--muted)}
+.status-alt{font-family:var(--f-display);font-size:13.5px;color:var(--muted);margin-top:10px}
+.status-alt b{color:var(--ink-2);font-weight:600}
+.intent{display:flex;gap:6px;margin-top:6px}
+.inbox{padding:18px 20px;display:grid;gap:12px}
+.inbox-h{display:flex;justify-content:space-between;align-items:baseline;gap:10px;flex-wrap:wrap}
+.theme{border:1px solid var(--line);border-radius:12px;padding:14px;display:grid;gap:8px;background:var(--surface)}
+.theme-h{display:flex;justify-content:space-between;gap:10px;align-items:flex-start;flex-wrap:wrap}
+.theme-h b{font-size:15.5px;font-weight:650;line-height:1.35}
+.theme-h small{display:block;font-size:12px;color:var(--muted);font-weight:400;margin-top:2px}
+.support{display:flex;gap:14px;flex-wrap:wrap;font-size:13px;color:var(--ink-2)}
+.support b{color:var(--ink);font-variant-numeric:tabular-nums}
+.support .mine b{color:var(--brand)}
+.acts{display:flex;gap:6px;flex-wrap:wrap}
+.acts button{font:inherit;font-size:12.5px;padding:5px 10px;border-radius:8px;border:1px solid var(--line-strong);background:var(--surface);color:var(--ink-2);cursor:pointer}
+.acts button:hover{border-color:var(--ink-2)}
+.reply{font-family:var(--f-body);font-size:15px;line-height:1.5;color:var(--ink-2);border-left:3px solid var(--brand);padding-left:12px}
 </style>
 
 <svg width="0" height="0" style="position:absolute" aria-hidden="true">
@@ -505,7 +527,7 @@ footer.end svg{width:28px;height:28px}
       <li><a href="#bill">Projekto puslapis</a></li>
       <li><a href="#delegation">Balso delegavimas</a></li>
       <li><a href="#politicians">Politikai platformoje</a></li>
-      <li><a href="#dialog">Pokalbis su politikais</a></li>
+      <li><a href="#dialog">Pasisakymai ir klausimai</a></li>
       <li><a href="#analytics">Analitika</a></li>
       <li><a href="#elections">Rinkimų režimas</a></li>
       <li><a href="#beyond">Ne tik Seimas</a></li>
@@ -888,7 +910,7 @@ footer.end svg{width:28px;height:28px}
       </div>
 
       <div class="incent">
-        <div><span class="for">VISIEMS POLITIKAMS</span><h4>Kalbėkitės su savo auditorija</h4><p>Žmonės jus pažymi klausimuose, o jūs atsakote viešai. Kai klausimų daug, DI sugrupuoja panašius, todėl į vieną temą atsakote vieną kartą, o atsakymas pasiekia visus klaususius. Savo atsakymų dalį visada matote patys, o viešai ji rodoma, kai pasiekia 70 %. Plačiau – 9 skyriuje.</p></div>
+        <div><span class="for">VISIEMS POLITIKAMS</span><h4>Kalbėkitės su savo auditorija</h4><p>Žmonės jus pažymi klausimuose ir pasisakymuose, o jūs atsakote viešai, imatės projekto arba paaiškinate, kodėl nepritariate. Kai klausimų daug, DI sugrupuoja panašius, todėl į vieną temą atsakote vieną kartą, o atsakymas pasiekia visus klaususius. Savo atsakymų dalį visada matote patys, o viešai ji rodoma, kai pasiekia 70 %. Plačiau – 9 skyriuje.</p></div>
         <div><span class="for">VISIEMS POLITIKAMS</span><h4>Paaiškinkite savo balsą ten, kur jis matomas</h4><p>Trumpas paaiškinimas prie kiekvieno užfiksuoto balsavimo rodomas projekto puslapyje ir pasiekia kiekvieną jums balsą patikėjusį žmogų – be reklamos ir be algoritmo, kuris spręstų, kas jį pamatys.</p></div>
         <div><span class="for">VISIEMS POLITIKAMS</span><h4>Matykite, kur jumis pasitikintys nesutinka</h4><p>Prie kiekvieno balsavimo matote, kiek jums balsą patikėjusių žmonių balsavo patys ir kiek jų pasirinko kitaip nei jūs. Tai veikia ir išrinktiems pagal partijos sąrašą, ir dar tik kandidatuojantiems. Rodomi tik apibendrinti skaičiai.</p></div>
         <div><span class="for">VISIEMS POLITIKAMS</span><h4>Matomas mandatas tarp rinkimų</h4><p>„Ekonomikos klausimais manimi pasitiki 2 140 piliečių“ – skaičius, kuris auga arba mažėja po kiekvieno balsavimo. Jis atlygina už nuoseklumą ir gerus paaiškinimus, o ne už garsiausią balsą.</p></div>
@@ -903,16 +925,16 @@ footer.end svg{width:28px;height:28px}
     <!-- 9 DIALOG -->
     <section class="chapter" id="dialog">
       <header>
-        <div class="eyebrow">09 · Pokalbis su politikais</div>
-        <h2>Klauskite tiesiogiai, atsakymą gaukite visi</h2>
-        <p class="lede">Kiekvienas turi savo srautą: komentarus apie projektus, kuriuos sekate, jūsų patikėtinių paaiškinimus ir atsakymus į jūsų klausimus. Politiką galima pažymėti klausime, o jis atsako viešai.</p>
+        <div class="eyebrow">09 · Pasisakymai ir klausimai</div>
+        <h2>Pasakykite, kas rūpi, o atstovai mato ir atsako</h2>
+        <p class="lede">Kiekvienas turi savo srautą ir gali rašyti politikams dviem būdais. <b>Klausimu</b> prašote atsakymo. <b>Pasisakymu</b> prašote veiksmų: iškeliate problemą ar reikalavimą, o kiti jį palaiko. Politikas atsako viešai, o jo atsakymas pasiekia visus.</p>
       </header>
       <div class="mock-label"><span><b>Maketas</b> · Asmeninis srautas ir klausimai</span><span>Interaktyvus</span></div>
       <div class="mock">
         <div class="mock-bar"><div class="dots"><i></i><i></i><i></i></div><div class="url">lietuva20.lt/srautas</div></div>
         <div class="feed">
           <div class="feed-main">
-            <div class="compose"><span class="avatar" style="background:#8a6d3b">DS</span><div class="compose-box">Užduokite klausimą ar pasidalykite nuomone. Pažymėkite politiką, pvz., <b>@Jonas Petraitis</b></div></div>
+            <div class="compose"><span class="avatar" style="background:#8a6d3b">DS</span><div><div class="compose-box">Užduokite klausimą arba parašykite pasisakymą. Pažymėkite politiką, pvz., <b>@Jonas Petraitis</b></div><div class="intent"><span class="chip ok">Klausimas</span><span class="chip">Pasisakymas</span></div></div></div>
             <div class="post cluster">
               <div class="post-h"><span class="avatar" style="background:var(--brand)">DI</span><span><b>14 panašių klausimų</b><small>DI sugrupavo · pažymėtas <span class="tag">@Jonas Petraitis</span> · XVP-0412</small></span></div>
               <span class="q">Ar 32 % tarifas palies šeimos verslą, kai parduodama visa įmonė?</span>
@@ -950,6 +972,56 @@ footer.end svg{width:28px;height:28px}
       </div>
       <div class="prose" style="margin-top:22px">
         <p>Diskusijas prižiūri DI pagalbininkas ir moderatoriai: įžeidžiantys ar pasikartojantys įrašai paslepiami, o patvirtintų politikų ir organizacijų įrašai pažymimi. Balsavimą dėl Seimo projekto gali inicijuoti bet kuris naudotojas, o savo projektų juodraščius skelbti ir dėl jų klausti auditorijos nuomonės gali tik patvirtinti politikai ir organizacijos.</p>
+      </div>
+
+      <h3 style="margin-top:44px">Ką mato politikas</h3>
+      <div class="prose" style="margin-top:10px"><p>Panašius pasisakymus DI sujungia į temas. Politikas mato, kas rūpi jo auditorijai, ir kiek palaikančiųjų yra jam balsą patikėję žmonės. Į temą jis gali atsakyti, imtis projekto, susieti ją su Seime svarstomu projektu arba paaiškinti, kodėl nepritaria.</p></div>
+      <div class="mock-label"><span><b>Maketas</b> · Politiko pasisakymų dėžutė</span><span>Interaktyvus</span></div>
+      <div class="mock">
+        <div class="mock-bar"><div class="dots"><i></i><i></i><i></i></div><div class="url">lietuva20.lt/p/jonas-petraitis/pasisakymai</div></div>
+        <div class="inbox">
+          <div class="inbox-h"><div class="side-h">Kas rūpi jumis pasitikintiems</div><span style="font-size:12.5px;color:var(--muted)">Rikiuojama pagal jums balsą patikėjusių palaikymą</span></div>
+          <div class="theme">
+            <div class="theme-h"><b>Mokyklose trūksta psichologų<small>Pasisakymas · Švietimas · DI sujungė 214 panašių</small></b><span class="chip ok">Rengiamas projektas</span></div>
+            <div class="support"><span><b>1 240</b> palaiko</span><span class="mine"><b>142</b> iš jų jums patikėję</span></div>
+            <p class="reply">Rengiu Švietimo įstatymo pataisą: po vieną psichologo etatą 300 mokinių. Juodraštį paskelbsiu čia spalio mėnesį.</p>
+          </div>
+          <div class="theme" id="themeWait">
+            <div class="theme-h"><b>Balsuokite prieš fejerverkų prekybos ribojimą (XVP-1811)<small>Pasisakymas dėl Seimo projekto · Viešoji tvarka · DI sujungė 57 panašius</small></b><span class="chip warn" id="themeStatus">Laukia atsakymo</span></div>
+            <div class="support"><span><b>312</b> palaiko</span><span class="mine"><b>57</b> iš jų jums patikėję</span><span>Balsavimas Seime: spalio 6 d.</span></div>
+            <div class="acts" id="themeActs">
+              <button type="button" data-a="Atsakyta">Atsakyti</button>
+              <button type="button" data-a="Rengiamas projektas">Rengiu projektą</button>
+              <button type="button" data-a="Susieta su projektu">Susieti su projektu</button>
+              <button type="button" data-a="Nepritariu">Nepritariu</button>
+            </div>
+          </div>
+          <div class="theme">
+            <div class="theme-h"><b>Panaikinti automobilių registracijos mokestį<small>Pasisakymas · Mokesčiai · DI sujungė 388 panašius</small></b><span class="chip">Nepritariu</span></div>
+            <div class="support"><span><b>2 015</b> palaiko</span><span class="mine"><b>96</b> iš jų jums patikėję</span></div>
+            <p class="reply">Nepritariu: mokestis mažina taršiausių automobilių skaičių, o surinktos lėšos skiriamos keliams. Siūlau jį susieti su automobilio amžiumi, o ne panaikinti.</p>
+          </div>
+        </div>
+      </div>
+      <div class="annot">
+        <div><span class="n">1</span><span><b>Temos, ne laiškų lavina.</b> Tūkstantis vienodų laiškų tampa viena tema su palaikančiųjų skaičiumi.</span></div>
+        <div><span class="n">2</span><span><b>Jums patikėję – atskirai.</b> Politikas mato, kiek palaikančiųjų yra jam balsą patikėję žmonės.</span></div>
+        <div><span class="n">3</span><span><b>Keturi atsakymo būdai.</b> Atsakyti, imtis projekto, susieti su Seimo projektu arba paaiškinti, kodėl nepritariate.</span></div>
+        <div><span class="n">4</span><span><b>Prieš balsavimą.</b> Su Seimo projektu susieti pasisakymai rodomi projekto puslapyje ir Seimo nariui prieš balsavimą.</span></div>
+      </div>
+
+      <h3 style="margin-top:44px">Kiekvienos temos kelias yra viešas</h3>
+      <ol class="status-flow" aria-label="Pasisakymo būsenos">
+        <li><span>Naujas</span></li>
+        <li><span>Politikas atsakė</span></li>
+        <li><span>Rengiamas projektas</span></li>
+        <li><span>Įregistruotas Seime (XVP-…)</span></li>
+        <li><span>Balsuojama</span></li>
+        <li class="end"><span>Priimta arba atmesta</span></li>
+      </ol>
+      <p class="status-alt">Arba: <b>Nepritariu</b> – su politiko paaiškinimu, kurį mato visi palaikantieji.</p>
+      <div class="prose" style="margin-top:18px">
+        <p>Taip matyti, ką politikai padarė su tuo, ko prašė žmonės. Pasisakymai neturi teisinės galios, nes paskyros nėra tikrinamos pagal asmens kodą. Kai tema sulaukia didelio palaikymo, platforma nukreipia į oficialius kelius: piliečių įstatymų leidybos iniciatyvą per VRK arba peticiją Seimui.</p>
       </div>
     </section>
 
@@ -1156,7 +1228,7 @@ footer.end svg{width:28px;height:28px}
       <div class="road">
         <div class="now"><div class="when">2026 m. IV ketv.<small>dabar</small></div><div><h4>Idėjos patikrinimas</h4><p>Ši baltoji knyga, pokalbiai su politikais ir kitais suinteresuotais asmenimis bei veikiantis Seimo balsavimų importas nuo dabartinės kadencijos pradžios (2024 m. lapkričio).</p></div></div>
         <div><div class="when">2027 m. I–II ketv.</div><div><h4>Seimo stebėsena, alfa versija</h4><p>Balsavimų inicijavimas, projektų puslapiai, DI santraukos, Seimo narių ir frakcijų balsavimų istorija ir tiesioginis visuomenės balsavimas. Uždaras bandymas su pakviestais politikais.</p><span class="chip milestone">2027 m. pavasario savivaldos rinkimai: paprasti kandidatų puslapiai bandomosiose savivaldybėse</span></div></div>
-        <div><div class="when">2027 m. III–IV ketv.</div><div><h4>Delegavimas ir patvirtinti profiliai</h4><p>Delegavimo variklis, patvirtinti Seimo narių ir organizacijų profiliai, balsavimų paaiškinimai, asmeninis srautas, klausimai politikams ir vieša beta versija.</p></div></div>
+        <div><div class="when">2027 m. III–IV ketv.</div><div><h4>Delegavimas ir patvirtinti profiliai</h4><p>Delegavimo variklis, patvirtinti Seimo narių ir organizacijų profiliai, balsavimų paaiškinimai, asmeninis srautas, klausimai ir pasisakymai politikams bei vieša beta versija.</p></div></div>
         <div><div class="when">2028 m. I pusm.</div><div><h4>Daugiau institucijų, atvira API</h4><p>Dvi ar trys savivaldybių tarybos, Europos Parlamento balsavimai ir vieša API žurnalistams bei tyrėjams.</p></div></div>
         <div><div class="when">2028 m. II–III ketv.</div><div><h4>Rinkimų režimas</h4><p>Kandidatų pozicijos, palyginimas pagal balsavimus ir kandidatų sąrašai prieš Seimo rinkimus.</p><span class="chip milestone">Seimo rinkimai, 2028 m. spalis</span></div></div>
       </div>
@@ -1174,6 +1246,7 @@ footer.end svg{width:28px;height:28px}
         <li><span>Kurios 8 ir 9 skyrių galimybės iš tiesų pakeistų jūsų darbą, o kurios tik malonus priedas?<small>Politikams ir jų biurams</small></span></li>
         <li><span>Ar delegavimas pirma žmogui, o po to Seimo nariui atrodo teisingas ir suprantamas? Ką keistumėte?<small>Visiems</small></span></li>
         <li><span>Kuri 10 skyriaus statistika galėtų klaidinti ar būti nesąžininga, ir kaip ją reikėtų pateikti?<small>Visiems</small></span></li>
+        <li><span>Ar sugrupuoti pasisakymai jūsų biurui būtų patogesni nei dabartiniai el. laiškai ir peticijos?<small>Politikams ir jų biurams</small></span></li>
         <li><span>Ar jūsų organizacija sutiktų tapti viešu patikėtiniu savo srities klausimais?<small>NVO, profesinėms sąjungoms ir asociacijoms</small></span></li>
         <li><span>Kuri savivaldybė tiktų bandomajam projektui ir su kuo ten verta pasikalbėti?<small>Vietos politikams</small></span></li>
       </ol>
@@ -1327,6 +1400,10 @@ footer.end svg{width:28px;height:28px}
   }
   $("#initSearch").addEventListener("input",renderInitList);
   renderInitList();renderInitForm();
+
+  /* ---------- politician inbox ---------- */
+  $$("#themeActs button").forEach(b=>b.addEventListener("click",()=>{const st=$("#themeStatus");st.textContent=b.dataset.a;st.className="chip "+(b.dataset.a==="Nepritariu"?"":"ok");
+    $("#themeActs").outerHTML='<p class="reply">'+({"Atsakyta":"Atsakymas paskelbtas ir išsiųstas 312 palaikančiųjų.","Rengiamas projektas":"Pažymėta, kad rengiate projektą. Palaikantieji gaus pranešimą, kai paskelbsite juodraštį.","Susieta su projektu":"Tema susieta su Seimo projektu XVP-1811 ir rodoma jo puslapyje.","Nepritariu":"Parašykite paaiškinimą – jį matys visi 312 palaikančiųjų."})[b.dataset.a]+' <span style="color:var(--muted)">(maketas)</span></p>';}));
 
   /* ---------- want to know ---------- */
   $$(".want").forEach(b=>b.addEventListener("click",()=>{const on=b.getAttribute("aria-pressed")!=="true";b.setAttribute("aria-pressed",on);b.textContent="Noriu žinoti · "+(+b.dataset.n+(on?1:0));}));
