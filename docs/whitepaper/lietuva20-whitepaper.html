@@ -447,6 +447,34 @@ footer.end svg{width:28px;height:28px}
 .exp h4{font-size:17px}
 .exp-stats{font-family:var(--f-display)}
 
+.post.own{border-color:var(--brand)}
+.topic-strip{display:block;font-size:13px;line-height:1.4;background:var(--brand-soft);border-radius:8px;padding:7px 10px;color:var(--ink);text-decoration:none}
+.post .foot a{color:var(--link)}
+.topic{display:grid;grid-template-columns:minmax(0,1fr) 290px}
+@media (max-width:880px){.topic{grid-template-columns:minmax(0,1fr)}}
+.topic-main{padding:20px 22px;display:grid;gap:12px;align-content:start;border-right:1px solid var(--line);min-width:0}
+@media (max-width:880px){.topic-main{border-right:0;border-bottom:1px solid var(--line)}}
+.topic-main h3{font-size:22px;letter-spacing:-.01em}
+.topic-side{padding:18px;display:grid;gap:10px;align-content:start;background:color-mix(in oklab,var(--surface-2) 45%,var(--surface))}
+.addr{display:flex;flex-wrap:wrap;gap:6px 14px;font-size:13px;align-items:center}
+.addr span{display:inline-flex;align-items:center;gap:4px}
+.addr small{color:var(--muted)}
+.support .want{margin-left:auto}
+.ans{border:1px solid var(--line);border-radius:12px;padding:12px 14px;display:grid;gap:8px;background:var(--surface)}
+.ans-h{display:grid;grid-template-columns:28px minmax(0,1fr) auto;gap:10px;align-items:center;font-size:13.5px;line-height:1.3}
+.ans-h b{font-weight:600;display:inline-flex;gap:4px;align-items:center}
+.ans-h small{display:block;color:var(--muted);font-size:12px}
+.ans p{font-family:var(--f-body);font-size:15px;line-height:1.5;color:var(--ink-2)}
+.ans .foot{display:flex;gap:12px;align-items:center;font-size:12.5px;color:var(--muted)}
+.useful{font:inherit;font-size:12px;padding:3px 9px;border-radius:999px;border:1px solid var(--line-strong);background:var(--surface);color:var(--ink-2);cursor:pointer}
+.useful[aria-pressed="true"]{background:var(--ink);border-color:var(--ink);color:var(--bg)}
+.tpost{border:1px solid var(--line);border-radius:10px;padding:9px 11px;background:var(--surface);font-size:13px;display:grid;gap:3px}
+.tpost p{color:var(--ink-2);line-height:1.4}
+.tpost.mine{border-color:var(--brand)}
+.tpost .linkbtn{font-size:12px;justify-self:start}
+.mt-rate{font-size:12.5px;color:var(--muted);text-align:right}
+.mt-rate b{color:var(--ink)}
+.mt-note{font-size:12px;color:var(--muted)}
 .status-flow{list-style:none;margin:22px 0 0;padding:0;display:flex;flex-wrap:wrap;gap:8px;align-items:center;font-family:var(--f-display);font-size:13.5px}
 .status-flow li{display:flex;align-items:center;gap:8px}
 .status-flow li span{padding:6px 12px;border-radius:999px;background:var(--surface);border:1px solid var(--line-strong);color:var(--ink-2)}
@@ -812,7 +840,7 @@ footer.end svg{width:28px;height:28px}
         <div class="rule"><h4>Ekspertai pagal temas</h4><p>Kiekvienas patikėtinis taikomas visoms temoms. Ekspertu jis laikomas iki 3 temų, kurias nurodė pats, ir temose, kurias atitinka jo komitetas. Projektas turi kelias temų žymas; ekspertais laikomi tie patikėtiniai, kurių bent viena pasirinkta tema sutampa su projekto žyma.</p></div>
         <div class="rule"><h4>Patikėtiniai – žmonės</h4><p>Pirmojoje versijoje patikėtiniai yra tik žmonės: piliečiai ir Seimo nariai. Partijos ir organizacijos kaip patikėtiniai galėtų atsirasti vėliau, jei to prireiktų.</p></div>
         <div class="rule"><h4>Jokių grandinių</h4><p>Jei jūsų patikėtinis pats nebalsavo, o delegavo savo balsą, jis jums neperduodamas – skaičiuojami kiti jūsų patikėtiniai. Taip rezultatai lieka paaiškinami, o galia nesikaupia nematomai.</p></div>
-        <div class="rule"><h4>Patikėtiniai veikia viešai</h4><p>Patikėtiniu tampama savo noru: naudotojas tai įsijungia profilyje ir sutinka, kad jo balsai būtų vieši. Jam balsą patikėję žmonės lieka anonimiški.</p></div>
+        <div class="rule"><h4>Patikėtiniai veikia viešai</h4><p>Patikėtiniu tampama savo noru: naudotojas tai įsijungia profilyje ir sutinka, kad jo balsai būtų vieši. Jam balsą patikėję žmonės lieka anonimiški. Patikėtinius galima pažymėti įrašuose, o jie gali atsakyti į jiems skirtas temas (žr. 6 skyrių).</p></div>
       </div>
     </section>
 
@@ -870,97 +898,130 @@ footer.end svg{width:28px;height:28px}
       <header>
         <div class="eyebrow">06 · Kas rūpi žmonėms</div>
         <h2>Jūs pasakote, kas jums rūpi, o atstovai mato ir atsako</h2>
-        <p class="lede">Kiekvienas turi savo srautą ir gali parašyti, kas jam rūpi: paklausti, iškelti problemą ar paprašyti veiksmų. Įrašą galima susieti su politiku ir Seimo projektu. Kiti pažymi „Man irgi svarbu“, panašūs įrašai sujungiami į temą, o politikas atsako vieną kartą visiems.</p>
+        <p class="lede">Kiekvienas gali parašyti, kas jam rūpi: paklausti, iškelti problemą ar paprašyti veiksmų, ir pažymėti Seimo narį, patikėtinį ar Seimo projektą. Kiti pažymi „Man irgi svarbu“, panašūs įrašai sujungiami į temą, o pažymėtieji atsako vieną kartą visiems.</p>
       </header>
       <div class="mock-label"><span><b>Maketas</b> · Asmeninis srautas</span><span>Interaktyvus</span></div>
       <div class="mock">
         <div class="mock-bar"><div class="dots"><i></i><i></i><i></i></div><div class="url">lietuva2.lt/srautas</div></div>
         <div class="feed">
           <div class="feed-main">
-            <div class="compose"><span class="avatar" style="background:#8a6d3b">DS</span><div><div class="compose-box">Parašykite, kas jums rūpi. Pažymėkite politiką ar projektą, pvz., <b>@Jonas Petraitis</b>, <b>XVP-0412</b></div></div></div>
-            <div class="post cluster">
-              <div class="post-h"><span class="avatar" style="background:var(--brand)">14</span><span><b>14 panašių įrašų · 110 palaiko</b><small>Sujungta į vieną temą · pažymėtas <span class="tag">@Jonas Petraitis</span> · XVP-0412</small></span></div>
-              <span class="q">Ar 32 % tarifas palies šeimos verslą, kai parduodama visa įmonė?</span>
-              <span class="ex">Pvz.: „Parduodu tėvų įmonę po 30 metų – ar mokėsiu 32 %?“ · „Ar bus išimtis ilgai valdytoms akcijoms?“ · dar 12</span>
-              <div class="answer"><span class="by"><b style="color:var(--ink)">Jonas Petraitis</b> atsakė · rugsėjo 21 d.</span><p>Pagal dabartinę redakciją – taip, vienkartinis pardavimas įskaičiuojamas į ribą. Siūliau pataisą, kuri išskirtų ilgiau nei 5 metus valdytas akcijas; komitetas jai nepritarė.</p></div>
-              <div class="foot"><span>14 parašė, 96 pažymėjo „Man irgi svarbu“</span><span>Atsakymas išsiųstas visiems 110</span></div>
+            <div class="compose"><span class="avatar" style="background:#8a6d3b">DS</span><div><div class="compose-box">Parašykite, kas jums rūpi. Pažymėkite Seimo narį, patikėtinį ar projektą, pvz., <b>@Jonas Petraitis</b>, <b>XVP-0412</b></div></div></div>
+            <div class="post own">
+              <div class="post-h"><span class="avatar" style="background:#8a6d3b">DS</span><span><b>Jūsų įrašas</b><small>Rugsėjo 18 d. · pažymėjote <span class="tag">@Jonas Petraitis</span> · XVP-0412</small></span></div>
+              <p>Parduodu tėvų įmonę po 30 metų darbo – ar tikrai mokėsiu 32 %?</p>
+              <a class="topic-strip" href="#topicMock">Įtrauktas į temą „Ar 32 % tarifas palies šeimos verslą, kai parduodama visa įmonė?“ · 14 įrašų · 110 palaiko</a>
+              <div class="answer"><span class="by"><b style="color:var(--ink)">Jonas Petraitis</b> atsakė temai · jūsų pažymėtas · rugsėjo 21 d.</span><p>Pagal dabartinę redakciją – taip, vienkartinis pardavimas įskaičiuojamas į ribą. Siūliau pataisą, kuri išskirtų ilgiau nei 5 metus valdytas akcijas; komitetas jai nepritarė.</p></div>
+              <div class="foot"><span>Temoje dar 2 atsakymai</span><a href="#topicMock">Atverti temą →</a></div>
             </div>
             <div class="post">
               <div class="post-h"><span class="avatar" style="background:#4a3aa7">JP</span><span><b>Jonas Petraitis <svg class="badge-v" aria-label="Patvirtintas"><use href="#vbadge"/></svg></b><small>Paaiškino balsą · Saulės parkai ūkio žemėje · jūsų ekonomikos patikėtinis</small></span></div>
               <p>Balsavau už, nes pataisa leidžia parkus tik mažiau derlingoje žemėje ir įpareigoja grąžinti ją ūkiui po 25 metų.</p>
-              <div class="foot"><span>48 komentarai</span><span>Atsakyti</span></div>
+              <div class="foot"><span>48 komentarai</span><span>Komentuoti</span></div>
             </div>
             <div class="post">
               <div class="post-h"><span class="avatar" style="background:#1c5cab">AK</span><span><b>Aistė Kazlaitė</b><small>Komentavo projektą, dėl kurio balsavote · XVP-0412</small></span></div>
               <p>Gerai, kad pagaliau diskutuojama, bet ribą reikėtų indeksuoti pagal infliaciją, kitaip po kelerių metų ji palies daug daugiau žmonių.</p>
-              <div class="foot"><span>12 atsakymų</span><span>Atsakyti</span></div>
+              <div class="foot"><span>12 komentarų</span><span>Komentuoti</span></div>
             </div>
           </div>
           <div class="feed-side">
-            <div class="side-h">Laukia Jono Petraičio atsakymo</div>
-            <div class="kv">
-              <span>Atsakyta temų</span><b class="tnum">84 %</b>
-              <span>Vidutinis atsakymo laikas</span><b class="tnum">2 d.</b>
-            </div>
-            <div class="oq"><b>Kodėl balsavote už saulės parkus ūkio žemėje?</b><div class="meta"><span>23 įrašai · 84 palaiko</span><button class="want" type="button" data-n="84" aria-pressed="false">Man irgi svarbu</button></div></div>
-            <div class="oq"><b>Ar palaikysite nemokamą viešąjį transportą moksleiviams?</b><div class="meta"><span>9 įrašai · 36 palaiko</span><button class="want" type="button" data-n="36" aria-pressed="false">Man irgi svarbu</button></div></div>
+            <div class="side-h">Populiarios temos jūsų srityse</div>
+            <div class="oq"><b>Mokyklose trūksta psichologų</b><div class="meta"><span>214 įrašų · 1 240 palaiko</span><button class="want" type="button" data-n="1240" aria-pressed="false">Man irgi svarbu</button></div></div>
+            <div class="oq"><b>Ar pajamų mokesčio riba bus indeksuojama pagal infliaciją?</b><div class="meta"><span>9 įrašai · 36 palaiko</span><button class="want" type="button" data-n="36" aria-pressed="false">Man irgi svarbu</button></div></div>
           </div>
         </div>
       </div>
       <div class="annot">
-        <div><span class="n">1</span><span><b>Srautas pagal jus.</b> Rodoma tai, kas susiję su jūsų balsais, temomis ir patikėtiniais, o ne tai, kas garsiausia.</span></div>
-        <div><span class="n">2</span><span><b>Kam skirta.</b> Įrašą galima pažymėti politikui ar Seimo projektui. Pažymėtas politikas gauna pranešimą, o su projektu susietas įrašas rodomas ir projekto puslapyje.</span></div>
-        <div><span class="n">3</span><span><b>Panašūs įrašai – viena tema.</b> Įrašus sugrupuoja DI, o moderatoriai gali temas sujungti, išskaidyti ar perkelti įrašą; autorius gali pažymėti, kad jo įrašas pateko ne į tą temą. Temos palaikymas – visi parašę ir pažymėję „Man irgi svarbu“. Tūkstantis vienodų laiškų tampa viena tema.</span></div>
-        <div><span class="n">4</span><span><b>Atsakymų rodiklis.</b> Politikas visada mato, į kokią dalį jam skirtų temų atsakė; atsakymu laikomas ir paaiškinimas, kodėl nepritaria. Viešai rodiklis rodomas, kai pasiekia 70 %, todėl verta atsakyti daugiau.</span></div>
+        <div><span class="n">1</span><span><b>Srautas pagal jus.</b> Rodoma tai, kas susiję su jūsų balsais, sritimis ir patikėtiniais, o ne tai, kas garsiausia.</span></div>
+        <div><span class="n">2</span><span><b>Jūsų įrašas lieka jūsų.</b> Jis rodomas taip, kaip parašėte, o po juo – tema, į kurią jis įtrauktas, ir naujausias atsakymas.</span></div>
+        <div><span class="n">3</span><span><b>Panašūs įrašai – viena tema.</b> Įrašus sugrupuoja DI, o moderatoriai gali temas sujungti, išskaidyti ar perkelti įrašą. Temos palaikymas – visi parašę ir pažymėję „Man irgi svarbu“. Tūkstantis vienodų laiškų tampa viena tema.</span></div>
+      </div>
+
+      <h3 style="margin-top:44px">Temos puslapis</h3>
+      <div class="mock-label"><span><b>Maketas</b> · Tema su atsakymais</span><span>Interaktyvus</span></div>
+      <div class="mock" id="topicMock">
+        <div class="mock-bar"><div class="dots"><i></i><i></i><i></i></div><div class="url">lietuva2.lt/temos/seimos-verslo-pardavimas</div></div>
+        <div class="topic">
+          <div class="topic-main">
+            <div class="bill-crumbs"><span>Tema</span><span class="chip">Mokesčiai</span><span>susieta su <span class="mono">XVP-0412</span></span></div>
+            <h3>Ar 32 % tarifas palies šeimos verslą, kai parduodama visa įmonė?</h3>
+            <div class="addr"><span class="muted">Skirta:</span><span>Jonas Petraitis <svg class="badge-v" aria-label="Patvirtintas"><use href="#vbadge"/></svg> <small>9 įrašai</small></span><span>Ona Jonaitienė <svg class="badge-v" aria-label="Patvirtintas"><use href="#vbadge"/></svg> <small>3</small></span><span>Rūta Mockutė <small>2</small></span></div>
+            <div class="support"><span>14 įrašų</span><span><b id="tpSup">110</b> palaiko</span><button class="want" type="button" id="tpWant" aria-pressed="true">Man irgi svarbu</button></div>
+            <div class="side-h" style="margin-top:6px">Atsakymai</div>
+            <div class="ans">
+              <div class="ans-h"><span class="avatar" style="background:#4a3aa7">JP</span><span><b>Jonas Petraitis <svg class="badge-v" aria-label="Patvirtintas"><use href="#vbadge"/></svg></b><small>Seimo narys · pažymėtas 9 įrašuose</small></span><span class="chip ok">Atsakė</span></div>
+              <p>Pagal dabartinę redakciją – taip, vienkartinis pardavimas įskaičiuojamas į ribą. Siūliau pataisą, kuri išskirtų ilgiau nei 5 metus valdytas akcijas; komitetas jai nepritarė.</p>
+              <div class="foot"><button class="useful" type="button" data-n="41" aria-pressed="false">Naudinga · 41</button><span>rugsėjo 21 d.</span></div>
+            </div>
+            <div class="ans">
+              <div class="ans-h"><span class="avatar" style="background:#1f6b3a">OJ</span><span><b>Ona Jonaitienė <svg class="badge-v" aria-label="Patvirtintas"><use href="#vbadge"/></svg></b><small>Seimo narė · pažymėta 3 įrašuose</small></span><span class="chip ok">Rengia projektą</span></div>
+              <p>Registruosiu pataisą, kuri išskirtų šeimos įmonės pardavimą, kai ji valdyta ilgiau nei 10 metų. Juodraštį paskelbsiu čia iki spalio 15 d.</p>
+              <div class="foot"><button class="useful" type="button" data-n="33" aria-pressed="false">Naudinga · 33</button><span>rugsėjo 22 d.</span></div>
+            </div>
+            <div class="ans">
+              <div class="ans-h"><span class="avatar" style="background:#8a6d3b">RM</span><span><b>Rūta Mockutė</b><small>Patikėtinė · ekspertė: ekonomika · 3 310 patikėjusių · pažymėta 2 įrašuose</small></span><span class="chip ok">Atsakė</span></div>
+              <p>Riba skaičiuojama metams, todėl vienkartinis pardavimas ją iškart viršija. Kaimyninėse šalyse tokiais atvejais taikomas atskiras kapitalo prieaugio tarifas – tai paprasčiau nei išimtys.</p>
+              <div class="foot"><button class="useful" type="button" data-n="57" aria-pressed="false">Naudinga · 57</button><span>rugsėjo 20 d.</span></div>
+            </div>
+            <div class="ans" id="ansMore" hidden>
+              <div class="ans-h"><span class="avatar" style="background:#6b6a66">TV</span><span><b>Tomas Vaitkus</b><small>Patikėtinis · 640 patikėjusių · nepažymėtas</small></span><span class="chip">Atsakė</span></div>
+              <p>Pats pardaviau įmonę pernai: verta iš anksto pasitarti su mokesčių konsultantu, nes pardavimą galima išdėstyti per kelerius metus.</p>
+              <div class="foot"><button class="useful" type="button" data-n="6" aria-pressed="false">Naudinga · 6</button><span>rugsėjo 23 d.</span></div>
+            </div>
+            <button class="linkbtn" type="button" id="ansMoreBtn" style="justify-self:start">Dar 1 atsakymas iš nepažymėtų</button>
+          </div>
+          <div class="topic-side">
+            <div class="side-h">Įrašai temoje (14)</div>
+            <div class="tpost mine"><b>Jūsų įrašas</b><p>Parduodu tėvų įmonę po 30 metų darbo – ar tikrai mokėsiu 32 %?</p><button class="linkbtn" type="button" id="wrongTopic">Ne ta tema?</button></div>
+            <div class="tpost"><b>Giedrė L.</b><p>Ar bus išimtis ilgai valdytoms akcijoms? @Jonas Petraitis</p></div>
+            <div class="tpost"><b>Mindaugas R.</b><p>Ūkininkai, parduodantys ūkį, irgi pateks į 32 %? @Ona Jonaitienė</p></div>
+            <button class="linkbtn" type="button" style="justify-self:start">Rodyti visus 14</button>
+          </div>
+        </div>
+      </div>
+      <div class="annot">
+        <div><span class="n">1</span><span><b>Atsakoma temai.</b> Atsakymas rodomas vieną kartą temoje ir pasiekia visus palaikančius, o ne kartojamas po kiekvienu įrašu.</span></div>
+        <div><span class="n">2</span><span><b>Atsakymų tvarka.</b> Pirmiausia pažymėtieji, patvirtinti Seimo nariai aukščiau; kiti – pagal „Naudinga“. Prie kiekvieno atsakymo matyti, kas atsako.</span></div>
+        <div><span class="n">3</span><span><b>Ne ta tema?</b> Grupavimas įrašo nekeičia ir neslepia. Jei įrašas pateko ne į tą temą, autorius tai pažymi, o sprendžia moderatorius.</span></div>
+        <div><span class="n">4</span><span><b>Pranešimai be triukšmo.</b> Pranešimą gaunate, kai atsako jūsų pažymėtas žmogus ar jūsų patikėtinis. Kiti atsakymai matomi temoje.</span></div>
+      </div>
+
+      <h3 style="margin-top:44px">Ką mato patikėtiniai ir Seimo nariai</h3>
+      <div class="mock-label"><span><b>Maketas</b> · Mano temos</span><span class="phase-sw">Rodo:<span class="seg" role="group" aria-label="Kam rodomas maketas"><button type="button" data-role="mp" aria-pressed="true">Seimo nariui</button><button type="button" data-role="exp" aria-pressed="false">patikėtinei ekspertei</button></span></span></div>
+      <div class="mock">
+        <div class="mock-bar"><div class="dots"><i></i><i></i><i></i></div><div class="url" id="mtUrl">lietuva2.lt/mano-temos</div></div>
+        <div class="inbox">
+          <div class="inbox-h"><div id="mtWho"></div><span class="mt-rate" id="mtRate"></span></div>
+          <div class="utabs" role="group" aria-label="Temų sąrašas" id="mtTabs">
+            <button type="button" data-t="me" aria-pressed="true">Man skirta</button>
+            <button type="button" data-t="area" aria-pressed="false">Mano sritys</button>
+            <button type="button" data-t="top" aria-pressed="false">Populiariausios</button>
+          </div>
+          <div id="mtList" style="display:grid;gap:12px"></div>
+        </div>
+      </div>
+      <div class="annot">
+        <div><span class="n">1</span><span><b>Vienas vaizdas visiems patikėtiniams.</b> Tiek Seimo nariai, tiek kiti patikėtiniai mato jiems skirtas temas, temas iš savo sričių ir populiariausias.</span></div>
+        <div><span class="n">2</span><span><b>Jums patikėję – atskirai.</b> Prie kiekvienos temos matyti, kiek palaikančiųjų yra jums balsą patikėję žmonės.</span></div>
+        <div><span class="n">3</span><span><b>Tik Seimo nariams.</b> „Rengiu projektą“, patvirtinimo ženklelis ir viešas atsakymų rodiklis. Kiti patikėtiniai savo rodiklį mato tik patys.</span></div>
+        <div><span class="n">4</span><span><b>Prieš balsavimą.</b> Su Seimo projektu susietos temos rodomos projekto puslapyje ir Seimo nariui prieš balsavimą.</span></div>
       </div>
       <div class="prose" style="margin-top:22px">
-        <p>Diskusijas prižiūri DI pagalbininkas ir moderatoriai: įžeidžiantys ar pasikartojantys įrašai paslepiami, o patvirtintų politikų įrašai pažymimi. Savo projektų juodraščius skelbti ir dėl jų klausti auditorijos nuomonės gali tik patvirtinti politikai.</p>
+        <p><b>Ką galima pažymėti.</b> Įraše galima pažymėti bet kurį Seimo narį, taip pat ir neprisijungusį, ir kiekvieną patikėtinį – naudotoją, sutikusį veikti viešai (žr. 4 skyrių). Kitų naudotojų pažymėti negalima.</p>
+        <p><b>Atsakymų rodiklis.</b> Skaičiuojamos temos, kuriose žmogus pažymėtas ir kurias palaiko bent 20 žmonių, – taip vienas įrašas rodiklio nesugadina. Atsakymu laikomas bet kuris sprendimas dėl temos, taip pat ir „Nepritariu“ su paaiškinimu. Seimo nario rodiklis rodomas viešai, kai pasiekia 70 %; kitų patikėtinių – tik jiems patiems.</p>
+        <p><b>Moderavimas.</b> Diskusijas prižiūri DI pagalbininkas ir moderatoriai: įžeidžiantys ar pasikartojantys įrašai paslepiami. Savo projektų juodraščius skelbti ir dėl jų klausti nuomonės gali tik patvirtinti Seimo nariai.</p>
       </div>
 
-      <h3 style="margin-top:44px">Ką mato politikas</h3>
-      <div class="mock-label"><span><b>Maketas</b> · Politiko temų dėžutė</span><span>Interaktyvus</span></div>
-      <div class="mock">
-        <div class="mock-bar"><div class="dots"><i></i><i></i><i></i></div><div class="url">lietuva2.lt/p/jonas-petraitis/temos</div></div>
-        <div class="inbox">
-          <div class="inbox-h"><div class="side-h">Kas rūpi jumis pasitikintiems</div><span style="font-size:12.5px;color:var(--muted)">Rikiuojama pagal jums balsą patikėjusių palaikymą</span></div>
-          <div class="theme">
-            <div class="theme-h"><b>Mokyklose trūksta psichologų<small>Švietimas · sujungta 214 panašių įrašų</small></b><span class="chip ok">Rengiamas projektas</span></div>
-            <div class="support"><span><b>1 240</b> palaiko</span><span class="mine"><b>142</b> iš jų jums patikėję</span></div>
-            <p class="reply">Rengiu Švietimo įstatymo pataisą: po vieną psichologo etatą 300 mokinių. Juodraštį paskelbsiu čia spalio mėnesį.</p>
-          </div>
-          <div class="theme" id="themeWait">
-            <div class="theme-h"><b>Balsuokite prieš fejerverkų prekybos ribojimą (XVP-1811)<small>Susieta su Seimo projektu · Viešoji tvarka · sujungtas 41 panašus įrašas</small></b><span class="chip warn" id="themeStatus">Laukia atsakymo</span></div>
-            <div class="support"><span><b>312</b> palaiko</span><span class="mine"><b>57</b> iš jų jums patikėję</span><span>Balsavimas Seime: spalio 6 d.</span></div>
-            <div class="acts" id="themeActs">
-              <button type="button" data-a="Atsakyta">Atsakyti</button>
-              <button type="button" data-a="Rengiamas projektas">Rengiu projektą</button>
-              <button type="button" data-a="Susieta su projektu">Susieti su projektu</button>
-              <button type="button" data-a="Nepritariu">Nepritariu</button>
-            </div>
-          </div>
-          <div class="theme">
-            <div class="theme-h"><b>Panaikinti automobilių registracijos mokestį<small>Mokesčiai · sujungta 388 panašūs įrašai</small></b><span class="chip">Nepritariu</span></div>
-            <div class="support"><span><b>2 015</b> palaiko</span><span class="mine"><b>96</b> iš jų jums patikėję</span></div>
-            <p class="reply">Nepritariu: mokestis mažina taršiausių automobilių skaičių, o surinktos lėšos skiriamos keliams. Siūlau jį susieti su automobilio amžiumi, o ne panaikinti.</p>
-          </div>
-        </div>
-      </div>
-      <div class="annot">
-        <div><span class="n">1</span><span><b>Jums patikėję – atskirai.</b> Politikas mato, kiek palaikančiųjų yra jam balsą patikėję žmonės.</span></div>
-        <div><span class="n">2</span><span><b>Keturi atsakymo būdai.</b> Atsakyti, imtis projekto, susieti su Seimo projektu arba paaiškinti, kodėl nepritariate.</span></div>
-        <div><span class="n">3</span><span><b>Prieš balsavimą.</b> Su Seimo projektu susieti įrašai rodomi projekto puslapyje ir Seimo nariui prieš balsavimą.</span></div>
-      </div>
-
-      <h3 style="margin-top:44px">Kiekvienos temos kelias yra viešas</h3>
-      <ol class="status-flow" aria-label="Temos būsenos">
-        <li><span>Naujas</span></li>
-        <li><span>Politikas atsakė</span></li>
-        <li><span>Rengiamas projektas</span></li>
+      <h3 style="margin-top:44px">Ką Seimo narys padarė – matyti viešai</h3>
+      <ol class="status-flow" aria-label="Seimo nario atsakymo būsenos">
+        <li><span>Nauja tema</span></li>
+        <li><span>Atsakė</span></li>
+        <li><span>Rengia projektą</span></li>
         <li><span>Įregistruotas Seime (XVP-…)</span></li>
         <li><span>Balsuojama</span></li>
         <li class="end"><span>Priimta arba atmesta</span></li>
       </ol>
-      <p class="status-alt">Arba: <b>Nepritariu</b> – su politiko paaiškinimu, kurį mato visi palaikantieji.</p>
+      <p class="status-alt">Arba: <b>Nepritariu</b> – su paaiškinimu, kurį mato visi palaikantieji. Būsena rodoma prie kiekvieno atsakiusiojo atskirai: vienas Seimo narys gali rengti projektą, kitas – nepritarti.</p>
       <div class="prose" style="margin-top:18px">
         <p>Taip matyti, ką politikai padarė su tuo, ko prašė žmonės. Įrašai neturi teisinės galios, nes paskyros nėra tikrinamos pagal asmens kodą. Kai tema sulaukia didelio palaikymo, ją galima paversti peticija: palaikantieji ją pasirašo atskirai, sutikdami, kad jų vardas ir pavardė būtų įtraukti į sąrašą, o sąrašas įteikiamas Seimo nariams ar Seimo Peticijų komisijai. Kaip ir kitos internetinės peticijos, ji teisinės galios neturi, bet parodo, kiek žmonių to prašo. Teisinę galią turinčiai piliečių iniciatyvai parašai renkami per VRK sistemą.</p>
       </div>
@@ -1341,7 +1402,7 @@ footer.end svg{width:28px;height:28px}
   const MYV={for:"už",against:"prieš",abstain:"susilaikau"};
   function renderBill(){
     const after=bill.phase==="after",st=$("#myStatus");
-    $$(".phase-sw button").forEach(b=>b.setAttribute("aria-pressed",b.dataset.ph===bill.phase));
+    $$(".phase-sw [data-ph]").forEach(b=>b.setAttribute("aria-pressed",b.dataset.ph===bill.phase));
     if(bill.mine){
       st.innerHTML='<div class="st"><i style="background:var(--v-'+bill.mine+')"></i>Jūsų balsas: '+MYV[bill.mine]+'</div><div style="margin-top:4px;color:var(--ink-2)">'+(after?'Užfiksuotas rugsėjo 24 d., 14:00.':'Skaičiuojamas jūsų balsas, o patikėtinių balsai rodomi tik palyginimui. Pakeisti jį galite, kol balsavimas nesibaigė.')+'</div>'+(after?'':'<div style="margin-top:6px"><button class="linkbtn" type="button" id="undo">Atšaukti balsą ir grąžinti delegavimą</button></div>');
       if(!after)$("#undo").addEventListener("click",()=>{bill.mine=null;renderBill();});
@@ -1378,7 +1439,7 @@ footer.end svg{width:28px;height:28px}
     $("#tally").innerHTML=rows.join("");
   }
   $$(".vote-btns button").forEach(b=>b.addEventListener("click",()=>{if(bill.phase==="after")return;bill.mine=(bill.mine===b.dataset.v)?null:b.dataset.v;renderBill();}));
-  $$(".phase-sw button").forEach(b=>b.addEventListener("click",()=>{bill.phase=b.dataset.ph;renderBill();}));
+  $$(".phase-sw [data-ph]").forEach(b=>b.addEventListener("click",()=>{bill.phase=b.dataset.ph;renderBill();}));
   renderBill();
 
   /* ---------- initiation ---------- */
@@ -1418,9 +1479,44 @@ footer.end svg{width:28px;height:28px}
   $("#initSearch").addEventListener("input",renderInitList);
   renderInitList();renderInitForm();
 
-  /* ---------- politician inbox ---------- */
-  $$("#themeActs button").forEach(b=>b.addEventListener("click",()=>{const st=$("#themeStatus");st.textContent=b.dataset.a;st.className="chip "+(b.dataset.a==="Nepritariu"?"":"ok");
-    $("#themeActs").outerHTML='<p class="reply">'+({"Atsakyta":"Atsakymas paskelbtas ir išsiųstas 312 palaikančiųjų.","Rengiamas projektas":"Pažymėta, kad rengiate projektą. Palaikantieji gaus pranešimą, kai paskelbsite juodraštį.","Susieta su projektu":"Tema susieta su Seimo projektu XVP-1811 ir rodoma jo puslapyje.","Nepritariu":"Parašykite paaiškinimą – jį matys visi 312 palaikančiųjų."})[b.dataset.a]+' <span style="color:var(--muted)">(maketas)</span></p>';}));
+  /* ---------- topic page ---------- */
+  $("#tpWant").addEventListener("click",e=>{const b=e.currentTarget,on=b.getAttribute("aria-pressed")!=="true";b.setAttribute("aria-pressed",on);$("#tpSup").textContent=on?110:109;});
+  $$(".useful").forEach(b=>b.addEventListener("click",()=>{const on=b.getAttribute("aria-pressed")!=="true";b.setAttribute("aria-pressed",on);b.textContent="Naudinga · "+(+b.dataset.n+(on?1:0));}));
+  $("#ansMoreBtn").addEventListener("click",e=>{$("#ansMore").hidden=false;e.currentTarget.remove();});
+  $("#wrongTopic").addEventListener("click",e=>{e.currentTarget.outerHTML='<span class="mt-note">Pažymėta – peržiūrės moderatorius</span>';});
+
+  /* ---------- my topics (delegates and MPs) ---------- */
+  const MT={
+    mp:{url:"lietuva2.lt/p/jonas-petraitis/temos",who:'<b>Jonas Petraitis</b> '+'<svg class="badge-v" aria-label="Patvirtintas"><use href="#vbadge"/></svg><div class="mt-note">Seimo narys · Rikiuojama pagal jums balsą patikėjusių palaikymą</div>',
+      rate:'Atsakymų rodiklis <b>84 %</b><br>rodomas viešai (≥ 70 %)',
+      acts:[["Atsakyta","Atsakyti"],["Rengiamas projektas","Rengiu projektą"],["Susieta su projektu","Susieti su Seimo projektu"],["Nepritariu","Nepritariu"]],
+      me:[{t:"Mokyklose trūksta psichologų",m:"Švietimas · 214 įrašų",sup:"1 240",mine:"142",st:"Rengiamas projektas",r:"Rengiu Švietimo įstatymo pataisą: po vieną psichologo etatą 300 mokinių. Juodraštį paskelbsiu čia spalio mėnesį."},
+          {t:"Balsuokite prieš fejerverkų prekybos ribojimą (XVP-1811)",m:"Susieta su Seimo projektu · Viešoji tvarka · 41 įrašas · balsavimas Seime spalio 6 d.",sup:"312",mine:"57",wait:1},
+          {t:"Panaikinti automobilių registracijos mokestį",m:"Mokesčiai · 388 įrašai",sup:"2 015",mine:"96",st:"Nepritariu",r:"Nepritariu: mokestis mažina taršiausių automobilių skaičių, o lėšos skiriamos keliams. Siūlau jį susieti su automobilio amžiumi."}],
+      area:[{t:"Ar Lietuva turėtų prisidėti prie bendro ES gynybos fondo?",m:"Užsienio politika (jūsų komitetas) · 61 įrašas · jūsų nepažymėjo",sup:"540",mine:"88",wait:1}],
+      top:[{t:"Panaikinti automobilių registracijos mokestį",m:"Mokesčiai · 388 įrašai",sup:"2 015",mine:"96",st:"Nepritariu"},{t:"Nemokamas viešasis transportas moksleiviams",m:"Transportas · 302 įrašai · jūsų nepažymėjo",sup:"1 870",mine:"104",wait:1}]},
+    exp:{url:"lietuva2.lt/p/ruta-mockute/temos",who:'<b>Rūta Mockutė</b><div class="mt-note">Patikėtinė · ekspertė: ekonomika · 3 310 patikėjusių</div>',
+      rate:'Atsakėte į <b>6 iš 8</b> jums skirtų temų<br>matote tik jūs',
+      acts:[["Atsakyta","Atsakyti"],["Susieta su projektu","Susieti su Seimo projektu"],["Nepritariu","Nepritariu"]],
+      me:[{t:"Ar 32 % tarifas palies šeimos verslą, kai parduodama visa įmonė?",m:"Mokesčiai · 14 įrašų · susieta su XVP-0412",sup:"110",mine:"23",st:"Atsakyta",r:"Riba skaičiuojama metams, todėl vienkartinis pardavimas ją iškart viršija. Kaimyninėse šalyse taikomas atskiras kapitalo prieaugio tarifas."},
+          {t:"Ar verta mažinti PVM maitinimo paslaugoms?",m:"Mokesčiai · 27 įrašai",sup:"64",mine:"19",wait:1}],
+      area:[{t:"Ar pajamų mokesčio riba bus indeksuojama pagal infliaciją?",m:"Ekonomika (jūsų sritis) · 9 įrašai · jūsų nepažymėjo",sup:"36",mine:"11",wait:1}],
+      top:[{t:"Panaikinti automobilių registracijos mokestį",m:"Mokesčiai · 388 įrašai",sup:"2 015",mine:"204",wait:1},{t:"Nemokamas viešasis transportas moksleiviams",m:"Transportas · 302 įrašai",sup:"1 870",mine:"77",wait:1}]}};
+  const mtS={role:"mp",tab:"me"};
+  const REPLY={"Atsakyta":"Atsakymas paskelbtas temoje, palaikantieji gavo pranešimą.","Rengiamas projektas":"Pažymėta, kad rengiate projektą. Palaikantieji gaus pranešimą, kai paskelbsite juodraštį.","Susieta su projektu":"Tema susieta su Seimo projektu ir rodoma jo puslapyje.","Nepritariu":"Parašykite paaiškinimą – jį matys visi palaikantieji."};
+  function renderMT(){
+    const R=MT[mtS.role];
+    $$(".phase-sw [data-role]").forEach(b=>b.setAttribute("aria-pressed",b.dataset.role===mtS.role));
+    $$("#mtTabs button").forEach(b=>b.setAttribute("aria-pressed",b.dataset.t===mtS.tab));
+    $("#mtUrl").textContent=R.url;$("#mtWho").innerHTML=R.who;$("#mtRate").innerHTML=R.rate;
+    $("#mtList").innerHTML=R[mtS.tab].map((x,k)=>'<div class="theme"><div class="theme-h"><b>'+x.t+'<small>'+x.m+'</small></b><span class="chip '+(x.wait?"warn":x.st==="Nepritariu"?"":"ok")+'">'+(x.wait?"Laukia atsakymo":x.st)+'</span></div>'+
+      '<div class="support"><span><b>'+x.sup+'</b> palaiko</span><span class="mine"><b>'+x.mine+'</b> iš jų jums patikėję</span></div>'+
+      (x.wait?'<div class="acts" data-k="'+k+'">'+R.acts.map(a=>'<button type="button" data-a="'+a[0]+'">'+a[1]+'</button>').join("")+(mtS.role==="exp"?'<span class="mt-note" style="align-self:center">„Rengiu projektą“ – tik Seimo nariams</span>':'')+'</div>':(x.r?'<p class="reply">'+x.r+'</p>':''))+'</div>').join("");
+    $$("#mtList .acts button").forEach(b=>b.addEventListener("click",()=>{const box=b.parentElement,ch=box.parentElement.querySelector(".chip");ch.textContent=b.dataset.a;ch.className="chip "+(b.dataset.a==="Nepritariu"?"":"ok");box.outerHTML='<p class="reply">'+REPLY[b.dataset.a]+' <span class="mt-note">(maketas)</span></p>';}));
+  }
+  $$(".phase-sw [data-role]").forEach(b=>b.addEventListener("click",()=>{mtS.role=b.dataset.role;renderMT();}));
+  $$("#mtTabs button").forEach(b=>b.addEventListener("click",()=>{mtS.tab=b.dataset.t;renderMT();}));
+  renderMT();
 
   /* ---------- want to know ---------- */
   $("#inviteIv").addEventListener("click",e=>{const b=e.currentTarget;b.setAttribute("aria-pressed","true");b.textContent="Pakviesta ✓";});
