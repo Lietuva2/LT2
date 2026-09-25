@@ -1,4 +1,4 @@
-<title>Lietuva 2.0 – išsami produkto koncepcija</title>
+<title>Lietuva 2.0 – partnerystės ir piloto pasiūlymas politikams</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400;12..96,500;12..96,600;12..96,700;12..96,800&family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;1,6..72,400&family=IBM+Plex+Mono:wght@400;500&display=swap">
@@ -71,7 +71,6 @@ p{margin:0}
 .toc{position:sticky;top:84px;align-self:start;padding-top:40px;font-family:var(--f-display);font-size:14px}
 .toc ol{list-style:none;padding:0;margin:12px 0 0;display:grid;gap:2px;counter-reset:toc}
 .toc li{counter-increment:toc}
-.toc li.toc-intro{counter-increment:none}.toc li.toc-intro a::before{content:"•";font-size:15px;line-height:.8;color:var(--brand)}
 .toc a{display:grid;grid-template-columns:26px 1fr;padding:5px 8px;border-radius:6px;text-decoration:none;color:var(--ink-2)}
 .toc a::before{content:counter(toc,decimal-leading-zero);font-family:var(--f-mono);font-size:11px;color:var(--muted);padding-top:3px}
 .toc a:hover,.toc a.on{background:var(--surface-2);color:var(--ink)}
@@ -387,13 +386,8 @@ select{font:inherit;font-size:13px;padding:5px 8px;border-radius:8px;border:1px 
 .box h4{font-size:17px}
 .box ul{margin:0;padding-left:18px;font-size:16.5px;color:var(--ink-2);line-height:1.5}
 .box li+li{margin-top:6px}
-.audiences{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px;margin-top:24px}
-@media (max-width:820px){.audiences{grid-template-columns:minmax(0,1fr)}}
-.audience{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:20px;display:grid;gap:10px;align-content:start}
-.audience h3{font-size:21px}.audience p{font-size:16.5px;line-height:1.5;color:var(--ink-2)}.audience a{font-family:var(--f-display);font-size:14px;font-weight:700;margin-top:4px}
-.guardrail{margin-top:28px;padding:18px 20px;border-radius:14px;background:var(--brand-soft);font-family:var(--f-display);font-size:15px;line-height:1.5}
-.detail-block{margin-top:28px;border:1px solid var(--line);border-radius:14px;background:var(--surface);overflow:hidden}
-.detail-block summary{cursor:pointer;padding:16px 18px;font-family:var(--f-display);font-weight:700;list-style:none}.detail-block summary::-webkit-details-marker{display:none}.detail-block summary::after{content:"+";float:right;color:var(--brand);font-size:20px;line-height:1}.detail-block[open] summary::after{content:"–"}.detail-block .detail-body{padding:0 18px 18px}
+.pilot-card{margin-top:28px;padding:20px 22px;border-radius:14px;background:var(--brand-soft);display:flex;flex-wrap:wrap;gap:12px 24px;align-items:center;font-family:var(--f-display);font-size:16px}
+.pilot-card strong{font-size:18px}.pilot-card a{margin-left:auto;font-weight:700}
 
 footer.end{margin-top:96px;padding-top:28px;border-top:1px solid var(--line);font-family:var(--f-display);font-size:13.5px;color:var(--muted);display:flex;flex-wrap:wrap;gap:10px 28px;align-items:center}
 footer.end svg{width:28px;height:28px}
@@ -589,7 +583,7 @@ footer.end svg{width:28px;height:28px}
 <div class="topbar">
   <a class="brandmark" href="#top"><svg aria-hidden="true"><use href="#logo"/></svg>Lietuva 2.0</a>
   <nav aria-label="Skyriai">
-    <a href="#summary">Santrauka</a><a href="#part-voting">Kaip veikia</a><a href="#part-loop">Ryšys su atstovais</a><a href="#trust">Pasitikėjimas</a><a href="#contribute">Prisidėkite</a>
+    <a href="#for-politicians">Politikui trumpai</a><a href="#politicians">Nauda</a><a href="#part-voting">Kaip veikia</a><a href="#trust">Pasitikėjimas</a><a href="#pilot">Pilotas</a>
   </nav>
 </div>
 
@@ -597,7 +591,7 @@ footer.end svg{width:28px;height:28px}
   <aside class="toc" aria-label="Turinys">
     <div class="eyebrow">Turinys</div>
     <ol>
-      <li class="toc-intro"><a href="#summary">Santrauka</a></li>
+      <li><a href="#for-politicians">Politikui trumpai</a></li>
       <li><a href="#why">Kodėl dabar</a></li>
       <li class="toc-part">I · Balsavimas</li>
       <li><a href="#bill">Projekto puslapis</a></li>
@@ -614,7 +608,7 @@ footer.end svg{width:28px;height:28px}
       <li><a href="#trust">Pasitikėjimas ir privatumas</a></li>
       <li><a href="#legacy">Mūsų patirtis</a></li>
       <li><a href="#roadmap">Veiksmų planas</a></li>
-      <li><a href="#contribute">Kaip prisidėti</a></li>
+      <li><a href="#pilot">Uždaras pilotas</a></li>
     </ol>
   </aside>
 
@@ -624,12 +618,12 @@ footer.end svg{width:28px;height:28px}
       <div>
         <div class="hero-logo">
           <svg aria-label="Lietuva 2.0 logotipas" role="img"><use href="#logo"/></svg>
-          <div><div class="wm">Lietuva <span>2.0</span></div><div class="tag">Suprantami sprendimai ir matomas ryšys tarp žmonių bei Seimo</div></div>
+          <div><div class="wm">Lietuva <span>2.0</span></div><div class="tag">Struktūruotas ryšys su rinkėjais tarp rinkimų</div></div>
         </div>
-        <h1>Supraskite. Dalyvaukite. <em>Matykite rezultatą.</em></h1>
-        <p class="kicker">Vienas ryšys tarp žmonių ir Seimo – ne tik per rinkimus.</p>
-        <p class="lede">Lietuva 2.0 (LT2) svarstomus Seimo projektus paaiškina suprantama kalba, leidžia LT2 naudotojams išreikšti ar patikėti savo pasirinkimą, politikams – pridėti sprendimų kontekstą, o aktyviems piliečiams – telkti žmones aplink konkrečias temas ir sekti rezultatą.</p>
-        <div class="hero-meta"><span><b>Išsami produkto koncepcija</b> · pagrindinis dokumentas</span><span><b>2026 m. rugsėjis</b></span></div>
+        <h1>Išgirskite rinkėjus. <em>Paaiškinkite sprendimus.</em></h1>
+        <p class="kicker">Vienas kanalas tarp Seimo ir žmonių – ne tik per rinkimus.</p>
+        <p class="lede">Lietuva 2.0 (LT2) svarstomus Seimo projektus paaiškina suprantama kalba, surenka LT2 naudotojų nuomonės signalą ir leidžia politikui ten pat paaiškinti savo balsą. Oficialūs balsai jau vieši; patvirtintas profilis suteikia jiems kontekstą.</p>
+        <div class="hero-meta"><span><b>Partnerystės ir piloto pasiūlymas</b> · juodraštis bendram kūrimui</span><span><b>2026 m. rugsėjis</b></span></div>
         <div class="notice" role="note">
           <svg viewBox="0 0 20 20" aria-hidden="true"><circle cx="10" cy="10" r="8.5" fill="none" stroke="currentColor" stroke-width="1.6"/><path d="M10 5.5v5.5M10 13.6v.9" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
           <span>Visi Seimo nariai, frakcijos, projektai ir skaičiai šiame dokumente yra išgalvoti. Jie rodo, kaip atrodytų produktas, o ne kaip balsavo realūs politikai.</span>
@@ -655,43 +649,44 @@ footer.end svg{width:28px;height:28px}
           <div class="sbar-row"><div class="lbl"><b>Lietuva 2.0</b>15 160 balsų</div>
             <div class="sbar" data-tip="LT2 rezultatas (tiesioginiai ir deleguoti LT2 balsai): 35 % už, 58 % prieš, 7 % susilaikė"><span class="f" style="flex:35">35 %</span><span class="a" style="flex:58">58 %</span><span class="n" style="flex:7"></span></div></div>
         </div>
-        <div class="verdict"><span class="chip gap">Skirtumas: 25 p. p.</span> Matomas LT2 naudotojų signalas, Seimo sprendimas ir politikų paaiškinimai.</div>
+        <div class="verdict"><span class="chip gap">Skirtumas: 25 p. p.</span> Matomas LT2 naudotojų signalas ir vieta politikams paaiškinti sprendimą.</div>
       </div>
     </section>
 
-    <!-- SUMMARY -->
-    <section class="chapter" id="summary">
+    <!-- POLITICIAN SUMMARY -->
+    <section class="chapter" id="for-politicians">
       <header>
-        <div class="eyebrow">Santrauka</div>
-        <h2>Viena platforma, trys naudojimo būdai</h2>
-        <p class="lede">Šis dokumentas yra vienintelis išsamus LT2 veikimo aprašymas. Skirtingoms auditorijoms skirtos trumposios versijos keičia įėjimo tašką, bet ne produkto taisykles.</p>
+        <div class="eyebrow">Politikui trumpai</div>
+        <h2>Mažiau triukšmo, daugiau paaiškinamo grįžtamojo ryšio</h2>
+        <p class="lede">LT2 nėra referendumas ir nepretenduoja kalbėti visos visuomenės vardu. Tai viešas, metodiką atskleidžiantis LT2 naudotojų signalas ir darbo įrankis politikui, norinčiam išgirsti, paaiškinti bei parodyti rezultatą.</p>
       </header>
-      <div class="audiences">
-        <div class="audience"><h3>Piliečiui</h3><p>Per kelias minutes suprasti aktualų projektą, balsuoti pačiam arba pasirinkti patikėtinius ir matyti galutinį rezultatą.</p><a href="lietuva20-trumpai.html">Trumpoji versija piliečiams →</a></div>
-        <div class="audience"><h3>Politikui ir jo biurui</h3><p>Matyti struktūruotą LT2 naudotojų signalą, paaiškinti sprendimus ir atsakyti į sugrupuotas žmonių temas.</p><a href="lietuva20-politikams-trumpai.html">Trumpoji versija politikams →</a><a href="lietuva20-politikams-baltoji-knyga.html">Partnerystės ir piloto pasiūlymas →</a></div>
-        <div class="audience"><h3>Aktyviam piliečiui</h3><p>Dalytis patikrinama projekto santrauka, telkti auditoriją vienam aiškiam veiksmui ir užbaigti istoriją rezultatu.</p><a href="lietuva20-aktyviems-pilieciams.html">Versija visuomenininkams ir kūrėjams →</a></div>
+      <div class="pillars">
+        <div class="pillar"><div class="verb">Išgirskite</div><p>Sugrupuotos temos parodo ne vien garsiausią laišką, o pasikartojantį žmonių rūpestį.</p></div>
+        <div class="pillar"><div class="verb">Paaiškinkite</div><p>Pridėkite savo paaiškinimą prie konkretaus balsavimo ir pasiekite jus sekančius žmones.</p></div>
+        <div class="pillar"><div class="verb">Pasitikrinkite</div><p>Matykite, kur su jumis pasitikintys LT2 naudotojai pritaria, o kur renkasi kitaip.</p></div>
+        <div class="pillar"><div class="verb">Parodykite</div><p>Susiekite žmonių iškeltą temą su atsakymu, rengiamu projektu ir galutiniu rezultatu.</p></div>
       </div>
       <div class="two">
-        <div class="box"><h4>Pirmoji versija</h4><ul>
-          <li>Aktyvių Seimo projektų importas ir suprantamos, šaltiniais pažymėtos santraukos.</li>
-          <li>LT2 naudotojų balsavimai ir oficialių Seimo balsų palyginimas.</li>
-          <li>Patvirtinti politikų profiliai bei balsų paaiškinimai.</li>
-          <li>Uždaras bandymas su pakviestais politikais ir aktyviais piliečiais.</li>
+        <div class="box"><h4>Ką siūlome išbandyti pirmiausia</h4><ul>
+          <li>5 aktualių projektų santraukas ir LT2 naudotojų balsavimus.</li>
+          <li>Patvirtintus politikų profilius bei balsų paaiškinimus.</li>
+          <li>Sugrupuotas žmonių temas ir vieną atsakymą visiems.</li>
+          <li>Rodiklius, kuriuos pilotuojantys politikai laiko sąžiningais.</li>
         </ul></div>
-        <div class="box"><h4>Vėlesni etapai</h4><ul>
-          <li>Balso patikėjimas keliems žmonėms ir vieši patikėtinių profiliai.</li>
-          <li>Sugrupuotos žmonių temos bei tiesioginiai atsakymai.</li>
-          <li>Analitika ir rinkimų režimas, paremtas tikrais balsavimais.</li>
-          <li>Galimas savivaldybių ar Europos Parlamento prijungimas tik atsiradus poreikiui.</li>
+        <div class="box"><h4>Kokias ribas nustatome iš anksto</h4><ul>
+          <li>LT2 rezultatai vadinami naudotojų signalu, ne visuomenės valia.</li>
+          <li>DI tekstai pažymėti, susieti su šaltiniais ir turi taisymų istoriją.</li>
+          <li>Jokios reklamos ar mokamo politikų iškėlimo.</li>
+          <li>Delegavimas veikia tik LT2 ir neturi teisinės balsavimo galios.</li>
         </ul></div>
       </div>
-      <div class="guardrail"><b>Svarbiausia riba:</b> LT2 naudotojų rezultatai yra savanoriškai dalyvaujančių žmonių nuomonės signalas, o ne referendumas ar reprezentatyvi visuomenės apklausa. Delegavimas veikia tik platformoje ir neturi teisinės balsavimo galios.</div>
       <div class="kpis exp-stats" style="margin-top:28px">
         <div class="kpi"><span class="k">Ankstesnė LT2 platforma veikė</span><span class="v">9 metus</span><span class="s">2011–2020 m.</span></div>
         <div class="kpi"><span class="k">Parašų iniciatyvoms</span><span class="v">12 000+</span><span class="s">9 parašų rinkimai</span></div>
         <div class="kpi"><span class="k">Viešų balsų</span><span class="v">11 000+</span><span class="s">68 balsavimai</span></div>
         <div class="kpi"><span class="k">Turinio peržiūrų</span><span class="v">700 000+</span><span class="s">320+ piliečių pasiūlymų</span></div>
       </div>
+      <div class="pilot-card"><span><strong>Kvietimas:</strong> prisidėti prie uždaro 5 projektų piloto ir padėti nustatyti sąžiningas taisykles.</span><a href="#pilot">Kaip atrodytų pilotas →</a></div>
     </section>
 
     <!-- 2 WHY -->
@@ -878,17 +873,14 @@ footer.end svg{width:28px;height:28px}
           <tr><td>Seimo narių išlaidų ataskaitos<small>Teisė</small></td><td>Visi trys už</td><td><b>Prieš</b><small>balsavote patys – patikėtinių balsai rodomi tik palyginimui</small></td></tr>
         </tbody></table></div>
 
-      <details class="detail-block">
-        <summary>Išsamios delegavimo taisyklės</summary>
-        <div class="detail-body"><div class="rules">
+      <div class="rules">
         <div class="rule"><h4>Jūsų balsas visada svarbiausias</h4><p>Kai balsuojate patys, patikėtinių balsai rodomi tik palyginimui, o skaičiuojamas visada jūsų balsas. Balsą galite keisti, kol balsavimas nesibaigė.</p></div>
         <div class="rule"><h4>Pirmiausia ekspertai, tada dauguma</h4><p>Skaičiuojami tik LT2 balsavę patikėtiniai. Jei balsavo bent vienas projekto temos ekspertas, sprendžia ekspertų dauguma; kitaip – visų balsavusių dauguma. Susilaikymas skaičiuojamas kaip balsas: jei dauguma susilaikė, susilaikote ir jūs. Lygiųjų atveju lemia aukščiau sąraše esantis. Jei nebalsavo nė vienas, balsas neįskaičiuojamas: balso pagal nutylėjimą nepriskiriame.</p></div>
         <div class="rule"><h4>Ekspertai pagal temas</h4><p>Kiekvienas patikėtinis taikomas visoms temoms. Ekspertu jis laikomas iki 3 temų, kurias nurodė pats, ir temose, kurias atitinka jo komitetas. Projektas turi kelias temų žymas; ekspertais laikomi tie patikėtiniai, kurių bent viena pasirinkta tema sutampa su projekto žyma.</p></div>
         <div class="rule"><h4>Patikėtiniai – žmonės</h4><p>Pirmojoje versijoje patikėtiniai yra tik žmonės: piliečiai ir Seimo nariai. Partijos ir organizacijos kaip patikėtiniai galėtų atsirasti vėliau, jei to prireiktų.</p></div>
         <div class="rule"><h4>Jokių grandinių</h4><p>Jei jūsų patikėtinis pats nebalsavo, o delegavo savo balsą, jis jums neperduodamas – skaičiuojami kiti jūsų patikėtiniai. Taip rezultatai lieka paaiškinami, o galia nesikaupia nematomai.</p></div>
         <div class="rule"><h4>Patikėtiniai veikia viešai</h4><p>Patikėtiniu tampama savo noru: naudotojas tai įsijungia profilyje ir sutinka, kad jo balsai būtų vieši. Jam balsą patikėję žmonės lieka anonimiški. Patikėtinius galima pažymėti įrašuose, o jie gali atsakyti į jiems skirtas temas (žr. 6 skyrių).</p></div>
-        </div></div>
-      </details>
+      </div>
     </section>
 
     <!-- 4 LIFECYCLE -->
@@ -1179,7 +1171,7 @@ footer.end svg{width:28px;height:28px}
         <div><span class="for">VISIEMS POLITIKAMS</span><h4>Matykite, kur jumis pasitikintys nesutinka</h4><p>Prie kiekvieno balsavimo matote, kiek jums balsą patikėjusių žmonių balsavo patys ir kiek jų pasirinko kitaip nei jūs. Tai veikia ir išrinktiems pagal partijos sąrašą, ir dar tik kandidatuojantiems.</p></div>
         <div><span class="for">VISIEMS POLITIKAMS</span><h4>Jūsų balsas LT2 – su jumis pasitikinčiųjų balsais</h4><p>Kai balsuojate LT2, jūsų balsas iškart lemia jums balsą patikėjusių žmonių balsus, pvz., 2 140 ekonomikos klausimais. Nurodę iki 3 savo sričių, tose temose turite pirmenybę prieš kitus jų patikėtinius ir esate siūlomi pirmi.</p></div>
         <div><span class="for">KANDIDATAMS</span><h4>Patekite į rinkimų palyginimą</h4><p>Pasižymėkite kandidatu, ir patvirtinus jūsų pozicijos bus lyginamos su Seimo narių pozicijomis ir balsavimais. Naujokai be Seimo balsavimų istorijos varžosi lygiomis sąlygomis. Kaip – 9 skyriuje.</p></div>
-        <div><span class="for">PILOTO DALYVIAMS</span><h4>Padėkite nustatyti sąžiningas taisykles</h4><p>Pilotą vykdantys politikai ir aktyvūs piliečiai kartu įvertina, kaip turi būti pateikiamos santraukos, nesutarimai, atsakymų rodikliai ir moderavimo sprendimai.</p></div>
+        <div><span class="for">PILOTO DALYVIAMS</span><h4>Padėkite nustatyti sąžiningas taisykles</h4><p>Pilotą vykdantys politikai kartu įvertina, kaip turi būti pateikiamos santraukos, nesutarimai, atsakymų rodikliai ir moderavimo sprendimai.</p></div>
       </div>
       <div class="prose" style="margin-top:24px">
         <p><b>LT2 ir Seimo balsai.</b> Politikas balsuoja LT2 kaip ir visi, o jo balsas iškart skaičiuojamas jam balsą patikėjusiems. Iki Seimo balsavimo jį galima keisti. Po Seimo balsavimo LT2 balsas mechaniškai, be DI, palyginamas su oficialiu; nedalyvavimas nelaikomas neatitikimu. Rodiklis „Seime balsavo taip pat kaip LT2“ rodomas, kai politikas LT2 balsavo bent 10 kartų. Neatitikimas matomas prie konkretaus balsavimo, su politiko paaiškinimu, o patikėtojai gauna pranešimą.</p>
@@ -1351,27 +1343,39 @@ footer.end svg{width:28px;height:28px}
         <h2>Nuo Seimo stebėsenos iki rinkimų režimo 2028 m.</h2>
       </header>
       <div class="road">
-        <div class="now"><div class="when">2026 m. IV ketv.<small>dabar</small></div><div><h4>Idėjos patikrinimas</h4><p>Ši išsami produkto koncepcija, pokalbiai su politikais bei aktyviais piliečiais ir veikiantis Seimo balsavimų importas nuo dabartinės kadencijos pradžios (2024 m. lapkričio).</p></div></div>
-        <div><div class="when">2027 m. I–II ketv.</div><div><h4>Seimo stebėsena, alfa versija</h4><p>Balsavimų inicijavimas, projektų puslapiai, DI santraukos, Seimo narių ir frakcijų balsavimų istorija ir LT2 naudotojų balsavimai. Uždaras bandymas su pakviestais politikais bei aktyviais piliečiais.</p></div></div>
+        <div class="now"><div class="when">2026 m. IV ketv.<small>dabar</small></div><div><h4>Idėjos patikrinimas</h4><p>Šis partnerystės pasiūlymas, pokalbiai su politikais ir kitais suinteresuotais asmenimis bei veikiantis Seimo balsavimų importas nuo dabartinės kadencijos pradžios (2024 m. lapkričio).</p></div></div>
+        <div><div class="when">2027 m. I–II ketv.</div><div><h4>Seimo stebėsena, alfa versija</h4><p>Balsavimų inicijavimas, projektų puslapiai, DI santraukos, Seimo narių ir frakcijų balsavimų istorija ir LT2 naudotojų balsavimai. Uždaras bandymas su pakviestais politikais.</p></div></div>
         <div><div class="when">2027 m. III–IV ketv.</div><div><h4>Delegavimas ir patvirtinti profiliai</h4><p>Delegavimo variklis, patvirtinti Seimo narių profiliai, balsavimų paaiškinimai, asmeninis srautas, įrašai politikams bei vieša beta versija.</p></div></div>
         <div><div class="when">2028 m. II–III ketv.</div><div><h4>Rinkimų režimas</h4><p>Kandidatų pozicijos, palyginimas pagal balsavimus ir kandidatų sąrašai prieš Seimo rinkimus.</p><span class="chip milestone">Seimo rinkimai, 2028 m. spalis</span></div></div>
         <div><div class="when">Ateityje<small>be įsipareigojimų</small></div><div><h4>Plečiama sistema</h4><p>Duomenų modelis nepririštas prie Seimo, todėl, jei bus poreikis, vėliau būtų galima prijungti savivaldybių tarybas ar Europos Parlamentą ir atverti API žurnalistams bei tyrėjams. Kol kas to nežadame – pirmiausia Seimas.</p></div></div>
       </div>
     </section>
 
-    <!-- 13 CONTRIBUTE -->
-    <section class="chapter" id="contribute">
+    <!-- 13 PILOT -->
+    <section class="chapter" id="pilot">
       <header>
-        <div class="eyebrow">13 · Kaip prisidėti</div>
-        <h2>Pasirinkite vaidmenį pirmajame bandyme</h2>
-        <p class="lede">Pirmąją versiją norime kurti su skirtingais dalyviais, o ne jiems už uždarų durų. Kiekvienai grupei parengtas trumpas įėjimo dokumentas ir konkretus bandymo vaidmuo.</p>
+        <div class="eyebrow">13 · Uždaras pilotas</div>
+        <h2>Penki projektai, nedidelė politikų grupė, aiškūs vertinimo klausimai</h2>
+        <p class="lede">Prieš viešą startą siūlome uždarą pilotą su 5–8 skirtingų politinių pažiūrų politikais ir jų biurais. Pilotui nereikia viešo pritarimo visai platformos vizijai: tik išbandyti pagrindinį darbo ciklą ir atvirai įvertinti rizikas.</p>
       </header>
-      <div class="audiences">
-        <div class="audience"><h3>Kaip LT2 naudotojas</h3><p>Išbandykite projektų santraukas, balsavimą ir palyginimą. Pasakykite, kas neaišku, ko trūksta ir dėl ko nepasitikėtumėte rezultatu.</p><a href="lietuva20-trumpai.html">Pradėti nuo trumposios versijos →</a></div>
-        <div class="audience"><h3>Kaip viešas patikėtinis</h3><p>Pasirinkite savo temas, viešai balsuokite ir padėkite nustatyti atsakomybės, interesų deklaravimo bei moderavimo taisykles.</p><a href="lietuva20-aktyviems-pilieciams.html">Ambasadorių ir patikėtinių versija →</a></div>
-        <div class="audience"><h3>Kaip politinio piloto dalyvis</h3><p>Su savo biuru išbandykite 5 projektų ciklą: santrauką, naudotojų signalą, balso paaiškinimą ir sugrupuotas žmonių temas.</p><a href="lietuva20-politikams-baltoji-knyga.html">Partnerystės ir piloto pasiūlymas →</a></div>
+      <div class="road">
+        <div class="now"><div class="when">1 savaitė</div><div><h4>Pasirenkame 5 projektus</h4><p>Skirtingo dydžio ir temų projektai, dėl kurių dar neįvyko galutinis Seimo balsavimas.</p></div></div>
+        <div><div class="when">2–5 savaitė</div><div><h4>Išbandome darbo ciklą</h4><p>LT2 parengia santraukas ir naudotojų signalą, politikai prideda balsų paaiškinimus, o jų biurai išbando sugrupuotas temas.</p></div></div>
+        <div><div class="when">6 savaitė</div><div><h4>Įvertiname ir sprendžiame</h4><p>Kartu peržiūrime neutralumą, darbo sąnaudas, rodiklių teisingumą, moderavimą ir tai, kas turėtų patekti į pirmą viešą versiją.</p></div></div>
       </div>
-      <h3 style="margin-top:44px">Ką dar turime patikrinti</h3>
+      <div class="two">
+        <div class="box"><h4>Ko prašome iš dalyvio</h4><ul>
+          <li>Vieno 45 min. pradinio pokalbio.</li>
+          <li>Politiko arba biuro darbuotojo, galinčio išbandyti 5 projektus.</li>
+          <li>Atviro grįžtamojo ryšio, įskaitant priežastis neprisijungti.</li>
+        </ul></div>
+        <div class="box"><h4>Ką dalyvis gauna</h4><ul>
+          <li>Galimybę paveikti santraukų, statistikos ir moderavimo taisykles.</li>
+          <li>Uždarą savo profilio bei temų darbo aplinką.</li>
+          <li>Piloto rezultatų ir rekomendacijų santrauką prieš viešus sprendimus.</li>
+        </ul></div>
+      </div>
+      <h3 style="margin-top:44px">Ką norime iš jūsų sužinoti</h3>
       <ol class="qs">
         <li><span>Ar paaiškintumėte savo balsavimus tokioje platformoje? Kas jus sulaikytų?<small>Seimo nariams</small></span></li>
         <li><span>Kurios ryšio su rinkėjais ir profilio galimybės iš tiesų pakeistų jūsų darbą, o kurios būtų tik malonus priedas?<small>Politikams ir jų biurams</small></span></li>
@@ -1381,7 +1385,7 @@ footer.end svg{width:28px;height:28px}
       </ol>
       <footer class="end">
         <svg aria-hidden="true"><use href="#logo"/></svg>
-        <span>Lietuva 2.0 · išsami produkto koncepcija, 2026 m. rugsėjis</span>
+        <span>Lietuva 2.0 · partnerystės ir piloto pasiūlymas politikams, 2026 m. rugsėjis</span>
         <span>Kodas: github.com/simelis/LT2</span>
         <span>Logotipas: trys pokalbio debesėliai, kartu sudarantys Lietuvos kontūrą.</span>
       </footer>
