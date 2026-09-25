@@ -865,7 +865,7 @@ footer.end svg{width:28px;height:28px}
       <div class="tbl-wrap" style="margin-top:12px"><table class="cmp dlgt">
         <thead><tr><th>Projektas</th><th>Kaip balsavo patikėtiniai LT2</th><th>Jūsų balsas</th></tr></thead>
         <tbody>
-          <tr><td>Progresinis pajamų mokestis<small>Ekonomika, Mokesčiai</small></td><td>Rūta prieš, Jonas už, Darius už</td><td><b>Prieš</b><small>balsavo ekspertė Rūta – sprendžia ekspertų dauguma</small></td></tr>
+          <tr><td>Progresinis pajamų mokestis<small>Ekonomika, Mokesčiai</small></td><td>Rūta prieš, Jonas prieš, Darius už</td><td><b>Prieš</b><small>balsavo ekspertė Rūta – sprendžia ekspertų dauguma</small></td></tr>
           <tr><td>Dantų protezavimas 65+<small>Sveikata</small></td><td>Rūta nebalsavo, Jonas už, Darius už</td><td><b>Už</b><small>ekspertų nėra – sprendžia visų balsavusių dauguma</small></td></tr>
           <tr><td>Nemokamos studijos<small>Švietimas</small></td><td>Rūta nebalsavo, Jonas už, Darius prieš</td><td><b>Už</b><small>lygiosios – lemia aukščiau sąraše esantis Jonas</small></td></tr>
           <tr><td>Saulės parkai ūkio žemėje<small>Energetika</small></td><td>Rūta susilaikė, Darius susilaikė, Jonas už</td><td><b>Susilaikote</b><small>dauguma susilaikė</small></td></tr>
@@ -1450,7 +1450,7 @@ footer.end svg{width:28px;height:28px}
       +'<div class="hemi-wrap"><svg viewBox="0 0 440 236" role="img" aria-label="141 Seimo nario vietų schema: 78 už, 41 prieš, 12 susilaikė, 10 nebalsavo"></svg><div class="hemi-center"><div class="big tnum">78 : 41</div><div class="small">Priimta</div></div></div>'
       +'<div class="legend" style="margin-top:10px"><span><i style="background:var(--v-for)"></i>Už</span><span><i style="background:var(--v-against)"></i>Prieš</span><span><i style="background:var(--v-abstain)"></i>Susilaikė</span><span><i class="ring"></i>Nebalsavo</span>'+(o.page?'<span><i class="me"></i>Jūsų patikėtinis</span>':'')+'</div>'
       +'<div class="split-bars"><div class="sbar-row"><div class="lbl"><b>Seimas</b>balsavo 131 SN</div>'+bar(78,41,12,"Seimas: 60 % už, 31 % prieš, 9 % susilaikė")+'</div>'
-      +'<div class="sbar-row"><div class="lbl"><b>LT2 naudotojai</b>'+fmt(t)+' balsų</div>'+bar(o.f,o.a,o.n,"LT2 rezultatas (tiesioginiai ir deleguoti LT2 balsai): "+P(o.f)+" % už, "+P(o.a)+" % prieš, "+P(o.n)+" % susilaikė")+'</div></div>'
+      +'<div class="sbar-row"><div class="lbl"><b>LT2 rezultatas</b>'+fmt(t)+' balsų</div>'+bar(o.f,o.a,o.n,"LT2 rezultatas (tiesioginiai ir deleguoti LT2 balsai): "+P(o.f)+" % už, "+P(o.a)+" % prieš, "+P(o.n)+" % susilaikė")+'</div></div>'
       +'<div class="verdict">'+(same?'<span class="chip ok">Dauguma sutampa: už</span>':'<span class="chip">Dauguma skiriasi</span>')+'<span>Skirtumas '+d+' p. p. · 3 Seimo nariai paaiškino balsą</span></div>';
     drawHemi(box.querySelector("svg"),o.page);
   }
@@ -1473,8 +1473,8 @@ footer.end svg{width:28px;height:28px}
       if(!after)$("#undo").addEventListener("click",()=>{bill.mine=null;renderBill();});
     } else {
       st.innerHTML=after
-        ?'<div class="st"><i style="background:var(--v-against)"></i>Deleguota: prieš</div><div style="margin-top:4px;color:var(--ink-2)">Užfiksuota rugsėjo 24 d., 14:00. Jūsų patikėtinių dauguma balsavo <b>prieš</b> (Rūta Mockutė, Darius Stankus).</div>'
-        :'<div class="st"><i style="background:var(--v-against)"></i>Deleguota: prieš</div><div style="margin-top:4px;color:var(--ink-2)">2 iš 3 jūsų patikėtinių balsavo <b>prieš</b> (Rūta Mockutė, Darius Stankus), Jonas Petraitis dar nebalsavo. Jūsų balsas seka jų daugumą, nebent balsuosite patys.</div>';
+        ?'<div class="st"><i style="background:var(--v-against)"></i>Deleguota: prieš</div><div style="margin-top:4px;color:var(--ink-2)">Užfiksuota rugsėjo 24 d., 14:00. Sprendė šios temos ekspertė Rūta Mockutė – <b>prieš</b>. Jonas Petraitis taip pat balsavo prieš, Darius Stankus – už.</div>'
+        :'<div class="st"><i style="background:var(--v-against)"></i>Deleguota: prieš</div><div style="margin-top:4px;color:var(--ink-2)">Šios temos ekspertė Rūta Mockutė balsavo <b>prieš</b>, Darius Stankus – už, Jonas Petraitis dar nebalsavo. Ekspertai turi pirmenybę, todėl jūsų balsas – prieš, nebent balsuosite patys.</div>';
     }
     $$(".vote-btns button").forEach(b=>{b.setAttribute("aria-pressed",b.dataset.v===bill.mine);b.disabled=after;});
     const B=base[bill.phase];
@@ -1483,18 +1483,17 @@ footer.end svg{width:28px;height:28px}
     const rows=[],pct=(x,t)=>Math.round(100*x/t);
     const bar=(f,a,n,tipTxt)=>{const t=f+a+n;return '<div class="sbar" data-tip="'+tipTxt+'"><span class="f" style="flex:'+f+'">'+(pct(f,t)>=12?pct(f,t)+' %':'')+'</span><span class="a" style="flex:'+a+'">'+(pct(a,t)>=12?pct(a,t)+' %':'')+'</span><span class="n" style="flex:'+n+'"></span></div>';};
     const t1=dF+dA+dN,f2=dF+gF,a2=dA+gA,n2=dN+gN,t2=f2+a2+n2;
+    rows.push('<div class="row"><div class="top"><span>Tiesioginiai balsai</span><b class="tnum">'+fmt(t1)+'</b></div>'+bar(dF,dA,dN,"Tiesioginiai: "+pct(dF,t1)+" % už, "+pct(dA,t1)+" % prieš, "+pct(dN,t1)+" % susilaikė")+'</div>');
+    rows.push('<div class="row"><div class="top"><span>+ deleguoti balsai = <b>LT2 rezultatas</b></span><b class="tnum">'+fmt(t2)+'</b></div>'+bar(f2,a2,n2,"LT2 rezultatas: "+pct(f2,t2)+" % už, "+pct(a2,t2)+" % prieš")+'</div>');
     if(after){
-      rows.push('<div class="row"><div class="top"><span><b>LT2 rezultatas</b> · užfiksuotas</span><b class="tnum">'+fmt(t2)+'</b></div>'+bar(f2,a2,n2,"LT2: "+pct(f2,t2)+" % už, "+pct(a2,t2)+" % prieš")+'</div>');
       const m=B.mp,f3=f2+m.f,a3=a2+m.a,n3=n2+m.n,t3=f3+a3+n3;
-      rows.push('<div class="row po"><div class="top"><span>Po Seimo: + balsai, patikėti LT2 nebalsavusiems Seimo nariams</span><b class="tnum">'+fmt(t3)+'</b></div>'+bar(f3,a3,n3,"Po Seimo: "+pct(f3,t3)+" % už, "+pct(a3,t3)+" % prieš")+'</div>');
-      rows.push('<p class="note">Su Seimu rezultato kortelėje lyginamas LT2 rezultatas – tiesioginiai ir deleguoti balsai iki Seimo balsavimo. „Po Seimo“ rodomas tik informacijai.</p>');
+      rows.push('<div class="row po"><div class="top"><span>+ balsai, patikėti LT2 nebalsavusiems Seimo nariams = „Po Seimo“</span><b class="tnum">'+fmt(t3)+'</b></div>'+bar(f3,a3,n3,"Po Seimo: "+pct(f3,t3)+" % už, "+pct(a3,t3)+" % prieš")+'</div>');
+      rows.push('<p class="note">LT2 rezultatas užfiksuotas Seimui balsuojant ir palygintas su Seimo sprendimu rezultato kortelėje. „Po Seimo“ rodomas tik informacijai.</p>');
       $("#stageTxt").textContent="Priimta 78 : 41"; $("#stageFinal").className="stage done";
       $("#closes").textContent="Balsavimas baigtas";
       $("#tlFinal").className="done"; $("#tlFinalTxt").textContent="Priimta 78 : 41. LT2 rezultatas užfiksuotas: "+pct(f2,t2)+" % už, "+pct(a2,t2)+" % prieš.";
     } else {
-      rows.push('<div class="row"><div class="top"><span>Tiesioginiai balsai</span><b class="tnum">'+fmt(t1)+'</b></div>'+bar(dF,dA,dN,"Tiesioginiai: "+pct(dF,t1)+" % už, "+pct(dA,t1)+" % prieš, "+pct(dN,t1)+" % susilaikė")+'</div>');
-      rows.push('<div class="row"><div class="top"><span>+ deleguoti balsai = LT2 rezultatas</span><b class="tnum">'+fmt(t2)+'</b></div>'+bar(f2,a2,n2,"LT2 rezultatas: "+pct(f2,t2)+" % už, "+pct(a2,t2)+" % prieš")+'</div>');
-      rows.push('<p class="note">Kai Seimas balsuos, balsavimas užsidarys, o puslapyje atsiras rezultato kortelė su Seimo sprendimu ir LT2 naudotojų rezultatu.</p>');
+      rows.push('<p class="note">Kai Seimas balsuos, balsavimas užsidarys, o puslapyje atsiras rezultato kortelė su Seimo sprendimu ir LT2 rezultatu.</p>');
       $("#stageTxt").textContent="Rugs. 24 d., 14:00"; $("#stageFinal").className="stage next";
       $("#closes").innerHTML='liko <b class="tnum">22 val.</b>';
       $("#tlFinal").className=""; $("#tlFinalTxt").textContent="Galutinis balsavimas (priėmimas). Visuomenės rezultatas bus užfiksuotas.";
