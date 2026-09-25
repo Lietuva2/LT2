@@ -109,18 +109,22 @@ section.chapter>header .lede{font-size:21px;color:var(--ink-2)}
 .hemi-wrap{position:relative;margin-top:14px}
 .hemi-wrap svg{width:100%;height:auto;display:block}
 .hemi-center{position:absolute;left:0;right:0;bottom:4px;text-align:center}
-.hemi-center .big{font-size:30px;font-weight:800;letter-spacing:-.02em}
+.hemi-center .big{font-size:clamp(20px,6.4vw,30px);font-weight:800;letter-spacing:-.02em}
 .hemi-center .small{font-size:12px;color:var(--muted)}
 .legend{display:flex;flex-wrap:wrap;gap:6px 14px;font-family:var(--f-display);font-size:13px;color:var(--ink-2)}
 .legend i{display:inline-block;width:10px;height:10px;border-radius:50%;margin-right:6px;vertical-align:-1px}
 .legend i.ring{background:transparent!important;box-shadow:inset 0 0 0 2px var(--v-absent)}
-.hero-conn{display:grid;gap:8px;margin-top:16px;padding-top:16px;border-top:1px solid var(--line)}
-.hc-row{display:grid;grid-template-columns:74px 1fr;gap:12px;align-items:baseline;font-size:13.5px;line-height:1.35;color:var(--ink-2)}
-.hc-row b{white-space:nowrap;font-size:18px;font-weight:800;color:var(--ink);text-align:right}
-.hc-quote{margin-top:14px;display:flex;gap:10px;padding:12px 14px;border-radius:12px;background:var(--brand-soft)}
-.hc-quote .av{flex:none;width:30px;height:30px;border-radius:50%;background:var(--brand);color:var(--brand-ink);display:grid;place-items:center;font-size:12px;font-weight:700}
-.hc-quote p{font-family:var(--f-body);font-size:15px;line-height:1.4;color:var(--ink)}
-.hc-quote .meta{display:block;margin-top:4px;font-size:12px;color:var(--ink-2)}
+.split-bars{display:grid;gap:12px;margin-top:16px;padding-top:16px;border-top:1px solid var(--line)}
+.sbar-row{display:grid;grid-template-columns:118px 1fr;gap:10px;align-items:center;font-size:13px}
+.sbar-row .lbl{color:var(--ink-2);line-height:1.2}
+.sbar-row .lbl b{display:block;color:var(--ink);font-weight:600}
+.verdict{margin-top:14px;display:flex;flex-wrap:wrap;align-items:center;gap:6px 8px;font-size:13.5px;color:var(--ink-2)}
+.rc-head{display:flex;justify-content:space-between;align-items:center;gap:10px}
+.rc-share{font:inherit;font-size:12.5px;font-weight:600;padding:4px 12px;border-radius:999px;border:1px solid var(--line-strong);background:var(--surface);color:var(--ink);cursor:pointer}
+.legend i.me{background:transparent!important;box-shadow:inset 0 0 0 2.5px var(--ink)}
+.hero-fig{margin:0}
+.hero-cap{margin-top:12px;font-family:var(--f-display);font-size:13px;line-height:1.45;color:var(--muted);text-align:center}
+.bill-result{margin-top:16px;box-shadow:none}
 .sbar{display:flex;height:22px;gap:2px;border-radius:5px;overflow:hidden}
 .sbar span{display:flex;align-items:center;justify-content:center;color:#fff;font-size:11.5px;font-weight:600;min-width:0;white-space:nowrap;overflow:hidden}
 .sbar .f{background:var(--v-for)} .sbar .a{background:var(--v-against)} .sbar .n{background:var(--v-abstain);color:var(--ink)}
@@ -638,25 +642,9 @@ footer.end svg{width:28px;height:28px}
         </div>
       </div>
 
-      <div class="hemi-card" aria-label="Rezultato kortelės pavyzdys">
-        <div class="bill-id">XVP-0412 · Galutinis balsavimas (priėmimas)</div>
-        <h3>Gyventojų pajamų mokesčio įstatymo pataisa</h3>
-        <div class="hemi-wrap">
-          <svg id="hemi" viewBox="0 0 440 236" role="img" aria-label="141 Seimo nario vietų schema: 78 už, 41 prieš, 12 susilaikė, 10 nebalsavo"></svg>
-          <div class="hemi-center"><div class="big tnum">78 : 41</div><div class="small">Priimta</div></div>
-        </div>
-        <div class="legend" style="margin-top:10px">
-          <span><i style="background:var(--v-for)"></i>Už</span>
-          <span><i style="background:var(--v-against)"></i>Prieš</span>
-          <span><i style="background:var(--v-abstain)"></i>Susilaikė</span>
-          <span><i class="ring"></i>Nebalsavo</span>
-        </div>
-        <div class="hero-conn">
-          <div class="hc-row"><b class="tnum">15&nbsp;160</b><span>LT2 naudotojų išreiškė nuomonę, kol projektas buvo svarstomas</span></div>
-          <div class="hc-row"><b class="tnum">212</b><span>klausimų ir komentarų, sugrupuotų į kelias aiškias temas</span></div>
-          <div class="hc-row"><b class="tnum">2</b><span>Seimo nariai atsakė žmonėms, viena iš jų rengia pataisą</span></div>
-        </div>
-        <div class="hc-quote"><span class="av" aria-hidden="true">JP</span><div><p>„Pritariu didesniam didžiausias pajamas gaunančiųjų indėliui, bet siūliau išskirti šeimos verslų pardavimą.“</p><span class="meta">Jonas Petraitis paaiškino savo balsą · pasiekė 2&nbsp;140 jam balsą patikėjusių</span></div></div>
+      <div class="hero-fig">
+        <div class="hemi-card" id="heroCard" aria-label="Rezultato kortelė"></div>
+        <p class="hero-cap">Rezultato kortelė. Ji rodoma projekto puslapyje po galutinio Seimo balsavimo ir naudojama dalijantis rezultatu (žr. 2 skyrių).</p>
       </div>
     </section>
 
@@ -741,6 +729,7 @@ footer.end svg{width:28px;height:28px}
               <div class="stage done"><b>Svarstymas</b>Pritarta 74 : 44</div>
               <div class="stage next" id="stageFinal"><b>Priėmimas</b><span id="stageTxt">Rugs. 24 d., 14:00</span></div>
             </div>
+            <div class="hemi-card bill-result" id="billResult" hidden></div>
             <div class="tabs" role="tablist" aria-label="Projekto skyriai">
               <button role="tab" aria-selected="true" aria-controls="tp-sum" id="t-sum">DI santrauka</button>
               <button role="tab" aria-selected="false" aria-controls="tp-chg" id="t-chg" tabindex="-1">Kas keičiasi</button>
@@ -775,7 +764,7 @@ footer.end svg{width:28px;height:28px}
               <ol class="tl">
                 <li class="done"><span class="d">04-14</span><span class="dot"></span><span>Vyriausybė įregistravo projektą.</span></li>
                 <li class="done"><span class="d">04-16</span><span class="dot"></span><span>Rūta Mockutė inicijavo balsavimą ir paskelbė peržiūrėtą DI santrauką.</span></li>
-                <li class="done"><span class="d">05-07</span><span class="dot"></span><span>Po pateikimo pritarta 71 : 38. Platformoje tuo metu – 41 % už.</span></li>
+                <li class="done"><span class="d">05-07</span><span class="dot"></span><span>Po pateikimo pritarta 71 : 38. Platformoje tuo metu – 48 % už.</span></li>
                 <li class="done"><span class="d">09-03</span><span class="dot"></span><span>Biudžeto ir finansų komitetas pakeitė 6 str. 3 d. Santrauka atnaujinta.</span></li>
                 <li class="done"><span class="d">09-15</span><span class="dot"></span><span>Po svarstymo pritarta 74 : 44.</span></li>
                 <li id="tlFinal"><span class="d">09-24</span><span class="dot"></span><span id="tlFinalTxt">Galutinis balsavimas (priėmimas). Visuomenės rezultatas bus užfiksuotas.</span></li>
@@ -795,6 +784,11 @@ footer.end svg{width:28px;height:28px}
             <div class="tally" id="tally"></div>
           </div>
         </div>
+      </div>
+      <div class="annot">
+        <div><span class="n">1</span><span><b>Rezultato kortelė.</b> Po galutinio Seimo balsavimo puslapio viršuje atsiranda Seimo vietų schema, Seimo sprendimas ir LT2 naudotojų rezultatas. Užvedę pelę ant vietos matote Seimo narį ir frakciją, o jūsų patikėtiniai Seimo nariai pažymėti.</span></div>
+        <div><span class="n">2</span><span><b>Ankstesni etapai.</b> Tokią pačią schemą galima atverti ir pateikimo bei svarstymo balsavimams skiltyje „Eiga“.</span></div>
+        <div><span class="n">3</span><span><b>Dalijimasis.</b> Ta pati kortelė be puslapio aplinkos tampa paveikslėliu, kai rezultatu dalijamasi socialiniuose tinkluose ar pranešimuose.</span></div>
       </div>
     </section>
 
@@ -1417,8 +1411,8 @@ footer.end svg{width:28px;height:28px}
     {n:"Reformų partija",s:30,v:[3,22,2,3]},
     {n:"Be frakcijos",s:8,v:[3,2,1,2]}
   ];
-  (function drawHemi(){
-    const svg=$("#hemi"); const cx=220, cy=226, R0=92, R1=212, rows=8, total=141;
+  function drawHemi(svg,me){
+    const cx=220, cy=226, R0=92, R1=212, rows=8, total=141;
     const radii=[];for(let i=0;i<rows;i++)radii.push(R0+(R1-R0)*i/(rows-1));
     const sum=radii.reduce((a,b)=>a+b,0);
     let counts=radii.map(r=>Math.round(total*r/sum));
@@ -1435,14 +1429,31 @@ footer.end svg{width:28px;height:28px}
       sl.forEach((s,i)=>{s.f=f.n;s.vote=list[i];});
       k+=f.s;
     });
+    const mine=me?seats.find(s=>s.f==="Reformų partija"&&s.vote==="against"):null;
     seats.forEach(s=>{
       const c=el("circle",{cx:s.x.toFixed(1),cy:s.y.toFixed(1),r:6.2});
       if(s.vote==="absent"){c.setAttribute("fill","none");c.setAttribute("stroke","var(--v-absent)");c.setAttribute("stroke-width","2");c.setAttribute("r","5.2");}
       else c.setAttribute("fill","var(--v-"+s.vote+")");
-      c.setAttribute("data-tip",s.f+" · "+labels[s.vote]);
+      if(s===mine){c.setAttribute("stroke","var(--ink)");c.setAttribute("stroke-width","2.5");c.setAttribute("data-tip","Jonas Petraitis · jūsų patikėtinis · "+s.f+" · "+labels[s.vote]);}
+      else c.setAttribute("data-tip",s.f+" · "+labels[s.vote]);
       svg.appendChild(c);
     });
-  })();
+  }
+  /* Result card: the same component on the bill page, in the hero and as the share image */
+  function resultCard(box,o){
+    const t=o.f+o.a+o.n,P=x=>Math.round(100*x/t),d=Math.abs(60-P(o.f));
+    const bar=(f,a,n,tip)=>{const T=f+a+n,q=x=>Math.round(100*x/T);return '<div class="sbar" data-tip="'+tip+'"><span class="f" style="flex:'+f+'">'+(q(f)>=12?q(f)+' %':'')+'</span><span class="a" style="flex:'+a+'">'+(q(a)>=12?q(a)+' %':'')+'</span><span class="n" style="flex:'+n+'"></span></div>';};
+    const same=o.f>o.a&&o.f>o.n;
+    box.innerHTML=(o.page
+        ?'<div class="rc-head"><span class="side-h">Galutinis balsavimas · rugsėjo 24 d.</span><button type="button" class="rc-share">Dalintis</button></div>'
+        :'<div class="bill-id">XVP-0412 · Galutinis balsavimas (priėmimas)</div><h3>Gyventojų pajamų mokesčio įstatymo pataisa</h3>')
+      +'<div class="hemi-wrap"><svg viewBox="0 0 440 236" role="img" aria-label="141 Seimo nario vietų schema: 78 už, 41 prieš, 12 susilaikė, 10 nebalsavo"></svg><div class="hemi-center"><div class="big tnum">78 : 41</div><div class="small">Priimta</div></div></div>'
+      +'<div class="legend" style="margin-top:10px"><span><i style="background:var(--v-for)"></i>Už</span><span><i style="background:var(--v-against)"></i>Prieš</span><span><i style="background:var(--v-abstain)"></i>Susilaikė</span><span><i class="ring"></i>Nebalsavo</span>'+(o.page?'<span><i class="me"></i>Jūsų patikėtinis</span>':'')+'</div>'
+      +'<div class="split-bars"><div class="sbar-row"><div class="lbl"><b>Seimas</b>balsavo 131 SN</div>'+bar(78,41,12,"Seimas: 60 % už, 31 % prieš, 9 % susilaikė")+'</div>'
+      +'<div class="sbar-row"><div class="lbl"><b>LT2 naudotojai</b>'+fmt(t)+' balsų</div>'+bar(o.f,o.a,o.n,"LT2 rezultatas (tiesioginiai ir deleguoti LT2 balsai): "+P(o.f)+" % už, "+P(o.a)+" % prieš, "+P(o.n)+" % susilaikė")+'</div></div>'
+      +'<div class="verdict">'+(same?'<span class="chip ok">Dauguma sutampa: už</span>':'<span class="chip">Dauguma skiriasi</span>')+'<span>Skirtumas '+d+' p. p. · 3 Seimo nariai paaiškino balsą</span></div>';
+    drawHemi(box.querySelector("svg"),o.page);
+  }
 
   /* ---------- tabs ---------- */
   const tabs=$$('[role="tab"]');
@@ -1452,7 +1463,7 @@ footer.end svg{width:28px;height:28px}
 
   /* ---------- bill page vote ---------- */
   const bill={mine:null,phase:"before"};
-  const base={before:{f:4120,a:6860,n:870,deleg:{f:1240,a:1880,n:190}},after:{f:4120,a:6860,n:870,deleg:{f:1240,a:1880,n:190},mp:{f:9570,a:7330,n:1100}}};
+  const base={before:{f:6800,a:4280,n:770,deleg:{f:1800,a:1320,n:190}},after:{f:6800,a:4280,n:770,deleg:{f:1800,a:1320,n:190},mp:{f:9570,a:7330,n:1100}}};
   const MYV={for:"už",against:"prieš",abstain:"susilaikau"};
   function renderBill(){
     const after=bill.phase==="after",st=$("#myStatus");
@@ -1473,28 +1484,29 @@ footer.end svg{width:28px;height:28px}
     const bar=(f,a,n,tipTxt)=>{const t=f+a+n;return '<div class="sbar" data-tip="'+tipTxt+'"><span class="f" style="flex:'+f+'">'+(pct(f,t)>=12?pct(f,t)+' %':'')+'</span><span class="a" style="flex:'+a+'">'+(pct(a,t)>=12?pct(a,t)+' %':'')+'</span><span class="n" style="flex:'+n+'"></span></div>';};
     const t1=dF+dA+dN,f2=dF+gF,a2=dA+gA,n2=dN+gN,t2=f2+a2+n2;
     if(after){
-      rows.push('<div class="row"><div class="top"><span><b>Seimas</b> · priimta</span><b class="tnum">78 : 41</b></div>'+bar(78,41,12,"Seimas: 78 už, 41 prieš, 12 susilaikė")+'</div>');
       rows.push('<div class="row"><div class="top"><span><b>LT2 rezultatas</b> · užfiksuotas</span><b class="tnum">'+fmt(t2)+'</b></div>'+bar(f2,a2,n2,"LT2: "+pct(f2,t2)+" % už, "+pct(a2,t2)+" % prieš")+'</div>');
-      rows.push('<div><span class="chip">Skirtumas: '+Math.abs(60-pct(f2,t2))+' p. p.</span></div>');
       const m=B.mp,f3=f2+m.f,a3=a2+m.a,n3=n2+m.n,t3=f3+a3+n3;
       rows.push('<div class="row po"><div class="top"><span>Po Seimo: + balsai, patikėti LT2 nebalsavusiems Seimo nariams</span><b class="tnum">'+fmt(t3)+'</b></div>'+bar(f3,a3,n3,"Po Seimo: "+pct(f3,t3)+" % už, "+pct(a3,t3)+" % prieš")+'</div>');
-      rows.push('<p class="note">Su Seimu lyginamas LT2 rezultatas – tiesioginiai ir deleguoti balsai iki Seimo balsavimo. „Po Seimo“ rodomas tik informacijai.</p>');
+      rows.push('<p class="note">Su Seimu rezultato kortelėje lyginamas LT2 rezultatas – tiesioginiai ir deleguoti balsai iki Seimo balsavimo. „Po Seimo“ rodomas tik informacijai.</p>');
       $("#stageTxt").textContent="Priimta 78 : 41"; $("#stageFinal").className="stage done";
       $("#closes").textContent="Balsavimas baigtas";
       $("#tlFinal").className="done"; $("#tlFinalTxt").textContent="Priimta 78 : 41. LT2 rezultatas užfiksuotas: "+pct(f2,t2)+" % už, "+pct(a2,t2)+" % prieš.";
     } else {
       rows.push('<div class="row"><div class="top"><span>Tiesioginiai balsai</span><b class="tnum">'+fmt(t1)+'</b></div>'+bar(dF,dA,dN,"Tiesioginiai: "+pct(dF,t1)+" % už, "+pct(dA,t1)+" % prieš, "+pct(dN,t1)+" % susilaikė")+'</div>');
       rows.push('<div class="row"><div class="top"><span>+ deleguoti balsai = LT2 rezultatas</span><b class="tnum">'+fmt(t2)+'</b></div>'+bar(f2,a2,n2,"LT2 rezultatas: "+pct(f2,t2)+" % už, "+pct(a2,t2)+" % prieš")+'</div>');
-      rows.push('<p class="note">Kai Seimas balsuos, balsavimas užsidarys, o šalia atsiras Seimo sprendimas ir pasirinkimų skirtumas.</p>');
+      rows.push('<p class="note">Kai Seimas balsuos, balsavimas užsidarys, o puslapyje atsiras rezultato kortelė su Seimo sprendimu ir LT2 naudotojų rezultatu.</p>');
       $("#stageTxt").textContent="Rugs. 24 d., 14:00"; $("#stageFinal").className="stage next";
       $("#closes").innerHTML='liko <b class="tnum">22 val.</b>';
       $("#tlFinal").className=""; $("#tlFinalTxt").textContent="Galutinis balsavimas (priėmimas). Visuomenės rezultatas bus užfiksuotas.";
     }
     $("#tally").innerHTML=rows.join("");
+    const rc=$("#billResult");rc.hidden=!after;
+    if(after)resultCard(rc,{f:f2,a:a2,n:n2,page:true});else rc.innerHTML="";
   }
   $$(".vote-btns button").forEach(b=>b.addEventListener("click",()=>{if(bill.phase==="after")return;bill.mine=(bill.mine===b.dataset.v)?null:b.dataset.v;renderBill();}));
   $$(".phase-sw [data-ph]").forEach(b=>b.addEventListener("click",()=>{bill.phase=b.dataset.ph;renderBill();}));
   renderBill();
+  resultCard($("#heroCard"),{f:base.after.f+base.after.deleg.f,a:base.after.a+base.after.deleg.a,n:base.after.n+base.after.deleg.n});
 
   /* ---------- initiation ---------- */
   const initBills=[
@@ -1638,7 +1650,7 @@ footer.end svg{width:28px;height:28px}
     {id:"XVP-0701",t:"Dantų protezavimas 65+",s:72,p:88,o:"Priimta"},
     {id:"XVP-0633",t:"Gynybai – 3,5 % BVP",s:91,p:77,o:"Priimta"},
     {id:"XVP-0690",t:"Akcizas saldintiems gėrimams",s:52,p:49,o:"Priimta"},
-    {id:"XVP-0412",t:"Progresinis pajamų mokestis",s:60,p:35,o:"Priimta"},
+    {id:"XVP-0412",t:"Progresinis pajamų mokestis",s:60,p:57,o:"Priimta"},
     {id:"XVP-0655",t:"Saulės parkai ūkio žemėje",s:55,p:41,o:"Priimta"}
   ];
   (function dot(){
