@@ -1,1 +1,0 @@
-NServiceBus.Host.exe /uninstall /serviceName:Bus.DemoCommandHandler
