@@ -163,6 +163,8 @@ figcaption{font-family:var(--f-display);font-size:14px;color:var(--muted);margin
 .mock-label{display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap;margin-top:32px;font-family:var(--f-display);font-size:13px;color:var(--muted)}
 .mock-label b{color:var(--ink);font-weight:600}
 .mock-label+.mock{margin-top:10px}
+.phase-sw{display:inline-flex;align-items:center;gap:8px;flex-wrap:wrap}
+.phase-sw .seg button{font-size:12.5px}
 .app-nav{display:flex;align-items:center;gap:18px;padding:12px 20px;border-bottom:1px solid var(--line);flex-wrap:wrap}
 .app-nav .logo{display:flex;align-items:center;gap:8px;font-weight:800}
 .app-nav .logo svg{width:24px;height:24px}
@@ -224,6 +226,7 @@ figcaption{font-family:var(--f-display);font-size:14px;color:var(--muted);margin
 .vote-btns{display:grid;grid-template-columns:repeat(3,1fr);gap:6px}
 .vote-btns button{font:inherit;font-size:14px;font-weight:600;padding:10px 6px;border-radius:9px;border:1.5px solid var(--line-strong);background:var(--surface);color:var(--ink);cursor:pointer;transition:background .15s,border-color .15s}
 .vote-btns button:hover{border-color:var(--ink-2)}
+.vote-btns button:disabled{opacity:.45;cursor:default}
 .vote-btns button[aria-pressed="true"][data-v="for"]{background:var(--v-for);border-color:var(--v-for);color:#fff}
 .vote-btns button[aria-pressed="true"][data-v="against"]{background:var(--v-against);border-color:var(--v-against);color:#fff}
 .vote-btns button[aria-pressed="true"][data-v="abstain"]{background:var(--v-abstain);border-color:var(--v-abstain);color:var(--ink)}
@@ -235,6 +238,7 @@ figcaption{font-family:var(--f-display);font-size:14px;color:var(--muted);margin
 .tally .row{display:grid;gap:5px;font-size:13px}
 .tally .row .top{display:flex;justify-content:space-between;color:var(--ink-2)}
 .tally .row .top b{color:var(--ink)}
+.tally .row.po{opacity:.7}
 .tally .note{font-size:12px;color:var(--muted);line-height:1.4}
 
 /* annotations */
@@ -646,7 +650,7 @@ footer.end svg{width:28px;height:28px}
         <p class="lede">Dažniausiai žmonės čia ateina per pasidalytą nuorodą ar pranešimą. Visada matote, kaip balsavo jūsų patikėtiniai, o vienu paspaudimu galite balsuoti patys.</p>
       </header>
 
-      <div class="mock-label"><span><b>Maketas</b> · Projekto puslapis kompiuteryje</span><span>Interaktyvus</span></div>
+      <div class="mock-label"><span><b>Maketas</b> · Projekto puslapis kompiuteryje</span><span class="phase-sw">Tas pats puslapis:<span class="seg" role="group" aria-label="Maketo būsena"><button type="button" data-ph="before" aria-pressed="true">prieš galutinį Seimo balsavimą</button><button type="button" data-ph="after" aria-pressed="false">po jo</button></span></span></div>
       <div class="mock">
         <div class="mock-bar"><div class="dots"><i></i><i></i><i></i></div><div class="url">lietuva2.lt/seimas/XVP-0412</div></div>
         <div class="app-nav">
@@ -662,7 +666,7 @@ footer.end svg{width:28px;height:28px}
               <div class="stage done"><b>Pateikimas</b>Pritarta 71 : 38</div>
               <div class="stage done"><b>Komitetas</b>Biudžeto ir finansų</div>
               <div class="stage done"><b>Svarstymas</b>Pritarta 74 : 44</div>
-              <div class="stage next"><b>Priėmimas</b><span id="stageTxt">Rugs. 24 d., 14:00</span></div>
+              <div class="stage next" id="stageFinal"><b>Priėmimas</b><span id="stageTxt">Rugs. 24 d., 14:00</span></div>
             </div>
             <div class="tabs" role="tablist" aria-label="Projekto skyriai">
               <button role="tab" aria-selected="true" aria-controls="tp-sum" id="t-sum">DI santrauka</button>
@@ -701,13 +705,13 @@ footer.end svg{width:28px;height:28px}
                 <li class="done"><span class="d">05-07</span><span class="dot"></span><span>Po pateikimo pritarta 71 : 38. Platformoje tuo metu – 41 % už.</span></li>
                 <li class="done"><span class="d">09-03</span><span class="dot"></span><span>Biudžeto ir finansų komitetas pakeitė 6 str. 3 d. Santrauka atnaujinta.</span></li>
                 <li class="done"><span class="d">09-15</span><span class="dot"></span><span>Po svarstymo pritarta 74 : 44.</span></li>
-                <li><span class="d">09-24</span><span class="dot"></span><span>Galutinis balsavimas (priėmimas). Visuomenės rezultatas bus užfiksuotas.</span></li>
+                <li id="tlFinal"><span class="d">09-24</span><span class="dot"></span><span id="tlFinalTxt">Galutinis balsavimas (priėmimas). Visuomenės rezultatas bus užfiksuotas.</span></li>
               </ol>
             </div>
           </div>
 
           <div class="bill-side">
-            <div class="deadline"><span class="side-h">Jūsų balsas</span><span>liko <b class="tnum" id="closes">22 val.</b></span></div>
+            <div class="deadline"><span class="side-h">Jūsų balsas</span><span id="closes">liko <b class="tnum">22 val.</b></span></div>
             <div class="my-status" id="myStatus"></div>
             <div class="vote-btns" role="group" aria-label="Balsuokite">
               <button type="button" data-v="for" aria-pressed="false">Už</button>
@@ -1243,6 +1247,7 @@ footer.end svg{width:28px;height:28px}
         <div><div class="when">2027 m. I–II ketv.</div><div><h4>Seimo stebėsena, alfa versija</h4><p>Balsavimų inicijavimas, projektų puslapiai, DI santraukos, Seimo narių ir frakcijų balsavimų istorija ir tiesioginis visuomenės balsavimas. Uždaras bandymas su pakviestais politikais.</p></div></div>
         <div><div class="when">2027 m. III–IV ketv.</div><div><h4>Delegavimas ir patvirtinti profiliai</h4><p>Delegavimo variklis, patvirtinti Seimo narių profiliai, balsavimų paaiškinimai, asmeninis srautas, įrašai politikams bei vieša beta versija.</p></div></div>
         <div><div class="when">2028 m. II–III ketv.</div><div><h4>Rinkimų režimas</h4><p>Kandidatų pozicijos, palyginimas pagal balsavimus ir kandidatų sąrašai prieš Seimo rinkimus.</p><span class="chip milestone">Seimo rinkimai, 2028 m. spalis</span></div></div>
+        <div><div class="when">Ateityje<small>be įsipareigojimų</small></div><div><h4>Plečiama sistema</h4><p>Duomenų modelis nepririštas prie Seimo, todėl, jei bus poreikis, vėliau būtų galima prijungti savivaldybių tarybas ar Europos Parlamentą ir atverti API žurnalistams bei tyrėjams. Kol kas to nežadame – pirmiausia Seimas.</p></div></div>
       </div>
     </section>
 
@@ -1335,40 +1340,45 @@ footer.end svg{width:28px;height:28px}
   const base={before:{f:4120,a:6860,n:870,deleg:{f:1240,a:1880,n:190}},after:{f:4120,a:6860,n:870,deleg:{f:1240,a:1880,n:190},mp:{f:9570,a:7330,n:1100}}};
   const MYV={for:"už",against:"prieš",abstain:"susilaikau"};
   function renderBill(){
-    const st=$("#myStatus");
+    const after=bill.phase==="after",st=$("#myStatus");
+    $$(".phase-sw button").forEach(b=>b.setAttribute("aria-pressed",b.dataset.ph===bill.phase));
     if(bill.mine){
-      st.innerHTML='<div class="st"><i style="background:var(--v-'+bill.mine+')"></i>Jūsų balsas: '+MYV[bill.mine]+'</div><div style="margin-top:4px;color:var(--ink-2)">Jūsų balsas šiam projektui pakeičia delegavimą. Pakeisti jį galite, kol balsavimas nesibaigė.</div><div style="margin-top:6px"><button class="linkbtn" type="button" id="undo">Atšaukti balsą ir grąžinti delegavimą</button></div>';
-      $("#undo").addEventListener("click",()=>{bill.mine=null;renderBill();});
+      st.innerHTML='<div class="st"><i style="background:var(--v-'+bill.mine+')"></i>Jūsų balsas: '+MYV[bill.mine]+'</div><div style="margin-top:4px;color:var(--ink-2)">'+(after?'Užfiksuotas rugsėjo 24 d., 14:00.':'Skaičiuojamas jūsų balsas, o patikėtinių balsai rodomi tik palyginimui. Pakeisti jį galite, kol balsavimas nesibaigė.')+'</div>'+(after?'':'<div style="margin-top:6px"><button class="linkbtn" type="button" id="undo">Atšaukti balsą ir grąžinti delegavimą</button></div>');
+      if(!after)$("#undo").addEventListener("click",()=>{bill.mine=null;renderBill();});
     } else {
-      st.innerHTML='<div class="st"><i style="background:var(--v-against)"></i>Deleguota: prieš</div><div style="margin-top:4px;color:var(--ink-2)">2 iš 3 jūsų patikėtinių balsavo <b>prieš</b> (Rūta Mockutė, Darius Stankus), Jonas Petraitis dar nebalsavo. Jūsų balsas seka jų daugumą, nebent balsuosite patys.</div>';
+      st.innerHTML=after
+        ?'<div class="st"><i style="background:var(--v-against)"></i>Deleguota: prieš</div><div style="margin-top:4px;color:var(--ink-2)">Užfiksuota rugsėjo 24 d., 14:00. Jūsų patikėtinių dauguma balsavo <b>prieš</b> (Rūta Mockutė, Darius Stankus).</div>'
+        :'<div class="st"><i style="background:var(--v-against)"></i>Deleguota: prieš</div><div style="margin-top:4px;color:var(--ink-2)">2 iš 3 jūsų patikėtinių balsavo <b>prieš</b> (Rūta Mockutė, Darius Stankus), Jonas Petraitis dar nebalsavo. Jūsų balsas seka jų daugumą, nebent balsuosite patys.</div>';
     }
-    $$(".vote-btns button").forEach(b=>b.setAttribute("aria-pressed",b.dataset.v===bill.mine));
+    $$(".vote-btns button").forEach(b=>{b.setAttribute("aria-pressed",b.dataset.v===bill.mine);b.disabled=after;});
     const B=base[bill.phase];
-    let dF=B.f,dA=B.a,dN=B.n;
-    let gF=B.deleg.f,gA=B.deleg.a,gN=B.deleg.n;
+    let dF=B.f,dA=B.a,dN=B.n,gF=B.deleg.f,gA=B.deleg.a,gN=B.deleg.n;
     if(bill.mine){gA-=1; if(bill.mine==="for")dF++; else if(bill.mine==="against")dA++; else dN++;}
-    const rows=[];
-    const pct=(x,t)=>Math.round(100*x/t);
+    const rows=[],pct=(x,t)=>Math.round(100*x/t);
     const bar=(f,a,n,tipTxt)=>{const t=f+a+n;return '<div class="sbar" data-tip="'+tipTxt+'"><span class="f" style="flex:'+f+'">'+(pct(f,t)>=12?pct(f,t)+' %':'')+'</span><span class="a" style="flex:'+a+'">'+(pct(a,t)>=12?pct(a,t)+' %':'')+'</span><span class="n" style="flex:'+n+'"></span></div>';};
-    const t1=dF+dA+dN;
-    rows.push('<div class="row"><div class="top"><span>Tiesioginiai balsai</span><b class="tnum">'+fmt(t1)+'</b></div>'+bar(dF,dA,dN,"Tiesioginiai: "+pct(dF,t1)+" % už, "+pct(dA,t1)+" % prieš, "+pct(dN,t1)+" % susilaikė")+'</div>');
-    const f2=dF+gF,a2=dA+gA,n2=dN+gN,t2=f2+a2+n2;
-    rows.push('<div class="row"><div class="top"><span>+ deleguoti balsai (LT2)</span><b class="tnum">'+fmt(t2)+'</b></div>'+bar(f2,a2,n2,"Su deleguotais balsais: "+pct(f2,t2)+" % už, "+pct(a2,t2)+" % prieš")+'</div>');
-    if(bill.phase==="after"){
-      const m=B.mp;const f3=f2+m.f,a3=a2+m.a,n3=n2+m.n,t3=f3+a3+n3;
-      rows.push('<div class="row"><div class="top"><span>+ Seimo nariai, LT2 nebalsavę</span><b class="tnum">'+fmt(t3)+'</b></div>'+bar(f3,a3,n3,"Visi balsai: "+pct(f3,t3)+" % už, "+pct(a3,t3)+" % prieš")+'</div>');
-      rows.push('<div class="row"><div class="top"><span>Seimo galutinis balsavimas</span><b class="tnum">131 SN</b></div>'+bar(78,41,12,"Seimas: 78 už, 41 prieš, 12 susilaikė")+'</div>');
-      rows.push('<p class="note">LT2 rezultatas užfiksuotas rugsėjo 24 d. Paskutinė eilutė papildomai įskaičiuoja Seimo narius, kurie LT2 nebalsavo, pagal jų oficialų balsą.</p>');
-      $("#stageTxt").textContent="Priimta 78 : 41"; $("#closes").textContent="baigta";
-      $$(".vote-btns button").forEach(b=>b.disabled=true);
+    const t1=dF+dA+dN,f2=dF+gF,a2=dA+gA,n2=dN+gN,t2=f2+a2+n2;
+    if(after){
+      rows.push('<div class="row"><div class="top"><span><b>Seimas</b> · priimta</span><b class="tnum">78 : 41</b></div>'+bar(78,41,12,"Seimas: 78 už, 41 prieš, 12 susilaikė")+'</div>');
+      rows.push('<div class="row"><div class="top"><span><b>LT2 rezultatas</b> · užfiksuotas</span><b class="tnum">'+fmt(t2)+'</b></div>'+bar(f2,a2,n2,"LT2: "+pct(f2,t2)+" % už, "+pct(a2,t2)+" % prieš")+'</div>');
+      rows.push('<div><span class="chip gap">Atotrūkis: '+Math.abs(60-pct(f2,t2))+' p. p.</span></div>');
+      const m=B.mp,f3=f2+m.f,a3=a2+m.a,n3=n2+m.n,t3=f3+a3+n3;
+      rows.push('<div class="row po"><div class="top"><span>Po Seimo: + balsai, patikėti LT2 nebalsavusiems Seimo nariams</span><b class="tnum">'+fmt(t3)+'</b></div>'+bar(f3,a3,n3,"Po Seimo: "+pct(f3,t3)+" % už, "+pct(a3,t3)+" % prieš")+'</div>');
+      rows.push('<p class="note">Su Seimu lyginamas LT2 rezultatas – tiesioginiai ir deleguoti balsai iki Seimo balsavimo. „Po Seimo“ rodomas tik informacijai.</p>');
+      $("#stageTxt").textContent="Priimta 78 : 41"; $("#stageFinal").className="stage done";
+      $("#closes").textContent="Balsavimas baigtas";
+      $("#tlFinal").className="done"; $("#tlFinalTxt").textContent="Priimta 78 : 41. LT2 rezultatas užfiksuotas: "+pct(f2,t2)+" % už, "+pct(a2,t2)+" % prieš.";
     } else {
-      rows.push('<p class="note">Kai Seimas balsuos, čia automatiškai atsiras Seimo sprendimas ir rezultatas „Po Seimo“: jame įskaičiuojami ir balsai, patikėti Seimo nariams, kurie LT2 nebalsavo (apie 18 000), pagal jų oficialų balsą.</p>');
-      $("#stageTxt").textContent="Rugs. 24 d., 14:00"; $("#closes").textContent="22 val.";
-      $$(".vote-btns button").forEach(b=>b.disabled=false);
+      rows.push('<div class="row"><div class="top"><span>Tiesioginiai balsai</span><b class="tnum">'+fmt(t1)+'</b></div>'+bar(dF,dA,dN,"Tiesioginiai: "+pct(dF,t1)+" % už, "+pct(dA,t1)+" % prieš, "+pct(dN,t1)+" % susilaikė")+'</div>');
+      rows.push('<div class="row"><div class="top"><span>+ deleguoti balsai = LT2 rezultatas</span><b class="tnum">'+fmt(t2)+'</b></div>'+bar(f2,a2,n2,"LT2 rezultatas: "+pct(f2,t2)+" % už, "+pct(a2,t2)+" % prieš")+'</div>');
+      rows.push('<p class="note">Kai Seimas balsuos, balsavimas užsidarys, o šalia atsiras Seimo sprendimas ir atotrūkis.</p>');
+      $("#stageTxt").textContent="Rugs. 24 d., 14:00"; $("#stageFinal").className="stage next";
+      $("#closes").innerHTML='liko <b class="tnum">22 val.</b>';
+      $("#tlFinal").className=""; $("#tlFinalTxt").textContent="Galutinis balsavimas (priėmimas). Visuomenės rezultatas bus užfiksuotas.";
     }
     $("#tally").innerHTML=rows.join("");
   }
-  $$(".vote-btns button").forEach(b=>b.addEventListener("click",()=>{bill.mine=(bill.mine===b.dataset.v)?null:b.dataset.v;renderBill();}));
+  $$(".vote-btns button").forEach(b=>b.addEventListener("click",()=>{if(bill.phase==="after")return;bill.mine=(bill.mine===b.dataset.v)?null:b.dataset.v;renderBill();}));
+  $$(".phase-sw button").forEach(b=>b.addEventListener("click",()=>{bill.phase=b.dataset.ph;renderBill();}));
   renderBill();
 
   /* ---------- initiation ---------- */
