@@ -515,7 +515,8 @@ footer.end svg{width:28px;height:28px}
 @media (max-width:520px){.trow{grid-template-columns:minmax(0,1fr)}}
 .trow select{width:100%}
 .trow small{display:block;color:var(--muted);font-size:11.5px;margin-top:2px}
-.utabs{display:flex;gap:4px;flex-wrap:wrap}
+.utabs{display:flex;gap:4px;flex-wrap:wrap;align-items:center}
+.utabs .sortlbl{font-size:12.5px;color:var(--muted);margin-right:2px}
 .utabs button{font:inherit;font-size:12.5px;padding:5px 10px;border-radius:7px;border:0;background:var(--surface-2);color:var(--ink-2);cursor:pointer}
 .utabs button[aria-pressed="true"]{background:var(--ink);color:var(--bg)}
 .urow{display:grid;grid-template-columns:28px minmax(0,1fr) auto;gap:10px;align-items:center;font-size:13.5px}
@@ -788,13 +789,13 @@ footer.end svg{width:28px;height:28px}
             </div>
             <div class="step" id="repAdd">
               <div class="step-h"><b>Pridėti patikėtinį</b></div>
-              <div class="fld">Palaikau (neprivaloma, galima kelias – išsaugoma profilyje)<div class="parties" id="repParties" role="group" aria-label="Palaikomos partijos"></div></div>
-              <div class="utabs" role="group" aria-label="Sąrašas">
-                <button type="button" data-t="sug" aria-pressed="true">Siūlomi</button>
-                <button type="button" data-t="top" aria-pressed="false">Daugiausia patikėtojų</button>
-                <button type="button" data-t="search" aria-pressed="false">Paieška</button>
+              <div class="fld">Pasirinkite partiją, kurią palaikote (neprivaloma, galima pakeisti savo paskyroje)<div class="parties" id="repParties" role="group" aria-label="Palaikomos partijos"></div></div>
+              <input class="search" id="repSearch" type="search" placeholder="Ieškoti pagal vardą, partiją ar sritį" aria-label="Ieškoti">
+              <div class="utabs" role="group" aria-label="Rikiuoti"><span class="sortlbl">Rikiuoti:</span>
+                <button type="button" data-t="cnt" aria-pressed="true">Patikėti balsai</button>
+                <button type="button" data-t="abc" aria-pressed="false">Abėcėlė</button>
+                <button type="button" data-t="rep" aria-pressed="false">Atstovavimas</button>
               </div>
-              <input class="search" id="repSearch" type="search" placeholder="Ieškoti žmogaus ar Seimo nario" aria-label="Ieškoti" hidden>
               <div id="repCands" style="display:grid;gap:8px"></div>
             </div>
           </div>
@@ -806,7 +807,7 @@ footer.end svg{width:28px;height:28px}
       </div>
       <div class="annot">
         <div><span class="n">1</span><span><b>Ekspertai užsipildo patys.</b> Patikėtinio ekspertinės temos – jo paties nurodytos arba pagal jo komitetą. Jūs galite pakeisti, kuriose srityse ekspertas atstovaus būtent jus.</span></div>
-        <div><span class="n">2</span><span><b>Siūlymai pagal jūsų partijas.</b> Pažymėjus palaikomas partijas, pirmiausia siūlomi jų LT2 balsuojantys Seimo nariai, tada tų pačių partijų rėmėjai, kuriais pasitiki daugiausia žmonių. Paieška apima visus.</span></div>
+        <div><span class="n">2</span><span><b>Paieška ir rikiavimas.</b> Sąrašą galima rikiuoti pagal patikėtų balsų skaičių, abėcėlę (partija ir vardas) arba atstovavimą: Seimo nariai, tarybų nariai, ekspertai. Pasirinkus partiją, pirmi rodomi jos LT2 balsuojantys Seimo nariai ir rėmėjai.</span></div>
         <div><span class="n">3</span><span><b>Iškart matote pasekmes.</b> Dešinėje – kas balsuotų už jus dėl skirtingų projektų.</span></div>
       </div>
 
@@ -1496,9 +1497,10 @@ footer.end svg{width:28px;height:28px}
     {id:"la",n:"Laura Adomaitienė",d:"Mokytoja · palaiko Reformų partiją",av:"LA",c:"#1c5cab",cnt:2480,sup:"Reformų partija",exp:["Švietimas"],src:"nurodė pati"},
     {id:"er",n:"Eglė Rimkienė",d:"Gydytoja · palaiko Pilietinę sąjungą",av:"ER",c:"#2e7d6b",cnt:2890,sup:"Pilietinė sąjunga",exp:["Sveikata"],src:"nurodė pati"},
     {id:"tv",n:"Tomas Vaitkus",d:"Energetikos inžinierius · palaiko Reformų partiją",av:"TV",c:"#6b6a66",cnt:640,sup:"Reformų partija",exp:["Energetika"],src:"nurodė pats"},
-    {id:"ds",n:"Darius Stankus",d:"Atsargos karininkas",av:"DS",c:"#8a4a8a",cnt:2210,exp:["Gynyba"],src:"nurodė pats"}];
+    {id:"ds",n:"Darius Stankus",d:"Atsargos karininkas",av:"DS",c:"#8a4a8a",cnt:2210,exp:["Gynyba"],src:"nurodė pats"},
+    {id:"vz",n:"Vilma Žukienė",d:"Kauno miesto tarybos narė · Reformų partija",av:"VŽ",c:"#a3542b",cnt:910,ver:1,cty:1,party:"Reformų partija",exp:["Socialiniai reikalai"],src:"komitetas"}];
   const PBILLS=[{t:"Progresinis pajamų mokestis",tags:["Ekonomika","Mokesčiai"]},{t:"Dantų protezavimas 65+",tags:["Sveikata","Socialiniai reikalai"]},{t:"Nemokamos studijos",tags:["Švietimas"]}];
-  const R={list:[{id:"ruta",exp:["Ekonomika"]},{id:"jp",exp:["Užsienio politika"]}],parties:new Set(["Reformų partija"]),tab:"sug",edit:null};
+  const R={list:[{id:"ruta",exp:["Ekonomika"]},{id:"jp",exp:["Užsienio politika"]}],parties:new Set(["Reformų partija"]),sort:"cnt",edit:null};
   const cand=id=>CAND.find(c=>c.id===id);
   const isExp=(r,tags)=>r.exp.some(t=>tags.includes(t));
   function repRender(){
@@ -1515,19 +1517,22 @@ footer.end svg{width:28px;height:28px}
       if(m==="del")R.list.splice(k,1);else{const k2=m==="up"?k-1:k+1;[R.list[k],R.list[k2]]=[R.list[k2],R.list[k]];}R.edit=null;repRender();}));
     $("#repParties").innerHTML=PARTIES.map(p=>'<button type="button" data-p="'+p+'" aria-pressed="'+R.parties.has(p)+'">'+p+'</button>').join("");
     $$("#repParties button").forEach(b=>b.addEventListener("click",()=>{const p=b.dataset.p;R.parties.has(p)?R.parties.delete(p):R.parties.add(p);repRender();}));
-    $$("#repAdd .utabs button").forEach(b=>b.setAttribute("aria-pressed",b.dataset.t===R.tab));
-    $("#repSearch").hidden=R.tab!=="search";
+    $$("#repAdd .utabs button").forEach(b=>b.setAttribute("aria-pressed",b.dataset.t===R.sort));
     let cs=CAND.filter(c=>!R.list.some(r=>r.id===c.id));
-    if(R.tab==="sug"){const rank=c=>c.party&&R.parties.has(c.party)&&c.act?2:c.sup&&R.parties.has(c.sup)?1:0;cs.sort((a,b)=>rank(b)-rank(a)||b.cnt-a.cnt);}
-    if(R.tab==="top")cs.sort((a,b)=>b.cnt-a.cnt);
-    if(R.tab==="search"){const q=($("#repSearch").value||"").toLowerCase();cs=q?cs.filter(c=>(c.n+" "+c.d).toLowerCase().includes(q)):[];}
-    $("#repCands").innerHTML=cs.length?cs.slice(0,3).map(c=>'<div class="urow"><span class="avatar" style="background:'+c.c+'">'+c.av+'</span><span>'+c.n+(c.ver?' <svg class="badge-v" aria-label="Patvirtinta"><use href="#vbadge"/></svg>':'')+'<small>'+c.d+(c.exp.length?' · ekspertas: '+c.exp.join(", "):'')+' · '+fmt(c.cnt)+' patikėtojų</small></span><button type="button" data-id="'+c.id+'">Pridėti</button></div>').join("")+(R.tab!=="search"?'<button class="linkbtn" type="button" style="justify-self:start">Rodyti daugiau</button>':''):
-      '<span style="font-size:13px;color:var(--muted)">'+(R.tab==="search"?"Įveskite vardą ar sritį":"Visi siūlomi jau pridėti")+'</span>';
+    const q=($("#repSearch").value||"").toLowerCase();
+    if(q)cs=cs.filter(c=>(c.n+" "+c.d+" "+c.exp.join(" ")).toLowerCase().includes(q));
+    const pref=c=>c.party&&R.parties.has(c.party)&&c.act?2:(c.party||c.sup)&&R.parties.has(c.party||c.sup)?1:0; // your parties first
+    const lvl=c=>c.act||c.party&&!c.cty?3:c.cty?2:c.exp.length?1:0; // Seimo nariai, tarybų nariai, ekspertai, kiti
+    const abc=c=>((c.party||c.sup||"\uffff")+" "+c.n);
+    const by={cnt:(a,b)=>b.cnt-a.cnt,abc:(a,b)=>abc(a).localeCompare(abc(b),"lt"),rep:(a,b)=>lvl(b)-lvl(a)||b.cnt-a.cnt}[R.sort];
+    cs.sort((a,b)=>pref(b)-pref(a)||by(a,b));
+    $("#repCands").innerHTML=cs.length?cs.slice(0,5).map(c=>'<div class="urow"><span class="avatar" style="background:'+c.c+'">'+c.av+'</span><span>'+c.n+(c.ver?' <svg class="badge-v" aria-label="Patvirtinta"><use href="#vbadge"/></svg>':'')+'<small>'+c.d+(c.exp.length?' · ekspertas: '+c.exp.join(", "):'')+' · '+fmt(c.cnt)+' patikėtojų</small></span><button type="button" data-id="'+c.id+'">Pridėti</button></div>').join("")+(cs.length>5?'<button class="linkbtn" type="button" style="justify-self:start">Rodyti daugiau ('+(cs.length-5)+')</button>':''):
+      '<span style="font-size:13px;color:var(--muted)">'+(q?"Nieko nerasta":"Visi jau pridėti")+'</span>';
     $$("#repCands .urow button").forEach(b=>b.addEventListener("click",()=>{const c=cand(b.dataset.id);R.list.push({id:c.id,exp:[...c.exp]});repRender();}));
     $("#repPrev").innerHTML=PBILLS.map(b=>{const ex=R.list.filter(r=>isExp(r,b.tags)).map(r=>cand(r.id).n),all=R.list.map(r=>cand(r.id).n);
       return '<div class="prev"><b>'+b.t+'</b><div class="tg">'+b.tags.map(t=>'<span>'+t+'</span>').join("")+'</div><span class="pwho">'+(!all.length?"Nėra patikėtinių – balsuokite patys":ex.length?"Pirmenybė: "+ex.join(", ")+". Jei jie nebalsuos – visų dauguma.":"Ekspertų nėra – sprendžia dauguma: "+all.join(", "))+'</span></div>';}).join("");
   }
-  $$("#repAdd .utabs button").forEach(b=>b.addEventListener("click",()=>{R.tab=b.dataset.t;repRender();}));
+  $$("#repAdd .utabs button").forEach(b=>b.addEventListener("click",()=>{R.sort=b.dataset.t;repRender();}));
   $("#repSearch").addEventListener("input",repRender);
   repRender();
 
