@@ -1,3 +1,7 @@
+<!doctype html>
+<html lang="lt">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Lietuva 2.0 – išsami produkto koncepcija</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -106,10 +110,10 @@ section.chapter>header .lede{font-size:21px;color:var(--ink-2)}
 .hemi-card{background:var(--surface);border:1px solid var(--line);border-radius:18px;padding:22px;box-shadow:var(--shadow);font-family:var(--f-display)}
 .hemi-card .bill-id{font-family:var(--f-mono);font-size:12px;color:var(--muted)}
 .hemi-card h3{font-size:19px;margin-top:4px}
-.hemi-wrap{position:relative;margin-top:14px}
+.hemi-wrap{position:relative;margin-top:14px;container-type:inline-size}
 .hemi-wrap svg{width:100%;height:auto;display:block}
 .hemi-center{position:absolute;left:0;right:0;bottom:4px;text-align:center}
-.hemi-center .big{font-size:clamp(20px,6.4vw,30px);font-weight:800;letter-spacing:-.02em}
+.hemi-center .big{font-size:min(30px,7.4cqi);font-weight:800;letter-spacing:-.02em}
 .hemi-center .small{font-size:12px;color:var(--muted)}
 .legend{display:flex;flex-wrap:wrap;gap:6px 14px;font-family:var(--f-display);font-size:13px;color:var(--ink-2)}
 .legend i{display:inline-block;width:10px;height:10px;border-radius:50%;margin-right:6px;vertical-align:-1px}
@@ -154,6 +158,7 @@ table.cmp tr:last-child>*{border-bottom:0}
 table.cmp td small{display:block;font-size:12.5px;color:var(--muted);margin-top:2px}
 table.dlgt td:first-child{width:30%}
 .tbl-note{font-family:var(--f-display);font-size:14px;color:var(--ink-2);margin-top:14px}
+@media (max-width:560px){.stack-wrap{overflow:visible;border:0;border-radius:0;background:none}table.stack{min-width:0!important;display:block}table.stack thead{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}table.stack tbody{display:grid;gap:10px}table.stack tr{display:grid;gap:10px;padding:14px 16px;background:var(--surface);border:1px solid var(--line);border-radius:12px}table.stack tr>*,table.stack tr:last-child>*{display:block;width:auto!important;padding:0;border:0}table.stack tr>:first-child{font-weight:600;color:var(--ink);font-size:15.5px}table.stack tr>:first-child small{font-weight:400}table.stack [data-label]::before{content:attr(data-label);display:block;margin-bottom:2px;font-size:11.5px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}}
 
 /* ---------- diagram ---------- */
 figure{margin:28px 0 0}
@@ -343,6 +348,8 @@ select{font:inherit;font-size:13px;padding:5px 8px;border-radius:8px;border:1px 
 .match .bar{height:8px;background:var(--surface-2);border-radius:4px;overflow:hidden}
 .match .bar span{display:block;height:100%;background:var(--brand)}
 .match b{text-align:right;font-variant-numeric:tabular-nums}
+.coh div span{white-space:nowrap}
+@media (max-width:480px){.cmp3{grid-template-columns:minmax(0,1fr)}.cmp3>div{grid-template-columns:minmax(0,1fr) auto;align-items:baseline}.match{grid-template-columns:28px minmax(0,1fr) 56px 40px}.coh{grid-template-columns:96px minmax(0,1fr) 36px}}
 .tview{font-size:12.5px}
 .tview summary{cursor:pointer;color:var(--link)}
 .tview table{border-collapse:collapse;margin-top:8px;width:100%;font-variant-numeric:tabular-nums}
@@ -877,15 +884,15 @@ footer.end svg{width:28px;height:28px}
 
       <h3 style="margin-top:44px">Kaip nustatomas jūsų balsas</h3>
       <p class="tbl-note">Pavyzdys. Jūsų patikėtiniai: 1. Rūta Mockutė (ekspertė: ekonomika) · 2. Jonas Petraitis (Seimo narys, ekspertas: užsienio politika) · 3. Darius Stankus (ekspertas: gynyba).</p>
-      <div class="tbl-wrap" style="margin-top:12px"><table class="cmp dlgt">
+      <div class="tbl-wrap stack-wrap" style="margin-top:12px"><table class="cmp dlgt stack">
         <thead><tr><th>Projektas</th><th>Kaip balsavo patikėtiniai LT2</th><th>Jūsų balsas</th></tr></thead>
         <tbody>
-          <tr><td>Progresinis pajamų mokestis<small>Ekonomika, Mokesčiai</small></td><td>Rūta prieš, Jonas prieš, Darius už</td><td><b>Prieš</b><small>balsavo ekspertė Rūta – sprendžia ekspertų dauguma</small></td></tr>
-          <tr><td>Dantų protezavimas 65+<small>Sveikata</small></td><td>Rūta nebalsavo, Jonas už, Darius už</td><td><b>Už</b><small>ekspertų nėra – sprendžia visų balsavusių dauguma</small></td></tr>
-          <tr><td>Nemokamos studijos<small>Švietimas</small></td><td>Rūta nebalsavo, Jonas už, Darius prieš</td><td><b>Už</b><small>lygiosios – lemia aukščiau sąraše esantis Jonas</small></td></tr>
-          <tr><td>Saulės parkai ūkio žemėje<small>Energetika</small></td><td>Rūta susilaikė, Darius susilaikė, Jonas už</td><td><b>Susilaikote</b><small>dauguma susilaikė</small></td></tr>
-          <tr><td>Akcizas saldintiems gėrimams<small>Sveikata, Mokesčiai</small></td><td>Niekas nebalsavo</td><td><b>Neįskaičiuojamas</b><small>balso pagal nutylėjimą nepriskiriame</small></td></tr>
-          <tr><td>Seimo narių išlaidų ataskaitos<small>Teisė</small></td><td>Visi trys už</td><td><b>Prieš</b><small>balsavote patys – patikėtinių balsai rodomi tik palyginimui</small></td></tr>
+          <tr><td>Progresinis pajamų mokestis<small>Ekonomika, Mokesčiai</small></td><td data-label="Kaip balsavo patikėtiniai LT2">Rūta prieš, Jonas prieš, Darius už</td><td data-label="Jūsų balsas"><b>Prieš</b><small>balsavo ekspertė Rūta – sprendžia ekspertų dauguma</small></td></tr>
+          <tr><td>Dantų protezavimas 65+<small>Sveikata</small></td><td data-label="Kaip balsavo patikėtiniai LT2">Rūta nebalsavo, Jonas už, Darius už</td><td data-label="Jūsų balsas"><b>Už</b><small>ekspertų nėra – sprendžia visų balsavusių dauguma</small></td></tr>
+          <tr><td>Nemokamos studijos<small>Švietimas</small></td><td data-label="Kaip balsavo patikėtiniai LT2">Rūta nebalsavo, Jonas už, Darius prieš</td><td data-label="Jūsų balsas"><b>Už</b><small>lygiosios – lemia aukščiau sąraše esantis Jonas</small></td></tr>
+          <tr><td>Saulės parkai ūkio žemėje<small>Energetika</small></td><td data-label="Kaip balsavo patikėtiniai LT2">Rūta susilaikė, Darius susilaikė, Jonas už</td><td data-label="Jūsų balsas"><b>Susilaikote</b><small>dauguma susilaikė</small></td></tr>
+          <tr><td>Akcizas saldintiems gėrimams<small>Sveikata, Mokesčiai</small></td><td data-label="Kaip balsavo patikėtiniai LT2">Niekas nebalsavo</td><td data-label="Jūsų balsas"><b>Neįskaičiuojamas</b><small>balso pagal nutylėjimą nepriskiriame</small></td></tr>
+          <tr><td>Seimo narių išlaidų ataskaitos<small>Teisė</small></td><td data-label="Kaip balsavo patikėtiniai LT2">Visi trys už</td><td data-label="Jūsų balsas"><b>Prieš</b><small>balsavote patys – patikėtinių balsai rodomi tik palyginimui</small></td></tr>
         </tbody></table></div>
 
       <details class="detail-block">
@@ -1367,23 +1374,23 @@ footer.end svg{width:28px;height:28px}
         <h2>Kas jau veikia kitur</h2>
         <p class="lede">Elektroninės demokratijos platformos kitose šalyse ir organizacijose: kas jos daro, ar leidžia patikėti balsą ir ar vis dar veikia.</p>
       </header>
-      <div class="tbl-wrap"><table class="cmp" style="min-width:860px">
+      <div class="tbl-wrap stack-wrap"><table class="cmp stack" style="min-width:860px">
         <thead><tr><th scope="col">Kur</th><th scope="col">Platforma</th><th scope="col">Ką daro</th><th scope="col">Delegavimas</th><th scope="col">Būsena</th></tr></thead>
         <tbody>
-          <tr><th scope="row">Barselona ir 400+ organizacijų 30+ šalių</th><td>Decidim<small>nuo 2016 m.</small></td><td>Pasiūlymai, dalyvaujamasis biudžetas, konsultacijos ir balsavimai</td><td>Tik atskiru moduliu kooperatyvų balsavimams</td><td>Veikia</td></tr>
-          <tr><th scope="row">Madridas ir 90+ savivaldybių (Paryžius, Buenos Airės, Miunchenas)</th><td>CONSUL<small>nuo 2015 m.</small></td><td>Piliečių pasiūlymai, dalyvaujamasis biudžetas, balsavimai</td><td>Ne</td><td>Veikia</td></tr>
-          <tr><th scope="row">Estija</th><td>Rahvaalgatus.ee<small>nuo 2016 m.</small></td><td>Kolektyviniai kreipimaisi: surinkus 1 000 parašų Riigikogu privalo juos svarstyti</td><td>Ne</td><td>Veikia</td></tr>
-          <tr><th scope="row">Latvija</th><td>ManaBalss.lv<small>nuo 2011 m.</small></td><td>Iniciatyvos: surinkus 10 000 parašų svarsto Saeima; iš 38 iki galutinio balsavimo nukeliavusių priimta 31</td><td>Ne</td><td>Veikia; su ja bendradarbiavo ir senoji LT2</td></tr>
-          <tr><th scope="row">Suomija</th><td>Kansalaisaloite.fi<small>nuo 2012 m.</small></td><td>Piliečių įstatymų iniciatyvos: surinkus 50 000 parašų svarsto Eduskunta</td><td>Ne</td><td>Veikia</td></tr>
-          <tr><th scope="row">Vokietija</th><td>abgeordnetenwatch.de<small>nuo 2004 m.</small></td><td>Vieši klausimai parlamentarams ir jų balsavimų istorija; atsako daugiau nei 80 % Bundestago narių</td><td>Ne</td><td>Veikia</td></tr>
-          <tr><th scope="row">Jungtinė Karalystė</th><td>Parlamento peticijos<small>nuo 2015 m.</small></td><td>Surinkus 10 000 parašų atsako Vyriausybė, 100 000 – svarstoma debatams parlamente</td><td>Ne</td><td>Veikia</td></tr>
-          <tr><th scope="row">Europos Sąjunga</th><td>Europos piliečių iniciatyva<small>nuo 2012 m.</small></td><td>Surinkus 1 mln. parašų bent 7 šalyse Europos Komisija privalo atsakyti</td><td>Ne</td><td>Veikia</td></tr>
-          <tr><th scope="row">Taivanas</th><td>vTaiwan, Join<small>nuo 2014 m.</small></td><td>Viešos konsultacijos dėl įstatymų projektų, nuomonių žemėlapiai (Pol.is)</td><td>Ne</td><td>Veikia, bet vyriausybė ja naudojasi nereguliariai</td></tr>
-          <tr><th scope="row">Reikjavikas</th><td>Betri Reykjavík<small>nuo 2010 m.</small></td><td>Piliečių idėjos miestui ir jų prioritetai</td><td>Ne</td><td>Svetainė veikia, bet miesto taryba pasiūlymų šiuo metu nenagrinėja</td></tr>
-          <tr><th scope="row">Vokietija</th><td>LiquidFeedback<small>Piratų partija nuo 2010 m., Fryzlando apskritis 2012–2016 m.</small></td><td>Partijos ir apskrities sprendimų svarstymas bei balsavimai</td><td>Taip</td><td>Fryzlande nutraukta: užsiregistravo 552 iš maždaug 83 000 galinčių</td></tr>
-          <tr><th scope="row">Švedija, Vallentuna</th><td>Demoex<small>2002–2014 m.</small></td><td>Partijos atstovas savivaldybės taryboje balsavo taip, kaip nuspręsdavo nariai internete</td><td>Taip, pagal temas</td><td>Susijungė su kitomis partijomis</td></tr>
-          <tr><th scope="row">Argentina, Buenos Airės</th><td>DemocracyOS ir Tinklo partija<small>nuo 2013 m.</small></td><td>Miesto parlamento projektų svarstymas ir balsavimas</td><td>Taip, pagal temas</td><td>Partija gavo apie 1 % balsų ir mandato negavo</td></tr>
-          <tr><th scope="row">Google</th><td>Google Votes<small>2012–2015 m.</small></td><td>Vidiniai darbuotojų balsavimai, apie 15 000 dalyvių</td><td>Taip</td><td>Eksperimentas baigtas</td></tr>
+          <tr><th scope="row">Barselona ir 400+ organizacijų 30+ šalių</th><td data-label="Platforma">Decidim<small>nuo 2016 m.</small></td><td data-label="Ką daro">Pasiūlymai, dalyvaujamasis biudžetas, konsultacijos ir balsavimai</td><td data-label="Delegavimas">Tik atskiru moduliu kooperatyvų balsavimams</td><td data-label="Būsena">Veikia</td></tr>
+          <tr><th scope="row">Madridas ir 90+ savivaldybių (Paryžius, Buenos Airės, Miunchenas)</th><td data-label="Platforma">CONSUL<small>nuo 2015 m.</small></td><td data-label="Ką daro">Piliečių pasiūlymai, dalyvaujamasis biudžetas, balsavimai</td><td data-label="Delegavimas">Ne</td><td data-label="Būsena">Veikia</td></tr>
+          <tr><th scope="row">Estija</th><td data-label="Platforma">Rahvaalgatus.ee<small>nuo 2016 m.</small></td><td data-label="Ką daro">Kolektyviniai kreipimaisi: surinkus 1 000 parašų Riigikogu privalo juos svarstyti</td><td data-label="Delegavimas">Ne</td><td data-label="Būsena">Veikia</td></tr>
+          <tr><th scope="row">Latvija</th><td data-label="Platforma">ManaBalss.lv<small>nuo 2011 m.</small></td><td data-label="Ką daro">Iniciatyvos: surinkus 10 000 parašų svarsto Saeima; iš 38 iki galutinio balsavimo nukeliavusių priimta 31</td><td data-label="Delegavimas">Ne</td><td data-label="Būsena">Veikia; su ja bendradarbiavo ir senoji LT2</td></tr>
+          <tr><th scope="row">Suomija</th><td data-label="Platforma">Kansalaisaloite.fi<small>nuo 2012 m.</small></td><td data-label="Ką daro">Piliečių įstatymų iniciatyvos: surinkus 50 000 parašų svarsto Eduskunta</td><td data-label="Delegavimas">Ne</td><td data-label="Būsena">Veikia</td></tr>
+          <tr><th scope="row">Vokietija</th><td data-label="Platforma">abgeordnetenwatch.de<small>nuo 2004 m.</small></td><td data-label="Ką daro">Vieši klausimai parlamentarams ir jų balsavimų istorija; atsako daugiau nei 80 % Bundestago narių</td><td data-label="Delegavimas">Ne</td><td data-label="Būsena">Veikia</td></tr>
+          <tr><th scope="row">Jungtinė Karalystė</th><td data-label="Platforma">Parlamento peticijos<small>nuo 2015 m.</small></td><td data-label="Ką daro">Surinkus 10 000 parašų atsako Vyriausybė, 100 000 – svarstoma debatams parlamente</td><td data-label="Delegavimas">Ne</td><td data-label="Būsena">Veikia</td></tr>
+          <tr><th scope="row">Europos Sąjunga</th><td data-label="Platforma">Europos piliečių iniciatyva<small>nuo 2012 m.</small></td><td data-label="Ką daro">Surinkus 1 mln. parašų bent 7 šalyse Europos Komisija privalo atsakyti</td><td data-label="Delegavimas">Ne</td><td data-label="Būsena">Veikia</td></tr>
+          <tr><th scope="row">Taivanas</th><td data-label="Platforma">vTaiwan, Join<small>nuo 2014 m.</small></td><td data-label="Ką daro">Viešos konsultacijos dėl įstatymų projektų, nuomonių žemėlapiai (Pol.is)</td><td data-label="Delegavimas">Ne</td><td data-label="Būsena">Veikia, bet vyriausybė ja naudojasi nereguliariai</td></tr>
+          <tr><th scope="row">Reikjavikas</th><td data-label="Platforma">Betri Reykjavík<small>nuo 2010 m.</small></td><td data-label="Ką daro">Piliečių idėjos miestui ir jų prioritetai</td><td data-label="Delegavimas">Ne</td><td data-label="Būsena">Svetainė veikia, bet miesto taryba pasiūlymų šiuo metu nenagrinėja</td></tr>
+          <tr><th scope="row">Vokietija</th><td data-label="Platforma">LiquidFeedback<small>Piratų partija nuo 2010 m., Fryzlando apskritis 2012–2016 m.</small></td><td data-label="Ką daro">Partijos ir apskrities sprendimų svarstymas bei balsavimai</td><td data-label="Delegavimas">Taip</td><td data-label="Būsena">Fryzlande nutraukta: užsiregistravo 552 iš maždaug 83 000 galinčių</td></tr>
+          <tr><th scope="row">Švedija, Vallentuna</th><td data-label="Platforma">Demoex<small>2002–2014 m.</small></td><td data-label="Ką daro">Partijos atstovas savivaldybės taryboje balsavo taip, kaip nuspręsdavo nariai internete</td><td data-label="Delegavimas">Taip, pagal temas</td><td data-label="Būsena">Susijungė su kitomis partijomis</td></tr>
+          <tr><th scope="row">Argentina, Buenos Airės</th><td data-label="Platforma">DemocracyOS ir Tinklo partija<small>nuo 2013 m.</small></td><td data-label="Ką daro">Miesto parlamento projektų svarstymas ir balsavimas</td><td data-label="Delegavimas">Taip, pagal temas</td><td data-label="Būsena">Partija gavo apie 1 % balsų ir mandato negavo</td></tr>
+          <tr><th scope="row">Google</th><td data-label="Platforma">Google Votes<small>2012–2015 m.</small></td><td data-label="Ką daro">Vidiniai darbuotojų balsavimai, apie 15 000 dalyvių</td><td data-label="Delegavimas">Taip</td><td data-label="Būsena">Eksperimentas baigtas</td></tr>
         </tbody>
       </table></div>
       <p class="tbl-note">Ilgiausiai veikia tos platformos, kurioms institucija įsipareigoja atsakyti: Estijos, Latvijos, Suomijos parlamentai ar Bundestago nariai. Kur tokio įsipareigojimo nėra ar jis susilpnėja, dalyvavimas nyksta. Dauguma platformų dirba su piliečių pasiūlymais ir parašais; LT2 dirba su tuo, ką Seimas jau svarsto, ir lygina piliečių pasirinkimą su tikrais balsavimais.</p>

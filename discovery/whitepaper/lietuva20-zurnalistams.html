@@ -1,3 +1,7 @@
+<!doctype html>
+<html lang="lt">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Lietuva 2.0 žurnalistams</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -105,10 +109,10 @@ section.chapter>header .lede{font-size:21px;color:var(--ink-2)}
 .hemi-card{background:var(--surface);border:1px solid var(--line);border-radius:18px;padding:22px;box-shadow:var(--shadow);font-family:var(--f-display)}
 .hemi-card .bill-id{font-family:var(--f-mono);font-size:12px;color:var(--muted)}
 .hemi-card h3{font-size:19px;margin-top:4px}
-.hemi-wrap{position:relative;margin-top:14px}
+.hemi-wrap{position:relative;margin-top:14px;container-type:inline-size}
 .hemi-wrap svg{width:100%;height:auto;display:block}
 .hemi-center{position:absolute;left:0;right:0;bottom:4px;text-align:center}
-.hemi-center .big{font-size:30px;font-weight:800;letter-spacing:-.02em}
+.hemi-center .big{font-size:min(30px,7.4cqi);font-weight:800;letter-spacing:-.02em}
 .hemi-center .small{font-size:12px;color:var(--muted)}
 .legend{display:flex;flex-wrap:wrap;gap:6px 14px;font-family:var(--f-display);font-size:13px;color:var(--ink-2)}
 .legend i{display:inline-block;width:10px;height:10px;border-radius:50%;margin-right:6px;vertical-align:-1px}
@@ -421,7 +425,7 @@ footer.end svg{width:28px;height:28px}
 <style>
 .short{max-width:980px;margin:0 auto}
 .short .hero{padding-top:40px}
-.readtime{display:inline-flex;gap:8px;align-items:center;font-family:var(--f-display);font-size:13px;color:var(--muted);margin-bottom:18px}
+.readtime{display:block;font-family:var(--f-display);font-size:13px;color:var(--muted);margin-bottom:18px}
 .readtime b{color:var(--brand);font-weight:600}
 .short section.chapter{padding-top:64px}
 .short section.chapter>header{margin-bottom:22px}
