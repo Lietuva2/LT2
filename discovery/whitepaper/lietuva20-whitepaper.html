@@ -402,7 +402,8 @@ select{font:inherit;font-size:13px;padding:5px 8px;border-radius:8px;border:1px 
 .box ul{margin:0;padding-left:18px;font-size:16.5px;color:var(--ink-2);line-height:1.5}
 .box li+li{margin-top:6px}
 .box .more{font-family:var(--f-display);font-size:14px;font-weight:700;margin-top:4px}
-.two.benefits{gap:14px}
+.benefits{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px;margin-top:24px}
+@media (max-width:900px){.benefits{grid-template-columns:minmax(0,1fr)}}
 .v2note{margin-top:18px;padding:12px 16px;border-radius:12px;background:var(--surface-2);border-left:3px solid var(--slate);font-family:var(--f-display);font-size:14.5px;line-height:1.5;color:var(--ink-2);max-width:760px}
 .audiences{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px;margin-top:24px}
 @media (max-width:820px){.audiences{grid-template-columns:minmax(0,1fr)}}
@@ -689,25 +690,20 @@ footer.end svg{width:28px;height:28px}
         <h2>Kiekvienam dalyviui – sava nauda</h2>
         <p class="lede">LT2 veikia tik tada, kai jame yra ir žmonės, ir jų atstovai. Todėl kiekvienai grupei turi būti aišku, ką ji gauna ir kodėl verta skirti laiko.</p>
       </header>
-      <div class="two benefits">
+      <div class="benefits">
         <div class="box"><h4>Piliečiams</h4><ul>
           <li>Aktualūs Seimo projektai suprantama kalba per kelias minutes, su nuorodomis į straipsnius.</li>
           <li>Balsuoti galima pačiam arba patikėti balsą žmonėms, kuriais pasitikite, – taip dalyvaujama net neturint laiko sekti kiekvieno projekto.</li>
-          <li>Balsavimą dėl svarbaus projekto galima inicijuoti ir pačiam.</li>
-          <li>Matyti, kaip Seimas nusprendė ir kaip balsavo jūsų pasirinkti atstovai.</li>
+          <li>Balsavimą dėl svarbaus projekto galima inicijuoti pačiam ir pakviesti kitus, dalijantis patikrinama santrauka, o ne savo perpasakojimu.</li>
+          <li>Galima tapti viešu patikėtiniu savo srityje.</li>
+          <li>Matyti, kaip Seimas nusprendė, kaip balsavo jūsų pasirinkti atstovai ir kaip jie tai paaiškino.</li>
         </ul><a class="more" href="#bill">Kaip tai veikia – 3–5 skyriai</a></div>
         <div class="box"><h4>Politikams</h4><ul>
-          <li><b>Savo rėmėjų pozicija.</b> Apklausos rodo visos visuomenės nuomonę, o partijos rėmėjų poziciją – tik retai, keliais klausimais ir mažomis imtimis. LT2 dėl kiekvieno svarstomo projekto rodo, kaip balsuoja jūsų partijos rėmėjai ir jums balsą patikėję žmonės – dar prieš balsavimą Seime.</li>
-          <li>Balso paaiškinimas ten, kur jis matomas, ir tiesioginis ryšys su jumis pasitikinčiais žmonėmis.</li>
+          <li><b>Savo rėmėjų pozicija.</b> Apklausos rodo visuomenės nuomonę, bet retai – konkrečios partijos rėmėjų. LT2 dėl kiekvieno svarstomo projekto rodo, kaip balsuoja jūsų rėmėjai ir jums balsą patikėję žmonės.</li>
+          <li><b>Balso paaiškinimas.</b> Paaiškinimas rodomas prie konkretaus projekto ir pasiekia jums balsą patikėjusius žmones. Tai galimybė įtikinti rinkėjus savo sprendimo teisingumu, paveikti jų nuomonę dar prieš balsavimą ir išlikti patikimam, net kai balsuojate kitaip, nei jie tikėjosi.</li>
           <li>Jūsų balsas LT2 iškart skaičiuojamas jums balsą patikėjusiems žmonėms.</li>
           <li>Patvirtintas profilis ir galimybė būti pasirinktam patikėtiniu, taip pat ir kandidatams.</li>
         </ul><a class="more" href="#politicians">Kaip tai veikia – 6 skyrius</a></div>
-        <div class="box"><h4>Aktyviems piliečiams</h4><ul>
-          <li>Patikrinama projekto santrauka, kuria galima dalytis, vietoj savo perpasakojimo.</li>
-          <li>Vienas aiškus veiksmas auditorijai: balsuoti pačiam arba patikėti balsą.</li>
-          <li>Galimybė tapti viešu patikėtiniu savo srityje.</li>
-          <li>Istorija su pabaiga: matyti, kaip Seimas nusprendė ir kaip politikai paaiškino savo balsus.</li>
-        </ul><a class="more" href="#bill">Kaip tai veikia – 3–4 skyriai</a></div>
         <div class="box"><h4>Žurnalistams</h4><ul>
           <li>Kiekvieno projekto santrauka, eiga ir Seimo narių balsai vienoje vietoje.</li>
           <li>Rezultato kortelės, kurias galima įterpti į straipsnį, ir duomenų atsisiuntimas CSV formatu.</li>
@@ -1007,7 +1003,7 @@ footer.end svg{width:28px;height:28px}
 
       <div class="incent">
         <div><span class="for">PARTIJOMS IR POLITIKAMS</span><h4>Žinokite savo rėmėjų poziciją prieš balsavimą</h4><p>Apklausos matuoja visą visuomenę ir retai parodo, ką mano konkrečios partijos rėmėjai. LT2 dėl kiekvieno svarstomo projekto rodo, kaip balsuoja partijos rėmėjai ir jums balsą patikėję žmonės, ir kurie projektai jiems svarbiausi. Tai aktyvių rėmėjų signalas, o ne reprezentatyvi apklausa; grupės rodomos tik kai jose bent 20 žmonių.</p></div>
-        <div><span class="for">VISIEMS POLITIKAMS</span><h4>Paaiškinkite savo balsą ten, kur jis matomas</h4><p>Paaiškinimas rodomas prie konkretaus projekto ir pasiekia jums balsą patikėjusius žmones, nepriklausomai nuo socialinių tinklų pasiekiamumo algoritmų.</p></div>
+        <div><span class="for">VISIEMS POLITIKAMS</span><h4>Paaiškinkite savo balsą ten, kur jis matomas</h4><p>Paaiškinimas rodomas prie konkretaus projekto ir pasiekia jums balsą patikėjusius žmones, nepriklausomai nuo socialinių tinklų algoritmų. Taip galite įtikinti rinkėjus savo sprendimo teisingumu dar prieš balsavimą ir išlikti patikimi, net kai balsuojate kitaip, nei jie tikėjosi.</p></div>
         <div><span class="for">VISIEMS POLITIKAMS</span><h4>Supraskite, ką galvoja jumis pasitikintys</h4><p>Prie kiekvieno balsavimo matote, kiek jums balsą patikėjusių žmonių balsavo patys ir kaip jie pasirinko. Taip žinote, kur verta paaiškinti daugiau. Tai veikia ir išrinktiems pagal partijos sąrašą, ir dar tik kandidatuojantiems.</p></div>
         <div><span class="for">VISIEMS POLITIKAMS</span><h4>Jūsų balsas LT2 – su jumis pasitikinčiųjų balsais</h4><p>Kai balsuojate LT2, jūsų balsas iškart lemia jums balsą patikėjusių žmonių balsus, pvz., 2 140 ekonomikos klausimais. Nurodę iki 3 savo sričių, tose temose turite pirmenybę prieš kitus jų patikėtinius ir esate siūlomi pirmi.</p></div>
         <div><span class="for">KANDIDATAMS</span><h4>Būkite matomi dar prieš rinkimus</h4><p>Pasižymėję kandidatu ir patvirtinti, galite balsuoti LT2, paaiškinti savo požiūrį į svarstomus projektus ir būti pasirinkti patikėtiniu. Kaip kandidatai rodomi prieš rinkimus – 8 skyriuje.</p></div>
