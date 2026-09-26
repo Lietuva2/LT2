@@ -420,6 +420,7 @@ footer.end svg{width:28px;height:28px}
 
 <style>
 .short{max-width:980px;margin:0 auto}
+.verdict{flex-wrap:wrap}.verdict .chip{white-space:nowrap}
 .short .hero{padding-top:40px}
 .readtime{display:inline-flex;gap:8px;align-items:center;font-family:var(--f-display);font-size:13px;color:var(--muted);margin-bottom:18px}
 .readtime b{color:var(--brand);font-weight:600}
@@ -481,10 +482,10 @@ footer.end svg{width:28px;height:28px}
         <svg aria-label="Lietuva 2.0 logotipas" role="img"><use href="#logo"/></svg>
         <div><div class="wm">Lietuva <span>2.0</span></div><div class="tag">Seimo darbai ir pilietinis įsitraukimas</div></div>
       </div>
-      <div class="readtime"><b>Trumpoji versija</b> · skaitymo laikas apie 3 min.</div>
+      <div class="readtime"><b>Trumpoji versija piliečiams</b> · skaitymo laikas apie 4 min.</div>
       <h1>Jūsų balsas svarbus – <em>ne tik per rinkimus.</em></h1>
         <p class="kicker">Padėkite Seimui jus atstovauti.</p>
-      <p class="lede">Svarbiausi Seimo projektai suprantama kalba. Kol jie svarstomi, už juos galima balsuoti patiems arba patikėti balsą tam, kuo pasitikite. Kai Seimas nusprendžia – aiškus palyginimas, kiek jis nutolęs nuo piliečių.</p>
+      <p class="lede">Svarbiausi Seimo projektai suprantama kalba. Kol jie svarstomi, už juos galima balsuoti patiems arba patikėti balsą tam, kuo pasitikite. Kai Seimas nusprendžia – aišku, kur Seimo ir piliečių pasirinkimai sutapo, kur skyrėsi ir kaip politikai paaiškino savo balsus.</p>
       <div class="notice" role="note">
         <svg viewBox="0 0 20 20" aria-hidden="true"><circle cx="10" cy="10" r="8.5" fill="none" stroke="currentColor" stroke-width="1.6"/><path d="M10 5.5v5.5M10 13.6v.9" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
         <span>Visi Seimo nariai, frakcijos, projektai ir skaičiai čia yra išgalvoti.</span>
@@ -506,10 +507,10 @@ footer.end svg{width:28px;height:28px}
       <div class="split-bars">
         <div class="sbar-row"><div class="lbl"><b>Seimas</b>balsavo 131 SN</div>
           <div class="sbar" data-tip="Seimas: 60 % už, 31 % prieš, 9 % susilaikė"><span class="f" style="flex:78">60 %</span><span class="a" style="flex:41">31 %</span><span class="n" style="flex:12"></span></div></div>
-        <div class="sbar-row"><div class="lbl"><b>Lietuva 2.0</b>15 160 balsų</div>
-          <div class="sbar" data-tip="Lietuva 2.0 rezultatas (tiesioginiai ir deleguoti balsai): 35 % už, 58 % prieš, 7 % susilaikė"><span class="f" style="flex:35">35 %</span><span class="a" style="flex:58">58 %</span><span class="n" style="flex:7"></span></div></div>
+        <div class="sbar-row"><div class="lbl"><b>LT2 rezultatas</b>15 160 balsų</div>
+          <div class="sbar" data-tip="LT2 rezultatas (tiesioginiai ir deleguoti LT2 balsai): 57 % už, 37 % prieš, 6 % susilaikė"><span class="f" style="flex:57">57 %</span><span class="a" style="flex:37">37 %</span><span class="n" style="flex:6"></span></div></div>
       </div>
-      <div class="verdict"><span class="chip gap">Atotrūkis: 25 p. p.</span> Seimas priėmė projektą, kuriam dauguma naudotojų nepritarė.</div>
+      <div class="verdict"><span class="chip ok">Dauguma sutampa: už</span> Skirtumas 3 p. p. · 3 Seimo nariai paaiškino balsą</div>
     </div>
   </section>
 
@@ -537,11 +538,26 @@ footer.end svg{width:28px;height:28px}
       <div style="overflow-x:auto"><table class="extbl">
         <thead><tr><th>Projektas</th><th>Kaip balsavo patikėtiniai</th><th>Jūsų balsas</th></tr></thead>
         <tbody>
-          <tr><td>Pajamų mokestis<small>Ekonomika</small></td><td>Rūta prieš, Jonas už, Darius už</td><td><b>Prieš</b><small>sprendžia ekspertė Rūta</small></td></tr>
+          <tr><td>Pajamų mokestis<small>Ekonomika</small></td><td>Rūta prieš, Jonas prieš, Darius už</td><td><b>Prieš</b><small>sprendžia ekspertė Rūta</small></td></tr>
           <tr><td>Dantų protezavimas<small>Sveikata</small></td><td>Rūta ir Jonas nebalsavo, Darius už</td><td><b>Už</b><small>ekspertų nėra – dauguma</small></td></tr>
           <tr><td>Nemokamos studijos<small>Švietimas</small></td><td>Rūta nebalsavo, Jonas ir Darius už</td><td><b>Prieš</b><small>balsavote patys</small></td></tr>
         </tbody></table></div>
     </div>
+  </section>
+
+  <section class="chapter" id="community">
+    <header>
+      <div class="eyebrow">Telkiantiems auditoriją</div>
+      <h2>Ne tik pasiekite auditoriją – padėkite jai veikti</h2>
+      <p class="lede">Visuomenininkams, ekspertams ir turinio kūrėjams LT2 suteikia šaltiniais paremtą puslapį, kuriuo galima dalytis nepriklausomai nuo socialinio tinklo, o auditorijos balsai tampa palyginamu signalu.</p>
+    </header>
+    <ul class="bul">
+      <li><span><b>Dalinkitės patikrinamu turiniu.</b> Viename puslapyje – projekto šaltinis, trumpa santrauka, argumentai už ir prieš bei pakeitimų istorija.</span></li>
+      <li><span><b>Sutelkite vienam aiškiam veiksmui.</b> Užuot prašę vien reakcijos ar pasidalijimo, kvieskite balsuoti arba patikėti balsą.</span></li>
+      <li><span><b>Inicijuokite balsavimą.</b> Jei svarbus projektas dar neturi balsavimo, jį galite inicijuoti patys: DI paruošia santrauką, o jūs ją peržiūrite ir paskelbiate.</span></li>
+      <li><span><b>Tapkite patikėtiniu.</b> Auditorija gali pasirinkti jus savo patikėtiniu jūsų srityje. Tai ne teisinis mandatas, o viešas ir paaiškinamas pasitikėjimo ryšys platformoje.</span></li>
+      <li><span><b>Užbaikite istoriją.</b> Grįžkite pas auditoriją su galutiniu Seimo balsavimu ir politikų paaiškinimais – nepalikite projekto tik naujienų cikle.</span></li>
+    </ul>
   </section>
 
   <section class="chapter" id="politicians">
@@ -561,10 +577,10 @@ footer.end svg{width:28px;height:28px}
   <section class="chapter" id="analytics">
     <header>
       <div class="eyebrow">Analitika</div>
-      <h2>Kur Seimas ir piliečiai išsiskiria</h2>
+      <h2>Kur Seimo ir LT2 naudotojų pasirinkimai sutampa ir kur skiriasi</h2>
     </header>
     <div class="chartcard">
-      <div class="legend"><span><i style="background:var(--s-seimas)"></i>Seimas</span><span><i style="background:var(--s-platform)"></i>Lietuva 2.0 naudotojai</span><span class="muted">· balsų „už“ dalis, linija ties 50 % – dauguma, pavyzdiniai duomenys</span></div>
+      <div class="legend"><span><i style="background:var(--s-seimas)"></i>Seimas</span><span><i style="background:var(--s-platform)"></i>Lietuva 2.0 naudotojai</span><span class="muted">· balsų „už“ dalis; savanoriškai dalyvaujančių naudotojų signalas, ne reprezentatyvi visuomenės apklausa; pavyzdiniai duomenys</span></div>
       <div class="dots-chart"><svg id="dotplot" viewBox="0 0 560 300" role="img" aria-label="Taškinis grafikas, lyginantis balsų už dalį Seime ir platformoje šešiems projektams"></svg></div>
     </div>
   </section>
@@ -584,17 +600,17 @@ footer.end svg{width:28px;height:28px}
       <h2>Iki Seimo rinkimų 2028 m.</h2>
     </header>
     <div class="road3">
-      <div><span class="when">2027 m. I pusm.</span><p>Seimo stebėsena, DI santraukos ir tiesioginis balsavimas. Bandymas su pakviestais politikais.</p></div>
+      <div><span class="when">2027 m. I pusm.</span><p>Seimo stebėsena, DI santraukos ir tiesioginis balsavimas. Bandymas su pakviestais politikais ir 10–15 visuomenininkų, ekspertų bei turinio kūrėjų auditorijomis.</p></div>
       <div><span class="when">2027 m. II pusm.</span><p>Pirmoji versija: delegavimas, patvirtinti profiliai ir balsų paaiškinimai.</p></div>
       <div class="goal"><span class="when">2028 m. spalis</span><p>Rinkimų režimas: palyginimas su Seimo nariais ir frakcijomis pagal tikrus balsavimus prieš Seimo rinkimus.</p></div>
     </div>
     <div class="cta">
-      <span><b>Norime išgirsti jus:</b> ar paaiškintumėte savo balsus čia ir kas jus sulaikytų?</span>
+      <span><b>Norime išgirsti jus:</b> ar balsuotumėte čia ir kam patikėtumėte savo balsą? Telkiate auditoriją – prisijunkite prie bandymo su 5 projektais.</span>
       <a href="lietuva20-whitepaper.html">Išsami produkto koncepcija su maketais →</a>
     </div>
     <footer class="end">
       <svg aria-hidden="true"><use href="#logo"/></svg>
-      <span>Lietuva 2.0 · trumpoji versija, 2026 m. rugsėjis</span>
+      <span>Lietuva 2.0 · trumpoji versija piliečiams, 2026 m. rugsėjis</span>
       <span>Logotipas: trys pokalbio debesėliai, kartu sudarantys Lietuvos kontūrą.</span>
     </footer>
   </section>
@@ -643,7 +659,7 @@ footer.end svg{width:28px;height:28px}
     {id:"XVP-0701",t:"Dantų protezavimas 65+",s:72,p:88,o:"Priimta"},
     {id:"XVP-0633",t:"Gynybai – 3,5 % BVP",s:91,p:77,o:"Priimta"},
     {id:"XVP-0690",t:"Akcizas saldintiems gėrimams",s:52,p:49,o:"Priimta"},
-    {id:"XVP-0412",t:"Progresinis pajamų mokestis",s:60,p:35,o:"Priimta"},
+    {id:"XVP-0412",t:"Progresinis pajamų mokestis",s:60,p:57,o:"Priimta"},
     {id:"XVP-0655",t:"Saulės parkai ūkio žemėje",s:55,p:41,o:"Priimta"}];
   (function(){
     const svg=$("#dotplot"),L=200,R=540,top=24,rowH=42,x=v=>L+(R-L)*v/100;
@@ -653,7 +669,7 @@ footer.end svg{width:28px;height:28px}
     
     bills.forEach((b,i)=>{const y=top+i*rowH+8;
       const hit=el("rect",{x:0,y:y-18,width:560,height:rowH-4,fill:"transparent"});
-      hit.setAttribute("data-tip",b.t+" ("+b.id+"): Seime "+b.s+" % už, platformoje "+b.p+" % už. Atotrūkis "+Math.abs(b.s-b.p)+" p. p. "+b.o+".");g.appendChild(hit);
+      hit.setAttribute("data-tip",b.t+" ("+b.id+"): Seime "+b.s+" % už, platformoje "+b.p+" % už. Skirtumas "+Math.abs(b.s-b.p)+" p. p. "+b.o+".");g.appendChild(hit);
       const t1=el("text",{x:0,y:y-2,fill:"var(--ink)","font-weight":"600"});t1.textContent=b.t;g.appendChild(t1);
       const t2=el("text",{x:0,y:y+13,fill:"var(--muted)","font-family":"IBM Plex Mono, monospace","font-size":"10.5"});t2.textContent=b.id+" · "+b.o;g.appendChild(t2);
       g.appendChild(el("line",{x1:x(Math.min(b.s,b.p)),x2:x(Math.max(b.s,b.p)),y1:y,y2:y,stroke:"var(--line-strong)","stroke-width":3,"stroke-linecap":"round"}));

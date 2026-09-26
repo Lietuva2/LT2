@@ -420,6 +420,7 @@ footer.end svg{width:28px;height:28px}
 
 <style>
 .short{max-width:980px;margin:0 auto}
+.verdict{flex-wrap:wrap}.verdict .chip{white-space:nowrap}
 .short .hero{padding-top:40px}
 .readtime{display:inline-flex;gap:8px;align-items:center;font-family:var(--f-display);font-size:13px;color:var(--muted);margin-bottom:18px}
 .readtime b{color:var(--brand);font-weight:600}
@@ -694,7 +695,7 @@ footer.end svg{width:28px;height:28px}
     
     bills.forEach((b,i)=>{const y=top+i*rowH+8;
       const hit=el("rect",{x:0,y:y-18,width:560,height:rowH-4,fill:"transparent"});
-      hit.setAttribute("data-tip",b.t+" ("+b.id+"): Seime "+b.s+" % už, platformoje "+b.p+" % už. Atotrūkis "+Math.abs(b.s-b.p)+" p. p. "+b.o+".");g.appendChild(hit);
+      hit.setAttribute("data-tip",b.t+" ("+b.id+"): Seime "+b.s+" % už, platformoje "+b.p+" % už. Skirtumas "+Math.abs(b.s-b.p)+" p. p. "+b.o+".");g.appendChild(hit);
       const t1=el("text",{x:0,y:y-2,fill:"var(--ink)","font-weight":"600"});t1.textContent=b.t;g.appendChild(t1);
       const t2=el("text",{x:0,y:y+13,fill:"var(--muted)","font-family":"IBM Plex Mono, monospace","font-size":"10.5"});t2.textContent=b.id+" · "+b.o;g.appendChild(t2);
       g.appendChild(el("line",{x1:x(Math.min(b.s,b.p)),x2:x(Math.max(b.s,b.p)),y1:y,y2:y,stroke:"var(--line-strong)","stroke-width":3,"stroke-linecap":"round"}));
