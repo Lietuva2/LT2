@@ -132,10 +132,11 @@ Headlines considered for the hero (the current one is in `CLAUDE.md`)
 - Build from scratch rather than fork an existing platform (the platforms themselves are compared in the whitepaper appendix).
   The distinctive parts (Seimas import, AI summaries, expert-first delegation, comparisons, MP verification) must be written anyway;
   delegation without chains is a simple lookup, not graph traversal. LiquidFeedback: chains, party-internal decisions, rare Lua stack.
-  DemocracyOS: unmaintained, no delegation. Decidim / CONSUL: built around municipal processes, AGPL.
+  DemocracyOS: had topic-based delegation (used by the Net Party in Buenos Aires, 2013–2014) but is no longer actively developed. Decidim / CONSUL: built around municipal processes, AGPL.
 - Stack depends on who builds it: Python/Django + PostgreSQL as a default (admin for moderation, handy for import jobs and AI), or modern .NET if the team knows C#.
-- Liquid democracy references used in the paper: German Pirate Party (LiquidFeedback, from 2010), Liquid Friesland (from 2012); Google Votes also exists.
-  Wikipedia was blocked from the cloud environment, so the links were not checked there.
+- Liquid democracy and e-democracy references: the paper now lists them without links in chapter 01 (countries only) and in the appendix "Kas jau veikia kitur"
+  (Decidim, CONSUL, Rahvaalgatus, ManaBalss, Kansalaisaloite, abgeordnetenwatch, UK petitions, ECI, vTaiwan, Betri Reykjavík, LiquidFeedback, Demoex, DemocracyOS, Google Votes),
+  checked against public sources in September 2026. Decidim has delegation only through the separate "Action Delegator" module used for cooperative votes.
 
 ### Environment notes (cloud sessions)
 - Network allowlist needed: `*.lrs.lt`; `blog.lietuva2.lt` had to be added explicitly (the wildcard didn't cover it); `web.archive.org`. Facebook needs a login – use the owner's browser.

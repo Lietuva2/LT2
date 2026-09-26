@@ -71,6 +71,8 @@ Chapter numbers are written by hand in each `eyebrow`; the table of contents num
 - Nothing about being free, no ads, or no paid promotion (removed deliberately). Use "all parties and politicians are shown on equal terms" instead.
 - No full API (embeds and CSV only). No municipalities/EP.
 - LT2 results are a signal from self-selected users, never "the public", "voters" or a referendum.
+- Not "the same tools for everyone" (paid plans may come), not a specific licence (e.g. GPL-3.0), not parties or organisations as future delegates.
+- Never name the 2013 referendum initiative, even when citing the 12 000+ signatures. In the main documents say "we've done this before" without old-vs-new detail; the former-users page is the deliberate exception.
 
 ## Tone and wording
 
@@ -80,6 +82,7 @@ Chapter numbers are written by hand in each `eyebrow`; the table of contents num
 - Politician benefit to state explicitly: "Jūsų rėmėjų pozicija. Apklausos rodo visuomenės nuomonę, retai – jūsų partijos rėmėjų, o asmeniškai jūsų rėmėjų – beveik niekada." Vote explanations = a way to persuade voters and stay credible.
 - The main whitepaper does **not** link to the short versions (readers arrive from the short versions, not the other way round). Short versions link to the main whitepaper.
 - New Lithuanian copy should be read by a native speaker before it is shown externally.
+- In English, *patikėtinis* is "delegate" (delegator → delegate); not "trustee" or "representative".
 
 ## Example data (all fictional; keep consistent across files)
 
@@ -100,7 +103,16 @@ Chapter numbers are written by hand in each `eyebrow`; the table of contents num
 ## Seimas open data (verified 2026-09)
 
 - Base: `https://apps.lrs.lt/sip/` (CC BY 4.0). Useful endpoints: `p2b.ad_seimo_kadencijos`, `p2b.ad_seimo_sesijos?kadencijos_id=`, `p2b.ad_seimo_posedziai?sesijos_id=`, `p2b.ad_sp_darbotvarke?posedzio_id=` (items with planned time slot and stage: pateikimas / svarstymas / priėmimas), `p2b.ad_sp_balsavimo_rezultatai?balsavimo_id=` (per-MP votes).
+- Votes "Pritarta bendru sutarimu" (consensus) have no per-MP votes – show them without numbers; they add nothing to "Po Seimo". Some results carry an official note that the electronic per-MP votes don't match the protocol totals – show it next to the result. More detail in `discovery/design-notes.md`.
 - Open data lists sittings that have started; upcoming agendas appear on lrs.lt (`portal.show?p_r=35727&p_k=1`) about 10–12 days ahead and change often (the same item can be scheduled for adoption on several dates).
+
+## Working with the owner
+
+- Discuss complex mechanics in chat first; change the documents only after agreement.
+- The owner's suggestions are proposals: weigh them, say where you disagree and why, then apply.
+- State each thing once, most important first, in plain language; every page must be clear to someone who wasn't in the discussions.
+- Don't present undecided things as promises ("galėtų", "jei bus poreikis").
+- Before re-opening a settled question, read `discovery/design-notes.md` (decision history and rejected alternatives). If it disagrees with the pages or this file, the pages and this file win.
 
 ## Open questions / possible next steps
 
