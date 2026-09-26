@@ -34,6 +34,7 @@ This repository currently holds **pre-implementation documents only** (the conce
 | `discovery/whitepaper/lietuva20-politikams-trumpai.html` | Politicians | Short version plus the closed pilot proposal (6-week plan, what we ask / what they get, questions). The pilot details live only here. |
 | `discovery/whitepaper/lietuva20-zurnalistams.html` | Journalists | What LT2 offers, how to cite its results correctly, story ideas. |
 | `discovery/whitepaper/lietuva20-kas-nauja.html` | Former LT2 users | Lessons from 2011–2020, old vs new, what stays. |
+| `discovery/design-notes.md` | Team | Decision history: rejected alternatives and why, research sources (Seimas data, 2011–2020 figures), open questions, working with the owner. Read before re-opening a settled question. |
 | `discovery/prototypes/seimas-vote-hemicycle/` | Team | `fetch_vote.py` + `make_page.py` draw a real Seimas vote as a seat map from open data. |
 
 Removed on purpose (do not recreate): `lietuva20-politikams-baltoji-knyga.html` (merged into the main whitepaper / politicians' short version), `lietuva20-aktyviems-pilieciams.html` (merged into the citizens' short version).

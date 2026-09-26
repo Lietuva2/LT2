@@ -16,6 +16,7 @@ All whitepaper pages are in Lithuanian and open directly in a browser. `../index
 | `whitepaper/lietuva20-politikams-trumpai.html` | Politicians | Short version with the closed pilot proposal and questions for politicians. |
 | `whitepaper/lietuva20-kas-nauja.html` | Former LT2 users | What changed since the 2011–2020 platform, lessons learned, what stays. |
 | `whitepaper/lietuva20-zurnalistams.html` | Journalists | What LT2 offers journalists, how to cite its results correctly, story ideas. |
+| `design-notes.md` | Team | Decision history, rejected alternatives, research sources and open questions from the discovery work. |
 | `prototypes/seimas-vote-hemicycle/` | Team | Feasibility check: renders a real Seimas vote from the open data API. |
 
 When adding or renaming a whitepaper page, update `../index.html` as well.
