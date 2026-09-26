@@ -61,7 +61,7 @@ Chapter numbers are written by hand in each `eyebrow`; the table of contents num
 **Rules of the mechanics**
 - LT2 voting runs from initiation until the Seimas actually votes. The Seimas agenda is published ~10–12 days ahead but items often slip, so never show a fixed countdown; show "Planuojama …" and close only when the vote happens. Delegators get a reminder when the bill enters the agenda.
 - LT2 rezultatas = direct + delegated votes, fixed at the Seimas vote; all comparisons use it. "Po Seimo" = additionally counts votes entrusted to MPs who did not vote on LT2, by their Seimas vote; informational only.
-- Delegation: several delegates; topic experts decide first, otherwise the majority; ties by list order; no chains; no default vote. A delegate MP's LT2 vote is *įskaičiuojamas* for delegators "kurie nepareiškė savo nuomonės".
+- Delegation: several delegates; topic experts decide first, otherwise the majority; ties by list order; no chains; no default vote. A delegate's (e.g. an MP's) LT2 vote *lemia* the votes of delegators "kurie nepareiškė savo nuomonės". Not "įskaičiuojamas" and no "iškart" (with several delegates it decides only under the delegation rules); chapter 05 explains the rules, so don't repeat "kartu su kitais patikėtiniais" everywhere.
 - Group statistics (delegators, party supporters) only when a group has ≥ 20 people.
 - Registration: email + phone; optional stronger ID later via the EU Digital Identity Wallet.
 - AI label never disappears after human edits: "Sukurta DI · taisė žmonės" + edit history.
