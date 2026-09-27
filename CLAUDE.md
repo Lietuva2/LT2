@@ -43,9 +43,9 @@ Removed on purpose (do not recreate): `lietuva20-politikams-baltoji-knyga.html` 
 
 Hero (result card) → 01 Kodėl dabar → 02 Kam ir kokia nauda →
 **I Balsavimas:** 03 Projekto puslapis, 04 Balsavimo inicijavimas, 05 Balso delegavimas →
-**II Politikai ir palyginimas:** 06 Politikai platformoje, 07 Analitika, 08 Rinkimų režimas →
+**II Politikai ir duomenų analizė:** 06 Politikai platformoje, 07 Analitika, 08 Rinkimų režimas →
 **III Antroji versija:** 09 Kas rūpi žmonėms →
-**IV Įgyvendinimas:** 10 Pasitikėjimas ir privatumas, 11 Mūsų patirtis, 12 Veiksmų planas, 13 Kaip prisidėti →
+**IV Įgyvendinimas:** 10 Pasitikėjimas ir privatumas, 11 Mūsų patirtis, 12 Kaip prisidėti →
 Priedas: Kas jau veikia kitur (table of e-democracy platforms).
 
 Chapter numbers are written by hand in each `eyebrow`; the table of contents numbers itself with a CSS counter (`li.toc-intro` and `li.toc-part` are not counted). When chapters move, update eyebrows and every "žr. N skyrių" / "N skyriuje" / "N skyrius" reference.
@@ -60,8 +60,8 @@ Chapter numbers are written by hand in each `eyebrow`; the table of contents num
 
 **Rules of the mechanics**
 - LT2 voting runs from initiation until the Seimas actually votes. The Seimas agenda is published ~10–12 days ahead but items often slip, so never show a fixed countdown; show "Planuojama …" and close only when the vote happens. Delegators get a reminder when the bill enters the agenda.
-- LT2 rezultatas = direct + delegated votes, fixed at the Seimas vote; all comparisons use it. "Po Seimo" = additionally counts votes entrusted to MPs who did not vote on LT2, by their Seimas vote; informational only.
-- Delegation: several delegates; topic experts decide first, otherwise the majority; ties by list order; no chains; no default vote. A delegate's (e.g. an MP's) LT2 vote *lemia* the votes of delegators "kurie nepareiškė savo nuomonės". Not "įskaičiuojamas" and no "iškart" (with several delegates it decides only under the delegation rules); chapter 05 explains the rules, so don't repeat "kartu su kitais patikėtiniais" everywhere.
+- LT2 rezultatas = direct + delegated votes, fixed at the Seimas vote; all comparisons use it. "Su Seimo narių balsais" (formerly "Po Seimo") = additionally counts votes entrusted to MPs who did not vote on LT2, by their Seimas vote; informational only.
+- Delegation: several delegates; experts in the bill's area (*sritis*) decide first, otherwise the majority; ties by list order; no chains; no default vote. A delegate's (e.g. an MP's) LT2 vote *lemia* the votes of delegators "kurie nepareiškė savo nuomonės". Not "įskaičiuojamas" and no "iškart" (with several delegates it decides only under the delegation rules); chapter 05 explains the rules, so don't repeat "kartu su kitais patikėtiniais" everywhere.
 - Group statistics (delegators, party supporters) only when a group has ≥ 20 people.
 - Registration: email + phone; optional stronger ID later via the EU Digital Identity Wallet.
 - AI label never disappears after human edits: "Sukurta DI · taisė žmonės" + edit history.
@@ -70,6 +70,7 @@ Chapter numbers are written by hand in each `eyebrow`; the table of contents num
 **What we must not promise**
 - Nothing about being free, no ads, or no paid promotion (removed deliberately). Use "all parties and politicians are shown on equal terms" instead.
 - No full API (embeds and CSV only). No municipalities/EP.
+- No roadmap or dates for releases: the plan was removed from all pages (2026-09) because it is not defined yet.
 - LT2 results are a signal from self-selected users, never "the public", "voters" or a referendum.
 - Not "the same tools for everyone" (paid plans may come), not a specific licence (e.g. GPL-3.0), not parties or organisations as future delegates.
 - Never name the 2013 referendum initiative, even when citing the 12 000+ signatures. In the main documents say "we've done this before" without old-vs-new detail; the former-users page is the deliberate exception.
@@ -79,7 +80,8 @@ Chapter numbers are written by hand in each `eyebrow`; the table of contents num
 - Documents are in **Lithuanian**; the audience includes politicians. Keep a neutral-to-positive tone towards them: connection and explanation, not control or "gotcha". Prefer "skirtumas" over "atotrūkis"; "sutampa ir kur skiriasi" over "išsiskiria"; neutral chips over warning colours for differences.
 - Headlines address nobody in particular (e.g. "Politikai ir rinkėjai – viena komanda", "Balsuojama tiesiogiai arba per kelis patikėtinius").
 - Terms: "patikėti balsą" / "patikėtinis" (not "perleisti"), "Man svarbu" (not "Man irgi svarbu"), "LT2 rezultatas", "Seimo darbai ir pilietinis įsitraukimas" (subtitle), "Gyvas pokalbis tarp žmonių ir jų atstovų" (kicker).
-- Politician benefit to state explicitly: "Jūsų rėmėjų pozicija. Apklausos rodo visuomenės nuomonę, retai – jūsų partijos rėmėjų, o asmeniškai jūsų rėmėjų – beveik niekada." Vote explanations = a way to persuade voters and stay credible.
+- *Sritis* (not *tema*) for delegates' expertise and a bill's subject areas (ekonomika, švietimas …). *Tema* is reserved for the second version's grouping of posts.
+- Politician benefit to state explicitly: "Jūsų rėmėjų pozicija. Apklausos rodo visuomenės nuomonę kai kuriais klausimais, bet retai – jūsų partijos rėmėjų, o konkrečiai jūsų asmeninių rėmėjų – beveik niekada." Vote explanations = a way to persuade voters and stay credible.
 - The main whitepaper does **not** link to the short versions (readers arrive from the short versions, not the other way round). Short versions link to the main whitepaper.
 - New Lithuanian copy should be read by a native speaker before it is shown externally.
 - In English, *patikėtinis* is "delegate" (delegator → delegate); not "trustee" or "representative".
@@ -103,7 +105,7 @@ Chapter numbers are written by hand in each `eyebrow`; the table of contents num
 ## Seimas open data (verified 2026-09)
 
 - Base: `https://apps.lrs.lt/sip/` (CC BY 4.0). Useful endpoints: `p2b.ad_seimo_kadencijos`, `p2b.ad_seimo_sesijos?kadencijos_id=`, `p2b.ad_seimo_posedziai?sesijos_id=`, `p2b.ad_sp_darbotvarke?posedzio_id=` (items with planned time slot and stage: pateikimas / svarstymas / priėmimas), `p2b.ad_sp_balsavimo_rezultatai?balsavimo_id=` (per-MP votes).
-- Votes "Pritarta bendru sutarimu" (consensus) have no per-MP votes – show them without numbers; they add nothing to "Po Seimo". Some results carry an official note that the electronic per-MP votes don't match the protocol totals – show it next to the result. More detail in `discovery/design-notes.md`.
+- Votes "Pritarta bendru sutarimu" (consensus) have no per-MP votes – show them without numbers; they add nothing to "Su Seimo narių balsais". Some results carry an official note that the electronic per-MP votes don't match the protocol totals – show it next to the result. More detail in `discovery/design-notes.md`.
 - Open data lists sittings that have started; upcoming agendas appear on lrs.lt (`portal.show?p_r=35727&p_k=1`) about 10–12 days ahead and change often (the same item can be scheduled for adoption on several dates).
 
 ## Working with the owner

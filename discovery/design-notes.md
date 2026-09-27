@@ -48,7 +48,7 @@ Delegation
   deliberately don't collect. May return later, only if needed.
 - **Ministers and the Government as delegates.** A non-MP minister has no Seimas vote. The Government's opinion on a bill may be shown as information, never as a delegation.
 - **Official Seimas votes counting for delegation** (e.g. "if my delegate didn't vote on LT2, use their Seimas vote"): the delegator could not override it,
-  and it would remove MPs' reason to vote on LT2. Kept only as the separate "Po Seimo" result.
+  and it would remove MPs' reason to vote on LT2. Kept only as the separate "Su Seimo narių balsais" result (first called "Po Seimo"; renamed because the name was unclear).
 - **"Only these topics" restriction on a delegate:** dropped – limits give nobody a reason to declare topics; expertise gives priority instead.
 - **One suggestion per uncovered topic:** too few; moot after the flat list.
 - **Delegation chains** and **a default vote** when no delegate voted: never accepted (results must stay explainable).
@@ -96,7 +96,7 @@ Headlines considered for the hero (the current one is in `CLAUDE.md`)
 - `p2b.ad_seimo_nariai`: `asmens_id` stays the same across terms (`kadencijų_skaičius` gives the count), `data_iki` marks the end of a mandate,
   nominating party (`iškėlusi_partija`), how elected (list or constituency), faction and committee memberships with dates (`Pareigos`),
   and the official email (`<Kontaktai rūšis="El. p." reikšmė="…@lrs.lt"/>`, 145 records in Sept 2026). This is what makes automatic MP verification possible.
-- Items "Pritarta bendru sutarimu" (approved by consensus) have **no per-MP votes** – show them without numbers; such a vote gives nothing for "Po Seimo".
+- Items "Pritarta bendru sutarimu" (approved by consensus) have **no per-MP votes** – show them without numbers; such a vote gives nothing for "Su Seimo narių balsais".
 - Some results carry an official comment that the electronic per-MP votes don't match the protocol totals ("…neatitinka protokole įrašytų suminių rezultatų") – show it next to the result.
 - No seat positions and no left-to-right faction order in the data; the seat map orders factions itself (by size, or coalition vs opposition).
 - e-seimas bill page: Reg. Nr., Reg. data, Parengė (proposer), Būsena, Chronologija, related documents (committee conclusions, new versions). No convenient API – parse the pages.
@@ -146,7 +146,7 @@ Headlines considered for the hero (the current one is in `CLAUDE.md`)
 
 ## 4. Open questions carried over
 - How long an MP keeps the @lrs.lt mailbox after the term – unknown; the design doesn't depend on it (verification is tied to `asmens_id`, new confirmations only for sitting MPs).
-- Will MPs vote on LT2? Delegations to MPs count only when they do; early on "Po Seimo" may differ a lot from the LT2 result.
+- Will MPs vote on LT2? Delegations to MPs count only when they do; early on "Su Seimo narių balsais" may differ a lot from the LT2 result.
 - Candidates with identical names in the VRK lists need a manual check.
 - Funding and sustainability: the old platform stopped partly because money ran out; the paper has no section on it and stakeholders may ask.
 - Amendments between stages: notify voters and delegates (agreed), don't reset votes.
