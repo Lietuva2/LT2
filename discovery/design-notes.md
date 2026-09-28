@@ -60,6 +60,8 @@ Politicians
   An intermediate "Balsavo pagal nurodytą poziciją" (stated position per bill and stage, shown after ≥ 10) was replaced by
   "Seime balsavo taip pat kaip LT2" once the MP's LT2 vote itself became the stated position.
 - **"Teisė atsakyti"** (a pinned reply to summaries and indicators): unclear; ordinary comments cover it.
+- **"Balsavo kaip frakcija" against the plain faction majority:** meaningless when a faction votes freely (e.g. 16 : 14).
+  Since 2026-09 only votes where at least two thirds of the faction's voting members chose the same option count; free votes are excluded and counted separately.
 - **Answer rate always public:** replaced by public only at ≥ 70 % (the politician always sees it) – an incentive, not a pillory.
 
 Posts
