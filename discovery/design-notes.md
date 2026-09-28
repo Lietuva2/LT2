@@ -1,8 +1,8 @@
 # Design notes and decision history
 
-Background from the discovery work in September 2026 that is **not** in the pages or in `CLAUDE.md`:
+Background from the discovery work in September 2026 that is **not** in the pages or in `AGENTS.md`:
 how the concept got its shape, what was tried and rejected (and why), the research behind the facts,
-and questions still open. If this file and the pages or `CLAUDE.md` disagree, the pages and `CLAUDE.md` win –
+and questions still open. If this file and the pages or `AGENTS.md` disagree, the pages and `AGENTS.md` win –
 they are newer. Read this before re-opening a settled question.
 
 ## 1. How the concept evolved
@@ -77,7 +77,7 @@ Platform and paper
 - **A fixed number of delegates (1–3):** removed; the tie rule is kept only in the full whitepaper (in short versions it invites debate).
 - **Promises to drop:** "free", "same tools for everyone" (paid plans may come), GPL-3.0 (licence may change), municipalities/EP/API as plans, parties/organisations as future delegates.
 
-Headlines considered for the hero (the current one is in `CLAUDE.md`)
+Headlines considered for the hero (the current one is in `AGENTS.md`)
 - "Balsuokite, kol Seimas dar svarsto. Tada palyginkite su jo sprendimu." – accurate, not inspiring.
 - "Seimas balsuoja. Jūs irgi.", "Demokratija ne tik rinkimų dieną", "Balsuokite ne kas ketverius metus, o kiekvieną savaitę".
 - "El. demokratija – perkrauta" / "Lietuva 2.0 · perkrauta": *perkrauta* also means "overloaded".
@@ -89,7 +89,7 @@ Headlines considered for the hero (the current one is in `CLAUDE.md`)
 
 ## 3. Research and sources
 
-### Seimas open data (apps.lrs.lt/sip, CC BY 4.0) – details beyond `CLAUDE.md`
+### Seimas open data (apps.lrs.lt/sip, CC BY 4.0) – details beyond `AGENTS.md`
 - The full chain works: term → session → sitting → agenda item (bill number XVP-…, stage, e-seimas link) →
   `p2b.ad_sp_klausimo_svarstymo_eiga` (the item's votes and their IDs) → `p2b.ad_sp_balsavimo_rezultatai` (each MP's vote with faction).
 - `kadencijos_id=10` is the 2024–2028 term. The list of about 23 services is on lrs.lt, `portal.show?p_r=35391`.
