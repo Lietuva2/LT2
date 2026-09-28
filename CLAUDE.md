@@ -55,7 +55,7 @@ Chapter numbers are written by hand in each `eyebrow`; the table of contents num
 **Scope**
 - **First version = voting:** bill pages, AI summaries, initiating a vote, delegation, verified politician profiles with vote explanations, result card (also for sharing and embedding), CSV export, analytics, 2028 election comparison by real votes.
 - **Second version = posts:** user posts and questions, feed, grouping into topics and questions, answers "once for everyone", "Mano temos", response rate, "Man svarbu", petitions from topics. Described only in chapter 09 of the main whitepaper. Short versions must not mention the second version at all.
-- Election mode for 2028 = comparison with MPs and factions by real votes only; newcomers shown without percentages. Candidate questionnaire on future topics is a later phase (ideally with existing election guides).
+- Election mode for 2028 = comparison with MPs and factions by real votes only; candidates who are not MPs are compared by their LT2 votes. Candidates may also vote on bills the Seimas already decided: such votes are marked "po Seimo sprendimo", never enter the LT2 result, and their count is shown next to the match. Candidates who do not vote on LT2 are shown without percentages. Candidate questionnaire on future topics is a later phase (ideally with existing election guides).
 - Municipal councils / European Parliament and a full API: "ateityje, be įsipareigojimų".
 
 **Rules of the mechanics**
@@ -63,6 +63,7 @@ Chapter numbers are written by hand in each `eyebrow`; the table of contents num
 - LT2 rezultatas = direct + delegated votes, fixed at the Seimas vote; all comparisons use it. "Su Seimo narių balsais" (formerly "Po Seimo") = additionally counts votes entrusted to MPs who did not vote on LT2, by their Seimas vote; informational only.
 - Delegation: several delegates; experts in the bill's area (*sritis*) decide first, otherwise the majority; ties by list order; no chains; no default vote. A delegate's (e.g. an MP's) LT2 vote *lemia* the votes of delegators "kurie nepareiškė savo nuomonės". Not "įskaičiuojamas" and no "iškart" (with several delegates it decides only under the delegation rules); chapter 05 explains the rules, so don't repeat "kartu su kitais patikėtiniais" everywhere.
 - Group statistics (delegators, party supporters) only when a group has ≥ 20 people.
+- A delegate's profile shows how delegators changed the delegate's areas (how many added or removed each area), as a signal of whether the declared expertise convinces.
 - Registration: email + phone; optional stronger ID later via the EU Digital Identity Wallet.
 - AI label never disappears after human edits: "Sukurta DI · taisė žmonės" + edit history.
 - Bills are tagged in posts by name with `#`, not by XVP number.

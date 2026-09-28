@@ -297,6 +297,11 @@ select{font:inherit;font-size:13px;padding:5px 8px;border-radius:8px;border:1px 
 .trust .bar{height:8px;border-radius:4px;background:var(--surface-2);overflow:hidden}
 .trust .bar span{display:block;height:100%;background:var(--brand);border-radius:4px}
 .trust .r b{text-align:right;color:var(--ink);font-variant-numeric:tabular-nums}
+.srcchg{display:grid;gap:7px;font-size:13px;color:var(--ink-2)}
+.srcchg div{display:flex;justify-content:space-between;align-items:baseline;gap:10px}
+.srcchg small{display:block;font-size:11.5px;color:var(--muted)}
+.srcchg b{font-weight:600;white-space:nowrap;font-variant-numeric:tabular-nums}
+.srcchg .plus{color:var(--link)}.srcchg .minus{color:var(--warn-ink)}
 .prof-main{padding:22px;display:grid;gap:14px;align-content:start;min-width:0}
 .vrec{border:1px solid var(--line);border-radius:12px;padding:14px;display:grid;gap:10px}
 .vrec-h{display:flex;justify-content:space-between;align-items:flex-start;gap:10px;flex-wrap:wrap}
@@ -371,6 +376,7 @@ select{font:inherit;font-size:13px;padding:5px 8px;border-radius:8px;border:1px 
 .cand .nm small{display:block;color:var(--muted);font-size:11.5px}
 .cand .pct{font-size:18px;font-weight:800;font-variant-numeric:tabular-nums}
 .cand .basis{grid-column:2/4;font-size:11.5px;color:var(--muted);display:flex;gap:6px;flex-wrap:wrap}
+.cand .late{color:var(--warn-ink);background:var(--warn-bg);border-radius:4px;padding:0 5px}
 .qcard{border:1px solid var(--line);border-radius:12px;padding:12px;display:grid;gap:10px}
 .qcard .q{font-weight:600;line-height:1.3}
 .qcard .ans{display:grid;grid-template-columns:repeat(3,1fr);gap:6px}
@@ -876,7 +882,7 @@ footer.end svg{width:28px;height:28px}
         </div>
       </div>
       <div class="annot">
-        <div><span class="n">1</span><span><b>Ekspertai užsipildo patys.</b> Patikėtinio ekspertinės sritys – jo paties nurodytos arba parinktos automatiškai pagal Seimo nario komitetą. Jūs galite pakeisti, kuriose srityse ekspertas atstovaus būtent jus.</span></div>
+        <div><span class="n">1</span><span><b>Ekspertai užsipildo patys.</b> Patikėtinio ekspertinės sritys – jo paties nurodytos arba parinktos automatiškai pagal Seimo nario komitetą. Jūs galite pakeisti, kuriose srityse ekspertas atstovaus būtent jus; kiek patikėtojų tai padarė, matyti patikėtinio profilyje (žr. 6 skyrių).</span></div>
         <div><span class="n">2</span><span><b>Paieška ir rikiavimas.</b> Sąrašą galima rikiuoti pagal:<ul><li>LT2 patikėtų balsų skaičių;</li><li>abėcėlę (partija ir vardas);</li><li>atstovavimą: pirmiausia Seimo nariai, tada ekspertai.</li></ul>Pasirinktų partijų LT2 balsuojantys Seimo nariai ir rėmėjai rodomi aukščiau.</span></div>
         <div><span class="n">3</span><span><b>Iškart matote pasekmes.</b> Dešinėje – kas balsuotų už jus kiekvienoje srityje.</span></div>
         <div><span class="n">4</span><span><b>Bet kuris Seimo narys.</b> Galima pasirinkti ir LT2 nebalsuojantį Seimo narį. LT2 rezultate tada lemia kiti patikėtiniai, o jo balsas Seime įskaičiuojamas tik į atskirą rezultatą „Su Seimo narių balsais“ (žr. 3 skyrių). Pakviestas jis sužino, kiek žmonių jį pasirinko, o prisijungęs iškart pradeda balsuoti už juos.</span></div>
@@ -936,11 +942,21 @@ footer.end svg{width:28px;height:28px}
               <span>Seime balsavo taip pat kaip LT2</span><b class="tnum">43 iš 44</b>
             </div>
             <div>
-              <div class="side-h" style="margin-bottom:8px">Jam balsą patikėję piliečiai</div>
+              <div class="side-h" style="margin-bottom:8px">Jam balsą patikėję piliečiai: 2 480</div>
               <div class="trust">
-                <div class="r"><span>Ekonomika</span><div class="bar"><span style="width:100%"></span></div><b>2 140</b></div>
-                <div class="r"><span>Energetika</span><div class="bar"><span style="width:38%"></span></div><b>812</b></div>
+                <div class="r"><span>Užsienio politika</span><div class="bar"><span style="width:100%"></span></div><b>2 170</b></div>
+                <div class="r"><span>Ekonomika</span><div class="bar"><span style="width:99%"></span></div><b>2 140</b></div>
+                <div class="r"><span>Energetika</span><div class="bar"><span style="width:37%"></span></div><b>812</b></div>
                 <div class="r"><span>Švietimas</span><div class="bar"><span style="width:14%"></span></div><b>296</b></div>
+              </div>
+            </div>
+            <div>
+              <div class="side-h" style="margin-bottom:8px">Kaip patikėtojai pakeitė jo sritis</div>
+              <div class="srcchg">
+                <div><span>Užsienio politika<small>nurodyta pagal komitetą</small></span><b class="minus">nuėmė 310 · 13 %</b></div>
+                <div><span>Ekonomika</span><b class="plus">pridėjo 2 140 · 86 %</b></div>
+                <div><span>Energetika</span><b class="plus">pridėjo 812 · 33 %</b></div>
+                <div><span>Švietimas</span><b class="plus">pridėjo 296 · 12 %</b></div>
               </div>
             </div>
           </div>
@@ -962,7 +978,7 @@ footer.end svg{width:28px;height:28px}
                 <div>Jo frakcija<b>19 iš 30 už</b></div>
                 <div>Jam patikėję, balsavę patys<b>88 · 38 % kaip jis</b></div>
               </div>
-              <p class="explain muted" style="border-left-color:var(--line-strong)">Paaiškinimą galima pridėti bet kada – jį matys visi, o 812 jam balsą patikėjusių žmonių gaus pranešimą.</p>
+              <p class="explain muted" style="border-left-color:var(--line-strong)">Paaiškinimą galima pridėti bet kada – jį matys visi, o 2 480 jam balsą patikėjusių žmonių gaus pranešimą.</p>
             </div>
           </div>
         </div>
@@ -1006,6 +1022,7 @@ footer.end svg{width:28px;height:28px}
         <div><span class="n">1</span><span><b>Rodomi ir neprisijungę Seimo nariai.</b> Kiekvieno Seimo nario balsavimų Seime istorija, dalyvavimas ir frakcijos palyginimas matomi visiems.</span></div>
         <div><span class="n">2</span><span><b>Be balso ir paaiškinimų.</b> Neprisijungęs Seimo narys nebalsuoja LT2, todėl jam patikėti balsai lemia tik rezultatą „Su Seimo narių balsais“, o savo balsų jis negali paaiškinti.</span></div>
         <div><span class="n">3</span><span><b>Kvietimas prisijungti.</b> Kiekvienas gali jį pakviesti, o kvietime matyti, kiek žmonių jį jau pasirinko patikėtiniu.</span></div>
+        <div><span class="n">4</span><span><b>Sritis vertina patikėtojai.</b> Profilyje matyti, kiek patikėtojų pridėjo ar nuėmė patikėtinio sritis. Ženklus neatitikimas – signalas ir pačiam patikėtiniui, ir jį renkantiems: nurodyta sritis neįtikina arba žmonės jį laiko kitos srities žinovu. Rodoma, kai grupėje bent 20 žmonių.</span></div>
       </div>
 
       <div class="incent">
@@ -1013,7 +1030,7 @@ footer.end svg{width:28px;height:28px}
         <div><span class="for">VISIEMS POLITIKAMS</span><h4>Paaiškinkite savo balsą ten, kur jis matomas</h4><p>Paaiškinimą prie konkretaus projekto mato visi, o jums balsą patikėję žmonės gauna apie jį pranešimą. Taip galite įtikinti rinkėjus savo sprendimo teisingumu dar prieš balsavimą ir išlikti patikimi, net kai balsuojate kitaip, nei jie tikėjosi.</p></div><div><span class="for">VISIEMS POLITIKAMS</span><h4>Pasiekite žmones be algoritmų</h4><p>Apie jūsų balsus ir paaiškinimus visada sužino jums balsą patikėję ir jūsų veiklą sekantys žmonės – be socialinių tinklų algoritmų. Galite daryti tai, kas jums svarbu, negalvodami, ar tai patiks algoritmui.</p></div>
         <div><span class="for">VISIEMS POLITIKAMS</span><h4>Supraskite, ką galvoja jumis pasitikintys</h4><p>Kiekvieno balsavimo metu matote, kiek jums balsą patikėjusių žmonių balsavo patys ir kaip jie pasirinko. Taip sužinote, kurie projektai reikalauja daugiau dėmesio ir paaiškinimų.</p></div>
         <div><span class="for">VISIEMS POLITIKAMS</span><h4>Jūsų balsas LT2 – sustiprintas jumis pasitikinčiųjų balsais</h4><p>Kai balsuojate LT2, jūsų balsas lemia ir balsus tų jums balsą patikėjusių žmonių, kurie nepareiškė savo nuomonės. Nurodę iki 3 savo sričių, tose srityse turite pirmenybę prieš kitus jų patikėtinius.</p></div>
-        <div><span class="for">KANDIDATAMS</span><h4>Būkite matomi dar prieš rinkimus</h4><p>Pasižymėję kandidatu ir patvirtinti, galite balsuoti LT2, paaiškinti savo požiūrį į svarstomus projektus ir būti pasirinkti patikėtiniu. Kaip kandidatai rodomi prieš rinkimus – 8 skyriuje.</p></div>
+        <div><span class="for">KANDIDATAMS</span><h4>Būkite matomi dar prieš rinkimus</h4><p>Pasižymėję kandidatu ir patvirtinti, galite balsuoti LT2, paaiškinti savo požiūrį ir būti pasirinkti patikėtiniu. Balsuoti galite ir dėl projektų, dėl kurių Seimas jau nusprendė, – taip rinkėjai gali palyginti savo balsus su jūsų. Tokie balsai žymimi „po Seimo sprendimo“, į LT2 rezultatą nepatenka, o jų skaičius rodomas šalia atitikimo. Kaip kandidatai rodomi prieš rinkimus – 8 skyriuje.</p></div>
         <div><span class="for">PILOTO DALYVIAMS</span><h4>Kurkite sistemą kartu su mumis</h4><p>Pilotą vykdantys politikai ir aktyvūs piliečiai kartu kuria naudingos, patogios ir veikiančios sistemos modelį. Ko reikia, kad dalyvavimas čia jums kurtų vertę? Kaip pritraukti jūsų rinkėjus dalyvauti? Į šiuos ir daugelį kitų klausimų atsakysime dirbdami kartu.</p></div>
       </div>
       <div class="prose" style="margin-top:24px">
@@ -1078,7 +1095,7 @@ footer.end svg{width:28px;height:28px}
       </div>
       <div class="annot">
         <div><span class="n">1</span><span><b>Skirtumas, o ne verdiktas.</b> Svarbiausia – atstumas tarp taškų. Jis rodomas su imties dydžiu ir niekada nepateikiamas kaip visos visuomenės valia ar Seimo nario įvertinimas.</span></div>
-        <div><span class="n">2</span><span><b>Asmeninis atitikimas.</b> Skaičiuojamas pagal jūsų balsus ir viešus Seimo narių balsavimus, o kandidatams – pagal jų balsavimus LT2.</span></div>
+        <div><span class="n">2</span><span><b>Asmeninis atitikimas.</b> Skaičiuojamas pagal jūsų balsus ir viešus Seimo narių balsavimus, o kandidatams – pagal jų balsavimus LT2; balsai po Seimo sprendimo pažymimi.</span></div>
       </div>
     </section>
 
@@ -1094,18 +1111,21 @@ footer.end svg{width:28px;height:28px}
           <div class="notch"><i></i></div>
           <div class="scr">
             <div class="sub">Seimo rinkimai · 2028-10-08 · Žirmūnų apygarda</div>
-            <h4>Kas Seime balsavo taip kaip jūs</h4>
+            <h4>Kas balsavo taip kaip jūs</h4>
             <div class="seg" role="group" aria-label="Palyginimas"><button type="button" aria-pressed="true">Seimo nariai</button><button type="button" aria-pressed="false">Frakcijos</button></div>
             <div class="cand"><span class="avatar" style="background:#1f6b3a">OJ</span><div class="nm"><b>Ona Jonaitienė <svg class="badge-v"><use href="#vbadge"/></svg></b><small>Pilietinė sąjunga · Seimo narė</small></div><span class="pct">82 %</span><div class="basis"><span>41 bendras balsavimas</span><span>· 3 esminiai nesutapimai</span></div></div>
             <div class="cand"><span class="avatar" style="background:#4a3aa7">JP</span><div class="nm"><b>Jonas Petraitis <svg class="badge-v"><use href="#vbadge"/></svg></b><small>Reformų partija · Seimo narys</small></div><span class="pct">61 %</span><div class="basis"><span>44 bendri balsavimai</span></div></div>
-<div class="qcard"><span class="sub">Kiti apygardos kandidatai</span><span class="q">4 kandidatai dar nebuvo Seimo nariais</span><span class="sub">Jie rodomi be procentų – balsavimų istorijos neturintys kandidatai nevertinami pagal tai, ko negalėjo daryti.</span></div>
+<div class="sub">Kiti apygardos kandidatai – pagal jų balsus LT2</div>
+            <div class="cand"><span class="avatar" style="background:#8a5a1f">RK</span><div class="nm"><b>Rasa Kairienė <svg class="badge-v"><use href="#vbadge"/></svg></b><small>Kaimo aljansas · kandidatė</small></div><span class="pct">74 %</span><div class="basis"><span>23 bendri balsavimai</span><span class="late">15 – po Seimo sprendimo</span></div></div>
+            <div class="cand"><span class="avatar" style="background:#2f6f8f">MŽ</span><div class="nm"><b>Mantas Žukas <svg class="badge-v"><use href="#vbadge"/></svg></b><small>Naujasis centras · kandidatas</small></div><span class="pct">58 %</span><div class="basis"><span>9 bendri balsavimai</span></div></div>
+            <div class="sub">Dar 2 kandidatai LT2 nebalsuoja – jie rodomi be procentų.</div>
           </div>
         </div>
         <div class="phone-note prose">
           <p>Rinkimų režimas įsijungia likus maždaug šešiems mėnesiams iki rinkimų. Jis prideda:</p>
           <ul>
             <li><b>Palyginimą pagal balsavimus</b> su Seimo nariais ir frakcijomis, remiantis projektais, dėl kurių balsavote LT2.</li>
-            <li><b>Kandidatų sąrašus</b> pagal partijas ir vienmandates apygardas. Dabartiniams Seimo nariams rodomi jų balsavimai ir paaiškinimai, kitiems kandidatams – jų LT2 balsai ir paaiškinimai.</li>
+            <li><b>Kandidatų sąrašus</b> pagal partijas ir vienmandates apygardas. Dabartiniams Seimo nariams rodomi jų balsavimai ir paaiškinimai, kitiems kandidatams – jų LT2 balsai ir paaiškinimai. Balsai, atiduoti jau po Seimo sprendimo, pažymimi, nes renkantis rezultatas jau buvo žinomas.</li>
           </ul>
           <p style="margin-top:14px"><b>Vėlesnis etapas.</b> Kandidatų pozicijos dėl svarbiausių laukiamų sprendimų: klausimai, pateikiami kaip būsimų projektų juodraščiai. Po rinkimų išrinktųjų balsai būtų lyginami su jų pozicija prieš rinkimus.</p>
         </div>
@@ -1598,7 +1618,7 @@ footer.end svg{width:28px;height:28px}
   const TOP=["Ekonomika","Mokesčiai","Švietimas","Sveikata","Socialiniai reikalai","Gynyba","Energetika","Teisė","Užsienio politika"];
   const PARTIES=["Pilietinė sąjunga","Reformų partija","Socialinis forumas","Kaimo aljansas","Naujasis centras"];
   const CAND=[
-    {id:"jp",n:"Jonas Petraitis",d:"Seimo narys · Reformų partija",av:"JP",c:"#4a3aa7",cnt:2140,act:1,ver:1,party:"Reformų partija",exp:["Užsienio politika"],src:"komitetas"},
+    {id:"jp",n:"Jonas Petraitis",d:"Seimo narys · Reformų partija",av:"JP",c:"#4a3aa7",cnt:2480,act:1,ver:1,party:"Reformų partija",exp:["Užsienio politika"],src:"komitetas"},
     {id:"ruta",n:"Rūta Mockutė",d:"Ekonomistė · palaiko Reformų partiją",av:"RM",c:"#8a6d3b",cnt:3310,sup:"Reformų partija",exp:["Ekonomika"],src:"nurodė pati"},
     {id:"oj",n:"Ona Jonaitienė",d:"Seimo narė · Pilietinė sąjunga",av:"OJ",c:"#1f6b3a",cnt:1760,act:1,ver:1,party:"Pilietinė sąjunga",exp:["Švietimas"],src:"komitetas"},
     {id:"la",n:"Laura Adomaitienė",d:"Mokytoja · palaiko Reformų partiją",av:"LA",c:"#1c5cab",cnt:2480,sup:"Reformų partija",exp:["Švietimas"],src:"nurodė pati"},
