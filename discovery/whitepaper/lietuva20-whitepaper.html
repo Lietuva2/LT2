@@ -377,6 +377,7 @@ select{font:inherit;font-size:13px;padding:5px 8px;border-radius:8px;border:1px 
 .cand .pct{font-size:18px;font-weight:800;font-variant-numeric:tabular-nums}
 .cand .basis{grid-column:2/4;font-size:11.5px;color:var(--muted);display:flex;gap:6px;flex-wrap:wrap}
 .cand .late{color:var(--warn-ink);background:var(--warn-bg);border-radius:4px;padding:0 5px}
+.cand .small{color:var(--ink-2);background:var(--surface-2);border-radius:4px;padding:0 5px}.cand .pct.low{color:var(--muted);font-weight:600}
 .qcard{border:1px solid var(--line);border-radius:12px;padding:12px;display:grid;gap:10px}
 .qcard .q{font-weight:600;line-height:1.3}
 .qcard .ans{display:grid;grid-template-columns:repeat(3,1fr);gap:6px}
@@ -606,7 +607,7 @@ footer.end svg{width:28px;height:28px}
 .partytbl th,.partytbl td{padding:6px 8px;border-bottom:1px solid var(--line);text-align:right}
 .partytbl th:first-child,.partytbl td:first-child{text-align:left}
 .partytbl th{font-size:11.5px;color:var(--muted);font-weight:600;letter-spacing:.04em}
-.partytbl td.gap{font-weight:700;color:var(--warn-ink);background:var(--warn-bg)}
+.partytbl td.gap{font-weight:700;background:var(--surface-2)}
 </style>
 
 <svg width="0" height="0" style="position:absolute" aria-hidden="true">
@@ -652,7 +653,7 @@ footer.end svg{width:28px;height:28px}
       <li><a href="#trust">Pasitikėjimas ir privatumas</a></li>
       <li><a href="#legacy">Mūsų patirtis</a></li>
       <li><a href="#contribute">Kaip prisidėti</a></li>
-      <li class="toc-intro"><a href="#elsewhere">Priedas: kas veikia kitur</a></li>
+      <li class="toc-intro"><a href="#elsewhere">Priedas: kas veikia arba buvo išbandyta kitur</a></li>
     </ol>
   </aside>
 
@@ -670,7 +671,7 @@ footer.end svg{width:28px;height:28px}
         <div class="hero-meta"><span><b>Išsami produkto koncepcija</b> · pagrindinis dokumentas</span><span><b>2026 m. rugsėjis</b></span></div>
         <div class="notice" role="note">
           <svg viewBox="0 0 20 20" aria-hidden="true"><circle cx="10" cy="10" r="8.5" fill="none" stroke="currentColor" stroke-width="1.6"/><path d="M10 5.5v5.5M10 13.6v.9" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
-          <span>Visi Seimo nariai, frakcijos, projektai ir skaičiai šiame dokumente yra išgalvoti. Jie rodo, kaip atrodytų produktas, o ne kaip balsavo realūs politikai.</span>
+          <span>Maketuose ir pavyzdžiuose pateikti Seimo nariai, frakcijos, projektai ir skaičiai yra išgalvoti. Jie rodo, kaip atrodytų produktas, o ne kaip balsavo realūs politikai. 11 skyriaus ir priedo faktai yra tikri; jie tikrinti 2026 m. rugsėjį.</span>
         </div>
       </div>
 
@@ -691,8 +692,8 @@ footer.end svg{width:28px;height:28px}
         <p>Todėl žmonės Seimą dažnai vertina iš antraščių, o politikai gauna tūkstančius nesusietų laiškų, komentarų ir peticijų. Trūksta bendro konteksto: apie kokį projektą kalbama, kiek žmonių tai rūpi ir ką atstovas jau daro.</p>
         <p>Per pastarąjį dešimtmetį pasikeitė trys dalykai:</p>
         <ul>
-          <li><b>DI gali padėti pateikti teisės aktus žmonėms suprantama kalba.</b> Santrauka pažymima kaip parengta DI, susiejama su konkrečiais projekto straipsniais, peržiūrima žmogaus ir išsaugo taisymų istoriją.</li>
-          <li><b>Balso delegavimas jau išbandytas.</b> Skystoji demokratija (angl. <i>liquid democracy</i>) leidžia balsuoti pačiam arba patikėti balsą kitam. Ji išbandyta Vokietijoje, Švedijoje, Argentinoje ir didelėse organizacijose (žr. <a href="#elsewhere">priedą dokumento pabaigoje</a>). Kai kurie bandymai buvo susieti su savivaldybės ar miesto parlamento darbotvarke, bet ne su nacionalinio parlamento balsavimais.</li>
+          <li><b>DI gali padėti pateikti teisės aktus žmonėms suprantama kalba.</b> Santrauka ir argumentai pažymimi kaip parengti DI ir susiejami su konkrečiais projekto straipsniais. Prieš paskelbiant juos peržiūri balsavimo iniciatorius, vėliau gali taisyti bendruomenės redaktoriai, o kiekvienas pakeitimas išsaugomas istorijoje.</li>
+          <li><b>Balso delegavimas jau bandytas.</b> Skystoji demokratija (angl. <i>liquid democracy</i>) leidžia balsuoti pačiam arba patikėti balsą kitam. Ji išbandyta Vokietijoje, Švedijoje, Argentinoje ir didelėse organizacijose (žr. <a href="#elsewhere">priedą dokumento pabaigoje</a>). Kai kurie bandymai buvo susieti su savivaldybės ar miesto parlamento darbotvarke, bet ne su nacionalinio parlamento balsavimais.</li>
           <li><b>Seimo duomenys atverti.</b> Balsavimų rezultatai, įskaitant kiekvieno Seimo nario balsą, skelbiami kaip atvirieji duomenys, todėl jų nereikia suvesti ranka.</li>
         </ul>
       </div>
@@ -709,7 +710,7 @@ footer.end svg{width:28px;height:28px}
           <li>Aktualūs Seimo projektai, paaiškinti suprantama kalba: esmę suprasite per kelias minutes, o nuorodos veda į konkrečius straipsnius.</li>
           <li>Balsuoti galima pačiam arba patikėti balsą žmonėms, kuriais pasitikite, – taip dalyvaujama net neturint laiko sekti kiekvieno projekto.</li>
           <li>Balsavimą dėl svarbaus projekto galima inicijuoti pačiam ir pakviesti kitus balsuoti, pasidalijus nuoroda socialiniuose tinkluose.</li>
-          <li>Galima tapti viešu patikėtiniu, o savo srityse – ir ekspertu, kurio balsas turi pirmenybę.</li>
+          <li>Galima tapti viešu patikėtiniu ir nurodyti savo sritis: jose būsite ekspertas, kurio balsas turi pirmenybę.</li>
           <li>Matyti, kaip Seimas nusprendė, kaip balsavo jūsų pasirinkti atstovai ir kaip jie tai paaiškino.</li>
         </ul><a class="more" href="#bill">Kaip tai veikia – 3–5 skyriai</a></div>
         <div class="box"><h4>Politikams</h4><ul>
@@ -733,7 +734,7 @@ footer.end svg{width:28px;height:28px}
     <section class="chapter" id="bill">
       <header>
         <div class="eyebrow">03 · Projekto puslapis</div>
-        <h2>Dvi minutės suprasti, vienas paspaudimas balsuoti</h2>
+        <h2>Per kelias minutes suprasti, vienu paspaudimu balsuoti</h2>
         <p class="lede">Viename puslapyje – santrauka, kas keičiasi, argumentai už ir prieš ir projekto eiga Seime. Visada matote, kaip balsavo jūsų patikėtiniai, o vienu paspaudimu galite balsuoti patys.</p>
       </header>
 
@@ -780,7 +781,7 @@ footer.end svg{width:28px;height:28px}
               <div class="diff">6 straipsnis. 1. Pajamų mokesčio tarifas yra 20 procentų, <del>išskyrus šio straipsnio 2 dalyje nurodytas pajamas</del><ins>išskyrus šio straipsnio 2 ir 2¹ dalyse nurodytas pajamas</ins>.<br><ins>2¹. Mokestinio laikotarpio pajamoms, viršijančioms 60 vidutinių darbo užmokesčių, taikomas 32 procentų tarifas.</ins><br>3. <ins>Apskaičiuojant šio straipsnio 2¹ dalyje nustatytą ribą, įskaičiuojamos 17 straipsnio 1 dalies 8 punkte nurodytos pajamos.</ins></div>
             </div>
             <div class="tabpanel" role="tabpanel" id="tp-arg" aria-labelledby="t-arg" hidden>
-              <div class="ai-flag"><span class="chip">Sukurta DI</span>Pagal aiškinamąjį raštą ir komiteto išvadas</div>
+              <div class="ai-flag"><span class="chip">Sukurta DI · peržiūrėjo iniciatorė</span>Pagal aiškinamąjį raštą ir komiteto išvadas · <button class="linkbtn" type="button">Keitimų istorija</button> · <button class="linkbtn" type="button">Pasiūlyti pataisymą</button></div>
               <div class="args">
                 <div><h4><i style="background:var(--v-for)"></i>Už</h4><ul><li>Didžiausias pajamas gaunantys dabar moka mažesnį efektyvųjį tarifą nei samdomi darbuotojai.</li><li>Gynyba finansuojama nekeliant PVM.</li><li>Tarifai artimi kaimyninių šalių tarifams.</li></ul></div>
                 <div><h4><i style="background:var(--v-against)"></i>Prieš</h4><ul><li>Skatina įmonių steigėjus keisti mokestinę rezidavimo vietą.</li><li>Akcijų pardavimo įskaičiavimas paliečia vienkartinius įvykius, pvz., šeimos verslo pardavimą.</li><li>Pajamų vertinime neatsižvelgiama į elgsenos pokyčius.</li></ul></div>
@@ -793,7 +794,7 @@ footer.end svg{width:28px;height:28px}
                 <li class="done"><span class="d">05-07</span><span class="dot"></span><span>Po pateikimo pritarta 71 : 38. Platformoje tuo metu – 48 % už.</span></li>
                 <li class="done"><span class="d">09-03</span><span class="dot"></span><span>Biudžeto ir finansų komitetas pakeitė 6 str. 3 d. Santrauka atnaujinta.</span></li>
                 <li class="done"><span class="d">09-15</span><span class="dot"></span><span>Po svarstymo pritarta 74 : 44.</span></li>
-                <li id="tlFinal"><span class="d">09-24</span><span class="dot"></span><span id="tlFinalTxt">Galutinis balsavimas (priėmimas). Visuomenės rezultatas bus užfiksuotas.</span></li>
+                <li id="tlFinal"><span class="d">09-24</span><span class="dot"></span><span id="tlFinalTxt">Galutinis balsavimas (priėmimas). LT2 rezultatas bus užfiksuotas.</span></li>
               </ol>
             </div>
           </div>
@@ -812,10 +813,10 @@ footer.end svg{width:28px;height:28px}
         </div>
       </div>
       <div class="annot">
-        <div><span class="n">1</span><span><b>Rezultato kortelė.</b> Po galutinio Seimo balsavimo puslapio viršuje atsiranda Seimo vietų ir balsų schema, Seimo sprendimas ir LT2 naudotojų rezultatas. Užvedę pelę ant vietos matote Seimo narį, jo frakciją ir balsą, o jūsų patikėtiniai Seimo nariai pažymėti atskirai.</span></div>
+        <div><span class="n">1</span><span><b>Rezultato kortelė.</b> Po galutinio Seimo balsavimo puslapio viršuje atsiranda Seimo vietų ir balsų schema, Seimo sprendimas ir LT2 naudotojų rezultatas. Užvedę pelę ar palietę vietą matote Seimo narį, jo frakciją ir balsą, o jūsų patikėtiniai Seimo nariai pažymėti atskirai.</span></div>
         <div><span class="n">2</span><span><b>Ankstesni etapai.</b> Tokia pati schema būtų atvaizduojama ir pateikimo bei svarstymo balsavimams skiltyje „Eiga“.</span></div>
         <div><span class="n">3</span><span><b>Dalijimasis.</b> Prieš Seimo balsavimą dalijamasi projekto puslapiu ir kvietimu balsuoti, o po jo – dalijimuisi paruošta rezultato kortele, kaip paveikslėliu socialiniuose tinkluose ar pranešimuose.</span></div>
-        <div><span class="n">4</span><span><b>Balsavimas vyksta kartu su Seimu.</b> LT2 naudotojai balsuoja nuo balsavimo inicijavimo iki galutinio Seimo balsavimo ir iki tol gali keisti savo balsą bei patikėtinius. Seimo darbotvarkė skelbiama maždaug prieš dvi savaites, bet dažnai keičiasi, todėl LT2 balsavimas užsidaro tik tada, kai Seimas iš tikrųjų balsuoja galutinai. Kai projektas įtraukiamas į darbotvarkę, tiems, kurių balsas deleguotas, siunčiamas priminimas jį patikrinti.</span></div>
+        <div><span class="n">4</span><span><b>Balsavimas vyksta kartu su Seimu.</b> LT2 naudotojai balsuoja nuo balsavimo inicijavimo iki galutinio Seimo balsavimo ir iki tol gali keisti savo balsą bei patikėtinius. Seimo darbotvarkė skelbiama maždaug prieš 10–12 dienų, bet dažnai keičiasi, todėl LT2 balsavimas užsidaro tik tada, kai Seimas iš tikrųjų balsuoja galutinai. Kai projektas įtraukiamas į darbotvarkę, tiems, kurių balsas deleguotas, siunčiamas priminimas jį patikrinti.</span></div>
         <div><span class="n">5</span><span><b>LT2 rezultatas ir „Su Seimo narių balsais“.</b> Seimui balsavus, LT2 rezultatas (tiesioginiai ir deleguoti balsai) užfiksuojamas, palyginamas su balsavimu Seime ir įtraukiamas į visus statistinius rodiklius. Papildomas rezultatas „Su Seimo narių balsais“ įskaičiuoja ir balsus, patikėtus LT2 nebalsavusiems Seimo nariams, pagal jų balsą Seime. Jis rodomas atskirai ir į rodiklius neįtraukiamas.</span></div>
       </div>
     </section>
@@ -825,7 +826,7 @@ footer.end svg{width:28px;height:28px}
       <header>
         <div class="eyebrow">04 · Balsavimo inicijavimas</div>
         <h2>Tik aktualūs projektai, paruošti per kelias minutes</h2>
-        <p class="lede">Balsavimą gali inicijuoti bet kuris naudotojas: pasirenka projektą iš automatiškai importuoto aktyvių Seimo projektų sąrašo, gauna DI paruoštą pavadinimą, santrauką ir sritis, juos peržiūri, jei reikia – pataiso, ir paskelbia.</p>
+        <p class="lede">Balsavimą gali inicijuoti bet kuris naudotojas: pasirenka projektą iš automatiškai importuoto aktyvių Seimo projektų sąrašo, gauna DI paruoštą pavadinimą, santrauką, argumentus už ir prieš bei sritis, juos peržiūri, jei reikia – pataiso, ir paskelbia.</p>
       </header>
       <div class="mock-label"><span><b>Maketas</b> · Naujas LT2 naudotojų balsavimas</span><span>Interaktyvus</span></div>
       <div class="mock">
@@ -841,7 +842,7 @@ footer.end svg{width:28px;height:28px}
         </div>
       </div>
       <div class="annot">
-        <div><span class="n">1</span><span><b>Žmogus atsako už turinį.</b> Santrauka paskelbiama tik iniciatoriui ją peržiūrėjus.</span></div>
+        <div><span class="n">1</span><span><b>Žmogus atsako už turinį.</b> Santrauka ir argumentai paskelbiami tik iniciatoriui juos peržiūrėjus. Vėliau juos gali taisyti bendruomenės redaktoriai, o kiekvienas pakeitimas matomas istorijoje (žr. 10 skyrių).</span></div>
         <div><span class="n">2</span><span><b>Be triukšmo ir dublių.</b> DI įspėja apie techninius, visuomenei mažai aktualius projektus, o dėl vieno projekto galimas tik vienas balsavimas.</span></div>
       </div>
     </section>
@@ -882,10 +883,10 @@ footer.end svg{width:28px;height:28px}
         </div>
       </div>
       <div class="annot">
-        <div><span class="n">1</span><span><b>Ekspertai užsipildo patys.</b> Patikėtinio ekspertinės sritys – jo paties nurodytos arba parinktos automatiškai pagal Seimo nario komitetą. Jūs galite pakeisti, kuriose srityse ekspertas atstovaus būtent jus; kiek patikėtojų tai padarė, matyti patikėtinio profilyje (žr. 6 skyrių).</span></div>
+        <div><span class="n">1</span><span><b>Ekspertines sritis galima pritaikyti.</b> Patikėtinio ekspertinės sritys – jo paties nurodytos arba parinktos automatiškai pagal Seimo nario komitetą. Jūs galite pakeisti, kuriose srityse ekspertas atstovaus būtent jus; kiek patikėtojų tai padarė, matyti patikėtinio profilyje (žr. 6 skyrių).</span></div>
         <div><span class="n">2</span><span><b>Paieška ir rikiavimas.</b> Sąrašą galima rikiuoti pagal:<ul><li>LT2 patikėtų balsų skaičių;</li><li>abėcėlę (partija ir vardas);</li><li>atstovavimą: pirmiausia Seimo nariai, tada ekspertai.</li></ul>Pasirinktų partijų LT2 balsuojantys Seimo nariai ir rėmėjai rodomi aukščiau.</span></div>
         <div><span class="n">3</span><span><b>Iškart matote pasekmes.</b> Dešinėje – kas balsuotų už jus kiekvienoje srityje.</span></div>
-        <div><span class="n">4</span><span><b>Bet kuris Seimo narys.</b> Galima pasirinkti ir LT2 nebalsuojantį Seimo narį. LT2 rezultate tada lemia kiti patikėtiniai, o jo balsas Seime įskaičiuojamas tik į atskirą rezultatą „Su Seimo narių balsais“ (žr. 3 skyrių). Pakviestas jis sužino, kiek žmonių jį pasirinko, o prisijungęs iškart pradeda balsuoti už juos.</span></div>
+        <div><span class="n">4</span><span><b>Bet kuris Seimo narys.</b> Galima pasirinkti ir LT2 nebalsuojantį Seimo narį. LT2 rezultate tada lemia kiti patikėtiniai, o jo balsas Seime įskaičiuojamas tik į atskirą rezultatą „Su Seimo narių balsais“ (žr. 3 skyrių). Pakviestas Seimo narys sužino, kiek žmonių jį pasirinko. Prisijungus jo LT2 balsas lemia patikėtojų balsus pagal delegavimo taisykles.</span></div>
       </div>
 
       <h3 style="margin-top:44px">Kaip nustatomas jūsų balsas</h3>
@@ -907,7 +908,7 @@ footer.end svg{width:28px;height:28px}
         <div class="rule"><h4>Jūsų balsas visada svarbiausias</h4><p>Kai balsuojate patys, patikėtinių balsai rodomi tik palyginimui, o skaičiuojamas jūsų balsas. Balsą galite keisti, kol balsavimas nesibaigė.</p></div>
         <div class="rule"><h4>Pirmiausia ekspertai, tada dauguma</h4><p>Skaičiuojami tik LT2 balsavę patikėtiniai. Jei balsavo bent vienas projekto srities ekspertas, sprendžia ekspertų dauguma; kitaip – visų balsavusių patikėtinių dauguma. Susilaikymas skaičiuojamas kaip balsas: jei dauguma susilaikė, susilaikote ir jūs. Lygiųjų atveju lemia aukščiau sąraše esantis. Jei nebalsavo nė vienas, balsas neįskaičiuojamas: balso pagal nutylėjimą nepriskiriame.</p></div>
         <div class="rule"><h4>Sričių ekspertai</h4><p>Patikėtiniai atstovauja jums visose srityse, bet jei dėl projekto balsavo jo srities ekspertų, sprendžia jie. Ekspertu patikėtinis tampa pats pasirinkdamas iki 3 sričių; Seimo nariams automatiškai priskiriamos ir jų komitetų sritys. Kiekvienas projektas priskiriamas vienai ar kelioms sritims; ekspertais laikomi tie patikėtiniai, kurių bent viena sritis sutampa su projekto sritimi.</p></div>
-        <div class="rule"><h4>Patikėtiniai – žmonės</h4><p>Pirmojoje versijoje patikėtiniai yra tik žmonės: piliečiai ir Seimo nariai. Partijos ir organizacijos kaip patikėtiniai galėtų atsirasti vėliau, jei to prireiktų.</p></div>
+        <div class="rule"><h4>Patikėtiniai – žmonės</h4><p>Pirmojoje versijoje patikėtiniai yra tik žmonės: piliečiai ir Seimo nariai.</p></div>
         <div class="rule"><h4>Jokių pasitikėjimo grandinių</h4><p>Jei jūsų patikėtinis nebalsavo, o pats delegavo savo balsą kitam savo patikėtiniui, jo balsas jums neperduodamas – skaičiuojami kiti jūsų patikėtiniai. Taip išvengiama dviejų dažniausiai kritikuojamų skystosios demokratijos trūkumų: rezultatai lieka paaiškinami, o galia nesikaupia nematomai.</p></div>
         <div class="rule"><h4>Patikėtiniai veikia viešai</h4><p>Patikėtiniu tampama savo noru: naudotojas tai įsijungia profilyje ir sutinka, kad jo balsai būtų vieši. Jam balsą patikėję žmonės lieka anonimiški.</p></div>
         </div></div>
@@ -1000,7 +1001,7 @@ footer.end svg{width:28px;height:28px}
               <span>Paaiškinti balsavimai</span><b class="tnum muted">–</b>
             </div>
             <div class="invite-box">
-              <span><b class="tnum">1 150</b> žmonių ją pasirinko patikėtine. Prisijungusi ji galės balsuoti LT2 už juos ir paaiškinti savo balsus.</span>
+              <span><b class="tnum">1 150</b> žmonių ją pasirinko patikėtine. Prisijungusi ji galės balsuoti LT2 ir paaiškinti savo balsus.</span>
               <button type="button" class="want" id="inviteIv" aria-pressed="false">Pakviesti į LT2</button>
             </div>
           </div>
@@ -1031,7 +1032,7 @@ footer.end svg{width:28px;height:28px}
         <div><span class="for">VISIEMS POLITIKAMS</span><h4>Supraskite, ką galvoja jumis pasitikintys</h4><p>Kiekvieno balsavimo metu matote, kiek jums balsą patikėjusių žmonių balsavo patys ir kaip jie pasirinko. Taip sužinote, kurie projektai reikalauja daugiau dėmesio ir paaiškinimų.</p></div>
         <div><span class="for">VISIEMS POLITIKAMS</span><h4>Jūsų balsas LT2 – sustiprintas jumis pasitikinčiųjų balsais</h4><p>Kai balsuojate LT2, jūsų balsas lemia ir balsus tų jums balsą patikėjusių žmonių, kurie nepareiškė savo nuomonės. Nurodę iki 3 savo sričių, tose srityse turite pirmenybę prieš kitus jų patikėtinius.</p></div>
         <div><span class="for">KANDIDATAMS</span><h4>Būkite matomi dar prieš rinkimus</h4><p>Pasižymėję kandidatu ir patvirtinti, galite balsuoti LT2, paaiškinti savo požiūrį ir būti pasirinkti patikėtiniu. Balsuoti galite ir dėl projektų, dėl kurių Seimas jau nusprendė, – taip rinkėjai gali palyginti savo balsus su jūsų. Tokie balsai žymimi „po Seimo sprendimo“, į LT2 rezultatą nepatenka, o jų skaičius rodomas šalia atitikimo. Kaip kandidatai rodomi prieš rinkimus – 8 skyriuje.</p></div>
-        <div><span class="for">PILOTO DALYVIAMS</span><h4>Kurkite sistemą kartu su mumis</h4><p>Pilotą vykdantys politikai ir aktyvūs piliečiai kartu kuria naudingos, patogios ir veikiančios sistemos modelį. Ko reikia, kad dalyvavimas čia jums kurtų vertę? Kaip pritraukti jūsų rinkėjus dalyvauti? Į šiuos ir daugelį kitų klausimų atsakysime dirbdami kartu.</p></div>
+        <div><span class="for">KŪRIMO DALYVIAMS</span><h4>Kurkite sistemą kartu su mumis</h4><p>Prieš kurdami platformą, ją išsamiai aptarsime su politikais, ekspertais ir aktyviais piliečiais (žr. 12 skyrių). Ko reikia, kad dalyvavimas čia jums kurtų vertę? Kaip pritraukti jūsų rinkėjus dalyvauti? Į šiuos ir daugelį kitų klausimų atsakysime dirbdami kartu.</p></div>
       </div>
       <div class="prose" style="margin-top:24px">
         <p><b>LT2 ir Seimo balsai.</b> Politikas balsuoja LT2 kaip ir visi, o jo balsas lemia ir balsus tų jam balsą patikėjusių, kurie nepareiškė savo nuomonės. Iki Seimo balsavimo jį galima keisti. Po Seimo balsavimo LT2 balsas palyginamas su oficialiu; nedalyvavimas nelaikomas neatitikimu. Rodiklis „Seime balsavo taip pat kaip LT2“ rodomas, kai politikas LT2 balsavo bent 10 kartų. Jei balsai skiriasi, tai rodoma prie konkretaus balsavimo kartu su politiko paaiškinimu: po svarstymo pakeisti nuomonę yra normalu, todėl svarbiausia – paaiškinti kodėl. Patikėtojai gauna pranešimą su paaiškinimu.</p>
@@ -1045,7 +1046,7 @@ footer.end svg{width:28px;height:28px}
       <header>
         <div class="eyebrow">07 · Analitika</div>
         <h2>Kur Seimo ir LT2 naudotojų pasirinkimai sutampa ir kur skiriasi</h2>
-        <p class="lede">Kiekvienas grafikas aiškiai atskiria oficialius Seimo rezultatus nuo savanoriškai dalyvaujančių LT2 naudotojų balsų. Tai nėra reprezentatyvi visuomenės apklausa. Užveskite pelę ant grafikų, kad pamatytumėte tikslius skaičius, arba atverkite lentelę.</p>
+        <p class="lede">Kiekvienas grafikas aiškiai atskiria oficialius Seimo rezultatus nuo savanoriškai dalyvaujančių LT2 naudotojų balsų. Tai nėra reprezentatyvi visuomenės apklausa. Užveskite pelę ant grafikų arba juos palieskite, kad pamatytumėte tikslius skaičius, arba atverkite lentelę.</p>
       </header>
 
       <div class="mock-label"><span><b>Maketas</b> · Seimo analitikos skydelis</span><span></span></div>
@@ -1059,7 +1060,7 @@ footer.end svg{width:28px;height:28px}
           </div>
           <div class="kpis">
             <div class="kpi"><span class="k">LT2 balsavimai šiemet</span><span class="v">58</span><span class="s">iš 406 įregistruotų projektų</span></div>
-            <div class="kpi"><span class="k">Seimas ir LT2 naudotojai sutapo</span><span class="v">71 %</span><span class="s">galutinių balsavimų</span></div>
+            <div class="kpi"><span class="k">Seimo ir LT2 dauguma sutapo</span><span class="v">71 %</span><span class="s">galutinių balsavimų</span></div>
             <div class="kpi"><span class="k">Balsų platformoje</span><span class="v">412 tūkst.</span><span class="s">38 % jų deleguoti</span></div>
             <div class="kpi"><span class="k">Patvirtinti Seimo nariai</span><span class="v">46</span><span class="s">iš 141</span></div>
           </div>
@@ -1072,7 +1073,7 @@ footer.end svg{width:28px;height:28px}
           <div class="panel span-5">
             <div class="ph"><h4>Frakcijų vieningumas</h4><span>% balsų kartu su frakcijos dauguma</span></div>
             <div class="cohesion" id="cohesion"></div>
-            <p style="font-size:12.5px;color:var(--muted)">Mažesnis nei 85 % rodiklis dažnai reiškia, kad klausimas buvo sudėtingas arba nariai balsavo pagal sąžinę. Užveskite pelę ant juostos, kad pamatytumėte tris balsavimus, kuriuose nuomonės labiausiai išsiskyrė.</p>
+            <p style="font-size:12.5px;color:var(--muted)">Pasirinkite juostą, kad pamatytumėte tris balsavimus, kuriuose frakcijos narių nuomonės labiausiai skyrėsi.</p>
           </div>
           <div class="panel span-12">
             <div class="ph"><h4>Partijos: ar jų nariai ir rėmėjai LT2 balsuoja kaip frakcija Seime</h4><span>Visi galutiniai balsavimai, XV Seimas, 2026 m.</span></div>
@@ -1085,7 +1086,7 @@ footer.end svg{width:28px;height:28px}
                 <tr data-tip="Rėmėjų nuomonė labiausiai skyrėsi: Dantų protezavimas 65+"><td>Reformų partija</td><td>96 %</td><td>77 %</td></tr>
                 <tr data-tip="Rėmėjų nuomonė labiausiai skyrėsi: Nemokamos studijos; saulės parkai ūkio žemėje"><td>Naujasis centras</td><td>90 %</td><td class="gap">58 %</td></tr>
               </tbody></table></div>
-            <p style="font-size:12.5px;color:var(--muted)">Dalis galutinių balsavimų, kuriuose sutapo balsas „už“, „prieš“ ar „susilaikė“. Rėmėjai – naudotojai, pažymėję, kad palaiko partiją (galima kelias). Pažymėta, kai rėmėjų dauguma su frakcija sutapo rečiau nei 60 % balsavimų – tokiais atvejais partijai verta daugiau pasikalbėti su savo rėmėjais. Tą patį partija ir jos Seimo nariai mato ir prieš balsavimą – dėl kiekvieno svarstomo projekto. Užveskite pelę ant eilutės, kad pamatytumėte, kur nuomonės skyrėsi labiausiai.</p>
+            <p style="font-size:12.5px;color:var(--muted)">Rodoma galutinių balsavimų dalis, kai sutapo pasirinkimas „už“, „prieš“ arba „susilaikė“. Rėmėjai – naudotojai, pažymėję, kad palaiko partiją; galima pažymėti kelias partijas. Atskirai pažymimi atvejai, kai rėmėjų dauguma su frakcija sutapo rečiau nei per 60 % balsavimų. Tą patį partija ir jos Seimo nariai mato ir prieš balsavimą – dėl kiekvieno svarstomo projekto. Pasirinkite eilutę, kad pamatytumėte, kur nuomonės skyrėsi labiausiai.</p>
           </div>
           <div class="panel span-12">
             <div class="ph"><h4>Kas balsuoja taip kaip jūs</h4><span>Pagal 37 galutinius balsavimus, kuriuose balsavote patys</span></div>
@@ -1117,15 +1118,15 @@ footer.end svg{width:28px;height:28px}
             <div class="cand"><span class="avatar" style="background:#4a3aa7">JP</span><div class="nm"><b>Jonas Petraitis <svg class="badge-v"><use href="#vbadge"/></svg></b><small>Reformų partija · Seimo narys</small></div><span class="pct">61 %</span><div class="basis"><span>44 bendri balsavimai</span></div></div>
 <div class="sub">Kiti apygardos kandidatai – pagal jų balsus LT2</div>
             <div class="cand"><span class="avatar" style="background:#8a5a1f">RK</span><div class="nm"><b>Rasa Kairienė <svg class="badge-v"><use href="#vbadge"/></svg></b><small>Kaimo aljansas · kandidatė</small></div><span class="pct">74 %</span><div class="basis"><span>23 bendri balsavimai</span><span class="late">15 – po Seimo sprendimo</span></div></div>
-            <div class="cand"><span class="avatar" style="background:#2f6f8f">MŽ</span><div class="nm"><b>Mantas Žukas <svg class="badge-v"><use href="#vbadge"/></svg></b><small>Naujasis centras · kandidatas</small></div><span class="pct">58 %</span><div class="basis"><span>9 bendri balsavimai</span></div></div>
+            <div class="cand"><span class="avatar" style="background:#2f6f8f">MŽ</span><div class="nm"><b>Mantas Žukas <svg class="badge-v"><use href="#vbadge"/></svg></b><small>Naujasis centras · kandidatas</small></div><span class="pct low">58 %</span><div class="basis"><span>9 bendri balsavimai</span><span class="small">maža imtis</span></div></div>
             <div class="sub">Dar 2 kandidatai LT2 nebalsuoja – jie rodomi be procentų.</div>
           </div>
         </div>
         <div class="phone-note prose">
-          <p>Rinkimų režimas įsijungia likus maždaug šešiems mėnesiams iki rinkimų. Jis prideda:</p>
+          <p>Rinkimų laikotarpiu platformoje atsiranda:</p>
           <ul>
             <li><b>Palyginimą pagal balsavimus</b> su Seimo nariais ir frakcijomis, remiantis projektais, dėl kurių balsavote LT2.</li>
-            <li><b>Kandidatų sąrašus</b> pagal partijas ir vienmandates apygardas. Dabartiniams Seimo nariams rodomi jų balsavimai Seime ir pateikti paaiškinimai, kitiems kandidatams – jų LT2 balsai ir paaiškinimai. Balsai, atiduoti jau po Seimo sprendimo, pažymimi atskirai, nes balsuojant rezultatas jau buvo žinomas.</li>
+            <li><b>Kandidatų sąrašus</b> pagal partijas ir vienmandates apygardas. Dabartiniams Seimo nariams rodomi jų balsavimai Seime ir pateikti paaiškinimai, kitiems kandidatams – jų LT2 balsai ir paaiškinimai. Balsai, atiduoti jau po Seimo sprendimo, pažymimi atskirai, nes balsuojant rezultatas jau buvo žinomas. Kai bendrų balsavimų mažiau nei 20, šalia atitikimo rodoma žyma „maža imtis“.</li>
           </ul>
           <p style="margin-top:14px"><b>Vėlesnis etapas.</b> Kandidatų pozicijos dėl svarbiausių laukiamų sprendimų: klausimai, pateikiami kaip būsimų projektų juodraščiai. Po rinkimų išrinktųjų balsai būtų lyginami su jų pozicija prieš rinkimus.</p>
         </div>
@@ -1139,151 +1140,17 @@ footer.end svg{width:28px;height:28px}
       <header>
         <div class="eyebrow">09 · Kas rūpi žmonėms · antroji versija</div>
         <h2>Atstovai išgirsta rinkėjus ir paaiškina sprendimus</h2>
-        <p class="lede">Kiekvienas LT2 naudotojas gali parašyti, kas jam rūpi: paklausti, iškelti problemą ar paprašyti veiksmų, ir pažymėti Seimo narį, patikėtinį ar Seimo projektą. Kiti pažymi „Man svarbu“, panašūs įrašai sujungiami į temą, o pažymėtieji žmonės atsako vieną kartą visiems.</p>
-        <p class="v2note">Šios galimybės – antrojoje versijoje. Pirmoji versija skirta balsavimui: projektų puslapiams, delegavimui, politikų profiliams su balsų paaiškinimais ir balsavimų analizei. Įrašai, temos ir atsakymai kuriami tik tada, kai pirmoji versija pasiteisins.</p>
+        <p class="lede">Antrojoje versijoje LT2 naudotojai galės ne tik balsuoti, bet ir parašyti, kas jiems rūpi, o atstovai – atsakyti vieną kartą visiems, kuriems tai svarbu.</p>
       </header>
-      <div class="mock-label"><span><b>Maketas</b> · Asmeninis srautas</span><span>Interaktyvus</span></div>
-      <div class="mock">
-        <div class="mock-bar"><div class="dots"><i></i><i></i><i></i></div><div class="url">lietuva2.lt/srautas</div></div>
-        <div class="feed">
-          <div class="feed-main">
-            <div class="compose"><span class="avatar" style="background:#8a6d3b">DS</span><div><div class="compose-box">Parašykite, kas jums rūpi. Pažymėkite Seimo narį, patikėtinį ar projektą, pvz., <b>@Jonas Petraitis</b>, <b>#pajamų mokestis</b></div></div></div>
-            <div class="post own">
-              <div class="post-h"><span class="avatar" style="background:#8a6d3b">DS</span><span><b>Jūsų įrašas</b><small>Rugsėjo 18 d. · pažymėjote <span class="tag">@Jonas Petraitis</span></small></span></div>
-              <p>Mūsų mokykloje 900 vaikų ir vienas psichologas pusei etato. Ar bus daugiau?</p>
-              <a class="topic-strip" href="#topicMock">Tema „Mokyklose trūksta psichologų“ · klausimas „Kiek psichologų turėtų būti mokykloje?“ · 214 įrašų · 1 240 palaiko</a>
-              <div class="answer"><span class="by"><b style="color:var(--ink)">Jonas Petraitis</b> atsakė į šį klausimą · jūsų pažymėtas · rugsėjo 21 d.</span><p>Rengiu Švietimo įstatymo pataisą: po vieną psichologo etatą 300 mokinių. Juodraštį paskelbsiu čia spalio mėnesį.</p></div>
-              <div class="foot"><span>Temoje dar 3 atsakymai į kitus klausimus</span><a href="#topicMock">Atverti temą →</a></div>
-            </div>
-            <div class="post">
-              <div class="post-h"><span class="avatar" style="background:#4a3aa7">JP</span><span><b>Jonas Petraitis <svg class="badge-v" aria-label="Patvirtintas"><use href="#vbadge"/></svg></b><small>Paaiškino balsą · Saulės parkai ūkio žemėje · jūsų ekonomikos patikėtinis</small></span></div>
-              <p>Balsavau už, nes pataisa leidžia parkus tik mažiau derlingoje žemėje ir įpareigoja grąžinti ją ūkiui po 25 metų.</p>
-              <div class="foot"><span>48 komentarai</span><span>Komentuoti</span></div>
-            </div>
-            <div class="post">
-              <div class="post-h"><span class="avatar" style="background:#1c5cab">AK</span><span><b>Aistė Kazlaitė</b><small>Komentavo projektą, dėl kurio balsavote · Pajamų mokesčio pataisa</small></span></div>
-              <p>Gerai, kad pagaliau diskutuojama, bet ribą reikėtų indeksuoti pagal infliaciją, kitaip po kelerių metų ji palies daug daugiau žmonių.</p>
-              <div class="foot"><span>12 komentarų</span><span>Komentuoti</span></div>
-            </div>
-          </div>
-          <div class="feed-side">
-            <div class="side-h">Populiarios temos jūsų srityse</div>
-            <div class="oq"><b>Progresinis pajamų mokestis</b><div class="meta"><span>5 klausimai · 142 įrašai · 610 palaiko</span><button class="want" type="button" data-n="610" aria-pressed="false">Man svarbu</button></div></div>
-            <div class="oq"><b>Nemokamas viešasis transportas moksleiviams</b><div class="meta"><span>3 klausimai · 302 įrašai · 1 870 palaiko</span><button class="want" type="button" data-n="1870" aria-pressed="false">Man svarbu</button></div></div>
-          </div>
-        </div>
+      <div class="prose">
+        <ul>
+          <li><b>Įrašai ir klausimai atstovams.</b> Įraše galima paklausti, iškelti problemą ar paprašyti veiksmų ir pažymėti Seimo narį, patikėtinį ar Seimo projektą. Kiti pažymi „Man svarbu“.</li>
+          <li><b>Temos vietoj tūkstančių laiškų.</b> DI panašius įrašus sugrupuoja į temas ir klausimus, o moderatoriai tai patikrina. Tūkstantis vienodų laiškų tampa vienu klausimu.</li>
+          <li><b>Atsakymas vieną kartą visiems.</b> Atsakymą gauna visi panašių klausimų autoriai ir pažymėjusieji „Man svarbu“. Kaip Seimo narys dirba su tema – atsakė, rengia projektą ar nepritaria – matoma viešai.</li>
+          <li><b>„Mano temos“.</b> Kiekvienas patikėtinis mato jam skirtas temas ir kiek jose yra jam balsą patikėjusių žmonių.</li>
+        </ul>
       </div>
-      <div class="annot">
-        <div><span class="n">1</span><span><b>Srautas pagal jus.</b> Rodoma viskas, kas susiję su jūsų balsais, sritimis ir patikėtiniais – jokio neaiškaus algoritmo.</span></div>
-        <div><span class="n">2</span><span><b>Jūsų įrašas lieka jūsų.</b> Jis rodomas taip, kaip parašėte, o po juo – tema, klausimas, į kurį jis įtrauktas, ir naujausias atsakymas į jį.</span></div>
-        <div><span class="n">3</span><span><b>Tema – plati, klausimai – konkretūs.</b> DI sugrupuoja įrašus į temas, o temoje – į klausimus. Moderatoriai gali juos sujungti, išskaidyti ar perkelti įrašą. Temos palaikymas – visi parašę ar pažymėję „Man svarbu“ prie bet kurio tos temos klausimo. Tūkstantis vienodų laiškų tampa vienu klausimu.</span></div>
-      </div>
-
-      <h3 style="margin-top:44px">Temos puslapis</h3>
-      <div class="mock-label"><span><b>Maketas</b> · Tema su klausimais ir atsakymais</span><span>Interaktyvus</span></div>
-      <div class="mock" id="topicMock">
-        <div class="mock-bar"><div class="dots"><i></i><i></i><i></i></div><div class="url">lietuva2.lt/temos/psichologai-mokyklose</div></div>
-        <div class="topic">
-          <div class="topic-main">
-            <div class="bill-crumbs"><span>Tema</span><span class="chip">Švietimas</span><span>susijusio Seimo projekto dar nėra</span></div>
-            <h3>Mokyklose trūksta psichologų</h3>
-            <div class="addr"><span class="muted">Skirta:</span><span>Jonas Petraitis <svg class="badge-v" aria-label="Patvirtintas"><use href="#vbadge"/></svg> <small>96 įrašai</small></span><span>Ona Jonaitienė <svg class="badge-v" aria-label="Patvirtintas"><use href="#vbadge"/></svg> <small>41</small></span><span>Eglė Stonienė <small>12</small></span></div>
-            <div class="support"><span>4 klausimai · 214 įrašų</span><span><b id="tpSup">1 240</b> palaiko</span><button class="want" type="button" id="tpWant" aria-pressed="true">Man svarbu</button></div>
-
-            <div class="qgroup">
-              <div class="qgroup-h"><b>Kiek psichologų turėtų būti mokykloje?</b><small>88 įrašai</small></div>
-              <div class="ans">
-                <div class="ans-h"><span class="avatar" style="background:#4a3aa7">JP</span><span><b>Jonas Petraitis <svg class="badge-v" aria-label="Patvirtintas"><use href="#vbadge"/></svg></b><small>Seimo narys · pažymėtas 52 įrašuose</small></span><span class="chip ok">Rengia projektą</span></div>
-                <p>Rengiu Švietimo įstatymo pataisą: po vieną psichologo etatą 300 mokinių. Juodraštį paskelbsiu čia spalio mėnesį.</p>
-                <div class="foot"><button class="useful" type="button" data-n="212" aria-pressed="false">Naudinga · 212</button><span>rugsėjo 21 d.</span></div>
-              </div>
-            </div>
-
-            <div class="qgroup">
-              <div class="qgroup-h"><b>Kas finansuos papildomus etatus – valstybė ar savivaldybės?</b><small>47 įrašai</small></div>
-              <div class="ans">
-                <div class="ans-h"><span class="avatar" style="background:#1f6b3a">OJ</span><span><b>Ona Jonaitienė <svg class="badge-v" aria-label="Patvirtintas"><use href="#vbadge"/></svg></b><small>Seimo narė · pažymėta 29 įrašuose</small></span><span class="chip ok">Atsakė</span></div>
-                <p>Dabar psichologų etatus finansuoja savivaldybės iš mokymo lėšų. Siūlysiu, kad pirmus trejus metus papildomus etatus finansuotų valstybė, kol savivaldybės persitvarkys.</p>
-                <div class="foot"><button class="useful" type="button" data-n="96" aria-pressed="false">Naudinga · 96</button><span>rugsėjo 22 d.</span></div>
-              </div>
-            </div>
-
-            <div class="qgroup">
-              <div class="qgroup-h"><b>Ką daryti, kai mokykla negali rasti psichologo?</b><small>61 įrašas</small></div>
-              <div class="ans">
-                <div class="ans-h"><span class="avatar" style="background:#8a4a8a">ES</span><span><b>Eglė Stonienė</b><small>Patikėtinė · ekspertė: švietimas · pažymėta 12 įrašų</small></span><span class="chip ok">Atsakė</span></div>
-                <p>Regionuose trūksta ne tiek etatų, kiek specialistų. Savivaldybių pedagoginės psichologinės tarnybos gali konsultuoti ir nuotoliu – mokyklos apie tai dažnai nežino.</p>
-                <div class="foot"><button class="useful" type="button" data-n="74" aria-pressed="false">Naudinga · 74</button><span>rugsėjo 20 d.</span></div>
-              </div>
-              <p class="qwait">Laukia pažymėtų Seimo narių atsakymo.</p>
-            </div>
-
-            <div class="qgroup">
-              <div class="qgroup-h"><b>Ar vienas psichologas galėtų dirbti keliose mokyklose?</b><small>18 įrašų</small></div>
-              <p class="qwait">Pažymėtieji dar neatsakė.</p>
-              <div class="ans" id="ansMore" hidden>
-                <div class="ans-h"><span class="avatar" style="background:#6b6a66">TV</span><span><b>Tomas Vaitkus</b><small>Patikėtinis · 640 patikėjusių · nepažymėtas</small></span><span class="chip">Atsakė</span></div>
-                <p>Mūsų gimnazija psichologą dalijasi su dviem kaimyninėmis mokyklomis. Veikia, jei tvarkaraštis sutariamas iš anksto ir vaikai žino, kurią dieną jis būna.</p>
-                <div class="foot"><button class="useful" type="button" data-n="6" aria-pressed="false">Naudinga · 6</button><span>rugsėjo 23 d.</span></div>
-              </div>
-              <button class="linkbtn" type="button" id="ansMoreBtn" style="justify-self:start">Dar 1 atsakymas iš nepažymėtų</button>
-            </div>
-          </div>
-          <div class="topic-side">
-            <div class="side-h">Įrašai temoje (214)</div>
-            <div class="tpost mine"><b>Jūsų įrašas</b><p>Mūsų mokykloje 900 vaikų ir vienas psichologas pusei etato. Ar bus daugiau?</p><span class="q">Klausimas: kiek psichologų turėtų būti mokykloje?</span><button class="linkbtn" type="button" id="wrongTopic">Ne tas klausimas?</button></div>
-            <div class="tpost"><b>Giedrė L.</b><p>Ar savivaldybė turės iš ko mokėti už naują etatą? @Ona Jonaitienė</p><span class="q">Klausimas: kas finansuos papildomus etatus?</span></div>
-            <div class="tpost"><b>Mindaugas R.</b><p>Skelbėme konkursą pusmetį – niekas neatsiliepė. @Jonas Petraitis</p><span class="q">Klausimas: ką daryti, kai mokykla negali rasti psichologo?</span></div>
-            <button class="linkbtn" type="button" style="justify-self:start">Rodyti visus 214</button>
-          </div>
-        </div>
-      </div>
-      <div class="annot">
-        <div><span class="n">1</span><span><b>Atsakoma į klausimą.</b> Kiekvienas atsakymas rodomas po klausimu, į kurį atsako, ir pasiekia visus panašių klausimų autorius bei pažymėjusius „Man svarbu“ prie tos temos.</span></div>
-        <div><span class="n">2</span><span><b>Atsakymų tvarka.</b> Pirmiausia pažymėtieji (Seimo nariai ir patikėtiniai), tada kiti patvirtinti Seimo nariai ir kandidatai; likusieji – pagal „Naudinga“ paspaudimų skaičių. Klausimas be atsakymo lieka matomas su žyma, ko laukiama.</span></div>
-        <div><span class="n">3</span><span><b>Ne tas klausimas?</b> Grupavimas įrašo nekeičia ir neslepia. Jei įrašas pateko ne į tą klausimą ar temą, autorius tai pažymi, o sprendžia moderatorius.</span></div>
-        <div><span class="n">4</span><span><b>Pranešimai be triukšmo.</b> Pranešimą gaunate, kai į jūsų klausimą atsako jūsų pažymėtas žmogus ar jūsų patikėtinis. Kiti atsakymai matomi užėjus į konkrečią temą.</span></div>
-      </div>
-
-      <h3 style="margin-top:44px">Ką mato patikėtiniai ir Seimo nariai</h3>
-      <div class="mock-label"><span><b>Maketas</b> · Mano temos</span><span class="phase-sw">Rodo:<span class="seg" role="group" aria-label="Kam rodomas maketas"><button type="button" data-role="mp" aria-pressed="true">Seimo nariui</button><button type="button" data-role="exp" aria-pressed="false">patikėtinei ekspertei</button></span></span></div>
-      <div class="mock">
-        <div class="mock-bar"><div class="dots"><i></i><i></i><i></i></div><div class="url" id="mtUrl">lietuva2.lt/mano-temos</div></div>
-        <div class="inbox">
-          <div class="inbox-h"><div id="mtWho"></div><span class="mt-rate" id="mtRate"></span></div>
-          <div class="utabs" role="group" aria-label="Temų sąrašas" id="mtTabs">
-            <button type="button" data-t="me" aria-pressed="true">Man skirta</button>
-            <button type="button" data-t="area" aria-pressed="false">Mano sritys</button>
-            <button type="button" data-t="top" aria-pressed="false">Populiariausios</button>
-          </div>
-          <div id="mtList" style="display:grid;gap:12px"></div>
-        </div>
-      </div>
-      <div class="annot">
-        <div><span class="n">1</span><span><b>Vienas vaizdas visiems patikėtiniams.</b> Tiek Seimo nariai, tiek kiti patikėtiniai mato jiems skirtas temas, temas iš savo sričių ir pagal populiarumą.</span></div>
-        <div><span class="n">2</span><span><b>Jums patikėję – atskirai.</b> Prie kiekvienos temos matyti, kiek palaikančiųjų yra jums balsą patikėję žmonės.</span></div>
-        <div><span class="n">3</span><span><b>Tik Seimo nariams.</b> „Rengiu projektą“, patvirtinimo ženklelis ir viešas atsakymų rodiklis. Kiti patikėtiniai savo atsakymų rodiklį mato patys ir gali jį paviešinti savo nuožiūra.</span></div>
-        <div><span class="n">4</span><span><b>Prieš balsavimą.</b> Su Seimo projektu susietos temos rodomos projekto puslapyje ir Seimo nariui prieš balsavimą.</span></div>
-      </div>
-      <div class="prose" style="margin-top:22px">
-        <p><b>Ką galima pažymėti.</b> Įraše galima pažymėti bet kurį Seimo narį, taip pat ir neprisijungusį, ir kiekvieną patikėtinį – naudotoją, sutikusį veikti viešai (žr. 5 skyrių). Kitų naudotojų pažymėti negalima. Sistema pasiūlo susijusį projektą, jei toks yra ir įraše jo nepažymėjote.</p>
-        <p><b>Atsakymų rodiklis.</b> Skaičiuojamos temos, kuriose žmogus pažymėtas ir kurias palaiko bent 20 žmonių, – taip vienas įrašas rodiklio nesugadina. Atsakymu laikomas bet kuris sprendimas dėl temos, taip pat ir „Nepritariu“ su paaiškinimu. Seimo nario rodiklis rodomas viešai, kai pasiekia 70 %.</p>
-        <p><b>Moderavimas.</b> Diskusijas prižiūri DI pagalbininkas ir moderatoriai: įžeidžiantys ar pasikartojantys įrašai paslepiami. Savo projektų juodraščius skelbti ir dėl jų klausti nuomonės gali tik patvirtinti Seimo nariai.</p>
-      </div>
-
-      <h3 style="margin-top:44px">Seimo nario darbas su temomis matomas visiems</h3>
-      <ol class="status-flow" aria-label="Seimo nario atsakymo būsenos">
-        <li><span>Nauja tema</span></li>
-        <li><span>Atsakė</span></li>
-        <li><span>Rengia projektą</span></li>
-        <li><span>Įregistruotas Seime (XVP-…)</span></li>
-        <li><span>Balsuojama</span></li>
-        <li class="end"><span>Priimta arba atmesta</span></li>
-      </ol>
-      <p class="status-alt">Arba: <b>Nepritariu</b> – su paaiškinimu, kurį mato visi palaikantieji. Būsena rodoma prie kiekvieno atsakiusiojo atskirai: vienas Seimo narys gali rengti projektą, kitas – nepritarti.</p>
-      <div class="prose" style="margin-top:18px">
-        <p>Taip politiko darbas su žmonių iškeltomis temomis tampa matomas visiems, kuriems jos svarbios, – ne tik per rinkimus. Įrašai neturi teisinės galios, nes paskyros nėra tikrinamos pagal asmens kodą. Kai tema sulaukia didelio palaikymo, ją galima paversti peticija: palaikantieji ją pasirašo atskirai, sutikdami, kad jų vardas ir pavardė būtų įtraukti į sąrašą, o sąrašas įteikiamas Seimo nariams ar Seimo Peticijų komisijai. Kaip ir kitos internetinės peticijos, ji teisinės galios neturi, bet parodo, kiek žmonių to prašo. Teisinę galią turinčiai piliečių iniciatyvai parašai renkami per VRK sistemą.</p>
-      </div>
+      <p class="v2note">Šios galimybės – antrojoje versijoje. Pirmoji versija skirta balsavimui: projektų puslapiams, delegavimui, politikų profiliams su balsų paaiškinimais ir balsavimų analizei. Įrašai, temos ir atsakymai kuriami tik tada, kai pirmoji versija pasiteisins. Išsamiau su maketais – <a href="lietuva20-antroji-versija.html">atskirame dokumente</a>.</p>
     </section>
 
     <div class="part" id="part-build"><span class="part-no">IV dalis</span><span class="part-title">Įgyvendinimas</span></div>
@@ -1355,28 +1222,42 @@ footer.end svg{width:28px;height:28px}
     <section class="chapter" id="contribute">
       <header>
         <div class="eyebrow">12 · Kaip prisidėti</div>
-        <h2>Pasirinkite vaidmenį pirmajame bandyme</h2>
-        <p class="lede">Pirmąją versiją norime kurti su skirtingais dalyviais, o ne už uždarų durų. Kiekvienai grupei – konkretus vaidmuo.</p>
+        <h2>Pasirinkite, kaip prisidėti</h2>
+        <p class="lede">Prieš kurdami bet ką, koncepciją norime išsamiai aptarti su skirtingais dalyviais – ne už uždarų durų. Aptarimams naudojame šio dokumento maketus ir juos taisome pagal pastabas. Tik sutarę, ką kurti, bandytume veikiančią versiją su keliais tikrais Seimo projektais.</p>
       </header>
       <div class="audiences">
-        <div class="audience"><h3>Kaip LT2 naudotojas</h3><p>Išbandykite projektų santraukas, balsavimą ir palyginimą. Pasakykite, kas neaišku, ko trūksta ir dėl ko nepasitikėtumėte rezultatu.</p></div>
-        <div class="audience"><h3>Kaip viešas patikėtinis</h3><p>Pasirinkite savo sritis, viešai balsuokite ir padėkite nustatyti atsakomybės, interesų deklaravimo bei moderavimo taisykles.</p></div>
-        <div class="audience"><h3>Kaip politinio piloto dalyvis</h3><p>Su savo biuru išbandykite 5 projektų ciklą: santrauką, naudotojų signalą ir balso paaiškinimą.</p></div>
+        <div class="audience"><h3>Kaip LT2 naudotojas</h3><p>Peržiūrėkite projekto puslapį, balsavimą ir palyginimą maketuose. Pasakykite, kas neaišku, ko trūksta ir dėl ko nepasitikėtumėte rezultatu.</p></div>
+        <div class="audience"><h3>Kaip viešas patikėtinis</h3><p>Padėkite nustatyti patikėtinių atsakomybės, interesų deklaravimo bei moderavimo taisykles ir pasakykite, kas jus paskatintų tapti patikėtiniu.</p></div>
+        <div class="audience"><h3>Kaip politikas ar jo biuras</h3><p>Aptarkite, kaip balsų paaiškinimai ir rėmėjų signalas tiktų jūsų darbui ir kiek laiko tai užimtų. Padėkite nuspręsti, kas turėtų patekti į pirmą versiją, o vėliau išbandykite ją su keliais tikrais projektais.</p></div>
       </div>
-      <h3 style="margin-top:44px">Ką dar turime patikrinti</h3>
+      <h3 style="margin-top:44px">Kaip galima prisidėti</h3>
+      <div class="prose">
+        <ul>
+          <li><b>Įvertinkite maketus.</b> Pasakykite, kas neaišku, ko trūksta ir dėl ko nepasitikėtumėte rezultatu.</li>
+          <li><b>Patarkite dėl politinio proceso.</b> Jei pažįstate Seimo darbą iš arti, padėkite suprasti, kaip projektai iš tikrųjų svarstomi ir ką reikia žinoti, kad LT2 rodytų tikslų vaizdą.</li>
+          <li><b>Padėkite atrinkti ir aprašyti pirmuosius projektus.</b> Kurie svarstomi projektai žmonėms svarbiausi ir kaip juos paaiškinti suprantamai bei neutraliai.</li>
+          <li><b>Pasidalykite savo srities žiniomis.</b> Jei gerai išmanote kurią nors sritį – sveikatą, švietimą, mokesčius, energetiką ar kitą, – padėkite patikrinti, ar santraukos ir argumentai tikslūs.</li>
+          <li><b>Padėkite nustatyti taisykles.</b> Kaip turėtų veikti patikėtiniai, moderavimas ir statistika, kad rezultatais būtų galima pasitikėti.</li>
+          <li><b>Pakvieskite kitus.</b> Politikus, ekspertus, organizacijas ar savo auditoriją – visus, kuriems tai būtų įdomu.</li>
+          <li><b>Padėkite savo įgūdžiais.</b> Tekstais, dizainu, teisės žiniomis ar programavimu – kai bus sutarta, ką kurti.</li>
+        </ul>
+      </div>
+      <h3 style="margin-top:44px">Ką norime iš jūsų sužinoti</h3>
       <ol class="qs">
+        <li><span>Kaip norėtumėte dalyvauti aptariant ir kuriant platformą: periodiniuose susitikimuose, bendrame pokalbių kanale, asmeniniuose pokalbiuose ar kitaip? Kiek laiko galėtumėte skirti?<small>Visiems, norintiems prisidėti</small></span></li>
         <li><span>Ar paaiškintumėte savo balsavimus tokioje platformoje? Kas jus sulaikytų?<small>Seimo nariams</small></span></li>
         <li><span>Kurios iš siūlomų galimybių iš tiesų pakeistų jūsų darbą, o kurios – nebūtinos, o gal ir nepageidautinos?<small>Politikams ir jų biurams</small></span></li>
         <li><span>Ar delegavimas keliems patikėtiniams, kai sprendžia jų dauguma, atrodo teisingas ir suprantamas? Ką keistumėte?<small>Visiems</small></span></li>
         <li><span>Kuri siūloma statistika galėtų klaidinti ar būti nesąžininga, ir kaip ją reikėtų pateikti?<small>Visiems</small></span></li>
         <li><span>Ar sugrupuotos temos jūsų biurui būtų patogesni nei dabartiniai el. laiškai ir peticijos?<small>Politikams ir jų biurams · antrajai versijai</small></span></li>
       </ol>
+      <p style="margin-top:28px;font-family:var(--f-display);font-size:17px"><b>Norite prisidėti?</b> Rašykite <a href="mailto:info@lietuva2.lt">info@lietuva2.lt</a> ir pasakykite, kaip jums patogiau dalyvauti.</p>
     </section>
 
     <section class="chapter" id="elsewhere">
       <header>
         <div class="eyebrow">Priedas</div>
-        <h2>Kas jau veikia kitur</h2>
+        <h2>Kas veikia arba buvo išbandyta kitur</h2>
         <p class="lede">Elektroninės demokratijos platformos kitose šalyse ir organizacijose: kas jos daro, ar leidžia patikėti balsą ir ar vis dar veikia.</p>
       </header>
       <div class="tbl-wrap stack-wrap"><table class="cmp stack" style="min-width:860px">
@@ -1398,7 +1279,7 @@ footer.end svg{width:28px;height:28px}
           <tr><th scope="row">Google</th><td data-label="Platforma">Google Votes<small>2012–2015 m.</small></td><td data-label="Ką daro">Vidiniai darbuotojų balsavimai, apie 15 000 dalyvių</td><td data-label="Delegavimas">Taip</td><td data-label="Būsena">Eksperimentas baigtas</td></tr>
         </tbody>
       </table></div>
-      <p class="tbl-note">Ilgiausiai veikia tos platformos, kurioms institucija įsipareigoja atsakyti: Estijos, Latvijos, Suomijos parlamentai ar Bundestago nariai. Kur tokio įsipareigojimo nėra ar jis susilpnėja, dalyvavimas nyksta. Dauguma platformų dirba su piliečių pasiūlymais ir parašais; LT2 dirba su tuo, ką Seimas jau svarsto, ir lygina piliečių pasirinkimą su tikrais balsavimais.</p>
+      <p class="tbl-note">Šiuose pavyzdžiuose ilgiausiai veikia platformos, kurioms institucijos yra įsipareigojusios atsakyti, pavyzdžiui, Estijos, Latvijos ir Suomijos parlamentai arba Bundestago nariai. Susilpnėjus instituciniam įsipareigojimui dažnai mažėja ir dalyvavimas. Dauguma platformų dirba su piliečių pasiūlymais ir parašais. LT2 telkia dėmesį į Seimo jau svarstomus projektus ir lygina LT2 naudotojų balsus su įvykusiais Seimo balsavimais.</p>
       <footer class="end">
         <svg aria-hidden="true"><use href="#logo"/></svg>
         <span>Lietuva 2.0 · išsami produkto koncepcija, 2026 m. rugsėjis</span>
@@ -1424,7 +1305,9 @@ footer.end svg{width:28px;height:28px}
   const tip=$("#tip");
   function showTip(t,x,y){tip.textContent=t;tip.classList.add("on");const w=tip.offsetWidth,h=tip.offsetHeight;let L=x+14,T=y+14;if(L+w>innerWidth-8)L=x-w-14;if(T+h>innerHeight-8)T=y-h-14;tip.style.left=L+"px";tip.style.top=T+"px";}
   function hideTip(){tip.classList.remove("on");}
-  document.addEventListener("pointermove",e=>{const t=e.target.closest&&e.target.closest("[data-tip]");if(t)showTip(t.getAttribute("data-tip"),e.clientX,e.clientY);else hideTip();});
+  const tipAt=e=>{const t=e.target.closest&&e.target.closest("[data-tip]");if(t)showTip(t.getAttribute("data-tip"),e.clientX,e.clientY);else hideTip();};
+  document.addEventListener("pointermove",tipAt);
+  document.addEventListener("pointerdown",tipAt);
   document.addEventListener("pointerleave",hideTip);
 
   /* ---------- hemicycle ---------- */
@@ -1523,7 +1406,7 @@ footer.end svg{width:28px;height:28px}
       rows.push('<div class="share-row"><button type="button" class="rc-share">Dalintis</button><span>Pakvieskite kitus balsuoti</span></div>');
       $("#stageTxt").textContent="Planuojama rugs. 24 d."; $("#stageFinal").className="stage next";
       $("#closes").textContent="iki Seimo balsavimo";
-      $("#tlFinal").className=""; $("#tlFinalTxt").textContent="Galutinis balsavimas (priėmimas). Visuomenės rezultatas bus užfiksuotas.";
+      $("#tlFinal").className=""; $("#tlFinalTxt").textContent="Galutinis balsavimas (priėmimas). LT2 rezultatas bus užfiksuotas.";
     }
     $("#tally").innerHTML=rows.join("");
     const rc=$("#billResult");rc.hidden=!after;
@@ -1561,9 +1444,10 @@ footer.end svg{width:28px;height:28px}
       (b.tech?'<div class="warnbox"><b>DI vertinimu, projektas techninio pobūdžio.</b> Jis nekeičia žmonių teisių ar pareigų, todėl plačiajai auditorijai greičiausiai mažai aktualus.</div>':'')+
       '<label class="fld" for="f-title">Pavadinimas LT2 naudotojams<input id="f-title" value="'+b.t+'"></label>'+
       '<label class="fld" for="f-sum"><span>DI santrauka <span class="chip">galite redaguoti</span></span><textarea id="f-sum" rows="4">'+b.sum.map(x=>"• "+x).join("\n")+'</textarea></label>'+
+      '<div class="fld"><span>DI argumentai už ir prieš <span class="chip">galite redaguoti</span></span><span style="font-size:13px;color:var(--ink-2)">3 už · 3 prieš · <button class="linkbtn" type="button">Peržiūrėti</button></span></div>'+
       '<div class="fld">Sritys<div style="display:flex;gap:6px;flex-wrap:wrap">'+b.topics.map(t=>'<span class="chip">'+t+'</span>').join("")+'</div></div>'+
       '<label class="fld" for="f-why">Kodėl tai svarbu (neprivaloma)<textarea id="f-why" rows="2" placeholder="Trumpai parašykite, kodėl verta balsuoti"></textarea></label>'+
-      '<label class="chk" for="f-ok"><input type="checkbox" id="f-ok"> Peržiūrėjau santrauką ir ji atitinka projekto tekstą</label>'+
+      '<label class="chk" for="f-ok"><input type="checkbox" id="f-ok"> Peržiūrėjau santrauką bei argumentus ir jie atitinka projekto tekstą</label>'+
       '<div style="display:flex;gap:12px;align-items:center;flex-wrap:wrap"><button class="btn-primary" type="button" id="f-pub" disabled>Paskelbti balsavimą</button><span id="f-msg" style="font-size:13px;color:var(--muted)"></span></div>';
     $("#f-ok").addEventListener("change",e=>{$("#f-pub").disabled=!e.target.checked;});
     $("#f-pub").addEventListener("click",()=>{$("#f-msg").textContent="Paskelbta (maketas). Sekėjai gaus pranešimą.";$("#f-pub").disabled=true;});
@@ -1571,48 +1455,9 @@ footer.end svg{width:28px;height:28px}
   $("#initSearch").addEventListener("input",renderInitList);
   renderInitList();renderInitForm();
 
-  /* ---------- topic page ---------- */
-  $("#tpWant").addEventListener("click",e=>{const b=e.currentTarget,on=b.getAttribute("aria-pressed")!=="true";b.setAttribute("aria-pressed",on);$("#tpSup").textContent=fmt(on?1240:1239);});
-  $$(".useful").forEach(b=>b.addEventListener("click",()=>{const on=b.getAttribute("aria-pressed")!=="true";b.setAttribute("aria-pressed",on);b.textContent="Naudinga · "+(+b.dataset.n+(on?1:0));}));
-  $("#ansMoreBtn").addEventListener("click",e=>{$("#ansMore").hidden=false;e.currentTarget.remove();});
-  $("#wrongTopic").addEventListener("click",e=>{e.currentTarget.outerHTML='<span class="mt-note">Pažymėta – peržiūrės moderatorius</span>';});
-
-  /* ---------- my topics (delegates and MPs) ---------- */
-  const MT={
-    mp:{url:"lietuva2.lt/p/jonas-petraitis/temos",who:'<b>Jonas Petraitis</b> '+'<svg class="badge-v" aria-label="Patvirtintas"><use href="#vbadge"/></svg><div class="mt-note">Seimo narys · Rikiuojama pagal jums balsą patikėjusių palaikymą</div>',
-      rate:'Atsakymų rodiklis <b>84 %</b><br>rodomas viešai (≥ 70 %)',
-      acts:[["Atsakyta","Atsakyti"],["Rengiamas projektas","Rengiu projektą"],["Susieta su projektu","Susieti su Seimo projektu"],["Nepritariu","Nepritariu"]],
-      me:[{t:"Mokyklose trūksta psichologų",m:"Švietimas · 4 klausimai · 214 įrašų",sup:"1 240",mine:"142",st:"Rengiamas projektas",r:"Į klausimą „Kiek psichologų turėtų būti mokykloje?“: rengiu Švietimo įstatymo pataisą – po vieną psichologo etatą 300 mokinių. Juodraštį paskelbsiu čia spalio mėnesį."},
-          {t:"Balsuokite prieš fejerverkų prekybos ribojimą (XVP-1811)",m:"Susieta su Seimo projektu · Viešoji tvarka · 41 įrašas · balsavimas Seime spalio 6 d.",sup:"312",mine:"57",wait:1},
-          {t:"Panaikinti automobilių registracijos mokestį",m:"Mokesčiai · 388 įrašai",sup:"2 015",mine:"96",st:"Nepritariu",r:"Nepritariu: mokestis mažina taršiausių automobilių skaičių, o lėšos skiriamos keliams. Siūlau jį susieti su automobilio amžiumi."}],
-      area:[{t:"Ar Lietuva turėtų prisidėti prie bendro ES gynybos fondo?",m:"Užsienio politika (jūsų komitetas) · 61 įrašas · jūsų nepažymėjo",sup:"540",mine:"88",wait:1}],
-      top:[{t:"Panaikinti automobilių registracijos mokestį",m:"Mokesčiai · 388 įrašai",sup:"2 015",mine:"96",st:"Nepritariu"},{t:"Nemokamas viešasis transportas moksleiviams",m:"Transportas · 302 įrašai · jūsų nepažymėjo",sup:"1 870",mine:"104",wait:1}]},
-    exp:{url:"lietuva2.lt/p/ruta-mockute/temos",who:'<b>Rūta Mockutė</b><div class="mt-note">Patikėtinė · ekspertė: ekonomika · 3 310 patikėjusių</div>',
-      rate:'Atsakėte į <b>6 iš 8</b> jums skirtų temų<br>matote tik jūs',
-      acts:[["Atsakyta","Atsakyti"],["Susieta su projektu","Susieti su Seimo projektu"],["Nepritariu","Nepritariu"]],
-      me:[{t:"Progresinis pajamų mokestis",m:"Mokesčiai · 5 klausimai · 142 įrašai · susieta su XVP-0412",sup:"610",mine:"118",st:"Atsakyta",r:"Į klausimą „Ar 32 % tarifas palies šeimos verslo pardavimą?“: riba skaičiuojama metams, todėl vienkartinis pardavimas ją iškart viršija. Kaimyninėse šalyse taikomas atskiras kapitalo prieaugio tarifas."},
-          {t:"Ar verta mažinti PVM maitinimo paslaugoms?",m:"Mokesčiai · 27 įrašai",sup:"64",mine:"19",wait:1}],
-      area:[{t:"Ar pajamų mokesčio riba bus indeksuojama pagal infliaciją?",m:"Ekonomika (jūsų sritis) · 9 įrašai · jūsų nepažymėjo",sup:"36",mine:"11",wait:1}],
-      top:[{t:"Panaikinti automobilių registracijos mokestį",m:"Mokesčiai · 388 įrašai",sup:"2 015",mine:"204",wait:1},{t:"Nemokamas viešasis transportas moksleiviams",m:"Transportas · 302 įrašai",sup:"1 870",mine:"77",wait:1}]}};
-  const mtS={role:"mp",tab:"me"};
-  const REPLY={"Atsakyta":"Atsakymas paskelbtas temoje, palaikantieji gavo pranešimą.","Rengiamas projektas":"Pažymėta, kad rengiate projektą. Palaikantieji gaus pranešimą, kai paskelbsite juodraštį.","Susieta su projektu":"Tema susieta su Seimo projektu ir rodoma jo puslapyje.","Nepritariu":"Parašykite paaiškinimą – jį matys visi palaikantieji."};
-  function renderMT(){
-    const R=MT[mtS.role];
-    $$(".phase-sw [data-role]").forEach(b=>b.setAttribute("aria-pressed",b.dataset.role===mtS.role));
-    $$("#mtTabs button").forEach(b=>b.setAttribute("aria-pressed",b.dataset.t===mtS.tab));
-    $("#mtUrl").textContent=R.url;$("#mtWho").innerHTML=R.who;$("#mtRate").innerHTML=R.rate;
-    $("#mtList").innerHTML=R[mtS.tab].map((x,k)=>'<div class="theme"><div class="theme-h"><b>'+x.t+'<small>'+x.m+'</small></b><span class="chip '+(x.wait?"warn":x.st==="Nepritariu"?"":"ok")+'">'+(x.wait?"Laukia atsakymo":x.st)+'</span></div>'+
-      '<div class="support"><span><b>'+x.sup+'</b> palaiko</span><span class="mine"><b>'+x.mine+'</b> iš jų jums patikėję</span></div>'+
-      (x.wait?'<div class="acts" data-k="'+k+'">'+R.acts.map(a=>'<button type="button" data-a="'+a[0]+'">'+a[1]+'</button>').join("")+(mtS.role==="exp"?'<span class="mt-note" style="align-self:center">„Rengiu projektą“ – tik Seimo nariams</span>':'')+'</div>':(x.r?'<p class="reply">'+x.r+'</p>':''))+'</div>').join("");
-    $$("#mtList .acts button").forEach(b=>b.addEventListener("click",()=>{const box=b.parentElement,ch=box.parentElement.querySelector(".chip");ch.textContent=b.dataset.a;ch.className="chip "+(b.dataset.a==="Nepritariu"?"":"ok");box.outerHTML='<p class="reply">'+REPLY[b.dataset.a]+' <span class="mt-note">(maketas)</span></p>';}));
-  }
-  $$(".phase-sw [data-role]").forEach(b=>b.addEventListener("click",()=>{mtS.role=b.dataset.role;renderMT();}));
-  $$("#mtTabs button").forEach(b=>b.addEventListener("click",()=>{mtS.tab=b.dataset.t;renderMT();}));
-  renderMT();
 
   /* ---------- want to know ---------- */
   $("#inviteIv").addEventListener("click",e=>{const b=e.currentTarget;b.setAttribute("aria-pressed","true");b.textContent="Pakviesta ✓";});
-  $$(".oq .want").forEach(b=>b.addEventListener("click",()=>{const on=b.getAttribute("aria-pressed")!=="true";b.setAttribute("aria-pressed",on);const m=b.previousElementSibling;m.textContent=m.textContent.replace(/\d[\d \u00a0]* palaiko/,fmt(+b.dataset.n+(on?1:0))+" palaiko");}));
 
   /* ---------- my delegates ---------- */
   const TOP=["Ekonomika","Mokesčiai","Švietimas","Sveikata","Socialiniai reikalai","Gynyba","Energetika","Teisė","Užsienio politika"];
@@ -1720,7 +1565,7 @@ footer.end svg{width:28px;height:28px}
     {n:"Naujasis centras",v:88,d:"nemokamos studijos; saulės parkai; progresinis pajamų mokestis"},
     {n:"Kaimo aljansas",v:84,d:"saulės parkai ūkio žemėje; akcizas saldintiems gėrimams; progresinis pajamų mokestis"}
   ];
-  $("#cohesion").innerHTML=coh.map(c=>{const w=(c.v-70)/30*100;return '<div class="coh" data-tip="'+c.n+': '+c.v+' %. Nuomonės labiausiai išsiskyrė: '+c.d+'"><span>'+c.n+'</span><div class="bar"><span style="width:'+w+'%"></span></div><b>'+c.v+' %</b></div>';}).join("")+'<div class="coh" aria-hidden="true" style="font-size:11px;color:var(--muted)"><span></span><div style="display:flex;justify-content:space-between"><span>70 %</span><span>85 %</span><span>100 %</span></div><span></span></div>';
+  $("#cohesion").innerHTML=coh.map(c=>{const w=(c.v-70)/30*100;return '<div class="coh" data-tip="'+c.n+': '+c.v+' %. Nuomonės labiausiai skyrėsi: '+c.d+'"><span>'+c.n+'</span><div class="bar"><span style="width:'+w+'%"></span></div><b>'+c.v+' %</b></div>';}).join("")+'<div class="coh" aria-hidden="true" style="font-size:11px;color:var(--muted)"><span></span><div style="display:flex;justify-content:space-between"><span>70 %</span><span>85 %</span><span>100 %</span></div><span></span></div>';
 
   /* ---------- matches ---------- */
   const mt=[

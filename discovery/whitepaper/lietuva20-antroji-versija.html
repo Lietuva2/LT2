@@ -1,0 +1,897 @@
+<!doctype html>
+<html lang="lt">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Lietuva 2.0 – antroji versija: kas rūpi žmonėms</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400;12..96,500;12..96,600;12..96,700;12..96,800&family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;1,6..72,400&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+:root{
+  --bg:#f4f7f3; --surface:#ffffff; --surface-2:#eaf0e8; --surface-3:#dde6db;
+  --ink:#13201a; --ink-2:#44524a; --muted:#6f7c75; --line:#d3dcd3; --line-strong:#b6c3b8;
+  --brand:#1f6b3a; --brand-ink:#ffffff; --brand-soft:#dcebdc; --leaf:#7cc242; --slate:#a7b1ac;
+  --link:#1f6b3a;
+  --v-for:#2a78d6; --v-against:#e34948; --v-abstain:#b5b4ae; --v-absent:#c9ccc6;
+  --s-seimas:#4a3aa7; --s-platform:#2e9a4a;
+  --warn-bg:#fff4d6; --warn-ink:#6b4d00;
+  --shadow:0 1px 2px rgba(19,32,26,.06),0 8px 24px rgba(19,32,26,.08);
+  --f-display:"Bricolage Grotesque","Segoe UI",system-ui,sans-serif;
+  --f-body:"Newsreader",Georgia,"Times New Roman",serif;
+  --f-mono:"IBM Plex Mono",ui-monospace,Menlo,Consolas,monospace;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    color-scheme:dark;
+    --bg:#0e1411; --surface:#151d18; --surface-2:#1c2620; --surface-3:#243029;
+    --ink:#e6eee8; --ink-2:#b0beb5; --muted:#84928a; --line:#28352d; --line-strong:#3a4a40;
+    --brand:#3f9a5c; --brand-ink:#ffffff; --brand-soft:#1f3326; --leaf:#8fd158; --slate:#6d7872;
+    --link:#7fd08f;
+    --v-for:#3987e5; --v-against:#e66767; --v-abstain:#6b6a66; --v-absent:#3a423d;
+    --s-seimas:#9085e9; --s-platform:#3fae5a;
+    --warn-bg:#3a2f10; --warn-ink:#f3d58a;
+    --shadow:0 1px 2px rgba(0,0,0,.3),0 8px 24px rgba(0,0,0,.35);
+  }
+}
+:root[data-theme="dark"]{
+  color-scheme:dark;
+  --bg:#0e1411; --surface:#151d18; --surface-2:#1c2620; --surface-3:#243029;
+  --ink:#e6eee8; --ink-2:#b0beb5; --muted:#84928a; --line:#28352d; --line-strong:#3a4a40;
+  --brand:#3f9a5c; --brand-ink:#ffffff; --brand-soft:#1f3326; --leaf:#8fd158; --slate:#6d7872;
+  --link:#7fd08f;
+  --v-for:#3987e5; --v-against:#e66767; --v-abstain:#6b6a66; --v-absent:#3a423d;
+  --s-seimas:#9085e9; --s-platform:#3fae5a;
+  --warn-bg:#3a2f10; --warn-ink:#f3d58a;
+  --shadow:0 1px 2px rgba(0,0,0,.3),0 8px 24px rgba(0,0,0,.35);
+}
+
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+@media (prefers-reduced-motion: reduce){html{scroll-behavior:auto}*{animation:none!important;transition:none!important}}
+body{background:var(--bg);color:var(--ink);font-family:var(--f-body);font-size:19px;line-height:1.6;padding-inline:20px;padding-block:0 64px}
+a{color:var(--link);text-underline-offset:3px}
+:focus-visible{outline:2px solid var(--brand);outline-offset:2px;border-radius:4px}
+h1,h2,h3,h4{font-family:var(--f-display);line-height:1.12;text-wrap:balance;margin:0;color:var(--ink)}
+h2{font-size:clamp(30px,4vw,42px);font-weight:700;letter-spacing:-.02em}
+h3{font-size:23px;font-weight:650;letter-spacing:-.01em}
+h4{font-size:17px;font-weight:650}
+p{margin:0}
+.mono{font-family:var(--f-mono);font-size:.82em;letter-spacing:0}
+.eyebrow{font-family:var(--f-display);font-size:13px;font-weight:600;letter-spacing:.09em;text-transform:uppercase;color:var(--brand)}
+.muted{color:var(--muted)}
+.tnum{font-variant-numeric:tabular-nums}
+
+/* ---------- page frame ---------- */
+.topbar{position:sticky;top:env(safe-area-inset-top,0px);z-index:20;margin-inline:-20px;padding:10px 20px;background:color-mix(in oklab,var(--bg) 88%,transparent);backdrop-filter:blur(10px);border-bottom:1px solid var(--line);display:flex;align-items:center;gap:16px}
+.topbar .brandmark{display:flex;align-items:center;gap:10px;text-decoration:none;color:var(--ink);font-family:var(--f-display);font-weight:700;font-size:18px}
+.topbar .brandmark svg{width:30px;height:30px}
+.topbar nav{margin-left:auto;display:flex;gap:18px;font-family:var(--f-display);font-size:14px;overflow-x:auto;scrollbar-width:none}
+.topbar nav a{color:var(--ink-2);text-decoration:none;white-space:nowrap}
+.topbar nav a:hover{color:var(--brand)}
+@media (max-width:760px){.topbar nav{display:none}}
+
+.layout{max-width:1180px;margin:0 auto;display:grid;grid-template-columns:220px minmax(0,1fr);gap:56px}
+@media (max-width:1060px){.layout{grid-template-columns:minmax(0,1fr)}.toc{display:none}}
+.toc{position:sticky;top:84px;align-self:start;padding-top:40px;font-family:var(--f-display);font-size:14px}
+.toc ol{list-style:none;padding:0;margin:12px 0 0;display:grid;gap:2px;counter-reset:toc}
+.toc li{counter-increment:toc}
+.toc li.toc-intro{counter-increment:none}.toc li.toc-intro a::before{content:"•";font-size:15px;line-height:.8;color:var(--brand)}
+.toc a{display:grid;grid-template-columns:26px 1fr;padding:5px 8px;border-radius:6px;text-decoration:none;color:var(--ink-2)}
+.toc a::before{content:counter(toc,decimal-leading-zero);font-family:var(--f-mono);font-size:11px;color:var(--muted);padding-top:3px}
+.toc a:hover,.toc a.on{background:var(--surface-2);color:var(--ink)}
+.toc a.on::before{color:var(--brand)}
+
+main{min-width:0}
+.prose{max-width:680px}
+.prose p+p{margin-top:1em}
+.prose ul,.prose ol{padding-left:1.2em;margin:1em 0 0}
+.prose li+li{margin-top:.45em}
+section.chapter{padding-top:84px;scroll-margin-top:60px}
+section.chapter>header{display:grid;gap:12px;margin-bottom:28px;max-width:720px}
+section.chapter>header .lede{font-size:21px;color:var(--ink-2)}
+
+/* ---------- hero ---------- */
+.hero{padding-top:48px;display:grid;grid-template-columns:minmax(0,1.05fr) minmax(0,1fr);gap:48px;align-items:center}
+@media (max-width:900px){.hero{grid-template-columns:minmax(0,1fr)}}
+.hero-logo{display:flex;align-items:center;gap:14px;margin-bottom:28px}
+.hero-logo svg{width:64px;height:64px}
+.hero-logo .wm{font-family:var(--f-display);font-weight:800;font-size:30px;letter-spacing:-.02em;line-height:1}
+.hero-logo .wm span{color:var(--brand)}
+.hero-logo .tag{font-family:var(--f-display);font-size:13px;color:var(--muted);margin-top:4px;letter-spacing:.02em}
+.hero h1{font-size:clamp(40px,6vw,68px);font-weight:800;letter-spacing:-.035em;line-height:1.02}
+.hero .kicker{font-family:var(--f-display);font-size:clamp(20px,2.4vw,26px);font-weight:600;letter-spacing:-.01em;line-height:1.25;color:var(--ink);margin-top:18px}
+.hero h1 em{font-style:normal;color:var(--brand)}
+.hero .lede{font-size:22px;color:var(--ink-2);margin-top:22px;max-width:560px}
+.hero-meta{display:flex;flex-wrap:wrap;gap:8px 20px;margin-top:26px;font-family:var(--f-display);font-size:14px;color:var(--muted)}
+.hero-meta b{color:var(--ink);font-weight:600}
+.notice{margin-top:28px;display:flex;gap:10px;padding:12px 14px;border-radius:10px;background:var(--warn-bg);color:var(--warn-ink);font-family:var(--f-display);font-size:14px;line-height:1.45;max-width:560px}
+.notice svg{flex:none;width:18px;height:18px;margin-top:1px}
+
+.hemi-card{background:var(--surface);border:1px solid var(--line);border-radius:18px;padding:22px;box-shadow:var(--shadow);font-family:var(--f-display)}
+.hemi-card .bill-id{font-family:var(--f-mono);font-size:12px;color:var(--muted)}
+.hemi-card h3{font-size:19px;margin-top:4px}
+.hemi-wrap{position:relative;margin-top:14px;container-type:inline-size}
+.hemi-wrap svg{width:100%;height:auto;display:block}
+.hemi-center{position:absolute;left:0;right:0;bottom:4px;text-align:center}
+.hemi-center .big{font-size:min(30px,7.4cqi);font-weight:800;letter-spacing:-.02em}
+.hemi-center .small{font-size:12px;color:var(--muted)}
+.legend{display:flex;flex-wrap:wrap;gap:6px 14px;font-family:var(--f-display);font-size:13px;color:var(--ink-2)}
+.legend i{display:inline-block;width:10px;height:10px;border-radius:50%;margin-right:6px;vertical-align:-1px}
+.legend i.ring{background:transparent!important;box-shadow:inset 0 0 0 2px var(--v-absent)}
+.split-bars{display:grid;gap:12px;margin-top:16px;padding-top:16px;border-top:1px solid var(--line)}
+.sbar-row{display:grid;grid-template-columns:118px 1fr;gap:10px;align-items:center;font-size:13px}
+.sbar-row .lbl{color:var(--ink-2);line-height:1.2}
+.sbar-row .lbl b{display:block;color:var(--ink);font-weight:600}
+.verdict{margin-top:14px;display:flex;flex-wrap:wrap;align-items:center;gap:6px 8px;font-size:13.5px;color:var(--ink-2)}
+.rc-head{display:flex;justify-content:space-between;align-items:center;gap:10px}
+.rc-share{font:inherit;font-size:12.5px;font-weight:600;padding:4px 12px;border-radius:999px;border:1px solid var(--line-strong);background:var(--surface);color:var(--ink);cursor:pointer}
+.legend i.me{background:transparent!important;box-shadow:inset 0 0 0 2.5px var(--ink)}
+.hero-fig{margin:0}
+.hero-cap{margin-top:12px;font-family:var(--f-display);font-size:13px;line-height:1.45;color:var(--muted);text-align:center}
+.bill-result{margin-top:16px;box-shadow:none}
+.sbar{display:flex;height:22px;gap:2px;border-radius:5px;overflow:hidden}
+.sbar span{display:flex;align-items:center;justify-content:center;color:#fff;font-size:11.5px;font-weight:600;min-width:0;white-space:nowrap;overflow:hidden}
+.sbar .f{background:var(--v-for)} .sbar .a{background:var(--v-against)} .sbar .n{background:var(--v-abstain);color:var(--ink)}
+.chip{display:inline-flex;align-items:center;gap:6px;padding:3px 9px;border-radius:999px;font-family:var(--f-display);font-size:12px;font-weight:600;line-height:1.5;border:1px solid var(--line-strong);color:var(--ink-2);background:var(--surface)}
+.chip.gap{background:var(--warn-bg);color:var(--warn-ink);border-color:transparent}
+.chip.ok{background:var(--brand-soft);color:var(--brand);border-color:transparent}
+:root[data-theme="dark"] .chip.ok{color:var(--link)}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]) .chip.ok{color:var(--link)}}
+
+/* ---------- pillars ---------- */
+.pillars{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:14px;margin-top:8px}
+@media (max-width:980px){.pillars{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media (max-width:520px){.pillars{grid-template-columns:minmax(0,1fr)}}
+.pillar{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:18px;display:grid;gap:8px;align-content:start}
+.pillar .verb{font-family:var(--f-display);font-size:26px;font-weight:800;letter-spacing:-.02em;color:var(--brand)}
+.pillar p{font-size:16px;line-height:1.5;color:var(--ink-2)}
+.pillar .src{font-family:var(--f-display);font-size:12.5px;color:var(--muted);border-top:1px dashed var(--line);padding-top:8px;margin-top:4px}
+
+/* ---------- tables ---------- */
+.tbl-wrap{overflow-x:auto;margin-top:24px;border:1px solid var(--line);border-radius:14px;background:var(--surface)}
+table.cmp{border-collapse:collapse;width:100%;min-width:620px;font-family:var(--f-display);font-size:14.5px;line-height:1.45}
+table.cmp th,table.cmp td{text-align:left;padding:12px 16px;border-bottom:1px solid var(--line);vertical-align:top}
+table.cmp thead th{font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);font-weight:600;background:var(--surface-2)}
+table.cmp tbody th{font-weight:600;color:var(--ink);width:150px}
+table.cmp td.old{color:var(--muted)}
+table.cmp tr:last-child>*{border-bottom:0}
+table.cmp td small{display:block;font-size:12.5px;color:var(--muted);margin-top:2px}
+table.dlgt td:first-child{width:30%}
+.tbl-note{font-family:var(--f-display);font-size:14px;color:var(--ink-2);margin-top:14px}
+@media (max-width:560px){.stack-wrap{overflow:visible;border:0;border-radius:0;background:none}table.stack{min-width:0!important;display:block}table.stack thead{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}table.stack tbody{display:grid;gap:10px}table.stack tr{display:grid;gap:10px;padding:14px 16px;background:var(--surface);border:1px solid var(--line);border-radius:12px}table.stack tr>*,table.stack tr:last-child>*{display:block;width:auto!important;padding:0;border:0}table.stack tr>:first-child{font-weight:600;color:var(--ink);font-size:15.5px}table.stack tr>:first-child small{font-weight:400}table.stack [data-label]::before{content:attr(data-label);display:block;margin-bottom:2px;font-size:11.5px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}}
+
+/* ---------- diagram ---------- */
+figure{margin:28px 0 0}
+figure .fig{overflow-x:auto;background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:18px}
+figure svg{display:block;width:100%;height:auto;min-width:720px;color:var(--ink)}
+figcaption{font-family:var(--f-display);font-size:14px;color:var(--muted);margin-top:10px;max-width:680px}
+
+/* ---------- mockup frames ---------- */
+.mock{margin-top:32px;border-radius:14px;border:1px solid var(--line-strong);background:var(--surface);box-shadow:var(--shadow);overflow:hidden;font-family:var(--f-display);font-size:15px;line-height:1.45}
+.mock-bar{display:flex;align-items:center;gap:12px;padding:9px 14px;background:var(--surface-2);border-bottom:1px solid var(--line)}
+.mock-bar .dots{display:flex;gap:6px}
+.mock-bar .dots i{width:10px;height:10px;border-radius:50%;background:var(--line-strong)}
+.mock-bar .url{flex:1;min-width:0;background:var(--surface);border:1px solid var(--line);border-radius:7px;padding:3px 10px;font-family:var(--f-mono);font-size:12px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.mock-label{display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap;margin-top:32px;font-family:var(--f-display);font-size:13px;color:var(--muted)}
+.mock-label b{color:var(--ink);font-weight:600}
+.mock-label+.mock{margin-top:10px}
+.phase-sw{display:inline-flex;align-items:center;gap:8px;flex-wrap:wrap}
+.phase-sw .seg button{font-size:12.5px}
+.app-nav{display:flex;align-items:center;gap:18px;padding:12px 20px;border-bottom:1px solid var(--line);flex-wrap:wrap}
+.app-nav .logo{display:flex;align-items:center;gap:8px;font-weight:800}
+.app-nav .logo svg{width:24px;height:24px}
+.app-nav a{color:var(--ink-2);text-decoration:none;font-size:14px}
+.app-nav a.on{color:var(--ink);font-weight:600;box-shadow:inset 0 -2px 0 var(--brand);padding-bottom:3px}
+.app-nav .me{margin-left:auto;display:flex;align-items:center;gap:8px;font-size:13px;color:var(--muted)}
+.avatar{width:28px;height:28px;border-radius:50%;display:inline-grid;place-items:center;font-size:12px;font-weight:700;color:#fff;flex:none}
+
+/* bill page */
+.bill{display:grid;grid-template-columns:minmax(0,1fr) 320px;gap:0}
+@media (max-width:880px){.bill{grid-template-columns:minmax(0,1fr)}}
+.bill-main{padding:22px 24px;border-right:1px solid var(--line);min-width:0}
+@media (max-width:880px){.bill-main{border-right:0;border-bottom:1px solid var(--line)}}
+.bill-crumbs{display:flex;flex-wrap:wrap;gap:6px 10px;align-items:center;font-size:13px;color:var(--muted)}
+.bill-main h3{font-size:25px;margin-top:10px;letter-spacing:-.015em}
+.stages{display:flex;gap:4px;margin-top:16px;flex-wrap:wrap}
+.stage{flex:1 1 110px;padding:8px 10px;border-radius:8px;background:var(--surface-2);font-size:12.5px;line-height:1.3;color:var(--muted)}
+.stage b{display:block;color:var(--ink-2);font-weight:600;font-size:13px}
+.stage.done{background:var(--brand-soft)} .stage.done b{color:var(--ink)}
+.stage.next{outline:2px solid var(--brand);outline-offset:-2px;background:var(--surface)} .stage.next b{color:var(--ink)}
+.tabs{display:flex;gap:4px;margin-top:20px;border-bottom:1px solid var(--line);overflow-x:auto}
+.tabs button{font:inherit;font-size:14px;background:none;border:0;padding:9px 12px;color:var(--ink-2);cursor:pointer;border-bottom:2px solid transparent;margin-bottom:-1px;white-space:nowrap}
+.tabs button[aria-selected="true"]{color:var(--ink);font-weight:600;border-bottom-color:var(--brand)}
+.tabpanel{padding-top:16px}
+.ai-flag{display:flex;flex-wrap:wrap;align-items:center;gap:8px;font-size:12.5px;color:var(--muted);margin-bottom:12px}
+.ai-flag .chip{font-size:11.5px}
+.sum-list{display:grid;gap:10px;margin:0;padding:0;list-style:none}
+.sum-list li{display:grid;grid-template-columns:22px 1fr;gap:8px;font-size:15px}
+.sum-list li::before{content:"";width:8px;height:8px;border-radius:2px;background:var(--brand);margin:8px 0 0 6px}
+.cite{font-family:var(--f-mono);font-size:11px;color:var(--link);background:var(--brand-soft);border-radius:4px;padding:0 5px;margin-left:4px;white-space:nowrap}
+.who{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;margin-top:16px}
+@media (max-width:560px){.who{grid-template-columns:minmax(0,1fr)}}
+.who div{background:var(--surface-2);border-radius:10px;padding:10px 12px;font-size:13px;color:var(--ink-2)}
+.who b{display:block;font-size:20px;color:var(--ink);letter-spacing:-.01em}
+.args{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+@media (max-width:560px){.args{grid-template-columns:1fr}}
+.args h4{font-size:14px;display:flex;align-items:center;gap:8px}
+.args h4 i{width:10px;height:10px;border-radius:50%}
+.args ul{margin:8px 0 0;padding-left:18px;font-size:14px;color:var(--ink-2)}
+.args li+li{margin-top:6px}
+.diff{font-family:var(--f-mono);font-size:12.5px;line-height:1.6;background:var(--surface-2);border-radius:10px;padding:12px 14px;overflow-x:auto}
+.diff del{color:var(--v-against);text-decoration:line-through}
+.diff ins{color:var(--v-for);text-decoration:none;font-weight:500}
+.tl{list-style:none;margin:0;padding:0;display:grid;gap:0}
+.tl li{display:grid;grid-template-columns:92px 14px 1fr;gap:12px;font-size:14px;padding-bottom:12px;position:relative}
+.tl li .d{font-family:var(--f-mono);font-size:12px;color:var(--muted);padding-top:2px}
+.tl li .dot{width:12px;height:12px;border-radius:50%;background:var(--surface);border:2px solid var(--line-strong);margin-top:5px;position:relative;z-index:1}
+.tl li.done .dot{background:var(--brand);border-color:var(--brand)}
+.tl li::after{content:"";position:absolute;left:111px;top:18px;bottom:0;width:2px;background:var(--line)}
+.tl li:last-child::after{display:none}
+
+.bill-side{padding:22px 20px;background:color-mix(in oklab,var(--surface-2) 45%,var(--surface));display:grid;gap:16px;align-content:start}
+.side-h{font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);font-weight:600}
+.deadline{display:flex;justify-content:space-between;align-items:baseline;font-size:13px;color:var(--ink-2)}
+.deadline b{font-size:17px;color:var(--ink)}
+.my-status{border-radius:12px;padding:12px 14px;border:1px solid var(--line);background:var(--surface);font-size:13.5px;line-height:1.45}
+.my-status .st{display:flex;align-items:center;gap:8px;font-weight:600;font-size:14px}
+.my-status .st i{width:10px;height:10px;border-radius:50%;flex:none}
+.dlg{list-style:none;margin:8px 0 0;padding:8px 0 0;border-top:1px solid var(--line);display:grid;gap:5px}
+.dlg li{display:flex;justify-content:space-between;align-items:baseline;gap:8px}
+.dlg small{color:var(--muted);font-size:12px}
+.dlg .dv{white-space:nowrap;font-weight:600}
+.dlg .dv i{display:inline-block;width:8px;height:8px;border-radius:50%;margin-right:5px}
+.dlg .muted{font-weight:400;color:var(--muted)}
+.dlg .lemia{font-size:11px;font-weight:600;color:var(--brand);background:var(--brand-soft);border-radius:999px;padding:1px 6px;margin-left:4px}
+.share-row{display:flex;align-items:center;gap:10px;font-size:13px;color:var(--ink-2)}
+.vote-btns{display:grid;grid-template-columns:repeat(3,1fr);gap:6px}
+.vote-btns button{font:inherit;font-size:14px;font-weight:600;padding:10px 6px;border-radius:9px;border:1.5px solid var(--line-strong);background:var(--surface);color:var(--ink);cursor:pointer;transition:background .15s,border-color .15s}
+.vote-btns button:hover{border-color:var(--ink-2)}
+.vote-btns button:disabled{opacity:.45;cursor:default}
+.vote-btns button[aria-pressed="true"][data-v="for"]{background:var(--v-for);border-color:var(--v-for);color:#fff}
+.vote-btns button[aria-pressed="true"][data-v="against"]{background:var(--v-against);border-color:var(--v-against);color:#fff}
+.vote-btns button[aria-pressed="true"][data-v="abstain"]{background:var(--v-abstain);border-color:var(--v-abstain);color:var(--ink)}
+.linkbtn{font:inherit;font-size:13px;background:none;border:0;padding:0;color:var(--link);cursor:pointer;text-decoration:underline;text-underline-offset:3px}
+.seg{display:inline-flex;background:var(--surface-2);border-radius:9px;padding:3px;gap:2px}
+.seg button{font:inherit;font-size:12.5px;border:0;background:none;padding:5px 10px;border-radius:7px;color:var(--ink-2);cursor:pointer}
+.seg button[aria-pressed="true"]{background:var(--surface);color:var(--ink);font-weight:600;box-shadow:0 1px 2px rgba(0,0,0,.08)}
+.tally{display:grid;gap:10px}
+.tally .row{display:grid;gap:5px;font-size:13px}
+.tally .row .top{display:flex;justify-content:space-between;color:var(--ink-2)}
+.tally .row .top b{color:var(--ink)}
+.tally .row.po{opacity:.7}
+.tally .note{font-size:12px;color:var(--muted);line-height:1.4}
+
+/* annotations */
+.annot{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:14px 24px;margin-top:18px;font-family:var(--f-display);font-size:14.5px;line-height:1.45;color:var(--ink-2)}
+.annot div{display:grid;grid-template-columns:26px 1fr;gap:8px}
+.annot .n{width:22px;height:22px;border-radius:50%;background:var(--ink);color:var(--bg);font-size:12px;font-weight:700;display:grid;place-items:center}
+.annot b{color:var(--ink)}
+.annot ul{margin:4px 0;padding-left:18px}
+
+.badge-v{width:14px;height:14px;flex:none}
+select{font:inherit;font-size:13px;padding:5px 8px;border-radius:8px;border:1px solid var(--line-strong);background:var(--surface);color:var(--ink);max-width:100%}
+
+/* rules */
+.rules{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px;margin-top:28px}
+@media (max-width:720px){.rules{grid-template-columns:minmax(0,1fr)}}
+.rule{border-top:2px solid var(--ink);padding-top:12px}
+.rule h4{font-size:16px}
+.rule p{font-size:16.5px;color:var(--ink-2);margin-top:6px;line-height:1.5}
+
+/* politician profile */
+.prof{display:grid;grid-template-columns:300px minmax(0,1fr);gap:0}
+@media (max-width:880px){.prof{grid-template-columns:minmax(0,1fr)}}
+.prof-side{padding:22px;border-right:1px solid var(--line);display:grid;gap:14px;align-content:start}
+@media (max-width:880px){.prof-side{border-right:0;border-bottom:1px solid var(--line)}}
+.prof-id{display:flex;gap:14px;align-items:center}
+.prof-id .avatar{width:64px;height:64px;font-size:22px}
+.prof-id h3{font-size:21px;display:flex;align-items:center;gap:6px}
+.prof-id h3 svg{width:20px;height:20px}
+.prof-id p{font-size:13px;color:var(--muted);margin-top:2px}
+.verified{display:flex;gap:8px;align-items:flex-start;font-size:12.5px;line-height:1.4;color:var(--ink-2);background:var(--brand-soft);border-radius:10px;padding:10px 12px}
+.verified svg{width:16px;height:16px;flex:none;margin-top:1px}
+.kv{display:grid;grid-template-columns:1fr auto;gap:8px 12px;font-size:13.5px;color:var(--ink-2)}
+.kv b{color:var(--ink);text-align:right}
+.trust{display:grid;gap:8px}
+.trust .r{display:grid;grid-template-columns:96px 1fr 52px;gap:8px;align-items:center;font-size:13px;color:var(--ink-2)}
+.trust .bar{height:8px;border-radius:4px;background:var(--surface-2);overflow:hidden}
+.trust .bar span{display:block;height:100%;background:var(--brand);border-radius:4px}
+.trust .r b{text-align:right;color:var(--ink);font-variant-numeric:tabular-nums}
+.srcchg{display:grid;gap:7px;font-size:13px;color:var(--ink-2)}
+.srcchg div{display:flex;justify-content:space-between;align-items:baseline;gap:10px}
+.srcchg small{display:block;font-size:11.5px;color:var(--muted)}
+.srcchg b{font-weight:600;white-space:nowrap;font-variant-numeric:tabular-nums}
+.srcchg .plus{color:var(--link)}.srcchg .minus{color:var(--warn-ink)}
+.prof-main{padding:22px;display:grid;gap:14px;align-content:start;min-width:0}
+.vrec{border:1px solid var(--line);border-radius:12px;padding:14px;display:grid;gap:10px}
+.vrec-h{display:flex;justify-content:space-between;align-items:flex-start;gap:10px;flex-wrap:wrap}
+.vrec-h .t{font-weight:600;font-size:15px}
+.vrec-h .t small{display:block;font-family:var(--f-mono);font-size:11.5px;color:var(--muted);font-weight:400}
+.vpill{display:inline-flex;align-items:center;gap:6px;padding:3px 10px;border-radius:999px;font-size:12px;font-weight:700;color:#fff}
+.vpill.for{background:var(--v-for)} .vpill.against{background:var(--v-against)} .vpill.abstain{background:var(--v-abstain);color:var(--ink)}
+.cmp3{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;font-size:12.5px;color:var(--muted)}
+.cmp3>div{background:var(--surface-2);border-radius:8px;padding:8px 10px;display:grid;gap:4px}
+.cmp3 b{color:var(--ink);font-size:13.5px}
+.unver{font-size:12.5px;line-height:1.4;color:var(--ink-2);background:var(--surface-2);border-radius:10px;padding:10px 12px}
+.invite-box{display:grid;gap:8px;font-size:13px;line-height:1.4;color:var(--warn-ink);background:var(--warn-bg);border-radius:10px;padding:10px 12px}
+.invite-box .want{justify-self:start}
+.explain{font-family:var(--f-body);font-size:15.5px;line-height:1.5;color:var(--ink-2);border-left:3px solid var(--brand);padding-left:12px}
+
+/* incentive list */
+.incent{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:0;margin-top:28px;border-top:1px solid var(--line)}
+@media (max-width:720px){.incent{grid-template-columns:minmax(0,1fr)}}
+.incent>div{padding:18px 18px 18px 0;border-bottom:1px solid var(--line);display:grid;gap:6px;align-content:start}
+.incent>div:nth-child(odd){padding-right:28px}
+@media (min-width:721px){.incent>div:nth-child(even){padding-left:28px;border-left:1px solid var(--line)}}
+.incent h4{font-size:17px}
+.incent p{font-size:16.5px;color:var(--ink-2);line-height:1.5}
+.incent .for{font-family:var(--f-display);font-size:12px;color:var(--muted);letter-spacing:.04em}
+
+/* dashboard */
+.dash{padding:20px;display:grid;grid-template-columns:repeat(12,minmax(0,1fr));gap:14px}
+.panel{grid-column:span 12;border:1px solid var(--line);border-radius:12px;padding:16px;display:grid;gap:12px;align-content:start;min-width:0}
+.panel .ph{display:flex;justify-content:space-between;align-items:baseline;gap:10px;flex-wrap:wrap}
+.panel .ph h4{font-size:15px}
+.panel .ph span{font-size:12px;color:var(--muted)}
+@media (min-width:900px){.span-7{grid-column:span 7}.span-5{grid-column:span 5}}
+.filters{grid-column:span 12;display:flex;flex-wrap:wrap;gap:8px;align-items:center;font-size:13px;color:var(--muted)}
+.kpis{grid-column:span 12;display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:14px}
+@media (max-width:760px){.kpis{grid-template-columns:repeat(2,minmax(0,1fr))}}
+.kpi{border:1px solid var(--line);border-radius:12px;padding:14px;display:grid;gap:2px}
+.kpi .k{font-size:12px;color:var(--muted)}
+.kpi .v{font-size:28px;font-weight:800;letter-spacing:-.02em;font-variant-numeric:tabular-nums}
+.kpi .s{font-size:12px;color:var(--ink-2)}
+.dots-chart{overflow-x:auto}
+.dots-chart svg{width:100%;height:auto;display:block;min-width:480px}
+.cohesion{display:grid;gap:9px}
+.coh{display:grid;grid-template-columns:132px 1fr 48px;gap:10px;align-items:center;font-size:13px}
+.coh .bar{height:14px;background:var(--surface-2);border-radius:0 4px 4px 0;position:relative}
+.coh .bar span{position:absolute;left:0;top:0;bottom:0;background:var(--ink-2);border-radius:0 4px 4px 0}
+.coh b{text-align:right;font-variant-numeric:tabular-nums}
+.match-list{display:grid;gap:8px}
+.match{display:grid;grid-template-columns:28px minmax(0,1fr) 110px 44px;gap:10px;align-items:center;font-size:13.5px}
+.match .nm small{display:block;color:var(--muted);font-size:12px}
+.match .bar{height:8px;background:var(--surface-2);border-radius:4px;overflow:hidden}
+.match .bar span{display:block;height:100%;background:var(--brand)}
+.match b{text-align:right;font-variant-numeric:tabular-nums}
+.coh div span{white-space:nowrap}
+@media (max-width:480px){.cmp3{grid-template-columns:minmax(0,1fr)}.cmp3>div{grid-template-columns:minmax(0,1fr) auto;align-items:baseline}.match{grid-template-columns:28px minmax(0,1fr) 56px 40px}.coh{grid-template-columns:96px minmax(0,1fr) 36px}}
+.tview{font-size:12.5px}
+.tview summary{cursor:pointer;color:var(--link)}
+.tview table{border-collapse:collapse;margin-top:8px;width:100%;font-variant-numeric:tabular-nums}
+.tview th,.tview td{text-align:left;padding:4px 8px;border-bottom:1px solid var(--line)}
+
+/* phone */
+.phones{display:flex;flex-wrap:wrap;gap:28px;margin-top:32px;align-items:flex-start}
+.phone{width:320px;max-width:100%;border-radius:34px;border:8px solid var(--ink);background:var(--surface);box-shadow:var(--shadow);overflow:hidden;font-family:var(--f-display);font-size:14px}
+.phone .notch{height:24px;display:flex;justify-content:center;align-items:center;background:var(--surface)}
+.phone .notch i{width:84px;height:6px;border-radius:3px;background:var(--line-strong)}
+.phone .scr{padding:6px 16px 18px;display:grid;gap:12px}
+.phone h4{font-size:19px;letter-spacing:-.01em}
+.phone .sub{font-size:12.5px;color:var(--muted)}
+.cand{display:grid;grid-template-columns:36px minmax(0,1fr) auto;gap:10px;align-items:center;padding:10px;border:1px solid var(--line);border-radius:12px}
+.cand .avatar{width:36px;height:36px}
+.cand .nm{line-height:1.25;min-width:0}
+.cand .nm b{font-weight:600;display:inline-flex;gap:4px;align-items:center}
+.cand .nm small{display:block;color:var(--muted);font-size:11.5px}
+.cand .pct{font-size:18px;font-weight:800;font-variant-numeric:tabular-nums}
+.cand .basis{grid-column:2/4;font-size:11.5px;color:var(--muted);display:flex;gap:6px;flex-wrap:wrap}
+.cand .late{color:var(--warn-ink);background:var(--warn-bg);border-radius:4px;padding:0 5px}
+.cand .small{color:var(--ink-2);background:var(--surface-2);border-radius:4px;padding:0 5px}.cand .pct.low{color:var(--muted);font-weight:600}
+.qcard{border:1px solid var(--line);border-radius:12px;padding:12px;display:grid;gap:10px}
+.qcard .q{font-weight:600;line-height:1.3}
+.qcard .ans{display:grid;grid-template-columns:repeat(3,1fr);gap:6px}
+.qcard .ans span{text-align:center;padding:7px 4px;border:1px solid var(--line-strong);border-radius:8px;font-size:12.5px}
+.qcard .ans span.sel{background:var(--v-for);border-color:var(--v-for);color:#fff;font-weight:600}
+.phone-note{flex:1 1 300px;min-width:0;font-size:18px}
+
+/* architecture + roadmap */
+.adapters{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:14px;margin-top:28px}
+@media (max-width:900px){.adapters{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media (max-width:480px){.adapters{grid-template-columns:minmax(0,1fr)}}
+.adapter{border:1px solid var(--line);border-radius:12px;padding:16px;background:var(--surface);display:grid;gap:8px;align-content:start;font-family:var(--f-display)}
+.adapter h4{font-size:16px}
+.adapter .src{font-family:var(--f-mono);font-size:11.5px;color:var(--muted);word-break:break-word}
+.adapter p{font-size:14px;color:var(--ink-2);line-height:1.45}
+.adapter .lvl{font-size:12px;font-weight:600}
+.road{margin-top:28px;display:grid;gap:0;border-left:2px solid var(--line);margin-left:6px}
+.road>div{display:grid;grid-template-columns:150px minmax(0,1fr);gap:18px;padding:0 0 26px 22px;position:relative}
+@media (max-width:620px){.road>div{grid-template-columns:minmax(0,1fr);gap:4px}}
+.road>div::before{content:"";position:absolute;left:-8px;top:6px;width:14px;height:14px;border-radius:50%;background:var(--bg);border:2px solid var(--brand)}
+.road>div.now::before{background:var(--brand)}
+.road .when{font-family:var(--f-display);font-weight:700;font-size:15px}
+.road .when small{display:block;font-weight:500;color:var(--muted);font-size:12.5px}
+.road h4{font-size:17px}
+.road p{font-size:16.5px;color:var(--ink-2);margin-top:4px;line-height:1.5}
+.road .milestone{display:inline-block;margin-top:8px}
+
+.qs{counter-reset:q;display:grid;gap:14px;margin-top:24px;padding:0;list-style:none}
+.qs li{counter-increment:q;display:grid;grid-template-columns:38px minmax(0,1fr);gap:10px;font-size:18px}
+.qs li::before{content:"Q" counter(q);font-family:var(--f-mono);font-size:13px;color:var(--brand);padding-top:5px}
+.qs li small{display:block;font-family:var(--f-display);font-size:13.5px;color:var(--muted);margin-top:2px}
+
+.two{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:28px;margin-top:24px}
+@media (max-width:760px){.two{grid-template-columns:minmax(0,1fr)}}
+.box{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:20px;display:grid;gap:10px;align-content:start}
+.box h4{font-size:17px}
+.box ul{margin:0;padding-left:18px;font-size:16.5px;color:var(--ink-2);line-height:1.5}
+.box li+li{margin-top:6px}
+.box .more{font-family:var(--f-display);font-size:14px;font-weight:700;margin-top:4px}
+.benefits{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px;margin-top:24px}
+@media (max-width:900px){.benefits{grid-template-columns:minmax(0,1fr)}}
+.v2note{margin-top:18px;padding:12px 16px;border-radius:12px;background:var(--surface-2);border-left:3px solid var(--slate);font-family:var(--f-display);font-size:14.5px;line-height:1.5;color:var(--ink-2);max-width:760px}
+.audiences{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px;margin-top:24px}
+@media (max-width:820px){.audiences{grid-template-columns:minmax(0,1fr)}}
+.audience{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:20px;display:grid;gap:10px;align-content:start}
+.audience h3{font-size:21px}.audience p{font-size:16.5px;line-height:1.5;color:var(--ink-2)}.audience a{font-family:var(--f-display);font-size:14px;font-weight:700;margin-top:4px}
+.guardrail{margin-top:28px;padding:18px 20px;border-radius:14px;background:var(--brand-soft);font-family:var(--f-display);font-size:15px;line-height:1.5}
+.detail-block{margin-top:28px;border:1px solid var(--line);border-radius:14px;background:var(--surface);overflow:hidden}
+.detail-block summary{cursor:pointer;padding:16px 18px;font-family:var(--f-display);font-weight:700;list-style:none}.detail-block summary::-webkit-details-marker{display:none}.detail-block summary::after{content:"+";float:right;color:var(--brand);font-size:20px;line-height:1}.detail-block[open] summary::after{content:"–"}.detail-block .detail-body{padding:0 18px 18px}
+
+footer.end{margin-top:96px;padding-top:28px;border-top:1px solid var(--line);font-family:var(--f-display);font-size:13.5px;color:var(--muted);display:flex;flex-wrap:wrap;gap:10px 28px;align-items:center}
+footer.end svg{width:28px;height:28px}
+
+/* tooltip */
+#tip{position:fixed;z-index:50;pointer-events:none;background:var(--ink);color:var(--bg);font-family:var(--f-display);font-size:12.5px;line-height:1.4;padding:7px 10px;border-radius:8px;max-width:240px;opacity:0;transform:translateY(4px);transition:opacity .12s,transform .12s}
+#tip.on{opacity:1;transform:none}
+
+/* initiation + feed + experience */
+.init{display:grid;grid-template-columns:320px minmax(0,1fr)}
+@media (max-width:880px){.init{grid-template-columns:minmax(0,1fr)}}
+.init-list{padding:18px;border-right:1px solid var(--line);display:grid;gap:10px;align-content:start;background:color-mix(in oklab,var(--surface-2) 45%,var(--surface))}
+@media (max-width:880px){.init-list{border-right:0;border-bottom:1px solid var(--line)}}
+.search{font:inherit;font-size:13.5px;padding:8px 10px;border:1px solid var(--line-strong);border-radius:8px;background:var(--surface);color:var(--ink);width:100%}
+.init-items{display:grid;gap:6px}
+.init-item{font:inherit;text-align:left;border:1px solid var(--line);border-radius:10px;padding:10px 12px;background:var(--surface);color:var(--ink);cursor:pointer;display:grid;gap:3px}
+.init-item:hover{border-color:var(--line-strong)}
+.init-item[aria-selected="true"]{border-color:var(--brand);box-shadow:inset 0 0 0 1px var(--brand)}
+.init-item .id{font-family:var(--f-mono);font-size:11px;color:var(--muted);display:flex;gap:6px;align-items:center;flex-wrap:wrap}
+.init-item b{font-size:13.5px;font-weight:600;line-height:1.3}
+.init-item small{font-size:12px;color:var(--muted)}
+.init-form{padding:18px 20px;display:grid;gap:12px;align-content:start;min-width:0}
+.fld{display:grid;gap:5px;font-size:13px;color:var(--ink-2)}
+.fld input,.fld textarea{font:inherit;font-size:14px;padding:8px 10px;border:1px solid var(--line-strong);border-radius:8px;background:var(--surface);color:var(--ink);width:100%;resize:vertical}
+.fld textarea{font-family:var(--f-body);font-size:15px;line-height:1.5}
+.warnbox{background:var(--warn-bg);color:var(--warn-ink);border-radius:10px;padding:10px 12px;font-size:13.5px;line-height:1.45}
+.okbox{background:var(--brand-soft);border-radius:10px;padding:12px 14px;font-size:14px;line-height:1.45}
+.chk{display:flex;gap:8px;align-items:flex-start;font-size:13.5px;color:var(--ink-2)}
+.btn-primary{font:inherit;font-size:14px;font-weight:600;padding:10px 16px;border-radius:9px;border:0;background:var(--brand);color:var(--brand-ink);cursor:pointer;justify-self:start}
+.btn-primary:disabled{opacity:.45;cursor:not-allowed}
+.chip.warn{background:var(--warn-bg);color:var(--warn-ink);border-color:transparent}
+.feed{display:grid;grid-template-columns:minmax(0,1fr) 300px}
+@media (max-width:880px){.feed{grid-template-columns:minmax(0,1fr)}}
+.feed-main{padding:18px 20px;display:grid;gap:12px;border-right:1px solid var(--line);align-content:start;min-width:0}
+@media (max-width:880px){.feed-main{border-right:0;border-bottom:1px solid var(--line)}}
+.feed-side{padding:18px;display:grid;gap:12px;align-content:start;background:color-mix(in oklab,var(--surface-2) 45%,var(--surface))}
+.compose{display:grid;grid-template-columns:28px 1fr;gap:10px;align-items:center}
+.compose-box{border:1px solid var(--line-strong);border-radius:10px;padding:9px 12px;font-size:13.5px;color:var(--muted);background:var(--surface)}
+.compose-box b{color:var(--link);font-weight:600}
+.post{border:1px solid var(--line);border-radius:12px;padding:14px;display:grid;gap:8px;background:var(--surface)}
+.post-h{display:grid;grid-template-columns:28px 1fr;gap:10px;align-items:center;font-size:13.5px;line-height:1.3}
+.post-h b{font-weight:600;display:inline-flex;gap:4px;align-items:center}
+.post-h small{display:block;color:var(--muted);font-size:12px}
+.post p{font-family:var(--f-body);font-size:15.5px;line-height:1.5;color:var(--ink-2)}
+.post .foot{font-size:12.5px;color:var(--muted);display:flex;gap:14px;flex-wrap:wrap}
+.tag{color:var(--link);font-weight:600}
+.post.cluster{border-color:var(--brand)}
+.cluster .q{font-weight:650;font-size:16px;line-height:1.35}
+.cluster .ex{font-size:12.5px;color:var(--muted);line-height:1.45}
+.answer{border-left:3px solid var(--brand);padding-left:12px;display:grid;gap:4px}
+.answer .by{font-size:12.5px;color:var(--muted)}
+.oq{border:1px solid var(--line);border-radius:10px;padding:10px 12px;display:grid;gap:8px;background:var(--surface)}
+.oq b{font-size:14px;font-weight:600;line-height:1.3}
+.oq .meta{display:flex;justify-content:space-between;align-items:center;gap:8px;font-size:12px;color:var(--muted);flex-wrap:wrap}
+.want{font:inherit;font-size:12.5px;padding:4px 10px;border-radius:999px;border:1px solid var(--line-strong);background:var(--surface);color:var(--ink-2);cursor:pointer}
+.want[aria-pressed="true"]{background:var(--brand);border-color:var(--brand);color:var(--brand-ink)}
+.exp{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px}
+@media (max-width:820px){.exp{grid-template-columns:minmax(0,1fr)}}
+.exp h4{font-size:17px}
+.exp-stats{font-family:var(--f-display)}
+
+.post.own{border-color:var(--brand)}
+.topic-strip{display:block;font-size:13px;line-height:1.4;background:var(--brand-soft);border-radius:8px;padding:7px 10px;color:var(--ink);text-decoration:none}
+.post .foot a{color:var(--link)}
+.topic{display:grid;grid-template-columns:minmax(0,1fr) 290px}
+@media (max-width:880px){.topic{grid-template-columns:minmax(0,1fr)}}
+.topic-main{padding:20px 22px;display:grid;gap:12px;align-content:start;border-right:1px solid var(--line);min-width:0}
+@media (max-width:880px){.topic-main{border-right:0;border-bottom:1px solid var(--line)}}
+.topic-main h3{font-size:22px;letter-spacing:-.01em}
+.topic-side{padding:18px;display:grid;gap:10px;align-content:start;background:color-mix(in oklab,var(--surface-2) 45%,var(--surface))}
+.addr{display:flex;flex-wrap:wrap;gap:6px 14px;font-size:13px;align-items:center}
+.addr span{display:inline-flex;align-items:center;gap:4px}
+.addr small{color:var(--muted)}
+.support .want{margin-left:auto}
+.ans{border:1px solid var(--line);border-radius:12px;padding:12px 14px;display:grid;gap:8px;background:var(--surface)}
+.ans-h{display:grid;grid-template-columns:28px minmax(0,1fr) auto;gap:10px;align-items:center;font-size:13.5px;line-height:1.3}
+.ans-h b{font-weight:600;display:inline-flex;gap:4px;align-items:center}
+.ans-h small{display:block;color:var(--muted);font-size:12px}
+.ans p{font-family:var(--f-body);font-size:15px;line-height:1.5;color:var(--ink-2)}
+.ans .foot{display:flex;gap:12px;align-items:center;font-size:12.5px;color:var(--muted)}
+.useful{font:inherit;font-size:12px;padding:3px 9px;border-radius:999px;border:1px solid var(--line-strong);background:var(--surface);color:var(--ink-2);cursor:pointer}
+.useful[aria-pressed="true"]{background:var(--ink);border-color:var(--ink);color:var(--bg)}
+.tpost{border:1px solid var(--line);border-radius:10px;padding:9px 11px;background:var(--surface);font-size:13px;display:grid;gap:3px}
+.tpost p{color:var(--ink-2);line-height:1.4}
+.tpost.mine{border-color:var(--brand)}
+.tpost .linkbtn{font-size:12px;justify-self:start}
+.tpost .q{font-size:11.5px;color:var(--muted)}
+.qgroup{display:grid;gap:10px;border-top:1px solid var(--line);padding-top:14px;margin-top:4px}
+.qgroup-h{display:flex;justify-content:space-between;gap:12px;align-items:baseline}
+.qgroup-h b{font-family:var(--f-display);font-size:16.5px;line-height:1.3}
+.qgroup-h small{color:var(--muted);font-size:12px;white-space:nowrap}
+.qwait{font-family:var(--f-display);font-size:13px;color:var(--muted)}
+.mt-rate{font-size:12.5px;color:var(--muted);text-align:right}
+.mt-rate b{color:var(--ink)}
+.mt-note{font-size:12px;color:var(--muted)}
+.status-flow{list-style:none;margin:22px 0 0;padding:0;display:flex;flex-wrap:wrap;gap:8px;align-items:center;font-family:var(--f-display);font-size:13.5px}
+.status-flow li{display:flex;align-items:center;gap:8px}
+.status-flow li span{padding:6px 12px;border-radius:999px;background:var(--surface);border:1px solid var(--line-strong);color:var(--ink-2)}
+.status-flow li.end span{background:var(--brand-soft);border-color:transparent;color:var(--ink);font-weight:600}
+.status-flow li+li::before{content:"→";color:var(--muted)}
+.status-alt{font-family:var(--f-display);font-size:13.5px;color:var(--muted);margin-top:10px}
+.status-alt b{color:var(--ink-2);font-weight:600}
+.inbox{padding:18px 20px;display:grid;gap:12px}
+.inbox-h{display:flex;justify-content:space-between;align-items:baseline;gap:10px;flex-wrap:wrap}
+.theme{border:1px solid var(--line);border-radius:12px;padding:14px;display:grid;gap:8px;background:var(--surface)}
+.theme-h{display:flex;justify-content:space-between;gap:10px;align-items:flex-start;flex-wrap:wrap}
+.theme-h b{font-size:15.5px;font-weight:650;line-height:1.35}
+.theme-h small{display:block;font-size:12px;color:var(--muted);font-weight:400;margin-top:2px}
+.support{display:flex;gap:14px;flex-wrap:wrap;font-size:13px;color:var(--ink-2)}
+.support b{color:var(--ink);font-variant-numeric:tabular-nums}
+.support .mine b{color:var(--brand)}
+.acts{display:flex;gap:6px;flex-wrap:wrap}
+.acts button{font:inherit;font-size:12.5px;padding:5px 10px;border-radius:8px;border:1px solid var(--line-strong);background:var(--surface);color:var(--ink-2);cursor:pointer}
+.acts button:hover{border-color:var(--ink-2)}
+.reply{font-family:var(--f-body);font-size:15px;line-height:1.5;color:var(--ink-2);border-left:3px solid var(--brand);padding-left:12px}
+
+.part{margin-top:110px;padding-top:14px;border-top:2px solid var(--ink);display:flex;gap:14px;align-items:baseline;scroll-margin-top:60px;font-family:var(--f-display)}
+.part-no{font-family:var(--f-mono);font-size:12px;color:var(--brand);letter-spacing:.04em;text-transform:uppercase}
+.part-title{font-size:15px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--ink)}
+.part + section.chapter{padding-top:36px}
+.toc li.toc-part{counter-increment:none;font-size:11.5px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);padding:14px 8px 4px}
+
+.wz{display:grid;grid-template-columns:minmax(0,1.35fr) minmax(0,1fr)}
+@media (max-width:900px){.wz{grid-template-columns:minmax(0,1fr)}}
+.wz-main{padding:20px;display:grid;gap:14px;align-content:start;border-right:1px solid var(--line);min-width:0}
+@media (max-width:900px){.wz-main{border-right:0;border-bottom:1px solid var(--line)}}
+.wz-side{padding:20px;display:grid;gap:12px;align-content:start;background:color-mix(in oklab,var(--surface-2) 45%,var(--surface))}
+.step{border:1px solid var(--line);border-radius:12px;padding:14px;display:grid;gap:10px;background:var(--surface)}
+.step-h{display:flex;justify-content:space-between;align-items:baseline;gap:10px;flex-wrap:wrap}
+.step-h b{font-size:15px;font-weight:700}
+.step-h span{font-size:12.5px;color:var(--muted)}
+.step.off{opacity:.5}
+.parties{display:flex;flex-wrap:wrap;gap:6px}
+.parties button{font:inherit;font-size:13.5px;padding:7px 12px;border-radius:999px;border:1.5px solid var(--line-strong);background:var(--surface);color:var(--ink);cursor:pointer;display:inline-flex;align-items:center;gap:7px}
+.parties button i{width:10px;height:10px;border-radius:50%}
+.parties button[aria-pressed="true"]{border-color:var(--ink);background:var(--ink);color:var(--bg)}
+.trow{display:grid;grid-template-columns:150px minmax(0,1fr);gap:10px;align-items:center;font-size:13.5px}
+@media (max-width:520px){.trow{grid-template-columns:minmax(0,1fr)}}
+.trow select{width:100%}
+.trow small{display:block;color:var(--muted);font-size:11.5px;margin-top:2px}
+.utabs{display:flex;gap:4px;flex-wrap:wrap;align-items:center}
+.utabs .sortlbl{font-size:12.5px;color:var(--muted);margin-right:2px}
+.utabs button{font:inherit;font-size:12.5px;padding:5px 10px;border-radius:7px;border:0;background:var(--surface-2);color:var(--ink-2);cursor:pointer}
+.utabs button[aria-pressed="true"]{background:var(--ink);color:var(--bg)}
+.urow{display:grid;grid-template-columns:28px minmax(0,1fr) auto;gap:10px;align-items:center;font-size:13.5px}
+.urow small{display:block;color:var(--muted);font-size:12px}
+.offtag{color:var(--warn-ink);background:var(--warn-bg);border-radius:4px;padding:0 5px;white-space:nowrap}
+.offnote{display:flex;flex-wrap:wrap;gap:4px 10px;align-items:center;margin-top:6px;font-size:12px;color:var(--warn-ink);background:var(--warn-bg);border-radius:7px;padding:5px 9px}
+.offnote .linkbtn{font-size:12px}
+.offnote .invd{font-weight:600}
+.warnline{font-size:13px;line-height:1.4;color:var(--warn-ink);background:var(--warn-bg);border-radius:8px;padding:8px 10px;margin-top:8px}
+.urow button{font:inherit;font-size:12.5px;padding:5px 10px;border-radius:8px;border:1px solid var(--line-strong);background:var(--surface);color:var(--ink);cursor:pointer;white-space:nowrap}
+.urow button[aria-pressed="true"]{background:var(--brand);border-color:var(--brand);color:var(--brand-ink)}
+.sumrow{display:grid;gap:3px;font-size:13px;padding-bottom:8px;border-bottom:1px solid var(--line)}
+.sumrow b{font-size:13px}
+.chain{display:flex;flex-wrap:wrap;gap:4px;align-items:center;color:var(--ink-2)}
+.chain span+span::before{content:"→";color:var(--muted);margin-right:4px}
+.chain .none{color:var(--muted)}
+
+.rep{display:grid;grid-template-columns:28px minmax(0,1fr) auto;gap:10px;align-items:start;padding:10px 0;border-bottom:1px solid var(--line)}
+.rep:last-child{border-bottom:0}
+.rep .nm{font-size:14px;line-height:1.3}
+.rep .nm small{display:block;color:var(--muted);font-size:12px}
+.rep .tags{display:flex;flex-wrap:wrap;gap:4px;margin-top:6px}
+.rep .tags button{font:inherit;font-size:11.5px;padding:2px 8px;border-radius:999px;border:1px solid var(--line-strong);background:var(--surface);color:var(--ink-2);cursor:pointer}
+.rep .tags button[aria-pressed="true"]{background:var(--brand-soft);border-color:var(--brand);color:var(--ink)}
+.rep .ctl3{display:flex;gap:4px}
+.rep .ctl3 button{font:inherit;font-size:12px;width:26px;height:26px;border-radius:7px;border:1px solid var(--line-strong);background:var(--surface);color:var(--ink-2);cursor:pointer}
+.rep .ctl3 button:disabled{opacity:.35;cursor:default}
+.rank{font-family:var(--f-mono);font-size:11px;color:var(--muted)}
+.prev{border:1px solid var(--line);border-radius:10px;padding:10px 12px;background:var(--surface);display:grid;gap:4px;font-size:13px}
+.prev b{font-size:13.5px}
+.prev .tg{display:flex;gap:4px;flex-wrap:wrap}
+.prev .tg span{font-size:11px;padding:1px 7px;border-radius:999px;background:var(--surface-2);color:var(--muted)}
+.prev .pwho{color:var(--ink-2)}
+.pnote{margin:0;font-size:12px;color:var(--muted)}
+.partytbl{width:100%;border-collapse:collapse;font-size:13px;font-variant-numeric:tabular-nums}
+.partytbl th,.partytbl td{padding:6px 8px;border-bottom:1px solid var(--line);text-align:right}
+.partytbl th:first-child,.partytbl td:first-child{text-align:left}
+.partytbl th{font-size:11.5px;color:var(--muted);font-weight:600;letter-spacing:.04em}
+.partytbl td.gap{font-weight:700;background:var(--surface-2)}
+</style>
+<body>
+
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <defs>
+    <symbol id="logo" viewBox="28 44 604 474">
+      <g stroke-width="10" stroke-linejoin="round">
+        <path d="M70 78L345 106L352 58L396 108L292 112L293 240L168 243L165 316L40 298Z" fill="var(--slate)" stroke="var(--slate)"/>
+        <path d="M318 142L556 130L558 190L618 192L566 256L570 352L330 368Z" fill="var(--leaf)" stroke="var(--leaf)"/>
+        <path d="M200 265L292 270L300 396L478 390L532 466L476 470L474 506L186 490Z" fill="var(--brand)" stroke="var(--brand)"/>
+      </g>
+    </symbol>
+    <symbol id="vbadge" viewBox="0 0 20 20">
+      <path d="M10 1.5l2.2 1.6 2.7-.1.9 2.6 2.2 1.6-.8 2.6.8 2.6-2.2 1.6-.9 2.6-2.7-.1L10 18.5l-2.2-1.6-2.7.1-.9-2.6-2.2-1.6.8-2.6-.8-2.6 2.2-1.6.9-2.6 2.7.1z" fill="var(--brand)"/>
+      <path d="M6.6 10.2l2.3 2.3 4.6-4.8" fill="none" stroke="#fff" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+    </symbol>
+  </defs>
+</svg>
+
+<div class="topbar">
+  <a class="brandmark" href="#top"><svg aria-hidden="true"><use href="#logo"/></svg>Lietuva 2.0</a>
+  <nav aria-label="Skyriai">
+    <a href="#dialog">Srautas</a><a href="#topics">Temos</a><a href="#mytopics">Mano temos</a><a href="lietuva20-whitepaper.html">Išsami koncepcija</a>
+  </nav>
+</div>
+
+<div class="layout" id="top">
+  <aside class="toc" aria-label="Turinys">
+    <div class="eyebrow">Turinys</div>
+    <ol>
+      <li><a href="#dialog">Asmeninis srautas</a></li>
+      <li><a href="#topics">Temos puslapis</a></li>
+      <li><a href="#mytopics">Mano temos</a></li>
+      <li><a href="#status">Darbas su temomis</a></li>
+      <li class="toc-intro"><a href="lietuva20-whitepaper.html">Išsami koncepcija (pirmoji versija)</a></li>
+    </ol>
+  </aside>
+
+  <main>
+    <!-- HERO -->
+    <section class="hero" style="grid-template-columns:minmax(0,1fr)">
+      <div>
+        <div class="hero-logo">
+          <svg aria-label="Lietuva 2.0 logotipas" role="img"><use href="#logo"/></svg>
+          <div><div class="wm">Lietuva <span>2.0</span></div><div class="tag">Seimo darbai ir pilietinis įsitraukimas</div></div>
+        </div>
+        <h1>Kas rūpi <em>žmonėms.</em></h1>
+        <p class="kicker">Antroji versija: įrašai, temos ir atsakymai.</p>
+        <p class="lede">Šis dokumentas papildo <a href="lietuva20-whitepaper.html">išsamią produkto koncepciją</a>. Joje aprašyta pirmoji versija – Seimo projektų paaiškinimai, balsavimas, balso delegavimas ir politikų profiliai. Čia – kas būtų pridėta vėliau, jei pirmoji versija pasiteisins.</p>
+        <div class="hero-meta"><span><b>Antrosios versijos koncepcija</b> · papildomas dokumentas</span><span><b>2026 m. rugsėjis</b></span></div>
+        <div class="notice" role="note">
+          <svg viewBox="0 0 20 20" aria-hidden="true"><circle cx="10" cy="10" r="8.5" fill="none" stroke="currentColor" stroke-width="1.6"/><path d="M10 5.5v5.5M10 13.6v.9" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
+          <span>Maketuose pateikti Seimo nariai, patikėtiniai, projektai, temos ir skaičiai yra išgalvoti. Jie rodo, kaip atrodytų produktas, o ne kaip realūs politikai atsakė žmonėms.</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- DIALOG -->
+    <section class="chapter" id="dialog">
+      <header>
+        <div class="eyebrow">Antroji versija · Kas rūpi žmonėms</div>
+        <h2>Atstovai išgirsta rinkėjus ir paaiškina sprendimus</h2>
+        <p class="lede">Kiekvienas LT2 naudotojas gali parašyti, kas jam rūpi: paklausti, iškelti problemą ar paprašyti veiksmų, ir pažymėti Seimo narį, patikėtinį ar Seimo projektą. Kiti pažymi „Man svarbu“, panašūs įrašai sujungiami į temą, o pažymėtieji žmonės atsako vieną kartą visiems.</p>
+        <p class="v2note">Šios galimybės – antrojoje versijoje. Pirmoji versija skirta balsavimui: projektų puslapiams, delegavimui, politikų profiliams su balsų paaiškinimais ir balsavimų analizei. Įrašai, temos ir atsakymai kuriami tik tada, kai pirmoji versija pasiteisins.</p>
+      </header>
+      <div class="mock-label"><span><b>Maketas</b> · Asmeninis srautas</span><span>Interaktyvus</span></div>
+      <div class="mock">
+        <div class="mock-bar"><div class="dots"><i></i><i></i><i></i></div><div class="url">lietuva2.lt/srautas</div></div>
+        <div class="feed">
+          <div class="feed-main">
+            <div class="compose"><span class="avatar" style="background:#8a6d3b">DS</span><div><div class="compose-box">Parašykite, kas jums rūpi. Pažymėkite Seimo narį, patikėtinį ar projektą, pvz., <b>@Jonas Petraitis</b>, <b>#pajamų mokestis</b></div></div></div>
+            <div class="post own">
+              <div class="post-h"><span class="avatar" style="background:#8a6d3b">DS</span><span><b>Jūsų įrašas</b><small>Rugsėjo 18 d. · pažymėjote <span class="tag">@Jonas Petraitis</span></small></span></div>
+              <p>Mūsų mokykloje 900 vaikų ir vienas psichologas pusei etato. Ar bus daugiau?</p>
+              <a class="topic-strip" href="#topicMock">Tema „Mokyklose trūksta psichologų“ · klausimas „Kiek psichologų turėtų būti mokykloje?“ · 214 įrašų · 1 240 pažymėjo „Man svarbu“</a>
+              <div class="answer"><span class="by"><b style="color:var(--ink)">Jonas Petraitis</b> atsakė į šį klausimą · jūsų pažymėtas · rugsėjo 21 d.</span><p>Rengiu Švietimo įstatymo pataisą: po vieną psichologo etatą 300 mokinių. Juodraštį paskelbsiu čia spalio mėnesį.</p></div>
+              <div class="foot"><span>Temoje dar 3 atsakymai į kitus klausimus</span><a href="#topicMock">Atverti temą →</a></div>
+            </div>
+            <div class="post">
+              <div class="post-h"><span class="avatar" style="background:#4a3aa7">JP</span><span><b>Jonas Petraitis <svg class="badge-v" aria-label="Patvirtintas"><use href="#vbadge"/></svg></b><small>Paaiškino balsą · Saulės parkai ūkio žemėje · jūsų ekonomikos patikėtinis</small></span></div>
+              <p>Balsavau už, nes pataisa leidžia parkus tik mažiau derlingoje žemėje ir įpareigoja grąžinti ją ūkiui po 25 metų.</p>
+              <div class="foot"><span>48 komentarai</span><span>Komentuoti</span></div>
+            </div>
+            <div class="post">
+              <div class="post-h"><span class="avatar" style="background:#1c5cab">AK</span><span><b>Aistė Kazlaitė</b><small>Komentavo projektą, dėl kurio balsavote · Pajamų mokesčio pataisa</small></span></div>
+              <p>Gerai, kad pagaliau diskutuojama, bet ribą reikėtų indeksuoti pagal infliaciją, kitaip po kelerių metų ji palies daug daugiau žmonių.</p>
+              <div class="foot"><span>12 komentarų</span><span>Komentuoti</span></div>
+            </div>
+          </div>
+          <div class="feed-side">
+            <div class="side-h">Populiarios temos jūsų srityse</div>
+            <div class="oq"><b>Progresinis pajamų mokestis</b><div class="meta"><span>5 klausimai · 142 įrašai · 610 pažymėjo „Man svarbu“</span><button class="want" type="button" data-n="610" aria-pressed="false">Man svarbu</button></div></div>
+            <div class="oq"><b>Nemokamas viešasis transportas moksleiviams</b><div class="meta"><span>3 klausimai · 302 įrašai · 1 870 pažymėjo „Man svarbu“</span><button class="want" type="button" data-n="1870" aria-pressed="false">Man svarbu</button></div></div>
+          </div>
+        </div>
+      </div>
+      <div class="annot">
+        <div><span class="n">1</span><span><b>Srautas pagal jus.</b> Rodoma viskas, kas susiję su jūsų balsais, sritimis ir patikėtiniais – jokio neaiškaus algoritmo.</span></div>
+        <div><span class="n">2</span><span><b>Jūsų įrašas lieka jūsų.</b> Jis rodomas taip, kaip parašėte, o po juo – tema, klausimas, į kurį jis įtrauktas, ir naujausias atsakymas į jį.</span></div>
+        <div><span class="n">3</span><span><b>Tema – plati, klausimai – konkretūs.</b> DI sugrupuoja įrašus į temas, o temoje – į klausimus. Moderatoriai gali juos sujungti, išskaidyti ar perkelti įrašą. Temos svarbos skaičius apima visus parašiusius arba pažymėjusius „Man svarbu“ prie bet kurio tos temos klausimo. Tūkstantis vienodų laiškų tampa vienu klausimu.</span></div>
+      </div>
+
+      <h3 id="topics" style="margin-top:44px;scroll-margin-top:70px">Temos puslapis</h3>
+      <div class="mock-label"><span><b>Maketas</b> · Tema su klausimais ir atsakymais</span><span>Interaktyvus</span></div>
+      <div class="mock" id="topicMock">
+        <div class="mock-bar"><div class="dots"><i></i><i></i><i></i></div><div class="url">lietuva2.lt/temos/psichologai-mokyklose</div></div>
+        <div class="topic">
+          <div class="topic-main">
+            <div class="bill-crumbs"><span>Tema</span><span class="chip">Švietimas</span><span>susijusio Seimo projekto dar nėra</span></div>
+            <h3>Mokyklose trūksta psichologų</h3>
+            <div class="addr"><span class="muted">Skirta:</span><span>Jonas Petraitis <svg class="badge-v" aria-label="Patvirtintas"><use href="#vbadge"/></svg> <small>96 įrašai</small></span><span>Ona Jonaitienė <svg class="badge-v" aria-label="Patvirtintas"><use href="#vbadge"/></svg> <small>41</small></span><span>Eglė Stonienė <small>12</small></span></div>
+            <div class="support"><span>4 klausimai · 214 įrašų</span><span><b id="tpSup">1 240</b> pažymėjo „Man svarbu“</span><button class="want" type="button" id="tpWant" aria-pressed="true">Man svarbu</button></div>
+
+            <div class="qgroup">
+              <div class="qgroup-h"><b>Kiek psichologų turėtų būti mokykloje?</b><small>88 įrašai</small></div>
+              <div class="ans">
+                <div class="ans-h"><span class="avatar" style="background:#4a3aa7">JP</span><span><b>Jonas Petraitis <svg class="badge-v" aria-label="Patvirtintas"><use href="#vbadge"/></svg></b><small>Seimo narys · pažymėtas 52 įrašuose</small></span><span class="chip ok">Rengia projektą</span></div>
+                <p>Rengiu Švietimo įstatymo pataisą: po vieną psichologo etatą 300 mokinių. Juodraštį paskelbsiu čia spalio mėnesį.</p>
+                <div class="foot"><button class="useful" type="button" data-n="212" aria-pressed="false">Naudinga · 212</button><span>rugsėjo 21 d.</span></div>
+              </div>
+            </div>
+
+            <div class="qgroup">
+              <div class="qgroup-h"><b>Kas finansuos papildomus etatus – valstybė ar savivaldybės?</b><small>47 įrašai</small></div>
+              <div class="ans">
+                <div class="ans-h"><span class="avatar" style="background:#1f6b3a">OJ</span><span><b>Ona Jonaitienė <svg class="badge-v" aria-label="Patvirtintas"><use href="#vbadge"/></svg></b><small>Seimo narė · pažymėta 29 įrašuose</small></span><span class="chip ok">Atsakė</span></div>
+                <p>Dabar psichologų etatus finansuoja savivaldybės iš mokymo lėšų. Siūlysiu, kad pirmus trejus metus papildomus etatus finansuotų valstybė, kol savivaldybės persitvarkys.</p>
+                <div class="foot"><button class="useful" type="button" data-n="96" aria-pressed="false">Naudinga · 96</button><span>rugsėjo 22 d.</span></div>
+              </div>
+            </div>
+
+            <div class="qgroup">
+              <div class="qgroup-h"><b>Ką daryti, kai mokykla negali rasti psichologo?</b><small>61 įrašas</small></div>
+              <div class="ans">
+                <div class="ans-h"><span class="avatar" style="background:#8a4a8a">ES</span><span><b>Eglė Stonienė</b><small>Patikėtinė · ekspertė: švietimas · pažymėta 12 įrašų</small></span><span class="chip ok">Atsakė</span></div>
+                <p>Regionuose trūksta ne tiek etatų, kiek specialistų. Savivaldybių pedagoginės psichologinės tarnybos gali konsultuoti ir nuotoliu – mokyklos apie tai dažnai nežino.</p>
+                <div class="foot"><button class="useful" type="button" data-n="74" aria-pressed="false">Naudinga · 74</button><span>rugsėjo 20 d.</span></div>
+              </div>
+              <p class="qwait">Laukia pažymėtų Seimo narių atsakymo.</p>
+            </div>
+
+            <div class="qgroup">
+              <div class="qgroup-h"><b>Ar vienas psichologas galėtų dirbti keliose mokyklose?</b><small>18 įrašų</small></div>
+              <p class="qwait">Pažymėtieji dar neatsakė.</p>
+              <div class="ans" id="ansMore" hidden>
+                <div class="ans-h"><span class="avatar" style="background:#6b6a66">TV</span><span><b>Tomas Vaitkus</b><small>Patikėtinis · 640 patikėjusių · nepažymėtas</small></span><span class="chip">Atsakė</span></div>
+                <p>Mūsų gimnazija psichologą dalijasi su dviem kaimyninėmis mokyklomis. Veikia, jei tvarkaraštis sutariamas iš anksto ir vaikai žino, kurią dieną jis būna.</p>
+                <div class="foot"><button class="useful" type="button" data-n="6" aria-pressed="false">Naudinga · 6</button><span>rugsėjo 23 d.</span></div>
+              </div>
+              <button class="linkbtn" type="button" id="ansMoreBtn" style="justify-self:start">Dar 1 atsakymas iš nepažymėtų</button>
+            </div>
+          </div>
+          <div class="topic-side">
+            <div class="side-h">Įrašai temoje (214)</div>
+            <div class="tpost mine"><b>Jūsų įrašas</b><p>Mūsų mokykloje 900 vaikų ir vienas psichologas pusei etato. Ar bus daugiau?</p><span class="q">Klausimas: kiek psichologų turėtų būti mokykloje?</span><button class="linkbtn" type="button" id="wrongTopic">Ne tas klausimas?</button></div>
+            <div class="tpost"><b>Giedrė L.</b><p>Ar savivaldybė turės iš ko mokėti už naują etatą? @Ona Jonaitienė</p><span class="q">Klausimas: kas finansuos papildomus etatus?</span></div>
+            <div class="tpost"><b>Mindaugas R.</b><p>Skelbėme konkursą pusmetį – niekas neatsiliepė. @Jonas Petraitis</p><span class="q">Klausimas: ką daryti, kai mokykla negali rasti psichologo?</span></div>
+            <button class="linkbtn" type="button" style="justify-self:start">Rodyti visus 214</button>
+          </div>
+        </div>
+      </div>
+      <div class="annot">
+        <div><span class="n">1</span><span><b>Atsakoma į klausimą.</b> Kiekvienas atsakymas rodomas po klausimu, į kurį atsako, ir pasiekia visus panašių klausimų autorius bei pažymėjusius „Man svarbu“ prie tos temos.</span></div>
+        <div><span class="n">2</span><span><b>Atsakymų tvarka.</b> Pirmiausia pažymėtieji (Seimo nariai ir patikėtiniai), tada kiti patvirtinti Seimo nariai ir kandidatai; likusieji – pagal „Naudinga“ paspaudimų skaičių. Klausimas be atsakymo lieka matomas su žyma, ko laukiama.</span></div>
+        <div><span class="n">3</span><span><b>Ne tas klausimas?</b> Grupavimas įrašo nekeičia ir neslepia. Jei įrašas pateko ne į tą klausimą ar temą, autorius tai pažymi, o sprendžia moderatorius.</span></div>
+        <div><span class="n">4</span><span><b>Pranešimai be triukšmo.</b> Pranešimą gaunate, kai į jūsų klausimą atsako jūsų pažymėtas žmogus ar jūsų patikėtinis. Kiti atsakymai matomi užėjus į konkrečią temą.</span></div>
+      </div>
+
+      <h3 id="mytopics" style="margin-top:44px;scroll-margin-top:70px">Ką mato patikėtiniai ir Seimo nariai</h3>
+      <div class="mock-label"><span><b>Maketas</b> · Mano temos</span><span class="phase-sw">Rodo:<span class="seg" role="group" aria-label="Kam rodomas maketas"><button type="button" data-role="mp" aria-pressed="true">Seimo nariui</button><button type="button" data-role="exp" aria-pressed="false">patikėtinei ekspertei</button></span></span></div>
+      <div class="mock">
+        <div class="mock-bar"><div class="dots"><i></i><i></i><i></i></div><div class="url" id="mtUrl">lietuva2.lt/mano-temos</div></div>
+        <div class="inbox">
+          <div class="inbox-h"><div id="mtWho"></div><span class="mt-rate" id="mtRate"></span></div>
+          <div class="utabs" role="group" aria-label="Temų sąrašas" id="mtTabs">
+            <button type="button" data-t="me" aria-pressed="true">Man skirta</button>
+            <button type="button" data-t="area" aria-pressed="false">Mano sritys</button>
+            <button type="button" data-t="top" aria-pressed="false">Populiariausios</button>
+          </div>
+          <div id="mtList" style="display:grid;gap:12px"></div>
+        </div>
+      </div>
+      <div class="annot">
+        <div><span class="n">1</span><span><b>Vienas vaizdas visiems patikėtiniams.</b> Tiek Seimo nariai, tiek kiti patikėtiniai mato jiems skirtas temas, temas iš savo sričių ir pagal populiarumą.</span></div>
+        <div><span class="n">2</span><span><b>Jums patikėję – atskirai.</b> Prie kiekvienos temos matyti, kiek pažymėjusiųjų „Man svarbu“ yra jums balsą patikėję žmonės.</span></div>
+        <div><span class="n">3</span><span><b>Tik Seimo nariams.</b> „Rengiu projektą“, patvirtinimo ženklelis ir viešas atsakymų rodiklis. Kiti patikėtiniai savo atsakymų rodiklį mato patys ir gali jį paviešinti savo nuožiūra.</span></div>
+        <div><span class="n">4</span><span><b>Prieš balsavimą.</b> Su Seimo projektu susietos temos rodomos projekto puslapyje ir Seimo nariui prieš balsavimą.</span></div>
+      </div>
+      <div class="prose" style="margin-top:22px">
+        <p><b>Ką galima pažymėti.</b> Įraše galima pažymėti bet kurį Seimo narį, taip pat ir neprisijungusį, ir kiekvieną patikėtinį – naudotoją, sutikusį veikti viešai (žr. <a href="lietuva20-whitepaper.html#delegation">išsamios koncepcijos 5 skyrių</a>). Kitų naudotojų pažymėti negalima. Sistema pasiūlo susijusį projektą, jei toks yra ir įraše jo nepažymėjote.</p>
+        <p><b>Atsakymų rodiklis.</b> Skaičiuojamos temos, kuriose žmogus pažymėtas ir bent 20 žmonių pažymėjo „Man svarbu“, – taip vienas įrašas rodiklio nesugadina. Atsakymu laikomas bet kuris sprendimas dėl temos, taip pat ir „Nepritariu“ su paaiškinimu. Seimo nario rodiklis rodomas viešai, kai pasiekia 70 %.</p>
+        <p><b>Moderavimas.</b> Diskusijas prižiūri DI pagalbininkas ir moderatoriai: įžeidžiantys ir šlamšto pobūdžio įrašai paslepiami, o panašūs prasmingi įrašai grupuojami ir lieka matomi. Savo projektų juodraščius skelbti ir dėl jų klausti nuomonės gali tik patvirtinti Seimo nariai.</p>
+      </div>
+
+      <h3 id="status" style="margin-top:44px;scroll-margin-top:70px">Seimo nario darbas su temomis matomas visiems</h3>
+      <ol class="status-flow" aria-label="Seimo nario atsakymo būsenos">
+        <li><span>Nauja tema</span></li>
+        <li><span>Atsakė</span></li>
+        <li><span>Rengia projektą</span></li>
+        <li><span>Įregistruotas Seime (XVP-…)</span></li>
+        <li><span>Balsuojama</span></li>
+        <li class="end"><span>Priimta arba atmesta</span></li>
+      </ol>
+      <p class="status-alt">Arba: <b>Nepritariu</b> – su paaiškinimu, kurį mato visi pažymėjusieji „Man svarbu“. Būsena rodoma prie kiekvieno atsakiusiojo atskirai: vienas Seimo narys gali rengti projektą, kitas – nepritarti.</p>
+      <div class="prose" style="margin-top:18px">
+        <p>Taip politiko darbas su žmonių iškeltomis temomis tampa matomas visiems, kuriems jos svarbios, – ne tik per rinkimus. Įrašai neturi teisinės galios, nes paskyros nėra tikrinamos pagal asmens kodą. Kai daug žmonių pažymi, kad tema jiems svarbi, iš jos galima parengti peticiją. Norintys jai pritarti pasirašo atskirai, sutikdami, kad jų vardas ir pavardė būtų įtraukti į sąrašą, o sąrašas įteikiamas Seimo nariams ar Seimo Peticijų komisijai. Kaip ir kitos internetinės peticijos, ji teisinės galios neturi, bet parodo, kiek žmonių to prašo. Teisinę galią turinčiai piliečių iniciatyvai parašai renkami per VRK sistemą.</p>
+      </div>
+    </section>
+      <p style="margin-top:40px;font-family:var(--f-display);font-size:17px"><b>Norite prisidėti?</b> Prieš kurdami platformą, ją aptarsime su būsimais naudotojais. Rašykite <a href="mailto:info@lietuva2.lt">info@lietuva2.lt</a> ir pasakykite, kaip jums patogiau dalyvauti. <a href="lietuva20-trumpai.html#plan">Kaip galima prisidėti</a> – trumpojoje versijoje piliečiams.</p>
+      <footer class="end">
+        <svg aria-hidden="true"><use href="#logo"/></svg>
+        <span>Lietuva 2.0 · antrosios versijos koncepcija, 2026 m. rugsėjis</span>
+        <span><a href="lietuva20-whitepaper.html">Išsami produkto koncepcija</a></span>
+      </footer>
+  </main>
+</div>
+
+<div id="tip" role="tooltip"></div>
+
+<script>
+(function(){
+  document.documentElement.lang="lt";
+  const $ = (s,r=document)=>r.querySelector(s);
+  const $$ = (s,r=document)=>Array.from(r.querySelectorAll(s));
+  const NS="http://www.w3.org/2000/svg";
+  const el=(n,a={})=>{const e=document.createElementNS(NS,n);for(const k in a)e.setAttribute(k,a[k]);return e;};
+  const fmt=n=>n.toLocaleString("lt-LT");
+
+  /* ---------- tooltip ---------- */
+  const tip=$("#tip");
+  function showTip(t,x,y){tip.textContent=t;tip.classList.add("on");const w=tip.offsetWidth,h=tip.offsetHeight;let L=x+14,T=y+14;if(L+w>innerWidth-8)L=x-w-14;if(T+h>innerHeight-8)T=y-h-14;tip.style.left=L+"px";tip.style.top=T+"px";}
+  function hideTip(){tip.classList.remove("on");}
+  const tipAt=e=>{const t=e.target.closest&&e.target.closest("[data-tip]");if(t)showTip(t.getAttribute("data-tip"),e.clientX,e.clientY);else hideTip();};
+  document.addEventListener("pointermove",tipAt);
+  document.addEventListener("pointerdown",tipAt);
+  document.addEventListener("pointerleave",hideTip);
+
+  /* ---------- topic page ---------- */
+  $("#tpWant").addEventListener("click",e=>{const b=e.currentTarget,on=b.getAttribute("aria-pressed")!=="true";b.setAttribute("aria-pressed",on);$("#tpSup").textContent=fmt(on?1240:1239);});
+  $$(".useful").forEach(b=>b.addEventListener("click",()=>{const on=b.getAttribute("aria-pressed")!=="true";b.setAttribute("aria-pressed",on);b.textContent="Naudinga · "+(+b.dataset.n+(on?1:0));}));
+  $("#ansMoreBtn").addEventListener("click",e=>{$("#ansMore").hidden=false;e.currentTarget.remove();});
+  $("#wrongTopic").addEventListener("click",e=>{e.currentTarget.outerHTML='<span class="mt-note">Pažymėta – peržiūrės moderatorius</span>';});
+
+  /* ---------- my topics (delegates and MPs) ---------- */
+  const MT={
+    mp:{url:"lietuva2.lt/p/jonas-petraitis/temos",who:'<b>Jonas Petraitis</b> '+'<svg class="badge-v" aria-label="Patvirtintas"><use href="#vbadge"/></svg><div class="mt-note">Seimo narys · Rikiuojama pagal tai, kiek jums balsą patikėjusių pažymėjo „Man svarbu“</div>',
+      rate:'Atsakymų rodiklis <b>84 %</b><br>rodomas viešai (≥ 70 %)',
+      acts:[["Atsakyta","Atsakyti"],["Rengiamas projektas","Rengiu projektą"],["Susieta su projektu","Susieti su Seimo projektu"],["Nepritariu","Nepritariu"]],
+      me:[{t:"Mokyklose trūksta psichologų",m:"Švietimas · 4 klausimai · 214 įrašų",sup:"1 240",mine:"142",st:"Rengiamas projektas",r:"Į klausimą „Kiek psichologų turėtų būti mokykloje?“: rengiu Švietimo įstatymo pataisą – po vieną psichologo etatą 300 mokinių. Juodraštį paskelbsiu čia spalio mėnesį."},
+          {t:"Balsuokite prieš fejerverkų prekybos ribojimą (XVP-1811)",m:"Susieta su Seimo projektu · Viešoji tvarka · 41 įrašas · balsavimas Seime spalio 6 d.",sup:"312",mine:"57",wait:1},
+          {t:"Panaikinti automobilių registracijos mokestį",m:"Mokesčiai · 388 įrašai",sup:"2 015",mine:"96",st:"Nepritariu",r:"Nepritariu: mokestis mažina taršiausių automobilių skaičių, o lėšos skiriamos keliams. Siūlau jį susieti su automobilio amžiumi."}],
+      area:[{t:"Ar Lietuva turėtų prisidėti prie bendro ES gynybos fondo?",m:"Užsienio politika (jūsų komitetas) · 61 įrašas · jūsų nepažymėjo",sup:"540",mine:"88",wait:1}],
+      top:[{t:"Panaikinti automobilių registracijos mokestį",m:"Mokesčiai · 388 įrašai",sup:"2 015",mine:"96",st:"Nepritariu"},{t:"Nemokamas viešasis transportas moksleiviams",m:"Transportas · 302 įrašai · jūsų nepažymėjo",sup:"1 870",mine:"104",wait:1}]},
+    exp:{url:"lietuva2.lt/p/ruta-mockute/temos",who:'<b>Rūta Mockutė</b><div class="mt-note">Patikėtinė · ekspertė: ekonomika · 3 310 patikėjusių</div>',
+      rate:'Atsakėte į <b>6 iš 8</b> jums skirtų temų<br>matote tik jūs',
+      acts:[["Atsakyta","Atsakyti"],["Susieta su projektu","Susieti su Seimo projektu"],["Nepritariu","Nepritariu"]],
+      me:[{t:"Progresinis pajamų mokestis",m:"Mokesčiai · 5 klausimai · 142 įrašai · susieta su XVP-0412",sup:"610",mine:"118",st:"Atsakyta",r:"Į klausimą „Ar 32 % tarifas palies šeimos verslo pardavimą?“: riba skaičiuojama metams, todėl vienkartinis pardavimas ją iškart viršija. Kaimyninėse šalyse taikomas atskiras kapitalo prieaugio tarifas."},
+          {t:"Ar verta mažinti PVM maitinimo paslaugoms?",m:"Mokesčiai · 27 įrašai",sup:"64",mine:"19",wait:1}],
+      area:[{t:"Ar pajamų mokesčio riba bus indeksuojama pagal infliaciją?",m:"Ekonomika (jūsų sritis) · 9 įrašai · jūsų nepažymėjo",sup:"36",mine:"11",wait:1}],
+      top:[{t:"Panaikinti automobilių registracijos mokestį",m:"Mokesčiai · 388 įrašai",sup:"2 015",mine:"204",wait:1},{t:"Nemokamas viešasis transportas moksleiviams",m:"Transportas · 302 įrašai",sup:"1 870",mine:"77",wait:1}]}};
+  const mtS={role:"mp",tab:"me"};
+  const REPLY={"Atsakyta":"Atsakymas paskelbtas temoje, pažymėjusieji „Man svarbu“ gavo pranešimą.","Rengiamas projektas":"Pažymėta, kad rengiate projektą. Pažymėjusieji „Man svarbu“ gaus pranešimą, kai paskelbsite juodraštį.","Susieta su projektu":"Tema susieta su Seimo projektu ir rodoma jo puslapyje.","Nepritariu":"Parašykite paaiškinimą – jį matys visi pažymėjusieji „Man svarbu“."};
+  function renderMT(){
+    const R=MT[mtS.role];
+    $$(".phase-sw [data-role]").forEach(b=>b.setAttribute("aria-pressed",b.dataset.role===mtS.role));
+    $$("#mtTabs button").forEach(b=>b.setAttribute("aria-pressed",b.dataset.t===mtS.tab));
+    $("#mtUrl").textContent=R.url;$("#mtWho").innerHTML=R.who;$("#mtRate").innerHTML=R.rate;
+    $("#mtList").innerHTML=R[mtS.tab].map((x,k)=>'<div class="theme"><div class="theme-h"><b>'+x.t+'<small>'+x.m+'</small></b><span class="chip '+(x.wait?"warn":x.st==="Nepritariu"?"":"ok")+'">'+(x.wait?"Laukia atsakymo":x.st)+'</span></div>'+
+      '<div class="support"><span><b>'+x.sup+'</b> pažymėjo „Man svarbu“</span><span class="mine"><b>'+x.mine+'</b> iš jų jums patikėję</span></div>'+
+      (x.wait?'<div class="acts" data-k="'+k+'">'+R.acts.map(a=>'<button type="button" data-a="'+a[0]+'">'+a[1]+'</button>').join("")+(mtS.role==="exp"?'<span class="mt-note" style="align-self:center">„Rengiu projektą“ – tik Seimo nariams</span>':'')+'</div>':(x.r?'<p class="reply">'+x.r+'</p>':''))+'</div>').join("");
+    $$("#mtList .acts button").forEach(b=>b.addEventListener("click",()=>{const box=b.parentElement,ch=box.parentElement.querySelector(".chip");ch.textContent=b.dataset.a;ch.className="chip "+(b.dataset.a==="Nepritariu"?"":"ok");box.outerHTML='<p class="reply">'+REPLY[b.dataset.a]+' <span class="mt-note">(maketas)</span></p>';}));
+  }
+  $$(".phase-sw [data-role]").forEach(b=>b.addEventListener("click",()=>{mtS.role=b.dataset.role;renderMT();}));
+  $$("#mtTabs button").forEach(b=>b.addEventListener("click",()=>{mtS.tab=b.dataset.t;renderMT();}));
+  renderMT();
+
+  /* ---------- "Man svarbu" in the feed ---------- */
+  $$(".oq .want").forEach(b=>b.addEventListener("click",()=>{const on=b.getAttribute("aria-pressed")!=="true";b.setAttribute("aria-pressed",on);const m=b.previousElementSibling;m.textContent=m.textContent.replace(/\d[\d \u00a0]* pažymėjo/,fmt(+b.dataset.n+(on?1:0))+" pažymėjo");}));
+
+  /* ---------- toc highlight ---------- */
+  const links=$$(".toc a");const secs=links.map(a=>$(a.getAttribute("href")));
+  if("IntersectionObserver" in window){
+    const io=new IntersectionObserver(es=>{es.forEach(e=>{if(e.isIntersecting){links.forEach(l=>l.classList.toggle("on",l.getAttribute("href")==="#"+e.target.id));}});},{rootMargin:"-30% 0px -60% 0px"});
+    secs.forEach(s=>s&&io.observe(s));
+  }
+})();
+</script>

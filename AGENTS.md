@@ -29,10 +29,11 @@ This repository currently holds **pre-implementation documents only** (the conce
 |---|---|---|
 | `index.html` | – | Lists every page. Update it when a page is added, renamed or removed. |
 | `discovery/README.md` | – | English overview and table of pages. Keep in sync with `index.html`. |
-| `discovery/whitepaper/lietuva20-whitepaper.html` | Everyone | The canonical, complete concept with interactive mockups. |
+| `discovery/whitepaper/lietuva20-whitepaper.html` | Everyone | The canonical, complete concept of the first version with interactive mockups. |
+| `discovery/whitepaper/lietuva20-antroji-versija.html` | Everyone | The second version (posts, topics, answers) with its mockups. Split out of the main whitepaper to keep it short; the main whitepaper's chapter 09 summarises it and links here. |
 | `discovery/whitepaper/lietuva20-trumpai.html` | Citizens (incl. people who mobilise an audience) | Short version. |
-| `discovery/whitepaper/lietuva20-politikams-trumpai.html` | Politicians | Short version plus the closed pilot proposal (6-week plan, what we ask / what they get, questions). The pilot details live only here. |
-| `discovery/whitepaper/lietuva20-zurnalistams.html` | Journalists | What LT2 offers, how to cite its results correctly, story ideas. |
+| `discovery/whitepaper/lietuva20-politikams-trumpai.html` | Politicians | Short version plus the invitation to take part (the two steps below, what we ask / what they get, questions). These details live only here. |
+| `discovery/whitepaper/lietuva20-zurnalistams.html` | Journalists | What LT2 would offer and story ideas. The citation guide (correct vs incorrect wording) was removed as premature at this stage. |
 | `discovery/whitepaper/lietuva20-kas-nauja.html` | Former LT2 users | Lessons from 2011–2020, old vs new, what stays. |
 | `discovery/design-notes.md` | Team | Decision history: rejected alternatives and why, research sources (Seimas data, 2011–2020 figures), open questions, working with the owner. Read before re-opening a settled question. |
 | `discovery/prototypes/seimas-vote-hemicycle/` | Team | `fetch_vote.py` + `make_page.py` draw a real Seimas vote as a seat map from open data. |
@@ -44,9 +45,9 @@ Removed on purpose (do not recreate): `lietuva20-politikams-baltoji-knyga.html` 
 Hero (result card) → 01 Kodėl dabar → 02 Kam ir kokia nauda →
 **I Balsavimas:** 03 Projekto puslapis, 04 Balsavimo inicijavimas, 05 Balso delegavimas →
 **II Politikai ir duomenų analizė:** 06 Politikai platformoje, 07 Analitika, 08 Rinkimų režimas →
-**III Antroji versija:** 09 Kas rūpi žmonėms →
+**III Antroji versija:** 09 Kas rūpi žmonėms (a short summary with a link to `lietuva20-antroji-versija.html`) →
 **IV Įgyvendinimas:** 10 Pasitikėjimas ir privatumas, 11 Mūsų patirtis, 12 Kaip prisidėti →
-Priedas: Kas jau veikia kitur (table of e-democracy platforms).
+Priedas: Kas veikia arba buvo išbandyta kitur (table of e-democracy platforms).
 
 Chapter numbers are written by hand in each `eyebrow`; the table of contents numbers itself with a CSS counter (`li.toc-intro` and `li.toc-part` are not counted). When chapters move, update eyebrows and every "žr. N skyrių" / "N skyriuje" / "N skyrius" reference.
 
@@ -54,7 +55,7 @@ Chapter numbers are written by hand in each `eyebrow`; the table of contents num
 
 **Scope**
 - **First version = voting:** bill pages, AI summaries, initiating a vote, delegation, verified politician profiles with vote explanations, result card (also for sharing and embedding), CSV export, analytics, 2028 election comparison by real votes.
-- **Second version = posts:** user posts and questions, feed, grouping into topics and questions, answers "once for everyone", "Mano temos", response rate, "Man svarbu", petitions from topics. Described only in chapter 09 of the main whitepaper. Short versions must not mention the second version at all.
+- **Second version = posts:** user posts and questions, feed, grouping into topics and questions, answers "once for everyone", "Mano temos", response rate, "Man svarbu", petitions from topics. Described in `lietuva20-antroji-versija.html`; chapter 09 of the main whitepaper only summarises it and links there. Short versions must not mention the second version at all.
 - Election mode for 2028 = comparison with MPs and factions by real votes only; candidates who are not MPs are compared by their LT2 votes. Candidates may also vote on bills the Seimas already decided: such votes are marked "po Seimo sprendimo", never enter the LT2 result, and their count is shown next to the match. Candidates who do not vote on LT2 are shown without percentages. Candidate questionnaire on future topics is a later phase (ideally with existing election guides).
 - Municipal councils / European Parliament and a full API: "ateityje, be įsipareigojimų".
 
@@ -98,7 +99,7 @@ Chapter numbers are written by hand in each `eyebrow`; the table of contents num
 ## Editing practices
 
 - HTML files have **mixed CRLF/LF line endings**. Do not rewrite whole files with tools that normalise newlines. Make targeted replacements and check `git diff --stat` against `git diff --ignore-cr-at-eol --stat`: the two should match.
-- Pages are self-contained HTML (inline CSS/JS, Google Fonts only). The main whitepaper's mockups are driven by inline JS (`renderBill`, `resultCard`, `drawHemi`, `renderMT` …); the result card is one component used in the hero, on the bill page after the vote, and as the share image.
+- Pages are self-contained HTML (inline CSS/JS, Google Fonts only). The main whitepaper's mockups are driven by inline JS (`renderBill`, `resultCard`, `drawHemi` …; the second-version page has `renderMT`); the result card is one component used in the hero, on the bill page after the vote, and as the share image.
 - Gotcha: a global `figure svg{min-width:720px}` rule exists; don't wrap small SVGs in `<figure>`.
 - Numbers shown with thousands separators: use `fmt()` (lt-LT, non-breaking space) and regexes that allow `[\d  ]`.
 - After editing, open every page at 1280 px and 390 px width (Playwright with Chromium at `/opt/pw-browsers/chromium` in the cloud environment): no page errors, `scrollWidth` equal to viewport width, all `href="#…"` anchors and relative `.html` links resolve.
@@ -120,5 +121,8 @@ Chapter numbers are written by hand in each `eyebrow`; the table of contents num
 ## Open questions / possible next steps
 
 - No mockup yet shows the before-vote breakdown of a politician's supporters and delegators (only the analytics table shows it for final votes).
-- The full pilot plan exists only in the politicians' short version.
+- The full participation plan exists only in the politicians' short version.
+- **Nothing is built before the concept is discussed in detail with stakeholders.** Step 1 (the only one on offer now): discussions over the existing mockups with politicians and their offices, experts, journalists, active citizens and former users; the mockups are revised between rounds, and a summary goes to every participant. Step 2: a closed trial with a minimal working version and a few real Seimas bills – only if step 1 agrees on what to build, with no dates. Don't describe a pilot of a working product as the next step.
+- The discussion format (regular meetings, a shared chat, personal interviews) is not decided; every page asks readers how they would like to take part. Don't describe a specific format as settled.
+- Every page has a call to action with the contact `info@lietuva2.lt` (a `mailto:` link).
 - The e-democracy appendix and the former-users page contain facts gathered from public sources in September 2026; re-check statuses before publishing.
