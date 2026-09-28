@@ -110,6 +110,12 @@ Headlines considered for the hero (the current one is in `AGENTS.md`)
 - Bank-verified votes were stored in SQL with personal code, name, address and ID document number, digitally signed; other votes as `AdditionalVotes`.
   Storing that next to political opinions would be a GDPR problem today (Art. 9) – one reason to rebuild rather than port.
 - The Seimas result was typed in by hand (`OfficialVote`). Login through banks (SEB, Swedbank, Nordea, DnB…) and VIISP. Politicians were only a flag (`User.IsPolitician`).
+- Main menu (`Globalization/Resources/Shared/Menu.resx`): Veikalapis (news feed), Pasisakymai (`Problem`), Pasiūlymai (`Idea`), Balsavimai (`Issue`),
+  Balsavimų rezultatai, Prioritetai, Organizacijos, Gyvi pokalbiai (chat). Owner, 2026-09: Veikalapis and Pasisakymai correspond to the second version (feed, topics);
+  Pasiūlymai with signatures are now the VRK system's job; Balsavimai are what the first version builds on; organisations registered but hardly used their accounts
+  (may return later, no promise); the chat was used by almost nobody but the owner and is not planned. "Politikų tribūna" was only a filter by users marked as
+  politicians, not a separate feature – don't present it as one. Its lesson: politicians wait for enough people, people wait for politicians who respond; the new
+  design breaks the loop with automatic MP profiles and votes, delegation to MPs who haven't joined (they see how many chose them) and involving politicians before building.
 - Google Analytics ID `UA-266484-11`. Universal Analytics data was deleted by Google on 2024-07-01; it can't be recovered.
 
 ### Track record figures ("Mūsų patirtis") – where they come from

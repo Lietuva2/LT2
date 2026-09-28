@@ -2,7 +2,7 @@
 <html lang="lt">
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Lietuva 2.0 žurnalistams</title>
+<title>Kas nauja Lietuva 2.0</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400;12..96,500;12..96,600;12..96,700;12..96,800&family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;1,6..72,400&family=IBM+Plex+Mono:wght@400;500&display=swap">
@@ -460,10 +460,12 @@ footer.end svg{width:28px;height:28px}
 .road3 p{font-size:16.5px;color:var(--ink-2);line-height:1.5}
 .cta{display:flex;flex-wrap:wrap;gap:12px 24px;align-items:center;margin-top:28px;padding:18px 20px;border-radius:14px;background:var(--brand-soft);font-family:var(--f-display);font-size:15px}
 .cta a{font-weight:600}
+.cta p{flex:1 1 100%;margin:0}.cta .links{display:flex;flex-wrap:wrap;gap:6px 20px}
 .extbl{width:100%;border-collapse:collapse;font-family:var(--f-display);font-size:14px}
 .extbl th,.extbl td{text-align:left;padding:10px 10px;border-bottom:1px solid var(--line);vertical-align:top}
 .extbl th{font-size:12px;color:var(--muted);font-weight:600}
 .extbl small{display:block;font-size:12px;color:var(--muted)}
+.extbl th[scope="colgroup"]{padding-top:20px;color:var(--brand);letter-spacing:.06em;text-transform:uppercase}
 </style>
 
 <svg width="0" height="0" style="position:absolute" aria-hidden="true">
@@ -485,65 +487,80 @@ footer.end svg{width:28px;height:28px}
         <svg aria-label="Lietuva 2.0 logotipas" role="img"><use href="#logo"/></svg>
         <div><div class="wm">Lietuva <span>2.0</span></div><div class="tag">Seimo darbai ir pilietinis įsitraukimas</div></div>
       </div>
-      <div class="readtime"><b>Žurnalistams</b> · skaitymo laikas apie 2 min.</div>
-      <h1>Seimo sprendimai – <em>su kontekstu ir šaltiniais.</em></h1>
-      <p class="kicker">Ką LT2 duotų žurnalistams ir kokias istorijas jo duomenyse būtų galima rasti.</p>
-      <p class="lede">Lietuva 2.0 (LT2) svarstomus Seimo projektus paaiškina suprantama kalba, surenka LT2 naudotojų nuomonę ir palygina ją su tikrais Seimo narių balsavimais. Politikai prie savo balsų prideda paaiškinimus. Viskas – vienoje vietoje, su nuorodomis į šaltinius.</p>
-      <div class="notice" role="note">
-        <svg viewBox="0 0 20 20" aria-hidden="true"><circle cx="10" cy="10" r="8.5" fill="none" stroke="currentColor" stroke-width="1.6"/><path d="M10 5.5v5.5M10 13.6v.9" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
-        <span>LT2 rezultatai – savanoriškai dalyvaujančių naudotojų signalas, o ne reprezentatyvi visuomenės apklausa.</span>
-      </div>
+      <div class="readtime"><b>Buvusiems LT2 naudotojams</b> · skaitymo laikas apie 3 min.</div>
+      <h1>Lietuva 2.0 grįžta – <em>kitokia.</em></h1>
+      <p class="kicker">Ką išmokome per devynerius metus ir kas keičiasi.</p>
+      <p class="lede">2011–2020 m. Lietuva 2.0 buvo pirmoji Lietuvoje tiesioginės e. demokratijos platforma. Piliečiai joje pateikė daugiau nei 320 pasiūlymų, surinko daugiau nei 12 000 parašų 9 iniciatyvoms, o 2013 m. VRK pirmą kartą įskaitė elektroninius parašus. Naujoji LT2 remiasi šia patirtimi, bet keičia centrą: nuo piliečių pasiūlymų – prie to, ką Seimas svarsto dabar.</p>
     </div>
   </section>
 
-  <section class="chapter" id="what">
+  <section class="chapter" id="lessons">
     <header>
-      <div class="eyebrow">Ką gaunate</div>
-      <h2>Kiekvienas projektas – vienoje vietoje</h2>
+      <div class="eyebrow">Ko išmokome</div>
+      <h2>Keturios pamokos, pakeitusios produktą</h2>
     </header>
     <ul class="bul">
-      <li><span><b>Suprantama santrauka su šaltiniais.</b> DI parengtą santrauką prieš paskelbiant peržiūri balsavimo iniciatorius, vėliau ją gali taisyti bendruomenės redaktoriai. Kiekvienas teiginys susietas su projekto straipsniu, o taisymų istorija vieša.</span></li>
-      <li><span><b>Eiga ir Seimo narių balsai.</b> Visi projekto etapai ir kiekvieno Seimo nario balsas, importuoti iš Seimo atvirųjų duomenų.</span></li>
-      <li><span><b>Politikų paaiškinimai.</b> Seimo narių balsų paaiškinimai su data ir nuoroda – tinkami cituoti.</span></li>
-      <li><span><b>Rezultato kortelės ir duomenys.</b> Seimo ir LT2 rezultato kortelę galima įterpti į straipsnį, o duomenis atsisiųsti CSV formatu.</span></li>
-      <li><span><b>Analitika.</b> Frakcijų vieningumas, partijų rėmėjų ir frakcijų balsavimų palyginimas, projektai, kuriuose Seimo ir LT2 naudotojų pasirinkimai labiausiai skiriasi.</span></li>
-      <li><span><b>Vieša metodika.</b> Kiekvienos statistikos skaičiavimo būdas ir DI santraukų neutralumo taisyklės skelbiamos viešai. Kiekvienas rezultatas rodomas su imties dydžiu, o koordinuoti balsų antplūdžiai viešai pažymimi projekto puslapyje.</span></li>
+      <li><span><b>Griežtas tapatybės tikrinimas atbaido daugumą.</b> Jis būtinas teisinę galią turintiems parašams, bet nuomonei išreikšti jo nereikia. Todėl registracijai pakanka el. pašto ir telefono, o stipresnis patvirtinimas, pvz., ES skaitmeninės tapatybės pinigine, bus neprivalomas.</span></li>
+      <li><span><b>Žmones atveda žmonės.</b> Daugiausia lankytojų atėjo iš socialinių tinklų ir tinklaraščių, o ne iš naujienų portalų. Todėl politikai, patikėtiniai ir aktyvūs piliečiai su savo auditorijomis tampa pagrindiniu kanalu, o kiekvienu projektu ir rezultatu lengva pasidalyti.</span></li>
+      <li><span><b>Pasiūlymams reikia atsako.</b> Piliečių pasiūlymai ir parašai dažnai likdavo be Seimo atsako, ir žmonės nematė, kas iš jų išėjo. Todėl naujoji LT2 pradeda nuo to, ką Seimas jau svarsto: kiekvienas balsavimas baigiasi tikru Seimo sprendimu, o politikai gali paaiškinti savo balsus.</span></li>
+      <li><span><b>Reikia sulaužyti uždarą ratą.</b> Senosios LT2 patirtis parodė, kad politikai nedalyvauja, kol platformoje nėra pakankamai žmonių, o žmonės neateina, kol nėra politikų, kurie reaguotų į jų nuomonę. Todėl naujoji LT2 prasmę turi ir be politikų: kiekvieno Seimo nario balsai importuojami iš atvirųjų duomenų, tad savo pasirinkimą su jais galima palyginti iš karto. Balsą galima patikėti ir neprisijungusiam Seimo nariui – pakviestas jis pamato, kiek žmonių jį pasirinko. O politikus kviečiame aptarti platformą dar prieš ją kuriant.</span></li>
     </ul>
   </section>
 
-  <section class="chapter" id="stories">
+  <section class="chapter" id="changes">
     <header>
-      <div class="eyebrow">Istorijų idėjos</div>
-      <h2>Ką galima rasti duomenyse</h2>
+      <div class="eyebrow">Kas keičiasi</div>
+      <h2>Anksčiau ir dabar</h2>
+    </header>
+    <div style="overflow-x:auto"><table class="extbl">
+      <thead><tr><th></th><th>Senoji LT2 (2011–2020)</th><th>Naujoji LT2</th></tr></thead>
+      <tbody>
+        <tr><th colspan="3" scope="colgroup">Senosios LT2 meniu</th></tr>
+        <tr><td><b>Veikalapis</b></td><td>Naujausia veikla platformoje</td><td>Galėtų atsirasti <a href="antroji-versija.html">antrojoje versijoje</a>, jei pirmoji pasiteisins: srautas pagal jūsų balsus, sritis ir patikėtinius</td></tr>
+        <tr><td><b>Pasisakymai</b></td><td>Piliečių iškeltos problemos ir nuomonės</td><td>Galėtų atsirasti <a href="antroji-versija.html">antrojoje versijoje</a> kaip temos: panašūs įrašai sugrupuojami, o atstovai atsako vieną kartą visiems</td></tr>
+        <tr><td><b>Pasiūlymai</b></td><td>Piliečių pasiūlymai ir parašų rinkimas jiems</td><td>LT2 parašų nerenka: teisinę galią turinčioms piliečių iniciatyvoms – VRK sistema</td></tr>
+        <tr><td><b>Balsavimai</b></td><td>Balsavimai dėl pasiūlymų ir klausimų platformoje</td><td>Pagrindinė naujosios LT2 dalis: balsavimai dėl Seimo projektų, kol Seimas juos svarsto, – pačiam arba per kelis patikėtinius. Rezultatas lyginamas su tikru Seimo sprendimu</td></tr>
+        <tr><td><b>Organizacijos</b></td><td>Organizacijų paskyros; dauguma užsiregistravusių jomis beveik nesinaudojo</td><td>Pirmojoje versijoje nėra; galėtų atsirasti vėliau, jei bus poreikis</td></tr>
+        <tr><td><b>Gyvi pokalbiai</b></td><td>Pokalbiai realiuoju laiku</td><td>Neplanuojami</td></tr>
+        <tr><th colspan="3" scope="colgroup">Kiti pokyčiai</th></tr>
+        <tr><td><b>Projektų paaiškinimas</b></td><td>Pasiūlymų tekstai ir diskusijos</td><td>DI santraukos su nuorodomis į straipsnius, peržiūrimos ir taisomos žmonių</td></tr>
+        <tr><td><b>Politikai</b></td><td>Naudotojai, pažymėti politikais</td><td>Visų Seimo narių balsai – automatiškai iš Seimo duomenų; prisijungę politikai patvirtina profilį ir paaiškina balsus</td></tr>
+        <tr><td><b>Registracija</b></td><td>Tapatybės tikrinimas per bankus ir el. valdžios vartus</td><td>El. paštas ir telefonas; vėliau – neprivaloma ES skaitmeninės tapatybės piniginė</td></tr>
+      </tbody>
+    </table></div>
+  </section>
+
+  <section class="chapter" id="stays">
+    <header>
+      <div class="eyebrow">Kas lieka</div>
+      <h2>Ta pati komanda ir tie patys principai</h2>
     </header>
     <ul class="bul">
-      <li><span><b>Kur Seimo ir LT2 naudotojų pasirinkimai skiriasi.</b> Projektai, kuriuose Seimo sprendimas ir naudotojų pasirinkimas labiausiai skiriasi, ir kaip tai paaiškina politikai.</span></li>
-      <li><span><b>Frakcijų vieningumas.</b> Kada frakcijos balsuoja vieningai, o kada jų narių nuomonės skiriasi.</span></li>
-      <li><span><b>Partijos ir jų rėmėjai.</b> Kuriais klausimais partijos rėmėjai LT2 renkasi kitaip nei jos frakcija Seime.</span></li>
-      <li><span><b>Nuomonės kaita.</b> Kaip keitėsi LT2 naudotojų pasirinkimas nuo projekto pateikimo iki galutinio balsavimo.</span></li>
-      <li><span><b>Paaiškinti balsai.</b> Kurie Seimo nariai paaiškina savo balsus ir kaip jų argumentai keičia jais pasitikinčių žmonių nuomonę.</span></li>
+      <li><span><b>Ta pati komanda.</b> Projektą siūlo VšĮ LT2.0 – tie patys žmonės, kurie kūrė ir devynerius metus išlaikė senąją platformą.</span></li>
+      <li><span><b>Nešališkumas.</b> Visos partijos ir politikai rodomi vienodomis sąlygomis, taip pat ir per rinkimų kampanijas.</span></li>
+      <li><span><b>Atvirumas.</b> Statistikos metodika ir DI santraukų taisyklės skelbiamos viešai, o senosios platformos kodas lieka viešai prieinamas.</span></li>
+      <li><span><b>Atsakingi duomenys.</b> Politinės pažiūros saugomos kaip ypatingi duomenys: balsai pagal nutylėjimą privatūs, duomenys laikomi ES.</span></li>
     </ul>
   </section>
 
   <section class="chapter" id="plan">
     <header>
-      <div class="eyebrow">Atsiliepimai</div>
-      <h2>Norime išgirsti jus</h2>
+      <div class="eyebrow">Norime išgirsti jus</div>
+      <h2>Jūs žinote, kas veikė, o kas – ne</h2>
     </header>
     <ol class="qs">
-      <li><span>Kokių duomenų apie Seimo darbą labiausiai trūksta jūsų darbui?<small>Žurnalistams ir redakcijoms</small></span></li>
-      <li><span>Ar pakanka įterpiamų kortelių ir CSV, ar reikalinga API?<small>Duomenų žurnalistams</small></span></li>
-      <li><span>Kaip rezultatus pateikti, kad jų nebūtų galima klaidingai interpretuoti?<small>Visiems</small></span></li>
-      <li><span>Kaip norėtumėte dalyvauti aptariant ir kuriant platformą: periodiniuose susitikimuose, bendrame pokalbių kanale, asmeniniuose pokalbiuose ar kitaip? Kiek laiko galėtumėte skirti?<small>Žurnalistams ir redakcijoms</small></span></li>
+      <li><span>Ko labiausiai pasigendate iš senosios LT2?<small>Buvusiems naudotojams</small></span></li>
+      <li><span>Ar sutiktumėte aptarti naujosios LT2 maketus, o vėliau – išbandyti veikiančią versiją?<small>Buvusiems naudotojams ir organizacijoms</small></span></li>
+      <li><span>Kaip norėtumėte dalyvauti aptariant ir kuriant platformą: periodiniuose susitikimuose, bendrame pokalbių kanale, asmeniniuose pokalbiuose ar kitaip? Kiek laiko galėtumėte skirti?<small>Buvusiems naudotojams</small></span></li>
     </ol>
     <div class="cta">
-      <span><b>Kviečiame</b> aptarti rezultatų korteles ir duomenis, kol jie dar tik kuriami, ir pasakyti, ko trūksta. Rašykite <a href="mailto:info@lietuva2.lt">info@lietuva2.lt</a>.</span>
-      <a href="lietuva20-whitepaper.html">Išsami produkto koncepcija →</a>
+      <p><b>Norite prisidėti?</b> Rašykite <a href="mailto:info@lietuva2.lt">info@lietuva2.lt</a> · <a href="index.html#join">Kaip galima prisidėti →</a></p>
+      <p><a href="koncepcija.html">Plačiau – išsami koncepcija su maketais ir taisyklėmis →</a></p>
     </div>
     <footer class="end">
       <svg aria-hidden="true"><use href="#logo"/></svg>
-      <span>Lietuva 2.0 · žurnalistams, 2026 m. rugsėjis</span>
-      <span>Logotipas: trys pokalbio debesėliai, kartu sudarantys Lietuvos kontūrą.</span>
+      <span>Lietuva 2.0 · buvusiems naudotojams, 2026 m. rugsėjis</span>
+      <span>Senosios platformos kodas: <a href="https://github.com/Lietuva2/LT2/tree/legacy">github.com/Lietuva2/LT2 (legacy)</a></span>
     </footer>
   </section>
 </div>

@@ -2,7 +2,7 @@
 <html lang="lt">
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Kas nauja Lietuva 2.0</title>
+<title>Lietuva 2.0 politikams – trumpai</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400;12..96,500;12..96,600;12..96,700;12..96,800&family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;1,6..72,400&family=IBM+Plex+Mono:wght@400;500&display=swap">
@@ -424,6 +424,7 @@ footer.end svg{width:28px;height:28px}
 
 <style>
 .short{max-width:980px;margin:0 auto}
+.verdict{flex-wrap:wrap}.verdict .chip{white-space:nowrap}
 .short .hero{padding-top:40px}
 .readtime{display:block;font-family:var(--f-display);font-size:13px;color:var(--muted);margin-bottom:18px}
 .readtime b{color:var(--brand);font-weight:600}
@@ -451,6 +452,8 @@ footer.end svg{width:28px;height:28px}
 .bul b{color:var(--ink);font-family:var(--f-display);font-weight:650}
 .chartcard{border:1px solid var(--line);border-radius:14px;background:var(--surface);padding:18px;display:grid;gap:12px}
 .chartcard .dots-chart{max-width:680px}
+.short{display:flex;flex-direction:column}
+.short .hero{order:0}.short #how{order:1}.short #politicians{order:2}.short #experience{order:3}.short #delegation{order:4}.short #analytics{order:5}.short #plan{order:6}
 .short .hero h1{font-size:clamp(38px,5vw,56px)}
 .road3{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px}
 @media (max-width:720px){.road3{grid-template-columns:minmax(0,1fr)}}
@@ -479,83 +482,211 @@ footer.end svg{width:28px;height:28px}
 </svg>
 
 <div class="short">
-  <section class="hero" style="grid-template-columns:minmax(0,1fr)">
+  <section class="hero">
     <div>
       <div class="hero-logo">
         <svg aria-label="Lietuva 2.0 logotipas" role="img"><use href="#logo"/></svg>
         <div><div class="wm">Lietuva <span>2.0</span></div><div class="tag">Seimo darbai ir pilietinis įsitraukimas</div></div>
       </div>
-      <div class="readtime"><b>Buvusiems LT2 naudotojams</b> · skaitymo laikas apie 3 min.</div>
-      <h1>Lietuva 2.0 grįžta – <em>kitokia.</em></h1>
-      <p class="kicker">Ką išmokome per devynerius metus ir kas keičiasi.</p>
-      <p class="lede">2011–2020 m. Lietuva 2.0 buvo pirmoji Lietuvoje tiesioginės e. demokratijos platforma. Piliečiai joje pateikė daugiau nei 320 pasiūlymų, surinko daugiau nei 12 000 parašų 9 iniciatyvoms, o 2013 m. VRK pirmą kartą įskaitė elektroninius parašus. Naujoji LT2 remiasi šia patirtimi, bet keičia centrą: nuo piliečių pasiūlymų – prie to, ką Seimas svarsto dabar.</p>
+      <div class="readtime"><b>Politikams</b> · skaitymo laikas apie 5 min.</div>
+      <h1>Išgirskite rinkėjus. <em>Paaiškinkite sprendimus.</em></h1>
+        <p class="kicker">Vienas kanalas tarp Seimo ir žmonių – ne tik per rinkimus.</p>
+      <p class="lede">Lietuva 2.0 svarstomus Seimo projektus paaiškina suprantama kalba, surenka LT2 naudotojų nuomonės signalą ir leidžia politikui ten pat paaiškinti savo balsą. Oficialūs balsai jau vieši; patvirtintas profilis suteikia jiems kontekstą.</p>
+      <div class="notice" role="note">
+        <svg viewBox="0 0 20 20" aria-hidden="true"><circle cx="10" cy="10" r="8.5" fill="none" stroke="currentColor" stroke-width="1.6"/><path d="M10 5.5v5.5M10 13.6v.9" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
+        <span>Maketuose ir pavyzdžiuose pateikti Seimo nariai, frakcijos, projektai ir skaičiai yra išgalvoti. Jie rodo, kaip atrodytų produktas, o ne kaip balsavo realūs politikai. Komandos patirties faktai yra tikri.</span>
+      </div>
+    </div>
+    <div class="hemi-card" aria-label="Rezultato kortelė">
+      <div class="bill-id">XVP-0412 · Galutinis balsavimas (priėmimas)</div>
+      <h3>Gyventojų pajamų mokesčio įstatymo pataisa</h3>
+      <div class="hemi-wrap">
+        <svg id="hemi" viewBox="0 0 440 236" role="img" aria-label="141 Seimo nario vietų schema: 78 už, 41 prieš, 12 susilaikė, 10 nebalsavo"></svg>
+        <div class="hemi-center"><div class="big tnum">78 : 41</div><div class="small">Priimta</div></div>
+      </div>
+      <div class="legend" style="margin-top:10px">
+        <span><i style="background:var(--v-for)"></i>Už</span>
+        <span><i style="background:var(--v-against)"></i>Prieš</span>
+        <span><i style="background:var(--v-abstain)"></i>Susilaikė</span>
+        <span><i class="ring"></i>Nebalsavo</span>
+      </div>
+      <div class="split-bars">
+        <div class="sbar-row"><div class="lbl"><b>Seimas</b>balsavo 131 SN</div>
+          <div class="sbar" data-tip="Seimas: 60 % už, 31 % prieš, 9 % susilaikė"><span class="f" style="flex:78">60 %</span><span class="a" style="flex:41">31 %</span><span class="n" style="flex:12"></span></div></div>
+        <div class="sbar-row"><div class="lbl"><b>LT2 rezultatas</b>15 160 balsų</div>
+          <div class="sbar" data-tip="LT2 rezultatas (tiesioginiai ir deleguoti LT2 balsai): 57 % už, 37 % prieš, 6 % susilaikė"><span class="f" style="flex:57">57 %</span><span class="a" style="flex:37">37 %</span><span class="n" style="flex:6"></span></div></div>
+      </div>
+      <div class="verdict"><span class="chip ok">Dauguma sutampa: už</span> Skirtumas 3 p. p. · 3 Seimo nariai paaiškino balsą</div>
     </div>
   </section>
 
-  <section class="chapter" id="lessons">
+  <section class="chapter" id="how">
     <header>
-      <div class="eyebrow">Ko išmokome</div>
-      <h2>Keturios pamokos, pakeitusios produktą</h2>
+      <div class="eyebrow">Vertė politikui</div>
+      <h2>Keturi dalykai vienoje vietoje</h2>
+      <p class="lede">LT2 – vieta, kur politikas tiesiogiai pasiekia jį sekančius ir juo pasitikinčius žmones.</p>
     </header>
-    <ul class="bul">
-      <li><span><b>Griežtas tapatybės tikrinimas atbaido daugumą.</b> Jis būtinas teisinę galią turintiems parašams, bet nuomonei išreikšti jo nereikia. Todėl registracijai pakanka el. pašto ir telefono, o stipresnis patvirtinimas, pvz., ES skaitmeninės tapatybės pinigine, bus neprivalomas.</span></li>
-      <li><span><b>Žmones atveda žmonės.</b> Daugiausia lankytojų atėjo iš socialinių tinklų ir tinklaraščių, o ne iš naujienų portalų. Todėl politikai, patikėtiniai ir aktyvūs piliečiai su savo auditorijomis tampa pagrindiniu kanalu, o kiekvienu projektu ir rezultatu lengva pasidalyti.</span></li>
-      <li><span><b>Procedūros žmonių netraukia.</b> Žmonės įsitraukia tada, kai sprendimas juos liečia tiesiogiai. Todėl balsavimui atrenkami tik aktualūs projektai, paaiškinti suprantama kalba.</span></li>
-      <li><span><b>Ryšys su politikais turi būti abipusis.</b> „Politikų tribūna“ parodė, kad politikai dalyvauja, kai mato, kas jų rinkėjams rūpi. Todėl politikas mato, kaip dėl svarstomų projektų balsuoja juo pasitikintys žmonės, ir paaiškina jiems savo balsus.</span></li>
-    </ul>
+    <div class="pillars">
+      <div class="pillar"><div class="verb">Išgirskite</div><p><b>Jūsų rėmėjų pozicija.</b> Apklausos rodo visuomenės nuomonę kai kuriais klausimais, bet retai – jūsų partijos rėmėjų, o konkrečiai jūsų asmeninių rėmėjų – beveik niekada. LT2 dėl kiekvieno svarstomo projekto rodo, kaip balsuoja jūsų partijos rėmėjai ir jums balsą patikėję žmonės, taip pat kiek jums patikėjusių balsavo patys ir kaip, – taip žinote, kur verta paaiškinti daugiau.</p></div>
+      <div class="pillar"><div class="verb">Paaiškinkite</div><p>Paaiškinimą prie konkretaus projekto mato visi, o jums balsą patikėję žmonės gauna apie jį pranešimą. Tai galimybė įtikinti rinkėjus savo sprendimo teisingumu, paveikti jų nuomonę dar prieš balsavimą ir išlikti patikimam, net kai balsuojate kitaip, nei jie tikėjosi.</p></div>
+      <div class="pillar"><div class="verb">Atstovaukite</div><p>Pasirinkti patikėtiniu – tiek Seimo nariai, tiek kandidatai – balsuodami LT2 lemiate ir balsus tų jums balsą patikėjusių žmonių, kurie nepareiškė savo nuomonės. Savo srityse turite pirmenybę.</p></div>
+      <div class="pillar"><div class="verb">Parodykite</div><p>Vienoje vietoje – jūsų balsas, paaiškinimas ir galutinis Seimo sprendimas.</p></div>
+    </div>
   </section>
 
-  <section class="chapter" id="changes">
+  <section class="chapter" id="delegation">
     <header>
-      <div class="eyebrow">Kas keičiasi</div>
-      <h2>Anksčiau ir dabar</h2>
+      <div class="eyebrow">Papildomas nuomonės signalas</div>
+      <h2>Delegavimas padeda dalyvauti dažniau</h2>
+      <p class="lede">LT2 naudotojas gali balsuoti pats arba patikėti balsą keliems patikėtiniams – piliečiams, ekspertams ar Seimo nariams. Jei pats nebalsuoja, jo balsą lemia patikėtinių dauguma, o projekto srities ekspertai turi pirmenybę. Seimo narys lemia jį pasirinkusių balsus tik tada, kai pats balsuoja LT2. Tai nėra teisinis įgaliojimas ar referendumo balsas – tik paaiškinamas būdas parodyti naudotojo poziciją, kai jis pats nebalsavo.</p>
     </header>
-    <div style="overflow-x:auto"><table class="extbl">
-      <thead><tr><th></th><th>Senoji LT2 (2011–2020)</th><th>Naujoji LT2</th></tr></thead>
-      <tbody>
-        <tr><td><b>Kas svarstoma</b></td><td>Piliečių pasiūlymai ir iniciatyvos</td><td>Tikri Seimo projektai, automatiškai importuojami iš Seimo atvirųjų duomenų</td></tr>
-        <tr><td><b>Kaip suprasti</b></td><td>Pasiūlymų tekstai ir diskusijos</td><td>DI santraukos su nuorodomis į straipsnius, peržiūrimos ir taisomos žmonių</td></tr>
-        <tr><td><b>Balsavimas</b></td><td>Balsavimai dėl pasiūlymų ir klausimų platformoje</td><td>Balsavimas dėl Seimo projektų, kol Seimas juos svarsto, – pačiam arba per kelis patikėtinius</td></tr>
-        <tr><td><b>Rezultatas</b></td><td>Balsavimo rezultatas platformoje</td><td>Palyginimas su tikru Seimo sprendimu ir politikų balsų paaiškinimai</td></tr>
-        <tr><td><b>Politikai</b></td><td>„Politikų tribūna“</td><td>Patvirtinti profiliai ir balsų paaiškinimai</td></tr>
-        <tr><td><b>Parašai</b></td><td>Teisinę galią turintys elektroniniai parašai</td><td>LT2 parašų nerenka; teisinės galios iniciatyvoms – VRK sistema</td></tr>
-        <tr><td><b>Registracija</b></td><td>Tapatybės tikrinimas per bankus ir el. valdžios vartus</td><td>El. paštas ir telefonas; vėliau – neprivaloma ES skaitmeninės tapatybės piniginė</td></tr>
-      </tbody>
-    </table></div>
+    <div class="chartcard">
+      <div class="legend"><span>Pavyzdys: 1. Rūta Mockutė (ekspertė: ekonomika) · 2. Jonas Petraitis (Seimo narys) · 3. Darius Stankus</span></div>
+      <div style="overflow-x:auto"><table class="extbl">
+        <thead><tr><th>Projektas</th><th>Kaip balsavo patikėtiniai</th><th>Jūsų balsas</th></tr></thead>
+        <tbody>
+          <tr><td>Pajamų mokestis<small>Ekonomika</small></td><td>Rūta prieš, Jonas prieš, Darius už</td><td><b>Prieš</b><small>sprendžia ekspertė Rūta</small></td></tr>
+          <tr><td>Dantų protezavimas<small>Sveikata</small></td><td>Rūta nebalsavo, Jonas už, Darius už</td><td><b>Už</b><small>ekspertų nėra – dauguma</small></td></tr>
+          <tr><td>Seimo narių išlaidų ataskaitos<small>Teisė</small></td><td>Visi trys už</td><td><b>Prieš</b><small>balsavote patys</small></td></tr>
+        </tbody></table></div>
+    </div>
   </section>
 
-  <section class="chapter" id="stays">
+  <section class="chapter" id="analytics">
     <header>
-      <div class="eyebrow">Kas lieka</div>
-      <h2>Ta pati komanda ir tie patys principai</h2>
+      <div class="eyebrow">Signalas, ne referendumas</div>
+      <h2>Kur Seimo ir LT2 naudotojų pasirinkimai sutampa ir kur skiriasi</h2>
     </header>
-    <ul class="bul">
-      <li><span><b>Ta pati komanda.</b> Projektą siūlo VšĮ LT2.0 – tie patys žmonės, kurie kūrė ir devynerius metus išlaikė senąją platformą.</span></li>
-      <li><span><b>Nešališkumas.</b> Visos partijos ir politikai rodomi vienodomis sąlygomis, taip pat ir per rinkimų kampanijas.</span></li>
-      <li><span><b>Atvirumas.</b> Statistikos metodika ir DI santraukų taisyklės skelbiamos viešai, o senosios platformos kodas lieka viešai prieinamas.</span></li>
-      <li><span><b>Atsakingi duomenys.</b> Politinės pažiūros saugomos kaip ypatingi duomenys: balsai pagal nutylėjimą privatūs, duomenys laikomi ES.</span></li>
-    </ul>
+    <div class="chartcard">
+      <div class="legend"><span><i style="background:var(--s-seimas)"></i>Seimas</span><span><i style="background:var(--s-platform)"></i>Lietuva 2.0 naudotojai</span><span class="muted">· balsų „už“ dalis, linija ties 50 % – dauguma, pavyzdiniai duomenys</span></div>
+      <div class="dots-chart"><svg id="dotplot" viewBox="0 0 560 300" role="img" aria-label="Taškinis grafikas, lyginantis balsų už dalį Seime ir platformoje šešiems projektams"></svg></div>
+    </div>
+    <div class="box" style="margin-top:24px"><h4>Kokias ribas nustatome iš anksto</h4><ul>
+      <li>LT2 rezultatai vadinami naudotojų signalu, ne visuomenės valia.</li>
+      <li>DI tekstai pažymėti, susieti su šaltiniais, prieš paskelbiant peržiūrimi žmogaus ir turi taisymų istoriją.</li>
+      <li>Apibendrinti duomenys apie grupes, pvz., jums balsą patikėjusius ar partijos rėmėjus, rodomi tik kai grupėje yra bent 20 žmonių.</li>
+      <li>Visi politikai rodomi vienodomis sąlygomis.</li>
+      <li>Delegavimas veikia tik LT2 ir neturi teisinės balsavimo galios.</li>
+    </ul></div>
+  </section>
+
+  <section class="chapter" id="experience">
+    <header>
+      <div class="eyebrow">Komandos patirtis</div>
+      <h2>Nepradedame nuo nulio</h2>
+      <p class="lede">2011–2020 m. veikė Lietuva 2.0 – pirmoji Lietuvoje tiesioginės e. demokratijos platforma. Piliečiai joje pateikė daugiau nei 320 pasiūlymų, surinko daugiau nei 12 000 parašų 9 iniciatyvoms, o 2013 m. VRK pirmą kartą Lietuvos istorijoje įskaitė elektroninius parašus.</p>
+    </header>
+      <p style="margin-top:14px;font-family:var(--f-display);font-weight:700"><a href="kas-nauja.html">Naudojotės senąja LT2? Kas pasikeitė ir ko išmokome →</a></p>
   </section>
 
   <section class="chapter" id="plan">
     <header>
-      <div class="eyebrow">Norime išgirsti jus</div>
-      <h2>Jūs žinote, kas veikė, o kas – ne</h2>
+      <div class="eyebrow">Kitas žingsnis</div>
+      <h2>Pirmiausia aptarti, tik tada kurti</h2>
+      <p class="lede">Prieš kurdami bet ką, koncepciją norime išsamiai aptarti su tais, kurie platforma naudotųsi: 5–8 skirtingų politinių pažiūrų politikais ir jų biurais, ekspertais, žurnalistais ir aktyviais piliečiais. Aptarimams naudojame šio dokumento ir <a href="koncepcija.html">išsamios koncepcijos</a> maketus, o po kiekvieno aptarimo juos pataisome. Dalyvavimas neįpareigoja pritarti visai platformos vizijai.</p>
     </header>
+    <div class="road">
+      <div class="now"><div class="when">Pradžia</div><div><h4>Pradinis pokalbis</h4><p>Apie 45 min.: kas jums būtų naudinga, kas trukdytų ir kaip jums patogu dalyvauti toliau – susitikimuose, bendrame pokalbių kanale ar asmeniniuose pokalbiuose.</p></div></div>
+      <div><div class="when">Aptarimai</div><div><h4>Maketai pagal temas</h4><p>Kiekvieną kartą aptariame vieną temą: projekto puslapį ir santraukas, politiko profilį ir balsų paaiškinimus, delegavimą, rodiklius ir jų sąžiningumą, moderavimą. Tarp aptarimų maketus pataisome pagal pastabas.</p></div></div>
+      <div><div class="when">Apibendrinimas</div><div><h4>Sutariame, ką kurti</h4><p>Parengiame santrauką: ką dalyviai laiko naudingu, ko reikėtų atsisakyti ir kas turėtų patekti į pirmą versiją. Ją gauna visi dalyviai.</p></div></div>
+      <div><div class="when">Vėliau</div><div><h4>Uždaras bandymas su veikiančia versija</h4><p>Tik jei po aptarimų nuspręsime kurti: nedidelis bandymas su keliais tikrais Seimo projektais ir politikų balsų paaiškinimais. Jis parodytų tai, ko maketai neparodo: ar politikai iš tiesų paaiškintų savo balsus ir kiek laiko tai užima jų biurams.</p></div></div>
+    </div>
+    <div class="two">
+      <div class="box"><h4>Ko prašome iš dalyvio</h4><ul>
+        <li>Pradinio pokalbio (apie 45 min.).</li>
+        <li>Dalyvauti keliuose aptarimuose – jums patogiu būdu.</li>
+        <li>Atviro grįžtamojo ryšio, įskaitant priežastis nedalyvauti.</li>
+      </ul></div>
+      <div class="box"><h4>Ką dalyvis gauna</h4><ul>
+        <li>Galimybę paveikti, ką ir kaip kuriame – galimybes, santraukų, statistikos ir moderavimo taisykles – dar prieš tai, kai kas nors sukurta.</li>
+        <li>Aptarimų apibendrinimą prieš viešus sprendimus.</li>
+        <li>Pirmenybę dalyvauti bandyme su veikiančia versija, jei jis vyks.</li>
+      </ul></div>
+    </div>
+    <h3 style="margin-top:44px">Ką norime iš jūsų sužinoti</h3>
     <ol class="qs">
-      <li><span>Ko labiausiai pasigendate iš senosios LT2?<small>Buvusiems naudotojams</small></span></li>
-      <li><span>Ar sutiktumėte aptarti naujosios LT2 maketus, o vėliau – išbandyti veikiančią versiją?<small>Buvusiems naudotojams ir organizacijoms</small></span></li>
-      <li><span>Kaip norėtumėte dalyvauti aptariant ir kuriant platformą: periodiniuose susitikimuose, bendrame pokalbių kanale, asmeniniuose pokalbiuose ar kitaip? Kiek laiko galėtumėte skirti?<small>Buvusiems naudotojams</small></span></li>
+      <li><span>Kaip norėtumėte dalyvauti aptariant ir kuriant platformą: periodiniuose susitikimuose, bendrame pokalbių kanale, asmeniniuose pokalbiuose ar kitaip? Kiek laiko galėtumėte skirti?<small>Politikams, jų biurams, ekspertams ir visiems, norintiems prisidėti</small></span></li>
+      <li><span>Ar paaiškintumėte savo balsavimus tokioje platformoje? Kas jus sulaikytų?<small>Seimo nariams</small></span></li>
+      <li><span>Kurios iš siūlomų galimybių iš tiesų pakeistų jūsų darbą, o kurios – nebūtinos, o gal ir nepageidautinos?<small>Politikams ir jų biurams</small></span></li>
+      <li><span>Ar delegavimas keliems patikėtiniams, kai sprendžia jų dauguma, atrodo teisingas ir suprantamas? Ką keistumėte?<small>Visiems</small></span></li>
+      <li><span>Kuri siūloma statistika galėtų klaidinti ar būti nesąžininga, ir kaip ją reikėtų pateikti?<small>Visiems</small></span></li>
     </ol>
     <div class="cta">
-      <span><b>Norite prisidėti?</b> Rašykite <a href="mailto:info@lietuva2.lt">info@lietuva2.lt</a>. <a href="lietuva20-trumpai.html#plan">Kaip galima prisidėti</a> – trumpojoje versijoje. Plačiau apie tai, kaip veiktų naujoji LT2 – su maketais ir taisyklėmis:</span>
-      <a href="lietuva20-whitepaper.html">Išsami produkto koncepcija →</a>
-      <a href="lietuva20-trumpai.html">Trumpoji versija →</a>
+      <span><b>Kviečiame</b> aptarti koncepciją ir maketus, kol dar niekas nesukurta. Rašykite <a href="mailto:info@lietuva2.lt">info@lietuva2.lt</a>.</span>
+      <a href="koncepcija.html">Išsami produkto koncepcija →</a>
     </div>
     <footer class="end">
       <svg aria-hidden="true"><use href="#logo"/></svg>
-      <span>Lietuva 2.0 · buvusiems naudotojams, 2026 m. rugsėjis</span>
-      <span>Senosios platformos kodas: <a href="https://github.com/Lietuva2/LT2/tree/legacy">github.com/Lietuva2/LT2 (legacy)</a></span>
+      <span>Lietuva 2.0 · versija politikams ir kvietimas prisidėti, 2026 m. rugsėjis</span>
     </footer>
   </section>
 </div>
+
+<div id="tip" role="tooltip"></div>
+
+<script>
+(function(){
+  document.documentElement.lang="lt";
+  const $=(s,r=document)=>r.querySelector(s);
+  const $$=(s,r=document)=>Array.from(r.querySelectorAll(s));
+  const NS="http://www.w3.org/2000/svg";
+  const el=(n,a={})=>{const e=document.createElementNS(NS,n);for(const k in a)e.setAttribute(k,a[k]);return e;};
+
+  const tip=$("#tip");
+  function showTip(t,x,y){tip.textContent=t;tip.classList.add("on");const w=tip.offsetWidth,h=tip.offsetHeight;let L=x+14,T=y+14;if(L+w>innerWidth-8)L=x-w-14;if(T+h>innerHeight-8)T=y-h-14;tip.style.left=L+"px";tip.style.top=T+"px";}
+  const tipAt=e=>{const t=e.target.closest&&e.target.closest("[data-tip]");if(t)showTip(t.getAttribute("data-tip"),e.clientX,e.clientY);else tip.classList.remove("on");};
+  document.addEventListener("pointermove",tipAt);
+  document.addEventListener("pointerdown",tipAt);
+
+  /* hemicycle */
+  const factions=[
+    {n:"Socialinis forumas",s:26,v:[22,1,2,1]},{n:"Pilietinė sąjunga",s:38,v:[34,0,2,2]},
+    {n:"Kaimo aljansas",s:21,v:[15,2,3,1]},{n:"Naujasis centras",s:18,v:[1,14,2,1]},
+    {n:"Reformų partija",s:30,v:[3,22,2,3]},{n:"Be frakcijos",s:8,v:[3,2,1,2]}];
+  (function(){
+    const svg=$("#hemi"),cx=220,cy=226,R0=92,R1=212,rows=8,total=141;
+    const radii=[];for(let i=0;i<rows;i++)radii.push(R0+(R1-R0)*i/(rows-1));
+    const sum=radii.reduce((a,b)=>a+b,0);const counts=radii.map(r=>Math.round(total*r/sum));
+    counts[rows-1]+=total-counts.reduce((a,b)=>a+b,0);
+    const seats=[];radii.forEach((r,i)=>{const n=counts[i];for(let j=0;j<n;j++){const a=Math.PI-(Math.PI*(j+0.5)/n);seats.push({x:cx+r*Math.cos(a),y:cy-r*Math.sin(a),a});}});
+    seats.sort((p,q)=>q.a-p.a);
+    const keys=["for","against","abstain","absent"],labels={for:"Už",against:"Prieš",abstain:"Susilaikė",absent:"Nebalsavo"};
+    let k=0;factions.forEach(f=>{const list=[];keys.forEach((key,i)=>{for(let c=0;c<f.v[i];c++)list.push(key);});
+      seats.slice(k,k+f.s).sort((p,q)=>Math.hypot(p.x-cx,p.y-cy)-Math.hypot(q.x-cx,q.y-cy)).forEach((s,i)=>{s.f=f.n;s.vote=list[i];});k+=f.s;});
+    seats.forEach(s=>{const c=el("circle",{cx:s.x.toFixed(1),cy:s.y.toFixed(1),r:6.2});
+      if(s.vote==="absent"){c.setAttribute("fill","none");c.setAttribute("stroke","var(--v-absent)");c.setAttribute("stroke-width","2");c.setAttribute("r","5.2");}
+      else c.setAttribute("fill","var(--v-"+s.vote+")");
+      c.setAttribute("data-tip",s.f+" · "+labels[s.vote]);svg.appendChild(c);});
+  })();
+
+
+
+  /* dot plot */
+  const bills=[
+    {id:"XVP-0587",t:"Nemokamos I pakopos studijos",s:48,p:81,o:"Atmesta"},
+    {id:"XVP-0701",t:"Dantų protezavimas 65+",s:72,p:88,o:"Priimta"},
+    {id:"XVP-0633",t:"Gynybai – 3,5 % BVP",s:91,p:77,o:"Priimta"},
+    {id:"XVP-0690",t:"Akcizas saldintiems gėrimams",s:52,p:49,o:"Priimta"},
+    {id:"XVP-0412",t:"Progresinis pajamų mokestis",s:60,p:57,o:"Priimta"},
+    {id:"XVP-0655",t:"Saulės parkai ūkio žemėje",s:55,p:41,o:"Priimta"}];
+  (function(){
+    const svg=$("#dotplot"),L=200,R=540,top=24,rowH=42,x=v=>L+(R-L)*v/100;
+    const g=el("g",{"font-family":"Bricolage Grotesque, system-ui, sans-serif","font-size":"12"});
+    [0,25,50,75,100].forEach(v=>{g.appendChild(el("line",{x1:x(v),x2:x(v),y1:top-6,y2:top+rowH*bills.length-14,stroke:"var(--line)","stroke-width":v===50?1.5:1,"stroke-dasharray":v===50?"":"2 3"}));
+      const t=el("text",{x:x(v),y:top+rowH*bills.length+4,"text-anchor":"middle",fill:"var(--muted)"});t.textContent=v+" %";g.appendChild(t);});
+    
+    bills.forEach((b,i)=>{const y=top+i*rowH+8;
+      const hit=el("rect",{x:0,y:y-18,width:560,height:rowH-4,fill:"transparent"});
+      hit.setAttribute("data-tip",b.t+" ("+b.id+"): Seime "+b.s+" % už, platformoje "+b.p+" % už. Skirtumas "+Math.abs(b.s-b.p)+" p. p. "+b.o+".");g.appendChild(hit);
+      const t1=el("text",{x:0,y:y-2,fill:"var(--ink)","font-weight":"600"});t1.textContent=b.t;g.appendChild(t1);
+      const t2=el("text",{x:0,y:y+13,fill:"var(--muted)","font-family":"IBM Plex Mono, monospace","font-size":"10.5"});t2.textContent=b.id+" · "+b.o;g.appendChild(t2);
+      g.appendChild(el("line",{x1:x(Math.min(b.s,b.p)),x2:x(Math.max(b.s,b.p)),y1:y,y2:y,stroke:"var(--line-strong)","stroke-width":3,"stroke-linecap":"round"}));
+      g.appendChild(el("circle",{cx:x(b.s),cy:y,r:6.5,fill:"var(--s-seimas)",stroke:"var(--surface)","stroke-width":2}));
+      g.appendChild(el("circle",{cx:x(b.p),cy:y,r:6.5,fill:"var(--s-platform)",stroke:"var(--surface)","stroke-width":2}));
+      if(i===0){const a=el("text",{x:x(b.s),y:y-11,"text-anchor":"middle",fill:"var(--ink-2)","font-size":"11"});a.textContent="Seimas";g.appendChild(a);
+        const c=el("text",{x:x(b.p),y:y-11,"text-anchor":"middle",fill:"var(--ink-2)","font-size":"11"});c.textContent="Naudotojai";g.appendChild(c);}
+    });
+    svg.appendChild(g);
+  })();
+})();
+</script>

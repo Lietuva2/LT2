@@ -17,7 +17,7 @@ This repository currently holds **pre-implementation documents only** (the conce
 
 | Branch | Contents |
 |---|---|
-| `docs` | All current work: `discovery/` and `index.html`. Develop here. |
+| `docs` | All current work: `docs/` (the website) and `discovery/` (team notes, prototypes). Develop here. |
 | `legacy` | The old 2011–2020 ASP.NET MVC platform. Do not modify. |
 | `master` | Intentionally empty (one commit removed all files; history kept). |
 
@@ -27,16 +27,18 @@ This repository currently holds **pre-implementation documents only** (the conce
 
 | Path | Audience | Notes |
 |---|---|---|
-| `index.html` | – | Lists every page. Update it when a page is added, renamed or removed. |
-| `discovery/README.md` | – | English overview and table of pages. Keep in sync with `index.html`. |
-| `discovery/whitepaper/lietuva20-whitepaper.html` | Everyone | The canonical, complete concept of the first version with interactive mockups. |
-| `discovery/whitepaper/lietuva20-antroji-versija.html` | Everyone | The second version (posts, topics, answers) with its mockups. Split out of the main whitepaper to keep it short; the main whitepaper's chapter 09 summarises it and links here. |
-| `discovery/whitepaper/lietuva20-trumpai.html` | Citizens (incl. people who mobilise an audience) | Short version. |
-| `discovery/whitepaper/lietuva20-politikams-trumpai.html` | Politicians | Short version plus the invitation to take part (the two steps below, what we ask / what they get, questions). These details live only here. |
-| `discovery/whitepaper/lietuva20-zurnalistams.html` | Journalists | What LT2 would offer and story ideas. The citation guide (correct vs incorrect wording) was removed as premature at this stage. |
-| `discovery/whitepaper/lietuva20-kas-nauja.html` | Former LT2 users | Lessons from 2011–2020, old vs new, what stays. |
+| `docs/index.html` | Citizens and first-time visitors | **Start page of lietuva2.lt**, built as a landing page: hero with two calls to action and the result card → why → four possibilities → bill page mockup (vote or delegate) → a politician's vote explanation → cards to the audience versions → trust → experience → ways to contribute and the contact. Detail (delegation table, analytics, rules) stays in `koncepcija.html`; keep only the most informative mockups here. |
+| `docs/koncepcija.html` | Everyone | The main whitepaper: the canonical, complete concept of the first version with interactive mockups. |
+| `docs/antroji-versija.html` | Everyone | The second version (posts, topics, answers) with its mockups. Split out of the main whitepaper to keep it short; the main whitepaper's chapter 09 summarises it and links here. |
+| `docs/politikams.html` | Politicians | Short version plus the invitation to take part (the two steps below, what we ask / what they get, questions). These details live only here. |
+| `docs/zurnalistams.html` | Journalists | What LT2 would offer and story ideas. The citation guide (correct vs incorrect wording) was removed as premature at this stage. |
+| `docs/kas-nauja.html` | Former LT2 users | Lessons from 2011–2020, old vs new, what stays. |
+| `docs/dokumentai.html` | People who want everything | Lists every page. Not linked from any page and marked `noindex`; the owner shares it on request. Update it when a page is added, renamed or removed. |
+| `discovery/README.md` | – | English overview and table of pages. Keep in sync with `docs/dokumentai.html`. |
 | `discovery/design-notes.md` | Team | Decision history: rejected alternatives and why, research sources (Seimas data, 2011–2020 figures), open questions, working with the owner. Read before re-opening a settled question. |
 | `discovery/prototypes/seimas-vote-hemicycle/` | Team | `fetch_vote.py` + `make_page.py` draw a real Seimas vote as a seat map from open data. |
+
+`docs/` is the website: its contents are uploaded as they are to the web root of lietuva2.lt, and nothing outside it is published. All links between pages are relative (`politikams.html`, `koncepcija.html#delegation`), so the folder works under any base URL, opened from disk, or on GitHub Pages from `/docs`. Keep it that way: no absolute site paths, and no internal notes inside `docs/`. In the text "the main whitepaper" means `koncepcija.html`; the page names were `lietuva20-*.html` before 2026-09.
 
 Removed on purpose (do not recreate): `lietuva20-politikams-baltoji-knyga.html` (merged into the main whitepaper / politicians' short version), `lietuva20-aktyviems-pilieciams.html` (merged into the citizens' short version).
 
@@ -45,7 +47,7 @@ Removed on purpose (do not recreate): `lietuva20-politikams-baltoji-knyga.html` 
 Hero (result card) → 01 Kodėl dabar → 02 Kam ir kokia nauda →
 **I Balsavimas:** 03 Projekto puslapis, 04 Balsavimo inicijavimas, 05 Balso delegavimas →
 **II Politikai ir duomenų analizė:** 06 Politikai platformoje, 07 Analitika, 08 Rinkimų režimas →
-**III Antroji versija:** 09 Kas rūpi žmonėms (a short summary with a link to `lietuva20-antroji-versija.html`) →
+**III Antroji versija:** 09 Kas rūpi žmonėms (a short summary with a link to `antroji-versija.html`) →
 **IV Įgyvendinimas:** 10 Pasitikėjimas ir privatumas, 11 Mūsų patirtis, 12 Kaip prisidėti →
 Priedas: Kas veikia arba buvo išbandyta kitur (table of e-democracy platforms).
 
@@ -55,7 +57,7 @@ Chapter numbers are written by hand in each `eyebrow`; the table of contents num
 
 **Scope**
 - **First version = voting:** bill pages, AI summaries, initiating a vote, delegation, verified politician profiles with vote explanations, result card (also for sharing and embedding), CSV export, analytics, 2028 election comparison by real votes.
-- **Second version = posts:** user posts and questions, feed, grouping into topics and questions, answers "once for everyone", "Mano temos", response rate, "Man svarbu", petitions from topics. Described in `lietuva20-antroji-versija.html`; chapter 09 of the main whitepaper only summarises it and links there. Short versions must not mention the second version at all.
+- **Second version = posts:** user posts and questions, feed, grouping into topics and questions, answers "once for everyone", "Mano temos", response rate, "Man svarbu", petitions from topics. Described in `antroji-versija.html`; chapter 09 of the main whitepaper only summarises it and links there. Short versions must not mention the second version, with one exception: the former-users page maps the old menu (Veikalapis, Pasisakymai) to it, always as "galėtų atsirasti … jei pirmoji pasiteisins" and linked to `antroji-versija.html`.
 - Election mode for 2028 = comparison with MPs and factions by real votes only; candidates who are not MPs are compared by their LT2 votes. Candidates may also vote on bills the Seimas already decided: such votes are marked "po Seimo sprendimo", never enter the LT2 result, and their count is shown next to the match. Candidates who do not vote on LT2 are shown without percentages. Candidate questionnaire on future topics is a later phase (ideally with existing election guides).
 - Municipal councils / European Parliament and a full API: "ateityje, be įsipareigojimų".
 

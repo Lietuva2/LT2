@@ -7,20 +7,20 @@ The previous platform (2011–2020, ASP.NET MVC) is kept on the `legacy` branch.
 
 ## Contents
 
-All whitepaper pages are in Lithuanian and open directly in a browser. `../index.html` at the repository root links to all of them.
+The website is the `../docs/` folder: its contents are uploaded as they are to lietuva2.lt, and all links between pages are relative. The pages are in Lithuanian and open directly in a browser. `../docs/index.html` (the citizens' short version) is the start page; `../docs/dokumentai.html` lists every page and is shared on request.
 
 | Path | Audience | What |
 |---|---|---|
-| `whitepaper/lietuva20-whitepaper.html` | Everyone | Full product concept with interactive mockups (the canonical version). |
-| `whitepaper/lietuva20-antroji-versija.html` | Everyone | The second version: posts, topics and answers from representatives, with mockups. |
-| `whitepaper/lietuva20-trumpai.html` | Citizens | Short version, including a section for people who mobilise an audience. |
-| `whitepaper/lietuva20-politikams-trumpai.html` | Politicians | Short version with the invitation to discuss the concept before anything is built, and questions for politicians. |
-| `whitepaper/lietuva20-kas-nauja.html` | Former LT2 users | What changed since the 2011–2020 platform, lessons learned, what stays. |
-| `whitepaper/lietuva20-zurnalistams.html` | Journalists | What LT2 would offer journalists and story ideas. |
+| `../docs/koncepcija.html` | Everyone | Full product concept with interactive mockups (the canonical version). |
+| `../docs/antroji-versija.html` | Everyone | The second version: posts, topics and answers from representatives, with mockups. |
+| `../docs/index.html` | Citizens | Start page (landing page): the short version with the key mockups, links to the audience versions and ways to contribute. |
+| `../docs/politikams.html` | Politicians | Short version with the invitation to discuss the concept before anything is built, and questions for politicians. |
+| `../docs/kas-nauja.html` | Former LT2 users | What changed since the 2011–2020 platform, lessons learned, what stays. |
+| `../docs/zurnalistams.html` | Journalists | What LT2 would offer journalists and story ideas. |
 | `design-notes.md` | Team | Decision history, rejected alternatives, research sources and open questions from the discovery work. |
 | `prototypes/seimas-vote-hemicycle/` | Team | Feasibility check: renders a real Seimas vote from the open data API. |
 
-When adding or renaming a whitepaper page, update `../index.html` as well.
+When adding or renaming a page, update `../docs/dokumentai.html` as well.
 
 All politicians, parties, bills and figures in the whitepaper mockups are fictional.
 
