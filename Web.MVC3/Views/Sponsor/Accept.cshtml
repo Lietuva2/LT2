@@ -1,0 +1,43 @@
+﻿@model Data.ViewModels.Sponsor.PaymentAcceptModel
+@{
+    ViewBag.Title = "Mokėjimas atliktas!";
+}
+@section Scripts
+{
+    <script type='text/javascript'>
+        function onPageLoad() {
+        }
+    </script>
+}
+<h2 class="heading">Mokėjimas atliktas!</h2>
+<div>
+
+    @if (ViewBag.CurrentUser.IsAuthenticated && Model.Success)
+    {
+        <p>
+            Jums suteiktas <b>Rėmėjo</b> titulas.
+        </p>
+    }
+    @if (Model.PersonCodeStatus.HasValue)
+    {
+        if (Model.PersonCodeStatus == 0)
+        {
+            <p>
+                Jūsų asmens kodas yra tikrinamas. Tai gali užtrukti nuo kelių minučių iki paros. Apie patikrinimo rezultatą Jūs būsite informuoti el. paštu.
+            </p>
+        }
+        if (Model.PersonCodeStatus == 1)
+        {
+            <p>
+                Jūsų tapatybė patvirtinta!
+            </p>
+        }
+        if (Model.PersonCodeStatus == 3)
+        {
+            <p>
+                Šis mokėjimo būdas nepalaiko galimybės patvirtinti tapatybės.
+            </p>
+        }
+    }
+    <p>Ačiū labai!</p>
+</div>

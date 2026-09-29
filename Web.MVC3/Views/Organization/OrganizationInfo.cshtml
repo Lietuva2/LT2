@@ -1,0 +1,16 @@
+﻿@model Data.ViewModels.Organization.OrganizationViewModel
+@using Globalization.Resources.Organization
+@using Globalization.Resources.Shared;
+@using Web.Helpers;
+@if (Model.Info.IsFilled || Model.IsEditable)
+{
+    <div class="sectionContainer">
+        @{Html.RenderPartial(MVC.Organization.Views.Info, Model.Info);}
+    </div>
+}
+@if (Model.Contacts.IsFilled || Model.IsEditable)
+{
+    <div id="contactsContainer" class="sectionContainer">
+        @{Html.RenderPartial(MVC.Organization.Views.Contacts, Model.Contacts);}
+    </div>
+}

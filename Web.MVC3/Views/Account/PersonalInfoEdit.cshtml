@@ -1,0 +1,75 @@
+﻿@model Data.ViewModels.Account.PersonalInfoEditModel
+@using Globalization.Resources.Account
+@using Globalization.Resources.Shared
+@using Web.Helpers
+<fieldset>
+    <div class="uiHeader">
+        <span>@Resource.PersonalInfoLegend</span>
+    </div>
+    
+    @using (Html.BeginForm(MVC.Account.SavePersonalInfo()))
+    {
+    @Html.AntiForgeryToken()
+    @Html.HiddenFor(m => m.UserObjectId)
+    <table class="tbl_data tbl_edit">
+    <tbody>
+    <tr>
+        <th class="lbl">@Resource.FirstName</th>
+        <td class="data">
+            @if (ViewBag.CurrentUser.IsUnique && Services.Infrastructure.CustomAppSettings.RequireUniqueAuthentication)
+            {
+                @Model.FirstName
+                @Html.HiddenFor(m => m.FirstName)
+            }
+            else
+            {
+                @Html.TextBoxFor(m => m.FirstName)
+                @Html.ValidationMessageFor(model => model.FirstName)
+            }
+        </td>
+    </tr>
+    <tr>
+        <th class="lbl">@Resource.LastName</th>
+        <td class="data">
+            @if (ViewBag.CurrentUser.IsUnique && Services.Infrastructure.CustomAppSettings.RequireUniqueAuthentication)
+            {
+                @Model.LastName
+                @Html.HiddenFor(m => m.LastName)
+            }
+            else
+            {
+                @Html.TextBoxFor(m => m.LastName)
+                @Html.ValidationMessageFor(model => model.LastName)
+            }
+        </td>
+    </tr>
+    <tr>
+        <th class="lbl">@Resource.UserName</th>
+        <td class="data">@Html.TextBoxFor(m => m.UserName) @Html.ValidationMessageFor(model => model.UserName)</td>
+    </tr>
+    <tr>
+        <th class="lbl">@Resource.BirthDate</th>
+        <td class="data">
+            @Html.DropDownListFor(m => m.BirthYear, Model.Years) 
+            @Html.ValidationMessageFor(model => model.BirthYear)
+            @Html.DropDownListFor(m => m.BirthMonth, Model.Months) 
+            @Html.ValidationMessageFor(model => model.BirthMonth)
+            @Html.DropDownListFor(m => m.BirthDay, Model.Days) 
+            @Html.ValidationMessageFor(model => model.BirthDay)
+        </td>
+    </tr>
+    <tr>
+        <th class="lbl">@Resource.EmploymentStatusName</th>
+        <td class="data">@Html.DropDownListFor(m => m.EmploymentStatusName, Model.EmploymentStatuses)
+        @Html.ValidationMessageFor(model => model.EmploymentStatusName)</td>
+    </tr>
+    <tr>
+        <th></th>
+        <td class="actions data">
+            @Html.Buttons(2, Url.Action(MVC.Account.PersonalInfo(Model.UserObjectId)))
+        </td>
+    </tr>
+    </tbody>
+    </table>
+    }
+</fieldset>

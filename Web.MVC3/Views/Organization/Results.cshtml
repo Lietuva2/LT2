@@ -1,0 +1,37 @@
+﻿@model Data.ViewModels.Voting.VotingResultsModel
+
+@using Data.Enums
+@using Globalization.Resources.Shared
+@using Globalization.Resources.Voting
+@using Framework.Lists
+@using Services.Enums
+@using Web.Helpers
+<div class="clear">
+    <span class="index_links">
+        @if (Model.IsEditable)
+        {
+            <a href="@Html.GetUrl(MVC.Voting.Create(Model.OrganizationId))" title="@Resource.CreateTooltip">@Resource.Create</a>
+        }
+
+        @Html.ActionLink(Globalization.Resources.Voting.Resource.Votings, MVC.Organization.Details(Model.OrganizationId, Model.OrganizationName, OrganizationViews.Issues, null, (IssueListSorts?)Model.ListSort, null))
+    </span>
+</div>
+@if (Model.Items.List.Any())
+{
+    <div class="clear">
+        <p class="fl">
+            @Html.ActionLink(Resource.SortNearest, MVC.Voting.Index(null, IssueListSorts.Nearest, null), new Dictionary<string, object> {{"class", (IssueListSorts) Model.ListSort == IssueListSorts.Nearest ? "highlight" : ""}})
+            &nbsp; @Html.ActionLink(Resource.SortActive, MVC.Voting.Index(null, IssueListSorts.MostActive, null), new Dictionary<string, object> {{"class", (IssueListSorts) Model.ListSort == IssueListSorts.MostActive ? "highlight" : ""}})
+        </p>
+        <p class="fr itemsCounter">@SharedStrings.TotalCount: <span id="spanTotalCount">@Model.TotalCount</span></p>
+    </div>
+}
+<div class="clear"></div>
+<ul id="list" class="m_list">
+    @{ Html.RenderPartial(MVC.Voting.Views._ResultsList, Model.Items.List);}
+</ul>
+
+@if (Model.Items.HasMoreElements)
+{
+    @Html.ActionLink(SharedStrings.More, MVC.Voting.GetNextPage(), new { id = "lnkShowMore" })
+}

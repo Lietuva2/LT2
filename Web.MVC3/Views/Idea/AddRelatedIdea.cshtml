@@ -1,0 +1,29 @@
+﻿@using Data.ViewModels.Base
+@using Globalization.Resources.Idea
+@using Web.Helpers
+@model List<Data.ViewModels.Base.RelatedIdeaListItem>
+<script type="text/javascript">
+    $(function() {
+        $('#ideaList').deleteButton();
+    });
+    function onIdeaSelect() {
+        $.helpers.loadAsync(null, '@Url.Action(MVC.Idea.AddRelatedIdea())', { id: $('#RelatedIdeaId').val(), name: $('#RelatedIdeaText').val() }, function (result) {
+            var html = $(result.Content).appendTo($('#ideaList'));
+            $.helpers.flash(html);
+            $('#RelatedIdeaId').val('');
+            $('#RelatedIdeaText').val('');
+        });
+    }
+</script>
+@Html.Label("RelatedIdeaText", Globalization.Resources.Idea.Resource.RelatedIdeas, new { @class = "fl" })
+            @Html.Partial(MVC.Shared.Views._Help, Resource.RelateIdeasHelp)
+<div id="selectRelatedIdea">
+    @Html.AutoComplete("RelatedIdeaText", "RelatedIdeaId", MVC.Idea.GetMatchedIdeas(), "txt_l", "onIdeaSelect", true, new Dictionary<string, object> { { "placeholder", Resource.SelectRelatedIdea } })
+    @Html.ValidationMessageFor(model => model)
+    <ul id="ideaList">
+        @foreach (RelatedIdeaListItem idea in Model)
+        {
+            @Html.Partial(MVC.Idea.Views.RelatedIdea, idea)
+        }
+    </ul>
+</div>

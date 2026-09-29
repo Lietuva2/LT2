@@ -1,0 +1,30 @@
+﻿@model Data.ViewModels.Idea.IdeaViewModel
+@using Data.Enums
+@using Globalization.Resources.Idea
+@using Web.Helpers
+@using Globalization.Resources.Shared
+
+<p class="m_list_d">
+    @if (Model.Progress != null)
+    {
+        @Html.Partial(MVC.Idea.Views.Progress, Model.Progress)
+    }
+    else
+    {
+        @Resource.TotalVotes<text>:</text>
+        <a href="@Url.Action("GetSupporters", "Idea", new RouteValueDictionary() { { "ideaId", Model.Id }, { "versionId", UrlParameter.Optional } })" class="lnkUsers" title="@Html.GetUniqueUsersTip(Model.TotalConfirmedSupporters, Model.TotalUnconfirmedSupporters)">@Model.TotalSupporters</a>
+    }
+</p>
+@if (Model.State == IdeaStates.New && Model.TotalSupporters > 0 && Model.Versions.Count > 1)
+{
+    <p class="m_list_d">
+        @Resource.SupportPercentage: <span title='@string.Format(Resource.SupportPercentageTemplate, Model.CurrentVersion.SupportingUserCount, Model.TotalSupporters)'>
+            @Model.CurrentVersion.SupportPercentage </span>
+    </p>
+}
+else if (Model.State == IdeaStates.Resolved && Model.Deadline.HasValue)
+{
+    <p class="m_list_d" title="@Model.Deadline">
+        Liko: @Globalization.GlobalizedSentences.GetTimeLeftString(Model.Deadline)
+    </p>
+}

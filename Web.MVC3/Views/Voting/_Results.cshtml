@@ -1,0 +1,70 @@
+﻿@model Data.ViewModels.Voting.VotingResultsModel
+@using Globalization.Resources.Shared
+@using Globalization.Resources.Voting
+@using Globalization.Resources.Shared
+@using Framework.Lists
+@using Services.Enums
+@using Web.Helpers
+@{
+    ViewBag.Title = Resource.PageTitleResults;
+}
+@section Head
+{
+}
+@section Scripts
+{
+    <script type='text/javascript'>
+        function onPageLoad() {
+            $('#list').showmore();
+            CreateCategorySelector('@Url.Action(MVC.Voting.FilterResultsPage())', '@Url.Action(MVC.Voting.SaveMyCategories())');
+
+            initializeInfiniteScroll();
+        }
+    </script>
+}
+<div class="clearfix">
+    <h2 class="heading">@Resource.TitleResults</h2>
+</div>
+@if (ViewBag.FilteredCategoryIds == null)
+{
+    <p class="content_views">
+        <form id="formCategories">
+            @Html.AntiForgeryToken()
+            @Html.Partial(MVC.Idea.Views.CategorySelector, Model.SelectedCategories, new ViewDataDictionary(ViewData) {{"view", Model.ListView}})
+        </form>
+    </p>
+}
+<div class="clear"></div>
+<div>
+    <p class="fl">
+        @Html.ActionLink(Resource.FilterInteresting, MVC.Voting.Results(IssueListViews.Interesting, null, null), new Dictionary<string, object> { { "class", Model.ListView == (int)IssueListViews.Interesting ? "highlight" : "" } })
+        
+        &nbsp; @Html.ActionLink(Resource.FilterOther, MVC.Voting.Results(IssueListViews.Other, null, null), new Dictionary<string, object> { { "class", Model.ListView == (int)IssueListViews.Other ? "highlight" : "" } })
+    </p>
+    <p class="fr">
+        @Html.ActionLink(Resource.SortNearest, MVC.Voting.Results(null, IssueListSorts.Nearest, null), new Dictionary<string, object> { { "class", Model.ListSort == (int)IssueListSorts.Nearest ? "highlight" : "" } })
+        &nbsp; @Html.ActionLink(Resource.SortActive, MVC.Voting.Results(null, IssueListSorts.MostActive, null), new Dictionary<string, object> { { "class", Model.ListSort == (int)IssueListSorts.MostActive ? "highlight" : "" } })
+    </p>
+    <p class="fr itemsCounter">
+        @SharedStrings.TotalCount: <span id="spanTotalCount">@Model.TotalCount</span>
+    </p>
+</div>
+<div>
+    <img src="@Links.Content.Images.s_gif" alt="" />
+</div>
+    @if (!Model.NoMunicipalities)
+    {
+        <ul id="list" class="m_list">
+            @{ Html.RenderPartial(MVC.Voting.Views._ResultsList, Model.Items.List);}
+        </ul>
+    }
+    else
+    {
+        <p>
+            @SharedStrings.NoCities
+        </p>
+    }
+@if (Model.Items.HasMoreElements)
+{
+    @Html.ActionLink(SharedStrings.More, MVC.Voting.GetNextResultsPage(), new { id = "lnkShowMore" })
+}

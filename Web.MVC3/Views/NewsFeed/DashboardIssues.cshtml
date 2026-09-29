@@ -1,0 +1,14 @@
+﻿@model Data.ViewModels.Voting.VotingIndexModel
+@using Data.Enums
+@using Framework.Strings
+@using Globalization.Resources.NewsFeed
+@using Globalization.Resources.Shared
+@using Web.Helpers
+
+<div id="listIssues">
+    @Html.Partial(MVC.NewsFeed.Views.IssuesList, Model)
+</div>
+@if (Model.Items.HasMoreElements)
+{
+    <p>@Html.ActionLink(SharedStrings.More, MVC.Voting.GetMoreTopIssues(), new {id = "lnkShowMoreIssues"})</p>
+}

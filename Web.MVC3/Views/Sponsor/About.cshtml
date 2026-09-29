@@ -1,0 +1,94 @@
+﻿@using Framework.Enums
+@using Framework.Strings
+@using PagedList
+@using PagedList.Mvc
+@using Web.Helpers
+@model Data.ViewModels.Sponsor.DonateModel
+@{
+    ViewBag.Title = "Paremkite mus!";
+}
+@section Scripts
+{
+    <script type='text/javascript'>
+        function onPageLoad() {
+            
+        }
+    </script>
+}
+<h2 class="clearfix">Paremkite mus!</h2>
+<div>
+    <p>
+        Pasirinkite sumą, kuria norite prisidėti prie mūsų rezultatų:
+    </p>
+    @Html.Partial(MVC.Sponsor.Views._DonateForm, Model)
+    @if (!Model.IsPersonCodeRequired)
+    {
+        <div class="clear"></div>
+        <div class="LoginOptionSeparator" style="margin-top: 16px;">
+            ARBA
+        </div>
+        <form action="https://www.paypal.com/cgi-bin/webscr" method="post" target="_top">
+            <input type="hidden" name="cmd" value="_s-xclick">
+            <input type="hidden" name="hosted_button_id" value="F58ZX2X9556KN">
+            <input type="image" src="https://www.paypalobjects.com/en_US/i/btn/btn_donate_LG.gif" border="0" name="submit" alt="PayPal - The safer, easier way to pay online!">
+            <img alt="" border="0" src="https://www.paypalobjects.com/en_US/i/scr/pixel.gif" width="1" height="1">
+        </form>
+    }
+</div>
+<div class="clear"></div>
+<h3>Kam bus skirta Jūsų parama?</h3>
+<p>
+    Lietuva 2.0 - ne pelno siekiantis projektas, kurio vystymo darbams jau ne pirmus metus yra be jokio atlygio investuojamas beveik visas jo kūrėjų laisvas laikas. 
+</p>
+<p>
+    Ir mes NEPRAŠOME Jūsų paremti šios <b>savanoriškos</b> veiklos!
+</p>
+<p>
+    Lietuva 2.0 pasiekė tokią būseną, kurioje judėjimas į priekį yra tiesiogiai priklausomas nuo bendruomenės augimo ir palaikymo. Be Jūsų šis projektas yra nieko vertas - juk tai visų mūsų erdvė!
+</p>
+<p>
+    Todėl mes PRAŠOME Jūsų prisidėti prie šio projekto <b>viešinimo</b>. Organizacijos atributika, dalyvavimas konferencijose, prizai aktyvistams, geriausių įgyvendinamų projektų parama,
+    išlaidos kurui - tai tik keletas sričių, kurioms finansai yra būtini.
+</p>
+<h3>Rėmimo sąlygos</h3>
+<p>
+    Visą savo veiklą organizacija LT2.0 vykdo viešai šiame portale. Siekiant užtikrinti dar didesnį viešumą ir pasitikėjimą, viešos yra 
+    ir visos VšĮ LT2.0 banko @Html.ActionLink("sąskaitos operacijos", MVC.Sponsor.Index()).
+</p>
+<img src="@Links.Content.Images.award_sponsor_jpg" title="Rėmėjas" alt="Rėmėjas" class="fr"/>
+<p>
+    Jeigu nuspręsite bent vienu savo litu prisidėti prie mūsų visų sėkmės, atsidėkodami mes skirsime Jums garbingą Rėmėjo apdovanojimą, kuris bus visada rodomas Jūsų asmeniniame puslapyje.<br/>
+    Paramą galima skirti ir organizacijos vardu.<br/>
+    Jeigu norite mus paremti anonimiškai, prieš skirdami paramą Atsijunkite, ir nepateikite savo asmens duomenų.
+</p>
+<h3>2% parama</h3>
+<p>
+    Lietuvos valstybė suteikia galimybę kiekvienam dirbančiajam iki 2% gyventojų mokamų mokesčio skirti kaip paramą pasirinktai ne pelno siekiančiai organizacijai.
+</p>
+<p>
+    TAI JUMS NIEKO PAPILDOMAI NEKAINUOJA - šių pinigų nepaskyrę jokiai organizacijai, juos sumokėsite valstybei.
+</p>
+<p>
+Jei Jūs vertinate mūsų pastangas, ir Jums nėra svetimos mūsų vertybės, o šiais metais dar niekam neskyrėte šios paramos, kviečiame ją skirti VšĮ LT2.0, atliekant šiuos veiksmus:
+</p>
+    <ul>
+        <li>
+            Parsisiųsti, išarchyvuoti ir įsidiegti aplikaciją: <a href="@Url.Content("~/parama/eFormFiller25v6_2008_03_06.zip")">ABBYY form filler</a>.
+        </li>
+        <li>
+            Su ja atidaryti failą parama_lt2.ffdata, kurį rasite ten, kur išarchyvavote aplikaciją.
+        </li>
+        <li>
+            Užpildyti šią formą savo duomenimis, pagal <a href="@Url.Content("~/parama/parama lt2.jpg")">pavyzdį</a>
+        </li>
+        <li>
+            Prisijungti prie <a href="http://deklaravimas.vmi.lt">VMI e-deklaravimo puslapio</a> ir pateikti šią formą.
+        </li>
+        <li>
+            Jeigu šios programinės įrangos diegti nenorite, galite atsispausdinti <a href="@Url.Content("~/parama/FR0512_v2.pdf")" target="_blank">pirmą</a> ir <a href="@Url.Content("~/parama/FR0512P_v2.pdf")" target="_blank">antrą</a> formas, užpildyti jas ranka ir išsiusti į artimiausią <a href="http://www.vmi.lt/lt/index.aspx?itemId=1001967">VMI skyrių</a>. 
+        </li>
+    </ul> 
+<p>
+    Atkreipiame dėmesį, kad 2% paramą skirti galima tik iki gegužės 1d.!
+</p>
+

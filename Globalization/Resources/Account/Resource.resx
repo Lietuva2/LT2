@@ -1,0 +1,883 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <!-- 
+    Microsoft ResX Schema 
+    
+    Version 2.0
+    
+    The primary goals of this format is to allow a simple XML format 
+    that is mostly human readable. The generation and parsing of the 
+    various data types are done through the TypeConverter classes 
+    associated with the data types.
+    
+    Example:
+    
+    ... ado.net/XML headers & schema ...
+    <resheader name="resmimetype">text/microsoft-resx</resheader>
+    <resheader name="version">2.0</resheader>
+    <resheader name="reader">System.Resources.ResXResourceReader, System.Windows.Forms, ...</resheader>
+    <resheader name="writer">System.Resources.ResXResourceWriter, System.Windows.Forms, ...</resheader>
+    <data name="Name1"><value>this is my long string</value><comment>this is a comment</comment></data>
+    <data name="Color1" type="System.Drawing.Color, System.Drawing">Blue</data>
+    <data name="Bitmap1" mimetype="application/x-microsoft.net.object.binary.base64">
+        <value>[base64 mime encoded serialized .NET Framework object]</value>
+    </data>
+    <data name="Icon1" type="System.Drawing.Icon, System.Drawing" mimetype="application/x-microsoft.net.object.bytearray.base64">
+        <value>[base64 mime encoded string representing a byte array form of the .NET Framework object]</value>
+        <comment>This is a comment</comment>
+    </data>
+                
+    There are any number of "resheader" rows that contain simple 
+    name/value pairs.
+    
+    Each data row contains a name, and value. The row also contains a 
+    type or mimetype. Type corresponds to a .NET class that support 
+    text/value conversion through the TypeConverter architecture. 
+    Classes that don't support this are serialized and stored with the 
+    mimetype set.
+    
+    The mimetype is used for serialized objects, and tells the 
+    ResXResourceReader how to depersist the object. This is currently not 
+    extensible. For a given mimetype the value must be set accordingly:
+    
+    Note - application/x-microsoft.net.object.binary.base64 is the format 
+    that the ResXResourceWriter will generate, however the reader can 
+    read any of the formats listed below.
+    
+    mimetype: application/x-microsoft.net.object.binary.base64
+    value   : The object must be serialized with 
+            : System.Runtime.Serialization.Formatters.Binary.BinaryFormatter
+            : and then encoded with base64 encoding.
+    
+    mimetype: application/x-microsoft.net.object.soap.base64
+    value   : The object must be serialized with 
+            : System.Runtime.Serialization.Formatters.Soap.SoapFormatter
+            : and then encoded with base64 encoding.
+
+    mimetype: application/x-microsoft.net.object.bytearray.base64
+    value   : The object must be serialized into a byte array 
+            : using a System.ComponentModel.TypeConverter
+            : and then encoded with base64 encoding.
+    -->
+  <xsd:schema id="root" xmlns="" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:msdata="urn:schemas-microsoft-com:xml-msdata">
+    <xsd:import namespace="http://www.w3.org/XML/1998/namespace" />
+    <xsd:element name="root" msdata:IsDataSet="true">
+      <xsd:complexType>
+        <xsd:choice maxOccurs="unbounded">
+          <xsd:element name="metadata">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" />
+              </xsd:sequence>
+              <xsd:attribute name="name" use="required" type="xsd:string" />
+              <xsd:attribute name="type" type="xsd:string" />
+              <xsd:attribute name="mimetype" type="xsd:string" />
+              <xsd:attribute ref="xml:space" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="assembly">
+            <xsd:complexType>
+              <xsd:attribute name="alias" type="xsd:string" />
+              <xsd:attribute name="name" type="xsd:string" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="data">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+                <xsd:element name="comment" type="xsd:string" minOccurs="0" msdata:Ordinal="2" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" msdata:Ordinal="1" />
+              <xsd:attribute name="type" type="xsd:string" msdata:Ordinal="3" />
+              <xsd:attribute name="mimetype" type="xsd:string" msdata:Ordinal="4" />
+              <xsd:attribute ref="xml:space" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="resheader">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" />
+            </xsd:complexType>
+          </xsd:element>
+        </xsd:choice>
+      </xsd:complexType>
+    </xsd:element>
+  </xsd:schema>
+  <resheader name="resmimetype">
+    <value>text/microsoft-resx</value>
+  </resheader>
+  <resheader name="version">
+    <value>2.0</value>
+  </resheader>
+  <resheader name="reader">
+    <value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <resheader name="writer">
+    <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <data name="Address" xml:space="preserve">
+    <value>Adresas</value>
+  </data>
+  <data name="AddressLineIsRequired" xml:space="preserve">
+    <value>Įveskite gatvės adresą</value>
+  </data>
+  <data name="Awards" xml:space="preserve">
+    <value>Apdovanojimai</value>
+  </data>
+  <data name="BirthDate" xml:space="preserve">
+    <value>Gimimo data</value>
+  </data>
+  <data name="Citizenship" xml:space="preserve">
+    <value>Pilietybė</value>
+  </data>
+  <data name="City" xml:space="preserve">
+    <value>Miestas (gyvenvietė)</value>
+  </data>
+  <data name="CityIsRequired" xml:space="preserve">
+    <value>Įveskite gyvenvietę</value>
+  </data>
+  <data name="Comments" xml:space="preserve">
+    <value>Nuomonės</value>
+  </data>
+  <data name="CommentsCount" xml:space="preserve">
+    <value>Argumentavau</value>
+  </data>
+  <data name="ConfirmOverwrite" xml:space="preserve">
+    <value>Ar norite užrašyti ant viršaus?</value>
+  </data>
+  <data name="ConfirmPassword" xml:space="preserve">
+    <value>Pakartokite slaptažodį</value>
+  </data>
+  <data name="ConfirmPasswordCompareFailed" xml:space="preserve">
+    <value>Slaptažodžiai nesutampa</value>
+  </data>
+  <data name="ConfirmPasswordIsRequired" xml:space="preserve">
+    <value>Pakartokite slaptažodį</value>
+  </data>
+  <data name="ContactsLegend" xml:space="preserve">
+    <value>Kontaktinė informacija</value>
+  </data>
+  <data name="Country" xml:space="preserve">
+    <value>Valstybė</value>
+  </data>
+  <data name="CountryIsRequired" xml:space="preserve">
+    <value>Įveskite valstybę</value>
+  </data>
+  <data name="CurrentLocation" xml:space="preserve">
+    <value>Dabartinė gyvenamoji vieta</value>
+  </data>
+  <data name="CurrentParty" xml:space="preserve">
+    <value>Šiuo metu esu šios partijos narys</value>
+  </data>
+  <data name="CurrentPosition" xml:space="preserve">
+    <value>Šiuo metu dirbu šiose pareigose</value>
+  </data>
+  <data name="DocumentNoIsRequired" xml:space="preserve">
+    <value>Įveskite dokumento numerį</value>
+  </data>
+  <data name="Education" xml:space="preserve">
+    <value>Išsilavinimas</value>
+  </data>
+  <data name="EducationAndWorkLegent" xml:space="preserve">
+    <value>Išsilavinimas ir darbo patirtis</value>
+  </data>
+  <data name="Email" xml:space="preserve">
+    <value>El. paštas</value>
+  </data>
+  <data name="EmailIsRequired" xml:space="preserve">
+    <value>Įveskite el. paštą</value>
+  </data>
+  <data name="EmailRegexpIsNotValid" xml:space="preserve">
+    <value>Neteisingas el. pašto formatas</value>
+  </data>
+  <data name="EmailRemoteValidationFailed" xml:space="preserve">
+    <value>Toks el. paštas jau yra užregistruotas sistemoje</value>
+  </data>
+  <data name="EmploymentStatusName" xml:space="preserve">
+    <value>Darbinė padėtis</value>
+  </data>
+  <data name="EndYearIsRequired" xml:space="preserve">
+    <value>Pasirinkite pabaigos metus</value>
+  </data>
+  <data name="FieldOfStudy" xml:space="preserve">
+    <value>Specialybė</value>
+  </data>
+  <data name="FirstName" xml:space="preserve">
+    <value>Vardas</value>
+  </data>
+  <data name="FirstNameIsRequired" xml:space="preserve">
+    <value>Įveskite vardą</value>
+  </data>
+  <data name="FormHeaderAccount" xml:space="preserve">
+    <value>Informacija apie pilietį</value>
+  </data>
+  <data name="From" xml:space="preserve">
+    <value>Nuo</value>
+  </data>
+  <data name="Groups" xml:space="preserve">
+    <value>Visuomeninė veikla</value>
+  </data>
+  <data name="IdeasCount" xml:space="preserve">
+    <value>Pateikiau</value>
+  </data>
+  <data name="ImportFromLinkedIn" xml:space="preserve">
+    <value>Įkelti iš LinkedIn</value>
+  </data>
+  <data name="ImportSuccessful" xml:space="preserve">
+    <value>Informacija antaujinta sėkmingai</value>
+  </data>
+  <data name="Interests" xml:space="preserve">
+    <value>Pomėgiai</value>
+  </data>
+  <data name="InterestsLegend" xml:space="preserve">
+    <value>Domėjimosi sritys</value>
+  </data>
+  <data name="InvolvedIdeasCount" xml:space="preserve">
+    <value>Dalyvavau vystant</value>
+  </data>
+  <data name="IssuesCount" xml:space="preserve">
+    <value>Aprašiau</value>
+  </data>
+  <data name="LastName" xml:space="preserve">
+    <value>Pavardė</value>
+  </data>
+  <data name="LastNameIsRequired" xml:space="preserve">
+    <value>Įveskite pavardę</value>
+  </data>
+  <data name="Like" xml:space="preserve">
+    <value>Sekti veiklą</value>
+  </data>
+  <data name="LikedBy" xml:space="preserve">
+    <value>Mano veikla domisi</value>
+  </data>
+  <data name="Likes" xml:space="preserve">
+    <value>Patinka</value>
+  </data>
+  <data name="LikeUserToolTip" xml:space="preserve">
+    <value>Mane domina šio dalyvio veikla!</value>
+  </data>
+  <data name="MaritalStatusName" xml:space="preserve">
+    <value>Šeimyninė padėtis</value>
+  </data>
+  <data name="MeInterested" xml:space="preserve">
+    <value>Man įdomu</value>
+  </data>
+  <data name="MemberOfOrganizations" xml:space="preserve">
+    <value>Organizacijų narys</value>
+  </data>
+  <data name="MemberOfParties" xml:space="preserve">
+    <value>Narystė partijose</value>
+  </data>
+  <data name="MemberSince" xml:space="preserve">
+    <value>Narys nuo</value>
+  </data>
+  <data name="Municipality" xml:space="preserve">
+    <value>Savivaldybė</value>
+  </data>
+  <data name="MunicipalityIsRequired" xml:space="preserve">
+    <value>Įveskite savivaldybę</value>
+  </data>
+  <data name="MyProjects" xml:space="preserve">
+    <value>Dalyvavau įgyvendinant</value>
+  </data>
+  <data name="Nationality" xml:space="preserve">
+    <value>Tautybė</value>
+  </data>
+  <data name="NewPassword" xml:space="preserve">
+    <value>Slaptažodis</value>
+  </data>
+  <data name="NewPasswordIsRequired" xml:space="preserve">
+    <value>Būtina įvesti slaptažodį</value>
+  </data>
+  <data name="NewPasswordLengthIsNotValid" xml:space="preserve">
+    <value>{0} turi būti bent {2} simbolių ilgio</value>
+  </data>
+  <data name="NewPasswordRegexpIsNotValid" xml:space="preserve">
+    <value>Slaptažodis turi turėti bent vieną mažają, vieną didžiąją raidę ir vieną skaičių</value>
+  </data>
+  <data name="NoCategories" xml:space="preserve">
+    <value>Nėra pasirinktų kategorijų</value>
+  </data>
+  <data name="OldPassword" xml:space="preserve">
+    <value>Senas slaptažodis</value>
+  </data>
+  <data name="OldPasswordIsRequired" xml:space="preserve">
+    <value>Būtina įvesti seną slaptažodį</value>
+  </data>
+  <data name="OriginCountryIsRequired" xml:space="preserve">
+    <value>Įveskite valstybę</value>
+  </data>
+  <data name="OriginLacation" xml:space="preserve">
+    <value>Gimtoji vieta</value>
+  </data>
+  <data name="OriginMunicipalityIsRequired" xml:space="preserve">
+    <value>Įveskite savivaldybę</value>
+  </data>
+  <data name="OverwriteOnImport" xml:space="preserve">
+    <value>Ar norite LinkedIn duomenimis užpildyti visą, taip pat ir jau suvestą informaciją?</value>
+  </data>
+  <data name="PageTitleAccount" xml:space="preserve">
+    <value>{0} - Naudotojo informacija</value>
+  </data>
+  <data name="PartyName" xml:space="preserve">
+    <value>Partija</value>
+  </data>
+  <data name="Password" xml:space="preserve">
+    <value>Slaptažodis</value>
+  </data>
+  <data name="PasswordIsRequired" xml:space="preserve">
+    <value>Būtina įvesti slaptažodį</value>
+  </data>
+  <data name="PasswordLengthIsNotValid" xml:space="preserve">
+    <value>{0} turi būti bent {2} simbolių ilgio</value>
+  </data>
+  <data name="PasswordRegexpIsNotValid" xml:space="preserve">
+    <value>Slaptažodis turi turėti bent vieną mažają, vieną didžiąją raidę ir vieną skaičių</value>
+  </data>
+  <data name="PersonalInfoLegend" xml:space="preserve">
+    <value>Apie mane</value>
+  </data>
+  <data name="PersonCodeIsRequired" xml:space="preserve">
+    <value>Įveskite asmens kodą</value>
+  </data>
+  <data name="PersonCodeRegexpIsNotValid" xml:space="preserve">
+    <value>Asmens kodas turi būti iš 11 skaičių</value>
+  </data>
+  <data name="Phone" xml:space="preserve">
+    <value>Telefono nr.</value>
+  </data>
+  <data name="PhoneNumbers" xml:space="preserve">
+    <value>Tel. numeriai</value>
+  </data>
+  <data name="PhoneType" xml:space="preserve">
+    <value>Tipas</value>
+  </data>
+  <data name="PoliticalViews" xml:space="preserve">
+    <value>Politinės pažiūros</value>
+  </data>
+  <data name="Position" xml:space="preserve">
+    <value>Pareigos</value>
+  </data>
+  <data name="Positions" xml:space="preserve">
+    <value>Darbo patirtis</value>
+  </data>
+  <data name="PostCode" xml:space="preserve">
+    <value>Pašto kodas</value>
+  </data>
+  <data name="ProblemsCount" xml:space="preserve">
+    <value>Aprašiau</value>
+  </data>
+  <data name="ProfilePictureLegend" xml:space="preserve">
+    <value>Nuotrauka</value>
+  </data>
+  <data name="RememberMe" xml:space="preserve">
+    <value>Įsiminti mane</value>
+  </data>
+  <data name="School" xml:space="preserve">
+    <value>Mokymo įstaiga</value>
+  </data>
+  <data name="Settings" xml:space="preserve">
+    <value>Nustatymai</value>
+  </data>
+  <data name="Specialties" xml:space="preserve">
+    <value>Specializacijos</value>
+  </data>
+  <data name="StartYearIsRequired" xml:space="preserve">
+    <value>Pasirinkite pradžios metus</value>
+  </data>
+  <data name="Summary" xml:space="preserve">
+    <value>Bendras aprašymas</value>
+  </data>
+  <data name="TitleAccount" xml:space="preserve">
+    <value>Naudotojo informacija</value>
+  </data>
+  <data name="To" xml:space="preserve">
+    <value>Iki</value>
+  </data>
+  <data name="ToPresent" xml:space="preserve">
+    <value>dabar</value>
+  </data>
+  <data name="TypeNameIsRequired" xml:space="preserve">
+    <value>Pasirinkite tipą</value>
+  </data>
+  <data name="Unlike" xml:space="preserve">
+    <value>Nebesekti veiklos</value>
+  </data>
+  <data name="UserActivity" xml:space="preserve">
+    <value>Veikla</value>
+  </data>
+  <data name="UserInfo" xml:space="preserve">
+    <value>Info</value>
+  </data>
+  <data name="UserName" xml:space="preserve">
+    <value>Prisijungimo vardas</value>
+  </data>
+  <data name="UserNameIsRequired" xml:space="preserve">
+    <value>Būtina įvesti prisijungimo vardą</value>
+  </data>
+  <data name="UserNameRemoteValidationFailed" xml:space="preserve">
+    <value>Toks naudotojo vardas jau yra užregistruotas sistemoje</value>
+  </data>
+  <data name="VotesCount" xml:space="preserve">
+    <value>Balsavau</value>
+  </data>
+  <data name="Websites" xml:space="preserve">
+    <value>Nuorodos</value>
+  </data>
+  <data name="WebSiteTitle" xml:space="preserve">
+    <value>Antraštė</value>
+  </data>
+  <data name="WebSiteType" xml:space="preserve">
+    <value>Tipas</value>
+  </data>
+  <data name="WebSiteUrl" xml:space="preserve">
+    <value>Nuoroda</value>
+  </data>
+  <data name="Workplace" xml:space="preserve">
+    <value>Darbovietė</value>
+  </data>
+  <data name="EnterCredentials" xml:space="preserve">
+    <value>Įveskite savo naudotojo vardą ir slaptažodį.</value>
+  </data>
+  <data name="FillForm" xml:space="preserve">
+    <value>Norėdami prisijungti prie mūsų, užpildykite šią formą.</value>
+  </data>
+  <data name="ForgotPassword" xml:space="preserve">
+    <value>Pamiršote slaptažodį?</value>
+  </data>
+  <data name="FormHeader" xml:space="preserve">
+    <value>Prisijunkite prie mūsų!</value>
+  </data>
+  <data name="FormHeaderReset" xml:space="preserve">
+    <value>Pamiršau slaptažodį</value>
+  </data>
+  <data name="Legend" xml:space="preserve">
+    <value>Prisijungimo informacija</value>
+  </data>
+  <data name="Login" xml:space="preserve">
+    <value>Prisijungti</value>
+  </data>
+  <data name="FormHeaderLogin" xml:space="preserve">
+    <value>Prisijunkite</value>
+  </data>
+  <data name="PageTitleLogin" xml:space="preserve">
+    <value>Prisijunkite</value>
+  </data>
+  <data name="PageTitleRegister" xml:space="preserve">
+    <value>Registruokitės</value>
+  </data>
+  <data name="PageTitleReset" xml:space="preserve">
+    <value>Pakeisti slaptažodį</value>
+  </data>
+  <data name="PasswordLength" xml:space="preserve">
+    <value>Slaptažodis turi būti bent {0} simbolių ilgio, susidėti iš mažųjų, didžiųjų raidžių ir skaičių.</value>
+  </data>
+  <data name="Register" xml:space="preserve">
+    <value>Registruotis</value>
+  </data>
+  <data name="RegisterAction" xml:space="preserve">
+    <value>Registruoti</value>
+  </data>
+  <data name="ValidationErrorRegister" xml:space="preserve">
+    <value>Sukurti prieigos nepavyko. Ištaisykite klaidas ir bandykite dar kartą.</value>
+  </data>
+  <data name="Reset" xml:space="preserve">
+    <value>Vykdyti</value>
+  </data>
+  <data name="ValidationErrorReset" xml:space="preserve">
+    <value>Įvyko klaida. Įsitikinkite, ar šis el. paštas tikrai buvo registruotas ir patvirtintas sistemoje.</value>
+  </data>
+  <data name="FillFormReset" xml:space="preserve">
+    <value>Norėdami pasikeisti slaptažodį, užpildykite šią formą.</value>
+  </data>
+  <data name="Save" xml:space="preserve">
+    <value>Saugoti</value>
+  </data>
+  <data name="TitleReset" xml:space="preserve">
+    <value>Atnaujinti</value>
+  </data>
+  <data name="ValidationErrorLogin" xml:space="preserve">
+    <value>Prisijungti nepavyko. Ištaisykite klaidas ir bandykite dar kartą.</value>
+  </data>
+  <data name="UserReputation" xml:space="preserve">
+    <value>Reputacija</value>
+  </data>
+  <data name="RemindPassword" xml:space="preserve">
+    <value>Priminti slaptažodį</value>
+  </data>
+  <data name="Contact" xml:space="preserve">
+    <value>Susisiekti gali</value>
+  </data>
+  <data name="PersonCode" xml:space="preserve">
+    <value>Asmens kodas</value>
+  </data>
+  <data name="EmailsIsEmpty" xml:space="preserve">
+    <value>Įveskite el. paštą</value>
+  </data>
+  <data name="SendMail" xml:space="preserve">
+    <value>Sutinku gauti laiškus</value>
+  </data>
+  <data name="Activity" xml:space="preserve">
+    <value>Aktyvumas</value>
+  </data>
+  <data name="AdditionalUniqueInfoLawMessage" xml:space="preserve">
+    <value>Remiantis Lietuvos Respublikos Piliečių įstatymų leidybos iniciatyvos įstatymo 7 straipsniu, būtina pateikti šiuos duomenis:</value>
+  </data>
+  <data name="AdditionalUniqueInfoReferenduumMessage" xml:space="preserve">
+    <value>Remiantis Lietuvos Respublikos Referendumo įstatymo 11 strapsniu, būtina pateikti šiuos duomenis:</value>
+  </data>
+  <data name="AdditionalUniqueInfoTitle" xml:space="preserve">
+    <value>Pasirašymas</value>
+  </data>
+  <data name="AddressLine" xml:space="preserve">
+    <value>Gatvės adresas (pvz. Gatvės al. 1-1)</value>
+  </data>
+  <data name="AgreeGetEmails" xml:space="preserve">
+    <value>Sutinku gauti laiškus</value>
+  </data>
+  <data name="BecameAmbassador" xml:space="preserve">
+    <value>Tapau Lietuva 2.0 ambasadoriumi!</value>
+  </data>
+  <data name="BecomeAmbassador" xml:space="preserve">
+    <value>Tapti ambasadoriumi</value>
+  </data>
+  <data name="BecomeAmbassadorCancel" xml:space="preserve">
+    <value>Nebūti ambasadorium</value>
+  </data>
+  <data name="Block" xml:space="preserve">
+    <value>Neleisti susisiekti</value>
+  </data>
+  <data name="ChangePassword" xml:space="preserve">
+    <value>Keisti slaptažodį</value>
+  </data>
+  <data name="Chat" xml:space="preserve">
+    <value>Kalbėtis gyvai</value>
+  </data>
+  <data name="ChooseLanguage" xml:space="preserve">
+    <value>Kalbos pasirinkimas</value>
+  </data>
+  <data name="CommentTitle" xml:space="preserve">
+    <value>Kokius faktus žinote?</value>
+  </data>
+  <data name="ConfirmationSent" xml:space="preserve">
+    <value>Netrukus gausite el. pašto patvirtinimo laišką</value>
+  </data>
+  <data name="ConfirmEmailFailedMessage" xml:space="preserve">
+    <value>Jūsų el. pašto patvirtinti nepavyko! Patikrinkite nuorodą.</value>
+  </data>
+  <data name="ConfirmEmailFailedTitle" xml:space="preserve">
+    <value>El. pašto patvirtinti nepavyko</value>
+  </data>
+  <data name="ConfirmIdentity" xml:space="preserve">
+    <value>Patvirtinkite tapatybę</value>
+  </data>
+  <data name="ConfirmIdentityReason" xml:space="preserve">
+    <value>Norėdami naudotis visomis Lietuva 2.0 galimybėmis</value>
+  </data>
+  <data name="ConfirmIdentityReasonTip" xml:space="preserve">
+    <value>Patvirtinę tapatybę, galėsite pasirašyti iniciatyvas, balsuoti Jums aktualiais klausimais, užregistruoti savo organizaciją, keisti pasiūlymų būsenas ir kt.</value>
+  </data>
+  <data name="ConfirmIdentityRequired" xml:space="preserve">
+    <value>Jūsų veiksmai portale Lietuva 2.0 yra apriboti, kol nepatvirtinsite savo tapatybės.</value>
+  </data>
+  <data name="ConnectFacebook" xml:space="preserve">
+    <value>Susieti su Facebook</value>
+  </data>
+  <data name="ContactUs" xml:space="preserve">
+    <value>Susisiekite su mumis</value>
+  </data>
+  <data name="CoreTeam" xml:space="preserve">
+    <value>Dalininkas</value>
+  </data>
+  <data name="CoreTeamCancel" xml:space="preserve">
+    <value>Ne dalininkas</value>
+  </data>
+  <data name="DocumentNo" xml:space="preserve">
+    <value>Paso arba tapatybės kortelės numeris</value>
+  </data>
+  <data name="OpenAuthConnecting" xml:space="preserve">
+    <value>Jungiamasi prie Lietuva 2.0 per {0}...</value>
+  </data>
+  <data name="OpenAuthConnectingTitle" xml:space="preserve">
+    <value>Jungiamasi per {0}</value>
+  </data>
+  <data name="HideFromOthers" xml:space="preserve">
+    <value>Nerodyti kitiems</value>
+  </data>
+  <data name="Logout" xml:space="preserve">
+    <value>Atsijungti</value>
+  </data>
+  <data name="MyComments" xml:space="preserve">
+    <value>Argumentavau šiuos teisės aktus</value>
+  </data>
+  <data name="MyIdeas" xml:space="preserve">
+    <value>Pateikiau šiuos pasiūlymus</value>
+  </data>
+  <data name="MyInvolvedIdeas" xml:space="preserve">
+    <value>Dalyvavau vystant šiuos pasiūlymus</value>
+  </data>
+  <data name="MyIssues" xml:space="preserve">
+    <value>Aprašiau šiuos balsavimus</value>
+  </data>
+  <data name="MyProblems" xml:space="preserve">
+    <value>Mano pasisakymai</value>
+  </data>
+  <data name="MyProjectsTitle" xml:space="preserve">
+    <value>Dalyvavau įgyvendinant šiuos projektus</value>
+  </data>
+  <data name="MyVotes" xml:space="preserve">
+    <value>Balsavau dėl šių teisės aktų</value>
+  </data>
+  <data name="NegativeCommentButton" xml:space="preserve">
+    <value>Kritikuoti</value>
+  </data>
+  <data name="NegativeCommentPlaceholder" xml:space="preserve">
+    <value>Ko prisidirbo?</value>
+  </data>
+  <data name="PointsPerCategory" xml:space="preserve">
+    <value>Taškai pagal kategorijas</value>
+  </data>
+  <data name="PossitiveCommentButton" xml:space="preserve">
+    <value>Palaikyti</value>
+  </data>
+  <data name="PossitiveCommentPlaceholder" xml:space="preserve">
+    <value>Ką gero nuveikė?</value>
+  </data>
+  <data name="PrivacyPolicy" xml:space="preserve">
+    <value>Privatumo politika</value>
+  </data>
+  <data name="PrivacyStatement" xml:space="preserve">
+    <value>VšĮ LT2.0 šiuos duomenis perduos atsakingom valstybės institucijoms, ir jokiais kitais tikslais jų nenaudos.</value>
+  </data>
+  <data name="ProfilePictureTip" xml:space="preserve">
+    <value>Rekomenduojame, kad didesniosios kraštinės ilgis būtų 200px</value>
+  </data>
+  <data name="ReadOur" xml:space="preserve">
+    <value>Susipažinkite su mūsų</value>
+  </data>
+  <data name="Reconfirm" xml:space="preserve">
+    <value>Patvirtinti iš naujo</value>
+  </data>
+  <data name="Reputation" xml:space="preserve">
+    <value>Reputacija</value>
+  </data>
+  <data name="RequireUnique" xml:space="preserve">
+    <value>Reikalauti tapatybės</value>
+  </data>
+  <data name="RequireUniqueCancel" xml:space="preserve">
+    <value>Nereikalauti tapatybės</value>
+  </data>
+  <data name="SendConfirmationCode" xml:space="preserve">
+    <value>Išsiųsti patvirtinimo kodą</value>
+  </data>
+  <data name="SendEmails" xml:space="preserve">
+    <value>Siųsti laiškus</value>
+  </data>
+  <data name="SendMessage" xml:space="preserve">
+    <value>Susisiekti</value>
+  </data>
+  <data name="SignUp" xml:space="preserve">
+    <value>Užsiregistruoti</value>
+  </data>
+  <data name="Unblock" xml:space="preserve">
+    <value>Leisti susisiekti</value>
+  </data>
+  <data name="UniqueNotRegistered" xml:space="preserve">
+    <value>Patvirtinę savo tapatybę, galite pasirašyti piliečių iniciatyvas ir balsuoti Jums aktualiais klausimais. Norėdami teikti pasiūlymus, argumentus, ir būti visaverčiais bendruomenės nariais, turite</value>
+  </data>
+  <data name="UniqueViispNotRegistered" xml:space="preserve">
+    <value>Prisijungę per el. valdžios vartus, galite pasirašyti tik oficialias, Vyriausioje rinkimų komisijoje užregistruotas iniciatyvas. Norėdami teikti pasiūlymus, argumentus, ir būti visaverčiais bendruomenės nariais, turite</value>
+  </data>
+  <data name="VotesArePublic" xml:space="preserve">
+    <value>Rodyti mane pasirašiusiųjų sąraše</value>
+  </data>
+  <data name="VotesArePublicDescription" xml:space="preserve">
+    <value>Pažymėjus šią varnelę, Jūsų vardas ir pavardė bus rodomi viešame pasirašiusiųjų sąraše. Nepažymėjus varnelės, Jūsų parašas bus matomas tik Jums patiems ir VRK</value>
+  </data>
+  <data name="AttentionToSecurity" xml:space="preserve">
+    <value>Būkite atidūs dėl savo duomenų viešumo!</value>
+  </data>
+  <data name="Category" xml:space="preserve">
+    <value>Kategorija</value>
+  </data>
+  <data name="ConfirmIdentityAction" xml:space="preserve">
+    <value>Patvirtinti tapatybę</value>
+  </data>
+  <data name="EmailConfirmed" xml:space="preserve">
+    <value>Jūsų el. paštas patvirtintas!</value>
+  </data>
+  <data name="EmailConfirmedTitle" xml:space="preserve">
+    <value>El. paštas patvirtintas</value>
+  </data>
+  <data name="Facebook" xml:space="preserve">
+    <value>Veidaknygė (facebook)</value>
+  </data>
+  <data name="InfoVisibilityBySettings" xml:space="preserve">
+    <value>Jūsų pateikta informacija bus matoma pagal skilties "Nustatymai" parinktis.</value>
+  </data>
+  <data name="Lists" xml:space="preserve">
+    <value>Sąrašai</value>
+  </data>
+  <data name="Points" xml:space="preserve">
+    <value>Taškai</value>
+  </data>
+  <data name="ProfileVisibleTo" xml:space="preserve">
+    <value>Paskyra matoma</value>
+  </data>
+  <data name="PublicDataWarning" xml:space="preserve">
+    <value>Įspėjame, kad viešai paskelbtus duomenis bus galima rasti internetinėse paieškos sistemose, todėl viešinkite tik tokią informaciją, dėl kurios viešumo neturite abejonių, ir kuri padės Lietuva 2.0 lankytojams susidaryti nuomonę apie Jus ir Jūsų kompetencijas.
+            Susipažinkite su &lt;a href="https://docs.google.com/a/lietuva2.lt/document/d/18uU0q1DkHvE1TOK5UABZt8HasR5m3BXPOthHpaEWe8A/edit#" target="_blank"&gt;VšĮ LT2.0 privatumo politika&lt;/a&gt;.</value>
+  </data>
+  <data name="Visibility" xml:space="preserve">
+    <value>Matomumas</value>
+  </data>
+  <data name="VotesArePublicAll" xml:space="preserve">
+    <value>Rodyti mane palaikančiųjų sąrašuose</value>
+  </data>
+  <data name="DoLogin" xml:space="preserve">
+    <value>Prisijunkite</value>
+  </data>
+  <data name="AllCountry" xml:space="preserve">
+    <value>Visa Lietuva</value>
+  </data>
+  <data name="DefaultSubject" xml:space="preserve">
+    <value>Lietuva 2.0 naudotojo žinutė</value>
+  </data>
+  <data name="LikeFbPage" xml:space="preserve">
+    <value>Norėdami gauti mūsų naujienas, prisijunkite prie Lietuva 2.0 Facebook puslapio!</value>
+  </data>
+  <data name="MessageSent" xml:space="preserve">
+    <value>Laiškas išsiųstas</value>
+  </data>
+  <data name="Subject" xml:space="preserve">
+    <value>Antraštė</value>
+  </data>
+  <data name="YourEmail" xml:space="preserve">
+    <value>Jūsų el. paštas</value>
+  </data>
+  <data name="PasswordChangeFailed" xml:space="preserve">
+    <value>Pakeisti slaptažodžio nepavyko. Ištaisykite klaidas ir bandykite dar kartą</value>
+  </data>
+  <data name="PasswordSimilarToName" xml:space="preserve">
+    <value>Slaptažodis per daug panašus į Jūsų vardą arba pavardę</value>
+  </data>
+  <data name="PasswordSimilarToUserName" xml:space="preserve">
+    <value>Slaptažodis per daug panašus į naudotojo vardą</value>
+  </data>
+  <data name="InvalidCredentials" xml:space="preserve">
+    <value>Nurodyti neteisingi prisijungimo duomenys</value>
+  </data>
+  <data name="AcceptTerms" xml:space="preserve">
+    <value>Patvirtinkite, kad esate susipažinę su pasirašymo sąlygomis</value>
+  </data>
+  <data name="AwardFailed" xml:space="preserve">
+    <value>Nepavyko apdovanoti</value>
+  </data>
+  <data name="BanklinkCanceled" xml:space="preserve">
+    <value>Registracija nutraukta</value>
+  </data>
+  <data name="BankLinkFailed" xml:space="preserve">
+    <value>Prisijungimas nepavyko. Pabandykite dar kartą, arba praneškite apie klaidą mums.</value>
+  </data>
+  <data name="BankLinkReject" xml:space="preserve">
+    <value>Registracija nepavyko</value>
+  </data>
+  <data name="ConfirmedEmailRequired" xml:space="preserve">
+    <value>Turi likti bent vienas patvirtintas el. paštas</value>
+  </data>
+  <data name="ConfirmEmail" xml:space="preserve">
+    <value>Patvirtinkite el. paštą - paspauskite ant nuorodos, kuri Jums buvo išsiųsta Jūsų nurodytu el. pašto adresu. &lt;a href='{0}'&gt;Siųsti dar kartą&lt;/a&gt;</value>
+  </data>
+  <data name="ConfirmIdentityFailed" xml:space="preserve">
+    <value>Nepavyko patvirtinti prisijungimo</value>
+  </data>
+  <data name="EmailNotFound" xml:space="preserve">
+    <value>El. paštas {0} nerastas</value>
+  </data>
+  <data name="InvalidCaptcha" xml:space="preserve">
+    <value>Įvestas neteisingas apsaugos nuo robotų kodas</value>
+  </data>
+  <data name="InvalidPersonCode" xml:space="preserve">
+    <value>Neteisingas asmens kodas</value>
+  </data>
+  <data name="LoginFailed" xml:space="preserve">
+    <value>Neteisingas vartotojo vardas arba slaptazodis</value>
+  </data>
+  <data name="MergeFailed" xml:space="preserve">
+    <value>Naudotojų apjungti nepavyko</value>
+  </data>
+  <data name="MergeSuccess" xml:space="preserve">
+    <value>Naudotojai sėkmingai apjungti</value>
+  </data>
+  <data name="NoRights" xml:space="preserve">
+    <value>Neturite teisių</value>
+  </data>
+  <data name="PasswordResetSuccess" xml:space="preserve">
+    <value>Slaptažodis pakeistas sėkmingai!</value>
+  </data>
+  <data name="SelectExistingMunicipality" xml:space="preserve">
+    <value>Pasirinkite egzistuojančią savivaldybę</value>
+  </data>
+  <data name="TakeBackAwardFailed" xml:space="preserve">
+    <value>Nepavyko atimti apdovanojimo</value>
+  </data>
+  <data name="TempPasswordSent" xml:space="preserve">
+    <value>Adresu {0} netrukus gausite laikiną slaptažodį</value>
+  </data>
+  <data name="TourAccount" xml:space="preserve">
+    <value>Bendruomenės nariams svarbu žinoti Jūsų kompetencijas - pateikite informaciją apie save</value>
+  </data>
+  <data name="TourManifest" xml:space="preserve">
+    <value>Jums buvo išsiųstas el. laiškas. Patvirtinę el. pašto adresą, spauskite "Sutinku".</value>
+  </data>
+  <data name="UnsubscribeSuccess" xml:space="preserve">
+    <value>Laiškų atsisakyta sėkmingai. Juos užsisakyti galite savo naudotojo paskyroje.</value>
+  </data>
+  <data name="NotRegistered" xml:space="preserve">
+    <value>Neturite paskyros?</value>
+  </data>
+  <data name="Message" xml:space="preserve">
+    <value>Žinutė</value>
+  </data>
+  <data name="DocumentNoNotValid" xml:space="preserve">
+    <value>Įveskite paso arba tapatybės kortelės numerį, o ne asmens kodą</value>
+  </data>
+  <data name="EmailNotReceived" xml:space="preserve">
+    <value>El. pašto adresas negautas iš tiekėjo, pabandykite kitą prisijungimo būdą</value>
+  </data>
+  <data name="MyCategories" xml:space="preserve">
+    <value>Mano kategorijos</value>
+  </data>
+  <data name="NotPolitician" xml:space="preserve">
+    <value>Ne politikas</value>
+  </data>
+  <data name="Politician" xml:space="preserve">
+    <value>Politikas</value>
+  </data>
+  <data name="NoCategoriesSelected" xml:space="preserve">
+    <value>Jūs nesate pasirinkęs nė vienos kategorijos, todėl negalime atrinkti to, kas Jums yra aktualiausia.</value>
+  </data>
+  <data name="SelectCategories" xml:space="preserve">
+    <value>Pasirinkite kategorijas</value>
+  </data>
+  <data name="NewsLetterFreq" xml:space="preserve">
+    <value>Naujienlaiškis</value>
+  </data>
+  <data name="UserDeleteSuccess" xml:space="preserve">
+    <value>Jūsų paskyra buvo sėkmingai pašalinta. Laukiame sugrįžtant!</value>
+  </data>
+  <data name="CommentIsRequired" xml:space="preserve">
+    <value>Įveskite komentarą</value>
+  </data>
+  <data name="DeleteProfile" xml:space="preserve">
+    <value>Pašalinti paskyrą</value>
+  </data>
+  <data name="UserDeleteFailed" xml:space="preserve">
+    <value>Paskyros pašalinti nepavyko. Rašykite adresu info@lietuva2.lt</value>
+  </data>
+  <data name="OpenAuthConnect" xml:space="preserve">
+    <value>Prisijungti per {0}</value>
+  </data>
+</root>

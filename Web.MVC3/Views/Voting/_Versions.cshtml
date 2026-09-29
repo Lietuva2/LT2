@@ -1,0 +1,19 @@
+﻿@model Data.ViewModels.Voting.VotingViewModel
+@using Globalization.Resources.Voting
+@using Web.Helpers;
+@using Framework.Strings;
+<ul>
+    @foreach (var version in Model.Versions)
+    {
+        <li class='@Html.Raw(version == Model.Versions.Last() ? "selected" : "") versionContainer'>
+            @Html.ActionLink(version.VersionName, MVC.Voting.Details(Model.Id, Model.Subject), new Dictionary<string, object> { { "class", "version" }, { "data-url", Url.Action(MVC.Voting.GetText(Model.Id, version.ObjectId)) } }),
+            @Html.ActionLinkWithReturnUrl(version.UserFullName, MVC.Account.Details(version.UserObjectId, version.UserFullName.ToSeoUrl(), null))
+            <div class="fr">
+                @Html.RadioButton("historyId1", version.ObjectId, new Dictionary<string, object>(){{"title", Resource.CompareFrom}})
+                @Html.RadioButton("historyId2", version.ObjectId, new Dictionary<string, object>(){{"title", Resource.CompareTo}})
+            </div>
+            <div class="clear"></div>
+        </li>
+    }
+</ul>
+@Html.Button(new ButtonHelperModel() { Id = "btnCompareVersions", Type = ButtonHelperModel.Types.Link, Text = Resource.Compare, Href = Url.Action(MVC.Voting.CompareHistoryVersions(Model.Id, null, null)) })

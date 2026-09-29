@@ -1,0 +1,43 @@
+﻿@model Data.ViewModels.Account.PasswordResetModel
+@using Globalization.Resources.Account
+@using Globalization.Resources.Shared
+@using Web.Helpers;
+@{
+    ViewBag.Title = Resource.PageTitleReset;
+}
+@section Scripts
+{
+    
+    <script type="text/javascript">
+        function onPageLoad() {
+            $('#btnChangeMode').click(function (e) {
+                $('#divOldMode').show();
+                $('#divEmailMode').hide();
+                $(e.target).hide();
+            });
+
+            $('#Password').val('');
+        }
+    </script>
+}
+<h2 class="heading">@Resource.PageTitleReset</h2>
+@using (Html.BeginForm())
+{
+    @Html.ValidationSummary(true, Resource.ValidationErrorReset)
+    <div>
+        <fieldset>
+            <div id="divEmailMode">
+                <div class="editor-label">
+                    @Html.LabelFor(m => m.Email)
+                </div>
+                <div class="editor-field">
+                    @Html.TextBoxFor(m => m.Email, new {size=40})
+                    @Html.ValidationMessageFor(m => m.Email)
+                </div>
+            </div>
+            <p>
+                @Html.Buttons(2, Url.Action(MVC.Account.Login()), SharedStrings.Send)
+            </p>
+        </fieldset>
+    </div>
+}

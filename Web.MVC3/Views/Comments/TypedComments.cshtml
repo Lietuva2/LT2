@@ -1,0 +1,82 @@
+﻿@model Data.ViewModels.Comments.CommentsModel
+@using Data.Enums
+@using Data.ViewModels.Comments
+@using Globalization.Resources.Shared
+@using Globalization.Resources.Comments
+@using Web.Helpers
+@if (!ViewBag.IsAuthenticated)
+{
+    <div class="tbl_edit clear" style="padding: 10px 10px 10px 10px; margin: 10px 0 10px 0;">
+        @Html.ActionLink(Globalization.Resources.Account.Resource.DoLogin, MVC.Account.Login(Request.RawUrl)), @Resource.ToComment
+    </div>
+}
+<div class="uiHeader">
+    <span>@Resource.Comments</span>
+</div>
+<div id="divCommentsContainer" class="comments-container">
+    <div id="divComments" class="clearfix">
+        @if (ViewBag.IsAuthenticated)
+        {
+            Html.RenderPartial(MVC.Comments.Views.IdeaCommentInput, new CommentView() { EntryId = Model.EntryId, EntryType = Model.Type });
+        }
+        <div id="commentsFilterContainer" class="span-13 last clearfix">
+            <ul id="listFilter" class="filter">
+                <li class="ref_type">
+                    <div class="filter_tag" href="@Url.Action("GetComments", Html.GetControllerNameByEntryType(Model.Type), new RouteValueDictionary() { { "id", Model.EntryId }, { "filter", ForAgainst.For } })">
+                        <span class="num">@Model.CommentCounts[ForAgainst.For]</span>
+                        <span class="label">@Resource.Supports</span>
+                    </div>
+                </li>
+                <li class="ref_type">
+                    <div class="filter_tag" href="@Url.Action("GetComments", Html.GetControllerNameByEntryType(Model.Type), new RouteValueDictionary() { { "id", Model.EntryId }, { "filter", ForAgainst.Neutral } })">
+                        <span class="num">@Model.CommentCounts[ForAgainst.Neutral]</span>
+                        <span class="label">@Resource.Neutrals</span>
+                    </div>
+                </li>
+                <li class="ref_type">
+                    <div class="filter_tag" href="@Url.Action("GetComments", Html.GetControllerNameByEntryType(Model.Type), new RouteValueDictionary() { { "id", Model.EntryId }, { "filter", ForAgainst.Against } })">
+                        <span class="num">@Model.CommentCounts[ForAgainst.Against]</span>
+                        <span class="label">@Resource.Criticizes</span>
+                    </div>
+                </li>
+                <li class="ref_type">
+                    <div class="filter_tag" href="@Url.Action("GetComments", Html.GetControllerNameByEntryType(Model.Type), new RouteValueDictionary() { { "id", Model.EntryId }, { "filter", ForAgainst.Suggest } })">
+                        <span class="num">@Model.CommentCounts[ForAgainst.Suggest]</span>
+                        <span class="label">@Resource.Suggests</span>
+                    </div>
+                </li>
+            </ul>
+        </div>
+        <div id="divCommentListContainer" class="clear @(Model.Comments.List.Any() ? "" : "hide")">
+            <ul id="menuComments" class="tabmenu" style="margin-top: 15px; margin-bottom: 15px;">
+                <li>@Html.ActionLink(Globalization.Resources.Services.CommentViews.MostSupported, "GetComments", Html.GetControllerNameByEntryType(Model.Type), new RouteValueDictionary() { { "id", Model.EntryId }, { "sort", Services.Enums.CommentViews.MostSupported } }, new Dictionary<string, object>() { { "class", "tabitem highlight" } })</li><li>@Html.ActionLink(Globalization.Resources.Services.CommentViews.MostRecent, "GetComments", Html.GetControllerNameByEntryType(Model.Type), new RouteValueDictionary() { { "id", Model.EntryId }, { "sort", Services.Enums.CommentViews.MostRecent } }, new Dictionary<string, object>() { { "class", "tabitem" } })</li>
+                @if (Model.Type == EntryTypes.Idea)
+                {<li>@Html.ActionLink(Globalization.Resources.Services.CommentViews.ByVersion, "GetComments", Html.GetControllerNameByEntryType(Model.Type), new RouteValueDictionary() { { "id", Model.EntryId }, { "sort", Services.Enums.CommentViews.ByVersion } }, new Dictionary<string, object>() { { "id", "tabByVersion" }, { "class", "tabitem" } })</li>}</ul>
+            <div id="listComments" class="listComments">
+                @{ Html.RenderPartial(MVC.Comments.Views._CommentList, Model.Comments.List); }
+            </div>
+            @if (Model.Comments.HasMoreElements)
+            {
+                @Html.ActionLink(SharedStrings.More, "GetMoreComments", Html.GetControllerNameByEntryType(Model.Type), new RouteValueDictionary() { { "id", Model.EntryId } }, new Dictionary<string, object>() { { "id", "lnkShowMoreComments" }, { "class", "lnkShowMoreComments" } })
+            }
+        </div>
+    </div>
+</div>
+<script type="text/javascript">
+    $('#listFilter').ajaxTabs({
+        data: { versionId: function () { return $('#hiddenCurrentVersionId').val(); } },
+        tabItemSelector: 'div.filter_tag',
+        highlightClass: 'filter_tag_current',
+        deselectUrl: '@Url.Action("GetComments", Html.GetControllerNameByEntryType(Model.Type), new RouteValueDictionary() { { "id", Model.EntryId } })',
+        callback: function (res) {
+            $('#listComments').html(res.Content);
+
+            var link = $('#lnkShowMoreComments');
+            link.attr('href', res.UpdatedHref);
+            res.HasMoreElements ? link.show() : link.hide();
+            link.showmore('reset');
+
+            createExpandableText($('#listComments'));
+        }
+    });
+</script>

@@ -1,0 +1,20 @@
+﻿@model Data.ViewModels.Idea.IdeaIndexModel
+@using Framework.Strings
+@using Globalization.Resources.NewsFeed
+@using Globalization.Resources.Shared
+@using Web.Helpers
+<div class="dashboard-header">
+    @Html.ActionLink(Resource.PublicInitiatives, MVC.Idea.GetActiveIdeasDashboard(), new Dictionary<string, object> { { "data-role", "tab-link" }, {"class", "fl"} })
+    <h3 class="fr">
+        @Resource.FinishedInitiatives
+    </h3>
+    <div class="clear">
+    </div>
+</div>
+<div id="listIdeas">
+    @Html.Partial(MVC.NewsFeed.Views.FinishedIdeasList, Model)
+</div>
+@if (Model.Items.HasMoreElements)
+{
+    <p>@Html.ActionLink(SharedStrings.More, MVC.Idea.GetMoreFinishedIdeas(), new {id = "lnkShowMoreIdeas"})</p>
+}

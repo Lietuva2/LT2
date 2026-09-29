@@ -1,0 +1,6 @@
+﻿@using Globalization.Resources.Project
+@model String
+<ul class="tabmenu">
+    <li>@Html.ActionLink(Resource.MenuTasks, MVC.Organization.ToDos(ViewData["OrganizationId"].ToString(), Model), new { @class = "tabitem" + (ViewData["index"] == "0" ? " highlight" : string.Empty) })</li>
+    @if (ViewData["isEditable"] == null || (bool)ViewData["isEditable"]){<li>@Html.ActionLink(Resource.MenuSettings, MVC.Organization.Settings(ViewData["OrganizationId"].ToString(), Model), new { @class = "tabitem" + (ViewData["index"] == "1" ? " highlight" : string.Empty) })</li>}
+</ul>

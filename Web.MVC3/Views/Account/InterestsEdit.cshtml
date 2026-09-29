@@ -1,0 +1,45 @@
+﻿@model Data.ViewModels.Account.InterestsEditModel
+@using Globalization.Resources.Account
+@using Globalization.Resources.Shared
+@using Web.Helpers
+<fieldset>
+    <div class="uiHeader">
+        <span>@Resource.InterestsLegend</span>
+    </div>
+    @using (Html.BeginForm(MVC.Account.SaveInterests()))
+    {
+        @Html.AntiForgeryToken()
+        @Html.HiddenFor(m => m.UserObjectId)
+        <table class="tbl_data tbl_edit">
+            <tbody>
+            <tr>
+                <th class="lbl">@Resource.PoliticalViews</th>
+                <td class="data">
+                    @Html.TextBoxFor(m => m.PoliticalViews) 
+                    @Html.ValidationMessageFor(model => model.PoliticalViews)
+                </td>
+            </tr>
+            <tr>
+                <th class="lbl">@Resource.Groups</th>
+                <td class="data">
+                    @Html.TextAreaFor(m => m.Groups, new { @class = "txt_xl" }) 
+                    @Html.ValidationMessageFor(model => model.Groups)
+                </td>
+            </tr>
+            <tr>
+                <th class="lbl">@Resource.Interests</th>
+                <td class="data">
+                    @Html.TextAreaFor(m => m.Interests, new { @class="txt_xl"}) 
+                    @Html.ValidationMessageFor(model => model.Interests)
+                </td>
+            </tr>
+            <tr>
+                <th></th>
+                <td class="actions data">
+                    @Html.Buttons(2, Url.Action(MVC.Account.Interests(Model.UserObjectId)))
+                </td>
+            </tr>
+            </tbody>
+        </table>
+    }
+</fieldset>

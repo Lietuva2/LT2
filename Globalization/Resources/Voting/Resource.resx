@@ -1,0 +1,507 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <!-- 
+    Microsoft ResX Schema 
+    
+    Version 2.0
+    
+    The primary goals of this format is to allow a simple XML format 
+    that is mostly human readable. The generation and parsing of the 
+    various data types are done through the TypeConverter classes 
+    associated with the data types.
+    
+    Example:
+    
+    ... ado.net/XML headers & schema ...
+    <resheader name="resmimetype">text/microsoft-resx</resheader>
+    <resheader name="version">2.0</resheader>
+    <resheader name="reader">System.Resources.ResXResourceReader, System.Windows.Forms, ...</resheader>
+    <resheader name="writer">System.Resources.ResXResourceWriter, System.Windows.Forms, ...</resheader>
+    <data name="Name1"><value>this is my long string</value><comment>this is a comment</comment></data>
+    <data name="Color1" type="System.Drawing.Color, System.Drawing">Blue</data>
+    <data name="Bitmap1" mimetype="application/x-microsoft.net.object.binary.base64">
+        <value>[base64 mime encoded serialized .NET Framework object]</value>
+    </data>
+    <data name="Icon1" type="System.Drawing.Icon, System.Drawing" mimetype="application/x-microsoft.net.object.bytearray.base64">
+        <value>[base64 mime encoded string representing a byte array form of the .NET Framework object]</value>
+        <comment>This is a comment</comment>
+    </data>
+                
+    There are any number of "resheader" rows that contain simple 
+    name/value pairs.
+    
+    Each data row contains a name, and value. The row also contains a 
+    type or mimetype. Type corresponds to a .NET class that support 
+    text/value conversion through the TypeConverter architecture. 
+    Classes that don't support this are serialized and stored with the 
+    mimetype set.
+    
+    The mimetype is used for serialized objects, and tells the 
+    ResXResourceReader how to depersist the object. This is currently not 
+    extensible. For a given mimetype the value must be set accordingly:
+    
+    Note - application/x-microsoft.net.object.binary.base64 is the format 
+    that the ResXResourceWriter will generate, however the reader can 
+    read any of the formats listed below.
+    
+    mimetype: application/x-microsoft.net.object.binary.base64
+    value   : The object must be serialized with 
+            : System.Runtime.Serialization.Formatters.Binary.BinaryFormatter
+            : and then encoded with base64 encoding.
+    
+    mimetype: application/x-microsoft.net.object.soap.base64
+    value   : The object must be serialized with 
+            : System.Runtime.Serialization.Formatters.Soap.SoapFormatter
+            : and then encoded with base64 encoding.
+
+    mimetype: application/x-microsoft.net.object.bytearray.base64
+    value   : The object must be serialized into a byte array 
+            : using a System.ComponentModel.TypeConverter
+            : and then encoded with base64 encoding.
+    -->
+  <xsd:schema id="root" xmlns="" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:msdata="urn:schemas-microsoft-com:xml-msdata">
+    <xsd:import namespace="http://www.w3.org/XML/1998/namespace" />
+    <xsd:element name="root" msdata:IsDataSet="true">
+      <xsd:complexType>
+        <xsd:choice maxOccurs="unbounded">
+          <xsd:element name="metadata">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" />
+              </xsd:sequence>
+              <xsd:attribute name="name" use="required" type="xsd:string" />
+              <xsd:attribute name="type" type="xsd:string" />
+              <xsd:attribute name="mimetype" type="xsd:string" />
+              <xsd:attribute ref="xml:space" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="assembly">
+            <xsd:complexType>
+              <xsd:attribute name="alias" type="xsd:string" />
+              <xsd:attribute name="name" type="xsd:string" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="data">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+                <xsd:element name="comment" type="xsd:string" minOccurs="0" msdata:Ordinal="2" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" msdata:Ordinal="1" />
+              <xsd:attribute name="type" type="xsd:string" msdata:Ordinal="3" />
+              <xsd:attribute name="mimetype" type="xsd:string" msdata:Ordinal="4" />
+              <xsd:attribute ref="xml:space" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="resheader">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" />
+            </xsd:complexType>
+          </xsd:element>
+        </xsd:choice>
+      </xsd:complexType>
+    </xsd:element>
+  </xsd:schema>
+  <resheader name="resmimetype">
+    <value>text/microsoft-resx</value>
+  </resheader>
+  <resheader name="version">
+    <value>2.0</value>
+  </resheader>
+  <resheader name="reader">
+    <value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <resheader name="writer">
+    <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <data name="AddCommentComment" xml:space="preserve">
+    <value>Komentuoti</value>
+  </data>
+  <data name="AddNegativeComment" xml:space="preserve">
+    <value>Kritikuoti</value>
+  </data>
+  <data name="AddPositiveComment" xml:space="preserve">
+    <value>Pritarti</value>
+  </data>
+  <data name="Categories" xml:space="preserve">
+    <value>Rodomos kategorijos</value>
+  </data>
+  <data name="CategoryIds" xml:space="preserve">
+    <value>Kategorijos</value>
+  </data>
+  <data name="CategoryIdIsRequired" xml:space="preserve">
+    <value>Pasirinkite kategoriją</value>
+  </data>
+  <data name="CategoryName" xml:space="preserve">
+    <value>Kategorija</value>
+  </data>
+  <data name="ChangedMyMind" xml:space="preserve">
+    <value>Atšaukti</value>
+  </data>
+  <data name="Comments" xml:space="preserve">
+    <value>Argumentai</value>
+  </data>
+  <data name="CommentsCount" xml:space="preserve">
+    <value>Komentarai</value>
+  </data>
+  <data name="Create" xml:space="preserve">
+    <value>Įtraukti naują</value>
+  </data>
+  <data name="CreatedBy" xml:space="preserve">
+    <value>Autorius</value>
+  </data>
+  <data name="CreateTooltip" xml:space="preserve">
+    <value>Aprašyti naują balsavimą</value>
+  </data>
+  <data name="Deadline" xml:space="preserve">
+    <value>Balsavimo data</value>
+  </data>
+  <data name="DeadlineIsRequired" xml:space="preserve">
+    <value>Įveskite balsavimo datą</value>
+  </data>
+  <data name="DocumentUrl" xml:space="preserve">
+    <value>Nuoroda</value>
+  </data>
+  <data name="EditPageTitle" xml:space="preserve">
+    <value>Balsavimas {0}</value>
+  </data>
+  <data name="EditTitle" xml:space="preserve">
+    <value>Balsavimas {0}</value>
+  </data>
+  <data name="FilterInteresting" xml:space="preserve">
+    <value>Aktualūs</value>
+  </data>
+  <data name="FilterOther" xml:space="preserve">
+    <value>Kiti</value>
+  </data>
+  <data name="FormHeaderCreate" xml:space="preserve">
+    <value>Aprašykite svarstomo klausimo esmę</value>
+  </data>
+  <data name="FormHeaderDetails" xml:space="preserve">
+    <value>Balsavimas</value>
+  </data>
+  <data name="Interested" xml:space="preserve">
+    <value>Domina</value>
+  </data>
+  <data name="InterestedTooltip" xml:space="preserve">
+    <value>Mane domina ši kategorija</value>
+  </data>
+  <data name="MunicipalityId" xml:space="preserve">
+    <value>Savivaldybė</value>
+  </data>
+  <data name="NonSupportingComments" xml:space="preserve">
+    <value>Prieš</value>
+  </data>
+  <data name="NotSelectedCategoriesDescription" xml:space="preserve">
+    <value>Įrašai, nepatenkantys į pasirinktas kategorijas, nuo Jūsų nebus paslėpti - jie bus prieinami sąrašuose pakeitus filtrus nustatymus. 
+    &lt;b&gt;Todėl siūlome pasirinkti tik tas sritis, kurios Jums iš tiesų yra pačios aktualiausios.&lt;/b&gt; Pasirinkimą galėsite bet kada pakeisti iš savo asmeninio puslapio.</value>
+  </data>
+  <data name="OfficialVoteAgainst" xml:space="preserve">
+    <value>Valdžia balsavo PRIEŠ</value>
+  </data>
+  <data name="OfficialVoteFor" xml:space="preserve">
+    <value>Valdžia balsavo UŽ</value>
+  </data>
+  <data name="OrganizationId" xml:space="preserve">
+    <value>Teikia</value>
+  </data>
+  <data name="OrganizationName" xml:space="preserve">
+    <value>Organizacija</value>
+  </data>
+  <data name="PageTitleCategories" xml:space="preserve">
+    <value>Kategorijų pasirinkimas</value>
+  </data>
+  <data name="PageTitleCreate" xml:space="preserve">
+    <value>Naujas balsavimas</value>
+  </data>
+  <data name="PageTitleDetails" xml:space="preserve">
+    <value>Balsavimas</value>
+  </data>
+  <data name="PageTitleResults" xml:space="preserve">
+    <value>Pasibaigę balsavimai</value>
+  </data>
+  <data name="RelatedIdeas" xml:space="preserve">
+    <value>Susiję pasiūlymai</value>
+  </data>
+  <data name="Save" xml:space="preserve">
+    <value>Saugoti</value>
+  </data>
+  <data name="SaveCommentComment" xml:space="preserve">
+    <value>Komentuoti</value>
+  </data>
+  <data name="SaveVersion" xml:space="preserve">
+    <value>Saugoti</value>
+  </data>
+  <data name="CategoryIdsIsEmpty" xml:space="preserve">
+    <value>Pasirinkite kategorijas</value>
+  </data>
+  <data name="SelectYourCategoriesDescription" xml:space="preserve">
+    <value>Pasirinkite Jus dominančias kategorijas. Apie naujai sukurtus Jus dominančių kategorijų įrašus būsite informuojami Naujienų puslapyje.Taip pat pagal pasirinktas kategorijas bus pagal nutylėjima filtruojami Pasiūlymų, Balsavimų bei Balsavimo rezultatų sąrašai.</value>
+  </data>
+  <data name="SortActive" xml:space="preserve">
+    <value>Aktyviausi</value>
+  </data>
+  <data name="SortNearest" xml:space="preserve">
+    <value>Artimiausi</value>
+  </data>
+  <data name="Subject" xml:space="preserve">
+    <value>Pavadinimas</value>
+  </data>
+  <data name="SubjectIsRequired" xml:space="preserve">
+    <value>Įveskite pavadinimą</value>
+  </data>
+  <data name="Success" xml:space="preserve">
+    <value>Kategorijos pasirinktos! Pateikite informaciją apie save.</value>
+  </data>
+  <data name="Summary" xml:space="preserve">
+    <value>Santrumpa</value>
+  </data>
+  <data name="SummaryIsRequired" xml:space="preserve">
+    <value>Įveskite santrumpą</value>
+  </data>
+  <data name="SupportingComments" xml:space="preserve">
+    <value>Už</value>
+  </data>
+  <data name="SupportPercentage" xml:space="preserve">
+    <value>Palaikymas</value>
+  </data>
+  <data name="SupportPercentageTemplate" xml:space="preserve">
+    <value>Už: {0} / Prieš: {1}</value>
+  </data>
+  <data name="TimeLeft" xml:space="preserve">
+    <value>Liko {0}</value>
+  </data>
+  <data name="TitleCategories" xml:space="preserve">
+    <value>Mano kategorijos</value>
+  </data>
+  <data name="TitleCreate" xml:space="preserve">
+    <value>Naujas balsavimas</value>
+  </data>
+  <data name="TitleDetails" xml:space="preserve">
+    <value>Balsavimas</value>
+  </data>
+  <data name="TitleIndex" xml:space="preserve">
+    <value>Balsavimai</value>
+  </data>
+  <data name="TitleResults" xml:space="preserve">
+    <value>Balsavimų rezultatai</value>
+  </data>
+  <data name="TotalVotes" xml:space="preserve">
+    <value>Balsų skaičius</value>
+  </data>
+  <data name="Urls" xml:space="preserve">
+    <value>Nuorodos</value>
+  </data>
+  <data name="ViewsCount" xml:space="preserve">
+    <value>Peržiūros</value>
+  </data>
+  <data name="VoteAgainst" xml:space="preserve">
+    <value>prieš</value>
+  </data>
+  <data name="VotedAgainst" xml:space="preserve">
+    <value>Aš balsavau PRIEŠ</value>
+  </data>
+  <data name="VotedFor" xml:space="preserve">
+    <value>Aš balsavau UŽ</value>
+  </data>
+  <data name="VoteFor" xml:space="preserve">
+    <value>už</value>
+  </data>
+  <data name="VotesCount" xml:space="preserve">
+    <value>Viso balsavo</value>
+  </data>
+  <data name="Voting" xml:space="preserve">
+    <value>Balsavimas</value>
+  </data>
+  <data name="VotingFinished" xml:space="preserve">
+    <value>Balsavimas yra pasibaigęs</value>
+  </data>
+  <data name="VotedNeutral" xml:space="preserve">
+    <value>Aš susilaikiau</value>
+  </data>
+  <data name="VoteNeutral" xml:space="preserve">
+    <value>Susilaikau</value>
+  </data>
+  <data name="FacebookPostMessage" xml:space="preserve">
+    <value>Aktualus balsavimas!</value>
+  </data>
+  <data name="Votings" xml:space="preserve">
+    <value>Balsavimai</value>
+  </data>
+  <data name="AddUrl" xml:space="preserve">
+    <value>Pridėti nuorodą</value>
+  </data>
+  <data name="Against" xml:space="preserve">
+    <value>PRIEŠ</value>
+  </data>
+  <data name="AllowNeutralVotes" xml:space="preserve">
+    <value>Leidžiama susilaikyti</value>
+  </data>
+  <data name="AllowSummaryWiki" xml:space="preserve">
+    <value>Santrumpa laisvai redaguojama</value>
+  </data>
+  <data name="AssignProblem" xml:space="preserve">
+    <value>Priskirkite pasisakymą</value>
+  </data>
+  <data name="CancelVote" xml:space="preserve">
+    <value>Atšaukti balsą</value>
+  </data>
+  <data name="CategoriesNotice" xml:space="preserve">
+    <value>Pasirinkite Jus dominančias kategorijas. Apie naujai sukurtus Jus dominančių kategorijų įrašūs būsite informuojami el. paštu. 
+    Taip pat pagal pasirinktas kategorijas bus atrenkama Jums aktuali informacija portale.</value>
+  </data>
+  <data name="CategoriesNotice1" xml:space="preserve">
+    <value>Todėl siūlome pasirinkti tik tas sritis, kurios Jums iš tiesų yra pačios aktualiausios. 
+    Pasirinkimą galėsite bet kada pakeisti.</value>
+  </data>
+  <data name="CategoryIdsHelp" xml:space="preserve">
+    <value>Priskirkite 1-3 kategorijas, kurios geriausiai apibūdina svarstomo klausimo problematiką. Rinkdamiesi kategorijas įvertinkite, kuri ministerija, komitetas ar pan. yra atsakingas už šį sprendimą.</value>
+  </data>
+  <data name="ChangeState" xml:space="preserve">
+    <value>Keisti būseną</value>
+  </data>
+  <data name="CommentNotice" xml:space="preserve">
+    <value>Gerbkime save ir savo kalbą - komentuokime taisyklinga lietuvių kalba!</value>
+  </data>
+  <data name="Compare" xml:space="preserve">
+    <value>Palyginti</value>
+  </data>
+  <data name="CompareFrom" xml:space="preserve">
+    <value>Lyginti nuo</value>
+  </data>
+  <data name="CompareTo" xml:space="preserve">
+    <value>Lyginti iki</value>
+  </data>
+  <data name="CreateRelatedIdea" xml:space="preserve">
+    <value>Sukurti susijusį pasiūlymą</value>
+  </data>
+  <data name="DeadlineHelp" xml:space="preserve">
+    <value>Įveskite datą ir laiką, kada valdžia turėtų priimti šį sprendimą. Atėjus šiam laikui, balsavimas už sprendimą bus uždaromas ir parodomi balsavimų rezultatai.&lt;br/&gt; Jeigu dar nėra numatyta konkreti balsavimo data, šį lauką galite palikti tuščią ir įvesti vėliau. Neterminuoto sprendimo atveju balsavimas sistemoje bus leidžiamas iki kol nepažymėsite, kad valdžia jau prabalsavo už arba prieš šį sprendimą.</value>
+  </data>
+  <data name="EditSummaryHelp" xml:space="preserve">
+    <value>Jeigu manote, kad svarstomas klausimas yra aprašytas ne pakankamai tiksliai ir aiškiai, pateikite naują aprašymo versiją</value>
+  </data>
+  <data name="Expand" xml:space="preserve">
+    <value>Plačiau</value>
+  </data>
+  <data name="FacebookPostText" xml:space="preserve">
+    <value>Kviečiu pareikšti savo nuomonę šiuo aktualiu klausimu</value>
+  </data>
+  <data name="For" xml:space="preserve">
+    <value>UŽ</value>
+  </data>
+  <data name="GenerateReport" xml:space="preserve">
+    <value>Generuoti ataskaitą</value>
+  </data>
+  <data name="IsPrivate" xml:space="preserve">
+    <value>Matomas tik organizacijos nariams</value>
+  </data>
+  <data name="Login" xml:space="preserve">
+    <value>Prisijunkite</value>
+  </data>
+  <data name="LoginToComment" xml:space="preserve">
+    <value>{0}, jeigu norite pateikti savo argumentus</value>
+  </data>
+  <data name="MunicipalityIdHelp" xml:space="preserve">
+    <value>Pažymėkite, ar šis balsavimas yra nacionalinio masto, ar skirtas konkrečiai savivaldybei?</value>
+  </data>
+  <data name="NextIssue" xml:space="preserve">
+    <value>Kitas balsavimas</value>
+  </data>
+  <data name="NoIssues" xml:space="preserve">
+    <value>Balsavimų pagal pasirinktus nustatymus nėra</value>
+  </data>
+  <data name="NoResults" xml:space="preserve">
+    <value>Pasibaigusių balsavimų pagal pasirinktus nustatymus nėra</value>
+  </data>
+  <data name="NotUniqueVotes" xml:space="preserve">
+    <value>Nepatvirtinusių tapatybės asmenų balsai</value>
+  </data>
+  <data name="OfficialVote" xml:space="preserve">
+    <value>Ką nusprendė valdžia?</value>
+  </data>
+  <data name="OrganizationIdHelp" xml:space="preserve">
+    <value>Pasirinkite, ar šį balsavimą teikiate asmeniškai, ar organizacijos vardu</value>
+  </data>
+  <data name="Problems" xml:space="preserve">
+    <value>Problemos</value>
+  </data>
+  <data name="ProblemsHelp" xml:space="preserve">
+    <value>Pasirinkite problemas (pasisakymus), kurias sprendžia šis balsavimas</value>
+  </data>
+  <data name="RelatedIdeasHelp" xml:space="preserve">
+    <value>Jeigu šis balsavimas yra inicijuotas per Lietuva 2.0 pasiūlymus, pasirinkite juos. Pažymėjus 'Keisti būseną' ir išsaugojus, pasirinkti pasiūlymai gaus būseną 'Priimamas'. Vėliau, nustačius, kad valdžia balsavo UŽ šį teisės aktą, susijė sumanymai bus pažymėti kaip 'Įgyvendinti', jeigu PRIEŠ - kaip 'Atmestos'.&lt;br/&gt;&lt;br/&gt; Sąraše pateikiama tik dalis pasiūlymų - jeigu nematote to, kurio ieškote, spauskite 'Visi', ir bus pateiktas visas sąrašas.</value>
+  </data>
+  <data name="RelateIdea" xml:space="preserve">
+    <value>Susieti pasiūlymą</value>
+  </data>
+  <data name="SelectAllCategories" xml:space="preserve">
+    <value>Pasirinkti visas</value>
+  </data>
+  <data name="SelectIdea" xml:space="preserve">
+    <value>Pasirinkite sprendimą</value>
+  </data>
+  <data name="SelectRelatedIdea" xml:space="preserve">
+    <value>Pasirinkite susijusį pasiūlymą</value>
+  </data>
+  <data name="SendMails" xml:space="preserve">
+    <value>Siųsti laiškus</value>
+  </data>
+  <data name="SubjectHelp" xml:space="preserve">
+    <value>Įveskite trumpą, konkretų valdžios svarstomą klausimą apibūdinantį pavadinimą. &lt;br/&gt; Pvz. vietoj 'Lietuvos Respublikos administracinių teisės pažeidimų kodekso 41-3 pakeitimo įstatymo projektas' rašykite pvz. 'Administracinė atsakomybė nelegaliai dirbusiems asmenims'</value>
+  </data>
+  <data name="SummaryHelp" xml:space="preserve">
+    <value>Trumpai, suprantamai aprašykite valdžios svarstomo klausimo - įstatymo projekto, nutarimo ar pan. esmę, pasikeitimus nuo dabartinės tvarkos. Rekomenduojama, kad tekstas užimtų ne daugiau nei 3 pastraipas. &lt;br/&gt;Labai svarbu, kad šis tekstas būtų neutralus - pateikite jį kaip faktą, o savo asmeninę nuomonę išdėstykite argumentuose UŽ arba PRIEŠ.</value>
+  </data>
+  <data name="SummaryNotice" xml:space="preserve">
+    <value>Balsavimus aprašyti galima tik valdžios svarstomais klausimais. Jeigu turite savo pasiūlymų, koks sprendimas būtų geresnis už tai, ką svarsto valdžia, aprašykite susijusį pasiūlymą.</value>
+  </data>
+  <data name="UniqueVotes" xml:space="preserve">
+    <value>Patvirtinusių tapatybę piliečių balsai</value>
+  </data>
+  <data name="UrlsHelp" xml:space="preserve">
+    <value>Įkelkite nuorodas, kur galima rasti daugiau informacijos apie šį klausimą</value>
+  </data>
+  <data name="VersionHistory" xml:space="preserve">
+    <value>Versijų istorija</value>
+  </data>
+  <data name="Visibility" xml:space="preserve">
+    <value>Matomumas</value>
+  </data>
+  <data name="VotingCreationNotice" xml:space="preserve">
+    <value>Balsavimus aprašyti galima tik valdžios svarstomais klausimais. Jeigu turite savo pasiūlymų, koks sprendimas būtų geresnis už tai, ką svarsto valdžia, aprašykite pasiūlymą.</value>
+  </data>
+  <data name="EnterSummary" xml:space="preserve">
+    <value>Įveskite santrauką</value>
+  </data>
+  <data name="SelectOrganization" xml:space="preserve">
+    <value>Pasirinkite organizaciją, kuriai bus matomas pasiūlymas</value>
+  </data>
+  <data name="TourCategories" xml:space="preserve">
+    <value>Pasirinkite Jums aktualias kategorijas</value>
+  </data>
+  <data name="TourIndex" xml:space="preserve">
+    <value>Šiame lange pateikiamas Jums aktualių šiuo metu valdžios svarstomų klausimų sąrašas. Rodomas kategorijas galite pakeisti naudodami žemiau esantį kategorijų filtrą</value>
+  </data>
+  <data name="TourIssue" xml:space="preserve">
+    <value>Pareikškite savo nuomonę dėl šio aktualaus valdžios svarstomo klausimo.</value>
+  </data>
+  <data name="VoteSuccess" xml:space="preserve">
+    <value>Balsavimas sėkmingas!</value>
+  </data>
+  <data name="DeleteFailed" xml:space="preserve">
+    <value>Šio balsavimo pašalinti negalima</value>
+  </data>
+  <data name="DeleteSuccess" xml:space="preserve">
+    <value>Balsavimas pašalintas sėkmingai</value>
+  </data>
+  <data name="UrlIsRequired" xml:space="preserve">
+    <value>Įveskite nuorodą</value>
+  </data>
+  <data name="UrlsIsEmpty" xml:space="preserve">
+    <value>Įkelkite nuorodą į įstatymo projektą</value>
+  </data>
+</root>

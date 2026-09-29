@@ -1,0 +1,493 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <!-- 
+    Microsoft ResX Schema 
+    
+    Version 2.0
+    
+    The primary goals of this format is to allow a simple XML format 
+    that is mostly human readable. The generation and parsing of the 
+    various data types are done through the TypeConverter classes 
+    associated with the data types.
+    
+    Example:
+    
+    ... ado.net/XML headers & schema ...
+    <resheader name="resmimetype">text/microsoft-resx</resheader>
+    <resheader name="version">2.0</resheader>
+    <resheader name="reader">System.Resources.ResXResourceReader, System.Windows.Forms, ...</resheader>
+    <resheader name="writer">System.Resources.ResXResourceWriter, System.Windows.Forms, ...</resheader>
+    <data name="Name1"><value>this is my long string</value><comment>this is a comment</comment></data>
+    <data name="Color1" type="System.Drawing.Color, System.Drawing">Blue</data>
+    <data name="Bitmap1" mimetype="application/x-microsoft.net.object.binary.base64">
+        <value>[base64 mime encoded serialized .NET Framework object]</value>
+    </data>
+    <data name="Icon1" type="System.Drawing.Icon, System.Drawing" mimetype="application/x-microsoft.net.object.bytearray.base64">
+        <value>[base64 mime encoded string representing a byte array form of the .NET Framework object]</value>
+        <comment>This is a comment</comment>
+    </data>
+                
+    There are any number of "resheader" rows that contain simple 
+    name/value pairs.
+    
+    Each data row contains a name, and value. The row also contains a 
+    type or mimetype. Type corresponds to a .NET class that support 
+    text/value conversion through the TypeConverter architecture. 
+    Classes that don't support this are serialized and stored with the 
+    mimetype set.
+    
+    The mimetype is used for serialized objects, and tells the 
+    ResXResourceReader how to depersist the object. This is currently not 
+    extensible. For a given mimetype the value must be set accordingly:
+    
+    Note - application/x-microsoft.net.object.binary.base64 is the format 
+    that the ResXResourceWriter will generate, however the reader can 
+    read any of the formats listed below.
+    
+    mimetype: application/x-microsoft.net.object.binary.base64
+    value   : The object must be serialized with 
+            : System.Runtime.Serialization.Formatters.Binary.BinaryFormatter
+            : and then encoded with base64 encoding.
+    
+    mimetype: application/x-microsoft.net.object.soap.base64
+    value   : The object must be serialized with 
+            : System.Runtime.Serialization.Formatters.Soap.SoapFormatter
+            : and then encoded with base64 encoding.
+
+    mimetype: application/x-microsoft.net.object.bytearray.base64
+    value   : The object must be serialized into a byte array 
+            : using a System.ComponentModel.TypeConverter
+            : and then encoded with base64 encoding.
+    -->
+  <xsd:schema id="root" xmlns="" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:msdata="urn:schemas-microsoft-com:xml-msdata">
+    <xsd:import namespace="http://www.w3.org/XML/1998/namespace" />
+    <xsd:element name="root" msdata:IsDataSet="true">
+      <xsd:complexType>
+        <xsd:choice maxOccurs="unbounded">
+          <xsd:element name="metadata">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" />
+              </xsd:sequence>
+              <xsd:attribute name="name" use="required" type="xsd:string" />
+              <xsd:attribute name="type" type="xsd:string" />
+              <xsd:attribute name="mimetype" type="xsd:string" />
+              <xsd:attribute ref="xml:space" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="assembly">
+            <xsd:complexType>
+              <xsd:attribute name="alias" type="xsd:string" />
+              <xsd:attribute name="name" type="xsd:string" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="data">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+                <xsd:element name="comment" type="xsd:string" minOccurs="0" msdata:Ordinal="2" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" msdata:Ordinal="1" />
+              <xsd:attribute name="type" type="xsd:string" msdata:Ordinal="3" />
+              <xsd:attribute name="mimetype" type="xsd:string" msdata:Ordinal="4" />
+              <xsd:attribute ref="xml:space" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="resheader">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" />
+            </xsd:complexType>
+          </xsd:element>
+        </xsd:choice>
+      </xsd:complexType>
+    </xsd:element>
+  </xsd:schema>
+  <resheader name="resmimetype">
+    <value>text/microsoft-resx</value>
+  </resheader>
+  <resheader name="version">
+    <value>2.0</value>
+  </resheader>
+  <resheader name="reader">
+    <value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <resheader name="writer">
+    <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <data name="AddCommentComment" xml:space="preserve">
+    <value>Add comment</value>
+  </data>
+  <data name="AddNegativeComment" xml:space="preserve">
+    <value>Criticize</value>
+  </data>
+  <data name="AddPositiveComment" xml:space="preserve">
+    <value>Support</value>
+  </data>
+  <data name="Categories" xml:space="preserve">
+    <value>Displayed categories</value>
+  </data>
+  <data name="CategoryIds" xml:space="preserve">
+    <value>Categories</value>
+  </data>
+  <data name="CategoryIdIsRequired" xml:space="preserve">
+    <value>Select a category</value>
+  </data>
+  <data name="CategoryName" xml:space="preserve">
+    <value>Category</value>
+  </data>
+  <data name="ChangedMyMind" xml:space="preserve">
+    <value>Cancel</value>
+  </data>
+  <data name="Comments" xml:space="preserve">
+    <value>Arguments</value>
+  </data>
+  <data name="CommentsCount" xml:space="preserve">
+    <value>Comments</value>
+  </data>
+  <data name="Create" xml:space="preserve">
+    <value>Create new</value>
+  </data>
+  <data name="CreatedBy" xml:space="preserve">
+    <value>Author</value>
+  </data>
+  <data name="CreateTooltip" xml:space="preserve">
+    <value>Describe new issue</value>
+  </data>
+  <data name="Deadline" xml:space="preserve">
+    <value>The date of the voting</value>
+  </data>
+  <data name="DeadlineIsRequired" xml:space="preserve">
+    <value>Enter the date of the voting</value>
+  </data>
+  <data name="DocumentUrl" xml:space="preserve">
+    <value>Link</value>
+  </data>
+  <data name="EditPageTitle" xml:space="preserve">
+    <value>Issue {0}</value>
+  </data>
+  <data name="EditTitle" xml:space="preserve">
+    <value>Issue {0}</value>
+  </data>
+  <data name="FilterInteresting" xml:space="preserve">
+    <value>Interesting</value>
+  </data>
+  <data name="FilterOther" xml:space="preserve">
+    <value>Other</value>
+  </data>
+  <data name="FormHeaderCreate" xml:space="preserve">
+    <value>Describe the subject matter in question</value>
+  </data>
+  <data name="FormHeaderDetails" xml:space="preserve">
+    <value>Issue</value>
+  </data>
+  <data name="Interested" xml:space="preserve">
+    <value>You Are Interested</value>
+  </data>
+  <data name="InterestedTooltip" xml:space="preserve">
+    <value>I am interested in this category</value>
+  </data>
+  <data name="MunicipalityId" xml:space="preserve">
+    <value>Municipality</value>
+  </data>
+  <data name="NonSupportingComments" xml:space="preserve">
+    <value>Against</value>
+  </data>
+  <data name="NotSelectedCategoriesDescription" xml:space="preserve">
+    <value>Records that are not covered by the categories you selected will still be available to select later on. 
+    &lt;b&gt;Please select only those categories that You are indeed the most interested in&lt;/b&gt;. You can change the selection at any time from your profile page.</value>
+  </data>
+  <data name="OfficialVoteAgainst" xml:space="preserve">
+    <value>MPs voted AGAINST</value>
+  </data>
+  <data name="OfficialVoteFor" xml:space="preserve">
+    <value>MPs voted FOR</value>
+  </data>
+  <data name="OrganizationId" xml:space="preserve">
+    <value>Created by</value>
+  </data>
+  <data name="OrganizationName" xml:space="preserve">
+    <value>Organization</value>
+  </data>
+  <data name="PageTitleCategories" xml:space="preserve">
+    <value>Select categories</value>
+  </data>
+  <data name="PageTitleCreate" xml:space="preserve">
+    <value>New issue</value>
+  </data>
+  <data name="PageTitleDetails" xml:space="preserve">
+    <value>Issue</value>
+  </data>
+  <data name="PageTitleResults" xml:space="preserve">
+    <value>Finished polls</value>
+  </data>
+  <data name="RelatedIdeas" xml:space="preserve">
+    <value>Related ideas</value>
+  </data>
+  <data name="Save" xml:space="preserve">
+    <value>Save</value>
+  </data>
+  <data name="SaveCommentComment" xml:space="preserve">
+    <value>Comment</value>
+  </data>
+  <data name="SaveVersion" xml:space="preserve">
+    <value>Save</value>
+  </data>
+  <data name="CategoryIdsIsEmpty" xml:space="preserve">
+    <value>Select the categories</value>
+  </data>
+  <data name="SelectYourCategoriesDescription" xml:space="preserve">
+    <value>Select the categories that interest you. You will find news about these categories in your news feed. Also, the Ideas, Legislations, Problems and other lists will be filtered by these categories by default.</value>
+  </data>
+  <data name="SortActive" xml:space="preserve">
+    <value>Most Active</value>
+  </data>
+  <data name="SortNearest" xml:space="preserve">
+    <value>Nearest</value>
+  </data>
+  <data name="Subject" xml:space="preserve">
+    <value>Subject</value>
+  </data>
+  <data name="SubjectIsRequired" xml:space="preserve">
+    <value>Enter the subject</value>
+  </data>
+  <data name="Success" xml:space="preserve">
+    <value>The categories are selected! Please provide information about yourself.</value>
+  </data>
+  <data name="Summary" xml:space="preserve">
+    <value>Summary</value>
+  </data>
+  <data name="SummaryIsRequired" xml:space="preserve">
+    <value>Enter the summary</value>
+  </data>
+  <data name="SupportingComments" xml:space="preserve">
+    <value>For</value>
+  </data>
+  <data name="SupportPercentage" xml:space="preserve">
+    <value>Support percentage</value>
+  </data>
+  <data name="SupportPercentageTemplate" xml:space="preserve">
+    <value>For: {0}/Against: {1}</value>
+  </data>
+  <data name="TimeLeft" xml:space="preserve">
+    <value>{0} left</value>
+  </data>
+  <data name="TitleCategories" xml:space="preserve">
+    <value>My categories</value>
+  </data>
+  <data name="TitleCreate" xml:space="preserve">
+    <value>The new issue</value>
+  </data>
+  <data name="TitleDetails" xml:space="preserve">
+    <value>Issue</value>
+  </data>
+  <data name="TitleIndex" xml:space="preserve">
+    <value>Issues</value>
+  </data>
+  <data name="TitleResults" xml:space="preserve">
+    <value>The results of the voting</value>
+  </data>
+  <data name="TotalVotes" xml:space="preserve">
+    <value>Number of votes</value>
+  </data>
+  <data name="Urls" xml:space="preserve">
+    <value>Links</value>
+  </data>
+  <data name="ViewsCount" xml:space="preserve">
+    <value>Views</value>
+  </data>
+  <data name="VoteAgainst" xml:space="preserve">
+    <value>AGAINST</value>
+  </data>
+  <data name="VotedAgainst" xml:space="preserve">
+    <value>I voted AGAINST</value>
+  </data>
+  <data name="VotedFor" xml:space="preserve">
+    <value>I voted FOR</value>
+  </data>
+  <data name="VoteFor" xml:space="preserve">
+    <value>FOR</value>
+  </data>
+  <data name="VotesCount" xml:space="preserve">
+    <value>Total votes</value>
+  </data>
+  <data name="Voting" xml:space="preserve">
+    <value>Voting</value>
+  </data>
+  <data name="VotingFinished" xml:space="preserve">
+    <value>The voting is finished</value>
+  </data>
+  <data name="VotedNeutral" xml:space="preserve">
+    <value>I abstained</value>
+  </data>
+  <data name="VoteNeutral" xml:space="preserve">
+    <value>I Abstain</value>
+  </data>
+  <data name="FacebookPostMessage" xml:space="preserve">
+    <value>Interesting issue!</value>
+  </data>
+  <data name="Votings" xml:space="preserve">
+    <value>Issues</value>
+  </data>
+  <data name="AddUrl" xml:space="preserve">
+    <value>Add a link</value>
+  </data>
+  <data name="Against" xml:space="preserve">
+    <value>AGAINST</value>
+  </data>
+  <data name="AllowNeutralVotes" xml:space="preserve">
+    <value>Allow neutral votes</value>
+  </data>
+  <data name="AllowSummaryWiki" xml:space="preserve">
+    <value>The summary is editable</value>
+  </data>
+  <data name="AssignProblem" xml:space="preserve">
+    <value>Assign the problem</value>
+  </data>
+  <data name="CancelVote" xml:space="preserve">
+    <value>Cancel a vote</value>
+  </data>
+  <data name="CategoriesNotice" xml:space="preserve">
+    <value>Select the categories that interest you. You will find news about these categories in your news feed. Also, the Ideas, Legislations, Problems and other lists will be filtered by these categories by default.</value>
+  </data>
+  <data name="CategoriesNotice1" xml:space="preserve">
+    <value>Please select only those categories that You are indeed the most interested in. You can change the selection at any time from your profile page.</value>
+  </data>
+  <data name="CategoryIdsHelp" xml:space="preserve">
+    <value>Assign 1-3 categories that best describe the subject matter in question.</value>
+  </data>
+  <data name="ChangeState" xml:space="preserve">
+    <value>Change the state</value>
+  </data>
+  <data name="CommentNotice" xml:space="preserve">
+    <value>Respect yourself and your language - comment in well-formed language!</value>
+  </data>
+  <data name="Compare" xml:space="preserve">
+    <value>Compare</value>
+  </data>
+  <data name="CompareFrom" xml:space="preserve">
+    <value>Compare from</value>
+  </data>
+  <data name="CompareTo" xml:space="preserve">
+    <value>Compare to</value>
+  </data>
+  <data name="CreateRelatedIdea" xml:space="preserve">
+    <value>Create a related idea</value>
+  </data>
+  <data name="DeadlineHelp" xml:space="preserve">
+    <value>Enter the date and time that the Government should take this decision. At this time, the vote for the ruling will be closed, and the results of votes are displayed &lt;br/&gt;. If there is no specific date for the voting, you can leave this field blank, and enter at a later date. In the case of an open ballot system, the decision will be published until you do not, that the Government is already prabalsavo for or against this decision.</value>
+  </data>
+  <data name="EditSummaryHelp" xml:space="preserve">
+    <value>If you think that the issue at hand is not described in a sufficiently precise and clear manner, provide a new version of the description</value>
+  </data>
+  <data name="Expand" xml:space="preserve">
+    <value>Expand</value>
+  </data>
+  <data name="FacebookPostText" xml:space="preserve">
+    <value>I invite you to express your opinion on this matter</value>
+  </data>
+  <data name="For" xml:space="preserve">
+    <value>FOR</value>
+  </data>
+  <data name="GenerateReport" xml:space="preserve">
+    <value>Generate a report</value>
+  </data>
+  <data name="IsPrivate" xml:space="preserve">
+    <value>Visible only to members of the Organization</value>
+  </data>
+  <data name="Login" xml:space="preserve">
+    <value>Sign In</value>
+  </data>
+  <data name="LoginToComment" xml:space="preserve">
+    <value>{0}, if you want to present your arguments</value>
+  </data>
+  <data name="MunicipalityIdHelp" xml:space="preserve">
+    <value>Select whether or not this vote is a national-scale, or designed specifically for the municipality?</value>
+  </data>
+  <data name="NextIssue" xml:space="preserve">
+    <value>The next vote</value>
+  </data>
+  <data name="NoIssues" xml:space="preserve">
+    <value>No issues found</value>
+  </data>
+  <data name="NoResults" xml:space="preserve">
+    <value>No results found</value>
+  </data>
+  <data name="NotUniqueVotes" xml:space="preserve">
+    <value>Not unique votes</value>
+  </data>
+  <data name="OfficialVote" xml:space="preserve">
+    <value>What did the government decide?</value>
+  </data>
+  <data name="OrganizationIdHelp" xml:space="preserve">
+    <value>Select whether or not this vote you personally, or on behalf of the Organization</value>
+  </data>
+  <data name="Problems" xml:space="preserve">
+    <value>Problems</value>
+  </data>
+  <data name="ProblemsHelp" xml:space="preserve">
+    <value>Select problems, which are solved by this voting</value>
+  </data>
+  <data name="RelatedIdeasHelp" xml:space="preserve">
+    <value>If this vote is initiated as described in Lithuania 2.0 idea (s), select it (them). When you select the ' Change status ' and when you save, choose to receive the status ' Accepted ' ideas. Later, when the Government voted in favour of this legislation, the ideas will be marked as susijė ' Put ', where BEFORE-as ' Rejected '. &lt;br/&gt; &lt;br/&gt; The list contains only part of the ventures-if you don't see it, you're looking for, click on the ' all ', and will be presented to the full list.</value>
+  </data>
+  <data name="RelateIdea" xml:space="preserve">
+    <value>Relate an idea</value>
+  </data>
+  <data name="SelectAllCategories" xml:space="preserve">
+    <value>Select all</value>
+  </data>
+  <data name="SelectIdea" xml:space="preserve">
+    <value>Select a solution</value>
+  </data>
+  <data name="SelectRelatedIdea" xml:space="preserve">
+    <value>Select the related idea</value>
+  </data>
+  <data name="SendMails" xml:space="preserve">
+    <value>Send emails</value>
+  </data>
+  <data name="SubjectHelp" xml:space="preserve">
+    <value>Enter a short name to describe the matter before the authorities concerned. for example, &lt;br/&gt; instead of ' the Republic of Lithuania Code of administrative law violations, 41-3, the draft law amendment ' write for example. ' Illegal ' persons who have administrative responsibility</value>
+  </data>
+  <data name="SummaryHelp" xml:space="preserve">
+    <value>In short, comprehensible description of the issue in question to the Government a draft law, decree or-like. at its core, changes from current procedures. It is recommended that the text takes up no more than 3 paragraphs. &lt;br/&gt; it is very important that this text would be neutral-please provide it as fact, and your personal opinion set out the arguments for or against.</value>
+  </data>
+  <data name="SummaryNotice" xml:space="preserve">
+    <value>Ballots can only be described in relation to the issues of Government. If you have your own suggestions, what would be better than what you are considering, please describe the relevant undertaking.</value>
+  </data>
+  <data name="UniqueVotes" xml:space="preserve">
+    <value>Unique votes</value>
+  </data>
+  <data name="UrlsHelp" xml:space="preserve">
+    <value>Upload the links where you can find more information about this issue</value>
+  </data>
+  <data name="VersionHistory" xml:space="preserve">
+    <value>Version history</value>
+  </data>
+  <data name="Visibility" xml:space="preserve">
+    <value>Visibility</value>
+  </data>
+  <data name="VotingCreationNotice" xml:space="preserve">
+    <value>Voting is intended to represent the issues that are currently discussed in government. If you have your own ideas, what solutions would be better, please create an idea.</value>
+  </data>
+  <data name="EnterSummary" xml:space="preserve">
+    <value>Enter summary</value>
+  </data>
+  <data name="SelectOrganization" xml:space="preserve">
+    <value>Please select an organization</value>
+  </data>
+  <data name="TourCategories" xml:space="preserve">
+    <value>Select the categories that interest You</value>
+  </data>
+  <data name="TourIndex" xml:space="preserve">
+    <value>This window contains a list of the issues which are about to be voted in parliament. Only those who fall into your selected categories are shown - you can change this by using the category filter below.</value>
+  </data>
+  <data name="TourIssue" xml:space="preserve">
+    <value>Give your opinion on this issue</value>
+  </data>
+  <data name="VoteSuccess" xml:space="preserve">
+    <value>The vote was successful!</value>
+  </data>
+</root>

@@ -1,0 +1,8 @@
+﻿@using Data.Enums
+@using Globalization.Resources.Project
+@model Data.ViewModels.Organization.Project.ProjectViewModel
+
+       <li class="@(Model.State == OrganizationProjectStates.Finished ? "succeeded" : Model.State == OrganizationProjectStates.Cancelled ? "finished" : string.Empty)">
+            <span>@Html.ActionLink(string.IsNullOrEmpty(Model.Name) ? Resource.NoName : Model.Name, MVC.Organization.ToDos(Model.OrganizationId, Model.ObjectId))</span>
+            <span>@Model.TasksCount</span>
+       </li> 

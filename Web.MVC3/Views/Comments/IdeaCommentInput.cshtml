@@ -1,0 +1,47 @@
+﻿@model Data.ViewModels.Comments.CommentView
+@using Data.Enums
+@using Globalization.Resources.Comments
+@using Globalization.Resources.Shared
+@using Web.Helpers
+@using (Html.BeginForm("AddComment", Html.GetControllerNameByEntryType(Model.EntryType), new RouteValueDictionary { { "EntryId", Model.EntryId } }))
+{
+    @Html.AntiForgeryToken()
+    <div>
+        @Resource.RespectLanguage
+    </div>
+    <span class="span-13 no-padding" style="float: left">
+        @Html.TextAreaFor(m => m.CommentText, new { style = "margin-bottom: 0; width: 480px; height: 58px; margin-top: 1em" })
+        @if (ViewBag.CurrentUser.IsAmbasador)
+        {
+            <div class="clear"></div>
+            <label class="normal">
+                @Html.CheckBox("chkPostToFacebook", false)
+                @Globalization.Resources.Problem.Resource.PostToFacebook
+            </label>
+        }
+        <div class="clear"></div>
+        <label class="normal">
+            Apie sprendimą nr. 
+        </label>
+        @Html.Buttons(1, saveText: SharedStrings.Save)
+    </span>
+        if (Model.EntryId != ViewBag.CurrentUser.Id)
+        {
+    <div id="rblForAgainst" class="last">
+        <label class="normal">
+            <input type="radio" name="forAgainst" value="@ForAgainst.Neutral" checked="checked">@Resource.Neutral</label>
+        <label class="normal">
+            <input type="radio" name="forAgainst" value="@ForAgainst.For">@Resource.Support</label>
+        <label class="normal">
+            <input type="radio" name="forAgainst" value="@ForAgainst.Against">@Resource.Criticize</label>
+        <label class="normal">
+            <input type="radio" name="forAgainst" value="@ForAgainst.Suggest">@Resource.Suggest</label>
+    </div> 
+        }
+    <div class="clearfix">
+    </div>
+    <div>
+        @Html.ValidationMessageFor(m => m.CommentText)
+    </div>
+    
+}

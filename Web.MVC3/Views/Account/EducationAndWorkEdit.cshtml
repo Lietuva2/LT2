@@ -1,0 +1,94 @@
+﻿@model Data.ViewModels.Account.EducationAndWorkEditModel
+@using Globalization.Resources.Account
+@using Globalization.Resources.Shared
+@using Globalization.Resources.Account;
+@using Globalization.Resources.Shared;
+@using Web.Helpers
+<fieldset>
+    <div class="uiHeader">
+        <span>@Resource.EducationAndWorkLegent</span>
+    </div>
+    @using (Html.BeginForm(MVC.Account.SaveEducationAndWork()))
+    {
+        @Html.AntiForgeryToken()
+        @Html.HiddenFor(m => m.UserObjectId)
+        <table class="tbl_data tbl_edit">
+            <tbody>
+                <tr>
+                    <th class="lbl">@Resource.Summary</th>
+                    <td class="data">@Html.TextAreaFor(m => m.Summary, new { @class = "txt_xl" })
+                </tr>
+                <tr>
+                    <th class="lbl">@Resource.Specialties</th>
+                    <td class="data">@Html.TextAreaFor(m => m.Specialties, new { @class = "txt_xl" })
+                </tr>
+                <tr>
+                    <th class="lbl">@Resource.Education
+                    </th>
+                    <td class="data" data-role="parent-container">
+                        <div class="itemsContainer clearfix">
+                            @for (var i = 0; i < Model.Educations.Count; i++)
+                            {
+                                if (!Model.Educations[i].IsDeleted)
+                                {
+                                    Model.EditIndex = i;
+                                    Html.RenderPartial(MVC.Account.Views.Education, Model);
+                                }
+                            }
+                        </div>
+                        <span class="uiblock">
+                            @Html.ActionLink(SharedStrings.Add, MVC.Account.AddEducation(Model.Educations.Count), new { @class = "add" })
+                        </span>
+                    </td>
+                </tr>
+                <tr>
+                    <th class="lbl">@Resource.Positions
+                    </th>
+                    <td class="data" data-role="parent-container">
+                        <div class="itemsContainer clearfix">
+                            @{Model.EditIndex = 0;}
+                            @for (var i = 0; i < Model.Positions.Count; i++)
+                            {
+                                if (!Model.Positions[i].IsDeleted)
+                                {
+                                    Model.EditIndex = i;
+                                    Html.RenderPartial(MVC.Account.Views.Position, Model);
+                                }
+                            }
+                        </div>
+                        <span class="uiblock">
+                            @Html.ActionLink(SharedStrings.Add, MVC.Account.AddPosition(Model.Positions.Count), new { @class = "add" })
+                        </span>
+                    </td>
+                </tr>
+                <tr>
+                    <th class="lbl">@Resource.MemberOfParties
+                    </th>
+                    <td class="data" data-role="parent-container">
+                        <div class="itemsContainer clearfix">
+                            @{Model.EditIndex = 0;}
+                            @for (var i = 0; i < Model.MemberOfParties.Count; i++)
+                            {
+                                if (!Model.MemberOfParties[i].IsDeleted)
+                                {
+                                    Model.EditIndex = i;
+                                    Html.RenderPartial(MVC.Account.Views.MemberOfParty, Model);
+                                }
+                            }
+                        </div>
+                        <span class="uiblock">
+                            @Html.ActionLink(SharedStrings.Add, MVC.Account.AddParty(Model.MemberOfParties.Count), new { @class = "add" })
+                        </span>
+                    </td>
+                </tr>
+                <tr>
+                    <th>
+                    </th>
+                    <td class="actions">
+                        @Html.Buttons(2, Url.Action(MVC.Account.EducationAndWork(Model.UserObjectId)))
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+    }
+</fieldset>

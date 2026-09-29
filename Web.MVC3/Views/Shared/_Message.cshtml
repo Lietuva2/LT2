@@ -1,0 +1,82 @@
+﻿@if (TempData["OpenDialog"] != null && (bool) TempData["OpenDialog"])
+    {
+        <script type="text/javascript">
+            function openDialog(title, message) {
+                var dialog = $('#dialog').dialog({
+                    width: 'auto',
+                    height: 'auto',
+                    buttons: [{
+                        text: "Uždaryti",
+                        click: function() {
+                            $(this).dialog("close");
+                        }
+                    }]
+                });
+                dialog.parent().find('.ui-dialog-title').text(title);
+                $('#divDialogContent').html(message);
+                dialog.dialog("open");
+            }
+        </script>
+    }
+
+@if (TempData["SuccessMessage"] != null)
+{
+    if (TempData["OpenDialog"] != null && (bool) TempData["OpenDialog"])
+    {
+        <script type="text/javascript">
+            $(document).ready(function () {
+                openDialog("@Globalization.Resources.Shared.SharedStrings.OperationSuccess", "@TempData["SuccessMessage"]");
+            });
+        </script>
+    }
+    else
+    {
+        <div id="successMessage" class="popup">
+            <div class="popup_border success">
+                <div>@TempData["SuccessMessage"].ToString()</div>
+            </div>
+        </div>
+    }
+}
+@if (TempData["FailureMessage"] != null)
+{
+    if (TempData["OpenDialog"] != null && (bool) TempData["OpenDialog"])
+    {
+        <script type="text/javascript">
+            $(document).ready(function () {
+                openDialog("@Globalization.Resources.Services.Errors.Error", "@TempData["FailureMessage"]");
+            });
+        </script>
+    }
+    else
+    {
+        <div id="failureMessage" class="popup">
+            <div class="popup_border error">
+                <div>@TempData["FailureMessage"].ToString()</div>
+            </div>
+        </div>
+    }
+}
+@if (TempData["TourMessage"] != null)
+{
+<div id="tourMessage" class="popup">
+    <div class="popup_border notice" style="position:relative">
+        <div style="margin-right: 5px;">@TempData["TourMessage"].ToString()</div>
+        @if (TempData["TourLink"] != null)
+        {
+            <a href="@TempData["TourLink"]">@Globalization.Resources.Shared.SharedStrings.Next</a>
+        }
+        <div style="position: absolute; right: 0px; top: 0px;">
+            <a href="@Url.Action(MVC.Account.FinishTheTour())" data-hijack="hideMessage">
+                <img src="@Links.Content.Images.cross_png" />
+            </a>
+        </div>    
+    </div>
+    
+    <script type="text/javascript">
+        function hideMessage() {
+            $('#tourMessage').hide();
+        }
+    </script>
+</div>
+}

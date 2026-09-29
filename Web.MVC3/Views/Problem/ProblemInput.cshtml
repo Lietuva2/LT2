@@ -1,0 +1,60 @@
+﻿@using Globalization.Resources.Problem
+@using Globalization.Resources.Shared
+@using Web.Helpers
+@model Data.ViewModels.Problem.ProblemIndexModel
+@if (ViewBag.IsAuthenticated)
+{
+    <div id="divProblemInput">
+        <input type="text" placeholder="@Resource.ProblemInputPlaceholder" id="txtShowProblemInput" value="@Resource.ProblemInputPlaceholder" />
+        <div id="problemInput" class="hide problemInput">
+            @using (Html.BeginForm(MVC.Problem.Create(), FormMethod.Post, new { id = "formNewProblem" }))
+            {
+                @Html.AntiForgeryToken()
+                @Html.TextArea("Text", string.Empty, new RouteValueDictionary() { { "placeholder", Resource.ProblemInputPlaceholder }, { "data-val", "true" }, { "data-val-required", Resource.EnterProbelm }, { "class", "problemInputBox" } })
+                @Html.ValidationMessage("Text")
+                if (ViewBag.CurrentUser.IsAmbasador)
+                {
+                    <div class="clear"></div>
+                <label class="normal">
+                    @Html.CheckBox("chkPostToFacebook", true)
+                    @Resource.PostToFacebook
+                </label>
+                }
+
+                <hr style="margin-bottom: 1em; margin-top:1em;" />
+                 if (ViewBag.FilteredCategoryIds == null)
+                 {
+                     <div id="selectCategory">
+                         @Html.ListBox("CategoryIds", Model.Categories, new RouteValueDictionary() {{"id", "categorySelect"}, {"class", "categoryInputDdl"}})
+                     </div>
+                 }
+                <div class="clearfix problemInputDetails">
+                    @if (!string.IsNullOrEmpty(Model.OrganizationId))
+                    {
+                        @Html.HiddenFor(m => m.OrganizationId)
+                        @Html.Hidden("IsPrivate", true)
+                    }
+                    else if (Model.Organizations.Any())
+                    {
+                        <div class="ploblemInputItem">
+                            @Html.DropDownList("OrganizationId", Model.Organizations, new { @class = "organizationInputDdl" })
+                            @Html.Partial(MVC.Shared.Views._Help, Resource.OrganizationId)
+                        </div>
+                    }
+                    @if (ViewBag.Municipality == null)
+                    {
+                        <div class="ploblemInputItem">
+                            @Html.DropDownList("MunicipalityId", Model.Municipalities, new { @class = "municipalityInputDdl" })
+                            @Html.Partial(MVC.Shared.Views._Help, Resource.MunicipalityIdHelp)
+                            @Html.ValidationMessage("MunicipalityId")
+                        </div>
+                    }
+                </div>
+                <div class="problemInputButtons">
+                    @Html.Buttons(saveText: SharedStrings.Publish)
+                </div>
+                <div class="clear"></div>
+            }
+        </div>
+    </div>
+}

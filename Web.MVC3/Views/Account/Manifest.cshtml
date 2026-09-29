@@ -1,0 +1,28 @@
+﻿@using Globalization.Resources.About
+@using Globalization.Resources.Shared
+@using Web.Helpers;
+@{
+    ViewBag.Title = Resource.ManifestTitle;
+}
+@section Scripts
+{
+
+    <script type="text/javascript">
+        function onPageLoad() {
+        }
+    </script>
+}
+<div class="validation-summary-errors">
+    <ul>
+        @foreach (var error in ViewData.ModelState.Where(s => s.Value.Errors.Any()).SelectMany(s => s.Value.Errors))
+        {
+            <li>@Html.Raw(error.ErrorMessage)</li>
+        }
+    </ul>
+</div>
+@Html.Partial(MVC.Account.Views.ManifestPartial)
+
+@using (Html.BeginForm())
+{
+    @Html.Buttons(saveText: SharedStrings.Agree)
+}

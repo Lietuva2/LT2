@@ -1,0 +1,209 @@
+2019-12-31 08:47:47 INFO  General - App is starting 
+2019-12-31 08:47:49 INFO  Hangfire.SqlServer.SqlServerStorage - Start installing Hangfire SQL objects... 
+2019-12-31 08:47:49 INFO  Hangfire.SqlServer.SqlServerStorage - Hangfire SQL objects installed. 
+2019-12-31 08:47:49 INFO  Hangfire.BackgroundJobServer - Starting Hangfire Server 
+2019-12-31 08:47:49 INFO  Hangfire.BackgroundJobServer - Using job storage: 'SQL Server: .@LT2_Reporting'. 
+2019-12-31 08:47:49 INFO  Hangfire.BackgroundJobServer - Using the following options for SQL Server job storage: 
+2019-12-31 08:47:49 INFO  Hangfire.BackgroundJobServer -     Queue poll interval: 00:00:15. 
+2019-12-31 08:47:49 INFO  Hangfire.BackgroundJobServer - Using the following options for Hangfire Server: 
+2019-12-31 08:47:49 INFO  Hangfire.BackgroundJobServer -     Worker count: 40. 
+2019-12-31 08:47:49 INFO  Hangfire.BackgroundJobServer -     Listening queues: 'default'. 
+2019-12-31 08:47:49 INFO  Hangfire.BackgroundJobServer -     Shutdown timeout: 00:00:15. 
+2019-12-31 08:47:49 INFO  Hangfire.BackgroundJobServer -     Schedule polling interval: 00:00:15. 
+2019-12-31 08:47:49 INFO  Hangfire.Server.ServerWatchdog - 1 servers were removed due to timeout 
+2019-12-31 08:50:56 INFO  Hangfire.BackgroundJobServer - Hangfire Server stopped. 
+2019-12-31 08:51:02 INFO  General - App is starting 
+2019-12-31 08:51:03 INFO  Hangfire.SqlServer.SqlServerStorage - Start installing Hangfire SQL objects... 
+2019-12-31 08:51:03 INFO  Hangfire.SqlServer.SqlServerStorage - Hangfire SQL objects installed. 
+2019-12-31 08:51:03 INFO  Hangfire.BackgroundJobServer - Starting Hangfire Server 
+2019-12-31 08:51:03 INFO  Hangfire.BackgroundJobServer - Using job storage: 'SQL Server: .@LT2_Reporting'. 
+2019-12-31 08:51:03 INFO  Hangfire.BackgroundJobServer - Using the following options for SQL Server job storage: 
+2019-12-31 08:51:03 INFO  Hangfire.BackgroundJobServer -     Queue poll interval: 00:00:15. 
+2019-12-31 08:51:03 INFO  Hangfire.BackgroundJobServer - Using the following options for Hangfire Server: 
+2019-12-31 08:51:03 INFO  Hangfire.BackgroundJobServer -     Worker count: 40. 
+2019-12-31 08:51:03 INFO  Hangfire.BackgroundJobServer -     Listening queues: 'default'. 
+2019-12-31 08:51:03 INFO  Hangfire.BackgroundJobServer -     Shutdown timeout: 00:00:15. 
+2019-12-31 08:51:03 INFO  Hangfire.BackgroundJobServer -     Schedule polling interval: 00:00:15. 
+2019-12-31 09:13:33 INFO  Hangfire.BackgroundJobServer - Hangfire Server stopped. 
+2020-01-13 09:47:00 INFO  General - App is starting 
+2020-01-13 09:47:02 INFO  Hangfire.SqlServer.SqlServerStorage - Start installing Hangfire SQL objects... 
+2020-01-13 09:47:02 INFO  Hangfire.SqlServer.SqlServerStorage - Hangfire SQL objects installed. 
+2020-01-13 09:47:02 INFO  Hangfire.BackgroundJobServer - Starting Hangfire Server 
+2020-01-13 09:47:02 INFO  Hangfire.BackgroundJobServer - Using job storage: 'SQL Server: .@LT2_Reporting'. 
+2020-01-13 09:47:02 INFO  Hangfire.BackgroundJobServer - Using the following options for SQL Server job storage: 
+2020-01-13 09:47:02 INFO  Hangfire.BackgroundJobServer -     Queue poll interval: 00:00:15. 
+2020-01-13 09:47:02 INFO  Hangfire.BackgroundJobServer - Using the following options for Hangfire Server: 
+2020-01-13 09:47:02 INFO  Hangfire.BackgroundJobServer -     Worker count: 40. 
+2020-01-13 09:47:02 INFO  Hangfire.BackgroundJobServer -     Listening queues: 'default'. 
+2020-01-13 09:47:02 INFO  Hangfire.BackgroundJobServer -     Shutdown timeout: 00:00:15. 
+2020-01-13 09:47:02 INFO  Hangfire.BackgroundJobServer -     Schedule polling interval: 00:00:15. 
+2020-01-13 10:19:50 INFO  Hangfire.BackgroundJobServer - Hangfire Server stopped. 
+2020-02-25 22:33:46 INFO  General - App is starting 
+2020-02-25 22:33:48 INFO  Hangfire.SqlServer.SqlServerStorage - Start installing Hangfire SQL objects... 
+2020-02-25 22:33:48 INFO  Hangfire.SqlServer.SqlServerStorage - Hangfire SQL objects installed. 
+2020-02-25 22:33:48 INFO  Hangfire.BackgroundJobServer - Starting Hangfire Server 
+2020-02-25 22:33:48 INFO  Hangfire.BackgroundJobServer - Using job storage: 'SQL Server: .@LT2_Reporting'. 
+2020-02-25 22:33:48 INFO  Hangfire.BackgroundJobServer - Using the following options for SQL Server job storage: 
+2020-02-25 22:33:48 INFO  Hangfire.BackgroundJobServer -     Queue poll interval: 00:00:15. 
+2020-02-25 22:33:48 INFO  Hangfire.BackgroundJobServer - Using the following options for Hangfire Server: 
+2020-02-25 22:33:48 INFO  Hangfire.BackgroundJobServer -     Worker count: 40. 
+2020-02-25 22:33:48 INFO  Hangfire.BackgroundJobServer -     Listening queues: 'default'. 
+2020-02-25 22:33:48 INFO  Hangfire.BackgroundJobServer -     Shutdown timeout: 00:00:15. 
+2020-02-25 22:33:48 INFO  Hangfire.BackgroundJobServer -     Schedule polling interval: 00:00:15. 
+2020-02-25 23:09:26 INFO  Hangfire.BackgroundJobServer - Hangfire Server stopped. 
+2020-02-26 14:01:14 INFO  General - App is starting 
+2020-02-26 14:01:15 INFO  Hangfire.SqlServer.SqlServerStorage - Start installing Hangfire SQL objects... 
+2020-02-26 14:01:15 INFO  Hangfire.SqlServer.SqlServerStorage - Hangfire SQL objects installed. 
+2020-02-26 14:01:15 INFO  Hangfire.BackgroundJobServer - Starting Hangfire Server 
+2020-02-26 14:01:15 INFO  Hangfire.BackgroundJobServer - Using job storage: 'SQL Server: .@LT2_Reporting'. 
+2020-02-26 14:01:15 INFO  Hangfire.BackgroundJobServer - Using the following options for SQL Server job storage: 
+2020-02-26 14:01:15 INFO  Hangfire.BackgroundJobServer -     Queue poll interval: 00:00:15. 
+2020-02-26 14:01:15 INFO  Hangfire.BackgroundJobServer - Using the following options for Hangfire Server: 
+2020-02-26 14:01:15 INFO  Hangfire.BackgroundJobServer -     Worker count: 40. 
+2020-02-26 14:01:15 INFO  Hangfire.BackgroundJobServer -     Listening queues: 'default'. 
+2020-02-26 14:01:15 INFO  Hangfire.BackgroundJobServer -     Shutdown timeout: 00:00:15. 
+2020-02-26 14:01:15 INFO  Hangfire.BackgroundJobServer -     Schedule polling interval: 00:00:15. 
+2020-02-26 16:50:10 INFO  Hangfire.BackgroundJobServer - Hangfire Server stopped. 
+2020-03-02 13:38:04 INFO  General - App is starting 
+2020-03-02 13:38:05 INFO  Hangfire.SqlServer.SqlServerStorage - Start installing Hangfire SQL objects... 
+2020-03-02 13:38:05 INFO  Hangfire.SqlServer.SqlServerStorage - Hangfire SQL objects installed. 
+2020-03-02 13:38:05 INFO  Hangfire.BackgroundJobServer - Starting Hangfire Server 
+2020-03-02 13:38:05 INFO  Hangfire.BackgroundJobServer - Using job storage: 'SQL Server: .@LT2_Reporting'. 
+2020-03-02 13:38:05 INFO  Hangfire.BackgroundJobServer - Using the following options for SQL Server job storage: 
+2020-03-02 13:38:05 INFO  Hangfire.BackgroundJobServer -     Queue poll interval: 00:00:15. 
+2020-03-02 13:38:05 INFO  Hangfire.BackgroundJobServer - Using the following options for Hangfire Server: 
+2020-03-02 13:38:05 INFO  Hangfire.BackgroundJobServer -     Worker count: 40. 
+2020-03-02 13:38:05 INFO  Hangfire.BackgroundJobServer -     Listening queues: 'default'. 
+2020-03-02 13:38:05 INFO  Hangfire.BackgroundJobServer -     Shutdown timeout: 00:00:15. 
+2020-03-02 13:38:05 INFO  Hangfire.BackgroundJobServer -     Schedule polling interval: 00:00:15. 
+2020-03-02 13:59:37 INFO  Hangfire.BackgroundJobServer - Hangfire Server stopped. 
+2020-05-15 23:47:32 INFO  General - App is starting 
+2020-05-15 23:47:33 INFO  Hangfire.SqlServer.SqlServerStorage - Start installing Hangfire SQL objects... 
+2020-05-15 23:47:33 INFO  Hangfire.SqlServer.SqlServerStorage - Hangfire SQL objects installed. 
+2020-05-15 23:47:33 INFO  Hangfire.BackgroundJobServer - Starting Hangfire Server 
+2020-05-15 23:47:33 INFO  Hangfire.BackgroundJobServer - Using job storage: 'SQL Server: .@LT2_Reporting'. 
+2020-05-15 23:47:33 INFO  Hangfire.BackgroundJobServer - Using the following options for SQL Server job storage: 
+2020-05-15 23:47:33 INFO  Hangfire.BackgroundJobServer -     Queue poll interval: 00:00:15. 
+2020-05-15 23:47:33 INFO  Hangfire.BackgroundJobServer - Using the following options for Hangfire Server: 
+2020-05-15 23:47:33 INFO  Hangfire.BackgroundJobServer -     Worker count: 40. 
+2020-05-15 23:47:33 INFO  Hangfire.BackgroundJobServer -     Listening queues: 'default'. 
+2020-05-15 23:47:33 INFO  Hangfire.BackgroundJobServer -     Shutdown timeout: 00:00:15. 
+2020-05-15 23:47:33 INFO  Hangfire.BackgroundJobServer -     Schedule polling interval: 00:00:15. 
+2020-05-15 23:57:19 INFO  General - App is starting 
+2020-05-15 23:57:20 INFO  Hangfire.SqlServer.SqlServerStorage - Start installing Hangfire SQL objects... 
+2020-05-15 23:57:20 INFO  Hangfire.SqlServer.SqlServerStorage - Hangfire SQL objects installed. 
+2020-05-15 23:57:20 INFO  Hangfire.BackgroundJobServer - Starting Hangfire Server 
+2020-05-15 23:57:20 INFO  Hangfire.BackgroundJobServer - Using job storage: 'SQL Server: .@LT2_Reporting'. 
+2020-05-15 23:57:20 INFO  Hangfire.BackgroundJobServer - Using the following options for SQL Server job storage: 
+2020-05-15 23:57:20 INFO  Hangfire.BackgroundJobServer -     Queue poll interval: 00:00:15. 
+2020-05-15 23:57:20 INFO  Hangfire.BackgroundJobServer - Using the following options for Hangfire Server: 
+2020-05-15 23:57:20 INFO  Hangfire.BackgroundJobServer -     Worker count: 40. 
+2020-05-15 23:57:20 INFO  Hangfire.BackgroundJobServer -     Listening queues: 'default'. 
+2020-05-15 23:57:20 INFO  Hangfire.BackgroundJobServer -     Shutdown timeout: 00:00:15. 
+2020-05-15 23:57:20 INFO  Hangfire.BackgroundJobServer -     Schedule polling interval: 00:00:15. 
+2020-05-16 00:02:20 INFO  Hangfire.Server.ServerWatchdog - 1 servers were removed due to timeout 
+2020-05-16 00:38:13 INFO  Hangfire.BackgroundJobServer - Hangfire Server stopped. 
+2020-05-16 00:48:20 INFO  General - App is starting 
+2020-05-16 00:48:20 INFO  Hangfire.SqlServer.SqlServerStorage - Start installing Hangfire SQL objects... 
+2020-05-16 00:48:20 INFO  Hangfire.SqlServer.SqlServerStorage - Hangfire SQL objects installed. 
+2020-05-16 00:48:20 INFO  Hangfire.BackgroundJobServer - Starting Hangfire Server 
+2020-05-16 00:48:20 INFO  Hangfire.BackgroundJobServer - Using job storage: 'SQL Server: .@LT2_Reporting'. 
+2020-05-16 00:48:20 INFO  Hangfire.BackgroundJobServer - Using the following options for SQL Server job storage: 
+2020-05-16 00:48:20 INFO  Hangfire.BackgroundJobServer -     Queue poll interval: 00:00:15. 
+2020-05-16 00:48:20 INFO  Hangfire.BackgroundJobServer - Using the following options for Hangfire Server: 
+2020-05-16 00:48:20 INFO  Hangfire.BackgroundJobServer -     Worker count: 40. 
+2020-05-16 00:48:20 INFO  Hangfire.BackgroundJobServer -     Listening queues: 'default'. 
+2020-05-16 00:48:20 INFO  Hangfire.BackgroundJobServer -     Shutdown timeout: 00:00:15. 
+2020-05-16 00:48:20 INFO  Hangfire.BackgroundJobServer -     Schedule polling interval: 00:00:15. 
+2020-05-16 01:40:17 INFO  Hangfire.BackgroundJobServer - Hangfire Server stopped. 
+2020-05-17 23:02:42 INFO  General - App is starting 
+2020-05-17 23:02:43 INFO  Hangfire.SqlServer.SqlServerStorage - Start installing Hangfire SQL objects... 
+2020-05-17 23:02:43 INFO  Hangfire.SqlServer.SqlServerStorage - Hangfire SQL objects installed. 
+2020-05-17 23:02:43 INFO  Hangfire.BackgroundJobServer - Starting Hangfire Server 
+2020-05-17 23:02:43 INFO  Hangfire.BackgroundJobServer - Using job storage: 'SQL Server: .@LT2_Reporting'. 
+2020-05-17 23:02:43 INFO  Hangfire.BackgroundJobServer - Using the following options for SQL Server job storage: 
+2020-05-17 23:02:43 INFO  Hangfire.BackgroundJobServer -     Queue poll interval: 00:00:15. 
+2020-05-17 23:02:43 INFO  Hangfire.BackgroundJobServer - Using the following options for Hangfire Server: 
+2020-05-17 23:02:43 INFO  Hangfire.BackgroundJobServer -     Worker count: 40. 
+2020-05-17 23:02:43 INFO  Hangfire.BackgroundJobServer -     Listening queues: 'default'. 
+2020-05-17 23:02:43 INFO  Hangfire.BackgroundJobServer -     Shutdown timeout: 00:00:15. 
+2020-05-17 23:02:43 INFO  Hangfire.BackgroundJobServer -     Schedule polling interval: 00:00:15. 
+2020-05-17 23:29:35 INFO  Hangfire.BackgroundJobServer - Hangfire Server stopped. 
+2020-05-26 22:51:32 INFO  General - App is starting 
+2020-05-26 22:51:33 INFO  Hangfire.SqlServer.SqlServerStorage - Start installing Hangfire SQL objects... 
+2020-05-26 22:51:33 INFO  Hangfire.SqlServer.SqlServerStorage - Hangfire SQL objects installed. 
+2020-05-26 22:51:33 INFO  Hangfire.BackgroundJobServer - Starting Hangfire Server 
+2020-05-26 22:51:33 INFO  Hangfire.BackgroundJobServer - Using job storage: 'SQL Server: .@LT2_Reporting'. 
+2020-05-26 22:51:33 INFO  Hangfire.BackgroundJobServer - Using the following options for SQL Server job storage: 
+2020-05-26 22:51:33 INFO  Hangfire.BackgroundJobServer -     Queue poll interval: 00:00:15. 
+2020-05-26 22:51:33 INFO  Hangfire.BackgroundJobServer - Using the following options for Hangfire Server: 
+2020-05-26 22:51:33 INFO  Hangfire.BackgroundJobServer -     Worker count: 40. 
+2020-05-26 22:51:33 INFO  Hangfire.BackgroundJobServer -     Listening queues: 'default'. 
+2020-05-26 22:51:33 INFO  Hangfire.BackgroundJobServer -     Shutdown timeout: 00:00:15. 
+2020-05-26 22:51:33 INFO  Hangfire.BackgroundJobServer -     Schedule polling interval: 00:00:15. 
+2020-05-26 23:21:28 INFO  Hangfire.BackgroundJobServer - Hangfire Server stopped. 
+2020-05-26 23:50:39 INFO  General - App is starting 
+2020-05-26 23:50:39 INFO  Hangfire.SqlServer.SqlServerStorage - Start installing Hangfire SQL objects... 
+2020-05-26 23:50:39 INFO  Hangfire.SqlServer.SqlServerStorage - Hangfire SQL objects installed. 
+2020-05-26 23:50:39 INFO  Hangfire.BackgroundJobServer - Starting Hangfire Server 
+2020-05-26 23:50:39 INFO  Hangfire.BackgroundJobServer - Using job storage: 'SQL Server: .@LT2_Reporting'. 
+2020-05-26 23:50:39 INFO  Hangfire.BackgroundJobServer - Using the following options for SQL Server job storage: 
+2020-05-26 23:50:39 INFO  Hangfire.BackgroundJobServer -     Queue poll interval: 00:00:15. 
+2020-05-26 23:50:39 INFO  Hangfire.BackgroundJobServer - Using the following options for Hangfire Server: 
+2020-05-26 23:50:39 INFO  Hangfire.BackgroundJobServer -     Worker count: 40. 
+2020-05-26 23:50:39 INFO  Hangfire.BackgroundJobServer -     Listening queues: 'default'. 
+2020-05-26 23:50:39 INFO  Hangfire.BackgroundJobServer -     Shutdown timeout: 00:00:15. 
+2020-05-26 23:50:39 INFO  Hangfire.BackgroundJobServer -     Schedule polling interval: 00:00:15. 
+2020-05-27 00:12:36 INFO  Hangfire.BackgroundJobServer - Hangfire Server stopped. 
+2020-05-27 01:34:36 INFO  General - App is starting 
+2020-05-27 01:34:36 INFO  Hangfire.SqlServer.SqlServerStorage - Start installing Hangfire SQL objects... 
+2020-05-27 01:34:36 INFO  Hangfire.SqlServer.SqlServerStorage - Hangfire SQL objects installed. 
+2020-05-27 01:34:36 INFO  Hangfire.BackgroundJobServer - Starting Hangfire Server 
+2020-05-27 01:34:36 INFO  Hangfire.BackgroundJobServer - Using job storage: 'SQL Server: .@LT2_Reporting'. 
+2020-05-27 01:34:36 INFO  Hangfire.BackgroundJobServer - Using the following options for SQL Server job storage: 
+2020-05-27 01:34:36 INFO  Hangfire.BackgroundJobServer -     Queue poll interval: 00:00:15. 
+2020-05-27 01:34:36 INFO  Hangfire.BackgroundJobServer - Using the following options for Hangfire Server: 
+2020-05-27 01:34:36 INFO  Hangfire.BackgroundJobServer -     Worker count: 40. 
+2020-05-27 01:34:36 INFO  Hangfire.BackgroundJobServer -     Listening queues: 'default'. 
+2020-05-27 01:34:36 INFO  Hangfire.BackgroundJobServer -     Shutdown timeout: 00:00:15. 
+2020-05-27 01:34:36 INFO  Hangfire.BackgroundJobServer -     Schedule polling interval: 00:00:15. 
+2020-05-27 01:55:33 INFO  Hangfire.BackgroundJobServer - Hangfire Server stopped. 
+2020-05-27 02:29:46 INFO  General - App is starting 
+2020-05-27 02:29:47 INFO  Hangfire.SqlServer.SqlServerStorage - Start installing Hangfire SQL objects... 
+2020-05-27 02:29:47 INFO  Hangfire.SqlServer.SqlServerStorage - Hangfire SQL objects installed. 
+2020-05-27 02:29:47 INFO  Hangfire.BackgroundJobServer - Starting Hangfire Server 
+2020-05-27 02:29:47 INFO  Hangfire.BackgroundJobServer - Using job storage: 'SQL Server: .@LT2_Reporting'. 
+2020-05-27 02:29:47 INFO  Hangfire.BackgroundJobServer - Using the following options for SQL Server job storage: 
+2020-05-27 02:29:47 INFO  Hangfire.BackgroundJobServer -     Queue poll interval: 00:00:15. 
+2020-05-27 02:29:47 INFO  Hangfire.BackgroundJobServer - Using the following options for Hangfire Server: 
+2020-05-27 02:29:47 INFO  Hangfire.BackgroundJobServer -     Worker count: 40. 
+2020-05-27 02:29:47 INFO  Hangfire.BackgroundJobServer -     Listening queues: 'default'. 
+2020-05-27 02:29:47 INFO  Hangfire.BackgroundJobServer -     Shutdown timeout: 00:00:15. 
+2020-05-27 02:29:47 INFO  Hangfire.BackgroundJobServer -     Schedule polling interval: 00:00:15. 
+2020-05-27 02:50:44 INFO  Hangfire.BackgroundJobServer - Hangfire Server stopped. 
+2020-05-27 02:59:54 INFO  General - App is starting 
+2020-05-27 02:59:55 INFO  Hangfire.SqlServer.SqlServerStorage - Start installing Hangfire SQL objects... 
+2020-05-27 02:59:55 INFO  Hangfire.SqlServer.SqlServerStorage - Hangfire SQL objects installed. 
+2020-05-27 02:59:55 INFO  Hangfire.BackgroundJobServer - Starting Hangfire Server 
+2020-05-27 02:59:55 INFO  Hangfire.BackgroundJobServer - Using job storage: 'SQL Server: .@LT2_Reporting'. 
+2020-05-27 02:59:55 INFO  Hangfire.BackgroundJobServer - Using the following options for SQL Server job storage: 
+2020-05-27 02:59:55 INFO  Hangfire.BackgroundJobServer -     Queue poll interval: 00:00:15. 
+2020-05-27 02:59:55 INFO  Hangfire.BackgroundJobServer - Using the following options for Hangfire Server: 
+2020-05-27 02:59:55 INFO  Hangfire.BackgroundJobServer -     Worker count: 40. 
+2020-05-27 02:59:55 INFO  Hangfire.BackgroundJobServer -     Listening queues: 'default'. 
+2020-05-27 02:59:55 INFO  Hangfire.BackgroundJobServer -     Shutdown timeout: 00:00:15. 
+2020-05-27 02:59:55 INFO  Hangfire.BackgroundJobServer -     Schedule polling interval: 00:00:15. 
+2020-05-27 03:20:52 INFO  Hangfire.BackgroundJobServer - Hangfire Server stopped. 
+2020-06-11 03:14:11 INFO  General - App is starting 
+2020-06-11 03:14:11 INFO  Hangfire.SqlServer.SqlServerStorage - Start installing Hangfire SQL objects... 
+2020-06-11 03:14:12 INFO  Hangfire.SqlServer.SqlServerStorage - Hangfire SQL objects installed. 
+2020-06-11 03:14:12 INFO  Hangfire.BackgroundJobServer - Starting Hangfire Server 
+2020-06-11 03:14:12 INFO  Hangfire.BackgroundJobServer - Using job storage: 'SQL Server: .@LT2_Reporting'. 
+2020-06-11 03:14:12 INFO  Hangfire.BackgroundJobServer - Using the following options for SQL Server job storage: 
+2020-06-11 03:14:12 INFO  Hangfire.BackgroundJobServer -     Queue poll interval: 00:00:15. 
+2020-06-11 03:14:12 INFO  Hangfire.BackgroundJobServer - Using the following options for Hangfire Server: 
+2020-06-11 03:14:12 INFO  Hangfire.BackgroundJobServer -     Worker count: 40. 
+2020-06-11 03:14:12 INFO  Hangfire.BackgroundJobServer -     Listening queues: 'default'. 
+2020-06-11 03:14:12 INFO  Hangfire.BackgroundJobServer -     Shutdown timeout: 00:00:15. 
+2020-06-11 03:14:12 INFO  Hangfire.BackgroundJobServer -     Schedule polling interval: 00:00:15. 
+2020-06-11 03:34:38 INFO  Hangfire.BackgroundJobServer - Hangfire Server stopped. 

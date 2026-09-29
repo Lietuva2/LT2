@@ -1,0 +1,50 @@
+﻿@model Data.ViewModels.Organization.Project.EditToDoModel
+@using Globalization.Resources.Project
+@using Globalization.Resources.Shared
+@using Web.Helpers
+<div id="editItem" class="editItem">
+    @using (Html.BeginForm(MVC.Organization.EditToDo(), FormMethod.Post, new { id = "formEditToDo" }))
+    {
+        @Html.AntiForgeryToken()
+        @Html.HiddenFor(m => m.ProjectId)
+        @Html.HiddenFor(m => m.OrganizationId)
+        @Html.HiddenFor(m => m.Id)
+        @Html.TextAreaFor(m => m.Subject)
+        @Html.ValidationMessageFor(m => m.Subject)
+        if (!Model.IsProjectPrivate)
+        {
+            <span class="span-3">
+                @Html.LabelFor(m => m.IsPrivate, Resource.Visibility)
+                @Html.CheckBoxFor(m => m.IsPrivate)
+                @Resource.MembersOnly
+            </span>
+        }
+        <span class="span-5">
+            @Html.LabelFor(m => m.DueDate, Resource.DueDate)
+            @Html.EditorFor(m => m.DueDate)
+        </span>
+        <span class="span-4">
+            @Html.LabelFor(m => m.ResponsibleUserId, Resource.ResponsibleUserId)
+            @Html.DropDownListFor(m => m.ResponsibleUserId, Model.ResponsibleUsers)
+        </span>
+        <div class="clear"></div>
+        <div class="actions">
+            @Html.Buttons(new List<ButtonHelperModel>()
+                        {
+                            new ButtonHelperModel()
+                                {
+                                    Id="btnEdit",
+                                },
+                            new ButtonHelperModel()
+                                {
+                                    Type = ButtonHelperModel.Types.Link,
+                                    Id="lnkCancel",
+                                    Href = "javascript:void(0);",
+                                    ImageUrl = Links.Content.Images.cross_png,
+                                    Text = SharedStrings.Cancel
+                                }
+                        })
+        </div>
+        <div class="clear"></div>
+    }
+</div>

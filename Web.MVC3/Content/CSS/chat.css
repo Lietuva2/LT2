@@ -1,0 +1,199 @@
+.chatbox {
+    position: fixed;
+    position: expression("absolute");
+    width: 225px;
+    display: none;
+    bottom: 0px;
+    z-index: 1000;
+    font-size: 13px;
+}
+
+.chatboxhead {
+    background-color: #468947;
+    padding: 7px;
+    color: #ffffff;
+    border-right: 1px solid #468947;
+    border-left: 1px solid #468947;
+    overflow-x: hidden;
+}
+
+.chatboxHeader {
+    cursor: pointer;
+}
+
+.chatboxblink {
+    background-color: #176689;
+    border-right: 1px solid #176689;
+    border-left: 1px solid #176689;
+}
+
+.chatboxcontent {
+    font-size: 13px;
+    color: #333333;
+    height: 200px;
+    width: 209px;
+    overflow-y: auto;
+    overflow-x: hidden;
+    padding: 7px;
+    border-left: 1px solid #cccccc;
+    border-right: 1px solid #cccccc;
+    border-bottom: 1px solid #eeeeee;
+    background-color: #ffffff;
+    line-height: 1.3em;
+}
+
+.chatboxinput {
+    padding: 5px;
+    background-color: #ffffff;
+    border-left: 1px solid #cccccc;
+    border-right: 1px solid #cccccc;
+    border-bottom: 1px solid #cccccc;
+}
+
+.chatboxtextarea {
+    width: 206px;
+    height: 44px;
+    padding: 3px 0pt 3px 3px;
+    border: 1px solid #eeeeee;
+    margin: 1px;
+    overflow: hidden;
+}
+
+.chatboxtextareaselected {
+    border: 2px solid #f99d39;
+    margin: 0;
+}
+
+.chatboxmessage {
+    margin-left: 1em;
+    border-bottom: 1px solid #DDD;
+}
+
+.chatboxinfo {
+    margin-left: -1em;
+    color: #666666;
+}
+
+.chatboxmessagefrom {
+    margin-left: -1em;
+    font-weight: bold;
+}
+
+.chatboxmessagecontent {
+}
+
+.chatboxoptions {
+    float: right;
+}
+
+    .chatboxoptions a, .chatboxtitle a {
+        color: white;
+        font-weight: bold;
+        font-family: Verdana,Arial,"Bitstream Vera Sans",sans-serif;
+    }
+
+    .chatboxoptions a {
+        text-decoration: none;
+    }
+
+.chatboxtitle {
+    float: left;
+    white-space: nowrap;
+    width: 164px;
+    overflow-x: hidden;
+    text-overflow: ellipsis;
+}
+
+    .chatboxtitle .presenceIcon {
+        margin-left: 4px;
+    }
+
+div.historyButtons {
+    width: 209px;
+    padding: 7px;
+    border-left: 1px solid #cccccc;
+    border-right: 1px solid #cccccc;
+    border-bottom: 1px solid #eeeeee;
+    background-color: #ffffff;
+    line-height: 1.3em;
+    font-size: 11px;
+}
+
+a.historyButton, a.historyButton:hover, a.historyButton:active {
+    margin-left: 4px;
+    color: #888;
+}
+
+.dot {
+    color: #888;
+    position: relative;
+    margin-left: 4px;
+    bottom: 2px;
+}
+
+.typing {
+    width: 209px;
+    padding: 2px 7px;
+    border-left: 1px solid #cccccc;
+    border-right: 1px solid #cccccc;
+    border-bottom: 1px solid #eeeeee;
+    background-color: #ffffff;
+    line-height: 1.3em;
+}
+
+    .typing span {
+        visibility: hidden;
+    }
+
+.istyping .typing span {
+    visibility: visible;
+}
+
+.presenceIcon {
+    width: 12px;
+    height: 12px;
+    display: inline-block;
+    top: 2px;
+    position: relative;
+}
+
+.disconnected .presenceIcon {
+    background-image: url(../Images/chat-presence.png);
+    background-position: 0 -2px;
+}
+
+.connected .presenceIcon {
+    background-image: url(../Images/chat-presence.png);
+    background-position: 0 -20px;
+}
+
+#chat a {
+    margin-left: 6px;
+}
+
+.chatgroup {
+    margin-bottom: 8px;
+    width: 162px;
+}
+
+.chatHeader {
+    color: #888;
+    padding: 2px 4px;
+    font-size: 13px;
+}
+
+    .chatHeader img {
+        top: 4px;
+        position: relative;
+    }
+
+ul#activeUsers {
+    margin: 4px 0 0 6px;
+    white-space: nowrap;
+}
+
+#groupChat .buttons button[type] {
+    line-height: inherit;
+    padding: 3px 34px 2px 7px;
+    margin: 0;
+}

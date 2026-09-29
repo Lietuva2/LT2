@@ -1,0 +1,183 @@
+﻿@model Data.ViewModels.Project.MileStoneEditModel
+@{
+    ViewBag.Title = Model.Subject + " - " + Resource.PageTitleMileStones;
+}
+@using Data.Enums
+@using Framework.Mvc.Strings
+@using Globalization.Resources.Project
+@using Globalization.Resources.Shared
+@using Web.Helpers
+@using Framework.Strings;
+@section Head
+{
+}
+@section Scripts
+{
+    <script type="text/javascript">
+        function onPageLoad() {
+            setupDatePicker();
+            var form = $('#form');
+            $('#btnSubmit').click(function (e) {
+                if (form.valid()) {
+                    loadAsync(e, form.attr('action'),
+                        form.serialize(),
+                        function (result) {
+                            if (result.errors) {
+                                alert(result.errors);
+                                return;
+                            }
+                            var elem = $(result.Content).appendTo($('#listMileStones'));
+                            $('.imgDelete', elem).click(deleteItem);
+                            $('.lnkEditItem', elem).click(getEdit);
+                            bindHover(elem);
+                            $('textarea', form).val('');
+                        });
+
+                    return cancelEvent(e);
+                }
+            });
+
+            $('.imgDelete').click(deleteItem);
+            $('.lnkEditItem').click(getEdit);
+
+            bindHover();
+
+            $('#lnkInsertMileStone').click(function (e) {
+                $('#divInsertForm').show();
+                $('#divInsertLink').hide();
+            });
+            $('#lnkCancelInsert').click(function (e) {
+                $('#divInsertForm').hide();
+                $('#divInsertLink').show();
+            });
+        }
+
+        function bindHover(container) {
+            if (!container || !container.is('.itemContainer')) {
+                container = $('.itemContainer');
+            }
+            container.add(container.children());
+            container.hover(
+            function (e) {
+                var el = $(e.target);
+                if (!el.is('.itemContainer')) {
+                    el = $(e.target).parents('.itemContainer:first');
+                }
+                el.addClass('hover');
+            }, function (e) {
+                var el = $(e.target);
+                if (!el.is('.itemContainer')) {
+                    el = $(e.target).parents('.itemContainer:first');
+                }
+                el.removeClass('hover');
+            });
+        }
+
+        function deleteItem(e) {
+            if (confirm(JavaScriptLibraryResources.ConfirmDelete)) {
+                var url = $(e.target).attr('href');
+                if (!url) {
+                    url = $(e.target).parent().attr('href');
+                }
+                loadAsync(e, url,
+                null,
+                function (result) {
+                    if (result) {
+                        $(e.target).parents('.itemContainer').remove();
+
+                    }
+                });
+            }
+            cancelEvent(e);
+        }
+
+        function getEdit(e) {
+            var url = $(e.target).attr('href');
+            if (!url) {
+                url = $(e.target).parent().attr('href');
+            }
+            loadAsync(e, url,
+                null,
+                function (result) {
+                    var container = $(e.target).parents('.itemContainer').find('.editFormContainer');
+                    container.html(result.Content);
+                    $('#lnkCancel', container).click(function (e) {
+                        container.empty();
+                    });
+                    var form = $('#formEdit', container);
+                    jQuery.validator.unobtrusive.parse(form);
+                    form.validate().settings.submitHandler = edit;
+                    setupDatePicker();
+                });
+            cancelEvent(e);
+        }
+
+
+        function edit(form) {
+            loadAsync(null, $(form).attr('action'),
+                $(form).serialize(),
+                function (result) {
+                    var container = $(form).parents('.itemContainer');
+                    container.html(result.Content);
+                    $('.imgDelete', container).click(deleteItem);
+                    $('.lnkEditItem', container).click(getEdit);
+                    container.removeClass('hover');
+                    bindHover(container);
+                });
+            return cancelEvent(form);
+        }
+    </script>
+}
+<h3>
+    @Html.Raw(string.Format(Resource.IdeaTask, Html.ActionLink(Model.Subject.HtmlDecode(), MVC.Idea.Details(Model.IdeaId, Model.Subject.ToSeoUrl(), null))))
+</h3>
+@{Html.RenderPartial(MVC.Project.Views.PendingConfirmationMessage, Model.IsPendingConfirmation);}
+@{Html.RenderPartial(MVC.Project.Views.JoinProject, new Data.ViewModels.Project.JoinProjectModel(){IdeaId = Model.IdeaId, IsJoinable = Model.IsJoinable});}
+<br />
+@{Html.RenderPartial(MVC.Project.Views.Menu, Model.Id, new ViewDataDictionary() { { "index", "1" }, { "isEditable", Model.IsCurrentUserInvolved } });}
+<br />
+<div id="MileStonesContainer">
+    <div id="listMileStones" class='@(Model.IsEditable ? " controlSpace1" : "")'>
+        @for (int i = 0; i < Model.MileStones.Count; i++)
+        {
+            Html.RenderPartial(MVC.Project.Views.MileStoneItem, Model.MileStones[i]);
+        }
+    </div>
+    @if (Model.IsEditable)
+    {
+    <div class="insertMileStone">
+        <div id="divInsertLink" class='@(Model.MileStones.Count == 0 ? "hide": "")'>
+            <a href="javascript:void(0);" id="lnkInsertMileStone">@SharedStrings.Add</a>
+        </div>
+        <div id="divInsertForm" class='clearfix @(Model.MileStones.Count == 0 ? "" : "hide")'>
+            @using (Html.BeginForm(MVC.Project.AddMileStone(), FormMethod.Post, new { id = "form" }))
+            {
+                @Html.AntiForgeryToken()
+                @Html.HiddenFor(m => m.Id)
+                <span>
+                    @Html.LabelFor(m => m.InsertSubject, Resource.EnterMilestone)
+                    @Html.TextAreaFor(m => m.InsertSubject)
+                    @Html.ValidationMessageFor(m => m.InsertSubject)
+                </span>
+                <span>      
+                    @Html.LabelFor(m => m.InsertDate, Resource.DueDate)          
+                    @Html.EditorFor(m => m.InsertDate)
+                </span>
+                <div class="clearfix">
+                    @Html.Buttons(new List<ButtonHelperModel>()
+                        {
+                            new ButtonHelperModel()
+                                {
+                                    Id="btnSubmit"
+                                },
+                            new CancelButtonHelperModel()
+                                {
+                                    Id = "lnkCancelInsert"  
+                                }
+                        })
+                </div>
+            }
+        </div>
+    </div>
+    }
+</div>

@@ -1,0 +1,29 @@
+﻿@using Data.ViewModels.Base
+@using Globalization.Resources.Idea
+@using Web.Helpers
+@model List<Data.ViewModels.Base.ListItem>
+<script type="text/javascript">
+    $(function() {
+        $('#issueList').deleteButton();
+    });
+    function onIssueSelect() {
+        $.helpers.loadAsync(null, '@Url.Action(MVC.Idea.AddRelatedIssue())', { id: $('#RelatedIssueId').val(), name: $('#RelatedIssueText').val() }, function (result) {
+            var html = $(result.Content).appendTo($('#issueList'));
+            $.helpers.flash(html);
+            $('#RelatedIssueId').val('');
+            $('#RelatedIssueText').val('');
+        });
+    }
+</script>
+@Html.Label("RelatedIssueText", Resource.RelatedIssues, new { @class = "fl" })
+            @Html.Partial(MVC.Shared.Views._Help, Resource.RelateIssuesHelp)
+<div id="selectRelatedIdea">
+    @Html.AutoComplete("RelatedIssueText", "RelatedIssueId", MVC.Voting.GetMatchedIssues(), "txt_l", "onIssueSelect", true, new Dictionary<string, object> { { "placeholder", Resource.SelectRelatedIssue } })
+    @Html.ValidationMessageFor(model => model)
+    <ul id="issueList">
+        @foreach (ListItem idea in Model)
+        {
+            @Html.Partial(MVC.Idea.Views.RelatedIssue, idea)
+        }
+    </ul>
+</div>

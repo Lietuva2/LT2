@@ -1,0 +1,850 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <!-- 
+    Microsoft ResX Schema 
+    
+    Version 2.0
+    
+    The primary goals of this format is to allow a simple XML format 
+    that is mostly human readable. The generation and parsing of the 
+    various data types are done through the TypeConverter classes 
+    associated with the data types.
+    
+    Example:
+    
+    ... ado.net/XML headers & schema ...
+    <resheader name="resmimetype">text/microsoft-resx</resheader>
+    <resheader name="version">2.0</resheader>
+    <resheader name="reader">System.Resources.ResXResourceReader, System.Windows.Forms, ...</resheader>
+    <resheader name="writer">System.Resources.ResXResourceWriter, System.Windows.Forms, ...</resheader>
+    <data name="Name1"><value>this is my long string</value><comment>this is a comment</comment></data>
+    <data name="Color1" type="System.Drawing.Color, System.Drawing">Blue</data>
+    <data name="Bitmap1" mimetype="application/x-microsoft.net.object.binary.base64">
+        <value>[base64 mime encoded serialized .NET Framework object]</value>
+    </data>
+    <data name="Icon1" type="System.Drawing.Icon, System.Drawing" mimetype="application/x-microsoft.net.object.bytearray.base64">
+        <value>[base64 mime encoded string representing a byte array form of the .NET Framework object]</value>
+        <comment>This is a comment</comment>
+    </data>
+                
+    There are any number of "resheader" rows that contain simple 
+    name/value pairs.
+    
+    Each data row contains a name, and value. The row also contains a 
+    type or mimetype. Type corresponds to a .NET class that support 
+    text/value conversion through the TypeConverter architecture. 
+    Classes that don't support this are serialized and stored with the 
+    mimetype set.
+    
+    The mimetype is used for serialized objects, and tells the 
+    ResXResourceReader how to depersist the object. This is currently not 
+    extensible. For a given mimetype the value must be set accordingly:
+    
+    Note - application/x-microsoft.net.object.binary.base64 is the format 
+    that the ResXResourceWriter will generate, however the reader can 
+    read any of the formats listed below.
+    
+    mimetype: application/x-microsoft.net.object.binary.base64
+    value   : The object must be serialized with 
+            : System.Runtime.Serialization.Formatters.Binary.BinaryFormatter
+            : and then encoded with base64 encoding.
+    
+    mimetype: application/x-microsoft.net.object.soap.base64
+    value   : The object must be serialized with 
+            : System.Runtime.Serialization.Formatters.Soap.SoapFormatter
+            : and then encoded with base64 encoding.
+
+    mimetype: application/x-microsoft.net.object.bytearray.base64
+    value   : The object must be serialized into a byte array 
+            : using a System.ComponentModel.TypeConverter
+            : and then encoded with base64 encoding.
+    -->
+  <xsd:schema id="root" xmlns="" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:msdata="urn:schemas-microsoft-com:xml-msdata">
+    <xsd:import namespace="http://www.w3.org/XML/1998/namespace" />
+    <xsd:element name="root" msdata:IsDataSet="true">
+      <xsd:complexType>
+        <xsd:choice maxOccurs="unbounded">
+          <xsd:element name="metadata">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" />
+              </xsd:sequence>
+              <xsd:attribute name="name" use="required" type="xsd:string" />
+              <xsd:attribute name="type" type="xsd:string" />
+              <xsd:attribute name="mimetype" type="xsd:string" />
+              <xsd:attribute ref="xml:space" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="assembly">
+            <xsd:complexType>
+              <xsd:attribute name="alias" type="xsd:string" />
+              <xsd:attribute name="name" type="xsd:string" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="data">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+                <xsd:element name="comment" type="xsd:string" minOccurs="0" msdata:Ordinal="2" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" msdata:Ordinal="1" />
+              <xsd:attribute name="type" type="xsd:string" msdata:Ordinal="3" />
+              <xsd:attribute name="mimetype" type="xsd:string" msdata:Ordinal="4" />
+              <xsd:attribute ref="xml:space" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="resheader">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" />
+            </xsd:complexType>
+          </xsd:element>
+        </xsd:choice>
+      </xsd:complexType>
+    </xsd:element>
+  </xsd:schema>
+  <resheader name="resmimetype">
+    <value>text/microsoft-resx</value>
+  </resheader>
+  <resheader name="version">
+    <value>2.0</value>
+  </resheader>
+  <resheader name="reader">
+    <value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <resheader name="writer">
+    <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <data name="Address" xml:space="preserve">
+    <value>Address</value>
+  </data>
+  <data name="AddressLineIsRequired" xml:space="preserve">
+    <value>Enter the street address</value>
+  </data>
+  <data name="Awards" xml:space="preserve">
+    <value>Awards</value>
+  </data>
+  <data name="BirthDate" xml:space="preserve">
+    <value>Date of birth</value>
+  </data>
+  <data name="Citizenship" xml:space="preserve">
+    <value>Citizenship</value>
+  </data>
+  <data name="City" xml:space="preserve">
+    <value>City (village)</value>
+  </data>
+  <data name="CityIsRequired" xml:space="preserve">
+    <value>Enter the village</value>
+  </data>
+  <data name="Comments" xml:space="preserve">
+    <value>Opinions</value>
+  </data>
+  <data name="CommentsCount" xml:space="preserve">
+    <value>Commented issues: </value>
+  </data>
+  <data name="ConfirmOverwrite" xml:space="preserve">
+    <value>Do you want to overwrite?</value>
+  </data>
+  <data name="ConfirmPassword" xml:space="preserve">
+    <value>Repeat the password</value>
+  </data>
+  <data name="ConfirmPasswordCompareFailed" xml:space="preserve">
+    <value>Passwords do not match</value>
+  </data>
+  <data name="ConfirmPasswordIsRequired" xml:space="preserve">
+    <value>Repeat the password</value>
+  </data>
+  <data name="ContactsLegend" xml:space="preserve">
+    <value>Contact information</value>
+  </data>
+  <data name="Country" xml:space="preserve">
+    <value>The State</value>
+  </data>
+  <data name="CountryIsRequired" xml:space="preserve">
+    <value>Enter a State</value>
+  </data>
+  <data name="CurrentLocation" xml:space="preserve">
+    <value>The current place of residence</value>
+  </data>
+  <data name="CurrentParty" xml:space="preserve">
+    <value>I am currently a member of the party</value>
+  </data>
+  <data name="CurrentPosition" xml:space="preserve">
+    <value>At the moment I'm working in this role</value>
+  </data>
+  <data name="DocumentNoIsRequired" xml:space="preserve">
+    <value>Enter a document number</value>
+  </data>
+  <data name="Education" xml:space="preserve">
+    <value>Education</value>
+  </data>
+  <data name="EducationAndWorkLegent" xml:space="preserve">
+    <value>Education and work experience</value>
+  </data>
+  <data name="Email" xml:space="preserve">
+    <value>E-mail</value>
+  </data>
+  <data name="EmailIsRequired" xml:space="preserve">
+    <value>Please enter your e-mail</value>
+  </data>
+  <data name="EmailRegexpIsNotValid" xml:space="preserve">
+    <value>Invalid e-mail format</value>
+  </data>
+  <data name="EmailRemoteValidationFailed" xml:space="preserve">
+    <value>Such e-mail is already registered in the system</value>
+  </data>
+  <data name="EmploymentStatusName" xml:space="preserve">
+    <value>Employment status</value>
+  </data>
+  <data name="EndYearIsRequired" xml:space="preserve">
+    <value>Select the end year</value>
+  </data>
+  <data name="FieldOfStudy" xml:space="preserve">
+    <value>Specialty</value>
+  </data>
+  <data name="FirstName" xml:space="preserve">
+    <value>First Name</value>
+  </data>
+  <data name="FirstNameIsRequired" xml:space="preserve">
+    <value>Enter the name of</value>
+  </data>
+  <data name="FormHeaderAccount" xml:space="preserve">
+    <value>Information on the national</value>
+  </data>
+  <data name="From" xml:space="preserve">
+    <value>From</value>
+  </data>
+  <data name="Groups" xml:space="preserve">
+    <value>Public activities</value>
+  </data>
+  <data name="IdeasCount" xml:space="preserve">
+    <value>I Submitted</value>
+  </data>
+  <data name="ImportFromLinkedIn" xml:space="preserve">
+    <value>Upload from LinkedIn</value>
+  </data>
+  <data name="ImportSuccessful" xml:space="preserve">
+    <value>The information has been successfully antaujinta</value>
+  </data>
+  <data name="Interests" xml:space="preserve">
+    <value>Interests</value>
+  </data>
+  <data name="InterestsLegend" xml:space="preserve">
+    <value>Areas of interest</value>
+  </data>
+  <data name="InvolvedIdeasCount" xml:space="preserve">
+    <value>I participated in the development of the</value>
+  </data>
+  <data name="IssuesCount" xml:space="preserve">
+    <value>I Described</value>
+  </data>
+  <data name="LastName" xml:space="preserve">
+    <value>Last Name</value>
+  </data>
+  <data name="LastNameIsRequired" xml:space="preserve">
+    <value>Please enter last name</value>
+  </data>
+  <data name="Like" xml:space="preserve">
+    <value>Follow</value>
+  </data>
+  <data name="LikedBy" xml:space="preserve">
+    <value>My activity is interesting to</value>
+  </data>
+  <data name="Likes" xml:space="preserve">
+    <value>Likes</value>
+  </data>
+  <data name="LikeUserToolTip" xml:space="preserve">
+    <value>I am interested in the activities of the participant!</value>
+  </data>
+  <data name="MaritalStatusName" xml:space="preserve">
+    <value>Marital status</value>
+  </data>
+  <data name="MeInterested" xml:space="preserve">
+    <value>I find it interesting</value>
+  </data>
+  <data name="MemberOfOrganizations" xml:space="preserve">
+    <value>Member of organisations</value>
+  </data>
+  <data name="MemberOfParties" xml:space="preserve">
+    <value>Member of parties</value>
+  </data>
+  <data name="MemberSince" xml:space="preserve">
+    <value>Member since</value>
+  </data>
+  <data name="Municipality" xml:space="preserve">
+    <value>Municipality</value>
+  </data>
+  <data name="MunicipalityIsRequired" xml:space="preserve">
+    <value>Enter the municipality</value>
+  </data>
+  <data name="MyProjects" xml:space="preserve">
+    <value>I participated in the implementation of the</value>
+  </data>
+  <data name="Nationality" xml:space="preserve">
+    <value>Nationality</value>
+  </data>
+  <data name="NewPassword" xml:space="preserve">
+    <value>Password</value>
+  </data>
+  <data name="NewPasswordIsRequired" xml:space="preserve">
+    <value>It is necessary to enter a password</value>
+  </data>
+  <data name="NewPasswordLengthIsNotValid" xml:space="preserve">
+    <value>{0} must be at least {2} characters in length</value>
+  </data>
+  <data name="NewPasswordRegexpIsNotValid" xml:space="preserve">
+    <value>The password must contain at least one mažają, one capital letter and one number</value>
+  </data>
+  <data name="NoCategories" xml:space="preserve">
+    <value>No categories selected</value>
+  </data>
+  <data name="OldPassword" xml:space="preserve">
+    <value>Old password</value>
+  </data>
+  <data name="OldPasswordIsRequired" xml:space="preserve">
+    <value>It is necessary to enter the old password</value>
+  </data>
+  <data name="OriginCountryIsRequired" xml:space="preserve">
+    <value>Enter a State</value>
+  </data>
+  <data name="OriginLacation" xml:space="preserve">
+    <value>Native place</value>
+  </data>
+  <data name="OriginMunicipalityIsRequired" xml:space="preserve">
+    <value>Enter the municipality</value>
+  </data>
+  <data name="OverwriteOnImport" xml:space="preserve">
+    <value>Do you want to fill in all the data on LinkedIn as well as already suvestą information?</value>
+  </data>
+  <data name="PageTitleAccount" xml:space="preserve">
+    <value>{0}-user information</value>
+  </data>
+  <data name="PartyName" xml:space="preserve">
+    <value>The Democratic Party</value>
+  </data>
+  <data name="Password" xml:space="preserve">
+    <value>Password</value>
+  </data>
+  <data name="PasswordIsRequired" xml:space="preserve">
+    <value>It is necessary to enter a password</value>
+  </data>
+  <data name="PasswordLengthIsNotValid" xml:space="preserve">
+    <value>{0} must be at least {2} characters in length</value>
+  </data>
+  <data name="PasswordRegexpIsNotValid" xml:space="preserve">
+    <value>The password must contain at least one mažają, one capital letter and one number</value>
+  </data>
+  <data name="PersonalInfoLegend" xml:space="preserve">
+    <value>About me</value>
+  </data>
+  <data name="PersonCodeIsRequired" xml:space="preserve">
+    <value>Enter the personal code</value>
+  </data>
+  <data name="PersonCodeRegexpIsNotValid" xml:space="preserve">
+    <value>The code of the person must be of the number 11</value>
+  </data>
+  <data name="Phone" xml:space="preserve">
+    <value>Phone No.</value>
+  </data>
+  <data name="PhoneNumbers" xml:space="preserve">
+    <value>Phone numbers</value>
+  </data>
+  <data name="PhoneType" xml:space="preserve">
+    <value>Type</value>
+  </data>
+  <data name="PoliticalViews" xml:space="preserve">
+    <value>Political opinions</value>
+  </data>
+  <data name="Position" xml:space="preserve">
+    <value>Position</value>
+  </data>
+  <data name="Positions" xml:space="preserve">
+    <value>Work experience</value>
+  </data>
+  <data name="PostCode" xml:space="preserve">
+    <value>Postal code</value>
+  </data>
+  <data name="ProblemsCount" xml:space="preserve">
+    <value>My problems</value>
+  </data>
+  <data name="ProfilePictureLegend" xml:space="preserve">
+    <value>Photo</value>
+  </data>
+  <data name="RememberMe" xml:space="preserve">
+    <value>Remember me</value>
+  </data>
+  <data name="School" xml:space="preserve">
+    <value>School</value>
+  </data>
+  <data name="Settings" xml:space="preserve">
+    <value>Settings</value>
+  </data>
+  <data name="Specialties" xml:space="preserve">
+    <value>Specialization</value>
+  </data>
+  <data name="StartYearIsRequired" xml:space="preserve">
+    <value>Select start year</value>
+  </data>
+  <data name="Summary" xml:space="preserve">
+    <value>General description</value>
+  </data>
+  <data name="TitleAccount" xml:space="preserve">
+    <value>The user information</value>
+  </data>
+  <data name="To" xml:space="preserve">
+    <value>Up To</value>
+  </data>
+  <data name="ToPresent" xml:space="preserve">
+    <value>now</value>
+  </data>
+  <data name="TypeNameIsRequired" xml:space="preserve">
+    <value>Select the type of</value>
+  </data>
+  <data name="Unlike" xml:space="preserve">
+    <value>Stop tracking performance</value>
+  </data>
+  <data name="UserActivity" xml:space="preserve">
+    <value>Activity</value>
+  </data>
+  <data name="UserInfo" xml:space="preserve">
+    <value>Info</value>
+  </data>
+  <data name="UserName" xml:space="preserve">
+    <value>The login name</value>
+  </data>
+  <data name="UserNameIsRequired" xml:space="preserve">
+    <value>You must enter a sign-in name</value>
+  </data>
+  <data name="UserNameRemoteValidationFailed" xml:space="preserve">
+    <value>This user name is already registered in the system</value>
+  </data>
+  <data name="VotesCount" xml:space="preserve">
+    <value>I Voted</value>
+  </data>
+  <data name="Websites" xml:space="preserve">
+    <value>Links</value>
+  </data>
+  <data name="WebSiteTitle" xml:space="preserve">
+    <value>Header</value>
+  </data>
+  <data name="WebSiteType" xml:space="preserve">
+    <value>Type</value>
+  </data>
+  <data name="WebSiteUrl" xml:space="preserve">
+    <value>Link</value>
+  </data>
+  <data name="Workplace" xml:space="preserve">
+    <value>In The Workplace</value>
+  </data>
+  <data name="EnterCredentials" xml:space="preserve">
+    <value>Please enter your user name and password.</value>
+  </data>
+  <data name="FillForm" xml:space="preserve">
+    <value>Please fill in this form to register</value>
+  </data>
+  <data name="ForgotPassword" xml:space="preserve">
+    <value>Forgot your password?</value>
+  </data>
+  <data name="FormHeader" xml:space="preserve">
+    <value>Join us!</value>
+  </data>
+  <data name="FormHeaderReset" xml:space="preserve">
+    <value>I forgot my password</value>
+  </data>
+  <data name="Legend" xml:space="preserve">
+    <value>Login information</value>
+  </data>
+  <data name="Login" xml:space="preserve">
+    <value>Sing In</value>
+  </data>
+  <data name="FormHeaderLogin" xml:space="preserve">
+    <value>Sign In</value>
+  </data>
+  <data name="PageTitleLogin" xml:space="preserve">
+    <value>Sign In</value>
+  </data>
+  <data name="PageTitleRegister" xml:space="preserve">
+    <value>Sign up</value>
+  </data>
+  <data name="PageTitleReset" xml:space="preserve">
+    <value>To change your password</value>
+  </data>
+  <data name="PasswordLength" xml:space="preserve">
+    <value>The password must be at least {0} characters, consist of small capitalization and numbers.</value>
+  </data>
+  <data name="Register" xml:space="preserve">
+    <value>Sign Up</value>
+  </data>
+  <data name="RegisterAction" xml:space="preserve">
+    <value>Post</value>
+  </data>
+  <data name="ValidationErrorRegister" xml:space="preserve">
+    <value>Create access failed. Please correct the errors and try again.</value>
+  </data>
+  <data name="Reset" xml:space="preserve">
+    <value>Reset</value>
+  </data>
+  <data name="ValidationErrorReset" xml:space="preserve">
+    <value>An error has occurred. Make sure this email really has been registered and approved by the system.</value>
+  </data>
+  <data name="FillFormReset" xml:space="preserve">
+    <value>To change your password, please fill in this form.</value>
+  </data>
+  <data name="Save" xml:space="preserve">
+    <value>Save</value>
+  </data>
+  <data name="TitleReset" xml:space="preserve">
+    <value>Update</value>
+  </data>
+  <data name="ValidationErrorLogin" xml:space="preserve">
+    <value>Login failed. Please correct the errors and try again.</value>
+  </data>
+  <data name="UserReputation" xml:space="preserve">
+    <value>Reputation</value>
+  </data>
+  <data name="RemindPassword" xml:space="preserve">
+    <value>Remind password</value>
+  </data>
+  <data name="Contact" xml:space="preserve">
+    <value>Contact may</value>
+  </data>
+  <data name="PersonCode" xml:space="preserve">
+    <value>Personal code</value>
+  </data>
+  <data name="EmailsIsEmpty" xml:space="preserve">
+    <value>Please enter your e-mail</value>
+  </data>
+  <data name="SendMail" xml:space="preserve">
+    <value>I agree to receive emails</value>
+  </data>
+  <data name="Activity" xml:space="preserve">
+    <value>Activity</value>
+  </data>
+  <data name="AdditionalUniqueInfoLawMessage" xml:space="preserve">
+    <value>On the basis of the citizens of the Republic of Lithuania Law on article 7 of the legislative initiative, it is necessary to submit the following data:</value>
+  </data>
+  <data name="AdditionalUniqueInfoReferenduumMessage" xml:space="preserve">
+    <value>On the basis of the Referendum Act of the Republic of Lithuania (11) it is necessary to submit the following data to strapsniu:</value>
+  </data>
+  <data name="AdditionalUniqueInfoTitle" xml:space="preserve">
+    <value>Signing On</value>
+  </data>
+  <data name="AddressLine" xml:space="preserve">
+    <value>Street address (for example. Street al. 1-1)</value>
+  </data>
+  <data name="AgreeGetEmails" xml:space="preserve">
+    <value>I agree to receive emails</value>
+  </data>
+  <data name="BecameAmbassador" xml:space="preserve">
+    <value>I became the Ambassador of Lithuania 2.0!</value>
+  </data>
+  <data name="BecomeAmbassador" xml:space="preserve">
+    <value>Become an Ambassador</value>
+  </data>
+  <data name="BecomeAmbassadorCancel" xml:space="preserve">
+    <value>Cancel ambassadorship</value>
+  </data>
+  <data name="Block" xml:space="preserve">
+    <value>Block user</value>
+  </data>
+  <data name="ChangePassword" xml:space="preserve">
+    <value>Change the password</value>
+  </data>
+  <data name="Chat" xml:space="preserve">
+    <value>Chat</value>
+  </data>
+  <data name="ChooseLanguage" xml:space="preserve">
+    <value>Choose your language</value>
+  </data>
+  <data name="CommentTitle" xml:space="preserve">
+    <value>What facts do you know?</value>
+  </data>
+  <data name="ConfirmationSent" xml:space="preserve">
+    <value>You will soon receive an e-mail confirmation message</value>
+  </data>
+  <data name="ConfirmEmailFailedMessage" xml:space="preserve">
+    <value>Your e-mail could not be validated! Check out the link.</value>
+  </data>
+  <data name="ConfirmEmailFailedTitle" xml:space="preserve">
+    <value>The e-mail could not be validated</value>
+  </data>
+  <data name="ConfirmIdentity" xml:space="preserve">
+    <value>Confirm your identity</value>
+  </data>
+  <data name="ConfirmIdentityReason" xml:space="preserve">
+    <value>To use all the possibilities of Lithuania 2.0</value>
+  </data>
+  <data name="ConfirmIdentityReasonTip" xml:space="preserve">
+    <value>After confirming the identity, you will be able to sign the initiatives, to vote for you on topical issues, register your organization, change the status of the projects, and so on.</value>
+  </data>
+  <data name="ConfirmIdentityRequired" xml:space="preserve">
+    <value>Your actions on Lithuania 2.0 is limited until you verify your identity.</value>
+  </data>
+  <data name="ConnectFacebook" xml:space="preserve">
+    <value>Link to Facebook</value>
+  </data>
+  <data name="ContactUs" xml:space="preserve">
+    <value>Contact us</value>
+  </data>
+  <data name="CoreTeam" xml:space="preserve">
+    <value>Core team</value>
+  </data>
+  <data name="CoreTeamCancel" xml:space="preserve">
+    <value>Not core team</value>
+  </data>
+  <data name="DocumentNo" xml:space="preserve">
+    <value>Passport or identity card number</value>
+  </data>
+  <data name="OpenAuthConnecting" xml:space="preserve">
+    <value>Connecting to Lithuania 2.0 via {0}...</value>
+  </data>
+  <data name="OpenAuthConnectingTitle" xml:space="preserve">
+    <value>Connecting via {0}</value>
+  </data>
+  <data name="HideFromOthers" xml:space="preserve">
+    <value>Hide others</value>
+  </data>
+  <data name="Logout" xml:space="preserve">
+    <value>Log Out</value>
+  </data>
+  <data name="MyComments" xml:space="preserve">
+    <value>I commented these issues</value>
+  </data>
+  <data name="MyIdeas" xml:space="preserve">
+    <value>I submitted these proposals</value>
+  </data>
+  <data name="MyInvolvedIdeas" xml:space="preserve">
+    <value>I participated in the development of these ideas</value>
+  </data>
+  <data name="MyIssues" xml:space="preserve">
+    <value>I described these ballots</value>
+  </data>
+  <data name="MyProblems" xml:space="preserve">
+    <value>My problems</value>
+  </data>
+  <data name="MyProjectsTitle" xml:space="preserve">
+    <value>I participated in the implementation of these projects</value>
+  </data>
+  <data name="MyVotes" xml:space="preserve">
+    <value>I voted for these issues</value>
+  </data>
+  <data name="NegativeCommentButton" xml:space="preserve">
+    <value>Criticize</value>
+  </data>
+  <data name="NegativeCommentPlaceholder" xml:space="preserve">
+    <value>What prisidirbo?</value>
+  </data>
+  <data name="PointsPerCategory" xml:space="preserve">
+    <value>Points by category</value>
+  </data>
+  <data name="PossitiveCommentButton" xml:space="preserve">
+    <value>Support</value>
+  </data>
+  <data name="PossitiveCommentPlaceholder" xml:space="preserve">
+    <value>What good has done?</value>
+  </data>
+  <data name="PrivacyPolicy" xml:space="preserve">
+    <value>Privacy policy</value>
+  </data>
+  <data name="PrivacyStatement" xml:space="preserve">
+    <value>These data will be organized by LT 2.0 atsakingom to the public authorities, and will not use them for any other purpose.</value>
+  </data>
+  <data name="ProfilePictureTip" xml:space="preserve">
+    <value>We recommend that higher length to be 200px</value>
+  </data>
+  <data name="ReadOur" xml:space="preserve">
+    <value>Check out our</value>
+  </data>
+  <data name="Reconfirm" xml:space="preserve">
+    <value>Reconfirm identity</value>
+  </data>
+  <data name="Reputation" xml:space="preserve">
+    <value>Reputation</value>
+  </data>
+  <data name="RequireUnique" xml:space="preserve">
+    <value>Request ID</value>
+  </data>
+  <data name="RequireUniqueCancel" xml:space="preserve">
+    <value>Confirm identity</value>
+  </data>
+  <data name="SendConfirmationCode" xml:space="preserve">
+    <value>Send the verification code</value>
+  </data>
+  <data name="SendEmails" xml:space="preserve">
+    <value>Send emails</value>
+  </data>
+  <data name="SendMessage" xml:space="preserve">
+    <value>Send a message</value>
+  </data>
+  <data name="SignUp" xml:space="preserve">
+    <value>Sign Up For The</value>
+  </data>
+  <data name="Unblock" xml:space="preserve">
+    <value>Allow contact</value>
+  </data>
+  <data name="UniqueNotRegistered" xml:space="preserve">
+    <value>Once you have confirmed your identity, you can support the suggestions and vote for you on topical issues. To provide suggestions, arguments, and to play as members of the community, you have to</value>
+  </data>
+  <data name="UniqueViispNotRegistered" xml:space="preserve">
+    <value>Online through e-Government goal, you can sign the official Electoral Commission, Vyriausioje only registered initiatives. To provide suggestions, arguments, and to play as members of the community, you have to</value>
+  </data>
+  <data name="VotesArePublic" xml:space="preserve">
+    <value>Show me the list of signatories</value>
+  </data>
+  <data name="VotesArePublicDescription" xml:space="preserve">
+    <value>If you select this checkbox, your name will be displayed in the public list of signatories. If you check, your signature will be visible only to You and CEC</value>
+  </data>
+  <data name="AttentionToSecurity" xml:space="preserve">
+    <value>Be careful on your data publicity!</value>
+  </data>
+  <data name="Category" xml:space="preserve">
+    <value>Category</value>
+  </data>
+  <data name="ConfirmIdentityAction" xml:space="preserve">
+    <value>Confirm identity</value>
+  </data>
+  <data name="EmailConfirmed" xml:space="preserve">
+    <value>Your e-mail confirmed!</value>
+  </data>
+  <data name="EmailConfirmedTitle" xml:space="preserve">
+    <value>E-mail validated</value>
+  </data>
+  <data name="Facebook" xml:space="preserve">
+    <value>Facebook</value>
+  </data>
+  <data name="InfoVisibilityBySettings" xml:space="preserve">
+    <value>The information you provide will be visible under the "settings" option.</value>
+  </data>
+  <data name="Lists" xml:space="preserve">
+    <value>Lists</value>
+  </data>
+  <data name="Points" xml:space="preserve">
+    <value>Pts</value>
+  </data>
+  <data name="ProfileVisibleTo" xml:space="preserve">
+    <value>The account appears in the</value>
+  </data>
+  <data name="PublicDataWarning" xml:space="preserve">
+    <value>Warning that the published data will be available online in the search engines, so viešinkite just for the publicity of such information do not have to doubt, and which will help Lithuania 2.0 visitors of forming an opinion about you and your competencies.
+            Get to know &lt;a href="https://docs.google.com/a/lietuva2.lt/document/d/18uU0q1DkHvE1TOK5UABZt8HasR5m3BXPOthHpaEWe8A/edit#" target="_blank"&gt;LT 2.0 privacy policy&lt;/a&gt;.</value>
+  </data>
+  <data name="Visibility" xml:space="preserve">
+    <value>Visibility</value>
+  </data>
+  <data name="VotesArePublicAll" xml:space="preserve">
+    <value>Show me in the supporter's lists</value>
+  </data>
+  <data name="DoLogin" xml:space="preserve">
+    <value>Sign In</value>
+  </data>
+  <data name="AllCountry" xml:space="preserve">
+    <value>All Of Lithuania</value>
+  </data>
+  <data name="DefaultSubject" xml:space="preserve">
+    <value>Lithuania 2.0 user's post</value>
+  </data>
+  <data name="LikeFbPage" xml:space="preserve">
+    <value>To receive our newsletter, log in to the Facebook page of Lithuania 2.0!</value>
+  </data>
+  <data name="MessageSent" xml:space="preserve">
+    <value>Email sent</value>
+  </data>
+  <data name="Subject" xml:space="preserve">
+    <value>Subject</value>
+  </data>
+  <data name="YourEmail" xml:space="preserve">
+    <value>Your e-mail</value>
+  </data>
+  <data name="PasswordChangeFailed" xml:space="preserve">
+    <value>Change password failed. Please correct the errors and try again</value>
+  </data>
+  <data name="PasswordSimilarToName" xml:space="preserve">
+    <value>Password is too similar to Your first or last name</value>
+  </data>
+  <data name="PasswordSimilarToUserName" xml:space="preserve">
+    <value>Password is too similar to your username</value>
+  </data>
+  <data name="InvalidCredentials" xml:space="preserve">
+    <value>Specify the incorrect login details</value>
+  </data>
+  <data name="AcceptTerms" xml:space="preserve">
+    <value>Please confirm that you are familiar with the conditions for the signing of</value>
+  </data>
+  <data name="AwardFailed" xml:space="preserve">
+    <value>Failed to reward</value>
+  </data>
+  <data name="BanklinkCanceled" xml:space="preserve">
+    <value>Registration cancelled</value>
+  </data>
+  <data name="BankLinkFailed" xml:space="preserve">
+    <value>Login failed. Please try again, or to report a bug to us.</value>
+  </data>
+  <data name="BankLinkReject" xml:space="preserve">
+    <value>Registration failed.</value>
+  </data>
+  <data name="ConfirmedEmailRequired" xml:space="preserve">
+    <value>Must remain at least one certified e-mail</value>
+  </data>
+  <data name="ConfirmEmail" xml:space="preserve">
+    <value>Please confirm your email - click on the link in the email which has been sent to your e-mail address. &lt;a href='{0}'&gt;Send again&lt;/a&gt;</value>
+  </data>
+  <data name="ConfirmIdentityFailed" xml:space="preserve">
+    <value>Failed to validate login</value>
+  </data>
+  <data name="EmailNotFound" xml:space="preserve">
+    <value>E-mail {0} not found</value>
+  </data>
+  <data name="InvalidCaptcha" xml:space="preserve">
+    <value>The code you entered is incorrect for protection against robots</value>
+  </data>
+  <data name="InvalidPersonCode" xml:space="preserve">
+    <value>The wrong personal identification number</value>
+  </data>
+  <data name="LoginFailed" xml:space="preserve">
+    <value>Incorrect user name or password</value>
+  </data>
+  <data name="MergeFailed" xml:space="preserve">
+    <value>Combine the users failed</value>
+  </data>
+  <data name="MergeSuccess" xml:space="preserve">
+    <value>Users to successfully combine</value>
+  </data>
+  <data name="NoRights" xml:space="preserve">
+    <value>You don't have permission</value>
+  </data>
+  <data name="PasswordResetSuccess" xml:space="preserve">
+    <value>Password has been changed successfully!</value>
+  </data>
+  <data name="SelectExistingMunicipality" xml:space="preserve">
+    <value>Select an existing municipality</value>
+  </data>
+  <data name="TakeBackAwardFailed" xml:space="preserve">
+    <value>Failed to take away the award</value>
+  </data>
+  <data name="TempPasswordSent" xml:space="preserve">
+    <value>At {0} you will receive a temporary password shortly</value>
+  </data>
+  <data name="TourAccount" xml:space="preserve">
+    <value>If you are about to become active, other members of the community want to know Your competences. Please provide information about yourself.</value>
+  </data>
+  <data name="TourManifest" xml:space="preserve">
+    <value>You have been sent an e-mail message. Once you have confirmed the e-mail address, click the "I agree".</value>
+  </data>
+  <data name="UnsubscribeSuccess" xml:space="preserve">
+    <value>Mail discarded successfully. You can order them in your user account.</value>
+  </data>
+  <data name="NotRegistered" xml:space="preserve">
+    <value>Not yet registered?</value>
+  </data>
+  <data name="Message" xml:space="preserve">
+    <value>Message</value>
+  </data>
+  <data name="EmailNotReceived" xml:space="preserve">
+    <value>Email was not received from authentication provider, please try another provider</value>
+  </data>
+  <data name="OpenAuthConnect" xml:space="preserve">
+    <value>Connect via {0}</value>
+  </data>
+</root>

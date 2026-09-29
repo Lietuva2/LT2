@@ -1,0 +1,1585 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<edmx:Edmx Version="3.0" xmlns:edmx="http://schemas.microsoft.com/ado/2009/11/edmx">
+  <!-- EF Runtime content -->
+  <edmx:Runtime>
+    <!-- SSDL content -->
+    <edmx:StorageModels>
+    <Schema Namespace="UsersModel.Store" Provider="System.Data.SqlClient" ProviderManifestToken="2008" Alias="Self" xmlns:store="http://schemas.microsoft.com/ado/2007/12/edm/EntityStoreSchemaGenerator" xmlns:customannotation="http://schemas.microsoft.com/ado/2013/11/edm/customannotation" xmlns="http://schemas.microsoft.com/ado/2009/11/edm/ssdl">
+        <EntityType Name="BankAccount">
+          <Key>
+            <PropertyRef Name="Id" />
+          </Key>
+          <Property Name="Id" Type="int" StoreGeneratedPattern="Identity" Nullable="false" />
+          <Property Name="AccountNo" Type="nvarchar" MaxLength="50" Nullable="false" />
+          <Property Name="Balance" Type="decimal" Precision="18" Scale="2" Nullable="false" />
+        </EntityType>
+        <EntityType Name="BankAccountItem">
+          <Key>
+            <PropertyRef Name="Id" />
+          </Key>
+          <Property Name="Id" Type="int" StoreGeneratedPattern="Identity" Nullable="false" />
+          <Property Name="BankAccountId" Type="int" Nullable="false" />
+          <Property Name="Date" Type="date" Nullable="false" />
+          <Property Name="Operation" Type="nvarchar(max)" Nullable="false" />
+          <Property Name="Expense" Type="decimal" Precision="18" Scale="2" />
+          <Property Name="Income" Type="decimal" Precision="18" Scale="2" />
+          <Property Name="UserId" Type="int" />
+          <Property Name="OrganizationId" Type="char" MaxLength="24" />
+        </EntityType>
+        <EntityType Name="BlackList">
+          <Key>
+            <PropertyRef Name="Id" />
+          </Key>
+          <Property Name="Id" Type="int" StoreGeneratedPattern="Identity" Nullable="false" />
+          <Property Name="UserId" Type="int" Nullable="false" />
+          <Property Name="BlockedUserId" Type="int" Nullable="false" />
+        </EntityType>
+        <EntityType Name="ChatClient">
+          <Key>
+            <PropertyRef Name="Id" />
+          </Key>
+          <Property Name="Id" Type="int" StoreGeneratedPattern="Identity" Nullable="false" />
+          <Property Name="ConnectionId" Type="char" MaxLength="36" Nullable="false" />
+          <Property Name="UserId" Type="int" Nullable="false" />
+          <Property Name="UserAgent" Type="nvarchar" MaxLength="500" />
+          <Property Name="LastActivity" Type="datetime" Nullable="false" />
+          <Property Name="GroupId" Type="char" MaxLength="24" />
+        </EntityType>
+        <EntityType Name="ChatGroup">
+          <Key>
+            <PropertyRef Name="Id" />
+          </Key>
+          <Property Name="Id" Type="char" MaxLength="24" Nullable="false" />
+          <Property Name="Url" Type="nvarchar" MaxLength="1000" Nullable="false" />
+          <Property Name="Name" Type="nvarchar(max)" />
+          <Property Name="IsPrivate" Type="bit" Nullable="false" />
+          <Property Name="OrganizationId" Type="char" MaxLength="24" />
+        </EntityType>
+        <EntityType Name="ChatGroupUsers">
+          <Key>
+            <PropertyRef Name="Id" />
+          </Key>
+          <Property Name="Id" Type="int" StoreGeneratedPattern="Identity" Nullable="false" />
+          <Property Name="UserId" Type="int" Nullable="false" />
+          <Property Name="GroupId" Type="char" MaxLength="24" Nullable="false" />
+        </EntityType>
+        <EntityType Name="ChatMessage">
+          <Key>
+            <PropertyRef Name="Id" />
+          </Key>
+          <Property Name="Id" Type="int" StoreGeneratedPattern="Identity" Nullable="false" />
+          <Property Name="Content" Type="nvarchar(max)" />
+          <Property Name="Date" Type="datetime" Nullable="false" />
+          <Property Name="UserId" Type="int" Nullable="false" />
+          <Property Name="GroupId" Type="char" MaxLength="24" />
+          <Property Name="OtherUserId" Type="int" />
+          <Property Name="HtmlEncoded" Type="bit" Nullable="false" />
+        </EntityType>
+        <EntityType Name="ChatOpenDialog">
+          <Key>
+            <PropertyRef Name="Id" />
+          </Key>
+          <Property Name="Id" Type="int" StoreGeneratedPattern="Identity" Nullable="false" />
+          <Property Name="UserId" Type="int" Nullable="false" />
+          <Property Name="OtherUserId" Type="int" Nullable="false" />
+        </EntityType>
+        <EntityType Name="ChatOpenGroup">
+          <Key>
+            <PropertyRef Name="Id" />
+          </Key>
+          <Property Name="Id" Type="int" StoreGeneratedPattern="Identity" Nullable="false" />
+          <Property Name="UserId" Type="int" Nullable="false" />
+          <Property Name="GroupId" Type="char" MaxLength="24" Nullable="false" />
+        </EntityType>
+        <EntityType Name="City">
+          <Key>
+            <PropertyRef Name="Id" />
+          </Key>
+          <Property Name="Id" Type="int" StoreGeneratedPattern="Identity" Nullable="false" />
+          <Property Name="MunicipalityId" Type="int" Nullable="false" />
+          <Property Name="Name" Type="nvarchar" MaxLength="100" Nullable="false" />
+        </EntityType>
+        <EntityType Name="Country">
+          <Key>
+            <PropertyRef Name="Id" />
+          </Key>
+          <Property Name="Id" Type="int" StoreGeneratedPattern="Identity" Nullable="false" />
+          <Property Name="Name" Type="nvarchar" MaxLength="100" Nullable="false" />
+        </EntityType>
+        <EntityType Name="Gifts">
+          <Key>
+            <PropertyRef Name="Id" />
+          </Key>
+          <Property Name="Id" Type="int" StoreGeneratedPattern="Identity" Nullable="false" />
+          <Property Name="Name" Type="nvarchar" MaxLength="50" Nullable="false" />
+          <Property Name="Url" Type="nvarchar" MaxLength="500" Nullable="false" />
+          <Property Name="RequiredAmount" Type="int" Nullable="false" />
+        </EntityType>
+        <EntityType Name="Languages">
+          <Key>
+            <PropertyRef Name="Id" />
+          </Key>
+          <Property Name="Id" Type="int" StoreGeneratedPattern="Identity" Nullable="false" />
+          <Property Name="Name" Type="nvarchar" MaxLength="50" Nullable="false" />
+          <Property Name="Code" Type="varchar" MaxLength="10" Nullable="false" />
+        </EntityType>
+        <EntityType Name="Municipality">
+          <Key>
+            <PropertyRef Name="Id" />
+          </Key>
+          <Property Name="Id" Type="int" StoreGeneratedPattern="Identity" Nullable="false" />
+          <Property Name="CountryId" Type="int" Nullable="false" />
+          <Property Name="Name" Type="nvarchar" MaxLength="100" />
+          <Property Name="ShortName" Type="nvarchar" MaxLength="50" />
+        </EntityType>
+        <EntityType Name="Notification">
+          <Key>
+            <PropertyRef Name="Id" />
+          </Key>
+          <Property Name="Id" Type="int" Nullable="false" />
+          <Property Name="Name" Type="nvarchar" MaxLength="255" Nullable="false" />
+          <Property Name="Subject" Type="nvarchar" MaxLength="255" Nullable="false" />
+          <Property Name="Message" Type="nvarchar(max)" Nullable="false" />
+        </EntityType>
+        <EntityType Name="Status">
+          <Key>
+            <PropertyRef Name="Id" />
+          </Key>
+          <Property Name="Id" Type="int" Nullable="false" />
+          <Property Name="PointsNeeded" Type="int" Nullable="false" />
+        </EntityType>
+        <EntityType Name="UniqueUser">
+          <Key>
+            <PropertyRef Name="PersonCode" />
+          </Key>
+          <Property Name="PersonCode" Type="nvarchar" MaxLength="32" Nullable="false" />
+          <Property Name="FirstName" Type="nvarchar" MaxLength="100" Nullable="false" />
+          <Property Name="LastName" Type="nvarchar" MaxLength="100" Nullable="false" />
+          <Property Name="AddressLine" Type="nvarchar" MaxLength="1000" />
+          <Property Name="DocumentNo" Type="varchar" MaxLength="20" />
+          <Property Name="CityId" Type="int" />
+        </EntityType>
+        <EntityType Name="User">
+          <Key>
+            <PropertyRef Name="Id" />
+          </Key>
+          <Property Name="Id" Type="int" StoreGeneratedPattern="Identity" Nullable="false" />
+          <Property Name="UserName" Type="nvarchar" MaxLength="50" />
+          <Property Name="Password" Type="nvarchar" MaxLength="100" />
+          <Property Name="FirstName" Type="nvarchar" MaxLength="100" />
+          <Property Name="LastName" Type="nvarchar" MaxLength="100" />
+          <Property Name="ObjectId" Type="nchar" MaxLength="24" />
+          <Property Name="FacebookId" Type="bigint" />
+          <Property Name="Role" Type="smallint" Nullable="false" />
+          <Property Name="LanguageId" Type="int" Nullable="false" />
+          <Property Name="RequireChangePassword" Type="bit" Nullable="false" />
+          <Property Name="Signed" Type="bit" Nullable="false" />
+          <Property Name="IsAmbasador" Type="bit" Nullable="false" />
+          <Property Name="PostPermissionGranted" Type="bit" />
+          <Property Name="PersonCode" Type="nvarchar" MaxLength="32" />
+          <Property Name="AuthSource" Type="varchar" MaxLength="50" />
+          <Property Name="RequireUniqueAuthentication" Type="bit" Nullable="false" />
+          <Property Name="TutorialShown" Type="bit" Nullable="false" />
+          <Property Name="RegisteredOn" Type="datetime" Nullable="false" />
+          <Property Name="PageLiked" Type="bit" />
+          <Property Name="IsPolitician" Type="bit" Nullable="false" />
+        </EntityType>
+        <EntityType Name="UserAwards">
+          <Key>
+            <PropertyRef Name="Id" />
+          </Key>
+          <Property Name="Id" Type="int" StoreGeneratedPattern="Identity" Nullable="false" />
+          <Property Name="UserId" Type="int" Nullable="false" />
+          <Property Name="AwardId" Type="smallint" Nullable="false" />
+        </EntityType>
+        <EntityType Name="UserCategory">
+          <Key>
+            <PropertyRef Name="Id" />
+          </Key>
+          <Property Name="Id" Type="int" StoreGeneratedPattern="Identity" Nullable="false" />
+          <Property Name="UserId" Type="int" Nullable="false" />
+          <Property Name="CategoryId" Type="int" />
+          <Property Name="Points" Type="int" Nullable="false" />
+          <Property Name="IsExpert" Type="bit" Nullable="false" />
+        </EntityType>
+        <EntityType Name="UserEmail">
+          <Key>
+            <PropertyRef Name="Id" />
+          </Key>
+          <Property Name="Id" Type="int" StoreGeneratedPattern="Identity" Nullable="false" />
+          <Property Name="UserId" Type="int" Nullable="false" />
+          <Property Name="Email" Type="nvarchar" MaxLength="200" Nullable="false" />
+          <Property Name="IsEmailConfirmed" Type="bit" Nullable="false" />
+          <Property Name="EmailConfirmationCode" Type="char" MaxLength="10" />
+          <Property Name="SendMail" Type="bit" Nullable="false" />
+          <Property Name="IsPrivate" Type="bit" Nullable="false" />
+        </EntityType>
+        <EntityType Name="UserInvitations">
+          <Key>
+            <PropertyRef Name="Id" />
+          </Key>
+          <Property Name="Id" Type="int" StoreGeneratedPattern="Identity" Nullable="false" />
+          <Property Name="OrganizationId" Type="nchar" MaxLength="24" />
+          <Property Name="ProjectId" Type="nchar" MaxLength="24" />
+          <Property Name="UserEmail" Type="nvarchar" MaxLength="50" Nullable="false" />
+          <Property Name="InvitationSent" Type="smallint" Nullable="false" />
+          <Property Name="Message" Type="nvarchar" MaxLength="500" />
+          <Property Name="Joined" Type="bit" Nullable="false" />
+          <Property Name="InvitedByUserId" Type="int" />
+        </EntityType>
+        <EntityType Name="WebToPayLog">
+          <Key>
+            <PropertyRef Name="Id" />
+          </Key>
+          <Property Name="Id" Type="int" StoreGeneratedPattern="Identity" Nullable="false" />
+          <Property Name="Firstname" Type="nvarchar" MaxLength="255" />
+          <Property Name="LastName" Type="nvarchar" MaxLength="255" />
+          <Property Name="Email" Type="nchar" MaxLength="255" />
+          <Property Name="Amount" Type="decimal" Precision="18" Scale="2" />
+          <Property Name="Date" Type="datetime" Nullable="false" />
+          <Property Name="Currency" Type="nchar" MaxLength="3" />
+          <Property Name="Country" Type="nchar" MaxLength="2" />
+          <Property Name="Status" Type="smallint" Nullable="false" />
+          <Property Name="Error" Type="nvarchar" MaxLength="50" />
+          <Property Name="RequestId" Type="nvarchar" MaxLength="40" />
+          <Property Name="UserId" Type="int" />
+          <Property Name="PayText" Type="nvarchar" MaxLength="255" />
+          <Property Name="GiftId" Type="int" />
+        </EntityType>
+        <Association Name="FK_BankAccountItem_BankAccount">
+          <End Role="BankAccount" Type="Self.BankAccount" Multiplicity="1" />
+          <End Role="BankAccountItem" Type="Self.BankAccountItem" Multiplicity="*" />
+          <ReferentialConstraint>
+            <Principal Role="BankAccount">
+              <PropertyRef Name="Id" />
+            </Principal>
+            <Dependent Role="BankAccountItem">
+              <PropertyRef Name="BankAccountId" />
+            </Dependent>
+          </ReferentialConstraint>
+        </Association>
+        <Association Name="FK_BankAccountItem_User">
+          <End Role="User" Type="Self.User" Multiplicity="0..1" />
+          <End Role="BankAccountItem" Type="Self.BankAccountItem" Multiplicity="*" />
+          <ReferentialConstraint>
+            <Principal Role="User">
+              <PropertyRef Name="Id" />
+            </Principal>
+            <Dependent Role="BankAccountItem">
+              <PropertyRef Name="UserId" />
+            </Dependent>
+          </ReferentialConstraint>
+        </Association>
+        <Association Name="FK_ChatBlockedUser_User">
+          <End Role="User" Type="Self.User" Multiplicity="1" />
+          <End Role="BlackList" Type="Self.BlackList" Multiplicity="*" />
+          <ReferentialConstraint>
+            <Principal Role="User">
+              <PropertyRef Name="Id" />
+            </Principal>
+            <Dependent Role="BlackList">
+              <PropertyRef Name="UserId" />
+            </Dependent>
+          </ReferentialConstraint>
+        </Association>
+        <Association Name="FK_ChatClients_ChatUsers">
+          <End Role="User" Type="Self.User" Multiplicity="1" />
+          <End Role="ChatClient" Type="Self.ChatClient" Multiplicity="*" />
+          <ReferentialConstraint>
+            <Principal Role="User">
+              <PropertyRef Name="Id" />
+            </Principal>
+            <Dependent Role="ChatClient">
+              <PropertyRef Name="UserId" />
+            </Dependent>
+          </ReferentialConstraint>
+        </Association>
+        <Association Name="FK_ChatGroupUsers_ChatGroup">
+          <End Role="ChatGroup" Type="Self.ChatGroup" Multiplicity="1" />
+          <End Role="ChatGroupUsers" Type="Self.ChatGroupUsers" Multiplicity="*" />
+          <ReferentialConstraint>
+            <Principal Role="ChatGroup">
+              <PropertyRef Name="Id" />
+            </Principal>
+            <Dependent Role="ChatGroupUsers">
+              <PropertyRef Name="GroupId" />
+            </Dependent>
+          </ReferentialConstraint>
+        </Association>
+        <Association Name="FK_ChatMessage_ChatGroup">
+          <End Role="ChatGroup" Type="Self.ChatGroup" Multiplicity="0..1" />
+          <End Role="ChatMessage" Type="Self.ChatMessage" Multiplicity="*" />
+          <ReferentialConstraint>
+            <Principal Role="ChatGroup">
+              <PropertyRef Name="Id" />
+            </Principal>
+            <Dependent Role="ChatMessage">
+              <PropertyRef Name="GroupId" />
+            </Dependent>
+          </ReferentialConstraint>
+        </Association>
+        <Association Name="FK_ChatMessage_OtherUser">
+          <End Role="User" Type="Self.User" Multiplicity="0..1" />
+          <End Role="ChatMessage" Type="Self.ChatMessage" Multiplicity="*" />
+          <ReferentialConstraint>
+            <Principal Role="User">
+              <PropertyRef Name="Id" />
+            </Principal>
+            <Dependent Role="ChatMessage">
+              <PropertyRef Name="OtherUserId" />
+            </Dependent>
+          </ReferentialConstraint>
+        </Association>
+        <Association Name="FK_ChatMessages_Users">
+          <End Role="User" Type="Self.User" Multiplicity="1" />
+          <End Role="ChatMessage" Type="Self.ChatMessage" Multiplicity="*" />
+          <ReferentialConstraint>
+            <Principal Role="User">
+              <PropertyRef Name="Id" />
+            </Principal>
+            <Dependent Role="ChatMessage">
+              <PropertyRef Name="UserId" />
+            </Dependent>
+          </ReferentialConstraint>
+        </Association>
+        <Association Name="FK_ChatOpenDialog_OtherUser">
+          <End Role="User" Type="Self.User" Multiplicity="1" />
+          <End Role="ChatOpenDialog" Type="Self.ChatOpenDialog" Multiplicity="*" />
+          <ReferentialConstraint>
+            <Principal Role="User">
+              <PropertyRef Name="Id" />
+            </Principal>
+            <Dependent Role="ChatOpenDialog">
+              <PropertyRef Name="OtherUserId" />
+            </Dependent>
+          </ReferentialConstraint>
+        </Association>
+        <Association Name="FK_ChatOpenDialog_User">
+          <End Role="User" Type="Self.User" Multiplicity="1" />
+          <End Role="ChatOpenDialog" Type="Self.ChatOpenDialog" Multiplicity="*" />
+          <ReferentialConstraint>
+            <Principal Role="User">
+              <PropertyRef Name="Id" />
+            </Principal>
+            <Dependent Role="ChatOpenDialog">
+              <PropertyRef Name="UserId" />
+            </Dependent>
+          </ReferentialConstraint>
+        </Association>
+        <Association Name="FK_ChatOpenGroup_ChatGroup">
+          <End Role="ChatGroup" Type="Self.ChatGroup" Multiplicity="1" />
+          <End Role="ChatOpenGroup" Type="Self.ChatOpenGroup" Multiplicity="*" />
+          <ReferentialConstraint>
+            <Principal Role="ChatGroup">
+              <PropertyRef Name="Id" />
+            </Principal>
+            <Dependent Role="ChatOpenGroup">
+              <PropertyRef Name="GroupId" />
+            </Dependent>
+          </ReferentialConstraint>
+        </Association>
+        <Association Name="FK_ChatOpenGroup_User">
+          <End Role="User" Type="Self.User" Multiplicity="1" />
+          <End Role="ChatOpenGroup" Type="Self.ChatOpenGroup" Multiplicity="*" />
+          <ReferentialConstraint>
+            <Principal Role="User">
+              <PropertyRef Name="Id" />
+            </Principal>
+            <Dependent Role="ChatOpenGroup">
+              <PropertyRef Name="UserId" />
+            </Dependent>
+          </ReferentialConstraint>
+        </Association>
+        <Association Name="FK_ChatRoomUser_User">
+          <End Role="User" Type="Self.User" Multiplicity="1" />
+          <End Role="ChatGroupUsers" Type="Self.ChatGroupUsers" Multiplicity="*" />
+          <ReferentialConstraint>
+            <Principal Role="User">
+              <PropertyRef Name="Id" />
+            </Principal>
+            <Dependent Role="ChatGroupUsers">
+              <PropertyRef Name="UserId" />
+            </Dependent>
+          </ReferentialConstraint>
+        </Association>
+        <Association Name="FK_City_Municipality">
+          <End Role="Municipality" Type="Self.Municipality" Multiplicity="1" />
+          <End Role="City" Type="Self.City" Multiplicity="*" />
+          <ReferentialConstraint>
+            <Principal Role="Municipality">
+              <PropertyRef Name="Id" />
+            </Principal>
+            <Dependent Role="City">
+              <PropertyRef Name="MunicipalityId" />
+            </Dependent>
+          </ReferentialConstraint>
+        </Association>
+        <Association Name="FK_Municipality_Country">
+          <End Role="Country" Type="Self.Country" Multiplicity="1" />
+          <End Role="Municipality" Type="Self.Municipality" Multiplicity="*" />
+          <ReferentialConstraint>
+            <Principal Role="Country">
+              <PropertyRef Name="Id" />
+            </Principal>
+            <Dependent Role="Municipality">
+              <PropertyRef Name="CountryId" />
+            </Dependent>
+          </ReferentialConstraint>
+        </Association>
+        <Association Name="FK_Table_1_BlockedUser">
+          <End Role="User" Type="Self.User" Multiplicity="1" />
+          <End Role="BlackList" Type="Self.BlackList" Multiplicity="*" />
+          <ReferentialConstraint>
+            <Principal Role="User">
+              <PropertyRef Name="Id" />
+            </Principal>
+            <Dependent Role="BlackList">
+              <PropertyRef Name="BlockedUserId" />
+            </Dependent>
+          </ReferentialConstraint>
+        </Association>
+        <Association Name="FK_User_Languages">
+          <End Role="Languages" Type="Self.Languages" Multiplicity="1" />
+          <End Role="User" Type="Self.User" Multiplicity="*" />
+          <ReferentialConstraint>
+            <Principal Role="Languages">
+              <PropertyRef Name="Id" />
+            </Principal>
+            <Dependent Role="User">
+              <PropertyRef Name="LanguageId" />
+            </Dependent>
+          </ReferentialConstraint>
+        </Association>
+        <Association Name="FK_UserAwards_User">
+          <End Role="User" Type="Self.User" Multiplicity="1" />
+          <End Role="UserAwards" Type="Self.UserAwards" Multiplicity="*" />
+          <ReferentialConstraint>
+            <Principal Role="User">
+              <PropertyRef Name="Id" />
+            </Principal>
+            <Dependent Role="UserAwards">
+              <PropertyRef Name="UserId" />
+            </Dependent>
+          </ReferentialConstraint>
+        </Association>
+        <Association Name="FK_UserCategory_User">
+          <End Role="User" Type="Self.User" Multiplicity="1" />
+          <End Role="UserCategory" Type="Self.UserCategory" Multiplicity="*" />
+          <ReferentialConstraint>
+            <Principal Role="User">
+              <PropertyRef Name="Id" />
+            </Principal>
+            <Dependent Role="UserCategory">
+              <PropertyRef Name="UserId" />
+            </Dependent>
+          </ReferentialConstraint>
+        </Association>
+        <Association Name="FK_UserEmail_User">
+          <End Role="User" Type="Self.User" Multiplicity="1" />
+          <End Role="UserEmail" Type="Self.UserEmail" Multiplicity="*" />
+          <ReferentialConstraint>
+            <Principal Role="User">
+              <PropertyRef Name="Id" />
+            </Principal>
+            <Dependent Role="UserEmail">
+              <PropertyRef Name="UserId" />
+            </Dependent>
+          </ReferentialConstraint>
+        </Association>
+        <Association Name="FK_WebToPayLog_Gifts">
+          <End Role="Gifts" Type="Self.Gifts" Multiplicity="0..1" />
+          <End Role="WebToPayLog" Type="Self.WebToPayLog" Multiplicity="*" />
+          <ReferentialConstraint>
+            <Principal Role="Gifts">
+              <PropertyRef Name="Id" />
+            </Principal>
+            <Dependent Role="WebToPayLog">
+              <PropertyRef Name="GiftId" />
+            </Dependent>
+          </ReferentialConstraint>
+        </Association>
+        <Association Name="FK_WebToPayLog_User">
+          <End Role="User" Type="Self.User" Multiplicity="0..1" />
+          <End Role="WebToPayLog" Type="Self.WebToPayLog" Multiplicity="*" />
+          <ReferentialConstraint>
+            <Principal Role="User">
+              <PropertyRef Name="Id" />
+            </Principal>
+            <Dependent Role="WebToPayLog">
+              <PropertyRef Name="UserId" />
+            </Dependent>
+          </ReferentialConstraint>
+        </Association>
+        <EntityContainer Name="UsersModelStoreContainer">
+          <EntitySet Name="BankAccount" EntityType="Self.BankAccount" Schema="dbo" store:Type="Tables" />
+          <EntitySet Name="BankAccountItem" EntityType="Self.BankAccountItem" Schema="dbo" store:Type="Tables" />
+          <EntitySet Name="BlackList" EntityType="Self.BlackList" Schema="dbo" store:Type="Tables" />
+          <EntitySet Name="ChatClient" EntityType="Self.ChatClient" Schema="dbo" store:Type="Tables" />
+          <EntitySet Name="ChatGroup" EntityType="Self.ChatGroup" Schema="dbo" store:Type="Tables" />
+          <EntitySet Name="ChatGroupUsers" EntityType="Self.ChatGroupUsers" Schema="dbo" store:Type="Tables" />
+          <EntitySet Name="ChatMessage" EntityType="Self.ChatMessage" Schema="dbo" store:Type="Tables" />
+          <EntitySet Name="ChatOpenDialog" EntityType="Self.ChatOpenDialog" Schema="dbo" store:Type="Tables" />
+          <EntitySet Name="ChatOpenGroup" EntityType="Self.ChatOpenGroup" Schema="dbo" store:Type="Tables" />
+          <EntitySet Name="City" EntityType="Self.City" Schema="dbo" store:Type="Tables" />
+          <EntitySet Name="Country" EntityType="Self.Country" Schema="dbo" store:Type="Tables" />
+          <EntitySet Name="Gifts" EntityType="Self.Gifts" Schema="dbo" store:Type="Tables" />
+          <EntitySet Name="Languages" EntityType="Self.Languages" Schema="dbo" store:Type="Tables" />
+          <EntitySet Name="Municipality" EntityType="Self.Municipality" Schema="dbo" store:Type="Tables" />
+          <EntitySet Name="Notification" EntityType="Self.Notification" Schema="dbo" store:Type="Tables" />
+          <EntitySet Name="Status" EntityType="Self.Status" Schema="dbo" store:Type="Tables" />
+          <EntitySet Name="UniqueUser" EntityType="Self.UniqueUser" Schema="dbo" store:Type="Tables" />
+          <EntitySet Name="User" EntityType="Self.User" Schema="dbo" store:Type="Tables" />
+          <EntitySet Name="UserAwards" EntityType="Self.UserAwards" Schema="dbo" store:Type="Tables" />
+          <EntitySet Name="UserCategory" EntityType="Self.UserCategory" Schema="dbo" store:Type="Tables" />
+          <EntitySet Name="UserEmail" EntityType="Self.UserEmail" Schema="dbo" store:Type="Tables" />
+          <EntitySet Name="UserInvitations" EntityType="Self.UserInvitations" Schema="dbo" store:Type="Tables" />
+          <EntitySet Name="WebToPayLog" EntityType="Self.WebToPayLog" Schema="dbo" store:Type="Tables" />
+          <AssociationSet Name="FK_BankAccountItem_BankAccount" Association="Self.FK_BankAccountItem_BankAccount">
+            <End Role="BankAccount" EntitySet="BankAccount" />
+            <End Role="BankAccountItem" EntitySet="BankAccountItem" />
+          </AssociationSet>
+          <AssociationSet Name="FK_BankAccountItem_User" Association="Self.FK_BankAccountItem_User">
+            <End Role="User" EntitySet="User" />
+            <End Role="BankAccountItem" EntitySet="BankAccountItem" />
+          </AssociationSet>
+          <AssociationSet Name="FK_ChatBlockedUser_User" Association="Self.FK_ChatBlockedUser_User">
+            <End Role="User" EntitySet="User" />
+            <End Role="BlackList" EntitySet="BlackList" />
+          </AssociationSet>
+          <AssociationSet Name="FK_ChatClients_ChatUsers" Association="Self.FK_ChatClients_ChatUsers">
+            <End Role="User" EntitySet="User" />
+            <End Role="ChatClient" EntitySet="ChatClient" />
+          </AssociationSet>
+          <AssociationSet Name="FK_ChatGroupUsers_ChatGroup" Association="Self.FK_ChatGroupUsers_ChatGroup">
+            <End Role="ChatGroup" EntitySet="ChatGroup" />
+            <End Role="ChatGroupUsers" EntitySet="ChatGroupUsers" />
+          </AssociationSet>
+          <AssociationSet Name="FK_ChatMessage_ChatGroup" Association="Self.FK_ChatMessage_ChatGroup">
+            <End Role="ChatGroup" EntitySet="ChatGroup" />
+            <End Role="ChatMessage" EntitySet="ChatMessage" />
+          </AssociationSet>
+          <AssociationSet Name="FK_ChatMessage_OtherUser" Association="Self.FK_ChatMessage_OtherUser">
+            <End Role="User" EntitySet="User" />
+            <End Role="ChatMessage" EntitySet="ChatMessage" />
+          </AssociationSet>
+          <AssociationSet Name="FK_ChatMessages_Users" Association="Self.FK_ChatMessages_Users">
+            <End Role="User" EntitySet="User" />
+            <End Role="ChatMessage" EntitySet="ChatMessage" />
+          </AssociationSet>
+          <AssociationSet Name="FK_ChatOpenDialog_OtherUser" Association="Self.FK_ChatOpenDialog_OtherUser">
+            <End Role="User" EntitySet="User" />
+            <End Role="ChatOpenDialog" EntitySet="ChatOpenDialog" />
+          </AssociationSet>
+          <AssociationSet Name="FK_ChatOpenDialog_User" Association="Self.FK_ChatOpenDialog_User">
+            <End Role="User" EntitySet="User" />
+            <End Role="ChatOpenDialog" EntitySet="ChatOpenDialog" />
+          </AssociationSet>
+          <AssociationSet Name="FK_ChatOpenGroup_ChatGroup" Association="Self.FK_ChatOpenGroup_ChatGroup">
+            <End Role="ChatGroup" EntitySet="ChatGroup" />
+            <End Role="ChatOpenGroup" EntitySet="ChatOpenGroup" />
+          </AssociationSet>
+          <AssociationSet Name="FK_ChatOpenGroup_User" Association="Self.FK_ChatOpenGroup_User">
+            <End Role="User" EntitySet="User" />
+            <End Role="ChatOpenGroup" EntitySet="ChatOpenGroup" />
+          </AssociationSet>
+          <AssociationSet Name="FK_ChatRoomUser_User" Association="Self.FK_ChatRoomUser_User">
+            <End Role="User" EntitySet="User" />
+            <End Role="ChatGroupUsers" EntitySet="ChatGroupUsers" />
+          </AssociationSet>
+          <AssociationSet Name="FK_City_Municipality" Association="Self.FK_City_Municipality">
+            <End Role="Municipality" EntitySet="Municipality" />
+            <End Role="City" EntitySet="City" />
+          </AssociationSet>
+          <AssociationSet Name="FK_Municipality_Country" Association="Self.FK_Municipality_Country">
+            <End Role="Country" EntitySet="Country" />
+            <End Role="Municipality" EntitySet="Municipality" />
+          </AssociationSet>
+          <AssociationSet Name="FK_Table_1_BlockedUser" Association="Self.FK_Table_1_BlockedUser">
+            <End Role="User" EntitySet="User" />
+            <End Role="BlackList" EntitySet="BlackList" />
+          </AssociationSet>
+          <AssociationSet Name="FK_User_Languages" Association="Self.FK_User_Languages">
+            <End Role="Languages" EntitySet="Languages" />
+            <End Role="User" EntitySet="User" />
+          </AssociationSet>
+          <AssociationSet Name="FK_UserAwards_User" Association="Self.FK_UserAwards_User">
+            <End Role="User" EntitySet="User" />
+            <End Role="UserAwards" EntitySet="UserAwards" />
+          </AssociationSet>
+          <AssociationSet Name="FK_UserCategory_User" Association="Self.FK_UserCategory_User">
+            <End Role="User" EntitySet="User" />
+            <End Role="UserCategory" EntitySet="UserCategory" />
+          </AssociationSet>
+          <AssociationSet Name="FK_UserEmail_User" Association="Self.FK_UserEmail_User">
+            <End Role="User" EntitySet="User" />
+            <End Role="UserEmail" EntitySet="UserEmail" />
+          </AssociationSet>
+          <AssociationSet Name="FK_WebToPayLog_Gifts" Association="Self.FK_WebToPayLog_Gifts">
+            <End Role="Gifts" EntitySet="Gifts" />
+            <End Role="WebToPayLog" EntitySet="WebToPayLog" />
+          </AssociationSet>
+          <AssociationSet Name="FK_WebToPayLog_User" Association="Self.FK_WebToPayLog_User">
+            <End Role="User" EntitySet="User" />
+            <End Role="WebToPayLog" EntitySet="WebToPayLog" />
+          </AssociationSet>
+        </EntityContainer>
+      </Schema></edmx:StorageModels>
+    <!-- CSDL content -->
+    <edmx:ConceptualModels>
+      <Schema Namespace="UsersModel" Alias="Self" p1:UseStrongSpatialTypes="false" xmlns:annotation="http://schemas.microsoft.com/ado/2009/02/edm/annotation" xmlns:p1="http://schemas.microsoft.com/ado/2009/02/edm/annotation" xmlns="http://schemas.microsoft.com/ado/2009/11/edm">
+        <EntityContainer Name="UsersEntities" p1:LazyLoadingEnabled="true">
+          <EntitySet Name="BankAccounts" EntityType="UsersModel.BankAccount" />
+          <EntitySet Name="BankAccountItems" EntityType="UsersModel.BankAccountItem" />
+          <EntitySet Name="ChatClients" EntityType="UsersModel.ChatClient" />
+          <EntitySet Name="Cities" EntityType="UsersModel.City" />
+          <EntitySet Name="Countries" EntityType="UsersModel.Country" />
+          <EntitySet Name="Gifts" EntityType="UsersModel.Gift" />
+          <EntitySet Name="Languages" EntityType="UsersModel.Language" />
+          <EntitySet Name="Municipalities" EntityType="UsersModel.Municipality" />
+          <EntitySet Name="Notifications" EntityType="UsersModel.Notification" />
+          <EntitySet Name="UniqueUsers" EntityType="UsersModel.UniqueUser" />
+          <EntitySet Name="Users" EntityType="UsersModel.User" />
+          <EntitySet Name="UserAwards" EntityType="UsersModel.UserAward" />
+          <EntitySet Name="UserCategories" EntityType="UsersModel.UserCategory" />
+          <EntitySet Name="UserInvitations" EntityType="UsersModel.UserInvitation" />
+          <EntitySet Name="WebToPayLogs" EntityType="UsersModel.WebToPayLog" />
+          <AssociationSet Name="FK_BankAccountItem_BankAccount" Association="UsersModel.FK_BankAccountItem_BankAccount">
+            <End Role="BankAccount" EntitySet="BankAccounts" />
+            <End Role="BankAccountItem" EntitySet="BankAccountItems" />
+          </AssociationSet>
+          <AssociationSet Name="FK_BankAccountItem_User" Association="UsersModel.FK_BankAccountItem_User">
+            <End Role="User" EntitySet="Users" />
+            <End Role="BankAccountItem" EntitySet="BankAccountItems" />
+          </AssociationSet>
+          <AssociationSet Name="FK_ChatClients_ChatUsers" Association="UsersModel.FK_ChatClients_ChatUsers">
+            <End Role="User" EntitySet="Users" />
+            <End Role="ChatClient" EntitySet="ChatClients" />
+          </AssociationSet>
+          <AssociationSet Name="FK_City_Municipality" Association="UsersModel.FK_City_Municipality">
+            <End Role="Municipality" EntitySet="Municipalities" />
+            <End Role="City" EntitySet="Cities" />
+          </AssociationSet>
+          <AssociationSet Name="FK_Municipality_Country" Association="UsersModel.FK_Municipality_Country">
+            <End Role="Country" EntitySet="Countries" />
+            <End Role="Municipality" EntitySet="Municipalities" />
+          </AssociationSet>
+          <AssociationSet Name="FK_WebToPayLog_Gifts" Association="UsersModel.FK_WebToPayLog_Gifts">
+            <End Role="Gift" EntitySet="Gifts" />
+            <End Role="WebToPayLog" EntitySet="WebToPayLogs" />
+          </AssociationSet>
+          <AssociationSet Name="FK_User_Languages" Association="UsersModel.FK_User_Languages">
+            <End Role="Language" EntitySet="Languages" />
+            <End Role="User" EntitySet="Users" />
+          </AssociationSet>
+          <AssociationSet Name="FK_UserAwards_User" Association="UsersModel.FK_UserAwards_User">
+            <End Role="User" EntitySet="Users" />
+            <End Role="UserAward" EntitySet="UserAwards" />
+          </AssociationSet>
+          <AssociationSet Name="FK_UserCategory_User" Association="UsersModel.FK_UserCategory_User">
+            <End Role="User" EntitySet="Users" />
+            <End Role="UserCategory" EntitySet="UserCategories" />
+          </AssociationSet>
+          <AssociationSet Name="FK_WebToPayLog_User" Association="UsersModel.FK_WebToPayLog_User">
+            <End Role="User" EntitySet="Users" />
+            <End Role="WebToPayLog" EntitySet="WebToPayLogs" />
+          </AssociationSet>
+          <EntitySet Name="ChatMessages" EntityType="UsersModel.ChatMessage" />
+          <AssociationSet Name="FK_ChatMessages_Users" Association="UsersModel.FK_ChatMessages_Users">
+            <End Role="User" EntitySet="Users" />
+            <End Role="ChatMessage" EntitySet="ChatMessages" />
+          </AssociationSet>
+          <AssociationSet Name="FK_ChatMessage_OtherUser" Association="UsersModel.FK_ChatMessage_OtherUser">
+            <End Role="User" EntitySet="Users" />
+            <End Role="ChatMessage" EntitySet="ChatMessages" />
+          </AssociationSet>
+          <EntitySet Name="ChatGroupUsers" EntityType="UsersModel.ChatGroupUser" />
+          <AssociationSet Name="FK_ChatRoomUser_User" Association="UsersModel.FK_ChatRoomUser_User">
+            <End Role="User" EntitySet="Users" />
+            <End Role="ChatGroupUser" EntitySet="ChatGroupUsers" />
+          </AssociationSet>
+          <EntitySet Name="UserEmails" EntityType="UsersModel.UserEmail" />
+          <AssociationSet Name="FK_UserEmail_User" Association="UsersModel.FK_UserEmail_User">
+            <End Role="User" EntitySet="Users" />
+            <End Role="UserEmail" EntitySet="UserEmails" />
+          </AssociationSet>
+          <EntitySet Name="BlackLists" EntityType="UsersModel.BlackList" />
+          <AssociationSet Name="FK_ChatBlockedUser_User" Association="UsersModel.FK_ChatBlockedUser_User">
+            <End Role="User" EntitySet="Users" />
+            <End Role="BlackList" EntitySet="BlackLists" />
+          </AssociationSet>
+          <AssociationSet Name="FK_Table_1_BlockedUser" Association="UsersModel.FK_Table_1_BlockedUser">
+            <End Role="User" EntitySet="Users" />
+            <End Role="BlackList" EntitySet="BlackLists" />
+          </AssociationSet>
+          <EntitySet Name="ChatGroups" EntityType="UsersModel.ChatGroup" />
+          <AssociationSet Name="FK_ChatGroupUsers_ChatGroup" Association="UsersModel.FK_ChatGroupUsers_ChatGroup">
+            <End Role="ChatGroup" EntitySet="ChatGroups" />
+            <End Role="ChatGroupUser" EntitySet="ChatGroupUsers" />
+          </AssociationSet>
+          <EntitySet Name="Status" EntityType="UsersModel.Status" />
+          <EntitySet Name="ChatOpenDialogs" EntityType="UsersModel.ChatOpenDialog" />
+          <EntitySet Name="ChatOpenGroups" EntityType="UsersModel.ChatOpenGroup" />
+          <AssociationSet Name="FK_ChatOpenGroup_ChatGroup" Association="UsersModel.FK_ChatOpenGroup_ChatGroup">
+            <End Role="ChatGroup" EntitySet="ChatGroups" />
+            <End Role="ChatOpenGroup" EntitySet="ChatOpenGroups" />
+          </AssociationSet>
+          <AssociationSet Name="FK_ChatOpenDialog_OtherUser" Association="UsersModel.FK_ChatOpenDialog_OtherUser">
+            <End Role="User" EntitySet="Users" />
+            <End Role="ChatOpenDialog" EntitySet="ChatOpenDialogs" />
+          </AssociationSet>
+          <AssociationSet Name="FK_ChatOpenDialog_User" Association="UsersModel.FK_ChatOpenDialog_User">
+            <End Role="User" EntitySet="Users" />
+            <End Role="ChatOpenDialog" EntitySet="ChatOpenDialogs" />
+          </AssociationSet>
+          <AssociationSet Name="FK_ChatOpenGroup_User" Association="UsersModel.FK_ChatOpenGroup_User">
+            <End Role="User" EntitySet="Users" />
+            <End Role="ChatOpenGroup" EntitySet="ChatOpenGroups" />
+          </AssociationSet>
+          <AssociationSet Name="FK_ChatMessage_ChatGroup" Association="UsersModel.FK_ChatMessage_ChatGroup">
+            <End Role="ChatGroup" EntitySet="ChatGroups" />
+            <End Role="ChatMessage" EntitySet="ChatMessages" />
+          </AssociationSet>
+          </EntityContainer>
+        <EntityType Name="BankAccount">
+          <Key>
+            <PropertyRef Name="Id" />
+          </Key>
+          <Property Type="Int32" Name="Id" Nullable="false" annotation:StoreGeneratedPattern="Identity" />
+          <Property Type="String" Name="AccountNo" Nullable="false" MaxLength="50" FixedLength="false" Unicode="true" />
+          <Property Type="Decimal" Name="Balance" Nullable="false" Precision="18" Scale="2" />
+          <NavigationProperty Name="BankAccountItems" Relationship="UsersModel.FK_BankAccountItem_BankAccount" FromRole="BankAccount" ToRole="BankAccountItem" />
+        </EntityType>
+        <EntityType Name="BankAccountItem">
+          <Key>
+            <PropertyRef Name="Id" />
+          </Key>
+          <Property Type="Int32" Name="Id" Nullable="false" annotation:StoreGeneratedPattern="Identity" />
+          <Property Type="Int32" Name="BankAccountId" Nullable="false" />
+          <Property Type="DateTime" Name="Date" Nullable="false" Precision="0" />
+          <Property Type="String" Name="Operation" Nullable="false" MaxLength="Max" FixedLength="false" Unicode="true" />
+          <Property Type="Decimal" Name="Expense" Precision="18" Scale="2" />
+          <Property Type="Decimal" Name="Income" Precision="18" Scale="2" />
+          <Property Type="Int32" Name="UserId" />
+          <Property Type="String" Name="OrganizationId" MaxLength="24" FixedLength="true" Unicode="false" />
+          <NavigationProperty Name="BankAccount" Relationship="UsersModel.FK_BankAccountItem_BankAccount" FromRole="BankAccountItem" ToRole="BankAccount" />
+          <NavigationProperty Name="User" Relationship="UsersModel.FK_BankAccountItem_User" FromRole="BankAccountItem" ToRole="User" />
+        </EntityType>
+        <EntityType Name="ChatClient">
+          <Key>
+            <PropertyRef Name="Id" />
+          </Key>
+          <Property Type="Int32" Name="Id" Nullable="false" annotation:StoreGeneratedPattern="Identity" />
+          <Property Type="String" Name="ConnectionId" Nullable="false" MaxLength="36" FixedLength="true" Unicode="false" />
+          <Property Type="Int32" Name="UserId" Nullable="false" />
+          <Property Type="String" Name="UserAgent" MaxLength="500" FixedLength="false" Unicode="true" />
+          <Property Type="DateTime" Name="LastActivity" Nullable="false" Precision="3" />
+          <Property Type="String" Name="GroupId" MaxLength="24" FixedLength="true" Unicode="false" />
+          <NavigationProperty Name="User" Relationship="UsersModel.FK_ChatClients_ChatUsers" FromRole="ChatClient" ToRole="User" />
+        </EntityType>
+        <EntityType Name="City">
+          <Key>
+            <PropertyRef Name="Id" />
+          </Key>
+          <Property Type="Int32" Name="Id" Nullable="false" annotation:StoreGeneratedPattern="Identity" />
+          <Property Type="Int32" Name="MunicipalityId" Nullable="false" />
+          <Property Type="String" Name="Name" Nullable="false" MaxLength="100" FixedLength="false" Unicode="true" />
+          <NavigationProperty Name="Municipality" Relationship="UsersModel.FK_City_Municipality" FromRole="City" ToRole="Municipality" />
+        </EntityType>
+        <EntityType Name="Country">
+          <Key>
+            <PropertyRef Name="Id" />
+          </Key>
+          <Property Type="Int32" Name="Id" Nullable="false" annotation:StoreGeneratedPattern="Identity" />
+          <Property Type="String" Name="Name" Nullable="false" MaxLength="100" FixedLength="false" Unicode="true" />
+          <NavigationProperty Name="Municipalities" Relationship="UsersModel.FK_Municipality_Country" FromRole="Country" ToRole="Municipality" />
+        </EntityType>
+        <EntityType Name="Gift">
+          <Key>
+            <PropertyRef Name="Id" />
+          </Key>
+          <Property Type="Int32" Name="Id" Nullable="false" annotation:StoreGeneratedPattern="Identity" />
+          <Property Type="String" Name="Name" Nullable="false" MaxLength="50" FixedLength="false" Unicode="true" />
+          <Property Type="String" Name="Url" Nullable="false" MaxLength="500" FixedLength="false" Unicode="true" />
+          <Property Type="Int32" Name="RequiredAmount" Nullable="false" />
+          <NavigationProperty Name="WebToPayLogs" Relationship="UsersModel.FK_WebToPayLog_Gifts" FromRole="Gift" ToRole="WebToPayLog" />
+        </EntityType>
+        <EntityType Name="Language">
+          <Key>
+            <PropertyRef Name="Id" />
+          </Key>
+          <Property Type="Int32" Name="Id" Nullable="false" annotation:StoreGeneratedPattern="Identity" />
+          <Property Type="String" Name="Name" Nullable="false" MaxLength="50" FixedLength="false" Unicode="true" />
+          <Property Type="String" Name="Code" Nullable="false" MaxLength="10" FixedLength="false" Unicode="false" />
+          <NavigationProperty Name="Users" Relationship="UsersModel.FK_User_Languages" FromRole="Language" ToRole="User" />
+        </EntityType>
+        <EntityType Name="Municipality">
+          <Key>
+            <PropertyRef Name="Id" />
+          </Key>
+          <Property Type="Int32" Name="Id" Nullable="false" annotation:StoreGeneratedPattern="Identity" />
+          <Property Type="Int32" Name="CountryId" Nullable="false" />
+          <Property Type="String" Name="Name" MaxLength="100" FixedLength="false" Unicode="true" />
+          <Property Type="String" Name="ShortName" MaxLength="50" FixedLength="false" Unicode="true" />
+          <NavigationProperty Name="Cities" Relationship="UsersModel.FK_City_Municipality" FromRole="Municipality" ToRole="City" />
+          <NavigationProperty Name="Country" Relationship="UsersModel.FK_Municipality_Country" FromRole="Municipality" ToRole="Country" />
+        </EntityType>
+        <EntityType Name="Notification">
+          <Key>
+            <PropertyRef Name="Id" />
+          </Key>
+          <Property Type="Int32" Name="Id" Nullable="false" />
+          <Property Type="String" Name="Name" Nullable="false" MaxLength="255" FixedLength="false" Unicode="true" />
+          <Property Type="String" Name="Subject" Nullable="false" MaxLength="255" FixedLength="false" Unicode="true" />
+          <Property Type="String" Name="Message" Nullable="false" MaxLength="Max" FixedLength="false" Unicode="true" />
+        </EntityType>
+        <EntityType Name="UniqueUser">
+          <Key>
+            <PropertyRef Name="PersonCode" />
+          </Key>
+          <Property Type="String" Name="PersonCode" Nullable="false" MaxLength="32" FixedLength="false" Unicode="true" />
+          <Property Type="String" Name="FirstName" Nullable="false" MaxLength="100" FixedLength="false" Unicode="true" />
+          <Property Type="String" Name="LastName" Nullable="false" MaxLength="100" FixedLength="false" Unicode="true" />
+          <Property Type="String" Name="AddressLine" MaxLength="1000" FixedLength="false" Unicode="true" />
+          <Property Type="String" Name="DocumentNo" MaxLength="20" FixedLength="false" Unicode="false" />
+          <Property Type="Int32" Name="CityId" />
+        </EntityType>
+        <EntityType Name="User">
+          <Key>
+            <PropertyRef Name="Id" />
+          </Key>
+          <Property Type="Int32" Name="Id" Nullable="false" annotation:StoreGeneratedPattern="Identity" />
+          <Property Type="String" Name="UserName" MaxLength="50" FixedLength="false" Unicode="true" />
+          <Property Type="String" Name="Password" MaxLength="100" FixedLength="false" Unicode="true" />
+          <Property Type="String" Name="FirstName" MaxLength="100" FixedLength="false" Unicode="true" />
+          <Property Type="String" Name="LastName" MaxLength="100" FixedLength="false" Unicode="true" />
+          <Property Type="String" Name="ObjectId" MaxLength="24" FixedLength="true" Unicode="true" />
+          <Property Type="Int64" Name="FacebookId" />
+          <Property Type="Int16" Name="Role" Nullable="false" />
+          <Property Type="Int32" Name="LanguageId" Nullable="false" />
+          <Property Type="Boolean" Name="RequireChangePassword" Nullable="false" />
+          <Property Type="Boolean" Name="Signed" Nullable="false" />
+          <Property Type="Boolean" Name="IsAmbasador" Nullable="false" />
+          <Property Type="Boolean" Name="PostPermissionGranted" />
+          <Property Type="String" Name="PersonCode" MaxLength="32" FixedLength="false" Unicode="true" />
+          <Property Type="String" Name="AuthSource" MaxLength="50" FixedLength="false" Unicode="false" />
+          <NavigationProperty Name="BankAccountItems" Relationship="UsersModel.FK_BankAccountItem_User" FromRole="User" ToRole="BankAccountItem" />
+          <NavigationProperty Name="ChatClients" Relationship="UsersModel.FK_ChatClients_ChatUsers" FromRole="User" ToRole="ChatClient" />
+          <NavigationProperty Name="Language" Relationship="UsersModel.FK_User_Languages" FromRole="User" ToRole="Language" />
+          <NavigationProperty Name="UserAwards" Relationship="UsersModel.FK_UserAwards_User" FromRole="User" ToRole="UserAward" />
+          <NavigationProperty Name="UserCategories" Relationship="UsersModel.FK_UserCategory_User" FromRole="User" ToRole="UserCategory" />
+          <NavigationProperty Name="WebToPayLogs" Relationship="UsersModel.FK_WebToPayLog_User" FromRole="User" ToRole="WebToPayLog" />
+          <NavigationProperty Name="ChatMessages" Relationship="UsersModel.FK_ChatMessages_Users" FromRole="User" ToRole="ChatMessage" />
+          <NavigationProperty Name="ChatMessages1" Relationship="UsersModel.FK_ChatMessage_OtherUser" FromRole="User" ToRole="ChatMessage" />
+          <NavigationProperty Name="ChatGroupUsers" Relationship="UsersModel.FK_ChatRoomUser_User" FromRole="User" ToRole="ChatGroupUser" />
+          <Property Type="Boolean" Name="RequireUniqueAuthentication" Nullable="false" />
+          <NavigationProperty Name="UserEmails" Relationship="UsersModel.FK_UserEmail_User" FromRole="User" ToRole="UserEmail" />
+          <NavigationProperty Name="BlackLists" Relationship="UsersModel.FK_ChatBlockedUser_User" FromRole="User" ToRole="BlackList" />
+          <NavigationProperty Name="BlackLists1" Relationship="UsersModel.FK_Table_1_BlockedUser" FromRole="User" ToRole="BlackList" />
+          <Property Type="Boolean" Name="TutorialShown" Nullable="false" />
+          <NavigationProperty Name="ChatOpenDialogs" Relationship="UsersModel.FK_ChatOpenDialog_OtherUser" FromRole="User" ToRole="ChatOpenDialog" />
+          <NavigationProperty Name="ChatOpenDialogs1" Relationship="UsersModel.FK_ChatOpenDialog_User" FromRole="User" ToRole="ChatOpenDialog" />
+          <NavigationProperty Name="ChatOpenGroups" Relationship="UsersModel.FK_ChatOpenGroup_User" FromRole="User" ToRole="ChatOpenGroup" />
+          <Property Name="RegisteredOn" Nullable="false" Precision="3" Type="DateTime" />
+          <Property Name="PageLiked" Nullable="true" Type="Boolean" />
+          <Property Type="Boolean" Name="IsPolitician" Nullable="false" />
+          </EntityType>
+        <EntityType Name="UserAward">
+          <Key>
+            <PropertyRef Name="Id" />
+          </Key>
+          <Property Type="Int32" Name="Id" Nullable="false" annotation:StoreGeneratedPattern="Identity" />
+          <Property Type="Int32" Name="UserId" Nullable="false" />
+          <Property Type="Int16" Name="AwardId" Nullable="false" />
+          <NavigationProperty Name="User" Relationship="UsersModel.FK_UserAwards_User" FromRole="UserAward" ToRole="User" />
+        </EntityType>
+        <EntityType Name="UserCategory">
+          <Key>
+            <PropertyRef Name="Id" />
+          </Key>
+          <Property Type="Int32" Name="Id" Nullable="false" annotation:StoreGeneratedPattern="Identity" />
+          <Property Type="Int32" Name="UserId" Nullable="false" />
+          <Property Type="Int32" Name="CategoryId" />
+          <Property Type="Int32" Name="Points" Nullable="false" />
+          <Property Type="Boolean" Name="IsExpert" Nullable="false" />
+          <NavigationProperty Name="User" Relationship="UsersModel.FK_UserCategory_User" FromRole="UserCategory" ToRole="User" />
+        </EntityType>
+        <EntityType Name="UserInvitation">
+          <Key>
+            <PropertyRef Name="Id" />
+          </Key>
+          <Property Type="Int32" Name="Id" Nullable="false" annotation:StoreGeneratedPattern="Identity" />
+          <Property Type="String" Name="OrganizationId" MaxLength="24" FixedLength="true" Unicode="true" />
+          <Property Type="String" Name="ProjectId" MaxLength="24" FixedLength="true" Unicode="true" />
+          <Property Type="String" Name="UserEmail" Nullable="false" MaxLength="50" FixedLength="false" Unicode="true" />
+          <Property Type="Int16" Name="InvitationSent" Nullable="false" />
+          <Property Type="String" Name="Message" MaxLength="500" FixedLength="false" Unicode="true" />
+          <Property Type="Boolean" Name="Joined" Nullable="false" />
+          <Property Type="Int32" Name="InvitedByUserId" />
+        </EntityType>
+        <EntityType Name="WebToPayLog">
+          <Key>
+            <PropertyRef Name="Id" />
+          </Key>
+          <Property Type="Int32" Name="Id" Nullable="false" annotation:StoreGeneratedPattern="Identity" />
+          <Property Type="String" Name="Firstname" MaxLength="255" FixedLength="false" Unicode="true" />
+          <Property Type="String" Name="LastName" MaxLength="255" FixedLength="false" Unicode="true" />
+          <Property Type="String" Name="Email" MaxLength="255" FixedLength="true" Unicode="true" />
+          <Property Type="Decimal" Name="Amount" Precision="18" Scale="2" />
+          <Property Type="DateTime" Name="Date" Nullable="false" Precision="3" />
+          <Property Type="String" Name="Currency" MaxLength="3" FixedLength="true" Unicode="true" />
+          <Property Type="String" Name="Country" MaxLength="2" FixedLength="true" Unicode="true" />
+          <Property Type="Int16" Name="Status" Nullable="false" />
+          <Property Type="String" Name="Error" MaxLength="50" FixedLength="false" Unicode="true" />
+          <Property Type="String" Name="RequestId" MaxLength="40" FixedLength="false" Unicode="true" />
+          <Property Type="Int32" Name="UserId" />
+          <Property Type="String" Name="PayText" MaxLength="255" FixedLength="false" Unicode="true" />
+          <Property Type="Int32" Name="GiftId" />
+          <NavigationProperty Name="Gift" Relationship="UsersModel.FK_WebToPayLog_Gifts" FromRole="WebToPayLog" ToRole="Gift" />
+          <NavigationProperty Name="User" Relationship="UsersModel.FK_WebToPayLog_User" FromRole="WebToPayLog" ToRole="User" />
+        </EntityType>
+        <Association Name="FK_BankAccountItem_BankAccount">
+          <End Type="UsersModel.BankAccount" Role="BankAccount" Multiplicity="1" />
+          <End Type="UsersModel.BankAccountItem" Role="BankAccountItem" Multiplicity="*" />
+          <ReferentialConstraint>
+            <Principal Role="BankAccount">
+              <PropertyRef Name="Id" />
+            </Principal>
+            <Dependent Role="BankAccountItem">
+              <PropertyRef Name="BankAccountId" />
+            </Dependent>
+          </ReferentialConstraint>
+        </Association>
+        <Association Name="FK_BankAccountItem_User">
+          <End Type="UsersModel.User" Role="User" Multiplicity="0..1" />
+          <End Type="UsersModel.BankAccountItem" Role="BankAccountItem" Multiplicity="*" />
+          <ReferentialConstraint>
+            <Principal Role="User">
+              <PropertyRef Name="Id" />
+            </Principal>
+            <Dependent Role="BankAccountItem">
+              <PropertyRef Name="UserId" />
+            </Dependent>
+          </ReferentialConstraint>
+        </Association>
+        <Association Name="FK_ChatClients_ChatUsers">
+          <End Type="UsersModel.User" Role="User" Multiplicity="1" />
+          <End Type="UsersModel.ChatClient" Role="ChatClient" Multiplicity="*" />
+          <ReferentialConstraint>
+            <Principal Role="User">
+              <PropertyRef Name="Id" />
+            </Principal>
+            <Dependent Role="ChatClient">
+              <PropertyRef Name="UserId" />
+            </Dependent>
+          </ReferentialConstraint>
+        </Association>
+        <Association Name="FK_City_Municipality">
+          <End Type="UsersModel.Municipality" Role="Municipality" Multiplicity="1" />
+          <End Type="UsersModel.City" Role="City" Multiplicity="*" />
+          <ReferentialConstraint>
+            <Principal Role="Municipality">
+              <PropertyRef Name="Id" />
+            </Principal>
+            <Dependent Role="City">
+              <PropertyRef Name="MunicipalityId" />
+            </Dependent>
+          </ReferentialConstraint>
+        </Association>
+        <Association Name="FK_Municipality_Country">
+          <End Type="UsersModel.Country" Role="Country" Multiplicity="1" />
+          <End Type="UsersModel.Municipality" Role="Municipality" Multiplicity="*" />
+          <ReferentialConstraint>
+            <Principal Role="Country">
+              <PropertyRef Name="Id" />
+            </Principal>
+            <Dependent Role="Municipality">
+              <PropertyRef Name="CountryId" />
+            </Dependent>
+          </ReferentialConstraint>
+        </Association>
+        <Association Name="FK_WebToPayLog_Gifts">
+          <End Type="UsersModel.Gift" Role="Gift" Multiplicity="0..1" />
+          <End Type="UsersModel.WebToPayLog" Role="WebToPayLog" Multiplicity="*" />
+          <ReferentialConstraint>
+            <Principal Role="Gift">
+              <PropertyRef Name="Id" />
+            </Principal>
+            <Dependent Role="WebToPayLog">
+              <PropertyRef Name="GiftId" />
+            </Dependent>
+          </ReferentialConstraint>
+        </Association>
+        <Association Name="FK_User_Languages">
+          <End Type="UsersModel.Language" Role="Language" Multiplicity="1" />
+          <End Type="UsersModel.User" Role="User" Multiplicity="*" />
+          <ReferentialConstraint>
+            <Principal Role="Language">
+              <PropertyRef Name="Id" />
+            </Principal>
+            <Dependent Role="User">
+              <PropertyRef Name="LanguageId" />
+            </Dependent>
+          </ReferentialConstraint>
+        </Association>
+        <Association Name="FK_UserAwards_User">
+          <End Type="UsersModel.User" Role="User" Multiplicity="1" />
+          <End Type="UsersModel.UserAward" Role="UserAward" Multiplicity="*" />
+          <ReferentialConstraint>
+            <Principal Role="User">
+              <PropertyRef Name="Id" />
+            </Principal>
+            <Dependent Role="UserAward">
+              <PropertyRef Name="UserId" />
+            </Dependent>
+          </ReferentialConstraint>
+        </Association>
+        <Association Name="FK_UserCategory_User">
+          <End Type="UsersModel.User" Role="User" Multiplicity="1" />
+          <End Type="UsersModel.UserCategory" Role="UserCategory" Multiplicity="*" />
+          <ReferentialConstraint>
+            <Principal Role="User">
+              <PropertyRef Name="Id" />
+            </Principal>
+            <Dependent Role="UserCategory">
+              <PropertyRef Name="UserId" />
+            </Dependent>
+          </ReferentialConstraint>
+        </Association>
+        <Association Name="FK_WebToPayLog_User">
+          <End Type="UsersModel.User" Role="User" Multiplicity="0..1" />
+          <End Type="UsersModel.WebToPayLog" Role="WebToPayLog" Multiplicity="*" />
+          <ReferentialConstraint>
+            <Principal Role="User">
+              <PropertyRef Name="Id" />
+            </Principal>
+            <Dependent Role="WebToPayLog">
+              <PropertyRef Name="UserId" />
+            </Dependent>
+          </ReferentialConstraint>
+        </Association>
+        <EntityType Name="ChatMessage">
+          <Key>
+            <PropertyRef Name="Id" />
+          </Key>
+          <Property Type="Int32" Name="Id" Nullable="false" annotation:StoreGeneratedPattern="Identity" />
+          <Property Type="String" Name="Content" MaxLength="Max" FixedLength="false" Unicode="true" />
+          <Property Type="DateTime" Name="Date" Nullable="false" Precision="3" />
+          <Property Type="Int32" Name="UserId" Nullable="false" />
+          <Property Type="Int32" Name="OtherUserId" />
+          <Property Type="Boolean" Name="HtmlEncoded" Nullable="false" />
+          <NavigationProperty Name="User" Relationship="UsersModel.FK_ChatMessages_Users" FromRole="ChatMessage" ToRole="User" />
+          <NavigationProperty Name="User1" Relationship="UsersModel.FK_ChatMessage_OtherUser" FromRole="ChatMessage" ToRole="User" />
+          <Property Type="String" Name="GroupId" MaxLength="24" FixedLength="true" Unicode="false" />
+          <NavigationProperty Name="ChatGroup" Relationship="UsersModel.FK_ChatMessage_ChatGroup" FromRole="ChatMessage" ToRole="ChatGroup" />
+        </EntityType>
+        <Association Name="FK_ChatMessages_Users">
+          <End Type="UsersModel.User" Role="User" Multiplicity="1" />
+          <End Type="UsersModel.ChatMessage" Role="ChatMessage" Multiplicity="*" />
+          <ReferentialConstraint>
+            <Principal Role="User">
+              <PropertyRef Name="Id" />
+            </Principal>
+            <Dependent Role="ChatMessage">
+              <PropertyRef Name="UserId" />
+            </Dependent>
+          </ReferentialConstraint>
+        </Association>
+        <Association Name="FK_ChatMessage_OtherUser">
+          <End Type="UsersModel.User" Role="User" Multiplicity="0..1" />
+          <End Type="UsersModel.ChatMessage" Role="ChatMessage" Multiplicity="*" />
+          <ReferentialConstraint>
+            <Principal Role="User">
+              <PropertyRef Name="Id" />
+            </Principal>
+            <Dependent Role="ChatMessage">
+              <PropertyRef Name="OtherUserId" />
+            </Dependent>
+          </ReferentialConstraint>
+        </Association>
+        <EntityType Name="ChatGroupUser">
+          <Key>
+            <PropertyRef Name="Id" />
+          </Key>
+          <Property Type="Int32" Name="Id" Nullable="false" annotation:StoreGeneratedPattern="Identity" />
+          <Property Type="Int32" Name="UserId" Nullable="false" />
+          <Property Type="String" Name="GroupId" Nullable="false" MaxLength="24" FixedLength="true" Unicode="false" />
+          <NavigationProperty Name="User" Relationship="UsersModel.FK_ChatRoomUser_User" FromRole="ChatGroupUser" ToRole="User" />
+          <NavigationProperty Name="ChatGroup" Relationship="UsersModel.FK_ChatGroupUsers_ChatGroup" FromRole="ChatGroupUser" ToRole="ChatGroup" />
+        </EntityType>
+        <Association Name="FK_ChatRoomUser_User">
+          <End Type="UsersModel.User" Role="User" Multiplicity="1" />
+          <End Type="UsersModel.ChatGroupUser" Role="ChatGroupUser" Multiplicity="*" />
+          <ReferentialConstraint>
+            <Principal Role="User">
+              <PropertyRef Name="Id" />
+            </Principal>
+            <Dependent Role="ChatGroupUser">
+              <PropertyRef Name="UserId" />
+            </Dependent>
+          </ReferentialConstraint>
+        </Association>
+        <EntityType Name="UserEmail">
+          <Key>
+            <PropertyRef Name="Id" />
+          </Key>
+          <Property Type="Int32" Name="Id" Nullable="false" annotation:StoreGeneratedPattern="Identity" />
+          <Property Type="Int32" Name="UserId" Nullable="false" />
+          <Property Type="String" Name="Email" Nullable="false" MaxLength="200" FixedLength="false" Unicode="true" />
+          <Property Type="Boolean" Name="IsEmailConfirmed" Nullable="false" />
+          <Property Type="String" Name="EmailConfirmationCode" MaxLength="10" FixedLength="true" Unicode="false" />
+          <Property Type="Boolean" Name="SendMail" Nullable="false" />
+          <Property Type="Boolean" Name="IsPrivate" Nullable="false" />
+          <NavigationProperty Name="User" Relationship="UsersModel.FK_UserEmail_User" FromRole="UserEmail" ToRole="User" />
+        </EntityType>
+        <Association Name="FK_UserEmail_User">
+          <End Type="UsersModel.User" Role="User" Multiplicity="1" />
+          <End Type="UsersModel.UserEmail" Role="UserEmail" Multiplicity="*" />
+          <ReferentialConstraint>
+            <Principal Role="User">
+              <PropertyRef Name="Id" />
+            </Principal>
+            <Dependent Role="UserEmail">
+              <PropertyRef Name="UserId" />
+            </Dependent>
+          </ReferentialConstraint>
+        </Association>
+        <EntityType Name="BlackList">
+          <Key>
+            <PropertyRef Name="Id" />
+          </Key>
+          <Property Type="Int32" Name="Id" Nullable="false" annotation:StoreGeneratedPattern="Identity" />
+          <Property Type="Int32" Name="UserId" Nullable="false" />
+          <Property Type="Int32" Name="BlockedUserId" Nullable="false" />
+          <NavigationProperty Name="User" Relationship="UsersModel.FK_ChatBlockedUser_User" FromRole="BlackList" ToRole="User" />
+          <NavigationProperty Name="User1" Relationship="UsersModel.FK_Table_1_BlockedUser" FromRole="BlackList" ToRole="User" />
+        </EntityType>
+        <Association Name="FK_ChatBlockedUser_User">
+          <End Type="UsersModel.User" Role="User" Multiplicity="1" />
+          <End Type="UsersModel.BlackList" Role="BlackList" Multiplicity="*" />
+          <ReferentialConstraint>
+            <Principal Role="User">
+              <PropertyRef Name="Id" />
+            </Principal>
+            <Dependent Role="BlackList">
+              <PropertyRef Name="UserId" />
+            </Dependent>
+          </ReferentialConstraint>
+        </Association>
+        <Association Name="FK_Table_1_BlockedUser">
+          <End Type="UsersModel.User" Role="User" Multiplicity="1" />
+          <End Type="UsersModel.BlackList" Role="BlackList" Multiplicity="*" />
+          <ReferentialConstraint>
+            <Principal Role="User">
+              <PropertyRef Name="Id" />
+            </Principal>
+            <Dependent Role="BlackList">
+              <PropertyRef Name="BlockedUserId" />
+            </Dependent>
+          </ReferentialConstraint>
+        </Association>
+        <EntityType Name="ChatGroup">
+          <Key>
+            <PropertyRef Name="Id" />
+          </Key>
+          <Property Type="String" Name="Id" Nullable="false" MaxLength="24" FixedLength="true" Unicode="false" />
+          <Property Type="String" Name="Url" Nullable="false" MaxLength="1000" FixedLength="false" Unicode="true" />
+          <Property Type="String" Name="Name" MaxLength="Max" FixedLength="false" Unicode="true" />
+          <NavigationProperty Name="ChatGroupUsers" Relationship="UsersModel.FK_ChatGroupUsers_ChatGroup" FromRole="ChatGroup" ToRole="ChatGroupUser" />
+          <NavigationProperty Name="ChatOpenGroups" Relationship="UsersModel.FK_ChatOpenGroup_ChatGroup" FromRole="ChatGroup" ToRole="ChatOpenGroup" />
+          <NavigationProperty Name="ChatMessages" Relationship="UsersModel.FK_ChatMessage_ChatGroup" FromRole="ChatGroup" ToRole="ChatMessage" />
+          <Property Type="Boolean" Name="IsPrivate" Nullable="false" />
+          <Property Type="String" Name="OrganizationId" MaxLength="24" FixedLength="true" Unicode="false" />
+        </EntityType>
+        <Association Name="FK_ChatGroupUsers_ChatGroup">
+          <End Type="UsersModel.ChatGroup" Role="ChatGroup" Multiplicity="1" />
+          <End Type="UsersModel.ChatGroupUser" Role="ChatGroupUser" Multiplicity="*" />
+          <ReferentialConstraint>
+            <Principal Role="ChatGroup">
+              <PropertyRef Name="Id" />
+            </Principal>
+            <Dependent Role="ChatGroupUser">
+              <PropertyRef Name="GroupId" />
+            </Dependent>
+          </ReferentialConstraint>
+        </Association>
+        <EntityType Name="Status">
+          <Key>
+            <PropertyRef Name="Id" />
+          </Key>
+          <Property Type="Int32" Name="Id" Nullable="false" />
+          <Property Type="Int32" Name="PointsNeeded" Nullable="false" />
+        </EntityType>
+        <EntityType Name="ChatOpenDialog">
+          <Key>
+            <PropertyRef Name="Id" />
+          </Key>
+          <Property Type="Int32" Name="Id" Nullable="false" annotation:StoreGeneratedPattern="Identity" />
+          <Property Type="Int32" Name="UserId" Nullable="false" />
+          <Property Type="Int32" Name="OtherUserId" Nullable="false" />
+          <NavigationProperty Name="User" Relationship="UsersModel.FK_ChatOpenDialog_OtherUser" FromRole="ChatOpenDialog" ToRole="User" />
+          <NavigationProperty Name="User1" Relationship="UsersModel.FK_ChatOpenDialog_User" FromRole="ChatOpenDialog" ToRole="User" />
+        </EntityType>
+        <EntityType Name="ChatOpenGroup">
+          <Key>
+            <PropertyRef Name="Id" />
+          </Key>
+          <Property Type="Int32" Name="Id" Nullable="false" annotation:StoreGeneratedPattern="Identity" />
+          <Property Type="Int32" Name="UserId" Nullable="false" />
+          <Property Type="String" Name="GroupId" Nullable="false" MaxLength="24" FixedLength="true" Unicode="false" />
+          <NavigationProperty Name="ChatGroup" Relationship="UsersModel.FK_ChatOpenGroup_ChatGroup" FromRole="ChatOpenGroup" ToRole="ChatGroup" />
+          <NavigationProperty Name="User" Relationship="UsersModel.FK_ChatOpenGroup_User" FromRole="ChatOpenGroup" ToRole="User" />
+        </EntityType>
+        <Association Name="FK_ChatOpenGroup_ChatGroup">
+          <End Type="UsersModel.ChatGroup" Role="ChatGroup" Multiplicity="1" />
+          <End Type="UsersModel.ChatOpenGroup" Role="ChatOpenGroup" Multiplicity="*" />
+          <ReferentialConstraint>
+            <Principal Role="ChatGroup">
+              <PropertyRef Name="Id" />
+            </Principal>
+            <Dependent Role="ChatOpenGroup">
+              <PropertyRef Name="GroupId" />
+            </Dependent>
+          </ReferentialConstraint>
+        </Association>
+        <Association Name="FK_ChatOpenDialog_OtherUser">
+          <End Type="UsersModel.User" Role="User" Multiplicity="1" />
+          <End Type="UsersModel.ChatOpenDialog" Role="ChatOpenDialog" Multiplicity="*" />
+          <ReferentialConstraint>
+            <Principal Role="User">
+              <PropertyRef Name="Id" />
+            </Principal>
+            <Dependent Role="ChatOpenDialog">
+              <PropertyRef Name="OtherUserId" />
+            </Dependent>
+          </ReferentialConstraint>
+        </Association>
+        <Association Name="FK_ChatOpenDialog_User">
+          <End Type="UsersModel.User" Role="User" Multiplicity="1" />
+          <End Type="UsersModel.ChatOpenDialog" Role="ChatOpenDialog" Multiplicity="*" />
+          <ReferentialConstraint>
+            <Principal Role="User">
+              <PropertyRef Name="Id" />
+            </Principal>
+            <Dependent Role="ChatOpenDialog">
+              <PropertyRef Name="UserId" />
+            </Dependent>
+          </ReferentialConstraint>
+        </Association>
+        <Association Name="FK_ChatOpenGroup_User">
+          <End Type="UsersModel.User" Role="User" Multiplicity="1" />
+          <End Type="UsersModel.ChatOpenGroup" Role="ChatOpenGroup" Multiplicity="*" />
+          <ReferentialConstraint>
+            <Principal Role="User">
+              <PropertyRef Name="Id" />
+            </Principal>
+            <Dependent Role="ChatOpenGroup">
+              <PropertyRef Name="UserId" />
+            </Dependent>
+          </ReferentialConstraint>
+        </Association>
+        <Association Name="FK_ChatMessage_ChatGroup">
+          <End Type="UsersModel.ChatGroup" Role="ChatGroup" Multiplicity="0..1" />
+          <End Type="UsersModel.ChatMessage" Role="ChatMessage" Multiplicity="*" />
+          <ReferentialConstraint>
+            <Principal Role="ChatGroup">
+              <PropertyRef Name="Id" />
+            </Principal>
+            <Dependent Role="ChatMessage">
+              <PropertyRef Name="GroupId" />
+            </Dependent>
+          </ReferentialConstraint>
+        </Association>
+        </Schema>
+    </edmx:ConceptualModels>
+    <!-- C-S mapping content -->
+    <edmx:Mappings>
+      <Mapping Space="C-S" xmlns="http://schemas.microsoft.com/ado/2009/11/mapping/cs">
+        <EntityContainerMapping StorageEntityContainer="UsersModelStoreContainer" CdmEntityContainer="UsersEntities">
+          <EntitySetMapping Name="BankAccounts">
+            <EntityTypeMapping TypeName="UsersModel.BankAccount">
+              <MappingFragment StoreEntitySet="BankAccount">
+                <ScalarProperty Name="Balance" ColumnName="Balance" />
+                <ScalarProperty Name="AccountNo" ColumnName="AccountNo" />
+                <ScalarProperty Name="Id" ColumnName="Id" />
+              </MappingFragment>
+            </EntityTypeMapping>
+          </EntitySetMapping>
+          <EntitySetMapping Name="BankAccountItems">
+            <EntityTypeMapping TypeName="UsersModel.BankAccountItem">
+              <MappingFragment StoreEntitySet="BankAccountItem">
+                <ScalarProperty Name="OrganizationId" ColumnName="OrganizationId" />
+                <ScalarProperty Name="UserId" ColumnName="UserId" />
+                <ScalarProperty Name="Income" ColumnName="Income" />
+                <ScalarProperty Name="Expense" ColumnName="Expense" />
+                <ScalarProperty Name="Operation" ColumnName="Operation" />
+                <ScalarProperty Name="Date" ColumnName="Date" />
+                <ScalarProperty Name="BankAccountId" ColumnName="BankAccountId" />
+                <ScalarProperty Name="Id" ColumnName="Id" />
+              </MappingFragment>
+            </EntityTypeMapping>
+          </EntitySetMapping>
+          <EntitySetMapping Name="ChatClients">
+            <EntityTypeMapping TypeName="UsersModel.ChatClient">
+              <MappingFragment StoreEntitySet="ChatClient">
+                <ScalarProperty Name="GroupId" ColumnName="GroupId" />
+                <ScalarProperty Name="LastActivity" ColumnName="LastActivity" />
+                <ScalarProperty Name="UserAgent" ColumnName="UserAgent" />
+                <ScalarProperty Name="UserId" ColumnName="UserId" />
+                <ScalarProperty Name="ConnectionId" ColumnName="ConnectionId" />
+                <ScalarProperty Name="Id" ColumnName="Id" />
+              </MappingFragment>
+            </EntityTypeMapping>
+          </EntitySetMapping>
+          <EntitySetMapping Name="Cities">
+            <EntityTypeMapping TypeName="UsersModel.City">
+              <MappingFragment StoreEntitySet="City">
+                <ScalarProperty Name="Name" ColumnName="Name" />
+                <ScalarProperty Name="MunicipalityId" ColumnName="MunicipalityId" />
+                <ScalarProperty Name="Id" ColumnName="Id" />
+              </MappingFragment>
+            </EntityTypeMapping>
+          </EntitySetMapping>
+          <EntitySetMapping Name="Countries">
+            <EntityTypeMapping TypeName="UsersModel.Country">
+              <MappingFragment StoreEntitySet="Country">
+                <ScalarProperty Name="Name" ColumnName="Name" />
+                <ScalarProperty Name="Id" ColumnName="Id" />
+              </MappingFragment>
+            </EntityTypeMapping>
+          </EntitySetMapping>
+          <EntitySetMapping Name="Gifts">
+            <EntityTypeMapping TypeName="UsersModel.Gift">
+              <MappingFragment StoreEntitySet="Gifts">
+                <ScalarProperty Name="RequiredAmount" ColumnName="RequiredAmount" />
+                <ScalarProperty Name="Url" ColumnName="Url" />
+                <ScalarProperty Name="Name" ColumnName="Name" />
+                <ScalarProperty Name="Id" ColumnName="Id" />
+              </MappingFragment>
+            </EntityTypeMapping>
+          </EntitySetMapping>
+          <EntitySetMapping Name="Languages">
+            <EntityTypeMapping TypeName="UsersModel.Language">
+              <MappingFragment StoreEntitySet="Languages">
+                <ScalarProperty Name="Code" ColumnName="Code" />
+                <ScalarProperty Name="Name" ColumnName="Name" />
+                <ScalarProperty Name="Id" ColumnName="Id" />
+              </MappingFragment>
+            </EntityTypeMapping>
+          </EntitySetMapping>
+          <EntitySetMapping Name="Municipalities">
+            <EntityTypeMapping TypeName="UsersModel.Municipality">
+              <MappingFragment StoreEntitySet="Municipality">
+                <ScalarProperty Name="ShortName" ColumnName="ShortName" />
+                <ScalarProperty Name="Name" ColumnName="Name" />
+                <ScalarProperty Name="CountryId" ColumnName="CountryId" />
+                <ScalarProperty Name="Id" ColumnName="Id" />
+              </MappingFragment>
+            </EntityTypeMapping>
+          </EntitySetMapping>
+          <EntitySetMapping Name="Notifications">
+            <EntityTypeMapping TypeName="UsersModel.Notification">
+              <MappingFragment StoreEntitySet="Notification">
+                <ScalarProperty Name="Message" ColumnName="Message" />
+                <ScalarProperty Name="Subject" ColumnName="Subject" />
+                <ScalarProperty Name="Name" ColumnName="Name" />
+                <ScalarProperty Name="Id" ColumnName="Id" />
+              </MappingFragment>
+            </EntityTypeMapping>
+          </EntitySetMapping>
+          <EntitySetMapping Name="UniqueUsers">
+            <EntityTypeMapping TypeName="UsersModel.UniqueUser">
+              <MappingFragment StoreEntitySet="UniqueUser">
+                <ScalarProperty Name="CityId" ColumnName="CityId" />
+                <ScalarProperty Name="DocumentNo" ColumnName="DocumentNo" />
+                <ScalarProperty Name="AddressLine" ColumnName="AddressLine" />
+                <ScalarProperty Name="LastName" ColumnName="LastName" />
+                <ScalarProperty Name="FirstName" ColumnName="FirstName" />
+                <ScalarProperty Name="PersonCode" ColumnName="PersonCode" />
+              </MappingFragment>
+            </EntityTypeMapping>
+          </EntitySetMapping>
+          <EntitySetMapping Name="Users">
+            <EntityTypeMapping TypeName="UsersModel.User">
+              <MappingFragment StoreEntitySet="User">
+                <ScalarProperty Name="IsPolitician" ColumnName="IsPolitician" />
+                <ScalarProperty Name="PageLiked" ColumnName="PageLiked" />
+                <ScalarProperty Name="RegisteredOn" ColumnName="RegisteredOn" />
+                <ScalarProperty Name="TutorialShown" ColumnName="TutorialShown" />
+                <ScalarProperty Name="RequireUniqueAuthentication" ColumnName="RequireUniqueAuthentication" />
+                <ScalarProperty Name="AuthSource" ColumnName="AuthSource" />
+                <ScalarProperty Name="PersonCode" ColumnName="PersonCode" />
+                <ScalarProperty Name="PostPermissionGranted" ColumnName="PostPermissionGranted" />
+                <ScalarProperty Name="IsAmbasador" ColumnName="IsAmbasador" />
+                <ScalarProperty Name="Signed" ColumnName="Signed" />
+                <ScalarProperty Name="RequireChangePassword" ColumnName="RequireChangePassword" />
+                <ScalarProperty Name="LanguageId" ColumnName="LanguageId" />
+                <ScalarProperty Name="Role" ColumnName="Role" />
+                <ScalarProperty Name="FacebookId" ColumnName="FacebookId" />
+                <ScalarProperty Name="ObjectId" ColumnName="ObjectId" />
+                <ScalarProperty Name="LastName" ColumnName="LastName" />
+                <ScalarProperty Name="FirstName" ColumnName="FirstName" />
+                <ScalarProperty Name="Password" ColumnName="Password" />
+                <ScalarProperty Name="UserName" ColumnName="UserName" />
+                <ScalarProperty Name="Id" ColumnName="Id" />
+              </MappingFragment>
+            </EntityTypeMapping>
+          </EntitySetMapping>
+          <EntitySetMapping Name="UserAwards">
+            <EntityTypeMapping TypeName="UsersModel.UserAward">
+              <MappingFragment StoreEntitySet="UserAwards">
+                <ScalarProperty Name="AwardId" ColumnName="AwardId" />
+                <ScalarProperty Name="UserId" ColumnName="UserId" />
+                <ScalarProperty Name="Id" ColumnName="Id" />
+              </MappingFragment>
+            </EntityTypeMapping>
+          </EntitySetMapping>
+          <EntitySetMapping Name="UserCategories">
+            <EntityTypeMapping TypeName="UsersModel.UserCategory">
+              <MappingFragment StoreEntitySet="UserCategory">
+                <ScalarProperty Name="IsExpert" ColumnName="IsExpert" />
+                <ScalarProperty Name="Points" ColumnName="Points" />
+                <ScalarProperty Name="CategoryId" ColumnName="CategoryId" />
+                <ScalarProperty Name="UserId" ColumnName="UserId" />
+                <ScalarProperty Name="Id" ColumnName="Id" />
+              </MappingFragment>
+            </EntityTypeMapping>
+          </EntitySetMapping>
+          <EntitySetMapping Name="UserInvitations">
+            <EntityTypeMapping TypeName="UsersModel.UserInvitation">
+              <MappingFragment StoreEntitySet="UserInvitations">
+                <ScalarProperty Name="InvitedByUserId" ColumnName="InvitedByUserId" />
+                <ScalarProperty Name="Joined" ColumnName="Joined" />
+                <ScalarProperty Name="Message" ColumnName="Message" />
+                <ScalarProperty Name="InvitationSent" ColumnName="InvitationSent" />
+                <ScalarProperty Name="UserEmail" ColumnName="UserEmail" />
+                <ScalarProperty Name="ProjectId" ColumnName="ProjectId" />
+                <ScalarProperty Name="OrganizationId" ColumnName="OrganizationId" />
+                <ScalarProperty Name="Id" ColumnName="Id" />
+              </MappingFragment>
+            </EntityTypeMapping>
+          </EntitySetMapping>
+          <EntitySetMapping Name="WebToPayLogs">
+            <EntityTypeMapping TypeName="UsersModel.WebToPayLog">
+              <MappingFragment StoreEntitySet="WebToPayLog">
+                <ScalarProperty Name="GiftId" ColumnName="GiftId" />
+                <ScalarProperty Name="PayText" ColumnName="PayText" />
+                <ScalarProperty Name="UserId" ColumnName="UserId" />
+                <ScalarProperty Name="RequestId" ColumnName="RequestId" />
+                <ScalarProperty Name="Error" ColumnName="Error" />
+                <ScalarProperty Name="Status" ColumnName="Status" />
+                <ScalarProperty Name="Country" ColumnName="Country" />
+                <ScalarProperty Name="Currency" ColumnName="Currency" />
+                <ScalarProperty Name="Date" ColumnName="Date" />
+                <ScalarProperty Name="Amount" ColumnName="Amount" />
+                <ScalarProperty Name="Email" ColumnName="Email" />
+                <ScalarProperty Name="LastName" ColumnName="LastName" />
+                <ScalarProperty Name="Firstname" ColumnName="Firstname" />
+                <ScalarProperty Name="Id" ColumnName="Id" />
+              </MappingFragment>
+            </EntityTypeMapping>
+          </EntitySetMapping>
+          <EntitySetMapping Name="ChatMessages">
+            <EntityTypeMapping TypeName="UsersModel.ChatMessage">
+              <MappingFragment StoreEntitySet="ChatMessage">
+                <ScalarProperty Name="GroupId" ColumnName="GroupId" />
+                <ScalarProperty Name="HtmlEncoded" ColumnName="HtmlEncoded" />
+                <ScalarProperty Name="OtherUserId" ColumnName="OtherUserId" />
+                <ScalarProperty Name="UserId" ColumnName="UserId" />
+                <ScalarProperty Name="Date" ColumnName="Date" />
+                <ScalarProperty Name="Content" ColumnName="Content" />
+                <ScalarProperty Name="Id" ColumnName="Id" />
+              </MappingFragment>
+            </EntityTypeMapping>
+          </EntitySetMapping>
+          <EntitySetMapping Name="ChatGroupUsers">
+            <EntityTypeMapping TypeName="UsersModel.ChatGroupUser">
+              <MappingFragment StoreEntitySet="ChatGroupUsers">
+                <ScalarProperty Name="GroupId" ColumnName="GroupId" />
+                <ScalarProperty Name="UserId" ColumnName="UserId" />
+                <ScalarProperty Name="Id" ColumnName="Id" />
+              </MappingFragment>
+            </EntityTypeMapping>
+          </EntitySetMapping>
+          <EntitySetMapping Name="UserEmails">
+            <EntityTypeMapping TypeName="UsersModel.UserEmail">
+              <MappingFragment StoreEntitySet="UserEmail">
+                <ScalarProperty Name="IsPrivate" ColumnName="IsPrivate" />
+                <ScalarProperty Name="SendMail" ColumnName="SendMail" />
+                <ScalarProperty Name="EmailConfirmationCode" ColumnName="EmailConfirmationCode" />
+                <ScalarProperty Name="IsEmailConfirmed" ColumnName="IsEmailConfirmed" />
+                <ScalarProperty Name="Email" ColumnName="Email" />
+                <ScalarProperty Name="UserId" ColumnName="UserId" />
+                <ScalarProperty Name="Id" ColumnName="Id" />
+              </MappingFragment>
+            </EntityTypeMapping>
+          </EntitySetMapping>
+          <EntitySetMapping Name="BlackLists">
+            <EntityTypeMapping TypeName="UsersModel.BlackList">
+              <MappingFragment StoreEntitySet="BlackList">
+                <ScalarProperty Name="BlockedUserId" ColumnName="BlockedUserId" />
+                <ScalarProperty Name="UserId" ColumnName="UserId" />
+                <ScalarProperty Name="Id" ColumnName="Id" />
+              </MappingFragment>
+            </EntityTypeMapping>
+          </EntitySetMapping>
+          <EntitySetMapping Name="ChatGroups">
+            <EntityTypeMapping TypeName="UsersModel.ChatGroup">
+              <MappingFragment StoreEntitySet="ChatGroup">
+                <ScalarProperty Name="OrganizationId" ColumnName="OrganizationId" />
+                <ScalarProperty Name="IsPrivate" ColumnName="IsPrivate" />
+                <ScalarProperty Name="Name" ColumnName="Name" />
+                <ScalarProperty Name="Url" ColumnName="Url" />
+                <ScalarProperty Name="Id" ColumnName="Id" />
+              </MappingFragment>
+            </EntityTypeMapping>
+          </EntitySetMapping>
+          <EntitySetMapping Name="Status">
+            <EntityTypeMapping TypeName="UsersModel.Status">
+              <MappingFragment StoreEntitySet="Status">
+                <ScalarProperty Name="PointsNeeded" ColumnName="PointsNeeded" />
+                <ScalarProperty Name="Id" ColumnName="Id" />
+              </MappingFragment>
+            </EntityTypeMapping>
+          </EntitySetMapping>
+          <EntitySetMapping Name="ChatOpenDialogs">
+            <EntityTypeMapping TypeName="UsersModel.ChatOpenDialog">
+              <MappingFragment StoreEntitySet="ChatOpenDialog">
+                <ScalarProperty Name="OtherUserId" ColumnName="OtherUserId" />
+                <ScalarProperty Name="UserId" ColumnName="UserId" />
+                <ScalarProperty Name="Id" ColumnName="Id" />
+              </MappingFragment>
+            </EntityTypeMapping>
+          </EntitySetMapping>
+          <EntitySetMapping Name="ChatOpenGroups">
+            <EntityTypeMapping TypeName="UsersModel.ChatOpenGroup">
+              <MappingFragment StoreEntitySet="ChatOpenGroup">
+                <ScalarProperty Name="GroupId" ColumnName="GroupId" />
+                <ScalarProperty Name="UserId" ColumnName="UserId" />
+                <ScalarProperty Name="Id" ColumnName="Id" />
+              </MappingFragment>
+            </EntityTypeMapping>
+          </EntitySetMapping>
+        </EntityContainerMapping>
+      </Mapping>
+    </edmx:Mappings>
+  </edmx:Runtime>
+  <!-- EF Designer content (DO NOT EDIT MANUALLY BELOW HERE) -->
+  <Designer xmlns="http://schemas.microsoft.com/ado/2009/11/edmx">
+    <Connection>
+      <DesignerInfoPropertySet>
+        <DesignerProperty Name="MetadataArtifactProcessing" Value="EmbedInOutputAssembly" />
+      </DesignerInfoPropertySet>
+    </Connection>
+    <Options>
+      <DesignerInfoPropertySet>
+        <DesignerProperty Name="ValidateOnBuild" Value="true" />
+        <DesignerProperty Name="EnablePluralization" Value="True" />
+        <DesignerProperty Name="IncludeForeignKeysInModel" Value="True" />
+        <DesignerProperty Name="CodeGenerationStrategy" Value="None" />
+        <DesignerProperty Name="UseLegacyProvider" Value="False" />
+      </DesignerInfoPropertySet>
+    </Options>
+    <!-- Diagram content (shape and connector positions) -->
+    <Diagrams></Diagrams>
+  </Designer>
+</edmx:Edmx>

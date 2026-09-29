@@ -1,0 +1,24 @@
+﻿@using Globalization.Resources.Account
+@using Globalization.Resources.Shared
+@using Web.Helpers
+@{
+    ViewBag.Title = Resource.EmailConfirmedTitle;
+}
+
+<div class="popup">
+    <div class="popup_border success">
+        <div>@Resource.EmailConfirmed</div>
+    </div>
+</div>
+<div class="clear"></div>
+@if (!ViewBag.CurrentUser.HasSigned)
+{
+    @Html.ValidationSummary()
+    @Html.Partial(MVC.Account.Views.ManifestPartial)
+
+    using (Html.BeginForm(MVC.Account.Manifest()))
+    {
+        @Html.Buttons(saveText: SharedStrings.Agree)
+    }
+}
+

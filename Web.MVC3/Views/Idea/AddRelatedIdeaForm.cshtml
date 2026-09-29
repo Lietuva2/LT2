@@ -1,0 +1,12 @@
+﻿@using Data.ViewModels.Base
+@using Globalization.Resources.Idea
+@using Web.Helpers
+@model Data.ViewModels.Idea.RelatedIdeaDialogModel
+@using (Html.BeginForm(MVC.Idea.SaveRelatedIdeas()))
+{
+    @Html.HiddenFor(m => m.Id)
+    @Html.Partial(MVC.Idea.Views.AddRelatedIdea, Model.RelatedIdeas)
+    @Html.Buttons(
+    new ButtonHelperModel(),
+    new ButtonHelperModel() { Type = ButtonHelperModel.Types.Link, Text = Resource.AddRelatedIdea, ImageUrl = Links.Content.Images.add_png, Href = Url.Action(MVC.Idea.Create(null, Model.Id)) })
+}

@@ -1,0 +1,8 @@
+﻿@using Globalization.Resources.Project
+@model String
+<ul class="tabmenu">
+    <li>@Html.ActionLink(Resource.MenuTasks, MVC.Project.ToDos(Model), new { @class = "tabitem" + (ViewData["index"] == "0" ? " highlight" : string.Empty) })</li>
+    <li>@Html.ActionLink(Resource.MenuMilestones, MVC.Project.MileStones(Model), new { @class = "tabitem" + (ViewData["index"] == "1" ? " highlight" : string.Empty) })</li>
+    <li>@Html.ActionLink(Resource.MenuTeam, MVC.Project.Team(Model), new { @class = "tabitem" + (ViewData["index"] == "2" ? " highlight" : string.Empty) })</li>
+    @if (ViewData["isEditable"] == null || (bool)ViewData["isEditable"]){<li>@Html.ActionLink(Resource.MenuSettings, MVC.Project.Settings(Model), new { @class = "tabitem" + (ViewData["index"] == "3" ? " highlight" : string.Empty) })</li>}
+</ul>

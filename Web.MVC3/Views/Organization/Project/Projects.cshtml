@@ -1,0 +1,42 @@
+﻿@model Data.ViewModels.Organization.Project.ProjectsListModel
+@using Framework.Strings;
+@using Globalization.Resources.Organization.Project
+@using Globalization.Resources.Shared
+@using Services.Enums
+@using Web.Helpers
+<div>
+    <p id="projectFilter">
+        @Html.ActionLink(Resource.Active, MVC.Organization.GetProjects(Model.OrganizationId, ProjectListViews.Active), new Dictionary<string, object> {{"class", "highlight"}})
+        &nbsp; 
+        @Html.ActionLink(Resource.Finished, MVC.Organization.GetProjects(Model.OrganizationId, ProjectListViews.Finished))
+    </p>
+    <ul id="listProjects">
+        @Html.Partial(MVC.Organization.Views.Project.ProjectListContainer, Model.List)
+    </ul>
+    @if (Model.IsEditable)
+    {
+        <div class="@(Model.List.Any() ? "" : "hide")">
+            @Html.Button(new ButtonHelperModel
+                       {
+                           Id = "btnAddProject",
+                           Text = SharedStrings.AddShort,
+                           ImageUrl = Links.Content.Images.add_png
+                       })
+        </div>
+        <div id="divAddProjectContainer" class="@(Model.List.Any() ? "hide" : "")">
+            @using (Html.BeginForm(MVC.Organization.AddProject(), FormMethod.Post))
+            {
+                @Html.HiddenFor(m => m.OrganizationId)
+                @Html.Label("ProjectName", Resource.NewProject)
+                @Html.TextBox("ProjectName", null, new { @class = "txt_l" })
+                <div>
+                    @Html.CheckBox("IsPrivate")
+                    <span>@Resource.IsPrivate</span>
+                </div>
+                <div class="actions">
+                    @Html.Buttons(id: "btnSaveProject")
+                </div>
+            }
+        </div>
+    }
+</div>

@@ -1,0 +1,1932 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<edmx:Edmx Version="3.0" xmlns:edmx="http://schemas.microsoft.com/ado/2009/11/edmx">
+  <!-- EF Runtime content -->
+  <edmx:Runtime>
+    <!-- SSDL content -->
+    <edmx:StorageModels>
+    <Schema Namespace="VotingModel.Store" Provider="System.Data.SqlClient" ProviderManifestToken="2008" Alias="Self" xmlns:store="http://schemas.microsoft.com/ado/2007/12/edm/EntityStoreSchemaGenerator" xmlns:customannotation="http://schemas.microsoft.com/ado/2013/11/edm/customannotation" xmlns="http://schemas.microsoft.com/ado/2009/11/edm/ssdl">
+        <EntityType Name="Comments">
+          <Key>
+            <PropertyRef Name="Id" />
+          </Key>
+          <Property Name="Id" Type="char" MaxLength="24" Nullable="false" />
+          <Property Name="Text" Type="nvarchar(max)" Nullable="false" />
+          <Property Name="TypeId" Type="int" />
+          <Property Name="Date" Type="datetime" Nullable="false" />
+          <Property Name="ParentCommentId" Type="char" MaxLength="24" />
+          <Property Name="UserObjectId" Type="char" MaxLength="24" Nullable="false" />
+          <Property Name="UserFullName" Type="nvarchar" MaxLength="200" Nullable="false" />
+          <Property Name="ObjectId" Type="char" MaxLength="24" Nullable="false" />
+          <Property Name="EntryTypeId" Type="int" Nullable="false" />
+          <Property Name="IsHidden" Type="bit" Nullable="false" />
+          <Property Name="EmbedId" Type="int" />
+          <Property Name="Number" Type="varchar" MaxLength="10" Nullable="false" />
+        </EntityType>
+        <EntityType Name="CommentSupporters">
+          <Key>
+            <PropertyRef Name="CommentId" />
+            <PropertyRef Name="UserId" />
+          </Key>
+          <Property Name="CommentId" Type="char" MaxLength="24" Nullable="false" />
+          <Property Name="UserId" Type="char" MaxLength="24" Nullable="false" />
+        </EntityType>
+        <EntityType Name="Embed">
+          <Key>
+            <PropertyRef Name="Id" />
+          </Key>
+          <Property Name="Id" Type="int" StoreGeneratedPattern="Identity" Nullable="false" />
+          <Property Name="Type" Type="varchar" MaxLength="20" Nullable="false" />
+          <Property Name="Version" Type="varchar" MaxLength="5" Nullable="false" />
+          <Property Name="Title" Type="nvarchar(max)" />
+          <Property Name="Author_Name" Type="nvarchar" MaxLength="200" />
+          <Property Name="Author_Url" Type="nvarchar" MaxLength="500" />
+          <Property Name="Provider_Name" Type="nvarchar" MaxLength="100" />
+          <Property Name="Provider_Url" Type="nvarchar" MaxLength="500" />
+          <Property Name="Cache_Age" Type="int" />
+          <Property Name="Thumbnail_Url" Type="nvarchar" MaxLength="500" />
+          <Property Name="Description" Type="nvarchar(max)" />
+          <Property Name="Url" Type="nvarchar" MaxLength="500" />
+          <Property Name="Width" Type="int" />
+          <Property Name="Height" Type="int" />
+          <Property Name="Html" Type="nvarchar(max)" />
+        </EntityType>
+        <EntityType Name="IdeaCategories">
+          <Key>
+            <PropertyRef Name="IdeaId" />
+            <PropertyRef Name="CategoryId" />
+          </Key>
+          <Property Name="IdeaId" Type="char" MaxLength="24" Nullable="false" />
+          <Property Name="CategoryId" Type="int" Nullable="false" />
+        </EntityType>
+        <EntityType Name="IdeaComments">
+          <Key>
+            <PropertyRef Name="IdeaId" />
+            <PropertyRef Name="CommentId" />
+          </Key>
+          <Property Name="IdeaId" Type="char" MaxLength="24" Nullable="false" />
+          <Property Name="CommentId" Type="char" MaxLength="24" Nullable="false" />
+          <Property Name="UserObjectId" Type="char" MaxLength="24" Nullable="false" />
+          <Property Name="TypeId" Type="int" Nullable="false" />
+        </EntityType>
+        <EntityType Name="IdeaIssues">
+          <Key>
+            <PropertyRef Name="IdeaObjectId" />
+            <PropertyRef Name="IssueObjectId" />
+          </Key>
+          <Property Name="IdeaObjectId" Type="char" MaxLength="24" Nullable="false" />
+          <Property Name="IssueObjectId" Type="char" MaxLength="24" Nullable="false" />
+          <Property Name="ChangeState" Type="bit" Nullable="false" />
+        </EntityType>
+        <EntityType Name="IdeaPriorities">
+          <Key>
+            <PropertyRef Name="Id" />
+          </Key>
+          <Property Name="Id" Type="int" StoreGeneratedPattern="Identity" Nullable="false" />
+          <Property Name="IdeaObjectId" Type="char" MaxLength="24" Nullable="false" />
+          <Property Name="UserId" Type="int" Nullable="false" />
+          <Property Name="PriorityNumber" Type="int" Nullable="false" />
+          <Property Name="TotalNumber" Type="int" Nullable="false" />
+        </EntityType>
+        <EntityType Name="Ideas">
+          <Key>
+            <PropertyRef Name="Id" />
+          </Key>
+          <Property Name="Id" Type="char" MaxLength="24" Nullable="false" />
+          <Property Name="Subject" Type="nvarchar(max)" Nullable="false" />
+          <Property Name="Aim" Type="nvarchar(max)" />
+          <Property Name="UserObjectId" Type="char" MaxLength="24" />
+          <Property Name="IsDraft" Type="bit" Nullable="false" />
+          <Property Name="OrganizationId" Type="char" MaxLength="24" />
+          <Property Name="IsPrivate" Type="bit" Nullable="false" />
+          <Property Name="MunicipalityId" Type="int" />
+          <Property Name="CreatedOn" Type="datetime" Nullable="false" />
+          <Property Name="ModifiedOn" Type="datetime" Nullable="false" />
+          <Property Name="RequiredVotes" Type="int" />
+          <Property Name="StateId" Type="int" Nullable="false" />
+          <Property Name="FinalIdeaText" Type="nvarchar(max)" />
+          <Property Name="FinalVersionId" Type="char" MaxLength="24" />
+          <Property Name="IsImpersonal" Type="bit" Nullable="false" />
+        </EntityType>
+        <EntityType Name="IdeaVersions">
+          <Key>
+            <PropertyRef Name="VersionId" />
+          </Key>
+          <Property Name="VersionId" Type="char" MaxLength="24" Nullable="false" />
+          <Property Name="IdeaId" Type="char" MaxLength="24" Nullable="false" />
+          <Property Name="VersionSubject" Type="nvarchar" MaxLength="500" />
+          <Property Name="UserObjectId" Type="char" MaxLength="24" />
+          <Property Name="OrganizationId" Type="char" MaxLength="24" />
+          <Property Name="CreatedOn" Type="datetime" Nullable="false" />
+          <Property Name="ModifiedOn" Type="datetime" Nullable="false" />
+          <Property Name="IsDeleted" Type="bit" Nullable="false" />
+          <Property Name="Text" Type="nvarchar(max)" Nullable="false" />
+        </EntityType>
+        <EntityType Name="IdeaVersionView">
+          <Key>
+            <PropertyRef Name="IdeaVersionObjectId" />
+            <PropertyRef Name="UserDbId" />
+          </Key>
+          <Property Name="IdeaVersionObjectId" Type="char" MaxLength="24" Nullable="false" />
+          <Property Name="UserDbId" Type="int" Nullable="false" />
+        </EntityType>
+        <EntityType Name="IdeaVotes">
+          <Key>
+            <PropertyRef Name="IdeaId" />
+            <PropertyRef Name="PersonCode" />
+          </Key>
+          <Property Name="IdeaId" Type="char" MaxLength="24" Nullable="false" />
+          <Property Name="PersonCode" Type="nvarchar" MaxLength="32" Nullable="false" />
+          <Property Name="Signature" Type="varbinary" MaxLength="512" Nullable="false" />
+          <Property Name="Date" Type="datetime" Nullable="false" />
+          <Property Name="AddressLine" Type="nvarchar" MaxLength="1000" />
+          <Property Name="DocumentNo" Type="varchar" MaxLength="20" />
+          <Property Name="FirstName" Type="nvarchar" MaxLength="100" Nullable="false" />
+          <Property Name="LastName" Type="nvarchar" MaxLength="100" Nullable="false" />
+          <Property Name="CityId" Type="int" />
+          <Property Name="Source" Type="varchar" MaxLength="50" Nullable="false" />
+          <Property Name="IsPublic" Type="bit" Nullable="false" />
+          <Property Name="UserObjectId" Type="char" MaxLength="24" />
+        </EntityType>
+        <EntityType Name="IssueCategories">
+          <Key>
+            <PropertyRef Name="IssueId" />
+            <PropertyRef Name="CategoryId" />
+          </Key>
+          <Property Name="IssueId" Type="int" Nullable="false" />
+          <Property Name="CategoryId" Type="int" Nullable="false" />
+        </EntityType>
+        <EntityType Name="IssueComments">
+          <Key>
+            <PropertyRef Name="IssueId" />
+            <PropertyRef Name="CommentId" />
+          </Key>
+          <Property Name="IssueId" Type="char" MaxLength="24" Nullable="false" />
+          <Property Name="CommentId" Type="char" MaxLength="24" Nullable="false" />
+          <Property Name="UserObjectId" Type="char" MaxLength="24" Nullable="false" />
+          <Property Name="TypeId" Type="int" Nullable="false" />
+        </EntityType>
+        <EntityType Name="Issues">
+          <Key>
+            <PropertyRef Name="Id" />
+          </Key>
+          <Property Name="Id" Type="int" StoreGeneratedPattern="Identity" Nullable="false" />
+          <Property Name="ObjectId" Type="char" MaxLength="24" Nullable="false" />
+          <Property Name="Subject" Type="nvarchar(max)" Nullable="false" />
+          <Property Name="Summary" Type="nvarchar(max)" Nullable="false" />
+          <Property Name="Deadline" Type="datetime" />
+          <Property Name="UserObjectId" Type="char" MaxLength="24" Nullable="false" />
+          <Property Name="RegistrationDate" Type="datetime" Nullable="false" />
+          <Property Name="ModificationDate" Type="datetime" />
+          <Property Name="OfficialVote" Type="smallint" />
+          <Property Name="MunicipalityId" Type="int" />
+          <Property Name="OrganizationId" Type="char" MaxLength="24" />
+          <Property Name="IsPrivateToOrganization" Type="bit" Nullable="false" />
+          <Property Name="OfficialVotingDescription" Type="nvarchar(max)" />
+          <Property Name="IsMailSent" Type="bit" Nullable="false" />
+        </EntityType>
+        <EntityType Name="IssueVersions">
+          <Key>
+            <PropertyRef Name="VersionId" />
+          </Key>
+          <Property Name="VersionId" Type="char" MaxLength="24" Nullable="false" />
+          <Property Name="IssueId" Type="int" Nullable="false" />
+          <Property Name="Text" Type="nvarchar(max)" Nullable="false" />
+          <Property Name="UserObjectId" Type="char" MaxLength="24" />
+          <Property Name="CreatedOn" Type="datetime" Nullable="false" />
+          <Property Name="ModifiedOn" Type="datetime" Nullable="false" />
+        </EntityType>
+        <EntityType Name="ProblemCategories">
+          <Key>
+            <PropertyRef Name="ProblemId" />
+            <PropertyRef Name="CategoryId" />
+          </Key>
+          <Property Name="ProblemId" Type="char" MaxLength="24" Nullable="false" />
+          <Property Name="CategoryId" Type="int" Nullable="false" />
+        </EntityType>
+        <EntityType Name="ProblemComments">
+          <Key>
+            <PropertyRef Name="ProblemId" />
+            <PropertyRef Name="CommentId" />
+          </Key>
+          <Property Name="ProblemId" Type="char" MaxLength="24" Nullable="false" />
+          <Property Name="CommentId" Type="char" MaxLength="24" Nullable="false" />
+          <Property Name="UserObjectId" Type="char" MaxLength="24" Nullable="false" />
+        </EntityType>
+        <EntityType Name="ProblemIdeas">
+          <Key>
+            <PropertyRef Name="ProblemId" />
+            <PropertyRef Name="IdeaId" />
+          </Key>
+          <Property Name="ProblemId" Type="char" MaxLength="24" Nullable="false" />
+          <Property Name="IdeaId" Type="char" MaxLength="24" Nullable="false" />
+          <Property Name="UserObjectId" Type="char" MaxLength="24" />
+        </EntityType>
+        <EntityType Name="ProblemIssues">
+          <Key>
+            <PropertyRef Name="ProblemId" />
+            <PropertyRef Name="IssueId" />
+          </Key>
+          <Property Name="ProblemId" Type="char" MaxLength="24" Nullable="false" />
+          <Property Name="IssueId" Type="char" MaxLength="24" Nullable="false" />
+          <Property Name="UserObjectId" Type="char" MaxLength="24" />
+        </EntityType>
+        <EntityType Name="Problems">
+          <Key>
+            <PropertyRef Name="Id" />
+          </Key>
+          <Property Name="Id" Type="char" MaxLength="24" Nullable="false" />
+          <Property Name="Text" Type="nvarchar(max)" Nullable="false" />
+          <Property Name="UserObjectId" Type="char" MaxLength="24" Nullable="false" />
+          <Property Name="Date" Type="datetime" Nullable="false" />
+          <Property Name="MunicipalityId" Type="int" />
+          <Property Name="OrganizationId" Type="char" MaxLength="24" />
+          <Property Name="IsPrivateToOrganization" Type="bit" />
+          <Property Name="UserFullName" Type="nvarchar" MaxLength="200" />
+          <Property Name="OrganizationName" Type="nvarchar" MaxLength="1000" />
+          <Property Name="EmbedId" Type="int" />
+        </EntityType>
+        <EntityType Name="ProblemSupporters">
+          <Key>
+            <PropertyRef Name="Id" />
+          </Key>
+          <Property Name="Id" Type="int" StoreGeneratedPattern="Identity" Nullable="false" />
+          <Property Name="ProblemId" Type="char" MaxLength="24" Nullable="false" />
+          <Property Name="UserId" Type="char" MaxLength="24" Nullable="false" />
+          <Property Name="ForAgainst" Type="int" Nullable="false" />
+        </EntityType>
+        <EntityType Name="RelatedIdeas">
+          <Key>
+            <PropertyRef Name="IdeaObjectId" />
+            <PropertyRef Name="RelatedIdeaObjectId" />
+          </Key>
+          <Property Name="IdeaObjectId" Type="char" MaxLength="24" Nullable="false" />
+          <Property Name="RelatedIdeaObjectId" Type="char" MaxLength="24" Nullable="false" />
+          <Property Name="UserObjectId" Type="char" MaxLength="24" />
+        </EntityType>
+        <EntityType Name="ShortLinks">
+          <Key>
+            <PropertyRef Name="Id" />
+          </Key>
+          <Property Name="Id" Type="nvarchar" MaxLength="100" Nullable="false" />
+          <Property Name="FullLink" Type="nvarchar(max)" Nullable="false" />
+        </EntityType>
+        <EntityType Name="UserComments">
+          <Key>
+            <PropertyRef Name="CommentId" />
+            <PropertyRef Name="UserId" />
+          </Key>
+          <Property Name="CommentId" Type="char" MaxLength="24" Nullable="false" />
+          <Property Name="UserId" Type="char" MaxLength="24" Nullable="false" />
+          <Property Name="UserObjectId" Type="char" MaxLength="24" Nullable="false" />
+          <Property Name="TypeId" Type="int" Nullable="false" />
+        </EntityType>
+        <EntityType Name="Votes">
+          <Key>
+            <PropertyRef Name="Id" />
+          </Key>
+          <Property Name="Id" Type="int" StoreGeneratedPattern="Identity" Nullable="false" />
+          <Property Name="IssueId" Type="int" Nullable="false" />
+          <Property Name="ForAgainst" Type="smallint" Nullable="false" />
+          <Property Name="PersonCode" Type="nvarchar" MaxLength="32" Nullable="false" />
+          <Property Name="Signature" Type="varbinary" MaxLength="512" Nullable="false" />
+          <Property Name="Date" Type="datetime" Nullable="false" />
+          <Property Name="AddressLine" Type="nvarchar" MaxLength="1000" />
+          <Property Name="DocumentNo" Type="varchar" MaxLength="20" />
+          <Property Name="FirstName" Type="nvarchar" MaxLength="100" Nullable="false" />
+          <Property Name="LastName" Type="nvarchar" MaxLength="100" Nullable="false" />
+          <Property Name="CityId" Type="int" />
+          <Property Name="Source" Type="varchar" MaxLength="50" Nullable="false" />
+          <Property Name="IsPublic" Type="bit" Nullable="false" />
+          <Property Name="UserObjectId" Type="char" MaxLength="24" />
+        </EntityType>
+        <Association Name="FK_Comment_ParentComment">
+          <End Role="Comments" Type="Self.Comments" Multiplicity="0..1" />
+          <End Role="Comments1" Type="Self.Comments" Multiplicity="*" />
+          <ReferentialConstraint>
+            <Principal Role="Comments">
+              <PropertyRef Name="Id" />
+            </Principal>
+            <Dependent Role="Comments1">
+              <PropertyRef Name="ParentCommentId" />
+            </Dependent>
+          </ReferentialConstraint>
+        </Association>
+        <Association Name="FK_Comments_Embed">
+          <End Role="Embed" Type="Self.Embed" Multiplicity="0..1" />
+          <End Role="Comments" Type="Self.Comments" Multiplicity="*" />
+          <ReferentialConstraint>
+            <Principal Role="Embed">
+              <PropertyRef Name="Id" />
+            </Principal>
+            <Dependent Role="Comments">
+              <PropertyRef Name="EmbedId" />
+            </Dependent>
+          </ReferentialConstraint>
+        </Association>
+        <Association Name="FK_CommentSupporters_Comments">
+          <End Role="Comments" Type="Self.Comments" Multiplicity="1">
+            <OnDelete Action="Cascade" />
+          </End>
+          <End Role="CommentSupporters" Type="Self.CommentSupporters" Multiplicity="*" />
+          <ReferentialConstraint>
+            <Principal Role="Comments">
+              <PropertyRef Name="Id" />
+            </Principal>
+            <Dependent Role="CommentSupporters">
+              <PropertyRef Name="CommentId" />
+            </Dependent>
+          </ReferentialConstraint>
+        </Association>
+        <Association Name="FK_IdeaCategories_Ideas">
+          <End Role="Ideas" Type="Self.Ideas" Multiplicity="1" />
+          <End Role="IdeaCategories" Type="Self.IdeaCategories" Multiplicity="*" />
+          <ReferentialConstraint>
+            <Principal Role="Ideas">
+              <PropertyRef Name="Id" />
+            </Principal>
+            <Dependent Role="IdeaCategories">
+              <PropertyRef Name="IdeaId" />
+            </Dependent>
+          </ReferentialConstraint>
+        </Association>
+        <Association Name="FK_IdeaComments_Comments">
+          <End Role="Comments" Type="Self.Comments" Multiplicity="1">
+            <OnDelete Action="Cascade" />
+          </End>
+          <End Role="IdeaComments" Type="Self.IdeaComments" Multiplicity="*" />
+          <ReferentialConstraint>
+            <Principal Role="Comments">
+              <PropertyRef Name="Id" />
+            </Principal>
+            <Dependent Role="IdeaComments">
+              <PropertyRef Name="CommentId" />
+            </Dependent>
+          </ReferentialConstraint>
+        </Association>
+        <Association Name="FK_IdeaComments_Ideas">
+          <End Role="Ideas" Type="Self.Ideas" Multiplicity="1" />
+          <End Role="IdeaComments" Type="Self.IdeaComments" Multiplicity="*" />
+          <ReferentialConstraint>
+            <Principal Role="Ideas">
+              <PropertyRef Name="Id" />
+            </Principal>
+            <Dependent Role="IdeaComments">
+              <PropertyRef Name="IdeaId" />
+            </Dependent>
+          </ReferentialConstraint>
+        </Association>
+        <Association Name="FK_IdeaIssues_Ideas">
+          <End Role="Ideas" Type="Self.Ideas" Multiplicity="1" />
+          <End Role="IdeaIssues" Type="Self.IdeaIssues" Multiplicity="*" />
+          <ReferentialConstraint>
+            <Principal Role="Ideas">
+              <PropertyRef Name="Id" />
+            </Principal>
+            <Dependent Role="IdeaIssues">
+              <PropertyRef Name="IdeaObjectId" />
+            </Dependent>
+          </ReferentialConstraint>
+        </Association>
+        <!--Errors Found During Generation:
+warning 6035: The relationship 'FK_IdeaIssues_Issues' has columns that are not part of the key of the table on the primary side of the relationship. The relationship was excluded.
+        <Association Name="FK_IdeaIssues_Issues" />-->
+        <Association Name="FK_IdeaPriorities_Idea">
+          <End Role="Ideas" Type="Self.Ideas" Multiplicity="1" />
+          <End Role="IdeaPriorities" Type="Self.IdeaPriorities" Multiplicity="*" />
+          <ReferentialConstraint>
+            <Principal Role="Ideas">
+              <PropertyRef Name="Id" />
+            </Principal>
+            <Dependent Role="IdeaPriorities">
+              <PropertyRef Name="IdeaObjectId" />
+            </Dependent>
+          </ReferentialConstraint>
+        </Association>
+        <Association Name="FK_Ideas_IdeaVersions">
+          <End Role="IdeaVersions" Type="Self.IdeaVersions" Multiplicity="0..1" />
+          <End Role="Ideas" Type="Self.Ideas" Multiplicity="*" />
+          <ReferentialConstraint>
+            <Principal Role="IdeaVersions">
+              <PropertyRef Name="VersionId" />
+            </Principal>
+            <Dependent Role="Ideas">
+              <PropertyRef Name="FinalVersionId" />
+            </Dependent>
+          </ReferentialConstraint>
+        </Association>
+        <Association Name="FK_IdeaVersions_Idea">
+          <End Role="Ideas" Type="Self.Ideas" Multiplicity="1" />
+          <End Role="IdeaVersions" Type="Self.IdeaVersions" Multiplicity="*" />
+          <ReferentialConstraint>
+            <Principal Role="Ideas">
+              <PropertyRef Name="Id" />
+            </Principal>
+            <Dependent Role="IdeaVersions">
+              <PropertyRef Name="IdeaId" />
+            </Dependent>
+          </ReferentialConstraint>
+        </Association>
+        <Association Name="FK_IdeaVersionView_IdeaVersions">
+          <End Role="IdeaVersions" Type="Self.IdeaVersions" Multiplicity="1" />
+          <End Role="IdeaVersionView" Type="Self.IdeaVersionView" Multiplicity="*" />
+          <ReferentialConstraint>
+            <Principal Role="IdeaVersions">
+              <PropertyRef Name="VersionId" />
+            </Principal>
+            <Dependent Role="IdeaVersionView">
+              <PropertyRef Name="IdeaVersionObjectId" />
+            </Dependent>
+          </ReferentialConstraint>
+        </Association>
+        <Association Name="FK_IdeaVotes_Ideas">
+          <End Role="Ideas" Type="Self.Ideas" Multiplicity="1" />
+          <End Role="IdeaVotes" Type="Self.IdeaVotes" Multiplicity="*" />
+          <ReferentialConstraint>
+            <Principal Role="Ideas">
+              <PropertyRef Name="Id" />
+            </Principal>
+            <Dependent Role="IdeaVotes">
+              <PropertyRef Name="IdeaId" />
+            </Dependent>
+          </ReferentialConstraint>
+        </Association>
+        <Association Name="FK_IssueCategories_Ideas">
+          <End Role="Issues" Type="Self.Issues" Multiplicity="1" />
+          <End Role="IssueCategories" Type="Self.IssueCategories" Multiplicity="*" />
+          <ReferentialConstraint>
+            <Principal Role="Issues">
+              <PropertyRef Name="Id" />
+            </Principal>
+            <Dependent Role="IssueCategories">
+              <PropertyRef Name="IssueId" />
+            </Dependent>
+          </ReferentialConstraint>
+        </Association>
+        <Association Name="FK_IssueComments_Comments">
+          <End Role="Comments" Type="Self.Comments" Multiplicity="1">
+            <OnDelete Action="Cascade" />
+          </End>
+          <End Role="IssueComments" Type="Self.IssueComments" Multiplicity="*" />
+          <ReferentialConstraint>
+            <Principal Role="Comments">
+              <PropertyRef Name="Id" />
+            </Principal>
+            <Dependent Role="IssueComments">
+              <PropertyRef Name="CommentId" />
+            </Dependent>
+          </ReferentialConstraint>
+        </Association>
+        <!--Errors Found During Generation:
+warning 6035: The relationship 'FK_IssueComments_Issues1' has columns that are not part of the key of the table on the primary side of the relationship. The relationship was excluded.
+        <Association Name="FK_IssueComments_Issues1" />-->
+        <Association Name="FK_IssueVersions_Issue">
+          <End Role="Issues" Type="Self.Issues" Multiplicity="1" />
+          <End Role="IssueVersions" Type="Self.IssueVersions" Multiplicity="*" />
+          <ReferentialConstraint>
+            <Principal Role="Issues">
+              <PropertyRef Name="Id" />
+            </Principal>
+            <Dependent Role="IssueVersions">
+              <PropertyRef Name="IssueId" />
+            </Dependent>
+          </ReferentialConstraint>
+        </Association>
+        <Association Name="FK_IssueVote">
+          <End Role="Issues" Type="Self.Issues" Multiplicity="1" />
+          <End Role="Votes" Type="Self.Votes" Multiplicity="*" />
+          <ReferentialConstraint>
+            <Principal Role="Issues">
+              <PropertyRef Name="Id" />
+            </Principal>
+            <Dependent Role="Votes">
+              <PropertyRef Name="IssueId" />
+            </Dependent>
+          </ReferentialConstraint>
+        </Association>
+        <Association Name="FK_ProblemCategories_Problems">
+          <End Role="Problems" Type="Self.Problems" Multiplicity="1" />
+          <End Role="ProblemCategories" Type="Self.ProblemCategories" Multiplicity="*" />
+          <ReferentialConstraint>
+            <Principal Role="Problems">
+              <PropertyRef Name="Id" />
+            </Principal>
+            <Dependent Role="ProblemCategories">
+              <PropertyRef Name="ProblemId" />
+            </Dependent>
+          </ReferentialConstraint>
+        </Association>
+        <Association Name="FK_ProblemComments_Comments">
+          <End Role="Comments" Type="Self.Comments" Multiplicity="1">
+            <OnDelete Action="Cascade" />
+          </End>
+          <End Role="ProblemComments" Type="Self.ProblemComments" Multiplicity="*" />
+          <ReferentialConstraint>
+            <Principal Role="Comments">
+              <PropertyRef Name="Id" />
+            </Principal>
+            <Dependent Role="ProblemComments">
+              <PropertyRef Name="CommentId" />
+            </Dependent>
+          </ReferentialConstraint>
+        </Association>
+        <Association Name="FK_ProblemComments_Problems">
+          <End Role="Problems" Type="Self.Problems" Multiplicity="1" />
+          <End Role="ProblemComments" Type="Self.ProblemComments" Multiplicity="*" />
+          <ReferentialConstraint>
+            <Principal Role="Problems">
+              <PropertyRef Name="Id" />
+            </Principal>
+            <Dependent Role="ProblemComments">
+              <PropertyRef Name="ProblemId" />
+            </Dependent>
+          </ReferentialConstraint>
+        </Association>
+        <Association Name="FK_ProblemIdeas_Idea">
+          <End Role="Ideas" Type="Self.Ideas" Multiplicity="1" />
+          <End Role="ProblemIdeas" Type="Self.ProblemIdeas" Multiplicity="*" />
+          <ReferentialConstraint>
+            <Principal Role="Ideas">
+              <PropertyRef Name="Id" />
+            </Principal>
+            <Dependent Role="ProblemIdeas">
+              <PropertyRef Name="IdeaId" />
+            </Dependent>
+          </ReferentialConstraint>
+        </Association>
+        <Association Name="FK_ProblemIdeas_Problems">
+          <End Role="Problems" Type="Self.Problems" Multiplicity="1" />
+          <End Role="ProblemIdeas" Type="Self.ProblemIdeas" Multiplicity="*" />
+          <ReferentialConstraint>
+            <Principal Role="Problems">
+              <PropertyRef Name="Id" />
+            </Principal>
+            <Dependent Role="ProblemIdeas">
+              <PropertyRef Name="ProblemId" />
+            </Dependent>
+          </ReferentialConstraint>
+        </Association>
+        <Association Name="FK_ProblemIssues_Problems">
+          <End Role="Problems" Type="Self.Problems" Multiplicity="1" />
+          <End Role="ProblemIssues" Type="Self.ProblemIssues" Multiplicity="*" />
+          <ReferentialConstraint>
+            <Principal Role="Problems">
+              <PropertyRef Name="Id" />
+            </Principal>
+            <Dependent Role="ProblemIssues">
+              <PropertyRef Name="ProblemId" />
+            </Dependent>
+          </ReferentialConstraint>
+        </Association>
+        <Association Name="FK_Problems_Embed">
+          <End Role="Embed" Type="Self.Embed" Multiplicity="0..1" />
+          <End Role="Problems" Type="Self.Problems" Multiplicity="*" />
+          <ReferentialConstraint>
+            <Principal Role="Embed">
+              <PropertyRef Name="Id" />
+            </Principal>
+            <Dependent Role="Problems">
+              <PropertyRef Name="EmbedId" />
+            </Dependent>
+          </ReferentialConstraint>
+        </Association>
+        <Association Name="FK_ProblemSupporters_Problems">
+          <End Role="Problems" Type="Self.Problems" Multiplicity="1" />
+          <End Role="ProblemSupporters" Type="Self.ProblemSupporters" Multiplicity="*" />
+          <ReferentialConstraint>
+            <Principal Role="Problems">
+              <PropertyRef Name="Id" />
+            </Principal>
+            <Dependent Role="ProblemSupporters">
+              <PropertyRef Name="ProblemId" />
+            </Dependent>
+          </ReferentialConstraint>
+        </Association>
+        <Association Name="FK_RelatedIdeas_Ideas">
+          <End Role="Ideas" Type="Self.Ideas" Multiplicity="1" />
+          <End Role="RelatedIdeas" Type="Self.RelatedIdeas" Multiplicity="*" />
+          <ReferentialConstraint>
+            <Principal Role="Ideas">
+              <PropertyRef Name="Id" />
+            </Principal>
+            <Dependent Role="RelatedIdeas">
+              <PropertyRef Name="IdeaObjectId" />
+            </Dependent>
+          </ReferentialConstraint>
+        </Association>
+        <Association Name="FK_RelatedIdeas_RelatedIdeas">
+          <End Role="Ideas" Type="Self.Ideas" Multiplicity="1" />
+          <End Role="RelatedIdeas" Type="Self.RelatedIdeas" Multiplicity="*" />
+          <ReferentialConstraint>
+            <Principal Role="Ideas">
+              <PropertyRef Name="Id" />
+            </Principal>
+            <Dependent Role="RelatedIdeas">
+              <PropertyRef Name="RelatedIdeaObjectId" />
+            </Dependent>
+          </ReferentialConstraint>
+        </Association>
+        <Association Name="FK_UserComments_Comments">
+          <End Role="Comments" Type="Self.Comments" Multiplicity="1">
+            <OnDelete Action="Cascade" />
+          </End>
+          <End Role="UserComments" Type="Self.UserComments" Multiplicity="*" />
+          <ReferentialConstraint>
+            <Principal Role="Comments">
+              <PropertyRef Name="Id" />
+            </Principal>
+            <Dependent Role="UserComments">
+              <PropertyRef Name="CommentId" />
+            </Dependent>
+          </ReferentialConstraint>
+        </Association>
+        <EntityContainer Name="VotingModelStoreContainer">
+          <EntitySet Name="Comments" EntityType="Self.Comments" Schema="dbo" store:Type="Tables" />
+          <EntitySet Name="CommentSupporters" EntityType="Self.CommentSupporters" Schema="dbo" store:Type="Tables" />
+          <EntitySet Name="Embed" EntityType="Self.Embed" Schema="dbo" store:Type="Tables" />
+          <EntitySet Name="IdeaCategories" EntityType="Self.IdeaCategories" Schema="dbo" store:Type="Tables" />
+          <EntitySet Name="IdeaComments" EntityType="Self.IdeaComments" Schema="dbo" store:Type="Tables" />
+          <EntitySet Name="IdeaIssues" EntityType="Self.IdeaIssues" Schema="dbo" store:Type="Tables" />
+          <EntitySet Name="IdeaPriorities" EntityType="Self.IdeaPriorities" Schema="dbo" store:Type="Tables" />
+          <EntitySet Name="Ideas" EntityType="Self.Ideas" Schema="dbo" store:Type="Tables" />
+          <EntitySet Name="IdeaVersions" EntityType="Self.IdeaVersions" Schema="dbo" store:Type="Tables" />
+          <EntitySet Name="IdeaVersionView" EntityType="Self.IdeaVersionView" Schema="dbo" store:Type="Tables" />
+          <EntitySet Name="IdeaVotes" EntityType="Self.IdeaVotes" Schema="dbo" store:Type="Tables" />
+          <EntitySet Name="IssueCategories" EntityType="Self.IssueCategories" Schema="dbo" store:Type="Tables" />
+          <EntitySet Name="IssueComments" EntityType="Self.IssueComments" Schema="dbo" store:Type="Tables" />
+          <EntitySet Name="Issues" EntityType="Self.Issues" Schema="dbo" store:Type="Tables" />
+          <EntitySet Name="IssueVersions" EntityType="Self.IssueVersions" Schema="dbo" store:Type="Tables" />
+          <EntitySet Name="ProblemCategories" EntityType="Self.ProblemCategories" Schema="dbo" store:Type="Tables" />
+          <EntitySet Name="ProblemComments" EntityType="Self.ProblemComments" Schema="dbo" store:Type="Tables" />
+          <EntitySet Name="ProblemIdeas" EntityType="Self.ProblemIdeas" Schema="dbo" store:Type="Tables" />
+          <EntitySet Name="ProblemIssues" EntityType="Self.ProblemIssues" Schema="dbo" store:Type="Tables" />
+          <EntitySet Name="Problems" EntityType="Self.Problems" Schema="dbo" store:Type="Tables" />
+          <EntitySet Name="ProblemSupporters" EntityType="Self.ProblemSupporters" Schema="dbo" store:Type="Tables" />
+          <EntitySet Name="RelatedIdeas" EntityType="Self.RelatedIdeas" Schema="dbo" store:Type="Tables" />
+          <EntitySet Name="ShortLinks" EntityType="Self.ShortLinks" Schema="dbo" store:Type="Tables" />
+          <EntitySet Name="UserComments" EntityType="Self.UserComments" Schema="dbo" store:Type="Tables" />
+          <EntitySet Name="Votes" EntityType="Self.Votes" Schema="dbo" store:Type="Tables" />
+          <AssociationSet Name="FK_Comment_ParentComment" Association="Self.FK_Comment_ParentComment">
+            <End Role="Comments" EntitySet="Comments" />
+            <End Role="Comments1" EntitySet="Comments" />
+          </AssociationSet>
+          <AssociationSet Name="FK_Comments_Embed" Association="Self.FK_Comments_Embed">
+            <End Role="Embed" EntitySet="Embed" />
+            <End Role="Comments" EntitySet="Comments" />
+          </AssociationSet>
+          <AssociationSet Name="FK_CommentSupporters_Comments" Association="Self.FK_CommentSupporters_Comments">
+            <End Role="Comments" EntitySet="Comments" />
+            <End Role="CommentSupporters" EntitySet="CommentSupporters" />
+          </AssociationSet>
+          <AssociationSet Name="FK_IdeaCategories_Ideas" Association="Self.FK_IdeaCategories_Ideas">
+            <End Role="Ideas" EntitySet="Ideas" />
+            <End Role="IdeaCategories" EntitySet="IdeaCategories" />
+          </AssociationSet>
+          <AssociationSet Name="FK_IdeaComments_Comments" Association="Self.FK_IdeaComments_Comments">
+            <End Role="Comments" EntitySet="Comments" />
+            <End Role="IdeaComments" EntitySet="IdeaComments" />
+          </AssociationSet>
+          <AssociationSet Name="FK_IdeaComments_Ideas" Association="Self.FK_IdeaComments_Ideas">
+            <End Role="Ideas" EntitySet="Ideas" />
+            <End Role="IdeaComments" EntitySet="IdeaComments" />
+          </AssociationSet>
+          <AssociationSet Name="FK_IdeaIssues_Ideas" Association="Self.FK_IdeaIssues_Ideas">
+            <End Role="Ideas" EntitySet="Ideas" />
+            <End Role="IdeaIssues" EntitySet="IdeaIssues" />
+          </AssociationSet>
+          <AssociationSet Name="FK_IdeaPriorities_Idea" Association="Self.FK_IdeaPriorities_Idea">
+            <End Role="Ideas" EntitySet="Ideas" />
+            <End Role="IdeaPriorities" EntitySet="IdeaPriorities" />
+          </AssociationSet>
+          <AssociationSet Name="FK_Ideas_IdeaVersions" Association="Self.FK_Ideas_IdeaVersions">
+            <End Role="IdeaVersions" EntitySet="IdeaVersions" />
+            <End Role="Ideas" EntitySet="Ideas" />
+          </AssociationSet>
+          <AssociationSet Name="FK_IdeaVersions_Idea" Association="Self.FK_IdeaVersions_Idea">
+            <End Role="Ideas" EntitySet="Ideas" />
+            <End Role="IdeaVersions" EntitySet="IdeaVersions" />
+          </AssociationSet>
+          <AssociationSet Name="FK_IdeaVersionView_IdeaVersions" Association="Self.FK_IdeaVersionView_IdeaVersions">
+            <End Role="IdeaVersions" EntitySet="IdeaVersions" />
+            <End Role="IdeaVersionView" EntitySet="IdeaVersionView" />
+          </AssociationSet>
+          <AssociationSet Name="FK_IdeaVotes_Ideas" Association="Self.FK_IdeaVotes_Ideas">
+            <End Role="Ideas" EntitySet="Ideas" />
+            <End Role="IdeaVotes" EntitySet="IdeaVotes" />
+          </AssociationSet>
+          <AssociationSet Name="FK_IssueCategories_Ideas" Association="Self.FK_IssueCategories_Ideas">
+            <End Role="Issues" EntitySet="Issues" />
+            <End Role="IssueCategories" EntitySet="IssueCategories" />
+          </AssociationSet>
+          <AssociationSet Name="FK_IssueComments_Comments" Association="Self.FK_IssueComments_Comments">
+            <End Role="Comments" EntitySet="Comments" />
+            <End Role="IssueComments" EntitySet="IssueComments" />
+          </AssociationSet>
+          <AssociationSet Name="FK_IssueVersions_Issue" Association="Self.FK_IssueVersions_Issue">
+            <End Role="Issues" EntitySet="Issues" />
+            <End Role="IssueVersions" EntitySet="IssueVersions" />
+          </AssociationSet>
+          <AssociationSet Name="FK_IssueVote" Association="Self.FK_IssueVote">
+            <End Role="Issues" EntitySet="Issues" />
+            <End Role="Votes" EntitySet="Votes" />
+          </AssociationSet>
+          <AssociationSet Name="FK_ProblemCategories_Problems" Association="Self.FK_ProblemCategories_Problems">
+            <End Role="Problems" EntitySet="Problems" />
+            <End Role="ProblemCategories" EntitySet="ProblemCategories" />
+          </AssociationSet>
+          <AssociationSet Name="FK_ProblemComments_Comments" Association="Self.FK_ProblemComments_Comments">
+            <End Role="Comments" EntitySet="Comments" />
+            <End Role="ProblemComments" EntitySet="ProblemComments" />
+          </AssociationSet>
+          <AssociationSet Name="FK_ProblemComments_Problems" Association="Self.FK_ProblemComments_Problems">
+            <End Role="Problems" EntitySet="Problems" />
+            <End Role="ProblemComments" EntitySet="ProblemComments" />
+          </AssociationSet>
+          <AssociationSet Name="FK_ProblemIdeas_Idea" Association="Self.FK_ProblemIdeas_Idea">
+            <End Role="Ideas" EntitySet="Ideas" />
+            <End Role="ProblemIdeas" EntitySet="ProblemIdeas" />
+          </AssociationSet>
+          <AssociationSet Name="FK_ProblemIdeas_Problems" Association="Self.FK_ProblemIdeas_Problems">
+            <End Role="Problems" EntitySet="Problems" />
+            <End Role="ProblemIdeas" EntitySet="ProblemIdeas" />
+          </AssociationSet>
+          <AssociationSet Name="FK_ProblemIssues_Problems" Association="Self.FK_ProblemIssues_Problems">
+            <End Role="Problems" EntitySet="Problems" />
+            <End Role="ProblemIssues" EntitySet="ProblemIssues" />
+          </AssociationSet>
+          <AssociationSet Name="FK_Problems_Embed" Association="Self.FK_Problems_Embed">
+            <End Role="Embed" EntitySet="Embed" />
+            <End Role="Problems" EntitySet="Problems" />
+          </AssociationSet>
+          <AssociationSet Name="FK_ProblemSupporters_Problems" Association="Self.FK_ProblemSupporters_Problems">
+            <End Role="Problems" EntitySet="Problems" />
+            <End Role="ProblemSupporters" EntitySet="ProblemSupporters" />
+          </AssociationSet>
+          <AssociationSet Name="FK_RelatedIdeas_Ideas" Association="Self.FK_RelatedIdeas_Ideas">
+            <End Role="Ideas" EntitySet="Ideas" />
+            <End Role="RelatedIdeas" EntitySet="RelatedIdeas" />
+          </AssociationSet>
+          <AssociationSet Name="FK_RelatedIdeas_RelatedIdeas" Association="Self.FK_RelatedIdeas_RelatedIdeas">
+            <End Role="Ideas" EntitySet="Ideas" />
+            <End Role="RelatedIdeas" EntitySet="RelatedIdeas" />
+          </AssociationSet>
+          <AssociationSet Name="FK_UserComments_Comments" Association="Self.FK_UserComments_Comments">
+            <End Role="Comments" EntitySet="Comments" />
+            <End Role="UserComments" EntitySet="UserComments" />
+          </AssociationSet>
+        </EntityContainer>
+      </Schema></edmx:StorageModels>
+    <!-- CSDL content -->
+    <edmx:ConceptualModels>
+      <Schema Namespace="VotingModel" Alias="Self" p1:UseStrongSpatialTypes="false" xmlns:annotation="http://schemas.microsoft.com/ado/2009/02/edm/annotation" xmlns:p1="http://schemas.microsoft.com/ado/2009/02/edm/annotation" xmlns="http://schemas.microsoft.com/ado/2009/11/edm">
+        <EntityContainer Name="VotingEntities" p1:LazyLoadingEnabled="true">
+          <EntitySet Name="Comments" EntityType="VotingModel.Comment" />
+          <EntitySet Name="CommentSupporters" EntityType="VotingModel.CommentSupporter" />
+          <EntitySet Name="Embeds" EntityType="VotingModel.Embed" />
+          <EntitySet Name="IdeaCategories" EntityType="VotingModel.IdeaCategory" />
+          <EntitySet Name="IdeaComments" EntityType="VotingModel.IdeaComment" />
+          <EntitySet Name="IdeaIssues" EntityType="VotingModel.IdeaIssue" />
+          <EntitySet Name="IdeaPriorities" EntityType="VotingModel.IdeaPriority" />
+          <EntitySet Name="Ideas" EntityType="VotingModel.Idea" />
+          <EntitySet Name="IdeaVersions" EntityType="VotingModel.IdeaVersion" />
+          <EntitySet Name="IdeaVersionViews" EntityType="VotingModel.IdeaVersionView" />
+          <EntitySet Name="IdeaVotes" EntityType="VotingModel.IdeaVote" />
+          <EntitySet Name="IssueCategories" EntityType="VotingModel.IssueCategory" />
+          <EntitySet Name="IssueComments" EntityType="VotingModel.IssueComment" />
+          <EntitySet Name="IssueVersions" EntityType="VotingModel.IssueVersion" />
+          <EntitySet Name="ProblemCategories" EntityType="VotingModel.ProblemCategory" />
+          <EntitySet Name="ProblemComments" EntityType="VotingModel.ProblemComment" />
+          <EntitySet Name="ProblemIdeas" EntityType="VotingModel.ProblemIdea" />
+          <EntitySet Name="ProblemIssues" EntityType="VotingModel.ProblemIssue" />
+          <EntitySet Name="Problems" EntityType="VotingModel.Problem" />
+          <EntitySet Name="ProblemSupporters" EntityType="VotingModel.ProblemSupporter" />
+          <EntitySet Name="RelatedIdeas" EntityType="VotingModel.RelatedIdea" />
+          <EntitySet Name="UserComments" EntityType="VotingModel.UserComment" />
+          <EntitySet Name="Votes" EntityType="VotingModel.Vote" />
+          <AssociationSet Name="FK_Comment_ParentComment" Association="VotingModel.FK_Comment_ParentComment">
+            <End Role="Comments" EntitySet="Comments" />
+            <End Role="Comments1" EntitySet="Comments" />
+          </AssociationSet>
+          <AssociationSet Name="FK_Comments_Embed" Association="VotingModel.FK_Comments_Embed">
+            <End Role="Embed" EntitySet="Embeds" />
+            <End Role="Comments" EntitySet="Comments" />
+          </AssociationSet>
+          <AssociationSet Name="FK_CommentSupporters_Comments" Association="VotingModel.FK_CommentSupporters_Comments">
+            <End Role="Comments" EntitySet="Comments" />
+            <End Role="CommentSupporters" EntitySet="CommentSupporters" />
+          </AssociationSet>
+          <AssociationSet Name="FK_IdeaComments_Comments" Association="VotingModel.FK_IdeaComments_Comments">
+            <End Role="Comments" EntitySet="Comments" />
+            <End Role="IdeaComments" EntitySet="IdeaComments" />
+          </AssociationSet>
+          <AssociationSet Name="FK_IssueComments_Comments" Association="VotingModel.FK_IssueComments_Comments">
+            <End Role="Comments" EntitySet="Comments" />
+            <End Role="IssueComments" EntitySet="IssueComments" />
+          </AssociationSet>
+          <AssociationSet Name="FK_ProblemComments_Comments" Association="VotingModel.FK_ProblemComments_Comments">
+            <End Role="Comments" EntitySet="Comments" />
+            <End Role="ProblemComments" EntitySet="ProblemComments" />
+          </AssociationSet>
+          <AssociationSet Name="FK_UserComments_Comments" Association="VotingModel.FK_UserComments_Comments">
+            <End Role="Comments" EntitySet="Comments" />
+            <End Role="UserComments" EntitySet="UserComments" />
+          </AssociationSet>
+          <AssociationSet Name="FK_Problems_Embed" Association="VotingModel.FK_Problems_Embed">
+            <End Role="Embed" EntitySet="Embeds" />
+            <End Role="Problems" EntitySet="Problems" />
+          </AssociationSet>
+          <AssociationSet Name="FK_IdeaCategories_Ideas" Association="VotingModel.FK_IdeaCategories_Ideas">
+            <End Role="Ideas" EntitySet="Ideas" />
+            <End Role="IdeaCategories" EntitySet="IdeaCategories" />
+          </AssociationSet>
+          <AssociationSet Name="FK_IdeaComments_Ideas" Association="VotingModel.FK_IdeaComments_Ideas">
+            <End Role="Ideas" EntitySet="Ideas" />
+            <End Role="IdeaComments" EntitySet="IdeaComments" />
+          </AssociationSet>
+          <AssociationSet Name="FK_IdeaIssues_Ideas" Association="VotingModel.FK_IdeaIssues_Ideas">
+            <End Role="Ideas" EntitySet="Ideas" />
+            <End Role="IdeaIssues" EntitySet="IdeaIssues" />
+          </AssociationSet>
+          <AssociationSet Name="FK_IdeaPriorities_Idea" Association="VotingModel.FK_IdeaPriorities_Idea">
+            <End Role="Ideas" EntitySet="Ideas" />
+            <End Role="IdeaPriorities" EntitySet="IdeaPriorities" />
+          </AssociationSet>
+          <AssociationSet Name="FK_Ideas_IdeaVersions" Association="VotingModel.FK_Ideas_IdeaVersions">
+            <End Role="IdeaVersions" EntitySet="IdeaVersions" />
+            <End Role="Ideas" EntitySet="Ideas" />
+          </AssociationSet>
+          <AssociationSet Name="FK_IdeaVersions_Idea" Association="VotingModel.FK_IdeaVersions_Idea">
+            <End Role="Ideas" EntitySet="Ideas" />
+            <End Role="IdeaVersions" EntitySet="IdeaVersions" />
+          </AssociationSet>
+          <AssociationSet Name="FK_IdeaVotes_Ideas" Association="VotingModel.FK_IdeaVotes_Ideas">
+            <End Role="Ideas" EntitySet="Ideas" />
+            <End Role="IdeaVotes" EntitySet="IdeaVotes" />
+          </AssociationSet>
+          <AssociationSet Name="FK_ProblemIdeas_Idea" Association="VotingModel.FK_ProblemIdeas_Idea">
+            <End Role="Ideas" EntitySet="Ideas" />
+            <End Role="ProblemIdeas" EntitySet="ProblemIdeas" />
+          </AssociationSet>
+          <AssociationSet Name="FK_RelatedIdeas_Ideas" Association="VotingModel.FK_RelatedIdeas_Ideas">
+            <End Role="Ideas" EntitySet="Ideas" />
+            <End Role="RelatedIdeas" EntitySet="RelatedIdeas" />
+          </AssociationSet>
+          <AssociationSet Name="FK_RelatedIdeas_RelatedIdeas" Association="VotingModel.FK_RelatedIdeas_RelatedIdeas">
+            <End Role="Ideas" EntitySet="Ideas" />
+            <End Role="RelatedIdeas" EntitySet="RelatedIdeas" />
+          </AssociationSet>
+          <AssociationSet Name="FK_IdeaVersionView_IdeaVersions" Association="VotingModel.FK_IdeaVersionView_IdeaVersions">
+            <End Role="IdeaVersions" EntitySet="IdeaVersions" />
+            <End Role="IdeaVersionView" EntitySet="IdeaVersionViews" />
+          </AssociationSet>
+          <AssociationSet Name="FK_ProblemCategories_Problems" Association="VotingModel.FK_ProblemCategories_Problems">
+            <End Role="Problems" EntitySet="Problems" />
+            <End Role="ProblemCategories" EntitySet="ProblemCategories" />
+          </AssociationSet>
+          <AssociationSet Name="FK_ProblemComments_Problems" Association="VotingModel.FK_ProblemComments_Problems">
+            <End Role="Problems" EntitySet="Problems" />
+            <End Role="ProblemComments" EntitySet="ProblemComments" />
+          </AssociationSet>
+          <AssociationSet Name="FK_ProblemIdeas_Problems" Association="VotingModel.FK_ProblemIdeas_Problems">
+            <End Role="Problems" EntitySet="Problems" />
+            <End Role="ProblemIdeas" EntitySet="ProblemIdeas" />
+          </AssociationSet>
+          <AssociationSet Name="FK_ProblemIssues_Problems" Association="VotingModel.FK_ProblemIssues_Problems">
+            <End Role="Problems" EntitySet="Problems" />
+            <End Role="ProblemIssues" EntitySet="ProblemIssues" />
+          </AssociationSet>
+          <AssociationSet Name="FK_ProblemSupporters_Problems" Association="VotingModel.FK_ProblemSupporters_Problems">
+            <End Role="Problems" EntitySet="Problems" />
+            <End Role="ProblemSupporters" EntitySet="ProblemSupporters" />
+          </AssociationSet>
+          <EntitySet Name="Issues" EntityType="VotingModel.Issue" />
+          <AssociationSet Name="FK_IssueCategories_Ideas" Association="VotingModel.FK_IssueCategories_Ideas">
+            <End Role="Issue" EntitySet="Issues" />
+            <End Role="IssueCategory" EntitySet="IssueCategories" />
+          </AssociationSet>
+          <AssociationSet Name="FK_IssueVersions_Issue" Association="VotingModel.FK_IssueVersions_Issue">
+            <End Role="Issue" EntitySet="Issues" />
+            <End Role="IssueVersion" EntitySet="IssueVersions" />
+          </AssociationSet>
+          <AssociationSet Name="FK_IssueVote" Association="VotingModel.FK_IssueVote">
+            <End Role="Issue" EntitySet="Issues" />
+            <End Role="Vote" EntitySet="Votes" />
+          </AssociationSet>
+          <EntitySet Name="ShortLinks" EntityType="VotingModel.ShortLink" />
+        </EntityContainer>
+        <EntityType Name="Comment">
+          <Key>
+            <PropertyRef Name="Id" />
+          </Key>
+          <Property Name="Id" Type="String" Nullable="false" MaxLength="24" Unicode="false" FixedLength="true" />
+          <Property Name="Text" Type="String" Nullable="false" MaxLength="Max" Unicode="true" FixedLength="false" />
+          <Property Name="TypeId" Type="Int32" />
+          <Property Name="Date" Type="DateTime" Nullable="false" Precision="3" />
+          <Property Name="ParentCommentId" Type="String" MaxLength="24" Unicode="false" FixedLength="true" />
+          <Property Name="UserObjectId" Type="String" Nullable="false" MaxLength="24" Unicode="false" FixedLength="true" />
+          <Property Name="UserFullName" Type="String" Nullable="false" MaxLength="200" Unicode="true" FixedLength="false" />
+          <Property Name="ObjectId" Type="String" Nullable="false" MaxLength="24" Unicode="false" FixedLength="true" />
+          <Property Name="EntryTypeId" Type="Int32" Nullable="false" />
+          <Property Name="IsHidden" Type="Boolean" Nullable="false" />
+          <Property Name="EmbedId" Type="Int32" />
+          <NavigationProperty Name="Comments1" Relationship="VotingModel.FK_Comment_ParentComment" FromRole="Comments" ToRole="Comments1" />
+          <NavigationProperty Name="Comment1" Relationship="VotingModel.FK_Comment_ParentComment" FromRole="Comments1" ToRole="Comments" />
+          <NavigationProperty Name="Embed" Relationship="VotingModel.FK_Comments_Embed" FromRole="Comments" ToRole="Embed" />
+          <NavigationProperty Name="CommentSupporters" Relationship="VotingModel.FK_CommentSupporters_Comments" FromRole="Comments" ToRole="CommentSupporters" />
+          <NavigationProperty Name="IdeaComments" Relationship="VotingModel.FK_IdeaComments_Comments" FromRole="Comments" ToRole="IdeaComments" />
+          <NavigationProperty Name="IssueComments" Relationship="VotingModel.FK_IssueComments_Comments" FromRole="Comments" ToRole="IssueComments" />
+          <NavigationProperty Name="ProblemComments" Relationship="VotingModel.FK_ProblemComments_Comments" FromRole="Comments" ToRole="ProblemComments" />
+          <NavigationProperty Name="UserComments" Relationship="VotingModel.FK_UserComments_Comments" FromRole="Comments" ToRole="UserComments" />
+          <Property Type="String" Name="Number" Nullable="false" MaxLength="10" FixedLength="false" Unicode="false" />
+        </EntityType>
+        <EntityType Name="CommentSupporter">
+          <Key>
+            <PropertyRef Name="CommentId" />
+            <PropertyRef Name="UserId" />
+          </Key>
+          <Property Name="CommentId" Type="String" Nullable="false" MaxLength="24" Unicode="false" FixedLength="true" />
+          <Property Name="UserId" Type="String" Nullable="false" MaxLength="24" Unicode="false" FixedLength="true" />
+          <NavigationProperty Name="Comment" Relationship="VotingModel.FK_CommentSupporters_Comments" FromRole="CommentSupporters" ToRole="Comments" />
+        </EntityType>
+        <EntityType Name="Embed">
+          <Key>
+            <PropertyRef Name="Id" />
+          </Key>
+          <Property Name="Id" Type="Int32" Nullable="false" p1:StoreGeneratedPattern="Identity" />
+          <Property Name="Type" Type="String" Nullable="false" MaxLength="20" Unicode="false" FixedLength="false" />
+          <Property Name="Version" Type="String" Nullable="false" MaxLength="5" Unicode="false" FixedLength="false" />
+          <Property Name="Title" Type="String" MaxLength="Max" Unicode="true" FixedLength="false" />
+          <Property Name="Author_Name" Type="String" MaxLength="200" Unicode="true" FixedLength="false" />
+          <Property Name="Author_Url" Type="String" MaxLength="500" Unicode="true" FixedLength="false" />
+          <Property Name="Provider_Name" Type="String" MaxLength="100" Unicode="true" FixedLength="false" />
+          <Property Name="Provider_Url" Type="String" MaxLength="500" Unicode="true" FixedLength="false" />
+          <Property Name="Cache_Age" Type="Int32" />
+          <Property Name="Thumbnail_Url" Type="String" MaxLength="500" Unicode="true" FixedLength="false" />
+          <Property Name="Description" Type="String" MaxLength="Max" Unicode="true" FixedLength="false" />
+          <Property Name="Url" Type="String" MaxLength="500" Unicode="true" FixedLength="false" />
+          <Property Name="Width" Type="Int32" />
+          <Property Name="Height" Type="Int32" />
+          <Property Name="Html" Type="String" MaxLength="Max" Unicode="true" FixedLength="false" />
+          <NavigationProperty Name="Comments" Relationship="VotingModel.FK_Comments_Embed" FromRole="Embed" ToRole="Comments" />
+          <NavigationProperty Name="Problems" Relationship="VotingModel.FK_Problems_Embed" FromRole="Embed" ToRole="Problems" />
+        </EntityType>
+        <EntityType Name="IdeaCategory">
+          <Key>
+            <PropertyRef Name="IdeaId" />
+            <PropertyRef Name="CategoryId" />
+          </Key>
+          <Property Name="IdeaId" Type="String" Nullable="false" MaxLength="24" Unicode="false" FixedLength="true" />
+          <Property Name="CategoryId" Type="Int32" Nullable="false" />
+          <NavigationProperty Name="Idea" Relationship="VotingModel.FK_IdeaCategories_Ideas" FromRole="IdeaCategories" ToRole="Ideas" />
+        </EntityType>
+        <EntityType Name="IdeaComment">
+          <Key>
+            <PropertyRef Name="IdeaId" />
+            <PropertyRef Name="CommentId" />
+          </Key>
+          <Property Name="IdeaId" Type="String" Nullable="false" MaxLength="24" Unicode="false" FixedLength="true" />
+          <Property Name="CommentId" Type="String" Nullable="false" MaxLength="24" Unicode="false" FixedLength="true" />
+          <Property Name="UserObjectId" Type="String" Nullable="false" MaxLength="24" Unicode="false" FixedLength="true" />
+          <Property Name="TypeId" Type="Int32" Nullable="false" />
+          <NavigationProperty Name="Comment" Relationship="VotingModel.FK_IdeaComments_Comments" FromRole="IdeaComments" ToRole="Comments" />
+          <NavigationProperty Name="Idea" Relationship="VotingModel.FK_IdeaComments_Ideas" FromRole="IdeaComments" ToRole="Ideas" />
+        </EntityType>
+        <EntityType Name="IdeaIssue">
+          <Key>
+            <PropertyRef Name="IdeaObjectId" />
+            <PropertyRef Name="IssueObjectId" />
+          </Key>
+          <Property Name="IdeaObjectId" Type="String" Nullable="false" MaxLength="24" Unicode="false" FixedLength="true" />
+          <Property Name="IssueObjectId" Type="String" Nullable="false" MaxLength="24" Unicode="false" FixedLength="true" />
+          <Property Name="ChangeState" Type="Boolean" Nullable="false" />
+          <NavigationProperty Name="Idea" Relationship="VotingModel.FK_IdeaIssues_Ideas" FromRole="IdeaIssues" ToRole="Ideas" />
+        </EntityType>
+        <EntityType Name="IdeaPriority">
+          <Key>
+            <PropertyRef Name="Id" />
+          </Key>
+          <Property Name="Id" Type="Int32" Nullable="false" p1:StoreGeneratedPattern="Identity" />
+          <Property Name="IdeaObjectId" Type="String" Nullable="false" MaxLength="24" Unicode="false" FixedLength="true" />
+          <Property Name="UserId" Type="Int32" Nullable="false" />
+          <Property Name="PriorityNumber" Type="Int32" Nullable="false" />
+          <Property Name="TotalNumber" Type="Int32" Nullable="false" />
+          <NavigationProperty Name="Idea" Relationship="VotingModel.FK_IdeaPriorities_Idea" FromRole="IdeaPriorities" ToRole="Ideas" />
+        </EntityType>
+        <EntityType Name="Idea">
+          <Key>
+            <PropertyRef Name="Id" />
+          </Key>
+          <Property Name="Id" Type="String" Nullable="false" MaxLength="24" Unicode="false" FixedLength="true" />
+          <Property Name="Subject" Type="String" Nullable="false" MaxLength="Max" Unicode="true" FixedLength="false" />
+          <Property Name="Aim" Type="String" MaxLength="Max" Unicode="true" FixedLength="false" />
+          <Property Name="UserObjectId" Type="String" MaxLength="24" Unicode="false" FixedLength="true" />
+          <Property Name="IsDraft" Type="Boolean" Nullable="false" />
+          <Property Name="OrganizationId" Type="String" MaxLength="24" Unicode="false" FixedLength="true" />
+          <Property Name="IsPrivate" Type="Boolean" Nullable="false" />
+          <Property Name="MunicipalityId" Type="Int32" />
+          <Property Name="CreatedOn" Type="DateTime" Nullable="false" Precision="3" />
+          <Property Name="ModifiedOn" Type="DateTime" Nullable="false" Precision="3" />
+          <Property Name="RequiredVotes" Type="Int32" />
+          <Property Name="StateId" Type="Int32" Nullable="false" />
+          <Property Name="FinalIdeaText" Type="String" MaxLength="Max" Unicode="true" FixedLength="false" />
+          <Property Name="FinalVersionId" Type="String" MaxLength="24" Unicode="false" FixedLength="true" />
+          <Property Name="IsImpersonal" Type="Boolean" Nullable="false" />
+          <NavigationProperty Name="IdeaCategories" Relationship="VotingModel.FK_IdeaCategories_Ideas" FromRole="Ideas" ToRole="IdeaCategories" />
+          <NavigationProperty Name="IdeaComments" Relationship="VotingModel.FK_IdeaComments_Ideas" FromRole="Ideas" ToRole="IdeaComments" />
+          <NavigationProperty Name="IdeaIssues" Relationship="VotingModel.FK_IdeaIssues_Ideas" FromRole="Ideas" ToRole="IdeaIssues" />
+          <NavigationProperty Name="IdeaPriorities" Relationship="VotingModel.FK_IdeaPriorities_Idea" FromRole="Ideas" ToRole="IdeaPriorities" />
+          <NavigationProperty Name="IdeaVersion" Relationship="VotingModel.FK_Ideas_IdeaVersions" FromRole="Ideas" ToRole="IdeaVersions" />
+          <NavigationProperty Name="IdeaVersions" Relationship="VotingModel.FK_IdeaVersions_Idea" FromRole="Ideas" ToRole="IdeaVersions" />
+          <NavigationProperty Name="IdeaVotes" Relationship="VotingModel.FK_IdeaVotes_Ideas" FromRole="Ideas" ToRole="IdeaVotes" />
+          <NavigationProperty Name="ProblemIdeas" Relationship="VotingModel.FK_ProblemIdeas_Idea" FromRole="Ideas" ToRole="ProblemIdeas" />
+          <NavigationProperty Name="RelatedIdeas" Relationship="VotingModel.FK_RelatedIdeas_Ideas" FromRole="Ideas" ToRole="RelatedIdeas" />
+          <NavigationProperty Name="RelatedIdeas1" Relationship="VotingModel.FK_RelatedIdeas_RelatedIdeas" FromRole="Ideas" ToRole="RelatedIdeas" />
+        </EntityType>
+        <EntityType Name="IdeaVersion">
+          <Key>
+            <PropertyRef Name="VersionId" />
+          </Key>
+          <Property Name="VersionId" Type="String" Nullable="false" MaxLength="24" Unicode="false" FixedLength="true" />
+          <Property Name="IdeaId" Type="String" Nullable="false" MaxLength="24" Unicode="false" FixedLength="true" />
+          <Property Name="VersionSubject" Type="String" MaxLength="500" Unicode="true" FixedLength="false" />
+          <Property Name="UserObjectId" Type="String" MaxLength="24" Unicode="false" FixedLength="true" />
+          <Property Name="OrganizationId" Type="String" MaxLength="24" Unicode="false" FixedLength="true" />
+          <Property Name="CreatedOn" Type="DateTime" Nullable="false" Precision="3" />
+          <Property Name="ModifiedOn" Type="DateTime" Nullable="false" Precision="3" />
+          <Property Name="IsDeleted" Type="Boolean" Nullable="false" />
+          <Property Name="Text" Type="String" Nullable="false" MaxLength="Max" Unicode="true" FixedLength="false" />
+          <NavigationProperty Name="Ideas" Relationship="VotingModel.FK_Ideas_IdeaVersions" FromRole="IdeaVersions" ToRole="Ideas" />
+          <NavigationProperty Name="Idea" Relationship="VotingModel.FK_IdeaVersions_Idea" FromRole="IdeaVersions" ToRole="Ideas" />
+          <NavigationProperty Name="IdeaVersionViews" Relationship="VotingModel.FK_IdeaVersionView_IdeaVersions" FromRole="IdeaVersions" ToRole="IdeaVersionView" />
+        </EntityType>
+        <EntityType Name="IdeaVersionView">
+          <Key>
+            <PropertyRef Name="IdeaVersionObjectId" />
+            <PropertyRef Name="UserDbId" />
+          </Key>
+          <Property Name="IdeaVersionObjectId" Type="String" Nullable="false" MaxLength="24" Unicode="false" FixedLength="true" />
+          <Property Name="UserDbId" Type="Int32" Nullable="false" />
+          <NavigationProperty Name="IdeaVersion" Relationship="VotingModel.FK_IdeaVersionView_IdeaVersions" FromRole="IdeaVersionView" ToRole="IdeaVersions" />
+        </EntityType>
+        <EntityType Name="IdeaVote">
+          <Key>
+            <PropertyRef Name="IdeaId" />
+            <PropertyRef Name="PersonCode" />
+          </Key>
+          <Property Name="IdeaId" Type="String" Nullable="false" MaxLength="24" Unicode="false" FixedLength="true" />
+          <Property Name="PersonCode" Type="String" Nullable="false" MaxLength="32" Unicode="true" FixedLength="false" />
+          <Property Name="Signature" Type="Binary" Nullable="false" MaxLength="512" FixedLength="false" />
+          <Property Name="Date" Type="DateTime" Nullable="false" Precision="3" />
+          <Property Name="AddressLine" Type="String" MaxLength="1000" Unicode="true" FixedLength="false" />
+          <Property Name="DocumentNo" Type="String" MaxLength="20" Unicode="false" FixedLength="false" />
+          <Property Name="FirstName" Type="String" Nullable="false" MaxLength="100" Unicode="true" FixedLength="false" />
+          <Property Name="LastName" Type="String" Nullable="false" MaxLength="100" Unicode="true" FixedLength="false" />
+          <Property Name="CityId" Type="Int32" />
+          <Property Name="Source" Type="String" Nullable="false" MaxLength="50" Unicode="false" FixedLength="false" />
+          <Property Name="IsPublic" Type="Boolean" Nullable="false" />
+          <Property Name="UserObjectId" Type="String" MaxLength="24" Unicode="false" FixedLength="true" />
+          <NavigationProperty Name="Idea" Relationship="VotingModel.FK_IdeaVotes_Ideas" FromRole="IdeaVotes" ToRole="Ideas" />
+        </EntityType>
+        <EntityType Name="IssueCategory">
+          <Key>
+            <PropertyRef Name="IssueId" />
+            <PropertyRef Name="CategoryId" />
+          </Key>
+          <Property Name="IssueId" Type="Int32" Nullable="false" />
+          <Property Name="CategoryId" Type="Int32" Nullable="false" />
+          <NavigationProperty Name="Issue" Relationship="VotingModel.FK_IssueCategories_Ideas" FromRole="IssueCategory" ToRole="Issue" />
+        </EntityType>
+        <EntityType Name="IssueComment">
+          <Key>
+            <PropertyRef Name="IssueId" />
+            <PropertyRef Name="CommentId" />
+          </Key>
+          <Property Name="IssueId" Type="String" Nullable="false" MaxLength="24" Unicode="false" FixedLength="true" />
+          <Property Name="CommentId" Type="String" Nullable="false" MaxLength="24" Unicode="false" FixedLength="true" />
+          <Property Name="UserObjectId" Type="String" Nullable="false" MaxLength="24" Unicode="false" FixedLength="true" />
+          <Property Name="TypeId" Type="Int32" Nullable="false" />
+          <NavigationProperty Name="Comment" Relationship="VotingModel.FK_IssueComments_Comments" FromRole="IssueComments" ToRole="Comments" />
+        </EntityType>
+        <EntityType Name="IssueVersion">
+          <Key>
+            <PropertyRef Name="VersionId" />
+          </Key>
+          <Property Name="VersionId" Type="String" Nullable="false" MaxLength="24" Unicode="false" FixedLength="true" />
+          <Property Name="IssueId" Type="Int32" Nullable="false" />
+          <Property Name="Text" Type="String" Nullable="false" MaxLength="Max" Unicode="true" FixedLength="false" />
+          <Property Name="UserObjectId" Type="String" MaxLength="24" Unicode="false" FixedLength="true" />
+          <Property Name="CreatedOn" Type="DateTime" Nullable="false" Precision="3" />
+          <Property Name="ModifiedOn" Type="DateTime" Nullable="false" Precision="3" />
+          <NavigationProperty Name="Issue" Relationship="VotingModel.FK_IssueVersions_Issue" FromRole="IssueVersion" ToRole="Issue" />
+        </EntityType>
+        <EntityType Name="ProblemCategory">
+          <Key>
+            <PropertyRef Name="ProblemId" />
+            <PropertyRef Name="CategoryId" />
+          </Key>
+          <Property Name="ProblemId" Type="String" Nullable="false" MaxLength="24" Unicode="false" FixedLength="true" />
+          <Property Name="CategoryId" Type="Int32" Nullable="false" />
+          <NavigationProperty Name="Problem" Relationship="VotingModel.FK_ProblemCategories_Problems" FromRole="ProblemCategories" ToRole="Problems" />
+        </EntityType>
+        <EntityType Name="ProblemComment">
+          <Key>
+            <PropertyRef Name="ProblemId" />
+            <PropertyRef Name="CommentId" />
+          </Key>
+          <Property Name="ProblemId" Type="String" Nullable="false" MaxLength="24" Unicode="false" FixedLength="true" />
+          <Property Name="CommentId" Type="String" Nullable="false" MaxLength="24" Unicode="false" FixedLength="true" />
+          <Property Name="UserObjectId" Type="String" Nullable="false" MaxLength="24" Unicode="false" FixedLength="true" />
+          <NavigationProperty Name="Comment" Relationship="VotingModel.FK_ProblemComments_Comments" FromRole="ProblemComments" ToRole="Comments" />
+          <NavigationProperty Name="Problem" Relationship="VotingModel.FK_ProblemComments_Problems" FromRole="ProblemComments" ToRole="Problems" />
+        </EntityType>
+        <EntityType Name="ProblemIdea">
+          <Key>
+            <PropertyRef Name="ProblemId" />
+            <PropertyRef Name="IdeaId" />
+          </Key>
+          <Property Name="ProblemId" Type="String" Nullable="false" MaxLength="24" Unicode="false" FixedLength="true" />
+          <Property Name="IdeaId" Type="String" Nullable="false" MaxLength="24" Unicode="false" FixedLength="true" />
+          <Property Name="UserObjectId" Type="String" MaxLength="24" Unicode="false" FixedLength="true" />
+          <NavigationProperty Name="Idea" Relationship="VotingModel.FK_ProblemIdeas_Idea" FromRole="ProblemIdeas" ToRole="Ideas" />
+          <NavigationProperty Name="Problem" Relationship="VotingModel.FK_ProblemIdeas_Problems" FromRole="ProblemIdeas" ToRole="Problems" />
+        </EntityType>
+        <EntityType Name="ProblemIssue">
+          <Key>
+            <PropertyRef Name="ProblemId" />
+            <PropertyRef Name="IssueId" />
+          </Key>
+          <Property Name="ProblemId" Type="String" Nullable="false" MaxLength="24" Unicode="false" FixedLength="true" />
+          <Property Name="IssueId" Type="String" Nullable="false" MaxLength="24" Unicode="false" FixedLength="true" />
+          <Property Name="UserObjectId" Type="String" MaxLength="24" Unicode="false" FixedLength="true" />
+          <NavigationProperty Name="Problem" Relationship="VotingModel.FK_ProblemIssues_Problems" FromRole="ProblemIssues" ToRole="Problems" />
+        </EntityType>
+        <EntityType Name="Problem">
+          <Key>
+            <PropertyRef Name="Id" />
+          </Key>
+          <Property Name="Id" Type="String" Nullable="false" MaxLength="24" Unicode="false" FixedLength="true" />
+          <Property Name="Text" Type="String" Nullable="false" MaxLength="Max" Unicode="true" FixedLength="false" />
+          <Property Name="UserObjectId" Type="String" Nullable="false" MaxLength="24" Unicode="false" FixedLength="true" />
+          <Property Name="Date" Type="DateTime" Nullable="false" Precision="3" />
+          <Property Name="MunicipalityId" Type="Int32" />
+          <Property Name="OrganizationId" Type="String" MaxLength="24" Unicode="false" FixedLength="true" />
+          <Property Name="IsPrivateToOrganization" Type="Boolean" />
+          <Property Name="UserFullName" Type="String" MaxLength="200" Unicode="true" FixedLength="false" />
+          <Property Name="OrganizationName" Type="String" MaxLength="1000" Unicode="true" FixedLength="false" />
+          <Property Name="EmbedId" Type="Int32" />
+          <NavigationProperty Name="Embed" Relationship="VotingModel.FK_Problems_Embed" FromRole="Problems" ToRole="Embed" />
+          <NavigationProperty Name="ProblemCategories" Relationship="VotingModel.FK_ProblemCategories_Problems" FromRole="Problems" ToRole="ProblemCategories" />
+          <NavigationProperty Name="ProblemComments" Relationship="VotingModel.FK_ProblemComments_Problems" FromRole="Problems" ToRole="ProblemComments" />
+          <NavigationProperty Name="ProblemIdeas" Relationship="VotingModel.FK_ProblemIdeas_Problems" FromRole="Problems" ToRole="ProblemIdeas" />
+          <NavigationProperty Name="ProblemIssues" Relationship="VotingModel.FK_ProblemIssues_Problems" FromRole="Problems" ToRole="ProblemIssues" />
+          <NavigationProperty Name="ProblemSupporters" Relationship="VotingModel.FK_ProblemSupporters_Problems" FromRole="Problems" ToRole="ProblemSupporters" />
+        </EntityType>
+        <EntityType Name="ProblemSupporter">
+          <Key>
+            <PropertyRef Name="Id" />
+          </Key>
+          <Property Name="Id" Type="Int32" Nullable="false" p1:StoreGeneratedPattern="Identity" />
+          <Property Name="ProblemId" Type="String" Nullable="false" MaxLength="24" Unicode="false" FixedLength="true" />
+          <Property Name="UserId" Type="String" Nullable="false" MaxLength="24" Unicode="false" FixedLength="true" />
+          <Property Name="ForAgainst" Type="Int32" Nullable="false" />
+          <NavigationProperty Name="Problem" Relationship="VotingModel.FK_ProblemSupporters_Problems" FromRole="ProblemSupporters" ToRole="Problems" />
+        </EntityType>
+        <EntityType Name="RelatedIdea">
+          <Key>
+            <PropertyRef Name="IdeaObjectId" />
+            <PropertyRef Name="RelatedIdeaObjectId" />
+          </Key>
+          <Property Name="IdeaObjectId" Type="String" Nullable="false" MaxLength="24" Unicode="false" FixedLength="true" />
+          <Property Name="RelatedIdeaObjectId" Type="String" Nullable="false" MaxLength="24" Unicode="false" FixedLength="true" />
+          <Property Name="UserObjectId" Type="String" MaxLength="24" Unicode="false" FixedLength="true" />
+          <NavigationProperty Name="Idea" Relationship="VotingModel.FK_RelatedIdeas_Ideas" FromRole="RelatedIdeas" ToRole="Ideas" />
+          <NavigationProperty Name="Idea1" Relationship="VotingModel.FK_RelatedIdeas_RelatedIdeas" FromRole="RelatedIdeas" ToRole="Ideas" />
+        </EntityType>
+        <EntityType Name="UserComment">
+          <Key>
+            <PropertyRef Name="CommentId" />
+            <PropertyRef Name="UserId" />
+          </Key>
+          <Property Name="CommentId" Type="String" Nullable="false" MaxLength="24" Unicode="false" FixedLength="true" />
+          <Property Name="UserId" Type="String" Nullable="false" MaxLength="24" Unicode="false" FixedLength="true" />
+          <Property Name="UserObjectId" Type="String" Nullable="false" MaxLength="24" Unicode="false" FixedLength="true" />
+          <Property Name="TypeId" Type="Int32" Nullable="false" />
+          <NavigationProperty Name="Comment" Relationship="VotingModel.FK_UserComments_Comments" FromRole="UserComments" ToRole="Comments" />
+        </EntityType>
+        <EntityType Name="Vote">
+          <Key>
+            <PropertyRef Name="Id" />
+          </Key>
+          <Property Name="Id" Type="Int32" Nullable="false" p1:StoreGeneratedPattern="Identity" />
+          <Property Name="IssueId" Type="Int32" Nullable="false" />
+          <Property Name="ForAgainst" Type="Int16" Nullable="false" />
+          <Property Name="PersonCode" Type="String" Nullable="false" MaxLength="32" Unicode="true" FixedLength="false" />
+          <Property Name="Signature" Type="Binary" Nullable="false" MaxLength="512" FixedLength="false" />
+          <Property Name="Date" Type="DateTime" Nullable="false" Precision="3" />
+          <Property Name="AddressLine" Type="String" MaxLength="1000" Unicode="true" FixedLength="false" />
+          <Property Name="DocumentNo" Type="String" MaxLength="20" Unicode="false" FixedLength="false" />
+          <Property Name="FirstName" Type="String" Nullable="false" MaxLength="100" Unicode="true" FixedLength="false" />
+          <Property Name="LastName" Type="String" Nullable="false" MaxLength="100" Unicode="true" FixedLength="false" />
+          <Property Name="CityId" Type="Int32" />
+          <Property Name="Source" Type="String" Nullable="false" MaxLength="50" Unicode="false" FixedLength="false" />
+          <Property Name="IsPublic" Type="Boolean" Nullable="false" />
+          <Property Name="UserObjectId" Type="String" MaxLength="24" Unicode="false" FixedLength="true" />
+          <NavigationProperty Name="Issue" Relationship="VotingModel.FK_IssueVote" FromRole="Vote" ToRole="Issue" />
+        </EntityType>
+        <Association Name="FK_Comment_ParentComment">
+          <End Role="Comments" Type="VotingModel.Comment" Multiplicity="0..1" />
+          <End Role="Comments1" Type="VotingModel.Comment" Multiplicity="*" />
+          <ReferentialConstraint>
+            <Principal Role="Comments">
+              <PropertyRef Name="Id" />
+            </Principal>
+            <Dependent Role="Comments1">
+              <PropertyRef Name="ParentCommentId" />
+            </Dependent>
+          </ReferentialConstraint>
+        </Association>
+        <Association Name="FK_Comments_Embed">
+          <End Role="Embed" Type="VotingModel.Embed" Multiplicity="0..1" />
+          <End Role="Comments" Type="VotingModel.Comment" Multiplicity="*" />
+          <ReferentialConstraint>
+            <Principal Role="Embed">
+              <PropertyRef Name="Id" />
+            </Principal>
+            <Dependent Role="Comments">
+              <PropertyRef Name="EmbedId" />
+            </Dependent>
+          </ReferentialConstraint>
+        </Association>
+        <Association Name="FK_CommentSupporters_Comments">
+          <End Role="Comments" Type="VotingModel.Comment" Multiplicity="1">
+            <OnDelete Action="Cascade" />
+          </End>
+          <End Role="CommentSupporters" Type="VotingModel.CommentSupporter" Multiplicity="*" />
+          <ReferentialConstraint>
+            <Principal Role="Comments">
+              <PropertyRef Name="Id" />
+            </Principal>
+            <Dependent Role="CommentSupporters">
+              <PropertyRef Name="CommentId" />
+            </Dependent>
+          </ReferentialConstraint>
+        </Association>
+        <Association Name="FK_IdeaComments_Comments">
+          <End Role="Comments" Type="VotingModel.Comment" Multiplicity="1">
+            <OnDelete Action="Cascade" />
+          </End>
+          <End Role="IdeaComments" Type="VotingModel.IdeaComment" Multiplicity="*" />
+          <ReferentialConstraint>
+            <Principal Role="Comments">
+              <PropertyRef Name="Id" />
+            </Principal>
+            <Dependent Role="IdeaComments">
+              <PropertyRef Name="CommentId" />
+            </Dependent>
+          </ReferentialConstraint>
+        </Association>
+        <Association Name="FK_IssueComments_Comments">
+          <End Role="Comments" Type="VotingModel.Comment" Multiplicity="1">
+            <OnDelete Action="Cascade" />
+          </End>
+          <End Role="IssueComments" Type="VotingModel.IssueComment" Multiplicity="*" />
+          <ReferentialConstraint>
+            <Principal Role="Comments">
+              <PropertyRef Name="Id" />
+            </Principal>
+            <Dependent Role="IssueComments">
+              <PropertyRef Name="CommentId" />
+            </Dependent>
+          </ReferentialConstraint>
+        </Association>
+        <Association Name="FK_ProblemComments_Comments">
+          <End Role="Comments" Type="VotingModel.Comment" Multiplicity="1">
+            <OnDelete Action="Cascade" />
+          </End>
+          <End Role="ProblemComments" Type="VotingModel.ProblemComment" Multiplicity="*" />
+          <ReferentialConstraint>
+            <Principal Role="Comments">
+              <PropertyRef Name="Id" />
+            </Principal>
+            <Dependent Role="ProblemComments">
+              <PropertyRef Name="CommentId" />
+            </Dependent>
+          </ReferentialConstraint>
+        </Association>
+        <Association Name="FK_UserComments_Comments">
+          <End Role="Comments" Type="VotingModel.Comment" Multiplicity="1">
+            <OnDelete Action="Cascade" />
+          </End>
+          <End Role="UserComments" Type="VotingModel.UserComment" Multiplicity="*" />
+          <ReferentialConstraint>
+            <Principal Role="Comments">
+              <PropertyRef Name="Id" />
+            </Principal>
+            <Dependent Role="UserComments">
+              <PropertyRef Name="CommentId" />
+            </Dependent>
+          </ReferentialConstraint>
+        </Association>
+        <Association Name="FK_Problems_Embed">
+          <End Role="Embed" Type="VotingModel.Embed" Multiplicity="0..1" />
+          <End Role="Problems" Type="VotingModel.Problem" Multiplicity="*" />
+          <ReferentialConstraint>
+            <Principal Role="Embed">
+              <PropertyRef Name="Id" />
+            </Principal>
+            <Dependent Role="Problems">
+              <PropertyRef Name="EmbedId" />
+            </Dependent>
+          </ReferentialConstraint>
+        </Association>
+        <Association Name="FK_IdeaCategories_Ideas">
+          <End Role="Ideas" Type="VotingModel.Idea" Multiplicity="1" />
+          <End Role="IdeaCategories" Type="VotingModel.IdeaCategory" Multiplicity="*" />
+          <ReferentialConstraint>
+            <Principal Role="Ideas">
+              <PropertyRef Name="Id" />
+            </Principal>
+            <Dependent Role="IdeaCategories">
+              <PropertyRef Name="IdeaId" />
+            </Dependent>
+          </ReferentialConstraint>
+        </Association>
+        <Association Name="FK_IdeaComments_Ideas">
+          <End Role="Ideas" Type="VotingModel.Idea" Multiplicity="1" />
+          <End Role="IdeaComments" Type="VotingModel.IdeaComment" Multiplicity="*" />
+          <ReferentialConstraint>
+            <Principal Role="Ideas">
+              <PropertyRef Name="Id" />
+            </Principal>
+            <Dependent Role="IdeaComments">
+              <PropertyRef Name="IdeaId" />
+            </Dependent>
+          </ReferentialConstraint>
+        </Association>
+        <Association Name="FK_IdeaIssues_Ideas">
+          <End Role="Ideas" Type="VotingModel.Idea" Multiplicity="1" />
+          <End Role="IdeaIssues" Type="VotingModel.IdeaIssue" Multiplicity="*" />
+          <ReferentialConstraint>
+            <Principal Role="Ideas">
+              <PropertyRef Name="Id" />
+            </Principal>
+            <Dependent Role="IdeaIssues">
+              <PropertyRef Name="IdeaObjectId" />
+            </Dependent>
+          </ReferentialConstraint>
+        </Association>
+        <Association Name="FK_IdeaPriorities_Idea">
+          <End Role="Ideas" Type="VotingModel.Idea" Multiplicity="1" />
+          <End Role="IdeaPriorities" Type="VotingModel.IdeaPriority" Multiplicity="*" />
+          <ReferentialConstraint>
+            <Principal Role="Ideas">
+              <PropertyRef Name="Id" />
+            </Principal>
+            <Dependent Role="IdeaPriorities">
+              <PropertyRef Name="IdeaObjectId" />
+            </Dependent>
+          </ReferentialConstraint>
+        </Association>
+        <Association Name="FK_Ideas_IdeaVersions">
+          <End Role="IdeaVersions" Type="VotingModel.IdeaVersion" Multiplicity="0..1" />
+          <End Role="Ideas" Type="VotingModel.Idea" Multiplicity="*" />
+          <ReferentialConstraint>
+            <Principal Role="IdeaVersions">
+              <PropertyRef Name="VersionId" />
+            </Principal>
+            <Dependent Role="Ideas">
+              <PropertyRef Name="FinalVersionId" />
+            </Dependent>
+          </ReferentialConstraint>
+        </Association>
+        <Association Name="FK_IdeaVersions_Idea">
+          <End Role="Ideas" Type="VotingModel.Idea" Multiplicity="1" />
+          <End Role="IdeaVersions" Type="VotingModel.IdeaVersion" Multiplicity="*" />
+          <ReferentialConstraint>
+            <Principal Role="Ideas">
+              <PropertyRef Name="Id" />
+            </Principal>
+            <Dependent Role="IdeaVersions">
+              <PropertyRef Name="IdeaId" />
+            </Dependent>
+          </ReferentialConstraint>
+        </Association>
+        <Association Name="FK_IdeaVotes_Ideas">
+          <End Role="Ideas" Type="VotingModel.Idea" Multiplicity="1" />
+          <End Role="IdeaVotes" Type="VotingModel.IdeaVote" Multiplicity="*" />
+          <ReferentialConstraint>
+            <Principal Role="Ideas">
+              <PropertyRef Name="Id" />
+            </Principal>
+            <Dependent Role="IdeaVotes">
+              <PropertyRef Name="IdeaId" />
+            </Dependent>
+          </ReferentialConstraint>
+        </Association>
+        <Association Name="FK_ProblemIdeas_Idea">
+          <End Role="Ideas" Type="VotingModel.Idea" Multiplicity="1" />
+          <End Role="ProblemIdeas" Type="VotingModel.ProblemIdea" Multiplicity="*" />
+          <ReferentialConstraint>
+            <Principal Role="Ideas">
+              <PropertyRef Name="Id" />
+            </Principal>
+            <Dependent Role="ProblemIdeas">
+              <PropertyRef Name="IdeaId" />
+            </Dependent>
+          </ReferentialConstraint>
+        </Association>
+        <Association Name="FK_RelatedIdeas_Ideas">
+          <End Role="Ideas" Type="VotingModel.Idea" Multiplicity="1" />
+          <End Role="RelatedIdeas" Type="VotingModel.RelatedIdea" Multiplicity="*" />
+          <ReferentialConstraint>
+            <Principal Role="Ideas">
+              <PropertyRef Name="Id" />
+            </Principal>
+            <Dependent Role="RelatedIdeas">
+              <PropertyRef Name="IdeaObjectId" />
+            </Dependent>
+          </ReferentialConstraint>
+        </Association>
+        <Association Name="FK_RelatedIdeas_RelatedIdeas">
+          <End Role="Ideas" Type="VotingModel.Idea" Multiplicity="1" />
+          <End Role="RelatedIdeas" Type="VotingModel.RelatedIdea" Multiplicity="*" />
+          <ReferentialConstraint>
+            <Principal Role="Ideas">
+              <PropertyRef Name="Id" />
+            </Principal>
+            <Dependent Role="RelatedIdeas">
+              <PropertyRef Name="RelatedIdeaObjectId" />
+            </Dependent>
+          </ReferentialConstraint>
+        </Association>
+        <Association Name="FK_IdeaVersionView_IdeaVersions">
+          <End Role="IdeaVersions" Type="VotingModel.IdeaVersion" Multiplicity="1" />
+          <End Role="IdeaVersionView" Type="VotingModel.IdeaVersionView" Multiplicity="*" />
+          <ReferentialConstraint>
+            <Principal Role="IdeaVersions">
+              <PropertyRef Name="VersionId" />
+            </Principal>
+            <Dependent Role="IdeaVersionView">
+              <PropertyRef Name="IdeaVersionObjectId" />
+            </Dependent>
+          </ReferentialConstraint>
+        </Association>
+        <Association Name="FK_ProblemCategories_Problems">
+          <End Role="Problems" Type="VotingModel.Problem" Multiplicity="1" />
+          <End Role="ProblemCategories" Type="VotingModel.ProblemCategory" Multiplicity="*" />
+          <ReferentialConstraint>
+            <Principal Role="Problems">
+              <PropertyRef Name="Id" />
+            </Principal>
+            <Dependent Role="ProblemCategories">
+              <PropertyRef Name="ProblemId" />
+            </Dependent>
+          </ReferentialConstraint>
+        </Association>
+        <Association Name="FK_ProblemComments_Problems">
+          <End Role="Problems" Type="VotingModel.Problem" Multiplicity="1" />
+          <End Role="ProblemComments" Type="VotingModel.ProblemComment" Multiplicity="*" />
+          <ReferentialConstraint>
+            <Principal Role="Problems">
+              <PropertyRef Name="Id" />
+            </Principal>
+            <Dependent Role="ProblemComments">
+              <PropertyRef Name="ProblemId" />
+            </Dependent>
+          </ReferentialConstraint>
+        </Association>
+        <Association Name="FK_ProblemIdeas_Problems">
+          <End Role="Problems" Type="VotingModel.Problem" Multiplicity="1" />
+          <End Role="ProblemIdeas" Type="VotingModel.ProblemIdea" Multiplicity="*" />
+          <ReferentialConstraint>
+            <Principal Role="Problems">
+              <PropertyRef Name="Id" />
+            </Principal>
+            <Dependent Role="ProblemIdeas">
+              <PropertyRef Name="ProblemId" />
+            </Dependent>
+          </ReferentialConstraint>
+        </Association>
+        <Association Name="FK_ProblemIssues_Problems">
+          <End Role="Problems" Type="VotingModel.Problem" Multiplicity="1" />
+          <End Role="ProblemIssues" Type="VotingModel.ProblemIssue" Multiplicity="*" />
+          <ReferentialConstraint>
+            <Principal Role="Problems">
+              <PropertyRef Name="Id" />
+            </Principal>
+            <Dependent Role="ProblemIssues">
+              <PropertyRef Name="ProblemId" />
+            </Dependent>
+          </ReferentialConstraint>
+        </Association>
+        <Association Name="FK_ProblemSupporters_Problems">
+          <End Role="Problems" Type="VotingModel.Problem" Multiplicity="1" />
+          <End Role="ProblemSupporters" Type="VotingModel.ProblemSupporter" Multiplicity="*" />
+          <ReferentialConstraint>
+            <Principal Role="Problems">
+              <PropertyRef Name="Id" />
+            </Principal>
+            <Dependent Role="ProblemSupporters">
+              <PropertyRef Name="ProblemId" />
+            </Dependent>
+          </ReferentialConstraint>
+        </Association>
+        <EntityType Name="Issue">
+          <Key>
+            <PropertyRef Name="Id" />
+          </Key>
+          <Property Type="Int32" Name="Id" Nullable="false" annotation:StoreGeneratedPattern="Identity" />
+          <Property Type="String" Name="ObjectId" Nullable="false" MaxLength="24" FixedLength="true" Unicode="false" />
+          <Property Type="String" Name="Subject" Nullable="false" MaxLength="Max" FixedLength="false" Unicode="true" />
+          <Property Type="String" Name="Summary" Nullable="false" MaxLength="Max" FixedLength="false" Unicode="true" />
+          <Property Type="DateTime" Name="Deadline" Precision="3" />
+          <Property Type="String" Name="UserObjectId" Nullable="false" MaxLength="24" FixedLength="true" Unicode="false" />
+          <Property Type="DateTime" Name="RegistrationDate" Nullable="false" Precision="3" />
+          <Property Type="DateTime" Name="ModificationDate" Precision="3" />
+          <Property Type="Int16" Name="OfficialVote" />
+          <Property Type="Int32" Name="MunicipalityId" />
+          <Property Type="String" Name="OrganizationId" MaxLength="24" FixedLength="true" Unicode="false" />
+          <Property Type="Boolean" Name="IsPrivateToOrganization" Nullable="false" />
+          <Property Type="String" Name="OfficialVotingDescription" MaxLength="Max" FixedLength="false" Unicode="true" />
+          <Property Type="Boolean" Name="IsMailSent" Nullable="false" />
+          <NavigationProperty Name="IssueCategories" Relationship="VotingModel.FK_IssueCategories_Ideas" FromRole="Issue" ToRole="IssueCategory" />
+          <NavigationProperty Name="IssueVersions" Relationship="VotingModel.FK_IssueVersions_Issue" FromRole="Issue" ToRole="IssueVersion" />
+          <NavigationProperty Name="Votes" Relationship="VotingModel.FK_IssueVote" FromRole="Issue" ToRole="Vote" />
+        </EntityType>
+        <Association Name="FK_IssueCategories_Ideas">
+          <End Type="VotingModel.Issue" Role="Issue" Multiplicity="1" />
+          <End Type="VotingModel.IssueCategory" Role="IssueCategory" Multiplicity="*" />
+          <ReferentialConstraint>
+            <Principal Role="Issue">
+              <PropertyRef Name="Id" />
+            </Principal>
+            <Dependent Role="IssueCategory">
+              <PropertyRef Name="IssueId" />
+            </Dependent>
+          </ReferentialConstraint>
+        </Association>
+        <Association Name="FK_IssueVersions_Issue">
+          <End Type="VotingModel.Issue" Role="Issue" Multiplicity="1" />
+          <End Type="VotingModel.IssueVersion" Role="IssueVersion" Multiplicity="*" />
+          <ReferentialConstraint>
+            <Principal Role="Issue">
+              <PropertyRef Name="Id" />
+            </Principal>
+            <Dependent Role="IssueVersion">
+              <PropertyRef Name="IssueId" />
+            </Dependent>
+          </ReferentialConstraint>
+        </Association>
+        <Association Name="FK_IssueVote">
+          <End Type="VotingModel.Issue" Role="Issue" Multiplicity="1" />
+          <End Type="VotingModel.Vote" Role="Vote" Multiplicity="*" />
+          <ReferentialConstraint>
+            <Principal Role="Issue">
+              <PropertyRef Name="Id" />
+            </Principal>
+            <Dependent Role="Vote">
+              <PropertyRef Name="IssueId" />
+            </Dependent>
+          </ReferentialConstraint>
+        </Association>
+        <EntityType Name="ShortLink">
+          <Key>
+            <PropertyRef Name="Id" />
+          </Key>
+          <Property Type="String" Name="Id" Nullable="false" MaxLength="100" FixedLength="false" Unicode="true" />
+          <Property Type="String" Name="FullLink" Nullable="false" MaxLength="Max" FixedLength="false" Unicode="true" />
+        </EntityType>
+      </Schema>
+    </edmx:ConceptualModels>
+    <!-- C-S mapping content -->
+    <edmx:Mappings>
+      <Mapping Space="C-S" xmlns="http://schemas.microsoft.com/ado/2009/11/mapping/cs">
+        <EntityContainerMapping StorageEntityContainer="VotingModelStoreContainer" CdmEntityContainer="VotingEntities">
+          <EntitySetMapping Name="Comments">
+            <EntityTypeMapping TypeName="VotingModel.Comment">
+              <MappingFragment StoreEntitySet="Comments">
+                <ScalarProperty Name="Number" ColumnName="Number" />
+                <ScalarProperty Name="Id" ColumnName="Id" />
+                <ScalarProperty Name="Text" ColumnName="Text" />
+                <ScalarProperty Name="TypeId" ColumnName="TypeId" />
+                <ScalarProperty Name="Date" ColumnName="Date" />
+                <ScalarProperty Name="ParentCommentId" ColumnName="ParentCommentId" />
+                <ScalarProperty Name="UserObjectId" ColumnName="UserObjectId" />
+                <ScalarProperty Name="UserFullName" ColumnName="UserFullName" />
+                <ScalarProperty Name="ObjectId" ColumnName="ObjectId" />
+                <ScalarProperty Name="EntryTypeId" ColumnName="EntryTypeId" />
+                <ScalarProperty Name="IsHidden" ColumnName="IsHidden" />
+                <ScalarProperty Name="EmbedId" ColumnName="EmbedId" />
+              </MappingFragment>
+            </EntityTypeMapping>
+          </EntitySetMapping>
+          <EntitySetMapping Name="CommentSupporters">
+            <EntityTypeMapping TypeName="VotingModel.CommentSupporter">
+              <MappingFragment StoreEntitySet="CommentSupporters">
+                <ScalarProperty Name="CommentId" ColumnName="CommentId" />
+                <ScalarProperty Name="UserId" ColumnName="UserId" />
+              </MappingFragment>
+            </EntityTypeMapping>
+          </EntitySetMapping>
+          <EntitySetMapping Name="Embeds">
+            <EntityTypeMapping TypeName="VotingModel.Embed">
+              <MappingFragment StoreEntitySet="Embed">
+                <ScalarProperty Name="Id" ColumnName="Id" />
+                <ScalarProperty Name="Type" ColumnName="Type" />
+                <ScalarProperty Name="Version" ColumnName="Version" />
+                <ScalarProperty Name="Title" ColumnName="Title" />
+                <ScalarProperty Name="Author_Name" ColumnName="Author_Name" />
+                <ScalarProperty Name="Author_Url" ColumnName="Author_Url" />
+                <ScalarProperty Name="Provider_Name" ColumnName="Provider_Name" />
+                <ScalarProperty Name="Provider_Url" ColumnName="Provider_Url" />
+                <ScalarProperty Name="Cache_Age" ColumnName="Cache_Age" />
+                <ScalarProperty Name="Thumbnail_Url" ColumnName="Thumbnail_Url" />
+                <ScalarProperty Name="Description" ColumnName="Description" />
+                <ScalarProperty Name="Url" ColumnName="Url" />
+                <ScalarProperty Name="Width" ColumnName="Width" />
+                <ScalarProperty Name="Height" ColumnName="Height" />
+                <ScalarProperty Name="Html" ColumnName="Html" />
+              </MappingFragment>
+            </EntityTypeMapping>
+          </EntitySetMapping>
+          <EntitySetMapping Name="IdeaCategories">
+            <EntityTypeMapping TypeName="VotingModel.IdeaCategory">
+              <MappingFragment StoreEntitySet="IdeaCategories">
+                <ScalarProperty Name="IdeaId" ColumnName="IdeaId" />
+                <ScalarProperty Name="CategoryId" ColumnName="CategoryId" />
+              </MappingFragment>
+            </EntityTypeMapping>
+          </EntitySetMapping>
+          <EntitySetMapping Name="IdeaComments">
+            <EntityTypeMapping TypeName="VotingModel.IdeaComment">
+              <MappingFragment StoreEntitySet="IdeaComments">
+                <ScalarProperty Name="IdeaId" ColumnName="IdeaId" />
+                <ScalarProperty Name="CommentId" ColumnName="CommentId" />
+                <ScalarProperty Name="UserObjectId" ColumnName="UserObjectId" />
+                <ScalarProperty Name="TypeId" ColumnName="TypeId" />
+              </MappingFragment>
+            </EntityTypeMapping>
+          </EntitySetMapping>
+          <EntitySetMapping Name="IdeaIssues">
+            <EntityTypeMapping TypeName="VotingModel.IdeaIssue">
+              <MappingFragment StoreEntitySet="IdeaIssues">
+                <ScalarProperty Name="IdeaObjectId" ColumnName="IdeaObjectId" />
+                <ScalarProperty Name="IssueObjectId" ColumnName="IssueObjectId" />
+                <ScalarProperty Name="ChangeState" ColumnName="ChangeState" />
+              </MappingFragment>
+            </EntityTypeMapping>
+          </EntitySetMapping>
+          <EntitySetMapping Name="IdeaPriorities">
+            <EntityTypeMapping TypeName="VotingModel.IdeaPriority">
+              <MappingFragment StoreEntitySet="IdeaPriorities">
+                <ScalarProperty Name="Id" ColumnName="Id" />
+                <ScalarProperty Name="IdeaObjectId" ColumnName="IdeaObjectId" />
+                <ScalarProperty Name="UserId" ColumnName="UserId" />
+                <ScalarProperty Name="PriorityNumber" ColumnName="PriorityNumber" />
+                <ScalarProperty Name="TotalNumber" ColumnName="TotalNumber" />
+              </MappingFragment>
+            </EntityTypeMapping>
+          </EntitySetMapping>
+          <EntitySetMapping Name="Ideas">
+            <EntityTypeMapping TypeName="VotingModel.Idea">
+              <MappingFragment StoreEntitySet="Ideas">
+                <ScalarProperty Name="Id" ColumnName="Id" />
+                <ScalarProperty Name="Subject" ColumnName="Subject" />
+                <ScalarProperty Name="Aim" ColumnName="Aim" />
+                <ScalarProperty Name="UserObjectId" ColumnName="UserObjectId" />
+                <ScalarProperty Name="IsDraft" ColumnName="IsDraft" />
+                <ScalarProperty Name="OrganizationId" ColumnName="OrganizationId" />
+                <ScalarProperty Name="IsPrivate" ColumnName="IsPrivate" />
+                <ScalarProperty Name="MunicipalityId" ColumnName="MunicipalityId" />
+                <ScalarProperty Name="CreatedOn" ColumnName="CreatedOn" />
+                <ScalarProperty Name="ModifiedOn" ColumnName="ModifiedOn" />
+                <ScalarProperty Name="RequiredVotes" ColumnName="RequiredVotes" />
+                <ScalarProperty Name="StateId" ColumnName="StateId" />
+                <ScalarProperty Name="FinalIdeaText" ColumnName="FinalIdeaText" />
+                <ScalarProperty Name="FinalVersionId" ColumnName="FinalVersionId" />
+                <ScalarProperty Name="IsImpersonal" ColumnName="IsImpersonal" />
+              </MappingFragment>
+            </EntityTypeMapping>
+          </EntitySetMapping>
+          <EntitySetMapping Name="IdeaVersions">
+            <EntityTypeMapping TypeName="VotingModel.IdeaVersion">
+              <MappingFragment StoreEntitySet="IdeaVersions">
+                <ScalarProperty Name="VersionId" ColumnName="VersionId" />
+                <ScalarProperty Name="IdeaId" ColumnName="IdeaId" />
+                <ScalarProperty Name="VersionSubject" ColumnName="VersionSubject" />
+                <ScalarProperty Name="UserObjectId" ColumnName="UserObjectId" />
+                <ScalarProperty Name="OrganizationId" ColumnName="OrganizationId" />
+                <ScalarProperty Name="CreatedOn" ColumnName="CreatedOn" />
+                <ScalarProperty Name="ModifiedOn" ColumnName="ModifiedOn" />
+                <ScalarProperty Name="IsDeleted" ColumnName="IsDeleted" />
+                <ScalarProperty Name="Text" ColumnName="Text" />
+              </MappingFragment>
+            </EntityTypeMapping>
+          </EntitySetMapping>
+          <EntitySetMapping Name="IdeaVersionViews">
+            <EntityTypeMapping TypeName="VotingModel.IdeaVersionView">
+              <MappingFragment StoreEntitySet="IdeaVersionView">
+                <ScalarProperty Name="IdeaVersionObjectId" ColumnName="IdeaVersionObjectId" />
+                <ScalarProperty Name="UserDbId" ColumnName="UserDbId" />
+              </MappingFragment>
+            </EntityTypeMapping>
+          </EntitySetMapping>
+          <EntitySetMapping Name="IdeaVotes">
+            <EntityTypeMapping TypeName="VotingModel.IdeaVote">
+              <MappingFragment StoreEntitySet="IdeaVotes">
+                <ScalarProperty Name="IdeaId" ColumnName="IdeaId" />
+                <ScalarProperty Name="PersonCode" ColumnName="PersonCode" />
+                <ScalarProperty Name="Signature" ColumnName="Signature" />
+                <ScalarProperty Name="Date" ColumnName="Date" />
+                <ScalarProperty Name="AddressLine" ColumnName="AddressLine" />
+                <ScalarProperty Name="DocumentNo" ColumnName="DocumentNo" />
+                <ScalarProperty Name="FirstName" ColumnName="FirstName" />
+                <ScalarProperty Name="LastName" ColumnName="LastName" />
+                <ScalarProperty Name="CityId" ColumnName="CityId" />
+                <ScalarProperty Name="Source" ColumnName="Source" />
+                <ScalarProperty Name="IsPublic" ColumnName="IsPublic" />
+                <ScalarProperty Name="UserObjectId" ColumnName="UserObjectId" />
+              </MappingFragment>
+            </EntityTypeMapping>
+          </EntitySetMapping>
+          <EntitySetMapping Name="IssueCategories">
+            <EntityTypeMapping TypeName="VotingModel.IssueCategory">
+              <MappingFragment StoreEntitySet="IssueCategories">
+                <ScalarProperty Name="IssueId" ColumnName="IssueId" />
+                <ScalarProperty Name="CategoryId" ColumnName="CategoryId" />
+              </MappingFragment>
+            </EntityTypeMapping>
+          </EntitySetMapping>
+          <EntitySetMapping Name="IssueComments">
+            <EntityTypeMapping TypeName="VotingModel.IssueComment">
+              <MappingFragment StoreEntitySet="IssueComments">
+                <ScalarProperty Name="IssueId" ColumnName="IssueId" />
+                <ScalarProperty Name="CommentId" ColumnName="CommentId" />
+                <ScalarProperty Name="UserObjectId" ColumnName="UserObjectId" />
+                <ScalarProperty Name="TypeId" ColumnName="TypeId" />
+              </MappingFragment>
+            </EntityTypeMapping>
+          </EntitySetMapping>
+          <EntitySetMapping Name="IssueVersions">
+            <EntityTypeMapping TypeName="VotingModel.IssueVersion">
+              <MappingFragment StoreEntitySet="IssueVersions">
+                <ScalarProperty Name="VersionId" ColumnName="VersionId" />
+                <ScalarProperty Name="IssueId" ColumnName="IssueId" />
+                <ScalarProperty Name="Text" ColumnName="Text" />
+                <ScalarProperty Name="UserObjectId" ColumnName="UserObjectId" />
+                <ScalarProperty Name="CreatedOn" ColumnName="CreatedOn" />
+                <ScalarProperty Name="ModifiedOn" ColumnName="ModifiedOn" />
+              </MappingFragment>
+            </EntityTypeMapping>
+          </EntitySetMapping>
+          <EntitySetMapping Name="ProblemCategories">
+            <EntityTypeMapping TypeName="VotingModel.ProblemCategory">
+              <MappingFragment StoreEntitySet="ProblemCategories">
+                <ScalarProperty Name="ProblemId" ColumnName="ProblemId" />
+                <ScalarProperty Name="CategoryId" ColumnName="CategoryId" />
+              </MappingFragment>
+            </EntityTypeMapping>
+          </EntitySetMapping>
+          <EntitySetMapping Name="ProblemComments">
+            <EntityTypeMapping TypeName="VotingModel.ProblemComment">
+              <MappingFragment StoreEntitySet="ProblemComments">
+                <ScalarProperty Name="ProblemId" ColumnName="ProblemId" />
+                <ScalarProperty Name="CommentId" ColumnName="CommentId" />
+                <ScalarProperty Name="UserObjectId" ColumnName="UserObjectId" />
+              </MappingFragment>
+            </EntityTypeMapping>
+          </EntitySetMapping>
+          <EntitySetMapping Name="ProblemIdeas">
+            <EntityTypeMapping TypeName="VotingModel.ProblemIdea">
+              <MappingFragment StoreEntitySet="ProblemIdeas">
+                <ScalarProperty Name="ProblemId" ColumnName="ProblemId" />
+                <ScalarProperty Name="IdeaId" ColumnName="IdeaId" />
+                <ScalarProperty Name="UserObjectId" ColumnName="UserObjectId" />
+              </MappingFragment>
+            </EntityTypeMapping>
+          </EntitySetMapping>
+          <EntitySetMapping Name="ProblemIssues">
+            <EntityTypeMapping TypeName="VotingModel.ProblemIssue">
+              <MappingFragment StoreEntitySet="ProblemIssues">
+                <ScalarProperty Name="ProblemId" ColumnName="ProblemId" />
+                <ScalarProperty Name="IssueId" ColumnName="IssueId" />
+                <ScalarProperty Name="UserObjectId" ColumnName="UserObjectId" />
+              </MappingFragment>
+            </EntityTypeMapping>
+          </EntitySetMapping>
+          <EntitySetMapping Name="Problems">
+            <EntityTypeMapping TypeName="VotingModel.Problem">
+              <MappingFragment StoreEntitySet="Problems">
+                <ScalarProperty Name="Id" ColumnName="Id" />
+                <ScalarProperty Name="Text" ColumnName="Text" />
+                <ScalarProperty Name="UserObjectId" ColumnName="UserObjectId" />
+                <ScalarProperty Name="Date" ColumnName="Date" />
+                <ScalarProperty Name="MunicipalityId" ColumnName="MunicipalityId" />
+                <ScalarProperty Name="OrganizationId" ColumnName="OrganizationId" />
+                <ScalarProperty Name="IsPrivateToOrganization" ColumnName="IsPrivateToOrganization" />
+                <ScalarProperty Name="UserFullName" ColumnName="UserFullName" />
+                <ScalarProperty Name="OrganizationName" ColumnName="OrganizationName" />
+                <ScalarProperty Name="EmbedId" ColumnName="EmbedId" />
+              </MappingFragment>
+            </EntityTypeMapping>
+          </EntitySetMapping>
+          <EntitySetMapping Name="ProblemSupporters">
+            <EntityTypeMapping TypeName="VotingModel.ProblemSupporter">
+              <MappingFragment StoreEntitySet="ProblemSupporters">
+                <ScalarProperty Name="Id" ColumnName="Id" />
+                <ScalarProperty Name="ProblemId" ColumnName="ProblemId" />
+                <ScalarProperty Name="UserId" ColumnName="UserId" />
+                <ScalarProperty Name="ForAgainst" ColumnName="ForAgainst" />
+              </MappingFragment>
+            </EntityTypeMapping>
+          </EntitySetMapping>
+          <EntitySetMapping Name="RelatedIdeas">
+            <EntityTypeMapping TypeName="VotingModel.RelatedIdea">
+              <MappingFragment StoreEntitySet="RelatedIdeas">
+                <ScalarProperty Name="IdeaObjectId" ColumnName="IdeaObjectId" />
+                <ScalarProperty Name="RelatedIdeaObjectId" ColumnName="RelatedIdeaObjectId" />
+                <ScalarProperty Name="UserObjectId" ColumnName="UserObjectId" />
+              </MappingFragment>
+            </EntityTypeMapping>
+          </EntitySetMapping>
+          <EntitySetMapping Name="UserComments">
+            <EntityTypeMapping TypeName="VotingModel.UserComment">
+              <MappingFragment StoreEntitySet="UserComments">
+                <ScalarProperty Name="CommentId" ColumnName="CommentId" />
+                <ScalarProperty Name="UserId" ColumnName="UserId" />
+                <ScalarProperty Name="UserObjectId" ColumnName="UserObjectId" />
+                <ScalarProperty Name="TypeId" ColumnName="TypeId" />
+              </MappingFragment>
+            </EntityTypeMapping>
+          </EntitySetMapping>
+          <EntitySetMapping Name="Votes">
+            <EntityTypeMapping TypeName="VotingModel.Vote">
+              <MappingFragment StoreEntitySet="Votes">
+                <ScalarProperty Name="Id" ColumnName="Id" />
+                <ScalarProperty Name="IssueId" ColumnName="IssueId" />
+                <ScalarProperty Name="ForAgainst" ColumnName="ForAgainst" />
+                <ScalarProperty Name="PersonCode" ColumnName="PersonCode" />
+                <ScalarProperty Name="Signature" ColumnName="Signature" />
+                <ScalarProperty Name="Date" ColumnName="Date" />
+                <ScalarProperty Name="AddressLine" ColumnName="AddressLine" />
+                <ScalarProperty Name="DocumentNo" ColumnName="DocumentNo" />
+                <ScalarProperty Name="FirstName" ColumnName="FirstName" />
+                <ScalarProperty Name="LastName" ColumnName="LastName" />
+                <ScalarProperty Name="CityId" ColumnName="CityId" />
+                <ScalarProperty Name="Source" ColumnName="Source" />
+                <ScalarProperty Name="IsPublic" ColumnName="IsPublic" />
+                <ScalarProperty Name="UserObjectId" ColumnName="UserObjectId" />
+              </MappingFragment>
+            </EntityTypeMapping>
+          </EntitySetMapping>
+          <EntitySetMapping Name="Issues">
+            <EntityTypeMapping TypeName="VotingModel.Issue">
+              <MappingFragment StoreEntitySet="Issues">
+                <ScalarProperty Name="IsMailSent" ColumnName="IsMailSent" />
+                <ScalarProperty Name="OfficialVotingDescription" ColumnName="OfficialVotingDescription" />
+                <ScalarProperty Name="IsPrivateToOrganization" ColumnName="IsPrivateToOrganization" />
+                <ScalarProperty Name="OrganizationId" ColumnName="OrganizationId" />
+                <ScalarProperty Name="MunicipalityId" ColumnName="MunicipalityId" />
+                <ScalarProperty Name="OfficialVote" ColumnName="OfficialVote" />
+                <ScalarProperty Name="ModificationDate" ColumnName="ModificationDate" />
+                <ScalarProperty Name="RegistrationDate" ColumnName="RegistrationDate" />
+                <ScalarProperty Name="UserObjectId" ColumnName="UserObjectId" />
+                <ScalarProperty Name="Deadline" ColumnName="Deadline" />
+                <ScalarProperty Name="Summary" ColumnName="Summary" />
+                <ScalarProperty Name="Subject" ColumnName="Subject" />
+                <ScalarProperty Name="ObjectId" ColumnName="ObjectId" />
+                <ScalarProperty Name="Id" ColumnName="Id" />
+              </MappingFragment>
+            </EntityTypeMapping>
+          </EntitySetMapping>
+          <EntitySetMapping Name="ShortLinks">
+            <EntityTypeMapping TypeName="VotingModel.ShortLink">
+              <MappingFragment StoreEntitySet="ShortLinks">
+                <ScalarProperty Name="FullLink" ColumnName="FullLink" />
+                <ScalarProperty Name="Id" ColumnName="Id" />
+              </MappingFragment>
+            </EntityTypeMapping>
+          </EntitySetMapping>
+        </EntityContainerMapping>
+      </Mapping>
+    </edmx:Mappings>
+  </edmx:Runtime>
+  <!-- EF Designer content (DO NOT EDIT MANUALLY BELOW HERE) -->
+  <Designer xmlns="http://schemas.microsoft.com/ado/2009/11/edmx">
+    <Connection>
+      <DesignerInfoPropertySet>
+        <DesignerProperty Name="MetadataArtifactProcessing" Value="EmbedInOutputAssembly" />
+      </DesignerInfoPropertySet>
+    </Connection>
+    <Options>
+      <DesignerInfoPropertySet>
+        <DesignerProperty Name="ValidateOnBuild" Value="true" />
+        <DesignerProperty Name="EnablePluralization" Value="True" />
+        <DesignerProperty Name="IncludeForeignKeysInModel" Value="True" />
+        <DesignerProperty Name="CodeGenerationStrategy" Value="None" />
+        <DesignerProperty Name="UseLegacyProvider" Value="False" />
+      </DesignerInfoPropertySet>
+    </Options>
+    <!-- Diagram content (shape and connector positions) -->
+    <Diagrams></Diagrams>
+  </Designer>
+</edmx:Edmx>

@@ -1,0 +1,61 @@
+﻿@model Data.ViewModels.Organization.OrganizationViewModel
+@using Globalization.Resources.Organization
+@using Globalization.Resources.Shared
+@using Framework.Strings;
+@using Web.Helpers
+
+@using (Html.BeginForm(MVC.Organization.SaveMembers()))
+{
+    @Html.AntiForgeryToken()
+    @Html.ValidationSummary()
+    <table id="listMembers">
+        <tr>
+            <th>
+                @Html.HiddenFor(m => m.ObjectId)
+                <label>@Resource.OrganizationMembers</label>
+            </th>
+            <th>
+                <label>@Resource.Position</label>
+            </th>
+            <th><label>@Resource.Role</label></th>
+            <th><label>Balsų sk.</label></th>
+            <th><label>@Resource.MemberIsPublic</label></th>
+        </tr>
+        @for (int i = 0; i < Model.Members.Count; i++)
+        {
+            @Html.HiddenFor(m => m.Members[i].ObjectId)
+            <tr>
+                <td class="member">
+                    @Html.ActionLink(Model.Members[i].FullName, MVC.Account.Details(Model.Members[i].ObjectId, Model.Members[i].FullName.ToSeoUrl(), null))
+                </td>
+                <td class="role">
+                    @Html.TextBoxFor(m => m.Members[i].Role)
+                    @Html.HiddenFor(m => m.Members[i].DbId)
+                </td>
+                <td>
+                    <span class="normal">
+                        @Html.DropDownForEnum(m => m.Members[i].Permission, Globalization.Resources.Services.UserRolesResource.ResourceManager)
+                    </span>
+                </td>
+                <td >
+                    @Html.TextBoxFor(m => m.Members[i].VoteCount, new Dictionary<string, object>(){{"class", "txt_s"}})
+                </td>
+                <td>
+                    @Html.CheckBoxFor(m => m.Members[i].IsPublic, new Dictionary<string, object>() { { "title", Resource.MemberIsPublic } })
+                </td>
+            </tr>
+        }
+    </table>
+    @Html.Buttons(new List<ButtonHelperModel>()
+                            {
+                                new ButtonHelperModel()
+                                    {
+                                        Id="btnSubmit",
+                                    },
+                                new CancelButtonHelperModel()
+                                    {
+                                        Href = Url.Action(MVC.Organization.CancelMembersEdit(Model.ObjectId))
+                                    }
+                            })
+    <div class="clear"></div>
+}

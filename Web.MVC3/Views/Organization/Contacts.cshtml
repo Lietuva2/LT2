@@ -1,0 +1,62 @@
+﻿@model Data.ViewModels.Organization.ContactsViewModel
+@using Globalization.Resources.Organization
+@using Globalization.Resources.Shared
+@using Web.Helpers
+<fieldset>
+    <div class="uiHeader">
+        <div>
+            <span>@Resource.ContactsLegend</span>
+            @if (Model.IsEditable)
+            {
+                @Html.ActionLink(SharedStrings.Edit, MVC.Organization.EditContacts(Model.ObjectId), new { @class = "edit" })
+            }
+        </div>
+    </div>
+    <table class="tbl_data">
+        <tbody>
+            @if (!string.IsNullOrEmpty(Model.Email) || Model.IsEditable)
+            {
+                <tr>
+                    <th class="lbl">@Resource.Email
+                    </th>
+                    <td class="data">
+                        <a href="mailto:@Model.Email">@Html.Raw(Model.Email)</a>
+                    </td>
+                </tr>
+            }
+            @if (!string.IsNullOrEmpty(Model.PhoneNumber) || Model.IsEditable)
+            {
+                <tr>
+                    <th class="lbl">@Resource.PhoneNumber
+                    </th>
+                    <td class="data">@Model.PhoneNumber
+                    </td>
+                </tr>
+            }
+            @if (!string.IsNullOrEmpty(Model.Address) || Model.IsEditable)
+            {
+                <tr>
+                    <th class="lbl">@Resource.Address
+                    </th>
+                    <td class="data">@Model.Address
+                    </td>
+                </tr>
+            }
+            @if (Model.WebSites.Count > 0 || Model.IsEditable)
+            {
+                <tr>
+                    <th class="lbl">@Resource.Websites
+                    </th>
+                    <td class="data">
+                        <ul>
+                            @foreach (var website in Model.WebSites)
+                            {
+                                <li><a href='@website.Url' target="_blank">@website.Title</a> </li>
+                            }
+                        </ul>
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+</fieldset>

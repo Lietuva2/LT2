@@ -1,0 +1,11 @@
+﻿@using Web.Helpers
+@model Data.ViewModels.Base.InviteUserModel
+@using (Html.BeginCollectionItem("UsersToInvite"))
+                {
+                    <li>
+                        @Model.InvitedUser
+                        @Html.HiddenFor(m => m.UserId)
+                        @Html.HiddenFor(m => m.InvitedUser)
+                        @Model.Message
+                    </li>
+                }

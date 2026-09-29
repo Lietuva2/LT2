@@ -1,0 +1,156 @@
+﻿@model Data.ViewModels.NewsFeed.StartPageModel
+@{
+    ViewBag.Title = "";
+    Layout = "~/Views/Shared/_LayoutFront.Mobile.cshtml";
+}
+@using Data.Enums
+@using Data.ViewModels.Account
+@using Framework.Strings;
+@using Globalization.Resources.NewsFeed;
+@using Globalization.Resources.Shared
+@using Services.Enums
+@using Web.Helpers
+@section Head
+{
+    <style type="text/css">
+        .dashboard-header {
+            background: #EAF6E8;
+            padding: 5px 5px 5px 5px;
+            border-bottom: #DDD solid 1px;
+            margin-bottom: 1em;
+        }
+
+            .dashboard-header h3 {
+                color: #A0C8A0;
+            }
+
+            .dashboard-header a {
+            }
+
+        h4 {
+            margin-bottom: 1em;
+        }
+
+            h4 a {
+                color: #000000!important;
+                cursor: pointer !important;
+                font-family: Arial,Helvetica,Sans-Serif;
+                font-size: 1.2em;
+                font-weight: bold;
+                text-decoration: none!important;
+            }
+
+                h4 a:hover, h4 a:focus {
+                    color: #006bc6!important;
+                    text-decoration: underline!important;
+                }
+
+        #leftCol {
+            width: 430px;
+            float: left;
+        }
+
+        #rightCol {
+            float: right;
+            width: 270px;
+        }
+    </style>
+    <title>@Resource.Slogan</title>
+}
+@section Scripts
+{
+    <script type='text/javascript'>
+        function onPageLoad() {
+            $('#listIdeas').voting({
+                isAmbasador: @ViewBag.CurrentUser.CanPostToFacebook.ToString().ToLower(),
+                supportMessage: '@ViewBag.CurrentUser.SupportedIdeaText',
+                facebookUrl: '@Url.ActionAbsolute(MVC.Idea.Details())' + '/{0}',
+                forceFbLogin: @(ViewBag.CurrentUser.PostPermissionGranted ? "false" : "true")
+                });
+            
+            $('#listVoting').voting({
+                isAmbasador: @((ViewBag.CurrentUser.CanPostToFacebook && ViewBag.CurrentUser.IsUnique).ToString().ToLower()),
+                supportMessage: '@ViewBag.CurrentUser.VotedText',
+                facebookUrl: '@Url.ActionAbsolute(MVC.Voting.Details())' + '/{0}',
+                forceFbLogin: @(ViewBag.CurrentUser.PostPermissionGranted ? "false" : "true")
+                });
+
+            $('#listIdeas, #listVoting').on('click', 'a[data-role="tab-link"]', function(e) {
+                var link = $(this);
+                $.helpers.loadAsync(e, link.attr('href'), null, function(result) {
+                    link.parents('.whatsnew').html(result.Content);
+                });
+
+                return $.helpers.cancelEvent(e);
+            });
+            
+            $('#listIdeas').showmore({ linkSelector: '#lnkShowMoreIdeas', listSelector: '#listIdeas'});
+            $('#listIssues').showmore({ linkSelector: '#lnkShowMoreIssues', listSelector: '#listIssues'});
+
+            initializeInfiniteScroll('#lnkShowMoreIdeas');
+            initializeInfiniteScroll('#lnkShowMoreIssues');
+            
+            CreateAjaxDialog('a.lnkUsers', '@Globalization.Resources.Idea.Resource.SignersList');
+        }
+    </script>
+}
+<div class="about">
+    <h2 class="heading">@Resource.Slogan mobiliai</h2>
+    @Html.Partial(MVC.Idea.Views._MainIdeaVoting)
+</div>
+<div id="leftCol">
+    <div id="listIdeas" class="whatsnew">
+        @Html.Partial(MVC.NewsFeed.Views.DashboardIdeas, Model.Ideas)
+    </div>
+    <div id="listVoting" class="whatsnew">
+        @Html.Partial(MVC.NewsFeed.Views.DashboardIssues, Model.BestIssues)
+    </div>
+</div>
+<div id="rightCol">
+    <div>
+        <div class="about">
+            @Html.Partial(MVC.About.Views.AboutText)
+        </div>
+        <div class="aboutvideo">
+            <iframe width="270" height="163" src="https://www.youtube.com/embed/SSkX-HgV_2A?rel=0" frameborder="0" allowfullscreen></iframe>
+        </div>
+        <div>
+            <p>
+                @Globalization.Resources.About.Resource.LegalBase
+            </p>
+        </div>
+        <div style="margin-bottom: 16px;">@Resource.AlreadyRegistered <b>@Model.MembersCount</b> @Model.MembersCountString!</div>
+        @if (!ViewBag.IsAuthenticated)
+        {
+            <div>
+                @Html.Button(new ButtonHelperModel() { Href = Url.Action(MVC.Account.Login()), Text = Globalization.Resources.Account.Resource.Register, Type = ButtonHelperModel.Types.Link, ImageUrl = Links.Content.Images.group_key_png })
+            </div>
+            <div style="padding-top: 4px;">
+                @Html.ActionLink(Resource.AboutMore, MVC.About.About())
+            </div>
+        }
+    </div>
+    <div class="clear" style="margin-bottom: 16px;"></div>
+    <div class="whatsnew">
+        <div class="dashboard-header">
+            <h3>@Resource.NewActivity
+            </h3>
+        </div>
+    </div>
+    <ul class="small_feed">
+        @Html.Partial(MVC.NewsFeed.Views.List, Model.NewsFeed.List)
+    </ul>
+    @Html.RouteLink(SharedStrings.More, "AllNewsFeed")
+</div>
+
+<div class="clear">
+</div>
+@if (TempData["OpenAdditinalUniqueInfoDialog"] != null)
+{
+    @Html.Partial(MVC.Account.Views.AdditionalUniqueInfo, (AdditionalUniqueInfoModel)TempData["OpenAdditinalUniqueInfoDialog"])
+    <script type="text/javascript">
+        $(document).ready(function () {
+            $.helpers.openAdditionalUniqueInfoForm();
+        });
+    </script>
+}

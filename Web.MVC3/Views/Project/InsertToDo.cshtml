@@ -1,0 +1,52 @@
+﻿@using Globalization.Resources.Project
+@using Globalization.Resources.Shared
+@using Web.Helpers
+@model Data.ViewModels.Project.ProjectToDosModel
+<div class="insertToDo">
+        <a class='@(Model.AnyToDos() ? "" : "hide")' data-role="insert-todo" href="javascript:void(0);">@SharedStrings.Add</a>
+        <div class='todo_form @(Model.AnyToDos() ? "hide" : "")'>
+            @using (Html.BeginForm(MVC.Project.AddToDo(), FormMethod.Post))
+            {
+                
+                @Html.AntiForgeryToken()
+                @Html.HiddenFor(m => m.Id)
+                @Html.Hidden("InsertMileStoneId", ViewData["MileStoneId"])
+                <span>                
+                    @Html.LabelFor(m => m.InsertSubject, Resource.EnterTask)
+                    @Html.TextAreaFor(m => m.InsertSubject, new {@class="txt_tasksubject" })
+                    @Html.ValidationMessageFor(m => m.InsertSubject)
+                </span>
+                <span class="span-3">
+                    @Html.LabelFor(m => m.InsertToDoIsPrivate, Resource.Visibility)
+                    @Html.CheckBoxFor(m => m.InsertToDoIsPrivate) @Resource.TeamOnly
+                </span>
+                <span class="span-5">                
+                    @Html.LabelFor(m => m.InsertDueDate, Resource.DueDate)
+                    @Html.TextBox("InsertDueDate", (Model.InsertDueDate.HasValue ? Model.InsertDueDate.Value.ToShortDateString() : string.Empty), new Dictionary<string, object>(){{"class", "date"}, {"id", "InsertDueDate" + ViewData["MileStoneId"]}})
+                </span>
+                <span class="span-4">                
+                    @Html.LabelFor(m => m.InsertResponsibleUsers, Resource.ResponsibleUserId)
+                    @Html.DropDownListFor(m => m.InsertResponsibleUserId, Model.InsertResponsibleUsers)
+                </span>
+                <div class="clear"></div>
+                <div style="margin-bottom: 6px;">                
+                    @Html.LabelFor(m => m.InsertSendNotifications, Resource.SendMail)
+                    @Html.CheckBoxFor(m => m.InsertSendNotifications) @Resource.SendNotifications
+                </div>   
+                <div class="clear"></div> 
+                <div>
+                    @Html.Buttons(new List<ButtonHelperModel>()
+                        {
+                            new ButtonHelperModel()
+                                {
+                                },
+                            new CancelButtonHelperModel()
+                                {
+                                    HtmlAttributes = new Dictionary<string, object>(){{"data-role", "cancel-insert"}}
+                                }
+                        })
+                </div>
+                <div class="clear"></div>
+            }
+        </div>
+    </div>

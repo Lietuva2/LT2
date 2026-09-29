@@ -1,0 +1,11 @@
+﻿@model Data.ViewModels.Account.BankLinkModel
+<form id="formBankLink" action="@Model.Target" method="POST">
+    @foreach (string key in Model.Values.Keys)
+    {
+        <input type="hidden" name="@key" value="@Model.Values[key]" />
+    }
+    <input type="submit" value="Jungtis" />
+</form>
+<script type="text/javascript">
+    $(function () { $('#formBankLink').submit(); });
+</script>

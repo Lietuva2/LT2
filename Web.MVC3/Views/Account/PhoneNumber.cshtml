@@ -1,0 +1,23 @@
+﻿@model Data.ViewModels.Base.PhoneNumberEditModel
+@using Globalization.Resources.Organization
+@using Globalization.Resources.Shared
+@using Web.Helpers
+
+@using (Html.BeginCollectionItem(Model.ListName))
+{
+<div class="fields_container">
+    <p class="uiblock fl">
+        <span class="block">@Resource.Type</span>
+        @Html.HiddenFor(m => m.Id) 
+        @Html.DropDownForEnum(m => m.Type, Globalization.Resources.Services.PhoneNumberTypes.ResourceManager)
+    </p>
+    <p class="uiblock fl">
+        <span class="block">@Resource.PhoneNumber</span>
+        @Html.TextBoxFor(m => m.Number, new { @class = "txt_l" })
+        @Html.ValidationMessageFor(m => m.Number)
+    </p>
+    <p class="uiblock fl"><br /><a href="javascript:void(0)" class="delete">@SharedStrings.Delete</a></p>
+    <hr />
+    <div class="clear"></div>
+</div>
+}

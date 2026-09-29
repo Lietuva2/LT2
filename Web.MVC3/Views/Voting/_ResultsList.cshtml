@@ -1,0 +1,45 @@
+﻿@model IEnumerable<Data.ViewModels.Voting.VotingResultsItemModel>
+@using Framework.Lists;
+@using Framework.Mvc.Strings
+@using Globalization
+@using Globalization.Resources.Voting
+@using Globalization.Resources.Voting;
+@using Framework.Strings;
+@using Web.Helpers;
+@if (Model.Count() == 0)
+{
+    @Resource.NoResults
+}
+else
+{
+    foreach (var issue in Model.AsStyleableList())
+    {
+        <li class="issue @issue.GetCssClass("issue_")">
+            <h3>@Html.ActionLink(issue.Item.Subject.HtmlDecode(), MVC.Voting.Details(issue.Item.Id, issue.Item.Subject.ToSeoUrl()))</h3>
+            <div class="fr">
+            <div data-role="progressbar" style="width:150px;">
+                @Html.Partial(MVC.Voting.Views.Progress, issue.Item.Progress)
+            </div>
+            </div>
+            <div class="clear"></div>
+            <div class="categories">
+                <p class="m_list_d">
+                    @foreach (var category in issue.Item.Categories)
+                    {
+                        <span class="ctag" data-id="@category.Value">@category.Text</span>
+                    }
+                    @if (!string.IsNullOrEmpty(issue.Item.Municipality))
+                    {
+                        <span class="ctag">@issue.Item.Municipality</span>
+                    }
+                </p>
+            </div>
+            <div class="details">
+                <span>@GlobalizedSentences.GetVotesCountString(issue.Item.VotesCount)</span>
+                <span>@GlobalizedSentences.GetCommentsCountString(issue.Item.CommentsCount)</span>
+                <span class="last">@GlobalizedSentences.GetViewsCountString(issue.Item.ViewsCount)</span>
+            </div>
+            <div class="clear"></div>
+        </li>
+    }
+}

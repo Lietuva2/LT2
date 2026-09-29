@@ -1,0 +1,13 @@
+﻿@using Globalization.Resources.About
+@model int
+<ul class="tabmenu">
+    <li>@Html.ActionLink(Resource.AboutProject, MVC.About.About(), new { @class = "tabitem" + (Model == 0 ? " highlight" : string.Empty) })</li>
+    <li>@Html.ActionLink(Resource.MenuFaq, MVC.About.Faq(), new { @class = "tabitem" + (Model == 1 ? " highlight" : string.Empty) })</li>
+    <li>@Html.ActionLink(Resource.MenuManifest, MVC.About.Manifest(), new { @class = "tabitem" + (Model == 2 ? " highlight" : string.Empty) })</li>
+    <li>@Html.ActionLink(Resource.MenuValues, MVC.About.Ideas(), new { @class = "tabitem" + (Model == 3 ? " highlight" : string.Empty) })</li>
+    <li><a href="http://blog.lietuva2.lt" class="tabitem" target="_blank">@Resource.MenuBlog</a></li>
+    <li>@Html.ActionLink(Resource.MenuVideo, MVC.About.Video(), new { @class = "tabitem" + (Model == 4 ? " highlight" : string.Empty) })</li>
+    <li>@Html.ActionLink(Resource.MenuFutures, MVC.About.RoadMap(), new { @class = "tabitem" + (Model == 5 ? " highlight" : string.Empty) })</li>
+    <li>@Html.ActionLink(Resource.MenuContacts, MVC.About.Contacts(), new { @class = "tabitem" + (Model == 6 ? " highlight" : string.Empty) })</li>
+    
+</ul>

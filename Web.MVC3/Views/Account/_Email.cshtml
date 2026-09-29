@@ -1,0 +1,25 @@
+﻿@model Data.ViewModels.Account.EmailModel
+@using Globalization.Resources.Account
+@using Globalization.Resources.Shared
+@using Web.Helpers
+@using (Html.BeginCollectionItem("Emails"))
+{
+    <div class="fields_container clearfix">
+        <p class="uiblock">
+            @Html.TextBoxFor(m => m.Email, new {@class = "fl"})
+            <span id="rbtnEmailNotifications" class="fl">
+                <label style="font-weight: normal;">
+                    @Html.CheckBoxFor(m => m.SendMail)
+                    @Resource.SendEmails
+                </label>
+                <label style="font-weight: normal;">
+                    @Html.CheckBoxFor(m => m.IsPrivate)
+                    @Resource.HideFromOthers
+                </label>
+            </span>
+            <a href="javascript:void(0)" class="delete">@SharedStrings.Delete</a>
+            <div class="clear"></div>
+            @Html.ValidationMessageFor(model => model.Email)
+        </p>
+    </div>
+}

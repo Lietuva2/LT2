@@ -1,0 +1,27 @@
+﻿@using Globalization.Resources.About
+@{
+    ViewBag.Title = Resource.ContactsTitle;
+}
+
+<h2>@Resource.AboutProject</h2>
+<div style="height:15px;"></div>
+@Html.Partial(MVC.About.Views.Menu, 6)
+<div class="uitabContainer">
+    <p style="padding:15px 0 2px;">
+        @Html.Partial(MVC.About.Views.Requisites)
+        email: <a href="mailto:info@lietuva2.lt?subject=Dėl Lietuva 2.0">info@lietuva2.lt</a><br/>
+        <br/>
+        @Resource.Director: <a href="@Url.Action(MVC.Account.Details("9ce63302c79d1eb80d000000", "donatas-šimelis", null))">Donatas Šimelis</a><br/>
+        email: <a href="mailto:donatas@lietuva2.lt?subject=Dėl Lietuva 2.0">donatas@lietuva2.lt</a>
+    </p>
+    <p>
+        <a href="@Url.Action(MVC.Organization.Details("4e6d2d890a1d0d0aecf9a5b1", null, null, null, null, null))">@Resource.LT2OrgLink</a>
+        <br />
+        <a target="_blank" href="@Links.Content.Files.LT2_istatai_doc">@Resource.LT2Statute</a>
+    </p>
+    <p>@Resource.LT2Attributes</p>
+    <img class="fl" src="@Links.Content.Images.lt2_100x100_png"/>
+    <img src="@Links.Content.Images.lt2_468x60_gif"/>
+    <div class="clear"></div>
+    <p>@Resource.InformAboutLinks <a href="mailto:info@lietuva2.lt?subject=Dėl nuorodos į Lietuva 2.0">info@lietuva2.lt</a>.</p>
+</div>

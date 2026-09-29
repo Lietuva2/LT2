@@ -1,0 +1,84 @@
+﻿@model IEnumerable<Data.ViewModels.Idea.IdeaIndexItemModel>
+@using Data.ViewModels.Idea
+@using Framework.Lists;
+@using Framework.Mvc.Strings
+@using Globalization
+@using Globalization.Resources.Idea
+@using Globalization.Resources.Idea;
+@using Framework.Strings;
+@using Globalization.Resources.Shared
+@using Web.Helpers;
+@if (Model.Count() == 0)
+{
+    @Resource.NoIdeas
+}
+else
+{
+    foreach (var issue in Model.AsStyleableList())
+    {
+    <li class="issue @issue.GetCssClass("issue_")">
+        <h3>@Html.ActionLinkWithReturnUrl(issue.Item.Subject.HtmlDecode(), MVC.Idea.Details(issue.Item.Id, issue.Item.Subject.ToSeoUrl(), null))
+            <a href="javascript:void(0)" data-role="expand">
+                <img src="@Links.Content.Images.expand_gif" alt="@Resource.Expand"/>
+            </a>
+        </h3>
+        <div class="fr">
+            @if (issue.Item.Progress != null)
+            {
+                <div data-role="unique-voting" class="inline_voting">
+                    @if (!issue.Item.SupportedByCurrentUser && !issue.Item.IsClosed)
+                    {
+                        <div data-role="votebutton" class="fr GreenButton">
+                            @Html.Button(new ButtonHelperModel()
+                                               {
+                                                   CssClass = "VoteButton inlineButton",
+                                                   Href = Url.Action(MVC.Idea.Vote(issue.Item.Id, null)),
+                                                   Type = ButtonHelperModel.Types.Link,
+                                                   Text = Resource.Sign,
+                                                   ImageUrl = null,
+                                                   HtmlAttributes = new Dictionary<string, object> { { "data-id", issue.Item.Id }, { "data-private", issue.Item.IsPrivate ? "true" : "false" }, { "data-role", "vote" } }
+                                               })
+                        </div>
+                    }
+                    <div data-role="progressbar" class="fr @Html.GetVisibilityClassString(issue.Item.SupportedByCurrentUser || issue.Item.IsClosed)" style="width:150px;">
+                        @Html.Partial(MVC.Idea.Views.Progress, issue.Item.Progress)
+                    </div>
+                </div>
+            }
+            else
+            {
+                <span class="emphasize" title="@Html.GetUniqueUsersTip(issue.Item.TotalConfirmedSupporters, issue.Item.TotalUnconfirmedSupporters)">@issue.Item.TotalSupporters</span>
+                @Resource.VotesCount
+            }
+        </div>
+        <div class="clear"></div>
+        <div class="categories">
+            <p class="m_list_d">
+                @foreach (var category in issue.Item.Categories)
+                {
+                    <span class="ctag" data-id="@category.Value">@category.Text</span>
+                }
+                @if (!string.IsNullOrEmpty(issue.Item.Municipality))
+                {
+                    <span class="ctag">@issue.Item.Municipality</span>
+                }
+            </p>
+        </div>
+        <div class="details">
+            @if (issue.Item.Deadline.HasValue && !issue.Item.IsClosed)
+            {
+                <span title="@issue.Item.Deadline">
+                    @string.Format(Resource.TimeLeft, Globalization.GlobalizedSentences.GetTimeLeftString(issue.Item.Deadline))
+                </span>
+            }
+            <span><a href="javascript:void(0);" class="@(issue.Item.IsBold ? "bold" : "")" data-role="expand">@Resource.NumberOfSolutions: @issue.Item.VersionsCount</a></span>
+            <span>@GlobalizedSentences.GetCommentsCountString(issue.Item.CommentsCount)</span>
+            <span class="">@GlobalizedSentences.GetViewsCountString(issue.Item.ViewsCount)</span>
+            <div class="last"><span class="last @Html.GetStateCssClass(issue.Item.State)">@Html.GetIdeaStateString(issue.Item.State, issue.Item.InitiativeType)</span></div>
+        </div>
+        <div class="clear"></div>
+        <div data-role="versions" data-id="@issue.Item.Id">
+        </div>
+    </li>
+    }
+}

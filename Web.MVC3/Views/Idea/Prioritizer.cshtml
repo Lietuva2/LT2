@@ -1,0 +1,43 @@
+﻿@model Data.ViewModels.Idea.PrioritizerModel
+@using Globalization.Resources.Idea
+@using Globalization.Resources.Idea
+@using Globalization.Resources.Shared
+@using Framework.Strings;
+@using Web.Helpers
+@{
+    ViewBag.Title = Resource.PageTitlePrioritizer;
+}
+<h2 class="heading">@Resource.TitlePrioritizer</h2>
+<p>
+    @Resource.PrioritizerDescription
+</p>
+@using (Html.BeginForm())
+{
+    @Html.AntiForgeryToken()
+    <table>
+        @for (int i = 0; i < Model.Items.Count; i++)
+        {
+            <tr>
+                <td style="text-align: right;">
+                    @Html.HiddenFor(m => m.Items[i].First.Id)
+                    @Html.ActionLink(Model.Items[i].First.Subject, MVC.Idea.Details(Model.Items[i].First.Id, Model.Items[i].First.Subject.ToSeoUrl(), null), new { target = "_blank" })
+                </td>
+                <td>
+                    @Html.RadioButtonFor(m => m.Items[i].SelectedId, Model.Items[i].First.Id, new Dictionary<string, object>(){{"class", "VoteButton"}})
+                </td>
+                <td>
+                    @Html.RadioButtonFor(m => m.Items[i].SelectedId, Model.Items[i].Second.Id, new Dictionary<string, object>(){{"class", "VoteButton"}})
+                </td>
+                <td>
+                    @Html.HiddenFor(m => m.Items[i].Second.Id)
+                    @Html.ActionLink(Model.Items[i].Second.Subject, MVC.Idea.Details(Model.Items[i].Second.Id, Model.Items[i].Second.Subject.ToSeoUrl(), null), new { target = "_blank" })
+                </td>
+            </tr>
+        }
+    </table>
+    <br />
+    <div style="text-align: center;">
+        @Html.Buttons()
+        @Html.ActionLink(Resource.Results, MVC.Idea.PrioritizerResults())
+    </div>
+}

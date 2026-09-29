@@ -1,0 +1,37 @@
+﻿@model Data.ViewModels.Idea.IdeaIndexItemModel
+@using Framework.Mvc.Strings
+@using Framework.Strings
+@using Globalization.Resources.Idea
+@using Globalization.Resources.Shared
+@using Web.Helpers
+@{ var idea = Model; }
+<h4 class="type-title" style="text-transform: none;">
+    @Html.ActionLink(idea.Subject.HtmlDecode(), MVC.Idea.Details(idea.Id, idea.Subject.ToSeoUrl(), null), new Dictionary<string, object>() { { "class", "" } })
+    <a class="btn btn-plain btn-sm text-muted" href="@Url.Action(MVC.Idea.Details(idea.Id, idea.Subject.ToSeoUrl(), null))"><i data-icon="c"></i><span class="title">@idea.CommentsCount</span></a>
+    @if (idea.Progress == null)
+    {
+        <a class="btn btn-plain btn-sm text-muted" href="@Url.Action(MVC.Idea.Details(idea.Id, idea.Subject.ToSeoUrl(), null))"><i data-icon="l"></i><span class="title">@idea.TotalSupporters</span></a>
+    }
+</h4>
+@*<p>
+        @idea.Text
+    </p>*@
+@if (idea.Progress != null)
+{
+    <div data-role="unique-voting" class="clearfix margin w100p">
+        <div data-role="votebutton" class="sign-title w30p">
+            @Html.Button(new ButtonHelperModel()
+                                   {
+                                       CssClass = "btn btn-sm btn-success VoteButton w100p",
+                                       Href = Url.Action(MVC.Idea.Vote(idea.Id, null)),
+                                       Type = ButtonHelperModel.Types.Link,
+                                       Text = idea.SupportedByCurrentUser ? SharedStrings.ThankYou + "!" : Resource.Sign,
+                                       ImageUrl = null,
+                                       Disabled = idea.SupportedByCurrentUser || idea.IsClosed,
+                                       HtmlAttributes = new Dictionary<string, object> { { "data-id", idea.Id }, { "data-private", idea.IsPrivate ? "true" : "false" }, { "data-role", "vote" } }
+                                   })
+        </div>
+        @Html.Partial(MVC.Idea.Views.Progress, idea.Progress)
+    </div>
+}
+<hr />

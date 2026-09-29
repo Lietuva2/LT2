@@ -1,0 +1,27 @@
+﻿@model Data.ViewModels.NewsFeed.NewsFeedIndexModel
+@using Globalization.Resources.NewsFeed
+@using Globalization.Resources.Shared
+@using Globalization.Resources.Shared;
+@using Globalization.Resources.NewsFeed;
+@using Framework.Lists
+@using Services.Enums
+@using Web.Helpers
+
+<ul id="list" class="feed_list">
+    @if(Model.List.List.Any())
+    {
+        @Html.Partial(MVC.NewsFeed.Views.List, Model.List.List)
+    }
+    else
+    {
+        <li>
+            <p>
+                @Html.Raw(string.Format(Resource.Welcome, Html.ActionLink(Resource.Suggestions, MVC.Idea.Index()), Html.ActionLink(Resource.Ideas, MVC.Idea.Create()), Html.ActionLink(Resource.Issues, MVC.Voting.Index()), Html.RouteLink(Resource.AllNews, "AllNewsFeed")))
+            </p>
+        </li>
+    }
+</ul>
+@if (Model.List.HasMoreElements)
+{
+    @Html.ActionLink(SharedStrings.More, MVC.NewsFeed.GetNextPage(0, (NewsFeedListViews)ViewData["NewsFeedListView"]), new { id = "lnkShowMore" })
+}

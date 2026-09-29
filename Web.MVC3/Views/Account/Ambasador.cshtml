@@ -1,0 +1,97 @@
+﻿@using Globalization.Resources.Account
+@using Globalization.Resources.Shared
+@using Web.Helpers;
+@using Framework.Strings;
+@{
+    ViewBag.Title = "Ambasadoriaus teisės ir pareigos";
+}
+@section Head
+{
+    <style type="text/css">
+        p {
+            font-weight: bold;
+        }
+    </style>
+}
+@section Scripts
+{
+    
+    <script type="text/javascript">
+        function onPageLoad() {
+            $('button[type="submit"]').on('click', function (e) {
+                var form = $('form');
+                $.helpers.facebookLogin(function () {
+                    FB.api('/me/permissions', function (response) {
+                        if (response && response.data && response.data.length) {
+                            var permissions = response.data.shift();
+                            if (permissions.publish_stream) {
+                                form.submit();
+                            }
+                        }
+                    });
+                }, true, true);
+                
+                return $.helpers.cancelEvent(e);
+            });
+        }
+    </script>
+}
+<h2 class="heading">Lietuva 2.0 ambasadoriaus teisės ir pareigos</h2>
+<div>
+    <p>
+        Aš, @ViewBag.CurrentUser.FullName, tapdamas Lietuva 2.0 ambasadoriumi, įsipareigoju:
+    </p>
+    <ul>
+        <li>
+            Visomis išgalėmis skleisti gerąją žinią apie portalą Lietuva 2.0 savo draugams ir pažįstamiems, kuriems tai galėtų būti įdomu;
+        </li>
+        <li>
+            Suteikti leidimą portalui Lietuva 2.0 automatiniu būdu skelbti mano socialinių tinklų sienose informaciją apie mano sukurtus pasiūlymus/balsavimus, taip pat kitų piliečių pateiktus pasiūlymus, kuriuos aš palaikau, bei balsavimus, dėl kurių aš pareiškiau savo nuomonę;
+        </li>
+    </ul>
+    <p>
+        Atsidėkodama už aktyvią viešinimo veiklą, VšĮ LT2.0 įsipareigoja:
+    </p>
+    <ul>
+        <li>
+            Suteikti Jums garbingą ambasadoriaus apdovanojimą, kuris bus matomas Jūsų asmeniniame puslapyje visą laiką, kol būsite ambasadoriumi;
+        </li>
+        <li>
+            Ypatingomis progomis apdovanoti aktyviausius ambasadorius prizais, LT2.0 atributika;
+        </li>
+        <li>
+            Suteikti asmeninius kvietimus į VšĮ LT2.0 organizuojamus renginius;
+        </li>
+        <li>
+            Aktyviausius ambasadorius pakviesti tapti VšĮ LT2.0 dalininkais;
+        </li>
+    </ul>
+    <p>
+        Ambasadoriaus teisės:
+    </p>
+    <ul>
+        <li>
+            Nevaržomai naudotis ambasadoriaus titulu, prisistatinėti ir pasirašinėti Lietuva 2.0 ambasadoriumi visą buvimo ambasadoriumi laiką;
+        </li>
+        <li>
+            Dalyvauti vystant portalą <a href="https://www.lietuva2.lt">www.lietuva2.lt</a>, teikti pasiūlymus jo tobulinimui;
+        </li>
+        <li>
+            Bet kuriuo metu vienašališkai atsisakyti būti ambasadoriumi.
+        </li>
+    </ul>
+    <p>
+        VšĮ LT2.0 teisės:
+    </p>
+    <ul>
+        <li>
+            Vienašališkai atimti ambasadoriaus statusą, asmeniui sąmoningai kenkiant, nesilaikant www.lietuva2.lt <a target="_blank" href="https://docs.google.com/a/lietuva2.lt/document/d/1jJC5saB9x7T9JCkpJlBnHhGkOXP_gse0eMUsPCo9WJU/edit">naudojimo taisyklių</a>
+            ar atstovaujant su <a target="_blank" href="@Url.Content("~/LT2_istatai.doc")">VšĮ LT2.0 įstatais</a> nesuderinamus interesus.
+        </li>
+    </ul>
+</div>
+@using (Html.BeginForm())
+{
+    string fullname = ViewBag.CurrentUser.FullName;
+    @Html.Buttons(2, Url.Action(MVC.Account.Details((string)ViewBag.CurrentUser.Id, fullname.ToSeoUrl(), null)), SharedStrings.Agree)
+}

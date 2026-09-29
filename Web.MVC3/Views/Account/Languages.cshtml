@@ -1,0 +1,9 @@
+﻿@model List<Data.ViewModels.Account.LanguageModel>
+<ul>
+@foreach(var lang in Model)
+{
+   <li class="@(lang.IsSelected ? "selected" : string.Empty)">
+        <a href="@Url.Action("ChangeLanguage", "Account", new { code = lang.Code, returnTo = ViewBag.ReturnTo })">@lang.Name</a>
+   </li>
+}
+</ul>

@@ -1,0 +1,77 @@
+﻿@model Data.ViewModels.Organization.InfoEditModel
+@using Globalization.Resources.Organization
+@using Globalization.Resources.Shared
+@using Web.Helpers
+<fieldset>
+    <div class="uiHeader">
+        <span>@Resource.InfoLegend</span>
+    </div>
+    @using (Html.BeginForm(MVC.Organization.SaveInfo()))
+    {
+        @Html.AntiForgeryToken()
+        @Html.HiddenFor(m => m.ObjectId)
+        <table class="tbl_data tbl_edit">
+            <tbody>
+                <tr>
+                    <th class="lbl">@Resource.Name
+                    </th>
+                    <td class="data">@Html.TextBoxFor(m => m.Name)
+                        @Html.ValidationMessageFor(model => model.Name)
+                    </td>
+                </tr>
+                <tr>
+                    <th class="lbl">@Resource.Type
+                    </th>
+                    <td class="data">@Html.DropDownListFor(m => m.Type, Model.Types)
+                        @Html.ValidationMessageFor(model => model.Name)
+                    </td>
+                </tr>
+                <tr>
+                    <th class="lbl">@Resource.Description
+                    </th>
+                    <td class="data">
+                        @Html.TextAreaFor(m => m.Description, new { @class = "txt_xl", maxTextLength=1000 })
+                        @Html.ValidationMessageFor(model => model.Description)
+                    </td>
+                </tr>
+                <tr>
+                    <th class="lbl">@Resource.Vision
+                    </th>
+                   <td class="data">
+                        @Html.TextAreaFor(m => m.Vision, new { @class = "txt_xl", maxTextLength=1000 })
+                        @Html.ValidationMessageFor(model => model.Vision)
+                    </td>
+                </tr>
+                <tr>
+                    <th class="lbl">@Resource.Mission
+                    </th>
+                    <td class="data">
+                        @Html.TextAreaFor(m => m.Mission, new { @class = "txt_xl", maxTextLength=1000 })
+                        @Html.ValidationMessageFor(model => model.Mission)
+                    </td>
+                </tr>
+                <tr>
+                    <th class="lbl">@Resource.Goals
+                    </th>
+                   <td class="data">
+                        @Html.TextAreaFor(m => m.Goals, new { @class = "txt_xl", maxTextLength=1000 })
+                        @Html.ValidationMessageFor(model => model.Goals)
+                    </td>
+                </tr>
+                <tr>
+                    <th class="lbl">@Resource.FoundedOn
+                    </th>
+                    <td class="data">@Html.EditorFor(m => m.FoundedOn)
+                    </td>
+                </tr>
+                <tr>
+                    <th>
+                    </th>
+                    <td class="actions data">
+                        @Html.Buttons(2, Url.Action(MVC.Organization.Info(Model.ObjectId)))
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+    }
+</fieldset>

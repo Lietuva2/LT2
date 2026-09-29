@@ -1,0 +1,49 @@
+﻿@model Data.ViewModels.Comments.CommentView
+@using Globalization.Resources.Comments
+@using Web.Helpers;
+@using Framework.Strings;
+<div data-role="deleteContainer" class="commentComment">
+    @if (Model.IsCreatedByCurrentUser)
+    {
+        <div data-role="delete" style="position: absolute; right: 0px; display: none;">
+            <a href="@Url.Action("DeleteCommentComment", Html.GetControllerNameByEntryType(Model.EntryType), new RouteValueDictionary() { { "id", Model.EntryId }, { "commentId", Model.ParentId }, { "commentCommentId", Model.Id } })">
+                <img src="@Links.Content.Images.cross_png" />
+            </a>
+        </div>
+    }
+    @{
+        var authorUrl = Url.ActionWithReturnUrl(MVC.Account.Details(Model.AuthorObjectId, Model.AuthorFullName.ToSeoUrl(), null));
+        var link = "<a href='" + authorUrl + "'>" + Model.AuthorFullName + "</a>: ";
+    }
+    <a href="@authorUrl">
+        <img alt="" src='@Url.Action(MVC.File.GetUserPicture(Model.ProfilePictureThumbId))' class="thumb" />
+    </a>
+    <div class="comment_container">
+        <div class="comment_body">
+            @{Html.RenderPartial(MVC.Shared.Views.ExpandableTextSmall, link + Model.CommentText);}
+        </div>
+        @if (Model.Embed != null)
+        {
+            @Html.Partial(MVC.Shared.Views.Embed, Model.Embed)
+        }
+        <div class="m_list_d">
+            <span class="comment_number">@Model.Number</span>
+            @Model.CommentDateString
+            @if (Model.EntryId == ViewBag.CurrentUser.Id)
+            {
+                if (!Model.IsHidden)
+                {
+                @Html.ActionLink(Resource.Hide, "HideComment", Html.GetControllerNameByEntryType(Model.EntryType), new RouteValueDictionary { { "id", Model.EntryId }, { "commentId", Model.Id }, { "parentId", Model.ParentId } }, new Dictionary<string, object>() { { "data-role", "show-hide-text" } })
+                }
+                else
+                {
+                @Html.ActionLink(Resource.Show, "ShowComment", Html.GetControllerNameByEntryType(Model.EntryType), new RouteValueDictionary { { "id", Model.EntryId }, { "commentId", Model.Id }, { "parentId", Model.ParentId } }, new Dictionary<string, object>() { { "data-role", "show-hide-text" } })
+                }
+            }
+            <div class="fr likeContainer">
+                @{Html.RenderPartial(MVC.Comments.Views.Like, Model.Liking);}
+            </div>
+        </div>
+    </div>
+    <div class="clear"></div>
+</div>

@@ -1,0 +1,13 @@
+﻿@model Data.ViewModels.Project.JoinProjectModel
+@using Globalization.Resources.Project
+@using Globalization.Resources.Project;
+@using Web.Helpers
+@if (Model.IsJoinable)
+{
+    using (Html.BeginForm(MVC.Idea.JoinIdeaRealization(Model.IdeaId), FormMethod.Post))
+    {
+        @Html.AntiForgeryToken();
+        @Html.Buttons(id:"btnJoin",saveText:Resource.Join)
+    }
+    <div class="clear"></div>
+}

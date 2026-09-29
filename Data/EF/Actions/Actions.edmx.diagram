@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="utf-8"?>
+<edmx:Edmx Version="3.0" xmlns:edmx="http://schemas.microsoft.com/ado/2009/11/edmx">
+ <!-- EF Designer content (DO NOT EDIT MANUALLY BELOW HERE) -->
+  <edmx:Designer xmlns="http://schemas.microsoft.com/ado/2009/11/edmx">
+    <!-- Diagram content (shape and connector positions) -->
+    <edmx:Diagrams>
+      <Diagram DiagramId="d0fe145358bc48148fd95a6cf97921bc" Name="Diagram1" ZoomLevel="55">
+        <EntityTypeShape EntityType="ActionsModel.ActionType" Width="1.5" PointX="6.4639222279488688" PointY="11.220039343098197" />
+        <EntityTypeShape EntityType="ActionsModel.Category" Width="1.5" PointX="8.994553359688517" PointY="20.494623014933719" />
+        <EntityTypeShape EntityType="ActionsModel.Categories_Translation" Width="1.5" PointX="7.1791343741021745" PointY="3.0356425806114649" />
+        <EntityTypeShape EntityType="ActionsModel.InterestingCategory" Width="1.5" PointX="3.2703186475067949" PointY="13.821676692842356" />
+        <EntityTypeShape EntityType="ActionsModel.Message" Width="1.5" PointX="2.0936284726921603" PointY="7.8965956009442895" />
+        <EntityTypeShape EntityType="ActionsModel.Notification" Width="1.5" PointX="2.2898854381823379" PointY="23.213609631738443" />
+        <EntityTypeShape EntityType="ActionsModel.Subscribtion" Width="1.5" PointX="4.2597639450150373" PointY="31.210462942351803" />
+        <EntityTypeShape EntityType="ActionsModel.UserInterestingOrganization" Width="1.5" PointX="8.81592807397988" PointY="23.501438151812849" />
+        <EntityTypeShape EntityType="ActionsModel.UserInterestingUser" Width="1.5" PointX="4.1037515141553023" PointY="17.040511332936823" />
+        <EntityTypeShape EntityType="ActionsModel.ActionView" Width="1.5" PointX="7.50923447474336" PointY="8.6139151345071916" />
+        <EntityTypeShape EntityType="ActionsModel.OrganizationActionView" Width="1.5" PointX="1.7610475969319452" PointY="19.295268738314167" />
+        <AssociationConnector Association="ActionsModel.FK_Categories_Translation_Categories" />
+        <AssociationConnector Association="ActionsModel.FK_InterestingCategoriesCategories" />
+        <EntityTypeShape EntityType="ActionsModel.Action" Width="1.5" PointX="3.3970097058438742" PointY="11.331497912915189" />
+        <AssociationConnector Association="ActionsModel.FK_ActionNotification" />
+        <AssociationConnector Association="ActionsModel.FK_ActionTypeAction" />
+        <EntityTypeShape EntityType="ActionsModel.ActionCategory" Width="1.5" PointX="11.25" PointY="16" />
+        <AssociationConnector Association="ActionsModel.FK_ActionCategories_Actions" />
+        <AssociationConnector Association="ActionsModel.FK_ActionCategories_Categories" />
+      </Diagram>
+    </edmx:Diagrams>
+  </edmx:Designer>
+</edmx:Edmx>

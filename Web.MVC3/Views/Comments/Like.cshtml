@@ -1,0 +1,18 @@
+﻿@model Data.ViewModels.Comments.Liking
+@using Data.Enums
+@using Globalization.Resources.Comments
+@using Globalization.Resources.Shared
+@using Web.Helpers
+<div class="liking">
+    <span class="likeCount"><a class="lnkUsers" href="@Url.Action(MVC.Common.GetCommentSupporters(Model.EntryId, Model.CommentId, Model.Type, Model.ParentId))">@Model.LikesCount</a>
+    </span>
+    @if (Model.IsLikeVisible)
+    { <span style="position: relative; bottom: 3px;"> . </span>
+        <a href="@Url.Action("LikeComment", Html.GetControllerNameByEntryType(Model.Type), new RouteValueDictionary { { "EntryId", Model.EntryId } })" commentid='@Model.CommentId' entryId='@Model.EntryId' parentId='@Model.ParentId' class="like">@SharedStrings.Like</a>
+    }
+    @if (Model.IsUnlikeVisible)
+    {
+        <span class='likedComment'><span style="position: relative; bottom: 3px;"> . </span> <a href="@Url.Action("UndoLikeComment", Html.GetControllerNameByEntryType(Model.Type), new RouteValueDictionary() {{"EntryId", Model.EntryId}})" commentid='@Model.CommentId' parentId='@Model.ParentId' entryId='@Model.EntryId' class="undoLike">@Resource.UndoLikeComment</a>
+        </span>
+    }
+</div>

@@ -1,0 +1,225 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+	<!-- 
+    Microsoft ResX Schema 
+    
+    Version 2.0
+    
+    The primary goals of this format is to allow a simple XML format 
+    that is mostly human readable. The generation and parsing of the 
+    various data types are done through the TypeConverter classes 
+    associated with the data types.
+    
+    Example:
+    
+    ... ado.net/XML headers & schema ...
+    <resheader name="resmimetype">text/microsoft-resx</resheader>
+    <resheader name="version">2.0</resheader>
+    <resheader name="reader">System.Resources.ResXResourceReader, System.Windows.Forms, ...</resheader>
+    <resheader name="writer">System.Resources.ResXResourceWriter, System.Windows.Forms, ...</resheader>
+    <data name="Name1"><value>this is my long string</value><comment>this is a comment</comment></data>
+    <data name="Color1" type="System.Drawing.Color, System.Drawing">Blue</data>
+    <data name="Bitmap1" mimetype="application/x-microsoft.net.object.binary.base64">
+        <value>[base64 mime encoded serialized .NET Framework object]</value>
+    </data>
+    <data name="Icon1" type="System.Drawing.Icon, System.Drawing" mimetype="application/x-microsoft.net.object.bytearray.base64">
+        <value>[base64 mime encoded string representing a byte array form of the .NET Framework object]</value>
+        <comment>This is a comment</comment>
+    </data>
+                
+    There are any number of "resheader" rows that contain simple 
+    name/value pairs.
+    
+    Each data row contains a name, and value. The row also contains a 
+    type or mimetype. Type corresponds to a .NET class that support 
+    text/value conversion through the TypeConverter architecture. 
+    Classes that don't support this are serialized and stored with the 
+    mimetype set.
+    
+    The mimetype is used for serialized objects, and tells the 
+    ResXResourceReader how to depersist the object. This is currently not 
+    extensible. For a given mimetype the value must be set accordingly:
+    
+    Note - application/x-microsoft.net.object.binary.base64 is the format 
+    that the ResXResourceWriter will generate, however the reader can 
+    read any of the formats listed below.
+    
+    mimetype: application/x-microsoft.net.object.binary.base64
+    value   : The object must be serialized with 
+            : System.Runtime.Serialization.Formatters.Binary.BinaryFormatter
+            : and then encoded with base64 encoding.
+    
+    mimetype: application/x-microsoft.net.object.soap.base64
+    value   : The object must be serialized with 
+            : System.Runtime.Serialization.Formatters.Soap.SoapFormatter
+            : and then encoded with base64 encoding.
+
+    mimetype: application/x-microsoft.net.object.bytearray.base64
+    value   : The object must be serialized into a byte array 
+            : using a System.ComponentModel.TypeConverter
+            : and then encoded with base64 encoding.
+    -->
+	<xsd:schema id="root" xmlns="" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:msdata="urn:schemas-microsoft-com:xml-msdata">
+		<xsd:import namespace="http://www.w3.org/XML/1998/namespace" />
+		<xsd:element name="root" msdata:IsDataSet="true">
+			<xsd:complexType>
+				<xsd:choice maxOccurs="unbounded">
+					<xsd:element name="metadata">
+						<xsd:complexType>
+							<xsd:sequence>
+								<xsd:element name="value" type="xsd:string" minOccurs="0" />
+							</xsd:sequence>
+							<xsd:attribute name="name" use="required" type="xsd:string" />
+							<xsd:attribute name="type" type="xsd:string" />
+							<xsd:attribute name="mimetype" type="xsd:string" />
+							<xsd:attribute ref="xml:space" />
+						</xsd:complexType>
+					</xsd:element>
+					<xsd:element name="assembly">
+						<xsd:complexType>
+							<xsd:attribute name="alias" type="xsd:string" />
+							<xsd:attribute name="name" type="xsd:string" />
+						</xsd:complexType>
+					</xsd:element>
+					<xsd:element name="data">
+						<xsd:complexType>
+							<xsd:sequence>
+								<xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+								<xsd:element name="comment" type="xsd:string" minOccurs="0" msdata:Ordinal="2" />
+							</xsd:sequence>
+							<xsd:attribute name="name" type="xsd:string" use="required" msdata:Ordinal="1" />
+							<xsd:attribute name="type" type="xsd:string" msdata:Ordinal="3" />
+							<xsd:attribute name="mimetype" type="xsd:string" msdata:Ordinal="4" />
+							<xsd:attribute ref="xml:space" />
+						</xsd:complexType>
+					</xsd:element>
+					<xsd:element name="resheader">
+						<xsd:complexType>
+							<xsd:sequence>
+								<xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+							</xsd:sequence>
+							<xsd:attribute name="name" type="xsd:string" use="required" />
+						</xsd:complexType>
+					</xsd:element>
+				</xsd:choice>
+			</xsd:complexType>
+		</xsd:element>
+	</xsd:schema>
+	<resheader name="resmimetype">
+		<value>text/microsoft-resx</value>
+	</resheader>
+	<resheader name="version">
+		<value>2.0</value>
+	</resheader>
+	<resheader name="reader">
+		<value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+	</resheader>
+	<resheader name="writer">
+		<value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+	</resheader>
+	<data name="Categories" xml:space="preserve">
+    <value>Rodomos kategorijos</value>
+  </data>
+	<data name="Comment" xml:space="preserve">
+    <value>Komentuoti</value>
+  </data>
+	<data name="CommentsCount" xml:space="preserve">
+    <value>Komentarai</value>
+  </data>
+	<data name="Create" xml:space="preserve">
+    <value>Įtraukti naują</value>
+  </data>
+	<data name="CreateIdea" xml:space="preserve">
+    <value>Sukurti pasiūlymą</value>
+  </data>
+	<data name="CreateIssue" xml:space="preserve">
+    <value>Aprašyti balsavimą</value>
+  </data>
+	<data name="CreateTooltip" xml:space="preserve">
+    <value>Aprašyti naują balsavimą</value>
+  </data>
+	<data name="Downvote" xml:space="preserve">
+    <value>Neaktualu</value>
+  </data>
+	<data name="EnterComment" xml:space="preserve">
+    <value>Įveskite komentarą</value>
+  </data>
+	<data name="EnterProbelm" xml:space="preserve">
+    <value>Įveskite tekstą</value>
+  </data>
+	<data name="Expand" xml:space="preserve">
+    <value>Išskleisti</value>
+  </data>
+	<data name="FilterInteresting" xml:space="preserve">
+    <value>Aktualūs</value>
+  </data>
+	<data name="FilterLocal" xml:space="preserve">
+    <value>Mano miestai</value>
+  </data>
+	<data name="FilterOther" xml:space="preserve">
+    <value>Kiti</value>
+  </data>
+	<data name="FilterSubscribed" xml:space="preserve">
+    <value>Sekami</value>
+  </data>
+	<data name="MoreComments" xml:space="preserve">
+    <value>Daugiau komentarų</value>
+  </data>
+	<data name="MunicipalityIdHelp" xml:space="preserve">
+    <value>Pažymėkite, ar šis pasisakymas yra nacionalinio masto, ar skirtas konkrečiai savivaldybei?</value>
+  </data>
+	<data name="NoProblems" xml:space="preserve">
+    <value>Pasisakymų pagal pasirinktus nustatymus nėra</value>
+  </data>
+	<data name="OfferSolution" xml:space="preserve">
+    <value>Pasiūlyti sprendimą</value>
+  </data>
+	<data name="Organization" xml:space="preserve">
+    <value>Organizacija</value>
+  </data>
+	<data name="OrganizationId" xml:space="preserve">
+    <value>Kieno vardu pasisakoma?</value>
+  </data>
+	<data name="PostToFacebook" xml:space="preserve">
+    <value>Įkelti į facebook</value>
+  </data>
+	<data name="ProblemInputPlaceholder" xml:space="preserve">
+    <value>Kas vyksta?</value>
+  </data>
+	<data name="RelateIdea" xml:space="preserve">
+    <value>Susieti pasiūlymą</value>
+  </data>
+	<data name="SelectIdea" xml:space="preserve">
+    <value>Pasirinkite sprendimą</value>
+  </data>
+	<data name="SelectProblem" xml:space="preserve">
+    <value>Priskirkite pasisakymą</value>
+  </data>
+	<data name="ShowAll" xml:space="preserve">
+    <value>Rodyti visus</value>
+  </data>
+	<data name="Solutions" xml:space="preserve">
+    <value>Kaip siūloma spręsti?</value>
+  </data>
+	<data name="SortActive" xml:space="preserve">
+    <value>Aktualiausi</value>
+  </data>
+	<data name="SortNearest" xml:space="preserve">
+    <value>Naujausi</value>
+  </data>
+	<data name="TimeLeft" xml:space="preserve">
+    <value>Liko</value>
+  </data>
+	<data name="Title" xml:space="preserve">
+    <value>Pasisakymai</value>
+  </data>
+	<data name="Upvote" xml:space="preserve">
+    <value>Aktualu</value>
+  </data>
+	<data name="ViewsCount" xml:space="preserve">
+    <value>Peržiūros</value>
+  </data>
+	<data name="VotesCount" xml:space="preserve">
+    <value>Viso balsavo</value>
+  </data>
+</root>

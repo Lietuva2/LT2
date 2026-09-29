@@ -1,0 +1,557 @@
+﻿<!DOCTYPE html>
+@using System.Web
+@using System.Web.Optimization
+@using Data.ViewModels.Account
+@using Framework.Enums
+@using Globalization.Resources.Shared
+@using Globalization.Resources.About;
+@using Framework.Strings;
+@using Services.Infrastructure
+@using Web.Helpers;
+<html itemscope itemtype="http://schema.org/Article">
+<head prefix="og: http://ogp.me/ns# fb: http://ogp.me/ns/fb# lietuva: http://ogp.me/ns/fb/lietuva#">
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+    @if (!string.IsNullOrEmpty(ViewBag.Title))
+    {
+        <meta property="og:title" content="@ViewBag.Title - @(ViewBag.Municipality != null ? ViewBag.Municipality.Name + " - " : string.Empty)@CustomAppSettings.SiteName" />
+    }
+    else
+    {
+        <meta property="og:title" content="@Globalization.Resources.NewsFeed.Resource.Slogan" />
+    }
+    <meta property="og:url" content="@Url.ToAbsoluteUrl(Request.RawUrl)" />
+    <meta property="og:image" content="@Url.ToAbsoluteUrl(Links.Content.Images.lt2_200x200_png)" />
+    <meta property="og:site_name" content="Lietuva 2.0" />
+    <meta property="fb:app_id" content="204111066276450" />
+    @{ var pageDescription = ViewBag.PageDescription ?? Resource.SiteDescription; }
+    <meta name="description" content="@pageDescription" />
+    <meta itemprop="description" content="@pageDescription">
+    <meta property="og:description" content="@pageDescription" />
+
+    @if (!string.IsNullOrEmpty(ViewBag.Title))
+    {
+        <title>@ViewBag.Title - @(ViewBag.Municipality != null ? ViewBag.Municipality.Name + " - " : string.Empty)@CustomAppSettings.SiteName</title>
+    }
+    <link href="@Links.Content.CSS.print_css" rel="stylesheet" type="text/css" media="print" />
+    @Html.RegisterCommonCss()
+    <!--[if lt IE 8]><link rel="stylesheet" href="@Links.Content.CSS.ie_css" type="text/css" media="screen, projection"><![endif]-->
+    <link href='https://fonts.googleapis.com/css?family=Open+Sans:400,700&subset=latin-ext,latin' rel='stylesheet' type='text/css'>
+    @Web.Helpers.HtmlHelpers.EnableJavascriptGlobalization(Url)
+    @Scripts.Render("~/libraries/js")
+    @Html.RegisterCommonScripts()
+    @RenderSection("Head", required: false)
+    <script type="text/javascript">
+        var lt2FbPageId = '@System.Configuration.ConfigurationManager.AppSettings["FbPageId"]';
+        (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+            (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+            m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+        })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+
+        ga('create', 'UA-266484-11', 'auto');
+        ga('send', 'pageview');
+    </script>
+</head>
+<body>
+    <div id="fb-root">
+    </div>
+    @*@if (HttpContext.Current.IsDebuggingEnabled)
+        {
+            @Html.Partial(MVC.Shared.Views._ViewSwitcher)
+        }*@
+    <div class="background_green">
+        <div id="header" class="container">
+            <div class="span-4 posrel">
+                <h1 style="float: left;">
+                    <a href='@Url.Action(MVC.NewsFeed.Default())'>
+                        <img src="@Links.Content.Images.logo_png" style="margin-top: -4px; margin-left: 4px;" alt="Lietuva 2.0" />
+                    </a>
+                </h1>
+
+                <div class="municipalityTitle">
+                    <a href="@Url.Action(MVC.Address.GetAllMunicipalities(Request.RawUrl))" id="lnkChangeMunicipality" data-title="@Resource.SelectMunicipality">@(ViewBag.Municipality != null ? ViewBag.Municipality.Name : "Lietuva")</a>
+                </div>
+            </div>
+            @if (ViewBag.FilteredCategoryIds == null)
+            {
+                <div class="search span-10">
+                    @using (Html.BeginForm(MVC.Search.Search(), FormMethod.Get, new {@class = "form-inline"}))
+                    {
+                        <input type="text" id="searchText" name="searchText" class="noFocus" placeholder="@Globalization.Resources.Search.Resource.EnterKeywords" />
+                        <a class="btn btn-plain" href="#" onclick=" $(this).parents('form').submit(); ">
+                            <i data-icon="s" alt="@Globalization.Resources.Search.Resource.Search" title="@Globalization.Resources.Search.Resource.Search"></i>
+                        </a>
+                    }
+                </div>
+            }
+            else
+            {
+                <div class="span-10">&nbsp;</div>
+            }
+            <div class="span-10 last header">
+                <div class="global_links">
+                    <a class="btn btn-plain btn-toggleMenu"><i data-icon="m"></i></a>
+                    @if (ViewBag.IsAuthenticated != null)
+                    {
+                        var url = (Request.RawUrl.Contains("/login") ? Request.QueryString["returnUrl"] : Request.RawUrl);
+                        if (!ViewBag.IsAuthenticated)
+                        {
+                            if (ViewBag.CurrentUser.IsUnique)
+                            {
+                                @Html.ActionLink(Globalization.Resources.Account.Resource.Logout, MVC.Account.Logout(), new { @class = "btn btn-plain" })
+                                <a class="btn btn-plain profile" href="@Url.Action(MVC.Account.Login(url))">@ViewBag.CurrentUser.FullName</a>
+                            }
+                            else
+                            {
+                                @Html.ActionLink(Globalization.Resources.Account.Resource.Login, MVC.Account.Login(url))
+                            }
+                        }
+                        else
+                        {
+                            @Html.ActionLink(Globalization.Resources.Account.Resource.Logout, MVC.Account.Logout(), new Dictionary<string, object>() { { "id", "lnkLogOut" } })
+                            <a class="profile" href="@Url.Action(MVC.Account.ActionNames.Details, MVC.Account.Name, new RouteValueDictionary { { "userObjectId", ViewBag.CurrentUser.Id }, { "fullName", Framework.Strings.StringExtensions.ToSeoUrl(ViewBag.CurrentUser.FullName) } })">@ViewBag.CurrentUser.FullName</a>
+                        }
+                        <a href="@Url.Action(MVC.Account.GetLanguages(Request.RawUrl))" id="lnkChangeLanguage" data-title="@Globalization.Resources.Account.Resource.ChooseLanguage">@ViewBag.LanguageName</a>
+                    }
+                    <span id="email">
+                        <a id="lnkContactUs" class="ContactUs" href="?#" title="@Globalization.Resources.Account.Resource.ContactUs">
+                            <img src="@Links.Content.Images.email_png" alt="@Globalization.Resources.Account.Resource.ContactUs" />
+                        </a>
+                    </span>
+                </div>
+            </div>
+        </div>
+    </div>
+    @if (ViewBag.FilteredCategoryIds == null)
+    {
+        <div class="donate">
+            @Html.ActionLink(Globalization.Resources.Sponsor.Resource.Donate, MVC.Sponsor.About())
+        </div>
+    }
+    <div class="background_lightgreen">
+    </div>
+    <div class="clear"></div>
+    <div class="container">
+        <div id="left_nav">
+            <div class="topOnly">
+                @using (Html.BeginForm(MVC.Search.Search(), FormMethod.Get, new { @class = "form-inline" }))
+                {
+                    <input type="text" id="searchText" name="searchText" class="noFocus" placeholder="@Globalization.Resources.Search.Resource.EnterKeywords" />
+                }
+            </div>
+            <ul class="main_nav">
+                <li>
+                    <a href='@Url.RouteUrl("MyNewsFeed")'>
+                        <img class="menuIcon" src='@Links.Content.Images.menu_icons_newsfeed_png' alt='@Menu.NewsFeed' />@Menu.NewsFeed</a>
+                    <span id="unreadNewsCount" class="highlight @(Session["UnreadNewsCount"] == null ? "hide" : "")">@Session["UnreadNewsCount"]</span>
+                </li>
+                @if (ViewBag.FilteredCategoryIds == null)
+                {
+                    <li>
+                        <a href='@Url.Action(MVC.Problem.Index())'>
+                            <img class="menuIcon" src='@Links.Content.Images.menu_icons_problems_png' alt='@Menu.Problem' />@Menu.Problem</a>
+                    </li>
+                }
+                <li>
+                    @if (ViewBag.IsAuthenticated != null && ViewBag.IsAuthenticated)
+                    {
+                        <a class="menuAdd" href="@Url.Action(MVC.Idea.Create())">+</a>
+                    }
+                    <a href='@Url.Action(MVC.Idea.Index())'>
+                        <img class="menuIcon" src='@Links.Content.Images.menu_icons_ideas_png' alt='@Menu.Ideas' />@Menu.Ideas</a>
+                </li>
+                <li>
+                    @if (ViewBag.IsAuthenticated != null && ViewBag.IsAuthenticated)
+                    {
+                        <a class="menuAdd" href="@Url.Action(MVC.Voting.Create())">+</a>
+                    }
+                    <a href='@Url.Action(MVC.Voting.Index())'>
+                        <img class="menuIcon" src='@Links.Content.Images.menu_icons_voting_png' alt='@Menu.Issues' />@Menu.Issues</a>
+                </li>
+                @if (ViewBag.FilteredCategoryIds == null)
+                {
+                    <li>
+                        <a href='@Url.Action(MVC.Organization.Index())'>
+                            <img class="menuIcon" src='@Links.Content.Images.menu_icons_orgs_png' alt='@Menu.Organizations' />@Menu.Organizations</a>
+                    </li>
+
+                    <li>
+                        <a target="_blank" href='http://blog.lietuva2.lt'>
+                            <img class="menuIcon" src='@Links.Content.Images.menu_icons_blog_png' alt='@Menu.Blog' />@Menu.Blog</a>
+                    </li>
+                    <li>
+                        <a href='@Url.Action(MVC.Chat.Index())'>
+                            <img class="menuIcon" src='@Links.Content.Images.chat_ico_png' alt='@Menu.Chat' />@Menu.Chat
+                        </a>
+                    </li>
+                    <li>
+                        <a href='@Url.Action(MVC.About.About())'>
+                            <img class="menuIcon" src='@Links.Content.Images.menu_icons_about_png' alt='@Menu.About' />@Menu.About
+                        </a>
+                    </li>
+                }
+               
+            </ul>
+            @if (ViewBag.CurrentUser.OrganizationIds.Count > 0 && ViewBag.FilteredCategoryIds == null)
+            {
+                <h3>@Menu.Organizations</h3>
+                <ul class="org_nav">
+                    @foreach (var org in ViewBag.CurrentUser.Organizations)
+                    {
+                        if (org.IsMember)
+                        {
+                        <li>
+                            <a class="ellipsis" href='@Url.Action("Details", "Organization", new RouteValueDictionary() { { "objectId", org.OrganizationId }, { "name", Framework.Strings.StringExtensions.ToSeoUrl(org.OrganizationName) } })' title="@Framework.Mvc.Strings.StringExtensions.HtmlDecode(org.OrganizationName)">
+                                <img class="menuIcon" src='@Links.Content.Images.menu_icons_orgs_png' alt='@org.OrganizationName' />@org.OrganizationName
+                            </a>
+                        </li>
+                        }
+                    }
+                </ul>
+            }
+            @if (ViewBag.FilteredCategoryIds == null)
+            {
+                <div id="chat" class="hide">
+                    <div id="groupChat" class="chatgroup">
+                        <div data-action='groupchat' data-chatid='@ViewContext.RouteData.Values["id"]' data-chatname='@ViewBag.GroupChatTitle'>
+                            @Html.Button(new ButtonHelperModel() {ImageUrl = Links.Content.Images.chat_ico_png, Text = Globalization.Resources.Chat.Resource.StartChat})
+                            @Html.Partial(MVC.Shared.Views._Help, Globalization.Resources.Chat.Resource.GroupChatTip)
+                            <div class="clear"></div>
+                        </div>
+                    </div>
+                    <div class="chatgroup">
+                        <div class="chatHeader">
+                            <div class="fl">
+                                <img src="@Links.Content.Images.user_ico_png" />
+                                @Globalization.Resources.Chat.Resource.OnlineUsers
+                            </div>
+                            @Html.Partial(MVC.Shared.Views._Help, Globalization.Resources.Chat.Resource.ChatTip)
+                            <div class="clear"></div>
+                        </div>
+                        <ul id="activeUsers"></ul>
+                    </div>
+                </div>
+                if (ViewBag.CurrentUser.FacebookPageLiked != true)
+                {
+                    <div id="fb-like-box" style="margin-left: -50px;">
+                        <div class="fb-like-box" data-href="https://www.facebook.com/lietuva2" data-width="200" data-colorscheme="light" data-show-faces="true" data-header="false" data-stream="false" data-show-border="false"></div>
+                    </div>
+                }
+            }
+            else
+            {
+                <div>
+                    Iniciatyvos partneriai:
+                </div>
+                <div>
+                    <img src="@Links.Content.Images.ZEF_logo_gif" style="width: 150px" alt="ZEF"/>
+                </div>
+                <div>
+                    <img src="@Links.Content.Images.lt2_100x100_png" alt="Lietuva 2.0" />
+                </div>
+                <div>
+                    <img src="@Links.Content.Images.pacita_logo_jpg" style="width: 150px" alt="Pacita" />
+                </div>
+            }
+        </div>
+        <div id="main" class="span-20 last">
+            <div class="in_brd page_content">
+                @{Html.RenderMessage();}
+                @if (ViewBag.CurrentUser.IsAuthenticated && (ViewBag.CurrentUser.SelectedCategoryIds == null || ViewBag.CurrentUser.SelectedCategoryIds.Count == 0) && ViewContext.RouteData.GetRequiredString("action") != "EditMyCategories" && ViewContext.RouteData.GetRequiredString("action") != "Manifest")
+                {
+                    <div id="loginMessage" class="popup">
+                        <div class="notice">
+                            @Globalization.Resources.Account.Resource.NoCategoriesSelected @Html.ActionLink(Globalization.Resources.Account.Resource.SelectCategories, MVC.Voting.EditMyCategories()).
+                        </div>
+                    </div>
+                }
+                @if (TempData["VoteSuccess"] != null)
+                {
+                    <div class="success big-text" style="width: 694px;">
+                        <p>
+                            @Globalization.Resources.Idea.Resource.SignSuccess
+                        </p>
+                        <div>
+                            @Globalization.Resources.Idea.Resource.InviteFriendsToSign
+                            <div style="margin-top: 8px;">
+                                <div class="addthis_toolbox addthis_default_style addthis_32x32_style">
+                                    <a class="addthis_button_facebook" addthis:url="@TempData["VoteSuccess"]"></a>
+                                    <a class="addthis_button_twitter" addthis:url="@TempData["VoteSuccess"]"></a>
+                                    <a class="addthis_button_google_plusone_share" addthis:url="@TempData["VoteSuccess"]"></a>
+                                    <a class="addthis_button_linkedin" addthis:url="@TempData["VoteSuccess"]"></a>
+                                    <a class="addthis_button_email" addthis:url="@TempData["VoteSuccess"]"></a>
+                                    <a class="addthis_button_compact" addthis:url="@TempData["VoteSuccess"]"></a>
+                                    <a class="addthis_counter addthis_bubble_style" addthis:url="@TempData["VoteSuccess"]"></a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                }
+                @if (ViewBag.CurrentUser.IsAuthenticated &&
+                         !ViewBag.CurrentUser.IsUnique && !Request.RawUrl.Contains("Sponsor") && ViewBag.FilteredCategoryIds == null)
+                {
+                    <script type="text/javascript">
+                        $(document).ready(function () {
+                            $('#lnkConfirmIdentity').linkdialog({
+                                dialogSelector: "#dialog-confirm-user",
+                                addCloseButton: false
+                            });
+                        });
+                    </script>
+                    <div id="confirmMessage" class="popup notice">
+
+                        @if (ViewBag.CurrentUser.RequireUniqueAuthentication)
+                        {
+                            @Globalization.Resources.Account.Resource.ConfirmIdentityRequired
+                        }
+                        else
+                        {
+                            @Globalization.Resources.Account.Resource.ConfirmIdentityReason
+                            @Html.Partial(MVC.Shared.Views._Help, Globalization.Resources.Account.Resource.ConfirmIdentityReasonTip)
+                        }
+
+                        @Html.Button(new ButtonHelperModel() { CssClass = "btn btn-default", ImageUrl = Links.Content.Images.group_key_png, Text = Globalization.Resources.Account.Resource.ConfirmIdentity, Type = ButtonHelperModel.Types.Link, Id = "lnkConfirmIdentity" })
+
+                    </div>
+                }
+                @if (!ViewBag.IsAuthenticated && ViewBag.CurrentUser.IsUnique)
+                {
+                    <div id="loginMessage" class="popup notice">
+                        @if (ViewBag.CurrentUser.IsViispConfirmed)
+                        {
+                            <div>
+                                @Globalization.Resources.Account.Resource.UniqueViispNotRegistered @Html.ActionLink(Globalization.Resources.Account.Resource.SignUp.ToLower(), MVC.Account.Login()).
+                            </div>
+                        }
+                        else
+                        {
+                            <div>
+                                @Globalization.Resources.Account.Resource.UniqueNotRegistered @Html.ActionLink(Globalization.Resources.Account.Resource.SignUp.ToLower(), MVC.Account.Login()).
+                            </div>
+                        }
+                    </div>
+                }
+                <form id="__AjaxAntiForgeryForm" action="#" method="post">@Html.AntiForgeryToken()</form>
+
+
+                @RenderBody()
+
+                @{Html.RenderPartial(MVC.Shared.Views.MailMessage);}
+                @{Html.RenderPartial(MVC.Shared.Views.Dialog);}
+                @if (!ViewBag.CurrentUser.IsUnique || !ViewBag.CurrentUser.IsConfirmedThisSession)
+                {
+                    @Html.Partial(MVC.Account.Views.ConfirmIdentity)
+                    @Html.Partial(MVC.Account.Views.ConfirmIdentityViisp)
+                }
+                @*@if (!string.IsNullOrEmpty(CustomAppSettings.ViispPid))
+                {
+                    @Html.Partial(MVC.Account.Views.ConfirmIdentityViisp)
+                }*@
+                <div class="clear"></div>
+            </div>
+        </div>
+        <div class="span-24 last">
+        </div>
+    </div>
+</body>
+<!--[if lt IE 8]><script src="http://ajax.cdnjs.com/ajax/libs/json2/20110223/json2.js" type="text/javascript"></script><![endif]-->
+@if (ViewBag.IsAuthenticated)
+{
+    if (!Request.Browser.IsMobileDevice)
+    {
+    <script src="@Links.Scripts.jquery_signalR_2_2_0_js" type="text/javascript"></script>
+    <script src="@Url.Content("~/signalr/hubs")"></script>
+    @Scripts.Render("~/chat/js");
+    }
+
+    @Html.RegisterExtraScripts()
+}
+@RenderSection("Scripts", required: false)
+<script type="text/javascript">
+    window.fbAsyncInit = function () {
+        @if (ViewBag.CurrentUser.IsAuthenticated && ViewBag.CurrentUser.ConnectedFacebookId == null && ViewBag.CurrentUser.IsConnectedToFacebook == null)
+        {
+                <text>
+        $.helpers.facebookStatusCheck('@Url.Action(MVC.Account.SetFacebookStatus())');
+        </text>
+        }
+
+        if (window.fbAsyncInitCallback) {
+            window.fbAsyncInitCallback();
+        }
+
+        @if (ViewBag.CurrentUser.FacebookPageLiked == null)
+        {
+            <text>
+        FB.getLoginStatus(function (status) {
+            if (status.status === 'connected') {
+                FB.api('/me/likes/' + lt2FbPageId, function (response) {
+                    if (response.data) {
+                        if (!$.helpers.isEmpty(response.data)) {
+                            $.helpers.loadAsync(null, '@Url.Action(MVC.Account.SetFacebookPageLiked(true))');
+                            return;
+                        }
+                    }
+                    $.helpers.loadAsync(null, '@Url.Action(MVC.Account.SetFacebookPageLiked(false))');
+                });
+            }
+            else{
+                $.helpers.loadAsync(null, '@Url.Action(MVC.Account.SetFacebookPageLiked(false))');
+            }
+        });
+        </text>
+        }
+        else if (ViewBag.CurrentUser.FacebookPageLiked == false)
+        {
+            <text>
+        FB.Event.subscribe('edge.create',
+            function(href, widget) {
+                $.helpers.loadAsync(null, '@Url.Action(MVC.Account.SetFacebookPageLiked(true))');
+            }
+            );
+        </text>
+        }
+    };
+
+    (function (d) {
+        var js, id = 'facebook-jssdk'; if (d.getElementById(id)) { return; }
+        js = d.createElement('script'); js.id = id; js.async = true;
+        js.src = "//connect.facebook.net/lt_LT/all.js#xfbml=1&appId=@(System.Configuration.ConfigurationManager.AppSettings["FbAppId"] ?? "204111066276450")";
+        d.getElementsByTagName('head')[0].appendChild(js);
+    }(document));
+
+    var isFocused = true;
+    var originalTitle = document.title + '';
+
+    $(document).ready(function () {
+        if ($.validator) {
+            $.validator.setDefaults({ errorClass: "field-validation-error" });
+        }
+
+        if ($.fn.googleDocs) {
+            $.fn.googleDocs.defaults.appId = '@CustomAppSettings.GoogleAppId';
+        }
+
+        $.helpers.settings.loaderHtml = '<span class="loader"><img alt="" src="@Links.Content.Images.ajax_loader_gif" /></span>';
+        $.helpers.settings.relativeRoot = '@Url.Content("~")';
+        $.helpers.settings.loginPopupUrl = '@Url.Action(MVC.Account.LoginPopup())';
+        $.helpers.settings.confirmPersonCodeUrl = '@Url.Action(MVC.Account.GetConfirmPersonCodeForm())';
+        $.helpers.settings.embedlyKey = '@System.Configuration.ConfigurationManager.AppSettings["EmbedlyKey"]';
+        $.helpers.settings.debug = @HttpContext.Current.IsDebuggingEnabled.ToString().ToLower();
+
+        CreateSendMessageDialog($('.ContactUs'), $('#dialog-message'), '@Url.Action(MVC.Account.SendMessage())', '@SharedStrings.SiteName', '');
+        CreateAjaxDialog($('#lnkChangeLanguage'), null, 240, 220);
+        CreateAjaxDialog($('#lnkChangeMunicipality'));
+
+        if (typeof addthis != "undefined") {
+            addthis.init();
+        }
+
+        @if (ViewBag.IsAuthenticated)
+        {
+                <text>
+        function getUnreadNewsCount() {
+            loadAsync(null, '@Url.Action(MVC.NewsFeed.GetUnreadNewsCount())', null, function(result) {
+                if (result.Count > 0) {
+                    $('#unreadNewsCount').text(result.Count).show();
+                    if(isFocused == false){
+                        setTimeout(function () {
+                            document.title = "(" + result.Count + ")" + originalTitle;
+                        }, 500);
+                    }
+                } else {
+                    $('#unreadNewsCount').hide();
+                }
+            });
+        }
+        setInterval(getUnreadNewsCount, 200000);
+        </text>
+        <text>
+        if (typeof (document.onfocusin) != 'undefined') {
+            document.onfocusin = restoreTitle;
+            document.onfocusout = onBlur;
+        }
+        else {
+            $(window).focus(restoreTitle);
+            $(window).blur(onBlur);
+        }
+
+        function restoreTitle(){
+            setTimeout(function () {
+                document.title = originalTitle;
+            }, 500);
+        }
+
+        function onBlur(e) {
+            isFocused = false;
+        }
+
+        @if (ViewBag.CurrentUser.TutorialShown == false)
+        {
+            <text>
+        $.helpers.loadAsync(null, '@Url.Action(MVC.Account.ShowTutorial())', null, function(result){
+            $('#divDialogContent').html(result.Content);
+            var dialog = $('#dialog');
+            dialog.parent().find('.ui-dialog-title').text('@Resource.TutorialVideoTitle');
+            $('#dialog').dialog({buttons:[
+                {text: "@Globalization.Resources.About.Resource.Understood",
+                    click: function () {
+                        $(this).dialog("close");
+                        $('#tutorialFrame').attr("src","");
+                    }}],
+                autoOpen: true,
+                width:700,
+                height:620
+            });
+        });
+        </text>
+        }
+
+        @if (!Request.Browser.IsMobileDevice)
+        {
+            <text>
+        $('#chat').chat({ userProfileUrl: '@Url.RouteUrlRaw("RawUser")/', myName: '@ViewBag.CurrentUser.FullName', currentUserId: '@ViewBag.CurrentUser.Id', debug: @HttpContext.Current.IsDebuggingEnabled.ToString().ToLower() });
+        $('#lnkLogOut').on('click', function(){
+            $().chat('stopAllClients');
+        });
+        </text>
+        }
+        </text>
+        }
+
+        if (typeof (onPageLoad) == 'function') {
+            onPageLoad();
+        }
+        @if (TempData["OpenConfirmIdentityDialog"] != null && (bool)TempData["OpenConfirmIdentityDialog"] == true)
+        {
+                <text>
+        $.helpers.identifyUser();
+        </text>
+        }
+        @if (TempData["OpenViispDialog"] != null && (bool)TempData["OpenViispDialog"] == true)
+        {
+                <text>
+        $.helpers.identifyUserViisp();
+        </text>
+        }
+    });
+    @if (ViewBag.CurrentUser.IsAmbasador)
+    {
+            <text>
+    $.helpers.settings.setFacebookPermissionGrantedUrl = '@Url.Action(MVC.Account.SetFacebookPermissionGranted())';
+    $.helpers.settings.setPostedToFacebookUrl = '@Url.Action(MVC.Account.SetPostedToFacebook())';
+
+    </text>
+    }
+    $('.btn-toggleMenu').on('click', function(e) {
+        $('#left_nav').toggleClass('showMenu');
+    });
+</script>
+<script type="text/javascript">
+    var addthis_config = {
+        "data_track_clickback": true,
+        ui_language: "lt",
+        services_compact: 'facebook,google_plusone_share,twitter,linkedin,email'
+    };
+</script>
+<script type="text/javascript" src="https://s7.addthis.com/js/300/addthis_widget.js#pubid=satanod&async=1"></script>
+</html>

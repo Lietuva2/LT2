@@ -1,0 +1,104 @@
+﻿@model Data.ViewModels.Project.CommentsModel
+@{
+    ViewBag.Title = Model.IdeaSubject + " -> " + Model.ToDo.Subject + " - " + Resource.PageTitleComments;
+}
+@using Data.Enums
+@using Globalization.Resources.Project
+@using Globalization.Resources.Shared
+@using Web.Helpers
+@using Globalization.Resources.Shared
+@using Globalization.Resources.Project;
+@using Framework.Strings;
+@section Head
+{
+    <style type="text/css">
+        .todoItem, .finishedTodoItem, .editToDoContainer, .mileStone, .hover .todoItem, .hover .finishedTodoItem {
+            margin-left: 0px;
+            margin-bottom: 16px;
+            }
+    </style>
+}
+@section Scripts
+{
+    @if (ViewBag.IsAuthenticated)
+    {
+        <script src="https://www.google.com/jsapi" charset="utf-8"></script>
+        <script type='text/javascript'>
+            google.load('picker', '1', { 'language': '@SharedStrings.LanguageCodeShort' });
+        </script>
+    }
+    <script type="text/javascript">
+        function onPageLoad() {
+            var form = $('#formComment');
+            $('#btnSubmit').click(function (e) {
+                if (form.valid()) {
+                    loadAsync(e, form.attr('action'),
+                        form.serialize(),
+                        function (result) {
+                            var elem = $(result.Content).appendTo($('#listComments'));
+                            $('textarea', form).val('');
+                            $('#listAttachments').html('');
+                            $(document).googleDocs('reset');
+                        });
+
+                    return cancelEvent(e);
+                }
+            });
+
+            $('#IsFinished').on('click', function (e) { loadAsync(e, $(this).attr('data-url')); });
+            $('#lnkAttachFiles').on('click', function (e) {
+                $(this).next().show();
+                $(this).hide();
+            });
+
+            $('#listComments, #listAttachments').deleteButton();
+            $('[data-role="googleDocs"]').googleDocs({ titleSelector: '#InsertComment', formSelector: '#formComment', saveTempDataUrl: '@Url.Action(MVC.Project.SaveTempModel())' });
+        }
+    </script>
+}
+<h3>
+    @Html.Raw(string.Format(Resource.ProjectTask, Html.ActionLink(Model.IdeaSubject, MVC.Project.ToDos(Model.ToDo.ProjectId))))
+</h3>
+@Html.Partial(MVC.Project.Views.ToDoItem, Model.ToDo)
+@if (!string.IsNullOrEmpty(Model.ToDo.CreatedByUserId))
+{
+    <div>@Resource.TaskCreatedBy: @Html.ActionLink(Model.ToDo.CreatedByUserFullName, MVC.Account.Details(Model.ToDo.CreatedByUserId, Model.ToDo.CreatedByUserFullName.ToSeoUrl(), null))</div>
+}
+<ul id="listComments">
+    @for (int i = 0; i < Model.Comments.Count; i++)
+    {
+        @Html.Partial(MVC.Project.Views.Comment, Model.Comments[i])
+    }
+</ul>
+@if (Model.IsEditable)
+{
+    using (Html.BeginForm(MVC.Project.AddComment(), FormMethod.Post, new { id = "formComment" }))
+    {
+        @Html.AntiForgeryToken()
+        @Html.Hidden("returnUrl", Request.RawUrl)
+        @Html.HiddenFor(m => m.ToDo.ProjectId)
+        @Html.HiddenFor(m => m.ToDo.ToDoId)
+        @Html.HiddenFor(m => m.ToDo.MileStoneId)
+        @Html.TextAreaFor(m => m.InsertComment, new { cols = 80, rows = 5 })
+        if (!Model.IsTodoPrivate)
+         {
+             <div>
+                 @Html.CheckBoxFor(m => m.InsertIsPrivate)
+                 @Resource.IsPrivateToTeam
+             </div>
+         }
+        else
+        {
+            @Html.HiddenFor(m => m.InsertIsPrivate, new { value = "1"})
+        }
+        <div title="@Resource.SendNotificationsHelp">
+            @Html.CheckBoxFor(m => m.InsertSendNotifications)
+            <text>@Resource.SendNotifications</text>
+        </div>
+        <a href="javascript:void(0)" id="lnkAttachFiles">@Resource.AttachDocuments</a>
+        <div class="hide">
+            @Html.Partial(MVC.Google.Views.Create, Model.Attachments)
+        </div>
+        @Html.Buttons(id: "btnSubmit")
+    }
+}

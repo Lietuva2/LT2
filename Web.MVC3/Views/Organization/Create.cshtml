@@ -1,0 +1,17 @@
+﻿@model Data.ViewModels.Organization.OrganizationCreateModel
+@using Globalization.Resources.Organization
+@using Web.Helpers;
+@{
+    ViewBag.Title = Resource.CreateTitle;
+}
+@section Head
+{
+}
+@section Scripts
+{
+}
+@Html.AntiForgeryToken()
+<span class="block">
+    @Html.BackLink()
+</span>
+@{Html.RenderPartial(MVC.Organization.Views.CreateForm, Model);}

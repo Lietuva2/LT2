@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="utf-8"?>
+<edmx:Edmx Version="3.0" xmlns:edmx="http://schemas.microsoft.com/ado/2009/11/edmx">
+ <!-- EF Designer content (DO NOT EDIT MANUALLY BELOW HERE) -->
+  <edmx:Designer xmlns="http://schemas.microsoft.com/ado/2009/11/edmx">
+    <!-- Diagram content (shape and connector positions) -->
+    <edmx:Diagrams>
+      <Diagram DiagramId="08048cf565674b988240e6e1df710baf" Name="Diagram1" ZoomLevel="58">
+        <EntityTypeShape EntityType="UsersModel.BankAccount" Width="1.5" PointX="7.9409809652441092" PointY="16.104938574184171" />
+        <EntityTypeShape EntityType="UsersModel.BankAccountItem" Width="1.5" PointX="2.4411438938421868" PointY="9.911997293081134" />
+        <EntityTypeShape EntityType="UsersModel.ChatClient" Width="1.5" PointX="3.0095302364833327" PointY="22.799310188181376" />
+        <EntityTypeShape EntityType="UsersModel.City" Width="1.5" PointX="2.1353211990256424" PointY="11.43253978129129" />
+        <EntityTypeShape EntityType="UsersModel.Country" Width="1.5" PointX="11.503201514251158" PointY="16.93711619867809" />
+        <EntityTypeShape EntityType="UsersModel.Gift" Width="1.5" PointX="8.0512471869826534" PointY="9.066436339666339" />
+        <EntityTypeShape EntityType="UsersModel.Language" Width="1.5" PointX="0.42098367978864515" PointY="3.6744192408744336" />
+        <EntityTypeShape EntityType="UsersModel.Municipality" Width="1.5" PointX="7.4581374709765136" PointY="29.312310560286189" />
+        <EntityTypeShape EntityType="UsersModel.Notification" Width="1.5" PointX="2.4388468612166339" PointY="12.957148036433919" />
+        <EntityTypeShape EntityType="UsersModel.UniqueUser" Width="1.5" PointX="3.7583734671391422" PointY="8.3607339599918262" />
+        <EntityTypeShape EntityType="UsersModel.User" Width="1.5" PointX="0.90194002208390267" PointY="17.895546683061657" />
+        <EntityTypeShape EntityType="UsersModel.UserAward" Width="1.5" PointX="2.125" PointY="7.75" />
+        <EntityTypeShape EntityType="UsersModel.UserCategory" Width="1.5" PointX="5.9797352263609582" PointY="3.3243756756765657" />
+        <EntityTypeShape EntityType="UsersModel.UserInvitation" Width="1.5" PointX="1.5592101726491052" PointY="24.779447880005208" />
+        <EntityTypeShape EntityType="UsersModel.WebToPayLog" Width="1.5" PointX="5.4598152383509158" PointY="29.462304978381052" />
+        <AssociationConnector Association="UsersModel.FK_BankAccountItem_BankAccount" />
+        <AssociationConnector Association="UsersModel.FK_BankAccountItem_User" />
+        <AssociationConnector Association="UsersModel.FK_ChatClients_ChatUsers" />
+        <AssociationConnector Association="UsersModel.FK_City_Municipality" />
+        <AssociationConnector Association="UsersModel.FK_Municipality_Country" />
+        <AssociationConnector Association="UsersModel.FK_WebToPayLog_Gifts" />
+        <AssociationConnector Association="UsersModel.FK_User_Languages" />
+        <AssociationConnector Association="UsersModel.FK_UserAwards_User" />
+        <AssociationConnector Association="UsersModel.FK_UserCategory_User" />
+        <AssociationConnector Association="UsersModel.FK_WebToPayLog_User" />
+        <EntityTypeShape EntityType="UsersModel.ChatMessage" Width="1.5" PointX="3.125" PointY="18.375" />
+        <AssociationConnector Association="UsersModel.FK_ChatMessages_Users" />
+        <AssociationConnector Association="UsersModel.FK_ChatMessage_OtherUser" />
+        <EntityTypeShape EntityType="UsersModel.ChatGroupUser" Width="1.5" PointX="8.88914385293105" PointY="30.343376754942991" />
+        <AssociationConnector Association="UsersModel.FK_ChatRoomUser_User" />
+        <EntityTypeShape EntityType="UsersModel.UserEmail" Width="1.5" PointX="5.7127303600836221" PointY="24.050919439667332" />
+        <AssociationConnector Association="UsersModel.FK_UserEmail_User" />
+        <EntityTypeShape EntityType="UsersModel.BlackList" Width="1.5" PointX="10" PointY="21.75" />
+        <AssociationConnector Association="UsersModel.FK_ChatBlockedUser_User" />
+        <AssociationConnector Association="UsersModel.FK_Table_1_BlockedUser" />
+        <EntityTypeShape EntityType="UsersModel.ChatGroup" Width="1.5" PointX="1.0195575025955017" PointY="25.203263756448059" />
+        <AssociationConnector Association="UsersModel.FK_ChatGroupUsers_ChatGroup" />
+        <EntityTypeShape EntityType="UsersModel.Status" Width="1.5" PointX="8.9698535282955749" PointY="25.698043626592515" />
+        <EntityTypeShape EntityType="UsersModel.ChatOpenDialog" Width="1.5" PointX="0.13272240764122567" PointY="4.4528192749492916" />
+        <EntityTypeShape EntityType="UsersModel.ChatOpenGroup" Width="1.5" PointX="6.385750235237996" PointY="3.1958462014775009" />
+        <AssociationConnector Association="UsersModel.FK_ChatOpenGroup_ChatGroup" />
+        <AssociationConnector Association="UsersModel.FK_ChatOpenDialog_OtherUser" />
+        <AssociationConnector Association="UsersModel.FK_ChatOpenDialog_User" />
+        <AssociationConnector Association="UsersModel.FK_ChatOpenGroup_User" />
+        <AssociationConnector Association="UsersModel.FK_ChatMessage_ChatGroup" />
+        </Diagram>
+    </edmx:Diagrams>
+  </edmx:Designer>
+</edmx:Edmx>

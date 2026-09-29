@@ -1,0 +1,156 @@
+﻿@using System.Collections.Generic
+@using Framework.Enums
+@using Framework.Strings
+@using PagedList
+@using PagedList.Mvc
+@using Web.Helpers
+@model Data.ViewModels.Sponsor.BankAccountModel
+@{
+    ViewBag.Title = "Operacijos";
+    var isEditable = ViewBag.IsAuthenticated && ViewBag.CurrentUser.Role == UserRoles.Admin;
+}
+@section Scripts
+{
+    @Html.CSS(Links.Content.CSS.PagedList_css)
+    @if (isEditable)
+    {
+        <script type='text/javascript'>
+            function onPageLoad() {
+
+                $('#hpf').change(doUpload);
+
+                function doUpload(e) {
+                    $('#uploaderContainer').show();
+                    $('#formFileUpload').submit();
+                }
+
+                $('.SaveOperation').on('click', function(e) {
+                    var text = $(this).parents('td:first').find('textarea').val();
+                    var itemId = $(this).parents('tr:first').data('id');
+                    $.helpers.loadAsync(e, '@Url.Action(MVC.Sponsor.UpdateOperation())', { itemId: itemId, operation: text }, function(result) {
+
+                    });
+
+                    $.helpers.cancelEvent(e);
+                });
+            }
+
+            function onUserSelect(txt) {
+                var parent = txt.parents('tr:first');
+                var itemId = parent.data('id');
+                var userId = parent.find('#UserId').val();
+
+                $.helpers.loadAsync(null, '@Url.Action(MVC.Sponsor.UpdateRelatedUser())', { userId: userId, itemId: itemId }, function(result) {
+
+                });
+            }
+
+            function onOrganizationSelect() {
+
+            }
+        </script>
+    }
+}
+
+<h2 class="heading">Sąskaitos operacijos</h2>
+<div style="height:15px;"></div>
+@if (isEditable)
+{
+    using (Html.BeginForm(MVC.Sponsor.ImportBankAccountExcel(), FormMethod.Post, new Dictionary<string, object> { { "enctype", "multipart/form-data" }, { "id", "formFileUpload" } }))
+    {
+         <fieldset>
+             <legend>Įkelkite excel bylą</legend>
+             <input type="file" name="hpf" id="hpf" />
+             <div id="uploaderContainer" class="hide">
+                 <img src="@Links.Content.Images.ajax_upload_gif" alt="" />
+             </div>
+         </fieldset>
+    }
+}
+@foreach (var account in Model.Accounts)
+{
+    @account.AccountNo
+    <table class="BankOperations">
+        <tr>
+            <th style="width: 100px;">Data</th>
+            <th>Operacija</th>
+            <th>Išlaidos</th>
+            <th>Įplaukos</th>
+            <th>Susijęs naudotojas</th>
+        </tr>
+        @foreach (var item in account.Items)
+        {
+            <tr data-id="@item.Id" data-role="container">
+                <td>@item.Date.ToShortDateString()</td>
+                <td>
+                    @if (!isEditable)
+                    {
+                        @item.Operation
+                    }
+                    else
+                    {
+                        @Html.TextArea("Operation", item.Operation, new Dictionary<string, object>() {{"class", "fl"}})
+                        @Html.ImageLink(string.Empty, "lnkSaveOperation", "Išsaugoti", Links.Content.Images.save_gif, "SaveOperation")
+                    }
+                </td>
+                <td>@item.Expense</td>
+                <td>@item.Income</td>
+                <td>
+                    @if (!isEditable)
+                    {
+                        if (!string.IsNullOrEmpty(item.UserObjectId))
+                        {
+                            @Html.ActionLink(item.UserFullName, MVC.Account.Details(item.UserObjectId, item.UserFullName.ToSeoUrl(), null))
+                        }
+                        if (!string.IsNullOrEmpty(item.OrganizationId))
+                        {
+                            @Html.ActionLink(item.OrganizationName, MVC.Organization.Details(item.OrganizationId, item.OrganizationName.ToSeoUrl(), null, null, null, null))
+                        }
+                    }
+                    else
+                    {
+                        @Html.AutoComplete("UserFullName", "UserId", MVC.Account.SuggestUser(), null, "onUserSelect", true, new Dictionary<string, object> {{"placeholder", "Pasirinkite naudotoją"}}, item.UserFullName, item.UserObjectId)
+                    }
+                </td>
+            </tr>
+        }
+        <tr>
+            <td colspan="5" style="text-align: right;">
+                Balansas: @account.Balance @account.Currency
+            </td>
+        </tr>
+    </table>
+    @Html.PagedListPager((IPagedList)account.Items, pageNumber => Url.Action("Index", new {pageNumber = pageNumber, accountId = account.Id }), new PagedListRenderOptions() {LinkToPreviousPageFormat = "Atgal", LinkToNextPageFormat = "Toliau"})
+}
+<h3>
+    Patvirtinti mokėjimai
+</h3>
+<table class="BankOperations">
+    <tr>
+        <th style="width: 100px;">Data</th>
+        <th>Operacija</th>
+        <th>Įplaukos</th>
+        <th>Susijęs naudotojas</th>
+    </tr>
+    @foreach (var item in Model.WebToPayItems)
+    {
+        <tr data-id="@item.Id" data-role="container">
+            <td>@item.Date.ToShortDateString()</td>
+            <td>@item.Operation</td>
+            <td>@item.Income</td>
+            <td>
+                @if (!string.IsNullOrEmpty(item.UserObjectId))
+                {
+                    @Html.ActionLink(item.UserFullName, MVC.Account.Details(item.UserObjectId, item.UserFullName.ToSeoUrl(), null))
+                }
+                @if (!string.IsNullOrEmpty(item.OrganizationId))
+                {
+                    @Html.ActionLink(item.OrganizationName, MVC.Organization.Details(item.OrganizationId, item.OrganizationName.ToSeoUrl(), null, null, null, null))
+                }
+            </td>
+        </tr>
+    }
+</table>
+@Html.PagedListPager((IPagedList)Model.WebToPayItems, pageNumber => Url.Action("Index", new { pageNumber = pageNumber, webToPayPaging = true}), new PagedListRenderOptions() { LinkToPreviousPageFormat = "Atgal", LinkToNextPageFormat = "Toliau" })
+
+

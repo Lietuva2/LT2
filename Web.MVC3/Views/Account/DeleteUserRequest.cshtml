@@ -1,0 +1,49 @@
+﻿@model Data.ViewModels.Account.UserDeleteRequestViewModel
+@using Data.Enums
+@using Globalization.Resources.Account
+@using Globalization.Resources.Shared
+@using Web.Helpers;
+@{
+    ViewBag.Title = "Paskyros pašalinimas";
+}
+
+@section Scripts
+{
+    <script type="text/javascript">
+        $('[name=Reason]').on('click', function (e) {
+            $('.explain').hide();
+            if (e.target.value == '@UserDeleteReason.SearchEngines') {
+                $('#searchEngineExplanation').show();
+            }
+            if (e.target.value == '@UserDeleteReason.DifferentViews') {
+                $('#explanation').text('Lietuva 2.0 yra atvira visiems ir neatstovauja jokių politinių pažiūrų ar ideologijų. Mūsų iniciatyvos ir balsavimai - tai tokių pačių bendruomenės narių, kaip Jūs, iniciatyvos, todėl vietoj paskyros pašalinimo kviečiame pateikti Jūsų pažiūras atitinkančių iniciatyvų, pakviesti jas palaikyti bendraminčius ir taip iš esmės pakeisti portalo turinį.').show();
+            }
+        });
+    </script>
+}
+<h2 class="heading">Paskyros @ViewBag.CurrentUser.FullName pašalinimas</h2>
+<div>
+    @Html.ValidationSummary(true)
+    <p>
+        Ar tikrai norite visam laikui ir negrįžtamai pašalinti savo paskyrą?
+    </p>
+    <p>
+        Jeigu taip, nurodykite paskyros pašalinimo priežastį:<br />
+        @using (Html.BeginForm())
+        {
+            @Html.RadioButtonListForEnum(m => m.Reason, Globalization.Resources.Services.UserDeleteReasons.ResourceManager)
+            <div>Komentaras:</div>
+            <div>
+                @Html.TextAreaFor(m => m.Comment)
+                @Html.ValidationMessageFor(m => m.Comment)
+            </div>
+            <div id="explanation" class="explain hide"></div>
+            <div id="searchEngineExplanation" class="explain hide">
+                <p>Jūs galite lengvai paslėpti savo paskyrą nuo paieškos sistemų - užtenka savo paskyros nustatymuose laukelio "Paskyra matoma" reikšmę pasirinkti kitokią, nei "Visi".</p>
+                <p>@Html.ActionLink("Keisti nustatymus", MVC.Account.Details(null, null, UserViews.Settings))</p>
+            </div>
+            @Html.Buttons(new ButtonHelperModel() { Text = Resource.DeleteProfile })
+        }
+
+    </p>
+</div>

@@ -1,0 +1,621 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <!-- 
+    Microsoft ResX Schema 
+    
+    Version 2.0
+    
+    The primary goals of this format is to allow a simple XML format 
+    that is mostly human readable. The generation and parsing of the 
+    various data types are done through the TypeConverter classes 
+    associated with the data types.
+    
+    Example:
+    
+    ... ado.net/XML headers & schema ...
+    <resheader name="resmimetype">text/microsoft-resx</resheader>
+    <resheader name="version">2.0</resheader>
+    <resheader name="reader">System.Resources.ResXResourceReader, System.Windows.Forms, ...</resheader>
+    <resheader name="writer">System.Resources.ResXResourceWriter, System.Windows.Forms, ...</resheader>
+    <data name="Name1"><value>this is my long string</value><comment>this is a comment</comment></data>
+    <data name="Color1" type="System.Drawing.Color, System.Drawing">Blue</data>
+    <data name="Bitmap1" mimetype="application/x-microsoft.net.object.binary.base64">
+        <value>[base64 mime encoded serialized .NET Framework object]</value>
+    </data>
+    <data name="Icon1" type="System.Drawing.Icon, System.Drawing" mimetype="application/x-microsoft.net.object.bytearray.base64">
+        <value>[base64 mime encoded string representing a byte array form of the .NET Framework object]</value>
+        <comment>This is a comment</comment>
+    </data>
+                
+    There are any number of "resheader" rows that contain simple 
+    name/value pairs.
+    
+    Each data row contains a name, and value. The row also contains a 
+    type or mimetype. Type corresponds to a .NET class that support 
+    text/value conversion through the TypeConverter architecture. 
+    Classes that don't support this are serialized and stored with the 
+    mimetype set.
+    
+    The mimetype is used for serialized objects, and tells the 
+    ResXResourceReader how to depersist the object. This is currently not 
+    extensible. For a given mimetype the value must be set accordingly:
+    
+    Note - application/x-microsoft.net.object.binary.base64 is the format 
+    that the ResXResourceWriter will generate, however the reader can 
+    read any of the formats listed below.
+    
+    mimetype: application/x-microsoft.net.object.binary.base64
+    value   : The object must be serialized with 
+            : System.Runtime.Serialization.Formatters.Binary.BinaryFormatter
+            : and then encoded with base64 encoding.
+    
+    mimetype: application/x-microsoft.net.object.soap.base64
+    value   : The object must be serialized with 
+            : System.Runtime.Serialization.Formatters.Soap.SoapFormatter
+            : and then encoded with base64 encoding.
+
+    mimetype: application/x-microsoft.net.object.bytearray.base64
+    value   : The object must be serialized into a byte array 
+            : using a System.ComponentModel.TypeConverter
+            : and then encoded with base64 encoding.
+    -->
+  <xsd:schema id="root" xmlns="" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:msdata="urn:schemas-microsoft-com:xml-msdata">
+    <xsd:import namespace="http://www.w3.org/XML/1998/namespace" />
+    <xsd:element name="root" msdata:IsDataSet="true">
+      <xsd:complexType>
+        <xsd:choice maxOccurs="unbounded">
+          <xsd:element name="metadata">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" />
+              </xsd:sequence>
+              <xsd:attribute name="name" use="required" type="xsd:string" />
+              <xsd:attribute name="type" type="xsd:string" />
+              <xsd:attribute name="mimetype" type="xsd:string" />
+              <xsd:attribute ref="xml:space" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="assembly">
+            <xsd:complexType>
+              <xsd:attribute name="alias" type="xsd:string" />
+              <xsd:attribute name="name" type="xsd:string" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="data">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+                <xsd:element name="comment" type="xsd:string" minOccurs="0" msdata:Ordinal="2" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" msdata:Ordinal="1" />
+              <xsd:attribute name="type" type="xsd:string" msdata:Ordinal="3" />
+              <xsd:attribute name="mimetype" type="xsd:string" msdata:Ordinal="4" />
+              <xsd:attribute ref="xml:space" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="resheader">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" />
+            </xsd:complexType>
+          </xsd:element>
+        </xsd:choice>
+      </xsd:complexType>
+    </xsd:element>
+  </xsd:schema>
+  <resheader name="resmimetype">
+    <value>text/microsoft-resx</value>
+  </resheader>
+  <resheader name="version">
+    <value>2.0</value>
+  </resheader>
+  <resheader name="reader">
+    <value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <resheader name="writer">
+    <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <data name="AddComment" xml:space="preserve">
+    <value>Add comment</value>
+  </data>
+  <data name="AddCommentComment" xml:space="preserve">
+    <value>Comment</value>
+  </data>
+  <data name="AddIdea" xml:space="preserve">
+    <value>Suggest an alternative solution</value>
+  </data>
+  <data name="Aim" xml:space="preserve">
+    <value>Problem</value>
+  </data>
+  <data name="Attachments" xml:space="preserve">
+    <value>Documents</value>
+  </data>
+  <data name="Cancel" xml:space="preserve">
+    <value>Cancel</value>
+  </data>
+  <data name="CancelVote" xml:space="preserve">
+    <value>Cancel</value>
+  </data>
+  <data name="Categories" xml:space="preserve">
+    <value>Displayed categories</value>
+  </data>
+  <data name="CategoryIds" xml:space="preserve">
+    <value>Categories</value>
+  </data>
+  <data name="CategoryIdIsRequired" xml:space="preserve">
+    <value>Select a category</value>
+  </data>
+  <data name="CategoryName" xml:space="preserve">
+    <value>Category</value>
+  </data>
+  <data name="Closed" xml:space="preserve">
+    <value>The idea is no longer relevant</value>
+  </data>
+  <data name="Comments" xml:space="preserve">
+    <value>Arguments</value>
+  </data>
+  <data name="CommentsByVersion" xml:space="preserve">
+    <value>By solution</value>
+  </data>
+  <data name="CommentsCount" xml:space="preserve">
+    <value>comments</value>
+  </data>
+  <data name="Create" xml:space="preserve">
+    <value>Add new</value>
+  </data>
+  <data name="CreatedBy" xml:space="preserve">
+    <value>Author</value>
+  </data>
+  <data name="CreateNewVersion" xml:space="preserve">
+    <value>Offer your own solution</value>
+  </data>
+  <data name="CreateTooltip" xml:space="preserve">
+    <value>Offer your own solution</value>
+  </data>
+  <data name="Deadline" xml:space="preserve">
+    <value>Deadline</value>
+  </data>
+  <data name="DeadlineIsRequired" xml:space="preserve">
+    <value>Enter the date of the voting</value>
+  </data>
+  <data name="DocumentUrl" xml:space="preserve">
+    <value>Link</value>
+  </data>
+  <data name="EditPageTitle" xml:space="preserve">
+    <value>Idea {0}</value>
+  </data>
+  <data name="EditTitle" xml:space="preserve">
+    <value>Idea {0}</value>
+  </data>
+  <data name="FilterInteresting" xml:space="preserve">
+    <value>Interesting</value>
+  </data>
+  <data name="FilterOther" xml:space="preserve">
+    <value>Other</value>
+  </data>
+  <data name="FormHeader" xml:space="preserve">
+    <value>Describe the idea at its core</value>
+  </data>
+  <data name="FormHeaderDetails" xml:space="preserve">
+    <value>Idea</value>
+  </data>
+  <data name="Idea" xml:space="preserve">
+    <value>Idea</value>
+  </data>
+  <data name="IdeaIsClosed" xml:space="preserve">
+    <value>Idea is closed</value>
+  </data>
+  <data name="Interested" xml:space="preserve">
+    <value>Interested</value>
+  </data>
+  <data name="Join" xml:space="preserve">
+    <value>I will implement this!</value>
+  </data>
+  <data name="LikedComment" xml:space="preserve">
+    <value>I like this</value>
+  </data>
+  <data name="LikedVersion" xml:space="preserve">
+    <value>I like this solution</value>
+  </data>
+  <data name="MostRecentComments" xml:space="preserve">
+    <value>The latest comments</value>
+  </data>
+  <data name="MostSupportedComments" xml:space="preserve">
+    <value>The best comments</value>
+  </data>
+  <data name="MunicipalityId" xml:space="preserve">
+    <value>Municipality</value>
+  </data>
+  <data name="OrganizationId" xml:space="preserve">
+    <value>By organization</value>
+  </data>
+  <data name="OrganizationName" xml:space="preserve">
+    <value>Organization</value>
+  </data>
+  <data name="PageTitleCreate" xml:space="preserve">
+    <value>Create a new idea</value>
+  </data>
+  <data name="PageTitleDetails" xml:space="preserve">
+    <value>Idea</value>
+  </data>
+  <data name="PageTitleIndex" xml:space="preserve">
+    <value>Ideas</value>
+  </data>
+  <data name="PageTitlePrioritizer" xml:space="preserve">
+    <value>Idea prioritizer</value>
+  </data>
+  <data name="PrioritizerDescription" xml:space="preserve">
+    <value>Select which of the two is more important to you.</value>
+  </data>
+  <data name="PrioritizerResultDescription" xml:space="preserve">
+    <value>Sort ideas according to your priorities:</value>
+  </data>
+  <data name="ReadOnlyRealization" xml:space="preserve">
+    <value>Get acquainted with the project</value>
+  </data>
+  <data name="Realization" xml:space="preserve">
+    <value>The implementation of the project</value>
+  </data>
+  <data name="Realized" xml:space="preserve">
+    <value>Idea implemented!</value>
+  </data>
+  <data name="RelatedIdeas" xml:space="preserve">
+    <value>Related ideas</value>
+  </data>
+  <data name="ResultPageTitle" xml:space="preserve">
+    <value>Your priorities</value>
+  </data>
+  <data name="ResultTitle" xml:space="preserve">
+    <value>The most important ideas you</value>
+  </data>
+  <data name="Save" xml:space="preserve">
+    <value>Save</value>
+  </data>
+  <data name="SaveCommentComment" xml:space="preserve">
+    <value>Comment</value>
+  </data>
+  <data name="SaveVersion" xml:space="preserve">
+    <value>Save</value>
+  </data>
+  <data name="CategoryIdsIsEmpty" xml:space="preserve">
+    <value>Select the categories</value>
+  </data>
+  <data name="SortActive" xml:space="preserve">
+    <value>Most Active</value>
+  </data>
+  <data name="SortNearest" xml:space="preserve">
+    <value>Most Recent</value>
+  </data>
+  <data name="Subject" xml:space="preserve">
+    <value>Subject</value>
+  </data>
+  <data name="SubjectIsRequired" xml:space="preserve">
+    <value>Enter the subject of the idea</value>
+  </data>
+  <data name="Summary" xml:space="preserve">
+    <value>Solution</value>
+  </data>
+  <data name="SummaryIsRequired" xml:space="preserve">
+    <value>Please describe the solution</value>
+  </data>
+  <data name="Support" xml:space="preserve">
+    <value>I support this</value>
+  </data>
+  <data name="SupportPercentage" xml:space="preserve">
+    <value>Solution support</value>
+  </data>
+  <data name="SupportPercentageTemplate" xml:space="preserve">
+    <value>{0}/{1}</value>
+  </data>
+  <data name="TimeLeft" xml:space="preserve">
+    <value>{0} left</value>
+  </data>
+  <data name="TitleCreate" xml:space="preserve">
+    <value>New idea</value>
+  </data>
+  <data name="TitleDetails" xml:space="preserve">
+    <value>Idea</value>
+  </data>
+  <data name="TitleIndex" xml:space="preserve">
+    <value>Ideas</value>
+  </data>
+  <data name="TitlePrioritizer" xml:space="preserve">
+    <value>Prioritize your supported ideas!</value>
+  </data>
+  <data name="TotalPrioritizerResultDescription" xml:space="preserve">
+    <value>Ideas sorted by the priorities of all participants in Lithuania 2.0:</value>
+  </data>
+  <data name="TotalResultPageTitle" xml:space="preserve">
+    <value>The priorities of Lithuania</value>
+  </data>
+  <data name="TotalResultTitle" xml:space="preserve">
+    <value>The most important ideas of the Lithuanian citizens</value>
+  </data>
+  <data name="TotalVotes" xml:space="preserve">
+    <value>Number of supporters</value>
+  </data>
+  <data name="Urls" xml:space="preserve">
+    <value>Links</value>
+  </data>
+  <data name="VersionName" xml:space="preserve">
+    <value>Name</value>
+  </data>
+  <data name="VersionNameIsRequired" xml:space="preserve">
+    <value>Enter the name of the solution</value>
+  </data>
+  <data name="VersionSubject" xml:space="preserve">
+    <value>Solution name</value>
+  </data>
+  <data name="Text" xml:space="preserve">
+    <value>The essence of the solution</value>
+  </data>
+  <data name="TextIsRequired" xml:space="preserve">
+    <value>Please provide a solution</value>
+  </data>
+  <data name="ViewsCount" xml:space="preserve">
+    <value>views</value>
+  </data>
+  <data name="Voted" xml:space="preserve">
+    <value>I support this decision</value>
+  </data>
+  <data name="VotesCount" xml:space="preserve">
+    <value>supports</value>
+  </data>
+  <data name="Voting" xml:space="preserve">
+    <value>Issue</value>
+  </data>
+  <data name="Impersonal" xml:space="preserve">
+    <value>Author is hidden</value>
+  </data>
+  <data name="RelatedIssues" xml:space="preserve">
+    <value>Related issues</value>
+  </data>
+  <data name="InviteFriendsToSign" xml:space="preserve">
+    <value>Invite your friends to sign up!</value>
+  </data>
+  <data name="Sign" xml:space="preserve">
+    <value>Sign</value>
+  </data>
+  <data name="SignSuccess" xml:space="preserve">
+    <value>Signed successfully. Thank you for your initiative!</value>
+  </data>
+  <data name="ISign" xml:space="preserve">
+    <value>Sign</value>
+  </data>
+  <data name="AddRelatedIdea" xml:space="preserve">
+    <value>Add related idea</value>
+  </data>
+  <data name="AddRelatedIssue" xml:space="preserve">
+    <value>Describe the related issue</value>
+  </data>
+  <data name="AimHelp" xml:space="preserve">
+    <value>Select or describe the idea, the reason for the problem, which deal with its implementation. &lt;br/&gt; &lt;br/&gt; The emergence of alternative solutions, this text will be common to them all. &lt;br/&gt; If the specific, unique idea, this field can be left blank.</value>
+  </data>
+  <data name="ApproveCommitmentToRealize" xml:space="preserve">
+    <value>Taking responsibility for the implementation of the project, you will be responsible for gathering of the project team and task allocation to them. Are you sure you gonna do this?</value>
+  </data>
+  <data name="CancelSupport" xml:space="preserve">
+    <value>Unlike</value>
+  </data>
+  <data name="CannotChangeState" xml:space="preserve">
+    <value>Status cannot be changed until they are collected at 1% of the required support.</value>
+  </data>
+  <data name="CategoryIdsHelp" xml:space="preserve">
+    <value>Assign 1-3 categories that best describe the idea. From this choice will depend on which part of the community will be informed of the Lithuania 2.0 this idea.</value>
+  </data>
+  <data name="ChooseSolution" xml:space="preserve">
+    <value>Select a solution</value>
+  </data>
+  <data name="CloseIdea" xml:space="preserve">
+    <value>Close idea</value>
+  </data>
+  <data name="ClosingDescription" xml:space="preserve">
+    <value>Closing reason</value>
+  </data>
+  <data name="Compare" xml:space="preserve">
+    <value>Compare</value>
+  </data>
+  <data name="CompareFrom" xml:space="preserve">
+    <value>Compare from</value>
+  </data>
+  <data name="CompareTo" xml:space="preserve">
+    <value>Compare to</value>
+  </data>
+  <data name="Depersonate" xml:space="preserve">
+    <value>Depersonate the author</value>
+  </data>
+  <data name="DepersonateShort" xml:space="preserve">
+    <value>Depersonate</value>
+  </data>
+  <data name="DescribeSolution" xml:space="preserve">
+    <value>Please describe the solution</value>
+  </data>
+  <data name="Draft" xml:space="preserve">
+    <value>Draft</value>
+  </data>
+  <data name="EnterClosingDescription" xml:space="preserve">
+    <value>Enter the reason for the closing</value>
+  </data>
+  <data name="EnterResolution" xml:space="preserve">
+    <value>Enter the summary</value>
+  </data>
+  <data name="Expand" xml:space="preserve">
+    <value>Expand</value>
+  </data>
+  <data name="FilterSubscribed" xml:space="preserve">
+    <value>Subscribed</value>
+  </data>
+  <data name="FinalResolution" xml:space="preserve">
+    <value>The final decision</value>
+  </data>
+  <data name="InitiativeType" xml:space="preserve">
+    <value>Type of initiative</value>
+  </data>
+  <data name="MakePublic" xml:space="preserve">
+    <value>Make Public</value>
+  </data>
+  <data name="MunicipalityIdHelp" xml:space="preserve">
+    <value>Select whether this idea is a national-scale, or designed specifically for the municipality?</value>
+  </data>
+  <data name="MustBeUnique" xml:space="preserve">
+    <value>To start collecting official support, you need to confirm your identity</value>
+  </data>
+  <data name="Next" xml:space="preserve">
+    <value>Another idea</value>
+  </data>
+  <data name="NoIdeas" xml:space="preserve">
+    <value>No ideas found</value>
+  </data>
+  <data name="NumberOfSolutions" xml:space="preserve">
+    <value>Solutions</value>
+  </data>
+  <data name="NumberOfVotes" xml:space="preserve">
+    <value>The number of votes</value>
+  </data>
+  <data name="OfficialUrl" xml:space="preserve">
+    <value>A link to the official signature collection sheets</value>
+  </data>
+  <data name="OpenIdea" xml:space="preserve">
+    <value>Open idea</value>
+  </data>
+  <data name="OrganizationIdHelp" xml:space="preserve">
+    <value>Select whether this idea is yours personally, or on behalf of the Organization</value>
+  </data>
+  <data name="Problem" xml:space="preserve">
+    <value>Problem</value>
+  </data>
+  <data name="Problems" xml:space="preserve">
+    <value>Problems</value>
+  </data>
+  <data name="RealizationDescription" xml:space="preserve">
+    <value>How it was implemented?</value>
+  </data>
+  <data name="Realizing" xml:space="preserve">
+    <value>Being implemented</value>
+  </data>
+  <data name="RealizingDescription" xml:space="preserve">
+    <value>See implementation</value>
+  </data>
+  <data name="RelateIdeas" xml:space="preserve">
+    <value>Link ideas</value>
+  </data>
+  <data name="RelateIdeasHelp" xml:space="preserve">
+    <value>If this idea is linked to other Lithuania 2.0 posted ideas, select them</value>
+  </data>
+  <data name="RelateIssues" xml:space="preserve">
+    <value>Link issues</value>
+  </data>
+  <data name="RelateIssuesHelp" xml:space="preserve">
+    <value>If this idea is linked to other Lithuania 2.0 posted ideas, select them.</value>
+  </data>
+  <data name="RequiredVotes" xml:space="preserve">
+    <value>Required votes</value>
+  </data>
+  <data name="Resolution" xml:space="preserve">
+    <value>The text being signed</value>
+  </data>
+  <data name="ResolutionVotesInvalidation" xml:space="preserve">
+    <value>If you change this text, the collected signatures will be invalidated</value>
+  </data>
+  <data name="Results" xml:space="preserve">
+    <value>Results</value>
+  </data>
+  <data name="RevertToDefaultCategories" xml:space="preserve">
+    <value>Restore the default categories</value>
+  </data>
+  <data name="SaveAimAsProblem" xml:space="preserve">
+    <value>Save as a problem</value>
+  </data>
+  <data name="SaveAimAsProblemHelp" xml:space="preserve">
+    <value>When you save the aim as a problem, it will be possible to comment and rank separatelly, however, it will not be available for editing.</value>
+  </data>
+  <data name="SaveDraft" xml:space="preserve">
+    <value>Save a draft</value>
+  </data>
+  <data name="SaveSelection" xml:space="preserve">
+    <value>Save selection</value>
+  </data>
+  <data name="SelectRelatedIdea" xml:space="preserve">
+    <value>Select the related project</value>
+  </data>
+  <data name="SelectRelatedIssue" xml:space="preserve">
+    <value>Select the related issue</value>
+  </data>
+  <data name="SendMails" xml:space="preserve">
+    <value>Send emails</value>
+  </data>
+  <data name="ShowAllSolutions" xml:space="preserve">
+    <value>View all solutions</value>
+  </data>
+  <data name="SignersList" xml:space="preserve">
+    <value>The list of signatories</value>
+  </data>
+  <data name="Solution" xml:space="preserve">
+    <value>Solution</value>
+  </data>
+  <data name="Solutions" xml:space="preserve">
+    <value>Solutions</value>
+  </data>
+  <data name="SolutionSupportedBy" xml:space="preserve">
+    <value>Solution supporters</value>
+  </data>
+  <data name="State" xml:space="preserve">
+    <value>State</value>
+  </data>
+  <data name="SubjectHelp" xml:space="preserve">
+    <value>Enter a short name for the idea. the name should describe the essential problem,&lt;br/&gt; rather than one specific solution.&lt;br/&gt;For example, write ' Alcohol control ' instead of  'The complete ban on advertising of alcohol ', because the latter is the only one of the ways to control alcohol</value>
+  </data>
+  <data name="SummaryHelp" xml:space="preserve">
+    <value>Briefly describe the idea. This text will be presented as the first solution and the competition for the support of the alternative proposals submitted at a later date. &lt;br/&gt; So, this field should contain a description of one specific problem-solving way.</value>
+  </data>
+  <data name="SupportedBy" xml:space="preserve">
+    <value>Supported by</value>
+  </data>
+  <data name="UrlsHelp" xml:space="preserve">
+    <value>Please provide a link to a detailed article in the press, the blog entry, and so on.</value>
+  </data>
+  <data name="VersionHistory" xml:space="preserve">
+    <value>Version history</value>
+  </data>
+  <data name="VersionInputHelp" xml:space="preserve">
+    <value>Enter a short name and describe the solution </value>
+  </data>
+  <data name="VersionNoAndSubject" xml:space="preserve">
+    <value>Proposal No. / Name</value>
+  </data>
+  <data name="VersionSubjectHelp" xml:space="preserve">
+    <value>Enter the name of a particular solution</value>
+  </data>
+  <data name="CannotResolve" xml:space="preserve">
+    <value>Status cannot be changed until 1% of the required support is collected.</value>
+  </data>
+  <data name="CannotSign" xml:space="preserve">
+    <value>You have to be 18 or older to sign</value>
+  </data>
+  <data name="ResolveError" xml:space="preserve">
+    <value>Select the final solution or enter the text to be signed</value>
+  </data>
+  <data name="SelectOrganization" xml:space="preserve">
+    <value>Please select an organization the idea will be visible to</value>
+  </data>
+  <data name="TourIdea" xml:space="preserve">
+    <value>Get familiar with this idea, and contribute by commenting or supporting it.</value>
+  </data>
+  <data name="TourIdeas" xml:space="preserve">
+    <value>This window contains a list of the interesting ideas. The list can be filtered by changing the category and state filters below.</value>
+  </data>
+  <data name="Visibility" xml:space="preserve">
+    <value>Visibility</value>
+  </data>
+  <data name="SupportersList" xml:space="preserve">
+    <value>List of supporters</value>
+  </data>
+  <data name="CannotVoteClosedIdea" xml:space="preserve">
+    <value>Cannot vote a closed idea</value>
+  </data>
+  <data name="ConfirmedUsersVoting" xml:space="preserve">
+    <value>Only confirmed users can support</value>
+  </data>
+</root>

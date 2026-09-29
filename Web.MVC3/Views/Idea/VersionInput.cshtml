@@ -1,0 +1,43 @@
+﻿@model Data.ViewModels.Idea.IdeaViewModel
+@using Globalization.Resources.Idea
+@using Globalization.Resources.Shared
+@using Web.Helpers
+@using (Html.BeginForm(MVC.Idea.AddVersion().AddRouteValue("Id", Model.Id), FormMethod.Post, new { id = "formVersion" }))
+{
+    @Html.AntiForgeryToken()
+    @Html.Hidden("returnUrl", Request.RawUrl)
+    @Html.HiddenFor(m => m.CurrentVersion.CreateNewVersion)
+    @Html.HiddenFor(m => m.CurrentVersion.Id, new { id = "hiddenCurrentVersionId" })
+    @Html.LabelFor(m => m.CurrentVersion.Subject, new { @class = "fl" })
+    @Html.Partial(MVC.Shared.Views._Help, Resource.VersionInputHelp)
+    @Html.TextBoxFor(m => m.CurrentVersion.Subject, new { id = "txtVersionSubject", style = "width: 490px", autocomplete = "off" })
+    @Html.ValidationMessageFor(m => m.CurrentVersion.Subject)
+    @Html.TextAreaFor(m => m.CurrentVersion.Text, 6, 60, new { id = "txtVersionSummary", @class = "richtexteditor" })
+    @Html.ValidationMessageFor(m => m.CurrentVersion.Text)
+    @Html.Partial(MVC.Google.Views.Create, Model.CurrentVersion.Attachments)
+    if (Model.CurrentVersion.Organizations.Any())
+    {
+    <p id="organizationContainer">
+        @Html.LabelFor(m => m.OrganizationId)
+        @foreach (var o in Model.CurrentVersion.Organizations)
+        {
+            <label class="normal">
+                @Html.RadioButtonFor(m => m.OrganizationId, o.Value)
+                @o.Text
+            </label>
+            <br />
+        }
+    </p>
+    }
+    <div class="actions">
+        @Html.Buttons(new ButtonHelperModel()
+   {
+       Id = "btnSubmitSummary",
+       Text = Resource.SaveVersion
+   },
+                        new CancelButtonHelperModel()
+                        {
+                            Id = "btnCancel"
+                        })
+    </div>
+}

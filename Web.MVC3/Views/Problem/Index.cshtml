@@ -1,0 +1,117 @@
+﻿@model Data.ViewModels.Problem.ProblemIndexModel
+@{
+    ViewBag.Title = Resource.Title;
+    if (ViewContext.RouteData.Values["action"].ToString() == "Single")
+    {
+        ViewBag.PageDescription = Model.Items.List.First().Text.StripHtml();
+        ViewBag.Title = ((string)ViewBag.PageDescription).LimitLength(100) + " - Pasisakymas";
+    }
+}
+@using Framework.Strings
+@using Globalization.Resources.Shared
+@using Globalization.Resources.Problem
+@using Services.Enums
+@using Web.Helpers
+@section Head
+{
+    <style type="text/css">
+        #categoryList li {
+            display: inline;
+            list-style-type: none;
+            padding-right: 5px;
+        }
+    </style>
+}
+@section Scripts
+{
+    <script type='text/javascript'>
+
+        function onPageLoad() {
+            $('#list').showmore({
+                callback: function (html) {
+                    $('div.text_expandable', html).expandable();
+                    addthis.toolbox('.addthis_toolbox');
+                }
+            });
+
+            CreateCategorySelector('@Url.Action(MVC.Problem.FilterPage())', '@Url.Action(MVC.Problem.SaveMyCategories())');
+
+            initializeInfiniteScroll();
+
+            $('#list').problems({
+                addIdeaUrl: '@Url.Action(MVC.Problem.AddRelatedIdea())'
+            });
+            @if (ViewBag.IsAuthenticated)
+            {
+                <text>
+            $('#list').Comments({ listSelector: '.listComments' }).liking();
+            </text>
+            }
+            $('#list').CommentsRead({ prepend: true, commentsListSelector: '.listComments', commentsListContainerSelector: '.comments', showMoreOnScroll: false });
+            CreateUserAjaxDialog('a.lnkUsers');
+        }
+    </script>
+}
+<div data-role="add_idea_hidden" class="hide">
+    @Html.AutoComplete("txtIdea", "IdeaId", MVC.Idea.GetMatchedIdeas(), "txt_90", "function(){$('#list').problems('select');}", true, new Dictionary<string, object> { { "placeholder", Globalization.Resources.Idea.Resource.ChooseSolution } })
+</div>
+<div class="clearfix">
+    <h2 class="heading">@Resource.Title</h2>
+</div>
+@if (string.IsNullOrEmpty(Model.ProblemId))
+{
+    if (ViewBag.FilteredCategoryIds == null)
+    {
+        <p class="content_views">
+            <form id="formCategories">
+                @Html.AntiForgeryToken()
+                @Html.Partial(MVC.Idea.Views.CategorySelector, Model.SelectedCategories, new ViewDataDictionary(ViewData) { { "view", Model.ListView } })
+            </form>
+        </p>
+        <div class="clear"></div>
+    }
+    <div class="clearfix">
+        @if (ViewBag.Municipality == null)
+        {
+            <p class="fl">
+                @Html.ActionLink(Resource.FilterInteresting, MVC.Problem.Index(ProblemListViews.Interesting, null, null), new Dictionary<string, object> { { "class", Model.ListView == (int)ProblemListViews.Interesting ? "highlight" : "" } })
+                @if (ViewBag.IsAuthenticated)
+                {
+                    <text>&nbsp;</text>
+                    @Html.ActionLink(Resource.FilterSubscribed, MVC.Problem.Index(ProblemListViews.Subscribed, null, null), new Dictionary<string, object> { { "class", Model.ListView == (int)ProblemListViews.Subscribed ? "highlight" : "" } })
+                }
+                &nbsp; @Html.ActionLink(Resource.FilterOther, MVC.Problem.Index(ProblemListViews.Other, null, null), new Dictionary<string, object> { { "class", Model.ListView == (int)ProblemListViews.Other ? "highlight" : "" } })
+            </p>
+        }
+        <p class="fr">
+            @Html.ActionLink(Resource.SortNearest, MVC.Problem.Index(null, ProblemListSorts.Newest, null), new Dictionary<string, object> { { "class", (ProblemListSorts)Model.ListSort == ProblemListSorts.Newest ? "highlight" : "" } })
+            &nbsp; @Html.ActionLink(Resource.SortActive, MVC.Problem.Index(null, ProblemListSorts.MostSupported, null), new Dictionary<string, object> { { "class", (ProblemListSorts)Model.ListSort == ProblemListSorts.MostSupported ? "highlight" : "" } })
+        </p>
+        <p class="fr itemsCounter">@SharedStrings.TotalCount: <span id="spanTotalCount">@Model.TotalCount</span></p>
+    </div>
+}
+else
+{
+    @Html.ActionLink(Resource.ShowAll, MVC.Problem.Index())
+}
+<div>
+    <img src="@Links.Content.Images.s_gif" alt="" />
+</div>
+@Html.Partial(MVC.Problem.Views.ProblemInput, Model)
+@if (!Model.NoMunicipalities)
+{
+    <div id="list" class="problem_list">
+        @{ Html.RenderPartial(MVC.Problem.Views.List, Model.Items.List);}
+    </div>
+}
+else
+{
+    <p>
+        @SharedStrings.NoCities
+    </p>
+}
+
+@if (Model.Items.HasMoreElements)
+{
+    @Html.ActionLink(SharedStrings.More, MVC.Problem.GetNextPage(), new { id = "lnkShowMore" })
+}

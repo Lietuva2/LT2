@@ -1,0 +1,173 @@
+﻿@using Data.Enums
+<script type="text/javascript">
+    $(document).ready(function () {
+        initTooltips();
+        $('#dialog-confirm-user ul li a, #divOtherBanks a').on('click', function(e) {
+            $.helpers.loadAsync(null, $(this).attr('href'), null, function(result) {
+                if (result.Contacts) {
+                    $('#divDialogContent').html(result.Contacts);
+                    $($.helpers.settings.dialogSelector).dialog({
+                        resizable: false,
+                        height: 380,
+                        width: 400,
+                        modal: true
+                    });
+                    $($.helpers.settings.dialogSelector).dialog('close');
+                    $($.helpers.settings.dialogSelector).dialog('open');
+                    if (typeof bindOnAmountSelect == 'function') {
+                        bindOnAmountSelect();
+                    }
+                    initTooltips();
+                } else if (result.Error && result.Error.indexOf('AdditionalUniqueInfoRequiredException') >= 0) {
+                    $.helpers.openAdditionalUniqueInfoForm(result);
+                } else {
+                    var form = $(result.Content).appendTo('body');
+                    form.submit();
+                }
+            });
+            $.helpers.cancelEvent(e);
+        });
+
+        $('#dialog-confirm-user ul li a').hover(function (e) {
+            var current = $(this).find('img').attr('src');
+            var index = current.indexOf('.');
+            var active = current.substring(0, index) + "-active" + current.substring(index, current.length);
+            $(this).find('img').attr('src', active);
+        }, function (e) {
+            var current = $(this).find('img').attr('src');
+            var passive = current.replace('-active', '');
+            $(this).find('img').attr('src', passive);
+        });
+    });
+</script>
+<div id="dialog-confirm-question" title="Tapatybės patvirtinimas" class="hide">
+    <p>Norėdami palaikyti šią iniciatyvą, turėsite patvirtinti savo tapatybę (mob.) el. parašu arba bankiniu prisijungimu.</p>
+    <p>
+        Siūlome Jums 10 nemokamų tapatybės patvirtinimo būdų, jeigu tarp jų visgi nėra Jums tinkamo, kviečiame įsigyti mob. el. parašą - dalis mobiliųjų operatorių tai leidžia padaryti nemokamai, arba atsidaryti sąskaita viename iš nemokamą tapatybės patvirtinimą mums suteikusių bankų.
+    </p>
+    <p>Ar sutinkate su tokiomis pasirašymo sąlygomis?</p>
+</div>
+<div id="dialog-confirm-user" title="Patvirtinkite tapatybę" class="hide confirm_identity_body">
+    <p class="bigger">
+        Norėdami pasirašyti iniciatyvas bei naudotis visomis kitomis Lietuva 2.0 galimybėmis, turite patvirtinti savo tapatybę. Tai galima padaryti šiais būdais:
+    </p>
+    <div class="confirm_identity_column">
+        <label>
+            Mobiliuoju el. parašu
+        </label>
+        <ul>
+            <li>
+                <a href="@Url.Action(MVC.Account.BankLink(AuthenticationSources.IPasas))" class="omnitel first">
+                    <img src="@Links.Content.CSS.logos.omnitel_gif"/>
+                </a>
+            </li>
+            <li>
+                <a href="@Url.Action(MVC.Account.BankLink(AuthenticationSources.IPasas))" class="tele2">
+                    <img src="@Links.Content.CSS.logos.tele2_gif"/>
+                </a>
+            </li>
+            <li>
+                <a href="@Url.Action(MVC.Account.BankLink(AuthenticationSources.IPasas))" class="bite">
+                    <img src="@Links.Content.CSS.logos.bite_gif"/>
+                </a>
+            </li>
+            <li>
+                <a href="@Url.Action(MVC.Account.BankLink(AuthenticationSources.IPasas))" class="teledema">
+                    <img src="@Links.Content.CSS.logos.teledema_gif"/>
+                </a>
+            </li>
+        </ul>
+        <p>
+            Reikalinga mob. el. parašo sutartis ir speciali SIM kortelė su integruotu sertifikatu. Jei dar neturite mob. el. parašo, kviečiame jį įsigyti - dalis mobiliųjų operatorių leidžia tai padaryti nemokamai.
+        </p>
+    </div>
+    <div class="confirm_identity_column">
+        <label>
+            El. parašu
+        </label>
+        <ul>
+            <li>
+                <a href="@Url.Action(MVC.Account.BankLink(AuthenticationSources.IPasas))" class="grt">
+                    <img src="@Links.Content.CSS.logos.kortele_gif"/>
+                </a>
+            </li>
+            <li>
+                <a href="@Url.Action(MVC.Account.BankLink(AuthenticationSources.IPasas))" class="rscs">
+                    <img src="@Links.Content.CSS.logos.rcsc_gif"/>
+                </a>
+            </li>
+            <li>
+                <a href="@Url.Action(MVC.Account.BankLink(AuthenticationSources.Ssc))" class="ssc">
+                    <img src="@Links.Content.CSS.logos.ssc_gif" />
+                </a>
+            </li>
+        </ul>
+        <p>
+            Reikalinga tapatybės kortelė su integruotu sertifikatu (išduota ne anksčiau kaip 2009 m.) ir kortelės skaitytuvas (<a href="http://www.nsc.vrm.lt/default.htm" target="_blank">plačiau</a>) arba kvalifikuotas mob. el. parašas.
+        </p>
+    </div>
+    <div class="confirm_identity_column">
+        <label>
+            Bankiniu prisijungimu
+        </label>
+        <ul>
+            <li>
+                <a href="@Url.Action(MVC.Account.BankLink(AuthenticationSources.Sb))" class="sb first">
+                    <img src="@Links.Content.CSS.logos.sb_gif"/>
+                </a>
+            </li>
+            <li>
+                <a href="@Url.Action(MVC.Account.BankLink(AuthenticationSources.DnB))" class="dnb">
+                    <img src="@Links.Content.CSS.logos.dnb_gif"/>
+                </a>
+            </li>
+            <li>
+                <a href="@Url.Action(MVC.Account.BankLink(AuthenticationSources.Danske))" class="danske">
+                    <img src="@Links.Content.CSS.logos.danske_gif"/>
+                </a>
+            </li>
+            <li>
+                <a href="@Url.Action(MVC.Account.BankLink(AuthenticationSources.Citadele))" class="citadele">
+                    <img src="@Links.Content.CSS.logos.citadele_gif"/>
+                </a>
+            </li>
+        </ul>
+        <p>
+            Jei neturite sąskaitos šiuose bankuose, galite ją atsidaryti nemokamai.
+        </p>
+    </div>
+    <div class="confirm_identity_column">
+            <label>
+                Bankiniu pervedimu
+            </label>
+            <ul>
+                <li>
+                    <a href="@Url.Action(MVC.Account.BankLink(AuthenticationSources.Seb))" class="seb first">
+                        <img src="@Links.Content.CSS.logos.seb_gif"/>
+                    </a>
+                </li>
+                <li>
+                    <a href="@Url.Action(MVC.Account.BankLink(AuthenticationSources.SwedBank))" class="swed last">
+                        <img src="@Links.Content.CSS.logos.swedbank_gif" />
+                    </a>
+                </li>
+            </ul>
+            <p>
+                Su šiais bankais nemokamo būdo, deja, nepavyko rasti - tapatybę patvirtinti galima tik pagal gauto pervedimo duomenis, tačiau tokiu būdu Jūs gausite Rėmėjo statusą ir savo parama prisidėsite prie mūsų veiklos.
+            </p>
+    </div>
+    <div class="clear"></div>
+    <div style="color: grey;">
+        Jūsų duomenys gali būti perduoti VRK ir kitoms atsakingoms LR institucijoms. Susipažinkite su mūsų <a href="https://docs.google.com/a/lietuva2.lt/document/d/18uU0q1DkHvE1TOK5UABZt8HasR5m3BXPOthHpaEWe8A/edit#" target="_blank">Privatumo politika</a>
+    </div>
+    @*<div style="color: grey;">
+        Per el. valdžios vartus prisijungti kol kas galima tik pasirašant už VRK registruotas iniciatyvas. 
+    </div>*@
+    <div id="divOtherBanks" style="color: grey;">
+        Esate šių bankų klientas? 
+        <a href="@Url.Action(MVC.Account.BankLink(AuthenticationSources.Nordea))">Nordea
+        </a>
+        <a href="@Url.Action(MVC.Account.BankLink(AuthenticationSources.Medicinos))">Medicinos
+        </a>
+    </div>
+</div>

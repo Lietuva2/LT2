@@ -1,0 +1,622 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
+    <ProductVersion>8.0.30703</ProductVersion>
+    <SchemaVersion>2.0</SchemaVersion>
+    <ProjectGuid>{2AA33DAA-3E89-4F4B-882C-C392CEC521BE}</ProjectGuid>
+    <OutputType>Library</OutputType>
+    <AppDesignerFolder>Properties</AppDesignerFolder>
+    <RootNamespace>Data</RootNamespace>
+    <AssemblyName>LT2.Data</AssemblyName>
+    <TargetFrameworkVersion>v4.5</TargetFrameworkVersion>
+    <FileAlignment>512</FileAlignment>
+    <SccProjectName>SAK</SccProjectName>
+    <SccLocalPath>SAK</SccLocalPath>
+    <SccAuxPath>SAK</SccAuxPath>
+    <SccProvider>SAK</SccProvider>
+    <TargetFrameworkProfile />
+    <SolutionDir Condition="$(SolutionDir) == '' Or $(SolutionDir) == '*Undefined*'">..\</SolutionDir>
+    <RestorePackages>true</RestorePackages>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+    <DebugSymbols>true</DebugSymbols>
+    <DebugType>full</DebugType>
+    <Optimize>false</Optimize>
+    <OutputPath>bin\Debug\</OutputPath>
+    <DefineConstants>DEBUG;TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+    <Prefer32Bit>false</Prefer32Bit>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
+    <DebugType>pdbonly</DebugType>
+    <Optimize>true</Optimize>
+    <OutputPath>bin\Release\</OutputPath>
+    <DefineConstants>TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+    <Prefer32Bit>false</Prefer32Bit>
+  </PropertyGroup>
+  <ItemGroup>
+    <Reference Include="EntityFramework, Version=6.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089, processorArchitecture=MSIL">
+      <HintPath>..\packages\EntityFramework.6.1.3\lib\net45\EntityFramework.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="EntityFramework.SqlServer, Version=6.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089, processorArchitecture=MSIL">
+      <HintPath>..\packages\EntityFramework.6.1.3\lib\net45\EntityFramework.SqlServer.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="HyperPropertyDescriptor">
+      <HintPath>..\lib\HyperPropertyDescriptor.dll</HintPath>
+    </Reference>
+    <Reference Include="MongoDB.Bson, Version=1.8.3.9, Culture=neutral, PublicKeyToken=f686731cfb9cc103, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\packages\mongocsharpdriver.1.8.3\lib\net35\MongoDB.Bson.dll</HintPath>
+    </Reference>
+    <Reference Include="MongoDB.Driver, Version=1.8.3.9, Culture=neutral, PublicKeyToken=f686731cfb9cc103, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\packages\mongocsharpdriver.1.8.3\lib\net35\MongoDB.Driver.dll</HintPath>
+    </Reference>
+    <Reference Include="PagedList, Version=1.17.0.0, Culture=neutral, PublicKeyToken=abbb863e9397c5e1, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\packages\PagedList.1.17.0.0\lib\net40\PagedList.dll</HintPath>
+    </Reference>
+    <Reference Include="System" />
+    <Reference Include="System.ComponentModel.DataAnnotations" />
+    <Reference Include="System.Core" />
+    <Reference Include="System.Data.Linq" />
+    <Reference Include="System.Runtime.Serialization" />
+    <Reference Include="System.Security" />
+    <Reference Include="System.Web.Mvc, Version=5.1.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\Web.MVC3\bin\System.Web.Mvc.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Xml.Linq" />
+    <Reference Include="System.Data.DataSetExtensions" />
+    <Reference Include="Microsoft.CSharp" />
+    <Reference Include="System.Data" />
+    <Reference Include="System.Xml" />
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="EF\Actions\Action.cs">
+      <DependentUpon>Actions.tt</DependentUpon>
+    </Compile>
+    <Compile Include="EF\Actions\ActionCategory.cs">
+      <DependentUpon>Actions.tt</DependentUpon>
+    </Compile>
+    <Compile Include="EF\Actions\Actions.Context.cs">
+      <AutoGen>True</AutoGen>
+      <DesignTime>True</DesignTime>
+      <DependentUpon>Actions.Context.tt</DependentUpon>
+    </Compile>
+    <Compile Include="EF\Actions\Actions.cs">
+      <AutoGen>True</AutoGen>
+      <DesignTime>True</DesignTime>
+      <DependentUpon>Actions.tt</DependentUpon>
+    </Compile>
+    <Compile Include="EF\Actions\Actions.Designer.cs">
+      <AutoGen>True</AutoGen>
+      <DesignTime>True</DesignTime>
+      <DependentUpon>Actions.edmx</DependentUpon>
+    </Compile>
+    <Compile Include="EF\Actions\ActionType.cs">
+      <DependentUpon>Actions.tt</DependentUpon>
+    </Compile>
+    <Compile Include="EF\Actions\ActionView.cs">
+      <DependentUpon>Actions.tt</DependentUpon>
+    </Compile>
+    <Compile Include="EF\Actions\Categories_Translation.cs">
+      <DependentUpon>Actions.tt</DependentUpon>
+    </Compile>
+    <Compile Include="EF\Actions\Category.cs">
+      <DependentUpon>Actions.tt</DependentUpon>
+    </Compile>
+    <Compile Include="EF\Actions\InterestingCategory.cs">
+      <DependentUpon>Actions.tt</DependentUpon>
+    </Compile>
+    <Compile Include="EF\Actions\Message.cs">
+      <DependentUpon>Actions.tt</DependentUpon>
+    </Compile>
+    <Compile Include="EF\Actions\Notification.cs">
+      <DependentUpon>Actions.tt</DependentUpon>
+    </Compile>
+    <Compile Include="EF\Actions\OrganizationActionView.cs">
+      <DependentUpon>Actions.tt</DependentUpon>
+    </Compile>
+    <Compile Include="EF\Actions\Subscribtion.cs">
+      <DependentUpon>Actions.tt</DependentUpon>
+    </Compile>
+    <Compile Include="EF\Actions\UserInterestingOrganization.cs">
+      <DependentUpon>Actions.tt</DependentUpon>
+    </Compile>
+    <Compile Include="EF\Actions\UserInterestingUser.cs">
+      <DependentUpon>Actions.tt</DependentUpon>
+    </Compile>
+    <Compile Include="EF\Users\BankAccount.cs">
+      <DependentUpon>Users.tt</DependentUpon>
+    </Compile>
+    <Compile Include="EF\Users\BankAccountItem.cs">
+      <DependentUpon>Users.tt</DependentUpon>
+    </Compile>
+    <Compile Include="EF\Users\BlackList.cs">
+      <DependentUpon>Users.tt</DependentUpon>
+    </Compile>
+    <Compile Include="EF\Users\ChatClient.cs">
+      <DependentUpon>Users.tt</DependentUpon>
+    </Compile>
+    <Compile Include="EF\Users\ChatGroup.cs">
+      <DependentUpon>Users.tt</DependentUpon>
+    </Compile>
+    <Compile Include="EF\Users\ChatGroupUser.cs">
+      <DependentUpon>Users.tt</DependentUpon>
+    </Compile>
+    <Compile Include="EF\Users\ChatMessage.cs">
+      <DependentUpon>Users.tt</DependentUpon>
+    </Compile>
+    <Compile Include="EF\Users\ChatOpenDialog.cs">
+      <DependentUpon>Users.tt</DependentUpon>
+    </Compile>
+    <Compile Include="EF\Users\ChatOpenGroup.cs">
+      <DependentUpon>Users.tt</DependentUpon>
+    </Compile>
+    <Compile Include="EF\Users\City.cs">
+      <DependentUpon>Users.tt</DependentUpon>
+    </Compile>
+    <Compile Include="EF\Users\Country.cs">
+      <DependentUpon>Users.tt</DependentUpon>
+    </Compile>
+    <Compile Include="EF\Users\Gift.cs">
+      <DependentUpon>Users.tt</DependentUpon>
+    </Compile>
+    <Compile Include="EF\Users\Language.cs">
+      <DependentUpon>Users.tt</DependentUpon>
+    </Compile>
+    <Compile Include="EF\Users\Municipality.cs">
+      <DependentUpon>Users.tt</DependentUpon>
+    </Compile>
+    <Compile Include="EF\Users\Notification.cs">
+      <DependentUpon>Users.tt</DependentUpon>
+    </Compile>
+    <Compile Include="EF\Users\Status.cs">
+      <DependentUpon>Users.tt</DependentUpon>
+    </Compile>
+    <Compile Include="EF\Users\UniqueUser.cs">
+      <DependentUpon>Users.tt</DependentUpon>
+    </Compile>
+    <Compile Include="EF\Users\User.cs">
+      <DependentUpon>Users.tt</DependentUpon>
+    </Compile>
+    <Compile Include="EF\Users\UserAward.cs">
+      <DependentUpon>Users.tt</DependentUpon>
+    </Compile>
+    <Compile Include="EF\Users\UserCategory.cs">
+      <DependentUpon>Users.tt</DependentUpon>
+    </Compile>
+    <Compile Include="EF\Users\UserEmail.cs">
+      <DependentUpon>Users.tt</DependentUpon>
+    </Compile>
+    <Compile Include="EF\Users\UserInvitation.cs">
+      <DependentUpon>Users.tt</DependentUpon>
+    </Compile>
+    <Compile Include="EF\Users\Users.Context.cs">
+      <AutoGen>True</AutoGen>
+      <DesignTime>True</DesignTime>
+      <DependentUpon>Users.Context.tt</DependentUpon>
+    </Compile>
+    <Compile Include="EF\Users\Users.cs">
+      <AutoGen>True</AutoGen>
+      <DesignTime>True</DesignTime>
+      <DependentUpon>Users.tt</DependentUpon>
+    </Compile>
+    <Compile Include="EF\Users\Users.Designer.cs">
+      <AutoGen>True</AutoGen>
+      <DesignTime>True</DesignTime>
+      <DependentUpon>Users.edmx</DependentUpon>
+    </Compile>
+    <Compile Include="EF\Users\WebToPayLog.cs">
+      <DependentUpon>Users.tt</DependentUpon>
+    </Compile>
+    <Compile Include="EF\Voting\Comment.cs">
+      <DependentUpon>Voting.tt</DependentUpon>
+    </Compile>
+    <Compile Include="EF\Voting\CommentSupporter.cs">
+      <DependentUpon>Voting.tt</DependentUpon>
+    </Compile>
+    <Compile Include="EF\Voting\Embed.cs">
+      <DependentUpon>Voting.tt</DependentUpon>
+    </Compile>
+    <Compile Include="EF\Voting\Idea.cs">
+      <DependentUpon>Voting.tt</DependentUpon>
+    </Compile>
+    <Compile Include="EF\Voting\IdeaCategory.cs">
+      <DependentUpon>Voting.tt</DependentUpon>
+    </Compile>
+    <Compile Include="EF\Voting\IdeaComment.cs">
+      <DependentUpon>Voting.tt</DependentUpon>
+    </Compile>
+    <Compile Include="EF\Voting\IdeaIssue.cs">
+      <DependentUpon>Voting.tt</DependentUpon>
+    </Compile>
+    <Compile Include="EF\Voting\IdeaPriority.cs">
+      <DependentUpon>Voting.tt</DependentUpon>
+    </Compile>
+    <Compile Include="EF\Voting\IdeaVersion.cs">
+      <DependentUpon>Voting.tt</DependentUpon>
+    </Compile>
+    <Compile Include="EF\Voting\IdeaVersionView.cs">
+      <DependentUpon>Voting.tt</DependentUpon>
+    </Compile>
+    <Compile Include="EF\Voting\IdeaVote.cs">
+      <DependentUpon>Voting.tt</DependentUpon>
+    </Compile>
+    <Compile Include="EF\Voting\Issue.cs">
+      <DependentUpon>Voting.tt</DependentUpon>
+    </Compile>
+    <Compile Include="EF\Voting\IssueCategory.cs">
+      <DependentUpon>Voting.tt</DependentUpon>
+    </Compile>
+    <Compile Include="EF\Voting\IssueComment.cs">
+      <DependentUpon>Voting.tt</DependentUpon>
+    </Compile>
+    <Compile Include="EF\Voting\IssueVersion.cs">
+      <DependentUpon>Voting.tt</DependentUpon>
+    </Compile>
+    <Compile Include="EF\Voting\Problem.cs">
+      <DependentUpon>Voting.tt</DependentUpon>
+    </Compile>
+    <Compile Include="EF\Voting\ProblemCategory.cs">
+      <DependentUpon>Voting.tt</DependentUpon>
+    </Compile>
+    <Compile Include="EF\Voting\ProblemComment.cs">
+      <DependentUpon>Voting.tt</DependentUpon>
+    </Compile>
+    <Compile Include="EF\Voting\ProblemIdea.cs">
+      <DependentUpon>Voting.tt</DependentUpon>
+    </Compile>
+    <Compile Include="EF\Voting\ProblemIssue.cs">
+      <DependentUpon>Voting.tt</DependentUpon>
+    </Compile>
+    <Compile Include="EF\Voting\ProblemSupporter.cs">
+      <DependentUpon>Voting.tt</DependentUpon>
+    </Compile>
+    <Compile Include="EF\Voting\RelatedIdea.cs">
+      <DependentUpon>Voting.tt</DependentUpon>
+    </Compile>
+    <Compile Include="EF\Voting\ShortLink.cs">
+      <DependentUpon>Voting.tt</DependentUpon>
+    </Compile>
+    <Compile Include="EF\Voting\UserComment.cs">
+      <DependentUpon>Voting.tt</DependentUpon>
+    </Compile>
+    <Compile Include="EF\Voting\Vote.cs">
+      <DependentUpon>Voting.tt</DependentUpon>
+    </Compile>
+    <Compile Include="EF\Voting\VoteEx.cs" />
+    <Compile Include="EF\Voting\IdeaVoteEx.cs" />
+    <Compile Include="EF\Voting\Voting.Context.cs">
+      <AutoGen>True</AutoGen>
+      <DesignTime>True</DesignTime>
+      <DependentUpon>Voting.Context.tt</DependentUpon>
+    </Compile>
+    <Compile Include="EF\Voting\Voting.cs">
+      <AutoGen>True</AutoGen>
+      <DesignTime>True</DesignTime>
+      <DependentUpon>Voting.tt</DependentUpon>
+    </Compile>
+    <Compile Include="EF\Voting\Voting.Designer.cs">
+      <AutoGen>True</AutoGen>
+      <DesignTime>True</DesignTime>
+      <DependentUpon>Voting.edmx</DependentUpon>
+    </Compile>
+    <Compile Include="Enums\ActionTypes.cs" />
+    <Compile Include="Enums\AuthenticationSources.cs" />
+    <Compile Include="Enums\ObjectVisibility.cs" />
+    <Compile Include="Enums\InitiativeTypes.cs" />
+    <Compile Include="Enums\NotificationTypes.cs" />
+    <Compile Include="Enums\TodoAssignedTo.cs" />
+    <Compile Include="Enums\UserAwards.cs" />
+    <Compile Include="Enums\OrganizationProjectStates.cs" />
+    <Compile Include="Enums\OrganizationViews.cs" />
+    <Compile Include="Enums\IdeaStates.cs" />
+    <Compile Include="Enums\EntryTypes.cs" />
+    <Compile Include="Enums\UserDeleteReason.cs" />
+    <Compile Include="Enums\UserStatuses.cs" />
+    <Compile Include="Enums\UserViews.cs" />
+    <Compile Include="EF\Actions\ActionsContext.custom.cs" />
+    <Compile Include="Infrastructure\ContextFactories\ActionsContextFactory.cs" />
+    <Compile Include="EF\Voting\VotingContext.custom.cs" />
+    <Compile Include="Infrastructure\ContextFactories\VotingContextFactory.cs" />
+    <Compile Include="EF\Users\UsersContext.custom.cs" />
+    <Compile Include="Infrastructure\ContextFactories\UsersContextFactory.cs" />
+    <Compile Include="Infrastructure\Sessions\INoSqlSession.cs" />
+    <Compile Include="Infrastructure\Sessions\IReporting.cs" />
+    <Compile Include="Infrastructure\Sessions\ReportingSession.cs" />
+    <Compile Include="Infrastructure\Sessions\SiteMongoDbSession.cs" />
+    <Compile Include="LinqToSQL\Reporting\Reporting.designer.cs">
+      <DependentUpon>Reporting.dbml</DependentUpon>
+      <DesignTime>True</DesignTime>
+      <AutoGen>True</AutoGen>
+    </Compile>
+    <Compile Include="MongoDB\Category.cs" />
+    <Compile Include="MongoDB\Comment.cs" />
+    <Compile Include="MongoDB\NewsLetterFrequency.cs" />
+    <Compile Include="MongoDB\WikiTextWithHistory.cs" />
+    <Compile Include="MongoDB\WikiTextVersionWithHistory.cs" />
+    <Compile Include="MongoDB\Embed.cs" />
+    <Compile Include="MongoDB\Interfaces\ICommentable.cs" />
+    <Compile Include="MongoDB\Problem.cs" />
+    <Compile Include="MongoDB\OrganizationProject.cs" />
+    <Compile Include="MongoDB\Organization.cs" />
+    <Compile Include="MongoDB\MileStone.cs" />
+    <Compile Include="MongoDB\OrganizationMember.cs" />
+    <Compile Include="MongoDB\OrganizationTypes.cs" />
+    <Compile Include="MongoDB\ProjectMember.cs" />
+    <Compile Include="MongoDB\SupportingUser.cs" />
+    <Compile Include="MongoDB\ToDoComment.cs" />
+    <Compile Include="MongoDB\Project.cs" />
+    <Compile Include="MongoDB\ToDo.cs" />
+    <Compile Include="MongoDB\Idea.cs" />
+    <Compile Include="MongoDB\Country.cs" />
+    <Compile Include="MongoDB\Education.cs" />
+    <Compile Include="MongoDB\EmploymentStatus.cs" />
+    <Compile Include="MongoDB\PositiveOrNegative.cs" />
+    <Compile Include="MongoDB\Issue.cs" />
+    <Compile Include="MongoDB\Language.cs" />
+    <Compile Include="MongoDB\MaritalStatus.cs" />
+    <Compile Include="MongoDB\PhoneNumber.cs" />
+    <Compile Include="MongoDB\PoliticalParty.cs" />
+    <Compile Include="MongoDB\Settings.cs" />
+    <Compile Include="MongoDB\User.cs" />
+    <Compile Include="MongoDB\UserDetailsVisibility.cs" />
+    <Compile Include="MongoDB\Website.cs" />
+    <Compile Include="MongoDB\WikiText.cs" />
+    <Compile Include="MongoDB\WikiTextVersion.cs" />
+    <Compile Include="MongoDB\WorkPosition.cs" />
+    <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="Properties\Settings.Designer.cs">
+      <AutoGen>True</AutoGen>
+      <DesignTimeSharedInput>True</DesignTimeSharedInput>
+      <DependentUpon>Settings.settings</DependentUpon>
+    </Compile>
+    <Compile Include="ViewModels\Account\AdditionalUniqueInfo.cs" />
+    <Compile Include="ViewModels\Account\BankLinkModel.cs" />
+    <Compile Include="ViewModels\Account\ConfirmPersonCodeModel.cs" />
+    <Compile Include="ViewModels\Account\ContactsViewModel.cs" />
+    <Compile Include="ViewModels\Account\ContactsEditModel.cs" />
+    <Compile Include="ViewModels\Account\ChangePasswordModel.cs" />
+    <Compile Include="Enums\UserVisibility.cs" />
+    <Compile Include="ViewModels\Account\ExternalAuthenticationDescription.cs" />
+    <Compile Include="ViewModels\Account\SettingsModel.cs" />
+    <Compile Include="ViewModels\Account\UserDeleteRequestViewModel.cs" />
+    <Compile Include="ViewModels\Base\EmbedModel.cs" />
+    <Compile Include="ViewModels\Base\PhoneNumberEditModel.cs" />
+    <Compile Include="ViewModels\Base\PhoneNumberViewModel.cs" />
+    <Compile Include="ViewModels\Base\UserListContainerModel.cs" />
+    <Compile Include="ViewModels\Base\UserListModel.cs" />
+    <Compile Include="ViewModels\Base\InviteUsersModel.cs" />
+    <Compile Include="ViewModels\Chat\ChatUser.cs" />
+    <Compile Include="ViewModels\Chat\ChatMessage.cs" />
+    <Compile Include="ViewModels\Chat\ChatGroup.cs" />
+    <Compile Include="ViewModels\Chat\ChatIndexModel.cs" />
+    <Compile Include="ViewModels\Chat\GroupUser.cs" />
+    <Compile Include="ViewModels\Chat\HistoryType.cs" />
+    <Compile Include="ViewModels\Comments\BaseCommentDbView.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="ViewModels\Comments\CommentCommentDbView.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="ViewModels\Comments\CommentDbView.cs" />
+    <Compile Include="ViewModels\Comments\CommentsModel.cs" />
+    <Compile Include="ViewModels\Idea\RelatedIssueDialogModel.cs" />
+    <Compile Include="ViewModels\Idea\ProgressViewModel.cs" />
+    <Compile Include="ViewModels\Base\WebSiteEditModel.cs" />
+    <Compile Include="ViewModels\Base\WebsiteViewModel.cs" />
+    <Compile Include="ViewModels\Idea\FinalIdeaModel.cs" />
+    <Compile Include="ViewModels\Base\SubscribeModel.cs" />
+    <Compile Include="ViewModels\Idea\RelatedIdeaDialogModel.cs" />
+    <Compile Include="ViewModels\Idea\WikiVersionModel.cs" />
+    <Compile Include="ViewModels\Organization\OrganizationIndexItemModel.cs" />
+    <Compile Include="ViewModels\Organization\OrganizationIndexModel.cs" />
+    <Compile Include="ViewModels\Problem\ProblemCreateEditModel.cs" />
+    <Compile Include="ViewModels\Problem\ProblemIdeaListModel.cs" />
+    <Compile Include="ViewModels\Problem\ProblemIndexItemModel.cs" />
+    <Compile Include="ViewModels\Problem\ProblemIndexModel.cs" />
+    <Compile Include="ViewModels\NewsFeed\DashboardListModel.cs" />
+    <Compile Include="ViewModels\NewsFeed\StartPageModel.cs" />
+    <Compile Include="ViewModels\Organization\ContactsEditModel.cs" />
+    <Compile Include="ViewModels\Organization\ContactsViewModel.cs" />
+    <Compile Include="ViewModels\Organization\MemberModel.cs" />
+    <Compile Include="ViewModels\Organization\Project\ProjectBase.cs" />
+    <Compile Include="ViewModels\Organization\Project\ProjectViewModel.cs" />
+    <Compile Include="ViewModels\Organization\OrganizationCreateModel.cs" />
+    <Compile Include="ViewModels\Organization\InfoEditModel.cs" />
+    <Compile Include="ViewModels\Organization\InfoViewModel.cs" />
+    <Compile Include="ViewModels\Organization\OrganizationViewModel.cs" />
+    <Compile Include="ViewModels\Account\FacebookLoginModel.cs" />
+    <Compile Include="ViewModels\Base\FileViewModel.cs" />
+    <Compile Include="ViewModels\Account\InterestsEditModel.cs" />
+    <Compile Include="ViewModels\Account\LanguageModel.cs" />
+    <Compile Include="ViewModels\Account\MemberOfPartiesEditModel.cs" />
+    <Compile Include="ViewModels\Account\EducationEditModel.cs" />
+    <Compile Include="ViewModels\Account\EducationAndWorkEditModel.cs" />
+    <Compile Include="ViewModels\Account\PersonalInfoEditModel.cs" />
+    <Compile Include="ViewModels\Account\InterestsViewModel.cs" />
+    <Compile Include="ViewModels\Account\EducationAndWorkViewModel.cs" />
+    <Compile Include="ViewModels\Account\PersonalInfoViewModel.cs" />
+    <Compile Include="ViewModels\Account\PointsPerCategoryModel.cs" />
+    <Compile Include="ViewModels\Account\PositionEditModel.cs" />
+    <Compile Include="ViewModels\Account\UserAccountViewModel.cs" />
+    <Compile Include="ViewModels\Account\SimpleLinkView.cs" />
+    <Compile Include="ViewModels\Organization\Project\CommentModel.cs" />
+    <Compile Include="ViewModels\Organization\Project\CommentsModel.cs" />
+    <Compile Include="ViewModels\Organization\Project\EditToDoModel.cs" />
+    <Compile Include="ViewModels\Organization\Project\ProjectsListModel.cs" />
+    <Compile Include="ViewModels\Organization\Project\ProjectToDosModel.cs" />
+    <Compile Include="ViewModels\Organization\Project\SettingsModel.cs" />
+    <Compile Include="ViewModels\Organization\Project\ToDoModel.cs" />
+    <Compile Include="ViewModels\Base\ListItem.cs" />
+    <Compile Include="ViewModels\Base\SimpleListContainerModel.cs" />
+    <Compile Include="ViewModels\Base\EditableListModel.cs" />
+    <Compile Include="ViewModels\Base\SimpleListModel.cs" />
+    <Compile Include="ViewModels\Base\UserLinkModel.cs" />
+    <Compile Include="ViewModels\Comments\CommentView.cs" />
+    <Compile Include="ViewModels\NewsFeed\UrgentMessageItemModel.cs" />
+    <Compile Include="ViewModels\Problem\VoteResultModel.cs" />
+    <Compile Include="ViewModels\Project\CommentsModel.cs" />
+    <Compile Include="ViewModels\Project\CommentModel.cs" />
+    <Compile Include="ViewModels\Project\ProjectModel.cs" />
+    <Compile Include="ViewModels\Project\JoinProjectModel.cs" />
+    <Compile Include="ViewModels\Project\MemberModel.cs" />
+    <Compile Include="ViewModels\Project\SettingsModel.cs" />
+    <Compile Include="ViewModels\Project\EditMileStoneModel.cs" />
+    <Compile Include="ViewModels\Project\MileStoneEditModel.cs" />
+    <Compile Include="ViewModels\Project\MileStoneModel.cs" />
+    <Compile Include="ViewModels\Project\ProjectTeamModel.cs" />
+    <Compile Include="ViewModels\Project\EditToDoModel.cs" />
+    <Compile Include="ViewModels\Project\ProjectToDosModel.cs" />
+    <Compile Include="ViewModels\Project\ToDoModel.cs" />
+    <Compile Include="ViewModels\Idea\IdeaIndexItemModel.cs" />
+    <Compile Include="ViewModels\Idea\PrioritizerResultItemModel.cs" />
+    <Compile Include="ViewModels\Idea\PrioritizerResultModel.cs" />
+    <Compile Include="ViewModels\Idea\PrioritizerPair.cs" />
+    <Compile Include="ViewModels\Idea\PrioritizerItemModel.cs" />
+    <Compile Include="ViewModels\Idea\PrioritizerModel.cs" />
+    <Compile Include="ViewModels\Idea\IdeaCreateModel.cs" />
+    <Compile Include="ViewModels\Idea\IdeaIndexModel.cs" />
+    <Compile Include="ViewModels\Idea\IdeaViewModel.cs" />
+    <Compile Include="ViewModels\NewsFeed\NewsFeedIndexModel.cs" />
+    <Compile Include="ViewModels\Account\UserCreateModel.cs" />
+    <Compile Include="ViewModels\Account\UserLoginModel.cs" />
+    <Compile Include="ViewModels\Account\UserRemindModel.cs" />
+    <Compile Include="ViewModels\NewsFeed\NewsFeedItemModel.cs" />
+    <Compile Include="ViewModels\NewsFeed\UrgentMessageModel.cs" />
+    <Compile Include="ViewModels\Search\SearchModel.cs" />
+    <Compile Include="ViewModels\Search\SearchIndexModel.cs" />
+    <Compile Include="ViewModels\Sponsor\BankAccountExcel.cs" />
+    <Compile Include="ViewModels\Sponsor\BankAccountExcelItem.cs" />
+    <Compile Include="ViewModels\Sponsor\PaymentAcceptModel.cs" />
+    <Compile Include="ViewModels\Sponsor\WebToPayResponseModel16.cs" />
+    <Compile Include="ViewModels\Sponsor\WebToPayModel16.cs" />
+    <Compile Include="ViewModels\Sponsor\DonateModel.cs" />
+    <Compile Include="ViewModels\Sponsor\GiftModel.cs" />
+    <Compile Include="ViewModels\Voting\CategorySelectModel.cs" />
+    <Compile Include="ViewModels\Voting\Helper.cs" />
+    <Compile Include="ViewModels\Voting\IssueDocumentModel.cs" />
+    <Compile Include="ViewModels\Voting\RelatedIdeaListItem.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="ViewModels\Voting\VotingStatisticsViewModel.cs" />
+    <Compile Include="ViewModels\Voting\VotingResultsItemModel.cs" />
+    <Compile Include="ViewModels\Voting\VotingIndexItemModel.cs" />
+    <Compile Include="ViewModels\Voting\VersionViewModel.cs" />
+    <Compile Include="ViewModels\Voting\VotingResultsModel.cs" />
+    <Compile Include="ViewModels\Voting\VotingViewModel.cs" />
+    <Compile Include="ViewModels\Voting\VotingCreateModel.cs" />
+    <Compile Include="ViewModels\Voting\VotingIndexModel.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="App.Config">
+      <SubType>Designer</SubType>
+    </None>
+    <EntityDeploy Include="EF\Actions\Actions.edmx">
+      <Generator>EntityModelCodeGenerator</Generator>
+      <LastGenOutput>Actions.Designer.cs</LastGenOutput>
+    </EntityDeploy>
+    <None Include="EF\Actions\Actions.Context.tt">
+      <Generator>TextTemplatingFileGenerator</Generator>
+      <LastGenOutput>Actions.Context.cs</LastGenOutput>
+      <DependentUpon>Actions.edmx</DependentUpon>
+    </None>
+    <None Include="EF\Actions\Actions.edmx.diagram">
+      <DependentUpon>Actions.edmx</DependentUpon>
+    </None>
+    <EntityDeploy Include="EF\Users\Users.edmx">
+      <Generator>EntityModelCodeGenerator</Generator>
+      <LastGenOutput>Users.Designer.cs</LastGenOutput>
+    </EntityDeploy>
+    <None Include="EF\Actions\Actions.tt">
+      <Generator>TextTemplatingFileGenerator</Generator>
+      <LastGenOutput>Actions.cs</LastGenOutput>
+      <DependentUpon>Actions.edmx</DependentUpon>
+    </None>
+    <Compile Include="EF\Actions\UserInterestingOrganization.Custom.cs" />
+    <None Include="EF\Users\Users.Context.tt">
+      <Generator>TextTemplatingFileGenerator</Generator>
+      <LastGenOutput>Users.Context.cs</LastGenOutput>
+      <DependentUpon>Users.edmx</DependentUpon>
+    </None>
+    <None Include="EF\Users\Users.edmx.diagram">
+      <DependentUpon>Users.edmx</DependentUpon>
+    </None>
+    <EntityDeploy Include="EF\Voting\Voting.edmx">
+      <Generator>EntityModelCodeGenerator</Generator>
+      <LastGenOutput>Voting.Designer.cs</LastGenOutput>
+    </EntityDeploy>
+    <None Include="EF\Users\Users.tt">
+      <Generator>TextTemplatingFileGenerator</Generator>
+      <LastGenOutput>Users.cs</LastGenOutput>
+      <DependentUpon>Users.edmx</DependentUpon>
+    </None>
+    <None Include="EF\Voting\Voting.Context.tt">
+      <Generator>TextTemplatingFileGenerator</Generator>
+      <LastGenOutput>Voting.Context.cs</LastGenOutput>
+      <DependentUpon>Voting.edmx</DependentUpon>
+    </None>
+    <None Include="EF\Voting\Voting.edmx.diagram">
+      <DependentUpon>Voting.edmx</DependentUpon>
+    </None>
+    <None Include="EF\Voting\Voting.tt">
+      <Generator>TextTemplatingFileGenerator</Generator>
+      <LastGenOutput>Voting.cs</LastGenOutput>
+      <DependentUpon>Voting.edmx</DependentUpon>
+    </None>
+    <None Include="LinqToSQL\Reporting\Reporting.dbml">
+      <Generator>MSLinqToSQLGenerator</Generator>
+      <LastGenOutput>Reporting.designer.cs</LastGenOutput>
+      <SubType>Designer</SubType>
+    </None>
+    <None Include="packages.config" />
+    <None Include="Properties\Settings.settings">
+      <Generator>SettingsSingleFileGenerator</Generator>
+      <LastGenOutput>Settings.Designer.cs</LastGenOutput>
+    </None>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="LinqToSQL\Reporting\Reporting.dbml.layout">
+      <DependentUpon>Reporting.dbml</DependentUpon>
+    </None>
+  </ItemGroup>
+  <ItemGroup>
+    <Service Include="{3259AA49-8AA1-44D3-9025-A0B520596A8C}" />
+    <Service Include="{508349B6-6B84-4DF5-91F0-309BEEBAD82D}" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\Framework.Mvc\Framework.Mvc.csproj">
+      <Project>{2104F11F-2B1A-47C5-8A60-157A7003E5BC}</Project>
+      <Name>Framework.Mvc</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\Framework\Framework.csproj">
+      <Project>{f032c987-f6d8-4171-a00c-37cc2da979fe}</Project>
+      <Name>Framework</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\Globalization\Globalization.csproj">
+      <Project>{5d7eedc0-19c4-46fa-bbf5-251359986be5}</Project>
+      <Name>Globalization</Name>
+    </ProjectReference>
+  </ItemGroup>
+  <ItemGroup>
+    <Folder Include="Data\Repositories\Interfaces\" />
+  </ItemGroup>
+  <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
+  <Import Project="$(SolutionDir)\.nuget\nuget.targets" />
+  <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
+       Other similar extension points exist, see Microsoft.Common.targets.
+  <Target Name="BeforeBuild">
+  </Target>
+  <Target Name="AfterBuild">
+  </Target>
+  -->
+</Project>

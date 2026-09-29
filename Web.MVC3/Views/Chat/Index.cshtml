@@ -1,0 +1,53 @@
+﻿@model Data.ViewModels.Chat.ChatIndexModel
+@using Framework.Strings
+@using Globalization.Resources.Chat
+@using Web.Helpers
+@{
+    ViewBag.Title = Resource.ChatTitle;
+}
+@section Head{
+    <style type="text/css">
+        .activeUsers {
+            white-space: nowrap;
+        }
+    </style>
+}
+@section Scripts{
+    <script type="text/javascript">
+        function onPageLoad() {
+            $(document).chat({ userProfileUrl: '@Url.RouteUrlRaw("RawUser")/', myName: '@ViewBag.CurrentUser.FullName', currentUserId: '@ViewBag.CurrentUser.Id', debug: @HttpContext.Current.IsDebuggingEnabled.ToString().ToLower() });
+        }
+    </script>
+}
+<h2 class="heading clearfix">@Resource.LiveChat</h2>
+<div class="fr span-6">
+    <h3>@Resource.ConnectedUsers: @Model.Users.Count</h3>
+    <ul>
+        @foreach (var user in Model.Users)
+        {
+            <li class="@(user.IsOnline ? "connected" : "disconnected")" data-action="chat" data-chatid="@user.Id" data-chatname="@user.Name"><span class="presenceIcon"></span><a href="@Url.Action(MVC.Account.Details(user.Id, user.Name, null))">@user.Name</a></li>
+        }
+    </ul>
+</div>
+<div class="span-12">
+    @foreach (var group in Model.Groups)
+    {
+        <h3 class="m_list"><a href="@group.Url"><span title="@Resource.LastMessage: @group.Date">@group.Name</span> <span title="@Resource.MessageCount">(@group.MessageCount)</span></a></h3>
+        <div class="chatgroup">
+            <div data-action='groupchat' data-chatid='@group.Id' data-chatname='@group.Name' data-url="@group.Url">
+                @Html.Button(new ButtonHelperModel() { ImageUrl = Links.Content.Images.chat_ico_png, Text = Resource.Discuss })
+                <div class="clear"></div>
+            </div>
+        </div>
+        <div class="chatgroup">
+            <ul class="activeUsers">
+                @foreach (var user in group.Users)
+                {
+                    <li class="@(user.IsOnline ? "connected" : "disconnected")" data-action="chat" data-chatid="@user.Id" data-chatname="@user.Name"><span class="presenceIcon"></span><a href="@Url.Action(MVC.Account.Details(user.Id, user.Name, null))">@user.Name</a></li>
+                }
+            </ul>
+        </div>
+    }
+</div>
+
+

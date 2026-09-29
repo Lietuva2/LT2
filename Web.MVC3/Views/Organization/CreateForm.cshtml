@@ -1,0 +1,25 @@
+﻿@using Globalization.Resources.Organization
+@using Web.Helpers
+@model Data.ViewModels.Organization.OrganizationCreateModel
+@using (Html.BeginForm())
+{
+    <fieldset>
+            <div class="editor-label">
+                @Html.LabelFor(m => m.Name)
+            </div>
+            <div class="editor-field">
+                @Html.TextBoxFor(m => m.Name, new Dictionary<string, object>(){{"class", "txt_xl"}})
+                @Html.ValidationMessageFor(m => m.Name)
+            </div>
+            <div class="editor-label">
+                @Html.LabelFor(m => m.Type)
+            </div>
+            <div class="editor-field">
+                @Html.DropDownListFor(m => m.Type, Model.Types)
+                @Html.ValidationMessageFor(m => m.Type)
+            </div>
+        <p>
+            @Html.Buttons(saveText: Resource.Create)
+        </p>
+    </fieldset>
+}

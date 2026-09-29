@@ -1,0 +1,27 @@
+﻿@model List<Data.ViewModels.Organization.MemberModel>
+@using Framework.Enums
+@using Framework.Strings;
+@using Globalization.Resources.Organization
+<ul id="listMembers">
+    @for (int i = 0; i < Model.Count; i++)
+    {
+        <li data-role="deleteContainer" title="@(!string.IsNullOrEmpty(Model[i].InvitedBy) ? Resource.InvitedBy + ": " + Model[i].InvitedBy : "")">
+            @{ var boldClass = Model[i].Permission == UserRoles.Admin ? "bold" : "";}
+            @Html.ActionLink(Model[i].FullName, MVC.Account.Details(Model[i].ObjectId, Model[i].FullName.ToSeoUrl(), null), new Dictionary<string, object>() { { "class", boldClass } })
+            <span class="details">@Model[i].Role</span>
+
+            @if (Model[i].IsCurrentUser)
+            {
+                @Html.CheckBoxFor(m => m[i].IsPublic, new Dictionary<string, object>() { { "title", Resource.MemberIsPublic }, {"data-url", Url.Action(MVC.Organization.SetMemberVisibility(Model[i].OrganizationId, Model[i].DbId.Value, false))} })
+            }
+        @if (Model[i].IsEditable)
+        {
+            <span class="hide" data-role="delete">
+                <a href="@Url.Action(MVC.Organization.RemoveMember(Model[i].OrganizationId, Model[i].DbId))">
+                    <img style="height: 12px;" src="@Links.Content.Images.cross_png" />
+                </a>
+            </span>
+        }
+        </li>
+    }
+</ul>

@@ -1,0 +1,21 @@
+﻿@model Data.ViewModels.Voting.VotingResultsModel
+
+@using Data.Enums
+@using Framework.Strings
+@using Web.Helpers
+
+@foreach (var issue in Model.Items.List)
+{
+    <h4>
+        @Html.ActionLink(issue.Subject, MVC.Voting.Details(issue.Id, issue.Subject.ToSeoUrl()))
+    </h4> 
+    <p>
+        @issue.Text
+    </p>
+    <div class="margin">
+        <div data-role="progressbar" style="width: 150px;">
+            @Html.Partial(MVC.Voting.Views.Progress, issue.Progress)
+        </div>
+    </div>
+    <hr />
+}

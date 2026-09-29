@@ -1,0 +1,19 @@
+﻿@using Globalization.Resources.Account
+@using Globalization.Resources.Shared
+@{
+    ViewBag.Title = Resource.ConfirmEmailFailedTitle;
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<div class="span-12">
+    <h2 class="heading">@SharedStrings.Error
+    </h2>
+</div>
+<div class="clear"></div>
+<div class="popup">
+            <div class="popup_border error">
+                <div>@Resource.ConfirmEmailFailedMessage</div>
+            </div>
+        </div>
+<div class="clear"></div>
+

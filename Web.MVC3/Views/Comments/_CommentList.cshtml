@@ -1,0 +1,5 @@
+﻿@model IEnumerable<Data.ViewModels.Comments.CommentView>
+@foreach (var comment in Model)
+{
+    Html.RenderPartial(MVC.Comments.Views._Comment, comment);
+}

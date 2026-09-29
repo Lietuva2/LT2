@@ -1,0 +1,9 @@
+﻿@using Services.Infrastructure
+@using Web.Helpers
+@if (ViewBag.CurrentUser.IsMainIdeaVoted == false && !string.IsNullOrEmpty(CustomAppSettings.MainIdeaId))
+{
+    
+    <div id="divMainIdeaVoting">
+        
+    </div>
+}

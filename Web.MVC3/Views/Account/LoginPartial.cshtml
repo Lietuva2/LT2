@@ -1,0 +1,109 @@
+﻿@model Data.ViewModels.Account.UserLoginModel
+@using Globalization.Resources.Account
+@using Globalization.Resources.Shared
+@using Lucene.Net.Documents
+@using Microsoft.Ajax.Utilities
+@using Web.Helpers
+<script type="text/javascript">
+    $(document).ready(function () {
+        $('#lnkConfirmIdentity', $('#loginPartialContainer')).linkdialog({
+            dialogSelector: "#dialog-confirm-user",
+            addCloseButton: false,
+            autoOpen: false
+        });
+
+        @if (Model.ExternalAuthenticationTypes.Any()) {
+            <text>
+        $('#dialog-openauth', $('#loginPartialContainer')).dialog({
+            resizable: false,
+            height: 110,
+            width: 340,
+            modal: true,
+            autoOpen: false
+        });
+
+        $('.js-btn-ext-login').bind('click', function () {
+            var dialog = $('#dialog-openauth');
+            var text = dialog.parent().find('.ui-dialog-title');
+            text.text($.helpers.format(text.text(), $(this).data('value')));
+            dialog.find('p').text($.helpers.format(dialog.find('p').text(), $(this).data('value')));
+
+            dialog.dialog('open');
+
+            $('#oAuthLoginProvider').val($(this).data('value'));
+            document.getElementById('oAuthLogin').submit();
+        });
+
+        </text>
+        }
+    });
+</script>
+<div id="loginPartialContainer">
+    @{Html.RenderPartial(MVC.Shared.Views.LoginFb);}
+    <h2 class="heading">@Resource.FormHeader</h2>
+    <br />
+    @Html.ValidationSummary(true, Resource.ValidationErrorLogin)
+
+    @if (Model.ExternalAuthenticationTypes.Any())
+    {
+        <div class="clearfix">
+            @{ var index = 0;}
+            @foreach (var type in Model.ExternalAuthenticationTypes.Reverse())
+            {
+                <a title="@string.Format(Resource.OpenAuthConnect, type.AuthenticationType)" href="#" data-value="@type.AuthenticationType" style="background: #FFF url(@Links.Content.Images.OpenID.images_large.Url(type.AuthenticationType + ".gif")) no-repeat center center" class="js-btn-ext-login openid_large_btn"></a>
+                index++;
+            }
+        </div>
+        using (Html.BeginForm(MVC.Account.ExternalLogin().AddRouteValue("returnTo", Model.ReturnTo), FormMethod.Post, new { id = "oAuthLogin" }))
+        {
+            @Html.AntiForgeryToken()
+            @Html.Hidden("provider", null, new { id = "oAuthLoginProvider" })
+            <label class="normal">@Html.CheckBox("chkRememberMe") @Resource.RememberMe</label>
+        }
+    }
+    @if (!ViewBag.CurrentUser.IsUnique)
+    {
+        <div class="LoginOptionSeparator">
+            @SharedStrings.Or.ToUpper()
+        </div>
+        @Html.Button(new ButtonHelperModel() { CssClass = "positive LoginInput", ImageUrl = Links.Content.Images.group_key_png, Text = Resource.ConfirmIdentityAction, Type = ButtonHelperModel.Types.Link, Id = "lnkConfirmIdentity" })
+        <div class="clear"></div>
+        <br />
+    }
+
+    <div class="LoginOptionSeparator">
+        @SharedStrings.Or.ToUpper()
+    </div>
+    <p>
+        @Resource.NotRegistered @Html.ActionLink(Resource.Register, MVC.Account.Register(Model.ReturnTo))
+    </p>
+    @using (Html.BeginForm(MVC.Account.Login(Model.ReturnTo)))
+    {
+        <div>
+            <fieldset>
+                <div>
+                    @Html.TextBoxFor(m => m.UserName, new { placeholder = Resource.UserName, @class = "LoginInput" })
+                    @Html.ValidationMessageFor(m => m.UserName)
+                </div>
+                <div>
+                    @Html.PasswordFor(m => m.Password, new { placeholder = Resource.Password, @class = "LoginInput" })
+                    @Html.ValidationMessageFor(m => m.Password)
+                </div>
+                @Html.HiddenFor(m => m.ReturnTo)
+                <div class="secondaryActions">
+                    <label class="normal">@Html.CheckBoxFor(m => m.RememberMe) @Resource.RememberMe</label>
+                    @Html.ActionLink(Resource.ForgotPassword, MVC.Account.Reset())
+                </div>
+                <div class="actions clearfix">
+                    @Html.Button(new ButtonHelperModel() { Text = Resource.Login, ImageUrl = Links.Content.Images.tick_png, CssClass = "LoginInput" })
+                </div>
+
+            </fieldset>
+        </div>
+    }
+    <div id="dialog-openauth" title="@Resource.OpenAuthConnectingTitle" class="hide">
+        <p>
+            @Resource.OpenAuthConnecting
+        </p>
+    </div>
+</div>
