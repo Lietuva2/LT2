@@ -19,6 +19,7 @@ The website is the `../docs/` folder: its contents are uploaded as they are to l
 | `../docs/zurnalistams.html` | Journalists | What LT2 would offer journalists and story ideas. |
 | `design-notes.md` | Team | Decision history, rejected alternatives, research sources and open questions from the discovery work. |
 | `prototypes/seimas-vote-hemicycle/` | Team | Feasibility check: renders a real Seimas vote from the open data API. |
+| `prototypes/logo-spin/` | Team | `<lt2-logo-spin>`: embeddable script that turns the logo in 3D; edge-on it is a man (left edge) or a woman (right edge), drawn so their clothes match the logo's colour bands. `index.html` is the demo (serve the folder over HTTP). The design history: `figuros.html` (flat figure options per edge) and `poros.html` (the chosen pair, R bodies with K4 legs, and the alternatives). |
 
 When adding or renaming a page, update `../docs/dokumentai.html` as well.
 

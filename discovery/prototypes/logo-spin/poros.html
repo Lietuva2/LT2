@@ -1,0 +1,283 @@
+<!doctype html>
+<html lang="lt">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>LT2 poros variantai</title>
+<style>
+  :root{color-scheme:light;--bg:#f6f7f4;--ink:#1c2420;--muted:#5b6660;--card:#fff;--line:#dfe3dd}
+  body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.5 system-ui,sans-serif}
+  main{max-width:1100px;margin:0 auto;padding:32px 16px 64px}
+  h1{font-size:24px;margin:0 0 6px} p{color:var(--muted);margin:0 0 20px;max-width:760px}
+  .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(330px,1fr));gap:14px}
+  .pair{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:14px;display:flex;flex-direction:column;gap:8px;min-width:0}
+  .pair b{font-size:16px} .pair small{color:var(--muted);font-size:13.5px;line-height:1.4}
+  .views{display:flex;align-items:flex-end;justify-content:center;gap:6px}
+  .views svg.big{width:128px;height:334px} .views svg.small{width:24px;height:63px}
+  .views .gap{width:14px}
+  h2{font-size:19px;margin:32px 0 6px}
+  .grid.narrow{grid-template-columns:repeat(auto-fill,minmax(250px,1fr))}
+  .grid.narrow .views{align-items:flex-start}
+  .views svg.head{width:104px;height:126px}
+  .views svg.legs{width:118px;height:232px}
+</style>
+</head>
+<body>
+<main>
+  <h1>M6 + V1: poros variantai</h1>
+  <p>Vyras – kairėje briaunoje (pilkas švarkas iki klubų, tamsiai žalios kelnės), moteris – dešinėje (pilka galva, šviesiai žalias ilgas švarkas iki kelių, tamsiai žalios kelnės). Dešinėje – abu mažu dydžiu, kaip matytųsi 200 px logotipe.</p>
+  <h2>Pagal jūsų pavyzdį</h2>
+  <p>Perbraižyta pagal atsiųstus paveikslėlius ir pritaikyta spalvų riboms: vyro švarko kraštas – ties klubais (321), moters plaukai baigiasi ties smakru (124), suknelės kraštas – ties keliais (371). Todėl liemuo šiek tiek ilgesnis nei pavyzdyje.</p>
+  <div class="grid" id="reference"></div>
+
+  <h2>Kojų variantai</h2>
+  <p>Kojos nubrėžtos viena ištisine sklandžia kreive per kelis taškus, todėl kontūre nėra lūžių ir gumbų. Kairėje – visa pora, dešinėje – kojos iš arti.</p>
+  <div class="grid" id="legs"></div>
+
+  <h2>Vyro galvos forma</h2>
+  <p>P1 kūnas, keičiasi tik galvos forma. Kairėje – visas žmogus, dešinėje – galva stambiu planu ir mažu dydžiu.</p>
+  <div class="grid narrow" id="manHeads"></div>
+
+  <h2>Moters kaklas</h2>
+  <p>P1 kūnas, keičiasi tik tai, kur baigiasi plaukai ir prasideda kaklas. Pilka baigiasi ties smakru, todėl žemiau kaklas šviesiai žalias – kaip aukšta apykaklė.</p>
+  <div class="grid narrow" id="womanNecks"></div>
+
+  <h2>Ankstesni poros variantai</h2>
+  <div class="grid" id="pairs"></div>
+</main>
+<script>
+function samplePath(d) {
+  var t = d.match(/[MLCZ]|-?\d*\.?\d+/g), pts = [], i = 0, cmd, x = 0, y = 0;
+  function n() { return parseFloat(t[i++]); }
+  while (i < t.length) {
+    if (/[MLCZ]/.test(t[i])) cmd = t[i++];
+    if (cmd === 'Z') continue;
+    if (cmd === 'M' || cmd === 'L') { x = n(); y = n(); pts.push(x, y); continue; }
+    var x1 = n(), y1 = n(), x2 = n(), y2 = n(), x3 = n(), y3 = n();
+    for (var s = 1; s <= 16; s++) {
+      var u = s / 16, v = 1 - u;
+      pts.push(v * v * v * x + 3 * v * v * u * x1 + 3 * v * u * u * x2 + u * u * u * x3,
+        v * v * v * y + 3 * v * v * u * y1 + 3 * v * u * u * y2 + u * u * u * y3);
+    }
+    x = x3; y = y3;
+  }
+  return pts;
+}
+function half(d) {
+  var p = samplePath(d), out = p.slice();
+  for (var i = p.length - 2; i >= 0; i -= 2) if (p[i] !== 0) out.push(-p[i], p[i + 1]);
+  return out;
+}
+function shape(d) { return samplePath(d); }
+function flip(p) { return p.map(function (v, i) { return i % 2 ? v : -v; }); }
+
+// ---- Man (left edge): grey to the jacket hem at 321, dark green below ----
+var MAN_BODY = half('M 0 52 C 12 52 19 60 19 75 C 19 90 17 100 12 106 C 10 109 9 111 9 114 L 9.5 121 ' +
+  'C 14 125 30 128 44 131 C 53 133 57 140 57 150 C 55 160 50 166 48 175 ' +
+  'C 46 205 44 240 45 270 C 46 292 47 306 47 318 C 47 321 45 323 42 323 L 0 323');
+var MAN_LEG = shape('M 4 316 L 42 316 C 41 370 37 430 32 488 C 32 495 34 502 34 506 C 34 510 29 512 21 512 ' +
+  'C 14 512 11 510 11 505 C 11 470 10 410 7 350 C 6 336 4 326 4 316 Z');
+var MAN_LEG_FREE = shape('M 4 316 L 42 316 C 43 370 44 430 44 486 C 45 494 48 501 48 506 C 48 510 43 512 35 512 ' +
+  'C 28 512 25 510 25 505 C 23 470 17 410 9 350 C 6 336 4 326 4 316 Z');
+var MAN_ARM = shape('M 50 132 C 60 134 66 142 67 156 C 68 190 69 225 68 255 C 67 280 65 298 64 310 ' +
+  'C 63 318 60 321 55 321 C 50 321 48 317 49 309 C 50 290 51 270 51 250 C 51 220 51 190 50 170 C 49 150 46 136 50 132 Z');
+var MAN_ARM_POCKET = shape('M 50 132 C 60 134 66 142 67 156 C 69 185 73 215 73 240 C 73 258 66 278 56 294 ' +
+  'C 52 300 48 304 45 305 C 43 300 44 296 46 292 C 53 278 58 262 58 246 C 58 220 55 190 52 170 C 50 152 46 136 50 132 Z');
+var MAN_SIDE_PART = shape('M -19 80 C -20 62 -10 51 4 51 C 15 51 22 58 22 70 C 22 75 21 78 19 81 C 17 72 10 66 -2 66 C -11 67 -17 72 -19 80 Z');
+
+// ---- Woman (right edge): grey head to the chin at 125, light green long
+// jacket to the knee at 373, dark green trousers below ----
+var W_BOB = half('M 0 52 C 14 52 23 60 24 75 C 25 89 25 99 24 107 C 24 111 21 113 17 112 C 14 112 11 111 8.5 112 L 0 112');
+var W_FACE = half('M 0 60 C 11 60 16 69 16 83 C 16 97 14 105 10 109 C 9 111 8.5 112 8.5 114 L 0 114');
+var W_SIDE_SWEPT = shape('M 2 51 C 14 51 22 58 23 72 C 24 82 22 90 18 96 C 16 86 12 76 4 72 C -6 70 -14 76 -16 84 ' +
+  'C -18 94 -18 104 -17 112 C -20 114 -24 113 -25 110 C -26 100 -26 86 -25 74 C -23 60 -12 51 2 51 Z');
+var W_PIXIE = shape('M -18 82 C -20 64 -9 51 4 51 C 16 51 22 60 21 74 C 20 80 18 84 16 86 C 14 76 8 70 -1 70 ' +
+  'C -9 70 -15 75 -18 82 Z');
+var W_JACKET = half('M 0 110 L 8.5 112 L 8.5 134 C 12 139 30 142 41 146 C 46 148 48 153 47 160 ' +
+  'C 46 176 44 192 42 208 C 40 224 38 238 38 250 C 39 280 44 330 46 360 C 47 368 45 371 41 371 L 0 371');
+var W_LEG = shape('M 4 366 L 36 366 C 31 368 29 372 29 380 C 29 420 29 460 28 490 C 29 496 31 502 30 507 ' +
+  'C 29 511 24 512 18 512 C 12 512 10 510 10 506 C 9 470 8 420 6 382 C 5 374 4 370 4 366 Z');
+var W_LEG_FREE = shape('M 4 366 L 34 366 C 35 410 38 450 41 490 C 42 496 44 502 43 507 C 42 511 37 512 31 512 ' +
+  'C 25 512 23 510 23 506 C 20 470 13 420 7 382 C 5 374 4 370 4 366 Z');
+var W_ARM = shape('M 40 146 C 51 148 57 155 58 167 C 59 198 59 226 58 250 C 57 274 57 296 56 310 C 55 318 52 322 47 322 ' +
+  'C 42 322 40 318 41 311 C 42 296 43 278 43 262 C 43 238 43 214 42 190 C 41 170 37 152 40 146 Z');
+var W_ARM_HIP = shape('M 40 146 C 51 148 57 155 59 168 C 63 188 70 206 75 218 C 78 226 77 234 71 239 ' +
+  'C 64 245 55 251 47 256 C 43 258 40 254 42 249 C 48 243 57 236 62 230 C 63 228 62 224 60 218 ' +
+  'C 55 202 48 184 44 168 C 43 158 38 150 40 146 Z');
+var W_ARM_FOLDER = shape('M 40 146 C 51 148 57 155 58 167 C 59 198 60 226 60 250 C 60 272 60 290 60 298 ' +
+  'C 60 306 57 310 52 310 C 47 310 45 306 45 300 C 45 286 44 272 44 260 C 44 236 43 214 42 190 C 41 170 37 152 40 146 Z');
+var W_FOLDER = shape('M 50 270 L 68 270 C 71 270 72 272 72 275 L 72 352 C 72 355 71 356 68 356 L 50 356 ' +
+  'C 47 356 46 355 46 352 L 46 275 C 46 272 47 270 50 270 Z');
+
+var PAIRS = [
+  { id: 'P1', name: 'Išgryninta bazė', note: 'Tolygesni pečiai, siauresnė galva, švelnus moters švarko liemuo, rankos atitrauktos nuo liemens.',
+    man: [MAN_BODY, MAN_LEG, flip(MAN_LEG), MAN_ARM, flip(MAN_ARM)],
+    woman: [W_BOB, W_FACE, W_JACKET, W_LEG, flip(W_LEG), W_ARM, flip(W_ARM)] },
+  { id: 'P2', name: 'Laisvesnė poza', note: 'Svoris ant vienos kojos. Vyras – ranka kišenėje, moteris – ranka ant klubo.',
+    man: [MAN_BODY, MAN_LEG, flip(MAN_LEG_FREE), MAN_ARM, flip(MAN_ARM_POCKET)],
+    woman: [W_BOB, W_FACE, W_JACKET, flip(W_LEG), W_LEG_FREE, flip(W_ARM), W_ARM_HIP] },
+  { id: 'P3', name: 'Su dokumentu', note: 'Moteris laiko aplanką prie šono, vyras – ranka kišenėje.',
+    man: [MAN_BODY, MAN_LEG, flip(MAN_LEG), MAN_ARM, flip(MAN_ARM_POCKET)],
+    woman: [W_BOB, W_FACE, W_JACKET, W_LEG, flip(W_LEG), flip(W_ARM), W_ARM_FOLDER, W_FOLDER] },
+  { id: 'P4', name: 'Asimetriškas kirpimas', note: 'Moters plaukai sušukuoti į šoną, vyrui – šoninis sklastymas.',
+    man: [MAN_BODY, MAN_SIDE_PART, MAN_LEG, flip(MAN_LEG), MAN_ARM, flip(MAN_ARM)],
+    woman: [W_FACE, W_SIDE_SWEPT, W_JACKET, W_LEG, flip(W_LEG), W_ARM, flip(W_ARM)] },
+  { id: 'P5', name: 'Trumpas kirpimas', note: 'Moteriai trumpas „pixie“ kirpimas su apimtimi viršuje.',
+    man: [MAN_BODY, MAN_LEG, flip(MAN_LEG), MAN_ARM, flip(MAN_ARM)],
+    woman: [W_FACE, W_PIXIE, W_JACKET, W_LEG, flip(W_LEG), W_ARM, flip(W_ARM)] }
+];
+
+var BANDS = {
+  left: [[45, '#a7b1ac'], [321, '#a7b1ac'], [321, '#1f6b3a'], [515, '#1f6b3a']],
+  right: [[45, '#a7b1ac'], [125.5, '#a7b1ac'], [125.5, '#7cc242'], [373, '#7cc242'], [373, '#1f6b3a'], [515, '#1f6b3a']]
+};
+var uid = 0;
+function svg(shapes, edge, cls) {
+  var id = 'g' + (uid++);
+  var stops = BANDS[edge].map(function (s) { return '<stop offset="' + (s[0] - 45) / 470 + '" stop-color="' + s[1] + '"/>'; }).join('');
+  var box = cls === 'head' ? '-38 46 76 92' : cls === 'legs' ? '-50 318 100 197' : '-80 45 160 470';
+  return '<svg class="' + cls + '" viewBox="' + box + '" aria-hidden="true"><defs><linearGradient id="' + id +
+    '" gradientUnits="userSpaceOnUse" x1="0" y1="45" x2="0" y2="515">' + stops + '</linearGradient></defs>' +
+    shapes.map(function (p) { return '<polygon points="' + p.join(' ') + '" fill="url(#' + id + ')"/>'; }).join('') + '</svg>';
+}
+document.getElementById('pairs').innerHTML = PAIRS.map(function (p) {
+  return '<div class="pair"><b>' + p.id + ' · ' + p.name + '</b><div class="views">' +
+    svg(p.man, 'left', 'big') + svg(p.woman, 'right', 'big') + '<span class="gap"></span>' +
+    svg(p.man, 'left', 'small') + svg(p.woman, 'right', 'small') + '</div><small>' + p.note + '</small></div>';
+}).join('');
+
+// ---- Head shapes (no hairstyles): the man's head, the woman's neck ----
+// Each man's head path runs from the top centre down to the neck (x 9.5–10).
+var MAN_REST = ' L 9.5 121 C 14 125 30 128 44 131 C 53 133 57 140 57 150 C 55 160 50 166 48 175 ' +
+  'C 46 205 44 240 45 270 C 46 292 47 306 47 318 C 47 321 45 323 42 323 L 0 323';
+var MAN_HEADS = [
+  { id: 'G1', name: 'Dabartinė (P1)', note: 'pailga, siaura', d: 'M 0 52 C 12 52 19 60 19 75 C 19 90 17 100 12 106 C 10 109 9 111 9 114' },
+  { id: 'G2', name: 'Apvalesnė', note: 'platesnė, apvalesnis smakras', d: 'M 0 52 C 15 52 22 61 22 77 C 22 92 19 102 14 107 C 11 110 9.5 111 9.5 114' },
+  { id: 'G3', name: 'Apvali', note: 'beveik apskrita', d: 'M 0 52 C 17 52 24 62 24 79 C 24 95 18 104 11 108 C 10 110 9.5 112 9.5 114' },
+  { id: 'G4', name: 'Kiaušinio formos', note: 'plati viršuje, siaurėja į smakrą', d: 'M 0 52 C 17 52 24 59 24 72 C 24 87 19 99 11 107 C 10 109 9.5 111 9.5 114' }
+];
+function manWith(head) { return [half(head + MAN_REST), MAN_LEG, flip(MAN_LEG), MAN_ARM, flip(MAN_ARM)]; }
+
+// Each woman's variant: the bob (closed at the centre where it ends) and the
+// point where the jacket's neck starts, just above the end of the hair.
+var W_REST = ' L 8.5 134 C 12 139 30 142 41 146 C 46 148 48 153 47 160 ' +
+  'C 46 176 44 192 42 208 C 40 224 38 238 38 250 C 39 280 44 330 46 360 C 47 368 45 371 41 371 L 0 371';
+var WOMAN_NECKS = [
+  { id: 'K1', name: 'Kaip P1', note: 'plaukai iki 112, ilgas kaklas', neck: 112,
+    bob: 'M 0 52 C 14 52 23 60 24 75 C 25 89 25 99 24 107 C 24 111 21 113 17 112 C 14 112 11 111 8.5 112 L 0 112' },
+  { id: 'K2', name: 'Vidutinis', note: 'plaukai iki 119', neck: 119,
+    bob: 'M 0 52 C 14 52 24 60 25 76 C 26 91 26 103 25 112 C 25 117 22 119 18 119 C 14 119 11 118 8.5 119 L 0 119' },
+  { id: 'K3', name: 'Kaip M6', note: 'plaukai iki 124, trumpas kaklas', neck: 124,
+    bob: 'M 0 52 C 15 52 25 61 26 78 C 27 94 27 106 26 116 C 26 122 23 124 19 124 C 15 124 11 123 8.5 124 L 0 124' }
+];
+function womanWith(v) {
+  return [half(v.bob), half('M 0 ' + (v.neck - 2) + ' L 8.5 ' + v.neck + W_REST), W_LEG, flip(W_LEG), W_ARM, flip(W_ARM)];
+}
+function card(id, name, note, shapes, edge) {
+  return '<div class="pair"><b>' + id + ' · ' + name + '</b><div class="views">' + svg(shapes, edge, 'big') +
+    '<span class="gap"></span>' + svg(shapes, edge, 'head') + svg(shapes, edge, 'small') + '</div><small>' + note + '</small></div>';
+}
+document.getElementById('manHeads').innerHTML = MAN_HEADS.map(function (h) {
+  return card(h.id, h.name, h.note, manWith(h.d), 'left');
+}).join('');
+document.getElementById('womanNecks').innerHTML = WOMAN_NECKS.map(function (v) {
+  return card(v.id, v.name, v.note, womanWith(v), 'right');
+}).join('');
+
+// ---- Traced from the owner's reference images ----
+function both(d) { var p = shape(d); return [p, flip(p)]; }
+var R_MAN = [half('M 0 52 C 13 52 21 62 21 77 C 21 90 18 100 13 105 C 12 106 12.5 107 12.5 108 L 12.5 120 ' +
+    'C 13 125 20 128 30 131 C 40 134 48 137 54 142 C 59 147 62 154 62 164 C 60 172 51 178 46 183 ' +
+    'C 42 200 38 222 38 240 C 38 262 42 296 44 314 C 44.5 318 44.5 321 44 322 L 0 322')].concat(
+  both('M 57 147 C 64 153 67 166 67 182 C 68 200 70 222 70 240 C 70 258 68 272 66 286 ' +
+    'C 67 296 67 306 64 313 C 61 319 55 321 51 319 C 47 317 46 312 47 306 C 48 302 50 298 49 294 ' +
+    'C 50 282 50 262 49 246 C 48 225 47 200 46 183 C 45 170 50 151 57 147 Z'),
+  both('M 1 318 L 45 318 C 44.5 340 43 362 41 380 C 39.5 392 38 398 38 404 C 38 412 39.5 420 39.5 430 ' +
+    'C 39.5 446 35 462 31 474 C 30 478 29.5 481 29.5 484 C 30 489 34 494 36 498 C 38 503 38 508 35 510.5 ' +
+    'C 33 512 29 512 25 512 C 19 512 14.5 512 13 510 C 12 508 12 505 12 501 C 12 494 12.5 488 12.5 482 ' +
+    'C 12 468 10.5 452 9.5 440 C 9 428 9 414 8.5 404 C 7 385 4 352 1 318 Z'));
+var R_WOMAN = [half('M 0 52 C 19 52 28 64 29 83 C 30 99 29 111 27 118 C 25 123 21 125 16 124 C 13 124 11 124 10 124 L 0 124'),
+  half('M 0 120 L 10 120 L 10 135 C 12 139 24 142 36 145 C 46 148 53 152 56 160 C 57 168 50 180 40 192 ' +
+    'C 35 208 32 228 32 246 C 32 262 40 278 44 292 C 47 312 48 345 49 366 C 49 370 47 371 44 371 L 0 371')].concat(
+  both('M 52 154 C 59 160 61 175 61 190 C 61 212 62 235 61 255 C 60 275 60 288 60 296 ' +
+    'C 61 306 61 316 58 322 C 55 327 49 328 46 324 C 43 320 43 314 44 308 C 45 304 46 300 45 296 ' +
+    'C 45 282 46 268 46 256 C 47 236 47 214 45 196 C 44 184 46 160 52 154 Z'),
+  both('M 2 366 L 33 366 C 32.5 385 31 405 30 420 C 29.5 428 29.5 432 30 436 C 31 444 32.5 452 32.5 460 ' +
+    'C 32.5 470 28 478 24.5 484 C 23.5 487 23.5 490 25 493 C 27.5 497 30 501 30 505 C 30 510 27 512 22 512 ' +
+    'C 16 512 12 512 10.5 510 C 9.5 508 9.5 505 9.5 501 C 9.5 494 10 488 10 484 C 9.5 476 8 468 7 460 ' +
+    'C 6.5 452 7 444 7 438 C 6 420 4.5 395 3.5 375 C 3 370 2.5 368 2 366 Z'));
+document.getElementById('reference').innerHTML = '<div class="pair"><b>R · Pagal pavyzdį</b><div class="views">' +
+  svg(R_MAN, 'left', 'big') + svg(R_WOMAN, 'right', 'big') + '<span class="gap"></span>' +
+  svg(R_MAN, 'left', 'small') + svg(R_WOMAN, 'right', 'small') + '</div><small>Kiaušinio formos vyro galva ant tiesaus kaklo, ' +
+  'rankos su alkūnėmis ir kumščiais, kojos su keliais ir blauzdomis; moteriai – pilnas bobas, siauras liemuo, platesni klubai.</small></div>' +
+  '<div class="pair"><b>Galvos stambiu planu</b><div class="views">' + svg(R_MAN, 'left', 'head') + svg(R_WOMAN, 'right', 'head') +
+  '</div><small>Pilka baigiasi ties smakru, todėl moters kaklas žemiau – šviesiai žalias, kaip aukšta apykaklė.</small></div>';
+
+// ---- Legs as one smooth curve ----
+// Centripetal Catmull-Rom spline through the points (x, y, x, y, ...): the
+// outline passes through every point with no kinks or overshoot. A leg runs
+// from the outer top, down and round the foot, up to the inner top; the
+// straight closing edge at the top is hidden under the jacket or dress.
+function spline(flat) {
+  var P = [], out = [];
+  for (var i = 0; i < flat.length; i += 2) P.push([flat[i], flat[i + 1]]);
+  var n = P.length;
+  function ext(a, b) { return [2 * a[0] - b[0], 2 * a[1] - b[1]]; }
+  function dist(a, b) { return Math.sqrt(Math.hypot(b[0] - a[0], b[1] - a[1])) || 1e-4; }
+  function mix(a, b, ta, tb, t) {
+    var u = (t - ta) / (tb - ta);
+    return [a[0] + (b[0] - a[0]) * u, a[1] + (b[1] - a[1]) * u];
+  }
+  for (i = 0; i < n - 1; i++) {
+    var p0 = i > 0 ? P[i - 1] : ext(P[0], P[1]), p1 = P[i], p2 = P[i + 1], p3 = i + 2 < n ? P[i + 2] : ext(P[n - 1], P[n - 2]);
+    var t0 = 0, t1 = t0 + dist(p0, p1), t2 = t1 + dist(p1, p2), t3 = t2 + dist(p2, p3);
+    for (var s = 0; s < 14; s++) {
+      var t = t1 + (t2 - t1) * s / 14;
+      var a1 = mix(p0, p1, t0, t1, t), a2 = mix(p1, p2, t1, t2, t), a3 = mix(p2, p3, t2, t3, t);
+      var b1 = mix(a1, a2, t0, t2, t), b2 = mix(a2, a3, t1, t3, t), c = mix(b1, b2, t1, t2, t);
+      out.push(c[0], c[1]);
+    }
+  }
+  out.push(P[n - 1][0], P[n - 1][1]);
+  return out;
+}
+function legPair(flat, exact) { var p = exact ? flat : spline(flat); return [p, flip(p)]; }
+
+// K4: the legs of the reference images, read row by row from the pixels
+// (left and right leg averaged, lightly smoothed), same width scale as the
+// body, fitted between the hem and the bottom of the logo.
+var LEGS_EXACT = {
+  man: [43.2,316,43.2,322,43.4,323.3,43.3,324.6,43.2,326,43.1,327.3,43,328.6,42.9,329.9,42.9,331.2,42.8,332.6,42.7,333.9,42.6,335.2,42.5,336.5,42.4,337.8,42.4,339.2,42.3,340.5,42.2,341.8,42.1,343.1,42,344.4,41.9,345.8,41.9,347.1,41.8,348.4,41.7,349.7,41.6,351,41.5,352.3,41.3,353.7,41.3,355,41.2,356.3,41,357.6,40.9,358.9,40.8,360.3,40.6,361.6,40.4,362.9,40.3,364.2,40.1,365.5,40,366.9,39.8,368.2,39.6,369.5,39.5,370.8,39.3,372.1,39.1,373.5,39,374.8,38.8,376.1,38.6,377.4,38.4,378.7,38.3,380.1,38.1,381.4,37.9,382.7,37.8,384,37.7,385.3,37.6,386.7,37.6,388,37.6,389.3,37.5,390.6,37.5,391.9,37.4,393.3,37.4,394.6,37.4,395.9,37.5,397.2,37.5,398.5,37.5,399.8,37.6,401.2,37.7,402.5,37.8,403.8,38,405.1,38.2,406.4,38.3,407.8,38.5,409.1,38.7,410.4,38.9,411.7,38.9,413,39.1,414.4,39.1,415.7,39.3,417,39.4,418.3,39.4,419.6,39.3,421,39.2,422.3,39.1,423.6,39,424.9,38.9,426.2,38.7,427.6,38.5,428.9,38.3,430.2,38,431.5,37.8,432.8,37.6,434.2,37.3,435.5,37.1,436.8,36.8,438.1,36.5,439.4,36.3,440.8,36,442.1,35.7,443.4,35.5,444.7,35.2,446,34.9,447.3,34.6,448.7,34.4,450,34.2,451.3,33.9,452.6,33.7,453.9,33.4,455.3,33.2,456.6,33.1,457.9,32.9,459.2,32.7,460.5,32.6,461.9,32.4,463.2,32.3,464.5,32.1,465.8,32,467.1,31.8,468.5,31.6,469.8,31.4,471.1,31.2,472.4,30.9,473.7,30.9,475.1,30.8,476.4,30.7,477.7,30.6,479,30.6,480.3,30.6,481.7,30.6,483,30.6,484.3,30.6,485.6,30.7,486.9,30.8,488.3,31,489.6,31.2,490.9,31.4,492.2,31.7,493.5,32.3,494.8,33,496.2,33.8,497.5,34.6,498.8,35.5,500.1,36.3,501.4,36.9,502.8,37.4,504.1,37.6,505.4,37.5,506.7,36.9,508,36.9,508.3,36.6,508.5,36.4,508.7,36.3,508.9,36,509.1,35.6,509.4,35.4,509.6,35,509.8,34.6,510,34.3,510.2,33.5,510.5,33,510.7,32.3,510.9,31.5,511.1,30.5,511.3,29.3,511.6,27.8,511.8,25.4,512,20.9,512,19,511.8,17.8,511.6,16.8,511.3,16.1,511.1,15.6,510.9,15.1,510.7,14.8,510.5,14.4,510.2,14.1,510,13.9,509.8,13.6,509.6,13.5,509.4,13.3,509.1,13.1,508.9,13,508.7,12.9,508.5,12.8,508.3,12.6,508,12.3,506.7,12.1,505.4,12.1,504.1,12.2,502.8,12.2,501.4,12.3,500.1,12.3,498.8,12.4,497.5,12.4,496.2,12.3,494.8,12.2,493.5,12,492.2,11.9,490.9,11.8,489.6,11.6,488.3,11.6,486.9,11.6,485.6,11.5,484.3,11.4,483,11.4,481.7,11.4,480.3,11.4,479,11.4,477.7,11.5,476.4,11.6,475.1,11.7,473.7,11.8,472.4,11.9,471.1,12,469.8,12,468.5,12.1,467.1,12.1,465.8,12.1,464.5,12,463.2,12,461.9,12,460.5,12,459.2,12,457.9,11.9,456.6,11.8,455.3,11.7,453.9,11.6,452.6,11.4,451.3,11.3,450,11.1,448.7,11,447.3,10.8,446,10.7,444.7,10.5,443.4,10.4,442.1,10.3,440.8,10.1,439.4,10,438.1,9.9,436.8,9.8,435.5,9.7,434.2,9.6,432.8,9.6,431.5,9.5,430.2,9.5,428.9,9.5,427.6,9.5,426.2,9.6,424.9,9.6,423.6,9.7,422.3,9.8,421,9.9,419.6,10,418.3,10.1,417,10.3,415.7,10.4,414.4,10.6,413,10.7,411.7,10.9,410.4,10.9,409.1,10.9,407.8,11,406.4,11,405.1,11,403.8,11,402.5,10.9,401.2,10.8,399.8,10.7,398.5,10.5,397.2,10.3,395.9,10.2,394.6,10,393.3,9.9,391.9,9.8,390.6,9.8,389.3,9.8,388,9.7,386.7,9.7,385.3,9.5,384,9.4,382.7,9.2,381.4,9.1,380.1,8.9,378.7,8.7,377.4,8.6,376.1,8.4,374.8,8.3,373.5,8.1,372.1,7.9,370.8,7.8,369.5,7.6,368.2,7.5,366.9,7.3,365.5,7.1,364.2,7,362.9,6.8,361.6,6.6,360.3,6.5,358.9,6.3,357.6,6.2,356.3,6,355,5.8,353.7,5.7,352.3,5.5,351,5.3,349.7,5.2,348.4,5,347.1,4.8,345.8,4.7,344.4,4.5,343.1,4.4,341.8,4.2,340.5,4.1,339.2,3.9,337.8,3.7,336.5,3.6,335.2,3.4,333.9,3.2,332.6,3,331.2,2.8,329.9,2.6,328.6,2.4,327.3,1.3,326,0,324.6,0,323.3,0,322,0,316],
+  woman: [33.9,367,33.9,373,33.8,374.4,33.5,375.8,33.3,377.2,33,378.6,32.7,380,32.5,381.4,32.2,382.8,31.9,384.2,31.7,385.6,31.4,387,31.2,388.4,31,389.8,30.8,391.2,30.6,392.6,30.5,394,30.3,395.4,30.2,396.8,30.2,398.2,30.2,399.6,30.2,401,30.2,402.4,30.2,403.8,30.4,405.2,30.6,406.6,30.9,408,31.1,409.4,31.4,410.8,31.7,412.2,32,413.6,32.2,415.1,32.5,416.5,32.8,417.9,33,419.3,33.2,420.7,33.4,422.1,33.5,423.5,33.7,424.9,33.7,426.3,33.8,427.7,33.9,429.1,33.9,430.5,33.9,431.9,33.8,433.3,33.7,434.7,33.7,436.1,33.5,437.5,33.3,438.9,33.1,440.3,32.9,441.7,32.7,443.1,32.4,444.5,32.1,445.9,31.8,447.3,31.5,448.7,31.2,450.1,30.9,451.5,30.6,452.9,30.3,454.3,30,455.7,29.6,457.1,29.3,458.5,28.9,459.9,28.6,461.3,28.3,462.7,27.9,464.1,27.5,465.5,27.2,466.9,26.9,468.3,26.6,469.7,26.3,471.1,26,472.5,25.7,473.9,25.5,475.3,25.3,476.7,25.2,478.1,25.2,479.5,25.3,480.9,25.7,482.3,26.1,483.7,26.6,485.1,26.8,486.5,26.8,487.9,27,489.3,27.3,490.7,27.7,492.1,28.1,493.5,28.5,494.9,28.9,496.3,29.5,497.7,30,499.2,30.7,500.6,31.3,502,31.8,503.4,32,504.8,32.1,506.2,31.8,507.6,31.5,508,31.5,508.3,31.5,508.5,31.3,508.7,31,509,31,509.2,30.7,509.4,30.5,509.7,30.2,509.9,29.8,510.1,29.4,510.4,28.9,510.6,28.4,510.8,27.8,511.1,27,511.3,26.2,511.5,25,511.8,23.1,512,16.8,512,15.4,511.8,14.3,511.5,13.5,511.3,13,511.1,12.5,510.8,11.9,510.6,11.7,510.4,11.3,510.1,11,509.9,10.9,509.7,10.6,509.4,10.3,509.2,10.3,509,10.1,508.7,9.9,508.5,9.8,508.3,9.8,508,9.5,507.6,9.4,506.2,9.3,504.8,9.4,503.4,9.5,502,9.5,500.6,9.5,499.2,9.6,497.7,9.8,496.3,9.8,494.9,9.8,493.5,10,492.1,10.1,490.7,10.1,489.3,10.3,487.9,10.3,486.5,10.3,485.1,10.3,483.7,10.3,482.3,10.4,480.9,10.7,479.5,10.9,478.1,10.9,476.7,10.8,475.3,10.7,473.9,10.5,472.5,10.5,471.1,10.4,469.7,10.2,468.3,10.2,466.9,10.1,465.5,10,464.1,9.8,462.7,9.7,461.3,9.6,459.9,9.5,458.5,9.4,457.1,9.2,455.7,9,454.3,8.9,452.9,8.7,451.5,8.5,450.1,8.4,448.7,8.2,447.3,8,445.9,7.9,444.5,7.7,443.1,7.6,441.7,7.4,440.3,7.3,438.9,7.2,437.5,7.1,436.1,6.9,434.7,6.9,433.3,6.9,431.9,6.9,430.5,6.9,429.1,6.9,427.7,7.1,426.3,7.2,424.9,7.2,423.5,7.4,422.1,7.5,420.7,7.7,419.3,7.7,417.9,7.9,416.5,8,415.1,8,413.6,8.1,412.2,8,410.8,8,409.4,7.8,408,7.6,406.6,7.4,405.2,7.1,403.8,6.8,402.4,6.6,401,6.3,399.6,6,398.2,5.8,396.8,5.7,395.4,5.5,394,5.3,392.6,5.3,391.2,5.1,389.8,5,388.4,5,387,4.8,385.6,4.8,384.2,4.7,382.8,4.6,381.4,4.5,380,4.5,378.6,4.4,377.2,4.2,375.8,4.2,374.4,4.2,373,4.2,367]
+};
+
+var LEGS = [
+  { id: 'K4', name: 'Tiksliai pagal pavyzdį', exact: true,
+    note: 'Kontūras nuskaitytas tiesiai iš jūsų paveikslėlių (abi kojos suvidurkintos, lengvai išlygintos). Plotis – kaip pavyzdyje, ilgis pritaikytas tarp švarko ar suknelės krašto ir logotipo apačios.',
+    man: LEGS_EXACT.man, woman: LEGS_EXACT.woman },
+  { id: 'K1', name: 'Švelnios', note: 'Tolygiai siaurėja nuo šlaunies iki kulkšnies, pėda vos pastebimai platėja.',
+    man: [42, 316, 42.5, 345, 41.5, 380, 39, 415, 35.5, 450, 32.5, 472, 31.5, 486, 32.5, 498, 33.5, 505.5, 31, 510.5,
+      25, 512, 18, 512, 14, 510.5, 12.5, 505, 12.5, 495, 12.5, 484, 11.5, 460, 9.5, 425, 7, 390, 4, 352, 1, 316],
+    woman: [32, 366, 31.5, 395, 30.5, 425, 30, 450, 28, 469, 25.5, 482, 25, 493, 26.5, 503, 25, 510, 20.5, 512,
+      15, 512, 11.5, 510.5, 10, 505, 10, 495, 10, 485, 9, 466, 7.5, 440, 5.5, 410, 4, 385, 2.5, 366] },
+  { id: 'K2', name: 'Paprastos', note: 'Beveik tiesios, siaurėja į apačią, pėda – tik suapvalintas galas.',
+    man: [42, 316, 41.5, 360, 38.5, 410, 34.5, 455, 31.5, 480, 31.5, 494, 32, 504, 29.5, 510.5, 23, 512, 16, 511.5,
+      13, 506, 12.5, 496, 12.5, 482, 11, 452, 8.5, 412, 5, 368, 1, 316],
+    woman: [32, 366, 31.5, 400, 29.5, 440, 26.5, 470, 24.5, 484, 24.5, 496, 25, 505, 22.5, 511, 16.5, 512, 12, 511,
+      10, 505, 10, 495, 10, 484, 8.5, 455, 6, 420, 4, 390, 2.5, 366] },
+  { id: 'K3', name: 'Kaip pavyzdyje', note: 'Lengvai pažymėtas kelis ir blauzda, pėda išsikiša į išorę – bet viena sklandžia linija.',
+    man: [42, 316, 42.5, 345, 41, 380, 39, 408, 39, 430, 37, 455, 33.5, 472, 31, 484, 32.5, 494, 35.5, 502, 34.5, 509.5,
+      29, 512, 21, 512, 14.5, 511, 12.5, 505, 12.5, 494, 12.5, 482, 11, 458, 9.5, 432, 8.5, 408, 6, 380, 3, 345, 1, 316],
+    woman: [32, 366, 31.5, 390, 30, 418, 30.5, 440, 31.5, 455, 29.5, 470, 25.5, 482, 25, 492, 27.5, 500, 29, 506,
+      27.5, 511, 22.5, 512, 15.5, 512, 11.5, 511, 10, 505, 10, 494, 10, 484, 8.5, 468, 7, 450, 7, 436, 5.5, 410,
+      4, 385, 2.5, 366] }
+];
+document.getElementById('legs').innerHTML = LEGS.map(function (k) {
+  var man = R_MAN.slice(0, 3).concat(legPair(k.man, k.exact)), woman = R_WOMAN.slice(0, 4).concat(legPair(k.woman, k.exact));
+  return '<div class="pair"><b>' + k.id + ' · ' + k.name + '</b><div class="views">' +
+    svg(man, 'left', 'big') + svg(woman, 'right', 'big') + '<span class="gap"></span>' +
+    svg(man, 'left', 'legs') + svg(woman, 'right', 'legs') + '</div><small>' + k.note + '</small></div>';
+}).join('');
+</script>
+</body>
+</html>
