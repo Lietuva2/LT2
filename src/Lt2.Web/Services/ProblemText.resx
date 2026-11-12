@@ -67,4 +67,9 @@
 <data name="report.target" xml:space="preserve"><value>Nenurodyta, apie ką pranešate.</value></data>
 <data name="report.target-not-found" xml:space="preserve"><value>To, apie ką pranešate, nebėra.</value></data>
 <data name="moderation.wrong-state" xml:space="preserve"><value>Šiam turiniui šio veiksmo atlikti negalima.</value></data>
-<data name="merge.target-invalid" xml:space="preserve"><value>Sujungti galima tik su paskelbtu tos pačios pusės argumentu tame pačiame kreipimesi.</value></data></root>
+<data name="merge.target-invalid" xml:space="preserve"><value>Sujungti galima tik su paskelbtu tos pačios pusės argumentu tame pačiame kreipimesi.</value></data><data name="flag.kind" xml:space="preserve"><value>Pasirinkite, kas negerai su data.</value></data>
+<data name="flag.link" xml:space="preserve"><value>Nurodykite nuorodą (http arba https), kur matyti tikroji data.</value></data>
+<data name="flag.note" xml:space="preserve"><value>Paaiškinimas per ilgas: ne daugiau kaip 1 000 ženklų.</value></data>
+<data name="flag.participants-only" xml:space="preserve"><value>Apie datą gali pranešti kreipimosi iniciatorius ir tie, kurie nurodė savo poziciją.</value></data>
+<data name="planned.stage" xml:space="preserve"><value>Netinkama stadija.</value></data>
+</root>

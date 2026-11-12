@@ -33,6 +33,7 @@ public static class ParliamentModule
         services.TryAddSingleton(TimeProvider.System);
         services.AddScoped<IParliamentQueries, ParliamentQueries>();
         services.AddScoped<IBillCatalogue, BillCatalogue>();
+        services.AddScoped<IPlannedAgenda, PlannedAgenda>();
         return services;
     }
 
@@ -74,6 +75,38 @@ public static class ParliamentModule
         services.AddTransient<ISeimasClient, SeimasClient>();
         services.AddScoped<IParliamentStatistics, ParliamentStatistics>();
         services.AddScoped<IParliamentImport, ParliamentImporter>();
+        services.AddParliamentAgenda(configuration);
+        return services;
+    }
+
+    /// <summary>
+    /// The agenda watcher (design 8.4): lrs.lt pages behind <c>Agenda:BaseAddress</c> (empty: off) and the outbound
+    /// allowlist, with retries and time-outs. Worker only.
+    /// </summary>
+    public static IServiceCollection AddParliamentAgenda(this IServiceCollection services, IConfiguration configuration)
+    {
+        ArgumentNullException.ThrowIfNull(configuration);
+        var section = configuration.GetSection(Import.Agenda.AgendaOptions.Section);
+        var agenda = section.Get<Import.Agenda.AgendaOptions>() ?? new Import.Agenda.AgendaOptions();
+        services.AddOutboundAllowlist(configuration);
+        services.TryAddSingleton(TimeProvider.System);
+        services.AddOptions<Import.Agenda.AgendaOptions>()
+            .Bind(section)
+            .Validate(o => o.BaseAddress is null || (o.BaseAddress.IsAbsoluteUri && o.BaseAddress.AbsolutePath.EndsWith('/')),
+                "Agenda:BaseAddress must be empty or an absolute address ending in a slash.")
+            .ValidateOnStart();
+        services.AddHttpClient(Import.Agenda.AgendaWatcher.HttpClientName, http =>
+            {
+                http.Timeout = Timeout.InfiniteTimeSpan;
+                http.DefaultRequestHeaders.UserAgent.ParseAdd("Lietuva2.0-agenda/1.0");
+            })
+            .AddStandardResilienceHandler(o =>
+            {
+                o.AttemptTimeout.Timeout = TimeSpan.FromSeconds(agenda.TimeoutSeconds);
+                o.TotalRequestTimeout.Timeout = TimeSpan.FromSeconds(agenda.TimeoutSeconds * 4);
+                o.CircuitBreaker.SamplingDuration = TimeSpan.FromSeconds(agenda.TimeoutSeconds * 2 + 1);
+            });
+        services.AddScoped<IAgendaWatch, Import.Agenda.AgendaWatcher>();
         return services;
     }
 }

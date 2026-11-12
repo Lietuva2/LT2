@@ -29,4 +29,8 @@
 <data name="Statement.Required" xml:space="preserve"><value>Parašykite paaiškinimą autoriui.</value></data>
 <data name="Statement.TooLong" xml:space="preserve"><value>Paaiškinimas per ilgas: ne daugiau kaip 1 000 ženklų.</value></data>
 <data name="Merge.Target" xml:space="preserve"><value>Pasirinkite argumentą, su kuriuo sujungti.</value></data>
-<data name="Consent.Required" xml:space="preserve"><value>Reikia jūsų sutikimo.</value></data></root>
+<data name="Consent.Required" xml:space="preserve"><value>Reikia jūsų sutikimo.</value></data><data name="Flag.Kind" xml:space="preserve"><value>Pasirinkite, kas negerai su data.</value></data>
+<data name="Flag.Link" xml:space="preserve"><value>Nurodykite nuorodą (http arba https), kur matyti tikroji data.</value></data>
+<data name="Planned.Date" xml:space="preserve"><value>Nurodykite datą.</value></data>
+<data name="Planned.Stage" xml:space="preserve"><value>Netinkama stadija.</value></data>
+</root>

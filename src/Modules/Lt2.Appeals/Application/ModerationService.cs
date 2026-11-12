@@ -19,6 +19,7 @@ internal sealed class ModerationService(
     IParticipants participants,
     IAuditLog audit,
     IOutbox outbox,
+    IPlannedAgenda agenda,
     TimeProvider clock) : IAppealsModeration
 {
     private const int QueueLimit = 100;
@@ -39,7 +40,17 @@ internal sealed class ModerationService(
             }
         }
 
-        var surgeIds = surges.Keys.ToList();
+        // Date flags, and appeals under their threshold whose bill has reached the agenda (design 8.3).
+        var openFlags = await db.Flags.AsNoTracking().Where(f => f.Status == "open").OrderBy(f => f.CreatedAt).ToListAsync(cancellationToken);
+        var openAppeals = await db.Appeals.AsNoTracking().Where(a => a.Status == AppealStatuses.Open).ToListAsync(cancellationToken);
+        var planned = await agenda.ForBillsAsync(openAppeals.Select(a => a.BillNumber).ToList(), cancellationToken);
+        var counts = await reads.CountsAsync(db, openAppeals.Select(a => a.Id).ToList(), cancellationToken);
+        var minimum = await reads.MinimumAsync(cancellationToken);
+        var underThresholdOnAgenda = openAppeals
+            .Where(a => planned.ContainsKey(a.BillNumber) && !AppealReads.Threshold(a, counts[a.Id], minimum).Reached)
+            .Select(a => a.Id)
+            .ToHashSet();
+        var surgeIds = surges.Keys.Concat(openFlags.Select(f => f.AppealId)).Concat(underThresholdOnAgenda).Distinct().ToList();
         var appeals = await db.Appeals.AsNoTracking()
             .Where(a => a.Status == AppealStatuses.Pending
                 || (a.Status == AppealStatuses.Open && (reportedIds.Contains(a.Id) || surgeIds.Contains(a.Id))))
@@ -87,7 +98,10 @@ internal sealed class ModerationService(
                 a.ScreeningFlags.Concat(first?.ScreeningFlags ?? []).Distinct().ToList(),
                 ReportsOn(a.Id),
                 a.OpenedAt,
-                surges.GetValueOrDefault(a.Id));
+                surges.GetValueOrDefault(a.Id),
+                planned.GetValueOrDefault(a.BillNumber),
+                openFlags.Where(f => f.AppealId == a.Id).Select(f => new QueueFlag(f.Id, f.Kind, f.Link, f.Note, f.CreatedAt)).ToList(),
+                underThresholdOnAgenda.Contains(a.Id));
         }).ToList();
 
         var queueReasons = reasons.Select(r => new QueueReason(
@@ -134,7 +148,8 @@ internal sealed class ModerationService(
                     .ExecuteUpdateAsync(s => s.SetProperty(r => r.Status, ReasonStatuses.Published).SetProperty(r => r.SeenAt, now), cancellationToken);
             }
 
-            // An open appeal that was reported is kept as it is: the reports are closed.
+            // An open appeal that was reported or flagged is kept as it is: its reports and date flags are closed.
+            await CloseFlagsAsync(db, appeal.Id, now, cancellationToken);
             return notice;
         }, cancellationToken);
 
@@ -244,6 +259,32 @@ internal sealed class ModerationService(
             reason.SeenAt = now;
             return ModerationNotices.ReasonMerged;
         }, cancellationToken, details: new { into = intoReasonId });
+
+    public Task<Result<Unit>> SetPlannedAsync(Guid appealId, DateOnly date, string? stage, string statement, ModeratorActor moderator, CancellationToken cancellationToken)
+    {
+        if (stage is not (null or "presentation" or "consideration" or "adoption"))
+        {
+            return Task.FromResult<Result<Unit>>(Error.Validation("planned.stage", "stage"));
+        }
+
+        return OnAppealAsync(appealId, moderator, "planned", statement, async (db, appeal, now) =>
+        {
+            if (appeal.Status != AppealStatuses.Open)
+            {
+                return Error.Conflict("moderation.wrong-state");
+            }
+
+            await agenda.CorrectAsync(appeal.BillNumber, date, stage, moderator.UserId, statement, db.Database.CurrentTransaction!.GetDbTransaction(), cancellationToken);
+            await CloseFlagsAsync(db, appeal.Id, now, cancellationToken);
+
+            // Not the initiator's content: no notice to the author.
+            return (string?)null;
+        }, cancellationToken, details: new { date, stage });
+    }
+
+    private static Task<int> CloseFlagsAsync(AppealsDb db, Guid appealId, DateTimeOffset now, CancellationToken ct) =>
+        db.Flags.Where(f => f.AppealId == appealId && f.Status == "open")
+            .ExecuteUpdateAsync(s => s.SetProperty(f => f.Status, "closed").SetProperty(f => f.ClosedAt, now), ct);
 
     private delegate Task<Result<string?>> AppealAction(AppealsDb db, Appeal appeal, DateTimeOffset now);
 

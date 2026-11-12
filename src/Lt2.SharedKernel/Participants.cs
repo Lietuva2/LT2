@@ -64,3 +64,27 @@ public interface IBillCatalogue
 
 /// <summary>The vote that closes an appeal (design 8.1).</summary>
 public sealed record BillFinalVote(long VoteId, DateTimeOffset HeldAt);
+
+/// <summary>
+/// A bill's planned date on the Seimas agenda (design 5.1 planned_item, 8.4): from the lrs.lt agenda pages, or entered
+/// by a moderator, whose row takes precedence. Shown as "Planuojama …", never as a countdown.
+/// </summary>
+/// <param name="Stage"><c>presentation</c>, <c>consideration</c>, <c>adoption</c>, or <c>null</c>.</param>
+/// <param name="SetByModerator">A moderator entered or corrected it.</param>
+public sealed record PlannedDate(string BillNumber, DateOnly Date, string? Stage, string? SourceUrl, bool SetByModerator);
+
+/// <summary>Planned dates of bills. Implemented by the Parliament module.</summary>
+public interface IPlannedAgenda
+{
+    /// <summary>The current planned date of each given bill that has one today or later.</summary>
+    Task<IReadOnlyDictionary<string, PlannedDate>> ForBillsAsync(IReadOnlyCollection<string> numbers, CancellationToken cancellationToken);
+
+    /// <summary>Every current planned item with a date in [<paramref name="from"/>, <paramref name="to"/>].</summary>
+    Task<IReadOnlyList<PlannedDate>> BetweenAsync(DateOnly from, DateOnly to, CancellationToken cancellationToken);
+
+    /// <summary>
+    /// A moderator's correction (design 8.4), written in the caller's transaction: it replaces the bill's moderator row
+    /// and takes precedence over the agenda pages.
+    /// </summary>
+    Task CorrectAsync(string number, DateOnly date, string? stage, Guid moderatorUserId, string note, DbTransaction transaction, CancellationToken cancellationToken);
+}

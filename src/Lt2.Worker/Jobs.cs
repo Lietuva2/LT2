@@ -104,6 +104,24 @@ public sealed class AppealsDailyJob(IAppealsMaintenance maintenance, TimeProvide
     }
 }
 
+/// <summary>
+/// The agenda watcher (design 8.4): reads the upcoming plenary agenda hourly when <c>Agenda:BaseAddress</c> is set. A page
+/// it cannot read is an error line (the alert of design 8.9) and changes nothing.
+/// </summary>
+public sealed class AgendaWatchJob(IAgendaWatch watch, ILogger<AgendaWatchJob> logger)
+{
+    [DisableConcurrentExecution(timeoutInSeconds: 30 * 60)]
+    [AutomaticRetry(Attempts = 0, OnAttemptsExceeded = AttemptsExceededAction.Delete)]
+    public async Task RunAsync(CancellationToken cancellationToken)
+    {
+        var outcome = await watch.RunAsync(cancellationToken);
+        if (outcome.Status is "refused" or "failed")
+        {
+            logger.LogError("Agenda watcher {Status}: {Problem}", outcome.Status, outcome.Problem);
+        }
+    }
+}
+
 /// <summary>Registers the recurring Hangfire jobs at start-up, in Vilnius time (design 3: <c>Europe/Vilnius</c> for schedules).</summary>
 internal sealed class RecurringJobs(IRecurringJobManager jobs) : IHostedService
 {
@@ -128,6 +146,13 @@ internal sealed class RecurringJobs(IRecurringJobManager jobs) : IHostedService
             job => job.RunAsync(CancellationToken.None),
             "5 * * * *",
             new RecurringJobOptions { TimeZone = vilnius });
+
+        jobs.AddOrUpdate<AgendaWatchJob>(
+            "agenda-watch",
+            job => job.RunAsync(CancellationToken.None),
+            "20 * * * *",
+            new RecurringJobOptions { TimeZone = vilnius });
+        jobs.Trigger("agenda-watch");
 
         // Ask once at start-up, so a fresh deployment (or the local stack) imports without waiting for the first period.
         jobs.Trigger(ParliamentImport);

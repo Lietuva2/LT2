@@ -751,6 +751,115 @@ namespace Lt2.Parliament.Infrastructure.Migrations
                     b.ToTable("vote", "parliament");
                 });
 
+            modelBuilder.Entity("Lt2.Parliament.Import.Agenda.AgendaSnapshot", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<byte[]>("Body")
+                        .IsRequired()
+                        .HasColumnType("bytea")
+                        .HasColumnName("body");
+
+                    b.Property<string>("Failure")
+                        .HasColumnType("text")
+                        .HasColumnName("failure");
+
+                    b.Property<DateTimeOffset>("FetchedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("fetched_at");
+
+                    b.Property<int>("Rows")
+                        .HasColumnType("integer")
+                        .HasColumnName("rows");
+
+                    b.Property<string>("Sha256")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("sha256");
+
+                    b.Property<bool>("Synthetic")
+                        .HasColumnType("boolean")
+                        .HasColumnName("synthetic");
+
+                    b.Property<string>("Url")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("url");
+
+                    b.HasKey("Id")
+                        .HasName("pk_agenda_snapshot");
+
+                    b.HasIndex("FetchedAt")
+                        .HasDatabaseName("ix_agenda_snapshot_fetched_at");
+
+                    b.ToTable("agenda_snapshot", "parliament");
+                });
+
+            modelBuilder.Entity("Lt2.Parliament.Import.Agenda.PlannedItem", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<string>("BillNumber")
+                        .IsRequired()
+                        .HasMaxLength(40)
+                        .HasColumnType("character varying(40)")
+                        .HasColumnName("bill_number");
+
+                    b.Property<Guid?>("ConfirmedBy")
+                        .HasColumnType("uuid")
+                        .HasColumnName("confirmed_by");
+
+                    b.Property<DateTimeOffset>("FirstSeen")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("first_seen");
+
+                    b.Property<DateTimeOffset?>("GoneAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("gone_at");
+
+                    b.Property<DateTimeOffset>("LastSeen")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("last_seen");
+
+                    b.Property<string>("Note")
+                        .HasMaxLength(1000)
+                        .HasColumnType("character varying(1000)")
+                        .HasColumnName("note");
+
+                    b.Property<DateOnly>("PlannedDate")
+                        .HasColumnType("date")
+                        .HasColumnName("planned_date");
+
+                    b.Property<string>("Source")
+                        .IsRequired()
+                        .HasMaxLength(16)
+                        .HasColumnType("character varying(16)")
+                        .HasColumnName("source");
+
+                    b.Property<string>("SourceUrl")
+                        .HasColumnType("text")
+                        .HasColumnName("source_url");
+
+                    b.Property<string>("Stage")
+                        .HasMaxLength(16)
+                        .HasColumnType("character varying(16)")
+                        .HasColumnName("stage");
+
+                    b.HasKey("Id")
+                        .HasName("pk_planned_item");
+
+                    b.HasIndex("BillNumber", "GoneAt")
+                        .HasDatabaseName("ix_planned_item_bill_number_gone_at");
+
+                    b.ToTable("planned_item", "parliament");
+                });
+
             modelBuilder.Entity("Lt2.Parliament.Domain.AgendaItem", b =>
                 {
                     b.HasOne("Lt2.Parliament.Domain.Bill", null)

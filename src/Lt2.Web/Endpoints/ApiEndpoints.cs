@@ -72,6 +72,7 @@ internal static class ApiEndpoints
         EndorseEndpoint.Map(api);
         RemoveEndorsementEndpoint.Map(api);
         ReportEndpoint.Map(api);
+        FlagDateEndpoint.Map(api);
 
         GetModerationQueueEndpoint.Map(api);
         PublishAppealEndpoint.Map(api);
@@ -81,6 +82,7 @@ internal static class ApiEndpoints
         PublishReasonEndpoint.Map(api);
         HideReasonEndpoint.Map(api);
         MergeReasonEndpoint.Map(api);
+        SetPlannedEndpoint.Map(api);
     }
 
     /// <summary>A route from <see cref="ApiRoutes"/> relative to the <c>/api/v1</c> group.</summary>

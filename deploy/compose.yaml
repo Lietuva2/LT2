@@ -91,6 +91,8 @@ services:
       # The Seimas open data. Production keeps the default; only the local .env points the worker at the stand-in.
       Seimas__BaseAddress: ${LT2_SEIMAS_BASE_ADDRESS:-https://apps.lrs.lt/sip/}
       Outbound__AllowedHosts__1: ${LT2_OUTBOUND_EXTRA_HOST:-}
+      # The upcoming plenary agenda (lrs.lt pages). Empty: the watcher is off. The host must be on the allowlist.
+      Agenda__BaseAddress: ${LT2_AGENDA_BASE_ADDRESS:-}
       OTEL_EXPORTER_OTLP_ENDPOINT: ${OTEL_EXPORTER_OTLP_ENDPOINT:-}
     secrets:
       - source: db_worker_password

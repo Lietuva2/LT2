@@ -1,0 +1,76 @@
+@using Lt2.Api.Contracts.Appeals
+@inherits InteractiveBase
+@inject IAppealsApi Appeals
+
+@* Design 8.4: the initiator and participants can say the planned date is wrong or the bill is voted sooner, with a link
+   to the source; a moderator makes the change. Shown only to members who have a side on the appeal or opened it. *@
+@if (Mine is { } mine && (mine.Side is not null || mine.IsInitiator))
+{
+    <details class="stack stack--tight" id="date-flag">
+        <summary class="linkish small">@L["Flag.Open"]</summary>
+        @if (_sent)
+        {
+            <p class="note note--quiet" role="status">@L["Flag.Sent"]</p>
+        }
+        else
+        {
+            <form class="stack stack--tight" @onsubmit="SendAsync" novalidate>
+                <fieldset class="stack stack--tight">
+                    <legend class="label">@L["Flag.Kind"]</legend>
+                    @foreach (var kind in Kinds)
+                    {
+                        <label class="check">
+                            <input type="radio" name="flag-kind" id="flag-@kind" checked="@(_kind == kind)" @onchange="() => _kind = kind" disabled="@Locked" />
+                            <span>@L["Flag." + kind]</span>
+                        </label>
+                    }
+                </fieldset>
+                <div class="field @(Errors.ContainsKey("link") ? "field--error" : "")">
+                    <label for="flag-link">@L["Flag.Link"]</label>
+                    <input class="input" id="flag-link" type="url" maxlength="500" @bind="_link" disabled="@Locked" />
+                    <FieldError Errors="Errors" Field="link" />
+                </div>
+                <div class="field">
+                    <label for="flag-note">@L["Report.Text"]</label>
+                    <textarea class="textarea" id="flag-note" maxlength="1000" @bind="_note" disabled="@Locked"></textarea>
+                </div>
+                <button type="submit" class="btn btn--plain" disabled="@(Locked || _kind is null)">@L["Flag.Submit"]</button>
+                <Messages Message="@Message" Info="@Info" />
+            </form>
+        }
+    </details>
+}
+
+@code {
+    private static readonly string[] Kinds = ["date-wrong", "sooner"];
+    private string? _kind;
+    private string _link = "";
+    private string? _note;
+    private bool _sent;
+
+    [Parameter, EditorRequired] public string Number { get; set; } = "";
+
+    [CascadingParameter] private Task<AuthenticationState>? AuthState { get; set; }
+
+    [PersistentState] public MyAppealResponse? Mine { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        if (AuthState is not null && (await AuthState).User.Identity?.IsAuthenticated == true)
+        {
+            Mine ??= (await Appeals.GetMineAsync(Number)).Value;
+        }
+    }
+
+    private Task SendAsync() => RunAsync(async () =>
+    {
+        var result = await Appeals.FlagDateAsync(Number, new FlagRequest { Kind = _kind!, Link = _link.Trim(), Note = _note });
+        if (!result.IsSuccess)
+        {
+            Show(result.Problem, "link");
+            return;
+        }
+
+        _sent = true;
+    });
+}

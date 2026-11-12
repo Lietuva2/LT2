@@ -159,14 +159,19 @@ internal sealed class ImportHarness : IAsyncDisposable
             ["Seimas:RetryDelaySeconds"] = "0.01",
             ["Seimas:MinimumIntervalMilliseconds"] = "0",
             ["Outbound:AllowedHosts:0"] = "seimas-standin.test",
+            ["Agenda:BaseAddress"] = "http://seimas-standin.test/",
+            ["Agenda:TimeoutSeconds"] = "2",
         }).Build();
         var services = new ServiceCollection();
-        services.AddLogging(b => b.SetMinimumLevel(LogLevel.Warning));
+        services.AddLogging(b => b.SetMinimumLevel(LogLevel.Warning).AddProvider(Logs));
         services.AddSingleton<TimeProvider>(Clock);
         services.AddSingleton(_ => new NpgsqlDataSourceBuilder(database.WorkerConnectionString).Build());
         services.AddParliamentModule();
         services.AddParliamentImport(configuration);
         services.AddHttpClient(Lt2.Parliament.Import.Client.SeimasClient.HttpClientName)
+            .ConfigurePrimaryHttpMessageHandler(() => StandIn)
+            .SetHandlerLifetime(Timeout.InfiniteTimeSpan);
+        services.AddHttpClient(Lt2.Parliament.Import.Agenda.AgendaWatcher.HttpClientName)
             .ConfigurePrimaryHttpMessageHandler(() => StandIn)
             .SetHandlerLifetime(Timeout.InfiniteTimeSpan);
         _services = services.BuildServiceProvider();
@@ -175,6 +180,22 @@ internal sealed class ImportHarness : IAsyncDisposable
     public TestClock Clock { get; } = new();
 
     public StandInHandler StandIn { get; }
+
+    /// <summary>Error lines the services logged (the agenda watcher's alert).</summary>
+    public CollectingLogs Logs { get; } = new();
+
+    public async Task<AgendaOutcome> RunAgendaAsync()
+    {
+        StandInHandler.Today = () => DateOnly.FromDateTime(Clock.Now.UtcDateTime);
+        await using var scope = _services.CreateAsyncScope();
+        return await scope.ServiceProvider.GetRequiredService<IAgendaWatch>().RunAsync(CancellationToken.None);
+    }
+
+    public async Task<IReadOnlyList<Lt2.SharedKernel.PlannedDate>> PlannedAsync(DateOnly from, DateOnly to)
+    {
+        await using var scope = _services.CreateAsyncScope();
+        return await scope.ServiceProvider.GetRequiredService<Lt2.SharedKernel.IPlannedAgenda>().BetweenAsync(from, to, CancellationToken.None);
+    }
 
     public async Task<ImportOutcome> RunAsync()
     {
@@ -206,4 +227,35 @@ internal sealed class ImportHarness : IAsyncDisposable
     }
 
     public ValueTask DisposeAsync() => _services.DisposeAsync();
+}
+
+/// <summary>Collects error-level log lines.</summary>
+internal sealed class CollectingLogs : ILoggerProvider
+{
+    public List<string> Errors { get; } = [];
+
+    public ILogger CreateLogger(string categoryName) => new Logger(this);
+
+    public void Dispose()
+    {
+    }
+
+    private sealed class Logger(CollectingLogs owner) : ILogger
+    {
+        public IDisposable? BeginScope<TState>(TState state)
+            where TState : notnull => null;
+
+        public bool IsEnabled(LogLevel logLevel) => logLevel >= LogLevel.Error;
+
+        public void Log<TState>(LogLevel logLevel, EventId eventId, TState state, Exception? exception, Func<TState, Exception?, string> formatter)
+        {
+            if (logLevel >= LogLevel.Error)
+            {
+                lock (owner.Errors)
+                {
+                    owner.Errors.Add(formatter(state, exception));
+                }
+            }
+        }
+    }
 }

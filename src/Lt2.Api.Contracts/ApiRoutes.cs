@@ -85,6 +85,10 @@ public static class AppealRoutes
     public const string SimilarReasons = Appeal + "/reasons/similar";
     public const string Endorsement = ApiRoutes.Prefix + "/reasons/{id:guid}/endorsement";
     public const string Reports = ApiRoutes.Prefix + "/reports";
+    public const string Flags = Appeal + "/flags";
+    public const string AppealPlanned = ApiRoutes.Prefix + "/moderation/appeals/{id:guid}/planned";
+
+    public static string FlagsOf(string number) => AppealOf(number) + "/flags";
 
     public const string ModerationQueue = ApiRoutes.Prefix + "/moderation/queue";
     public const string PublishAppeal = ApiRoutes.Prefix + "/moderation/appeals/{id:guid}/publish";

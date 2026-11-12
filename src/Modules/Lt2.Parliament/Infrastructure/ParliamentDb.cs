@@ -38,6 +38,10 @@ internal sealed class ParliamentDb(DbContextOptions<ParliamentDb> options) : DbC
 
     public DbSet<ImportRun> ImportRuns => Set<ImportRun>();
 
+    public DbSet<Import.Agenda.PlannedItem> PlannedItems => Set<Import.Agenda.PlannedItem>();
+
+    public DbSet<Import.Agenda.AgendaSnapshot> AgendaSnapshots => Set<Import.Agenda.AgendaSnapshot>();
+
     public DbSet<RawDocument> RawDocuments => Set<RawDocument>();
 
     public DbSet<FetchState> FetchStates => Set<FetchState>();
@@ -45,6 +49,24 @@ internal sealed class ParliamentDb(DbContextOptions<ParliamentDb> options) : DbC
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         modelBuilder.HasDefaultSchema(ParliamentModule.Schema);
+
+        modelBuilder.Entity<Import.Agenda.PlannedItem>(e =>
+        {
+            e.ToTable("planned_item");
+            e.HasKey(p => p.Id);
+            e.Property(p => p.BillNumber).HasMaxLength(40);
+            e.Property(p => p.Stage).HasMaxLength(16);
+            e.Property(p => p.Source).HasMaxLength(16);
+            e.Property(p => p.Note).HasMaxLength(1000);
+            e.HasIndex(p => new { p.BillNumber, p.GoneAt });
+        });
+
+        modelBuilder.Entity<Import.Agenda.AgendaSnapshot>(e =>
+        {
+            e.ToTable("agenda_snapshot");
+            e.HasKey(s => s.Id);
+            e.HasIndex(s => s.FetchedAt);
+        });
 
         modelBuilder.Entity<Term>(e =>
         {

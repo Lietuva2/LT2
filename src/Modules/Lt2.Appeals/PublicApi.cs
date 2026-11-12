@@ -44,7 +44,8 @@ public sealed record AppealInfo(
     string? ReturnNote,
     SurgeInfo? Surge = null,
     long? ClosingVoteId = null,
-    DateTimeOffset? ClosedAt = null);
+    DateTimeOffset? ClosedAt = null,
+    PlannedDate? Planned = null);
 
 /// <summary>
 /// The surge note (design 6.6): in the last <paramref name="WindowHours"/> hours, <paramref name="SharePercent"/> % of the
@@ -52,7 +53,7 @@ public sealed record AppealInfo(
 /// </summary>
 public sealed record SurgeInfo(int SharePercent, int WindowHours, int RecentPositions, int FromNewAccounts);
 
-public sealed record AppealListItem(Guid Id, BillFacts Bill, SideCounts Counts, ThresholdInfo Threshold, DateTimeOffset? PublishedAt);
+public sealed record AppealListItem(Guid Id, BillFacts Bill, SideCounts Counts, ThresholdInfo Threshold, DateTimeOffset? PublishedAt, PlannedDate? Planned = null);
 
 public sealed record AppealPage(IReadOnlyList<AppealListItem> Items, int Total, string? NextCursor);
 
@@ -102,7 +103,15 @@ public sealed record QueueAppeal(
     IReadOnlyList<string> Flags,
     IReadOnlyList<QueueReport> Reports,
     DateTimeOffset OpenedAt,
-    SurgeInfo? Surge = null);
+    SurgeInfo? Surge = null,
+    PlannedDate? Planned = null,
+    IReadOnlyList<QueueFlag>? DateFlags = null,
+    bool UnderThresholdOnAgenda = false);
+
+/// <summary>A participant's flag about the planned date (design 8.4). Who flagged is not shown.</summary>
+public sealed record QueueFlag(Guid Id, string Kind, string Link, string? Note, DateTimeOffset CreatedAt);
+
+public sealed record NewFlag(string Kind, string Link, string? Note);
 
 /// <summary>An argument for a moderator: flagged, reported, or not yet seen.</summary>
 public sealed record QueueReason(
@@ -161,6 +170,9 @@ public interface IAppealsModule
     Task<Result<Unit>> RemoveEndorsementAsync(Guid reasonId, Guid userId, CancellationToken cancellationToken);
 
     Task<Result<Unit>> ReportAsync(Guid userId, NewReport request, CancellationToken cancellationToken);
+
+    /// <summary>"The date is wrong" or "this is being voted sooner", with a link (design 8.4); initiator and participants.</summary>
+    Task<Result<Unit>> FlagDateAsync(string billNumber, Guid userId, NewFlag request, CancellationToken cancellationToken);
 }
 
 /// <summary>Moderation of appeals and arguments (design 8.3). Every action is audited and the author is told why.</summary>
@@ -181,6 +193,9 @@ public interface IAppealsModeration
     Task<Result<Unit>> HideReasonAsync(Guid reasonId, string statement, ModeratorActor moderator, CancellationToken cancellationToken);
 
     Task<Result<Unit>> MergeReasonAsync(Guid reasonId, Guid intoReasonId, string statement, ModeratorActor moderator, CancellationToken cancellationToken);
+
+    /// <summary>Corrects the planned date or stage of the appeal's bill (design 8.4); closes its open date flags.</summary>
+    Task<Result<Unit>> SetPlannedAsync(Guid appealId, DateOnly date, string? stage, string statement, ModeratorActor moderator, CancellationToken cancellationToken);
 }
 
 /// <summary>Scheduled work of the Appeals module, run by the worker.</summary>

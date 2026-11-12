@@ -247,3 +247,41 @@ internal sealed class DailyStat
     /// <summary>Share of that day's new positions taken by accounts younger than 30 days.</summary>
     public decimal NewAccountShare { get; set; }
 }
+
+/// <summary>
+/// <c>appeals.flag</c>: a participant says the planned date is wrong or the bill is being voted sooner, with a link to
+/// the source (design 8.4). A moderator corrects the date or keeps it; the flag then closes.
+/// </summary>
+internal sealed class Flag
+{
+    public Guid Id { get; set; }
+
+    public Guid AppealId { get; set; }
+
+    /// <summary><c>date-wrong</c> or <c>sooner</c>.</summary>
+    public string Kind { get; set; } = "";
+
+    public string Link { get; set; } = "";
+
+    public string? Note { get; set; }
+
+    public Guid ReporterUserId { get; set; }
+
+    public string Status { get; set; } = "open";
+
+    public DateTimeOffset CreatedAt { get; set; }
+
+    public DateTimeOffset? ClosedAt { get; set; }
+}
+
+internal static class FlagKinds
+{
+    public const string DateWrong = "date-wrong";
+    public const string Sooner = "sooner";
+
+    public static readonly IReadOnlyList<string> All = [DateWrong, Sooner];
+
+    /// <summary>A flag carries a link to where the right date can be seen: http or https, at most 500 characters.</summary>
+    public static bool IsLink(string? link) =>
+        link is { Length: > 0 and <= 500 } && Uri.TryCreate(link, UriKind.Absolute, out var uri) && uri.Scheme is "http" or "https";
+}

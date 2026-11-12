@@ -19,6 +19,7 @@ internal sealed class AppealsService(
     IParticipants participants,
     IBillCatalogue bills,
     IPreScreening screening,
+    IPlannedAgenda agenda,
     TimeProvider clock) : IAppealsModule
 {
     private const int PageSize = 20;
@@ -39,13 +40,15 @@ internal sealed class AppealsService(
         var page = ordered.Skip(offset).Take(PageSize).ToList();
         var billFacts = await reads.BillsAsync(page.Select(a => a.BillNumber).ToList(), cancellationToken);
         var minimum = await reads.MinimumAsync(cancellationToken);
+        var planned = await agenda.ForBillsAsync(page.Select(a => a.BillNumber).ToList(), cancellationToken);
         var items = page
             .Select(a => new AppealListItem(
                 a.Id,
                 billFacts.GetValueOrDefault(a.BillNumber) ?? new BillFacts(a.BillNumber, a.BillNumber),
                 counts[a.Id],
                 AppealReads.Threshold(a, counts[a.Id], minimum),
-                a.PublishedAt))
+                a.PublishedAt,
+                a.Status == AppealStatuses.Open ? planned.GetValueOrDefault(a.BillNumber) : null))
             .ToList();
         var next = offset + page.Count < ordered.Count ? (offset + page.Count).ToString(CultureInfo.InvariantCulture) : null;
         return new AppealPage(items, ordered.Count, next);
@@ -553,6 +556,58 @@ internal sealed class AppealsService(
         return Result.Ok();
     }
 
+    public async Task<Result<Unit>> FlagDateAsync(string billNumber, Guid userId, NewFlag request, CancellationToken cancellationToken)
+    {
+        if (!FlagKinds.All.Contains(request.Kind))
+        {
+            return Error.Validation("flag.kind", "kind");
+        }
+
+        if (!FlagKinds.IsLink(request.Link))
+        {
+            return Error.Validation("flag.link", "link");
+        }
+
+        var note = string.IsNullOrWhiteSpace(request.Note) ? null : AppealRules.NormaliseText(request.Note);
+        if (note is { Length: > 1000 })
+        {
+            return Error.Validation("flag.note", "note");
+        }
+
+        await using var db = await contexts.CreateDbContextAsync(cancellationToken);
+        var appeal = await OpenAppealAsync(db, billNumber, userId, cancellationToken);
+        if (!appeal.IsSuccess)
+        {
+            return appeal.Error!;
+        }
+
+        // The initiator and any participant (design 8.4): someone with a side on this appeal.
+        var participates = appeal.Value.InitiatorUserId == userId
+            || await db.Positions.AnyAsync(p => p.AppealId == appeal.Value.Id && p.UserId == userId, cancellationToken);
+        if (!participates)
+        {
+            return Error.Conflict("flag.participants-only");
+        }
+
+        if (await db.Flags.AnyAsync(f => f.AppealId == appeal.Value.Id && f.ReporterUserId == userId && f.Status == "open", cancellationToken))
+        {
+            return Result.Ok();
+        }
+
+        db.Flags.Add(new Flag
+        {
+            Id = Ids.New(clock),
+            AppealId = appeal.Value.Id,
+            Kind = request.Kind,
+            Link = request.Link.Trim(),
+            Note = note,
+            ReporterUserId = userId,
+            CreatedAt = clock.GetUtcNow(),
+        });
+        await db.SaveChangesAsync(cancellationToken);
+        return Result.Ok();
+    }
+
     /// <summary>The open appeal on a bill, as seen by the member acting on it.</summary>
     private static async Task<Result<Appeal>> OpenAppealAsync(AppealsDb db, string billNumber, Guid userId, CancellationToken ct)
     {
@@ -596,7 +651,8 @@ internal sealed class AppealsService(
             appeal.Status == AppealStatuses.Returned ? appeal.ReturnNote : null,
             appeal.Status == AppealStatuses.Open ? await reads.SurgeAsync(db, appeal.Id, ct) : null,
             appeal.ClosingVoteId,
-            appeal.ClosedAt);
+            appeal.ClosedAt,
+            appeal.Status == AppealStatuses.Closed ? null : (await agenda.ForBillsAsync([appeal.BillNumber], ct)).GetValueOrDefault(appeal.BillNumber));
     }
 
     internal static Revision Revise(string kind, Guid id, string field, string? oldValue, string? newValue, Guid? by, DateTimeOffset at) => new()

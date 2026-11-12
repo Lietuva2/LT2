@@ -100,6 +100,9 @@ internal sealed class HttpAppealsApi(ApiHttp http) : IAppealsApi
 
     public Task<ApiResult> ReportAsync(ReportRequest request, CancellationToken cancellationToken = default) =>
         http.SendAsync(HttpMethod.Post, AppealRoutes.Reports, request, cancellationToken);
+
+    public Task<ApiResult> FlagDateAsync(string number, FlagRequest request, CancellationToken cancellationToken = default) =>
+        http.SendAsync(HttpMethod.Post, AppealRoutes.FlagsOf(number), request, cancellationToken);
 }
 
 internal sealed class HttpModerationApi(ApiHttp http) : IModerationApi
@@ -127,6 +130,9 @@ internal sealed class HttpModerationApi(ApiHttp http) : IModerationApi
 
     public Task<ApiResult> MergeReasonAsync(Guid reasonId, MergeReasonRequest request, CancellationToken cancellationToken = default) =>
         http.SendAsync(HttpMethod.Post, AppealRoutes.With(AppealRoutes.MergeReason, reasonId), request, cancellationToken);
+
+    public Task<ApiResult> SetPlannedAsync(Guid appealId, ModeratorPlannedRequest request, CancellationToken cancellationToken = default) =>
+        http.SendAsync(HttpMethod.Put, AppealRoutes.With(AppealRoutes.AppealPlanned, appealId), request, cancellationToken);
 }
 
 internal sealed class HttpAdminApi(ApiHttp http) : IAdminApi

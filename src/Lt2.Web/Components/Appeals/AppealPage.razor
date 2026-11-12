@@ -26,6 +26,14 @@
         <h1>@a.Bill.Title</h1>
         <div class="row">
             <a class="tag tag--ink num" href="/seimas/@Uri.EscapeDataString(a.Bill.Number)">@a.Bill.Number</a>
+            @if (a.Planned is { } plan)
+            {
+                @if (plan.Stage is { } plannedStage)
+                {
+                    <span class="tag">@F.Stage(plannedStage)</span>
+                }
+                <span class="tag" id="planned">@Fmt("Planned", F.T["Month." + plan.Date.Month], plan.Date.Day)</span>
+            }
             @if (a.Status != "open")
             {
                 <span class="tag" id="appeal-status">@T["Status." + a.Status]</span>
@@ -184,8 +192,21 @@
                             </li>
                         }
                     </ol>
+                    @if (a.Planned is { SetByModerator: true })
+                    {
+                        <p class="fine">@T["Planned.ByModerator"]</p>
+                    }
+                    else if (a.Planned?.SourceUrl is { } plannedSource)
+                    {
+                        <p class="fine"><a href="@plannedSource" rel="external">@T["Planned.Source"]</a></p>
+                    }
                     <SourceLine UpdatedAt="_updatedAt" HideMethodology="true" />
                 </section>
+            }
+
+            @if (a.Status == "open")
+            {
+                <DateFlagForm Number="@a.Bill.Number" @rendermode="InteractiveWebAssembly" />
             }
 
             <p class="note note--quiet" id="not-a-poll">@T["NotAPoll"]</p>

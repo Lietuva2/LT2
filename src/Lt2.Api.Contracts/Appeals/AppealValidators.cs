@@ -106,3 +106,24 @@ public sealed class MergeReasonRequestValidator : AbstractValidator<MergeReasonR
         RuleFor(x => (string?)x.Statement).Statement(l, required: true).OverridePropertyName("statement");
     }
 }
+
+public sealed class FlagRequestValidator : AbstractValidator<FlagRequest>
+{
+    public FlagRequestValidator(IStringLocalizer<ValidationMessages> l)
+    {
+        RuleFor(x => x.Kind).Must(k => k is "date-wrong" or "sooner").WithMessage(l["Flag.Kind"]);
+        RuleFor(x => x.Link).Must(link => link.Length <= 500 && Uri.TryCreate(link, UriKind.Absolute, out var uri) && uri.Scheme is "http" or "https")
+            .WithMessage(l["Flag.Link"]);
+        RuleFor(x => x.Note).Must(n => n is null || n.Trim().Length <= 1000).WithMessage(l["Report.TooLong"]);
+    }
+}
+
+public sealed class ModeratorPlannedRequestValidator : AbstractValidator<ModeratorPlannedRequest>
+{
+    public ModeratorPlannedRequestValidator(IStringLocalizer<ValidationMessages> l)
+    {
+        RuleFor(x => x.Date).NotEqual(default(DateOnly)).WithMessage(l["Planned.Date"]);
+        RuleFor(x => x.Stage).Must(s => s is null or "presentation" or "consideration" or "adoption").WithMessage(l["Planned.Stage"]);
+        RuleFor(x => (string?)x.Statement).Statement(l, required: true).OverridePropertyName("statement");
+    }
+}

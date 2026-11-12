@@ -23,6 +23,9 @@ internal sealed class StandInResponses
     private readonly ConcurrentDictionary<string, byte[]> _responses;
     private readonly HashSet<string> _services;
 
+    /// <summary>The invented upcoming-agenda page (an lrs.lt page, not open data), with date tokens; null when absent.</summary>
+    public string? AgendaTemplate { get; private set; }
+
     private StandInResponses(Dictionary<string, byte[]> responses)
     {
         _responses = new ConcurrentDictionary<string, byte[]>(responses, StringComparer.Ordinal);
@@ -43,7 +46,33 @@ internal sealed class StandInResponses
             throw new InvalidOperationException($"No canned responses in {directory}.");
         }
 
-        return new StandInResponses(responses);
+        var agenda = Path.Combine(directory, "agenda", "darbotvarke.html");
+        return new StandInResponses(responses) { AgendaTemplate = File.Exists(agenda) ? File.ReadAllText(agenda) : null };
+    }
+
+    /// <summary>
+    /// The agenda page for <paramref name="today"/>: <c>{{sitting:N}}</c> becomes the N-th Tuesday or Thursday at least
+    /// two days ahead, written "2026 m. lapkričio 17 d. (antradienis)".
+    /// </summary>
+    public static string RenderAgenda(string template, DateOnly today)
+    {
+        ArgumentNullException.ThrowIfNull(template);
+        string[] months = ["sausio", "vasario", "kovo", "balandžio", "gegužės", "birželio", "liepos", "rugpjūčio", "rugsėjo", "spalio", "lapkričio", "gruodžio"];
+        var sittings = Enumerable.Range(2, 30).Select(today.AddDays)
+            .Where(d => d.DayOfWeek is DayOfWeek.Tuesday or DayOfWeek.Thursday)
+            .Take(6)
+            .ToList();
+        for (var n = 1; n <= sittings.Count; n++)
+        {
+            var d = sittings[n - 1];
+            var weekday = d.DayOfWeek == DayOfWeek.Tuesday ? "antradienis" : "ketvirtadienis";
+            template = template.Replace(
+                "{{sitting:" + n.ToString(System.Globalization.CultureInfo.InvariantCulture) + "}}",
+                string.Create(System.Globalization.CultureInfo.InvariantCulture, $"{d.Year} m. {months[d.Month - 1]} {d.Day} d. ({weekday})"),
+                StringComparison.Ordinal);
+        }
+
+        return template;
     }
 
     /// <summary><c>p2b.ad_seimo_nariai@kadencijos_id=10</c> → <c>p2b.ad_seimo_nariai?kadencijos_id=10</c>.</summary>
@@ -82,5 +111,8 @@ internal sealed class StandInResponses
     public string Text(string key) => Encoding.UTF8.GetString(_responses[key]);
 
     /// <summary>The answers as loaded, for a test that changes some of them.</summary>
-    public StandInResponses Copy() => new(new Dictionary<string, byte[]>(_responses, StringComparer.Ordinal));
+    public StandInResponses Copy() => new(new Dictionary<string, byte[]>(_responses, StringComparer.Ordinal)) { AgendaTemplate = AgendaTemplate };
+
+    /// <summary>Tests: replace the agenda page, as if lrs.lt had changed it.</summary>
+    public void ReplaceAgenda(string template) => AgendaTemplate = template;
 }

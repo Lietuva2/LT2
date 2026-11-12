@@ -34,6 +34,9 @@ public interface IAppealsApi
     Task<ApiResult> RemoveEndorsementAsync(Guid reasonId, CancellationToken cancellationToken = default);
 
     Task<ApiResult> ReportAsync(ReportRequest request, CancellationToken cancellationToken = default);
+
+    /// <summary>"The date is wrong" or "voted sooner", with a link (design 8.4).</summary>
+    Task<ApiResult> FlagDateAsync(string number, FlagRequest request, CancellationToken cancellationToken = default);
 }
 
 /// <summary>Design 8.3, 8.8: the moderators' queue and actions. Needs an active moderator role (a staff-passkey session).</summary>
@@ -54,6 +57,8 @@ public interface IModerationApi
     Task<ApiResult> HideReasonAsync(Guid reasonId, StatementRequest request, CancellationToken cancellationToken = default);
 
     Task<ApiResult> MergeReasonAsync(Guid reasonId, MergeReasonRequest request, CancellationToken cancellationToken = default);
+
+    Task<ApiResult> SetPlannedAsync(Guid appealId, ModeratorPlannedRequest request, CancellationToken cancellationToken = default);
 }
 
 /// <summary>Design 8.8: the administrator's settings screen. Needs an active administrator role.</summary>

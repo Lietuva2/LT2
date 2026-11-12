@@ -47,6 +47,24 @@ else
                     }
                 </div>
                 <h3 id="qa-@appeal.Id">@appeal.Bill.Title</h3>
+                @if (appeal.Planned is { } plan)
+                {
+                    <p class="small num">@Text("Mod.Planned", plan.Date.ToString("yyyy-MM-dd", System.Globalization.CultureInfo.InvariantCulture), plan.Stage is { } s ? " · " + L["Mod.Stage." + s] : "")</p>
+                }
+                @if (appeal.UnderThresholdOnAgenda)
+                {
+                    <p class="note note--quiet">@L["Mod.UnderThreshold"]</p>
+                }
+                @if (appeal.DateFlags is { Count: > 0 } flags)
+                {
+                    <p class="label num">@Text("Mod.DateFlags", flags.Count)</p>
+                    <ul class="rows">
+                        @foreach (var flag in flags)
+                        {
+                            <li><div class="rows__main"><b>@L["Flag." + flag.Kind]</b><a href="@flag.Link" rel="external noreferrer">@flag.Link</a>@if (flag.Note is { } note) {<span class="small">@note</span>}</div></li>
+                        }
+                    </ul>
+                }
                 @if (appeal.Surge is { } surge)
                 {
                     <p class="note" id="surge-@appeal.Id">@Text("Mod.Surge", surge.WindowHours, surge.SharePercent)</p>

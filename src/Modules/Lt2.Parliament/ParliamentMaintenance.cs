@@ -31,7 +31,8 @@ public static class ParliamentMaintenance
             await using var transaction = await connection.BeginTransactionAsync(cancellationToken);
             await ExecuteAsync(connection, transaction, "LOCK TABLE parliament.import_run, parliament.raw_document IN EXCLUSIVE MODE", cancellationToken);
             var real = await ScalarAsync<long>(connection, transaction, "SELECT count(*) FROM parliament.import_run WHERE NOT synthetic", cancellationToken)
-                + await ScalarAsync<long>(connection, transaction, "SELECT count(*) FROM parliament.raw_document WHERE NOT synthetic", cancellationToken);
+                + await ScalarAsync<long>(connection, transaction, "SELECT count(*) FROM parliament.raw_document WHERE NOT synthetic", cancellationToken)
+                + await ScalarAsync<long>(connection, transaction, "SELECT count(*) FROM parliament.agenda_snapshot WHERE NOT synthetic", cancellationToken);
             if (real > 0)
             {
                 return Error.Conflict("parliament.reset.real-data");
@@ -72,7 +73,8 @@ public static class ParliamentMaintenance
         await connection.OpenAsync(cancellationToken);
         var synthetic = await ScalarAsync<long>(connection, null, "SELECT count(*) FROM parliament.raw_document WHERE synthetic", cancellationToken);
         var real = await ScalarAsync<long>(connection, null, "SELECT count(*) FROM parliament.import_run WHERE NOT synthetic", cancellationToken)
-            + await ScalarAsync<long>(connection, null, "SELECT count(*) FROM parliament.raw_document WHERE NOT synthetic", cancellationToken);
+            + await ScalarAsync<long>(connection, null, "SELECT count(*) FROM parliament.raw_document WHERE NOT synthetic", cancellationToken)
+            + await ScalarAsync<long>(connection, null, "SELECT count(*) FROM parliament.agenda_snapshot WHERE NOT synthetic", cancellationToken);
         return synthetic > 0 && real == 0;
     }
 

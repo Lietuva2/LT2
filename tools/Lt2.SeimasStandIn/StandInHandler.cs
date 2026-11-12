@@ -38,16 +38,27 @@ internal sealed class StandInHandler(StandInResponses responses) : HttpMessageHa
 
         var answer = Answer(uri, responses);
         var message = new HttpResponseMessage((HttpStatusCode)answer.Status) { Content = new ByteArrayContent(answer.Body), RequestMessage = request };
-        message.Content.Headers.ContentType = new System.Net.Http.Headers.MediaTypeHeaderValue("text/xml") { CharSet = "utf-8" };
+        message.Content.Headers.ContentType = new System.Net.Http.Headers.MediaTypeHeaderValue(uri.AbsolutePath == "/darbotvarke" ? "text/html" : "text/xml") { CharSet = "utf-8" };
         message.Headers.Add(StandInResponses.SyntheticHeader, "1");
         return Task.FromResult(message);
     }
 
-    /// <summary>Shared by the in-process handler and the HTTP host: only paths under <c>/sip/</c> exist.</summary>
+    /// <summary>The day the agenda page is rendered for; tests set it, the container uses today in Vilnius.</summary>
+    public static Func<DateOnly> Today { get; set; } =
+        () => DateOnly.FromDateTime(TimeZoneInfo.ConvertTime(DateTimeOffset.UtcNow, TimeZoneInfo.FindSystemTimeZoneById("Europe/Vilnius")).DateTime);
+
+    /// <summary>Shared by the in-process handler and the HTTP host: paths under <c>/sip/</c> (open data) and <c>/darbotvarke</c> (the invented agenda page).</summary>
     public static StandInResponse Answer(Uri uri, StandInResponses responses)
     {
         ArgumentNullException.ThrowIfNull(uri);
         ArgumentNullException.ThrowIfNull(responses);
+        if (uri.AbsolutePath == "/darbotvarke")
+        {
+            return responses.AgendaTemplate is { } template
+                ? new StandInResponse(200, System.Text.Encoding.UTF8.GetBytes(StandInResponses.RenderAgenda(template, Today())))
+                : new StandInResponse(404, "Not found."u8.ToArray());
+        }
+
         const string prefix = "/sip/";
         var path = uri.AbsolutePath;
         if (!path.StartsWith(prefix, StringComparison.Ordinal) || path.Length == prefix.Length)

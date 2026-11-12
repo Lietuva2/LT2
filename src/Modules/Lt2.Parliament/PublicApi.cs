@@ -28,3 +28,15 @@ public interface IParliamentDataNotice
     /// emptied, because parsed rows may come from those responses.</summary>
     Task<bool> IsParliamentDataInventedAsync(CancellationToken cancellationToken);
 }
+
+/// <summary>What one agenda read did: <c>off</c> (not configured), <c>succeeded</c>, <c>refused</c> (layout changed) or <c>failed</c>.</summary>
+public sealed record AgendaOutcome(string Status, int Rows, int Changes, string? Problem);
+
+/// <summary>
+/// The agenda watcher (design 8.4, 8.9): reads the upcoming plenary agenda from lrs.lt (or the local stand-in), keeps
+/// the page raw, and updates the planned dates. A page it cannot read changes nothing and is logged as an error.
+/// </summary>
+public interface IAgendaWatch
+{
+    Task<AgendaOutcome> RunAsync(CancellationToken cancellationToken);
+}

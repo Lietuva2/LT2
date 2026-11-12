@@ -17,6 +17,24 @@
             <input class="input num" type="number" id="threshold-@Id" min="1" step="1" @bind="_threshold" disabled="@Locked" />
         </div>
     }
+    @if (Kind == "appeal" && Status == "open")
+    {
+        <div class="pair">
+            <div class="field">
+                <label for="planned-@Id">@L["Mod.PlannedDate"]</label>
+                <input class="input num" type="date" id="planned-@Id" @bind="_planned" disabled="@Locked" />
+            </div>
+            <div class="field">
+                <label for="stage-@Id">@L["Mod.PlannedStage"]</label>
+                <select class="input" id="stage-@Id" @bind="_stage" disabled="@Locked">
+                    <option value="">@L["Mod.Stage.none"]</option>
+                    <option value="presentation">@L["Mod.Stage.presentation"]</option>
+                    <option value="consideration">@L["Mod.Stage.consideration"]</option>
+                    <option value="adoption">@L["Mod.Stage.adoption"]</option>
+                </select>
+            </div>
+        </div>
+    }
     @if (MergeCandidates is { Count: > 0 })
     {
         <fieldset class="stack stack--tight">
@@ -41,6 +59,10 @@
         {
             <button type="button" class="btn btn--plain" disabled="@(Locked || _threshold is null)" @onclick="ThresholdAsync">@L["Mod.SetThreshold"]</button>
         }
+        @if (Kind == "appeal" && Status == "open")
+        {
+            <button type="button" class="btn btn--plain" disabled="@(Locked || _planned is null)" @onclick="PlannedAsync">@L["Mod.SetPlanned"]</button>
+        }
         @if (MergeCandidates is { Count: > 0 })
         {
             <button type="button" class="btn btn--plain" disabled="@(Locked || _mergeInto is null)" @onclick="MergeAsync">@L["Mod.Merge"]</button>
@@ -53,6 +75,8 @@
     private string _statement = "";
     private int? _threshold;
     private Guid? _mergeInto;
+    private DateOnly? _planned;
+    private string _stage = "";
 
     [Parameter, EditorRequired] public Guid Id { get; set; }
 
@@ -82,6 +106,10 @@
     private Task ThresholdAsync() => ActAsync(
         () => Moderation.SetThresholdAsync(Id, new ModeratorThresholdRequest { Threshold = _threshold ?? 0, Statement = _statement }),
         "Mod.Done.Threshold");
+
+    private Task PlannedAsync() => ActAsync(
+        () => Moderation.SetPlannedAsync(Id, new ModeratorPlannedRequest { Date = _planned!.Value, Stage = _stage.Length == 0 ? null : _stage, Statement = _statement }),
+        "Mod.Done.Planned");
 
     private Task MergeAsync() => ActAsync(
         () => Moderation.MergeReasonAsync(Id, new MergeReasonRequest { IntoReasonId = _mergeInto!.Value, Statement = _statement }),

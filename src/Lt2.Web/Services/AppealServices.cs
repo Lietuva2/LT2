@@ -24,12 +24,14 @@ internal static class AppealMapping
 
     public static AppealResponse Map(AppealInfo a) => new(
         a.Id, Map(a.Bill), a.Status, a.InitiatorName, a.Description, a.OpenedAt, a.PublishedAt, Map(a.Counts), Map(a.Threshold),
-        a.Reasons.Select(Map).ToList(), a.ReturnNote, Map(a.Surge), a.ClosingVoteId, a.ClosedAt);
+        a.Reasons.Select(Map).ToList(), a.ReturnNote, Map(a.Surge), a.ClosingVoteId, a.ClosedAt, Map(a.Planned));
+
+    public static PlannedDateResponse? Map(PlannedDate? p) => p is null ? null : new(p.Date, p.Stage, p.SourceUrl, p.SetByModerator);
 
     public static SurgeResponse? Map(SurgeInfo? s) => s is null ? null : new(s.SharePercent, s.WindowHours);
 
     public static AppealListResponse Map(AppealPage p) => new(
-        p.Items.Select(i => new AppealListItemResponse(i.Id, Map(i.Bill), Map(i.Counts), Map(i.Threshold), i.PublishedAt)).ToList(),
+        p.Items.Select(i => new AppealListItemResponse(i.Id, Map(i.Bill), Map(i.Counts), Map(i.Threshold), i.PublishedAt, Map(i.Planned))).ToList(),
         p.Total,
         p.NextCursor);
 
@@ -44,7 +46,9 @@ internal static class AppealMapping
     public static ModerationQueueResponse Map(ModerationItems q) => new(
         q.Appeals.Select(a => new QueueAppealResponse(
             a.Id, Map(a.Bill), a.Status, a.InitiatorName, a.Description, a.FirstReason is { } f ? Map(f) : null, a.Threshold, a.Flags,
-            a.Reports.Select(Map).ToList(), a.OpenedAt, Map(a.Surge))).ToList(),
+            a.Reports.Select(Map).ToList(), a.OpenedAt, Map(a.Surge), Map(a.Planned),
+            (a.DateFlags ?? []).Select(f => new QueueFlagResponse(f.Id, f.Kind, f.Link, f.Note, f.CreatedAt)).ToList(),
+            a.UnderThresholdOnAgenda)).ToList(),
         q.Reasons.Select(r => new QueueReasonResponse(
             r.Id, r.AppealId, Map(r.Bill), r.Side, r.Text, r.AuthorName, r.Status, r.Seen, r.Flags, r.Reports.Select(Map).ToList(),
             r.MergeCandidates.Select(Map).ToList(), r.CreatedAt)).ToList());
@@ -128,6 +132,9 @@ internal sealed class ServerAppealsApi(IAppealsModule appeals, IHttpContextAcces
     public async Task<ApiResult> ReportAsync(ReportRequest request, CancellationToken cancellationToken = default) =>
         await AsMemberAsync(id => appeals.ReportAsync(id, AppealMapping.ToModule(request), cancellationToken));
 
+    public async Task<ApiResult> FlagDateAsync(string number, FlagRequest request, CancellationToken cancellationToken = default) =>
+        await AsMemberAsync(id => appeals.FlagDateAsync(number, id, new NewFlag(request.Kind, request.Link, request.Note), cancellationToken));
+
     private Guid? UserId => AppealMapping.UserId(accessor.HttpContext?.User);
 
     private async Task<ApiResult> AsMemberAsync(Func<Guid, Task<Result<Unit>>> action) =>
@@ -162,6 +169,9 @@ internal sealed class ServerModerationApi(IAppealsModeration moderation, IIdenti
 
     public Task<ApiResult> MergeReasonAsync(Guid reasonId, MergeReasonRequest request, CancellationToken cancellationToken = default) =>
         ActAsync(m => moderation.MergeReasonAsync(reasonId, request.IntoReasonId, request.Statement, m, cancellationToken));
+
+    public Task<ApiResult> SetPlannedAsync(Guid appealId, ModeratorPlannedRequest request, CancellationToken cancellationToken = default) =>
+        ActAsync(m => moderation.SetPlannedAsync(appealId, request.Date, request.Stage, request.Statement, m, cancellationToken));
 
     private async Task<bool> IsModeratorAsync()
     {

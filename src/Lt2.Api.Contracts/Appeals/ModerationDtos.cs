@@ -14,7 +14,23 @@ public sealed record QueueAppealResponse(
     IReadOnlyList<string> Flags,
     IReadOnlyList<QueueReportResponse> Reports,
     DateTimeOffset OpenedAt,
-    SurgeResponse? Surge = null);
+    SurgeResponse? Surge = null,
+    PlannedDateResponse? Planned = null,
+    IReadOnlyList<QueueFlagResponse>? DateFlags = null,
+    bool UnderThresholdOnAgenda = false);
+
+public sealed record QueueFlagResponse(Guid Id, string Kind, string Link, string? Note, DateTimeOffset CreatedAt);
+
+/// <summary>A moderator's planned date or stage for the appeal's bill (design 8.4), with the reason.</summary>
+public sealed record ModeratorPlannedRequest
+{
+    public DateOnly Date { get; init; }
+
+    /// <summary><c>presentation</c>, <c>consideration</c>, <c>adoption</c>, or null.</summary>
+    public string? Stage { get; init; }
+
+    public string Statement { get; init; } = "";
+}
 
 /// <summary>An argument for a moderator: flagged by pre-screening, reported, or not yet seen.</summary>
 public sealed record QueueReasonResponse(

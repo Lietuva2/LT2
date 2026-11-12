@@ -24,6 +24,8 @@ internal sealed class AppealsDb(DbContextOptions<AppealsDb> options) : DbContext
 
     public DbSet<DailyStat> DailyStats => Set<DailyStat>();
 
+    public DbSet<Flag> Flags => Set<Flag>();
+
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         modelBuilder.HasDefaultSchema(AppealsModule.Schema);
@@ -108,6 +110,19 @@ internal sealed class AppealsDb(DbContextOptions<AppealsDb> options) : DbContext
             e.Property(r => r.EntityKind).HasMaxLength(20);
             e.Property(r => r.Field).HasMaxLength(40);
             e.HasIndex(r => new { r.EntityKind, r.EntityId });
+        });
+
+        modelBuilder.Entity<Flag>(e =>
+        {
+            e.ToTable("flag");
+            e.HasKey(f => f.Id);
+            e.Property(f => f.Kind).HasMaxLength(20);
+            e.Property(f => f.Link).HasMaxLength(500);
+            e.Property(f => f.Note).HasMaxLength(1000);
+            e.Property(f => f.Status).HasMaxLength(20);
+            e.HasIndex(f => new { f.AppealId, f.Status });
+            e.HasIndex(f => new { f.AppealId, f.ReporterUserId }).IsUnique().HasFilter("status = 'open'");
+            e.HasOne<Appeal>().WithMany().HasForeignKey(f => f.AppealId).OnDelete(DeleteBehavior.Cascade);
         });
 
         modelBuilder.Entity<DailyStat>(e =>

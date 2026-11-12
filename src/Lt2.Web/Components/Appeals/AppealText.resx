@@ -54,4 +54,7 @@
 <data name="Closed.Heading" xml:space="preserve"><value>Seimo sprendimas</value></data>
 <data name="Closed.VotePage" xml:space="preserve"><value>Balsavimo puslapis</value></data>
 <data name="Closed.EachMp" xml:space="preserve"><value>Kaip balsavo kiekvienas Seimo narys</value></data>
+<data name="Planned" xml:space="preserve"><value>Planuojama {0} {1} d.</value></data>
+<data name="Planned.ByModerator" xml:space="preserve"><value>Planuojamą datą patikslino moderatorius.</value></data>
+<data name="Planned.Source" xml:space="preserve"><value>Iš kur žinoma planuojama data</value></data>
 </root>

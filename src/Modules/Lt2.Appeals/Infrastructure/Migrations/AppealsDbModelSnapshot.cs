@@ -204,6 +204,66 @@ namespace Lt2.Appeals.Infrastructure.Migrations
                     b.ToTable("endorsement", "appeals");
                 });
 
+            modelBuilder.Entity("Lt2.Appeals.Domain.Flag", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<Guid>("AppealId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("appeal_id");
+
+                    b.Property<DateTimeOffset?>("ClosedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("closed_at");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("created_at");
+
+                    b.Property<string>("Kind")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)")
+                        .HasColumnName("kind");
+
+                    b.Property<string>("Link")
+                        .IsRequired()
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)")
+                        .HasColumnName("link");
+
+                    b.Property<string>("Note")
+                        .HasMaxLength(1000)
+                        .HasColumnType("character varying(1000)")
+                        .HasColumnName("note");
+
+                    b.Property<Guid>("ReporterUserId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("reporter_user_id");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)")
+                        .HasColumnName("status");
+
+                    b.HasKey("Id")
+                        .HasName("pk_flag");
+
+                    b.HasIndex("AppealId", "ReporterUserId")
+                        .IsUnique()
+                        .HasDatabaseName("ix_flag_appeal_id_reporter_user_id")
+                        .HasFilter("status = 'open'");
+
+                    b.HasIndex("AppealId", "Status")
+                        .HasDatabaseName("ix_flag_appeal_id_status");
+
+                    b.ToTable("flag", "appeals");
+                });
+
             modelBuilder.Entity("Lt2.Appeals.Domain.ModerationAction", b =>
                 {
                     b.Property<Guid>("Id")
@@ -494,6 +554,16 @@ namespace Lt2.Appeals.Infrastructure.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired()
                         .HasConstraintName("fk_endorsement_reason_reason_id");
+                });
+
+            modelBuilder.Entity("Lt2.Appeals.Domain.Flag", b =>
+                {
+                    b.HasOne("Lt2.Appeals.Domain.Appeal", null)
+                        .WithMany()
+                        .HasForeignKey("AppealId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
+                        .HasConstraintName("fk_flag_appeal_appeal_id");
                 });
 
             modelBuilder.Entity("Lt2.Appeals.Domain.Position", b =>

@@ -46,12 +46,26 @@ public sealed record AppealResponse(
     string? ReturnNote,
     SurgeResponse? Surge = null,
     long? ClosingVoteId = null,
-    DateTimeOffset? ClosedAt = null);
+    DateTimeOffset? ClosedAt = null,
+    PlannedDateResponse? Planned = null);
+
+/// <summary>The bill's planned date on the Seimas agenda (design 8.4): shown as "Planuojama …", never a countdown.</summary>
+public sealed record PlannedDateResponse(DateOnly Date, string? Stage, string? SourceUrl, bool SetByModerator);
+
+/// <summary>"The date is wrong" (<c>date-wrong</c>) or "this is being voted sooner" (<c>sooner</c>), with a link.</summary>
+public sealed record FlagRequest
+{
+    public string Kind { get; init; } = "";
+
+    public string Link { get; init; } = "";
+
+    public string? Note { get; init; }
+}
 
 /// <summary>The surge note (design 6.6): in the last hours, this share of positions came from accounts made in those hours.</summary>
 public sealed record SurgeResponse(int SharePercent, int WindowHours);
 
-public sealed record AppealListItemResponse(Guid Id, BillRefResponse Bill, SideCountsResponse Counts, ThresholdResponse Threshold, DateTimeOffset? PublishedAt);
+public sealed record AppealListItemResponse(Guid Id, BillRefResponse Bill, SideCountsResponse Counts, ThresholdResponse Threshold, DateTimeOffset? PublishedAt, PlannedDateResponse? Planned = null);
 
 public sealed record AppealListResponse(IReadOnlyList<AppealListItemResponse> Items, int Total, string? NextCursor);
 
