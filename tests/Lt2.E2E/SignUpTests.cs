@@ -51,21 +51,22 @@ public sealed partial class SignUpTests
         await Assertions.Expect(page.GetByRole(AriaRole.Heading, new() { Level = 1 })).ToContainTextAsync("Lietuva");
         await page.GetByRole(AriaRole.Link, new() { Name = "Registruotis" }).ClickAsync();
 
-        await Assertions.Expect(page.GetByRole(AriaRole.Heading, new() { Name = "Registracija" })).ToBeVisibleAsync();
+        await Assertions.Expect(page.GetByRole(AriaRole.Heading, new() { Name = "Nauja paskyra" })).ToBeVisibleAsync();
         await WaitForInteractivityAsync(page);
-        await page.GetByLabel("El. pašto adresas").FillAsync(email);
+        await page.GetByLabel("El. paštas").FillAsync(email);
         await page.GetByLabel("Kvietimo kodas").FillAsync(Invitation);
-        await page.GetByLabel("Patvirtinu, kad man yra 18 metų ar daugiau.").CheckAsync();
+        await page.GetByLabel("Vardas, kurį matys kiti").FillAsync("Rūta M.");
+        await page.GetByLabel("Man yra 18 metų arba daugiau").CheckAsync();
         await page.GetByRole(AriaRole.Button, new() { Name = "Registruotis", Exact = true }).ClickAsync();
 
-        var codeField = page.GetByLabel("Kodas iš laiško");
+        var codeField = page.GetByLabel("Šešių skaitmenų kodas");
         await Assertions.Expect(codeField).ToBeVisibleAsync();
         var code = await CodeFromMailpitAsync(email);
         await codeField.FillAsync(code);
         await page.GetByRole(AriaRole.Button, new() { Name = "Prisijungti", Exact = true }).ClickAsync();
 
         await page.WaitForURLAsync(new Regex("/sveiki$"));
-        await Assertions.Expect(page.GetByRole(AriaRole.Heading, new() { Level = 1 })).ToHaveTextAsync($"Sveiki, {email}!");
+        await Assertions.Expect(page.GetByRole(AriaRole.Heading, new() { Level = 1 })).ToHaveTextAsync("Sveiki, Rūta M.!");
         await Assertions.Expect(page.GetByText("El. paštas patvirtintas")).ToBeVisibleAsync();
         await Assertions.Expect(page.GetByText("Ši sesija")).ToBeVisibleAsync();
 

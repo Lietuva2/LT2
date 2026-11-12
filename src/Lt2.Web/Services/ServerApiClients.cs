@@ -65,7 +65,7 @@ internal sealed class ServerMeApi(IIdentityModule identity, IHttpContextAccessor
 internal static class Mapping
 {
     public static Registration ToRegistration(RegisterRequest request) =>
-        new(request.Email, request.InvitationCode, request.ConfirmsAdult);
+        new(request.Email, request.InvitationCode, request.ConfirmsAdult, request.DisplayName);
 
     public static MeResponse ToResponse(AccountSummary account) => new()
     {

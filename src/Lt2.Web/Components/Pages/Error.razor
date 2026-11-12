@@ -4,12 +4,12 @@
 
 <PageTitle>@T["Error.Title"]</PageTitle>
 
-<section class="panel">
+<section class="sheet sheet--cut stack">
     <h1>@T["Error.Title"]</h1>
     <p>@T["Error.Text"]</p>
     @if (RequestId is not null)
     {
-        <p class="muted small">@T["Error.RequestId"] <span class="mono">@RequestId</span></p>
+        <p class="fine">@T["Error.RequestId"] <span class="num">@RequestId</span></p>
     }
 </section>
 

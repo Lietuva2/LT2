@@ -7,6 +7,7 @@ internal static class AuthRules
 {
     public const int EmailMaxLength = 254;
     public const int InvitationCodeMaxLength = 64;
+    public const int DisplayNameMaxLength = 60;
 
     public static IRuleBuilderOptions<T, string> ValidEmail<T>(this IRuleBuilderInitial<T, string> rule, IStringLocalizer l) =>
         rule.Cascade(CascadeMode.Stop)
@@ -21,6 +22,7 @@ public sealed class RegisterRequestValidator : AbstractValidator<RegisterRequest
     {
         RuleFor(x => x.Email).ValidEmail(l);
         RuleFor(x => x.InvitationCode).MaximumLength(AuthRules.InvitationCodeMaxLength).WithMessage(l["Invitation.TooLong"]);
+        RuleFor(x => x.DisplayName).MaximumLength(AuthRules.DisplayNameMaxLength).WithMessage(l["DisplayName.TooLong"]);
         RuleFor(x => x.ConfirmsAdult).Equal(true).WithMessage(l["Adult.Required"]);
     }
 }

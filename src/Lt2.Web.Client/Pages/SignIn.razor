@@ -9,91 +9,118 @@
 @inject IValidator<RequestCodeRequest> CodeValidator
 @inject IValidator<SignInRequest> SignInValidator
 
+@* Layout and wording follow design/ui/prisijungimas.html. *@
 <PageTitle>@T["SignIn.PageTitle"]</PageTitle>
 
-<section class="panel auth" aria-labelledby="auth-title">
-    <h1 id="auth-title">@(_mode == Mode.Register ? T["Register.Title"] : T["SignIn.Title"])</h1>
+<div class="welcome">
+    <div class="stack">
+        <lt2-logo-spin period="14"></lt2-logo-spin>
+        <h1>@T["Welcome.Title"]</h1>
+        <p class="lead">@T["Welcome.Lead"]</p>
+    </div>
 
-    @if (_step == Step.Email)
+    @switch (_step)
     {
-        <div class="tabs" role="tablist">
-            <button type="button" role="tab" class="tab" aria-selected="@(_mode == Mode.SignIn)" @onclick="() => Switch(Mode.SignIn)">@T["Tab.SignIn"]</button>
-            <button type="button" role="tab" class="tab" aria-selected="@(_mode == Mode.Register)" @onclick="() => Switch(Mode.Register)">@T["Tab.Register"]</button>
-        </div>
-
-        @if (_mode == Mode.SignIn)
-        {
-            <form class="stack" @onsubmit="RequestCodeAsync" novalidate>
-                <label class="field">
-                    <span>@T["Email.Label"]</span>
-                    <input type="email" autocomplete="email webauthn" inputmode="email" @bind="_email" @bind:event="oninput" disabled="@_busy" required />
-                </label>
-                <FieldError Errors="_errors" Field="email" />
-                <button type="submit" class="btn primary" disabled="@_busy">@T["SignIn.SendCode"]</button>
+        case Step.SignIn:
+            <form class="sheet sheet--cut stack" @onsubmit="RequestCodeAsync" novalidate aria-labelledby="form-title">
+                <h2 id="form-title">@T["SignIn.Title"]</h2>
+                <p>@T["SignIn.Intro"]</p>
+                <div class="field @ErrorClass("email")">
+                    <label for="email">@T["Email.Label"]</label>
+                    <input class="input" id="email" type="email" autocomplete="email webauthn" inputmode="email"
+                           placeholder="@T["Email.Placeholder"]" @bind="_email" @bind:event="oninput" disabled="@_busy"
+                           aria-invalid="@Invalid("email")" aria-describedby="@Describe("email")" />
+                    <FieldError Errors="_errors" Field="email" />
+                </div>
+                <button class="btn btn--wide" type="submit" disabled="@_busy">@T["SignIn.SendCode"]</button>
+                <button class="btn btn--plain btn--wide" type="button" disabled="@_busy" @onclick="SignInWithPasskeyAsync">@T["SignIn.Passkey"]</button>
+                <p class="small">@T["SignIn.PasskeyHint"]</p>
+                <p class="small">@T["SignIn.NoAccount"] <button type="button" class="linkish" @onclick="() => Go(Step.Register)">@T["SignIn.ToRegister"]</button></p>
+                <Messages Message="_message" Info="_info" />
             </form>
+            break;
 
-            <p class="or"><span>@T["Or"]</span></p>
-            <button type="button" class="btn" disabled="@_busy" @onclick="SignInWithPasskeyAsync">@T["SignIn.Passkey"]</button>
-        }
-        else
-        {
-            <p class="muted">@T["Register.Intro"]</p>
-            <form class="stack" @onsubmit="RegisterAsync" novalidate>
-                <label class="field">
-                    <span>@T["Email.Label"]</span>
-                    <input type="email" autocomplete="email" inputmode="email" @bind="_email" @bind:event="oninput" disabled="@_busy" required />
-                </label>
-                <FieldError Errors="_errors" Field="email" />
-                <label class="field">
-                    <span>@T["Invitation.Label"]</span>
-                    <input type="text" autocomplete="off" autocapitalize="characters" @bind="_invitation" @bind:event="oninput" disabled="@_busy" />
-                    <small class="muted">@T["Invitation.Hint"]</small>
-                </label>
-                <FieldError Errors="_errors" Field="invitationCode" />
-                <label class="check">
-                    <input type="checkbox" @bind="_adult" disabled="@_busy" />
-                    <span>@T["Adult.Label"]</span>
-                </label>
-                <FieldError Errors="_errors" Field="confirmsAdult" />
-                <button type="submit" class="btn primary" disabled="@_busy">@T["Register.Submit"]</button>
+        case Step.Register:
+            <form class="sheet sheet--cut stack" @onsubmit="RegisterAsync" novalidate aria-labelledby="form-title">
+                <p class="label">@T["Register.Label"]</p>
+                <h2 id="form-title">@T["Register.Title"]</h2>
+                <div class="field @ErrorClass("email")">
+                    <label for="reg-email">@T["Email.Label"]</label>
+                    <input class="input" id="reg-email" type="email" autocomplete="email" inputmode="email"
+                           @bind="_email" @bind:event="oninput" disabled="@_busy"
+                           aria-invalid="@Invalid("email")" aria-describedby="@Describe("email")" />
+                    <FieldError Errors="_errors" Field="email" />
+                </div>
+                <div class="field @ErrorClass("invitationCode")">
+                    <label for="reg-invite">@T["Invitation.Label"]</label>
+                    <input class="input num" id="reg-invite" autocomplete="off" autocapitalize="characters"
+                           @bind="_invitation" @bind:event="oninput" disabled="@_busy"
+                           aria-invalid="@Invalid("invitationCode")" aria-describedby="reg-invite-hint @Describe("invitationCode")" />
+                    <p class="field__hint" id="reg-invite-hint">@T["Invitation.Hint"]</p>
+                    <FieldError Errors="_errors" Field="invitationCode" />
+                </div>
+                <div class="field @ErrorClass("displayName")">
+                    <label for="reg-name">@T["DisplayName.Label"]</label>
+                    <input class="input" id="reg-name" autocomplete="nickname" placeholder="@T["DisplayName.Placeholder"]"
+                           @bind="_displayName" @bind:event="oninput" disabled="@_busy"
+                           aria-describedby="reg-name-hint @Describe("displayName")" />
+                    <p class="field__hint" id="reg-name-hint">@T["DisplayName.Hint"]</p>
+                    <FieldError Errors="_errors" Field="displayName" />
+                </div>
+                <div class="field @ErrorClass("confirmsAdult")">
+                    <label class="check" for="reg-age">
+                        <input type="checkbox" id="reg-age" @bind="_adult" disabled="@_busy" aria-describedby="@Describe("confirmsAdult")" />
+                        <span>@T["Adult.Label"]</span>
+                    </label>
+                    <FieldError Errors="_errors" Field="confirmsAdult" />
+                </div>
+                <button class="btn btn--wide" type="submit" disabled="@_busy">@T["Register.Submit"]</button>
+                <p class="fine">@T["Register.Fine"]</p>
+                <p class="small">@T["Register.HaveAccount"] <button type="button" class="linkish" @onclick="() => Go(Step.SignIn)">@T["Register.ToSignIn"]</button></p>
+                <Messages Message="_message" Info="_info" />
             </form>
-        }
-    }
-    else
-    {
-        <p role="status">@(_mode == Mode.Register ? T["Code.SentAfterRegister", _email] : T["Code.SentAfterRequest", _email])</p>
-        <form class="stack" @onsubmit="SignInAsync" novalidate>
-            <label class="field">
-                <span>@T["Code.Label"]</span>
-                <input type="text" class="code" inputmode="numeric" autocomplete="one-time-code" maxlength="6" pattern="[0-9]{6}" @bind="_code" @bind:event="oninput" disabled="@_busy" required />
-            </label>
-            <FieldError Errors="_errors" Field="code" />
-            <button type="submit" class="btn primary" disabled="@_busy">@T["Code.Submit"]</button>
-        </form>
-        <div class="row">
-            <button type="button" class="link" disabled="@_busy" @onclick="ResendAsync">@T["Code.Resend"]</button>
-            <button type="button" class="link" disabled="@_busy" @onclick="ChangeEmail">@T["Code.ChangeEmail"]</button>
-        </div>
-    }
+            break;
 
-    @if (_message is not null)
-    {
-        <p class="notice" role="alert">@_message</p>
+        default:
+            <form class="sheet sheet--cut stack" @onsubmit="SignInAsync" novalidate aria-labelledby="form-title">
+                <h2 id="form-title">@T["Code.Title"]</h2>
+                <p role="status">
+                    @if (_registered)
+                    {
+                        @T["Code.SentAfterRegister.Before"] <b>@Masked</b>@T["Code.SentAfterRegister.After"]
+                    }
+                    else
+                    {
+                        @T["Code.SentAfterRequest.Before"] <b>@Masked</b> @T["Code.SentAfterRequest.After"]
+                    }
+                </p>
+                <div class="field @ErrorClass("code")">
+                    <label for="code">@T["Code.Label"]</label>
+                    <input class="input input--code num" id="code" inputmode="numeric" autocomplete="one-time-code" maxlength="6"
+                           @bind="_code" @bind:event="oninput" disabled="@_busy"
+                           aria-invalid="@Invalid("code")" aria-describedby="@Describe("code")" />
+                    <FieldError Errors="_errors" Field="code" />
+                </div>
+                <button class="btn btn--wide" type="submit" disabled="@_busy">@T["Code.Submit"]</button>
+                <p class="small">
+                    <button type="button" class="linkish" disabled="@_busy" @onclick="ResendAsync">@T["Code.Resend"]</button>
+                    ·
+                    <button type="button" class="linkish" disabled="@_busy" @onclick="() => Go(_registered ? Step.Register : Step.SignIn)">@T["Code.ChangeEmail"]</button>
+                </p>
+                <Messages Message="_message" Info="_info" />
+            </form>
+            break;
     }
-    @if (_info is not null)
-    {
-        <p class="chip ok" role="status">@_info</p>
-    }
-</section>
+</div>
 
 @code {
-    private enum Mode { SignIn, Register }
-    private enum Step { Email, Code }
+    private enum Step { SignIn, Register, Code }
 
-    private Mode _mode = Mode.SignIn;
-    private Step _step = Step.Email;
+    private Step _step = Step.SignIn;
+    private bool _registered;
     private string _email = "";
     private string? _invitation;
+    private string? _displayName;
     private bool _adult;
     private string _code = "";
     private bool _busy;
@@ -104,17 +131,35 @@
     [SupplyParameterFromQuery(Name = "registruotis")]
     public bool? StartWithRegistration { get; set; }
 
+    /// <summary>The address as shown back to the person: first letter and domain only.</summary>
+    private string Masked
+    {
+        get
+        {
+            var email = _email.Trim();
+            var at = email.LastIndexOf('@');
+            return at <= 0 ? email : email[0] + "•••" + email[at..];
+        }
+    }
+
     protected override void OnInitialized()
     {
         if (StartWithRegistration == true)
         {
-            _mode = Mode.Register;
+            _step = Step.Register;
         }
     }
 
-    private void Switch(Mode mode)
+    private string? ErrorClass(string field) => _errors.ContainsKey(field) ? "field--error" : null;
+
+    private string? Invalid(string field) => _errors.ContainsKey(field) ? "true" : null;
+
+    private string? Describe(string field) => _errors.ContainsKey(field) ? field + "-error" : null;
+
+    private void Go(Step step)
     {
-        _mode = mode;
+        _step = step;
+        _code = "";
         Clear();
     }
 
@@ -128,9 +173,9 @@
 
         await RunAsync(async () =>
         {
-            var result = await Auth.RequestCodeAsync(request);
-            if (Show(result))
+            if (Show(await Auth.RequestCodeAsync(request)))
             {
+                _registered = false;
                 _step = Step.Code;
             }
         });
@@ -142,6 +187,7 @@
         {
             Email = _email.Trim(),
             InvitationCode = string.IsNullOrWhiteSpace(_invitation) ? null : _invitation.Trim(),
+            DisplayName = string.IsNullOrWhiteSpace(_displayName) ? null : _displayName.Trim(),
             ConfirmsAdult = _adult,
         };
         if (!Validate(RegisterValidator.Validate(request)))
@@ -151,9 +197,9 @@
 
         await RunAsync(async () =>
         {
-            var result = await Auth.RegisterAsync(request);
-            if (Show(result))
+            if (Show(await Auth.RegisterAsync(request)))
             {
+                _registered = true;
                 _step = Step.Code;
             }
         });
@@ -169,8 +215,7 @@
 
         await RunAsync(async () =>
         {
-            var result = await Auth.SignInAsync(request);
-            if (Show(result))
+            if (Show(await Auth.SignInAsync(request)))
             {
                 Navigation.NavigateTo("/sveiki", forceLoad: true);
             }
@@ -181,19 +226,11 @@
     {
         await RunAsync(async () =>
         {
-            var result = await Auth.RequestCodeAsync(new RequestCodeRequest { Email = _email.Trim() });
-            if (Show(result))
+            if (Show(await Auth.RequestCodeAsync(new RequestCodeRequest { Email = _email.Trim() })))
             {
                 _info = T["Code.Resent"];
             }
         });
-    }
-
-    private void ChangeEmail()
-    {
-        _step = Step.Email;
-        _code = "";
-        Clear();
     }
 
     private async Task SignInWithPasskeyAsync()
@@ -219,8 +256,7 @@
                 return;
             }
 
-            var result = await Auth.SignInWithPasskeyAsync(new PasskeyCredentialRequest { Credential = credential });
-            if (Show(result))
+            if (Show(await Auth.SignInWithPasskeyAsync(new PasskeyCredentialRequest { Credential = credential })))
             {
                 Navigation.NavigateTo("/sveiki", forceLoad: true);
             }

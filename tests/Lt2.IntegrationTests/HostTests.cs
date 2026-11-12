@@ -36,7 +36,7 @@ public sealed class HostTests(DatabaseFixture database) : ApiTest(database)
         var html = await browser.Client.GetStringAsync("/");
 
         html.ShouldContain("<html lang=\"lt\">");
-        html.ShouldContain("Lietuva <em>2.0</em>");
+        html.ShouldContain("<h1 id=\"home-title\">Lietuva 2.0</h1>");
         html.ShouldContain("Vyksta uždaras bandymas");
         html.ShouldContain("_framework/blazor.web");
         System.Text.RegularExpressions.Regex.Matches(html, "<script(?![^>]*\\bsrc=)[^>]*>").ShouldBeEmpty();

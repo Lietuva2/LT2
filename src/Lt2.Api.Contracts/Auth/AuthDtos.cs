@@ -7,6 +7,9 @@ public sealed record RegisterRequest
 
     public string? InvitationCode { get; init; }
 
+    /// <summary>Optional name others will see next to what the person writes. Never shown with a side.</summary>
+    public string? DisplayName { get; init; }
+
     /// <summary>The person confirms they are 18 or older.</summary>
     public bool ConfirmsAdult { get; init; }
 }

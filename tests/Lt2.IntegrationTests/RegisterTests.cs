@@ -1,4 +1,5 @@
 using System.Net;
+using System.Net.Http.Json;
 using Lt2.Api.Contracts;
 using Lt2.Api.Contracts.Auth;
 using Lt2.IntegrationTests.Infrastructure;
@@ -60,6 +61,28 @@ public sealed class RegisterTests(DatabaseFixture database) : ApiTest(database)
         alias.StatusCode.ShouldBe(HttpStatusCode.Accepted);
         (await Database.ScalarAsync<long>("SELECT count(*) FROM identity.profile WHERE normalized_email = @e", ("e", $"{local.Replace(".", "")}@gmail.com")))
             .ShouldBe(1);
+    }
+
+    [Fact]
+    public async Task The_chosen_display_name_is_kept_and_shown_back_to_the_person()
+    {
+        using var browser = NewBrowser();
+        var email = TestData.Email();
+        using (var register = await browser.PostAsync(
+            ApiRoutes.Auth.Register,
+            new RegisterRequest { Email = email, InvitationCode = TestData.Invitation, DisplayName = "  Rūta M.  ", ConfirmsAdult = true }))
+        {
+            register.StatusCode.ShouldBe(HttpStatusCode.Accepted);
+        }
+
+        var code = await Factory.LatestCodeAsync(email);
+        using (var signIn = await browser.PostAsync(ApiRoutes.Auth.SignIn, new SignInRequest { Email = email, Code = code! }))
+        {
+            signIn.StatusCode.ShouldBe(HttpStatusCode.NoContent);
+        }
+
+        var me = await browser.Client.GetFromJsonAsync<Lt2.Api.Contracts.Me.MeResponse>(ApiRoutes.Me.Root);
+        me!.DisplayName.ShouldBe("Rūta M.");
     }
 
     [Fact]

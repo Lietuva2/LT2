@@ -1,0 +1,17 @@
+@* A general error (design/ui: .note) and a short confirmation (.note--quiet) under a form. *@
+@if (Message is not null)
+{
+    <p class="note" role="alert">@Message</p>
+}
+@if (Info is not null)
+{
+    <p class="note note--quiet" role="status">@Info</p>
+}
+
+@code {
+    [Parameter]
+    public string? Message { get; set; }
+
+    [Parameter]
+    public string? Info { get; set; }
+}

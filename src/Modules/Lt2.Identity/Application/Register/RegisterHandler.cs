@@ -86,6 +86,7 @@ internal sealed class RegisterHandler(
             db.Profiles.Add(new Profile
             {
                 UserId = user.Id,
+                DisplayName = string.IsNullOrWhiteSpace(registration.DisplayName) ? null : registration.DisplayName.Trim(),
                 NormalizedEmail = normalized,
                 VerificationLevel = VerificationLevels.None,
                 InvitationId = invitation?.Id,

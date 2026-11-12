@@ -11,68 +11,65 @@
 
 @if (Me is null)
 {
-    <p class="muted">@T["Loading"]</p>
+    <p class="small">@T["Loading"]</p>
 }
 else
 {
-    <section class="panel" aria-labelledby="hello-title">
-        <p class="eyebrow">Lietuva 2.0</p>
+    <section class="stack" aria-labelledby="hello-title">
+        <p class="label">Lietuva 2.0</p>
         <h1 id="hello-title">@T["Hello.Greeting", Me.DisplayName ?? Me.Email]</h1>
-        <p>@T["Hello.SignedIn"]</p>
-        <p class="chips">
-            <span class="chip @(Me.VerificationLevel == "email" ? "ok" : "gap")">@T["Level." + Me.VerificationLevel]</span>
+        <p class="lead">@T["Hello.SignedIn"]</p>
+        <p class="row">
+            <span class="tag @(Me.VerificationLevel == "email" ? "tag--people" : "")">@T["Level." + Me.VerificationLevel]</span>
             @foreach (var role in Me.Roles)
             {
-                <span class="chip">@T["Role." + role]</span>
+                <span class="tag tag--brand">@T["Role." + role]</span>
             }
         </p>
     </section>
 
-    <section class="panel" aria-labelledby="passkeys-title">
-        <h2 id="passkeys-title">@T["Passkeys.Title"]</h2>
-        <p class="muted">@T["Passkeys.Text"]</p>
-        <p>@T["Passkeys.Count", Me.PasskeyCount]</p>
-        <button type="button" class="btn" disabled="@_busy" @onclick="AddPasskeyAsync">@T["Passkeys.Add"]</button>
-    </section>
+    <div class="pair">
+        <section class="sheet sheet--cut stack" aria-labelledby="passkeys-title">
+            <h2 id="passkeys-title">@T["Passkeys.Title"]</h2>
+            <p>@T["Passkeys.Text"]</p>
+            <p class="small num">@T["Passkeys.Count", Me.PasskeyCount]</p>
+            <button type="button" class="btn" disabled="@_busy" @onclick="AddPasskeyAsync">@T["Passkeys.Add"]</button>
+        </section>
 
-    <section class="panel" aria-labelledby="sessions-title">
-        <h2 id="sessions-title">@T["Sessions.Title"]</h2>
-        <p class="muted">@T["Sessions.Text"]</p>
-        <ul class="sessions">
-            @foreach (var session in Sessions ?? [])
-            {
-                <li>
-                    <div>
-                        <b>@(session.Device ?? T["Sessions.UnknownDevice"])</b>
-                        @if (session.IsCurrent)
-                        {
-                            <span class="chip ok">@T["Sessions.Current"]</span>
-                        }
-                        <div class="muted small">
-                            @T["Sessions.Method." + (string.IsNullOrEmpty(session.Method) ? "unknown" : session.Method)] ·
-                            @T["Sessions.LastSeen", Format(session.LastSeenAt)]
+        <section class="sheet stack" aria-labelledby="sessions-title">
+            <h2 id="sessions-title">@T["Sessions.Title"]</h2>
+            <p>@T["Sessions.Text"]</p>
+            <ul class="rows">
+                @foreach (var session in Sessions ?? [])
+                {
+                    <li>
+                        <div class="rows__main">
+                            <b>@(session.Device ?? T["Sessions.UnknownDevice"])</b>
+                            <span class="small">
+                                @T["Sessions.Method." + (string.IsNullOrEmpty(session.Method) ? "unknown" : session.Method)] ·
+                                <span class="num">@T["Sessions.LastSeen", Format(session.LastSeenAt)]</span>
+                            </span>
                         </div>
-                    </div>
-                    @if (!session.IsCurrent)
-                    {
-                        <button type="button" class="btn small" disabled="@_busy" @onclick="() => EndSessionAsync(session.Id)">@T["Sessions.End"]</button>
-                    }
-                </li>
-            }
-        </ul>
-    </section>
+                        <div class="rows__side">
+                            @if (session.IsCurrent)
+                            {
+                                <span class="tag tag--people">@T["Sessions.Current"]</span>
+                            }
+                            else
+                            {
+                                <button type="button" class="btn btn--plain" disabled="@_busy" @onclick="() => EndSessionAsync(session.Id)">@T["Sessions.End"]</button>
+                            }
+                        </div>
+                    </li>
+                }
+            </ul>
+        </section>
+    </div>
 
-    <p><button type="button" class="btn primary" disabled="@_busy" @onclick="SignOutAsync">@T["SignOut"]</button></p>
+    <p><button type="button" class="btn btn--plain" disabled="@_busy" @onclick="SignOutAsync">@T["SignOut"]</button></p>
 }
 
-@if (_message is not null)
-{
-    <p class="notice" role="alert">@_message</p>
-}
-@if (_info is not null)
-{
-    <p class="chip ok" role="status">@_info</p>
-}
+<Messages Message="_message" Info="_info" />
 
 @code {
     private static readonly TimeZoneInfo Vilnius = FindVilnius();

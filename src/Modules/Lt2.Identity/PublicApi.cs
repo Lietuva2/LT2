@@ -4,7 +4,7 @@ using Lt2.SharedKernel;
 namespace Lt2.Identity;
 
 /// <summary>Registration request as the module sees it; validated by the shared contracts first.</summary>
-public sealed record Registration(string Email, string? InvitationCode, bool ConfirmsAdult);
+public sealed record Registration(string Email, string? InvitationCode, bool ConfirmsAdult, string? DisplayName = null);
 
 /// <summary>The signed-in person's own account.</summary>
 public sealed record AccountSummary(
