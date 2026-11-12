@@ -126,4 +126,7 @@
 <data name="Admin.Setting.Surge:MinimumShare" xml:space="preserve"><value>Šuolio pastaba: naujų paskyrų dalis</value></data>
 <data name="Admin.Setting.Surge:MinimumAccounts" xml:space="preserve"><value>Šuolio pastaba: mažiausiai naujų paskyrų</value></data>
 <data name="Admin.Setting.Surge:WindowHours" xml:space="preserve"><value>Šuolio pastaba: laikotarpis valandomis</value></data>
+<data name="Report.Visitor" xml:space="preserve"><value>Pranešti apie turinį moderatoriams gali prisijungę Lietuva 2.0 naudotojai:</value></data>
+<data name="Report.SignIn" xml:space="preserve"><value>prisijunkite</value></data>
+<data name="Report.OrWrite" xml:space="preserve"><value>arba parašykite moderatoriams adresu</value></data>
 </root>

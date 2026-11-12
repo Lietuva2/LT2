@@ -59,6 +59,8 @@ services:
     environment:
       ConnectionStrings__Lt2: Host=postgres;Port=5432;Database=lt2;Username=lt2_app;GSS Encryption Mode=Disable
       ReverseProxy__TrustForwardedHeaders: "true"
+      # Where visitors without a session may write to the moderators (design 8.3). Production sets the real address.
+      Moderation__ContactAddress: ${LT2_MODERATION_CONTACT:-}
       OTEL_EXPORTER_OTLP_ENDPOINT: ${OTEL_EXPORTER_OTLP_ENDPOINT:-}
     secrets:
       - source: db_app_password

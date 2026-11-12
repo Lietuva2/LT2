@@ -117,6 +117,11 @@ public sealed class AppealFlowTests(AppealFlowTests.ModeratorFixture moderator) 
         await Assertions.Expect(page.GetByText("Man svarbu · 1 920")).ToBeVisibleAsync();
         await Assertions.Expect(page.Locator("#not-a-poll")).ToHaveTextAsync("Tai nėra reprezentatyvi apklausa: skaičiai rodo savanoriškai dalyvaujančių Lietuva 2.0 naudotojų nuomonę.");
         await Assertions.Expect(page.Locator("a.btn--for")).ToHaveAttributeAsync("href", "/prisijungti");
+
+        // Reporting without JavaScript and without a session: the disclosure opens and says how.
+        await page.GetByText("Pranešti apie kreipimąsi").ClickAsync();
+        await Assertions.Expect(page.GetByText("Pranešti apie turinį moderatoriams gali prisijungę Lietuva 2.0 naudotojai:").Last).ToBeVisibleAsync();
+        await Assertions.Expect(page.Locator("a[href='mailto:moderatoriai@lt2.localhost']").Last).ToBeVisibleAsync();
         await NoSidewaysScrollAsync(page);
         await page.ScreenshotAsync(new() { Path = Shot("appeal-no-javascript-390.png"), FullPage = true });
 

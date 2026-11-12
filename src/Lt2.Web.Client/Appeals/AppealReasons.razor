@@ -36,6 +36,7 @@
                                 else
                                 {
                                     <span class="mark num">@Text("Reasons.Endorse", AppealNumbers.Of(reason.Endorsements))</span>
+                                    <VisitorReport Contact="@Contact" />
                                 }
                             </div>
                             @if (_reporting == reason.Id)
@@ -123,6 +124,9 @@
     private Guid? _reporting;
 
     [Parameter, EditorRequired] public string Number { get; set; } = "";
+
+    /// <summary>The moderators' contact address, for visitors who want to report.</summary>
+    [Parameter] public string? Contact { get; set; }
 
     [CascadingParameter] private Task<AuthenticationState>? AuthState { get; set; }
 

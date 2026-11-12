@@ -495,3 +495,5 @@ body > .page { width: 100%; }
 fieldset { margin: 0; padding: 0; border: 0; min-width: 0; }
 legend { padding: 0; font-weight: 600; }
 .said__by .linkish { font-size: var(--fs-1); }
+.report-visitor > summary { display: inline; cursor: pointer; }
+.report-visitor[open] > p { margin-top: var(--sp-2); }

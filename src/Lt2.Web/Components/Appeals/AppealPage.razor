@@ -8,6 +8,7 @@
 @inject Formats F
 @inject IStringLocalizer<AppealText> T
 @inject NavigationManager Navigation
+@inject IConfiguration Configuration
 
 @* The appeal on a bill (design 8.1, design/ui/kreipimasis.html): server-rendered and readable without JavaScript;
    taking a side, the arguments' "Man svarbu" and writing are WebAssembly islands. Without an appeal the bill offers to
@@ -85,8 +86,8 @@
 
             @if (a.Status is "open" or "closed")
             {
-                <AppealReasons Number="@a.Bill.Number" @rendermode="InteractiveWebAssembly" />
-                <ReportAppeal AppealId="a.Id" @rendermode="InteractiveWebAssembly" />
+                <AppealReasons Number="@a.Bill.Number" Contact="@Contact" @rendermode="InteractiveWebAssembly" />
+                <ReportAppeal AppealId="a.Id" Contact="@Contact" @rendermode="InteractiveWebAssembly" />
             }
             else
             {
@@ -169,6 +170,9 @@ else if (_bill is { } bill)
     private DateTimeOffset? _updatedAt;
 
     [Parameter] public string Number { get; set; } = "";
+
+    /// <summary>Where visitors without a session may write to the moderators (configuration, not a promise in code).</summary>
+    private string? Contact => Configuration["Moderation:ContactAddress"] is { Length: > 0 } address ? address : null;
 
     protected override async Task OnInitializedAsync()
     {

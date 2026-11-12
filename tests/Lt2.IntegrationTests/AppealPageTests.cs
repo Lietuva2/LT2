@@ -108,6 +108,36 @@ public sealed partial class AppealPageTests(DatabaseFixture database) : ApiTest(
     }
 
     [Fact]
+    public async Task Everyone_sees_a_report_link_on_the_appeal_and_every_argument_and_a_visitor_is_told_how_to_report()
+    {
+        var (initiator, _) = await Factory.MemberAsync();
+        using var _i = initiator;
+        await Database.OpenPublishedAsync(initiator, await ModeratorAsync(), AppealSteps.ThirdBill, "against");
+        var (writer, _) = await Factory.MemberAsync();
+        using var _w = writer;
+        (await writer.TakeSideAsync(AppealSteps.ThirdBill, "for")).StatusCode.ShouldBe(HttpStatusCode.NoContent);
+        (await writer.WriteReasonAsync(AppealSteps.ThirdBill, "for", "Gynyba finansuojama nekeliant PVM.")).StatusCode.ShouldBe(HttpStatusCode.Created);
+
+        // A visitor without a session (this HTML is what a browser with JavaScript off gets): a <details> per argument and
+        // one for the appeal, telling them to sign in or to write to the configured address. No form, no anonymous report.
+        using var stranger = NewBrowser();
+        var (_, html) = await PageAsync(stranger, "/seimas/XVP-0618/kreipimasis");
+        Regex.Count(html, "<details class=\"report-visitor\">").ShouldBe(3, "two arguments and the appeal");
+        html.ShouldContain("<summary class=\"linkish small\">Pranešti apie kreipimąsi</summary>");
+        Regex.Count(html, "<summary class=\"linkish small\">Pranešti</summary>").ShouldBe(2);
+        html.ShouldContain("Pranešti apie turinį moderatoriams gali prisijungę Lietuva 2.0 naudotojai:");
+        html.ShouldContain("<a href=\"/prisijungti\">prisijunkite</a>");
+        html.ShouldContain("<a href=\"mailto:moderatoriai@lt2.test\">moderatoriai@lt2.test</a>");
+        html.ShouldNotContain("id=\"report-appeal\"");
+
+        // A member reports in the product: a button on the appeal and on each argument.
+        var (_, member) = await PageAsync(writer, "/seimas/XVP-0618/kreipimasis");
+        member.ShouldContain("id=\"report-appeal\"");
+        Regex.Count(member, ">Pranešti</button>").ShouldBe(2);
+        member.ShouldNotContain("report-visitor");
+    }
+
+    [Fact]
     public async Task A_pending_appeal_page_is_shown_only_to_its_initiator()
     {
         await Database.FreeBillAsync(AppealSteps.SecondBill);
