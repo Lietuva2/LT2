@@ -45,6 +45,26 @@ internal sealed class AppealReads(IParticipants participants, IBillCatalogue bil
             });
     }
 
+    /// <summary>The surge note for an appeal, or <c>null</c> when the rule (design 6.6, three settings) does not hold.</summary>
+    public async Task<SurgeInfo?> SurgeAsync(AppealsDb db, Guid appealId, CancellationToken ct)
+    {
+        var hours = await settings.GetAsync(SettingKeys.SurgeWindowHours, ct);
+        var share = await settings.GetAsync(SettingKeys.SurgeMinimumShare, ct);
+        var minimum = await settings.GetAsync(SettingKeys.SurgeMinimumAccounts, ct);
+        var since = clock.GetUtcNow() - TimeSpan.FromHours(hours);
+        var counts = await db.Positions.AsNoTracking()
+            .Where(p => p.AppealId == appealId && p.CreatedAt >= since)
+            .GroupBy(p => 1)
+            .Select(g => new { Recent = g.Count(), New = g.Count(p => p.MemberSince >= since) })
+            .FirstOrDefaultAsync(ct);
+        if (counts is null || !SurgeRules.IsSurge(counts.Recent, counts.New, share, minimum))
+        {
+            return null;
+        }
+
+        return new SurgeInfo(SurgeRules.SharePercent(counts.Recent, counts.New), hours, counts.Recent, counts.New);
+    }
+
     public static ThresholdInfo Threshold(Appeal appeal, SideCounts counts, int minimum)
     {
         var effective = ThresholdRules.Effective(appeal.Threshold, minimum, appeal.FirstSummarisedAt);

@@ -41,7 +41,14 @@ public sealed record AppealInfo(
     SideCounts Counts,
     ThresholdInfo Threshold,
     IReadOnlyList<ReasonInfo> Reasons,
-    string? ReturnNote);
+    string? ReturnNote,
+    SurgeInfo? Surge = null);
+
+/// <summary>
+/// The surge note (design 6.6): in the last <paramref name="WindowHours"/> hours, <paramref name="SharePercent"/> % of the
+/// positions taken came from accounts that became members within the same hours. An aggregate; never a person.
+/// </summary>
+public sealed record SurgeInfo(int SharePercent, int WindowHours, int RecentPositions, int FromNewAccounts);
 
 public sealed record AppealListItem(Guid Id, BillFacts Bill, SideCounts Counts, ThresholdInfo Threshold, DateTimeOffset? PublishedAt);
 
@@ -92,7 +99,8 @@ public sealed record QueueAppeal(
     int Threshold,
     IReadOnlyList<string> Flags,
     IReadOnlyList<QueueReport> Reports,
-    DateTimeOffset OpenedAt);
+    DateTimeOffset OpenedAt,
+    SurgeInfo? Surge = null);
 
 /// <summary>An argument for a moderator: flagged, reported, or not yet seen.</summary>
 public sealed record QueueReason(
@@ -171,4 +179,11 @@ public interface IAppealsModeration
     Task<Result<Unit>> HideReasonAsync(Guid reasonId, string statement, ModeratorActor moderator, CancellationToken cancellationToken);
 
     Task<Result<Unit>> MergeReasonAsync(Guid reasonId, Guid intoReasonId, string statement, ModeratorActor moderator, CancellationToken cancellationToken);
+}
+
+/// <summary>Scheduled work of the Appeals module, run by the worker.</summary>
+public interface IAppealsMaintenance
+{
+    /// <summary>Writes (or rewrites) the daily aggregate of every published appeal for one Vilnius day; returns how many.</summary>
+    Task<int> AggregateDayAsync(DateOnly day, CancellationToken cancellationToken);
 }

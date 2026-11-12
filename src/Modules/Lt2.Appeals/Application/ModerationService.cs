@@ -29,8 +29,20 @@ internal sealed class ModerationService(
         var openReports = await db.Reports.AsNoTracking().Where(r => r.Status == "open").OrderBy(r => r.CreatedAt).ToListAsync(cancellationToken);
         var reportedIds = openReports.Select(r => r.TargetId).ToHashSet();
 
+        // Open appeals come into the queue when reported or when a surge needs a person to look (design 6.6).
+        var surges = new Dictionary<Guid, SurgeInfo>();
+        foreach (var openId in await db.Appeals.AsNoTracking().Where(a => a.Status == AppealStatuses.Open).Select(a => a.Id).ToListAsync(cancellationToken))
+        {
+            if (await reads.SurgeAsync(db, openId, cancellationToken) is { } surge)
+            {
+                surges[openId] = surge;
+            }
+        }
+
+        var surgeIds = surges.Keys.ToList();
         var appeals = await db.Appeals.AsNoTracking()
-            .Where(a => a.Status == AppealStatuses.Pending || (a.Status == AppealStatuses.Open && reportedIds.Contains(a.Id)))
+            .Where(a => a.Status == AppealStatuses.Pending
+                || (a.Status == AppealStatuses.Open && (reportedIds.Contains(a.Id) || surgeIds.Contains(a.Id))))
             .OrderBy(a => a.OpenedAt)
             .Take(QueueLimit)
             .ToListAsync(cancellationToken);
@@ -74,7 +86,8 @@ internal sealed class ModerationService(
                 a.Threshold,
                 a.ScreeningFlags.Concat(first?.ScreeningFlags ?? []).Distinct().ToList(),
                 ReportsOn(a.Id),
-                a.OpenedAt);
+                a.OpenedAt,
+                surges.GetValueOrDefault(a.Id));
         }).ToList();
 
         var queueReasons = reasons.Select(r => new QueueReason(

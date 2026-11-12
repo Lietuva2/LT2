@@ -1,6 +1,7 @@
 using System.Globalization;
 using Hangfire;
 using Hangfire.PostgreSql;
+using Lt2.Appeals;
 using Lt2.Audit;
 using Lt2.Identity;
 using Lt2.Notifications;
@@ -66,6 +67,8 @@ builder.Services.AddIdentityMaintenance();
 builder.Services.AddOutboundAllowlist(configuration);
 builder.Services.AddParliamentModule();
 builder.Services.AddParliamentImport(configuration);
+builder.Services.AddIdentityDirectory();
+builder.Services.AddAppealsModule();
 
 builder.Services.AddHangfire(hangfire => hangfire
     .SetDataCompatibilityLevel(CompatibilityLevel.Version_180)

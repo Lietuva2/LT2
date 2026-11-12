@@ -13,7 +13,8 @@ public sealed record QueueAppealResponse(
     int Threshold,
     IReadOnlyList<string> Flags,
     IReadOnlyList<QueueReportResponse> Reports,
-    DateTimeOffset OpenedAt);
+    DateTimeOffset OpenedAt,
+    SurgeResponse? Surge = null);
 
 /// <summary>An argument for a moderator: flagged by pre-screening, reported, or not yet seen.</summary>
 public sealed record QueueReasonResponse(

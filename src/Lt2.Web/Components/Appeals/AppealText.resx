@@ -49,4 +49,5 @@
 <data name="New.Search" xml:space="preserve"><value>Projekto numeris arba pavadinimas</value></data>
 <data name="New.SearchButton" xml:space="preserve"><value>Ieškoti</value></data>
 <data name="New.None" xml:space="preserve"><value>Tokių projektų nerasta.</value></data>
+<data name="Surge.Note" xml:space="preserve"><value>Per paskutines {0} valandas {1} % pozicijų pateikė paskyros, sukurtos per tą patį laiką. Skaičius „senesnės nei 30 d.“ jų neapima.</value></data>
 </root>

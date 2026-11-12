@@ -591,7 +591,8 @@ internal sealed class AppealsService(
             counts,
             AppealReads.Threshold(appeal, counts, minimum),
             ordered,
-            appeal.Status == AppealStatuses.Returned ? appeal.ReturnNote : null);
+            appeal.Status == AppealStatuses.Returned ? appeal.ReturnNote : null,
+            appeal.Status == AppealStatuses.Open ? await reads.SurgeAsync(db, appeal.Id, ct) : null);
     }
 
     internal static Revision Revise(string kind, Guid id, string field, string? oldValue, string? newValue, Guid? by, DateTimeOffset at) => new()

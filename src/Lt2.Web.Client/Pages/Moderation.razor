@@ -47,6 +47,10 @@ else
                     }
                 </div>
                 <h3 id="qa-@appeal.Id">@appeal.Bill.Title</h3>
+                @if (appeal.Surge is { } surge)
+                {
+                    <p class="note" id="surge-@appeal.Id">@Text("Mod.Surge", surge.WindowHours, surge.SharePercent)</p>
+                }
                 <p class="small">@Text("Mod.OpenedBy", appeal.InitiatorName ?? L["Reasons.Anonymous"], AppealNumbers.Of(appeal.Threshold))</p>
                 <p class="label">@L["Open.Description"]</p>
                 <p class="voice">@appeal.Description</p>

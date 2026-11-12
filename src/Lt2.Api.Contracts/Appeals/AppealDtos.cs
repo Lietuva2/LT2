@@ -43,7 +43,11 @@ public sealed record AppealResponse(
     SideCountsResponse Counts,
     ThresholdResponse Threshold,
     IReadOnlyList<ReasonResponse> Reasons,
-    string? ReturnNote);
+    string? ReturnNote,
+    SurgeResponse? Surge = null);
+
+/// <summary>The surge note (design 6.6): in the last hours, this share of positions came from accounts made in those hours.</summary>
+public sealed record SurgeResponse(int SharePercent, int WindowHours);
 
 public sealed record AppealListItemResponse(Guid Id, BillRefResponse Bill, SideCountsResponse Counts, ThresholdResponse Threshold, DateTimeOffset? PublishedAt);
 

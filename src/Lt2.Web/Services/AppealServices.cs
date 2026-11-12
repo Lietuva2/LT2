@@ -24,7 +24,9 @@ internal static class AppealMapping
 
     public static AppealResponse Map(AppealInfo a) => new(
         a.Id, Map(a.Bill), a.Status, a.InitiatorName, a.Description, a.OpenedAt, a.PublishedAt, Map(a.Counts), Map(a.Threshold),
-        a.Reasons.Select(Map).ToList(), a.ReturnNote);
+        a.Reasons.Select(Map).ToList(), a.ReturnNote, Map(a.Surge));
+
+    public static SurgeResponse? Map(SurgeInfo? s) => s is null ? null : new(s.SharePercent, s.WindowHours);
 
     public static AppealListResponse Map(AppealPage p) => new(
         p.Items.Select(i => new AppealListItemResponse(i.Id, Map(i.Bill), Map(i.Counts), Map(i.Threshold), i.PublishedAt)).ToList(),
@@ -42,7 +44,7 @@ internal static class AppealMapping
     public static ModerationQueueResponse Map(ModerationItems q) => new(
         q.Appeals.Select(a => new QueueAppealResponse(
             a.Id, Map(a.Bill), a.Status, a.InitiatorName, a.Description, a.FirstReason is { } f ? Map(f) : null, a.Threshold, a.Flags,
-            a.Reports.Select(Map).ToList(), a.OpenedAt)).ToList(),
+            a.Reports.Select(Map).ToList(), a.OpenedAt, Map(a.Surge))).ToList(),
         q.Reasons.Select(r => new QueueReasonResponse(
             r.Id, r.AppealId, Map(r.Bill), r.Side, r.Text, r.AuthorName, r.Status, r.Seen, r.Flags, r.Reports.Select(Map).ToList(),
             r.MergeCandidates.Select(Map).ToList(), r.CreatedAt)).ToList());

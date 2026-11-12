@@ -125,6 +125,13 @@ public static class IdentityModule
         return services;
     }
 
+    /// <summary>Registers <see cref="IParticipants"/> alone, for hosts that run Appeals work without the web host's Identity.</summary>
+    public static IServiceCollection AddIdentityDirectory(this IServiceCollection services)
+    {
+        services.AddSingleton<IParticipants, ParticipantDirectory>();
+        return services;
+    }
+
     /// <summary>Registers only what the worker needs: the database and housekeeping.</summary>
     public static IServiceCollection AddIdentityMaintenance(this IServiceCollection services)
     {

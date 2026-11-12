@@ -63,6 +63,10 @@
                     </div>
                 </div>
                 <SplitBar For="a.Counts.For" Against="a.Counts.Against" Abstain="0" />
+                @if (a.Surge is { } surge)
+                {
+                    <p class="note" id="surge-note">@Fmt("Surge.Note", Formats.Number(surge.WindowHours), Formats.Number(surge.SharePercent))</p>
+                }
                 @if (a.Status == "open")
                 {
                     <SidePicker Number="@a.Bill.Number" @rendermode="InteractiveWebAssembly" />

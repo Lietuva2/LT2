@@ -217,3 +217,27 @@ public sealed class GroupRuleTests
         GroupRules.Publishable(410).ShouldBe(410);
     }
 }
+
+/// <summary>Design 6.6: the surge note and the daily share of new accounts.</summary>
+public sealed class SurgeRuleTests
+{
+    [Fact]
+    public void A_surge_needs_at_least_the_share_and_at_least_the_number_of_new_accounts()
+    {
+        SurgeRules.IsSurge(recentPositions: 100, fromNewAccounts: 50, minimumShare: 0.30m, minimumAccounts: 50).ShouldBeTrue();
+        SurgeRules.IsSurge(recentPositions: 100, fromNewAccounts: 30, minimumShare: 0.30m, minimumAccounts: 50).ShouldBeFalse("too few accounts");
+        SurgeRules.IsSurge(recentPositions: 1000, fromNewAccounts: 299, minimumShare: 0.30m, minimumAccounts: 50).ShouldBeFalse("too small a share");
+        SurgeRules.IsSurge(recentPositions: 1000, fromNewAccounts: 300, minimumShare: 0.30m, minimumAccounts: 50).ShouldBeTrue();
+        SurgeRules.IsSurge(recentPositions: 0, fromNewAccounts: 0, minimumShare: 0.30m, minimumAccounts: 0).ShouldBeFalse();
+    }
+
+    [Fact]
+    public void The_surge_note_never_overstates_the_share() => SurgeRules.SharePercent(300, 119).ShouldBe(39);
+
+    [Fact]
+    public void The_daily_share_of_new_accounts_is_zero_on_a_day_without_new_positions()
+    {
+        SurgeRules.NewAccountShare(0, 0).ShouldBe(0);
+        SurgeRules.NewAccountShare(3, 1).ShouldBe(0.3333m);
+    }
+}

@@ -1,4 +1,5 @@
 using Hangfire;
+using Lt2.Appeals;
 using Lt2.Identity;
 using Lt2.Notifications;
 using Lt2.Parliament;
@@ -86,6 +87,22 @@ public sealed class ParliamentImportJob(IParliamentImport import, ILogger<Parlia
     }
 }
 
+/// <summary>
+/// The daily aggregate of appeals (design 5.3): yesterday's row once the day is over, today's so far. Hourly, so a missed
+/// run catches up; a day's row is overwritten by the next run for that day.
+/// </summary>
+public sealed class AppealsDailyJob(IAppealsMaintenance maintenance, TimeProvider clock, ILogger<AppealsDailyJob> logger)
+{
+    [DisableConcurrentExecution(timeoutInSeconds: 30 * 60)]
+    public async Task RunAsync(CancellationToken cancellationToken)
+    {
+        var today = DateOnly.FromDateTime(TimeZoneInfo.ConvertTime(clock.GetUtcNow(), TimeZoneInfo.FindSystemTimeZoneById("Europe/Vilnius")).DateTime);
+        var appeals = await maintenance.AggregateDayAsync(today.AddDays(-1), cancellationToken);
+        await maintenance.AggregateDayAsync(today, cancellationToken);
+        logger.LogInformation("Daily appeal aggregates written for {Appeals} appeals", appeals);
+    }
+}
+
 /// <summary>Registers the recurring Hangfire jobs at start-up, in Vilnius time (design 3: <c>Europe/Vilnius</c> for schedules).</summary>
 internal sealed class RecurringJobs(IRecurringJobManager jobs) : IHostedService
 {
@@ -103,6 +120,12 @@ internal sealed class RecurringJobs(IRecurringJobManager jobs) : IHostedService
             ParliamentImport,
             job => job.RunAsync(CancellationToken.None),
             "*/15 * * * *",
+            new RecurringJobOptions { TimeZone = vilnius });
+
+        jobs.AddOrUpdate<AppealsDailyJob>(
+            "appeals-daily",
+            job => job.RunAsync(CancellationToken.None),
+            "5 * * * *",
             new RecurringJobOptions { TimeZone = vilnius });
 
         // Ask once at start-up, so a fresh deployment (or the local stack) imports without waiting for the first period.
