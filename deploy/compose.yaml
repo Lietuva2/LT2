@@ -112,6 +112,9 @@ services:
     environment:
       ConnectionStrings__Admin: Host=postgres;Port=5432;Database=lt2;Username=postgres;GSS Encryption Mode=Disable
       ConnectionStrings__Lt2: Host=postgres;Port=5432;Database=lt2;Username=lt2_migrator;GSS Encryption Mode=Disable
+      # Local only: --demo-appeal may write invented participants (it also refuses unless the parliament data is the
+      # stand-in's). Production leaves LT2_DEMO_DATA unset.
+      Demo__Allowed: ${LT2_DEMO_DATA:-false}
     secrets:
       - source: postgres_password
         target: Database__AdminPassword

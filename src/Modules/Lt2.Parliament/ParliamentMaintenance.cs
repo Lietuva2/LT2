@@ -62,6 +62,30 @@ public static class ParliamentMaintenance
         }
     }
 
+    /// <summary>
+    /// Whether the parliament data is the stand-in's: at least one stored response, and every import run and every stored
+    /// response synthetic. A database that ever imported from the real Seimas service answers false.
+    /// </summary>
+    public static async Task<bool> IsDataInventedAsync(string connectionString, CancellationToken cancellationToken)
+    {
+        await using var connection = new NpgsqlConnection(connectionString);
+        await connection.OpenAsync(cancellationToken);
+        var synthetic = await ScalarAsync<long>(connection, null, "SELECT count(*) FROM parliament.raw_document WHERE synthetic", cancellationToken);
+        var real = await ScalarAsync<long>(connection, null, "SELECT count(*) FROM parliament.import_run WHERE NOT synthetic", cancellationToken)
+            + await ScalarAsync<long>(connection, null, "SELECT count(*) FROM parliament.raw_document WHERE NOT synthetic", cancellationToken);
+        return synthetic > 0 && real == 0;
+    }
+
+    /// <summary>The official title of a stored bill, or <c>null</c>.</summary>
+    public static async Task<string?> BillTitleAsync(string connectionString, string number, CancellationToken cancellationToken)
+    {
+        await using var connection = new NpgsqlConnection(connectionString);
+        await connection.OpenAsync(cancellationToken);
+        await using var command = new NpgsqlCommand("SELECT title FROM parliament.bill WHERE number = @n", connection);
+        command.Parameters.AddWithValue("n", number);
+        return await command.ExecuteScalarAsync(cancellationToken) as string;
+    }
+
     private static async Task ExecuteAsync(NpgsqlConnection connection, NpgsqlTransaction? transaction, string sql, CancellationToken cancellationToken)
     {
 #pragma warning disable CA2100 // Constant SQL; the only interpolation is a constant lock key.

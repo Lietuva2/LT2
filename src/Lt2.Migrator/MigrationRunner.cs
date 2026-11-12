@@ -22,7 +22,8 @@ namespace Lt2.Migrator;
 /// grant access;</item>
 /// <item>optional commands: <c>--seed-invitation CODE[:USES]</c>, <c>--grant-role ROLE EMAIL</c> (prints the one-time
 /// activation code on the console, never to a log sink), <c>--reset-parliament</c> (empties the parliament schema,
-/// refusing unless every import so far came from the Seimas stand-in).</item>
+/// refusing unless every import so far came from the Seimas stand-in), <c>--demo-appeal</c> (local demonstration data:
+/// invented participants on XVP-0412, refusing unless <c>Demo:Allowed</c> is set and the parliament data is invented).</item>
 /// </list>
 /// </summary>
 public static class MigrationRunner
@@ -112,6 +113,12 @@ public static class MigrationRunner
                     Log.Information(
                         "Parliament data emptied: {Runs} import runs, {Documents} stored responses, {People} people, {Votes} votes (all invented)",
                         reset.Value.ImportRuns, reset.Value.RawDocuments, reset.Value.People, reset.Value.Votes);
+                    break;
+                case "--demo-appeal":
+                    var demo = await DemoAppeal.RunAsync(configuration, connectionString, TimeProvider.System, cancellationToken);
+                    Log.Information(
+                        "Demonstration appeal on {Bill}: {Status}; invented accounts created: {Created}",
+                        DemoAppeal.Bill, demo.Status, demo.AccountsCreated);
                     break;
                 default:
                     throw new ArgumentException($"Unknown or incomplete argument '{args[i]}'.", nameof(args));
