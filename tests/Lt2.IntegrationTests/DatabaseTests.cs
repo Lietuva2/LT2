@@ -8,53 +8,15 @@ using Npgsql;
 
 namespace Lt2.IntegrationTests;
 
-/// <summary>Database roles and grants (design 5.5) and the outbox dispatcher with SKIP LOCKED (design 5.4).</summary>
+/// <summary>The audit trigger, schema ownership (design 5.5) and the outbox dispatcher with SKIP LOCKED (design 5.4).
+/// What each role may do is in <see cref="DatabaseRoleTests"/>.</summary>
 public sealed class DatabaseTests(DatabaseFixture database)
 {
-    [Fact]
-    public async Task The_application_role_may_only_insert_into_the_audit_log()
-    {
-        await using var app = new NpgsqlConnection(database.AppConnectionString);
-        await app.OpenAsync();
-        await using (var insert = new NpgsqlCommand(
-            "INSERT INTO audit.event (id, occurred_at, action) VALUES (gen_random_uuid(), now(), 'test.insert')", app))
-        {
-            (await insert.ExecuteNonQueryAsync()).ShouldBe(1);
-        }
-
-        foreach (var sql in new[] { "SELECT count(*) FROM audit.event", "UPDATE audit.event SET action = 'x'", "DELETE FROM audit.event" })
-        {
-            await using var command = new NpgsqlCommand(sql, app);
-            var error = await Should.ThrowAsync<PostgresException>(() => command.ExecuteNonQueryAsync());
-            error.SqlState.ShouldBe(PostgresErrorCodes.InsufficientPrivilege);
-        }
-    }
-
     [Fact]
     public async Task Even_the_owner_cannot_change_the_audit_log()
     {
         var error = await Should.ThrowAsync<PostgresException>(() => database.ExecuteAsync("UPDATE audit.event SET action = 'x'"));
         error.MessageText.ShouldContain("append-only");
-    }
-
-    [Fact]
-    public async Task The_read_only_role_cannot_see_accounts()
-    {
-        await using var readonlyConnection = new NpgsqlConnection(database.ConnectionStringFor(DatabaseRoles.Readonly, DatabaseFixture.ReadonlyPassword));
-        await readonlyConnection.OpenAsync();
-        await using var command = new NpgsqlCommand("SELECT count(*) FROM identity.profile", readonlyConnection);
-        var error = await Should.ThrowAsync<PostgresException>(() => command.ExecuteScalarAsync());
-        error.SqlState.ShouldBe(PostgresErrorCodes.InsufficientPrivilege);
-    }
-
-    [Fact]
-    public async Task The_application_role_cannot_change_the_schema()
-    {
-        await using var app = new NpgsqlConnection(database.AppConnectionString);
-        await app.OpenAsync();
-        await using var command = new NpgsqlCommand("CREATE TABLE identity.extra (id int)", app);
-        var error = await Should.ThrowAsync<PostgresException>(() => command.ExecuteNonQueryAsync());
-        error.SqlState.ShouldBe(PostgresErrorCodes.InsufficientPrivilege);
     }
 
     [Fact]

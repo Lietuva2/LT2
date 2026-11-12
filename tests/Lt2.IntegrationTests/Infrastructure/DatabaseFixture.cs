@@ -35,6 +35,20 @@ public sealed class DatabaseFixture : IAsyncLifetime
 
     public string WorkerConnectionString => ConnectionStringFor(DatabaseRoles.Worker, WorkerPassword);
 
+    public string ReadonlyConnectionString => ConnectionStringFor(DatabaseRoles.Readonly, ReadonlyPassword);
+
+    public string MigratorConnectionString => ConnectionStringFor(DatabaseRoles.Migrator, MigratorPassword);
+
+    /// <summary>The connection string of a running role by name: <c>lt2_app</c>, <c>lt2_worker</c> or <c>lt2_readonly</c>.</summary>
+    public string ConnectionStringFor(string role) => role switch
+    {
+        DatabaseRoles.App => AppConnectionString,
+        DatabaseRoles.Worker => WorkerConnectionString,
+        DatabaseRoles.Readonly => ReadonlyConnectionString,
+        DatabaseRoles.Migrator => MigratorConnectionString,
+        _ => throw new ArgumentOutOfRangeException(nameof(role), role, null),
+    };
+
     public async ValueTask InitializeAsync()
     {
         await _container.StartAsync();
