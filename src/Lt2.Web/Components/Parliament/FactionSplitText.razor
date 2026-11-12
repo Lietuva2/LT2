@@ -1,0 +1,9 @@
+@using Lt2.Api.Contracts.Parliament
+@inject Formats F
+
+@* How a faction voted: its position (or that it voted freely) and the counts; neutral text, no warning colours. *@
+<span class="small num">@F.Format("Faction.Position", Split.Label, F.Position(Split.Position)) (@F.Counts(Split.For, Split.Against, Split.Abstain))</span>
+
+@code {
+    [Parameter, EditorRequired] public FactionSplitResponse Split { get; set; } = default!;
+}

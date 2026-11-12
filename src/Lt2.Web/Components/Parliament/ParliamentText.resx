@@ -1,0 +1,156 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <resheader name="resmimetype"><value>text/microsoft-resx</value></resheader>
+  <resheader name="version"><value>2.0</value></resheader>
+  <resheader name="reader"><value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value></resheader>
+  <resheader name="writer"><value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value></resheader>
+  <data name="Source.Text" xml:space="preserve"><value>Šaltinis: Lietuvos Respublikos Seimo atvirieji duomenys,</value></data>
+  <data name="Source.Licence" xml:space="preserve"><value>CC BY 4.0</value></data>
+  <data name="Source.Updated" xml:space="preserve"><value>atnaujinta {0}</value></data>
+  <data name="Source.NotYet" xml:space="preserve"><value>dar neimportuota</value></data>
+  <data name="Source.How" xml:space="preserve"><value>Kaip tai skaičiuojama</value></data>
+  <data name="NoData" xml:space="preserve"><value>Duomenų nėra</value></data>
+  <data name="Date.Format" xml:space="preserve"><value>{0} m. {1} {2} d.</value></data>
+  <data name="Time.Format" xml:space="preserve"><value>{0} {1}</value></data>
+  <data name="Month.1" xml:space="preserve"><value>sausio</value></data>
+  <data name="Month.2" xml:space="preserve"><value>vasario</value></data>
+  <data name="Month.3" xml:space="preserve"><value>kovo</value></data>
+  <data name="Month.4" xml:space="preserve"><value>balandžio</value></data>
+  <data name="Month.5" xml:space="preserve"><value>gegužės</value></data>
+  <data name="Month.6" xml:space="preserve"><value>birželio</value></data>
+  <data name="Month.7" xml:space="preserve"><value>liepos</value></data>
+  <data name="Month.8" xml:space="preserve"><value>rugpjūčio</value></data>
+  <data name="Month.9" xml:space="preserve"><value>rugsėjo</value></data>
+  <data name="Month.10" xml:space="preserve"><value>spalio</value></data>
+  <data name="Month.11" xml:space="preserve"><value>lapkričio</value></data>
+  <data name="Month.12" xml:space="preserve"><value>gruodžio</value></data>
+  <data name="Choice.for" xml:space="preserve"><value>Už</value></data>
+  <data name="Choice.against" xml:space="preserve"><value>Prieš</value></data>
+  <data name="Choice.abstain" xml:space="preserve"><value>Susilaikė</value></data>
+  <data name="Choice.did-not-vote" xml:space="preserve"><value>Nebalsavo</value></data>
+  <data name="Position.for" xml:space="preserve"><value>už</value></data>
+  <data name="Position.against" xml:space="preserve"><value>prieš</value></data>
+  <data name="Position.abstain" xml:space="preserve"><value>susilaikė</value></data>
+  <data name="Position.free" xml:space="preserve"><value>balsavo laisvai</value></data>
+  <data name="Position.nobody-voted" xml:space="preserve"><value>nebalsavo nė vienas narys</value></data>
+  <data name="Stage.presentation" xml:space="preserve"><value>Pateikimas</value></data>
+  <data name="Stage.consideration" xml:space="preserve"><value>Svarstymas</value></data>
+  <data name="Stage.adoption" xml:space="preserve"><value>Priėmimas</value></data>
+  <data name="VoteKind.stage-result" xml:space="preserve"><value>Stadijos balsavimas</value></data>
+  <data name="VoteKind.amendment" xml:space="preserve"><value>Dėl pasiūlymo</value></data>
+  <data name="VoteKind.procedural" xml:space="preserve"><value>Procedūrinis balsavimas</value></data>
+  <data name="VoteKind.other" xml:space="preserve"><value>Kitas balsavimas</value></data>
+  <data name="Consensus.Tag" xml:space="preserve"><value>Pritarta bendru sutarimu</value></data>
+  <data name="Consensus.NoVotes" xml:space="preserve"><value>Atskirų Seimo narių balsų nėra</value></data>
+  <data name="NoResult" xml:space="preserve"><value>Rezultatų dar nėra</value></data>
+  <data name="Split.Aria" xml:space="preserve"><value>{0} už, {1} prieš, {2} susilaikė</value></data>
+  <data name="Faction.Position" xml:space="preserve"><value>Frakcija ({0}): {1}</value></data>
+  <data name="Faction.Counts" xml:space="preserve"><value>{0} už · {1} prieš · {2} susilaikė</value></data>
+  <data name="Mps.Title" xml:space="preserve"><value>Seimo nariai</value></data>
+  <data name="Mps.Lead" xml:space="preserve"><value>{0}. Profiliai sudaryti automatiškai iš Seimo atvirųjų duomenų.</value></data>
+  <data name="Mps.Search" xml:space="preserve"><value>Vardas ar pavardė</value></data>
+  <data name="Mps.Faction" xml:space="preserve"><value>Frakcija</value></data>
+  <data name="Mps.AllFactions" xml:space="preserve"><value>Visos frakcijos</value></data>
+  <data name="Mps.Committee" xml:space="preserve"><value>Komitetas</value></data>
+  <data name="Mps.AllCommittees" xml:space="preserve"><value>Visi komitetai</value></data>
+  <data name="Mps.Show" xml:space="preserve"><value>Rodyti</value></data>
+  <data name="Mps.Clear" xml:space="preserve"><value>Rodyti visus</value></data>
+  <data name="Mps.Found" xml:space="preserve"><value>Rasta: {0}</value></data>
+  <data name="Mps.Sitting" xml:space="preserve"><value>Dabartiniai Seimo nariai</value></data>
+  <data name="Mps.Former" xml:space="preserve"><value>Buvę šios kadencijos Seimo nariai</value></data>
+  <data name="Mps.None" xml:space="preserve"><value>Pagal šiuos filtrus nieko nerasta.</value></data>
+  <data name="Mps.Bodies" xml:space="preserve"><value>Frakcijos ir komitetai</value></data>
+  <data name="Mps.Factions" xml:space="preserve"><value>Frakcijos</value></data>
+  <data name="Mps.Committees" xml:space="preserve"><value>Komitetai</value></data>
+  <data name="Mps.Members" xml:space="preserve"><value>narių: {0}</value></data>
+  <data name="Mp.Label" xml:space="preserve"><value>Seimo narys</value></data>
+  <data name="Mp.Label.V" xml:space="preserve"><value>Seimo narys</value></data>
+  <data name="Mp.Label.M" xml:space="preserve"><value>Seimo narė</value></data>
+  <data name="Mp.Former" xml:space="preserve"><value>Buvęs Seimo narys</value></data>
+  <data name="Mp.Former.V" xml:space="preserve"><value>Buvęs Seimo narys</value></data>
+  <data name="Mp.Former.M" xml:space="preserve"><value>Buvusi Seimo narė</value></data>
+  <data name="Mp.Record" xml:space="preserve"><value>Balsavimai Seime</value></data>
+  <data name="Stat.Participation" xml:space="preserve"><value>Dalyvavimas balsavimuose</value></data>
+  <data name="Stat.ParticipationCount" xml:space="preserve"><value>balsavo {0} iš {1}</value></data>
+  <data name="Stat.WithFaction" xml:space="preserve"><value>Balsavo kaip frakcija</value></data>
+  <data name="Stat.WithFactionCount" xml:space="preserve"><value>{0} iš {1}, kai frakcija turėjo poziciją</value></data>
+  <data name="Stat.Free" xml:space="preserve"><value>frakcija balsavo laisvai: {0}</value></data>
+  <data name="Stat.NoPosition" xml:space="preserve"><value>frakcija poziciją turėjo 0 kartų</value></data>
+  <data name="Stat.None" xml:space="preserve"><value>įrašytų balsavimų mandato metu dar nėra</value></data>
+  <data name="Mp.RecentVotes" xml:space="preserve"><value>Naujausi balsavimai</value></data>
+  <data name="Mp.AllVotes" xml:space="preserve"><value>Visi balsavimai</value></data>
+  <data name="Mp.NoVotes" xml:space="preserve"><value>Balsavimų mandato metu dar nėra.</value></data>
+  <data name="Mp.Mandate" xml:space="preserve"><value>Mandatas</value></data>
+  <data name="Mp.ElectedHow" xml:space="preserve"><value>Išrinkimo būdas</value></data>
+  <data name="Mp.Constituency" xml:space="preserve"><value>Apygarda</value></data>
+  <data name="Mp.Party" xml:space="preserve"><value>Iškėlė</value></data>
+  <data name="Mp.Terms" xml:space="preserve"><value>Kadencijų Seime</value></data>
+  <data name="Mp.From" xml:space="preserve"><value>Mandatas nuo</value></data>
+  <data name="Mp.To" xml:space="preserve"><value>Mandatas iki</value></data>
+  <data name="Mp.Roles" xml:space="preserve"><value>Pareigos Seime</value></data>
+  <data name="Mp.FormerRoles" xml:space="preserve"><value>Ankstesnės pareigos šioje kadencijoje</value></data>
+  <data name="Mp.Contacts" xml:space="preserve"><value>Oficialūs kontaktai</value></data>
+  <data name="Mp.Email" xml:space="preserve"><value>El. paštas</value></data>
+  <data name="Mp.Auto" xml:space="preserve"><value>Profilis sudarytas automatiškai iš Seimo atvirųjų duomenų.</value></data>
+  <data name="Mp.Votes.Title" xml:space="preserve"><value>{0}: balsavimai</value></data>
+  <data name="Mp.Votes.Older" xml:space="preserve"><value>Ankstesni balsavimai</value></data>
+  <data name="Mp.Votes.Back" xml:space="preserve"><value>Į profilį</value></data>
+  <data name="Dates.Range" xml:space="preserve"><value>{0} – {1}</value></data>
+  <data name="Dates.Since" xml:space="preserve"><value>nuo {0}</value></data>
+  <data name="Body.faction" xml:space="preserve"><value>Frakcija</value></data>
+  <data name="Body.committee" xml:space="preserve"><value>Komitetas</value></data>
+  <data name="Body.Members" xml:space="preserve"><value>Nariai</value></data>
+  <data name="Body.FormerMembers" xml:space="preserve"><value>Buvę nariai</value></data>
+  <data name="Body.Positions" xml:space="preserve"><value>Frakcijos pozicijos naujausiuose balsavimuose</value></data>
+  <data name="Body.Count" xml:space="preserve"><value>Dabar narių: {0}</value></data>
+  <data name="Body.NoPositions" xml:space="preserve"><value>Pozicijų dar nėra.</value></data>
+  <data name="Bill.Label" xml:space="preserve"><value>Įstatymo projektas</value></data>
+  <data name="Bill.ESeimas" xml:space="preserve"><value>Projektas e-seime</value></data>
+  <data name="Bill.Stages" xml:space="preserve"><value>Stadijos Seime</value></data>
+  <data name="Bill.NotYet" xml:space="preserve"><value>dar nebalsuota</value></data>
+  <data name="Bill.Votes" xml:space="preserve"><value>Visi balsavimai dėl projekto</value></data>
+  <data name="Bill.NoVotes" xml:space="preserve"><value>Balsavimų dar nėra.</value></data>
+  <data name="Vote.Label" xml:space="preserve"><value>Balsavimas</value></data>
+  <data name="Vote.Result" xml:space="preserve"><value>Rezultatas</value></data>
+  <data name="Vote.Voted" xml:space="preserve"><value>balsavo {0} iš {1}</value></data>
+  <data name="Vote.VotedOnly" xml:space="preserve"><value>balsavo {0}</value></data>
+  <data name="Vote.ConsensusText" xml:space="preserve"><value>Seimas pritarė bendru sutarimu: Seimo nariai nebalsavo atskirai, todėl balsų skaičių nėra.</value></data>
+  <data name="Vote.Note" xml:space="preserve"><value>Seimo pastaba prie rezultato:</value></data>
+  <data name="Vote.Item" xml:space="preserve"><value>Darbotvarkės klausimas</value></data>
+  <data name="Vote.SeatMap" xml:space="preserve"><value>Kaip balsavo Seimo nariai</value></data>
+  <data name="Vote.SeatMapAria" xml:space="preserve"><value>Seimo narių balsai: kiekvienas taškas – vienas Seimo narys, sugrupuota pagal frakcijas</value></data>
+  <data name="Vote.Factions" xml:space="preserve"><value>Frakcijų pozicijos</value></data>
+  <data name="Vote.FactionColumn" xml:space="preserve"><value>Frakcija</value></data>
+  <data name="Vote.PositionColumn" xml:space="preserve"><value>Pozicija</value></data>
+  <data name="Vote.CountsColumn" xml:space="preserve"><value>Balsai</value></data>
+  <data name="Vote.Ballots" xml:space="preserve"><value>Seimo narių balsai</value></data>
+  <data name="Vote.NoFaction" xml:space="preserve"><value>be frakcijos</value></data>
+  <data name="Vote.Bill" xml:space="preserve"><value>Projektas</value></data>
+  <data name="Method.Title" xml:space="preserve"><value>Kaip skaičiuojama</value></data>
+  <data name="Method.Lead" xml:space="preserve"><value>Seimo narių profiliai sudaromi automatiškai. Čia aprašyta, iš kur imami duomenys ir ką tiksliai skaičiuoja du profilio rodikliai.</value></data>
+  <data name="Method.Source" xml:space="preserve"><value>Iš kur duomenys</value></data>
+  <data name="Method.Source.1" xml:space="preserve"><value>Visi Seimo narių, frakcijų, komitetų, posėdžių ir balsavimų duomenys imami iš Lietuvos Respublikos Seimo atvirųjų duomenų (apps.lrs.lt/sip). Juos galima naudoti pagal licenciją CC BY 4.0.</value></data>
+  <data name="Method.Source.2" xml:space="preserve"><value>Duomenys atnaujinami automatiškai: posėdžių dienomis kas 15 minučių, kitomis dienomis kas valandą. Seimo narių sąrašas ir pareigos – kartą per dieną.</value></data>
+  <data name="Method.Source.Last" xml:space="preserve"><value>Paskutinį kartą duomenys sėkmingai atnaujinti {0}.</value></data>
+  <data name="Method.Source.Never" xml:space="preserve"><value>Duomenys dar nebuvo atnaujinti.</value></data>
+  <data name="Method.Participation" xml:space="preserve"><value>Dalyvavimas balsavimuose</value></data>
+  <data name="Method.Participation.1" xml:space="preserve"><value>Iš visų įrašytų balsavimų, vykusių per Seimo nario mandatą, – dalis tų, kuriuose Seimo narys balsavo už, prieš arba susilaikė.</value></data>
+  <data name="Method.Participation.2" xml:space="preserve"><value>Įrašytas balsavimas – toks, kurio kiekvieno Seimo nario balsą skelbia Seimas. Skaičiuojami visi tokie balsavimai, ir procedūriniai, ir dėl pasiūlymų.</value></data>
+  <data name="Method.Participation.3" xml:space="preserve"><value>Neskaičiuojama: sprendimai, priimti bendru sutarimu (atskirų balsų nėra), ir balsavimai iki mandato pradžios ar po jo pabaigos. Jei Seimo narys užsiregistravo, bet nebalsavo, tai laikoma nedalyvavimu.</value></data>
+  <data name="Method.WithFaction" xml:space="preserve"><value>Balsavo kaip frakcija</value></data>
+  <data name="Method.WithFaction.1" xml:space="preserve"><value>Frakcija turi poziciją balsavime, kai bent {0} jos narių, kurie balsavo, pasirinko tą patį: už, prieš arba susilaikė. Nebalsavę nariai neskaičiuojami. Pats Seimo narys skaičiuojamas kaip vienas iš frakcijos narių.</value></data>
+  <data name="Method.WithFaction.2" xml:space="preserve"><value>Jei nė vienas pasirinkimas nesurenka {0}, laikoma, kad frakcija balsavo laisvai. Tokie balsavimai į rodiklį neįtraukiami, o jų skaičius rodomas šalia.</value></data>
+  <data name="Method.WithFaction.Absence.False" xml:space="preserve"><value>Rodiklis – dalis balsavimų, kuriuose Seimo narys dalyvavo ir frakcija turėjo poziciją, kai Seimo narys pasirinko tą patį. Balsavimas, kuriame Seimo narys nedalyvavo, šio rodiklio nemažina – jis mažina tik dalyvavimą.</value></data>
+  <data name="Method.WithFaction.Absence.True" xml:space="preserve"><value>Rodiklis – dalis balsavimų, kuriuose frakcija turėjo poziciją, kai Seimo narys pasirinko tą patį. Balsavimas, kuriame Seimo narys nedalyvavo, laikomas balsavimu ne kaip frakcija.</value></data>
+  <data name="Method.WithFaction.3" xml:space="preserve"><value>Frakcija – ta, kurią prie Seimo nario balso nurodo pats Seimas to balsavimo rezultatuose, todėl perėjus į kitą frakciją ankstesni balsavimai lieka su ankstesne frakcija.</value></data>
+  <data name="Method.WithFaction.Labels.None" xml:space="preserve"><value>Kiekviena Seimo rezultatuose nurodyta grupė laikoma frakcija, taip pat ir Mišri Seimo narių grupė.</value></data>
+  <data name="Method.WithFaction.Labels.Some" xml:space="preserve"><value>Šios Seimo rezultatuose nurodytos grupės nelaikomos frakcijomis ir pozicijos neturi: {0}.</value></data>
+  <data name="Method.Notes" xml:space="preserve"><value>Ypatingi atvejai</value></data>
+  <data name="Method.Notes.1" xml:space="preserve"><value>Sprendimai, priimti bendru sutarimu, rodomi be skaičių: atskirų Seimo narių balsų tokiais atvejais nėra.</value></data>
+  <data name="Method.Notes.2" xml:space="preserve"><value>Kai Seimas prie rezultato nurodo, kad atskiri Seimo narių balsai nesutampa su protokole įrašytais bendrais skaičiais, ši pastaba rodoma šalia rezultato.</value></data>
+  <data name="Method.Not" xml:space="preserve"><value>Ko neskaičiuojame</value></data>
+  <data name="Method.Not.1" xml:space="preserve"><value>Profiliuose nėra reitingų, balų ar Seimo narių palyginimų tarpusavyje, nėra ir Seimo narių išlaidų. Profilis rodo, ką Seimo narys darė, o ne vertina.</value></data>
+  <data name="Method.Classification" xml:space="preserve"><value>Kaip atpažįstamos projekto stadijos</value></data>
+  <data name="Method.Classification.1" xml:space="preserve"><value>Ar balsavimas buvo dėl projekto pateikimo, svarstymo ar priėmimo, nustatoma pagal balsavimo formuluotę. Ko taisyklės negali priskirti, rodoma kaip kitas balsavimas be stadijos.</value></data>
+  <data name="Method.TwoThirds" xml:space="preserve"><value>dviejų trečdalių</value></data>
+</root>

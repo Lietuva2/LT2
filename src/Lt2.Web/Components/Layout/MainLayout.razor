@@ -5,6 +5,8 @@
 <header class="page top">
     <a class="top__brand" href="/"><Logo />Lietuva 2.0</a>
     <nav class="top__nav" aria-label="@T["Nav.Label"]">
+        <NavLink href="/seimo-nariai" Match="NavLinkMatch.Prefix" ActiveClass="">@T["Nav.Mps"]</NavLink>
+        <NavLink href="/metodika" ActiveClass="">@T["Nav.Methodology"]</NavLink>
         <AuthorizeView>
             <Authorized>
                 <a href="/sveiki">@T["Nav.Account"]</a>

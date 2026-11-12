@@ -1,0 +1,196 @@
+@page "/p/{Slug}"
+@using Lt2.Api.Contracts.Parliament
+@using Lt2.Api.Contracts.Meta
+@inject IParliamentApi Api
+@inject IMetaApi Meta
+@inject Formats F
+@inject NavigationManager Navigation
+
+@if (_mp is { } p)
+{
+    <PageTitle>@p.Mp.FirstName @p.Mp.LastName · Lietuva 2.0</PageTitle>
+
+    <div class="stack">
+        <ol class="crumbs">
+            <li><a href="/seimo-nariai">@F.T["Mps.Title"]</a></li>
+            @if (p.Mp.Faction is { } crumb)
+            {
+                <li><a href="/frakcijos/@crumb.Slug">@crumb.Name</a></li>
+            }
+        </ol>
+        <div class="row row--end">
+            <span class="portrait" aria-hidden="true">@Initials(p.Mp)</span>
+            <div class="stack stack--tight">
+                <p class="label">@Label(p.Mp)</p>
+                <h1>@p.Mp.FirstName @p.Mp.LastName</h1>
+            </div>
+        </div>
+        <div class="row">
+            @foreach (var m in p.Memberships.Where(m => m.Current && m.Body.Kind is "faction" or "committee"))
+            {
+                <a class="tag @(m.Body.Kind == "faction" ? "tag--ink" : "")" href="/@(m.Body.Kind == "faction" ? "frakcijos" : "komitetai")/@m.Body.Slug">@m.Body.Name</a>
+            }
+        </div>
+    </div>
+
+    <div class="cols">
+        <div class="stack stack--loose">
+            <section class="sheet sheet--cut stack" aria-labelledby="h-record">
+                <h2 id="h-record" class="visually-hidden">@F.T["Mp.Record"]</h2>
+                <div class="pair pair--keep">
+                    <div class="figure figure--m" id="participation">
+                        <span class="label">@F.T["Stat.Participation"]</span>
+                        @if (Formats.Percent(p.Statistics?.Participation) is { } share)
+                        {
+                            <span class="figure__num">@share</span>
+                            <span class="small num">@F.Format("Stat.ParticipationCount", Formats.Number(p.Statistics!.VotesTakenPart), Formats.Number(p.Statistics.VotesHeld))</span>
+                        }
+                        else
+                        {
+                            <span class="figure__none">@F.T["NoData"]</span>
+                            <span class="small">@F.T["Stat.None"]</span>
+                        }
+                    </div>
+                    <div class="figure figure--m" id="with-faction">
+                        <span class="label">@F.T["Stat.WithFaction"]</span>
+                        @if (Formats.Percent(p.Statistics?.WithFaction) is { } withShare)
+                        {
+                            <span class="figure__num">@withShare</span>
+                            <span class="small num">@F.Format("Stat.WithFactionCount", Formats.Number(p.Statistics!.VotedWithFaction), Formats.Number(p.Statistics.VotesWithFactionPosition))</span>
+                        }
+                        else
+                        {
+                            <span class="figure__none">@F.T["NoData"]</span>
+                            <span class="small">@(p.Statistics is { VotesHeld: > 0 } ? F.T["Stat.NoPosition"] : F.T["Stat.None"])</span>
+                        }
+                        @if (p.Statistics is { } s)
+                        {
+                            <span class="small num">@F.Format("Stat.Free", Formats.Number(s.FreeVotes))</span>
+                        }
+                    </div>
+                </div>
+                <SourceLine UpdatedAt="@_updatedAt" />
+            </section>
+
+            <section class="stack" aria-labelledby="h-votes">
+                <h2 id="h-votes">@F.T["Mp.RecentVotes"]</h2>
+                @if (p.RecentVotes.Count == 0)
+                {
+                    <p>@F.T["Mp.NoVotes"]</p>
+                }
+                else
+                {
+                    <MpVoteRows Votes="p.RecentVotes" />
+                    <p><a href="/p/@p.Mp.Slug/balsavimai">@F.T["Mp.AllVotes"]</a></p>
+                }
+            </section>
+        </div>
+
+        <aside class="stack">
+            <section class="sheet stack stack--tight" aria-labelledby="h-mandate">
+                <h3 id="h-mandate">@F.T["Mp.Mandate"]</h3>
+                <dl class="facts">
+                    @if (p.Mandate.ElectedHow is { } how)
+                    {
+                        <dt>@F.T["Mp.ElectedHow"]</dt><dd>@how</dd>
+                    }
+                    @if (p.Mandate.Constituency is { } constituency)
+                    {
+                        <dt>@F.T["Mp.Constituency"]</dt><dd>@constituency</dd>
+                    }
+                    @if (p.Mandate.NominatingParty is { } party)
+                    {
+                        <dt>@F.T["Mp.Party"]</dt><dd>@party</dd>
+                    }
+                    @if (p.Mandate.TermsServed is { } terms)
+                    {
+                        <dt>@F.T["Mp.Terms"]</dt><dd class="num">@terms</dd>
+                    }
+                    <dt>@F.T["Mp.From"]</dt><dd class="num">@F.Date(p.Mandate.From)</dd>
+                    @if (p.Mandate.To is { } to)
+                    {
+                        <dt>@F.T["Mp.To"]</dt><dd class="num">@F.Date(to)</dd>
+                    }
+                </dl>
+            </section>
+
+            @if (p.Memberships.Any(m => m.Current))
+            {
+                <section class="sheet stack stack--tight" aria-labelledby="h-roles">
+                    <h3 id="h-roles">@F.T["Mp.Roles"]</h3>
+                    <dl class="facts">
+                        @foreach (var m in p.Memberships.Where(m => m.Current))
+                        {
+                            <dt><BodyName Body="m.Body" /></dt><dd>@m.Role</dd>
+                        }
+                    </dl>
+                </section>
+            }
+
+            @if (p.Memberships.Any(m => !m.Current))
+            {
+                <section class="stack stack--tight" aria-labelledby="h-former-roles">
+                    <h3 id="h-former-roles">@F.T["Mp.FormerRoles"]</h3>
+                    <dl class="facts">
+                        @foreach (var m in p.Memberships.Where(m => !m.Current))
+                        {
+                            <dt><BodyName Body="m.Body" /></dt>
+                            <dd>@m.Role, <span class="num">@F.Format("Dates.Range", F.Date(m.From), m.To is { } end ? F.Date(end) : "")</span></dd>
+                        }
+                    </dl>
+                </section>
+            }
+
+            @if (p.Contacts.Count > 0)
+            {
+                <section class="stack stack--tight" aria-labelledby="h-contacts">
+                    <h3 id="h-contacts">@F.T["Mp.Contacts"]</h3>
+                    <ul class="stack stack--tight">
+                        @foreach (var c in p.Contacts)
+                        {
+                            <li>
+                                @if (c.Kind == "El. p.")
+                                {
+                                    @F.T["Mp.Email"]<text>: </text><a href="mailto:@c.Value">@c.Value</a>
+                                }
+                                else
+                                {
+                                    @c.Kind<text>: </text>@c.Value
+                                }
+                            </li>
+                        }
+                    </ul>
+                </section>
+            }
+
+            <p class="note note--quiet">@F.T["Mp.Auto"]</p>
+        </aside>
+    </div>
+}
+
+@code {
+    private MpProfileResponse? _mp;
+    private DateTimeOffset? _updatedAt;
+
+    [Parameter] public string Slug { get; set; } = "";
+
+    protected override async Task OnInitializedAsync()
+    {
+        _mp = (await Api.GetMpAsync(Slug)).Value;
+        if (_mp is null)
+        {
+            Navigation.NotFound();
+            return;
+        }
+
+        _updatedAt = (await Meta.GetImportsAsync()).Value?.Sources.FirstOrDefault()?.LastSuccessAt;
+    }
+
+    private static string Initials(MpListItem mp) => $"{mp.FirstName[..1]}{mp.LastName[..1]}";
+
+    private string Label(MpListItem mp)
+    {
+        var key = (mp.Sitting ? "Mp.Label" : "Mp.Former") + (mp.Gender is "V" or "M" ? "." + mp.Gender : "");
+        return F.T[key];
+    }
+}

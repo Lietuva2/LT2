@@ -1,0 +1,21 @@
+@using Lt2.Api.Contracts.Parliament
+@inject Formats F
+
+<ul class="rows">
+    @foreach (var m in Members)
+    {
+        <li>
+            <div class="rows__main">
+                <a href="/p/@m.Mp.Slug">@m.Mp.FirstName @m.Mp.LastName</a>
+                <span class="small">@m.Role</span>
+            </div>
+            <div class="rows__side">
+                <span class="small num">@(m.To is { } to ? F.Format("Dates.Range", F.Date(m.From), F.Date(to)) : F.Format("Dates.Since", F.Date(m.From)))</span>
+            </div>
+        </li>
+    }
+</ul>
+
+@code {
+    [Parameter, EditorRequired] public IReadOnlyList<BodyMemberResponse> Members { get; set; } = [];
+}

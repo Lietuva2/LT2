@@ -1,0 +1,137 @@
+@page "/seimas/balsavimai/{Id:long}"
+@using Lt2.Api.Contracts.Parliament
+@using Lt2.Api.Contracts.Meta
+@inject IParliamentApi Api
+@inject IMetaApi Meta
+@inject Formats F
+@inject NavigationManager Navigation
+
+@if (_vote is { } v)
+{
+    var vote = v.Summary.Vote;
+    var totals = v.Summary.Totals;
+    <PageTitle>@F.T["Vote.Label"] · @(vote.Bill?.Title ?? v.AgendaItemTitle) · Lietuva 2.0</PageTitle>
+
+    <div class="stack">
+        @if (vote.Bill is { } bill)
+        {
+            <ol class="crumbs">
+                <li><a href="/seimas/@bill.Number">@bill.Number</a></li>
+            </ol>
+        }
+        <p class="label num">@string.Join(" · ", Label(vote))</p>
+        <h1>@(vote.Bill?.Title ?? v.AgendaItemTitle)</h1>
+        <p class="lead">@vote.Wording</p>
+    </div>
+
+    <section class="sheet sheet--cut stack" aria-labelledby="h-result">
+        <h2 id="h-result" class="visually-hidden">@F.T["Vote.Result"]</h2>
+        @if (vote.IsConsensus)
+        {
+            <p><span class="tag">@F.T["Consensus.Tag"]</span></p>
+            <p>@F.T["Vote.ConsensusText"]</p>
+        }
+        else if (!vote.HasResult)
+        {
+            <p>@F.T["NoResult"]</p>
+        }
+        else
+        {
+            <div class="totals">
+                <div class="figure figure--m figure--for"><span class="label">@F.Choice("for")</span><span class="figure__num">@Formats.Number(totals.For)</span></div>
+                <div class="figure figure--m figure--against"><span class="label">@F.Choice("against")</span><span class="figure__num">@Formats.Number(totals.Against)</span></div>
+                <div class="figure figure--m"><span class="label">@F.Choice("abstain")</span><span class="figure__num">@Formats.Number(totals.Abstain)</span></div>
+            </div>
+            <SplitBar For="totals.For" Against="totals.Against" Abstain="totals.Abstain" />
+            @if (totals.Voted is { } voted)
+            {
+                <p class="small num">@(totals.Seats is { } seats ? F.Format("Vote.Voted", Formats.Number(voted), Formats.Number(seats)) : F.Format("Vote.VotedOnly", Formats.Number(voted)))</p>
+            }
+            @if (v.Summary.OfficialNote is { } note)
+            {
+                <p class="note" role="note" id="official-note">@F.T["Vote.Note"] @note</p>
+            }
+        }
+        <SourceLine UpdatedAt="@_updatedAt" />
+    </section>
+
+    @if (v.Ballots.Count > 0)
+    {
+        <section class="stack" aria-labelledby="h-seats">
+            <h2 id="h-seats">@F.T["Vote.SeatMap"]</h2>
+            <SeatMap Ballots="v.Ballots" />
+        </section>
+
+        <section class="stack" aria-labelledby="h-factions">
+            <h2 id="h-factions">@F.T["Vote.Factions"]</h2>
+            <div class="table-wrap">
+                <table class="table">
+                    <thead><tr><th scope="col">@F.T["Vote.FactionColumn"]</th><th scope="col">@F.T["Vote.PositionColumn"]</th><th scope="col">@F.T["Vote.CountsColumn"]</th></tr></thead>
+                    <tbody>
+                        @foreach (var f in v.Factions)
+                        {
+                            <tr>
+                                <td>@if (f.Faction is { } body) { <a href="/frakcijos/@body.Slug">@body.Name</a> } else { @f.Label }</td>
+                                <td>@F.Position(f.Position)</td>
+                                <td class="num">@F.Counts(f.For, f.Against, f.Abstain)</td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+        <section class="stack" aria-labelledby="h-ballots">
+            <h2 id="h-ballots">@F.T["Vote.Ballots"]</h2>
+            <ul class="rows">
+                @foreach (var b in v.Ballots)
+                {
+                    <li>
+                        <div class="rows__main">
+                            <a href="/p/@b.Mp.Slug">@b.Mp.FirstName @b.Mp.LastName</a>
+                            <span class="small">@(b.FactionLabel ?? F.T["Vote.NoFaction"])</span>
+                        </div>
+                        <div class="rows__side"><span class="@Formats.ChoiceClass(b.Choice)">@F.Choice(b.Choice)</span></div>
+                    </li>
+                }
+            </ul>
+        </section>
+    }
+
+    <p class="small">@F.T["Vote.Item"]: @v.AgendaItemTitle · <span class="num">@F.Time(v.SittingStartsAt)</span></p>
+}
+
+@code {
+    private VoteResponse? _vote;
+    private DateTimeOffset? _updatedAt;
+
+    [Parameter] public long Id { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        _vote = (await Api.GetVoteAsync(Id)).Value;
+        if (_vote is null)
+        {
+            Navigation.NotFound();
+            return;
+        }
+
+        _updatedAt = (await Meta.GetImportsAsync()).Value?.Sources.FirstOrDefault()?.LastSuccessAt;
+    }
+
+    private IEnumerable<string> Label(VoteLink vote)
+    {
+        yield return F.T["Vote.Label"];
+        if (vote.Stage is { } stage)
+        {
+            yield return F.Stage(stage);
+        }
+
+        if (vote.Kind != "stage-result")
+        {
+            yield return F.Kind(vote.Kind);
+        }
+
+        yield return F.Time(vote.HeldAt);
+    }
+}

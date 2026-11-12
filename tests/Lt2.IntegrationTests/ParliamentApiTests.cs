@@ -208,6 +208,18 @@ public sealed class ParliamentApiTests(DatabaseFixture database) : ApiTest(datab
     }
 
     [Fact]
+    public async Task The_methodology_settings_are_the_open_choices_as_built() =>
+        (await GetAsync<MethodologyResponse>(ParliamentRoutes.Methodology)).ShouldBe(new MethodologyResponse("2/3", false, []), new MethodologyComparer());
+
+    private sealed class MethodologyComparer : IEqualityComparer<MethodologyResponse>
+    {
+        public bool Equals(MethodologyResponse? x, MethodologyResponse? y) =>
+            x!.TwoThirds == y!.TwoThirds && x.AbsenceCountsInVotedWithFaction == y.AbsenceCountsInVotedWithFaction && x.LabelsThatAreNotFactions.SequenceEqual(y.LabelsThatAreNotFactions);
+
+        public int GetHashCode(MethodologyResponse obj) => obj.TwoThirds.GetHashCode(StringComparison.Ordinal);
+    }
+
+    [Fact]
     public async Task Public_answers_carry_an_etag_and_a_matching_if_none_match_gets_304()
     {
         using var browser = NewBrowser();
@@ -229,7 +241,7 @@ public sealed class ParliamentApiTests(DatabaseFixture database) : ApiTest(datab
         var document = await browser.Client.GetStringAsync("/openapi/v1.json");
 
         foreach (var path in new[] { "/api/v1/terms/current", "/api/v1/mps", "/api/v1/mps/{slug}", "/api/v1/mps/{slug}/votes", "/api/v1/factions", "/api/v1/factions/{slug}",
-            "/api/v1/committees", "/api/v1/committees/{slug}", "/api/v1/bills", "/api/v1/bills/{number}", "/api/v1/votes/{id}", "/api/v1/meta/imports" })
+            "/api/v1/committees", "/api/v1/committees/{slug}", "/api/v1/bills", "/api/v1/bills/{number}", "/api/v1/votes/{id}", "/api/v1/meta/imports", "/api/v1/meta/methodology" })
         {
             document.ShouldContain($"\"{path}\"", customMessage: path);
         }

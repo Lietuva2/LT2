@@ -1,0 +1,88 @@
+@page "/seimas/{Number}"
+@using Lt2.Api.Contracts.Parliament
+@using Lt2.Api.Contracts.Meta
+@inject IParliamentApi Api
+@inject IMetaApi Meta
+@inject Formats F
+@inject NavigationManager Navigation
+
+@if (_bill is { } b)
+{
+    <PageTitle>@b.Number · @b.Title · Lietuva 2.0</PageTitle>
+    <div class="stack">
+        <p class="label num">@F.T["Bill.Label"] · @b.Number</p>
+        <h1>@b.Title</h1>
+        @if (b.ESeimasUrl is { } link)
+        {
+            <p><a href="@link" rel="external">@F.T["Bill.ESeimas"]</a></p>
+        }
+    </div>
+
+    <section class="stack" aria-labelledby="h-stages">
+        <h2 id="h-stages">@F.T["Bill.Stages"]</h2>
+        <ol class="stages">
+            @foreach (var stage in Stages)
+            {
+                var result = b.Votes.LastOrDefault(v => v.Vote.Kind == "stage-result" && v.Vote.Stage == stage);
+                <li class="stage @(result is null ? "stage--next" : "")">
+                    <span class="label">@F.Stage(stage)</span>
+                    @if (result is null)
+                    {
+                        <span class="small">@F.T["Bill.NotYet"]</span>
+                    }
+                    else if (result.Vote.IsConsensus)
+                    {
+                        <a href="/seimas/balsavimai/@result.Vote.Id">@F.T["Consensus.Tag"]</a>
+                        <span class="small num">@F.Date(result.Vote.HeldAt)</span>
+                    }
+                    else
+                    {
+                        <b class="num"><a href="/seimas/balsavimai/@result.Vote.Id">@Formats.Number(result.Totals.For) : @Formats.Number(result.Totals.Against)</a></b>
+                        <span class="small num">@F.Date(result.Vote.HeldAt)</span>
+                    }
+                </li>
+            }
+        </ol>
+    </section>
+
+    <section class="stack" aria-labelledby="h-votes">
+        <h2 id="h-votes">@F.T["Bill.Votes"]</h2>
+        @if (b.Votes.Count == 0)
+        {
+            <p>@F.T["Bill.NoVotes"]</p>
+        }
+        else
+        {
+            <ul class="rows">
+                @foreach (var v in b.Votes.Reverse())
+                {
+                    <VoteRow Vote="v.Vote">
+                        <VoteResultSide Vote="v" />
+                    </VoteRow>
+                }
+            </ul>
+        }
+    </section>
+
+    <SourceLine UpdatedAt="@_updatedAt" />
+}
+
+@code {
+    private static readonly string[] Stages = ["presentation", "consideration", "adoption"];
+    private BillResponse? _bill;
+    private DateTimeOffset? _updatedAt;
+
+    [Parameter] public string Number { get; set; } = "";
+
+    protected override async Task OnInitializedAsync()
+    {
+        _bill = (await Api.GetBillAsync(Number)).Value;
+        if (_bill is null)
+        {
+            Navigation.NotFound();
+            return;
+        }
+
+        _updatedAt = (await Meta.GetImportsAsync()).Value?.Sources.FirstOrDefault()?.LastSuccessAt;
+    }
+}

@@ -68,6 +68,7 @@ internal static class WebHost
         services.AddScoped<ParliamentReads>();
         services.AddScoped<IMetaApi, ServerMetaApi>();
         services.AddScoped<IParliamentApi, ServerParliamentApi>();
+        services.AddScoped<Lt2.Web.Components.Parliament.Formats>();
         services.AddLt2ClientComponents();
     }
 
@@ -83,7 +84,13 @@ internal static class WebHost
         // API errors become problem details; page errors show the Lithuanian error page.
         app.UseWhen(IsApi, api => api.UseExceptionHandler());
         app.UseWhen(context => !IsApi(context), pages => pages.UseExceptionHandler("/klaida", createScopeForErrors: true));
-        app.UseStatusCodePages(ProblemStatusPages.WriteAsync);
+        app.UseWhen(IsApi, api => api.UseStatusCodePages(ProblemStatusPages.WriteAsync));
+
+        // An address no page answers gets the site's own "not found" page, with the layout and its notices.
+        app.UseWhen(context => !IsApi(context), pages => pages.UseStatusCodePagesWithReExecute("/nerasta", createScopeForStatusCodePages: true));
+
+        // Routing after the status-code pages, so the re-executed "/nerasta" request is routed to its page.
+        app.UseRouting();
         app.UseSerilogRequestLogging();
 
         var lithuanian = new CultureInfo("lt-LT");

@@ -1,0 +1,27 @@
+@using System.Globalization
+@inject Formats F
+
+@* For, against and abstained as one bar, drawn as SVG (the content security policy allows no inline styles). *@
+@if (Total > 0)
+{
+    <svg class="splitbar @(Small ? "splitbar--s" : "")" viewBox="0 0 1000 10" preserveAspectRatio="none" role="img"
+         aria-label="@F.Format("Split.Aria", Formats.Number(For), Formats.Number(Against), Formats.Number(Abstain))">
+        <rect class="splitbar__for" x="0" y="0" width="@W(For)" height="10" />
+        <rect class="splitbar__against" x="@W(For)" y="0" width="@W(Against)" height="10" />
+        <rect class="splitbar__abstain" x="@W((For ?? 0) + (Against ?? 0))" y="0" width="@W(Abstain)" height="10" />
+    </svg>
+}
+
+@code {
+    [Parameter] public int? For { get; set; }
+
+    [Parameter] public int? Against { get; set; }
+
+    [Parameter] public int? Abstain { get; set; }
+
+    [Parameter] public bool Small { get; set; }
+
+    private int Total => (For ?? 0) + (Against ?? 0) + (Abstain ?? 0);
+
+    private string W(int? part) => (1000.0 * (part ?? 0) / Total).ToString("0.#", CultureInfo.InvariantCulture);
+}

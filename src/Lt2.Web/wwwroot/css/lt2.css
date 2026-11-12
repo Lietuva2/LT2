@@ -406,6 +406,8 @@ lt2-logo-spin {
 
 body { min-height: 100vh; display: flex; flex-direction: column; }
 main.page { flex: 1; padding-block: var(--sp-5) 0; }
+/* In the body's flex column, auto margins would shrink the header, notices and footer to their content. */
+body > .page { width: 100%; }
 
 /* The logo mark in the top bar: the logo's colours, following the theme. */
 .logo-slate { fill: var(--slate); stroke: var(--slate); }
@@ -435,3 +437,41 @@ main.page { flex: 1; padding-block: var(--sp-5) 0; }
   padding: var(--sp-3) var(--sp-5); background: var(--note-bg); color: var(--note-ink);
 }
 #blazor-error-ui .reload { margin-left: var(--sp-3); color: inherit; }
+/* ---------- Parliament pages (M1) ---------- */
+
+/* Split bar and seat map: SVG rendered on the server, coloured by the vote tokens. */
+.splitbar { display: block; width: 100%; height: 1rem; background: var(--absent); }
+.splitbar--s { height: 0.5rem; }
+.rows__side .splitbar { width: 12rem; max-width: 100%; }
+.splitbar__for { fill: var(--for); }
+.splitbar__against { fill: var(--against); }
+.splitbar__abstain { fill: var(--abstain); }
+.seatmap { display: block; width: 100%; max-width: 40rem; height: auto; }
+.seat--for { fill: var(--for); }
+.seat--against { fill: var(--against); }
+.seat--abstain { fill: var(--abstain); }
+.seat--did-not-vote { fill: var(--sheet); stroke: var(--abstain); stroke-width: 0.6; }
+
+/* A share with nothing to count: words, not a big number. */
+.figure__none { font: 700 var(--fs-3)/1.2 var(--font-display); color: var(--ink-2); }
+
+/* Profile head: portrait and name side by side, bottom-aligned. */
+.row--end { align-items: flex-end; gap: var(--sp-5); }
+
+/* MP list filters: a plain GET form that works without JavaScript. */
+.filters { display: grid; grid-template-columns: repeat(auto-fit, minmax(12rem, 1fr)); gap: var(--sp-4); align-items: end; }
+.filters select { appearance: auto; }
+
+/* Totals of a vote: the three figures side by side, wrapping on a phone. */
+.totals { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: var(--sp-5); }
+@media (max-width: 36rem) { .totals { gap: var(--sp-3); } .totals .figure__num { font-size: 2.25rem; } }
+
+/* Plain tables for faction positions; they scroll inside themselves, never the page. */
+.table-wrap { overflow-x: auto; }
+.table { width: 100%; border-collapse: collapse; font-size: var(--fs-1); }
+.table th, .table td { text-align: left; padding: var(--sp-2) var(--sp-3) var(--sp-2) 0; border-top: 1px solid var(--rule); vertical-align: top; }
+.table th { font-weight: 700; color: var(--ink-2); }
+
+/* Long official names and addresses wrap instead of pushing the page sideways. */
+.rows__main a, .facts dd, .tag { overflow-wrap: anywhere; }
+.tag { white-space: normal; }

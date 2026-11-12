@@ -283,6 +283,9 @@ internal sealed class ParliamentQueries(ParliamentDb db, IParliamentDataNotice n
             return new ImportsInfo(success, last?.StartedAt, last?.Status, await notice.IsParliamentDataInventedAsync(cancellationToken));
         }))!;
 
+    public MethodologyInfo Methodology() =>
+        new(OpenChoices.AbsenceCountsInVotedWithFaction, OpenChoices.LabelsThatAreNotFactions.Order(StringComparer.Ordinal).ToList());
+
     // ---- Shared pieces ------------------------------------------------------------------------------------------------
 
     private async Task<Term?> CurrentTermRowAsync(CancellationToken cancellationToken) =>

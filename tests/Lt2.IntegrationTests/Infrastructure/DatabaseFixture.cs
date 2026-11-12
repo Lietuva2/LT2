@@ -67,6 +67,9 @@ public sealed class DatabaseFixture : IAsyncLifetime
 
         // Running the migrator twice must change nothing (it runs on every deploy).
         await MigrationRunner.RunAsync(configuration, ["--seed-invitation", TestData.Invitation + ":1000"], CancellationToken.None);
+
+        // The invented parliament, before any test host starts (pages cache what they read for a minute).
+        await ParliamentSeed.EnsureAsync(this);
     }
 
     public async ValueTask DisposeAsync() => await _container.DisposeAsync();

@@ -1,0 +1,60 @@
+@page "/p/{Slug}/balsavimai"
+@using Lt2.Api.Contracts.Parliament
+@using Lt2.Api.Contracts.Meta
+@inject IParliamentApi Api
+@inject IMetaApi Meta
+@inject Formats F
+@inject NavigationManager Navigation
+
+@if (_mp is { } p && _votes is { } votes)
+{
+    <PageTitle>@F.Format("Mp.Votes.Title", $"{p.Mp.FirstName} {p.Mp.LastName}") · Lietuva 2.0</PageTitle>
+    <div class="stack">
+        <ol class="crumbs">
+            <li><a href="/seimo-nariai">@F.T["Mps.Title"]</a></li>
+            <li><a href="/p/@p.Mp.Slug">@p.Mp.FirstName @p.Mp.LastName</a></li>
+        </ol>
+        <h1>@F.Format("Mp.Votes.Title", $"{p.Mp.FirstName} {p.Mp.LastName}")</h1>
+    </div>
+
+    @if (votes.Items.Count == 0)
+    {
+        <p>@F.T["Mp.NoVotes"]</p>
+    }
+    else
+    {
+        <MpVoteRows Votes="votes.Items" />
+    }
+
+    <p class="row">
+        <a href="/p/@p.Mp.Slug">@F.T["Mp.Votes.Back"]</a>
+        @if (votes.NextCursor is { } next)
+        {
+            <a href="/p/@p.Mp.Slug/balsavimai?nuo=@next">@F.T["Mp.Votes.Older"]</a>
+        }
+    </p>
+    <SourceLine UpdatedAt="@_updatedAt" />
+}
+
+@code {
+    private MpProfileResponse? _mp;
+    private MpVotesResponse? _votes;
+    private DateTimeOffset? _updatedAt;
+
+    [Parameter] public string Slug { get; set; } = "";
+
+    [SupplyParameterFromQuery(Name = "nuo")] public string? Cursor { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        _mp = (await Api.GetMpAsync(Slug)).Value;
+        _votes = (await Api.GetMpVotesAsync(Slug, Cursor)).Value;
+        if (_mp is null || _votes is null)
+        {
+            Navigation.NotFound();
+            return;
+        }
+
+        _updatedAt = (await Meta.GetImportsAsync()).Value?.Sources.FirstOrDefault()?.LastSuccessAt;
+    }
+}

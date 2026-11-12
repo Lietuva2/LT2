@@ -78,6 +78,11 @@ public sealed record VoteDetail(VoteSummary Summary, DateTimeOffset SittingStart
 /// <param name="ParliamentDataInvented">The data came from the stand-in.</param>
 public sealed record ImportsInfo(DateTimeOffset? LastSuccessAt, DateTimeOffset? LastRunAt, string? LastRunStatus, bool ParliamentDataInvented);
 
+/// <summary>How the statistics are counted as built, for the methodology page (the open choices included).</summary>
+/// <param name="AbsenceCountsInVotedWithFaction">Open question 1: does a vote the MP missed count as "not with the faction".</param>
+/// <param name="LabelsThatAreNotFactions">Open question 2: per-MP faction labels that get no faction position.</param>
+public sealed record MethodologyInfo(bool AbsenceCountsInVotedWithFaction, IReadOnlyList<string> LabelsThatAreNotFactions);
+
 /// <summary>Read side of the Parliament module, for the public API and the pages. Null means not found.</summary>
 public interface IParliamentQueries
 {
@@ -102,4 +107,6 @@ public interface IParliamentQueries
     Task<VoteDetail?> VoteAsync(long id, CancellationToken cancellationToken);
 
     Task<ImportsInfo> ImportsAsync(CancellationToken cancellationToken);
+
+    MethodologyInfo Methodology();
 }

@@ -1,0 +1,149 @@
+@page "/seimo-nariai"
+@using Lt2.Api.Contracts.Parliament
+@using Lt2.Api.Contracts.Meta
+@inject IParliamentApi Api
+@inject IMetaApi Meta
+@inject Formats F
+
+<PageTitle>@F.T["Mps.Title"] · Lietuva 2.0</PageTitle>
+
+<section class="stack" aria-labelledby="mps-title">
+    <h1 id="mps-title">@F.T["Mps.Title"]</h1>
+    @if (_term is not null)
+    {
+        <p class="lead">@F.Format("Mps.Lead", _term.Name)</p>
+    }
+
+    <form class="filters sheet" method="get" action="/seimo-nariai" role="search">
+        <div class="field">
+            <label for="q">@F.T["Mps.Search"]</label>
+            <input class="input" id="q" name="q" type="search" value="@Q" autocomplete="off" />
+        </div>
+        <div class="field">
+            <label for="frakcija">@F.T["Mps.Faction"]</label>
+            <select class="input" id="frakcija" name="frakcija">
+                <option value="">@F.T["Mps.AllFactions"]</option>
+                @foreach (var f in _factions)
+                {
+                    <option value="@f.Slug" selected="@(f.Slug == Faction)">@f.Name</option>
+                }
+            </select>
+        </div>
+        <div class="field">
+            <label for="komitetas">@F.T["Mps.Committee"]</label>
+            <select class="input" id="komitetas" name="komitetas">
+                <option value="">@F.T["Mps.AllCommittees"]</option>
+                @foreach (var c in _committees)
+                {
+                    <option value="@c.Slug" selected="@(c.Slug == Committee)">@c.Name</option>
+                }
+            </select>
+        </div>
+        <div class="row">
+            <button class="btn" type="submit">@F.T["Mps.Show"]</button>
+            @if (Filtered)
+            {
+                <a href="/seimo-nariai">@F.T["Mps.Clear"]</a>
+            }
+        </div>
+    </form>
+    <p class="small num" role="status">@F.Format("Mps.Found", Formats.Number(_mps.Count))</p>
+</section>
+
+@if (_mps.Count == 0)
+{
+    <p>@F.T["Mps.None"]</p>
+}
+else
+{
+    @foreach (var (heading, group) in new[] { ("Mps.Sitting", _mps.Where(m => m.Sitting).ToList()), ("Mps.Former", _mps.Where(m => !m.Sitting).ToList()) })
+    {
+        if (group.Count == 0)
+        {
+            continue;
+        }
+
+        <section class="stack" aria-label="@F.T[heading]">
+            <h2>@F.T[heading]</h2>
+            <ul class="rows">
+                @foreach (var mp in group)
+                {
+                    <li>
+                        <div class="rows__main">
+                            <a href="/p/@mp.Slug">@mp.FirstName @mp.LastName</a>
+                            @if (mp.NominatingParty is { } party)
+                            {
+                                <span class="small">@F.T["Mp.Party"]: @party</span>
+                            }
+                        </div>
+                        <div class="rows__side">
+                            @if (mp.Faction is { } faction)
+                            {
+                                <a class="tag tag--ink" href="/frakcijos/@faction.Slug">@faction.Name</a>
+                            }
+                        </div>
+                    </li>
+                }
+            </ul>
+        </section>
+    }
+}
+
+<section class="stack" aria-labelledby="bodies-title">
+    <h2 id="bodies-title">@F.T["Mps.Bodies"]</h2>
+    <div class="pair">
+        @foreach (var (heading, list, path) in new[] { ("Mps.Factions", _factions, "frakcijos"), ("Mps.Committees", _committees, "komitetai") })
+        {
+            <div class="stack stack--tight">
+                <h3>@F.T[heading]</h3>
+                <ul class="stack stack--tight">
+                    @foreach (var body in list)
+                    {
+                        <li><a href="/@path/@body.Slug">@body.Name</a> <span class="small num">(@F.Format("Mps.Members", Formats.Number(body.Members)))</span></li>
+                    }
+                </ul>
+            </div>
+        }
+    </div>
+</section>
+
+<SourceLine UpdatedAt="@_updatedAt" />
+
+@code {
+    private TermResponse? _term;
+    private List<MpListItem> _mps = [];
+    private IReadOnlyList<BodyListItem> _factions = [];
+    private IReadOnlyList<BodyListItem> _committees = [];
+    private DateTimeOffset? _updatedAt;
+
+    [SupplyParameterFromQuery(Name = "q")] public string? Q { get; set; }
+
+    [SupplyParameterFromQuery(Name = "frakcija")] public string? Faction { get; set; }
+
+    [SupplyParameterFromQuery(Name = "komitetas")] public string? Committee { get; set; }
+
+    private bool Filtered => !string.IsNullOrWhiteSpace(Q) || !string.IsNullOrWhiteSpace(Faction) || !string.IsNullOrWhiteSpace(Committee);
+
+    protected override async Task OnInitializedAsync()
+    {
+        _term = (await Api.GetCurrentTermAsync()).Value;
+        _factions = (await Api.GetFactionsAsync()).Value ?? [];
+        _committees = (await Api.GetCommitteesAsync()).Value ?? [];
+        _updatedAt = (await Meta.GetImportsAsync()).Value?.Sources.FirstOrDefault()?.LastSuccessAt;
+
+        // Every page of the list, so the whole term is on one page (about 141 MPs plus former ones).
+        string? cursor = null;
+        do
+        {
+            var page = (await Api.GetMpsAsync(Faction, Committee, Q, cursor)).Value;
+            if (page is null)
+            {
+                break;
+            }
+
+            _mps.AddRange(page.Items);
+            cursor = page.NextCursor;
+        }
+        while (cursor is not null);
+    }
+}
