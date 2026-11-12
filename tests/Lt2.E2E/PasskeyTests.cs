@@ -45,6 +45,25 @@ public sealed partial class PasskeyTests
     }
 
     [Fact]
+    public async Task Signing_in_with_a_passkey_this_site_never_stored_says_it_did_not_work()
+    {
+        Assert.SkipWhen(string.IsNullOrEmpty(SignUpTests.BaseUrl), "LT2_E2E_BASE_URL is not set; start the stack and set it to run end-to-end tests.");
+
+        // Like a passkey a password manager saved although the server refused it: the browser offers it, the server
+        // does not know it.
+        await using var session = await PasskeyBrowser.StartAsync("native");
+        await session.AddUnknownPasskeyAsync("lt2.localhost");
+        var page = session.Page;
+        await page.GotoAsync(SignUpTests.BaseUrl!.TrimEnd('/') + "/prisijungti");
+        await SignUpTests.WaitForInteractivityAsync(page);
+
+        await page.GetByRole(AriaRole.Button, new() { Name = "Prisijungti prieigos raktu" }).ClickAsync();
+
+        await Assertions.Expect(page.Locator(".note[role=alert]")).ToHaveTextAsync("Prieigos rakto patikrinti nepavyko.");
+        page.Url.ShouldEndWith("/prisijungti");
+    }
+
+    [Fact]
     public async Task When_the_server_cannot_verify_a_new_passkey_the_page_says_it_was_not_added_and_may_be_tried_again()
     {
         Assert.SkipWhen(string.IsNullOrEmpty(SignUpTests.BaseUrl), "LT2_E2E_BASE_URL is not set; start the stack and set it to run end-to-end tests.");
@@ -188,6 +207,29 @@ internal sealed class PasskeyBrowser : IAsyncDisposable
 
     public IPage Page { get; }
 
+    private ICDPSession? Cdp { get; set; }
+
+    private string AuthenticatorId { get; set; } = "";
+
+    /// <summary>Puts a discoverable passkey for <paramref name="rpId"/> on the virtual authenticator that no server has seen.</summary>
+    public async Task AddUnknownPasskeyAsync(string rpId)
+    {
+        using var key = System.Security.Cryptography.ECDsa.Create(System.Security.Cryptography.ECCurve.NamedCurves.nistP256);
+        await Cdp!.SendAsync("WebAuthn.addCredential", new Dictionary<string, object>
+        {
+            ["authenticatorId"] = AuthenticatorId,
+            ["credential"] = new Dictionary<string, object>
+            {
+                ["credentialId"] = Convert.ToBase64String(System.Security.Cryptography.RandomNumberGenerator.GetBytes(32)),
+                ["isResidentCredential"] = true,
+                ["rpId"] = rpId,
+                ["privateKey"] = Convert.ToBase64String(key.ExportPkcs8PrivateKey()),
+                ["userHandle"] = Convert.ToBase64String(System.Security.Cryptography.RandomNumberGenerator.GetBytes(16)),
+                ["signCount"] = 0,
+            },
+        });
+    }
+
     public List<string> ConsoleErrors { get; } = [];
 
     public static async Task<PasskeyBrowser> StartAsync(string kind)
@@ -217,7 +259,7 @@ internal sealed class PasskeyBrowser : IAsyncDisposable
 
         var cdp = await context.NewCDPSessionAsync(page);
         await cdp.SendAsync("WebAuthn.enable", new Dictionary<string, object> { ["enableUI"] = false });
-        await cdp.SendAsync("WebAuthn.addVirtualAuthenticator", new Dictionary<string, object>
+        var added = await cdp.SendAsync("WebAuthn.addVirtualAuthenticator", new Dictionary<string, object>
         {
             ["options"] = new Dictionary<string, object>
             {
@@ -229,6 +271,8 @@ internal sealed class PasskeyBrowser : IAsyncDisposable
                 ["automaticPresenceSimulation"] = true,
             },
         });
+        result.Cdp = cdp;
+        result.AuthenticatorId = added!.Value.GetProperty("authenticatorId").GetString()!;
         return result;
     }
 

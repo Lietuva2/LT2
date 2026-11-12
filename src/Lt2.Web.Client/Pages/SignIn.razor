@@ -308,8 +308,10 @@
     {
         await RunAsync(async () =>
         {
-            await Auth.SignOutAsync();
-            Navigation.NavigateTo("/", forceLoad: true);
+            if (Show(await Auth.SignOutAsync()))
+            {
+                Navigation.NavigateTo("/", forceLoad: true);
+            }
         });
     }
 
@@ -366,6 +368,11 @@
         {
             _message = T["Error.Network"];
         }
+        catch (Exception ex) when (ex is System.Text.Json.JsonException or NotSupportedException)
+        {
+            // An answer the client could not read: say so rather than leave the page silent.
+            _message = T["Error.Generic"];
+        }
         finally
         {
             _busy = false;
@@ -397,6 +404,18 @@
         if (problem.Errors is { Count: > 0 })
         {
             _errors = problem.Errors;
+
+            // An error about something this step has no field for (for example the passkey credential) goes into the
+            // note, so no refusal is ever silent.
+            var unseen = problem.Errors
+                .Where(e => !FieldsOnThisStep.Contains(e.Key))
+                .SelectMany(e => e.Value)
+                .Distinct()
+                .ToList();
+            if (unseen.Count > 0)
+            {
+                _message = string.Join(" ", unseen);
+            }
         }
         else
         {
@@ -405,6 +424,15 @@
 
         return false;
     }
+
+    /// <summary>The fields whose errors this step shows under the field itself.</summary>
+    private string[] FieldsOnThisStep => _step switch
+    {
+        Step.SignIn => ["email"],
+        Step.Register => ["email", "invitationCode"],
+        Step.Code => ["code"],
+        _ => ["displayName", "confirmsAdult", "invitationCode"],
+    };
 
     private void Clear()
     {
