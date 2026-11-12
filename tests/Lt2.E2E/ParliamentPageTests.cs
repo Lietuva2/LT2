@@ -115,6 +115,30 @@ public sealed class ParliamentPageTests
         session.ConsoleErrors.ShouldBeEmpty();
     }
 
+    [Fact]
+    public async Task A_tag_that_is_a_link_keeps_the_tag_look_without_an_underline_until_pointed_at()
+    {
+        Assert.SkipWhen(string.IsNullOrEmpty(SignUpTests.BaseUrl), "LT2_E2E_BASE_URL is not set; start the stack and set it to run end-to-end tests.");
+        await using var session = await Session.StartAsync(1280, 800, ColorScheme.Light, javaScript: true);
+        var page = session.Page;
+
+        foreach (var path in new[] { "/p/jonas-petraitis", "/seimo-nariai" })
+        {
+            await page.GotoAsync(SignUpTests.BaseUrl + path);
+            var tags = page.Locator("a.tag");
+            (await tags.CountAsync()).ShouldBeGreaterThan(0, path);
+            foreach (var tag in await tags.AllAsync())
+            {
+                (await tag.EvaluateAsync<string>("t => getComputedStyle(t).textDecorationLine")).ShouldBe("none", path);
+            }
+
+            var first = page.Locator("a.tag.tag--ink").First;
+            (await first.EvaluateAsync<string>("t => getComputedStyle(t).color")).ShouldBe("rgb(255, 255, 255)", "the ink tag's own colour (--sheet), not the link colour");
+            await first.HoverAsync();
+            (await first.EvaluateAsync<string>("t => getComputedStyle(t).textDecorationLine")).ShouldBe("underline", path);
+        }
+    }
+
     private sealed class Session : IAsyncDisposable
     {
         private IPlaywright _playwright = default!;

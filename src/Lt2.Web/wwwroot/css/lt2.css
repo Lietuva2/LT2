@@ -318,6 +318,9 @@ lt2-logo-spin {
   background: var(--slate-tint); color: var(--slate-ink);
   font: 600 var(--fs-0)/1.5 var(--font-text); white-space: nowrap;
 }
+/* A tag that is a link keeps the tag's look: no link colour or underline until it is pointed at. */
+a.tag { text-decoration: none; }
+a.tag:hover { text-decoration: underline; text-decoration-thickness: 1.5px; }
 .tag--people { background: var(--leaf-tint); color: var(--leaf-ink); }
 .tag--brand { background: var(--brand-tint); color: var(--link); }
 .tag--ink { background: var(--ink); color: var(--sheet); }
