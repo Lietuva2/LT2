@@ -150,6 +150,9 @@ ul, ol { list-style: none; }
 a { color: var(--link); text-decoration-thickness: 1.5px; text-underline-offset: 3px; }
 a:hover { text-decoration-thickness: 3px; }
 :focus-visible { outline: 3px solid var(--focus); outline-offset: 2px; }
+/* Blazor focuses the page's h1 on load and navigation so screen readers start there (FocusOnNavigate);
+   a heading is not a control, so it gets no ring. */
+h1[tabindex="-1"]:focus { outline: none; }
 
 .num { font-variant-numeric: tabular-nums; }
 .visually-hidden {
