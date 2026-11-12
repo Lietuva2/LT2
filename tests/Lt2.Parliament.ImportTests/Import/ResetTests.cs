@@ -20,7 +20,7 @@ public sealed class ResetTests(ImportDatabase database) : IAsyncLifetime
     {
         await using var import = new ImportHarness(database);
         await import.RunAsync();
-        (await CountAsync("person")).ShouldBe(13);
+        (await CountAsync("person")).ShouldBe(14);
 
         await database.RunMigratorAsync("--reset-parliament");
 
@@ -34,7 +34,7 @@ public sealed class ResetTests(ImportDatabase database) : IAsyncLifetime
         var again = await import.RunAsync();
         again.Status.ShouldBe("succeeded");
         again.Requests.ShouldBe(20, "nothing was left to skip");
-        (await CountAsync("person")).ShouldBe(13);
+        (await CountAsync("person")).ShouldBe(14);
     }
 
     [Fact]
@@ -49,7 +49,7 @@ public sealed class ResetTests(ImportDatabase database) : IAsyncLifetime
         var refusal = await Should.ThrowAsync<InvalidOperationException>(() => database.RunMigratorAsync("--reset-parliament"));
 
         refusal.Message.ShouldContain("real Seimas service");
-        (await CountAsync("person")).ShouldBe(13);
+        (await CountAsync("person")).ShouldBe(14);
         (await CountAsync("import_run")).ShouldBe(2);
     }
 
@@ -68,7 +68,7 @@ public sealed class ResetTests(ImportDatabase database) : IAsyncLifetime
         var refusal = await Should.ThrowAsync<InvalidOperationException>(() => database.RunMigratorAsync("--reset-parliament"));
 
         refusal.Message.ShouldContain("import is running");
-        (await CountAsync("person")).ShouldBe(13);
+        (await CountAsync("person")).ShouldBe(14);
     }
 
     [Fact]

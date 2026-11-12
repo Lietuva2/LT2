@@ -69,5 +69,10 @@
       <Pareigos padalinio_id="99200002" padalinio_pavadinimas="Socialinių reikalų ir darbo komitetas" pareigos="Komiteto narė" data_nuo="2026-05-05" data_iki=""/>
       <Kontaktai rūšis="El. p." reikšmė="pavyzdys.aurelija.kadagyte@lrs.lt"/>
     </SeimoNarys>
+    <SeimoNarys asmens_id="99000014" vardas="Rasa" pavardė="Ievaitė" lytis="M" data_nuo="2024-11-14" data_iki="" iškėlusi_partija="Reformų partija" išrinkimo_būdas="Pagal sąrašą" kadencijų_skaičius="1">
+      <Pareigos padalinio_id="99100001" padalinio_pavadinimas="Reformų partijos frakcija" pareigos="Frakcijos narė" data_nuo="2024-11-14" data_iki="2026-04-30"/>
+      <Pareigos padalinio_id="99100009" padalinio_pavadinimas="Mišri Seimo narių grupė" pareigos="Grupės narė" data_nuo="2026-05-01" data_iki=""/>
+      <Kontaktai rūšis="El. p." reikšmė="pavyzdys.rasa.ievaite@lrs.lt"/>
+    </SeimoNarys>
   </SeimoKadencija>
 </SeimoInformacija>

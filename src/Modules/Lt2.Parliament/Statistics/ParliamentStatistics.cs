@@ -8,7 +8,8 @@ namespace Lt2.Parliament.Statistics;
 /// <summary>Stores what the pure rules compute: faction positions per vote, and each MP's counts per term.</summary>
 internal interface IParliamentStatistics
 {
-    /// <summary>Faction positions of one vote from its per-MP rows; tracked in the caller's unit of work.</summary>
+    /// <summary>Faction positions of one vote from its per-MP rows, for the labels that resolve to a faction body;
+    /// tracked in the caller's unit of work.</summary>
     Task ApplyFactionPositionsAsync(long voteId, IEnumerable<(string? Label, BallotChoice Choice)> rows, IReadOnlyDictionary<string, Guid> factionByLabel, CancellationToken cancellationToken);
 
     /// <summary>Every MP's counts for the term, from the stored ballots and faction positions; saved at once.</summary>
@@ -25,7 +26,7 @@ internal sealed class ParliamentStatistics(ParliamentDb db, TimeProvider clock) 
         IReadOnlyDictionary<string, Guid> factionByLabel,
         CancellationToken cancellationToken)
     {
-        var tallies = FactionRule.Tally(rows);
+        var tallies = FactionRule.Tally(rows, factionByLabel.Keys.ToHashSet(StringComparer.Ordinal));
         var existing = await db.FactionPositions.Where(p => p.VoteId == voteId).ToDictionaryAsync(p => p.FactionLabel, StringComparer.Ordinal, cancellationToken);
         foreach (var tally in tallies)
         {

@@ -31,11 +31,11 @@ public sealed class ParliamentApiTests(DatabaseFixture database) : ApiTest(datab
     {
         var mps = await GetAsync<MpListResponse>(ParliamentRoutes.Mps);
 
-        mps.Total.ShouldBe(13);
+        mps.Total.ShouldBe(14);
         mps.NextCursor.ShouldBeNull();
         mps.Items.Select(m => m.LastName).ShouldBe(
         [
-            "Alksninis", "Ąžuolaitis", "Beržinytė", "Eglaitė", "Gluosnis", "Jonaitienė", "Kadagytė", "Klevinskas",
+            "Alksninis", "Ąžuolaitis", "Beržinytė", "Eglaitė", "Gluosnis", "Ievaitė", "Jonaitienė", "Kadagytė", "Klevinskas",
             "Liepaitis", "Petraitis", "Pušinskienė", "Šermukšnytė", "Uosytė",
         ]);
         mps.Items.Single(m => m.LastName == "Alksninis").Sitting.ShouldBeFalse();
@@ -58,7 +58,7 @@ public sealed class ParliamentApiTests(DatabaseFixture database) : ApiTest(datab
         using var browser = NewBrowser();
         var first = await browser.Client.GetFromJsonAsync<MpListResponse>(ParliamentRoutes.Mps + "?cursor=10");
 
-        first!.Items.Select(m => m.LastName).ShouldBe(["Pušinskienė", "Šermukšnytė", "Uosytė"]);
+        first!.Items.Select(m => m.LastName).ShouldBe(["Petraitis", "Pušinskienė", "Šermukšnytė", "Uosytė"]);
     }
 
     [Fact]
@@ -79,7 +79,7 @@ public sealed class ParliamentApiTests(DatabaseFixture database) : ApiTest(datab
         consensus.Faction.ShouldBeNull();
         var presentation = jonas.RecentVotes.Single(v => v.Vote.Id == 99100002);
         presentation.Choice.ShouldBe("against");
-        presentation.Faction.ShouldBe(new FactionSplitResponse("RPF", new BodyLink("reformu-partijos-frakcija", "Reformų partijos frakcija", "faction"), "for", 3, 1, 0, 0));
+        presentation.Faction.ShouldBe(new FactionSplitResponse("RPF", new BodyLink("reformu-partijos-frakcija", "Reformų partijos frakcija", "faction"), "for", 4, 1, 0, 0));
     }
 
     [Fact]
@@ -91,6 +91,21 @@ public sealed class ParliamentApiTests(DatabaseFixture database) : ApiTest(datab
         tadas.Mandate.To.ShouldBe(new DateOnly(2026, 4, 15));
         tadas.RecentVotes.Select(v => v.Vote.Id).ShouldBe([99100004L, 99100003, 99100002, 99100001]);
         tadas.Statistics!.Participation.ShouldBe(2m / 3m);
+    }
+
+    [Fact]
+    public async Task A_mixed_group_member_has_no_faction_and_votes_there_have_no_faction_split_or_figure()
+    {
+        var rasa = await GetAsync<MpProfileResponse>(ParliamentRoutes.MpBySlug("rasa-ievaite"));
+
+        rasa.Mp.Faction.ShouldBeNull();
+        rasa.Memberships.Where(m => m.Current).Select(m => (m.Body.Name, m.Body.Kind)).ShouldBe([("Mišri Seimo narių grupė", "group")]);
+        rasa.Statistics.ShouldBe(new MpStatisticsResponse(7, 7, 1m, 3, 3, 1m, 0));
+        rasa.RecentVotes.Single(v => v.Vote.Id == 99100005).Faction.ShouldBeNull();
+        rasa.RecentVotes.Single(v => v.Vote.Id == 99100004).Faction!.Label.ShouldBe("RPF");
+
+        (await GetAsync<VoteResponse>(ParliamentRoutes.VoteById(99100005))).Factions.Select(f => f.Label).ShouldBe(["RAF", "RPF", "PSF"]);
+        (await GetAsync<MpListResponse>(ParliamentRoutes.Mps + "?faction=reformu-partijos-frakcija")).Items.ShouldNotContain(m => m.LastName == "Ievaitė");
     }
 
     [Fact]
@@ -174,8 +189,8 @@ public sealed class ParliamentApiTests(DatabaseFixture database) : ApiTest(datab
         var vote = await GetAsync<VoteResponse>(ParliamentRoutes.VoteById(99100002));
 
         vote.Summary.Totals.ShouldBe(new VoteTotalsResponse(71, 38, 14, 123, 141));
-        vote.Factions.Select(f => (f.Label, f.Position)).ShouldBe([("PSF", "against"), ("RAF", "free"), ("RPF", "for")]);
-        vote.Ballots.Count.ShouldBe(12);
+        vote.Factions.Select(f => (f.Label, f.Position)).ShouldBe([("RPF", "for"), ("PSF", "against"), ("RAF", "free")]);
+        vote.Ballots.Count.ShouldBe(13);
         vote.Ballots.Single(b => b.Mp.Slug == "jonas-petraitis").ShouldBe(new BallotResponse(new MpLink("jonas-petraitis", "Jonas", "Petraitis"), "RPF", "against"));
         vote.AgendaItemTitle.ShouldBe("Gyventojų pajamų mokesčio įstatymo pataisa");
     }
@@ -208,18 +223,6 @@ public sealed class ParliamentApiTests(DatabaseFixture database) : ApiTest(datab
     }
 
     [Fact]
-    public async Task The_methodology_settings_are_the_open_choices_as_built() =>
-        (await GetAsync<MethodologyResponse>(ParliamentRoutes.Methodology)).ShouldBe(new MethodologyResponse("2/3", []), new MethodologyComparer());
-
-    private sealed class MethodologyComparer : IEqualityComparer<MethodologyResponse>
-    {
-        public bool Equals(MethodologyResponse? x, MethodologyResponse? y) =>
-            x!.TwoThirds == y!.TwoThirds && x.LabelsThatAreNotFactions.SequenceEqual(y.LabelsThatAreNotFactions);
-
-        public int GetHashCode(MethodologyResponse obj) => obj.TwoThirds.GetHashCode(StringComparison.Ordinal);
-    }
-
-    [Fact]
     public async Task Public_answers_carry_an_etag_and_a_matching_if_none_match_gets_304()
     {
         using var browser = NewBrowser();
@@ -241,7 +244,7 @@ public sealed class ParliamentApiTests(DatabaseFixture database) : ApiTest(datab
         var document = await browser.Client.GetStringAsync("/openapi/v1.json");
 
         foreach (var path in new[] { "/api/v1/terms/current", "/api/v1/mps", "/api/v1/mps/{slug}", "/api/v1/mps/{slug}/votes", "/api/v1/factions", "/api/v1/factions/{slug}",
-            "/api/v1/committees", "/api/v1/committees/{slug}", "/api/v1/bills", "/api/v1/bills/{number}", "/api/v1/votes/{id}", "/api/v1/meta/imports", "/api/v1/meta/methodology" })
+            "/api/v1/committees", "/api/v1/committees/{slug}", "/api/v1/bills", "/api/v1/bills/{number}", "/api/v1/votes/{id}", "/api/v1/meta/imports" })
         {
             document.ShouldContain($"\"{path}\"", customMessage: path);
         }

@@ -79,12 +79,6 @@ internal sealed class ParliamentReads(IParliamentQueries queries)
         return new ImportsResponse([new ImportSourceResponse(ImportSource, info.LastSuccessAt, info.LastRunAt, info.LastRunStatus)], info.ParliamentDataInvented);
     }
 
-    public Result<MethodologyResponse> Methodology()
-    {
-        var m = queries.Methodology();
-        return new MethodologyResponse("2/3", m.LabelsThatAreNotFactions);
-    }
-
     private static string? Blank(string? text) => string.IsNullOrWhiteSpace(text) ? null : text.Trim();
 
     private static TermResponse Map(TermInfo t) => new(t.Id, t.Name, t.From, t.To);
@@ -163,9 +157,6 @@ internal sealed class ServerMetaApi(ParliamentReads reads, ILogger<ServerMetaApi
             return ApiResult<ImportsResponse>.Ok(new ImportsResponse([], false));
         }
     }
-
-    public Task<ApiResult<MethodologyResponse>> GetMethodologyAsync(CancellationToken cancellationToken = default) =>
-        Task.FromResult(ApiResult<MethodologyResponse>.Ok(reads.Methodology().Value));
 }
 
 /// <summary>

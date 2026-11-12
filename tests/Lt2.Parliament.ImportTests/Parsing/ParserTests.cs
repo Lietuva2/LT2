@@ -25,7 +25,7 @@ public sealed class ParserTests
     {
         var members = SeimasParsers.Members(Synthetic("p2b.ad_seimo_nariai@kadencijos_id=10"));
 
-        members.Count.ShouldBe(13);
+        members.Count.ShouldBe(14);
         var jonas = members.Single(m => m.PersonId == 99000001);
         jonas.FirstName.ShouldBe("Jonas");
         jonas.LastName.ShouldBe("Petraitis");
@@ -106,7 +106,7 @@ public sealed class ParserTests
         result.VoteId.ShouldBe(99100002);
         result.Totals.ShouldBe(new VoteTotals(71, 38, 14, 123, 141));
         result.OfficialNote.ShouldBeNull();
-        result.Ballots.Count.ShouldBe(12);
+        result.Ballots.Count.ShouldBe(13);
         result.Ballots.Single(b => b.PersonId == 99000001).ShouldBe(new ParsedBallot(99000001, "Jonas", "Petraitis", "RPF", BallotChoice.Against));
     }
 

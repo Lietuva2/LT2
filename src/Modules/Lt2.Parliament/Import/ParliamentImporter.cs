@@ -528,7 +528,8 @@ internal sealed class ParliamentImporter(
 
         db.Ballots.RemoveRange(existing.Values.Where(b => !seen.Contains(b.PersonId)));
 
-        // A label's faction is the body most of its MPs belonged to that day.
+        // A label's faction is the faction body most of its MPs belonged to that day. Only such labels get a position:
+        // the mixed group's label (no faction body) and unknown labels get none [decided 2026-11-12].
         var factionByLabel = labelFactions.GroupBy(x => x.Label, StringComparer.Ordinal)
             .ToDictionary(g => g.Key, g => g.GroupBy(x => x.Faction).OrderByDescending(f => f.Count()).First().Key, StringComparer.Ordinal);
         await statistics.ApplyFactionPositionsAsync(voteId, parsed.Ballots.Select(b => (b.FactionLabel, b.Choice)), factionByLabel, ct);

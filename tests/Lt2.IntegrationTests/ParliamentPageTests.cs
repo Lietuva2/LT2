@@ -118,6 +118,16 @@ public sealed partial class ParliamentPageTests(DatabaseFixture database) : ApiT
     }
 
     [Fact]
+    public async Task A_mixed_group_member_shows_the_group_counts_only_the_faction_time_votes_and_no_free_votes_line()
+    {
+        var html = await OkAsync("/p/rasa-ievaite");
+
+        html.ShouldContain("<span class=\"tag\">Mišri Seimo narių grupė</span>");
+        html.ShouldContain("3 iš 3, kai frakcija turėjo poziciją");
+        html.ShouldContain("frakcija balsavo laisvai: 0", Case.Sensitive, "the line shows while the MP has faction-time votes");
+    }
+
+    [Fact]
     public async Task A_former_mp_is_labelled_as_such_with_the_end_of_the_mandate()
     {
         var html = await OkAsync("/p/tadas-alksninis");
@@ -178,7 +188,7 @@ public sealed partial class ParliamentPageTests(DatabaseFixture database) : ApiT
         html.ShouldContain("class=\"figure__num\">71</span>");
         html.ShouldContain("class=\"figure__num\">38</span>");
         html.ShouldContain("<svg class=\"seatmap\"");
-        Regex.Count(html, "<circle ").ShouldBe(12);
+        Regex.Count(html, "<circle ").ShouldBe(13);
         html.ShouldContain("<svg class=\"splitbar");
         html.ShouldContain("Jonas Petraitis (RPF): Prieš");
     }
@@ -211,7 +221,7 @@ public sealed partial class ParliamentPageTests(DatabaseFixture database) : ApiT
 
         html.ShouldContain("bent dviejų trečdalių jos narių");
         html.ShouldContain("Balsavimai, kuriuose Seimo narys nedalyvavo, čia neskaičiuojami");
-        html.ShouldContain("taip pat ir Mišri Seimo narių grupė");
+        html.ShouldContain("Mišri Seimo narių grupė nėra frakcija, todėl pozicijos neturi");
         html.ShouldContain("bendru sutarimu");
         html.ShouldContain("Paskutinį kartą duomenys sėkmingai atnaujinti");
         html.ShouldContain("CC BY 4.0");

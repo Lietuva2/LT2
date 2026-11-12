@@ -15,9 +15,9 @@ answers a known service asked about an unknown identifier with an empty `<SeimoI
 ## The invented parliament
 
 Term 10 (2024–2028). All identifiers start with 99, which no Seimas identifier seen so far does, so these rows cannot
-be confused with real ones. Only 13 of the 141 seats are filled: the **totals** of each vote are Seimas-wide numbers
+be confused with real ones. Only 14 of the 141 seats are filled: the **totals** of each vote are Seimas-wide numbers
 (XVP-0412: 71 : 38 after presentation, 74 : 44 after consideration), so the per-MP votes here never add up to the
-totals. The per-MP list of a vote includes every sitting MP of the 13, with an empty `kaip_balsavo` for one who did not
+totals. The per-MP list of a vote includes every sitting MP of the 14, with an empty `kaip_balsavo` for one who did not
 vote.
 
 | `asmens_id` | MP | Nominated by | Faction (ballot label) | Notes |
@@ -35,9 +35,10 @@ vote.
 | 99000011 | Tadas Alksninis | Regionų aljansas | RAF | **mandate ended** 2026-04-15 |
 | 99000012 | Gintarė Šermukšnytė | Regionų aljansas | RAF | |
 | 99000013 | Aurelija Kadagytė | Regionų aljansas | RAF | mandate from 2026-04-21 (took Alksninis's seat) |
+| 99000014 | Rasa Ievaitė | Reformų partija | RPF until 2026-04-30, then MG | **left the faction for the mixed group**, which is not a faction |
 
 Factions: Reformų partijos frakcija (99100001), Pilietinės sąjungos frakcija (99100002), Regionų aljanso frakcija
-(99100003). Committees: Biudžeto ir finansų komitetas (99200001), Socialinių reikalų ir darbo komitetas (99200002).
+(99100003); the mixed group, Mišri Seimo narių grupė (99100009), is a group, not a faction. Committees: Biudžeto ir finansų komitetas (99200001), Socialinių reikalų ir darbo komitetas (99200002).
 Official addresses are `pavyzdys.<vardas>.<pavardė>@lrs.lt`, so no invented address can be a real mailbox's.
 
 ## Sittings and votes
@@ -58,7 +59,8 @@ XVP-0412's adoption is still planned. Open data lists only sittings that have st
 ## Statistics by hand
 
 Seven votes have per-MP results (99100003 is a consensus vote and counts nowhere). A faction's position is the option at
-least two thirds of its members who voted chose; "free" when no option reaches that.
+least two thirds of its members who voted chose; "free" when no option reaches that. The mixed group (label MG) has no
+position and its votes are neither counted nor free [decided 2026-11-12].
 
 | MP | Recorded votes in mandate | Took part | With faction / faction had a position and MP voted | Free votes MP took part in |
 |---|---|---|---|---|
@@ -67,5 +69,6 @@ least two thirds of its members who voted chose; "free" when no option reaches t
 | Darius Liepaitis | 7 | 6 | 3 / 4 | 2 |
 | Tadas Alksninis | 3 | 2 | 1 / 1 | 1 |
 | Aurelija Kadagytė | 4 | 4 | 2 / 2 | 2 |
+| Rasa Ievaitė | 7 | 7 | 3 / 3 (the four mixed-group votes have no figure) | 0 |
 
 `tests/Lt2.Parliament.ImportTests/Import/ImportTests.cs` checks these numbers after a full import.

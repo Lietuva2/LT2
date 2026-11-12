@@ -35,19 +35,19 @@ public sealed class ImportTests(ImportDatabase database) : IAsyncLifetime
         outcome.Requests.ShouldBe(20);
         (await CountAsync("raw_document")).ShouldBe(20);
         (await CountAsync("term")).ShouldBe(2);
-        (await CountAsync("person")).ShouldBe(13);
-        (await CountAsync("mandate")).ShouldBe(13);
-        (await CountAsync("body")).ShouldBe(5);
-        (await CountAsync("membership")).ShouldBe(27);
-        (await CountAsync("contact")).ShouldBe(13);
+        (await CountAsync("person")).ShouldBe(14);
+        (await CountAsync("mandate")).ShouldBe(14);
+        (await CountAsync("body")).ShouldBe(6);
+        (await CountAsync("membership")).ShouldBe(29);
+        (await CountAsync("contact")).ShouldBe(14);
         (await CountAsync("session")).ShouldBe(2);
         (await CountAsync("sitting")).ShouldBe(4);
         (await CountAsync("agenda_item")).ShouldBe(7);
         (await CountAsync("bill")).ShouldBe(3);
         (await CountAsync("vote")).ShouldBe(8);
-        (await CountAsync("ballot")).ShouldBe(84);
+        (await CountAsync("ballot")).ShouldBe(91);
         (await CountAsync("faction_position")).ShouldBe(21);
-        (await CountAsync("mp_stat")).ShouldBe(13);
+        (await CountAsync("mp_stat")).ShouldBe(14);
         (await database.ScalarAsync<bool>("SELECT bool_and(synthetic) FROM parliament.raw_document")).ShouldBeTrue();
 
         // The answer is cached for a minute on the site; a fresh process sees the stand-in's data as invented.
@@ -92,6 +92,14 @@ public sealed class ImportTests(ImportDatabase database) : IAsyncLifetime
         (await database.RowsAsync("SELECT vote_id, faction_label, position FROM parliament.faction_position WHERE (vote_id, faction_label) IN ((99100002, 'RAF'), (99100102, 'PSF'), (99100102, 'RAF')) ORDER BY 1, 2"))
             .ShouldBe(["99100002 | RAF | Free", "99100102 | PSF | Against", "99100102 | RAF | Free"]);
         (await database.ScalarAsync<string>("SELECT slug FROM parliament.person WHERE seimas_person_id = 99000001")).ShouldBe("jonas-petraitis");
+
+        // The mixed group is not a faction: its label gets no position row, and its member's ballot no faction body.
+        (await database.ScalarAsync<long>("SELECT count(*) FROM parliament.faction_position WHERE faction_label = 'MG'")).ShouldBe(0);
+        (await database.ScalarAsync<string>("SELECT kind FROM parliament.body WHERE seimas_id = 99100009")).ShouldBe("Group");
+        (await database.RowsAsync(
+            "SELECT x.vote_id, x.faction_label, coalesce(f.name, '-') FROM parliament.ballot x JOIN parliament.person p ON p.id = x.person_id " +
+            "LEFT JOIN parliament.body f ON f.id = x.faction_id WHERE p.seimas_person_id = 99000014 AND x.vote_id IN (99100004, 99100005) ORDER BY 1"))
+            .ShouldBe(["99100004 | RPF | Reformų partijos frakcija", "99100005 | MG | -"]);
     }
 
     [Fact]
@@ -103,7 +111,7 @@ public sealed class ImportTests(ImportDatabase database) : IAsyncLifetime
         var stats = await database.RowsAsync(
             "SELECT p.last_name, s.votes_held, s.votes_taken_part, s.voted_with_faction, s.votes_with_faction_position, s.free_votes " +
             "FROM parliament.mp_stat s JOIN parliament.person p ON p.id = s.person_id " +
-            "WHERE p.seimas_person_id IN (99000001, 99000005, 99000007, 99000011, 99000013) ORDER BY p.seimas_person_id");
+            "WHERE p.seimas_person_id IN (99000001, 99000005, 99000007, 99000011, 99000013, 99000014) ORDER BY p.seimas_person_id");
 
         // Hand calculation: Seimas/Synthetic/README.md, "Statistics by hand".
         stats.ShouldBe(
@@ -113,6 +121,7 @@ public sealed class ImportTests(ImportDatabase database) : IAsyncLifetime
             "Liepaitis | 7 | 6 | 3 | 4 | 2",
             "Alksninis | 3 | 2 | 1 | 1 | 1",
             "Kadagytė | 4 | 4 | 2 | 2 | 2",
+            "Ievaitė | 7 | 7 | 3 | 3 | 0",
         ]);
     }
 
@@ -157,7 +166,7 @@ public sealed class ImportTests(ImportDatabase database) : IAsyncLifetime
 
         broken.Status.ShouldBe("failed");
         broken.Error.ShouldNotBeNull().ShouldContain("balsavimo_id=99100005");
-        (await CountAsync("ballot")).ShouldBe(36, "the three votes before the outage are stored");
+        (await CountAsync("ballot")).ShouldBe(39, "the three votes before the outage are stored");
         (await database.ScalarAsync<string>("SELECT status FROM parliament.import_run ORDER BY started_at LIMIT 1")).ShouldBe("failed");
 
         import.StandIn.FailWhen = null;
@@ -250,7 +259,7 @@ public sealed class ImportTests(ImportDatabase database) : IAsyncLifetime
             .ShouldBe("For", "4 of 5 voting RAF members now chose for");
         (await database.RowsAsync("SELECT s.voted_with_faction, s.votes_with_faction_position, s.free_votes FROM parliament.mp_stat s JOIN parliament.person p ON p.id = s.person_id WHERE p.seimas_person_id = 99000007"))
             .ShouldBe(["4 | 5 | 1"], "Liepaitis voted for, now with his faction");
-        (await CountAsync("ballot")).ShouldBe(84);
+        (await CountAsync("ballot")).ShouldBe(91);
     }
 
     [Fact]

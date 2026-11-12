@@ -2,19 +2,6 @@ using Lt2.Parliament.Import.Parsing;
 
 namespace Lt2.Parliament.Statistics;
 
-/// <summary>
-/// The owner's open question about the statistics (M1 report, 2026-11-12), kept here so it can be flipped in one place.
-/// The value is what was built, not a decision; the methodology page states whichever value is set.
-/// </summary>
-internal static class OpenChoices
-{
-    /// <summary>
-    /// Question 2. Per-MP faction labels that are not factions, so get no faction position (for example the mixed group,
-    /// "MG"). Empty (as built): every label is treated as a faction.
-    /// </summary>
-    public static IReadOnlySet<string> LabelsThatAreNotFactions { get; } = new HashSet<string>(StringComparer.Ordinal);
-}
-
 /// <summary>A faction's position in one vote (design 5.1 <c>faction_position</c>).</summary>
 internal enum FactionPosition
 {
@@ -38,7 +25,8 @@ internal sealed record FactionTally(string Label, int For, int Against, int Abst
 /// <summary>
 /// Design 7.3 "Balsavo kaip frakcija": a faction has a position in a vote when at least two thirds of its members who
 /// voted chose the same option (for, against or abstain). Members who did not vote are not counted. Otherwise the
-/// vote is free for that faction.
+/// vote is free for that faction. Only factions have a position: the mixed group of MPs is not a faction, so its label
+/// gets no position and is not a free vote either [decided 2026-11-12].
 /// </summary>
 internal static class FactionRule
 {
@@ -57,13 +45,12 @@ internal static class FactionRule
             : FactionPosition.Free;
     }
 
-    /// <summary>One tally per faction label in a vote; rows without a label belong to no faction.</summary>
-    public static IReadOnlyList<FactionTally> Tally(IEnumerable<(string? Label, BallotChoice Choice)> ballots) =>
-        Tally(ballots, OpenChoices.LabelsThatAreNotFactions);
-
-    /// <summary>As <see cref="Tally(IEnumerable{ValueTuple{string, BallotChoice}})"/>, leaving out labels that are not factions.</summary>
-    public static IReadOnlyList<FactionTally> Tally(IEnumerable<(string? Label, BallotChoice Choice)> ballots, IReadOnlySet<string> notFactions) =>
-        ballots.Where(b => !string.IsNullOrWhiteSpace(b.Label) && !notFactions.Contains(b.Label!.Trim()))
+    /// <summary>
+    /// One tally per faction in a vote. <paramref name="factionLabels"/> are the labels that resolve to a faction body
+    /// on the day of the vote; any other label (the mixed group's, an unknown one) and rows without a label get none.
+    /// </summary>
+    public static IReadOnlyList<FactionTally> Tally(IEnumerable<(string? Label, BallotChoice Choice)> ballots, IReadOnlySet<string> factionLabels) =>
+        ballots.Where(b => !string.IsNullOrWhiteSpace(b.Label) && factionLabels.Contains(b.Label!.Trim()))
             .GroupBy(b => b.Label!.Trim(), StringComparer.Ordinal)
             .Select(g => new FactionTally(
                 g.Key,
@@ -88,7 +75,7 @@ internal static class FactionRule
 /// One recorded vote held during the MP's mandate, as the statistics see it.
 /// </summary>
 /// <param name="Choice">The MP's choice; <see cref="BallotChoice.DidNotVote"/> also when the MP has no row in the result.</param>
-/// <param name="FactionPosition">The position of the MP's faction in that vote; null when the MP had no faction.</param>
+/// <param name="FactionPosition">The position of the MP's faction in that vote; null when the MP was in no faction (the mixed group included).</param>
 internal sealed record MpVoteFact(BallotChoice Choice, FactionPosition? FactionPosition);
 
 /// <summary>Design 5.1 <c>mp_stat</c>: the counts behind the two statistics of a profile.</summary>

@@ -28,14 +28,11 @@
 
     <section class="stack" aria-labelledby="m-faction" id="kaip-frakcija">
         <h2 id="m-faction">@F.T["Method.WithFaction"]</h2>
-        @if (_method is { } m)
-        {
-            <p>@F.Format("Method.WithFaction.1", Share(m.TwoThirds))</p>
-            <p>@F.Format("Method.WithFaction.2", Share(m.TwoThirds))</p>
-            <p id="absence-rule">@F.T["Method.WithFaction.Absence"]</p>
-            <p>@F.T["Method.WithFaction.3"]</p>
-            <p id="labels-rule">@(m.LabelsThatAreNotFactions.Count == 0 ? F.T["Method.WithFaction.Labels.None"] : F.Format("Method.WithFaction.Labels.Some", string.Join(", ", m.LabelsThatAreNotFactions)))</p>
-        }
+        <p>@F.T["Method.WithFaction.1"]</p>
+        <p>@F.T["Method.WithFaction.2"]</p>
+        <p id="absence-rule">@F.T["Method.WithFaction.Absence"]</p>
+        <p id="mixed-group-rule">@F.T["Method.WithFaction.MixedGroup"]</p>
+        <p>@F.T["Method.WithFaction.3"]</p>
     </section>
 
     <section class="stack" aria-labelledby="m-notes">
@@ -57,14 +54,7 @@
 
 @code {
     private DateTimeOffset? _lastSuccess;
-    private MethodologyResponse? _method;
 
-    protected override async Task OnInitializedAsync()
-    {
+    protected override async Task OnInitializedAsync() =>
         _lastSuccess = (await Meta.GetImportsAsync()).Value?.Sources.FirstOrDefault()?.LastSuccessAt;
-        _method = (await Meta.GetMethodologyAsync()).Value;
-    }
-
-    /// <summary>The share as words in the sentence ("dviejų trečdalių"); any other value as given.</summary>
-    private string Share(string fraction) => fraction == "2/3" ? F.T["Method.TwoThirds"] : fraction;
 }

@@ -55,7 +55,7 @@ name; a namespace on the real elements would contradict every element line.
 | M20 | p2b.ad_seimo_nariai | attribute | reikšmė | Kontaktai | seen | notes | contact value |
 | M21 | p2b.ad_seimo_nariai | value | rūšis=El. p. | Kontaktai | seen | notes (145 records in Sept 2026) | the official `@lrs.lt` address |
 | M22 | p2b.ad_seimo_nariai | behaviour | an MP whose mandate ended is still listed, with data_iki | SeimoNarys | seen | notes | former MPs keep their profile |
-| M23 | p2b.ad_seimo_nariai | behaviour | a body's kind can be read from its name (frakcija, komitetas, komisija, grupė) | Pareigos | assumed | design 7.1: lists of bodies are separate services, not confirmed | faction vs committee |
+| M23 | p2b.ad_seimo_nariai | behaviour | a body's kind can be read from its name (frakcija, komitetas, komisija, grupė) | Pareigos | assumed | design 7.1: lists of bodies are separate services, not confirmed | faction vs committee; the mixed group ("…grupė") is not a faction, so has no position (decided 2026-11-12) |
 | S1 | p2b.ad_seimo_sesijos | element | SeimoSesija | (document) | assumed | | one row per session |
 | S2 | p2b.ad_seimo_sesijos | attribute | sesijos_id | SeimoSesija | assumed | the query parameter of that name is seen (design) | session key |
 | S3 | p2b.ad_seimo_sesijos | attribute | pavadinimas | SeimoSesija | assumed | | session name |
@@ -106,6 +106,7 @@ name; a namespace on the real elements would contradict every element line.
 | R17 | p2b.ad_sp_balsavimo_rezultatai | behaviour | every sitting MP has a row, including those who did not vote | IndividualusBalsavimoRezultatas | seen | fetch_vote (empty values); notes (105 of 140 voted) | participation |
 | R18 | p2b.ad_sp_balsavimo_rezultatai | behaviour | a consensus vote has no per-MP rows | IndividualusBalsavimoRezultatas | seen | notes | consensus votes count nowhere |
 | R19 | p2b.ad_sp_balsavimo_rezultatai | behaviour | per-MP rows usually sum to the totals; when they do not, the official note says so | BendriBalsavimoRezultatai | seen | notes (-60034 summed exactly and carried the note) | design 7.5 check |
+| R20 | p2b.ad_sp_balsavimo_rezultatai | value | frakcija=MG | IndividualusBalsavimoRezultatas | seen | fetch_vote only: the September 2026 prototype places "MG" (the mixed group) last; seen nowhere else | nothing: the mixed group is recognised by its membership's body (M23, not a faction), never by this label |
 | F1 | (all) | format | dates are yyyy-MM-dd | data_nuo, data_iki | assumed | | dates |
 | F2 | (all) | format | times are Vilnius local time, yyyy-MM-dd HH:mm or HH:mm:ss | pradžia, pabaiga, balsavimo_laikas | assumed | | times, stored in UTC |
 | F3 | (all) | format | identifiers are integers and may be negative | *_id | seen | notes: vote -60034 | keys (bigint) |

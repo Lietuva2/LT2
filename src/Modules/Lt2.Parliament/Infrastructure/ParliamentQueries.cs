@@ -293,16 +293,13 @@ internal sealed class ParliamentQueries(IDbContextFactory<ParliamentDb> contexts
             return new ImportsInfo(success, last?.StartedAt, last?.Status, await notice.IsParliamentDataInventedAsync(cancellationToken));
         }))!;
 
-    public MethodologyInfo Methodology() =>
-        new(OpenChoices.LabelsThatAreNotFactions.Order(StringComparer.Ordinal).ToList());
-
     // ---- Shared pieces ------------------------------------------------------------------------------------------------
 
     private static async Task<Term?> CurrentTermRowAsync(ParliamentDb db, CancellationToken cancellationToken) =>
         await db.Terms.AsNoTracking().Where(t => db.Mandates.Any(m => m.TermId == t.Id))
             .OrderByDescending(t => t.To == null).ThenByDescending(t => t.Id).FirstOrDefaultAsync(cancellationToken);
 
-    /// <summary>Every MP of the term with the faction of today (or the last one, for a former MP).</summary>
+    /// <summary>Every MP of the term with the faction of today (none in the mixed group; the last one, for a former MP).</summary>
     private async Task<Dictionary<Guid, MpSummary>> SummariesAsync(ParliamentDb db, int termId, CancellationToken cancellationToken)
     {
         var today = Today;
@@ -316,9 +313,10 @@ internal sealed class ParliamentQueries(IDbContextFactory<ParliamentDb> contexts
                               select new { m.PersonId, m.From, m.To, b }).ToListAsync(cancellationToken);
         return people.ToDictionary(x => x.p.Id, x =>
         {
-            var faction = factions.Where(f => f.PersonId == x.p.Id)
-                .OrderByDescending(f => f.To is null || f.To >= today).ThenByDescending(f => f.From).FirstOrDefault();
+            // A sitting MP's faction is today's, or none (the mixed group is not a faction); a former MP's, the last one.
             var sitting = x.m.To is null || x.m.To >= today;
+            var faction = factions.Where(f => f.PersonId == x.p.Id && (!sitting || f.To is null || f.To >= today))
+                .OrderByDescending(f => f.From).FirstOrDefault();
             return new MpSummary(x.p.Slug, x.p.FirstName, x.p.LastName, x.p.Gender, sitting, faction is null ? null : Ref(faction.b), x.m.NominatingParty);
         });
     }

@@ -33,7 +33,7 @@ public sealed class FactionPositionRuleTests
         [
             ("RPF", BallotChoice.For), ("RPF", BallotChoice.For), ("RPF", BallotChoice.Against),
             ("RPF", BallotChoice.DidNotVote), ("RPF", BallotChoice.DidNotVote), ("RPF", BallotChoice.DidNotVote),
-        ]).Single();
+        ], Factions).Single();
 
         tally.ShouldBe(new FactionTally("RPF", 2, 1, 0, 3));
         tally.Position.ShouldBe(FactionPosition.For);
@@ -49,10 +49,24 @@ public sealed class FactionPositionRuleTests
         var tallies = FactionRule.Tally(
         [
             ("RPF", BallotChoice.For), ("PSF", BallotChoice.Against), ("PSF", BallotChoice.Against), ("", BallotChoice.For), (null, BallotChoice.For),
-        ]);
+        ], Factions);
 
         tallies.Select(t => (t.Label, t.Position)).ShouldBe([("PSF", FactionPosition.Against), ("RPF", FactionPosition.For)]);
     }
+
+    [Fact]
+    public void The_mixed_group_is_not_a_faction_so_its_label_gets_no_position_and_is_not_a_free_vote()
+    {
+        var tallies = FactionRule.Tally(
+        [
+            ("RPF", BallotChoice.For), ("MG", BallotChoice.For), ("MG", BallotChoice.Against), ("XYZ", BallotChoice.For),
+        ], Factions);
+
+        tallies.Select(t => t.Label).ShouldBe(["RPF"]);
+    }
+
+    /// <summary>Labels that resolve to a faction body on the day of the vote ("MG", the mixed group, never does).</summary>
+    private static readonly HashSet<string> Factions = ["RPF", "PSF", "RAF"];
 }
 
 public sealed class MpStatisticsRuleTests
@@ -144,19 +158,42 @@ public sealed class MpStatisticsRuleTests
         stats.WithFaction.ShouldBeNull();
     }
 
-}
-
-public sealed class OpenFactionLabelChoiceTests
-{
     [Fact]
-    public void Open_question_2_as_built_every_label_is_treated_as_a_faction_the_mixed_group_included()
+    public void An_absence_does_not_lower_voted_with_the_faction()
     {
-        OpenChoices.LabelsThatAreNotFactions.ShouldBeEmpty();
-        FactionRule.Tally([("MG", BallotChoice.For)]).Single().Label.ShouldBe("MG");
+        var present = MpStatisticsRule.Compute([Vote(BallotChoice.For, FactionPosition.For), Vote(BallotChoice.Against, FactionPosition.For)]);
+        var alsoAbsent = MpStatisticsRule.Compute(
+        [
+            Vote(BallotChoice.For, FactionPosition.For), Vote(BallotChoice.Against, FactionPosition.For),
+            Vote(BallotChoice.DidNotVote, FactionPosition.For), Vote(BallotChoice.DidNotVote, FactionPosition.Against),
+        ]);
+
+        alsoAbsent.WithFaction.ShouldBe(present.WithFaction);
+        alsoAbsent.Participation.ShouldBe(0.5m);
     }
 
     [Fact]
-    public void Open_question_2_flipped_a_label_that_is_not_a_faction_gets_no_position() =>
-        FactionRule.Tally([("MG", BallotChoice.For), ("RPF", BallotChoice.For)], new HashSet<string> { "MG" })
-            .Select(t => t.Label).ShouldBe(["RPF"]);
+    public void A_mixed_group_member_has_no_voted_with_the_faction_figure_never_zero()
+    {
+        var stats = MpStatisticsRule.Compute([Vote(BallotChoice.For, faction: null), Vote(BallotChoice.Against, faction: null), Vote(BallotChoice.Abstain, faction: null)]);
+
+        stats.Participation.ShouldBe(1m);
+        stats.WithFaction.ShouldBeNull();
+        (stats.VotesWithFactionPosition, stats.FreeVotes).ShouldBe((0, 0));
+    }
+
+    [Fact]
+    public void An_mp_who_moved_from_a_faction_to_the_mixed_group_keeps_only_the_faction_time_votes()
+    {
+        var stats = MpStatisticsRule.Compute(
+        [
+            // In the faction.
+            Vote(BallotChoice.For, FactionPosition.For), Vote(BallotChoice.Against, FactionPosition.For), Vote(BallotChoice.For, FactionPosition.Free),
+            // In the mixed group: no position, not free.
+            Vote(BallotChoice.For, faction: null), Vote(BallotChoice.Against, faction: null),
+        ]);
+
+        stats.ShouldBe(new MpStatistics(VotesHeld: 5, VotesTakenPart: 5, VotesWithFactionPosition: 2, VotedWithFaction: 1, FreeVotes: 1));
+        stats.WithFaction.ShouldBe(0.5m);
+    }
 }

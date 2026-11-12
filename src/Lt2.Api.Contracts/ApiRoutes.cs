@@ -57,7 +57,6 @@ public static class ParliamentRoutes
     public const string Bill = Bills + "/{number}";
     public const string Vote = ApiRoutes.Prefix + "/votes/{id:long}";
     public const string Imports = ApiRoutes.Prefix + "/meta/imports";
-    public const string Methodology = ApiRoutes.Prefix + "/meta/methodology";
 
     public static string MpBySlug(string slug) => $"{Mps}/{Uri.EscapeDataString(slug)}";
 

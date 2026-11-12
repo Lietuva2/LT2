@@ -26,9 +26,16 @@
             </div>
         </div>
         <div class="row">
-            @foreach (var m in p.Memberships.Where(m => m.Current && m.Body.Kind is "faction" or "committee"))
+            @foreach (var m in p.Memberships.Where(m => m.Current && m.Body.Kind is "faction" or "committee" or "group"))
             {
-                <a class="tag @(m.Body.Kind == "faction" ? "tag--ink" : "")" href="/@(m.Body.Kind == "faction" ? "frakcijos" : "komitetai")/@m.Body.Slug">@m.Body.Name</a>
+                @if (m.Body.Kind == "group")
+                {
+                    <span class="tag">@m.Body.Name</span>
+                }
+                else
+                {
+                    <a class="tag @(m.Body.Kind == "faction" ? "tag--ink" : "")" href="/@(m.Body.Kind == "faction" ? "frakcijos" : "komitetai")/@m.Body.Slug">@m.Body.Name</a>
+                }
             }
         </div>
     </div>
@@ -63,7 +70,7 @@
                             <span class="figure__none">@F.T["NoData"]</span>
                             <span class="small">@(p.Statistics is { VotesHeld: > 0 } ? F.T["Stat.NoPosition"] : F.T["Stat.None"])</span>
                         }
-                        @if (p.Statistics is { } s)
+                        @if (p.Statistics is { } s && (s.VotesWithFactionPosition > 0 || s.FreeVotes > 0))
                         {
                             <span class="small num">@F.Format("Stat.Free", Formats.Number(s.FreeVotes))</span>
                         }

@@ -75,7 +75,7 @@
   <data name="Stat.WithFaction" xml:space="preserve"><value>Balsavo kaip frakcija</value></data>
   <data name="Stat.WithFactionCount" xml:space="preserve"><value>{0} iš {1}, kai frakcija turėjo poziciją</value></data>
   <data name="Stat.Free" xml:space="preserve"><value>frakcija balsavo laisvai: {0}</value></data>
-  <data name="Stat.NoPosition" xml:space="preserve"><value>frakcija poziciją turėjo 0 kartų</value></data>
+  <data name="Stat.NoPosition" xml:space="preserve"><value>nėra balsavimų, kuriuose Seimo narys dalyvavo ir jo frakcija turėjo poziciją</value></data>
   <data name="Stat.None" xml:space="preserve"><value>įrašytų balsavimų mandato metu dar nėra</value></data>
   <data name="Mp.RecentVotes" xml:space="preserve"><value>Naujausi balsavimai</value></data>
   <data name="Mp.AllVotes" xml:space="preserve"><value>Visi balsavimai</value></data>
@@ -138,12 +138,11 @@
   <data name="Method.Participation.2" xml:space="preserve"><value>Įrašytas balsavimas – toks, kurio kiekvieno Seimo nario balsą skelbia Seimas. Skaičiuojami visi tokie balsavimai, ir procedūriniai, ir dėl pasiūlymų.</value></data>
   <data name="Method.Participation.3" xml:space="preserve"><value>Neskaičiuojama: sprendimai, priimti bendru sutarimu (atskirų balsų nėra), ir balsavimai iki mandato pradžios ar po jo pabaigos. Jei Seimo narys užsiregistravo, bet nebalsavo, tai laikoma nedalyvavimu.</value></data>
   <data name="Method.WithFaction" xml:space="preserve"><value>Balsavo kaip frakcija</value></data>
-  <data name="Method.WithFaction.1" xml:space="preserve"><value>Frakcija turi poziciją balsavime, kai bent {0} jos narių, kurie balsavo, pasirinko tą patį: už, prieš arba susilaikė. Nebalsavę nariai neskaičiuojami. Pats Seimo narys skaičiuojamas kaip vienas iš frakcijos narių.</value></data>
-  <data name="Method.WithFaction.2" xml:space="preserve"><value>Jei nė vienas pasirinkimas nesurenka {0}, laikoma, kad frakcija balsavo laisvai. Tokie balsavimai į rodiklį neįtraukiami, o jų skaičius rodomas šalia.</value></data>
+  <data name="Method.WithFaction.1" xml:space="preserve"><value>Frakcija turi poziciją balsavime, kai bent dviejų trečdalių jos narių, kurie balsavo, pasirinko tą patį: už, prieš arba susilaikė. Nebalsavę nariai neskaičiuojami. Pats Seimo narys skaičiuojamas kaip vienas iš frakcijos narių.</value></data>
+  <data name="Method.WithFaction.2" xml:space="preserve"><value>Jei nė vienas pasirinkimas nesurenka dviejų trečdalių, laikoma, kad frakcija balsavo laisvai. Tokie balsavimai į rodiklį neįtraukiami, o jų skaičius rodomas šalia.</value></data>
   <data name="Method.WithFaction.Absence" xml:space="preserve"><value>Rodiklis – dalis balsavimų, kuriuose Seimo narys dalyvavo ir frakcija turėjo poziciją, kai Seimo narys pasirinko tą patį. Balsavimai, kuriuose Seimo narys nedalyvavo, čia neskaičiuojami: nedalyvavimas jau matomas dalyvavimo rodiklyje, todėl tas pats nedalyvavimas nežymimas du kartus.</value></data>
+  <data name="Method.WithFaction.MixedGroup" xml:space="preserve"><value>Mišri Seimo narių grupė nėra frakcija, todėl pozicijos neturi. Kol Seimo narys priklauso mišriai grupei ar nepriklauso jokiai frakcijai, jo balsavimai į šį rodiklį neįtraukiami ir nelaikomi laisvais. Jei tokių balsavimų nelieka nė vieno, rodiklio profilyje nėra – niekada nerodoma 0 %.</value></data>
   <data name="Method.WithFaction.3" xml:space="preserve"><value>Frakcija – ta, kurią prie Seimo nario balso nurodo pats Seimas to balsavimo rezultatuose, todėl perėjus į kitą frakciją ankstesni balsavimai lieka su ankstesne frakcija.</value></data>
-  <data name="Method.WithFaction.Labels.None" xml:space="preserve"><value>Kiekviena Seimo rezultatuose nurodyta grupė laikoma frakcija, taip pat ir Mišri Seimo narių grupė.</value></data>
-  <data name="Method.WithFaction.Labels.Some" xml:space="preserve"><value>Šios Seimo rezultatuose nurodytos grupės nelaikomos frakcijomis ir pozicijos neturi: {0}.</value></data>
   <data name="Method.Notes" xml:space="preserve"><value>Ypatingi atvejai</value></data>
   <data name="Method.Notes.1" xml:space="preserve"><value>Sprendimai, priimti bendru sutarimu, rodomi be skaičių: atskirų Seimo narių balsų tokiais atvejais nėra.</value></data>
   <data name="Method.Notes.2" xml:space="preserve"><value>Kai Seimas prie rezultato nurodo, kad atskiri Seimo narių balsai nesutampa su protokole įrašytais bendrais skaičiais, ši pastaba rodoma šalia rezultato.</value></data>
@@ -151,5 +150,4 @@
   <data name="Method.Not.1" xml:space="preserve"><value>Profiliuose nėra reitingų, balų ar Seimo narių palyginimų tarpusavyje, nėra ir Seimo narių išlaidų. Profilis rodo, ką Seimo narys darė, o ne vertina.</value></data>
   <data name="Method.Classification" xml:space="preserve"><value>Kaip atpažįstamos projekto stadijos</value></data>
   <data name="Method.Classification.1" xml:space="preserve"><value>Ar balsavimas buvo dėl projekto pateikimo, svarstymo ar priėmimo, nustatoma pagal balsavimo formuluotę. Ko taisyklės negali priskirti, rodoma kaip kitas balsavimas be stadijos.</value></data>
-  <data name="Method.TwoThirds" xml:space="preserve"><value>dviejų trečdalių</value></data>
 </root>

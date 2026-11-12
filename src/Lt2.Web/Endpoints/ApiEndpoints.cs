@@ -53,7 +53,6 @@ internal static class ApiEndpoints
         GetBillEndpoint.Map(api);
         GetVoteEndpoint.Map(api);
         GetImportsEndpoint.Map(api);
-        GetMethodologyEndpoint.Map(api);
     }
 
     /// <summary>A route from <see cref="ApiRoutes"/> relative to the <c>/api/v1</c> group.</summary>
