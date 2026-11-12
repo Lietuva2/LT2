@@ -128,6 +128,22 @@ public sealed partial class ParliamentPageTests(DatabaseFixture database) : ApiT
     }
 
     [Fact]
+    public async Task When_faction_time_does_not_cover_the_mandate_the_figure_names_the_faction_and_the_period()
+    {
+        var rasa = await OkAsync("/p/rasa-ievaite");
+
+        rasa.ShouldContain("id=\"faction-period\"");
+        rasa.ShouldContain("Skaičiuojama tik narystės frakcijoje laikotarpiu: Reformų partijos frakcija, 2024 m. lapkričio 14 d. – 2026 m. balandžio 30 d.");
+    }
+
+    [Theory]
+    [InlineData("/p/jonas-petraitis")]
+    [InlineData("/p/darius-liepaitis")]
+    [InlineData("/p/tadas-alksninis")]
+    public async Task When_faction_time_covers_the_whole_mandate_no_period_line_is_shown(string path) =>
+        (await OkAsync(path)).ShouldNotContain("id=\"faction-period\"", customMessage: "a move between factions or an ended mandate leaves no gap");
+
+    [Fact]
     public async Task A_former_mp_is_labelled_as_such_with_the_end_of_the_mandate()
     {
         var html = await OkAsync("/p/tadas-alksninis");

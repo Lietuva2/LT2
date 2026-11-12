@@ -5,6 +5,7 @@
 @inject IMetaApi Meta
 @inject Formats F
 @inject NavigationManager Navigation
+@inject TimeProvider Clock
 
 @if (_mp is { } p)
 {
@@ -73,6 +74,10 @@
                         @if (p.Statistics is { } s && (s.VotesWithFactionPosition > 0 || s.FreeVotes > 0))
                         {
                             <span class="small num">@F.Format("Stat.Free", Formats.Number(s.FreeVotes))</span>
+                        }
+                        @if (_factionPeriods.Count > 0)
+                        {
+                            <span class="small num" id="faction-period">@F.Format("Stat.FactionPeriod", string.Join("; ", _factionPeriods.Select(Period)))</span>
                         }
                     </div>
                 </div>
@@ -178,6 +183,7 @@
 @code {
     private MpProfileResponse? _mp;
     private DateTimeOffset? _updatedAt;
+    private IReadOnlyList<MembershipResponse> _factionPeriods = [];
 
     [Parameter] public string Slug { get; set; } = "";
 
@@ -191,7 +197,13 @@
         }
 
         _updatedAt = (await Meta.GetImportsAsync()).Value?.Sources.FirstOrDefault()?.LastSuccessAt;
+        var today = DateOnly.FromDateTime(TimeZoneInfo.ConvertTime(Clock.GetUtcNow(), TimeZoneInfo.FindSystemTimeZoneById("Europe/Vilnius")).DateTime);
+        _factionPeriods = FactionCoverage.PeriodsWhenIncomplete(_mp.Mandate, _mp.Memberships, today);
     }
+
+    /// <summary>"Reformų partijos frakcija, 2024 m. lapkričio 14 d. – 2026 m. balandžio 30 d." or "…, nuo …".</summary>
+    private string Period(MembershipResponse m) =>
+        m.Body.Name + ", " + (m.To is { } to ? F.Format("Dates.Range", F.Date(m.From), F.Date(to)) : F.Format("Dates.Since", F.Date(m.From)));
 
     private static string Initials(MpListItem mp) => $"{mp.FirstName[..1]}{mp.LastName[..1]}";
 

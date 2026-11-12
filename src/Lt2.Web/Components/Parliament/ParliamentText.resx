@@ -76,6 +76,7 @@
   <data name="Stat.WithFactionCount" xml:space="preserve"><value>{0} iš {1}, kai frakcija turėjo poziciją</value></data>
   <data name="Stat.Free" xml:space="preserve"><value>frakcija balsavo laisvai: {0}</value></data>
   <data name="Stat.NoPosition" xml:space="preserve"><value>nėra balsavimų, kuriuose Seimo narys dalyvavo ir jo frakcija turėjo poziciją</value></data>
+  <data name="Stat.FactionPeriod" xml:space="preserve"><value>Skaičiuojama tik narystės frakcijoje laikotarpiu: {0}.</value></data>
   <data name="Stat.None" xml:space="preserve"><value>įrašytų balsavimų mandato metu dar nėra</value></data>
   <data name="Mp.RecentVotes" xml:space="preserve"><value>Naujausi balsavimai</value></data>
   <data name="Mp.AllVotes" xml:space="preserve"><value>Visi balsavimai</value></data>
