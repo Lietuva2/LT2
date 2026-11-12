@@ -20,4 +20,8 @@ public interface IMeApi
 
     /// <summary>Withdraws the consent; every position of the person is deleted (design 6.5).</summary>
     Task<ApiResult> WithdrawPositionConsentAsync(CancellationToken cancellationToken = default);
+
+    Task<ApiResult<PartySupportResponse>> GetPartySupportAsync(CancellationToken cancellationToken = default);
+
+    Task<ApiResult> SetPartySupportAsync(PartySupportRequest request, CancellationToken cancellationToken = default);
 }

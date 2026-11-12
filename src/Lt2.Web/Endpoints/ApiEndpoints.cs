@@ -40,6 +40,8 @@ internal static class ApiEndpoints
         EndSessionEndpoint.Map(api);
         GivePositionConsentEndpoint.Map(api);
         WithdrawPositionConsentEndpoint.Map(api);
+        GetPartySupportEndpoint.Map(api);
+        SetPartySupportEndpoint.Map(api);
 
         GetSettingsEndpoint.Map(api);
         UpdateSettingEndpoint.Map(api);

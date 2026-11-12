@@ -66,6 +66,62 @@ internal sealed class PositionConsentHandlers(IdentityDb db, IPositionErasure er
 }
 
 /// <summary>
+/// Party support (design 5.2): private, optional, one party per person, overwritten without history. Giving it records an
+/// explicit consent (kind <c>party-support</c>), since a party preference is a political opinion too; removing it deletes
+/// the row and withdraws the consent.
+/// </summary>
+internal sealed class PartySupportHandlers(IdentityDb db, TimeProvider clock)
+{
+    public const string ConsentKind = "party-support";
+    public const string ConsentVersion = "2026-11-13";
+
+    public async Task<Result<string?>> GetAsync(ClaimsPrincipal principal, CancellationToken cancellationToken)
+    {
+        if (!Guid.TryParse(principal.FindFirstValue(ClaimTypes.NameIdentifier), out var userId))
+        {
+            return Error.Unauthorized("auth.required");
+        }
+
+        return await db.PartySupports.AsNoTracking().Where(p => p.UserId == userId).Select(p => p.Party).FirstOrDefaultAsync(cancellationToken);
+    }
+
+    public async Task<Result<Unit>> SetAsync(ClaimsPrincipal principal, string? party, IReadOnlyCollection<string> allowed, CancellationToken cancellationToken)
+    {
+        if (!Guid.TryParse(principal.FindFirstValue(ClaimTypes.NameIdentifier), out var userId))
+        {
+            return Error.Unauthorized("auth.required");
+        }
+
+        if (party is not null && !allowed.Contains(party))
+        {
+            return Error.Validation("party.unknown", "party");
+        }
+
+        var now = clock.GetUtcNow();
+        await using var transaction = await db.Database.BeginTransactionAsync(cancellationToken);
+        await db.PartySupports.Where(p => p.UserId == userId).ExecuteDeleteAsync(cancellationToken);
+        if (party is null)
+        {
+            await db.Consents.Where(c => c.UserId == userId && c.Kind == ConsentKind && c.WithdrawnAt == null)
+                .ExecuteUpdateAsync(s => s.SetProperty(c => c.WithdrawnAt, now), cancellationToken);
+        }
+        else
+        {
+            db.PartySupports.Add(new PartySupport { UserId = userId, Party = party, GivenAt = now });
+            if (!await db.Consents.AnyAsync(c => c.UserId == userId && c.Kind == ConsentKind && c.WithdrawnAt == null, cancellationToken))
+            {
+                db.Consents.Add(new Consent { Id = Ids.New(clock), UserId = userId, Kind = ConsentKind, TextVersion = ConsentVersion, GivenAt = now });
+            }
+
+            await db.SaveChangesAsync(cancellationToken);
+        }
+
+        await transaction.CommitAsync(cancellationToken);
+        return Result.Ok();
+    }
+}
+
+/// <summary>
 /// <see cref="IParticipants"/> for the Appeals module. Plain SQL on its own connection per call, so it can be asked
 /// from several components rendering at once.
 /// </summary>

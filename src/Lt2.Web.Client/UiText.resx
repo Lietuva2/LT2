@@ -85,4 +85,12 @@
 <data name="PositionConsent.Title" xml:space="preserve"><value>Sutikimas saugoti pozicijas</value></data>
 <data name="PositionConsent.Text" xml:space="preserve"><value>Esate sutikę, kad saugotume jūsų pozicijas dėl įstatymų projektų. Atšaukus sutikimą, visos jūsų pozicijos ir „Man svarbu“ žymos bus ištrintos, o bendri skaičiai sumažės. Jūsų parašyti argumentai liks.</value></data>
 <data name="PositionConsent.Withdraw" xml:space="preserve"><value>Atšaukti sutikimą ir ištrinti pozicijas</value></data>
-<data name="PositionConsent.Withdrawn" xml:space="preserve"><value>Sutikimas atšauktas, jūsų pozicijos ištrintos.</value></data></root>
+<data name="PositionConsent.Withdrawn" xml:space="preserve"><value>Sutikimas atšauktas, jūsų pozicijos ištrintos.</value></data><data name="Party.Title" xml:space="preserve"><value>Kurią partiją palaikote</value></data>
+<data name="Party.Text" xml:space="preserve"><value>Nebūtina. Jūsų pasirinkimo niekam nerodome. Seimo nariui jo suvestinėje parodytume tik bendrą skaičių, kiek palaikančių jo partiją prašo balsuoti už ar prieš, ir tik tada, kai jų yra bent 20.</value></data>
+<data name="Party.Label" xml:space="preserve"><value>Partija</value></data>
+<data name="Party.None" xml:space="preserve"><value>Nenurodyti</value></data>
+<data name="Party.Consent" xml:space="preserve"><value>Sutinku, kad Lietuva 2.0 saugotų mano nurodytą partiją taip, kaip aprašyta. Galiu ją bet kada pašalinti.</value></data>
+<data name="Party.Save" xml:space="preserve"><value>Išsaugoti</value></data>
+<data name="Party.Saved" xml:space="preserve"><value>Išsaugota.</value></data>
+<data name="Party.Removed" xml:space="preserve"><value>Partija pašalinta.</value></data>
+</root>

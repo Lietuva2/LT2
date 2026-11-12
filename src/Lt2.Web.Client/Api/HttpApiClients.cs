@@ -55,6 +55,12 @@ internal sealed class HttpMeApi(ApiHttp http) : IMeApi
 
     public Task<ApiResult> WithdrawPositionConsentAsync(CancellationToken cancellationToken = default) =>
         http.SendAsync(HttpMethod.Delete, ApiRoutes.Me.PositionConsent, null, cancellationToken);
+
+    public Task<ApiResult<PartySupportResponse>> GetPartySupportAsync(CancellationToken cancellationToken = default) =>
+        http.SendAsync<PartySupportResponse>(HttpMethod.Get, ApiRoutes.Me.PartySupport, null, cancellationToken);
+
+    public Task<ApiResult> SetPartySupportAsync(PartySupportRequest request, CancellationToken cancellationToken = default) =>
+        http.SendAsync(HttpMethod.Put, ApiRoutes.Me.PartySupport, request, cancellationToken);
 }
 
 internal sealed class HttpAppealsApi(ApiHttp http) : IAppealsApi

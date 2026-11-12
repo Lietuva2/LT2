@@ -75,4 +75,5 @@
 <data name="digest.not-found" xml:space="preserve"><value>Tokios suvestinės nėra.</value></data>
 <data name="digest.held" xml:space="preserve"><value>Šio projekto siuntimas sulaikytas.</value></data>
 <data name="digest.urgent-already" xml:space="preserve"><value>Šią savaitę skubi suvestinė šiam projektui jau patvirtinta.</value></data>
+<data name="party.unknown" xml:space="preserve"><value>Tokios partijos sąraše nėra.</value></data>
 </root>

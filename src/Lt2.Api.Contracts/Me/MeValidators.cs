@@ -30,3 +30,12 @@ public sealed class PositionConsentRequestValidator : AbstractValidator<Position
     public PositionConsentRequestValidator(IStringLocalizer<ValidationMessages> l) =>
         RuleFor(x => x.TextVersion).NotEmpty().WithMessage(l["Consent.Required"]).MaximumLength(50).WithMessage(l["Consent.Required"]);
 }
+
+public sealed class PartySupportRequestValidator : AbstractValidator<PartySupportRequest>
+{
+    public PartySupportRequestValidator(IStringLocalizer<ValidationMessages> l)
+    {
+        RuleFor(x => x.Consent).Equal(true).When(x => x.Party is not null).WithMessage(l["Consent.Required"]);
+        RuleFor(x => x.Party).MaximumLength(200);
+    }
+}

@@ -106,6 +106,7 @@ public static class IdentityModule
         services.AddScoped<StaffHandlers>();
         services.AddScoped<IIdentityAdministration, RoleAdministration>();
         services.AddScoped<PositionConsentHandlers>();
+        services.AddScoped<PartySupportHandlers>();
         services.AddSingleton<IParticipants, ParticipantDirectory>();
         services.AddSingleton<IPartySupporters, PartySupporterDirectory>();
         services.AddScoped<IIdentityModule, IdentityModuleFacade>();
@@ -185,6 +186,7 @@ internal sealed class IdentityModuleFacade(
     AccountHandlers account,
     StaffHandlers staff,
     PositionConsentHandlers consents,
+    PartySupportHandlers parties,
     SignInManager<User> signIn) : IIdentityModule
 {
     public Task<Result<Unit>> RegisterAsync(Registration registration, CancellationToken cancellationToken) =>
@@ -236,6 +238,12 @@ internal sealed class IdentityModuleFacade(
 
     public Task<Result<Unit>> WithdrawPositionConsentAsync(ClaimsPrincipal user, CancellationToken cancellationToken) =>
         consents.WithdrawAsync(user, cancellationToken);
+
+    public Task<Result<string?>> GetPartySupportAsync(ClaimsPrincipal user, CancellationToken cancellationToken) =>
+        parties.GetAsync(user, cancellationToken);
+
+    public Task<Result<Unit>> SetPartySupportAsync(ClaimsPrincipal user, string? party, IReadOnlyCollection<string> allowed, CancellationToken cancellationToken) =>
+        parties.SetAsync(user, party, allowed, cancellationToken);
 }
 
 /// <summary>Operational commands run by the migrator (seeding a trial invitation, granting a role).</summary>

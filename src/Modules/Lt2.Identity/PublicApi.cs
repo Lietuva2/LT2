@@ -128,6 +128,15 @@ public interface IIdentityModule
 
     /// <summary>Withdraws the consent and, in the same transaction, deletes every position of the person (design 6.5).</summary>
     Task<Result<Unit>> WithdrawPositionConsentAsync(ClaimsPrincipal user, CancellationToken cancellationToken);
+
+    /// <summary>The party the person said they support, if any (design 5.2; private, optional).</summary>
+    Task<Result<string?>> GetPartySupportAsync(ClaimsPrincipal user, CancellationToken cancellationToken);
+
+    /// <summary>
+    /// Sets the party (one of <paramref name="allowed"/>) with the explicit consent it needs, or with <c>null</c> removes it and
+    /// its consent. Stored without history.
+    /// </summary>
+    Task<Result<Unit>> SetPartySupportAsync(ClaimsPrincipal user, string? party, IReadOnlyCollection<string> allowed, CancellationToken cancellationToken);
 }
 
 /// <summary>Housekeeping run by the worker.</summary>

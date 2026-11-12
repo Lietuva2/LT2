@@ -94,6 +94,33 @@ else
         </nav>
     }
 
+    @if (Party is { } party)
+    {
+        @* Private and optional (design 5.2): used only for group numbers of at least 20 in summaries to MPs. *@
+        <section class="sheet stack" aria-labelledby="party-title" id="party-support">
+            <h2 id="party-title">@T["Party.Title"]</h2>
+            <p>@T["Party.Text"]</p>
+            <div class="field">
+                <label for="party-choice">@T["Party.Label"]</label>
+                <select class="input" id="party-choice" @bind="_partyChoice" disabled="@Locked">
+                    <option value="">@T["Party.None"]</option>
+                    @foreach (var choice in party.Choices)
+                    {
+                        <option value="@choice">@choice</option>
+                    }
+                </select>
+            </div>
+            @if (!string.IsNullOrEmpty(_partyChoice) && _partyChoice != party.Party)
+            {
+                <label class="check">
+                    <input type="checkbox" id="party-consent" @bind="_partyConsent" disabled="@Locked" />
+                    <span>@T["Party.Consent"]</span>
+                </label>
+            }
+            <p><button type="button" class="btn btn--plain" disabled="@(Locked || (!string.IsNullOrEmpty(_partyChoice) && _partyChoice != party.Party && !_partyConsent))" @onclick="SavePartyAsync">@T["Party.Save"]</button></p>
+        </section>
+    }
+
     @if (Me.HasPositionConsent)
     {
         @* Withdrawing the consent deletes every position (design 6.5). *@
@@ -128,6 +155,12 @@ else
     [PersistentState]
     public List<SessionResponse>? Sessions { get; set; }
 
+    [PersistentState]
+    public PartySupportResponse? Party { get; set; }
+
+    private string _partyChoice = "";
+    private bool _partyConsent;
+
     protected override async Task OnInitializedAsync()
     {
         if (Me is null)
@@ -150,6 +183,26 @@ else
         }
 
         Sessions ??= await LoadSessionsAsync();
+        Party ??= (await MeApi.GetPartySupportAsync()).Value;
+        _partyChoice = Party?.Party ?? "";
+    }
+
+    private async Task SavePartyAsync()
+    {
+        await RunAsync(async () =>
+        {
+            var party = string.IsNullOrEmpty(_partyChoice) ? null : _partyChoice;
+            var result = await MeApi.SetPartySupportAsync(new PartySupportRequest { Party = party, Consent = _partyConsent });
+            if (!result.IsSuccess)
+            {
+                _message = result.Problem!.Errors?.Values.FirstOrDefault()?.FirstOrDefault() ?? result.Problem.Detail ?? T["Error.Generic"];
+                return;
+            }
+
+            _info = T[party is null ? "Party.Removed" : "Party.Saved"];
+            _partyConsent = false;
+            Party = (await MeApi.GetPartySupportAsync()).Value;
+        });
     }
 
     private async Task<List<SessionResponse>> LoadSessionsAsync()

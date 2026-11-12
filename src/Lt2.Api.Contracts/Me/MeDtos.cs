@@ -91,3 +91,17 @@ public sealed record SessionResponse
 
     public bool IsCurrent { get; init; }
 }
+
+/// <summary>The party the person said they support (private, optional), and the parties to choose from.</summary>
+public sealed record PartySupportResponse(string? Party, IReadOnlyList<string> Choices);
+
+/// <summary>
+/// Sets the party, or with <c>null</c> removes it. Giving one needs <see cref="Consent"/>: a party preference is a
+/// political opinion; it is used only for group numbers of at least 20 and never shown.
+/// </summary>
+public sealed record PartySupportRequest
+{
+    public string? Party { get; init; }
+
+    public bool Consent { get; init; }
+}
