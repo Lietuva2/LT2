@@ -37,8 +37,13 @@ public sealed partial class SignUpTests
         });
         var page = await context.NewPageAsync();
         var consoleErrors = new List<string>();
+        Directory.CreateDirectory("output");
+        var consoleLog = Path.Combine("output", $"console-{width}.txt");
+        File.WriteAllText(consoleLog, "");
         page.Console += (_, message) =>
         {
+            // Kept for diagnosis: the browser console is the only place a client-side failure shows up.
+            File.AppendAllText(consoleLog, $"{message.Type}: {message.Text}{Environment.NewLine}");
             if (message.Type == "error")
             {
                 consoleErrors.Add(message.Text);
@@ -78,6 +83,7 @@ public sealed partial class SignUpTests
         await Assertions.Expect(page.GetByRole(AriaRole.Heading, new() { Level = 1 })).ToHaveTextAsync("Sveiki, Rūta M.!");
         await Assertions.Expect(page.GetByText("El. paštas patvirtintas")).ToBeVisibleAsync();
         await Assertions.Expect(page.GetByText("Ši sesija")).ToBeVisibleAsync();
+        await Assertions.Expect(page.GetByRole(AriaRole.Button, new() { Name = "Atsijungti" })).ToBeEnabledAsync(new() { Timeout = 60_000 });
         await ExpectNoNoteAsync(page);
 
         var scroll = await page.EvaluateAsync<int>("() => document.documentElement.scrollWidth - document.documentElement.clientWidth");
@@ -96,9 +102,9 @@ public sealed partial class SignUpTests
         (await page.ContentAsync()).ShouldNotContain("_message");
     }
 
-    /// <summary>The form works only once WebAssembly has started; Blazor then marks the page interactive.</summary>
+    /// <summary>The form's fields stay disabled until WebAssembly has taken over the prerendered page.</summary>
     private static async Task WaitForInteractivityAsync(IPage page) =>
-        await page.WaitForFunctionAsync("() => window.Blazor !== undefined && document.querySelector('form') !== null && !!window.DotNet", null, new() { Timeout = 60_000 });
+        await page.Locator("form input:not([disabled])").First.WaitForAsync(new() { Timeout = 60_000 });
 
     private static async Task<string> CodeFromMailpitAsync(string email)
     {
