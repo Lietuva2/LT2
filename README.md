@@ -106,7 +106,17 @@ Then, with the stack up, set these environment variables in your shell and run t
 | `LT2_E2E_HTTP_URL` | optional: `http://lt2.localhost:8080`, to check the redirect to HTTPS |
 | `LT2_E2E_COMPOSE_FILE` | optional: the compose file whose Caddy logs are checked (default `deploy/compose.yaml`) |
 
-Besides the browser run, `StackTests` checks the security headers and cookies through Caddy and that Caddy's logs hold
+Every run registers new accounts (seven at present), and each completed registration uses one invitation. On a stack
+you keep, give the tests their own invitation so they do not use up `BANDYMAS-2026`, then set
+`LT2_E2E_INVITATION=E2E-BANDYMAS`:
+
+```bash
+docker compose -f deploy/compose.yaml run --rm --no-deps migrator --seed-invitation E2E-BANDYMAS:1000
+```
+
+`PasskeyTests` add, use and activate passkeys in the browser with Chromium's virtual WebAuthn authenticator (also with
+`navigator.credentials` wrapped the way password managers do it); the staff test runs `docker compose run` for the
+migrator. Besides the browser run, `StackTests` checks the security headers and cookies through Caddy and that Caddy's logs hold
 no client address, header or token (it reads `docker compose logs caddy`, so the docker CLI must be on the path).
 
 ```bash
