@@ -450,7 +450,7 @@ body > .page { width: 100%; }
 .seat--for { fill: var(--for); }
 .seat--against { fill: var(--against); }
 .seat--abstain { fill: var(--abstain); }
-.seat--did-not-vote { fill: var(--sheet); stroke: var(--abstain); stroke-width: 0.6; }
+.seat--did-not-vote { fill: var(--absent); }
 
 /* A share with nothing to count: words, not a big number. */
 .figure__none { font: 700 var(--fs-3)/1.2 var(--font-display); color: var(--ink-2); }

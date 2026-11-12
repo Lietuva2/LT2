@@ -79,7 +79,7 @@ public sealed class ParliamentPageTests
         await page.GetByRole(AriaRole.Link, new() { Name = "Ona Jonaitienė" }).ClickAsync();
         await Assertions.Expect(page.GetByRole(AriaRole.Heading, new() { Level = 1 })).ToHaveTextAsync("Ona Jonaitienė");
         await page.Locator("a[href='/seimas/balsavimai/99100002']").ClickAsync();
-        await Assertions.Expect(page.Locator("svg.seatmap circle")).ToHaveCountAsync(13);
+        await Assertions.Expect(page.Locator("svg.seatmap rect.seat")).ToHaveCountAsync(13);
     }
 
     [Fact]

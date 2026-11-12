@@ -188,7 +188,8 @@ public sealed partial class ParliamentPageTests(DatabaseFixture database) : ApiT
         html.ShouldContain("class=\"figure__num\">71</span>");
         html.ShouldContain("class=\"figure__num\">38</span>");
         html.ShouldContain("<svg class=\"seatmap\"");
-        Regex.Count(html, "<circle ").ShouldBe(13);
+        Regex.Count(html, "<rect [^>]*class=\"seat ").ShouldBe(13);
+        html.ShouldNotContain("<circle");
         html.ShouldContain("<svg class=\"splitbar");
         html.ShouldContain("Jonas Petraitis (RPF): Prieš");
     }
@@ -201,7 +202,7 @@ public sealed partial class ParliamentPageTests(DatabaseFixture database) : ApiT
         html.ShouldContain("Pritarta bendru sutarimu");
         html.ShouldContain("todėl balsų skaičių nėra");
         html.ShouldNotContain("figure__num");
-        html.ShouldNotContain("<circle ");
+        html.ShouldNotContain("class=\"seat ");
     }
 
     [Fact]

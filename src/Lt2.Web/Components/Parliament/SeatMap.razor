@@ -10,7 +10,7 @@
         <svg class="seatmap" viewBox="0 0 @N(Hemicycle.Width) @N(Hemicycle.Height)" role="img" aria-label="@F.T["Vote.SeatMapAria"]">
             @foreach (var (seat, ballot) in _seats)
             {
-                <circle cx="@N(seat.X)" cy="@N(seat.Y)" r="@N(_radius)" class="seat seat--@ballot.Choice"><title>@ballot.Mp.FirstName @ballot.Mp.LastName (@(ballot.FactionLabel ?? F.T["Vote.NoFaction"])): @F.Choice(ballot.Choice)</title></circle>
+                <rect x="@N(-_side / 2)" y="@N(-_side / 2)" width="@N(_side)" height="@N(_side)" transform="translate(@N(seat.X) @N(seat.Y)) rotate(@N(90 - seat.Angle * 180 / Math.PI))" class="seat seat--@ballot.Choice"><title>@ballot.Mp.FirstName @ballot.Mp.LastName (@(ballot.FactionLabel ?? F.T["Vote.NoFaction"])): @F.Choice(ballot.Choice)</title></rect>
             }
         </svg>
         <figcaption class="row small">
@@ -26,7 +26,7 @@
     private static readonly string[] Order = ["for", "against", "abstain", "did-not-vote"];
 
     private List<(Hemicycle.Seat Seat, BallotResponse Ballot)> _seats = [];
-    private double _radius;
+    private double _side;
 
     [Parameter, EditorRequired]
     public IReadOnlyList<BallotResponse> Ballots { get; set; } = [];
@@ -40,9 +40,9 @@
             .ThenBy(b => b.FactionLabel, StringComparer.Ordinal)
             .ThenBy(b => Array.IndexOf(Order, b.Choice))
             .ToList();
-        var (seats, radius) = Hemicycle.Layout(ordered.Count);
+        var (seats, side) = Hemicycle.Layout(ordered.Count);
         _seats = seats.Zip(ordered).ToList();
-        _radius = radius;
+        _side = side;
     }
 
     private static string N(double value) => value.ToString("0.##", CultureInfo.InvariantCulture);
