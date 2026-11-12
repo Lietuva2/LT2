@@ -31,7 +31,9 @@ from disk, except the turning logo, which needs HTTP.
 - One corner of the main sheet is cut at an angle, like the logo's bubbles. Buttons and portraits carry a small cut.
 - The logo's colours each belong to one speaker: **slate** is the Seimas record, **leaf** is people, **brand green** is
   Lietuva 2.0 and the representatives' answers. Words a person wrote sit in a speech bubble, in the serif.
-- "For" is blue and "against" is red, always with the word. Green never means "for", because green is the brand.
+- "For" is a soft moss green and "against" a dusty red, always with the word. Moss is a yellower green than the
+  brand, so "for" does not read as Lietuva 2.0 taking a side. Blue and red were dropped: beside white they
+  recalled a flag.
 
 ## Porting to Blazor
 

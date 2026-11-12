@@ -7,7 +7,9 @@
  *   slate  = the Seimas record (official facts, imported data)
  *   leaf   = people (Lietuva 2.0 users: their numbers and their words)
  *   brand  = Lietuva 2.0 itself and the representatives' answers (actions, links, responses)
- * "For" and "against" never use green: green is the brand, so it cannot also mean yes.
+ * "For" is a soft moss green and "against" a dusty red, always with the word. Moss is a yellower green than the
+ * brand and the action button, so "for" does not read as Lietuva 2.0 taking a side. (Blue and red were dropped:
+ * beside white they recalled a flag.)
  *
  * Type: Sofia Sans for the interface, its Extra Condensed width for headings and figures (Lithuanian words are
  * long; a condensed face keeps them on one line on a phone), Brygada 1918 for words people wrote themselves.
@@ -43,10 +45,10 @@
   --link: #1b6034;
 
   /* Votes and sides */
-  --for: #1f63b5;
-  --for-tint: #dbe7f5;
-  --against: #c2382f;
-  --against-tint: #f6dedb;
+  --for: #5c7838;
+  --for-tint: #e7ebe1;
+  --against: #aa524c;
+  --against-tint: #f2e5e4;
   --abstain: #8a948e;
   --absent: #cbd1cd;
   --on-vote: #ffffff;
@@ -98,7 +100,7 @@
     --leaf-tint: #21331a; --leaf-ink: #bfe89b;
     --brand-deep: #123d22; --brand-tint: #1b2e22;
     --action: #2a7d45; --action-hover: #33915a; --action-ink: #ffffff; --link: #82d196;
-    --for: #2f76cf; --for-tint: #16273b; --against: #cf4a40; --against-tint: #3a1c19;
+    --for: #637d40; --for-tint: #242f1d; --against: #ae5e59; --against-tint: #382724;
     --abstain: #7a857f; --absent: #38433d; --on-vote: #ffffff;
     --note-bg: #3a2f10; --note-ink: #f3d58a; --error: #f2a39c; --focus: #ffb000;
     color-scheme: dark;
@@ -112,7 +114,7 @@
   --leaf-tint: #21331a; --leaf-ink: #bfe89b;
   --brand-deep: #123d22; --brand-tint: #1b2e22;
   --action: #2a7d45; --action-hover: #33915a; --action-ink: #ffffff; --link: #82d196;
-  --for: #2f76cf; --for-tint: #16273b; --against: #cf4a40; --against-tint: #3a1c19;
+  --for: #637d40; --for-tint: #242f1d; --against: #ae5e59; --against-tint: #382724;
   --abstain: #7a857f; --absent: #38433d; --on-vote: #ffffff;
   --note-bg: #3a2f10; --note-ink: #f3d58a; --error: #f2a39c; --focus: #ffb000;
   color-scheme: dark;
@@ -315,6 +317,9 @@ lt2-logo-spin {
   background: var(--slate-tint); color: var(--slate-ink);
   font: 600 var(--fs-0)/1.5 var(--font-text); white-space: nowrap;
 }
+/* A tag that is a link keeps the tag's look: no link colour or underline until it is pointed at. */
+a.tag { text-decoration: none; }
+a.tag:hover { text-decoration: underline; text-decoration-thickness: 1.5px; }
 .tag--people { background: var(--leaf-tint); color: var(--leaf-ink); }
 .tag--brand { background: var(--brand-tint); color: var(--link); }
 .tag--ink { background: var(--ink); color: var(--sheet); }
