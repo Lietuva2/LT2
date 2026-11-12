@@ -69,7 +69,7 @@ else
     <p><button type="button" class="btn btn--plain" disabled="@_busy" @onclick="SignOutAsync">@T["SignOut"]</button></p>
 }
 
-<Messages Message="_message" Info="_info" />
+<Messages Message="@_message" Info="@_info" />
 
 @code {
     private static readonly TimeZoneInfo Vilnius = FindVilnius();

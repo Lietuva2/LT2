@@ -53,6 +53,7 @@ public sealed partial class SignUpTests
 
         await Assertions.Expect(page.GetByRole(AriaRole.Heading, new() { Name = "Nauja paskyra" })).ToBeVisibleAsync();
         await WaitForInteractivityAsync(page);
+        await ExpectNoNoteAsync(page);
         await page.GetByLabel("El. paštas").FillAsync(email);
         await page.GetByLabel("Kvietimo kodas").FillAsync(Invitation);
         await page.GetByLabel("Vardas, kurį matys kiti").FillAsync("Rūta M.");
@@ -61,7 +62,15 @@ public sealed partial class SignUpTests
 
         var codeField = page.GetByLabel("Šešių skaitmenų kodas");
         await Assertions.Expect(codeField).ToBeVisibleAsync();
+        await ExpectNoNoteAsync(page);
         var code = await CodeFromMailpitAsync(email);
+
+        // A wrong code first: the refusal is shown in Lithuanian under the field, and no stray note appears.
+        await codeField.FillAsync(code == "000000" ? "111111" : "000000");
+        await page.GetByRole(AriaRole.Button, new() { Name = "Prisijungti", Exact = true }).ClickAsync();
+        await Assertions.Expect(page.Locator("#code-error")).ToHaveTextAsync("Kodas netinka arba nebegalioja. Paprašykite naujo.");
+        await ExpectNoNoteAsync(page);
+
         await codeField.FillAsync(code);
         await page.GetByRole(AriaRole.Button, new() { Name = "Prisijungti", Exact = true }).ClickAsync();
 
@@ -69,6 +78,7 @@ public sealed partial class SignUpTests
         await Assertions.Expect(page.GetByRole(AriaRole.Heading, new() { Level = 1 })).ToHaveTextAsync("Sveiki, Rūta M.!");
         await Assertions.Expect(page.GetByText("El. paštas patvirtintas")).ToBeVisibleAsync();
         await Assertions.Expect(page.GetByText("Ši sesija")).ToBeVisibleAsync();
+        await ExpectNoNoteAsync(page);
 
         var scroll = await page.EvaluateAsync<int>("() => document.documentElement.scrollWidth - document.documentElement.clientWidth");
         scroll.ShouldBeLessThanOrEqualTo(0, "no horizontal scrolling");
@@ -77,6 +87,13 @@ public sealed partial class SignUpTests
         await page.ScreenshotAsync(new PageScreenshotOptions { Path = Path.Combine("output", $"hello-{width}.png"), FullPage = true });
 
         consoleErrors.Where(e => e.Contains("Content Security Policy", StringComparison.OrdinalIgnoreCase)).ShouldBeEmpty();
+    }
+
+    /// <summary>Nothing has gone wrong, so no general note is shown, and no variable name leaks into the page.</summary>
+    private static async Task ExpectNoNoteAsync(IPage page)
+    {
+        await Assertions.Expect(page.Locator(".note")).ToHaveCountAsync(0);
+        (await page.ContentAsync()).ShouldNotContain("_message");
     }
 
     /// <summary>The form works only once WebAssembly has started; Blazor then marks the page interactive.</summary>

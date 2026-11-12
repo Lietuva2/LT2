@@ -36,7 +36,7 @@
                 <button class="btn btn--plain btn--wide" type="button" disabled="@_busy" @onclick="SignInWithPasskeyAsync">@T["SignIn.Passkey"]</button>
                 <p class="small">@T["SignIn.PasskeyHint"]</p>
                 <p class="small">@T["SignIn.NoAccount"] <button type="button" class="linkish" @onclick="() => Go(Step.Register)">@T["SignIn.ToRegister"]</button></p>
-                <Messages Message="_message" Info="_info" />
+                <Messages Message="@_message" Info="@_info" />
             </form>
             break;
 
@@ -77,7 +77,7 @@
                 <button class="btn btn--wide" type="submit" disabled="@_busy">@T["Register.Submit"]</button>
                 <p class="fine">@T["Register.Fine"]</p>
                 <p class="small">@T["Register.HaveAccount"] <button type="button" class="linkish" @onclick="() => Go(Step.SignIn)">@T["Register.ToSignIn"]</button></p>
-                <Messages Message="_message" Info="_info" />
+                <Messages Message="@_message" Info="@_info" />
             </form>
             break;
 
@@ -107,7 +107,7 @@
                     ·
                     <button type="button" class="linkish" disabled="@_busy" @onclick="() => Go(_registered ? Step.Register : Step.SignIn)">@T["Code.ChangeEmail"]</button>
                 </p>
-                <Messages Message="_message" Info="_info" />
+                <Messages Message="@_message" Info="@_info" />
             </form>
             break;
     }
