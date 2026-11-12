@@ -39,6 +39,33 @@ public sealed partial class PasskeyTests
     }
 
     [Fact]
+    public async Task When_the_server_cannot_verify_a_new_passkey_the_page_says_it_was_not_added_and_may_be_tried_again()
+    {
+        Assert.SkipWhen(string.IsNullOrEmpty(SignUpTests.BaseUrl), "LT2_E2E_BASE_URL is not set; start the stack and set it to run end-to-end tests.");
+
+        await using var session = await PasskeyBrowser.StartAsync("native");
+        var page = session.Page;
+        await RegisterAsync(page);
+
+        // The authenticator saves the key, but what reaches the server cannot be verified.
+        await page.RouteAsync("**/api/v1/auth/passkeys", async route =>
+        {
+            using var body = JsonDocument.Parse(route.Request.PostData!);
+            var credential = JsonDocument.Parse(body.RootElement.GetProperty("credential").GetString()!).RootElement;
+            var broken = credential.ToString().Replace(
+                credential.GetProperty("response").GetProperty("clientDataJSON").GetString()!, "e30", StringComparison.Ordinal);
+            await route.ContinueAsync(new() { PostData = System.Text.Encoding.UTF8.GetBytes(JsonSerializer.Serialize(new { credential = broken })) });
+        });
+        var add = page.GetByRole(AriaRole.Button, new() { Name = "Sukurti prieigos raktą" });
+        await Assertions.Expect(add).ToBeEnabledAsync(new() { Timeout = 60_000 });
+        await add.ClickAsync();
+
+        await Assertions.Expect(page.Locator(".note[role=alert]")).ToHaveTextAsync(
+            "Prieigos rakto patikrinti nepavyko. Prie šios paskyros jis nepridėtas, net jei naršyklė ar slaptažodžių tvarkyklė jį išsaugojo; galite bandyti dar kartą.");
+        await Assertions.Expect(page.GetByText("Sukurta prieigos raktų: 0")).ToBeVisibleAsync();
+    }
+
+    [Fact]
     public async Task A_granted_staff_role_is_activated_with_the_code_in_a_passkey_session()
     {
         Assert.SkipWhen(string.IsNullOrEmpty(SignUpTests.BaseUrl), "LT2_E2E_BASE_URL is not set; start the stack and set it to run end-to-end tests.");

@@ -95,6 +95,8 @@ public sealed class PasskeyTests(DatabaseFixture database) : ApiTest(database)
         }
 
         using var response = await browser.PostAsync(ApiRoutes.Auth.Passkeys, new PasskeyCredentialRequest { Credential = "{\"id\":\"x\",\"type\":\"public-key\"}" });
-        await response.ShouldBeProblemAsync(HttpStatusCode.BadRequest, "passkey.invalid");
+        await response.ShouldBeProblemAsync(HttpStatusCode.BadRequest, "passkey.not-added");
+        (await response.ProblemAsync()).GetProperty("errors").GetProperty("credential")[0].GetString().ShouldBe(
+            "Prieigos rakto patikrinti nepavyko. Prie šios paskyros jis nepridėtas, net jei naršyklė ar slaptažodžių tvarkyklė jį išsaugojo; galite bandyti dar kartą.");
     }
 }

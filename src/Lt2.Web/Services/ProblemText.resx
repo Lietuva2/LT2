@@ -28,6 +28,7 @@
   <data name="account.not-found" xml:space="preserve"><value>Tokios baigtos registruoti paskyros nėra.</value></data>
   <data name="auth.code-invalid" xml:space="preserve"><value>Kodas netinka arba nebegalioja. Paprašykite naujo.</value></data>
   <data name="auth.required" xml:space="preserve"><value>Reikia prisijungti.</value></data>
+  <data name="passkey.not-added" xml:space="preserve"><value>Prieigos rakto patikrinti nepavyko. Prie šios paskyros jis nepridėtas, net jei naršyklė ar slaptažodžių tvarkyklė jį išsaugojo; galite bandyti dar kartą.</value></data>
   <data name="passkey.invalid" xml:space="preserve"><value>Prieigos rakto patikrinti nepavyko.</value></data>
   <data name="session.not-found" xml:space="preserve"><value>Tokios sesijos nėra.</value></data>
   <data name="setting.unknown" xml:space="preserve"><value>Tokio nustatymo nėra.</value></data>

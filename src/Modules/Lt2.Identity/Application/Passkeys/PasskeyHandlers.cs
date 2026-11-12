@@ -27,6 +27,12 @@ internal sealed class PasskeyHandlers(
     ILogger<PasskeyHandlers> logger)
 {
     internal static readonly Error InvalidPasskey = Error.Validation("passkey.invalid", "credential");
+
+    /// <summary>
+    /// Adding a passkey failed. Said separately from <see cref="InvalidPasskey"/>: the browser or password manager may
+    /// already have saved the key, so the person is told it was not added here and may try again.
+    /// </summary>
+    internal static readonly Error NotAdded = Error.Validation("passkey.not-added", "credential");
     internal static readonly Error ConfirmationRequired = Error.Forbidden("passkey.confirmation-required");
     private const string DefaultName = "Prieigos raktas";
 
@@ -94,13 +100,13 @@ internal sealed class PasskeyHandlers(
         catch (InvalidOperationException ex)
         {
             logger.LogInformation(ex, "Passkey attestation without a pending challenge");
-            return InvalidPasskey;
+            return NotAdded;
         }
 
         if (!attestation.Succeeded || attestation.UserEntity.Id != user.Id.ToString())
         {
             logger.LogInformation("Passkey attestation failed: {Reason}", attestation.Failure?.Message);
-            return InvalidPasskey;
+            return NotAdded;
         }
 
         attestation.Passkey.Name = string.IsNullOrWhiteSpace(name) ? DefaultName : name.Trim();
@@ -108,7 +114,7 @@ internal sealed class PasskeyHandlers(
         var saved = await users.AddOrUpdatePasskeyAsync(user, attestation.Passkey);
         if (!saved.Succeeded)
         {
-            return InvalidPasskey;
+            return NotAdded;
         }
 
         await events.RecordAsync(
