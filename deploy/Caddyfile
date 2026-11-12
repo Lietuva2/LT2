@@ -1,0 +1,32 @@
+# Caddy in front of the web container: TLS, HTTP/3, compression, request size limit (design 9.1).
+# Locally the site is https://lt2.localhost:8443 with Caddy's own CA ("tls internal"); in production
+# LT2_SITE_ADDRESS is the domain and LT2_TLS the ACME contact address, so Caddy obtains a public certificate.
+# Security headers (HSTS, CSP, ...) come from the application itself, so they hold behind any proxy.
+
+{
+	skip_install_trust
+	servers {
+		protocols h1 h2 h3
+	}
+}
+
+{$LT2_SITE_ADDRESS} {
+	tls {$LT2_TLS}
+
+	encode zstd gzip
+
+	request_body {
+		max_size 1MB
+	}
+
+	header -Server
+
+	reverse_proxy web:8080 {
+		header_up X-Forwarded-Proto {scheme}
+	}
+
+	log {
+		output stdout
+		format json
+	}
+}

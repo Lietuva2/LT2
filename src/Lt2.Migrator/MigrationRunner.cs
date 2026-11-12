@@ -29,6 +29,7 @@ public static class MigrationRunner
     {
         ArgumentNullException.ThrowIfNull(configuration);
         ArgumentNullException.ThrowIfNull(args);
+        args = args.Where(a => !string.IsNullOrWhiteSpace(a)).ToList();
 
         if (!string.IsNullOrEmpty(configuration.GetConnectionString("Admin")))
         {
