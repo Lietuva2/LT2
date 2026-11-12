@@ -41,6 +41,8 @@ public static class NotificationsModule
         services.AddSingleton<IOutboxHandler, SignInCodeEmailHandler>();
         services.AddSingleton<AccountNoticeTemplate>();
         services.AddSingleton<IOutboxHandler, AccountNoticeEmailHandler>();
+        services.AddSingleton<ModerationNoticeTemplate>();
+        services.AddSingleton<IOutboxHandler, ModerationNoticeEmailHandler>();
         services.AddSingleton<INotificationsDispatcher, OutboxDispatcher>();
         return services;
     }

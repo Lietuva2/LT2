@@ -79,6 +79,12 @@ public static class SettingKeys
     /// <summary>Default appeal threshold offered to the initiator (design 8.4).</summary>
     public static readonly SettingKey<int> DigestThresholdDefault = new("Digest:ThresholdDefault", 100, v => v > 0);
 
+    /// <summary>
+    /// The administrator's minimum appeal threshold (design 8.4): no initiator or moderator may set less. The design
+    /// names the setting but gives no value; 50 is a placeholder for the owner to set.
+    /// </summary>
+    public static readonly SettingKey<int> DigestThresholdMinimum = new("Digest:ThresholdMinimum", 50, v => v > 0);
+
     /// <summary>Most summaries an MP receives in a week (design 8.4).</summary>
     public static readonly SettingKey<int> DigestMaxPerWeek = new("Digest:MaxPerWeek", 2, v => v is > 0 and <= 7);
 
@@ -98,6 +104,7 @@ public static class SettingKeys
         SignInCodesPerHour,
         SignInCodesPerDay,
         DigestThresholdDefault,
+        DigestThresholdMinimum,
         DigestMaxPerWeek,
         SurgeMinimumShare,
         SurgeMinimumAccounts,

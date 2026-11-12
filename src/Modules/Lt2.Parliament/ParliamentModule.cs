@@ -32,6 +32,7 @@ public static class ParliamentModule
         services.AddScoped<IParliamentDataNotice, ParliamentDataNotice>();
         services.TryAddSingleton(TimeProvider.System);
         services.AddScoped<IParliamentQueries, ParliamentQueries>();
+        services.AddScoped<IBillCatalogue, BillCatalogue>();
         return services;
     }
 

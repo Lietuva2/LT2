@@ -23,4 +23,21 @@
   <data name="Role.moderator" xml:space="preserve"><value>moderatoriaus</value></data>
   <data name="Role.administrator" xml:space="preserve"><value>administratoriaus</value></data>
   <data name="SignInCode.Signature" xml:space="preserve"><value>Lietuva 2.0</value></data>
+<data name="Moderation.appeal-published.Subject" xml:space="preserve"><value>Lietuva 2.0: kreipimasis dėl {0} paskelbtas</value></data>
+<data name="Moderation.appeal-published.Body" xml:space="preserve"><value>moderatorius peržiūrėjo ir paskelbė jūsų kreipimąsi dėl projekto {0}. Dabar jį mato visi, o Lietuva 2.0 naudotojai gali nurodyti savo poziciją ir rašyti argumentus.</value></data>
+<data name="Moderation.appeal-returned.Subject" xml:space="preserve"><value>Lietuva 2.0: kreipimąsi dėl {0} reikia pataisyti</value></data>
+<data name="Moderation.appeal-returned.Body" xml:space="preserve"><value>moderatorius grąžino jūsų kreipimąsi dėl projekto {0}. Jo kol kas niekas kitas nemato. Pataisykite aprašymą ar argumentą ir pateikite kreipimąsi dar kartą.</value></data>
+<data name="Moderation.appeal-hidden.Subject" xml:space="preserve"><value>Lietuva 2.0: kreipimasis dėl {0} paslėptas</value></data>
+<data name="Moderation.appeal-hidden.Body" xml:space="preserve"><value>moderatorius paslėpė jūsų kreipimąsi dėl projekto {0}. Jis nebėra matomas.</value></data>
+<data name="Moderation.threshold-changed.Subject" xml:space="preserve"><value>Lietuva 2.0: pakeista kreipimosi dėl {0} riba</value></data>
+<data name="Moderation.threshold-changed.Body" xml:space="preserve"><value>moderatorius pakeitė jūsų kreipimosi dėl projekto {0} ribą. Naują ribą ir jos priežastį matote kreipimosi puslapyje. Moderatoriaus nustatytos ribos keisti nebegalite.</value></data>
+<data name="Moderation.reason-published.Subject" xml:space="preserve"><value>Lietuva 2.0: jūsų argumentas paskelbtas</value></data>
+<data name="Moderation.reason-published.Body" xml:space="preserve"><value>moderatorius peržiūrėjo ir paskelbė jūsų argumentą kreipimesi dėl projekto {0}.</value></data>
+<data name="Moderation.reason-hidden.Subject" xml:space="preserve"><value>Lietuva 2.0: jūsų argumentas paslėptas</value></data>
+<data name="Moderation.reason-hidden.Body" xml:space="preserve"><value>moderatorius paslėpė jūsų argumentą kreipimesi dėl projekto {0}.</value></data>
+<data name="Moderation.reason-merged.Subject" xml:space="preserve"><value>Lietuva 2.0: jūsų argumentas sujungtas su panašiu</value></data>
+<data name="Moderation.reason-merged.Body" xml:space="preserve"><value>moderatorius sujungė jūsų argumentą kreipimesi dėl projekto {0} su panašiu jau paskelbtu argumentu. „Man svarbu“ žymos perkeltos prie jo.</value></data>
+<data name="Moderation.Excerpt" xml:space="preserve"><value>Argumentas: „{0}“</value></data>
+<data name="Moderation.Statement" xml:space="preserve"><value>Moderatoriaus paaiškinimas: {0}</value></data>
+<data name="Moderation.Rules" xml:space="preserve"><value>Šį laišką gavote, nes esate šio turinio autorius.</value></data>
 </root>

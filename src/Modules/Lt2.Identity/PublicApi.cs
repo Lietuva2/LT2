@@ -20,7 +20,8 @@ public sealed record AccountSummary(
     DateTimeOffset CreatedAt,
     bool RegistrationComplete,
     IReadOnlyList<string> ActiveStaffRoles,
-    bool AwaitingActivation);
+    bool AwaitingActivation,
+    bool HasPositionConsent = false);
 
 /// <summary>
 /// What the current session may do as staff (design 6.2): the staff roles that work in it (only when signed in with the
@@ -121,6 +122,12 @@ public interface IIdentityModule
     Task<IReadOnlyList<SessionSummary>> GetSessionsAsync(ClaimsPrincipal user, CancellationToken cancellationToken);
 
     Task<Result<Unit>> EndSessionAsync(ClaimsPrincipal user, Guid sessionId, CancellationToken cancellationToken);
+
+    /// <summary>Records the explicit consent to store positions against the text version in force (design 6.5).</summary>
+    Task<Result<Unit>> GivePositionConsentAsync(ClaimsPrincipal user, string textVersion, CancellationToken cancellationToken);
+
+    /// <summary>Withdraws the consent and, in the same transaction, deletes every position of the person (design 6.5).</summary>
+    Task<Result<Unit>> WithdrawPositionConsentAsync(ClaimsPrincipal user, CancellationToken cancellationToken);
 }
 
 /// <summary>Housekeeping run by the worker.</summary>

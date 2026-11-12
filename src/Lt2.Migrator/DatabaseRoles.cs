@@ -8,7 +8,7 @@ namespace Lt2.Migrator;
 /// <item><c>lt2_migrator</c> owns the schemas and runs migrations;</item>
 /// <item><c>lt2_app</c> has data access only, and may only insert into <c>audit.event</c>;</item>
 /// <item><c>lt2_worker</c> the same, plus its own <c>hangfire</c> schema;</item>
-/// <item><c>lt2_readonly</c> reads for analysis, with no access to <c>identity</c>, <c>notify</c> or <c>appeals.position</c>.</item>
+/// <item><c>lt2_readonly</c> reads for analysis, with no access to <c>identity</c>, <c>notify</c>, <c>appeals.position</c> or <c>appeals.endorsement</c>.</item>
 /// </list>
 /// </summary>
 public static class DatabaseRoles
@@ -25,8 +25,11 @@ public static class DatabaseRoles
     /// <summary>Schemas the read-only role may see.</summary>
     public static readonly string[] ReadableSchemas = ["parliament", "appeals", "config"];
 
-    /// <summary>Tables in readable schemas that stay hidden from the read-only role.</summary>
-    public static readonly string[] HiddenTables = ["appeals.position"];
+    /// <summary>
+    /// Tables in readable schemas that stay hidden from the read-only role: positions (design 5.5), and the "Man svarbu"
+    /// marks, which are allowed only on one's own side and so tell the side as well.
+    /// </summary>
+    public static readonly string[] HiddenTables = ["appeals.position", "appeals.endorsement"];
 
     /// <summary>
     /// Run with a superuser (or a role with CREATEROLE) once per deploy: creates the login roles, sets their passwords

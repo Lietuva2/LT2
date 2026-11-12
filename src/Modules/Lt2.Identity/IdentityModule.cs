@@ -1,6 +1,7 @@
 using System.Security.Claims;
 using Lt2.Identity.Application;
 using Lt2.Identity.Application.Account;
+using Lt2.Identity.Application.Consents;
 using Lt2.Identity.Application.Passkeys;
 using Lt2.Identity.Application.Register;
 using Lt2.Identity.Application.SignIn;
@@ -104,6 +105,8 @@ public static class IdentityModule
         services.AddScoped<AccountEvents>();
         services.AddScoped<StaffHandlers>();
         services.AddScoped<IIdentityAdministration, RoleAdministration>();
+        services.AddScoped<PositionConsentHandlers>();
+        services.AddSingleton<IParticipants, ParticipantDirectory>();
         services.AddScoped<IIdentityModule, IdentityModuleFacade>();
         services.AddScoped<IIdentityMaintenance, MaintenanceHandler>();
         services.AddSingleton<IModuleDatabase, IdentityModuleDatabase>();
@@ -172,6 +175,7 @@ internal sealed class IdentityModuleFacade(
     PasskeyHandlers passkeys,
     AccountHandlers account,
     StaffHandlers staff,
+    PositionConsentHandlers consents,
     SignInManager<User> signIn) : IIdentityModule
 {
     public Task<Result<Unit>> RegisterAsync(Registration registration, CancellationToken cancellationToken) =>
@@ -217,6 +221,12 @@ internal sealed class IdentityModuleFacade(
 
     public Task<Result<Unit>> EndSessionAsync(ClaimsPrincipal user, Guid sessionId, CancellationToken cancellationToken) =>
         account.EndSessionAsync(user, sessionId, cancellationToken);
+
+    public Task<Result<Unit>> GivePositionConsentAsync(ClaimsPrincipal user, string textVersion, CancellationToken cancellationToken) =>
+        consents.GiveAsync(user, textVersion, cancellationToken);
+
+    public Task<Result<Unit>> WithdrawPositionConsentAsync(ClaimsPrincipal user, CancellationToken cancellationToken) =>
+        consents.WithdrawAsync(user, cancellationToken);
 }
 
 /// <summary>Operational commands run by the migrator (seeding a trial invitation, granting a role).</summary>
