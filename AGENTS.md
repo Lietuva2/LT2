@@ -63,16 +63,17 @@ src/Lt2.Web.Client         Blazor WebAssembly components and HTTP implementation
 src/Lt2.Api.Contracts      DTOs, routes, client interfaces, validators (shared by server, client and tests)
 src/Lt2.SharedKernel       Result type, identifiers (UUID v7), event base types, outbox, audit and settings
                            interfaces, connection strings; no clock of its own (TimeProvider is used)
-src/Modules/               Lt2.Identity, Lt2.Notifications, Lt2.Audit (working); Lt2.Parliament, Lt2.Appeals
-                           (schema and DbContext only)
-src/Lt2.Worker             Hangfire server: outbox dispatch loop and a daily identity clean-up
+src/Modules/               Lt2.Identity, Lt2.Notifications, Lt2.Audit, Lt2.Parliament (Seimas open-data client,
+                           import, statistics; no pages yet); Lt2.Appeals (schema and DbContext only)
+src/Lt2.Worker             Hangfire server: outbox dispatch loop, the parliament import, a daily identity clean-up
 src/Lt2.Migrator           creates the database roles, applies migrations and grants; also seeds invitations and
                            grants the first staff role; run once per deploy
 tests/Lt2.UnitTests        rules and validators, plus bUnit tests of components (Components/)
 tests/Lt2.IntegrationTests API over HTTP against a real PostgreSQL (Testcontainers)
 tests/Lt2.ArchitectureTests module boundaries, static assets
 tests/Lt2.E2E              Playwright and stack checks against a running compose stack; skipped without one
-tests/Lt2.Parliament.ImportTests  placeholder for M1, not run by dotnet test
+tests/Lt2.Parliament.ImportTests  Seimas client, parsers, register of assumptions (Seimas/ASSUMPTIONS.md), import against
+                           the stand-in and PostgreSQL; live contract suite only with LT2_SEIMAS_LIVE=1
 deploy/                    Dockerfile, compose.yaml, Caddyfile, .env (local defaults), init-secrets.py, secrets/
 tools/Lt2.SeimasStandIn     local and test only: stand-in for the Seimas open data, invented answers; never shipped
 ```

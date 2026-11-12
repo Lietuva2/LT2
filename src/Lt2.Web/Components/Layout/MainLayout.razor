@@ -1,5 +1,6 @@
 @inherits LayoutComponentBase
 @inject IStringLocalizer<PageText> T
+@inject Lt2.Api.Contracts.Meta.IMetaApi Meta
 
 <header class="page top">
     <a class="top__brand" href="/"><Logo />Lietuva 2.0</a>
@@ -15,6 +16,11 @@
     </nav>
 </header>
 
+@if (_parliamentDataInvented)
+{
+    <p class="page note" role="note" id="invented-data">@T["Notice.InventedParliament"]</p>
+}
+
 <main class="page stack stack--loose">
     @Body
 </main>
@@ -22,3 +28,10 @@
 <footer class="page foot">
     <p>@T["Footer.Line"]</p>
 </footer>
+
+@code {
+    private bool _parliamentDataInvented;
+
+    protected override async Task OnInitializedAsync() =>
+        _parliamentDataInvented = (await Meta.GetDataNoticeAsync()).Value?.ParliamentDataInvented == true;
+}

@@ -1,5 +1,7 @@
+using Lt2.Parliament.Import;
 using Lt2.Parliament.Import.Client;
 using Lt2.Parliament.Infrastructure;
+using Lt2.Parliament.Statistics;
 using Lt2.SharedKernel;
 using Lt2.SharedKernel.Http;
 using Microsoft.EntityFrameworkCore;
@@ -24,6 +26,8 @@ public static class ParliamentModule
                     o => o.MigrationsHistoryTable("__ef_migrations_history", Schema))
                 .UseSnakeCaseNamingConvention());
         services.AddSingleton<IModuleDatabase, ParliamentModuleDatabase>();
+        services.AddMemoryCache();
+        services.AddScoped<IParliamentDataNotice, ParliamentDataNotice>();
         return services;
     }
 
@@ -63,6 +67,8 @@ public static class ParliamentModule
                 o.CircuitBreaker.SamplingDuration = attempt * 2 + TimeSpan.FromSeconds(1);
             });
         services.AddTransient<ISeimasClient, SeimasClient>();
+        services.AddScoped<IParliamentStatistics, ParliamentStatistics>();
+        services.AddScoped<IParliamentImport, ParliamentImporter>();
         return services;
     }
 }

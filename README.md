@@ -20,8 +20,9 @@ A modular monolith on .NET 10 (design sections 2–4):
 | `src/Modules/Lt2.Identity` | Accounts, registration by invitation, emailed sign-in codes, passkeys, sessions — schema `identity` |
 | `src/Modules/Lt2.Notifications` | Transactional outbox, dispatcher, SMTP transport, the sign-in code email — schema `notify` |
 | `src/Modules/Lt2.Audit` | Append-only audit log and runtime settings — schemas `audit`, `config` |
-| `src/Modules/Lt2.Parliament`, `Lt2.Appeals` | Empty module shells (schema and `DbContext` only) for milestones M1 and M2 |
-| `src/Lt2.Worker` | Hangfire server (PostgreSQL storage) and the outbox dispatch loop |
+| `src/Modules/Lt2.Parliament` | Seimas open-data client, raw-response store, parsers, import, statistics — schema `parliament` (no pages yet) |
+| `src/Modules/Lt2.Appeals` | Empty module shell (schema and `DbContext` only) for milestone M2 |
+| `src/Lt2.Worker` | Hangfire server (PostgreSQL storage): the outbox dispatch loop and the parliament import (every 15 minutes on sitting days, hourly otherwise) |
 | `src/Lt2.Migrator` | Creates the database roles, applies every module's migrations, grants access; run once per deploy |
 | `tests/` | Unit, integration (Testcontainers), architecture (NetArchTest) and end-to-end (Playwright) tests |
 | `deploy/` | Dockerfile, `compose.yaml`, `Caddyfile`, secret generators |
