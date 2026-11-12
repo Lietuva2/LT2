@@ -18,6 +18,9 @@ public static class ContractsServiceCollectionExtensions
         services.AddScoped<IValidator<SignInRequest>, SignInRequestValidator>();
         services.AddScoped<IValidator<PasskeyCredentialRequest>, PasskeyCredentialRequestValidator>();
         services.AddScoped<IValidator<Me.CompleteRegistrationRequest>, Me.CompleteRegistrationRequestValidator>();
+        services.AddScoped<IValidator<Me.RoleActivationRequest>, Me.RoleActivationRequestValidator>();
+        services.AddScoped<IValidator<GrantRoleRequest>, GrantRoleRequestValidator>();
+        services.AddScoped<IValidator<ResetAccountRequest>, ResetAccountRequestValidator>();
         services.AddScoped<IValidator<UpdateSettingRequest>, UpdateSettingRequestValidator>();
         return services;
     }

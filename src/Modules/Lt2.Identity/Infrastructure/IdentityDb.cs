@@ -27,6 +27,8 @@ internal sealed class IdentityDb(DbContextOptions<IdentityDb> options)
 
     public DbSet<Session> Sessions => Set<Session>();
 
+    public DbSet<RoleActivation> RoleActivations => Set<RoleActivation>();
+
     public DbSet<DataProtectionKey> DataProtectionKeys { get; set; } = null!;
 
     protected override void OnModelCreating(ModelBuilder builder)
@@ -57,6 +59,7 @@ internal sealed class IdentityDb(DbContextOptions<IdentityDb> options)
             b.Property(x => x.VerificationLevel).HasMaxLength(20);
             b.HasOne<Invitation>().WithMany().HasForeignKey(x => x.InvitationId).OnDelete(DeleteBehavior.SetNull);
             b.Property(x => x.InvitationCode).HasMaxLength(64);
+            b.Property(x => x.StaffPasskeyId).HasMaxLength(1024);
             b.Ignore(x => x.IsPending);
             b.HasIndex(x => x.CreatedAt).HasFilter("registered_at IS NULL").HasDatabaseName("ix_profile_pending_created_at");
         });
@@ -95,9 +98,20 @@ internal sealed class IdentityDb(DbContextOptions<IdentityDb> options)
             b.HasKey(x => x.Id);
             b.Property(x => x.Method).HasMaxLength(10);
             b.Property(x => x.Device).HasMaxLength(100);
+            b.Property(x => x.PasskeyId).HasMaxLength(1024);
             b.HasOne<User>().WithMany().HasForeignKey(x => x.UserId).OnDelete(DeleteBehavior.Cascade);
             b.HasIndex(x => x.UserId);
             b.HasIndex(x => x.ExpiresAt);
+        });
+
+        builder.Entity<RoleActivation>(b =>
+        {
+            b.ToTable("role_activation");
+            b.HasKey(x => x.Id);
+            b.Property(x => x.Role).HasMaxLength(20);
+            b.Property(x => x.CodeHash).HasMaxLength(32);
+            b.HasOne<User>().WithMany().HasForeignKey(x => x.UserId).OnDelete(DeleteBehavior.Cascade);
+            b.HasIndex(x => new { x.UserId, x.Role });
         });
     }
 

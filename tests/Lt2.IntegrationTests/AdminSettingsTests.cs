@@ -5,13 +5,12 @@ using Lt2.Api.Contracts;
 using Lt2.Api.Contracts.Admin;
 using Lt2.Api.Contracts.Auth;
 using Lt2.IntegrationTests.Infrastructure;
-using Lt2.Migrator;
 
 namespace Lt2.IntegrationTests;
 
 /// <summary>
-/// Runtime settings (design 5.6) through the minimal administrator endpoint. Staff need a second factor (design 6.2):
-/// an administrator signed in with an emailed code only is refused; with a passkey, allowed.
+/// Runtime settings (design 5.6) through the minimal administrator endpoint. A staff role works only in a session signed
+/// in with the staff passkey (design 6.2): an administrator signed in with an emailed code is a member there.
 /// </summary>
 public sealed class AdminSettingsTests(DatabaseFixture database) : ApiTest(database)
 {
@@ -35,13 +34,11 @@ public sealed class AdminSettingsTests(DatabaseFixture database) : ApiTest(datab
     }
 
     [Fact]
-    public async Task An_administrator_signed_in_with_a_code_only_is_refused()
+    public async Task An_active_administrator_signed_in_with_a_code_is_refused()
     {
+        using var admin = await StaffMembers.ActiveAsync(Factory, Database, "administrator");
         using var browser = NewBrowser();
-        var email = await browser.RegisterAndSignInAsync();
-        await GrantAdministratorAsync(email);
-        using var signOut = await browser.PostAsync(ApiRoutes.Auth.SignOut);
-        await SignInWithCodeAsync(browser, email);
+        await SignInWithCodeAsync(browser, admin.Email);
 
         using var response = await browser.Client.GetAsync(ApiRoutes.Admin.Settings);
         await response.ShouldBeProblemAsync(HttpStatusCode.Forbidden, "forbidden");
@@ -50,8 +47,8 @@ public sealed class AdminSettingsTests(DatabaseFixture database) : ApiTest(datab
     [Fact]
     public async Task An_administrator_with_a_passkey_changes_a_setting_and_the_change_is_audited()
     {
-        using var authenticator = new SoftwareAuthenticator();
-        using var admin = await AdministratorWithPasskeyAsync(authenticator);
+        using var staff = await StaffMembers.ActiveAsync(Factory, Database, "administrator");
+        var admin = staff.Browser;
 
         var settings = (await admin.Client.GetFromJsonAsync<List<SettingResponse>>(ApiRoutes.Admin.Settings))!;
         settings.Single(s => s.Key == Key).Value.GetBoolean().ShouldBeTrue();
@@ -85,8 +82,8 @@ public sealed class AdminSettingsTests(DatabaseFixture database) : ApiTest(datab
     [Fact]
     public async Task The_code_limits_are_settings_whose_changes_are_audited_and_apply_at_once()
     {
-        using var authenticator = new SoftwareAuthenticator();
-        using var admin = await AdministratorWithPasskeyAsync(authenticator);
+        using var staff = await StaffMembers.ActiveAsync(Factory, Database, "administrator");
+        var admin = staff.Browser;
         var perHour = Lt2.SharedKernel.SettingKeys.SignInCodesPerHour.Name;
         var settings = (await admin.Client.GetFromJsonAsync<List<SettingResponse>>(ApiRoutes.Admin.Settings))!;
         settings.Single(s => s.Key == perHour).Value.GetInt32().ShouldBe(5);
@@ -124,32 +121,14 @@ public sealed class AdminSettingsTests(DatabaseFixture database) : ApiTest(datab
     [Fact]
     public async Task Unknown_settings_and_wrong_values_are_refused()
     {
-        using var authenticator = new SoftwareAuthenticator();
-        using var admin = await AdministratorWithPasskeyAsync(authenticator);
+        using var staff = await StaffMembers.ActiveAsync(Factory, Database, "administrator");
+        var admin = staff.Browser;
 
         using var unknown = await admin.SendAsync(HttpMethod.Put, ApiRoutes.Admin.SettingByKey("Nera:Tokio"), new UpdateSettingRequest { Value = JsonSerializer.SerializeToElement(1) });
         await unknown.ShouldBeProblemAsync(HttpStatusCode.NotFound, "setting.unknown");
 
         using var wrong = await admin.SendAsync(HttpMethod.Put, ApiRoutes.Admin.SettingByKey("Digest:MaxPerWeek"), new UpdateSettingRequest { Value = JsonSerializer.SerializeToElement("daug") });
         await wrong.ShouldBeProblemAsync(HttpStatusCode.BadRequest, "setting.invalid");
-    }
-
-    private async Task<TestBrowser> AdministratorWithPasskeyAsync(SoftwareAuthenticator authenticator)
-    {
-        using var setup = NewBrowser();
-        var email = await setup.RegisterAndSignInAsync();
-        using var creation = await setup.PostAsync(ApiRoutes.Auth.PasskeyCreationOptions);
-        using (var add = await setup.PostAsync(ApiRoutes.Auth.Passkeys, new PasskeyCredentialRequest { Credential = authenticator.Create(await creation.Content.ReadAsStringAsync()) }))
-        {
-            add.StatusCode.ShouldBe(HttpStatusCode.NoContent);
-        }
-
-        await GrantAdministratorAsync(email);
-        var admin = NewBrowser();
-        using var request = await admin.PostAsync(ApiRoutes.Auth.PasskeyRequestOptions);
-        using var signIn = await admin.PostAsync(ApiRoutes.Auth.PasskeySignIn, new PasskeyCredentialRequest { Credential = authenticator.Get(await request.Content.ReadAsStringAsync()) });
-        signIn.StatusCode.ShouldBe(HttpStatusCode.NoContent);
-        return admin;
     }
 
     private async Task SignInWithCodeAsync(TestBrowser browser, string email)
@@ -161,11 +140,6 @@ public sealed class AdminSettingsTests(DatabaseFixture database) : ApiTest(datab
         using var signIn = await browser.PostAsync(ApiRoutes.Auth.SignIn, new SignInRequest { Email = email, Code = (await Factory.LatestCodeAsync(email))! });
         signIn.StatusCode.ShouldBe(HttpStatusCode.NoContent);
     }
-
-    private async Task GrantAdministratorAsync(string email) =>
-        (await Lt2.Identity.IdentityAdministration.GrantRoleAsync(
-            Database.ConnectionStringFor(DatabaseRoles.App, DatabaseFixture.AppPassword), email, "administrator", CancellationToken.None))
-        .ShouldBeTrue();
 
     private static class SharedKernelKeys
     {

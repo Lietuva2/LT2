@@ -39,6 +39,8 @@ public static class NotificationsModule
         services.AddSingleton<IEmailTransport, SmtpEmailTransport>();
         services.AddSingleton<SignInCodeTemplate>();
         services.AddSingleton<IOutboxHandler, SignInCodeEmailHandler>();
+        services.AddSingleton<AccountNoticeTemplate>();
+        services.AddSingleton<IOutboxHandler, AccountNoticeEmailHandler>();
         services.AddSingleton<INotificationsDispatcher, OutboxDispatcher>();
         return services;
     }

@@ -23,6 +23,21 @@ public sealed record MeResponse
     /// sessions, and sign out.
     /// </summary>
     public bool RegistrationComplete { get; init; }
+
+    /// <summary>
+    /// The staff roles that work in this session: only when it was signed in with the account's staff passkey, after
+    /// the role was activated (design 6.2). <see cref="Roles"/> lists every role granted.
+    /// </summary>
+    public IReadOnlyList<string> ActiveStaffRoles { get; init; } = [];
+
+    /// <summary>A staff role was granted and its activation code has not been used yet.</summary>
+    public bool AwaitingActivation { get; init; }
+}
+
+/// <summary>The one-time code an administrator passed on, used in a passkey session (design 6.2).</summary>
+public sealed record RoleActivationRequest
+{
+    public string Code { get; init; } = "";
 }
 
 /// <summary>

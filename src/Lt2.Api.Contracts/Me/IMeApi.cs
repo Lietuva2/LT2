@@ -11,4 +11,7 @@ public interface IMeApi
 
     /// <summary>Completes a pending registration (design 6.2).</summary>
     Task<ApiResult> CompleteRegistrationAsync(CompleteRegistrationRequest request, CancellationToken cancellationToken = default);
+
+    /// <summary>Uses a staff role activation code in the current passkey session (design 6.2).</summary>
+    Task<ApiResult> ActivateRoleAsync(RoleActivationRequest request, CancellationToken cancellationToken = default);
 }

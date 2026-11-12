@@ -22,6 +22,9 @@ internal sealed class SessionTicketStore(
     /// <summary>The claim the cookie handler adds with the session key.</summary>
     public const string SessionIdClaim = "Microsoft.AspNetCore.Authentication.Cookies-SessionId";
 
+    /// <summary>Set at passkey sign-in: the credential id (base64url) of the passkey used, kept on the session row.</summary>
+    public const string PasskeyClaim = "lt2:passkey";
+
     private static readonly TimeSpan LastSeenResolution = TimeSpan.FromMinutes(5);
     private static readonly TimeSpan DefaultLifetime = TimeSpan.FromDays(30);
 
@@ -38,6 +41,9 @@ internal sealed class SessionTicketStore(
         var userId = Guid.Parse(ticket.Principal.FindFirstValue(ClaimTypes.NameIdentifier)
             ?? throw new InvalidOperationException("The ticket has no user id."));
         var now = clock.GetUtcNow();
+        var passkey = ticket.Principal.FindFirstValue(PasskeyClaim) is { Length: > 0 } encoded
+            ? Microsoft.AspNetCore.WebUtilities.WebEncoders.Base64UrlDecode(encoded)
+            : null;
         var session = new Session
         {
             Id = Ids.New(clock),
@@ -48,6 +54,8 @@ internal sealed class SessionTicketStore(
             ExpiresAt = ticket.Properties.ExpiresUtc ?? now + DefaultLifetime,
             Method = ticket.Principal.FindFirstValue(AuthenticationMethods.ClaimType) ?? "",
             Device = DeviceDescription.FromUserAgent(httpContext?.Request.Headers.UserAgent.ToString()),
+            PasskeyId = passkey,
+            PasskeyConfirmedAt = passkey is null ? null : now,
         };
 
         await using var scope = scopes.CreateAsyncScope();

@@ -21,11 +21,13 @@ internal static class AddPasskeyEndpoint
     private static async Task<IResult> HandleAsync(
         PasskeyCredentialRequest request,
         ClaimsPrincipal user,
+        HttpContext context,
+        IpHasher ipHasher,
         IIdentityModule identity,
         ErrorMapper errors,
         CancellationToken cancellationToken)
     {
-        var result = await identity.AddPasskeyAsync(user, request.Credential, request.Name, cancellationToken);
+        var result = await identity.AddPasskeyAsync(user, request.Credential, request.Name, ipHasher.Hash(context), cancellationToken);
         return result.IsSuccess ? TypedResults.NoContent() : errors.ToResult(result.Error!);
     }
 }

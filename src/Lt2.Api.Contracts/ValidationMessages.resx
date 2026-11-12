@@ -14,5 +14,7 @@
   <data name="Code.Format" xml:space="preserve"><value>Kodą sudaro šeši skaitmenys.</value></data>
   <data name="Passkey.Required" xml:space="preserve"><value>Nepavyko gauti prieigos rakto duomenų.</value></data>
   <data name="Passkey.NameTooLong" xml:space="preserve"><value>Pavadinimas per ilgas.</value></data>
+  <data name="Activation.Required" xml:space="preserve"><value>Įveskite aktyvinimo kodą.</value></data>
+  <data name="Role.Required" xml:space="preserve"><value>Nurodykite vaidmenį.</value></data>
   <data name="Setting.ValueRequired" xml:space="preserve"><value>Nurodykite reikšmę.</value></data>
 </root>

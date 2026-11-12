@@ -246,6 +246,40 @@ public sealed class SignInComponentTests : BunitContext
     }
 
     [Fact]
+    public void The_hello_page_has_a_place_for_the_activation_code_only_while_a_role_waits_for_it()
+    {
+        _me.Account = FakeMeApi.Member;
+        Render<Hello>().FindAll("#activation-code").ShouldBeEmpty();
+
+        _me.Account = FakeMeApi.Member with { Roles = ["administrator", "member"], AwaitingActivation = true };
+        var page = Render<Hello>();
+        page.Find("#activation-title").TextContent.ShouldBe(Text("Activation.Title"));
+        page.Find("#activation-code").Input(" 7kq2-m9xd-4trb-hc0p ");
+        page.Find("section[aria-labelledby=activation-title] form").Submit();
+
+        page.WaitForAssertion(() => _me.Activations.ShouldHaveSingleItem().Code.ShouldBe("7kq2-m9xd-4trb-hc0p"));
+    }
+
+    [Fact]
+    public void A_refused_activation_code_shows_the_servers_explanation()
+    {
+        const string invalid = "Aktyvinimo kodas netinka arba nebegalioja.";
+        _me.Account = FakeMeApi.Member with { AwaitingActivation = true };
+        _me.Activate = _ => Task.FromResult(ApiResult.Fail(new ApiProblem
+        {
+            Status = 400,
+            Code = "role-activation.invalid",
+            Errors = new Dictionary<string, string[]> { ["code"] = [invalid] },
+        }));
+        var page = Render<Hello>();
+
+        page.Find("#activation-code").Input("AAAA-BBBB-CCCC-DDDD");
+        page.Find("section[aria-labelledby=activation-title] form").Submit();
+
+        page.WaitForElement(".note[role=alert]").TextContent.ShouldBe(invalid);
+    }
+
+    [Fact]
     public void The_note_component_renders_nothing_without_text()
     {
         Render<Messages>().Markup.Trim().ShouldBeEmpty();
@@ -320,6 +354,16 @@ public sealed class SignInComponentTests : BunitContext
         {
             Completions.Add(request);
             return Complete(request);
+        }
+
+        public List<RoleActivationRequest> Activations { get; } = [];
+
+        public Func<RoleActivationRequest, Task<ApiResult>> Activate { get; set; } = _ => Task.FromResult(ApiResult.Ok());
+
+        public Task<ApiResult> ActivateRoleAsync(RoleActivationRequest request, CancellationToken cancellationToken = default)
+        {
+            Activations.Add(request);
+            return Activate(request);
         }
 
         public Task<ApiResult<IReadOnlyList<SessionResponse>>> GetSessionsAsync(CancellationToken cancellationToken = default) =>

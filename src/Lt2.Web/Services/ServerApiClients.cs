@@ -3,6 +3,7 @@ using Lt2.Api.Contracts.Auth;
 using Lt2.Api.Contracts.Me;
 using Lt2.Identity;
 using Lt2.SharedKernel;
+using Lt2.Web.Security;
 
 namespace Lt2.Web.Services;
 
@@ -10,7 +11,7 @@ namespace Lt2.Web.Services;
 /// The server-side implementation of the typed clients (design 3.1): when a component is rendered on the server it calls
 /// the same module operations the HTTP endpoints call, in-process.
 /// </summary>
-internal sealed class ServerAuthApi(IIdentityModule identity, IHttpContextAccessor accessor, ErrorMapper errors) : IAuthApi
+internal sealed class ServerAuthApi(IIdentityModule identity, IHttpContextAccessor accessor, IpHasher ipHasher, ErrorMapper errors) : IAuthApi
 {
     public async Task<ApiResult> RegisterAsync(RegisterRequest request, CancellationToken cancellationToken = default) =>
         errors.ToApiResult(await identity.RegisterAsync(Mapping.ToRegistration(request), cancellationToken));
@@ -31,7 +32,8 @@ internal sealed class ServerAuthApi(IIdentityModule identity, IHttpContextAccess
         errors.ToApiResult(await identity.GetPasskeyCreationOptionsAsync(User, cancellationToken), x => x);
 
     public async Task<ApiResult> AddPasskeyAsync(PasskeyCredentialRequest request, CancellationToken cancellationToken = default) =>
-        errors.ToApiResult(await identity.AddPasskeyAsync(User, request.Credential, request.Name, cancellationToken));
+        errors.ToApiResult(await identity.AddPasskeyAsync(
+            User, request.Credential, request.Name, accessor.HttpContext is { } context ? ipHasher.Hash(context) : null, cancellationToken));
 
     public async Task<ApiResult<string>> GetPasskeyRequestOptionsAsync(CancellationToken cancellationToken = default) =>
         errors.ToApiResult(await identity.GetPasskeyRequestOptionsAsync(cancellationToken), x => x);
@@ -43,7 +45,7 @@ internal sealed class ServerAuthApi(IIdentityModule identity, IHttpContextAccess
         accessor.HttpContext?.User ?? new System.Security.Claims.ClaimsPrincipal();
 }
 
-internal sealed class ServerMeApi(IIdentityModule identity, IHttpContextAccessor accessor, ErrorMapper errors) : IMeApi
+internal sealed class ServerMeApi(IIdentityModule identity, IHttpContextAccessor accessor, IpHasher ipHasher, ErrorMapper errors) : IMeApi
 {
     public async Task<ApiResult<MeResponse>> GetAsync(CancellationToken cancellationToken = default) =>
         errors.ToApiResult(await identity.GetAccountAsync(User, cancellationToken), Mapping.ToResponse);
@@ -59,6 +61,11 @@ internal sealed class ServerMeApi(IIdentityModule identity, IHttpContextAccessor
 
     public async Task<ApiResult> CompleteRegistrationAsync(CompleteRegistrationRequest request, CancellationToken cancellationToken = default) =>
         errors.ToApiResult(await identity.CompleteRegistrationAsync(User, Mapping.ToCompletion(request), cancellationToken));
+
+    public async Task<ApiResult> ActivateRoleAsync(RoleActivationRequest request, CancellationToken cancellationToken = default) =>
+        errors.ToApiResult(await identity.ActivateRoleAsync(User, request.Code, IpHash, cancellationToken));
+
+    private string? IpHash => accessor.HttpContext is { } context ? ipHasher.Hash(context) : null;
 
     private System.Security.Claims.ClaimsPrincipal User =>
         accessor.HttpContext?.User ?? new System.Security.Claims.ClaimsPrincipal();
@@ -83,6 +90,8 @@ internal static class Mapping
         PasskeyCount = account.PasskeyCount,
         CreatedAt = account.CreatedAt,
         RegistrationComplete = account.RegistrationComplete,
+        ActiveStaffRoles = account.ActiveStaffRoles,
+        AwaitingActivation = account.AwaitingActivation,
     };
 
     public static SessionResponse ToResponse(SessionSummary session) => new()

@@ -1,4 +1,5 @@
 using System.Security.Claims;
+using Lt2.Identity.Application.Staff;
 using Lt2.Identity.Domain;
 using Lt2.Identity.Infrastructure;
 using Lt2.SharedKernel;
@@ -8,7 +9,7 @@ using Microsoft.EntityFrameworkCore;
 namespace Lt2.Identity.Application.Account;
 
 /// <summary>The signed-in person's account and sessions.</summary>
-internal sealed class AccountHandlers(IdentityDb db, UserManager<User> users, TimeProvider clock)
+internal sealed class AccountHandlers(IdentityDb db, UserManager<User> users, StaffAccess staff, TimeProvider clock)
 {
     public async Task<Result<AccountSummary>> GetAsync(ClaimsPrincipal principal, CancellationToken cancellationToken)
     {
@@ -21,6 +22,11 @@ internal sealed class AccountHandlers(IdentityDb db, UserManager<User> users, Ti
         var profile = await db.Profiles.AsNoTracking().FirstAsync(p => p.UserId == user.Id, cancellationToken);
         var roles = await users.GetRolesAsync(user);
         var passkeys = await users.GetPasskeysAsync(user);
+        var session = (await staff.ForAsync(principal, cancellationToken))?.ToSession() ?? StaffSession.None;
+        var now = clock.GetUtcNow();
+        var awaitingActivation = await db.RoleActivations.AnyAsync(
+            a => a.UserId == user.Id && a.UsedAt == null && a.ExpiresAt > now,
+            cancellationToken);
         return new AccountSummary(
             user.Id,
             user.Email!,
@@ -29,7 +35,9 @@ internal sealed class AccountHandlers(IdentityDb db, UserManager<User> users, Ti
             roles.Order(StringComparer.Ordinal).ToList(),
             passkeys.Count,
             profile.CreatedAt,
-            !profile.IsPending);
+            !profile.IsPending,
+            session.ActiveRoles,
+            awaitingActivation);
     }
 
     public async Task<IReadOnlyList<SessionSummary>> SessionsAsync(ClaimsPrincipal principal, CancellationToken cancellationToken)

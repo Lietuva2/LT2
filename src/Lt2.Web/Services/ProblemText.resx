@@ -20,6 +20,12 @@
   <data name="adult.required" xml:space="preserve"><value>Registruotis gali tik 18 metų ir vyresni asmenys.</value></data>
   <data name="invitation.used-up" xml:space="preserve"><value>Šio kvietimo kodo vietos jau užimtos. Įveskite kitą kvietimo kodą.</value></data>
   <data name="registration.complete" xml:space="preserve"><value>Registracija jau baigta.</value></data>
+  <data name="role-activation.invalid" xml:space="preserve"><value>Aktyvinimo kodas netinka arba nebegalioja.</value></data>
+  <data name="role-activation.passkey-required" xml:space="preserve"><value>Aktyvinimo kodą galima įvesti tik prisijungus prieigos raktu.</value></data>
+  <data name="passkey.staff-required" xml:space="preserve"><value>Šiam veiksmui reikia prisijungti darbuotojo prieigos raktu.</value></data>
+  <data name="passkey.confirmation-required" xml:space="preserve"><value>Patvirtinkite veiksmą prieigos raktu.</value></data>
+  <data name="role.unknown" xml:space="preserve"><value>Tokio vaidmens nėra.</value></data>
+  <data name="account.not-found" xml:space="preserve"><value>Tokios baigtos registruoti paskyros nėra.</value></data>
   <data name="auth.code-invalid" xml:space="preserve"><value>Kodas netinka arba nebegalioja. Paprašykite naujo.</value></data>
   <data name="auth.required" xml:space="preserve"><value>Reikia prisijungti.</value></data>
   <data name="passkey.invalid" xml:space="preserve"><value>Prieigos rakto patikrinti nepavyko.</value></data>

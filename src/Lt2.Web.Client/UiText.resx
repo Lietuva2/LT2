@@ -38,6 +38,11 @@
   <data name="Code.Submit" xml:space="preserve"><value>Prisijungti</value></data>
   <data name="Code.Resend" xml:space="preserve"><value>Siųsti kodą iš naujo</value></data>
   <data name="Code.ChangeEmail" xml:space="preserve"><value>Keisti el. pašto adresą</value></data>
+  <data name="Activation.Title" xml:space="preserve"><value>Darbuotojo vaidmens aktyvinimas</value></data>
+  <data name="Activation.Text" xml:space="preserve"><value>Jums suteiktas darbuotojo vaidmuo. Jis pradės veikti, kai prisijungę prieigos raktu įvesite aktyvinimo kodą, kurį jums asmeniškai perdavė administratorius. Tas prieigos raktas taps darbuotojo raktu, o kiti paskyros prieigos raktai bus pašalinti.</value></data>
+  <data name="Activation.Label" xml:space="preserve"><value>Aktyvinimo kodas</value></data>
+  <data name="Activation.Submit" xml:space="preserve"><value>Aktyvinti</value></data>
+  <data name="Activation.Done" xml:space="preserve"><value>Vaidmuo aktyvintas. Jis veikia, kai prisijungiate šiuo prieigos raktu.</value></data>
   <data name="Code.NewestOnly" xml:space="preserve"><value>Jei gavote kelis laiškus, tinka tik naujausias kodas.</value></data>
   <data name="Complete.Label" xml:space="preserve"><value>Po pirmo kodo</value></data>
   <data name="Complete.Title" xml:space="preserve"><value>Dar du dalykai</value></data>

@@ -13,3 +13,13 @@ public sealed class CompleteRegistrationRequestValidator : AbstractValidator<Com
         RuleFor(x => x.InvitationCode).MaximumLength(AuthRules.InvitationCodeMaxLength).WithMessage(l["Invitation.TooLong"]);
     }
 }
+
+public sealed class RoleActivationRequestValidator : AbstractValidator<RoleActivationRequest>
+{
+    public RoleActivationRequestValidator(IStringLocalizer<ValidationMessages> l)
+    {
+        RuleFor(x => x.Code).Cascade(CascadeMode.Stop)
+            .NotEmpty().WithMessage(l["Activation.Required"])
+            .MaximumLength(40).WithMessage(l["Activation.Required"]);
+    }
+}

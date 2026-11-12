@@ -36,6 +36,43 @@ public sealed class NotificationTests
     }
 
     [Fact]
+    public void The_sign_in_code_email_says_only_the_newest_code_works() =>
+        Template().Render(new SignInCodeEmail("ruta@pavyzdys.test", "000000", 10)).TextBody
+            .ShouldContain("tinka tik naujausias kodas");
+
+    private static AccountNoticeTemplate NoticeTemplate()
+    {
+        var factory = new ResourceManagerStringLocalizerFactory(Options.Create(new LocalizationOptions()), NullLoggerFactory.Instance);
+        return new AccountNoticeTemplate(new StringLocalizer<EmailTemplates>(factory));
+    }
+
+    [Theory]
+    [InlineData(AccountNotices.PasskeyAdded, null, "pridėtas naujas prieigos raktas")]
+    [InlineData(AccountNotices.RoleGranted, "moderator", "suteiktas moderatoriaus vaidmuo")]
+    [InlineData(AccountNotices.RoleActivated, "administrator", "administratoriaus vaidmuo aktyvintas")]
+    [InlineData(AccountNotices.AccountReset, null, "iš naujo nustatė jūsų paskyrą")]
+    public void Every_account_change_has_a_lithuanian_notice_that_says_what_to_do_if_it_was_not_you(string notice, string? role, string expected)
+    {
+        var email = NoticeTemplate().Render(new AccountNoticeEmail("ruta.mockute@pavyzdys.test", notice, role));
+
+        email.To.ShouldBe("ruta.mockute@pavyzdys.test");
+        email.Subject.ShouldStartWith("Lietuva 2.0: ");
+        email.TextBody.ShouldContain(expected);
+        email.TextBody.ShouldContain("Jei to nedarėte jūs");
+        email.HtmlBody.ShouldNotBeNull().ShouldContain("lang=\"lt\"");
+    }
+
+    [Fact]
+    public void The_role_notice_says_the_activation_code_is_never_emailed() =>
+        NoticeTemplate().Render(new AccountNoticeEmail("ruta@pavyzdys.test", AccountNotices.RoleGranted, "administrator")).TextBody
+            .ShouldContain("Šio kodo el. paštu nesiunčiame");
+
+    [Fact]
+    public void The_activation_notice_counts_the_passkeys_removed() =>
+        NoticeTemplate().Render(new AccountNoticeEmail("ruta@pavyzdys.test", AccountNotices.RoleActivated, "administrator", PasskeysRemoved: 2)).TextBody
+            .ShouldContain("Pašalinta prieigos raktų: 2.");
+
+    [Fact]
     public void Failed_messages_are_retried_with_growing_delays_up_to_an_hour()
     {
         OutboxDispatcher.Backoff(1).ShouldBe(TimeSpan.FromSeconds(10));

@@ -1,26 +1,51 @@
 using System.Security.Claims;
+using Lt2.Identity.Application.Staff;
 using Lt2.Identity.Domain;
 using Lt2.Identity.Infrastructure;
 using Lt2.SharedKernel;
 using Microsoft.AspNetCore.Authentication;
+using Microsoft.AspNetCore.WebUtilities;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Storage;
 using Microsoft.Extensions.Logging;
 
 namespace Lt2.Identity.Application.Passkeys;
 
 /// <summary>
-/// Passkey registration (for a signed-in person) and passkey sign-in, on ASP.NET Core Identity's WebAuthn support.
+/// Passkey registration (for a signed-in member) and passkey sign-in, on ASP.NET Core Identity's WebAuthn support.
 /// The challenge state lives in a short-lived encrypted cookie set by <see cref="SignInManager{TUser}"/>.
+/// On an account with an active staff role, adding a passkey needs a staff-passkey session with a fresh confirmation
+/// (design 6.2); every account is told by email when a passkey is added.
 /// </summary>
 internal sealed class PasskeyHandlers(
     IdentityDb db,
     UserManager<User> users,
     SignInManager<User> signIn,
+    StaffAccess access,
+    AccountEvents events,
     ILogger<PasskeyHandlers> logger)
 {
     internal static readonly Error InvalidPasskey = Error.Validation("passkey.invalid", "credential");
+    internal static readonly Error ConfirmationRequired = Error.Forbidden("passkey.confirmation-required");
     private const string DefaultName = "Prieigos raktas";
+
+    /// <summary>The staff rule for passkey changes: nothing extra unless the account has an active staff role.</summary>
+    private async Task<Error?> CheckStaffRuleAsync(ClaimsPrincipal principal, CancellationToken cancellationToken)
+    {
+        var state = await access.ForAsync(principal, cancellationToken);
+        if (state is null || !state.AccountHasActiveStaffRole)
+        {
+            return null;
+        }
+
+        if (!state.StaffPasskeySession)
+        {
+            return StaffHandlers.StaffPasskeyRequired;
+        }
+
+        return state.RecentlyConfirmed ? null : ConfirmationRequired;
+    }
 
     public async Task<Result<string>> CreationOptionsAsync(ClaimsPrincipal principal, CancellationToken cancellationToken)
     {
@@ -28,6 +53,11 @@ internal sealed class PasskeyHandlers(
         if (user is null)
         {
             return Error.Unauthorized("auth.required");
+        }
+
+        if (await CheckStaffRuleAsync(principal, cancellationToken) is { } refused)
+        {
+            return refused;
         }
 
         var displayName = await db.Profiles.AsNoTracking()
@@ -43,12 +73,17 @@ internal sealed class PasskeyHandlers(
         return await signIn.MakePasskeyCreationOptionsAsync(entity);
     }
 
-    public async Task<Result<Unit>> AddAsync(ClaimsPrincipal principal, string credentialJson, string? name, CancellationToken cancellationToken)
+    public async Task<Result<Unit>> AddAsync(ClaimsPrincipal principal, string credentialJson, string? name, string? ipHash, CancellationToken cancellationToken)
     {
         var user = await users.GetUserAsync(principal);
         if (user is null)
         {
             return Error.Unauthorized("auth.required");
+        }
+
+        if (await CheckStaffRuleAsync(principal, cancellationToken) is { } refused)
+        {
+            return refused;
         }
 
         PasskeyAttestationResult attestation;
@@ -69,8 +104,23 @@ internal sealed class PasskeyHandlers(
         }
 
         attestation.Passkey.Name = string.IsNullOrWhiteSpace(name) ? DefaultName : name.Trim();
+        await using var transaction = await db.Database.BeginTransactionAsync(cancellationToken);
         var saved = await users.AddOrUpdatePasskeyAsync(user, attestation.Passkey);
-        return saved.Succeeded ? Result.Ok() : InvalidPasskey;
+        if (!saved.Succeeded)
+        {
+            return InvalidPasskey;
+        }
+
+        await events.RecordAsync(
+            transaction.GetDbTransaction(),
+            "passkey.added",
+            user.Id,
+            new Actor(user.Id, Roles.Member, ipHash),
+            new { credential = WebEncoders.Base64UrlEncode(attestation.Passkey.CredentialId)[..12] },
+            new AccountNoticeEmail(user.Email!, AccountNotices.PasskeyAdded),
+            cancellationToken);
+        await transaction.CommitAsync(cancellationToken);
+        return Result.Ok();
     }
 
     public async Task<Result<string>> RequestOptionsAsync() => await signIn.MakePasskeyRequestOptionsAsync(user: null);
@@ -104,7 +154,10 @@ internal sealed class PasskeyHandlers(
         await signIn.SignInWithClaimsAsync(
             assertion.User,
             new AuthenticationProperties { IsPersistent = true },
-            [new Claim(AuthenticationMethods.ClaimType, AuthenticationMethods.Passkey)]);
+            [
+                new Claim(AuthenticationMethods.ClaimType, AuthenticationMethods.Passkey),
+                new Claim(SessionTicketStore.PasskeyClaim, WebEncoders.Base64UrlEncode(assertion.Passkey.CredentialId)),
+            ]);
         return Result.Ok();
     }
 }

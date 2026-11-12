@@ -4,6 +4,7 @@ using Lt2.Identity.Application.Account;
 using Lt2.Identity.Application.Passkeys;
 using Lt2.Identity.Application.Register;
 using Lt2.Identity.Application.SignIn;
+using Lt2.Identity.Application.Staff;
 using Lt2.Identity.Domain;
 using Lt2.Identity.Infrastructure;
 using Lt2.SharedKernel;
@@ -100,9 +101,26 @@ public static class IdentityModule
         services.AddScoped<CodeSignInHandler>();
         services.AddScoped<PasskeyHandlers>();
         services.AddScoped<AccountHandlers>();
+        services.AddScoped<StaffAccess>();
+        services.AddScoped<AccountEvents>();
+        services.AddScoped<StaffHandlers>();
+        services.AddScoped<IIdentityAdministration, RoleAdministration>();
         services.AddScoped<IIdentityModule, IdentityModuleFacade>();
         services.AddScoped<IIdentityMaintenance, MaintenanceHandler>();
         services.AddSingleton<IModuleDatabase, IdentityModuleDatabase>();
+        return services;
+    }
+
+    /// <summary>
+    /// Registers only role administration and its database, for the migrator (the first administrator, design 6.2).
+    /// The host provides <see cref="IOutbox"/> and <see cref="IAuditLog"/>.
+    /// </summary>
+    public static IServiceCollection AddIdentityAdministration(this IServiceCollection services)
+    {
+        services.AddDbContext<IdentityDb>((sp, options) =>
+            IdentityDb.Configure(options, sp.GetRequiredService<NpgsqlDataSource>()));
+        services.AddScoped<AccountEvents>();
+        services.AddScoped<IIdentityAdministration, RoleAdministration>();
         return services;
     }
 
@@ -145,6 +163,7 @@ internal sealed class IdentityModuleFacade(
     CodeSignInHandler codeSignIn,
     PasskeyHandlers passkeys,
     AccountHandlers account,
+    StaffHandlers staff,
     SignInManager<User> signIn) : IIdentityModule
 {
     public Task<Result<Unit>> RegisterAsync(Registration registration, CancellationToken cancellationToken) =>
@@ -164,8 +183,17 @@ internal sealed class IdentityModuleFacade(
     public Task<Result<string>> GetPasskeyCreationOptionsAsync(ClaimsPrincipal user, CancellationToken cancellationToken) =>
         passkeys.CreationOptionsAsync(user, cancellationToken);
 
-    public Task<Result<Unit>> AddPasskeyAsync(ClaimsPrincipal user, string credentialJson, string? name, CancellationToken cancellationToken) =>
-        passkeys.AddAsync(user, credentialJson, name, cancellationToken);
+    public Task<Result<Unit>> AddPasskeyAsync(ClaimsPrincipal user, string credentialJson, string? name, string? ipHash, CancellationToken cancellationToken) =>
+        passkeys.AddAsync(user, credentialJson, name, ipHash, cancellationToken);
+
+    public Task<Result<Unit>> ConfirmPasskeyAsync(ClaimsPrincipal user, string credentialJson, CancellationToken cancellationToken) =>
+        staff.ConfirmPasskeyAsync(user, credentialJson, cancellationToken);
+
+    public Task<Result<Unit>> ActivateRoleAsync(ClaimsPrincipal user, string code, string? ipHash, CancellationToken cancellationToken) =>
+        staff.ActivateAsync(user, code, ipHash, cancellationToken);
+
+    public Task<StaffSession> GetStaffSessionAsync(ClaimsPrincipal user, CancellationToken cancellationToken) =>
+        staff.SessionAsync(user, cancellationToken);
 
     public Task<Result<string>> GetPasskeyRequestOptionsAsync(CancellationToken cancellationToken) =>
         passkeys.RequestOptionsAsync();
@@ -206,33 +234,6 @@ public static class IdentityAdministration
             CreatedAt = clock.GetUtcNow(),
         });
         await db.SaveChangesAsync(cancellationToken);
-        return true;
-    }
-
-    /// <summary>Gives the account with this email address a role. Returns false if there is no such account.</summary>
-    public static async Task<bool> GrantRoleAsync(string connectionString, string email, string role, CancellationToken cancellationToken)
-    {
-        if (!Roles.All.Contains(role))
-        {
-            throw new ArgumentException($"Unknown role '{role}'.", nameof(role));
-        }
-
-        var normalized = EmailAddress.Normalize(email) ?? throw new ArgumentException("Not an email address.", nameof(email));
-        await using var db = new IdentityDb(IdentityDb.StandaloneOptions(connectionString));
-        var userId = await db.Profiles.Where(p => p.NormalizedEmail == normalized).Select(p => (Guid?)p.UserId)
-            .FirstOrDefaultAsync(cancellationToken);
-        if (userId is null)
-        {
-            return false;
-        }
-
-        var roleId = SeedRoles.All.Single(r => r.Name == role).Id;
-        if (!await db.UserRoles.AnyAsync(r => r.UserId == userId && r.RoleId == roleId, cancellationToken))
-        {
-            db.UserRoles.Add(new IdentityUserRole<Guid> { UserId = userId.Value, RoleId = roleId });
-            await db.SaveChangesAsync(cancellationToken);
-        }
-
         return true;
     }
 }

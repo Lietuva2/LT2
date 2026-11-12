@@ -23,6 +23,8 @@ public static class ApiRoutes
     {
         public const string Root = Prefix + "/me";
         public const string Registration = Root + "/registration";
+        public const string RoleActivation = Root + "/role-activation";
+        public const string PasskeyConfirmation = Root + "/passkey-confirmation";
         public const string Sessions = Root + "/sessions";
         public const string Session = Root + "/sessions/{id:guid}";
 
@@ -33,6 +35,8 @@ public static class ApiRoutes
     {
         public const string Settings = Prefix + "/admin/settings";
         public const string Setting = Prefix + "/admin/settings/{key}";
+        public const string Roles = Prefix + "/admin/roles";
+        public const string ResetAccount = Prefix + "/admin/accounts/reset";
 
         public static string SettingByKey(string key) => $"{Settings}/{Uri.EscapeDataString(key)}";
     }

@@ -139,6 +139,11 @@ namespace Lt2.Identity.Infrastructure.Migrations
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("registered_at");
 
+                    b.Property<byte[]>("StaffPasskeyId")
+                        .HasMaxLength(1024)
+                        .HasColumnType("bytea")
+                        .HasColumnName("staff_passkey_id");
+
                     b.Property<string>("VerificationLevel")
                         .IsRequired()
                         .HasMaxLength(20)
@@ -217,6 +222,54 @@ namespace Lt2.Identity.Infrastructure.Migrations
                         });
                 });
 
+            modelBuilder.Entity("Lt2.Identity.Domain.RoleActivation", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<byte[]>("CodeHash")
+                        .IsRequired()
+                        .HasMaxLength(32)
+                        .HasColumnType("bytea")
+                        .HasColumnName("code_hash");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("created_at");
+
+                    b.Property<DateTimeOffset>("ExpiresAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("expires_at");
+
+                    b.Property<Guid?>("IssuedByUserId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("issued_by_user_id");
+
+                    b.Property<string>("Role")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)")
+                        .HasColumnName("role");
+
+                    b.Property<DateTimeOffset?>("UsedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("used_at");
+
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("user_id");
+
+                    b.HasKey("Id")
+                        .HasName("pk_role_activation");
+
+                    b.HasIndex("UserId", "Role")
+                        .HasDatabaseName("ix_role_activation_user_id_role");
+
+                    b.ToTable("role_activation", "identity");
+                });
+
             modelBuilder.Entity("Lt2.Identity.Domain.Session", b =>
                 {
                     b.Property<Guid>("Id")
@@ -246,6 +299,15 @@ namespace Lt2.Identity.Infrastructure.Migrations
                         .HasMaxLength(10)
                         .HasColumnType("character varying(10)")
                         .HasColumnName("method");
+
+                    b.Property<DateTimeOffset?>("PasskeyConfirmedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("passkey_confirmed_at");
+
+                    b.Property<byte[]>("PasskeyId")
+                        .HasMaxLength(1024)
+                        .HasColumnType("bytea")
+                        .HasColumnName("passkey_id");
 
                     b.Property<byte[]>("Ticket")
                         .IsRequired()
@@ -593,6 +655,16 @@ namespace Lt2.Identity.Infrastructure.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired()
                         .HasConstraintName("fk_profile_user_user_id");
+                });
+
+            modelBuilder.Entity("Lt2.Identity.Domain.RoleActivation", b =>
+                {
+                    b.HasOne("Lt2.Identity.Domain.User", null)
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
+                        .HasConstraintName("fk_role_activation_user_user_id");
                 });
 
             modelBuilder.Entity("Lt2.Identity.Domain.Session", b =>

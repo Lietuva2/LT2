@@ -30,11 +30,15 @@ internal static class ApiEndpoints
 
         GetMeEndpoint.Map(api);
         CompleteRegistrationEndpoint.Map(api);
+        ActivateRoleEndpoint.Map(api);
+        ConfirmPasskeyEndpoint.Map(api);
         GetSessionsEndpoint.Map(api);
         EndSessionEndpoint.Map(api);
 
         GetSettingsEndpoint.Map(api);
         UpdateSettingEndpoint.Map(api);
+        GrantRoleEndpoint.Map(api);
+        ResetAccountEndpoint.Map(api);
     }
 
     /// <summary>A route from <see cref="ApiRoutes"/> relative to the <c>/api/v1</c> group.</summary>

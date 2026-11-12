@@ -28,6 +28,23 @@ else
         </p>
     </section>
 
+    @if (Me.AwaitingActivation)
+    {
+        @* A granted staff role waits for the one-time code the administrator passed on (design 6.2). *@
+        <section class="sheet sheet--cut stack" aria-labelledby="activation-title">
+            <h2 id="activation-title">@T["Activation.Title"]</h2>
+            <p>@T["Activation.Text"]</p>
+            <form class="stack" @onsubmit="ActivateAsync" novalidate>
+                <div class="field">
+                    <label for="activation-code">@T["Activation.Label"]</label>
+                    <input class="input num" id="activation-code" autocomplete="off" autocapitalize="characters" spellcheck="false"
+                           @bind="_activationCode" @bind:event="oninput" disabled="@Locked" />
+                </div>
+                <button class="btn" type="submit" disabled="@Locked">@T["Activation.Submit"]</button>
+            </form>
+        </section>
+    }
+
     <div class="pair">
         <section class="sheet sheet--cut stack" aria-labelledby="passkeys-title">
             <h2 id="passkeys-title">@T["Passkeys.Title"]</h2>
@@ -76,6 +93,7 @@ else
     private bool _busy;
     private string? _message;
     private string? _info;
+    private string _activationCode = "";
 
     /// <summary>
     /// Controls stay disabled until WebAssembly has taken over the server-rendered page: the prerendered form cannot
@@ -151,6 +169,29 @@ else
             }
 
             _info = T["Passkeys.Added"];
+            var me = await MeApi.GetAsync();
+            if (me.IsSuccess)
+            {
+                Me = me.Value;
+            }
+        });
+    }
+
+    private async Task ActivateAsync()
+    {
+        await RunAsync(async () =>
+        {
+            var result = await MeApi.ActivateRoleAsync(new RoleActivationRequest { Code = _activationCode.Trim() });
+            if (!result.IsSuccess)
+            {
+                _message = result.Problem!.Errors?.Values.FirstOrDefault()?.FirstOrDefault()
+                    ?? result.Problem.Detail
+                    ?? T["Error.Generic"];
+                return;
+            }
+
+            _activationCode = "";
+            _info = T["Activation.Done"];
             var me = await MeApi.GetAsync();
             if (me.IsSuccess)
             {

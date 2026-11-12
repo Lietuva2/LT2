@@ -3,7 +3,7 @@ using Microsoft.Extensions.Localization;
 
 namespace Lt2.Api.Contracts.Auth;
 
-internal static class AuthRules
+public static class AuthRules
 {
     public const int EmailMaxLength = 254;
     public const int InvitationCodeMaxLength = 64;

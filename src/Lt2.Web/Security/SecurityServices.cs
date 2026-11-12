@@ -15,10 +15,10 @@ internal static class Policies
 {
     public const string Member = "member";
 
-    /// <summary>Moderator or administrator, signed in with a passkey as the second factor (design 6.2).</summary>
+    /// <summary>An active moderator or administrator role: a session signed in with the staff passkey (design 6.2).</summary>
     public const string Moderator = "moderator";
 
-    /// <summary>Administrator, signed in with a passkey as the second factor (design 6.2).</summary>
+    /// <summary>An active administrator role: a session signed in with the staff passkey (design 6.2).</summary>
     public const string Administrator = "administrator";
 }
 
@@ -73,14 +73,13 @@ internal static class SecurityServices
             options.Preload = true;
         });
 
+        services.AddScoped<IAuthorizationHandler, StaffRoleHandler>();
         services.AddAuthorizationBuilder()
             .AddPolicy(Policies.Member, p => p.RequireAuthenticatedUser().RequireRole(Roles.Member))
             .AddPolicy(Policies.Moderator, p => p.RequireAuthenticatedUser()
-                .RequireRole(Roles.Moderator, Roles.Administrator)
-                .RequireClaim(AuthenticationMethods.ClaimType, AuthenticationMethods.Passkey))
+                .AddRequirements(new StaffRoleRequirement(Roles.Moderator, Roles.Administrator)))
             .AddPolicy(Policies.Administrator, p => p.RequireAuthenticatedUser()
-                .RequireRole(Roles.Administrator)
-                .RequireClaim(AuthenticationMethods.ClaimType, AuthenticationMethods.Passkey));
+                .AddRequirements(new StaffRoleRequirement(Roles.Administrator)));
 
         services.Configure<RateLimitOptions>(configuration.GetSection(RateLimitOptions.Section));
         services.AddRateLimiter(options =>

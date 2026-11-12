@@ -51,12 +51,19 @@ docker compose -f deploy/compose.yaml up --build
 Register with any address and the invitation code, open the sign-in email in Mailpit, enter the six-digit code, and the
 "Sveiki" page appears. From there you can add a passkey and see or end your sessions.
 
-To give an account the administrator role (needed for `GET/PUT /api/v1/admin/settings`; administrators must sign in
-with a passkey; sign in again afterwards so the new role is in the session):
+To give a registered account the administrator role (needed for `/api/v1/admin/…`). A staff role works only in a session
+signed in with the account's staff passkey (design 6.2), so the command prints a one-time activation code on the console
+(valid 24 hours, never logged or emailed):
 
 ```bash
 docker compose -f deploy/compose.yaml run --rm migrator --grant-role administrator ruta.mockute@pavyzdys.test
 ```
+
+The person then adds a passkey on the "Sveiki" page, signs in with it, and enters the activation code there: that
+passkey becomes the staff passkey and any other passkey on the account is removed. Use `run --rm` so the container, and
+the console output it keeps, is removed afterwards. Later grants and resets go through `POST /api/v1/admin/roles` and
+`POST /api/v1/admin/accounts/reset`, which need a passkey confirmation from the last ten minutes
+(`POST /api/v1/me/passkey-confirmation`).
 
 Stop with `docker compose -f deploy/compose.yaml down` (add `-v` to delete the database).
 

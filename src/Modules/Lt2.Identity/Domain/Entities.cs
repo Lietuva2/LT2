@@ -44,6 +44,35 @@ internal sealed class Profile
     public DateTimeOffset? RegisteredAt { get; set; }
 
     public bool IsPending => RegisteredAt is null;
+
+    /// <summary>
+    /// The credential id of the account's staff passkey, set when a role activation code is used (design 6.2). A staff
+    /// role works only in a session signed in with this passkey. Cleared by a reset.
+    /// </summary>
+    public byte[]? StaffPasskeyId { get; set; }
+}
+
+/// <summary>
+/// <c>identity.role_activation</c>: a one-time code that activates a granted staff role (design 5.2, 6.2). Only the hash
+/// is stored; the code is shown once to whoever granted the role.
+/// </summary>
+internal sealed class RoleActivation
+{
+    public Guid Id { get; set; }
+
+    public Guid UserId { get; set; }
+
+    public string Role { get; set; } = "";
+
+    public byte[] CodeHash { get; set; } = [];
+
+    public Guid? IssuedByUserId { get; set; }
+
+    public DateTimeOffset CreatedAt { get; set; }
+
+    public DateTimeOffset ExpiresAt { get; set; }
+
+    public DateTimeOffset? UsedAt { get; set; }
 }
 
 /// <summary><c>identity.invitation</c>: registration during the closed trial is by invitation (design 5.2).</summary>
@@ -130,4 +159,10 @@ internal sealed class Session
 
     /// <summary>Coarse browser and system description, never the full user agent.</summary>
     public string? Device { get; set; }
+
+    /// <summary>For a passkey session: the credential id of the passkey it was signed in with.</summary>
+    public byte[]? PasskeyId { get; set; }
+
+    /// <summary>When the session's passkey was last used (sign-in or confirmation), for the ten-minute rule.</summary>
+    public DateTimeOffset? PasskeyConfirmedAt { get; set; }
 }

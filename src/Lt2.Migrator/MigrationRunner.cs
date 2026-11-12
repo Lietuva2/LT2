@@ -20,7 +20,8 @@ namespace Lt2.Migrator;
 /// <c>lt2_migrator</c>;</item>
 /// <item>as <c>lt2_migrator</c> (<c>ConnectionStrings:Lt2</c>): create the schemas, apply every module's migrations,
 /// grant access;</item>
-/// <item>optional commands: <c>--seed-invitation CODE[:USES]</c>, <c>--grant-role ROLE EMAIL</c>.</item>
+/// <item>optional commands: <c>--seed-invitation CODE[:USES]</c>, <c>--grant-role ROLE EMAIL</c> (prints the one-time
+/// activation code on the console, never to a log sink).</item>
 /// </list>
 /// </summary>
 public static class MigrationRunner
@@ -81,13 +82,45 @@ public static class MigrationRunner
                 case "--grant-role" when i + 2 < args.Count:
                     var role = args[++i];
                     var email = args[++i];
-                    var granted = await IdentityAdministration.GrantRoleAsync(connectionString, email, role, cancellationToken);
-                    Log.Information(granted ? "Role {Role} granted" : "No account for that address; role {Role} not granted", role);
+                    var grant = await GrantRoleAsync(connectionString, email, role, cancellationToken);
+                    if (grant.IsSuccess)
+                    {
+                        // The activation code goes to the console once, never to a log sink or an email (design 6.2).
+                        Log.Information("Role {Role} granted; the activation code follows on the console only", role);
+                        await Console.Out.WriteLineAsync(string.Create(
+                            CultureInfo.InvariantCulture,
+                            $"Activation code for the {role} role (valid until {grant.Value.ExpiresAt:yyyy-MM-dd HH:mm} UTC, shown once): {grant.Value.ActivationCode}"));
+                        await Console.Out.FlushAsync(cancellationToken);
+                    }
+                    else
+                    {
+                        Log.Warning("Role {Role} not granted: {Reason}", role, grant.Error!.Code);
+                    }
+
                     break;
                 default:
                     throw new ArgumentException($"Unknown or incomplete argument '{args[i]}'.", nameof(args));
             }
         }
+    }
+
+    /// <summary>
+    /// Grants a staff role from the server, for the first administrator or a lost last one (design 6.2): the grant and
+    /// its notice email are written like any other, and the one-time activation code is returned to the caller.
+    /// </summary>
+    public static async Task<Result<RoleGrant>> GrantRoleAsync(string connectionString, string email, string role, CancellationToken cancellationToken)
+    {
+        var services = new ServiceCollection();
+        services.AddLogging();
+        services.AddSingleton(TimeProvider.System);
+        services.AddSingleton(_ => NpgsqlDataSource.Create(connectionString));
+        services.AddNotificationsModule(new ConfigurationBuilder().Build());
+        services.AddAuditModule();
+        services.AddIdentityAdministration();
+        await using var provider = services.BuildServiceProvider();
+        await using var scope = provider.CreateAsyncScope();
+        return await scope.ServiceProvider.GetRequiredService<IIdentityAdministration>()
+            .GrantRoleAsync(email, role, Actor.Server, cancellationToken);
     }
 
     /// <summary>Every module's database, in migration order.</summary>
