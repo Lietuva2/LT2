@@ -3,17 +3,11 @@ using Lt2.Parliament.Import.Parsing;
 namespace Lt2.Parliament.Statistics;
 
 /// <summary>
-/// The owner's open questions about the statistics (M1 report, 2026-11-12), each kept here so it can be flipped in one
-/// place. The values are what was built, not a decision; the methodology page states whichever value is set.
+/// The owner's open question about the statistics (M1 report, 2026-11-12), kept here so it can be flipped in one place.
+/// The value is what was built, not a decision; the methodology page states whichever value is set.
 /// </summary>
 internal static class OpenChoices
 {
-    /// <summary>
-    /// Question 1. False (as built): a vote the MP did not take part in lowers participation only. True: it also counts
-    /// as "not with the faction" when the faction had a position (and as a free vote when it voted freely).
-    /// </summary>
-    public static bool AbsenceCountsInVotedWithFaction => false;
-
     /// <summary>
     /// Question 2. Per-MP faction labels that are not factions, so get no faction position (for example the mixed group,
     /// "MG"). Empty (as built): every label is treated as a faction.
@@ -112,31 +106,27 @@ internal sealed record MpStatistics(int VotesHeld, int VotesTakenPart, int Votes
     public decimal? WithFaction => VotesWithFactionPosition == 0 ? null : (decimal)VotedWithFaction / VotesWithFactionPosition;
 }
 
-/// <summary>Design 7.3: the two statistics of an MP profile. No ranking, no score: counts and two shares.</summary>
+/// <summary>
+/// Design 7.3: the two statistics of an MP profile. No ranking, no score: counts and two shares. "Balsavo kaip
+/// frakcija" counts only votes the MP took part in: an absence already lowers participation, and is not marked twice
+/// [decided 2026-11-12].
+/// </summary>
 internal static class MpStatisticsRule
 {
     /// <param name="votesHeldDuringMandate">One fact per recorded vote held during the MP's mandate.</param>
-    public static MpStatistics Compute(IEnumerable<MpVoteFact> votesHeldDuringMandate) =>
-        Compute(votesHeldDuringMandate, OpenChoices.AbsenceCountsInVotedWithFaction);
-
-    /// <param name="absenceCounts">See <see cref="OpenChoices.AbsenceCountsInVotedWithFaction"/>.</param>
-    public static MpStatistics Compute(IEnumerable<MpVoteFact> votesHeldDuringMandate, bool absenceCounts)
+    public static MpStatistics Compute(IEnumerable<MpVoteFact> votesHeldDuringMandate)
     {
         ArgumentNullException.ThrowIfNull(votesHeldDuringMandate);
         int held = 0, tookPart = 0, withPosition = 0, withFaction = 0, free = 0;
         foreach (var vote in votesHeldDuringMandate)
         {
             held++;
-            var voted = vote.Choice != BallotChoice.DidNotVote;
-            if (voted)
-            {
-                tookPart++;
-            }
-            else if (!absenceCounts)
+            if (vote.Choice == BallotChoice.DidNotVote)
             {
                 continue;
             }
 
+            tookPart++;
             switch (vote.FactionPosition)
             {
                 case FactionPosition.Free:

@@ -284,7 +284,7 @@ internal sealed class ParliamentQueries(ParliamentDb db, IParliamentDataNotice n
         }))!;
 
     public MethodologyInfo Methodology() =>
-        new(OpenChoices.AbsenceCountsInVotedWithFaction, OpenChoices.LabelsThatAreNotFactions.Order(StringComparer.Ordinal).ToList());
+        new(OpenChoices.LabelsThatAreNotFactions.Order(StringComparer.Ordinal).ToList());
 
     // ---- Shared pieces ------------------------------------------------------------------------------------------------
 

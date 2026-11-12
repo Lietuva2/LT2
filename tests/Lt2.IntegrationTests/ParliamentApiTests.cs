@@ -209,12 +209,12 @@ public sealed class ParliamentApiTests(DatabaseFixture database) : ApiTest(datab
 
     [Fact]
     public async Task The_methodology_settings_are_the_open_choices_as_built() =>
-        (await GetAsync<MethodologyResponse>(ParliamentRoutes.Methodology)).ShouldBe(new MethodologyResponse("2/3", false, []), new MethodologyComparer());
+        (await GetAsync<MethodologyResponse>(ParliamentRoutes.Methodology)).ShouldBe(new MethodologyResponse("2/3", []), new MethodologyComparer());
 
     private sealed class MethodologyComparer : IEqualityComparer<MethodologyResponse>
     {
         public bool Equals(MethodologyResponse? x, MethodologyResponse? y) =>
-            x!.TwoThirds == y!.TwoThirds && x.AbsenceCountsInVotedWithFaction == y.AbsenceCountsInVotedWithFaction && x.LabelsThatAreNotFactions.SequenceEqual(y.LabelsThatAreNotFactions);
+            x!.TwoThirds == y!.TwoThirds && x.LabelsThatAreNotFactions.SequenceEqual(y.LabelsThatAreNotFactions);
 
         public int GetHashCode(MethodologyResponse obj) => obj.TwoThirds.GetHashCode(StringComparison.Ordinal);
     }

@@ -498,8 +498,10 @@ Matches the "unjoined MP" mockup in chapter 06, minus everything that needs voti
 - Official contacts and links to the official pages (Seimas, VRK, VTEK).
 - **Dalyvavimas balsavimuose:** of the recorded votes held during the MP's mandate, the share in which the MP voted for,
   against or abstained.
-- **Balsavo kaip frakcija:** of the votes where the MP's faction had a position (at least two thirds of its members who
-  voted chose the same option), the share where the MP chose that option. The number of free votes is shown beside it.
+- **Balsavo kaip frakcija:** of the votes the MP took part in where the MP's faction had a position (at least two thirds
+  of its members who voted chose the same option), the share where the MP chose that option. The number of free votes is
+  shown beside it. Votes the MP missed are not counted here: an absence already shows in the participation figure
+  **[decided 2026-11-12]**.
 - Recent votes: bill, stage, date, the MP's choice, the faction's split, a link to the vote page.
 - The line "Profilis sudarytas automatiškai iš Seimo atvirųjų duomenų" with the time of the last import.
 - From stage 2: appeals in progress and the MP's responses.
@@ -822,6 +824,8 @@ Splitting M2 means the risky step (emailing every MP) happens only after the who
   that have not signed in before; known devices are built before registration opens (6.2).
 - A staff role works only with a staff passkey, activated by a code the administrator passes on directly. No
   authenticator app (6.2).
+- "Balsavo kaip frakcija" counts only votes the MP took part in; an absence shows in the participation figure only, so
+  the same absence is not marked twice (7.3).
 
 **Decisions needed before the stage that uses them**
 

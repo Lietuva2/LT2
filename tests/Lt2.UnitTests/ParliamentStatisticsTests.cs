@@ -105,7 +105,7 @@ public sealed class MpStatisticsRuleTests
     }
 
     [Fact]
-    public void A_vote_the_mp_did_not_take_part_in_counts_against_participation_only_not_against_voting_with_the_faction()
+    public void An_absence_lowers_participation_only_and_never_voted_with_the_faction_nor_the_free_votes()
     {
         var stats = MpStatisticsRule.Compute(
         [
@@ -144,22 +144,6 @@ public sealed class MpStatisticsRuleTests
         stats.WithFaction.ShouldBeNull();
     }
 
-    [Fact]
-    public void Open_question_1_as_built_an_absence_does_not_count_against_voting_with_the_faction() =>
-        OpenChoices.AbsenceCountsInVotedWithFaction.ShouldBeFalse();
-
-    [Fact]
-    public void Open_question_1_flipped_an_absence_counts_as_not_with_the_faction_and_a_free_vote_still_counts_as_free()
-    {
-        var stats = MpStatisticsRule.Compute(
-        [
-            Vote(BallotChoice.For, FactionPosition.For),
-            Vote(BallotChoice.DidNotVote, FactionPosition.Against),
-            Vote(BallotChoice.DidNotVote, FactionPosition.Free),
-        ], absenceCounts: true);
-
-        stats.ShouldBe(new MpStatistics(VotesHeld: 3, VotesTakenPart: 1, VotesWithFactionPosition: 2, VotedWithFaction: 1, FreeVotes: 1));
-    }
 }
 
 public sealed class OpenFactionLabelChoiceTests

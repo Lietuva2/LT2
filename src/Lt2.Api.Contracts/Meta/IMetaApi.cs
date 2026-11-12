@@ -10,9 +10,8 @@ public sealed record ImportsResponse(IReadOnlyList<ImportSourceResponse> Sources
 
 /// <summary>How the two statistics are counted, as built; the methodology page states whatever this says.</summary>
 /// <param name="TwoThirds">A faction has a position when at least this share of its members who voted chose one option.</param>
-/// <param name="AbsenceCountsInVotedWithFaction">A vote the MP did not take part in counts as "not with the faction".</param>
 /// <param name="LabelsThatAreNotFactions">Faction labels of the per-MP results that get no faction position.</param>
-public sealed record MethodologyResponse(string TwoThirds, bool AbsenceCountsInVotedWithFaction, IReadOnlyList<string> LabelsThatAreNotFactions);
+public sealed record MethodologyResponse(string TwoThirds, IReadOnlyList<string> LabelsThatAreNotFactions);
 
 /// <summary>Design 7.4 <c>GET /api/v1/meta/imports</c>: the last successful import per source; and the methodology settings.</summary>
 public interface IMetaApi

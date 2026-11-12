@@ -32,7 +32,7 @@
         {
             <p>@F.Format("Method.WithFaction.1", Share(m.TwoThirds))</p>
             <p>@F.Format("Method.WithFaction.2", Share(m.TwoThirds))</p>
-            <p id="absence-rule">@F.T[m.AbsenceCountsInVotedWithFaction ? "Method.WithFaction.Absence.True" : "Method.WithFaction.Absence.False"]</p>
+            <p id="absence-rule">@F.T["Method.WithFaction.Absence"]</p>
             <p>@F.T["Method.WithFaction.3"]</p>
             <p id="labels-rule">@(m.LabelsThatAreNotFactions.Count == 0 ? F.T["Method.WithFaction.Labels.None"] : F.Format("Method.WithFaction.Labels.Some", string.Join(", ", m.LabelsThatAreNotFactions)))</p>
         }

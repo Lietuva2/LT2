@@ -82,7 +82,7 @@ internal sealed class ParliamentReads(IParliamentQueries queries)
     public Result<MethodologyResponse> Methodology()
     {
         var m = queries.Methodology();
-        return new MethodologyResponse("2/3", m.AbsenceCountsInVotedWithFaction, m.LabelsThatAreNotFactions);
+        return new MethodologyResponse("2/3", m.LabelsThatAreNotFactions);
     }
 
     private static string? Blank(string? text) => string.IsNullOrWhiteSpace(text) ? null : text.Trim();

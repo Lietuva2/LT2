@@ -210,7 +210,7 @@ public sealed partial class ParliamentPageTests(DatabaseFixture database) : ApiT
         var html = await OkAsync("/metodika");
 
         html.ShouldContain("bent dviejų trečdalių jos narių");
-        html.ShouldContain("Balsavimas, kuriame Seimo narys nedalyvavo, šio rodiklio nemažina");
+        html.ShouldContain("Balsavimai, kuriuose Seimo narys nedalyvavo, čia neskaičiuojami");
         html.ShouldContain("taip pat ir Mišri Seimo narių grupė");
         html.ShouldContain("bendru sutarimu");
         html.ShouldContain("Paskutinį kartą duomenys sėkmingai atnaujinti");
