@@ -73,6 +73,14 @@ dotnet test
 docker compose -f deploy/compose.yaml up       # full stack locally, mail goes to Mailpit
 ```
 
+## Running commands
+
+- **On Windows, run every command in PowerShell, not Bash** (git, dotnet, docker, python). Bash there is Git Bash, an
+  emulation layer that has broken mid-session on the owner's machine. Write multi-line scripts to a file and run the
+  file; do not paste them inline.
+- CI and cloud sessions run Linux. The commands in this file run unchanged in PowerShell and in a Linux shell; keep it
+  that way, and keep scripts the build depends on in C# or Python, not in shell.
+
 ## Code rules
 
 - **Modules.** Everything in a module is `internal` except its interface, DTOs and events. No module reads another
