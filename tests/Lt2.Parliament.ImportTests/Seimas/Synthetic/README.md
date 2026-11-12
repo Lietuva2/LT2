@@ -1,0 +1,71 @@
+# Synthetic Seimas responses — invented, NOT recorded
+
+Every file here was written by Lietuva 2.0, not received from the Seimas. Each one starts with the comment
+`LT2-SYNTHETIC`, and the stand-in service (`tools/Lt2.SeimasStandIn`) also sends the header `X-Lt2-Synthetic` with
+it, so whatever the import stores from them is marked as invented and the site says so on every page.
+
+Why they exist: the Seimas open-data service (`https://apps.lrs.lt/sip/`) is closed for maintenance until
+16 November 2026, and nobody holds recorded responses. Their **shape** is taken only from the evidence listed in
+[`../ASSUMPTIONS.md`](../ASSUMPTIONS.md); most of it is assumed there, and the live contract suite will say which
+assumptions were wrong. Real responses go to [`../Recorded/`](../Recorded/), never here.
+
+File names: `<service>.xml`, or `<service>@<parameter>=<value>.xml` for a request with a query parameter. The stand-in
+answers a known service asked about an unknown identifier with an empty `<SeimoInformacija/>`.
+
+## The invented parliament
+
+Term 10 (2024–2028). All identifiers start with 99, which no Seimas identifier seen so far does, so these rows cannot
+be confused with real ones. Only 13 of the 141 seats are filled: the **totals** of each vote are Seimas-wide numbers
+(XVP-0412: 71 : 38 after presentation, 74 : 44 after consideration), so the per-MP votes here never add up to the
+totals. The per-MP list of a vote includes every sitting MP of the 13, with an empty `kaip_balsavo` for one who did not
+vote.
+
+| `asmens_id` | MP | Nominated by | Faction (ballot label) | Notes |
+|---|---|---|---|---|
+| 99000001 | Jonas Petraitis | Reformų partija | RPF | votes against XVP-0412 while his faction votes for |
+| 99000002 | Marius Ąžuolaitis | Reformų partija | RPF | faction elder; constituency |
+| 99000003 | Eglė Beržinytė | Reformų partija | RPF | chairs the budget committee |
+| 99000004 | Vytautas Klevinskas | Reformų partija | RPF | constituency |
+| 99000005 | Ona Jonaitienė | Pilietinė sąjunga | PSF | faction elder |
+| 99000006 | Laima Uosytė | Pilietinė sąjunga | PSF | chairs the social affairs committee |
+| 99000007 | Darius Liepaitis | Pilietinė sąjunga | PSF until 2026-04-30, then RAF | **changed faction** |
+| 99000008 | Asta Pušinskienė | Pilietinė sąjunga | PSF | |
+| 99000009 | Kęstutis Gluosnis | Regionų aljansas | RAF | faction elder |
+| 99000010 | Indrė Eglaitė | Regionų aljansas | RAF | |
+| 99000011 | Tadas Alksninis | Regionų aljansas | RAF | **mandate ended** 2026-04-15 |
+| 99000012 | Gintarė Šermukšnytė | Regionų aljansas | RAF | |
+| 99000013 | Aurelija Kadagytė | Regionų aljansas | RAF | mandate from 2026-04-21 (took Alksninis's seat) |
+
+Factions: Reformų partijos frakcija (99100001), Pilietinės sąjungos frakcija (99100002), Regionų aljanso frakcija
+(99100003). Committees: Biudžeto ir finansų komitetas (99200001), Socialinių reikalų ir darbo komitetas (99200002).
+Official addresses are `pavyzdys.<vardas>.<pavardė>@lrs.lt`, so no invented address can be a real mailbox's.
+
+## Sittings and votes
+
+| Sitting | Date | Item | Vote | What it exercises |
+|---|---|---|---|---|
+| 99001001 | 2026-03-17 | agenda | 99100001 procedural | an MP who did not vote; no bill |
+| | | XVP-0412 presentation | 99100002, 71 : 38 : 14 | Regionų aljanso frakcija splits 2 : 2, a **free vote** |
+| | | XVP-0533 presentation | 99100003 | **approved by consensus**: no per-MP votes, no results file |
+| 99001002 | 2026-04-14 | XVP-0618 presentation | 99100004, 64 : 20 : 30 | the official **mismatch note**; PSF free (2 : 2) |
+| 99001003 | 2026-05-19 | XVP-0412 consideration | 99100005 amendment | after the faction change and the new mandate |
+| | | | 99100006, 74 : 44 : 10 | stage result; Liepaitis votes in RAF |
+| 99001101 | 2026-09-15 | agenda | 99100101 procedural | autumn session |
+| | | XVP-0618 consideration | 99100102 | PSF exactly two thirds (2 of 3); RAF 3 of 5 = free |
+
+XVP-0412's adoption is still planned. Open data lists only sittings that have started, so it is not here.
+
+## Statistics by hand
+
+Seven votes have per-MP results (99100003 is a consensus vote and counts nowhere). A faction's position is the option at
+least two thirds of its members who voted chose; "free" when no option reaches that.
+
+| MP | Recorded votes in mandate | Took part | With faction / faction had a position and MP voted | Free votes MP took part in |
+|---|---|---|---|---|
+| Jonas Petraitis | 7 | 7 | 5 / 7 | 0 |
+| Ona Jonaitienė | 7 | 7 | 5 / 6 | 1 |
+| Darius Liepaitis | 7 | 6 | 3 / 4 | 2 |
+| Tadas Alksninis | 3 | 2 | 1 / 1 | 1 |
+| Aurelija Kadagytė | 4 | 4 | 2 / 2 | 2 |
+
+`tests/Lt2.Parliament.ImportTests/Import/ImportTests.cs` checks these numbers after a full import.

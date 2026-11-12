@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- LT2-SYNTHETIC: invented by Lietuva 2.0 for tests and the local stand-in. NOT a recorded Seimas response.
+     Shape: assumed from the evidence listed in ../ASSUMPTIONS.md. Every name, identifier and number is fictional. -->
+<SeimoInformacija>
+  <SeimoPosėdis posėdžio_id="99001002" numeris="212" tipas="Rytinis" pradžia="2026-04-14 10:00" pabaiga="2026-04-14 12:48">
+    <DarbotvarkėsKlausimas darbotvarkės_klausimo_id="99010004" numeris="1-1" pavadinimas="Atliekų tvarkymo įstatymo pataisa" stadija="Pateikimas" laikas_nuo="10:05">
+      <Dokumentas registracijos_numeris="XVP-0618" nuoroda="https://e-seimas.lrs.lt/portal/legalAct/lt/TAP/SINTETINIS-XVP-0618"/>
+    </DarbotvarkėsKlausimas>
+  </SeimoPosėdis>
+</SeimoInformacija>

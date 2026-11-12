@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- LT2-SYNTHETIC: invented by Lietuva 2.0 for tests and the local stand-in. NOT a recorded Seimas response.
+     Shape: assumed from the evidence listed in ../ASSUMPTIONS.md. Every name, identifier and number is fictional. -->
+<SeimoInformacija>
+  <SeimoPosėdis posėdžio_id="99001001" numeris="201" tipas="Rytinis" pradžia="2026-03-17 10:00" pabaiga="2026-03-17 13:02">
+    <DarbotvarkėsKlausimas darbotvarkės_klausimo_id="99010001" numeris="1" pavadinimas="Dėl posėdžio darbotvarkės" stadija="" laikas_nuo="10:00"/>
+    <DarbotvarkėsKlausimas darbotvarkės_klausimo_id="99010002" numeris="2-1" pavadinimas="Gyventojų pajamų mokesčio įstatymo pataisa" stadija="Pateikimas" laikas_nuo="10:05">
+      <Dokumentas registracijos_numeris="XVP-0412" nuoroda="https://e-seimas.lrs.lt/portal/legalAct/lt/TAP/SINTETINIS-XVP-0412"/>
+    </DarbotvarkėsKlausimas>
+    <DarbotvarkėsKlausimas darbotvarkės_klausimo_id="99010003" numeris="2-2" pavadinimas="Vietinių rinkliavų įstatymo pataisa" stadija="Pateikimas" laikas_nuo="10:50">
+      <Dokumentas registracijos_numeris="XVP-0533" nuoroda="https://e-seimas.lrs.lt/portal/legalAct/lt/TAP/SINTETINIS-XVP-0533"/>
+    </DarbotvarkėsKlausimas>
+  </SeimoPosėdis>
+</SeimoInformacija>
