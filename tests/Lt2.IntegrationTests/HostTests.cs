@@ -44,6 +44,20 @@ public sealed class HostTests(DatabaseFixture database) : ApiTest(database)
     }
 
     [Fact]
+    public async Task The_fonts_are_served_from_the_site_itself()
+    {
+        using var browser = NewBrowser();
+        var html = await browser.Client.GetStringAsync("/");
+        html.ShouldMatch("<link rel=\"stylesheet\" href=\"fonts/fonts\\.[a-z0-9]+\\.css\"");
+
+        var css = await browser.Client.GetStringAsync("/fonts/fonts.css");
+        css.ShouldNotContain("//fonts.");
+        using var font = await browser.Client.GetAsync("/fonts/sofia-sans-latin.woff2");
+        font.StatusCode.ShouldBe(HttpStatusCode.OK);
+        font.Content.Headers.ContentType!.MediaType.ShouldBe("font/woff2");
+    }
+
+    [Fact]
     public async Task The_signed_in_page_sends_strangers_to_sign_in()
     {
         using var browser = NewBrowser();

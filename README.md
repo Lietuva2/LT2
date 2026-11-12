@@ -129,3 +129,6 @@ address), `LT2_HTTP_PORT=80`, `LT2_HTTPS_PORT=443`, `COMPOSE_PROFILES=` (no Mail
 - Modules expose a small public interface and keep everything else `internal`; they never read each other's tables.
   `tests/Lt2.ArchitectureTests` enforces this.
 - Domain rules are pure functions with unit tests whose names read as the rule.
+- The site requests nothing from other hosts. Fonts (Sofia Sans, Sofia Sans Extra Condensed, Brygada 1918, SIL Open
+  Font License) are served from `src/Lt2.Web/wwwroot/fonts`; the licence texts must stay next to the font files, and
+  the content security policy allows fonts only from the site itself (`font-src 'self'`).

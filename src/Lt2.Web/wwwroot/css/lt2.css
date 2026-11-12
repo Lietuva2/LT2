@@ -397,8 +397,9 @@ lt2-logo-spin {
  * design/ui/lt2.css copied unchanged; keep it that way and add below.
  * ========================================================================== */
 
-/* Fonts: Sofia Sans, Sofia Sans Extra Condensed and Brygada 1918 are to be served from our own origin
-   (design/ui/README.md). Until the font files are added, the fallback stacks in --font-* apply. */
+/* Fonts: Sofia Sans, Sofia Sans Extra Condensed and Brygada 1918 are served from our own origin by
+   ../fonts/fonts.css, which App.razor links before this file. The OFL licence texts sit next to the
+   font files and must stay there. Nothing is requested from Google or any other host. */
 
 body { min-height: 100vh; display: flex; flex-direction: column; }
 main.page { flex: 1; padding-block: var(--sp-5) 0; }
