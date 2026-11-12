@@ -38,6 +38,13 @@
   <data name="Code.Submit" xml:space="preserve"><value>Prisijungti</value></data>
   <data name="Code.Resend" xml:space="preserve"><value>Siųsti kodą iš naujo</value></data>
   <data name="Code.ChangeEmail" xml:space="preserve"><value>Keisti el. pašto adresą</value></data>
+  <data name="Code.NewestOnly" xml:space="preserve"><value>Jei gavote kelis laiškus, tinka tik naujausias kodas.</value></data>
+  <data name="Complete.Label" xml:space="preserve"><value>Po pirmo kodo</value></data>
+  <data name="Complete.Title" xml:space="preserve"><value>Dar du dalykai</value></data>
+  <data name="Complete.Confirmed.Before" xml:space="preserve"><value>Adresas</value></data>
+  <data name="Complete.Confirmed.After" xml:space="preserve"><value>patvirtintas.</value></data>
+  <data name="Complete.Submit" xml:space="preserve"><value>Baigti registraciją</value></data>
+  <data name="Complete.SignOut" xml:space="preserve"><value>Atsijungti</value></data>
   <data name="Code.Resent" xml:space="preserve"><value>Naujas kodas išsiųstas.</value></data>
   <data name="Passkey.Unsupported" xml:space="preserve"><value>Ši naršyklė nepalaiko prieigos raktų.</value></data>
   <data name="Passkey.Cancelled" xml:space="preserve"><value>Prieigos rakto naudojimas atšauktas arba nepavyko.</value></data>

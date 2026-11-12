@@ -4,7 +4,10 @@ using Lt2.SharedKernel;
 namespace Lt2.Identity;
 
 /// <summary>Registration request as the module sees it; validated by the shared contracts first.</summary>
-public sealed record Registration(string Email, string? InvitationCode, bool ConfirmsAdult, string? DisplayName = null);
+public sealed record Registration(string Email, string? InvitationCode);
+
+/// <summary>What a person gives once their address is proven (design 6.2).</summary>
+public sealed record RegistrationCompletion(string? DisplayName, bool ConfirmsAdult, string? InvitationCode);
 
 /// <summary>The signed-in person's own account.</summary>
 public sealed record AccountSummary(
@@ -14,7 +17,8 @@ public sealed record AccountSummary(
     string VerificationLevel,
     IReadOnlyList<string> Roles,
     int PasskeyCount,
-    DateTimeOffset CreatedAt);
+    DateTimeOffset CreatedAt,
+    bool RegistrationComplete);
 
 /// <summary>One signed-in browser.</summary>
 public sealed record SessionSummary(
@@ -31,8 +35,14 @@ public sealed record SessionSummary(
 /// </summary>
 public interface IIdentityModule
 {
-    /// <summary>Creates the account (or, for an existing one, does nothing visible) and emails a sign-in code.</summary>
+    /// <summary>
+    /// Creates a pending account (or, for an address that already has one, does nothing visible) and emails a sign-in
+    /// code.
+    /// </summary>
     Task<Result<Unit>> RegisterAsync(Registration registration, CancellationToken cancellationToken);
+
+    /// <summary>Completes the signed-in person's pending registration and makes the account a member.</summary>
+    Task<Result<Unit>> CompleteRegistrationAsync(ClaimsPrincipal user, RegistrationCompletion completion, CancellationToken cancellationToken);
 
     /// <summary>Emails a sign-in code if the address belongs to an account; succeeds either way.</summary>
     Task<Result<Unit>> RequestSignInCodeAsync(string email, CancellationToken cancellationToken);
@@ -59,6 +69,9 @@ public interface IIdentityModule
 /// <summary>Housekeeping run by the worker.</summary>
 public interface IIdentityMaintenance
 {
-    /// <summary>Deletes sign-in codes older than a day and expired sessions; returns how many rows went.</summary>
+    /// <summary>
+    /// Deletes sign-in codes older than a day, expired sessions, and accounts still pending after the configured number
+    /// of days; returns how many rows went.
+    /// </summary>
     Task<int> PurgeExpiredAsync(CancellationToken cancellationToken);
 }

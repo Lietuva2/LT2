@@ -34,13 +34,13 @@ public sealed class RateLimitTests(DatabaseFixture database) : IAsyncDisposable
         {
             using var allowed = await browser.PostAsync(
                 ApiRoutes.Auth.Register,
-                new RegisterRequest { Email = TestData.Email(), InvitationCode = TestData.Invitation, ConfirmsAdult = true });
+                new RegisterRequest { Email = TestData.Email(), InvitationCode = TestData.Invitation });
             allowed.StatusCode.ShouldBe(HttpStatusCode.Accepted);
         }
 
         using var limited = await browser.PostAsync(
             ApiRoutes.Auth.Register,
-            new RegisterRequest { Email = TestData.Email(), InvitationCode = TestData.Invitation, ConfirmsAdult = true });
+            new RegisterRequest { Email = TestData.Email(), InvitationCode = TestData.Invitation });
         await limited.ShouldBeProblemAsync(HttpStatusCode.TooManyRequests, "rate-limited");
     }
 

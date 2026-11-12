@@ -7,7 +7,7 @@ namespace Lt2.E2E;
 
 /// <summary>
 /// End to end against a running stack (docker compose): register with an invitation, receive the code in Mailpit,
-/// sign in and see the hello page, at 1280 px and 390 px (design 10).
+/// sign in, complete the registration (name and age, design 6.2) and see the hello page, at 1280 px and 390 px (design 10).
 ///
 /// Runs only when <c>LT2_E2E_BASE_URL</c> is set, for example:
 ///   LT2_E2E_BASE_URL=https://lt2.localhost:8443  LT2_E2E_MAILPIT_URL=http://localhost:8025
@@ -61,12 +61,12 @@ public sealed partial class SignUpTests
         await ExpectNoNoteAsync(page);
         await page.GetByLabel("El. paštas").FillAsync(email);
         await page.GetByLabel("Kvietimo kodas").FillAsync(Invitation);
-        await page.GetByLabel("Vardas, kurį matys kiti").FillAsync("Rūta M.");
-        await page.GetByLabel("Man yra 18 metų arba daugiau").CheckAsync();
+        (await page.GetByLabel("Vardas, kurį matys kiti").CountAsync()).ShouldBe(0, "the name is asked only after the code");
         await page.GetByRole(AriaRole.Button, new() { Name = "Registruotis", Exact = true }).ClickAsync();
 
         var codeField = page.GetByLabel("Šešių skaitmenų kodas");
         await Assertions.Expect(codeField).ToBeVisibleAsync();
+        await Assertions.Expect(page.GetByText("Jei gavote kelis laiškus, tinka tik naujausias kodas.")).ToBeVisibleAsync();
         await ExpectNoNoteAsync(page);
         var code = await CodeFromMailpitAsync(email);
 
@@ -78,6 +78,17 @@ public sealed partial class SignUpTests
 
         await codeField.FillAsync(code);
         await page.GetByRole(AriaRole.Button, new() { Name = "Prisijungti", Exact = true }).ClickAsync();
+
+        // The address is proven; only now are the name and the age declaration asked, with nothing filled in.
+        await page.WaitForURLAsync(new Regex("/prisijungti$"));
+        await Assertions.Expect(page.GetByRole(AriaRole.Heading, new() { Name = "Dar du dalykai" })).ToBeVisibleAsync();
+        await WaitForInteractivityAsync(page);
+        var name = page.GetByLabel("Vardas, kurį matys kiti");
+        await Assertions.Expect(name).ToHaveValueAsync("");
+        await Assertions.Expect(page.GetByLabel("Man yra 18 metų arba daugiau")).Not.ToBeCheckedAsync();
+        await name.FillAsync("Rūta M.");
+        await page.GetByLabel("Man yra 18 metų arba daugiau").CheckAsync();
+        await page.GetByRole(AriaRole.Button, new() { Name = "Baigti registraciją" }).ClickAsync();
 
         await page.WaitForURLAsync(new Regex("/sveiki$"));
         await Assertions.Expect(page.GetByRole(AriaRole.Heading, new() { Level = 1 })).ToHaveTextAsync("Sveiki, Rūta M.!");

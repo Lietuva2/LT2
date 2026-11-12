@@ -8,9 +8,15 @@ using Npgsql;
 namespace Lt2.Identity.Application.Register;
 
 /// <summary>
-/// Registration by email and invitation code with the 18+ confirmation (design 6.2). The response is the same whether
-/// the address is new or already registered: in both cases a sign-in code is emailed, and an existing account is not
-/// changed and does not use up the invitation.
+/// Registration by email and invitation code (design 6.2). It creates a <em>pending</em> account: the normalised address
+/// and the invitation code entered, no name, no declaration, no role. The invitation use is counted only when the
+/// registration is completed, so addresses nobody confirms cannot use invitations up.
+/// The response is the same in every case, and a sign-in code is emailed in every case:
+/// <list type="bullet">
+/// <item>a new address gets a pending account;</item>
+/// <item>an address that is still pending keeps its account, and the invitation code it holds is replaced;</item>
+/// <item>an address with a completed account is not changed; what was typed is discarded.</item>
+/// </list>
 /// </summary>
 internal sealed class RegisterHandler(
     IdentityDb db,
@@ -21,11 +27,6 @@ internal sealed class RegisterHandler(
 {
     public async Task<Result<Unit>> HandleAsync(Registration registration, CancellationToken cancellationToken)
     {
-        if (!registration.ConfirmsAdult)
-        {
-            return Error.Validation("adult.required", "confirmsAdult");
-        }
-
         var normalized = EmailAddress.Normalize(registration.Email);
         if (normalized is null)
         {
@@ -37,15 +38,16 @@ internal sealed class RegisterHandler(
             return Error.Validation("email.disposable", "email");
         }
 
+        // The invitation is checked before the address is looked up, so the answer never depends on the address.
         var now = clock.GetUtcNow();
-        Invitation? invitation = null;
+        string? invitationCode = null;
         if (!string.IsNullOrWhiteSpace(registration.InvitationCode))
         {
-            var code = Invitation.NormalizeCode(registration.InvitationCode);
-            invitation = await db.Invitations.AsNoTracking().FirstOrDefaultAsync(
-                i => i.Code == code && i.UsesLeft > 0 && (i.ExpiresAt == null || i.ExpiresAt > now),
+            invitationCode = Invitation.NormalizeCode(registration.InvitationCode);
+            var valid = await db.Invitations.AsNoTracking().AnyAsync(
+                i => i.Code == invitationCode && i.UsesLeft > 0 && (i.ExpiresAt == null || i.ExpiresAt > now),
                 cancellationToken);
-            if (invitation is null)
+            if (!valid)
             {
                 return Error.Validation("invitation.invalid", "invitationCode");
             }
@@ -56,14 +58,16 @@ internal sealed class RegisterHandler(
         }
 
         await using var transaction = await db.Database.BeginTransactionAsync(cancellationToken);
-        var existing = await db.Profiles.AsNoTracking()
-            .Where(p => p.NormalizedEmail == normalized)
-            .Select(p => p.UserId)
-            .FirstOrDefaultAsync(cancellationToken);
-        if (existing != Guid.Empty)
+        var existing = await db.Profiles.FirstOrDefaultAsync(p => p.NormalizedEmail == normalized, cancellationToken);
+        if (existing is not null)
         {
-            var existingUser = await users.FindByIdAsync(existing.ToString());
-            if (existingUser is not null)
+            if (existing.IsPending)
+            {
+                existing.InvitationCode = invitationCode;
+                await db.SaveChangesAsync(cancellationToken);
+            }
+
+            if (await users.FindByIdAsync(existing.UserId.ToString()) is { } existingUser)
             {
                 await codes.IssueAsync(existingUser, transaction, cancellationToken);
             }
@@ -86,33 +90,12 @@ internal sealed class RegisterHandler(
             db.Profiles.Add(new Profile
             {
                 UserId = user.Id,
-                DisplayName = string.IsNullOrWhiteSpace(registration.DisplayName) ? null : registration.DisplayName.Trim(),
                 NormalizedEmail = normalized,
                 VerificationLevel = VerificationLevels.None,
-                InvitationId = invitation?.Id,
+                InvitationCode = invitationCode,
                 CreatedAt = now,
             });
-            db.Consents.Add(new Consent
-            {
-                Id = Ids.New(clock),
-                UserId = user.Id,
-                Kind = ConsentKinds.Adult,
-                TextVersion = ConsentKinds.AdultTextVersion,
-                GivenAt = now,
-            });
             await db.SaveChangesAsync(cancellationToken);
-
-            if (invitation is not null)
-            {
-                var used = await db.Invitations
-                    .Where(i => i.Id == invitation.Id && i.UsesLeft > 0)
-                    .ExecuteUpdateAsync(s => s.SetProperty(i => i.UsesLeft, i => i.UsesLeft - 1), cancellationToken);
-                if (used == 0)
-                {
-                    await transaction.RollbackAsync(cancellationToken);
-                    return Error.Validation("invitation.invalid", "invitationCode");
-                }
-            }
 
             await codes.IssueAsync(user, transaction, cancellationToken);
             await transaction.CommitAsync(cancellationToken);

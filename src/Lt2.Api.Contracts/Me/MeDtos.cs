@@ -16,6 +16,30 @@ public sealed record MeResponse
     public int PasskeyCount { get; init; }
 
     public DateTimeOffset CreatedAt { get; init; }
+
+    /// <summary>
+    /// <c>false</c> while the account is pending (design 6.2): the address is proven but the display name and the age
+    /// declaration have not been given yet. A pending account can only complete the registration, see and end its
+    /// sessions, and sign out.
+    /// </summary>
+    public bool RegistrationComplete { get; init; }
+}
+
+/// <summary>
+/// Completes a pending registration once the address is proven (design 6.2): the display name (optional) and the
+/// declaration of being 18 or older. The invitation use is counted now; if the code held has run out, another may be
+/// given here.
+/// </summary>
+public sealed record CompleteRegistrationRequest
+{
+    /// <summary>Optional name others will see next to what the person writes. Never shown with a side.</summary>
+    public string? DisplayName { get; init; }
+
+    /// <summary>The person declares they are 18 or older.</summary>
+    public bool ConfirmsAdult { get; init; }
+
+    /// <summary>Only when the code given at registration has run out or is no longer valid.</summary>
+    public string? InvitationCode { get; init; }
 }
 
 public sealed record SessionResponse

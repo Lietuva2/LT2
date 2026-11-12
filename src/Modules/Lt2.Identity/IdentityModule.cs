@@ -95,6 +95,7 @@ public static class IdentityModule
 
         services.AddScoped<SignInCodeIssuer>();
         services.AddScoped<RegisterHandler>();
+        services.AddScoped<CompleteRegistrationHandler>();
         services.AddScoped<RequestCodeHandler>();
         services.AddScoped<CodeSignInHandler>();
         services.AddScoped<PasskeyHandlers>();
@@ -139,6 +140,7 @@ public static class IdentityModule
 
 internal sealed class IdentityModuleFacade(
     RegisterHandler register,
+    CompleteRegistrationHandler completeRegistration,
     RequestCodeHandler requestCode,
     CodeSignInHandler codeSignIn,
     PasskeyHandlers passkeys,
@@ -147,6 +149,9 @@ internal sealed class IdentityModuleFacade(
 {
     public Task<Result<Unit>> RegisterAsync(Registration registration, CancellationToken cancellationToken) =>
         register.HandleAsync(registration, cancellationToken);
+
+    public Task<Result<Unit>> CompleteRegistrationAsync(ClaimsPrincipal user, RegistrationCompletion completion, CancellationToken cancellationToken) =>
+        completeRegistration.HandleAsync(user, completion, cancellationToken);
 
     public Task<Result<Unit>> RequestSignInCodeAsync(string email, CancellationToken cancellationToken) =>
         requestCode.HandleAsync(email, cancellationToken);

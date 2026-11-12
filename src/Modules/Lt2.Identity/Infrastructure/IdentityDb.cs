@@ -56,6 +56,9 @@ internal sealed class IdentityDb(DbContextOptions<IdentityDb> options)
             b.HasIndex(x => x.NormalizedEmail).IsUnique();
             b.Property(x => x.VerificationLevel).HasMaxLength(20);
             b.HasOne<Invitation>().WithMany().HasForeignKey(x => x.InvitationId).OnDelete(DeleteBehavior.SetNull);
+            b.Property(x => x.InvitationCode).HasMaxLength(64);
+            b.Ignore(x => x.IsPending);
+            b.HasIndex(x => x.CreatedAt).HasFilter("registered_at IS NULL").HasDatabaseName("ix_profile_pending_created_at");
         });
 
         builder.Entity<Invitation>(b =>
@@ -121,6 +124,10 @@ internal sealed class IdentityDb(DbContextOptions<IdentityDb> options)
 /// <summary>The three roles, seeded by the migration with fixed identifiers.</summary>
 internal static class SeedRoles
 {
+    public static readonly Guid MemberId = Guid.Parse("0193a000-0000-7000-8000-000000000001");
+
+    public static Guid IdOf(string role) => All.Single(r => r.Name == role).Id;
+
     public static readonly Role[] All =
     [
         new()

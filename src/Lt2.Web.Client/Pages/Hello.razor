@@ -103,6 +103,13 @@ else
             Me = me.Value;
         }
 
+        // A pending account finishes its registration first (design 6.2).
+        if (!Me!.RegistrationComplete)
+        {
+            Navigation.NavigateTo("/prisijungti", forceLoad: true);
+            return;
+        }
+
         Sessions ??= await LoadSessionsAsync();
     }
 

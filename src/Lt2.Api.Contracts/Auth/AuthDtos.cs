@@ -1,17 +1,14 @@
 namespace Lt2.Api.Contracts.Auth;
 
-/// <summary>Registration by email and invitation code, with the self-declared age confirmation.</summary>
+/// <summary>
+/// Registration by email and invitation code (design 6.2). It creates a pending account only; the display name and the
+/// age declaration are asked once the address is proven (<see cref="Me.CompleteRegistrationRequest"/>).
+/// </summary>
 public sealed record RegisterRequest
 {
     public string Email { get; init; } = "";
 
     public string? InvitationCode { get; init; }
-
-    /// <summary>Optional name others will see next to what the person writes. Never shown with a side.</summary>
-    public string? DisplayName { get; init; }
-
-    /// <summary>The person confirms they are 18 or older.</summary>
-    public bool ConfirmsAdult { get; init; }
 }
 
 public sealed record RequestCodeRequest

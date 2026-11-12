@@ -14,7 +14,7 @@ internal static class AddPasskeyEndpoint
         api.MapPost(ApiEndpoints.Relative(ApiRoutes.Auth.Passkeys), HandleAsync)
             .WithName("AddPasskey")
             .WithTags("Passkeys")
-            .RequireAuthorization()
+            .RequireAuthorization(Policies.Member)
             .WithValidation<PasskeyCredentialRequest>()
             .Produces(StatusCodes.Status204NoContent);
 

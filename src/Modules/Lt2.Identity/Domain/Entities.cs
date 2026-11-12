@@ -17,7 +17,10 @@ internal static class VerificationLevels
     public const string Email = "email";
 }
 
-/// <summary><c>identity.profile</c>: the application's own facts about an account.</summary>
+/// <summary>
+/// <c>identity.profile</c>: the application's own facts about an account. While the account is pending (design 6.2) it
+/// holds only the normalised address and the invitation code that was entered.
+/// </summary>
 internal sealed class Profile
 {
     public Guid UserId { get; set; }
@@ -29,9 +32,18 @@ internal sealed class Profile
 
     public string VerificationLevel { get; set; } = VerificationLevels.None;
 
+    /// <summary>The invitation whose use was counted when the registration was completed.</summary>
     public Guid? InvitationId { get; set; }
 
+    /// <summary>The invitation code entered at registration (normalised); counted only on completion.</summary>
+    public string? InvitationCode { get; set; }
+
     public DateTimeOffset CreatedAt { get; set; }
+
+    /// <summary>When the registration was completed; <c>null</c> while the account is pending.</summary>
+    public DateTimeOffset? RegisteredAt { get; set; }
+
+    public bool IsPending => RegisteredAt is null;
 }
 
 /// <summary><c>identity.invitation</c>: registration during the closed trial is by invitation (design 5.2).</summary>

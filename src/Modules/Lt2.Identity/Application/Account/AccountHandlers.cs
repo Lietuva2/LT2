@@ -28,7 +28,8 @@ internal sealed class AccountHandlers(IdentityDb db, UserManager<User> users, Ti
             profile.VerificationLevel,
             roles.Order(StringComparer.Ordinal).ToList(),
             passkeys.Count,
-            profile.CreatedAt);
+            profile.CreatedAt,
+            !profile.IsPending);
     }
 
     public async Task<IReadOnlyList<SessionSummary>> SessionsAsync(ClaimsPrincipal principal, CancellationToken cancellationToken)
@@ -67,8 +68,11 @@ internal sealed class AccountHandlers(IdentityDb db, UserManager<User> users, Ti
         Guid.TryParse(principal.FindFirstValue(ClaimTypes.NameIdentifier), out userId);
 }
 
-/// <summary>Housekeeping: old sign-in codes and expired sessions.</summary>
-internal sealed class MaintenanceHandler(IdentityDb db, TimeProvider clock) : IIdentityMaintenance
+/// <summary>
+/// Housekeeping: old sign-in codes, expired sessions, and accounts still pending after the configured number of days
+/// (design 6.2), so an address typed by a stranger is not kept.
+/// </summary>
+internal sealed class MaintenanceHandler(IdentityDb db, ISettings settings, TimeProvider clock) : IIdentityMaintenance
 {
     public async Task<int> PurgeExpiredAsync(CancellationToken cancellationToken)
     {
@@ -76,6 +80,11 @@ internal sealed class MaintenanceHandler(IdentityDb db, TimeProvider clock) : II
         var codeCutoff = now - TimeSpan.FromDays(1);
         var codes = await db.SignInCodes.Where(c => c.CreatedAt < codeCutoff).ExecuteDeleteAsync(cancellationToken);
         var sessions = await db.Sessions.Where(s => s.ExpiresAt < now).ExecuteDeleteAsync(cancellationToken);
-        return codes + sessions;
+
+        var pendingCutoff = now - TimeSpan.FromDays(await settings.GetAsync(SettingKeys.PendingAccountDays, cancellationToken));
+        var pending = await db.Users
+            .Where(u => db.Profiles.Any(p => p.UserId == u.Id && p.RegisteredAt == null && p.CreatedAt < pendingCutoff))
+            .ExecuteDeleteAsync(cancellationToken);
+        return codes + sessions + pending;
     }
 }

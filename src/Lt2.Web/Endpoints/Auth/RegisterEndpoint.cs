@@ -7,8 +7,8 @@ using Lt2.Web.Services;
 namespace Lt2.Web.Endpoints.Auth;
 
 /// <summary>
-/// <c>POST /api/v1/auth/register</c>: email, invitation code and the 18+ confirmation. Answers 202 whether or not the
-/// address was already registered; either way a sign-in code is emailed.
+/// <c>POST /api/v1/auth/register</c>: email and invitation code; creates a pending account (design 6.2). Answers 202
+/// whether the address is new, pending or registered; in every case a sign-in code is emailed.
 /// </summary>
 internal static class RegisterEndpoint
 {

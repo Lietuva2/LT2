@@ -22,6 +22,7 @@ public static class ApiRoutes
     public static class Me
     {
         public const string Root = Prefix + "/me";
+        public const string Registration = Root + "/registration";
         public const string Sessions = Root + "/sessions";
         public const string Session = Root + "/sessions/{id:guid}";
 

@@ -3,6 +3,7 @@ using System.Net.Http.Json;
 using System.Text.Json;
 using Lt2.Api.Contracts;
 using Lt2.Api.Contracts.Auth;
+using Lt2.Api.Contracts.Me;
 
 namespace Lt2.IntegrationTests.Infrastructure;
 
@@ -41,23 +42,43 @@ public sealed class TestBrowser(HttpClient client, Lt2Factory factory) : IDispos
     public Task<HttpResponseMessage> PostAsync(string uri, object? body = null, bool antiforgery = true) =>
         SendAsync(HttpMethod.Post, uri, body, antiforgery);
 
-    /// <summary>Registers a new account with the trial invitation and returns the emailed code.</summary>
-    public async Task<string> RegisterAsync(string email)
+    /// <summary>Registers (a pending account) with the trial invitation and returns the emailed code.</summary>
+    public async Task<string> RegisterAsync(string email, string? invitation = TestData.Invitation)
     {
-        using var response = await PostAsync(
-            ApiRoutes.Auth.Register,
-            new RegisterRequest { Email = email, InvitationCode = TestData.Invitation, ConfirmsAdult = true });
+        using var response = await PostAsync(ApiRoutes.Auth.Register, new RegisterRequest { Email = email, InvitationCode = invitation });
         response.StatusCode.ShouldBe(HttpStatusCode.Accepted, await response.Content.ReadAsStringAsync());
         return await factory.LatestCodeAsync(email) ?? throw new InvalidOperationException("No code was written to the outbox.");
     }
 
-    /// <summary>Registers and signs in; returns the address.</summary>
-    public async Task<string> RegisterAndSignInAsync(string? email = null)
+    /// <summary>Signs in with the newest code emailed to <paramref name="email"/>.</summary>
+    public async Task SignInWithCodeAsync(string email, string? code = null)
+    {
+        code ??= await factory.LatestCodeAsync(email) ?? throw new InvalidOperationException("No code in the outbox.");
+        using var response = await PostAsync(ApiRoutes.Auth.SignIn, new SignInRequest { Email = email, Code = code });
+        response.StatusCode.ShouldBe(HttpStatusCode.NoContent, await response.Content.ReadAsStringAsync());
+    }
+
+    /// <summary>Completes the signed-in pending registration (design 6.2).</summary>
+    public async Task CompleteRegistrationAsync(string? displayName = null)
+    {
+        using var response = await SendAsync(
+            HttpMethod.Put,
+            ApiRoutes.Me.Registration,
+            new CompleteRegistrationRequest { DisplayName = displayName, ConfirmsAdult = true });
+        response.StatusCode.ShouldBe(HttpStatusCode.NoContent, await response.Content.ReadAsStringAsync());
+    }
+
+    /// <summary>Registers, signs in with the code and, unless told otherwise, completes the registration; returns the address.</summary>
+    public async Task<string> RegisterAndSignInAsync(string? email = null, bool complete = true)
     {
         email ??= TestData.Email();
         var code = await RegisterAsync(email);
-        using var response = await PostAsync(ApiRoutes.Auth.SignIn, new SignInRequest { Email = email, Code = code });
-        response.StatusCode.ShouldBe(HttpStatusCode.NoContent, await response.Content.ReadAsStringAsync());
+        await SignInWithCodeAsync(email, code);
+        if (complete)
+        {
+            await CompleteRegistrationAsync();
+        }
+
         return email;
     }
 

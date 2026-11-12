@@ -1,6 +1,7 @@
 using System.Globalization;
 using Hangfire;
 using Hangfire.PostgreSql;
+using Lt2.Audit;
 using Lt2.Identity;
 using Lt2.Notifications;
 using Lt2.SharedKernel.Persistence;
@@ -58,6 +59,7 @@ builder.Services.AddSingleton(TimeProvider.System);
 builder.Services.AddSingleton(_ => new NpgsqlDataSourceBuilder(connectionString).Build());
 builder.Services.AddNotificationsModule(configuration);
 builder.Services.AddNotificationsDispatcher(configuration);
+builder.Services.AddAuditModule();
 builder.Services.AddIdentityMaintenance();
 
 builder.Services.AddHangfire(hangfire => hangfire

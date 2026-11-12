@@ -1,6 +1,7 @@
 using System.Text.Json;
 using Lt2.Api.Contracts;
 using Lt2.Api.Contracts.Auth;
+using Lt2.Api.Contracts.Me;
 using Lt2.SharedKernel;
 using Microsoft.Extensions.Localization;
 using Microsoft.Extensions.Logging.Abstractions;
@@ -14,18 +15,30 @@ public sealed class ContractRuleTests
         new ResourceManagerStringLocalizerFactory(Options.Create(new LocalizationOptions()), NullLoggerFactory.Instance));
 
     [Fact]
-    public void Registration_needs_the_eighteen_or_older_confirmation()
+    public void Registration_needs_only_a_valid_address_and_the_invitation_code() =>
+        new RegisterRequestValidator(L)
+            .Validate(new RegisterRequest { Email = "ruta@pavyzdys.test", InvitationCode = "BANDYMAS-2026" })
+            .IsValid.ShouldBeTrue();
+
+    [Fact]
+    public void Completing_a_registration_needs_the_eighteen_or_older_declaration()
     {
-        var result = new RegisterRequestValidator(L).Validate(new RegisterRequest { Email = "ruta@pavyzdys.test", ConfirmsAdult = false });
+        var result = new CompleteRegistrationRequestValidator(L).Validate(new CompleteRegistrationRequest { DisplayName = "Rūta M." });
         result.IsValid.ShouldBeFalse();
         result.Errors.Single().ErrorMessage.ShouldBe("Registruotis gali tik 18 metų ir vyresni asmenys.");
     }
 
     [Fact]
-    public void Registration_with_a_valid_address_and_the_confirmation_passes() =>
-        new RegisterRequestValidator(L)
-            .Validate(new RegisterRequest { Email = "ruta@pavyzdys.test", InvitationCode = "BANDYMAS-2026", ConfirmsAdult = true })
+    public void Completing_a_registration_with_the_declaration_and_no_name_passes() =>
+        new CompleteRegistrationRequestValidator(L)
+            .Validate(new CompleteRegistrationRequest { ConfirmsAdult = true })
             .IsValid.ShouldBeTrue();
+
+    [Fact]
+    public void A_display_name_is_at_most_sixty_characters() =>
+        new CompleteRegistrationRequestValidator(L)
+            .Validate(new CompleteRegistrationRequest { ConfirmsAdult = true, DisplayName = new string('a', 61) })
+            .Errors.Single().ErrorMessage.ShouldBe("Vardas per ilgas: ne daugiau kaip 60 ženklų.");
 
     [Theory]
     [InlineData("12345")]

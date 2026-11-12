@@ -18,6 +18,8 @@
   <data name="invitation.invalid" xml:space="preserve"><value>Kvietimo kodas neteisingas arba nebegalioja.</value></data>
   <data name="invitation.required" xml:space="preserve"><value>Kol vyksta uždaras bandymas, registruotis galima tik su kvietimo kodu.</value></data>
   <data name="adult.required" xml:space="preserve"><value>Registruotis gali tik 18 metų ir vyresni asmenys.</value></data>
+  <data name="invitation.used-up" xml:space="preserve"><value>Šio kvietimo kodo vietos jau užimtos. Įveskite kitą kvietimo kodą.</value></data>
+  <data name="registration.complete" xml:space="preserve"><value>Registracija jau baigta.</value></data>
   <data name="auth.code-invalid" xml:space="preserve"><value>Kodas netinka arba nebegalioja. Paprašykite naujo.</value></data>
   <data name="auth.required" xml:space="preserve"><value>Reikia prisijungti.</value></data>
   <data name="passkey.invalid" xml:space="preserve"><value>Prieigos rakto patikrinti nepavyko.</value></data>

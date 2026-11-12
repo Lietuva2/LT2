@@ -13,7 +13,7 @@ internal static class PasskeyCreationOptionsEndpoint
         api.MapPost(ApiEndpoints.Relative(ApiRoutes.Auth.PasskeyCreationOptions), HandleAsync)
             .WithName("GetPasskeyCreationOptions")
             .WithTags("Passkeys")
-            .RequireAuthorization()
+            .RequireAuthorization(Policies.Member)
             .Produces<string>(StatusCodes.Status200OK, "application/json");
 
     private static async Task<IResult> HandleAsync(ClaimsPrincipal user, IIdentityModule identity, ErrorMapper errors, CancellationToken cancellationToken)

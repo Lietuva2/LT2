@@ -67,6 +67,9 @@ public static class SettingKeys
     /// <summary>Whether registration needs an invitation code (closed trial, design 6.2).</summary>
     public static readonly SettingKey<bool> RegistrationRequiresInvitation = new("Registration:RequireInvitation", true);
 
+    /// <summary>Days a pending account (address never proven, or registration never completed) is kept (design 6.2).</summary>
+    public static readonly SettingKey<int> PendingAccountDays = new("Registration:PendingAccountDays", 7, v => v is > 0 and <= 90);
+
     /// <summary>Default appeal threshold offered to the initiator (design 8.4).</summary>
     public static readonly SettingKey<int> DigestThresholdDefault = new("Digest:ThresholdDefault", 100, v => v > 0);
 
@@ -85,6 +88,7 @@ public static class SettingKeys
     public static readonly IReadOnlyList<ISettingKey> All =
     [
         RegistrationRequiresInvitation,
+        PendingAccountDays,
         DigestThresholdDefault,
         DigestMaxPerWeek,
         SurgeMinimumShare,

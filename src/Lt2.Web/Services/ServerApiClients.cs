@@ -57,6 +57,9 @@ internal sealed class ServerMeApi(IIdentityModule identity, IHttpContextAccessor
     public async Task<ApiResult> EndSessionAsync(Guid sessionId, CancellationToken cancellationToken = default) =>
         errors.ToApiResult(await identity.EndSessionAsync(User, sessionId, cancellationToken));
 
+    public async Task<ApiResult> CompleteRegistrationAsync(CompleteRegistrationRequest request, CancellationToken cancellationToken = default) =>
+        errors.ToApiResult(await identity.CompleteRegistrationAsync(User, Mapping.ToCompletion(request), cancellationToken));
+
     private System.Security.Claims.ClaimsPrincipal User =>
         accessor.HttpContext?.User ?? new System.Security.Claims.ClaimsPrincipal();
 }
@@ -65,7 +68,10 @@ internal sealed class ServerMeApi(IIdentityModule identity, IHttpContextAccessor
 internal static class Mapping
 {
     public static Registration ToRegistration(RegisterRequest request) =>
-        new(request.Email, request.InvitationCode, request.ConfirmsAdult, request.DisplayName);
+        new(request.Email, request.InvitationCode);
+
+    public static RegistrationCompletion ToCompletion(CompleteRegistrationRequest request) =>
+        new(request.DisplayName, request.ConfirmsAdult, request.InvitationCode);
 
     public static MeResponse ToResponse(AccountSummary account) => new()
     {
@@ -76,6 +82,7 @@ internal static class Mapping
         Roles = account.Roles,
         PasskeyCount = account.PasskeyCount,
         CreatedAt = account.CreatedAt,
+        RegistrationComplete = account.RegistrationComplete,
     };
 
     public static SessionResponse ToResponse(SessionSummary session) => new()

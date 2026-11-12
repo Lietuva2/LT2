@@ -29,6 +29,7 @@ internal static class ApiEndpoints
         PasskeySignInEndpoint.Map(api);
 
         GetMeEndpoint.Map(api);
+        CompleteRegistrationEndpoint.Map(api);
         GetSessionsEndpoint.Map(api);
         EndSessionEndpoint.Map(api);
 

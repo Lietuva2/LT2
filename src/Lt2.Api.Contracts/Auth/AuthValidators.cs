@@ -22,8 +22,6 @@ public sealed class RegisterRequestValidator : AbstractValidator<RegisterRequest
     {
         RuleFor(x => x.Email).ValidEmail(l);
         RuleFor(x => x.InvitationCode).MaximumLength(AuthRules.InvitationCodeMaxLength).WithMessage(l["Invitation.TooLong"]);
-        RuleFor(x => x.DisplayName).MaximumLength(AuthRules.DisplayNameMaxLength).WithMessage(l["DisplayName.TooLong"]);
-        RuleFor(x => x.ConfirmsAdult).Equal(true).WithMessage(l["Adult.Required"]);
     }
 }
 

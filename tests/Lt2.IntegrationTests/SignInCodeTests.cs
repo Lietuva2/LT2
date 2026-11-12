@@ -66,7 +66,8 @@ public sealed class SignInCodeTests(DatabaseFixture database) : ApiTest(database
         var me = await browser.Client.GetFromJsonAsync<MeResponse>(ApiRoutes.Me.Root);
         me!.Email.ShouldBe(email);
         me.VerificationLevel.ShouldBe("email");
-        me.Roles.ShouldBe(["member"]);
+        me.RegistrationComplete.ShouldBeFalse("the address is proven, but the registration is completed separately");
+        me.Roles.ShouldBeEmpty();
     }
 
     [Fact]

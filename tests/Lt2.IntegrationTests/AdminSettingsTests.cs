@@ -72,7 +72,7 @@ public sealed class AdminSettingsTests(DatabaseFixture database) : ApiTest(datab
             using var stranger = NewBrowser();
             using var register = await stranger.PostAsync(
                 ApiRoutes.Auth.Register,
-                new RegisterRequest { Email = TestData.Email(), ConfirmsAdult = true });
+                new RegisterRequest { Email = TestData.Email() });
             register.StatusCode.ShouldBe(HttpStatusCode.Accepted);
         }
         finally

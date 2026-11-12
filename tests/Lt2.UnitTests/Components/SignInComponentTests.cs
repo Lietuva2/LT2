@@ -144,6 +144,7 @@ public sealed class SignInComponentTests : BunitContext
             new SessionResponse { Id = Guid.NewGuid(), Method = "otp", IsCurrent = true },
             new SessionResponse { Id = Guid.NewGuid(), Method = "otp", IsCurrent = false },
         ];
+        _me.Account = FakeMeApi.Member;
         var page = Render<Hello>();
         page.WaitForElement("#hello-title").TextContent.ShouldBe("Sveiki, Rūta M.!");
         page.FindAll(".note[role]").ShouldBeEmpty();
@@ -153,6 +154,95 @@ public sealed class SignInComponentTests : BunitContext
         page.Find(".rows__side button").Click();
 
         page.WaitForElement(".note[role=alert]").TextContent.ShouldBe(Text("Error.Network"));
+    }
+
+    [Fact]
+    public void The_registration_form_asks_only_for_the_address_and_the_invitation_code()
+    {
+        var page = Render<SignIn>();
+        page.FindAll("button.linkish")[0].Click();
+
+        page.Find("#reg-email").ShouldNotBeNull();
+        page.Find("#reg-invite").ShouldNotBeNull();
+        page.FindAll("#reg-name").ShouldBeEmpty();
+        page.FindAll("#reg-age").ShouldBeEmpty();
+    }
+
+    [Fact]
+    public void The_code_step_says_only_the_newest_code_works()
+    {
+        var page = Render<SignIn>();
+        page.Find("#email").Input(Email);
+        page.Find("form").Submit();
+
+        page.Find("#code").ShouldNotBeNull();
+        page.Markup.ShouldContain(Text("Code.NewestOnly"));
+    }
+
+    [Fact]
+    public void A_signed_in_pending_account_is_asked_for_the_name_and_the_declaration_with_nothing_filled_in()
+    {
+        _me.Account = FakeMeApi.Pending;
+        var page = Render<SignIn>();
+
+        page.Find("#form-title").TextContent.ShouldBe(Text("Complete.Title"));
+        page.Find("#reg-name").GetAttribute("value").ShouldBeNullOrEmpty();
+        page.Find("#reg-age").HasAttribute("checked").ShouldBeFalse();
+        page.FindAll("#complete-invite").ShouldBeEmpty("the invitation is asked again only if it ran out");
+        page.Markup.ShouldContain("r•••@pavyzdys.test");
+    }
+
+    [Fact]
+    public void Completion_sends_the_name_and_the_declaration()
+    {
+        _me.Account = FakeMeApi.Pending;
+        var page = Render<SignIn>();
+
+        page.Find("#reg-name").Input("Rūta M.");
+        page.Find("#reg-age").Change(true);
+        page.Find("form").Submit();
+
+        page.WaitForAssertion(() => _me.Completions.ShouldHaveSingleItem());
+        _me.Completions[0].DisplayName.ShouldBe("Rūta M.");
+        _me.Completions[0].ConfirmsAdult.ShouldBeTrue();
+        _me.Completions[0].InvitationCode.ShouldBeNull();
+    }
+
+    [Fact]
+    public void Completion_without_the_declaration_is_stopped_in_the_browser()
+    {
+        _me.Account = FakeMeApi.Pending;
+        var page = Render<SignIn>();
+
+        page.Find("form").Submit();
+
+        page.Find("#confirmsAdult-error").TextContent.ShouldBe("Registruotis gali tik 18 metų ir vyresni asmenys.");
+        _me.Completions.ShouldBeEmpty();
+    }
+
+    [Fact]
+    public void When_the_invitation_ran_out_the_form_asks_for_another_code()
+    {
+        const string usedUp = "Šio kvietimo kodo vietos jau užimtos. Įveskite kitą kvietimo kodą.";
+        _me.Account = FakeMeApi.Pending;
+        _me.Complete = request => Task.FromResult(request.InvitationCode is null
+            ? ApiResult.Fail(new ApiProblem
+            {
+                Status = 400,
+                Code = "validation",
+                Errors = new Dictionary<string, string[]> { ["invitationCode"] = [usedUp] },
+            })
+            : ApiResult.Ok());
+        var page = Render<SignIn>();
+        page.Find("#reg-age").Change(true);
+        page.Find("form").Submit();
+
+        page.WaitForElement("#invitationCode-error").TextContent.ShouldBe(usedUp);
+        page.Find("#complete-invite").Input("BANDYMAS-2026");
+        page.Find("form").Submit();
+
+        page.WaitForAssertion(() => _me.Completions.Count.ShouldBe(2));
+        _me.Completions[1].InvitationCode.ShouldBe("BANDYMAS-2026");
     }
 
     [Fact]
@@ -192,19 +282,45 @@ public sealed class SignInComponentTests : BunitContext
 
     private sealed class FakeMeApi : IMeApi
     {
+        public static readonly MeResponse Member = new()
+        {
+            Id = Guid.NewGuid(),
+            Email = Email,
+            DisplayName = "Rūta M.",
+            VerificationLevel = "email",
+            Roles = ["member"],
+            RegistrationComplete = true,
+        };
+
+        public static readonly MeResponse Pending = new()
+        {
+            Id = Guid.NewGuid(),
+            Email = Email,
+            VerificationLevel = "email",
+            RegistrationComplete = false,
+        };
+
+        /// <summary>The signed-in account; <c>null</c> for a visitor (the API answers 401).</summary>
+        public MeResponse? Account { get; set; }
+
         public IReadOnlyList<SessionResponse> Sessions { get; set; } = [];
 
         public Func<Guid, Task<ApiResult>> EndSession { get; set; } = _ => Task.FromResult(ApiResult.Ok());
 
+        public List<CompleteRegistrationRequest> Completions { get; } = [];
+
+        public Func<CompleteRegistrationRequest, Task<ApiResult>> Complete { get; set; } = _ => Task.FromResult(ApiResult.Ok());
+
         public Task<ApiResult<MeResponse>> GetAsync(CancellationToken cancellationToken = default) =>
-            Task.FromResult(ApiResult<MeResponse>.Ok(new MeResponse
-            {
-                Id = Guid.NewGuid(),
-                Email = Email,
-                DisplayName = "Rūta M.",
-                VerificationLevel = "email",
-                Roles = ["member"],
-            }));
+            Task.FromResult(Account is null
+                ? ApiResult<MeResponse>.Fail(new ApiProblem { Status = 401, Code = "auth.required" })
+                : ApiResult<MeResponse>.Ok(Account));
+
+        public Task<ApiResult> CompleteRegistrationAsync(CompleteRegistrationRequest request, CancellationToken cancellationToken = default)
+        {
+            Completions.Add(request);
+            return Complete(request);
+        }
 
         public Task<ApiResult<IReadOnlyList<SessionResponse>>> GetSessionsAsync(CancellationToken cancellationToken = default) =>
             Task.FromResult(ApiResult<IReadOnlyList<SessionResponse>>.Ok(Sessions));

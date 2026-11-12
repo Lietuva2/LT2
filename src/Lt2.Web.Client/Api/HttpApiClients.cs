@@ -41,4 +41,7 @@ internal sealed class HttpMeApi(ApiHttp http) : IMeApi
 
     public Task<ApiResult> EndSessionAsync(Guid sessionId, CancellationToken cancellationToken = default) =>
         http.SendAsync(HttpMethod.Delete, ApiRoutes.Me.SessionById(sessionId), null, cancellationToken);
+
+    public Task<ApiResult> CompleteRegistrationAsync(CompleteRegistrationRequest request, CancellationToken cancellationToken = default) =>
+        http.SendAsync(HttpMethod.Put, ApiRoutes.Me.Registration, request, cancellationToken);
 }

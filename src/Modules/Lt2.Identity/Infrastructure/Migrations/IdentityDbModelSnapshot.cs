@@ -18,7 +18,7 @@ namespace Lt2.Identity.Infrastructure.Migrations
 #pragma warning disable 612, 618
             modelBuilder
                 .HasDefaultSchema("identity")
-                .HasAnnotation("ProductVersion", "10.0.13")
+                .HasAnnotation("ProductVersion", "10.0.15")
                 .HasAnnotation("Relational:MaxIdentifierLength", 63);
 
             NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
@@ -120,6 +120,11 @@ namespace Lt2.Identity.Infrastructure.Migrations
                         .HasColumnType("character varying(100)")
                         .HasColumnName("display_name");
 
+                    b.Property<string>("InvitationCode")
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)")
+                        .HasColumnName("invitation_code");
+
                     b.Property<Guid?>("InvitationId")
                         .HasColumnType("uuid")
                         .HasColumnName("invitation_id");
@@ -130,6 +135,10 @@ namespace Lt2.Identity.Infrastructure.Migrations
                         .HasColumnType("character varying(256)")
                         .HasColumnName("normalized_email");
 
+                    b.Property<DateTimeOffset?>("RegisteredAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("registered_at");
+
                     b.Property<string>("VerificationLevel")
                         .IsRequired()
                         .HasMaxLength(20)
@@ -138,6 +147,10 @@ namespace Lt2.Identity.Infrastructure.Migrations
 
                     b.HasKey("UserId")
                         .HasName("pk_profile");
+
+                    b.HasIndex("CreatedAt")
+                        .HasDatabaseName("ix_profile_pending_created_at")
+                        .HasFilter("registered_at IS NULL");
 
                     b.HasIndex("InvitationId")
                         .HasDatabaseName("ix_profile_invitation_id");

@@ -18,5 +18,6 @@
     <ProjectReference Include="..\Lt2.SharedKernel\Lt2.SharedKernel.csproj" />
     <ProjectReference Include="..\Modules\Lt2.Notifications\Lt2.Notifications.csproj" />
     <ProjectReference Include="..\Modules\Lt2.Identity\Lt2.Identity.csproj" />
+    <ProjectReference Include="..\Modules\Lt2.Audit\Lt2.Audit.csproj" />
   </ItemGroup>
 </Project>

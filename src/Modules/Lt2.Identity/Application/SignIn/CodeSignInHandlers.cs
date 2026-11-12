@@ -36,7 +36,7 @@ internal sealed class RequestCodeHandler(IdentityDb db, UserManager<User> users,
 
 /// <summary>
 /// Signs in with the emailed code. Every failure (unknown address, wrong, expired, used or exhausted code) gives the
-/// same error. The first successful code confirms the email address and makes the account a member.
+/// same error. The first successful code confirms the email address; a pending account then completes its registration.
 /// </summary>
 internal sealed class CodeSignInHandler(
     IdentityDb db,
@@ -98,13 +98,14 @@ internal sealed class CodeSignInHandler(
             return InvalidCode;
         }
 
+        // The first correct code proves the address. A pending account stays pending: the member role comes with the
+        // completed registration (design 6.2).
         if (!user.EmailConfirmed)
         {
             user.EmailConfirmed = true;
             profile.VerificationLevel = VerificationLevels.Email;
             await users.UpdateAsync(user);
             await db.SaveChangesAsync(cancellationToken);
-            await users.AddToRoleAsync(user, Roles.Member);
         }
 
         await signIn.SignInWithClaimsAsync(
