@@ -61,7 +61,7 @@ internal static class Codes
     };
 }
 
-internal sealed class ParliamentQueries(ParliamentDb db, IParliamentDataNotice notice, IMemoryCache cache, TimeProvider clock) : IParliamentQueries
+internal sealed class ParliamentQueries(IDbContextFactory<ParliamentDb> contexts, IParliamentDataNotice notice, IMemoryCache cache, TimeProvider clock) : IParliamentQueries
 {
     private static readonly TimeZoneInfo Vilnius = TimeZoneInfo.FindSystemTimeZoneById("Europe/Vilnius");
     private static readonly CultureInfo Lithuanian = CultureInfo.GetCultureInfo("lt-LT");
@@ -71,20 +71,22 @@ internal sealed class ParliamentQueries(ParliamentDb db, IParliamentDataNotice n
 
     public async Task<TermInfo?> CurrentTermAsync(CancellationToken cancellationToken)
     {
-        var term = await CurrentTermRowAsync(cancellationToken);
+        await using var db = await contexts.CreateDbContextAsync(cancellationToken);
+        var term = await CurrentTermRowAsync(db, cancellationToken);
         return term is null ? null : ToInfo(term);
     }
 
     public async Task<MpPage> MpsAsync(MpFilter filter, CancellationToken cancellationToken)
     {
+        await using var db = await contexts.CreateDbContextAsync(cancellationToken);
         ArgumentNullException.ThrowIfNull(filter);
-        var term = await CurrentTermRowAsync(cancellationToken);
+        var term = await CurrentTermRowAsync(db, cancellationToken);
         if (term is null)
         {
             return new MpPage([], 0, null);
         }
 
-        var summaries = await SummariesAsync(term.Id, cancellationToken);
+        var summaries = await SummariesAsync(db, term.Id, cancellationToken);
         IEnumerable<MpSummary> list = summaries.Values;
         if (!string.IsNullOrWhiteSpace(filter.Faction))
         {
@@ -115,14 +117,15 @@ internal sealed class ParliamentQueries(ParliamentDb db, IParliamentDataNotice n
 
     public async Task<MpProfile?> MpAsync(string slug, CancellationToken cancellationToken)
     {
-        var context = await MpContextAsync(slug, cancellationToken);
+        await using var db = await contexts.CreateDbContextAsync(cancellationToken);
+        var context = await MpContextAsync(db, slug, cancellationToken);
         if (context is null)
         {
             return null;
         }
 
         var (person, mandate, term) = context.Value;
-        var summaries = await SummariesAsync(term.Id, cancellationToken);
+        var summaries = await SummariesAsync(db, term.Id, cancellationToken);
         var today = Today;
         var memberships = (await (from m in db.Memberships.AsNoTracking()
                                   join b in db.Bodies on m.BodyId equals b.Id
@@ -134,7 +137,7 @@ internal sealed class ParliamentQueries(ParliamentDb db, IParliamentDataNotice n
         var contacts = await db.Contacts.AsNoTracking().Where(c => c.PersonId == person.Id).OrderBy(c => c.Kind).ThenBy(c => c.Value)
             .Select(c => new ContactInfo(c.Kind, c.Value)).ToListAsync(cancellationToken);
         var stat = await db.MpStats.AsNoTracking().FirstOrDefaultAsync(s => s.PersonId == person.Id && s.TermId == term.Id, cancellationToken);
-        var votes = await VotesOfAsync(person, mandate, term.Id, 0, 10, cancellationToken);
+        var votes = await VotesOfAsync(db, person, mandate, term.Id, 0, 10, cancellationToken);
 
         return new MpProfile(
             summaries[person.Id],
@@ -148,19 +151,21 @@ internal sealed class ParliamentQueries(ParliamentDb db, IParliamentDataNotice n
 
     public async Task<MpVotePage?> MpVotesAsync(string slug, string? cursor, int limit, CancellationToken cancellationToken)
     {
-        var context = await MpContextAsync(slug, cancellationToken);
+        await using var db = await contexts.CreateDbContextAsync(cancellationToken);
+        var context = await MpContextAsync(db, slug, cancellationToken);
         if (context is null)
         {
             return null;
         }
 
         var (person, mandate, term) = context.Value;
-        return await VotesOfAsync(person, mandate, term.Id, Offset(cursor), Math.Clamp(limit, 1, 100), cancellationToken);
+        return await VotesOfAsync(db, person, mandate, term.Id, Offset(cursor), Math.Clamp(limit, 1, 100), cancellationToken);
     }
 
     public async Task<IReadOnlyList<BodySummary>> BodiesAsync(string kind, CancellationToken cancellationToken)
     {
-        var term = await CurrentTermRowAsync(cancellationToken);
+        await using var db = await contexts.CreateDbContextAsync(cancellationToken);
+        var term = await CurrentTermRowAsync(db, cancellationToken);
         if (term is null || Codes.Kind(kind) is not { } bodyKind)
         {
             return [];
@@ -177,7 +182,8 @@ internal sealed class ParliamentQueries(ParliamentDb db, IParliamentDataNotice n
 
     public async Task<BodyDetail?> BodyAsync(string kind, string slug, CancellationToken cancellationToken)
     {
-        var term = await CurrentTermRowAsync(cancellationToken);
+        await using var db = await contexts.CreateDbContextAsync(cancellationToken);
+        var term = await CurrentTermRowAsync(db, cancellationToken);
         if (term is null || Codes.Kind(kind) is not { } bodyKind)
         {
             return null;
@@ -206,7 +212,7 @@ internal sealed class ParliamentQueries(ParliamentDb db, IParliamentDataNotice n
                               where fp.FactionId == body.Id
                               orderby v.HeldAt descending
                               select new { fp, v }).Take(10).ToListAsync(cancellationToken);
-            var bills = await BillsByIdAsync(rows.Select(r => r.v.BillId), cancellationToken);
+            var bills = await BillsByIdAsync(db, rows.Select(r => r.v.BillId), cancellationToken);
             recent = rows.Select(r => new FactionVote(Ref(r.v, bills), Split(r.fp, Ref(body)))).ToList();
         }
 
@@ -215,6 +221,7 @@ internal sealed class ParliamentQueries(ParliamentDb db, IParliamentDataNotice n
 
     public async Task<BillPage> BillsAsync(string? query, string? cursor, int limit, CancellationToken cancellationToken)
     {
+        await using var db = await contexts.CreateDbContextAsync(cancellationToken);
         var bills = await db.Bills.AsNoTracking()
             .Select(b => new { b.Number, b.Title, Last = db.Votes.Where(v => v.BillId == b.Id).Max(v => (DateTimeOffset?)v.HeldAt) })
             .ToListAsync(cancellationToken);
@@ -231,6 +238,7 @@ internal sealed class ParliamentQueries(ParliamentDb db, IParliamentDataNotice n
 
     public async Task<BillDetail?> BillAsync(string number, CancellationToken cancellationToken)
     {
+        await using var db = await contexts.CreateDbContextAsync(cancellationToken);
         var bill = await db.Bills.AsNoTracking().FirstOrDefaultAsync(b => b.Number == number, cancellationToken);
         if (bill is null)
         {
@@ -244,6 +252,7 @@ internal sealed class ParliamentQueries(ParliamentDb db, IParliamentDataNotice n
 
     public async Task<VoteDetail?> VoteAsync(long id, CancellationToken cancellationToken)
     {
+        await using var db = await contexts.CreateDbContextAsync(cancellationToken);
         var row = await (from v in db.Votes.AsNoTracking()
                          join i in db.AgendaItems on v.AgendaItemId equals i.Id
                          join s in db.Sittings on i.SittingId equals s.Id
@@ -254,7 +263,7 @@ internal sealed class ParliamentQueries(ParliamentDb db, IParliamentDataNotice n
             return null;
         }
 
-        var bills = await BillsByIdAsync([row.v.BillId], cancellationToken);
+        var bills = await BillsByIdAsync(db, [row.v.BillId], cancellationToken);
         var positions = await (from fp in db.FactionPositions.AsNoTracking()
                                join b in db.Bodies on fp.FactionId equals b.Id into bs
                                from b in bs.DefaultIfEmpty()
@@ -278,6 +287,7 @@ internal sealed class ParliamentQueries(ParliamentDb db, IParliamentDataNotice n
         (await cache.GetOrCreateAsync("parliament:imports", async entry =>
         {
             entry.AbsoluteExpirationRelativeToNow = TimeSpan.FromMinutes(1);
+            await using var db = await contexts.CreateDbContextAsync(cancellationToken);
             var success = await db.ImportRuns.AsNoTracking().Where(r => r.Status == "succeeded").MaxAsync(r => r.FinishedAt, cancellationToken);
             var last = await db.ImportRuns.AsNoTracking().OrderByDescending(r => r.StartedAt).FirstOrDefaultAsync(cancellationToken);
             return new ImportsInfo(success, last?.StartedAt, last?.Status, await notice.IsParliamentDataInventedAsync(cancellationToken));
@@ -288,12 +298,12 @@ internal sealed class ParliamentQueries(ParliamentDb db, IParliamentDataNotice n
 
     // ---- Shared pieces ------------------------------------------------------------------------------------------------
 
-    private async Task<Term?> CurrentTermRowAsync(CancellationToken cancellationToken) =>
+    private static async Task<Term?> CurrentTermRowAsync(ParliamentDb db, CancellationToken cancellationToken) =>
         await db.Terms.AsNoTracking().Where(t => db.Mandates.Any(m => m.TermId == t.Id))
             .OrderByDescending(t => t.To == null).ThenByDescending(t => t.Id).FirstOrDefaultAsync(cancellationToken);
 
     /// <summary>Every MP of the term with the faction of today (or the last one, for a former MP).</summary>
-    private async Task<Dictionary<Guid, MpSummary>> SummariesAsync(int termId, CancellationToken cancellationToken)
+    private async Task<Dictionary<Guid, MpSummary>> SummariesAsync(ParliamentDb db, int termId, CancellationToken cancellationToken)
     {
         var today = Today;
         var people = await (from m in db.Mandates.AsNoTracking()
@@ -313,7 +323,7 @@ internal sealed class ParliamentQueries(ParliamentDb db, IParliamentDataNotice n
         });
     }
 
-    private async Task<(Person Person, Mandate Mandate, Term Term)?> MpContextAsync(string slug, CancellationToken cancellationToken)
+    private static async Task<(Person Person, Mandate Mandate, Term Term)?> MpContextAsync(ParliamentDb db, string slug, CancellationToken cancellationToken)
     {
         var person = await db.People.AsNoTracking().FirstOrDefaultAsync(p => p.Slug == slug, cancellationToken);
         if (person is null)
@@ -321,7 +331,7 @@ internal sealed class ParliamentQueries(ParliamentDb db, IParliamentDataNotice n
             return null;
         }
 
-        var current = await CurrentTermRowAsync(cancellationToken);
+        var current = await CurrentTermRowAsync(db, cancellationToken);
         var mandate = await db.Mandates.AsNoTracking().Where(m => m.PersonId == person.Id)
             .OrderByDescending(m => current != null && m.TermId == current.Id).ThenByDescending(m => m.TermId).FirstOrDefaultAsync(cancellationToken);
         if (mandate is null)
@@ -334,7 +344,7 @@ internal sealed class ParliamentQueries(ParliamentDb db, IParliamentDataNotice n
     }
 
     /// <summary>The votes of the term held during the mandate, newest first, with the MP's choice and faction split.</summary>
-    private async Task<MpVotePage> VotesOfAsync(Person person, Mandate mandate, int termId, int offset, int limit, CancellationToken cancellationToken)
+    private static async Task<MpVotePage> VotesOfAsync(ParliamentDb db, Person person, Mandate mandate, int termId, int offset, int limit, CancellationToken cancellationToken)
     {
         var start = XmlRead.VilniusToUtc(mandate.From.ToDateTime(TimeOnly.MinValue));
         var stop = mandate.To is { } last ? XmlRead.VilniusToUtc(last.AddDays(1).ToDateTime(TimeOnly.MinValue)) : new DateTimeOffset(3000, 1, 1, 0, 0, 0, TimeSpan.Zero);
@@ -354,7 +364,7 @@ internal sealed class ParliamentQueries(ParliamentDb db, IParliamentDataNotice n
                                from b in bs.DefaultIfEmpty()
                                where ids.Contains(fp.VoteId)
                                select new { fp, b }).ToListAsync(cancellationToken);
-        var bills = await BillsByIdAsync(votes.Select(v => v.BillId), cancellationToken);
+        var bills = await BillsByIdAsync(db, votes.Select(v => v.BillId), cancellationToken);
 
         var items = votes.Select(v =>
         {
@@ -372,7 +382,7 @@ internal sealed class ParliamentQueries(ParliamentDb db, IParliamentDataNotice n
         return new MpVotePage(items, more ? (offset + limit).ToString(CultureInfo.InvariantCulture) : null);
     }
 
-    private async Task<Dictionary<Guid, BillRef>> BillsByIdAsync(IEnumerable<Guid?> ids, CancellationToken cancellationToken)
+    private static async Task<Dictionary<Guid, BillRef>> BillsByIdAsync(ParliamentDb db, IEnumerable<Guid?> ids, CancellationToken cancellationToken)
     {
         var wanted = ids.Where(i => i is not null).Select(i => i!.Value).Distinct().ToList();
         return await db.Bills.AsNoTracking().Where(b => wanted.Contains(b.Id)).ToDictionaryAsync(b => b.Id, b => new BillRef(b.Number, b.Title), cancellationToken);

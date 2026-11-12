@@ -20,7 +20,9 @@ public static class ParliamentModule
 
     public static IServiceCollection AddParliamentModule(this IServiceCollection services)
     {
-        services.AddDbContext<ParliamentDb>((sp, options) =>
+        // A factory as well as the scoped context: the read side takes a context per call, because the layout and the
+        // page query at the same time while a page is rendered on the server (one shared context failed with a 500).
+        services.AddDbContextFactory<ParliamentDb>((sp, options) =>
             options.UseNpgsql(
                     sp.GetRequiredService<NpgsqlDataSource>(),
                     o => o.MigrationsHistoryTable("__ef_migrations_history", Schema))
