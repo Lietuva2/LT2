@@ -18,6 +18,7 @@ The website is the `../docs/` folder: its contents are uploaded as they are to l
 | `../docs/kas-nauja.html` | Former LT2 users | What changed since the 2011–2020 platform, lessons learned, what stays. |
 | `../docs/zurnalistams.html` | Journalists | What LT2 would offer journalists and story ideas. |
 | `design-notes.md` | Team | Decision history, rejected alternatives, research sources and open questions from the discovery work. |
+| `system-design.md` | Team | Proposed system design for implementation: stack, solution layout, security, MP profiles from open data, and appeals on bills with summary emails to MPs. Agreed 2026-11-12 as the basis for implementation. |
 | `prototypes/seimas-vote-hemicycle/` | Team | Feasibility check: renders a real Seimas vote from the open data API. |
 | `prototypes/logo-spin/` | Team | `<lt2-logo-spin>`: embeddable script that turns the logo in 3D; edge-on it is a man (left edge) or a woman (right edge), drawn so their clothes match the logo's colour bands. `index.html` is the demo (serve the folder over HTTP). The design history: `figuros.html` (flat figure options per edge) and `poros.html` (the chosen pair, R bodies with K4 legs, and the alternatives). |
 
