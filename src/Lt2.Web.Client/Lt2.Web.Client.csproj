@@ -14,4 +14,9 @@
   <ItemGroup>
     <ProjectReference Include="..\Lt2.Api.Contracts\Lt2.Api.Contracts.csproj" />
   </ItemGroup>
+  <ItemGroup>
+    <!-- The API clients (de)serialise the contract types by reflection. Publishing trims unused members, which removed
+         their constructors and broke every call from the browser; keep the whole (small) contracts assembly. -->
+    <TrimmerRootAssembly Include="Lt2.Api.Contracts" />
+  </ItemGroup>
 </Project>
