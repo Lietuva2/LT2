@@ -1,0 +1,5 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <RootNamespace>Lt2.SharedKernel</RootNamespace>
+  </PropertyGroup>
+</Project>

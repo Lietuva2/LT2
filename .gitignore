@@ -1,0 +1,15 @@
+bin/
+obj/
+*.user
+*.suo
+.vs/
+.vscode/
+.idea/
+TestResults/
+artifacts/
+*.swp
+# Secrets are generated locally by deploy/init-secrets and never committed.
+deploy/secrets/*
+!deploy/secrets/README.md
+# Playwright traces and screenshots
+tests/Lt2.E2E/output/

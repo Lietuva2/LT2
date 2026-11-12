@@ -1,0 +1,45 @@
+root = true
+
+[*]
+charset = utf-8
+end_of_line = lf
+insert_final_newline = true
+indent_style = space
+indent_size = 4
+trim_trailing_whitespace = true
+
+[*.{json,yaml,yml,props,csproj,xml,resx,razor,html,css,js}]
+indent_size = 2
+
+[*.{razor,cs}]
+indent_size = 4
+
+[*.cs]
+csharp_style_namespace_declarations = file_scoped:warning
+dotnet_sort_system_directives_first = true
+
+# Not useful for this code base: no VB consumers, static factories on generic results are intended.
+dotnet_diagnostic.CA1716.severity = none
+dotnet_diagnostic.CA1000.severity = none
+# ASP.NET Core has no synchronisation context.
+dotnet_diagnostic.CA2007.severity = none
+# Logging through source-generated LoggerMessage everywhere is not worth it at this size.
+dotnet_diagnostic.CA1848.severity = none
+dotnet_diagnostic.CA1873.severity = none
+# Lowercase normalisation of email addresses is intended (design 6.2).
+dotnet_diagnostic.CA1308.severity = none
+# Minimal API endpoints and EF entities are instantiated by frameworks.
+dotnet_diagnostic.CA1812.severity = none
+# Test method names use underscores.
+dotnet_diagnostic.CA1707.severity = none
+
+[tests/**.cs]
+dotnet_diagnostic.CA2000.severity = none
+dotnet_diagnostic.CA1515.severity = none
+dotnet_diagnostic.CA1001.severity = none
+dotnet_diagnostic.CA1861.severity = none
+dotnet_diagnostic.CA2234.severity = none
+dotnet_diagnostic.CA1062.severity = none
+
+[**/Migrations/*.cs]
+generated_code = true
