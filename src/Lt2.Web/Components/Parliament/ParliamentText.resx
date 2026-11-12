@@ -118,6 +118,7 @@
   <data name="Vote.ConsensusText" xml:space="preserve"><value>Seimas pritarė bendru sutarimu: Seimo nariai nebalsavo atskirai, todėl balsų skaičių nėra.</value></data>
   <data name="Vote.Note" xml:space="preserve"><value>Seimo pastaba prie rezultato:</value></data>
   <data name="Vote.Item" xml:space="preserve"><value>Darbotvarkės klausimas</value></data>
+  <data name="Vote.Sitting" xml:space="preserve"><value>Posėdžio pradžia</value></data>
   <data name="Vote.SeatMap" xml:space="preserve"><value>Kaip balsavo Seimo nariai</value></data>
   <data name="Vote.SeatMapAria" xml:space="preserve"><value>Seimo narių balsai: kiekvienas taškas – vienas Seimo narys, sugrupuota pagal frakcijas</value></data>
   <data name="Vote.Factions" xml:space="preserve"><value>Frakcijų pozicijos</value></data>

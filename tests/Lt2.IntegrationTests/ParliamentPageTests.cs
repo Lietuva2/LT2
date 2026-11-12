@@ -227,6 +227,7 @@ public sealed partial class ParliamentPageTests(DatabaseFixture database) : ApiT
 
         html.ShouldContain("<h1>Gyventojų pajamų mokesčio įstatymo pataisa</h1>");
         html.ShouldContain("<p class=\"lead\">Pritarti projektui po pateikimo</p>");
+        Regex.IsMatch(html, "Posėdžio pradžia:\\s*<span class=\"num\">2026 m. kovo 17 d. 10:00</span>").ShouldBeTrue(html[html.IndexOf("Posėdžio", StringComparison.Ordinal)..][..120]);
     }
 
     [Fact]

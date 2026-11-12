@@ -102,7 +102,7 @@
         </section>
     }
 
-    <p class="small">@if (!SameText(heading, v.AgendaItemTitle)) { @F.T["Vote.Item"]<text>: </text>@v.AgendaItemTitle<text> · </text> }<span class="num">@F.Time(v.SittingStartsAt)</span></p>
+    <p class="small">@if (!SameText(heading, v.AgendaItemTitle)) { @F.T["Vote.Item"]<text>: </text>@v.AgendaItemTitle<text> · </text> }@F.T["Vote.Sitting"]: <span class="num">@F.Time(v.SittingStartsAt)</span></p>
 }
 
 @code {
