@@ -35,7 +35,10 @@ internal static class SecurityHeaders
                 headers.XFrameOptions = "DENY";
                 headers["Cross-Origin-Opener-Policy"] = "same-origin";
                 headers["Cross-Origin-Resource-Policy"] = "same-origin";
-                if (context.Request.Path.StartsWithSegments("/api", StringComparison.OrdinalIgnoreCase))
+                // API answers are not stored anywhere unless an endpoint has said it is public (the parliament
+                // reads of design 7.4 set "public, max-age=60" with an ETag); personal answers never set it.
+                if (context.Request.Path.StartsWithSegments("/api", StringComparison.OrdinalIgnoreCase)
+                    && string.IsNullOrEmpty(headers.CacheControl))
                 {
                     headers.CacheControl = "no-store";
                 }

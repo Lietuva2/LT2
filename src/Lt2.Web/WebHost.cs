@@ -3,6 +3,7 @@ using Lt2.Api.Contracts;
 using Lt2.Api.Contracts.Auth;
 using Lt2.Api.Contracts.Me;
 using Lt2.Api.Contracts.Meta;
+using Lt2.Api.Contracts.Parliament;
 using Lt2.Appeals;
 using Lt2.Audit;
 using Lt2.Identity;
@@ -64,7 +65,9 @@ internal static class WebHost
         services.AddHttpContextAccessor();
         services.AddScoped<IAuthApi, ServerAuthApi>();
         services.AddScoped<IMeApi, ServerMeApi>();
+        services.AddScoped<ParliamentReads>();
         services.AddScoped<IMetaApi, ServerMetaApi>();
+        services.AddScoped<IParliamentApi, ServerParliamentApi>();
         services.AddLt2ClientComponents();
     }
 

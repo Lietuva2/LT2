@@ -17,5 +17,6 @@
   </ItemGroup>
   <ItemGroup>
     <InternalsVisibleTo Include="Lt2.Parliament.ImportTests" />
+    <InternalsVisibleTo Include="Lt2.IntegrationTests" />
   </ItemGroup>
 </Project>

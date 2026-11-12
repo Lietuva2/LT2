@@ -33,5 +33,5 @@
     private bool _parliamentDataInvented;
 
     protected override async Task OnInitializedAsync() =>
-        _parliamentDataInvented = (await Meta.GetDataNoticeAsync()).Value?.ParliamentDataInvented == true;
+        _parliamentDataInvented = (await Meta.GetImportsAsync()).Value?.ParliamentDataInvented == true;
 }

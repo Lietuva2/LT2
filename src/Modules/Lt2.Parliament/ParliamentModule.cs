@@ -28,6 +28,8 @@ public static class ParliamentModule
         services.AddSingleton<IModuleDatabase, ParliamentModuleDatabase>();
         services.AddMemoryCache();
         services.AddScoped<IParliamentDataNotice, ParliamentDataNotice>();
+        services.TryAddSingleton(TimeProvider.System);
+        services.AddScoped<IParliamentQueries, ParliamentQueries>();
         return services;
     }
 
