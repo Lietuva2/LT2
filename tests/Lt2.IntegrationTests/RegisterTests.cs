@@ -42,7 +42,9 @@ public sealed class RegisterTests(DatabaseFixture database) : ApiTest(database)
         again.StatusCode.ShouldBe(HttpStatusCode.Accepted);
         (await again.Content.ReadAsStringAsync()).ShouldBeEmpty();
         (await UsesLeftAsync()).ShouldBe(usesBefore);
-        (await Factory.OutboxCountAsync(email.ToUpperInvariant())).ShouldBe(1, "the existing account receives a sign-in code");
+        // The code goes to the address on the account, not to the spelling typed in the second registration.
+        (await Factory.OutboxCountAsync(email)).ShouldBe(2, "the existing account receives a sign-in code");
+        (await Factory.OutboxCountAsync(email.ToUpperInvariant())).ShouldBe(0);
         (await Database.ScalarAsync<long>("SELECT count(*) FROM identity.profile WHERE normalized_email = @e", ("e", email.ToLowerInvariant())))
             .ShouldBe(1);
     }
