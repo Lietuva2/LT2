@@ -189,6 +189,8 @@ public sealed class SignInComponentTests : BunitContext
         page.Find("#reg-name").GetAttribute("value").ShouldBeNullOrEmpty();
         page.Find("#reg-age").HasAttribute("checked").ShouldBeFalse();
         page.FindAll("#complete-invite").ShouldBeEmpty("the invitation is asked again only if it ran out");
+        page.Find("#reg-name-hint").TextContent
+            .ShouldBe("Šį vardą kiti matys prie jūsų parašytų argumentų. Ar prašote balsuoti už, ar prieš – nemato niekas.");
         page.Markup.ShouldContain("r•••@pavyzdys.test");
     }
 

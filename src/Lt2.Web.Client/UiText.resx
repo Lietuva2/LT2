@@ -23,7 +23,7 @@
   <data name="Invitation.Hint" xml:space="preserve"><value>Kol platforma bandoma, registruotis galima tik su kvietimu.</value></data>
   <data name="DisplayName.Label" xml:space="preserve"><value>Vardas, kurį matys kiti</value></data>
   <data name="DisplayName.Placeholder" xml:space="preserve"><value>Rūta M.</value></data>
-  <data name="DisplayName.Hint" xml:space="preserve"><value>Rodomas prie jūsų parašytų priežasčių. Jūsų pasirinkta pusė nerodoma niekam.</value></data>
+  <data name="DisplayName.Hint" xml:space="preserve"><value>Šį vardą kiti matys prie jūsų parašytų argumentų. Ar prašote balsuoti už, ar prieš – nemato niekas.</value></data>
   <data name="Adult.Label" xml:space="preserve"><value>Man yra 18 metų arba daugiau</value></data>
   <data name="Register.Submit" xml:space="preserve"><value>Registruotis</value></data>
   <data name="Register.Fine" xml:space="preserve"><value>Išsiųsime laišką šiuo adresu. Ar adresas jau registruotas, čia neparodome.</value></data>
