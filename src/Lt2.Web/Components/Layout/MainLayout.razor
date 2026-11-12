@@ -1,9 +1,12 @@
 @inherits LayoutComponentBase
 @inject IStringLocalizer<PageText> T
+@inject Lt2.Api.Contracts.Meta.IMetaApi Meta
 
 <header class="page top">
     <a class="top__brand" href="/"><Logo />Lietuva 2.0</a>
     <nav class="top__nav" aria-label="@T["Nav.Label"]">
+        <NavLink href="/seimo-nariai" Match="NavLinkMatch.Prefix" ActiveClass="">@T["Nav.Mps"]</NavLink>
+        <NavLink href="/metodika" ActiveClass="">@T["Nav.Methodology"]</NavLink>
         <AuthorizeView>
             <Authorized>
                 <a href="/sveiki">@T["Nav.Account"]</a>
@@ -12,8 +15,15 @@
                 <a href="/prisijungti">@T["Nav.SignIn"]</a>
             </NotAuthorized>
         </AuthorizeView>
+        @* The theme switch (lt2-theme.js): hidden until the script shows it; kept across enhanced navigation. *@
+        <button class="mark" type="button" id="theme-switch" data-theme-switch data-permanent hidden></button>
     </nav>
 </header>
+
+@if (_parliamentDataInvented)
+{
+    <div class="page"><p class="note" role="note" id="invented-data">@T["Notice.InventedParliament"]</p></div>
+}
 
 <main class="page stack stack--loose">
     @Body
@@ -22,3 +32,10 @@
 <footer class="page foot">
     <p>@T["Footer.Line"]</p>
 </footer>
+
+@code {
+    private bool _parliamentDataInvented;
+
+    protected override async Task OnInitializedAsync() =>
+        _parliamentDataInvented = (await Meta.GetImportsAsync()).Value?.ParliamentDataInvented == true;
+}

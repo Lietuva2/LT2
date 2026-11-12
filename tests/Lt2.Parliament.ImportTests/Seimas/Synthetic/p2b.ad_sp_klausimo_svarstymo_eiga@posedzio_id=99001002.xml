@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- LT2-SYNTHETIC: invented by Lietuva 2.0 for tests and the local stand-in. NOT a recorded Seimas response.
+     Shape: assumed from the evidence listed in ../ASSUMPTIONS.md. Every name, identifier and number is fictional. -->
+<SeimoInformacija>
+  <SeimoPosėdis posėdžio_id="99001002">
+    <DarbotvarkėsKlausimas darbotvarkės_klausimo_id="99010004">
+      <Balsavimas balsavimo_id="99100004" balsavimo_laikas="2026-04-14 10:47:52" aprašas="Pritarti projektui po pateikimo" balsavimo_tipas="Atviras"/>
+    </DarbotvarkėsKlausimas>
+  </SeimoPosėdis>
+</SeimoInformacija>

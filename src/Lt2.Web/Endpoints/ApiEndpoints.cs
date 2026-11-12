@@ -3,6 +3,7 @@ using Lt2.Api.Contracts;
 using Lt2.Web.Endpoints.Admin;
 using Lt2.Web.Endpoints.Auth;
 using Lt2.Web.Endpoints.Me;
+using Lt2.Web.Endpoints.Parliament;
 using Lt2.Web.Security;
 using Lt2.Web.Services;
 
@@ -39,6 +40,19 @@ internal static class ApiEndpoints
         UpdateSettingEndpoint.Map(api);
         GrantRoleEndpoint.Map(api);
         ResetAccountEndpoint.Map(api);
+
+        GetCurrentTermEndpoint.Map(api);
+        GetMpsEndpoint.Map(api);
+        GetMpEndpoint.Map(api);
+        GetMpVotesEndpoint.Map(api);
+        GetFactionsEndpoint.Map(api);
+        GetFactionEndpoint.Map(api);
+        GetCommitteesEndpoint.Map(api);
+        GetCommitteeEndpoint.Map(api);
+        GetBillsEndpoint.Map(api);
+        GetBillEndpoint.Map(api);
+        GetVoteEndpoint.Map(api);
+        GetImportsEndpoint.Map(api);
     }
 
     /// <summary>A route from <see cref="ApiRoutes"/> relative to the <c>/api/v1</c> group.</summary>

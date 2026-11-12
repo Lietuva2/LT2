@@ -42,6 +42,35 @@ public static class ApiRoutes
     }
 }
 
+/// <summary>Design 7.4: the public parliament routes.</summary>
+public static class ParliamentRoutes
+{
+    public const string CurrentTerm = ApiRoutes.Prefix + "/terms/current";
+    public const string Mps = ApiRoutes.Prefix + "/mps";
+    public const string Mp = Mps + "/{slug}";
+    public const string MpVotes = Mps + "/{slug}/votes";
+    public const string Factions = ApiRoutes.Prefix + "/factions";
+    public const string Faction = Factions + "/{slug}";
+    public const string Committees = ApiRoutes.Prefix + "/committees";
+    public const string Committee = Committees + "/{slug}";
+    public const string Bills = ApiRoutes.Prefix + "/bills";
+    public const string Bill = Bills + "/{number}";
+    public const string Vote = ApiRoutes.Prefix + "/votes/{id:long}";
+    public const string Imports = ApiRoutes.Prefix + "/meta/imports";
+
+    public static string MpBySlug(string slug) => $"{Mps}/{Uri.EscapeDataString(slug)}";
+
+    public static string MpVotesBySlug(string slug) => $"{MpBySlug(slug)}/votes";
+
+    public static string FactionBySlug(string slug) => $"{Factions}/{Uri.EscapeDataString(slug)}";
+
+    public static string CommitteeBySlug(string slug) => $"{Committees}/{Uri.EscapeDataString(slug)}";
+
+    public static string BillByNumber(string number) => $"{Bills}/{Uri.EscapeDataString(number)}";
+
+    public static string VoteById(long id) => $"{ApiRoutes.Prefix}/votes/{id.ToString(System.Globalization.CultureInfo.InvariantCulture)}";
+}
+
 /// <summary>Header names the API and its clients agree on.</summary>
 public static class ApiHeaders
 {

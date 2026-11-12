@@ -1,0 +1,184 @@
+using Microsoft.Playwright;
+
+namespace Lt2.E2E;
+
+/// <summary>
+/// Design 7.3 and 7.5: the parliament pages in a real browser against the stack with the invented parliament, at
+/// 1280 px and 390 px, in both themes, without sideways scrolling, and once with JavaScript turned off. Screenshots go
+/// to output/pages/. Uses no rate-limited endpoint.
+///
+/// Runs only when <c>LT2_E2E_BASE_URL</c> is set (see <see cref="SignUpTests"/>).
+/// </summary>
+public sealed class ParliamentPageTests
+{
+    private static readonly (string Name, string Path, string Heading)[] Pages =
+    [
+        ("mps", "/seimo-nariai", "Seimo nariai"),
+        ("profile", "/p/jonas-petraitis", "Jonas Petraitis"),
+        ("profile-votes", "/p/jonas-petraitis/balsavimai", "Jonas Petraitis: balsavimai"),
+        ("former", "/p/tadas-alksninis", "Tadas Alksninis"),
+        ("faction", "/frakcijos/regionu-aljanso-frakcija", "Regionų aljanso frakcija"),
+        ("committee", "/komitetai/biudzeto-ir-finansu-komitetas", "Biudžeto ir finansų komitetas"),
+        ("bill", "/seimas/XVP-0412", "Gyventojų pajamų mokesčio įstatymo pataisa"),
+        ("vote", "/seimas/balsavimai/99100002", "Gyventojų pajamų mokesčio įstatymo pataisa"),
+        ("vote-consensus", "/seimas/balsavimai/99100003", "Vietinių rinkliavų įstatymo pataisa"),
+        ("vote-note", "/seimas/balsavimai/99100004", "Atliekų tvarkymo įstatymo pataisa"),
+        ("methodology", "/metodika", "Kaip skaičiuojama"),
+        ("not-found", "/nera-tokio-puslapio", "Puslapis nerastas"),
+    ];
+
+    [Theory]
+    [InlineData(1280, 800, "light")]
+    [InlineData(1280, 800, "dark")]
+    [InlineData(390, 844, "light")]
+    [InlineData(390, 844, "dark")]
+    public async Task Every_parliament_page_fits_the_width_without_sideways_scrolling_in_both_themes(int width, int height, string theme)
+    {
+        Assert.SkipWhen(string.IsNullOrEmpty(SignUpTests.BaseUrl), "LT2_E2E_BASE_URL is not set; start the stack and set it to run end-to-end tests.");
+        await using var session = await Session.StartAsync(width, height, theme == "dark" ? ColorScheme.Dark : ColorScheme.Light, javaScript: true);
+        var page = session.Page;
+
+        foreach (var (name, path, heading) in Pages)
+        {
+            await page.GotoAsync(SignUpTests.BaseUrl + path);
+            await Assertions.Expect(page.GetByRole(AriaRole.Heading, new() { Level = 1 })).ToHaveTextAsync(heading);
+            var overflow = await page.EvaluateAsync<int>("() => document.documentElement.scrollWidth - document.documentElement.clientWidth");
+            overflow.ShouldBeLessThanOrEqualTo(0, $"{path} scrolls sideways by {overflow}px at {width}px ({theme})");
+            (await page.EvaluateAsync<string>("() => matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light'")).ShouldBe(theme);
+            await page.Locator("#invented-data").WaitForAsync();
+            await page.ScreenshotAsync(new() { Path = Path.Combine("output", "pages", $"{name}-{width}-{theme}.png"), FullPage = true });
+        }
+
+        session.ConsoleErrors.ShouldBeEmpty();
+    }
+
+    [Fact]
+    public async Task Without_javascript_every_page_renders_the_filters_work_and_there_is_no_dead_theme_button()
+    {
+        Assert.SkipWhen(string.IsNullOrEmpty(SignUpTests.BaseUrl), "LT2_E2E_BASE_URL is not set; start the stack and set it to run end-to-end tests.");
+        await using var session = await Session.StartAsync(390, 844, ColorScheme.Light, javaScript: false);
+        var page = session.Page;
+
+        foreach (var (name, path, heading) in Pages)
+        {
+            await page.GotoAsync(SignUpTests.BaseUrl + path);
+            await Assertions.Expect(page.GetByRole(AriaRole.Heading, new() { Level = 1 })).ToHaveTextAsync(heading);
+            await Assertions.Expect(page.Locator("[data-theme-switch]")).ToBeHiddenAsync();
+            await page.ScreenshotAsync(new() { Path = Path.Combine("output", "pages", $"{name}-nojs.png"), FullPage = true });
+        }
+
+        // The MP list filters are a plain GET form.
+        await page.GotoAsync(SignUpTests.BaseUrl + "/seimo-nariai");
+        await page.GetByLabel("Frakcija").SelectOptionAsync(new SelectOptionValue { Label = "Pilietinės sąjungos frakcija" });
+        await page.GetByRole(AriaRole.Button, new() { Name = "Rodyti" }).ClickAsync();
+        await page.WaitForURLAsync("**/seimo-nariai?*frakcija=pilietines-sajungos-frakcija*");
+        await Assertions.Expect(page.GetByRole(AriaRole.Status)).ToHaveTextAsync("Rasta: 3");
+        await Assertions.Expect(page.GetByRole(AriaRole.Link, new() { Name = "Ona Jonaitienė" })).ToBeVisibleAsync();
+
+        // A link from the list to a profile and on to a vote, all without scripts.
+        await page.GetByRole(AriaRole.Link, new() { Name = "Ona Jonaitienė" }).ClickAsync();
+        await Assertions.Expect(page.GetByRole(AriaRole.Heading, new() { Level = 1 })).ToHaveTextAsync("Ona Jonaitienė");
+        await page.Locator("a[href='/seimas/balsavimai/99100002']").ClickAsync();
+        await Assertions.Expect(page.Locator("svg.seatmap rect.seat")).ToHaveCountAsync(13);
+    }
+
+    [Fact]
+    public async Task The_theme_switch_cycles_system_light_dark_and_keeps_the_choice_across_pages()
+    {
+        Assert.SkipWhen(string.IsNullOrEmpty(SignUpTests.BaseUrl), "LT2_E2E_BASE_URL is not set; start the stack and set it to run end-to-end tests.");
+        await using var session = await Session.StartAsync(1280, 800, ColorScheme.Light, javaScript: true);
+        var page = session.Page;
+        await page.GotoAsync(SignUpTests.BaseUrl + "/seimo-nariai");
+
+        var button = page.Locator("[data-theme-switch]");
+        await Assertions.Expect(button).ToHaveTextAsync("Tema: automatinė");
+        await button.ClickAsync();
+        await Assertions.Expect(button).ToHaveTextAsync("Tema: šviesi");
+        await button.ClickAsync();
+        await Assertions.Expect(button).ToHaveTextAsync("Tema: tamsi");
+        (await page.EvaluateAsync<string>("() => document.documentElement.dataset.theme")).ShouldBe("dark");
+        var ground = await page.EvaluateAsync<string>("() => getComputedStyle(document.body).backgroundColor");
+        ground.ShouldBe("rgb(14, 20, 17)", "the dark ground token");
+
+        // Enhanced navigation to another page: the choice and the button stay.
+        await page.GetByRole(AriaRole.Link, new() { Name = "Jonas Petraitis" }).ClickAsync();
+        await Assertions.Expect(page.GetByRole(AriaRole.Heading, new() { Level = 1 })).ToHaveTextAsync("Jonas Petraitis");
+        await Assertions.Expect(button).ToBeVisibleAsync();
+        await Assertions.Expect(button).ToHaveTextAsync("Tema: tamsi");
+
+        // A full reload applies the stored choice before the page is shown.
+        await page.ReloadAsync();
+        (await page.EvaluateAsync<string>("() => document.documentElement.dataset.theme")).ShouldBe("dark");
+        await button.ClickAsync();
+        await Assertions.Expect(button).ToHaveTextAsync("Tema: automatinė");
+        (await page.EvaluateAsync<bool>("() => document.documentElement.hasAttribute('data-theme')")).ShouldBeFalse();
+        session.ConsoleErrors.ShouldBeEmpty();
+    }
+
+    [Fact]
+    public async Task A_tag_that_is_a_link_keeps_the_tag_look_without_an_underline_until_pointed_at()
+    {
+        Assert.SkipWhen(string.IsNullOrEmpty(SignUpTests.BaseUrl), "LT2_E2E_BASE_URL is not set; start the stack and set it to run end-to-end tests.");
+        await using var session = await Session.StartAsync(1280, 800, ColorScheme.Light, javaScript: true);
+        var page = session.Page;
+
+        foreach (var path in new[] { "/p/jonas-petraitis", "/seimo-nariai" })
+        {
+            await page.GotoAsync(SignUpTests.BaseUrl + path);
+            var tags = page.Locator("a.tag");
+            (await tags.CountAsync()).ShouldBeGreaterThan(0, path);
+            foreach (var tag in await tags.AllAsync())
+            {
+                (await tag.EvaluateAsync<string>("t => getComputedStyle(t).textDecorationLine")).ShouldBe("none", path);
+            }
+
+            var first = page.Locator("a.tag.tag--ink").First;
+            (await first.EvaluateAsync<string>("t => getComputedStyle(t).color")).ShouldBe("rgb(255, 255, 255)", "the ink tag's own colour (--sheet), not the link colour");
+            await first.HoverAsync();
+            (await first.EvaluateAsync<string>("t => getComputedStyle(t).textDecorationLine")).ShouldBe("underline", path);
+        }
+    }
+
+    private sealed class Session : IAsyncDisposable
+    {
+        private IPlaywright _playwright = default!;
+        private IBrowser _browser = default!;
+        private IBrowserContext _context = default!;
+
+        public IPage Page { get; private set; } = default!;
+
+        public List<string> ConsoleErrors { get; } = [];
+
+        public static async Task<Session> StartAsync(int width, int height, ColorScheme scheme, bool javaScript)
+        {
+            Directory.CreateDirectory(Path.Combine("output", "pages"));
+            var session = new Session { _playwright = await Playwright.CreateAsync() };
+            session._browser = await session._playwright.Chromium.LaunchAsync(new BrowserTypeLaunchOptions { Channel = SignUpTests.Channel, Headless = true });
+            session._context = await session._browser.NewContextAsync(new BrowserNewContextOptions
+            {
+                ViewportSize = new ViewportSize { Width = width, Height = height },
+                IgnoreHTTPSErrors = true,
+                Locale = "lt-LT",
+                ColorScheme = scheme,
+                JavaScriptEnabled = javaScript,
+            });
+            session.Page = await session._context.NewPageAsync();
+            session.Page.Console += (_, message) =>
+            {
+                // The not-found page answers 404 on purpose; the browser logs that as a failed resource.
+                if (message.Type == "error" && !message.Text.Contains("404", StringComparison.Ordinal))
+                {
+                    session.ConsoleErrors.Add(message.Text);
+                }
+            };
+            return session;
+        }
+
+        public async ValueTask DisposeAsync()
+        {
+            await _context.DisposeAsync();
+            await _browser.DisposeAsync();
+            _playwright.Dispose();
+        }
+    }
+}

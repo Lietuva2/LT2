@@ -1,0 +1,190 @@
+using System.Security.Cryptography;
+using System.Text.Json;
+using Lt2.Api.Contracts;
+using Lt2.Api.Contracts.Meta;
+using Lt2.Api.Contracts.Parliament;
+using Lt2.Parliament;
+using Lt2.SharedKernel;
+using Microsoft.Extensions.Options;
+
+namespace Lt2.Web.Services;
+
+/// <summary>
+/// The parliament reads both the HTTP endpoints and the server-rendered pages use: the module's answers mapped to the
+/// API contracts, or <c>not-found</c>.
+/// </summary>
+internal sealed class ParliamentReads(IParliamentQueries queries)
+{
+    public const string ImportSource = "seimas-open-data";
+    private static readonly Error NotFound = Error.NotFound("not-found");
+
+    public async Task<Result<TermResponse>> CurrentTermAsync(CancellationToken ct) =>
+        await queries.CurrentTermAsync(ct) is { } term ? Map(term) : NotFound;
+
+    public async Task<Result<MpListResponse>> MpsAsync(string? faction, string? committee, string? q, string? cursor, CancellationToken ct)
+    {
+        var page = await queries.MpsAsync(new MpFilter(Blank(faction), Blank(committee), Blank(q), cursor), ct);
+        return new MpListResponse(page.Items.Select(Map).ToList(), page.Total, page.NextCursor);
+    }
+
+    public async Task<Result<MpProfileResponse>> MpAsync(string slug, CancellationToken ct) =>
+        await queries.MpAsync(slug, ct) is { } p
+            ? new MpProfileResponse(
+                Map(p.Mp),
+                Map(p.Term),
+                new MandateResponse(p.Mandate.From, p.Mandate.To, p.Mandate.NominatingParty, p.Mandate.ElectedHow, p.Mandate.Constituency, p.Mandate.TermsServed),
+                p.Memberships.Select(m => new MembershipResponse(Map(m.Body), m.Role, m.From, m.To, m.Current)).ToList(),
+                p.Contacts.Select(c => new ContactResponse(c.Kind, c.Value)).ToList(),
+                p.Statistics is { } s ? new MpStatisticsResponse(s.VotesHeld, s.VotesTakenPart, s.Participation, s.VotesWithFactionPosition, s.VotedWithFaction, s.WithFaction, s.FreeVotes) : null,
+                p.RecentVotes.Select(Map).ToList())
+            : NotFound;
+
+    public async Task<Result<MpVotesResponse>> MpVotesAsync(string slug, string? cursor, CancellationToken ct) =>
+        await queries.MpVotesAsync(slug, cursor, 50, ct) is { } page ? new MpVotesResponse(page.Items.Select(Map).ToList(), page.NextCursor) : NotFound;
+
+    public async Task<Result<IReadOnlyList<BodyListItem>>> BodiesAsync(string kind, CancellationToken ct) =>
+        Result<IReadOnlyList<BodyListItem>>.Success((await queries.BodiesAsync(kind, ct)).Select(Map).ToList());
+
+    public async Task<Result<BodyResponse>> BodyAsync(string kind, string slug, CancellationToken ct) =>
+        await queries.BodyAsync(kind, slug, ct) is { } b
+            ? new BodyResponse(
+                Map(b.Body),
+                Map(b.Term),
+                b.Members.Select(m => new BodyMemberResponse(Map(m.Mp), m.Role, m.From, m.To, m.Current)).ToList(),
+                b.RecentVotes.Select(v => new FactionVoteResponse(Map(v.Vote), Map(v.Split))).ToList())
+            : NotFound;
+
+    public async Task<Result<BillListResponse>> BillsAsync(string? q, string? cursor, CancellationToken ct)
+    {
+        var page = await queries.BillsAsync(Blank(q), cursor, 50, ct);
+        return new BillListResponse(page.Items.Select(b => new BillListItem(b.Number, b.Title, b.LastVoteAt)).ToList(), page.Total, page.NextCursor);
+    }
+
+    public async Task<Result<BillResponse>> BillAsync(string number, CancellationToken ct) =>
+        await queries.BillAsync(number, ct) is { } b ? new BillResponse(b.Number, b.Title, b.ESeimasUrl, b.Votes.Select(Map).ToList()) : NotFound;
+
+    public async Task<Result<VoteResponse>> VoteAsync(long id, CancellationToken ct) =>
+        await queries.VoteAsync(id, ct) is { } v
+            ? new VoteResponse(
+                Map(v.Summary),
+                v.SittingStartsAt,
+                v.AgendaItemTitle,
+                v.Factions.Select(Map).ToList(),
+                v.Ballots.Select(b => new BallotResponse(Map(b.Mp), b.FactionLabel, b.Choice)).ToList())
+            : NotFound;
+
+    public async Task<Result<ImportsResponse>> ImportsAsync(CancellationToken ct)
+    {
+        var info = await queries.ImportsAsync(ct);
+        return new ImportsResponse([new ImportSourceResponse(ImportSource, info.LastSuccessAt, info.LastRunAt, info.LastRunStatus)], info.ParliamentDataInvented);
+    }
+
+    private static string? Blank(string? text) => string.IsNullOrWhiteSpace(text) ? null : text.Trim();
+
+    private static TermResponse Map(TermInfo t) => new(t.Id, t.Name, t.From, t.To);
+
+    private static BodyLink Map(BodyRef b) => new(b.Slug, b.Name, b.Kind);
+
+    private static MpLink Map(MpRef m) => new(m.Slug, m.FirstName, m.LastName);
+
+    private static MpListItem Map(MpSummary m) => new(m.Slug, m.FirstName, m.LastName, m.Gender, m.Sitting, m.Faction is { } f ? Map(f) : null, m.NominatingParty);
+
+    private static BodyListItem Map(BodySummary b) => new(b.Slug, b.Name, b.Kind, b.Members);
+
+    private static VoteLink Map(VoteRef v) =>
+        new(v.Id, v.HeldAt, v.Wording, v.Kind, v.Stage, v.IsConsensus, v.HasResult, v.Bill is { } b ? new BillLink(b.Number, b.Title) : null);
+
+    private static FactionSplitResponse Map(FactionSplit s) =>
+        new(s.Label, s.Faction is { } f ? Map(f) : null, s.Position, s.For, s.Against, s.Abstain, s.DidNotVote);
+
+    private static MpVoteResponse Map(MpVote v) => new(Map(v.Vote), v.Choice, v.Faction is { } f ? Map(f) : null);
+
+    private static VoteSummaryResponse Map(VoteSummary v) =>
+        new(Map(v.Vote), new VoteTotalsResponse(v.Totals.For, v.Totals.Against, v.Totals.Abstain, v.Totals.Voted, v.Totals.Seats), v.OfficialNote);
+}
+
+/// <summary>Server-side <see cref="IParliamentApi"/> for the server-rendered pages: the same reads as the endpoints, in-process.</summary>
+internal sealed class ServerParliamentApi(ParliamentReads reads, ErrorMapper errors) : IParliamentApi
+{
+    public async Task<ApiResult<TermResponse>> GetCurrentTermAsync(CancellationToken cancellationToken = default) =>
+        errors.ToApiResult(await reads.CurrentTermAsync(cancellationToken), x => x);
+
+    public async Task<ApiResult<MpListResponse>> GetMpsAsync(string? faction = null, string? committee = null, string? q = null, string? cursor = null, CancellationToken cancellationToken = default) =>
+        errors.ToApiResult(await reads.MpsAsync(faction, committee, q, cursor, cancellationToken), x => x);
+
+    public async Task<ApiResult<MpProfileResponse>> GetMpAsync(string slug, CancellationToken cancellationToken = default) =>
+        errors.ToApiResult(await reads.MpAsync(slug, cancellationToken), x => x);
+
+    public async Task<ApiResult<MpVotesResponse>> GetMpVotesAsync(string slug, string? cursor = null, CancellationToken cancellationToken = default) =>
+        errors.ToApiResult(await reads.MpVotesAsync(slug, cursor, cancellationToken), x => x);
+
+    public async Task<ApiResult<IReadOnlyList<BodyListItem>>> GetFactionsAsync(CancellationToken cancellationToken = default) =>
+        errors.ToApiResult(await reads.BodiesAsync("faction", cancellationToken), x => x);
+
+    public async Task<ApiResult<BodyResponse>> GetFactionAsync(string slug, CancellationToken cancellationToken = default) =>
+        errors.ToApiResult(await reads.BodyAsync("faction", slug, cancellationToken), x => x);
+
+    public async Task<ApiResult<IReadOnlyList<BodyListItem>>> GetCommitteesAsync(CancellationToken cancellationToken = default) =>
+        errors.ToApiResult(await reads.BodiesAsync("committee", cancellationToken), x => x);
+
+    public async Task<ApiResult<BodyResponse>> GetCommitteeAsync(string slug, CancellationToken cancellationToken = default) =>
+        errors.ToApiResult(await reads.BodyAsync("committee", slug, cancellationToken), x => x);
+
+    public async Task<ApiResult<BillListResponse>> GetBillsAsync(string? q = null, string? cursor = null, CancellationToken cancellationToken = default) =>
+        errors.ToApiResult(await reads.BillsAsync(q, cursor, cancellationToken), x => x);
+
+    public async Task<ApiResult<BillResponse>> GetBillAsync(string number, CancellationToken cancellationToken = default) =>
+        errors.ToApiResult(await reads.BillAsync(number, cancellationToken), x => x);
+
+    public async Task<ApiResult<VoteResponse>> GetVoteAsync(long id, CancellationToken cancellationToken = default) =>
+        errors.ToApiResult(await reads.VoteAsync(id, cancellationToken), x => x);
+}
+
+/// <summary>Server-side <see cref="IMetaApi"/>. A failure to read it must not take the page down with it.</summary>
+internal sealed class ServerMetaApi(ParliamentReads reads, ILogger<ServerMetaApi> logger) : IMetaApi
+{
+    public async Task<ApiResult<ImportsResponse>> GetImportsAsync(CancellationToken cancellationToken = default)
+    {
+        try
+        {
+            return ApiResult<ImportsResponse>.Ok((await reads.ImportsAsync(cancellationToken)).Value);
+        }
+#pragma warning disable CA1031 // The layout asks on every page; an unreadable notice must not break the page.
+        catch (Exception ex) when (ex is not OperationCanceledException)
+#pragma warning restore CA1031
+        {
+            logger.LogError(ex, "Could not read the import state");
+            return ApiResult<ImportsResponse>.Ok(new ImportsResponse([], false));
+        }
+    }
+}
+
+/// <summary>
+/// Design 7.4: the public API is cached with ETags. The body is serialised once, its hash is the ETag, a matching
+/// <c>If-None-Match</c> gets 304, and shared caches may keep it for a minute.
+/// </summary>
+internal static class PublicJson
+{
+    public static IResult From<T>(HttpContext http, ErrorMapper errors, Result<T> result)
+    {
+        ArgumentNullException.ThrowIfNull(http);
+        ArgumentNullException.ThrowIfNull(errors);
+        ArgumentNullException.ThrowIfNull(result);
+        if (!result.IsSuccess)
+        {
+            return errors.ToResult(result.Error!);
+        }
+
+        var options = http.RequestServices.GetRequiredService<IOptions<Microsoft.AspNetCore.Http.Json.JsonOptions>>().Value.SerializerOptions;
+        var body = JsonSerializer.SerializeToUtf8Bytes(result.Value, options);
+        var etag = "\"" + Convert.ToHexStringLower(SHA256.HashData(body))[..32] + "\"";
+        http.Response.Headers.ETag = etag;
+        http.Response.Headers.CacheControl = "public, max-age=60";
+        if (http.Request.Headers.IfNoneMatch.Any(v => v is not null && v.Split(',').Select(s => s.Trim()).Contains(etag)))
+        {
+            return TypedResults.StatusCode(StatusCodes.Status304NotModified);
+        }
+
+        return TypedResults.Bytes(body, "application/json; charset=utf-8");
+    }
+}

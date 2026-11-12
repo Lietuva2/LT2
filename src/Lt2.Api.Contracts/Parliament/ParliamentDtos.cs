@@ -1,0 +1,70 @@
+namespace Lt2.Api.Contracts.Parliament;
+
+// Design 7.4: the public parliament API. Codes are lower-case English words: kind faction | committee | commission |
+// group | other; vote kind stage-result | amendment | procedural | other; stage presentation | consideration | adoption;
+// choice for | against | abstain | did-not-vote; position for | against | abstain | free | nobody-voted.
+
+public sealed record TermResponse(int Id, string Name, DateOnly From, DateOnly? To);
+
+public sealed record BodyLink(string Slug, string Name, string Kind);
+
+public sealed record MpLink(string Slug, string FirstName, string LastName);
+
+/// <param name="Sitting">False for a former MP (the mandate ended).</param>
+public sealed record MpListItem(string Slug, string FirstName, string LastName, string? Gender, bool Sitting, BodyLink? Faction, string? NominatingParty);
+
+public sealed record MpListResponse(IReadOnlyList<MpListItem> Items, int Total, string? NextCursor);
+
+public sealed record MandateResponse(DateOnly From, DateOnly? To, string? NominatingParty, string? ElectedHow, string? Constituency, int? TermsServed);
+
+public sealed record MembershipResponse(BodyLink Body, string Role, DateOnly From, DateOnly? To, bool Current);
+
+public sealed record ContactResponse(string Kind, string Value);
+
+/// <summary>The two statistics with their counts (design 7.3). A share is null when there is nothing to count.</summary>
+public sealed record MpStatisticsResponse(
+    int VotesHeld, int VotesTakenPart, decimal? Participation, int VotesWithFactionPosition, int VotedWithFaction, decimal? WithFaction, int FreeVotes);
+
+public sealed record BillLink(string Number, string Title);
+
+public sealed record VoteLink(long Id, DateTimeOffset HeldAt, string Wording, string Kind, string? Stage, bool IsConsensus, bool HasResult, BillLink? Bill);
+
+public sealed record FactionSplitResponse(string Label, BodyLink? Faction, string Position, int For, int Against, int Abstain, int DidNotVote);
+
+/// <param name="Choice">Null for a vote approved by consensus: no per-MP votes exist.</param>
+public sealed record MpVoteResponse(VoteLink Vote, string? Choice, FactionSplitResponse? Faction);
+
+public sealed record MpVotesResponse(IReadOnlyList<MpVoteResponse> Items, string? NextCursor);
+
+public sealed record MpProfileResponse(
+    MpListItem Mp,
+    TermResponse Term,
+    MandateResponse Mandate,
+    IReadOnlyList<MembershipResponse> Memberships,
+    IReadOnlyList<ContactResponse> Contacts,
+    MpStatisticsResponse? Statistics,
+    IReadOnlyList<MpVoteResponse> RecentVotes);
+
+public sealed record BodyListItem(string Slug, string Name, string Kind, int Members);
+
+public sealed record BodyMemberResponse(MpLink Mp, string Role, DateOnly From, DateOnly? To, bool Current);
+
+public sealed record FactionVoteResponse(VoteLink Vote, FactionSplitResponse Split);
+
+public sealed record BodyResponse(BodyListItem Body, TermResponse Term, IReadOnlyList<BodyMemberResponse> Members, IReadOnlyList<FactionVoteResponse> RecentVotes);
+
+public sealed record BillListItem(string Number, string Title, DateTimeOffset? LastVoteAt);
+
+public sealed record BillListResponse(IReadOnlyList<BillListItem> Items, int Total, string? NextCursor);
+
+public sealed record VoteTotalsResponse(int? For, int? Against, int? Abstain, int? Voted, int? Seats);
+
+/// <param name="OfficialNote">The Seimas's own comment, for example that per-MP votes do not match the protocol totals.</param>
+public sealed record VoteSummaryResponse(VoteLink Vote, VoteTotalsResponse Totals, string? OfficialNote);
+
+public sealed record BillResponse(string Number, string Title, string? ESeimasUrl, IReadOnlyList<VoteSummaryResponse> Votes);
+
+public sealed record BallotResponse(MpLink Mp, string? FactionLabel, string Choice);
+
+public sealed record VoteResponse(
+    VoteSummaryResponse Summary, DateTimeOffset SittingStartsAt, string AgendaItemTitle, IReadOnlyList<FactionSplitResponse> Factions, IReadOnlyList<BallotResponse> Ballots);

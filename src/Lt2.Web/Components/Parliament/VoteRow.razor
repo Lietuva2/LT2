@@ -1,0 +1,35 @@
+@using Lt2.Api.Contracts.Parliament
+@inject Formats F
+
+@* One vote in a list: what it was about, bill, stage and date; the side column is the caller's. *@
+<li>
+    <div class="rows__main">
+        <a href="/seimas/balsavimai/@Vote.Id">@(Vote.Bill?.Title ?? Vote.Wording)</a>
+        <span class="small num">@string.Join(" · ", Facts())</span>
+    </div>
+    <div class="rows__side">
+        @ChildContent
+    </div>
+</li>
+
+@code {
+    [Parameter, EditorRequired] public VoteLink Vote { get; set; } = default!;
+
+    [Parameter] public RenderFragment? ChildContent { get; set; }
+
+    private IEnumerable<string> Facts()
+    {
+        if (Vote.Bill is { } bill)
+        {
+            yield return bill.Number;
+        }
+
+        yield return Vote.Stage is { } stage ? F.Stage(stage).ToLowerInvariant() : F.Kind(Vote.Kind).ToLowerInvariant();
+        if (Vote.Kind == "amendment")
+        {
+            yield return F.Kind(Vote.Kind).ToLowerInvariant();
+        }
+
+        yield return F.Date(Vote.HeldAt);
+    }
+}

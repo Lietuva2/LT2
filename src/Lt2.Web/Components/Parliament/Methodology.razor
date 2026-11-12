@@ -1,0 +1,60 @@
+@page "/metodika"
+@using Lt2.Api.Contracts.Meta
+@inject IMetaApi Meta
+@inject Formats F
+
+<PageTitle>@F.T["Method.Title"] · Lietuva 2.0</PageTitle>
+
+<section class="stack" aria-labelledby="method-title">
+    <h1 id="method-title">@F.T["Method.Title"]</h1>
+    <p class="lead">@F.T["Method.Lead"]</p>
+</section>
+
+<div class="stack stack--loose">
+    <section class="stack" aria-labelledby="m-source" id="saltinis">
+        <h2 id="m-source">@F.T["Method.Source"]</h2>
+        <p>@F.T["Method.Source.1"]</p>
+        <p>@F.T["Method.Source.2"]</p>
+        <p class="num">@(_lastSuccess is { } at ? F.Format("Method.Source.Last", F.Time(at)) : F.T["Method.Source.Never"])</p>
+        <SourceLine UpdatedAt="@_lastSuccess" HideMethodology="true" />
+    </section>
+
+    <section class="stack" aria-labelledby="m-participation" id="dalyvavimas">
+        <h2 id="m-participation">@F.T["Method.Participation"]</h2>
+        <p>@F.T["Method.Participation.1"]</p>
+        <p>@F.T["Method.Participation.2"]</p>
+        <p>@F.T["Method.Participation.3"]</p>
+    </section>
+
+    <section class="stack" aria-labelledby="m-faction" id="kaip-frakcija">
+        <h2 id="m-faction">@F.T["Method.WithFaction"]</h2>
+        <p>@F.T["Method.WithFaction.1"]</p>
+        <p>@F.T["Method.WithFaction.2"]</p>
+        <p id="absence-rule">@F.T["Method.WithFaction.Absence"]</p>
+        <p id="mixed-group-rule">@F.T["Method.WithFaction.MixedGroup"]</p>
+        <p>@F.T["Method.WithFaction.3"]</p>
+    </section>
+
+    <section class="stack" aria-labelledby="m-notes">
+        <h2 id="m-notes">@F.T["Method.Notes"]</h2>
+        <p>@F.T["Method.Notes.1"]</p>
+        <p>@F.T["Method.Notes.2"]</p>
+    </section>
+
+    <section class="stack" aria-labelledby="m-stages">
+        <h2 id="m-stages">@F.T["Method.Classification"]</h2>
+        <p>@F.T["Method.Classification.1"]</p>
+    </section>
+
+    <section class="stack" aria-labelledby="m-not">
+        <h2 id="m-not">@F.T["Method.Not"]</h2>
+        <p>@F.T["Method.Not.1"]</p>
+    </section>
+</div>
+
+@code {
+    private DateTimeOffset? _lastSuccess;
+
+    protected override async Task OnInitializedAsync() =>
+        _lastSuccess = (await Meta.GetImportsAsync()).Value?.Sources.FirstOrDefault()?.LastSuccessAt;
+}

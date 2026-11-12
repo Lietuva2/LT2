@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- LT2-SYNTHETIC: invented by Lietuva 2.0 for tests and the local stand-in. NOT a recorded Seimas response.
+     Shape: assumed from the evidence listed in ../ASSUMPTIONS.md. Every name, identifier and number is fictional. -->
+<SeimoInformacija>
+  <SeimoSesija sesijos_id="99000101" pavadinimas="Pavasario sesija" data_nuo="2026-03-10" data_iki="2026-06-30">
+    <SeimoPosėdis posėdžio_id="99001001" numeris="201" tipas="Rytinis" pradžia="2026-03-17 10:00" pabaiga="2026-03-17 13:02"/>
+    <SeimoPosėdis posėdžio_id="99001002" numeris="212" tipas="Rytinis" pradžia="2026-04-14 10:00" pabaiga="2026-04-14 12:48"/>
+    <SeimoPosėdis posėdžio_id="99001003" numeris="226" tipas="Vakarinis" pradžia="2026-05-19 14:00" pabaiga="2026-05-19 17:31"/>
+  </SeimoSesija>
+</SeimoInformacija>

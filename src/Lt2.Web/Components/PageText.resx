@@ -5,8 +5,11 @@
   <resheader name="reader"><value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value></resheader>
   <resheader name="writer"><value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value></resheader>
   <data name="Nav.Label" xml:space="preserve"><value>Pagrindinis meniu</value></data>
+  <data name="Nav.Mps" xml:space="preserve"><value>Seimo nariai</value></data>
+  <data name="Nav.Methodology" xml:space="preserve"><value>Kaip skaičiuojama</value></data>
   <data name="Nav.SignIn" xml:space="preserve"><value>Prisijungti</value></data>
   <data name="Nav.Account" xml:space="preserve"><value>Mano paskyra</value></data>
+  <data name="Notice.InventedParliament" xml:space="preserve"><value>Seimo narių ir balsavimų duomenys čia išgalvoti – tai tik bandymas.</value></data>
   <data name="Footer.Line" xml:space="preserve"><value>Lietuva 2.0 · uždaras bandymas</value></data>
   <data name="Home.Eyebrow" xml:space="preserve"><value>Bandomoji versija</value></data>
   <data name="Home.Kicker" xml:space="preserve"><value>Žmonės ir Seimas – vienoje vietoje.</value></data>

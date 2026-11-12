@@ -4,6 +4,8 @@ using Hangfire.PostgreSql;
 using Lt2.Audit;
 using Lt2.Identity;
 using Lt2.Notifications;
+using Lt2.Parliament;
+using Lt2.SharedKernel.Http;
 using Lt2.SharedKernel.Persistence;
 using Lt2.Worker;
 using Npgsql;
@@ -61,6 +63,9 @@ builder.Services.AddNotificationsModule(configuration);
 builder.Services.AddNotificationsDispatcher(configuration);
 builder.Services.AddAuditModule();
 builder.Services.AddIdentityMaintenance();
+builder.Services.AddOutboundAllowlist(configuration);
+builder.Services.AddParliamentModule();
+builder.Services.AddParliamentImport(configuration);
 
 builder.Services.AddHangfire(hangfire => hangfire
     .SetDataCompatibilityLevel(CompatibilityLevel.Version_180)

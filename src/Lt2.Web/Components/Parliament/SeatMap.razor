@@ -1,0 +1,49 @@
+@using System.Globalization
+@using Lt2.Api.Contracts.Parliament
+@inject Formats F
+
+@* Design 7.3: the seat map of a vote as SVG rendered on the server. Factions sit together, largest first (the open
+   data has no seat order); each seat is coloured by the MP's choice and named in its title. *@
+@if (_seats.Count > 0)
+{
+    <figure class="stack stack--tight">
+        <svg class="seatmap" viewBox="0 0 @N(Hemicycle.Width) @N(Hemicycle.Height)" role="img" aria-label="@F.T["Vote.SeatMapAria"]">
+            @foreach (var (seat, ballot) in _seats)
+            {
+                <rect x="@N(-_side / 2)" y="@N(-_side / 2)" width="@N(_side)" height="@N(_side)" transform="translate(@N(seat.X) @N(seat.Y)) rotate(@N(90 - seat.Angle * 180 / Math.PI))" class="seat seat--@ballot.Choice"><title>@ballot.Mp.FirstName @ballot.Mp.LastName (@(ballot.FactionLabel ?? F.T["Vote.NoFaction"])): @F.Choice(ballot.Choice)</title></rect>
+            }
+        </svg>
+        <figcaption class="row small">
+            @foreach (var code in Order.Where(c => Ballots.Any(b => b.Choice == c)))
+            {
+                <span class="@Formats.ChoiceClass(code)">@F.Choice(code) <span class="num">@Formats.Number(Ballots.Count(b => b.Choice == code))</span></span>
+            }
+        </figcaption>
+    </figure>
+}
+
+@code {
+    private static readonly string[] Order = ["for", "against", "abstain", "did-not-vote"];
+
+    private List<(Hemicycle.Seat Seat, BallotResponse Ballot)> _seats = [];
+    private double _side;
+
+    [Parameter, EditorRequired]
+    public IReadOnlyList<BallotResponse> Ballots { get; set; } = [];
+
+    protected override void OnParametersSet()
+    {
+        var size = Ballots.GroupBy(b => b.FactionLabel ?? "").ToDictionary(g => g.Key, g => g.Count());
+        var ordered = Ballots
+            .OrderBy(b => string.IsNullOrEmpty(b.FactionLabel) ? 1 : 0)
+            .ThenByDescending(b => size[b.FactionLabel ?? ""])
+            .ThenBy(b => b.FactionLabel, StringComparer.Ordinal)
+            .ThenBy(b => Array.IndexOf(Order, b.Choice))
+            .ToList();
+        var (seats, side) = Hemicycle.Layout(ordered.Count);
+        _seats = seats.Zip(ordered).ToList();
+        _side = side;
+    }
+
+    private static string N(double value) => value.ToString("0.##", CultureInfo.InvariantCulture);
+}

@@ -117,9 +117,10 @@ public sealed partial class SignUpTests
     /// <summary>Nothing has gone wrong, so no general note is shown, and no variable name leaks into the page.</summary>
     private static async Task ExpectNoNoteAsync(IPage page)
     {
-        // .note[role]: the general error and confirmation notes. The <noscript> note has no role and, with
-        // JavaScript on, is not part of the page at all.
-        await Assertions.Expect(page.Locator(".note[role]")).ToHaveCountAsync(0);
+        // main .note[role]: the general error and confirmation notes of the form. The <noscript> note has no role and,
+        // with JavaScript on, is not part of the page at all. The site-wide notice that the parliament data is invented
+        // (local stack) sits above <main> and is not a form note.
+        await Assertions.Expect(page.Locator("main .note[role]")).ToHaveCountAsync(0);
         (await page.ContentAsync()).ShouldNotContain("_message");
     }
 

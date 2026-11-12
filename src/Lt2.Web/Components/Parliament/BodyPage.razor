@@ -1,0 +1,91 @@
+@page "/frakcijos/{Slug}"
+@page "/komitetai/{Slug}"
+@using Lt2.Api.Contracts.Parliament
+@using Lt2.Api.Contracts.Meta
+@inject IParliamentApi Api
+@inject IMetaApi Meta
+@inject Formats F
+@inject NavigationManager Navigation
+
+@if (_body is { } b)
+{
+    <PageTitle>@b.Body.Name · Lietuva 2.0</PageTitle>
+    <div class="stack">
+        <ol class="crumbs">
+            <li><a href="/seimo-nariai">@F.T["Mps.Title"]</a></li>
+        </ol>
+        <p class="label">@F.T[$"Body.{b.Body.Kind}"]</p>
+        <h1>@b.Body.Name</h1>
+        <p class="small num">@b.Term.Name · @F.Format("Body.Count", Formats.Number(b.Body.Members))</p>
+    </div>
+
+    <div class="cols">
+        <div class="stack stack--loose">
+            @if (IsFaction)
+            {
+                <section class="stack" aria-labelledby="h-positions">
+                    <h2 id="h-positions">@F.T["Body.Positions"]</h2>
+                    @if (b.RecentVotes.Count == 0)
+                    {
+                        <p>@F.T["Body.NoPositions"]</p>
+                    }
+                    else
+                    {
+                        <ul class="rows">
+                            @foreach (var v in b.RecentVotes)
+                            {
+                                <VoteRow Vote="v.Vote">
+                                    <span class="@PositionClass(v.Split.Position)">@F.Position(v.Split.Position)</span>
+                                    <span class="small num">@F.Counts(v.Split.For, v.Split.Against, v.Split.Abstain)</span>
+                                </VoteRow>
+                            }
+                        </ul>
+                    }
+                </section>
+            }
+            <section class="stack" aria-labelledby="h-members">
+                <h2 id="h-members">@F.T["Body.Members"]</h2>
+                <MemberRows Members="b.Members.Where(m => m.Current).ToList()" />
+            </section>
+        </div>
+        <aside class="stack">
+            @if (b.Members.Any(m => !m.Current))
+            {
+                <section class="stack stack--tight" aria-labelledby="h-former">
+                    <h3 id="h-former">@F.T["Body.FormerMembers"]</h3>
+                    <MemberRows Members="b.Members.Where(m => !m.Current).ToList()" />
+                </section>
+            }
+            <SourceLine UpdatedAt="@_updatedAt" />
+        </aside>
+    </div>
+}
+
+@code {
+    private BodyResponse? _body;
+    private DateTimeOffset? _updatedAt;
+
+    [Parameter] public string Slug { get; set; } = "";
+
+    private bool IsFaction => Navigation.ToBaseRelativePath(Navigation.Uri).StartsWith("frakcijos/", StringComparison.Ordinal);
+
+    protected override async Task OnInitializedAsync()
+    {
+        _body = IsFaction ? (await Api.GetFactionAsync(Slug)).Value : (await Api.GetCommitteeAsync(Slug)).Value;
+        if (_body is null)
+        {
+            Navigation.NotFound();
+            return;
+        }
+
+        _updatedAt = (await Meta.GetImportsAsync()).Value?.Sources.FirstOrDefault()?.LastSuccessAt;
+    }
+
+    private static string PositionClass(string position) => position switch
+    {
+        "for" => "choice choice--for",
+        "against" => "choice choice--against",
+        "abstain" => "choice",
+        _ => "choice choice--absent",
+    };
+}

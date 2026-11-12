@@ -1,0 +1,32 @@
+@using Lt2.Api.Contracts.Parliament
+@inject Formats F
+
+@* An MP's votes: the choice (or "approved by consensus", without numbers) and how the MP's faction voted. *@
+<ul class="rows">
+    @foreach (var v in Votes)
+    {
+        <VoteRow Vote="v.Vote">
+            @if (v.Vote.IsConsensus)
+            {
+                <span class="tag">@F.T["Consensus.Tag"]</span>
+                <span class="small">@F.T["Consensus.NoVotes"]</span>
+            }
+            else if (v.Choice is null)
+            {
+                <span class="small">@F.T["NoResult"]</span>
+            }
+            else
+            {
+                <span class="@Formats.ChoiceClass(v.Choice)">@F.Choice(v.Choice)</span>
+                @if (v.Faction is { } split)
+                {
+                    <FactionSplitText Split="split" />
+                }
+            }
+        </VoteRow>
+    }
+</ul>
+
+@code {
+    [Parameter, EditorRequired] public IReadOnlyList<MpVoteResponse> Votes { get; set; } = [];
+}

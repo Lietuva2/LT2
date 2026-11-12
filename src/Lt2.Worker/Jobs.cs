@@ -1,6 +1,7 @@
 using Hangfire;
 using Lt2.Identity;
 using Lt2.Notifications;
+using Lt2.Parliament;
 using Microsoft.Extensions.Options;
 
 namespace Lt2.Worker;
@@ -60,9 +61,36 @@ public sealed class IdentityPurgeJob(IIdentityMaintenance maintenance, ILogger<I
     }
 }
 
+/// <summary>
+/// Design 7.2: the Seimas open-data import. Asked every 15 minutes; runs when due (every 15 minutes on sitting days,
+/// hourly otherwise, at once if it never succeeded). A Seimas outage fails the run, which Hangfire shows; the site keeps
+/// the last good data and the next run resumes.
+/// </summary>
+public sealed class ParliamentImportJob(IParliamentImport import, ILogger<ParliamentImportJob> logger)
+{
+    [DisableConcurrentExecution(timeoutInSeconds: 60 * 60)]
+    [AutomaticRetry(Attempts = 0, OnAttemptsExceeded = AttemptsExceededAction.Delete)]
+    public async Task RunAsync(CancellationToken cancellationToken)
+    {
+        if (!await import.IsDueAsync(cancellationToken))
+        {
+            return;
+        }
+
+        var outcome = await import.RunAsync(cancellationToken);
+        if (outcome.Status == "failed")
+        {
+            // Logged as an error for the alerting in design 9.4; not retried at once (the next period retries).
+            logger.LogError("Parliament import failed: {Error}", outcome.Error);
+        }
+    }
+}
+
 /// <summary>Registers the recurring Hangfire jobs at start-up, in Vilnius time (design 3: <c>Europe/Vilnius</c> for schedules).</summary>
 internal sealed class RecurringJobs(IRecurringJobManager jobs) : IHostedService
 {
+    public const string ParliamentImport = "parliament-import";
+
     public Task StartAsync(CancellationToken cancellationToken)
     {
         var vilnius = TimeZoneInfo.FindSystemTimeZoneById("Europe/Vilnius");
@@ -71,6 +99,14 @@ internal sealed class RecurringJobs(IRecurringJobManager jobs) : IHostedService
             job => job.RunAsync(CancellationToken.None),
             "15 3 * * *",
             new RecurringJobOptions { TimeZone = vilnius });
+        jobs.AddOrUpdate<ParliamentImportJob>(
+            ParliamentImport,
+            job => job.RunAsync(CancellationToken.None),
+            "*/15 * * * *",
+            new RecurringJobOptions { TimeZone = vilnius });
+
+        // Ask once at start-up, so a fresh deployment (or the local stack) imports without waiting for the first period.
+        jobs.Trigger(ParliamentImport);
         return Task.CompletedTask;
     }
 

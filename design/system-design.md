@@ -234,7 +234,7 @@ Schemas match the modules. Only the tables that carry design decisions are liste
 | `planned_item` | `bill_id`, planned date, stage, source link, `first_seen`, `last_seen`, `gone_at`, `confirmed_by` | Upcoming agenda, scraped from lrs.lt; moves often. A moderator can correct or confirm a row. |
 | `vote` | Seimas vote id, `agenda_item_id`, `bill_id`, time, wording, `kind`, stage, totals, official note, `is_consensus` | `kind`: stage result, amendment, procedural, other. Consensus votes have no ballots. |
 | `ballot` | `vote_id`, `person_id`, `faction_id`, `choice` | About 141 rows per vote; a few million rows per term. |
-| `faction_position` | `vote_id`, `faction_id`, position or "free", counts | Derived: the option chosen by at least two thirds of the faction's members who voted. |
+| `faction_position` | `vote_id`, `faction_id`, position or "free", counts | Derived: the option chosen by at least two thirds of the faction's members who voted. Only for factions: the mixed group and MPs outside a faction have no row. |
 | `mp_stat` | `person_id`, `term_id`, votes held, votes taken part in, with-faction count, free-vote count | Derived, recomputed after each import. |
 | `import_run`, `raw_document` | source address, fetch time, hash, compressed body | Every response is kept, so parsing can be re-run and any number traced to its source. |
 
@@ -498,8 +498,11 @@ Matches the "unjoined MP" mockup in chapter 06, minus everything that needs voti
 - Official contacts and links to the official pages (Seimas, VRK, VTEK).
 - **Dalyvavimas balsavimuose:** of the recorded votes held during the MP's mandate, the share in which the MP voted for,
   against or abstained.
-- **Balsavo kaip frakcija:** of the votes where the MP's faction had a position (at least two thirds of its members who
-  voted chose the same option), the share where the MP chose that option. The number of free votes is shown beside it.
+- **Balsavo kaip frakcija:** of the votes the MP took part in where the MP's faction had a position (at least two thirds
+  of its members who voted chose the same option), the share where the MP chose that option. The number of free votes is
+  shown beside it. Votes the MP missed are not counted here: an absence already shows in the participation figure
+  **[decided 2026-11-12]**. The mixed group of MPs is not a faction and has no position: its members, and MPs outside
+  any faction at the time of a vote, have no figure for those votes **[decided 2026-11-12]**.
 - Recent votes: bill, stage, date, the MP's choice, the faction's split, a link to the vote page.
 - The line "Profilis sudarytas automatiškai iš Seimo atvirųjų duomenų" with the time of the last import.
 - From stage 2: appeals in progress and the MP's responses.
@@ -822,6 +825,10 @@ Splitting M2 means the risky step (emailing every MP) happens only after the who
   that have not signed in before; known devices are built before registration opens (6.2).
 - A staff role works only with a staff passkey, activated by a code the administrator passes on directly. No
   authenticator app (6.2).
+- "Balsavo kaip frakcija" counts only votes the MP took part in; an absence shows in the participation figure only, so
+  the same absence is not marked twice (7.3).
+- The mixed group of MPs is not a faction and has no position; its members, and MPs outside any faction at the time of
+  a vote, have no "Balsavo kaip frakcija" figure for those votes (7.3).
 
 **Decisions needed before the stage that uses them**
 
