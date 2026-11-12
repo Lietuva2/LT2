@@ -1,0 +1,98 @@
+name: ci
+
+on:
+  push:
+    branches: [master]
+  pull_request:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build-and-test:
+    name: Build, test, audit
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    env:
+      DOTNET_NOLOGO: "1"
+      DOTNET_CLI_TELEMETRY_OPTOUT: "1"
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-dotnet@v4
+        with:
+          global-json-file: global.json
+
+      - name: Restore
+        run: dotnet restore LT2.sln
+
+      # Warnings are errors (Directory.Build.props), including NuGet audit warnings for known vulnerabilities.
+      - name: Build
+        run: dotnet build LT2.sln --configuration Release --no-restore
+
+      - name: NuGet audit (direct and transitive packages)
+        run: |
+          dotnet list LT2.sln package --vulnerable --include-transitive | tee audit.txt
+          if grep -qi "has the following vulnerable packages" audit.txt; then
+            echo "::error::Vulnerable NuGet packages found"
+            exit 1
+          fi
+
+      # Unit, architecture and integration tests. Integration tests start PostgreSQL with Testcontainers on the
+      # runner's Docker. The end-to-end tests are skipped here (no LT2_E2E_BASE_URL); the e2e job runs them.
+      - name: Test
+        run: dotnet test --solution LT2.sln --configuration Release --no-build
+
+  e2e:
+    name: End to end (compose stack, Playwright)
+    runs-on: ubuntu-24.04
+    needs: build-and-test
+    timeout-minutes: 30
+    env:
+      DOTNET_NOLOGO: "1"
+      DOTNET_CLI_TELEMETRY_OPTOUT: "1"
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-dotnet@v4
+        with:
+          global-json-file: global.json
+
+      - name: Start the stack
+        run: |
+          sh deploy/init-secrets.sh
+          docker compose -f deploy/compose.yaml up --build --detach
+          for i in $(seq 1 60); do
+            if curl -fsk --resolve lt2.localhost:8443:127.0.0.1 https://lt2.localhost:8443/health/ready; then exit 0; fi
+            sleep 3
+          done
+          docker compose -f deploy/compose.yaml logs
+          exit 1
+
+      - name: Install Playwright Chromium
+        run: |
+          dotnet build tests/Lt2.E2E --configuration Release
+          pwsh tests/Lt2.E2E/bin/Release/net10.0/playwright.ps1 install --with-deps chromium
+
+      - name: End-to-end tests
+        env:
+          LT2_E2E_BASE_URL: https://lt2.localhost:8443
+          LT2_E2E_MAILPIT_URL: http://localhost:8025
+          LT2_E2E_INVITATION: BANDYMAS-2026
+        run: dotnet test --project tests/Lt2.E2E --configuration Release --no-build
+
+      - name: Screenshots
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: e2e-screenshots
+          path: tests/Lt2.E2E/bin/Release/net10.0/output/
+          if-no-files-found: ignore
+
+      - name: Stack logs on failure
+        if: failure()
+        run: docker compose -f deploy/compose.yaml logs
