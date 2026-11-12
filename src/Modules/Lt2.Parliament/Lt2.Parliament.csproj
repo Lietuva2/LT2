@@ -6,6 +6,7 @@
     <FrameworkReference Include="Microsoft.AspNetCore.App" />
     <PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" />
     <PackageReference Include="EFCore.NamingConventions" />
+    <PackageReference Include="Microsoft.Extensions.Http.Resilience" />
     <PackageReference Include="Microsoft.EntityFrameworkCore.Design" PrivateAssets="all" />
   </ItemGroup>
   <ItemGroup>
@@ -15,5 +16,6 @@
     <InternalsVisibleTo Include="Lt2.UnitTests" />
     <InternalsVisibleTo Include="Lt2.IntegrationTests" />
     <InternalsVisibleTo Include="Lt2.ArchitectureTests" />
+    <InternalsVisibleTo Include="Lt2.Parliament.ImportTests" />
   </ItemGroup>
 </Project>

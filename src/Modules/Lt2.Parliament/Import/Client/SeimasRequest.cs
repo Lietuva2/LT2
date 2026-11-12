@@ -1,0 +1,65 @@
+using System.Globalization;
+
+namespace Lt2.Parliament.Import.Client;
+
+/// <summary>
+/// The open-data services of the chain in design 7.1, by their path under the base address
+/// (<c>https://apps.lrs.lt/sip/</c> in production).
+/// </summary>
+internal static class SeimasServices
+{
+    public const string Terms = "p2b.ad_seimo_kadencijos";
+    public const string Members = "p2b.ad_seimo_nariai";
+    public const string Sessions = "p2b.ad_seimo_sesijos";
+    public const string Sittings = "p2b.ad_seimo_posedziai";
+    public const string Agenda = "p2b.ad_sp_darbotvarke";
+    public const string Proceedings = "p2b.ad_sp_klausimo_svarstymo_eiga";
+    public const string VoteResults = "p2b.ad_sp_balsavimo_rezultatai";
+
+    public const string TermParameter = "kadencijos_id";
+    public const string SessionParameter = "sesijos_id";
+    public const string SittingParameter = "posedzio_id";
+    public const string VoteParameter = "balsavimo_id";
+}
+
+/// <summary>One request to the open-data service: a service path and at most one query parameter.</summary>
+internal sealed record SeimasRequest(string Service, string? Parameter = null, string? Value = null)
+{
+    /// <summary>The path and query relative to the base address, for example <c>p2b.ad_seimo_nariai?kadencijos_id=10</c>.
+    /// Also the key under which raw responses are stored.</summary>
+    public string RelativeUri => Parameter is null ? Service : $"{Service}?{Parameter}={Uri.EscapeDataString(Value ?? "")}";
+
+    public override string ToString() => RelativeUri;
+
+    public static SeimasRequest Terms() => new(SeimasServices.Terms);
+
+    public static SeimasRequest Members(int termId) => new(SeimasServices.Members, SeimasServices.TermParameter, Text(termId));
+
+    public static SeimasRequest Sessions(int termId) => new(SeimasServices.Sessions, SeimasServices.TermParameter, Text(termId));
+
+    public static SeimasRequest Sittings(long sessionId) => new(SeimasServices.Sittings, SeimasServices.SessionParameter, Text(sessionId));
+
+    public static SeimasRequest Agenda(long sittingId) => new(SeimasServices.Agenda, SeimasServices.SittingParameter, Text(sittingId));
+
+    /// <summary>Design 7.1: the parameter name of this service is still to be confirmed, so it is configuration.</summary>
+    public static SeimasRequest Proceedings(string parameter, long sittingId) => new(SeimasServices.Proceedings, parameter, Text(sittingId));
+
+    public static SeimasRequest VoteResults(long voteId) => new(SeimasServices.VoteResults, SeimasServices.VoteParameter, Text(voteId));
+
+    private static string Text(long value) => value.ToString(CultureInfo.InvariantCulture);
+}
+
+/// <summary>A response as received: the raw body is what gets stored (design 7.2), parsing comes later.</summary>
+/// <param name="Synthetic">The response came from the stand-in service, not from the Seimas (see <see cref="SyntheticMarker"/>).</param>
+internal sealed record SeimasResponse(SeimasRequest Request, Uri Url, byte[] Body, bool Synthetic, DateTimeOffset FetchedAt);
+
+/// <summary>
+/// How a stand-in response announces itself. The stand-in sends the header on every response, and every canned file
+/// carries the comment; either one marks the stored document, and through it the site, as invented data.
+/// </summary>
+internal static class SyntheticMarker
+{
+    public const string Header = "X-Lt2-Synthetic";
+
+    public const string Comment = "LT2-SYNTHETIC";
+}
