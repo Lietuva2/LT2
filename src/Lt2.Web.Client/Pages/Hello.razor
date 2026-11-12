@@ -218,7 +218,13 @@ else
     {
         await RunAsync(async () =>
         {
-            await Auth.SignOutAsync();
+            var result = await Auth.SignOutAsync();
+            if (!result.IsSuccess)
+            {
+                _message = result.Problem!.Detail ?? T["Error.Generic"];
+                return;
+            }
+
             Navigation.NavigateTo("/", forceLoad: true);
         });
     }
@@ -235,6 +241,11 @@ else
         catch (HttpRequestException)
         {
             _message = T["Error.Network"];
+        }
+        catch (Exception ex) when (ex is System.Text.Json.JsonException or NotSupportedException)
+        {
+            // An answer the client could not read: say so rather than leave the page silent.
+            _message = T["Error.Generic"];
         }
         finally
         {

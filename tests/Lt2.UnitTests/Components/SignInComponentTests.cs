@@ -299,6 +299,53 @@ public sealed class SignInComponentTests : BunitContext
     }
 
     [Fact]
+    public void A_refused_passkey_sign_in_is_never_silent_even_when_the_error_is_about_a_field_the_step_does_not_show()
+    {
+        const string invalid = "Prieigos rakto patikrinti nepavyko.";
+        var module = JSInterop.SetupModule("./js/passkeys.js");
+        module.Setup<bool>("isSupported").SetResult(true);
+        module.Setup<string>("get", _ => true).SetResult("{\"id\":\"x\"}");
+        _auth.PasskeySignIn = () => Task.FromResult(ApiResult.Fail(new ApiProblem
+        {
+            Status = 400,
+            Code = "passkey.invalid",
+            Detail = invalid,
+            Errors = new Dictionary<string, string[]> { ["credential"] = [invalid] },
+        }));
+        var page = Render<SignIn>();
+
+        page.FindAll("button").Single(b => b.TextContent == Text("SignIn.Passkey")).Click();
+
+        page.WaitForElement(".note[role=alert]").TextContent.ShouldBe(invalid);
+    }
+
+    [Fact]
+    public void An_answer_the_client_cannot_read_still_ends_in_a_message()
+    {
+        _auth.RequestCode = _ => throw new System.Text.Json.JsonException("not JSON");
+        var page = Render<SignIn>();
+
+        page.Find("#email").Input(Email);
+        page.Find("form").Submit();
+
+        page.WaitForElement(".note[role=alert]").TextContent.ShouldBe(Text("Error.Generic"));
+    }
+
+    [Fact]
+    public void A_failed_sign_out_says_so_and_keeps_the_person_on_the_page()
+    {
+        const string failed = "Įvyko klaida";
+        SignedIn(FakeMeApi.Member);
+        _auth.SignOut = () => Task.FromResult(ApiResult.Fail(new ApiProblem { Status = 502, Code = "http.502", Detail = failed }));
+        var page = Render<Hello>();
+
+        page.FindAll("button").Single(b => b.TextContent == Text("SignOut")).Click();
+
+        page.WaitForElement(".note[role=alert]").TextContent.ShouldBe(failed);
+        Services.GetRequiredService<BunitNavigationManager>().History.ShouldBeEmpty();
+    }
+
+    [Fact]
     public void The_note_component_renders_nothing_without_text()
     {
         Render<Messages>().Markup.Trim().ShouldBeEmpty();
@@ -318,7 +365,9 @@ public sealed class SignInComponentTests : BunitContext
         public Task<ApiResult> SignInAsync(SignInRequest request, CancellationToken cancellationToken = default) =>
             Task.FromResult(ApiResult.Ok());
 
-        public Task<ApiResult> SignOutAsync(CancellationToken cancellationToken = default) => Task.FromResult(ApiResult.Ok());
+        public Func<Task<ApiResult>> SignOut { get; set; } = () => Task.FromResult(ApiResult.Ok());
+
+        public Task<ApiResult> SignOutAsync(CancellationToken cancellationToken = default) => SignOut();
 
         public Task<ApiResult<string>> GetPasskeyCreationOptionsAsync(CancellationToken cancellationToken = default) =>
             Task.FromResult(ApiResult<string>.Ok("{}"));
@@ -329,8 +378,10 @@ public sealed class SignInComponentTests : BunitContext
         public Task<ApiResult<string>> GetPasskeyRequestOptionsAsync(CancellationToken cancellationToken = default) =>
             Task.FromResult(ApiResult<string>.Ok("{}"));
 
+        public Func<Task<ApiResult>> PasskeySignIn { get; set; } = () => Task.FromResult(ApiResult.Ok());
+
         public Task<ApiResult> SignInWithPasskeyAsync(PasskeyCredentialRequest request, CancellationToken cancellationToken = default) =>
-            Task.FromResult(ApiResult.Ok());
+            PasskeySignIn();
     }
 
     private sealed class FakeMeApi : IMeApi
