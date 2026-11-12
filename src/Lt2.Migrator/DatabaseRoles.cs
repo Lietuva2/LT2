@@ -109,7 +109,6 @@ public static class DatabaseRoles
                     GRANT SELECT, INSERT, UPDATE, DELETE ON TABLES TO {App}, {Worker};
                 ALTER DEFAULT PRIVILEGES FOR ROLE {Migrator} IN SCHEMA {s}
                     GRANT USAGE, SELECT ON SEQUENCES TO {App}, {Worker};
-                REVOKE ALL ON TABLE {s}."__ef_migrations_history" FROM {App}, {Worker};
                 """,
                 cancellationToken);
         }
@@ -150,7 +149,26 @@ public static class DatabaseRoles
                 """,
                 cancellationToken);
         }
+
+        // Migration history is the migrator's business only. A module's history table lives in its first schema
+        // (audit's covers config too), so revoke wherever such a table actually exists rather than per data schema.
+        await ExecuteAsync(
+            migrator,
+            $"""
+            DO $$
+            DECLARE history record;
+            BEGIN
+                FOR history IN
+                    SELECT schemaname FROM pg_tables WHERE tablename = '{HistoryTable}'
+                LOOP
+                    EXECUTE format('REVOKE ALL ON TABLE %I.%I FROM {App}, {Worker}, {Readonly}', history.schemaname, '{HistoryTable}');
+                END LOOP;
+            END $$;
+            """,
+            cancellationToken);
     }
+
+    private const string HistoryTable = "__ef_migrations_history";
 
     private static async Task ExecuteAsync(NpgsqlConnection connection, string sql, CancellationToken cancellationToken)
     {
