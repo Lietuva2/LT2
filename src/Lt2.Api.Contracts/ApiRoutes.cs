@@ -29,6 +29,7 @@ public static class ApiRoutes
         public const string Session = Root + "/sessions/{id:guid}";
         public const string PositionConsent = Root + "/consents/positions";
         public const string PartySupport = Root + "/party-support";
+        public const string Export = Root + "/export";
 
         public static string SessionById(Guid id) => $"{Sessions}/{id}";
     }

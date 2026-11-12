@@ -42,6 +42,8 @@ internal static class ApiEndpoints
         WithdrawPositionConsentEndpoint.Map(api);
         GetPartySupportEndpoint.Map(api);
         SetPartySupportEndpoint.Map(api);
+        ExportEndpoint.Map(api);
+        DeleteAccountEndpoint.Map(api);
 
         GetSettingsEndpoint.Map(api);
         UpdateSettingEndpoint.Map(api);

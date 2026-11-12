@@ -61,6 +61,9 @@ internal sealed class HttpMeApi(ApiHttp http) : IMeApi
 
     public Task<ApiResult> SetPartySupportAsync(PartySupportRequest request, CancellationToken cancellationToken = default) =>
         http.SendAsync(HttpMethod.Put, ApiRoutes.Me.PartySupport, request, cancellationToken);
+
+    public Task<ApiResult> DeleteAccountAsync(CancellationToken cancellationToken = default) =>
+        http.SendAsync(HttpMethod.Delete, ApiRoutes.Me.Root, null, cancellationToken);
 }
 
 internal sealed class HttpAppealsApi(ApiHttp http) : IAppealsApi

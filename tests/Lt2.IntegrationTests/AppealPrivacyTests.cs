@@ -183,7 +183,7 @@ public sealed class AppealPrivacyTests(DatabaseFixture database) : ApiTest(datab
     }
 
     /// <summary>The web application with every log line, from Debug up, collected (EF Core's SQL included).</summary>
-    private sealed class LoggingFactory(DatabaseFixture database, CollectingSink sink) : Lt2Factory(database)
+    internal sealed class LoggingFactory(DatabaseFixture database, CollectingSink sink) : Lt2Factory(database)
     {
         protected override void ConfigureWebHost(IWebHostBuilder builder)
         {
@@ -195,7 +195,7 @@ public sealed class AppealPrivacyTests(DatabaseFixture database) : ApiTest(datab
         }
     }
 
-    private sealed class CollectingSink : ILogEventSink
+    internal sealed class CollectingSink : ILogEventSink
     {
         private readonly List<string> _lines = [];
 

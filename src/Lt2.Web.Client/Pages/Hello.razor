@@ -131,6 +131,25 @@ else
         </section>
     }
 
+    @* Design 6.5: everything the person gave, and deleting the account. *@
+    <section class="sheet stack" aria-labelledby="data-title" id="my-data">
+        <h2 id="data-title">@T["Data.Title"]</h2>
+        <p>@T["Data.Text"]</p>
+        <p><a class="btn btn--plain" href="/api/v1/me/export" download id="export">@T["Data.Export"]</a></p>
+        @if (_confirmDelete)
+        {
+            <p class="note" role="alert">@T["Data.DeleteWarning"]</p>
+            <div class="row">
+                <button type="button" class="btn btn--against" id="delete-confirm" disabled="@Locked" @onclick="DeleteAccountAsync">@T["Data.DeleteConfirm"]</button>
+                <button type="button" class="btn btn--plain" disabled="@Locked" @onclick="() => _confirmDelete = false">@T["Data.DeleteCancel"]</button>
+            </div>
+        }
+        else
+        {
+            <p><button type="button" class="btn btn--plain" id="delete-account" disabled="@Locked" @onclick="() => _confirmDelete = true">@T["Data.Delete"]</button></p>
+        }
+    </section>
+
     <p><button type="button" class="btn btn--plain" disabled="@Locked" @onclick="SignOutAsync">@T["SignOut"]</button></p>
 }
 
@@ -159,6 +178,7 @@ else
     public PartySupportResponse? Party { get; set; }
 
     private string _partyChoice = "";
+    private bool _confirmDelete;
     private bool _partyConsent;
 
     protected override async Task OnInitializedAsync()
@@ -305,6 +325,21 @@ else
             {
                 Me = me.Value;
             }
+        });
+    }
+
+    private async Task DeleteAccountAsync()
+    {
+        await RunAsync(async () =>
+        {
+            var result = await MeApi.DeleteAccountAsync();
+            if (!result.IsSuccess)
+            {
+                _message = result.Problem!.Detail ?? T["Error.Generic"];
+                return;
+            }
+
+            Navigation.NavigateTo("/", forceLoad: true);
         });
     }
 

@@ -137,6 +137,12 @@ public interface IIdentityModule
     /// its consent. Stored without history.
     /// </summary>
     Task<Result<Unit>> SetPartySupportAsync(ClaimsPrincipal user, string? party, IReadOnlyCollection<string> allowed, CancellationToken cancellationToken);
+
+    /// <summary>Everything the person gave (design 6.5), their own data only.</summary>
+    Task<Result<object>> ExportAsync(ClaimsPrincipal user, CancellationToken cancellationToken);
+
+    /// <summary>Deletes the account and everything the person gave (design 6.5), and signs out.</summary>
+    Task<Result<Unit>> DeleteAccountAsync(ClaimsPrincipal user, CancellationToken cancellationToken);
 }
 
 /// <summary>Housekeeping run by the worker.</summary>

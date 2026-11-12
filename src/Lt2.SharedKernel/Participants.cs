@@ -45,6 +45,22 @@ public interface IPositionErasure
     Task<int> EraseAsync(Guid userId, DbTransaction transaction, CancellationToken cancellationToken);
 }
 
+/// <summary>
+/// What the Appeals module holds of one person (design 6.5): exported on request, erased with the account. Implemented by
+/// Appeals. The export holds only the person's own data.
+/// </summary>
+public interface IAccountData
+{
+    /// <summary>The person's positions, marks, arguments, opened appeals, reports and flags, as plain data.</summary>
+    Task<object> ExportAsync(Guid userId, CancellationToken cancellationToken);
+
+    /// <summary>
+    /// Deletes the person's positions, marks, arguments (with the marks on them), reports and flags in the caller's
+    /// transaction. Appeals the person opened stay, without a name. Counts fall; frozen summary snapshots are not touched.
+    /// </summary>
+    Task EraseAsync(Guid userId, DbTransaction transaction, CancellationToken cancellationToken);
+}
+
 /// <summary>A Seimas bill as the Appeals module refers to it: by its number, the natural key (design 3).</summary>
 public sealed record BillFacts(string Number, string Title);
 

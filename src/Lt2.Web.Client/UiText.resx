@@ -93,4 +93,11 @@
 <data name="Party.Save" xml:space="preserve"><value>Išsaugoti</value></data>
 <data name="Party.Saved" xml:space="preserve"><value>Išsaugota.</value></data>
 <data name="Party.Removed" xml:space="preserve"><value>Partija pašalinta.</value></data>
+<data name="Data.Title" xml:space="preserve"><value>Jūsų duomenys</value></data>
+<data name="Data.Text" xml:space="preserve"><value>Galite atsisiųsti viską, ką mums pateikėte, arba ištrinti paskyrą. Ištrynus paskyrą, ištrinamos ir jūsų pozicijos, „Man svarbu“ žymos, argumentai ir pranešimai, o bendri skaičiai sumažėja. Jau sudarytose suvestinėse skaičiai lieka tokie, kokie buvo.</value></data>
+<data name="Data.Export" xml:space="preserve"><value>Atsisiųsti mano duomenis</value></data>
+<data name="Data.Delete" xml:space="preserve"><value>Ištrinti paskyrą</value></data>
+<data name="Data.DeleteWarning" xml:space="preserve"><value>Paskyra bus ištrinta visam laikui. To atšaukti negalima.</value></data>
+<data name="Data.DeleteConfirm" xml:space="preserve"><value>Taip, ištrinti paskyrą</value></data>
+<data name="Data.DeleteCancel" xml:space="preserve"><value>Ne, palikti</value></data>
 </root>

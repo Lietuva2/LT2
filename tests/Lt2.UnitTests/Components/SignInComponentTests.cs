@@ -453,6 +453,8 @@ public sealed class SignInComponentTests : BunitContext
         public Task<ApiResult> SetPartySupportAsync(PartySupportRequest request, CancellationToken cancellationToken = default) =>
             Task.FromResult(ApiResult.Ok());
 
+        public Task<ApiResult> DeleteAccountAsync(CancellationToken cancellationToken = default) => Task.FromResult(ApiResult.Ok());
+
         public Task<ApiResult<IReadOnlyList<SessionResponse>>> GetSessionsAsync(CancellationToken cancellationToken = default) =>
             Task.FromResult(ApiResult<IReadOnlyList<SessionResponse>>.Ok(Sessions));
 

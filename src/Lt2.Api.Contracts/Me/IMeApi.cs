@@ -24,4 +24,7 @@ public interface IMeApi
     Task<ApiResult<PartySupportResponse>> GetPartySupportAsync(CancellationToken cancellationToken = default);
 
     Task<ApiResult> SetPartySupportAsync(PartySupportRequest request, CancellationToken cancellationToken = default);
+
+    /// <summary>Deletes the account and everything the person gave (design 6.5).</summary>
+    Task<ApiResult> DeleteAccountAsync(CancellationToken cancellationToken = default);
 }

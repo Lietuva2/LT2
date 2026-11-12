@@ -77,6 +77,9 @@ internal sealed class ServerMeApi(IIdentityModule identity, IMpDirectory mps, IH
         return errors.ToApiResult(await identity.GetPartySupportAsync(User, cancellationToken), party => new PartySupportResponse(party, choices));
     }
 
+    public async Task<ApiResult> DeleteAccountAsync(CancellationToken cancellationToken = default) =>
+        errors.ToApiResult(await identity.DeleteAccountAsync(User, cancellationToken));
+
     public async Task<ApiResult> SetPartySupportAsync(PartySupportRequest request, CancellationToken cancellationToken = default) =>
         errors.ToApiResult(await identity.SetPartySupportAsync(User, request.Party, await mps.PartiesAsync(cancellationToken), cancellationToken));
 
