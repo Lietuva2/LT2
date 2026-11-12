@@ -63,6 +63,10 @@
                     </div>
                 </div>
                 <SplitBar For="a.Counts.For" Against="a.Counts.Against" Abstain="0" />
+                @if (a.Status == "closed" && a.ClosedAt is { } closedAt)
+                {
+                    <p class="small" id="frozen-note">@Fmt("Closed.Frozen", F.Date(closedAt))</p>
+                }
                 @if (a.Surge is { } surge)
                 {
                     <p class="note" id="surge-note">@Fmt("Surge.Note", Formats.Number(surge.WindowHours), Formats.Number(surge.SharePercent))</p>
@@ -87,6 +91,43 @@
                     }
                 </p>
             </section>
+
+            @if (_closingVote is { } vote)
+            {
+                <section class="stack" aria-labelledby="h-result" id="seimas-result">
+                    <h2 id="h-result">@T["Closed.Heading"]</h2>
+                    <p class="small">@F.Stage(vote.Summary.Vote.Stage) · @F.Date(vote.Summary.Vote.HeldAt) · <a href="/seimas/balsavimai/@vote.Summary.Vote.Id">@T["Closed.VotePage"]</a></p>
+                    @if (vote.Summary.Vote.IsConsensus)
+                    {
+                        <p>@F.T["Consensus.Tag"]</p>
+                    }
+                    else
+                    {
+                        <div class="totals">
+                            <div class="figure figure--for figure--m"><span class="label">@F.Choice("for")</span><span class="figure__num">@Formats.Number(vote.Summary.Totals.For)</span></div>
+                            <div class="figure figure--against figure--m"><span class="label">@F.Choice("against")</span><span class="figure__num">@Formats.Number(vote.Summary.Totals.Against)</span></div>
+                            <div class="figure figure--m"><span class="label">@F.Choice("abstain")</span><span class="figure__num">@Formats.Number(vote.Summary.Totals.Abstain)</span></div>
+                        </div>
+                        @if (vote.Summary.OfficialNote is { } officialNote)
+                        {
+                            <p class="note note--quiet">@officialNote</p>
+                        }
+                        <SeatMap Ballots="vote.Ballots" />
+                        <details>
+                            <summary class="linkish">@T["Closed.EachMp"]</summary>
+                            <ul class="rows">
+                                @foreach (var ballot in vote.Ballots.OrderBy(b => b.Mp.LastName, StringComparer.Create(new System.Globalization.CultureInfo("lt-LT"), false)))
+                                {
+                                    <li>
+                                        <div class="rows__main"><a href="/p/@ballot.Mp.Slug">@ballot.Mp.FirstName @ballot.Mp.LastName</a><span class="small">@ballot.FactionLabel</span></div>
+                                        <div class="rows__side"><span class="@Formats.ChoiceClass(ballot.Choice)">@F.Choice(ballot.Choice)</span></div>
+                                    </li>
+                                }
+                            </ul>
+                        </details>
+                    }
+                </section>
+            }
 
             @if (a.Status is "open" or "closed")
             {
@@ -172,6 +213,7 @@ else if (_bill is { } bill)
     private AppealResponse? _appeal;
     private BillResponse? _bill;
     private DateTimeOffset? _updatedAt;
+    private VoteResponse? _closingVote;
 
     [Parameter] public string Number { get; set; } = "";
 
@@ -189,6 +231,10 @@ else if (_bill is { } bill)
         }
 
         _updatedAt = (await Meta.GetImportsAsync()).Value?.Sources.FirstOrDefault()?.LastSuccessAt;
+        if (_appeal?.ClosingVoteId is { } voteId)
+        {
+            _closingVote = (await Parliament.GetVoteAsync(voteId)).Value;
+        }
     }
 
     private string Fmt(string key, params object?[] values) => string.Format(System.Globalization.CultureInfo.InvariantCulture, T[key], values);

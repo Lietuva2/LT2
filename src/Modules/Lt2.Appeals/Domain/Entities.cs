@@ -24,8 +24,17 @@ internal sealed class Appeal
 
     public DateTimeOffset? ClosedAt { get; set; }
 
-    /// <summary>The final Seimas vote that closed it (second half of M2a).</summary>
+    /// <summary>The final Seimas vote that closed it.</summary>
     public long? ClosingVoteId { get; set; }
+
+    /// <summary>The counts frozen when the appeal closed (design 8.1); null while open.</summary>
+    public int? ClosedFor { get; set; }
+
+    public int? ClosedForOlderThan30Days { get; set; }
+
+    public int? ClosedAgainst { get; set; }
+
+    public int? ClosedAgainstOlderThan30Days { get; set; }
 
     /// <summary><c>automatic</c> or <c>held</c> (design 8.4; used by the summaries).</summary>
     public string Sending { get; set; } = "automatic";

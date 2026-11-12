@@ -40,9 +40,25 @@ namespace Lt2.Appeals.Infrastructure.Migrations
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("changed_at");
 
+                    b.Property<int?>("ClosedAgainst")
+                        .HasColumnType("integer")
+                        .HasColumnName("closed_against");
+
+                    b.Property<int?>("ClosedAgainstOlderThan30Days")
+                        .HasColumnType("integer")
+                        .HasColumnName("closed_against_older_than30days");
+
                     b.Property<DateTimeOffset?>("ClosedAt")
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("closed_at");
+
+                    b.Property<int?>("ClosedFor")
+                        .HasColumnType("integer")
+                        .HasColumnName("closed_for");
+
+                    b.Property<int?>("ClosedForOlderThan30Days")
+                        .HasColumnType("integer")
+                        .HasColumnName("closed_for_older_than30days");
 
                     b.Property<long?>("ClosingVoteId")
                         .HasColumnType("bigint")

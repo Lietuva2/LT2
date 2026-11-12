@@ -54,4 +54,13 @@ public interface IBillCatalogue
     Task<BillFacts?> FindAsync(string number, CancellationToken cancellationToken);
 
     Task<IReadOnlyDictionary<string, BillFacts>> FindManyAsync(IReadOnlyCollection<string> numbers, CancellationToken cancellationToken);
+
+    /// <summary>
+    /// The Seimas's final vote on the bill: the latest stage result at the adoption stage, or <c>null</c> while there is
+    /// none. Rejection or withdrawal at an earlier stage is not in the open data (see design 5.1, bill status).
+    /// </summary>
+    Task<BillFinalVote?> FinalVoteAsync(string number, CancellationToken cancellationToken);
 }
+
+/// <summary>The vote that closes an appeal (design 8.1).</summary>
+public sealed record BillFinalVote(long VoteId, DateTimeOffset HeldAt);

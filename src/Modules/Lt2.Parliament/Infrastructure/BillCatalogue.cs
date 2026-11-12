@@ -1,3 +1,4 @@
+using Lt2.Parliament.Import.Parsing;
 using Lt2.SharedKernel;
 using Microsoft.EntityFrameworkCore;
 
@@ -25,5 +26,17 @@ internal sealed class BillCatalogue(IDbContextFactory<ParliamentDb> contexts) : 
             .Select(b => new BillFacts(b.Number, b.Title))
             .ToListAsync(cancellationToken);
         return found.ToDictionary(b => b.Number, StringComparer.Ordinal);
+    }
+
+    public async Task<BillFinalVote?> FinalVoteAsync(string number, CancellationToken cancellationToken)
+    {
+        await using var db = await contexts.CreateDbContextAsync(cancellationToken);
+        var normalised = number.Trim().ToUpperInvariant();
+        return await (from b in db.Bills.AsNoTracking()
+                      join v in db.Votes.AsNoTracking() on b.Id equals v.BillId
+                      where b.Number == normalised && v.Kind == VoteKind.StageResult && v.Stage == BillStage.Adoption
+                      orderby v.HeldAt descending
+                      select new BillFinalVote(v.Id, v.HeldAt))
+            .FirstOrDefaultAsync(cancellationToken);
     }
 }

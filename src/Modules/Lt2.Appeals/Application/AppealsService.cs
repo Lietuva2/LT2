@@ -567,7 +567,9 @@ internal sealed class AppealsService(
 
     private async Task<AppealInfo> InfoAsync(AppealsDb db, Appeal appeal, CancellationToken ct)
     {
-        var counts = (await reads.CountsAsync(db, [appeal.Id], ct))[appeal.Id];
+        var counts = ClosingRules.Shown(
+            (await reads.CountsAsync(db, [appeal.Id], ct))[appeal.Id],
+            appeal.ClosedFor, appeal.ClosedForOlderThan30Days, appeal.ClosedAgainst, appeal.ClosedAgainstOlderThan30Days);
         var reasons = await db.Reasons.AsNoTracking()
             .Where(r => r.AppealId == appeal.Id && r.Status == ReasonStatuses.Published)
             .ToListAsync(ct);
@@ -592,7 +594,9 @@ internal sealed class AppealsService(
             AppealReads.Threshold(appeal, counts, minimum),
             ordered,
             appeal.Status == AppealStatuses.Returned ? appeal.ReturnNote : null,
-            appeal.Status == AppealStatuses.Open ? await reads.SurgeAsync(db, appeal.Id, ct) : null);
+            appeal.Status == AppealStatuses.Open ? await reads.SurgeAsync(db, appeal.Id, ct) : null,
+            appeal.ClosingVoteId,
+            appeal.ClosedAt);
     }
 
     internal static Revision Revise(string kind, Guid id, string field, string? oldValue, string? newValue, Guid? by, DateTimeOffset at) => new()

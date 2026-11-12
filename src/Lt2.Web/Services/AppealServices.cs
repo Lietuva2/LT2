@@ -24,7 +24,7 @@ internal static class AppealMapping
 
     public static AppealResponse Map(AppealInfo a) => new(
         a.Id, Map(a.Bill), a.Status, a.InitiatorName, a.Description, a.OpenedAt, a.PublishedAt, Map(a.Counts), Map(a.Threshold),
-        a.Reasons.Select(Map).ToList(), a.ReturnNote, Map(a.Surge));
+        a.Reasons.Select(Map).ToList(), a.ReturnNote, Map(a.Surge), a.ClosingVoteId, a.ClosedAt);
 
     public static SurgeResponse? Map(SurgeInfo? s) => s is null ? null : new(s.SharePercent, s.WindowHours);
 

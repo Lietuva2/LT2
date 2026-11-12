@@ -212,6 +212,19 @@ internal static class GroupRules
     public static int? Publishable(int groupSize) => MayPublish(groupSize) ? groupSize : null;
 }
 
+/// <summary>Design 8.1: an appeal closes when the Seimas takes the final vote on its bill; the counts are frozen then.</summary>
+internal static class ClosingRules
+{
+    /// <summary>Only an open appeal closes, and only on a final vote; a pending one waits for its moderator.</summary>
+    public static bool ShouldClose(string status, long? finalVoteId) => status == AppealStatuses.Open && finalVoteId is not null;
+
+    /// <summary>The counts shown: frozen ones once closed, live ones before.</summary>
+    public static SideCounts Shown(SideCounts live, int? closedFor, int? closedForOlder, int? closedAgainst, int? closedAgainstOlder) =>
+        closedFor is { } f && closedForOlder is { } fo && closedAgainst is { } a && closedAgainstOlder is { } ao
+            ? CountRules.Publish(f, fo, a, ao)
+            : live;
+}
+
 /// <summary>Turns a rule's error code into the module's error.</summary>
 internal static class RuleErrors
 {

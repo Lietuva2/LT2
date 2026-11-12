@@ -42,7 +42,9 @@ public sealed record AppealInfo(
     ThresholdInfo Threshold,
     IReadOnlyList<ReasonInfo> Reasons,
     string? ReturnNote,
-    SurgeInfo? Surge = null);
+    SurgeInfo? Surge = null,
+    long? ClosingVoteId = null,
+    DateTimeOffset? ClosedAt = null);
 
 /// <summary>
 /// The surge note (design 6.6): in the last <paramref name="WindowHours"/> hours, <paramref name="SharePercent"/> % of the
@@ -186,4 +188,7 @@ public interface IAppealsMaintenance
 {
     /// <summary>Writes (or rewrites) the daily aggregate of every published appeal for one Vilnius day; returns how many.</summary>
     Task<int> AggregateDayAsync(DateOnly day, CancellationToken cancellationToken);
+
+    /// <summary>Closes every open appeal whose bill had its final Seimas vote, freezing the counts; returns how many.</summary>
+    Task<int> CloseFinishedAsync(CancellationToken cancellationToken);
 }

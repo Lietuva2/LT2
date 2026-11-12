@@ -99,7 +99,8 @@ public sealed class AppealsDailyJob(IAppealsMaintenance maintenance, TimeProvide
         var today = DateOnly.FromDateTime(TimeZoneInfo.ConvertTime(clock.GetUtcNow(), TimeZoneInfo.FindSystemTimeZoneById("Europe/Vilnius")).DateTime);
         var appeals = await maintenance.AggregateDayAsync(today.AddDays(-1), cancellationToken);
         await maintenance.AggregateDayAsync(today, cancellationToken);
-        logger.LogInformation("Daily appeal aggregates written for {Appeals} appeals", appeals);
+        var closed = await maintenance.CloseFinishedAsync(cancellationToken);
+        logger.LogInformation("Daily appeal aggregates written for {Appeals} appeals; {Closed} closed after the final vote", appeals, closed);
     }
 }
 

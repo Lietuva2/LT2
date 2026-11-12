@@ -10,7 +10,8 @@ namespace Lt2.Appeals.Application;
 /// older than 30 days at the end of the day, and the share of that day's new positions taken by accounts younger than
 /// 30 days. The only source of trends: no per-person history exists. Re-running a day overwrites its row.
 /// </summary>
-internal sealed class AppealsMaintenance(IDbContextFactory<AppealsDb> contexts, TimeProvider clock) : IAppealsMaintenance
+internal sealed class AppealsMaintenance(
+    IDbContextFactory<AppealsDb> contexts, AppealReads reads, IBillCatalogue bills, IAuditLog audit, TimeProvider clock) : IAppealsMaintenance
 {
     private static readonly TimeZoneInfo Vilnius = TimeZoneInfo.FindSystemTimeZoneById("Europe/Vilnius");
 
@@ -60,6 +61,50 @@ internal sealed class AppealsMaintenance(IDbContextFactory<AppealsDb> contexts, 
         }
 
         return appeals.Count;
+    }
+
+    public async Task<int> CloseFinishedAsync(CancellationToken cancellationToken)
+    {
+        await using var db = await contexts.CreateDbContextAsync(cancellationToken);
+        var open = await db.Appeals.AsNoTracking().Where(a => a.Status == AppealStatuses.Open).Select(a => new { a.Id, a.BillNumber }).ToListAsync(cancellationToken);
+        var closed = 0;
+        foreach (var candidate in open)
+        {
+            var final = await bills.FinalVoteAsync(candidate.BillNumber, cancellationToken);
+            if (!ClosingRules.ShouldClose(AppealStatuses.Open, final?.VoteId))
+            {
+                continue;
+            }
+
+            await using var transaction = await db.Database.BeginTransactionAsync(cancellationToken);
+            var appeal = await db.Appeals.FirstAsync(a => a.Id == candidate.Id, cancellationToken);
+            if (appeal.Status != AppealStatuses.Open)
+            {
+                continue;
+            }
+
+            // Frozen now: once the status is closed no side can be taken or changed, and the page shows these numbers.
+            var counts = (await reads.CountsAsync(db, [appeal.Id], cancellationToken))[appeal.Id];
+            var now = clock.GetUtcNow();
+            appeal.Status = AppealStatuses.Closed;
+            appeal.ClosedAt = now;
+            appeal.ChangedAt = now;
+            appeal.ClosingVoteId = final!.VoteId;
+            appeal.ClosedFor = counts.For;
+            appeal.ClosedForOlderThan30Days = counts.ForOlderThan30Days;
+            appeal.ClosedAgainst = counts.Against;
+            appeal.ClosedAgainstOlderThan30Days = counts.AgainstOlderThan30Days;
+            await db.SaveChangesAsync(cancellationToken);
+            await audit.WriteAsync(
+                new AuditEntry("appeal.closed", null, "system", "appeal:" + appeal.Id,
+                    System.Text.Json.JsonSerializer.SerializeToElement(new { bill = appeal.BillNumber, vote = final.VoteId }, System.Text.Json.JsonSerializerOptions.Web)),
+                Microsoft.EntityFrameworkCore.Storage.DbContextTransactionExtensions.GetDbTransaction(transaction),
+                cancellationToken);
+            await transaction.CommitAsync(cancellationToken);
+            closed++;
+        }
+
+        return closed;
     }
 
     public static DateOnly VilniusToday(DateTimeOffset now) => DateOnly.FromDateTime(TimeZoneInfo.ConvertTime(now, Vilnius).DateTime);

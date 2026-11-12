@@ -241,3 +241,23 @@ public sealed class SurgeRuleTests
         SurgeRules.NewAccountShare(3, 1).ShouldBe(0.3333m);
     }
 }
+
+/// <summary>Design 8.1: an appeal closes at the final Seimas vote and its counts are frozen.</summary>
+public sealed class ClosingRuleTests
+{
+    [Fact]
+    public void An_open_appeal_closes_when_its_bill_has_a_final_vote()
+    {
+        ClosingRules.ShouldClose(AppealStatuses.Open, 99100009).ShouldBeTrue();
+        ClosingRules.ShouldClose(AppealStatuses.Open, null).ShouldBeFalse();
+        ClosingRules.ShouldClose(AppealStatuses.Pending, 99100009).ShouldBeFalse("a pending appeal waits for its moderator");
+    }
+
+    [Fact]
+    public void A_closed_appeal_shows_its_frozen_counts_whatever_happens_to_positions_later()
+    {
+        var live = CountRules.Publish(5, 1, 3, 0);
+        ClosingRules.Shown(live, 7, 2, 4, 1).ShouldBe(CountRules.Publish(7, 2, 4, 1));
+        ClosingRules.Shown(live, null, null, null, null).ShouldBe(live);
+    }
+}

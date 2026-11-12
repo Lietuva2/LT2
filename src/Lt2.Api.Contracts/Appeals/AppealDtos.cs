@@ -44,7 +44,9 @@ public sealed record AppealResponse(
     ThresholdResponse Threshold,
     IReadOnlyList<ReasonResponse> Reasons,
     string? ReturnNote,
-    SurgeResponse? Surge = null);
+    SurgeResponse? Surge = null,
+    long? ClosingVoteId = null,
+    DateTimeOffset? ClosedAt = null);
 
 /// <summary>The surge note (design 6.6): in the last hours, this share of positions came from accounts made in those hours.</summary>
 public sealed record SurgeResponse(int SharePercent, int WindowHours);
