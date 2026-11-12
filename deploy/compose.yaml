@@ -1,0 +1,185 @@
+# Lietuva 2.0: local and production-shaped stack (design 9.1).
+#
+#   python deploy/init-secrets.py       # once
+#   docker compose -f deploy/compose.yaml up --build
+#
+# Local defaults come from deploy/.env (site https://lt2.localhost:8443, Mailpit on http://localhost:8025, the
+# "local" profile, a trial invitation code). Production sets its own values: LT2_SITE_ADDRESS (the domain),
+# LT2_TLS (the ACME contact address), ports 80/443, COMPOSE_PROFILES empty (no Mailpit), real SMTP settings.
+# Secrets are files in deploy/secrets/, mounted under /run/secrets and never committed (design 6.5).
+# Database connections use passwords, never Kerberos: "GSS Encryption Mode=Disable" stops Npgsql looking for
+# libgssapi_krb5, which the chiselled images do not have (it logged an error at every start).
+
+name: lt2
+
+x-dotnet-hardening: &dotnet-hardening
+  read_only: true
+  tmpfs:
+    - /tmp
+  cap_drop: [ALL]
+  security_opt:
+    - no-new-privileges:true
+  restart: unless-stopped
+
+services:
+  caddy:
+    image: caddy:2.10
+    restart: unless-stopped
+    # Caddy listens on the published ports themselves (Caddyfile http_port/https_port), so its redirects are right.
+    ports:
+      - "${LT2_HTTP_PORT:-8080}:${LT2_HTTP_PORT:-8080}"
+      - "${LT2_HTTPS_PORT:-8443}:${LT2_HTTPS_PORT:-8443}"
+      - "${LT2_HTTPS_PORT:-8443}:${LT2_HTTPS_PORT:-8443}/udp"
+    environment:
+      LT2_SITE_ADDRESS: ${LT2_SITE_ADDRESS:-lt2.localhost}
+      LT2_TLS: ${LT2_TLS:-internal}
+      LT2_HTTP_PORT: ${LT2_HTTP_PORT:-8080}
+      LT2_HTTPS_PORT: ${LT2_HTTPS_PORT:-8443}
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data
+      - caddy_config:/config
+    cap_drop: [ALL]
+    cap_add: [NET_BIND_SERVICE]
+    security_opt:
+      - no-new-privileges:true
+    depends_on:
+      - web
+    networks: [edge]
+
+  web:
+    <<: *dotnet-hardening
+    build:
+      context: ..
+      dockerfile: deploy/Dockerfile
+      target: web
+    image: lt2/web:local
+    environment:
+      ConnectionStrings__Lt2: Host=postgres;Port=5432;Database=lt2;Username=lt2_app;GSS Encryption Mode=Disable
+      ReverseProxy__TrustForwardedHeaders: "true"
+      OTEL_EXPORTER_OTLP_ENDPOINT: ${OTEL_EXPORTER_OTLP_ENDPOINT:-}
+    secrets:
+      - source: db_app_password
+        target: Database__Password
+      - source: data_protection_key
+        target: DataProtection__KeyEncryptionKey
+      - source: ip_hash_key
+        target: Security__IpHashKey
+    depends_on:
+      migrator:
+        condition: service_completed_successfully
+    networks: [edge, backend]
+
+  worker:
+    <<: *dotnet-hardening
+    build:
+      context: ..
+      dockerfile: deploy/Dockerfile
+      target: worker
+    image: lt2/worker:local
+    environment:
+      ConnectionStrings__Lt2: Host=postgres;Port=5432;Database=lt2;Username=lt2_worker;GSS Encryption Mode=Disable
+      Email__Smtp__Host: ${LT2_SMTP_HOST:-mailpit}
+      Email__Smtp__Port: ${LT2_SMTP_PORT:-1025}
+      Email__Smtp__Security: ${LT2_SMTP_SECURITY:-None}
+      Email__Smtp__UserName: ${LT2_SMTP_USERNAME:-}
+      Email__Smtp__FromAddress: ${LT2_MAIL_FROM:-prisijungimas@lt2.localhost}
+      OTEL_EXPORTER_OTLP_ENDPOINT: ${OTEL_EXPORTER_OTLP_ENDPOINT:-}
+    secrets:
+      - source: db_worker_password
+        target: Database__Password
+      - source: smtp_password
+        target: Email__Smtp__Password
+    depends_on:
+      migrator:
+        condition: service_completed_successfully
+    networks: [backend]
+
+  migrator:
+    <<: *dotnet-hardening
+    build:
+      context: ..
+      dockerfile: deploy/Dockerfile
+      target: migrator
+    image: lt2/migrator:local
+    restart: "no"
+    command: ${LT2_MIGRATOR_ARGS:-}
+    environment:
+      ConnectionStrings__Admin: Host=postgres;Port=5432;Database=lt2;Username=postgres;GSS Encryption Mode=Disable
+      ConnectionStrings__Lt2: Host=postgres;Port=5432;Database=lt2;Username=lt2_migrator;GSS Encryption Mode=Disable
+    secrets:
+      - source: postgres_password
+        target: Database__AdminPassword
+      - source: db_migrator_password
+        target: Database__Password
+      - source: db_app_password
+        target: Database__AppPassword
+      - source: db_worker_password
+        target: Database__WorkerPassword
+      - source: db_readonly_password
+        target: Database__ReadonlyPassword
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks: [backend]
+
+  postgres:
+    image: postgres:17
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: lt2
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD_FILE: /run/secrets/postgres_password
+    secrets:
+      - postgres_password
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d lt2"]
+      interval: 3s
+      timeout: 3s
+      retries: 20
+    security_opt:
+      - no-new-privileges:true
+    networks: [backend]
+
+  # Local only: catches every email; web UI and API on http://localhost:8025.
+  mailpit:
+    image: axllent/mailpit:v1.27
+    profiles: [local]
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:${LT2_MAILPIT_PORT:-8025}:8025"
+    read_only: true
+    tmpfs:
+      - /tmp
+    security_opt:
+      - no-new-privileges:true
+    networks: [backend]
+
+networks:
+  edge:
+  backend:
+
+volumes:
+  postgres_data:
+  caddy_data:
+  caddy_config:
+
+secrets:
+  postgres_password:
+    file: ./secrets/postgres_password
+  db_migrator_password:
+    file: ./secrets/db_migrator_password
+  db_app_password:
+    file: ./secrets/db_app_password
+  db_worker_password:
+    file: ./secrets/db_worker_password
+  db_readonly_password:
+    file: ./secrets/db_readonly_password
+  data_protection_key:
+    file: ./secrets/data_protection_key
+  ip_hash_key:
+    file: ./secrets/ip_hash_key
+  smtp_password:
+    file: ./secrets/smtp_password

@@ -1,0 +1,82 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <resheader name="resmimetype"><value>text/microsoft-resx</value></resheader>
+  <resheader name="version"><value>2.0</value></resheader>
+  <resheader name="reader"><value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value></resheader>
+  <resheader name="writer"><value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value></resheader>
+  <data name="SignIn.PageTitle" xml:space="preserve"><value>Prisijungimas · Lietuva 2.0</value></data>
+  <data name="Welcome.Title" xml:space="preserve"><value>Gyvas pokalbis tarp žmonių ir jų atstovų</value></data>
+  <data name="Welcome.Lead" xml:space="preserve"><value>Pasakykite Seimo nariams, kaip prašote balsuoti, ir sužinokite, ką jie atsakė.</value></data>
+  <data name="NoScript" xml:space="preserve"><value>Prisijungti ir registruotis galima tik įjungus „JavaScript“. Įjunkite jį naršyklės nustatymuose ir perkraukite puslapį.</value></data>
+  <data name="SignIn.Title" xml:space="preserve"><value>Prisijunkite</value></data>
+  <data name="SignIn.Intro" xml:space="preserve"><value>Atsiųsime vienkartinį kodą el. paštu. Slaptažodžio nereikia.</value></data>
+  <data name="Email.Label" xml:space="preserve"><value>El. paštas</value></data>
+  <data name="Email.Placeholder" xml:space="preserve"><value>vardas@pavyzdys.lt</value></data>
+  <data name="SignIn.SendCode" xml:space="preserve"><value>Atsiųsti kodą</value></data>
+  <data name="SignIn.Passkey" xml:space="preserve"><value>Prisijungti prieigos raktu</value></data>
+  <data name="SignIn.PasskeyHint" xml:space="preserve"><value>Prieigos raktas – tai piršto atspaudas, veidas arba įrenginio PIN kodas vietoj kodo el. paštu.</value></data>
+  <data name="SignIn.NoAccount" xml:space="preserve"><value>Neturite paskyros?</value></data>
+  <data name="SignIn.ToRegister" xml:space="preserve"><value>Registruokitės su kvietimo kodu.</value></data>
+  <data name="Register.Label" xml:space="preserve"><value>Registracija</value></data>
+  <data name="Register.Title" xml:space="preserve"><value>Nauja paskyra</value></data>
+  <data name="Invitation.Label" xml:space="preserve"><value>Kvietimo kodas</value></data>
+  <data name="Invitation.Hint" xml:space="preserve"><value>Kol platforma bandoma, registruotis galima tik su kvietimu.</value></data>
+  <data name="DisplayName.Label" xml:space="preserve"><value>Vardas, kurį matys kiti</value></data>
+  <data name="DisplayName.Placeholder" xml:space="preserve"><value>Rūta M.</value></data>
+  <data name="DisplayName.Hint" xml:space="preserve"><value>Šį vardą kiti matys prie jūsų parašytų argumentų. Ar prašote balsuoti už, ar prieš – nemato niekas.</value></data>
+  <data name="Adult.Label" xml:space="preserve"><value>Man yra 18 metų arba daugiau</value></data>
+  <data name="Register.Submit" xml:space="preserve"><value>Registruotis</value></data>
+  <data name="Register.Fine" xml:space="preserve"><value>Išsiųsime laišką šiuo adresu. Ar adresas jau registruotas, čia neparodome.</value></data>
+  <data name="Register.HaveAccount" xml:space="preserve"><value>Jau turite paskyrą?</value></data>
+  <data name="Register.ToSignIn" xml:space="preserve"><value>Prisijunkite.</value></data>
+  <data name="Code.Title" xml:space="preserve"><value>Įveskite kodą</value></data>
+  <data name="Code.SentAfterRegister.Before" xml:space="preserve"><value>Kodą išsiuntėme adresu</value></data>
+  <data name="Code.SentAfterRegister.After" xml:space="preserve"><value>. Jis galioja 10 minučių.</value></data>
+  <data name="Code.SentAfterRequest.Before" xml:space="preserve"><value>Jei adresu</value></data>
+  <data name="Code.SentAfterRequest.After" xml:space="preserve"><value>yra paskyra, kodą jau išsiuntėme. Jis galioja 10 minučių.</value></data>
+  <data name="Code.Label" xml:space="preserve"><value>Šešių skaitmenų kodas</value></data>
+  <data name="Code.Submit" xml:space="preserve"><value>Prisijungti</value></data>
+  <data name="Code.Resend" xml:space="preserve"><value>Siųsti kodą iš naujo</value></data>
+  <data name="Code.ChangeEmail" xml:space="preserve"><value>Keisti el. pašto adresą</value></data>
+  <data name="Activation.Title" xml:space="preserve"><value>Darbuotojo vaidmens aktyvinimas</value></data>
+  <data name="Activation.Text" xml:space="preserve"><value>Jums suteiktas darbuotojo vaidmuo. Jis pradės veikti, kai prisijungę prieigos raktu įvesite aktyvinimo kodą, kurį jums asmeniškai perdavė administratorius. Tas prieigos raktas taps darbuotojo raktu, o kiti paskyros prieigos raktai bus pašalinti.</value></data>
+  <data name="Activation.Label" xml:space="preserve"><value>Aktyvinimo kodas</value></data>
+  <data name="Activation.Submit" xml:space="preserve"><value>Aktyvinti</value></data>
+  <data name="Activation.Done" xml:space="preserve"><value>Vaidmuo aktyvintas. Jis veikia, kai prisijungiate šiuo prieigos raktu.</value></data>
+  <data name="Code.NewestOnly" xml:space="preserve"><value>Jei gavote kelis laiškus, tinka tik naujausias kodas.</value></data>
+  <data name="Complete.Label" xml:space="preserve"><value>Po pirmo kodo</value></data>
+  <data name="Complete.Title" xml:space="preserve"><value>Dar du dalykai</value></data>
+  <data name="Complete.Confirmed.Before" xml:space="preserve"><value>Adresas</value></data>
+  <data name="Complete.Confirmed.After" xml:space="preserve"><value>patvirtintas.</value></data>
+  <data name="Complete.Submit" xml:space="preserve"><value>Baigti registraciją</value></data>
+  <data name="Complete.SignOut" xml:space="preserve"><value>Atsijungti</value></data>
+  <data name="Code.Resent" xml:space="preserve"><value>Naujas kodas išsiųstas.</value></data>
+  <data name="Passkey.Unsupported" xml:space="preserve"><value>Ši naršyklė nepalaiko prieigos raktų.</value></data>
+  <data name="Passkey.Cancelled" xml:space="preserve"><value>Prieigos rakto naudojimas atšauktas arba nepavyko.</value></data>
+  <data name="Error.Generic" xml:space="preserve"><value>Nepavyko. Bandykite dar kartą.</value></data>
+  <data name="Error.Network" xml:space="preserve"><value>Nepavyko susisiekti su serveriu. Patikrinkite ryšį ir bandykite dar kartą.</value></data>
+  <data name="Loading" xml:space="preserve"><value>Įkeliama…</value></data>
+  <data name="Hello.PageTitle" xml:space="preserve"><value>Sveiki · Lietuva 2.0</value></data>
+  <data name="Hello.Greeting" xml:space="preserve"><value>Sveiki, {0}!</value></data>
+  <data name="Hello.SignedIn" xml:space="preserve"><value>Esate prisijungę prie Lietuva 2.0.</value></data>
+  <data name="Level.email" xml:space="preserve"><value>El. paštas patvirtintas</value></data>
+  <data name="Level.none" xml:space="preserve"><value>El. paštas dar nepatvirtintas</value></data>
+  <data name="Role.member" xml:space="preserve"><value>Narys</value></data>
+  <data name="Role.moderator" xml:space="preserve"><value>Moderatorius</value></data>
+  <data name="Role.administrator" xml:space="preserve"><value>Administratorius</value></data>
+  <data name="Passkeys.Title" xml:space="preserve"><value>Prieigos raktai</value></data>
+  <data name="Passkeys.Text" xml:space="preserve"><value>Prieigos raktas leidžia prisijungti be kodo: piršto atspaudu, veidu arba įrenginio PIN kodu.</value></data>
+  <data name="Passkeys.Count" xml:space="preserve"><value>Sukurta prieigos raktų: {0}</value></data>
+  <data name="Passkeys.Add" xml:space="preserve"><value>Sukurti prieigos raktą</value></data>
+  <data name="Passkeys.Added" xml:space="preserve"><value>Prieigos raktas sukurtas.</value></data>
+  <data name="Sessions.Title" xml:space="preserve"><value>Jūsų sesijos</value></data>
+  <data name="Sessions.Text" xml:space="preserve"><value>Čia matote, kur esate prisijungę. Nepažįstamą sesiją galite baigti.</value></data>
+  <data name="Sessions.Current" xml:space="preserve"><value>Ši sesija</value></data>
+  <data name="Sessions.End" xml:space="preserve"><value>Baigti</value></data>
+  <data name="Sessions.LastSeen" xml:space="preserve"><value>paskutinį kartą {0}</value></data>
+  <data name="Sessions.UnknownDevice" xml:space="preserve"><value>Nežinomas įrenginys</value></data>
+  <data name="Sessions.Method.otp" xml:space="preserve"><value>prisijungta kodu</value></data>
+  <data name="Sessions.Method.pop" xml:space="preserve"><value>prisijungta prieigos raktu</value></data>
+  <data name="Sessions.Method.unknown" xml:space="preserve"><value>prisijungimo būdas nežinomas</value></data>
+  <data name="SignOut" xml:space="preserve"><value>Atsijungti</value></data>
+</root>

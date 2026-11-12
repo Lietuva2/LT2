@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <resheader name="resmimetype"><value>text/microsoft-resx</value></resheader>
+  <resheader name="version"><value>2.0</value></resheader>
+  <resheader name="reader"><value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value></resheader>
+  <resheader name="writer"><value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value></resheader>
+  <data name="SignInCode.Subject" xml:space="preserve"><value>Lietuva 2.0 prisijungimo kodas: {0}</value></data>
+  <data name="SignInCode.Greeting" xml:space="preserve"><value>Laba diena,</value></data>
+  <data name="SignInCode.Intro" xml:space="preserve"><value>jūsų prisijungimo prie Lietuva 2.0 kodas:</value></data>
+  <data name="SignInCode.Validity" xml:space="preserve"><value>Kodas galioja {0} min. ir tinka tik vieną kartą.</value></data>
+  <data name="SignInCode.NewestOnly" xml:space="preserve"><value>Kodą galite įvesti bet kurioje naršyklėje. Jei gavote kelis laiškus, tinka tik naujausias kodas.</value></data>
+  <data name="SignInCode.Ignore" xml:space="preserve"><value>Jei kodo neprašėte, nieko daryti nereikia: be šio kodo niekas negalės prisijungti prie jūsų paskyros.</value></data>
+  <data name="Notice.passkey-added.Subject" xml:space="preserve"><value>Lietuva 2.0: prie paskyros pridėtas prieigos raktas</value></data>
+  <data name="Notice.passkey-added.Body" xml:space="preserve"><value>prie jūsų Lietuva 2.0 paskyros ką tik pridėtas naujas prieigos raktas.</value></data>
+  <data name="Notice.role-granted.Subject" xml:space="preserve"><value>Lietuva 2.0: jums suteiktas vaidmuo</value></data>
+  <data name="Notice.role-granted.Body" xml:space="preserve"><value>jums suteiktas {0} vaidmuo. Jis pradės veikti, kai prisijungę prieigos raktu įvesite aktyvinimo kodą, kurį jums perdavė administratorius. Šio kodo el. paštu nesiunčiame.</value></data>
+  <data name="Notice.role-activated.Subject" xml:space="preserve"><value>Lietuva 2.0: vaidmuo aktyvintas</value></data>
+  <data name="Notice.role-activated.Body" xml:space="preserve"><value>jūsų {0} vaidmuo aktyvintas. Jis veikia tik prisijungus tuo prieigos raktu, kuriuo jį aktyvinote.</value></data>
+  <data name="Notice.account-reset.Subject" xml:space="preserve"><value>Lietuva 2.0: paskyros prieigos raktai pašalinti</value></data>
+  <data name="Notice.account-reset.Body" xml:space="preserve"><value>administratorius iš naujo nustatė jūsų paskyrą. Darbuotojo vaidmuo neveiks, kol įvesite naują aktyvinimo kodą.</value></data>
+  <data name="Notice.PasskeysRemoved" xml:space="preserve"><value>Pašalinta prieigos raktų: {0}.</value></data>
+  <data name="Notice.NotYou" xml:space="preserve"><value>Jei to nedarėte jūs, nedelsdami praneškite Lietuva 2.0 komandai.</value></data>
+  <data name="Role.moderator" xml:space="preserve"><value>moderatoriaus</value></data>
+  <data name="Role.administrator" xml:space="preserve"><value>administratoriaus</value></data>
+  <data name="SignInCode.Signature" xml:space="preserve"><value>Lietuva 2.0</value></data>
+</root>

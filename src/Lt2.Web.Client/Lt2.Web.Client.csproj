@@ -1,0 +1,22 @@
+<Project Sdk="Microsoft.NET.Sdk.BlazorWebAssembly">
+  <PropertyGroup>
+    <RootNamespace>Lt2.Web.Client</RootNamespace>
+    <NoDefaultLaunchSettingsFile>true</NoDefaultLaunchSettingsFile>
+    <StaticWebAssetProjectMode>Default</StaticWebAssetProjectMode>
+    <BlazorWebAssemblyLoadAllGlobalizationData>true</BlazorWebAssemblyLoadAllGlobalizationData>
+  </PropertyGroup>
+  <ItemGroup>
+    <PackageReference Include="Microsoft.AspNetCore.Components.WebAssembly" />
+    <PackageReference Include="Microsoft.AspNetCore.Components.WebAssembly.Authentication" />
+    <PackageReference Include="Microsoft.Extensions.Localization" />
+    <PackageReference Include="Microsoft.Extensions.Http" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\Lt2.Api.Contracts\Lt2.Api.Contracts.csproj" />
+  </ItemGroup>
+  <ItemGroup>
+    <!-- The API clients (de)serialise the contract types by reflection. Publishing trims unused members, which removed
+         their constructors and broke every call from the browser; keep the whole (small) contracts assembly. -->
+    <TrimmerRootAssembly Include="Lt2.Api.Contracts" />
+  </ItemGroup>
+</Project>

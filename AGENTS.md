@@ -107,8 +107,9 @@ code review.
 - Do not store per-person history of changed positions. Trends come from daily aggregate counts.
 - Logs carry no emails and no positions. IPs are hashed.
 - Group numbers (for example supporters of a party) are shown only for groups of at least 20.
-- Sign-in has no passwords: an emailed one-time code or a passkey. Staff and politicians need a second factor.
-  Responses never reveal whether an email is registered.
+- Sign-in has no passwords: an emailed one-time code or a passkey. A staff role works only in a session signed in
+  with a staff passkey; a code session is a member session, whatever roles the account has. Politicians need a
+  passkey too. Responses never reveal whether an email is registered.
 - Session cookie only (`__Host-`, Secure, HttpOnly, SameSite=Lax). No tokens in the browser. Every state-changing
   call needs the antiforgery header and passes the Origin check. CORS stays off.
 - No secrets in the repository or in images. No real personal data in tests or fixtures.
@@ -118,8 +119,9 @@ code review.
 ## Product rules to keep consistent
 
 **Accounts.** Registration is by email only, by invitation during the closed trial, with a self-declared age of 18 or
-older. One account per normalised address. Each account has a `verification_level` (`email` now); phone verification is
-a later decision.
+older. An account is pending until its address is proven; the display name and the age declaration are asked after the
+code, never before. One account per normalised address. Each account has a `verification_level` (`email` now); phone
+verification is a later decision.
 
 **MP profiles.** Compiled automatically from Seimas open data for every MP, joined or not. Two statistics:
 participation (share of recorded votes in which the MP voted for, against or abstained) and voted with the faction
@@ -158,7 +160,7 @@ A report button is on every appeal and reason.
 - Numbers are a signal from self-selected "Lietuva 2.0 naudotojai", never "the public", "voters" or a referendum. Every
   place that shows them says they are not a representative poll.
 - Planned Seimas dates are "Planuojama …", never a countdown: agenda items slip.
-- Proposed terms: *kreipimasis* (appeal), *pozicija* (position), *priežastis* (reason), *atsakymas* (an MP's
+- Proposed terms: *kreipimasis* (appeal), *pozicija* (position), *argumentas* (reason), *atsakymas* (an MP's
   response), *suvestinė* (summary), *iniciatorius*. Existing terms: "Man svarbu", *sritis* for subject areas,
   *patikėtinis* = "delegate" in English (stage 3).
 - Do not promise in any text: that the service is free or without ads, release dates, a public API, municipal councils

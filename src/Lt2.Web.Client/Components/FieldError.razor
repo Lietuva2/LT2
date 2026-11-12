@@ -1,0 +1,15 @@
+@* The error line under a field (design/ui: .field__error). The id lets the input point at it with aria-describedby. *@
+@if (Errors.TryGetValue(Field, out var messages))
+{
+    <p class="field__error" id="@Id" role="alert">@string.Join(" ", messages)</p>
+}
+
+@code {
+    [Parameter, EditorRequired]
+    public IReadOnlyDictionary<string, string[]> Errors { get; set; } = new Dictionary<string, string[]>();
+
+    [Parameter, EditorRequired]
+    public string Field { get; set; } = "";
+
+    public string Id => Field + "-error";
+}

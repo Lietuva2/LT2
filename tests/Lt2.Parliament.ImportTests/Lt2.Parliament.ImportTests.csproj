@@ -1,0 +1,12 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <!--
+    Parsers against recorded Seimas XML and agenda HTML (design 4). The import arrives in milestone M1; until then this
+    project holds no tests and is not run by dotnet test.
+  -->
+  <PropertyGroup>
+    <IsTestProject>false</IsTestProject>
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\..\src\Modules\Lt2.Parliament\Lt2.Parliament.csproj" />
+  </ItemGroup>
+</Project>

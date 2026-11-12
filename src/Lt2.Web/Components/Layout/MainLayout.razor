@@ -1,0 +1,24 @@
+@inherits LayoutComponentBase
+@inject IStringLocalizer<PageText> T
+
+<header class="page top">
+    <a class="top__brand" href="/"><Logo />Lietuva 2.0</a>
+    <nav class="top__nav" aria-label="@T["Nav.Label"]">
+        <AuthorizeView>
+            <Authorized>
+                <a href="/sveiki">@T["Nav.Account"]</a>
+            </Authorized>
+            <NotAuthorized>
+                <a href="/prisijungti">@T["Nav.SignIn"]</a>
+            </NotAuthorized>
+        </AuthorizeView>
+    </nav>
+</header>
+
+<main class="page stack stack--loose">
+    @Body
+</main>
+
+<footer class="page foot">
+    <p>@T["Footer.Line"]</p>
+</footer>

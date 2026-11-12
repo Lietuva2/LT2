@@ -1,0 +1,23 @@
+<Project Sdk="Microsoft.NET.Sdk.Worker">
+  <PropertyGroup>
+    <RootNamespace>Lt2.Worker</RootNamespace>
+    <UserSecretsId>lt2-worker-local</UserSecretsId>
+  </PropertyGroup>
+  <ItemGroup>
+    <FrameworkReference Include="Microsoft.AspNetCore.App" />
+    <PackageReference Include="Hangfire.Core" />
+    <PackageReference Include="Hangfire.NetCore" />
+    <PackageReference Include="Hangfire.PostgreSql" />
+    <PackageReference Include="Serilog.AspNetCore" />
+    <PackageReference Include="Serilog.Sinks.OpenTelemetry" />
+    <PackageReference Include="OpenTelemetry.Extensions.Hosting" />
+    <PackageReference Include="OpenTelemetry.Exporter.OpenTelemetryProtocol" />
+    <PackageReference Include="Npgsql.OpenTelemetry" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\Lt2.SharedKernel\Lt2.SharedKernel.csproj" />
+    <ProjectReference Include="..\Modules\Lt2.Notifications\Lt2.Notifications.csproj" />
+    <ProjectReference Include="..\Modules\Lt2.Identity\Lt2.Identity.csproj" />
+    <ProjectReference Include="..\Modules\Lt2.Audit\Lt2.Audit.csproj" />
+  </ItemGroup>
+</Project>

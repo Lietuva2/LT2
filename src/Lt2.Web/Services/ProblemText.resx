@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <resheader name="resmimetype"><value>text/microsoft-resx</value></resheader>
+  <resheader name="version"><value>2.0</value></resheader>
+  <resheader name="reader"><value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value></resheader>
+  <resheader name="writer"><value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value></resheader>
+  <data name="Title.400" xml:space="preserve"><value>Netinkama užklausa</value></data>
+  <data name="Title.401" xml:space="preserve"><value>Reikia prisijungti</value></data>
+  <data name="Title.403" xml:space="preserve"><value>Draudžiama</value></data>
+  <data name="Title.404" xml:space="preserve"><value>Nerasta</value></data>
+  <data name="Title.405" xml:space="preserve"><value>Netinkamas metodas</value></data>
+  <data name="Title.409" xml:space="preserve"><value>Konfliktas</value></data>
+  <data name="Title.429" xml:space="preserve"><value>Per daug užklausų</value></data>
+  <data name="Title.500" xml:space="preserve"><value>Įvyko klaida</value></data>
+  <data name="validation" xml:space="preserve"><value>Patikrinkite įvestus duomenis.</value></data>
+  <data name="email.invalid" xml:space="preserve"><value>Patikrinkite el. pašto adresą.</value></data>
+  <data name="email.disposable" xml:space="preserve"><value>Laikinųjų el. pašto dėžučių adresai netinka. Naudokite nuolatinį adresą.</value></data>
+  <data name="invitation.invalid" xml:space="preserve"><value>Kvietimo kodas neteisingas arba nebegalioja.</value></data>
+  <data name="invitation.required" xml:space="preserve"><value>Kol vyksta uždaras bandymas, registruotis galima tik su kvietimo kodu.</value></data>
+  <data name="adult.required" xml:space="preserve"><value>Registruotis gali tik 18 metų ir vyresni asmenys.</value></data>
+  <data name="invitation.used-up" xml:space="preserve"><value>Šio kvietimo kodo vietos jau užimtos. Įveskite kitą kvietimo kodą.</value></data>
+  <data name="registration.complete" xml:space="preserve"><value>Registracija jau baigta.</value></data>
+  <data name="role-activation.invalid" xml:space="preserve"><value>Aktyvinimo kodas netinka arba nebegalioja.</value></data>
+  <data name="role-activation.passkey-required" xml:space="preserve"><value>Aktyvinimo kodą galima įvesti tik prisijungus prieigos raktu.</value></data>
+  <data name="passkey.staff-required" xml:space="preserve"><value>Šiam veiksmui reikia prisijungti darbuotojo prieigos raktu.</value></data>
+  <data name="passkey.confirmation-required" xml:space="preserve"><value>Patvirtinkite veiksmą prieigos raktu.</value></data>
+  <data name="role.unknown" xml:space="preserve"><value>Tokio vaidmens nėra.</value></data>
+  <data name="account.not-found" xml:space="preserve"><value>Tokios baigtos registruoti paskyros nėra.</value></data>
+  <data name="auth.code-invalid" xml:space="preserve"><value>Kodas netinka arba nebegalioja. Paprašykite naujo.</value></data>
+  <data name="auth.required" xml:space="preserve"><value>Reikia prisijungti.</value></data>
+  <data name="passkey.not-added" xml:space="preserve"><value>Prieigos rakto patikrinti nepavyko. Prie šios paskyros jis nepridėtas, net jei naršyklė ar slaptažodžių tvarkyklė jį išsaugojo; galite bandyti dar kartą.</value></data>
+  <data name="passkey.invalid" xml:space="preserve"><value>Prieigos rakto patikrinti nepavyko.</value></data>
+  <data name="session.not-found" xml:space="preserve"><value>Tokios sesijos nėra.</value></data>
+  <data name="setting.unknown" xml:space="preserve"><value>Tokio nustatymo nėra.</value></data>
+  <data name="setting.invalid" xml:space="preserve"><value>Netinkama nustatymo reikšmė.</value></data>
+  <data name="antiforgery.invalid" xml:space="preserve"><value>Užklausa atmesta saugumo sumetimais. Perkraukite puslapį ir bandykite dar kartą.</value></data>
+  <data name="origin.invalid" xml:space="preserve"><value>Užklausa atmesta saugumo sumetimais. Perkraukite puslapį ir bandykite dar kartą.</value></data>
+  <data name="rate-limited" xml:space="preserve"><value>Per daug bandymų. Palaukite ir bandykite vėliau.</value></data>
+  <data name="forbidden" xml:space="preserve"><value>Neturite teisės atlikti šio veiksmo.</value></data>
+  <data name="not-found" xml:space="preserve"><value>Nerasta.</value></data>
+  <data name="http.405" xml:space="preserve"><value>Šis metodas netinkamas.</value></data>
+</root>

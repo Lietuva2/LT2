@@ -1,0 +1,167 @@
+using Lt2.IntegrationTests.Infrastructure;
+using Lt2.Migrator;
+using Npgsql;
+
+namespace Lt2.IntegrationTests;
+
+/// <summary>
+/// What each database role may and may not do (design 5.5), checked against the database the migrator prepared:
+/// by trying the statement as that role, not by reading the grant code.
+/// </summary>
+public sealed class DatabaseRoleTests(DatabaseFixture database)
+{
+    private static readonly string[] AllSchemas = ["identity", "notify", "audit", "config", "parliament", "appeals", "public", DatabaseRoles.HangfireSchema];
+
+    public static TheoryData<string> RunningRoles() => new(DatabaseRoles.App, DatabaseRoles.Worker, DatabaseRoles.Readonly);
+
+    public static TheoryData<string> WritingRoles() => new(DatabaseRoles.App, DatabaseRoles.Worker);
+
+    [Theory]
+    [MemberData(nameof(RunningRoles))]
+    public async Task No_running_role_can_read_any_migration_history(string role)
+    {
+        var tables = await HistoryTablesAsync();
+        tables.Count.ShouldBeGreaterThanOrEqualTo(5, "one history table per module");
+
+        await using var connection = await OpenAsync(role);
+        foreach (var table in tables)
+        {
+            await ShouldBeRefusedAsync(connection, $"SELECT count(*) FROM {table}", $"{role} reading {table}");
+        }
+    }
+
+    [Theory]
+    [MemberData(nameof(WritingRoles))]
+    public async Task The_writing_roles_may_only_insert_into_the_audit_log(string role)
+    {
+        await using var connection = await OpenAsync(role);
+        await using (var insert = new NpgsqlCommand(
+            "INSERT INTO audit.event (id, occurred_at, action) VALUES (gen_random_uuid(), now(), 'test.insert')", connection))
+        {
+            (await insert.ExecuteNonQueryAsync()).ShouldBe(1);
+        }
+
+        foreach (var sql in new[] { "SELECT count(*) FROM audit.event", "UPDATE audit.event SET action = 'x'", "DELETE FROM audit.event", "TRUNCATE audit.event" })
+        {
+            await ShouldBeRefusedAsync(connection, sql, $"{role}: {sql}");
+        }
+    }
+
+    [Theory]
+    [InlineData("identity")]
+    [InlineData("notify")]
+    public async Task The_read_only_role_cannot_see_into_identity_or_notify(string schema)
+    {
+        (await database.ScalarAsync<bool>("SELECT has_schema_privilege(@r, @s, 'USAGE')", ("r", DatabaseRoles.Readonly), ("s", schema)))
+            .ShouldBeFalse();
+
+        await using var connection = await OpenAsync(DatabaseRoles.Readonly);
+        var tables = await TablesInAsync(schema);
+        tables.ShouldNotBeEmpty();
+        foreach (var table in tables)
+        {
+            await ShouldBeRefusedAsync(connection, $"SELECT count(*) FROM {table}", table);
+        }
+    }
+
+    [Fact]
+    public async Task The_read_only_role_cannot_read_appeals_position_but_reads_the_rest()
+    {
+        // The appeals module has no tables yet (M0), so create the table as the migrator would, re-apply the grants
+        // exactly as a deploy does, and drop it again.
+        await using var migrator = new NpgsqlConnection(database.MigratorConnectionString);
+        await migrator.OpenAsync();
+        await using (var create = new NpgsqlCommand("CREATE TABLE appeals.position (id int); CREATE TABLE appeals.example (id int);", migrator))
+        {
+            await create.ExecuteNonQueryAsync();
+        }
+
+        try
+        {
+            await DatabaseRoles.GrantAsync(migrator, CancellationToken.None);
+
+            await using var readonlyConnection = await OpenAsync(DatabaseRoles.Readonly);
+            await ShouldBeRefusedAsync(readonlyConnection, "SELECT count(*) FROM appeals.position", "appeals.position");
+            await using var other = new NpgsqlCommand("SELECT count(*) FROM appeals.example", readonlyConnection);
+            (await other.ExecuteScalarAsync()).ShouldBe(0L);
+            await using var settings = new NpgsqlCommand("SELECT count(*) FROM config.setting", readonlyConnection);
+            await settings.ExecuteScalarAsync();
+        }
+        finally
+        {
+            await using var drop = new NpgsqlCommand("DROP TABLE appeals.position; DROP TABLE appeals.example;", migrator);
+            await drop.ExecuteNonQueryAsync();
+        }
+    }
+
+    [Theory]
+    [MemberData(nameof(RunningRoles))]
+    public async Task Only_the_migrator_can_create_tables(string role)
+    {
+        foreach (var schema in AllSchemas)
+        {
+            // Hangfire creates and upgrades its own tables when the worker starts, so lt2_worker has CREATE there and
+            // nowhere else (DatabaseRoles.EnsureSchemasAsync).
+            var expected = role == DatabaseRoles.Worker && schema == DatabaseRoles.HangfireSchema;
+            (await database.ScalarAsync<bool>("SELECT has_schema_privilege(@r, @s, 'CREATE')", ("r", role), ("s", schema)))
+                .ShouldBe(expected, $"{role} CREATE on {schema}");
+        }
+
+        (await database.ScalarAsync<bool>("SELECT has_database_privilege(@r, current_database(), 'CREATE')", ("r", role)))
+            .ShouldBeFalse($"{role} may not create schemas");
+
+        await using var connection = await OpenAsync(role);
+        foreach (var schema in new[] { "identity", "config", "public" })
+        {
+            await ShouldBeRefusedAsync(connection, $"CREATE TABLE {schema}.extra (id int)", $"{role} creating a table in {schema}");
+        }
+
+        await ShouldBeRefusedAsync(connection, "CREATE SCHEMA extra", $"{role} creating a schema");
+    }
+
+    private async Task<NpgsqlConnection> OpenAsync(string role)
+    {
+        var connection = new NpgsqlConnection(database.ConnectionStringFor(role));
+        await connection.OpenAsync();
+        return connection;
+    }
+
+    private async Task<List<string>> HistoryTablesAsync()
+    {
+        await using var admin = new NpgsqlConnection(database.AdminConnectionString);
+        await admin.OpenAsync();
+        await using var command = new NpgsqlCommand(
+            "SELECT format('%I.%I', schemaname, tablename) FROM pg_tables WHERE tablename = '__ef_migrations_history' ORDER BY 1", admin);
+        return await ReadAllAsync(command);
+    }
+
+    private async Task<List<string>> TablesInAsync(string schema)
+    {
+        await using var admin = new NpgsqlConnection(database.AdminConnectionString);
+        await admin.OpenAsync();
+        await using var command = new NpgsqlCommand("SELECT format('%I.%I', schemaname, tablename) FROM pg_tables WHERE schemaname = @s ORDER BY 1", admin);
+        command.Parameters.AddWithValue("s", schema);
+        return await ReadAllAsync(command);
+    }
+
+    private static async Task<List<string>> ReadAllAsync(NpgsqlCommand command)
+    {
+        var result = new List<string>();
+        await using var reader = await command.ExecuteReaderAsync();
+        while (await reader.ReadAsync())
+        {
+            result.Add(reader.GetString(0));
+        }
+
+        return result;
+    }
+
+    private static async Task ShouldBeRefusedAsync(NpgsqlConnection connection, string sql, string what)
+    {
+#pragma warning disable CA2100 // Test statements built from catalogue names.
+        await using var command = new NpgsqlCommand(sql, connection);
+#pragma warning restore CA2100
+        var error = await Should.ThrowAsync<PostgresException>(() => command.ExecuteNonQueryAsync(), what);
+        error.SqlState.ShouldBe(PostgresErrorCodes.InsufficientPrivilege, what);
+    }
+}
