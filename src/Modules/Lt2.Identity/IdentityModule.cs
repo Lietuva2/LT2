@@ -39,8 +39,7 @@ public static class IdentityModule
     {
         ArgumentNullException.ThrowIfNull(configuration);
 
-        services.AddDbContext<IdentityDb>((sp, options) =>
-            IdentityDb.Configure(options, sp.GetRequiredService<NpgsqlDataSource>()));
+        services.AddIdentityDb();
 
         services.AddAuthentication(options =>
             {
@@ -117,8 +116,7 @@ public static class IdentityModule
     /// </summary>
     public static IServiceCollection AddIdentityAdministration(this IServiceCollection services)
     {
-        services.AddDbContext<IdentityDb>((sp, options) =>
-            IdentityDb.Configure(options, sp.GetRequiredService<NpgsqlDataSource>()));
+        services.AddIdentityDb();
         services.AddScoped<AccountEvents>();
         services.AddScoped<IIdentityAdministration, RoleAdministration>();
         return services;
@@ -127,10 +125,20 @@ public static class IdentityModule
     /// <summary>Registers only what the worker needs: the database and housekeeping.</summary>
     public static IServiceCollection AddIdentityMaintenance(this IServiceCollection services)
     {
-        services.AddDbContext<IdentityDb>((sp, options) =>
-            IdentityDb.Configure(options, sp.GetRequiredService<NpgsqlDataSource>()));
+        services.AddIdentityDb();
         services.AddScoped<IIdentityMaintenance, MaintenanceHandler>();
         return services;
+    }
+
+    /// <summary>
+    /// The module's database. Identity reads its schema version (3, with passkeys) from the application services when it
+    /// builds the model, so every host that uses the database must set it, not only the web host.
+    /// </summary>
+    private static void AddIdentityDb(this IServiceCollection services)
+    {
+        services.Configure<IdentityOptions>(o => o.Stores.SchemaVersion = IdentitySchemaVersions.Version3);
+        services.AddDbContext<IdentityDb>((sp, options) =>
+            IdentityDb.Configure(options, sp.GetRequiredService<NpgsqlDataSource>()));
     }
 
     private static void ConfigureCookie(CookieBuilder cookie, string name)
