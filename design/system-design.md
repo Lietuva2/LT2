@@ -244,8 +244,11 @@ ASP.NET Core Identity tables (users, roles, claims, tokens, passkeys), plus:
 
 | Table | Notes |
 |---|---|
-| `profile` | Display name, created date, normalised email (for the one-account-per-address rule), `verification_level` (`email` at the start; `phone` and the EU wallet can be added), invitation used. |
-| `invitation` | Code, who issued it, uses left, expiry. Registration is by invitation during the closed trial. |
+| `profile` | Display name, created date, normalised email (for the one-account-per-address rule), `verification_level` (`email` at the start; `phone` and the EU wallet can be added), invitation used. While the account is pending (6.2) it holds only the normalised address and the invitation code that was entered. |
+| `invitation` | Code, who issued it, uses left, expiry. Registration is by invitation during the closed trial. A use is counted when the registration is completed (6.2), not when it is started. |
+| `sign_in_code` | Account, hashed code, expiry, failed attempts, used time, and the known device it was issued to (empty for a code any browser may use). |
+| `known_device` | Account, hashed identifier of the browser's cookie, first and last seen. Built before registration opens (M2b). |
+| `role_activation` | Account, role, hashed one-time code, who issued it, expiry, used time. Using it marks the passkey of that session as the staff passkey. |
 | `party_support` | `user_id`, `party_id`. Private and optional; used only for group statistics of at least 20 people. |
 | `consent` | Kind, text version, given and withdrawn times. Positions need explicit consent (GDPR Art. 9). |
 | `politician_link` | `user_id`, `person_id`, role (the MP, or an office member), how and when verified. |
@@ -283,7 +286,8 @@ ASP.NET Core Identity tables (users, roles, claims, tokens, passkeys), plus:
 ### 5.6 Settings
 
 `config.setting`: key, `jsonb` value, who changed it and when. Holds every number an administrator may need to tune
-without a deploy: the summary rules in 8.4, the surge thresholds in 6.6, whether registration needs an invitation. Each
+without a deploy: the summary rules in 8.4, the surge thresholds in 6.6, the code limits and the life of a pending
+account in 6.2, whether registration needs an invitation. Each
 change is written to `audit`, and the current values of the rules that affect what MPs receive are shown on the public
 methodology page.
 
@@ -306,6 +310,21 @@ plus the Hangfire schema; `lt2_readonly` for ad-hoc analysis has no access to `i
 
 - **No passwords.** Sign-in is a six-digit code sent by email (ten minutes, five attempts, single use), or a **passkey**
   (built into ASP.NET Core Identity in .NET 10). Nothing to leak, reuse or stuff.
+- **A code belongs to the address, not to a browser.** It can be read on any device and typed into any browser, so a
+  person can register on someone else's computer with the mail open on a phone, and later ask for a new code on their
+  own device. A new code replaces the earlier one; the email and the page say to use the newest.
+- **How many codes [decided 2026-11-12].** For one address, all browsers that have not signed in to that account before
+  share five codes an hour and ten a day (both are settings). The daily limit is what bounds guessing: at most 50 tries
+  a day against one account, about a 2 % chance over a year of constant attack, against about 20 % with the hourly
+  limit alone.
+- **Known devices [decided 2026-11-12; built before registration opens, M2b].** The shared limit can be used up by
+  anyone who knows an address, which would keep that person from signing in by code. So a browser that has signed in
+  to an account keeps a one-year `__Host-` cookie with a random identifier (stored hashed, tied to that account; it
+  gives no access by itself). Such a browser has its own five codes an hour. A code it asked for is accepted only
+  from it, so requests and wrong guesses from elsewhere cannot cancel or exhaust it. Codes asked for from any other
+  browser stay usable anywhere, as above. A stranger can then block sign-in only from browsers the person has never
+  used; the usual browser and a passkey keep working. Until this is built the lockout is an accepted risk of the
+  closed trial (section 12).
 - **Registration = email only at the start [decided 2026-11-12].** The concept says email and phone, but SMS
   verification is a paid service (charged per message, and a target for SMS-pumping fraud), so it waits until there is a
   budget and a need. Each account has a **verification level**: `email` now, `phone` or the EU Digital Identity Wallet
@@ -319,14 +338,44 @@ plus the Hangfire schema; `lt2_readonly` for ad-hoc analysis has no access to `i
   - the 30-day count beside every number, and the surge note (6.6).
 - **Before registration opens to everyone and real summaries go to MPs (M2b), decide again:** add phone verification, or
   stay with email and label every number as coming from email-confirmed accounts. See section 12.
-- Reading needs no account. Taking a side, writing a reason and endorsing need a confirmed email.
-- **Minimum age: 18, self-declared at registration [decided].** The signal is compared with a parliament elected by
-  adults; the EU Digital Identity Wallet could later confirm it.
+- **An account is pending until its address is proven [decided 2026-11-12].** Registration takes the address and the
+  invitation code and creates a pending account: no name, no declarations, no role, nothing it can do. The first
+  correct code proves the address. Only then is the person asked for the display name and the declaration of being 18
+  or older, only then is the invitation use counted (if it has run out by then, the person is told so and can enter
+  another), and with the declaration the account becomes a member. So nobody can attach a name or an age declaration
+  to someone else's address, or use up an invitation with addresses they do not control.
+  - Asking for a sign-in code for a pending account works like any other and completes the registration, on any
+    device.
+  - If the address already has an account, registration only sends a sign-in code to the address on the account; what
+    was typed is discarded.
+  - Accounts still pending after seven days (a setting) are deleted by the maintenance job that also removes old codes
+    and expired sessions, so an address typed by a stranger is not kept.
+- Reading needs no account. Taking a side, writing a reason and endorsing need a confirmed email and the age
+  declaration.
+- **Minimum age: 18, self-declared when the address has been confirmed [decided].** The signal is compared with a
+  parliament elected by adults; the EU Digital Identity Wallet could later confirm it.
 - Session: `__Host-` cookie, `Secure`, `HttpOnly`, `SameSite=Lax`, sliding 30 days; a person can see and end their
   sessions. No tokens in the browser: the WASM client uses the same cookie (same origin).
-- **Staff and politicians** (moderator, administrator, verified MP, office member) must use a passkey or an authenticator
-  app as a second factor; sensitive actions (approving a send, changing roles, verifying a politician) ask for a fresh
-  confirmation.
+- **Staff** (moderator, administrator) **[decided 2026-11-12].** A staff role works only in a session signed in with a
+  **staff passkey**. A session signed in by email code is an ordinary member session, whatever roles the account has,
+  so getting into a staff member's mailbox is not enough.
+  - *Activation.* An administrator grants the role; the system shows a one-time activation code on the administrator's
+    screen (valid 24 hours, never sent by email), and the administrator passes it to the person directly. The person
+    signs in with a passkey and enters the code: that passkey becomes the staff passkey, and any other passkey on the
+    account is removed.
+  - *Afterwards.* Adding or removing a passkey on a staff account needs a staff-passkey session and a fresh passkey
+    confirmation (within the last ten minutes). Sensitive actions (approving a send, changing roles, verifying a
+    politician) ask for the same fresh confirmation.
+  - *Lost passkey.* An administrator resets the account: its passkeys are removed and the role is inactive until a new
+    activation code is used. The first administrator, and a lost last one, are activated from the server: the migrator
+    command grants the role and prints the activation code.
+  - Every grant, activation, reset and passkey change is audited, and the person is told by email.
+- **Politicians** (verified MP, office member) need a passkey as well. Their proof of identity is the official
+  `@lrs.lt` mailbox, so the take-over link plays the part of the activation code: the passkey is created while using
+  the link, and later changes need that passkey or a new link. The details are designed with M2b.
+- **Other members:** a passkey is a convenience. The mailbox is what proves who they are, and a code still signs them
+  in. They are told by email when a passkey is added or removed.
+- No authenticator app: one way in to secure. It can be added if an MP's office cannot use passkeys.
 - Responses never reveal whether an email is registered.
 
 ### 6.3 Authorization
@@ -657,6 +706,8 @@ GET    /api/v1/digests            GET /api/v1/digests/{date}
 
 POST   /api/v1/auth/code          POST /api/v1/auth/sign-in        POST /api/v1/auth/sign-out
 POST   /api/v1/auth/register      (email, invitation code)         passkey registration and assertion
+PUT    /api/v1/me/registration    (display name, 18 or older)      once the address is confirmed
+POST   /api/v1/me/role-activation (activation code)                in a passkey session
 GET    /api/v1/me                 PUT /api/v1/me                   GET /api/v1/me/appeals
 PUT    /api/v1/me/party-support   PUT /api/v1/me/notifications
 GET    /api/v1/me/export          DELETE /api/v1/me
@@ -666,7 +717,8 @@ PUT    /api/v1/bills/{number}/appeal/responses/mine
 GET    /api/v1/mp-preferences/{token}     PUT /api/v1/mp-preferences/{token}
 
 /api/v1/moderation/…   queue, publish, return, hide, merge, planned dates, hold, urgent send
-/api/v1/admin/…        roles, politician links, invitations, import and digest status
+/api/v1/admin/…        roles (a grant returns the activation code once), passkey reset, politician links,
+                       invitations, import and digest status
 GET    /api/v1/admin/settings     PUT /api/v1/admin/settings/{key}
 ```
 
@@ -749,7 +801,7 @@ No dates, in line with the rule that release dates are not promised. Each milest
 | **M0 Foundation** | Solution skeleton, CI, compose, Caddy, PostgreSQL with roles and backups, sign-in with email codes and passkeys, security headers, telemetry, design tokens and base components. | A signed-in "hello" page on staging, restored once from backup. |
 | **M1 MP profiles** | Open-data client and import, backfill, statistics, MP, faction, committee, bill and vote pages, methodology page, public API. | Section 7.5. Can be shown to MPs and journalists as a first, useful, uncontroversial product. |
 | **M2a Appeals without sending** | Registration by invitation, settings screen, appeals, positions, reasons, moderation, agenda watcher, digest generation in dry-run with public previews. | A closed group runs real bills end to end; summaries are read by people, not sent. |
-| **M2b Sending** | Introduction letter, MP preferences, real summaries, profile take-over, MP responses, participant notifications. | Section 8.9, the impact assessment, the legal check and the penetration test are done. |
+| **M2b Sending** | Introduction letter, MP preferences, real summaries, profile take-over, MP responses, participant notifications, known devices for sign-in (6.2). | Section 8.9, the impact assessment, the legal check and the penetration test are done. |
 | **M3** | Stage 3 design: voting, delegation, AI summaries. | Separate document. |
 
 Splitting M2 means the risky step (emailing every MP) happens only after the whole flow has been watched working.
@@ -764,6 +816,12 @@ Splitting M2 means the risky step (emailing every MP) happens only after the who
 - Each appeal has its own public threshold, set by the initiator, never below the administrator's minimum. Objections
   reach moderators by email, not through the product; a moderator's number is final for the initiator (8.4).
 - Timing of a summary is changed by a moderator, on flags from people (8.4).
+- An account is pending until its address is proven; the display name and the age declaration are asked after the
+  code, and the invitation use is counted then (6.2).
+- A sign-in code belongs to the address and can be typed into any browser. Ten codes a day per address from browsers
+  that have not signed in before; known devices are built before registration opens (6.2).
+- A staff role works only with a staff passkey, activated by a code the administrator passes on directly. No
+  authenticator app (6.2).
 
 **Decisions needed before the stage that uses them**
 
@@ -785,6 +843,7 @@ Splitting M2 means the risky step (emailing every MP) happens only after the who
 | A campaign registers many accounts to inflate one side. With email-only registration this costs nothing, so it is the main weakness of the numbers | Invitation-only trial, one account per normalised address, disposable domains refused, the 30-day count beside every number, surge note, moderator hold; phone verification stays available as an upgrade. The numbers stay a signal, and say so. |
 | The upcoming-agenda page changes layout or is late | Watcher alerts, moderator-entered dates, "Planuojama …" wording, no extra emails when dates move. |
 | Open-data service outages (seen today) | Raw responses stored, retries, pages show the last import time, imports resume. |
+| Someone who knows a person's address uses up its daily codes, so the person cannot sign in by code, or cannot finish registering | Accepted for the closed trial: addresses are not public, nothing leaks, and passkeys are not affected. Known devices (6.2) are built before registration opens. Keeping a new address from registering stays possible after that. |
 | A leak of positions | Minimised data, no position in logs or admin screens, encrypted backups, impact assessment, penetration test, incident runbook. |
 | Moderation load for a volunteer team | One appeal per bill, short plain-text reasons, no comments, AI pre-screening, limits per person. |
 | Running costs outlive enthusiasm (the old platform's fate) | One VPS, no paid infrastructure beyond email and backup storage. |
