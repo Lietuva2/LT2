@@ -1,4 +1,5 @@
 using Bunit;
+using Bunit.TestDoubles;
 using Lt2.Api.Contracts;
 using Lt2.Api.Contracts.Auth;
 using Lt2.Api.Contracts.Me;
@@ -21,6 +22,7 @@ public sealed class SignInComponentTests : BunitContext
 
     private readonly FakeAuthApi _auth = new();
     private readonly FakeMeApi _me = new();
+    private readonly BunitAuthorizationContext _authorization;
 
     public SignInComponentTests()
     {
@@ -29,8 +31,23 @@ public sealed class SignInComponentTests : BunitContext
         Services.AddLt2ClientComponents();
         Services.AddSingleton<IAuthApi>(_auth);
         Services.AddSingleton<IMeApi>(_me);
+        _authorization = AddAuthorization();
         JSInterop.Mode = JSRuntimeMode.Loose;
         SetRendererInfo(new RendererInfo("WebAssembly", isInteractive: true));
+    }
+
+    /// <summary>A signed-in browser whose account is <paramref name="account"/>.</summary>
+    private void SignedIn(MeResponse account)
+    {
+        _me.Account = account;
+        _authorization.SetAuthorized(account.Email);
+    }
+
+    [Fact]
+    public void A_visitor_who_is_not_signed_in_does_not_cause_a_failed_request()
+    {
+        Render<SignIn>();
+        _me.GetCalls.ShouldBe(0, "asking /api/v1/me would answer 401, which the browser logs as an error");
     }
 
     [Fact]
@@ -144,7 +161,7 @@ public sealed class SignInComponentTests : BunitContext
             new SessionResponse { Id = Guid.NewGuid(), Method = "otp", IsCurrent = true },
             new SessionResponse { Id = Guid.NewGuid(), Method = "otp", IsCurrent = false },
         ];
-        _me.Account = FakeMeApi.Member;
+        SignedIn(FakeMeApi.Member);
         var page = Render<Hello>();
         page.WaitForElement("#hello-title").TextContent.ShouldBe("Sveiki, Rūta M.!");
         page.FindAll(".note[role]").ShouldBeEmpty();
@@ -182,7 +199,7 @@ public sealed class SignInComponentTests : BunitContext
     [Fact]
     public void A_signed_in_pending_account_is_asked_for_the_name_and_the_declaration_with_nothing_filled_in()
     {
-        _me.Account = FakeMeApi.Pending;
+        SignedIn(FakeMeApi.Pending);
         var page = Render<SignIn>();
 
         page.Find("#form-title").TextContent.ShouldBe(Text("Complete.Title"));
@@ -197,7 +214,7 @@ public sealed class SignInComponentTests : BunitContext
     [Fact]
     public void Completion_sends_the_name_and_the_declaration()
     {
-        _me.Account = FakeMeApi.Pending;
+        SignedIn(FakeMeApi.Pending);
         var page = Render<SignIn>();
 
         page.Find("#reg-name").Input("Rūta M.");
@@ -213,7 +230,7 @@ public sealed class SignInComponentTests : BunitContext
     [Fact]
     public void Completion_without_the_declaration_is_stopped_in_the_browser()
     {
-        _me.Account = FakeMeApi.Pending;
+        SignedIn(FakeMeApi.Pending);
         var page = Render<SignIn>();
 
         page.Find("form").Submit();
@@ -226,7 +243,7 @@ public sealed class SignInComponentTests : BunitContext
     public void When_the_invitation_ran_out_the_form_asks_for_another_code()
     {
         const string usedUp = "Šio kvietimo kodo vietos jau užimtos. Įveskite kitą kvietimo kodą.";
-        _me.Account = FakeMeApi.Pending;
+        SignedIn(FakeMeApi.Pending);
         _me.Complete = request => Task.FromResult(request.InvitationCode is null
             ? ApiResult.Fail(new ApiProblem
             {
@@ -250,10 +267,10 @@ public sealed class SignInComponentTests : BunitContext
     [Fact]
     public void The_hello_page_has_a_place_for_the_activation_code_only_while_a_role_waits_for_it()
     {
-        _me.Account = FakeMeApi.Member;
+        SignedIn(FakeMeApi.Member);
         Render<Hello>().FindAll("#activation-code").ShouldBeEmpty();
 
-        _me.Account = FakeMeApi.Member with { Roles = ["administrator", "member"], AwaitingActivation = true };
+        SignedIn(FakeMeApi.Member with { Roles = ["administrator", "member"], AwaitingActivation = true });
         var page = Render<Hello>();
         page.Find("#activation-title").TextContent.ShouldBe(Text("Activation.Title"));
         page.Find("#activation-code").Input(" 7kq2-m9xd-4trb-hc0p ");
@@ -266,7 +283,7 @@ public sealed class SignInComponentTests : BunitContext
     public void A_refused_activation_code_shows_the_servers_explanation()
     {
         const string invalid = "Aktyvinimo kodas netinka arba nebegalioja.";
-        _me.Account = FakeMeApi.Member with { AwaitingActivation = true };
+        SignedIn(FakeMeApi.Member with { AwaitingActivation = true });
         _me.Activate = _ => Task.FromResult(ApiResult.Fail(new ApiProblem
         {
             Status = 400,
@@ -347,10 +364,15 @@ public sealed class SignInComponentTests : BunitContext
 
         public Func<CompleteRegistrationRequest, Task<ApiResult>> Complete { get; set; } = _ => Task.FromResult(ApiResult.Ok());
 
-        public Task<ApiResult<MeResponse>> GetAsync(CancellationToken cancellationToken = default) =>
-            Task.FromResult(Account is null
+        public int GetCalls { get; private set; }
+
+        public Task<ApiResult<MeResponse>> GetAsync(CancellationToken cancellationToken = default)
+        {
+            GetCalls++;
+            return Task.FromResult(Account is null
                 ? ApiResult<MeResponse>.Fail(new ApiProblem { Status = 401, Code = "auth.required" })
                 : ApiResult<MeResponse>.Ok(Account));
+        }
 
         public Task<ApiResult> CompleteRegistrationAsync(CompleteRegistrationRequest request, CancellationToken cancellationToken = default)
         {

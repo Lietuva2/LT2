@@ -3,6 +3,7 @@
 @using FluentValidation
 @inject IAuthApi Auth
 @inject IMeApi Me
+@inject AuthenticationStateProvider AuthenticationState
 @inject IStringLocalizer<UiText> T
 @inject NavigationManager Navigation
 @inject Passkeys PasskeyBrowser
@@ -182,7 +183,14 @@
             _step = Step.Register;
         }
 
-        // Someone signed in whose account is still pending finishes the registration here; a member goes on.
+        // Someone signed in whose account is still pending finishes the registration here; a member goes on. Visitors
+        // are not asked: /api/v1/me would answer 401, which the browser logs as an error on every visit.
+        var state = await AuthenticationState.GetAuthenticationStateAsync();
+        if (state.User.Identity?.IsAuthenticated != true)
+        {
+            return;
+        }
+
         var me = await Me.GetAsync();
         if (me.IsSuccess)
         {
