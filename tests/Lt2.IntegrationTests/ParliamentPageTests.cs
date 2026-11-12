@@ -211,6 +211,25 @@ public sealed partial class ParliamentPageTests(DatabaseFixture database) : ApiT
     }
 
     [Fact]
+    public async Task A_procedural_vote_says_what_it_was_about_once()
+    {
+        var html = await OkAsync("/seimas/balsavimai/99100101");
+
+        html.ShouldContain("<h1>Dėl posėdžio darbotvarkės patvirtinimo</h1>");
+        html.ShouldNotContain("<p class=\"lead\">");
+        Regex.Count(html[html.IndexOf("<main", StringComparison.Ordinal)..], "Dėl posėdžio darbotvarkės").ShouldBe(1);
+    }
+
+    [Fact]
+    public async Task A_vote_on_a_bill_keeps_the_bill_as_heading_and_the_wording_under_it()
+    {
+        var html = await OkAsync("/seimas/balsavimai/99100002");
+
+        html.ShouldContain("<h1>Gyventojų pajamų mokesčio įstatymo pataisa</h1>");
+        html.ShouldContain("<p class=\"lead\">Pritarti projektui po pateikimo</p>");
+    }
+
+    [Fact]
     public async Task A_vote_approved_by_consensus_is_shown_without_numbers()
     {
         var html = await OkAsync("/seimas/balsavimai/99100003");

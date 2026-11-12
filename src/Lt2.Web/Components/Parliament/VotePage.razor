@@ -10,7 +10,8 @@
 {
     var vote = v.Summary.Vote;
     var totals = v.Summary.Totals;
-    <PageTitle>@F.T["Vote.Label"] · @(vote.Bill?.Title ?? v.AgendaItemTitle) · Lietuva 2.0</PageTitle>
+    var (heading, wording) = Heading(vote.Bill?.Title ?? v.AgendaItemTitle, vote.Wording);
+    <PageTitle>@F.T["Vote.Label"] · @heading · Lietuva 2.0</PageTitle>
 
     <div class="stack">
         @if (vote.Bill is { } bill)
@@ -20,8 +21,11 @@
             </ol>
         }
         <p class="label num">@string.Join(" · ", Label(vote))</p>
-        <h1>@(vote.Bill?.Title ?? v.AgendaItemTitle)</h1>
-        <p class="lead">@vote.Wording</p>
+        <h1>@heading</h1>
+        @if (wording is not null)
+        {
+            <p class="lead">@wording</p>
+        }
     </div>
 
     <section class="sheet sheet--cut stack" aria-labelledby="h-result">
@@ -98,7 +102,7 @@
         </section>
     }
 
-    <p class="small">@F.T["Vote.Item"]: @v.AgendaItemTitle · <span class="num">@F.Time(v.SittingStartsAt)</span></p>
+    <p class="small">@if (!SameText(heading, v.AgendaItemTitle)) { @F.T["Vote.Item"]<text>: </text>@v.AgendaItemTitle<text> · </text> }<span class="num">@F.Time(v.SittingStartsAt)</span></p>
 }
 
 @code {
@@ -118,6 +122,27 @@
 
         _updatedAt = (await Meta.GetImportsAsync()).Value?.Sources.FirstOrDefault()?.LastSuccessAt;
     }
+
+    /// <summary>
+    /// The heading and the line under it. When they say the same thing, or one is the start of the other (a procedural
+    /// vote: "Dėl posėdžio darbotvarkės" / "Dėl posėdžio darbotvarkės patvirtinimo"), the fuller one is shown once.
+    /// </summary>
+    internal static (string Heading, string? Wording) Heading(string title, string? wording)
+    {
+        if (string.IsNullOrWhiteSpace(wording))
+        {
+            return (title, null);
+        }
+
+        var a = title.Trim();
+        var b = wording.Trim();
+        return a.StartsWith(b, StringComparison.CurrentCultureIgnoreCase) ? (a, null)
+            : b.StartsWith(a, StringComparison.CurrentCultureIgnoreCase) ? (b, null)
+            : (a, b);
+    }
+
+    private static bool SameText(string heading, string other) =>
+        heading.Trim().StartsWith(other.Trim(), StringComparison.CurrentCultureIgnoreCase);
 
     private IEnumerable<string> Label(VoteLink vote)
     {
