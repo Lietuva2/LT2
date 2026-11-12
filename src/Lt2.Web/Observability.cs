@@ -20,9 +20,11 @@ internal static class Observability
         var otlpEndpoint = builder.Configuration["OTEL_EXPORTER_OTLP_ENDPOINT"];
         var json = !builder.Environment.IsDevelopment();
 
-        builder.Services.AddSerilog((_, logger) =>
+        // ReadFrom.Services: sinks registered as services are added too (the tests use one to read every log line).
+        builder.Services.AddSerilog((services, logger) =>
         {
             logger.ReadFrom.Configuration(builder.Configuration)
+                .ReadFrom.Services(services)
                 .Enrich.FromLogContext()
                 .Enrich.WithProperty("service", serviceName);
             if (json)

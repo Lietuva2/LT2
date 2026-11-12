@@ -1,4 +1,6 @@
 using Lt2.Api.Contracts;
+using Lt2.Api.Contracts.Admin;
+using Lt2.Api.Contracts.Appeals;
 using Lt2.Api.Contracts.Auth;
 using Lt2.Api.Contracts.Me;
 
@@ -47,4 +49,91 @@ internal sealed class HttpMeApi(ApiHttp http) : IMeApi
 
     public Task<ApiResult> ActivateRoleAsync(RoleActivationRequest request, CancellationToken cancellationToken = default) =>
         http.SendAsync(HttpMethod.Post, ApiRoutes.Me.RoleActivation, request, cancellationToken);
+
+    public Task<ApiResult> GivePositionConsentAsync(PositionConsentRequest request, CancellationToken cancellationToken = default) =>
+        http.SendAsync(HttpMethod.Put, ApiRoutes.Me.PositionConsent, request, cancellationToken);
+
+    public Task<ApiResult> WithdrawPositionConsentAsync(CancellationToken cancellationToken = default) =>
+        http.SendAsync(HttpMethod.Delete, ApiRoutes.Me.PositionConsent, null, cancellationToken);
+}
+
+internal sealed class HttpAppealsApi(ApiHttp http) : IAppealsApi
+{
+    public Task<ApiResult<AppealRulesResponse>> GetRulesAsync(CancellationToken cancellationToken = default) =>
+        http.SendAsync<AppealRulesResponse>(HttpMethod.Get, AppealRoutes.Rules, null, cancellationToken);
+
+    public Task<ApiResult<AppealListResponse>> GetAppealsAsync(string? sort = null, string? cursor = null, CancellationToken cancellationToken = default) =>
+        http.SendAsync<AppealListResponse>(HttpMethod.Get, AppealRoutes.AppealsList(sort, cursor), null, cancellationToken);
+
+    public Task<ApiResult<AppealResponse>> GetAppealAsync(string number, CancellationToken cancellationToken = default) =>
+        http.SendAsync<AppealResponse>(HttpMethod.Get, AppealRoutes.AppealOf(number), null, cancellationToken);
+
+    public Task<ApiResult<MyAppealResponse>> GetMineAsync(string number, CancellationToken cancellationToken = default) =>
+        http.SendAsync<MyAppealResponse>(HttpMethod.Get, AppealRoutes.MineOf(number), null, cancellationToken);
+
+    public Task<ApiResult<AppealResponse>> OpenAsync(string number, OpenAppealRequest request, CancellationToken cancellationToken = default) =>
+        http.SendAsync<AppealResponse>(HttpMethod.Post, AppealRoutes.AppealOf(number), request, cancellationToken);
+
+    public Task<ApiResult> EditAsync(string number, EditAppealRequest request, CancellationToken cancellationToken = default) =>
+        http.SendAsync(HttpMethod.Put, AppealRoutes.AppealOf(number), request, cancellationToken);
+
+    public Task<ApiResult> ChangeThresholdAsync(string number, ThresholdRequest request, CancellationToken cancellationToken = default) =>
+        http.SendAsync(HttpMethod.Put, AppealRoutes.ThresholdOf(number), request, cancellationToken);
+
+    public Task<ApiResult> TakePositionAsync(string number, PositionRequest request, CancellationToken cancellationToken = default) =>
+        http.SendAsync(HttpMethod.Put, AppealRoutes.PositionOf(number), request, cancellationToken);
+
+    public Task<ApiResult> ClearPositionAsync(string number, CancellationToken cancellationToken = default) =>
+        http.SendAsync(HttpMethod.Delete, AppealRoutes.PositionOf(number), null, cancellationToken);
+
+    public Task<ApiResult<IReadOnlyList<ReasonResponse>>> FindSimilarAsync(string number, ReasonRequest request, CancellationToken cancellationToken = default) =>
+        http.SendAsync<IReadOnlyList<ReasonResponse>>(HttpMethod.Post, AppealRoutes.SimilarReasonsOf(number), request, cancellationToken);
+
+    public Task<ApiResult<ReasonCreatedResponse>> WriteReasonAsync(string number, ReasonRequest request, CancellationToken cancellationToken = default) =>
+        http.SendAsync<ReasonCreatedResponse>(HttpMethod.Post, AppealRoutes.ReasonsOf(number), request, cancellationToken);
+
+    public Task<ApiResult> EndorseAsync(Guid reasonId, CancellationToken cancellationToken = default) =>
+        http.SendAsync(HttpMethod.Put, AppealRoutes.EndorsementOf(reasonId), null, cancellationToken);
+
+    public Task<ApiResult> RemoveEndorsementAsync(Guid reasonId, CancellationToken cancellationToken = default) =>
+        http.SendAsync(HttpMethod.Delete, AppealRoutes.EndorsementOf(reasonId), null, cancellationToken);
+
+    public Task<ApiResult> ReportAsync(ReportRequest request, CancellationToken cancellationToken = default) =>
+        http.SendAsync(HttpMethod.Post, AppealRoutes.Reports, request, cancellationToken);
+}
+
+internal sealed class HttpModerationApi(ApiHttp http) : IModerationApi
+{
+    public Task<ApiResult<ModerationQueueResponse>> GetQueueAsync(CancellationToken cancellationToken = default) =>
+        http.SendAsync<ModerationQueueResponse>(HttpMethod.Get, AppealRoutes.ModerationQueue, null, cancellationToken);
+
+    public Task<ApiResult> PublishAppealAsync(Guid appealId, ModerationRequest request, CancellationToken cancellationToken = default) =>
+        http.SendAsync(HttpMethod.Post, AppealRoutes.With(AppealRoutes.PublishAppeal, appealId), request, cancellationToken);
+
+    public Task<ApiResult> ReturnAppealAsync(Guid appealId, StatementRequest request, CancellationToken cancellationToken = default) =>
+        http.SendAsync(HttpMethod.Post, AppealRoutes.With(AppealRoutes.ReturnAppeal, appealId), request, cancellationToken);
+
+    public Task<ApiResult> HideAppealAsync(Guid appealId, StatementRequest request, CancellationToken cancellationToken = default) =>
+        http.SendAsync(HttpMethod.Post, AppealRoutes.With(AppealRoutes.HideAppeal, appealId), request, cancellationToken);
+
+    public Task<ApiResult> SetThresholdAsync(Guid appealId, ModeratorThresholdRequest request, CancellationToken cancellationToken = default) =>
+        http.SendAsync(HttpMethod.Put, AppealRoutes.With(AppealRoutes.AppealThreshold, appealId), request, cancellationToken);
+
+    public Task<ApiResult> PublishReasonAsync(Guid reasonId, ModerationRequest request, CancellationToken cancellationToken = default) =>
+        http.SendAsync(HttpMethod.Post, AppealRoutes.With(AppealRoutes.PublishReason, reasonId), request, cancellationToken);
+
+    public Task<ApiResult> HideReasonAsync(Guid reasonId, StatementRequest request, CancellationToken cancellationToken = default) =>
+        http.SendAsync(HttpMethod.Post, AppealRoutes.With(AppealRoutes.HideReason, reasonId), request, cancellationToken);
+
+    public Task<ApiResult> MergeReasonAsync(Guid reasonId, MergeReasonRequest request, CancellationToken cancellationToken = default) =>
+        http.SendAsync(HttpMethod.Post, AppealRoutes.With(AppealRoutes.MergeReason, reasonId), request, cancellationToken);
+}
+
+internal sealed class HttpAdminApi(ApiHttp http) : IAdminApi
+{
+    public Task<ApiResult<IReadOnlyList<SettingResponse>>> GetSettingsAsync(CancellationToken cancellationToken = default) =>
+        http.SendAsync<IReadOnlyList<SettingResponse>>(HttpMethod.Get, ApiRoutes.Admin.Settings, null, cancellationToken);
+
+    public Task<ApiResult<SettingResponse>> UpdateSettingAsync(string key, UpdateSettingRequest request, CancellationToken cancellationToken = default) =>
+        http.SendAsync<SettingResponse>(HttpMethod.Put, ApiRoutes.Admin.SettingByKey(key), request, cancellationToken);
 }

@@ -14,4 +14,10 @@ public interface IMeApi
 
     /// <summary>Uses a staff role activation code in the current passkey session (design 6.2).</summary>
     Task<ApiResult> ActivateRoleAsync(RoleActivationRequest request, CancellationToken cancellationToken = default);
+
+    /// <summary>Gives the explicit consent to store positions (design 6.5).</summary>
+    Task<ApiResult> GivePositionConsentAsync(PositionConsentRequest request, CancellationToken cancellationToken = default);
+
+    /// <summary>Withdraws the consent; every position of the person is deleted (design 6.5).</summary>
+    Task<ApiResult> WithdrawPositionConsentAsync(CancellationToken cancellationToken = default);
 }

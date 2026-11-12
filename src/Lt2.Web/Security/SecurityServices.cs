@@ -28,6 +28,15 @@ internal static class RateLimitPolicies
     public const string CodeRequest = "auth-code";
     public const string Registration = "auth-register";
     public const string SignIn = "auth-sign-in";
+
+    /// <summary>Opening appeals, per account (design 6.4).</summary>
+    public const string OpenAppeal = "appeal-open";
+
+    /// <summary>Writing arguments, per account (design 6.4).</summary>
+    public const string WriteReason = "appeal-reason";
+
+    /// <summary>Reports, per account (design 6.4).</summary>
+    public const string Report = "appeal-report";
 }
 
 internal sealed class RateLimitOptions
@@ -39,6 +48,12 @@ internal sealed class RateLimitOptions
     public FixedWindow Registration { get; set; } = new() { PermitLimit = 20, WindowSeconds = 60 * 60 };
 
     public FixedWindow SignIn { get; set; } = new() { PermitLimit = 30, WindowSeconds = 15 * 60 };
+
+    public FixedWindow OpenAppeal { get; set; } = new() { PermitLimit = 5, WindowSeconds = 60 * 60 };
+
+    public FixedWindow WriteReason { get; set; } = new() { PermitLimit = 20, WindowSeconds = 60 * 60 };
+
+    public FixedWindow Report { get; set; } = new() { PermitLimit = 20, WindowSeconds = 60 * 60 };
 
     internal sealed class FixedWindow
     {
@@ -104,6 +119,9 @@ internal static class SecurityServices
             options.AddPolicy(RateLimitPolicies.CodeRequest, context => PerIp(context, Limits(context).CodeRequest));
             options.AddPolicy(RateLimitPolicies.Registration, context => PerIp(context, Limits(context).Registration));
             options.AddPolicy(RateLimitPolicies.SignIn, context => PerIp(context, Limits(context).SignIn));
+            options.AddPolicy(RateLimitPolicies.OpenAppeal, context => PerAccount(context, Limits(context).OpenAppeal));
+            options.AddPolicy(RateLimitPolicies.WriteReason, context => PerAccount(context, Limits(context).WriteReason));
+            options.AddPolicy(RateLimitPolicies.Report, context => PerAccount(context, Limits(context).Report));
         });
 
         return services;
@@ -115,6 +133,17 @@ internal static class SecurityServices
     private static RateLimitPartition<string> PerIp(HttpContext context, RateLimitOptions.FixedWindow limit) =>
         RateLimitPartition.GetFixedWindowLimiter(
             ClientAddress(context),
+            _ => new FixedWindowRateLimiterOptions
+            {
+                PermitLimit = limit.PermitLimit,
+                Window = TimeSpan.FromSeconds(limit.WindowSeconds),
+                QueueLimit = 0,
+            });
+
+    /// <summary>Per signed-in account (these endpoints need one); the address only if somehow there is none.</summary>
+    private static RateLimitPartition<string> PerAccount(HttpContext context, RateLimitOptions.FixedWindow limit) =>
+        RateLimitPartition.GetFixedWindowLimiter(
+            context.User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value is { } account ? "account:" + account : "ip:" + ClientAddress(context),
             _ => new FixedWindowRateLimiterOptions
             {
                 PermitLimit = limit.PermitLimit,

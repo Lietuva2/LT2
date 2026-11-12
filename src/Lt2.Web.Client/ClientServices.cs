@@ -23,6 +23,9 @@ public static class ClientServices
         services.AddScoped(sp => new ApiHttp(sp.GetRequiredService<IHttpClientFactory>().CreateClient(HttpClientName)));
         services.AddScoped<IAuthApi, HttpAuthApi>();
         services.AddScoped<IMeApi, HttpMeApi>();
+        services.AddScoped<Lt2.Api.Contracts.Appeals.IAppealsApi, HttpAppealsApi>();
+        services.AddScoped<Lt2.Api.Contracts.Appeals.IModerationApi, HttpModerationApi>();
+        services.AddScoped<Lt2.Api.Contracts.Appeals.IAdminApi, HttpAdminApi>();
         services.AddLt2Validators();
         services.AddLt2ClientComponents();
         return services;

@@ -65,6 +65,12 @@ internal sealed class ServerMeApi(IIdentityModule identity, IHttpContextAccessor
     public async Task<ApiResult> ActivateRoleAsync(RoleActivationRequest request, CancellationToken cancellationToken = default) =>
         errors.ToApiResult(await identity.ActivateRoleAsync(User, request.Code, IpHash, cancellationToken));
 
+    public async Task<ApiResult> GivePositionConsentAsync(PositionConsentRequest request, CancellationToken cancellationToken = default) =>
+        errors.ToApiResult(await identity.GivePositionConsentAsync(User, request.TextVersion, cancellationToken));
+
+    public async Task<ApiResult> WithdrawPositionConsentAsync(CancellationToken cancellationToken = default) =>
+        errors.ToApiResult(await identity.WithdrawPositionConsentAsync(User, cancellationToken));
+
     private string? IpHash => accessor.HttpContext is { } context ? ipHasher.Hash(context) : null;
 
     private System.Security.Claims.ClaimsPrincipal User =>
@@ -92,6 +98,7 @@ internal static class Mapping
         RegistrationComplete = account.RegistrationComplete,
         ActiveStaffRoles = account.ActiveStaffRoles,
         AwaitingActivation = account.AwaitingActivation,
+        HasPositionConsent = account.HasPositionConsent,
     };
 
     public static SessionResponse ToResponse(SessionSummary session) => new()

@@ -23,3 +23,10 @@ public sealed class RoleActivationRequestValidator : AbstractValidator<RoleActiv
             .MaximumLength(40).WithMessage(l["Activation.Required"]);
     }
 }
+
+
+public sealed class PositionConsentRequestValidator : AbstractValidator<PositionConsentRequest>
+{
+    public PositionConsentRequestValidator(IStringLocalizer<ValidationMessages> l) =>
+        RuleFor(x => x.TextVersion).NotEmpty().WithMessage(l["Consent.Required"]).MaximumLength(50).WithMessage(l["Consent.Required"]);
+}

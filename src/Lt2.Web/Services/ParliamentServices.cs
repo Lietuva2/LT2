@@ -165,7 +165,10 @@ internal sealed class ServerMetaApi(ParliamentReads reads, ILogger<ServerMetaApi
 /// </summary>
 internal static class PublicJson
 {
-    public static IResult From<T>(HttpContext http, ErrorMapper errors, Result<T> result)
+    public static IResult From<T>(HttpContext http, ErrorMapper errors, Result<T> result) => From(http, errors, result, 60);
+
+    /// <summary>As above; <paramref name="maxAgeSeconds"/> 0 makes caches revalidate every time (numbers that change by the minute).</summary>
+    public static IResult From<T>(HttpContext http, ErrorMapper errors, Result<T> result, int maxAgeSeconds)
     {
         ArgumentNullException.ThrowIfNull(http);
         ArgumentNullException.ThrowIfNull(errors);
@@ -179,7 +182,9 @@ internal static class PublicJson
         var body = JsonSerializer.SerializeToUtf8Bytes(result.Value, options);
         var etag = "\"" + Convert.ToHexStringLower(SHA256.HashData(body))[..32] + "\"";
         http.Response.Headers.ETag = etag;
-        http.Response.Headers.CacheControl = "public, max-age=60";
+        http.Response.Headers.CacheControl = maxAgeSeconds > 0
+            ? "public, max-age=" + maxAgeSeconds.ToString(System.Globalization.CultureInfo.InvariantCulture)
+            : "public, no-cache";
         if (http.Request.Headers.IfNoneMatch.Any(v => v is not null && v.Split(',').Select(s => s.Trim()).Contains(etag)))
         {
             return TypedResults.StatusCode(StatusCodes.Status304NotModified);

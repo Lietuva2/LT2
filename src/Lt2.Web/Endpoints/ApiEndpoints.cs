@@ -1,8 +1,10 @@
 using FluentValidation;
 using Lt2.Api.Contracts;
 using Lt2.Web.Endpoints.Admin;
+using Lt2.Web.Endpoints.Appeals;
 using Lt2.Web.Endpoints.Auth;
 using Lt2.Web.Endpoints.Me;
+using Lt2.Web.Endpoints.Moderation;
 using Lt2.Web.Endpoints.Parliament;
 using Lt2.Web.Security;
 using Lt2.Web.Services;
@@ -35,6 +37,8 @@ internal static class ApiEndpoints
         ConfirmPasskeyEndpoint.Map(api);
         GetSessionsEndpoint.Map(api);
         EndSessionEndpoint.Map(api);
+        GivePositionConsentEndpoint.Map(api);
+        WithdrawPositionConsentEndpoint.Map(api);
 
         GetSettingsEndpoint.Map(api);
         UpdateSettingEndpoint.Map(api);
@@ -53,6 +57,30 @@ internal static class ApiEndpoints
         GetBillEndpoint.Map(api);
         GetVoteEndpoint.Map(api);
         GetImportsEndpoint.Map(api);
+
+        GetAppealRulesEndpoint.Map(api);
+        GetAppealsEndpoint.Map(api);
+        GetAppealEndpoint.Map(api);
+        GetMyAppealEndpoint.Map(api);
+        OpenAppealEndpoint.Map(api);
+        EditAppealEndpoint.Map(api);
+        ChangeThresholdEndpoint.Map(api);
+        TakePositionEndpoint.Map(api);
+        ClearPositionEndpoint.Map(api);
+        FindSimilarReasonsEndpoint.Map(api);
+        WriteReasonEndpoint.Map(api);
+        EndorseEndpoint.Map(api);
+        RemoveEndorsementEndpoint.Map(api);
+        ReportEndpoint.Map(api);
+
+        GetModerationQueueEndpoint.Map(api);
+        PublishAppealEndpoint.Map(api);
+        ReturnAppealEndpoint.Map(api);
+        HideAppealEndpoint.Map(api);
+        SetAppealThresholdEndpoint.Map(api);
+        PublishReasonEndpoint.Map(api);
+        HideReasonEndpoint.Map(api);
+        MergeReasonEndpoint.Map(api);
     }
 
     /// <summary>A route from <see cref="ApiRoutes"/> relative to the <c>/api/v1</c> group.</summary>

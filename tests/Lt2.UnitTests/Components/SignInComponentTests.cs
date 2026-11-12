@@ -441,6 +441,12 @@ public sealed class SignInComponentTests : BunitContext
             return Activate(request);
         }
 
+        public Task<ApiResult> GivePositionConsentAsync(PositionConsentRequest request, CancellationToken cancellationToken = default) =>
+            Task.FromResult(ApiResult.Ok());
+
+        public Task<ApiResult> WithdrawPositionConsentAsync(CancellationToken cancellationToken = default) =>
+            Task.FromResult(ApiResult.Ok());
+
         public Task<ApiResult<IReadOnlyList<SessionResponse>>> GetSessionsAsync(CancellationToken cancellationToken = default) =>
             Task.FromResult(ApiResult<IReadOnlyList<SessionResponse>>.Ok(Sessions));
 

@@ -39,4 +39,32 @@
   <data name="forbidden" xml:space="preserve"><value>Neturite teisės atlikti šio veiksmo.</value></data>
   <data name="not-found" xml:space="preserve"><value>Nerasta.</value></data>
   <data name="http.405" xml:space="preserve"><value>Šis metodas netinkamas.</value></data>
-</root>
+<data name="appeal.not-found" xml:space="preserve"><value>Šiam projektui kreipimosi nėra.</value></data>
+<data name="appeal.exists" xml:space="preserve"><value>Šis projektas jau turi kreipimąsi. Prisijunkite prie jo.</value></data>
+<data name="appeal.not-open" xml:space="preserve"><value>Šis kreipimasis dabar nepriima pozicijų ir argumentų.</value></data>
+<data name="appeal.not-editable" xml:space="preserve"><value>Kreipimasis jau paskelbtas, jo taisyti nebegalima.</value></data>
+<data name="appeal.initiator-only" xml:space="preserve"><value>Tai gali padaryti tik kreipimosi iniciatorius.</value></data>
+<data name="bill.not-found" xml:space="preserve"><value>Tokio projekto nėra.</value></data>
+<data name="member.required" xml:space="preserve"><value>Pirmiausia baikite registraciją.</value></data>
+<data name="consent.required" xml:space="preserve"><value>Kad galėtume išsaugoti jūsų poziciją, reikia jūsų aiškaus sutikimo.</value></data>
+<data name="consent.outdated" xml:space="preserve"><value>Sutikimo tekstas pasikeitė. Perkraukite puslapį ir perskaitykite naująjį.</value></data>
+<data name="side.invalid" xml:space="preserve"><value>Pasirinkite: prašyti balsuoti už arba prieš.</value></data>
+<data name="position.required" xml:space="preserve"><value>Pirmiausia nurodykite, ko prašote: balsuoti už ar prieš.</value></data>
+<data name="reason.empty" xml:space="preserve"><value>Parašykite argumentą.</value></data>
+<data name="reason.too-long" xml:space="preserve"><value>Argumentas per ilgas: ne daugiau kaip 500 ženklų.</value></data>
+<data name="reason.other-side" xml:space="preserve"><value>Argumentus galite rašyti tik tai pusei, kurią pasirinkote.</value></data>
+<data name="reason.limit" xml:space="preserve"><value>Dėl vieno projekto galite parašyti ne daugiau kaip du argumentus.</value></data>
+<data name="reason.not-found" xml:space="preserve"><value>Tokio argumento nėra.</value></data>
+<data name="endorsement.other-side" xml:space="preserve"><value>„Man svarbu“ galite pažymėti tik savo pusės argumentus.</value></data>
+<data name="endorsement.limit" xml:space="preserve"><value>Dėl vieno projekto „Man svarbu“ galite pažymėti ne daugiau kaip tris argumentus.</value></data>
+<data name="description.empty" xml:space="preserve"><value>Trumpai ir neutraliai aprašykite, ką keičia projektas.</value></data>
+<data name="description.too-long" xml:space="preserve"><value>Aprašymas per ilgas: ne daugiau kaip 1 500 ženklų.</value></data>
+<data name="threshold.below-minimum" xml:space="preserve"><value>Riba negali būti mažesnė už administratoriaus nustatytą mažiausią.</value></data>
+<data name="threshold.set-by-moderator" xml:space="preserve"><value>Ribą pakeitė moderatorius, todėl jos keisti nebegalite.</value></data>
+<data name="threshold.locked" xml:space="preserve"><value>Kreipimasis jau pateko į suvestinę, todėl ribos keisti nebegalima.</value></data>
+<data name="report.ground" xml:space="preserve"><value>Pasirinkite, kodėl pranešate.</value></data>
+<data name="report.too-long" xml:space="preserve"><value>Paaiškinimas per ilgas: ne daugiau kaip 1 000 ženklų.</value></data>
+<data name="report.target" xml:space="preserve"><value>Nenurodyta, apie ką pranešate.</value></data>
+<data name="report.target-not-found" xml:space="preserve"><value>To, apie ką pranešate, nebėra.</value></data>
+<data name="moderation.wrong-state" xml:space="preserve"><value>Šiam turiniui šio veiksmo atlikti negalima.</value></data>
+<data name="merge.target-invalid" xml:space="preserve"><value>Sujungti galima tik su paskelbtu tos pačios pusės argumentu tame pačiame kreipimesi.</value></data></root>

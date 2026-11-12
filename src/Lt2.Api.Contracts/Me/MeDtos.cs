@@ -32,6 +32,18 @@ public sealed record MeResponse
 
     /// <summary>A staff role was granted and its activation code has not been used yet.</summary>
     public bool AwaitingActivation { get; init; }
+
+    /// <summary>The explicit consent to store positions (design 6.5) is given to the text version in force.</summary>
+    public bool HasPositionConsent { get; init; }
+}
+
+/// <summary>
+/// The explicit consent before a first position (design 6.5), given to the text the page showed. The text version must
+/// be the one in force.
+/// </summary>
+public sealed record PositionConsentRequest
+{
+    public string TextVersion { get; init; } = "";
 }
 
 /// <summary>The one-time code an administrator passed on, used in a passkey session (design 6.2).</summary>
