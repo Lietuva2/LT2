@@ -80,7 +80,11 @@ public static class FactoryExtensions
     public static async Task<JsonElement> ProblemAsync(this HttpResponseMessage response)
     {
         response.Content.Headers.ContentType?.MediaType.ShouldBe("application/problem+json");
-        return await response.Content.ReadFromJsonAsync<JsonElement>();
+
+        // Read the buffered text, not the stream: the body may already have been read (for an assertion message) and
+        // ReadFromJsonAsync would dispose the buffered stream, so a second read would fail.
+        using var document = JsonDocument.Parse(await response.Content.ReadAsStringAsync());
+        return document.RootElement.Clone();
     }
 
     public static async Task ShouldBeProblemAsync(this HttpResponseMessage response, HttpStatusCode status, string code)
