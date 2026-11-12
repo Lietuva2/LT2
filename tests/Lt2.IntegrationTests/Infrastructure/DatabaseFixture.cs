@@ -81,5 +81,5 @@ public static class TestData
     public const string Invitation = "BANDYMAS-2026";
 
     /// <summary>A unique fictional address on the reserved <c>.test</c> domain.</summary>
-    public static string Email(string name = "jonas.petraitis") => $"{name}.{Guid.NewGuid():N}@pavyzdys.test";
+    public static string Email(string name = "ruta.mockute") => $"{name}.{Guid.NewGuid():N}@pavyzdys.test";
 }

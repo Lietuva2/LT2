@@ -1,7 +1,7 @@
 # deploy/secrets
 
-Local secret files for `deploy/compose.yaml`, one value per file. Created by `deploy/init-secrets.sh` (or
-`init-secrets.ps1`); everything here except this README is git-ignored.
+Local secret files for `deploy/compose.yaml`, one value per file. Created by
+`python deploy/init-secrets.py`; everything here except this README is git-ignored.
 
 | File | Used by | Meaning |
 |---|---|---|

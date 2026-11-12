@@ -18,9 +18,9 @@ public sealed class NotificationTests
     [Fact]
     public void The_sign_in_code_email_is_in_lithuanian_and_carries_the_code()
     {
-        var email = Template().Render(new SignInCodeEmail("jonas.petraitis@pavyzdys.test", "482915", 10));
+        var email = Template().Render(new SignInCodeEmail("ruta.mockute@pavyzdys.test", "482915", 10));
 
-        email.To.ShouldBe("jonas.petraitis@pavyzdys.test");
+        email.To.ShouldBe("ruta.mockute@pavyzdys.test");
         email.Subject.ShouldBe("Lietuva 2.0 prisijungimo kodas: 482915");
         email.TextBody.ShouldContain("482915");
         email.TextBody.ShouldContain("Kodas galioja 10 min.");
@@ -31,7 +31,7 @@ public sealed class NotificationTests
     [Fact]
     public void The_sign_in_code_email_does_not_say_whether_the_person_registered_or_signed_in()
     {
-        var text = Template().Render(new SignInCodeEmail("jonas@pavyzdys.test", "000000", 10)).TextBody;
+        var text = Template().Render(new SignInCodeEmail("ruta@pavyzdys.test", "000000", 10)).TextBody;
         text.ShouldNotContain("registr", Case.Insensitive);
     }
 

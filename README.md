@@ -1,8 +1,9 @@
 # Lietuva 2.0
 
-Code for the Lietuva 2.0 (LT2) Seimas engagement platform. This branch (`master`) holds the product code; the concept
-pages and the design live on the `docs` branch. **The system design this code follows is `discovery/system-design.md`
-on the `docs` branch**; this is milestone M0 "Foundation" from its section 11.
+Code for the Lietuva 2.0 (LT2) Seimas engagement platform. This branch (`master`) holds the product code. **The
+system design this code follows is [`design/system-design.md`](design/system-design.md)**; this is milestone M0
+"Foundation" from its section 11. Rules for changing the code are in `AGENTS.md`. The concept website stays on the
+`docs` branch.
 
 The user interface is in Lithuanian only. All names and data in examples and tests are fictional.
 
@@ -30,11 +31,10 @@ A modular monolith on .NET 10 (design sections 2–4):
 Needs Docker (Docker Desktop on Windows or macOS).
 
 ```bash
-sh deploy/init-secrets.sh
+python deploy/init-secrets.py
 ```
 
-On Windows PowerShell: `pwsh deploy/init-secrets.ps1`. This writes random local secrets to `deploy/secrets/`
-(git-ignored). Then:
+This writes random local secrets to `deploy/secrets/` (git-ignored; existing files are kept). Then:
 
 ```bash
 docker compose -f deploy/compose.yaml up --build
@@ -53,7 +53,7 @@ To give an account the administrator role (needed for `GET/PUT /api/v1/admin/set
 with a passkey; sign in again afterwards so the new role is in the session):
 
 ```bash
-docker compose -f deploy/compose.yaml run --rm migrator --grant-role administrator jonas.petraitis@pavyzdys.test
+docker compose -f deploy/compose.yaml run --rm migrator --grant-role administrator ruta.mockute@pavyzdys.test
 ```
 
 Stop with `docker compose -f deploy/compose.yaml down` (add `-v` to delete the database).
@@ -65,25 +65,39 @@ Other useful addresses: `/openapi/v1.json` (API description), `/health/live`, `/
 Needs the .NET SDK pinned in `global.json` (10.0.402). Warnings are errors.
 
 ```bash
-dotnet build LT2.sln
+dotnet build
 ```
 
 ```bash
-dotnet test --solution LT2.sln
+dotnet test
 ```
 
 `dotnet test` runs the unit and architecture tests, and the integration tests, which start PostgreSQL 17 in a container
-with Testcontainers (Docker must be running). The end-to-end tests are skipped unless pointed at a running stack:
+with Testcontainers (Docker must be running). Tests run on Microsoft.Testing.Platform (opted in by `global.json`), so a
+single project is chosen with `dotnet test --project tests/Lt2.UnitTests`.
+
+The end-to-end tests are skipped unless pointed at a running stack. Once, install Playwright's Chromium:
 
 ```bash
-dotnet build tests/Lt2.E2E && pwsh tests/Lt2.E2E/bin/Debug/net10.0/playwright.ps1 install chromium
+dotnet build tests/Lt2.E2E
 ```
 
 ```bash
-LT2_E2E_BASE_URL=https://lt2.localhost:8443 LT2_E2E_MAILPIT_URL=http://localhost:8025 dotnet test --project tests/Lt2.E2E
+pwsh tests/Lt2.E2E/bin/Debug/net10.0/playwright.ps1 install chromium
 ```
 
-Set `LT2_E2E_BROWSER_CHANNEL=msedge` to use an installed Edge instead of Playwright's Chromium.
+Then, with the stack up, set these environment variables in your shell and run the project:
+
+| Variable | Local value |
+|---|---|
+| `LT2_E2E_BASE_URL` | `https://lt2.localhost:8443` |
+| `LT2_E2E_MAILPIT_URL` | `http://localhost:8025` (the default) |
+| `LT2_E2E_INVITATION` | `BANDYMAS-2026` (the default) |
+| `LT2_E2E_BROWSER_CHANNEL` | optional: `msedge` to use an installed Edge instead of Playwright's Chromium |
+
+```bash
+dotnet test --project tests/Lt2.E2E
+```
 
 ## Configuration and secrets
 

@@ -192,12 +192,13 @@ public static class IdentityAdministration
             return false;
         }
 
+        var clock = TimeProvider.System;
         db.Invitations.Add(new Invitation
         {
-            Id = Guid.CreateVersion7(),
+            Id = Ids.New(clock),
             Code = normalized,
             UsesLeft = uses,
-            CreatedAt = DateTimeOffset.UtcNow,
+            CreatedAt = clock.GetUtcNow(),
         });
         await db.SaveChangesAsync(cancellationToken);
         return true;

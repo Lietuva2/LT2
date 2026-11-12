@@ -1,6 +1,6 @@
 # Lietuva 2.0: local and production-shaped stack (design 9.1).
 #
-#   ./deploy/init-secrets.sh            # or deploy/init-secrets.ps1 on Windows; once
+#   python deploy/init-secrets.py       # once
 #   docker compose -f deploy/compose.yaml up --build
 #
 # Local defaults come from deploy/.env (site https://lt2.localhost:8443, Mailpit on http://localhost:8025, the

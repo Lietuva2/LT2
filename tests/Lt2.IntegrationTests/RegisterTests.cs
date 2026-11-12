@@ -50,7 +50,7 @@ public sealed class RegisterTests(DatabaseFixture database) : ApiTest(database)
     public async Task One_account_per_normalised_address()
     {
         using var browser = NewBrowser();
-        var local = "jonas.petraitis." + Guid.NewGuid().ToString("N")[..8];
+        var local = "ruta.mockute." + Guid.NewGuid().ToString("N")[..8];
         await browser.RegisterAsync($"{local}@gmail.com");
 
         using var alias = await browser.PostAsync(
@@ -104,7 +104,7 @@ public sealed class RegisterTests(DatabaseFixture database) : ApiTest(database)
         using var browser = NewBrowser();
         using var response = await browser.PostAsync(
             ApiRoutes.Auth.Register,
-            new RegisterRequest { Email = $"jonas.{Guid.NewGuid():N}@mailinator.com", InvitationCode = TestData.Invitation, ConfirmsAdult = true });
+            new RegisterRequest { Email = $"ruta.{Guid.NewGuid():N}@mailinator.com", InvitationCode = TestData.Invitation, ConfirmsAdult = true });
         await response.ShouldBeProblemAsync(HttpStatusCode.BadRequest, "email.disposable");
     }
 

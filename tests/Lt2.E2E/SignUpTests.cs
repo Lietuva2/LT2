@@ -45,7 +45,7 @@ public sealed partial class SignUpTests
             }
         };
 
-        var email = $"jonas.petraitis.{Guid.NewGuid():N}@pavyzdys.test";
+        var email = $"ruta.mockute.{Guid.NewGuid():N}@pavyzdys.test";
 
         await page.GotoAsync(BaseUrl!);
         await Assertions.Expect(page.GetByRole(AriaRole.Heading, new() { Level = 1 })).ToContainTextAsync("Lietuva");

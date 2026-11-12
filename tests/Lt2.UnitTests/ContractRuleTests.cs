@@ -16,7 +16,7 @@ public sealed class ContractRuleTests
     [Fact]
     public void Registration_needs_the_eighteen_or_older_confirmation()
     {
-        var result = new RegisterRequestValidator(L).Validate(new RegisterRequest { Email = "jonas@pavyzdys.test", ConfirmsAdult = false });
+        var result = new RegisterRequestValidator(L).Validate(new RegisterRequest { Email = "ruta@pavyzdys.test", ConfirmsAdult = false });
         result.IsValid.ShouldBeFalse();
         result.Errors.Single().ErrorMessage.ShouldBe("Registruotis gali tik 18 metų ir vyresni asmenys.");
     }
@@ -24,7 +24,7 @@ public sealed class ContractRuleTests
     [Fact]
     public void Registration_with_a_valid_address_and_the_confirmation_passes() =>
         new RegisterRequestValidator(L)
-            .Validate(new RegisterRequest { Email = "jonas@pavyzdys.test", InvitationCode = "BANDYMAS-2026", ConfirmsAdult = true })
+            .Validate(new RegisterRequest { Email = "ruta@pavyzdys.test", InvitationCode = "BANDYMAS-2026", ConfirmsAdult = true })
             .IsValid.ShouldBeTrue();
 
     [Theory]
@@ -33,7 +33,7 @@ public sealed class ContractRuleTests
     [InlineData("12a456")]
     [InlineData("")]
     public void A_sign_in_code_must_be_six_digits(string code) =>
-        new SignInRequestValidator(L).Validate(new SignInRequest { Email = "jonas@pavyzdys.test", Code = code }).IsValid.ShouldBeFalse();
+        new SignInRequestValidator(L).Validate(new SignInRequest { Email = "ruta@pavyzdys.test", Code = code }).IsValid.ShouldBeFalse();
 
     [Fact]
     public void Settings_reject_values_of_the_wrong_type_or_range()
