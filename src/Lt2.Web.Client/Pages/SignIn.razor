@@ -17,6 +17,8 @@
         <lt2-logo-spin period="14"></lt2-logo-spin>
         <h1>@T["Welcome.Title"]</h1>
         <p class="lead">@T["Welcome.Lead"]</p>
+        @* The form needs WebAssembly; without JavaScript its controls stay disabled, so say why. *@
+        <noscript><p class="note">@T["NoScript"]</p></noscript>
     </div>
 
     @switch (_step)

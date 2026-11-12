@@ -58,6 +58,16 @@ public sealed class HostTests(DatabaseFixture database) : ApiTest(database)
     }
 
     [Fact]
+    public async Task The_prerendered_sign_in_page_tells_visitors_without_javascript_why_it_does_not_work()
+    {
+        using var browser = NewBrowser();
+        var html = System.Net.WebUtility.HtmlDecode(await browser.Client.GetStringAsync("/prisijungti"));
+
+        html.ShouldContain("<noscript><p class=\"note\">Prisijungti ir registruotis galima tik įjungus „JavaScript“.");
+        System.Text.RegularExpressions.Regex.IsMatch(html, "<input[^>]*id=\"email\"[^>]*disabled").ShouldBeTrue("the form is disabled until WebAssembly runs");
+    }
+
+    [Fact]
     public async Task The_signed_in_page_sends_strangers_to_sign_in()
     {
         using var browser = NewBrowser();

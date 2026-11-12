@@ -44,6 +44,18 @@ public sealed class SignInComponentTests : BunitContext
     }
 
     [Fact]
+    public void Visitors_without_javascript_are_told_why_the_form_does_not_work()
+    {
+        SetRendererInfo(new RendererInfo("Static", isInteractive: false));
+        var page = Render<SignIn>();
+
+        var note = page.Find("noscript .note");
+        note.TextContent.ShouldBe(Text("NoScript"));
+        note.TextContent.ShouldContain("JavaScript");
+        note.HasAttribute("role").ShouldBeFalse("it is static text, not an alert about something that happened");
+    }
+
+    [Fact]
     public void Once_interactive_the_form_can_be_used()
     {
         var page = Render<SignIn>();
@@ -64,7 +76,7 @@ public sealed class SignInComponentTests : BunitContext
     {
         var page = Render<SignIn>();
 
-        page.FindAll(".note").ShouldBeEmpty();
+        page.FindAll(".note[role]").ShouldBeEmpty();
         page.Markup.ShouldNotContain("_message");
         page.Markup.ShouldNotContain("_info");
     }
@@ -75,13 +87,13 @@ public sealed class SignInComponentTests : BunitContext
         var page = Render<SignIn>();
         page.FindAll("button.linkish")[0].Click();
         page.Find("#reg-email").ShouldNotBeNull();
-        page.FindAll(".note").ShouldBeEmpty();
+        page.FindAll(".note[role]").ShouldBeEmpty();
 
         page.FindAll("button.linkish")[0].Click();
         page.Find("#email").Input(Email);
         page.Find("form").Submit();
         page.Find("#code").ShouldNotBeNull();
-        page.FindAll(".note").ShouldBeEmpty();
+        page.FindAll(".note[role]").ShouldBeEmpty();
     }
 
     [Fact]
@@ -134,7 +146,7 @@ public sealed class SignInComponentTests : BunitContext
         ];
         var page = Render<Hello>();
         page.WaitForElement("#hello-title").TextContent.ShouldBe("Sveiki, Rūta M.!");
-        page.FindAll(".note").ShouldBeEmpty();
+        page.FindAll(".note[role]").ShouldBeEmpty();
         page.Markup.ShouldNotContain("_message");
 
         _me.EndSession = _ => throw new HttpRequestException("offline");
