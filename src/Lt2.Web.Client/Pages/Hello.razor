@@ -33,7 +33,7 @@ else
             <h2 id="passkeys-title">@T["Passkeys.Title"]</h2>
             <p>@T["Passkeys.Text"]</p>
             <p class="small num">@T["Passkeys.Count", Me.PasskeyCount]</p>
-            <button type="button" class="btn" disabled="@_busy" @onclick="AddPasskeyAsync">@T["Passkeys.Add"]</button>
+            <button type="button" class="btn" disabled="@Locked" @onclick="AddPasskeyAsync">@T["Passkeys.Add"]</button>
         </section>
 
         <section class="sheet stack" aria-labelledby="sessions-title">
@@ -57,7 +57,7 @@ else
                             }
                             else
                             {
-                                <button type="button" class="btn btn--plain" disabled="@_busy" @onclick="() => EndSessionAsync(session.Id)">@T["Sessions.End"]</button>
+                                <button type="button" class="btn btn--plain" disabled="@Locked" @onclick="() => EndSessionAsync(session.Id)">@T["Sessions.End"]</button>
                             }
                         </div>
                     </li>
@@ -66,7 +66,7 @@ else
         </section>
     </div>
 
-    <p><button type="button" class="btn btn--plain" disabled="@_busy" @onclick="SignOutAsync">@T["SignOut"]</button></p>
+    <p><button type="button" class="btn btn--plain" disabled="@Locked" @onclick="SignOutAsync">@T["SignOut"]</button></p>
 }
 
 <Messages Message="@_message" Info="@_info" />
@@ -76,6 +76,12 @@ else
     private bool _busy;
     private string? _message;
     private string? _info;
+
+    /// <summary>
+    /// Controls stay disabled until WebAssembly has taken over the server-rendered page: the prerendered form cannot
+    /// act, and anything typed into it would be lost when the interactive component replaces it.
+    /// </summary>
+    private bool Locked => _busy || !RendererInfo.IsInteractive;
 
     [PersistentState]
     public MeResponse? Me { get; set; }

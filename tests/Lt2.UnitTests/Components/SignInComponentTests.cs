@@ -5,6 +5,7 @@ using Lt2.Api.Contracts.Me;
 using Lt2.Web.Client;
 using Lt2.Web.Client.Components;
 using Lt2.Web.Client.Pages;
+using Microsoft.AspNetCore.Components;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Localization;
 
@@ -29,6 +30,26 @@ public sealed class SignInComponentTests : BunitContext
         Services.AddSingleton<IAuthApi>(_auth);
         Services.AddSingleton<IMeApi>(_me);
         JSInterop.Mode = JSRuntimeMode.Loose;
+        SetRendererInfo(new RendererInfo("WebAssembly", isInteractive: true));
+    }
+
+    [Fact]
+    public void While_only_prerendered_the_form_cannot_be_used()
+    {
+        SetRendererInfo(new RendererInfo("Static", isInteractive: false));
+        var page = Render<SignIn>();
+
+        page.Find("#email").HasAttribute("disabled").ShouldBeTrue();
+        page.FindAll("form button[type=submit]").ShouldAllBe(b => b.HasAttribute("disabled"));
+    }
+
+    [Fact]
+    public void Once_interactive_the_form_can_be_used()
+    {
+        var page = Render<SignIn>();
+
+        page.Find("#email").HasAttribute("disabled").ShouldBeFalse();
+        page.FindAll("form button[type=submit]").ShouldAllBe(b => !b.HasAttribute("disabled"));
     }
 
     private string Text(string key)
