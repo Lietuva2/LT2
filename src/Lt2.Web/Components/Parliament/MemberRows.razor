@@ -1,6 +1,7 @@
 @using Lt2.Api.Contracts.Parliament
 @inject Formats F
 
+@* Members of a body: name, role and dates under each other, so a narrow column never squeezes a name. *@
 <ul class="rows">
     @foreach (var m in Members)
     {
@@ -8,8 +9,6 @@
             <div class="rows__main">
                 <a href="/p/@m.Mp.Slug">@m.Mp.FirstName @m.Mp.LastName</a>
                 <span class="small">@m.Role</span>
-            </div>
-            <div class="rows__side">
                 <span class="small num">@(m.To is { } to ? F.Format("Dates.Range", F.Date(m.From), F.Date(to)) : F.Format("Dates.Since", F.Date(m.From)))</span>
             </div>
         </li>

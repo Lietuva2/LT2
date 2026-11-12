@@ -472,8 +472,8 @@ body > .page { width: 100%; }
 .table th, .table td { text-align: left; padding: var(--sp-2) var(--sp-3) var(--sp-2) 0; border-top: 1px solid var(--rule); vertical-align: top; }
 .table th { font-weight: 700; color: var(--ink-2); }
 
-/* Long official names and addresses wrap instead of pushing the page sideways. */
-.rows__main a, .facts dd, .tag { overflow-wrap: anywhere; }
+/* Long official names and addresses wrap instead of pushing the page sideways (between words first). */
+.rows__main a, .facts dd, .tag { overflow-wrap: break-word; }
 .tag { white-space: normal; }
 
 /* The theme switch sits in the navigation; hidden until lt2-theme.js shows it. */
