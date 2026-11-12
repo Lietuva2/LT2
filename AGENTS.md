@@ -28,8 +28,9 @@ Read it before changing behaviour. This is the maintained copy; the original on 
 - A change to a rule is discussed with the owner first, then written into the design, then coded.
 - Section 12 of the design lists what is decided and what is still open. Do not decide an open item in code.
 
-Until M0 is merged, the layout and commands below describe what the design intends. Once code exists, correct this
-file to what the code actually is.
+M0 is merged: the layout and commands below describe the code as it is. When the code changes them, correct this file
+in the same change. Where the design's section 4 differs (for example `deploy/backup`, runbooks or a staging compose
+file, which do not exist yet), this file describes the code and the design describes the intent.
 
 ## Branches
 
@@ -55,23 +56,36 @@ JavaScript framework.
 ## Layout
 
 ```
-design/                system-design.md, the agreed design
-src/Lt2.Web            host: API endpoints (one per file), Blazor server rendering, auth, security middleware
-src/Lt2.Web.Client     Blazor WebAssembly components and HTTP implementations of the API clients
-src/Lt2.Api.Contracts  DTOs, routes, client interfaces, validators (shared by server, client and tests)
-src/Lt2.SharedKernel   Result type, clock, identifiers, event base types
-src/Modules/           Lt2.Identity, Lt2.Parliament, Lt2.Appeals, Lt2.Notifications, Lt2.Audit
-src/Lt2.Worker         background jobs: imports, summaries, outbox dispatch
-src/Lt2.Migrator       applies migrations and database grants; run once per deploy
-tests/                 unit, integration (real PostgreSQL), import, architecture, end-to-end
-deploy/                compose files, Caddyfile, backup, runbooks
+design/                    system-design.md, the agreed design; ui/ the interface prototype (tokens, sample pages)
+src/Lt2.Web                host: API endpoints in Endpoints/<Module>/ (one per file), Blazor server rendering,
+                           auth, security middleware
+src/Lt2.Web.Client         Blazor WebAssembly components and HTTP implementations of the API clients
+src/Lt2.Api.Contracts      DTOs, routes, client interfaces, validators (shared by server, client and tests)
+src/Lt2.SharedKernel       Result type, identifiers (UUID v7), event base types, outbox, audit and settings
+                           interfaces, connection strings; no clock of its own (TimeProvider is used)
+src/Modules/               Lt2.Identity, Lt2.Notifications, Lt2.Audit (working); Lt2.Parliament, Lt2.Appeals
+                           (schema and DbContext only)
+src/Lt2.Worker             Hangfire server: outbox dispatch loop and a daily identity clean-up
+src/Lt2.Migrator           creates the database roles, applies migrations and grants; also seeds invitations and
+                           grants the first staff role; run once per deploy
+tests/Lt2.UnitTests        rules and validators, plus bUnit tests of components (Components/)
+tests/Lt2.IntegrationTests API over HTTP against a real PostgreSQL (Testcontainers)
+tests/Lt2.ArchitectureTests module boundaries, static assets
+tests/Lt2.E2E              Playwright and stack checks against a running compose stack; skipped without one
+tests/Lt2.Parliament.ImportTests  placeholder for M1, not run by dotnet test
+deploy/                    Dockerfile, compose.yaml, Caddyfile, .env (local defaults), init-secrets.py, secrets/
 ```
 
 ```sh
-dotnet build                                   # warnings are errors
-dotnet test
-docker compose -f deploy/compose.yaml up       # full stack locally, mail goes to Mailpit
+dotnet build                                          # warnings are errors
+dotnet test                                           # unit, architecture, integration (needs Docker)
+dotnet test --project tests/Lt2.UnitTests             # one project (Microsoft.Testing.Platform)
+python deploy/init-secrets.py                         # once: local secrets in deploy/secrets/
+docker compose -f deploy/compose.yaml up --build      # full stack: https://lt2.localhost:8443, Mailpit :8025
 ```
+
+If Windows has reserved port 8080, set `LT2_HTTP_PORT=8090` for every compose command. End-to-end tests run only with
+`LT2_E2E_BASE_URL` set; `README.md` lists their variables and the invitation to use.
 
 ## Running commands
 
