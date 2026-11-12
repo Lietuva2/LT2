@@ -57,4 +57,31 @@
 <data name="Planned" xml:space="preserve"><value>Planuojama {0} {1} d.</value></data>
 <data name="Planned.ByModerator" xml:space="preserve"><value>Planuojamą datą patikslino moderatorius.</value></data>
 <data name="Planned.Source" xml:space="preserve"><value>Iš kur žinoma planuojama data</value></data>
+<data name="Digests.Title" xml:space="preserve"><value>Suvestinės</value></data>
+<data name="Digests.Label" xml:space="preserve"><value>Suvestinės Seimo nariams</value></data>
+<data name="Digests.Of" xml:space="preserve"><value>{0} suvestinė</value></data>
+<data name="Digests.Lead" xml:space="preserve"><value>Vieša kopija to, ką Seimo nariai gautų. Skaičiai ir argumentai užfiksuoti suvestinės sudarymo metu ir nebesikeičia.</value></data>
+<data name="Digests.DryRun" xml:space="preserve"><value>Bandymas: suvestinės sudaromos, bet Seimo nariams nesiunčiamos.</value></data>
+<data name="Digests.Kind.weekly" xml:space="preserve"><value>Savaitinė suvestinė</value></data>
+<data name="Digests.Kind.before-vote" xml:space="preserve"><value>Suvestinė prieš posėdį</value></data>
+<data name="Digests.Kind.urgent" xml:space="preserve"><value>Skubi suvestinė</value></data>
+<data name="Digests.Status.dry-run" xml:space="preserve"><value>Nesiųsta</value></data>
+<data name="Digests.Mps" xml:space="preserve"><value>Seimo narių: {0}</value></data>
+<data name="Digests.Items" xml:space="preserve"><value>kreipimųsi: {0}</value></data>
+<data name="Digests.Open" xml:space="preserve"><value>Atskiras puslapis</value></data>
+<data name="Digests.Side.for" xml:space="preserve"><value>Už</value></data>
+<data name="Digests.Side.against" xml:space="preserve"><value>Prieš</value></data>
+<data name="Digests.Endorsed" xml:space="preserve"><value>Man svarbu · {0}</value></data>
+<data name="Digests.How" xml:space="preserve"><value>Kaip sudaroma suvestinė</value></data>
+<data name="Digests.Who" xml:space="preserve"><value>Kas gautų</value></data>
+<data name="Digests.WhoValue" xml:space="preserve"><value>Visi Seimo nariai, kurių oficialus adresas yra atviruosiuose duomenyse, vienodai</value></data>
+<data name="Digests.When" xml:space="preserve"><value>Kada</value></data>
+<data name="Digests.WhenValue" xml:space="preserve"><value>Pirmadienio rytą posėdžių savaitėmis ir darbo dieną prieš posėdį</value></data>
+<data name="Digests.What" xml:space="preserve"><value>Kas patenka</value></data>
+<data name="Digests.WhatValue" xml:space="preserve"><value>Kreipimaisi, pasiekę savo ribą</value></data>
+<data name="Digests.Seen" xml:space="preserve"><value>Visada rodomos abi pusės ir argumentai, kuriuos peržiūrėjo moderatorius.</value></data>
+<data name="Digests.Methodology" xml:space="preserve"><value>Taisyklės ir dabartinės reikšmės</value></data>
+<data name="Digests.Earlier" xml:space="preserve"><value>Ankstesnės suvestinės</value></data>
+<data name="Digests.NoMpFigures" xml:space="preserve"><value>Viešoje kopijoje nėra skaičių, skirtų konkrečiam Seimo nariui.</value></data>
+<data name="Digests.None" xml:space="preserve"><value>Suvestinių dar nėra.</value></data>
 </root>

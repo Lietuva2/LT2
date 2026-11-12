@@ -7,6 +7,7 @@
   <data name="Nav.Label" xml:space="preserve"><value>Pagrindinis meniu</value></data>
   <data name="Nav.Mps" xml:space="preserve"><value>Seimo nariai</value></data>
   <data name="Nav.Appeals" xml:space="preserve"><value>Kreipimaisi</value></data>
+<data name="Nav.Digests" xml:space="preserve"><value>Suvestinės</value></data>
 <data name="Nav.Methodology" xml:space="preserve"><value>Kaip skaičiuojama</value></data>
   <data name="Nav.SignIn" xml:space="preserve"><value>Prisijungti</value></data>
   <data name="Nav.Account" xml:space="preserve"><value>Mano paskyra</value></data>

@@ -72,6 +72,7 @@ internal static class WebHost
         services.AddScoped<IAppealsApi, ServerAppealsApi>();
         services.AddScoped<IModerationApi, ServerModerationApi>();
         services.AddScoped<IAdminApi, ServerAdminApi>();
+        services.AddScoped<Lt2.Api.Contracts.Digests.IDigestsApi, ServerDigestsApi>();
         services.AddScoped<Lt2.Web.Components.Parliament.Formats>();
         services.AddLt2ClientComponents();
     }

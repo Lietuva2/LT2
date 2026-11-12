@@ -29,6 +29,8 @@ internal sealed class IdentityDb(DbContextOptions<IdentityDb> options)
 
     public DbSet<RoleActivation> RoleActivations => Set<RoleActivation>();
 
+    public DbSet<PartySupport> PartySupports => Set<PartySupport>();
+
     public DbSet<DataProtectionKey> DataProtectionKeys { get; set; } = null!;
 
     protected override void OnModelCreating(ModelBuilder builder)
@@ -102,6 +104,15 @@ internal sealed class IdentityDb(DbContextOptions<IdentityDb> options)
             b.HasOne<User>().WithMany().HasForeignKey(x => x.UserId).OnDelete(DeleteBehavior.Cascade);
             b.HasIndex(x => x.UserId);
             b.HasIndex(x => x.ExpiresAt);
+        });
+
+        builder.Entity<PartySupport>(b =>
+        {
+            b.ToTable("party_support");
+            b.HasKey(x => x.UserId);
+            b.Property(x => x.Party).HasMaxLength(200);
+            b.HasOne<User>().WithMany().HasForeignKey(x => x.UserId).OnDelete(DeleteBehavior.Cascade);
+            b.HasIndex(x => x.Party);
         });
 
         builder.Entity<RoleActivation>(b =>

@@ -72,4 +72,7 @@
 <data name="flag.note" xml:space="preserve"><value>Paaiškinimas per ilgas: ne daugiau kaip 1 000 ženklų.</value></data>
 <data name="flag.participants-only" xml:space="preserve"><value>Apie datą gali pranešti kreipimosi iniciatorius ir tie, kurie nurodė savo poziciją.</value></data>
 <data name="planned.stage" xml:space="preserve"><value>Netinkama stadija.</value></data>
+<data name="digest.not-found" xml:space="preserve"><value>Tokios suvestinės nėra.</value></data>
+<data name="digest.held" xml:space="preserve"><value>Šio projekto siuntimas sulaikytas.</value></data>
+<data name="digest.urgent-already" xml:space="preserve"><value>Šią savaitę skubi suvestinė šiam projektui jau patvirtinta.</value></data>
 </root>

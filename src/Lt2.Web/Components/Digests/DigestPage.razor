@@ -1,0 +1,161 @@
+@page "/suvestines"
+@page "/suvestines/{Date}"
+@using Lt2.Api.Contracts.Digests
+@inject IDigestsApi Digests
+@inject IStringLocalizer<AppealText> T
+@inject Formats F
+@inject NavigationManager Navigation
+
+@* The public record of the summaries (design 8.7, design/ui/suvestines.html): the frozen numbers and arguments, both
+   sides, the 30-day counts and the surge note, without MP-specific figures and without any person. In M2a every summary
+   is a dry run: made, published here, never sent. *@
+@if (_runs is { Count: > 0 } runs)
+{
+    <PageTitle>@T["Digests.Title"] @(Date ?? "") · Lietuva 2.0</PageTitle>
+    <div class="stack">
+        <ol class="crumbs">
+            <li><a href="/suvestines">@T["Digests.Title"]</a></li>
+            @if (Date is not null)
+            {
+                <li>@Date</li>
+            }
+        </ol>
+        <p class="label">@T["Digests.Label"]</p>
+        <h1>@(Date is null ? T["Digests.Title"] : Fmt("Digests.Of", F.Date(runs[0].RunDate)))</h1>
+        <p class="lead">@T["Digests.Lead"]</p>
+        <p class="note" id="dry-run">@T["Digests.DryRun"]</p>
+    </div>
+
+    <div class="cols">
+        <div class="stack stack--loose">
+            @foreach (var run in Date is null ? runs.Take(1) : runs)
+            {
+                <section class="stack" aria-labelledby="h-@run.Id" id="run-@run.Id">
+                    <h2 id="h-@run.Id">@T["Digests.Kind." + run.Kind] · @F.Date(run.RunDate)</h2>
+                    <div class="row">
+                        <span class="tag tag--ink">@T["Digests.Status." + run.Status]</span>
+                        <span class="tag num">@Fmt("Digests.Mps", Formats.Number(run.MpCount))</span>
+                        <span class="tag num">@Fmt("Digests.Items", Formats.Number(run.Items.Count))</span>
+                        @if (Date is null)
+                        {
+                            <a href="/suvestines/@run.RunDate.ToString("yyyy-MM-dd", System.Globalization.CultureInfo.InvariantCulture)">@T["Digests.Open"]</a>
+                        }
+                    </div>
+                    @foreach (var item in run.Items)
+                    {
+                        <section class="sheet stack" aria-label="@item.BillNumber">
+                            <div class="row">
+                                <span class="tag tag--ink num">@item.BillNumber</span>
+                                @if (item.Stage is { } stage)
+                                {
+                                    <span class="tag">@F.Stage(stage)</span>
+                                }
+                                @if (item.PlannedDate is { } planned)
+                                {
+                                    <span class="tag">@Fmt("Planned", F.T["Month." + planned.Month], planned.Day)</span>
+                                }
+                            </div>
+                            <h3><a href="/seimas/@Uri.EscapeDataString(item.BillNumber)/kreipimasis">@item.BillTitle</a></h3>
+                            <div class="pair pair--keep">
+                                <div class="figure figure--for figure--m">
+                                    <span class="label">@T["Sides.for"]</span>
+                                    <span class="figure__num">@Formats.Number(item.For)</span>
+                                    <span class="small num">@Fmt("Sides.Older", Formats.Number(item.ForOlderThan30Days))</span>
+                                </div>
+                                <div class="figure figure--against figure--m">
+                                    <span class="label">@T["Sides.against"]</span>
+                                    <span class="figure__num">@Formats.Number(item.Against)</span>
+                                    <span class="small num">@Fmt("Sides.Older", Formats.Number(item.AgainstOlderThan30Days))</span>
+                                </div>
+                            </div>
+                            <SplitBar For="item.For" Against="item.Against" Abstain="0" Small="true" />
+                            @if (item.SurgeSharePercent is { } share)
+                            {
+                                <p class="note">@Fmt("Surge.Note", Formats.Number(item.SurgeWindowHours), Formats.Number(share))</p>
+                            }
+                            <div class="pair">
+                                @foreach (var side in new[] { "for", "against" })
+                                {
+                                    <div class="stack stack--tight">
+                                        <h4><span class="choice choice--@side">@T["Digests.Side." + side]</span></h4>
+                                        @foreach (var reason in item.Reasons.Where(r => r.Side == side))
+                                        {
+                                            <div class="said">
+                                                <p class="bubble bubble--people voice">@reason.Text</p>
+                                                <div class="said__by"><span class="num">@Fmt("Digests.Endorsed", Formats.Number(reason.Endorsements))</span></div>
+                                            </div>
+                                        }
+                                    </div>
+                                }
+                            </div>
+                        </section>
+                    }
+                </section>
+            }
+        </div>
+
+        <aside class="stack">
+            <section class="sheet stack stack--tight" aria-labelledby="h-how">
+                <h3 id="h-how">@T["Digests.How"]</h3>
+                <dl class="facts">
+                    <dt>@T["Digests.Who"]</dt><dd>@T["Digests.WhoValue"]</dd>
+                    <dt>@T["Digests.When"]</dt><dd>@T["Digests.WhenValue"]</dd>
+                    <dt>@T["Digests.What"]</dt><dd>@T["Digests.WhatValue"]</dd>
+                </dl>
+                <p class="small">@T["Digests.Seen"] <a href="/metodika">@T["Digests.Methodology"]</a></p>
+            </section>
+            @if (Date is null && runs.Count > 1)
+            {
+                <section class="stack stack--tight" aria-labelledby="h-earlier">
+                    <h3 id="h-earlier">@T["Digests.Earlier"]</h3>
+                    <ul class="rows">
+                        @foreach (var run in runs.Skip(1))
+                        {
+                            <li><div class="rows__main"><a href="/suvestines/@run.RunDate.ToString("yyyy-MM-dd", System.Globalization.CultureInfo.InvariantCulture)">@F.Date(run.RunDate)</a><span class="small">@T["Digests.Kind." + run.Kind] · @Fmt("Digests.Items", Formats.Number(run.Items.Count))</span></div></li>
+                        }
+                    </ul>
+                </section>
+            }
+            <p class="note note--quiet" id="not-a-poll">@T["NotAPoll"]</p>
+            <p class="fine">@T["Digests.NoMpFigures"]</p>
+        </aside>
+    </div>
+}
+else
+{
+    <PageTitle>@T["Digests.Title"] · Lietuva 2.0</PageTitle>
+    <div class="stack">
+        <h1>@T["Digests.Title"]</h1>
+        <p class="lead" id="no-digests">@T["Digests.None"]</p>
+        <p class="note note--quiet">@T["NotAPoll"]</p>
+    </div>
+}
+
+@code {
+    private IReadOnlyList<DigestRunResponse>? _runs;
+
+    [Parameter] public string? Date { get; set; }
+
+    protected override async Task OnParametersSetAsync()
+    {
+        if (Date is null)
+        {
+            _runs = (await Digests.GetDigestsAsync()).Value;
+            return;
+        }
+
+        if (!DateOnly.TryParseExact(Date, "yyyy-MM-dd", System.Globalization.CultureInfo.InvariantCulture, System.Globalization.DateTimeStyles.None, out var day))
+        {
+            Navigation.NotFound();
+            return;
+        }
+
+        _runs = (await Digests.GetDigestAsync(day)).Value;
+        if (_runs is not { Count: > 0 })
+        {
+            Navigation.NotFound();
+        }
+    }
+
+    private string Fmt(string key, params object?[] values) => string.Format(System.Globalization.CultureInfo.InvariantCulture, T[key], values);
+}

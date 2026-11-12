@@ -210,6 +210,15 @@ public sealed class GroupRuleTests
     }
 
     [Fact]
+    public void A_group_beside_a_total_is_hidden_when_the_rest_could_be_worked_out_by_subtraction()
+    {
+        GroupRules.PublishableBeside(groupSize: 410, total: 6800).ShouldBe(410);
+        GroupRules.PublishableBeside(groupSize: 25, total: 25).ShouldBe(25, "nothing else on that side");
+        GroupRules.PublishableBeside(groupSize: 25, total: 30).ShouldBeNull("the other 5 would show by subtraction");
+        GroupRules.PublishableBeside(groupSize: 19, total: 500).ShouldBeNull();
+    }
+
+    [Fact]
     public void A_group_of_20_or_more_is_shown()
     {
         GroupRules.MayPublish(20).ShouldBeTrue();

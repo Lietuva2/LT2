@@ -122,6 +122,23 @@ public sealed class AgendaWatchJob(IAgendaWatch watch, ILogger<AgendaWatchJob> l
     }
 }
 
+/// <summary>
+/// Summaries in dry-run (design 8.4): every 15 minutes, makes the weekly or before-vote summary when it is due. Nothing
+/// is sent in M2a.
+/// </summary>
+public sealed class DigestJob(IDigests digests, TimeProvider clock, ILogger<DigestJob> logger)
+{
+    [DisableConcurrentExecution(timeoutInSeconds: 30 * 60)]
+    public async Task RunAsync(CancellationToken cancellationToken)
+    {
+        var made = await digests.RunDueAsync(clock.GetUtcNow(), cancellationToken);
+        foreach (var run in made)
+        {
+            logger.LogInformation("Summary {Kind} made in dry-run: {Items} appeals, {Mps} MPs", run.Kind, run.Items.Count, run.MpCount);
+        }
+    }
+}
+
 /// <summary>Registers the recurring Hangfire jobs at start-up, in Vilnius time (design 3: <c>Europe/Vilnius</c> for schedules).</summary>
 internal sealed class RecurringJobs(IRecurringJobManager jobs) : IHostedService
 {
@@ -153,6 +170,11 @@ internal sealed class RecurringJobs(IRecurringJobManager jobs) : IHostedService
             "20 * * * *",
             new RecurringJobOptions { TimeZone = vilnius });
         jobs.Trigger("agenda-watch");
+        jobs.AddOrUpdate<DigestJob>(
+            "digests",
+            job => job.RunAsync(CancellationToken.None),
+            "*/15 * * * *",
+            new RecurringJobOptions { TimeZone = vilnius });
 
         // Ask once at start-up, so a fresh deployment (or the local stack) imports without waiting for the first period.
         jobs.Trigger(ParliamentImport);

@@ -26,6 +26,7 @@ public static class ClientServices
         services.AddScoped<Lt2.Api.Contracts.Appeals.IAppealsApi, HttpAppealsApi>();
         services.AddScoped<Lt2.Api.Contracts.Appeals.IModerationApi, HttpModerationApi>();
         services.AddScoped<Lt2.Api.Contracts.Appeals.IAdminApi, HttpAdminApi>();
+        services.AddScoped<Lt2.Api.Contracts.Digests.IDigestsApi, HttpDigestsApi>();
         services.AddLt2Validators();
         services.AddLt2ClientComponents();
         return services;

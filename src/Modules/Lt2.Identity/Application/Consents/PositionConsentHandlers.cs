@@ -117,3 +117,26 @@ internal sealed class ParticipantDirectory(NpgsqlDataSource dataSource) : IParti
         return result;
     }
 }
+
+/// <summary><see cref="IPartySupporters"/> for the Appeals module's group numbers. Plain SQL, a connection per call.</summary>
+internal sealed class PartySupporterDirectory(NpgsqlDataSource dataSource) : IPartySupporters
+{
+    public async Task<IReadOnlyDictionary<string, IReadOnlyCollection<Guid>>> SupportersByPartyAsync(CancellationToken cancellationToken)
+    {
+        var result = new Dictionary<string, List<Guid>>(StringComparer.Ordinal);
+        await using var command = dataSource.CreateCommand("SELECT party, user_id FROM identity.party_support");
+        await using var reader = await command.ExecuteReaderAsync(cancellationToken);
+        while (await reader.ReadAsync(cancellationToken))
+        {
+            var party = reader.GetString(0);
+            if (!result.TryGetValue(party, out var users))
+            {
+                result[party] = users = [];
+            }
+
+            users.Add(reader.GetGuid(1));
+        }
+
+        return result.ToDictionary(r => r.Key, r => (IReadOnlyCollection<Guid>)r.Value, StringComparer.Ordinal);
+    }
+}

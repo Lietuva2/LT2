@@ -166,3 +166,17 @@ internal sealed class Session
     /// <summary>When the session's passkey was last used (sign-in or confirmation), for the ten-minute rule.</summary>
     public DateTimeOffset? PasskeyConfirmedAt { get; set; }
 }
+
+/// <summary>
+/// <c>identity.party_support</c> (design 5.2): the party a person says they support. Private and optional; used only for
+/// group numbers of at least 20 (design 6.3). One party per person; changing it overwrites, withdrawing deletes.
+/// </summary>
+internal sealed class PartySupport
+{
+    public Guid UserId { get; set; }
+
+    /// <summary>The party as named by the nominating party of MPs in the open data.</summary>
+    public string Party { get; set; } = "";
+
+    public DateTimeOffset GivenAt { get; set; }
+}

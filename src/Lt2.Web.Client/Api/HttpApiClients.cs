@@ -143,3 +143,18 @@ internal sealed class HttpAdminApi(ApiHttp http) : IAdminApi
     public Task<ApiResult<SettingResponse>> UpdateSettingAsync(string key, UpdateSettingRequest request, CancellationToken cancellationToken = default) =>
         http.SendAsync<SettingResponse>(HttpMethod.Put, ApiRoutes.Admin.SettingByKey(key), request, cancellationToken);
 }
+
+internal sealed class HttpDigestsApi(ApiHttp http) : Lt2.Api.Contracts.Digests.IDigestsApi
+{
+    public Task<ApiResult<IReadOnlyList<Lt2.Api.Contracts.Digests.DigestRunResponse>>> GetDigestsAsync(CancellationToken cancellationToken = default) =>
+        http.SendAsync<IReadOnlyList<Lt2.Api.Contracts.Digests.DigestRunResponse>>(HttpMethod.Get, Lt2.Api.Contracts.Digests.DigestRoutes.Digests, null, cancellationToken);
+
+    public Task<ApiResult<IReadOnlyList<Lt2.Api.Contracts.Digests.DigestRunResponse>>> GetDigestAsync(DateOnly date, CancellationToken cancellationToken = default) =>
+        http.SendAsync<IReadOnlyList<Lt2.Api.Contracts.Digests.DigestRunResponse>>(HttpMethod.Get, Lt2.Api.Contracts.Digests.DigestRoutes.DigestOn(date), null, cancellationToken);
+
+    public Task<ApiResult<IReadOnlyList<Lt2.Api.Contracts.Digests.DigestMpResponse>>> GetMpsAsync(Guid runId, CancellationToken cancellationToken = default) =>
+        http.SendAsync<IReadOnlyList<Lt2.Api.Contracts.Digests.DigestMpResponse>>(HttpMethod.Get, Lt2.Api.Contracts.Digests.DigestRoutes.MpsOf(runId), null, cancellationToken);
+
+    public Task<ApiResult<Lt2.Api.Contracts.Digests.DigestPreviewResponse>> GetPreviewAsync(Guid runId, string slug, CancellationToken cancellationToken = default) =>
+        http.SendAsync<Lt2.Api.Contracts.Digests.DigestPreviewResponse>(HttpMethod.Get, Lt2.Api.Contracts.Digests.DigestRoutes.PreviewOf(runId, slug), null, cancellationToken);
+}

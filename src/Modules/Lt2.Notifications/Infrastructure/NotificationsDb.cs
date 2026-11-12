@@ -11,6 +11,12 @@ internal sealed class NotificationsDb(DbContextOptions<NotificationsDb> options)
 {
     public DbSet<OutboxRow> Outbox => Set<OutboxRow>();
 
+    public DbSet<Digests.DigestRun> DigestRuns => Set<Digests.DigestRun>();
+
+    public DbSet<Digests.DigestItem> DigestItems => Set<Digests.DigestItem>();
+
+    public DbSet<Digests.DigestDelivery> DigestDeliveries => Set<Digests.DigestDelivery>();
+
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         modelBuilder.HasDefaultSchema(NotificationsModule.Schema);
@@ -21,6 +27,34 @@ internal sealed class NotificationsDb(DbContextOptions<NotificationsDb> options)
             b.Property(x => x.Kind).HasMaxLength(100);
             b.Property(x => x.Payload).HasColumnType("jsonb");
             b.HasIndex(x => x.DueAt).HasFilter("failed_at IS NULL");
+        });
+        modelBuilder.Entity<Digests.DigestRun>(b =>
+        {
+            b.ToTable("digest_run");
+            b.HasKey(x => x.Id);
+            b.Property(x => x.Kind).HasMaxLength(20);
+            b.Property(x => x.Status).HasMaxLength(20);
+            b.HasIndex(x => x.RunDate);
+        });
+        modelBuilder.Entity<Digests.DigestItem>(b =>
+        {
+            b.ToTable("digest_item");
+            b.HasKey(x => x.Id);
+            b.Property(x => x.BillNumber).HasMaxLength(40);
+            b.Property(x => x.Stage).HasMaxLength(16);
+            b.Property(x => x.Reasons).HasColumnType("jsonb");
+            b.HasIndex(x => x.RunId);
+            b.HasIndex(x => x.AppealId);
+            b.HasOne<Digests.DigestRun>().WithMany().HasForeignKey(x => x.RunId).OnDelete(DeleteBehavior.Cascade);
+        });
+        modelBuilder.Entity<Digests.DigestDelivery>(b =>
+        {
+            b.ToTable("digest_delivery");
+            b.HasKey(x => new { x.RunId, x.MpSlug });
+            b.Property(x => x.MpSlug).HasMaxLength(200);
+            b.Property(x => x.Status).HasMaxLength(20);
+            b.Property(x => x.PartyNumbers).HasColumnType("jsonb");
+            b.HasOne<Digests.DigestRun>().WithMany().HasForeignKey(x => x.RunId).OnDelete(DeleteBehavior.Cascade);
         });
     }
 }

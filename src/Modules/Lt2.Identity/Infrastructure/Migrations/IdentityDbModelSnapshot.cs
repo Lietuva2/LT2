@@ -105,6 +105,31 @@ namespace Lt2.Identity.Infrastructure.Migrations
                         });
                 });
 
+            modelBuilder.Entity("Lt2.Identity.Domain.PartySupport", b =>
+                {
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("user_id");
+
+                    b.Property<DateTimeOffset>("GivenAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("given_at");
+
+                    b.Property<string>("Party")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)")
+                        .HasColumnName("party");
+
+                    b.HasKey("UserId")
+                        .HasName("pk_party_support");
+
+                    b.HasIndex("Party")
+                        .HasDatabaseName("ix_party_support_party");
+
+                    b.ToTable("party_support", "identity");
+                });
+
             modelBuilder.Entity("Lt2.Identity.Domain.Profile", b =>
                 {
                     b.Property<Guid>("UserId")
@@ -639,6 +664,16 @@ namespace Lt2.Identity.Infrastructure.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired()
                         .HasConstraintName("fk_consent_user_user_id");
+                });
+
+            modelBuilder.Entity("Lt2.Identity.Domain.PartySupport", b =>
+                {
+                    b.HasOne("Lt2.Identity.Domain.User", null)
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
+                        .HasConstraintName("fk_party_support_user_user_id");
                 });
 
             modelBuilder.Entity("Lt2.Identity.Domain.Profile", b =>

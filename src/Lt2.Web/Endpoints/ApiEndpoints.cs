@@ -3,6 +3,7 @@ using Lt2.Api.Contracts;
 using Lt2.Web.Endpoints.Admin;
 using Lt2.Web.Endpoints.Appeals;
 using Lt2.Web.Endpoints.Auth;
+using Lt2.Web.Endpoints.Digests;
 using Lt2.Web.Endpoints.Me;
 using Lt2.Web.Endpoints.Moderation;
 using Lt2.Web.Endpoints.Parliament;
@@ -83,6 +84,11 @@ internal static class ApiEndpoints
         HideReasonEndpoint.Map(api);
         MergeReasonEndpoint.Map(api);
         SetPlannedEndpoint.Map(api);
+
+        GetDigestsEndpoint.Map(api);
+        GetDigestEndpoint.Map(api);
+        GetDigestMpsEndpoint.Map(api);
+        GetDigestPreviewEndpoint.Map(api);
     }
 
     /// <summary>A route from <see cref="ApiRoutes"/> relative to the <c>/api/v1</c> group.</summary>

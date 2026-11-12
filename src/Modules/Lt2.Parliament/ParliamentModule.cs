@@ -34,6 +34,7 @@ public static class ParliamentModule
         services.AddScoped<IParliamentQueries, ParliamentQueries>();
         services.AddScoped<IBillCatalogue, BillCatalogue>();
         services.AddScoped<IPlannedAgenda, PlannedAgenda>();
+        services.AddScoped<IMpDirectory, MpDirectory>();
         return services;
     }
 

@@ -34,6 +34,7 @@ public static class AppealsModule
         services.AddScoped<IAppealsModule, AppealsService>();
         services.AddScoped<IAppealsModeration, ModerationService>();
         services.AddScoped<IAppealsMaintenance, AppealsMaintenance>();
+        services.AddScoped<IDigestSource, DigestSource>();
         return services;
     }
 }

@@ -107,6 +107,7 @@ public static class IdentityModule
         services.AddScoped<IIdentityAdministration, RoleAdministration>();
         services.AddScoped<PositionConsentHandlers>();
         services.AddSingleton<IParticipants, ParticipantDirectory>();
+        services.AddSingleton<IPartySupporters, PartySupporterDirectory>();
         services.AddScoped<IIdentityModule, IdentityModuleFacade>();
         services.AddScoped<IIdentityMaintenance, MaintenanceHandler>();
         services.AddSingleton<IModuleDatabase, IdentityModuleDatabase>();
@@ -129,6 +130,7 @@ public static class IdentityModule
     public static IServiceCollection AddIdentityDirectory(this IServiceCollection services)
     {
         services.AddSingleton<IParticipants, ParticipantDirectory>();
+        services.AddSingleton<IPartySupporters, PartySupporterDirectory>();
         return services;
     }
 

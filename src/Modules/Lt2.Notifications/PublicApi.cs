@@ -25,3 +25,48 @@ public interface IEmailTransport
 {
     Task SendAsync(EmailMessage message, CancellationToken cancellationToken);
 }
+
+/// <summary>One appeal as frozen in a summary. No person: counts, the surge note and arguments without authors.</summary>
+public sealed record DigestItemInfo(
+    string BillNumber,
+    string BillTitle,
+    string? Stage,
+    DateOnly? PlannedDate,
+    int For,
+    int ForOlderThan30Days,
+    int Against,
+    int AgainstOlderThan30Days,
+    int? SurgeSharePercent,
+    int? SurgeWindowHours,
+    IReadOnlyList<Lt2.SharedKernel.DigestReason> Reasons);
+
+/// <summary>A summary run (design 8.7) as its public copy shows it: without MP-specific figures.</summary>
+/// <param name="Status"><c>dry-run</c> in M2a: made, read by people, never sent.</param>
+/// <param name="MpCount">How many MPs it would have gone to.</param>
+public sealed record DigestRunInfo(
+    Guid Id, string Kind, DateOnly RunDate, DateOnly? SittingDate, DateTimeOffset CreatedAt, string Status, int MpCount, IReadOnlyList<DigestItemInfo> Items);
+
+/// <summary>What one MP would read (design 8.9: a moderator can read any MP's summary before a real send).</summary>
+public sealed record DigestPreview(string Subject, string Text);
+
+/// <summary>Who approves an urgent summary, for the audit log.</summary>
+public sealed record StaffActor(Guid UserId, string Role, string? IpHash);
+
+/// <summary>Summaries to MPs in dry-run (design 8.4, 8.7, 8.9). Nothing here sends anything.</summary>
+public interface IDigests
+{
+    /// <summary>Makes the weekly and before-vote summaries that are due at <paramref name="now"/>; returns those made.</summary>
+    Task<IReadOnlyList<DigestRunInfo>> RunDueAsync(DateTimeOffset now, CancellationToken cancellationToken);
+
+    /// <summary>One urgent summary for an appeal, approved by a moderator; may exceed the weekly ceiling by one.</summary>
+    Task<Lt2.SharedKernel.Result<DigestRunInfo>> UrgentAsync(Guid appealId, StaffActor moderator, CancellationToken cancellationToken);
+
+    Task<IReadOnlyList<DigestRunInfo>> ListAsync(CancellationToken cancellationToken);
+
+    Task<IReadOnlyList<DigestRunInfo>> OnDateAsync(DateOnly date, CancellationToken cancellationToken);
+
+    Task<Lt2.SharedKernel.Result<DigestPreview>> PreviewAsync(Guid runId, string mpSlug, CancellationToken cancellationToken);
+
+    /// <summary>The MPs of a run and what would have happened for each (<c>dry-run</c> or <c>skipped-ceiling</c>); moderators only.</summary>
+    Task<IReadOnlyList<(string MpSlug, string Status)>> MpsAsync(Guid runId, CancellationToken cancellationToken);
+}

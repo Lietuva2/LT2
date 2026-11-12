@@ -85,6 +85,12 @@ public static class SettingKeys
     /// </summary>
     public static readonly SettingKey<int> DigestThresholdMinimum = new("Digest:ThresholdMinimum", 50, v => v > 0);
 
+    /// <summary>The weekly summary: Monday at this Vilnius time ("HH:mm"), or "off" (design 8.4).</summary>
+    public static readonly SettingKey<string> DigestWeekly = new("Digest:Weekly", "07:00", IsTimeOrOff);
+
+    /// <summary>The before-vote summary: on the working day before the sitting at this Vilnius time, or "off" (design 8.4).</summary>
+    public static readonly SettingKey<string> DigestBeforeVote = new("Digest:BeforeVote", "12:00", IsTimeOrOff);
+
     /// <summary>Most summaries an MP receives in a week (design 8.4).</summary>
     public static readonly SettingKey<int> DigestMaxPerWeek = new("Digest:MaxPerWeek", 2, v => v is > 0 and <= 7);
 
@@ -105,11 +111,16 @@ public static class SettingKeys
         SignInCodesPerDay,
         DigestThresholdDefault,
         DigestThresholdMinimum,
+        DigestWeekly,
+        DigestBeforeVote,
         DigestMaxPerWeek,
         SurgeMinimumShare,
         SurgeMinimumAccounts,
         SurgeWindowHours,
     ];
+
+    private static bool IsTimeOrOff(string value) =>
+        value == "off" || TimeOnly.TryParseExact(value, "HH:mm", System.Globalization.CultureInfo.InvariantCulture, System.Globalization.DateTimeStyles.None, out _);
 
     public static ISettingKey? Find(string name) =>
         All.FirstOrDefault(k => string.Equals(k.Name, name, StringComparison.OrdinalIgnoreCase));

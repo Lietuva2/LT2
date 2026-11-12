@@ -40,4 +40,17 @@
 <data name="Moderation.Excerpt" xml:space="preserve"><value>Argumentas: „{0}“</value></data>
 <data name="Moderation.Statement" xml:space="preserve"><value>Moderatoriaus paaiškinimas: {0}</value></data>
 <data name="Moderation.Rules" xml:space="preserve"><value>Šį laišką gavote, nes esate šio turinio autorius.</value></data>
+<data name="Digest.Subject" xml:space="preserve"><value>Lietuva 2.0 suvestinė Seimo nariams, {0}</value></data>
+<data name="Digest.Intro" xml:space="preserve"><value>projektų šioje suvestinėje: {0}. Dėl jų į Seimo narius kreipiasi Lietuva 2.0 naudotojai.</value></data>
+<data name="Digest.Planned" xml:space="preserve"><value>Planuojama {0} d.</value></data>
+<data name="Digest.For" xml:space="preserve"><value>  Prašo balsuoti už: {0} (iš jų {1} – paskyros senesnės nei 30 d.)</value></data>
+<data name="Digest.Against" xml:space="preserve"><value>  Prašo balsuoti prieš: {0} (iš jų {1} – paskyros senesnės nei 30 d.)</value></data>
+<data name="Digest.PartyFor" xml:space="preserve"><value>  Iš nurodžiusių, kad palaiko {0}: {1} prašo balsuoti už.</value></data>
+<data name="Digest.PartyAgainst" xml:space="preserve"><value>  Iš nurodžiusių, kad palaiko {0}: {1} prašo balsuoti prieš.</value></data>
+<data name="Digest.Surge" xml:space="preserve"><value>  Per paskutines {0} valandas {1} % pozicijų pateikė paskyros, sukurtos per tą patį laiką. Skaičius „senesnės nei 30 d.“ jų neapima.</value></data>
+<data name="Digest.Reasons.for" xml:space="preserve"><value>  Dažniausi argumentai už:</value></data>
+<data name="Digest.Reasons.against" xml:space="preserve"><value>  Dažniausi argumentai prieš:</value></data>
+<data name="Digest.NotAPoll" xml:space="preserve"><value>Tai nėra reprezentatyvi apklausa: skaičiai rodo savanoriškai dalyvaujančių Lietuva 2.0 naudotojų nuomonę.</value></data>
+<data name="Digest.PublicCopy" xml:space="preserve"><value>Ta pati suvestinė viešai: /suvestines/{0}</value></data>
+<data name="Digest.Skipped" xml:space="preserve"><value>(Šiam Seimo nariui ši suvestinė nebūtų siunčiama: viršytas savaitės laiškų skaičius.)</value></data>
 </root>

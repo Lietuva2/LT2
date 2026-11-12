@@ -210,6 +210,16 @@ internal static class GroupRules
 
     /// <summary>The number to publish for a group, or <c>null</c> when the group is too small to show.</summary>
     public static int? Publishable(int groupSize) => MayPublish(groupSize) ? groupSize : null;
+
+    /// <summary>
+    /// A group shown beside a total it is part of (a party's supporters beside a side's count): the group needs at least
+    /// 20, and so does the rest of the total, or the rest could be worked out by subtraction. A rest of none is fine.
+    /// </summary>
+    public static int? PublishableBeside(int groupSize, int total)
+    {
+        var rest = total - groupSize;
+        return MayPublish(groupSize) && (rest == 0 || MayPublish(rest)) ? groupSize : null;
+    }
 }
 
 /// <summary>Design 8.1: an appeal closes when the Seimas takes the final vote on its bill; the counts are frozen then.</summary>
