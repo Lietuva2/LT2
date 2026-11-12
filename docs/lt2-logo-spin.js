@@ -17,6 +17,11 @@
  *   perspective  camera distance in logo units (default 0 = orthographic).
  *   label        accessible name (default "Lietuva 2.0 logotipas").
  *
+ * Colours: the CSS custom properties --lt2-slate, --lt2-leaf and --lt2-brand
+ * (on the element or any ancestor) override the logo's three colours, e.g.
+ *   lt2-logo-spin { --lt2-slate: var(--slate); --lt2-leaf: var(--leaf); --lt2-brand: var(--brand); }
+ * The logo redraws when the page's colour scheme or theme attribute changes.
+ *
  * The element is sized by CSS (default width 200px, aspect ratio of the
  * logo). It pauses while off-screen, shows the still logo when the reader
  * prefers reduced motion, and falls back to a flat SVG without WebGL 2.
@@ -48,10 +53,13 @@
 
   // Logo polygons in the SVG's user units (viewBox 28 44 604 474), drawn
   // with a 10-unit round-joined stroke of the same colour.
+  // Each piece's colour can be set with a CSS custom property on the element
+  // or any ancestor (--lt2-slate, --lt2-leaf, --lt2-brand), e.g. to follow a
+  // page's dark theme; the colour here is the default.
   var LOGO = [
-    { color: '#a7b1ac', pts: [70, 78, 345, 106, 352, 58, 396, 108, 292, 112, 293, 240, 168, 243, 165, 316, 40, 298] },
-    { color: '#7cc242', pts: [318, 142, 556, 130, 558, 190, 618, 192, 566, 256, 570, 352, 330, 368] },
-    { color: '#1f6b3a', pts: [200, 265, 292, 270, 300, 396, 478, 390, 532, 466, 476, 470, 474, 506, 186, 490] }
+    { name: 'slate', color: '#a7b1ac', pts: [70, 78, 345, 106, 352, 58, 396, 108, 292, 112, 293, 240, 168, 243, 165, 316, 40, 298] },
+    { name: 'leaf', color: '#7cc242', pts: [318, 142, 556, 130, 558, 190, 618, 192, 566, 256, 570, 352, 330, 368] },
+    { name: 'brand', color: '#1f6b3a', pts: [200, 265, 292, 270, 300, 396, 478, 390, 532, 466, 476, 470, 474, 506, 186, 490] }
   ];
   var STROKE = 5;          // half the stroke width
   var CENTER = [330, 281]; // centre of the logo's bounding box
@@ -192,6 +200,21 @@
   function hexToVec(h) {
     return [1, 3, 5].map(function (o) { return parseInt(h.substr(o, 2), 16) / 255; });
   }
+  // Any CSS colour to [r, g, b] in 0–1, through a 2D context's fillStyle,
+  // which normalises it to #rrggbb or rgba(); invalid values keep the fallback.
+  var probe = null;
+  function cssColor(value, fallback) {
+    value = (value || '').trim();
+    if (!value) return fallback;
+    if (!probe) probe = document.createElement('canvas').getContext('2d');
+    probe.fillStyle = '#010203';
+    probe.fillStyle = value;
+    var s = probe.fillStyle;
+    if (s === '#010203' && !/^#010203$/i.test(value)) return fallback;
+    if (s[0] === '#') return hexToVec(s);
+    var m = s.match(/[\d.]+/g);
+    return m ? [m[0] / 255, m[1] / 255, m[2] / 255] : fallback;
+  }
 
   var VS = '#version 300 es\n' +
     'void main(){vec2 p=vec2((gl_VertexID<<1)&2,gl_VertexID&2);gl_Position=vec4(p*2.-1.,0.,1.);}';
@@ -282,7 +305,8 @@
     return '<svg viewBox="28 44 604 474" aria-hidden="true"><g stroke-width="10" stroke-linejoin="round">' +
       LOGO.map(function (p) {
         var d = 'M' + p.pts.join(' ').replace(/(\d+) (\d+)/g, '$1 $2L').replace(/L$/, 'Z');
-        return '<path d="' + d + '" fill="' + p.color + '" stroke="' + p.color + '"/>';
+        var c = 'var(--lt2-' + p.name + ',' + p.color + ')';
+        return '<path d="' + d + '" style="fill:' + c + ';stroke:' + c + '"/>';
       }).join('') + '</g></svg>';
   }
 
@@ -309,12 +333,12 @@
     });
     gl.uniform1i(u.uLogo, 0);
     gl.uniform1i(u.uFig, 1);
-    LOGO.forEach(function (p, i) { gl.uniform3fv(u['uCol' + i], hexToVec(p.color)); });
     renderer = { canvas: canvas, gl: gl, u: u };
     return renderer;
   }
 
   var reduceMotion = window.matchMedia ? window.matchMedia('(prefers-reduced-motion: reduce)') : { matches: false };
+  var darkScheme = window.matchMedia ? window.matchMedia('(prefers-color-scheme: dark)') : {};
 
   class LogoSpin extends HTMLElement {
     static get observedAttributes() { return ['motion', 'period', 'angle', 'perspective', 'label']; }
@@ -347,8 +371,15 @@
         this._ro = new ResizeObserver(function () { self._resize(); self._schedule(true); });
         this._ro.observe(this);
       }
+      // Redraw when motion preference or the page's theme (and so the
+      // colour custom properties) changes.
       this._onMotion = function () { self._schedule(true); };
       if (reduceMotion.addEventListener) reduceMotion.addEventListener('change', this._onMotion);
+      if (darkScheme.addEventListener) darkScheme.addEventListener('change', this._onMotion);
+      if ('MutationObserver' in window) {
+        this._mo = new MutationObserver(this._onMotion);
+        this._mo.observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme', 'class', 'style'] });
+      }
       this._schedule(true);
     }
 
@@ -357,7 +388,23 @@
       this._raf = 0;
       if (this._io) this._io.disconnect();
       if (this._ro) this._ro.disconnect();
+      if (this._mo) this._mo.disconnect();
       if (reduceMotion.removeEventListener) reduceMotion.removeEventListener('change', this._onMotion);
+      if (darkScheme.removeEventListener) darkScheme.removeEventListener('change', this._onMotion);
+    }
+
+    // The three piece colours, from --lt2-slate/leaf/brand or the defaults.
+    _colors() {
+      var cs = getComputedStyle(this), key = '', vals = LOGO.map(function (p) {
+        var v = cs.getPropertyValue('--lt2-' + p.name);
+        key += v + '|';
+        return v;
+      });
+      if (key !== this._colorKey) {
+        this._colorKey = key;
+        this._rgb = LOGO.map(function (p, i) { return cssColor(vals[i], hexToVec(p.color)); });
+      }
+      return this._rgb;
     }
 
     attributeChangedCallback(name) {
@@ -464,6 +511,7 @@
       gl.uniform1f(u.uAng, ang);
       gl.uniform1f(u.uSide, degrees >= 180 ? 1 : 0);
       gl.uniform1f(u.uDist, dist);
+      this._colors().forEach(function (c, i) { gl.uniform3fv(u['uCol' + i], c); });
       gl.drawArrays(gl.TRIANGLES, 0, 3);
       // The viewport is the bottom-left corner in GL, the bottom rows of the image.
       this._ctx.clearRect(0, 0, w, h);

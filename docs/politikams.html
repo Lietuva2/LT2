@@ -6,6 +6,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400;12..96,500;12..96,600;12..96,700;12..96,800&family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;1,6..72,400&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<script src="lt2-logo-spin.js" defer></script>
 <style>
 :root{
   --bg:#f4f7f3; --surface:#ffffff; --surface-2:#eaf0e8; --surface-3:#dde6db;
@@ -92,6 +93,9 @@ section.chapter>header .lede{font-size:21px;color:var(--ink-2)}
 /* ---------- hero ---------- */
 .hero{padding-top:48px;display:grid;grid-template-columns:minmax(0,1.05fr) minmax(0,1fr);gap:48px;align-items:center}
 @media (max-width:900px){.hero{grid-template-columns:minmax(0,1fr)}}
+.hero-fig{margin:0}
+.hero-spin{display:block;width:100%;max-width:520px;margin:0 auto;--lt2-slate:var(--slate);--lt2-leaf:var(--leaf);--lt2-brand:var(--brand)}
+@media (max-width:900px){.hero-spin{max-width:340px}}
 .hero-logo{display:flex;align-items:center;gap:14px;margin-bottom:28px}
 .hero-logo svg{width:64px;height:64px}
 .hero-logo .wm{font-family:var(--f-display);font-weight:800;font-size:30px;letter-spacing:-.02em;line-height:1}
@@ -106,14 +110,6 @@ section.chapter>header .lede{font-size:21px;color:var(--ink-2)}
 .notice{margin-top:28px;display:flex;gap:10px;padding:12px 14px;border-radius:10px;background:var(--warn-bg);color:var(--warn-ink);font-family:var(--f-display);font-size:14px;line-height:1.45;max-width:560px}
 .notice svg{flex:none;width:18px;height:18px;margin-top:1px}
 
-.hemi-card{background:var(--surface);border:1px solid var(--line);border-radius:18px;padding:22px;box-shadow:var(--shadow);font-family:var(--f-display)}
-.hemi-card .bill-id{font-family:var(--f-mono);font-size:12px;color:var(--muted)}
-.hemi-card h3{font-size:19px;margin-top:4px}
-.hemi-wrap{position:relative;margin-top:14px;container-type:inline-size}
-.hemi-wrap svg{width:100%;height:auto;display:block}
-.hemi-center{position:absolute;left:0;right:0;bottom:4px;text-align:center}
-.hemi-center .big{font-size:min(30px,7.4cqi);font-weight:800;letter-spacing:-.02em}
-.hemi-center .small{font-size:12px;color:var(--muted)}
 .legend{display:flex;flex-wrap:wrap;gap:6px 14px;font-family:var(--f-display);font-size:13px;color:var(--ink-2)}
 .legend i{display:inline-block;width:10px;height:10px;border-radius:50%;margin-right:6px;vertical-align:-1px}
 .legend i.ring{background:transparent!important;box-shadow:inset 0 0 0 2px var(--v-absent)}
@@ -497,26 +493,8 @@ footer.end svg{width:28px;height:28px}
         <span>Maketuose ir pavyzdžiuose pateikti Seimo nariai, frakcijos, projektai ir skaičiai yra išgalvoti. Jie rodo, kaip atrodytų produktas, o ne kaip balsavo realūs politikai. Komandos patirties faktai yra tikri.</span>
       </div>
     </div>
-    <div class="hemi-card" aria-label="Rezultato kortelė">
-      <div class="bill-id">XVP-0412 · Galutinis balsavimas (priėmimas)</div>
-      <h3>Gyventojų pajamų mokesčio įstatymo pataisa</h3>
-      <div class="hemi-wrap">
-        <svg id="hemi" viewBox="0 0 440 236" role="img" aria-label="141 Seimo nario vietų schema: 78 už, 41 prieš, 12 susilaikė, 10 nebalsavo"></svg>
-        <div class="hemi-center"><div class="big tnum">78 : 41</div><div class="small">Priimta</div></div>
-      </div>
-      <div class="legend" style="margin-top:10px">
-        <span><i style="background:var(--v-for)"></i>Už</span>
-        <span><i style="background:var(--v-against)"></i>Prieš</span>
-        <span><i style="background:var(--v-abstain)"></i>Susilaikė</span>
-        <span><i class="ring"></i>Nebalsavo</span>
-      </div>
-      <div class="split-bars">
-        <div class="sbar-row"><div class="lbl"><b>Seimas</b>balsavo 131 SN</div>
-          <div class="sbar" data-tip="Seimas: 60 % už, 31 % prieš, 9 % susilaikė"><span class="f" style="flex:78">60 %</span><span class="a" style="flex:41">31 %</span><span class="n" style="flex:12"></span></div></div>
-        <div class="sbar-row"><div class="lbl"><b>LT2 rezultatas</b>15 160 balsų</div>
-          <div class="sbar" data-tip="LT2 rezultatas (tiesioginiai ir deleguoti LT2 balsai): 57 % už, 37 % prieš, 6 % susilaikė"><span class="f" style="flex:57">57 %</span><span class="a" style="flex:37">37 %</span><span class="n" style="flex:6"></span></div></div>
-      </div>
-      <div class="verdict"><span class="chip ok">Dauguma sutampa: už</span> Skirtumas 3 p. p. · 3 Seimo nariai paaiškino balsą</div>
+    <div class="hero-fig">
+      <lt2-logo-spin class="hero-spin" period="10"></lt2-logo-spin>
     </div>
   </section>
 
@@ -637,27 +615,6 @@ footer.end svg{width:28px;height:28px}
   const tipAt=e=>{const t=e.target.closest&&e.target.closest("[data-tip]");if(t)showTip(t.getAttribute("data-tip"),e.clientX,e.clientY);else tip.classList.remove("on");};
   document.addEventListener("pointermove",tipAt);
   document.addEventListener("pointerdown",tipAt);
-
-  /* hemicycle */
-  const factions=[
-    {n:"Socialinis forumas",s:26,v:[22,1,2,1]},{n:"Pilietinė sąjunga",s:38,v:[34,0,2,2]},
-    {n:"Kaimo aljansas",s:21,v:[15,2,3,1]},{n:"Naujasis centras",s:18,v:[1,14,2,1]},
-    {n:"Reformų partija",s:30,v:[3,22,2,3]},{n:"Be frakcijos",s:8,v:[3,2,1,2]}];
-  (function(){
-    const svg=$("#hemi"),cx=220,cy=226,R0=92,R1=212,rows=8,total=141;
-    const radii=[];for(let i=0;i<rows;i++)radii.push(R0+(R1-R0)*i/(rows-1));
-    const sum=radii.reduce((a,b)=>a+b,0);const counts=radii.map(r=>Math.round(total*r/sum));
-    counts[rows-1]+=total-counts.reduce((a,b)=>a+b,0);
-    const seats=[];radii.forEach((r,i)=>{const n=counts[i];for(let j=0;j<n;j++){const a=Math.PI-(Math.PI*(j+0.5)/n);seats.push({x:cx+r*Math.cos(a),y:cy-r*Math.sin(a),a});}});
-    seats.sort((p,q)=>q.a-p.a);
-    const keys=["for","against","abstain","absent"],labels={for:"Už",against:"Prieš",abstain:"Susilaikė",absent:"Nebalsavo"};
-    let k=0;factions.forEach(f=>{const list=[];keys.forEach((key,i)=>{for(let c=0;c<f.v[i];c++)list.push(key);});
-      seats.slice(k,k+f.s).sort((p,q)=>Math.hypot(p.x-cx,p.y-cy)-Math.hypot(q.x-cx,q.y-cy)).forEach((s,i)=>{s.f=f.n;s.vote=list[i];});k+=f.s;});
-    seats.forEach(s=>{const c=el("circle",{cx:s.x.toFixed(1),cy:s.y.toFixed(1),r:6.2});
-      if(s.vote==="absent"){c.setAttribute("fill","none");c.setAttribute("stroke","var(--v-absent)");c.setAttribute("stroke-width","2");c.setAttribute("r","5.2");}
-      else c.setAttribute("fill","var(--v-"+s.vote+")");
-      c.setAttribute("data-tip",s.f+" · "+labels[s.vote]);svg.appendChild(c);});
-  })();
 
 
 

@@ -27,17 +27,19 @@ This repository currently holds **pre-implementation documents only** (the conce
 
 | Path | Audience | Notes |
 |---|---|---|
-| `docs/index.html` | Citizens and first-time visitors | **Start page of lietuva2.lt**, built as a landing page: hero with two calls to action and the result card → why → four possibilities → bill page mockup (vote or delegate) → a politician's vote explanation → cards to the audience versions → trust → experience → ways to contribute and the contact. Detail (delegation table, analytics, rules) stays in `koncepcija.html`; keep only the most informative mockups here. |
+| `docs/index.html` | Citizens and first-time visitors | **Start page of lietuva2.lt**, built as a landing page: hero with two calls to action and the rotating logo → why → four possibilities → bill page mockup (vote or delegate) → a politician's vote explanation → cards to the audience versions → trust → experience → ways to contribute and the contact. Detail (delegation table, analytics, rules) stays in `koncepcija.html`; keep only the most informative mockups here. |
 | `docs/koncepcija.html` | Everyone | The main whitepaper: the canonical, complete concept of the first version with interactive mockups. |
 | `docs/antroji-versija.html` | Everyone | The second version (posts, topics, answers) with its mockups. Split out of the main whitepaper to keep it short; the main whitepaper's chapter 09 summarises it and links here. |
 | `docs/politikams.html` | Politicians | Short version plus the invitation to take part (the two steps below, what we ask / what they get, questions). These details live only here. |
 | `docs/zurnalistams.html` | Journalists | What LT2 would offer and story ideas. The citation guide (correct vs incorrect wording) was removed as premature at this stage. |
 | `docs/kas-nauja.html` | Former LT2 users | Lessons from 2011–2020, old vs new, what stays. |
+| `docs/lt2-logo-spin.js` | – | `<lt2-logo-spin>`: the logo turning in 3D, edge-on a man and a woman. Shown in the hero of every page (above the heading on `dokumentai.html`); takes its colours from the page's `--slate`, `--leaf`, `--brand` (dark theme included). The only shared file the pages load. |
 | `docs/dokumentai.html` | People who want everything | Lists every page. Not linked from any page and marked `noindex`; the owner shares it on request. Update it when a page is added, renamed or removed. |
 | `discovery/README.md` | – | English overview and table of pages. Keep in sync with `docs/dokumentai.html`. |
 | `discovery/design-notes.md` | Team | Decision history: rejected alternatives and why, research sources (Seimas data, 2011–2020 figures), open questions, working with the owner. Read before re-opening a settled question. |
 | `discovery/system-design.md` | Team | Proposed system design for implementation (2026-11): .NET 10, PostgreSQL, Blazor, security plumbing, MP profiles, and appeals on bills with summary emails to MPs. Agreed with the owner on 2026-11-12 as the basis for implementation. Its build order (profiles → appeals → voting) and email-only registration at the start differ from the pages, which are not changed yet. |
 | `discovery/prototypes/seimas-vote-hemicycle/` | Team | `fetch_vote.py` + `make_page.py` draw a real Seimas vote as a seat map from open data. |
+| `discovery/prototypes/logo-spin/` | Team | Demo and design history of `docs/lt2-logo-spin.js`: why the figures look as they do (the logo's colour bands fix where clothing colours can change) and the options the owner chose from. |
 
 `docs/` is the website: its contents are uploaded as they are to the web root of lietuva2.lt, and nothing outside it is published. All links between pages are relative (`politikams.html`, `koncepcija.html#delegation`), so the folder works under any base URL, opened from disk, or on GitHub Pages from `/docs`. Keep it that way: no absolute site paths, and no internal notes inside `docs/`. In the text "the main whitepaper" means `koncepcija.html`; the page names were `lietuva20-*.html` before 2026-09.
 
@@ -45,7 +47,7 @@ Removed on purpose (do not recreate): `lietuva20-politikams-baltoji-knyga.html` 
 
 ## Structure of the main whitepaper
 
-Hero (result card) → 01 Kodėl dabar → 02 Kam ir kokia nauda →
+Hero (rotating logo) → 01 Kodėl dabar → 02 Kam ir kokia nauda →
 **I Balsavimas:** 03 Projekto puslapis, 04 Balsavimo inicijavimas, 05 Balso delegavimas →
 **II Politikai ir duomenų analizė:** 06 Politikai platformoje, 07 Analitika, 08 Rinkimų režimas →
 **III Antroji versija:** 09 Kas rūpi žmonėms (a short summary with a link to `antroji-versija.html`) →
@@ -102,8 +104,9 @@ Chapter numbers are written by hand in each `eyebrow`; the table of contents num
 
 ## Editing practices
 
+- On Windows, run every command (git, python, dotnet, docker) in PowerShell, not Bash. Bash there is Git Bash, an emulation layer that has broken mid-session on the owner's machine. Write multi-line scripts to a file and run the file. Cloud sessions run Linux and use their own shell.
 - HTML files have **mixed CRLF/LF line endings**. Do not rewrite whole files with tools that normalise newlines. Make targeted replacements and check `git diff --stat` against `git diff --ignore-cr-at-eol --stat`: the two should match.
-- Pages are self-contained HTML (inline CSS/JS, Google Fonts only). The main whitepaper's mockups are driven by inline JS (`renderBill`, `resultCard`, `drawHemi` …; the second-version page has `renderMT`); the result card is one component used in the hero, on the bill page after the vote, and as the share image.
+- Pages are self-contained HTML (inline CSS/JS, Google Fonts only), except `lt2-logo-spin.js` in `docs/`, which every page loads by a relative path for the rotating logo; upload it together with the pages. The main whitepaper's mockups are driven by inline JS (`renderBill`, `resultCard`, `drawHemi` …; the second-version page has `renderMT`); the result card is one component used on the bill page after the vote and as the share image.
 - Gotcha: a global `figure svg{min-width:720px}` rule exists; don't wrap small SVGs in `<figure>`.
 - Numbers shown with thousands separators: use `fmt()` (lt-LT, non-breaking space) and regexes that allow `[\d  ]`.
 - After editing, open every page at 1280 px and 390 px width (Playwright with Chromium at `/opt/pw-browsers/chromium` in the cloud environment): no page errors, `scrollWidth` equal to viewport width, all `href="#…"` anchors and relative `.html` links resolve.

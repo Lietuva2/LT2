@@ -20,7 +20,7 @@ The website is the `../docs/` folder: its contents are uploaded as they are to l
 | `design-notes.md` | Team | Decision history, rejected alternatives, research sources and open questions from the discovery work. |
 | `system-design.md` | Team | Proposed system design for implementation: stack, solution layout, security, MP profiles from open data, and appeals on bills with summary emails to MPs. Agreed 2026-11-12 as the basis for implementation. |
 | `prototypes/seimas-vote-hemicycle/` | Team | Feasibility check: renders a real Seimas vote from the open data API. |
-| `prototypes/logo-spin/` | Team | `<lt2-logo-spin>`: embeddable script that turns the logo in 3D; edge-on it is a man (left edge) or a woman (right edge), drawn so their clothes match the logo's colour bands. `index.html` is the demo (serve the folder over HTTP). The design history: `figuros.html` (flat figure options per edge) and `poros.html` (the chosen pair, R bodies with K4 legs, and the alternatives). |
+| `prototypes/logo-spin/` | Team | Demo and design history of `../docs/lt2-logo-spin.js` (`<lt2-logo-spin>`, the rotating logo at the top of every page): edge-on it is a man (left edge) or a woman (right edge), drawn so their clothes match the logo's colour bands. `index.html` is the demo (serve the repository over HTTP); `figuros.html` (flat figure options per edge) and `poros.html` (the chosen pair, R bodies with K4 legs, and the alternatives) are the design history. |
 
 When adding or renaming a page, update `../docs/dokumentai.html` as well.
 

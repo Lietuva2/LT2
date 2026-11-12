@@ -9,11 +9,12 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700&family=Newsreader:opsz,wght@6..72,400;6..72,500&family=IBM+Plex+Mono:wght@400&display=swap">
+<script src="lt2-logo-spin.js" defer></script>
 <style>
 :root{
   --bg:#f4f7f3; --surface:#ffffff; --surface-2:#eaf0e8;
   --ink:#13201a; --ink-2:#44524a; --muted:#6f7c75; --line:#d3dcd3; --line-strong:#b6c3b8;
-  --brand:#1f6b3a; --brand-soft:#dcebdc; --link:#1f6b3a;
+  --brand:#1f6b3a; --brand-soft:#dcebdc; --link:#1f6b3a; --leaf:#7cc242; --slate:#a7b1ac;
   --shadow:0 1px 2px rgba(19,32,26,.06),0 8px 24px rgba(19,32,26,.08);
   --f-display:"Bricolage Grotesque","Segoe UI",system-ui,sans-serif;
   --f-body:"Newsreader",Georgia,"Times New Roman",serif;
@@ -24,7 +25,7 @@
     color-scheme:dark;
     --bg:#0e1411; --surface:#151d18; --surface-2:#1c2620;
     --ink:#e6eee8; --ink-2:#b0beb5; --muted:#84928a; --line:#28352d; --line-strong:#3a4a40;
-    --brand:#3f9a5c; --brand-soft:#1f3326; --link:#7fd08f;
+    --brand:#3f9a5c; --brand-soft:#1f3326; --link:#7fd08f; --leaf:#8fd158; --slate:#6d7872;
     --shadow:0 1px 2px rgba(0,0,0,.3),0 8px 24px rgba(0,0,0,.35);
   }
 }
@@ -32,7 +33,7 @@
   color-scheme:dark;
   --bg:#0e1411; --surface:#151d18; --surface-2:#1c2620;
   --ink:#e6eee8; --ink-2:#b0beb5; --muted:#84928a; --line:#28352d; --line-strong:#3a4a40;
-  --brand:#3f9a5c; --brand-soft:#1f3326; --link:#7fd08f;
+  --brand:#3f9a5c; --brand-soft:#1f3326; --link:#7fd08f; --leaf:#8fd158; --slate:#6d7872;
   --shadow:0 1px 2px rgba(0,0,0,.3),0 8px 24px rgba(0,0,0,.35);
 }
 *{box-sizing:border-box}
@@ -41,6 +42,7 @@ main{max-width:760px;margin:0 auto;padding:56px 16px 72px}
 h1,h2{font-family:var(--f-display);line-height:1.15;margin:0}
 h1{font-size:clamp(32px,6vw,44px);font-weight:700;letter-spacing:-.01em}
 h1 em{font-style:normal;color:var(--brand)}
+.doc-spin{display:block;width:200px;margin:0 0 20px;--lt2-slate:var(--slate);--lt2-leaf:var(--leaf);--lt2-brand:var(--brand)}
 .lede{color:var(--ink-2);margin:14px 0 0;max-width:60ch}
 h2{font-size:13px;font-weight:500;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);margin:44px 0 12px}
 ul{list-style:none;margin:0;padding:0;display:grid;gap:12px}
@@ -56,6 +58,7 @@ footer a{color:var(--link)}
 </head>
 <body>
 <main>
+  <lt2-logo-spin class="doc-spin" period="10"></lt2-logo-spin>
   <h1>Lietuva 2.0 <em>dokumentai</em></h1>
   <p class="lede">Naujosios Lietuva 2.0 platformos koncepcija ir auditorijoms skirtos versijos. Visi maketuose minimi politikai, partijos, projektai ir skaičiai yra išgalvoti.</p>
 

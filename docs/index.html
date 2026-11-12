@@ -14,6 +14,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400;12..96,500;12..96,600;12..96,700;12..96,800&family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;1,6..72,400&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<script src="lt2-logo-spin.js" defer></script>
 <style>
 :root{
   --bg:#f4f7f3; --surface:#ffffff; --surface-2:#eaf0e8; --surface-3:#dde6db;
@@ -447,7 +448,8 @@ footer.end svg{width:28px;height:28px}
 .btn.ghost{color:var(--link);background:transparent}
 .btn.ghost:hover{background:var(--brand-soft)}
 .hero-fig{margin:0}
-.hero-cap{margin-top:12px;font-family:var(--f-display);font-size:13px;line-height:1.45;color:var(--muted);text-align:center}
+.hero-spin{display:block;width:100%;max-width:520px;margin:0 auto;--lt2-slate:var(--slate);--lt2-leaf:var(--leaf);--lt2-brand:var(--brand)}
+@media (max-width:900px){.hero-spin{max-width:340px}}
 .pains{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:18px 28px}
 @media (max-width:760px){.pains{grid-template-columns:minmax(0,1fr)}}
 .pain{border-top:3px solid var(--line-strong);padding-top:12px;font-size:17px;line-height:1.5;color:var(--ink-2)}
@@ -538,28 +540,7 @@ footer.end a{font-weight:600}
       </div>
     </div>
     <div class="hero-fig">
-      <div class="hemi-card" aria-label="Rezultato kortelės pavyzdys">
-        <div class="bill-id">XVP-0412 · Galutinis balsavimas (priėmimas)</div>
-        <h3>Gyventojų pajamų mokesčio įstatymo pataisa</h3>
-        <div class="hemi-wrap">
-          <svg id="hemi" viewBox="0 0 440 236" role="img" aria-label="141 Seimo nario vietų schema: 78 už, 41 prieš, 12 susilaikė, 10 nebalsavo"></svg>
-          <div class="hemi-center"><div class="big tnum">78 : 41</div><div class="small">Priimta</div></div>
-        </div>
-        <div class="legend" style="margin-top:10px">
-          <span><i style="background:var(--v-for)"></i>Už</span>
-          <span><i style="background:var(--v-against)"></i>Prieš</span>
-          <span><i style="background:var(--v-abstain)"></i>Susilaikė</span>
-          <span><i class="ring"></i>Nebalsavo</span>
-        </div>
-        <div class="split-bars">
-          <div class="sbar-row"><div class="lbl"><b>Seimas</b>balsavo 131 SN</div>
-            <div class="sbar" data-tip="Seimas: 60 % už, 31 % prieš, 9 % susilaikė"><span class="f" style="flex:78">60 %</span><span class="a" style="flex:41">31 %</span><span class="n" style="flex:12"></span></div></div>
-          <div class="sbar-row"><div class="lbl"><b>LT2 rezultatas</b>15&nbsp;160 balsų</div>
-            <div class="sbar" data-tip="LT2 rezultatas (tiesioginiai ir deleguoti LT2 balsai): 57 % už, 37 % prieš, 6 % susilaikė"><span class="f" style="flex:57">57 %</span><span class="a" style="flex:37">37 %</span><span class="n" style="flex:6"></span></div></div>
-        </div>
-        <div class="verdict"><span class="chip ok">Dauguma sutampa: už</span> Skirtumas 3 p. p. · 3 Seimo nariai paaiškino balsą</div>
-      </div>
-      <p class="hero-cap">Rezultato kortelė: Seimo sprendimas ir LT2 naudotojų balsai šalia – kiekvienam projektui, dėl kurio balsuota.</p>
+      <lt2-logo-spin class="hero-spin" period="10"></lt2-logo-spin>
     </div>
   </section>
 
@@ -768,9 +749,8 @@ footer.end a{font-weight:600}
       else c.setAttribute("data-tip",s.f+" · "+labels[s.vote]);
       svg.appendChild(c);});
   }
-  drawHemi($("#hemi"),false);
 
-  /* Result card on the bill page after the final vote (same component as the hero card) */
+  /* Result card on the bill page after the final vote */
   function resultCard(box,o){
     const t=o.f+o.a+o.n,P=x=>Math.round(100*x/t),d=Math.abs(60-P(o.f));
     const bar=(f,a,n,tip)=>{const T=f+a+n,q=x=>Math.round(100*x/T);return '<div class="sbar" data-tip="'+tip+'"><span class="f" style="flex:'+f+'">'+(q(f)>=12?q(f)+' %':'')+'</span><span class="a" style="flex:'+a+'">'+(q(a)>=12?q(a)+' %':'')+'</span><span class="n" style="flex:'+n+'"></span></div>';};
