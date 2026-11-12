@@ -90,6 +90,18 @@ dotnet test
 with Testcontainers (Docker must be running). Tests run on Microsoft.Testing.Platform (opted in by `global.json`), so a
 single project is chosen with `dotnet test --project tests/Lt2.UnitTests`.
 
+`tests/Lt2.Parliament.ImportTests` also holds the **live contract suite** for the Seimas open data, skipped unless
+`LT2_SEIMAS_LIVE=1` is set. Run it once the service reopens (after 16 November 2026): it saves every response it fetches
+into `tests/Lt2.Parliament.ImportTests/Seimas/Recorded/` and reports on every line of the register of assumptions
+(`Seimas/ASSUMPTIONS.md`) in `Recorded/contract-report.md`, failing on each assumption that was wrong:
+
+```bash
+LT2_SEIMAS_LIVE=1 dotnet test --project tests/Lt2.Parliament.ImportTests
+```
+
+In PowerShell, set the variable first (`$env:LT2_SEIMAS_LIVE='1'`) and run the same `dotnet test` line without the
+prefix.
+
 The end-to-end tests are skipped unless pointed at a running stack. Once, install Playwright's Chromium:
 
 ```bash
