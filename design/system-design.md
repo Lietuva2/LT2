@@ -833,7 +833,7 @@ Splitting M2 means the risky step (emailing every MP) happens only after the who
 | AI provider for pre-screening | Any provider with EU data terms; no personal data is sent either way. | M2a |
 | Telemetry backend | Hosted free tier with EU storage, or self-hosted. | M0 |
 | MP photos | Use the Seimas photos if their terms allow, otherwise initials. | M1 |
-| Lithuanian terms for the new objects | Proposal: *kreipimasis*, *prašo balsuoti už / prieš*, *priežastis*, *suvestinė*, *atsakymas*. | M2a |
+| Lithuanian terms for the new objects | Proposal: *kreipimasis*, *prašo balsuoti už / prieš*, *argumentas* (chosen by the owner on 2026-11-12 in place of *priežastis*), *suvestinė*, *atsakymas*. | M2a |
 
 **Risks**
 
@@ -874,15 +874,15 @@ Priėmimas · planuojama rugsėjo 24 d.
 
   Iš nurodžiusių, kad palaiko Reformų partiją: 410 prašo balsuoti už, 520 – prieš.
 
-  Dažniausios priežastys už:
+  Dažniausi argumentai už:
   · Didžiausias pajamas gaunantys dabar moka mažesnį efektyvųjį tarifą nei samdomi darbuotojai. (1 920)
   · Gynyba finansuojama nekeliant PVM. (1 310)
-  Dažniausios priežastys prieš:
+  Dažniausi argumentai prieš:
   · Akcijų pardavimo įskaičiavimas paliečia vienkartinius įvykius, pvz., šeimos verslo pardavimą. (1 480)
   · Skatina įmonių steigėjus keisti mokestinę rezidavimo vietą. (970)
 
   Jūsų paskelbta pozicija: balsuosiu prieš. Keisti arba papildyti: https://lietuva2.lt/…
-  Visi skaičiai ir priežastys: https://lietuva2.lt/seimas/XVP-0412
+  Visi skaičiai ir argumentai: https://lietuva2.lt/seimas/XVP-0412
 
 XVP-1811 · …
 
@@ -897,7 +897,7 @@ Keisti suvestinių dažnumą arba jų atsisakyti: https://lietuva2.lt/…
 |---|---|---|
 | appeal | kreipimasis | The one object per bill where people take sides. |
 | position | pozicija | A person's side on a bill: for or against. Private. |
-| reason | priežastis | A short public text supporting one side. |
+| reason | argumentas | A short public text supporting one side. |
 | response | atsakymas | An MP's stance and explanation, published once for everyone. |
 | summary | suvestinė | The email to MPs and its public copy. |
 | initiator | iniciatorius | The person who opened the appeal. |

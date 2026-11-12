@@ -160,7 +160,7 @@ A report button is on every appeal and reason.
 - Numbers are a signal from self-selected "Lietuva 2.0 naudotojai", never "the public", "voters" or a referendum. Every
   place that shows them says they are not a representative poll.
 - Planned Seimas dates are "Planuojama …", never a countdown: agenda items slip.
-- Proposed terms: *kreipimasis* (appeal), *pozicija* (position), *priežastis* (reason), *atsakymas* (an MP's
+- Proposed terms: *kreipimasis* (appeal), *pozicija* (position), *argumentas* (reason), *atsakymas* (an MP's
   response), *suvestinė* (summary), *iniciatorius*. Existing terms: "Man svarbu", *sritis* for subject areas,
   *patikėtinis* = "delegate" in English (stage 3).
 - Do not promise in any text: that the service is free or without ads, release dates, a public API, municipal councils
