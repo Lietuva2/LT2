@@ -20,6 +20,10 @@
 
 {
 	skip_install_trust
+	# Listen on the same ports compose publishes. The site address below names the HTTPS port; Caddy adds it to the
+	# automatic HTTP -> HTTPS redirect only when it differs from 443, so locally the redirect goes to
+	# https://lt2.localhost:8443/ and in production (ports 80 and 443) to the bare domain.
+	http_port {$LT2_HTTP_PORT:80}
 	servers {
 		protocols h1 h2 h3
 	}
@@ -34,7 +38,7 @@
 	}
 }
 
-{$LT2_SITE_ADDRESS} {
+{$LT2_SITE_ADDRESS}:{$LT2_HTTPS_PORT:443} {
 	tls {$LT2_TLS}
 
 	encode zstd gzip

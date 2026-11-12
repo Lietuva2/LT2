@@ -43,6 +43,8 @@ docker compose -f deploy/compose.yaml up --build
 - Site: <https://lt2.localhost:8443>. Caddy serves it with its own local certificate authority, so the browser warns
   about the certificate the first time; accept it for this local address. (`*.localhost` resolves to your machine in
   Chrome, Edge and Firefox.)
+- <http://lt2.localhost:8080> redirects there. If Windows has reserved port 8080 (`netsh int ipv4 show
+  excludedportrange protocol=tcp`), set another, for example `LT2_HTTP_PORT=8090`, in your shell or `deploy/.env`.
 - Every email lands in Mailpit: <http://localhost:8025>.
 - Trial invitation code: `BANDYMAS-2026` (created by the migrator from `deploy/.env`).
 
@@ -94,6 +96,11 @@ Then, with the stack up, set these environment variables in your shell and run t
 | `LT2_E2E_MAILPIT_URL` | `http://localhost:8025` (the default) |
 | `LT2_E2E_INVITATION` | `BANDYMAS-2026` (the default) |
 | `LT2_E2E_BROWSER_CHANNEL` | optional: `msedge` to use an installed Edge instead of Playwright's Chromium |
+| `LT2_E2E_HTTP_URL` | optional: `http://lt2.localhost:8080`, to check the redirect to HTTPS |
+| `LT2_E2E_COMPOSE_FILE` | optional: the compose file whose Caddy logs are checked (default `deploy/compose.yaml`) |
+
+Besides the browser run, `StackTests` checks the security headers and cookies through Caddy and that Caddy's logs hold
+no client address, header or token (it reads `docker compose logs caddy`, so the docker CLI must be on the path).
 
 ```bash
 dotnet test --project tests/Lt2.E2E

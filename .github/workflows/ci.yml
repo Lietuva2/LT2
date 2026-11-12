@@ -83,6 +83,7 @@ jobs:
           LT2_E2E_BASE_URL: https://lt2.localhost:8443
           LT2_E2E_MAILPIT_URL: http://localhost:8025
           LT2_E2E_INVITATION: BANDYMAS-2026
+          LT2_E2E_HTTP_URL: http://lt2.localhost:8080
         run: dotnet test --project tests/Lt2.E2E --configuration Release --no-build
 
       - name: Screenshots

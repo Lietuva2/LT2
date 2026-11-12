@@ -60,6 +60,18 @@ public sealed partial class StackTests
     }
 
     [Fact]
+    public async Task Plain_http_is_redirected_to_the_https_origin_with_its_port()
+    {
+        var httpUrl = Environment.GetEnvironmentVariable("LT2_E2E_HTTP_URL");
+        Assert.SkipWhen(string.IsNullOrEmpty(BaseUrl) || string.IsNullOrEmpty(httpUrl), "LT2_E2E_BASE_URL or LT2_E2E_HTTP_URL is not set.");
+        using var http = new HttpClient(new HttpClientHandler { AllowAutoRedirect = false }) { BaseAddress = new Uri(httpUrl!) };
+        using var response = await http.GetAsync("/prisijungti?registruotis=true");
+
+        response.StatusCode.ShouldBe(HttpStatusCode.PermanentRedirect);
+        response.Headers.Location!.ToString().ShouldBe(BaseUrl!.TrimEnd('/') + "/prisijungti?registruotis=true");
+    }
+
+    [Fact]
     public async Task Caddy_logs_no_client_address_and_no_token()
     {
         Assert.SkipWhen(string.IsNullOrEmpty(BaseUrl), "LT2_E2E_BASE_URL is not set.");

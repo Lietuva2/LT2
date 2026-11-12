@@ -25,13 +25,16 @@ services:
   caddy:
     image: caddy:2.10
     restart: unless-stopped
+    # Caddy listens on the published ports themselves (Caddyfile http_port/https_port), so its redirects are right.
     ports:
-      - "${LT2_HTTP_PORT:-8080}:80"
-      - "${LT2_HTTPS_PORT:-8443}:443"
-      - "${LT2_HTTPS_PORT:-8443}:443/udp"
+      - "${LT2_HTTP_PORT:-8080}:${LT2_HTTP_PORT:-8080}"
+      - "${LT2_HTTPS_PORT:-8443}:${LT2_HTTPS_PORT:-8443}"
+      - "${LT2_HTTPS_PORT:-8443}:${LT2_HTTPS_PORT:-8443}/udp"
     environment:
       LT2_SITE_ADDRESS: ${LT2_SITE_ADDRESS:-lt2.localhost}
       LT2_TLS: ${LT2_TLS:-internal}
+      LT2_HTTP_PORT: ${LT2_HTTP_PORT:-8080}
+      LT2_HTTPS_PORT: ${LT2_HTTPS_PORT:-8443}
     volumes:
       - ./Caddyfile:/etc/caddy/Caddyfile:ro
       - caddy_data:/data
