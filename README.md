@@ -25,6 +25,7 @@ A modular monolith on .NET 10 (design sections 2–4):
 | `src/Lt2.Migrator` | Creates the database roles, applies every module's migrations, grants access; run once per deploy |
 | `tests/` | Unit, integration (Testcontainers), architecture (NetArchTest) and end-to-end (Playwright) tests |
 | `deploy/` | Dockerfile, `compose.yaml`, `Caddyfile`, secret generators |
+| `tools/Lt2.SeimasStandIn` | Local and test only: a stand-in for the Seimas open-data service that answers with **invented** data |
 
 ## Run it locally
 
@@ -47,6 +48,10 @@ docker compose -f deploy/compose.yaml up --build
   excludedportrange protocol=tcp`), set another, for example `LT2_HTTP_PORT=8090`, in your shell or `deploy/.env`.
 - Every email lands in Mailpit: <http://localhost:8025>.
 - Trial invitation code: `BANDYMAS-2026` (created by the migrator from `deploy/.env`).
+- Parliament data comes from `seimas-standin`, a stand-in for the Seimas open-data service with invented answers
+  (the real service is closed for maintenance until 16 November 2026). The `local` profile starts it and `deploy/.env`
+  points the worker at it; every page then says the parliament data is invented. To import from the real service
+  instead, empty `LT2_SEIMAS_BASE_ADDRESS` and `LT2_OUTBOUND_EXTRA_HOST` and start from an empty `parliament` schema.
 
 Register with any address and the invitation code, open the sign-in email in Mailpit, enter the six-digit code, and the
 "Sveiki" page appears. From there you can add a passkey and see or end your sessions.
@@ -137,6 +142,8 @@ separate secret. Nothing secret is committed; `deploy/secrets/README.md` lists e
 | `Email:Smtp:*` | SMTP host, port, security, user, password, from address (Mailpit locally; the provider is not chosen yet) |
 | `ReverseProxy:TrustForwardedHeaders` | Trust `X-Forwarded-*` from Caddy (the web container is reachable only through it) |
 | `RateLimits:*` | Per-IP limits for code requests, registration and sign-in attempts |
+| `Seimas:*` | Worker: open-data base address (`https://apps.lrs.lt/sip/`), term, retries, time-outs, request spacing |
+| `Outbound:AllowedHosts` | Hosts any outbound HTTP request may go to (`apps.lrs.lt` in the worker); others are refused |
 | `OTEL_EXPORTER_OTLP_ENDPOINT` | Turns on the OpenTelemetry exporter (traces, metrics, logs); off when empty |
 
 Runtime settings that an administrator may change without a deploy (design 5.6) live in `config.setting`; every change
@@ -144,7 +151,8 @@ is written to `audit.event`.
 
 For a production-shaped run, override `deploy/.env`: `LT2_SITE_ADDRESS` (the domain), `LT2_TLS` (the ACME contact
 address), `LT2_HTTP_PORT=80`, `LT2_HTTPS_PORT=443`, `COMPOSE_PROFILES=` (no Mailpit), the `LT2_SMTP_*` values and
-`LT2_MIGRATOR_ARGS=` (no seeded invitation), and mount real secrets.
+`LT2_MIGRATOR_ARGS=` (no seeded invitation), `LT2_SEIMAS_BASE_ADDRESS=` and `LT2_OUTBOUND_EXTRA_HOST=` (the worker
+then imports from `https://apps.lrs.lt/sip/`, the only host it may call), and mount real secrets.
 
 ## Conventions
 

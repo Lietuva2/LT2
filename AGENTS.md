@@ -74,6 +74,7 @@ tests/Lt2.ArchitectureTests module boundaries, static assets
 tests/Lt2.E2E              Playwright and stack checks against a running compose stack; skipped without one
 tests/Lt2.Parliament.ImportTests  placeholder for M1, not run by dotnet test
 deploy/                    Dockerfile, compose.yaml, Caddyfile, .env (local defaults), init-secrets.py, secrets/
+tools/Lt2.SeimasStandIn     local and test only: stand-in for the Seimas open data, invented answers; never shipped
 ```
 
 ```sh
