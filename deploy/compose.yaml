@@ -7,6 +7,8 @@
 # "local" profile, a trial invitation code). Production sets its own values: LT2_SITE_ADDRESS (the domain),
 # LT2_TLS (the ACME contact address), ports 80/443, COMPOSE_PROFILES empty (no Mailpit), real SMTP settings.
 # Secrets are files in deploy/secrets/, mounted under /run/secrets and never committed (design 6.5).
+# Database connections use passwords, never Kerberos: "GSS Encryption Mode=Disable" stops Npgsql looking for
+# libgssapi_krb5, which the chiselled images do not have (it logged an error at every start).
 
 name: lt2
 
@@ -50,7 +52,7 @@ services:
       target: web
     image: lt2/web:local
     environment:
-      ConnectionStrings__Lt2: Host=postgres;Port=5432;Database=lt2;Username=lt2_app
+      ConnectionStrings__Lt2: Host=postgres;Port=5432;Database=lt2;Username=lt2_app;GSS Encryption Mode=Disable
       ReverseProxy__TrustForwardedHeaders: "true"
       OTEL_EXPORTER_OTLP_ENDPOINT: ${OTEL_EXPORTER_OTLP_ENDPOINT:-}
     secrets:
@@ -73,7 +75,7 @@ services:
       target: worker
     image: lt2/worker:local
     environment:
-      ConnectionStrings__Lt2: Host=postgres;Port=5432;Database=lt2;Username=lt2_worker
+      ConnectionStrings__Lt2: Host=postgres;Port=5432;Database=lt2;Username=lt2_worker;GSS Encryption Mode=Disable
       Email__Smtp__Host: ${LT2_SMTP_HOST:-mailpit}
       Email__Smtp__Port: ${LT2_SMTP_PORT:-1025}
       Email__Smtp__Security: ${LT2_SMTP_SECURITY:-None}
@@ -100,8 +102,8 @@ services:
     restart: "no"
     command: ${LT2_MIGRATOR_ARGS:-}
     environment:
-      ConnectionStrings__Admin: Host=postgres;Port=5432;Database=lt2;Username=postgres
-      ConnectionStrings__Lt2: Host=postgres;Port=5432;Database=lt2;Username=lt2_migrator
+      ConnectionStrings__Admin: Host=postgres;Port=5432;Database=lt2;Username=postgres;GSS Encryption Mode=Disable
+      ConnectionStrings__Lt2: Host=postgres;Port=5432;Database=lt2;Username=lt2_migrator;GSS Encryption Mode=Disable
     secrets:
       - source: postgres_password
         target: Database__AdminPassword
