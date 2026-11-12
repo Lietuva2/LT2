@@ -79,4 +79,10 @@
   <data name="Sessions.Method.pop" xml:space="preserve"><value>prisijungta prieigos raktu</value></data>
   <data name="Sessions.Method.unknown" xml:space="preserve"><value>prisijungimo būdas nežinomas</value></data>
   <data name="SignOut" xml:space="preserve"><value>Atsijungti</value></data>
-</root>
+<data name="Staff.Nav" xml:space="preserve"><value>Darbuotojo darbai</value></data>
+<data name="Staff.Moderation" xml:space="preserve"><value>Moderavimas</value></data>
+<data name="Staff.Settings" xml:space="preserve"><value>Nustatymai</value></data>
+<data name="PositionConsent.Title" xml:space="preserve"><value>Sutikimas saugoti pozicijas</value></data>
+<data name="PositionConsent.Text" xml:space="preserve"><value>Esate sutikę, kad saugotume jūsų pozicijas dėl įstatymų projektų. Atšaukus sutikimą, visos jūsų pozicijos ir „Man svarbu“ žymos bus ištrintos, o bendri skaičiai sumažės. Jūsų parašyti argumentai liks.</value></data>
+<data name="PositionConsent.Withdraw" xml:space="preserve"><value>Atšaukti sutikimą ir ištrinti pozicijas</value></data>
+<data name="PositionConsent.Withdrawn" xml:space="preserve"><value>Sutikimas atšauktas, jūsų pozicijos ištrintos.</value></data></root>

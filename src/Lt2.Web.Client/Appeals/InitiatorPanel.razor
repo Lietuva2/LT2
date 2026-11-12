@@ -1,0 +1,97 @@
+@using Lt2.Api.Contracts.Appeals
+@inherits InteractiveBase
+@inject IAppealsApi Appeals
+@inject NavigationManager Navigation
+
+@* For the initiator only: a returned appeal is corrected and sent again; the threshold is changed until the appeal
+   first enters a summary or a moderator changed it (design 8.4). Renders nothing for anyone else. *@
+@if (Mine is { IsInitiator: true } mine)
+{
+    @if (Status is "pending" or "returned")
+    {
+        <form class="sheet stack" @onsubmit="EditAsync" novalidate aria-labelledby="edit-title" id="edit-appeal">
+            <h2 id="edit-title">@L[Status == "returned" ? "Edit.TitleReturned" : "Edit.Title"]</h2>
+            <div class="field @(Errors.ContainsKey("description") ? "field--error" : "")">
+                <label for="edit-description">@L["Open.Description"]</label>
+                <textarea class="textarea" id="edit-description" maxlength="@AppealLimits.DescriptionMaxLength" @bind="_description" disabled="@Locked"></textarea>
+                <FieldError Errors="Errors" Field="description" />
+            </div>
+            <div class="field @(Errors.ContainsKey("firstReason") ? "field--error" : "")">
+                <label for="edit-reason">@L["Open.FirstReason"]</label>
+                <textarea class="textarea" id="edit-reason" maxlength="@AppealLimits.ReasonMaxLength" @bind="_reason" disabled="@Locked"></textarea>
+                <FieldError Errors="Errors" Field="firstReason" />
+            </div>
+            <button type="submit" class="btn" disabled="@Locked">@L["Edit.Submit"]</button>
+        </form>
+    }
+
+    @if (mine.MayChangeThreshold)
+    {
+        <form class="stack stack--tight" @onsubmit="ChangeThresholdAsync" novalidate aria-labelledby="threshold-title" id="change-threshold">
+            <h3 id="threshold-title">@L["Threshold.Change"]</h3>
+            <div class="field @(Errors.ContainsKey("threshold") ? "field--error" : "")">
+                <label for="threshold-value">@L["Threshold.Label"]</label>
+                <input class="input num" type="number" id="threshold-value" min="1" step="1" @bind="_threshold" disabled="@Locked" />
+                <FieldError Errors="Errors" Field="threshold" />
+            </div>
+            <button type="submit" class="btn btn--plain" disabled="@Locked">@L["Threshold.Save"]</button>
+        </form>
+    }
+
+    <Messages Message="@Message" Info="@Info" />
+}
+
+@code {
+    private string _description = "";
+    private string _reason = "";
+    private int _threshold;
+
+    [Parameter, EditorRequired] public string Number { get; set; } = "";
+
+    [Parameter, EditorRequired] public string Status { get; set; } = "";
+
+    [Parameter] public string Description { get; set; } = "";
+
+    [Parameter] public int Threshold { get; set; }
+
+    [CascadingParameter] private Task<AuthenticationState>? AuthState { get; set; }
+
+    [PersistentState] public MyAppealResponse? Mine { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        if (AuthState is null || (await AuthState).User.Identity?.IsAuthenticated != true)
+        {
+            return;
+        }
+
+        Mine ??= (await Appeals.GetMineAsync(Number)).Value;
+        _description = Description;
+        _reason = Mine?.MyReasons.FirstOrDefault()?.Text ?? "";
+        _threshold = Threshold;
+    }
+
+    private Task EditAsync() => RunAsync(async () =>
+    {
+        var result = await Appeals.EditAsync(Number, new EditAppealRequest { Description = _description, FirstReason = _reason });
+        if (!result.IsSuccess)
+        {
+            Show(result.Problem, "description", "firstReason");
+            return;
+        }
+
+        Navigation.NavigateTo(Navigation.Uri, forceLoad: true);
+    });
+
+    private Task ChangeThresholdAsync() => RunAsync(async () =>
+    {
+        var result = await Appeals.ChangeThresholdAsync(Number, new ThresholdRequest { Threshold = _threshold });
+        if (!result.IsSuccess)
+        {
+            Show(result.Problem, "threshold");
+            return;
+        }
+
+        Navigation.NavigateTo(Navigation.Uri, forceLoad: true);
+    });
+}

@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+<resheader name="resmimetype"><value>text/microsoft-resx</value></resheader>
+<resheader name="version"><value>2.0</value></resheader>
+<resheader name="reader"><value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value></resheader>
+<resheader name="writer"><value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value></resheader>
+<data name="Nav.Appeals" xml:space="preserve"><value>Kreipimaisi</value></data>
+<data name="Anonymous" xml:space="preserve"><value>Lietuva 2.0 naudotojas</value></data>
+<data name="NotAPoll" xml:space="preserve"><value>Tai nėra reprezentatyvi apklausa: skaičiai rodo savanoriškai dalyvaujančių Lietuva 2.0 naudotojų nuomonę.</value></data>
+<data name="Page.Title" xml:space="preserve"><value>kreipimasis</value></data>
+<data name="Page.Label" xml:space="preserve"><value>Kreipimasis į Seimo narius</value></data>
+<data name="Page.OpenedBy" xml:space="preserve"><value>Kreipimąsi atidarė {0}</value></data>
+<data name="Status.pending" xml:space="preserve"><value>Laukia moderatoriaus</value></data>
+<data name="Status.returned" xml:space="preserve"><value>Grąžintas taisyti</value></data>
+<data name="Status.closed" xml:space="preserve"><value>Uždarytas</value></data>
+<data name="Pending.pending" xml:space="preserve"><value>Kreipimasis laukia moderatoriaus. Kol jis nepaskelbtas, jį matote tik jūs.</value></data>
+<data name="Pending.returned" xml:space="preserve"><value>Moderatorius grąžino kreipimąsi taisyti. Kol jis nepaskelbtas, jį matote tik jūs.</value></data>
+<data name="Pending.Note" xml:space="preserve"><value>Moderatoriaus paaiškinimas</value></data>
+<data name="Sides.Heading" xml:space="preserve"><value>Ko prašo Lietuva 2.0 naudotojai</value></data>
+<data name="Sides.for" xml:space="preserve"><value>Prašo balsuoti už</value></data>
+<data name="Sides.against" xml:space="preserve"><value>Prašo balsuoti prieš</value></data>
+<data name="Sides.Older" xml:space="preserve"><value>iš jų {0} – paskyros senesnės nei 30 d.</value></data>
+<data name="What.Heading" xml:space="preserve"><value>Ką keičia projektas</value></data>
+<data name="What.Approved" xml:space="preserve"><value>Aprašymą parašė kreipimosi iniciatorius, patvirtino moderatorius</value></data>
+<data name="What.NotYetApproved" xml:space="preserve"><value>Aprašymą parašė kreipimosi iniciatorius; moderatorius dar nepatvirtino</value></data>
+<data name="What.ESeimas" xml:space="preserve"><value>Projekto tekstas e. seime</value></data>
+<data name="Threshold.Heading" xml:space="preserve"><value>Riba</value></data>
+<data name="Threshold.Aria" xml:space="preserve"><value>{0} dalyvių iš {1}</value></data>
+<data name="Threshold.Progress" xml:space="preserve"><value>dalyvių · riba {0}</value></data>
+<data name="Threshold.SetBy.initiator" xml:space="preserve"><value>Ribą nustatė kreipimosi iniciatorius.</value></data>
+<data name="Threshold.SetBy.moderator" xml:space="preserve"><value>Ribą pakeitė moderatorius.</value></data>
+<data name="Threshold.Explained" xml:space="preserve"><value>Riba – kiek dalyvių, abiejų pusių kartu, turi turėti kreipimasis, kad patektų į suvestines Seimo nariams.</value></data>
+<data name="Threshold.Note" xml:space="preserve"><value>Moderatoriaus paaiškinimas: {0}</value></data>
+<data name="Stages.Heading" xml:space="preserve"><value>Eiga Seime</value></data>
+<data name="None.Lead" xml:space="preserve"><value>Šiam projektui kreipimosi dar nėra. Atidarykite jį – visi, kurie nori prašyti Seimo narių balsuoti už ar prieš, prisijungs prie to paties kreipimosi.</value></data>
+<data name="List.Title" xml:space="preserve"><value>Kreipimaisi</value></data>
+<data name="List.Lead" xml:space="preserve"><value>Vienam Seimo projektui – vienas kreipimasis su abiem pusėmis: kiek Lietuva 2.0 naudotojų prašo balsuoti už ir kiek prieš.</value></data>
+<data name="List.Open" xml:space="preserve"><value>Atidaryti kreipimąsi</value></data>
+<data name="List.Sort" xml:space="preserve"><value>Rikiuoti:</value></data>
+<data name="List.SortParticipants" xml:space="preserve"><value>pagal dalyvius</value></data>
+<data name="List.SortNewest" xml:space="preserve"><value>naujausi</value></data>
+<data name="List.Empty" xml:space="preserve"><value>Paskelbtų kreipimųsi dar nėra.</value></data>
+<data name="List.Counts" xml:space="preserve"><value>prašo už {0} (iš jų {1} – senesnės nei 30 d. paskyros), prieš {2} (iš jų {3})</value></data>
+<data name="List.Threshold" xml:space="preserve"><value>{0} dalyvių · riba {1}</value></data>
+<data name="List.More" xml:space="preserve"><value>Daugiau kreipimųsi</value></data>
+<data name="New.Title" xml:space="preserve"><value>Atidaryti kreipimąsi</value></data>
+<data name="New.Crumb" xml:space="preserve"><value>Naujas</value></data>
+<data name="New.Lead" xml:space="preserve"><value>Pasirinkite Seimo projektą. Jei jis jau turi kreipimąsi, prisijunkite prie jo; jei ne – atidarykite.</value></data>
+<data name="New.Search" xml:space="preserve"><value>Projekto numeris arba pavadinimas</value></data>
+<data name="New.SearchButton" xml:space="preserve"><value>Ieškoti</value></data>
+<data name="New.None" xml:space="preserve"><value>Tokių projektų nerasta.</value></data>
+</root>

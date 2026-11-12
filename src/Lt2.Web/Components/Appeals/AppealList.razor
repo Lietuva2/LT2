@@ -1,0 +1,77 @@
+@page "/kreipimaisi"
+@using Lt2.Api.Contracts.Appeals
+@inject IAppealsApi Appeals
+@inject IStringLocalizer<AppealText> T
+
+@* The published appeals (design 8.8 GET /appeals), server-rendered; sorting and paging are plain links. *@
+<PageTitle>@T["List.Title"] · Lietuva 2.0</PageTitle>
+
+<div class="stack">
+    <p class="label">Lietuva 2.0</p>
+    <h1>@T["List.Title"]</h1>
+    <p class="lead">@T["List.Lead"]</p>
+    <div class="row">
+        <a class="btn" href="/kreipimaisi/naujas" id="new-appeal">@T["List.Open"]</a>
+        <span class="small">
+            @T["List.Sort"]
+            @if (Newest)
+            {
+                <a href="/kreipimaisi">@T["List.SortParticipants"]</a><text> · </text><b>@T["List.SortNewest"]</b>
+            }
+            else
+            {
+                <b>@T["List.SortParticipants"]</b><text> · </text><a href="/kreipimaisi?rikiuoti=naujausi">@T["List.SortNewest"]</a>
+            }
+        </span>
+    </div>
+</div>
+
+@if (_page is { } page)
+{
+    @if (page.Items.Count == 0)
+    {
+        <p id="no-appeals">@T["List.Empty"]</p>
+    }
+    else
+    {
+        <ul class="rows" id="appeals">
+            @foreach (var item in page.Items)
+            {
+                <li>
+                    <div class="rows__main">
+                        <a href="/seimas/@Uri.EscapeDataString(item.Bill.Number)/kreipimasis"><b>@item.Bill.Title</b></a>
+                        <span class="small num">
+                            @item.Bill.Number ·
+                            @Fmt("List.Counts", Formats.Number(item.Counts.For), Formats.Number(item.Counts.ForOlderThan30Days), Formats.Number(item.Counts.Against), Formats.Number(item.Counts.AgainstOlderThan30Days))
+                        </span>
+                        <span class="small num">@Fmt("List.Threshold", Formats.Number(item.Threshold.Participants), Formats.Number(item.Threshold.Value))</span>
+                    </div>
+                    <div class="rows__side">
+                        <SplitBar For="item.Counts.For" Against="item.Counts.Against" Abstain="0" Small="true" />
+                    </div>
+                </li>
+            }
+        </ul>
+        @if (page.NextCursor is { } next)
+        {
+            <p><a href="/kreipimaisi?@(Newest ? "rikiuoti=naujausi&" : "")nuo=@next">@T["List.More"]</a></p>
+        }
+    }
+}
+
+<p class="note note--quiet" id="not-a-poll">@T["NotAPoll"]</p>
+
+@code {
+    private AppealListResponse? _page;
+
+    [SupplyParameterFromQuery(Name = "rikiuoti")] public string? Sort { get; set; }
+
+    [SupplyParameterFromQuery(Name = "nuo")] public string? From { get; set; }
+
+    private bool Newest => Sort == "naujausi";
+
+    protected override async Task OnParametersSetAsync() =>
+        _page = (await Appeals.GetAppealsAsync(Newest ? "newest" : null, From)).Value;
+
+    private string Fmt(string key, params object?[] values) => string.Format(System.Globalization.CultureInfo.InvariantCulture, T[key], values);
+}

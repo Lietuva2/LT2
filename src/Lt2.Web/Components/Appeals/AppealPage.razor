@@ -1,0 +1,190 @@
+@page "/seimas/{Number}/kreipimasis"
+@using Lt2.Api.Contracts.Appeals
+@using Lt2.Api.Contracts.Parliament
+@using Lt2.Web.Client.Appeals
+@inject IAppealsApi Appeals
+@inject IParliamentApi Parliament
+@inject Lt2.Api.Contracts.Meta.IMetaApi Meta
+@inject Formats F
+@inject IStringLocalizer<AppealText> T
+@inject NavigationManager Navigation
+
+@* The appeal on a bill (design 8.1, design/ui/kreipimasis.html): server-rendered and readable without JavaScript;
+   taking a side, the arguments' "Man svarbu" and writing are WebAssembly islands. Without an appeal the bill offers to
+   open one. Every number here is both sides with the count for accounts older than 30 days, and says it is not a
+   representative poll. *@
+@if (_appeal is { } a)
+{
+    <PageTitle>@a.Bill.Number · @T["Page.Title"] · Lietuva 2.0</PageTitle>
+    <div class="stack">
+        <ol class="crumbs">
+            <li><a href="/kreipimaisi">@T["Nav.Appeals"]</a></li>
+            <li>@a.Bill.Number</li>
+        </ol>
+        <p class="label">@T["Page.Label"]</p>
+        <h1>@a.Bill.Title</h1>
+        <div class="row">
+            <a class="tag tag--ink num" href="/seimas/@Uri.EscapeDataString(a.Bill.Number)">@a.Bill.Number</a>
+            @if (a.Status != "open")
+            {
+                <span class="tag" id="appeal-status">@T["Status." + a.Status]</span>
+            }
+            <span class="small">@Fmt("Page.OpenedBy", a.InitiatorName ?? T["Anonymous"])</span>
+        </div>
+    </div>
+
+    @if (a.Status is "pending" or "returned")
+    {
+        <p class="note" role="status" id="pending-note">@T["Pending." + a.Status]</p>
+        @if (a.ReturnNote is { } note)
+        {
+            <div class="stack stack--tight">
+                <p class="label">@T["Pending.Note"]</p>
+                <p class="bubble bubble--seimas voice" id="return-note">@note</p>
+            </div>
+        }
+    }
+
+    <div class="cols">
+        <div class="stack stack--loose">
+            <section class="sheet sheet--cut stack" aria-labelledby="h-sides" id="sides">
+                <h2 id="h-sides" class="visually-hidden">@T["Sides.Heading"]</h2>
+                <div class="pair pair--keep">
+                    <div class="figure figure--for" id="count-for">
+                        <span class="label">@T["Sides.for"]</span>
+                        <span class="figure__num">@Formats.Number(a.Counts.For)</span>
+                        <span class="small num">@Fmt("Sides.Older", Formats.Number(a.Counts.ForOlderThan30Days))</span>
+                    </div>
+                    <div class="figure figure--against" id="count-against">
+                        <span class="label">@T["Sides.against"]</span>
+                        <span class="figure__num">@Formats.Number(a.Counts.Against)</span>
+                        <span class="small num">@Fmt("Sides.Older", Formats.Number(a.Counts.AgainstOlderThan30Days))</span>
+                    </div>
+                </div>
+                <SplitBar For="a.Counts.For" Against="a.Counts.Against" Abstain="0" />
+                @if (a.Status == "open")
+                {
+                    <SidePicker Number="@a.Bill.Number" @rendermode="InteractiveWebAssembly" />
+                }
+            </section>
+
+            <section class="stack" aria-labelledby="h-what">
+                <h2 id="h-what">@T["What.Heading"]</h2>
+                @foreach (var paragraph in a.Description.Split('\n', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries))
+                {
+                    <p>@paragraph</p>
+                }
+                <p class="fine">
+                    @T[a.Status == "open" || a.Status == "closed" ? "What.Approved" : "What.NotYetApproved"]
+                    @if (_bill?.ESeimasUrl is { } link)
+                    {
+                        <text> · </text><a href="@link" rel="external">@T["What.ESeimas"]</a>
+                    }
+                </p>
+            </section>
+
+            @if (a.Status is "open" or "closed")
+            {
+                <AppealReasons Number="@a.Bill.Number" @rendermode="InteractiveWebAssembly" />
+                <ReportAppeal AppealId="a.Id" @rendermode="InteractiveWebAssembly" />
+            }
+            else
+            {
+                <InitiatorPanel Number="@a.Bill.Number" Status="@a.Status" Description="@a.Description" Threshold="a.Threshold.Value" @rendermode="InteractiveWebAssembly" />
+            }
+        </div>
+
+        <aside class="stack">
+            <section class="sheet stack stack--tight" aria-labelledby="h-reach" id="threshold">
+                <h3 id="h-reach">@T["Threshold.Heading"]</h3>
+                <div class="ruler" role="img" aria-label="@Fmt("Threshold.Aria", Formats.Number(a.Threshold.Participants), Formats.Number(a.Threshold.Value))">
+                    <svg viewBox="0 0 1000 10" preserveAspectRatio="none" aria-hidden="true"><rect class="ruler__bar" x="0" y="0" height="10" width="@RulerWidth(a.Threshold)" /></svg>
+                </div>
+                <p class="num"><b>@Formats.Number(a.Threshold.Participants)</b> @Fmt("Threshold.Progress", Formats.Number(a.Threshold.Value))</p>
+                <p class="small">@T["Threshold.SetBy." + a.Threshold.SetBy] @T["Threshold.Explained"]</p>
+                @if (a.Threshold.Note is { } thresholdNote)
+                {
+                    <p class="small" id="threshold-note">@Fmt("Threshold.Note", thresholdNote)</p>
+                }
+                @if (a.Status == "open")
+                {
+                    <InitiatorPanel Number="@a.Bill.Number" Status="@a.Status" Threshold="a.Threshold.Value" @rendermode="InteractiveWebAssembly" />
+                }
+            </section>
+
+            @if (_bill is { } bill)
+            {
+                <section class="stack stack--tight" aria-labelledby="h-stages">
+                    <h3 id="h-stages">@T["Stages.Heading"]</h3>
+                    <ol class="stages">
+                        @foreach (var stage in Stages)
+                        {
+                            var result = bill.Votes.LastOrDefault(v => v.Vote.Kind == "stage-result" && v.Vote.Stage == stage);
+                            <li class="stage @(result is null ? "stage--next" : "")">
+                                <span class="label">@F.Stage(stage)</span>
+                                @if (result is null)
+                                {
+                                    <span class="small">@F.T["Bill.NotYet"]</span>
+                                }
+                                else if (result.Vote.IsConsensus)
+                                {
+                                    <a href="/seimas/balsavimai/@result.Vote.Id">@F.T["Consensus.Tag"]</a>
+                                }
+                                else
+                                {
+                                    <b class="num"><a href="/seimas/balsavimai/@result.Vote.Id">@Formats.Number(result.Totals.For) : @Formats.Number(result.Totals.Against)</a></b>
+                                    <span class="small num">@F.Date(result.Vote.HeldAt)</span>
+                                }
+                            </li>
+                        }
+                    </ol>
+                    <SourceLine UpdatedAt="_updatedAt" HideMethodology="true" />
+                </section>
+            }
+
+            <p class="note note--quiet" id="not-a-poll">@T["NotAPoll"]</p>
+        </aside>
+    </div>
+}
+else if (_bill is { } bill)
+{
+    <PageTitle>@bill.Number · @T["Page.Title"] · Lietuva 2.0</PageTitle>
+    <div class="stack">
+        <ol class="crumbs">
+            <li><a href="/kreipimaisi">@T["Nav.Appeals"]</a></li>
+            <li>@bill.Number</li>
+        </ol>
+        <p class="label">@T["Page.Label"]</p>
+        <h1>@bill.Title</h1>
+        <p class="lead" id="no-appeal">@T["None.Lead"]</p>
+    </div>
+    <OpenAppealForm Number="@bill.Number" @rendermode="InteractiveWebAssembly" />
+    <p class="note note--quiet">@T["NotAPoll"]</p>
+}
+
+@code {
+    private static readonly string[] Stages = ["presentation", "consideration", "adoption"];
+    private AppealResponse? _appeal;
+    private BillResponse? _bill;
+    private DateTimeOffset? _updatedAt;
+
+    [Parameter] public string Number { get; set; } = "";
+
+    protected override async Task OnInitializedAsync()
+    {
+        _appeal = (await Appeals.GetAppealAsync(Number)).Value;
+        _bill = (await Parliament.GetBillAsync(_appeal?.Bill.Number ?? Number)).Value;
+        if (_appeal is null && _bill is null)
+        {
+            Navigation.NotFound();
+            return;
+        }
+
+        _updatedAt = (await Meta.GetImportsAsync()).Value?.Sources.FirstOrDefault()?.LastSuccessAt;
+    }
+
+    private string Fmt(string key, params object?[] values) => string.Format(System.Globalization.CultureInfo.InvariantCulture, T[key], values);
+
+    private static string RulerWidth(ThresholdResponse t) =>
+        (t.Value <= 0 ? 1000 : Math.Min(1000.0, 1000.0 * t.Participants / t.Value)).ToString("0.#", System.Globalization.CultureInfo.InvariantCulture);
+}

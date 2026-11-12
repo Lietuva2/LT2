@@ -1,0 +1,20 @@
+@using Lt2.Api.Contracts.Appeals
+@inject Microsoft.Extensions.Localization.IStringLocalizer<AppealUi> L
+
+@* Open reports on a queue item: the ground and the reporter's words. Who reported is never shown. *@
+@if (Items.Count > 0)
+{
+    <div class="stack stack--tight">
+        <p class="label num">@string.Format(System.Globalization.CultureInfo.InvariantCulture, L["Mod.Reports"], Items.Count)</p>
+        <ul class="rows">
+            @foreach (var report in Items)
+            {
+                <li><div class="rows__main"><b>@L["Report.Ground." + report.Ground]</b>@if (!string.IsNullOrEmpty(report.Text)) {<span class="small">@report.Text</span>}</div></li>
+            }
+        </ul>
+    </div>
+}
+
+@code {
+    [Parameter, EditorRequired] public IReadOnlyList<QueueReportResponse> Items { get; set; } = [];
+}
