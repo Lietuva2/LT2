@@ -110,14 +110,24 @@ internal sealed class SessionTicketStore(
                 .ExecuteUpdateAsync(s => s.SetProperty(x => x.LastSeenAt, now), cancellationToken);
         }
 
+        AuthenticationTicket? ticket;
         try
         {
-            return TicketSerializer.Default.Deserialize(_protector.Unprotect(session.Ticket));
+            ticket = TicketSerializer.Default.Deserialize(_protector.Unprotect(session.Ticket));
         }
         catch (System.Security.Cryptography.CryptographicException)
         {
             return null;
         }
+
+        // The ticket is stored before its key exists, so it lacks the session-id claim the cookie handler puts only in
+        // the cookie. Add it back so the signed-in person's principal says which session is the current one.
+        if (ticket?.Principal.Identity is ClaimsIdentity identity && !identity.HasClaim(c => c.Type == SessionIdClaim))
+        {
+            identity.AddClaim(new Claim(SessionIdClaim, key));
+        }
+
+        return ticket;
     }
 
     public Task RemoveAsync(string key) => RemoveAsync(key, null!, CancellationToken.None);
