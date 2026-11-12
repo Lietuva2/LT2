@@ -1,5 +1,8 @@
+using System.Net;
+using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Testing;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace Lt2.IntegrationTests.Infrastructure;
 
@@ -7,6 +10,9 @@ namespace Lt2.IntegrationTests.Infrastructure;
 public class Lt2Factory(DatabaseFixture database, int codeRequestLimit = 1000, int registrationLimit = 1000) : WebApplicationFactory<Lt2.Web.Components.App>
 {
     public const string Origin = "https://lt2.test";
+
+    /// <summary>The client address every test request appears to come from (a documentation range, RFC 5737).</summary>
+    public static readonly IPAddress ClientAddress = IPAddress.Parse("192.0.2.10");
 
     public DatabaseFixture Database { get; } = database;
 
@@ -21,6 +27,7 @@ public class Lt2Factory(DatabaseFixture database, int codeRequestLimit = 1000, i
         builder.UseSetting("RateLimits:Registration:WindowSeconds", "600");
         builder.UseSetting("RateLimits:SignIn:PermitLimit", "1000");
         builder.UseSetting("RateLimits:SignIn:WindowSeconds", "600");
+        builder.ConfigureServices(services => services.AddSingleton<IStartupFilter, ClientAddressStartupFilter>());
     }
 
     /// <summary>A new browser: its own cookies, sending this site's Origin like a real browser does.</summary>
@@ -34,5 +41,22 @@ public class Lt2Factory(DatabaseFixture database, int codeRequestLimit = 1000, i
         });
         client.DefaultRequestHeaders.Add("Origin", Origin);
         return new TestBrowser(client, this);
+    }
+
+    /// <summary>
+    /// The in-memory test server has no network connection, so it reports no client address. A real request always has
+    /// one (Kestrel, or Caddy's forwarded header), and the audit log and rate limits depend on it.
+    /// </summary>
+    private sealed class ClientAddressStartupFilter : IStartupFilter
+    {
+        public Action<IApplicationBuilder> Configure(Action<IApplicationBuilder> next) => app =>
+        {
+            app.Use((context, nextMiddleware) =>
+            {
+                context.Connection.RemoteIpAddress ??= ClientAddress;
+                return nextMiddleware(context);
+            });
+            next(app);
+        };
     }
 }
