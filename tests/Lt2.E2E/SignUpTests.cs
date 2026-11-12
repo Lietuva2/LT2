@@ -15,10 +15,10 @@ namespace Lt2.E2E;
 /// </summary>
 public sealed partial class SignUpTests
 {
-    private static readonly string? BaseUrl = Environment.GetEnvironmentVariable("LT2_E2E_BASE_URL");
+    internal static readonly string? BaseUrl = Environment.GetEnvironmentVariable("LT2_E2E_BASE_URL");
     private static readonly string MailpitUrl = Environment.GetEnvironmentVariable("LT2_E2E_MAILPIT_URL") ?? "http://localhost:8025";
-    private static readonly string Invitation = Environment.GetEnvironmentVariable("LT2_E2E_INVITATION") ?? "BANDYMAS-2026";
-    private static readonly string? Channel = Environment.GetEnvironmentVariable("LT2_E2E_BROWSER_CHANNEL");
+    internal static readonly string Invitation = Environment.GetEnvironmentVariable("LT2_E2E_INVITATION") ?? "BANDYMAS-2026";
+    internal static readonly string? Channel = Environment.GetEnvironmentVariable("LT2_E2E_BROWSER_CHANNEL");
 
     [Theory]
     [InlineData(1280, 800)]
@@ -124,10 +124,10 @@ public sealed partial class SignUpTests
     }
 
     /// <summary>The form's fields stay disabled until WebAssembly has taken over the prerendered page.</summary>
-    private static async Task WaitForInteractivityAsync(IPage page) =>
+    internal static async Task WaitForInteractivityAsync(IPage page) =>
         await page.Locator("form input:not([disabled])").First.WaitForAsync(new() { Timeout = 60_000 });
 
-    private static async Task<string> CodeFromMailpitAsync(string email)
+    internal static async Task<string> CodeFromMailpitAsync(string email)
     {
         using var http = new HttpClient { BaseAddress = new Uri(MailpitUrl) };
         for (var attempt = 0; attempt < 60; attempt++)

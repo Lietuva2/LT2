@@ -1,0 +1,207 @@
+using System.Text.Json;
+using System.Text.RegularExpressions;
+using Microsoft.Playwright;
+
+namespace Lt2.E2E;
+
+/// <summary>
+/// Passkeys through a real browser (design 6.2), with Chromium's virtual WebAuthn authenticator over CDP: add a passkey
+/// on the hello page, sign out, sign in with it. The same flow also runs with <c>navigator.credentials</c> wrapped the
+/// way a password manager's extension does it, where the returned credential's <c>toJSON()</c> leaves out
+/// <c>clientExtensionResults</c> or throws: ASP.NET Core Identity requires that property, so the page must not rely on
+/// <c>toJSON()</c>.
+/// </summary>
+public sealed partial class PasskeyTests
+{
+    /// <summary>How <c>navigator.credentials</c> behaves in the browser.</summary>
+    public static TheoryData<string> Browsers() => new("native", "password-manager-without-extension-results", "password-manager-toJSON-throws");
+
+    [Theory]
+    [MemberData(nameof(Browsers))]
+    public async Task A_person_adds_a_passkey_on_the_hello_page_and_signs_in_with_it(string browserKind)
+    {
+        Assert.SkipWhen(string.IsNullOrEmpty(SignUpTests.BaseUrl), "LT2_E2E_BASE_URL is not set; start the stack and set it to run end-to-end tests.");
+
+        await using var session = await PasskeyBrowser.StartAsync(browserKind);
+        var page = session.Page;
+        var email = await RegisterAsync(page);
+
+        await AddPasskeyAsync(page);
+
+        await page.GetByRole(AriaRole.Button, new() { Name = "Atsijungti" }).ClickAsync();
+        await page.WaitForURLAsync(new Regex("/$"));
+        await SignInWithPasskeyAsync(page);
+
+        var current = page.Locator(".rows li").Filter(new() { HasText = "Ši sesija" });
+        await Assertions.Expect(current).ToContainTextAsync("prisijungta prieigos raktu");
+        (await MeAsync(page)).GetProperty("email").GetString().ShouldBe(email);
+        session.ConsoleErrors.ShouldBeEmpty();
+    }
+
+    [Fact]
+    public async Task A_granted_staff_role_is_activated_with_the_code_in_a_passkey_session()
+    {
+        Assert.SkipWhen(string.IsNullOrEmpty(SignUpTests.BaseUrl), "LT2_E2E_BASE_URL is not set; start the stack and set it to run end-to-end tests.");
+
+        await using var session = await PasskeyBrowser.StartAsync("native");
+        var page = session.Page;
+        var email = await RegisterAsync(page);
+        await AddPasskeyAsync(page);
+        await page.GetByRole(AriaRole.Button, new() { Name = "Atsijungti" }).ClickAsync();
+        await page.WaitForURLAsync(new Regex("/$"));
+        await SignInWithPasskeyAsync(page);
+        (await MeAsync(page)).GetProperty("activeStaffRoles").GetArrayLength().ShouldBe(0);
+
+        // The server grants the role and prints the code once; the administrator passes it on in person.
+        var output = await Compose.RunAsync("run", "--rm", "--no-deps", "migrator", "--grant-role", "moderator", email);
+        var code = ActivationCode().Match(output).Value;
+        code.ShouldNotBeNullOrEmpty("the migrator prints the activation code");
+
+        await page.ReloadAsync();
+        await Assertions.Expect(page.GetByRole(AriaRole.Heading, new() { Name = "Darbuotojo vaidmens aktyvinimas" })).ToBeVisibleAsync();
+        await SignUpTests.WaitForInteractivityAsync(page);
+        await page.GetByLabel("Aktyvinimo kodas").FillAsync(code.ToLowerInvariant());
+        await page.GetByRole(AriaRole.Button, new() { Name = "Aktyvinti" }).ClickAsync();
+
+        await Assertions.Expect(page.GetByText("Vaidmuo aktyvintas.")).ToBeVisibleAsync();
+        await Assertions.Expect(page.GetByLabel("Aktyvinimo kodas")).ToHaveCountAsync(0);
+        var me = await MeAsync(page);
+        me.GetProperty("activeStaffRoles").EnumerateArray().Select(r => r.GetString()).ShouldBe(["moderator"]);
+        me.GetProperty("passkeyCount").GetInt32().ShouldBe(1);
+        session.ConsoleErrors.ShouldBeEmpty();
+    }
+
+    /// <summary>Registers through the pages: address and invitation, the emailed code, then name and age.</summary>
+    private static async Task<string> RegisterAsync(IPage page)
+    {
+        var email = $"ruta.mockute.{Guid.NewGuid():N}@pavyzdys.test";
+        await page.GotoAsync(SignUpTests.BaseUrl!.TrimEnd('/') + "/prisijungti?registruotis=true");
+        await SignUpTests.WaitForInteractivityAsync(page);
+        await page.GetByLabel("El. paštas").FillAsync(email);
+        await page.GetByLabel("Kvietimo kodas").FillAsync(SignUpTests.Invitation);
+        await page.GetByRole(AriaRole.Button, new() { Name = "Registruotis", Exact = true }).ClickAsync();
+        await page.GetByLabel("Šešių skaitmenų kodas").FillAsync(await SignUpTests.CodeFromMailpitAsync(email));
+        await page.GetByRole(AriaRole.Button, new() { Name = "Prisijungti", Exact = true }).ClickAsync();
+        await Assertions.Expect(page.GetByRole(AriaRole.Heading, new() { Name = "Dar du dalykai" })).ToBeVisibleAsync();
+        await SignUpTests.WaitForInteractivityAsync(page);
+        await page.GetByLabel("Vardas, kurį matys kiti").FillAsync("Rūta M.");
+        await page.GetByLabel("Man yra 18 metų arba daugiau").CheckAsync();
+        await page.GetByRole(AriaRole.Button, new() { Name = "Baigti registraciją" }).ClickAsync();
+        await page.WaitForURLAsync(new Regex("/sveiki$"));
+        await Assertions.Expect(page.GetByText("prisijungta kodu")).ToBeVisibleAsync();
+        return email;
+    }
+
+    private static async Task AddPasskeyAsync(IPage page)
+    {
+        var add = page.GetByRole(AriaRole.Button, new() { Name = "Sukurti prieigos raktą" });
+        await Assertions.Expect(add).ToBeEnabledAsync(new() { Timeout = 60_000 });
+        await add.ClickAsync();
+        await Assertions.Expect(page.GetByText("Prieigos raktas sukurtas.")).ToBeVisibleAsync();
+        await Assertions.Expect(page.GetByText("Sukurta prieigos raktų: 1")).ToBeVisibleAsync();
+    }
+
+    private static async Task SignInWithPasskeyAsync(IPage page)
+    {
+        await page.GotoAsync(SignUpTests.BaseUrl!.TrimEnd('/') + "/prisijungti");
+        await SignUpTests.WaitForInteractivityAsync(page);
+        await page.GetByRole(AriaRole.Button, new() { Name = "Prisijungti prieigos raktu" }).ClickAsync();
+        await page.WaitForURLAsync(new Regex("/sveiki$"));
+    }
+
+    private static async Task<JsonElement> MeAsync(IPage page) =>
+        JsonDocument.Parse(await page.EvaluateAsync<string>("async () => await (await fetch('/api/v1/me')).text()")).RootElement;
+
+    [GeneratedRegex("[0-9A-Z]{4}-[0-9A-Z]{4}-[0-9A-Z]{4}-[0-9A-Z]{4}")]
+    private static partial Regex ActivationCode();
+}
+
+/// <summary>A headless browser with a virtual WebAuthn authenticator (user verification on), optionally password-manager-like.</summary>
+internal sealed class PasskeyBrowser : IAsyncDisposable
+{
+    /// <summary>
+    /// Wraps <c>navigator.credentials.create</c> and <c>.get</c> the way a password manager's extension does: the returned
+    /// credential's <c>toJSON()</c> either drops <c>clientExtensionResults</c> or throws.
+    /// </summary>
+    private const string PasswordManagerScript = """
+        (() => {
+          const mode = "__MODE__";
+          const wrap = (original) => async (...args) => {
+            const credential = await original(...args);
+            if (!credential) return credential;
+            const toJSON = credential.toJSON ? credential.toJSON.bind(credential) : null;
+            Object.defineProperty(credential, "toJSON", {
+              configurable: true,
+              value: mode === "password-manager-toJSON-throws"
+                ? () => { throw new TypeError("toJSON is not supported by this credential"); }
+                : () => { const json = toJSON(); delete json.clientExtensionResults; return json; },
+            });
+            return credential;
+          };
+          navigator.credentials.create = wrap(navigator.credentials.create.bind(navigator.credentials));
+          navigator.credentials.get = wrap(navigator.credentials.get.bind(navigator.credentials));
+        })();
+        """;
+
+    private readonly IPlaywright _playwright;
+    private readonly IBrowser _browser;
+
+    private PasskeyBrowser(IPlaywright playwright, IBrowser browser, IPage page)
+    {
+        _playwright = playwright;
+        _browser = browser;
+        Page = page;
+    }
+
+    public IPage Page { get; }
+
+    public List<string> ConsoleErrors { get; } = [];
+
+    public static async Task<PasskeyBrowser> StartAsync(string kind)
+    {
+        var playwright = await Playwright.CreateAsync();
+        var browser = await playwright.Chromium.LaunchAsync(new BrowserTypeLaunchOptions { Channel = SignUpTests.Channel, Headless = true });
+        var context = await browser.NewContextAsync(new BrowserNewContextOptions
+        {
+            IgnoreHTTPSErrors = true, // Caddy's local certificate authority is not trusted by the test browser.
+            Locale = "lt-LT",
+            ViewportSize = new ViewportSize { Width = 1280, Height = 900 },
+        });
+        if (kind != "native")
+        {
+            await context.AddInitScriptAsync(PasswordManagerScript.Replace("__MODE__", kind, StringComparison.Ordinal));
+        }
+
+        var page = await context.NewPageAsync();
+        var result = new PasskeyBrowser(playwright, browser, page);
+        page.Console += (_, message) =>
+        {
+            if (message.Type == "error")
+            {
+                result.ConsoleErrors.Add(message.Text);
+            }
+        };
+
+        var cdp = await context.NewCDPSessionAsync(page);
+        await cdp.SendAsync("WebAuthn.enable", new Dictionary<string, object> { ["enableUI"] = false });
+        await cdp.SendAsync("WebAuthn.addVirtualAuthenticator", new Dictionary<string, object>
+        {
+            ["options"] = new Dictionary<string, object>
+            {
+                ["protocol"] = "ctap2",
+                ["transport"] = "internal",
+                ["hasResidentKey"] = true,
+                ["hasUserVerification"] = true,
+                ["isUserVerified"] = true,
+                ["automaticPresenceSimulation"] = true,
+            },
+        });
+        return result;
+    }
+
+    public async ValueTask DisposeAsync()
+    {
+        await _browser.DisposeAsync();
+        _playwright.Dispose();
+    }
+}

@@ -1,4 +1,3 @@
-using System.Diagnostics;
 using System.Globalization;
 using System.Net;
 using System.Net.Http.Json;
@@ -131,45 +130,10 @@ public sealed partial class StackTests
         return new HttpClient(handler, disposeHandler: true) { BaseAddress = new Uri(BaseUrl!) };
     }
 
-    private static async Task<string> CaddyLogsAsync(DateTimeOffset since)
-    {
-        var composeFile = Environment.GetEnvironmentVariable("LT2_E2E_COMPOSE_FILE")
-            ?? Path.Combine(RepositoryRoot(), "deploy", "compose.yaml");
-        var start = new ProcessStartInfo("docker")
-        {
-            RedirectStandardOutput = true,
-            RedirectStandardError = true,
-            UseShellExecute = false,
-        };
-        foreach (var argument in new[]
-        {
-            "compose", "-f", composeFile, "logs", "caddy", "--no-color", "--no-log-prefix",
-            "--since", since.UtcDateTime.ToString("yyyy-MM-ddTHH:mm:ssZ", CultureInfo.InvariantCulture),
-        })
-        {
-            start.ArgumentList.Add(argument);
-        }
-
-        using var process = Process.Start(start)!;
-        var output = process.StandardOutput.ReadToEndAsync();
-        var errors = process.StandardError.ReadToEndAsync();
-        await process.WaitForExitAsync();
-        process.ExitCode.ShouldBe(0, await errors);
-        return await output;
-    }
-
-    private static string RepositoryRoot()
-    {
-        for (var dir = new DirectoryInfo(AppContext.BaseDirectory); dir is not null; dir = dir.Parent)
-        {
-            if (File.Exists(Path.Combine(dir.FullName, "LT2.sln")))
-            {
-                return dir.FullName;
-            }
-        }
-
-        throw new InvalidOperationException("LT2.sln not found; set LT2_E2E_COMPOSE_FILE.");
-    }
+    private static Task<string> CaddyLogsAsync(DateTimeOffset since) =>
+        Compose.RunAsync(
+            "logs", "caddy", "--no-color", "--no-log-prefix",
+            "--since", since.UtcDateTime.ToString("yyyy-MM-ddTHH:mm:ssZ", CultureInfo.InvariantCulture));
 
     /// <summary>An IPv4 address, or an IPv6 address with at least three groups.</summary>
     [GeneratedRegex(@"\b(?:\d{1,3}\.){3}\d{1,3}\b|\b[0-9a-f]{1,4}(?::[0-9a-f]{0,4}){2,7}\b", RegexOptions.IgnoreCase)]
