@@ -1,0 +1,277 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>LT2 Interface Style</title>
+<link rel="stylesheet" href="fonts/fonts.css">
+<link rel="stylesheet" href="lt2.css">
+<script src="lt2-theme.js"></script>
+<script src="lt2-logo-spin.js" defer></script>
+<style>
+  /* Only what this guide itself needs; nothing here is part of the product styles. */
+  .guide-head { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: var(--sp-6); align-items: end; }
+  .guide-head lt2-logo-spin { width: 11rem; }
+  .swatches { display: grid; grid-template-columns: repeat(auto-fill, minmax(10.5rem, 1fr)); gap: var(--sp-4); }
+  .swatch { display: flex; flex-direction: column; gap: var(--sp-1); font-size: var(--fs-0); }
+  .swatch i { display: block; height: 3.5rem; box-shadow: inset 0 0 0 1px var(--rule); }
+  .swatch code, .tok { font: 600 var(--fs-0)/1.4 var(--font-text); letter-spacing: 0.01em; }
+  .swatch span { color: var(--ink-2); }
+  .spec { display: grid; grid-template-columns: minmax(0, 11rem) minmax(0, 1fr); gap: var(--sp-3) var(--sp-5); align-items: baseline; padding-block: var(--sp-4); border-top: 1px solid var(--rule); }
+  .demo { display: grid; grid-template-columns: minmax(0, 15rem) minmax(0, 1fr); gap: var(--sp-4) var(--sp-6); align-items: start; padding-block: var(--sp-5); border-top: 1px solid var(--rule); }
+  .demo > div:first-child { display: flex; flex-direction: column; gap: var(--sp-2); }
+  .rules li { padding-left: 1.5rem; position: relative; max-width: var(--measure); }
+  .rules li::before { content: ""; position: absolute; left: 0; top: 0.55em; width: 0.6rem; height: 0.6rem; background: var(--leaf); }
+  .rules--no li::before { background: var(--against); }
+  .hemi { width: min(26rem, 100%); height: auto; display: block; }
+  @media (max-width: 46rem) { .guide-head, .spec, .demo { grid-template-columns: minmax(0, 1fr); } .guide-head lt2-logo-spin { width: 7rem; } }
+</style>
+</head>
+<body>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true"><defs>
+  <symbol id="logo" viewBox="28 44 604 474"><g stroke-width="10" stroke-linejoin="round">
+    <path d="M70 78L345 106L352 58L396 108L292 112L293 240L168 243L165 316L40 298Z" fill="var(--slate)" stroke="var(--slate)"/>
+    <path d="M318 142L556 130L558 190L618 192L566 256L570 352L330 368Z" fill="var(--leaf)" stroke="var(--leaf)"/>
+    <path d="M200 265L292 270L300 396L478 390L532 466L476 470L474 506L186 490Z" fill="var(--brand)" stroke="var(--brand)"/>
+  </g></symbol>
+</defs></svg>
+
+<header class="page top">
+  <a class="top__brand" href="index.html"><svg viewBox="28 44 604 474" aria-hidden="true"><use href="#logo"/></svg><span lang="lt">Lietuva 2.0</span></a>
+  <nav class="top__nav" aria-label="Sample pages">
+    <a href="index.html" aria-current="page">Style</a>
+    <a href="kreipimasis.html">Appeal</a>
+    <a href="seimo-narys.html">MP profile</a>
+    <a href="suvestines.html">Summary</a>
+    <a href="prisijungimas.html">Sign-in</a>
+    <button class="mark" type="button" data-theme-switch hidden></button>
+  </nav>
+</header>
+
+<main class="page stack stack--loose">
+
+  <div class="guide-head">
+    <div class="stack">
+      <p class="label">Interface style</p>
+      <h1>Three bubbles, three speakers</h1>
+      <p class="lead">The logo is three speech bubbles cut from paper. The interface is built the same way: flat sheets with one corner cut, and each of the logo's colours always belongs to the same speaker.</p>
+    </div>
+    <lt2-logo-spin period="16"></lt2-logo-spin>
+  </div>
+
+  <section class="stack" aria-labelledby="g-voices">
+    <h2 id="g-voices">Who is speaking</h2>
+    <div class="pair" style="grid-template-columns:repeat(auto-fit,minmax(15rem,1fr))">
+      <div class="said">
+        <p class="bubble bubble--seimas" lang="lt">Pateikimas: pritarta 71 : 38. Svarstymas: pritarta 74 : 44.</p>
+        <div class="said__by"><b>Slate</b> the Seimas record: imported facts, set in the interface face</div>
+      </div>
+      <div class="said">
+        <p class="bubble bubble--people voice" lang="lt">Gynyba finansuojama nekeliant PVM.</p>
+        <div class="said__by"><b>Leaf</b> people: their numbers, and their words in the serif</div>
+      </div>
+      <div class="said said--mp">
+        <p class="bubble bubble--mp voice" lang="lt">Balsuosiu už. Papildomos pajamos reikalingos gynybai.</p>
+        <div class="said__by"><b>Brand</b> Lietuva 2.0 and the representatives' answers</div>
+      </div>
+    </div>
+  </section>
+
+  <section class="stack" aria-labelledby="g-colour">
+    <h2 id="g-colour">Colour</h2>
+    <p>Every colour is a token in <span class="tok">lt2.css</span>, defined for light and dark. Values below are read from the page, so they follow the theme switch.</p>
+    <div class="swatches" id="swatches"></div>
+  </section>
+
+  <section class="stack" aria-labelledby="g-type">
+    <h2 id="g-type">Type</h2>
+    <div>
+      <div class="spec"><div class="fine"><b>Sofia Sans Extra Condensed</b><br>800 · headings, figures</div><div lang="lt" style="font:800 var(--fs-6)/0.98 var(--font-display)">Įlinkdama fechtuotojo špaga</div></div>
+      <div class="spec"><div class="fine"><b>Sofia Sans Extra Condensed</b><br>700 · h2, h3</div><div lang="lt" style="font:700 var(--fs-5)/1 var(--font-display)">Sublykčiojusi pragręžė apvalų arbūzą</div></div>
+      <div class="spec"><div class="fine"><b>Sofia Sans</b><br>400 / 600 / 700 · interface, 17 px</div><div lang="lt">Seimo narių balsai importuojami automatiškai iš atvirųjų duomenų. <b>Planuojama rugsėjo 24 d.</b> <i>Ą Č Ę Ė Į Š Ų Ū Ž ą č ę ė į š ų ū ž</i></div></div>
+      <div class="spec"><div class="fine"><b>Brygada 1918</b><br>400 · words a person wrote, 20 px</div><div lang="lt" class="voice">Akcijų pardavimo įskaičiavimas paliečia vienkartinius įvykius, pvz., šeimos verslo pardavimą.</div></div>
+      <div class="spec"><div class="fine"><b>Label</b><br>Sofia Sans 700, 13 px, caps, +0.08em</div><div lang="lt" class="label">Prašo balsuoti už</div></div>
+      <div class="spec"><div class="fine"><b>Figures</b><br>tabular, thousands with a no-break space</div><div class="num" style="font:800 var(--fs-fig)/0.9 var(--font-display)">6&nbsp;800 : 4&nbsp;280</div></div>
+    </div>
+  </section>
+
+  <section class="stack" aria-labelledby="g-parts">
+    <h2 id="g-parts">Parts</h2>
+    <div>
+
+      <div class="demo">
+        <div><h4>Buttons</h4><p class="small">One corner cut. Green acts for Lietuva 2.0; blue and red are only ever the two sides.</p></div>
+        <div class="stack" lang="lt">
+          <div class="row"><button class="btn" type="button">Atsiųsti kodą</button><button class="btn btn--plain" type="button">Parašyti argumentą</button></div>
+          <div class="row"><button class="btn btn--for" type="button">Prašau balsuoti už</button><button class="btn btn--against" type="button" aria-pressed="true">Prašau balsuoti prieš</button></div>
+          <div class="row"><button class="mark num" type="button" aria-pressed="false">Man svarbu · 970</button><button class="mark num" type="button" aria-pressed="true">Man svarbu · 1&nbsp;921</button></div>
+        </div>
+      </div>
+
+      <div class="demo">
+        <div><h4>The two sides</h4><p class="small">Both numbers, always together, always with the count for accounts older than 30 days.</p></div>
+        <div class="sheet sheet--cut stack" lang="lt">
+          <div class="pair pair--keep">
+            <div class="figure figure--for"><span class="label">Prašo balsuoti už</span><span class="figure__num">6&nbsp;800</span><span class="small num">iš jų 6&nbsp;150 – paskyros senesnės nei 30 d.</span></div>
+            <div class="figure figure--against"><span class="label">Prašo balsuoti prieš</span><span class="figure__num">4&nbsp;280</span><span class="small num">iš jų 3&nbsp;900 – paskyros senesnės nei 30 d.</span></div>
+          </div>
+          <div class="split" role="img" aria-label="61 % už, 39 % prieš"><span class="split__for" style="width:61.4%"></span><span class="split__against" style="width:38.6%"></span></div>
+        </div>
+      </div>
+
+      <div class="demo">
+        <div><h4>Threshold</h4><p class="small">A ruler with a tick at every tenth. Leaf, because it counts people.</p></div>
+        <div class="stack stack--tight" lang="lt">
+          <div class="ruler" role="img" aria-label="612 iš 1 000"><span class="ruler__fill" style="width:61.2%"></span></div>
+          <p class="num"><b>612</b> iš 1&nbsp;000 dalyvių · ribą nustatė iniciatorė</p>
+          <p class="small">Surinkus 1&nbsp;000, kreipimasis bus įtrauktas į suvestines Seimo nariams.</p>
+        </div>
+      </div>
+
+      <div class="demo">
+        <div><h4>Votes</h4><p class="small">A square of colour and a word. Never colour alone. A faction that split is said in words.</p></div>
+        <div class="stack" lang="lt">
+          <div class="row" style="gap:var(--sp-5)"><span class="choice choice--for">Už</span><span class="choice choice--against">Prieš</span><span class="choice">Susilaikė</span><span class="choice choice--absent">Nebalsavo</span></div>
+          <svg class="hemi" id="hemi" viewBox="0 0 440 232" role="img" aria-label="Seimo balsavimas: 78 už, 41 prieš, 12 susilaikė, 10 nebalsavo"></svg>
+          <p class="num"><b style="font:800 2.5rem/1 var(--font-display)">78 : 41</b> &nbsp;Priimta · 12 susilaikė · 10 nebalsavo</p>
+        </div>
+      </div>
+
+      <div class="demo">
+        <div><h4>Tags</h4><p class="small">Rectangles, not pills. Slate for Seimas facts, leaf for people, green for Lietuva 2.0, ink for identifiers.</p></div>
+        <div class="row" lang="lt"><span class="tag tag--ink num">XVP-0412</span><span class="tag">Priėmimas</span><span class="tag">Planuojama rugsėjo 24 d.</span><span class="tag tag--people">11&nbsp;080 dalyvių</span><span class="tag tag--brand">Atsakė: balsuos prieš</span></div>
+      </div>
+
+      <div class="demo">
+        <div><h4>Fields</h4><p class="small">Label above, 2 px border, square corners. The error says what to do next.</p></div>
+        <div class="pair" lang="lt">
+          <div class="field"><label for="g-email">El. paštas</label><input class="input" id="g-email" type="email" placeholder="vardas@pavyzdys.lt"><p class="field__hint">Atsiųsime vienkartinį kodą.</p></div>
+          <div class="field field--error"><label for="g-code">Šešių skaitmenų kodas</label><input class="input input--code num" id="g-code" value="482918" aria-invalid="true"><p class="field__error">Kodas netinka arba nebegalioja. Paprašykite naujo.</p></div>
+        </div>
+      </div>
+
+      <div class="demo">
+        <div><h4>Rows</h4><p class="small">Lists are rows between thin rules, not cards. The fact sits left, the outcome right.</p></div>
+        <ul class="rows" lang="lt">
+          <li><div class="rows__main"><a href="kreipimasis.html">Gyventojų pajamų mokesčio įstatymo pataisa</a><span class="small num">XVP-0412 · svarstymas · rugsėjo 15 d.</span></div><div class="rows__side"><span class="choice choice--against">Prieš</span><span class="small num">Frakcija: 22 iš 30 prieš</span></div></li>
+          <li><div class="rows__main"><a href="#">Saulės parkai žemės ūkio paskirties žemėje</a><span class="small num">XVP-0655 · priėmimas · rugsėjo 10 d.</span></div><div class="rows__side"><span class="choice choice--for">Už</span><span class="small num">Frakcija balsavo laisvai (19 iš 30 už)</span></div></li>
+        </ul>
+      </div>
+
+      <div class="demo">
+        <div><h4>Stages and notes</h4><p class="small">Stages are slate: they are the Seimas record. A planned date is an outline, never a countdown.</p></div>
+        <div class="stack" lang="lt">
+          <div class="stages"><div class="stage"><span class="label">Pateikimas</span><b class="num">71 : 38</b><span class="small">Pritarta</span></div><div class="stage"><span class="label">Svarstymas</span><b class="num">74 : 44</b><span class="small">Pritarta</span></div><div class="stage stage--next"><span class="label">Priėmimas</span><b>Rugsėjo 24 d.</b><span class="small">Planuojama</span></div></div>
+          <p class="note note--quiet">Tai nėra reprezentatyvi apklausa: skaičiai rodo savanoriškai dalyvaujančių Lietuva 2.0 naudotojų nuomonę.</p>
+          <p class="note">Per pastarąsias tris dienas daug pasirinkimų atėjo iš naujų paskyrų. Moderatoriai tai tikrina.</p>
+        </div>
+      </div>
+
+      <div class="demo">
+        <div><h4>Portraits</h4><p class="small">Initials on slate ink with a cut corner until photo rights are settled. Never a circle.</p></div>
+        <div class="row" style="align-items:flex-end"><span class="portrait" aria-hidden="true">JP</span><span class="portrait portrait--s" aria-hidden="true">OJ</span><span class="portrait portrait--s" aria-hidden="true">IV</span></div>
+      </div>
+
+    </div>
+  </section>
+
+  <section class="pair" aria-label="Rules">
+    <div class="stack">
+      <h2>Do</h2>
+      <ul class="rules stack stack--tight">
+        <li>Keep surfaces flat. Separate things with fill and space, then with a thin rule.</li>
+        <li>Cut one corner of the one sheet that matters most on a page. Two at most.</li>
+        <li>Align left. Let long Lithuanian headings run in the condensed face instead of shrinking them.</li>
+        <li>Set anything a person wrote in the serif, inside a bubble, with their name under it.</li>
+        <li>Pair every vote colour with its word.</li>
+        <li>Use the amber focus ring on every control.</li>
+      </ul>
+    </div>
+    <div class="stack">
+      <h2>Don't</h2>
+      <ul class="rules rules--no stack stack--tight">
+        <li>No shadows, gradients, glows, rounded cards or pills.</li>
+        <li>No green for "for". Green is Lietuva 2.0; the sides are blue and red.</li>
+        <li>No icons as decoration and no emoji. A word does the job.</li>
+        <li>No centred hero blocks and no rows of three equal feature cards.</li>
+        <li>No countdowns to a vote: "Planuojama …" only.</li>
+        <li>No turning logo on green, and only one on a page.</li>
+      </ul>
+    </div>
+  </section>
+</main>
+
+<footer class="page foot">
+  <p>Prototype. Every MP, faction, bill and number in it is fictional. The fonts are served from the <code>fonts/</code> folder, as they will be in the product.</p>
+</footer>
+
+<script>
+  // Swatches: token, role. Values are read from the live page.
+  var TOKENS = [
+    ['--slate', 'Logo. The Seimas record'], ['--leaf', 'Logo. People'], ['--brand', 'Logo. Lietuva 2.0'],
+    ['--ground', 'Page background'], ['--sheet', 'Sheets, fields'], ['--sheet-2', 'Quiet sheet'],
+    ['--ink', 'Text'], ['--ink-2', 'Secondary text'], ['--ink-3', 'Faint text, on sheets only'], ['--rule', 'Thin rules'],
+    ['--slate-tint', 'Seimas bubbles, stages, tags'], ['--slate-ink', 'Text on slate tint'],
+    ['--leaf-tint', 'People bubbles'], ['--leaf-ink', 'Text on leaf tint'],
+    ['--brand-deep', 'Answer bubbles'], ['--brand-tint', 'Lietuva 2.0 tags'],
+    ['--action', 'Buttons'], ['--action-hover', 'Button hover'], ['--link', 'Links'],
+    ['--for', 'Side: for'], ['--for-tint', 'For, quiet'], ['--against', 'Side: against'], ['--against-tint', 'Against, quiet'],
+    ['--abstain', 'Abstained'], ['--absent', 'Did not vote'],
+    ['--note-bg', 'Notes that need a look'], ['--note-ink', 'Text on a note'], ['--error', 'Errors'], ['--focus', 'Focus ring']
+  ];
+  function hex(c) {
+    var m = c.match(/\d+(\.\d+)?/g);
+    if (!m || c.charAt(0) === '#') return c;
+    return '#' + m.slice(0, 3).map(function (n) { return ('0' + Math.round(+n).toString(16)).slice(-2); }).join('');
+  }
+  function drawSwatches() {
+    var box = document.getElementById('swatches'), probe = document.createElement('i');
+    box.textContent = '';
+    document.body.appendChild(probe);
+    TOKENS.forEach(function (t) {
+      probe.style.color = 'var(' + t[0] + ')';
+      var value = hex(getComputedStyle(probe).color);
+      var el = document.createElement('div');
+      el.className = 'swatch';
+      var chip = document.createElement('i'); chip.style.background = 'var(' + t[0] + ')';
+      var name = document.createElement('code'); name.textContent = t[0] + '  ' + value;
+      var role = document.createElement('span'); role.textContent = t[1];
+      el.appendChild(chip); el.appendChild(name); el.appendChild(role);
+      box.appendChild(el);
+    });
+    probe.remove();
+  }
+
+  // Seat map: 141 seats in six rows, coloured left to right. In the product this is drawn on the server.
+  function drawHemi() {
+    var svg = document.getElementById('hemi'), NS = 'http://www.w3.org/2000/svg';
+    var rows = 6, r0 = 78, step = 22, cx = 220, cy = 222, total = 141, seats = [];
+    var lens = [], sum = 0, i;
+    for (i = 0; i < rows; i++) { lens.push(r0 + i * step); sum += r0 + i * step; }
+    var counts = lens.map(function (l) { return Math.round(total * l / sum); });
+    counts[rows - 1] += total - counts.reduce(function (a, b) { return a + b; }, 0);
+    counts.forEach(function (n, row) {
+      for (var k = 0; k < n; k++) seats.push({ a: Math.PI - (k + 0.5) * Math.PI / n, r: lens[row] });
+    });
+    seats.sort(function (p, q) { return q.a - p.a; });
+    var groups = [[78, '--for'], [12, '--abstain'], [10, '--absent'], [41, '--against']], g = 0, left = groups[0][0];
+    seats.forEach(function (s) {
+      while (left === 0) { g++; left = groups[g][0]; }
+      left--;
+      var x = cx + s.r * Math.cos(s.a), y = cy - s.r * Math.sin(s.a);
+      var el = document.createElementNS(NS, 'rect');
+      el.setAttribute('x', -6.5); el.setAttribute('y', -6.5); el.setAttribute('width', 13); el.setAttribute('height', 13);
+      el.setAttribute('transform', 'translate(' + x.toFixed(1) + ' ' + y.toFixed(1) + ') rotate(' + (90 - s.a * 180 / Math.PI).toFixed(1) + ')');
+      el.setAttribute('style', 'fill:var(' + groups[g][1] + ')');
+      svg.appendChild(el);
+    });
+  }
+
+  // The switch itself is lt2-theme.js, shared by every page; the swatches only need redrawing.
+  document.addEventListener('lt2-theme', drawSwatches);
+  if (window.matchMedia) window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', drawSwatches);
+  drawSwatches();
+  drawHemi();
+</script>
+</body>
+</html>
