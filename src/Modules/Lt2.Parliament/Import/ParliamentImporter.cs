@@ -94,6 +94,13 @@ internal sealed class ParliamentImporter(
             _run.Error = ex.Message;
             logger.LogError(ex, "Parliament import {RunId} failed after {Requests} requests", _run.Id, _run.Requests);
         }
+        catch (Exception ex)
+        {
+            // Anything else (the database, a bug) is not ours to swallow, but the run must not stay "running".
+            _run.Status = "failed";
+            _run.Error = ex.GetType().Name;
+            throw;
+        }
         finally
         {
             if (_run.Changes > 0)
