@@ -66,8 +66,8 @@ src/Lt2.SharedKernel       Result type, identifiers (UUID v7), event base types,
 src/Modules/               Lt2.Identity, Lt2.Notifications, Lt2.Audit, Lt2.Parliament (Seimas open-data client,
                            import, statistics; no pages yet); Lt2.Appeals (schema and DbContext only)
 src/Lt2.Worker             Hangfire server: outbox dispatch loop, the parliament import, a daily identity clean-up
-src/Lt2.Migrator           creates the database roles, applies migrations and grants; also seeds invitations and
-                           grants the first staff role; run once per deploy
+src/Lt2.Migrator           creates the database roles, applies migrations and grants; also seeds invitations, grants
+                           the first staff role and empties invented parliament data; run once per deploy
 tests/Lt2.UnitTests        rules and validators, plus bUnit tests of components (Components/)
 tests/Lt2.IntegrationTests API over HTTP against a real PostgreSQL (Testcontainers)
 tests/Lt2.ArchitectureTests module boundaries, static assets

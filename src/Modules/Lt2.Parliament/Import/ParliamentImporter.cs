@@ -30,7 +30,7 @@ internal sealed class ParliamentImporter(
     internal const int ParserVersion = 1;
 
     /// <summary>Only one import at a time, across worker instances.</summary>
-    private const long LockKey = 0x4C54_3250_4152_4C;
+    internal const long LockKey = 0x4C54_3250_4152_4C;
 
     private static readonly TimeSpan Daily = TimeSpan.FromHours(24);
 

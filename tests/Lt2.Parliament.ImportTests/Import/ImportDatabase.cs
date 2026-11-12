@@ -21,12 +21,21 @@ public sealed class ImportDatabase : IAsyncLifetime
 
     public string AdminConnectionString => _container.GetConnectionString();
 
+    /// <summary>For tests that hold a session lock: closing really ends the session, so the lock goes with it.</summary>
+    public string UnpooledAdminConnectionString => new NpgsqlConnectionStringBuilder(AdminConnectionString) { Pooling = false }.ConnectionString;
+
     public string WorkerConnectionString =>
         new NpgsqlConnectionStringBuilder(AdminConnectionString) { Username = DatabaseRoles.Worker, Password = WorkerPassword }.ConnectionString;
 
     public async ValueTask InitializeAsync()
     {
         await _container.StartAsync();
+        await RunMigratorAsync();
+    }
+
+    /// <summary>The migrator, as a deploy runs it, with optional commands such as <c>--reset-parliament</c>.</summary>
+    public async Task RunMigratorAsync(params string[] args)
+    {
         var configuration = new ConfigurationBuilder().AddInMemoryCollection(new Dictionary<string, string?>
         {
             ["ConnectionStrings:Admin"] = AdminConnectionString,
@@ -36,7 +45,7 @@ public sealed class ImportDatabase : IAsyncLifetime
             ["Database:WorkerPassword"] = WorkerPassword,
             ["Database:ReadonlyPassword"] = "readonly-test-password",
         }).Build();
-        await MigrationRunner.RunAsync(configuration, [], CancellationToken.None);
+        await MigrationRunner.RunAsync(configuration, args, CancellationToken.None);
     }
 
     public async ValueTask DisposeAsync() => await _container.DisposeAsync();

@@ -257,7 +257,7 @@ public sealed class ImportTests(ImportDatabase database) : IAsyncLifetime
     public async Task Only_one_import_runs_at_a_time()
     {
         await using var import = new ImportHarness(database);
-        await using var other = new NpgsqlConnection(database.AdminConnectionString);
+        await using var other = new NpgsqlConnection(database.UnpooledAdminConnectionString);
         await other.OpenAsync();
         await using (var command = new NpgsqlCommand("SELECT pg_advisory_lock(" + 0x4C54_3250_4152_4C + ")", other))
         {

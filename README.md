@@ -52,7 +52,12 @@ docker compose -f deploy/compose.yaml up --build
 - Parliament data comes from `seimas-standin`, a stand-in for the Seimas open-data service with invented answers
   (the real service is closed for maintenance until 16 November 2026). The `local` profile starts it and `deploy/.env`
   points the worker at it; every page then says the parliament data is invented. To import from the real service
-  instead, empty `LT2_SEIMAS_BASE_ADDRESS` and `LT2_OUTBOUND_EXTRA_HOST` and start from an empty `parliament` schema.
+  instead, empty `LT2_SEIMAS_BASE_ADDRESS` and `LT2_OUTBOUND_EXTRA_HOST` and empty the invented data first; the command
+  refuses if any import so far was real, or while an import is running:
+
+```bash
+docker compose -f deploy/compose.yaml run --rm --no-deps migrator --reset-parliament
+```
 
 Register with any address and the invitation code, open the sign-in email in Mailpit, enter the six-digit code, and the
 "Sveiki" page appears. From there you can add a passkey and see or end your sessions.

@@ -21,7 +21,8 @@ namespace Lt2.Migrator;
 /// <item>as <c>lt2_migrator</c> (<c>ConnectionStrings:Lt2</c>): create the schemas, apply every module's migrations,
 /// grant access;</item>
 /// <item>optional commands: <c>--seed-invitation CODE[:USES]</c>, <c>--grant-role ROLE EMAIL</c> (prints the one-time
-/// activation code on the console, never to a log sink).</item>
+/// activation code on the console, never to a log sink), <c>--reset-parliament</c> (empties the parliament schema,
+/// refusing unless every import so far came from the Seimas stand-in).</item>
 /// </list>
 /// </summary>
 public static class MigrationRunner
@@ -97,6 +98,20 @@ public static class MigrationRunner
                         Log.Warning("Role {Role} not granted: {Reason}", role, grant.Error!.Code);
                     }
 
+                    break;
+                case "--reset-parliament":
+                    var reset = await ParliamentMaintenance.ResetInventedDataAsync(connectionString, cancellationToken);
+                    if (!reset.IsSuccess)
+                    {
+                        // Real Seimas data is never deleted this way; the exit code tells a script it was refused.
+                        throw new InvalidOperationException(reset.Error!.Code == "parliament.reset.real-data"
+                            ? "Refused: the parliament schema holds data imported from the real Seimas service; --reset-parliament empties invented data only."
+                            : "Refused: a parliament import is running; try again when it has finished.");
+                    }
+
+                    Log.Information(
+                        "Parliament data emptied: {Runs} import runs, {Documents} stored responses, {People} people, {Votes} votes (all invented)",
+                        reset.Value.ImportRuns, reset.Value.RawDocuments, reset.Value.People, reset.Value.Votes);
                     break;
                 default:
                     throw new ArgumentException($"Unknown or incomplete argument '{args[i]}'.", nameof(args));
