@@ -1,0 +1,15 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <ItemGroup>
+    <PackageReference Include="Microsoft.AspNetCore.Mvc.Testing" />
+    <PackageReference Include="Testcontainers.PostgreSql" />
+    <PackageReference Include="System.Formats.Cbor" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\..\src\Lt2.Web\Lt2.Web.csproj" />
+    <ProjectReference Include="..\..\src\Lt2.Migrator\Lt2.Migrator.csproj" />
+  </ItemGroup>
+  <ItemGroup>
+    <!-- The tests share one database and change global settings, so they run one at a time. -->
+    <Content Include="xunit.runner.json" CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
+</Project>

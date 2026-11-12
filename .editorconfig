@@ -40,6 +40,8 @@ dotnet_diagnostic.CA1001.severity = none
 dotnet_diagnostic.CA1861.severity = none
 dotnet_diagnostic.CA2234.severity = none
 dotnet_diagnostic.CA1062.severity = none
+# Test cancellation tokens add noise to every call; the test timeout is enough here.
+dotnet_diagnostic.xUnit1051.severity = none
 
 [**/Migrations/*.cs]
 generated_code = true

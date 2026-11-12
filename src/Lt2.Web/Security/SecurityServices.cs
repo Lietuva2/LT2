@@ -50,7 +50,7 @@ internal sealed class RateLimitOptions
 
 internal static class SecurityServices
 {
-    public static IServiceCollection AddLt2Security(this IServiceCollection services, IConfiguration configuration, IHostEnvironment environment)
+    public static IServiceCollection AddLt2Security(this IServiceCollection services, IConfiguration configuration)
     {
         services.AddForwardedHeadersFromConfiguration(configuration);
 
@@ -82,7 +82,7 @@ internal static class SecurityServices
                 .RequireRole(Roles.Administrator)
                 .RequireClaim(AuthenticationMethods.ClaimType, AuthenticationMethods.Passkey));
 
-        var limits = configuration.GetSection(RateLimitOptions.Section).Get<RateLimitOptions>() ?? new RateLimitOptions();
+        services.Configure<RateLimitOptions>(configuration.GetSection(RateLimitOptions.Section));
         services.AddRateLimiter(options =>
         {
             options.RejectionStatusCode = StatusCodes.Status429TooManyRequests;
@@ -102,14 +102,16 @@ internal static class SecurityServices
                         extensions: new Dictionary<string, object?> { ["code"] = "rate-limited" })
                     .ExecuteAsync(http);
             };
-            options.AddPolicy(RateLimitPolicies.CodeRequest, context => PerIp(context, limits.CodeRequest));
-            options.AddPolicy(RateLimitPolicies.Registration, context => PerIp(context, limits.Registration));
-            options.AddPolicy(RateLimitPolicies.SignIn, context => PerIp(context, limits.SignIn));
+            options.AddPolicy(RateLimitPolicies.CodeRequest, context => PerIp(context, Limits(context).CodeRequest));
+            options.AddPolicy(RateLimitPolicies.Registration, context => PerIp(context, Limits(context).Registration));
+            options.AddPolicy(RateLimitPolicies.SignIn, context => PerIp(context, Limits(context).SignIn));
         });
 
-        _ = environment;
         return services;
     }
+
+    private static RateLimitOptions Limits(HttpContext context) =>
+        context.RequestServices.GetRequiredService<Microsoft.Extensions.Options.IOptions<RateLimitOptions>>().Value;
 
     private static RateLimitPartition<string> PerIp(HttpContext context, RateLimitOptions.FixedWindow limit) =>
         RateLimitPartition.GetFixedWindowLimiter(

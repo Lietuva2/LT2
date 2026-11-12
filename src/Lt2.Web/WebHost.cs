@@ -44,7 +44,7 @@ internal static class WebHost
         RequireKeyEncryptionOutsideDevelopment(builder);
 
         // Security plumbing (design 6.4).
-        services.AddLt2Security(configuration, builder.Environment);
+        services.AddLt2Security(configuration);
 
         // API.
         services.AddProblemDetails();
