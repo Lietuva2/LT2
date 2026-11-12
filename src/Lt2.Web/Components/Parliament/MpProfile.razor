@@ -77,7 +77,7 @@
                         }
                         @if (_factionPeriods.Count > 0)
                         {
-                            <span class="small num" id="faction-period">@F.Format("Stat.FactionPeriod", string.Join("; ", _factionPeriods.Select(Period)))</span>
+                            <span class="small num" id="faction-period">@PeriodLine()</span>
                         }
                     </div>
                 </div>
@@ -199,6 +199,14 @@
         _updatedAt = (await Meta.GetImportsAsync()).Value?.Sources.FirstOrDefault()?.LastSuccessAt;
         var today = DateOnly.FromDateTime(TimeZoneInfo.ConvertTime(Clock.GetUtcNow(), TimeZoneInfo.FindSystemTimeZoneById("Europe/Vilnius")).DateTime);
         _factionPeriods = FactionCoverage.PeriodsWhenIncomplete(_mp.Mandate, _mp.Memberships, today);
+    }
+
+    /// <summary>The period line; its own full stop is dropped when the last date already ends in one ("… 30 d.").</summary>
+    private string PeriodLine()
+    {
+        var periods = string.Join("; ", _factionPeriods.Select(Period));
+        var line = F.Format("Stat.FactionPeriod", periods);
+        return periods.EndsWith('.') && line.EndsWith(periods + ".", StringComparison.Ordinal) ? line[..^1] : line;
     }
 
     /// <summary>"Reformų partijos frakcija, 2024 m. lapkričio 14 d. – 2026 m. balandžio 30 d." or "…, nuo …".</summary>

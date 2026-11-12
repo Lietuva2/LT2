@@ -133,7 +133,8 @@ public sealed partial class ParliamentPageTests(DatabaseFixture database) : ApiT
         var rasa = await OkAsync("/p/rasa-ievaite");
 
         rasa.ShouldContain("id=\"faction-period\"");
-        rasa.ShouldContain("Skaičiuojama tik narystės frakcijoje laikotarpiu: Reformų partijos frakcija, 2024 m. lapkričio 14 d. – 2026 m. balandžio 30 d.");
+        rasa.ShouldContain("Skaičiuojama tik narystės frakcijoje laikotarpiu: Reformų partijos frakcija, 2024 m. lapkričio 14 d. – 2026 m. balandžio 30 d.</span>");
+        rasa.ShouldNotContain("30 d..", customMessage: "the date's full stop ends the sentence");
     }
 
     [Theory]
