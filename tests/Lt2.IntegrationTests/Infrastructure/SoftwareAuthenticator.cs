@@ -20,6 +20,9 @@ public sealed class SoftwareAuthenticator : IDisposable
 
     public string Origin { get; init; } = Lt2Factory.Origin;
 
+    /// <summary>The credential id, base64url, as the server's options carry it.</summary>
+    public string CredentialId => Base64Url(_credentialId);
+
     /// <summary>Answers <c>navigator.credentials.create()</c> for the given creation options.</summary>
     public string Create(string optionsJson)
     {

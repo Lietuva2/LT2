@@ -28,6 +28,12 @@ public sealed partial class PasskeyTests
 
         await AddPasskeyAsync(page);
 
+        // A second attempt with the same authenticator: the server lists the existing key in excludeCredentials, so the
+        // authenticator refuses instead of making a duplicate.
+        await page.GetByRole(AriaRole.Button, new() { Name = "Sukurti prieigos raktą" }).ClickAsync();
+        await Assertions.Expect(page.Locator(".note[role=alert]")).ToHaveTextAsync("Prieigos rakto naudojimas atšauktas arba nepavyko.");
+        await Assertions.Expect(page.GetByText("Sukurta prieigos raktų: 1")).ToBeVisibleAsync();
+
         await page.GetByRole(AriaRole.Button, new() { Name = "Atsijungti" }).ClickAsync();
         await page.WaitForURLAsync(new Regex("/$"));
         await SignInWithPasskeyAsync(page);

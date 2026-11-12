@@ -78,6 +78,26 @@ public sealed class PasskeyTests(DatabaseFixture database) : ApiTest(database)
     }
 
     [Fact]
+    public async Task Creation_options_exclude_the_passkeys_the_account_already_has()
+    {
+        using var browser = NewBrowser();
+        await browser.RegisterAndSignInAsync();
+        using var first = new SoftwareAuthenticator();
+        using var second = new SoftwareAuthenticator();
+        (await browser.AddPasskeyAsync(first)).StatusCode.ShouldBe(HttpStatusCode.NoContent);
+        (await browser.AddPasskeyAsync(second)).StatusCode.ShouldBe(HttpStatusCode.NoContent);
+
+        using var creation = await browser.PostAsync(ApiRoutes.Auth.PasskeyCreationOptions);
+        using var options = JsonDocument.Parse(await creation.Content.ReadAsStringAsync());
+
+        // An authenticator that already holds one of these refuses to make another, so a second attempt does not
+        // silently create a duplicate.
+        options.RootElement.GetProperty("excludeCredentials").EnumerateArray()
+            .Select(c => c.GetProperty("id").GetString())
+            .ShouldBe([first.CredentialId, second.CredentialId], ignoreOrder: true);
+    }
+
+    [Fact]
     public async Task A_credential_without_a_pending_challenge_is_refused()
     {
         using var browser = NewBrowser();
