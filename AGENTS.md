@@ -20,8 +20,9 @@ Build one stage at a time. Do not start a later stage's features because they lo
 
 ## The design is the source of truth
 
-`discovery/system-design.md` on the `docs` branch (`git show docs:discovery/system-design.md`) is the agreed design:
-architecture, data model, security, every product rule and its reason. Read it before changing behaviour.
+`design/system-design.md` is the agreed design: architecture, data model, security, every product rule and its reason.
+Read it before changing behaviour. This is the maintained copy; the original on the `docs` branch
+(`discovery/system-design.md`) is not updated any more.
 
 - If the code and the design disagree, say so; do not silently pick one.
 - A change to a rule is discussed with the owner first, then written into the design, then coded.
@@ -35,7 +36,7 @@ file to what the code actually is.
 | Branch | Contents |
 |---|---|
 | `master` | Product code. Change it only through branches and pull requests, with **merge commits, not squash**. |
-| `docs` | The concept website (`docs/`) and team notes (`discovery/`), including the design. Not needed for coding except for the design document. |
+| `docs` | The concept website (`docs/`) and team notes (`discovery/`). Not needed for coding. Where the design mentions `../docs/` or `design-notes.md`, it means this branch. |
 | `legacy` | The 2011–2020 ASP.NET MVC platform. Do not modify. |
 
 Never push, open a pull request or publish anything without the owner asking.
@@ -54,6 +55,7 @@ JavaScript framework.
 ## Layout
 
 ```
+design/                system-design.md, the agreed design
 src/Lt2.Web            host: API endpoints (one per file), Blazor server rendering, auth, security middleware
 src/Lt2.Web.Client     Blazor WebAssembly components and HTTP implementations of the API clients
 src/Lt2.Api.Contracts  DTOs, routes, client interfaces, validators (shared by server, client and tests)
