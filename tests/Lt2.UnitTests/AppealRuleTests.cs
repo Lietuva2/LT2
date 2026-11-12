@@ -1,0 +1,219 @@
+using Lt2.Appeals.Domain;
+
+namespace Lt2.UnitTests;
+
+/// <summary>Design 8.2 and <c>AGENTS.md</c> "Appeals": one appeal per bill, one position per person, two sides, arguments, "Man svarbu".</summary>
+public sealed class AppealRuleTests
+{
+    [Fact]
+    public void A_bill_has_at_most_one_appeal()
+    {
+        AppealRules.BillAlreadyHasAppeal([]).ShouldBeFalse();
+        foreach (var status in new[] { AppealStatuses.Pending, AppealStatuses.Returned, AppealStatuses.Open, AppealStatuses.Closed })
+        {
+            AppealRules.BillAlreadyHasAppeal([status]).ShouldBeTrue(status);
+        }
+    }
+
+    [Fact]
+    public void Only_a_rejected_appeal_leaves_the_bill_free_for_a_new_one()
+    {
+        AppealRules.BillAlreadyHasAppeal([AppealStatuses.Rejected]).ShouldBeFalse();
+        AppealRules.BillAlreadyHasAppeal([AppealStatuses.Rejected, AppealStatuses.Open]).ShouldBeTrue();
+    }
+
+    [Theory]
+    [InlineData("for")]
+    [InlineData("against")]
+    public void For_and_against_are_the_two_sides(string side) => AppealRules.CheckSide(side).ShouldBeNull();
+
+    [Theory]
+    [InlineData("abstain")]
+    [InlineData("For")]
+    [InlineData("")]
+    [InlineData(null)]
+    public void Abstaining_or_anything_else_is_not_a_side(string? side) => AppealRules.CheckSide(side).ShouldBe("side.invalid");
+
+    [Fact]
+    public void An_argument_may_be_up_to_500_characters()
+    {
+        AppealRules.CheckReasonText(new string('a', 500)).ShouldBeNull();
+        AppealRules.CheckReasonText(new string('a', 501)).ShouldBe("reason.too-long");
+    }
+
+    [Fact]
+    public void Surrounding_white_space_does_not_count_towards_the_500_characters() =>
+        AppealRules.CheckReasonText("  \n" + new string('ą', 500) + "\n  ").ShouldBeNull();
+
+    [Theory]
+    [InlineData("")]
+    [InlineData("   ")]
+    [InlineData("\n\t")]
+    [InlineData(null)]
+    public void A_blank_argument_is_not_an_argument(string? text) => AppealRules.CheckReasonText(text).ShouldBe("reason.empty");
+
+    [Fact]
+    public void An_argument_is_kept_as_plain_text_with_line_breaks_but_without_control_characters() =>
+        AppealRules.NormaliseText(" Pirma eilutė\r\nantra\u0007 <b>ne HTML</b> ").ShouldBe("Pirma eilutė\nantra <b>ne HTML</b>");
+
+    [Fact]
+    public void A_person_may_write_at_most_two_arguments_per_bill()
+    {
+        AppealRules.CheckNewReason(Sides.For, Sides.For, 0).ShouldBeNull();
+        AppealRules.CheckNewReason(Sides.For, Sides.For, 1).ShouldBeNull();
+        AppealRules.CheckNewReason(Sides.For, Sides.For, 2).ShouldBe("reason.limit");
+    }
+
+    [Fact]
+    public void A_person_writes_arguments_only_for_the_side_they_took()
+    {
+        AppealRules.CheckNewReason(Sides.Against, Sides.For, 0).ShouldBe("reason.other-side");
+        AppealRules.CheckNewReason(null, Sides.For, 0).ShouldBe("position.required");
+    }
+
+    [Fact]
+    public void Man_svarbu_is_only_for_arguments_of_ones_own_side()
+    {
+        AppealRules.CheckEndorsement(Sides.For, Sides.For, 0).ShouldBeNull();
+        AppealRules.CheckEndorsement(Sides.For, Sides.Against, 0).ShouldBe("endorsement.other-side");
+        AppealRules.CheckEndorsement(null, Sides.Against, 0).ShouldBe("position.required");
+    }
+
+    [Fact]
+    public void Man_svarbu_is_at_most_three_per_bill()
+    {
+        AppealRules.CheckEndorsement(Sides.Against, Sides.Against, 2).ShouldBeNull();
+        AppealRules.CheckEndorsement(Sides.Against, Sides.Against, 3).ShouldBe("endorsement.limit");
+    }
+
+    [Fact]
+    public void Changing_sides_drops_the_man_svarbu_marks_of_the_old_side()
+    {
+        AppealRules.ChangingSideDropsEndorsementsOfTheOldSide(Sides.For, Sides.Against).ShouldBeTrue();
+        AppealRules.ChangingSideDropsEndorsementsOfTheOldSide(Sides.For, Sides.For).ShouldBeFalse();
+        AppealRules.ChangingSideDropsEndorsementsOfTheOldSide(null, Sides.For).ShouldBeFalse();
+    }
+
+    [Fact]
+    public void The_neutral_description_is_required_and_short()
+    {
+        AppealRules.CheckDescription("Įvedamas trečias pajamų mokesčio tarifas.").ShouldBeNull();
+        AppealRules.CheckDescription(" ").ShouldBe("description.empty");
+        AppealRules.CheckDescription(new string('x', AppealRules.DescriptionMaxLength + 1)).ShouldBe("description.too-long");
+    }
+}
+
+/// <summary>Design 8.4: the appeal's own, public threshold.</summary>
+public sealed class ThresholdRuleTests
+{
+    private static readonly DateTimeOffset Summarised = new(2026, 11, 16, 5, 0, 0, TimeSpan.Zero);
+
+    [Fact]
+    public void Nobody_sets_a_threshold_below_the_administrators_minimum()
+    {
+        ThresholdRules.CheckRequested(49, 50).ShouldBe("threshold.below-minimum");
+        ThresholdRules.CheckRequested(50, 50).ShouldBeNull();
+        ThresholdRules.CheckRequested(1000, 50).ShouldBeNull();
+    }
+
+    [Fact]
+    public void The_form_offers_the_default_but_never_less_than_the_minimum()
+    {
+        ThresholdRules.Offered(100, 50).ShouldBe(100);
+        ThresholdRules.Offered(100, 150).ShouldBe(150);
+    }
+
+    [Fact]
+    public void The_initiator_may_change_the_threshold_until_the_appeal_first_enters_a_summary()
+    {
+        ThresholdRules.CheckInitiatorChange(AppealStatuses.Open, ThresholdSetters.Initiator, null).ShouldBeNull();
+        ThresholdRules.CheckInitiatorChange(AppealStatuses.Pending, ThresholdSetters.Initiator, null).ShouldBeNull();
+        ThresholdRules.CheckInitiatorChange(AppealStatuses.Open, ThresholdSetters.Initiator, Summarised).ShouldBe("threshold.locked");
+    }
+
+    [Fact]
+    public void A_threshold_a_moderator_changed_is_final_for_the_initiator()
+    {
+        ThresholdRules.CheckInitiatorChange(AppealStatuses.Open, ThresholdSetters.Moderator, null).ShouldBe("threshold.set-by-moderator");
+        ThresholdRules.InitiatorMayChange(AppealStatuses.Open, ThresholdSetters.Moderator, null).ShouldBeFalse();
+    }
+
+    [Fact]
+    public void The_threshold_of_a_closed_or_rejected_appeal_does_not_change()
+    {
+        ThresholdRules.CheckInitiatorChange(AppealStatuses.Closed, ThresholdSetters.Initiator, null).ShouldBe("appeal.not-open");
+        ThresholdRules.CheckInitiatorChange(AppealStatuses.Rejected, ThresholdSetters.Initiator, null).ShouldBe("appeal.not-open");
+    }
+
+    [Fact]
+    public void A_raised_minimum_lifts_appeals_below_it()
+    {
+        ThresholdRules.Effective(stored: 60, minimum: 100, firstSummarisedAt: null).ShouldBe(100);
+        ThresholdRules.Effective(stored: 1000, minimum: 100, firstSummarisedAt: null).ShouldBe(1000);
+    }
+
+    [Fact]
+    public void An_appeal_already_in_summaries_keeps_its_threshold_when_the_minimum_is_raised() =>
+        ThresholdRules.Effective(stored: 60, minimum: 100, firstSummarisedAt: Summarised).ShouldBe(60);
+
+    [Fact]
+    public void The_threshold_counts_both_sides_together()
+    {
+        ThresholdRules.Reached(participantsBothSides: 99, effectiveThreshold: 100).ShouldBeFalse();
+        ThresholdRules.Reached(participantsBothSides: 100, effectiveThreshold: 100).ShouldBeTrue();
+    }
+}
+
+/// <summary>Design 6.6 and 8.2: both sides together, each with the count for accounts older than 30 days.</summary>
+public sealed class CountRuleTests
+{
+    private static readonly DateTimeOffset Now = new(2026, 11, 13, 12, 0, 0, TimeSpan.Zero);
+
+    [Fact]
+    public void An_account_counts_as_older_than_30_days_once_thirty_full_days_have_passed()
+    {
+        CountRules.IsOlderThan30Days(Now.AddDays(-30), Now).ShouldBeTrue();
+        CountRules.IsOlderThan30Days(Now.AddDays(-30).AddSeconds(1), Now).ShouldBeFalse();
+        CountRules.IsOlderThan30Days(Now.AddDays(-400), Now).ShouldBeTrue();
+        CountRules.IsOlderThan30Days(Now, Now).ShouldBeFalse();
+    }
+
+    [Fact]
+    public void Every_published_count_carries_both_sides_and_their_older_account_counts()
+    {
+        var counts = CountRules.Publish(6800, 6150, 4280, 3900);
+
+        counts.For.ShouldBe(6800);
+        counts.ForOlderThan30Days.ShouldBe(6150);
+        counts.Against.ShouldBe(4280);
+        counts.AgainstOlderThan30Days.ShouldBe(3900);
+        counts.Total.ShouldBe(11080);
+    }
+
+    [Theory]
+    [InlineData(10, 11, 0, 0)]
+    [InlineData(0, 0, 5, 6)]
+    [InlineData(-1, 0, 0, 0)]
+    public void An_older_account_count_never_exceeds_its_side(int forTotal, int forOlder, int againstTotal, int againstOlder) =>
+        Should.Throw<ArgumentOutOfRangeException>(() => CountRules.Publish(forTotal, forOlder, againstTotal, againstOlder));
+}
+
+/// <summary>Design 6.3 and 8.2: group numbers only for groups of at least 20 people.</summary>
+public sealed class GroupRuleTests
+{
+    [Fact]
+    public void A_group_of_19_is_not_shown()
+    {
+        GroupRules.MayPublish(19).ShouldBeFalse();
+        GroupRules.Publishable(19).ShouldBeNull();
+        GroupRules.Publishable(0).ShouldBeNull();
+    }
+
+    [Fact]
+    public void A_group_of_20_or_more_is_shown()
+    {
+        GroupRules.MayPublish(20).ShouldBeTrue();
+        GroupRules.Publishable(20).ShouldBe(20);
+        GroupRules.Publishable(410).ShouldBe(410);
+    }
+}
