@@ -1,0 +1,134 @@
+<!doctype html>
+<html lang="lt">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Prisijungimas · Lietuva 2.0</title>
+<link rel="stylesheet" href="fonts/fonts.css">
+<link rel="stylesheet" href="lt2.css">
+<script src="lt2-theme.js"></script>
+<script src="lt2-logo-spin.js" defer></script>
+<style>
+  .welcome { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 26rem); gap: var(--sp-7); align-items: center; }
+  .welcome lt2-logo-spin { width: min(22rem, 70%); }
+  .states { display: grid; grid-template-columns: repeat(auto-fit, minmax(17rem, 1fr)); gap: var(--sp-5); align-items: start; }
+  @media (max-width: 54rem) { .welcome { grid-template-columns: minmax(0, 1fr); gap: var(--sp-5); } .welcome lt2-logo-spin { width: 9rem; } }
+</style>
+</head>
+<body>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true"><defs>
+  <symbol id="logo" viewBox="28 44 604 474"><g stroke-width="10" stroke-linejoin="round">
+    <path d="M70 78L345 106L352 58L396 108L292 112L293 240L168 243L165 316L40 298Z" fill="var(--slate)" stroke="var(--slate)"/>
+    <path d="M318 142L556 130L558 190L618 192L566 256L570 352L330 368Z" fill="var(--leaf)" stroke="var(--leaf)"/>
+    <path d="M200 265L292 270L300 396L478 390L532 466L476 470L474 506L186 490Z" fill="var(--brand)" stroke="var(--brand)"/>
+  </g></symbol>
+</defs></svg>
+
+<header class="page top">
+  <a class="top__brand" href="index.html"><svg viewBox="28 44 604 474" aria-hidden="true"><use href="#logo"/></svg>Lietuva 2.0</a>
+  <nav class="top__nav" aria-label="Pagrindinis">
+    <a href="seimo-narys.html">Seimo nariai</a>
+    <a href="kreipimasis.html">Kreipimaisi</a>
+    <a href="suvestines.html">Suvestinės</a>
+    <a href="prisijungimas.html" aria-current="page">Prisijungti</a>
+    <button class="mark" type="button" data-theme-switch hidden></button>
+  </nav>
+</header>
+
+<main class="page stack stack--loose">
+
+  <div class="welcome">
+    <div class="stack">
+      <lt2-logo-spin period="14"></lt2-logo-spin>
+      <h1>Gyvas pokalbis tarp žmonių ir jų atstovų</h1>
+      <p class="lead">Pasakykite Seimo nariams, kaip prašote balsuoti, ir sužinokite, ką jie atsakė.</p>
+    </div>
+
+    <form class="sheet sheet--cut stack" id="sign-in" novalidate>
+      <h2>Prisijunkite</h2>
+      <p>Atsiųsime vienkartinį kodą el. paštu. Slaptažodžio nereikia.</p>
+      <div class="field">
+        <label for="email">El. paštas</label>
+        <input class="input" id="email" type="email" autocomplete="email" inputmode="email" placeholder="vardas@pavyzdys.lt">
+      </div>
+      <button class="btn btn--wide" type="submit">Atsiųsti kodą</button>
+      <button class="btn btn--plain btn--wide" type="button" id="passkey">Prisijungti prieigos raktu</button>
+      <p class="small">Prieigos raktas – tai piršto atspaudas, veidas arba įrenginio PIN kodas vietoj kodo el. paštu.</p>
+      <p class="small">Neturite paskyros? <a href="#registracija">Registruokitės su kvietimo kodu.</a></p>
+    </form>
+  </div>
+
+  <section class="stack" aria-labelledby="h-states">
+    <h2 id="h-states">Kitos šio ekrano būsenos</h2>
+    <div class="states">
+
+      <form class="sheet stack" id="code-form" novalidate>
+        <p class="label">Kodo įvedimas</p>
+        <h3>Įveskite kodą</h3>
+        <p>Kodą išsiuntėme adresu <b>r•••@pavyzdys.lt</b>. Jis galioja 10 minučių.</p>
+        <div class="field">
+          <label for="code">Šešių skaitmenų kodas</label>
+          <input class="input input--code num" id="code" inputmode="numeric" autocomplete="one-time-code" maxlength="6" value="482913">
+        </div>
+        <button class="btn btn--wide" type="submit">Prisijungti</button>
+        <p class="small">Jei gavote kelis laiškus, tinka tik naujausias kodas. <a href="#">Siųsti kodą iš naujo</a></p>
+      </form>
+
+      <form class="sheet stack" id="code-error" novalidate>
+        <p class="label">Klaida</p>
+        <h3>Įveskite kodą</h3>
+        <p>Kodą išsiuntėme adresu <b>r•••@pavyzdys.lt</b>. Jis galioja 10 minučių.</p>
+        <div class="field field--error">
+          <label for="code-bad">Šešių skaitmenų kodas</label>
+          <input class="input input--code num" id="code-bad" inputmode="numeric" maxlength="6" value="482918" aria-describedby="code-bad-msg" aria-invalid="true">
+          <p class="field__error" id="code-bad-msg">Kodas netinka arba nebegalioja. Paprašykite naujo.</p>
+        </div>
+        <button class="btn btn--wide" type="submit">Prisijungti</button>
+        <p class="small"><a href="#">Siųsti kodą iš naujo</a></p>
+      </form>
+
+      <form class="sheet stack" id="registracija" novalidate>
+        <p class="label">Registracija</p>
+        <h3>Nauja paskyra</h3>
+        <div class="field">
+          <label for="reg-email">El. paštas</label>
+          <input class="input" id="reg-email" type="email" autocomplete="email">
+        </div>
+        <div class="field">
+          <label for="reg-invite">Kvietimo kodas</label>
+          <input class="input num" id="reg-invite" autocomplete="off">
+          <p class="field__hint">Kol platforma bandoma, registruotis galima tik su kvietimu.</p>
+        </div>
+        <button class="btn btn--wide" type="submit">Registruotis</button>
+        <p class="fine">Išsiųsime kodą šiuo adresu. Ar adresas jau registruotas, čia neparodome.</p>
+      </form>
+
+      <!-- Shown once, after the first correct code: the address is proven, so the name and the age declaration come
+           from the person who owns it. Nothing here is filled in beforehand. -->
+      <form class="sheet stack" id="uzbaigimas" novalidate>
+        <p class="label">Po pirmo kodo</p>
+        <h3>Dar du dalykai</h3>
+        <p>Adresas <b>r•••@pavyzdys.lt</b> patvirtintas.</p>
+        <div class="field">
+          <label for="reg-name">Vardas, kurį matys kiti</label>
+          <input class="input" id="reg-name" autocomplete="nickname" placeholder="Rūta M.">
+          <p class="field__hint">Šį vardą kiti matys prie jūsų parašytų argumentų. Ar prašote balsuoti už, ar prieš – nemato niekas.</p>
+        </div>
+        <label class="check" for="reg-age"><input type="checkbox" id="reg-age"><span>Man yra 18 metų arba daugiau</span></label>
+        <button class="btn btn--wide" type="submit">Baigti registraciją</button>
+      </form>
+
+    </div>
+  </section>
+</main>
+
+<footer class="page foot">
+  <p>Maketas. Visi vardai, adresai ir kodai jame yra išgalvoti.</p>
+</footer>
+
+<script>
+  // Prototype only: forms go nowhere.
+  document.querySelectorAll('form').forEach(function (f) { f.addEventListener('submit', function (e) { e.preventDefault(); }); });
+</script>
+</body>
+</html>
