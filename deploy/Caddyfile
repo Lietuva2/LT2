@@ -2,11 +2,35 @@
 # Locally the site is https://lt2.localhost:8443 with Caddy's own CA ("tls internal"); in production
 # LT2_SITE_ADDRESS is the domain and LT2_TLS the ACME contact address, so Caddy obtains a public certificate.
 # Security headers (HSTS, CSP, ...) come from the application itself, so they hold behind any proxy.
+#
+# Logs carry no client addresses, cookies or tokens (AGENTS.md: "IPs are hashed"). Caddy cannot hash with a secret
+# key, and a plain hash of an IPv4 address is reversible by trying all 2^32 values, so the address fields are dropped
+# instead, as are request headers (antiforgery token, user agent) and response headers (session cookie). The web
+# application logs every request itself and hashes the address where the audit log needs one.
+
+(no_personal_data) {
+	wrap json
+	request>remote_ip delete
+	request>remote_port delete
+	request>client_ip delete
+	request>headers delete
+	request>tls delete
+	resp_headers delete
+}
 
 {
 	skip_install_trust
 	servers {
 		protocols h1 h2 h3
+	}
+	# Errors (for example a failing upstream) are logged with the request too: filter them the same way. Go's own
+	# server log (TLS handshake errors) puts the client address inside the message text, where no filter reaches.
+	log default {
+		output stderr
+		format filter {
+			import no_personal_data
+		}
+		exclude http.stdlib
 	}
 }
 
@@ -27,6 +51,8 @@
 
 	log {
 		output stdout
-		format json
+		format filter {
+			import no_personal_data
+		}
 	}
 }

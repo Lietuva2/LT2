@@ -86,6 +86,14 @@ public sealed partial class SignUpTests
         await Assertions.Expect(page.GetByRole(AriaRole.Button, new() { Name = "Atsijungti" })).ToBeEnabledAsync(new() { Timeout = 60_000 });
         await ExpectNoNoteAsync(page);
 
+        // The session cookie: host-only, secure, not readable by scripts.
+        var session = (await context.CookiesAsync()).Single(c => c.Name == "__Host-lt2");
+        session.Secure.ShouldBeTrue();
+        session.HttpOnly.ShouldBeTrue();
+        session.SameSite.ShouldBe(SameSiteAttribute.Lax);
+        session.Path.ShouldBe("/");
+        session.Domain.ShouldNotStartWith(".");
+
         var scroll = await page.EvaluateAsync<int>("() => document.documentElement.scrollWidth - document.documentElement.clientWidth");
         scroll.ShouldBeLessThanOrEqualTo(0, "no horizontal scrolling");
 
