@@ -143,4 +143,36 @@ public sealed class MpStatisticsRuleTests
         stats.Participation.ShouldBeNull();
         stats.WithFaction.ShouldBeNull();
     }
+
+    [Fact]
+    public void Open_question_1_as_built_an_absence_does_not_count_against_voting_with_the_faction() =>
+        OpenChoices.AbsenceCountsInVotedWithFaction.ShouldBeFalse();
+
+    [Fact]
+    public void Open_question_1_flipped_an_absence_counts_as_not_with_the_faction_and_a_free_vote_still_counts_as_free()
+    {
+        var stats = MpStatisticsRule.Compute(
+        [
+            Vote(BallotChoice.For, FactionPosition.For),
+            Vote(BallotChoice.DidNotVote, FactionPosition.Against),
+            Vote(BallotChoice.DidNotVote, FactionPosition.Free),
+        ], absenceCounts: true);
+
+        stats.ShouldBe(new MpStatistics(VotesHeld: 3, VotesTakenPart: 1, VotesWithFactionPosition: 2, VotedWithFaction: 1, FreeVotes: 1));
+    }
+}
+
+public sealed class OpenFactionLabelChoiceTests
+{
+    [Fact]
+    public void Open_question_2_as_built_every_label_is_treated_as_a_faction_the_mixed_group_included()
+    {
+        OpenChoices.LabelsThatAreNotFactions.ShouldBeEmpty();
+        FactionRule.Tally([("MG", BallotChoice.For)]).Single().Label.ShouldBe("MG");
+    }
+
+    [Fact]
+    public void Open_question_2_flipped_a_label_that_is_not_a_faction_gets_no_position() =>
+        FactionRule.Tally([("MG", BallotChoice.For), ("RPF", BallotChoice.For)], new HashSet<string> { "MG" })
+            .Select(t => t.Label).ShouldBe(["RPF"]);
 }
