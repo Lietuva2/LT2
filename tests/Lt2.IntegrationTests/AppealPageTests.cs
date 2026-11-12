@@ -184,6 +184,8 @@ public sealed partial class AppealPageTests(DatabaseFixture database) : ApiTest(
         status.ShouldBe(HttpStatusCode.OK);
         html.ShouldContain(AppealSteps.Description);
         html.ShouldContain("Paaiškinimas autoriui");
+        html.ShouldContain(">Paskelbti</button>", customMessage: "a pending appeal is offered for publication");
+        html.ShouldContain(">Grąžinti taisyti</button>");
 
         var (member, _) = await Factory.MemberAsync();
         using var _m = member;

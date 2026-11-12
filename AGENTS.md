@@ -64,10 +64,13 @@ src/Lt2.Api.Contracts      DTOs, routes, client interfaces, validators (shared b
 src/Lt2.SharedKernel       Result type, identifiers (UUID v7), event base types, outbox, audit and settings
                            interfaces, connection strings; no clock of its own (TimeProvider is used)
 src/Modules/               Lt2.Identity, Lt2.Notifications, Lt2.Audit, Lt2.Parliament (Seimas open-data client,
-                           import, statistics; no pages yet); Lt2.Appeals (schema and DbContext only)
+                           import, statistics); Lt2.Appeals (appeals, positions, arguments, endorsements, reports,
+                           moderation, rule-based pre-screening). Modules talk through interfaces in SharedKernel
+                           (IParticipants, IBillCatalogue, IPositionErasure, IOutbox, IAuditLog, ISettings)
 src/Lt2.Worker             Hangfire server: outbox dispatch loop, the parliament import, a daily identity clean-up
 src/Lt2.Migrator           creates the database roles, applies migrations and grants; also seeds invitations, grants
-                           the first staff role and empties invented parliament data; run once per deploy
+                           the first staff role, empties invented parliament data and (local stack only) fills the
+                           demonstration appeal on XVP-0412 (--demo-appeal); run once per deploy
 tests/Lt2.UnitTests        rules and validators, plus bUnit tests of components (Components/)
 tests/Lt2.IntegrationTests API over HTTP against a real PostgreSQL (Testcontainers)
 tests/Lt2.ArchitectureTests module boundaries, static assets

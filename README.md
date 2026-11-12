@@ -59,6 +59,14 @@ docker compose -f deploy/compose.yaml up --build
 docker compose -f deploy/compose.yaml run --rm --no-deps migrator --reset-parliament
 ```
 
+The demonstration appeal on XVP-0412 (6 800 invented accounts asking to vote for, 4 280 against, the prototype's
+arguments) is written by the migrator on the local stack only: it refuses unless `LT2_DEMO_DATA=true` (set in
+`deploy/.env`) and the parliament data is the stand-in's. Running it again changes nothing.
+
+```bash
+docker compose -f deploy/compose.yaml run --rm --no-deps migrator --demo-appeal
+```
+
 Register with any address and the invitation code, open the sign-in email in Mailpit, enter the six-digit code, and the
 "Sveiki" page appears. From there you can add a passkey and see or end your sessions.
 
@@ -169,7 +177,7 @@ is written to `audit.event`.
 
 For a production-shaped run, override `deploy/.env`: `LT2_SITE_ADDRESS` (the domain), `LT2_TLS` (the ACME contact
 address), `LT2_HTTP_PORT=80`, `LT2_HTTPS_PORT=443`, `COMPOSE_PROFILES=` (no Mailpit), the `LT2_SMTP_*` values and
-`LT2_MIGRATOR_ARGS=` (no seeded invitation), `LT2_SEIMAS_BASE_ADDRESS=` and `LT2_OUTBOUND_EXTRA_HOST=` (the worker
+`LT2_MIGRATOR_ARGS=` (no seeded invitation), `LT2_DEMO_DATA=` (no demonstration data), `LT2_SEIMAS_BASE_ADDRESS=` and `LT2_OUTBOUND_EXTRA_HOST=` (the worker
 then imports from `https://apps.lrs.lt/sip/`, the only host it may call), and mount real secrets.
 
 ## Conventions

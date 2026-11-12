@@ -56,7 +56,7 @@ else
                     <p class="bubble bubble--people voice">@first.Text</p>
                 }
                 <Reports Items="appeal.Reports" />
-                <ModerationActions Id="appeal.Id" Kind="appeal" Status="appeal.Status" OnDone="ReloadAsync" />
+                <ModerationActions Id="appeal.Id" Kind="appeal" Status="@appeal.Status" OnDone="ReloadAsync" />
             </article>
         }
     </section>
@@ -84,7 +84,7 @@ else
                     <div class="said__by"><b>@(reason.AuthorName ?? L["Reasons.Anonymous"])</b></div>
                 </div>
                 <Reports Items="reason.Reports" />
-                <ModerationActions Id="reason.Id" Kind="reason" Status="reason.Status" MergeCandidates="reason.MergeCandidates" OnDone="ReloadAsync" />
+                <ModerationActions Id="reason.Id" Kind="reason" Status="@reason.Status" MergeCandidates="reason.MergeCandidates" OnDone="ReloadAsync" />
             </article>
         }
     </section>

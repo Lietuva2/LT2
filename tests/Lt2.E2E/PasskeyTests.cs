@@ -124,7 +124,7 @@ public sealed partial class PasskeyTests
     }
 
     /// <summary>Registers through the pages: address and invitation, the emailed code, then name and age.</summary>
-    private static async Task<string> RegisterAsync(IPage page)
+    internal static async Task<string> RegisterAsync(IPage page, string displayName = "Rūta M.")
     {
         var email = $"ruta.mockute.{Guid.NewGuid():N}@pavyzdys.test";
         await page.GotoAsync(SignUpTests.BaseUrl!.TrimEnd('/') + "/prisijungti?registruotis=true");
@@ -136,7 +136,7 @@ public sealed partial class PasskeyTests
         await page.GetByRole(AriaRole.Button, new() { Name = "Prisijungti", Exact = true }).ClickAsync();
         await Assertions.Expect(page.GetByRole(AriaRole.Heading, new() { Name = "Dar du dalykai" })).ToBeVisibleAsync();
         await SignUpTests.WaitForInteractivityAsync(page);
-        await page.GetByLabel("Vardas, kurį matys kiti").FillAsync("Rūta M.");
+        await page.GetByLabel("Vardas, kurį matys kiti").FillAsync(displayName);
         await page.GetByLabel("Man yra 18 metų arba daugiau").CheckAsync();
         await page.GetByRole(AriaRole.Button, new() { Name = "Baigti registraciją" }).ClickAsync();
         await page.WaitForURLAsync(new Regex("/sveiki$"));
@@ -144,7 +144,7 @@ public sealed partial class PasskeyTests
         return email;
     }
 
-    private static async Task AddPasskeyAsync(IPage page)
+    internal static async Task AddPasskeyAsync(IPage page)
     {
         var add = page.GetByRole(AriaRole.Button, new() { Name = "Sukurti prieigos raktą" });
         await Assertions.Expect(add).ToBeEnabledAsync(new() { Timeout = 60_000 });
@@ -153,7 +153,7 @@ public sealed partial class PasskeyTests
         await Assertions.Expect(page.GetByText("Sukurta prieigos raktų: 1")).ToBeVisibleAsync();
     }
 
-    private static async Task SignInWithPasskeyAsync(IPage page)
+    internal static async Task SignInWithPasskeyAsync(IPage page)
     {
         await page.GotoAsync(SignUpTests.BaseUrl!.TrimEnd('/') + "/prisijungti");
         await SignUpTests.WaitForInteractivityAsync(page);
@@ -161,11 +161,11 @@ public sealed partial class PasskeyTests
         await page.WaitForURLAsync(new Regex("/sveiki$"));
     }
 
-    private static async Task<JsonElement> MeAsync(IPage page) =>
+    internal static async Task<JsonElement> MeAsync(IPage page) =>
         JsonDocument.Parse(await page.EvaluateAsync<string>("async () => await (await fetch('/api/v1/me')).text()")).RootElement;
 
     [GeneratedRegex("[0-9A-Z]{4}-[0-9A-Z]{4}-[0-9A-Z]{4}-[0-9A-Z]{4}")]
-    private static partial Regex ActivationCode();
+    internal static partial Regex ActivationCode();
 }
 
 /// <summary>A headless browser with a virtual WebAuthn authenticator (user verification on), optionally password-manager-like.</summary>
@@ -232,7 +232,7 @@ internal sealed class PasskeyBrowser : IAsyncDisposable
 
     public List<string> ConsoleErrors { get; } = [];
 
-    public static async Task<PasskeyBrowser> StartAsync(string kind)
+    public static async Task<PasskeyBrowser> StartAsync(string kind, int width = 1280, int height = 900)
     {
         var playwright = await Playwright.CreateAsync();
         var browser = await playwright.Chromium.LaunchAsync(new BrowserTypeLaunchOptions { Channel = SignUpTests.Channel, Headless = true });
@@ -240,7 +240,7 @@ internal sealed class PasskeyBrowser : IAsyncDisposable
         {
             IgnoreHTTPSErrors = true, // Caddy's local certificate authority is not trusted by the test browser.
             Locale = "lt-LT",
-            ViewportSize = new ViewportSize { Width = 1280, Height = 900 },
+            ViewportSize = new ViewportSize { Width = width, Height = height },
         });
         if (kind != "native")
         {
