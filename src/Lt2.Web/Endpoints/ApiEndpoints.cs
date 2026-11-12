@@ -84,6 +84,9 @@ internal static class ApiEndpoints
         HideReasonEndpoint.Map(api);
         MergeReasonEndpoint.Map(api);
         SetPlannedEndpoint.Map(api);
+        HoldAppealEndpoint.Map(api);
+        ReleaseAppealEndpoint.Map(api);
+        UrgentDigestEndpoint.Map(api);
 
         GetDigestsEndpoint.Map(api);
         GetDigestEndpoint.Map(api);

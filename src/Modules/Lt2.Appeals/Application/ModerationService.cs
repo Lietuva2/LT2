@@ -50,7 +50,8 @@ internal sealed class ModerationService(
             .Where(a => planned.ContainsKey(a.BillNumber) && !AppealReads.Threshold(a, counts[a.Id], minimum).Reached)
             .Select(a => a.Id)
             .ToHashSet();
-        var surgeIds = surges.Keys.Concat(openFlags.Select(f => f.AppealId)).Concat(underThresholdOnAgenda).Distinct().ToList();
+        var held = openAppeals.Where(a => a.Sending == "held").Select(a => a.Id);
+        var surgeIds = surges.Keys.Concat(openFlags.Select(f => f.AppealId)).Concat(underThresholdOnAgenda).Concat(held).Distinct().ToList();
         var appeals = await db.Appeals.AsNoTracking()
             .Where(a => a.Status == AppealStatuses.Pending
                 || (a.Status == AppealStatuses.Open && (reportedIds.Contains(a.Id) || surgeIds.Contains(a.Id))))
@@ -101,7 +102,8 @@ internal sealed class ModerationService(
                 surges.GetValueOrDefault(a.Id),
                 planned.GetValueOrDefault(a.BillNumber),
                 openFlags.Where(f => f.AppealId == a.Id).Select(f => new QueueFlag(f.Id, f.Kind, f.Link, f.Note, f.CreatedAt)).ToList(),
-                underThresholdOnAgenda.Contains(a.Id));
+                underThresholdOnAgenda.Contains(a.Id),
+                a.Sending == "held");
         }).ToList();
 
         var queueReasons = reasons.Select(r => new QueueReason(
@@ -281,6 +283,26 @@ internal sealed class ModerationService(
             return (string?)null;
         }, cancellationToken, details: new { date, stage });
     }
+
+    public Task<Result<Unit>> HoldAsync(Guid appealId, string statement, ModeratorActor moderator, CancellationToken cancellationToken) =>
+        SendingAsync(appealId, "held", "hold", statement, moderator, cancellationToken);
+
+    public Task<Result<Unit>> ReleaseAsync(Guid appealId, string statement, ModeratorActor moderator, CancellationToken cancellationToken) =>
+        SendingAsync(appealId, "automatic", "release", statement, moderator, cancellationToken);
+
+    private Task<Result<Unit>> SendingAsync(Guid appealId, string sending, string action, string statement, ModeratorActor moderator, CancellationToken ct) =>
+        OnAppealAsync(appealId, moderator, action, statement, (_, appeal, _) =>
+        {
+            if (appeal.Status != AppealStatuses.Open || appeal.Sending == sending)
+            {
+                return Task.FromResult<Result<string?>>(Error.Conflict("moderation.wrong-state"));
+            }
+
+            appeal.Sending = sending;
+
+            // Timing is not the initiator's content: no notice to the author.
+            return Task.FromResult<Result<string?>>((string?)null);
+        }, ct);
 
     private static Task<int> CloseFlagsAsync(AppealsDb db, Guid appealId, DateTimeOffset now, CancellationToken ct) =>
         db.Flags.Where(f => f.AppealId == appealId && f.Status == "open")

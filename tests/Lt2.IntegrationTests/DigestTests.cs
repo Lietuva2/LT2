@@ -2,6 +2,7 @@ using System.Net;
 using System.Text.Json;
 using Lt2.Api.Contracts;
 using Lt2.Api.Contracts.Admin;
+using Lt2.Api.Contracts.Appeals;
 using Lt2.Api.Contracts.Digests;
 using Lt2.IntegrationTests.Infrastructure;
 using Lt2.Notifications;
@@ -172,6 +173,58 @@ public sealed class DigestTests(DatabaseFixture database) : ApiTest(database)
                 .ShouldBeGreaterThan(0);
             (await RunDueAsync(At(thursday.AddDays(-1), 15))).ShouldBeEmpty("once per sitting");
             other.ShouldNotBeNull();
+        }
+        finally
+        {
+            await SetAsync(admin, "Digest:MaxPerWeek", 2);
+            await SetAsync(admin, "Digest:ThresholdMinimum", 50);
+            await Database.ExecuteAsync("DELETE FROM parliament.planned_item WHERE bill_number IN ('XVP-0618', 'XVP-0533')");
+        }
+    }
+
+    [Fact]
+    public async Task A_held_appeal_enters_no_summary_until_released_and_one_urgent_summary_may_exceed_the_ceiling()
+    {
+        var (moderator, admin) = await StaffAsync();
+        await SetAsync(admin, "Digest:ThresholdMinimum", 1);
+        await SetAsync(admin, "Digest:MaxPerWeek", 1);
+        var monday = MondayIn(6);
+        try
+        {
+            var (initiator, initiatorEmail) = await Factory.MemberAsync();
+            using var _i = initiator;
+            var appeal = await Database.OpenPublishedAsync(initiator, moderator, AppealSteps.ThirdBill, "against", threshold: 1);
+            await PlanAsync("XVP-0618", monday.AddDays(3));
+
+            using (var hold = await moderator.PostAsync(AppealRoutes.With(AppealRoutes.HoldAppeal, appeal.Id), new StatementRequest { Statement = "Tikrinamas šuolis." }))
+            {
+                hold.StatusCode.ShouldBe(HttpStatusCode.NoContent, await hold.Content.ReadAsStringAsync());
+            }
+
+            (await moderator.GetJsonAsync<Lt2.Api.Contracts.Appeals.ModerationQueueResponse>(AppealRoutes.ModerationQueue)).Appeals.Single(a => a.Id == appeal.Id).Held.ShouldBeTrue();
+            (await RunDueAsync(At(monday, 7, 10))).ShouldBeEmpty("a held appeal enters no summary");
+            using (var urgentHeld = await moderator.PostAsync(AppealRoutes.With(DigestRoutes.Urgent, appeal.Id), new UrgentDigestRequest { Statement = "Skubiai." }))
+            {
+                await urgentHeld.ShouldBeProblemAsync(HttpStatusCode.Conflict, "digest.held");
+            }
+
+            (await moderator.PostAsync(AppealRoutes.With(AppealRoutes.ReleaseAppeal, appeal.Id), new StatementRequest { Statement = "Patikrinta." })).StatusCode.ShouldBe(HttpStatusCode.NoContent);
+            (await Database.ScalarAsync<long>("SELECT count(*) FROM audit.event WHERE action IN ('moderation.appeal.hold', 'moderation.appeal.release') AND target = @t", ("t", "appeal:" + appeal.Id))).ShouldBe(2);
+
+            // This week already had its summary for everyone (ceiling 1); an urgent one may still go, once per bill per week.
+            await Database.ExecuteAsync("UPDATE appeals.appeal SET sending = 'automatic' WHERE id = @a", ("a", appeal.Id));
+            using var urgent = await moderator.PostAsync(AppealRoutes.With(DigestRoutes.Urgent, appeal.Id), new UrgentDigestRequest { Statement = "Įtraukta į rytojaus darbotvarkę." });
+            urgent.StatusCode.ShouldBe(HttpStatusCode.Created, await urgent.Content.ReadAsStringAsync());
+            var run = await urgent.ReadAsync<DigestRunResponse>();
+            run.Kind.ShouldBe("urgent");
+            run.MpCount.ShouldBeGreaterThan(0);
+            (await Database.ScalarAsync<long>("SELECT count(*) FROM audit.event WHERE action = 'digest.urgent.approved' AND actor_role = 'moderator'")).ShouldBeGreaterThanOrEqualTo(1);
+            using var again = await moderator.PostAsync(AppealRoutes.With(DigestRoutes.Urgent, appeal.Id), new UrgentDigestRequest { Statement = "Dar kartą." });
+            await again.ShouldBeProblemAsync(HttpStatusCode.Conflict, "digest.urgent-already");
+            (await Database.ScalarAsync<long>("SELECT count(*) FROM notify.outbox WHERE payload->>'to' = @to AND kind = 'email.moderation-notice' AND payload->>'notice' NOT IN ('appeal-published')", ("to", initiatorEmail))).ShouldBe(0, "timing is not the author's content");
+
+            using var member = NewBrowser();
+            (await member.Client.PostAsync(AppealRoutes.With(DigestRoutes.Urgent, appeal.Id), null)).StatusCode.ShouldBe(HttpStatusCode.Unauthorized);
         }
         finally
         {

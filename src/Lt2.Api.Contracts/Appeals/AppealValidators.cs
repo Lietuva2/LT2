@@ -127,3 +127,9 @@ public sealed class ModeratorPlannedRequestValidator : AbstractValidator<Moderat
         RuleFor(x => (string?)x.Statement).Statement(l, required: true).OverridePropertyName("statement");
     }
 }
+
+public sealed class UrgentDigestRequestValidator : AbstractValidator<Digests.UrgentDigestRequest>
+{
+    public UrgentDigestRequestValidator(IStringLocalizer<ValidationMessages> l) =>
+        RuleFor(x => (string?)x.Statement).Statement(l, required: true).OverridePropertyName("statement");
+}

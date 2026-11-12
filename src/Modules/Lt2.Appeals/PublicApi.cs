@@ -106,7 +106,8 @@ public sealed record QueueAppeal(
     SurgeInfo? Surge = null,
     PlannedDate? Planned = null,
     IReadOnlyList<QueueFlag>? DateFlags = null,
-    bool UnderThresholdOnAgenda = false);
+    bool UnderThresholdOnAgenda = false,
+    bool Held = false);
 
 /// <summary>A participant's flag about the planned date (design 8.4). Who flagged is not shown.</summary>
 public sealed record QueueFlag(Guid Id, string Kind, string Link, string? Note, DateTimeOffset CreatedAt);
@@ -193,6 +194,12 @@ public interface IAppealsModeration
     Task<Result<Unit>> HideReasonAsync(Guid reasonId, string statement, ModeratorActor moderator, CancellationToken cancellationToken);
 
     Task<Result<Unit>> MergeReasonAsync(Guid reasonId, Guid intoReasonId, string statement, ModeratorActor moderator, CancellationToken cancellationToken);
+
+    /// <summary>Holds sending for the appeal's bill (design 8.4): it enters no summary until released.</summary>
+    Task<Result<Unit>> HoldAsync(Guid appealId, string statement, ModeratorActor moderator, CancellationToken cancellationToken);
+
+    /// <summary>Releases a held appeal: summaries take it again by their rules.</summary>
+    Task<Result<Unit>> ReleaseAsync(Guid appealId, string statement, ModeratorActor moderator, CancellationToken cancellationToken);
 
     /// <summary>Corrects the planned date or stage of the appeal's bill (design 8.4); closes its open date flags.</summary>
     Task<Result<Unit>> SetPlannedAsync(Guid appealId, DateOnly date, string? stage, string statement, ModeratorActor moderator, CancellationToken cancellationToken);

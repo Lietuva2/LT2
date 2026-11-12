@@ -48,7 +48,8 @@ internal static class AppealMapping
             a.Id, Map(a.Bill), a.Status, a.InitiatorName, a.Description, a.FirstReason is { } f ? Map(f) : null, a.Threshold, a.Flags,
             a.Reports.Select(Map).ToList(), a.OpenedAt, Map(a.Surge), Map(a.Planned),
             (a.DateFlags ?? []).Select(f => new QueueFlagResponse(f.Id, f.Kind, f.Link, f.Note, f.CreatedAt)).ToList(),
-            a.UnderThresholdOnAgenda)).ToList(),
+            a.UnderThresholdOnAgenda,
+            a.Held)).ToList(),
         q.Reasons.Select(r => new QueueReasonResponse(
             r.Id, r.AppealId, Map(r.Bill), r.Side, r.Text, r.AuthorName, r.Status, r.Seen, r.Flags, r.Reports.Select(Map).ToList(),
             r.MergeCandidates.Select(Map).ToList(), r.CreatedAt)).ToList());
@@ -142,7 +143,8 @@ internal sealed class ServerAppealsApi(IAppealsModule appeals, IHttpContextAcces
 }
 
 /// <summary>Server-side <see cref="IModerationApi"/>, for the prerendered moderation page.</summary>
-internal sealed class ServerModerationApi(IAppealsModeration moderation, IIdentityModule identity, IHttpContextAccessor accessor, IpHasher ipHasher, ErrorMapper errors) : IModerationApi
+internal sealed class ServerModerationApi(
+    IAppealsModeration moderation, Lt2.Notifications.IDigests digests, IIdentityModule identity, IHttpContextAccessor accessor, IpHasher ipHasher, ErrorMapper errors) : IModerationApi
 {
     public async Task<ApiResult<ModerationQueueResponse>> GetQueueAsync(CancellationToken cancellationToken = default) =>
         await IsModeratorAsync()
@@ -172,6 +174,19 @@ internal sealed class ServerModerationApi(IAppealsModeration moderation, IIdenti
 
     public Task<ApiResult> SetPlannedAsync(Guid appealId, ModeratorPlannedRequest request, CancellationToken cancellationToken = default) =>
         ActAsync(m => moderation.SetPlannedAsync(appealId, request.Date, request.Stage, request.Statement, m, cancellationToken));
+
+    public Task<ApiResult> HoldAsync(Guid appealId, StatementRequest request, CancellationToken cancellationToken = default) =>
+        ActAsync(m => moderation.HoldAsync(appealId, request.Statement, m, cancellationToken));
+
+    public Task<ApiResult> ReleaseAsync(Guid appealId, StatementRequest request, CancellationToken cancellationToken = default) =>
+        ActAsync(m => moderation.ReleaseAsync(appealId, request.Statement, m, cancellationToken));
+
+    public Task<ApiResult> UrgentAsync(Guid appealId, Lt2.Api.Contracts.Digests.UrgentDigestRequest request, CancellationToken cancellationToken = default) =>
+        ActAsync(async m =>
+        {
+            var made = await digests.UrgentAsync(appealId, request.Statement, new Lt2.Notifications.StaffActor(m.UserId, m.Role, m.IpHash), cancellationToken);
+            return made.IsSuccess ? Result.Ok() : made.Error!;
+        });
 
     private async Task<bool> IsModeratorAsync()
     {

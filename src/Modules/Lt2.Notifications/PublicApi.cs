@@ -59,7 +59,7 @@ public interface IDigests
     Task<IReadOnlyList<DigestRunInfo>> RunDueAsync(DateTimeOffset now, CancellationToken cancellationToken);
 
     /// <summary>One urgent summary for an appeal, approved by a moderator; may exceed the weekly ceiling by one.</summary>
-    Task<Lt2.SharedKernel.Result<DigestRunInfo>> UrgentAsync(Guid appealId, StaffActor moderator, CancellationToken cancellationToken);
+    Task<Lt2.SharedKernel.Result<DigestRunInfo>> UrgentAsync(Guid appealId, string statement, StaffActor moderator, CancellationToken cancellationToken);
 
     Task<IReadOnlyList<DigestRunInfo>> ListAsync(CancellationToken cancellationToken);
 

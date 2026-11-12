@@ -62,6 +62,8 @@
         @if (Kind == "appeal" && Status == "open")
         {
             <button type="button" class="btn btn--plain" disabled="@(Locked || _planned is null)" @onclick="PlannedAsync">@L["Mod.SetPlanned"]</button>
+            <button type="button" class="btn btn--plain" disabled="@Locked" @onclick="HoldOrReleaseAsync">@L[Held ? "Mod.Release" : "Mod.Hold"]</button>
+            <button type="button" class="btn btn--plain" disabled="@(Locked || Held)" @onclick="UrgentAsync">@L["Mod.Urgent"]</button>
         }
         @if (MergeCandidates is { Count: > 0 })
         {
@@ -87,6 +89,9 @@
 
     [Parameter] public IReadOnlyList<ReasonResponse>? MergeCandidates { get; set; }
 
+    /// <summary>For an appeal: its sending is held.</summary>
+    [Parameter] public bool Held { get; set; }
+
     [Parameter] public EventCallback<string> OnDone { get; set; }
 
     private Task PublishAsync() => ActAsync(
@@ -110,6 +115,16 @@
     private Task PlannedAsync() => ActAsync(
         () => Moderation.SetPlannedAsync(Id, new ModeratorPlannedRequest { Date = _planned!.Value, Stage = _stage.Length == 0 ? null : _stage, Statement = _statement }),
         "Mod.Done.Planned");
+
+    private Task HoldOrReleaseAsync() => ActAsync(
+        () => Held
+            ? Moderation.ReleaseAsync(Id, new StatementRequest { Statement = _statement })
+            : Moderation.HoldAsync(Id, new StatementRequest { Statement = _statement }),
+        Held ? "Mod.Done.Release" : "Mod.Done.Hold");
+
+    private Task UrgentAsync() => ActAsync(
+        () => Moderation.UrgentAsync(Id, new Lt2.Api.Contracts.Digests.UrgentDigestRequest { Statement = _statement }),
+        "Mod.Done.Urgent");
 
     private Task MergeAsync() => ActAsync(
         () => Moderation.MergeReasonAsync(Id, new MergeReasonRequest { IntoReasonId = _mergeInto!.Value, Statement = _statement }),

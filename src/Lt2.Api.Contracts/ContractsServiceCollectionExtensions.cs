@@ -35,6 +35,7 @@ public static class ContractsServiceCollectionExtensions
         services.AddScoped<IValidator<Appeals.MergeReasonRequest>, Appeals.MergeReasonRequestValidator>();
         services.AddScoped<IValidator<Appeals.FlagRequest>, Appeals.FlagRequestValidator>();
         services.AddScoped<IValidator<Appeals.ModeratorPlannedRequest>, Appeals.ModeratorPlannedRequestValidator>();
+        services.AddScoped<IValidator<Digests.UrgentDigestRequest>, Appeals.UrgentDigestRequestValidator>();
         return services;
     }
 }

@@ -59,6 +59,13 @@ public interface IModerationApi
     Task<ApiResult> MergeReasonAsync(Guid reasonId, MergeReasonRequest request, CancellationToken cancellationToken = default);
 
     Task<ApiResult> SetPlannedAsync(Guid appealId, ModeratorPlannedRequest request, CancellationToken cancellationToken = default);
+
+    Task<ApiResult> HoldAsync(Guid appealId, StatementRequest request, CancellationToken cancellationToken = default);
+
+    Task<ApiResult> ReleaseAsync(Guid appealId, StatementRequest request, CancellationToken cancellationToken = default);
+
+    /// <summary>Approves one urgent summary for the appeal's bill (design 8.4); a dry run in M2a.</summary>
+    Task<ApiResult> UrgentAsync(Guid appealId, Digests.UrgentDigestRequest request, CancellationToken cancellationToken = default);
 }
 
 /// <summary>Design 8.8: the administrator's settings screen. Needs an active administrator role.</summary>

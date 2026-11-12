@@ -51,6 +51,10 @@ else
                 {
                     <p class="small num">@Text("Mod.Planned", plan.Date.ToString("yyyy-MM-dd", System.Globalization.CultureInfo.InvariantCulture), plan.Stage is { } s ? " · " + L["Mod.Stage." + s] : "")</p>
                 }
+                @if (appeal.Held)
+                {
+                    <p class="tag" id="held-@appeal.Id">@L["Mod.Held"]</p>
+                }
                 @if (appeal.UnderThresholdOnAgenda)
                 {
                     <p class="note note--quiet">@L["Mod.UnderThreshold"]</p>
@@ -78,7 +82,7 @@ else
                     <p class="bubble bubble--people voice">@first.Text</p>
                 }
                 <Reports Items="appeal.Reports" />
-                <ModerationActions Id="appeal.Id" Kind="appeal" Status="@appeal.Status" OnDone="ReloadAsync" />
+                <ModerationActions Id="appeal.Id" Kind="appeal" Status="@appeal.Status" Held="appeal.Held" OnDone="ReloadAsync" />
             </article>
         }
     </section>

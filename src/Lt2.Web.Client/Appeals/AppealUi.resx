@@ -148,4 +148,11 @@
 <data name="Mod.Stage.adoption" xml:space="preserve"><value>Priėmimas</value></data>
 <data name="Mod.SetPlanned" xml:space="preserve"><value>Pakeisti datą</value></data>
 <data name="Mod.Done.Planned" xml:space="preserve"><value>Atlikta: data pakeista.</value></data>
+<data name="Mod.Hold" xml:space="preserve"><value>Sulaikyti siuntimą</value></data>
+<data name="Mod.Release" xml:space="preserve"><value>Leisti siųsti</value></data>
+<data name="Mod.Held" xml:space="preserve"><value>Siuntimas sulaikytas</value></data>
+<data name="Mod.Urgent" xml:space="preserve"><value>Patvirtinti skubią suvestinę</value></data>
+<data name="Mod.Done.Hold" xml:space="preserve"><value>Atlikta: siuntimas sulaikytas.</value></data>
+<data name="Mod.Done.Release" xml:space="preserve"><value>Atlikta: siuntimas leistas.</value></data>
+<data name="Mod.Done.Urgent" xml:space="preserve"><value>Atlikta: skubi suvestinė sudaryta (bandymas, nesiunčiama).</value></data>
 </root>

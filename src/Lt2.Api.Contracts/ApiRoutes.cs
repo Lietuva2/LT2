@@ -87,6 +87,8 @@ public static class AppealRoutes
     public const string Reports = ApiRoutes.Prefix + "/reports";
     public const string Flags = Appeal + "/flags";
     public const string AppealPlanned = ApiRoutes.Prefix + "/moderation/appeals/{id:guid}/planned";
+    public const string HoldAppeal = ApiRoutes.Prefix + "/moderation/appeals/{id:guid}/hold";
+    public const string ReleaseAppeal = ApiRoutes.Prefix + "/moderation/appeals/{id:guid}/release";
 
     public static string FlagsOf(string number) => AppealOf(number) + "/flags";
 

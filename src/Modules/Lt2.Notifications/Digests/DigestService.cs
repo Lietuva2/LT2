@@ -70,7 +70,7 @@ internal sealed class DigestService(
         return made;
     }
 
-    public async Task<Result<DigestRunInfo>> UrgentAsync(Guid appealId, StaffActor moderator, CancellationToken cancellationToken)
+    public async Task<Result<DigestRunInfo>> UrgentAsync(Guid appealId, string statement, StaffActor moderator, CancellationToken cancellationToken)
     {
         var now = clock.GetUtcNow();
         var today = DateOnly.FromDateTime(TimeZoneInfo.ConvertTime(now, Vilnius).DateTime);
@@ -96,7 +96,7 @@ internal sealed class DigestService(
             return Error.Conflict("digest.urgent-already");
         }
 
-        return await MakeAsync(db, DigestRules.Urgent, today, null, [candidate], moderator, now, cancellationToken);
+        return await MakeAsync(db, DigestRules.Urgent, today, null, [candidate], moderator, now, cancellationToken, statement);
     }
 
     public async Task<IReadOnlyList<DigestRunInfo>> ListAsync(CancellationToken cancellationToken)
@@ -138,7 +138,7 @@ internal sealed class DigestService(
 
     private async Task<DigestRunInfo> MakeAsync(
         NotificationsDb db, string kind, DateOnly today, DateOnly? sitting, IReadOnlyList<DigestCandidate> items, StaffActor? approvedBy,
-        DateTimeOffset now, CancellationToken ct)
+        DateTimeOffset now, CancellationToken ct, string? statement = null)
     {
         var recipients = (await mps.SittingMpsAsync(ct)).Where(m => m.HasOfficialAddress).ToList();
         var maxPerWeek = await settings.GetAsync(SettingKeys.DigestMaxPerWeek, ct);
@@ -209,7 +209,7 @@ internal sealed class DigestService(
         {
             await audit.WriteAsync(
                 new AuditEntry("digest.urgent.approved", approvedBy.UserId, approvedBy.Role, "digest:" + run.Id,
-                    JsonSerializer.SerializeToElement(new { bills = items.Select(i => i.BillNumber) }, JsonSerializerOptions.Web), approvedBy.IpHash),
+                    JsonSerializer.SerializeToElement(new { bills = items.Select(i => i.BillNumber), statement }, JsonSerializerOptions.Web), approvedBy.IpHash),
                 transaction.GetDbTransaction(),
                 ct);
         }
