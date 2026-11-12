@@ -83,6 +83,45 @@ public sealed class AdminSettingsTests(DatabaseFixture database) : ApiTest(datab
     }
 
     [Fact]
+    public async Task The_code_limits_are_settings_whose_changes_are_audited_and_apply_at_once()
+    {
+        using var authenticator = new SoftwareAuthenticator();
+        using var admin = await AdministratorWithPasskeyAsync(authenticator);
+        var perHour = Lt2.SharedKernel.SettingKeys.SignInCodesPerHour.Name;
+        var settings = (await admin.Client.GetFromJsonAsync<List<SettingResponse>>(ApiRoutes.Admin.Settings))!;
+        settings.Single(s => s.Key == perHour).Value.GetInt32().ShouldBe(5);
+        settings.Single(s => s.Key == Lt2.SharedKernel.SettingKeys.SignInCodesPerDay.Name).Value.GetInt32().ShouldBe(10);
+
+        using (var change = await admin.SendAsync(HttpMethod.Put, ApiRoutes.Admin.SettingByKey(perHour), new UpdateSettingRequest { Value = JsonSerializer.SerializeToElement(2) }))
+        {
+            change.StatusCode.ShouldBe(HttpStatusCode.OK, await change.Content.ReadAsStringAsync());
+        }
+
+        try
+        {
+            (await Database.ScalarAsync<long>(
+                "SELECT count(*) FROM audit.event WHERE action = 'setting.changed' AND target = @k AND actor_role = 'administrator'",
+                ("k", perHour))).ShouldBeGreaterThanOrEqualTo(1);
+
+            using var browser = NewBrowser();
+            var email = TestData.Email();
+            await browser.RegisterAsync(email);
+            for (var i = 0; i < 2; i++)
+            {
+                using var request = await browser.PostAsync(ApiRoutes.Auth.Code, new RequestCodeRequest { Email = email });
+                request.StatusCode.ShouldBe(HttpStatusCode.Accepted);
+            }
+
+            (await Factory.OutboxCountAsync(email)).ShouldBe(2);
+        }
+        finally
+        {
+            using var restore = await admin.SendAsync(HttpMethod.Put, ApiRoutes.Admin.SettingByKey(perHour), new UpdateSettingRequest { Value = JsonSerializer.SerializeToElement(5) });
+            restore.StatusCode.ShouldBe(HttpStatusCode.OK);
+        }
+    }
+
+    [Fact]
     public async Task Unknown_settings_and_wrong_values_are_refused()
     {
         using var authenticator = new SoftwareAuthenticator();

@@ -23,6 +23,68 @@ public sealed class SignInCodeTests(DatabaseFixture database) : ApiTest(database
     }
 
     [Fact]
+    public async Task A_code_belongs_to_the_address_and_works_in_any_browser()
+    {
+        var email = TestData.Email();
+        using (var someoneElsesComputer = NewBrowser())
+        {
+            await someoneElsesComputer.RegisterAsync(email);
+        }
+
+        using var phone = NewBrowser();
+        await phone.SignInWithCodeAsync(email);
+        (await phone.Client.GetFromJsonAsync<MeResponse>(ApiRoutes.Me.Root))!.Email.ShouldBe(email);
+    }
+
+    [Fact]
+    public async Task The_eleventh_code_of_a_day_is_not_sent_and_the_answer_does_not_say_so()
+    {
+        using var browser = NewBrowser();
+        var email = TestData.Email();
+        await browser.RegisterAsync(email);
+
+        // Eight more earlier today, outside the last hour: nine in the day, one in the hour.
+        await Database.ExecuteAsync(
+            """
+            INSERT INTO identity.sign_in_code (id, user_id, code_hash, created_at, expires_at, failed_attempts, consumed_at)
+            SELECT gen_random_uuid(), id, '\x00'::bytea, now() - interval '3 hours', now() - interval '3 hours', 0, now()
+            FROM identity."user", generate_series(1, 8)
+            WHERE email = @e
+            """,
+            ("e", email));
+
+        using (var tenth = await browser.PostAsync(ApiRoutes.Auth.Code, new RequestCodeRequest { Email = email }))
+        {
+            tenth.StatusCode.ShouldBe(HttpStatusCode.Accepted);
+        }
+
+        (await Factory.OutboxCountAsync(email)).ShouldBe(2, "the tenth code of the day is sent");
+
+        using var eleventh = await browser.PostAsync(ApiRoutes.Auth.Code, new RequestCodeRequest { Email = email });
+        eleventh.StatusCode.ShouldBe(HttpStatusCode.Accepted);
+        (await eleventh.Content.ReadAsStringAsync()).ShouldBeEmpty();
+        (await Factory.OutboxCountAsync(email)).ShouldBe(2, "the eleventh is not, though the hour has room");
+        (await Database.ScalarAsync<long>(
+            "SELECT count(*) FROM identity.sign_in_code c JOIN identity.\"user\" u ON u.id = c.user_id WHERE u.email = @e",
+            ("e", email))).ShouldBe(10);
+    }
+
+    [Fact]
+    public async Task Registering_again_counts_against_the_same_limits()
+    {
+        using var browser = NewBrowser();
+        var email = TestData.Email();
+        await browser.RegisterAsync(email);
+        for (var i = 0; i < 6; i++)
+        {
+            using var again = await browser.PostAsync(ApiRoutes.Auth.Register, new RegisterRequest { Email = email, InvitationCode = TestData.Invitation });
+            again.StatusCode.ShouldBe(HttpStatusCode.Accepted);
+        }
+
+        (await Factory.OutboxCountAsync(email)).ShouldBe(5, "five codes an hour, whichever way they were asked for");
+    }
+
+    [Fact]
     public async Task A_new_code_replaces_the_previous_one()
     {
         using var browser = NewBrowser();

@@ -87,11 +87,45 @@ public sealed class SignInCodeRuleTests
         first.Length.ShouldBe(32);
     }
 
+    private static readonly CodeLimits Default = new(
+        Lt2.SharedKernel.SettingKeys.SignInCodesPerHour.Default,
+        Lt2.SharedKernel.SettingKeys.SignInCodesPerDay.Default);
+
     [Fact]
-    public void At_most_five_codes_are_emailed_to_one_account_per_hour()
+    public void By_default_an_address_is_sent_at_most_five_codes_an_hour_and_ten_a_day() =>
+        Default.ShouldBe(new CodeLimits(PerHour: 5, PerDay: 10));
+
+    [Fact]
+    public void The_fifth_code_of_an_hour_is_sent_and_the_sixth_is_not()
     {
-        SignInCodeRules.IssueWindow.ShouldBe(TimeSpan.FromHours(1));
-        SignInCodeRules.MayIssue(4).ShouldBeTrue();
-        SignInCodeRules.MayIssue(5).ShouldBeFalse();
+        SignInCodeRules.MayIssue(issuedInLastHour: 4, issuedInLastDay: 4, Default).ShouldBeTrue();
+        SignInCodeRules.MayIssue(issuedInLastHour: 5, issuedInLastDay: 5, Default).ShouldBeFalse();
+    }
+
+    [Fact]
+    public void The_tenth_code_of_a_day_is_sent_and_the_eleventh_is_not_even_in_a_new_hour()
+    {
+        SignInCodeRules.MayIssue(issuedInLastHour: 0, issuedInLastDay: 9, Default).ShouldBeTrue();
+        SignInCodeRules.MayIssue(issuedInLastHour: 0, issuedInLastDay: 10, Default).ShouldBeFalse();
+    }
+
+    [Fact]
+    public void Either_limit_alone_stops_the_code()
+    {
+        var limits = new CodeLimits(PerHour: 3, PerDay: 20);
+        SignInCodeRules.MayIssue(issuedInLastHour: 3, issuedInLastDay: 3, limits).ShouldBeFalse();
+        SignInCodeRules.MayIssue(issuedInLastHour: 0, issuedInLastDay: 20, limits).ShouldBeFalse();
+        SignInCodeRules.MayIssue(issuedInLastHour: 2, issuedInLastDay: 19, limits).ShouldBeTrue();
+    }
+
+    [Fact]
+    public void The_daily_limit_bounds_guessing_to_fifty_tries_a_day_against_one_account() =>
+        SignInCodeRules.MaxGuessesPerDay(Default).ShouldBe(50);
+
+    [Fact]
+    public void The_limits_are_counted_over_an_hour_and_over_a_day()
+    {
+        SignInCodeRules.Hour.ShouldBe(TimeSpan.FromHours(1));
+        SignInCodeRules.Day.ShouldBe(TimeSpan.FromDays(1));
     }
 }

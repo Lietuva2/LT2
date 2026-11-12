@@ -70,6 +70,12 @@ public static class SettingKeys
     /// <summary>Days a pending account (address never proven, or registration never completed) is kept (design 6.2).</summary>
     public static readonly SettingKey<int> PendingAccountDays = new("Registration:PendingAccountDays", 7, v => v is > 0 and <= 90);
 
+    /// <summary>Sign-in codes one address may be sent in an hour (design 6.2).</summary>
+    public static readonly SettingKey<int> SignInCodesPerHour = new("SignIn:CodesPerHour", 5, v => v is > 0 and <= 20);
+
+    /// <summary>Sign-in codes one address may be sent in a day; bounds guessing to five tries per code (design 6.2).</summary>
+    public static readonly SettingKey<int> SignInCodesPerDay = new("SignIn:CodesPerDay", 10, v => v is > 0 and <= 50);
+
     /// <summary>Default appeal threshold offered to the initiator (design 8.4).</summary>
     public static readonly SettingKey<int> DigestThresholdDefault = new("Digest:ThresholdDefault", 100, v => v > 0);
 
@@ -89,6 +95,8 @@ public static class SettingKeys
     [
         RegistrationRequiresInvitation,
         PendingAccountDays,
+        SignInCodesPerHour,
+        SignInCodesPerDay,
         DigestThresholdDefault,
         DigestMaxPerWeek,
         SurgeMinimumShare,

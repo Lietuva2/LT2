@@ -8,6 +8,7 @@
   <data name="SignInCode.Greeting" xml:space="preserve"><value>Laba diena,</value></data>
   <data name="SignInCode.Intro" xml:space="preserve"><value>jūsų prisijungimo prie Lietuva 2.0 kodas:</value></data>
   <data name="SignInCode.Validity" xml:space="preserve"><value>Kodas galioja {0} min. ir tinka tik vieną kartą.</value></data>
+  <data name="SignInCode.NewestOnly" xml:space="preserve"><value>Kodą galite įvesti bet kurioje naršyklėje. Jei gavote kelis laiškus, tinka tik naujausias kodas.</value></data>
   <data name="SignInCode.Ignore" xml:space="preserve"><value>Jei kodo neprašėte, nieko daryti nereikia: be šio kodo niekas negalės prisijungti prie jūsų paskyros.</value></data>
   <data name="SignInCode.Signature" xml:space="preserve"><value>Lietuva 2.0</value></data>
 </root>

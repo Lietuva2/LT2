@@ -23,6 +23,7 @@ internal sealed class SignInCodeTemplate(IStringLocalizer<EmailTemplates> l)
             l["SignInCode.Intro"],
             model.Code,
             string.Format(CultureInfo.InvariantCulture, l["SignInCode.Validity"], minutes),
+            l["SignInCode.NewestOnly"],
             l["SignInCode.Ignore"],
             l["SignInCode.Signature"],
         ];
