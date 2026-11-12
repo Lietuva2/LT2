@@ -53,7 +53,7 @@ public sealed class ParliamentPageTests
     }
 
     [Fact]
-    public async Task Without_javascript_every_page_renders_and_the_filters_work()
+    public async Task Without_javascript_every_page_renders_the_filters_work_and_there_is_no_dead_theme_button()
     {
         Assert.SkipWhen(string.IsNullOrEmpty(SignUpTests.BaseUrl), "LT2_E2E_BASE_URL is not set; start the stack and set it to run end-to-end tests.");
         await using var session = await Session.StartAsync(390, 844, ColorScheme.Light, javaScript: false);
@@ -63,6 +63,7 @@ public sealed class ParliamentPageTests
         {
             await page.GotoAsync(SignUpTests.BaseUrl + path);
             await Assertions.Expect(page.GetByRole(AriaRole.Heading, new() { Level = 1 })).ToHaveTextAsync(heading);
+            await Assertions.Expect(page.Locator("[data-theme-switch]")).ToBeHiddenAsync();
             await page.ScreenshotAsync(new() { Path = Path.Combine("output", "pages", $"{name}-nojs.png"), FullPage = true });
         }
 
@@ -79,6 +80,39 @@ public sealed class ParliamentPageTests
         await Assertions.Expect(page.GetByRole(AriaRole.Heading, new() { Level = 1 })).ToHaveTextAsync("Ona Jonaitienė");
         await page.Locator("a[href='/seimas/balsavimai/99100002']").ClickAsync();
         await Assertions.Expect(page.Locator("svg.seatmap circle")).ToHaveCountAsync(12);
+    }
+
+    [Fact]
+    public async Task The_theme_switch_cycles_system_light_dark_and_keeps_the_choice_across_pages()
+    {
+        Assert.SkipWhen(string.IsNullOrEmpty(SignUpTests.BaseUrl), "LT2_E2E_BASE_URL is not set; start the stack and set it to run end-to-end tests.");
+        await using var session = await Session.StartAsync(1280, 800, ColorScheme.Light, javaScript: true);
+        var page = session.Page;
+        await page.GotoAsync(SignUpTests.BaseUrl + "/seimo-nariai");
+
+        var button = page.Locator("[data-theme-switch]");
+        await Assertions.Expect(button).ToHaveTextAsync("Tema: automatinė");
+        await button.ClickAsync();
+        await Assertions.Expect(button).ToHaveTextAsync("Tema: šviesi");
+        await button.ClickAsync();
+        await Assertions.Expect(button).ToHaveTextAsync("Tema: tamsi");
+        (await page.EvaluateAsync<string>("() => document.documentElement.dataset.theme")).ShouldBe("dark");
+        var ground = await page.EvaluateAsync<string>("() => getComputedStyle(document.body).backgroundColor");
+        ground.ShouldBe("rgb(14, 20, 17)", "the dark ground token");
+
+        // Enhanced navigation to another page: the choice and the button stay.
+        await page.GetByRole(AriaRole.Link, new() { Name = "Jonas Petraitis" }).ClickAsync();
+        await Assertions.Expect(page.GetByRole(AriaRole.Heading, new() { Level = 1 })).ToHaveTextAsync("Jonas Petraitis");
+        await Assertions.Expect(button).ToBeVisibleAsync();
+        await Assertions.Expect(button).ToHaveTextAsync("Tema: tamsi");
+
+        // A full reload applies the stored choice before the page is shown.
+        await page.ReloadAsync();
+        (await page.EvaluateAsync<string>("() => document.documentElement.dataset.theme")).ShouldBe("dark");
+        await button.ClickAsync();
+        await Assertions.Expect(button).ToHaveTextAsync("Tema: automatinė");
+        (await page.EvaluateAsync<bool>("() => document.documentElement.hasAttribute('data-theme')")).ShouldBeFalse();
+        session.ConsoleErrors.ShouldBeEmpty();
     }
 
     private sealed class Session : IAsyncDisposable

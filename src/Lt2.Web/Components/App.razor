@@ -8,6 +8,8 @@
     <link rel="icon" type="image/svg+xml" href="@Assets["favicon.svg"]" />
     <link rel="stylesheet" href="@Assets["fonts/fonts.css"]" />
     <link rel="stylesheet" href="@Assets["css/lt2.css"]" />
+    @* Not deferred: a stored theme choice applies before the first paint (design/ui/README.md). *@
+    <script src="@Assets["js/lt2-theme.js"]"></script>
     <HeadOutlet />
 </head>
 <body>
@@ -17,6 +19,7 @@
     </div>
     <script src="@Assets["js/lt2-logo-spin.js"]" defer></script>
     <script src="@Assets["_framework/blazor.web.js"]"></script>
+    <script src="@Assets["js/lt2-theme-blazor.js"]"></script>
 </body>
 </html>
 

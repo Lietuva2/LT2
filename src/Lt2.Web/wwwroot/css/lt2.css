@@ -475,3 +475,6 @@ body > .page { width: 100%; }
 /* Long official names and addresses wrap instead of pushing the page sideways. */
 .rows__main a, .facts dd, .tag { overflow-wrap: anywhere; }
 .tag { white-space: normal; }
+
+/* The theme switch sits in the navigation; hidden until lt2-theme.js shows it. */
+.top__nav .mark { align-self: center; }

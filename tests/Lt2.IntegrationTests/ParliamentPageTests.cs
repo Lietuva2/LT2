@@ -233,6 +233,16 @@ public sealed partial class ParliamentPageTests(DatabaseFixture database) : ApiT
         html.ShouldContain("Seimo narių ir balsavimų duomenys čia išgalvoti");
     }
 
+    [Fact]
+    public async Task The_theme_switch_script_loads_in_the_head_from_our_origin_and_its_button_is_hidden_until_it_runs()
+    {
+        var html = await OkAsync("/seimo-nariai");
+        var head = html[..html.IndexOf("</head>", StringComparison.Ordinal)];
+
+        Regex.IsMatch(head, "<script src=\"/?js/lt2-theme[^\"]*\\.js\"></script>").ShouldBeTrue();
+        html.ShouldContain("data-theme-switch data-permanent hidden");
+    }
+
     [GeneratedRegex("<h1[ >]")]
     private static partial Regex H1();
 
