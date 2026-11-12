@@ -1,0 +1,23 @@
+@page "/"
+@inject IStringLocalizer<PageText> T
+
+<PageTitle>Lietuva 2.0</PageTitle>
+
+<section class="hero">
+    <p class="eyebrow">@T["Home.Eyebrow"]</p>
+    <h1>Lietuva <em>2.0</em></h1>
+    <p class="kicker">@T["Home.Kicker"]</p>
+    <p class="lede">@T["Home.Lede"]</p>
+    <p class="notice">@T["Home.Trial"]</p>
+    <p class="actions">
+        <AuthorizeView>
+            <Authorized>
+                <a class="btn primary" href="/sveiki">@T["Home.ToAccount"]</a>
+            </Authorized>
+            <NotAuthorized>
+                <a class="btn primary" href="/prisijungti">@T["Home.SignIn"]</a>
+                <a class="btn" href="/prisijungti?registruotis=true">@T["Home.Register"]</a>
+            </NotAuthorized>
+        </AuthorizeView>
+    </p>
+</section>

@@ -2,4 +2,8 @@
   <PropertyGroup>
     <RootNamespace>Lt2.SharedKernel</RootNamespace>
   </PropertyGroup>
+  <ItemGroup>
+    <FrameworkReference Include="Microsoft.AspNetCore.App" />
+    <PackageReference Include="Npgsql" />
+  </ItemGroup>
 </Project>

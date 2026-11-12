@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <resheader name="resmimetype"><value>text/microsoft-resx</value></resheader>
+  <resheader name="version"><value>2.0</value></resheader>
+  <resheader name="reader"><value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value></resheader>
+  <resheader name="writer"><value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value></resheader>
+  <data name="Nav.Label" xml:space="preserve"><value>Pagrindinis meniu</value></data>
+  <data name="Nav.SignIn" xml:space="preserve"><value>Prisijungti</value></data>
+  <data name="Nav.Account" xml:space="preserve"><value>Mano paskyra</value></data>
+  <data name="Footer.Line" xml:space="preserve"><value>Lietuva 2.0 · uždaras bandymas</value></data>
+  <data name="Home.Eyebrow" xml:space="preserve"><value>Bandomoji versija</value></data>
+  <data name="Home.Kicker" xml:space="preserve"><value>Žmonės ir Seimas – vienoje vietoje.</value></data>
+  <data name="Home.Lede" xml:space="preserve"><value>Lietuva 2.0 kuriama tam, kad būtų paprasčiau matyti, kaip dirba Seimas, ir aiškiai pasakyti Seimo nariams, ko prašote.</value></data>
+  <data name="Home.Trial" xml:space="preserve"><value>Vyksta uždaras bandymas: registruotis galima tik su kvietimo kodu.</value></data>
+  <data name="Home.SignIn" xml:space="preserve"><value>Prisijungti</value></data>
+  <data name="Home.Register" xml:space="preserve"><value>Registruotis</value></data>
+  <data name="Home.ToAccount" xml:space="preserve"><value>Mano paskyra</value></data>
+  <data name="Error.Title" xml:space="preserve"><value>Įvyko klaida</value></data>
+  <data name="Error.Text" xml:space="preserve"><value>Atsiprašome, kažkas nepavyko. Bandykite dar kartą vėliau.</value></data>
+  <data name="Error.RequestId" xml:space="preserve"><value>Užklausos numeris:</value></data>
+  <data name="Error.Ui" xml:space="preserve"><value>Įvyko klaida.</value></data>
+  <data name="Error.Reload" xml:space="preserve"><value>Perkrauti</value></data>
+  <data name="NotFound.Title" xml:space="preserve"><value>Puslapis nerastas</value></data>
+  <data name="NotFound.Text" xml:space="preserve"><value>Tokio puslapio nėra. Gal adresas surinktas su klaida?</value></data>
+  <data name="NotFound.Home" xml:space="preserve"><value>Į pradžios puslapį</value></data>
+</root>

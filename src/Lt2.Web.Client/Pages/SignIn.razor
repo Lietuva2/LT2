@@ -1,0 +1,288 @@
+@page "/prisijungti"
+@rendermode InteractiveWebAssembly
+@using FluentValidation
+@inject IAuthApi Auth
+@inject IStringLocalizer<UiText> T
+@inject NavigationManager Navigation
+@inject Passkeys PasskeyBrowser
+@inject IValidator<RegisterRequest> RegisterValidator
+@inject IValidator<RequestCodeRequest> CodeValidator
+@inject IValidator<SignInRequest> SignInValidator
+
+<PageTitle>@T["SignIn.PageTitle"]</PageTitle>
+
+<section class="panel auth" aria-labelledby="auth-title">
+    <h1 id="auth-title">@(_mode == Mode.Register ? T["Register.Title"] : T["SignIn.Title"])</h1>
+
+    @if (_step == Step.Email)
+    {
+        <div class="tabs" role="tablist">
+            <button type="button" role="tab" class="tab" aria-selected="@(_mode == Mode.SignIn)" @onclick="() => Switch(Mode.SignIn)">@T["Tab.SignIn"]</button>
+            <button type="button" role="tab" class="tab" aria-selected="@(_mode == Mode.Register)" @onclick="() => Switch(Mode.Register)">@T["Tab.Register"]</button>
+        </div>
+
+        @if (_mode == Mode.SignIn)
+        {
+            <form class="stack" @onsubmit="RequestCodeAsync" novalidate>
+                <label class="field">
+                    <span>@T["Email.Label"]</span>
+                    <input type="email" autocomplete="email webauthn" inputmode="email" @bind="_email" @bind:event="oninput" disabled="@_busy" required />
+                </label>
+                <FieldError Errors="_errors" Field="email" />
+                <button type="submit" class="btn primary" disabled="@_busy">@T["SignIn.SendCode"]</button>
+            </form>
+
+            <p class="or"><span>@T["Or"]</span></p>
+            <button type="button" class="btn" disabled="@_busy" @onclick="SignInWithPasskeyAsync">@T["SignIn.Passkey"]</button>
+        }
+        else
+        {
+            <p class="muted">@T["Register.Intro"]</p>
+            <form class="stack" @onsubmit="RegisterAsync" novalidate>
+                <label class="field">
+                    <span>@T["Email.Label"]</span>
+                    <input type="email" autocomplete="email" inputmode="email" @bind="_email" @bind:event="oninput" disabled="@_busy" required />
+                </label>
+                <FieldError Errors="_errors" Field="email" />
+                <label class="field">
+                    <span>@T["Invitation.Label"]</span>
+                    <input type="text" autocomplete="off" autocapitalize="characters" @bind="_invitation" @bind:event="oninput" disabled="@_busy" />
+                    <small class="muted">@T["Invitation.Hint"]</small>
+                </label>
+                <FieldError Errors="_errors" Field="invitationCode" />
+                <label class="check">
+                    <input type="checkbox" @bind="_adult" disabled="@_busy" />
+                    <span>@T["Adult.Label"]</span>
+                </label>
+                <FieldError Errors="_errors" Field="confirmsAdult" />
+                <button type="submit" class="btn primary" disabled="@_busy">@T["Register.Submit"]</button>
+            </form>
+        }
+    }
+    else
+    {
+        <p role="status">@(_mode == Mode.Register ? T["Code.SentAfterRegister", _email] : T["Code.SentAfterRequest", _email])</p>
+        <form class="stack" @onsubmit="SignInAsync" novalidate>
+            <label class="field">
+                <span>@T["Code.Label"]</span>
+                <input type="text" class="code" inputmode="numeric" autocomplete="one-time-code" maxlength="6" pattern="[0-9]{6}" @bind="_code" @bind:event="oninput" disabled="@_busy" required />
+            </label>
+            <FieldError Errors="_errors" Field="code" />
+            <button type="submit" class="btn primary" disabled="@_busy">@T["Code.Submit"]</button>
+        </form>
+        <div class="row">
+            <button type="button" class="link" disabled="@_busy" @onclick="ResendAsync">@T["Code.Resend"]</button>
+            <button type="button" class="link" disabled="@_busy" @onclick="ChangeEmail">@T["Code.ChangeEmail"]</button>
+        </div>
+    }
+
+    @if (_message is not null)
+    {
+        <p class="notice" role="alert">@_message</p>
+    }
+    @if (_info is not null)
+    {
+        <p class="chip ok" role="status">@_info</p>
+    }
+</section>
+
+@code {
+    private enum Mode { SignIn, Register }
+    private enum Step { Email, Code }
+
+    private Mode _mode = Mode.SignIn;
+    private Step _step = Step.Email;
+    private string _email = "";
+    private string? _invitation;
+    private bool _adult;
+    private string _code = "";
+    private bool _busy;
+    private string? _message;
+    private string? _info;
+    private IReadOnlyDictionary<string, string[]> _errors = new Dictionary<string, string[]>();
+
+    [SupplyParameterFromQuery(Name = "registruotis")]
+    public bool? StartWithRegistration { get; set; }
+
+    protected override void OnInitialized()
+    {
+        if (StartWithRegistration == true)
+        {
+            _mode = Mode.Register;
+        }
+    }
+
+    private void Switch(Mode mode)
+    {
+        _mode = mode;
+        Clear();
+    }
+
+    private async Task RequestCodeAsync()
+    {
+        var request = new RequestCodeRequest { Email = _email.Trim() };
+        if (!Validate(CodeValidator.Validate(request)))
+        {
+            return;
+        }
+
+        await RunAsync(async () =>
+        {
+            var result = await Auth.RequestCodeAsync(request);
+            if (Show(result))
+            {
+                _step = Step.Code;
+            }
+        });
+    }
+
+    private async Task RegisterAsync()
+    {
+        var request = new RegisterRequest
+        {
+            Email = _email.Trim(),
+            InvitationCode = string.IsNullOrWhiteSpace(_invitation) ? null : _invitation.Trim(),
+            ConfirmsAdult = _adult,
+        };
+        if (!Validate(RegisterValidator.Validate(request)))
+        {
+            return;
+        }
+
+        await RunAsync(async () =>
+        {
+            var result = await Auth.RegisterAsync(request);
+            if (Show(result))
+            {
+                _step = Step.Code;
+            }
+        });
+    }
+
+    private async Task SignInAsync()
+    {
+        var request = new SignInRequest { Email = _email.Trim(), Code = _code.Trim() };
+        if (!Validate(SignInValidator.Validate(request)))
+        {
+            return;
+        }
+
+        await RunAsync(async () =>
+        {
+            var result = await Auth.SignInAsync(request);
+            if (Show(result))
+            {
+                Navigation.NavigateTo("/sveiki", forceLoad: true);
+            }
+        });
+    }
+
+    private async Task ResendAsync()
+    {
+        await RunAsync(async () =>
+        {
+            var result = await Auth.RequestCodeAsync(new RequestCodeRequest { Email = _email.Trim() });
+            if (Show(result))
+            {
+                _info = T["Code.Resent"];
+            }
+        });
+    }
+
+    private void ChangeEmail()
+    {
+        _step = Step.Email;
+        _code = "";
+        Clear();
+    }
+
+    private async Task SignInWithPasskeyAsync()
+    {
+        await RunAsync(async () =>
+        {
+            if (!await PasskeyBrowser.IsSupportedAsync())
+            {
+                _message = T["Passkey.Unsupported"];
+                return;
+            }
+
+            var options = await Auth.GetPasskeyRequestOptionsAsync();
+            if (!Show(options))
+            {
+                return;
+            }
+
+            var credential = await PasskeyBrowser.GetAsync(options.Value!);
+            if (credential is null)
+            {
+                _message = T["Passkey.Cancelled"];
+                return;
+            }
+
+            var result = await Auth.SignInWithPasskeyAsync(new PasskeyCredentialRequest { Credential = credential });
+            if (Show(result))
+            {
+                Navigation.NavigateTo("/sveiki", forceLoad: true);
+            }
+        });
+    }
+
+    private async Task RunAsync(Func<Task> action)
+    {
+        Clear();
+        _busy = true;
+        try
+        {
+            await action();
+        }
+        catch (HttpRequestException)
+        {
+            _message = T["Error.Network"];
+        }
+        finally
+        {
+            _busy = false;
+        }
+    }
+
+    private bool Validate(FluentValidation.Results.ValidationResult result)
+    {
+        Clear();
+        if (result.IsValid)
+        {
+            return true;
+        }
+
+        _errors = result.Errors
+            .GroupBy(e => char.ToLowerInvariant(e.PropertyName[0]) + e.PropertyName[1..])
+            .ToDictionary(g => g.Key, g => g.Select(e => e.ErrorMessage).ToArray());
+        return false;
+    }
+
+    private bool Show(ApiResult result)
+    {
+        if (result.IsSuccess)
+        {
+            return true;
+        }
+
+        var problem = result.Problem!;
+        if (problem.Errors is { Count: > 0 })
+        {
+            _errors = problem.Errors;
+        }
+        else
+        {
+            _message = problem.Detail ?? T["Error.Generic"];
+        }
+
+        return false;
+    }
+
+    private void Clear()
+    {
+        _message = null;
+        _info = null;
+        _errors = new Dictionary<string, string[]>();
+    }
+}

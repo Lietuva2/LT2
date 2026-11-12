@@ -1,0 +1,208 @@
+@page "/sveiki"
+@attribute [Authorize]
+@rendermode InteractiveWebAssembly
+@inject IMeApi MeApi
+@inject IAuthApi Auth
+@inject IStringLocalizer<UiText> T
+@inject NavigationManager Navigation
+@inject Passkeys PasskeyBrowser
+
+<PageTitle>@T["Hello.PageTitle"]</PageTitle>
+
+@if (Me is null)
+{
+    <p class="muted">@T["Loading"]</p>
+}
+else
+{
+    <section class="panel" aria-labelledby="hello-title">
+        <p class="eyebrow">Lietuva 2.0</p>
+        <h1 id="hello-title">@T["Hello.Greeting", Me.DisplayName ?? Me.Email]</h1>
+        <p>@T["Hello.SignedIn"]</p>
+        <p class="chips">
+            <span class="chip @(Me.VerificationLevel == "email" ? "ok" : "gap")">@T["Level." + Me.VerificationLevel]</span>
+            @foreach (var role in Me.Roles)
+            {
+                <span class="chip">@T["Role." + role]</span>
+            }
+        </p>
+    </section>
+
+    <section class="panel" aria-labelledby="passkeys-title">
+        <h2 id="passkeys-title">@T["Passkeys.Title"]</h2>
+        <p class="muted">@T["Passkeys.Text"]</p>
+        <p>@T["Passkeys.Count", Me.PasskeyCount]</p>
+        <button type="button" class="btn" disabled="@_busy" @onclick="AddPasskeyAsync">@T["Passkeys.Add"]</button>
+    </section>
+
+    <section class="panel" aria-labelledby="sessions-title">
+        <h2 id="sessions-title">@T["Sessions.Title"]</h2>
+        <p class="muted">@T["Sessions.Text"]</p>
+        <ul class="sessions">
+            @foreach (var session in Sessions ?? [])
+            {
+                <li>
+                    <div>
+                        <b>@(session.Device ?? T["Sessions.UnknownDevice"])</b>
+                        @if (session.IsCurrent)
+                        {
+                            <span class="chip ok">@T["Sessions.Current"]</span>
+                        }
+                        <div class="muted small">
+                            @T["Sessions.Method." + (string.IsNullOrEmpty(session.Method) ? "unknown" : session.Method)] ·
+                            @T["Sessions.LastSeen", Format(session.LastSeenAt)]
+                        </div>
+                    </div>
+                    @if (!session.IsCurrent)
+                    {
+                        <button type="button" class="btn small" disabled="@_busy" @onclick="() => EndSessionAsync(session.Id)">@T["Sessions.End"]</button>
+                    }
+                </li>
+            }
+        </ul>
+    </section>
+
+    <p><button type="button" class="btn primary" disabled="@_busy" @onclick="SignOutAsync">@T["SignOut"]</button></p>
+}
+
+@if (_message is not null)
+{
+    <p class="notice" role="alert">@_message</p>
+}
+@if (_info is not null)
+{
+    <p class="chip ok" role="status">@_info</p>
+}
+
+@code {
+    private static readonly TimeZoneInfo Vilnius = FindVilnius();
+    private bool _busy;
+    private string? _message;
+    private string? _info;
+
+    [PersistentState]
+    public MeResponse? Me { get; set; }
+
+    [PersistentState]
+    public List<SessionResponse>? Sessions { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        if (Me is null)
+        {
+            var me = await MeApi.GetAsync();
+            if (!me.IsSuccess)
+            {
+                Navigation.NavigateTo("/prisijungti", forceLoad: true);
+                return;
+            }
+
+            Me = me.Value;
+        }
+
+        Sessions ??= await LoadSessionsAsync();
+    }
+
+    private async Task<List<SessionResponse>> LoadSessionsAsync()
+    {
+        var sessions = await MeApi.GetSessionsAsync();
+        return sessions.IsSuccess ? sessions.Value!.ToList() : [];
+    }
+
+    private async Task AddPasskeyAsync()
+    {
+        await RunAsync(async () =>
+        {
+            if (!await PasskeyBrowser.IsSupportedAsync())
+            {
+                _message = T["Passkey.Unsupported"];
+                return;
+            }
+
+            var options = await Auth.GetPasskeyCreationOptionsAsync();
+            if (!options.IsSuccess)
+            {
+                _message = options.Problem!.Detail ?? T["Error.Generic"];
+                return;
+            }
+
+            var credential = await PasskeyBrowser.CreateAsync(options.Value!);
+            if (credential is null)
+            {
+                _message = T["Passkey.Cancelled"];
+                return;
+            }
+
+            var result = await Auth.AddPasskeyAsync(new PasskeyCredentialRequest { Credential = credential });
+            if (!result.IsSuccess)
+            {
+                _message = result.Problem!.Detail ?? T["Error.Generic"];
+                return;
+            }
+
+            _info = T["Passkeys.Added"];
+            var me = await MeApi.GetAsync();
+            if (me.IsSuccess)
+            {
+                Me = me.Value;
+            }
+        });
+    }
+
+    private async Task EndSessionAsync(Guid id)
+    {
+        await RunAsync(async () =>
+        {
+            var result = await MeApi.EndSessionAsync(id);
+            if (!result.IsSuccess)
+            {
+                _message = result.Problem!.Detail ?? T["Error.Generic"];
+            }
+
+            Sessions = await LoadSessionsAsync();
+        });
+    }
+
+    private async Task SignOutAsync()
+    {
+        await RunAsync(async () =>
+        {
+            await Auth.SignOutAsync();
+            Navigation.NavigateTo("/", forceLoad: true);
+        });
+    }
+
+    private async Task RunAsync(Func<Task> action)
+    {
+        _message = null;
+        _info = null;
+        _busy = true;
+        try
+        {
+            await action();
+        }
+        catch (HttpRequestException)
+        {
+            _message = T["Error.Network"];
+        }
+        finally
+        {
+            _busy = false;
+        }
+    }
+
+    private static string Format(DateTimeOffset value) =>
+        TimeZoneInfo.ConvertTime(value, Vilnius).ToString("yyyy-MM-dd HH:mm", System.Globalization.CultureInfo.InvariantCulture);
+
+    private static TimeZoneInfo FindVilnius()
+    {
+        try
+        {
+            return TimeZoneInfo.FindSystemTimeZoneById("Europe/Vilnius");
+        }
+        catch (TimeZoneNotFoundException)
+        {
+            return TimeZoneInfo.Utc;
+        }
+    }
+}
