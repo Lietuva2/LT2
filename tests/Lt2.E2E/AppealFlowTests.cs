@@ -24,18 +24,17 @@ public sealed class AppealFlowTests(AppealFlowTests.ModeratorFixture moderator) 
         var mod = await moderator.PageAsync();
         await HideAppealsOnAsync(mod, bill);
 
-        // 1. The initiator opens the appeal on the bill's appeal page.
+        // 1. The initiator opens the appeal on the bill's appeal page: a neutral description and a threshold, nothing else.
         await using var initiator = await PasskeyBrowser.StartAsync("native", width, height);
         var a = initiator.Page;
         await PasskeyTests.RegisterAsync(a, "Rūta Mockutė");
         await a.GotoAsync($"{Base}/seimas/{bill}/kreipimasis");
         await Assertions.Expect(a.Locator("#no-appeal")).ToBeVisibleAsync();
         await a.Locator("#open-description:not([disabled])").WaitForAsync(new() { Timeout = 60_000 });
-        await a.Locator("#open-side-against").CheckAsync();
+        await Assertions.Expect(a.Locator("#open-appeal input[type=radio]")).ToHaveCountAsync(0, new() { Timeout = 5_000 });
+        await Assertions.Expect(a.Locator("#open-appeal input[type=checkbox]")).ToHaveCountAsync(0, new() { Timeout = 5_000 });
         await a.Locator("#open-description").FillAsync("Projektas keičia mokesčių tvarką: įvedamas naujas tarifas didelėms pajamoms.");
-        await a.Locator("#open-reason").FillAsync("Pakeitimas paliestų vienkartinius įvykius, pavyzdžiui šeimos verslo pardavimą.");
         await a.Locator("#open-threshold").FillAsync("100");
-        await a.Locator("#open-consent").CheckAsync();
         await a.GetByRole(AriaRole.Button, new() { Name = "Pateikti moderatoriui" }).ClickAsync();
         await Assertions.Expect(a.Locator("#pending-note")).ToContainTextAsync("Kreipimasis laukia moderatoriaus", new() { Timeout = 30_000 });
         await NoSidewaysScrollAsync(a);
@@ -80,7 +79,7 @@ public sealed class AppealFlowTests(AppealFlowTests.ModeratorFixture moderator) 
         await b.GetByRole(AriaRole.Button, new() { Name = "Sutinku ir prašau balsuoti už" }).ClickAsync();
         await Assertions.Expect(b.Locator("#my-side")).ToContainTextAsync("Jūs prašote balsuoti už. Tai matote tik jūs.", new() { Timeout = 30_000 });
         await Assertions.Expect(b.Locator("#count-for .figure__num")).ToHaveTextAsync("1");
-        await Assertions.Expect(b.Locator("#count-against .figure__num")).ToHaveTextAsync("1");
+        await Assertions.Expect(b.Locator("#count-against .figure__num")).ToHaveTextAsync("0", new() { Timeout = 5_000 });
         await Assertions.Expect(b.Locator("#reasons-note")).ToHaveCountAsync(0, new() { Timeout = 10_000 });
 
         // 5. ... and marks their argument "Man svarbu", now that it is on their own side.
@@ -90,12 +89,17 @@ public sealed class AppealFlowTests(AppealFlowTests.ModeratorFixture moderator) 
         await NoSidewaysScrollAsync(b);
         await b.ScreenshotAsync(new() { Path = Shot($"appeal-open-{width}.png"), FullPage = true });
 
-        // The initiator sees the counts but not the second member's side.
+        // The initiator sees the counts but not the second member's side; the initiator has none until they take one.
         await a.ReloadAsync();
         await Assertions.Expect(a.Locator("#count-for .figure__num")).ToHaveTextAsync("1");
+        var againstButton = a.Locator("#side-against");
+        await Assertions.Expect(againstButton).ToBeEnabledAsync(new() { Timeout = 60_000 });
+        await againstButton.ClickAsync();
+        await a.Locator("#consent-check").CheckAsync();
+        await a.GetByRole(AriaRole.Button, new() { Name = "Sutinku ir prašau balsuoti prieš" }).ClickAsync();
         await Assertions.Expect(a.Locator("#my-side")).ToContainTextAsync("Jūs prašote balsuoti prieš.", new() { Timeout = 30_000 });
 
-        // 6. The initiator, who asks to vote against, gets "prieš" preselected and writes an argument for instead.
+        // 6. The initiator, who now asks to vote against, gets "prieš" preselected and writes an argument for instead.
         var addMore = a.Locator("#add-reason");
         await Assertions.Expect(addMore).ToBeEnabledAsync(new() { Timeout = 60_000 });
         await addMore.ClickAsync();

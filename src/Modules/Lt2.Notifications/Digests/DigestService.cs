@@ -317,6 +317,11 @@ internal sealed class DigestText(Microsoft.Extensions.Localization.IStringLocali
                         text.AppendLine(CultureInfo.InvariantCulture, $"  · {r.Text} ({N(r.Endorsements)})");
                     }
                 }
+                else
+                {
+                    // An appeal is opened without arguments (design 8.1): a side may have none yet.
+                    text.AppendLine(l["Digest.NoReasons." + side]);
+                }
             }
 
             text.AppendLine();

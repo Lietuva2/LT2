@@ -125,9 +125,10 @@ internal sealed class AppealsService(
 
     public async Task<Result<AppealInfo>> OpenAsync(string billNumber, Guid userId, OpenAppeal request, CancellationToken cancellationToken)
     {
+        // Design 8.1 (decided 2026-11-13): a neutral description and a threshold, nothing else. No side and no first
+        // argument, so no position is stored and no positions consent is needed; the initiator writes arguments and takes
+        // a side on the published appeal like anyone else, or never.
         if (FirstBroken(
-                AppealRules.CheckSide(request.Side),
-                AppealRules.CheckReasonText(request.FirstReason),
                 AppealRules.CheckDescription(request.Description),
                 ThresholdRules.CheckRequested(request.Threshold, await reads.MinimumAsync(cancellationToken))) is { } broken)
         {
@@ -141,9 +142,7 @@ internal sealed class AppealsService(
         }
 
         var description = AppealRules.NormaliseText(request.Description);
-        var firstReason = AppealRules.NormaliseText(request.FirstReason);
         var descriptionFlags = await screening.ScreenAsync(description, cancellationToken);
-        var reasonFlags = await screening.ScreenAsync(firstReason, cancellationToken);
 
         await using var db = await contexts.CreateDbContextAsync(cancellationToken);
         await using var transaction = await db.Database.BeginTransactionAsync(cancellationToken);
@@ -154,11 +153,6 @@ internal sealed class AppealsService(
         if (participant is null)
         {
             return Error.Forbidden("member.required");
-        }
-
-        if (!participant.HasPositionConsent)
-        {
-            return Error.Conflict("consent.required");
         }
 
         if (await RestrictedAsync(db, userId, cancellationToken) is { } restricted)
@@ -190,26 +184,6 @@ internal sealed class AppealsService(
             ScreeningFlags = [.. descriptionFlags],
         };
         db.Appeals.Add(appeal);
-        db.Reasons.Add(new Reason
-        {
-            Id = Ids.New(clock),
-            AppealId = appeal.Id,
-            Side = request.Side,
-            AuthorUserId = userId,
-            Text = firstReason,
-            Status = ReasonStatuses.Pending,
-            ScreeningFlags = [.. reasonFlags],
-            CreatedAt = now,
-        });
-        db.Positions.Add(new Position
-        {
-            AppealId = appeal.Id,
-            UserId = userId,
-            Side = request.Side,
-            CreatedAt = now,
-            ChangedAt = now,
-            MemberSince = participant.MemberSince,
-        });
         await db.SaveChangesAsync(cancellationToken);
         await transaction.CommitAsync(cancellationToken);
         return await InfoAsync(db, appeal, cancellationToken);
@@ -217,7 +191,7 @@ internal sealed class AppealsService(
 
     public async Task<Result<Unit>> EditAsync(string billNumber, Guid userId, EditAppeal request, CancellationToken cancellationToken)
     {
-        if (FirstBroken(AppealRules.CheckDescription(request.Description), AppealRules.CheckReasonText(request.FirstReason)) is { } broken)
+        if (AppealRules.CheckDescription(request.Description) is { } broken)
         {
             return RuleErrors.Of(broken);
         }
@@ -254,17 +228,6 @@ internal sealed class AppealsService(
             appeal.ScreeningFlags = [.. await screening.ScreenAsync(description, cancellationToken)];
         }
 
-        var first = await db.Reasons
-            .Where(r => r.AppealId == appeal.Id && r.AuthorUserId == userId)
-            .OrderBy(r => r.CreatedAt)
-            .FirstAsync(cancellationToken);
-        var text = AppealRules.NormaliseText(request.FirstReason);
-        if (text != first.Text)
-        {
-            db.Revisions.Add(Revise("reason", first.Id, "text", first.Text, text, userId, now));
-            first.Text = text;
-            first.ScreeningFlags = [.. await screening.ScreenAsync(text, cancellationToken)];
-        }
 
         appeal.Status = AppealStatuses.Pending;
         appeal.ChangedAt = now;

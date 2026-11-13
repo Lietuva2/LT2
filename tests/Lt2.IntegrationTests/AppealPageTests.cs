@@ -74,6 +74,25 @@ public sealed partial class AppealPageTests(DatabaseFixture database) : ApiTest(
         }
     }
 
+    /// <summary>Design 8.1: an appeal is opened without arguments, so a published one may have none, on either side.</summary>
+    [Fact]
+    public async Task An_open_appeal_without_participants_or_arguments_says_so_on_both_sides_without_javascript()
+    {
+        var (initiator, _) = await Factory.MemberAsync();
+        using var _i = initiator;
+        await Database.OpenPublishedAsync(initiator, await ModeratorAsync(), AppealSteps.ThirdBill, side: null);
+        using var stranger = NewBrowser();
+
+        var (status, html) = await PageAsync(stranger, "/seimas/XVP-0618/kreipimasis");
+        status.ShouldBe(HttpStatusCode.OK);
+        var main = MainOf(html);
+        Regex.Count(main, "Argumentų dar nėra\\.").ShouldBe(2, "one empty state per side, server-rendered");
+        main.ShouldContain("Tai nėra reprezentatyvi apklausa");
+        (await stranger.AppealAsync(AppealSteps.ThirdBill)).Counts.ShouldBe(new SideCountsResponse(0, 0, 0, 0));
+        var (listStatus, _) = await PageAsync(stranger, "/kreipimaisi");
+        listStatus.ShouldBe(HttpStatusCode.OK);
+    }
+
     [Fact]
     public async Task The_appeal_page_shows_both_sides_with_older_account_counts_the_description_arguments_and_the_note()
     {
@@ -264,6 +283,8 @@ public sealed partial class AppealPageTests(DatabaseFixture database) : ApiTest(
         method.ShouldContain("12:00 darbo dieną prieš posėdį");
         method.ShouldContain("2 suvestinės vienam Seimo nariui");
         method.ShouldContain("pasikeitė bent 10 %");
+        method.ShouldContain("Argumentai yra vieši: kiekvienas rodomas su autoriaus vardu ir puse");
+        method.ShouldContain("Savo argumentą autorius gali atsiimti, kol kreipimasis atviras.");
         method.ShouldContain("Argumentų dėl vieno projekto</dt><dd class=\"num\">neribojama");
         method.ShouldContain("„Man svarbu“ žymų dėl vieno projekto</dt><dd class=\"num\">neribojama");
         method.ShouldContain("kai bent 30 % per paskutines 72 valandas");
@@ -285,7 +306,7 @@ public sealed partial class AppealPageTests(DatabaseFixture database) : ApiTest(
         (await stranger.Client.GetAsync(AppealRoutes.HistoryOf(AppealSteps.SecondBill))).StatusCode.ShouldBe(HttpStatusCode.NotFound, "not before publication");
 
         (await moderator.ReturnAppealAsync(appeal.Id, "Aprašymas turi būti neutralus.")).StatusCode.ShouldBe(HttpStatusCode.NoContent);
-        (await initiator.SendAsync(HttpMethod.Put, AppealRoutes.AppealOf(AppealSteps.SecondBill), new EditAppealRequest { Description = AppealSteps.Description, FirstReason = AppealSteps.AgainstReason }))
+        (await initiator.SendAsync(HttpMethod.Put, AppealRoutes.AppealOf(AppealSteps.SecondBill), new EditAppealRequest { Description = AppealSteps.Description }))
             .StatusCode.ShouldBe(HttpStatusCode.NoContent);
         (await moderator.PublishAsync(appeal.Id)).StatusCode.ShouldBe(HttpStatusCode.NoContent);
 

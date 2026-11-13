@@ -45,7 +45,7 @@ internal static class AppealMapping
 
     public static ModerationQueueResponse Map(ModerationItems q) => new(
         q.Appeals.Select(a => new QueueAppealResponse(
-            a.Id, Map(a.Bill), a.Status, a.InitiatorName, a.Description, a.FirstReason is { } f ? Map(f) : null, a.Threshold, a.Flags,
+            a.Id, Map(a.Bill), a.Status, a.InitiatorName, a.Description, a.Threshold, a.Flags,
             a.Reports.Select(Map).ToList(), a.OpenedAt, Map(a.Surge), Map(a.Planned),
             (a.DateFlags ?? []).Select(f => new QueueFlagResponse(f.Id, f.Kind, f.Link, f.Note, f.CreatedAt)).ToList(),
             a.UnderThresholdOnAgenda,
@@ -54,9 +54,9 @@ internal static class AppealMapping
             r.Id, r.AppealId, Map(r.Bill), r.Side, r.Text, r.AuthorName, r.Status, r.Seen, r.Flags, r.Reports.Select(Map).ToList(),
             r.MergeCandidates.Select(Map).ToList(), r.CreatedAt)).ToList());
 
-    public static OpenAppeal ToModule(OpenAppealRequest r) => new(r.Side, r.FirstReason, r.Description, r.Threshold);
+    public static OpenAppeal ToModule(OpenAppealRequest r) => new(r.Description, r.Threshold);
 
-    public static EditAppeal ToModule(EditAppealRequest r) => new(r.Description, r.FirstReason);
+    public static EditAppeal ToModule(EditAppealRequest r) => new(r.Description);
 
     public static NewReason ToModule(ReasonRequest r) => new(r.Side, r.Text);
 

@@ -94,24 +94,21 @@ public sealed record ReasonCreatedResponse(Guid Id, string Status);
 /// </summary>
 public sealed record MyRestrictionResponse(bool Restricted, DateOnly? Until, string? Statement);
 
-/// <summary>Opening the appeal on a bill (design 8.1): a side, the first argument, a neutral description, a threshold.</summary>
+/// <summary>
+/// Opening the appeal on a bill (design 8.1, decided 2026-11-13): a neutral description and a threshold. No side and no
+/// first argument: the initiator writes arguments and takes a side on the published appeal like anyone else.
+/// </summary>
 public sealed record OpenAppealRequest
 {
-    public string Side { get; init; } = "";
-
-    public string FirstReason { get; init; } = "";
-
     public string Description { get; init; } = "";
 
     public int Threshold { get; init; }
 }
 
-/// <summary>A returned appeal, corrected by its initiator and sent to the moderators again.</summary>
+/// <summary>A returned appeal: its neutral description, corrected by its initiator and sent to the moderators again.</summary>
 public sealed record EditAppealRequest
 {
     public string Description { get; init; } = "";
-
-    public string FirstReason { get; init; } = "";
 }
 
 public sealed record ThresholdRequest

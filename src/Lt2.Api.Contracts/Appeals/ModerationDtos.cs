@@ -9,7 +9,6 @@ public sealed record QueueAppealResponse(
     string Status,
     string? InitiatorName,
     string Description,
-    ReasonResponse? FirstReason,
     int Threshold,
     IReadOnlyList<string> Flags,
     IReadOnlyList<QueueReportResponse> Reports,

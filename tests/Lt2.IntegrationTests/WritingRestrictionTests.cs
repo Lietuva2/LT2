@@ -50,7 +50,7 @@ public sealed class WritingRestrictionTests(DatabaseFixture database) : ApiTest(
         var (person, email) = await Factory.MemberAsync("Rašanti Asmenybė");
         using var _p = person;
         await Database.FreeBillAsync(AppealSteps.SecondBill);
-        using (var opened = await person.OpenAppealAsync(AppealSteps.SecondBill, "for", 100))
+        using (var opened = await person.OpenAppealAsync(AppealSteps.SecondBill, 100))
         {
             opened.StatusCode.ShouldBe(HttpStatusCode.Created);
             var own = await opened.ReadAsync<AppealResponse>();
@@ -90,13 +90,13 @@ public sealed class WritingRestrictionTests(DatabaseFixture database) : ApiTest(
             await reason.ShouldBeProblemAsync(HttpStatusCode.Forbidden, "writing.restricted");
         }
 
-        using (var open = await person.OpenAppealAsync(AppealSteps.ThirdBill, "for", 100))
+        using (var open = await person.OpenAppealAsync(AppealSteps.ThirdBill, 100))
         {
             await open.ShouldBeProblemAsync(HttpStatusCode.Forbidden, "writing.restricted");
         }
 
         using (var edit = await person.SendAsync(HttpMethod.Put, AppealRoutes.AppealOf(AppealSteps.SecondBill),
-                   new EditAppealRequest { Description = "Pataisytas neutralus aprašymas.", FirstReason = "Pataisytas argumentas." }))
+                   new EditAppealRequest { Description = "Pataisytas neutralus aprašymas." }))
         {
             await edit.ShouldBeProblemAsync(HttpStatusCode.Forbidden, "writing.restricted");
         }

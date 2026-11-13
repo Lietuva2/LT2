@@ -197,6 +197,78 @@ public sealed class AppealPrivacyTests(DatabaseFixture database) : ApiTest(datab
         reasons.ShouldAllBe(r => Block(page, r.Id, texts) != null);
     }
 
+    /// <summary>
+    /// Design 8.1 (decided 2026-11-13): opening asks for no side, so nothing ties the initiator to one. The same appeal is
+    /// opened three times by an initiator with no side, asking for, and asking against, each time with other members
+    /// making the totals equal (one for, one against). Every public answer and page must then be the same, once ids,
+    /// times and the bill's own answer counts are blanked.
+    /// </summary>
+    [Fact]
+    public async Task No_answer_tells_the_initiators_side_or_whether_they_have_one()
+    {
+        var (moderator, _) = await StaffAsync();
+        var (forMember, _) = await Factory.MemberAsync("Narys Už");
+        using var _f = forMember;
+        var (againstMember, _) = await Factory.MemberAsync("Narė Prieš");
+        using var _a = againstMember;
+        using var stranger = NewBrowser();
+        var shapes = new Dictionary<string, List<string>>();
+
+        foreach (var initiatorSide in new string?[] { null, "for", "against" })
+        {
+            var (initiator, _) = await Factory.MemberAsync("Iniciatorė Bet Kuri");
+            using var _i = initiator;
+            await Database.OpenPublishedAsync(initiator, moderator.Browser, AppealSteps.ThirdBill, side: null);
+            if (initiatorSide is not null)
+            {
+                (await initiator.TakeSideAsync(AppealSteps.ThirdBill, initiatorSide)).StatusCode.ShouldBe(HttpStatusCode.NoContent);
+            }
+
+            if (initiatorSide != "for")
+            {
+                (await forMember.TakeSideAsync(AppealSteps.ThirdBill, "for")).StatusCode.ShouldBe(HttpStatusCode.NoContent);
+            }
+
+            if (initiatorSide != "against")
+            {
+                (await againstMember.TakeSideAsync(AppealSteps.ThirdBill, "against")).StatusCode.ShouldBe(HttpStatusCode.NoContent);
+            }
+
+            (await stranger.AppealAsync(AppealSteps.ThirdBill)).Counts.ShouldBe(new SideCountsResponse(1, 0, 1, 0));
+            var answers = new List<string>();
+            foreach (var uri in new[] { AppealRoutes.AppealOf(AppealSteps.ThirdBill), "/seimas/XVP-0618/kreipimasis", AppealRoutes.Appeals, "/kreipimaisi" })
+            {
+                foreach (var viewer in new[] { stranger, moderator.Browser })
+                {
+                    var body = await viewer.Client.GetStringAsync(uri);
+                    answers.Add(Blank(body));
+                }
+            }
+
+            shapes[initiatorSide ?? "none"] = answers;
+        }
+
+        for (var i = 0; i < shapes["none"].Count; i++)
+        {
+            shapes["for"][i].ShouldBe(shapes["none"][i], $"answer {i}: an initiator asking for vs one with no side");
+            shapes["against"][i].ShouldBe(shapes["none"][i], $"answer {i}: an initiator asking against vs one with no side");
+        }
+
+        // Nothing stored ties an initiator to a side: no column next to the initiator, and no position made by opening.
+        (await Database.ScalarAsync<long>(
+            "SELECT count(*) FROM information_schema.columns WHERE table_schema = 'appeals' AND table_name = 'appeal' AND column_name LIKE '%side%'"))
+            .ShouldBe(0);
+    }
+
+    /// <summary>An answer with ids, times, Blazor's comments and persisted state blanked; what is left must not depend on anyone's side.</summary>
+    private static string Blank(string body)
+    {
+        var text = Regex.Replace(body, "<!--.*?-->", "", RegexOptions.Singleline);
+        text = Regex.Replace(text, "[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}", "ID");
+        text = Regex.Replace(text, @"\d{4}-\d{2}-\d{2}T[0-9:.+\-Z]+", "TIME");
+        return Regex.Replace(text, "name=\"__RequestVerificationToken\"[^>]*", "TOKEN");
+    }
+
     /// <summary>Every JSON object whose id is one of <paramref name="ids"/>, with the fields that may differ removed.</summary>
     private static void Collect(JsonElement element, HashSet<Guid> ids, HashSet<string> varying, Dictionary<(Guid, string), string> found)
     {
@@ -346,7 +418,7 @@ public sealed class AppealPrivacyTests(DatabaseFixture database) : ApiTest(datab
         var (initiator, initiatorEmail) = await logged.MemberAsync("Rūta Mockutė");
         using var _i = initiator;
         await Database.FreeBillAsync(AppealSteps.ThirdBill);
-        var opened = await (await initiator.OpenAppealAsync(AppealSteps.ThirdBill, "against")).ReadAsync<AppealResponse>();
+        var opened = await (await initiator.OpenAppealAsync(AppealSteps.ThirdBill)).ReadAsync<AppealResponse>();
         (await moderator.Browser.PublishAsync(opened.Id)).StatusCode.ShouldBe(HttpStatusCode.NoContent);
         var (member, memberEmail) = await logged.MemberAsync("Giedrė L.");
         using var _m = member;

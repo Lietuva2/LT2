@@ -76,11 +76,7 @@ else
                 <p class="small">@Text("Mod.OpenedBy", appeal.InitiatorName ?? L["Reasons.Anonymous"], AppealNumbers.Of(appeal.Threshold))</p>
                 <p class="label">@L["Open.Description"]</p>
                 <p class="voice">@appeal.Description</p>
-                @if (appeal.FirstReason is { } first)
-                {
-                    <p class="label">@L["Mod.FirstReason"] · <span class="choice choice--@first.Side">@L["Reasons." + first.Side]</span></p>
-                    <p class="bubble bubble--people voice">@first.Text</p>
-                }
+
                 <Reports Items="appeal.Reports" />
                 <ModerationActions Id="appeal.Id" Kind="appeal" Status="@appeal.Status" Held="appeal.Held" OnDone="ReloadAsync" />
                 <RestrictAuthor Kind="appeal" Id="appeal.Id" OnDone="RestrictedAsync" />

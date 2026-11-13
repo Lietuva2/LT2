@@ -107,11 +107,10 @@
 <data name="Report.Sent" xml:space="preserve"><value>Ačiū. Moderatoriai peržiūrės.</value></data>
 <data name="Open.SignIn" xml:space="preserve"><value>Prisijunkite, kad atidarytumėte kreipimąsi</value></data>
 <data name="Open.Title" xml:space="preserve"><value>Atidaryti kreipimąsi</value></data>
+<data name="Open.After" xml:space="preserve"><value>Kai moderatorius kreipimąsi paskelbs, galėsite – kaip ir visi kiti – parašyti argumentų už ar prieš ir, jei norite, nurodyti, ko prašote patys.</value></data>
 <data name="Open.Intro" xml:space="preserve"><value>Vienam projektui – vienas kreipimasis: visi, kurie prašo Seimo narių balsuoti už ar prieš, prisijungia prie jo. Prieš paskelbiant kreipimąsi peržiūrės moderatorius; iki tol jį matote tik jūs.</value></data>
-<data name="Open.Side" xml:space="preserve"><value>Ko prašote Seimo narių?</value></data>
 <data name="Open.Description" xml:space="preserve"><value>Ką keičia projektas</value></data>
 <data name="Open.DescriptionHint" xml:space="preserve"><value>Trumpai ir neutraliai, be vertinimų: šį aprašymą skaitys abiejų pusių dalyviai. Iki {0} ženklų.</value></data>
-<data name="Open.FirstReason" xml:space="preserve"><value>Jūsų argumentas</value></data>
 <data name="Open.Threshold" xml:space="preserve"><value>Riba</value></data>
 <data name="Open.ThresholdHint" xml:space="preserve"><value>Kiek dalyvių, abiejų pusių kartu, turi turėti kreipimasis, kad patektų į suvestines Seimo nariams. Riba bus vieša. Ne mažiau kaip {0}.</value></data>
 <data name="Open.Submit" xml:space="preserve"><value>Pateikti moderatoriui</value></data>
@@ -130,7 +129,6 @@
 <data name="Mod.Reason" xml:space="preserve"><value>Argumentas</value></data>
 <data name="Mod.Empty" xml:space="preserve"><value>Nieko nelaukia.</value></data>
 <data name="Mod.OpenedBy" xml:space="preserve"><value>Atidarė {0} · riba {1}</value></data>
-<data name="Mod.FirstReason" xml:space="preserve"><value>Pirmas argumentas</value></data>
 <data name="Mod.Status.pending" xml:space="preserve"><value>Laukia peržiūros</value></data>
 <data name="Mod.Status.open" xml:space="preserve"><value>Paskelbtas, gautas pranešimas</value></data>
 <data name="Mod.Status.published" xml:space="preserve"><value>Paskelbtas</value></data>

@@ -69,6 +69,7 @@
 <data name="Digests.Mps" xml:space="preserve"><value>Seimo narių: {0}</value></data>
 <data name="Digests.Items" xml:space="preserve"><value>kreipimųsi: {0}</value></data>
 <data name="Digests.Open" xml:space="preserve"><value>Atskiras puslapis</value></data>
+<data name="Digests.NoReasons" xml:space="preserve"><value>Argumentų dar nėra.</value></data>
 <data name="Digests.Side.for" xml:space="preserve"><value>Už</value></data>
 <data name="Digests.Side.against" xml:space="preserve"><value>Prieš</value></data>
 <data name="Digests.Endorsed" xml:space="preserve"><value>Man svarbu · {0}</value></data>
@@ -113,7 +114,8 @@
 <data name="Method.Digests.Groups" xml:space="preserve"><value>Grupių skaičiai</value></data>
 <data name="Method.Digests.GroupsValue" xml:space="preserve"><value>pvz., palaikančių Seimo nario partiją, rodomi tik kai grupėje yra bent {0} žmonių</value></data>
 <data name="Method.Digests.NotSent" xml:space="preserve"><value>Kol vyksta bandymas, suvestinės sudaromos ir skelbiamos viešai, bet Seimo nariams nesiunčiamos.</value></data>
-<data name="Method.Limits" xml:space="preserve"><value>Kiek gali vienas žmogus</value></data>
+<data name="Method.Reasons" xml:space="preserve"><value>Argumentai</value></data>
+<data name="Method.Reasons.1" xml:space="preserve"><value>Argumentai yra vieši: kiekvienas rodomas su autoriaus vardu ir puse, kurią autorius pasirinko (už ar prieš). Argumentą galima parašyti bet kuriai pusei, nepriklausomai nuo to, ko prašote patys, ir net nenurodžius, ko prašote, todėl argumentas neparodo autoriaus pozicijos. Sutikimo saugoti poziciją tam nereikia, nes rašant argumentą jokia pozicija nesaugoma. Savo argumentą autorius gali atsiimti, kol kreipimasis atviras.</value></data><data name="Method.Limits" xml:space="preserve"><value>Kiek gali vienas žmogus</value></data>
 <data name="Method.Limits.Reasons" xml:space="preserve"><value>Argumentų dėl vieno projekto</value></data>
 <data name="Method.Limits.ReasonsValue" xml:space="preserve"><value>ne daugiau kaip {0}</value></data>
 <data name="Method.Limits.Endorsements" xml:space="preserve"><value>„Man svarbu“ žymų dėl vieno projekto</value></data>

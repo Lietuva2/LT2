@@ -1,11 +1,11 @@
 @using Lt2.Api.Contracts.Appeals
 @inherits InteractiveBase
 @inject IAppealsApi Appeals
-@inject IMeApi MeApi
 @inject NavigationManager Navigation
 
-@* Opening the appeal on a bill (design 8.1): a side, the first argument, a neutral description and the threshold. It
-   waits for a moderator; if the bill got an appeal meanwhile, the person is taken to it. *@
+@* Opening the appeal on a bill (design 8.1, decided 2026-11-13): a neutral description and the threshold, nothing else.
+   No side and no first argument, so no positions consent: once a moderator publishes the appeal, the initiator writes
+   arguments and takes a side like anyone else, or never. If the bill got an appeal meanwhile, the person is taken to it. *@
 @if (!_signedIn)
 {
     <p><a class="btn" href="/prisijungti">@L["Open.SignIn"]</a></p>
@@ -20,32 +20,12 @@ else if (Rules is { } rules)
         <h2 id="open-title">@L["Open.Title"]</h2>
         <p>@L["Open.Intro"]</p>
 
-        <fieldset class="field stack stack--tight @(Errors.ContainsKey("side") ? "field--error" : "")">
-            <legend>@L["Open.Side"]</legend>
-            @foreach (var side in AppealLimits.Sides)
-            {
-                <label class="check">
-                    <input type="radio" name="side" id="open-side-@side" value="@side" checked="@(_side == side)" @onchange="() => _side = side" disabled="@Locked" />
-                    <span>@L["Side." + side]</span>
-                </label>
-            }
-            <FieldError Errors="Errors" Field="side" />
-        </fieldset>
-
         <div class="field @(Errors.ContainsKey("description") ? "field--error" : "")">
             <label for="open-description">@L["Open.Description"]</label>
             <p class="field__hint" id="open-description-hint">@Text("Open.DescriptionHint", AppealNumbers.Of(rules.DescriptionMaxLength))</p>
             <textarea class="textarea" id="open-description" maxlength="@rules.DescriptionMaxLength" aria-describedby="open-description-hint"
                       @bind="_description" @bind:event="oninput" disabled="@Locked"></textarea>
             <FieldError Errors="Errors" Field="description" />
-        </div>
-
-        <div class="field @(Errors.ContainsKey("firstReason") ? "field--error" : "")">
-            <label for="open-reason">@L["Open.FirstReason"]</label>
-            <p class="field__hint num" id="open-reason-hint">@Text("Reasons.Hint", _reason.Length, rules.ReasonMaxLength)</p>
-            <textarea class="textarea" id="open-reason" maxlength="@rules.ReasonMaxLength" aria-describedby="open-reason-hint"
-                      @bind="_reason" @bind:event="oninput" disabled="@Locked"></textarea>
-            <FieldError Errors="Errors" Field="firstReason" />
         </div>
 
         <div class="field @(Errors.ContainsKey("threshold") ? "field--error" : "")">
@@ -56,30 +36,15 @@ else if (Rules is { } rules)
             <FieldError Errors="Errors" Field="threshold" />
         </div>
 
-        @if (!_hasConsent)
-        {
-            <div class="stack stack--tight">
-                <p class="label">@L["Consent.Title"]</p>
-                <p>@L["Consent.Text"]</p>
-                <label class="check">
-                    <input type="checkbox" id="open-consent" @bind="_consentChecked" disabled="@Locked" />
-                    <span>@L["Consent.Check"]</span>
-                </label>
-            </div>
-        }
-
-        <button type="submit" class="btn" disabled="@(Locked || (!_hasConsent && !_consentChecked))">@L["Open.Submit"]</button>
+        <p class="small">@L["Open.After"]</p>
+        <button type="submit" class="btn" disabled="@Locked">@L["Open.Submit"]</button>
         <Messages Message="@Message" Info="@Info" />
     </form>
 }
 
 @code {
     private bool _signedIn;
-    private bool _hasConsent;
-    private bool _consentChecked;
-    private string? _side;
     private string _description = "";
-    private string _reason = "";
     private int _threshold;
 
     [Parameter, EditorRequired] public string Number { get; set; } = "";
@@ -87,8 +52,6 @@ else if (Rules is { } rules)
     [CascadingParameter] private Task<AuthenticationState>? AuthState { get; set; }
 
     [PersistentState] public AppealRulesResponse? Rules { get; set; }
-
-    [PersistentState] public bool? HasConsent { get; set; }
 
     /// <summary>The person's own writing restriction (design 8.3): opening an appeal is writing.</summary>
     [PersistentState] public MyRestrictionResponse? Restriction { get; set; }
@@ -103,38 +66,18 @@ else if (Rules is { } rules)
 
         Rules ??= (await Appeals.GetRulesAsync()).Value;
         Restriction ??= (await Appeals.GetMyRestrictionAsync()).Value;
-        HasConsent ??= (await MeApi.GetAsync()).Value?.HasPositionConsent ?? false;
-        _hasConsent = HasConsent.Value;
         _threshold = Rules?.ThresholdDefault ?? 100;
     }
 
     private Task SubmitAsync() => RunAsync(async () =>
     {
-        if (!_hasConsent)
-        {
-            var consent = await MeApi.GivePositionConsentAsync(new PositionConsentRequest { TextVersion = PositionConsentText.Version });
-            if (!consent.IsSuccess)
-            {
-                Show(consent.Problem);
-                return;
-            }
-
-            _hasConsent = true;
-        }
-
-        var result = await Appeals.OpenAsync(Number, new OpenAppealRequest
-        {
-            Side = _side ?? "",
-            Description = _description,
-            FirstReason = _reason,
-            Threshold = _threshold,
-        });
+        var result = await Appeals.OpenAsync(Number, new OpenAppealRequest { Description = _description, Threshold = _threshold });
         if (result.IsSuccess || result.Problem?.Code == "appeal.exists")
         {
             Navigation.NavigateTo($"/seimas/{Uri.EscapeDataString(Number)}/kreipimasis", forceLoad: true);
             return;
         }
 
-        Show(result.Problem, "side", "description", "firstReason", "threshold");
+        Show(result.Problem, "description", "threshold");
     });
 }

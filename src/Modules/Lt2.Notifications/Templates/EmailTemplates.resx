@@ -24,9 +24,9 @@
   <data name="Role.administrator" xml:space="preserve"><value>administratoriaus</value></data>
   <data name="SignInCode.Signature" xml:space="preserve"><value>Lietuva 2.0</value></data>
 <data name="Moderation.appeal-published.Subject" xml:space="preserve"><value>Lietuva 2.0: kreipimasis dėl {0} paskelbtas</value></data>
-<data name="Moderation.appeal-published.Body" xml:space="preserve"><value>moderatorius peržiūrėjo ir paskelbė jūsų kreipimąsi dėl projekto {0}. Dabar jį mato visi, o Lietuva 2.0 naudotojai gali nurodyti savo poziciją ir rašyti argumentus.</value></data>
+<data name="Moderation.appeal-published.Body" xml:space="preserve"><value>moderatorius peržiūrėjo ir paskelbė jūsų kreipimąsi dėl projekto {0}. Dabar jį mato visi, o Lietuva 2.0 naudotojai gali nurodyti, ko prašo, ir rašyti argumentus. Argumentų galite parašyti ir jūs – kreipimosi puslapyje, kaip ir visi kiti.</value></data>
 <data name="Moderation.appeal-returned.Subject" xml:space="preserve"><value>Lietuva 2.0: kreipimąsi dėl {0} reikia pataisyti</value></data>
-<data name="Moderation.appeal-returned.Body" xml:space="preserve"><value>moderatorius grąžino jūsų kreipimąsi dėl projekto {0}. Jo kol kas niekas kitas nemato. Pataisykite aprašymą ar argumentą ir pateikite kreipimąsi dar kartą.</value></data>
+<data name="Moderation.appeal-returned.Body" xml:space="preserve"><value>moderatorius grąžino jūsų kreipimąsi dėl projekto {0}. Jo kol kas niekas kitas nemato. Pataisykite aprašymą ir pateikite kreipimąsi dar kartą.</value></data>
 <data name="Moderation.appeal-hidden.Subject" xml:space="preserve"><value>Lietuva 2.0: kreipimasis dėl {0} paslėptas</value></data>
 <data name="Moderation.appeal-hidden.Body" xml:space="preserve"><value>moderatorius paslėpė jūsų kreipimąsi dėl projekto {0}. Jis nebėra matomas.</value></data>
 <data name="Moderation.threshold-changed.Subject" xml:space="preserve"><value>Lietuva 2.0: pakeista kreipimosi dėl {0} riba</value></data>
@@ -58,6 +58,8 @@
 <data name="Digest.Surge" xml:space="preserve"><value>  Per paskutines {0} valandas {1} % pozicijų pateikė paskyros, sukurtos per tą patį laiką. Skaičius „senesnės nei 30 d.“ jų neapima.</value></data>
 <data name="Digest.Reasons.for" xml:space="preserve"><value>  Dažniausi argumentai už:</value></data>
 <data name="Digest.Reasons.against" xml:space="preserve"><value>  Dažniausi argumentai prieš:</value></data>
+<data name="Digest.NoReasons.for" xml:space="preserve"><value>  Argumentų už dar nėra.</value></data>
+<data name="Digest.NoReasons.against" xml:space="preserve"><value>  Argumentų prieš dar nėra.</value></data>
 <data name="Digest.NotAPoll" xml:space="preserve"><value>Tai nėra reprezentatyvi apklausa: skaičiai rodo savanoriškai dalyvaujančių Lietuva 2.0 naudotojų nuomonę.</value></data>
 <data name="Digest.PublicCopy" xml:space="preserve"><value>Ta pati suvestinė viešai: /suvestines/{0}</value></data>
 <data name="Digest.Skipped" xml:space="preserve"><value>(Šiam Seimo nariui ši suvestinė nebūtų siunčiama: viršytas savaitės laiškų skaičius.)</value></data>

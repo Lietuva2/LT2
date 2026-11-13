@@ -78,10 +78,10 @@ public sealed record MyAppeal(
 public sealed record AppealRulesInfo(int ThresholdDefault, int ThresholdMinimum, int ReasonMaxLength, int ReasonsPerPerson, int EndorsementsPerPerson, int DescriptionMaxLength);
 
 /// <summary>What the initiator gives when opening an appeal (design 8.1).</summary>
-public sealed record OpenAppeal(string Side, string FirstReason, string Description, int Threshold);
+public sealed record OpenAppeal(string Description, int Threshold);
 
 /// <summary>A returned appeal, edited by its initiator and sent to the moderators again.</summary>
-public sealed record EditAppeal(string Description, string FirstReason);
+public sealed record EditAppeal(string Description);
 
 public sealed record NewReason(string Side, string Text);
 
@@ -101,7 +101,6 @@ public sealed record QueueAppeal(
     string Status,
     string? InitiatorName,
     string Description,
-    ReasonInfo? FirstReason,
     int Threshold,
     IReadOnlyList<string> Flags,
     IReadOnlyList<QueueReport> Reports,

@@ -183,6 +183,57 @@ public sealed class DigestTests(DatabaseFixture database) : ApiTest(database)
         }
     }
 
+    /// <summary>Design 8.1: appeals are opened without arguments, so a summary meets a side, or a whole appeal, with none.</summary>
+    [Fact]
+    public async Task A_summary_copes_with_an_appeal_without_arguments_and_with_a_side_without_any()
+    {
+        var (moderator, admin) = await StaffAsync();
+        await SetAsync(admin, "Digest:ThresholdMinimum", 1);
+        var monday = MondayIn(16);
+        try
+        {
+            // XVP-0618: one participant, no arguments at all. XVP-0533: an argument for, none against.
+            var (first, _) = await Factory.MemberAsync();
+            using var _f = first;
+            await Database.OpenPublishedAsync(first, moderator, AppealSteps.ThirdBill, side: null, threshold: 1);
+            var (second, _) = await Factory.MemberAsync();
+            using var _s = second;
+            await Database.OpenPublishedAsync(second, moderator, AppealSteps.SecondBill, side: null, threshold: 1);
+            var (participant, _) = await Factory.MemberAsync();
+            using var _p = participant;
+            (await participant.TakeSideAsync(AppealSteps.ThirdBill, "for")).StatusCode.ShouldBe(HttpStatusCode.NoContent);
+            (await participant.TakeSideAsync(AppealSteps.SecondBill, "for")).StatusCode.ShouldBe(HttpStatusCode.NoContent);
+            using (var written = await participant.WriteReasonAsync(AppealSteps.SecondBill, "for", "Vienintelis argumentas už."))
+            {
+                var id = (await written.ReadAsync<ReasonCreatedResponse>()).Id;
+                (await moderator.PostAsync(AppealRoutes.With(AppealRoutes.PublishReason, id), new ModerationRequest())).StatusCode.ShouldBe(HttpStatusCode.NoContent);
+            }
+
+            await PlanAsync("XVP-0618", monday.AddDays(3));
+            await PlanAsync("XVP-0533", monday.AddDays(3), "consideration");
+            var weekly = (await RunDueAsync(At(monday, 7, 5))).Single();
+            weekly.Items.Single(i => i.BillNumber == "XVP-0618").Reasons.ShouldBeEmpty();
+            weekly.Items.Single(i => i.BillNumber == "XVP-0533").Reasons.Select(r => r.Side).ShouldBe(["for"]);
+
+            var mps = await moderator.GetJsonAsync<List<DigestMpResponse>>(DigestRoutes.MpsOf(weekly.Id));
+            var text = (await moderator.GetJsonAsync<DigestPreviewResponse>(DigestRoutes.PreviewOf(weekly.Id, mps[0].Slug))).Text;
+            Regex(text, "Argumentų už dar nėra.").ShouldBe(1, "XVP-0618 has none for");
+            Regex(text, "Argumentų prieš dar nėra.").ShouldBe(2, "neither appeal has one against");
+            text.ShouldContain("Vienintelis argumentas už.");
+
+            using var stranger = NewBrowser();
+            var html = WebUtility.HtmlDecode(await stranger.Client.GetStringAsync("/suvestines/" + monday.ToString("yyyy-MM-dd", System.Globalization.CultureInfo.InvariantCulture)));
+            Regex(html, "Argumentų dar nėra.").ShouldBe(3, "XVP-0618 on both sides, XVP-0533 against");
+        }
+        finally
+        {
+            await SetAsync(admin, "Digest:ThresholdMinimum", 50);
+            await Database.ExecuteAsync("DELETE FROM parliament.planned_item WHERE bill_number IN ('XVP-0618', 'XVP-0533')");
+        }
+
+        static int Regex(string text, string what) => System.Text.RegularExpressions.Regex.Count(text, System.Text.RegularExpressions.Regex.Escape(what));
+    }
+
     [Fact]
     public async Task A_before_vote_summary_comes_the_day_before_and_the_weekly_ceiling_holds_per_mp()
     {

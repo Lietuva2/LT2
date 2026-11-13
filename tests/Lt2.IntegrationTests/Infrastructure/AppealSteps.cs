@@ -39,14 +39,9 @@ public static class AppealSteps
         return (browser, email);
     }
 
-    public static async Task<HttpResponseMessage> OpenAppealAsync(this TestBrowser browser, string number, string side = "against", int threshold = 100, string? reason = null, string? description = null) =>
-        await browser.PostAsync(AppealRoutes.AppealOf(number), new OpenAppealRequest
-        {
-            Side = side,
-            FirstReason = reason ?? (side == "for" ? ForReason : AgainstReason),
-            Description = description ?? Description,
-            Threshold = threshold,
-        });
+    /// <summary>Opens the appeal (design 8.1): a neutral description and a threshold, nothing else.</summary>
+    public static async Task<HttpResponseMessage> OpenAppealAsync(this TestBrowser browser, string number, int threshold = 100, string? description = null) =>
+        await browser.PostAsync(AppealRoutes.AppealOf(number), new OpenAppealRequest { Description = description ?? Description, Threshold = threshold });
 
     public static Task<HttpResponseMessage> TakeSideAsync(this TestBrowser browser, string number, string side) =>
         browser.SendAsync(HttpMethod.Put, AppealRoutes.PositionOf(number), new PositionRequest { Side = side });
@@ -57,15 +52,32 @@ public static class AppealSteps
     public static Task<HttpResponseMessage> PublishAsync(this TestBrowser moderator, Guid appealId, string? statement = null) =>
         moderator.PostAsync(AppealRoutes.With(AppealRoutes.PublishAppeal, appealId), new ModerationRequest { Statement = statement });
 
-    /// <summary>Opens the appeal on a freed bill as <paramref name="initiator"/> and has <paramref name="moderator"/> publish it.</summary>
-    public static async Task<AppealResponse> OpenPublishedAsync(this DatabaseFixture database, TestBrowser initiator, TestBrowser moderator, string number, string side = "against", int threshold = 100)
+    /// <summary>
+    /// Opens the appeal on a freed bill as <paramref name="initiator"/> and has <paramref name="moderator"/> publish it.
+    /// Then, unless <paramref name="side"/> is null, the initiator takes that side and writes the standard argument for it
+    /// (<see cref="ForReason"/> or <see cref="AgainstReason"/>) like anyone else, and the moderator marks it seen: the
+    /// state tests used to get from a side and a first argument at opening, before 2026-11-13.
+    /// </summary>
+    public static async Task<AppealResponse> OpenPublishedAsync(this DatabaseFixture database, TestBrowser initiator, TestBrowser moderator, string number, string? side = "against", int threshold = 100)
     {
         await database.FreeBillAsync(number);
-        using var opened = await initiator.OpenAppealAsync(number, side, threshold);
+        using var opened = await initiator.OpenAppealAsync(number, threshold);
         opened.StatusCode.ShouldBe(HttpStatusCode.Created, await opened.Content.ReadAsStringAsync());
         var appeal = await opened.ReadAsync<AppealResponse>();
         using var published = await moderator.PublishAsync(appeal.Id);
         published.StatusCode.ShouldBe(HttpStatusCode.NoContent, await published.Content.ReadAsStringAsync());
+        if (side is null)
+        {
+            return appeal;
+        }
+
+        using var took = await initiator.TakeSideAsync(number, side);
+        took.StatusCode.ShouldBe(HttpStatusCode.NoContent, await took.Content.ReadAsStringAsync());
+        using var wrote = await initiator.WriteReasonAsync(number, side, side == "for" ? ForReason : AgainstReason);
+        wrote.StatusCode.ShouldBe(HttpStatusCode.Created, await wrote.Content.ReadAsStringAsync());
+        var reason = await wrote.ReadAsync<ReasonCreatedResponse>();
+        using var seen = await moderator.PostAsync(AppealRoutes.With(AppealRoutes.PublishReason, reason.Id), new ModerationRequest());
+        seen.StatusCode.ShouldBe(HttpStatusCode.NoContent, await seen.Content.ReadAsStringAsync());
         return appeal;
     }
 

@@ -58,10 +58,6 @@ internal sealed class ModerationService(
             .OrderBy(a => a.OpenedAt)
             .Take(QueueLimit)
             .ToListAsync(cancellationToken);
-        var pendingIds = appeals.Where(a => a.Status == AppealStatuses.Pending).Select(a => a.Id).ToList();
-        var firstReasons = await db.Reasons.AsNoTracking()
-            .Where(r => pendingIds.Contains(r.AppealId))
-            .ToListAsync(cancellationToken);
 
         var reasons = await db.Reasons.AsNoTracking()
             .Where(r => db.Appeals.Any(a => a.Id == r.AppealId && a.Status == AppealStatuses.Open)
@@ -78,25 +74,24 @@ internal sealed class ModerationService(
             .Where(r => candidateAppeals.Contains(r.AppealId) && r.Status == ReasonStatuses.Published)
             .ToListAsync(cancellationToken);
 
-        var allReasons = firstReasons.Concat(reasons).Concat(candidates).ToList();
+        var allReasons = reasons.Concat(candidates).ToList();
         var names = await reads.NamesAsync(appeals.Select(a => a.InitiatorUserId).Concat(allReasons.Select(r => r.AuthorUserId)), cancellationToken);
         var endorsements = await AppealReads.EndorsementCountsAsync(db, allReasons.Select(r => r.Id).Distinct().ToList(), cancellationToken);
         var billFacts = await reads.BillsAsync(appeals.Select(a => a.BillNumber).Concat(appealOf.Values.Select(a => a.BillNumber)).Distinct().ToList(), cancellationToken);
         BillFacts Bill(string number) => billFacts.GetValueOrDefault(number) ?? new BillFacts(number, number);
         IReadOnlyList<QueueReport> ReportsOn(Guid id) => openReports.Where(r => r.TargetId == id).Select(r => new QueueReport(r.Id, r.Ground, r.Text, r.CreatedAt)).ToList();
 
+        // Design 8.1: a moderator reviews an appeal's neutral description; it has no first argument.
         var queueAppeals = appeals.Select(a =>
         {
-            var first = firstReasons.Where(r => r.AppealId == a.Id && r.AuthorUserId == a.InitiatorUserId).MinBy(r => r.CreatedAt);
             return new QueueAppeal(
                 a.Id,
                 Bill(a.BillNumber),
                 a.Status,
                 names.GetValueOrDefault(a.InitiatorUserId),
                 a.Description,
-                first is null ? null : AppealReads.ToInfo(first, names, endorsements),
                 a.Threshold,
-                a.ScreeningFlags.Concat(first?.ScreeningFlags ?? []).Distinct().ToList(),
+                a.ScreeningFlags.Distinct().ToList(),
                 ReportsOn(a.Id),
                 a.OpenedAt,
                 surges.GetValueOrDefault(a.Id),
@@ -143,11 +138,6 @@ internal sealed class ModerationService(
                 appeal.PublishedAt = now;
                 appeal.ReturnNote = null;
                 notice = ModerationNotices.AppealPublished;
-
-                // The initiator's first argument was checked with the appeal.
-                await db.Reasons
-                    .Where(r => r.AppealId == appeal.Id && r.AuthorUserId == appeal.InitiatorUserId && r.Status == ReasonStatuses.Pending)
-                    .ExecuteUpdateAsync(s => s.SetProperty(r => r.Status, ReasonStatuses.Published).SetProperty(r => r.SeenAt, now), cancellationToken);
             }
 
             // An open appeal that was reported or flagged is kept as it is: its reports and date flags are closed.

@@ -30,8 +30,6 @@ public sealed class OpenAppealRequestValidator : AbstractValidator<OpenAppealReq
 {
     public OpenAppealRequestValidator(IStringLocalizer<ValidationMessages> l)
     {
-        RuleFor(x => x.Side).Side(l);
-        RuleFor(x => x.FirstReason).ReasonText(l);
         RuleFor(x => x.Description).Description(l);
         RuleFor(x => x.Threshold).GreaterThan(0).WithMessage(l["Threshold.Positive"]);
     }
@@ -39,11 +37,8 @@ public sealed class OpenAppealRequestValidator : AbstractValidator<OpenAppealReq
 
 public sealed class EditAppealRequestValidator : AbstractValidator<EditAppealRequest>
 {
-    public EditAppealRequestValidator(IStringLocalizer<ValidationMessages> l)
-    {
-        RuleFor(x => x.FirstReason).ReasonText(l);
+    public EditAppealRequestValidator(IStringLocalizer<ValidationMessages> l) =>
         RuleFor(x => x.Description).Description(l);
-    }
 }
 
 public sealed class ThresholdRequestValidator : AbstractValidator<ThresholdRequest>

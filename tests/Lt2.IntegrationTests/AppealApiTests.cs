@@ -44,13 +44,15 @@ public sealed class AppealApiTests(DatabaseFixture database) : ApiTest(database)
     }
 
     [Fact]
-    public async Task Opening_an_appeal_needs_the_consent_to_store_the_initiators_side()
+    public async Task Opening_an_appeal_needs_no_positions_consent_because_it_stores_no_side()
     {
         await Database.FreeBillAsync(AppealSteps.SecondBill);
-        var (browser, _) = await Factory.MemberAsync(consent: false);
+        var (browser, email) = await Factory.MemberAsync(consent: false);
         using var _b = browser;
         using var response = await browser.OpenAppealAsync(AppealSteps.SecondBill);
-        await response.ShouldBeProblemAsync(HttpStatusCode.Conflict, "consent.required");
+        response.StatusCode.ShouldBe(HttpStatusCode.Created, await response.Content.ReadAsStringAsync());
+        (await Database.ScalarAsync<long>("SELECT count(*) FROM appeals.position WHERE user_id = @u", ("u", await Database.UserIdAsync(email)))).ShouldBe(0);
+        (await Database.ScalarAsync<long>("SELECT count(*) FROM appeals.reason WHERE author_user_id = @u", ("u", await Database.UserIdAsync(email)))).ShouldBe(0);
     }
 
     [Fact]
@@ -63,23 +65,30 @@ public sealed class AppealApiTests(DatabaseFixture database) : ApiTest(database)
         using var _o = other;
         using var stranger = NewBrowser();
 
-        using var opened = await initiator.OpenAppealAsync(AppealSteps.SecondBill, "against", threshold: 1000);
+        using var opened = await initiator.OpenAppealAsync(AppealSteps.SecondBill, 1000);
         opened.StatusCode.ShouldBe(HttpStatusCode.Created, await opened.Content.ReadAsStringAsync());
         opened.Headers.Location!.ToString().ShouldBe("/api/v1/bills/XVP-0533/appeal");
         var appeal = await opened.ReadAsync<AppealResponse>();
         appeal.Status.ShouldBe("pending");
         appeal.InitiatorName.ShouldBe("Rūta Mockutė");
         appeal.Bill.Number.ShouldBe("XVP-0533");
-        appeal.Threshold.ShouldBe(new ThresholdResponse(1000, "initiator", null, 1, false, false));
-        appeal.Counts.ShouldBe(new SideCountsResponse(0, 0, 1, 0), "the initiator's own side");
+        appeal.Threshold.ShouldBe(new ThresholdResponse(1000, "initiator", null, 0, false, false));
+        appeal.Counts.ShouldBe(new SideCountsResponse(0, 0, 0, 0), "a new appeal has no participants, the initiator included");
+        appeal.Reasons.ShouldBeEmpty("no first argument");
 
         (await initiator.AppealAsync(AppealSteps.SecondBill)).Status.ShouldBe("pending");
         var mine = await initiator.MineAsync(AppealSteps.SecondBill);
-        mine.Side.ShouldBe("against");
+        mine.Side.ShouldBeNull();
         mine.IsInitiator.ShouldBeTrue();
         mine.MayChangeThreshold.ShouldBeTrue();
-        mine.MyReasons.Single().Status.ShouldBe("pending");
+        mine.MyReasons.ShouldBeEmpty();
         mine.ReasonsLeft.ShouldBeNull("no limit by default, so no counter");
+
+        // Nobody writes arguments on an appeal waiting for a moderator, the initiator included.
+        using (var early = await initiator.WriteReasonAsync(AppealSteps.SecondBill, "for", "Per anksti."))
+        {
+            early.IsSuccessStatusCode.ShouldBeFalse();
+        }
 
         foreach (var browser in new[] { other, stranger })
         {
@@ -100,7 +109,7 @@ public sealed class AppealApiTests(DatabaseFixture database) : ApiTest(database)
         using var _s = second;
         (await first.OpenAppealAsync(AppealSteps.SecondBill)).StatusCode.ShouldBe(HttpStatusCode.Created);
 
-        using var again = await second.OpenAppealAsync(AppealSteps.SecondBill, "for");
+        using var again = await second.OpenAppealAsync(AppealSteps.SecondBill);
         await again.ShouldBeProblemAsync(HttpStatusCode.Conflict, "appeal.exists");
     }
 
@@ -124,15 +133,14 @@ public sealed class AppealApiTests(DatabaseFixture database) : ApiTest(database)
     }
 
     [Theory]
-    [InlineData("abstain", 100, "Argumentas.", "Aprašymas.")]
-    [InlineData("for", 0, "Argumentas.", "Aprašymas.")]
-    [InlineData("for", 100, " ", "Aprašymas.")]
-    [InlineData("for", 100, "Argumentas.", "")]
-    public async Task An_appeal_needs_a_side_a_positive_threshold_a_first_argument_and_a_description(string side, int threshold, string reason, string description)
+    [InlineData(0, "Aprašymas.")]
+    [InlineData(100, "")]
+    [InlineData(100, " ")]
+    public async Task An_appeal_needs_a_positive_threshold_and_a_description(int threshold, string description)
     {
         var (member, _) = await Factory.MemberAsync();
         using var _m = member;
-        using var response = await member.OpenAppealAsync(AppealSteps.SecondBill, side, threshold, reason, description);
+        using var response = await member.OpenAppealAsync(AppealSteps.SecondBill, threshold, description);
         await response.ShouldBeProblemAsync(HttpStatusCode.BadRequest, "validation");
     }
 

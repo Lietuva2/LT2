@@ -78,6 +78,10 @@
                                 {
                                     <div class="stack stack--tight">
                                         <h4><span class="choice choice--@side">@T["Digests.Side." + side]</span></h4>
+                                        @if (!item.Reasons.Any(r => r.Side == side))
+                                        {
+                                            <p class="small">@T["Digests.NoReasons"]</p>
+                                        }
                                         @foreach (var reason in item.Reasons.Where(r => r.Side == side))
                                         {
                                             <div class="said">

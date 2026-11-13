@@ -72,16 +72,15 @@ public sealed class ModerationApiTests(DatabaseFixture database) : ApiTest(datab
         var (initiator, email) = await Factory.MemberAsync("Rūta Mockutė");
         using var _i = initiator;
         using var opened = await initiator.OpenAppealAsync(
-            AppealSteps.SecondBill, "against", reason: "Skambinkite +370 612 34567, paaiškinsiu.");
+            AppealSteps.SecondBill, description: AppealSteps.Description + " Skambinkite +370 612 34567, paaiškinsiu.");
         var appeal = await opened.ReadAsync<AppealResponse>();
         var moderator = (await ModeratorAsync()).Browser;
 
         var queued = (await moderator.GetJsonAsync<ModerationQueueResponse>(AppealRoutes.ModerationQueue)).Appeals.Single(a => a.Id == appeal.Id);
         queued.Status.ShouldBe("pending");
         queued.InitiatorName.ShouldBe("Rūta Mockutė");
-        queued.Description.ShouldBe(AppealSteps.Description);
-        queued.FirstReason!.Text.ShouldBe("Skambinkite +370 612 34567, paaiškinsiu.");
-        queued.Flags.ShouldBe(["phone"]);
+        queued.Description.ShouldBe(AppealSteps.Description + " Skambinkite +370 612 34567, paaiškinsiu.");
+        queued.Flags.ShouldBe(["phone"], "the moderator reviews the description only; there is no first argument");
 
         using (var published = await moderator.PublishAsync(appeal.Id, "Aprašymas neutralus."))
         {
@@ -92,7 +91,7 @@ public sealed class ModerationApiTests(DatabaseFixture database) : ApiTest(datab
         var page = await stranger.AppealAsync(AppealSteps.SecondBill);
         page.Status.ShouldBe("open");
         page.PublishedAt.ShouldNotBeNull();
-        page.Reasons.Single().Status.ShouldBe("published");
+        page.Reasons.ShouldBeEmpty("opened without arguments; the initiator writes them like anyone else");
         (await AuditAsync("moderation.appeal.publish", appeal.Id)).ShouldBe(1);
         (await NoticesAsync(email, "appeal-published")).ShouldBe(1);
         (await Database.ScalarAsync<long>("SELECT count(*) FROM appeals.moderation_action WHERE target_id = @t AND action = 'publish'", ("t", appeal.Id))).ShouldBe(1);
@@ -127,7 +126,6 @@ public sealed class ModerationApiTests(DatabaseFixture database) : ApiTest(datab
         using (var edited = await initiator.SendAsync(HttpMethod.Put, AppealRoutes.AppealOf(AppealSteps.SecondBill), new EditAppealRequest
         {
             Description = AppealSteps.Description,
-            FirstReason = AppealSteps.AgainstReason,
         }))
         {
             edited.StatusCode.ShouldBe(HttpStatusCode.NoContent);
@@ -159,7 +157,7 @@ public sealed class ModerationApiTests(DatabaseFixture database) : ApiTest(datab
         (await NoticesAsync(email, "appeal-hidden")).ShouldBe(1);
         var (next, _) = await Factory.MemberAsync();
         using var _n = next;
-        (await next.OpenAppealAsync(AppealSteps.ThirdBill, "for")).StatusCode.ShouldBe(HttpStatusCode.Created);
+        (await next.OpenAppealAsync(AppealSteps.ThirdBill)).StatusCode.ShouldBe(HttpStatusCode.Created);
     }
 
     [Fact]
