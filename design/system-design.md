@@ -265,6 +265,7 @@ ASP.NET Core Identity tables (users, roles, claims, tokens, passkeys), plus:
 | `response` | `appeal_id`, `person_id`, stance, text, published and edited times, `written_by_user_id` | One per MP per bill; edits keep history. |
 | `report` | target, reporter, ground, status | Notice-and-action under the Digital Services Act. |
 | `moderation_action` | moderator, target, action, statement of reasons, time | The statement is sent to the author. |
+| `writing_restriction` | `id`, `user_id`, `ends_at` (null = until lifted), statement, set by and when, lifted by, when and why | A moderator's restriction on writing (8.3). Lives with the writing rules in this module; deleted with the account; never shown to anyone but the person and staff. |
 | `revision` | entity, field, old and new value, who, when | Edit history for descriptions, reasons, responses. |
 
 ### 5.4 `notify`
@@ -390,8 +391,8 @@ Policy-based, with resource handlers where ownership matters.
 | Visitor | Read all public pages and public API. |
 | Member (confirmed email; invited during the trial) | Open an appeal, take a side, write and endorse reasons, report content. |
 | Verified MP / office member (`politician_link`) | Publish and edit that MP's response; manage that MP's email preferences. |
-| Moderator | Review appeals and reasons, merge, hide, correct planned dates, hold a send, approve an urgent send. |
-| Administrator | Roles, politician verification, configuration, import and digest dashboards. Cannot read individual positions through any screen. |
+| Moderator | Review appeals and reasons, merge, hide, correct planned dates, hold a send, approve an urgent send, restrict an account from writing and lift that. |
+| Administrator | Roles, politician verification, configuration, import and digest dashboards, lifting a writing restriction. Cannot read individual positions through any screen. |
 
 No screen and no API returns another person's position. Group numbers are published only for groups of at least 20.
 
@@ -604,11 +605,36 @@ the bill, participants are told so they can reconsider (as agreed for votes in `
 - Queue: new appeals (always), reasons flagged by pre-screening or by reports, requests to correct a date or send
   urgently, and appeals still under their threshold whose bill has reached the agenda.
 - Actions: publish, return with a note, hide, merge a reason into another (endorsements move with it), correct the
-  planned date or stage, change an appeal's threshold, hold or release sending for a bill.
+  planned date or stage, change an appeal's threshold, hold or release sending for a bill, restrict an account from
+  writing or lift that (below).
 - Hiding an appeal rejects it and frees the bill for a new appeal. The sides people took on the hidden appeal are
   **kept, for now [decided 2026-11-13, to be looked at again]**: nobody can see them, and deleting them on hide could
   not be undone if the hide was a mistake. Whether to delete them instead (data minimisation) will be looked at
   again.
+- **Restricting an account from writing [decided 2026-11-13].** With the per-person limits switched off (8.2), this is
+  the tool for the one person who misuses that. A moderator restricts the author of a reason or the initiator of an
+  appeal, reached from that item in the queue, either until a date (inclusive, Vilnius time) or until lifted; any
+  moderator may set any length, and any moderator or administrator may lift it, each only in a staff-passkey session
+  (6.2) and each with a written statement. A dated restriction ends by itself when it is checked on use; no job runs.
+  - It blocks everything the person writes for others to read: writing a reason, opening an appeal, editing an
+    appeal's description or first reason (a returned one included), and flags about planned dates. The API refuses
+    these with `writing.restricted`; the pages show, in place of the writing box or form, that writing is restricted,
+    until when, and the reason.
+  - It does not touch signing in, taking or changing a side, "Man svarbu", reporting, consent, export, deleting the
+    account or sessions, and never changes a count. The person's earlier reasons and appeals stay; hiding one is its own
+    action, as before.
+  - The person is told by email (outbox): the statement, the end date or "until lifted", and the moderators' contact
+    address for objecting (there is no objection form in the product). Lifting early tells them too.
+  - It is not public: no page, API answer or summary shows anyone else that an account is restricted, and the person's
+    reasons look the same as everyone's.
+  - When restricting, the moderator sees the display name, that person's reasons and appeals, and earlier moderation
+    actions on them, earlier restrictions included; never the address, a side or a mark. The account is never named by
+    its id: the moderator's screens reach it through the reason or appeal, and a restriction has its own id for lifting.
+  - Setting and lifting are recorded like every moderation action (moderator, target, statement, end date) and in
+    `audit`, with nothing about sides.
+  - Deleting the account deletes its restrictions with everything else. **No hash of the address is kept [decided
+    2026-11-13]**: a person can register with another address anyway.
+  - Not built: a full lock that also stops signing in; left for later.
 - Every action is logged in `audit`, and the author receives the statement of reasons. A report button is on every
   appeal and reason (Digital Services Act notice-and-action applies to any hosting service, however small).
 - Only reasons a moderator has seen can appear in a summary email.
@@ -743,6 +769,13 @@ POST   /api/v1/bills/{number}/appeal/reasons             side (either), text
 DELETE /api/v1/reasons/{id}                              the author withdraws their own reason, while the appeal is open
 PUT    /api/v1/reasons/{id}/endorsement    DELETE /api/v1/reasons/{id}/endorsement
 POST   /api/v1/bills/{number}/appeal/flags               "date is wrong", "voted sooner"
+GET    /api/v1/me/writing-restriction                    the caller's own restriction, if any (never cached)
+GET    /api/v1/moderation/reasons/{id}/author            name, their reasons, appeals, earlier actions and restrictions
+GET    /api/v1/moderation/appeals/{id}/initiator         the same for an appeal's initiator
+POST   /api/v1/moderation/reasons/{id}/restrict-author   statement, until (a date) or none = until lifted
+POST   /api/v1/moderation/appeals/{id}/restrict-initiator
+GET    /api/v1/moderation/restrictions                   current restrictions (moderator or administrator)
+POST   /api/v1/moderation/restrictions/{id}/lift         statement (moderator or administrator)
 POST   /api/v1/reports
 GET    /api/v1/digests            GET /api/v1/digests/{date}
 
@@ -882,6 +915,9 @@ Splitting M2 means the risky step (emailing every MP) happens only after the who
   switched on later counts only shown or waiting reasons and removes nothing (8.2, 5.6).
 - An author can withdraw their own reason while the appeal is open (8.2, 8.8). Still to be confirmed: that a reason
   cannot be withdrawn once the appeal is closed (8.2).
+- A moderator can restrict an account from writing, until a date or until lifted, with a statement emailed to the
+  person; it is not public, touches no side, mark or count, and goes with the account; no hash of the address is kept.
+  A full lock that stops sign-in is left for later (8.3).
 
 **Decisions needed before the stage that uses them**
 

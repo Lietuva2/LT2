@@ -181,7 +181,9 @@ official `@lrs.lt` address from open data; the link is tied to the Seimas person
 - Timing is corrected by a moderator when people flag a wrong date: correct, hold, or approve one urgent summary.
 
 **Moderation.** Anything that reaches MPs has passed a person. Every action is audited and the author gets the reason.
-A report button is on every appeal and reason.
+A report button is on every appeal and reason. A moderator can restrict an account from writing (reasons, appeals,
+their edits, date flags), until a date or until lifted, with a statement emailed to the person; it never touches sides,
+marks, counts or sign-in, is never shown to anyone else, and goes with the account (no address hash is kept).
 
 ## Wording and tone
 
