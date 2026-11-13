@@ -19,6 +19,9 @@
   <data name="Setting.ValueRequired" xml:space="preserve"><value>Nurodykite reikšmę.</value></data>
 <data name="Side.Invalid" xml:space="preserve"><value>Pasirinkite: prašyti balsuoti už arba prieš.</value></data>
 <data name="Reason.Required" xml:space="preserve"><value>Parašykite argumentą.</value></data>
+<data name="Feedback.Empty" xml:space="preserve"><value>Parašykite, ką norite pasakyti.</value></data>
+<data name="Feedback.TooLong" xml:space="preserve"><value>Per ilga žinutė: ne daugiau kaip 2 000 ženklų.</value></data>
+<data name="Feedback.Kind" xml:space="preserve"><value>Pasirinkite vieną iš pateiktų rūšių.</value></data>
 <data name="Reason.TooLong" xml:space="preserve"><value>Argumentas per ilgas: ne daugiau kaip 500 ženklų.</value></data>
 <data name="Description.Required" xml:space="preserve"><value>Trumpai ir neutraliai aprašykite, ką keičia projektas.</value></data>
 <data name="Description.TooLong" xml:space="preserve"><value>Aprašymas per ilgas: ne daugiau kaip 1 500 ženklų.</value></data>

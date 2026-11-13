@@ -10,6 +10,10 @@ public static class MessageKinds
     public const string ModerationNoticeEmail = "email.moderation-notice";
 
     public const string WritingRestrictionEmail = "email.writing-restriction";
+
+    public const string FeedbackReplyEmail = "email.feedback-reply";
+
+    public const string FeedbackNoticeEmail = "email.feedback-notice";
 }
 
 /// <summary>
@@ -85,3 +89,12 @@ public static class AccountNotices
 
     public static readonly IReadOnlyList<string> All = [PasskeyAdded, RoleGranted, RoleActivated, AccountReset];
 }
+
+/// <summary>Payload of <see cref="MessageKinds.FeedbackReplyEmail"/>: the team's reply to a member's feedback (design 8.10).</summary>
+/// <param name="To">The member's address; staff never see it.</param>
+/// <param name="Reply">The team's reply.</param>
+/// <param name="Excerpt">The beginning of the member's own text, so they know which item.</param>
+public sealed record FeedbackReplyEmail(string To, string Reply, string Excerpt);
+
+/// <summary>Payload of <see cref="MessageKinds.FeedbackNoticeEmail"/>: how many new feedback items wait, never their text.</summary>
+public sealed record FeedbackNoticeEmail(string To, int Count, string StaffPath);

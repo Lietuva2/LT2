@@ -63,6 +63,74 @@ namespace Lt2.Identity.Infrastructure.Migrations
                     b.ToTable("consent", "identity");
                 });
 
+            modelBuilder.Entity("Lt2.Identity.Domain.FeedbackItem", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<string>("Browser")
+                        .HasMaxLength(60)
+                        .HasColumnType("character varying(60)")
+                        .HasColumnName("browser");
+
+                    b.Property<DateOnly>("CreatedOn")
+                        .HasColumnType("date")
+                        .HasColumnName("created_on");
+
+                    b.Property<string>("Kind")
+                        .HasMaxLength(16)
+                        .HasColumnType("character varying(16)")
+                        .HasColumnName("kind");
+
+                    b.Property<string>("Note")
+                        .HasMaxLength(1000)
+                        .HasColumnType("character varying(1000)")
+                        .HasColumnName("note");
+
+                    b.Property<bool>("Noticed")
+                        .HasColumnType("boolean")
+                        .HasColumnName("noticed");
+
+                    b.Property<string>("PagePath")
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)")
+                        .HasColumnName("page_path");
+
+                    b.Property<string>("Replies")
+                        .IsRequired()
+                        .HasColumnType("jsonb")
+                        .HasColumnName("replies");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasMaxLength(8)
+                        .HasColumnType("character varying(8)")
+                        .HasColumnName("status");
+
+                    b.Property<string>("Text")
+                        .IsRequired()
+                        .HasMaxLength(2000)
+                        .HasColumnType("character varying(2000)")
+                        .HasColumnName("text");
+
+                    b.Property<Guid?>("UserId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("user_id");
+
+                    b.HasKey("Id")
+                        .HasName("pk_feedback");
+
+                    b.HasIndex("UserId")
+                        .HasDatabaseName("ix_feedback_user_id");
+
+                    b.HasIndex("Status", "CreatedOn")
+                        .HasDatabaseName("ix_feedback_status_created_on");
+
+                    b.ToTable("feedback", "identity");
+                });
+
             modelBuilder.Entity("Lt2.Identity.Domain.Invitation", b =>
                 {
                     b.Property<Guid>("Id")
@@ -725,6 +793,15 @@ namespace Lt2.Identity.Infrastructure.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired()
                         .HasConstraintName("fk_consent_user_user_id");
+                });
+
+            modelBuilder.Entity("Lt2.Identity.Domain.FeedbackItem", b =>
+                {
+                    b.HasOne("Lt2.Identity.Domain.User", null)
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .HasConstraintName("fk_feedback_user_user_id");
                 });
 
             modelBuilder.Entity("Lt2.Identity.Domain.InvitationDaily", b =>

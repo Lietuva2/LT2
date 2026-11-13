@@ -61,6 +61,8 @@ services:
       ReverseProxy__TrustForwardedHeaders: "true"
       # Where visitors without a session may write to the moderators (design 8.3). Production sets the real address.
       Moderation__ContactAddress: ${LT2_MODERATION_CONTACT:-}
+      # The repository's GitHub issues, linked from the feedback panel (design 8.10); nothing shown when empty.
+      Feedback__IssuesUrl: ${LT2_FEEDBACK_ISSUES_URL:-}
       # Requests per client address in each window (design 6.4). The defaults here are the code's; only the local .env
       # raises them, so hand testing and end-to-end runs on one machine never meet a 429.
       RateLimits__CodeRequest__PermitLimit: ${LT2_RATE_CODE_REQUESTS:-10}
@@ -98,6 +100,8 @@ services:
       Outbound__AllowedHosts__1: ${LT2_OUTBOUND_EXTRA_HOST:-}
       # The upcoming plenary agenda (lrs.lt pages). Empty: the watcher is off. The host must be on the allowlist.
       Agenda__BaseAddress: ${LT2_AGENDA_BASE_ADDRESS:-}
+      # Where at most one notice a day of new feedback goes (design 8.10); none when empty.
+      Feedback__TeamAddress: ${LT2_FEEDBACK_TEAM_ADDRESS:-}
       OTEL_EXPORTER_OTLP_ENDPOINT: ${OTEL_EXPORTER_OTLP_ENDPOINT:-}
     secrets:
       - source: db_worker_password

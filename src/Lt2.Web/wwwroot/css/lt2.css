@@ -497,3 +497,21 @@ legend { padding: 0; font-weight: 600; }
 .said__by .linkish { font-size: var(--fs-1); }
 .report-visitor > summary { display: inline; cursor: pointer; }
 .report-visitor[open] > p { margin-top: var(--sp-2); }
+
+/* Feedback balloon (design 8.10): a disclosure, so it opens and closes without JavaScript. Where the side margin is wide
+   enough it floats in it; on narrower screens it sits at the end of the page, so it never covers text or controls. */
+.feedback { max-width: var(--page); margin: var(--sp-5) auto 0; padding: 0 var(--sp-4) var(--sp-5); display: flex; flex-direction: column; align-items: flex-end; }
+.feedback__button { list-style: none; cursor: pointer; inline-size: 2.75rem; block-size: 2.75rem; border-radius: 50%; display: grid; place-items: center; background: var(--action); color: var(--action-ink); }
+.feedback__button::-webkit-details-marker { display: none; }
+.feedback__button::marker { content: ""; }
+.feedback__button:hover { background: var(--action-hover); }
+.feedback__button svg { inline-size: 1.5rem; block-size: 1.5rem; }
+.feedback__panel { inline-size: min(26rem, 100%); background: var(--sheet); color: var(--ink); border: 1px solid var(--rule); padding: var(--sp-5); margin-top: var(--sp-3); box-shadow: 0 0.5rem 1.5rem rgb(0 0 0 / 0.18); }
+@media (min-width: 80rem) {
+  .feedback { position: fixed; right: 0.75rem; bottom: 0.75rem; margin: 0; padding: 0; z-index: 20; }
+  .feedback__panel { position: absolute; right: 0; bottom: 3.5rem; max-block-size: calc(100vh - 5rem); overflow: auto; }
+}
+@media (prefers-reduced-motion: no-preference) {
+  .feedback[open] .feedback__panel { animation: feedback-slide 0.18s ease-out; }
+}
+@keyframes feedback-slide { from { transform: translateY(0.75rem); opacity: 0; } to { transform: none; opacity: 1; } }

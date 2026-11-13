@@ -191,5 +191,20 @@
     b.addEventListener('click', function () { sides.forEach(function (o) { o.setAttribute('aria-pressed', o === b); }); });
   });
 </script>
+<details class="feedback">
+  <summary class="feedback__button" aria-label="Atsiliepimai" title="Atsiliepimai"><svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path fill="currentColor" d="M12 3C6.5 3 2 6.6 2 11c0 2.4 1.3 4.5 3.4 6L4.6 21l4.3-2.4c1 .3 2 .4 3.1.4 5.5 0 10-3.6 10-8s-4.5-8-10-8Z"/></svg></summary>
+  <section class="feedback__panel stack stack--tight" aria-labelledby="feedback-title">
+    <h2 id="feedback-title">Atsiliepimai Lietuva 2.0 komandai</h2>
+    <p class="small">Tai ne pokalbis: žinutę perskaito komanda, o atsako el. paštu, jei leidžiate.</p>
+    <div class="field"><label for="fb-text">Ką norite pasakyti?</label><textarea class="textarea" id="fb-text" maxlength="2000"></textarea><p class="field__hint">Iki 2 000 ženklų. Nerašykite, kurią pusę pasirinkote dėl projekto – mums to nereikia.</p></div>
+    <p class="small">Kartu išsiųsime (galite atžymėti):</p>
+    <label class="check"><input type="checkbox" checked><span>puslapis: <code>/seimas/XVP-0412/kreipimasis</code></span></label>
+    <label class="check"><input type="checkbox" checked><span>naršyklė: Edge 131</span></label>
+    <label class="check"><input type="checkbox"><span>Galite man atsakyti</span></label>
+    <button type="button" class="btn">Siųsti</button>
+    <p class="small">Darbus komanda tvarko ir GitHub: <a href="https://github.com/Lietuva2/LT2/issues">Lietuva 2.0 darbai GitHub</a>. Ten parašytas pranešimas yra viešas ir rodomas su jūsų GitHub vardu.</p>
+  </section>
+</details>
+<script src="lt2-feedback.js" defer></script>
 </body>
 </html>

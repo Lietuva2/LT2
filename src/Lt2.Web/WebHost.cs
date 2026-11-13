@@ -71,6 +71,8 @@ internal static class WebHost
         services.AddScoped<IParliamentApi, ServerParliamentApi>();
         services.AddScoped<IAppealsApi, ServerAppealsApi>();
         services.AddScoped<IModerationApi, ServerModerationApi>();
+        services.AddSingleton<FeedbackLimiter>();
+        services.AddScoped<Lt2.Api.Contracts.Feedback.IFeedbackApi, ServerFeedbackApi>();
         services.AddScoped<IAdminApi, ServerAdminApi>();
         services.AddScoped<Lt2.Api.Contracts.Digests.IDigestsApi, ServerDigestsApi>();
         services.AddScoped<Lt2.Web.Components.Parliament.Formats>();

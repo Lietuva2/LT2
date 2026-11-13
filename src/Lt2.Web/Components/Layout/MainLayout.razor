@@ -1,6 +1,9 @@
 @inherits LayoutComponentBase
 @inject IStringLocalizer<PageText> T
 @inject Lt2.Api.Contracts.Meta.IMetaApi Meta
+@inject IStringLocalizer<Lt2.Web.Components.Feedback.FeedbackText> F
+@inject IConfiguration Configuration
+@inject NavigationManager Navigation
 
 <header class="page top">
     <a class="top__brand" href="/"><Logo />Lietuva 2.0</a>
@@ -29,14 +32,23 @@
 
 <main class="page stack stack--loose">
     @Body
+    @if (OnSignInPage && Configuration["Moderation:ContactAddress"] is { Length: > 0 } contact)
+    {
+        @* Design 8.10: on the sign-in and registration page, a way out for whoever cannot sign in. *@
+        <p class="small" id="cannot-sign-in">@F["CannotSignIn"] <a href="mailto:@contact">@contact</a></p>
+    }
 </main>
 
 <footer class="page foot">
     <p>@T["Footer.Line"]</p>
 </footer>
 
+<FeedbackBalloon />
+
 @code {
     private bool _parliamentDataInvented;
+
+    private bool OnSignInPage => Navigation.ToBaseRelativePath(Navigation.Uri).Split('?', '#')[0] == "prisijungti";
 
     protected override async Task OnInitializedAsync() =>
         _parliamentDataInvented = (await Meta.GetImportsAsync()).Value?.ParliamentDataInvented == true;

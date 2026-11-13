@@ -96,6 +96,10 @@ internal sealed class MaintenanceHandler(IdentityDb db, ISettings settings, Time
         var pending = await db.Users
             .Where(u => db.Profiles.Any(p => p.UserId == u.Id && p.RegisteredAt == null && p.CreatedAt < pendingCutoff))
             .ExecuteDeleteAsync(cancellationToken);
-        return codes + sessions + pending;
+
+        // Feedback is kept for the setting's months (design 8.10).
+        var feedback = await Feedback.FeedbackHandlers.DeleteOldAsync(
+            db, FeedbackRules.KeepFrom(Feedback.FeedbackHandlers.TodayIn(clock), await settings.GetAsync(SettingKeys.FeedbackKeepMonths, cancellationToken)), cancellationToken);
+        return codes + sessions + pending + feedback;
     }
 }
