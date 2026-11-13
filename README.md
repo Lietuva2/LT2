@@ -67,6 +67,13 @@ arguments) is written by the migrator on the local stack only: it refuses unless
 docker compose -f deploy/compose.yaml run --rm --no-deps migrator --demo-appeal
 ```
 
+Planned dates come from the lrs.lt upcoming-agenda pages, not the open data. Locally the worker reads the stand-in's
+INVENTED page (`LT2_AGENDA_BASE_ADDRESS` in `deploy/.env`); production sets the real address and adds its host to the
+outbound allowlist; empty means off. The parser's assumptions are in `tests/Lt2.Parliament.ImportTests/Agenda/ASSUMPTIONS.md`;
+`LT2_LRS_LIVE=1` with `LT2_LRS_AGENDA_URL` runs the live check. Summaries to MPs are made in dry-run only (M2a): published
+at `/suvestines`, never sent. `LT2_MODERATION_CONTACT` is the address shown to visitors who want to report (a local
+placeholder in `deploy/.env`).
+
 Register with any address and the invitation code, open the sign-in email in Mailpit, enter the six-digit code, and the
 "Sveiki" page appears. From there you can add a passkey and see or end your sessions.
 
@@ -177,7 +184,8 @@ is written to `audit.event`.
 
 For a production-shaped run, override `deploy/.env`: `LT2_SITE_ADDRESS` (the domain), `LT2_TLS` (the ACME contact
 address), `LT2_HTTP_PORT=80`, `LT2_HTTPS_PORT=443`, `COMPOSE_PROFILES=` (no Mailpit), the `LT2_SMTP_*` values and
-`LT2_MIGRATOR_ARGS=` (no seeded invitation), `LT2_DEMO_DATA=` (no demonstration data), `LT2_SEIMAS_BASE_ADDRESS=` and `LT2_OUTBOUND_EXTRA_HOST=` (the worker
+`LT2_MIGRATOR_ARGS=` (no seeded invitation), `LT2_DEMO_DATA=` (no demonstration data), `LT2_MODERATION_CONTACT` (the real address), `LT2_AGENDA_BASE_ADDRESS`
+(the lrs.lt address, or empty), `LT2_SEIMAS_BASE_ADDRESS=` and `LT2_OUTBOUND_EXTRA_HOST=` (the worker
 then imports from `https://apps.lrs.lt/sip/`, the only host it may call), and mount real secrets.
 
 ## Conventions

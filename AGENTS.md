@@ -65,9 +65,13 @@ src/Lt2.SharedKernel       Result type, identifiers (UUID v7), event base types,
                            interfaces, connection strings; no clock of its own (TimeProvider is used)
 src/Modules/               Lt2.Identity, Lt2.Notifications, Lt2.Audit, Lt2.Parliament (Seimas open-data client,
                            import, statistics); Lt2.Appeals (appeals, positions, arguments, endorsements, reports,
-                           moderation, rule-based pre-screening). Modules talk through interfaces in SharedKernel
-                           (IParticipants, IBillCatalogue, IPositionErasure, IOutbox, IAuditLog, ISettings)
-src/Lt2.Worker             Hangfire server: outbox dispatch loop, the parliament import, a daily identity clean-up
+                           moderation, rule-based pre-screening, flags, summaries content). Notifications also owns the
+                           summaries (Digests/). Modules talk through interfaces in SharedKernel (IParticipants,
+                           IBillCatalogue, IPlannedAgenda, IMpDirectory, IDigestSource, IPartySupporters, IAccountData,
+                           IPositionErasure, IOutbox, IAuditLog, ISettings)
+src/Lt2.Worker             Hangfire server: outbox dispatch loop, the parliament import, the agenda watcher (lrs.lt
+                           pages; off unless Agenda:BaseAddress is set), appeals daily aggregates and closing, summaries
+                           in dry-run (nothing is sent in M2a), a daily identity clean-up
 src/Lt2.Migrator           creates the database roles, applies migrations and grants; also seeds invitations, grants
                            the first staff role, empties invented parliament data and (local stack only) fills the
                            demonstration appeal on XVP-0412 (--demo-appeal); run once per deploy
@@ -78,7 +82,8 @@ tests/Lt2.E2E              Playwright and stack checks against a running compose
 tests/Lt2.Parliament.ImportTests  Seimas client, parsers, register of assumptions (Seimas/ASSUMPTIONS.md), import against
                            the stand-in and PostgreSQL; live contract suite only with LT2_SEIMAS_LIVE=1
 deploy/                    Dockerfile, compose.yaml, Caddyfile, .env (local defaults), init-secrets.py, secrets/
-tools/Lt2.SeimasStandIn     local and test only: stand-in for the Seimas open data, invented answers; never shipped
+tools/Lt2.SeimasStandIn     local and test only: stand-in for the Seimas open data and the lrs.lt agenda page (/darbotvarke),
+                           invented answers; never shipped
 ```
 
 ```sh
