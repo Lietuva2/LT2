@@ -95,6 +95,8 @@ internal sealed class ModerationService(
         // Design 8.1: a moderator reviews an appeal's neutral description; it has no first argument.
         var queueAppeals = appeals.Select(a =>
         {
+            // For the notes on an open appeal: how many take part and the threshold that applies (design 8.3).
+            var threshold = counts.TryGetValue(a.Id, out var c) ? AppealReads.Threshold(a, c, minimum) : null;
             return new QueueAppeal(
                 a.Id,
                 Bill(a.BillNumber),
@@ -110,7 +112,9 @@ internal sealed class ModerationService(
                 openFlags.Where(f => f.AppealId == a.Id).Select(f => new QueueFlag(f.Id, f.Kind, f.Link, f.Note, f.CreatedAt)).ToList(),
                 underThresholdOnAgenda.Contains(a.Id),
                 a.Sending == "held",
-                a.Status == AppealStatuses.Pending ? proposalsOnBill.GetValueOrDefault(a.BillNumber, 1) : 0);
+                a.Status == AppealStatuses.Pending ? proposalsOnBill.GetValueOrDefault(a.BillNumber, 1) : 0,
+                threshold?.Participants ?? 0,
+                threshold?.Value ?? a.Threshold);
         }).ToList();
 
         var queueReasons = reasons.Select(r => new QueueReason(

@@ -55,19 +55,21 @@ else
                 <h3 id="qa-@appeal.Id">@appeal.Bill.Title</h3>
                 @if (appeal.Planned is { } plan)
                 {
-                    <p class="small num">@Text("Mod.Planned", plan.Date.ToString("yyyy-MM-dd", System.Globalization.CultureInfo.InvariantCulture), plan.Stage is { } s ? " · " + L["Mod.Stage." + s] : "")</p>
+                    <p class="small num">@Text("Mod.Planned", Dates.Day(plan.Date), plan.Stage is { } s ? " · " + L["Mod.Stage." + s] : "")</p>
                 }
                 @if (appeal.Held)
                 {
-                    <p class="tag" id="held-@appeal.Id">@L["Mod.Held"]</p>
+                    <p class="note note--quiet" id="held-@appeal.Id">@L["Mod.Held"]</p>
                 }
                 @if (appeal.UnderThresholdOnAgenda)
                 {
-                    <p class="note note--quiet">@L["Mod.UnderThreshold"]</p>
+                    <p class="note note--quiet" id="under-threshold-@appeal.Id">@Text("Mod.UnderThreshold",
+                        appeal.Planned is { } onAgenda ? Dates.Day(onAgenda.Date) : "–",
+                        AppealNumbers.Of(appeal.Participants), AppealNumbers.Of(appeal.EffectiveThreshold))</p>
                 }
                 @if (appeal.DateFlags is { Count: > 0 } flags)
                 {
-                    <p class="label num">@Text("Mod.DateFlags", flags.Count)</p>
+                    <p class="note note--quiet num" id="date-flags-@appeal.Id">@Text("Mod.DateFlags", flags.Count)</p>
                     <ul class="rows">
                         @foreach (var flag in flags)
                         {

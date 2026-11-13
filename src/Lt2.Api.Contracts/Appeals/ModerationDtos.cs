@@ -18,7 +18,9 @@ public sealed record QueueAppealResponse(
     IReadOnlyList<QueueFlagResponse>? DateFlags = null,
     bool UnderThresholdOnAgenda = false,
     bool Held = false,
-    int ProposalsOnBill = 0);
+    int ProposalsOnBill = 0,
+    int Participants = 0,
+    int EffectiveThreshold = 0);
 
 public sealed record QueueFlagResponse(Guid Id, string Kind, string Link, string? Note, DateTimeOffset CreatedAt);
 

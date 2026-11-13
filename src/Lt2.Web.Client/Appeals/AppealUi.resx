@@ -124,7 +124,7 @@
 <data name="Threshold.Save" xml:space="preserve"><value>Išsaugoti ribą</value></data>
 <data name="Mod.PageTitle" xml:space="preserve"><value>Moderavimas · Lietuva 2.0</value></data>
 <data name="Mod.Title" xml:space="preserve"><value>Moderavimas</value></data>
-<data name="Mod.Lead" xml:space="preserve"><value>Nauji kreipimaisi, pažymėti ar praneštieji argumentai ir dar nematyti argumentai. Paaiškinimą gauna autorius.</value></data>
+<data name="Mod.Lead" xml:space="preserve"><value>Laukiantys kreipimosi pasiūlymai, aprašymo pakeitimai, pažymėti, praneštieji ir dar nematyti argumentai, taip pat paskelbti kreipimaisi, kuriems reikia jūsų sprendimo. Kiekvienas veiksmas registruojamas, o autorius gauna jūsų paaiškinimą.</value></data>
 <data name="Mod.Changes" xml:space="preserve"><value>Aprašymo pakeitimai</value></data>
 <data name="Mod.ChangeBy" xml:space="preserve"><value>Pasiūlė iniciatorius {0} · {1}</value></data>
 <data name="Mod.ChangeOld" xml:space="preserve"><value>Dabar rodomas aprašymas</value></data>
@@ -178,7 +178,7 @@
 <data name="Mod.OpenedBy" xml:space="preserve"><value>Atidarė {0} · riba {1}</value></data>
 <data name="Mod.Proposals" xml:space="preserve"><value>Projektui {0} pateikta kreipimosi pasiūlymų: {1}. Jie rodomi kartu, seniausias pirmas. Skelbkite seniausią pasiūlymą, atitinkantį taisykles; tai rekomendacija, ne programos taisyklė. Paskelbus vieną, kiti laukiantys ir grąžinti pasiūlymai uždaromi, o jų autoriai gauna laišką be vardų.</value></data>
 <data name="Mod.Status.pending" xml:space="preserve"><value>Laukia peržiūros</value></data>
-<data name="Mod.Status.open" xml:space="preserve"><value>Paskelbtas, gautas pranešimas</value></data>
+<data name="Mod.Status.open" xml:space="preserve"><value>Paskelbtas</value></data>
 <data name="Mod.Status.published" xml:space="preserve"><value>Paskelbtas</value></data>
 <data name="Mod.Seen" xml:space="preserve"><value>Matytas, gautas pranešimas</value></data>
 <data name="Mod.NotSeen" xml:space="preserve"><value>Dar nematytas</value></data>
@@ -186,7 +186,7 @@
 <data name="Mod.Flag.phone" xml:space="preserve"><value>Telefono numeris</value></data>
 <data name="Mod.Flag.personal-code" xml:space="preserve"><value>Asmens kodas</value></data>
 <data name="Mod.Flag.link" xml:space="preserve"><value>Nuoroda</value></data>
-<data name="Mod.Reports" xml:space="preserve"><value>Pranešimų: {0}</value></data>
+<data name="Mod.Reports" xml:space="preserve"><value>Nariai pranešė apie šį turinį: {0}. Perskaitykite pranešimus: jei pažeidimo nėra, palikite, kitaip paslėpkite. Kas pranešė, nerodoma.</value></data>
 <data name="Mod.Statement" xml:space="preserve"><value>Paaiškinimas autoriui</value></data>
 <data name="Mod.Threshold" xml:space="preserve"><value>Nauja riba (keičiant ribą)</value></data>
 <data name="Mod.MergeInto" xml:space="preserve"><value>Sujungti su</value></data>
@@ -313,7 +313,7 @@
 <data name="Report.Visitor" xml:space="preserve"><value>Pranešti apie turinį moderatoriams gali prisijungę Lietuva 2.0 naudotojai:</value></data>
 <data name="Report.SignIn" xml:space="preserve"><value>prisijunkite</value></data>
 <data name="Report.OrWrite" xml:space="preserve"><value>arba parašykite moderatoriams adresu</value></data>
-<data name="Mod.Surge" xml:space="preserve"><value>Šuolis: per paskutines {0} valandas {1} % pozicijų pateikė per tą laiką sukurtos paskyros. Ar sulaikyti siuntimą?</value></data>
+<data name="Mod.Surge" xml:space="preserve"><value>Per paskutines {0} val. {1} % naujų pozicijų pateikė per tą laiką sukurtos paskyros, todėl kreipimosi puslapyje rodoma pastaba apie staigų šuolį. Galite sulaikyti siuntimą, kol išsiaiškinsite, arba nieko nedaryti.</value></data>
 <data name="Flag.Open" xml:space="preserve"><value>Data neteisinga?</value></data>
 <data name="Flag.Kind" xml:space="preserve"><value>Kas negerai?</value></data>
 <data name="Flag.date-wrong" xml:space="preserve"><value>Nurodyta data neteisinga</value></data>
@@ -322,8 +322,8 @@
 <data name="Flag.Submit" xml:space="preserve"><value>Pranešti moderatoriams</value></data>
 <data name="Flag.Sent" xml:space="preserve"><value>Ačiū. Moderatorius patikrins ir, jei reikia, pataisys datą.</value></data>
 <data name="Mod.Planned" xml:space="preserve"><value>Planuojama: {0}{1}</value></data>
-<data name="Mod.UnderThreshold" xml:space="preserve"><value>Projektas jau darbotvarkėje, o kreipimasis dar nepasiekė ribos.</value></data>
-<data name="Mod.DateFlags" xml:space="preserve"><value>Pranešimai apie datą: {0}</value></data>
+<data name="Mod.UnderThreshold" xml:space="preserve"><value>Projektas įtrauktas į Seimo darbotvarkę, planuojama {0}. Kreipimasis turi {1} iš {2} dalyvių, todėl į suvestinę Seimo nariams nepateks. Galite patvirtinti vieną skubią suvestinę arba nieko nedaryti.</value></data>
+<data name="Mod.DateFlags" xml:space="preserve"><value>Nariai praneša, kad planuojama data neteisinga arba balsuojama anksčiau ({0}). Patikrinkite nuorodas: pataisykite planuojamą datą, patvirtinkite skubią suvestinę arba palikite, kaip yra.</value></data>
 <data name="Mod.PlannedDate" xml:space="preserve"><value>Planuojama data (keičiant datą)</value></data>
 <data name="Mod.PlannedStage" xml:space="preserve"><value>Stadija</value></data>
 <data name="Mod.Stage.none" xml:space="preserve"><value>Nenurodyta</value></data>
@@ -333,7 +333,7 @@
 <data name="Mod.SetPlanned" xml:space="preserve"><value>Pakeisti datą</value></data>
 <data name="Mod.Hold" xml:space="preserve"><value>Sulaikyti siuntimą</value></data>
 <data name="Mod.Release" xml:space="preserve"><value>Leisti siųsti</value></data>
-<data name="Mod.Held" xml:space="preserve"><value>Siuntimas sulaikytas</value></data>
+<data name="Mod.Held" xml:space="preserve"><value>Siuntimas sulaikytas: kol jo neatnaujinsite, kreipimasis nepatenka į jokią suvestinę Seimo nariams.</value></data>
 <data name="Mod.Urgent" xml:space="preserve"><value>Patvirtinti skubią suvestinę</value></data>
 <data name="Admin.Setting.Digest:Weekly" xml:space="preserve"><value>Savaitinė suvestinė: pirmadienio laikas (HH:mm arba off)</value></data>
 <data name="Admin.Setting.Digest:BeforeVote" xml:space="preserve"><value>Suvestinė prieš posėdį: laikas (HH:mm arba off)</value></data>

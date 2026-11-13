@@ -118,7 +118,9 @@ public sealed record QueueAppeal(
     IReadOnlyList<QueueFlag>? DateFlags = null,
     bool UnderThresholdOnAgenda = false,
     bool Held = false,
-    int ProposalsOnBill = 0);
+    int ProposalsOnBill = 0,
+    int Participants = 0,
+    int EffectiveThreshold = 0);
 
 /// <summary>A participant's flag about the planned date (design 8.4). Who flagged is not shown.</summary>
 public sealed record QueueFlag(Guid Id, string Kind, string Link, string? Note, DateTimeOffset CreatedAt);
