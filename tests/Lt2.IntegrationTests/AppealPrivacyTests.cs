@@ -87,6 +87,180 @@ public sealed class AppealPrivacyTests(DatabaseFixture database) : ApiTest(datab
         (await stranger.AppealAsync(AppealSteps.ThirdBill)).Counts.For.ShouldBe(1);
     }
 
+    /// <summary>
+    /// Design 8.2 (decided 2026-11-13): an argument may be written for either side, so an argument must not tell its
+    /// author's side. Four arguments: in the "for" column one by a person asking against (the other side) and one by a
+    /// person asking for (their own); in the "against" column the initiator's (their own) and one by a person with no
+    /// side. Every public answer, and the staff screens, must show each pair alike apart from the text, the name, the
+    /// id, the time and the count.
+    /// </summary>
+    [Fact]
+    public async Task No_answer_tells_whether_an_argument_is_on_its_authors_side()
+    {
+        var (moderator, administrator) = await StaffAsync();
+        var (initiator, _) = await Factory.MemberAsync("Iniciatorė Prieš");
+        using var _i = initiator;
+        await Database.OpenPublishedAsync(initiator, moderator.Browser, AppealSteps.ThirdBill, "against");
+        var (other, _) = await Factory.MemberAsync("Ona Kitapusė");
+        using var _o = other;
+        (await other.TakeSideAsync(AppealSteps.ThirdBill, "against")).StatusCode.ShouldBe(HttpStatusCode.NoContent);
+        (await other.WriteReasonAsync(AppealSteps.ThirdBill, "for", "Kitos pusės argumentas apie biudžetą.")).StatusCode.ShouldBe(HttpStatusCode.Created);
+        var (own, _) = await Factory.MemberAsync("Petras Savapusis");
+        using var _w = own;
+        (await own.TakeSideAsync(AppealSteps.ThirdBill, "for")).StatusCode.ShouldBe(HttpStatusCode.NoContent);
+        (await own.WriteReasonAsync(AppealSteps.ThirdBill, "for", "Savos pusės argumentas apie gynybą.")).StatusCode.ShouldBe(HttpStatusCode.Created);
+        var (none, _) = await Factory.MemberAsync("Jurga Bepusė", consent: false);
+        using var _n = none;
+        (await none.WriteReasonAsync(AppealSteps.ThirdBill, "against", "Argumentas be pozicijos apie įmones.")).StatusCode.ShouldBe(HttpStatusCode.Created);
+
+        using var stranger = NewBrowser();
+        var reasons = (await stranger.AppealAsync(AppealSteps.ThirdBill)).Reasons;
+        reasons.Count.ShouldBe(4);
+        var pairs = new[]
+        {
+            (Side: "for", Ids: reasons.Where(r => r.Side == "for").Select(r => r.Id).ToList(), Why: "other side vs own side"),
+            (Side: "against", Ids: reasons.Where(r => r.Side == "against").Select(r => r.Id).ToList(), Why: "own side (initiator) vs no side"),
+        };
+        var varying = new HashSet<string>(StringComparer.OrdinalIgnoreCase) { "id", "text", "authorName", "createdAt", "endorsements" };
+        var texts = reasons.Select(r => r.Text).Concat(reasons.Select(r => r.AuthorName!)).ToList();
+
+        // A cached public answer is the same for an author and a stranger: nothing personal rides in it.
+        using (var asAuthor = await other.Client.GetAsync(AppealRoutes.AppealOf(AppealSteps.ThirdBill)))
+        using (var asStranger = await stranger.Client.GetAsync(AppealRoutes.AppealOf(AppealSteps.ThirdBill)))
+        {
+            (await asAuthor.Content.ReadAsStringAsync()).ShouldBe(await asStranger.Content.ReadAsStringAsync());
+            asAuthor.Headers.ETag.ShouldBe(asStranger.Headers.ETag);
+        }
+
+        using (var mine = await other.Client.GetAsync(AppealRoutes.MineOf(AppealSteps.ThirdBill)))
+        {
+            mine.Headers.CacheControl?.NoStore.ShouldBe(true, "the author's own side comes only from the never-cached answer");
+        }
+
+        var (member, _) = await Factory.MemberAsync();
+        using var _m = member;
+        var viewers = new (string Who, TestBrowser Browser)[]
+        {
+            ("stranger", stranger), ("member", member), ("moderator", moderator.Browser), ("administrator", administrator.Browser),
+        };
+        var jsonReads = new[]
+        {
+            AppealRoutes.Appeals, AppealRoutes.AppealOf(AppealSteps.ThirdBill), AppealRoutes.HistoryOf(AppealSteps.ThirdBill),
+            Lt2.Api.Contracts.Digests.DigestRoutes.Digests, AppealRoutes.ModerationQueue,
+        };
+        var pages = new[] { "/seimas/XVP-0618/kreipimasis", "/kreipimaisi", "/moderavimas" };
+
+        foreach (var (who, browser) in viewers)
+        {
+            foreach (var uri in jsonReads)
+            {
+                using var response = await browser.Client.GetAsync(uri);
+                if (!response.IsSuccessStatusCode)
+                {
+                    continue;
+                }
+
+                // An argument can appear in several kinds of object (a queue item, a merge candidate): compare like with like.
+                var found = new Dictionary<(Guid Id, string Kind), string>();
+                Collect(JsonDocument.Parse(await response.Content.ReadAsStringAsync()).RootElement, reasons.Select(r => r.Id).ToHashSet(), varying, found);
+                foreach (var (side, ids, why) in pairs)
+                {
+                    foreach (var kind in found.Keys.Select(k => k.Kind).Distinct())
+                    {
+                        var shapes = ids.Where(id => found.ContainsKey((id, kind))).Select(id => found[(id, kind)]).Distinct().ToList();
+                        shapes.Count.ShouldBeLessThanOrEqualTo(1, $"{who} {uri}, {side}: {why} differ: {string.Join(" | ", shapes)}");
+                    }
+                }
+            }
+
+            foreach (var uri in pages)
+            {
+                using var response = await browser.Client.GetAsync(uri);
+                var html = await response.Content.ReadAsStringAsync();
+                foreach (var (side, ids, why) in pairs)
+                {
+                    var blocks = ids.Select(id => Block(html, id, texts)).OfType<string>().Distinct().ToList();
+                    blocks.Count.ShouldBeLessThanOrEqualTo(1, $"{who} {uri}, {side}: {why} differ:\n{string.Join("\n---\n", blocks)}");
+                }
+            }
+        }
+
+        // The page really shows all four, so the comparison above was made.
+        var page = await stranger.Client.GetStringAsync("/seimas/XVP-0618/kreipimasis");
+        reasons.ShouldAllBe(r => Block(page, r.Id, texts) != null);
+    }
+
+    /// <summary>Every JSON object whose id is one of <paramref name="ids"/>, with the fields that may differ removed.</summary>
+    private static void Collect(JsonElement element, HashSet<Guid> ids, HashSet<string> varying, Dictionary<(Guid, string), string> found)
+    {
+        if (element.ValueKind == JsonValueKind.Object)
+        {
+            if (element.TryGetProperty("id", out var id) && id.ValueKind == JsonValueKind.String && Guid.TryParse(id.GetString(), out var guid) && ids.Contains(guid))
+            {
+                var kind = string.Join(",", element.EnumerateObject().Select(p => p.Name));
+                found[(guid, kind)] = Shape(element, varying);
+            }
+
+            foreach (var property in element.EnumerateObject())
+            {
+                Collect(property.Value, ids, varying, found);
+            }
+        }
+        else if (element.ValueKind == JsonValueKind.Array)
+        {
+            foreach (var item in element.EnumerateArray())
+            {
+                Collect(item, ids, varying, found);
+            }
+        }
+    }
+
+    /// <summary>A JSON value with the fields that may differ removed at every depth.</summary>
+    private static string Shape(JsonElement element, HashSet<string> varying) => element.ValueKind switch
+    {
+        JsonValueKind.Object => "{" + string.Join(",", element.EnumerateObject().Where(p => !varying.Contains(p.Name)).Select(p => p.Name + "=" + Shape(p.Value, varying))) + "}",
+        JsonValueKind.Array => "[" + string.Join(",", element.EnumerateArray().Select(e => Shape(e, varying))) + "]",
+        _ => element.GetRawText(),
+    };
+
+    /// <summary>The markup of one argument on a page (its element and everything inside), with text, names, id and counts blanked.</summary>
+    private static string? Block(string html, Guid id, IEnumerable<string> texts)
+    {
+        var start = html.IndexOf($"id=\"reason-{id}\"", StringComparison.Ordinal);
+        if (start < 0)
+        {
+            return null;
+        }
+
+        start = html.LastIndexOf("<div", start, StringComparison.Ordinal);
+        var depth = 0;
+        var at = start;
+        do
+        {
+            var open = html.IndexOf("<div", at, StringComparison.Ordinal);
+            var close = html.IndexOf("</div>", at, StringComparison.Ordinal);
+            if (open >= 0 && open < close)
+            {
+                depth++;
+                at = open + 4;
+            }
+            else
+            {
+                depth--;
+                at = close + 6;
+            }
+        }
+        while (depth > 0);
+
+        var block = WebUtility.HtmlDecode(html[start..at]).Replace(id.ToString(), "ID", StringComparison.OrdinalIgnoreCase);
+        foreach (var text in texts)
+        {
+            block = block.Replace(text, "TEXT", StringComparison.Ordinal);
+        }
+
+        return Regex.Replace(Regex.Replace(block, @"\d[\d\s ]*", "N"), "<!--.*?-->", "", RegexOptions.Singleline);
+    }
+
     [Fact]
     public async Task No_operation_takes_or_returns_a_person_identifier_next_to_a_side()
     {

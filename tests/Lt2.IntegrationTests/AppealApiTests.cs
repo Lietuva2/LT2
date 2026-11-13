@@ -302,32 +302,23 @@ public sealed class AppealApiTests(DatabaseFixture database) : ApiTest(database)
     }
 
     [Fact]
-    public async Task An_argument_is_written_for_ones_own_side_at_most_twice_and_flagged_ones_wait_for_a_moderator()
+    public async Task An_argument_is_written_for_either_side_without_a_side_or_consent_at_most_twice_and_flagged_ones_wait_for_a_moderator()
     {
         var (initiator, _) = await Factory.MemberAsync();
         using var _i = initiator;
         await Database.OpenPublishedAsync(initiator, await ModeratorAsync(), AppealSteps.ThirdBill, "against");
-        var (member, _) = await Factory.MemberAsync("Mindaugas R.");
+        var (member, _) = await Factory.MemberAsync("Mindaugas R.", consent: false);
         using var _m = member;
+        var before = (await member.AppealAsync(AppealSteps.ThirdBill)).Counts;
 
-        using (var noSide = await member.WriteReasonAsync(AppealSteps.ThirdBill, "for", "Gynyba finansuojama nekeliant PVM."))
-        {
-            await noSide.ShouldBeProblemAsync(HttpStatusCode.Conflict, "position.required");
-        }
-
-        (await member.TakeSideAsync(AppealSteps.ThirdBill, "for")).StatusCode.ShouldBe(HttpStatusCode.NoContent);
-        using (var otherSide = await member.WriteReasonAsync(AppealSteps.ThirdBill, "against", "Kitos pusės argumentas."))
-        {
-            await otherSide.ShouldBeProblemAsync(HttpStatusCode.Conflict, "reason.other-side");
-        }
-
+        // No side taken and no positions consent given: writing stores no position, so it needs neither.
         using (var first = await member.WriteReasonAsync(AppealSteps.ThirdBill, "for", "Gynyba finansuojama nekeliant PVM."))
         {
-            first.StatusCode.ShouldBe(HttpStatusCode.Created);
+            first.StatusCode.ShouldBe(HttpStatusCode.Created, await first.Content.ReadAsStringAsync());
             (await first.ReadAsync<ReasonCreatedResponse>()).Status.ShouldBe("published");
         }
 
-        using (var flagged = await member.WriteReasonAsync(AppealSteps.ThirdBill, "for", "Daugiau: https://pavyzdys.test/straipsnis"))
+        using (var flagged = await member.WriteReasonAsync(AppealSteps.ThirdBill, "against", "Daugiau: https://pavyzdys.test/straipsnis"))
         {
             flagged.StatusCode.ShouldBe(HttpStatusCode.Created);
             (await flagged.ReadAsync<ReasonCreatedResponse>()).Status.ShouldBe("pending");
@@ -344,9 +335,45 @@ public sealed class AppealApiTests(DatabaseFixture database) : ApiTest(database)
         }
 
         var page = await member.AppealAsync(AppealSteps.ThirdBill);
+        page.Counts.ShouldBe(before, "writing an argument is not taking a side");
         page.Reasons.Select(r => r.Text).ShouldBe(["Gynyba finansuojama nekeliant PVM.", AppealSteps.AgainstReason], ignoreOrder: true);
         page.Reasons.Single(r => r.Side == "for").AuthorName.ShouldBe("Mindaugas R.");
-        (await member.MineAsync(AppealSteps.ThirdBill)).MyReasons.Select(r => r.Status).ShouldBe(["published", "pending"]);
+        var mine = await member.MineAsync(AppealSteps.ThirdBill);
+        mine.Side.ShouldBeNull();
+        mine.MyReasons.Select(r => (r.Side, r.Status)).ShouldBe([("for", "published"), ("against", "pending")]);
+        (await Database.ScalarAsync<long>("SELECT count(*) FROM appeals.position p JOIN appeals.appeal a ON a.id = p.appeal_id WHERE a.bill_number = 'XVP-0618' AND a.status = 'open'"))
+            .ShouldBe(1, "only the initiator's side is stored");
+    }
+
+    [Fact]
+    public async Task Man_svarbu_still_needs_ones_own_side_and_changing_side_keeps_ones_arguments()
+    {
+        var (initiator, _) = await Factory.MemberAsync();
+        using var _i = initiator;
+        await Database.OpenPublishedAsync(initiator, await ModeratorAsync(), AppealSteps.ThirdBill, "against");
+        var (member, _) = await Factory.MemberAsync("Mindaugas R.");
+        using var _m = member;
+        (await member.WriteReasonAsync(AppealSteps.ThirdBill, "for", "Gynyba finansuojama nekeliant PVM.")).StatusCode.ShouldBe(HttpStatusCode.Created);
+        var forReason = (await member.AppealAsync(AppealSteps.ThirdBill)).Reasons.Single(r => r.Side == "for").Id;
+        var againstReason = (await member.AppealAsync(AppealSteps.ThirdBill)).Reasons.Single(r => r.Side == "against").Id;
+
+        using (var noSide = await member.SendAsync(HttpMethod.Put, AppealRoutes.EndorsementOf(forReason)))
+        {
+            await noSide.ShouldBeProblemAsync(HttpStatusCode.Conflict, "position.required");
+        }
+
+        // Asks to vote against, though the argument they wrote is for: allowed; the mark stays on their own side.
+        (await member.TakeSideAsync(AppealSteps.ThirdBill, "against")).StatusCode.ShouldBe(HttpStatusCode.NoContent);
+        using (var otherSide = await member.SendAsync(HttpMethod.Put, AppealRoutes.EndorsementOf(forReason)))
+        {
+            await otherSide.ShouldBeProblemAsync(HttpStatusCode.Conflict, "endorsement.other-side");
+        }
+
+        (await member.SendAsync(HttpMethod.Put, AppealRoutes.EndorsementOf(againstReason))).StatusCode.ShouldBe(HttpStatusCode.NoContent);
+        (await member.TakeSideAsync(AppealSteps.ThirdBill, "for")).StatusCode.ShouldBe(HttpStatusCode.NoContent);
+        var mine = await member.MineAsync(AppealSteps.ThirdBill);
+        mine.Endorsed.ShouldBeEmpty("changing side drops the marks");
+        mine.MyReasons.Select(r => r.Side).ShouldBe(["for"], "and never the person's arguments");
     }
 
     [Fact]

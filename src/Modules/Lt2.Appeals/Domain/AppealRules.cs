@@ -82,23 +82,12 @@ internal static class AppealRules
     }
 
     /// <summary>
-    /// A person may write an argument only on the side they have taken, and at most two per bill (every argument they
-    /// wrote on the bill counts, whatever happened to it since).
+    /// An argument may be written for either side, whatever the author's own side and whether they took one (design 8.2,
+    /// decided 2026-11-13), so the author's side is not an input. At most two per person per bill in total, across both
+    /// sides (every argument they wrote on the bill counts, whatever happened to it since).
     /// </summary>
-    public static string? CheckNewReason(string? authorsSide, string reasonSide, int reasonsAlreadyWritten)
-    {
-        if (authorsSide is null)
-        {
-            return "position.required";
-        }
-
-        if (authorsSide != reasonSide)
-        {
-            return "reason.other-side";
-        }
-
-        return reasonsAlreadyWritten >= ReasonsPerPersonPerBill ? "reason.limit" : null;
-    }
+    public static string? CheckNewReason(string reasonSide, int reasonsAlreadyWritten) =>
+        CheckSide(reasonSide) ?? (reasonsAlreadyWritten >= ReasonsPerPersonPerBill ? "reason.limit" : null);
 
     /// <summary>"Man svarbu" only on an argument of the person's own side, and at most three per bill.</summary>
     public static string? CheckEndorsement(string? endorsersSide, string reasonSide, int endorsementsAlreadyOnBill)
@@ -118,7 +107,7 @@ internal static class AppealRules
 
     /// <summary>
     /// Changing sides keeps one position per person per bill: the row is overwritten, and the "Man svarbu" marks on the
-    /// old side's arguments go, since they are allowed only on one's own side.
+    /// old side's arguments go, since they are allowed only on one's own side. The person's own arguments stay.
     /// </summary>
     public static bool ChangingSideDropsEndorsementsOfTheOldSide(string? oldSide, string newSide) =>
         oldSide is not null && oldSide != newSide;
@@ -240,7 +229,7 @@ internal static class RuleErrors
 {
     public static Error Of(string code) => code switch
     {
-        "position.required" or "reason.other-side" or "reason.limit" or "endorsement.other-side" or "endorsement.limit"
+        "position.required" or "reason.limit" or "endorsement.other-side" or "endorsement.limit"
             or "threshold.set-by-moderator" or "threshold.locked" or "appeal.not-open" => Error.Conflict(code),
         "side.invalid" => Error.Validation(code, "side"),
         "reason.empty" or "reason.too-long" => Error.Validation(code, "text"),

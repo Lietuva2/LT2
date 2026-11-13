@@ -424,9 +424,9 @@ internal sealed class AppealsService(
             return Error.Forbidden("member.required");
         }
 
-        var side = await db.Positions.Where(p => p.AppealId == appeal.Value.Id && p.UserId == userId).Select(p => p.Side).FirstOrDefaultAsync(cancellationToken);
+        // Either side, whatever the author's own (design 8.2): the position is not read, and writing never stores one.
         var written = await db.Reasons.CountAsync(r => r.AppealId == appeal.Value.Id && r.AuthorUserId == userId, cancellationToken);
-        if (AppealRules.CheckNewReason(side, request.Side, written) is { } refused)
+        if (AppealRules.CheckNewReason(request.Side, written) is { } refused)
         {
             return RuleErrors.Of(refused);
         }

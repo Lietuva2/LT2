@@ -59,16 +59,33 @@ public sealed class AppealRuleTests
     [Fact]
     public void A_person_may_write_at_most_two_arguments_per_bill()
     {
-        AppealRules.CheckNewReason(Sides.For, Sides.For, 0).ShouldBeNull();
-        AppealRules.CheckNewReason(Sides.For, Sides.For, 1).ShouldBeNull();
-        AppealRules.CheckNewReason(Sides.For, Sides.For, 2).ShouldBe("reason.limit");
+        AppealRules.CheckNewReason(Sides.For, 0).ShouldBeNull();
+        AppealRules.CheckNewReason(Sides.For, 1).ShouldBeNull();
+        AppealRules.CheckNewReason(Sides.For, 2).ShouldBe("reason.limit");
     }
 
     [Fact]
-    public void A_person_writes_arguments_only_for_the_side_they_took()
+    public void A_person_with_or_without_a_side_may_write_an_argument_for_either_side()
     {
-        AppealRules.CheckNewReason(Sides.Against, Sides.For, 0).ShouldBe("reason.other-side");
-        AppealRules.CheckNewReason(null, Sides.For, 0).ShouldBe("position.required");
+        // The rule has no input for the author's side: it cannot refuse an argument because of it.
+        AppealRules.CheckNewReason(Sides.For, 0).ShouldBeNull();
+        AppealRules.CheckNewReason(Sides.Against, 0).ShouldBeNull();
+        AppealRules.CheckNewReason("abstain", 0).ShouldBe("side.invalid", "an argument still belongs to one of the two sides");
+    }
+
+    [Fact]
+    public void The_two_arguments_per_bill_count_across_both_sides()
+    {
+        AppealRules.CheckNewReason(Sides.Against, 1).ShouldBeNull("one for, then one against");
+        AppealRules.CheckNewReason(Sides.For, 2).ShouldBe("reason.limit");
+        AppealRules.CheckNewReason(Sides.Against, 2).ShouldBe("reason.limit");
+    }
+
+    [Fact]
+    public void Man_svarbu_still_needs_the_persons_own_side_even_though_arguments_do_not()
+    {
+        AppealRules.CheckEndorsement(null, Sides.For, 0).ShouldBe("position.required");
+        AppealRules.CheckEndorsement(Sides.Against, Sides.For, 0).ShouldBe("endorsement.other-side");
     }
 
     [Fact]

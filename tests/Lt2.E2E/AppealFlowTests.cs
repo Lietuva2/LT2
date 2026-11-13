@@ -6,8 +6,9 @@ namespace Lt2.E2E;
 
 /// <summary>
 /// The main path of appeals through real browsers against the stack (design 8.1, 10), at 1280 px and 390 px: a member
-/// opens an appeal, a moderator publishes it in a staff-passkey session, a second member takes a side (giving the
-/// consent first), writes an argument and marks one "Man svarbu". And the public appeal page once with JavaScript off.
+/// opens an appeal, a moderator publishes it in a staff-passkey session, a second member writes an argument before
+/// taking any side (choosing its side), then takes a side (giving the consent first) and marks it "Man svarbu"; the
+/// initiator writes one for the other side. And the public appeal page once with JavaScript off.
 /// Each width uses its own bill; the moderator hides the appeal at the end so the bill is free for the next run.
 /// </summary>
 public sealed class AppealFlowTests(AppealFlowTests.ModeratorFixture moderator) : IClassFixture<AppealFlowTests.ModeratorFixture>
@@ -48,12 +49,29 @@ public sealed class AppealFlowTests(AppealFlowTests.ModeratorFixture moderator) 
         await item.GetByRole(AriaRole.Button, new() { Name = "Paskelbti", Exact = true }).ClickAsync();
         await Assertions.Expect(mod.GetByText("Atlikta: paskelbta.")).ToBeVisibleAsync();
 
-        // 3. A second member takes a side: the consent is asked first, then the side is counted and shown only to them.
+        // 3. A second member, before taking any side, writes an argument: nothing is preselected, so they must choose.
         await using var second = await PasskeyBrowser.StartAsync("native", width, height);
         var b = second.Page;
         await PasskeyTests.RegisterAsync(b, "Giedrė L.");
         await b.GotoAsync($"{Base}/seimas/{bill}/kreipimasis");
         await Assertions.Expect(b.Locator("#count-for .figure__num")).ToHaveTextAsync("0");
+        var add = b.Locator("#add-reason");
+        await Assertions.Expect(add).ToBeEnabledAsync(new() { Timeout = 60_000 });
+        await add.ClickAsync();
+        await Assertions.Expect(b.Locator("#write-reason")).ToContainTextAsync("nepriklausomai nuo to, ko prašote patys");
+        await Assertions.Expect(b.Locator("#reason-side-for")).Not.ToBeCheckedAsync();
+        await Assertions.Expect(b.Locator("#reason-side-against")).Not.ToBeCheckedAsync();
+        await b.Locator("#reason-text").FillAsync("Papildomos pajamos reikalingos gynybai, o riba paliestų mažai mokėtojų.");
+        await b.GetByRole(AriaRole.Button, new() { Name = "Paskelbti", Exact = true }).ClickAsync();
+        await Assertions.Expect(b.GetByText("Pasirinkite, ar argumentas už, ar prieš.")).ToBeVisibleAsync();
+        await b.Locator("#reason-side-for").CheckAsync();
+        await b.GetByRole(AriaRole.Button, new() { Name = "Paskelbti", Exact = true }).ClickAsync();
+        await Assertions.Expect(b.GetByText("Argumentas paskelbtas.")).ToBeVisibleAsync();
+        var mine = b.Locator("#reasons-for .said").Filter(new() { HasText = "Papildomos pajamos reikalingos gynybai" });
+        await Assertions.Expect(mine).ToBeVisibleAsync();
+        await Assertions.Expect(b.Locator("#count-for .figure__num")).ToHaveTextAsync("0", new() { Timeout = 10_000 });
+
+        // 4. ... then takes a side: the consent is asked first, then the side is counted and shown only to them.
         var forButton = b.Locator("#side-for");
         await Assertions.Expect(forButton).ToBeEnabledAsync(new() { Timeout = 60_000 });
         await forButton.ClickAsync();
@@ -64,17 +82,7 @@ public sealed class AppealFlowTests(AppealFlowTests.ModeratorFixture moderator) 
         await Assertions.Expect(b.Locator("#count-for .figure__num")).ToHaveTextAsync("1");
         await Assertions.Expect(b.Locator("#count-against .figure__num")).ToHaveTextAsync("1");
 
-        // 4. ... writes an argument, which is published at once ...
-        var add = b.Locator("#add-reason");
-        await Assertions.Expect(add).ToBeEnabledAsync(new() { Timeout = 60_000 });
-        await add.ClickAsync();
-        await b.Locator("#reason-text").FillAsync("Papildomos pajamos reikalingos gynybai, o riba paliestų mažai mokėtojų.");
-        await b.GetByRole(AriaRole.Button, new() { Name = "Paskelbti", Exact = true }).ClickAsync();
-        await Assertions.Expect(b.GetByText("Argumentas paskelbtas.")).ToBeVisibleAsync();
-        var mine = b.Locator("#reasons-for .said").Filter(new() { HasText = "Papildomos pajamos reikalingos gynybai" });
-        await Assertions.Expect(mine).ToBeVisibleAsync();
-
-        // 5. ... and marks it "Man svarbu".
+        // 5. ... and marks their argument "Man svarbu", now that it is on their own side.
         await mine.GetByRole(AriaRole.Button, new() { Name = "Man svarbu · 0" }).ClickAsync();
         await Assertions.Expect(mine.GetByRole(AriaRole.Button, new() { Name = "Man svarbu · 1" })).ToHaveAttributeAsync("aria-pressed", "true");
         await Assertions.Expect(b.Locator("#not-a-poll")).ToContainTextAsync("Tai nėra reprezentatyvi apklausa");
@@ -85,6 +93,20 @@ public sealed class AppealFlowTests(AppealFlowTests.ModeratorFixture moderator) 
         await a.ReloadAsync();
         await Assertions.Expect(a.Locator("#count-for .figure__num")).ToHaveTextAsync("1");
         await Assertions.Expect(a.Locator("#my-side")).ToContainTextAsync("Jūs prašote balsuoti prieš.", new() { Timeout = 30_000 });
+
+        // 6. The initiator, who asks to vote against, gets "prieš" preselected and writes an argument for instead.
+        var addMore = a.Locator("#add-reason");
+        await Assertions.Expect(addMore).ToBeEnabledAsync(new() { Timeout = 60_000 });
+        await addMore.ClickAsync();
+        await Assertions.Expect(a.Locator("#reason-side-against")).ToBeCheckedAsync();
+        await a.Locator("#reason-side-for").CheckAsync();
+        await a.Locator("#reason-text").FillAsync("Pripažįstu, kad biudžetui papildomų pajamų reikia.");
+        await a.GetByRole(AriaRole.Button, new() { Name = "Paskelbti", Exact = true }).ClickAsync();
+        await Assertions.Expect(a.GetByText("Argumentas paskelbtas.")).ToBeVisibleAsync();
+        await Assertions.Expect(a.Locator("#reasons-for .said").Filter(new() { HasText = "Pripažįstu, kad biudžetui" })).ToBeVisibleAsync();
+        await Assertions.Expect(a.Locator("#count-against .figure__num")).ToHaveTextAsync("1");
+        await NoSidewaysScrollAsync(a);
+        await a.ScreenshotAsync(new() { Path = Shot($"appeal-argument-other-side-{width}.png"), FullPage = true });
 
         initiator.ConsoleErrors.ShouldBeEmpty();
         second.ConsoleErrors.ShouldBeEmpty();

@@ -2,9 +2,10 @@
 @inherits InteractiveBase
 @inject IAppealsApi Appeals
 
-@* The arguments of both sides (design 8.1, design/ui/kreipimasis.html "Kodėl"): "Man svarbu" on one's own side, a
-   report button on every argument, and writing a new one, offered a similar existing one first. Prerendered on the
-   server, so the arguments are readable without JavaScript. *@
+@* The arguments of both sides (design 8.1, 8.2, design/ui/kreipimasis.html "Kodėl"): "Man svarbu" on one's own side, a
+   report button on every argument, and writing a new one for either side (the person's own side preselected, if any),
+   offered a similar existing one first. Prerendered on the server, so the arguments are readable without JavaScript;
+   nothing in an argument's markup depends on its author's side. *@
 <section class="stack" aria-labelledby="h-why" id="reasons">
     <h2 id="h-why">@L["Reasons.Title"]</h2>
     @if (Appeal is { } appeal)
@@ -51,7 +52,7 @@
         <div class="row">
             @if (CanWrite && !_writing)
             {
-                <button class="btn btn--plain" type="button" id="add-reason" disabled="@Locked" @onclick="() => _writing = true">@L["Reasons.Write"]</button>
+                <button class="btn btn--plain" type="button" id="add-reason" disabled="@Locked" @onclick="StartWriting">@L["Reasons.Write"]</button>
             }
             @if (appeal.Reasons.Count > Shown * 2 || appeal.Reasons.GroupBy(r => r.Side).Any(g => g.Count() > Shown))
             {
@@ -62,20 +63,26 @@
         </div>
         @if (_signedIn && Mine is { } mine)
         {
-            @if (mine.Side is null)
-            {
-                <p class="small">@L["Reasons.NeedSide"]</p>
-            }
-            else
-            {
-                <p class="small num">@Text("Reasons.EndorsementsLeft", mine.EndorsementsLeft) @(mine.ReasonsLeft > 0 ? Text("Reasons.Left", mine.ReasonsLeft) : L["Reasons.NoneLeft"])</p>
-            }
+            <p class="small num">@(mine.Side is null ? L["Reasons.NeedSide"] : Text("Reasons.EndorsementsLeft", mine.EndorsementsLeft)) @(mine.ReasonsLeft > 0 ? Text("Reasons.Left", mine.ReasonsLeft) : L["Reasons.NoneLeft"])</p>
         }
 
-        @if (_writing && Mine?.Side is { } mySide)
+        @if (_writing && Mine is not null)
         {
-            <form class="sheet stack" @onsubmit="SubmitAsync" novalidate aria-labelledby="write-title">
-                <h3 id="write-title">@L["Reasons.WriteFor." + mySide]</h3>
+            <form class="sheet stack" @onsubmit="SubmitAsync" novalidate aria-labelledby="write-title" id="write-reason">
+                <h3 id="write-title">@L["Reasons.WriteTitle"]</h3>
+                <p class="small">@L["Reasons.EitherSide"]</p>
+                <fieldset class="field stack stack--tight @(Errors.ContainsKey("side") ? "field--error" : "")">
+                    <legend>@L["Reasons.SideLegend"]</legend>
+                    @foreach (var side in AppealLimits.Sides)
+                    {
+                        <label class="check">
+                            <input type="radio" name="reason-side" id="reason-side-@side" value="@side" checked="@(_side == side)"
+                                   @onchange="() => ChooseSide(side)" disabled="@Locked" />
+                            <span>@L["Reasons.SideOption." + side]</span>
+                        </label>
+                    }
+                    <FieldError Errors="Errors" Field="side" />
+                </fieldset>
                 <div class="field @(Errors.ContainsKey("text") ? "field--error" : "")">
                     <label for="reason-text">@L["Reasons.Label"]</label>
                     <textarea class="textarea" id="reason-text" maxlength="@AppealLimits.ReasonMaxLength" aria-describedby="reason-hint"
@@ -134,7 +141,27 @@
 
     [PersistentState] public MyAppealResponse? Mine { get; set; }
 
-    private bool CanWrite => _signedIn && Appeal?.Status == "open" && Mine is { Side: not null, ReasonsLeft: > 0 };
+    private string? _side;
+
+    /// <summary>An argument may be written for either side, with or without a side of one's own (design 8.2).</summary>
+    private bool CanWrite => _signedIn && Appeal?.Status == "open" && Mine is { ReasonsLeft: > 0 };
+
+    /// <summary>
+    /// The side is preselected to the person's own, read from their never-cached "mine" answer; with no side of their
+    /// own nothing is preselected and they choose.
+    /// </summary>
+    private void StartWriting()
+    {
+        _side = Mine?.Side;
+        _writing = true;
+    }
+
+    private void ChooseSide(string side)
+    {
+        _side = side;
+        _similar = null;
+        Errors = new Dictionary<string, string[]>();
+    }
 
     protected override async Task OnInitializedAsync()
     {
@@ -173,7 +200,13 @@
 
     private Task SubmitAsync() => RunAsync(async () =>
     {
-        var request = new ReasonRequest { Side = Mine!.Side!, Text = _text };
+        if (_side is null)
+        {
+            Errors = new Dictionary<string, string[]> { ["side"] = [L["Reasons.ChooseSide"].Value] };
+            return;
+        }
+
+        var request = new ReasonRequest { Side = _side, Text = _text };
         if (_similar is null)
         {
             var similar = await Appeals.FindSimilarAsync(Number, request);
@@ -205,6 +238,7 @@
     private void CancelWriting()
     {
         _writing = false;
+        _side = null;
         _text = "";
         _similar = null;
         Errors = new Dictionary<string, string[]>();

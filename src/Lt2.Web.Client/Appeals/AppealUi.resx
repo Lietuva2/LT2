@@ -29,18 +29,22 @@
 <data name="Reasons.All" xml:space="preserve"><value>Visi argumentai: {0}</value></data>
 <data name="Reasons.Fewer" xml:space="preserve"><value>Rodyti mažiau</value></data>
 <data name="Reasons.Write" xml:space="preserve"><value>Parašyti argumentą</value></data>
-<data name="Reasons.WriteFor.for" xml:space="preserve"><value>Jūsų argumentas už</value></data>
-<data name="Reasons.WriteFor.against" xml:space="preserve"><value>Jūsų argumentas prieš</value></data>
-<data name="Reasons.Label" xml:space="preserve"><value>Argumentas</value></data>
-<data name="Reasons.Hint" xml:space="preserve"><value>Paprastas tekstas, {0} iš {1} ženklų. Argumentas bus viešas su jūsų vardu.</value></data>
+<data name="Reasons.WriteTitle" xml:space="preserve"><value>Jūsų argumentas</value></data>
+<data name="Reasons.EitherSide" xml:space="preserve"><value>Argumentą galite parašyti už arba prieš, nepriklausomai nuo to, ko prašote patys, ir net jei dar nenurodėte. Prie argumento nerodoma, ko prašote jūs.</value></data>
+<data name="Reasons.SideLegend" xml:space="preserve"><value>Argumentas</value></data>
+<data name="Reasons.SideOption.for" xml:space="preserve"><value>už – kodėl balsuoti už</value></data>
+<data name="Reasons.SideOption.against" xml:space="preserve"><value>prieš – kodėl balsuoti prieš</value></data>
+<data name="Reasons.ChooseSide" xml:space="preserve"><value>Pasirinkite, ar argumentas už, ar prieš.</value></data>
+<data name="Reasons.Label" xml:space="preserve"><value>Tekstas</value></data>
+<data name="Reasons.Hint" xml:space="preserve"><value>Paprastas tekstas, {0} iš {1} ženklų. Argumentas bus viešas su jūsų vardu ir pasirinkta puse.</value></data>
 <data name="Reasons.Submit" xml:space="preserve"><value>Paskelbti</value></data>
 <data name="Reasons.PublishAnyway" xml:space="preserve"><value>Vis tiek paskelbti savo</value></data>
 <data name="Reasons.SimilarTitle" xml:space="preserve"><value>Panašūs argumentai jau yra</value></data>
-<data name="Reasons.SimilarText" xml:space="preserve"><value>Gal jūsų mintį kas nors jau parašė? Pažymėkite „Man svarbu“ prie esamo argumento arba vis tiek paskelbkite savo.</value></data>
+<data name="Reasons.SimilarText" xml:space="preserve"><value>Gal jūsų mintį kas nors jau parašė? Jei argumentas tos pusės, kurios prašote patys, galite pažymėti „Man svarbu“; arba vis tiek paskelbkite savo.</value></data>
 <data name="Reasons.Published" xml:space="preserve"><value>Argumentas paskelbtas.</value></data>
 <data name="Reasons.Pending" xml:space="preserve"><value>Argumentą pirma peržiūrės moderatorius. Kai jis bus paskelbtas, gausite laišką.</value></data>
-<data name="Reasons.NeedSide" xml:space="preserve"><value>Argumentus rašyti ir „Man svarbu“ žymėti gali tie, kurie nurodė, ko prašo.</value></data>
-<data name="Reasons.OwnSideOnly" xml:space="preserve"><value>„Man svarbu“ galite žymėti tik savo pusės argumentus.</value></data>
+<data name="Reasons.NeedSide" xml:space="preserve"><value>„Man svarbu“ žymėti gali tie, kurie nurodė, ko prašo.</value></data>
+<data name="Reasons.OwnSideOnly" xml:space="preserve"><value>„Man svarbu“ galite žymėti tik argumentus tos pusės, kurios prašote patys.</value></data>
 <data name="Reasons.NoEndorsementsLeft" xml:space="preserve"><value>Dėl šio projekto „Man svarbu“ jau pažymėjote tris argumentus.</value></data>
 <data name="Reasons.EndorsementsLeft" xml:space="preserve"><value>„Man svarbu“ dar galite pažymėti: {0}.</value></data>
 <data name="Reasons.Left" xml:space="preserve"><value>Argumentų dar galite parašyti: {0}.</value></data>

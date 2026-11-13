@@ -107,7 +107,7 @@
 <data name="Method.Digests.Counts" xml:space="preserve"><value>Skaičiai</value></data>
 <data name="Method.Digests.CountsValue" xml:space="preserve"><value>visada abi pusės kartu, prie kiekvienos – kiek paskyrų senesnės nei {0} d.</value></data>
 <data name="Method.Digests.Reasons" xml:space="preserve"><value>Argumentai</value></data>
-<data name="Method.Digests.ReasonsValue" xml:space="preserve"><value>po {0} labiausiai „Man svarbu“ pažymėtus kiekvienos pusės argumentus, kuriuos peržiūrėjo moderatorius</value></data>
+<data name="Method.Digests.ReasonsValue" xml:space="preserve"><value>po {0} labiausiai „Man svarbu“ pažymėtus argumentus už ir {0} – prieš, kuriuos peržiūrėjo moderatorius</value></data>
 <data name="Method.Digests.Surge" xml:space="preserve"><value>Šuolio pastaba</value></data>
 <data name="Method.Digests.SurgeValue" xml:space="preserve"><value>kai bent {0} % per paskutines {1} valandas pateiktų pozicijų pateikė per tą laiką sukurtos paskyros ir jų yra bent {2}</value></data>
 <data name="Method.Digests.Groups" xml:space="preserve"><value>Grupių skaičiai</value></data>
@@ -132,7 +132,7 @@
 <data name="Rules.Sending" xml:space="preserve"><value>Suvestinės</value></data>
 <data name="Rules.Sending.1" xml:space="preserve"><value>Moderatorius gali sulaikyti kreipimąsi, kad jis kurį laiką nepatektų į suvestines (pvz., kol tikrinamas staigus naujų paskyrų antplūdis), ir patvirtinti vieną skubią suvestinę projektui, kuris į darbotvarkę įtrauktas netikėtai.</value></data>
 <data name="Rules.Privacy" xml:space="preserve"><value>Ko moderatoriai nemato</value></data>
-<data name="Rules.Privacy.1" xml:space="preserve"><value>Moderatoriai, kaip ir administratoriai, nemato, kas kurią pusę pasirinko. Jie mato tik bendrus skaičius.</value></data>
+<data name="Rules.Privacy.1" xml:space="preserve"><value>Moderatoriai, kaip ir administratoriai, nemato, kas kurią pusę pasirinko. Jie mato tik bendrus skaičius. Argumentą galima parašyti už arba prieš, nepriklausomai nuo savo pozicijos, todėl ir argumentas jos neparodo.</value></data>
 <data name="Rules.Contact" xml:space="preserve"><value>Parašyti moderatoriams:</value></data>
 <data name="Rules.Draft" xml:space="preserve"><value>Taisyklės aprašo, kaip veikia sistema; jų tekstas dar bus peržiūrėtas.</value></data>
 </root>

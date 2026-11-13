@@ -8,7 +8,7 @@ using Lt2.Web.Services;
 namespace Lt2.Web.Endpoints.Appeals;
 
 /// <summary>
-/// <c>POST /api/v1/bills/{number}/appeal/reasons</c>: a new argument on one's own side, at most two per bill. Published at
+/// <c>POST /api/v1/bills/{number}/appeal/reasons</c>: a new argument for either side, whatever the author's own (design 8.2), at most two per bill. Published at
 /// once unless pre-screening flags it for a moderator.
 /// </summary>
 internal static class WriteReasonEndpoint
