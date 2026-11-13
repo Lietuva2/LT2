@@ -543,14 +543,18 @@ GET /api/v1/meta/imports                    last successful import per source
 
 ### 8.1 Life of an appeal
 
-1. **Open.** A member picks a bill from the list of active bills and opens its appeal: chooses a side, writes the first
-   reason, writes a short **neutral description** of what the bill changes, and sets the **threshold**: how many
-   participants the appeal should have before MPs hear about it (8.4). If the bill already has an appeal, they are taken
-   to it instead.
-2. **Review.** AI pre-screening flags insults, spam and personal data. A moderator checks the neutral description and the
-   first reason and publishes the appeal. Until then it is visible only to its initiator.
-3. **Collect.** People join a side, endorse reasons on their side, or add one for either side. A new reason
-   similar to an existing one is offered the existing one first. Positions can be changed until the appeal closes.
+1. **Open.** A member picks a bill from the list of active bills and opens its appeal: writes a short **neutral
+   description** of what the bill changes and sets the **threshold**: how many participants the appeal should have
+   before MPs hear about it (8.4). Nothing else: no side and no first reason **[decided 2026-11-13]**, so opening needs
+   no positions consent and a new appeal has no participants. If the bill already has an appeal, they are taken to it
+   instead.
+2. **Review.** AI pre-screening flags insults, spam and personal data. A moderator checks the neutral description and
+   publishes the appeal; a returned appeal is corrected by editing the description. Until then it is visible only to its
+   initiator, and nobody writes reasons on it.
+3. **Collect.** On the published appeal people, the initiator like anyone else, take a side (or never do), endorse
+   reasons on their side, or add one for either side. The notice that the appeal was published invites the initiator
+   to add reasons. A new reason similar to an existing one is offered the existing one first. Positions can be changed
+   until the appeal closes.
 4. **Summarise.** Once the appeal reaches its threshold it enters the summaries sent to MPs (8.4).
 5. **Answer.** MPs publish responses; participants are told (8.6).
 6. **Close.** When the Seimas takes the final vote on the bill (or rejects or withdraws it at any stage) the appeal
@@ -585,9 +589,12 @@ the bill, participants are told so they can reconsider (as agreed for votes in `
   side may write reasons for either side or for both. Writing a reason never creates or changes a position, and nothing
   public (page, API, cached appeal, summary) tells whether a reason is on its author's side, so a reason does not reveal
   its author's position.
-- Writing a reason does not need the positions consent (6.5), because no position is stored; the writing box says
-  plainly that the reason is public with the author's name and the side chosen. **[Proposed in M2a, to be confirmed by
-  the owner.]**
+- Writing a reason does not need the positions consent (6.5), because no position is stored: writing a reason is the
+  author's own deliberate publication. The writing box says plainly that the reason is public with the author's name
+  and the side chosen, the author can withdraw it, and the privacy and methodology texts say the same. **[decided
+  2026-11-13; to be read by a lawyer together with the consent texts before registration opens]**
+- No reason is marked as the initiator's: nothing ties a reason's side, or the initiator, to a side. Reasons written as
+  "first reasons" before 2026-11-13 stay as ordinary reasons.
 - "Man svarbu" stays on one's own side only, within the setting above; a person without a side cannot mark. Changing or
   clearing a side drops the marks, never the person's reasons; withdrawing the consent deletes positions and marks,
   not reasons.
@@ -617,7 +624,7 @@ the bill, participants are told so they can reconsider (as agreed for votes in `
   moderator may set any length, and any moderator or administrator may lift it, each only in a staff-passkey session
   (6.2) and each with a written statement. A dated restriction ends by itself when it is checked on use; no job runs.
   - It blocks everything the person writes for others to read: writing a reason, opening an appeal, editing an
-    appeal's description or first reason (a returned one included), and flags about planned dates. The API refuses
+    appeal's description (a returned one included), and flags about planned dates. The API refuses
     these with `writing.restricted`; the pages show, in place of the writing box or form, that writing is restricted,
     until when, and the reason.
   - It does not touch signing in, taking or changing a side, "Man svarbu", reporting, consent, export, deleting the
@@ -761,7 +768,7 @@ can cite it, and MPs know that the numbers in their inbox are the numbers everyo
 ```
 GET    /api/v1/appeals?sort=&cursor=
 GET    /api/v1/bills/{number}/appeal                     counts, reasons, responses, planned date
-POST   /api/v1/bills/{number}/appeal                     open: side, first reason, neutral description, threshold
+POST   /api/v1/bills/{number}/appeal                     open: neutral description, threshold (no side, no first reason)
 PUT    /api/v1/bills/{number}/appeal/threshold           initiator, until the first summary or a moderator's change
 PUT    /api/v1/bills/{number}/appeal/position            take or change a side
 DELETE /api/v1/bills/{number}/appeal/position
@@ -909,8 +916,12 @@ Splitting M2 means the risky step (emailing every MP) happens only after the who
 - Summaries carry no authors' names beside the reasons: the email, the public copy and the stored snapshot (8.4, 8.7).
 - "Changed notably" for the weekly summary is a runtime setting, `Digest:NotableChange`, default 10 % (8.4, 5.6).
 - A reason may be written for either side, whatever the author's own; the author's side is only the preselected
-  choice, and a person without a side may write too (8.2). Still to be confirmed: that writing a reason needs no
-  positions consent (8.2).
+  choice, and a person without a side may write too (8.2). Writing a reason needs no positions consent: the author's
+  own deliberate publication, public with name and side and withdrawable (8.2); a lawyer reads this with the consent
+  texts before registration opens (below).
+- Opening an appeal asks only for the neutral description and the threshold: no side, no first reason, no positions
+  consent. The initiator writes reasons and takes a side on the published appeal like anyone else, or never (8.1).
+  Earlier first reasons stay as ordinary reasons; nothing marks a reason as the initiator's.
 - Reasons and "Man svarbu" marks per person per bill are runtime settings, both 0 (no limit) at the start; a limit
   switched on later counts only shown or waiting reasons and removes nothing (8.2, 5.6).
 - An author can withdraw their own reason while the appeal is open (8.2, 8.8). Still to be confirmed: that a reason
@@ -926,6 +937,7 @@ Splitting M2 means the risky step (emailing every MP) happens only after the who
 | Email provider | An EU-owned service (for example Brevo or Scaleway) or Amazon SES in an EU region. Compare deliverability to `lrs.lt`, price, processor terms. | M0 |
 | How accounts are verified once registration is open | **Stay with email** and label numbers as email-confirmed accounts; or add **phone verification** (an EU provider such as Infobip or Sinch, or a Lithuanian bulk-SMS service; paid per message; Lithuanian numbers only would exclude people abroad); or wait for the EU Digital Identity Wallet. The public pages promise one account per confirmed phone number, so staying with email also means rewording them. | Before M2b |
 | CDN and DDoS protection | Bunny (EU) or Cloudflare. | Before M2b |
+| Legal reading of the consent texts | A lawyer reads the positions consent texts together with the rule that writing a reason needs no consent (8.2): a reason is the author's own deliberate publication, public with name and chosen side, and withdrawable. | Before registration opens, at the latest before M2b |
 | AI provider for pre-screening | Any provider with EU data terms; no personal data is sent either way. | M2a |
 | Telemetry backend | Hosted free tier with EU storage, or self-hosted. | M0 |
 | MP photos | Use the Seimas photos if their terms allow, otherwise initials. | M1 |

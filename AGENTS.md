@@ -158,12 +158,14 @@ official `@lrs.lt` address from open data; the link is tied to the Seimas person
 - One position per person per bill, private, changeable until the appeal closes at the final Seimas vote.
 - Reasons: plain text up to 500 characters, public with the author's display name, for either side, whatever the
   author's own (no side needed; the writing box preselects the author's side if any). Nothing public may tell whether
-  a reason is on its author's side. The author can withdraw their own reason while the appeal is open.
+  a reason is on its author's side. The author can withdraw their own reason while the appeal is open. Writing a reason
+  needs no positions consent: it is the author's own deliberate publication, public with name and chosen side.
 - "Man svarbu" endorses a reason on your own side.
 - Reasons and marks per person per bill are settings (`Appeals:ReasonsPerPerson`, `Appeals:EndorsementsPerPerson`);
   0 = no limit, the default. A limit switched on later removes nothing and counts only shown or waiting reasons.
-- The initiator opens the appeal with a side, a first reason, a neutral description and a threshold. A moderator
-  publishes it.
+- The initiator opens the appeal with a neutral description and a threshold: no side, no first reason, so no
+  positions consent. A moderator publishes it; then the initiator writes reasons and takes a side like anyone else, or
+  never. Nothing marks a reason as the initiator's.
 - **Threshold:** per appeal, public, set by the initiator, default 100, never below the administrator's minimum. The
   initiator can change it until the appeal first enters a summary that is really sent (a dry run does not count). A
   number changed by a moderator is final. There is
