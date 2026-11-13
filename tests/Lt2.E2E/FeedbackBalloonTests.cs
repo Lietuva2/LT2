@@ -36,7 +36,20 @@ public sealed class FeedbackBalloonTests(AppealFlowTests.ModeratorFixture modera
         covered.ShouldBeEmpty("at the end of the page");
     }
 
-    private sealed record PanelBox(double Left, double Top, double Right, double Bottom, double Width, double ViewportWidth, double ViewportHeight, double ScrollWidth, double ClientWidth, string[] Clipped);
+    /// <summary>What the page reports about the open panel (Playwright needs settable properties to fill it).</summary>
+    private sealed class PanelBox
+    {
+        public double Left { get; set; }
+        public double Top { get; set; }
+        public double Right { get; set; }
+        public double Bottom { get; set; }
+        public double Width { get; set; }
+        public double ViewportWidth { get; set; }
+        public double ViewportHeight { get; set; }
+        public double ScrollWidth { get; set; }
+        public double ClientWidth { get; set; }
+        public string[] Clipped { get; set; } = [];
+    }
 
     /// <summary>
     /// The open panel lies fully inside the window, is at least 280 px wide, has no sideways overflow, and no line of its
@@ -94,14 +107,18 @@ public sealed class FeedbackBalloonTests(AppealFlowTests.ModeratorFixture modera
     private static async Task ShotsAsync(IPage page, string name)
     {
         await page.EmulateMediaAsync(new() { ColorScheme = ColorScheme.Light });
-        await page.ScreenshotAsync(new() { Path = Shot($"{name}-light.png") });
+        await page.ScreenshotAsync(new() { Path = Shot($"{name}-light.png"), Animations = ScreenshotAnimations.Disabled });
         await page.EmulateMediaAsync(new() { ColorScheme = ColorScheme.Dark });
-        await page.ScreenshotAsync(new() { Path = Shot($"{name}-dark.png") });
+        await page.ScreenshotAsync(new() { Path = Shot($"{name}-dark.png"), Animations = ScreenshotAnimations.Disabled });
         await page.EmulateMediaAsync(new() { ColorScheme = ColorScheme.Light });
     }
 
-    private static Task<string?> FocusedAsync(IPage page) =>
-        page.EvaluateAsync<string?>("() => document.activeElement?.id || document.activeElement?.className || document.activeElement?.tagName");
+    /// <summary>The page has loaded everything it asks for (the WebAssembly runtime included) and has stopped moving focus.</summary>
+    private static async Task SettledAsync(IPage page)
+    {
+        await page.WaitForLoadStateAsync(LoadState.NetworkIdle);
+        await page.EvaluateAsync("() => new Promise(r => requestAnimationFrame(() => setTimeout(r, 0)))");
+    }
 
     [Theory]
     [InlineData(1280, 800)]
@@ -126,7 +143,10 @@ public sealed class FeedbackBalloonTests(AppealFlowTests.ModeratorFixture modera
             await NothingCoveredAtTheEndAsync(page);
             await ShotsAsync(page, $"balloon-closed{path.Replace('/', '-')}-{width}");
 
-            // Opened from the keyboard: focus goes into the panel (the heading; a visitor has no form).
+            // Opened from the keyboard: focus goes into the panel (the heading; a visitor has no form). Only once the page
+            // has settled, as a person would: while WebAssembly starts, the toggle event and Blazor's focus on the
+            // page's heading after loading both come late, and the latter takes the focus back.
+            await SettledAsync(page);
             await page.EvaluateAsync("() => window.scrollTo(0, 0)");
             await summary.FocusAsync();
             await page.Keyboard.PressAsync("Enter");
@@ -138,7 +158,7 @@ public sealed class FeedbackBalloonTests(AppealFlowTests.ModeratorFixture modera
             await Assertions.Expect(panel.Locator("a[href='https://github.com/Lietuva2/LT2/issues']")).ToBeVisibleAsync();
             await Assertions.Expect(panel).ToContainTextAsync("viešas ir rodomas su jūsų GitHub vardu");
             await Assertions.Expect(panel.Locator("form")).ToHaveCountAsync(0);
-            (await FocusedAsync(page)).ShouldBe("feedback-title", where);
+            await Assertions.Expect(panel.Locator("#feedback-title")).ToBeFocusedAsync();
             await PanelFitsAsync(page, where);
             await ReachableAsync(page, panel.Locator("a[href='mailto:moderatoriai@lt2.localhost']"), where);
             await ShotsAsync(page, $"balloon-visitor{path.Replace('/', '-')}-{width}");
@@ -146,7 +166,7 @@ public sealed class FeedbackBalloonTests(AppealFlowTests.ModeratorFixture modera
             // Escape closes and focus returns to the button.
             await page.Keyboard.PressAsync("Escape");
             await Assertions.Expect(panel).ToBeHiddenAsync();
-            (await FocusedAsync(page)).ShouldBe("feedback__button", where);
+            await Assertions.Expect(summary).ToBeFocusedAsync();
 
             // Opened with the mouse, closed with the panel's own close button.
             await summary.ClickAsync();
@@ -155,7 +175,7 @@ public sealed class FeedbackBalloonTests(AppealFlowTests.ModeratorFixture modera
             await ReachableAsync(page, close, where);
             await close.ClickAsync();
             await Assertions.Expect(panel).ToBeHiddenAsync();
-            (await FocusedAsync(page)).ShouldBe("feedback__button", where);
+            await Assertions.Expect(summary).ToBeFocusedAsync();
         }
 
         await Assertions.Expect(page.Locator("#cannot-sign-in")).ToContainTextAsync("Nepavyksta prisijungti?");
@@ -176,10 +196,11 @@ public sealed class FeedbackBalloonTests(AppealFlowTests.ModeratorFixture modera
         // With JavaScript: focus goes to the text field; the panel fits; the send button can be reached.
         await a.GotoAsync($"{Base}/seimas/XVP-0412/kreipimasis");
         await NothingCoveredAtTheEndAsync(a);
+        await SettledAsync(a);
         await a.Locator("summary.feedback__button").ClickAsync();
         var panel = a.Locator(".feedback__panel");
         await Assertions.Expect(panel.Locator("#fb-text-panel")).ToBeVisibleAsync();
-        (await FocusedAsync(a)).ShouldBe("fb-text-panel", $"member at {width}");
+        await Assertions.Expect(panel.Locator("#fb-text-panel")).ToBeFocusedAsync();
         await Assertions.Expect(panel).ToContainTextAsync("/seimas/XVP-0412/kreipimasis");
         await Assertions.Expect(panel).ToContainTextAsync("Nerašykite, kurią pusę pasirinkote");
         await PanelFitsAsync(a, $"member at {width}");

@@ -519,6 +519,7 @@ body { padding-block-end: 4.5rem; }
   box-shadow: 0 0.5rem 1.5rem rgb(0 0 0 / 0.25); overflow-wrap: anywhere;
 }
 .feedback__head { display: flex; align-items: flex-start; justify-content: space-between; gap: var(--sp-3); }
+.feedback__head h2 { font-size: var(--fs-4); }
 .feedback__close { flex: none; background: none; border: 0; padding: 0.25rem 0; font: inherit; font-size: var(--fs-1); color: var(--ink); text-decoration: underline; cursor: pointer; }
 @media (prefers-reduced-motion: no-preference) {
   .feedback[open] .feedback__panel { animation: feedback-slide 0.18s ease-out; }
