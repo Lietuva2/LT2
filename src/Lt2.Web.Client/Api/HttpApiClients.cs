@@ -219,3 +219,22 @@ internal sealed class HttpDigestsApi(ApiHttp http) : Lt2.Api.Contracts.Digests.I
     public Task<ApiResult<Lt2.Api.Contracts.Digests.DigestPreviewResponse>> GetPreviewAsync(Guid runId, string slug, CancellationToken cancellationToken = default) =>
         http.SendAsync<Lt2.Api.Contracts.Digests.DigestPreviewResponse>(HttpMethod.Get, Lt2.Api.Contracts.Digests.DigestRoutes.PreviewOf(runId, slug), null, cancellationToken);
 }
+
+internal sealed class HttpFeedbackApi(ApiHttp http) : Lt2.Api.Contracts.Feedback.IFeedbackApi
+{
+    public Task<ApiResult> SendAsync(Lt2.Api.Contracts.Feedback.FeedbackRequest request, CancellationToken cancellationToken = default) =>
+        http.SendAsync(HttpMethod.Post, Lt2.Api.Contracts.Feedback.FeedbackRoutes.Send, request, cancellationToken);
+
+    public Task<ApiResult<IReadOnlyList<Lt2.Api.Contracts.Feedback.FeedbackItemResponse>>> ListAsync(string? kind = null, string? status = null, CancellationToken cancellationToken = default)
+    {
+        var query = string.Join("&", new[] { kind is null ? null : "kind=" + Uri.EscapeDataString(kind), status is null ? null : "status=" + Uri.EscapeDataString(status) }.Where(q => q is not null));
+        return http.SendAsync<IReadOnlyList<Lt2.Api.Contracts.Feedback.FeedbackItemResponse>>(
+            HttpMethod.Get, Lt2.Api.Contracts.Feedback.FeedbackRoutes.Staff + (query.Length > 0 ? "?" + query : ""), null, cancellationToken);
+    }
+
+    public Task<ApiResult> UpdateAsync(Guid id, Lt2.Api.Contracts.Feedback.FeedbackUpdateRequest request, CancellationToken cancellationToken = default) =>
+        http.SendAsync(HttpMethod.Put, Lt2.Api.Contracts.Feedback.FeedbackRoutes.ItemOf(id), request, cancellationToken);
+
+    public Task<ApiResult> ReplyAsync(Guid id, Lt2.Api.Contracts.Feedback.FeedbackReplyRequest request, CancellationToken cancellationToken = default) =>
+        http.SendAsync(HttpMethod.Post, Lt2.Api.Contracts.Feedback.FeedbackRoutes.ReplyOf(id), request, cancellationToken);
+}

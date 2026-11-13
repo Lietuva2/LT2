@@ -72,7 +72,9 @@ INVENTED page (`LT2_AGENDA_BASE_ADDRESS` in `deploy/.env`); production sets the 
 outbound allowlist; empty means off. The parser's assumptions are in `tests/Lt2.Parliament.ImportTests/Agenda/ASSUMPTIONS.md`;
 `LT2_LRS_LIVE=1` with `LT2_LRS_AGENDA_URL` runs the live check. Summaries to MPs are made in dry-run only (M2a): published
 at `/suvestines`, never sent. `LT2_MODERATION_CONTACT` is the address shown to visitors who want to report (a local
-placeholder in `deploy/.env`).
+placeholder in `deploy/.env`). Feedback (design 8.10): `LT2_FEEDBACK_ISSUES_URL` (`Feedback:IssuesUrl`, the
+repository's GitHub issues, linked from the feedback panel; nothing shown when empty) and `LT2_FEEDBACK_TEAM_ADDRESS`
+(`Feedback:TeamAddress`, where the worker sends at most one notice a day of new feedback; none when empty).
 
 Register with any address and the invitation code, open the sign-in email in Mailpit, enter the six-digit code, and the
 "Sveiki" page appears. From there you can add a passkey and see or end your sessions.
@@ -175,6 +177,7 @@ separate secret. Nothing secret is committed; `deploy/secrets/README.md` lists e
 | Setting | Meaning |
 |---|---|
 | `ConnectionStrings:Lt2` + `Database:Password` | Database connection for the process's own role (`lt2_app`, `lt2_worker` or `lt2_migrator`) |
+| `Database:MaxPoolSize`, `Database:HangfireMaxPoolSize`, `Database:ApplicationName` | The connection budget (design 9.5): web 25 per instance, worker 10, Hangfire 10, migrator 5, against PostgreSQL's `max_connections=150` in `deploy/compose.yaml`; 10 when unset. Change them only together with the budget test |
 | `DataProtection:KeyEncryptionKey` | Base64 32-byte key wrapping the data-protection keys stored in PostgreSQL; required outside development |
 | `Security:IpHashKey` | Key for hashing client IP addresses in the audit log |
 | `Email:Smtp:*` | SMTP host, port, security, user, password, from address (Mailpit locally; the provider is not chosen yet) |

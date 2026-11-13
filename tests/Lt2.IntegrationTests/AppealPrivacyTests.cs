@@ -66,6 +66,7 @@ public sealed class AppealPrivacyTests(DatabaseFixture database) : ApiTest(datab
             AppealRoutes.HistoryOf(AppealSteps.ThirdBill), Lt2.Api.Contracts.Digests.DigestRoutes.Digests, Lt2.Api.Contracts.Digests.DigestRoutes.Rules,
             ApiRoutes.Me.PartySupport, ApiRoutes.Me.Export, "/kreipimaisi", "/seimas/XVP-0618/kreipimasis", "/suvestines", "/moderavimas",
             ApiRoutes.Me.Invitation, ApiRoutes.Admin.Invitations, "/sveiki", "/administravimas/kvietimai",
+            Lt2.Api.Contracts.Feedback.FeedbackRoutes.Staff, "/atsiliepimai", "/moderavimas/atsiliepimai",
         };
 
         foreach (var (who, browser) in viewers)
@@ -354,7 +355,7 @@ public sealed class AppealPrivacyTests(DatabaseFixture database) : ApiTest(datab
         {
             "/api/v1/appeals", "/api/v1/appeals/rules", "/api/v1/bills/{number}/appeal", "/api/v1/bills/{number}/appeal/mine",
             "/api/v1/bills/{number}/appeal/threshold", "/api/v1/bills/{number}/appeal/position", "/api/v1/bills/{number}/appeal/reasons",
-            "/api/v1/bills/{number}/appeal/reasons/similar", "/api/v1/reasons/{id}/endorsement", "/api/v1/reasons/{id}", "/api/v1/reports", "/api/v1/me/writing-restriction", "/api/v1/moderation/reasons/{id}/author", "/api/v1/moderation/appeals/{id}/initiator", "/api/v1/moderation/reasons/{id}/restrict-author", "/api/v1/moderation/appeals/{id}/restrict-initiator", "/api/v1/moderation/restrictions", "/api/v1/moderation/restrictions/{id}/lift", "/api/v1/me/invitation", "/api/v1/me/invitation/replace", "/api/v1/admin/invitations", "/api/v1/admin/invitations/{id}/switch-off", "/api/v1/admin/invitations/{id}/switch-on", "/api/v1/moderation/queue",
+            "/api/v1/bills/{number}/appeal/reasons/similar", "/api/v1/reasons/{id}/endorsement", "/api/v1/reasons/{id}", "/api/v1/reports", "/api/v1/me/writing-restriction", "/api/v1/moderation/reasons/{id}/author", "/api/v1/moderation/appeals/{id}/initiator", "/api/v1/moderation/reasons/{id}/restrict-author", "/api/v1/moderation/appeals/{id}/restrict-initiator", "/api/v1/moderation/restrictions", "/api/v1/moderation/restrictions/{id}/lift", "/api/v1/me/invitation", "/api/v1/me/invitation/replace", "/api/v1/admin/invitations", "/api/v1/admin/invitations/{id}/switch-off", "/api/v1/admin/invitations/{id}/switch-on", "/api/v1/feedback", "/api/v1/moderation/feedback", "/api/v1/moderation/feedback/{id}", "/api/v1/moderation/feedback/{id}/reply", "/api/v1/moderation/queue",
             "/api/v1/moderation/appeals/{id}/publish", "/api/v1/moderation/appeals/{id}/return", "/api/v1/moderation/appeals/{id}/hide",
             "/api/v1/moderation/appeals/{id}/threshold", "/api/v1/moderation/reasons/{id}/publish", "/api/v1/moderation/reasons/{id}/hide",
             "/api/v1/moderation/reasons/{id}/merge", "/api/v1/me/consents/positions", "/api/v1/bills/{number}/appeal/flags",

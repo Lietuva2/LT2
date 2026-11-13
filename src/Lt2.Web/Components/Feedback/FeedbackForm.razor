@@ -1,0 +1,114 @@
+@using Lt2.Api.Contracts.Feedback
+@inject IFeedbackApi Feedback
+@inject IStringLocalizer<FeedbackText> T
+@inject NavigationManager Navigation
+
+@* A member's feedback form (design 8.10), server-rendered: it posts back to the page it is on, so it needs no
+   WebAssembly and works without JavaScript. The page path and the browser are shown before sending and each can be
+   unticked; "Galite man atsakyti" decides whether the item is linked to the account at all. *@
+@if (_sent)
+{
+    <p class="note" role="status" id="feedback-sent-@Scope">@T["Sent"]</p>
+}
+else
+{
+    <EditForm Model="Model" FormName="feedback" OnSubmit="SubmitAsync" class="stack stack--tight" id="@($"feedback-form-{Scope}")">
+        <div class="field @(_error is null ? "" : "field--error")">
+            <label for="fb-text-@Scope">@T["Text"]</label>
+            <InputTextArea id="@($"fb-text-{Scope}")" class="textarea" maxlength="@FeedbackLimits.TextMaxLength" @bind-Value="Model!.Text" aria-describedby="@($"fb-hint-{Scope}")" />
+            <p class="field__hint" id="fb-hint-@Scope">@T["TextHint"]</p>
+            @if (_error is { } error)
+            {
+                <p class="field__error" role="alert">@error</p>
+            }
+        </div>
+        <fieldset class="stack stack--tight">
+            <legend class="label">@T["Kind"]</legend>
+            <InputRadioGroup @bind-Value="Model!.Kind">
+                <div class="row">
+                    @foreach (var kind in new[] { "" }.Concat(FeedbackLimits.Kinds))
+                    {
+                        <label class="check"><InputRadio Value="kind" /><span>@T["Kind." + (kind.Length == 0 ? "none" : kind)]</span></label>
+                    }
+                </div>
+            </InputRadioGroup>
+        </fieldset>
+        @if (Model!.Page is not null || Model.Browser is not null)
+        {
+            <div class="stack stack--tight">
+                <p class="small">@T["Attached"]</p>
+                @if (Model.Page is not null)
+                {
+                    <label class="check"><InputCheckbox @bind-Value="Model.IncludePage" id="@($"fb-page-{Scope}")" /><span>@T["Page"]: <code>@Model.Page</code></span></label>
+                    <InputText type="hidden" @bind-Value="Model.Page" />
+                }
+                @if (Model.Browser is not null)
+                {
+                    <label class="check"><InputCheckbox @bind-Value="Model.IncludeBrowser" id="@($"fb-browser-{Scope}")" /><span>@T["Browser"]: @Model.Browser</span></label>
+                    <InputText type="hidden" @bind-Value="Model.Browser" />
+                }
+            </div>
+        }
+        <label class="check"><InputCheckbox @bind-Value="Model.MayReply" id="@($"fb-reply-{Scope}")" /><span>@T["MayReply"]</span></label>
+        <p class="small">@T["MayReplyHint"]</p>
+        <button type="submit" class="btn">@T["Send"]</button>
+    </EditForm>
+}
+
+@code {
+    private bool _sent;
+    private string? _error;
+
+    /// <summary><c>panel</c> (the balloon) or <c>page</c> (<c>/atsiliepimai</c>); each has its own form scope.</summary>
+    [Parameter, EditorRequired] public string Scope { get; set; } = "panel";
+
+    [CascadingParameter] private HttpContext? HttpContext { get; set; }
+
+    [SupplyParameterFromForm] public FeedbackFormModel? Model { get; set; }
+
+    protected override void OnInitialized() =>
+        Model ??= new FeedbackFormModel
+        {
+            Page = Lt2.Web.Services.FeedbackPage.PathOf(Navigation.Uri),
+            Browser = Lt2.Web.Services.FeedbackPage.BrowserOf(HttpContext?.Request.Headers.UserAgent.ToString()),
+            IncludePage = true,
+            IncludeBrowser = true,
+        };
+
+    private async Task SubmitAsync()
+    {
+        var request = new FeedbackRequest
+        {
+            Text = Model!.Text ?? "",
+            Kind = string.IsNullOrEmpty(Model.Kind) ? null : Model.Kind,
+            PagePath = Model.IncludePage ? Model.Page : null,
+            Browser = Model.IncludeBrowser ? Model.Browser : null,
+            MayReply = Model.MayReply,
+        };
+        var result = await Feedback.SendAsync(request);
+        if (result.IsSuccess)
+        {
+            _sent = true;
+            return;
+        }
+
+        _error = result.Problem?.Errors?.Values.SelectMany(v => v).FirstOrDefault() ?? result.Problem?.Detail ?? result.Problem?.Title;
+    }
+
+    public sealed class FeedbackFormModel
+    {
+        public string? Text { get; set; }
+
+        public string? Kind { get; set; } = "";
+
+        public string? Page { get; set; }
+
+        public string? Browser { get; set; }
+
+        public bool IncludePage { get; set; }
+
+        public bool IncludeBrowser { get; set; }
+
+        public bool MayReply { get; set; }
+    }
+}

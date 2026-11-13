@@ -114,6 +114,7 @@
 <data name="Open.Threshold" xml:space="preserve"><value>Riba</value></data>
 <data name="Open.ThresholdHint" xml:space="preserve"><value>Kiek dalyvių, abiejų pusių kartu, turi turėti kreipimasis, kad patektų į suvestines Seimo nariams. Riba bus vieša. Ne mažiau kaip {0}.</value></data>
 <data name="Open.Submit" xml:space="preserve"><value>Pateikti moderatoriui</value></data>
+<data name="Open.TakenMeanwhile" xml:space="preserve"><value>Šiam projektui kreipimąsi jau pateikė kitas narys; jis laukia moderatoriaus. Kai moderatorius jį paskelbs, rasite jį šiame puslapyje. Jūsų tekstas liko laukelyje.</value></data>
 <data name="Edit.Title" xml:space="preserve"><value>Pataisyti prieš paskelbiant</value></data>
 <data name="Edit.TitleReturned" xml:space="preserve"><value>Pataisyti ir pateikti dar kartą</value></data>
 <data name="Edit.Submit" xml:space="preserve"><value>Pateikti moderatoriui</value></data>
@@ -165,7 +166,32 @@
 <data name="Admin.Setting.Digest:ThresholdDefault" xml:space="preserve"><value>Siūloma kreipimosi riba</value></data>
 <data name="Admin.Setting.Digest:ThresholdMinimum" xml:space="preserve"><value>Mažiausia kreipimosi riba</value></data>
 <data name="Admin.Setting.Registration:PersonalCodeUses" xml:space="preserve"><value>Registracijų vienu asmeniniu kvietimo kodu (0 – neribojama)</value></data>
-<data name="Inv.PageTitle" xml:space="preserve"><value>Kvietimai · Lietuva 2.0</value></data>
+<data name="Admin.Setting.Feedback:KeepMonths" xml:space="preserve"><value>Kiek mėnesių laikomi atsiliepimai</value></data>
+<data name="Fb.PageTitle" xml:space="preserve"><value>Atsiliepimai · Lietuva 2.0</value></data>
+<data name="Fb.Title" xml:space="preserve"><value>Atsiliepimai</value></data>
+<data name="Fb.Lead" xml:space="preserve"><value>Ką naudotojai parašė komandai. Atsakyti galima tik į susietus atsiliepimus; jie keliauja el. paštu, kurio adreso nematote.</value></data>
+<data name="Fb.Kind" xml:space="preserve"><value>Rūšis</value></data>
+<data name="Fb.Status" xml:space="preserve"><value>Būsena</value></data>
+<data name="Fb.All" xml:space="preserve"><value>visos</value></data>
+<data name="Fb.Filter" xml:space="preserve"><value>Rodyti</value></data>
+<data name="Fb.Item" xml:space="preserve"><value>Atsiliepimas</value></data>
+<data name="Fb.Kind.bug" xml:space="preserve"><value>klaida</value></data>
+<data name="Fb.Kind.idea" xml:space="preserve"><value>pasiūlymas</value></data>
+<data name="Fb.Kind.unclear" xml:space="preserve"><value>neaišku</value></data>
+<data name="Fb.Kind.other" xml:space="preserve"><value>kita</value></data>
+<data name="Fb.Status.new" xml:space="preserve"><value>nauja</value></data>
+<data name="Fb.Status.seen" xml:space="preserve"><value>matyta</value></data>
+<data name="Fb.Status.done" xml:space="preserve"><value>atlikta</value></data>
+<data name="Fb.From" xml:space="preserve"><value>Nuo: {0} (galima atsakyti)</value></data>
+<data name="Fb.Unlinked" xml:space="preserve"><value>Nesusieta su paskyra: atsakyti negalima</value></data>
+<data name="Fb.Replied" xml:space="preserve"><value>Atsakyta {0}:</value></data>
+<data name="Fb.Note" xml:space="preserve"><value>Vidinė pastaba (pvz., GitHub įrašo adresas)</value></data>
+<data name="Fb.Save" xml:space="preserve"><value>Išsaugoti</value></data>
+<data name="Fb.Saved" xml:space="preserve"><value>Išsaugota.</value></data>
+<data name="Fb.Reply" xml:space="preserve"><value>Atsakymas naudotojui</value></data>
+<data name="Fb.ReplyHint" xml:space="preserve"><value>Sistema išsiųs jį naudotojo el. paštu.</value></data>
+<data name="Fb.Send" xml:space="preserve"><value>Siųsti atsakymą</value></data>
+<data name="Fb.Sent" xml:space="preserve"><value>Atsakymas išsiųstas.</value></data><data name="Inv.PageTitle" xml:space="preserve"><value>Kvietimai · Lietuva 2.0</value></data>
 <data name="Inv.Title" xml:space="preserve"><value>Kvietimai</value></data>
 <data name="Inv.Lead" xml:space="preserve"><value>Tik skaičiai: kiek žmonių užbaigė registraciją su kuriuo kodu ir kada. Kas ką pakvietė ir kas kuriuo kodu naudojosi, čia nerodoma.</value></data>
 <data name="Inv.Days" xml:space="preserve"><value>Registracijos per dieną, {0}–{1}</value></data>

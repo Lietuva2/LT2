@@ -156,7 +156,10 @@ if it weighs better]**. The options:
 phone and only read (the old platform's lesson: "people bring people"), so MP profiles, bill pages and appeal pages are
 static server-rendered HTML with proper Open Graph tags and no WebAssembly download. Everything a signed-in person does
 (taking a side, writing a reason, settings, moderation, administration) is an Interactive WebAssembly component that talks
-only to `/api/v1`.
+only to `/api/v1`. Until such an island has started, everything in it is disabled (fields, choices and buttons alike):
+what was typed would be emptied when the island takes over, and a form sent natively would reload the page. Without
+JavaScript the island never starts, and the page says so in one note. An end-to-end test loads every page with islands
+with the WebAssembly runtime blocked and fails on any control left usable.
 
 How "full API from the start" holds with server rendering: every component depends on a typed client interface from
 `Lt2.Api.Contracts` (`IParliamentApi`, `IAppealsApi`, …). In the browser the implementation is an `HttpClient` call; on the
@@ -247,6 +250,7 @@ ASP.NET Core Identity tables (users, roles, claims, tokens, passkeys), plus:
 | `profile` | Display name, created date, normalised email (for the one-account-per-address rule), `verification_level` (`email` at the start; `phone` and the EU wallet can be added), invitation used. While the account is pending (6.2) it holds only the normalised address and the invitation code that was entered. |
 | `invitation` | Code (and its look-up form without dashes or spaces), kind (`team` or `personal`), who issued it (for a personal code: its member), uses left and expiry (team codes), completed registrations (a counter that never drops), level, switched off (when, by an administrator), replaced (when). Registration is by invitation during the closed trial. A use is counted when the registration is completed (6.2), not when it is started. |
 | `invitation_daily` | Per code and Vilnius day: registrations completed. For the administrators' chart; no per-person history. |
+| `feedback` | Kind (`bug`, `idea`, `unclear`, `other` or none), text (up to 2 000 characters), page path and browser (each only if the member left them in), status (`new`, `seen`, `done`), internal note, replies, the day it came, and the account **only if** the member ticked "Galite man atsakyti". An item without that tick has no account, a random id and only the day, so nothing leads back to its author. Kept 12 months (a setting); linked items go with the account (8.10). |
 | `sign_in_code` | Account, hashed code, expiry, failed attempts, used time, and the known device it was issued to (empty for a code any browser may use). |
 | `known_device` | Account, hashed identifier of the browser's cookie, first and last seen. Built before registration opens (M2b). |
 | `role_activation` | Account, role, hashed one-time code, who issued it, expiry, used time. Using it marks the passkey of that session as the staff passkey. |
@@ -292,7 +296,7 @@ without a deploy: the summary rules in 8.4 (default and minimum threshold, the w
 per MP, and the share of change that counts as "changed notably", `Digest:NotableChange`), the reasons and "Man svarbu"
 marks a person may give per bill in 8.2 (`Appeals:ReasonsPerPerson`, `Appeals:EndorsementsPerPerson`, 0 = no limit,
 the default), the surge thresholds in 6.6,
-the code limits and the life of a pending account in 6.2, whether registration needs an invitation, uses per personal invitation code (`Registration:PersonalCodeUses`, 0 = no limit, the default). Each
+the code limits and the life of a pending account in 6.2, whether registration needs an invitation, uses per personal invitation code (`Registration:PersonalCodeUses`, 0 = no limit, the default), how long feedback is kept (`Feedback:KeepMonths`, 12). Each
 change is written to `audit`, and the current values of the rules that affect what MPs receive are shown on the public
 methodology page.
 
@@ -434,7 +438,7 @@ Policy-based, with resource handlers where ownership matters.
 | Member (confirmed email; invited during the trial) | Open an appeal, take a side, write and endorse reasons, report content. |
 | Verified MP / office member (`politician_link`) | Publish and edit that MP's response; manage that MP's email preferences. |
 | Moderator | Review appeals and reasons, merge, hide, correct planned dates, hold a send, approve an urgent send, restrict an account from writing and lift that. |
-| Administrator | Roles, politician verification, configuration, import and digest dashboards, lifting a writing restriction. Cannot read individual positions through any screen. |
+| Administrator | Roles, politician verification, configuration, import and digest dashboards; every moderator action, restricting an account from writing and lifting that included. Cannot read individual positions through any screen. |
 
 No screen and no API returns another person's position. Group numbers are published only for groups of at least 20.
 
@@ -589,7 +593,10 @@ GET /api/v1/meta/imports                    last successful import per source
    description** of what the bill changes and sets the **threshold**: how many participants the appeal should have
    before MPs hear about it (8.4). Nothing else: no side and no first reason **[decided 2026-11-13]**, so opening needs
    no positions consent and a new appeal has no participants. If the bill already has an appeal, they are taken to it
-   instead.
+   instead. An appeal another member opened that still waits for a moderator is visible only to its initiator, so a
+   second member still sees the opening form; when they send it, their text stays in the form and a note says that
+   another member has already opened an appeal on the bill and it waits for a moderator (a reload would show the same
+   empty form). Whether the page should say so before they write is open (section 12).
 2. **Review.** AI pre-screening flags insults, spam and personal data. A moderator checks the neutral description and
    publishes the appeal; a returned appeal is corrected by editing the description. Until then it is visible only to its
    initiator, and nobody writes reasons on it.
@@ -624,7 +631,7 @@ the bill, participants are told so they can reconsider (as agreed for votes in `
   "Man svarbu" marks and disappears from the page; open reports on it are closed; a summary already made keeps its
   frozen text, which carries no name. The audit log records the withdrawal without the text or the side. On a closed
   appeal a reason cannot be withdrawn (the page there is the record beside the Seimas vote); a moderator can still hide
-  it, and deleting the account removes it. **[The closed-appeal case is proposed in M2a, to be confirmed by the owner.]**
+  it, and deleting the account removes it. **[The closed-appeal case decided 2026-11-13.]**
 - **A reason may be written for either side, whatever the author's own position [decided 2026-11-13].** The writing
   box asks for the side: it preselects the author's own side when they have taken one (read only from their own,
   never-cached answer), and preselects nothing when they have not, so they must choose. A person who has not taken a
@@ -663,7 +670,7 @@ the bill, participants are told so they can reconsider (as agreed for votes in `
 - **Restricting an account from writing [decided 2026-11-13].** With the per-person limits switched off (8.2), this is
   the tool for the one person who misuses that. A moderator restricts the author of a reason or the initiator of an
   appeal, reached from that item in the queue, either until a date (inclusive, Vilnius time) or until lifted; any
-  moderator may set any length, and any moderator or administrator may lift it, each only in a staff-passkey session
+  moderator or administrator may set any length and lift it [decided 2026-11-13], each only in a staff-passkey session
   (6.2) and each with a written statement. A dated restriction ends by itself when it is checked on use; no job runs.
   - It blocks everything the person writes for others to read: writing a reason, opening an appeal, editing an
     appeal's description (a returned one included), and flags about planned dates. The API refuses
@@ -837,6 +844,9 @@ PUT    /api/v1/me/party-support   PUT /api/v1/me/notifications
 GET    /api/v1/me/export          DELETE /api/v1/me
 GET    /api/v1/me/invitation      (own code, link, count, on or off)  POST /api/v1/me/invitation/replace
 GET    /api/v1/admin/invitations  (daily totals, top codes, levels: numbers only)
+POST   /api/v1/feedback           (text, kind, page path, browser, may reply)      a member; 10 a day
+GET    /api/v1/moderation/feedback?kind=&status=   PUT /api/v1/moderation/feedback/{id}  (status, note)
+POST   /api/v1/moderation/feedback/{id}/reply      (linked items only; sent through the outbox)
 POST   /api/v1/admin/invitations/{id}/switch-off   POST /api/v1/admin/invitations/{id}/switch-on   (statement)
 
 POST   /api/v1/mps/{slug}/claim
@@ -848,6 +858,43 @@ GET    /api/v1/mp-preferences/{token}     PUT /api/v1/mp-preferences/{token}
                        invitations, import and digest status
 GET    /api/v1/admin/settings     PUT /api/v1/admin/settings/{key}
 ```
+
+### 8.10 Feedback from members [decided 2026-11-13]
+
+Members tell the team what is broken, unclear or missing, without leaving the page.
+
+- **Entry.** A round speech-balloon button at the bottom corner of every page opens a panel with the form; the panel's
+  heading says what it is, so it does not look like live chat. It is a disclosure (`<details>`), so it opens and closes
+  without JavaScript; it is labelled "Atsiliepimai" for screen readers and on hover, reachable by keyboard, and its
+  slide respects reduced motion. The button floats in the bottom corner at every width, phones included; every page
+  ends with room for it, so nothing at the end of a page lies under it (while scrolling it passes over the page, as any
+  floating button does). The open panel lies over the page at a readable width (24rem; on a phone the full width less
+  the margins), never wider or taller than the window, scrolling inside itself when the form is longer than the
+  screen; covering the page while it is open is expected. Without JavaScript the button, which shows a close mark while
+  open, closes it; with the script there is also a "Uždaryti" button in the panel and Escape, focus moves into the panel
+  when the person opens it (the text field, or the heading for a visitor) and back to the button when it closes
+  [corrected 2026-11-13: "never covers text or controls" was meant for the closed button, not the open panel]. A plain
+  page `/atsiliepimai` has the same content, for linking.
+- **A member's form**: one text up to 2 000 characters; an optional kind (klaida, pasiūlymas, neaišku, kita); the page
+  they are on (path only) and the browser's name and version, both shown before sending and each removable; and a tick
+  box "Galite man atsakyti". Ticked, the item is linked to the account; unticked, it is stored with no link to the
+  account at all. A hint asks not to write which side one took on a bill. The form is server-rendered and posts back to
+  the page, so it needs no WebAssembly and works without JavaScript.
+- **A visitor** sees no form: the moderators' contact address and "Nepavyksta prisijungti? Parašykite mums."; the same
+  line is on the sign-in page.
+- **GitHub issues**: the panels and `/atsiliepimai` link to the repository's issues (`Feedback:IssuesUrl`; nothing when
+  unset), saying plainly that an issue there is public and appears under the person's GitHub name. A link only: no
+  script from GitHub, no request to it, nothing forwarded.
+- **Staff** (moderators and administrators, staff passkey): a list filtered by kind and status (new, seen, done), an
+  internal note per item (for example the issue's address), and for linked items a reply sent through the outbox to the
+  member's address, which staff never see, with the display name shown; unlinked items show no author and have no reply.
+- **Notice**: at most one email a day to the team address (`Feedback:TeamAddress`) with the number of new items and the
+  staff page's address, never the text; nothing when there is nothing new.
+- **Rules**: ten items a day per account (counted in memory, so an unlinked item gets no link through the counter); an
+  account restricted from writing (8.3) can still send feedback; kept for `Feedback:KeepMonths` months (12), then
+  deleted by the daily clean-up; linked items are in the export and go with the account; never in logs; never combined
+  with sides; not public and not moderated. It lives in the Identity module, beside the account it may be linked to, the
+  address replies go to, the export, the deletion and the daily clean-up.
 
 ### 8.9 Done when
 
@@ -896,6 +943,8 @@ receives production data.
 GitHub Actions: build, unit and integration tests, architecture tests, scans, then an image per commit in the container
 registry. Deploy is a manual, approved step: pull by digest, run `Lt2.Migrator`, start the new `web` instances, check
 health, stop the old ones. Schema changes follow expand-then-contract so the old and new versions can run side by side.
+The migrator holds a PostgreSQL advisory lock from its first step to its last, so a second copy started at the same
+time (a hand run during a deploy) waits for the first instead of changing roles and grants alongside it.
 
 ### 9.4 Watching it
 
@@ -907,6 +956,30 @@ health, stop the old ones. Schema changes follow expand-then-contract so the old
 - Runbooks in `deploy/runbooks/`: restore from backup, rotate secrets, stop all outgoing email, respond to a data
   incident (including the 72-hour notification duty).
 - A restore drill before launch and every quarter.
+
+### 9.5 Database connections
+
+PostgreSQL allows a fixed number of connections; when the pools of all parts together ask for more, it refuses new ones
+and every part fails at once. So the pools have a budget, set explicitly and checked by a test
+(`tests/Lt2.ArchitectureTests/ConnectionBudgetTests.cs`):
+
+| Who | Pool | Where it is set |
+|---|---|---|
+| PostgreSQL `max_connections` | 150, of which 3 are kept for superusers | `deploy/compose.yaml` (`command`) |
+| `web`, per instance | 25; up to four instances at once (two, plus two new ones during a deploy) = 100 | `src/Lt2.Web/appsettings.json` `Database:MaxPoolSize` |
+| `worker` (modules, outbox, jobs) | 10 | `src/Lt2.Worker/appsettings.json` `Database:MaxPoolSize` |
+| Hangfire inside the worker | 10 (its own pool) | `src/Lt2.Worker/appsettings.json` `Database:HangfireMaxPoolSize` |
+| `migrator` | 5 | `src/Lt2.Migrator/appsettings.json` `Database:MaxPoolSize` |
+| Left for psql, backups, the read-only role | 22 (the test requires at least 20) | |
+
+A host that does not set a size gets 10, never Npgsql's default of 100. Each pool names its connections
+(`lt2-web`, `lt2-worker`, `lt2-hangfire`, `lt2-migrator`) so `pg_stat_activity` shows who holds what. A burst larger
+than a pool waits for a free connection (up to Npgsql's 15-second timeout) instead of opening more.
+
+Static files (the WebAssembly runtime, styles, scripts, images) are answered straight after routing, before
+authentication, so a signed-in browser's start (dozens of parallel downloads) never looks up the session in the
+database. Pages and the API still check the session on every request, so an ended session stops working at once. A
+server error is sent with `Cache-Control: no-store`, so no browser or proxy keeps it; Caddy caches nothing.
 
 ## 10. Quality
 
@@ -969,8 +1042,10 @@ Splitting M2 means the risky step (emailing every MP) happens only after the who
   Earlier first reasons stay as ordinary reasons; nothing marks a reason as the initiator's.
 - Reasons and "Man svarbu" marks per person per bill are runtime settings, both 0 (no limit) at the start; a limit
   switched on later counts only shown or waiting reasons and removes nothing (8.2, 5.6).
-- An author can withdraw their own reason while the appeal is open (8.2, 8.8). Still to be confirmed: that a reason
-  cannot be withdrawn once the appeal is closed (8.2).
+- An author can withdraw their own reason while the appeal is open, and not once it is closed (8.2, 8.8).
+- Administrators set and lift writing restrictions like moderators (8.3, 6.3).
+- Feedback from members: a balloon on every page and `/atsiliepimai`; linked to the account only if the member allows a
+  reply; staff list, note and reply; one notice a day to the team; kept 12 months (8.10).
 - Personal invitation codes: one per member, unlimited by default (`Registration:PersonalCodeUses`), replaceable,
   counted at completed registration on the code and per day; members see only their count; administrators see numbers
   per day, per code and per level, never who invited whom, and can switch codes off and on (6.2).
@@ -989,6 +1064,7 @@ Splitting M2 means the risky step (emailing every MP) happens only after the who
 | AI provider for pre-screening | Any provider with EU data terms; no personal data is sent either way. | M2a |
 | Telemetry backend | Hosted free tier with EU storage, or self-hosted. | M0 |
 | MP photos | Use the Seimas photos if their terms allow, otherwise initials. | M1 |
+| Whether a bill page says an appeal is waiting for a moderator | Today an appeal waiting for a moderator is visible only to its initiator, so others see the opening form, and learn only when they send it (8.1; their text stays). Options: keep it so; or say on the bill page, before anyone writes, that an appeal has been opened and waits for a moderator (no name, no text). | M2a |
 | Lithuanian terms for the new objects | Proposal: *kreipimasis*, *prašo balsuoti už / prieš*, *argumentas* (chosen by the owner on 2026-11-12 in place of *priežastis*), *suvestinė*, *atsakymas*. | M2a |
 
 **Risks**

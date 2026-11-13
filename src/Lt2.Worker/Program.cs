@@ -75,7 +75,7 @@ builder.Services.AddHangfire(hangfire => hangfire
     .UseSimpleAssemblyNameTypeSerializer()
     .UseRecommendedSerializerSettings()
     .UsePostgreSqlStorage(
-        options => options.UseNpgsqlConnection(connectionString),
+        options => options.UseNpgsqlConnection(HangfireConnectionString(connectionString, configuration)),
         new PostgreSqlStorageOptions { SchemaName = "hangfire", PrepareSchemaIfNecessary = true }));
 builder.Services.AddHangfireServer(options => options.WorkerCount = 2);
 builder.Services.Configure<OutboxLoopOptions>(configuration.GetSection(OutboxLoopOptions.Section));
@@ -83,3 +83,14 @@ builder.Services.AddHostedService<OutboxDispatchLoop>();
 builder.Services.AddHostedService<RecurringJobs>();
 
 await builder.Build().RunAsync();
+
+// Hangfire keeps its own pool (Npgsql pools per connection string), so it gets its own size and name in the budget of
+// design 9.5 rather than a second copy of the worker's.
+static string HangfireConnectionString(string connectionString, IConfiguration configuration) =>
+    new NpgsqlConnectionStringBuilder(connectionString)
+    {
+        MaxPoolSize = configuration["Database:HangfireMaxPoolSize"] is { Length: > 0 } size
+            ? int.Parse(size, CultureInfo.InvariantCulture)
+            : ConnectionStrings.DefaultMaxPoolSize,
+        ApplicationName = "lt2-hangfire",
+    }.ConnectionString;

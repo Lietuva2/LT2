@@ -40,7 +40,7 @@
                 <button class="btn btn--wide" type="submit" disabled="@Locked">@T["SignIn.SendCode"]</button>
                 <button class="btn btn--plain btn--wide" type="button" disabled="@Locked" @onclick="SignInWithPasskeyAsync">@T["SignIn.Passkey"]</button>
                 <p class="small">@T["SignIn.PasskeyHint"]</p>
-                <p class="small">@T["SignIn.NoAccount"] <button type="button" class="linkish" @onclick="() => Go(Step.Register)">@T["SignIn.ToRegister"]</button></p>
+                <p class="small">@T["SignIn.NoAccount"] <button type="button" class="linkish" disabled="@Locked" @onclick="() => Go(Step.Register)">@T["SignIn.ToRegister"]</button></p>
                 <Messages Message="@_message" Info="@_info" />
             </form>
             break;
@@ -66,7 +66,7 @@
                 </div>
                 <button class="btn btn--wide" type="submit" disabled="@Locked">@T["Register.Submit"]</button>
                 <p class="fine">@T["Register.Fine"]</p>
-                <p class="small">@T["Register.HaveAccount"] <button type="button" class="linkish" @onclick="() => Go(Step.SignIn)">@T["Register.ToSignIn"]</button></p>
+                <p class="small">@T["Register.HaveAccount"] <button type="button" class="linkish" disabled="@Locked" @onclick="() => Go(Step.SignIn)">@T["Register.ToSignIn"]</button></p>
                 <Messages Message="@_message" Info="@_info" />
             </form>
             break;

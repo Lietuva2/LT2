@@ -73,6 +73,9 @@ public static class SettingKeys
     /// </summary>
     public static readonly SettingKey<int> RegistrationPersonalCodeUses = new("Registration:PersonalCodeUses", 0, v => v is >= 0 and <= 100000);
 
+    /// <summary>Months feedback from members is kept before the daily clean-up deletes it (design 8.10).</summary>
+    public static readonly SettingKey<int> FeedbackKeepMonths = new("Feedback:KeepMonths", 12, v => v is > 0 and <= 60);
+
     /// <summary>Days a pending account (address never proven, or registration never completed) is kept (design 6.2).</summary>
     public static readonly SettingKey<int> PendingAccountDays = new("Registration:PendingAccountDays", 7, v => v is > 0 and <= 90);
 
@@ -128,6 +131,7 @@ public static class SettingKeys
     [
         RegistrationRequiresInvitation,
         RegistrationPersonalCodeUses,
+        FeedbackKeepMonths,
         PendingAccountDays,
         SignInCodesPerHour,
         SignInCodesPerDay,

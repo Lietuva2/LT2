@@ -1,0 +1,12 @@
+@page "/atsiliepimai"
+@inject IStringLocalizer<FeedbackText> T
+
+@* Design 8.10: the feedback form on a plain page, for linking; the same content as the balloon's panel. *@
+<PageTitle>@T["PageTitle"] · Lietuva 2.0</PageTitle>
+
+<section class="stack" aria-labelledby="feedback-page-title">
+    <h1 id="feedback-page-title">@T["Title"]</h1>
+    <p class="lead">@T["PageLead"]</p>
+    <p class="small">@T["NotChat"]</p>
+    <FeedbackContent Scope="page" />
+</section>

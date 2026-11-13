@@ -72,9 +72,24 @@ else if (Rules is { } rules)
     private Task SubmitAsync() => RunAsync(async () =>
     {
         var result = await Appeals.OpenAsync(Number, new OpenAppealRequest { Description = _description, Threshold = _threshold });
-        if (result.IsSuccess || result.Problem?.Code == "appeal.exists")
+        if (result.IsSuccess)
         {
             Navigation.NavigateTo($"/seimas/{Uri.EscapeDataString(Number)}/kreipimasis", forceLoad: true);
+            return;
+        }
+
+        if (result.Problem?.Code == "appeal.exists")
+        {
+            // The bill got an appeal meanwhile. If the person can see it (published), take them to it. One another member
+            // opened that waits for a moderator is visible only to its initiator: reloading would show this form again,
+            // empty, and the text would be lost without a word. So the text stays and the note says what happened.
+            if ((await Appeals.GetAppealAsync(Number)).IsSuccess)
+            {
+                Navigation.NavigateTo($"/seimas/{Uri.EscapeDataString(Number)}/kreipimasis", forceLoad: true);
+                return;
+            }
+
+            Info = L["Open.TakenMeanwhile"];
             return;
         }
 

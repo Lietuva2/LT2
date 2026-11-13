@@ -1,0 +1,33 @@
+@inject IStringLocalizer<FeedbackText> T
+@inject IConfiguration Configuration
+
+@* Design 8.10: what the balloon's panel and /atsiliepimai hold. A member gets the form; a visitor the moderators' contact
+   address. Both get the GitHub issues link (configuration; nothing when unset), with the plain note that an issue there
+   is public. A link only: nothing is sent to GitHub. *@
+<AuthorizeView>
+    <Authorized Context="auth">
+        <FormMappingScope Name="@Scope">
+            <FeedbackForm Scope="@Scope" />
+        </FormMappingScope>
+    </Authorized>
+    <NotAuthorized>
+        <p>@T["Visitor"]</p>
+        @if (Contact is { } contact)
+        {
+            <p id="feedback-contact-@Scope">@T["CannotSignIn"] <a href="mailto:@contact">@contact</a></p>
+        }
+    </NotAuthorized>
+</AuthorizeView>
+@if (IssuesUrl is { } issues)
+{
+    <p class="small" id="feedback-issues-@Scope">@T["Issues"] <a href="@issues" rel="external noreferrer">@T["IssuesLink"]</a>. @T["IssuesPublic"]</p>
+}
+
+@code {
+    [Parameter, EditorRequired] public string Scope { get; set; } = "panel";
+
+    private string? Contact => Configuration["Moderation:ContactAddress"] is { Length: > 0 } address ? address : null;
+
+    private string? IssuesUrl =>
+        Configuration["Feedback:IssuesUrl"] is { Length: > 0 } url && Uri.TryCreate(url, UriKind.Absolute, out var parsed) && parsed.Scheme == Uri.UriSchemeHttps ? url : null;
+}

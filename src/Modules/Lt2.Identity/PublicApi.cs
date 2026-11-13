@@ -191,3 +191,37 @@ public interface IInvitations
     /// <summary>An administrator switches a code off or on again, with a statement; audited.</summary>
     Task<Result<Unit>> SwitchAsync(Guid invitationId, bool on, string statement, Guid adminUserId, string role, string? ipHash, CancellationToken cancellationToken);
 }
+
+/// <summary>What a member sends (design 8.10). <c>MayReply</c> decides whether the item is linked to the account at all.</summary>
+public sealed record NewFeedback(string Text, string? Kind, string? PagePath, string? Browser, bool MayReply);
+
+public sealed record FeedbackReply(DateTimeOffset At, string Text);
+
+/// <summary>A feedback item for staff: the display name only on linked items; an unlinked item has no author.</summary>
+public sealed record FeedbackInfo(
+    Guid Id, string? Kind, string Text, string Status, string? Note, string? PagePath, string? Browser, DateOnly CreatedOn, bool Linked, string? DisplayName, IReadOnlyList<FeedbackReply> Replies);
+
+/// <summary>Feedback from members to the team (design 8.10).</summary>
+public interface IFeedback
+{
+    /// <summary>A member sends feedback; linked to the account only when they allow a reply. The per-account daily limit is the caller's.</summary>
+    Task<Result<Unit>> SendAsync(Guid userId, NewFeedback feedback, CancellationToken cancellationToken);
+
+    Task<IReadOnlyList<FeedbackInfo>> ListAsync(string? kind, string? status, CancellationToken cancellationToken);
+
+    Task<Result<Unit>> UpdateAsync(Guid id, string status, string? note, CancellationToken cancellationToken);
+
+    /// <summary>A reply to a linked item, sent through the outbox to the member's address; audited without its text.</summary>
+    Task<Result<Unit>> ReplyAsync(Guid id, string text, Guid staffUserId, string role, string? ipHash, CancellationToken cancellationToken);
+
+    /// <summary>At most one notice a day to the team address with the number of new items; none when nothing is new.</summary>
+    Task<int> SendNoticeAsync(string? teamAddress, CancellationToken cancellationToken);
+}
+
+/// <summary>What the feedback form suggests sending along (design 8.10): the page path only, the browser's name and version.</summary>
+public static class FeedbackSuggestions
+{
+    public static string? PagePath(string? path) => Domain.FeedbackRules.PagePath(path);
+
+    public static string? Browser(string? userAgent) => Domain.FeedbackRules.Browser(userAgent);
+}

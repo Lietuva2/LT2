@@ -120,6 +120,41 @@ internal static class InvitationKinds
     public const string Personal = "personal";
 }
 
+/// <summary>
+/// <c>identity.feedback</c>: what a member told the team (design 8.10). <see cref="UserId"/> is set only when the member
+/// allowed a reply; otherwise the item has a random id and only the day, so nothing leads back to its author.
+/// </summary>
+internal sealed class FeedbackItem
+{
+    public Guid Id { get; set; }
+
+    public Guid? UserId { get; set; }
+
+    /// <summary><c>bug</c>, <c>idea</c>, <c>unclear</c>, <c>other</c>, or none.</summary>
+    public string? Kind { get; set; }
+
+    public string Text { get; set; } = "";
+
+    public string? PagePath { get; set; }
+
+    public string? Browser { get; set; }
+
+    /// <summary><c>new</c>, <c>seen</c> or <c>done</c>.</summary>
+    public string Status { get; set; } = "new";
+
+    /// <summary>The team's internal note, for example the address of a GitHub issue.</summary>
+    public string? Note { get; set; }
+
+    /// <summary>The Vilnius day it came. No time, so an unlinked item cannot be matched to a request.</summary>
+    public DateOnly CreatedOn { get; set; }
+
+    /// <summary>The team's replies (linked items only), as JSON: when and what.</summary>
+    public string Replies { get; set; } = "[]";
+
+    /// <summary>Counted in a daily notice to the team already.</summary>
+    public bool Noticed { get; set; }
+}
+
 /// <summary><c>identity.invitation_daily</c>: registrations completed per code and Vilnius day, for the administrators' chart.</summary>
 internal sealed class InvitationDaily
 {

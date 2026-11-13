@@ -1,0 +1,131 @@
+using System.Text.RegularExpressions;
+using Microsoft.Playwright;
+
+namespace Lt2.E2E;
+
+/// <summary>
+/// Before a WebAssembly island has started, nothing in it can be used: a field typed into would be emptied when the island
+/// takes over, and a form submitted natively would reload the page and lose what was typed. Every page with islands is
+/// loaded here with the WebAssembly runtime blocked (so the islands never start), as a visitor, a member, a moderator and
+/// an administrator; inside every island (found by Blazor's prerender markers) each input, text area, choice and button
+/// must be disabled, and the page must carry the "needs JavaScript" note. A new form or page that forgets
+/// <c>disabled="@Locked"</c> fails here.
+/// </summary>
+public sealed partial class IslandsBeforeStartTests(AppealFlowTests.ModeratorFixture moderator, AdministratorFixture administrator)
+    : IClassFixture<AppealFlowTests.ModeratorFixture>, IClassFixture<AdministratorFixture>
+{
+    private static string Base => SignUpTests.BaseUrl!.TrimEnd('/');
+
+    /// <summary>The .NET runtime and assemblies; blazor.web.js itself still loads, so the markers are read as usual.</summary>
+    [GeneratedRegex(@"/_framework/(dotnet\.[^/]*|[^/]+\.(wasm|dat))(\?.*)?$")]
+    internal static partial Regex WebAssemblyFiles();
+
+    private sealed class IslandReport
+    {
+        public int Islands { get; set; }
+        public string[] Enabled { get; set; } = [];
+        public int NeedsScriptNotes { get; set; }
+    }
+
+    /// <summary>
+    /// Opens <paramref name="path"/> in a new page of <paramref name="context"/> with the WebAssembly runtime blocked and
+    /// asserts that every control inside every island is disabled, that there is at least one island, and that the page
+    /// says JavaScript is needed.
+    /// </summary>
+    internal static async Task NothingUsableBeforeStartAsync(IBrowserContext context, string path)
+    {
+        var page = await context.NewPageAsync();
+        try
+        {
+            // Blazor's start script removes its markers as soon as it runs, so the islands are noted while the page is
+            // parsed: the parser inserts nodes in document order, and every element between an island's start and end
+            // markers is tagged with the island's id.
+            await page.AddInitScriptAsync(
+                """
+                (() => {
+                  const open = [];
+                  window.__lt2Islands = new Set();
+                  const tag = (el, id) => { el.setAttribute('data-lt2-island', id); for (const d of el.querySelectorAll('*')) d.setAttribute('data-lt2-island', id); };
+                  new MutationObserver(records => {
+                    for (const record of records) for (const node of record.addedNodes) {
+                      if (node.nodeType === Node.COMMENT_NODE) {
+                        const text = node.data.trim();
+                        if (!text.startsWith('Blazor:')) continue;
+                        let info;
+                        try { info = JSON.parse(text.slice('Blazor:'.length)); } catch { continue; }
+                        if (info.type === 'webassembly' && info.prerenderId) { open.push(info.prerenderId); window.__lt2Islands.add(info.prerenderId); }
+                        else if (!info.type && info.prerenderId && open[open.length - 1] === info.prerenderId) open.pop();
+                      } else if (node.nodeType === Node.ELEMENT_NODE && open.length) {
+                        tag(node, open[open.length - 1]);
+                      }
+                    }
+                  }).observe(document, { childList: true, subtree: true });
+                })();
+                """);
+            await page.RouteAsync(WebAssemblyFiles(), route => route.AbortAsync());
+            await page.GotoAsync(Base + path);
+            await page.WaitForLoadStateAsync(LoadState.NetworkIdle);
+            var report = await page.EvaluateAsync<IslandReport>(
+                """
+                () => {
+                  const enabled = [];
+                  for (const el of document.querySelectorAll('[data-lt2-island]:is(input, textarea, select, button)')) {
+                    if (el.type === 'hidden' || el.matches(':disabled')) continue;
+                    enabled.push(el.tagName.toLowerCase() + (el.id ? '#' + el.id : '') + ' "' + (el.textContent || el.getAttribute('aria-label') || el.name || '').trim().slice(0, 40) + '"');
+                  }
+                  const notes = [...document.querySelectorAll('noscript')].filter(n => n.textContent.includes('JavaScript')).length;
+                  return { islands: window.__lt2Islands.size, enabled: [...new Set(enabled)], needsScriptNotes: notes };
+                }
+                """);
+            report.Islands.ShouldBeGreaterThan(0, $"{path}: the islands are found (the check is not empty)");
+            report.Enabled.ShouldBeEmpty($"{path}: usable before WebAssembly has started");
+            report.NeedsScriptNotes.ShouldBeGreaterThan(0, $"{path}: says that JavaScript is needed");
+        }
+        finally
+        {
+            await page.CloseAsync();
+        }
+    }
+
+    [Fact]
+    public async Task For_a_visitor_nothing_in_an_island_can_be_used_before_it_has_started()
+    {
+        Assert.SkipWhen(string.IsNullOrEmpty(SignUpTests.BaseUrl), "LT2_E2E_BASE_URL is not set; start the stack and set it to run end-to-end tests.");
+        using var playwright = await Playwright.CreateAsync();
+        await using var browser = await playwright.Chromium.LaunchAsync(new() { Channel = SignUpTests.Channel, Headless = true });
+        await using var context = await browser.NewContextAsync(new() { IgnoreHTTPSErrors = true, Locale = "lt-LT" });
+        foreach (var path in new[] { "/prisijungti", "/seimas/XVP-0412/kreipimasis" })
+        {
+            await NothingUsableBeforeStartAsync(context, path);
+        }
+    }
+
+    [Fact]
+    public async Task For_a_member_nothing_in_an_island_can_be_used_before_it_has_started()
+    {
+        Assert.SkipWhen(string.IsNullOrEmpty(SignUpTests.BaseUrl), "LT2_E2E_BASE_URL is not set; start the stack and set it to run end-to-end tests.");
+        await using var member = await PasskeyBrowser.StartAsync("native", 1280, 800);
+        await PasskeyTests.RegisterAsync(member.Page, "Laukianti Pradžios");
+        foreach (var path in new[] { "/sveiki", "/seimas/XVP-0412/kreipimasis" })
+        {
+            await NothingUsableBeforeStartAsync(member.Page.Context, path);
+        }
+    }
+
+    [Fact]
+    public async Task For_staff_nothing_in_an_island_can_be_used_before_it_has_started()
+    {
+        Assert.SkipWhen(string.IsNullOrEmpty(SignUpTests.BaseUrl), "LT2_E2E_BASE_URL is not set; start the stack and set it to run end-to-end tests.");
+        var mod = await moderator.PageAsync();
+        foreach (var path in new[] { "/moderavimas", "/moderavimas/atsiliepimai", "/seimas/XVP-0412/kreipimasis" })
+        {
+            await NothingUsableBeforeStartAsync(mod.Context, path);
+        }
+
+        var admin = await administrator.PageAsync();
+        foreach (var path in new[] { "/administravimas/nustatymai", "/administravimas/kvietimai", "/sveiki" })
+        {
+            await NothingUsableBeforeStartAsync(admin.Context, path);
+        }
+    }
+}

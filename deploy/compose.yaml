@@ -61,6 +61,8 @@ services:
       ReverseProxy__TrustForwardedHeaders: "true"
       # Where visitors without a session may write to the moderators (design 8.3). Production sets the real address.
       Moderation__ContactAddress: ${LT2_MODERATION_CONTACT:-}
+      # The repository's GitHub issues, linked from the feedback panel (design 8.10); nothing shown when empty.
+      Feedback__IssuesUrl: ${LT2_FEEDBACK_ISSUES_URL:-}
       # Requests per client address in each window (design 6.4). The defaults here are the code's; only the local .env
       # raises them, so hand testing and end-to-end runs on one machine never meet a 429.
       RateLimits__CodeRequest__PermitLimit: ${LT2_RATE_CODE_REQUESTS:-10}
@@ -98,6 +100,8 @@ services:
       Outbound__AllowedHosts__1: ${LT2_OUTBOUND_EXTRA_HOST:-}
       # The upcoming plenary agenda (lrs.lt pages). Empty: the watcher is off. The host must be on the allowlist.
       Agenda__BaseAddress: ${LT2_AGENDA_BASE_ADDRESS:-}
+      # Where at most one notice a day of new feedback goes (design 8.10); none when empty.
+      Feedback__TeamAddress: ${LT2_FEEDBACK_TEAM_ADDRESS:-}
       OTEL_EXPORTER_OTLP_ENDPOINT: ${OTEL_EXPORTER_OTLP_ENDPOINT:-}
     secrets:
       - source: db_worker_password
@@ -143,6 +147,11 @@ services:
   postgres:
     image: postgres:17
     restart: unless-stopped
+    # The connection budget (design 9.5): 150 connections, 3 of them kept for superusers. The pools are set in each
+    # host's appsettings.json: web 25 per instance (up to four at once during a deploy), worker 10, Hangfire 10,
+    # migrator 5; together 125, leaving room for psql and backups. tests/Lt2.ArchitectureTests/ConnectionBudgetTests.cs
+    # checks the sum.
+    command: ["postgres", "-c", "max_connections=150", "-c", "superuser_reserved_connections=3"]
     environment:
       POSTGRES_DB: lt2
       POSTGRES_USER: postgres

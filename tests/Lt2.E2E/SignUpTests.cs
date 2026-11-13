@@ -124,9 +124,14 @@ public sealed partial class SignUpTests
         (await page.ContentAsync()).ShouldNotContain("_message");
     }
 
-    /// <summary>The form's fields stay disabled until WebAssembly has taken over the prerendered page.</summary>
+    /// <summary>
+    /// The page's own form fields stay disabled until WebAssembly has taken over the prerendered page. Only the main
+    /// content counts (the feedback balloon has a form too) and only a visible field (not the hidden antiforgery one),
+    /// so a WebAssembly start that fails shows up here as what it is.
+    /// </summary>
     internal static async Task WaitForInteractivityAsync(IPage page) =>
-        await page.Locator("form input:not([disabled])").First.WaitForAsync(new() { Timeout = 60_000 });
+        await page.Locator("main form input:not([disabled]):not([type=hidden])").First
+            .WaitForAsync(new() { State = WaitForSelectorState.Visible, Timeout = 60_000 });
 
     internal static async Task<string> CodeFromMailpitAsync(string email)
     {

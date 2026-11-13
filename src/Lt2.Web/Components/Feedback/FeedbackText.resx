@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <resheader name="resmimetype"><value>text/microsoft-resx</value></resheader>
+  <resheader name="version"><value>2.0</value></resheader>
+  <resheader name="reader"><value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value></resheader>
+  <resheader name="writer"><value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value></resheader>
+<data name="Button" xml:space="preserve"><value>Atsiliepimai</value></data>
+  <data name="Close" xml:space="preserve"><value>Uždaryti</value></data>
+<data name="Title" xml:space="preserve"><value>Atsiliepimai Lietuva 2.0 komandai</value></data>
+<data name="NotChat" xml:space="preserve"><value>Tai ne pokalbis: žinutę perskaito komanda, o atsako el. paštu, jei leidžiate.</value></data>
+<data name="PageTitle" xml:space="preserve"><value>Atsiliepimai</value></data>
+<data name="PageLead" xml:space="preserve"><value>Parašykite, kas neveikia, kas neaišku ar ko trūksta.</value></data>
+<data name="Text" xml:space="preserve"><value>Ką norite pasakyti?</value></data>
+<data name="TextHint" xml:space="preserve"><value>Iki 2 000 ženklų. Nerašykite, kurią pusę pasirinkote dėl projekto – mums to nereikia.</value></data>
+<data name="Kind" xml:space="preserve"><value>Rūšis (nebūtina)</value></data>
+<data name="Kind.none" xml:space="preserve"><value>nenurodyta</value></data>
+<data name="Kind.bug" xml:space="preserve"><value>klaida</value></data>
+<data name="Kind.idea" xml:space="preserve"><value>pasiūlymas</value></data>
+<data name="Kind.unclear" xml:space="preserve"><value>neaišku</value></data>
+<data name="Kind.other" xml:space="preserve"><value>kita</value></data>
+<data name="Attached" xml:space="preserve"><value>Kartu išsiųsime (galite atžymėti):</value></data>
+<data name="Page" xml:space="preserve"><value>puslapis</value></data>
+<data name="Browser" xml:space="preserve"><value>naršyklė</value></data>
+<data name="MayReply" xml:space="preserve"><value>Galite man atsakyti</value></data>
+<data name="MayReplyHint" xml:space="preserve"><value>Pažymėjus, atsiliepimas bus susietas su jūsų paskyra, kad komanda galėtų atsakyti el. paštu (jūsų adreso ji nemato). Nepažymėjus, atsiliepimas išsaugomas be jokio ryšio su jūsų paskyra.</value></data>
+<data name="Send" xml:space="preserve"><value>Siųsti</value></data>
+<data name="Sent" xml:space="preserve"><value>Ačiū! Atsiliepimą gavome.</value></data>
+<data name="Visitor" xml:space="preserve"><value>Atsiliepimus svetainėje gali palikti prisijungę Lietuva 2.0 naudotojai.</value></data>
+<data name="CannotSignIn" xml:space="preserve"><value>Nepavyksta prisijungti? Parašykite mums:</value></data>
+<data name="Issues" xml:space="preserve"><value>Darbus komanda tvarko ir GitHub: ten galite pranešti apie klaidą ar pasiūlyti patobulinimą.</value></data>
+<data name="IssuesLink" xml:space="preserve"><value>Lietuva 2.0 darbai GitHub</value></data>
+<data name="IssuesPublic" xml:space="preserve"><value>Ten parašytas pranešimas yra viešas ir rodomas su jūsų GitHub vardu.</value></data>
+</root>

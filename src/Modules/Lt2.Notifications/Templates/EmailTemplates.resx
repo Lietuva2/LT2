@@ -46,7 +46,12 @@
 <data name="Restriction.Contact" xml:space="preserve"><value>Jei nesutinkate, parašykite moderatoriams: {0}</value></data>
 <data name="Restriction.lifted.Subject" xml:space="preserve"><value>Lietuva 2.0: rašymo apribojimas atšauktas</value></data>
 <data name="Restriction.lifted.Body" xml:space="preserve"><value>moderatorius atšaukė jūsų rašymo apribojimą: vėl galite rašyti argumentus, atidaryti kreipimusis ir pranešti apie datas.</value></data>
-<data name="Moderation.Statement" xml:space="preserve"><value>Moderatoriaus paaiškinimas: {0}</value></data>
+<data name="Feedback.Reply.Subject" xml:space="preserve"><value>Lietuva 2.0: atsakymas į jūsų atsiliepimą</value></data>
+<data name="Feedback.Reply.Body" xml:space="preserve"><value>ačiū už atsiliepimą. Lietuva 2.0 komanda jums atsako.</value></data>
+<data name="Feedback.Reply.Yours" xml:space="preserve"><value>Jūs rašėte: „{0}“</value></data>
+<data name="Feedback.Reply.Answer" xml:space="preserve"><value>Atsakymas: {0}</value></data>
+<data name="Feedback.Notice.Subject" xml:space="preserve"><value>Lietuva 2.0: nauji atsiliepimai ({0})</value></data>
+<data name="Feedback.Notice.Body" xml:space="preserve"><value>Naujų atsiliepimų: {0}. Juos rasite {1} (reikia darbuotojo prieigos rakto).</value></data><data name="Moderation.Statement" xml:space="preserve"><value>Moderatoriaus paaiškinimas: {0}</value></data>
 <data name="Moderation.Rules" xml:space="preserve"><value>Šį laišką gavote, nes esate šio turinio autorius.</value></data>
 <data name="Digest.Subject" xml:space="preserve"><value>Lietuva 2.0 suvestinė Seimo nariams, {0}</value></data>
 <data name="Digest.Intro" xml:space="preserve"><value>projektų šioje suvestinėje: {0}. Dėl jų į Seimo narius kreipiasi Lietuva 2.0 naudotojai.</value></data>

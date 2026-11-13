@@ -8,8 +8,28 @@ internal static class Compose
     public static string File =>
         Environment.GetEnvironmentVariable("LT2_E2E_COMPOSE_FILE") ?? Path.Combine(RepositoryRoot(), "deploy", "compose.yaml");
 
+    /// <summary>
+    /// One compose command at a time: test classes run in parallel, and two migrator runs at once (each moderator fixture
+    /// grants its role through the migrator, which also re-applies grants) collide in PostgreSQL ("tuple concurrently
+    /// updated"). A deploy runs the migrator once; only the tests could run it twice at the same moment.
+    /// </summary>
+    private static readonly SemaphoreSlim OneAtATime = new(1, 1);
+
     /// <summary>Runs <c>docker compose -f FILE ARGS…</c> and returns its standard output; fails on a non-zero exit.</summary>
     public static async Task<string> RunAsync(params string[] arguments)
+    {
+        await OneAtATime.WaitAsync();
+        try
+        {
+            return await RunOnceAsync(arguments);
+        }
+        finally
+        {
+            OneAtATime.Release();
+        }
+    }
+
+    private static async Task<string> RunOnceAsync(string[] arguments)
     {
         var start = new ProcessStartInfo("docker")
         {
@@ -26,7 +46,8 @@ internal static class Compose
         var output = process.StandardOutput.ReadToEndAsync();
         var errors = process.StandardError.ReadToEndAsync();
         await process.WaitForExitAsync();
-        process.ExitCode.ShouldBe(0, await errors);
+        // The migrator logs to standard output, so a failure shows both.
+        process.ExitCode.ShouldBe(0, $"{await errors}{Environment.NewLine}{await output}");
         return await output;
     }
 

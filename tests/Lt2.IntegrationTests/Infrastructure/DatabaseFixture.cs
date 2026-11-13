@@ -49,10 +49,9 @@ public sealed class DatabaseFixture : IAsyncLifetime
         _ => throw new ArgumentOutOfRangeException(nameof(role), role, null),
     };
 
-    public async ValueTask InitializeAsync()
-    {
-        await _container.StartAsync();
-        var configuration = new ConfigurationBuilder()
+    /// <summary>The migrator's configuration for this database, as production gives it (administrator and migrator).</summary>
+    public IConfiguration MigratorConfiguration() =>
+        new ConfigurationBuilder()
             .AddInMemoryCollection(new Dictionary<string, string?>
             {
                 ["ConnectionStrings:Admin"] = AdminConnectionString,
@@ -63,6 +62,11 @@ public sealed class DatabaseFixture : IAsyncLifetime
                 ["Database:ReadonlyPassword"] = ReadonlyPassword,
             })
             .Build();
+
+    public async ValueTask InitializeAsync()
+    {
+        await _container.StartAsync();
+        var configuration = MigratorConfiguration();
         await MigrationRunner.RunAsync(configuration, ["--seed-invitation", TestData.Invitation + ":1000"], CancellationToken.None);
 
         // Running the migrator twice must change nothing (it runs on every deploy).

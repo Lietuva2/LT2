@@ -9,7 +9,7 @@ namespace Lt2.Web.Endpoints.Moderation;
 
 /// <summary>
 /// <c>POST /api/v1/moderation/reasons/{id}/restrict-author</c> and <c>POST /api/v1/moderation/appeals/{id}/restrict-initiator</c>:
-/// a moderator restricts the person from writing until a day or until lifted (design 8.3). The moderator role itself, in a
+/// a moderator or an administrator restricts the person from writing until a day or until lifted (design 8.3), in a
 /// staff-passkey session; the statement is required and emailed with the contact address; audited.
 /// </summary>
 internal static class RestrictAuthorEndpoints
@@ -21,7 +21,7 @@ internal static class RestrictAuthorEndpoints
                 HandleAsync((m, contact) => moderation.RestrictAuthorOfReasonAsync(id, request.Until, request.Statement, m, contact, cancellationToken), user, context, identity, ipHasher, errors, configuration, cancellationToken))
             .WithName("RestrictReasonAuthor")
             .WithTags("Moderation")
-            .RequireAuthorization(Policies.ModeratorRole)
+            .RequireAuthorization(Policies.Moderator)
             .WithValidation<RestrictionRequest>()
             .Produces<RestrictionCreatedResponse>(StatusCodes.Status201Created)
             .ProducesProblem(StatusCodes.Status404NotFound)
@@ -32,7 +32,7 @@ internal static class RestrictAuthorEndpoints
                 HandleAsync((m, contact) => moderation.RestrictInitiatorOfAppealAsync(id, request.Until, request.Statement, m, contact, cancellationToken), user, context, identity, ipHasher, errors, configuration, cancellationToken))
             .WithName("RestrictAppealInitiator")
             .WithTags("Moderation")
-            .RequireAuthorization(Policies.ModeratorRole)
+            .RequireAuthorization(Policies.Moderator)
             .WithValidation<RestrictionRequest>()
             .Produces<RestrictionCreatedResponse>(StatusCodes.Status201Created)
             .ProducesProblem(StatusCodes.Status404NotFound)

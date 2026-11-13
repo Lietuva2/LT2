@@ -23,6 +23,8 @@ internal sealed class IdentityDb(DbContextOptions<IdentityDb> options)
 
     public DbSet<InvitationDaily> InvitationDailies => Set<InvitationDaily>();
 
+    public DbSet<FeedbackItem> Feedback => Set<FeedbackItem>();
+
     public DbSet<Consent> Consents => Set<Consent>();
 
     public DbSet<SignInCode> SignInCodes => Set<SignInCode>();
@@ -81,6 +83,23 @@ internal sealed class IdentityDb(DbContextOptions<IdentityDb> options)
             b.Property(x => x.Level).HasDefaultValue(1);
             b.HasIndex(x => x.IssuedByUserId);
             b.ToTable(t => t.HasCheckConstraint("ck_invitation_uses_left", "uses_left >= 0"));
+        });
+
+        builder.Entity<FeedbackItem>(b =>
+        {
+            b.ToTable("feedback");
+            b.HasKey(x => x.Id);
+            b.Property(x => x.Kind).HasMaxLength(16);
+            b.Property(x => x.Text).HasMaxLength(2000);
+            b.Property(x => x.PagePath).HasMaxLength(200);
+            b.Property(x => x.Browser).HasMaxLength(60);
+            b.Property(x => x.Status).HasMaxLength(8);
+            b.Property(x => x.Note).HasMaxLength(1000);
+            b.Property(x => x.Replies).HasColumnType("jsonb");
+            b.HasIndex(x => new { x.Status, x.CreatedOn });
+
+            // A linked item goes with its account (design 8.10).
+            b.HasOne<User>().WithMany().HasForeignKey(x => x.UserId).OnDelete(DeleteBehavior.Cascade);
         });
 
         builder.Entity<InvitationDaily>(b =>

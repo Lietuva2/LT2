@@ -109,6 +109,7 @@ public static class IdentityModule
         services.AddScoped<PartySupportHandlers>();
         services.AddScoped<AccountDataHandlers>();
         services.AddScoped<IInvitations, Application.Invitations.InvitationHandlers>();
+        services.AddScoped<IFeedback, Application.Feedback.FeedbackHandlers>();
         services.AddSingleton<IParticipants, ParticipantDirectory>();
         services.AddSingleton<IPartySupporters, PartySupporterDirectory>();
         services.AddScoped<IIdentityModule, IdentityModuleFacade>();
@@ -142,6 +143,9 @@ public static class IdentityModule
     {
         services.AddIdentityDb();
         services.AddScoped<IIdentityMaintenance, MaintenanceHandler>();
+
+        // The worker's daily notice of new feedback (design 8.10).
+        services.AddScoped<IFeedback, Application.Feedback.FeedbackHandlers>();
         return services;
     }
 

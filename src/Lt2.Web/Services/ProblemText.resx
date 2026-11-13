@@ -19,7 +19,14 @@
   <data name="invitation.required" xml:space="preserve"><value>Kol vyksta uždaras bandymas, registruotis galima tik su kvietimo kodu.</value></data>
   <data name="adult.required" xml:space="preserve"><value>Registruotis gali tik 18 metų ir vyresni asmenys.</value></data>
   <data name="invitation.switched-off" xml:space="preserve"><value>Jūsų kvietimo kodą išjungė administratorius, todėl naujo kol kas sukurti negalima.</value></data>
-<data name="invitation.not-found" xml:space="preserve"><value>Tokio kvietimo kodo nėra.</value></data>
+<data name="feedback.limit" xml:space="preserve"><value>Šiandien jau išsiuntėte dešimt atsiliepimų. Rytoj galėsite vėl.</value></data>
+<data name="feedback.not-linked" xml:space="preserve"><value>Šis atsiliepimas nesusietas su paskyra, todėl atsakyti į jį negalima.</value></data>
+<data name="feedback.not-found" xml:space="preserve"><value>Tokio atsiliepimo nėra.</value></data>
+<data name="feedback.empty" xml:space="preserve"><value>Parašykite, ką norite pasakyti.</value></data>
+<data name="feedback.too-long" xml:space="preserve"><value>Per ilga žinutė: ne daugiau kaip 2 000 ženklų.</value></data>
+<data name="feedback.kind" xml:space="preserve"><value>Pasirinkite vieną iš pateiktų rūšių.</value></data>
+<data name="feedback.status" xml:space="preserve"><value>Būsena gali būti nauja, matyta arba atlikta.</value></data>
+<data name="feedback.reply" xml:space="preserve"><value>Parašykite atsakymą (ne daugiau kaip 2 000 ženklų).</value></data><data name="invitation.not-found" xml:space="preserve"><value>Tokio kvietimo kodo nėra.</value></data>
 <data name="invitation.cannot-switch-on" xml:space="preserve"><value>Šio kodo įjungti nebegalima: jo savininkas jį pakeitė arba ištrynė paskyrą.</value></data>
 <data name="invitation.already" xml:space="preserve"><value>Kodas jau toks ir yra.</value></data>
   <data name="registration.complete" xml:space="preserve"><value>Registracija jau baigta.</value></data>

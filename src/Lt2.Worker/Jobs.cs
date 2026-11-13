@@ -139,6 +139,19 @@ public sealed class DigestJob(IDigests digests, TimeProvider clock, ILogger<Dige
     }
 }
 
+/// <summary>
+/// Design 8.10: once a day, a notice of new feedback to the team address (<c>Feedback:TeamAddress</c>): the count and the
+/// staff page, never the text; nothing when nothing is new or no address is set.
+/// </summary>
+public sealed class FeedbackNoticeJob(Lt2.Identity.IFeedback feedback, IConfiguration configuration, ILogger<FeedbackNoticeJob> logger)
+{
+    public async Task RunAsync(CancellationToken cancellationToken)
+    {
+        var count = await feedback.SendNoticeAsync(configuration["Feedback:TeamAddress"], cancellationToken);
+        logger.LogInformation("Feedback notice: {Count} new items", count);
+    }
+}
+
 /// <summary>Registers the recurring Hangfire jobs at start-up, in Vilnius time (design 3: <c>Europe/Vilnius</c> for schedules).</summary>
 internal sealed class RecurringJobs(IRecurringJobManager jobs) : IHostedService
 {
@@ -170,6 +183,11 @@ internal sealed class RecurringJobs(IRecurringJobManager jobs) : IHostedService
             "20 * * * *",
             new RecurringJobOptions { TimeZone = vilnius });
         jobs.Trigger("agenda-watch");
+        jobs.AddOrUpdate<FeedbackNoticeJob>(
+            "feedback-notice",
+            job => job.RunAsync(CancellationToken.None),
+            "0 8 * * *",
+            new RecurringJobOptions { TimeZone = vilnius });
         jobs.AddOrUpdate<DigestJob>(
             "digests",
             job => job.RunAsync(CancellationToken.None),

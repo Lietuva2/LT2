@@ -1,3 +1,4 @@
+using System.Text.Json;
 using System.Security.Claims;
 using Lt2.Identity.Domain;
 using Lt2.Identity.Infrastructure;
@@ -57,6 +58,10 @@ internal sealed class AccountDataHandlers(IdentityDb db, IAccountData appeals, S
             },
             consents,
             partySupport = party,
+
+            // Only the feedback linked to the account (design 8.10); unlinked items lead to nobody.
+            feedback = (await db.Feedback.AsNoTracking().Where(f => f.UserId == userId).OrderBy(f => f.CreatedOn).ToListAsync(cancellationToken))
+                .Select(f => new { f.Kind, f.Text, f.PagePath, f.Browser, f.CreatedOn, f.Status, replies = JsonDocument.Parse(f.Replies).RootElement.Clone() }),
             sessions,
             appeals = await appeals.ExportAsync(userId, cancellationToken),
         };

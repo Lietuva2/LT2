@@ -35,6 +35,12 @@ internal static class SecurityHeaders
                 headers.XFrameOptions = "DENY";
                 headers["Cross-Origin-Opener-Policy"] = "same-origin";
                 headers["Cross-Origin-Resource-Policy"] = "same-origin";
+                // A server error is never kept by a browser or a proxy: the next try asks again.
+                if (context.Response.StatusCode >= StatusCodes.Status500InternalServerError)
+                {
+                    headers.CacheControl = "no-store";
+                }
+
                 // API answers are not stored anywhere unless an endpoint has said it is public (the parliament
                 // reads of design 7.4 set "public, max-age=60" with an ETag); personal answers never set it.
                 if (context.Request.Path.StartsWithSegments("/api", StringComparison.OrdinalIgnoreCase)
