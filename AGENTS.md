@@ -145,7 +145,9 @@ code review.
 **Accounts.** Registration is by email only, by invitation during the closed trial, with a self-declared age of 18 or
 older. An account is pending until its address is proven; the display name and the age declaration are asked after the
 code, never before. One account per normalised address. Each account has a `verification_level` (`email` now); phone
-verification is a later decision.
+verification is a later decision. Every member has one personal invitation code (replaceable; uses unlimited unless
+`Registration:PersonalCodeUses` is set) and sees only how many registered with it; administrators see numbers per day,
+code and level, never who invited whom, and can switch codes off. Invitations are never combined with sides.
 
 **MP profiles.** Compiled automatically from Seimas open data for every MP, joined or not. Two statistics:
 participation (share of recorded votes in which the MP voted for, against or abstained) and voted with the faction

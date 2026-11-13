@@ -245,7 +245,8 @@ ASP.NET Core Identity tables (users, roles, claims, tokens, passkeys), plus:
 | Table | Notes |
 |---|---|
 | `profile` | Display name, created date, normalised email (for the one-account-per-address rule), `verification_level` (`email` at the start; `phone` and the EU wallet can be added), invitation used. While the account is pending (6.2) it holds only the normalised address and the invitation code that was entered. |
-| `invitation` | Code, who issued it, uses left, expiry. Registration is by invitation during the closed trial. A use is counted when the registration is completed (6.2), not when it is started. |
+| `invitation` | Code (and its look-up form without dashes or spaces), kind (`team` or `personal`), who issued it (for a personal code: its member), uses left and expiry (team codes), completed registrations (a counter that never drops), level, switched off (when, by an administrator), replaced (when). Registration is by invitation during the closed trial. A use is counted when the registration is completed (6.2), not when it is started. |
+| `invitation_daily` | Per code and Vilnius day: registrations completed. For the administrators' chart; no per-person history. |
 | `sign_in_code` | Account, hashed code, expiry, failed attempts, used time, and the known device it was issued to (empty for a code any browser may use). |
 | `known_device` | Account, hashed identifier of the browser's cookie, first and last seen. Built before registration opens (M2b). |
 | `role_activation` | Account, role, hashed one-time code, who issued it, expiry, used time. Using it marks the passkey of that session as the staff passkey. |
@@ -291,7 +292,7 @@ without a deploy: the summary rules in 8.4 (default and minimum threshold, the w
 per MP, and the share of change that counts as "changed notably", `Digest:NotableChange`), the reasons and "Man svarbu"
 marks a person may give per bill in 8.2 (`Appeals:ReasonsPerPerson`, `Appeals:EndorsementsPerPerson`, 0 = no limit,
 the default), the surge thresholds in 6.6,
-the code limits and the life of a pending account in 6.2, whether registration needs an invitation. Each
+the code limits and the life of a pending account in 6.2, whether registration needs an invitation, uses per personal invitation code (`Registration:PersonalCodeUses`, 0 = no limit, the default). Each
 change is written to `audit`, and the current values of the rules that affect what MPs receive are shown on the public
 methodology page.
 
@@ -350,6 +351,34 @@ plus the Hangfire schema; `lt2_readonly` for ad-hoc analysis has no access to `i
   to someone else's address, or use up an invitation with addresses they do not control.
   - Asking for a sign-in code for a pending account works like any other and completes the registration, on any
     device.
+- **Personal invitation codes [decided 2026-11-13].** Every member has one personal code, made at completed
+  registration (for earlier members when first needed), shown on the account page as a link to the registration form
+  with the code filled in and as a short code with a copy button. Format: eight characters from 29 that cannot be
+  mistaken for one another (`23456789ABCDEFGHJKMNPQRSTVWXYZ`: no 0, 1, I, L, O, U), shown as `XXXX-XXXX`; case,
+  dashes and spaces do not matter when typed; about 5 × 10¹¹ codes, and guessing stays under the registration rate
+  limits. Codes are never written to logs.
+  - Uses per personal code are a runtime setting, `Registration:PersonalCodeUses`, 0 = no limit, the default. Team codes
+    keep their own uses and expiry.
+  - The member can replace the code: a new one is made, the old one stops working, and the member's count (the sum of
+    their codes) carries over.
+  - A use is counted when registration completes, as before, on a counter on the code and in daily totals per code; the
+    count never drops when an invited person deletes their account. The profile keeps which code it registered with,
+    and that goes with the account.
+  - When the inviter deletes their account, their codes are switched off and lose their owner: nothing of the person
+    stays on them; their counts, levels and daily totals stay as anonymous numbers.
+  - The member sees only how many people completed registration with their code and whether it is on; no names, dates
+    or list. The registration form says plainly that whoever gave the code sees that it was used, not by whom.
+  - Administrators (staff-passkey session) get a page: completed registrations per day, in total and for the codes that
+    brought the most people, as a server-rendered chart with the numbers also as a table; those codes (team codes by
+    their code, personal codes by the member's display name); and the numbers per level (level 1: by team codes or with
+    no code; level 2: by codes of level-1 people; and so on). No who-invited-whom tree and no list of who used a code.
+    An administrator can switch any code off and on again, with a statement, audited; a member whose code was switched
+    off sees that on the account page, with the contact address, and cannot replace it meanwhile.
+  - A code that does not work gets one message on the registration form, whatever the reason (unknown, switched off,
+    replaced, expired, used up): ask whoever invited you for a new one.
+  - Never combined with sides: no screen, API answer, export or query joins invitations with positions, marks or
+    arguments. No ranking shown to members, no rewards, nothing public. An account restricted from writing (8.3) keeps
+    its code; switching a code off is a separate action.
   - If the address already has an account, registration only sends a sign-in code to the address on the account; what
     was typed is discarded.
   - Accounts still pending after seven days (a setting) are deleted by the maintenance job that also removes old codes
@@ -806,6 +835,9 @@ POST   /api/v1/me/role-activation (activation code)                in a passkey 
 GET    /api/v1/me                 PUT /api/v1/me                   GET /api/v1/me/appeals
 PUT    /api/v1/me/party-support   PUT /api/v1/me/notifications
 GET    /api/v1/me/export          DELETE /api/v1/me
+GET    /api/v1/me/invitation      (own code, link, count, on or off)  POST /api/v1/me/invitation/replace
+GET    /api/v1/admin/invitations  (daily totals, top codes, levels: numbers only)
+POST   /api/v1/admin/invitations/{id}/switch-off   POST /api/v1/admin/invitations/{id}/switch-on   (statement)
 
 POST   /api/v1/mps/{slug}/claim
 PUT    /api/v1/bills/{number}/appeal/responses/mine
@@ -939,6 +971,9 @@ Splitting M2 means the risky step (emailing every MP) happens only after the who
   switched on later counts only shown or waiting reasons and removes nothing (8.2, 5.6).
 - An author can withdraw their own reason while the appeal is open (8.2, 8.8). Still to be confirmed: that a reason
   cannot be withdrawn once the appeal is closed (8.2).
+- Personal invitation codes: one per member, unlimited by default (`Registration:PersonalCodeUses`), replaceable,
+  counted at completed registration on the code and per day; members see only their count; administrators see numbers
+  per day, per code and per level, never who invited whom, and can switch codes off and on (6.2).
 - A moderator can restrict an account from writing, until a date or until lifted, with a statement emailed to the
   person; it is not public, touches no side, mark or count, and goes with the account; no hash of the address is kept.
   A full lock that stops sign-in is left for later (8.3).
