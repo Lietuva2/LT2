@@ -381,6 +381,17 @@ plus the Hangfire schema; `lt2_readonly` for ad-hoc analysis has no access to `i
   in. They are told by email when a passkey is added or removed.
 - No authenticator app: one way in to secure. It can be added if an MP's office cannot use passkeys.
 - Responses never reveal whether an email is registered.
+- **Local development only: a fixed sign-in code [decided 2026-11-13].** For the owner's hand testing on the local
+  stack, one configured six-digit code may be typed in place of the emailed one, for any account. Guards, all of them:
+  it is configuration only (an environment variable in `deploy/.env`), never a runtime setting and never on the
+  settings screen, so no administrator can switch it on; the web host refuses to start when it is set and the site's
+  own address (`Site:Address`, from the same `LT2_SITE_ADDRESS` Caddy serves) is not `localhost` or a `.localhost`
+  host, and each request must also come to such a host; unset by default, and then it is refused like any wrong code.
+  The real code is still generated, emailed and accepted. The fixed code works only where an emailed code does
+  (registration and sign-in, a code requested and not yet used, expired or exhausted) and gives an ordinary member
+  session; it never activates a staff role and has nothing to do with activation codes or passkeys. The sign-in page
+  says plainly that it is on, and start-up logs one warning line (without the code). Locally the per-address rate limits
+  and the code limits are raised through the same `.env`; the defaults in code and in production stay.
 
 ### 6.3 Authorization
 

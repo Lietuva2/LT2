@@ -77,6 +77,14 @@ placeholder in `deploy/.env`).
 Register with any address and the invitation code, open the sign-in email in Mailpit, enter the six-digit code, and the
 "Sveiki" page appears. From there you can add a passkey and see or end your sessions.
 
+For hand testing without opening Mailpit, the local stack accepts one fixed code for every account in addition to the
+emailed one: the value of `LT2_LOCAL_SIGN_IN_CODE` in `deploy/.env`, shown on the sign-in page while it is on (design
+6.2). It works only for registration and sign-in codes, gives an ordinary member session (never a staff role), and the
+web host refuses to start if it is set while `LT2_SITE_ADDRESS` is not a `.localhost` host. **Never set it on a server**;
+empty it to switch it off. `deploy/.env` also raises, for this machine only, the per-address request limits
+(`LT2_RATE_*`) and, through the migrator's `--local-code-limits`, the code limits per hour and per day (to the highest
+values the settings allow); the defaults in code and production are unchanged.
+
 To give a registered account the administrator role (needed for `/api/v1/admin/…`). A staff role works only in a session
 signed in with the account's staff passkey (design 6.2), so the command prints a one-time activation code on the console
 (valid 24 hours, never logged or emailed):
