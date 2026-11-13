@@ -69,7 +69,15 @@ public sealed record MyAppeal(
     int? ReasonsLeft,
     bool IsInitiator,
     bool MayChangeThreshold,
-    bool HasPositionConsent);
+    bool HasPositionConsent,
+    MyDescriptionChange? DescriptionChange = null);
+
+/// <summary>The initiator's latest proposed description change (design 8.1): pending, approved or returned with a note.</summary>
+public sealed record MyDescriptionChange(string Status, string Text, string? Note, DateTimeOffset CreatedAt);
+
+/// <summary>A proposed description change for the moderators' queue: the approved text and the proposed one, side by side.</summary>
+public sealed record QueueDescriptionChange(
+    Guid Id, Guid AppealId, BillFacts Bill, string? InitiatorName, string CurrentText, string ProposedText, IReadOnlyList<string> Flags, DateTimeOffset CreatedAt);
 
 /// <summary>
 /// The numbers the forms need (design 8.2, 8.4): the threshold offered, the minimum, and the per-person limits (0 = no
@@ -109,7 +117,16 @@ public sealed record QueueAppeal(
     PlannedDate? Planned = null,
     IReadOnlyList<QueueFlag>? DateFlags = null,
     bool UnderThresholdOnAgenda = false,
-    bool Held = false);
+    bool Held = false,
+    int ProposalsOnBill = 0,
+    int Participants = 0,
+    int EffectiveThreshold = 0);
+
+/// <summary>
+/// What a moderator's controls on the appeal page need (design 8.3): the state that decides which actions apply. Holds no
+/// position and no person.
+/// </summary>
+public sealed record ModerationAppealState(Guid Id, string Status, string Description, int Threshold, bool Held, PlannedDate? Planned, bool HasOpenItems);
 
 /// <summary>A participant's flag about the planned date (design 8.4). Who flagged is not shown.</summary>
 public sealed record QueueFlag(Guid Id, string Kind, string Link, string? Note, DateTimeOffset CreatedAt);
@@ -132,7 +149,7 @@ public sealed record QueueReason(
     DateTimeOffset CreatedAt);
 
 /// <summary>The moderators' queue (design 8.3) for this half: new appeals, flagged or reported arguments, reported appeals, unseen arguments.</summary>
-public sealed record ModerationItems(IReadOnlyList<QueueAppeal> Appeals, IReadOnlyList<QueueReason> Reasons);
+public sealed record ModerationItems(IReadOnlyList<QueueAppeal> Appeals, IReadOnlyList<QueueReason> Reasons, IReadOnlyList<QueueDescriptionChange>? DescriptionChanges = null);
 
 /// <summary>
 /// The Appeals module (design 8). Every operation that acts for a person takes their account id; moderation operations
@@ -153,13 +170,22 @@ public interface IAppealsModule
 
     Task<Result<MyAppeal>> MineAsync(string billNumber, Guid userId, CancellationToken cancellationToken);
 
+    /// <summary>How many proposals wait on a bill (design 8.1): the number only, the same for everyone.</summary>
+    Task<Result<int>> ProposalsWaitingAsync(string billNumber, CancellationToken cancellationToken);
+
     /// <summary>The description's edits (oldest first), public for a published appeal; no editor is named.</summary>
     Task<Result<IReadOnlyList<(DateTimeOffset ChangedAt, string? OldText, string? NewText)>>> HistoryAsync(string billNumber, CancellationToken cancellationToken);
 
-    /// <summary>Opens the appeal on a bill; <c>appeal.exists</c> if the bill already has one.</summary>
+    /// <summary>
+    /// Proposes the appeal on a bill (design 8.1): <c>appeal.exists</c> if the bill has a published appeal,
+    /// <c>proposal.exists</c> if the person already has a waiting or returned proposal on it.
+    /// </summary>
     Task<Result<AppealInfo>> OpenAsync(string billNumber, Guid userId, OpenAppeal request, CancellationToken cancellationToken);
 
     Task<Result<Unit>> EditAsync(string billNumber, Guid userId, EditAppeal request, CancellationToken cancellationToken);
+
+    /// <summary>The initiator proposes a new description for an open appeal (design 8.1); a moderator approves it.</summary>
+    Task<Result<Unit>> ProposeDescriptionAsync(string billNumber, Guid userId, EditAppeal request, CancellationToken cancellationToken);
 
     Task<Result<Unit>> ChangeThresholdAsync(string billNumber, Guid userId, int threshold, CancellationToken cancellationToken);
 
@@ -197,6 +223,34 @@ public interface IAppealsModeration
     Task<Result<Unit>> ReturnAppealAsync(Guid appealId, string statement, ModeratorActor moderator, CancellationToken cancellationToken);
 
     Task<Result<Unit>> HideAppealAsync(Guid appealId, string statement, ModeratorActor moderator, CancellationToken cancellationToken);
+
+    /// <summary>Approves the initiator's proposed description (design 8.1): it replaces the shown one and enters the history.</summary>
+    Task<Result<Unit>> ApproveDescriptionAsync(Guid changeId, string? statement, ModeratorActor moderator, CancellationToken cancellationToken);
+
+    /// <summary>Returns a proposed description with a required note; the page keeps the approved text.</summary>
+    Task<Result<Unit>> ReturnDescriptionAsync(Guid changeId, string statement, ModeratorActor moderator, CancellationToken cancellationToken);
+
+    /// <summary>
+    /// A moderator corrects the description of an open appeal directly (design 8.1): it replaces the shown one and enters
+    /// the history; the statement is required, audited and emailed to the initiator.
+    /// </summary>
+    Task<Result<Unit>> CorrectDescriptionAsync(Guid appealId, string description, string statement, ModeratorActor moderator, CancellationToken cancellationToken);
+
+    /// <summary>The state a moderator's controls on the appeal page need; <c>appeal.not-found</c> for a hidden or unknown appeal.</summary>
+    Task<Result<ModerationAppealState>> AppealStateAsync(Guid appealId, CancellationToken cancellationToken);
+
+    /// <summary>Hidden appeals and reasons, newest hide first, with who hid them, when and why (design 8.3).</summary>
+    Task<HiddenItems> HiddenAsync(CancellationToken cancellationToken);
+
+    /// <summary>
+    /// Brings a hidden appeal back as it was (design 8.3): open or closed if it had been published, else a waiting
+    /// proposal. Refused while another appeal on the bill is published; restoring a published one closes waiting
+    /// proposals as publishing does.
+    /// </summary>
+    Task<Result<Unit>> RestoreAppealAsync(Guid appealId, string statement, ModeratorActor moderator, CancellationToken cancellationToken);
+
+    /// <summary>Brings a hidden reason back as published, while its appeal is open; its marks are gone (design 8.3).</summary>
+    Task<Result<Unit>> RestoreReasonAsync(Guid reasonId, string statement, ModeratorActor moderator, CancellationToken cancellationToken);
 
     Task<Result<Unit>> SetThresholdAsync(Guid appealId, int threshold, string statement, ModeratorActor moderator, CancellationToken cancellationToken);
 
@@ -239,6 +293,20 @@ public interface IAppealsModeration
     /// <summary>Lifts a restriction early (a moderator or an administrator); audited and emailed.</summary>
     Task<Result<Unit>> LiftRestrictionAsync(Guid restrictionId, string statement, ModeratorActor moderator, string? contact, CancellationToken cancellationToken);
 }
+
+/// <summary>
+/// A hidden appeal for the moderators' list (design 8.3). <paramref name="RestoresAs"/> is the status "Atkurti" would give
+/// it; <paramref name="RefusedBecause"/> the code it would be refused with now, or null.
+/// </summary>
+public sealed record HiddenAppeal(
+    Guid Id, BillFacts Bill, string? InitiatorName, string Description, DateTimeOffset? HiddenAt, string? HiddenBy, string? Statement,
+    string RestoresAs, string? RefusedBecause);
+
+/// <summary>A hidden reason for the moderators' list; it can be restored only while its appeal is open.</summary>
+public sealed record HiddenReason(
+    Guid Id, BillFacts Bill, string Side, string Text, string? AuthorName, DateTimeOffset? HiddenAt, string? HiddenBy, string? Statement, bool Restorable);
+
+public sealed record HiddenItems(IReadOnlyList<HiddenAppeal> Appeals, IReadOnlyList<HiddenReason> Reasons);
 
 /// <summary>The caller's own writing restriction (design 8.3): its last day (null = until lifted) and the statement.</summary>
 public sealed record MyRestriction(DateOnly? Until, string Statement);

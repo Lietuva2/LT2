@@ -17,7 +17,10 @@ public sealed record QueueAppealResponse(
     PlannedDateResponse? Planned = null,
     IReadOnlyList<QueueFlagResponse>? DateFlags = null,
     bool UnderThresholdOnAgenda = false,
-    bool Held = false);
+    bool Held = false,
+    int ProposalsOnBill = 0,
+    int Participants = 0,
+    int EffectiveThreshold = 0);
 
 public sealed record QueueFlagResponse(Guid Id, string Kind, string Link, string? Note, DateTimeOffset CreatedAt);
 
@@ -47,8 +50,30 @@ public sealed record QueueReasonResponse(
     IReadOnlyList<ReasonResponse> MergeCandidates,
     DateTimeOffset CreatedAt);
 
+/// <summary>
+/// A hidden appeal (design 8.3): who hid it, when and why. <c>RestoresAs</c> is the status "Atkurti" gives it (open,
+/// closed or pending); <c>RefusedBecause</c> the code a restore would be refused with now, or null.
+/// </summary>
+public sealed record HiddenAppealResponse(
+    Guid Id, BillRefResponse Bill, string? InitiatorName, string Description, DateTimeOffset? HiddenAt, string? HiddenBy, string? Statement,
+    string RestoresAs, string? RefusedBecause);
+
+/// <summary>A hidden reason; <c>Restorable</c> while its appeal is open.</summary>
+public sealed record HiddenReasonResponse(
+    Guid Id, BillRefResponse Bill, string Side, string Text, string? AuthorName, DateTimeOffset? HiddenAt, string? HiddenBy, string? Statement, bool Restorable);
+
+/// <summary>The moderators' list of hidden appeals and reasons (design 8.3), newest hide first. Holds no position.</summary>
+public sealed record HiddenItemsResponse(IReadOnlyList<HiddenAppealResponse> Appeals, IReadOnlyList<HiddenReasonResponse> Reasons);
+
+/// <summary>A proposed description change (design 8.1): the approved text and the proposed one, side by side.</summary>
+public sealed record QueueDescriptionChangeResponse(
+    Guid Id, Guid AppealId, BillRefResponse Bill, string? InitiatorName, string CurrentText, string ProposedText, IReadOnlyList<string> Flags, DateTimeOffset CreatedAt);
+
 /// <summary>The moderators' queue (design 8.3). Holds no position of anyone.</summary>
-public sealed record ModerationQueueResponse(IReadOnlyList<QueueAppealResponse> Appeals, IReadOnlyList<QueueReasonResponse> Reasons);
+public sealed record ModerationQueueResponse(
+    IReadOnlyList<QueueAppealResponse> Appeals,
+    IReadOnlyList<QueueReasonResponse> Reasons,
+    IReadOnlyList<QueueDescriptionChangeResponse>? DescriptionChanges = null);
 
 /// <summary>Publishing: the statement to the author is optional.</summary>
 public sealed record ModerationRequest
@@ -69,6 +94,21 @@ public sealed record ModeratorThresholdRequest
     /// <summary>Shown on the appeal page with the new number (design 8.4).</summary>
     public string Statement { get; init; } = "";
 }
+
+/// <summary>A moderator's correction of an open appeal's description (design 8.1); the statement goes to the initiator.</summary>
+public sealed record ModeratorDescriptionRequest
+{
+    public string Description { get; init; } = "";
+
+    public string Statement { get; init; } = "";
+}
+
+/// <summary>
+/// The state a moderator's controls on the appeal page need (design 8.3): which actions apply. Holds no position and no
+/// person.
+/// </summary>
+public sealed record ModerationAppealResponse(
+    Guid Id, string Status, string Description, int Threshold, bool Held, PlannedDateResponse? Planned, bool HasOpenItems);
 
 public sealed record MergeReasonRequest
 {

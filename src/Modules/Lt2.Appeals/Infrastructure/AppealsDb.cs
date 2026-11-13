@@ -28,6 +28,8 @@ internal sealed class AppealsDb(DbContextOptions<AppealsDb> options) : DbContext
 
     public DbSet<WritingRestriction> WritingRestrictions => Set<WritingRestriction>();
 
+    public DbSet<DescriptionChange> DescriptionChanges => Set<DescriptionChange>();
+
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         modelBuilder.HasDefaultSchema(AppealsModule.Schema);
@@ -44,8 +46,10 @@ internal sealed class AppealsDb(DbContextOptions<AppealsDb> options) : DbContext
             e.Property(a => a.ThresholdNote).HasMaxLength(1000);
             e.Property(a => a.ReturnNote).HasMaxLength(1000);
 
-            // One appeal per bill (design 8.2); a rejected appeal leaves the bill free.
-            e.HasIndex(a => a.BillNumber).IsUnique().HasFilter("status <> 'rejected'");
+            // One published appeal per bill, and one waiting or returned proposal per person per bill (design 8.1).
+            e.HasIndex(a => a.BillNumber).IsUnique().HasFilter("status IN ('open', 'closed')").HasDatabaseName("ix_appeal_bill_number_published");
+            e.HasIndex(a => new { a.BillNumber, a.InitiatorUserId }).IsUnique().HasFilter("status IN ('pending', 'returned')")
+                .HasDatabaseName("ix_appeal_bill_number_initiator_waiting");
             e.HasIndex(a => a.Status);
             e.ToTable(t => t.HasCheckConstraint("ck_appeal_threshold_positive", "threshold > 0"));
         });
@@ -102,6 +106,20 @@ internal sealed class AppealsDb(DbContextOptions<AppealsDb> options) : DbContext
             e.Property(w => w.Statement).HasMaxLength(1000);
             e.Property(w => w.LiftStatement).HasMaxLength(1000);
             e.HasIndex(w => w.UserId);
+        });
+
+        modelBuilder.Entity<DescriptionChange>(e =>
+        {
+            e.ToTable("description_change");
+            e.HasKey(d => d.Id);
+            e.Property(d => d.Text).HasMaxLength(AppealRules.DescriptionMaxLength);
+            e.Property(d => d.Status).HasMaxLength(20);
+            e.Property(d => d.Note).HasMaxLength(1000);
+
+            // One pending change per appeal (design 8.1).
+            e.HasIndex(d => d.AppealId).IsUnique().HasFilter("status = 'pending'").HasDatabaseName("ix_description_change_appeal_id_pending");
+            e.HasIndex(d => new { d.AppealId, d.CreatedAt });
+            e.HasOne<Appeal>().WithMany().HasForeignKey(d => d.AppealId).OnDelete(DeleteBehavior.Cascade);
         });
 
         modelBuilder.Entity<ModerationAction>(e =>

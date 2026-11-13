@@ -8,6 +8,9 @@ public sealed record SettingResponse
 
     public JsonElement Value { get; init; }
 
+    /// <summary>The value from the design, which applies while nobody has changed it (shown on the settings screen).</summary>
+    public JsonElement? Default { get; init; }
+
     public Guid? ChangedBy { get; init; }
 
     public DateTimeOffset? ChangedAt { get; init; }

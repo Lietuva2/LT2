@@ -59,7 +59,7 @@ internal sealed class AppealsService(
     public async Task<Result<AppealInfo>> GetAsync(string billNumber, Guid? viewer, CancellationToken cancellationToken)
     {
         await using var db = await contexts.CreateDbContextAsync(cancellationToken);
-        var appeal = await AppealReads.FindByBillAsync(db, billNumber, tracking: false, cancellationToken);
+        var appeal = await AppealReads.FindForAsync(db, billNumber, viewer, tracking: false, cancellationToken);
         if (appeal is null || !AppealReads.IsVisibleTo(appeal, viewer))
         {
             return Error.NotFound("appeal.not-found");
@@ -68,11 +68,25 @@ internal sealed class AppealsService(
         return await InfoAsync(db, appeal, cancellationToken);
     }
 
+    public async Task<Result<int>> ProposalsWaitingAsync(string billNumber, CancellationToken cancellationToken)
+    {
+        var bill = await bills.FindAsync(AppealReads.NormaliseBillNumber(billNumber), cancellationToken);
+        if (bill is null)
+        {
+            return Error.NotFound("bill.not-found");
+        }
+
+        // The number only (design 8.1): no names, no texts, nothing about the person asking.
+        await using var db = await contexts.CreateDbContextAsync(cancellationToken);
+        var statuses = await db.Appeals.AsNoTracking().Where(a => a.BillNumber == bill.Number).Select(a => a.Status).ToListAsync(cancellationToken);
+        return ProposalRules.Waiting(statuses);
+    }
+
     public async Task<Result<IReadOnlyList<(DateTimeOffset ChangedAt, string? OldText, string? NewText)>>> HistoryAsync(string billNumber, CancellationToken cancellationToken)
     {
         await using var db = await contexts.CreateDbContextAsync(cancellationToken);
-        var appeal = await AppealReads.FindByBillAsync(db, billNumber, tracking: false, cancellationToken);
-        if (appeal is null || appeal.Status is not (AppealStatuses.Open or AppealStatuses.Closed))
+        var appeal = await AppealReads.FindPublishedAsync(db, billNumber, tracking: false, cancellationToken);
+        if (appeal is null)
         {
             return Error.NotFound("appeal.not-found");
         }
@@ -88,7 +102,7 @@ internal sealed class AppealsService(
     public async Task<Result<MyAppeal>> MineAsync(string billNumber, Guid userId, CancellationToken cancellationToken)
     {
         await using var db = await contexts.CreateDbContextAsync(cancellationToken);
-        var appeal = await AppealReads.FindByBillAsync(db, billNumber, tracking: false, cancellationToken);
+        var appeal = await AppealReads.FindForAsync(db, billNumber, userId, tracking: false, cancellationToken);
         if (appeal is null || !AppealReads.IsVisibleTo(appeal, userId))
         {
             return Error.NotFound("appeal.not-found");
@@ -110,6 +124,15 @@ internal sealed class AppealsService(
         var endorsements = await AppealReads.EndorsementCountsAsync(db, mine.Select(r => r.Id).ToList(), cancellationToken);
         var facts = await participants.FindAsync(userId, cancellationToken);
         var isInitiator = appeal.InitiatorUserId == userId;
+
+        // The initiator's latest proposed description change and its state (design 8.1); nobody else's business.
+        var change = isInitiator
+            ? await db.DescriptionChanges.AsNoTracking()
+                .Where(d => d.AppealId == appeal.Id)
+                .OrderByDescending(d => d.CreatedAt)
+                .Select(d => new MyDescriptionChange(d.Status, d.Text, d.Note, d.CreatedAt))
+                .FirstOrDefaultAsync(cancellationToken)
+            : null;
         return new MyAppeal(
             side,
             endorsed,
@@ -120,7 +143,8 @@ internal sealed class AppealsService(
                 await settings.GetAsync(SettingKeys.AppealsReasonsPerPerson, cancellationToken)),
             isInitiator,
             isInitiator && ThresholdRules.InitiatorMayChange(appeal.Status, appeal.ThresholdSetBy, appeal.FirstSummarisedAt),
-            facts?.HasPositionConsent == true);
+            facts?.HasPositionConsent == true,
+            change);
     }
 
     public async Task<Result<AppealInfo>> OpenAsync(string billNumber, Guid userId, OpenAppeal request, CancellationToken cancellationToken)
@@ -160,13 +184,15 @@ internal sealed class AppealsService(
             return restricted;
         }
 
+        // Design 8.1 (decided 2026-11-13): several proposals per bill until one is published; one waiting or returned per
+        // person. Someone else's proposal never blocks anyone.
         var existing = await db.Appeals.AsNoTracking()
             .Where(a => a.BillNumber == bill.Number)
-            .Select(a => a.Status)
+            .Select(a => new { a.Status, a.InitiatorUserId })
             .ToListAsync(cancellationToken);
-        if (AppealRules.BillAlreadyHasAppeal(existing))
+        if (ProposalRules.CheckNewProposal(existing.Select(a => (a.Status, a.InitiatorUserId == userId))) is { } refused)
         {
-            return Error.Conflict("appeal.exists");
+            return RuleErrors.Of(refused);
         }
 
         var now = clock.GetUtcNow();
@@ -198,7 +224,7 @@ internal sealed class AppealsService(
 
         await using var db = await contexts.CreateDbContextAsync(cancellationToken);
         await using var transaction = await db.Database.BeginTransactionAsync(cancellationToken);
-        var appeal = await AppealReads.FindByBillAsync(db, billNumber, tracking: true, cancellationToken);
+        var appeal = await AppealReads.FindForAsync(db, billNumber, userId, tracking: true, cancellationToken);
         if (appeal is null || !AppealReads.IsVisibleTo(appeal, userId))
         {
             return Error.NotFound("appeal.not-found");
@@ -236,6 +262,53 @@ internal sealed class AppealsService(
         return Result.Ok();
     }
 
+    /// <summary>
+    /// The initiator proposes a new description for their open appeal (design 8.1): the page keeps the approved text until
+    /// a moderator approves this one. One pending at a time; writing, so a restriction blocks it.
+    /// </summary>
+    public async Task<Result<Unit>> ProposeDescriptionAsync(string billNumber, Guid userId, EditAppeal request, CancellationToken cancellationToken)
+    {
+        if (AppealRules.CheckDescription(request.Description) is { } broken)
+        {
+            return RuleErrors.Of(broken);
+        }
+
+        var text = AppealRules.NormaliseText(request.Description);
+        var flags = await screening.ScreenAsync(text, cancellationToken);
+
+        await using var db = await contexts.CreateDbContextAsync(cancellationToken);
+        await using var transaction = await db.Database.BeginTransactionAsync(cancellationToken);
+        await ParticipationLock.TakeAsync(db, userId, cancellationToken);
+        var appeal = await AppealReads.FindForAsync(db, billNumber, userId, tracking: false, cancellationToken);
+        if (appeal is null || !AppealReads.IsVisibleTo(appeal, userId))
+        {
+            return Error.NotFound("appeal.not-found");
+        }
+
+        if (await RestrictedAsync(db, userId, cancellationToken) is { } restricted)
+        {
+            return restricted;
+        }
+
+        var pending = await db.DescriptionChanges.AnyAsync(d => d.AppealId == appeal.Id && d.Status == DescriptionChangeStatuses.Pending, cancellationToken);
+        if (DescriptionChangeRules.CheckProposal(appeal.Status, appeal.InitiatorUserId == userId, pending, appeal.Description, text) is { } refused)
+        {
+            return RuleErrors.Of(refused);
+        }
+
+        db.DescriptionChanges.Add(new DescriptionChange
+        {
+            Id = Ids.New(clock),
+            AppealId = appeal.Id,
+            Text = text,
+            ScreeningFlags = [.. flags],
+            CreatedAt = clock.GetUtcNow(),
+        });
+        await db.SaveChangesAsync(cancellationToken);
+        await transaction.CommitAsync(cancellationToken);
+        return Result.Ok();
+    }
+
     public async Task<Result<Unit>> ChangeThresholdAsync(string billNumber, Guid userId, int threshold, CancellationToken cancellationToken)
     {
         if (ThresholdRules.CheckRequested(threshold, await reads.MinimumAsync(cancellationToken)) is { } below)
@@ -245,7 +318,7 @@ internal sealed class AppealsService(
 
         await using var db = await contexts.CreateDbContextAsync(cancellationToken);
         await using var transaction = await db.Database.BeginTransactionAsync(cancellationToken);
-        var appeal = await AppealReads.FindByBillAsync(db, billNumber, tracking: true, cancellationToken);
+        var appeal = await AppealReads.FindForAsync(db, billNumber, userId, tracking: true, cancellationToken);
         if (appeal is null || !AppealReads.IsVisibleTo(appeal, userId))
         {
             return Error.NotFound("appeal.not-found");
@@ -362,7 +435,7 @@ internal sealed class AppealsService(
         }
 
         await using var db = await contexts.CreateDbContextAsync(cancellationToken);
-        var appeal = await AppealReads.FindByBillAsync(db, billNumber, tracking: false, cancellationToken);
+        var appeal = await AppealReads.FindPublishedAsync(db, billNumber, tracking: false, cancellationToken);
         if (appeal is null || appeal.Status != AppealStatuses.Open)
         {
             return Error.NotFound("appeal.not-found");
@@ -691,7 +764,7 @@ internal sealed class AppealsService(
     /// <summary>The open appeal on a bill, as seen by the member acting on it.</summary>
     private static async Task<Result<Appeal>> OpenAppealAsync(AppealsDb db, string billNumber, Guid userId, CancellationToken ct)
     {
-        var appeal = await AppealReads.FindByBillAsync(db, billNumber, tracking: false, ct);
+        var appeal = await AppealReads.FindForAsync(db, billNumber, userId, tracking: false, ct);
         if (appeal is null || !AppealReads.IsVisibleTo(appeal, userId))
         {
             return Error.NotFound("appeal.not-found");

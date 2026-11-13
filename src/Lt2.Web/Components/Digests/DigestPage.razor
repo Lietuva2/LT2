@@ -115,7 +115,7 @@
                     <ul class="rows">
                         @foreach (var run in runs.Skip(1))
                         {
-                            <li><div class="rows__main"><a href="/suvestines/@run.RunDate.ToString("yyyy-MM-dd", System.Globalization.CultureInfo.InvariantCulture)">@F.Date(run.RunDate)</a><span class="small">@T["Digests.Kind." + run.Kind] · @Fmt("Digests.Items", Formats.Number(run.Items.Count))</span></div></li>
+                            <li><div class="rows__main"><a href="/suvestines/@run.RunDate.ToString("yyyy-MM-dd", System.Globalization.CultureInfo.InvariantCulture)" class="num">@Formats.Day(run.RunDate)</a><span class="small">@T["Digests.Kind." + run.Kind] · @Fmt("Digests.Items", Formats.Number(run.Items.Count))</span></div></li>
                         }
                     </ul>
                 </section>

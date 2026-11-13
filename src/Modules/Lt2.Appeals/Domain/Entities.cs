@@ -5,7 +5,10 @@ internal sealed class Appeal
 {
     public Guid Id { get; set; }
 
-    /// <summary>The Seimas bill number, the natural key of a bill (design 3). One appeal per bill, except rejected ones.</summary>
+    /// <summary>
+    /// The Seimas bill number, the natural key of a bill (design 3). One published (open or closed) appeal per bill; before
+    /// that, several proposals, one waiting or returned per person (design 8.1).
+    /// </summary>
     public string BillNumber { get; set; } = "";
 
     public Guid InitiatorUserId { get; set; }
@@ -75,6 +78,73 @@ internal static class AppealStatuses
 
     /// <summary>Hidden by a moderator. The bill may get a new appeal.</summary>
     public const string Rejected = "rejected";
+
+    /// <summary>A proposal closed because another proposal on the same bill was published (design 8.1). Visible to nobody.</summary>
+    public const string Superseded = "superseded";
+}
+
+/// <summary>
+/// <c>appeals.description_change</c>: the initiator's proposed new description of a published appeal (design 8.1). The
+/// page keeps the approved text until a moderator approves this one; at most one pending per appeal.
+/// </summary>
+internal sealed class DescriptionChange
+{
+    public Guid Id { get; set; }
+
+    public Guid AppealId { get; set; }
+
+    public string Text { get; set; } = "";
+
+    /// <summary>See <see cref="DescriptionChangeStatuses"/>.</summary>
+    public string Status { get; set; } = DescriptionChangeStatuses.Pending;
+
+    /// <summary>The moderator's note: optional on approval, required when returned.</summary>
+    public string? Note { get; set; }
+
+    public string[] ScreeningFlags { get; set; } = [];
+
+    public DateTimeOffset CreatedAt { get; set; }
+
+    public DateTimeOffset? DecidedAt { get; set; }
+}
+
+internal static class DescriptionChangeStatuses
+{
+    public const string Pending = "pending";
+    public const string Approved = "approved";
+    public const string Returned = "returned";
+}
+
+/// <summary>Design 8.1 (decided 2026-11-13): who may propose a new description, and when.</summary>
+internal static class DescriptionChangeRules
+{
+    /// <summary>
+    /// The initiator of an open appeal (not a closed one) proposes a new description, one pending at a time, and it must
+    /// differ from the text shown now.
+    /// </summary>
+    public static string? CheckProposal(string appealStatus, bool isInitiator, bool hasPending, string currentText, string proposedText)
+    {
+        if (!isInitiator)
+        {
+            return "appeal.initiator-only";
+        }
+
+        if (appealStatus != AppealStatuses.Open)
+        {
+            return "appeal.not-open";
+        }
+
+        if (hasPending)
+        {
+            return "description-change.pending";
+        }
+
+        return currentText == proposedText ? "description.unchanged" : null;
+    }
+
+    /// <summary>A moderator decides a pending change only while its appeal is open.</summary>
+    public static string? CheckDecision(string changeStatus, string appealStatus) =>
+        changeStatus == DescriptionChangeStatuses.Pending && appealStatus == AppealStatuses.Open ? null : "moderation.wrong-state";
 }
 
 internal static class ThresholdSetters

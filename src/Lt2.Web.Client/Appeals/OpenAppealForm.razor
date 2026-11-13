@@ -3,9 +3,15 @@
 @inject IAppealsApi Appeals
 @inject NavigationManager Navigation
 
-@* Opening the appeal on a bill (design 8.1, decided 2026-11-13): a neutral description and the threshold, nothing else.
+@* Proposing the appeal on a bill (design 8.1, decided 2026-11-13): a neutral description and the threshold, nothing else.
    No side and no first argument, so no positions consent: once a moderator publishes the appeal, the initiator writes
-   arguments and takes a side like anyone else, or never. If the bill got an appeal meanwhile, the person is taken to it. *@
+   arguments and takes a side like anyone else, or never. Several members may propose until one is published; the form
+   says how many proposals wait (a number only, from its own public answer). If the bill got a published appeal
+   meanwhile, or the person already has a proposal on it, they are taken to it. *@
+@if (Proposals is { Waiting: > 0 } proposals)
+{
+    <p class="note" id="proposals-waiting">@Text("Open.Waiting", AppealNumbers.Of(proposals.Waiting))</p>
+}
 @if (!_signedIn)
 {
     <p><a class="btn" href="/prisijungti">@L["Open.SignIn"]</a></p>
@@ -56,8 +62,12 @@ else if (Rules is { } rules)
     /// <summary>The person's own writing restriction (design 8.3): opening an appeal is writing.</summary>
     [PersistentState] public MyRestrictionResponse? Restriction { get; set; }
 
+    /// <summary>How many proposals already wait on the bill (design 8.1): the same public number for everyone.</summary>
+    [PersistentState] public ProposalsResponse? Proposals { get; set; }
+
     protected override async Task OnInitializedAsync()
     {
+        Proposals ??= (await Appeals.GetProposalsAsync(Number)).Value;
         _signedIn = AuthState is not null && (await AuthState).User.Identity?.IsAuthenticated == true;
         if (!_signedIn)
         {
@@ -78,11 +88,10 @@ else if (Rules is { } rules)
             return;
         }
 
-        if (result.Problem?.Code == "appeal.exists")
+        if (result.Problem?.Code is "appeal.exists" or "proposal.exists")
         {
-            // The bill got an appeal meanwhile. If the person can see it (published), take them to it. One another member
-            // opened that waits for a moderator is visible only to its initiator: reloading would show this form again,
-            // empty, and the text would be lost without a word. So the text stays and the note says what happened.
+            // The bill got a published appeal meanwhile, or the person already has a proposal on it: the page shows
+            // either one. If it somehow cannot be seen, the text stays and the note says so, so nothing is lost.
             if ((await Appeals.GetAppealAsync(Number)).IsSuccess)
             {
                 Navigation.NavigateTo($"/seimas/{Uri.EscapeDataString(Number)}/kreipimasis", forceLoad: true);
@@ -94,5 +103,15 @@ else if (Rules is { } rules)
         }
 
         Show(result.Problem, "description", "threshold");
+
+        // The server checks the administrator's minimum only once the request itself is valid, so with another field wrong
+        // it would come only on the next try: the form says it now, beside the other errors.
+        if (Errors.Count > 0 && !Errors.ContainsKey("threshold") && Rules is { } rules && _threshold < rules.ThresholdMinimum)
+        {
+            Errors = new Dictionary<string, string[]>(Errors, StringComparer.OrdinalIgnoreCase)
+            {
+                ["threshold"] = [Text("Open.ThresholdBelow", AppealNumbers.Of(rules.ThresholdMinimum))],
+            };
+        }
     });
 }

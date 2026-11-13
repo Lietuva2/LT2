@@ -427,6 +427,15 @@ body > .page { width: 100%; }
   .welcome lt2-logo-spin { width: 9rem; }
 }
 
+/* The front page (option B, owner 2026-11-13): the same welcome with a smaller logo, then one summary card per appeal. */
+.welcome--home lt2-logo-spin { width: min(16rem, 60%); }
+@media (max-width: 54rem) { .welcome--home lt2-logo-spin { width: 8rem; } }
+.cards { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(18rem, 100%), 1fr)); gap: var(--sp-5); align-items: start; }
+.card__title { color: inherit; }
+.counts b { font-size: var(--fs-3); }
+.counts__for { color: var(--for); }
+.counts__against { color: var(--against); }
+
 /* An action that reads as a link (resend the code, switch form). */
 .linkish {
   padding: 0; border: 0; background: none; cursor: pointer;
@@ -525,3 +534,49 @@ body { padding-block-end: 4.5rem; }
   .feedback[open] .feedback__panel { animation: feedback-slide 0.18s ease-out; }
 }
 @keyframes feedback-slide { from { transform: translateY(0.75rem); opacity: 0; } to { transform: none; opacity: 1; } }
+
+/* Old and new text side by side (a proposed description change, design 8.1); one under the other on a phone. */
+.compare { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--sp-5); }
+.compare > * { border-left: 3px solid var(--rule); padding-left: var(--sp-4); }
+@media (max-width: 36rem) { .compare { grid-template-columns: minmax(0, 1fr); gap: var(--sp-4); } }
+
+/* A queue item's actions (design 8.3): one control each, wrapping on a narrow screen; choosing one opens its fields. */
+.actions { display: flex; flex-wrap: wrap; gap: var(--sp-2) var(--sp-3); align-items: center; }
+
+/* The settings screen (design 5.6): the value field is short, its unit beside it. */
+.settings__value { inline-size: 7rem; }
+.settings .rows__side { flex-wrap: wrap; justify-content: flex-end; }
+
+/* "Atsijungti" in the menu (owner, 2026-11-13): a form button that looks and behaves like the menu's links. */
+.top__signout { display: contents; }
+.top__signout button {
+  margin: 0; padding: var(--sp-2) 0; border: 0; border-bottom: 4px solid transparent; background: none; cursor: pointer;
+  font: inherit; font-weight: 600; color: var(--ink);
+}
+.top__signout button:hover { border-bottom-color: var(--slate); }
+
+/* A two-part switch over real radio inputs (owner, 2026-11-13), our own CSS: "Už | Prieš" in the writing box. Each input
+   lies over its half, invisible, so a click, a tap or the keyboard works as on any radio; the chosen half is filled in
+   its side's colour (--plain: the action colour), neither when nothing is chosen; the focus ring is the page's own. */
+.switch { display: inline-grid; grid-auto-flow: column; grid-auto-columns: minmax(6rem, 1fr); max-inline-size: 100%; border: 2px solid var(--ink); background: var(--sheet); }
+.switch__half {
+  position: relative; display: flex; align-items: center; justify-content: center; min-block-size: 2.75rem;
+  padding: 0 var(--sp-4); font-weight: 700; color: var(--ink); cursor: pointer; user-select: none; text-align: center;
+}
+.switch__half + .switch__half { border-inline-start: 2px solid var(--ink); }
+.switch__input { position: absolute; inset: 0; inline-size: 100%; block-size: 100%; margin: 0; opacity: 0; cursor: pointer; }
+.switch__half:hover { background: var(--slate-tint); }
+.switch__half--for:has(.switch__input:checked) { background: var(--for); color: var(--on-vote); }
+.switch__half--against:has(.switch__input:checked) { background: var(--against); color: var(--on-vote); }
+.switch__half--plain:has(.switch__input:checked) { background: var(--action); color: var(--action-ink); }
+.switch__half:has(.switch__input:focus-visible) { outline: 3px solid var(--focus); outline-offset: 2px; z-index: 1; }
+.switch__half:has(.switch__input:disabled) { opacity: 0.6; cursor: progress; }
+.switch__input:disabled { cursor: progress; }
+
+/* Under an argument (owner, 2026-11-13): "Man svarbu", "Pranešti" and "Atsiimti" stay together on one line; when the
+   author's name and the group do not fit side by side, the name takes its own line above. The two columns of
+   arguments become one where a column would be too narrow for the group. A visitor's opened report note wraps. */
+.said__name { overflow-wrap: anywhere; }
+.said__actions { display: inline-flex; flex-wrap: nowrap; align-items: center; gap: var(--sp-3); white-space: nowrap; }
+.said__actions:has(.report-visitor[open]) { flex-wrap: wrap; white-space: normal; }
+@media (max-width: 64rem) { .pair--reasons { grid-template-columns: minmax(0, 1fr); } }

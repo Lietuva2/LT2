@@ -54,7 +54,8 @@ public sealed partial class SignUpTests
 
         await page.GotoAsync(BaseUrl!);
         await Assertions.Expect(page.GetByRole(AriaRole.Heading, new() { Level = 1 })).ToContainTextAsync("Lietuva");
-        await page.GetByRole(AriaRole.Link, new() { Name = "Registruotis" }).ClickAsync();
+        // The front page carries the sign-in steps (design 8.7): registration opens in place.
+        await page.GetByRole(AriaRole.Button, new() { Name = "Registruokitės su kvietimo kodu." }).ClickAsync();
 
         await Assertions.Expect(page.GetByRole(AriaRole.Heading, new() { Name = "Nauja paskyra" })).ToBeVisibleAsync();
         await WaitForInteractivityAsync(page);
@@ -94,7 +95,7 @@ public sealed partial class SignUpTests
         await Assertions.Expect(page.GetByRole(AriaRole.Heading, new() { Level = 1 })).ToHaveTextAsync("Sveiki, Rūta M.!");
         await Assertions.Expect(page.GetByText("El. paštas patvirtintas")).ToBeVisibleAsync();
         await Assertions.Expect(page.GetByText("Ši sesija")).ToBeVisibleAsync();
-        await Assertions.Expect(page.GetByRole(AriaRole.Button, new() { Name = "Atsijungti" })).ToBeEnabledAsync(new() { Timeout = 60_000 });
+        await Assertions.Expect(page.Locator("main").GetByRole(AriaRole.Button, new() { Name = "Atsijungti" })).ToBeEnabledAsync(new() { Timeout = 60_000 });
         await ExpectNoNoteAsync(page);
 
         // The session cookie: host-only, secure, not readable by scripts.

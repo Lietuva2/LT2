@@ -59,6 +59,17 @@ internal sealed class ModerationService(
             .Take(QueueLimit)
             .ToListAsync(cancellationToken);
 
+        // A bill's proposals together, oldest first, the bills in the order of their oldest item (design 8.1).
+        var firstOnBill = appeals.GroupBy(a => a.BillNumber).ToDictionary(g => g.Key, g => g.Min(a => a.OpenedAt));
+        appeals = appeals.OrderBy(a => firstOnBill[a.BillNumber]).ThenBy(a => a.BillNumber, StringComparer.Ordinal).ThenBy(a => a.OpenedAt).ToList();
+        var pendingBills = appeals.Where(a => a.Status == AppealStatuses.Pending).Select(a => a.BillNumber).Distinct().ToList();
+        var proposalsOnBill = (await db.Appeals.AsNoTracking()
+                .Where(a => pendingBills.Contains(a.BillNumber) && (a.Status == AppealStatuses.Pending || a.Status == AppealStatuses.Returned))
+                .Select(a => a.BillNumber)
+                .ToListAsync(cancellationToken))
+            .GroupBy(b => b)
+            .ToDictionary(g => g.Key, g => g.Count());
+
         var reasons = await db.Reasons.AsNoTracking()
             .Where(r => db.Appeals.Any(a => a.Id == r.AppealId && a.Status == AppealStatuses.Open)
                 && (r.Status == ReasonStatuses.Pending
@@ -84,6 +95,8 @@ internal sealed class ModerationService(
         // Design 8.1: a moderator reviews an appeal's neutral description; it has no first argument.
         var queueAppeals = appeals.Select(a =>
         {
+            // For the notes on an open appeal: how many take part and the threshold that applies (design 8.3).
+            var threshold = counts.TryGetValue(a.Id, out var c) ? AppealReads.Threshold(a, c, minimum) : null;
             return new QueueAppeal(
                 a.Id,
                 Bill(a.BillNumber),
@@ -98,7 +111,10 @@ internal sealed class ModerationService(
                 planned.GetValueOrDefault(a.BillNumber),
                 openFlags.Where(f => f.AppealId == a.Id).Select(f => new QueueFlag(f.Id, f.Kind, f.Link, f.Note, f.CreatedAt)).ToList(),
                 underThresholdOnAgenda.Contains(a.Id),
-                a.Sending == "held");
+                a.Sending == "held",
+                a.Status == AppealStatuses.Pending ? proposalsOnBill.GetValueOrDefault(a.BillNumber, 1) : 0,
+                threshold?.Participants ?? 0,
+                threshold?.Value ?? a.Threshold);
         }).ToList();
 
         var queueReasons = reasons.Select(r => new QueueReason(
@@ -120,7 +136,84 @@ internal sealed class ModerationService(
                 .ToList(),
             r.CreatedAt)).ToList();
 
-        return new ModerationItems(queueAppeals, queueReasons);
+        // Proposed description changes of open appeals (design 8.1): the approved text beside the proposed one.
+        var changes = await db.DescriptionChanges.AsNoTracking()
+            .Where(d => d.Status == DescriptionChangeStatuses.Pending)
+            .OrderBy(d => d.CreatedAt)
+            .Take(QueueLimit)
+            .ToListAsync(cancellationToken);
+        var changedAppealIds = changes.Select(d => d.AppealId).Distinct().ToList();
+        var changedAppeals = await db.Appeals.AsNoTracking().Where(a => changedAppealIds.Contains(a.Id)).ToDictionaryAsync(a => a.Id, cancellationToken);
+        var changeNames = await reads.NamesAsync(changedAppeals.Values.Select(a => a.InitiatorUserId), cancellationToken);
+        var changeBills = await reads.BillsAsync(changedAppeals.Values.Select(a => a.BillNumber).Distinct().ToList(), cancellationToken);
+        var queueChanges = changes
+            .Where(d => changedAppeals[d.AppealId].Status == AppealStatuses.Open)
+            .Select(d =>
+            {
+                var appeal = changedAppeals[d.AppealId];
+                return new QueueDescriptionChange(
+                    d.Id, appeal.Id, changeBills.GetValueOrDefault(appeal.BillNumber) ?? new BillFacts(appeal.BillNumber, appeal.BillNumber),
+                    changeNames.GetValueOrDefault(appeal.InitiatorUserId), appeal.Description, d.Text, d.ScreeningFlags.Distinct().ToList(), d.CreatedAt);
+            })
+            .ToList();
+
+        return new ModerationItems(queueAppeals, queueReasons, queueChanges);
+    }
+
+    public Task<Result<Unit>> ApproveDescriptionAsync(Guid changeId, string? statement, ModeratorActor moderator, CancellationToken cancellationToken) =>
+        OnDescriptionChangeAsync(changeId, moderator, "approve", statement, (db, change, appeal, now) =>
+        {
+            // The approved text replaces the shown one and enters the public history (design 8.1, 8.2).
+            db.Revisions.Add(AppealsService.Revise("appeal", appeal.Id, "description", appeal.Description, change.Text, appeal.InitiatorUserId, now));
+            appeal.Description = change.Text;
+            appeal.ScreeningFlags = change.ScreeningFlags;
+            appeal.ChangedAt = now;
+            change.Status = DescriptionChangeStatuses.Approved;
+            change.Note = string.IsNullOrWhiteSpace(statement) ? null : statement.Trim();
+            return ModerationNotices.DescriptionApproved;
+        }, cancellationToken);
+
+    public Task<Result<Unit>> ReturnDescriptionAsync(Guid changeId, string statement, ModeratorActor moderator, CancellationToken cancellationToken)
+    {
+        if (string.IsNullOrWhiteSpace(statement))
+        {
+            return Task.FromResult<Result<Unit>>(Error.Validation("statement.required", "statement"));
+        }
+
+        return OnDescriptionChangeAsync(changeId, moderator, "return", statement, (_, change, _, _) =>
+        {
+            change.Status = DescriptionChangeStatuses.Returned;
+            change.Note = statement.Trim();
+            return ModerationNotices.DescriptionReturned;
+        }, cancellationToken);
+    }
+
+    private async Task<Result<Unit>> OnDescriptionChangeAsync(
+        Guid changeId, ModeratorActor moderator, string action, string? statement,
+        Func<AppealsDb, DescriptionChange, Appeal, DateTimeOffset, string> apply, CancellationToken ct)
+    {
+        await using var db = await contexts.CreateDbContextAsync(ct);
+        await using var transaction = await db.Database.BeginTransactionAsync(ct);
+        var change = await db.DescriptionChanges.FirstOrDefaultAsync(d => d.Id == changeId, ct);
+        var appeal = change is null ? null : await db.Appeals.FirstOrDefaultAsync(a => a.Id == change.AppealId, ct);
+        if (change is null || appeal is null)
+        {
+            return Error.NotFound("description-change.not-found");
+        }
+
+        if (DescriptionChangeRules.CheckDecision(change.Status, appeal.Status) is { } refused)
+        {
+            return RuleErrors.Of(refused);
+        }
+
+        var now = clock.GetUtcNow();
+        var notice = apply(db, change, appeal, now);
+        change.DecidedAt = now;
+        await RecordAsync(db, transaction, "description-change", change.Id, action, statement, moderator, now, appeal.BillNumber, new { appeal = appeal.Id }, ct);
+        await NotifyAsync(transaction, appeal.InitiatorUserId, notice, appeal.BillNumber, statement, null, ct);
+        await db.SaveChangesAsync(ct);
+        await transaction.CommitAsync(ct);
+        return Result.Ok();
     }
 
     public Task<Result<Unit>> PublishAppealAsync(Guid appealId, string? statement, ModeratorActor moderator, CancellationToken cancellationToken) =>
@@ -134,10 +227,23 @@ internal sealed class ModerationService(
             var notice = (string?)null;
             if (appeal.Status == AppealStatuses.Pending)
             {
+                // One published appeal per bill (design 8.1): under the bill's lock, nothing else on the bill is published;
+                // the unique partial index stands behind this.
+                await ParticipationLock.TakeBillAsync(db, appeal.BillNumber, cancellationToken);
+                var others = await db.Appeals.AsNoTracking()
+                    .Where(a => a.BillNumber == appeal.BillNumber && a.Id != appeal.Id)
+                    .Select(a => a.Status)
+                    .ToListAsync(cancellationToken);
+                if (ProposalRules.CheckPublish(appeal.Status, others) is { } refused)
+                {
+                    return RuleErrors.Of(refused);
+                }
+
                 appeal.Status = AppealStatuses.Open;
                 appeal.PublishedAt = now;
                 appeal.ReturnNote = null;
                 notice = ModerationNotices.AppealPublished;
+                await SupersedeOthersAsync(db, appeal, moderator, now, cancellationToken);
             }
 
             // An open appeal that was reported or flagged is kept as it is: its reports and date flags are closed.
@@ -170,6 +276,119 @@ internal sealed class ModerationService(
             return Task.FromResult<Result<string?>>(ModerationNotices.AppealHidden);
         }, cancellationToken);
 
+    public async Task<HiddenItems> HiddenAsync(CancellationToken cancellationToken)
+    {
+        await using var db = await contexts.CreateDbContextAsync(cancellationToken);
+        var appeals = await db.Appeals.AsNoTracking().Where(a => a.Status == AppealStatuses.Rejected).ToListAsync(cancellationToken);
+        var reasons = await db.Reasons.AsNoTracking().Where(r => r.Status == ReasonStatuses.Hidden).ToListAsync(cancellationToken);
+        var targets = appeals.Select(a => a.Id).Concat(reasons.Select(r => r.Id)).ToList();
+        var hides = (await db.ModerationActions.AsNoTracking()
+                .Where(m => targets.Contains(m.TargetId) && m.Action == "hide")
+                .ToListAsync(cancellationToken))
+            .GroupBy(m => m.TargetId)
+            .ToDictionary(g => g.Key, g => g.OrderByDescending(m => m.CreatedAt).First());
+
+        // Everything else on the same bills, for what "Atkurti" would do now (design 8.3).
+        var bills = appeals.Select(a => a.BillNumber).Distinct().ToList();
+        var onBills = await db.Appeals.AsNoTracking()
+            .Where(a => bills.Contains(a.BillNumber) && a.Status != AppealStatuses.Rejected)
+            .Select(a => new { a.Id, a.BillNumber, a.Status, a.InitiatorUserId })
+            .ToListAsync(cancellationToken);
+        var reasonAppeals = reasons.Select(r => r.AppealId).Distinct().ToList();
+        var appealOf = await db.Appeals.AsNoTracking().Where(a => reasonAppeals.Contains(a.Id)).ToDictionaryAsync(a => a.Id, cancellationToken);
+
+        var names = await reads.NamesAsync(
+            appeals.Select(a => a.InitiatorUserId).Concat(reasons.Select(r => r.AuthorUserId)).Concat(hides.Values.Select(m => m.ModeratorUserId)),
+            cancellationToken);
+        var billFacts = await reads.BillsAsync(bills.Concat(appealOf.Values.Select(a => a.BillNumber)).Distinct().ToList(), cancellationToken);
+        BillFacts Bill(string number) => billFacts.GetValueOrDefault(number) ?? new BillFacts(number, number);
+        ModerationAction? Hide(Guid id) => hides.GetValueOrDefault(id);
+
+        var hiddenAppeals = appeals
+            .Select(a =>
+            {
+                var restoresAs = ProposalRules.RestoredStatus(a.PublishedAt, a.ClosedAt);
+                var others = onBills.Where(o => o.BillNumber == a.BillNumber && o.Id != a.Id).Select(o => (o.Status, o.InitiatorUserId == a.InitiatorUserId));
+                var hide = Hide(a.Id);
+                return new HiddenAppeal(
+                    a.Id, Bill(a.BillNumber), names.GetValueOrDefault(a.InitiatorUserId), a.Description, hide?.CreatedAt,
+                    hide is null ? null : names.GetValueOrDefault(hide.ModeratorUserId), hide?.Statement, restoresAs,
+                    ProposalRules.CheckRestore(a.Status, restoresAs, others));
+            })
+            .OrderByDescending(a => a.HiddenAt ?? DateTimeOffset.MinValue)
+            .Take(QueueLimit * 2)
+            .ToList();
+        var hiddenReasons = reasons
+            .Select(r =>
+            {
+                var hide = Hide(r.Id);
+                var appeal = appealOf[r.AppealId];
+                return new HiddenReason(
+                    r.Id, Bill(appeal.BillNumber), r.Side, r.Text, names.GetValueOrDefault(r.AuthorUserId), hide?.CreatedAt,
+                    hide is null ? null : names.GetValueOrDefault(hide.ModeratorUserId), hide?.Statement, appeal.Status == AppealStatuses.Open);
+            })
+            .OrderByDescending(r => r.HiddenAt ?? DateTimeOffset.MinValue)
+            .Take(QueueLimit * 2)
+            .ToList();
+        return new HiddenItems(hiddenAppeals, hiddenReasons);
+    }
+
+    public Task<Result<Unit>> RestoreAppealAsync(Guid appealId, string statement, ModeratorActor moderator, CancellationToken cancellationToken)
+    {
+        if (string.IsNullOrWhiteSpace(statement))
+        {
+            return Task.FromResult<Result<Unit>>(Error.Validation("statement.required", "statement"));
+        }
+
+        return OnAppealAsync(appealId, moderator, "restore", statement, async (db, appeal, now) =>
+        {
+            // Under the bill's lock, and read again after it, so "one published appeal per bill" holds (design 8.1).
+            await ParticipationLock.TakeBillAsync(db, appeal.BillNumber, cancellationToken);
+            await db.Entry(appeal).ReloadAsync(cancellationToken);
+            var others = await db.Appeals.AsNoTracking()
+                .Where(a => a.BillNumber == appeal.BillNumber && a.Id != appeal.Id)
+                .Select(a => new { a.Status, a.InitiatorUserId })
+                .ToListAsync(cancellationToken);
+            var restored = ProposalRules.RestoredStatus(appeal.PublishedAt, appeal.ClosedAt);
+            if (ProposalRules.CheckRestore(appeal.Status, restored, others.Select(o => (o.Status, o.InitiatorUserId == appeal.InitiatorUserId))) is { } refused)
+            {
+                return RuleErrors.Of(refused);
+            }
+
+            // Sides, reasons and marks were never touched by the hide, so they come back as they were.
+            appeal.Status = restored;
+            if (ProposalRules.IsPublished(restored))
+            {
+                // Proposed by the parent session, not yet confirmed by the owner (design 8.3): restoring a published
+                // appeal while proposals wait counts as publishing, and they close.
+                await SupersedeOthersAsync(db, appeal, moderator, now, cancellationToken);
+            }
+
+            return ModerationNotices.AppealRestored;
+        }, cancellationToken);
+    }
+
+    public Task<Result<Unit>> RestoreReasonAsync(Guid reasonId, string statement, ModeratorActor moderator, CancellationToken cancellationToken)
+    {
+        if (string.IsNullOrWhiteSpace(statement))
+        {
+            return Task.FromResult<Result<Unit>>(Error.Validation("statement.required", "statement"));
+        }
+
+        return OnReasonAsync(reasonId, moderator, "restore", statement, (_, reason, now) =>
+        {
+            if (reason.Status != ReasonStatuses.Hidden)
+            {
+                return Task.FromResult<Result<string?>>(Error.Conflict("moderation.wrong-state"));
+            }
+
+            // Its "Man svarbu" marks were deleted by the hide and do not come back (design 8.3).
+            reason.Status = ReasonStatuses.Published;
+            reason.SeenAt = now;
+            return Task.FromResult<Result<string?>>(ModerationNotices.ReasonRestored);
+        }, cancellationToken);
+    }
+
     public async Task<Result<Unit>> SetThresholdAsync(Guid appealId, int threshold, string statement, ModeratorActor moderator, CancellationToken cancellationToken)
     {
         if (ThresholdRules.CheckRequested(threshold, await reads.MinimumAsync(cancellationToken)) is { } below)
@@ -190,6 +409,48 @@ internal sealed class ModerationService(
             appeal.ThresholdNote = statement;
             return Task.FromResult<Result<string?>>(ModerationNotices.ThresholdChanged);
         }, cancellationToken, details: new { threshold });
+    }
+
+    public Task<Result<Unit>> CorrectDescriptionAsync(Guid appealId, string description, string statement, ModeratorActor moderator, CancellationToken cancellationToken)
+    {
+        if (string.IsNullOrWhiteSpace(statement))
+        {
+            return Task.FromResult<Result<Unit>>(Error.Validation("statement.required", "statement"));
+        }
+
+        var text = AppealRules.NormaliseText(description);
+        return OnAppealAsync(appealId, moderator, "describe", statement, (db, appeal, now) =>
+        {
+            // Only a published, still open appeal (design 8.1): a proposal is returned to its author instead, and a closed
+            // appeal's page is the record beside the Seimas vote.
+            if (appeal.Status != AppealStatuses.Open || appeal.Description == text)
+            {
+                return Task.FromResult<Result<string?>>(Error.Conflict("moderation.wrong-state"));
+            }
+
+            // Like an approved change: the corrected text is shown at once and enters the public history. A proposed change
+            // still waiting stays in the queue, compared with the corrected text.
+            db.Revisions.Add(AppealsService.Revise("appeal", appeal.Id, "description", appeal.Description, text, moderator.UserId, now));
+            appeal.Description = text;
+            appeal.ScreeningFlags = [];
+            return Task.FromResult<Result<string?>>(ModerationNotices.DescriptionCorrected);
+        }, cancellationToken);
+    }
+
+    public async Task<Result<ModerationAppealState>> AppealStateAsync(Guid appealId, CancellationToken cancellationToken)
+    {
+        await using var db = await contexts.CreateDbContextAsync(cancellationToken);
+        var appeal = await db.Appeals.AsNoTracking().FirstOrDefaultAsync(a => a.Id == appealId, cancellationToken);
+        if (appeal is null || appeal.Status is AppealStatuses.Rejected or AppealStatuses.Superseded)
+        {
+            return Error.NotFound("appeal.not-found");
+        }
+
+        var planned = await agenda.ForBillsAsync([appeal.BillNumber], cancellationToken);
+        var hasOpenItems = await db.Reports.AsNoTracking().AnyAsync(r => r.TargetId == appeal.Id && r.Status == "open", cancellationToken)
+            || await db.Flags.AsNoTracking().AnyAsync(f => f.AppealId == appeal.Id && f.Status == "open", cancellationToken);
+        return new ModerationAppealState(
+            appeal.Id, appeal.Status, appeal.Description, appeal.Threshold, appeal.Sending == "held", planned.GetValueOrDefault(appeal.BillNumber), hasOpenItems);
     }
 
     public Task<Result<Unit>> PublishReasonAsync(Guid reasonId, string? statement, ModeratorActor moderator, CancellationToken cancellationToken) =>
@@ -293,6 +554,30 @@ internal sealed class ModerationService(
             // Timing is not the initiator's content: no notice to the author.
             return Task.FromResult<Result<string?>>((string?)null);
         }, ct);
+
+    /// <summary>
+    /// Publishing a proposal closes every other waiting or returned proposal on its bill (design 8.1), in the same
+    /// transaction: each is recorded as a moderation action and in the audit log, and its author is emailed that another
+    /// appeal on the bill was published, with the link. The email names nobody and carries no statement.
+    /// </summary>
+    private async Task SupersedeOthersAsync(AppealsDb db, Appeal published, ModeratorActor moderator, DateTimeOffset now, CancellationToken ct)
+    {
+        var others = (await db.Appeals
+                .Where(a => a.BillNumber == published.BillNumber && a.Id != published.Id)
+                .ToListAsync(ct))
+            .Where(a => ProposalRules.ClosedWhenAnotherIsPublished(a.Status))
+            .ToList();
+        var transaction = db.Database.CurrentTransaction!;
+        foreach (var other in others)
+        {
+            other.Status = AppealStatuses.Superseded;
+            other.ChangedAt = now;
+            await RecordAsync(db, transaction, "appeal", other.Id, "supersede", null, moderator, now, other.BillNumber, new { published = published.Id }, ct);
+            await NotifyAsync(transaction, other.InitiatorUserId, ModerationNotices.AppealSuperseded, other.BillNumber, null, null, ct, AppealPath(other.BillNumber));
+        }
+    }
+
+    private static string AppealPath(string billNumber) => $"/seimas/{Uri.EscapeDataString(billNumber)}/kreipimasis";
 
     private static Task<int> CloseFlagsAsync(AppealsDb db, Guid appealId, DateTimeOffset now, CancellationToken ct) =>
         db.Flags.Where(f => f.AppealId == appealId && f.Status == "open")
@@ -556,7 +841,8 @@ internal sealed class ModerationService(
             ct);
     }
 
-    private async Task NotifyAsync(IDbContextTransaction transaction, Guid authorId, string notice, string billNumber, string? statement, string? excerpt, CancellationToken ct)
+    private async Task NotifyAsync(
+        IDbContextTransaction transaction, Guid authorId, string notice, string billNumber, string? statement, string? excerpt, CancellationToken ct, string? path = null)
     {
         var author = await participants.FindAsync(authorId, ct);
         if (author is null)
@@ -567,7 +853,7 @@ internal sealed class ModerationService(
         var bill = await reads.BillAsync(billNumber, ct);
         DbTransaction dbTransaction = transaction.GetDbTransaction();
         await outbox.EnqueueAsync(
-            OutboxMessage.Create(MessageKinds.ModerationNoticeEmail, new ModerationNoticeEmail(author.Email, notice, bill.Number, bill.Title, statement, excerpt)),
+            OutboxMessage.Create(MessageKinds.ModerationNoticeEmail, new ModerationNoticeEmail(author.Email, notice, bill.Number, bill.Title, statement, excerpt, path)),
             dbTransaction,
             ct);
     }

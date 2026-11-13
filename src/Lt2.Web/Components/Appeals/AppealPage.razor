@@ -103,6 +103,10 @@
                         <text> · </text><a href="@link" rel="external">@T["What.ESeimas"]</a>
                     }
                 </p>
+                @if (a.Status == "open")
+                {
+                    <DescriptionChangeForm Number="@a.Bill.Number" Description="@a.Description" @rendermode="InteractiveWebAssembly" />
+                }
             </section>
 
             @if (_closingVote is { } vote)
@@ -149,11 +153,15 @@
             }
             else
             {
-                <InitiatorPanel Number="@a.Bill.Number" Status="@a.Status" Description="@a.Description" Threshold="a.Threshold.Value" @rendermode="InteractiveWebAssembly" />
+                <InitiatorPanel Number="@a.Bill.Number" Status="@a.Status" Description="@a.Description" Threshold="a.Threshold.Value" Part="description" @rendermode="InteractiveWebAssembly" />
             }
         </div>
 
         <aside class="stack">
+            @if (a.Status == "open")
+            {
+                <AppealModerationPanel AppealId="a.Id" @rendermode="InteractiveWebAssembly" />
+            }
             <section class="sheet stack stack--tight" aria-labelledby="h-reach" id="threshold">
                 <h3 id="h-reach">@T["Threshold.Heading"]</h3>
                 <div class="ruler" role="img" aria-label="@Fmt("Threshold.Aria", Formats.Number(a.Threshold.Participants), Formats.Number(a.Threshold.Value))">
@@ -165,9 +173,9 @@
                 {
                     <p class="small" id="threshold-note">@Fmt("Threshold.Note", thresholdNote)</p>
                 }
-                @if (a.Status == "open")
+                @if (a.Status is "open" or "pending" or "returned")
                 {
-                    <InitiatorPanel Number="@a.Bill.Number" Status="@a.Status" Threshold="a.Threshold.Value" @rendermode="InteractiveWebAssembly" />
+                    <InitiatorPanel Number="@a.Bill.Number" Status="@a.Status" Threshold="a.Threshold.Value" Part="threshold" @rendermode="InteractiveWebAssembly" />
                 }
             </section>
 

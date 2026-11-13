@@ -40,6 +40,9 @@ public sealed class PlannedDateTests(DatabaseFixture database) : ApiTest(databas
             // Under its threshold with the bill on the agenda: a moderator looks at it (design 8.3).
             var queued = (await moderator.Browser.GetJsonAsync<ModerationQueueResponse>(AppealRoutes.ModerationQueue)).Appeals.Single(a => a.Id == appeal.Id);
             queued.UnderThresholdOnAgenda.ShouldBeTrue();
+            queued.Participants.ShouldBe(1, "the note says how many take part: the initiator took a side");
+            queued.EffectiveThreshold.ShouldBe(500);
+            queued.Planned!.Date.ShouldBe(date);
 
             var (outsider, _) = await Factory.MemberAsync();
             using var _o = outsider;

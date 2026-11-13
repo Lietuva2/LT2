@@ -23,7 +23,9 @@
     <a href="seimo-narys.html">Seimo nariai</a>
     <a href="kreipimasis.html" aria-current="page">Kreipimaisi</a>
     <a href="suvestines.html">Suvestinės</a>
-    <a href="prisijungimas.html">Prisijungti</a>
+    <!-- Signed in (this page shows the writing box): the account and "Atsijungti", a form that works without JavaScript. -->
+    <a href="index.html">Mano paskyra</a>
+    <form class="top__signout" method="post" action="index.html"><button type="submit">Atsijungti</button></form>
     <button class="mark" type="button" data-theme-switch hidden></button>
   </nav>
 </header>
@@ -82,27 +84,27 @@
 
       <section class="stack" aria-labelledby="h-why">
         <h2 id="h-why">Kodėl</h2>
-        <div class="pair">
+        <div class="pair pair--reasons">
           <div class="stack">
             <h3><span class="choice choice--for">Už</span></h3>
             <div class="said">
               <p class="bubble bubble--people voice">Didžiausias pajamas gaunantys dabar moka mažesnį efektyvųjį tarifą nei samdomi darbuotojai.</p>
-              <div class="said__by"><b>Giedrė L.</b><button class="mark num" type="button" aria-pressed="true" id="r1">Man svarbu · 1&nbsp;920</button></div>
+              <div class="said__by"><b class="said__name">Giedrė L.</b><span class="said__actions"><button class="mark num" type="button" aria-pressed="true" id="r1">Man svarbu · 1&nbsp;920</button> <button class="linkish small" type="button">Pranešti</button></span></div>
             </div>
             <div class="said">
               <p class="bubble bubble--people voice">Gynyba finansuojama nekeliant PVM.</p>
-              <div class="said__by"><b>Mindaugas R.</b><button class="mark num" type="button" aria-pressed="false" id="r2">Man svarbu · 1&nbsp;310</button></div>
+              <div class="said__by"><b class="said__name">Mindaugas R.</b><span class="said__actions"><button class="mark num" type="button" aria-pressed="false" id="r2">Man svarbu · 1&nbsp;310</button> <button class="linkish small" type="button">Pranešti</button></span></div>
             </div>
           </div>
           <div class="stack">
             <h3><span class="choice choice--against">Prieš</span></h3>
             <div class="said">
               <p class="bubble bubble--people voice">Akcijų pardavimo įskaičiavimas paliečia vienkartinius įvykius, pvz., šeimos verslo pardavimą.</p>
-              <div class="said__by"><b>Rūta Mockutė</b><button class="mark num" type="button" aria-pressed="false" id="r3">Man svarbu · 1&nbsp;480</button></div>
+              <div class="said__by"><b class="said__name">Rūta Mockutė</b><span class="said__actions"><button class="mark num" type="button" aria-pressed="false" id="r3">Man svarbu · 1&nbsp;480</button> <button class="linkish small" type="button">Pranešti</button> <button class="linkish small" type="button">Atsiimti</button></span></div>
             </div>
             <div class="said">
               <p class="bubble bubble--people voice">Skatina įmonių steigėjus keisti mokestinę rezidavimo vietą.</p>
-              <div class="said__by"><b>Aistė Kazlaitė</b><button class="mark num" type="button" aria-pressed="false" id="r4">Man svarbu · 970</button></div>
+              <div class="said__by"><b class="said__name">Aistė Kazlaitė</b><span class="said__actions"><button class="mark num" type="button" aria-pressed="false" id="r4">Man svarbu · 970</button> <button class="linkish small" type="button">Pranešti</button></span></div>
             </div>
           </div>
         </div>
@@ -113,10 +115,14 @@
         <form class="sheet stack" aria-labelledby="write-title" id="write-reason">
           <h3 id="write-title">Jūsų argumentas</h3>
           <p class="small">Argumentą galite parašyti už arba prieš, nepriklausomai nuo to, ko prašote patys. Prie argumento nerodoma, kurią pusę pasirinkote jūs.</p>
+          <!-- A two-part switch over real radio inputs: the chosen half in its side's colour; neither chosen when the
+               person has no side of their own. -->
           <fieldset class="field stack stack--tight">
             <legend>Argumentas</legend>
-            <label class="check"><input type="radio" name="reason-side" id="reason-side-for" value="for" checked><span>už</span></label>
-            <label class="check"><input type="radio" name="reason-side" id="reason-side-against" value="against"><span>prieš</span></label>
+            <div class="switch">
+              <label class="switch__half switch__half--for"><input class="switch__input" type="radio" name="reason-side" id="reason-side-for" value="for" checked><span>Už</span></label>
+              <label class="switch__half switch__half--against"><input class="switch__input" type="radio" name="reason-side" id="reason-side-against" value="against"><span>Prieš</span></label>
+            </div>
           </fieldset>
           <div class="field">
             <label for="reason-text">Tekstas</label>

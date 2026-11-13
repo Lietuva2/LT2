@@ -19,7 +19,7 @@
         @foreach (var item in Items)
         {
             <article class="sheet stack stack--tight" id="restriction-@item.Id">
-                <p><b>@(item.DisplayName ?? L["Reasons.Anonymous"])</b> · <span class="num">@(item.Until is { } day ? Text("Restrict.UntilShown", day.ToString("yyyy-MM-dd", System.Globalization.CultureInfo.InvariantCulture)) : L["Restrict.UntilLifted"])</span></p>
+                <p><b>@(item.DisplayName ?? L["Reasons.Anonymous"])</b> · <span class="num">@(item.Until is { } day ? Text("Restrict.UntilShown", Dates.Day(day)) : L["Restrict.UntilLifted"])</span></p>
                 <p class="small">@item.Statement</p>
                 @if (_lifting == item.Id)
                 {

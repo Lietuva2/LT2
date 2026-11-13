@@ -1,0 +1,71 @@
+@using Lt2.Api.Contracts.Appeals
+@inherits InteractiveBase
+@inject IModerationApi ModerationApi
+
+@* "Atkurti" for a hidden appeal or reason (design 8.3): opens only its own field, a required statement sent to the
+   author, with one sentence on what it does. The confirmation stays after the action closes. *@
+<div class="stack stack--tight" id="restore-@Id">
+    @if (!_open)
+    {
+        @if (Done is null)
+        {
+            <div class="row">
+                <button type="button" class="btn btn--plain" id="restore-open-@Id" disabled="@(Locked || !Allowed)" @onclick="() => _open = true">@L["Hidden.Restore"]</button>
+            </div>
+        }
+    }
+    else
+    {
+        <form class="sheet stack stack--tight" @onsubmit="RestoreAsync" novalidate aria-labelledby="restore-title-@Id">
+            <h4 id="restore-title-@Id">@L["Hidden.Restore"]</h4>
+            <p class="small">@L[Sentence]</p>
+            <div class="field @(Errors.ContainsKey("statement") ? "field--error" : "")">
+                <label for="restore-statement-@Id">@L["Hidden.Statement"]</label>
+                <textarea class="textarea" id="restore-statement-@Id" maxlength="@AppealLimits.StatementMaxLength" @bind="_statement" disabled="@Locked"></textarea>
+                <FieldError Errors="Errors" Field="statement" />
+            </div>
+            <div class="row">
+                <button type="submit" class="btn" disabled="@Locked">@L["Hidden.Restore"]</button>
+                <button type="button" class="btn btn--plain" disabled="@Locked" @onclick="() => _open = false">@L["Cancel"]</button>
+            </div>
+        </form>
+    }
+    <Messages Message="@Message" Info="@(Info ?? Done)" />
+</div>
+
+@code {
+    private bool _open;
+    private string _statement = "";
+
+    [Parameter, EditorRequired] public Guid Id { get; set; }
+
+    /// <summary><c>appeal</c> or <c>reason</c>.</summary>
+    [Parameter, EditorRequired] public string Kind { get; set; } = "";
+
+    /// <summary>For an appeal, the status it comes back with (open, closed, pending).</summary>
+    [Parameter] public string? RestoresAs { get; set; }
+
+    /// <summary>False when the server would refuse now; the reason is shown beside the item.</summary>
+    [Parameter] public bool Allowed { get; set; } = true;
+
+    /// <summary>Set after a restore, so the confirmation stays visible while the list reloads.</summary>
+    private string? Done { get; set; }
+
+    private string Sentence => Kind == "reason" ? "Hidden.RestoreReason.Sentence" : "Hidden.RestoreAppeal.Sentence." + (RestoresAs ?? "open");
+
+    private Task RestoreAsync() => RunAsync(async () =>
+    {
+        var request = new StatementRequest { Statement = _statement };
+        var result = Kind == "reason"
+            ? await ModerationApi.RestoreReasonAsync(Id, request)
+            : await ModerationApi.RestoreAppealAsync(Id, request);
+        if (!result.IsSuccess)
+        {
+            Show(result.Problem, "statement");
+            return;
+        }
+
+        _open = false;
+        Done = L["Hidden.Restored"];
+    });
+}

@@ -1,0 +1,49 @@
+@using Lt2.Api.Contracts.Appeals
+@inherits InteractiveBase
+@inject IModerationApi Moderation
+@inject NavigationManager Navigation
+
+@* The queue's actions for this appeal on its own page, "Taisyti aprašymą" among them (design 8.3), for a moderator or an
+   administrator in a staff-passkey session only. The state comes from the moderators' own answer: for anyone else the
+   server refuses it while prerendering, nothing renders, and the browser does not ask again. After an action the page
+   reloads, so it shows the result. *@
+@if (State is { Status: "open" } state)
+{
+    <section class="sheet stack stack--tight" aria-labelledby="moderation-panel-title" id="moderation-panel">
+        <h3 id="moderation-panel-title">@L["ModPanel.Title"]</h3>
+        <p class="small">@L["ModPanel.Lead"] <a href="/moderavimas">@L["ModPanel.Queue"]</a></p>
+        <ModerationActions Id="state.Id" Kind="appeal" Status="@state.Status" Held="state.Held" Threshold="state.Threshold" Planned="state.Planned"
+                           Description="@state.Description" HasOpenItems="state.HasOpenItems" OnDone="Reload" OnRestricted="Restricted" />
+    </section>
+}
+
+@code {
+    [Parameter, EditorRequired] public Guid AppealId { get; set; }
+
+    [CascadingParameter] private Task<AuthenticationState>? AuthState { get; set; }
+
+    [PersistentState] public ModerationAppealResponse? State { get; set; }
+
+    /// <summary>Set once the server has asked, so the browser does not ask again for someone who is not a moderator.</summary>
+    [PersistentState] public bool? Asked { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        if (Asked == true)
+        {
+            return;
+        }
+
+        Asked = true;
+        if (AuthState is null || (await AuthState).User.Identity?.IsAuthenticated != true)
+        {
+            return;
+        }
+
+        State = (await Moderation.GetAppealAsync(AppealId)).Value;
+    }
+
+    private void Reload(string _) => Navigation.NavigateTo(Navigation.Uri, forceLoad: true);
+
+    private void Restricted() => Navigation.NavigateTo(Navigation.Uri, forceLoad: true);
+}

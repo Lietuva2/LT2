@@ -1,23 +1,116 @@
 @page "/"
+@using Lt2.Api.Contracts.Appeals
 @inject IStringLocalizer<PageText> T
+@inject IStringLocalizer<Lt2.Web.Components.Appeals.AppealText> A
+@inject IAppealsApi Appeals
+@inject Formats F
 
+@* The front page (design 8.7, option B chosen 2026-11-13), server-rendered and public: the welcome with the turning logo
+   and the sign-in steps shared with /prisijungti (a greeting instead once signed in), then one summary per published
+   appeal with the most participants: both sides with the count for accounts older than 30 days, the threshold and the
+   most endorsed reason on each side, linking to the appeal. The note that this is not a representative poll closes it. *@
 <PageTitle>Lietuva 2.0</PageTitle>
 
-<section class="stack" aria-labelledby="home-title">
-    <p class="label">@T["Home.Eyebrow"]</p>
-    <h1 id="home-title">Lietuva 2.0</h1>
-    <p class="lead">@T["Home.Kicker"]</p>
-    <p>@T["Home.Lede"]</p>
-    <p class="note">@T["Home.Trial"]</p>
-    <div class="row">
-        <AuthorizeView>
-            <Authorized>
-                <a class="btn" href="/sveiki">@T["Home.ToAccount"]</a>
-            </Authorized>
-            <NotAuthorized>
-                <a class="btn" href="/prisijungti">@T["Home.SignIn"]</a>
-                <a class="btn btn--plain" href="/prisijungti?registruotis=true">@T["Home.Register"]</a>
-            </NotAuthorized>
-        </AuthorizeView>
+<div class="welcome welcome--home">
+    <div class="stack">
+        <lt2-logo-spin period="14"></lt2-logo-spin>
+        <h1 id="home-title">Lietuva 2.0</h1>
+        <p class="lead">@T["Home.Kicker"]</p>
+        <p>@T["Home.Lede"]</p>
+        <p class="note">@T["Home.Trial"]</p>
     </div>
+    <AuthorizeView>
+        <Authorized>
+            <section class="sheet sheet--cut stack" aria-labelledby="h-home-welcome" id="home-signed-in">
+                <h2 id="h-home-welcome">@T["Home.Welcome"]</h2>
+                <p>@T["Home.WelcomeText"]</p>
+                <a class="btn btn--wide" href="/sveiki">@T["Home.ToAccount"]</a>
+            </section>
+        </Authorized>
+        <NotAuthorized>
+            <Lt2.Web.Client.Components.SignInFlow @rendermode="InteractiveWebAssembly" />
+        </NotAuthorized>
+    </AuthorizeView>
+</div>
+
+<section class="stack" aria-labelledby="h-home-appeals" id="home-appeals">
+    <div class="row">
+        <h2 id="h-home-appeals">@T["Home.Appeals"]</h2>
+        <a href="/kreipimaisi">@T["Home.AllAppeals"]</a>
+        <a href="/suvestines">@T["Home.Digests"]</a>
+    </div>
+    @if (_appeals.Count == 0)
+    {
+        <p id="home-no-appeals">@T["Home.AppealsNone"] <a href="/kreipimaisi/naujas">@A["List.Open"]</a></p>
+    }
+    else
+    {
+        <div class="cards">
+            @foreach (var a in _appeals)
+            {
+                var link = $"/seimas/{Uri.EscapeDataString(a.Bill.Number)}/kreipimasis";
+                <article class="sheet stack stack--tight" aria-labelledby="h-@a.Bill.Number" id="home-appeal-@a.Bill.Number">
+                    <div class="row">
+                        <a class="tag tag--ink num" href="/seimas/@Uri.EscapeDataString(a.Bill.Number)">@a.Bill.Number</a>
+                        @if (a.Planned is { } plan)
+                        {
+                            @if (plan.Stage is { } stage)
+                            {
+                                <span class="tag">@F.Stage(stage)</span>
+                            }
+                            <span class="tag">@Fmt(A, "Planned", F.T["Month." + plan.Date.Month], plan.Date.Day)</span>
+                        }
+                    </div>
+                    <h3 id="h-@a.Bill.Number"><a class="card__title" href="@link">@a.Bill.Title</a></h3>
+                    <div class="counts num">
+                        <p><b class="counts__for">@Formats.Number(a.Counts.For)</b> @T["Home.For"] <span class="small">@Fmt(T, "Home.Older", Formats.Number(a.Counts.ForOlderThan30Days))</span></p>
+                        <p><b class="counts__against">@Formats.Number(a.Counts.Against)</b> @T["Home.Against"] <span class="small">@Fmt(T, "Home.Older", Formats.Number(a.Counts.AgainstOlderThan30Days))</span></p>
+                    </div>
+                    <SplitBar For="a.Counts.For" Against="a.Counts.Against" Abstain="0" Small="true" />
+                    <p class="small num">
+                        <b>@Formats.Number(a.Threshold.Participants)</b> @Fmt(A, "Threshold.Progress", Formats.Number(a.Threshold.Value))
+                        · @(a.Threshold.Reached ? T["Home.Reached"] : Fmt(T, "Home.ToGo", Formats.Number(Math.Max(0, a.Threshold.Value - a.Threshold.Participants))))
+                    </p>
+                    @foreach (var side in Sides)
+                    {
+                        @if (a.Reasons.Where(r => r.Side == side).OrderByDescending(r => r.Endorsements).ThenBy(r => r.CreatedAt).FirstOrDefault() is { } top)
+                        {
+                            <div class="said">
+                                <p class="bubble bubble--people voice"><span class="choice choice--@side">@A["Digests.Side." + side]</span> @top.Text</p>
+                                <div class="said__by"><span class="small num">@Fmt(A, "Digests.Endorsed", Formats.Number(top.Endorsements))</span></div>
+                            </div>
+                        }
+                        else
+                        {
+                            <p class="small"><span class="choice choice--@side">@A["Digests.Side." + side]</span> @T["Home.NoReasons"]</p>
+                        }
+                    }
+                    <p><a href="@link">@T["Home.OpenAppeal"]</a></p>
+                </article>
+            }
+        </div>
+    }
+    <p class="note note--quiet" id="not-a-poll">@A["NotAPoll"]</p>
 </section>
+
+@code {
+    private const int Shown = 6;
+    private static readonly string[] Sides = ["for", "against"];
+    private List<AppealResponse> _appeals = [];
+
+    protected override async Task OnInitializedAsync()
+    {
+        // The list is by participants; each card needs its appeal's public reasons, so the few shown are read one by one.
+        var page = (await Appeals.GetAppealsAsync(null, null)).Value;
+        foreach (var item in page?.Items.Take(Shown) ?? [])
+        {
+            if ((await Appeals.GetAppealAsync(item.Bill.Number)).Value is { } appeal)
+            {
+                _appeals.Add(appeal);
+            }
+        }
+    }
+
+    private static string Fmt(IStringLocalizer localizer, string key, params object?[] values) =>
+        string.Format(System.Globalization.CultureInfo.InvariantCulture, localizer[key], values);
+}

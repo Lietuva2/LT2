@@ -99,6 +99,15 @@ public sealed class ModeratorThresholdRequestValidator : AbstractValidator<Moder
     }
 }
 
+public sealed class ModeratorDescriptionRequestValidator : AbstractValidator<ModeratorDescriptionRequest>
+{
+    public ModeratorDescriptionRequestValidator(IStringLocalizer<ValidationMessages> l)
+    {
+        RuleFor(x => x.Description).Description(l);
+        RuleFor(x => (string?)x.Statement).Statement(l, required: true).OverridePropertyName("statement");
+    }
+}
+
 public sealed class MergeReasonRequestValidator : AbstractValidator<MergeReasonRequest>
 {
     public MergeReasonRequestValidator(IStringLocalizer<ValidationMessages> l)

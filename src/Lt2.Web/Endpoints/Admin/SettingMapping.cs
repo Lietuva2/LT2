@@ -14,6 +14,7 @@ internal static class SettingMapping
     {
         Key = value.Key,
         Value = value.Value,
+        Default = Lt2.SharedKernel.SettingKeys.Find(value.Key)?.DefaultValue,
         ChangedBy = value.ChangedBy,
         ChangedAt = value.ChangedAt,
     };

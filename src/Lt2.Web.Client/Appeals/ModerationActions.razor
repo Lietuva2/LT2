@@ -2,83 +2,110 @@
 @inherits InteractiveBase
 @inject IModerationApi Moderation
 
-@* The actions on one queue item (design 8.3). The statement goes to the author; returning, hiding, merging and a new
-   threshold need one. *@
-<div class="stack stack--tight">
-    <div class="field @(Errors.ContainsKey("statement") ? "field--error" : "")">
-        <label for="statement-@Id">@L["Mod.Statement"]</label>
-        <textarea class="textarea" id="statement-@Id" maxlength="@AppealLimits.StatementMaxLength" @bind="_statement" @bind:event="oninput" disabled="@Locked"></textarea>
-        <FieldError Errors="Errors" Field="statement" />
-    </div>
-    @if (Kind == "appeal")
+@* The actions on one queue item (design 8.3, decided 2026-11-13). Each action is its own control; choosing one opens
+   only its own fields, with one sentence on what it does. Only the actions that apply to the item's state are offered,
+   one is open at a time, and the confirmation stays visible after the action closes. An action that finishes the item
+   (publish, keep, return, hide, merge) leaves the confirmation in place of the controls. *@
+<div class="stack stack--tight" id="actions-@Id">
+    @if (!_finished)
     {
-        <div class="field">
-            <label for="threshold-@Id">@L["Mod.Threshold"]</label>
-            <input class="input num" type="number" id="threshold-@Id" min="1" step="1" @bind="_threshold" disabled="@Locked" />
-        </div>
-    }
-    @if (Kind == "appeal" && Status == "open")
-    {
-        <div class="pair">
-            <div class="field">
-                <label for="planned-@Id">@L["Mod.PlannedDate"]</label>
-                <input class="input num" type="date" id="planned-@Id" @bind="_planned" disabled="@Locked" />
+        @if (_open is null)
+        {
+            <div class="actions" role="group" aria-label="@L["Mod.Actions"]">
+                @foreach (var action in Offered)
+                {
+                    <button type="button" class="@(action == Offered[0] ? "btn" : "btn btn--plain")" id="action-@action-@Id" disabled="@Locked" @onclick="() => Open(action)">@L["Mod.Action." + Label(action)]</button>
+                }
             </div>
-            <div class="field">
-                <label for="stage-@Id">@L["Mod.PlannedStage"]</label>
-                <select class="input" id="stage-@Id" @bind="_stage" disabled="@Locked">
-                    <option value="">@L["Mod.Stage.none"]</option>
-                    <option value="presentation">@L["Mod.Stage.presentation"]</option>
-                    <option value="consideration">@L["Mod.Stage.consideration"]</option>
-                    <option value="adoption">@L["Mod.Stage.adoption"]</option>
-                </select>
-            </div>
-        </div>
+        }
+        else if (_open == "restrict")
+        {
+            <RestrictAuthor Kind="@Kind" Id="Id" Embedded="true" OnCancel="Close" OnDone="RestrictedAsync" />
+        }
+        else
+        {
+            <form class="sheet stack stack--tight" @onsubmit="SubmitAsync" novalidate aria-labelledby="action-title-@Id" id="action-form-@Id">
+                <h4 id="action-title-@Id">@L["Mod.Action." + Label(_open)]</h4>
+                <p class="small" id="action-sentence-@Id">@L["Mod.Sentence." + Kind + "." + Label(_open)]</p>
+
+                @if (_open == "describe")
+                {
+                    <div class="field @(Errors.ContainsKey("description") ? "field--error" : "")">
+                        <label for="describe-@Id">@L["Open.Description"]</label>
+                        <textarea class="textarea" id="describe-@Id" rows="10" maxlength="@AppealLimits.DescriptionMaxLength" @bind="_description" @bind:event="oninput" disabled="@Locked"></textarea>
+                        <FieldError Errors="Errors" Field="description" />
+                    </div>
+                }
+                @if (_open == "threshold")
+                {
+                    <div class="field @(Errors.ContainsKey("threshold") ? "field--error" : "")">
+                        <label for="threshold-@Id">@L["Mod.Threshold"]</label>
+                        <input class="input num" type="number" inputmode="numeric" id="threshold-@Id" min="1" step="1" @bind="_threshold" disabled="@Locked" />
+                        <FieldError Errors="Errors" Field="threshold" />
+                    </div>
+                }
+                @if (_open == "planned")
+                {
+                    <div class="pair">
+                        <div class="field @(Errors.ContainsKey("date") ? "field--error" : "")">
+                            <label for="planned-@Id">@L["Mod.PlannedDate"]</label>
+                            <p class="field__hint" id="planned-hint-@Id">@Text("Date.Hint", Dates.Example)</p>
+                            <input class="input num" type="text" inputmode="numeric" autocomplete="off" pattern="@Dates.Pattern" placeholder="@Dates.Example"
+                                   id="planned-@Id" aria-describedby="planned-hint-@Id" @bind="_planned" disabled="@Locked" />
+                            <FieldError Errors="Errors" Field="date" />
+                        </div>
+                        <div class="field">
+                            <label for="stage-@Id">@L["Mod.PlannedStage"]</label>
+                            <select class="input" id="stage-@Id" @bind="_stage" disabled="@Locked">
+                                <option value="presentation">@L["Mod.Stage.presentation"]</option>
+                                <option value="consideration">@L["Mod.Stage.consideration"]</option>
+                                <option value="adoption">@L["Mod.Stage.adoption"]</option>
+                            </select>
+                        </div>
+                    </div>
+                }
+                @if (_open == "merge" && MergeCandidates is { Count: > 0 })
+                {
+                    <fieldset class="stack stack--tight @(Errors.ContainsKey("into") ? "field--error" : "")">
+                        <legend class="label">@L["Mod.MergeInto"]</legend>
+                        @foreach (var candidate in MergeCandidates)
+                        {
+                            <label class="check">
+                                <input type="radio" name="merge-@Id" value="@candidate.Id" checked="@(_mergeInto == candidate.Id)" @onchange="() => _mergeInto = candidate.Id" disabled="@Locked" />
+                                <span>@candidate.Text <span class="small num">(@AppealNumbers.Of(candidate.Endorsements))</span></span>
+                            </label>
+                        }
+                        <FieldError Errors="Errors" Field="into" />
+                    </fieldset>
+                }
+
+                <div class="field @(Errors.ContainsKey("statement") ? "field--error" : "")">
+                    <label for="statement-@Id">@L[StatementLabel(_open)]</label>
+                    <textarea class="textarea" id="statement-@Id" maxlength="@AppealLimits.StatementMaxLength" @bind="_statement" @bind:event="oninput" disabled="@Locked"></textarea>
+                    <FieldError Errors="Errors" Field="statement" />
+                </div>
+                <div class="row">
+                    <button type="submit" class="btn" id="action-submit-@Id" disabled="@Locked">@L["Mod.Action." + Label(_open)]</button>
+                    <button type="button" class="btn btn--plain" disabled="@Locked" @onclick="Close">@L["Cancel"]</button>
+                </div>
+            </form>
+        }
     }
-    @if (MergeCandidates is { Count: > 0 })
-    {
-        <fieldset class="stack stack--tight">
-            <legend class="label">@L["Mod.MergeInto"]</legend>
-            @foreach (var candidate in MergeCandidates)
-            {
-                <label class="check">
-                    <input type="radio" name="merge-@Id" checked="@(_mergeInto == candidate.Id)" @onchange="() => _mergeInto = candidate.Id" disabled="@Locked" />
-                    <span>@candidate.Text <span class="small num">(@AppealNumbers.Of(candidate.Endorsements))</span></span>
-                </label>
-            }
-        </fieldset>
-    }
-    <div class="row">
-        <button type="button" class="btn" disabled="@Locked" @onclick="PublishAsync">@L[Status == "pending" ? "Mod.Publish" : "Mod.Keep"]</button>
-        @if (Kind == "appeal" && Status == "pending")
-        {
-            <button type="button" class="btn btn--plain" disabled="@Locked" @onclick="ReturnAsync">@L["Mod.Return"]</button>
-        }
-        <button type="button" class="btn btn--plain" disabled="@Locked" @onclick="HideAsync">@L["Mod.Hide"]</button>
-        @if (Kind == "appeal")
-        {
-            <button type="button" class="btn btn--plain" disabled="@(Locked || _threshold is null)" @onclick="ThresholdAsync">@L["Mod.SetThreshold"]</button>
-        }
-        @if (Kind == "appeal" && Status == "open")
-        {
-            <button type="button" class="btn btn--plain" disabled="@(Locked || _planned is null)" @onclick="PlannedAsync">@L["Mod.SetPlanned"]</button>
-            <button type="button" class="btn btn--plain" disabled="@Locked" @onclick="HoldOrReleaseAsync">@L[Held ? "Mod.Release" : "Mod.Hold"]</button>
-            <button type="button" class="btn btn--plain" disabled="@(Locked || Held)" @onclick="UrgentAsync">@L["Mod.Urgent"]</button>
-        }
-        @if (MergeCandidates is { Count: > 0 })
-        {
-            <button type="button" class="btn btn--plain" disabled="@(Locked || _mergeInto is null)" @onclick="MergeAsync">@L["Mod.Merge"]</button>
-        }
-    </div>
-    <Messages Message="@Message" Info="@Info" />
+    @* Outside the form, so the confirmation stays after it closes. *@
+    <Messages Message="@Message" Info="@(Info ?? _done)" />
 </div>
 
 @code {
+    private string? _open;
+    private string? _done;
+    private bool _finished;
+    private bool? _held;
     private string _statement = "";
     private int? _threshold;
     private Guid? _mergeInto;
-    private DateOnly? _planned;
-    private string _stage = "";
+    private string? _planned;
+    private string _stage = "consideration";
+    private string _description = "";
 
     [Parameter, EditorRequired] public Guid Id { get; set; }
 
@@ -92,55 +119,135 @@
     /// <summary>For an appeal: its sending is held.</summary>
     [Parameter] public bool Held { get; set; }
 
+    /// <summary>For an appeal: its current threshold, the starting value of a change.</summary>
+    [Parameter] public int? Threshold { get; set; }
+
+    /// <summary>For an appeal: the planned date the page shows now, the starting value of a correction.</summary>
+    [Parameter] public PlannedDateResponse? Planned { get; set; }
+
+    /// <summary>For an open appeal: its shown description, the starting text of a correction (design 8.1). Without it no correction is offered.</summary>
+    [Parameter] public string? Description { get; set; }
+
+    /// <summary>The item has open reports or date flags, so "keep" means something.</summary>
+    [Parameter] public bool HasOpenItems { get; set; }
+
+    /// <summary>After an action: the item's queue may change (the page decides whether to reload).</summary>
     [Parameter] public EventCallback<string> OnDone { get; set; }
 
-    private Task PublishAsync() => ActAsync(
-        () => Kind == "appeal"
-            ? Moderation.PublishAppealAsync(Id, new ModerationRequest { Statement = Blank(_statement) })
-            : Moderation.PublishReasonAsync(Id, new ModerationRequest { Statement = Blank(_statement) }),
-        "Mod.Done.Publish");
+    /// <summary>After a restriction: the page reloads its list of restrictions.</summary>
+    [Parameter] public EventCallback OnRestricted { get; set; }
 
-    private Task ReturnAsync() => ActAsync(() => Moderation.ReturnAppealAsync(Id, new StatementRequest { Statement = _statement }), "Mod.Done.Return");
+    private bool IsHeld => _held ?? Held;
 
-    private Task HideAsync() => ActAsync(
-        () => Kind == "appeal"
-            ? Moderation.HideAppealAsync(Id, new StatementRequest { Statement = _statement })
-            : Moderation.HideReasonAsync(Id, new StatementRequest { Statement = _statement }),
-        "Mod.Done.Hide");
-
-    private Task ThresholdAsync() => ActAsync(
-        () => Moderation.SetThresholdAsync(Id, new ModeratorThresholdRequest { Threshold = _threshold ?? 0, Statement = _statement }),
-        "Mod.Done.Threshold");
-
-    private Task PlannedAsync() => ActAsync(
-        () => Moderation.SetPlannedAsync(Id, new ModeratorPlannedRequest { Date = _planned!.Value, Stage = _stage.Length == 0 ? null : _stage, Statement = _statement }),
-        "Mod.Done.Planned");
-
-    private Task HoldOrReleaseAsync() => ActAsync(
-        () => Held
-            ? Moderation.ReleaseAsync(Id, new StatementRequest { Statement = _statement })
-            : Moderation.HoldAsync(Id, new StatementRequest { Statement = _statement }),
-        Held ? "Mod.Done.Release" : "Mod.Done.Hold");
-
-    private Task UrgentAsync() => ActAsync(
-        () => Moderation.UrgentAsync(Id, new Lt2.Api.Contracts.Digests.UrgentDigestRequest { Statement = _statement }),
-        "Mod.Done.Urgent");
-
-    private Task MergeAsync() => ActAsync(
-        () => Moderation.MergeReasonAsync(Id, new MergeReasonRequest { IntoReasonId = _mergeInto!.Value, Statement = _statement }),
-        "Mod.Done.Merge");
-
-    private Task ActAsync(Func<Task<ApiResult>> action, string done) => RunAsync(async () =>
+    /// <summary>The actions that apply to the item's state, the main one first (design 8.3).</summary>
+    private IReadOnlyList<string> Offered => (Kind, Status) switch
     {
-        var result = await action();
-        if (!result.IsSuccess)
+        ("appeal", "pending") => ["publish", "return", "hide", "threshold", "restrict"],
+        ("appeal", "open") => [.. (HasOpenItems ? new[] { "keep" } : []), .. (Description is null ? Array.Empty<string>() : ["describe"]), "hide", "threshold", "planned", IsHeld ? "release" : "hold", .. (IsHeld ? Array.Empty<string>() : ["urgent"]), "restrict"],
+        ("reason", "pending") => ["publish", "hide", .. (MergeCandidates is { Count: > 0 } ? new[] { "merge" } : []), "restrict"],
+        ("reason", _) => ["keep", "hide", .. (MergeCandidates is { Count: > 0 } ? new[] { "merge" } : []), "restrict"],
+        _ => [],
+    };
+
+    private static string Label(string action) => action;
+
+    /// <summary>A note is optional when publishing or keeping, a statement required for everything else.</summary>
+    private static string StatementLabel(string action) => action switch
+    {
+        "publish" or "keep" => "Mod.Note.Optional",
+        "return" => "Mod.Note.Required",
+        _ => "Mod.Statement.Required",
+    };
+
+    /// <summary>Actions after which the item has left the queue for good.</summary>
+    private static bool Finishes(string action) => action is "publish" or "keep" or "return" or "hide" or "merge";
+
+    private void Open(string action)
+    {
+        _open = action;
+        _statement = "";
+        _done = null;
+        Message = null;
+        Info = null;
+        Errors = new Dictionary<string, string[]>();
+        _threshold = Threshold;
+        _planned = Planned is { } p ? Dates.Day(p.Date) : null;
+        _stage = Planned?.Stage ?? "consideration";
+        _mergeInto = null;
+        _description = Description ?? "";
+    }
+
+    private void Close() => _open = null;
+
+    private async Task RestrictedAsync()
+    {
+        _open = null;
+        _done = L["Restrict.Done"];
+        await OnRestricted.InvokeAsync();
+    }
+
+    private Task SubmitAsync() => RunAsync(async () =>
+    {
+        var action = _open!;
+        if (Check(action) is { } errors)
         {
-            Show(result.Problem, "statement");
+            Errors = errors;
             return;
         }
 
-        await OnDone.InvokeAsync(L[done]);
+        var result = await SendAsync(action);
+        if (!result.IsSuccess)
+        {
+            Show(result.Problem, "statement", "threshold", "date", "stage", "description");
+            return;
+        }
+
+        if (action is "hold" or "release")
+        {
+            _held = action == "hold";
+        }
+
+        _open = null;
+        _finished = Finishes(action);
+        _done = L["Mod.Done." + action];
+        await OnDone.InvokeAsync(_done);
     });
 
-    private static string? Blank(string text) => string.IsNullOrWhiteSpace(text) ? null : text;
+    /// <summary>What the form can tell before sending: a typed date in the form yyyy-MM-dd, a chosen merge target.</summary>
+    private Dictionary<string, string[]>? Check(string action)
+    {
+        if (action == "planned" && !Dates.TryRead(_planned, out _))
+        {
+            return new() { ["date"] = [Text("Date.Invalid", Dates.Example)] };
+        }
+
+        if (action == "merge" && _mergeInto is null)
+        {
+            return new() { ["into"] = [L["Mod.MergeChoose"]] };
+        }
+
+        return null;
+    }
+
+    private Task<ApiResult> SendAsync(string action)
+    {
+        var statement = new StatementRequest { Statement = _statement };
+        var note = new ModerationRequest { Statement = string.IsNullOrWhiteSpace(_statement) ? null : _statement };
+        return (Kind, action) switch
+        {
+            ("appeal", "publish" or "keep") => Moderation.PublishAppealAsync(Id, note),
+            ("appeal", "return") => Moderation.ReturnAppealAsync(Id, statement),
+            ("appeal", "hide") => Moderation.HideAppealAsync(Id, statement),
+            ("appeal", "describe") => Moderation.CorrectDescriptionAsync(Id, new ModeratorDescriptionRequest { Description = _description, Statement = _statement }),
+            ("appeal", "threshold") => Moderation.SetThresholdAsync(Id, new ModeratorThresholdRequest { Threshold = _threshold ?? 0, Statement = _statement }),
+            ("appeal", "planned") => Moderation.SetPlannedAsync(Id, new ModeratorPlannedRequest { Date = Dates.TryRead(_planned, out var day) ? day : default, Stage = _stage, Statement = _statement }),
+            ("appeal", "hold") => Moderation.HoldAsync(Id, statement),
+            ("appeal", "release") => Moderation.ReleaseAsync(Id, statement),
+            ("appeal", "urgent") => Moderation.UrgentAsync(Id, new Lt2.Api.Contracts.Digests.UrgentDigestRequest { Statement = _statement }),
+            ("reason", "publish" or "keep") => Moderation.PublishReasonAsync(Id, note),
+            ("reason", "hide") => Moderation.HideReasonAsync(Id, statement),
+            ("reason", "merge") => Moderation.MergeReasonAsync(Id, new MergeReasonRequest { IntoReasonId = _mergeInto!.Value, Statement = _statement }),
+            _ => throw new InvalidOperationException($"No action {action} for {Kind}."),
+        };
+    }
 }

@@ -94,7 +94,7 @@ public sealed partial class IslandsBeforeStartTests(AppealFlowTests.ModeratorFix
         using var playwright = await Playwright.CreateAsync();
         await using var browser = await playwright.Chromium.LaunchAsync(new() { Channel = SignUpTests.Channel, Headless = true });
         await using var context = await browser.NewContextAsync(new() { IgnoreHTTPSErrors = true, Locale = "lt-LT" });
-        foreach (var path in new[] { "/prisijungti", "/seimas/XVP-0412/kreipimasis" })
+        foreach (var path in new[] { "/", "/prisijungti", "/seimas/XVP-0412/kreipimasis" })
         {
             await NothingUsableBeforeStartAsync(context, path);
         }
@@ -117,7 +117,7 @@ public sealed partial class IslandsBeforeStartTests(AppealFlowTests.ModeratorFix
     {
         Assert.SkipWhen(string.IsNullOrEmpty(SignUpTests.BaseUrl), "LT2_E2E_BASE_URL is not set; start the stack and set it to run end-to-end tests.");
         var mod = await moderator.PageAsync();
-        foreach (var path in new[] { "/moderavimas", "/moderavimas/atsiliepimai", "/seimas/XVP-0412/kreipimasis" })
+        foreach (var path in new[] { "/moderavimas", "/moderavimas/atsiliepimai", "/moderavimas/paslepti", "/seimas/XVP-0412/kreipimasis" })
         {
             await NothingUsableBeforeStartAsync(mod.Context, path);
         }

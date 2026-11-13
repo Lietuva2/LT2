@@ -90,8 +90,16 @@ public static class AppealRoutes
     public const string Appeal = ApiRoutes.Prefix + "/bills/{number}/appeal";
     public const string Mine = Appeal + "/mine";
     public const string History = Appeal + "/history";
+    public const string Proposals = Appeal + "/proposals";
+    public const string DescriptionChange = Appeal + "/description-change";
+    public const string ApproveDescription = ApiRoutes.Prefix + "/moderation/description-changes/{id:guid}/approve";
+    public const string ReturnDescription = ApiRoutes.Prefix + "/moderation/description-changes/{id:guid}/return";
+
+    public static string DescriptionChangeOf(string number) => AppealOf(number) + "/description-change";
 
     public static string HistoryOf(string number) => AppealOf(number) + "/history";
+
+    public static string ProposalsOf(string number) => AppealOf(number) + "/proposals";
     public const string Threshold = Appeal + "/threshold";
     public const string Position = Appeal + "/position";
     public const string Reasons = Appeal + "/reasons";
@@ -117,7 +125,12 @@ public static class AppealRoutes
     public const string PublishAppeal = ApiRoutes.Prefix + "/moderation/appeals/{id:guid}/publish";
     public const string ReturnAppeal = ApiRoutes.Prefix + "/moderation/appeals/{id:guid}/return";
     public const string HideAppeal = ApiRoutes.Prefix + "/moderation/appeals/{id:guid}/hide";
+    public const string Hidden = ApiRoutes.Prefix + "/moderation/hidden";
+    public const string RestoreAppeal = ApiRoutes.Prefix + "/moderation/appeals/{id:guid}/restore";
+    public const string RestoreReason = ApiRoutes.Prefix + "/moderation/reasons/{id:guid}/restore";
     public const string AppealThreshold = ApiRoutes.Prefix + "/moderation/appeals/{id:guid}/threshold";
+    public const string ModerationAppeal = ApiRoutes.Prefix + "/moderation/appeals/{id:guid}";
+    public const string AppealDescription = ApiRoutes.Prefix + "/moderation/appeals/{id:guid}/description";
     public const string PublishReason = ApiRoutes.Prefix + "/moderation/reasons/{id:guid}/publish";
     public const string HideReason = ApiRoutes.Prefix + "/moderation/reasons/{id:guid}/hide";
     public const string MergeReason = ApiRoutes.Prefix + "/moderation/reasons/{id:guid}/merge";

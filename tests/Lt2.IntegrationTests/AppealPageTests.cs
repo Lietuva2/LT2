@@ -257,9 +257,12 @@ public sealed partial class AppealPageTests(DatabaseFixture database) : ApiTest(
         var (status, html) = await PageAsync(await ModeratorAsync(), "/moderavimas");
         status.ShouldBe(HttpStatusCode.OK);
         html.ShouldContain(AppealSteps.Description);
-        html.ShouldContain("Paaiškinimas autoriui");
-        html.ShouldContain(">Paskelbti</button>", customMessage: "a pending appeal is offered for publication");
-        html.ShouldContain(">Grąžinti taisyti</button>");
+        // Each action is its own control (design 8.3); the fields open only when one is chosen.
+        html.ShouldContain(">Skelbti</button>", customMessage: "a pending appeal is offered for publication");
+        html.ShouldContain(">Grąžinti autoriui</button>");
+        html.ShouldContain(">Keisti ribą</button>");
+        html.ShouldNotContain(">Pataisyti planuojamą datą</button>", customMessage: "the planned date applies only to a published appeal");
+        html.ShouldNotContain("id=\"statement-", customMessage: "no statement field before an action is chosen");
 
         var (member, _) = await Factory.MemberAsync();
         using var _m = member;

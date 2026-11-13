@@ -10,7 +10,7 @@
     <h2 id="h-why">@L["Reasons.Title"]</h2>
     @if (Appeal is { } appeal)
     {
-        <div class="pair">
+        <div class="pair pair--reasons">
             @foreach (var side in AppealLimits.Sides)
             {
                 var all = appeal.Reasons.Where(r => r.Side == side).ToList();
@@ -24,26 +24,30 @@
                     {
                         <div class="said" id="reason-@reason.Id">
                             <p class="bubble bubble--people voice">@reason.Text</p>
+                            @* The name, then the actions as one group that never wraps item by item (owner, 2026-11-13): when
+                               the two do not fit side by side, the name takes its own line above. *@
                             <div class="said__by">
-                                <b>@(reason.AuthorName ?? L["Reasons.Anonymous"])</b>
-                                @if (_signedIn)
-                                {
-                                    var endorsed = Mine?.Endorsed.Contains(reason.Id) == true;
-                                    <button class="mark num" type="button" aria-pressed="@(endorsed ? "true" : "false")"
-                                            disabled="@(Locked || !MayEndorse(reason, endorsed))" title="@EndorseHint(reason, endorsed)"
-                                            @onclick="() => ToggleEndorsementAsync(reason.Id, endorsed)">@Text("Reasons.Endorse", AppealNumbers.Of(reason.Endorsements))</button>
-                                    <button class="linkish small" type="button" disabled="@Locked" @onclick="() => _reporting = _reporting == reason.Id ? null : reason.Id">@L["Report.Open"]</button>
-                                    @if (IsMine(reason) && appeal.Status == "open")
+                                <b class="said__name">@(reason.AuthorName ?? L["Reasons.Anonymous"])</b>
+                                <span class="said__actions" id="actions-@reason.Id">
+                                    @if (_signedIn)
                                     {
-                                        <button class="linkish small" type="button" id="withdraw-@reason.Id" disabled="@Locked"
-                                                @onclick="() => _withdrawing = _withdrawing == reason.Id ? null : reason.Id">@L["Reasons.Withdraw"]</button>
+                                        var endorsed = Mine?.Endorsed.Contains(reason.Id) == true;
+                                        <button class="mark num" type="button" aria-pressed="@(endorsed ? "true" : "false")"
+                                                disabled="@(Locked || !MayEndorse(reason, endorsed))" title="@EndorseHint(reason, endorsed)"
+                                                @onclick="() => ToggleEndorsementAsync(reason.Id, endorsed)">@Text("Reasons.Endorse", AppealNumbers.Of(reason.Endorsements))</button>
+                                        <button class="linkish small" type="button" disabled="@Locked" @onclick="() => _reporting = _reporting == reason.Id ? null : reason.Id">@L["Report.Open"]</button>
+                                        @if (IsMine(reason) && appeal.Status == "open")
+                                        {
+                                            <button class="linkish small" type="button" id="withdraw-@reason.Id" disabled="@Locked"
+                                                    @onclick="() => _withdrawing = _withdrawing == reason.Id ? null : reason.Id">@L["Reasons.Withdraw"]</button>
+                                        }
                                     }
-                                }
-                                else
-                                {
-                                    <span class="mark num">@Text("Reasons.Endorse", AppealNumbers.Of(reason.Endorsements))</span>
-                                    <VisitorReport Contact="@Contact" />
-                                }
+                                    else
+                                    {
+                                        <span class="mark num">@Text("Reasons.Endorse", AppealNumbers.Of(reason.Endorsements))</span>
+                                        <VisitorReport Contact="@Contact" />
+                                    }
+                                </span>
                             </div>
                             @if (_reporting == reason.Id)
                             {
@@ -95,16 +99,20 @@
             <form class="sheet stack" @onsubmit="SubmitAsync" novalidate aria-labelledby="write-title" id="write-reason">
                 <h3 id="write-title">@L["Reasons.WriteTitle"]</h3>
                 <p class="small">@L["Reasons.EitherSide"]</p>
+                @* A two-part switch over real radio inputs (owner, 2026-11-13): the chosen half filled in its side's colour;
+                   neither when the person has no side and has not chosen yet. *@
                 <fieldset class="field stack stack--tight @(Errors.ContainsKey("side") ? "field--error" : "")">
                     <legend>@L["Reasons.SideLegend"]</legend>
-                    @foreach (var side in AppealLimits.Sides)
-                    {
-                        <label class="check">
-                            <input type="radio" name="reason-side" id="reason-side-@side" value="@side" checked="@(_side == side)"
-                                   @onchange="() => ChooseSide(side)" disabled="@Locked" />
-                            <span>@L["Reasons.SideOption." + side]</span>
-                        </label>
-                    }
+                    <div class="switch" id="reason-side">
+                        @foreach (var side in AppealLimits.Sides)
+                        {
+                            <label class="switch__half switch__half--@side">
+                                <input class="switch__input" type="radio" name="reason-side" id="reason-side-@side" value="@side" checked="@(_side == side)"
+                                       @onchange="() => ChooseSide(side)" disabled="@Locked" />
+                                <span>@L["Reasons.Switch." + side]</span>
+                            </label>
+                        }
+                    </div>
                     <FieldError Errors="Errors" Field="side" />
                 </fieldset>
                 <div class="field @(Errors.ContainsKey("text") ? "field--error" : "")">

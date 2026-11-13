@@ -1,0 +1,117 @@
+@page "/moderavimas/paslepti"
+@attribute [Authorize]
+@rendermode InteractiveWebAssembly
+@using Lt2.Api.Contracts.Appeals
+@using Lt2.Web.Client.Appeals
+@inherits InteractiveBase
+@inject IModerationApi ModerationApi
+
+@* Hidden appeals and reasons (design 8.3): what was hidden, by whom, when and why, and "Atkurti". Moderators only, in a
+   staff-passkey session; the server refuses anything else. Nothing here shows who took which side. *@
+<PageTitle>@L["Hidden.PageTitle"]</PageTitle>
+
+<div class="stack">
+    <ol class="crumbs">
+        <li><a href="/moderavimas">@L["Mod.Title"]</a></li>
+        <li>@L["Hidden.Title"]</li>
+    </ol>
+    <h1>@L["Hidden.Title"]</h1>
+    <NeedsScript />
+    <p class="lead">@L["Hidden.Lead"]</p>
+</div>
+
+@if (_refused)
+{
+    <p class="note" role="alert">@L["Mod.Refused"]</p>
+}
+else if (Items is null)
+{
+    <p class="small">@L["Loading"]</p>
+}
+else
+{
+    <section class="stack" aria-labelledby="h-hidden-appeals">
+        <h2 id="h-hidden-appeals">@L["Hidden.Appeals"]</h2>
+        @if (Items.Appeals.Count == 0)
+        {
+            <p class="small">@L["Hidden.None"]</p>
+        }
+        @foreach (var appeal in Items.Appeals)
+        {
+            <article class="sheet stack stack--tight" id="hidden-appeal-@appeal.Id" aria-labelledby="ha-@appeal.Id">
+                <div class="row">
+                    <span class="tag tag--ink num">@appeal.Bill.Number</span>
+                    <span class="tag">@L["Hidden.RestoresAs." + appeal.RestoresAs]</span>
+                </div>
+                <h3 id="ha-@appeal.Id">@appeal.Bill.Title</h3>
+                <p class="small">@Text("Hidden.Initiator", appeal.InitiatorName ?? L["Reasons.Anonymous"])</p>
+                <p class="small num">@Hidden(appeal.HiddenAt, appeal.HiddenBy)</p>
+                @if (appeal.Statement is { } statement)
+                {
+                    <p class="small">@Text("Hidden.Why", statement)</p>
+                }
+                <details>
+                    <summary class="linkish">@L["Open.Description"]</summary>
+                    <p class="voice">@appeal.Description</p>
+                </details>
+                @if (appeal.RefusedBecause is { } refused)
+                {
+                    <p class="note note--quiet" id="refused-@appeal.Id">@L["Hidden.Refused." + refused]</p>
+                }
+                <RestoreAction Id="appeal.Id" Kind="appeal" RestoresAs="@appeal.RestoresAs" Allowed="appeal.RefusedBecause is null" />
+            </article>
+        }
+    </section>
+
+    <section class="stack" aria-labelledby="h-hidden-reasons">
+        <h2 id="h-hidden-reasons">@L["Hidden.Reasons"]</h2>
+        @if (Items.Reasons.Count == 0)
+        {
+            <p class="small">@L["Hidden.None"]</p>
+        }
+        @foreach (var reason in Items.Reasons)
+        {
+            <article class="sheet stack stack--tight" id="hidden-reason-@reason.Id" aria-label="@L["Mod.Reason"]">
+                <div class="row">
+                    <span class="tag tag--ink num">@reason.Bill.Number</span>
+                    <span class="choice choice--@reason.Side">@L["Reasons." + reason.Side]</span>
+                </div>
+                <div class="said">
+                    <p class="bubble bubble--people voice">@reason.Text</p>
+                    <div class="said__by"><b>@(reason.AuthorName ?? L["Reasons.Anonymous"])</b></div>
+                </div>
+                <p class="small num">@Hidden(reason.HiddenAt, reason.HiddenBy)</p>
+                @if (reason.Statement is { } statement)
+                {
+                    <p class="small">@Text("Hidden.Why", statement)</p>
+                }
+                @if (!reason.Restorable)
+                {
+                    <p class="note note--quiet">@L["Hidden.ReasonNotOpen"]</p>
+                }
+                <RestoreAction Id="reason.Id" Kind="reason" Allowed="reason.Restorable" />
+            </article>
+        }
+    </section>
+}
+
+@code {
+    private bool _refused;
+
+    [PersistentState] public HiddenItemsResponse? Items { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        if (Items is null)
+        {
+            var items = await ModerationApi.GetHiddenAsync();
+            _refused = !items.IsSuccess;
+            Items = items.Value;
+        }
+    }
+
+    private string Hidden(DateTimeOffset? at, string? by) =>
+        at is { } when
+            ? Text("Hidden.When", Dates.DayTime(when), by ?? L["Hidden.Moderator"])
+            : L["Hidden.WhenUnknown"];
+}

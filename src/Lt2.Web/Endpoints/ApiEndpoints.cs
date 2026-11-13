@@ -68,6 +68,7 @@ internal static class ApiEndpoints
         GetAppealEndpoint.Map(api);
         GetMyAppealEndpoint.Map(api);
         GetAppealHistoryEndpoint.Map(api);
+        GetProposalsEndpoint.Map(api);
         OpenAppealEndpoint.Map(api);
         EditAppealEndpoint.Map(api);
         ChangeThresholdEndpoint.Map(api);
@@ -93,7 +94,11 @@ internal static class ApiEndpoints
         PublishAppealEndpoint.Map(api);
         ReturnAppealEndpoint.Map(api);
         HideAppealEndpoint.Map(api);
+        HiddenEndpoints.Map(api);
+        DescriptionChangeEndpoints.Map(api);
+        ProposeDescriptionEndpoint.Map(api);
         SetAppealThresholdEndpoint.Map(api);
+        ModerationAppealEndpoints.Map(api);
         PublishReasonEndpoint.Map(api);
         HideReasonEndpoint.Map(api);
         MergeReasonEndpoint.Map(api);

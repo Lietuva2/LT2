@@ -4,14 +4,22 @@
 @inject NavigationManager Navigation
 
 @* For the initiator only: a returned appeal is corrected and sent again; the threshold is changed until the appeal
-   first enters a summary or a moderator changed it (design 8.4). Renders nothing for anyone else. *@
+   first enters a summary or a moderator changed it (design 8.4). Renders nothing for anyone else. The page places the
+   two parts apart: the description under the text, the threshold in the threshold panel (Part). *@
 @if (Mine is { IsInitiator: true } mine)
 {
-    @if (Status is "pending" or "returned" && Restriction is { Restricted: true } restriction)
+    @if (Part != "threshold" && Status is "pending" or "returned" && Restriction is { Restricted: true } restriction)
     {
         <WritingRestricted Restriction="restriction" />
     }
-    else if (Status is "pending" or "returned")
+    else if (Part != "threshold" && Status == "pending" && !_editing)
+    {
+        @* A waiting proposal is edited on request; a returned one shows the form at once, since it must be corrected. *@
+        <div class="row">
+            <button type="button" class="btn btn--plain" id="edit-open" disabled="@Locked" @onclick="() => _editing = true">@L["Change.Open"]</button>
+        </div>
+    }
+    else if (Part != "threshold" && Status is "pending" or "returned")
     {
         <form class="sheet stack" @onsubmit="EditAsync" novalidate aria-labelledby="edit-title" id="edit-appeal">
             <h2 id="edit-title">@L[Status == "returned" ? "Edit.TitleReturned" : "Edit.Title"]</h2>
@@ -25,7 +33,7 @@
         </form>
     }
 
-    @if (mine.MayChangeThreshold)
+    @if (Part != "description" && mine.MayChangeThreshold)
     {
         <form class="stack stack--tight" @onsubmit="ChangeThresholdAsync" novalidate aria-labelledby="threshold-title" id="change-threshold">
             <h3 id="threshold-title">@L["Threshold.Change"]</h3>
@@ -44,6 +52,7 @@
 @code {
     private string _description = "";
     private int _threshold;
+    private bool _editing;
 
     [Parameter, EditorRequired] public string Number { get; set; } = "";
 
@@ -52,6 +61,9 @@
     [Parameter] public string Description { get; set; } = "";
 
     [Parameter] public int Threshold { get; set; }
+
+    /// <summary><c>description</c>, <c>threshold</c>, or empty for both.</summary>
+    [Parameter] public string Part { get; set; } = "";
 
     [CascadingParameter] private Task<AuthenticationState>? AuthState { get; set; }
 

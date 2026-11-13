@@ -34,7 +34,7 @@ public sealed partial class PasskeyTests
         await Assertions.Expect(page.Locator(".note[role=alert]")).ToHaveTextAsync("Prieigos rakto naudojimas atšauktas arba nepavyko.");
         await Assertions.Expect(page.GetByText("Sukurta prieigos raktų: 1")).ToBeVisibleAsync();
 
-        await page.GetByRole(AriaRole.Button, new() { Name = "Atsijungti" }).ClickAsync();
+        await page.Locator("main").GetByRole(AriaRole.Button, new() { Name = "Atsijungti" }).ClickAsync();
         await page.WaitForURLAsync(new Regex("/$"));
         await SignInWithPasskeyAsync(page);
 
@@ -99,7 +99,7 @@ public sealed partial class PasskeyTests
         var page = session.Page;
         var email = await RegisterAsync(page);
         await AddPasskeyAsync(page);
-        await page.GetByRole(AriaRole.Button, new() { Name = "Atsijungti" }).ClickAsync();
+        await page.Locator("main").GetByRole(AriaRole.Button, new() { Name = "Atsijungti" }).ClickAsync();
         await page.WaitForURLAsync(new Regex("/$"));
         await SignInWithPasskeyAsync(page);
         (await MeAsync(page)).GetProperty("activeStaffRoles").GetArrayLength().ShouldBe(0);
