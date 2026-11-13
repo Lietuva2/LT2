@@ -95,16 +95,20 @@
             <form class="sheet stack" @onsubmit="SubmitAsync" novalidate aria-labelledby="write-title" id="write-reason">
                 <h3 id="write-title">@L["Reasons.WriteTitle"]</h3>
                 <p class="small">@L["Reasons.EitherSide"]</p>
+                @* A two-part switch over real radio inputs (owner, 2026-11-13): the chosen half filled in its side's colour;
+                   neither when the person has no side and has not chosen yet. *@
                 <fieldset class="field stack stack--tight @(Errors.ContainsKey("side") ? "field--error" : "")">
                     <legend>@L["Reasons.SideLegend"]</legend>
-                    @foreach (var side in AppealLimits.Sides)
-                    {
-                        <label class="check">
-                            <input type="radio" name="reason-side" id="reason-side-@side" value="@side" checked="@(_side == side)"
-                                   @onchange="() => ChooseSide(side)" disabled="@Locked" />
-                            <span>@L["Reasons.SideOption." + side]</span>
-                        </label>
-                    }
+                    <div class="switch" id="reason-side">
+                        @foreach (var side in AppealLimits.Sides)
+                        {
+                            <label class="switch__half switch__half--@side">
+                                <input class="switch__input" type="radio" name="reason-side" id="reason-side-@side" value="@side" checked="@(_side == side)"
+                                       @onchange="() => ChooseSide(side)" disabled="@Locked" />
+                                <span>@L["Reasons.Switch." + side]</span>
+                            </label>
+                        }
+                    </div>
                     <FieldError Errors="Errors" Field="side" />
                 </fieldset>
                 <div class="field @(Errors.ContainsKey("text") ? "field--error" : "")">

@@ -115,10 +115,14 @@
         <form class="sheet stack" aria-labelledby="write-title" id="write-reason">
           <h3 id="write-title">Jūsų argumentas</h3>
           <p class="small">Argumentą galite parašyti už arba prieš, nepriklausomai nuo to, ko prašote patys. Prie argumento nerodoma, kurią pusę pasirinkote jūs.</p>
+          <!-- A two-part switch over real radio inputs: the chosen half in its side's colour; neither chosen when the
+               person has no side of their own. -->
           <fieldset class="field stack stack--tight">
             <legend>Argumentas</legend>
-            <label class="check"><input type="radio" name="reason-side" id="reason-side-for" value="for" checked><span>už</span></label>
-            <label class="check"><input type="radio" name="reason-side" id="reason-side-against" value="against"><span>prieš</span></label>
+            <div class="switch">
+              <label class="switch__half switch__half--for"><input class="switch__input" type="radio" name="reason-side" id="reason-side-for" value="for" checked><span>Už</span></label>
+              <label class="switch__half switch__half--against"><input class="switch__input" type="radio" name="reason-side" id="reason-side-against" value="against"><span>Prieš</span></label>
+            </div>
           </fieldset>
           <div class="field">
             <label for="reason-text">Tekstas</label>

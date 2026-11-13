@@ -64,10 +64,17 @@ else
             <form class="stack stack--tight" @onsubmit="RestrictAsync" novalidate>
                 <fieldset class="stack stack--tight">
                     <legend class="label">@L["Restrict.Length"]</legend>
-                    <label class="check">
-                        <input type="radio" name="restrict-length-@Id" id="restrict-dated-@Id" checked="@_dated" @onchange="() => _dated = true" disabled="@Locked" />
-                        <span>@L["Restrict.UntilDay"]</span>
-                    </label>
+                    @* Two exclusive choices read better as the two-part switch (owner, 2026-11-13). *@
+                    <div class="switch">
+                        <label class="switch__half switch__half--plain">
+                            <input class="switch__input" type="radio" name="restrict-length-@Id" id="restrict-dated-@Id" checked="@_dated" @onchange="() => _dated = true" disabled="@Locked" />
+                            <span>@L["Restrict.UntilDay"]</span>
+                        </label>
+                        <label class="switch__half switch__half--plain">
+                            <input class="switch__input" type="radio" name="restrict-length-@Id" id="restrict-lifted-@Id" checked="@(!_dated)" @onchange="() => _dated = false" disabled="@Locked" />
+                            <span>@L["Restrict.UntilLifted"]</span>
+                        </label>
+                    </div>
                     @if (_dated)
                     {
                         <div class="field @(Errors.ContainsKey("until") ? "field--error" : "")">
@@ -78,10 +85,6 @@ else
                             <FieldError Errors="Errors" Field="until" />
                         </div>
                     }
-                    <label class="check">
-                        <input type="radio" name="restrict-length-@Id" id="restrict-lifted-@Id" checked="@(!_dated)" @onchange="() => _dated = false" disabled="@Locked" />
-                        <span>@L["Restrict.UntilLifted"]</span>
-                    </label>
                 </fieldset>
                 <div class="field @(Errors.ContainsKey("statement") ? "field--error" : "")">
                     <label for="restrict-statement-@Id">@L["Restrict.Statement"]</label>

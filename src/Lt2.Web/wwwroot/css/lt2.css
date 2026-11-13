@@ -545,3 +545,21 @@ body { padding-block-end: 4.5rem; }
   font: inherit; font-weight: 600; color: var(--ink);
 }
 .top__signout button:hover { border-bottom-color: var(--slate); }
+
+/* A two-part switch over real radio inputs (owner, 2026-11-13), our own CSS: "Už | Prieš" in the writing box. Each input
+   lies over its half, invisible, so a click, a tap or the keyboard works as on any radio; the chosen half is filled in
+   its side's colour (--plain: the action colour), neither when nothing is chosen; the focus ring is the page's own. */
+.switch { display: inline-grid; grid-auto-flow: column; grid-auto-columns: minmax(6rem, 1fr); max-inline-size: 100%; border: 2px solid var(--ink); background: var(--sheet); }
+.switch__half {
+  position: relative; display: flex; align-items: center; justify-content: center; min-block-size: 2.75rem;
+  padding: 0 var(--sp-4); font-weight: 700; color: var(--ink); cursor: pointer; user-select: none; text-align: center;
+}
+.switch__half + .switch__half { border-inline-start: 2px solid var(--ink); }
+.switch__input { position: absolute; inset: 0; inline-size: 100%; block-size: 100%; margin: 0; opacity: 0; cursor: pointer; }
+.switch__half:hover { background: var(--slate-tint); }
+.switch__half--for:has(.switch__input:checked) { background: var(--for); color: var(--on-vote); }
+.switch__half--against:has(.switch__input:checked) { background: var(--against); color: var(--on-vote); }
+.switch__half--plain:has(.switch__input:checked) { background: var(--action); color: var(--action-ink); }
+.switch__half:has(.switch__input:focus-visible) { outline: 3px solid var(--focus); outline-offset: 2px; z-index: 1; }
+.switch__half:has(.switch__input:disabled) { opacity: 0.6; cursor: progress; }
+.switch__input:disabled { cursor: progress; }

@@ -32,8 +32,8 @@
 <data name="Reasons.WriteTitle" xml:space="preserve"><value>Jūsų argumentas</value></data>
 <data name="Reasons.EitherSide" xml:space="preserve"><value>Argumentą galite parašyti už arba prieš, nepriklausomai nuo to, ko prašote patys, ir net jei dar nenurodėte. Prie argumento nerodoma, ko prašote jūs.</value></data>
 <data name="Reasons.SideLegend" xml:space="preserve"><value>Argumentas</value></data>
-<data name="Reasons.SideOption.for" xml:space="preserve"><value>už – kodėl balsuoti už</value></data>
-<data name="Reasons.SideOption.against" xml:space="preserve"><value>prieš – kodėl balsuoti prieš</value></data>
+<data name="Reasons.Switch.for" xml:space="preserve"><value>Už</value></data>
+<data name="Reasons.Switch.against" xml:space="preserve"><value>Prieš</value></data>
 <data name="Reasons.ChooseSide" xml:space="preserve"><value>Pasirinkite, ar argumentas už, ar prieš.</value></data>
 <data name="Reasons.Label" xml:space="preserve"><value>Tekstas</value></data>
 <data name="Reasons.Hint" xml:space="preserve"><value>Paprastas tekstas, {0} iš {1} ženklų. Argumentas bus viešas su jūsų vardu ir pasirinkta puse.</value></data>
@@ -52,7 +52,7 @@
 <data name="Restrict.Length" xml:space="preserve"><value>Kiek laiko</value></data>
 <data name="Restrict.UntilDay" xml:space="preserve"><value>Iki nurodytos dienos</value></data>
 <data name="Restrict.LastDay" xml:space="preserve"><value>Paskutinė apribojimo diena</value></data>
-<data name="Restrict.UntilLifted" xml:space="preserve"><value>kol bus atšauktas</value></data>
+<data name="Restrict.UntilLifted" xml:space="preserve"><value>Kol bus atšauktas</value></data>
 <data name="Restrict.UntilShown" xml:space="preserve"><value>iki {0} imtinai</value></data>
 <data name="Restrict.Statement" xml:space="preserve"><value>Paaiškinimas naudotojui</value></data>
 <data name="Restrict.StatementHint" xml:space="preserve"><value>Naudotojas jį gaus el. paštu kartu su apribojimo trukme ir moderatorių adresu prieštaravimams.</value></data>
