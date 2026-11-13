@@ -102,7 +102,7 @@ public sealed class AppealFlowTests(AppealFlowTests.ModeratorFixture moderator) 
         await Assertions.Expect(b.Locator("#reason-side .switch__half")).ToHaveTextAsync(["Už", "Prieš"]);
         await Assertions.Expect(b.Locator("#reason-side-for")).Not.ToBeCheckedAsync();
         await Assertions.Expect(b.Locator("#reason-side-against")).Not.ToBeCheckedAsync();
-        (await HalfColourAsync(b, "for")).ShouldBe(await SheetColourAsync(b), "an unchosen half is not filled");
+        (await HalfColourAsync(b, "for")).ShouldBe("rgba(0, 0, 0, 0)", "an unchosen half is not filled: the switch's own background shows");
         await b.Locator("#reason-text").FillAsync("Papildomos pajamos reikalingos gynybai, o riba paliestų mažai mokėtojų.");
         await b.GetByRole(AriaRole.Button, new() { Name = "Paskelbti", Exact = true }).ClickAsync();
         await Assertions.Expect(b.GetByText("Pasirinkite, ar argumentas už, ar prieš.")).ToBeVisibleAsync();
@@ -202,8 +202,6 @@ public sealed class AppealFlowTests(AppealFlowTests.ModeratorFixture moderator) 
         page.EvaluateAsync<string>(
             "t => { const d = document.createElement('div'); d.style.backgroundColor = 'var(' + t + ')'; document.body.append(d); const c = getComputedStyle(d).backgroundColor; d.remove(); return c; }",
             token);
-
-    private static Task<string> SheetColourAsync(IPage page) => TokenColourAsync(page, "--sheet");
 
     [Fact]
     public async Task The_public_appeal_page_reads_without_javascript()
