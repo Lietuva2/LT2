@@ -261,7 +261,7 @@ ASP.NET Core Identity tables (users, roles, claims, tokens, passkeys), plus:
 | `position` | (`appeal_id`, `user_id`) primary key, `side` (for or against), created and changed times | One row per person per bill. Becomes the direct LT2 vote in stage 3. |
 | `daily_stat` | `appeal_id`, date, counts per side, counts for accounts older than 30 days, share of new accounts | For the trend chart and surge detection. **No per-person history of opinion changes is stored.** |
 | `reason` | `id`, `appeal_id`, `side`, `author_user_id`, text (up to 500 characters), status, `merged_into_id` | Status: pending, published, hidden, merged. `side` is the side the argument supports, chosen by its author, whatever the author's own position (8.2). |
-| `endorsement` | (`reason_id`, `user_id`) | "Man svarbu" on a reason; only on your own side, at most three per bill. |
+| `endorsement` | (`reason_id`, `user_id`) | "Man svarbu" on a reason; only on your own side; how many per bill is a setting, no limit by default (8.2). |
 | `response` | `appeal_id`, `person_id`, stance, text, published and edited times, `written_by_user_id` | One per MP per bill; edits keep history. |
 | `report` | target, reporter, ground, status | Notice-and-action under the Digital Services Act. |
 | `moderation_action` | moderator, target, action, statement of reasons, time | The statement is sent to the author. |
@@ -287,7 +287,9 @@ ASP.NET Core Identity tables (users, roles, claims, tokens, passkeys), plus:
 
 `config.setting`: key, `jsonb` value, who changed it and when. Holds every number an administrator may need to tune
 without a deploy: the summary rules in 8.4 (default and minimum threshold, the weekly and before-vote times, the ceiling
-per MP, and the share of change that counts as "changed notably", `Digest:NotableChange`), the surge thresholds in 6.6,
+per MP, and the share of change that counts as "changed notably", `Digest:NotableChange`), the reasons and "Man svarbu"
+marks a person may give per bill in 8.2 (`Appeals:ReasonsPerPerson`, `Appeals:EndorsementsPerPerson`, 0 = no limit,
+the default), the surge thresholds in 6.6,
 the code limits and the life of a pending account in 6.2, whether registration needs an invitation. Each
 change is written to `audit`, and the current values of the rules that affect what MPs receive are shown on the public
 methodology page.
@@ -546,7 +548,7 @@ GET /api/v1/meta/imports                    last successful import per source
    to it instead.
 2. **Review.** AI pre-screening flags insults, spam and personal data. A moderator checks the neutral description and the
    first reason and publishes the appeal. Until then it is visible only to its initiator.
-3. **Collect.** People join a side, endorse up to three reasons on their side, or add one for either side. A new reason
+3. **Collect.** People join a side, endorse reasons on their side, or add one for either side. A new reason
    similar to an existing one is offered the existing one first. Positions can be changed until the appeal closes.
 4. **Summarise.** Once the appeal reaches its threshold it enters the summaries sent to MPs (8.4).
 5. **Answer.** MPs publish responses; participants are told (8.6).
@@ -562,8 +564,20 @@ the bill, participants are told so they can reconsider (as agreed for votes in `
 - One appeal per bill; one position per person per bill; sides are "for" and "against". Abstaining is not a request to
   an MP, so it is not offered here; stage 3 adds it as a vote option.
 - Positions are private. Reasons are public with their author's display name; the initiator's name is public.
-- A reason belongs to one side and is at most 500 characters of plain text; a person may write at most two per bill in
-  total, so one for each side is possible.
+- A reason belongs to one side and is at most 500 characters of plain text.
+- **No limit per person by default [decided 2026-11-13].** How many reasons a person may write on a bill, and how many
+  "Man svarbu" marks they may give on a bill, are two runtime settings for all appeals (`Appeals:ReasonsPerPerson`,
+  `Appeals:EndorsementsPerPerson`); 0 means no limit, and both start at 0. Nobody knows yet whether people will write
+  reasons at all, and a limit mostly produces support questions; a limit is switched on when the need shows. While a
+  setting is 0 the pages show no counters and no "you have N left". A limit switched on later applies to new reasons and
+  marks only: nothing already written or marked is removed, and a person over the limit cannot add until they are under
+  it. Only reasons that are shown or waiting for a moderator count; hidden, merged and withdrawn ones do not. The
+  hourly per-account rate limits (6.4) stay as they are.
+- **An author can withdraw their own reason [decided 2026-11-13]** while the appeal is open: it is deleted with its
+  "Man svarbu" marks and disappears from the page; open reports on it are closed; a summary already made keeps its
+  frozen text, which carries no name. The audit log records the withdrawal without the text or the side. On a closed
+  appeal a reason cannot be withdrawn (the page there is the record beside the Seimas vote); a moderator can still hide
+  it, and deleting the account removes it. **[The closed-appeal case is proposed in M2a, to be confirmed by the owner.]**
 - **A reason may be written for either side, whatever the author's own position [decided 2026-11-13].** The writing
   box asks for the side: it preselects the author's own side when they have taken one (read only from their own,
   never-cached answer), and preselects nothing when they have not, so they must choose. A person who has not taken a
@@ -573,7 +587,7 @@ the bill, participants are told so they can reconsider (as agreed for votes in `
 - Writing a reason does not need the positions consent (6.5), because no position is stored; the writing box says
   plainly that the reason is public with the author's name and the side chosen. **[Proposed in M2a, to be confirmed by
   the owner.]**
-- "Man svarbu" stays on one's own side only, at most three per bill; a person without a side cannot mark. Changing or
+- "Man svarbu" stays on one's own side only, within the setting above; a person without a side cannot mark. Changing or
   clearing a side drops the marks, never the person's reasons; withdrawing the consent deletes positions and marks,
   not reasons.
 - Pages, summaries and emails head reasons as "argumentai už / prieš" (reasons to vote for or against), never as the
@@ -714,8 +728,7 @@ By email, each kind switchable in settings:
 
 Every summary has a public page (`/suvestines/2026-11-16`) with the frozen numbers and reasons, without MP-specific
 figures and without the reasons' authors (8.4). Participants can see that their appeal reached the Seimas, journalists
-can cite it, and MPs know that the
-numbers in their inbox are the numbers everyone sees. The pages carry the same "not a representative poll" notice.
+can cite it, and MPs know that the numbers in their inbox are the numbers everyone sees. The pages carry the same "not a representative poll" notice.
 
 ### 8.8 API
 
@@ -726,7 +739,8 @@ POST   /api/v1/bills/{number}/appeal                     open: side, first reaso
 PUT    /api/v1/bills/{number}/appeal/threshold           initiator, until the first summary or a moderator's change
 PUT    /api/v1/bills/{number}/appeal/position            take or change a side
 DELETE /api/v1/bills/{number}/appeal/position
-POST   /api/v1/bills/{number}/appeal/reasons
+POST   /api/v1/bills/{number}/appeal/reasons             side (either), text
+DELETE /api/v1/reasons/{id}                              the author withdraws their own reason, while the appeal is open
 PUT    /api/v1/reasons/{id}/endorsement    DELETE /api/v1/reasons/{id}/endorsement
 POST   /api/v1/bills/{number}/appeal/flags               "date is wrong", "voted sooner"
 POST   /api/v1/reports
@@ -864,6 +878,10 @@ Splitting M2 means the risky step (emailing every MP) happens only after the who
 - A reason may be written for either side, whatever the author's own; the author's side is only the preselected
   choice, and a person without a side may write too (8.2). Still to be confirmed: that writing a reason needs no
   positions consent (8.2).
+- Reasons and "Man svarbu" marks per person per bill are runtime settings, both 0 (no limit) at the start; a limit
+  switched on later counts only shown or waiting reasons and removes nothing (8.2, 5.6).
+- An author can withdraw their own reason while the appeal is open (8.2, 8.8). Still to be confirmed: that a reason
+  cannot be withdrawn once the appeal is closed (8.2).
 
 **Decisions needed before the stage that uses them**
 
@@ -887,7 +905,7 @@ Splitting M2 means the risky step (emailing every MP) happens only after the who
 | Open-data service outages (seen today) | Raw responses stored, retries, pages show the last import time, imports resume. |
 | Someone who knows a person's address uses up its daily codes, so the person cannot sign in by code, or cannot finish registering | Accepted for the closed trial: addresses are not public, nothing leaks, and passkeys are not affected. Known devices (6.2) are built before registration opens. Keeping a new address from registering stays possible after that. |
 | A leak of positions | Minimised data, no position in logs or admin screens, encrypted backups, impact assessment, penetration test, incident runbook. |
-| Moderation load for a volunteer team | One appeal per bill, short plain-text reasons, no comments, AI pre-screening, limits per person. |
+| Moderation load for a volunteer team | One appeal per bill, short plain-text reasons, no comments, AI pre-screening, hourly rate limits per account, and limits per person per bill ready to switch on (off at the start, 8.2). |
 | Running costs outlive enthusiasm (the old platform's fate) | One VPS, no paid infrastructure beyond email and backup storage. |
 | Stage 2 ships before stage 3 and the public pages say otherwise | Update the pages when this order is agreed (below). |
 
