@@ -16,10 +16,8 @@
     <h1>@L["Mod.Title"]</h1>
     <NeedsScript />
     <p class="lead">@L["Mod.Lead"]</p>
-    <p><a href="/moderavimas/paslepti" id="hidden-link">@L["Mod.HiddenLink"]</a></p>
+    <p class="row"><a href="/moderavimas" id="queue-refresh">@L["Mod.Refresh"]</a> <a href="/moderavimas/paslepti" id="hidden-link">@L["Mod.HiddenLink"]</a></p>
 </div>
-
-<Messages Message="@Message" Info="@Info" />
 
 @if (_refused)
 {
@@ -86,8 +84,8 @@ else
                 <p class="voice">@appeal.Description</p>
 
                 <Reports Items="appeal.Reports" />
-                <ModerationActions Id="appeal.Id" Kind="appeal" Status="@appeal.Status" Held="appeal.Held" OnDone="ReloadAsync" />
-                <RestrictAuthor Kind="appeal" Id="appeal.Id" OnDone="RestrictedAsync" />
+                <ModerationActions Id="appeal.Id" Kind="appeal" Status="@appeal.Status" Held="appeal.Held" Threshold="appeal.Threshold" Planned="appeal.Planned"
+                                   HasOpenItems="@(appeal.Reports.Count > 0 || appeal.DateFlags is { Count: > 0 })" OnRestricted="RestrictedAsync" />
             </article>
         }
     </section>
@@ -147,8 +145,7 @@ else
                     <div class="said__by"><b>@(reason.AuthorName ?? L["Reasons.Anonymous"])</b></div>
                 </div>
                 <Reports Items="reason.Reports" />
-                <ModerationActions Id="reason.Id" Kind="reason" Status="@reason.Status" MergeCandidates="reason.MergeCandidates" OnDone="ReloadAsync" />
-                <RestrictAuthor Kind="reason" Id="reason.Id" OnDone="RestrictedAsync" />
+                <ModerationActions Id="reason.Id" Kind="reason" Status="@reason.Status" MergeCandidates="reason.MergeCandidates" OnRestricted="RestrictedAsync" />
             </article>
         }
     </section>
@@ -184,10 +181,4 @@ else
             await _restrictions.ReloadAsync();
         }
     }
-
-    private Task ReloadAsync(string info) => RunAsync(async () =>
-    {
-        await LoadAsync();
-        Info = info;
-    });
 }

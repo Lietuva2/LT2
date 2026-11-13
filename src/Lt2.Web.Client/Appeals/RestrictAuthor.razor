@@ -8,7 +8,10 @@
    reached through the item. *@
 @if (!_open)
 {
-    <button class="linkish small" type="button" id="restrict-open-@Id" disabled="@Locked" @onclick="OpenAsync">@L[Kind == "reason" ? "Restrict.OpenAuthor" : "Restrict.OpenInitiator"]</button>
+    @if (!Embedded)
+    {
+        <button class="linkish small" type="button" id="restrict-open-@Id" disabled="@Locked" @onclick="OpenAsync">@L[Kind == "reason" ? "Restrict.OpenAuthor" : "Restrict.OpenInitiator"]</button>
+    }
 }
 else
 {
@@ -69,7 +72,9 @@ else
                     {
                         <div class="field @(Errors.ContainsKey("until") ? "field--error" : "")">
                             <label for="restrict-until-@Id">@L["Restrict.LastDay"]</label>
-                            <input class="input" type="date" id="restrict-until-@Id" @bind="_until" disabled="@Locked" />
+                            <p class="field__hint" id="restrict-until-hint-@Id">@Text("Date.Hint", Dates.Example)</p>
+                            <input class="input num" type="text" inputmode="numeric" autocomplete="off" pattern="@Dates.Pattern" placeholder="@Dates.Example"
+                                   id="restrict-until-@Id" aria-describedby="restrict-until-hint-@Id" @bind="_until" disabled="@Locked" />
                             <FieldError Errors="Errors" Field="until" />
                         </div>
                     }
@@ -86,7 +91,7 @@ else
                 </div>
                 <div class="row">
                     <button type="submit" class="btn" id="restrict-submit-@Id" disabled="@Locked">@L["Restrict.Submit"]</button>
-                    <button type="button" class="btn btn--plain" disabled="@Locked" @onclick="() => _open = false">@L["Cancel"]</button>
+                    <button type="button" class="btn btn--plain" disabled="@Locked" @onclick="CancelAsync">@L["Cancel"]</button>
                 </div>
             </form>
         }
@@ -103,7 +108,7 @@ else
 @code {
     private bool _open;
     private bool _dated = true;
-    private DateOnly? _until;
+    private string? _until;
     private string _statement = "";
     private AuthorViewResponse? _view;
 
@@ -114,8 +119,30 @@ else
 
     [Parameter] public EventCallback OnDone { get; set; }
 
+    /// <summary>
+    /// One action among the item's others (design 8.3): opened by the action list rather than its own link, so it loads at
+    /// once; "Atšaukti" hands control back through <see cref="OnCancel"/>.
+    /// </summary>
+    [Parameter] public bool Embedded { get; set; }
+
+    [Parameter] public EventCallback OnCancel { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        if (Embedded && RendererInfo.IsInteractive)
+        {
+            await OpenAsync();
+        }
+    }
+
+    private async Task CancelAsync()
+    {
+        _open = false;
+        await OnCancel.InvokeAsync();
+    }
+
     private string Until(DateOnly? until) => until is { } day
-        ? Text("Restrict.UntilShown", day.ToString("yyyy-MM-dd", System.Globalization.CultureInfo.InvariantCulture))
+        ? Text("Restrict.UntilShown", Dates.Day(day))
         : L["Restrict.UntilLifted"];
 
     private Task OpenAsync() => RunAsync(async () =>
@@ -129,18 +156,30 @@ else
         }
 
         _view = view.Value;
-        _until ??= DateOnly.FromDateTime(DateTime.Today).AddDays(7);
+        _until ??= Dates.Day(DateOnly.FromDateTime(DateTime.Today).AddDays(7));
     });
 
     private Task RestrictAsync() => RunAsync(async () =>
     {
-        var request = new RestrictionRequest { Until = _dated ? _until : null, Statement = _statement };
+        DateOnly? until = null;
+        if (_dated)
+        {
+            if (!Dates.TryRead(_until, out var day))
+            {
+                Errors = new Dictionary<string, string[]> { ["until"] = [Text("Date.Invalid", Dates.Example)] };
+                return;
+            }
+
+            until = day;
+        }
+
+        var request = new RestrictionRequest { Until = until, Statement = _statement };
         var result = Kind == "reason"
             ? await ModerationApi.RestrictAuthorOfReasonAsync(Id, request)
             : await ModerationApi.RestrictInitiatorOfAppealAsync(Id, request);
         if (!result.IsSuccess)
         {
-            Show(result.Problem, "statement");
+            Show(result.Problem, "statement", "until");
             return;
         }
 

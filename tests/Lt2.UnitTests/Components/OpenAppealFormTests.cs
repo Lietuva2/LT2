@@ -131,6 +131,8 @@ public sealed class OpenAppealFormTests : BunitContext
 
         public void On<T>(string method, ApiResult<T> answer) => _answers[method] = Task.FromResult(answer);
 
+        public void On(string method, ApiResult answer) => _answers[method] = Task.FromResult(answer);
+
         protected override object? Invoke(MethodInfo? targetMethod, object?[]? args) =>
             _answers.TryGetValue(targetMethod!.Name, out var answer)
                 ? answer

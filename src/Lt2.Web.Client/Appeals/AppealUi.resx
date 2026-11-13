@@ -190,17 +190,51 @@
 <data name="Mod.Statement" xml:space="preserve"><value>Paaiškinimas autoriui</value></data>
 <data name="Mod.Threshold" xml:space="preserve"><value>Nauja riba (keičiant ribą)</value></data>
 <data name="Mod.MergeInto" xml:space="preserve"><value>Sujungti su</value></data>
-<data name="Mod.Publish" xml:space="preserve"><value>Paskelbti</value></data>
+<data name="Mod.Publish" xml:space="preserve"><value>Skelbti</value></data>
 <data name="Mod.Keep" xml:space="preserve"><value>Palikti</value></data>
-<data name="Mod.Return" xml:space="preserve"><value>Grąžinti taisyti</value></data>
+<data name="Mod.Return" xml:space="preserve"><value>Grąžinti autoriui</value></data>
+<data name="Mod.Action.publish" xml:space="preserve"><value>Skelbti</value></data>
+<data name="Mod.Action.keep" xml:space="preserve"><value>Palikti</value></data>
+<data name="Mod.Action.return" xml:space="preserve"><value>Grąžinti autoriui</value></data>
+<data name="Mod.Action.hide" xml:space="preserve"><value>Paslėpti</value></data>
+<data name="Mod.Action.threshold" xml:space="preserve"><value>Keisti ribą</value></data>
+<data name="Mod.Action.planned" xml:space="preserve"><value>Pataisyti planuojamą datą</value></data>
+<data name="Mod.Action.hold" xml:space="preserve"><value>Sulaikyti siuntimą</value></data>
+<data name="Mod.Action.release" xml:space="preserve"><value>Atnaujinti siuntimą</value></data>
+<data name="Mod.Action.urgent" xml:space="preserve"><value>Patvirtinti skubią suvestinę</value></data>
+<data name="Mod.Action.merge" xml:space="preserve"><value>Sujungti</value></data>
+<data name="Mod.Action.restrict" xml:space="preserve"><value>Riboti autoriaus rašymą</value></data>
+<data name="Mod.Sentence.appeal.publish" xml:space="preserve"><value>Kreipimasis bus paskelbtas: jį matys visi, o nariai galės nurodyti, ko prašo, ir rašyti argumentus. Kiti šio projekto pasiūlymai bus uždaryti. Pastabą, jei ją parašysite, gaus iniciatorius.</value></data>
+<data name="Mod.Sentence.appeal.keep" xml:space="preserve"><value>Kreipimasis liks toks, koks yra; pranešimai apie jį ir pastabos apie datą bus uždaryti.</value></data>
+<data name="Mod.Sentence.appeal.return" xml:space="preserve"><value>Pasiūlymas grąžinamas iniciatoriui pataisyti; kol jis nepataisys, niekas kitas jo nemato. Iš pastabos iniciatorius sužinos, ką taisyti.</value></data>
+<data name="Mod.Sentence.appeal.hide" xml:space="preserve"><value>Kreipimasis bus paslėptas ir niekam nerodomas, o projektui bus galima pasiūlyti naują. Pozicijos lieka, kreipimąsi galima atkurti. Paaiškinimą gaus iniciatorius.</value></data>
+<data name="Mod.Sentence.appeal.threshold" xml:space="preserve"><value>Nauja riba pakeis iniciatoriaus nustatytą, ir iniciatorius jos nebegalės keisti. Paaiškinimas rodomas kreipimosi puslapyje ir siunčiamas iniciatoriui.</value></data>
+<data name="Mod.Sentence.appeal.planned" xml:space="preserve"><value>Data ir stadija, kada Seimas planuoja svarstyti projektą. Puslapyje rodoma „Planuojama …“, o pastabos apie datą uždaromos.</value></data>
+<data name="Mod.Sentence.appeal.hold" xml:space="preserve"><value>Kol siuntimas sulaikytas, kreipimasis nepatenka į jokią suvestinę Seimo nariams.</value></data>
+<data name="Mod.Sentence.appeal.release" xml:space="preserve"><value>Kreipimasis vėl pateks į suvestines Seimo nariams pagal įprastas taisykles.</value></data>
+<data name="Mod.Sentence.appeal.urgent" xml:space="preserve"><value>Viena papildoma suvestinė šiam projektui ne pagal tvarkaraštį: kai balsavimas vyks anksčiau nei kita įprasta suvestinė. Ne dažniau kaip kartą per savaitę vienam projektui.</value></data>
+<data name="Mod.Sentence.reason.publish" xml:space="preserve"><value>Argumentas bus rodomas kreipimosi puslapyje ir galės patekti į suvestines. Pastabą, jei ją parašysite, gaus autorius.</value></data>
+<data name="Mod.Sentence.reason.keep" xml:space="preserve"><value>Argumentas liks rodomas ir bus pažymėtas kaip peržiūrėtas, todėl galės patekti į suvestines; pranešimai apie jį bus uždaryti.</value></data>
+<data name="Mod.Sentence.reason.hide" xml:space="preserve"><value>Argumentas bus paslėptas, o „Man svarbu“ žymos prie jo ištrintos. Jį galima atkurti, bet be žymų. Paaiškinimą gaus autorius.</value></data>
+<data name="Mod.Sentence.reason.merge" xml:space="preserve"><value>Argumentas bus sujungtas su pasirinktu panašiu: „Man svarbu“ žymos persikels prie jo, o šis nebebus rodomas. Paaiškinimą gaus autorius.</value></data>
+<data name="Mod.Statement.Required" xml:space="preserve"><value>Paaiškinimas (privalomas)</value></data>
+<data name="Mod.MergeChoose" xml:space="preserve"><value>Pasirinkite argumentą, su kuriuo sujungti.</value></data>
+<data name="Mod.Done.publish" xml:space="preserve"><value>Atlikta: paskelbta.</value></data>
+<data name="Mod.Done.keep" xml:space="preserve"><value>Atlikta: palikta, pranešimai uždaryti.</value></data>
+<data name="Mod.Done.return" xml:space="preserve"><value>Atlikta: grąžinta iniciatoriui.</value></data>
+<data name="Mod.Done.hide" xml:space="preserve"><value>Atlikta: paslėpta.</value></data>
+<data name="Mod.Done.threshold" xml:space="preserve"><value>Atlikta: riba pakeista.</value></data>
+<data name="Mod.Done.planned" xml:space="preserve"><value>Atlikta: planuojama data pataisyta.</value></data>
+<data name="Mod.Done.hold" xml:space="preserve"><value>Atlikta: siuntimas sulaikytas.</value></data>
+<data name="Mod.Done.release" xml:space="preserve"><value>Atlikta: siuntimas atnaujintas.</value></data>
+<data name="Mod.Done.urgent" xml:space="preserve"><value>Atlikta: skubi suvestinė sudaryta (bandymas, nesiunčiama).</value></data>
+<data name="Mod.Done.merge" xml:space="preserve"><value>Atlikta: sujungta.</value></data>
+<data name="Mod.Refresh" xml:space="preserve"><value>Atnaujinti eilę</value></data>
+<data name="Date.Hint" xml:space="preserve"><value>Data skaičiais, pvz., {0}</value></data>
+<data name="Date.Invalid" xml:space="preserve"><value>Įrašykite datą skaičiais: metai-mėnuo-diena, pvz., {0}.</value></data>
 <data name="Mod.Hide" xml:space="preserve"><value>Paslėpti</value></data>
 <data name="Mod.SetThreshold" xml:space="preserve"><value>Pakeisti ribą</value></data>
 <data name="Mod.Merge" xml:space="preserve"><value>Sujungti</value></data>
-<data name="Mod.Done.Publish" xml:space="preserve"><value>Atlikta: paskelbta.</value></data>
-<data name="Mod.Done.Return" xml:space="preserve"><value>Atlikta: grąžinta iniciatoriui.</value></data>
-<data name="Mod.Done.Hide" xml:space="preserve"><value>Atlikta: paslėpta.</value></data>
-<data name="Mod.Done.Threshold" xml:space="preserve"><value>Atlikta: riba pakeista.</value></data>
-<data name="Mod.Done.Merge" xml:space="preserve"><value>Atlikta: sujungta.</value></data>
 <data name="Admin.PageTitle" xml:space="preserve"><value>Nustatymai · Lietuva 2.0</value></data>
 <data name="Admin.Title" xml:space="preserve"><value>Nustatymai</value></data>
 <data name="Admin.Lead" xml:space="preserve"><value>Skaičiai, kuriuos galima keisti be naujos versijos. Kiekvienas pakeitimas įrašomas į auditą.</value></data>
@@ -297,14 +331,10 @@
 <data name="Mod.Stage.consideration" xml:space="preserve"><value>Svarstymas</value></data>
 <data name="Mod.Stage.adoption" xml:space="preserve"><value>Priėmimas</value></data>
 <data name="Mod.SetPlanned" xml:space="preserve"><value>Pakeisti datą</value></data>
-<data name="Mod.Done.Planned" xml:space="preserve"><value>Atlikta: data pakeista.</value></data>
 <data name="Mod.Hold" xml:space="preserve"><value>Sulaikyti siuntimą</value></data>
 <data name="Mod.Release" xml:space="preserve"><value>Leisti siųsti</value></data>
 <data name="Mod.Held" xml:space="preserve"><value>Siuntimas sulaikytas</value></data>
 <data name="Mod.Urgent" xml:space="preserve"><value>Patvirtinti skubią suvestinę</value></data>
-<data name="Mod.Done.Hold" xml:space="preserve"><value>Atlikta: siuntimas sulaikytas.</value></data>
-<data name="Mod.Done.Release" xml:space="preserve"><value>Atlikta: siuntimas leistas.</value></data>
-<data name="Mod.Done.Urgent" xml:space="preserve"><value>Atlikta: skubi suvestinė sudaryta (bandymas, nesiunčiama).</value></data>
 <data name="Admin.Setting.Digest:Weekly" xml:space="preserve"><value>Savaitinė suvestinė: pirmadienio laikas (HH:mm arba off)</value></data>
 <data name="Admin.Setting.Digest:BeforeVote" xml:space="preserve"><value>Suvestinė prieš posėdį: laikas (HH:mm arba off)</value></data>
 </root>

@@ -530,3 +530,6 @@ body { padding-block-end: 4.5rem; }
 .compare { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--sp-5); }
 .compare > * { border-left: 3px solid var(--rule); padding-left: var(--sp-4); }
 @media (max-width: 36rem) { .compare { grid-template-columns: minmax(0, 1fr); gap: var(--sp-4); } }
+
+/* A queue item's actions (design 8.3): one control each, wrapping on a narrow screen; choosing one opens its fields. */
+.actions { display: flex; flex-wrap: wrap; gap: var(--sp-2) var(--sp-3); align-items: center; }
