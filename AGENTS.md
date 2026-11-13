@@ -159,7 +159,11 @@ and their count shown). No expenses, rankings or scorecards. An MP takes over a 
 official `@lrs.lt` address from open data; the link is tied to the Seimas person id.
 
 **Appeals.**
-- One appeal per bill, always tied to a Seimas bill. Two sides: asks to vote for, asks to vote against.
+- One published appeal per bill, always tied to a Seimas bill. Two sides: asks to vote for, asks to vote against.
+- Until one is published, several members may propose an appeal on the bill: one waiting or returned proposal per
+  person per bill, no cap per bill. The opening form says how many proposals wait (a number only, no names or texts).
+  Publishing one closes the others (status `superseded`); their authors are emailed with the link, naming nobody. The
+  initiator of record is the author of the published proposal.
 - One position per person per bill, private, changeable until the appeal closes at the final Seimas vote.
 - Reasons: plain text up to 500 characters, public with the author's display name, for either side, whatever the
   author's own (no side needed; the writing box preselects the author's side if any). Nothing public may tell whether
@@ -171,6 +175,8 @@ official `@lrs.lt` address from open data; the link is tied to the Seimas person
 - The initiator opens the appeal with a neutral description and a threshold: no side, no first reason, so no
   positions consent. A moderator publishes it; then the initiator writes reasons and takes a side like anyone else, or
   never. Nothing marks a reason as the initiator's.
+- The initiator may propose a new description for an open appeal: the page keeps the approved text until a moderator
+  approves the change (one pending at a time, not on a closed appeal); the history page lists approved changes.
 - **Threshold:** per appeal, public, set by the initiator, default 100, never below the administrator's minimum. The
   initiator can change it until the appeal first enters a summary that is really sent (a dry run does not count). A
   number changed by a moderator is final. There is
@@ -203,6 +209,9 @@ marks, counts or sign-in, is never shown to anyone else, and goes with the accou
 - Numbers are a signal from self-selected "Lietuva 2.0 naudotojai", never "the public", "voters" or a referendum. Every
   place that shows them says they are not a representative poll.
 - Planned Seimas dates are "Planuojama …", never a countdown: agenda items slip.
+- Dates shown as numbers are `yyyy-MM-dd` (with `HH:mm`, Vilnius time); dates written in words inside a sentence stay
+  in words. A date typed into a form is a text field in the form `yyyy-MM-dd` (placeholder, validated, numeric keyboard
+  on phones), never the browser's date control.
 - Proposed terms: *kreipimasis* (appeal), *pozicija* (position), *argumentas* (reason), *atsakymas* (an MP's
   response), *suvestinė* (summary), *iniciatorius*. Existing terms: "Man svarbu", *sritis* for subject areas,
   *patikėtinis* = "delegate" in English (stage 3).

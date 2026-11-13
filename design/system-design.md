@@ -47,8 +47,10 @@ Stage 2 replaces the flood with one object per bill, an **appeal** (*kreipimasis
   **[decided: all MPs, automatically; nobody picks recipients]**;
 - an MP (or the MP's office) can publish one **response** that everyone who took a side is told about.
 
-One appeal per bill, not one per author: whoever raises the bill first opens the appeal, everyone after joins it. This is
-the same rule as "one vote per bill" in chapter 04 of the concept, and it is what makes one summary per bill possible.
+One published appeal per bill, not one per author: until a moderator publishes one, several members may propose an appeal
+on the bill; the moderator publishes one proposal, the others close, and everyone after joins the published appeal
+**[decided 2026-11-13]**. This is the same rule as "one vote per bill" in chapter 04 of the concept, and it is what makes
+one summary per bill possible.
 
 ### 1.3 What is kept from the second version and what is trimmed
 
@@ -262,7 +264,8 @@ ASP.NET Core Identity tables (users, roles, claims, tokens, passkeys), plus:
 
 | Table | Key columns | Notes |
 |---|---|---|
-| `appeal` | `id`, `bill_id` (unique), `initiator_user_id`, neutral description, status, opened and closed times, `closing_vote_id`, `sending` (automatic or held), `threshold`, `threshold_set_by` (initiator or moderator), `first_summarised_at` | Status: pending review → open → closed, or rejected. `threshold` is the initiator's choice (8.4). `first_summarised_at` is set by the first summary really sent to MPs, not by a dry run (8.4). |
+| `appeal` | `id`, `bill_id`, `initiator_user_id`, neutral description, status, opened and closed times, `closing_vote_id`, `sending` (automatic or held), `threshold`, `threshold_set_by` (initiator or moderator), `first_summarised_at` | A row is a proposal until a moderator publishes it. Status: pending review (or returned) → open → closed; rejected (hidden by a moderator); superseded (closed because another proposal on the bill was published, 8.1). At most one open or closed appeal per bill, and at most one pending or returned proposal per person per bill: both are unique partial indexes. `threshold` is the initiator's choice (8.4). `first_summarised_at` is set by the first summary really sent to MPs, not by a dry run (8.4). |
+| `description_change` | `id`, `appeal_id`, proposed text, status (pending, approved, returned), note, created and decided times | The initiator's proposed change to the description of a published appeal (8.1); at most one pending per appeal. An approved one is copied into the appeal and recorded in `revision`. |
 | `position` | (`appeal_id`, `user_id`) primary key, `side` (for or against), created and changed times | One row per person per bill. Becomes the direct LT2 vote in stage 3. |
 | `daily_stat` | `appeal_id`, date, counts per side, counts for accounts older than 30 days, share of new accounts | For the trend chart and surge detection. **No per-person history of opinion changes is stored.** |
 | `reason` | `id`, `appeal_id`, `side`, `author_user_id`, text (up to 500 characters), status, `merged_into_id` | Status: pending, published, hidden, merged. `side` is the side the argument supports, chosen by its author, whatever the author's own position (8.2). |
@@ -299,6 +302,12 @@ the default), the surge thresholds in 6.6,
 the code limits and the life of a pending account in 6.2, whether registration needs an invitation, uses per personal invitation code (`Registration:PersonalCodeUses`, 0 = no limit, the default), how long feedback is kept (`Feedback:KeepMonths`, 12). Each
 change is written to `audit`, and the current values of the rules that affect what MPs receive are shown on the public
 methodology page.
+
+The administrator's settings screen groups them under headings (registration and sign-in; appeals; summaries; surge
+note; feedback), with a separate "Saugumo ribos" group for the ones rarely changed (codes per hour and per day, days a
+pending account is kept), which says so. Each setting shows a plain Lithuanian label, one sentence on what it does and
+when to change it, its unit, the default, and the key in small type. The minimum threshold's 50 is a placeholder until
+the owner sets a number, and the screen says so.
 
 Database roles: `lt2_migrator` owns the schemas and runs migrations; `lt2_app` has data access only; `lt2_worker` the same
 plus the Hangfire schema; `lt2_readonly` for ad-hoc analysis has no access to `identity` or `appeals.position`.
@@ -589,17 +598,32 @@ GET /api/v1/meta/imports                    last successful import per source
 
 ### 8.1 Life of an appeal
 
-1. **Open.** A member picks a bill from the list of active bills and opens its appeal: writes a short **neutral
+1. **Propose.** A member picks a bill from the list of active bills and proposes its appeal: writes a short **neutral
    description** of what the bill changes and sets the **threshold**: how many participants the appeal should have
-   before MPs hear about it (8.4). Nothing else: no side and no first reason **[decided 2026-11-13]**, so opening needs
-   no positions consent and a new appeal has no participants. If the bill already has an appeal, they are taken to it
-   instead. An appeal another member opened that still waits for a moderator is visible only to its initiator, so a
-   second member still sees the opening form; when they send it, their text stays in the form and a note says that
-   another member has already opened an appeal on the bill and it waits for a moderator (a reload would show the same
-   empty form). Whether the page should say so before they write is open (section 12).
+   before MPs hear about it (8.4). Nothing else: no side and no first reason **[decided 2026-11-13]**, so proposing needs
+   no positions consent and a new appeal has no participants. **Several proposals per bill [decided 2026-11-13]:**
+   - While the bill has a published appeal (open or closed), nobody can propose another; the person is taken to it.
+   - Until one is published, any member who may write (8.3) can send a proposal. A person has at most one waiting or
+     returned proposal per bill; trying again takes them to their own. Someone else's proposal never blocks anyone.
+   - The opening form says, before the person writes, how many proposals already wait for this bill and that a
+     moderator will publish one of them. The number only: no names, no texts. It comes from its own public answer,
+     never from one that carries anything about the person, so it can be cached.
+   - There is no cap on proposals per bill; the hourly limit on openings per account (6.4) and writing restrictions
+     (8.3) apply as before.
+   - If two members send at the same moment, both proposals stand; no text is lost.
 2. **Review.** AI pre-screening flags insults, spam and personal data. A moderator checks the neutral description and
-   publishes the appeal; a returned appeal is corrected by editing the description. Until then it is visible only to its
-   initiator, and nobody writes reasons on it.
+   publishes the appeal; a returned proposal is corrected by editing the description. Until then a proposal is visible
+   only to its author, and nobody writes reasons on it.
+   - The queue shows a bill's proposals together, oldest first, with a note for the moderator: publish the earliest
+     proposal that meets the rules. This is guidance on the screen, not enforced in code.
+   - **Publishing one proposal closes every other waiting or returned proposal on that bill** in the same transaction
+     (status `superseded`), each recorded as a moderation action and in `audit`. Each of their authors is emailed:
+     another appeal on this bill has been published, with the link to it, and this is not a judgement of their text.
+     The email names nobody.
+   - The initiator of record is the author of the published proposal. Sides and reasons exist only on a published
+     appeal, so nothing moves from a closed proposal.
+   - "One published appeal per bill" holds under concurrency: publishing takes the bill's lock and checks again, and a
+     unique partial index allows one open or closed appeal per bill.
 3. **Collect.** On the published appeal people, the initiator like anyone else, take a side (or never do), endorse
    reasons on their side, or add one for either side. The notice that the appeal was published invites the initiator
    to add reasons. A new reason similar to an existing one is offered the existing one first. Positions can be changed
@@ -613,9 +637,21 @@ GET /api/v1/meta/imports                    last successful import per source
 A bill passes several stages. The appeal and the positions stay the same through all of them; when a committee changes
 the bill, participants are told so they can reconsider (as agreed for votes in `design-notes.md`: notify, do not reset).
 
+**Changing the description of a published appeal [decided 2026-11-13].** The initiator can propose a new text for the
+neutral description of an open appeal (not a closed one):
+- the change is a proposal: the page keeps showing the approved text until a moderator approves the new one;
+- one pending proposal at a time; a returned one does not block a new one;
+- the moderators' queue shows the old and the new text side by side, with "publish" or "return with a note"; the
+  initiator is told either way, with the note;
+- an approved change is recorded in `revision`, and the public history page lists each one;
+- proposing is writing, so a writing restriction (8.3) blocks it; pre-screening flags it for the moderator as for any
+  description;
+- telling participants about the change is M2b (8.6).
+
 ### 8.2 Rules
 
-- One appeal per bill; one position per person per bill; sides are "for" and "against". Abstaining is not a request to
+- One published appeal per bill (proposals before it, 8.1); one position per person per bill; sides are "for" and
+  "against". Abstaining is not a request to
   an MP, so it is not offered here; stage 3 adds it as a vote option.
 - Positions are private. Reasons are public with their author's display name; the initiator's name is public.
 - A reason belongs to one side and is at most 500 characters of plain text.
@@ -654,19 +690,40 @@ the bill, participants are told so they can reconsider (as agreed for votes in `
 - Wording follows `AGENTS.md`: numbers are "Lietuva 2.0 naudotojai", never "the public" or "voters"; differences are
   shown neutrally.
 - The neutral description is written by the initiator and approved by a moderator, is labelled as such, and keeps its
-  edit history. AI summaries of bills arrive with stage 3 and will carry the "Sukurta DI · taisė žmonės" label.
+  edit history. On a published appeal it changes only through a proposal a moderator approves (8.1). AI summaries of bills arrive with stage 3 and will carry the "Sukurta DI · taisė žmonės" label.
 
 ### 8.3 Moderation
 
-- Queue: new appeals (always), reasons flagged by pre-screening or by reports, requests to correct a date or send
-  urgently, and appeals still under their threshold whose bill has reached the agenda.
-- Actions: publish, return with a note, hide, merge a reason into another (endorsements move with it), correct the
-  planned date or stage, change an appeal's threshold, hold or release sending for a bill, restrict an account from
-  writing or lift that (below).
+- Queue: new proposals (always; a bill's proposals together, 8.1), proposed description changes (8.1), reasons flagged
+  by pre-screening or by reports, requests to correct a date or send urgently, and appeals still under their threshold
+  whose bill has reached the agenda. Each note on an item says what happened and what the moderator can do (for example:
+  the bill is on the Seimas agenda, planned for a date; the appeal has n of its threshold's participants and so will not
+  enter a summary; the moderator may approve one urgent summary, or do nothing).
+- Actions: publish, return with a note, hide, restore a hidden appeal or reason (below), merge a reason into another
+  (endorsements move with it), correct the planned date or stage, change an appeal's threshold, hold or release sending
+  for a bill, approve one urgent summary, approve or return a description change, restrict an account from writing or
+  lift that (below).
+- **The screen [decided 2026-11-13].** Each action is its own control. Choosing one opens only its own fields, with one
+  sentence on what it does; one action is open at a time per item; only the actions that apply to the item's state are
+  offered; the confirmation stays visible after the action closes. The fields: publish, an optional note; return, a
+  required note; hide, a required statement; threshold, the number and a statement; planned date, the date, the stage
+  and a statement (the stage is asked only here); hold or release, a statement (while held, the appeal enters no summary
+  to MPs); urgent summary, a statement (one extra summary outside the schedule for this bill, used when the vote comes
+  before the next regular summary; at most once per bill per week); for reasons: publish, hide, merge (choosing the
+  target), restrict the author.
 - Hiding an appeal rejects it and frees the bill for a new appeal. The sides people took on the hidden appeal are
   **kept, for now [decided 2026-11-13, to be looked at again]**: nobody can see them, and deleting them on hide could
   not be undone if the hide was a mistake. Whether to delete them instead (data minimisation) will be looked at
   again.
+- **Restoring [decided 2026-11-13].** Moderators have a list of hidden appeals (bill, the initiator's display name,
+  when, who hid it, the statement). "Atkurti" brings an appeal back as it was: a published one as open (or closed, if
+  it had closed) with its sides, reasons and marks; one hidden before publication as a waiting proposal. A statement is
+  required, the action is audited, and the initiator is told.
+  - It is refused while another appeal on the bill is published. **[Proposed, to be confirmed by the owner:]** if only
+    proposals wait on the bill, restoring a published appeal counts as publishing and closes them as in 8.1; restoring
+    one hidden before publication is refused while its author has another waiting or returned proposal on the bill.
+  - Hidden reasons have the same list and "Atkurti", while their appeal is open. A restored reason comes back without
+    its "Man svarbu" marks, which hiding deleted (they no longer count towards anyone's limit).
 - **Restricting an account from writing [decided 2026-11-13].** With the per-person limits switched off (8.2), this is
   the tool for the one person who misuses that. A moderator restricts the author of a reason or the initiator of an
   appeal, reached from that item in the queue, either until a date (inclusive, Vilnius time) or until lifted; any
@@ -817,7 +874,9 @@ can cite it, and MPs know that the numbers in their inbox are the numbers everyo
 ```
 GET    /api/v1/appeals?sort=&cursor=
 GET    /api/v1/bills/{number}/appeal                     counts, reasons, responses, planned date
-POST   /api/v1/bills/{number}/appeal                     open: neutral description, threshold (no side, no first reason)
+POST   /api/v1/bills/{number}/appeal                     propose: neutral description, threshold (no side, no first reason)
+GET    /api/v1/bills/{number}/appeal/proposals           how many proposals wait (a number only; public, cacheable)
+POST   /api/v1/bills/{number}/appeal/description-change  initiator of an open appeal: proposed text (one pending)
 PUT    /api/v1/bills/{number}/appeal/threshold           initiator, until the first summary or a moderator's change
 PUT    /api/v1/bills/{number}/appeal/position            take or change a side
 DELETE /api/v1/bills/{number}/appeal/position
@@ -854,6 +913,10 @@ PUT    /api/v1/bills/{number}/appeal/responses/mine
 GET    /api/v1/mp-preferences/{token}     PUT /api/v1/mp-preferences/{token}
 
 /api/v1/moderation/…   queue, publish, return, hide, merge, planned dates, hold, urgent send
+GET    /api/v1/moderation/hidden                         hidden appeals and reasons (who hid them, when, why)
+POST   /api/v1/moderation/appeals/{id}/restore           POST /api/v1/moderation/reasons/{id}/restore   (statement)
+POST   /api/v1/moderation/description-changes/{id}/approve   (optional note)
+POST   /api/v1/moderation/description-changes/{id}/return    (required note)
 /api/v1/admin/…        roles (a grant returns the activation code once), passkey reset, politician links,
                        invitations, import and digest status
 GET    /api/v1/admin/settings     PUT /api/v1/admin/settings/{key}
@@ -1052,6 +1115,17 @@ Splitting M2 means the risky step (emailing every MP) happens only after the who
 - A moderator can restrict an account from writing, until a date or until lifted, with a statement emailed to the
   person; it is not public, touches no side, mark or count, and goes with the account; no hash of the address is kept.
   A full lock that stops sign-in is left for later (8.3).
+- Several proposals per bill until one is published: one waiting or returned proposal per person per bill, no cap per
+  bill; the opening form says how many wait (a number only), which closes the earlier open question whether the page
+  says an appeal waits; a moderator publishes one (guidance: the earliest that meets the rules), the others close and
+  their authors are emailed without names (8.1).
+- The initiator may propose a change to the description of an open appeal; it shows only once a moderator approves it,
+  and the history page lists each approved change. Telling participants about it is M2b (8.1).
+- Moderators can restore a hidden appeal or reason, with a statement, audited, the author told (8.3). Not decided by
+  the owner yet: restoring while only proposals wait counts as publishing and closes them (8.3, proposed).
+- Moderation actions are separate controls, each with its own fields and one sentence on what it does (8.3).
+- Dates typed into a form are a text field in the form yyyy-MM-dd; dates shown as numbers are yyyy-MM-dd (with HH:mm,
+  Vilnius time); dates written in words in sentences stay as they are (`AGENTS.md`).
 
 **Decisions needed before the stage that uses them**
 
@@ -1064,7 +1138,6 @@ Splitting M2 means the risky step (emailing every MP) happens only after the who
 | AI provider for pre-screening | Any provider with EU data terms; no personal data is sent either way. | M2a |
 | Telemetry backend | Hosted free tier with EU storage, or self-hosted. | M0 |
 | MP photos | Use the Seimas photos if their terms allow, otherwise initials. | M1 |
-| Whether a bill page says an appeal is waiting for a moderator | Today an appeal waiting for a moderator is visible only to its initiator, so others see the opening form, and learn only when they send it (8.1; their text stays). Options: keep it so; or say on the bill page, before anyone writes, that an appeal has been opened and waits for a moderator (no name, no text). | M2a |
 | Lithuanian terms for the new objects | Proposal: *kreipimasis*, *prašo balsuoti už / prieš*, *argumentas* (chosen by the owner on 2026-11-12 in place of *priežastis*), *suvestinė*, *atsakymas*. | M2a |
 
 **Risks**
@@ -1077,7 +1150,7 @@ Splitting M2 means the risky step (emailing every MP) happens only after the who
 | Open-data service outages (seen today) | Raw responses stored, retries, pages show the last import time, imports resume. |
 | Someone who knows a person's address uses up its daily codes, so the person cannot sign in by code, or cannot finish registering | Accepted for the closed trial: addresses are not public, nothing leaks, and passkeys are not affected. Known devices (6.2) are built before registration opens. Keeping a new address from registering stays possible after that. |
 | A leak of positions | Minimised data, no position in logs or admin screens, encrypted backups, impact assessment, penetration test, incident runbook. |
-| Moderation load for a volunteer team | One appeal per bill, short plain-text reasons, no comments, AI pre-screening, hourly rate limits per account, and limits per person per bill ready to switch on (off at the start, 8.2). |
+| Moderation load for a volunteer team | One published appeal per bill (competing proposals are shown together and close when one is published), short plain-text reasons, no comments, AI pre-screening, hourly rate limits per account, and limits per person per bill ready to switch on (off at the start, 8.2). |
 | Running costs outlive enthusiasm (the old platform's fate) | One VPS, no paid infrastructure beyond email and backup storage. |
 | Stage 2 ships before stage 3 and the public pages say otherwise | Update the pages when this order is agreed (below). |
 
