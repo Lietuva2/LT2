@@ -113,6 +113,7 @@
 <data name="Open.Description" xml:space="preserve"><value>Ką keičia projektas</value></data>
 <data name="Open.DescriptionHint" xml:space="preserve"><value>Trumpai ir neutraliai, be vertinimų: šį aprašymą skaitys abiejų pusių dalyviai. Iki {0} ženklų.</value></data>
 <data name="Open.Threshold" xml:space="preserve"><value>Riba</value></data>
+<data name="Open.ThresholdBelow" xml:space="preserve"><value>Riba negali būti mažesnė nei {0}.</value></data>
 <data name="Open.ThresholdHint" xml:space="preserve"><value>Kiek dalyvių, abiejų pusių kartu, turi turėti kreipimasis, kad patektų į suvestines Seimo nariams. Riba bus vieša. Ne mažiau kaip {0}.</value></data>
 <data name="Open.Submit" xml:space="preserve"><value>Pateikti moderatoriui</value></data>
 <data name="Open.TakenMeanwhile" xml:space="preserve"><value>Šiam projektui kreipimasis jau yra, bet jo dabar parodyti negalime. Perkraukite puslapį po kelių minučių. Jūsų tekstas liko laukelyje.</value></data>
@@ -136,7 +137,7 @@
 <data name="Change.Mod.Return.Sentence" xml:space="preserve"><value>Puslapyje liks dabartinis aprašymas. Iniciatorius gaus jūsų pastabą ir galės pasiūlyti naują pakeitimą.</value></data>
 <data name="Change.Mod.Approved" xml:space="preserve"><value>Naujas aprašymas paskelbtas. Iniciatorius gaus laišką.</value></data>
 <data name="Change.Mod.Returned" xml:space="preserve"><value>Pakeitimas grąžintas su pastaba. Iniciatorius gaus laišką.</value></data>
-<data name="Change.Open" xml:space="preserve"><value>Siūlyti aprašymo pakeitimą</value></data>
+<data name="Change.Open" xml:space="preserve"><value>Redaguoti aprašymą</value></data>
 <data name="Change.Title" xml:space="preserve"><value>Aprašymo pakeitimas</value></data>
 <data name="Change.Explained" xml:space="preserve"><value>Naujas aprašymas bus rodomas tik tada, kai jį patvirtins moderatorius; iki tol puslapyje lieka dabartinis. Ankstesni aprašymai matomi istorijoje.</value></data>
 <data name="Change.Submit" xml:space="preserve"><value>Siųsti moderatoriui</value></data>
@@ -198,6 +199,10 @@
 <data name="Mod.Action.return" xml:space="preserve"><value>Grąžinti autoriui</value></data>
 <data name="Mod.Action.hide" xml:space="preserve"><value>Paslėpti</value></data>
 <data name="Mod.Action.threshold" xml:space="preserve"><value>Keisti ribą</value></data>
+<data name="Mod.Action.describe" xml:space="preserve"><value>Taisyti aprašymą</value></data>
+<data name="ModPanel.Title" xml:space="preserve"><value>Moderavimas</value></data>
+<data name="ModPanel.Lead" xml:space="preserve"><value>Tai matote kaip moderatorius. Kiekvienas veiksmas registruojamas, o iniciatorius gauna jūsų paaiškinimą.</value></data>
+<data name="ModPanel.Queue" xml:space="preserve"><value>Moderavimo eilė</value></data>
 <data name="Mod.Action.planned" xml:space="preserve"><value>Pataisyti planuojamą datą</value></data>
 <data name="Mod.Action.hold" xml:space="preserve"><value>Sulaikyti siuntimą</value></data>
 <data name="Mod.Action.release" xml:space="preserve"><value>Atnaujinti siuntimą</value></data>
@@ -209,6 +214,7 @@
 <data name="Mod.Sentence.appeal.return" xml:space="preserve"><value>Pasiūlymas grąžinamas iniciatoriui pataisyti; kol jis nepataisys, niekas kitas jo nemato. Iš pastabos iniciatorius sužinos, ką taisyti.</value></data>
 <data name="Mod.Sentence.appeal.hide" xml:space="preserve"><value>Kreipimasis bus paslėptas ir niekam nerodomas, o projektui bus galima pasiūlyti naują. Pozicijos lieka, kreipimąsi galima atkurti. Paaiškinimą gaus iniciatorius.</value></data>
 <data name="Mod.Sentence.appeal.threshold" xml:space="preserve"><value>Nauja riba pakeis iniciatoriaus nustatytą, ir iniciatorius jos nebegalės keisti. Paaiškinimas rodomas kreipimosi puslapyje ir siunčiamas iniciatoriui.</value></data>
+<data name="Mod.Sentence.appeal.describe" xml:space="preserve"><value>Pataisytas aprašymas bus rodomas iš karto, o ankstesnis liks aprašymo istorijoje. Paaiškinimą gaus iniciatorius.</value></data>
 <data name="Mod.Sentence.appeal.planned" xml:space="preserve"><value>Data ir stadija, kada Seimas planuoja svarstyti projektą. Puslapyje rodoma „Planuojama …“, o pastabos apie datą uždaromos.</value></data>
 <data name="Mod.Sentence.appeal.hold" xml:space="preserve"><value>Kol siuntimas sulaikytas, kreipimasis nepatenka į jokią suvestinę Seimo nariams.</value></data>
 <data name="Mod.Sentence.appeal.release" xml:space="preserve"><value>Kreipimasis vėl pateks į suvestines Seimo nariams pagal įprastas taisykles.</value></data>
@@ -224,6 +230,7 @@
 <data name="Mod.Done.return" xml:space="preserve"><value>Atlikta: grąžinta iniciatoriui.</value></data>
 <data name="Mod.Done.hide" xml:space="preserve"><value>Atlikta: paslėpta.</value></data>
 <data name="Mod.Done.threshold" xml:space="preserve"><value>Atlikta: riba pakeista.</value></data>
+<data name="Mod.Done.describe" xml:space="preserve"><value>Atlikta: aprašymas pataisytas.</value></data>
 <data name="Mod.Done.planned" xml:space="preserve"><value>Atlikta: planuojama data pataisyta.</value></data>
 <data name="Mod.Done.hold" xml:space="preserve"><value>Atlikta: siuntimas sulaikytas.</value></data>
 <data name="Mod.Done.release" xml:space="preserve"><value>Atlikta: siuntimas atnaujintas.</value></data>

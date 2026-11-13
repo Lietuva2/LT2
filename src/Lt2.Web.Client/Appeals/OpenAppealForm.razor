@@ -103,5 +103,15 @@ else if (Rules is { } rules)
         }
 
         Show(result.Problem, "description", "threshold");
+
+        // The server checks the administrator's minimum only once the request itself is valid, so with another field wrong
+        // it would come only on the next try: the form says it now, beside the other errors.
+        if (Errors.Count > 0 && !Errors.ContainsKey("threshold") && Rules is { } rules && _threshold < rules.ThresholdMinimum)
+        {
+            Errors = new Dictionary<string, string[]>(Errors, StringComparer.OrdinalIgnoreCase)
+            {
+                ["threshold"] = [Text("Open.ThresholdBelow", AppealNumbers.Of(rules.ThresholdMinimum))],
+            };
+        }
     });
 }

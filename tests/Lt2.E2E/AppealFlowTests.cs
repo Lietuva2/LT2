@@ -449,7 +449,7 @@ public sealed class AppealFlowTests(AppealFlowTests.ModeratorFixture moderator) 
         await mod.GotoAsync($"{Base}/moderavimas");
         var open = mod.Locator("article").Filter(new() { HasText = firstText });
         await Assertions.Expect(open.Locator("button[id^='action-']")).ToHaveTextAsync(
-            ["Palikti", "Paslėpti", "Keisti ribą", "Pataisyti planuojamą datą", "Sulaikyti siuntimą", "Patvirtinti skubią suvestinę", "Riboti autoriaus rašymą"],
+            ["Palikti", "Taisyti aprašymą", "Paslėpti", "Keisti ribą", "Pataisyti planuojamą datą", "Sulaikyti siuntimą", "Patvirtinti skubią suvestinę", "Riboti autoriaus rašymą"],
             new() { Timeout = 60_000 });
 
         // The planned date is typed as text in the form yyyy-MM-dd; a wrong one is refused before anything is sent.

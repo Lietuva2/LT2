@@ -95,6 +95,21 @@ public sealed record ModeratorThresholdRequest
     public string Statement { get; init; } = "";
 }
 
+/// <summary>A moderator's correction of an open appeal's description (design 8.1); the statement goes to the initiator.</summary>
+public sealed record ModeratorDescriptionRequest
+{
+    public string Description { get; init; } = "";
+
+    public string Statement { get; init; } = "";
+}
+
+/// <summary>
+/// The state a moderator's controls on the appeal page need (design 8.3): which actions apply. Holds no position and no
+/// person.
+/// </summary>
+public sealed record ModerationAppealResponse(
+    Guid Id, string Status, string Description, int Threshold, bool Held, PlannedDateResponse? Planned, bool HasOpenItems);
+
 public sealed record MergeReasonRequest
 {
     public Guid IntoReasonId { get; init; }

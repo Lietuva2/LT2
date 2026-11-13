@@ -64,6 +64,25 @@ public sealed class OpenAppealFormTests : BunitContext
     }
 
     [Fact]
+    public void A_threshold_under_the_minimum_is_named_together_with_the_other_errors_not_on_the_next_try()
+    {
+        // The server checks the minimum only once the request is otherwise valid, so it answers with the description alone.
+        _api.On("OpenAsync", ApiResult<AppealResponse>.Fail(new ApiProblem
+        {
+            Status = 400,
+            Code = "validation",
+            Errors = new Dictionary<string, string[]> { ["description"] = ["Trumpai ir neutraliai aprašykite, ką keičia projektas."] },
+        }));
+        var form = Render<OpenAppealForm>(p => p.Add(c => c.Number, Bill));
+        form.Find("#open-threshold").Change("5");
+        form.Find("form").Submit();
+
+        form.Markup.ShouldContain("Trumpai ir neutraliai aprašykite, ką keičia projektas.");
+        form.Markup.ShouldContain(string.Format(System.Globalization.CultureInfo.InvariantCulture, Text("Open.ThresholdBelow"), "50"));
+        form.FindAll(".field--error").Count.ShouldBe(2);
+    }
+
+    [Fact]
     public void Opened_the_person_is_taken_to_the_appeal()
     {
         _api.On("OpenAsync", ApiResult<AppealResponse>.Ok(null!));

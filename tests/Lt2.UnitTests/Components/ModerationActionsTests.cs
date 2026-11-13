@@ -34,7 +34,7 @@ public sealed class ModerationActionsTests : BunitContext
 
     private string Text(string key) => Services.GetRequiredService<IStringLocalizer<AppealUi>>()[key];
 
-    private IRenderedComponent<ModerationActions> Render(string kind, string status, bool held = false, bool openItems = false, int candidates = 0) =>
+    private IRenderedComponent<ModerationActions> Render(string kind, string status, bool held = false, bool openItems = false, int candidates = 0, string? description = null) =>
         Render<ModerationActions>(p => p
             .Add(c => c.Id, Item)
             .Add(c => c.Kind, kind)
@@ -42,6 +42,7 @@ public sealed class ModerationActionsTests : BunitContext
             .Add(c => c.Held, held)
             .Add(c => c.Threshold, 100)
             .Add(c => c.HasOpenItems, openItems)
+            .Add(c => c.Description, description)
             .Add(c => c.MergeCandidates, Enumerable.Range(0, candidates)
                 .Select(i => new ReasonResponse(Guid.NewGuid(), "for", "Panašus argumentas " + i, "Rūta Mockutė", i, "published", DateTimeOffset.UnixEpoch))
                 .ToList()));
@@ -56,6 +57,31 @@ public sealed class ModerationActionsTests : BunitContext
     [Fact]
     public void An_open_appeal_offers_the_timing_actions_and_keep_only_when_something_was_reported() =>
         Offered(Render("appeal", "open", openItems: true)).ShouldBe(["keep", "hide", "threshold", "planned", "hold", "urgent", "restrict"]);
+
+    [Fact]
+    public void An_open_appeal_offers_correcting_its_description_when_the_text_is_given_and_never_a_waiting_one()
+    {
+        Offered(Render("appeal", "open", description: "Projektas keičia rinkliavas.")).ShouldBe(["describe", "hide", "threshold", "planned", "hold", "urgent", "restrict"]);
+        Offered(Render("appeal", "open", openItems: true, description: "Projektas keičia rinkliavas.")).Take(2).ShouldBe(["keep", "describe"]);
+        Offered(Render("appeal", "pending", description: "Projektas keičia rinkliavas.")).ShouldNotContain("describe", "a proposal is returned to its author instead");
+    }
+
+    [Fact]
+    public void Correcting_the_description_starts_from_the_shown_text_and_the_item_stays_after_it()
+    {
+        _api.On("CorrectDescriptionAsync", ApiResult.Ok());
+        var actions = Render("appeal", "open", description: "Projektas keičia rinkliavas.");
+        actions.Find($"#action-describe-{Item}").Click();
+
+        actions.Find($"#action-sentence-{Item}").TextContent.ShouldBe(Text("Mod.Sentence.appeal.describe"));
+        actions.Find($"#describe-{Item}").GetAttribute("value").ShouldBe("Projektas keičia rinkliavas.");
+        actions.Find($"#describe-{Item}").Input("Projektas keičia vietinių rinkliavų tvarką.");
+        actions.Find($"#statement-{Item}").Input("Aprašymas buvo šališkas.");
+        actions.Find("form").Submit();
+
+        actions.Markup.ShouldContain(Text("Mod.Done.describe"));
+        Offered(actions).ShouldContain("describe", "the appeal stays open; nothing is finished");
+    }
 
     [Fact]
     public void An_appeal_on_hold_offers_release_and_no_urgent_summary()

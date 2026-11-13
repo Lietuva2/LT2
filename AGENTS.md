@@ -176,7 +176,9 @@ official `@lrs.lt` address from open data; the link is tied to the Seimas person
   positions consent. A moderator publishes it; then the initiator writes reasons and takes a side like anyone else, or
   never. Nothing marks a reason as the initiator's.
 - The initiator may propose a new description for an open appeal: the page keeps the approved text until a moderator
-  approves the change (one pending at a time, not on a closed appeal); the history page lists approved changes.
+  approves the change (one pending at a time, not on a closed appeal); the history page lists approved changes. A
+  moderator may also correct an open appeal's description directly, with a required statement emailed to the
+  initiator; it enters the history too. Moderators get the queue's actions on the appeal page itself.
 - **Threshold:** per appeal, public, set by the initiator, default 100, never below the administrator's minimum. The
   initiator can change it until the appeal first enters a summary that is really sent (a dry run does not count). A
   number changed by a moderator is final. There is

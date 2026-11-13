@@ -98,6 +98,12 @@ public interface IModerationApi
 
     Task<ApiResult> SetThresholdAsync(Guid appealId, ModeratorThresholdRequest request, CancellationToken cancellationToken = default);
 
+    /// <summary>The state a moderator's controls on the appeal page need (design 8.3); forbidden for anyone else.</summary>
+    Task<ApiResult<ModerationAppealResponse>> GetAppealAsync(Guid appealId, CancellationToken cancellationToken = default);
+
+    /// <summary>Corrects an open appeal's description directly (design 8.1); the statement is required and goes to the initiator.</summary>
+    Task<ApiResult> CorrectDescriptionAsync(Guid appealId, ModeratorDescriptionRequest request, CancellationToken cancellationToken = default);
+
     Task<ApiResult> PublishReasonAsync(Guid reasonId, ModerationRequest request, CancellationToken cancellationToken = default);
 
     Task<ApiResult> HideReasonAsync(Guid reasonId, StatementRequest request, CancellationToken cancellationToken = default);

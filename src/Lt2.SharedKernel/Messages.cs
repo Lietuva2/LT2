@@ -71,10 +71,13 @@ public static class ModerationNotices
 
     public const string DescriptionReturned = "description-returned";
 
+    /// <summary>A moderator corrected the description of a published appeal directly (design 8.1).</summary>
+    public const string DescriptionCorrected = "description-corrected";
+
     public static readonly IReadOnlyList<string> All =
     [
         AppealPublished, AppealReturned, AppealHidden, AppealSuperseded, AppealRestored, ThresholdChanged, ReasonPublished,
-        ReasonHidden, ReasonMerged, ReasonRestored, DescriptionApproved, DescriptionReturned,
+        ReasonHidden, ReasonMerged, ReasonRestored, DescriptionApproved, DescriptionReturned, DescriptionCorrected,
     ];
 }
 

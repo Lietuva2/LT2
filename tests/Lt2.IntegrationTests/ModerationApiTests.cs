@@ -190,6 +190,84 @@ public sealed class ModerationApiTests(DatabaseFixture database) : ApiTest(datab
     }
 
     [Fact]
+    public async Task A_moderator_corrects_the_description_directly_with_a_statement_to_the_initiator_and_it_enters_the_history()
+    {
+        var (initiator, email) = await Factory.MemberAsync();
+        using var _i = initiator;
+        var moderator = (await ModeratorAsync()).Browser;
+        var appeal = await Database.OpenPublishedAsync(initiator, moderator, AppealSteps.ThirdBill);
+        var route = AppealRoutes.With(AppealRoutes.AppealDescription, appeal.Id);
+        const string Corrected = "Projektas keičia vietinių rinkliavų tvarką: savivaldybės galės nustatyti rinkliavą už stovėjimą.";
+
+        using (var byMember = await initiator.SendAsync(HttpMethod.Put, route, new ModeratorDescriptionRequest { Description = Corrected, Statement = "Bandymas." }))
+        {
+            await byMember.ShouldBeProblemAsync(HttpStatusCode.Forbidden, "forbidden");
+        }
+
+        using (var noStatement = await moderator.SendAsync(HttpMethod.Put, route, new ModeratorDescriptionRequest { Description = Corrected, Statement = " " }))
+        {
+            await noStatement.ShouldBeProblemAsync(HttpStatusCode.BadRequest, "validation");
+        }
+
+        using (var unchanged = await moderator.SendAsync(HttpMethod.Put, route, new ModeratorDescriptionRequest { Description = appeal.Description, Statement = "Be pakeitimų." }))
+        {
+            await unchanged.ShouldBeProblemAsync(HttpStatusCode.Conflict, "moderation.wrong-state");
+        }
+
+        (await moderator.SendAsync(HttpMethod.Put, route, new ModeratorDescriptionRequest
+        {
+            Description = "  " + Corrected + " ",
+            Statement = "Aprašymas buvo šališkas: rinkliava vadinta mokesčiu vairuotojams.",
+        })).StatusCode.ShouldBe(HttpStatusCode.NoContent);
+
+        using var stranger = NewBrowser();
+        (await stranger.AppealAsync(AppealSteps.ThirdBill)).Description.ShouldBe(Corrected, "shown at once, trimmed, without waiting for anyone");
+        var history = await stranger.GetJsonAsync<List<DescriptionRevisionResponse>>(AppealRoutes.HistoryOf(AppealSteps.ThirdBill));
+        history.ShouldContain(h => h.NewText == Corrected && h.OldText == appeal.Description);
+        (await NoticesAsync(email, "description-corrected")).ShouldBe(1);
+        (await AuditAsync("moderation.appeal.describe", appeal.Id)).ShouldBe(1);
+        (await Database.ScalarAsync<long>("SELECT count(*) FROM appeals.moderation_action WHERE target_id = @t AND action = 'describe'", ("t", appeal.Id))).ShouldBe(1);
+    }
+
+    [Fact]
+    public async Task Only_a_moderator_reads_the_state_of_an_appeal_for_the_controls_on_its_page()
+    {
+        var (initiator, _) = await Factory.MemberAsync();
+        using var _i = initiator;
+        var moderator = (await ModeratorAsync()).Browser;
+        var appeal = await Database.OpenPublishedAsync(initiator, moderator, AppealSteps.ThirdBill, threshold: 400);
+        var route = AppealRoutes.With(AppealRoutes.ModerationAppeal, appeal.Id);
+
+        using var stranger = NewBrowser();
+        (await stranger.Client.GetAsync(route)).StatusCode.ShouldBe(HttpStatusCode.Unauthorized);
+        using (var byMember = await initiator.Client.GetAsync(route))
+        {
+            await byMember.ShouldBeProblemAsync(HttpStatusCode.Forbidden, "forbidden");
+        }
+
+        var state = await moderator.GetJsonAsync<ModerationAppealResponse>(route);
+        state.Id.ShouldBe(appeal.Id);
+        state.Status.ShouldBe("open");
+        state.Description.ShouldBe(appeal.Description);
+        state.Threshold.ShouldBe(400);
+        state.Held.ShouldBeFalse();
+        state.HasOpenItems.ShouldBeFalse();
+
+        (await moderator.PostAsync(AppealRoutes.With(AppealRoutes.HoldAppeal, appeal.Id), new StatementRequest { Statement = "Laukiame Seimo darbotvarkės." }))
+            .StatusCode.ShouldBe(HttpStatusCode.NoContent);
+        (await initiator.PostAsync(AppealRoutes.Reports, new ReportRequest { TargetKind = "appeal", TargetId = appeal.Id, Ground = "other", Text = "Bandymas." }))
+            .StatusCode.ShouldBe(HttpStatusCode.NoContent);
+        state = await moderator.GetJsonAsync<ModerationAppealResponse>(route);
+        state.Held.ShouldBeTrue();
+        state.HasOpenItems.ShouldBeTrue("a report waits, so \"Palikti\" means something");
+
+        (await moderator.PostAsync(AppealRoutes.With(AppealRoutes.HideAppeal, appeal.Id), new StatementRequest { Statement = "Bandymas." }))
+            .StatusCode.ShouldBe(HttpStatusCode.NoContent);
+        using var hidden = await moderator.Client.GetAsync(route);
+        await hidden.ShouldBeProblemAsync(HttpStatusCode.NotFound, "appeal.not-found");
+    }
+
+    [Fact]
     public async Task A_flagged_argument_waits_and_a_moderator_publishes_it()
     {
         var (initiator, _) = await Factory.MemberAsync();

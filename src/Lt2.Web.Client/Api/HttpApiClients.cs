@@ -185,6 +185,12 @@ internal sealed class HttpModerationApi(ApiHttp http) : IModerationApi
     public Task<ApiResult> SetThresholdAsync(Guid appealId, ModeratorThresholdRequest request, CancellationToken cancellationToken = default) =>
         http.SendAsync(HttpMethod.Put, AppealRoutes.With(AppealRoutes.AppealThreshold, appealId), request, cancellationToken);
 
+    public Task<ApiResult<ModerationAppealResponse>> GetAppealAsync(Guid appealId, CancellationToken cancellationToken = default) =>
+        http.SendAsync<ModerationAppealResponse>(HttpMethod.Get, AppealRoutes.With(AppealRoutes.ModerationAppeal, appealId), null, cancellationToken);
+
+    public Task<ApiResult> CorrectDescriptionAsync(Guid appealId, ModeratorDescriptionRequest request, CancellationToken cancellationToken = default) =>
+        http.SendAsync(HttpMethod.Put, AppealRoutes.With(AppealRoutes.AppealDescription, appealId), request, cancellationToken);
+
     public Task<ApiResult> PublishReasonAsync(Guid reasonId, ModerationRequest request, CancellationToken cancellationToken = default) =>
         http.SendAsync(HttpMethod.Post, AppealRoutes.With(AppealRoutes.PublishReason, reasonId), request, cancellationToken);
 

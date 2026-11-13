@@ -411,6 +411,48 @@ internal sealed class ModerationService(
         }, cancellationToken, details: new { threshold });
     }
 
+    public Task<Result<Unit>> CorrectDescriptionAsync(Guid appealId, string description, string statement, ModeratorActor moderator, CancellationToken cancellationToken)
+    {
+        if (string.IsNullOrWhiteSpace(statement))
+        {
+            return Task.FromResult<Result<Unit>>(Error.Validation("statement.required", "statement"));
+        }
+
+        var text = AppealRules.NormaliseText(description);
+        return OnAppealAsync(appealId, moderator, "describe", statement, (db, appeal, now) =>
+        {
+            // Only a published, still open appeal (design 8.1): a proposal is returned to its author instead, and a closed
+            // appeal's page is the record beside the Seimas vote.
+            if (appeal.Status != AppealStatuses.Open || appeal.Description == text)
+            {
+                return Task.FromResult<Result<string?>>(Error.Conflict("moderation.wrong-state"));
+            }
+
+            // Like an approved change: the corrected text is shown at once and enters the public history. A proposed change
+            // still waiting stays in the queue, compared with the corrected text.
+            db.Revisions.Add(AppealsService.Revise("appeal", appeal.Id, "description", appeal.Description, text, moderator.UserId, now));
+            appeal.Description = text;
+            appeal.ScreeningFlags = [];
+            return Task.FromResult<Result<string?>>(ModerationNotices.DescriptionCorrected);
+        }, cancellationToken);
+    }
+
+    public async Task<Result<ModerationAppealState>> AppealStateAsync(Guid appealId, CancellationToken cancellationToken)
+    {
+        await using var db = await contexts.CreateDbContextAsync(cancellationToken);
+        var appeal = await db.Appeals.AsNoTracking().FirstOrDefaultAsync(a => a.Id == appealId, cancellationToken);
+        if (appeal is null || appeal.Status is AppealStatuses.Rejected or AppealStatuses.Superseded)
+        {
+            return Error.NotFound("appeal.not-found");
+        }
+
+        var planned = await agenda.ForBillsAsync([appeal.BillNumber], cancellationToken);
+        var hasOpenItems = await db.Reports.AsNoTracking().AnyAsync(r => r.TargetId == appeal.Id && r.Status == "open", cancellationToken)
+            || await db.Flags.AsNoTracking().AnyAsync(f => f.AppealId == appeal.Id && f.Status == "open", cancellationToken);
+        return new ModerationAppealState(
+            appeal.Id, appeal.Status, appeal.Description, appeal.Threshold, appeal.Sending == "held", planned.GetValueOrDefault(appeal.BillNumber), hasOpenItems);
+    }
+
     public Task<Result<Unit>> PublishReasonAsync(Guid reasonId, string? statement, ModeratorActor moderator, CancellationToken cancellationToken) =>
         OnReasonAsync(reasonId, moderator, "publish", statement, (_, reason, now) =>
         {

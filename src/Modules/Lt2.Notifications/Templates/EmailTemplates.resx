@@ -47,6 +47,8 @@
 <data name="Moderation.description-approved.Body" xml:space="preserve"><value>moderatorius patvirtino jūsų pasiūlytą kreipimosi dėl projekto {0} aprašymo pakeitimą. Naujas aprašymas jau rodomas kreipimosi puslapyje, o ankstesnis – aprašymo istorijoje.</value></data>
 <data name="Moderation.description-returned.Subject" xml:space="preserve"><value>Lietuva 2.0: aprašymo pakeitimas dėl {0} grąžintas</value></data>
 <data name="Moderation.description-returned.Body" xml:space="preserve"><value>moderatorius grąžino jūsų pasiūlytą kreipimosi dėl projekto {0} aprašymo pakeitimą. Puslapyje lieka ankstesnis aprašymas. Galite pasiūlyti naują pakeitimą.</value></data>
+<data name="Moderation.description-corrected.Subject" xml:space="preserve"><value>Lietuva 2.0: moderatorius pataisė kreipimosi dėl {0} aprašymą</value></data>
+<data name="Moderation.description-corrected.Body" xml:space="preserve"><value>moderatorius pataisė jūsų kreipimosi dėl projekto {0} aprašymą. Naujas aprašymas jau rodomas kreipimosi puslapyje, o ankstesnis – aprašymo istorijoje. Jei nesutinkate, galite pasiūlyti kitą pakeitimą.</value></data>
 <data name="Moderation.Excerpt" xml:space="preserve"><value>Argumentas: „{0}“</value></data>
 <data name="Restriction.restricted.Subject" xml:space="preserve"><value>Lietuva 2.0: jūsų galimybė rašyti apribota</value></data>
 <data name="Restriction.restricted.Body" xml:space="preserve"><value>moderatorius apribojo jūsų galimybę rašyti Lietuva 2.0: kol apribojimas galioja, negalite rašyti argumentų, atidaryti kreipimųsi, taisyti jų aprašymų ir pranešti apie neteisingas datas.</value></data>

@@ -86,7 +86,7 @@ else
                 <p class="voice">@appeal.Description</p>
 
                 <Reports Items="appeal.Reports" />
-                <ModerationActions Id="appeal.Id" Kind="appeal" Status="@appeal.Status" Held="appeal.Held" Threshold="appeal.Threshold" Planned="appeal.Planned"
+                <ModerationActions Id="appeal.Id" Kind="appeal" Status="@appeal.Status" Held="appeal.Held" Threshold="appeal.Threshold" Planned="appeal.Planned" Description="@appeal.Description"
                                    HasOpenItems="@(appeal.Reports.Count > 0 || appeal.DateFlags is { Count: > 0 })" OnRestricted="RestrictedAsync" />
             </article>
         }

@@ -647,6 +647,16 @@ neutral description of an open appeal (not a closed one):
 - proposing is writing, so a writing restriction (8.3) blocks it; pre-screening flags it for the moderator as for any
   description;
 - telling participants about the change is M2b (8.6).
+- On the page the initiator's control reads "Redaguoti aprašymą" and opens this proposal; a waiting proposal (before
+  publishing) is likewise edited behind "Redaguoti aprašymą", while a returned one shows its form at once
+  **[decided 2026-11-13]**.
+
+**A moderator corrects the description directly [decided 2026-11-13].** A moderator or an administrator, in a
+staff-passkey session, can correct the description of an open appeal (not a proposal, which is returned to its author;
+not a closed appeal). The corrected text is shown at once, enters `revision` and the public history page like an
+approved change, and clears the description's pre-screening flags. A statement is required: it is recorded with the
+action, audited and emailed to the initiator, who can propose another change in the usual way. A proposed change
+still waiting stays in the queue, compared with the corrected text.
 
 ### 8.2 Rules
 
@@ -690,7 +700,8 @@ neutral description of an open appeal (not a closed one):
 - Wording follows `AGENTS.md`: numbers are "Lietuva 2.0 naudotojai", never "the public" or "voters"; differences are
   shown neutrally.
 - The neutral description is written by the initiator and approved by a moderator, is labelled as such, and keeps its
-  edit history. On a published appeal it changes only through a proposal a moderator approves (8.1). AI summaries of bills arrive with stage 3 and will carry the "Sukurta DI · taisė žmonės" label.
+  edit history. On a published appeal it changes only through a proposal a moderator approves, or a moderator's own
+correction with a statement to the initiator (8.1). AI summaries of bills arrive with stage 3 and will carry the "Sukurta DI · taisė žmonės" label.
 
 ### 8.3 Moderation
 
@@ -701,8 +712,13 @@ neutral description of an open appeal (not a closed one):
   enter a summary; the moderator may approve one urgent summary, or do nothing).
 - Actions: publish, return with a note, hide, restore a hidden appeal or reason (below), merge a reason into another
   (endorsements move with it), correct the planned date or stage, change an appeal's threshold, hold or release sending
-  for a bill, approve one urgent summary, approve or return a description change, restrict an account from writing or
-  lift that (below).
+  for a bill, approve one urgent summary, approve or return a description change, correct an open appeal's description
+  (8.1), restrict an account from writing or lift that (below).
+- **On the appeal page [decided 2026-11-13].** A moderator or an administrator in a staff-passkey session sees, on an
+  open appeal's own page, a "Moderavimas" panel with the same actions as the queue offers for it in its state
+  ("Palikti" only while a report or date flag is open). The state comes from a moderators-only answer
+  (`GET /api/v1/moderation/appeals/{id}`); nobody else sees the panel or anything from that answer. After an action the
+  page reloads to show the result.
 - **The screen [decided 2026-11-13].** Each action is its own control. Choosing one opens only its own fields, with one
   sentence on what it does; one action is open at a time per item; only the actions that apply to the item's state are
   offered; the confirmation stays visible after the action closes. The fields: publish, an optional note; return, a
@@ -710,7 +726,7 @@ neutral description of an open appeal (not a closed one):
   and a statement (the stage is asked only here); hold or release, a statement (while held, the appeal enters no summary
   to MPs); urgent summary, a statement (one extra summary outside the schedule for this bill, used when the vote comes
   before the next regular summary; at most once per bill per week); for reasons: publish, hide, merge (choosing the
-  target), restrict the author.
+  target), restrict the author; correct description, the text (starting from the shown one) and a required statement.
 - Hiding an appeal rejects it and frees the bill for a new appeal. The sides people took on the hidden appeal are
   **kept, for now [decided 2026-11-13, to be looked at again]**: nobody can see them, and deleting them on hide could
   not be undone if the hide was a mistake. Whether to delete them instead (data minimisation) will be looked at
@@ -869,6 +885,15 @@ Every summary has a public page (`/suvestines/2026-11-16`) with the frozen numbe
 figures and without the reasons' authors (8.4). Participants can see that their appeal reached the Seimas, journalists
 can cite it, and MPs know that the numbers in their inbox are the numbers everyone sees. The pages carry the same "not a representative poll" notice.
 
+**The front page [decided 2026-11-13, layout "B" chosen from three mockups].** The front page (`/`), public and
+server-rendered, opens with the sign-in page's welcome: the turning logo (the page's only one), the title and
+introduction, and beside it the same sign-in steps as `/prisijungti` (a short greeting with a link to the account once
+signed in). Below it, one summary card per published appeal, the six with the most participants: the bill, its stage
+and planned date, both sides with the counts for accounts older than 30 days, the bar, the threshold, and the most
+endorsed reason on each side (shown with its "Man svarbu" count, without its author), each card linking to the appeal;
+then links to all appeals and to the summaries, and the "not a representative poll" notice. It uses only the public
+answers behind `/kreipimaisi` and the appeal pages.
+
 ### 8.8 API
 
 ```
@@ -917,6 +942,8 @@ GET    /api/v1/moderation/hidden                         hidden appeals and reas
 POST   /api/v1/moderation/appeals/{id}/restore           POST /api/v1/moderation/reasons/{id}/restore   (statement)
 POST   /api/v1/moderation/description-changes/{id}/approve   (optional note)
 POST   /api/v1/moderation/description-changes/{id}/return    (required note)
+GET    /api/v1/moderation/appeals/{id}                   the state the appeal page's moderator panel needs (no person, no side)
+PUT    /api/v1/moderation/appeals/{id}/description       an open appeal's corrected text (required statement)
 /api/v1/admin/…        roles (a grant returns the activation code once), passkey reset, politician links,
                        invitations, import and digest status
 GET    /api/v1/admin/settings     PUT /api/v1/admin/settings/{key}

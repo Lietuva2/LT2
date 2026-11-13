@@ -122,6 +122,12 @@ public sealed record QueueAppeal(
     int Participants = 0,
     int EffectiveThreshold = 0);
 
+/// <summary>
+/// What a moderator's controls on the appeal page need (design 8.3): the state that decides which actions apply. Holds no
+/// position and no person.
+/// </summary>
+public sealed record ModerationAppealState(Guid Id, string Status, string Description, int Threshold, bool Held, PlannedDate? Planned, bool HasOpenItems);
+
 /// <summary>A participant's flag about the planned date (design 8.4). Who flagged is not shown.</summary>
 public sealed record QueueFlag(Guid Id, string Kind, string Link, string? Note, DateTimeOffset CreatedAt);
 
@@ -223,6 +229,15 @@ public interface IAppealsModeration
 
     /// <summary>Returns a proposed description with a required note; the page keeps the approved text.</summary>
     Task<Result<Unit>> ReturnDescriptionAsync(Guid changeId, string statement, ModeratorActor moderator, CancellationToken cancellationToken);
+
+    /// <summary>
+    /// A moderator corrects the description of an open appeal directly (design 8.1): it replaces the shown one and enters
+    /// the history; the statement is required, audited and emailed to the initiator.
+    /// </summary>
+    Task<Result<Unit>> CorrectDescriptionAsync(Guid appealId, string description, string statement, ModeratorActor moderator, CancellationToken cancellationToken);
+
+    /// <summary>The state a moderator's controls on the appeal page need; <c>appeal.not-found</c> for a hidden or unknown appeal.</summary>
+    Task<Result<ModerationAppealState>> AppealStateAsync(Guid appealId, CancellationToken cancellationToken);
 
     /// <summary>Hidden appeals and reasons, newest hide first, with who hid them, when and why (design 8.3).</summary>
     Task<HiddenItems> HiddenAsync(CancellationToken cancellationToken);

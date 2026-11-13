@@ -44,6 +44,9 @@ internal static class AppealMapping
 
     public static QueueReportResponse Map(QueueReport r) => new(r.Id, r.Ground, r.Text, r.CreatedAt);
 
+    public static ModerationAppealResponse Map(ModerationAppealState s) =>
+        new(s.Id, s.Status, s.Description, s.Threshold, s.Held, Map(s.Planned), s.HasOpenItems);
+
     public static ModerationQueueResponse Map(ModerationItems q) => new(
         q.Appeals.Select(a => new QueueAppealResponse(
             a.Id, Map(a.Bill), a.Status, a.InitiatorName, a.Description, a.Threshold, a.Flags,
@@ -259,6 +262,14 @@ internal sealed class ServerModerationApi(
 
     public Task<ApiResult> HideAppealAsync(Guid appealId, StatementRequest request, CancellationToken cancellationToken = default) =>
         ActAsync(m => moderation.HideAppealAsync(appealId, request.Statement, m, cancellationToken));
+
+    public async Task<ApiResult<ModerationAppealResponse>> GetAppealAsync(Guid appealId, CancellationToken cancellationToken = default) =>
+        await IsModeratorAsync()
+            ? errors.ToApiResult(await moderation.AppealStateAsync(appealId, cancellationToken), AppealMapping.Map)
+            : ApiResult<ModerationAppealResponse>.Fail(errors.ToProblem(Error.Forbidden("forbidden")));
+
+    public Task<ApiResult> CorrectDescriptionAsync(Guid appealId, ModeratorDescriptionRequest request, CancellationToken cancellationToken = default) =>
+        ActAsync(m => moderation.CorrectDescriptionAsync(appealId, request.Description, request.Statement, m, cancellationToken));
 
     public Task<ApiResult> SetThresholdAsync(Guid appealId, ModeratorThresholdRequest request, CancellationToken cancellationToken = default) =>
         ActAsync(m => moderation.SetThresholdAsync(appealId, request.Threshold, request.Statement, m, cancellationToken));

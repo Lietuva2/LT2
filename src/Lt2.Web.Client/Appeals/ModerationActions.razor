@@ -28,6 +28,14 @@
                 <h4 id="action-title-@Id">@L["Mod.Action." + Label(_open)]</h4>
                 <p class="small" id="action-sentence-@Id">@L["Mod.Sentence." + Kind + "." + Label(_open)]</p>
 
+                @if (_open == "describe")
+                {
+                    <div class="field @(Errors.ContainsKey("description") ? "field--error" : "")">
+                        <label for="describe-@Id">@L["Open.Description"]</label>
+                        <textarea class="textarea" id="describe-@Id" rows="10" maxlength="@AppealLimits.DescriptionMaxLength" @bind="_description" @bind:event="oninput" disabled="@Locked"></textarea>
+                        <FieldError Errors="Errors" Field="description" />
+                    </div>
+                }
                 @if (_open == "threshold")
                 {
                     <div class="field @(Errors.ContainsKey("threshold") ? "field--error" : "")">
@@ -97,6 +105,7 @@
     private Guid? _mergeInto;
     private string? _planned;
     private string _stage = "consideration";
+    private string _description = "";
 
     [Parameter, EditorRequired] public Guid Id { get; set; }
 
@@ -116,6 +125,9 @@
     /// <summary>For an appeal: the planned date the page shows now, the starting value of a correction.</summary>
     [Parameter] public PlannedDateResponse? Planned { get; set; }
 
+    /// <summary>For an open appeal: its shown description, the starting text of a correction (design 8.1). Without it no correction is offered.</summary>
+    [Parameter] public string? Description { get; set; }
+
     /// <summary>The item has open reports or date flags, so "keep" means something.</summary>
     [Parameter] public bool HasOpenItems { get; set; }
 
@@ -131,7 +143,7 @@
     private IReadOnlyList<string> Offered => (Kind, Status) switch
     {
         ("appeal", "pending") => ["publish", "return", "hide", "threshold", "restrict"],
-        ("appeal", "open") => [.. (HasOpenItems ? new[] { "keep" } : []), "hide", "threshold", "planned", IsHeld ? "release" : "hold", .. (IsHeld ? Array.Empty<string>() : ["urgent"]), "restrict"],
+        ("appeal", "open") => [.. (HasOpenItems ? new[] { "keep" } : []), .. (Description is null ? Array.Empty<string>() : ["describe"]), "hide", "threshold", "planned", IsHeld ? "release" : "hold", .. (IsHeld ? Array.Empty<string>() : ["urgent"]), "restrict"],
         ("reason", "pending") => ["publish", "hide", .. (MergeCandidates is { Count: > 0 } ? new[] { "merge" } : []), "restrict"],
         ("reason", _) => ["keep", "hide", .. (MergeCandidates is { Count: > 0 } ? new[] { "merge" } : []), "restrict"],
         _ => [],
@@ -162,6 +174,7 @@
         _planned = Planned is { } p ? Dates.Day(p.Date) : null;
         _stage = Planned?.Stage ?? "consideration";
         _mergeInto = null;
+        _description = Description ?? "";
     }
 
     private void Close() => _open = null;
@@ -185,7 +198,7 @@
         var result = await SendAsync(action);
         if (!result.IsSuccess)
         {
-            Show(result.Problem, "statement", "threshold", "date", "stage");
+            Show(result.Problem, "statement", "threshold", "date", "stage", "description");
             return;
         }
 
@@ -225,6 +238,7 @@
             ("appeal", "publish" or "keep") => Moderation.PublishAppealAsync(Id, note),
             ("appeal", "return") => Moderation.ReturnAppealAsync(Id, statement),
             ("appeal", "hide") => Moderation.HideAppealAsync(Id, statement),
+            ("appeal", "describe") => Moderation.CorrectDescriptionAsync(Id, new ModeratorDescriptionRequest { Description = _description, Statement = _statement }),
             ("appeal", "threshold") => Moderation.SetThresholdAsync(Id, new ModeratorThresholdRequest { Threshold = _threshold ?? 0, Statement = _statement }),
             ("appeal", "planned") => Moderation.SetPlannedAsync(Id, new ModeratorPlannedRequest { Date = Dates.TryRead(_planned, out var day) ? day : default, Stage = _stage, Statement = _statement }),
             ("appeal", "hold") => Moderation.HoldAsync(Id, statement),
