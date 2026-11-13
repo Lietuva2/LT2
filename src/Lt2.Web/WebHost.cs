@@ -114,7 +114,11 @@ internal static class WebHost
         app.UseRateLimiter();
         app.UseAntiforgery();
 
-        app.MapStaticAssets();
+        // Static files (the WebAssembly runtime, styles, scripts, images) are answered by the routing step itself, before
+        // authentication: a signed-in browser's dozens of parallel downloads must not each look up the session in the
+        // database (design 9.5). They need no person; pages and the API still check the session on every request, so an
+        // ended session stops working at once.
+        app.MapStaticAssets().ShortCircuit();
         app.MapHealthChecks("/health/live", new HealthCheckOptions { Predicate = _ => false });
         app.MapHealthChecks("/health/ready", new HealthCheckOptions { Predicate = check => check.Tags.Contains("ready") });
         app.MapOpenApi("/openapi/{documentName}.json");

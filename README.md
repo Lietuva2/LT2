@@ -177,6 +177,7 @@ separate secret. Nothing secret is committed; `deploy/secrets/README.md` lists e
 | Setting | Meaning |
 |---|---|
 | `ConnectionStrings:Lt2` + `Database:Password` | Database connection for the process's own role (`lt2_app`, `lt2_worker` or `lt2_migrator`) |
+| `Database:MaxPoolSize`, `Database:HangfireMaxPoolSize`, `Database:ApplicationName` | The connection budget (design 9.5): web 25 per instance, worker 10, Hangfire 10, migrator 5, against PostgreSQL's `max_connections=150` in `deploy/compose.yaml`; 10 when unset. Change them only together with the budget test |
 | `DataProtection:KeyEncryptionKey` | Base64 32-byte key wrapping the data-protection keys stored in PostgreSQL; required outside development |
 | `Security:IpHashKey` | Key for hashing client IP addresses in the audit log |
 | `Email:Smtp:*` | SMTP host, port, security, user, password, from address (Mailpit locally; the provider is not chosen yet) |

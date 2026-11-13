@@ -147,6 +147,11 @@ services:
   postgres:
     image: postgres:17
     restart: unless-stopped
+    # The connection budget (design 9.5): 150 connections, 3 of them kept for superusers. The pools are set in each
+    # host's appsettings.json: web 25 per instance (up to four at once during a deploy), worker 10, Hangfire 10,
+    # migrator 5; together 125, leaving room for psql and backups. tests/Lt2.ArchitectureTests/ConnectionBudgetTests.cs
+    # checks the sum.
+    command: ["postgres", "-c", "max_connections=150", "-c", "superuser_reserved_connections=3"]
     environment:
       POSTGRES_DB: lt2
       POSTGRES_USER: postgres

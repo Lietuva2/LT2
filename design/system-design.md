@@ -943,6 +943,30 @@ health, stop the old ones. Schema changes follow expand-then-contract so the old
   incident (including the 72-hour notification duty).
 - A restore drill before launch and every quarter.
 
+### 9.5 Database connections
+
+PostgreSQL allows a fixed number of connections; when the pools of all parts together ask for more, it refuses new ones
+and every part fails at once. So the pools have a budget, set explicitly and checked by a test
+(`tests/Lt2.ArchitectureTests/ConnectionBudgetTests.cs`):
+
+| Who | Pool | Where it is set |
+|---|---|---|
+| PostgreSQL `max_connections` | 150, of which 3 are kept for superusers | `deploy/compose.yaml` (`command`) |
+| `web`, per instance | 25; up to four instances at once (two, plus two new ones during a deploy) = 100 | `src/Lt2.Web/appsettings.json` `Database:MaxPoolSize` |
+| `worker` (modules, outbox, jobs) | 10 | `src/Lt2.Worker/appsettings.json` `Database:MaxPoolSize` |
+| Hangfire inside the worker | 10 (its own pool) | `src/Lt2.Worker/appsettings.json` `Database:HangfireMaxPoolSize` |
+| `migrator` | 5 | `src/Lt2.Migrator/appsettings.json` `Database:MaxPoolSize` |
+| Left for psql, backups, the read-only role | 22 (the test requires at least 20) | |
+
+A host that does not set a size gets 10, never Npgsql's default of 100. Each pool names its connections
+(`lt2-web`, `lt2-worker`, `lt2-hangfire`, `lt2-migrator`) so `pg_stat_activity` shows who holds what. A burst larger
+than a pool waits for a free connection (up to Npgsql's 15-second timeout) instead of opening more.
+
+Static files (the WebAssembly runtime, styles, scripts, images) are answered straight after routing, before
+authentication, so a signed-in browser's start (dozens of parallel downloads) never looks up the session in the
+database. Pages and the API still check the session on every request, so an ended session stops working at once. A
+server error is sent with `Cache-Control: no-store`, so no browser or proxy keeps it; Caddy caches nothing.
+
 ## 10. Quality
 
 - Unit tests for every counted rule; integration tests for every endpoint against real PostgreSQL; import tests against
