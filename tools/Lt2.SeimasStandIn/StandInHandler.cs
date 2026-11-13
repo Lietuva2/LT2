@@ -43,9 +43,11 @@ internal sealed class StandInHandler(StandInResponses responses) : HttpMessageHa
         return Task.FromResult(message);
     }
 
-    /// <summary>The day the agenda page is rendered for; tests set it, the container uses today in Vilnius.</summary>
-    public static Func<DateOnly> Today { get; set; } =
-        () => DateOnly.FromDateTime(TimeZoneInfo.ConvertTime(DateTimeOffset.UtcNow, TimeZoneInfo.FindSystemTimeZoneById("Europe/Vilnius")).DateTime);
+    /// <summary>
+    /// The day the agenda page is rendered for; tests set it. The container uses today in UTC: its chiseled image has no
+    /// time-zone data, and the sittings it writes are at least two days ahead anyway.
+    /// </summary>
+    public static Func<DateOnly> Today { get; set; } = () => DateOnly.FromDateTime(DateTime.UtcNow);
 
     /// <summary>Shared by the in-process handler and the HTTP host: paths under <c>/sip/</c> (open data) and <c>/darbotvarke</c> (the invented agenda page).</summary>
     public static StandInResponse Answer(Uri uri, StandInResponses responses)
