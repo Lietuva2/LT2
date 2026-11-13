@@ -260,7 +260,7 @@ ASP.NET Core Identity tables (users, roles, claims, tokens, passkeys), plus:
 | `appeal` | `id`, `bill_id` (unique), `initiator_user_id`, neutral description, status, opened and closed times, `closing_vote_id`, `sending` (automatic or held), `threshold`, `threshold_set_by` (initiator or moderator), `first_summarised_at` | Status: pending review → open → closed, or rejected. `threshold` is the initiator's choice (8.4). `first_summarised_at` is set by the first summary really sent to MPs, not by a dry run (8.4). |
 | `position` | (`appeal_id`, `user_id`) primary key, `side` (for or against), created and changed times | One row per person per bill. Becomes the direct LT2 vote in stage 3. |
 | `daily_stat` | `appeal_id`, date, counts per side, counts for accounts older than 30 days, share of new accounts | For the trend chart and surge detection. **No per-person history of opinion changes is stored.** |
-| `reason` | `id`, `appeal_id`, `side`, `author_user_id`, text (up to 500 characters), status, `merged_into_id` | Status: pending, published, hidden, merged. |
+| `reason` | `id`, `appeal_id`, `side`, `author_user_id`, text (up to 500 characters), status, `merged_into_id` | Status: pending, published, hidden, merged. `side` is the side the argument supports, chosen by its author, whatever the author's own position (8.2). |
 | `endorsement` | (`reason_id`, `user_id`) | "Man svarbu" on a reason; only on your own side, at most three per bill. |
 | `response` | `appeal_id`, `person_id`, stance, text, published and edited times, `written_by_user_id` | One per MP per bill; edits keep history. |
 | `report` | target, reporter, ground, status | Notice-and-action under the Digital Services Act. |
@@ -546,8 +546,8 @@ GET /api/v1/meta/imports                    last successful import per source
    to it instead.
 2. **Review.** AI pre-screening flags insults, spam and personal data. A moderator checks the neutral description and the
    first reason and publishes the appeal. Until then it is visible only to its initiator.
-3. **Collect.** People join a side, endorse up to three reasons, or add one. A new reason similar to an existing one is
-   offered the existing one first. Positions can be changed until the appeal closes.
+3. **Collect.** People join a side, endorse up to three reasons on their side, or add one for either side. A new reason
+   similar to an existing one is offered the existing one first. Positions can be changed until the appeal closes.
 4. **Summarise.** Once the appeal reaches its threshold it enters the summaries sent to MPs (8.4).
 5. **Answer.** MPs publish responses; participants are told (8.6).
 6. **Close.** When the Seimas takes the final vote on the bill (or rejects or withdraws it at any stage) the appeal
@@ -562,7 +562,22 @@ the bill, participants are told so they can reconsider (as agreed for votes in `
 - One appeal per bill; one position per person per bill; sides are "for" and "against". Abstaining is not a request to
   an MP, so it is not offered here; stage 3 adds it as a vote option.
 - Positions are private. Reasons are public with their author's display name; the initiator's name is public.
-- A reason belongs to one side and is at most 500 characters of plain text; a person may write at most two per bill.
+- A reason belongs to one side and is at most 500 characters of plain text; a person may write at most two per bill in
+  total, so one for each side is possible.
+- **A reason may be written for either side, whatever the author's own position [decided 2026-11-13].** The writing
+  box asks for the side: it preselects the author's own side when they have taken one (read only from their own,
+  never-cached answer), and preselects nothing when they have not, so they must choose. A person who has not taken a
+  side may write reasons for either side or for both. Writing a reason never creates or changes a position, and nothing
+  public (page, API, cached appeal, summary) tells whether a reason is on its author's side, so a reason does not reveal
+  its author's position.
+- Writing a reason does not need the positions consent (6.5), because no position is stored; the writing box says
+  plainly that the reason is public with the author's name and the side chosen. **[Proposed in M2a, to be confirmed by
+  the owner.]**
+- "Man svarbu" stays on one's own side only, at most three per bill; a person without a side cannot mark. Changing or
+  clearing a side drops the marks, never the person's reasons; withdrawing the consent deletes positions and marks,
+  not reasons.
+- Pages, summaries and emails head reasons as "argumentai už / prieš" (reasons to vote for or against), never as the
+  reasons of the people on that side.
 - Published numbers: both sides, always together, always with the count for accounts older than 30 days. Group numbers
   (for example supporters of a party) only when the group has at least 20 people.
 - Wording follows `AGENTS.md`: numbers are "Lietuva 2.0 naudotojai", never "the public" or "voters"; differences are
@@ -698,7 +713,8 @@ By email, each kind switchable in settings:
 ### 8.7 Public record of what was sent
 
 Every summary has a public page (`/suvestines/2026-11-16`) with the frozen numbers and reasons, without MP-specific
-figures and without the reasons' authors (8.4). Participants can see that their appeal reached the Seimas, journalists can cite it, and MPs know that the
+figures and without the reasons' authors (8.4). Participants can see that their appeal reached the Seimas, journalists
+can cite it, and MPs know that the
 numbers in their inbox are the numbers everyone sees. The pages carry the same "not a representative poll" notice.
 
 ### 8.8 API
@@ -845,6 +861,9 @@ Splitting M2 means the risky step (emailing every MP) happens only after the who
 - A dry-run summary does not lock the initiator's threshold; only the first summary really sent does (8.4).
 - Summaries carry no authors' names beside the reasons: the email, the public copy and the stored snapshot (8.4, 8.7).
 - "Changed notably" for the weekly summary is a runtime setting, `Digest:NotableChange`, default 10 % (8.4, 5.6).
+- A reason may be written for either side, whatever the author's own; the author's side is only the preselected
+  choice, and a person without a side may write too (8.2). Still to be confirmed: that writing a reason needs no
+  positions consent (8.2).
 
 **Decisions needed before the stage that uses them**
 
@@ -856,7 +875,6 @@ Splitting M2 means the risky step (emailing every MP) happens only after the who
 | AI provider for pre-screening | Any provider with EU data terms; no personal data is sent either way. | M2a |
 | Telemetry backend | Hosted free tier with EU storage, or self-hosted. | M0 |
 | MP photos | Use the Seimas photos if their terms allow, otherwise initials. | M1 |
-| Which side an argument may be written on | Built in M2a: only on the author's own side (8.2), which tells readers that author's side. Being weighed: own side with honest wording about that; either side; arguments with no side. The texts that say nobody sees a person's side are to be corrected once this is chosen. | Not set yet |
 | Lithuanian terms for the new objects | Proposal: *kreipimasis*, *prašo balsuoti už / prieš*, *argumentas* (chosen by the owner on 2026-11-12 in place of *priežastis*), *suvestinė*, *atsakymas*. | M2a |
 
 **Risks**

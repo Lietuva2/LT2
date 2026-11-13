@@ -156,7 +156,9 @@ official `@lrs.lt` address from open data; the link is tied to the Seimas person
 **Appeals.**
 - One appeal per bill, always tied to a Seimas bill. Two sides: asks to vote for, asks to vote against.
 - One position per person per bill, private, changeable until the appeal closes at the final Seimas vote.
-- Reasons: plain text up to 500 characters, public with the author's display name, at most two per person per bill.
+- Reasons: plain text up to 500 characters, public with the author's display name, at most two per person per bill,
+  for either side, whatever the author's own (no side needed; the writing box preselects the author's side if any).
+  Nothing public may tell whether a reason is on its author's side.
   "Man svarbu" endorses a reason on your own side, at most three per bill.
 - The initiator opens the appeal with a side, a first reason, a neutral description and a threshold. A moderator
   publishes it.
