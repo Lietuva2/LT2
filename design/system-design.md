@@ -257,7 +257,7 @@ ASP.NET Core Identity tables (users, roles, claims, tokens, passkeys), plus:
 
 | Table | Key columns | Notes |
 |---|---|---|
-| `appeal` | `id`, `bill_id` (unique), `initiator_user_id`, neutral description, status, opened and closed times, `closing_vote_id`, `sending` (automatic or held), `threshold`, `threshold_set_by` (initiator or moderator), `first_summarised_at` | Status: pending review → open → closed, or rejected. `threshold` is the initiator's choice (8.4). |
+| `appeal` | `id`, `bill_id` (unique), `initiator_user_id`, neutral description, status, opened and closed times, `closing_vote_id`, `sending` (automatic or held), `threshold`, `threshold_set_by` (initiator or moderator), `first_summarised_at` | Status: pending review → open → closed, or rejected. `threshold` is the initiator's choice (8.4). `first_summarised_at` is set by the first summary really sent to MPs, not by a dry run (8.4). |
 | `position` | (`appeal_id`, `user_id`) primary key, `side` (for or against), created and changed times | One row per person per bill. Becomes the direct LT2 vote in stage 3. |
 | `daily_stat` | `appeal_id`, date, counts per side, counts for accounts older than 30 days, share of new accounts | For the trend chart and surge detection. **No per-person history of opinion changes is stored.** |
 | `reason` | `id`, `appeal_id`, `side`, `author_user_id`, text (up to 500 characters), status, `merged_into_id` | Status: pending, published, hidden, merged. |
@@ -273,7 +273,7 @@ ASP.NET Core Identity tables (users, roles, claims, tokens, passkeys), plus:
 |---|---|
 | `outbox` | Kind, `jsonb` payload, due time, attempts, error. Written in the same transaction as the change; dispatched with `FOR UPDATE SKIP LOCKED`. |
 | `digest_run` | Kind (weekly, before-vote, urgent, introduction), scheduled time, status, who approved. |
-| `digest_item` | Per run and appeal: counts per side, counts for accounts older than 30 days, top reasons, planned date and stage. A frozen snapshot: what MPs were told. |
+| `digest_item` | Per run and appeal: counts per side, counts for accounts older than 30 days, top reasons (text and "Man svarbu" count, without the author's name), planned date and stage. A frozen snapshot: what MPs were told. |
 | `digest_delivery` | Per run and MP: sent, skipped by preference, suppressed, bounced; the MP-specific numbers. |
 | `mp_email_pref` | Per MP: frequency (default, weekly only, before votes only, stopped), confirmed extra recipient. |
 | `suppression` | Hashed addresses that bounced or asked to stop. |
@@ -286,8 +286,9 @@ ASP.NET Core Identity tables (users, roles, claims, tokens, passkeys), plus:
 ### 5.6 Settings
 
 `config.setting`: key, `jsonb` value, who changed it and when. Holds every number an administrator may need to tune
-without a deploy: the summary rules in 8.4, the surge thresholds in 6.6, the code limits and the life of a pending
-account in 6.2, whether registration needs an invitation. Each
+without a deploy: the summary rules in 8.4 (default and minimum threshold, the weekly and before-vote times, the ceiling
+per MP, and the share of change that counts as "changed notably", `Digest:NotableChange`), the surge thresholds in 6.6,
+the code limits and the life of a pending account in 6.2, whether registration needs an invitation. Each
 change is written to `audit`, and the current values of the rules that affect what MPs receive are shown on the public
 methodology page.
 
@@ -575,6 +576,10 @@ the bill, participants are told so they can reconsider (as agreed for votes in `
   urgently, and appeals still under their threshold whose bill has reached the agenda.
 - Actions: publish, return with a note, hide, merge a reason into another (endorsements move with it), correct the
   planned date or stage, change an appeal's threshold, hold or release sending for a bill.
+- Hiding an appeal rejects it and frees the bill for a new appeal. The sides people took on the hidden appeal are
+  **kept, for now [decided 2026-11-13, to be looked at again]**: nobody can see them, and deleting them on hide could
+  not be undone if the hide was a mistake. Whether to delete them instead (data minimisation) will be looked at
+  again.
 - Every action is logged in `audit`, and the author receives the statement of reasons. A report button is on every
   appeal and reason (Digital Services Act notice-and-action applies to any hosting service, however small).
 - Only reasons a moderator has seen can appear in a summary email.
@@ -591,6 +596,7 @@ and factions are treated on equal terms. MPs who have not joined LT2 are include
 |---|---|---|
 | An appeal enters summaries when it reaches its own threshold | Set by the initiator for that appeal **[decided]**; the form offers the default (100 positions, both sides together) and refuses anything below the minimum | `Digest:ThresholdDefault`, `Digest:ThresholdMinimum` |
 | **Weekly summary** | Monday 07:00 Vilnius time, in weeks when the Seimas sits. Lists eligible appeals that are on that week's agenda or changed notably since the last summary. No changes, no email. | `Digest:Weekly` |
+| Changed notably | An appeal never yet in a summary, or one whose participants (both sides together) rose or fell by at least 10 % since the last summary that held it **[decided 2026-11-13]** | `Digest:NotableChange` |
 | **Before-vote summary** | 12:00 on the working day before a sitting whose agenda has an eligible appeal's bill at a voting stage, unless that week's Monday summary already covered the same sitting. | `Digest:BeforeVote` |
 | Ceiling per MP | Two summaries a week | `Digest:MaxPerWeek` |
 | Re-sending after an item slips | Only in the next regular summary; never an extra email because a date moved | – |
@@ -602,7 +608,9 @@ gives people a reason to share. Rules around it:
 - It is **public**: everyone sees the number, who set it (the initiator or a moderator) and the progress towards it.
 - It can never be below the administrator's minimum. If the minimum is raised later, appeals below it are lifted to it;
   appeals already in summaries stay in.
-- The initiator can change it until the appeal first enters a summary. After that it has done its job and is locked.
+- The initiator can change it until the appeal first enters a summary that is really sent to MPs. After that it has
+  done its job and is locked. A summary made in dry-run (M2a, before anything is sent) does not lock it **[decided
+  2026-11-13]**.
 - **Anyone can object to it, outside the application [decided].** The appeal covers both sides, so whoever opens it
   first could set a number the appeal will never reach and keep the other side's support from MPs. Because the number is
   public, people can see that and write to the moderators at the contact address; there is no objection form or queue
@@ -636,7 +644,8 @@ the agenda in the coming days, then the rest by participation. For each bill:
 - number, official title, stage, "Planuojama …" (never a countdown);
 - how many ask to vote for and how many against, with the counts for accounts older than 30 days;
 - when at least 20 participants on a side said they support the MP's party: those numbers;
-- the two most endorsed reasons per side;
+- the two most endorsed reasons per side, with their "Man svarbu" counts and without their authors' names **[decided
+  2026-11-13]**: the same in the email, the public copy and the stored snapshot, so a summary holds no person;
 - a surge note when one applies;
 - the MP's own published stance, or a link to answer once for everyone;
 - a link to the public page with the same numbers.
@@ -689,7 +698,7 @@ By email, each kind switchable in settings:
 ### 8.7 Public record of what was sent
 
 Every summary has a public page (`/suvestines/2026-11-16`) with the frozen numbers and reasons, without MP-specific
-figures. Participants can see that their appeal reached the Seimas, journalists can cite it, and MPs know that the
+figures and without the reasons' authors (8.4). Participants can see that their appeal reached the Seimas, journalists can cite it, and MPs know that the
 numbers in their inbox are the numbers everyone sees. The pages carry the same "not a representative poll" notice.
 
 ### 8.8 API
@@ -830,6 +839,13 @@ Splitting M2 means the risky step (emailing every MP) happens only after the who
 - The mixed group of MPs is not a faction and has no position; its members, and MPs outside any faction at the time of
   a vote, have no "Balsavo kaip frakcija" figure for those votes (7.3).
 
+**Confirmed by the owner on 2026-11-13**
+
+- The sides taken on a hidden (rejected) appeal are kept, for now; to be looked at again (8.3).
+- A dry-run summary does not lock the initiator's threshold; only the first summary really sent does (8.4).
+- Summaries carry no authors' names beside the reasons: the email, the public copy and the stored snapshot (8.4, 8.7).
+- "Changed notably" for the weekly summary is a runtime setting, `Digest:NotableChange`, default 10 % (8.4, 5.6).
+
 **Decisions needed before the stage that uses them**
 
 | Decision | Options | Needed by |
@@ -840,6 +856,7 @@ Splitting M2 means the risky step (emailing every MP) happens only after the who
 | AI provider for pre-screening | Any provider with EU data terms; no personal data is sent either way. | M2a |
 | Telemetry backend | Hosted free tier with EU storage, or self-hosted. | M0 |
 | MP photos | Use the Seimas photos if their terms allow, otherwise initials. | M1 |
+| Which side an argument may be written on | Built in M2a: only on the author's own side (8.2), which tells readers that author's side. Being weighed: own side with honest wording about that; either side; arguments with no side. The texts that say nobody sees a person's side are to be corrected once this is chosen. | Not set yet |
 | Lithuanian terms for the new objects | Proposal: *kreipimasis*, *prašo balsuoti už / prieš*, *argumentas* (chosen by the owner on 2026-11-12 in place of *priežastis*), *suvestinė*, *atsakymas*. | M2a |
 
 **Risks**

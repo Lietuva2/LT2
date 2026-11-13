@@ -161,7 +161,8 @@ official `@lrs.lt` address from open data; the link is tied to the Seimas person
 - The initiator opens the appeal with a side, a first reason, a neutral description and a threshold. A moderator
   publishes it.
 - **Threshold:** per appeal, public, set by the initiator, default 100, never below the administrator's minimum. The
-  initiator can change it until the appeal first enters a summary. A number changed by a moderator is final. There is
+  initiator can change it until the appeal first enters a summary that is really sent (a dry run does not count). A
+  number changed by a moderator is final. There is
   no objection flow in the product and no automatic override before a vote.
 
 **Summaries to MPs.**
@@ -169,7 +170,9 @@ official `@lrs.lt` address from open data; the link is tied to the Seimas person
 - Weekly on Monday morning in sitting weeks, and the working day before a sitting with a relevant bill. At most two a
   week per MP.
 - Always both sides, always with the count for accounts older than 30 days, with the most endorsed reasons a moderator
-  has seen.
+  has seen, without their authors' names (email, public copy and snapshot alike).
+- The weekly one holds appeals on that week's agenda, or never summarised, or whose participants changed by at least
+  the `Digest:NotableChange` share (default 10 %) since the last summary that held them.
 - Every summary has a public copy with the same numbers. Whether an MP stopped the summaries is never shown publicly.
 - Timing is corrected by a moderator when people flag a wrong date: correct, hold, or approve one urgent summary.
 
