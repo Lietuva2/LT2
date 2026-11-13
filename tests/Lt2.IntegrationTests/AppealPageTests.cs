@@ -50,6 +50,30 @@ public sealed partial class AppealPageTests(DatabaseFixture database) : ApiTest(
     /// <summary>The page's own content; the layout's navigation is checked elsewhere.</summary>
     private static string MainOf(string html) => html[html.IndexOf("<main", StringComparison.Ordinal)..html.IndexOf("</main>", StringComparison.Ordinal)];
 
+    /// <summary>
+    /// Found by Playwright on the stack: a member's appeal page renders several components that read runtime settings at
+    /// the same moment; with the settings cache cold they all reached the one scoped settings context and the page
+    /// answered 500. Every request here starts with an empty cache.
+    /// </summary>
+    [Fact]
+    public async Task A_members_appeal_page_renders_when_the_settings_cache_is_empty()
+    {
+        var (initiator, _) = await Factory.MemberAsync();
+        using var _i = initiator;
+        await Database.OpenPublishedAsync(initiator, await ModeratorAsync(), AppealSteps.ThirdBill, "against");
+        var (member, _) = await Factory.MemberAsync();
+        using var _m = member;
+        var cache = (Microsoft.Extensions.Caching.Memory.MemoryCache)Microsoft.Extensions.DependencyInjection.ServiceProviderServiceExtensions
+            .GetRequiredService<Microsoft.Extensions.Caching.Memory.IMemoryCache>(Factory.Services);
+
+        for (var i = 0; i < 10; i++)
+        {
+            cache.Clear();
+            var (status, _) = await PageAsync(member, "/seimas/XVP-0618/kreipimasis");
+            status.ShouldBe(HttpStatusCode.OK, $"request {i + 1}");
+        }
+    }
+
     [Fact]
     public async Task The_appeal_page_shows_both_sides_with_older_account_counts_the_description_arguments_and_the_note()
     {

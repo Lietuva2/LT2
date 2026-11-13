@@ -7,10 +7,15 @@ using Microsoft.Extensions.Caching.Memory;
 
 namespace Lt2.Audit.Settings;
 
-/// <summary>Reads settings with a short in-memory cache; a missing row means the design default.</summary>
-internal sealed class SettingsReader(AuditDb db, IMemoryCache cache) : ISettings
+/// <summary>
+/// Reads settings with a short in-memory cache; a missing row means the design default. Components of one page render
+/// concurrently in the same scope and may all miss the cache at once, so reads of the scoped context take turns.
+/// </summary>
+internal sealed class SettingsReader(AuditDb db, IMemoryCache cache) : ISettings, IDisposable
 {
     internal static readonly TimeSpan CacheDuration = TimeSpan.FromSeconds(30);
+
+    private readonly SemaphoreSlim _gate = new(1, 1);
 
     internal static string CacheKey(string name) => "setting:" + name;
 
@@ -20,10 +25,18 @@ internal sealed class SettingsReader(AuditDb db, IMemoryCache cache) : ISettings
         var raw = await cache.GetOrCreateAsync(CacheKey(key.Name), async entry =>
         {
             entry.AbsoluteExpirationRelativeToNow = CacheDuration;
-            return await db.Settings.AsNoTracking()
-                .Where(s => s.Key == key.Name)
-                .Select(s => s.Value)
-                .FirstOrDefaultAsync(cancellationToken);
+            await _gate.WaitAsync(cancellationToken);
+            try
+            {
+                return await db.Settings.AsNoTracking()
+                    .Where(s => s.Key == key.Name)
+                    .Select(s => s.Value)
+                    .FirstOrDefaultAsync(cancellationToken);
+            }
+            finally
+            {
+                _gate.Release();
+            }
         });
 
         if (raw is null)
@@ -34,6 +47,8 @@ internal sealed class SettingsReader(AuditDb db, IMemoryCache cache) : ISettings
         using var document = JsonDocument.Parse(raw);
         return key.TryRead(document.RootElement, out var value) ? value : key.Default;
     }
+
+    public void Dispose() => _gate.Dispose();
 }
 
 internal sealed class SettingsAdministration(AuditDb db, IAuditLog audit, IMemoryCache cache, TimeProvider clock)
