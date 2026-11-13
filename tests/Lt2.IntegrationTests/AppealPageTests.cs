@@ -239,11 +239,12 @@ public sealed partial class AppealPageTests(DatabaseFixture database) : ApiTest(
         method.ShouldContain("pirmadienį 07:00");
         method.ShouldContain("12:00 darbo dieną prieš posėdį");
         method.ShouldContain("2 suvestinės vienam Seimo nariui");
+        method.ShouldContain("pasikeitė bent 10 %");
         method.ShouldContain("kai bent 30 % per paskutines 72 valandas");
         method.ShouldContain("bent 20 žmonių");
 
         var api = await stranger.GetJsonAsync<Lt2.Api.Contracts.Digests.DigestRulesResponse>(Lt2.Api.Contracts.Digests.DigestRoutes.Rules);
-        api.ShouldBe(new Lt2.Api.Contracts.Digests.DigestRulesResponse(100, 50, "07:00", "12:00", 2, 0.30m, 50, 72, 20, 30, 2));
+        api.ShouldBe(new Lt2.Api.Contracts.Digests.DigestRulesResponse(100, 50, "07:00", "12:00", 2, 0.10m, 0.30m, 50, 72, 20, 30, 2));
     }
 
     [Fact]

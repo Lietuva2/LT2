@@ -57,6 +57,7 @@
             <dl class="facts" id="digest-rules">
                 <dt>@A["Method.Digests.Threshold"]</dt><dd class="num">@Fmt("Method.Digests.ThresholdValue", Formats.Number(r.ThresholdDefault), Formats.Number(r.ThresholdMinimum))</dd>
                 <dt>@A["Method.Digests.Weekly"]</dt><dd class="num">@(r.Weekly == "off" ? A["Method.Digests.Off"] : Fmt("Method.Digests.WeeklyValue", r.Weekly))</dd>
+                <dt>@A["Method.Digests.Notable"]</dt><dd class="num">@Fmt("Method.Digests.NotableValue", Formats.Number((int)Math.Round(r.NotableChange * 100)))</dd>
                 <dt>@A["Method.Digests.BeforeVote"]</dt><dd class="num">@(r.BeforeVote == "off" ? A["Method.Digests.Off"] : Fmt("Method.Digests.BeforeVoteValue", r.BeforeVote))</dd>
                 <dt>@A["Method.Digests.Ceiling"]</dt><dd class="num">@Fmt("Method.Digests.CeilingValue", r.MaxPerWeek)</dd>
                 <dt>@A["Method.Digests.Counts"]</dt><dd class="num">@Fmt("Method.Digests.CountsValue", r.OlderThanDays)</dd>

@@ -32,6 +32,7 @@ internal sealed class ServerDigestsApi(IDigests digests, ISettings settings, IHt
             await settings.GetAsync(SettingKeys.DigestWeekly, ct),
             await settings.GetAsync(SettingKeys.DigestBeforeVote, ct),
             await settings.GetAsync(SettingKeys.DigestMaxPerWeek, ct),
+            await settings.GetAsync(SettingKeys.DigestNotableChange, ct),
             await settings.GetAsync(SettingKeys.SurgeMinimumShare, ct),
             await settings.GetAsync(SettingKeys.SurgeMinimumAccounts, ct),
             await settings.GetAsync(SettingKeys.SurgeWindowHours, ct),

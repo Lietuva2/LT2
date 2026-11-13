@@ -97,6 +97,8 @@
 <data name="Method.Digests.ThresholdValue" xml:space="preserve"><value>siūloma {0}, ne mažiau kaip {1} dalyvių, abiejų pusių kartu</value></data>
 <data name="Method.Digests.Weekly" xml:space="preserve"><value>Savaitinė suvestinė</value></data>
 <data name="Method.Digests.WeeklyValue" xml:space="preserve"><value>pirmadienį {0}, posėdžių savaitėmis</value></data>
+<data name="Method.Digests.Notable" xml:space="preserve"><value>Kas patenka į savaitinę suvestinę</value></data>
+<data name="Method.Digests.NotableValue" xml:space="preserve"><value>kreipimaisi, kurių projektas yra tos savaitės darbotvarkėje; kiti – jei dar nebuvo nė vienoje suvestinėje arba jei dalyvių nuo paskutinės juos įtraukusios suvestinės pasikeitė bent {0} %</value></data>
 <data name="Method.Digests.BeforeVote" xml:space="preserve"><value>Suvestinė prieš posėdį</value></data>
 <data name="Method.Digests.BeforeVoteValue" xml:space="preserve"><value>{0} darbo dieną prieš posėdį, kai darbotvarkėje yra kreipimosi projektas</value></data>
 <data name="Method.Digests.Off" xml:space="preserve"><value>išjungta</value></data>

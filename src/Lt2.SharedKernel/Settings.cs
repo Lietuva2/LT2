@@ -94,6 +94,12 @@ public static class SettingKeys
     /// <summary>Most summaries an MP receives in a week (design 8.4).</summary>
     public static readonly SettingKey<int> DigestMaxPerWeek = new("Digest:MaxPerWeek", 2, v => v is > 0 and <= 7);
 
+    /// <summary>
+    /// "Changed notably" for the weekly summary (design 8.4): the share by which an appeal's participants (both sides)
+    /// changed since the last summary that held it. Decided by the owner on 2026-11-13, default 10 %.
+    /// </summary>
+    public static readonly SettingKey<decimal> DigestNotableChange = new("Digest:NotableChange", 0.10m, v => v is > 0 and <= 1);
+
     /// <summary>Surge note: share of recent positions from new accounts (design 6.6).</summary>
     public static readonly SettingKey<decimal> SurgeMinimumShare = new("Surge:MinimumShare", 0.30m, v => v is > 0 and <= 1);
 
@@ -114,6 +120,7 @@ public static class SettingKeys
         DigestWeekly,
         DigestBeforeVote,
         DigestMaxPerWeek,
+        DigestNotableChange,
         SurgeMinimumShare,
         SurgeMinimumAccounts,
         SurgeWindowHours,

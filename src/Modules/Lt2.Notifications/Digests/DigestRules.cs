@@ -11,12 +11,6 @@ internal static class DigestRules
     public const string BeforeVote = "before-vote";
     public const string Urgent = "urgent";
 
-    /// <summary>
-    /// "Changed notably since the last summary" is not defined by the design. Chosen here: the appeal was never in a
-    /// summary, or its participants (both sides) changed by at least this share since the last summary that held it.
-    /// </summary>
-    public const decimal NotableChange = 0.10m;
-
     public static DateOnly WeekStart(DateOnly day) => day.AddDays(-(((int)day.DayOfWeek + 6) % 7));
 
     /// <summary>Monday to Friday. Public holidays are not known to the system yet, so they count as working days.</summary>
@@ -48,16 +42,21 @@ internal static class DigestRules
     /// <summary>An appeal enters summaries when it reached its own threshold and its sending is not held.</summary>
     public static bool Eligible(DigestCandidate candidate) => candidate.ReachedThreshold && !candidate.Held;
 
-    public static bool ChangedNotably(int participantsNow, int? participantsAtLastSummary) =>
+    /// <summary>
+    /// "Changed notably since the last summary" (design 8.4, decided 2026-11-13): the appeal was never in a summary, or its
+    /// participants (both sides) changed by at least <paramref name="notableShare"/> (setting
+    /// <c>Digest:NotableChange</c>) since the last summary that held it.
+    /// </summary>
+    public static bool ChangedNotably(int participantsNow, int? participantsAtLastSummary, decimal notableShare) =>
         participantsAtLastSummary is not { } last
-        || (last == 0 ? participantsNow > 0 : Math.Abs(participantsNow - last) >= NotableChange * last);
+        || (last == 0 ? participantsNow > 0 : Math.Abs(participantsNow - last) >= notableShare * last);
 
     /// <summary>The weekly summary lists eligible appeals on that week's agenda or changed notably since their last summary.</summary>
     public static IReadOnlyList<DigestCandidate> WeeklyItems(
-        IEnumerable<DigestCandidate> candidates, DateOnly weekStart, IReadOnlyDictionary<Guid, int> participantsAtLastSummary) =>
+        IEnumerable<DigestCandidate> candidates, DateOnly weekStart, IReadOnlyDictionary<Guid, int> participantsAtLastSummary, decimal notableShare) =>
         Order(candidates.Where(c => Eligible(c)
             && ((c.Planned is { } p && p.Date >= weekStart && p.Date < weekStart.AddDays(7))
-                || ChangedNotably(c.For + c.Against, participantsAtLastSummary.TryGetValue(c.AppealId, out var last) ? last : null))));
+                || ChangedNotably(c.For + c.Against, participantsAtLastSummary.TryGetValue(c.AppealId, out var last) ? last : null, notableShare))));
 
     /// <summary>
     /// The before-vote summary: eligible appeals whose bill is planned for that sitting at a stage that is voted on, unless

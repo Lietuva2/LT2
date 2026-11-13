@@ -54,7 +54,32 @@ public sealed class DigestRuleTests
         var fresh = Candidate("NEW");
         var last = new Dictionary<Guid, int> { [onAgenda.AppealId] = 100, [unchanged.AppealId] = 100, [grown.AppealId] = 100 };
 
-        DigestRules.WeeklyItems([onAgenda, unchanged, grown, fresh], Monday, last).Select(c => c.BillNumber).ShouldBe(["ON", "GROWN", "NEW"]);
+        DigestRules.WeeklyItems([onAgenda, unchanged, grown, fresh], Monday, last, 0.10m).Select(c => c.BillNumber).ShouldBe(["ON", "GROWN", "NEW"]);
+    }
+
+    [Fact]
+    public void An_appeal_changed_notably_when_its_participants_changed_by_at_least_the_set_share_since_its_last_summary()
+    {
+        DigestRules.ChangedNotably(110, 100, 0.10m).ShouldBeTrue("exactly the share");
+        DigestRules.ChangedNotably(109, 100, 0.10m).ShouldBeFalse();
+        DigestRules.ChangedNotably(90, 100, 0.10m).ShouldBeTrue("a fall counts as much as a rise");
+        DigestRules.ChangedNotably(120, 100, 0.25m).ShouldBeFalse("the share is the setting's");
+        DigestRules.ChangedNotably(125, 100, 0.25m).ShouldBeTrue();
+    }
+
+    [Fact]
+    public void An_appeal_never_in_a_summary_counts_as_changed_notably_whatever_the_share() =>
+        DigestRules.ChangedNotably(100, null, 1m).ShouldBeTrue();
+
+    [Fact]
+    public void A_higher_notable_change_share_leaves_a_grown_appeal_out_of_the_weekly_summary_unless_it_is_on_the_agenda()
+    {
+        var onAgenda = Candidate("ON", planned: new PlannedDate("ON", Monday.AddDays(3), "adoption", null, false));
+        var grown = Candidate("GROWN", participants: 115);
+        var last = new Dictionary<Guid, int> { [onAgenda.AppealId] = 100, [grown.AppealId] = 100 };
+
+        DigestRules.WeeklyItems([onAgenda, grown], Monday, last, 0.10m).Select(c => c.BillNumber).ShouldBe(["ON", "GROWN"]);
+        DigestRules.WeeklyItems([onAgenda, grown], Monday, last, 0.20m).Select(c => c.BillNumber).ShouldBe(["ON"]);
     }
 
     [Fact]

@@ -119,6 +119,7 @@
 <data name="Admin.Setting.Digest:ThresholdDefault" xml:space="preserve"><value>Siūloma kreipimosi riba</value></data>
 <data name="Admin.Setting.Digest:ThresholdMinimum" xml:space="preserve"><value>Mažiausia kreipimosi riba</value></data>
 <data name="Admin.Setting.Digest:MaxPerWeek" xml:space="preserve"><value>Daugiausia suvestinių Seimo nariui per savaitę</value></data>
+<data name="Admin.Setting.Digest:NotableChange" xml:space="preserve"><value>Savaitinė suvestinė: kiek turi pasikeisti dalyvių skaičius (dalis, 0.10 = 10 %)</value></data>
 <data name="Admin.Setting.Registration:RequireInvitation" xml:space="preserve"><value>Registruotis tik su kvietimu</value></data>
 <data name="Admin.Setting.Registration:PendingAccountDays" xml:space="preserve"><value>Kiek dienų laikoma nebaigta registracija</value></data>
 <data name="Admin.Setting.SignIn:CodesPerHour" xml:space="preserve"><value>Prisijungimo kodų per valandą vienam adresui</value></data>

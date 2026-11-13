@@ -28,7 +28,7 @@ public sealed record DigestMpResponse(string Slug, string Status);
 
 /// <summary>
 /// The rules that decide what MPs would receive, with their current values (design 8.4: shown on the methodology page).
-/// Times are Vilnius "HH:mm" or "off"; the share is a fraction.
+/// Times are Vilnius "HH:mm" or "off"; shares are fractions.
 /// </summary>
 public sealed record DigestRulesResponse(
     int ThresholdDefault,
@@ -36,6 +36,7 @@ public sealed record DigestRulesResponse(
     string Weekly,
     string BeforeVote,
     int MaxPerWeek,
+    decimal NotableChange,
     decimal SurgeMinimumShare,
     int SurgeMinimumAccounts,
     int SurgeWindowHours,

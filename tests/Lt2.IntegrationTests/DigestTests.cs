@@ -141,6 +141,49 @@ public sealed class DigestTests(DatabaseFixture database) : ApiTest(database)
     }
 
     [Fact]
+    public async Task Changing_the_notable_change_setting_changes_which_grown_appeals_a_weekly_summary_holds()
+    {
+        var (moderator, admin) = await StaffAsync();
+        await SetAsync(admin, "Digest:ThresholdMinimum", 1);
+        var first = MondayIn(8);
+        try
+        {
+            // Another bill on each week's agenda makes them sitting weeks; XVP-0618 itself is never planned, so it can
+            // enter a weekly summary only by being new or by changing notably.
+            foreach (var monday in new[] { first, first.AddDays(7), first.AddDays(14) })
+            {
+                await PlanAsync("XVP-0533", monday.AddDays(3), "consideration");
+            }
+
+            var (initiator, _) = await Factory.MemberAsync();
+            using var _i = initiator;
+            await Database.OpenPublishedAsync(initiator, moderator, AppealSteps.ThirdBill, "against", threshold: 1);
+            var (second, _) = await Factory.MemberAsync();
+            using var _s = second;
+            (await second.TakeSideAsync(AppealSteps.ThirdBill, "for")).StatusCode.ShouldBe(HttpStatusCode.NoContent);
+
+            static IEnumerable<string> Bills(IReadOnlyList<DigestRunInfo> runs) => runs.SelectMany(r => r.Items).Select(i => i.BillNumber);
+            Bills(await RunDueAsync(At(first, 7, 5))).ShouldContain("XVP-0618", "never in a summary yet: 2 participants");
+
+            var (third, _) = await Factory.MemberAsync();
+            using var _t = third;
+            (await third.TakeSideAsync(AppealSteps.ThirdBill, "for")).StatusCode.ShouldBe(HttpStatusCode.NoContent);
+
+            // 2 → 3 participants is a change of 50 %.
+            await SetAsync(admin, "Digest:NotableChange", 0.6m);
+            Bills(await RunDueAsync(At(first.AddDays(7), 7, 5))).ShouldNotContain("XVP-0618", "50 % is under the set 60 %");
+            await SetAsync(admin, "Digest:NotableChange", 0.5m);
+            Bills(await RunDueAsync(At(first.AddDays(14), 7, 5))).ShouldContain("XVP-0618", "50 % reaches the set 50 %");
+        }
+        finally
+        {
+            await SetAsync(admin, "Digest:NotableChange", 0.10m);
+            await SetAsync(admin, "Digest:ThresholdMinimum", 50);
+            await Database.ExecuteAsync("DELETE FROM parliament.planned_item WHERE bill_number IN ('XVP-0618', 'XVP-0533')");
+        }
+    }
+
+    [Fact]
     public async Task A_before_vote_summary_comes_the_day_before_and_the_weekly_ceiling_holds_per_mp()
     {
         var (moderator, admin) = await StaffAsync();

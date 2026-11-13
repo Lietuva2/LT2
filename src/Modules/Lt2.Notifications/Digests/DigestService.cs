@@ -43,7 +43,8 @@ internal sealed class DigestService(
         {
             candidates ??= await source.CandidatesAsync(cancellationToken);
             var last = await LastParticipantsAsync(db, cancellationToken);
-            var items = DigestRules.WeeklyItems(candidates, weekStart, last);
+            var notable = await settings.GetAsync(SettingKeys.DigestNotableChange, cancellationToken);
+            var items = DigestRules.WeeklyItems(candidates, weekStart, last, notable);
             if (items.Count > 0)
             {
                 made.Add(await MakeAsync(db, DigestRules.Weekly, today, null, items, null, now, cancellationToken));
