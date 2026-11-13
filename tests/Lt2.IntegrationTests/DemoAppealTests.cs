@@ -54,6 +54,26 @@ public sealed class DemoAppealTests(DatabaseFixture database) : ApiTest(database
     [Fact]
     public async Task It_refuses_on_a_database_that_ever_imported_real_seimas_data()
     {
+        // Independent of test order: another test may already have filled the demonstration appeal, so compare what is
+        // there before and after the refused run rather than expecting nothing.
+        const string Appeals = "SELECT count(*) FROM appeals.appeal WHERE bill_number = 'XVP-0412' AND status <> 'rejected'";
+        const string Invented = "SELECT count(*) FROM identity.\"user\" WHERE email LIKE '%@pavyzdys.test' AND email LIKE 'demo.%'";
+
+        // The state that used to break this test when the filling test ran first: an open appeal on XVP-0412 already.
+        var existing = Guid.NewGuid();
+        if (await Database.ScalarAsync<long>(Appeals) == 0)
+        {
+            await Database.ExecuteAsync(
+                """
+                INSERT INTO appeals.appeal (id, bill_number, initiator_user_id, description, status, opened_at, published_at, sending, threshold, threshold_set_by, screening_flags, changed_at)
+                VALUES (@id, 'XVP-0412', @id, 'Jau esantis kreipimasis.', 'open', now(), now(), 'automatic', 100, 'initiator', '{}', now())
+                """,
+                ("id", existing));
+        }
+
+        var appealsBefore = await Database.ScalarAsync<long>(Appeals);
+        appealsBefore.ShouldBeGreaterThan(0);
+        var inventedBefore = await Database.ScalarAsync<long>(Invented);
         var run = await Database.ScalarAsync<Guid>("SELECT id FROM parliament.import_run ORDER BY started_at LIMIT 1");
         await Database.ExecuteAsync("UPDATE parliament.import_run SET synthetic = false WHERE id = @id", ("id", run));
         try
@@ -61,11 +81,13 @@ public sealed class DemoAppealTests(DatabaseFixture database) : ApiTest(database
             var error = await Should.ThrowAsync<InvalidOperationException>(() =>
                 DemoAppeal.RunAsync(Configuration(true), Database.MigratorConnectionString, TimeProvider.System, CancellationToken.None));
             error.Message.ShouldContain("stand-in");
-            (await Database.ScalarAsync<long>("SELECT count(*) FROM appeals.appeal WHERE bill_number = 'XVP-0412' AND status <> 'rejected'")).ShouldBe(0);
+            (await Database.ScalarAsync<long>(Appeals)).ShouldBe(appealsBefore, "the refused run wrote no appeal");
+            (await Database.ScalarAsync<long>(Invented)).ShouldBe(inventedBefore, "and no invented account");
         }
         finally
         {
             await Database.ExecuteAsync("UPDATE parliament.import_run SET synthetic = true WHERE id = @id", ("id", run));
+            await Database.ExecuteAsync("UPDATE appeals.appeal SET status = 'rejected' WHERE id = @id", ("id", existing));
         }
     }
 
