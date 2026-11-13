@@ -89,6 +89,7 @@ public static class AppealRoutes
     public const string Reasons = Appeal + "/reasons";
     public const string SimilarReasons = Appeal + "/reasons/similar";
     public const string Endorsement = ApiRoutes.Prefix + "/reasons/{id:guid}/endorsement";
+    public const string Reason = ApiRoutes.Prefix + "/reasons/{id:guid}";
     public const string Reports = ApiRoutes.Prefix + "/reports";
     public const string Flags = Appeal + "/flags";
     public const string AppealPlanned = ApiRoutes.Prefix + "/moderation/appeals/{id:guid}/planned";
@@ -119,6 +120,8 @@ public static class AppealRoutes
     public static string SimilarReasonsOf(string number) => AppealOf(number) + "/reasons/similar";
 
     public static string EndorsementOf(Guid reasonId) => $"{ApiRoutes.Prefix}/reasons/{reasonId}/endorsement";
+
+    public static string ReasonOf(Guid reasonId) => $"{ApiRoutes.Prefix}/reasons/{reasonId}";
 
     public static string AppealsList(string? sort, string? cursor)
     {

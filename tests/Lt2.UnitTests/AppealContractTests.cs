@@ -18,8 +18,7 @@ public sealed class AppealContractTests
     public void The_client_and_the_server_use_the_same_limits()
     {
         AppealLimits.ReasonMaxLength.ShouldBe(AppealRules.ReasonMaxLength);
-        AppealLimits.ReasonsPerPerson.ShouldBe(AppealRules.ReasonsPerPersonPerBill);
-        AppealLimits.EndorsementsPerPerson.ShouldBe(AppealRules.EndorsementsPerPersonPerBill);
+
         AppealLimits.DescriptionMaxLength.ShouldBe(AppealRules.DescriptionMaxLength);
         AppealLimits.Sides.ShouldBe(Sides.All);
     }

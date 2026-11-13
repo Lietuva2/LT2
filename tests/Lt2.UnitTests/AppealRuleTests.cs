@@ -1,3 +1,4 @@
+using Lt2.SharedKernel;
 using Lt2.Appeals.Domain;
 
 namespace Lt2.UnitTests;
@@ -57,52 +58,82 @@ public sealed class AppealRuleTests
         AppealRules.NormaliseText(" Pirma eilutė\r\nantra\u0007 <b>ne HTML</b> ").ShouldBe("Pirma eilutė\nantra <b>ne HTML</b>");
 
     [Fact]
-    public void A_person_may_write_at_most_two_arguments_per_bill()
+    public void There_is_no_limit_on_arguments_per_person_when_the_setting_is_0()
     {
-        AppealRules.CheckNewReason(Sides.For, 0).ShouldBeNull();
-        AppealRules.CheckNewReason(Sides.For, 1).ShouldBeNull();
-        AppealRules.CheckNewReason(Sides.For, 2).ShouldBe("reason.limit");
+        AppealRules.CheckNewReason(Sides.For, 0, limit: 0).ShouldBeNull();
+        AppealRules.CheckNewReason(Sides.For, 500, limit: 0).ShouldBeNull();
+        SettingKeys.AppealsReasonsPerPerson.Default.ShouldBe(0, "the owner's decision: no limit at the start");
+    }
+
+    [Fact]
+    public void With_a_limit_set_a_person_may_write_only_while_under_it()
+    {
+        AppealRules.CheckNewReason(Sides.For, 1, limit: 2).ShouldBeNull();
+        AppealRules.CheckNewReason(Sides.For, 2, limit: 2).ShouldBe("reason.limit");
+    }
+
+    [Fact]
+    public void A_limit_switched_on_later_leaves_a_person_over_it_unable_to_add_but_removes_nothing()
+    {
+        AppealRules.CheckNewReason(Sides.For, 5, limit: 2).ShouldBe("reason.limit");
+        AppealRules.Left(5, 2).ShouldBe(0, "nothing negative, nothing taken away");
+        AppealRules.CheckEndorsement(Sides.For, Sides.For, 7, limit: 3).ShouldBe("endorsement.limit");
+    }
+
+    [Fact]
+    public void Only_shown_or_waiting_arguments_count_towards_the_limit()
+    {
+        AppealRules.CountedReasonStatuses.ShouldBe([ReasonStatuses.Published, ReasonStatuses.Pending], ignoreOrder: true);
+        AppealRules.CountedReasonStatuses.ShouldNotContain(ReasonStatuses.Hidden);
+        AppealRules.CountedReasonStatuses.ShouldNotContain(ReasonStatuses.Merged);
+    }
+
+    [Fact]
+    public void Without_a_limit_nothing_is_left_to_count_so_the_pages_show_no_counter()
+    {
+        AppealRules.Left(3, limit: 0).ShouldBeNull();
+        AppealRules.Left(1, limit: 3).ShouldBe(2);
     }
 
     [Fact]
     public void A_person_with_or_without_a_side_may_write_an_argument_for_either_side()
     {
         // The rule has no input for the author's side: it cannot refuse an argument because of it.
-        AppealRules.CheckNewReason(Sides.For, 0).ShouldBeNull();
-        AppealRules.CheckNewReason(Sides.Against, 0).ShouldBeNull();
-        AppealRules.CheckNewReason("abstain", 0).ShouldBe("side.invalid", "an argument still belongs to one of the two sides");
+        AppealRules.CheckNewReason(Sides.For, 0, limit: 0).ShouldBeNull();
+        AppealRules.CheckNewReason(Sides.Against, 0, limit: 0).ShouldBeNull();
+        AppealRules.CheckNewReason("abstain", 0, limit: 0).ShouldBe("side.invalid", "an argument still belongs to one of the two sides");
     }
 
     [Fact]
-    public void The_two_arguments_per_bill_count_across_both_sides()
+    public void A_limit_on_arguments_counts_across_both_sides()
     {
-        AppealRules.CheckNewReason(Sides.Against, 1).ShouldBeNull("one for, then one against");
-        AppealRules.CheckNewReason(Sides.For, 2).ShouldBe("reason.limit");
-        AppealRules.CheckNewReason(Sides.Against, 2).ShouldBe("reason.limit");
+        AppealRules.CheckNewReason(Sides.Against, 1, limit: 2).ShouldBeNull("one for, then one against");
+        AppealRules.CheckNewReason(Sides.Against, 2, limit: 2).ShouldBe("reason.limit");
     }
 
     [Fact]
     public void Man_svarbu_still_needs_the_persons_own_side_even_though_arguments_do_not()
     {
-        AppealRules.CheckEndorsement(null, Sides.For, 0).ShouldBe("position.required");
-        AppealRules.CheckEndorsement(Sides.Against, Sides.For, 0).ShouldBe("endorsement.other-side");
+        AppealRules.CheckEndorsement(null, Sides.For, 0, limit: 0).ShouldBe("position.required");
+        AppealRules.CheckEndorsement(Sides.Against, Sides.For, 0, limit: 0).ShouldBe("endorsement.other-side");
     }
 
     [Fact]
     public void Man_svarbu_is_only_for_arguments_of_ones_own_side()
     {
-        AppealRules.CheckEndorsement(Sides.For, Sides.For, 0).ShouldBeNull();
-        AppealRules.CheckEndorsement(Sides.For, Sides.Against, 0).ShouldBe("endorsement.other-side");
-        AppealRules.CheckEndorsement(null, Sides.Against, 0).ShouldBe("position.required");
+        AppealRules.CheckEndorsement(Sides.For, Sides.For, 0, limit: 0).ShouldBeNull();
+        AppealRules.CheckEndorsement(Sides.For, Sides.Against, 0, limit: 0).ShouldBe("endorsement.other-side");
+        AppealRules.CheckEndorsement(null, Sides.Against, 0, limit: 0).ShouldBe("position.required");
     }
 
     [Fact]
-    public void Man_svarbu_is_at_most_three_per_bill()
+    public void There_is_no_limit_on_man_svarbu_marks_when_the_setting_is_0_and_the_set_limit_otherwise()
     {
-        AppealRules.CheckEndorsement(Sides.Against, Sides.Against, 2).ShouldBeNull();
-        AppealRules.CheckEndorsement(Sides.Against, Sides.Against, 3).ShouldBe("endorsement.limit");
+        AppealRules.CheckEndorsement(Sides.Against, Sides.Against, 40, limit: 0).ShouldBeNull();
+        SettingKeys.AppealsEndorsementsPerPerson.Default.ShouldBe(0);
+        AppealRules.CheckEndorsement(Sides.Against, Sides.Against, 2, limit: 3).ShouldBeNull();
+        AppealRules.CheckEndorsement(Sides.Against, Sides.Against, 3, limit: 3).ShouldBe("endorsement.limit");
     }
-
     [Fact]
     public void Changing_sides_drops_the_man_svarbu_marks_of_the_old_side()
     {

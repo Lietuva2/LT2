@@ -9,8 +9,7 @@ namespace Lt2.Api.Contracts.Appeals;
 public static class AppealLimits
 {
     public const int ReasonMaxLength = 500;
-    public const int ReasonsPerPerson = 2;
-    public const int EndorsementsPerPerson = 3;
+
     public const int DescriptionMaxLength = 1500;
     public const int StatementMaxLength = 1000;
     public const int ReportTextMaxLength = 1000;
@@ -73,13 +72,18 @@ public sealed record AppealListResponse(IReadOnlyList<AppealListItemResponse> It
 public sealed record MyAppealResponse(
     string? Side,
     IReadOnlyList<Guid> Endorsed,
-    int EndorsementsLeft,
+    int? EndorsementsLeft,
     IReadOnlyList<ReasonResponse> MyReasons,
-    int ReasonsLeft,
+    int? ReasonsLeft,
     bool IsInitiator,
     bool MayChangeThreshold,
     bool HasPositionConsent);
 
+/// <summary>
+/// The numbers the forms show (design 8.2, 8.4). <c>ReasonsPerPerson</c> and <c>EndorsementsPerPerson</c> are the
+/// settings' current limits per person per bill; 0 means no limit. In <see cref="MyAppealResponse"/> a <c>null</c>
+/// "left" means no limit.
+/// </summary>
 public sealed record AppealRulesResponse(int ThresholdDefault, int ThresholdMinimum, int ReasonMaxLength, int ReasonsPerPerson, int EndorsementsPerPerson, int DescriptionMaxLength);
 
 public sealed record ReasonCreatedResponse(Guid Id, string Status);

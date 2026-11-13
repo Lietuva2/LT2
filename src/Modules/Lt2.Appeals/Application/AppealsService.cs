@@ -20,6 +20,8 @@ internal sealed class AppealsService(
     IBillCatalogue bills,
     IPreScreening screening,
     IPlannedAgenda agenda,
+    ISettings settings,
+    IAuditLog audit,
     TimeProvider clock) : IAppealsModule
 {
     private const int PageSize = 20;
@@ -111,9 +113,11 @@ internal sealed class AppealsService(
         return new MyAppeal(
             side,
             endorsed,
-            Math.Max(0, AppealRules.EndorsementsPerPersonPerBill - endorsed.Count),
+            AppealRules.Left(endorsed.Count, await settings.GetAsync(SettingKeys.AppealsEndorsementsPerPerson, cancellationToken)),
             mine.Select(r => AppealReads.ToInfo(r, names, endorsements)).ToList(),
-            Math.Max(0, AppealRules.ReasonsPerPersonPerBill - mine.Count),
+            AppealRules.Left(
+                mine.Count(r => AppealRules.CountedReasonStatuses.Contains(r.Status)),
+                await settings.GetAsync(SettingKeys.AppealsReasonsPerPerson, cancellationToken)),
             isInitiator,
             isInitiator && ThresholdRules.InitiatorMayChange(appeal.Status, appeal.ThresholdSetBy, appeal.FirstSummarisedAt),
             facts?.HasPositionConsent == true);
@@ -425,8 +429,10 @@ internal sealed class AppealsService(
         }
 
         // Either side, whatever the author's own (design 8.2): the position is not read, and writing never stores one.
-        var written = await db.Reasons.CountAsync(r => r.AppealId == appeal.Value.Id && r.AuthorUserId == userId, cancellationToken);
-        if (AppealRules.CheckNewReason(request.Side, written) is { } refused)
+        var counted = AppealRules.CountedReasonStatuses.ToList();
+        var written = await db.Reasons.CountAsync(r => r.AppealId == appeal.Value.Id && r.AuthorUserId == userId && counted.Contains(r.Status), cancellationToken);
+        var limit = await settings.GetAsync(SettingKeys.AppealsReasonsPerPerson, cancellationToken);
+        if (AppealRules.CheckNewReason(request.Side, written, limit) is { } refused)
         {
             return RuleErrors.Of(refused);
         }
@@ -467,7 +473,8 @@ internal sealed class AppealsService(
 
         var side = await db.Positions.Where(p => p.AppealId == appeal.Id && p.UserId == userId).Select(p => p.Side).FirstOrDefaultAsync(cancellationToken);
         var already = await db.Endorsements.CountAsync(e => e.AppealId == appeal.Id && e.UserId == userId, cancellationToken);
-        if (AppealRules.CheckEndorsement(side, reason.Side, already) is { } refused)
+        var limit = await settings.GetAsync(SettingKeys.AppealsEndorsementsPerPerson, cancellationToken);
+        if (AppealRules.CheckEndorsement(side, reason.Side, already, limit) is { } refused)
         {
             return RuleErrors.Of(refused);
         }
@@ -496,6 +503,54 @@ internal sealed class AppealsService(
         }
 
         await db.Endorsements.Where(e => e.ReasonId == reasonId && e.UserId == userId).ExecuteDeleteAsync(cancellationToken);
+        await transaction.CommitAsync(cancellationToken);
+        return Result.Ok();
+    }
+
+    /// <summary>
+    /// The author withdraws their own argument (design 8.2, decided 2026-11-13), while the appeal is open: the row is
+    /// deleted with its "Man svarbu" marks, arguments once merged into it stay merged but point nowhere, and open reports
+    /// on it are closed. A summary already made keeps its frozen text. The audit entry names the bill, not the text or
+    /// the side. Someone else's argument: <c>reason.author-only</c>; a hidden, merged or unknown one: not found; on an
+    /// appeal that is not open (closed, or still with the moderators): <c>appeal.not-open</c>.
+    /// </summary>
+    public async Task<Result<Unit>> WithdrawReasonAsync(Guid reasonId, Guid userId, CancellationToken cancellationToken)
+    {
+        await using var db = await contexts.CreateDbContextAsync(cancellationToken);
+        await using var transaction = await db.Database.BeginTransactionAsync(cancellationToken);
+        await ParticipationLock.TakeAsync(db, userId, cancellationToken);
+        var counted = AppealRules.CountedReasonStatuses.ToList();
+        var reason = await db.Reasons.FirstOrDefaultAsync(r => r.Id == reasonId && counted.Contains(r.Status), cancellationToken);
+        if (reason is null)
+        {
+            return Error.NotFound("reason.not-found");
+        }
+
+        if (reason.AuthorUserId != userId)
+        {
+            return Error.Forbidden("reason.author-only");
+        }
+
+        var appeal = await db.Appeals.AsNoTracking().FirstAsync(a => a.Id == reason.AppealId, cancellationToken);
+        if (appeal.Status != AppealStatuses.Open)
+        {
+            return Error.Conflict("appeal.not-open");
+        }
+
+        var now = clock.GetUtcNow();
+        await db.Endorsements.Where(e => e.ReasonId == reasonId).ExecuteDeleteAsync(cancellationToken);
+        await db.Reasons.Where(r => r.MergedIntoId == reasonId).ExecuteUpdateAsync(s => s.SetProperty(r => r.MergedIntoId, (Guid?)null), cancellationToken);
+        await db.Reports.Where(r => r.TargetId == reasonId && r.Status == "open")
+            .ExecuteUpdateAsync(s => s.SetProperty(r => r.Status, "closed").SetProperty(r => r.ClosedAt, now), cancellationToken);
+        db.Reasons.Remove(reason);
+        await db.SaveChangesAsync(cancellationToken);
+        await audit.WriteAsync(
+            new AuditEntry(
+                "reason.withdrawn", userId, "member", "reason:" + reasonId,
+                System.Text.Json.JsonSerializer.SerializeToElement(new { bill = appeal.BillNumber }, System.Text.Json.JsonSerializerOptions.Web),
+                null),
+            transaction.GetDbTransaction(),
+            cancellationToken);
         await transaction.CommitAsync(cancellationToken);
         return Result.Ok();
     }

@@ -110,6 +110,9 @@ internal sealed class HttpAppealsApi(ApiHttp http) : IAppealsApi
     public Task<ApiResult> RemoveEndorsementAsync(Guid reasonId, CancellationToken cancellationToken = default) =>
         http.SendAsync(HttpMethod.Delete, AppealRoutes.EndorsementOf(reasonId), null, cancellationToken);
 
+    public Task<ApiResult> WithdrawReasonAsync(Guid reasonId, CancellationToken cancellationToken = default) =>
+        http.SendAsync(HttpMethod.Delete, AppealRoutes.ReasonOf(reasonId), null, cancellationToken);
+
     public Task<ApiResult> ReportAsync(ReportRequest request, CancellationToken cancellationToken = default) =>
         http.SendAsync(HttpMethod.Post, AppealRoutes.Reports, request, cancellationToken);
 

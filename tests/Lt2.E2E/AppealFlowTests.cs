@@ -81,6 +81,7 @@ public sealed class AppealFlowTests(AppealFlowTests.ModeratorFixture moderator) 
         await Assertions.Expect(b.Locator("#my-side")).ToContainTextAsync("Jūs prašote balsuoti už. Tai matote tik jūs.", new() { Timeout = 30_000 });
         await Assertions.Expect(b.Locator("#count-for .figure__num")).ToHaveTextAsync("1");
         await Assertions.Expect(b.Locator("#count-against .figure__num")).ToHaveTextAsync("1");
+        await Assertions.Expect(b.Locator("#reasons-note")).ToHaveCountAsync(0, new() { Timeout = 10_000 });
 
         // 5. ... and marks their argument "Man svarbu", now that it is on their own side.
         await mine.GetByRole(AriaRole.Button, new() { Name = "Man svarbu · 0" }).ClickAsync();
@@ -105,8 +106,18 @@ public sealed class AppealFlowTests(AppealFlowTests.ModeratorFixture moderator) 
         await Assertions.Expect(a.GetByText("Argumentas paskelbtas.")).ToBeVisibleAsync();
         await Assertions.Expect(a.Locator("#reasons-for .said").Filter(new() { HasText = "Pripažįstu, kad biudžetui" })).ToBeVisibleAsync();
         await Assertions.Expect(a.Locator("#count-against .figure__num")).ToHaveTextAsync("1");
+        await Assertions.Expect(a.Locator("#reasons-note")).ToHaveCountAsync(0, new() { Timeout = 5_000 });
         await NoSidewaysScrollAsync(a);
         await a.ScreenshotAsync(new() { Path = Shot($"appeal-argument-other-side-{width}.png"), FullPage = true });
+
+        // 7. ... and withdraws it again: the button is beside one's own arguments only, and asks first.
+        var own = a.Locator("#reasons-for .said").Filter(new() { HasText = "Pripažįstu, kad biudžetui" });
+        await Assertions.Expect(a.Locator("#reasons-for .said").Filter(new() { HasText = "Papildomos pajamos reikalingos gynybai" })
+            .GetByRole(AriaRole.Button, new() { Name = "Atsiimti" })).ToHaveCountAsync(0);
+        await own.GetByRole(AriaRole.Button, new() { Name = "Atsiimti", Exact = true }).ClickAsync();
+        await a.GetByRole(AriaRole.Button, new() { Name = "Atsiimti argumentą" }).ClickAsync();
+        await Assertions.Expect(a.GetByText("Argumentas atsiimtas.")).ToBeVisibleAsync();
+        await Assertions.Expect(own).ToHaveCountAsync(0);
 
         initiator.ConsoleErrors.ShouldBeEmpty();
         second.ConsoleErrors.ShouldBeEmpty();

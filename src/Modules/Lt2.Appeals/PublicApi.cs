@@ -64,14 +64,17 @@ public sealed record AppealPage(IReadOnlyList<AppealListItem> Items, int Total, 
 public sealed record MyAppeal(
     string? Side,
     IReadOnlyList<Guid> Endorsed,
-    int EndorsementsLeft,
+    int? EndorsementsLeft,
     IReadOnlyList<ReasonInfo> MyReasons,
-    int ReasonsLeft,
+    int? ReasonsLeft,
     bool IsInitiator,
     bool MayChangeThreshold,
     bool HasPositionConsent);
 
-/// <summary>The numbers the forms need (design 8.4): the threshold offered, and the minimum.</summary>
+/// <summary>
+/// The numbers the forms need (design 8.2, 8.4): the threshold offered, the minimum, and the per-person limits (0 = no
+/// limit, the default).
+/// </summary>
 public sealed record AppealRulesInfo(int ThresholdDefault, int ThresholdMinimum, int ReasonMaxLength, int ReasonsPerPerson, int EndorsementsPerPerson, int DescriptionMaxLength);
 
 /// <summary>What the initiator gives when opening an appeal (design 8.1).</summary>
@@ -172,6 +175,9 @@ public interface IAppealsModule
     Task<Result<Unit>> EndorseAsync(Guid reasonId, Guid userId, CancellationToken cancellationToken);
 
     Task<Result<Unit>> RemoveEndorsementAsync(Guid reasonId, Guid userId, CancellationToken cancellationToken);
+
+    /// <summary>The author withdraws their own argument while the appeal is open (design 8.2).</summary>
+    Task<Result<Unit>> WithdrawReasonAsync(Guid reasonId, Guid userId, CancellationToken cancellationToken);
 
     Task<Result<Unit>> ReportAsync(Guid userId, NewReport request, CancellationToken cancellationToken);
 

@@ -41,14 +41,18 @@
 <data name="Reasons.PublishAnyway" xml:space="preserve"><value>Vis tiek paskelbti savo</value></data>
 <data name="Reasons.SimilarTitle" xml:space="preserve"><value>Panašūs argumentai jau yra</value></data>
 <data name="Reasons.SimilarText" xml:space="preserve"><value>Gal jūsų mintį kas nors jau parašė? Jei argumentas tos pusės, kurios prašote patys, galite pažymėti „Man svarbu“; arba vis tiek paskelbkite savo.</value></data>
+<data name="Reasons.Withdraw" xml:space="preserve"><value>Atsiimti</value></data>
+<data name="Reasons.WithdrawConfirm" xml:space="preserve"><value>Argumentas bus ištrintas kartu su jo „Man svarbu“ žymomis. Jau sudarytose suvestinėse jo tekstas liks.</value></data>
+<data name="Reasons.WithdrawYes" xml:space="preserve"><value>Atsiimti argumentą</value></data>
+<data name="Reasons.Withdrawn" xml:space="preserve"><value>Argumentas atsiimtas.</value></data>
 <data name="Reasons.Published" xml:space="preserve"><value>Argumentas paskelbtas.</value></data>
 <data name="Reasons.Pending" xml:space="preserve"><value>Argumentą pirma peržiūrės moderatorius. Kai jis bus paskelbtas, gausite laišką.</value></data>
 <data name="Reasons.NeedSide" xml:space="preserve"><value>„Man svarbu“ žymėti gali tie, kurie nurodė, ko prašo.</value></data>
 <data name="Reasons.OwnSideOnly" xml:space="preserve"><value>„Man svarbu“ galite žymėti tik argumentus tos pusės, kurios prašote patys.</value></data>
-<data name="Reasons.NoEndorsementsLeft" xml:space="preserve"><value>Dėl šio projekto „Man svarbu“ jau pažymėjote tris argumentus.</value></data>
+<data name="Reasons.NoEndorsementsLeft" xml:space="preserve"><value>Dėl šio projekto „Man svarbu“ daugiau pažymėti nebegalite.</value></data>
 <data name="Reasons.EndorsementsLeft" xml:space="preserve"><value>„Man svarbu“ dar galite pažymėti: {0}.</value></data>
 <data name="Reasons.Left" xml:space="preserve"><value>Argumentų dar galite parašyti: {0}.</value></data>
-<data name="Reasons.NoneLeft" xml:space="preserve"><value>Šiam projektui jau parašėte du argumentus.</value></data>
+<data name="Reasons.NoneLeft" xml:space="preserve"><value>Šiam projektui daugiau argumentų parašyti nebegalite.</value></data>
 <data name="Report.Open" xml:space="preserve"><value>Pranešti</value></data>
 <data name="Report.AppealOpen" xml:space="preserve"><value>Pranešti apie kreipimąsi</value></data>
 <data name="Report.Title" xml:space="preserve"><value>Pranešimas moderatoriams</value></data>
@@ -123,6 +127,8 @@
 <data name="Admin.Setting.Digest:ThresholdDefault" xml:space="preserve"><value>Siūloma kreipimosi riba</value></data>
 <data name="Admin.Setting.Digest:ThresholdMinimum" xml:space="preserve"><value>Mažiausia kreipimosi riba</value></data>
 <data name="Admin.Setting.Digest:MaxPerWeek" xml:space="preserve"><value>Daugiausia suvestinių Seimo nariui per savaitę</value></data>
+<data name="Admin.Setting.Appeals:ReasonsPerPerson" xml:space="preserve"><value>Argumentų vienam žmogui dėl vieno projekto (0 – neribojama)</value></data>
+<data name="Admin.Setting.Appeals:EndorsementsPerPerson" xml:space="preserve"><value>„Man svarbu“ žymų vienam žmogui dėl vieno projekto (0 – neribojama)</value></data>
 <data name="Admin.Setting.Digest:NotableChange" xml:space="preserve"><value>Savaitinė suvestinė: kiek turi pasikeisti dalyvių skaičius (dalis, 0.10 = 10 %)</value></data>
 <data name="Admin.Setting.Registration:RequireInvitation" xml:space="preserve"><value>Registruotis tik su kvietimu</value></data>
 <data name="Admin.Setting.Registration:PendingAccountDays" xml:space="preserve"><value>Kiek dienų laikoma nebaigta registracija</value></data>

@@ -22,11 +22,14 @@ internal static class AppealRules
     /// <summary>An argument is plain text of at most this many characters.</summary>
     public const int ReasonMaxLength = 500;
 
-    /// <summary>A person may write at most this many arguments per bill.</summary>
-    public const int ReasonsPerPersonPerBill = 2;
+    /// <summary>A per-person limit set to this means no limit (settings Appeals:ReasonsPerPerson, Appeals:EndorsementsPerPerson).</summary>
+    public const int NoLimit = 0;
 
-    /// <summary>A person may mark at most this many arguments "Man svarbu" per bill.</summary>
-    public const int EndorsementsPerPersonPerBill = 3;
+    /// <summary>
+    /// The argument statuses that count towards a person's limit (design 8.2): shown or waiting for a moderator. Hidden
+    /// and merged ones do not; a withdrawn one is gone.
+    /// </summary>
+    public static readonly IReadOnlyList<string> CountedReasonStatuses = [ReasonStatuses.Published, ReasonStatuses.Pending];
 
     /// <summary>The neutral description is short; the design gives no number, this one is a choice.</summary>
     public const int DescriptionMaxLength = 1500;
@@ -82,15 +85,25 @@ internal static class AppealRules
     }
 
     /// <summary>
-    /// An argument may be written for either side, whatever the author's own side and whether they took one (design 8.2,
-    /// decided 2026-11-13), so the author's side is not an input. At most two per person per bill in total, across both
-    /// sides (every argument they wrote on the bill counts, whatever happened to it since).
+    /// A per-person limit (design 8.2): with the setting at 0 there is none; otherwise a person may add while they have
+    /// fewer than the limit. Nothing already there is removed, so someone over a limit switched on later simply cannot
+    /// add.
     /// </summary>
-    public static string? CheckNewReason(string reasonSide, int reasonsAlreadyWritten) =>
-        CheckSide(reasonSide) ?? (reasonsAlreadyWritten >= ReasonsPerPersonPerBill ? "reason.limit" : null);
+    public static bool MayAdd(int alreadyCounted, int limit) => limit == NoLimit || alreadyCounted < limit;
 
-    /// <summary>"Man svarbu" only on an argument of the person's own side, and at most three per bill.</summary>
-    public static string? CheckEndorsement(string? endorsersSide, string reasonSide, int endorsementsAlreadyOnBill)
+    /// <summary>How many a person may still add, or <c>null</c> when there is no limit (the pages then show no counter).</summary>
+    public static int? Left(int alreadyCounted, int limit) => limit == NoLimit ? null : Math.Max(0, limit - alreadyCounted);
+
+    /// <summary>
+    /// An argument may be written for either side, whatever the author's own side and whether they took one (design 8.2,
+    /// decided 2026-11-13), so the author's side is not an input. Across both sides, the person's shown or waiting
+    /// arguments on the bill count towards the setting's limit, if one is set.
+    /// </summary>
+    public static string? CheckNewReason(string reasonSide, int reasonsCounted, int limit) =>
+        CheckSide(reasonSide) ?? (MayAdd(reasonsCounted, limit) ? null : "reason.limit");
+
+    /// <summary>"Man svarbu" only on an argument of the person's own side, within the setting's limit, if one is set.</summary>
+    public static string? CheckEndorsement(string? endorsersSide, string reasonSide, int endorsementsAlreadyOnBill, int limit)
     {
         if (endorsersSide is null)
         {
@@ -102,7 +115,7 @@ internal static class AppealRules
             return "endorsement.other-side";
         }
 
-        return endorsementsAlreadyOnBill >= EndorsementsPerPersonPerBill ? "endorsement.limit" : null;
+        return MayAdd(endorsementsAlreadyOnBill, limit) ? null : "endorsement.limit";
     }
 
     /// <summary>

@@ -77,6 +77,7 @@ internal static class ApiEndpoints
         WriteReasonEndpoint.Map(api);
         EndorseEndpoint.Map(api);
         RemoveEndorsementEndpoint.Map(api);
+        WithdrawReasonEndpoint.Map(api);
         ReportEndpoint.Map(api);
         FlagDateEndpoint.Map(api);
 

@@ -33,6 +33,11 @@
                                             disabled="@(Locked || !MayEndorse(reason, endorsed))" title="@EndorseHint(reason, endorsed)"
                                             @onclick="() => ToggleEndorsementAsync(reason.Id, endorsed)">@Text("Reasons.Endorse", AppealNumbers.Of(reason.Endorsements))</button>
                                     <button class="linkish small" type="button" disabled="@Locked" @onclick="() => _reporting = _reporting == reason.Id ? null : reason.Id">@L["Report.Open"]</button>
+                                    @if (IsMine(reason) && appeal.Status == "open")
+                                    {
+                                        <button class="linkish small" type="button" id="withdraw-@reason.Id" disabled="@Locked"
+                                                @onclick="() => _withdrawing = _withdrawing == reason.Id ? null : reason.Id">@L["Reasons.Withdraw"]</button>
+                                    }
                                 }
                                 else
                                 {
@@ -43,6 +48,14 @@
                             @if (_reporting == reason.Id)
                             {
                                 <ReportForm TargetKind="reason" TargetId="reason.Id" OnClose="() => _reporting = null" />
+                            }
+                            @if (_withdrawing == reason.Id)
+                            {
+                                <div class="row" role="group" aria-label="@L["Reasons.Withdraw"]">
+                                    <p class="small">@L["Reasons.WithdrawConfirm"]</p>
+                                    <button class="btn" type="button" id="withdraw-confirm" disabled="@Locked" @onclick="() => WithdrawAsync(reason.Id)">@L["Reasons.WithdrawYes"]</button>
+                                    <button class="btn btn--plain" type="button" disabled="@Locked" @onclick="() => _withdrawing = null">@L["Cancel"]</button>
+                                </div>
                             }
                         </div>
                     }
@@ -63,7 +76,13 @@
         </div>
         @if (_signedIn && Mine is { } mine)
         {
-            <p class="small num">@(mine.Side is null ? L["Reasons.NeedSide"] : Text("Reasons.EndorsementsLeft", mine.EndorsementsLeft)) @(mine.ReasonsLeft > 0 ? Text("Reasons.Left", mine.ReasonsLeft) : L["Reasons.NoneLeft"])</p>
+            // Counters only while a limit is set (design 8.2: none by default, so usually nothing but the side note).
+            var marks = mine.Side is null ? L["Reasons.NeedSide"].Value : mine.EndorsementsLeft is { } e ? Text("Reasons.EndorsementsLeft", e) : null;
+            var reasons = mine.ReasonsLeft switch { null => null, > 0 and var r => Text("Reasons.Left", r), _ => L["Reasons.NoneLeft"].Value };
+            @if (marks is not null || reasons is not null)
+            {
+                <p class="small num" id="reasons-note">@marks @reasons</p>
+            }
         }
 
         @if (_writing && Mine is not null)
@@ -144,7 +163,26 @@
     private string? _side;
 
     /// <summary>An argument may be written for either side, with or without a side of one's own (design 8.2).</summary>
-    private bool CanWrite => _signedIn && Appeal?.Status == "open" && Mine is { ReasonsLeft: > 0 };
+    private bool CanWrite => _signedIn && Appeal?.Status == "open" && Mine is { } mine && mine.ReasonsLeft is null or > 0;
+
+    private Guid? _withdrawing;
+
+    /// <summary>One's own argument, known only from the never-cached "mine" answer.</summary>
+    private bool IsMine(ReasonResponse reason) => Mine?.MyReasons.Any(r => r.Id == reason.Id) == true;
+
+    private Task WithdrawAsync(Guid reasonId) => RunAsync(async () =>
+    {
+        var result = await Appeals.WithdrawReasonAsync(reasonId);
+        if (!result.IsSuccess)
+        {
+            Show(result.Problem);
+            return;
+        }
+
+        _withdrawing = null;
+        Info = L["Reasons.Withdrawn"];
+        await ReloadAsync();
+    });
 
     /// <summary>
     /// The side is preselected to the person's own, read from their never-cached "mine" answer; with no side of their
@@ -174,7 +212,7 @@
     }
 
     private bool MayEndorse(ReasonResponse reason, bool endorsed) =>
-        Appeal?.Status == "open" && Mine is { } mine && (endorsed || (mine.Side == reason.Side && mine.EndorsementsLeft > 0));
+        Appeal?.Status == "open" && Mine is { } mine && (endorsed || (mine.Side == reason.Side && mine.EndorsementsLeft is null or > 0));
 
     private string? EndorseHint(ReasonResponse reason, bool endorsed) =>
         MayEndorse(reason, endorsed) ? null

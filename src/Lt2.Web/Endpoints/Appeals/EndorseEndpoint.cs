@@ -7,7 +7,7 @@ using Lt2.Web.Services;
 
 namespace Lt2.Web.Endpoints.Appeals;
 
-/// <summary><c>PUT /api/v1/reasons/{id}/endorsement</c>: "Man svarbu" on an argument of one's own side, at most three per bill.</summary>
+/// <summary><c>PUT /api/v1/reasons/{id}/endorsement</c>: "Man svarbu" on an argument of one's own side, within the per-person setting (no limit by default).</summary>
 internal static class EndorseEndpoint
 {
     public static void Map(IEndpointRouteBuilder api) =>

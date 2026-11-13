@@ -21,8 +21,8 @@ internal sealed class AppealReads(IParticipants participants, IBillCatalogue bil
             offered,
             minimum,
             AppealRules.ReasonMaxLength,
-            AppealRules.ReasonsPerPersonPerBill,
-            AppealRules.EndorsementsPerPersonPerBill,
+            await settings.GetAsync(SettingKeys.AppealsReasonsPerPerson, ct),
+            await settings.GetAsync(SettingKeys.AppealsEndorsementsPerPerson, ct),
             AppealRules.DescriptionMaxLength);
     }
 

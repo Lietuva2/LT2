@@ -240,6 +240,8 @@ public sealed partial class AppealPageTests(DatabaseFixture database) : ApiTest(
         method.ShouldContain("12:00 darbo dieną prieš posėdį");
         method.ShouldContain("2 suvestinės vienam Seimo nariui");
         method.ShouldContain("pasikeitė bent 10 %");
+        method.ShouldContain("Argumentų dėl vieno projekto</dt><dd class=\"num\">neribojama");
+        method.ShouldContain("„Man svarbu“ žymų dėl vieno projekto</dt><dd class=\"num\">neribojama");
         method.ShouldContain("kai bent 30 % per paskutines 72 valandas");
         method.ShouldContain("bent 20 žmonių");
 

@@ -100,6 +100,15 @@ public static class SettingKeys
     /// </summary>
     public static readonly SettingKey<decimal> DigestNotableChange = new("Digest:NotableChange", 0.10m, v => v is > 0 and <= 1);
 
+    /// <summary>
+    /// Arguments one person may write on one bill (design 8.2); 0 = no limit, the default (decided by the owner on
+    /// 2026-11-13: limits are switched on when the need shows).
+    /// </summary>
+    public static readonly SettingKey<int> AppealsReasonsPerPerson = new("Appeals:ReasonsPerPerson", 0, v => v is >= 0 and <= 100);
+
+    /// <summary>"Man svarbu" marks one person may give on one bill (design 8.2); 0 = no limit, the default.</summary>
+    public static readonly SettingKey<int> AppealsEndorsementsPerPerson = new("Appeals:EndorsementsPerPerson", 0, v => v is >= 0 and <= 100);
+
     /// <summary>Surge note: share of recent positions from new accounts (design 6.6).</summary>
     public static readonly SettingKey<decimal> SurgeMinimumShare = new("Surge:MinimumShare", 0.30m, v => v is > 0 and <= 1);
 
@@ -121,6 +130,8 @@ public static class SettingKeys
         DigestBeforeVote,
         DigestMaxPerWeek,
         DigestNotableChange,
+        AppealsReasonsPerPerson,
+        AppealsEndorsementsPerPerson,
         SurgeMinimumShare,
         SurgeMinimumAccounts,
         SurgeWindowHours,

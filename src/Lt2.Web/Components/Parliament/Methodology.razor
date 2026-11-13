@@ -2,6 +2,7 @@
 @using Lt2.Api.Contracts.Meta
 @inject IMetaApi Meta
 @inject Lt2.Api.Contracts.Digests.IDigestsApi Digests
+@inject Lt2.Api.Contracts.Appeals.IAppealsApi Appeals
 @inject IStringLocalizer<Lt2.Web.Components.Appeals.AppealText> A
 @inject Formats F
 
@@ -69,6 +70,19 @@
         </section>
     }
 
+    @if (_limits is { } l)
+    {
+        @* Design 8.2: the per-person limits are runtime settings; 0 means no limit (the default), said in words. *@
+        <section class="stack" aria-labelledby="m-limits" id="ribos-zmogui">
+            <h2 id="m-limits">@A["Method.Limits"]</h2>
+            <dl class="facts" id="person-limits">
+                <dt>@A["Method.Limits.Reasons"]</dt><dd class="num">@(l.ReasonsPerPerson == 0 ? A["Method.Limits.None"] : Fmt("Method.Limits.ReasonsValue", Formats.Number(l.ReasonsPerPerson)))</dd>
+                <dt>@A["Method.Limits.Endorsements"]</dt><dd class="num">@(l.EndorsementsPerPerson == 0 ? A["Method.Limits.None"] : Fmt("Method.Limits.EndorsementsValue", Formats.Number(l.EndorsementsPerPerson)))</dd>
+            </dl>
+            <p>@A["Method.Limits.Note"]</p>
+        </section>
+    }
+
     <section class="stack" aria-labelledby="m-not">
         <h2 id="m-not">@F.T["Method.Not"]</h2>
         <p>@F.T["Method.Not.1"]</p>
@@ -78,11 +92,13 @@
 @code {
     private DateTimeOffset? _lastSuccess;
     private Lt2.Api.Contracts.Digests.DigestRulesResponse? _rules;
+    private Lt2.Api.Contracts.Appeals.AppealRulesResponse? _limits;
 
     protected override async Task OnInitializedAsync()
     {
         _lastSuccess = (await Meta.GetImportsAsync()).Value?.Sources.FirstOrDefault()?.LastSuccessAt;
         _rules = (await Digests.GetRulesAsync()).Value;
+        _limits = (await Appeals.GetRulesAsync()).Value;
     }
 
     private string Fmt(string key, params object?[] values) => string.Format(System.Globalization.CultureInfo.InvariantCulture, A[key], values);

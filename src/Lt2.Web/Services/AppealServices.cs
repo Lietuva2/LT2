@@ -135,6 +135,9 @@ internal sealed class ServerAppealsApi(IAppealsModule appeals, IHttpContextAcces
     public async Task<ApiResult> RemoveEndorsementAsync(Guid reasonId, CancellationToken cancellationToken = default) =>
         await AsMemberAsync(id => appeals.RemoveEndorsementAsync(reasonId, id, cancellationToken));
 
+    public async Task<ApiResult> WithdrawReasonAsync(Guid reasonId, CancellationToken cancellationToken = default) =>
+        await AsMemberAsync(id => appeals.WithdrawReasonAsync(reasonId, id, cancellationToken));
+
     public async Task<ApiResult> ReportAsync(ReportRequest request, CancellationToken cancellationToken = default) =>
         await AsMemberAsync(id => appeals.ReportAsync(id, AppealMapping.ToModule(request), cancellationToken));
 

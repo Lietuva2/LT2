@@ -36,6 +36,9 @@ public interface IAppealsApi
 
     Task<ApiResult> RemoveEndorsementAsync(Guid reasonId, CancellationToken cancellationToken = default);
 
+    /// <summary>The author withdraws their own argument while the appeal is open (design 8.2).</summary>
+    Task<ApiResult> WithdrawReasonAsync(Guid reasonId, CancellationToken cancellationToken = default);
+
     Task<ApiResult> ReportAsync(ReportRequest request, CancellationToken cancellationToken = default);
 
     /// <summary>"The date is wrong" or "voted sooner", with a link (design 8.4).</summary>

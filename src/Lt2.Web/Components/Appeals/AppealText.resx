@@ -113,6 +113,13 @@
 <data name="Method.Digests.Groups" xml:space="preserve"><value>Grupių skaičiai</value></data>
 <data name="Method.Digests.GroupsValue" xml:space="preserve"><value>pvz., palaikančių Seimo nario partiją, rodomi tik kai grupėje yra bent {0} žmonių</value></data>
 <data name="Method.Digests.NotSent" xml:space="preserve"><value>Kol vyksta bandymas, suvestinės sudaromos ir skelbiamos viešai, bet Seimo nariams nesiunčiamos.</value></data>
+<data name="Method.Limits" xml:space="preserve"><value>Kiek gali vienas žmogus</value></data>
+<data name="Method.Limits.Reasons" xml:space="preserve"><value>Argumentų dėl vieno projekto</value></data>
+<data name="Method.Limits.ReasonsValue" xml:space="preserve"><value>ne daugiau kaip {0}</value></data>
+<data name="Method.Limits.Endorsements" xml:space="preserve"><value>„Man svarbu“ žymų dėl vieno projekto</value></data>
+<data name="Method.Limits.EndorsementsValue" xml:space="preserve"><value>ne daugiau kaip {0}</value></data>
+<data name="Method.Limits.None" xml:space="preserve"><value>neribojama</value></data>
+<data name="Method.Limits.Note" xml:space="preserve"><value>Ribas nustato administratorius. Jei riba įvedama vėliau, ji taikoma tik naujiems argumentams ir žymoms: niekas, kas jau parašyta ar pažymėta, neištrinama. Skaičiuojami tik rodomi ir moderatoriaus laukiantys argumentai. Savo argumentą autorius gali atsiimti, kol kreipimasis atviras.</value></data>
 <data name="Rules.Title" xml:space="preserve"><value>Moderavimo taisyklės</value></data>
 <data name="Rules.Lead" xml:space="preserve"><value>Viskas, kas pasiektų Seimo narius, pirma praeina pro žmogų. Čia aprašyta, ką ir kaip daro moderatoriai.</value></data>
 <data name="Rules.What" xml:space="preserve"><value>Ką moderatoriai peržiūri</value></data>

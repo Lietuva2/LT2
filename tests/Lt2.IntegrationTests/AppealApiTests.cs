@@ -32,7 +32,7 @@ public sealed class AppealApiTests(DatabaseFixture database) : ApiTest(database)
     {
         using var stranger = NewBrowser();
         var rules = await stranger.GetJsonAsync<AppealRulesResponse>(AppealRoutes.Rules);
-        rules.ShouldBe(new AppealRulesResponse(100, 50, 500, 2, 3, 1500));
+        rules.ShouldBe(new AppealRulesResponse(100, 50, 500, 0, 0, 1500), "no limit per person by default");
     }
 
     [Fact]
@@ -79,7 +79,7 @@ public sealed class AppealApiTests(DatabaseFixture database) : ApiTest(database)
         mine.IsInitiator.ShouldBeTrue();
         mine.MayChangeThreshold.ShouldBeTrue();
         mine.MyReasons.Single().Status.ShouldBe("pending");
-        mine.ReasonsLeft.ShouldBe(1);
+        mine.ReasonsLeft.ShouldBeNull("no limit by default, so no counter");
 
         foreach (var browser in new[] { other, stranger })
         {
@@ -302,7 +302,7 @@ public sealed class AppealApiTests(DatabaseFixture database) : ApiTest(database)
     }
 
     [Fact]
-    public async Task An_argument_is_written_for_either_side_without_a_side_or_consent_at_most_twice_and_flagged_ones_wait_for_a_moderator()
+    public async Task An_argument_is_written_for_either_side_without_a_side_or_consent_with_no_limit_by_default_and_flagged_ones_wait_for_a_moderator()
     {
         var (initiator, _) = await Factory.MemberAsync();
         using var _i = initiator;
@@ -326,7 +326,7 @@ public sealed class AppealApiTests(DatabaseFixture database) : ApiTest(database)
 
         using (var third = await member.WriteReasonAsync(AppealSteps.ThirdBill, "for", "Trečias argumentas."))
         {
-            await third.ShouldBeProblemAsync(HttpStatusCode.Conflict, "reason.limit");
+            third.StatusCode.ShouldBe(HttpStatusCode.Created, "no limit per person by default");
         }
 
         using (var tooLong = await member.WriteReasonAsync(AppealSteps.ThirdBill, "for", new string('a', 501)))
@@ -336,11 +336,12 @@ public sealed class AppealApiTests(DatabaseFixture database) : ApiTest(database)
 
         var page = await member.AppealAsync(AppealSteps.ThirdBill);
         page.Counts.ShouldBe(before, "writing an argument is not taking a side");
-        page.Reasons.Select(r => r.Text).ShouldBe(["Gynyba finansuojama nekeliant PVM.", AppealSteps.AgainstReason], ignoreOrder: true);
-        page.Reasons.Single(r => r.Side == "for").AuthorName.ShouldBe("Mindaugas R.");
+        page.Reasons.Select(r => r.Text).ShouldBe(["Gynyba finansuojama nekeliant PVM.", "Trečias argumentas.", AppealSteps.AgainstReason], ignoreOrder: true);
+        page.Reasons.Where(r => r.Side == "for").ShouldAllBe(r => r.AuthorName == "Mindaugas R.");
         var mine = await member.MineAsync(AppealSteps.ThirdBill);
         mine.Side.ShouldBeNull();
-        mine.MyReasons.Select(r => (r.Side, r.Status)).ShouldBe([("for", "published"), ("against", "pending")]);
+        mine.MyReasons.Select(r => (r.Side, r.Status)).ShouldBe([("for", "published"), ("against", "pending"), ("for", "published")]);
+        mine.ReasonsLeft.ShouldBeNull();
         (await Database.ScalarAsync<long>("SELECT count(*) FROM appeals.position p JOIN appeals.appeal a ON a.id = p.appeal_id WHERE a.bill_number = 'XVP-0618' AND a.status = 'open'"))
             .ShouldBe(1, "only the initiator's side is stored");
     }
@@ -398,7 +399,30 @@ public sealed class AppealApiTests(DatabaseFixture database) : ApiTest(database)
     }
 
     [Fact]
-    public async Task Man_svarbu_is_for_ones_own_side_at_most_three_and_goes_when_the_side_changes()
+    public async Task Man_svarbu_is_for_ones_own_side_within_a_limit_when_one_is_set_and_goes_when_the_side_changes()
+    {
+        // The limit is off by default (design 8.2); this test switches it on at 3 and back off.
+        var administrator = await StaffMembers.ActiveAsync(Factory, Database, "administrator");
+        await SetEndorsementLimitAsync(administrator.Browser, 3);
+        try
+        {
+            await MarksWithinTheLimitAsync();
+        }
+        finally
+        {
+            await SetEndorsementLimitAsync(administrator.Browser, 0);
+        }
+    }
+
+    private static async Task SetEndorsementLimitAsync(TestBrowser admin, int limit)
+    {
+        using var response = await admin.SendAsync(
+            HttpMethod.Put, ApiRoutes.Admin.SettingByKey("Appeals:EndorsementsPerPerson"),
+            new Lt2.Api.Contracts.Admin.UpdateSettingRequest { Value = System.Text.Json.JsonSerializer.SerializeToElement(limit) });
+        response.StatusCode.ShouldBe(HttpStatusCode.OK, await response.Content.ReadAsStringAsync());
+    }
+
+    private async Task MarksWithinTheLimitAsync()
     {
         var (initiator, _) = await Factory.MemberAsync();
         using var _i = initiator;
