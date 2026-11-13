@@ -859,10 +859,16 @@ Members tell the team what is broken, unclear or missing, without leaving the pa
 
 - **Entry.** A round speech-balloon button at the bottom corner of every page opens a panel with the form; the panel's
   heading says what it is, so it does not look like live chat. It is a disclosure (`<details>`), so it opens and closes
-  without JavaScript; it is labelled "Atsiliepimai" for screen readers and on hover, reachable by keyboard, closes with
-  Escape when the script is there, and its slide respects reduced motion. It floats in the page's side margin where
-  that margin is wide enough (about 1 260 px and wider); on narrower screens, phones included, it sits at the end of
-  the page instead, so it never covers text or controls. A plain page `/atsiliepimai` has the same content, for linking.
+  without JavaScript; it is labelled "Atsiliepimai" for screen readers and on hover, reachable by keyboard, and its
+  slide respects reduced motion. The button floats in the bottom corner at every width, phones included; every page
+  ends with room for it, so nothing at the end of a page lies under it (while scrolling it passes over the page, as any
+  floating button does). The open panel lies over the page at a readable width (24rem; on a phone the full width less
+  the margins), never wider or taller than the window, scrolling inside itself when the form is longer than the
+  screen; covering the page while it is open is expected. Without JavaScript the button, which shows a close mark while
+  open, closes it; with the script there is also a "Uždaryti" button in the panel and Escape, focus moves into the panel
+  when the person opens it (the text field, or the heading for a visitor) and back to the button when it closes
+  [corrected 2026-11-13: "never covers text or controls" was meant for the closed button, not the open panel]. A plain
+  page `/atsiliepimai` has the same content, for linking.
 - **A member's form**: one text up to 2 000 characters; an optional kind (klaida, pasiūlymas, neaišku, kita); the page
   they are on (path only) and the browser's name and version, both shown before sending and each removable; and a tick
   box "Galite man atsakyti". Ticked, the item is linked to the account; unticked, it is stored with no link to the

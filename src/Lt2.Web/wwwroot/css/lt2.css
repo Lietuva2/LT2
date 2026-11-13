@@ -498,19 +498,28 @@ legend { padding: 0; font-weight: 600; }
 .report-visitor > summary { display: inline; cursor: pointer; }
 .report-visitor[open] > p { margin-top: var(--sp-2); }
 
-/* Feedback balloon (design 8.10): a disclosure, so it opens and closes without JavaScript. Where the side margin is wide
-   enough it floats in it; on narrower screens it sits at the end of the page, so it never covers text or controls. */
-.feedback { max-width: var(--page); margin: var(--sp-5) auto 0; padding: 0 var(--sp-4) var(--sp-5); display: flex; flex-direction: column; align-items: flex-end; }
-.feedback__button { list-style: none; cursor: pointer; inline-size: 2.75rem; block-size: 2.75rem; border-radius: 50%; display: grid; place-items: center; background: var(--action); color: var(--action-ink); }
+/* Feedback balloon (design 8.10): a disclosure, so it opens and closes without JavaScript. The button floats in the
+   bottom corner at every width; the page ends with room for it, so nothing at the end of a page lies under it (while
+   scrolling it passes over the page like any floating button). The open panel lies over the page at a readable width,
+   never wider or taller than the window, and scrolls inside itself; the button turns into a close mark while it is
+   open, and with script the panel also has its own close button (lt2-feedback.js). */
+body { padding-block-end: 4.5rem; }
+.feedback { position: fixed; right: 0.75rem; bottom: 0.75rem; z-index: 20; margin: 0; }
+.feedback__button { list-style: none; cursor: pointer; inline-size: 2.75rem; block-size: 2.75rem; border-radius: 50%; display: grid; place-items: center; background: var(--action); color: var(--action-ink); box-shadow: 0 0.25rem 0.75rem rgb(0 0 0 / 0.2); }
 .feedback__button::-webkit-details-marker { display: none; }
 .feedback__button::marker { content: ""; }
 .feedback__button:hover { background: var(--action-hover); }
 .feedback__button svg { inline-size: 1.5rem; block-size: 1.5rem; }
-.feedback__panel { inline-size: min(26rem, 100%); background: var(--sheet); color: var(--ink); border: 1px solid var(--rule); padding: var(--sp-5); margin-top: var(--sp-3); box-shadow: 0 0.5rem 1.5rem rgb(0 0 0 / 0.18); }
-@media (min-width: 80rem) {
-  .feedback { position: fixed; right: 0.75rem; bottom: 0.75rem; margin: 0; padding: 0; z-index: 20; }
-  .feedback__panel { position: absolute; right: 0; bottom: 3.5rem; max-block-size: calc(100vh - 5rem); overflow: auto; }
+.feedback__button .feedback__shut, .feedback[open] .feedback__button .feedback__balloon { display: none; }
+.feedback[open] .feedback__button .feedback__shut { display: block; }
+.feedback__panel {
+  position: fixed; right: 0.75rem; bottom: 4.25rem;
+  inline-size: min(24rem, 100% - 1.5rem); max-block-size: calc(100% - 5rem); overflow-y: auto; overscroll-behavior: contain;
+  background: var(--sheet); color: var(--ink); border: 1px solid var(--rule); padding: var(--sp-5);
+  box-shadow: 0 0.5rem 1.5rem rgb(0 0 0 / 0.25); overflow-wrap: anywhere;
 }
+.feedback__head { display: flex; align-items: flex-start; justify-content: space-between; gap: var(--sp-3); }
+.feedback__close { flex: none; background: none; border: 0; padding: 0.25rem 0; font: inherit; font-size: var(--fs-1); color: var(--ink); text-decoration: underline; cursor: pointer; }
 @media (prefers-reduced-motion: no-preference) {
   .feedback[open] .feedback__panel { animation: feedback-slide 0.18s ease-out; }
 }

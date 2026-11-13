@@ -131,9 +131,9 @@
   document.querySelectorAll('form').forEach(function (f) { f.addEventListener('submit', function (e) { e.preventDefault(); }); });
 </script>
 <details class="feedback">
-  <summary class="feedback__button" aria-label="Atsiliepimai" title="Atsiliepimai"><svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path fill="currentColor" d="M12 3C6.5 3 2 6.6 2 11c0 2.4 1.3 4.5 3.4 6L4.6 21l4.3-2.4c1 .3 2 .4 3.1.4 5.5 0 10-3.6 10-8s-4.5-8-10-8Z"/></svg></summary>
+  <summary class="feedback__button" aria-label="Atsiliepimai" title="Atsiliepimai"><svg class="feedback__balloon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path fill="currentColor" d="M12 3C6.5 3 2 6.6 2 11c0 2.4 1.3 4.5 3.4 6L4.6 21l4.3-2.4c1 .3 2 .4 3.1.4 5.5 0 10-3.6 10-8s-4.5-8-10-8Z"/></svg><svg class="feedback__shut" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" d="M6 6l12 12M18 6L6 18"/></svg></summary>
   <section class="feedback__panel stack stack--tight" aria-labelledby="feedback-title">
-    <h2 id="feedback-title">Atsiliepimai Lietuva 2.0 komandai</h2>
+    <div class="feedback__head"><h2 id="feedback-title" tabindex="-1">Atsiliepimai Lietuva 2.0 komandai</h2><button type="button" class="feedback__close" data-feedback-close hidden>Uždaryti</button></div>
     <p class="small">Tai ne pokalbis: žinutę perskaito komanda, o atsako el. paštu, jei leidžiate.</p>
     <div class="field"><label for="fb-text">Ką norite pasakyti?</label><textarea class="textarea" id="fb-text" maxlength="2000"></textarea><p class="field__hint">Iki 2 000 ženklų. Nerašykite, kurią pusę pasirinkote dėl projekto – mums to nereikia.</p></div>
     <p class="small">Kartu išsiųsime (galite atžymėti):</p>
