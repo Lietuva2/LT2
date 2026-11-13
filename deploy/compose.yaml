@@ -61,6 +61,11 @@ services:
       ReverseProxy__TrustForwardedHeaders: "true"
       # Where visitors without a session may write to the moderators (design 8.3). Production sets the real address.
       Moderation__ContactAddress: ${LT2_MODERATION_CONTACT:-}
+      # Requests per client address in each window (design 6.4). The defaults here are the code's; only the local .env
+      # raises them, so hand testing and end-to-end runs on one machine never meet a 429.
+      RateLimits__CodeRequest__PermitLimit: ${LT2_RATE_CODE_REQUESTS:-10}
+      RateLimits__Registration__PermitLimit: ${LT2_RATE_REGISTRATIONS:-20}
+      RateLimits__SignIn__PermitLimit: ${LT2_RATE_SIGN_INS:-30}
       OTEL_EXPORTER_OTLP_ENDPOINT: ${OTEL_EXPORTER_OTLP_ENDPOINT:-}
     secrets:
       - source: db_app_password

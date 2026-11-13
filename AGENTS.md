@@ -133,8 +133,7 @@ code review.
 - Group numbers (for example supporters of a party) are shown only for groups of at least 20.
 - Sign-in has no passwords: an emailed one-time code or a passkey. A staff role works only in a session signed in
   with a staff passkey; a code session is a member session, whatever roles the account has. Politicians need a
-  passkey too. Responses never reveal whether an email is registered. The one exception is local only: a fixed code
-  from `LT2_LOCAL_SIGN_IN_CODE` on a `.localhost` site (design 6.2), never a runtime setting, never on a server.
+  passkey too. Responses never reveal whether an email is registered.
 - Session cookie only (`__Host-`, Secure, HttpOnly, SameSite=Lax). No tokens in the browser. Every state-changing
   call needs the antiforgery header and passes the Origin check. CORS stays off.
 - No secrets in the repository or in images. No real personal data in tests or fixtures.

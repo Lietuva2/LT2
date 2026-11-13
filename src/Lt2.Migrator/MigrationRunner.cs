@@ -22,7 +22,7 @@ namespace Lt2.Migrator;
 /// grant access;</item>
 /// <item>optional commands: <c>--seed-invitation CODE[:USES]</c>, <c>--grant-role ROLE EMAIL</c> (prints the one-time
 /// activation code on the console, never to a log sink), <c>--reset-parliament</c> (empties the parliament schema,
-/// refusing unless every import so far came from the Seimas stand-in), <c>--demo-appeal</c> (local demonstration data:
+/// refusing unless every import so far came from the Seimas stand-in), <c>--local-code-limits</c> (local stack only: the code limits per address raised to the settings' highest values, refusing unless <c>Demo:Allowed</c> is set), <c>--demo-appeal</c> (local demonstration data:
 /// invented participants on XVP-0412, refusing unless <c>Demo:Allowed</c> is set and the parliament data is invented).</item>
 /// </list>
 /// </summary>
@@ -119,6 +119,10 @@ public static class MigrationRunner
                     Log.Information(
                         "Demonstration appeal on {Bill}: {Status}; invented accounts created: {Created}",
                         DemoAppeal.Bill, demo.Status, demo.AccountsCreated);
+                    break;
+                case "--local-code-limits":
+                    var raised = await LocalCodeLimits.RunAsync(configuration, connectionString, cancellationToken);
+                    Log.Information("Local sign-in code limits: {PerHour} an hour, {PerDay} a day ({Changed} settings changed)", LocalCodeLimits.PerHour, LocalCodeLimits.PerDay, raised);
                     break;
                 default:
                     throw new ArgumentException($"Unknown or incomplete argument '{args[i]}'.", nameof(args));

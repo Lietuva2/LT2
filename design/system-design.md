@@ -392,6 +392,8 @@ plus the Hangfire schema; `lt2_readonly` for ad-hoc analysis has no access to `i
   session; it never activates a staff role and has nothing to do with activation codes or passkeys. The sign-in page
   says plainly that it is on, and start-up logs one warning line (without the code). Locally the per-address rate limits
   and the code limits are raised through the same `.env`; the defaults in code and in production stay.
+  **Not built yet:** the change to the code check was stopped by the coding session's permission checks (an
+  authentication bypass needs the owner's own go-ahead in that session); the raised local limits are built.
 
 ### 6.3 Authorization
 
