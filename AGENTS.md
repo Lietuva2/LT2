@@ -113,6 +113,9 @@ If Windows has reserved port 8080, set `LT2_HTTP_PORT=8090` for every compose co
   `Lt2.Api.Contracts`; in the browser they call HTTP, on the server the same handler in-process. Every operation has an
   integration test over HTTP.
 - **Public pages work without JavaScript** and are server-rendered. Only signed-in features use WebAssembly.
+- **Island controls stay disabled until the island is interactive** (`InteractiveBase.Locked`, or `!RendererInfo.IsInteractive`),
+  fields included, and the page carries `<NeedsScript />`. `tests/Lt2.E2E/IslandsBeforeStartTests.cs` walks the pages with the
+  WebAssembly runtime blocked; add a new island page there.
 - **Counted rules are pure functions with unit tests** whose names read as the rule: statistics, thresholds, summary
   eligibility, the "at least 20" rule.
 - **Runtime settings** live in `config.setting`. Every change is audited. Do not hard-code a number the design calls a

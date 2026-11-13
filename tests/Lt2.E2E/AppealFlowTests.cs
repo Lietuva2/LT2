@@ -28,15 +28,54 @@ public sealed class AppealFlowTests(AppealFlowTests.ModeratorFixture moderator) 
         await using var initiator = await PasskeyBrowser.StartAsync("native", width, height);
         var a = initiator.Page;
         await PasskeyTests.RegisterAsync(a, "Rūta Mockutė");
-        await a.GotoAsync($"{Base}/seimas/{bill}/kreipimasis");
+
+        // Before WebAssembly has started (held back here, as on a slow connection) the form cannot be used: a click on
+        // the button and typing do nothing, nothing is sent and the page does not reload. Then it works as usual.
+        var started = new TaskCompletionSource();
+        await a.RouteAsync(IslandsBeforeStartTests.WebAssemblyFiles(), async route =>
+        {
+            await started.Task;
+            await route.ContinueAsync();
+        });
+        var opens = 0;
+        a.Request += (_, request) =>
+        {
+            if (request.Method == "POST" && request.Url.EndsWith($"/bills/{bill}/appeal", StringComparison.Ordinal))
+            {
+                opens++;
+            }
+        };
+        await a.GotoAsync($"{Base}/seimas/{bill}/kreipimasis", new() { WaitUntil = WaitUntilState.DOMContentLoaded });
+        var navigations = 0;
+        a.FrameNavigated += (_, frame) =>
+        {
+            if (frame == a.MainFrame)
+            {
+                navigations++;
+            }
+        };
         await Assertions.Expect(a.Locator("#no-appeal")).ToBeVisibleAsync();
+        var submit = a.GetByRole(AriaRole.Button, new() { Name = "Pateikti moderatoriui" });
+        await Assertions.Expect(a.Locator("#open-description")).ToBeDisabledAsync();
+        await Assertions.Expect(submit).ToBeDisabledAsync();
+        await a.Locator("#open-description").ClickAsync(new() { Force = true });
+        await a.Keyboard.TypeAsync("Parašyta per anksti.");
+        await a.Keyboard.PressAsync("Enter");
+        await submit.ClickAsync(new() { Force = true });
+        await a.WaitForTimeoutAsync(1_000);
+        navigations.ShouldBe(0, "the page did not reload");
+        opens.ShouldBe(0, "nothing was sent");
+        started.SetResult();
         await a.Locator("#open-description:not([disabled])").WaitForAsync(new() { Timeout = 60_000 });
+        await Assertions.Expect(a.Locator("#open-description")).ToHaveValueAsync("");
         await Assertions.Expect(a.Locator("#open-appeal input[type=radio]")).ToHaveCountAsync(0, new() { Timeout = 5_000 });
         await Assertions.Expect(a.Locator("#open-appeal input[type=checkbox]")).ToHaveCountAsync(0, new() { Timeout = 5_000 });
         await a.Locator("#open-description").FillAsync("Projektas keičia mokesčių tvarką: įvedamas naujas tarifas didelėms pajamoms.");
         await a.Locator("#open-threshold").FillAsync("100");
         await a.GetByRole(AriaRole.Button, new() { Name = "Pateikti moderatoriui" }).ClickAsync();
         await Assertions.Expect(a.Locator("#pending-note")).ToContainTextAsync("Kreipimasis laukia moderatoriaus", new() { Timeout = 30_000 });
+        opens.ShouldBe(1);
+        await IslandsBeforeStartTests.NothingUsableBeforeStartAsync(a.Context, $"/seimas/{bill}/kreipimasis");
         await NoSidewaysScrollAsync(a);
         await a.ScreenshotAsync(new() { Path = Shot($"appeal-pending-{width}.png"), FullPage = true });
 
@@ -334,71 +373,5 @@ public sealed class AppealFlowTests(AppealFlowTests.ModeratorFixture moderator) 
     }
 
     /// <summary>One moderator for the class: registered, given a passkey, granted the role by the migrator, activated.</summary>
-    public sealed class ModeratorFixture : IAsyncLifetime
-    {
-        private PasskeyBrowser? _browser;
-
-        public async Task<IPage> PageAsync()
-        {
-            if (_browser is not null)
-            {
-                return _browser.Page;
-            }
-
-            _browser = await PasskeyBrowser.StartAsync("native");
-            var page = _browser.Page;
-            Directory.CreateDirectory(Path.Combine("output", "appeals"));
-            // One file per fixture: several test classes use this fixture at the same time.
-            var log = Path.Combine("output", "appeals", $"moderator-console-{Guid.NewGuid():N}.txt");
-            File.WriteAllText(log, "");
-            page.Console += (_, message) => File.AppendAllText(log, $"{message.Type}: {message.Text}{Environment.NewLine}");
-            page.PageError += (_, error) => File.AppendAllText(log, $"pageerror: {error}{Environment.NewLine}");
-            page.Response += (_, response) =>
-            {
-                if (response.Status >= 400)
-                {
-                    File.AppendAllText(log, $"http {response.Status}: {response.Url}{Environment.NewLine}");
-                }
-            };
-            // A Playwright trace of the set-up, kept only when it fails: a click on "Aktyvinti" once waited 30 s for a
-            // navigation nothing in the page starts (2026-11-13), and the next occurrence should be readable.
-            await page.Context.Tracing.StartAsync(new() { Screenshots = true, Snapshots = true, Sources = false, Title = "moderator fixture" });
-            try
-            {
-                var email = await PasskeyTests.RegisterAsync(page, "Moderatorius M.");
-                await PasskeyTests.AddPasskeyAsync(page);
-                await page.GetByRole(AriaRole.Button, new() { Name = "Atsijungti" }).ClickAsync();
-                await page.WaitForURLAsync(new Regex("/$"));
-                await PasskeyTests.SignInWithPasskeyAsync(page);
-                var output = await Compose.RunAsync("run", "--rm", "--no-deps", "migrator", "--grant-role", "moderator", email);
-                var code = PasskeyTests.ActivationCode().Match(output).Value;
-                code.ShouldNotBeNullOrEmpty("the migrator prints the activation code");
-                await page.ReloadAsync();
-                await SignUpTests.WaitForInteractivityAsync(page);
-                await page.GetByLabel("Aktyvinimo kodas").FillAsync(code);
-                await page.GetByRole(AriaRole.Button, new() { Name = "Aktyvinti" }).ClickAsync();
-                await Assertions.Expect(page.GetByText("Vaidmuo aktyvintas.")).ToBeVisibleAsync();
-            }
-            catch
-            {
-                var trace = Path.Combine("output", "appeals", $"moderator-trace-{Guid.NewGuid():N}.zip");
-                await page.Context.Tracing.StopAsync(new() { Path = trace });
-                File.AppendAllText(log, $"trace: {Path.GetFullPath(trace)}{Environment.NewLine}");
-                throw;
-            }
-
-            await page.Context.Tracing.StopAsync();
-            return page;
-        }
-
-        public ValueTask InitializeAsync() => ValueTask.CompletedTask;
-
-        public async ValueTask DisposeAsync()
-        {
-            if (_browser is not null)
-            {
-                await _browser.DisposeAsync();
-            }
-        }
-    }
+    public sealed class ModeratorFixture() : StaffFixture("moderator", "Moderatorius M.");
 }

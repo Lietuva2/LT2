@@ -41,6 +41,7 @@
             <span class="small">@Fmt("Page.OpenedBy", a.InitiatorName ?? T["Anonymous"])</span>
         </div>
     </div>
+    <Lt2.Web.Client.Components.NeedsScript />
 
     @if (a.Status is "pending" or "returned")
     {
@@ -229,6 +230,7 @@ else if (_bill is { } bill)
         <h1>@bill.Title</h1>
         <p class="lead" id="no-appeal">@T["None.Lead"]</p>
     </div>
+    <Lt2.Web.Client.Components.NeedsScript />
     <OpenAppealForm Number="@bill.Number" @rendermode="InteractiveWebAssembly" />
     <p class="note note--quiet">@T["NotAPoll"]</p>
 }

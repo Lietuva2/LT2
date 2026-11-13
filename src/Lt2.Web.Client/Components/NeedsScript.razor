@@ -1,0 +1,6 @@
+@inject IStringLocalizer<UiText> T
+
+@* Pages with WebAssembly islands keep every control disabled until the island is interactive (InteractiveBase.Locked,
+   tests/Lt2.E2E/IslandsBeforeStartTests.cs), so nothing typed is lost. Without JavaScript the islands never start: this
+   note says why the buttons do not work. Shown once per page, near its heading. *@
+<noscript><p class="note" id="needs-script">@T["NeedsScript"]</p></noscript>

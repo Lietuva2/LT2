@@ -114,6 +114,7 @@
 <data name="Open.Threshold" xml:space="preserve"><value>Riba</value></data>
 <data name="Open.ThresholdHint" xml:space="preserve"><value>Kiek dalyvių, abiejų pusių kartu, turi turėti kreipimasis, kad patektų į suvestines Seimo nariams. Riba bus vieša. Ne mažiau kaip {0}.</value></data>
 <data name="Open.Submit" xml:space="preserve"><value>Pateikti moderatoriui</value></data>
+<data name="Open.TakenMeanwhile" xml:space="preserve"><value>Šiam projektui kreipimąsi jau pateikė kitas narys; jis laukia moderatoriaus. Kai moderatorius jį paskelbs, rasite jį šiame puslapyje. Jūsų tekstas liko laukelyje.</value></data>
 <data name="Edit.Title" xml:space="preserve"><value>Pataisyti prieš paskelbiant</value></data>
 <data name="Edit.TitleReturned" xml:space="preserve"><value>Pataisyti ir pateikti dar kartą</value></data>
 <data name="Edit.Submit" xml:space="preserve"><value>Pateikti moderatoriui</value></data>

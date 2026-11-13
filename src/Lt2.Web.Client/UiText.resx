@@ -8,6 +8,7 @@
   <data name="Welcome.Title" xml:space="preserve"><value>Gyvas pokalbis tarp žmonių ir jų atstovų</value></data>
   <data name="Welcome.Lead" xml:space="preserve"><value>Pasakykite Seimo nariams, kaip prašote balsuoti, ir sužinokite, ką jie atsakė.</value></data>
   <data name="NoScript" xml:space="preserve"><value>Prisijungti ir registruotis galima tik įjungus „JavaScript“. Įjunkite jį naršyklės nustatymuose ir perkraukite puslapį.</value></data>
+  <data name="NeedsScript" xml:space="preserve"><value>Šios puslapio dalies mygtukams reikia „JavaScript“: be jo puslapį galite skaityti, bet nieko pakeisti negalite. Įjunkite jį naršyklės nustatymuose ir perkraukite puslapį.</value></data>
   <data name="SignIn.Title" xml:space="preserve"><value>Prisijunkite</value></data>
   <data name="SignIn.Intro" xml:space="preserve"><value>Atsiųsime vienkartinį kodą el. paštu. Slaptažodžio nereikia.</value></data>
   <data name="Email.Label" xml:space="preserve"><value>El. paštas</value></data>

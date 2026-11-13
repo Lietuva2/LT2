@@ -156,7 +156,10 @@ if it weighs better]**. The options:
 phone and only read (the old platform's lesson: "people bring people"), so MP profiles, bill pages and appeal pages are
 static server-rendered HTML with proper Open Graph tags and no WebAssembly download. Everything a signed-in person does
 (taking a side, writing a reason, settings, moderation, administration) is an Interactive WebAssembly component that talks
-only to `/api/v1`.
+only to `/api/v1`. Until such an island has started, everything in it is disabled (fields, choices and buttons alike):
+what was typed would be emptied when the island takes over, and a form sent natively would reload the page. Without
+JavaScript the island never starts, and the page says so in one note. An end-to-end test loads every page with islands
+with the WebAssembly runtime blocked and fails on any control left usable.
 
 How "full API from the start" holds with server rendering: every component depends on a typed client interface from
 `Lt2.Api.Contracts` (`IParliamentApi`, `IAppealsApi`, …). In the browser the implementation is an `HttpClient` call; on the
@@ -590,7 +593,10 @@ GET /api/v1/meta/imports                    last successful import per source
    description** of what the bill changes and sets the **threshold**: how many participants the appeal should have
    before MPs hear about it (8.4). Nothing else: no side and no first reason **[decided 2026-11-13]**, so opening needs
    no positions consent and a new appeal has no participants. If the bill already has an appeal, they are taken to it
-   instead.
+   instead. An appeal another member opened that still waits for a moderator is visible only to its initiator, so a
+   second member still sees the opening form; when they send it, their text stays in the form and a note says that
+   another member has already opened an appeal on the bill and it waits for a moderator (a reload would show the same
+   empty form). Whether the page should say so before they write is open (section 12).
 2. **Review.** AI pre-screening flags insults, spam and personal data. A moderator checks the neutral description and
    publishes the appeal; a returned appeal is corrected by editing the description. Until then it is visible only to its
    initiator, and nobody writes reasons on it.
@@ -1058,6 +1064,7 @@ Splitting M2 means the risky step (emailing every MP) happens only after the who
 | AI provider for pre-screening | Any provider with EU data terms; no personal data is sent either way. | M2a |
 | Telemetry backend | Hosted free tier with EU storage, or self-hosted. | M0 |
 | MP photos | Use the Seimas photos if their terms allow, otherwise initials. | M1 |
+| Whether a bill page says an appeal is waiting for a moderator | Today an appeal waiting for a moderator is visible only to its initiator, so others see the opening form, and learn only when they send it (8.1; their text stays). Options: keep it so; or say on the bill page, before anyone writes, that an appeal has been opened and waits for a moderator (no name, no text). | M2a |
 | Lithuanian terms for the new objects | Proposal: *kreipimasis*, *prašo balsuoti už / prieš*, *argumentas* (chosen by the owner on 2026-11-12 in place of *priežastis*), *suvestinė*, *atsakymas*. | M2a |
 
 **Risks**
