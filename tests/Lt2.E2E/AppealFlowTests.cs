@@ -630,7 +630,8 @@ public sealed class AppealFlowTests(AppealFlowTests.ModeratorFixture moderator) 
               const out = [];
               if (tops.length > 1 && Math.max(...tops) - Math.min(...tops) > 3) out.push(group.id + ': the actions wrap (' + tops.join(',') + ')');
               if (box.right > by.getBoundingClientRect().right + 1) out.push(group.id + ': the actions overflow their column');
-              if (name && box.top < name.top - 1) out.push(group.id + ': the actions sit above the name');
+              // On one line the taller "Man svarbu" starts a little above the centred name; above means wholly above it.
+              if (name && box.bottom <= name.top + 1) out.push(group.id + ': the actions sit above the name');
               return out;
             })
             """);
