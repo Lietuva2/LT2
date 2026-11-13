@@ -234,11 +234,22 @@ public sealed class AppealFlowTests(AppealFlowTests.ModeratorFixture moderator) 
         await w.Locator("#reason-side-against").CheckAsync();
         await w.Locator("#reason-text").FillAsync(Text);
         await w.GetByRole(AriaRole.Button, new() { Name = "Paskelbti", Exact = true }).ClickAsync();
-        await Assertions.Expect(w.GetByText("Argumentas paskelbtas.")).ToBeVisibleAsync();
+
+        // An earlier run's argument may be offered as similar first; then publish this one anyway.
+        var published = w.GetByText("Argumentas paskelbtas.");
+        var anyway = w.GetByRole(AriaRole.Button, new() { Name = "Vis tiek paskelbti savo" });
+        await Assertions.Expect(published.Or(anyway)).ToBeVisibleAsync();
+        if (await anyway.IsVisibleAsync())
+        {
+            await anyway.ClickAsync();
+        }
+
+        await Assertions.Expect(published).ToBeVisibleAsync();
 
         // The moderator opens the author's screen from the queue and restricts until lifted.
         await mod.GotoAsync($"{Base}/moderavimas");
-        var item = mod.Locator("article").Filter(new() { HasText = Text });
+        // The item whose own argument this is (another item may list it as a merge candidate).
+        var item = mod.Locator("article").Filter(new() { Has = mod.Locator(".said > p.bubble", new() { HasTextString = Text }) });
         await Assertions.Expect(item).ToBeVisibleAsync(new() { Timeout = 60_000 });
         var open = item.GetByRole(AriaRole.Button, new() { Name = "Riboti autoriaus rašymą…" });
         await Assertions.Expect(open).ToBeEnabledAsync(new() { Timeout = 60_000 });
@@ -248,7 +259,7 @@ public sealed class AppealFlowTests(AppealFlowTests.ModeratorFixture moderator) 
         await item.Locator("textarea[id^='restrict-statement-']").FillAsync("Bandymas: rašymas apribojamas, kol bus atšauktas.");
         await item.GetByRole(AriaRole.Button, new() { Name = "Riboti rašymą", Exact = true }).ClickAsync();
         await Assertions.Expect(mod.GetByText("Rašymas apribotas; naudotojui išsiųstas laiškas.")).ToBeVisibleAsync();
-        await Assertions.Expect(mod.Locator("#restrictions article").Filter(new() { HasText = "Ribojama Autorė" })).ToBeVisibleAsync();
+        await Assertions.Expect(mod.Locator("#restrictions article").Filter(new() { HasText = "Ribojama Autorė" }).Last).ToBeVisibleAsync();
         await mod.ScreenshotAsync(new() { Path = Shot("moderator-restricts-1280.png"), FullPage = true });
 
         // The author sees the notice instead of the writing box.
