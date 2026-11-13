@@ -91,6 +91,11 @@ public static class AppealRoutes
     public const string Mine = Appeal + "/mine";
     public const string History = Appeal + "/history";
     public const string Proposals = Appeal + "/proposals";
+    public const string DescriptionChange = Appeal + "/description-change";
+    public const string ApproveDescription = ApiRoutes.Prefix + "/moderation/description-changes/{id:guid}/approve";
+    public const string ReturnDescription = ApiRoutes.Prefix + "/moderation/description-changes/{id:guid}/return";
+
+    public static string DescriptionChangeOf(string number) => AppealOf(number) + "/description-change";
 
     public static string HistoryOf(string number) => AppealOf(number) + "/history";
 

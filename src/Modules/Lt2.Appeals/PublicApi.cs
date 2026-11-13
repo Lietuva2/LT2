@@ -69,7 +69,15 @@ public sealed record MyAppeal(
     int? ReasonsLeft,
     bool IsInitiator,
     bool MayChangeThreshold,
-    bool HasPositionConsent);
+    bool HasPositionConsent,
+    MyDescriptionChange? DescriptionChange = null);
+
+/// <summary>The initiator's latest proposed description change (design 8.1): pending, approved or returned with a note.</summary>
+public sealed record MyDescriptionChange(string Status, string Text, string? Note, DateTimeOffset CreatedAt);
+
+/// <summary>A proposed description change for the moderators' queue: the approved text and the proposed one, side by side.</summary>
+public sealed record QueueDescriptionChange(
+    Guid Id, Guid AppealId, BillFacts Bill, string? InitiatorName, string CurrentText, string ProposedText, IReadOnlyList<string> Flags, DateTimeOffset CreatedAt);
 
 /// <summary>
 /// The numbers the forms need (design 8.2, 8.4): the threshold offered, the minimum, and the per-person limits (0 = no
@@ -133,7 +141,7 @@ public sealed record QueueReason(
     DateTimeOffset CreatedAt);
 
 /// <summary>The moderators' queue (design 8.3) for this half: new appeals, flagged or reported arguments, reported appeals, unseen arguments.</summary>
-public sealed record ModerationItems(IReadOnlyList<QueueAppeal> Appeals, IReadOnlyList<QueueReason> Reasons);
+public sealed record ModerationItems(IReadOnlyList<QueueAppeal> Appeals, IReadOnlyList<QueueReason> Reasons, IReadOnlyList<QueueDescriptionChange>? DescriptionChanges = null);
 
 /// <summary>
 /// The Appeals module (design 8). Every operation that acts for a person takes their account id; moderation operations
@@ -167,6 +175,9 @@ public interface IAppealsModule
     Task<Result<AppealInfo>> OpenAsync(string billNumber, Guid userId, OpenAppeal request, CancellationToken cancellationToken);
 
     Task<Result<Unit>> EditAsync(string billNumber, Guid userId, EditAppeal request, CancellationToken cancellationToken);
+
+    /// <summary>The initiator proposes a new description for an open appeal (design 8.1); a moderator approves it.</summary>
+    Task<Result<Unit>> ProposeDescriptionAsync(string billNumber, Guid userId, EditAppeal request, CancellationToken cancellationToken);
 
     Task<Result<Unit>> ChangeThresholdAsync(string billNumber, Guid userId, int threshold, CancellationToken cancellationToken);
 
@@ -204,6 +215,12 @@ public interface IAppealsModeration
     Task<Result<Unit>> ReturnAppealAsync(Guid appealId, string statement, ModeratorActor moderator, CancellationToken cancellationToken);
 
     Task<Result<Unit>> HideAppealAsync(Guid appealId, string statement, ModeratorActor moderator, CancellationToken cancellationToken);
+
+    /// <summary>Approves the initiator's proposed description (design 8.1): it replaces the shown one and enters the history.</summary>
+    Task<Result<Unit>> ApproveDescriptionAsync(Guid changeId, string? statement, ModeratorActor moderator, CancellationToken cancellationToken);
+
+    /// <summary>Returns a proposed description with a required note; the page keeps the approved text.</summary>
+    Task<Result<Unit>> ReturnDescriptionAsync(Guid changeId, string statement, ModeratorActor moderator, CancellationToken cancellationToken);
 
     /// <summary>Hidden appeals and reasons, newest hide first, with who hid them, when and why (design 8.3).</summary>
     Task<HiddenItems> HiddenAsync(CancellationToken cancellationToken);

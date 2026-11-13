@@ -103,6 +103,10 @@
                         <text> · </text><a href="@link" rel="external">@T["What.ESeimas"]</a>
                     }
                 </p>
+                @if (a.Status == "open")
+                {
+                    <DescriptionChangeForm Number="@a.Bill.Number" Description="@a.Description" @rendermode="InteractiveWebAssembly" />
+                }
             </section>
 
             @if (_closingVote is { } vote)

@@ -132,7 +132,84 @@ internal sealed class ModerationService(
                 .ToList(),
             r.CreatedAt)).ToList();
 
-        return new ModerationItems(queueAppeals, queueReasons);
+        // Proposed description changes of open appeals (design 8.1): the approved text beside the proposed one.
+        var changes = await db.DescriptionChanges.AsNoTracking()
+            .Where(d => d.Status == DescriptionChangeStatuses.Pending)
+            .OrderBy(d => d.CreatedAt)
+            .Take(QueueLimit)
+            .ToListAsync(cancellationToken);
+        var changedAppealIds = changes.Select(d => d.AppealId).Distinct().ToList();
+        var changedAppeals = await db.Appeals.AsNoTracking().Where(a => changedAppealIds.Contains(a.Id)).ToDictionaryAsync(a => a.Id, cancellationToken);
+        var changeNames = await reads.NamesAsync(changedAppeals.Values.Select(a => a.InitiatorUserId), cancellationToken);
+        var changeBills = await reads.BillsAsync(changedAppeals.Values.Select(a => a.BillNumber).Distinct().ToList(), cancellationToken);
+        var queueChanges = changes
+            .Where(d => changedAppeals[d.AppealId].Status == AppealStatuses.Open)
+            .Select(d =>
+            {
+                var appeal = changedAppeals[d.AppealId];
+                return new QueueDescriptionChange(
+                    d.Id, appeal.Id, changeBills.GetValueOrDefault(appeal.BillNumber) ?? new BillFacts(appeal.BillNumber, appeal.BillNumber),
+                    changeNames.GetValueOrDefault(appeal.InitiatorUserId), appeal.Description, d.Text, d.ScreeningFlags.Distinct().ToList(), d.CreatedAt);
+            })
+            .ToList();
+
+        return new ModerationItems(queueAppeals, queueReasons, queueChanges);
+    }
+
+    public Task<Result<Unit>> ApproveDescriptionAsync(Guid changeId, string? statement, ModeratorActor moderator, CancellationToken cancellationToken) =>
+        OnDescriptionChangeAsync(changeId, moderator, "approve", statement, (db, change, appeal, now) =>
+        {
+            // The approved text replaces the shown one and enters the public history (design 8.1, 8.2).
+            db.Revisions.Add(AppealsService.Revise("appeal", appeal.Id, "description", appeal.Description, change.Text, appeal.InitiatorUserId, now));
+            appeal.Description = change.Text;
+            appeal.ScreeningFlags = change.ScreeningFlags;
+            appeal.ChangedAt = now;
+            change.Status = DescriptionChangeStatuses.Approved;
+            change.Note = string.IsNullOrWhiteSpace(statement) ? null : statement.Trim();
+            return ModerationNotices.DescriptionApproved;
+        }, cancellationToken);
+
+    public Task<Result<Unit>> ReturnDescriptionAsync(Guid changeId, string statement, ModeratorActor moderator, CancellationToken cancellationToken)
+    {
+        if (string.IsNullOrWhiteSpace(statement))
+        {
+            return Task.FromResult<Result<Unit>>(Error.Validation("statement.required", "statement"));
+        }
+
+        return OnDescriptionChangeAsync(changeId, moderator, "return", statement, (_, change, _, _) =>
+        {
+            change.Status = DescriptionChangeStatuses.Returned;
+            change.Note = statement.Trim();
+            return ModerationNotices.DescriptionReturned;
+        }, cancellationToken);
+    }
+
+    private async Task<Result<Unit>> OnDescriptionChangeAsync(
+        Guid changeId, ModeratorActor moderator, string action, string? statement,
+        Func<AppealsDb, DescriptionChange, Appeal, DateTimeOffset, string> apply, CancellationToken ct)
+    {
+        await using var db = await contexts.CreateDbContextAsync(ct);
+        await using var transaction = await db.Database.BeginTransactionAsync(ct);
+        var change = await db.DescriptionChanges.FirstOrDefaultAsync(d => d.Id == changeId, ct);
+        var appeal = change is null ? null : await db.Appeals.FirstOrDefaultAsync(a => a.Id == change.AppealId, ct);
+        if (change is null || appeal is null)
+        {
+            return Error.NotFound("description-change.not-found");
+        }
+
+        if (DescriptionChangeRules.CheckDecision(change.Status, appeal.Status) is { } refused)
+        {
+            return RuleErrors.Of(refused);
+        }
+
+        var now = clock.GetUtcNow();
+        var notice = apply(db, change, appeal, now);
+        change.DecidedAt = now;
+        await RecordAsync(db, transaction, "description-change", change.Id, action, statement, moderator, now, appeal.BillNumber, new { appeal = appeal.Id }, ct);
+        await NotifyAsync(transaction, appeal.InitiatorUserId, notice, appeal.BillNumber, statement, null, ct);
+        await db.SaveChangesAsync(ct);
+        await transaction.CommitAsync(ct);
+        return Result.Ok();
     }
 
     public Task<Result<Unit>> PublishAppealAsync(Guid appealId, string? statement, ModeratorActor moderator, CancellationToken cancellationToken) =>

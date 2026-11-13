@@ -63,8 +63,15 @@ public sealed record HiddenReasonResponse(
 /// <summary>The moderators' list of hidden appeals and reasons (design 8.3), newest hide first. Holds no position.</summary>
 public sealed record HiddenItemsResponse(IReadOnlyList<HiddenAppealResponse> Appeals, IReadOnlyList<HiddenReasonResponse> Reasons);
 
+/// <summary>A proposed description change (design 8.1): the approved text and the proposed one, side by side.</summary>
+public sealed record QueueDescriptionChangeResponse(
+    Guid Id, Guid AppealId, BillRefResponse Bill, string? InitiatorName, string CurrentText, string ProposedText, IReadOnlyList<string> Flags, DateTimeOffset CreatedAt);
+
 /// <summary>The moderators' queue (design 8.3). Holds no position of anyone.</summary>
-public sealed record ModerationQueueResponse(IReadOnlyList<QueueAppealResponse> Appeals, IReadOnlyList<QueueReasonResponse> Reasons);
+public sealed record ModerationQueueResponse(
+    IReadOnlyList<QueueAppealResponse> Appeals,
+    IReadOnlyList<QueueReasonResponse> Reasons,
+    IReadOnlyList<QueueDescriptionChangeResponse>? DescriptionChanges = null);
 
 /// <summary>Publishing: the statement to the author is optional.</summary>
 public sealed record ModerationRequest

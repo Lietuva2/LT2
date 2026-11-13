@@ -77,7 +77,14 @@ public sealed record MyAppealResponse(
     int? ReasonsLeft,
     bool IsInitiator,
     bool MayChangeThreshold,
-    bool HasPositionConsent);
+    bool HasPositionConsent,
+    MyDescriptionChangeResponse? DescriptionChange = null);
+
+/// <summary>
+/// The initiator's latest proposed description change (design 8.1): <c>pending</c> (the page still shows the approved
+/// text), <c>approved</c>, or <c>returned</c> with the moderator's note. Only the initiator gets it.
+/// </summary>
+public sealed record MyDescriptionChangeResponse(string Status, string Text, string? Note, DateTimeOffset CreatedAt);
 
 /// <summary>
 /// The numbers the forms show (design 8.2, 8.4). <c>ReasonsPerPerson</c> and <c>EndorsementsPerPerson</c> are the

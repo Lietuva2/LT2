@@ -125,7 +125,25 @@
 <data name="Mod.PageTitle" xml:space="preserve"><value>Moderavimas · Lietuva 2.0</value></data>
 <data name="Mod.Title" xml:space="preserve"><value>Moderavimas</value></data>
 <data name="Mod.Lead" xml:space="preserve"><value>Nauji kreipimaisi, pažymėti ar praneštieji argumentai ir dar nematyti argumentai. Paaiškinimą gauna autorius.</value></data>
-<data name="Action.Cancel" xml:space="preserve"><value>Atšaukti</value></data>
+<data name="Mod.Changes" xml:space="preserve"><value>Aprašymo pakeitimai</value></data>
+<data name="Mod.ChangeBy" xml:space="preserve"><value>Pasiūlė iniciatorius {0} · {1}</value></data>
+<data name="Mod.ChangeOld" xml:space="preserve"><value>Dabar rodomas aprašymas</value></data>
+<data name="Mod.ChangeNew" xml:space="preserve"><value>Siūlomas aprašymas</value></data>
+<data name="Mod.Actions" xml:space="preserve"><value>Veiksmai</value></data>
+<data name="Mod.Note.Optional" xml:space="preserve"><value>Pastaba autoriui (nebūtina)</value></data>
+<data name="Mod.Note.Required" xml:space="preserve"><value>Pastaba autoriui (privaloma)</value></data>
+<data name="Change.Mod.Approve.Sentence" xml:space="preserve"><value>Siūlomas aprašymas pakeis dabartinį kreipimosi puslapyje, o dabartinis liks aprašymo istorijoje. Iniciatorius gaus laišką.</value></data>
+<data name="Change.Mod.Return.Sentence" xml:space="preserve"><value>Puslapyje liks dabartinis aprašymas. Iniciatorius gaus jūsų pastabą ir galės pasiūlyti naują pakeitimą.</value></data>
+<data name="Change.Mod.Approved" xml:space="preserve"><value>Naujas aprašymas paskelbtas. Iniciatorius gaus laišką.</value></data>
+<data name="Change.Mod.Returned" xml:space="preserve"><value>Pakeitimas grąžintas su pastaba. Iniciatorius gaus laišką.</value></data>
+<data name="Change.Open" xml:space="preserve"><value>Siūlyti aprašymo pakeitimą</value></data>
+<data name="Change.Title" xml:space="preserve"><value>Aprašymo pakeitimas</value></data>
+<data name="Change.Explained" xml:space="preserve"><value>Naujas aprašymas bus rodomas tik tada, kai jį patvirtins moderatorius; iki tol puslapyje lieka dabartinis. Ankstesni aprašymai matomi istorijoje.</value></data>
+<data name="Change.Submit" xml:space="preserve"><value>Siųsti moderatoriui</value></data>
+<data name="Change.Sent" xml:space="preserve"><value>Pakeitimas išsiųstas moderatoriui.</value></data>
+<data name="Change.Pending" xml:space="preserve"><value>Jūsų pasiūlytas aprašymo pakeitimas laukia moderatoriaus. Kol jis nepatvirtintas, puslapyje rodomas dabartinis aprašymas.</value></data>
+<data name="Change.ShowProposed" xml:space="preserve"><value>Rodyti pasiūlytą tekstą</value></data>
+<data name="Change.Returned" xml:space="preserve"><value>Moderatorius grąžino jūsų ankstesnį pakeitimą: {0}</value></data>
 <data name="Mod.HiddenLink" xml:space="preserve"><value>Paslėpti kreipimaisi ir argumentai</value></data>
 <data name="Hidden.PageTitle" xml:space="preserve"><value>Paslėpti kreipimaisi · Lietuva 2.0</value></data>
 <data name="Hidden.Title" xml:space="preserve"><value>Paslėpti kreipimaisi</value></data>

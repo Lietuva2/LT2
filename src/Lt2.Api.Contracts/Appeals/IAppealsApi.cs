@@ -25,6 +25,9 @@ public interface IAppealsApi
 
     Task<ApiResult> EditAsync(string number, EditAppealRequest request, CancellationToken cancellationToken = default);
 
+    /// <summary>The initiator proposes a new description for an open appeal (design 8.1); shown once a moderator approves it.</summary>
+    Task<ApiResult> ProposeDescriptionAsync(string number, EditAppealRequest request, CancellationToken cancellationToken = default);
+
     Task<ApiResult> ChangeThresholdAsync(string number, ThresholdRequest request, CancellationToken cancellationToken = default);
 
     Task<ApiResult> TakePositionAsync(string number, PositionRequest request, CancellationToken cancellationToken = default);
@@ -77,6 +80,12 @@ public interface IModerationApi
     Task<ApiResult> ReturnAppealAsync(Guid appealId, StatementRequest request, CancellationToken cancellationToken = default);
 
     Task<ApiResult> HideAppealAsync(Guid appealId, StatementRequest request, CancellationToken cancellationToken = default);
+
+    /// <summary>Approves a proposed description change (design 8.1); the note to the initiator is optional.</summary>
+    Task<ApiResult> ApproveDescriptionAsync(Guid changeId, ModerationRequest request, CancellationToken cancellationToken = default);
+
+    /// <summary>Returns a proposed description change with a required note.</summary>
+    Task<ApiResult> ReturnDescriptionAsync(Guid changeId, StatementRequest request, CancellationToken cancellationToken = default);
 
     /// <summary>Hidden appeals and reasons, with who hid them, when and why (design 8.3).</summary>
     Task<ApiResult<HiddenItemsResponse>> GetHiddenAsync(CancellationToken cancellationToken = default);

@@ -182,6 +182,61 @@ namespace Lt2.Appeals.Infrastructure.Migrations
                     b.ToTable("daily_stat", "appeals");
                 });
 
+            modelBuilder.Entity("Lt2.Appeals.Domain.DescriptionChange", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<Guid>("AppealId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("appeal_id");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("created_at");
+
+                    b.Property<DateTimeOffset?>("DecidedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("decided_at");
+
+                    b.Property<string>("Note")
+                        .HasMaxLength(1000)
+                        .HasColumnType("character varying(1000)")
+                        .HasColumnName("note");
+
+                    b.PrimitiveCollection<string[]>("ScreeningFlags")
+                        .IsRequired()
+                        .HasColumnType("text[]")
+                        .HasColumnName("screening_flags");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)")
+                        .HasColumnName("status");
+
+                    b.Property<string>("Text")
+                        .IsRequired()
+                        .HasMaxLength(1500)
+                        .HasColumnType("character varying(1500)")
+                        .HasColumnName("text");
+
+                    b.HasKey("Id")
+                        .HasName("pk_description_change");
+
+                    b.HasIndex("AppealId")
+                        .IsUnique()
+                        .HasDatabaseName("ix_description_change_appeal_id_pending")
+                        .HasFilter("status = 'pending'");
+
+                    b.HasIndex("AppealId", "CreatedAt")
+                        .HasDatabaseName("ix_description_change_appeal_id_created_at");
+
+                    b.ToTable("description_change", "appeals");
+                });
+
             modelBuilder.Entity("Lt2.Appeals.Domain.Endorsement", b =>
                 {
                     b.Property<Guid>("ReasonId")
@@ -593,6 +648,16 @@ namespace Lt2.Appeals.Infrastructure.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired()
                         .HasConstraintName("fk_daily_stat_appeal_appeal_id");
+                });
+
+            modelBuilder.Entity("Lt2.Appeals.Domain.DescriptionChange", b =>
+                {
+                    b.HasOne("Lt2.Appeals.Domain.Appeal", null)
+                        .WithMany()
+                        .HasForeignKey("AppealId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
+                        .HasConstraintName("fk_description_change_appeal_appeal_id");
                 });
 
             modelBuilder.Entity("Lt2.Appeals.Domain.Endorsement", b =>

@@ -124,6 +124,15 @@ internal sealed class AppealsService(
         var endorsements = await AppealReads.EndorsementCountsAsync(db, mine.Select(r => r.Id).ToList(), cancellationToken);
         var facts = await participants.FindAsync(userId, cancellationToken);
         var isInitiator = appeal.InitiatorUserId == userId;
+
+        // The initiator's latest proposed description change and its state (design 8.1); nobody else's business.
+        var change = isInitiator
+            ? await db.DescriptionChanges.AsNoTracking()
+                .Where(d => d.AppealId == appeal.Id)
+                .OrderByDescending(d => d.CreatedAt)
+                .Select(d => new MyDescriptionChange(d.Status, d.Text, d.Note, d.CreatedAt))
+                .FirstOrDefaultAsync(cancellationToken)
+            : null;
         return new MyAppeal(
             side,
             endorsed,
@@ -134,7 +143,8 @@ internal sealed class AppealsService(
                 await settings.GetAsync(SettingKeys.AppealsReasonsPerPerson, cancellationToken)),
             isInitiator,
             isInitiator && ThresholdRules.InitiatorMayChange(appeal.Status, appeal.ThresholdSetBy, appeal.FirstSummarisedAt),
-            facts?.HasPositionConsent == true);
+            facts?.HasPositionConsent == true,
+            change);
     }
 
     public async Task<Result<AppealInfo>> OpenAsync(string billNumber, Guid userId, OpenAppeal request, CancellationToken cancellationToken)
@@ -247,6 +257,53 @@ internal sealed class AppealsService(
 
         appeal.Status = AppealStatuses.Pending;
         appeal.ChangedAt = now;
+        await db.SaveChangesAsync(cancellationToken);
+        await transaction.CommitAsync(cancellationToken);
+        return Result.Ok();
+    }
+
+    /// <summary>
+    /// The initiator proposes a new description for their open appeal (design 8.1): the page keeps the approved text until
+    /// a moderator approves this one. One pending at a time; writing, so a restriction blocks it.
+    /// </summary>
+    public async Task<Result<Unit>> ProposeDescriptionAsync(string billNumber, Guid userId, EditAppeal request, CancellationToken cancellationToken)
+    {
+        if (AppealRules.CheckDescription(request.Description) is { } broken)
+        {
+            return RuleErrors.Of(broken);
+        }
+
+        var text = AppealRules.NormaliseText(request.Description);
+        var flags = await screening.ScreenAsync(text, cancellationToken);
+
+        await using var db = await contexts.CreateDbContextAsync(cancellationToken);
+        await using var transaction = await db.Database.BeginTransactionAsync(cancellationToken);
+        await ParticipationLock.TakeAsync(db, userId, cancellationToken);
+        var appeal = await AppealReads.FindForAsync(db, billNumber, userId, tracking: false, cancellationToken);
+        if (appeal is null || !AppealReads.IsVisibleTo(appeal, userId))
+        {
+            return Error.NotFound("appeal.not-found");
+        }
+
+        if (await RestrictedAsync(db, userId, cancellationToken) is { } restricted)
+        {
+            return restricted;
+        }
+
+        var pending = await db.DescriptionChanges.AnyAsync(d => d.AppealId == appeal.Id && d.Status == DescriptionChangeStatuses.Pending, cancellationToken);
+        if (DescriptionChangeRules.CheckProposal(appeal.Status, appeal.InitiatorUserId == userId, pending, appeal.Description, text) is { } refused)
+        {
+            return RuleErrors.Of(refused);
+        }
+
+        db.DescriptionChanges.Add(new DescriptionChange
+        {
+            Id = Ids.New(clock),
+            AppealId = appeal.Id,
+            Text = text,
+            ScreeningFlags = [.. flags],
+            CreatedAt = clock.GetUtcNow(),
+        });
         await db.SaveChangesAsync(cancellationToken);
         await transaction.CommitAsync(cancellationToken);
         return Result.Ok();

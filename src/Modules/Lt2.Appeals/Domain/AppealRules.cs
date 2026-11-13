@@ -237,7 +237,10 @@ internal static class RuleErrors
     {
         "position.required" or "reason.limit" or "endorsement.other-side" or "endorsement.limit"
             or "threshold.set-by-moderator" or "threshold.locked" or "appeal.not-open"
-            or "appeal.exists" or "proposal.exists" or "appeal.published-exists" or "moderation.wrong-state" => Error.Conflict(code),
+            or "appeal.exists" or "proposal.exists" or "appeal.published-exists" or "moderation.wrong-state"
+            or "description-change.pending" => Error.Conflict(code),
+        "appeal.initiator-only" => Error.Forbidden(code),
+        "description.unchanged" => Error.Validation(code, "description"),
         "side.invalid" => Error.Validation(code, "side"),
         "reason.empty" or "reason.too-long" => Error.Validation(code, "text"),
         "description.empty" or "description.too-long" => Error.Validation(code, "description"),

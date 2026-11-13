@@ -95,6 +95,8 @@ internal static class ApiEndpoints
         ReturnAppealEndpoint.Map(api);
         HideAppealEndpoint.Map(api);
         HiddenEndpoints.Map(api);
+        DescriptionChangeEndpoints.Map(api);
+        ProposeDescriptionEndpoint.Map(api);
         SetAppealThresholdEndpoint.Map(api);
         PublishReasonEndpoint.Map(api);
         HideReasonEndpoint.Map(api);

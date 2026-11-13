@@ -92,6 +92,38 @@ else
         }
     </section>
 
+    @if (Queue.DescriptionChanges is { Count: > 0 } changes)
+    {
+        <section class="stack" aria-labelledby="h-changes">
+            <h2 id="h-changes">@L["Mod.Changes"]</h2>
+            @foreach (var change in changes)
+            {
+                <article class="sheet stack" id="queue-change-@change.Id" aria-labelledby="qc-@change.Id">
+                    <div class="row">
+                        <span class="tag tag--ink num">@change.Bill.Number</span>
+                        @foreach (var flag in change.Flags)
+                        {
+                            <span class="tag tag--people">@L["Mod.Flag." + flag]</span>
+                        }
+                    </div>
+                    <h3 id="qc-@change.Id">@change.Bill.Title</h3>
+                    <p class="small">@Text("Mod.ChangeBy", change.InitiatorName ?? L["Reasons.Anonymous"], Dates.DayTime(change.CreatedAt))</p>
+                    <div class="compare">
+                        <div class="stack stack--tight">
+                            <p class="label">@L["Mod.ChangeOld"]</p>
+                            <p class="voice" id="change-old-@change.Id">@change.CurrentText</p>
+                        </div>
+                        <div class="stack stack--tight">
+                            <p class="label">@L["Mod.ChangeNew"]</p>
+                            <p class="voice" id="change-new-@change.Id">@change.ProposedText</p>
+                        </div>
+                    </div>
+                    <DescriptionChangeActions Id="change.Id" />
+                </article>
+            }
+        </section>
+    }
+
     <section class="stack" aria-labelledby="h-reasons">
         <h2 id="h-reasons">@L["Mod.Reasons"]</h2>
         @if (Queue.Reasons.Count == 0)
