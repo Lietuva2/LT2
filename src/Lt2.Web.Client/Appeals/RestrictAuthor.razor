@@ -94,9 +94,11 @@ else
         {
             <p class="small">@L["Loading"]</p>
         }
-        <Messages Message="@Message" Info="@Info" />
     </section>
 }
+
+@* Outside the panel, so the confirmation stays visible after the panel closes. *@
+<Messages Message="@Message" Info="@Info" />
 
 @code {
     private bool _open;

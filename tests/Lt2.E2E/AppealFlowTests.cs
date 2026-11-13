@@ -221,7 +221,8 @@ public sealed class AppealFlowTests(AppealFlowTests.ModeratorFixture moderator) 
     {
         Assert.SkipWhen(string.IsNullOrEmpty(SignUpTests.BaseUrl), "LT2_E2E_BASE_URL is not set; start the stack and set it to run end-to-end tests.");
         var mod = await moderator.PageAsync();
-        const string Text = "Šis argumentas parašytas, kad moderatorius apribotų autoriaus rašymą.";
+        const string Prefix = "Šis argumentas parašytas, kad moderatorius apribotų autoriaus rašymą";
+        var Text = $"{Prefix} (bandymas {DateTime.UtcNow:HHmmss}).";
 
         await using var author = await PasskeyBrowser.StartAsync("native", 1280, 800);
         var w = author.Page;
@@ -272,12 +273,15 @@ public sealed class AppealFlowTests(AppealFlowTests.ModeratorFixture moderator) 
                 if (r.displayName === 'Ribojama Autorė') out.push((await post('/api/v1/moderation/restrictions/' + r.id + '/lift', { statement: 'Bandymo pabaiga.' })).status);
               const appeal = await (await fetch('/api/v1/bills/XVP-0412/appeal')).json();
               for (const r of appeal.reasons)
-                if (r.text === text) out.push((await post('/api/v1/moderation/reasons/' + r.id + '/hide', { statement: 'Bandymo duomenys išvalomi.' })).status);
+                if (r.text.startsWith(text)) out.push((await post('/api/v1/moderation/reasons/' + r.id + '/hide', { statement: 'Bandymo duomenys išvalomi.' })).status);
               return JSON.stringify(out);
             }
             """,
-            Text);
-        JsonSerializer.Deserialize<int[]>(statuses)!.ShouldBe([204, 204]);
+            Prefix);
+        // At least this run's restriction and argument; an earlier, interrupted run's leftovers go too.
+        var done = JsonSerializer.Deserialize<int[]>(statuses)!;
+        done.Length.ShouldBeGreaterThanOrEqualTo(2);
+        done.ShouldAllBe(status => status == 204);
     }
 
     private static string Shot(string name)
