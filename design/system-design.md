@@ -937,6 +937,8 @@ receives production data.
 GitHub Actions: build, unit and integration tests, architecture tests, scans, then an image per commit in the container
 registry. Deploy is a manual, approved step: pull by digest, run `Lt2.Migrator`, start the new `web` instances, check
 health, stop the old ones. Schema changes follow expand-then-contract so the old and new versions can run side by side.
+The migrator holds a PostgreSQL advisory lock from its first step to its last, so a second copy started at the same
+time (a hand run during a deploy) waits for the first instead of changing roles and grants alongside it.
 
 ### 9.4 Watching it
 

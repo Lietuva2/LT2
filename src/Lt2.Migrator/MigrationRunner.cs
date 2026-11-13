@@ -28,12 +28,55 @@ namespace Lt2.Migrator;
 /// </summary>
 public static class MigrationRunner
 {
+    /// <summary>
+    /// The PostgreSQL advisory lock every migrator run holds from its first step to its last, so two copies started at
+    /// once (a deploy and a hand run, or two test fixtures) take turns instead of changing roles and grants together
+    /// ("tuple concurrently updated"). The number is arbitrary and used for nothing else.
+    /// </summary>
+    public const long LockKey = 0x4C54_325F_4D49_4752; // "LT2_MIGR"
+
     public static async Task RunAsync(IConfiguration configuration, IReadOnlyList<string> args, CancellationToken cancellationToken)
     {
         ArgumentNullException.ThrowIfNull(configuration);
         ArgumentNullException.ThrowIfNull(args);
         args = args.Where(a => !string.IsNullOrWhiteSpace(a)).ToList();
 
+        // Advisory locks belong to the database, whichever role takes them: the administrator's connection when there is
+        // one (it runs the first step), else the migrator's. A session lock outlives a connection handed back to a pool,
+        // so this connection is not pooled: closing it ends the session and the lock, also if the run fails.
+        var lockConnection = new NpgsqlConnectionStringBuilder(!string.IsNullOrEmpty(configuration.GetConnectionString("Admin"))
+            ? ConnectionStrings.Build(configuration, "Admin", "Database:AdminPassword")
+            : ConnectionStrings.Build(configuration))
+        {
+            Pooling = false,
+        }.ConnectionString;
+        await using var held = await OpenWithRetryAsync(lockConnection, cancellationToken);
+        await using (var tryLock = new NpgsqlCommand("SELECT pg_try_advisory_lock(@key)", held))
+        {
+            tryLock.Parameters.AddWithValue("key", LockKey);
+            if (await tryLock.ExecuteScalarAsync(cancellationToken) is not true)
+            {
+                Log.Information("Another migrator run is in progress; waiting for it to finish");
+                await using var wait = new NpgsqlCommand("SELECT pg_advisory_lock(@key)", held) { CommandTimeout = 0 };
+                wait.Parameters.AddWithValue("key", LockKey);
+                await wait.ExecuteNonQueryAsync(cancellationToken);
+            }
+        }
+
+        try
+        {
+            await RunLockedAsync(configuration, args, cancellationToken);
+        }
+        finally
+        {
+            await using var unlock = new NpgsqlCommand("SELECT pg_advisory_unlock(@key)", held);
+            unlock.Parameters.AddWithValue("key", LockKey);
+            await unlock.ExecuteNonQueryAsync(CancellationToken.None);
+        }
+    }
+
+    private static async Task RunLockedAsync(IConfiguration configuration, IReadOnlyList<string> args, CancellationToken cancellationToken)
+    {
         if (!string.IsNullOrEmpty(configuration.GetConnectionString("Admin")))
         {
             var adminConnection = ConnectionStrings.Build(configuration, "Admin", "Database:AdminPassword");

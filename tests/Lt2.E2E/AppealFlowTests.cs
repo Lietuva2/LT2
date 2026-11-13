@@ -360,19 +360,34 @@ public sealed class AppealFlowTests(AppealFlowTests.ModeratorFixture moderator) 
                     File.AppendAllText(log, $"http {response.Status}: {response.Url}{Environment.NewLine}");
                 }
             };
-            var email = await PasskeyTests.RegisterAsync(page, "Moderatorius M.");
-            await PasskeyTests.AddPasskeyAsync(page);
-            await page.GetByRole(AriaRole.Button, new() { Name = "Atsijungti" }).ClickAsync();
-            await page.WaitForURLAsync(new Regex("/$"));
-            await PasskeyTests.SignInWithPasskeyAsync(page);
-            var output = await Compose.RunAsync("run", "--rm", "--no-deps", "migrator", "--grant-role", "moderator", email);
-            var code = PasskeyTests.ActivationCode().Match(output).Value;
-            code.ShouldNotBeNullOrEmpty("the migrator prints the activation code");
-            await page.ReloadAsync();
-            await SignUpTests.WaitForInteractivityAsync(page);
-            await page.GetByLabel("Aktyvinimo kodas").FillAsync(code);
-            await page.GetByRole(AriaRole.Button, new() { Name = "Aktyvinti" }).ClickAsync();
-            await Assertions.Expect(page.GetByText("Vaidmuo aktyvintas.")).ToBeVisibleAsync();
+            // A Playwright trace of the set-up, kept only when it fails: a click on "Aktyvinti" once waited 30 s for a
+            // navigation nothing in the page starts (2026-11-13), and the next occurrence should be readable.
+            await page.Context.Tracing.StartAsync(new() { Screenshots = true, Snapshots = true, Sources = false, Title = "moderator fixture" });
+            try
+            {
+                var email = await PasskeyTests.RegisterAsync(page, "Moderatorius M.");
+                await PasskeyTests.AddPasskeyAsync(page);
+                await page.GetByRole(AriaRole.Button, new() { Name = "Atsijungti" }).ClickAsync();
+                await page.WaitForURLAsync(new Regex("/$"));
+                await PasskeyTests.SignInWithPasskeyAsync(page);
+                var output = await Compose.RunAsync("run", "--rm", "--no-deps", "migrator", "--grant-role", "moderator", email);
+                var code = PasskeyTests.ActivationCode().Match(output).Value;
+                code.ShouldNotBeNullOrEmpty("the migrator prints the activation code");
+                await page.ReloadAsync();
+                await SignUpTests.WaitForInteractivityAsync(page);
+                await page.GetByLabel("Aktyvinimo kodas").FillAsync(code);
+                await page.GetByRole(AriaRole.Button, new() { Name = "Aktyvinti" }).ClickAsync();
+                await Assertions.Expect(page.GetByText("Vaidmuo aktyvintas.")).ToBeVisibleAsync();
+            }
+            catch
+            {
+                var trace = Path.Combine("output", "appeals", $"moderator-trace-{Guid.NewGuid():N}.zip");
+                await page.Context.Tracing.StopAsync(new() { Path = trace });
+                File.AppendAllText(log, $"trace: {Path.GetFullPath(trace)}{Environment.NewLine}");
+                throw;
+            }
+
+            await page.Context.Tracing.StopAsync();
             return page;
         }
 
