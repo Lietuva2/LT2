@@ -434,7 +434,7 @@ Policy-based, with resource handlers where ownership matters.
 | Member (confirmed email; invited during the trial) | Open an appeal, take a side, write and endorse reasons, report content. |
 | Verified MP / office member (`politician_link`) | Publish and edit that MP's response; manage that MP's email preferences. |
 | Moderator | Review appeals and reasons, merge, hide, correct planned dates, hold a send, approve an urgent send, restrict an account from writing and lift that. |
-| Administrator | Roles, politician verification, configuration, import and digest dashboards, lifting a writing restriction. Cannot read individual positions through any screen. |
+| Administrator | Roles, politician verification, configuration, import and digest dashboards; every moderator action, restricting an account from writing and lifting that included. Cannot read individual positions through any screen. |
 
 No screen and no API returns another person's position. Group numbers are published only for groups of at least 20.
 
@@ -624,7 +624,7 @@ the bill, participants are told so they can reconsider (as agreed for votes in `
   "Man svarbu" marks and disappears from the page; open reports on it are closed; a summary already made keeps its
   frozen text, which carries no name. The audit log records the withdrawal without the text or the side. On a closed
   appeal a reason cannot be withdrawn (the page there is the record beside the Seimas vote); a moderator can still hide
-  it, and deleting the account removes it. **[The closed-appeal case is proposed in M2a, to be confirmed by the owner.]**
+  it, and deleting the account removes it. **[The closed-appeal case decided 2026-11-13.]**
 - **A reason may be written for either side, whatever the author's own position [decided 2026-11-13].** The writing
   box asks for the side: it preselects the author's own side when they have taken one (read only from their own,
   never-cached answer), and preselects nothing when they have not, so they must choose. A person who has not taken a
@@ -663,7 +663,7 @@ the bill, participants are told so they can reconsider (as agreed for votes in `
 - **Restricting an account from writing [decided 2026-11-13].** With the per-person limits switched off (8.2), this is
   the tool for the one person who misuses that. A moderator restricts the author of a reason or the initiator of an
   appeal, reached from that item in the queue, either until a date (inclusive, Vilnius time) or until lifted; any
-  moderator may set any length, and any moderator or administrator may lift it, each only in a staff-passkey session
+  moderator or administrator may set any length and lift it [decided 2026-11-13], each only in a staff-passkey session
   (6.2) and each with a written statement. A dated restriction ends by itself when it is checked on use; no job runs.
   - It blocks everything the person writes for others to read: writing a reason, opening an appeal, editing an
     appeal's description (a returned one included), and flags about planned dates. The API refuses
@@ -969,8 +969,8 @@ Splitting M2 means the risky step (emailing every MP) happens only after the who
   Earlier first reasons stay as ordinary reasons; nothing marks a reason as the initiator's.
 - Reasons and "Man svarbu" marks per person per bill are runtime settings, both 0 (no limit) at the start; a limit
   switched on later counts only shown or waiting reasons and removes nothing (8.2, 5.6).
-- An author can withdraw their own reason while the appeal is open (8.2, 8.8). Still to be confirmed: that a reason
-  cannot be withdrawn once the appeal is closed (8.2).
+- An author can withdraw their own reason while the appeal is open, and not once it is closed (8.2, 8.8).
+- Administrators set and lift writing restrictions like moderators (8.3, 6.3).
 - Personal invitation codes: one per member, unlimited by default (`Registration:PersonalCodeUses`), replaceable,
   counted at completed registration on the code and per day; members see only their count; administrators see numbers
   per day, per code and per level, never who invited whom, and can switch codes off and on (6.2).

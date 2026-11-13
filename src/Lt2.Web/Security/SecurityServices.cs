@@ -21,11 +21,6 @@ internal static class Policies
     /// <summary>An active administrator role: a session signed in with the staff passkey (design 6.2).</summary>
     public const string Administrator = "administrator";
 
-    /// <summary>
-    /// The active moderator role itself, not an administrator's: restricting an account from writing is a moderator's
-    /// action (design 8.3); lifting it is open to both (<see cref="Moderator"/>).
-    /// </summary>
-    public const string ModeratorRole = "moderator-role";
 }
 
 /// <summary>Rate-limit policy names and limits (design 6.4). Limits are per client IP; see <see cref="RateLimitOptions"/>.</summary>
@@ -100,9 +95,7 @@ internal static class SecurityServices
             .AddPolicy(Policies.Moderator, p => p.RequireAuthenticatedUser()
                 .AddRequirements(new StaffRoleRequirement(Roles.Moderator, Roles.Administrator)))
             .AddPolicy(Policies.Administrator, p => p.RequireAuthenticatedUser()
-                .AddRequirements(new StaffRoleRequirement(Roles.Administrator)))
-            .AddPolicy(Policies.ModeratorRole, p => p.RequireAuthenticatedUser()
-                .AddRequirements(new StaffRoleRequirement(Roles.Moderator)));
+                .AddRequirements(new StaffRoleRequirement(Roles.Administrator)));
 
         services.Configure<RateLimitOptions>(configuration.GetSection(RateLimitOptions.Section));
         services.AddRateLimiter(options =>

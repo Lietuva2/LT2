@@ -155,7 +155,7 @@ public sealed class WritingRestrictionTests(DatabaseFixture database) : ApiTest(
     }
 
     [Fact]
-    public async Task Restricting_needs_the_moderator_role_in_a_staff_passkey_session_and_lifting_a_moderator_or_an_administrator()
+    public async Task Restricting_and_lifting_need_a_moderator_or_an_administrator_in_a_staff_passkey_session()
     {
         var (moderator, administrator) = await StaffAsync();
         var (initiator, _) = await Factory.MemberAsync();
@@ -173,7 +173,7 @@ public sealed class WritingRestrictionTests(DatabaseFixture database) : ApiTest(
         foreach (var (who, browser, expected) in new[]
         {
             ("stranger", stranger, HttpStatusCode.Unauthorized), ("member", member, HttpStatusCode.Forbidden),
-            ("moderator signed in by code", codeSession, HttpStatusCode.Forbidden), ("administrator", administrator.Browser, HttpStatusCode.Forbidden),
+            ("moderator signed in by code", codeSession, HttpStatusCode.Forbidden),
         })
         {
             (await RestrictAuthorAsync(browser, reasonId)).StatusCode.ShouldBe(expected, who);
@@ -197,7 +197,8 @@ public sealed class WritingRestrictionTests(DatabaseFixture database) : ApiTest(
         }
 
         var today = DateOnly.FromDateTime(TimeZoneInfo.ConvertTime(DateTimeOffset.UtcNow, TimeZoneInfo.FindSystemTimeZoneById("Europe/Vilnius")).DateTime);
-        using (var set = await moderator.Browser.PostAsync(AppealRoutes.With(AppealRoutes.RestrictAppealInitiator, appeal.Id), new RestrictionRequest { Until = today.AddDays(3), Statement = "Kartojasi tie patys įžeidimai." }))
+        // An administrator sets it, like any moderation action (decided 2026-11-13).
+        using (var set = await administrator.Browser.PostAsync(AppealRoutes.With(AppealRoutes.RestrictAppealInitiator, appeal.Id), new RestrictionRequest { Until = today.AddDays(3), Statement = "Kartojasi tie patys įžeidimai." }))
         {
             set.StatusCode.ShouldBe(HttpStatusCode.Created, await set.Content.ReadAsStringAsync());
         }

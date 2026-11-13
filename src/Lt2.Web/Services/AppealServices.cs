@@ -203,7 +203,7 @@ internal sealed class ServerModerationApi(
     {
         var http = accessor.HttpContext;
         var authorization = http?.RequestServices.GetRequiredService<Microsoft.AspNetCore.Authorization.IAuthorizationService>();
-        if (http is null || authorization is null || !(await authorization.AuthorizeAsync(http.User, http, Policies.ModeratorRole)).Succeeded)
+        if (http is null || authorization is null || !(await authorization.AuthorizeAsync(http.User, http, Policies.Moderator)).Succeeded)
         {
             return ApiResult<RestrictionCreatedResponse>.Fail(errors.ToProblem(Error.Forbidden("forbidden")));
         }
