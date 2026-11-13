@@ -198,7 +198,8 @@ public sealed class AppealFlowTests(AppealFlowTests.ModeratorFixture moderator) 
               const queue = await (await fetch('/api/v1/moderation/queue')).json();
               for (const a of queue.appeals) if (a.bill.number === bill) ids.push(a.id);
               const results = [];
-              for (const id of ids) {
+              // An open appeal can also be in the queue (on the agenda under its threshold, flagged, reported).
+              for (const id of [...new Set(ids)]) {
                 const r = await fetch('/api/v1/moderation/appeals/' + id + '/hide', {
                   method: 'POST', headers: { 'Content-Type': 'application/json', 'X-XSRF-TOKEN': token },
                   body: JSON.stringify({ statement: 'Bandymo duomenys išvalomi.' }) });
