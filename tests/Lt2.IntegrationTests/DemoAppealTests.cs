@@ -86,6 +86,7 @@ public sealed class DemoAppealTests(DatabaseFixture database) : ApiTest(database
         appeal.InitiatorName.ShouldBe("Rūta Mockutė");
         appeal.Counts.ShouldBe(new SideCountsResponse(6800, 6150, 4280, 3900));
         appeal.Threshold.ShouldBe(new ThresholdResponse(1000, "initiator", null, 11080, true, false));
+        appeal.Surge.ShouldBeNull("the invented sides are spread over the appeal's life, not a surge of new accounts");
         appeal.Reasons.Select(r => (r.AuthorName, r.Endorsements)).ShouldBe(
             [("Giedrė L.", 1920), ("Rūta Mockutė", 1480), ("Mindaugas R.", 1310), ("Aistė Kazlaitė", 970)]);
     }

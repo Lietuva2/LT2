@@ -5,7 +5,7 @@ using NpgsqlTypes;
 namespace Lt2.Appeals;
 
 /// <summary>One invented participant's side, for local demonstration data.</summary>
-public sealed record InventedPosition(Guid UserId, string Side, DateTimeOffset MemberSince);
+public sealed record InventedPosition(Guid UserId, string Side, DateTimeOffset MemberSince, DateTimeOffset? TakenAt = null);
 
 /// <summary>One invented argument and who marked it "Man svarbu".</summary>
 public sealed record InventedReason(Guid AuthorUserId, string Side, string Text, IReadOnlyList<Guid> EndorsedBy);
@@ -85,7 +85,7 @@ public static class InventedAppeal
         {
             foreach (var p in spec.Positions)
             {
-                var at = p.MemberSince > published ? p.MemberSince : published;
+                var at = p.TakenAt is { } taken && taken > published && taken > p.MemberSince ? taken : (p.MemberSince > published ? p.MemberSince : published);
                 await positions.WriteRowAsync(cancellationToken, appealId, p.UserId, p.Side, at, at, p.MemberSince);
             }
 

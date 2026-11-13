@@ -75,7 +75,13 @@ public static class DemoAppeal
         {
             var since = older ? Older() : Newer();
             members.Add(new InventedMember(Id(n), $"demo.{n:D5}@{InventedMembers.Domain}", name, since));
-            positions.Add(new InventedPosition(Id(n), side, since));
+
+            // Sides taken at any time since the appeal opened (not all on day one), so the invented data does not read as
+            // a surge of new accounts.
+            var opened = now.AddDays(-75);
+            var earliest = since > opened ? since : opened;
+            var taken = earliest + TimeSpan.FromMinutes(random.NextDouble() * (now - earliest).TotalMinutes);
+            positions.Add(new InventedPosition(Id(n), side, since, taken));
         }
 
         // The prototype's named authors: Rūta Mockutė opened the appeal.
