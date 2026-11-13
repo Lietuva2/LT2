@@ -63,6 +63,8 @@ public sealed class AppealPrivacyTests(DatabaseFixture database) : ApiTest(datab
         {
             AppealRoutes.Appeals, AppealRoutes.AppealOf(AppealSteps.ThirdBill), AppealRoutes.MineOf(AppealSteps.ThirdBill), AppealRoutes.Rules,
             AppealRoutes.ModerationQueue, ApiRoutes.Admin.Settings, ApiRoutes.Me.Root, ApiRoutes.Me.Sessions,
+            AppealRoutes.HistoryOf(AppealSteps.ThirdBill), Lt2.Api.Contracts.Digests.DigestRoutes.Digests, Lt2.Api.Contracts.Digests.DigestRoutes.Rules,
+            ApiRoutes.Me.PartySupport, ApiRoutes.Me.Export, "/kreipimaisi", "/seimas/XVP-0618/kreipimasis", "/suvestines", "/moderavimas",
         };
 
         foreach (var (who, browser) in viewers)
@@ -101,7 +103,11 @@ public sealed class AppealPrivacyTests(DatabaseFixture database) : ApiTest(datab
             "/api/v1/bills/{number}/appeal/reasons/similar", "/api/v1/reasons/{id}/endorsement", "/api/v1/reports", "/api/v1/moderation/queue",
             "/api/v1/moderation/appeals/{id}/publish", "/api/v1/moderation/appeals/{id}/return", "/api/v1/moderation/appeals/{id}/hide",
             "/api/v1/moderation/appeals/{id}/threshold", "/api/v1/moderation/reasons/{id}/publish", "/api/v1/moderation/reasons/{id}/hide",
-            "/api/v1/moderation/reasons/{id}/merge", "/api/v1/me/consents/positions",
+            "/api/v1/moderation/reasons/{id}/merge", "/api/v1/me/consents/positions", "/api/v1/bills/{number}/appeal/flags",
+            "/api/v1/bills/{number}/appeal/history", "/api/v1/moderation/appeals/{id}/planned", "/api/v1/moderation/appeals/{id}/hold",
+            "/api/v1/moderation/appeals/{id}/release", "/api/v1/moderation/appeals/{id}/urgent", "/api/v1/digests", "/api/v1/digests/{date}",
+            "/api/v1/digests/rules", "/api/v1/moderation/digests/{id}/mps", "/api/v1/moderation/digests/{id}/mps/{slug}", "/api/v1/me/party-support",
+            "/api/v1/me/export", "/api/v1/me",
         })
         {
             document.ShouldContain($"\"{path}\"", customMessage: path);

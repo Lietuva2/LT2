@@ -129,6 +129,52 @@ public sealed class AppealFlowTests(AppealFlowTests.ModeratorFixture moderator) 
         await Assertions.Expect(page.Locator("#appeals a[href='/seimas/XVP-0412/kreipimasis']")).ToBeVisibleAsync();
     }
 
+    [Theory]
+    [InlineData(1280, 800)]
+    [InlineData(390, 844)]
+    public async Task A_summary_of_the_demonstration_appeal_reads_without_javascript_and_names_nobody(int width, int height)
+    {
+        Assert.SkipWhen(string.IsNullOrEmpty(SignUpTests.BaseUrl), "LT2_E2E_BASE_URL is not set; start the stack and set it to run end-to-end tests.");
+
+        // A moderator approves one urgent summary for XVP-0412 (a dry run; once a week, so a later run finds it made).
+        var mod = await moderator.PageAsync();
+        var status = await mod.EvaluateAsync<int>(
+            """
+            async () => {
+              const token = (await (await fetch('/api/v1/auth/antiforgery')).json()).token;
+              const appeal = await (await fetch('/api/v1/bills/XVP-0412/appeal')).json();
+              const r = await fetch('/api/v1/moderation/appeals/' + appeal.id + '/urgent', {
+                method: 'POST', headers: { 'Content-Type': 'application/json', 'X-XSRF-TOKEN': token },
+                body: JSON.stringify({ statement: 'Demonstracinė suvestinė.' }) });
+              return r.status;
+            }
+            """);
+        status.ShouldBeOneOf(201, 409);
+
+        using var playwright = await Playwright.CreateAsync();
+        await using var browser = await playwright.Chromium.LaunchAsync(new() { Channel = SignUpTests.Channel, Headless = true });
+        await using var context = await browser.NewContextAsync(new()
+        {
+            JavaScriptEnabled = false,
+            IgnoreHTTPSErrors = true,
+            Locale = "lt-LT",
+            ViewportSize = new ViewportSize { Width = width, Height = height },
+        });
+        var page = await context.NewPageAsync();
+        await page.GotoAsync($"{Base}/suvestines");
+        await Assertions.Expect(page.Locator("#dry-run")).ToHaveTextAsync("Bandymas: suvestinės sudaromos, bet Seimo nariams nesiunčiamos.");
+        await Assertions.Expect(page.GetByText("Gyventojų pajamų mokesčio įstatymo pataisa").First).ToBeVisibleAsync();
+        await Assertions.Expect(page.GetByText("6 800").First).ToBeVisibleAsync();
+        await Assertions.Expect(page.Locator("#not-a-poll")).ToContainTextAsync("Tai nėra reprezentatyvi apklausa");
+        (await page.ContentAsync()).ShouldNotContain("Rūta Mockutė", customMessage: "a summary names nobody");
+        await NoSidewaysScrollAsync(page);
+        await page.ScreenshotAsync(new() { Path = Shot($"summary-no-javascript-{width}.png"), FullPage = true });
+
+        // The planned date the watcher read from the stand-in's invented agenda page.
+        await page.GotoAsync($"{Base}/seimas/XVP-0412/kreipimasis");
+        await Assertions.Expect(page.Locator("#planned")).ToContainTextAsync("Planuojama");
+    }
+
     private static string Shot(string name)
     {
         Directory.CreateDirectory(Path.Combine("output", "appeals"));
