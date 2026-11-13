@@ -43,7 +43,7 @@
                     </div>
                     @foreach (var item in run.Items)
                     {
-                        <section class="sheet stack" aria-label="@item.BillNumber">
+                        <section class="sheet stack" aria-label="@item.BillNumber" id="@DigestRoutes.ItemAnchor(run.Id, item.BillNumber)">
                             <div class="row">
                                 <span class="tag tag--ink num">@item.BillNumber</span>
                                 @if (item.Stage is { } stage)

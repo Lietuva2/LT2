@@ -1,8 +1,10 @@
 @page "/seimas/{Number}/kreipimasis"
 @using Lt2.Api.Contracts.Appeals
+@using Lt2.Api.Contracts.Digests
 @using Lt2.Api.Contracts.Parliament
 @using Lt2.Web.Client.Appeals
 @inject IAppealsApi Appeals
+@inject IDigestsApi Digests
 @inject IParliamentApi Parliament
 @inject Lt2.Api.Contracts.Meta.IMetaApi Meta
 @inject Formats F
@@ -13,7 +15,7 @@
 @* The appeal on a bill (design 8.1, design/ui/kreipimasis.html): server-rendered and readable without JavaScript;
    taking a side, the arguments' "Man svarbu" and writing are WebAssembly islands. Without an appeal the bill offers to
    open one. Every number here is both sides with the count for accounts older than 30 days, and says it is not a
-   representative poll. *@
+   representative poll. A published appeal lists the summaries to MPs that held it, each linking to its public copy. *@
 @if (_appeal is { } a)
 {
     <PageTitle>@a.Bill.Number · @T["Page.Title"] · Lietuva 2.0</PageTitle>
@@ -179,6 +181,36 @@
                 }
             </section>
 
+            @if (a.Status is "open" or "closed")
+            {
+                <section class="stack stack--tight" aria-labelledby="h-digests" id="digests">
+                    <h3 id="h-digests">@T["Digests.OnAppeal.Heading"]</h3>
+                    @if (_digests.Count == 0)
+                    {
+                        <p class="small" id="no-digests">@T["Digests.OnAppeal.None"]</p>
+                    }
+                    else
+                    {
+                        <ul class="rows">
+                            @foreach (var d in _digests)
+                            {
+                                <li>
+                                    <div class="rows__main">
+                                        <span><a href="@DigestRoutes.PageAt(d.RunDate, d.RunId, d.Item.BillNumber)" class="num">@Formats.Day(d.RunDate)</a> · <span class="small">@T["Digests.Kind." + d.Kind]</span></span>
+                                        <span class="small num">
+                                            <span class="choice choice--for">@T["Digests.Side.for"]</span> @Formats.Number(d.Item.For) (@Formats.Number(d.Item.ForOlderThan30Days))
+                                            · <span class="choice choice--against">@T["Digests.Side.against"]</span> @Formats.Number(d.Item.Against) (@Formats.Number(d.Item.AgainstOlderThan30Days))
+                                        </span>
+                                    </div>
+                                </li>
+                            }
+                        </ul>
+                        <p class="fine">@T["Digests.OnAppeal.Frozen"]</p>
+                    }
+                    <p class="fine">@T["Digests.DryRun"] <a href="/suvestines">@T["Digests.OnAppeal.All"]</a></p>
+                </section>
+            }
+
             @if (_bill is { } bill)
             {
                 <section class="stack stack--tight" aria-labelledby="h-stages">
@@ -249,6 +281,7 @@ else if (_bill is { } bill)
     private BillResponse? _bill;
     private DateTimeOffset? _updatedAt;
     private VoteResponse? _closingVote;
+    private IReadOnlyList<AppealDigestResponse> _digests = [];
 
     [Parameter] public string Number { get; set; } = "";
 
@@ -266,6 +299,11 @@ else if (_bill is { } bill)
         }
 
         _updatedAt = (await Meta.GetImportsAsync()).Value?.Sources.FirstOrDefault()?.LastSuccessAt;
+        if (_appeal is { Status: "open" or "closed" })
+        {
+            _digests = (await Digests.GetAppealDigestsAsync(_appeal.Bill.Number)).Value ?? [];
+        }
+
         if (_appeal?.ClosingVoteId is { } voteId)
         {
             _closingVote = (await Parliament.GetVoteAsync(voteId)).Value;

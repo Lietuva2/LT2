@@ -21,6 +21,9 @@ public sealed record DigestItemResponse(
 public sealed record DigestRunResponse(
     Guid Id, string Kind, DateOnly RunDate, DateOnly? SittingDate, DateTimeOffset CreatedAt, string Status, int MpCount, IReadOnlyList<DigestItemResponse> Items);
 
+/// <summary>One summary that held an appeal, with that appeal as the summary froze it (design 8.7: shown on the appeal page).</summary>
+public sealed record AppealDigestResponse(Guid RunId, string Kind, DateOnly RunDate, DateOnly? SittingDate, string Status, int MpCount, DigestItemResponse Item);
+
 /// <summary>What one MP would read; moderators only.</summary>
 public sealed record DigestPreviewResponse(string Subject, string Text);
 
@@ -55,18 +58,28 @@ public static class DigestRoutes
     public const string Digests = ApiRoutes.Prefix + "/digests";
     public const string Rules = Digests + "/rules";
     public const string Digest = Digests + "/{date}";
+    public const string OfAppeal = ApiRoutes.Prefix + "/bills/{number}/appeal/digests";
     public const string Mps = ApiRoutes.Prefix + "/moderation/digests/{id:guid}/mps";
     public const string Preview = ApiRoutes.Prefix + "/moderation/digests/{id:guid}/mps/{slug}";
     public const string Urgent = ApiRoutes.Prefix + "/moderation/appeals/{id:guid}/urgent";
 
     public static string DigestOn(DateOnly date) => Digests + "/" + date.ToString("yyyy-MM-dd", System.Globalization.CultureInfo.InvariantCulture);
 
+    public static string OfAppealOn(string number) => AppealRoutes.AppealOf(number) + "/digests";
+
+    /// <summary>The public summary page of a day, at one bill's item in one run.</summary>
+    public static string PageAt(DateOnly date, Guid runId, string number) =>
+        "/suvestines/" + date.ToString("yyyy-MM-dd", System.Globalization.CultureInfo.InvariantCulture) + "#" + ItemAnchor(runId, number);
+
+    /// <summary>The element id of one bill's item on a summary page.</summary>
+    public static string ItemAnchor(Guid runId, string number) => $"item-{runId:N}-{Uri.EscapeDataString(number)}";
+
     public static string MpsOf(Guid id) => $"{ApiRoutes.Prefix}/moderation/digests/{id}/mps";
 
     public static string PreviewOf(Guid id, string slug) => $"{MpsOf(id)}/{Uri.EscapeDataString(slug)}";
 }
 
-/// <summary>Design 8.8: GET /digests and GET /digests/{date}; and the moderators' preview of any MP's summary.</summary>
+/// <summary>Design 8.8: GET /digests, GET /digests/{date} and an appeal's summaries; and the moderators' preview of any MP's summary.</summary>
 public interface IDigestsApi
 {
     Task<ApiResult<IReadOnlyList<DigestRunResponse>>> GetDigestsAsync(CancellationToken cancellationToken = default);
@@ -74,6 +87,9 @@ public interface IDigestsApi
     Task<ApiResult<DigestRulesResponse>> GetRulesAsync(CancellationToken cancellationToken = default);
 
     Task<ApiResult<IReadOnlyList<DigestRunResponse>>> GetDigestAsync(DateOnly date, CancellationToken cancellationToken = default);
+
+    /// <summary>The summaries that held the published appeal on a bill, newest first (empty until the first).</summary>
+    Task<ApiResult<IReadOnlyList<AppealDigestResponse>>> GetAppealDigestsAsync(string number, CancellationToken cancellationToken = default);
 
     Task<ApiResult<IReadOnlyList<DigestMpResponse>>> GetMpsAsync(Guid runId, CancellationToken cancellationToken = default);
 

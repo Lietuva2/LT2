@@ -327,8 +327,10 @@ a.tag:hover { text-decoration: underline; text-decoration-thickness: 1.5px; }
 .tag--brand { background: var(--brand-tint); color: var(--link); }
 .tag--ink { background: var(--ink); color: var(--sheet); }
 
-.choice { display: inline-flex; align-items: center; gap: var(--sp-2); font-weight: 700; white-space: nowrap; }
-.choice::before { content: ""; width: 0.75rem; height: 0.75rem; background: var(--abstain); flex: none; }
+/* The label sits on the text baseline, so it lines up with the words and numbers beside it. The square's bottom sits on
+   that baseline too and is moved to the middle of the capitals (1cap), not of the line, which the fonts fill unevenly. */
+.choice { display: inline-flex; align-items: baseline; gap: var(--sp-2); font-weight: 700; white-space: nowrap; }
+.choice::before { content: ""; width: 0.75rem; height: 0.75rem; translate: 0 calc((0.75rem - 1cap) / 2); background: var(--abstain); flex: none; }
 .choice--for::before { background: var(--for); }
 .choice--against::before { background: var(--against); }
 .choice--absent { font-weight: 400; color: var(--ink-2); }
