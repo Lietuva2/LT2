@@ -11,6 +11,7 @@
 <data name="Nav.Methodology" xml:space="preserve"><value>Kaip skaičiuojama</value></data>
   <data name="Nav.SignIn" xml:space="preserve"><value>Prisijungti</value></data>
   <data name="Nav.Account" xml:space="preserve"><value>Mano paskyra</value></data>
+  <data name="Nav.SignOut" xml:space="preserve"><value>Atsijungti</value></data>
   <data name="Notice.InventedParliament" xml:space="preserve"><value>Seimo narių ir balsavimų duomenys čia išgalvoti – tai tik bandymas.</value></data>
   <data name="Footer.Line" xml:space="preserve"><value>Lietuva 2.0 · uždaras bandymas</value></data>
   <data name="Home.Eyebrow" xml:space="preserve"><value>Bandomoji versija</value></data>

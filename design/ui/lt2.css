@@ -424,3 +424,11 @@ body { padding-block-end: 4.5rem; }
   .feedback[open] .feedback__panel { animation: feedback-slide 0.18s ease-out; }
 }
 @keyframes feedback-slide { from { transform: translateY(0.75rem); opacity: 0; } to { transform: none; opacity: 1; } }
+
+/* "Atsijungti" in the menu: a form button that looks and behaves like the menu's links. */
+.top__signout { display: contents; }
+.top__signout button {
+  margin: 0; padding: var(--sp-2) 0; border: 0; border-bottom: 4px solid transparent; background: none; cursor: pointer;
+  font: inherit; font-weight: 600; color: var(--ink);
+}
+.top__signout button:hover { border-bottom-color: var(--slate); }

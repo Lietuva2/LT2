@@ -1,0 +1,21 @@
+@using Lt2.Api.Contracts.Auth
+@inject IAuthApi Auth
+@inject IStringLocalizer<PageText> T
+@inject NavigationManager Navigation
+
+@* "Atsijungti" in the main menu for a signed-in person (owner, 2026-11-13). Server-rendered like the feedback form: it
+   posts back to the page it is on, so it works without JavaScript and at every width; Blazor checks the antiforgery
+   token of the form, and the Origin check applies as to every post. Signing out ends this session (its row is deleted)
+   and takes the person to the front page. *@
+<form method="post" @formname="sign-out" @onsubmit="SignOutAsync" class="top__signout" id="nav-sign-out">
+    <AntiforgeryToken />
+    <button type="submit">@T["Nav.SignOut"]</button>
+</form>
+
+@code {
+    private async Task SignOutAsync()
+    {
+        await Auth.SignOutAsync();
+        Navigation.NavigateTo("/", forceLoad: true);
+    }
+}
