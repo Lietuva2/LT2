@@ -563,3 +563,11 @@ body { padding-block-end: 4.5rem; }
 .switch__half:has(.switch__input:focus-visible) { outline: 3px solid var(--focus); outline-offset: 2px; z-index: 1; }
 .switch__half:has(.switch__input:disabled) { opacity: 0.6; cursor: progress; }
 .switch__input:disabled { cursor: progress; }
+
+/* Under an argument (owner, 2026-11-13): "Man svarbu", "Pranešti" and "Atsiimti" stay together on one line; when the
+   author's name and the group do not fit side by side, the name takes its own line above. The two columns of
+   arguments become one where a column would be too narrow for the group. A visitor's opened report note wraps. */
+.said__name { overflow-wrap: anywhere; }
+.said__actions { display: inline-flex; flex-wrap: nowrap; align-items: center; gap: var(--sp-3); white-space: nowrap; }
+.said__actions:has(.report-visitor[open]) { flex-wrap: wrap; white-space: normal; }
+@media (max-width: 64rem) { .pair--reasons { grid-template-columns: minmax(0, 1fr); } }
