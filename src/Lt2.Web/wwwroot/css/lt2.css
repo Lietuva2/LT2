@@ -533,3 +533,7 @@ body { padding-block-end: 4.5rem; }
 
 /* A queue item's actions (design 8.3): one control each, wrapping on a narrow screen; choosing one opens its fields. */
 .actions { display: flex; flex-wrap: wrap; gap: var(--sp-2) var(--sp-3); align-items: center; }
+
+/* The settings screen (design 5.6): the value field is short, its unit beside it. */
+.settings__value { inline-size: 7rem; }
+.settings .rows__side { flex-wrap: wrap; justify-content: flex-end; }

@@ -53,6 +53,8 @@ public sealed class AdminSettingsTests(DatabaseFixture database) : ApiTest(datab
         var settings = (await admin.Client.GetFromJsonAsync<List<SettingResponse>>(ApiRoutes.Admin.Settings))!;
         settings.Single(s => s.Key == Key).Value.GetBoolean().ShouldBeTrue();
         settings.Single(s => s.Key == "Digest:ThresholdDefault").Value.GetInt32().ShouldBe(100);
+        settings.Single(s => s.Key == "Digest:ThresholdMinimum").Default!.Value.GetInt32().ShouldBe(50, "the screen shows each setting's default");
+        settings.ShouldAllBe(s => s.Default.HasValue);
 
         using (var change = await admin.SendAsync(HttpMethod.Put, ApiRoutes.Admin.SettingByKey(Key), new UpdateSettingRequest { Value = JsonSerializer.SerializeToElement(false) }))
         {
