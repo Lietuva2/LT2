@@ -403,6 +403,169 @@ internal sealed class ModerationService(
             ct);
     }
 
+    public Task<Result<AuthorView>> AuthorOfReasonAsync(Guid reasonId, CancellationToken cancellationToken) =>
+        ViewAsync(db => db.Reasons.Where(r => r.Id == reasonId).Select(r => (Guid?)r.AuthorUserId), "reason.not-found", cancellationToken);
+
+    public Task<Result<AuthorView>> InitiatorOfAppealAsync(Guid appealId, CancellationToken cancellationToken) =>
+        ViewAsync(db => db.Appeals.Where(a => a.Id == appealId).Select(a => (Guid?)a.InitiatorUserId), "appeal.not-found", cancellationToken);
+
+    public Task<Result<Guid>> RestrictAuthorOfReasonAsync(Guid reasonId, DateOnly? until, string statement, ModeratorActor moderator, string? contact, CancellationToken cancellationToken) =>
+        RestrictAsync(db => db.Reasons.Where(r => r.Id == reasonId).Select(r => (Guid?)r.AuthorUserId), "reason.not-found", until, statement, moderator, contact, cancellationToken);
+
+    public Task<Result<Guid>> RestrictInitiatorOfAppealAsync(Guid appealId, DateOnly? until, string statement, ModeratorActor moderator, string? contact, CancellationToken cancellationToken) =>
+        RestrictAsync(db => db.Appeals.Where(a => a.Id == appealId).Select(a => (Guid?)a.InitiatorUserId), "appeal.not-found", until, statement, moderator, contact, cancellationToken);
+
+    public async Task<IReadOnlyList<RestrictionInfo>> RestrictionsAsync(CancellationToken cancellationToken)
+    {
+        await using var db = await contexts.CreateDbContextAsync(cancellationToken);
+        var now = clock.GetUtcNow();
+        var holding = (await db.WritingRestrictions.AsNoTracking().Where(w => w.LiftedAt == null).OrderBy(w => w.SetAt).ToListAsync(cancellationToken))
+            .Where(w => WritingRules.Holds(w.EndsAt, w.LiftedAt, now))
+            .ToList();
+        var names = await reads.NamesAsync(holding.Select(w => w.UserId), cancellationToken);
+        return holding.Select(w => Info(w, names.GetValueOrDefault(w.UserId), now)).ToList();
+    }
+
+    public async Task<Result<Unit>> LiftRestrictionAsync(Guid restrictionId, string statement, ModeratorActor moderator, string? contact, CancellationToken cancellationToken)
+    {
+        if (string.IsNullOrWhiteSpace(statement))
+        {
+            return Error.Validation("statement.required", "statement");
+        }
+
+        await using var db = await contexts.CreateDbContextAsync(cancellationToken);
+        await using var transaction = await db.Database.BeginTransactionAsync(cancellationToken);
+        var restriction = await db.WritingRestrictions.FirstOrDefaultAsync(w => w.Id == restrictionId, cancellationToken);
+        if (restriction is null)
+        {
+            return Error.NotFound("restriction.not-found");
+        }
+
+        var now = clock.GetUtcNow();
+        if (!WritingRules.Holds(restriction.EndsAt, restriction.LiftedAt, now))
+        {
+            return Error.Conflict("restriction.not-holding");
+        }
+
+        restriction.LiftedAt = now;
+        restriction.LiftedByUserId = moderator.UserId;
+        restriction.LiftStatement = statement.Trim();
+        await RecordRestrictionAsync(db, transaction, restriction.Id, "lift", restriction.LiftStatement, null, moderator, now, cancellationToken);
+        await NotifyRestrictionAsync(transaction, restriction.UserId, WritingRestrictionNotices.Lifted, null, restriction.LiftStatement, contact, cancellationToken);
+        await db.SaveChangesAsync(cancellationToken);
+        await transaction.CommitAsync(cancellationToken);
+        return Result.Ok();
+    }
+
+    private async Task<Result<AuthorView>> ViewAsync(Func<AppealsDb, IQueryable<Guid?>> who, string notFound, CancellationToken ct)
+    {
+        await using var db = await contexts.CreateDbContextAsync(ct);
+        if (await who(db).FirstOrDefaultAsync(ct) is not { } userId)
+        {
+            return Error.NotFound(notFound);
+        }
+
+        var now = clock.GetUtcNow();
+        var reasons = await db.Reasons.AsNoTracking().Where(r => r.AuthorUserId == userId).OrderByDescending(r => r.CreatedAt).ToListAsync(ct);
+        var appeals = await db.Appeals.AsNoTracking().Where(a => a.InitiatorUserId == userId).OrderByDescending(a => a.OpenedAt).ToListAsync(ct);
+        var reasonAppeals = reasons.Select(r => r.AppealId).Distinct().ToList();
+        var bills = await db.Appeals.AsNoTracking().Where(a => reasonAppeals.Contains(a.Id)).ToDictionaryAsync(a => a.Id, a => a.BillNumber, ct);
+        var restrictions = await db.WritingRestrictions.AsNoTracking().Where(w => w.UserId == userId).OrderByDescending(w => w.SetAt).ToListAsync(ct);
+        var targets = reasons.Select(r => r.Id).Concat(appeals.Select(a => a.Id)).Concat(restrictions.Select(w => w.Id)).ToList();
+        var actions = await db.ModerationActions.AsNoTracking().Where(m => targets.Contains(m.TargetId)).OrderByDescending(m => m.CreatedAt).ToListAsync(ct);
+        var name = (await reads.NamesAsync([userId], ct)).GetValueOrDefault(userId);
+
+        // The person's arguments and appeals, and what moderators did about them. Never the address, a side or a mark.
+        return new AuthorView(
+            name,
+            reasons.Select(r => new AuthorReason(r.Id, bills.GetValueOrDefault(r.AppealId) ?? "", r.Side, r.Text, r.Status, r.CreatedAt)).ToList(),
+            appeals.Select(a => new AuthorAppeal(a.Id, a.BillNumber, a.Status, a.OpenedAt)).ToList(),
+            actions.Select(m => new ModerationEntry(m.TargetKind, m.Action, m.Statement, m.CreatedAt)).ToList(),
+            restrictions.Select(w => Info(w, name, now)).ToList());
+    }
+
+    private async Task<Result<Guid>> RestrictAsync(
+        Func<AppealsDb, IQueryable<Guid?>> who, string notFound, DateOnly? until, string statement, ModeratorActor moderator, string? contact, CancellationToken ct)
+    {
+        var now = clock.GetUtcNow();
+        if (string.IsNullOrWhiteSpace(statement))
+        {
+            return Error.Validation("statement.required", "statement");
+        }
+
+        if (WritingRules.CheckUntil(until, now) is { } wrong)
+        {
+            return Error.Validation(wrong, "until");
+        }
+
+        await using var db = await contexts.CreateDbContextAsync(ct);
+        await using var transaction = await db.Database.BeginTransactionAsync(ct);
+        if (await who(db).FirstOrDefaultAsync(ct) is not { } userId)
+        {
+            return Error.NotFound(notFound);
+        }
+
+        var open = await db.WritingRestrictions.Where(w => w.UserId == userId && w.LiftedAt == null).ToListAsync(ct);
+        if (open.Any(w => WritingRules.Holds(w.EndsAt, w.LiftedAt, now)))
+        {
+            // One at a time: to change its length, a moderator lifts it and sets a new one.
+            return Error.Conflict("restriction.exists");
+        }
+
+        var restriction = new WritingRestriction
+        {
+            Id = Ids.New(clock),
+            UserId = userId,
+            EndsAt = until is { } day ? WritingRules.EndsAt(day) : null,
+            Statement = statement.Trim(),
+            SetByUserId = moderator.UserId,
+            SetAt = now,
+        };
+        db.WritingRestrictions.Add(restriction);
+        await RecordRestrictionAsync(db, transaction, restriction.Id, "restrict", restriction.Statement, until, moderator, now, ct);
+        await NotifyRestrictionAsync(transaction, userId, WritingRestrictionNotices.Restricted, until, restriction.Statement, contact, ct);
+        await db.SaveChangesAsync(ct);
+        await transaction.CommitAsync(ct);
+        return restriction.Id;
+    }
+
+    private static RestrictionInfo Info(WritingRestriction w, string? name, DateTimeOffset now) =>
+        new(w.Id, name, WritingRules.Until(w.EndsAt), w.Statement, w.SetAt, WritingRules.Holds(w.EndsAt, w.LiftedAt, now), w.LiftedAt, w.LiftStatement);
+
+    /// <summary>Like every moderation action: the record and the audit entry (moderator, target, statement, end), nothing about sides.</summary>
+    private async Task RecordRestrictionAsync(
+        AppealsDb db, IDbContextTransaction transaction, Guid restrictionId, string action, string statement, DateOnly? until, ModeratorActor moderator, DateTimeOffset now, CancellationToken ct)
+    {
+        db.ModerationActions.Add(new ModerationAction
+        {
+            Id = Ids.New(clock),
+            ModeratorUserId = moderator.UserId,
+            TargetKind = "restriction",
+            TargetId = restrictionId,
+            Action = action,
+            Statement = statement,
+            CreatedAt = now,
+        });
+        var details = JsonSerializer.SerializeToElement(new { statement, until }, JsonSerializerOptions.Web);
+        await audit.WriteAsync(
+            new AuditEntry($"moderation.restriction.{action}", moderator.UserId, moderator.Role, $"restriction:{restrictionId}", details, moderator.IpHash),
+            transaction.GetDbTransaction(),
+            ct);
+    }
+
+    private async Task NotifyRestrictionAsync(IDbContextTransaction transaction, Guid userId, string notice, DateOnly? until, string statement, string? contact, CancellationToken ct)
+    {
+        if (await participants.FindAsync(userId, ct) is not { } person)
+        {
+            return;
+        }
+
+        await outbox.EnqueueAsync(
+            OutboxMessage.Create(MessageKinds.WritingRestrictionEmail, new WritingRestrictionEmail(person.Email, notice, until, statement, contact)),
+            transaction.GetDbTransaction(),
+            ct);
+    }
+
     private async Task NotifyAsync(IDbContextTransaction transaction, Guid authorId, string notice, string billNumber, string? statement, string? excerpt, CancellationToken ct)
     {
         var author = await participants.FindAsync(authorId, ct);

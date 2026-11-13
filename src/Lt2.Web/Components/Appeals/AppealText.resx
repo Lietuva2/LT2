@@ -132,6 +132,10 @@
 <data name="Rules.Actions" xml:space="preserve"><value>Paaiškinimas autoriui</value></data>
 <data name="Rules.Actions.1" xml:space="preserve"><value>Kiekvienas moderatoriaus veiksmas įrašomas. Grąžindamas, slėpdamas, sujungdamas ar keisdamas ribą moderatorius visada parašo paaiškinimą, o autorius jį gauna el. paštu.</value></data>
 <data name="Rules.Actions.2" xml:space="preserve"><value>Kreipimosi ribą moderatorius gali pakeisti, jei ji akivaizdžiai neleidžia kitai pusei būti išgirstai; pakeista riba ir jos priežastis rodomos kreipimosi puslapyje, o iniciatorius jos keisti nebegali.</value></data>
+<data name="Rules.Restriction" xml:space="preserve"><value>Rašymo apribojimas</value></data>
+<data name="Rules.Restriction.1" xml:space="preserve"><value>Jei kas nors piktnaudžiauja rašymu, moderatorius gali apriboti jo galimybę rašyti: iki nurodytos dienos arba kol apribojimas bus atšauktas. Kol jis galioja, žmogus negali rašyti argumentų, atidaryti kreipimųsi, taisyti jų aprašymų ir pranešti apie neteisingas datas.</value></data>
+<data name="Rules.Restriction.2" xml:space="preserve"><value>Prisijungti, nurodyti, ko prašoma, žymėti „Man svarbu“ ir pranešti apie turinį apribotas žmogus gali kaip anksčiau; jokie skaičiai nesikeičia, jau parašyti argumentai lieka. Kad rašymas apribotas, mato tik pats žmogus ir moderatoriai.</value></data>
+<data name="Rules.Restriction.3" xml:space="preserve"><value>Moderatorius visada parašo paaiškinimą; žmogus jį gauna el. paštu kartu su apribojimo trukme ir adresu, kuriuo gali prieštarauti. Apribojimą anksčiau laiko gali atšaukti moderatorius arba administratorius; apie tai žmogus taip pat gauna laišką. Ištrynus paskyrą, ištrinamas ir apribojimas.</value></data>
 <data name="Rules.Reports" xml:space="preserve"><value>Pranešimai</value></data>
 <data name="Rules.Reports.1" xml:space="preserve"><value>Prie kiekvieno kreipimosi ir argumento yra mygtukas „Pranešti“. Prisijungę naudotojai praneša svetainėje; kiti gali parašyti moderatoriams. Kas pranešė, moderatoriai nemato.</value></data>
 <data name="Rules.Dates" xml:space="preserve"><value>Planuojamos datos</value></data>

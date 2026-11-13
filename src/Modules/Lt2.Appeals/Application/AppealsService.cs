@@ -161,6 +161,11 @@ internal sealed class AppealsService(
             return Error.Conflict("consent.required");
         }
 
+        if (await RestrictedAsync(db, userId, cancellationToken) is { } restricted)
+        {
+            return restricted;
+        }
+
         var existing = await db.Appeals.AsNoTracking()
             .Where(a => a.BillNumber == bill.Number)
             .Select(a => a.Status)
@@ -228,6 +233,11 @@ internal sealed class AppealsService(
         if (appeal.InitiatorUserId != userId)
         {
             return Error.Forbidden("appeal.initiator-only");
+        }
+
+        if (await RestrictedAsync(db, userId, cancellationToken) is { } restricted)
+        {
+            return restricted;
         }
 
         if (appeal.Status is not (AppealStatuses.Pending or AppealStatuses.Returned))
@@ -428,6 +438,11 @@ internal sealed class AppealsService(
             return Error.Forbidden("member.required");
         }
 
+        if (await RestrictedAsync(db, userId, cancellationToken) is { } restricted)
+        {
+            return restricted;
+        }
+
         // Either side, whatever the author's own (design 8.2): the position is not read, and writing never stores one.
         var counted = AppealRules.CountedReasonStatuses.ToList();
         var written = await db.Reasons.CountAsync(r => r.AppealId == appeal.Value.Id && r.AuthorUserId == userId && counted.Contains(r.Status), cancellationToken);
@@ -555,6 +570,31 @@ internal sealed class AppealsService(
         return Result.Ok();
     }
 
+    public async Task<MyRestriction?> MyRestrictionAsync(Guid userId, CancellationToken cancellationToken)
+    {
+        await using var db = await contexts.CreateDbContextAsync(cancellationToken);
+        var now = clock.GetUtcNow();
+        var holding = (await db.WritingRestrictions.AsNoTracking().Where(w => w.UserId == userId && w.LiftedAt == null).ToListAsync(cancellationToken))
+            .Where(w => WritingRules.Holds(w.EndsAt, w.LiftedAt, now))
+            .OrderBy(w => w.EndsAt is null ? 0 : 1)
+            .ThenByDescending(w => w.EndsAt)
+            .FirstOrDefault();
+        return holding is null ? null : new MyRestriction(WritingRules.Until(holding.EndsAt), holding.Statement);
+    }
+
+    /// <summary>
+    /// A moderator's restriction on writing (design 8.3) blocks what the person writes for others to read: arguments,
+    /// opening and editing appeals, date flags. Never sides, marks, reports or anything about the account.
+    /// </summary>
+    private async Task<Error?> RestrictedAsync(AppealsDb db, Guid userId, CancellationToken ct)
+    {
+        var rows = await db.WritingRestrictions.AsNoTracking()
+            .Where(w => w.UserId == userId && w.LiftedAt == null)
+            .Select(w => new { w.EndsAt, w.LiftedAt })
+            .ToListAsync(ct);
+        return WritingRules.MayWrite(rows.Select(r => (r.EndsAt, r.LiftedAt)), clock.GetUtcNow()) ? null : Error.Forbidden("writing.restricted");
+    }
+
     public async Task<Result<Unit>> ReportAsync(Guid userId, NewReport request, CancellationToken cancellationToken)
     {
         if (!ReportGrounds.All.Contains(request.Ground))
@@ -659,6 +699,11 @@ internal sealed class AppealsService(
         if (!participates)
         {
             return Error.Conflict("flag.participants-only");
+        }
+
+        if (await RestrictedAsync(db, userId, cancellationToken) is { } restricted)
+        {
+            return restricted;
         }
 
         if (await db.Flags.AnyAsync(f => f.AppealId == appeal.Value.Id && f.ReporterUserId == userId && f.Status == "open", cancellationToken))

@@ -99,6 +99,13 @@ public static class AppealRoutes
     public static string FlagsOf(string number) => AppealOf(number) + "/flags";
 
     public const string ModerationQueue = ApiRoutes.Prefix + "/moderation/queue";
+    public const string MyRestriction = ApiRoutes.Prefix + "/me/writing-restriction";
+    public const string ReasonAuthor = ApiRoutes.Prefix + "/moderation/reasons/{id:guid}/author";
+    public const string AppealInitiator = ApiRoutes.Prefix + "/moderation/appeals/{id:guid}/initiator";
+    public const string RestrictReasonAuthor = ApiRoutes.Prefix + "/moderation/reasons/{id:guid}/restrict-author";
+    public const string RestrictAppealInitiator = ApiRoutes.Prefix + "/moderation/appeals/{id:guid}/restrict-initiator";
+    public const string Restrictions = ApiRoutes.Prefix + "/moderation/restrictions";
+    public const string LiftRestriction = ApiRoutes.Prefix + "/moderation/restrictions/{id:guid}/lift";
     public const string PublishAppeal = ApiRoutes.Prefix + "/moderation/appeals/{id:guid}/publish";
     public const string ReturnAppeal = ApiRoutes.Prefix + "/moderation/appeals/{id:guid}/return";
     public const string HideAppeal = ApiRoutes.Prefix + "/moderation/appeals/{id:guid}/hide";

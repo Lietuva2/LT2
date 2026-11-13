@@ -88,6 +88,12 @@ public sealed record AppealRulesResponse(int ThresholdDefault, int ThresholdMini
 
 public sealed record ReasonCreatedResponse(Guid Id, string Status);
 
+/// <summary>
+/// The caller's own writing restriction (design 8.3), never anyone else's: whether one holds, its last day (null = until
+/// lifted) and the moderator's statement.
+/// </summary>
+public sealed record MyRestrictionResponse(bool Restricted, DateOnly? Until, string? Statement);
+
 /// <summary>Opening the appeal on a bill (design 8.1): a side, the first argument, a neutral description, a threshold.</summary>
 public sealed record OpenAppealRequest
 {

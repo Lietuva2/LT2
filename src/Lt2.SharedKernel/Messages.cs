@@ -8,6 +8,28 @@ public static class MessageKinds
     public const string AccountNoticeEmail = "email.account-notice";
 
     public const string ModerationNoticeEmail = "email.moderation-notice";
+
+    public const string WritingRestrictionEmail = "email.writing-restriction";
+}
+
+/// <summary>
+/// Payload of <see cref="MessageKinds.WritingRestrictionEmail"/>: a moderator restricted the person from writing, or lifted
+/// that (design 8.3). Never carries a side or a position.
+/// </summary>
+/// <param name="To">The address on the account.</param>
+/// <param name="Notice">One of <see cref="WritingRestrictionNotices"/>.</param>
+/// <param name="Until">The last day of a dated restriction; null = until lifted (and for a lifting).</param>
+/// <param name="Statement">The moderator's statement of reasons.</param>
+/// <param name="Contact">The moderators' address for objecting, when configured.</param>
+public sealed record WritingRestrictionEmail(string To, string Notice, DateOnly? Until, string Statement, string? Contact);
+
+/// <summary>What a person is told about a writing restriction.</summary>
+public static class WritingRestrictionNotices
+{
+    public const string Restricted = "restricted";
+    public const string Lifted = "lifted";
+
+    public static readonly IReadOnlyList<string> All = [Restricted, Lifted];
 }
 
 /// <summary>

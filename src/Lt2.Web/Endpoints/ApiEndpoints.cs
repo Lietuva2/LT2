@@ -78,10 +78,15 @@ internal static class ApiEndpoints
         EndorseEndpoint.Map(api);
         RemoveEndorsementEndpoint.Map(api);
         WithdrawReasonEndpoint.Map(api);
+        GetMyRestrictionEndpoint.Map(api);
         ReportEndpoint.Map(api);
         FlagDateEndpoint.Map(api);
 
         GetModerationQueueEndpoint.Map(api);
+        GetReasonAuthorEndpoint.Map(api);
+        GetAppealInitiatorEndpoint.Map(api);
+        RestrictAuthorEndpoints.Map(api);
+        RestrictionsEndpoints.Map(api);
         PublishAppealEndpoint.Map(api);
         ReturnAppealEndpoint.Map(api);
         HideAppealEndpoint.Map(api);

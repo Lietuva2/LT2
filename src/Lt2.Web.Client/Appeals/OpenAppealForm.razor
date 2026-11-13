@@ -10,6 +10,10 @@
 {
     <p><a class="btn" href="/prisijungti">@L["Open.SignIn"]</a></p>
 }
+else if (Restriction is { Restricted: true } restriction)
+{
+    <WritingRestricted Restriction="restriction" />
+}
 else if (Rules is { } rules)
 {
     <form class="sheet sheet--cut stack" @onsubmit="SubmitAsync" novalidate aria-labelledby="open-title" id="open-appeal">
@@ -86,6 +90,9 @@ else if (Rules is { } rules)
 
     [PersistentState] public bool? HasConsent { get; set; }
 
+    /// <summary>The person's own writing restriction (design 8.3): opening an appeal is writing.</summary>
+    [PersistentState] public MyRestrictionResponse? Restriction { get; set; }
+
     protected override async Task OnInitializedAsync()
     {
         _signedIn = AuthState is not null && (await AuthState).User.Identity?.IsAuthenticated == true;
@@ -95,6 +102,7 @@ else if (Rules is { } rules)
         }
 
         Rules ??= (await Appeals.GetRulesAsync()).Value;
+        Restriction ??= (await Appeals.GetMyRestrictionAsync()).Value;
         HasConsent ??= (await MeApi.GetAsync()).Value?.HasPositionConsent ?? false;
         _hasConsent = HasConsent.Value;
         _threshold = Rules?.ThresholdDefault ?? 100;

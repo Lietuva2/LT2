@@ -66,6 +66,21 @@ internal static class AppealMapping
     public static Guid? UserId(ClaimsPrincipal? user) =>
         Guid.TryParse(user?.FindFirstValue(ClaimTypes.NameIdentifier), out var id) ? id : null;
 
+    public static MyRestrictionResponse Map(MyRestriction? r) => r is null ? new(false, null, null) : new(true, r.Until, r.Statement);
+
+    public static RestrictionResponse Map(RestrictionInfo r) => new(r.Id, r.DisplayName, r.Until, r.Statement, r.SetAt, r.Holds, r.LiftedAt, r.LiftStatement);
+
+    public static AuthorViewResponse Map(AuthorView v) => new(
+        v.DisplayName,
+        v.Reasons.Select(r => new AuthorReasonResponse(r.Id, r.BillNumber, r.Side, r.Text, r.Status, r.CreatedAt)).ToList(),
+        v.Appeals.Select(a => new AuthorAppealResponse(a.Id, a.BillNumber, a.Status, a.OpenedAt)).ToList(),
+        v.Actions.Select(m => new ModerationEntryResponse(m.TargetKind, m.Action, m.Statement, m.At)).ToList(),
+        v.Restrictions.Select(Map).ToList());
+
+    /// <summary>The moderators' contact address for objecting (configuration <c>Moderation:ContactAddress</c>), if set.</summary>
+    public static string? Contact(IConfiguration configuration) =>
+        configuration["Moderation:ContactAddress"] is { Length: > 0 } address ? address : null;
+
     /// <summary>The moderator for the audit log: the role that works in this session (moderator first).</summary>
     public static async Task<ModeratorActor> ModeratorAsync(IIdentityModule identity, ClaimsPrincipal user, string? ipHash, CancellationToken cancellationToken)
     {
@@ -138,6 +153,11 @@ internal sealed class ServerAppealsApi(IAppealsModule appeals, IHttpContextAcces
     public async Task<ApiResult> WithdrawReasonAsync(Guid reasonId, CancellationToken cancellationToken = default) =>
         await AsMemberAsync(id => appeals.WithdrawReasonAsync(reasonId, id, cancellationToken));
 
+    public async Task<ApiResult<MyRestrictionResponse>> GetMyRestrictionAsync(CancellationToken cancellationToken = default) =>
+        UserId is { } id
+            ? ApiResult<MyRestrictionResponse>.Ok(AppealMapping.Map(await appeals.MyRestrictionAsync(id, cancellationToken)))
+            : ApiResult<MyRestrictionResponse>.Fail(errors.ToProblem(SignInRequired));
+
     public async Task<ApiResult> ReportAsync(ReportRequest request, CancellationToken cancellationToken = default) =>
         await AsMemberAsync(id => appeals.ReportAsync(id, AppealMapping.ToModule(request), cancellationToken));
 
@@ -152,8 +172,45 @@ internal sealed class ServerAppealsApi(IAppealsModule appeals, IHttpContextAcces
 
 /// <summary>Server-side <see cref="IModerationApi"/>, for the prerendered moderation page.</summary>
 internal sealed class ServerModerationApi(
-    IAppealsModeration moderation, Lt2.Notifications.IDigests digests, IIdentityModule identity, IHttpContextAccessor accessor, IpHasher ipHasher, ErrorMapper errors) : IModerationApi
+    IAppealsModeration moderation, Lt2.Notifications.IDigests digests, IIdentityModule identity, IHttpContextAccessor accessor, IpHasher ipHasher, ErrorMapper errors,
+    IConfiguration configuration) : IModerationApi
 {
+    public async Task<ApiResult<AuthorViewResponse>> GetAuthorOfReasonAsync(Guid reasonId, CancellationToken cancellationToken = default) =>
+        await IsModeratorAsync()
+            ? errors.ToApiResult(await moderation.AuthorOfReasonAsync(reasonId, cancellationToken), AppealMapping.Map)
+            : ApiResult<AuthorViewResponse>.Fail(errors.ToProblem(Error.Forbidden("forbidden")));
+
+    public async Task<ApiResult<AuthorViewResponse>> GetInitiatorOfAppealAsync(Guid appealId, CancellationToken cancellationToken = default) =>
+        await IsModeratorAsync()
+            ? errors.ToApiResult(await moderation.InitiatorOfAppealAsync(appealId, cancellationToken), AppealMapping.Map)
+            : ApiResult<AuthorViewResponse>.Fail(errors.ToProblem(Error.Forbidden("forbidden")));
+
+    public Task<ApiResult<RestrictionCreatedResponse>> RestrictAuthorOfReasonAsync(Guid reasonId, RestrictionRequest request, CancellationToken cancellationToken = default) =>
+        RestrictAsync(m => moderation.RestrictAuthorOfReasonAsync(reasonId, request.Until, request.Statement, m, AppealMapping.Contact(configuration), cancellationToken));
+
+    public Task<ApiResult<RestrictionCreatedResponse>> RestrictInitiatorOfAppealAsync(Guid appealId, RestrictionRequest request, CancellationToken cancellationToken = default) =>
+        RestrictAsync(m => moderation.RestrictInitiatorOfAppealAsync(appealId, request.Until, request.Statement, m, AppealMapping.Contact(configuration), cancellationToken));
+
+    public async Task<ApiResult<IReadOnlyList<RestrictionResponse>>> GetRestrictionsAsync(CancellationToken cancellationToken = default) =>
+        await IsModeratorAsync()
+            ? ApiResult<IReadOnlyList<RestrictionResponse>>.Ok((await moderation.RestrictionsAsync(cancellationToken)).Select(AppealMapping.Map).ToList())
+            : ApiResult<IReadOnlyList<RestrictionResponse>>.Fail(errors.ToProblem(Error.Forbidden("forbidden")));
+
+    public Task<ApiResult> LiftRestrictionAsync(Guid restrictionId, StatementRequest request, CancellationToken cancellationToken = default) =>
+        ActAsync(m => moderation.LiftRestrictionAsync(restrictionId, request.Statement, m, AppealMapping.Contact(configuration), cancellationToken));
+
+    private async Task<ApiResult<RestrictionCreatedResponse>> RestrictAsync(Func<ModeratorActor, Task<Result<Guid>>> action)
+    {
+        var http = accessor.HttpContext;
+        var authorization = http?.RequestServices.GetRequiredService<Microsoft.AspNetCore.Authorization.IAuthorizationService>();
+        if (http is null || authorization is null || !(await authorization.AuthorizeAsync(http.User, http, Policies.ModeratorRole)).Succeeded)
+        {
+            return ApiResult<RestrictionCreatedResponse>.Fail(errors.ToProblem(Error.Forbidden("forbidden")));
+        }
+
+        return errors.ToApiResult(await action(await AppealMapping.ModeratorAsync(identity, http.User, ipHasher.Hash(http), http.RequestAborted)), id => new RestrictionCreatedResponse(id));
+    }
+
     public async Task<ApiResult<ModerationQueueResponse>> GetQueueAsync(CancellationToken cancellationToken = default) =>
         await IsModeratorAsync()
             ? ApiResult<ModerationQueueResponse>.Ok(AppealMapping.Map(await moderation.QueueAsync(cancellationToken)))

@@ -179,6 +179,9 @@ public interface IAppealsModule
     /// <summary>The author withdraws their own argument while the appeal is open (design 8.2).</summary>
     Task<Result<Unit>> WithdrawReasonAsync(Guid reasonId, Guid userId, CancellationToken cancellationToken);
 
+    /// <summary>The caller's own writing restriction that holds now, or <c>null</c> (design 8.3).</summary>
+    Task<MyRestriction?> MyRestrictionAsync(Guid userId, CancellationToken cancellationToken);
+
     Task<Result<Unit>> ReportAsync(Guid userId, NewReport request, CancellationToken cancellationToken);
 
     /// <summary>"The date is wrong" or "this is being voted sooner", with a link (design 8.4); initiator and participants.</summary>
@@ -212,7 +215,53 @@ public interface IAppealsModeration
 
     /// <summary>Corrects the planned date or stage of the appeal's bill (design 8.4); closes its open date flags.</summary>
     Task<Result<Unit>> SetPlannedAsync(Guid appealId, DateOnly date, string? stage, string statement, ModeratorActor moderator, CancellationToken cancellationToken);
+
+    /// <summary>
+    /// What a moderator sees before restricting the author of an argument (design 8.3): the display name, their arguments
+    /// and appeals, earlier moderation actions on them and earlier restrictions. Never the address, a side or a mark.
+    /// </summary>
+    Task<Result<AuthorView>> AuthorOfReasonAsync(Guid reasonId, CancellationToken cancellationToken);
+
+    /// <summary>The same for the initiator of an appeal.</summary>
+    Task<Result<AuthorView>> InitiatorOfAppealAsync(Guid appealId, CancellationToken cancellationToken);
+
+    /// <summary>
+    /// Restricts the author of the argument from writing until a day (inclusive) or, with <paramref name="until"/> null,
+    /// until lifted; audited and emailed with the moderators' <paramref name="contact"/> address. Returns the restriction id.
+    /// </summary>
+    Task<Result<Guid>> RestrictAuthorOfReasonAsync(Guid reasonId, DateOnly? until, string statement, ModeratorActor moderator, string? contact, CancellationToken cancellationToken);
+
+    /// <summary>The same for the initiator of an appeal.</summary>
+    Task<Result<Guid>> RestrictInitiatorOfAppealAsync(Guid appealId, DateOnly? until, string statement, ModeratorActor moderator, string? contact, CancellationToken cancellationToken);
+
+    /// <summary>Restrictions that hold now, for the moderators' screen.</summary>
+    Task<IReadOnlyList<RestrictionInfo>> RestrictionsAsync(CancellationToken cancellationToken);
+
+    /// <summary>Lifts a restriction early (a moderator or an administrator); audited and emailed.</summary>
+    Task<Result<Unit>> LiftRestrictionAsync(Guid restrictionId, string statement, ModeratorActor moderator, string? contact, CancellationToken cancellationToken);
 }
+
+/// <summary>The caller's own writing restriction (design 8.3): its last day (null = until lifted) and the statement.</summary>
+public sealed record MyRestriction(DateOnly? Until, string Statement);
+
+/// <summary>An argument as a moderator sees it on the author's screen; its side is the argument's, public anyway.</summary>
+public sealed record AuthorReason(Guid Id, string BillNumber, string Side, string Text, string Status, DateTimeOffset CreatedAt);
+
+public sealed record AuthorAppeal(Guid Id, string BillNumber, string Status, DateTimeOffset OpenedAt);
+
+/// <summary>An earlier moderation action on the person's arguments, appeals or restrictions.</summary>
+public sealed record ModerationEntry(string TargetKind, string Action, string? Statement, DateTimeOffset At);
+
+/// <summary>A writing restriction for the moderators' screens; <c>Holds</c> is whether it applies now.</summary>
+public sealed record RestrictionInfo(Guid Id, string? DisplayName, DateOnly? Until, string Statement, DateTimeOffset SetAt, bool Holds, DateTimeOffset? LiftedAt, string? LiftStatement);
+
+/// <summary>The author's screen for a moderator (design 8.3). No address, no side, no mark.</summary>
+public sealed record AuthorView(
+    string? DisplayName,
+    IReadOnlyList<AuthorReason> Reasons,
+    IReadOnlyList<AuthorAppeal> Appeals,
+    IReadOnlyList<ModerationEntry> Actions,
+    IReadOnlyList<RestrictionInfo> Restrictions);
 
 /// <summary>Scheduled work of the Appeals module, run by the worker.</summary>
 public interface IAppealsMaintenance

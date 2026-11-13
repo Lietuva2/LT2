@@ -73,7 +73,7 @@ public sealed class DatabaseRoleTests(DatabaseFixture database)
             .ShouldBeFalse();
 
         await using var readonlyConnection = await OpenAsync(DatabaseRoles.Readonly);
-        foreach (var hidden in new[] { "appeals.position", "appeals.endorsement" })
+        foreach (var hidden in new[] { "appeals.position", "appeals.endorsement", "appeals.writing_restriction" })
         {
             await ShouldBeRefusedAsync(readonlyConnection, $"SELECT count(*) FROM {hidden}", hidden);
             await ShouldBeRefusedAsync(readonlyConnection, $"SELECT user_id FROM {hidden} LIMIT 1", hidden + " by column");

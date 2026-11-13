@@ -83,6 +83,12 @@ public sealed class ModerationRequestValidator : AbstractValidator<ModerationReq
 }
 
 /// <summary>Returning or hiding needs a statement of reasons (design 8.3).</summary>
+public sealed class RestrictionRequestValidator : AbstractValidator<RestrictionRequest>
+{
+    public RestrictionRequestValidator(IStringLocalizer<ValidationMessages> l) =>
+        RuleFor(x => (string?)x.Statement).Statement(l, required: true).OverridePropertyName("statement");
+}
+
 public sealed class StatementRequestValidator : AbstractValidator<StatementRequest>
 {
     public StatementRequestValidator(IStringLocalizer<ValidationMessages> l) =>

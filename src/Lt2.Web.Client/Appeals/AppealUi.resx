@@ -41,6 +41,46 @@
 <data name="Reasons.PublishAnyway" xml:space="preserve"><value>Vis tiek paskelbti savo</value></data>
 <data name="Reasons.SimilarTitle" xml:space="preserve"><value>Panašūs argumentai jau yra</value></data>
 <data name="Reasons.SimilarText" xml:space="preserve"><value>Gal jūsų mintį kas nors jau parašė? Jei argumentas tos pusės, kurios prašote patys, galite pažymėti „Man svarbu“; arba vis tiek paskelbkite savo.</value></data>
+<data name="Restrict.OpenAuthor" xml:space="preserve"><value>Riboti autoriaus rašymą…</value></data>
+<data name="Restrict.OpenInitiator" xml:space="preserve"><value>Riboti iniciatoriaus rašymą…</value></data>
+<data name="Restrict.Title" xml:space="preserve"><value>Riboti rašymą: {0}</value></data>
+<data name="Restrict.Reasons" xml:space="preserve"><value>Argumentai: {0}</value></data>
+<data name="Restrict.Appeals" xml:space="preserve"><value>Atidaryti kreipimaisi: {0}</value></data>
+<data name="Restrict.Actions" xml:space="preserve"><value>Ankstesni moderatorių veiksmai: {0}</value></data>
+<data name="Restrict.Earlier" xml:space="preserve"><value>Ankstesni apribojimai: {0}</value></data>
+<data name="Restrict.Holds" xml:space="preserve"><value>galioja</value></data>
+<data name="Restrict.Length" xml:space="preserve"><value>Kiek laiko</value></data>
+<data name="Restrict.UntilDay" xml:space="preserve"><value>Iki nurodytos dienos</value></data>
+<data name="Restrict.LastDay" xml:space="preserve"><value>Paskutinė apribojimo diena</value></data>
+<data name="Restrict.UntilLifted" xml:space="preserve"><value>kol bus atšauktas</value></data>
+<data name="Restrict.UntilShown" xml:space="preserve"><value>iki {0} imtinai</value></data>
+<data name="Restrict.Statement" xml:space="preserve"><value>Paaiškinimas naudotojui</value></data>
+<data name="Restrict.StatementHint" xml:space="preserve"><value>Naudotojas jį gaus el. paštu kartu su apribojimo trukme ir moderatorių adresu prieštaravimams.</value></data>
+<data name="Restrict.Submit" xml:space="preserve"><value>Riboti rašymą</value></data>
+<data name="Restrict.Done" xml:space="preserve"><value>Rašymas apribotas; naudotojui išsiųstas laiškas.</value></data>
+<data name="Restrict.ListTitle" xml:space="preserve"><value>Apribotas rašymas</value></data>
+<data name="Restrict.None" xml:space="preserve"><value>Šiuo metu niekam rašymas neapribotas.</value></data>
+<data name="Restrict.Lift" xml:space="preserve"><value>Atšaukti apribojimą</value></data>
+<data name="Restrict.LiftStatement" xml:space="preserve"><value>Paaiškinimas naudotojui</value></data>
+<data name="Restrict.Lifted" xml:space="preserve"><value>Apribojimas atšauktas; naudotojui išsiųstas laiškas.</value></data>
+<data name="Restrict.Status.published" xml:space="preserve"><value>paskelbtas</value></data>
+<data name="Restrict.Status.pending" xml:space="preserve"><value>laukia moderatoriaus</value></data>
+<data name="Restrict.Status.hidden" xml:space="preserve"><value>paslėptas</value></data>
+<data name="Restrict.Status.merged" xml:space="preserve"><value>sujungtas</value></data>
+<data name="Restrict.AppealStatus.pending" xml:space="preserve"><value>laukia moderatoriaus</value></data>
+<data name="Restrict.AppealStatus.returned" xml:space="preserve"><value>grąžintas taisyti</value></data>
+<data name="Restrict.AppealStatus.open" xml:space="preserve"><value>atviras</value></data>
+<data name="Restrict.AppealStatus.closed" xml:space="preserve"><value>uždarytas</value></data>
+<data name="Restrict.AppealStatus.rejected" xml:space="preserve"><value>paslėptas</value></data>
+<data name="Restrict.Target.reason" xml:space="preserve"><value>argumentas</value></data>
+<data name="Restrict.Target.appeal" xml:space="preserve"><value>kreipimasis</value></data>
+<data name="Restrict.Target.restriction" xml:space="preserve"><value>apribojimas</value></data>
+<data name="Restricted.Title" xml:space="preserve"><value>Moderatorius apribojo jūsų galimybę rašyti.</value></data>
+<data name="Restricted.Until" xml:space="preserve"><value>Apribojimas galioja iki {0} imtinai.</value></data>
+<data name="Restricted.UntilLifted" xml:space="preserve"><value>Apribojimas galioja, kol jį atšauks moderatorius.</value></data>
+<data name="Restricted.Reason" xml:space="preserve"><value>Priežastis: {0}</value></data>
+<data name="Restricted.Object" xml:space="preserve"><value>Nurodyti, ko prašote, ir žymėti „Man svarbu“ galite kaip anksčiau. Jei nesutinkate, parašykite moderatoriams –</value></data>
+<data name="Restricted.Rules" xml:space="preserve"><value>adresas moderavimo taisyklėse</value></data>
 <data name="Reasons.Withdraw" xml:space="preserve"><value>Atsiimti</value></data>
 <data name="Reasons.WithdrawConfirm" xml:space="preserve"><value>Argumentas bus ištrintas kartu su jo „Man svarbu“ žymomis. Jau sudarytose suvestinėse jo tekstas liks.</value></data>
 <data name="Reasons.WithdrawYes" xml:space="preserve"><value>Atsiimti argumentą</value></data>

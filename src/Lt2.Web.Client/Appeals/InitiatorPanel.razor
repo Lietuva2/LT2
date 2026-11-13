@@ -7,7 +7,11 @@
    first enters a summary or a moderator changed it (design 8.4). Renders nothing for anyone else. *@
 @if (Mine is { IsInitiator: true } mine)
 {
-    @if (Status is "pending" or "returned")
+    @if (Status is "pending" or "returned" && Restriction is { Restricted: true } restriction)
+    {
+        <WritingRestricted Restriction="restriction" />
+    }
+    else if (Status is "pending" or "returned")
     {
         <form class="sheet stack" @onsubmit="EditAsync" novalidate aria-labelledby="edit-title" id="edit-appeal">
             <h2 id="edit-title">@L[Status == "returned" ? "Edit.TitleReturned" : "Edit.Title"]</h2>
@@ -58,6 +62,9 @@
 
     [PersistentState] public MyAppealResponse? Mine { get; set; }
 
+    /// <summary>The person's own writing restriction (design 8.3): editing the description or first argument is writing.</summary>
+    [PersistentState] public MyRestrictionResponse? Restriction { get; set; }
+
     protected override async Task OnInitializedAsync()
     {
         if (AuthState is null || (await AuthState).User.Identity?.IsAuthenticated != true)
@@ -66,6 +73,11 @@
         }
 
         Mine ??= (await Appeals.GetMineAsync(Number)).Value;
+        if (Mine?.IsInitiator == true)
+        {
+            Restriction ??= (await Appeals.GetMyRestrictionAsync()).Value;
+        }
+
         _description = Description;
         _reason = Mine?.MyReasons.FirstOrDefault()?.Text ?? "";
         _threshold = Threshold;

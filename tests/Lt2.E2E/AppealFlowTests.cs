@@ -208,6 +208,74 @@ public sealed class AppealFlowTests(AppealFlowTests.ModeratorFixture moderator) 
         await Assertions.Expect(page.Locator("#planned")).ToContainTextAsync("Planuojama");
     }
 
+    /// <summary>
+    /// Design 8.3: a moderator restricts an argument's author from the queue (until lifted, with a statement), and the
+    /// author then sees, in place of the writing box, that writing is restricted and why. Cleaned up through the API.
+    /// </summary>
+    [Fact]
+    public async Task A_moderator_restricts_an_author_from_the_queue_and_the_author_sees_the_notice()
+    {
+        Assert.SkipWhen(string.IsNullOrEmpty(SignUpTests.BaseUrl), "LT2_E2E_BASE_URL is not set; start the stack and set it to run end-to-end tests.");
+        var mod = await moderator.PageAsync();
+        const string Text = "Šis argumentas parašytas, kad moderatorius apribotų autoriaus rašymą.";
+
+        await using var author = await PasskeyBrowser.StartAsync("native", 1280, 800);
+        var w = author.Page;
+        await PasskeyTests.RegisterAsync(w, "Ribojama Autorė");
+        await w.GotoAsync($"{Base}/seimas/XVP-0412/kreipimasis");
+        var add = w.Locator("#add-reason");
+        await Assertions.Expect(add).ToBeEnabledAsync(new() { Timeout = 60_000 });
+        await add.ClickAsync();
+        await w.Locator("#reason-side-against").CheckAsync();
+        await w.Locator("#reason-text").FillAsync(Text);
+        await w.GetByRole(AriaRole.Button, new() { Name = "Paskelbti", Exact = true }).ClickAsync();
+        await Assertions.Expect(w.GetByText("Argumentas paskelbtas.")).ToBeVisibleAsync();
+
+        // The moderator opens the author's screen from the queue and restricts until lifted.
+        await mod.GotoAsync($"{Base}/moderavimas");
+        var item = mod.Locator("article").Filter(new() { HasText = Text });
+        await Assertions.Expect(item).ToBeVisibleAsync(new() { Timeout = 60_000 });
+        var open = item.GetByRole(AriaRole.Button, new() { Name = "Riboti autoriaus rašymą…" });
+        await Assertions.Expect(open).ToBeEnabledAsync(new() { Timeout = 60_000 });
+        await open.ClickAsync();
+        await Assertions.Expect(item.GetByText("Riboti rašymą: Ribojama Autorė")).ToBeVisibleAsync();
+        await item.Locator("input[id^='restrict-lifted-']").CheckAsync();
+        await item.Locator("textarea[id^='restrict-statement-']").FillAsync("Bandymas: rašymas apribojamas, kol bus atšauktas.");
+        await item.GetByRole(AriaRole.Button, new() { Name = "Riboti rašymą", Exact = true }).ClickAsync();
+        await Assertions.Expect(mod.GetByText("Rašymas apribotas; naudotojui išsiųstas laiškas.")).ToBeVisibleAsync();
+        await Assertions.Expect(mod.Locator("#restrictions article").Filter(new() { HasText = "Ribojama Autorė" })).ToBeVisibleAsync();
+        await mod.ScreenshotAsync(new() { Path = Shot("moderator-restricts-1280.png"), FullPage = true });
+
+        // The author sees the notice instead of the writing box.
+        await w.ReloadAsync();
+        var notice = w.Locator(".writing-restricted");
+        await Assertions.Expect(notice).ToContainTextAsync("Moderatorius apribojo jūsų galimybę rašyti.", new() { Timeout = 30_000 });
+        await Assertions.Expect(notice).ToContainTextAsync("kol jį atšauks moderatorius");
+        await Assertions.Expect(notice).ToContainTextAsync("Priežastis: Bandymas: rašymas apribojamas, kol bus atšauktas.");
+        await Assertions.Expect(w.Locator("#add-reason")).ToHaveCountAsync(0);
+        await NoSidewaysScrollAsync(w);
+        await w.ScreenshotAsync(new() { Path = Shot("author-restricted-1280.png"), FullPage = true });
+        author.ConsoleErrors.ShouldBeEmpty();
+
+        // Clean up: lift the restriction and hide the argument, so the demonstration appeal stays as it was.
+        var statuses = await mod.EvaluateAsync<string>(
+            """
+            async (text) => {
+              const token = (await (await fetch('/api/v1/auth/antiforgery')).json()).token;
+              const post = (url, body) => fetch(url, { method: 'POST', headers: { 'Content-Type': 'application/json', 'X-XSRF-TOKEN': token }, body: JSON.stringify(body) });
+              const out = [];
+              for (const r of await (await fetch('/api/v1/moderation/restrictions')).json())
+                if (r.displayName === 'Ribojama Autorė') out.push((await post('/api/v1/moderation/restrictions/' + r.id + '/lift', { statement: 'Bandymo pabaiga.' })).status);
+              const appeal = await (await fetch('/api/v1/bills/XVP-0412/appeal')).json();
+              for (const r of appeal.reasons)
+                if (r.text === text) out.push((await post('/api/v1/moderation/reasons/' + r.id + '/hide', { statement: 'Bandymo duomenys išvalomi.' })).status);
+              return JSON.stringify(out);
+            }
+            """,
+            Text);
+        JsonSerializer.Deserialize<int[]>(statuses)!.ShouldBe([204, 204]);
+    }
+
     private static string Shot(string name)
     {
         Directory.CreateDirectory(Path.Combine("output", "appeals"));

@@ -39,6 +39,9 @@ public interface IAppealsApi
     /// <summary>The author withdraws their own argument while the appeal is open (design 8.2).</summary>
     Task<ApiResult> WithdrawReasonAsync(Guid reasonId, CancellationToken cancellationToken = default);
 
+    /// <summary>The caller's own writing restriction, if one holds (design 8.3).</summary>
+    Task<ApiResult<MyRestrictionResponse>> GetMyRestrictionAsync(CancellationToken cancellationToken = default);
+
     Task<ApiResult> ReportAsync(ReportRequest request, CancellationToken cancellationToken = default);
 
     /// <summary>"The date is wrong" or "voted sooner", with a link (design 8.4).</summary>
@@ -49,6 +52,22 @@ public interface IAppealsApi
 public interface IModerationApi
 {
     Task<ApiResult<ModerationQueueResponse>> GetQueueAsync(CancellationToken cancellationToken = default);
+
+    /// <summary>The author of an argument, as a moderator sees them before restricting (design 8.3).</summary>
+    Task<ApiResult<AuthorViewResponse>> GetAuthorOfReasonAsync(Guid reasonId, CancellationToken cancellationToken = default);
+
+    Task<ApiResult<AuthorViewResponse>> GetInitiatorOfAppealAsync(Guid appealId, CancellationToken cancellationToken = default);
+
+    /// <summary>Restricts the argument's author from writing; a moderator role in a staff-passkey session.</summary>
+    Task<ApiResult<RestrictionCreatedResponse>> RestrictAuthorOfReasonAsync(Guid reasonId, RestrictionRequest request, CancellationToken cancellationToken = default);
+
+    Task<ApiResult<RestrictionCreatedResponse>> RestrictInitiatorOfAppealAsync(Guid appealId, RestrictionRequest request, CancellationToken cancellationToken = default);
+
+    /// <summary>The restrictions that hold now.</summary>
+    Task<ApiResult<IReadOnlyList<RestrictionResponse>>> GetRestrictionsAsync(CancellationToken cancellationToken = default);
+
+    /// <summary>Lifts a restriction early; a moderator or an administrator.</summary>
+    Task<ApiResult> LiftRestrictionAsync(Guid restrictionId, StatementRequest request, CancellationToken cancellationToken = default);
 
     Task<ApiResult> PublishAppealAsync(Guid appealId, ModerationRequest request, CancellationToken cancellationToken = default);
 

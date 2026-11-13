@@ -113,6 +113,9 @@ internal sealed class HttpAppealsApi(ApiHttp http) : IAppealsApi
     public Task<ApiResult> WithdrawReasonAsync(Guid reasonId, CancellationToken cancellationToken = default) =>
         http.SendAsync(HttpMethod.Delete, AppealRoutes.ReasonOf(reasonId), null, cancellationToken);
 
+    public Task<ApiResult<MyRestrictionResponse>> GetMyRestrictionAsync(CancellationToken cancellationToken = default) =>
+        http.SendAsync<MyRestrictionResponse>(HttpMethod.Get, AppealRoutes.MyRestriction, null, cancellationToken);
+
     public Task<ApiResult> ReportAsync(ReportRequest request, CancellationToken cancellationToken = default) =>
         http.SendAsync(HttpMethod.Post, AppealRoutes.Reports, request, cancellationToken);
 
@@ -124,6 +127,24 @@ internal sealed class HttpModerationApi(ApiHttp http) : IModerationApi
 {
     public Task<ApiResult<ModerationQueueResponse>> GetQueueAsync(CancellationToken cancellationToken = default) =>
         http.SendAsync<ModerationQueueResponse>(HttpMethod.Get, AppealRoutes.ModerationQueue, null, cancellationToken);
+
+    public Task<ApiResult<AuthorViewResponse>> GetAuthorOfReasonAsync(Guid reasonId, CancellationToken cancellationToken = default) =>
+        http.SendAsync<AuthorViewResponse>(HttpMethod.Get, AppealRoutes.With(AppealRoutes.ReasonAuthor, reasonId), null, cancellationToken);
+
+    public Task<ApiResult<AuthorViewResponse>> GetInitiatorOfAppealAsync(Guid appealId, CancellationToken cancellationToken = default) =>
+        http.SendAsync<AuthorViewResponse>(HttpMethod.Get, AppealRoutes.With(AppealRoutes.AppealInitiator, appealId), null, cancellationToken);
+
+    public Task<ApiResult<RestrictionCreatedResponse>> RestrictAuthorOfReasonAsync(Guid reasonId, RestrictionRequest request, CancellationToken cancellationToken = default) =>
+        http.SendAsync<RestrictionCreatedResponse>(HttpMethod.Post, AppealRoutes.With(AppealRoutes.RestrictReasonAuthor, reasonId), request, cancellationToken);
+
+    public Task<ApiResult<RestrictionCreatedResponse>> RestrictInitiatorOfAppealAsync(Guid appealId, RestrictionRequest request, CancellationToken cancellationToken = default) =>
+        http.SendAsync<RestrictionCreatedResponse>(HttpMethod.Post, AppealRoutes.With(AppealRoutes.RestrictAppealInitiator, appealId), request, cancellationToken);
+
+    public Task<ApiResult<IReadOnlyList<RestrictionResponse>>> GetRestrictionsAsync(CancellationToken cancellationToken = default) =>
+        http.SendAsync<IReadOnlyList<RestrictionResponse>>(HttpMethod.Get, AppealRoutes.Restrictions, null, cancellationToken);
+
+    public Task<ApiResult> LiftRestrictionAsync(Guid restrictionId, StatementRequest request, CancellationToken cancellationToken = default) =>
+        http.SendAsync(HttpMethod.Post, AppealRoutes.With(AppealRoutes.LiftRestriction, restrictionId), request, cancellationToken);
 
     public Task<ApiResult> PublishAppealAsync(Guid appealId, ModerationRequest request, CancellationToken cancellationToken = default) =>
         http.SendAsync(HttpMethod.Post, AppealRoutes.With(AppealRoutes.PublishAppeal, appealId), request, cancellationToken);

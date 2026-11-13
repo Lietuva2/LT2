@@ -27,9 +27,10 @@ public static class DatabaseRoles
 
     /// <summary>
     /// Tables in readable schemas that stay hidden from the read-only role: positions (design 5.5), and the "Man svarbu"
-    /// marks, which are allowed only on one's own side and so tell the side as well.
+    /// marks, which are allowed only on one's own side and so tell the side as well; and moderators' writing
+    /// restrictions on accounts (design 8.3), which are never shown to anyone but the person and staff.
     /// </summary>
-    public static readonly string[] HiddenTables = ["appeals.position", "appeals.endorsement"];
+    public static readonly string[] HiddenTables = ["appeals.position", "appeals.endorsement", "appeals.writing_restriction"];
 
     /// <summary>
     /// Run with a superuser (or a role with CREATEROLE) once per deploy: creates the login roles, sets their passwords

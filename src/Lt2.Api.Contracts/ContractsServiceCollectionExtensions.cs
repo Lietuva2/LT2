@@ -32,6 +32,7 @@ public static class ContractsServiceCollectionExtensions
         services.AddScoped<IValidator<Appeals.ReportRequest>, Appeals.ReportRequestValidator>();
         services.AddScoped<IValidator<Appeals.ModerationRequest>, Appeals.ModerationRequestValidator>();
         services.AddScoped<IValidator<Appeals.StatementRequest>, Appeals.StatementRequestValidator>();
+        services.AddScoped<IValidator<Appeals.RestrictionRequest>, Appeals.RestrictionRequestValidator>();
         services.AddScoped<IValidator<Appeals.ModeratorThresholdRequest>, Appeals.ModeratorThresholdRequestValidator>();
         services.AddScoped<IValidator<Appeals.MergeReasonRequest>, Appeals.MergeReasonRequestValidator>();
         services.AddScoped<IValidator<Appeals.FlagRequest>, Appeals.FlagRequestValidator>();

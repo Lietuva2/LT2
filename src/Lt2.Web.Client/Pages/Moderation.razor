@@ -83,6 +83,7 @@ else
                 }
                 <Reports Items="appeal.Reports" />
                 <ModerationActions Id="appeal.Id" Kind="appeal" Status="@appeal.Status" Held="appeal.Held" OnDone="ReloadAsync" />
+                <RestrictAuthor Kind="appeal" Id="appeal.Id" OnDone="RestrictedAsync" />
             </article>
         }
     </section>
@@ -111,13 +112,17 @@ else
                 </div>
                 <Reports Items="reason.Reports" />
                 <ModerationActions Id="reason.Id" Kind="reason" Status="@reason.Status" MergeCandidates="reason.MergeCandidates" OnDone="ReloadAsync" />
+                <RestrictAuthor Kind="reason" Id="reason.Id" OnDone="RestrictedAsync" />
             </article>
         }
     </section>
+
+    <RestrictionList @ref="_restrictions" />
 }
 
 @code {
     private bool _refused;
+    private RestrictionList? _restrictions;
 
     [PersistentState] public ModerationQueueResponse? Queue { get; set; }
 
@@ -134,6 +139,14 @@ else
         var queue = await ModerationApi.GetQueueAsync();
         _refused = !queue.IsSuccess;
         Queue = queue.Value;
+    }
+
+    private async Task RestrictedAsync()
+    {
+        if (_restrictions is not null)
+        {
+            await _restrictions.ReloadAsync();
+        }
     }
 
     private Task ReloadAsync(string info) => RunAsync(async () =>

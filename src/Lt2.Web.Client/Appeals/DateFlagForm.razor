@@ -12,6 +12,10 @@
         {
             <p class="note note--quiet" role="status">@L["Flag.Sent"]</p>
         }
+        else if (Restriction is { Restricted: true } restriction)
+        {
+            <WritingRestricted Restriction="restriction" />
+        }
         else
         {
             <form class="stack stack--tight" @onsubmit="SendAsync" novalidate>
@@ -54,11 +58,15 @@
 
     [PersistentState] public MyAppealResponse? Mine { get; set; }
 
+    /// <summary>The person's own writing restriction (design 8.3): flags are writing, so the form gives way to the notice.</summary>
+    [PersistentState] public MyRestrictionResponse? Restriction { get; set; }
+
     protected override async Task OnInitializedAsync()
     {
         if (AuthState is not null && (await AuthState).User.Identity?.IsAuthenticated == true)
         {
             Mine ??= (await Appeals.GetMineAsync(Number)).Value;
+            Restriction ??= (await Appeals.GetMyRestrictionAsync()).Value;
         }
     }
 

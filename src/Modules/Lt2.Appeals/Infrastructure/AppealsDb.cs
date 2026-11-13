@@ -26,6 +26,8 @@ internal sealed class AppealsDb(DbContextOptions<AppealsDb> options) : DbContext
 
     public DbSet<Flag> Flags => Set<Flag>();
 
+    public DbSet<WritingRestriction> WritingRestrictions => Set<WritingRestriction>();
+
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         modelBuilder.HasDefaultSchema(AppealsModule.Schema);
@@ -91,6 +93,15 @@ internal sealed class AppealsDb(DbContextOptions<AppealsDb> options) : DbContext
             e.Property(r => r.Status).HasMaxLength(20);
             e.HasIndex(r => new { r.TargetKind, r.TargetId, r.Status });
             e.HasIndex(r => new { r.TargetId, r.ReporterUserId }).IsUnique().HasFilter("status = 'open'");
+        });
+
+        modelBuilder.Entity<WritingRestriction>(e =>
+        {
+            e.ToTable("writing_restriction");
+            e.HasKey(w => w.Id);
+            e.Property(w => w.Statement).HasMaxLength(1000);
+            e.Property(w => w.LiftStatement).HasMaxLength(1000);
+            e.HasIndex(w => w.UserId);
         });
 
         modelBuilder.Entity<ModerationAction>(e =>

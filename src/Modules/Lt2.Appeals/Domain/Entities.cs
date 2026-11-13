@@ -184,6 +184,32 @@ internal sealed class Report
     public DateTimeOffset? ClosedAt { get; set; }
 }
 
+/// <summary>
+/// <c>appeals.writing_restriction</c>: a moderator's restriction on an account's writing (design 8.3). It lives with the
+/// writing rules it changes. <see cref="EndsAt"/> null means until lifted. Deleted with the account; no address is kept.
+/// </summary>
+internal sealed class WritingRestriction
+{
+    public Guid Id { get; set; }
+
+    public Guid UserId { get; set; }
+
+    /// <summary>The first moment the person may write again; null = until lifted.</summary>
+    public DateTimeOffset? EndsAt { get; set; }
+
+    public string Statement { get; set; } = "";
+
+    public Guid SetByUserId { get; set; }
+
+    public DateTimeOffset SetAt { get; set; }
+
+    public DateTimeOffset? LiftedAt { get; set; }
+
+    public Guid? LiftedByUserId { get; set; }
+
+    public string? LiftStatement { get; set; }
+}
+
 /// <summary><c>appeals.moderation_action</c>: what a moderator did, with the statement sent to the author (design 5.3).</summary>
 internal sealed class ModerationAction
 {

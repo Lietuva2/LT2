@@ -529,6 +529,57 @@ namespace Lt2.Appeals.Infrastructure.Migrations
                     b.ToTable("revision", "appeals");
                 });
 
+            modelBuilder.Entity("Lt2.Appeals.Domain.WritingRestriction", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<DateTimeOffset?>("EndsAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("ends_at");
+
+                    b.Property<string>("LiftStatement")
+                        .HasMaxLength(1000)
+                        .HasColumnType("character varying(1000)")
+                        .HasColumnName("lift_statement");
+
+                    b.Property<DateTimeOffset?>("LiftedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("lifted_at");
+
+                    b.Property<Guid?>("LiftedByUserId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("lifted_by_user_id");
+
+                    b.Property<DateTimeOffset>("SetAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("set_at");
+
+                    b.Property<Guid>("SetByUserId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("set_by_user_id");
+
+                    b.Property<string>("Statement")
+                        .IsRequired()
+                        .HasMaxLength(1000)
+                        .HasColumnType("character varying(1000)")
+                        .HasColumnName("statement");
+
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("user_id");
+
+                    b.HasKey("Id")
+                        .HasName("pk_writing_restriction");
+
+                    b.HasIndex("UserId")
+                        .HasDatabaseName("ix_writing_restriction_user_id");
+
+                    b.ToTable("writing_restriction", "appeals");
+                });
+
             modelBuilder.Entity("Lt2.Appeals.Domain.DailyStat", b =>
                 {
                     b.HasOne("Lt2.Appeals.Domain.Appeal", null)

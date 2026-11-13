@@ -47,6 +47,8 @@ public static class NotificationsModule
         services.AddSingleton<IOutboxHandler, AccountNoticeEmailHandler>();
         services.AddSingleton<ModerationNoticeTemplate>();
         services.AddSingleton<IOutboxHandler, ModerationNoticeEmailHandler>();
+        services.AddSingleton<WritingRestrictionTemplate>();
+        services.AddSingleton<IOutboxHandler, WritingRestrictionEmailHandler>();
         services.AddSingleton<INotificationsDispatcher, OutboxDispatcher>();
         return services;
     }

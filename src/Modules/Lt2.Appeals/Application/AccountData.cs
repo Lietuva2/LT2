@@ -27,7 +27,11 @@ internal sealed class AccountData(IDbContextFactory<AppealsDb> contexts, IPositi
             .Select(r => new { r.TargetKind, r.TargetId, r.Ground, r.Text, r.Status, r.CreatedAt }).ToListAsync(cancellationToken);
         var flags = (await db.Flags.AsNoTracking().Where(f => f.ReporterUserId == userId).ToListAsync(cancellationToken))
             .Select(f => new { bill = bills.GetValueOrDefault(f.AppealId), f.Kind, f.Link, f.Note, f.Status, f.CreatedAt });
-        return new { appealsOpened = appeals, positions = myPositions, reasons, endorsements, reports, dateFlags = flags };
+
+        // Restrictions on the person's writing (design 8.3): the person's own data, without who set or lifted them.
+        var restrictions = (await db.WritingRestrictions.AsNoTracking().Where(w => w.UserId == userId).ToListAsync(cancellationToken))
+            .Select(w => new { until = Domain.WritingRules.Until(w.EndsAt), statement = w.Statement, setAt = w.SetAt, liftedAt = w.LiftedAt, liftStatement = w.LiftStatement });
+        return new { appealsOpened = appeals, positions = myPositions, reasons, endorsements, reports, dateFlags = flags, writingRestrictions = restrictions };
     }
 
     public async Task EraseAsync(Guid userId, DbTransaction transaction, CancellationToken cancellationToken)
@@ -45,6 +49,9 @@ internal sealed class AccountData(IDbContextFactory<AppealsDb> contexts, IPositi
             "DELETE FROM appeals.reason WHERE author_user_id = @user",
             "DELETE FROM appeals.report WHERE reporter_user_id = @user",
             "DELETE FROM appeals.flag WHERE reporter_user_id = @user",
+
+            // With the account (design 8.3); no hash of the address is kept anywhere.
+            "DELETE FROM appeals.writing_restriction WHERE user_id = @user",
         })
         {
 #pragma warning disable CA2100 // Constant SQL.

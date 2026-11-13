@@ -77,3 +77,38 @@ public sealed record MergeReasonRequest
 
     public string Statement { get; init; } = "";
 }
+
+/// <summary>
+/// Restricting an account from writing (design 8.3): until a day (inclusive, Vilnius time), or with no day until lifted.
+/// The statement is required and sent to the person.
+/// </summary>
+public sealed record RestrictionRequest
+{
+    public DateOnly? Until { get; init; }
+
+    public string Statement { get; init; } = "";
+}
+
+public sealed record RestrictionCreatedResponse(Guid Id);
+
+/// <summary>An argument on the author's screen for a moderator. Its side is the argument's, public anyway; never the person's.</summary>
+public sealed record AuthorReasonResponse(Guid Id, string BillNumber, string Side, string Text, string Status, DateTimeOffset CreatedAt);
+
+public sealed record AuthorAppealResponse(Guid Id, string BillNumber, string Status, DateTimeOffset OpenedAt);
+
+/// <summary>An earlier moderation action on the person's arguments, appeals or restrictions.</summary>
+public sealed record ModerationEntryResponse(string TargetKind, string Action, string? Statement, DateTimeOffset At);
+
+/// <summary>A writing restriction for moderators; <c>Holds</c> is whether it applies now; <c>Until</c> null = until lifted.</summary>
+public sealed record RestrictionResponse(Guid Id, string? DisplayName, DateOnly? Until, string Statement, DateTimeOffset SetAt, bool Holds, DateTimeOffset? LiftedAt, string? LiftStatement);
+
+/// <summary>
+/// What a moderator sees before restricting a person (design 8.3): the display name, their arguments and appeals, earlier
+/// actions and restrictions. No address, no side of the person, no mark, no account id.
+/// </summary>
+public sealed record AuthorViewResponse(
+    string? DisplayName,
+    IReadOnlyList<AuthorReasonResponse> Reasons,
+    IReadOnlyList<AuthorAppealResponse> Appeals,
+    IReadOnlyList<ModerationEntryResponse> Actions,
+    IReadOnlyList<RestrictionResponse> Restrictions);

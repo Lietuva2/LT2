@@ -90,7 +90,7 @@ public sealed class AccountDataTests(DatabaseFixture database) : ApiTest(databas
 
             foreach (var (table, column) in new[]
             {
-                ("appeals.position", "user_id"), ("appeals.endorsement", "user_id"), ("appeals.reason", "author_user_id"), ("identity.consent", "user_id"),
+                ("appeals.position", "user_id"), ("appeals.endorsement", "user_id"), ("appeals.reason", "author_user_id"), ("appeals.writing_restriction", "user_id"), ("identity.consent", "user_id"),
                 ("identity.party_support", "user_id"), ("identity.profile", "user_id"), ("identity.session", "user_id"), ("identity.\"user\"", "id"),
             })
             {

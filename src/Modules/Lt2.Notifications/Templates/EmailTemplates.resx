@@ -38,6 +38,14 @@
 <data name="Moderation.reason-merged.Subject" xml:space="preserve"><value>Lietuva 2.0: jūsų argumentas sujungtas su panašiu</value></data>
 <data name="Moderation.reason-merged.Body" xml:space="preserve"><value>moderatorius sujungė jūsų argumentą kreipimesi dėl projekto {0} su panašiu jau paskelbtu argumentu. „Man svarbu“ žymos perkeltos prie jo.</value></data>
 <data name="Moderation.Excerpt" xml:space="preserve"><value>Argumentas: „{0}“</value></data>
+<data name="Restriction.restricted.Subject" xml:space="preserve"><value>Lietuva 2.0: jūsų galimybė rašyti apribota</value></data>
+<data name="Restriction.restricted.Body" xml:space="preserve"><value>moderatorius apribojo jūsų galimybę rašyti Lietuva 2.0: kol apribojimas galioja, negalite rašyti argumentų, atidaryti kreipimųsi, taisyti jų aprašymų ir pranešti apie neteisingas datas.</value></data>
+<data name="Restriction.Until" xml:space="preserve"><value>Apribojimas galioja iki {0} imtinai.</value></data>
+<data name="Restriction.UntilLifted" xml:space="preserve"><value>Apribojimas galioja, kol jį atšauks moderatorius.</value></data>
+<data name="Restriction.Untouched" xml:space="preserve"><value>Prisijungti, nurodyti, ko prašote, žymėti „Man svarbu“ ir pranešti apie turinį galite kaip anksčiau. Jūsų jau parašyti argumentai ir kreipimaisi lieka.</value></data>
+<data name="Restriction.Contact" xml:space="preserve"><value>Jei nesutinkate, parašykite moderatoriams: {0}</value></data>
+<data name="Restriction.lifted.Subject" xml:space="preserve"><value>Lietuva 2.0: rašymo apribojimas atšauktas</value></data>
+<data name="Restriction.lifted.Body" xml:space="preserve"><value>moderatorius atšaukė jūsų rašymo apribojimą: vėl galite rašyti argumentus, atidaryti kreipimusis ir pranešti apie datas.</value></data>
 <data name="Moderation.Statement" xml:space="preserve"><value>Moderatoriaus paaiškinimas: {0}</value></data>
 <data name="Moderation.Rules" xml:space="preserve"><value>Šį laišką gavote, nes esate šio turinio autorius.</value></data>
 <data name="Digest.Subject" xml:space="preserve"><value>Lietuva 2.0 suvestinė Seimo nariams, {0}</value></data>
