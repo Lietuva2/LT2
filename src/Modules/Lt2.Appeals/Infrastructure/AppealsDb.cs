@@ -44,8 +44,10 @@ internal sealed class AppealsDb(DbContextOptions<AppealsDb> options) : DbContext
             e.Property(a => a.ThresholdNote).HasMaxLength(1000);
             e.Property(a => a.ReturnNote).HasMaxLength(1000);
 
-            // One appeal per bill (design 8.2); a rejected appeal leaves the bill free.
-            e.HasIndex(a => a.BillNumber).IsUnique().HasFilter("status <> 'rejected'");
+            // One published appeal per bill, and one waiting or returned proposal per person per bill (design 8.1).
+            e.HasIndex(a => a.BillNumber).IsUnique().HasFilter("status IN ('open', 'closed')").HasDatabaseName("ix_appeal_bill_number_published");
+            e.HasIndex(a => new { a.BillNumber, a.InitiatorUserId }).IsUnique().HasFilter("status IN ('pending', 'returned')")
+                .HasDatabaseName("ix_appeal_bill_number_initiator_waiting");
             e.HasIndex(a => a.Status);
             e.ToTable(t => t.HasCheckConstraint("ck_appeal_threshold_positive", "threshold > 0"));
         });

@@ -12,9 +12,9 @@ using Microsoft.Extensions.Localization;
 namespace Lt2.UnitTests.Components;
 
 /// <summary>
-/// Opening an appeal (design 8.1): the form cannot be used before WebAssembly has taken over the prerendered page, and
-/// when the bill got an appeal meanwhile that the person cannot see (another member's, waiting for a moderator), their
-/// text stays and they are told why, instead of a reload to the same empty form.
+/// Proposing an appeal (design 8.1): the form cannot be used before WebAssembly has taken over the prerendered page; it
+/// says how many proposals already wait (a number only); a published appeal or the person's own proposal takes them to
+/// it; and if the appeal cannot be shown, the text stays instead of a reload to the same empty form.
 /// </summary>
 public sealed class OpenAppealFormTests : BunitContext
 {
@@ -31,6 +31,7 @@ public sealed class OpenAppealFormTests : BunitContext
         _api = (AppealsApiFake)(object)api;
         _api.On("GetRulesAsync", ApiResult<AppealRulesResponse>.Ok(new AppealRulesResponse(100, 50, 500, 0, 0, 3000)));
         _api.On("GetMyRestrictionAsync", ApiResult<MyRestrictionResponse>.Ok(new MyRestrictionResponse(false, null, null)));
+        _api.On("GetProposalsAsync", ApiResult<ProposalsResponse>.Ok(new ProposalsResponse(0)));
         Services.AddSingleton(api);
         AddAuthorization().SetAuthorized("ruta.mockute@pavyzdys.test");
         JSInterop.Mode = JSRuntimeMode.Loose;
@@ -72,7 +73,36 @@ public sealed class OpenAppealFormTests : BunitContext
     }
 
     [Fact]
-    public void Taken_meanwhile_by_an_appeal_waiting_for_a_moderator_the_text_stays_and_the_note_says_why()
+    public void The_form_says_how_many_proposals_wait_before_the_person_writes_and_no_more()
+    {
+        _api.On("GetProposalsAsync", ApiResult<ProposalsResponse>.Ok(new ProposalsResponse(2)));
+        var form = Render<OpenAppealForm>(p => p.Add(c => c.Number, Bill));
+
+        var note = form.Find("#proposals-waiting").TextContent;
+        note.ShouldContain("2");
+        note.ShouldBe(string.Format(System.Globalization.CultureInfo.InvariantCulture, Text("Open.Waiting"), "2"));
+    }
+
+    [Fact]
+    public void With_no_proposal_waiting_the_form_says_nothing_about_proposals()
+    {
+        var form = Render<OpenAppealForm>(p => p.Add(c => c.Number, Bill));
+
+        form.FindAll("#proposals-waiting").ShouldBeEmpty();
+    }
+
+    [Fact]
+    public void A_person_with_a_proposal_on_the_bill_is_taken_to_their_own()
+    {
+        _api.On("OpenAsync", ApiResult<AppealResponse>.Fail(Problem(409, "proposal.exists")));
+        _api.On("GetAppealAsync", ApiResult<AppealResponse>.Ok(null!));
+        FillAndSubmit();
+
+        Navigation.History.Single().Uri.ShouldBe($"/seimas/{Bill}/kreipimasis");
+    }
+
+    [Fact]
+    public void If_the_appeal_cannot_be_shown_the_text_stays_and_the_note_says_why()
     {
         _api.On("OpenAsync", ApiResult<AppealResponse>.Fail(Problem(409, "appeal.exists")));
         _api.On("GetAppealAsync", ApiResult<AppealResponse>.Fail(Problem(404, "appeal.not-found")));

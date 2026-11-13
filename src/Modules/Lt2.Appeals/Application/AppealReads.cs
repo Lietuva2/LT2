@@ -100,17 +100,40 @@ internal sealed class AppealReads(IParticipants participants, IBillCatalogue bil
     public static ReasonInfo ToInfo(Reason r, IReadOnlyDictionary<Guid, string?> names, IReadOnlyDictionary<Guid, int> endorsements) =>
         new(r.Id, r.Side, r.Text, names.GetValueOrDefault(r.AuthorUserId), endorsements.GetValueOrDefault(r.Id), r.Status, r.CreatedAt);
 
-    /// <summary>The appeal on a bill that holds the bill (any status but rejected).</summary>
-    public static Task<Appeal?> FindByBillAsync(AppealsDb db, string billNumber, bool tracking, CancellationToken ct)
+    /// <summary>The bill's published appeal (open or closed), at most one (design 8.1).</summary>
+    public static Task<Appeal?> FindPublishedAsync(AppealsDb db, string billNumber, bool tracking, CancellationToken ct)
     {
         var number = NormaliseBillNumber(billNumber);
         var query = tracking ? db.Appeals : db.Appeals.AsNoTracking();
-        return query.FirstOrDefaultAsync(a => a.BillNumber == number && a.Status != AppealStatuses.Rejected, ct);
+        return query.FirstOrDefaultAsync(a => a.BillNumber == number && (a.Status == AppealStatuses.Open || a.Status == AppealStatuses.Closed), ct);
+    }
+
+    /// <summary>
+    /// The appeal a person sees on a bill (design 8.1): the published one if there is one, otherwise their own waiting or
+    /// returned proposal. Someone else's proposal is never found here.
+    /// </summary>
+    public static async Task<Appeal?> FindForAsync(AppealsDb db, string billNumber, Guid? viewer, bool tracking, CancellationToken ct)
+    {
+        if (await FindPublishedAsync(db, billNumber, tracking, ct) is { } published)
+        {
+            return published;
+        }
+
+        if (viewer is not { } userId)
+        {
+            return null;
+        }
+
+        var number = NormaliseBillNumber(billNumber);
+        var query = tracking ? db.Appeals : db.Appeals.AsNoTracking();
+        return await query.FirstOrDefaultAsync(
+            a => a.BillNumber == number && a.InitiatorUserId == userId && (a.Status == AppealStatuses.Pending || a.Status == AppealStatuses.Returned),
+            ct);
     }
 
     public static string NormaliseBillNumber(string number) => number.Trim().ToUpperInvariant();
 
-    /// <summary>A pending or returned appeal is visible only to its initiator (design 8.1); a rejected one to nobody.</summary>
+    /// <summary>A pending or returned proposal is visible only to its author (design 8.1); a rejected or superseded one to nobody.</summary>
     public static bool IsVisibleTo(Appeal appeal, Guid? viewer) => appeal.Status switch
     {
         AppealStatuses.Open or AppealStatuses.Closed => true,

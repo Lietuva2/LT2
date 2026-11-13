@@ -49,7 +49,8 @@ internal static class AppealMapping
             a.Reports.Select(Map).ToList(), a.OpenedAt, Map(a.Surge), Map(a.Planned),
             (a.DateFlags ?? []).Select(f => new QueueFlagResponse(f.Id, f.Kind, f.Link, f.Note, f.CreatedAt)).ToList(),
             a.UnderThresholdOnAgenda,
-            a.Held)).ToList(),
+            a.Held,
+            a.ProposalsOnBill)).ToList(),
         q.Reasons.Select(r => new QueueReasonResponse(
             r.Id, r.AppealId, Map(r.Bill), r.Side, r.Text, r.AuthorName, r.Status, r.Seen, r.Flags, r.Reports.Select(Map).ToList(),
             r.MergeCandidates.Select(Map).ToList(), r.CreatedAt)).ToList());
@@ -111,6 +112,9 @@ internal sealed class ServerAppealsApi(IAppealsModule appeals, IHttpContextAcces
         errors.ToApiResult(
             await appeals.HistoryAsync(number, cancellationToken),
             rows => (IReadOnlyList<DescriptionRevisionResponse>)rows.Select(r => new DescriptionRevisionResponse(r.ChangedAt, r.OldText, r.NewText)).ToList());
+
+    public async Task<ApiResult<ProposalsResponse>> GetProposalsAsync(string number, CancellationToken cancellationToken = default) =>
+        errors.ToApiResult(await appeals.ProposalsWaitingAsync(number, cancellationToken), n => new ProposalsResponse(n));
 
     public async Task<ApiResult<MyAppealResponse>> GetMineAsync(string number, CancellationToken cancellationToken = default) =>
         UserId is { } id

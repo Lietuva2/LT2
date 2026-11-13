@@ -46,7 +46,8 @@ public static class WritingRestrictionNotices
 /// <param name="BillTitle">The bill's official title.</param>
 /// <param name="Statement">The moderator's statement of reasons; may be empty when something was published.</param>
 /// <param name="Excerpt">For an argument: the beginning of its text, so the author knows which one.</param>
-public sealed record ModerationNoticeEmail(string To, string Notice, string BillNumber, string BillTitle, string? Statement, string? Excerpt = null);
+/// <param name="Path">The site path of the appeal the notice points to, for example <c>/seimas/XVP-0412/kreipimasis</c>.</param>
+public sealed record ModerationNoticeEmail(string To, string Notice, string BillNumber, string BillTitle, string? Statement, string? Excerpt = null, string? Path = null);
 
 /// <summary>The moderation outcomes an author is told about (design 8.3, 8.6).</summary>
 public static class ModerationNotices
@@ -54,13 +55,27 @@ public static class ModerationNotices
     public const string AppealPublished = "appeal-published";
     public const string AppealReturned = "appeal-returned";
     public const string AppealHidden = "appeal-hidden";
+
+    /// <summary>Another proposal on the same bill was published, so this one closed (design 8.1). Names nobody.</summary>
+    public const string AppealSuperseded = "appeal-superseded";
+
+    public const string AppealRestored = "appeal-restored";
     public const string ThresholdChanged = "threshold-changed";
     public const string ReasonPublished = "reason-published";
     public const string ReasonHidden = "reason-hidden";
     public const string ReasonMerged = "reason-merged";
+    public const string ReasonRestored = "reason-restored";
+
+    /// <summary>The initiator's proposed description change was approved or returned (design 8.1).</summary>
+    public const string DescriptionApproved = "description-approved";
+
+    public const string DescriptionReturned = "description-returned";
 
     public static readonly IReadOnlyList<string> All =
-        [AppealPublished, AppealReturned, AppealHidden, ThresholdChanged, ReasonPublished, ReasonHidden, ReasonMerged];
+    [
+        AppealPublished, AppealReturned, AppealHidden, AppealSuperseded, AppealRestored, ThresholdChanged, ReasonPublished,
+        ReasonHidden, ReasonMerged, ReasonRestored, DescriptionApproved, DescriptionReturned,
+    ];
 }
 
 /// <summary>Payload of <see cref="MessageKinds.SignInCodeEmail"/>.</summary>

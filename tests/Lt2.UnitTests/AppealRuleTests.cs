@@ -6,23 +6,6 @@ namespace Lt2.UnitTests;
 /// <summary>Design 8.2 and <c>AGENTS.md</c> "Appeals": one appeal per bill, one position per person, two sides, arguments, "Man svarbu".</summary>
 public sealed class AppealRuleTests
 {
-    [Fact]
-    public void A_bill_has_at_most_one_appeal()
-    {
-        AppealRules.BillAlreadyHasAppeal([]).ShouldBeFalse();
-        foreach (var status in new[] { AppealStatuses.Pending, AppealStatuses.Returned, AppealStatuses.Open, AppealStatuses.Closed })
-        {
-            AppealRules.BillAlreadyHasAppeal([status]).ShouldBeTrue(status);
-        }
-    }
-
-    [Fact]
-    public void Only_a_rejected_appeal_leaves_the_bill_free_for_a_new_one()
-    {
-        AppealRules.BillAlreadyHasAppeal([AppealStatuses.Rejected]).ShouldBeFalse();
-        AppealRules.BillAlreadyHasAppeal([AppealStatuses.Rejected, AppealStatuses.Open]).ShouldBeTrue();
-    }
-
     [Theory]
     [InlineData("for")]
     [InlineData("against")]

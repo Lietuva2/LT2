@@ -108,13 +108,14 @@
 <data name="Open.SignIn" xml:space="preserve"><value>Prisijunkite, kad atidarytumėte kreipimąsi</value></data>
 <data name="Open.Title" xml:space="preserve"><value>Atidaryti kreipimąsi</value></data>
 <data name="Open.After" xml:space="preserve"><value>Kai moderatorius kreipimąsi paskelbs, galėsite – kaip ir visi kiti – parašyti argumentų už ar prieš ir, jei norite, nurodyti, ko prašote patys.</value></data>
-<data name="Open.Intro" xml:space="preserve"><value>Vienam projektui – vienas kreipimasis: visi, kurie prašo Seimo narių balsuoti už ar prieš, prisijungia prie jo. Prieš paskelbiant kreipimąsi peržiūrės moderatorius; iki tol jį matote tik jūs.</value></data>
+<data name="Open.Intro" xml:space="preserve"><value>Vienam projektui – vienas kreipimasis: visi, kurie prašo Seimo narių balsuoti už ar prieš, prisijungia prie jo. Kol kreipimasis nepaskelbtas, jį gali pasiūlyti keli nariai; moderatorius paskelbs vieną pasiūlymą. Savo pasiūlymą iki tol matote tik jūs.</value></data>
+<data name="Open.Waiting" xml:space="preserve"><value>Šiam projektui jau pateikta kreipimosi pasiūlymų, laukiančių moderatoriaus: {0}. Moderatorius paskelbs vieną iš jų. Kol to nepadarė, savo pasiūlymą galite pateikti ir jūs.</value></data>
 <data name="Open.Description" xml:space="preserve"><value>Ką keičia projektas</value></data>
 <data name="Open.DescriptionHint" xml:space="preserve"><value>Trumpai ir neutraliai, be vertinimų: šį aprašymą skaitys abiejų pusių dalyviai. Iki {0} ženklų.</value></data>
 <data name="Open.Threshold" xml:space="preserve"><value>Riba</value></data>
 <data name="Open.ThresholdHint" xml:space="preserve"><value>Kiek dalyvių, abiejų pusių kartu, turi turėti kreipimasis, kad patektų į suvestines Seimo nariams. Riba bus vieša. Ne mažiau kaip {0}.</value></data>
 <data name="Open.Submit" xml:space="preserve"><value>Pateikti moderatoriui</value></data>
-<data name="Open.TakenMeanwhile" xml:space="preserve"><value>Šiam projektui kreipimąsi jau pateikė kitas narys; jis laukia moderatoriaus. Kai moderatorius jį paskelbs, rasite jį šiame puslapyje. Jūsų tekstas liko laukelyje.</value></data>
+<data name="Open.TakenMeanwhile" xml:space="preserve"><value>Šiam projektui kreipimasis jau yra, bet jo dabar parodyti negalime. Perkraukite puslapį po kelių minučių. Jūsų tekstas liko laukelyje.</value></data>
 <data name="Edit.Title" xml:space="preserve"><value>Pataisyti prieš paskelbiant</value></data>
 <data name="Edit.TitleReturned" xml:space="preserve"><value>Pataisyti ir pateikti dar kartą</value></data>
 <data name="Edit.Submit" xml:space="preserve"><value>Pateikti moderatoriui</value></data>
@@ -130,6 +131,7 @@
 <data name="Mod.Reason" xml:space="preserve"><value>Argumentas</value></data>
 <data name="Mod.Empty" xml:space="preserve"><value>Nieko nelaukia.</value></data>
 <data name="Mod.OpenedBy" xml:space="preserve"><value>Atidarė {0} · riba {1}</value></data>
+<data name="Mod.Proposals" xml:space="preserve"><value>Projektui {0} pateikta kreipimosi pasiūlymų: {1}. Jie rodomi kartu, seniausias pirmas. Skelbkite seniausią pasiūlymą, atitinkantį taisykles; tai rekomendacija, ne programos taisyklė. Paskelbus vieną, kiti laukiantys ir grąžinti pasiūlymai uždaromi, o jų autoriai gauna laišką be vardų.</value></data>
 <data name="Mod.Status.pending" xml:space="preserve"><value>Laukia peržiūros</value></data>
 <data name="Mod.Status.open" xml:space="preserve"><value>Paskelbtas, gautas pranešimas</value></data>
 <data name="Mod.Status.published" xml:space="preserve"><value>Paskelbtas</value></data>

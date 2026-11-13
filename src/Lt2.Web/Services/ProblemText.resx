@@ -50,7 +50,9 @@
   <data name="not-found" xml:space="preserve"><value>Nerasta.</value></data>
   <data name="http.405" xml:space="preserve"><value>Šis metodas netinkamas.</value></data>
 <data name="appeal.not-found" xml:space="preserve"><value>Šiam projektui kreipimosi nėra.</value></data>
-<data name="appeal.exists" xml:space="preserve"><value>Šis projektas jau turi kreipimąsi. Prisijunkite prie jo.</value></data>
+<data name="appeal.exists" xml:space="preserve"><value>Šis projektas jau turi paskelbtą kreipimąsi. Prisijunkite prie jo.</value></data>
+<data name="proposal.exists" xml:space="preserve"><value>Šiam projektui jau esate pateikę kreipimosi pasiūlymą. Jį rasite kreipimosi puslapyje.</value></data>
+<data name="appeal.published-exists" xml:space="preserve"><value>Šis projektas jau turi paskelbtą kreipimąsi, todėl šio paskelbti ar atkurti negalima.</value></data>
 <data name="appeal.not-open" xml:space="preserve"><value>Šis kreipimasis dabar nepriima pozicijų ir argumentų.</value></data>
 <data name="appeal.not-editable" xml:space="preserve"><value>Kreipimasis jau paskelbtas, jo taisyti nebegalima.</value></data>
 <data name="appeal.initiator-only" xml:space="preserve"><value>Tai gali padaryti tik kreipimosi iniciatorius.</value></data>

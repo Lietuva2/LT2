@@ -100,20 +100,6 @@ public sealed class AppealApiTests(DatabaseFixture database) : ApiTest(database)
     }
 
     [Fact]
-    public async Task A_bill_has_one_appeal_so_a_second_one_is_refused()
-    {
-        await Database.FreeBillAsync(AppealSteps.SecondBill);
-        var (first, _) = await Factory.MemberAsync();
-        var (second, _) = await Factory.MemberAsync();
-        using var _f = first;
-        using var _s = second;
-        (await first.OpenAppealAsync(AppealSteps.SecondBill)).StatusCode.ShouldBe(HttpStatusCode.Created);
-
-        using var again = await second.OpenAppealAsync(AppealSteps.SecondBill);
-        await again.ShouldBeProblemAsync(HttpStatusCode.Conflict, "appeal.exists");
-    }
-
-    [Fact]
     public async Task An_appeal_is_opened_only_for_a_bill_that_exists()
     {
         var (member, _) = await Factory.MemberAsync();

@@ -18,6 +18,9 @@ public interface IAppealsApi
     /// <summary>The public edit history of the appeal's neutral description.</summary>
     Task<ApiResult<IReadOnlyList<DescriptionRevisionResponse>>> GetHistoryAsync(string number, CancellationToken cancellationToken = default);
 
+    /// <summary>How many proposals wait on the bill (design 8.1): a number only, public.</summary>
+    Task<ApiResult<ProposalsResponse>> GetProposalsAsync(string number, CancellationToken cancellationToken = default);
+
     Task<ApiResult<AppealResponse>> OpenAsync(string number, OpenAppealRequest request, CancellationToken cancellationToken = default);
 
     Task<ApiResult> EditAsync(string number, EditAppealRequest request, CancellationToken cancellationToken = default);

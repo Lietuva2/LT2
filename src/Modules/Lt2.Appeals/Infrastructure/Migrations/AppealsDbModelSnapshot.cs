@@ -128,11 +128,16 @@ namespace Lt2.Appeals.Infrastructure.Migrations
 
                     b.HasIndex("BillNumber")
                         .IsUnique()
-                        .HasDatabaseName("ix_appeal_bill_number")
-                        .HasFilter("status <> 'rejected'");
+                        .HasDatabaseName("ix_appeal_bill_number_published")
+                        .HasFilter("status IN ('open', 'closed')");
 
                     b.HasIndex("Status")
                         .HasDatabaseName("ix_appeal_status");
+
+                    b.HasIndex("BillNumber", "InitiatorUserId")
+                        .IsUnique()
+                        .HasDatabaseName("ix_appeal_bill_number_initiator_waiting")
+                        .HasFilter("status IN ('pending', 'returned')");
 
                     b.ToTable("appeal", "appeals", t =>
                         {

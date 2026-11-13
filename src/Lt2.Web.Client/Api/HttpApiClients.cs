@@ -89,6 +89,9 @@ internal sealed class HttpAppealsApi(ApiHttp http) : IAppealsApi
     public Task<ApiResult<MyAppealResponse>> GetMineAsync(string number, CancellationToken cancellationToken = default) =>
         http.SendAsync<MyAppealResponse>(HttpMethod.Get, AppealRoutes.MineOf(number), null, cancellationToken);
 
+    public Task<ApiResult<ProposalsResponse>> GetProposalsAsync(string number, CancellationToken cancellationToken = default) =>
+        http.SendAsync<ProposalsResponse>(HttpMethod.Get, AppealRoutes.ProposalsOf(number), null, cancellationToken);
+
     public Task<ApiResult<AppealResponse>> OpenAsync(string number, OpenAppealRequest request, CancellationToken cancellationToken = default) =>
         http.SendAsync<AppealResponse>(HttpMethod.Post, AppealRoutes.AppealOf(number), request, cancellationToken);
 

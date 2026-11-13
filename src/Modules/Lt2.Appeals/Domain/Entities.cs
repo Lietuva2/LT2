@@ -5,7 +5,10 @@ internal sealed class Appeal
 {
     public Guid Id { get; set; }
 
-    /// <summary>The Seimas bill number, the natural key of a bill (design 3). One appeal per bill, except rejected ones.</summary>
+    /// <summary>
+    /// The Seimas bill number, the natural key of a bill (design 3). One published (open or closed) appeal per bill; before
+    /// that, several proposals, one waiting or returned per person (design 8.1).
+    /// </summary>
     public string BillNumber { get; set; } = "";
 
     public Guid InitiatorUserId { get; set; }
@@ -75,6 +78,9 @@ internal static class AppealStatuses
 
     /// <summary>Hidden by a moderator. The bill may get a new appeal.</summary>
     public const string Rejected = "rejected";
+
+    /// <summary>A proposal closed because another proposal on the same bill was published (design 8.1). Visible to nobody.</summary>
+    public const string Superseded = "superseded";
 }
 
 internal static class ThresholdSetters

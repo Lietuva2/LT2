@@ -25,7 +25,7 @@ internal sealed class ModerationNoticeTemplate(IStringLocalizer<EmailTemplates> 
         var paragraphs = new List<string>
         {
             l["SignInCode.Greeting"],
-            string.Format(CultureInfo.InvariantCulture, l[$"Moderation.{model.Notice}.Body"], bill),
+            string.Format(CultureInfo.InvariantCulture, l[$"Moderation.{model.Notice}.Body"], bill, model.Path ?? $"/seimas/{model.BillNumber}/kreipimasis"),
         };
         if (!string.IsNullOrWhiteSpace(model.Excerpt))
         {

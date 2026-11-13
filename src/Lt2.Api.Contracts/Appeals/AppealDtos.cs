@@ -142,5 +142,8 @@ public sealed record ReportRequest
     public string? Text { get; init; }
 }
 
+/// <summary>How many proposals wait for a moderator on a bill (design 8.1): the number only, the same for everyone.</summary>
+public sealed record ProposalsResponse(int Waiting);
+
 /// <summary>One edit of an appeal's neutral description (design 8.2: it keeps its edit history). Who edited is not shown.</summary>
 public sealed record DescriptionRevisionResponse(DateTimeOffset ChangedAt, string? OldText, string? NewText);

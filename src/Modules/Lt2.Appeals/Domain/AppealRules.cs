@@ -34,13 +34,6 @@ internal static class AppealRules
     /// <summary>The neutral description is short; the design gives no number, this one is a choice.</summary>
     public const int DescriptionMaxLength = 1500;
 
-    /// <summary>
-    /// One appeal per bill: a bill whose appeal is pending, returned, open or closed has one; only a rejected appeal
-    /// leaves the bill free for a new one.
-    /// </summary>
-    public static bool BillAlreadyHasAppeal(IEnumerable<string> statusesOfAppealsOnTheBill) =>
-        statusesOfAppealsOnTheBill.Any(s => s != AppealStatuses.Rejected);
-
     /// <summary>A side is "for" or "against"; nothing else is a side.</summary>
     public static string? CheckSide(string? side) => Sides.IsSide(side) ? null : "side.invalid";
 
@@ -143,7 +136,7 @@ internal static class ThresholdRules
     /// </summary>
     public static string? CheckInitiatorChange(string status, string setBy, DateTimeOffset? firstSummarisedAt)
     {
-        if (status is AppealStatuses.Closed or AppealStatuses.Rejected)
+        if (status is AppealStatuses.Closed or AppealStatuses.Rejected or AppealStatuses.Superseded)
         {
             return "appeal.not-open";
         }
@@ -243,7 +236,8 @@ internal static class RuleErrors
     public static Error Of(string code) => code switch
     {
         "position.required" or "reason.limit" or "endorsement.other-side" or "endorsement.limit"
-            or "threshold.set-by-moderator" or "threshold.locked" or "appeal.not-open" => Error.Conflict(code),
+            or "threshold.set-by-moderator" or "threshold.locked" or "appeal.not-open"
+            or "appeal.exists" or "proposal.exists" or "appeal.published-exists" or "moderation.wrong-state" => Error.Conflict(code),
         "side.invalid" => Error.Validation(code, "side"),
         "reason.empty" or "reason.too-long" => Error.Validation(code, "text"),
         "description.empty" or "description.too-long" => Error.Validation(code, "description"),

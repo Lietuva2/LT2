@@ -59,6 +59,17 @@ internal sealed class ModerationService(
             .Take(QueueLimit)
             .ToListAsync(cancellationToken);
 
+        // A bill's proposals together, oldest first, the bills in the order of their oldest item (design 8.1).
+        var firstOnBill = appeals.GroupBy(a => a.BillNumber).ToDictionary(g => g.Key, g => g.Min(a => a.OpenedAt));
+        appeals = appeals.OrderBy(a => firstOnBill[a.BillNumber]).ThenBy(a => a.BillNumber, StringComparer.Ordinal).ThenBy(a => a.OpenedAt).ToList();
+        var pendingBills = appeals.Where(a => a.Status == AppealStatuses.Pending).Select(a => a.BillNumber).Distinct().ToList();
+        var proposalsOnBill = (await db.Appeals.AsNoTracking()
+                .Where(a => pendingBills.Contains(a.BillNumber) && (a.Status == AppealStatuses.Pending || a.Status == AppealStatuses.Returned))
+                .Select(a => a.BillNumber)
+                .ToListAsync(cancellationToken))
+            .GroupBy(b => b)
+            .ToDictionary(g => g.Key, g => g.Count());
+
         var reasons = await db.Reasons.AsNoTracking()
             .Where(r => db.Appeals.Any(a => a.Id == r.AppealId && a.Status == AppealStatuses.Open)
                 && (r.Status == ReasonStatuses.Pending
@@ -98,7 +109,8 @@ internal sealed class ModerationService(
                 planned.GetValueOrDefault(a.BillNumber),
                 openFlags.Where(f => f.AppealId == a.Id).Select(f => new QueueFlag(f.Id, f.Kind, f.Link, f.Note, f.CreatedAt)).ToList(),
                 underThresholdOnAgenda.Contains(a.Id),
-                a.Sending == "held");
+                a.Sending == "held",
+                a.Status == AppealStatuses.Pending ? proposalsOnBill.GetValueOrDefault(a.BillNumber, 1) : 0);
         }).ToList();
 
         var queueReasons = reasons.Select(r => new QueueReason(
@@ -134,10 +146,23 @@ internal sealed class ModerationService(
             var notice = (string?)null;
             if (appeal.Status == AppealStatuses.Pending)
             {
+                // One published appeal per bill (design 8.1): under the bill's lock, nothing else on the bill is published;
+                // the unique partial index stands behind this.
+                await ParticipationLock.TakeBillAsync(db, appeal.BillNumber, cancellationToken);
+                var others = await db.Appeals.AsNoTracking()
+                    .Where(a => a.BillNumber == appeal.BillNumber && a.Id != appeal.Id)
+                    .Select(a => a.Status)
+                    .ToListAsync(cancellationToken);
+                if (ProposalRules.CheckPublish(appeal.Status, others) is { } refused)
+                {
+                    return RuleErrors.Of(refused);
+                }
+
                 appeal.Status = AppealStatuses.Open;
                 appeal.PublishedAt = now;
                 appeal.ReturnNote = null;
                 notice = ModerationNotices.AppealPublished;
+                await SupersedeOthersAsync(db, appeal, moderator, now, cancellationToken);
             }
 
             // An open appeal that was reported or flagged is kept as it is: its reports and date flags are closed.
@@ -293,6 +318,30 @@ internal sealed class ModerationService(
             // Timing is not the initiator's content: no notice to the author.
             return Task.FromResult<Result<string?>>((string?)null);
         }, ct);
+
+    /// <summary>
+    /// Publishing a proposal closes every other waiting or returned proposal on its bill (design 8.1), in the same
+    /// transaction: each is recorded as a moderation action and in the audit log, and its author is emailed that another
+    /// appeal on the bill was published, with the link. The email names nobody and carries no statement.
+    /// </summary>
+    private async Task SupersedeOthersAsync(AppealsDb db, Appeal published, ModeratorActor moderator, DateTimeOffset now, CancellationToken ct)
+    {
+        var others = (await db.Appeals
+                .Where(a => a.BillNumber == published.BillNumber && a.Id != published.Id)
+                .ToListAsync(ct))
+            .Where(a => ProposalRules.ClosedWhenAnotherIsPublished(a.Status))
+            .ToList();
+        var transaction = db.Database.CurrentTransaction!;
+        foreach (var other in others)
+        {
+            other.Status = AppealStatuses.Superseded;
+            other.ChangedAt = now;
+            await RecordAsync(db, transaction, "appeal", other.Id, "supersede", null, moderator, now, other.BillNumber, new { published = published.Id }, ct);
+            await NotifyAsync(transaction, other.InitiatorUserId, ModerationNotices.AppealSuperseded, other.BillNumber, null, null, ct, AppealPath(other.BillNumber));
+        }
+    }
+
+    private static string AppealPath(string billNumber) => $"/seimas/{Uri.EscapeDataString(billNumber)}/kreipimasis";
 
     private static Task<int> CloseFlagsAsync(AppealsDb db, Guid appealId, DateTimeOffset now, CancellationToken ct) =>
         db.Flags.Where(f => f.AppealId == appealId && f.Status == "open")
@@ -556,7 +605,8 @@ internal sealed class ModerationService(
             ct);
     }
 
-    private async Task NotifyAsync(IDbContextTransaction transaction, Guid authorId, string notice, string billNumber, string? statement, string? excerpt, CancellationToken ct)
+    private async Task NotifyAsync(
+        IDbContextTransaction transaction, Guid authorId, string notice, string billNumber, string? statement, string? excerpt, CancellationToken ct, string? path = null)
     {
         var author = await participants.FindAsync(authorId, ct);
         if (author is null)
@@ -567,7 +617,7 @@ internal sealed class ModerationService(
         var bill = await reads.BillAsync(billNumber, ct);
         DbTransaction dbTransaction = transaction.GetDbTransaction();
         await outbox.EnqueueAsync(
-            OutboxMessage.Create(MessageKinds.ModerationNoticeEmail, new ModerationNoticeEmail(author.Email, notice, bill.Number, bill.Title, statement, excerpt)),
+            OutboxMessage.Create(MessageKinds.ModerationNoticeEmail, new ModerationNoticeEmail(author.Email, notice, bill.Number, bill.Title, statement, excerpt, path)),
             dbTransaction,
             ct);
     }

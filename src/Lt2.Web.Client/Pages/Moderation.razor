@@ -36,8 +36,14 @@ else
         {
             <p class="small">@L["Mod.Empty"]</p>
         }
-        @foreach (var appeal in Queue.Appeals)
+        @for (var i = 0; i < Queue.Appeals.Count; i++)
         {
+            var appeal = Queue.Appeals[i];
+            @if (appeal.ProposalsOnBill > 1 && (i == 0 || Queue.Appeals[i - 1].Bill.Number != appeal.Bill.Number))
+            {
+                @* A bill's proposals come together, oldest first (design 8.1): guidance, not a rule the code enforces. *@
+                <p class="note" id="proposals-@appeal.Bill.Number">@Text("Mod.Proposals", appeal.Bill.Number, AppealNumbers.Of(appeal.ProposalsOnBill))</p>
+            }
             <article class="sheet stack" id="queue-appeal-@appeal.Id" aria-labelledby="qa-@appeal.Id">
                 <div class="row">
                     <span class="tag tag--ink num">@appeal.Bill.Number</span>

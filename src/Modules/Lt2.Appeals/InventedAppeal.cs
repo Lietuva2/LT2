@@ -50,7 +50,7 @@ public static class InventedAppeal
         await using var connection = new NpgsqlConnection(connectionString);
         await connection.OpenAsync(cancellationToken);
         await using var transaction = await connection.BeginTransactionAsync(cancellationToken);
-        await using (var existing = new NpgsqlCommand("SELECT initiator_user_id FROM appeals.appeal WHERE bill_number = @b AND status <> 'rejected'", connection, transaction))
+        await using (var existing = new NpgsqlCommand("SELECT initiator_user_id FROM appeals.appeal WHERE bill_number = @b AND status IN ('open', 'closed')", connection, transaction))
         {
             existing.Parameters.AddWithValue("b", spec.BillNumber);
             if (await existing.ExecuteScalarAsync(cancellationToken) is Guid initiator)

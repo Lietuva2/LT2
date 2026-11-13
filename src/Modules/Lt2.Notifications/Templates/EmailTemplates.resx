@@ -37,6 +37,16 @@
 <data name="Moderation.reason-hidden.Body" xml:space="preserve"><value>moderatorius paslėpė jūsų argumentą kreipimesi dėl projekto {0}.</value></data>
 <data name="Moderation.reason-merged.Subject" xml:space="preserve"><value>Lietuva 2.0: jūsų argumentas sujungtas su panašiu</value></data>
 <data name="Moderation.reason-merged.Body" xml:space="preserve"><value>moderatorius sujungė jūsų argumentą kreipimesi dėl projekto {0} su panašiu jau paskelbtu argumentu. „Man svarbu“ žymos perkeltos prie jo.</value></data>
+<data name="Moderation.appeal-superseded.Subject" xml:space="preserve"><value>Lietuva 2.0: dėl {0} paskelbtas kitas kreipimosi pasiūlymas</value></data>
+<data name="Moderation.appeal-superseded.Body" xml:space="preserve"><value>dėl projekto {0} buvo pateiktas ne vienas kreipimosi pasiūlymas, ir moderatorius paskelbė vieną iš jų. Vienam projektui skelbiamas vienas kreipimasis, todėl jūsų pasiūlymas uždarytas. Tai nėra jūsų teksto vertinimas. Paskelbtą kreipimąsi rasite čia: {1}. Jame, kaip ir visi kiti, galite nurodyti, ko prašote, ir rašyti argumentus.</value></data>
+<data name="Moderation.appeal-restored.Subject" xml:space="preserve"><value>Lietuva 2.0: kreipimasis dėl {0} atkurtas</value></data>
+<data name="Moderation.appeal-restored.Body" xml:space="preserve"><value>moderatorius atkūrė jūsų anksčiau paslėptą kreipimąsi dėl projekto {0}.</value></data>
+<data name="Moderation.reason-restored.Subject" xml:space="preserve"><value>Lietuva 2.0: jūsų argumentas atkurtas</value></data>
+<data name="Moderation.reason-restored.Body" xml:space="preserve"><value>moderatorius atkūrė jūsų anksčiau paslėptą argumentą kreipimesi dėl projekto {0}. „Man svarbu“ žymos, buvusios prie jo, paslepiant buvo ištrintos ir neatkuriamos.</value></data>
+<data name="Moderation.description-approved.Subject" xml:space="preserve"><value>Lietuva 2.0: kreipimosi dėl {0} aprašymas pakeistas</value></data>
+<data name="Moderation.description-approved.Body" xml:space="preserve"><value>moderatorius patvirtino jūsų pasiūlytą kreipimosi dėl projekto {0} aprašymo pakeitimą. Naujas aprašymas jau rodomas kreipimosi puslapyje, o ankstesnis – aprašymo istorijoje.</value></data>
+<data name="Moderation.description-returned.Subject" xml:space="preserve"><value>Lietuva 2.0: aprašymo pakeitimas dėl {0} grąžintas</value></data>
+<data name="Moderation.description-returned.Body" xml:space="preserve"><value>moderatorius grąžino jūsų pasiūlytą kreipimosi dėl projekto {0} aprašymo pakeitimą. Puslapyje lieka ankstesnis aprašymas. Galite pasiūlyti naują pakeitimą.</value></data>
 <data name="Moderation.Excerpt" xml:space="preserve"><value>Argumentas: „{0}“</value></data>
 <data name="Restriction.restricted.Subject" xml:space="preserve"><value>Lietuva 2.0: jūsų galimybė rašyti apribota</value></data>
 <data name="Restriction.restricted.Body" xml:space="preserve"><value>moderatorius apribojo jūsų galimybę rašyti Lietuva 2.0: kol apribojimas galioja, negalite rašyti argumentų, atidaryti kreipimųsi, taisyti jų aprašymų ir pranešti apie neteisingas datas.</value></data>

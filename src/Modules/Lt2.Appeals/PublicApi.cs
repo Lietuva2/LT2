@@ -109,7 +109,8 @@ public sealed record QueueAppeal(
     PlannedDate? Planned = null,
     IReadOnlyList<QueueFlag>? DateFlags = null,
     bool UnderThresholdOnAgenda = false,
-    bool Held = false);
+    bool Held = false,
+    int ProposalsOnBill = 0);
 
 /// <summary>A participant's flag about the planned date (design 8.4). Who flagged is not shown.</summary>
 public sealed record QueueFlag(Guid Id, string Kind, string Link, string? Note, DateTimeOffset CreatedAt);
@@ -153,10 +154,16 @@ public interface IAppealsModule
 
     Task<Result<MyAppeal>> MineAsync(string billNumber, Guid userId, CancellationToken cancellationToken);
 
+    /// <summary>How many proposals wait on a bill (design 8.1): the number only, the same for everyone.</summary>
+    Task<Result<int>> ProposalsWaitingAsync(string billNumber, CancellationToken cancellationToken);
+
     /// <summary>The description's edits (oldest first), public for a published appeal; no editor is named.</summary>
     Task<Result<IReadOnlyList<(DateTimeOffset ChangedAt, string? OldText, string? NewText)>>> HistoryAsync(string billNumber, CancellationToken cancellationToken);
 
-    /// <summary>Opens the appeal on a bill; <c>appeal.exists</c> if the bill already has one.</summary>
+    /// <summary>
+    /// Proposes the appeal on a bill (design 8.1): <c>appeal.exists</c> if the bill has a published appeal,
+    /// <c>proposal.exists</c> if the person already has a waiting or returned proposal on it.
+    /// </summary>
     Task<Result<AppealInfo>> OpenAsync(string billNumber, Guid userId, OpenAppeal request, CancellationToken cancellationToken);
 
     Task<Result<Unit>> EditAsync(string billNumber, Guid userId, EditAppeal request, CancellationToken cancellationToken);
