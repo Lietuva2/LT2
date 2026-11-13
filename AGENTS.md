@@ -184,6 +184,9 @@ official `@lrs.lt` address from open data; the link is tied to the Seimas person
 - Every summary has a public copy with the same numbers. Whether an MP stopped the summaries is never shown publicly.
 - Timing is corrected by a moderator when people flag a wrong date: correct, hold, or approve one urgent summary.
 
+**Feedback.** A balloon on every page (and `/atsiliepimai`) lets members write to the team; an item is linked to the
+account only when the member allows a reply, otherwise nothing leads back; staff reply through the outbox; not public.
+
 **Moderation.** Anything that reaches MPs has passed a person. Every action is audited and the author gets the reason.
 A report button is on every appeal and reason. A moderator can restrict an account from writing (reasons, appeals,
 their edits, date flags), until a date or until lifted, with a statement emailed to the person; it never touches sides,

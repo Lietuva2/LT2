@@ -72,7 +72,9 @@ INVENTED page (`LT2_AGENDA_BASE_ADDRESS` in `deploy/.env`); production sets the 
 outbound allowlist; empty means off. The parser's assumptions are in `tests/Lt2.Parliament.ImportTests/Agenda/ASSUMPTIONS.md`;
 `LT2_LRS_LIVE=1` with `LT2_LRS_AGENDA_URL` runs the live check. Summaries to MPs are made in dry-run only (M2a): published
 at `/suvestines`, never sent. `LT2_MODERATION_CONTACT` is the address shown to visitors who want to report (a local
-placeholder in `deploy/.env`).
+placeholder in `deploy/.env`). Feedback (design 8.10): `LT2_FEEDBACK_ISSUES_URL` (`Feedback:IssuesUrl`, the
+repository's GitHub issues, linked from the feedback panel; nothing shown when empty) and `LT2_FEEDBACK_TEAM_ADDRESS`
+(`Feedback:TeamAddress`, where the worker sends at most one notice a day of new feedback; none when empty).
 
 Register with any address and the invitation code, open the sign-in email in Mailpit, enter the six-digit code, and the
 "Sveiki" page appears. From there you can add a passkey and see or end your sessions.

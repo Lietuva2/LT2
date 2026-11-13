@@ -247,6 +247,7 @@ ASP.NET Core Identity tables (users, roles, claims, tokens, passkeys), plus:
 | `profile` | Display name, created date, normalised email (for the one-account-per-address rule), `verification_level` (`email` at the start; `phone` and the EU wallet can be added), invitation used. While the account is pending (6.2) it holds only the normalised address and the invitation code that was entered. |
 | `invitation` | Code (and its look-up form without dashes or spaces), kind (`team` or `personal`), who issued it (for a personal code: its member), uses left and expiry (team codes), completed registrations (a counter that never drops), level, switched off (when, by an administrator), replaced (when). Registration is by invitation during the closed trial. A use is counted when the registration is completed (6.2), not when it is started. |
 | `invitation_daily` | Per code and Vilnius day: registrations completed. For the administrators' chart; no per-person history. |
+| `feedback` | Kind (`bug`, `idea`, `unclear`, `other` or none), text (up to 2 000 characters), page path and browser (each only if the member left them in), status (`new`, `seen`, `done`), internal note, replies, the day it came, and the account **only if** the member ticked "Galite man atsakyti". An item without that tick has no account, a random id and only the day, so nothing leads back to its author. Kept 12 months (a setting); linked items go with the account (8.10). |
 | `sign_in_code` | Account, hashed code, expiry, failed attempts, used time, and the known device it was issued to (empty for a code any browser may use). |
 | `known_device` | Account, hashed identifier of the browser's cookie, first and last seen. Built before registration opens (M2b). |
 | `role_activation` | Account, role, hashed one-time code, who issued it, expiry, used time. Using it marks the passkey of that session as the staff passkey. |
@@ -292,7 +293,7 @@ without a deploy: the summary rules in 8.4 (default and minimum threshold, the w
 per MP, and the share of change that counts as "changed notably", `Digest:NotableChange`), the reasons and "Man svarbu"
 marks a person may give per bill in 8.2 (`Appeals:ReasonsPerPerson`, `Appeals:EndorsementsPerPerson`, 0 = no limit,
 the default), the surge thresholds in 6.6,
-the code limits and the life of a pending account in 6.2, whether registration needs an invitation, uses per personal invitation code (`Registration:PersonalCodeUses`, 0 = no limit, the default). Each
+the code limits and the life of a pending account in 6.2, whether registration needs an invitation, uses per personal invitation code (`Registration:PersonalCodeUses`, 0 = no limit, the default), how long feedback is kept (`Feedback:KeepMonths`, 12). Each
 change is written to `audit`, and the current values of the rules that affect what MPs receive are shown on the public
 methodology page.
 
@@ -837,6 +838,9 @@ PUT    /api/v1/me/party-support   PUT /api/v1/me/notifications
 GET    /api/v1/me/export          DELETE /api/v1/me
 GET    /api/v1/me/invitation      (own code, link, count, on or off)  POST /api/v1/me/invitation/replace
 GET    /api/v1/admin/invitations  (daily totals, top codes, levels: numbers only)
+POST   /api/v1/feedback           (text, kind, page path, browser, may reply)      a member; 10 a day
+GET    /api/v1/moderation/feedback?kind=&status=   PUT /api/v1/moderation/feedback/{id}  (status, note)
+POST   /api/v1/moderation/feedback/{id}/reply      (linked items only; sent through the outbox)
 POST   /api/v1/admin/invitations/{id}/switch-off   POST /api/v1/admin/invitations/{id}/switch-on   (statement)
 
 POST   /api/v1/mps/{slug}/claim
@@ -848,6 +852,37 @@ GET    /api/v1/mp-preferences/{token}     PUT /api/v1/mp-preferences/{token}
                        invitations, import and digest status
 GET    /api/v1/admin/settings     PUT /api/v1/admin/settings/{key}
 ```
+
+### 8.10 Feedback from members [decided 2026-11-13]
+
+Members tell the team what is broken, unclear or missing, without leaving the page.
+
+- **Entry.** A round speech-balloon button at the bottom corner of every page opens a panel with the form; the panel's
+  heading says what it is, so it does not look like live chat. It is a disclosure (`<details>`), so it opens and closes
+  without JavaScript; it is labelled "Atsiliepimai" for screen readers and on hover, reachable by keyboard, closes with
+  Escape when the script is there, and its slide respects reduced motion. It floats in the page's side margin where
+  that margin is wide enough (about 1 260 px and wider); on narrower screens, phones included, it sits at the end of
+  the page instead, so it never covers text or controls. A plain page `/atsiliepimai` has the same content, for linking.
+- **A member's form**: one text up to 2 000 characters; an optional kind (klaida, pasiūlymas, neaišku, kita); the page
+  they are on (path only) and the browser's name and version, both shown before sending and each removable; and a tick
+  box "Galite man atsakyti". Ticked, the item is linked to the account; unticked, it is stored with no link to the
+  account at all. A hint asks not to write which side one took on a bill. The form is server-rendered and posts back to
+  the page, so it needs no WebAssembly and works without JavaScript.
+- **A visitor** sees no form: the moderators' contact address and "Nepavyksta prisijungti? Parašykite mums."; the same
+  line is on the sign-in page.
+- **GitHub issues**: the panels and `/atsiliepimai` link to the repository's issues (`Feedback:IssuesUrl`; nothing when
+  unset), saying plainly that an issue there is public and appears under the person's GitHub name. A link only: no
+  script from GitHub, no request to it, nothing forwarded.
+- **Staff** (moderators and administrators, staff passkey): a list filtered by kind and status (new, seen, done), an
+  internal note per item (for example the issue's address), and for linked items a reply sent through the outbox to the
+  member's address, which staff never see, with the display name shown; unlinked items show no author and have no reply.
+- **Notice**: at most one email a day to the team address (`Feedback:TeamAddress`) with the number of new items and the
+  staff page's address, never the text; nothing when there is nothing new.
+- **Rules**: ten items a day per account (counted in memory, so an unlinked item gets no link through the counter); an
+  account restricted from writing (8.3) can still send feedback; kept for `Feedback:KeepMonths` months (12), then
+  deleted by the daily clean-up; linked items are in the export and go with the account; never in logs; never combined
+  with sides; not public and not moderated. It lives in the Identity module, beside the account it may be linked to, the
+  address replies go to, the export, the deletion and the daily clean-up.
 
 ### 8.9 Done when
 
@@ -971,6 +1006,8 @@ Splitting M2 means the risky step (emailing every MP) happens only after the who
   switched on later counts only shown or waiting reasons and removes nothing (8.2, 5.6).
 - An author can withdraw their own reason while the appeal is open, and not once it is closed (8.2, 8.8).
 - Administrators set and lift writing restrictions like moderators (8.3, 6.3).
+- Feedback from members: a balloon on every page and `/atsiliepimai`; linked to the account only if the member allows a
+  reply; staff list, note and reply; one notice a day to the team; kept 12 months (8.10).
 - Personal invitation codes: one per member, unlimited by default (`Registration:PersonalCodeUses`), replaceable,
   counted at completed registration on the code and per day; members see only their count; administrators see numbers
   per day, per code and per level, never who invited whom, and can switch codes off and on (6.2).
