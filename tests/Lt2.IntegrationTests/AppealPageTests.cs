@@ -124,6 +124,11 @@ public sealed partial class AppealPageTests(DatabaseFixture database) : ApiTest(
         html.ShouldNotContain(" style=\"");
         ShouldSpeakOfUsersNotThePublic(html);
 
+        // Before its first summary the appeal says so, and the public answer behind it is empty.
+        html.ShouldContain("Suvestinėse Seimo nariams");
+        html.ShouldContain("Šis kreipimasis dar nebuvo nė vienoje suvestinėje.");
+        (await stranger.GetJsonAsync<List<Lt2.Api.Contracts.Digests.AppealDigestResponse>>(Lt2.Api.Contracts.Digests.DigestRoutes.OfAppealOn(AppealSteps.ThirdBill))).ShouldBeEmpty();
+
         // Visitors get links to sign in instead of buttons: they work without JavaScript.
         html.ShouldContain("<a class=\"btn btn--for btn--wide\" href=\"/prisijungti\">Prašau balsuoti už</a>");
         html.ShouldNotContain("Jūs prašote balsuoti");
@@ -193,6 +198,9 @@ public sealed partial class AppealPageTests(DatabaseFixture database) : ApiTest(
         status.ShouldBe(HttpStatusCode.OK);
         html.ShouldContain("Kreipimasis laukia moderatoriaus. Kol jis nepaskelbtas, jį matote tik jūs.");
         html.ShouldContain("aprašymą");
+        html.ShouldNotContain("Suvestinėse Seimo nariams", customMessage: "an unpublished appeal cannot have been in a summary");
+        (await initiator.Client.GetAsync(Lt2.Api.Contracts.Digests.DigestRoutes.OfAppealOn(AppealSteps.SecondBill))).StatusCode
+            .ShouldBe(HttpStatusCode.NotFound, "the summaries of an unpublished appeal are not found, like the appeal itself");
 
         using var stranger = NewBrowser();
         var (_, other) = await PageAsync(stranger, "/seimas/XVP-0533/kreipimasis");

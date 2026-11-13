@@ -85,6 +85,10 @@
 <data name="Digests.Earlier" xml:space="preserve"><value>Ankstesnės suvestinės</value></data>
 <data name="Digests.NoMpFigures" xml:space="preserve"><value>Viešoje kopijoje nėra skaičių, skirtų konkrečiam Seimo nariui.</value></data>
 <data name="Digests.None" xml:space="preserve"><value>Suvestinių dar nėra.</value></data>
+<data name="Digests.OnAppeal.Heading" xml:space="preserve"><value>Suvestinėse Seimo nariams</value></data>
+<data name="Digests.OnAppeal.None" xml:space="preserve"><value>Šis kreipimasis dar nebuvo nė vienoje suvestinėje. Į suvestines patenka kreipimaisi, pasiekę savo ribą.</value></data>
+<data name="Digests.OnAppeal.Frozen" xml:space="preserve"><value>Skaičiai tokie, kokie buvo suvestinėje; skliaustuose – paskyros senesnės nei 30 d.</value></data>
+<data name="Digests.OnAppeal.All" xml:space="preserve"><value>Visos suvestinės</value></data>
 <data name="History.Title" xml:space="preserve"><value>Aprašymo keitimų istorija</value></data>
 <data name="History.Link" xml:space="preserve"><value>Keitimų istorija</value></data>
 <data name="History.Now" xml:space="preserve"><value>Dabartinis aprašymas</value></data>

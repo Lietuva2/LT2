@@ -110,6 +110,7 @@ internal static class ApiEndpoints
         GetDigestRulesEndpoint.Map(api);
         GetDigestsEndpoint.Map(api);
         GetDigestEndpoint.Map(api);
+        GetAppealDigestsEndpoint.Map(api);
         GetDigestMpsEndpoint.Map(api);
         GetDigestPreviewEndpoint.Map(api);
     }

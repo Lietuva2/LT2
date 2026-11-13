@@ -114,6 +114,14 @@ internal sealed class DigestService(
         return await InfoAsync(db, runs, cancellationToken);
     }
 
+    public async Task<IReadOnlyList<DigestRunInfo>> ForAppealAsync(Guid appealId, CancellationToken cancellationToken)
+    {
+        await using var db = await contexts.CreateDbContextAsync(cancellationToken);
+        var runIds = db.DigestItems.Where(i => i.AppealId == appealId).Select(i => i.RunId);
+        var runs = await db.DigestRuns.AsNoTracking().Where(r => runIds.Contains(r.Id)).OrderByDescending(r => r.CreatedAt).ToListAsync(cancellationToken);
+        return await InfoAsync(db, runs, cancellationToken, appealId);
+    }
+
     public async Task<Result<DigestPreview>> PreviewAsync(Guid runId, string mpSlug, CancellationToken cancellationToken)
     {
         await using var db = await contexts.CreateDbContextAsync(cancellationToken);
@@ -235,10 +243,13 @@ internal sealed class DigestService(
                 where r.Kind == DigestRules.Weekly && r.RunDate == weekStart && i.PlannedDate == sitting
                 select i.AppealId).ToListAsync(ct)).ToHashSet();
 
-    private static async Task<IReadOnlyList<DigestRunInfo>> InfoAsync(NotificationsDb db, IReadOnlyList<DigestRun> runs, CancellationToken ct)
+    /// <summary>The runs as their public copy shows them; with <paramref name="appealId"/>, only that appeal's item.</summary>
+    private static async Task<IReadOnlyList<DigestRunInfo>> InfoAsync(NotificationsDb db, IReadOnlyList<DigestRun> runs, CancellationToken ct, Guid? appealId = null)
     {
         var ids = runs.Select(r => r.Id).ToList();
-        var items = await db.DigestItems.AsNoTracking().Where(i => ids.Contains(i.RunId)).OrderBy(i => i.Position).ToListAsync(ct);
+        var items = await db.DigestItems.AsNoTracking()
+            .Where(i => ids.Contains(i.RunId) && (appealId == null || i.AppealId == appealId))
+            .OrderBy(i => i.Position).ToListAsync(ct);
         return runs.Select(r => new DigestRunInfo(
                 r.Id,
                 r.Kind,

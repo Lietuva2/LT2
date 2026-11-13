@@ -65,6 +65,9 @@ public interface IDigests
 
     Task<IReadOnlyList<DigestRunInfo>> OnDateAsync(DateOnly date, CancellationToken cancellationToken);
 
+    /// <summary>The summaries that held one appeal, newest first; each run carries only that appeal's frozen item.</summary>
+    Task<IReadOnlyList<DigestRunInfo>> ForAppealAsync(Guid appealId, CancellationToken cancellationToken);
+
     Task<Lt2.SharedKernel.Result<DigestPreview>> PreviewAsync(Guid runId, string mpSlug, CancellationToken cancellationToken);
 
     /// <summary>The MPs of a run and what would have happened for each (<c>dry-run</c> or <c>skipped-ceiling</c>); moderators only.</summary>

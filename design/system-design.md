@@ -885,6 +885,11 @@ Every summary has a public page (`/suvestines/2026-11-16`) with the frozen numbe
 figures and without the reasons' authors (8.4). Participants can see that their appeal reached the Seimas, journalists
 can cite it, and MPs know that the numbers in their inbox are the numbers everyone sees. The pages carry the same "not a representative poll" notice.
 
+**From the appeal [decided 2026-11-13].** A published appeal's page lists, beside the threshold, the summaries that
+held it, newest first: the day, the kind, and both sides as frozen there with the counts for accounts older than 30
+days, each linking to that appeal's item on the summary's public page. Before the first it says the appeal has not been
+in a summary yet. The summaries keep their own menu item and pages; each item there links back to its appeal.
+
 **The front page [decided 2026-11-13, layout "B" chosen from three mockups].** The front page (`/`), public and
 server-rendered, opens with the sign-in page's welcome: the turning logo (the page's only one), the title and
 introduction, and beside it the same sign-in steps as `/prisijungti` (a short greeting with a link to the account once
@@ -918,6 +923,7 @@ GET    /api/v1/moderation/restrictions                   current restrictions (m
 POST   /api/v1/moderation/restrictions/{id}/lift         statement (moderator or administrator)
 POST   /api/v1/reports
 GET    /api/v1/digests            GET /api/v1/digests/{date}
+GET    /api/v1/bills/{number}/appeal/digests             the summaries that held the published appeal, as frozen (8.7)
 
 POST   /api/v1/auth/code          POST /api/v1/auth/sign-in        POST /api/v1/auth/sign-out
 POST   /api/v1/auth/register      (email, invitation code)         passkey registration and assertion

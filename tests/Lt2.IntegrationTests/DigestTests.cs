@@ -114,6 +114,19 @@ public sealed class DigestTests(DatabaseFixture database) : ApiTest(database)
                 (await Database.ScalarAsync<long>("SELECT count(*) FROM notify.digest_item WHERE reasons::text LIKE @p OR bill_title LIKE @p", ("p", "%" + person + "%"))).ShouldBe(0);
             }
 
+            // The appeal lists the summary that held it, with its frozen numbers, and links to its item on the public page.
+            var held = (await stranger.GetJsonAsync<List<AppealDigestResponse>>(DigestRoutes.OfAppealOn(AppealSteps.ThirdBill))).ShouldHaveSingleItem();
+            (held.RunId, held.Kind, held.RunDate, held.Status).ShouldBe((weekly.Id, "weekly", monday, "dry-run"));
+            (held.Item.BillNumber, held.Item.For, held.Item.Against).ShouldBe(("XVP-0618", 1, 1));
+            held.Item.Reasons.Select(r => r.Text).ShouldBe([AppealSteps.AgainstReason]);
+            using var appealPage = await stranger.Client.GetAsync("/seimas/XVP-0618/kreipimasis");
+            var appealHtml = WebUtility.HtmlDecode(await appealPage.Content.ReadAsStringAsync());
+            appealHtml.ShouldContain("Suvestinėse Seimo nariams");
+            appealHtml.ShouldNotContain("Šis kreipimasis dar nebuvo nė vienoje suvestinėje.");
+            appealHtml.ShouldContain($"href=\"{DigestRoutes.PageAt(monday, weekly.Id, "XVP-0618")}\"");
+            html.ShouldContain($"id=\"{DigestRoutes.ItemAnchor(weekly.Id, "XVP-0618")}\"", customMessage: "the link lands on the appeal's item");
+            (await stranger.Client.GetAsync(DigestRoutes.OfAppealOn("XVP-9999"))).StatusCode.ShouldBe(HttpStatusCode.NotFound);
+
             (await Database.ScalarAsync<long>(
                 "SELECT count(*) FROM information_schema.columns WHERE table_schema = 'notify' AND table_name LIKE 'digest%' AND (column_name LIKE '%user%' OR column_name LIKE '%email%' OR column_name LIKE '%address%')"))
                 .ShouldBe(0, "a summary table has no column for a person or an address");
@@ -132,6 +145,7 @@ public sealed class DigestTests(DatabaseFixture database) : ApiTest(database)
             // A later change to the appeal does not change what the summary said.
             (await initiator.TakeSideAsync(AppealSteps.ThirdBill, "for")).StatusCode.ShouldBe(HttpStatusCode.NoContent);
             (await stranger.GetJsonAsync<List<DigestRunResponse>>(DigestRoutes.DigestOn(monday))).Single().Items.Single(i => i.BillNumber == "XVP-0618").Against.ShouldBe(1);
+            (await stranger.GetJsonAsync<List<AppealDigestResponse>>(DigestRoutes.OfAppealOn(AppealSteps.ThirdBill))).Single().Item.Against.ShouldBe(1);
         }
         finally
         {

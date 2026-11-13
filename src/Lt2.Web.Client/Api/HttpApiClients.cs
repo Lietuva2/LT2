@@ -240,6 +240,9 @@ internal sealed class HttpDigestsApi(ApiHttp http) : Lt2.Api.Contracts.Digests.I
     public Task<ApiResult<IReadOnlyList<Lt2.Api.Contracts.Digests.DigestRunResponse>>> GetDigestAsync(DateOnly date, CancellationToken cancellationToken = default) =>
         http.SendAsync<IReadOnlyList<Lt2.Api.Contracts.Digests.DigestRunResponse>>(HttpMethod.Get, Lt2.Api.Contracts.Digests.DigestRoutes.DigestOn(date), null, cancellationToken);
 
+    public Task<ApiResult<IReadOnlyList<Lt2.Api.Contracts.Digests.AppealDigestResponse>>> GetAppealDigestsAsync(string number, CancellationToken cancellationToken = default) =>
+        http.SendAsync<IReadOnlyList<Lt2.Api.Contracts.Digests.AppealDigestResponse>>(HttpMethod.Get, Lt2.Api.Contracts.Digests.DigestRoutes.OfAppealOn(number), null, cancellationToken);
+
     public Task<ApiResult<IReadOnlyList<Lt2.Api.Contracts.Digests.DigestMpResponse>>> GetMpsAsync(Guid runId, CancellationToken cancellationToken = default) =>
         http.SendAsync<IReadOnlyList<Lt2.Api.Contracts.Digests.DigestMpResponse>>(HttpMethod.Get, Lt2.Api.Contracts.Digests.DigestRoutes.MpsOf(runId), null, cancellationToken);
 
