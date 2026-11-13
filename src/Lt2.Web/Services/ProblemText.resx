@@ -15,10 +15,13 @@
   <data name="validation" xml:space="preserve"><value>Patikrinkite įvestus duomenis.</value></data>
   <data name="email.invalid" xml:space="preserve"><value>Patikrinkite el. pašto adresą.</value></data>
   <data name="email.disposable" xml:space="preserve"><value>Laikinųjų el. pašto dėžučių adresai netinka. Naudokite nuolatinį adresą.</value></data>
-  <data name="invitation.invalid" xml:space="preserve"><value>Kvietimo kodas neteisingas arba nebegalioja.</value></data>
+  <data name="invitation.invalid" xml:space="preserve"><value>Šis kvietimo kodas negalioja. Paprašykite jus pakvietusio žmogaus naujo kodo.</value></data>
   <data name="invitation.required" xml:space="preserve"><value>Kol vyksta uždaras bandymas, registruotis galima tik su kvietimo kodu.</value></data>
   <data name="adult.required" xml:space="preserve"><value>Registruotis gali tik 18 metų ir vyresni asmenys.</value></data>
-  <data name="invitation.used-up" xml:space="preserve"><value>Šio kvietimo kodo vietos jau užimtos. Įveskite kitą kvietimo kodą.</value></data>
+  <data name="invitation.switched-off" xml:space="preserve"><value>Jūsų kvietimo kodą išjungė administratorius, todėl naujo kol kas sukurti negalima.</value></data>
+<data name="invitation.not-found" xml:space="preserve"><value>Tokio kvietimo kodo nėra.</value></data>
+<data name="invitation.cannot-switch-on" xml:space="preserve"><value>Šio kodo įjungti nebegalima: jo savininkas jį pakeitė arba ištrynė paskyrą.</value></data>
+<data name="invitation.already" xml:space="preserve"><value>Kodas jau toks ir yra.</value></data>
   <data name="registration.complete" xml:space="preserve"><value>Registracija jau baigta.</value></data>
   <data name="role-activation.invalid" xml:space="preserve"><value>Aktyvinimo kodas netinka arba nebegalioja.</value></data>
   <data name="role-activation.passkey-required" xml:space="preserve"><value>Aktyvinimo kodą galima įvesti tik prisijungus prieigos raktu.</value></data>

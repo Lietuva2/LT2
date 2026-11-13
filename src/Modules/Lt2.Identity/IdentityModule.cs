@@ -108,6 +108,7 @@ public static class IdentityModule
         services.AddScoped<PositionConsentHandlers>();
         services.AddScoped<PartySupportHandlers>();
         services.AddScoped<AccountDataHandlers>();
+        services.AddScoped<IInvitations, Application.Invitations.InvitationHandlers>();
         services.AddSingleton<IParticipants, ParticipantDirectory>();
         services.AddSingleton<IPartySupporters, PartySupporterDirectory>();
         services.AddScoped<IIdentityModule, IdentityModuleFacade>();

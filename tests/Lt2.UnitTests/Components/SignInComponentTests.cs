@@ -455,6 +455,11 @@ public sealed class SignInComponentTests : BunitContext
 
         public Task<ApiResult> DeleteAccountAsync(CancellationToken cancellationToken = default) => Task.FromResult(ApiResult.Ok());
 
+        public Task<ApiResult<MyInvitationResponse>> GetInvitationAsync(CancellationToken cancellationToken = default) =>
+            Task.FromResult(ApiResult<MyInvitationResponse>.Ok(new MyInvitationResponse("ABCD-EFGH", "/prisijungti?kodas=ABCD-EFGH", 0, true, null)));
+
+        public Task<ApiResult<MyInvitationResponse>> ReplaceInvitationAsync(CancellationToken cancellationToken = default) => GetInvitationAsync(cancellationToken);
+
         public Task<ApiResult<IReadOnlyList<SessionResponse>>> GetSessionsAsync(CancellationToken cancellationToken = default) =>
             Task.FromResult(ApiResult<IReadOnlyList<SessionResponse>>.Ok(Sessions));
 

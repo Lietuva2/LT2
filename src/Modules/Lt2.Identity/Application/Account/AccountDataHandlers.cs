@@ -14,7 +14,7 @@ namespace Lt2.Identity.Application.Account;
 /// and the account with everything that hangs on it (profile, consents, party support, sessions, codes, passkeys, roles).
 /// Counts fall; frozen summary snapshots keep their totals. Nothing is logged or audited with the address.
 /// </summary>
-internal sealed class AccountDataHandlers(IdentityDb db, IAccountData appeals, SignInManager<User> signIn)
+internal sealed class AccountDataHandlers(IdentityDb db, IAccountData appeals, SignInManager<User> signIn, TimeProvider clock)
 {
     public async Task<Result<object>> ExportAsync(ClaimsPrincipal principal, CancellationToken cancellationToken)
     {
@@ -51,6 +51,7 @@ internal sealed class AccountDataHandlers(IdentityDb db, IAccountData appeals, S
                 createdAt = profile.CreatedAt,
                 registeredAt = profile.RegisteredAt,
                 invitationCode = profile.InvitationCode,
+                myInvitation = await MyInvitationAsync(userId, cancellationToken),
                 roles,
                 passkeys,
             },
@@ -59,6 +60,16 @@ internal sealed class AccountDataHandlers(IdentityDb db, IAccountData appeals, S
             sessions,
             appeals = await appeals.ExportAsync(userId, cancellationToken),
         };
+    }
+
+    /// <summary>The person's own current code and how many completed registration with their codes; no names.</summary>
+    private async Task<object?> MyInvitationAsync(Guid userId, CancellationToken ct)
+    {
+        var own = await db.Invitations.AsNoTracking()
+            .Where(i => i.Kind == InvitationKinds.Personal && i.IssuedByUserId == userId)
+            .OrderByDescending(i => i.CreatedAt)
+            .ToListAsync(ct);
+        return own.Count == 0 ? null : new { code = own.FirstOrDefault(i => i.ReplacedAt == null)?.Code, completed = InvitationRules.MemberCount(own.Select(i => i.UsedCount)) };
     }
 
     public async Task<Result<Unit>> DeleteAsync(ClaimsPrincipal principal, CancellationToken cancellationToken)
@@ -71,6 +82,15 @@ internal sealed class AccountDataHandlers(IdentityDb db, IAccountData appeals, S
         await using (var transaction = await db.Database.BeginTransactionAsync(cancellationToken))
         {
             await appeals.EraseAsync(userId, transaction.GetDbTransaction(), cancellationToken);
+
+            // The person's invitation codes stop working and keep nothing of them (design 6.2); their counts, levels and
+            // daily totals stay as anonymous numbers. Codes the person registered with keep counting what they brought.
+            var now = clock.GetUtcNow();
+            await db.Invitations.Where(i => i.IssuedByUserId == userId)
+                .ExecuteUpdateAsync(
+                    s => s.SetProperty(i => i.IssuedByUserId, (Guid?)null)
+                        .SetProperty(i => i.SwitchedOffAt, i => i.Kind == InvitationKinds.Personal ? (i.SwitchedOffAt ?? now) : i.SwitchedOffAt),
+                    cancellationToken);
 
             // The user row cascades to profile, consents, party support, sessions, codes, passkeys, roles, activations.
             await db.Users.Where(u => u.Id == userId).ExecuteDeleteAsync(cancellationToken);

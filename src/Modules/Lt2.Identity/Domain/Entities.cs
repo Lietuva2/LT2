@@ -83,15 +83,51 @@ internal sealed class Invitation
     /// <summary>Stored in upper case; compared case-insensitively.</summary>
     public string Code { get; set; } = "";
 
+    /// <summary>The code as typed for comparison: upper case, without dashes or spaces (a stored, generated column).</summary>
+    public string Lookup { get; set; } = "";
+
+    /// <summary><c>team</c> (made by the team, with its own uses and expiry) or <c>personal</c> (one per member, design 6.2).</summary>
+    public string Kind { get; set; } = InvitationKinds.Team;
+
+    /// <summary>For a team code, who made it (if known); for a personal code, its member. Cleared when that account is deleted.</summary>
     public Guid? IssuedByUserId { get; set; }
 
+    /// <summary>Team codes only: uses left. Personal codes are limited by a setting instead (0 = no limit).</summary>
     public int UsesLeft { get; set; }
 
     public DateTimeOffset? ExpiresAt { get; set; }
 
     public DateTimeOffset CreatedAt { get; set; }
 
+    /// <summary>Registrations completed with this code. Never drops, also when an invited account is deleted.</summary>
+    public int UsedCount { get; set; }
+
+    /// <summary>Level 1: team codes; a personal code's level is its member's level plus one (design 6.2).</summary>
+    public int Level { get; set; } = 1;
+
+    /// <summary>Switched off by an administrator, or because its member deleted the account.</summary>
+    public DateTimeOffset? SwitchedOffAt { get; set; }
+
+    /// <summary>Replaced by its member with a new code.</summary>
+    public DateTimeOffset? ReplacedAt { get; set; }
+
     public static string NormalizeCode(string code) => code.Trim().ToUpperInvariant();
+}
+
+internal static class InvitationKinds
+{
+    public const string Team = "team";
+    public const string Personal = "personal";
+}
+
+/// <summary><c>identity.invitation_daily</c>: registrations completed per code and Vilnius day, for the administrators' chart.</summary>
+internal sealed class InvitationDaily
+{
+    public Guid InvitationId { get; set; }
+
+    public DateOnly Day { get; set; }
+
+    public int Completed { get; set; }
 }
 
 /// <summary><c>identity.consent</c>: what a person agreed to, with the version of the text (design 5.2, 6.5).</summary>

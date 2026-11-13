@@ -164,7 +164,35 @@
 <data name="Admin.Invalid" xml:space="preserve"><value>Reikšmė turi būti skaičius, true arba false.</value></data>
 <data name="Admin.Setting.Digest:ThresholdDefault" xml:space="preserve"><value>Siūloma kreipimosi riba</value></data>
 <data name="Admin.Setting.Digest:ThresholdMinimum" xml:space="preserve"><value>Mažiausia kreipimosi riba</value></data>
-<data name="Admin.Setting.Digest:MaxPerWeek" xml:space="preserve"><value>Daugiausia suvestinių Seimo nariui per savaitę</value></data>
+<data name="Admin.Setting.Registration:PersonalCodeUses" xml:space="preserve"><value>Registracijų vienu asmeniniu kvietimo kodu (0 – neribojama)</value></data>
+<data name="Inv.PageTitle" xml:space="preserve"><value>Kvietimai · Lietuva 2.0</value></data>
+<data name="Inv.Title" xml:space="preserve"><value>Kvietimai</value></data>
+<data name="Inv.Lead" xml:space="preserve"><value>Tik skaičiai: kiek žmonių užbaigė registraciją su kuriuo kodu ir kada. Kas ką pakvietė ir kas kuriuo kodu naudojosi, čia nerodoma.</value></data>
+<data name="Inv.Days" xml:space="preserve"><value>Registracijos per dieną, {0}–{1}</value></data>
+<data name="Inv.Total" xml:space="preserve"><value>Iš viso užbaigta su kodais: {0}. Užsiregistravę be kodo (dabartinės paskyros): {1}.</value></data>
+<data name="Inv.Chart" xml:space="preserve"><value>Užbaigtos registracijos per dieną</value></data>
+<data name="Inv.Table" xml:space="preserve"><value>Skaičiai lentele</value></data>
+<data name="Inv.Day" xml:space="preserve"><value>Diena</value></data>
+<data name="Inv.Completed" xml:space="preserve"><value>Užbaigė registraciją</value></data>
+<data name="Inv.Levels" xml:space="preserve"><value>Pagal lygį</value></data>
+<data name="Inv.Level" xml:space="preserve"><value>Lygis</value></data>
+<data name="Inv.LevelsNote" xml:space="preserve"><value>1 – komandos kodais; 2 – kodais tų, kurie atėjo 1 lygiu; ir t. t. Asmeninis kodas žmogaus, užsiregistravusio be kodo, priskiriamas 2 lygiui.</value></data>
+<data name="Inv.Codes" xml:space="preserve"><value>Kodai, atvedę daugiausia žmonių</value></data>
+<data name="Inv.Find" xml:space="preserve"><value>Rasti kodą</value></data>
+<data name="Inv.FindSubmit" xml:space="preserve"><value>Rasti</value></data>
+<data name="Inv.Deleted" xml:space="preserve"><value>(ištrinta paskyra)</value></data>
+<data name="Inv.Kind.team" xml:space="preserve"><value>komandos kodas</value></data>
+<data name="Inv.Kind.personal" xml:space="preserve"><value>asmeninis kodas</value></data>
+<data name="Inv.CodeCount" xml:space="preserve"><value>užbaigė registraciją: {0}</value></data>
+<data name="Inv.CodeChart" xml:space="preserve"><value>Užbaigtos registracijos per dieną: {0}</value></data>
+<data name="Inv.On" xml:space="preserve"><value>įjungtas</value></data>
+<data name="Inv.Off" xml:space="preserve"><value>išjungtas</value></data>
+<data name="Inv.Replaced" xml:space="preserve"><value>pakeistas nauju</value></data>
+<data name="Inv.Statement" xml:space="preserve"><value>Paaiškinimas (būtinas)</value></data>
+<data name="Inv.SwitchOff" xml:space="preserve"><value>Išjungti</value></data>
+<data name="Inv.SwitchOn" xml:space="preserve"><value>Įjungti</value></data>
+<data name="Inv.SwitchedOff" xml:space="preserve"><value>Kodas išjungtas.</value></data>
+<data name="Inv.SwitchedOn" xml:space="preserve"><value>Kodas vėl įjungtas.</value></data><data name="Admin.Setting.Digest:MaxPerWeek" xml:space="preserve"><value>Daugiausia suvestinių Seimo nariui per savaitę</value></data>
 <data name="Admin.Setting.Appeals:ReasonsPerPerson" xml:space="preserve"><value>Argumentų vienam žmogui dėl vieno projekto (0 – neribojama)</value></data>
 <data name="Admin.Setting.Appeals:EndorsementsPerPerson" xml:space="preserve"><value>„Man svarbu“ žymų vienam žmogui dėl vieno projekto (0 – neribojama)</value></data>
 <data name="Admin.Setting.Digest:NotableChange" xml:space="preserve"><value>Savaitinė suvestinė: kiek turi pasikeisti dalyvių skaičius (dalis, 0.10 = 10 %)</value></data>

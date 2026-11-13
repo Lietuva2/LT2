@@ -19,8 +19,19 @@
   <data name="SignIn.ToRegister" xml:space="preserve"><value>Registruokitės su kvietimo kodu.</value></data>
   <data name="Register.Label" xml:space="preserve"><value>Registracija</value></data>
   <data name="Register.Title" xml:space="preserve"><value>Nauja paskyra</value></data>
-  <data name="Invitation.Label" xml:space="preserve"><value>Kvietimo kodas</value></data>
-  <data name="Invitation.Hint" xml:space="preserve"><value>Kol platforma bandoma, registruotis galima tik su kvietimu.</value></data>
+  <data name="MyInvitation.Title" xml:space="preserve"><value>Jūsų kvietimo kodas</value></data>
+<data name="MyInvitation.Lead" xml:space="preserve"><value>Pakvieskite kitus: nuoroda atveria registraciją su jūsų kodu, o kodą galima įvesti ir ranka.</value></data>
+<data name="MyInvitation.Code" xml:space="preserve"><value>Kodas:</value></data>
+<data name="MyInvitation.Copy" xml:space="preserve"><value>Kopijuoti nuorodą</value></data>
+<data name="MyInvitation.Copied" xml:space="preserve"><value>Nuoroda nukopijuota.</value></data>
+<data name="MyInvitation.Count" xml:space="preserve"><value>Su jūsų kodu užsiregistravo: {0}.</value></data>
+<data name="MyInvitation.Private" xml:space="preserve"><value>Matote tik skaičių – ne kas užsiregistravo ir ne kada.</value></data>
+<data name="MyInvitation.Off" xml:space="preserve"><value>Jūsų kvietimo kodą išjungė administratorius, todėl juo užsiregistruoti dabar negalima. Klausimų turite? Rašykite</value></data>
+<data name="MyInvitation.Replace" xml:space="preserve"><value>Pakeisti kodą…</value></data>
+<data name="MyInvitation.ReplaceConfirm" xml:space="preserve"><value>Bus sukurtas naujas kodas, o senasis nebetiks. Skaičius išliks.</value></data>
+<data name="MyInvitation.ReplaceYes" xml:space="preserve"><value>Sukurti naują kodą</value></data>
+<data name="MyInvitation.Cancel" xml:space="preserve"><value>Atšaukti</value></data><data name="Invitation.Label" xml:space="preserve"><value>Kvietimo kodas</value></data>
+  <data name="Invitation.Hint" xml:space="preserve"><value>Kol platforma bandoma, registruotis galima tik su kvietimu. Kas jums davė kodą, matys, kad juo užsiregistruota, bet ne kas užsiregistravo.</value></data>
   <data name="DisplayName.Label" xml:space="preserve"><value>Vardas, kurį matys kiti</value></data>
   <data name="DisplayName.Placeholder" xml:space="preserve"><value>Rūta M.</value></data>
   <data name="DisplayName.Hint" xml:space="preserve"><value>Šį vardą kiti matys prie jūsų parašytų argumentų. Ar prašote balsuoti už, ar prieš – nemato niekas.</value></data>

@@ -67,6 +67,12 @@ public static class SettingKeys
     /// <summary>Whether registration needs an invitation code (closed trial, design 6.2).</summary>
     public static readonly SettingKey<bool> RegistrationRequiresInvitation = new("Registration:RequireInvitation", true);
 
+    /// <summary>
+    /// Registrations one personal invitation code may bring (design 6.2); 0 = no limit, the default (decided by the owner
+    /// on 2026-11-13). Team codes keep their own uses.
+    /// </summary>
+    public static readonly SettingKey<int> RegistrationPersonalCodeUses = new("Registration:PersonalCodeUses", 0, v => v is >= 0 and <= 100000);
+
     /// <summary>Days a pending account (address never proven, or registration never completed) is kept (design 6.2).</summary>
     public static readonly SettingKey<int> PendingAccountDays = new("Registration:PendingAccountDays", 7, v => v is > 0 and <= 90);
 
@@ -121,6 +127,7 @@ public static class SettingKeys
     public static readonly IReadOnlyList<ISettingKey> All =
     [
         RegistrationRequiresInvitation,
+        RegistrationPersonalCodeUses,
         PendingAccountDays,
         SignInCodesPerHour,
         SignInCodesPerDay,

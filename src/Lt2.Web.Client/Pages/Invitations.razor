@@ -1,0 +1,139 @@
+@page "/administravimas/kvietimai"
+@attribute [Authorize]
+@rendermode InteractiveWebAssembly
+@using Lt2.Api.Contracts.Appeals
+@using Lt2.Api.Contracts.Me
+@using Lt2.Web.Client.Appeals
+@inherits InteractiveBase
+@inject IAdminApi Admin
+
+@* Design 6.2: invitation numbers for administrators in a staff-passkey session. Completed registrations per day, in
+   total and for the codes that brought the most people, as a chart and a table; those codes (team codes by their code,
+   personal codes by the member's display name); numbers per level. Never who invited whom, never who used a code.
+   An administrator switches a code off or on again with a statement (audited). *@
+<PageTitle>@L["Inv.PageTitle"]</PageTitle>
+
+<div class="stack">
+    <p class="label">Lietuva 2.0</p>
+    <h1>@L["Inv.Title"]</h1>
+    <p class="lead">@L["Inv.Lead"]</p>
+</div>
+
+<Messages Message="@Message" Info="@Info" />
+
+@if (_refused)
+{
+    <p class="note" role="alert">@L["Admin.Refused"]</p>
+}
+else if (Stats is not { } stats)
+{
+    <p class="small">@L["Loading"]</p>
+}
+else
+{
+    <section class="stack" aria-labelledby="inv-days">
+        <h2 id="inv-days">@Text("Inv.Days", stats.From.ToString("yyyy-MM-dd", Ci), stats.To.ToString("yyyy-MM-dd", Ci))</h2>
+        <p class="num" id="inv-total">@Text("Inv.Total", stats.Total, stats.WithoutCode)</p>
+        <DayBars Days="stats.Days" Label="@L["Inv.Chart"]" />
+        <details>
+            <summary class="linkish small">@L["Inv.Table"]</summary>
+            <table class="table num" id="inv-days-table">
+                <thead><tr><th>@L["Inv.Day"]</th><th>@L["Inv.Completed"]</th></tr></thead>
+                <tbody>
+                    @foreach (var day in stats.Days.Where(d => d.Completed > 0))
+                    {
+                        <tr><td>@day.Day.ToString("yyyy-MM-dd", Ci)</td><td>@day.Completed</td></tr>
+                    }
+                </tbody>
+            </table>
+        </details>
+    </section>
+
+    <section class="stack" aria-labelledby="inv-levels">
+        <h2 id="inv-levels">@L["Inv.Levels"]</h2>
+        <table class="table num" id="inv-levels-table">
+            <thead><tr><th>@L["Inv.Level"]</th><th>@L["Inv.Completed"]</th></tr></thead>
+            <tbody>
+                @foreach (var level in stats.Levels)
+                {
+                    <tr><td>@level.Level</td><td>@level.Completed</td></tr>
+                }
+            </tbody>
+        </table>
+        <p class="small">@L["Inv.LevelsNote"]</p>
+    </section>
+
+    <section class="stack" aria-labelledby="inv-codes">
+        <h2 id="inv-codes">@L["Inv.Codes"]</h2>
+        <form class="row" @onsubmit="FindAsync">
+            <label for="inv-find" class="small">@L["Inv.Find"]</label>
+            <input class="input" id="inv-find" @bind="_find" disabled="@Locked" />
+            <button class="btn btn--plain" type="submit" disabled="@Locked">@L["Inv.FindSubmit"]</button>
+        </form>
+        <ul class="rows" id="inv-codes-list">
+            @foreach (var item in stats.Codes)
+            {
+                <li class="stack stack--tight" id="inv-code-@item.Id">
+                    <div class="rows__main">
+                        <b>@(item.Label ?? L["Inv.Deleted"])</b>
+                        <span class="small">@L["Inv.Kind." + item.Kind] · @Text("Inv.CodeCount", item.Completed) · @(item.On ? L["Inv.On"] : item.Replaced ? L["Inv.Replaced"] : L["Inv.Off"])</span>
+                    </div>
+                    @if (item.Completed > 0)
+                    {
+                        <DayBars Days="item.Days" Label="@Text("Inv.CodeChart", item.Label ?? L["Inv.Deleted"])" />
+                    }
+                    @if (!item.Replaced)
+                    {
+                        <div class="row">
+                            <input class="input" id="inv-statement-@item.Id" placeholder="@L["Inv.Statement"]" aria-label="@L["Inv.Statement"]"
+                                   @onchange="e => _statements[item.Id] = e.Value?.ToString()" disabled="@Locked" />
+                            <button class="btn btn--plain" type="button" id="inv-switch-@item.Id" disabled="@Locked" @onclick="() => SwitchAsync(item.Id, !item.On)">
+                                @(item.On ? L["Inv.SwitchOff"] : L["Inv.SwitchOn"])
+                            </button>
+                        </div>
+                    }
+                </li>
+            }
+        </ul>
+    </section>
+}
+
+@code {
+    private static readonly System.Globalization.CultureInfo Ci = System.Globalization.CultureInfo.InvariantCulture;
+    private readonly Dictionary<Guid, string?> _statements = [];
+    private bool _refused;
+    private string? _find;
+
+    [PersistentState] public InvitationStatsResponse? Stats { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        if (Stats is null)
+        {
+            await LoadAsync();
+        }
+    }
+
+    private async Task LoadAsync(string? code = null)
+    {
+        var stats = await Admin.GetInvitationStatsAsync(code);
+        _refused = !stats.IsSuccess;
+        Stats = stats.Value;
+    }
+
+    private Task FindAsync() => RunAsync(() => LoadAsync(_find));
+
+    private Task SwitchAsync(Guid id, bool on) => RunAsync(async () =>
+    {
+        var result = await Admin.SwitchInvitationAsync(id, on, new StatementRequest { Statement = _statements.GetValueOrDefault(id) ?? "" });
+        if (!result.IsSuccess)
+        {
+            Show(result.Problem);
+            return;
+        }
+
+        _statements.Remove(id);
+        await LoadAsync(_find);
+        Info = on ? L["Inv.SwitchedOn"] : L["Inv.SwitchedOff"];
+    });
+}

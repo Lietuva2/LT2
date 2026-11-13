@@ -21,6 +21,8 @@ internal sealed class IdentityDb(DbContextOptions<IdentityDb> options)
 
     public DbSet<Invitation> Invitations => Set<Invitation>();
 
+    public DbSet<InvitationDaily> InvitationDailies => Set<InvitationDaily>();
+
     public DbSet<Consent> Consents => Set<Consent>();
 
     public DbSet<SignInCode> SignInCodes => Set<SignInCode>();
@@ -72,7 +74,20 @@ internal sealed class IdentityDb(DbContextOptions<IdentityDb> options)
             b.HasKey(x => x.Id);
             b.Property(x => x.Code).HasMaxLength(64);
             b.HasIndex(x => x.Code).IsUnique();
+            b.Property(x => x.Lookup).HasMaxLength(64)
+                .HasComputedColumnSql("upper(replace(replace(code, '-', ''), ' ', ''))", stored: true);
+            b.HasIndex(x => x.Lookup).IsUnique();
+            b.Property(x => x.Kind).HasMaxLength(16).HasDefaultValue(InvitationKinds.Team);
+            b.Property(x => x.Level).HasDefaultValue(1);
+            b.HasIndex(x => x.IssuedByUserId);
             b.ToTable(t => t.HasCheckConstraint("ck_invitation_uses_left", "uses_left >= 0"));
+        });
+
+        builder.Entity<InvitationDaily>(b =>
+        {
+            b.ToTable("invitation_daily");
+            b.HasKey(x => new { x.InvitationId, x.Day });
+            b.HasOne<Invitation>().WithMany().HasForeignKey(x => x.InvitationId).OnDelete(DeleteBehavior.Cascade);
         });
 
         builder.Entity<Consent>(b =>

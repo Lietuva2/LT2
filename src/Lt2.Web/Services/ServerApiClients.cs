@@ -45,7 +45,7 @@ internal sealed class ServerAuthApi(IIdentityModule identity, IHttpContextAccess
         accessor.HttpContext?.User ?? new System.Security.Claims.ClaimsPrincipal();
 }
 
-internal sealed class ServerMeApi(IIdentityModule identity, IMpDirectory mps, IHttpContextAccessor accessor, IpHasher ipHasher, ErrorMapper errors) : IMeApi
+internal sealed class ServerMeApi(IIdentityModule identity, IMpDirectory mps, IHttpContextAccessor accessor, IpHasher ipHasher, ErrorMapper errors, IInvitations invitations, IConfiguration configuration) : IMeApi
 {
     public async Task<ApiResult<MeResponse>> GetAsync(CancellationToken cancellationToken = default) =>
         errors.ToApiResult(await identity.GetAccountAsync(User, cancellationToken), Mapping.ToResponse);
@@ -79,6 +79,17 @@ internal sealed class ServerMeApi(IIdentityModule identity, IMpDirectory mps, IH
 
     public async Task<ApiResult> DeleteAccountAsync(CancellationToken cancellationToken = default) =>
         errors.ToApiResult(await identity.DeleteAccountAsync(User, cancellationToken));
+
+    public Task<ApiResult<MyInvitationResponse>> GetInvitationAsync(CancellationToken cancellationToken = default) =>
+        InvitationAsync(id => invitations.MineAsync(id, cancellationToken));
+
+    public Task<ApiResult<MyInvitationResponse>> ReplaceInvitationAsync(CancellationToken cancellationToken = default) =>
+        InvitationAsync(id => invitations.ReplaceAsync(id, cancellationToken));
+
+    private async Task<ApiResult<MyInvitationResponse>> InvitationAsync(Func<Guid, Task<Result<MyInvitation>>> action) =>
+        AppealMapping.UserId(User) is { } id
+            ? errors.ToApiResult(await action(id), mine => InvitationMapping.Map(mine, configuration))
+            : ApiResult<MyInvitationResponse>.Fail(errors.ToProblem(Error.Unauthorized("auth.required")));
 
     public async Task<ApiResult> SetPartySupportAsync(PartySupportRequest request, CancellationToken cancellationToken = default) =>
         errors.ToApiResult(await identity.SetPartySupportAsync(User, request.Party, await mps.PartiesAsync(cancellationToken), cancellationToken));

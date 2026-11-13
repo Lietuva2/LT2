@@ -45,31 +45,26 @@ internal sealed class CompleteRegistrationHandler(
         var now = clock.GetUtcNow();
         var code = string.IsNullOrWhiteSpace(completion.InvitationCode)
             ? profile.InvitationCode
-            : Invitation.NormalizeCode(completion.InvitationCode);
+            : completion.InvitationCode;
 
         await using var transaction = await db.Database.BeginTransactionAsync(cancellationToken);
-        Guid? invitationId = null;
+        Invitation? invitation = null;
         if (code is not null)
         {
-            var invitation = await db.Invitations.AsNoTracking()
-                .Where(i => i.Code == code && (i.ExpiresAt == null || i.ExpiresAt > now))
-                .Select(i => (Guid?)i.Id)
-                .FirstOrDefaultAsync(cancellationToken);
-            if (invitation is null)
+            // One answer for every code that does not work (design 6.2): unknown, switched off, replaced, expired, used up.
+            var lookup = InvitationRules.Lookup(code);
+            invitation = await db.Invitations.AsNoTracking().FirstOrDefaultAsync(i => i.Lookup == lookup, cancellationToken);
+            var personalLimit = await settings.GetAsync(SettingKeys.RegistrationPersonalCodeUses, cancellationToken);
+            if (invitation is null
+                || !InvitationRules.Usable(invitation.Kind, invitation.UsesLeft, invitation.UsedCount, invitation.ExpiresAt, invitation.SwitchedOffAt, invitation.ReplacedAt, personalLimit, now)
+
+                // Counted atomically on the code and in the day's total: of two completions racing for the last use, one gets it.
+                || !await Invitations.InvitationHandlers.CountUseAsync(db, invitation, personalLimit, now, cancellationToken))
             {
                 return Error.Validation("invitation.invalid", "invitationCode");
             }
 
-            // Counted atomically: of two completions racing for the last use, one gets it.
-            var counted = await db.Invitations
-                .Where(i => i.Id == invitation && i.UsesLeft > 0)
-                .ExecuteUpdateAsync(s => s.SetProperty(i => i.UsesLeft, i => i.UsesLeft - 1), cancellationToken);
-            if (counted == 0)
-            {
-                return Error.Validation("invitation.used-up", "invitationCode");
-            }
-
-            invitationId = invitation;
+            code = invitation.Code;
         }
         else if (await settings.GetAsync(SettingKeys.RegistrationRequiresInvitation, cancellationToken))
         {
@@ -77,7 +72,7 @@ internal sealed class CompleteRegistrationHandler(
         }
 
         profile.InvitationCode = code;
-        profile.InvitationId = invitationId;
+        profile.InvitationId = invitation?.Id;
         profile.DisplayName = string.IsNullOrWhiteSpace(completion.DisplayName) ? null : completion.DisplayName.Trim();
         profile.RegisteredAt = now;
         db.Consents.Add(new Consent
@@ -90,6 +85,10 @@ internal sealed class CompleteRegistrationHandler(
         });
         db.UserRoles.Add(new IdentityUserRole<Guid> { UserId = userId, RoleId = SeedRoles.MemberId });
         await db.SaveChangesAsync(cancellationToken);
+
+        // The new member's own invitation code, one level below them (design 6.2).
+        await Invitations.InvitationHandlers.CreatePersonalAsync(
+            db, clock, userId, InvitationRules.PersonalCodeLevel(InvitationRules.MemberLevel(invitation?.Level)), cancellationToken);
         await transaction.CommitAsync(cancellationToken);
 
         // Re-issue the session so it carries the member role.

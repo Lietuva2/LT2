@@ -278,7 +278,7 @@ internal sealed class ServerModerationApi(
 }
 
 /// <summary>Server-side <see cref="IAdminApi"/>, for the prerendered settings page.</summary>
-internal sealed class ServerAdminApi(ISettingsAdministration settings, IHttpContextAccessor accessor, IpHasher ipHasher, ErrorMapper errors) : IAdminApi
+internal sealed class ServerAdminApi(ISettingsAdministration settings, IHttpContextAccessor accessor, IpHasher ipHasher, ErrorMapper errors, IInvitations invitations) : IAdminApi
 {
     public async Task<ApiResult<IReadOnlyList<SettingResponse>>> GetSettingsAsync(CancellationToken cancellationToken = default) =>
         await IsAdministratorAsync()
@@ -295,6 +295,22 @@ internal sealed class ServerAdminApi(ISettingsAdministration settings, IHttpCont
         var http = accessor.HttpContext!;
         var result = await settings.UpdateAsync(key, request.Value, AppealMapping.UserId(http.User)!.Value, Roles.Administrator, ipHasher.Hash(http), cancellationToken);
         return errors.ToApiResult(result, SettingMapping.ToResponse);
+    }
+
+    public async Task<ApiResult<Lt2.Api.Contracts.Me.InvitationStatsResponse>> GetInvitationStatsAsync(string? code = null, CancellationToken cancellationToken = default) =>
+        await IsAdministratorAsync()
+            ? ApiResult<Lt2.Api.Contracts.Me.InvitationStatsResponse>.Ok(InvitationMapping.Map(await invitations.StatsAsync(60, code, cancellationToken)))
+            : ApiResult<Lt2.Api.Contracts.Me.InvitationStatsResponse>.Fail(errors.ToProblem(Error.Forbidden("forbidden")));
+
+    public async Task<ApiResult> SwitchInvitationAsync(Guid invitationId, bool on, StatementRequest request, CancellationToken cancellationToken = default)
+    {
+        if (!await IsAdministratorAsync())
+        {
+            return ApiResult.Fail(errors.ToProblem(Error.Forbidden("forbidden")));
+        }
+
+        var http = accessor.HttpContext!;
+        return errors.ToApiResult(await invitations.SwitchAsync(invitationId, on, request.Statement, AppealMapping.UserId(http.User)!.Value, Roles.Administrator, ipHasher.Hash(http), cancellationToken));
     }
 
     private async Task<bool> IsAdministratorAsync()

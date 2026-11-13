@@ -64,6 +64,12 @@ internal sealed class HttpMeApi(ApiHttp http) : IMeApi
 
     public Task<ApiResult> DeleteAccountAsync(CancellationToken cancellationToken = default) =>
         http.SendAsync(HttpMethod.Delete, ApiRoutes.Me.Root, null, cancellationToken);
+
+    public Task<ApiResult<MyInvitationResponse>> GetInvitationAsync(CancellationToken cancellationToken = default) =>
+        http.SendAsync<MyInvitationResponse>(HttpMethod.Get, ApiRoutes.Me.Invitation, null, cancellationToken);
+
+    public Task<ApiResult<MyInvitationResponse>> ReplaceInvitationAsync(CancellationToken cancellationToken = default) =>
+        http.SendAsync<MyInvitationResponse>(HttpMethod.Post, ApiRoutes.Me.ReplaceInvitation, null, cancellationToken);
 }
 
 internal sealed class HttpAppealsApi(ApiHttp http) : IAppealsApi
@@ -187,6 +193,13 @@ internal sealed class HttpAdminApi(ApiHttp http) : IAdminApi
 
     public Task<ApiResult<SettingResponse>> UpdateSettingAsync(string key, UpdateSettingRequest request, CancellationToken cancellationToken = default) =>
         http.SendAsync<SettingResponse>(HttpMethod.Put, ApiRoutes.Admin.SettingByKey(key), request, cancellationToken);
+
+    public Task<ApiResult<InvitationStatsResponse>> GetInvitationStatsAsync(string? code = null, CancellationToken cancellationToken = default) =>
+        http.SendAsync<InvitationStatsResponse>(
+            HttpMethod.Get, ApiRoutes.Admin.Invitations + (string.IsNullOrWhiteSpace(code) ? "" : "?code=" + Uri.EscapeDataString(code)), null, cancellationToken);
+
+    public Task<ApiResult> SwitchInvitationAsync(Guid invitationId, bool on, StatementRequest request, CancellationToken cancellationToken = default) =>
+        http.SendAsync(HttpMethod.Post, ApiRoutes.Admin.SwitchInvitation(invitationId, on), request, cancellationToken);
 }
 
 internal sealed class HttpDigestsApi(ApiHttp http) : Lt2.Api.Contracts.Digests.IDigestsApi

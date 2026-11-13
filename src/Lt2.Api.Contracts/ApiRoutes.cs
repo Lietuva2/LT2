@@ -30,6 +30,8 @@ public static class ApiRoutes
         public const string PositionConsent = Root + "/consents/positions";
         public const string PartySupport = Root + "/party-support";
         public const string Export = Root + "/export";
+        public const string Invitation = Root + "/invitation";
+        public const string ReplaceInvitation = Root + "/invitation/replace";
 
         public static string SessionById(Guid id) => $"{Sessions}/{id}";
     }
@@ -42,6 +44,12 @@ public static class ApiRoutes
         public const string ResetAccount = Prefix + "/admin/accounts/reset";
 
         public static string SettingByKey(string key) => $"{Settings}/{Uri.EscapeDataString(key)}";
+
+        public const string Invitations = Prefix + "/admin/invitations";
+        public const string SwitchOffInvitation = Prefix + "/admin/invitations/{id:guid}/switch-off";
+        public const string SwitchOnInvitation = Prefix + "/admin/invitations/{id:guid}/switch-on";
+
+        public static string SwitchInvitation(Guid id, bool on) => $"{Invitations}/{id}/{(on ? "switch-on" : "switch-off")}";
     }
 }
 

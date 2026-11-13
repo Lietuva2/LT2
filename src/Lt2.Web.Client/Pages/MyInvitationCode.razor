@@ -1,0 +1,89 @@
+@inject IMeApi MeApi
+@inject IStringLocalizer<UiText> T
+@inject NavigationManager Navigation
+@inject IJSRuntime JS
+
+@* Design 6.2: the member's own invitation code, as a link to the registration form with the code filled in and as a
+   short code, and how many completed registration with it. No names, dates or list. Server-rendered first, so it reads
+   without JavaScript; only the copy button needs it. *@
+<section class="sheet stack" aria-labelledby="invite-title" id="my-invitation">
+    <h2 id="invite-title">@T["MyInvitation.Title"]</h2>
+    @if (Invitation is { } mine)
+    {
+        @if (mine.On)
+        {
+            <p>@T["MyInvitation.Lead"]</p>
+            <p class="stack stack--tight">
+                <a href="@mine.Link" id="invite-link">@Absolute(mine.Link)</a>
+                <span class="num">@T["MyInvitation.Code"] <b id="invite-code">@mine.Code</b></span>
+            </p>
+            <div class="row">
+                <button class="btn btn--plain" type="button" id="invite-copy" disabled="@(!RendererInfo.IsInteractive)" @onclick="CopyAsync">@T["MyInvitation.Copy"]</button>
+                @if (_copied)
+                {
+                    <span class="small" role="status">@T["MyInvitation.Copied"]</span>
+                }
+            </div>
+        }
+        else
+        {
+            <p class="note" id="invite-off">@T["MyInvitation.Off"] @if (mine.Contact is { } contact) {<a href="mailto:@contact">@contact</a>}</p>
+        }
+
+        <p class="num" id="invite-count">@string.Format(System.Globalization.CultureInfo.InvariantCulture, T["MyInvitation.Count"], mine.Completed)</p>
+        <p class="small">@T["MyInvitation.Private"]</p>
+        @if (mine.On)
+        {
+            @if (_confirmReplace)
+            {
+                <div class="row" role="group">
+                    <p class="small">@T["MyInvitation.ReplaceConfirm"]</p>
+                    <button class="btn" type="button" id="invite-replace-yes" disabled="@_busy" @onclick="ReplaceAsync">@T["MyInvitation.ReplaceYes"]</button>
+                    <button class="btn btn--plain" type="button" disabled="@_busy" @onclick="() => _confirmReplace = false">@T["MyInvitation.Cancel"]</button>
+                </div>
+            }
+            else
+            {
+                <p><button class="linkish small" type="button" id="invite-replace" disabled="@(!RendererInfo.IsInteractive)" @onclick="() => _confirmReplace = true">@T["MyInvitation.Replace"]</button></p>
+            }
+        }
+    }
+</section>
+
+@code {
+    private bool _copied;
+    private bool _confirmReplace;
+    private bool _busy;
+
+    [PersistentState] public MyInvitationResponse? Invitation { get; set; }
+
+    protected override async Task OnInitializedAsync() =>
+        Invitation ??= (await MeApi.GetInvitationAsync()).Value;
+
+    private string Absolute(string link) => Navigation.ToAbsoluteUri(link).ToString();
+
+    private async Task CopyAsync()
+    {
+        if (Invitation is { } mine)
+        {
+            await JS.InvokeVoidAsync("navigator.clipboard.writeText", Absolute(mine.Link));
+            _copied = true;
+        }
+    }
+
+    private async Task ReplaceAsync()
+    {
+        _busy = true;
+        try
+        {
+            var replaced = await MeApi.ReplaceInvitationAsync();
+            Invitation = replaced.Value ?? Invitation;
+            _confirmReplace = false;
+            _copied = false;
+        }
+        finally
+        {
+            _busy = false;
+        }
+    }
+}

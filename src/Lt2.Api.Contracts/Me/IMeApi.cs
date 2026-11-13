@@ -27,4 +27,10 @@ public interface IMeApi
 
     /// <summary>Deletes the account and everything the person gave (design 6.5).</summary>
     Task<ApiResult> DeleteAccountAsync(CancellationToken cancellationToken = default);
+
+    /// <summary>The caller's own invitation code and count (design 6.2).</summary>
+    Task<ApiResult<MyInvitationResponse>> GetInvitationAsync(CancellationToken cancellationToken = default);
+
+    /// <summary>A new code; the old one stops working; the count carries over.</summary>
+    Task<ApiResult<MyInvitationResponse>> ReplaceInvitationAsync(CancellationToken cancellationToken = default);
 }

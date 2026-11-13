@@ -99,4 +99,10 @@ public interface IAdminApi
     Task<ApiResult<IReadOnlyList<SettingResponse>>> GetSettingsAsync(CancellationToken cancellationToken = default);
 
     Task<ApiResult<SettingResponse>> UpdateSettingAsync(string key, UpdateSettingRequest request, CancellationToken cancellationToken = default);
+
+    /// <summary>The invitation numbers (design 6.2): per day, per code, per level; <paramref name="code"/> finds one code.</summary>
+    Task<ApiResult<Me.InvitationStatsResponse>> GetInvitationStatsAsync(string? code = null, CancellationToken cancellationToken = default);
+
+    /// <summary>Switches a code off or on again, with a statement; audited.</summary>
+    Task<ApiResult> SwitchInvitationAsync(Guid invitationId, bool on, Appeals.StatementRequest request, CancellationToken cancellationToken = default);
 }
