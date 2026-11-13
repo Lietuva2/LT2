@@ -188,7 +188,7 @@
 <data name="Mod.Flag.link" xml:space="preserve"><value>Nuoroda</value></data>
 <data name="Mod.Reports" xml:space="preserve"><value>Nariai pranešė apie šį turinį: {0}. Perskaitykite pranešimus: jei pažeidimo nėra, palikite, kitaip paslėpkite. Kas pranešė, nerodoma.</value></data>
 <data name="Mod.Statement" xml:space="preserve"><value>Paaiškinimas autoriui</value></data>
-<data name="Mod.Threshold" xml:space="preserve"><value>Nauja riba (keičiant ribą)</value></data>
+<data name="Mod.Threshold" xml:space="preserve"><value>Nauja riba</value></data>
 <data name="Mod.MergeInto" xml:space="preserve"><value>Sujungti su</value></data>
 <data name="Mod.Publish" xml:space="preserve"><value>Skelbti</value></data>
 <data name="Mod.Keep" xml:space="preserve"><value>Palikti</value></data>
@@ -307,7 +307,7 @@
 <data name="Mod.Planned" xml:space="preserve"><value>Planuojama: {0}{1}</value></data>
 <data name="Mod.UnderThreshold" xml:space="preserve"><value>Projektas įtrauktas į Seimo darbotvarkę, planuojama {0}. Kreipimasis turi {1} iš {2} dalyvių, todėl į suvestinę Seimo nariams nepateks. Galite patvirtinti vieną skubią suvestinę arba nieko nedaryti.</value></data>
 <data name="Mod.DateFlags" xml:space="preserve"><value>Nariai praneša, kad planuojama data neteisinga arba balsuojama anksčiau ({0}). Patikrinkite nuorodas: pataisykite planuojamą datą, patvirtinkite skubią suvestinę arba palikite, kaip yra.</value></data>
-<data name="Mod.PlannedDate" xml:space="preserve"><value>Planuojama data (keičiant datą)</value></data>
+<data name="Mod.PlannedDate" xml:space="preserve"><value>Planuojama data</value></data>
 <data name="Mod.PlannedStage" xml:space="preserve"><value>Stadija</value></data>
 <data name="Mod.Stage.none" xml:space="preserve"><value>Nenurodyta</value></data>
 <data name="Mod.Stage.presentation" xml:space="preserve"><value>Pateikimas</value></data>
