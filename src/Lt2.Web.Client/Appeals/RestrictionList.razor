@@ -1,0 +1,80 @@
+@using Lt2.Api.Contracts.Appeals
+@inherits InteractiveBase
+@inject IModerationApi ModerationApi
+
+@* Design 8.3: the writing restrictions that hold now, for moderators and administrators, each with lifting early (a
+   statement is required and emailed to the person). Shows the display name only. *@
+<section class="stack" aria-labelledby="h-restrictions" id="restrictions">
+    <h2 id="h-restrictions">@L["Restrict.ListTitle"]</h2>
+    @if (Items is null)
+    {
+        <p class="small">@L["Loading"]</p>
+    }
+    else if (Items.Count == 0)
+    {
+        <p class="small">@L["Restrict.None"]</p>
+    }
+    else
+    {
+        @foreach (var item in Items)
+        {
+            <article class="sheet stack stack--tight" id="restriction-@item.Id">
+                <p><b>@(item.DisplayName ?? L["Reasons.Anonymous"])</b> · <span class="num">@(item.Until is { } day ? Text("Restrict.UntilShown", day.ToString("yyyy-MM-dd", System.Globalization.CultureInfo.InvariantCulture)) : L["Restrict.UntilLifted"])</span></p>
+                <p class="small">@item.Statement</p>
+                @if (_lifting == item.Id)
+                {
+                    <form class="stack stack--tight" @onsubmit="() => LiftAsync(item.Id)" novalidate>
+                        <div class="field @(Errors.ContainsKey("statement") ? "field--error" : "")">
+                            <label for="lift-statement-@item.Id">@L["Restrict.LiftStatement"]</label>
+                            <textarea class="textarea" id="lift-statement-@item.Id" maxlength="@AppealLimits.StatementMaxLength" @bind="_statement" disabled="@Locked"></textarea>
+                            <FieldError Errors="Errors" Field="statement" />
+                        </div>
+                        <div class="row">
+                            <button type="submit" class="btn" id="lift-submit-@item.Id" disabled="@Locked">@L["Restrict.Lift"]</button>
+                            <button type="button" class="btn btn--plain" disabled="@Locked" @onclick="() => _lifting = null">@L["Cancel"]</button>
+                        </div>
+                    </form>
+                }
+                else
+                {
+                    <p><button class="linkish small" type="button" id="lift-open-@item.Id" disabled="@Locked" @onclick="() => _lifting = item.Id">@L["Restrict.Lift"]</button></p>
+                }
+            </article>
+        }
+    }
+    <Messages Message="@Message" Info="@Info" />
+</section>
+
+@code {
+    private Guid? _lifting;
+    private string _statement = "";
+
+    [PersistentState] public List<RestrictionResponse>? Items { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        Items ??= (await ModerationApi.GetRestrictionsAsync()).Value?.ToList() ?? [];
+    }
+
+    /// <summary>Reloads the list after a restriction is set elsewhere on the page.</summary>
+    public async Task ReloadAsync()
+    {
+        Items = (await ModerationApi.GetRestrictionsAsync()).Value?.ToList() ?? Items;
+        StateHasChanged();
+    }
+
+    private Task LiftAsync(Guid id) => RunAsync(async () =>
+    {
+        var result = await ModerationApi.LiftRestrictionAsync(id, new StatementRequest { Statement = _statement });
+        if (!result.IsSuccess)
+        {
+            Show(result.Problem, "statement");
+            return;
+        }
+
+        _lifting = null;
+        _statement = "";
+        Info = L["Restrict.Lifted"];
+        await ReloadAsync();
+    });
+}

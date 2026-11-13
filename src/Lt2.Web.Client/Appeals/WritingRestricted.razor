@@ -1,0 +1,16 @@
+@using Lt2.Api.Contracts.Appeals
+@inject Microsoft.Extensions.Localization.IStringLocalizer<AppealUi> L
+
+@* Shown only to the restricted person, in place of a writing box or form (design 8.3): that writing is restricted,
+   until when, and the moderator's reason; where to object. Nobody else ever sees it. *@
+<div class="note stack stack--tight writing-restricted" role="status">
+    <p><b>@L["Restricted.Title"]</b> @(Restriction.Until is { } until
+        ? string.Format(System.Globalization.CultureInfo.InvariantCulture, L["Restricted.Until"], until.ToString("yyyy-MM-dd", System.Globalization.CultureInfo.InvariantCulture))
+        : L["Restricted.UntilLifted"])</p>
+    <p>@string.Format(System.Globalization.CultureInfo.InvariantCulture, L["Restricted.Reason"], Restriction.Statement)</p>
+    <p class="small">@L["Restricted.Object"] <a href="/moderavimo-taisykles">@L["Restricted.Rules"]</a></p>
+</div>
+
+@code {
+    [Parameter, EditorRequired] public MyRestrictionResponse Restriction { get; set; } = new(false, null, null);
+}

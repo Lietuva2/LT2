@@ -109,10 +109,10 @@ public sealed class RegisterTests(DatabaseFixture database) : ApiTest(database)
         await second.SignInWithCodeAsync(secondEmail);
         using (var refused = await second.SendAsync(HttpMethod.Put, ApiRoutes.Me.Registration, new CompleteRegistrationRequest { ConfirmsAdult = true }))
         {
-            await refused.ShouldBeProblemAsync(HttpStatusCode.BadRequest, "invitation.used-up");
+            await refused.ShouldBeProblemAsync(HttpStatusCode.BadRequest, "invitation.invalid"); // one message for every code that does not work (design 6.2)
             var problem = await refused.ProblemAsync();
             problem.GetProperty("errors").GetProperty("invitationCode")[0].GetString()
-                .ShouldBe("Šio kvietimo kodo vietos jau užimtos. Įveskite kitą kvietimo kodą.");
+                .ShouldBe("Šis kvietimo kodas negalioja. Paprašykite jus pakvietusio žmogaus naujo kodo.");
         }
 
         (await ProfileAsync<DateTime?>("registered_at", secondEmail)).ShouldBeNull("nothing was stored");

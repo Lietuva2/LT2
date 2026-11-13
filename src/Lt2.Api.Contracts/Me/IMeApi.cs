@@ -14,4 +14,23 @@ public interface IMeApi
 
     /// <summary>Uses a staff role activation code in the current passkey session (design 6.2).</summary>
     Task<ApiResult> ActivateRoleAsync(RoleActivationRequest request, CancellationToken cancellationToken = default);
+
+    /// <summary>Gives the explicit consent to store positions (design 6.5).</summary>
+    Task<ApiResult> GivePositionConsentAsync(PositionConsentRequest request, CancellationToken cancellationToken = default);
+
+    /// <summary>Withdraws the consent; every position of the person is deleted (design 6.5).</summary>
+    Task<ApiResult> WithdrawPositionConsentAsync(CancellationToken cancellationToken = default);
+
+    Task<ApiResult<PartySupportResponse>> GetPartySupportAsync(CancellationToken cancellationToken = default);
+
+    Task<ApiResult> SetPartySupportAsync(PartySupportRequest request, CancellationToken cancellationToken = default);
+
+    /// <summary>Deletes the account and everything the person gave (design 6.5).</summary>
+    Task<ApiResult> DeleteAccountAsync(CancellationToken cancellationToken = default);
+
+    /// <summary>The caller's own invitation code and count (design 6.2).</summary>
+    Task<ApiResult<MyInvitationResponse>> GetInvitationAsync(CancellationToken cancellationToken = default);
+
+    /// <summary>A new code; the old one stops working; the count carries over.</summary>
+    Task<ApiResult<MyInvitationResponse>> ReplaceInvitationAsync(CancellationToken cancellationToken = default);
 }

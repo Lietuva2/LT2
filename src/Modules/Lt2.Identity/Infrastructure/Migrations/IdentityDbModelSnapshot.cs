@@ -88,6 +88,40 @@ namespace Lt2.Identity.Infrastructure.Migrations
                         .HasColumnType("uuid")
                         .HasColumnName("issued_by_user_id");
 
+                    b.Property<string>("Kind")
+                        .IsRequired()
+                        .ValueGeneratedOnAdd()
+                        .HasMaxLength(16)
+                        .HasColumnType("character varying(16)")
+                        .HasDefaultValue("team")
+                        .HasColumnName("kind");
+
+                    b.Property<int>("Level")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer")
+                        .HasDefaultValue(1)
+                        .HasColumnName("level");
+
+                    b.Property<string>("Lookup")
+                        .IsRequired()
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)")
+                        .HasColumnName("lookup")
+                        .HasComputedColumnSql("upper(replace(replace(code, '-', ''), ' ', ''))", true);
+
+                    b.Property<DateTimeOffset?>("ReplacedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("replaced_at");
+
+                    b.Property<DateTimeOffset?>("SwitchedOffAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("switched_off_at");
+
+                    b.Property<int>("UsedCount")
+                        .HasColumnType("integer")
+                        .HasColumnName("used_count");
+
                     b.Property<int>("UsesLeft")
                         .HasColumnType("integer")
                         .HasColumnName("uses_left");
@@ -99,10 +133,62 @@ namespace Lt2.Identity.Infrastructure.Migrations
                         .IsUnique()
                         .HasDatabaseName("ix_invitation_code");
 
+                    b.HasIndex("IssuedByUserId")
+                        .HasDatabaseName("ix_invitation_issued_by_user_id");
+
+                    b.HasIndex("Lookup")
+                        .IsUnique()
+                        .HasDatabaseName("ix_invitation_lookup");
+
                     b.ToTable("invitation", "identity", t =>
                         {
                             t.HasCheckConstraint("ck_invitation_uses_left", "uses_left >= 0");
                         });
+                });
+
+            modelBuilder.Entity("Lt2.Identity.Domain.InvitationDaily", b =>
+                {
+                    b.Property<Guid>("InvitationId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("invitation_id");
+
+                    b.Property<DateOnly>("Day")
+                        .HasColumnType("date")
+                        .HasColumnName("day");
+
+                    b.Property<int>("Completed")
+                        .HasColumnType("integer")
+                        .HasColumnName("completed");
+
+                    b.HasKey("InvitationId", "Day")
+                        .HasName("pk_invitation_daily");
+
+                    b.ToTable("invitation_daily", "identity");
+                });
+
+            modelBuilder.Entity("Lt2.Identity.Domain.PartySupport", b =>
+                {
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("user_id");
+
+                    b.Property<DateTimeOffset>("GivenAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("given_at");
+
+                    b.Property<string>("Party")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)")
+                        .HasColumnName("party");
+
+                    b.HasKey("UserId")
+                        .HasName("pk_party_support");
+
+                    b.HasIndex("Party")
+                        .HasDatabaseName("ix_party_support_party");
+
+                    b.ToTable("party_support", "identity");
                 });
 
             modelBuilder.Entity("Lt2.Identity.Domain.Profile", b =>
@@ -639,6 +725,26 @@ namespace Lt2.Identity.Infrastructure.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired()
                         .HasConstraintName("fk_consent_user_user_id");
+                });
+
+            modelBuilder.Entity("Lt2.Identity.Domain.InvitationDaily", b =>
+                {
+                    b.HasOne("Lt2.Identity.Domain.Invitation", null)
+                        .WithMany()
+                        .HasForeignKey("InvitationId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
+                        .HasConstraintName("fk_invitation_daily_invitation_invitation_id");
+                });
+
+            modelBuilder.Entity("Lt2.Identity.Domain.PartySupport", b =>
+                {
+                    b.HasOne("Lt2.Identity.Domain.User", null)
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
+                        .HasConstraintName("fk_party_support_user_user_id");
                 });
 
             modelBuilder.Entity("Lt2.Identity.Domain.Profile", b =>

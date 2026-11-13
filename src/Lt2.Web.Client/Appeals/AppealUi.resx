@@ -1,0 +1,237 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+<resheader name="resmimetype"><value>text/microsoft-resx</value></resheader>
+<resheader name="version"><value>2.0</value></resheader>
+<resheader name="reader"><value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value></resheader>
+<resheader name="writer"><value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value></resheader>
+<data name="Error.Generic" xml:space="preserve"><value>Nepavyko. Bandykite dar kartą.</value></data>
+<data name="Error.Network" xml:space="preserve"><value>Nepavyko susisiekti su serveriu. Patikrinkite ryšį ir bandykite dar kartą.</value></data>
+<data name="Loading" xml:space="preserve"><value>Įkeliama…</value></data>
+<data name="Cancel" xml:space="preserve"><value>Atšaukti</value></data>
+<data name="Side.for" xml:space="preserve"><value>Prašau balsuoti už</value></data>
+<data name="Side.against" xml:space="preserve"><value>Prašau balsuoti prieš</value></data>
+<data name="Side.Private" xml:space="preserve"><value>Jūsų pasirinkimas nėra viešas. Jį galite keisti, kol Seimas nebalsavo.</value></data>
+<data name="Side.SignIn" xml:space="preserve"><value>Prisijunkite, kad galėtumėte nurodyti, ko prašote. Jūsų pasirinkimas nebus viešas.</value></data>
+<data name="Side.Yours.for" xml:space="preserve"><value>Jūs prašote balsuoti už. Tai matote tik jūs.</value></data>
+<data name="Side.Yours.against" xml:space="preserve"><value>Jūs prašote balsuoti prieš. Tai matote tik jūs.</value></data>
+<data name="Side.Withdraw" xml:space="preserve"><value>Atsiimti</value></data>
+<data name="Consent.Title" xml:space="preserve"><value>Prieš išsaugant jūsų poziciją</value></data>
+<data name="Consent.Text" xml:space="preserve"><value>Tai, ar prašote balsuoti už, ar prieš, yra jūsų politinė nuomonė – ypatingai saugomi asmens duomenys. Ją išsaugosime tik gavę jūsų aiškų sutikimą. Jūsų pozicijos niekam nerodome: viešai skelbiami tik bendri skaičiai. Sutikimą galite bet kada atšaukti savo paskyroje – tada visos jūsų pozicijos bus ištrintos.</value></data>
+<data name="Consent.Check" xml:space="preserve"><value>Sutinku, kad Lietuva 2.0 saugotų mano pozicijas dėl įstatymų projektų taip, kaip aprašyta.</value></data>
+<data name="Consent.Submit.for" xml:space="preserve"><value>Sutinku ir prašau balsuoti už</value></data>
+<data name="Consent.Submit.against" xml:space="preserve"><value>Sutinku ir prašau balsuoti prieš</value></data>
+<data name="Reasons.Title" xml:space="preserve"><value>Kodėl</value></data>
+<data name="Reasons.for" xml:space="preserve"><value>Už</value></data>
+<data name="Reasons.against" xml:space="preserve"><value>Prieš</value></data>
+<data name="Reasons.None" xml:space="preserve"><value>Argumentų dar nėra.</value></data>
+<data name="Reasons.Endorse" xml:space="preserve"><value>Man svarbu · {0}</value></data>
+<data name="Reasons.Anonymous" xml:space="preserve"><value>Lietuva 2.0 naudotojas</value></data>
+<data name="Reasons.All" xml:space="preserve"><value>Visi argumentai: {0}</value></data>
+<data name="Reasons.Fewer" xml:space="preserve"><value>Rodyti mažiau</value></data>
+<data name="Reasons.Write" xml:space="preserve"><value>Parašyti argumentą</value></data>
+<data name="Reasons.WriteTitle" xml:space="preserve"><value>Jūsų argumentas</value></data>
+<data name="Reasons.EitherSide" xml:space="preserve"><value>Argumentą galite parašyti už arba prieš, nepriklausomai nuo to, ko prašote patys, ir net jei dar nenurodėte. Prie argumento nerodoma, ko prašote jūs.</value></data>
+<data name="Reasons.SideLegend" xml:space="preserve"><value>Argumentas</value></data>
+<data name="Reasons.SideOption.for" xml:space="preserve"><value>už – kodėl balsuoti už</value></data>
+<data name="Reasons.SideOption.against" xml:space="preserve"><value>prieš – kodėl balsuoti prieš</value></data>
+<data name="Reasons.ChooseSide" xml:space="preserve"><value>Pasirinkite, ar argumentas už, ar prieš.</value></data>
+<data name="Reasons.Label" xml:space="preserve"><value>Tekstas</value></data>
+<data name="Reasons.Hint" xml:space="preserve"><value>Paprastas tekstas, {0} iš {1} ženklų. Argumentas bus viešas su jūsų vardu ir pasirinkta puse.</value></data>
+<data name="Reasons.Submit" xml:space="preserve"><value>Paskelbti</value></data>
+<data name="Reasons.PublishAnyway" xml:space="preserve"><value>Vis tiek paskelbti savo</value></data>
+<data name="Reasons.SimilarTitle" xml:space="preserve"><value>Panašūs argumentai jau yra</value></data>
+<data name="Reasons.SimilarText" xml:space="preserve"><value>Gal jūsų mintį kas nors jau parašė? Jei argumentas tos pusės, kurios prašote patys, galite pažymėti „Man svarbu“; arba vis tiek paskelbkite savo.</value></data>
+<data name="Restrict.OpenAuthor" xml:space="preserve"><value>Riboti autoriaus rašymą…</value></data>
+<data name="Restrict.OpenInitiator" xml:space="preserve"><value>Riboti iniciatoriaus rašymą…</value></data>
+<data name="Restrict.Title" xml:space="preserve"><value>Riboti rašymą: {0}</value></data>
+<data name="Restrict.Reasons" xml:space="preserve"><value>Argumentai: {0}</value></data>
+<data name="Restrict.Appeals" xml:space="preserve"><value>Atidaryti kreipimaisi: {0}</value></data>
+<data name="Restrict.Actions" xml:space="preserve"><value>Ankstesni moderatorių veiksmai: {0}</value></data>
+<data name="Restrict.Earlier" xml:space="preserve"><value>Ankstesni apribojimai: {0}</value></data>
+<data name="Restrict.Holds" xml:space="preserve"><value>galioja</value></data>
+<data name="Restrict.Length" xml:space="preserve"><value>Kiek laiko</value></data>
+<data name="Restrict.UntilDay" xml:space="preserve"><value>Iki nurodytos dienos</value></data>
+<data name="Restrict.LastDay" xml:space="preserve"><value>Paskutinė apribojimo diena</value></data>
+<data name="Restrict.UntilLifted" xml:space="preserve"><value>kol bus atšauktas</value></data>
+<data name="Restrict.UntilShown" xml:space="preserve"><value>iki {0} imtinai</value></data>
+<data name="Restrict.Statement" xml:space="preserve"><value>Paaiškinimas naudotojui</value></data>
+<data name="Restrict.StatementHint" xml:space="preserve"><value>Naudotojas jį gaus el. paštu kartu su apribojimo trukme ir moderatorių adresu prieštaravimams.</value></data>
+<data name="Restrict.Submit" xml:space="preserve"><value>Riboti rašymą</value></data>
+<data name="Restrict.Done" xml:space="preserve"><value>Rašymas apribotas; naudotojui išsiųstas laiškas.</value></data>
+<data name="Restrict.ListTitle" xml:space="preserve"><value>Apribotas rašymas</value></data>
+<data name="Restrict.None" xml:space="preserve"><value>Šiuo metu niekam rašymas neapribotas.</value></data>
+<data name="Restrict.Lift" xml:space="preserve"><value>Atšaukti apribojimą</value></data>
+<data name="Restrict.LiftStatement" xml:space="preserve"><value>Paaiškinimas naudotojui</value></data>
+<data name="Restrict.Lifted" xml:space="preserve"><value>Apribojimas atšauktas; naudotojui išsiųstas laiškas.</value></data>
+<data name="Restrict.Status.published" xml:space="preserve"><value>paskelbtas</value></data>
+<data name="Restrict.Status.pending" xml:space="preserve"><value>laukia moderatoriaus</value></data>
+<data name="Restrict.Status.hidden" xml:space="preserve"><value>paslėptas</value></data>
+<data name="Restrict.Status.merged" xml:space="preserve"><value>sujungtas</value></data>
+<data name="Restrict.AppealStatus.pending" xml:space="preserve"><value>laukia moderatoriaus</value></data>
+<data name="Restrict.AppealStatus.returned" xml:space="preserve"><value>grąžintas taisyti</value></data>
+<data name="Restrict.AppealStatus.open" xml:space="preserve"><value>atviras</value></data>
+<data name="Restrict.AppealStatus.closed" xml:space="preserve"><value>uždarytas</value></data>
+<data name="Restrict.AppealStatus.rejected" xml:space="preserve"><value>paslėptas</value></data>
+<data name="Restrict.Target.reason" xml:space="preserve"><value>argumentas</value></data>
+<data name="Restrict.Target.appeal" xml:space="preserve"><value>kreipimasis</value></data>
+<data name="Restrict.Target.restriction" xml:space="preserve"><value>apribojimas</value></data>
+<data name="Restricted.Title" xml:space="preserve"><value>Moderatorius apribojo jūsų galimybę rašyti.</value></data>
+<data name="Restricted.Until" xml:space="preserve"><value>Apribojimas galioja iki {0} imtinai.</value></data>
+<data name="Restricted.UntilLifted" xml:space="preserve"><value>Apribojimas galioja, kol jį atšauks moderatorius.</value></data>
+<data name="Restricted.Reason" xml:space="preserve"><value>Priežastis: {0}</value></data>
+<data name="Restricted.Object" xml:space="preserve"><value>Nurodyti, ko prašote, ir žymėti „Man svarbu“ galite kaip anksčiau. Jei nesutinkate, parašykite moderatoriams –</value></data>
+<data name="Restricted.Rules" xml:space="preserve"><value>adresas moderavimo taisyklėse</value></data>
+<data name="Reasons.Withdraw" xml:space="preserve"><value>Atsiimti</value></data>
+<data name="Reasons.WithdrawConfirm" xml:space="preserve"><value>Argumentas bus ištrintas kartu su jo „Man svarbu“ žymomis. Jau sudarytose suvestinėse jo tekstas liks.</value></data>
+<data name="Reasons.WithdrawYes" xml:space="preserve"><value>Atsiimti argumentą</value></data>
+<data name="Reasons.Withdrawn" xml:space="preserve"><value>Argumentas atsiimtas.</value></data>
+<data name="Reasons.Published" xml:space="preserve"><value>Argumentas paskelbtas.</value></data>
+<data name="Reasons.Pending" xml:space="preserve"><value>Argumentą pirma peržiūrės moderatorius. Kai jis bus paskelbtas, gausite laišką.</value></data>
+<data name="Reasons.NeedSide" xml:space="preserve"><value>„Man svarbu“ žymėti gali tie, kurie nurodė, ko prašo.</value></data>
+<data name="Reasons.OwnSideOnly" xml:space="preserve"><value>„Man svarbu“ galite žymėti tik argumentus tos pusės, kurios prašote patys.</value></data>
+<data name="Reasons.NoEndorsementsLeft" xml:space="preserve"><value>Dėl šio projekto „Man svarbu“ daugiau pažymėti nebegalite.</value></data>
+<data name="Reasons.EndorsementsLeft" xml:space="preserve"><value>„Man svarbu“ dar galite pažymėti: {0}.</value></data>
+<data name="Reasons.Left" xml:space="preserve"><value>Argumentų dar galite parašyti: {0}.</value></data>
+<data name="Reasons.NoneLeft" xml:space="preserve"><value>Šiam projektui daugiau argumentų parašyti nebegalite.</value></data>
+<data name="Report.Open" xml:space="preserve"><value>Pranešti</value></data>
+<data name="Report.AppealOpen" xml:space="preserve"><value>Pranešti apie kreipimąsi</value></data>
+<data name="Report.Title" xml:space="preserve"><value>Pranešimas moderatoriams</value></data>
+<data name="Report.Ground" xml:space="preserve"><value>Kodėl pranešate?</value></data>
+<data name="Report.Ground.illegal" xml:space="preserve"><value>Neteisėtas turinys</value></data>
+<data name="Report.Ground.personal-data" xml:space="preserve"><value>Kieno nors asmens duomenys</value></data>
+<data name="Report.Ground.insult" xml:space="preserve"><value>Įžeidimas</value></data>
+<data name="Report.Ground.spam" xml:space="preserve"><value>Šlamštas ar reklama</value></data>
+<data name="Report.Ground.other" xml:space="preserve"><value>Kita</value></data>
+<data name="Report.Text" xml:space="preserve"><value>Paaiškinimas (nebūtina)</value></data>
+<data name="Report.Submit" xml:space="preserve"><value>Pranešti moderatoriams</value></data>
+<data name="Report.Sent" xml:space="preserve"><value>Ačiū. Moderatoriai peržiūrės.</value></data>
+<data name="Open.SignIn" xml:space="preserve"><value>Prisijunkite, kad atidarytumėte kreipimąsi</value></data>
+<data name="Open.Title" xml:space="preserve"><value>Atidaryti kreipimąsi</value></data>
+<data name="Open.After" xml:space="preserve"><value>Kai moderatorius kreipimąsi paskelbs, galėsite – kaip ir visi kiti – parašyti argumentų už ar prieš ir, jei norite, nurodyti, ko prašote patys.</value></data>
+<data name="Open.Intro" xml:space="preserve"><value>Vienam projektui – vienas kreipimasis: visi, kurie prašo Seimo narių balsuoti už ar prieš, prisijungia prie jo. Prieš paskelbiant kreipimąsi peržiūrės moderatorius; iki tol jį matote tik jūs.</value></data>
+<data name="Open.Description" xml:space="preserve"><value>Ką keičia projektas</value></data>
+<data name="Open.DescriptionHint" xml:space="preserve"><value>Trumpai ir neutraliai, be vertinimų: šį aprašymą skaitys abiejų pusių dalyviai. Iki {0} ženklų.</value></data>
+<data name="Open.Threshold" xml:space="preserve"><value>Riba</value></data>
+<data name="Open.ThresholdHint" xml:space="preserve"><value>Kiek dalyvių, abiejų pusių kartu, turi turėti kreipimasis, kad patektų į suvestines Seimo nariams. Riba bus vieša. Ne mažiau kaip {0}.</value></data>
+<data name="Open.Submit" xml:space="preserve"><value>Pateikti moderatoriui</value></data>
+<data name="Edit.Title" xml:space="preserve"><value>Pataisyti prieš paskelbiant</value></data>
+<data name="Edit.TitleReturned" xml:space="preserve"><value>Pataisyti ir pateikti dar kartą</value></data>
+<data name="Edit.Submit" xml:space="preserve"><value>Pateikti moderatoriui</value></data>
+<data name="Threshold.Change" xml:space="preserve"><value>Keisti ribą</value></data>
+<data name="Threshold.Label" xml:space="preserve"><value>Nauja riba</value></data>
+<data name="Threshold.Save" xml:space="preserve"><value>Išsaugoti ribą</value></data>
+<data name="Mod.PageTitle" xml:space="preserve"><value>Moderavimas · Lietuva 2.0</value></data>
+<data name="Mod.Title" xml:space="preserve"><value>Moderavimas</value></data>
+<data name="Mod.Lead" xml:space="preserve"><value>Nauji kreipimaisi, pažymėti ar praneštieji argumentai ir dar nematyti argumentai. Paaiškinimą gauna autorius.</value></data>
+<data name="Mod.Refused" xml:space="preserve"><value>Moderuoti galima tik prisijungus darbuotojo prieigos raktu, kai moderatoriaus vaidmuo aktyvintas.</value></data>
+<data name="Mod.Appeals" xml:space="preserve"><value>Kreipimaisi</value></data>
+<data name="Mod.Reasons" xml:space="preserve"><value>Argumentai</value></data>
+<data name="Mod.Reason" xml:space="preserve"><value>Argumentas</value></data>
+<data name="Mod.Empty" xml:space="preserve"><value>Nieko nelaukia.</value></data>
+<data name="Mod.OpenedBy" xml:space="preserve"><value>Atidarė {0} · riba {1}</value></data>
+<data name="Mod.Status.pending" xml:space="preserve"><value>Laukia peržiūros</value></data>
+<data name="Mod.Status.open" xml:space="preserve"><value>Paskelbtas, gautas pranešimas</value></data>
+<data name="Mod.Status.published" xml:space="preserve"><value>Paskelbtas</value></data>
+<data name="Mod.Seen" xml:space="preserve"><value>Matytas, gautas pranešimas</value></data>
+<data name="Mod.NotSeen" xml:space="preserve"><value>Dar nematytas</value></data>
+<data name="Mod.Flag.email" xml:space="preserve"><value>El. pašto adresas</value></data>
+<data name="Mod.Flag.phone" xml:space="preserve"><value>Telefono numeris</value></data>
+<data name="Mod.Flag.personal-code" xml:space="preserve"><value>Asmens kodas</value></data>
+<data name="Mod.Flag.link" xml:space="preserve"><value>Nuoroda</value></data>
+<data name="Mod.Reports" xml:space="preserve"><value>Pranešimų: {0}</value></data>
+<data name="Mod.Statement" xml:space="preserve"><value>Paaiškinimas autoriui</value></data>
+<data name="Mod.Threshold" xml:space="preserve"><value>Nauja riba (keičiant ribą)</value></data>
+<data name="Mod.MergeInto" xml:space="preserve"><value>Sujungti su</value></data>
+<data name="Mod.Publish" xml:space="preserve"><value>Paskelbti</value></data>
+<data name="Mod.Keep" xml:space="preserve"><value>Palikti</value></data>
+<data name="Mod.Return" xml:space="preserve"><value>Grąžinti taisyti</value></data>
+<data name="Mod.Hide" xml:space="preserve"><value>Paslėpti</value></data>
+<data name="Mod.SetThreshold" xml:space="preserve"><value>Pakeisti ribą</value></data>
+<data name="Mod.Merge" xml:space="preserve"><value>Sujungti</value></data>
+<data name="Mod.Done.Publish" xml:space="preserve"><value>Atlikta: paskelbta.</value></data>
+<data name="Mod.Done.Return" xml:space="preserve"><value>Atlikta: grąžinta iniciatoriui.</value></data>
+<data name="Mod.Done.Hide" xml:space="preserve"><value>Atlikta: paslėpta.</value></data>
+<data name="Mod.Done.Threshold" xml:space="preserve"><value>Atlikta: riba pakeista.</value></data>
+<data name="Mod.Done.Merge" xml:space="preserve"><value>Atlikta: sujungta.</value></data>
+<data name="Admin.PageTitle" xml:space="preserve"><value>Nustatymai · Lietuva 2.0</value></data>
+<data name="Admin.Title" xml:space="preserve"><value>Nustatymai</value></data>
+<data name="Admin.Lead" xml:space="preserve"><value>Skaičiai, kuriuos galima keisti be naujos versijos. Kiekvienas pakeitimas įrašomas į auditą.</value></data>
+<data name="Admin.Refused" xml:space="preserve"><value>Nustatymus keisti galima tik prisijungus darbuotojo prieigos raktu, kai administratoriaus vaidmuo aktyvintas.</value></data>
+<data name="Admin.Changed" xml:space="preserve"><value>pakeista {0} UTC</value></data>
+<data name="Admin.Default" xml:space="preserve"><value>numatytoji reikšmė</value></data>
+<data name="Admin.Save" xml:space="preserve"><value>Išsaugoti</value></data>
+<data name="Admin.Saved" xml:space="preserve"><value>Išsaugota.</value></data>
+<data name="Admin.Invalid" xml:space="preserve"><value>Reikšmė turi būti skaičius, true arba false.</value></data>
+<data name="Admin.Setting.Digest:ThresholdDefault" xml:space="preserve"><value>Siūloma kreipimosi riba</value></data>
+<data name="Admin.Setting.Digest:ThresholdMinimum" xml:space="preserve"><value>Mažiausia kreipimosi riba</value></data>
+<data name="Admin.Setting.Registration:PersonalCodeUses" xml:space="preserve"><value>Registracijų vienu asmeniniu kvietimo kodu (0 – neribojama)</value></data>
+<data name="Inv.PageTitle" xml:space="preserve"><value>Kvietimai · Lietuva 2.0</value></data>
+<data name="Inv.Title" xml:space="preserve"><value>Kvietimai</value></data>
+<data name="Inv.Lead" xml:space="preserve"><value>Tik skaičiai: kiek žmonių užbaigė registraciją su kuriuo kodu ir kada. Kas ką pakvietė ir kas kuriuo kodu naudojosi, čia nerodoma.</value></data>
+<data name="Inv.Days" xml:space="preserve"><value>Registracijos per dieną, {0}–{1}</value></data>
+<data name="Inv.Total" xml:space="preserve"><value>Iš viso užbaigta su kodais: {0}. Užsiregistravę be kodo (dabartinės paskyros): {1}.</value></data>
+<data name="Inv.Chart" xml:space="preserve"><value>Užbaigtos registracijos per dieną</value></data>
+<data name="Inv.Table" xml:space="preserve"><value>Skaičiai lentele</value></data>
+<data name="Inv.Day" xml:space="preserve"><value>Diena</value></data>
+<data name="Inv.Completed" xml:space="preserve"><value>Užbaigė registraciją</value></data>
+<data name="Inv.Levels" xml:space="preserve"><value>Pagal lygį</value></data>
+<data name="Inv.Level" xml:space="preserve"><value>Lygis</value></data>
+<data name="Inv.LevelsNote" xml:space="preserve"><value>1 – komandos kodais; 2 – kodais tų, kurie atėjo 1 lygiu; ir t. t. Asmeninis kodas žmogaus, užsiregistravusio be kodo, priskiriamas 2 lygiui.</value></data>
+<data name="Inv.Codes" xml:space="preserve"><value>Kodai, atvedę daugiausia žmonių</value></data>
+<data name="Inv.Find" xml:space="preserve"><value>Rasti kodą</value></data>
+<data name="Inv.FindSubmit" xml:space="preserve"><value>Rasti</value></data>
+<data name="Inv.Deleted" xml:space="preserve"><value>(ištrinta paskyra)</value></data>
+<data name="Inv.Kind.team" xml:space="preserve"><value>komandos kodas</value></data>
+<data name="Inv.Kind.personal" xml:space="preserve"><value>asmeninis kodas</value></data>
+<data name="Inv.CodeCount" xml:space="preserve"><value>užbaigė registraciją: {0}</value></data>
+<data name="Inv.CodeChart" xml:space="preserve"><value>Užbaigtos registracijos per dieną: {0}</value></data>
+<data name="Inv.On" xml:space="preserve"><value>įjungtas</value></data>
+<data name="Inv.Off" xml:space="preserve"><value>išjungtas</value></data>
+<data name="Inv.Replaced" xml:space="preserve"><value>pakeistas nauju</value></data>
+<data name="Inv.Statement" xml:space="preserve"><value>Paaiškinimas (būtinas)</value></data>
+<data name="Inv.SwitchOff" xml:space="preserve"><value>Išjungti</value></data>
+<data name="Inv.SwitchOn" xml:space="preserve"><value>Įjungti</value></data>
+<data name="Inv.SwitchedOff" xml:space="preserve"><value>Kodas išjungtas.</value></data>
+<data name="Inv.SwitchedOn" xml:space="preserve"><value>Kodas vėl įjungtas.</value></data><data name="Admin.Setting.Digest:MaxPerWeek" xml:space="preserve"><value>Daugiausia suvestinių Seimo nariui per savaitę</value></data>
+<data name="Admin.Setting.Appeals:ReasonsPerPerson" xml:space="preserve"><value>Argumentų vienam žmogui dėl vieno projekto (0 – neribojama)</value></data>
+<data name="Admin.Setting.Appeals:EndorsementsPerPerson" xml:space="preserve"><value>„Man svarbu“ žymų vienam žmogui dėl vieno projekto (0 – neribojama)</value></data>
+<data name="Admin.Setting.Digest:NotableChange" xml:space="preserve"><value>Savaitinė suvestinė: kiek turi pasikeisti dalyvių skaičius (dalis, 0.10 = 10 %)</value></data>
+<data name="Admin.Setting.Registration:RequireInvitation" xml:space="preserve"><value>Registruotis tik su kvietimu</value></data>
+<data name="Admin.Setting.Registration:PendingAccountDays" xml:space="preserve"><value>Kiek dienų laikoma nebaigta registracija</value></data>
+<data name="Admin.Setting.SignIn:CodesPerHour" xml:space="preserve"><value>Prisijungimo kodų per valandą vienam adresui</value></data>
+<data name="Admin.Setting.SignIn:CodesPerDay" xml:space="preserve"><value>Prisijungimo kodų per parą vienam adresui</value></data>
+<data name="Admin.Setting.Surge:MinimumShare" xml:space="preserve"><value>Šuolio pastaba: naujų paskyrų dalis</value></data>
+<data name="Admin.Setting.Surge:MinimumAccounts" xml:space="preserve"><value>Šuolio pastaba: mažiausiai naujų paskyrų</value></data>
+<data name="Admin.Setting.Surge:WindowHours" xml:space="preserve"><value>Šuolio pastaba: laikotarpis valandomis</value></data>
+<data name="Report.Visitor" xml:space="preserve"><value>Pranešti apie turinį moderatoriams gali prisijungę Lietuva 2.0 naudotojai:</value></data>
+<data name="Report.SignIn" xml:space="preserve"><value>prisijunkite</value></data>
+<data name="Report.OrWrite" xml:space="preserve"><value>arba parašykite moderatoriams adresu</value></data>
+<data name="Mod.Surge" xml:space="preserve"><value>Šuolis: per paskutines {0} valandas {1} % pozicijų pateikė per tą laiką sukurtos paskyros. Ar sulaikyti siuntimą?</value></data>
+<data name="Flag.Open" xml:space="preserve"><value>Data neteisinga?</value></data>
+<data name="Flag.Kind" xml:space="preserve"><value>Kas negerai?</value></data>
+<data name="Flag.date-wrong" xml:space="preserve"><value>Nurodyta data neteisinga</value></data>
+<data name="Flag.sooner" xml:space="preserve"><value>Seimas balsuos anksčiau</value></data>
+<data name="Flag.Link" xml:space="preserve"><value>Nuoroda, kur matyti tikroji data</value></data>
+<data name="Flag.Submit" xml:space="preserve"><value>Pranešti moderatoriams</value></data>
+<data name="Flag.Sent" xml:space="preserve"><value>Ačiū. Moderatorius patikrins ir, jei reikia, pataisys datą.</value></data>
+<data name="Mod.Planned" xml:space="preserve"><value>Planuojama: {0}{1}</value></data>
+<data name="Mod.UnderThreshold" xml:space="preserve"><value>Projektas jau darbotvarkėje, o kreipimasis dar nepasiekė ribos.</value></data>
+<data name="Mod.DateFlags" xml:space="preserve"><value>Pranešimai apie datą: {0}</value></data>
+<data name="Mod.PlannedDate" xml:space="preserve"><value>Planuojama data (keičiant datą)</value></data>
+<data name="Mod.PlannedStage" xml:space="preserve"><value>Stadija</value></data>
+<data name="Mod.Stage.none" xml:space="preserve"><value>Nenurodyta</value></data>
+<data name="Mod.Stage.presentation" xml:space="preserve"><value>Pateikimas</value></data>
+<data name="Mod.Stage.consideration" xml:space="preserve"><value>Svarstymas</value></data>
+<data name="Mod.Stage.adoption" xml:space="preserve"><value>Priėmimas</value></data>
+<data name="Mod.SetPlanned" xml:space="preserve"><value>Pakeisti datą</value></data>
+<data name="Mod.Done.Planned" xml:space="preserve"><value>Atlikta: data pakeista.</value></data>
+<data name="Mod.Hold" xml:space="preserve"><value>Sulaikyti siuntimą</value></data>
+<data name="Mod.Release" xml:space="preserve"><value>Leisti siųsti</value></data>
+<data name="Mod.Held" xml:space="preserve"><value>Siuntimas sulaikytas</value></data>
+<data name="Mod.Urgent" xml:space="preserve"><value>Patvirtinti skubią suvestinę</value></data>
+<data name="Mod.Done.Hold" xml:space="preserve"><value>Atlikta: siuntimas sulaikytas.</value></data>
+<data name="Mod.Done.Release" xml:space="preserve"><value>Atlikta: siuntimas leistas.</value></data>
+<data name="Mod.Done.Urgent" xml:space="preserve"><value>Atlikta: skubi suvestinė sudaryta (bandymas, nesiunčiama).</value></data>
+<data name="Admin.Setting.Digest:Weekly" xml:space="preserve"><value>Savaitinė suvestinė: pirmadienio laikas (HH:mm arba off)</value></data>
+<data name="Admin.Setting.Digest:BeforeVote" xml:space="preserve"><value>Suvestinė prieš posėdį: laikas (HH:mm arba off)</value></data>
+</root>

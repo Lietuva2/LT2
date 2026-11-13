@@ -14,6 +14,10 @@
              Link="Responses\%(Filename)%(Extension)"
              CopyToOutputDirectory="PreserveNewest"
              CopyToPublishDirectory="PreserveNewest" />
+    <Content Include="..\..\tests\Lt2.Parliament.ImportTests\Seimas\Synthetic\agenda\*.html"
+             Link="Responses\agenda\%(Filename)%(Extension)"
+             CopyToOutputDirectory="PreserveNewest"
+             CopyToPublishDirectory="PreserveNewest" />
   </ItemGroup>
   <ItemGroup>
     <InternalsVisibleTo Include="Lt2.Parliament.ImportTests" />

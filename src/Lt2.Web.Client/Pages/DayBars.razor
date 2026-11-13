@@ -1,0 +1,26 @@
+@using Lt2.Api.Contracts.Me
+
+@* Registrations per day as bars, drawn as SVG on the server (no script library; readable without JavaScript). Each bar
+   has a title with its day and number; the numbers are also in a table beside it. *@
+@if (Days.Count > 0)
+{
+    var max = Math.Max(1, Days.Max(d => d.Completed));
+    <svg class="daybars" viewBox="0 0 @(Days.Count * 10) 60" preserveAspectRatio="none" role="img" aria-label="@Label">
+        @for (var i = 0; i < Days.Count; i++)
+        {
+            var day = Days[i];
+            var height = 58.0 * day.Completed / max;
+            <rect class="splitbar__for" x="@(i * 10 + 1)" y="@F(60 - height)" width="8" height="@F(height)">
+                <title>@day.Day.ToString("yyyy-MM-dd", System.Globalization.CultureInfo.InvariantCulture): @day.Completed</title>
+            </rect>
+        }
+    </svg>
+}
+
+@code {
+    [Parameter, EditorRequired] public IReadOnlyList<InvitationDayResponse> Days { get; set; } = [];
+
+    [Parameter, EditorRequired] public string Label { get; set; } = "";
+
+    private static string F(double value) => value.ToString("0.#", System.Globalization.CultureInfo.InvariantCulture);
+}

@@ -1,0 +1,33 @@
+@page "/moderavimo-taisykles"
+@inject IStringLocalizer<AppealText> T
+@inject IConfiguration Configuration
+
+@* Design 8.3: "Rules for moderators are public, like the statistics methodology." What the system does, as built. *@
+<PageTitle>@T["Rules.Title"] · Lietuva 2.0</PageTitle>
+
+<section class="stack" aria-labelledby="rules-title">
+    <h1 id="rules-title">@T["Rules.Title"]</h1>
+    <p class="lead">@T["Rules.Lead"]</p>
+</section>
+
+<div class="stack stack--loose">
+    @foreach (var section in Sections)
+    {
+        <section class="stack" aria-labelledby="r-@section" id="@section">
+            <h2 id="r-@section">@T[$"Rules.{section}"]</h2>
+            @for (var i = 1; T[$"Rules.{section}.{i}"] is { ResourceNotFound: false } line; i++)
+            {
+                <p>@line</p>
+            }
+        </section>
+    }
+    @if (Configuration["Moderation:ContactAddress"] is { Length: > 0 } contact)
+    {
+        <p>@T["Rules.Contact"] <a href="mailto:@contact">@contact</a></p>
+    }
+    <p class="fine">@T["Rules.Draft"]</p>
+</div>
+
+@code {
+    private static readonly string[] Sections = ["What", "Appeals", "Reasons", "Actions", "Restriction", "Reports", "Dates", "Sending", "Privacy"];
+}

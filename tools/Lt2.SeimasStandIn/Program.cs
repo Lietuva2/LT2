@@ -21,4 +21,9 @@ app.MapGet("/sip/{**service}", (HttpRequest request) =>
         ? Results.Bytes(answer.Body, "text/xml; charset=utf-8")
         : Results.Text(Encoding.UTF8.GetString(answer.Body), "text/plain; charset=utf-8", statusCode: answer.Status);
 });
+app.MapGet("/darbotvarke", (HttpRequest request) =>
+{
+    var answer = StandInHandler.Answer(new Uri("http://stand-in/darbotvarke"), responses);
+    return Results.Bytes(answer.Body, answer.Status == 200 ? "text/html; charset=utf-8" : "text/plain; charset=utf-8");
+});
 await app.RunAsync();

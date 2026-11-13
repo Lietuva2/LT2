@@ -20,7 +20,8 @@ public sealed record AccountSummary(
     DateTimeOffset CreatedAt,
     bool RegistrationComplete,
     IReadOnlyList<string> ActiveStaffRoles,
-    bool AwaitingActivation);
+    bool AwaitingActivation,
+    bool HasPositionConsent = false);
 
 /// <summary>
 /// What the current session may do as staff (design 6.2): the staff roles that work in it (only when signed in with the
@@ -121,6 +122,27 @@ public interface IIdentityModule
     Task<IReadOnlyList<SessionSummary>> GetSessionsAsync(ClaimsPrincipal user, CancellationToken cancellationToken);
 
     Task<Result<Unit>> EndSessionAsync(ClaimsPrincipal user, Guid sessionId, CancellationToken cancellationToken);
+
+    /// <summary>Records the explicit consent to store positions against the text version in force (design 6.5).</summary>
+    Task<Result<Unit>> GivePositionConsentAsync(ClaimsPrincipal user, string textVersion, CancellationToken cancellationToken);
+
+    /// <summary>Withdraws the consent and, in the same transaction, deletes every position of the person (design 6.5).</summary>
+    Task<Result<Unit>> WithdrawPositionConsentAsync(ClaimsPrincipal user, CancellationToken cancellationToken);
+
+    /// <summary>The party the person said they support, if any (design 5.2; private, optional).</summary>
+    Task<Result<string?>> GetPartySupportAsync(ClaimsPrincipal user, CancellationToken cancellationToken);
+
+    /// <summary>
+    /// Sets the party (one of <paramref name="allowed"/>) with the explicit consent it needs, or with <c>null</c> removes it and
+    /// its consent. Stored without history.
+    /// </summary>
+    Task<Result<Unit>> SetPartySupportAsync(ClaimsPrincipal user, string? party, IReadOnlyCollection<string> allowed, CancellationToken cancellationToken);
+
+    /// <summary>Everything the person gave (design 6.5), their own data only.</summary>
+    Task<Result<object>> ExportAsync(ClaimsPrincipal user, CancellationToken cancellationToken);
+
+    /// <summary>Deletes the account and everything the person gave (design 6.5), and signs out.</summary>
+    Task<Result<Unit>> DeleteAccountAsync(ClaimsPrincipal user, CancellationToken cancellationToken);
 }
 
 /// <summary>Housekeeping run by the worker.</summary>
@@ -131,4 +153,41 @@ public interface IIdentityMaintenance
     /// of days; returns how many rows went.
     /// </summary>
     Task<int> PurgeExpiredAsync(CancellationToken cancellationToken);
+}
+
+/// <summary>A member's own invitation code (design 6.2): the code, how many completed registration with their codes, and whether it is on.</summary>
+public sealed record MyInvitation(string Code, int Completed, bool On);
+
+public sealed record InvitationDay(DateOnly Day, int Completed);
+
+/// <summary>One code for administrators: a team code by its code, a personal code by its member's display name (null once deleted).</summary>
+public sealed record InvitationCodeStats(Guid Id, string Kind, string? Label, int Completed, bool On, bool Replaced, IReadOnlyList<InvitationDay> Days);
+
+/// <summary>Registrations completed at one level: 1 by team codes, 2 by codes of level-1 people, and so on.</summary>
+public sealed record InvitationLevel(int Level, int Completed);
+
+/// <summary>The administrators' numbers (design 6.2): per day, per code, per level. Never who invited whom.</summary>
+public sealed record InvitationStats(
+    DateOnly From,
+    DateOnly To,
+    int Total,
+    IReadOnlyList<InvitationDay> Days,
+    IReadOnlyList<InvitationCodeStats> Codes,
+    IReadOnlyList<InvitationLevel> Levels,
+    int WithoutCode);
+
+/// <summary>Personal invitation codes and the administrators' numbers (design 6.2).</summary>
+public interface IInvitations
+{
+    /// <summary>The member's own code, made when first needed.</summary>
+    Task<Result<MyInvitation>> MineAsync(Guid userId, CancellationToken cancellationToken);
+
+    /// <summary>A new code; the old one stops working; the count carries over. Not while an administrator has it switched off.</summary>
+    Task<Result<MyInvitation>> ReplaceAsync(Guid userId, CancellationToken cancellationToken);
+
+    /// <summary>The last <paramref name="days"/> days; <paramref name="code"/> narrows the codes to one typed code.</summary>
+    Task<InvitationStats> StatsAsync(int days, string? code, CancellationToken cancellationToken);
+
+    /// <summary>An administrator switches a code off or on again, with a statement; audited.</summary>
+    Task<Result<Unit>> SwitchAsync(Guid invitationId, bool on, string statement, Guid adminUserId, string role, string? ipHash, CancellationToken cancellationToken);
 }

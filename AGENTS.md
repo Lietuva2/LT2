@@ -64,10 +64,17 @@ src/Lt2.Api.Contracts      DTOs, routes, client interfaces, validators (shared b
 src/Lt2.SharedKernel       Result type, identifiers (UUID v7), event base types, outbox, audit and settings
                            interfaces, connection strings; no clock of its own (TimeProvider is used)
 src/Modules/               Lt2.Identity, Lt2.Notifications, Lt2.Audit, Lt2.Parliament (Seimas open-data client,
-                           import, statistics; no pages yet); Lt2.Appeals (schema and DbContext only)
-src/Lt2.Worker             Hangfire server: outbox dispatch loop, the parliament import, a daily identity clean-up
+                           import, statistics); Lt2.Appeals (appeals, positions, arguments, endorsements, reports,
+                           moderation, rule-based pre-screening, flags, summaries content). Notifications also owns the
+                           summaries (Digests/). Modules talk through interfaces in SharedKernel (IParticipants,
+                           IBillCatalogue, IPlannedAgenda, IMpDirectory, IDigestSource, IPartySupporters, IAccountData,
+                           IPositionErasure, IOutbox, IAuditLog, ISettings)
+src/Lt2.Worker             Hangfire server: outbox dispatch loop, the parliament import, the agenda watcher (lrs.lt
+                           pages; off unless Agenda:BaseAddress is set), appeals daily aggregates and closing, summaries
+                           in dry-run (nothing is sent in M2a), a daily identity clean-up
 src/Lt2.Migrator           creates the database roles, applies migrations and grants; also seeds invitations, grants
-                           the first staff role and empties invented parliament data; run once per deploy
+                           the first staff role, empties invented parliament data and (local stack only) fills the
+                           demonstration appeal on XVP-0412 (--demo-appeal); run once per deploy
 tests/Lt2.UnitTests        rules and validators, plus bUnit tests of components (Components/)
 tests/Lt2.IntegrationTests API over HTTP against a real PostgreSQL (Testcontainers)
 tests/Lt2.ArchitectureTests module boundaries, static assets
@@ -75,7 +82,8 @@ tests/Lt2.E2E              Playwright and stack checks against a running compose
 tests/Lt2.Parliament.ImportTests  Seimas client, parsers, register of assumptions (Seimas/ASSUMPTIONS.md), import against
                            the stand-in and PostgreSQL; live contract suite only with LT2_SEIMAS_LIVE=1
 deploy/                    Dockerfile, compose.yaml, Caddyfile, .env (local defaults), init-secrets.py, secrets/
-tools/Lt2.SeimasStandIn     local and test only: stand-in for the Seimas open data, invented answers; never shipped
+tools/Lt2.SeimasStandIn     local and test only: stand-in for the Seimas open data and the lrs.lt agenda page (/darbotvarke),
+                           invented answers; never shipped
 ```
 
 ```sh
@@ -137,7 +145,9 @@ code review.
 **Accounts.** Registration is by email only, by invitation during the closed trial, with a self-declared age of 18 or
 older. An account is pending until its address is proven; the display name and the age declaration are asked after the
 code, never before. One account per normalised address. Each account has a `verification_level` (`email` now); phone
-verification is a later decision.
+verification is a later decision. Every member has one personal invitation code (replaceable; uses unlimited unless
+`Registration:PersonalCodeUses` is set) and sees only how many registered with it; administrators see numbers per day,
+code and level, never who invited whom, and can switch codes off. Invitations are never combined with sides.
 
 **MP profiles.** Compiled automatically from Seimas open data for every MP, joined or not. Two statistics:
 participation (share of recorded votes in which the MP voted for, against or abstained) and voted with the faction
@@ -148,12 +158,19 @@ official `@lrs.lt` address from open data; the link is tied to the Seimas person
 **Appeals.**
 - One appeal per bill, always tied to a Seimas bill. Two sides: asks to vote for, asks to vote against.
 - One position per person per bill, private, changeable until the appeal closes at the final Seimas vote.
-- Reasons: plain text up to 500 characters, public with the author's display name, at most two per person per bill.
-  "Man svarbu" endorses a reason on your own side, at most three per bill.
-- The initiator opens the appeal with a side, a first reason, a neutral description and a threshold. A moderator
-  publishes it.
+- Reasons: plain text up to 500 characters, public with the author's display name, for either side, whatever the
+  author's own (no side needed; the writing box preselects the author's side if any). Nothing public may tell whether
+  a reason is on its author's side. The author can withdraw their own reason while the appeal is open. Writing a reason
+  needs no positions consent: it is the author's own deliberate publication, public with name and chosen side.
+- "Man svarbu" endorses a reason on your own side.
+- Reasons and marks per person per bill are settings (`Appeals:ReasonsPerPerson`, `Appeals:EndorsementsPerPerson`);
+  0 = no limit, the default. A limit switched on later removes nothing and counts only shown or waiting reasons.
+- The initiator opens the appeal with a neutral description and a threshold: no side, no first reason, so no
+  positions consent. A moderator publishes it; then the initiator writes reasons and takes a side like anyone else, or
+  never. Nothing marks a reason as the initiator's.
 - **Threshold:** per appeal, public, set by the initiator, default 100, never below the administrator's minimum. The
-  initiator can change it until the appeal first enters a summary. A number changed by a moderator is final. There is
+  initiator can change it until the appeal first enters a summary that is really sent (a dry run does not count). A
+  number changed by a moderator is final. There is
   no objection flow in the product and no automatic override before a vote.
 
 **Summaries to MPs.**
@@ -161,12 +178,16 @@ official `@lrs.lt` address from open data; the link is tied to the Seimas person
 - Weekly on Monday morning in sitting weeks, and the working day before a sitting with a relevant bill. At most two a
   week per MP.
 - Always both sides, always with the count for accounts older than 30 days, with the most endorsed reasons a moderator
-  has seen.
+  has seen, without their authors' names (email, public copy and snapshot alike).
+- The weekly one holds appeals on that week's agenda, or never summarised, or whose participants changed by at least
+  the `Digest:NotableChange` share (default 10 %) since the last summary that held them.
 - Every summary has a public copy with the same numbers. Whether an MP stopped the summaries is never shown publicly.
 - Timing is corrected by a moderator when people flag a wrong date: correct, hold, or approve one urgent summary.
 
 **Moderation.** Anything that reaches MPs has passed a person. Every action is audited and the author gets the reason.
-A report button is on every appeal and reason.
+A report button is on every appeal and reason. A moderator can restrict an account from writing (reasons, appeals,
+their edits, date flags), until a date or until lifted, with a statement emailed to the person; it never touches sides,
+marks, counts or sign-in, is never shown to anyone else, and goes with the account (no address hash is kept).
 
 ## Wording and tone
 

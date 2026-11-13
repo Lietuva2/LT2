@@ -165,6 +165,10 @@
     [SupplyParameterFromQuery(Name = "registruotis")]
     public bool? StartWithRegistration { get; set; }
 
+    /// <summary>A member's invitation link (design 6.2): opens the registration form with the code filled in.</summary>
+    [SupplyParameterFromQuery(Name = "kodas")]
+    public string? InvitationFromLink { get; set; }
+
     /// <summary>The address as shown back to the person: first letter and domain only.</summary>
     private string Masked
     {
@@ -181,6 +185,12 @@
         if (StartWithRegistration == true)
         {
             _step = Step.Register;
+        }
+
+        if (!string.IsNullOrWhiteSpace(InvitationFromLink))
+        {
+            _step = Step.Register;
+            _invitation ??= InvitationFromLink.Trim();
         }
 
         // Someone signed in whose account is still pending finishes the registration here; a member goes on. Visitors

@@ -1,5 +1,6 @@
 using System.Globalization;
 using Lt2.Api.Contracts;
+using Lt2.Api.Contracts.Appeals;
 using Lt2.Api.Contracts.Auth;
 using Lt2.Api.Contracts.Me;
 using Lt2.Api.Contracts.Meta;
@@ -68,6 +69,10 @@ internal static class WebHost
         services.AddScoped<ParliamentReads>();
         services.AddScoped<IMetaApi, ServerMetaApi>();
         services.AddScoped<IParliamentApi, ServerParliamentApi>();
+        services.AddScoped<IAppealsApi, ServerAppealsApi>();
+        services.AddScoped<IModerationApi, ServerModerationApi>();
+        services.AddScoped<IAdminApi, ServerAdminApi>();
+        services.AddScoped<Lt2.Api.Contracts.Digests.IDigestsApi, ServerDigestsApi>();
         services.AddScoped<Lt2.Web.Components.Parliament.Formats>();
         services.AddLt2ClientComponents();
     }

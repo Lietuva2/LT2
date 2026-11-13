@@ -1,0 +1,59 @@
+@using Lt2.Api.Contracts.Appeals
+@inherits InteractiveBase
+@inject IAppealsApi Appeals
+
+@* A report (design 8.3, Digital Services Act notice and action) on an appeal or an argument. *@
+@if (_sent)
+{
+    <p class="note note--quiet" role="status">@L["Report.Sent"]</p>
+}
+else
+{
+    <form class="sheet sheet--quiet stack stack--tight" @onsubmit="SendAsync" novalidate aria-label="@L["Report.Title"]">
+        <fieldset class="stack stack--tight">
+            <legend class="label">@L["Report.Ground"]</legend>
+            @foreach (var ground in AppealLimits.ReportGrounds)
+            {
+                <label class="check">
+                    <input type="radio" name="@($"ground-{TargetId:N}")" value="@ground" checked="@(_ground == ground)"
+                           @onchange="() => _ground = ground" disabled="@Locked" />
+                    <span>@L["Report.Ground." + ground]</span>
+                </label>
+            }
+        </fieldset>
+        <div class="field">
+            <label for="@($"report-text-{TargetId:N}")">@L["Report.Text"]</label>
+            <textarea class="textarea" id="@($"report-text-{TargetId:N}")" maxlength="@AppealLimits.ReportTextMaxLength"
+                      @bind="_text" disabled="@Locked"></textarea>
+        </div>
+        <div class="row">
+            <button type="submit" class="btn" disabled="@(Locked || _ground is null)">@L["Report.Submit"]</button>
+            <button type="button" class="btn btn--plain" disabled="@Locked" @onclick="OnClose">@L["Cancel"]</button>
+        </div>
+        <Messages Message="@Message" Info="@Info" />
+    </form>
+}
+
+@code {
+    private string? _ground;
+    private string? _text;
+    private bool _sent;
+
+    [Parameter, EditorRequired] public string TargetKind { get; set; } = "";
+
+    [Parameter, EditorRequired] public Guid TargetId { get; set; }
+
+    [Parameter] public EventCallback OnClose { get; set; }
+
+    private Task SendAsync() => RunAsync(async () =>
+    {
+        var result = await Appeals.ReportAsync(new ReportRequest { TargetKind = TargetKind, TargetId = TargetId, Ground = _ground!, Text = _text });
+        if (!result.IsSuccess)
+        {
+            Show(result.Problem);
+            return;
+        }
+
+        _sent = true;
+    });
+}

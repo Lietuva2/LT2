@@ -1,0 +1,22 @@
+@inject Microsoft.Extensions.Localization.IStringLocalizer<AppealUi> L
+
+@* "Pranešti" for a visitor without a session (design 8.3: a report button on every appeal and argument, for anyone).
+   Reports in the product need a member; a visitor is told to sign in or to write to the moderators. A <details>
+   element, so it opens without JavaScript. Anonymous reports are not accepted: that is the owner's decision. *@
+<details class="report-visitor">
+    <summary class="linkish small">@(Appeal ? L["Report.AppealOpen"] : L["Report.Open"])</summary>
+    <p class="small">
+        @L["Report.Visitor"] <a href="/prisijungti">@L["Report.SignIn"]</a>@if (!string.IsNullOrWhiteSpace(Contact))
+        {
+            <text> </text>@L["Report.OrWrite"]<text> </text><a href="mailto:@Contact">@Contact</a>
+        }.
+    </p>
+</details>
+
+@code {
+    /// <summary>The moderators' contact address from configuration (<c>Moderation:ContactAddress</c>); none when not set.</summary>
+    [Parameter] public string? Contact { get; set; }
+
+    /// <summary>On the appeal rather than on an argument.</summary>
+    [Parameter] public bool Appeal { get; set; }
+}

@@ -23,9 +23,13 @@ public static class NotificationsModule
     {
         ArgumentNullException.ThrowIfNull(configuration);
 
-        services.AddDbContext<NotificationsDb>((sp, options) =>
-            options.UseLt2Npgsql(sp.GetRequiredService<NpgsqlDataSource>(), Schema));
+        // A factory as well as the scoped context: pages read summaries while other components render.
+        services.AddDbContextFactory<NotificationsDb>((sp, options) =>
+            options.UseLt2Npgsql(sp.GetRequiredService<NpgsqlDataSource>(), Schema), ServiceLifetime.Scoped);
         services.AddSingleton<IOutbox, OutboxWriter>();
+        services.AddLocalization();
+        services.AddSingleton<Digests.DigestText>();
+        services.AddScoped<IDigests, Digests.DigestService>();
         services.AddSingleton<IModuleDatabase, NotificationsModuleDatabase>();
         return services;
     }
@@ -41,6 +45,10 @@ public static class NotificationsModule
         services.AddSingleton<IOutboxHandler, SignInCodeEmailHandler>();
         services.AddSingleton<AccountNoticeTemplate>();
         services.AddSingleton<IOutboxHandler, AccountNoticeEmailHandler>();
+        services.AddSingleton<ModerationNoticeTemplate>();
+        services.AddSingleton<IOutboxHandler, ModerationNoticeEmailHandler>();
+        services.AddSingleton<WritingRestrictionTemplate>();
+        services.AddSingleton<IOutboxHandler, WritingRestrictionEmailHandler>();
         services.AddSingleton<INotificationsDispatcher, OutboxDispatcher>();
         return services;
     }

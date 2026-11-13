@@ -15,10 +15,13 @@
   <data name="validation" xml:space="preserve"><value>Patikrinkite įvestus duomenis.</value></data>
   <data name="email.invalid" xml:space="preserve"><value>Patikrinkite el. pašto adresą.</value></data>
   <data name="email.disposable" xml:space="preserve"><value>Laikinųjų el. pašto dėžučių adresai netinka. Naudokite nuolatinį adresą.</value></data>
-  <data name="invitation.invalid" xml:space="preserve"><value>Kvietimo kodas neteisingas arba nebegalioja.</value></data>
+  <data name="invitation.invalid" xml:space="preserve"><value>Šis kvietimo kodas negalioja. Paprašykite jus pakvietusio žmogaus naujo kodo.</value></data>
   <data name="invitation.required" xml:space="preserve"><value>Kol vyksta uždaras bandymas, registruotis galima tik su kvietimo kodu.</value></data>
   <data name="adult.required" xml:space="preserve"><value>Registruotis gali tik 18 metų ir vyresni asmenys.</value></data>
-  <data name="invitation.used-up" xml:space="preserve"><value>Šio kvietimo kodo vietos jau užimtos. Įveskite kitą kvietimo kodą.</value></data>
+  <data name="invitation.switched-off" xml:space="preserve"><value>Jūsų kvietimo kodą išjungė administratorius, todėl naujo kol kas sukurti negalima.</value></data>
+<data name="invitation.not-found" xml:space="preserve"><value>Tokio kvietimo kodo nėra.</value></data>
+<data name="invitation.cannot-switch-on" xml:space="preserve"><value>Šio kodo įjungti nebegalima: jo savininkas jį pakeitė arba ištrynė paskyrą.</value></data>
+<data name="invitation.already" xml:space="preserve"><value>Kodas jau toks ir yra.</value></data>
   <data name="registration.complete" xml:space="preserve"><value>Registracija jau baigta.</value></data>
   <data name="role-activation.invalid" xml:space="preserve"><value>Aktyvinimo kodas netinka arba nebegalioja.</value></data>
   <data name="role-activation.passkey-required" xml:space="preserve"><value>Aktyvinimo kodą galima įvesti tik prisijungus prieigos raktu.</value></data>
@@ -39,4 +42,45 @@
   <data name="forbidden" xml:space="preserve"><value>Neturite teisės atlikti šio veiksmo.</value></data>
   <data name="not-found" xml:space="preserve"><value>Nerasta.</value></data>
   <data name="http.405" xml:space="preserve"><value>Šis metodas netinkamas.</value></data>
+<data name="appeal.not-found" xml:space="preserve"><value>Šiam projektui kreipimosi nėra.</value></data>
+<data name="appeal.exists" xml:space="preserve"><value>Šis projektas jau turi kreipimąsi. Prisijunkite prie jo.</value></data>
+<data name="appeal.not-open" xml:space="preserve"><value>Šis kreipimasis dabar nepriima pozicijų ir argumentų.</value></data>
+<data name="appeal.not-editable" xml:space="preserve"><value>Kreipimasis jau paskelbtas, jo taisyti nebegalima.</value></data>
+<data name="appeal.initiator-only" xml:space="preserve"><value>Tai gali padaryti tik kreipimosi iniciatorius.</value></data>
+<data name="bill.not-found" xml:space="preserve"><value>Tokio projekto nėra.</value></data>
+<data name="member.required" xml:space="preserve"><value>Pirmiausia baikite registraciją.</value></data>
+<data name="consent.required" xml:space="preserve"><value>Kad galėtume išsaugoti jūsų poziciją, reikia jūsų aiškaus sutikimo.</value></data>
+<data name="consent.outdated" xml:space="preserve"><value>Sutikimo tekstas pasikeitė. Perkraukite puslapį ir perskaitykite naująjį.</value></data>
+<data name="side.invalid" xml:space="preserve"><value>Pasirinkite: prašyti balsuoti už arba prieš.</value></data>
+<data name="position.required" xml:space="preserve"><value>Pirmiausia nurodykite, ko prašote: balsuoti už ar prieš.</value></data>
+<data name="reason.empty" xml:space="preserve"><value>Parašykite argumentą.</value></data>
+<data name="reason.too-long" xml:space="preserve"><value>Argumentas per ilgas: ne daugiau kaip 500 ženklų.</value></data>
+<data name="reason.limit" xml:space="preserve"><value>Dėl šio projekto jau parašėte tiek argumentų, kiek dabar leidžiama vienam žmogui.</value></data>
+<data name="reason.not-found" xml:space="preserve"><value>Tokio argumento nėra.</value></data><data name="writing.restricted" xml:space="preserve"><value>Moderatorius apribojo jūsų galimybę rašyti, todėl šiuo metu to padaryti negalite.</value></data>
+<data name="restriction.exists" xml:space="preserve"><value>Šiam žmogui apribojimas jau galioja. Norėdami pakeisti jo trukmę, pirma jį atšaukite.</value></data>
+<data name="restriction.not-holding" xml:space="preserve"><value>Šis apribojimas jau nebegalioja.</value></data>
+<data name="restriction.not-found" xml:space="preserve"><value>Tokio apribojimo nėra.</value></data>
+<data name="restriction.until-past" xml:space="preserve"><value>Paskutinė apribojimo diena negali būti praeityje.</value></data>
+<data name="reason.author-only" xml:space="preserve"><value>Atsiimti galite tik savo argumentą.</value></data>
+<data name="endorsement.other-side" xml:space="preserve"><value>„Man svarbu“ galite pažymėti tik argumentus tos pusės, kurios prašote patys.</value></data>
+<data name="endorsement.limit" xml:space="preserve"><value>Dėl šio projekto „Man svarbu“ jau pažymėjote tiek argumentų, kiek dabar leidžiama vienam žmogui.</value></data>
+<data name="description.empty" xml:space="preserve"><value>Trumpai ir neutraliai aprašykite, ką keičia projektas.</value></data>
+<data name="description.too-long" xml:space="preserve"><value>Aprašymas per ilgas: ne daugiau kaip 1 500 ženklų.</value></data>
+<data name="threshold.below-minimum" xml:space="preserve"><value>Riba negali būti mažesnė už administratoriaus nustatytą mažiausią.</value></data>
+<data name="threshold.set-by-moderator" xml:space="preserve"><value>Ribą pakeitė moderatorius, todėl jos keisti nebegalite.</value></data>
+<data name="threshold.locked" xml:space="preserve"><value>Kreipimasis jau pateko į suvestinę, todėl ribos keisti nebegalima.</value></data>
+<data name="report.ground" xml:space="preserve"><value>Pasirinkite, kodėl pranešate.</value></data>
+<data name="report.too-long" xml:space="preserve"><value>Paaiškinimas per ilgas: ne daugiau kaip 1 000 ženklų.</value></data>
+<data name="report.target" xml:space="preserve"><value>Nenurodyta, apie ką pranešate.</value></data>
+<data name="report.target-not-found" xml:space="preserve"><value>To, apie ką pranešate, nebėra.</value></data>
+<data name="moderation.wrong-state" xml:space="preserve"><value>Šiam turiniui šio veiksmo atlikti negalima.</value></data>
+<data name="merge.target-invalid" xml:space="preserve"><value>Sujungti galima tik su paskelbtu tos pačios pusės argumentu tame pačiame kreipimesi.</value></data><data name="flag.kind" xml:space="preserve"><value>Pasirinkite, kas negerai su data.</value></data>
+<data name="flag.link" xml:space="preserve"><value>Nurodykite nuorodą (http arba https), kur matyti tikroji data.</value></data>
+<data name="flag.note" xml:space="preserve"><value>Paaiškinimas per ilgas: ne daugiau kaip 1 000 ženklų.</value></data>
+<data name="flag.participants-only" xml:space="preserve"><value>Apie datą gali pranešti kreipimosi iniciatorius ir tie, kurie nurodė savo poziciją.</value></data>
+<data name="planned.stage" xml:space="preserve"><value>Netinkama stadija.</value></data>
+<data name="digest.not-found" xml:space="preserve"><value>Tokios suvestinės nėra.</value></data>
+<data name="digest.held" xml:space="preserve"><value>Šio projekto siuntimas sulaikytas.</value></data>
+<data name="digest.urgent-already" xml:space="preserve"><value>Šią savaitę skubi suvestinė šiam projektui jau patvirtinta.</value></data>
+<data name="party.unknown" xml:space="preserve"><value>Tokios partijos sąraše nėra.</value></data>
 </root>

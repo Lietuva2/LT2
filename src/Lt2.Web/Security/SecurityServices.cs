@@ -20,6 +20,12 @@ internal static class Policies
 
     /// <summary>An active administrator role: a session signed in with the staff passkey (design 6.2).</summary>
     public const string Administrator = "administrator";
+
+    /// <summary>
+    /// The active moderator role itself, not an administrator's: restricting an account from writing is a moderator's
+    /// action (design 8.3); lifting it is open to both (<see cref="Moderator"/>).
+    /// </summary>
+    public const string ModeratorRole = "moderator-role";
 }
 
 /// <summary>Rate-limit policy names and limits (design 6.4). Limits are per client IP; see <see cref="RateLimitOptions"/>.</summary>
@@ -28,6 +34,15 @@ internal static class RateLimitPolicies
     public const string CodeRequest = "auth-code";
     public const string Registration = "auth-register";
     public const string SignIn = "auth-sign-in";
+
+    /// <summary>Opening appeals, per account (design 6.4).</summary>
+    public const string OpenAppeal = "appeal-open";
+
+    /// <summary>Writing arguments, per account (design 6.4).</summary>
+    public const string WriteReason = "appeal-reason";
+
+    /// <summary>Reports, per account (design 6.4).</summary>
+    public const string Report = "appeal-report";
 }
 
 internal sealed class RateLimitOptions
@@ -39,6 +54,12 @@ internal sealed class RateLimitOptions
     public FixedWindow Registration { get; set; } = new() { PermitLimit = 20, WindowSeconds = 60 * 60 };
 
     public FixedWindow SignIn { get; set; } = new() { PermitLimit = 30, WindowSeconds = 15 * 60 };
+
+    public FixedWindow OpenAppeal { get; set; } = new() { PermitLimit = 5, WindowSeconds = 60 * 60 };
+
+    public FixedWindow WriteReason { get; set; } = new() { PermitLimit = 20, WindowSeconds = 60 * 60 };
+
+    public FixedWindow Report { get; set; } = new() { PermitLimit = 20, WindowSeconds = 60 * 60 };
 
     internal sealed class FixedWindow
     {
@@ -79,7 +100,9 @@ internal static class SecurityServices
             .AddPolicy(Policies.Moderator, p => p.RequireAuthenticatedUser()
                 .AddRequirements(new StaffRoleRequirement(Roles.Moderator, Roles.Administrator)))
             .AddPolicy(Policies.Administrator, p => p.RequireAuthenticatedUser()
-                .AddRequirements(new StaffRoleRequirement(Roles.Administrator)));
+                .AddRequirements(new StaffRoleRequirement(Roles.Administrator)))
+            .AddPolicy(Policies.ModeratorRole, p => p.RequireAuthenticatedUser()
+                .AddRequirements(new StaffRoleRequirement(Roles.Moderator)));
 
         services.Configure<RateLimitOptions>(configuration.GetSection(RateLimitOptions.Section));
         services.AddRateLimiter(options =>
@@ -104,6 +127,9 @@ internal static class SecurityServices
             options.AddPolicy(RateLimitPolicies.CodeRequest, context => PerIp(context, Limits(context).CodeRequest));
             options.AddPolicy(RateLimitPolicies.Registration, context => PerIp(context, Limits(context).Registration));
             options.AddPolicy(RateLimitPolicies.SignIn, context => PerIp(context, Limits(context).SignIn));
+            options.AddPolicy(RateLimitPolicies.OpenAppeal, context => PerAccount(context, Limits(context).OpenAppeal));
+            options.AddPolicy(RateLimitPolicies.WriteReason, context => PerAccount(context, Limits(context).WriteReason));
+            options.AddPolicy(RateLimitPolicies.Report, context => PerAccount(context, Limits(context).Report));
         });
 
         return services;
@@ -115,6 +141,17 @@ internal static class SecurityServices
     private static RateLimitPartition<string> PerIp(HttpContext context, RateLimitOptions.FixedWindow limit) =>
         RateLimitPartition.GetFixedWindowLimiter(
             ClientAddress(context),
+            _ => new FixedWindowRateLimiterOptions
+            {
+                PermitLimit = limit.PermitLimit,
+                Window = TimeSpan.FromSeconds(limit.WindowSeconds),
+                QueueLimit = 0,
+            });
+
+    /// <summary>Per signed-in account (these endpoints need one); the address only if somehow there is none.</summary>
+    private static RateLimitPartition<string> PerAccount(HttpContext context, RateLimitOptions.FixedWindow limit) =>
+        RateLimitPartition.GetFixedWindowLimiter(
+            context.User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value is { } account ? "account:" + account : "ip:" + ClientAddress(context),
             _ => new FixedWindowRateLimiterOptions
             {
                 PermitLimit = limit.PermitLimit,

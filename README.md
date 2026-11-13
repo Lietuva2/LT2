@@ -59,8 +59,28 @@ docker compose -f deploy/compose.yaml up --build
 docker compose -f deploy/compose.yaml run --rm --no-deps migrator --reset-parliament
 ```
 
+The demonstration appeal on XVP-0412 (6 800 invented accounts asking to vote for, 4 280 against, the prototype's
+arguments) is written by the migrator on the local stack only: it refuses unless `LT2_DEMO_DATA=true` (set in
+`deploy/.env`) and the parliament data is the stand-in's. Running it again changes nothing.
+
+```bash
+docker compose -f deploy/compose.yaml run --rm --no-deps migrator --demo-appeal
+```
+
+Planned dates come from the lrs.lt upcoming-agenda pages, not the open data. Locally the worker reads the stand-in's
+INVENTED page (`LT2_AGENDA_BASE_ADDRESS` in `deploy/.env`); production sets the real address and adds its host to the
+outbound allowlist; empty means off. The parser's assumptions are in `tests/Lt2.Parliament.ImportTests/Agenda/ASSUMPTIONS.md`;
+`LT2_LRS_LIVE=1` with `LT2_LRS_AGENDA_URL` runs the live check. Summaries to MPs are made in dry-run only (M2a): published
+at `/suvestines`, never sent. `LT2_MODERATION_CONTACT` is the address shown to visitors who want to report (a local
+placeholder in `deploy/.env`).
+
 Register with any address and the invitation code, open the sign-in email in Mailpit, enter the six-digit code, and the
 "Sveiki" page appears. From there you can add a passkey and see or end your sessions.
+
+`deploy/.env` raises, for this machine only, the per-address request limits (`LT2_RATE_*`) and, through the migrator's
+`--local-code-limits`, the sign-in code limits per hour and per day (to the highest values the settings allow), so hand
+testing and end-to-end runs do not meet a 429. The defaults in code and production are unchanged; never set these on a
+server. (The fixed local sign-in code described in design 6.2 is not built.)
 
 To give a registered account the administrator role (needed for `/api/v1/admin/…`). A staff role works only in a session
 signed in with the account's staff passkey (design 6.2), so the command prints a one-time activation code on the console
@@ -169,7 +189,8 @@ is written to `audit.event`.
 
 For a production-shaped run, override `deploy/.env`: `LT2_SITE_ADDRESS` (the domain), `LT2_TLS` (the ACME contact
 address), `LT2_HTTP_PORT=80`, `LT2_HTTPS_PORT=443`, `COMPOSE_PROFILES=` (no Mailpit), the `LT2_SMTP_*` values and
-`LT2_MIGRATOR_ARGS=` (no seeded invitation), `LT2_SEIMAS_BASE_ADDRESS=` and `LT2_OUTBOUND_EXTRA_HOST=` (the worker
+`LT2_MIGRATOR_ARGS=` (no seeded invitation), `LT2_DEMO_DATA=` (no demonstration data), `LT2_MODERATION_CONTACT` (the real address), `LT2_AGENDA_BASE_ADDRESS`
+(the lrs.lt address, or empty), `LT2_SEIMAS_BASE_ADDRESS=` and `LT2_OUTBOUND_EXTRA_HOST=` (the worker
 then imports from `https://apps.lrs.lt/sip/`, the only host it may call), and mount real secrets.
 
 ## Conventions

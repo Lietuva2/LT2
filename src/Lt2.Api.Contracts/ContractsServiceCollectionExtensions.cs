@@ -22,6 +22,22 @@ public static class ContractsServiceCollectionExtensions
         services.AddScoped<IValidator<GrantRoleRequest>, GrantRoleRequestValidator>();
         services.AddScoped<IValidator<ResetAccountRequest>, ResetAccountRequestValidator>();
         services.AddScoped<IValidator<UpdateSettingRequest>, UpdateSettingRequestValidator>();
+        services.AddScoped<IValidator<Me.PositionConsentRequest>, Me.PositionConsentRequestValidator>();
+        services.AddScoped<IValidator<Me.PartySupportRequest>, Me.PartySupportRequestValidator>();
+        services.AddScoped<IValidator<Appeals.OpenAppealRequest>, Appeals.OpenAppealRequestValidator>();
+        services.AddScoped<IValidator<Appeals.EditAppealRequest>, Appeals.EditAppealRequestValidator>();
+        services.AddScoped<IValidator<Appeals.ThresholdRequest>, Appeals.ThresholdRequestValidator>();
+        services.AddScoped<IValidator<Appeals.PositionRequest>, Appeals.PositionRequestValidator>();
+        services.AddScoped<IValidator<Appeals.ReasonRequest>, Appeals.ReasonRequestValidator>();
+        services.AddScoped<IValidator<Appeals.ReportRequest>, Appeals.ReportRequestValidator>();
+        services.AddScoped<IValidator<Appeals.ModerationRequest>, Appeals.ModerationRequestValidator>();
+        services.AddScoped<IValidator<Appeals.StatementRequest>, Appeals.StatementRequestValidator>();
+        services.AddScoped<IValidator<Appeals.RestrictionRequest>, Appeals.RestrictionRequestValidator>();
+        services.AddScoped<IValidator<Appeals.ModeratorThresholdRequest>, Appeals.ModeratorThresholdRequestValidator>();
+        services.AddScoped<IValidator<Appeals.MergeReasonRequest>, Appeals.MergeReasonRequestValidator>();
+        services.AddScoped<IValidator<Appeals.FlagRequest>, Appeals.FlagRequestValidator>();
+        services.AddScoped<IValidator<Appeals.ModeratorPlannedRequest>, Appeals.ModeratorPlannedRequestValidator>();
+        services.AddScoped<IValidator<Digests.UrgentDigestRequest>, Appeals.UrgentDigestRequestValidator>();
         return services;
     }
 }

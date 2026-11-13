@@ -1,0 +1,146 @@
+@using Lt2.Api.Contracts.Appeals
+@inherits InteractiveBase
+@inject IModerationApi Moderation
+
+@* The actions on one queue item (design 8.3). The statement goes to the author; returning, hiding, merging and a new
+   threshold need one. *@
+<div class="stack stack--tight">
+    <div class="field @(Errors.ContainsKey("statement") ? "field--error" : "")">
+        <label for="statement-@Id">@L["Mod.Statement"]</label>
+        <textarea class="textarea" id="statement-@Id" maxlength="@AppealLimits.StatementMaxLength" @bind="_statement" @bind:event="oninput" disabled="@Locked"></textarea>
+        <FieldError Errors="Errors" Field="statement" />
+    </div>
+    @if (Kind == "appeal")
+    {
+        <div class="field">
+            <label for="threshold-@Id">@L["Mod.Threshold"]</label>
+            <input class="input num" type="number" id="threshold-@Id" min="1" step="1" @bind="_threshold" disabled="@Locked" />
+        </div>
+    }
+    @if (Kind == "appeal" && Status == "open")
+    {
+        <div class="pair">
+            <div class="field">
+                <label for="planned-@Id">@L["Mod.PlannedDate"]</label>
+                <input class="input num" type="date" id="planned-@Id" @bind="_planned" disabled="@Locked" />
+            </div>
+            <div class="field">
+                <label for="stage-@Id">@L["Mod.PlannedStage"]</label>
+                <select class="input" id="stage-@Id" @bind="_stage" disabled="@Locked">
+                    <option value="">@L["Mod.Stage.none"]</option>
+                    <option value="presentation">@L["Mod.Stage.presentation"]</option>
+                    <option value="consideration">@L["Mod.Stage.consideration"]</option>
+                    <option value="adoption">@L["Mod.Stage.adoption"]</option>
+                </select>
+            </div>
+        </div>
+    }
+    @if (MergeCandidates is { Count: > 0 })
+    {
+        <fieldset class="stack stack--tight">
+            <legend class="label">@L["Mod.MergeInto"]</legend>
+            @foreach (var candidate in MergeCandidates)
+            {
+                <label class="check">
+                    <input type="radio" name="merge-@Id" checked="@(_mergeInto == candidate.Id)" @onchange="() => _mergeInto = candidate.Id" disabled="@Locked" />
+                    <span>@candidate.Text <span class="small num">(@AppealNumbers.Of(candidate.Endorsements))</span></span>
+                </label>
+            }
+        </fieldset>
+    }
+    <div class="row">
+        <button type="button" class="btn" disabled="@Locked" @onclick="PublishAsync">@L[Status == "pending" ? "Mod.Publish" : "Mod.Keep"]</button>
+        @if (Kind == "appeal" && Status == "pending")
+        {
+            <button type="button" class="btn btn--plain" disabled="@Locked" @onclick="ReturnAsync">@L["Mod.Return"]</button>
+        }
+        <button type="button" class="btn btn--plain" disabled="@Locked" @onclick="HideAsync">@L["Mod.Hide"]</button>
+        @if (Kind == "appeal")
+        {
+            <button type="button" class="btn btn--plain" disabled="@(Locked || _threshold is null)" @onclick="ThresholdAsync">@L["Mod.SetThreshold"]</button>
+        }
+        @if (Kind == "appeal" && Status == "open")
+        {
+            <button type="button" class="btn btn--plain" disabled="@(Locked || _planned is null)" @onclick="PlannedAsync">@L["Mod.SetPlanned"]</button>
+            <button type="button" class="btn btn--plain" disabled="@Locked" @onclick="HoldOrReleaseAsync">@L[Held ? "Mod.Release" : "Mod.Hold"]</button>
+            <button type="button" class="btn btn--plain" disabled="@(Locked || Held)" @onclick="UrgentAsync">@L["Mod.Urgent"]</button>
+        }
+        @if (MergeCandidates is { Count: > 0 })
+        {
+            <button type="button" class="btn btn--plain" disabled="@(Locked || _mergeInto is null)" @onclick="MergeAsync">@L["Mod.Merge"]</button>
+        }
+    </div>
+    <Messages Message="@Message" Info="@Info" />
+</div>
+
+@code {
+    private string _statement = "";
+    private int? _threshold;
+    private Guid? _mergeInto;
+    private DateOnly? _planned;
+    private string _stage = "";
+
+    [Parameter, EditorRequired] public Guid Id { get; set; }
+
+    /// <summary><c>appeal</c> or <c>reason</c>.</summary>
+    [Parameter, EditorRequired] public string Kind { get; set; } = "";
+
+    [Parameter] public string Status { get; set; } = "";
+
+    [Parameter] public IReadOnlyList<ReasonResponse>? MergeCandidates { get; set; }
+
+    /// <summary>For an appeal: its sending is held.</summary>
+    [Parameter] public bool Held { get; set; }
+
+    [Parameter] public EventCallback<string> OnDone { get; set; }
+
+    private Task PublishAsync() => ActAsync(
+        () => Kind == "appeal"
+            ? Moderation.PublishAppealAsync(Id, new ModerationRequest { Statement = Blank(_statement) })
+            : Moderation.PublishReasonAsync(Id, new ModerationRequest { Statement = Blank(_statement) }),
+        "Mod.Done.Publish");
+
+    private Task ReturnAsync() => ActAsync(() => Moderation.ReturnAppealAsync(Id, new StatementRequest { Statement = _statement }), "Mod.Done.Return");
+
+    private Task HideAsync() => ActAsync(
+        () => Kind == "appeal"
+            ? Moderation.HideAppealAsync(Id, new StatementRequest { Statement = _statement })
+            : Moderation.HideReasonAsync(Id, new StatementRequest { Statement = _statement }),
+        "Mod.Done.Hide");
+
+    private Task ThresholdAsync() => ActAsync(
+        () => Moderation.SetThresholdAsync(Id, new ModeratorThresholdRequest { Threshold = _threshold ?? 0, Statement = _statement }),
+        "Mod.Done.Threshold");
+
+    private Task PlannedAsync() => ActAsync(
+        () => Moderation.SetPlannedAsync(Id, new ModeratorPlannedRequest { Date = _planned!.Value, Stage = _stage.Length == 0 ? null : _stage, Statement = _statement }),
+        "Mod.Done.Planned");
+
+    private Task HoldOrReleaseAsync() => ActAsync(
+        () => Held
+            ? Moderation.ReleaseAsync(Id, new StatementRequest { Statement = _statement })
+            : Moderation.HoldAsync(Id, new StatementRequest { Statement = _statement }),
+        Held ? "Mod.Done.Release" : "Mod.Done.Hold");
+
+    private Task UrgentAsync() => ActAsync(
+        () => Moderation.UrgentAsync(Id, new Lt2.Api.Contracts.Digests.UrgentDigestRequest { Statement = _statement }),
+        "Mod.Done.Urgent");
+
+    private Task MergeAsync() => ActAsync(
+        () => Moderation.MergeReasonAsync(Id, new MergeReasonRequest { IntoReasonId = _mergeInto!.Value, Statement = _statement }),
+        "Mod.Done.Merge");
+
+    private Task ActAsync(Func<Task<ApiResult>> action, string done) => RunAsync(async () =>
+    {
+        var result = await action();
+        if (!result.IsSuccess)
+        {
+            Show(result.Problem, "statement");
+            return;
+        }
+
+        await OnDone.InvokeAsync(L[done]);
+    });
+
+    private static string? Blank(string text) => string.IsNullOrWhiteSpace(text) ? null : text;
+}

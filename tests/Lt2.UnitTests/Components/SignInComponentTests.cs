@@ -441,6 +441,25 @@ public sealed class SignInComponentTests : BunitContext
             return Activate(request);
         }
 
+        public Task<ApiResult> GivePositionConsentAsync(PositionConsentRequest request, CancellationToken cancellationToken = default) =>
+            Task.FromResult(ApiResult.Ok());
+
+        public Task<ApiResult> WithdrawPositionConsentAsync(CancellationToken cancellationToken = default) =>
+            Task.FromResult(ApiResult.Ok());
+
+        public Task<ApiResult<PartySupportResponse>> GetPartySupportAsync(CancellationToken cancellationToken = default) =>
+            Task.FromResult(ApiResult<PartySupportResponse>.Ok(new PartySupportResponse(null, [])));
+
+        public Task<ApiResult> SetPartySupportAsync(PartySupportRequest request, CancellationToken cancellationToken = default) =>
+            Task.FromResult(ApiResult.Ok());
+
+        public Task<ApiResult> DeleteAccountAsync(CancellationToken cancellationToken = default) => Task.FromResult(ApiResult.Ok());
+
+        public Task<ApiResult<MyInvitationResponse>> GetInvitationAsync(CancellationToken cancellationToken = default) =>
+            Task.FromResult(ApiResult<MyInvitationResponse>.Ok(new MyInvitationResponse("ABCD-EFGH", "/prisijungti?kodas=ABCD-EFGH", 0, true, null)));
+
+        public Task<ApiResult<MyInvitationResponse>> ReplaceInvitationAsync(CancellationToken cancellationToken = default) => GetInvitationAsync(cancellationToken);
+
         public Task<ApiResult<IReadOnlyList<SessionResponse>>> GetSessionsAsync(CancellationToken cancellationToken = default) =>
             Task.FromResult(ApiResult<IReadOnlyList<SessionResponse>>.Ok(Sessions));
 

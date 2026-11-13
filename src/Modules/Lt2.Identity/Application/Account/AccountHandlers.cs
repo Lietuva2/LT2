@@ -37,7 +37,10 @@ internal sealed class AccountHandlers(IdentityDb db, UserManager<User> users, St
             profile.CreatedAt,
             !profile.IsPending,
             session.ActiveRoles,
-            awaitingActivation);
+            awaitingActivation,
+            await db.Consents.AnyAsync(
+                c => c.UserId == user.Id && c.Kind == PositionConsent.Kind && c.TextVersion == PositionConsent.TextVersion && c.WithdrawnAt == null,
+                cancellationToken));
     }
 
     public async Task<IReadOnlyList<SessionSummary>> SessionsAsync(ClaimsPrincipal principal, CancellationToken cancellationToken)

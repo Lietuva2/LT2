@@ -1,0 +1,64 @@
+@page "/seimas/{Number}/kreipimasis/istorija"
+@using Lt2.Api.Contracts.Appeals
+@inject IAppealsApi Appeals
+@inject IStringLocalizer<AppealText> T
+@inject Formats F
+@inject NavigationManager Navigation
+
+@* Design 8.2: the neutral description keeps its edit history, public. Who edited is not shown. *@
+@if (_appeal is { } a)
+{
+    <PageTitle>@a.Bill.Number · @T["History.Title"] · Lietuva 2.0</PageTitle>
+    <div class="stack">
+        <ol class="crumbs">
+            <li><a href="/kreipimaisi">@T["Nav.Appeals"]</a></li>
+            <li><a href="/seimas/@Uri.EscapeDataString(a.Bill.Number)/kreipimasis">@a.Bill.Number</a></li>
+            <li>@T["History.Title"]</li>
+        </ol>
+        <h1>@T["History.Title"]</h1>
+        <p class="lead">@a.Bill.Title</p>
+    </div>
+    <section class="stack" aria-labelledby="h-now">
+        <h2 id="h-now">@T["History.Now"]</h2>
+        <p class="voice">@a.Description</p>
+    </section>
+    <section class="stack" aria-labelledby="h-edits" id="edits">
+        <h2 id="h-edits">@T["History.Edits"]</h2>
+        @if (_history is not { Count: > 0 } edits)
+        {
+            <p>@T["History.None"]</p>
+        }
+        else
+        {
+            <ol class="rows">
+                @foreach (var edit in edits)
+                {
+                    <li>
+                        <div class="rows__main">
+                            <span class="small num">@F.Time(edit.ChangedAt)</span>
+                            <span class="label">@T["History.Before"]</span><span>@edit.OldText</span>
+                            <span class="label">@T["History.After"]</span><span>@edit.NewText</span>
+                        </div>
+                    </li>
+                }
+            </ol>
+        }
+    </section>
+}
+
+@code {
+    private AppealResponse? _appeal;
+    private IReadOnlyList<DescriptionRevisionResponse>? _history;
+
+    [Parameter] public string Number { get; set; } = "";
+
+    protected override async Task OnInitializedAsync()
+    {
+        _history = (await Appeals.GetHistoryAsync(Number)).Value;
+        _appeal = _history is null ? null : (await Appeals.GetAppealAsync(Number)).Value;
+        if (_appeal is null)
+        {
+            Navigation.NotFound();
+        }
+    }
+}

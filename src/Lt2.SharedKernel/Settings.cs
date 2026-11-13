@@ -67,6 +67,12 @@ public static class SettingKeys
     /// <summary>Whether registration needs an invitation code (closed trial, design 6.2).</summary>
     public static readonly SettingKey<bool> RegistrationRequiresInvitation = new("Registration:RequireInvitation", true);
 
+    /// <summary>
+    /// Registrations one personal invitation code may bring (design 6.2); 0 = no limit, the default (decided by the owner
+    /// on 2026-11-13). Team codes keep their own uses.
+    /// </summary>
+    public static readonly SettingKey<int> RegistrationPersonalCodeUses = new("Registration:PersonalCodeUses", 0, v => v is >= 0 and <= 100000);
+
     /// <summary>Days a pending account (address never proven, or registration never completed) is kept (design 6.2).</summary>
     public static readonly SettingKey<int> PendingAccountDays = new("Registration:PendingAccountDays", 7, v => v is > 0 and <= 90);
 
@@ -79,8 +85,35 @@ public static class SettingKeys
     /// <summary>Default appeal threshold offered to the initiator (design 8.4).</summary>
     public static readonly SettingKey<int> DigestThresholdDefault = new("Digest:ThresholdDefault", 100, v => v > 0);
 
+    /// <summary>
+    /// The administrator's minimum appeal threshold (design 8.4): no initiator or moderator may set less. The design
+    /// names the setting but gives no value; 50 is a placeholder for the owner to set.
+    /// </summary>
+    public static readonly SettingKey<int> DigestThresholdMinimum = new("Digest:ThresholdMinimum", 50, v => v > 0);
+
+    /// <summary>The weekly summary: Monday at this Vilnius time ("HH:mm"), or "off" (design 8.4).</summary>
+    public static readonly SettingKey<string> DigestWeekly = new("Digest:Weekly", "07:00", IsTimeOrOff);
+
+    /// <summary>The before-vote summary: on the working day before the sitting at this Vilnius time, or "off" (design 8.4).</summary>
+    public static readonly SettingKey<string> DigestBeforeVote = new("Digest:BeforeVote", "12:00", IsTimeOrOff);
+
     /// <summary>Most summaries an MP receives in a week (design 8.4).</summary>
     public static readonly SettingKey<int> DigestMaxPerWeek = new("Digest:MaxPerWeek", 2, v => v is > 0 and <= 7);
+
+    /// <summary>
+    /// "Changed notably" for the weekly summary (design 8.4): the share by which an appeal's participants (both sides)
+    /// changed since the last summary that held it. Decided by the owner on 2026-11-13, default 10 %.
+    /// </summary>
+    public static readonly SettingKey<decimal> DigestNotableChange = new("Digest:NotableChange", 0.10m, v => v is > 0 and <= 1);
+
+    /// <summary>
+    /// Arguments one person may write on one bill (design 8.2); 0 = no limit, the default (decided by the owner on
+    /// 2026-11-13: limits are switched on when the need shows).
+    /// </summary>
+    public static readonly SettingKey<int> AppealsReasonsPerPerson = new("Appeals:ReasonsPerPerson", 0, v => v is >= 0 and <= 100);
+
+    /// <summary>"Man svarbu" marks one person may give on one bill (design 8.2); 0 = no limit, the default.</summary>
+    public static readonly SettingKey<int> AppealsEndorsementsPerPerson = new("Appeals:EndorsementsPerPerson", 0, v => v is >= 0 and <= 100);
 
     /// <summary>Surge note: share of recent positions from new accounts (design 6.6).</summary>
     public static readonly SettingKey<decimal> SurgeMinimumShare = new("Surge:MinimumShare", 0.30m, v => v is > 0 and <= 1);
@@ -94,15 +127,25 @@ public static class SettingKeys
     public static readonly IReadOnlyList<ISettingKey> All =
     [
         RegistrationRequiresInvitation,
+        RegistrationPersonalCodeUses,
         PendingAccountDays,
         SignInCodesPerHour,
         SignInCodesPerDay,
         DigestThresholdDefault,
+        DigestThresholdMinimum,
+        DigestWeekly,
+        DigestBeforeVote,
         DigestMaxPerWeek,
+        DigestNotableChange,
+        AppealsReasonsPerPerson,
+        AppealsEndorsementsPerPerson,
         SurgeMinimumShare,
         SurgeMinimumAccounts,
         SurgeWindowHours,
     ];
+
+    private static bool IsTimeOrOff(string value) =>
+        value == "off" || TimeOnly.TryParseExact(value, "HH:mm", System.Globalization.CultureInfo.InvariantCulture, System.Globalization.DateTimeStyles.None, out _);
 
     public static ISettingKey? Find(string name) =>
         All.FirstOrDefault(k => string.Equals(k.Name, name, StringComparison.OrdinalIgnoreCase));

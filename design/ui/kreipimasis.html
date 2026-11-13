@@ -110,6 +110,24 @@
           <button class="btn btn--plain" type="button" id="add-reason">Parašyti argumentą</button>
           <a href="#">Visi 14 argumentų</a>
         </div>
+        <form class="sheet stack" aria-labelledby="write-title" id="write-reason">
+          <h3 id="write-title">Jūsų argumentas</h3>
+          <p class="small">Argumentą galite parašyti už arba prieš, nepriklausomai nuo to, ko prašote patys. Prie argumento nerodoma, kurią pusę pasirinkote jūs.</p>
+          <fieldset class="field stack stack--tight">
+            <legend>Argumentas</legend>
+            <label class="check"><input type="radio" name="reason-side" id="reason-side-for" value="for" checked><span>už</span></label>
+            <label class="check"><input type="radio" name="reason-side" id="reason-side-against" value="against"><span>prieš</span></label>
+          </fieldset>
+          <div class="field">
+            <label for="reason-text">Tekstas</label>
+            <textarea class="textarea" id="reason-text" maxlength="500" aria-describedby="reason-hint"></textarea>
+            <p class="field__hint num" id="reason-hint">Paprastas tekstas, 0 iš 500 ženklų. Argumentas bus viešas su jūsų vardu ir pasirinkta puse.</p>
+          </div>
+          <div class="row">
+            <button type="submit" class="btn">Paskelbti</button>
+            <button type="button" class="btn btn--plain">Atšaukti</button>
+          </div>
+        </form>
       </section>
 
       <section class="stack" aria-labelledby="h-answers">

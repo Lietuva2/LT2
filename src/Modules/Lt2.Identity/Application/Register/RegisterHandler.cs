@@ -43,14 +43,17 @@ internal sealed class RegisterHandler(
         string? invitationCode = null;
         if (!string.IsNullOrWhiteSpace(registration.InvitationCode))
         {
-            invitationCode = Invitation.NormalizeCode(registration.InvitationCode);
-            var valid = await db.Invitations.AsNoTracking().AnyAsync(
-                i => i.Code == invitationCode && i.UsesLeft > 0 && (i.ExpiresAt == null || i.ExpiresAt > now),
-                cancellationToken);
-            if (!valid)
+            // Case, dashes and spaces do not matter (design 6.2). One answer for every code that does not work.
+            var lookup = InvitationRules.Lookup(registration.InvitationCode);
+            var invitation = await db.Invitations.AsNoTracking().FirstOrDefaultAsync(i => i.Lookup == lookup, cancellationToken);
+            var personalLimit = await settings.GetAsync(SettingKeys.RegistrationPersonalCodeUses, cancellationToken);
+            if (invitation is null
+                || !InvitationRules.Usable(invitation.Kind, invitation.UsesLeft, invitation.UsedCount, invitation.ExpiresAt, invitation.SwitchedOffAt, invitation.ReplacedAt, personalLimit, now))
             {
                 return Error.Validation("invitation.invalid", "invitationCode");
             }
+
+            invitationCode = invitation.Code;
         }
         else if (await settings.GetAsync(SettingKeys.RegistrationRequiresInvitation, cancellationToken))
         {

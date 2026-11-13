@@ -1,0 +1,108 @@
+@page "/administravimas/nustatymai"
+@attribute [Authorize]
+@rendermode InteractiveWebAssembly
+@using System.Text.Json
+@using Lt2.Api.Contracts.Admin
+@using Lt2.Api.Contracts.Appeals
+@using Lt2.Web.Client.Appeals
+@inherits InteractiveBase
+@inject IAdminApi Admin
+
+@* The administrator's settings screen (design 5.6, 8.4): the numbers this half uses first, then every other runtime
+   setting. Each change is audited by the server. Needs the active administrator role of a staff-passkey session. *@
+<PageTitle>@L["Admin.PageTitle"]</PageTitle>
+
+<div class="stack">
+    <p class="label">Lietuva 2.0</p>
+    <h1>@L["Admin.Title"]</h1>
+    <p class="lead">@L["Admin.Lead"]</p>
+</div>
+
+<Messages Message="@Message" Info="@Info" />
+
+@if (_refused)
+{
+    <p class="note" role="alert">@L["Admin.Refused"]</p>
+}
+else if (Items is null)
+{
+    <p class="small">@L["Loading"]</p>
+}
+else
+{
+    <ul class="rows" id="settings">
+        @foreach (var setting in Items.OrderBy(s => Order(s.Key)).ThenBy(s => s.Key, StringComparer.Ordinal))
+        {
+            var id = "setting-" + setting.Key.Replace(':', '-');
+            <li>
+                <div class="rows__main">
+                    <label for="@id"><b>@Name(setting.Key)</b></label>
+                    <span class="small"><code>@setting.Key</code> · @(setting.ChangedAt is { } at ? Text("Admin.Changed", at.ToString("yyyy-MM-dd HH:mm", System.Globalization.CultureInfo.InvariantCulture)) : L["Admin.Default"])</span>
+                </div>
+                <div class="rows__side row">
+                    <input class="input num" id="@id" value="@(_drafts.GetValueOrDefault(setting.Key) ?? setting.Value.GetRawText())"
+                           @onchange="e => _drafts[setting.Key] = e.Value?.ToString()" disabled="@Locked" />
+                    <button type="button" class="btn btn--plain" disabled="@Locked" @onclick="() => SaveAsync(setting.Key)">@L["Admin.Save"]</button>
+                </div>
+            </li>
+        }
+    </ul>
+}
+
+@code {
+    private static readonly string[] ThisHalf =
+        ["Digest:ThresholdDefault", "Digest:ThresholdMinimum", "Digest:Weekly", "Digest:BeforeVote", "Digest:MaxPerWeek", "Digest:NotableChange", "Appeals:ReasonsPerPerson", "Appeals:EndorsementsPerPerson", "Surge:MinimumShare", "Surge:MinimumAccounts", "Surge:WindowHours"];
+    private readonly Dictionary<string, string?> _drafts = [];
+    private bool _refused;
+
+    [PersistentState] public List<SettingResponse>? Items { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        if (Items is null)
+        {
+            await LoadAsync();
+        }
+    }
+
+    private async Task LoadAsync()
+    {
+        var settings = await Admin.GetSettingsAsync();
+        _refused = !settings.IsSuccess;
+        Items = settings.Value?.ToList();
+    }
+
+    private Task SaveAsync(string key) => RunAsync(async () =>
+    {
+        JsonElement value;
+        var draft = (_drafts.GetValueOrDefault(key) ?? "").Trim();
+        try
+        {
+            value = JsonDocument.Parse(draft).RootElement.Clone();
+        }
+        catch (JsonException)
+        {
+            // A time setting is a string: "07:00" or "off" may be typed without quotes.
+            value = JsonSerializer.SerializeToElement(draft.Trim('"'));
+        }
+
+        var result = await Admin.UpdateSettingAsync(key, new UpdateSettingRequest { Value = value });
+        if (!result.IsSuccess)
+        {
+            Show(result.Problem);
+            return;
+        }
+
+        _drafts.Remove(key);
+        await LoadAsync();
+        Info = L["Admin.Saved"];
+    });
+
+    private static int Order(string key) => Array.IndexOf(ThisHalf, key) is var i and >= 0 ? i : ThisHalf.Length;
+
+    private string Name(string key)
+    {
+        var name = L["Admin.Setting." + key];
+        return name.ResourceNotFound ? key : name.Value;
+    }
+}

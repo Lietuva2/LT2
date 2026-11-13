@@ -1,0 +1,83 @@
+@using Lt2.Api.Contracts.Appeals
+@inherits InteractiveBase
+@inject IAppealsApi Appeals
+@inject NavigationManager Navigation
+
+@* Opening the appeal on a bill (design 8.1, decided 2026-11-13): a neutral description and the threshold, nothing else.
+   No side and no first argument, so no positions consent: once a moderator publishes the appeal, the initiator writes
+   arguments and takes a side like anyone else, or never. If the bill got an appeal meanwhile, the person is taken to it. *@
+@if (!_signedIn)
+{
+    <p><a class="btn" href="/prisijungti">@L["Open.SignIn"]</a></p>
+}
+else if (Restriction is { Restricted: true } restriction)
+{
+    <WritingRestricted Restriction="restriction" />
+}
+else if (Rules is { } rules)
+{
+    <form class="sheet sheet--cut stack" @onsubmit="SubmitAsync" novalidate aria-labelledby="open-title" id="open-appeal">
+        <h2 id="open-title">@L["Open.Title"]</h2>
+        <p>@L["Open.Intro"]</p>
+
+        <div class="field @(Errors.ContainsKey("description") ? "field--error" : "")">
+            <label for="open-description">@L["Open.Description"]</label>
+            <p class="field__hint" id="open-description-hint">@Text("Open.DescriptionHint", AppealNumbers.Of(rules.DescriptionMaxLength))</p>
+            <textarea class="textarea" id="open-description" maxlength="@rules.DescriptionMaxLength" aria-describedby="open-description-hint"
+                      @bind="_description" @bind:event="oninput" disabled="@Locked"></textarea>
+            <FieldError Errors="Errors" Field="description" />
+        </div>
+
+        <div class="field @(Errors.ContainsKey("threshold") ? "field--error" : "")">
+            <label for="open-threshold">@L["Open.Threshold"]</label>
+            <p class="field__hint num" id="open-threshold-hint">@Text("Open.ThresholdHint", AppealNumbers.Of(rules.ThresholdMinimum))</p>
+            <input class="input num" type="number" id="open-threshold" min="@rules.ThresholdMinimum" step="1" aria-describedby="open-threshold-hint"
+                   @bind="_threshold" disabled="@Locked" />
+            <FieldError Errors="Errors" Field="threshold" />
+        </div>
+
+        <p class="small">@L["Open.After"]</p>
+        <button type="submit" class="btn" disabled="@Locked">@L["Open.Submit"]</button>
+        <Messages Message="@Message" Info="@Info" />
+    </form>
+}
+
+@code {
+    private bool _signedIn;
+    private string _description = "";
+    private int _threshold;
+
+    [Parameter, EditorRequired] public string Number { get; set; } = "";
+
+    [CascadingParameter] private Task<AuthenticationState>? AuthState { get; set; }
+
+    [PersistentState] public AppealRulesResponse? Rules { get; set; }
+
+    /// <summary>The person's own writing restriction (design 8.3): opening an appeal is writing.</summary>
+    [PersistentState] public MyRestrictionResponse? Restriction { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        _signedIn = AuthState is not null && (await AuthState).User.Identity?.IsAuthenticated == true;
+        if (!_signedIn)
+        {
+            return;
+        }
+
+        Rules ??= (await Appeals.GetRulesAsync()).Value;
+        Restriction ??= (await Appeals.GetMyRestrictionAsync()).Value;
+        _threshold = Rules?.ThresholdDefault ?? 100;
+    }
+
+    private Task SubmitAsync() => RunAsync(async () =>
+    {
+        var result = await Appeals.OpenAsync(Number, new OpenAppealRequest { Description = _description, Threshold = _threshold });
+        if (result.IsSuccess || result.Problem?.Code == "appeal.exists")
+        {
+            Navigation.NavigateTo($"/seimas/{Uri.EscapeDataString(Number)}/kreipimasis", forceLoad: true);
+            return;
+        }
+
+        Show(result.Problem, "description", "threshold");
+    });
+}

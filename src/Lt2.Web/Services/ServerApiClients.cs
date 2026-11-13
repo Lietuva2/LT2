@@ -45,7 +45,7 @@ internal sealed class ServerAuthApi(IIdentityModule identity, IHttpContextAccess
         accessor.HttpContext?.User ?? new System.Security.Claims.ClaimsPrincipal();
 }
 
-internal sealed class ServerMeApi(IIdentityModule identity, IHttpContextAccessor accessor, IpHasher ipHasher, ErrorMapper errors) : IMeApi
+internal sealed class ServerMeApi(IIdentityModule identity, IMpDirectory mps, IHttpContextAccessor accessor, IpHasher ipHasher, ErrorMapper errors, IInvitations invitations, IConfiguration configuration) : IMeApi
 {
     public async Task<ApiResult<MeResponse>> GetAsync(CancellationToken cancellationToken = default) =>
         errors.ToApiResult(await identity.GetAccountAsync(User, cancellationToken), Mapping.ToResponse);
@@ -64,6 +64,35 @@ internal sealed class ServerMeApi(IIdentityModule identity, IHttpContextAccessor
 
     public async Task<ApiResult> ActivateRoleAsync(RoleActivationRequest request, CancellationToken cancellationToken = default) =>
         errors.ToApiResult(await identity.ActivateRoleAsync(User, request.Code, IpHash, cancellationToken));
+
+    public async Task<ApiResult> GivePositionConsentAsync(PositionConsentRequest request, CancellationToken cancellationToken = default) =>
+        errors.ToApiResult(await identity.GivePositionConsentAsync(User, request.TextVersion, cancellationToken));
+
+    public async Task<ApiResult> WithdrawPositionConsentAsync(CancellationToken cancellationToken = default) =>
+        errors.ToApiResult(await identity.WithdrawPositionConsentAsync(User, cancellationToken));
+
+    public async Task<ApiResult<PartySupportResponse>> GetPartySupportAsync(CancellationToken cancellationToken = default)
+    {
+        var choices = await mps.PartiesAsync(cancellationToken);
+        return errors.ToApiResult(await identity.GetPartySupportAsync(User, cancellationToken), party => new PartySupportResponse(party, choices));
+    }
+
+    public async Task<ApiResult> DeleteAccountAsync(CancellationToken cancellationToken = default) =>
+        errors.ToApiResult(await identity.DeleteAccountAsync(User, cancellationToken));
+
+    public Task<ApiResult<MyInvitationResponse>> GetInvitationAsync(CancellationToken cancellationToken = default) =>
+        InvitationAsync(id => invitations.MineAsync(id, cancellationToken));
+
+    public Task<ApiResult<MyInvitationResponse>> ReplaceInvitationAsync(CancellationToken cancellationToken = default) =>
+        InvitationAsync(id => invitations.ReplaceAsync(id, cancellationToken));
+
+    private async Task<ApiResult<MyInvitationResponse>> InvitationAsync(Func<Guid, Task<Result<MyInvitation>>> action) =>
+        AppealMapping.UserId(User) is { } id
+            ? errors.ToApiResult(await action(id), mine => InvitationMapping.Map(mine, configuration))
+            : ApiResult<MyInvitationResponse>.Fail(errors.ToProblem(Error.Unauthorized("auth.required")));
+
+    public async Task<ApiResult> SetPartySupportAsync(PartySupportRequest request, CancellationToken cancellationToken = default) =>
+        errors.ToApiResult(await identity.SetPartySupportAsync(User, request.Party, await mps.PartiesAsync(cancellationToken), cancellationToken));
 
     private string? IpHash => accessor.HttpContext is { } context ? ipHasher.Hash(context) : null;
 
@@ -92,6 +121,7 @@ internal static class Mapping
         RegistrationComplete = account.RegistrationComplete,
         ActiveStaffRoles = account.ActiveStaffRoles,
         AwaitingActivation = account.AwaitingActivation,
+        HasPositionConsent = account.HasPositionConsent,
     };
 
     public static SessionResponse ToResponse(SessionSummary session) => new()

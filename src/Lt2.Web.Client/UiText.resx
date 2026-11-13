@@ -19,8 +19,19 @@
   <data name="SignIn.ToRegister" xml:space="preserve"><value>Registruokitės su kvietimo kodu.</value></data>
   <data name="Register.Label" xml:space="preserve"><value>Registracija</value></data>
   <data name="Register.Title" xml:space="preserve"><value>Nauja paskyra</value></data>
-  <data name="Invitation.Label" xml:space="preserve"><value>Kvietimo kodas</value></data>
-  <data name="Invitation.Hint" xml:space="preserve"><value>Kol platforma bandoma, registruotis galima tik su kvietimu.</value></data>
+  <data name="MyInvitation.Title" xml:space="preserve"><value>Jūsų kvietimo kodas</value></data>
+<data name="MyInvitation.Lead" xml:space="preserve"><value>Pakvieskite kitus: nuoroda atveria registraciją su jūsų kodu, o kodą galima įvesti ir ranka.</value></data>
+<data name="MyInvitation.Code" xml:space="preserve"><value>Kodas:</value></data>
+<data name="MyInvitation.Copy" xml:space="preserve"><value>Kopijuoti nuorodą</value></data>
+<data name="MyInvitation.Copied" xml:space="preserve"><value>Nuoroda nukopijuota.</value></data>
+<data name="MyInvitation.Count" xml:space="preserve"><value>Su jūsų kodu užsiregistravo: {0}.</value></data>
+<data name="MyInvitation.Private" xml:space="preserve"><value>Matote tik skaičių – ne kas užsiregistravo ir ne kada.</value></data>
+<data name="MyInvitation.Off" xml:space="preserve"><value>Jūsų kvietimo kodą išjungė administratorius, todėl juo užsiregistruoti dabar negalima. Klausimų turite? Rašykite</value></data>
+<data name="MyInvitation.Replace" xml:space="preserve"><value>Pakeisti kodą…</value></data>
+<data name="MyInvitation.ReplaceConfirm" xml:space="preserve"><value>Bus sukurtas naujas kodas, o senasis nebetiks. Skaičius išliks.</value></data>
+<data name="MyInvitation.ReplaceYes" xml:space="preserve"><value>Sukurti naują kodą</value></data>
+<data name="MyInvitation.Cancel" xml:space="preserve"><value>Atšaukti</value></data><data name="Invitation.Label" xml:space="preserve"><value>Kvietimo kodas</value></data>
+  <data name="Invitation.Hint" xml:space="preserve"><value>Kol platforma bandoma, registruotis galima tik su kvietimu. Kas jums davė kodą, matys, kad juo užsiregistruota, bet ne kas užsiregistravo.</value></data>
   <data name="DisplayName.Label" xml:space="preserve"><value>Vardas, kurį matys kiti</value></data>
   <data name="DisplayName.Placeholder" xml:space="preserve"><value>Rūta M.</value></data>
   <data name="DisplayName.Hint" xml:space="preserve"><value>Šį vardą kiti matys prie jūsų parašytų argumentų. Ar prašote balsuoti už, ar prieš – nemato niekas.</value></data>
@@ -79,4 +90,25 @@
   <data name="Sessions.Method.pop" xml:space="preserve"><value>prisijungta prieigos raktu</value></data>
   <data name="Sessions.Method.unknown" xml:space="preserve"><value>prisijungimo būdas nežinomas</value></data>
   <data name="SignOut" xml:space="preserve"><value>Atsijungti</value></data>
+<data name="Staff.Nav" xml:space="preserve"><value>Darbuotojo darbai</value></data>
+<data name="Staff.Moderation" xml:space="preserve"><value>Moderavimas</value></data>
+<data name="Staff.Settings" xml:space="preserve"><value>Nustatymai</value></data>
+<data name="PositionConsent.Title" xml:space="preserve"><value>Sutikimas saugoti pozicijas</value></data>
+<data name="PositionConsent.Text" xml:space="preserve"><value>Esate sutikę, kad saugotume jūsų pozicijas dėl įstatymų projektų. Atšaukus sutikimą, visos jūsų pozicijos ir „Man svarbu“ žymos bus ištrintos, o bendri skaičiai sumažės. Jūsų parašyti argumentai liks.</value></data>
+<data name="PositionConsent.Withdraw" xml:space="preserve"><value>Atšaukti sutikimą ir ištrinti pozicijas</value></data>
+<data name="PositionConsent.Withdrawn" xml:space="preserve"><value>Sutikimas atšauktas, jūsų pozicijos ištrintos.</value></data><data name="Party.Title" xml:space="preserve"><value>Kurią partiją palaikote</value></data>
+<data name="Party.Text" xml:space="preserve"><value>Nebūtina. Jūsų pasirinkimo niekam nerodome. Seimo nariui jo suvestinėje parodytume tik bendrą skaičių, kiek palaikančių jo partiją prašo balsuoti už ar prieš, ir tik tada, kai jų yra bent 20.</value></data>
+<data name="Party.Label" xml:space="preserve"><value>Partija</value></data>
+<data name="Party.None" xml:space="preserve"><value>Nenurodyti</value></data>
+<data name="Party.Consent" xml:space="preserve"><value>Sutinku, kad Lietuva 2.0 saugotų mano nurodytą partiją taip, kaip aprašyta. Galiu ją bet kada pašalinti.</value></data>
+<data name="Party.Save" xml:space="preserve"><value>Išsaugoti</value></data>
+<data name="Party.Saved" xml:space="preserve"><value>Išsaugota.</value></data>
+<data name="Party.Removed" xml:space="preserve"><value>Partija pašalinta.</value></data>
+<data name="Data.Title" xml:space="preserve"><value>Jūsų duomenys</value></data>
+<data name="Data.Text" xml:space="preserve"><value>Galite atsisiųsti viską, ką mums pateikėte, arba ištrinti paskyrą. Ištrynus paskyrą, ištrinamos ir jūsų pozicijos, „Man svarbu“ žymos, argumentai ir pranešimai, o bendri skaičiai sumažėja. Jau sudarytose suvestinėse skaičiai lieka tokie, kokie buvo.</value></data>
+<data name="Data.Export" xml:space="preserve"><value>Atsisiųsti mano duomenis</value></data>
+<data name="Data.Delete" xml:space="preserve"><value>Ištrinti paskyrą</value></data>
+<data name="Data.DeleteWarning" xml:space="preserve"><value>Paskyra bus ištrinta visam laikui. To atšaukti negalima.</value></data>
+<data name="Data.DeleteConfirm" xml:space="preserve"><value>Taip, ištrinti paskyrą</value></data>
+<data name="Data.DeleteCancel" xml:space="preserve"><value>Ne, palikti</value></data>
 </root>

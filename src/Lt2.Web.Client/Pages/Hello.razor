@@ -83,6 +83,75 @@ else
         </section>
     </div>
 
+    @if (Me.ActiveStaffRoles.Count > 0)
+    {
+        <nav class="row" aria-label="@T["Staff.Nav"]">
+            <a class="btn btn--plain" href="/moderavimas">@T["Staff.Moderation"]</a>
+            @if (Me.ActiveStaffRoles.Contains("administrator"))
+            {
+                <a class="btn btn--plain" href="/administravimas/nustatymai">@T["Staff.Settings"]</a>
+            }
+        </nav>
+    }
+
+    @if (Party is { } party)
+    {
+        @* Private and optional (design 5.2): used only for group numbers of at least 20 in summaries to MPs. *@
+        <section class="sheet stack" aria-labelledby="party-title" id="party-support">
+            <h2 id="party-title">@T["Party.Title"]</h2>
+            <p>@T["Party.Text"]</p>
+            <div class="field">
+                <label for="party-choice">@T["Party.Label"]</label>
+                <select class="input" id="party-choice" @bind="_partyChoice" disabled="@Locked">
+                    <option value="">@T["Party.None"]</option>
+                    @foreach (var choice in party.Choices)
+                    {
+                        <option value="@choice">@choice</option>
+                    }
+                </select>
+            </div>
+            @if (!string.IsNullOrEmpty(_partyChoice) && _partyChoice != party.Party)
+            {
+                <label class="check">
+                    <input type="checkbox" id="party-consent" @bind="_partyConsent" disabled="@Locked" />
+                    <span>@T["Party.Consent"]</span>
+                </label>
+            }
+            <p><button type="button" class="btn btn--plain" disabled="@(Locked || (!string.IsNullOrEmpty(_partyChoice) && _partyChoice != party.Party && !_partyConsent))" @onclick="SavePartyAsync">@T["Party.Save"]</button></p>
+        </section>
+    }
+
+    @if (Me.HasPositionConsent)
+    {
+        @* Withdrawing the consent deletes every position (design 6.5). *@
+        <section class="sheet stack" aria-labelledby="consent-title">
+            <h2 id="consent-title">@T["PositionConsent.Title"]</h2>
+            <p>@T["PositionConsent.Text"]</p>
+            <p><button type="button" class="btn btn--plain" id="withdraw-consent" disabled="@Locked" @onclick="WithdrawConsentAsync">@T["PositionConsent.Withdraw"]</button></p>
+        </section>
+    }
+
+    <MyInvitationCode />
+
+    @* Design 6.5: everything the person gave, and deleting the account. *@
+    <section class="sheet stack" aria-labelledby="data-title" id="my-data">
+        <h2 id="data-title">@T["Data.Title"]</h2>
+        <p>@T["Data.Text"]</p>
+        <p><a class="btn btn--plain" href="/api/v1/me/export" download id="export">@T["Data.Export"]</a></p>
+        @if (_confirmDelete)
+        {
+            <p class="note" role="alert">@T["Data.DeleteWarning"]</p>
+            <div class="row">
+                <button type="button" class="btn btn--against" id="delete-confirm" disabled="@Locked" @onclick="DeleteAccountAsync">@T["Data.DeleteConfirm"]</button>
+                <button type="button" class="btn btn--plain" disabled="@Locked" @onclick="() => _confirmDelete = false">@T["Data.DeleteCancel"]</button>
+            </div>
+        }
+        else
+        {
+            <p><button type="button" class="btn btn--plain" id="delete-account" disabled="@Locked" @onclick="() => _confirmDelete = true">@T["Data.Delete"]</button></p>
+        }
+    </section>
+
     <p><button type="button" class="btn btn--plain" disabled="@Locked" @onclick="SignOutAsync">@T["SignOut"]</button></p>
 }
 
@@ -107,6 +176,13 @@ else
     [PersistentState]
     public List<SessionResponse>? Sessions { get; set; }
 
+    [PersistentState]
+    public PartySupportResponse? Party { get; set; }
+
+    private string _partyChoice = "";
+    private bool _confirmDelete;
+    private bool _partyConsent;
+
     protected override async Task OnInitializedAsync()
     {
         if (Me is null)
@@ -129,6 +205,26 @@ else
         }
 
         Sessions ??= await LoadSessionsAsync();
+        Party ??= (await MeApi.GetPartySupportAsync()).Value;
+        _partyChoice = Party?.Party ?? "";
+    }
+
+    private async Task SavePartyAsync()
+    {
+        await RunAsync(async () =>
+        {
+            var party = string.IsNullOrEmpty(_partyChoice) ? null : _partyChoice;
+            var result = await MeApi.SetPartySupportAsync(new PartySupportRequest { Party = party, Consent = _partyConsent });
+            if (!result.IsSuccess)
+            {
+                _message = result.Problem!.Errors?.Values.FirstOrDefault()?.FirstOrDefault() ?? result.Problem.Detail ?? T["Error.Generic"];
+                return;
+            }
+
+            _info = T[party is null ? "Party.Removed" : "Party.Saved"];
+            _partyConsent = false;
+            Party = (await MeApi.GetPartySupportAsync()).Value;
+        });
     }
 
     private async Task<List<SessionResponse>> LoadSessionsAsync()
@@ -211,6 +307,41 @@ else
             }
 
             Sessions = await LoadSessionsAsync();
+        });
+    }
+
+    private async Task WithdrawConsentAsync()
+    {
+        await RunAsync(async () =>
+        {
+            var result = await MeApi.WithdrawPositionConsentAsync();
+            if (!result.IsSuccess)
+            {
+                _message = result.Problem!.Detail ?? T["Error.Generic"];
+                return;
+            }
+
+            _info = T["PositionConsent.Withdrawn"];
+            var me = await MeApi.GetAsync();
+            if (me.IsSuccess)
+            {
+                Me = me.Value;
+            }
+        });
+    }
+
+    private async Task DeleteAccountAsync()
+    {
+        await RunAsync(async () =>
+        {
+            var result = await MeApi.DeleteAccountAsync();
+            if (!result.IsSuccess)
+            {
+                _message = result.Problem!.Detail ?? T["Error.Generic"];
+                return;
+            }
+
+            Navigation.NavigateTo("/", forceLoad: true);
         });
     }
 

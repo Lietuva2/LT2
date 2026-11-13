@@ -56,6 +56,9 @@ public sealed class ContractRuleTests
         SettingKeys.DigestMaxPerWeek.IsValid(JsonSerializer.SerializeToElement(2)).ShouldBeTrue();
         SettingKeys.DigestMaxPerWeek.IsValid(JsonSerializer.SerializeToElement(0)).ShouldBeFalse();
         SettingKeys.SurgeMinimumShare.IsValid(JsonSerializer.SerializeToElement(1.5)).ShouldBeFalse();
+        SettingKeys.DigestNotableChange.IsValid(JsonSerializer.SerializeToElement(0.25)).ShouldBeTrue();
+        SettingKeys.DigestNotableChange.IsValid(JsonSerializer.SerializeToElement(0)).ShouldBeFalse();
+        SettingKeys.DigestNotableChange.IsValid(JsonSerializer.SerializeToElement(1.5)).ShouldBeFalse();
     }
 
     [Fact]
@@ -64,6 +67,7 @@ public sealed class ContractRuleTests
         SettingKeys.RegistrationRequiresInvitation.Default.ShouldBeTrue();
         SettingKeys.DigestThresholdDefault.Default.ShouldBe(100);
         SettingKeys.DigestMaxPerWeek.Default.ShouldBe(2);
+        SettingKeys.DigestNotableChange.Default.ShouldBe(0.10m);
         SettingKeys.SurgeMinimumShare.Default.ShouldBe(0.30m);
         SettingKeys.SurgeMinimumAccounts.Default.ShouldBe(50);
         SettingKeys.SurgeWindowHours.Default.ShouldBe(72);

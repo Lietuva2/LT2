@@ -1,4 +1,5 @@
 using Hangfire;
+using Lt2.Appeals;
 using Lt2.Identity;
 using Lt2.Notifications;
 using Lt2.Parliament;
@@ -86,6 +87,58 @@ public sealed class ParliamentImportJob(IParliamentImport import, ILogger<Parlia
     }
 }
 
+/// <summary>
+/// The daily aggregate of appeals (design 5.3): yesterday's row once the day is over, today's so far. Hourly, so a missed
+/// run catches up; a day's row is overwritten by the next run for that day.
+/// </summary>
+public sealed class AppealsDailyJob(IAppealsMaintenance maintenance, TimeProvider clock, ILogger<AppealsDailyJob> logger)
+{
+    [DisableConcurrentExecution(timeoutInSeconds: 30 * 60)]
+    public async Task RunAsync(CancellationToken cancellationToken)
+    {
+        var today = DateOnly.FromDateTime(TimeZoneInfo.ConvertTime(clock.GetUtcNow(), TimeZoneInfo.FindSystemTimeZoneById("Europe/Vilnius")).DateTime);
+        var appeals = await maintenance.AggregateDayAsync(today.AddDays(-1), cancellationToken);
+        await maintenance.AggregateDayAsync(today, cancellationToken);
+        var closed = await maintenance.CloseFinishedAsync(cancellationToken);
+        logger.LogInformation("Daily appeal aggregates written for {Appeals} appeals; {Closed} closed after the final vote", appeals, closed);
+    }
+}
+
+/// <summary>
+/// The agenda watcher (design 8.4): reads the upcoming plenary agenda hourly when <c>Agenda:BaseAddress</c> is set. A page
+/// it cannot read is an error line (the alert of design 8.9) and changes nothing.
+/// </summary>
+public sealed class AgendaWatchJob(IAgendaWatch watch, ILogger<AgendaWatchJob> logger)
+{
+    [DisableConcurrentExecution(timeoutInSeconds: 30 * 60)]
+    [AutomaticRetry(Attempts = 0, OnAttemptsExceeded = AttemptsExceededAction.Delete)]
+    public async Task RunAsync(CancellationToken cancellationToken)
+    {
+        var outcome = await watch.RunAsync(cancellationToken);
+        if (outcome.Status is "refused" or "failed")
+        {
+            logger.LogError("Agenda watcher {Status}: {Problem}", outcome.Status, outcome.Problem);
+        }
+    }
+}
+
+/// <summary>
+/// Summaries in dry-run (design 8.4): every 15 minutes, makes the weekly or before-vote summary when it is due. Nothing
+/// is sent in M2a.
+/// </summary>
+public sealed class DigestJob(IDigests digests, TimeProvider clock, ILogger<DigestJob> logger)
+{
+    [DisableConcurrentExecution(timeoutInSeconds: 30 * 60)]
+    public async Task RunAsync(CancellationToken cancellationToken)
+    {
+        var made = await digests.RunDueAsync(clock.GetUtcNow(), cancellationToken);
+        foreach (var run in made)
+        {
+            logger.LogInformation("Summary {Kind} made in dry-run: {Items} appeals, {Mps} MPs", run.Kind, run.Items.Count, run.MpCount);
+        }
+    }
+}
+
 /// <summary>Registers the recurring Hangfire jobs at start-up, in Vilnius time (design 3: <c>Europe/Vilnius</c> for schedules).</summary>
 internal sealed class RecurringJobs(IRecurringJobManager jobs) : IHostedService
 {
@@ -101,6 +154,24 @@ internal sealed class RecurringJobs(IRecurringJobManager jobs) : IHostedService
             new RecurringJobOptions { TimeZone = vilnius });
         jobs.AddOrUpdate<ParliamentImportJob>(
             ParliamentImport,
+            job => job.RunAsync(CancellationToken.None),
+            "*/15 * * * *",
+            new RecurringJobOptions { TimeZone = vilnius });
+
+        jobs.AddOrUpdate<AppealsDailyJob>(
+            "appeals-daily",
+            job => job.RunAsync(CancellationToken.None),
+            "5 * * * *",
+            new RecurringJobOptions { TimeZone = vilnius });
+
+        jobs.AddOrUpdate<AgendaWatchJob>(
+            "agenda-watch",
+            job => job.RunAsync(CancellationToken.None),
+            "20 * * * *",
+            new RecurringJobOptions { TimeZone = vilnius });
+        jobs.Trigger("agenda-watch");
+        jobs.AddOrUpdate<DigestJob>(
+            "digests",
             job => job.RunAsync(CancellationToken.None),
             "*/15 * * * *",
             new RecurringJobOptions { TimeZone = vilnius });

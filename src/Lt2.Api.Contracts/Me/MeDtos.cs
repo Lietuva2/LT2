@@ -32,6 +32,24 @@ public sealed record MeResponse
 
     /// <summary>A staff role was granted and its activation code has not been used yet.</summary>
     public bool AwaitingActivation { get; init; }
+
+    /// <summary>The explicit consent to store positions (design 6.5) is given to the text version in force.</summary>
+    public bool HasPositionConsent { get; init; }
+}
+
+/// <summary>The version of the consent text the client shows (design 6.5); the server accepts consent to this one only.</summary>
+public static class PositionConsentText
+{
+    public const string Version = "2026-11-13";
+}
+
+/// <summary>
+/// The explicit consent before a first position (design 6.5), given to the text the page showed. The text version must
+/// be the one in force.
+/// </summary>
+public sealed record PositionConsentRequest
+{
+    public string TextVersion { get; init; } = "";
 }
 
 /// <summary>The one-time code an administrator passed on, used in a passkey session (design 6.2).</summary>
@@ -72,4 +90,18 @@ public sealed record SessionResponse
     public string Method { get; init; } = "";
 
     public bool IsCurrent { get; init; }
+}
+
+/// <summary>The party the person said they support (private, optional), and the parties to choose from.</summary>
+public sealed record PartySupportResponse(string? Party, IReadOnlyList<string> Choices);
+
+/// <summary>
+/// Sets the party, or with <c>null</c> removes it. Giving one needs <see cref="Consent"/>: a party preference is a
+/// political opinion; it is used only for group numbers of at least 20 and never shown.
+/// </summary>
+public sealed record PartySupportRequest
+{
+    public string? Party { get; init; }
+
+    public bool Consent { get; init; }
 }

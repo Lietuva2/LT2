@@ -1,6 +1,7 @@
 using System.Security.Claims;
 using Lt2.Identity.Application;
 using Lt2.Identity.Application.Account;
+using Lt2.Identity.Application.Consents;
 using Lt2.Identity.Application.Passkeys;
 using Lt2.Identity.Application.Register;
 using Lt2.Identity.Application.SignIn;
@@ -104,6 +105,12 @@ public static class IdentityModule
         services.AddScoped<AccountEvents>();
         services.AddScoped<StaffHandlers>();
         services.AddScoped<IIdentityAdministration, RoleAdministration>();
+        services.AddScoped<PositionConsentHandlers>();
+        services.AddScoped<PartySupportHandlers>();
+        services.AddScoped<AccountDataHandlers>();
+        services.AddScoped<IInvitations, Application.Invitations.InvitationHandlers>();
+        services.AddSingleton<IParticipants, ParticipantDirectory>();
+        services.AddSingleton<IPartySupporters, PartySupporterDirectory>();
         services.AddScoped<IIdentityModule, IdentityModuleFacade>();
         services.AddScoped<IIdentityMaintenance, MaintenanceHandler>();
         services.AddSingleton<IModuleDatabase, IdentityModuleDatabase>();
@@ -119,6 +126,14 @@ public static class IdentityModule
         services.AddIdentityDb();
         services.AddScoped<AccountEvents>();
         services.AddScoped<IIdentityAdministration, RoleAdministration>();
+        return services;
+    }
+
+    /// <summary>Registers <see cref="IParticipants"/> alone, for hosts that run Appeals work without the web host's Identity.</summary>
+    public static IServiceCollection AddIdentityDirectory(this IServiceCollection services)
+    {
+        services.AddSingleton<IParticipants, ParticipantDirectory>();
+        services.AddSingleton<IPartySupporters, PartySupporterDirectory>();
         return services;
     }
 
@@ -172,6 +187,9 @@ internal sealed class IdentityModuleFacade(
     PasskeyHandlers passkeys,
     AccountHandlers account,
     StaffHandlers staff,
+    PositionConsentHandlers consents,
+    PartySupportHandlers parties,
+    AccountDataHandlers data,
     SignInManager<User> signIn) : IIdentityModule
 {
     public Task<Result<Unit>> RegisterAsync(Registration registration, CancellationToken cancellationToken) =>
@@ -217,6 +235,22 @@ internal sealed class IdentityModuleFacade(
 
     public Task<Result<Unit>> EndSessionAsync(ClaimsPrincipal user, Guid sessionId, CancellationToken cancellationToken) =>
         account.EndSessionAsync(user, sessionId, cancellationToken);
+
+    public Task<Result<Unit>> GivePositionConsentAsync(ClaimsPrincipal user, string textVersion, CancellationToken cancellationToken) =>
+        consents.GiveAsync(user, textVersion, cancellationToken);
+
+    public Task<Result<Unit>> WithdrawPositionConsentAsync(ClaimsPrincipal user, CancellationToken cancellationToken) =>
+        consents.WithdrawAsync(user, cancellationToken);
+
+    public Task<Result<string?>> GetPartySupportAsync(ClaimsPrincipal user, CancellationToken cancellationToken) =>
+        parties.GetAsync(user, cancellationToken);
+
+    public Task<Result<Unit>> SetPartySupportAsync(ClaimsPrincipal user, string? party, IReadOnlyCollection<string> allowed, CancellationToken cancellationToken) =>
+        parties.SetAsync(user, party, allowed, cancellationToken);
+
+    public Task<Result<object>> ExportAsync(ClaimsPrincipal user, CancellationToken cancellationToken) => data.ExportAsync(user, cancellationToken);
+
+    public Task<Result<Unit>> DeleteAccountAsync(ClaimsPrincipal user, CancellationToken cancellationToken) => data.DeleteAsync(user, cancellationToken);
 }
 
 /// <summary>Operational commands run by the migrator (seeding a trial invitation, granting a role).</summary>

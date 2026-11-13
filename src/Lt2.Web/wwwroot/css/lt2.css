@@ -483,3 +483,17 @@ body > .page { width: 100%; }
 
 /* The theme switch sits in the navigation; hidden until lt2-theme.js shows it. */
 .top__nav .mark { align-self: center; }
+
+/* ---------- Appeals (M2a) ---------- */
+
+/* The threshold ruler: the fill is SVG (no inline styles under the content security policy); the ticks are the
+   prototype's .ruler::after laid over it. */
+.ruler > svg { display: block; width: 100%; height: 100%; }
+.ruler__bar { fill: var(--leaf); }
+
+/* Radio groups and report forms sit in fieldsets without the browser's frame. */
+fieldset { margin: 0; padding: 0; border: 0; min-width: 0; }
+legend { padding: 0; font-weight: 600; }
+.said__by .linkish { font-size: var(--fs-1); }
+.report-visitor > summary { display: inline; cursor: pointer; }
+.report-visitor[open] > p { margin-top: var(--sp-2); }

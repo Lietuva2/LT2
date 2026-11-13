@@ -1,0 +1,153 @@
+@page "/moderavimas"
+@attribute [Authorize]
+@rendermode InteractiveWebAssembly
+@using Lt2.Api.Contracts.Appeals
+@using Lt2.Web.Client.Appeals
+@inherits InteractiveBase
+@inject IModerationApi ModerationApi
+
+@* The moderators' queue (design 8.3): new appeals, flagged or reported arguments, reported appeals, arguments not yet
+   seen. Every action needs the active moderator role of a staff-passkey session; the server refuses anything else.
+   Nothing here shows who took which side. *@
+<PageTitle>@L["Mod.PageTitle"]</PageTitle>
+
+<div class="stack">
+    <p class="label">Lietuva 2.0</p>
+    <h1>@L["Mod.Title"]</h1>
+    <p class="lead">@L["Mod.Lead"]</p>
+</div>
+
+<Messages Message="@Message" Info="@Info" />
+
+@if (_refused)
+{
+    <p class="note" role="alert">@L["Mod.Refused"]</p>
+}
+else if (Queue is null)
+{
+    <p class="small">@L["Loading"]</p>
+}
+else
+{
+    <section class="stack" aria-labelledby="h-appeals">
+        <h2 id="h-appeals">@L["Mod.Appeals"]</h2>
+        @if (Queue.Appeals.Count == 0)
+        {
+            <p class="small">@L["Mod.Empty"]</p>
+        }
+        @foreach (var appeal in Queue.Appeals)
+        {
+            <article class="sheet stack" id="queue-appeal-@appeal.Id" aria-labelledby="qa-@appeal.Id">
+                <div class="row">
+                    <span class="tag tag--ink num">@appeal.Bill.Number</span>
+                    <span class="tag">@L["Mod.Status." + appeal.Status]</span>
+                    @foreach (var flag in appeal.Flags)
+                    {
+                        <span class="tag tag--people">@L["Mod.Flag." + flag]</span>
+                    }
+                </div>
+                <h3 id="qa-@appeal.Id">@appeal.Bill.Title</h3>
+                @if (appeal.Planned is { } plan)
+                {
+                    <p class="small num">@Text("Mod.Planned", plan.Date.ToString("yyyy-MM-dd", System.Globalization.CultureInfo.InvariantCulture), plan.Stage is { } s ? " · " + L["Mod.Stage." + s] : "")</p>
+                }
+                @if (appeal.Held)
+                {
+                    <p class="tag" id="held-@appeal.Id">@L["Mod.Held"]</p>
+                }
+                @if (appeal.UnderThresholdOnAgenda)
+                {
+                    <p class="note note--quiet">@L["Mod.UnderThreshold"]</p>
+                }
+                @if (appeal.DateFlags is { Count: > 0 } flags)
+                {
+                    <p class="label num">@Text("Mod.DateFlags", flags.Count)</p>
+                    <ul class="rows">
+                        @foreach (var flag in flags)
+                        {
+                            <li><div class="rows__main"><b>@L["Flag." + flag.Kind]</b><a href="@flag.Link" rel="external noreferrer">@flag.Link</a>@if (flag.Note is { } note) {<span class="small">@note</span>}</div></li>
+                        }
+                    </ul>
+                }
+                @if (appeal.Surge is { } surge)
+                {
+                    <p class="note" id="surge-@appeal.Id">@Text("Mod.Surge", surge.WindowHours, surge.SharePercent)</p>
+                }
+                <p class="small">@Text("Mod.OpenedBy", appeal.InitiatorName ?? L["Reasons.Anonymous"], AppealNumbers.Of(appeal.Threshold))</p>
+                <p class="label">@L["Open.Description"]</p>
+                <p class="voice">@appeal.Description</p>
+
+                <Reports Items="appeal.Reports" />
+                <ModerationActions Id="appeal.Id" Kind="appeal" Status="@appeal.Status" Held="appeal.Held" OnDone="ReloadAsync" />
+                <RestrictAuthor Kind="appeal" Id="appeal.Id" OnDone="RestrictedAsync" />
+            </article>
+        }
+    </section>
+
+    <section class="stack" aria-labelledby="h-reasons">
+        <h2 id="h-reasons">@L["Mod.Reasons"]</h2>
+        @if (Queue.Reasons.Count == 0)
+        {
+            <p class="small">@L["Mod.Empty"]</p>
+        }
+        @foreach (var reason in Queue.Reasons)
+        {
+            <article class="sheet stack" id="queue-reason-@reason.Id" aria-label="@L["Mod.Reason"]">
+                <div class="row">
+                    <span class="tag tag--ink num">@reason.Bill.Number</span>
+                    <span class="choice choice--@reason.Side">@L["Reasons." + reason.Side]</span>
+                    <span class="tag">@L[reason.Status == "pending" ? "Mod.Status.pending" : reason.Seen ? "Mod.Seen" : "Mod.NotSeen"]</span>
+                    @foreach (var flag in reason.Flags)
+                    {
+                        <span class="tag tag--people">@L["Mod.Flag." + flag]</span>
+                    }
+                </div>
+                <div class="said">
+                    <p class="bubble bubble--people voice">@reason.Text</p>
+                    <div class="said__by"><b>@(reason.AuthorName ?? L["Reasons.Anonymous"])</b></div>
+                </div>
+                <Reports Items="reason.Reports" />
+                <ModerationActions Id="reason.Id" Kind="reason" Status="@reason.Status" MergeCandidates="reason.MergeCandidates" OnDone="ReloadAsync" />
+                <RestrictAuthor Kind="reason" Id="reason.Id" OnDone="RestrictedAsync" />
+            </article>
+        }
+    </section>
+
+    <RestrictionList @ref="_restrictions" />
+}
+
+@code {
+    private bool _refused;
+    private RestrictionList? _restrictions;
+
+    [PersistentState] public ModerationQueueResponse? Queue { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        if (Queue is null)
+        {
+            await LoadAsync();
+        }
+    }
+
+    private async Task LoadAsync()
+    {
+        var queue = await ModerationApi.GetQueueAsync();
+        _refused = !queue.IsSuccess;
+        Queue = queue.Value;
+    }
+
+    private async Task RestrictedAsync()
+    {
+        if (_restrictions is not null)
+        {
+            await _restrictions.ReloadAsync();
+        }
+    }
+
+    private Task ReloadAsync(string info) => RunAsync(async () =>
+    {
+        await LoadAsync();
+        Info = info;
+    });
+}

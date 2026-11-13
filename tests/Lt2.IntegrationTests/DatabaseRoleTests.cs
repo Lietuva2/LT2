@@ -65,33 +65,31 @@ public sealed class DatabaseRoleTests(DatabaseFixture database)
     }
 
     [Fact]
-    public async Task The_read_only_role_cannot_read_appeals_position_but_reads_the_rest()
+    public async Task The_read_only_role_cannot_read_positions_or_endorsements_but_reads_the_rest_of_appeals()
     {
-        // The appeals module has no tables yet (M0), so create the table as the migrator would, re-apply the grants
-        // exactly as a deploy does, and drop it again.
+        // The real tables, after the grants a deploy applies (the fixture ran the migrator twice).
+        (await database.ScalarAsync<bool>("SELECT to_regclass('appeals.position') IS NOT NULL")).ShouldBeTrue();
+        (await database.ScalarAsync<bool>("SELECT has_table_privilege(@r, 'appeals.position', 'SELECT')", ("r", DatabaseRoles.Readonly)))
+            .ShouldBeFalse();
+
+        await using var readonlyConnection = await OpenAsync(DatabaseRoles.Readonly);
+        foreach (var hidden in new[] { "appeals.position", "appeals.endorsement", "appeals.writing_restriction" })
+        {
+            await ShouldBeRefusedAsync(readonlyConnection, $"SELECT count(*) FROM {hidden}", hidden);
+            await ShouldBeRefusedAsync(readonlyConnection, $"SELECT user_id FROM {hidden} LIMIT 1", hidden + " by column");
+        }
+
+        foreach (var visible in new[] { "appeals.appeal", "appeals.reason", "appeals.daily_stat", "config.setting" })
+        {
+            await using var command = new NpgsqlCommand($"SELECT count(*) FROM {visible}", readonlyConnection);
+            await command.ExecuteScalarAsync();
+        }
+
+        // Applying the grants again (every deploy does) keeps the tables hidden.
         await using var migrator = new NpgsqlConnection(database.MigratorConnectionString);
         await migrator.OpenAsync();
-        await using (var create = new NpgsqlCommand("CREATE TABLE appeals.position (id int); CREATE TABLE appeals.example (id int);", migrator))
-        {
-            await create.ExecuteNonQueryAsync();
-        }
-
-        try
-        {
-            await DatabaseRoles.GrantAsync(migrator, CancellationToken.None);
-
-            await using var readonlyConnection = await OpenAsync(DatabaseRoles.Readonly);
-            await ShouldBeRefusedAsync(readonlyConnection, "SELECT count(*) FROM appeals.position", "appeals.position");
-            await using var other = new NpgsqlCommand("SELECT count(*) FROM appeals.example", readonlyConnection);
-            (await other.ExecuteScalarAsync()).ShouldBe(0L);
-            await using var settings = new NpgsqlCommand("SELECT count(*) FROM config.setting", readonlyConnection);
-            await settings.ExecuteScalarAsync();
-        }
-        finally
-        {
-            await using var drop = new NpgsqlCommand("DROP TABLE appeals.position; DROP TABLE appeals.example;", migrator);
-            await drop.ExecuteNonQueryAsync();
-        }
+        await DatabaseRoles.GrantAsync(migrator, CancellationToken.None);
+        await ShouldBeRefusedAsync(readonlyConnection, "SELECT count(*) FROM appeals.position", "appeals.position after a second deploy");
     }
 
     [Theory]

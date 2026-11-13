@@ -1,0 +1,152 @@
+@using Lt2.Api.Contracts.Appeals
+@inherits InteractiveBase
+@inject IModerationApi ModerationApi
+
+@* Design 8.3: a moderator restricts the author of an argument or the initiator of an appeal from writing, reached from
+   that item in the queue. Before deciding, the moderator sees the display name, the person's arguments and appeals,
+   earlier moderation actions and restrictions; never the address, a side or a mark, and no account id: the person is
+   reached through the item. *@
+@if (!_open)
+{
+    <button class="linkish small" type="button" id="restrict-open-@Id" disabled="@Locked" @onclick="OpenAsync">@L[Kind == "reason" ? "Restrict.OpenAuthor" : "Restrict.OpenInitiator"]</button>
+}
+else
+{
+    <section class="sheet sheet--quiet stack" aria-labelledby="restrict-title-@Id" id="restrict-@Id">
+        @if (_view is { } view)
+        {
+            <h4 id="restrict-title-@Id">@Text("Restrict.Title", view.DisplayName ?? L["Reasons.Anonymous"])</h4>
+
+            <p class="label num">@Text("Restrict.Reasons", view.Reasons.Count)</p>
+            <ul class="rows">
+                @foreach (var r in view.Reasons)
+                {
+                    <li><div class="rows__main"><span class="small num">@r.BillNumber · <span class="choice choice--@r.Side">@L["Reasons." + r.Side]</span> · @L["Restrict.Status." + r.Status]</span><span class="voice">@r.Text</span></div></li>
+                }
+            </ul>
+
+            @if (view.Appeals.Count > 0)
+            {
+                <p class="label num">@Text("Restrict.Appeals", view.Appeals.Count)</p>
+                <ul class="rows">
+                    @foreach (var a in view.Appeals)
+                    {
+                        <li><div class="rows__main"><span class="small num">@a.BillNumber · @L["Restrict.AppealStatus." + a.Status]</span></div></li>
+                    }
+                </ul>
+            }
+
+            <p class="label num">@Text("Restrict.Actions", view.Actions.Count)</p>
+            @if (view.Actions.Count > 0)
+            {
+                <ul class="rows">
+                    @foreach (var m in view.Actions)
+                    {
+                        <li><div class="rows__main"><span class="small num">@m.At.ToString("yyyy-MM-dd", System.Globalization.CultureInfo.InvariantCulture) · @L["Restrict.Target." + m.TargetKind] · @m.Action</span>@if (m.Statement is { } s) {<span class="small">@s</span>}</div></li>
+                    }
+                </ul>
+            }
+
+            @if (view.Restrictions.Count > 0)
+            {
+                <p class="label num">@Text("Restrict.Earlier", view.Restrictions.Count)</p>
+                <ul class="rows">
+                    @foreach (var w in view.Restrictions)
+                    {
+                        <li><div class="rows__main"><span class="small num">@w.SetAt.ToString("yyyy-MM-dd", System.Globalization.CultureInfo.InvariantCulture) · @Until(w.Until)@(w.Holds ? " · " + L["Restrict.Holds"] : "")</span><span class="small">@w.Statement</span></div></li>
+                    }
+                </ul>
+            }
+
+            <form class="stack stack--tight" @onsubmit="RestrictAsync" novalidate>
+                <fieldset class="stack stack--tight">
+                    <legend class="label">@L["Restrict.Length"]</legend>
+                    <label class="check">
+                        <input type="radio" name="restrict-length-@Id" id="restrict-dated-@Id" checked="@_dated" @onchange="() => _dated = true" disabled="@Locked" />
+                        <span>@L["Restrict.UntilDay"]</span>
+                    </label>
+                    @if (_dated)
+                    {
+                        <div class="field @(Errors.ContainsKey("until") ? "field--error" : "")">
+                            <label for="restrict-until-@Id">@L["Restrict.LastDay"]</label>
+                            <input class="input" type="date" id="restrict-until-@Id" @bind="_until" disabled="@Locked" />
+                            <FieldError Errors="Errors" Field="until" />
+                        </div>
+                    }
+                    <label class="check">
+                        <input type="radio" name="restrict-length-@Id" id="restrict-lifted-@Id" checked="@(!_dated)" @onchange="() => _dated = false" disabled="@Locked" />
+                        <span>@L["Restrict.UntilLifted"]</span>
+                    </label>
+                </fieldset>
+                <div class="field @(Errors.ContainsKey("statement") ? "field--error" : "")">
+                    <label for="restrict-statement-@Id">@L["Restrict.Statement"]</label>
+                    <p class="field__hint">@L["Restrict.StatementHint"]</p>
+                    <textarea class="textarea" id="restrict-statement-@Id" maxlength="@AppealLimits.StatementMaxLength" @bind="_statement" disabled="@Locked"></textarea>
+                    <FieldError Errors="Errors" Field="statement" />
+                </div>
+                <div class="row">
+                    <button type="submit" class="btn" id="restrict-submit-@Id" disabled="@Locked">@L["Restrict.Submit"]</button>
+                    <button type="button" class="btn btn--plain" disabled="@Locked" @onclick="() => _open = false">@L["Cancel"]</button>
+                </div>
+            </form>
+        }
+        else
+        {
+            <p class="small">@L["Loading"]</p>
+        }
+    </section>
+}
+
+@* Outside the panel, so the confirmation stays visible after the panel closes. *@
+<Messages Message="@Message" Info="@Info" />
+
+@code {
+    private bool _open;
+    private bool _dated = true;
+    private DateOnly? _until;
+    private string _statement = "";
+    private AuthorViewResponse? _view;
+
+    /// <summary><c>reason</c> (restrict its author) or <c>appeal</c> (restrict its initiator).</summary>
+    [Parameter, EditorRequired] public string Kind { get; set; } = "";
+
+    [Parameter, EditorRequired] public Guid Id { get; set; }
+
+    [Parameter] public EventCallback OnDone { get; set; }
+
+    private string Until(DateOnly? until) => until is { } day
+        ? Text("Restrict.UntilShown", day.ToString("yyyy-MM-dd", System.Globalization.CultureInfo.InvariantCulture))
+        : L["Restrict.UntilLifted"];
+
+    private Task OpenAsync() => RunAsync(async () =>
+    {
+        _open = true;
+        var view = Kind == "reason" ? await ModerationApi.GetAuthorOfReasonAsync(Id) : await ModerationApi.GetInitiatorOfAppealAsync(Id);
+        if (!view.IsSuccess)
+        {
+            Show(view.Problem);
+            return;
+        }
+
+        _view = view.Value;
+        _until ??= DateOnly.FromDateTime(DateTime.Today).AddDays(7);
+    });
+
+    private Task RestrictAsync() => RunAsync(async () =>
+    {
+        var request = new RestrictionRequest { Until = _dated ? _until : null, Statement = _statement };
+        var result = Kind == "reason"
+            ? await ModerationApi.RestrictAuthorOfReasonAsync(Id, request)
+            : await ModerationApi.RestrictInitiatorOfAppealAsync(Id, request);
+        if (!result.IsSuccess)
+        {
+            Show(result.Problem, "statement");
+            return;
+        }
+
+        _open = false;
+        _statement = "";
+        Info = L["Restrict.Done"];
+        await OnDone.InvokeAsync();
+    });
+}

@@ -245,7 +245,8 @@ ASP.NET Core Identity tables (users, roles, claims, tokens, passkeys), plus:
 | Table | Notes |
 |---|---|
 | `profile` | Display name, created date, normalised email (for the one-account-per-address rule), `verification_level` (`email` at the start; `phone` and the EU wallet can be added), invitation used. While the account is pending (6.2) it holds only the normalised address and the invitation code that was entered. |
-| `invitation` | Code, who issued it, uses left, expiry. Registration is by invitation during the closed trial. A use is counted when the registration is completed (6.2), not when it is started. |
+| `invitation` | Code (and its look-up form without dashes or spaces), kind (`team` or `personal`), who issued it (for a personal code: its member), uses left and expiry (team codes), completed registrations (a counter that never drops), level, switched off (when, by an administrator), replaced (when). Registration is by invitation during the closed trial. A use is counted when the registration is completed (6.2), not when it is started. |
+| `invitation_daily` | Per code and Vilnius day: registrations completed. For the administrators' chart; no per-person history. |
 | `sign_in_code` | Account, hashed code, expiry, failed attempts, used time, and the known device it was issued to (empty for a code any browser may use). |
 | `known_device` | Account, hashed identifier of the browser's cookie, first and last seen. Built before registration opens (M2b). |
 | `role_activation` | Account, role, hashed one-time code, who issued it, expiry, used time. Using it marks the passkey of that session as the staff passkey. |
@@ -257,14 +258,15 @@ ASP.NET Core Identity tables (users, roles, claims, tokens, passkeys), plus:
 
 | Table | Key columns | Notes |
 |---|---|---|
-| `appeal` | `id`, `bill_id` (unique), `initiator_user_id`, neutral description, status, opened and closed times, `closing_vote_id`, `sending` (automatic or held), `threshold`, `threshold_set_by` (initiator or moderator), `first_summarised_at` | Status: pending review → open → closed, or rejected. `threshold` is the initiator's choice (8.4). |
+| `appeal` | `id`, `bill_id` (unique), `initiator_user_id`, neutral description, status, opened and closed times, `closing_vote_id`, `sending` (automatic or held), `threshold`, `threshold_set_by` (initiator or moderator), `first_summarised_at` | Status: pending review → open → closed, or rejected. `threshold` is the initiator's choice (8.4). `first_summarised_at` is set by the first summary really sent to MPs, not by a dry run (8.4). |
 | `position` | (`appeal_id`, `user_id`) primary key, `side` (for or against), created and changed times | One row per person per bill. Becomes the direct LT2 vote in stage 3. |
 | `daily_stat` | `appeal_id`, date, counts per side, counts for accounts older than 30 days, share of new accounts | For the trend chart and surge detection. **No per-person history of opinion changes is stored.** |
-| `reason` | `id`, `appeal_id`, `side`, `author_user_id`, text (up to 500 characters), status, `merged_into_id` | Status: pending, published, hidden, merged. |
-| `endorsement` | (`reason_id`, `user_id`) | "Man svarbu" on a reason; only on your own side, at most three per bill. |
+| `reason` | `id`, `appeal_id`, `side`, `author_user_id`, text (up to 500 characters), status, `merged_into_id` | Status: pending, published, hidden, merged. `side` is the side the argument supports, chosen by its author, whatever the author's own position (8.2). |
+| `endorsement` | (`reason_id`, `user_id`) | "Man svarbu" on a reason; only on your own side; how many per bill is a setting, no limit by default (8.2). |
 | `response` | `appeal_id`, `person_id`, stance, text, published and edited times, `written_by_user_id` | One per MP per bill; edits keep history. |
 | `report` | target, reporter, ground, status | Notice-and-action under the Digital Services Act. |
 | `moderation_action` | moderator, target, action, statement of reasons, time | The statement is sent to the author. |
+| `writing_restriction` | `id`, `user_id`, `ends_at` (null = until lifted), statement, set by and when, lifted by, when and why | A moderator's restriction on writing (8.3). Lives with the writing rules in this module; deleted with the account; never shown to anyone but the person and staff. |
 | `revision` | entity, field, old and new value, who, when | Edit history for descriptions, reasons, responses. |
 
 ### 5.4 `notify`
@@ -273,7 +275,7 @@ ASP.NET Core Identity tables (users, roles, claims, tokens, passkeys), plus:
 |---|---|
 | `outbox` | Kind, `jsonb` payload, due time, attempts, error. Written in the same transaction as the change; dispatched with `FOR UPDATE SKIP LOCKED`. |
 | `digest_run` | Kind (weekly, before-vote, urgent, introduction), scheduled time, status, who approved. |
-| `digest_item` | Per run and appeal: counts per side, counts for accounts older than 30 days, top reasons, planned date and stage. A frozen snapshot: what MPs were told. |
+| `digest_item` | Per run and appeal: counts per side, counts for accounts older than 30 days, top reasons (text and "Man svarbu" count, without the author's name), planned date and stage. A frozen snapshot: what MPs were told. |
 | `digest_delivery` | Per run and MP: sent, skipped by preference, suppressed, bounced; the MP-specific numbers. |
 | `mp_email_pref` | Per MP: frequency (default, weekly only, before votes only, stopped), confirmed extra recipient. |
 | `suppression` | Hashed addresses that bounced or asked to stop. |
@@ -286,8 +288,11 @@ ASP.NET Core Identity tables (users, roles, claims, tokens, passkeys), plus:
 ### 5.6 Settings
 
 `config.setting`: key, `jsonb` value, who changed it and when. Holds every number an administrator may need to tune
-without a deploy: the summary rules in 8.4, the surge thresholds in 6.6, the code limits and the life of a pending
-account in 6.2, whether registration needs an invitation. Each
+without a deploy: the summary rules in 8.4 (default and minimum threshold, the weekly and before-vote times, the ceiling
+per MP, and the share of change that counts as "changed notably", `Digest:NotableChange`), the reasons and "Man svarbu"
+marks a person may give per bill in 8.2 (`Appeals:ReasonsPerPerson`, `Appeals:EndorsementsPerPerson`, 0 = no limit,
+the default), the surge thresholds in 6.6,
+the code limits and the life of a pending account in 6.2, whether registration needs an invitation, uses per personal invitation code (`Registration:PersonalCodeUses`, 0 = no limit, the default). Each
 change is written to `audit`, and the current values of the rules that affect what MPs receive are shown on the public
 methodology page.
 
@@ -346,6 +351,34 @@ plus the Hangfire schema; `lt2_readonly` for ad-hoc analysis has no access to `i
   to someone else's address, or use up an invitation with addresses they do not control.
   - Asking for a sign-in code for a pending account works like any other and completes the registration, on any
     device.
+- **Personal invitation codes [decided 2026-11-13].** Every member has one personal code, made at completed
+  registration (for earlier members when first needed), shown on the account page as a link to the registration form
+  with the code filled in and as a short code with a copy button. Format: eight characters from 29 that cannot be
+  mistaken for one another (`23456789ABCDEFGHJKMNPQRSTVWXYZ`: no 0, 1, I, L, O, U), shown as `XXXX-XXXX`; case,
+  dashes and spaces do not matter when typed; about 5 × 10¹¹ codes, and guessing stays under the registration rate
+  limits. Codes are never written to logs.
+  - Uses per personal code are a runtime setting, `Registration:PersonalCodeUses`, 0 = no limit, the default. Team codes
+    keep their own uses and expiry.
+  - The member can replace the code: a new one is made, the old one stops working, and the member's count (the sum of
+    their codes) carries over.
+  - A use is counted when registration completes, as before, on a counter on the code and in daily totals per code; the
+    count never drops when an invited person deletes their account. The profile keeps which code it registered with,
+    and that goes with the account.
+  - When the inviter deletes their account, their codes are switched off and lose their owner: nothing of the person
+    stays on them; their counts, levels and daily totals stay as anonymous numbers.
+  - The member sees only how many people completed registration with their code and whether it is on; no names, dates
+    or list. The registration form says plainly that whoever gave the code sees that it was used, not by whom.
+  - Administrators (staff-passkey session) get a page: completed registrations per day, in total and for the codes that
+    brought the most people, as a server-rendered chart with the numbers also as a table; those codes (team codes by
+    their code, personal codes by the member's display name); and the numbers per level (level 1: by team codes or with
+    no code; level 2: by codes of level-1 people; and so on). No who-invited-whom tree and no list of who used a code.
+    An administrator can switch any code off and on again, with a statement, audited; a member whose code was switched
+    off sees that on the account page, with the contact address, and cannot replace it meanwhile.
+  - A code that does not work gets one message on the registration form, whatever the reason (unknown, switched off,
+    replaced, expired, used up): ask whoever invited you for a new one.
+  - Never combined with sides: no screen, API answer, export or query joins invitations with positions, marks or
+    arguments. No ranking shown to members, no rewards, nothing public. An account restricted from writing (8.3) keeps
+    its code; switching a code off is a separate action.
   - If the address already has an account, registration only sends a sign-in code to the address on the account; what
     was typed is discarded.
   - Accounts still pending after seven days (a setting) are deleted by the maintenance job that also removes old codes
@@ -377,6 +410,19 @@ plus the Hangfire schema; `lt2_readonly` for ad-hoc analysis has no access to `i
   in. They are told by email when a passkey is added or removed.
 - No authenticator app: one way in to secure. It can be added if an MP's office cannot use passkeys.
 - Responses never reveal whether an email is registered.
+- **Local development only: a fixed sign-in code [decided 2026-11-13].** For the owner's hand testing on the local
+  stack, one configured six-digit code may be typed in place of the emailed one, for any account. Guards, all of them:
+  it is configuration only (an environment variable in `deploy/.env`), never a runtime setting and never on the
+  settings screen, so no administrator can switch it on; the web host refuses to start when it is set and the site's
+  own address (`Site:Address`, from the same `LT2_SITE_ADDRESS` Caddy serves) is not `localhost` or a `.localhost`
+  host, and each request must also come to such a host; unset by default, and then it is refused like any wrong code.
+  The real code is still generated, emailed and accepted. The fixed code works only where an emailed code does
+  (registration and sign-in, a code requested and not yet used, expired or exhausted) and gives an ordinary member
+  session; it never activates a staff role and has nothing to do with activation codes or passkeys. The sign-in page
+  says plainly that it is on, and start-up logs one warning line (without the code). Locally the per-address rate limits
+  and the code limits are raised through the same `.env`; the defaults in code and in production stay.
+  **Not built yet:** the change to the code check was stopped by the coding session's permission checks (an
+  authentication bypass needs the owner's own go-ahead in that session); the raised local limits are built.
 
 ### 6.3 Authorization
 
@@ -387,8 +433,8 @@ Policy-based, with resource handlers where ownership matters.
 | Visitor | Read all public pages and public API. |
 | Member (confirmed email; invited during the trial) | Open an appeal, take a side, write and endorse reasons, report content. |
 | Verified MP / office member (`politician_link`) | Publish and edit that MP's response; manage that MP's email preferences. |
-| Moderator | Review appeals and reasons, merge, hide, correct planned dates, hold a send, approve an urgent send. |
-| Administrator | Roles, politician verification, configuration, import and digest dashboards. Cannot read individual positions through any screen. |
+| Moderator | Review appeals and reasons, merge, hide, correct planned dates, hold a send, approve an urgent send, restrict an account from writing and lift that. |
+| Administrator | Roles, politician verification, configuration, import and digest dashboards, lifting a writing restriction. Cannot read individual positions through any screen. |
 
 No screen and no API returns another person's position. Group numbers are published only for groups of at least 20.
 
@@ -539,14 +585,18 @@ GET /api/v1/meta/imports                    last successful import per source
 
 ### 8.1 Life of an appeal
 
-1. **Open.** A member picks a bill from the list of active bills and opens its appeal: chooses a side, writes the first
-   reason, writes a short **neutral description** of what the bill changes, and sets the **threshold**: how many
-   participants the appeal should have before MPs hear about it (8.4). If the bill already has an appeal, they are taken
-   to it instead.
-2. **Review.** AI pre-screening flags insults, spam and personal data. A moderator checks the neutral description and the
-   first reason and publishes the appeal. Until then it is visible only to its initiator.
-3. **Collect.** People join a side, endorse up to three reasons, or add one. A new reason similar to an existing one is
-   offered the existing one first. Positions can be changed until the appeal closes.
+1. **Open.** A member picks a bill from the list of active bills and opens its appeal: writes a short **neutral
+   description** of what the bill changes and sets the **threshold**: how many participants the appeal should have
+   before MPs hear about it (8.4). Nothing else: no side and no first reason **[decided 2026-11-13]**, so opening needs
+   no positions consent and a new appeal has no participants. If the bill already has an appeal, they are taken to it
+   instead.
+2. **Review.** AI pre-screening flags insults, spam and personal data. A moderator checks the neutral description and
+   publishes the appeal; a returned appeal is corrected by editing the description. Until then it is visible only to its
+   initiator, and nobody writes reasons on it.
+3. **Collect.** On the published appeal people, the initiator like anyone else, take a side (or never do), endorse
+   reasons on their side, or add one for either side. The notice that the appeal was published invites the initiator
+   to add reasons. A new reason similar to an existing one is offered the existing one first. Positions can be changed
+   until the appeal closes.
 4. **Summarise.** Once the appeal reaches its threshold it enters the summaries sent to MPs (8.4).
 5. **Answer.** MPs publish responses; participants are told (8.6).
 6. **Close.** When the Seimas takes the final vote on the bill (or rejects or withdraws it at any stage) the appeal
@@ -561,7 +611,37 @@ the bill, participants are told so they can reconsider (as agreed for votes in `
 - One appeal per bill; one position per person per bill; sides are "for" and "against". Abstaining is not a request to
   an MP, so it is not offered here; stage 3 adds it as a vote option.
 - Positions are private. Reasons are public with their author's display name; the initiator's name is public.
-- A reason belongs to one side and is at most 500 characters of plain text; a person may write at most two per bill.
+- A reason belongs to one side and is at most 500 characters of plain text.
+- **No limit per person by default [decided 2026-11-13].** How many reasons a person may write on a bill, and how many
+  "Man svarbu" marks they may give on a bill, are two runtime settings for all appeals (`Appeals:ReasonsPerPerson`,
+  `Appeals:EndorsementsPerPerson`); 0 means no limit, and both start at 0. Nobody knows yet whether people will write
+  reasons at all, and a limit mostly produces support questions; a limit is switched on when the need shows. While a
+  setting is 0 the pages show no counters and no "you have N left". A limit switched on later applies to new reasons and
+  marks only: nothing already written or marked is removed, and a person over the limit cannot add until they are under
+  it. Only reasons that are shown or waiting for a moderator count; hidden, merged and withdrawn ones do not. The
+  hourly per-account rate limits (6.4) stay as they are.
+- **An author can withdraw their own reason [decided 2026-11-13]** while the appeal is open: it is deleted with its
+  "Man svarbu" marks and disappears from the page; open reports on it are closed; a summary already made keeps its
+  frozen text, which carries no name. The audit log records the withdrawal without the text or the side. On a closed
+  appeal a reason cannot be withdrawn (the page there is the record beside the Seimas vote); a moderator can still hide
+  it, and deleting the account removes it. **[The closed-appeal case is proposed in M2a, to be confirmed by the owner.]**
+- **A reason may be written for either side, whatever the author's own position [decided 2026-11-13].** The writing
+  box asks for the side: it preselects the author's own side when they have taken one (read only from their own,
+  never-cached answer), and preselects nothing when they have not, so they must choose. A person who has not taken a
+  side may write reasons for either side or for both. Writing a reason never creates or changes a position, and nothing
+  public (page, API, cached appeal, summary) tells whether a reason is on its author's side, so a reason does not reveal
+  its author's position.
+- Writing a reason does not need the positions consent (6.5), because no position is stored: writing a reason is the
+  author's own deliberate publication. The writing box says plainly that the reason is public with the author's name
+  and the side chosen, the author can withdraw it, and the privacy and methodology texts say the same. **[decided
+  2026-11-13; to be read by a lawyer together with the consent texts before registration opens]**
+- No reason is marked as the initiator's: nothing ties a reason's side, or the initiator, to a side. Reasons written as
+  "first reasons" before 2026-11-13 stay as ordinary reasons.
+- "Man svarbu" stays on one's own side only, within the setting above; a person without a side cannot mark. Changing or
+  clearing a side drops the marks, never the person's reasons; withdrawing the consent deletes positions and marks,
+  not reasons.
+- Pages, summaries and emails head reasons as "argumentai už / prieš" (reasons to vote for or against), never as the
+  reasons of the people on that side.
 - Published numbers: both sides, always together, always with the count for accounts older than 30 days. Group numbers
   (for example supporters of a party) only when the group has at least 20 people.
 - Wording follows `AGENTS.md`: numbers are "Lietuva 2.0 naudotojai", never "the public" or "voters"; differences are
@@ -574,7 +654,36 @@ the bill, participants are told so they can reconsider (as agreed for votes in `
 - Queue: new appeals (always), reasons flagged by pre-screening or by reports, requests to correct a date or send
   urgently, and appeals still under their threshold whose bill has reached the agenda.
 - Actions: publish, return with a note, hide, merge a reason into another (endorsements move with it), correct the
-  planned date or stage, change an appeal's threshold, hold or release sending for a bill.
+  planned date or stage, change an appeal's threshold, hold or release sending for a bill, restrict an account from
+  writing or lift that (below).
+- Hiding an appeal rejects it and frees the bill for a new appeal. The sides people took on the hidden appeal are
+  **kept, for now [decided 2026-11-13, to be looked at again]**: nobody can see them, and deleting them on hide could
+  not be undone if the hide was a mistake. Whether to delete them instead (data minimisation) will be looked at
+  again.
+- **Restricting an account from writing [decided 2026-11-13].** With the per-person limits switched off (8.2), this is
+  the tool for the one person who misuses that. A moderator restricts the author of a reason or the initiator of an
+  appeal, reached from that item in the queue, either until a date (inclusive, Vilnius time) or until lifted; any
+  moderator may set any length, and any moderator or administrator may lift it, each only in a staff-passkey session
+  (6.2) and each with a written statement. A dated restriction ends by itself when it is checked on use; no job runs.
+  - It blocks everything the person writes for others to read: writing a reason, opening an appeal, editing an
+    appeal's description (a returned one included), and flags about planned dates. The API refuses
+    these with `writing.restricted`; the pages show, in place of the writing box or form, that writing is restricted,
+    until when, and the reason.
+  - It does not touch signing in, taking or changing a side, "Man svarbu", reporting, consent, export, deleting the
+    account or sessions, and never changes a count. The person's earlier reasons and appeals stay; hiding one is its own
+    action, as before.
+  - The person is told by email (outbox): the statement, the end date or "until lifted", and the moderators' contact
+    address for objecting (there is no objection form in the product). Lifting early tells them too.
+  - It is not public: no page, API answer or summary shows anyone else that an account is restricted, and the person's
+    reasons look the same as everyone's.
+  - When restricting, the moderator sees the display name, that person's reasons and appeals, and earlier moderation
+    actions on them, earlier restrictions included; never the address, a side or a mark. The account is never named by
+    its id: the moderator's screens reach it through the reason or appeal, and a restriction has its own id for lifting.
+  - Setting and lifting are recorded like every moderation action (moderator, target, statement, end date) and in
+    `audit`, with nothing about sides.
+  - Deleting the account deletes its restrictions with everything else. **No hash of the address is kept [decided
+    2026-11-13]**: a person can register with another address anyway.
+  - Not built: a full lock that also stops signing in; left for later.
 - Every action is logged in `audit`, and the author receives the statement of reasons. A report button is on every
   appeal and reason (Digital Services Act notice-and-action applies to any hosting service, however small).
 - Only reasons a moderator has seen can appear in a summary email.
@@ -591,6 +700,7 @@ and factions are treated on equal terms. MPs who have not joined LT2 are include
 |---|---|---|
 | An appeal enters summaries when it reaches its own threshold | Set by the initiator for that appeal **[decided]**; the form offers the default (100 positions, both sides together) and refuses anything below the minimum | `Digest:ThresholdDefault`, `Digest:ThresholdMinimum` |
 | **Weekly summary** | Monday 07:00 Vilnius time, in weeks when the Seimas sits. Lists eligible appeals that are on that week's agenda or changed notably since the last summary. No changes, no email. | `Digest:Weekly` |
+| Changed notably | An appeal never yet in a summary, or one whose participants (both sides together) rose or fell by at least 10 % since the last summary that held it **[decided 2026-11-13]** | `Digest:NotableChange` |
 | **Before-vote summary** | 12:00 on the working day before a sitting whose agenda has an eligible appeal's bill at a voting stage, unless that week's Monday summary already covered the same sitting. | `Digest:BeforeVote` |
 | Ceiling per MP | Two summaries a week | `Digest:MaxPerWeek` |
 | Re-sending after an item slips | Only in the next regular summary; never an extra email because a date moved | – |
@@ -602,7 +712,9 @@ gives people a reason to share. Rules around it:
 - It is **public**: everyone sees the number, who set it (the initiator or a moderator) and the progress towards it.
 - It can never be below the administrator's minimum. If the minimum is raised later, appeals below it are lifted to it;
   appeals already in summaries stay in.
-- The initiator can change it until the appeal first enters a summary. After that it has done its job and is locked.
+- The initiator can change it until the appeal first enters a summary that is really sent to MPs. After that it has
+  done its job and is locked. A summary made in dry-run (M2a, before anything is sent) does not lock it **[decided
+  2026-11-13]**.
 - **Anyone can object to it, outside the application [decided].** The appeal covers both sides, so whoever opens it
   first could set a number the appeal will never reach and keep the other side's support from MPs. Because the number is
   public, people can see that and write to the moderators at the contact address; there is no objection form or queue
@@ -636,7 +748,8 @@ the agenda in the coming days, then the rest by participation. For each bill:
 - number, official title, stage, "Planuojama …" (never a countdown);
 - how many ask to vote for and how many against, with the counts for accounts older than 30 days;
 - when at least 20 participants on a side said they support the MP's party: those numbers;
-- the two most endorsed reasons per side;
+- the two most endorsed reasons per side, with their "Man svarbu" counts and without their authors' names **[decided
+  2026-11-13]**: the same in the email, the public copy and the stored snapshot, so a summary holds no person;
 - a surge note when one applies;
 - the MP's own published stance, or a link to answer once for everyone;
 - a link to the public page with the same numbers.
@@ -689,21 +802,29 @@ By email, each kind switchable in settings:
 ### 8.7 Public record of what was sent
 
 Every summary has a public page (`/suvestines/2026-11-16`) with the frozen numbers and reasons, without MP-specific
-figures. Participants can see that their appeal reached the Seimas, journalists can cite it, and MPs know that the
-numbers in their inbox are the numbers everyone sees. The pages carry the same "not a representative poll" notice.
+figures and without the reasons' authors (8.4). Participants can see that their appeal reached the Seimas, journalists
+can cite it, and MPs know that the numbers in their inbox are the numbers everyone sees. The pages carry the same "not a representative poll" notice.
 
 ### 8.8 API
 
 ```
 GET    /api/v1/appeals?sort=&cursor=
 GET    /api/v1/bills/{number}/appeal                     counts, reasons, responses, planned date
-POST   /api/v1/bills/{number}/appeal                     open: side, first reason, neutral description, threshold
+POST   /api/v1/bills/{number}/appeal                     open: neutral description, threshold (no side, no first reason)
 PUT    /api/v1/bills/{number}/appeal/threshold           initiator, until the first summary or a moderator's change
 PUT    /api/v1/bills/{number}/appeal/position            take or change a side
 DELETE /api/v1/bills/{number}/appeal/position
-POST   /api/v1/bills/{number}/appeal/reasons
+POST   /api/v1/bills/{number}/appeal/reasons             side (either), text
+DELETE /api/v1/reasons/{id}                              the author withdraws their own reason, while the appeal is open
 PUT    /api/v1/reasons/{id}/endorsement    DELETE /api/v1/reasons/{id}/endorsement
 POST   /api/v1/bills/{number}/appeal/flags               "date is wrong", "voted sooner"
+GET    /api/v1/me/writing-restriction                    the caller's own restriction, if any (never cached)
+GET    /api/v1/moderation/reasons/{id}/author            name, their reasons, appeals, earlier actions and restrictions
+GET    /api/v1/moderation/appeals/{id}/initiator         the same for an appeal's initiator
+POST   /api/v1/moderation/reasons/{id}/restrict-author   statement, until (a date) or none = until lifted
+POST   /api/v1/moderation/appeals/{id}/restrict-initiator
+GET    /api/v1/moderation/restrictions                   current restrictions (moderator or administrator)
+POST   /api/v1/moderation/restrictions/{id}/lift         statement (moderator or administrator)
 POST   /api/v1/reports
 GET    /api/v1/digests            GET /api/v1/digests/{date}
 
@@ -714,6 +835,9 @@ POST   /api/v1/me/role-activation (activation code)                in a passkey 
 GET    /api/v1/me                 PUT /api/v1/me                   GET /api/v1/me/appeals
 PUT    /api/v1/me/party-support   PUT /api/v1/me/notifications
 GET    /api/v1/me/export          DELETE /api/v1/me
+GET    /api/v1/me/invitation      (own code, link, count, on or off)  POST /api/v1/me/invitation/replace
+GET    /api/v1/admin/invitations  (daily totals, top codes, levels: numbers only)
+POST   /api/v1/admin/invitations/{id}/switch-off   POST /api/v1/admin/invitations/{id}/switch-on   (statement)
 
 POST   /api/v1/mps/{slug}/claim
 PUT    /api/v1/bills/{number}/appeal/responses/mine
@@ -830,6 +954,30 @@ Splitting M2 means the risky step (emailing every MP) happens only after the who
 - The mixed group of MPs is not a faction and has no position; its members, and MPs outside any faction at the time of
   a vote, have no "Balsavo kaip frakcija" figure for those votes (7.3).
 
+**Confirmed by the owner on 2026-11-13**
+
+- The sides taken on a hidden (rejected) appeal are kept, for now; to be looked at again (8.3).
+- A dry-run summary does not lock the initiator's threshold; only the first summary really sent does (8.4).
+- Summaries carry no authors' names beside the reasons: the email, the public copy and the stored snapshot (8.4, 8.7).
+- "Changed notably" for the weekly summary is a runtime setting, `Digest:NotableChange`, default 10 % (8.4, 5.6).
+- A reason may be written for either side, whatever the author's own; the author's side is only the preselected
+  choice, and a person without a side may write too (8.2). Writing a reason needs no positions consent: the author's
+  own deliberate publication, public with name and side and withdrawable (8.2); a lawyer reads this with the consent
+  texts before registration opens (below).
+- Opening an appeal asks only for the neutral description and the threshold: no side, no first reason, no positions
+  consent. The initiator writes reasons and takes a side on the published appeal like anyone else, or never (8.1).
+  Earlier first reasons stay as ordinary reasons; nothing marks a reason as the initiator's.
+- Reasons and "Man svarbu" marks per person per bill are runtime settings, both 0 (no limit) at the start; a limit
+  switched on later counts only shown or waiting reasons and removes nothing (8.2, 5.6).
+- An author can withdraw their own reason while the appeal is open (8.2, 8.8). Still to be confirmed: that a reason
+  cannot be withdrawn once the appeal is closed (8.2).
+- Personal invitation codes: one per member, unlimited by default (`Registration:PersonalCodeUses`), replaceable,
+  counted at completed registration on the code and per day; members see only their count; administrators see numbers
+  per day, per code and per level, never who invited whom, and can switch codes off and on (6.2).
+- A moderator can restrict an account from writing, until a date or until lifted, with a statement emailed to the
+  person; it is not public, touches no side, mark or count, and goes with the account; no hash of the address is kept.
+  A full lock that stops sign-in is left for later (8.3).
+
 **Decisions needed before the stage that uses them**
 
 | Decision | Options | Needed by |
@@ -837,6 +985,7 @@ Splitting M2 means the risky step (emailing every MP) happens only after the who
 | Email provider | An EU-owned service (for example Brevo or Scaleway) or Amazon SES in an EU region. Compare deliverability to `lrs.lt`, price, processor terms. | M0 |
 | How accounts are verified once registration is open | **Stay with email** and label numbers as email-confirmed accounts; or add **phone verification** (an EU provider such as Infobip or Sinch, or a Lithuanian bulk-SMS service; paid per message; Lithuanian numbers only would exclude people abroad); or wait for the EU Digital Identity Wallet. The public pages promise one account per confirmed phone number, so staying with email also means rewording them. | Before M2b |
 | CDN and DDoS protection | Bunny (EU) or Cloudflare. | Before M2b |
+| Legal reading of the consent texts | A lawyer reads the positions consent texts together with the rule that writing a reason needs no consent (8.2): a reason is the author's own deliberate publication, public with name and chosen side, and withdrawable. | Before registration opens, at the latest before M2b |
 | AI provider for pre-screening | Any provider with EU data terms; no personal data is sent either way. | M2a |
 | Telemetry backend | Hosted free tier with EU storage, or self-hosted. | M0 |
 | MP photos | Use the Seimas photos if their terms allow, otherwise initials. | M1 |
@@ -852,7 +1001,7 @@ Splitting M2 means the risky step (emailing every MP) happens only after the who
 | Open-data service outages (seen today) | Raw responses stored, retries, pages show the last import time, imports resume. |
 | Someone who knows a person's address uses up its daily codes, so the person cannot sign in by code, or cannot finish registering | Accepted for the closed trial: addresses are not public, nothing leaks, and passkeys are not affected. Known devices (6.2) are built before registration opens. Keeping a new address from registering stays possible after that. |
 | A leak of positions | Minimised data, no position in logs or admin screens, encrypted backups, impact assessment, penetration test, incident runbook. |
-| Moderation load for a volunteer team | One appeal per bill, short plain-text reasons, no comments, AI pre-screening, limits per person. |
+| Moderation load for a volunteer team | One appeal per bill, short plain-text reasons, no comments, AI pre-screening, hourly rate limits per account, and limits per person per bill ready to switch on (off at the start, 8.2). |
 | Running costs outlive enthusiasm (the old platform's fate) | One VPS, no paid infrastructure beyond email and backup storage. |
 | Stage 2 ships before stage 3 and the public pages say otherwise | Update the pages when this order is agreed (below). |
 

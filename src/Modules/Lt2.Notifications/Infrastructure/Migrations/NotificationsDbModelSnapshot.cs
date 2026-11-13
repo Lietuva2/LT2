@@ -18,10 +18,166 @@ namespace Lt2.Notifications.Infrastructure.Migrations
 #pragma warning disable 612, 618
             modelBuilder
                 .HasDefaultSchema("notify")
-                .HasAnnotation("ProductVersion", "10.0.13")
+                .HasAnnotation("ProductVersion", "10.0.15")
                 .HasAnnotation("Relational:MaxIdentifierLength", 63);
 
             NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
+
+            modelBuilder.Entity("Lt2.Notifications.Digests.DigestDelivery", b =>
+                {
+                    b.Property<Guid>("RunId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("run_id");
+
+                    b.Property<string>("MpSlug")
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)")
+                        .HasColumnName("mp_slug");
+
+                    b.Property<string>("PartyNumbers")
+                        .IsRequired()
+                        .HasColumnType("jsonb")
+                        .HasColumnName("party_numbers");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)")
+                        .HasColumnName("status");
+
+                    b.HasKey("RunId", "MpSlug")
+                        .HasName("pk_digest_delivery");
+
+                    b.ToTable("digest_delivery", "notify");
+                });
+
+            modelBuilder.Entity("Lt2.Notifications.Digests.DigestItem", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<int>("AgainstCount")
+                        .HasColumnType("integer")
+                        .HasColumnName("against_count");
+
+                    b.Property<int>("AgainstOlderThan30Days")
+                        .HasColumnType("integer")
+                        .HasColumnName("against_older_than30days");
+
+                    b.Property<Guid>("AppealId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("appeal_id");
+
+                    b.Property<string>("BillNumber")
+                        .IsRequired()
+                        .HasMaxLength(40)
+                        .HasColumnType("character varying(40)")
+                        .HasColumnName("bill_number");
+
+                    b.Property<string>("BillTitle")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("bill_title");
+
+                    b.Property<int>("ForCount")
+                        .HasColumnType("integer")
+                        .HasColumnName("for_count");
+
+                    b.Property<int>("ForOlderThan30Days")
+                        .HasColumnType("integer")
+                        .HasColumnName("for_older_than30days");
+
+                    b.Property<DateOnly?>("PlannedDate")
+                        .HasColumnType("date")
+                        .HasColumnName("planned_date");
+
+                    b.Property<int>("Position")
+                        .HasColumnType("integer")
+                        .HasColumnName("position");
+
+                    b.Property<string>("Reasons")
+                        .IsRequired()
+                        .HasColumnType("jsonb")
+                        .HasColumnName("reasons");
+
+                    b.Property<Guid>("RunId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("run_id");
+
+                    b.Property<string>("Stage")
+                        .HasMaxLength(16)
+                        .HasColumnType("character varying(16)")
+                        .HasColumnName("stage");
+
+                    b.Property<int?>("SurgeSharePercent")
+                        .HasColumnType("integer")
+                        .HasColumnName("surge_share_percent");
+
+                    b.Property<int?>("SurgeWindowHours")
+                        .HasColumnType("integer")
+                        .HasColumnName("surge_window_hours");
+
+                    b.HasKey("Id")
+                        .HasName("pk_digest_item");
+
+                    b.HasIndex("AppealId")
+                        .HasDatabaseName("ix_digest_item_appeal_id");
+
+                    b.HasIndex("RunId")
+                        .HasDatabaseName("ix_digest_item_run_id");
+
+                    b.ToTable("digest_item", "notify");
+                });
+
+            modelBuilder.Entity("Lt2.Notifications.Digests.DigestRun", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<Guid?>("ApprovedBy")
+                        .HasColumnType("uuid")
+                        .HasColumnName("approved_by");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("created_at");
+
+                    b.Property<string>("Kind")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)")
+                        .HasColumnName("kind");
+
+                    b.Property<int>("MpCount")
+                        .HasColumnType("integer")
+                        .HasColumnName("mp_count");
+
+                    b.Property<DateOnly>("RunDate")
+                        .HasColumnType("date")
+                        .HasColumnName("run_date");
+
+                    b.Property<DateOnly?>("SittingDate")
+                        .HasColumnType("date")
+                        .HasColumnName("sitting_date");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)")
+                        .HasColumnName("status");
+
+                    b.HasKey("Id")
+                        .HasName("pk_digest_run");
+
+                    b.HasIndex("RunDate")
+                        .HasDatabaseName("ix_digest_run_run_date");
+
+                    b.ToTable("digest_run", "notify");
+                });
 
             modelBuilder.Entity("Lt2.Notifications.Outbox.OutboxRow", b =>
                 {
@@ -73,6 +229,26 @@ namespace Lt2.Notifications.Infrastructure.Migrations
                         .HasFilter("failed_at IS NULL");
 
                     b.ToTable("outbox", "notify");
+                });
+
+            modelBuilder.Entity("Lt2.Notifications.Digests.DigestDelivery", b =>
+                {
+                    b.HasOne("Lt2.Notifications.Digests.DigestRun", null)
+                        .WithMany()
+                        .HasForeignKey("RunId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
+                        .HasConstraintName("fk_digest_delivery_digest_run_run_id");
+                });
+
+            modelBuilder.Entity("Lt2.Notifications.Digests.DigestItem", b =>
+                {
+                    b.HasOne("Lt2.Notifications.Digests.DigestRun", null)
+                        .WithMany()
+                        .HasForeignKey("RunId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
+                        .HasConstraintName("fk_digest_item_digest_run_run_id");
                 });
 #pragma warning restore 612, 618
         }

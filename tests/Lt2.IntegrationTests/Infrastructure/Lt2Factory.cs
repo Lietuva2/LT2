@@ -21,6 +21,7 @@ public class Lt2Factory(DatabaseFixture database, int codeRequestLimit = 1000, i
         builder.UseEnvironment("Testing");
         builder.UseSetting("ConnectionStrings:Lt2", Database.AppConnectionString);
         builder.UseSetting("Security:IpHashKey", "test-ip-hash-key");
+        builder.UseSetting("Moderation:ContactAddress", "moderatoriai@lt2.test");
         builder.UseSetting("RateLimits:CodeRequest:PermitLimit", codeRequestLimit.ToString(System.Globalization.CultureInfo.InvariantCulture));
         builder.UseSetting("RateLimits:CodeRequest:WindowSeconds", "600");
         builder.UseSetting("RateLimits:Registration:PermitLimit", registrationLimit.ToString(System.Globalization.CultureInfo.InvariantCulture));
