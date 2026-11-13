@@ -150,7 +150,8 @@ public sealed class AppealFlowTests(AppealFlowTests.ModeratorFixture moderator) 
 
         // Both columns of the demonstration appeal, signed in: "Man svarbu" and "Pranešti" on one line under each.
         await b.GotoAsync($"{Base}/seimas/XVP-0412/kreipimasis");
-        await Assertions.Expect(b.Locator("#reasons-against .said__actions button").First).ToBeEnabledAsync(new() { Timeout = 60_000 });
+        // "Pranešti" is enabled once the island has started ("Man svarbu" stays disabled: no side on this bill).
+        await Assertions.Expect(b.Locator("#reasons-against .said__actions button.linkish").First).ToBeEnabledAsync(new() { Timeout = 60_000 });
         await ActionsOnOneLineAsync(b);
         await b.Locator("#reasons").ScreenshotAsync(new() { Path = Shot($"argument-actions-{width}.png") });
 
