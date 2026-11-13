@@ -195,6 +195,119 @@ internal sealed class ModerationService(
             return Task.FromResult<Result<string?>>(ModerationNotices.AppealHidden);
         }, cancellationToken);
 
+    public async Task<HiddenItems> HiddenAsync(CancellationToken cancellationToken)
+    {
+        await using var db = await contexts.CreateDbContextAsync(cancellationToken);
+        var appeals = await db.Appeals.AsNoTracking().Where(a => a.Status == AppealStatuses.Rejected).ToListAsync(cancellationToken);
+        var reasons = await db.Reasons.AsNoTracking().Where(r => r.Status == ReasonStatuses.Hidden).ToListAsync(cancellationToken);
+        var targets = appeals.Select(a => a.Id).Concat(reasons.Select(r => r.Id)).ToList();
+        var hides = (await db.ModerationActions.AsNoTracking()
+                .Where(m => targets.Contains(m.TargetId) && m.Action == "hide")
+                .ToListAsync(cancellationToken))
+            .GroupBy(m => m.TargetId)
+            .ToDictionary(g => g.Key, g => g.OrderByDescending(m => m.CreatedAt).First());
+
+        // Everything else on the same bills, for what "Atkurti" would do now (design 8.3).
+        var bills = appeals.Select(a => a.BillNumber).Distinct().ToList();
+        var onBills = await db.Appeals.AsNoTracking()
+            .Where(a => bills.Contains(a.BillNumber) && a.Status != AppealStatuses.Rejected)
+            .Select(a => new { a.Id, a.BillNumber, a.Status, a.InitiatorUserId })
+            .ToListAsync(cancellationToken);
+        var reasonAppeals = reasons.Select(r => r.AppealId).Distinct().ToList();
+        var appealOf = await db.Appeals.AsNoTracking().Where(a => reasonAppeals.Contains(a.Id)).ToDictionaryAsync(a => a.Id, cancellationToken);
+
+        var names = await reads.NamesAsync(
+            appeals.Select(a => a.InitiatorUserId).Concat(reasons.Select(r => r.AuthorUserId)).Concat(hides.Values.Select(m => m.ModeratorUserId)),
+            cancellationToken);
+        var billFacts = await reads.BillsAsync(bills.Concat(appealOf.Values.Select(a => a.BillNumber)).Distinct().ToList(), cancellationToken);
+        BillFacts Bill(string number) => billFacts.GetValueOrDefault(number) ?? new BillFacts(number, number);
+        ModerationAction? Hide(Guid id) => hides.GetValueOrDefault(id);
+
+        var hiddenAppeals = appeals
+            .Select(a =>
+            {
+                var restoresAs = ProposalRules.RestoredStatus(a.PublishedAt, a.ClosedAt);
+                var others = onBills.Where(o => o.BillNumber == a.BillNumber && o.Id != a.Id).Select(o => (o.Status, o.InitiatorUserId == a.InitiatorUserId));
+                var hide = Hide(a.Id);
+                return new HiddenAppeal(
+                    a.Id, Bill(a.BillNumber), names.GetValueOrDefault(a.InitiatorUserId), a.Description, hide?.CreatedAt,
+                    hide is null ? null : names.GetValueOrDefault(hide.ModeratorUserId), hide?.Statement, restoresAs,
+                    ProposalRules.CheckRestore(a.Status, restoresAs, others));
+            })
+            .OrderByDescending(a => a.HiddenAt ?? DateTimeOffset.MinValue)
+            .Take(QueueLimit * 2)
+            .ToList();
+        var hiddenReasons = reasons
+            .Select(r =>
+            {
+                var hide = Hide(r.Id);
+                var appeal = appealOf[r.AppealId];
+                return new HiddenReason(
+                    r.Id, Bill(appeal.BillNumber), r.Side, r.Text, names.GetValueOrDefault(r.AuthorUserId), hide?.CreatedAt,
+                    hide is null ? null : names.GetValueOrDefault(hide.ModeratorUserId), hide?.Statement, appeal.Status == AppealStatuses.Open);
+            })
+            .OrderByDescending(r => r.HiddenAt ?? DateTimeOffset.MinValue)
+            .Take(QueueLimit * 2)
+            .ToList();
+        return new HiddenItems(hiddenAppeals, hiddenReasons);
+    }
+
+    public Task<Result<Unit>> RestoreAppealAsync(Guid appealId, string statement, ModeratorActor moderator, CancellationToken cancellationToken)
+    {
+        if (string.IsNullOrWhiteSpace(statement))
+        {
+            return Task.FromResult<Result<Unit>>(Error.Validation("statement.required", "statement"));
+        }
+
+        return OnAppealAsync(appealId, moderator, "restore", statement, async (db, appeal, now) =>
+        {
+            // Under the bill's lock, and read again after it, so "one published appeal per bill" holds (design 8.1).
+            await ParticipationLock.TakeBillAsync(db, appeal.BillNumber, cancellationToken);
+            await db.Entry(appeal).ReloadAsync(cancellationToken);
+            var others = await db.Appeals.AsNoTracking()
+                .Where(a => a.BillNumber == appeal.BillNumber && a.Id != appeal.Id)
+                .Select(a => new { a.Status, a.InitiatorUserId })
+                .ToListAsync(cancellationToken);
+            var restored = ProposalRules.RestoredStatus(appeal.PublishedAt, appeal.ClosedAt);
+            if (ProposalRules.CheckRestore(appeal.Status, restored, others.Select(o => (o.Status, o.InitiatorUserId == appeal.InitiatorUserId))) is { } refused)
+            {
+                return RuleErrors.Of(refused);
+            }
+
+            // Sides, reasons and marks were never touched by the hide, so they come back as they were.
+            appeal.Status = restored;
+            if (ProposalRules.IsPublished(restored))
+            {
+                // Proposed by the parent session, not yet confirmed by the owner (design 8.3): restoring a published
+                // appeal while proposals wait counts as publishing, and they close.
+                await SupersedeOthersAsync(db, appeal, moderator, now, cancellationToken);
+            }
+
+            return ModerationNotices.AppealRestored;
+        }, cancellationToken);
+    }
+
+    public Task<Result<Unit>> RestoreReasonAsync(Guid reasonId, string statement, ModeratorActor moderator, CancellationToken cancellationToken)
+    {
+        if (string.IsNullOrWhiteSpace(statement))
+        {
+            return Task.FromResult<Result<Unit>>(Error.Validation("statement.required", "statement"));
+        }
+
+        return OnReasonAsync(reasonId, moderator, "restore", statement, (_, reason, now) =>
+        {
+            if (reason.Status != ReasonStatuses.Hidden)
+            {
+                return Task.FromResult<Result<string?>>(Error.Conflict("moderation.wrong-state"));
+            }
+
+            // Its "Man svarbu" marks were deleted by the hide and do not come back (design 8.3).
+            reason.Status = ReasonStatuses.Published;
+            reason.SeenAt = now;
+            return Task.FromResult<Result<string?>>(ModerationNotices.ReasonRestored);
+        }, cancellationToken);
+    }
+
     public async Task<Result<Unit>> SetThresholdAsync(Guid appealId, int threshold, string statement, ModeratorActor moderator, CancellationToken cancellationToken)
     {
         if (ThresholdRules.CheckRequested(threshold, await reads.MinimumAsync(cancellationToken)) is { } below)

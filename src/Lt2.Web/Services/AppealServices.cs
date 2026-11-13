@@ -55,6 +55,12 @@ internal static class AppealMapping
             r.Id, r.AppealId, Map(r.Bill), r.Side, r.Text, r.AuthorName, r.Status, r.Seen, r.Flags, r.Reports.Select(Map).ToList(),
             r.MergeCandidates.Select(Map).ToList(), r.CreatedAt)).ToList());
 
+    public static HiddenItemsResponse Map(HiddenItems h) => new(
+        h.Appeals.Select(a => new HiddenAppealResponse(
+            a.Id, Map(a.Bill), a.InitiatorName, a.Description, a.HiddenAt, a.HiddenBy, a.Statement, a.RestoresAs, a.RefusedBecause)).ToList(),
+        h.Reasons.Select(r => new HiddenReasonResponse(
+            r.Id, Map(r.Bill), r.Side, r.Text, r.AuthorName, r.HiddenAt, r.HiddenBy, r.Statement, r.Restorable)).ToList());
+
     public static OpenAppeal ToModule(OpenAppealRequest r) => new(r.Description, r.Threshold);
 
     public static EditAppeal ToModule(EditAppealRequest r) => new(r.Description);
@@ -222,6 +228,17 @@ internal sealed class ServerModerationApi(
 
     public Task<ApiResult> PublishAppealAsync(Guid appealId, ModerationRequest request, CancellationToken cancellationToken = default) =>
         ActAsync(m => moderation.PublishAppealAsync(appealId, request.Statement, m, cancellationToken));
+
+    public async Task<ApiResult<HiddenItemsResponse>> GetHiddenAsync(CancellationToken cancellationToken = default) =>
+        await IsModeratorAsync()
+            ? ApiResult<HiddenItemsResponse>.Ok(AppealMapping.Map(await moderation.HiddenAsync(cancellationToken)))
+            : ApiResult<HiddenItemsResponse>.Fail(errors.ToProblem(Error.Forbidden("forbidden")));
+
+    public Task<ApiResult> RestoreAppealAsync(Guid appealId, StatementRequest request, CancellationToken cancellationToken = default) =>
+        ActAsync(m => moderation.RestoreAppealAsync(appealId, request.Statement, m, cancellationToken));
+
+    public Task<ApiResult> RestoreReasonAsync(Guid reasonId, StatementRequest request, CancellationToken cancellationToken = default) =>
+        ActAsync(m => moderation.RestoreReasonAsync(reasonId, request.Statement, m, cancellationToken));
 
     public Task<ApiResult> ReturnAppealAsync(Guid appealId, StatementRequest request, CancellationToken cancellationToken = default) =>
         ActAsync(m => moderation.ReturnAppealAsync(appealId, request.Statement, m, cancellationToken));

@@ -78,4 +78,42 @@ public sealed class ProposalRuleTests
     [InlineData(Open, false)]
     public void Publishing_closes_the_other_waiting_and_returned_proposals_only(string status, bool closed) =>
         ProposalRules.ClosedWhenAnotherIsPublished(status).ShouldBe(closed);
+
+    [Fact]
+    public void A_hidden_appeal_comes_back_as_it_was_before_the_hide()
+    {
+        var at = new DateTimeOffset(2026, 11, 13, 9, 0, 0, TimeSpan.Zero);
+        ProposalRules.RestoredStatus(at, at.AddDays(9)).ShouldBe(Closed);
+        ProposalRules.RestoredStatus(at, null).ShouldBe(Open);
+        ProposalRules.RestoredStatus(null, null).ShouldBe(Pending, "one hidden before publication waits for a moderator again");
+    }
+
+    [Theory]
+    [InlineData(Open)]
+    [InlineData(Closed)]
+    [InlineData(Pending)]
+    public void Restoring_is_refused_while_another_appeal_on_the_bill_is_published(string restoresAs)
+    {
+        ProposalRules.CheckRestore(Rejected, restoresAs, [(Open, false)]).ShouldBe("appeal.published-exists");
+        ProposalRules.CheckRestore(Rejected, restoresAs, [(Closed, true)]).ShouldBe("appeal.published-exists");
+    }
+
+    [Fact]
+    public void Restoring_a_published_appeal_is_allowed_while_only_proposals_wait() =>
+        ProposalRules.CheckRestore(Rejected, Open, [(Pending, false), (Returned, true), (Rejected, false), (Superseded, false)]).ShouldBeNull();
+
+    [Fact]
+    public void A_proposal_hidden_before_publication_is_not_restored_while_its_author_has_another_waiting() =>
+        ProposalRules.CheckRestore(Rejected, Pending, [(Pending, true)]).ShouldBe("proposal.exists");
+
+    [Fact]
+    public void A_proposal_hidden_before_publication_is_restored_beside_other_peoples_proposals() =>
+        ProposalRules.CheckRestore(Rejected, Pending, [(Pending, false), (Returned, false)]).ShouldBeNull();
+
+    [Theory]
+    [InlineData(Open)]
+    [InlineData(Pending)]
+    [InlineData(Superseded)]
+    public void Only_a_hidden_appeal_is_restored(string status) =>
+        ProposalRules.CheckRestore(status, Open, []).ShouldBe("moderation.wrong-state");
 }

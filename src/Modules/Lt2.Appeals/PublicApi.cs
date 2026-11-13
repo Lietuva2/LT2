@@ -205,6 +205,19 @@ public interface IAppealsModeration
 
     Task<Result<Unit>> HideAppealAsync(Guid appealId, string statement, ModeratorActor moderator, CancellationToken cancellationToken);
 
+    /// <summary>Hidden appeals and reasons, newest hide first, with who hid them, when and why (design 8.3).</summary>
+    Task<HiddenItems> HiddenAsync(CancellationToken cancellationToken);
+
+    /// <summary>
+    /// Brings a hidden appeal back as it was (design 8.3): open or closed if it had been published, else a waiting
+    /// proposal. Refused while another appeal on the bill is published; restoring a published one closes waiting
+    /// proposals as publishing does.
+    /// </summary>
+    Task<Result<Unit>> RestoreAppealAsync(Guid appealId, string statement, ModeratorActor moderator, CancellationToken cancellationToken);
+
+    /// <summary>Brings a hidden reason back as published, while its appeal is open; its marks are gone (design 8.3).</summary>
+    Task<Result<Unit>> RestoreReasonAsync(Guid reasonId, string statement, ModeratorActor moderator, CancellationToken cancellationToken);
+
     Task<Result<Unit>> SetThresholdAsync(Guid appealId, int threshold, string statement, ModeratorActor moderator, CancellationToken cancellationToken);
 
     Task<Result<Unit>> PublishReasonAsync(Guid reasonId, string? statement, ModeratorActor moderator, CancellationToken cancellationToken);
@@ -246,6 +259,20 @@ public interface IAppealsModeration
     /// <summary>Lifts a restriction early (a moderator or an administrator); audited and emailed.</summary>
     Task<Result<Unit>> LiftRestrictionAsync(Guid restrictionId, string statement, ModeratorActor moderator, string? contact, CancellationToken cancellationToken);
 }
+
+/// <summary>
+/// A hidden appeal for the moderators' list (design 8.3). <paramref name="RestoresAs"/> is the status "Atkurti" would give
+/// it; <paramref name="RefusedBecause"/> the code it would be refused with now, or null.
+/// </summary>
+public sealed record HiddenAppeal(
+    Guid Id, BillFacts Bill, string? InitiatorName, string Description, DateTimeOffset? HiddenAt, string? HiddenBy, string? Statement,
+    string RestoresAs, string? RefusedBecause);
+
+/// <summary>A hidden reason for the moderators' list; it can be restored only while its appeal is open.</summary>
+public sealed record HiddenReason(
+    Guid Id, BillFacts Bill, string Side, string Text, string? AuthorName, DateTimeOffset? HiddenAt, string? HiddenBy, string? Statement, bool Restorable);
+
+public sealed record HiddenItems(IReadOnlyList<HiddenAppeal> Appeals, IReadOnlyList<HiddenReason> Reasons);
 
 /// <summary>The caller's own writing restriction (design 8.3): its last day (null = until lifted) and the statement.</summary>
 public sealed record MyRestriction(DateOnly? Until, string Statement);

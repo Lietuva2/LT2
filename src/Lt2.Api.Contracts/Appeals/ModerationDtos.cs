@@ -48,6 +48,21 @@ public sealed record QueueReasonResponse(
     IReadOnlyList<ReasonResponse> MergeCandidates,
     DateTimeOffset CreatedAt);
 
+/// <summary>
+/// A hidden appeal (design 8.3): who hid it, when and why. <c>RestoresAs</c> is the status "Atkurti" gives it (open,
+/// closed or pending); <c>RefusedBecause</c> the code a restore would be refused with now, or null.
+/// </summary>
+public sealed record HiddenAppealResponse(
+    Guid Id, BillRefResponse Bill, string? InitiatorName, string Description, DateTimeOffset? HiddenAt, string? HiddenBy, string? Statement,
+    string RestoresAs, string? RefusedBecause);
+
+/// <summary>A hidden reason; <c>Restorable</c> while its appeal is open.</summary>
+public sealed record HiddenReasonResponse(
+    Guid Id, BillRefResponse Bill, string Side, string Text, string? AuthorName, DateTimeOffset? HiddenAt, string? HiddenBy, string? Statement, bool Restorable);
+
+/// <summary>The moderators' list of hidden appeals and reasons (design 8.3), newest hide first. Holds no position.</summary>
+public sealed record HiddenItemsResponse(IReadOnlyList<HiddenAppealResponse> Appeals, IReadOnlyList<HiddenReasonResponse> Reasons);
+
 /// <summary>The moderators' queue (design 8.3). Holds no position of anyone.</summary>
 public sealed record ModerationQueueResponse(IReadOnlyList<QueueAppealResponse> Appeals, IReadOnlyList<QueueReasonResponse> Reasons);
 

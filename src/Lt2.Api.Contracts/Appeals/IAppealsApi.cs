@@ -78,6 +78,15 @@ public interface IModerationApi
 
     Task<ApiResult> HideAppealAsync(Guid appealId, StatementRequest request, CancellationToken cancellationToken = default);
 
+    /// <summary>Hidden appeals and reasons, with who hid them, when and why (design 8.3).</summary>
+    Task<ApiResult<HiddenItemsResponse>> GetHiddenAsync(CancellationToken cancellationToken = default);
+
+    /// <summary>"Atkurti": brings a hidden appeal back as it was; statement required (design 8.3).</summary>
+    Task<ApiResult> RestoreAppealAsync(Guid appealId, StatementRequest request, CancellationToken cancellationToken = default);
+
+    /// <summary>"Atkurti": brings a hidden reason back, while its appeal is open; statement required.</summary>
+    Task<ApiResult> RestoreReasonAsync(Guid reasonId, StatementRequest request, CancellationToken cancellationToken = default);
+
     Task<ApiResult> SetThresholdAsync(Guid appealId, ModeratorThresholdRequest request, CancellationToken cancellationToken = default);
 
     Task<ApiResult> PublishReasonAsync(Guid reasonId, ModerationRequest request, CancellationToken cancellationToken = default);

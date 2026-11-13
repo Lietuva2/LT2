@@ -17,6 +17,45 @@ public static class AppealNumbers
 }
 
 /// <summary>
+/// Dates as the pages write them in numbers (<c>AGENTS.md</c> "Wording"): <c>yyyy-MM-dd</c>, with <c>HH:mm</c> in Vilnius
+/// time; and the one typed form, a text field in <c>yyyy-MM-dd</c>, never the browser's date control.
+/// </summary>
+public static class Dates
+{
+    /// <summary>The placeholder of a typed date field.</summary>
+    public const string Example = "2026-11-19";
+
+    /// <summary>The pattern a typed date field checks before it is sent (the server checks again).</summary>
+    public const string Pattern = @"\d{4}-\d{2}-\d{2}";
+
+    private static readonly TimeZoneInfo Vilnius = FindVilnius();
+
+    public static string Day(DateOnly day) => day.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture);
+
+    /// <summary>The Vilnius day of a moment.</summary>
+    public static string Day(DateTimeOffset at) => TimeZoneInfo.ConvertTime(at, Vilnius).ToString("yyyy-MM-dd", CultureInfo.InvariantCulture);
+
+    /// <summary>The Vilnius day and time of a moment.</summary>
+    public static string DayTime(DateTimeOffset at) => TimeZoneInfo.ConvertTime(at, Vilnius).ToString("yyyy-MM-dd HH:mm", CultureInfo.InvariantCulture);
+
+    /// <summary>Reads a typed <c>yyyy-MM-dd</c> date; spaces around it are ignored, nothing else is accepted.</summary>
+    public static bool TryRead(string? text, out DateOnly day) =>
+        DateOnly.TryParseExact(text?.Trim(), "yyyy-MM-dd", CultureInfo.InvariantCulture, DateTimeStyles.None, out day);
+
+    private static TimeZoneInfo FindVilnius()
+    {
+        try
+        {
+            return TimeZoneInfo.FindSystemTimeZoneById("Europe/Vilnius");
+        }
+        catch (TimeZoneNotFoundException)
+        {
+            return TimeZoneInfo.Utc;
+        }
+    }
+}
+
+/// <summary>
 /// What every interactive appeal component shares: one action at a time, controls disabled until WebAssembly has taken
 /// over the prerendered markup (anything typed before would be lost), and a message for every failure.
 /// </summary>

@@ -120,6 +120,9 @@ public static class AppealRoutes
     public const string PublishAppeal = ApiRoutes.Prefix + "/moderation/appeals/{id:guid}/publish";
     public const string ReturnAppeal = ApiRoutes.Prefix + "/moderation/appeals/{id:guid}/return";
     public const string HideAppeal = ApiRoutes.Prefix + "/moderation/appeals/{id:guid}/hide";
+    public const string Hidden = ApiRoutes.Prefix + "/moderation/hidden";
+    public const string RestoreAppeal = ApiRoutes.Prefix + "/moderation/appeals/{id:guid}/restore";
+    public const string RestoreReason = ApiRoutes.Prefix + "/moderation/reasons/{id:guid}/restore";
     public const string AppealThreshold = ApiRoutes.Prefix + "/moderation/appeals/{id:guid}/threshold";
     public const string PublishReason = ApiRoutes.Prefix + "/moderation/reasons/{id:guid}/publish";
     public const string HideReason = ApiRoutes.Prefix + "/moderation/reasons/{id:guid}/hide";

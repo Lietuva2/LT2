@@ -125,6 +125,33 @@
 <data name="Mod.PageTitle" xml:space="preserve"><value>Moderavimas · Lietuva 2.0</value></data>
 <data name="Mod.Title" xml:space="preserve"><value>Moderavimas</value></data>
 <data name="Mod.Lead" xml:space="preserve"><value>Nauji kreipimaisi, pažymėti ar praneštieji argumentai ir dar nematyti argumentai. Paaiškinimą gauna autorius.</value></data>
+<data name="Action.Cancel" xml:space="preserve"><value>Atšaukti</value></data>
+<data name="Mod.HiddenLink" xml:space="preserve"><value>Paslėpti kreipimaisi ir argumentai</value></data>
+<data name="Hidden.PageTitle" xml:space="preserve"><value>Paslėpti kreipimaisi · Lietuva 2.0</value></data>
+<data name="Hidden.Title" xml:space="preserve"><value>Paslėpti kreipimaisi</value></data>
+<data name="Hidden.Lead" xml:space="preserve"><value>Moderatorių paslėpti kreipimaisi ir argumentai: kas, kada ir kodėl paslėpė. „Atkurti“ grąžina juos tokius, kokie buvo; autorius gauna jūsų paaiškinimą.</value></data>
+<data name="Hidden.Appeals" xml:space="preserve"><value>Kreipimaisi</value></data>
+<data name="Hidden.Reasons" xml:space="preserve"><value>Argumentai</value></data>
+<data name="Hidden.None" xml:space="preserve"><value>Paslėptų nėra.</value></data>
+<data name="Hidden.Initiator" xml:space="preserve"><value>Iniciatorius: {0}</value></data>
+<data name="Hidden.When" xml:space="preserve"><value>Paslėpta {0} · paslėpė {1}</value></data>
+<data name="Hidden.Moderator" xml:space="preserve"><value>moderatorius</value></data>
+<data name="Hidden.WhenUnknown" xml:space="preserve"><value>Kada ir kas paslėpė – neužregistruota.</value></data>
+<data name="Hidden.Why" xml:space="preserve"><value>Paaiškinimas: {0}</value></data>
+<data name="Hidden.RestoresAs.open" xml:space="preserve"><value>Atkūrus bus paskelbtas</value></data>
+<data name="Hidden.RestoresAs.closed" xml:space="preserve"><value>Atkūrus bus uždarytas, kaip buvo</value></data>
+<data name="Hidden.RestoresAs.pending" xml:space="preserve"><value>Atkūrus lauks moderatoriaus</value></data>
+<data name="Hidden.Refused.appeal.published-exists" xml:space="preserve"><value>Šiam projektui dabar paskelbtas kitas kreipimasis, todėl šio atkurti negalima.</value></data>
+<data name="Hidden.Refused.proposal.exists" xml:space="preserve"><value>Šio pasiūlymo autorius šiam projektui turi kitą laukiantį pasiūlymą, todėl šio atkurti negalima.</value></data>
+<data name="Hidden.Refused.moderation.wrong-state" xml:space="preserve"><value>Šio kreipimosi atkurti negalima.</value></data>
+<data name="Hidden.ReasonNotOpen" xml:space="preserve"><value>Kreipimasis nebėra atviras, todėl argumento atkurti negalima.</value></data>
+<data name="Hidden.Restore" xml:space="preserve"><value>Atkurti</value></data>
+<data name="Hidden.Statement" xml:space="preserve"><value>Paaiškinimas autoriui (privalomas)</value></data>
+<data name="Hidden.Restored" xml:space="preserve"><value>Atkurta. Autorius gaus jūsų paaiškinimą.</value></data>
+<data name="Hidden.RestoreAppeal.Sentence.open" xml:space="preserve"><value>Kreipimasis vėl bus paskelbtas su visomis pozicijomis, argumentais ir „Man svarbu“ žymomis, kaip buvo. Jei šiam projektui laukia kitų pasiūlymų, jie bus uždaryti, kaip paskelbus kreipimąsi.</value></data>
+<data name="Hidden.RestoreAppeal.Sentence.closed" xml:space="preserve"><value>Kreipimasis vėl bus rodomas uždarytas, su užfiksuotais skaičiais ir argumentais, kaip buvo.</value></data>
+<data name="Hidden.RestoreAppeal.Sentence.pending" xml:space="preserve"><value>Pasiūlymas dar nebuvo paskelbtas: jis grįš į eilę ir lauks moderatoriaus.</value></data>
+<data name="Hidden.RestoreReason.Sentence" xml:space="preserve"><value>Argumentas vėl bus rodomas. „Man svarbu“ žymos, ištrintos paslepiant, negrįš.</value></data>
 <data name="Mod.Refused" xml:space="preserve"><value>Moderuoti galima tik prisijungus darbuotojo prieigos raktu, kai moderatoriaus vaidmuo aktyvintas.</value></data>
 <data name="Mod.Appeals" xml:space="preserve"><value>Kreipimaisi</value></data>
 <data name="Mod.Reasons" xml:space="preserve"><value>Argumentai</value></data>
