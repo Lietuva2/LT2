@@ -427,6 +427,15 @@ body > .page { width: 100%; }
   .welcome lt2-logo-spin { width: 9rem; }
 }
 
+/* The front page (option B, owner 2026-11-13): the same welcome with a smaller logo, then one summary card per appeal. */
+.welcome--home lt2-logo-spin { width: min(16rem, 60%); }
+@media (max-width: 54rem) { .welcome--home lt2-logo-spin { width: 8rem; } }
+.cards { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(18rem, 100%), 1fr)); gap: var(--sp-5); align-items: start; }
+.card__title { color: inherit; }
+.counts b { font-size: var(--fs-3); }
+.counts__for { color: var(--for); }
+.counts__against { color: var(--against); }
+
 /* An action that reads as a link (resend the code, switch form). */
 .linkish {
   padding: 0; border: 0; background: none; cursor: pointer;

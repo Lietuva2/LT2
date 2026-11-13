@@ -94,7 +94,7 @@ public sealed partial class IslandsBeforeStartTests(AppealFlowTests.ModeratorFix
         using var playwright = await Playwright.CreateAsync();
         await using var browser = await playwright.Chromium.LaunchAsync(new() { Channel = SignUpTests.Channel, Headless = true });
         await using var context = await browser.NewContextAsync(new() { IgnoreHTTPSErrors = true, Locale = "lt-LT" });
-        foreach (var path in new[] { "/prisijungti", "/seimas/XVP-0412/kreipimasis" })
+        foreach (var path in new[] { "/", "/prisijungti", "/seimas/XVP-0412/kreipimasis" })
         {
             await NothingUsableBeforeStartAsync(context, path);
         }
