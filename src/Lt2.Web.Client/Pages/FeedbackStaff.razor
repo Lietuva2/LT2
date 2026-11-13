@@ -58,7 +58,7 @@ else
     {
         <article class="sheet stack stack--tight" id="fb-item-@item.Id" aria-label="@L["Fb.Item"]">
             <div class="row">
-                <span class="tag num">@item.CreatedOn.ToString("yyyy-MM-dd", System.Globalization.CultureInfo.InvariantCulture)</span>
+                <span class="tag num">@Lt2.Web.Client.Appeals.Dates.Day(item.CreatedOn)</span>
                 @if (item.Kind is { } k)
                 {
                     <span class="tag">@L["Fb.Kind." + k]</span>
@@ -73,7 +73,7 @@ else
             }
             @foreach (var reply in item.Replies)
             {
-                <p class="small">@Text("Fb.Replied", reply.At.ToString("yyyy-MM-dd", System.Globalization.CultureInfo.InvariantCulture)) @reply.Text</p>
+                <p class="small">@Text("Fb.Replied", Lt2.Web.Client.Appeals.Dates.DayTime(reply.At)) @reply.Text</p>
             }
             <div class="row">
                 <select class="input" aria-label="@L["Fb.Status"]" id="fb-set-status-@item.Id" @onchange="e => _statuses[item.Id] = e.Value?.ToString()" disabled="@Locked">

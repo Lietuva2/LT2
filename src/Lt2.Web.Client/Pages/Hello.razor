@@ -159,7 +159,6 @@ else
 <Messages Message="@_message" Info="@_info" />
 
 @code {
-    private static readonly TimeZoneInfo Vilnius = FindVilnius();
     private bool _busy;
     private string? _message;
     private string? _info;
@@ -385,18 +384,6 @@ else
         }
     }
 
-    private static string Format(DateTimeOffset value) =>
-        TimeZoneInfo.ConvertTime(value, Vilnius).ToString("yyyy-MM-dd HH:mm", System.Globalization.CultureInfo.InvariantCulture);
-
-    private static TimeZoneInfo FindVilnius()
-    {
-        try
-        {
-            return TimeZoneInfo.FindSystemTimeZoneById("Europe/Vilnius");
-        }
-        catch (TimeZoneNotFoundException)
-        {
-            return TimeZoneInfo.Utc;
-        }
-    }
+    /// <summary>A moment as the pages show it in numbers: yyyy-MM-dd HH:mm, Vilnius time.</summary>
+    private static string Format(DateTimeOffset value) => Lt2.Web.Client.Appeals.Dates.DayTime(value);
 }

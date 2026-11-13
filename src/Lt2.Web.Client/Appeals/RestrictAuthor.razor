@@ -45,7 +45,7 @@ else
                 <ul class="rows">
                     @foreach (var m in view.Actions)
                     {
-                        <li><div class="rows__main"><span class="small num">@m.At.ToString("yyyy-MM-dd", System.Globalization.CultureInfo.InvariantCulture) · @L["Restrict.Target." + m.TargetKind] · @m.Action</span>@if (m.Statement is { } s) {<span class="small">@s</span>}</div></li>
+                        <li><div class="rows__main"><span class="small num">@Dates.Day(m.At) · @L["Restrict.Target." + m.TargetKind] · @m.Action</span>@if (m.Statement is { } s) {<span class="small">@s</span>}</div></li>
                     }
                 </ul>
             }
@@ -56,7 +56,7 @@ else
                 <ul class="rows">
                     @foreach (var w in view.Restrictions)
                     {
-                        <li><div class="rows__main"><span class="small num">@w.SetAt.ToString("yyyy-MM-dd", System.Globalization.CultureInfo.InvariantCulture) · @Until(w.Until)@(w.Holds ? " · " + L["Restrict.Holds"] : "")</span><span class="small">@w.Statement</span></div></li>
+                        <li><div class="rows__main"><span class="small num">@Dates.Day(w.SetAt) · @Until(w.Until)@(w.Holds ? " · " + L["Restrict.Holds"] : "")</span><span class="small">@w.Statement</span></div></li>
                     }
                 </ul>
             }

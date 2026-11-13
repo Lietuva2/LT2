@@ -28,6 +28,12 @@ internal sealed class Formats(IStringLocalizer<ParliamentText> t)
 
     public string Date(DateTimeOffset at) => Date(DateOnly.FromDateTime(TimeZoneInfo.ConvertTime(at, Vilnius).DateTime));
 
+    /// <summary>A day in numbers, yyyy-MM-dd (<c>AGENTS.md</c> "Wording": dates shown as numbers).</summary>
+    public static string Day(DateOnly date) => date.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture);
+
+    /// <summary>A moment in numbers, yyyy-MM-dd HH:mm, Vilnius time: for lists such as the description's history.</summary>
+    public static string Stamp(DateTimeOffset at) => TimeZoneInfo.ConvertTime(at, Vilnius).ToString("yyyy-MM-dd HH:mm", CultureInfo.InvariantCulture);
+
     public string Time(DateTimeOffset at) =>
         string.Format(CultureInfo.InvariantCulture, t["Time.Format"], Date(at), TimeZoneInfo.ConvertTime(at, Vilnius).ToString("HH:mm", CultureInfo.InvariantCulture));
 
