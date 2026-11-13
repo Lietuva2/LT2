@@ -157,8 +157,9 @@ public sealed class AppealFlowTests(AppealFlowTests.ModeratorFixture moderator) 
 
         // Reporting without JavaScript and without a session: the disclosure opens and says how.
         await page.GetByText("Pranešti apie kreipimąsi").ClickAsync();
-        await Assertions.Expect(page.GetByText("Pranešti apie turinį moderatoriams gali prisijungę Lietuva 2.0 naudotojai:").Last).ToBeVisibleAsync();
-        await Assertions.Expect(page.Locator("a[href='mailto:moderatoriai@lt2.localhost']").Last).ToBeVisibleAsync();
+        // In the page itself (the feedback balloon, closed, holds the same address too).
+        await Assertions.Expect(page.Locator("main").GetByText("Pranešti apie turinį moderatoriams gali prisijungę Lietuva 2.0 naudotojai:").Last).ToBeVisibleAsync();
+        await Assertions.Expect(page.Locator("main a[href='mailto:moderatoriai@lt2.localhost']").Last).ToBeVisibleAsync();
         await NoSidewaysScrollAsync(page);
         await page.ScreenshotAsync(new() { Path = Shot("appeal-no-javascript-390.png"), FullPage = true });
 
@@ -347,7 +348,8 @@ public sealed class AppealFlowTests(AppealFlowTests.ModeratorFixture moderator) 
             _browser = await PasskeyBrowser.StartAsync("native");
             var page = _browser.Page;
             Directory.CreateDirectory(Path.Combine("output", "appeals"));
-            var log = Path.Combine("output", "appeals", "moderator-console.txt");
+            // One file per fixture: several test classes use this fixture at the same time.
+            var log = Path.Combine("output", "appeals", $"moderator-console-{Guid.NewGuid():N}.txt");
             File.WriteAllText(log, "");
             page.Console += (_, message) => File.AppendAllText(log, $"{message.Type}: {message.Text}{Environment.NewLine}");
             page.PageError += (_, error) => File.AppendAllText(log, $"pageerror: {error}{Environment.NewLine}");
