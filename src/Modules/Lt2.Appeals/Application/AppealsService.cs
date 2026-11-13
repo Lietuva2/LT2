@@ -66,6 +66,23 @@ internal sealed class AppealsService(
         return await InfoAsync(db, appeal, cancellationToken);
     }
 
+    public async Task<Result<IReadOnlyList<(DateTimeOffset ChangedAt, string? OldText, string? NewText)>>> HistoryAsync(string billNumber, CancellationToken cancellationToken)
+    {
+        await using var db = await contexts.CreateDbContextAsync(cancellationToken);
+        var appeal = await AppealReads.FindByBillAsync(db, billNumber, tracking: false, cancellationToken);
+        if (appeal is null || appeal.Status is not (AppealStatuses.Open or AppealStatuses.Closed))
+        {
+            return Error.NotFound("appeal.not-found");
+        }
+
+        var rows = await db.Revisions.AsNoTracking()
+            .Where(r => r.EntityKind == "appeal" && r.EntityId == appeal.Id && r.Field == "description")
+            .OrderBy(r => r.ChangedAt)
+            .Select(r => new { r.ChangedAt, r.OldValue, r.NewValue })
+            .ToListAsync(cancellationToken);
+        return Result<IReadOnlyList<(DateTimeOffset, string?, string?)>>.Success(rows.Select(r => (r.ChangedAt, r.OldValue, r.NewValue)).ToList());
+    }
+
     public async Task<Result<MyAppeal>> MineAsync(string billNumber, Guid userId, CancellationToken cancellationToken)
     {
         await using var db = await contexts.CreateDbContextAsync(cancellationToken);

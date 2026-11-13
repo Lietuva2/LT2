@@ -15,6 +15,9 @@ public interface IAppealsApi
     /// <summary>The caller's own side, marks and arguments on this appeal.</summary>
     Task<ApiResult<MyAppealResponse>> GetMineAsync(string number, CancellationToken cancellationToken = default);
 
+    /// <summary>The public edit history of the appeal's neutral description.</summary>
+    Task<ApiResult<IReadOnlyList<DescriptionRevisionResponse>>> GetHistoryAsync(string number, CancellationToken cancellationToken = default);
+
     Task<ApiResult<AppealResponse>> OpenAsync(string number, OpenAppealRequest request, CancellationToken cancellationToken = default);
 
     Task<ApiResult> EditAsync(string number, EditAppealRequest request, CancellationToken cancellationToken = default);

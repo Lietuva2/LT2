@@ -26,6 +26,23 @@ public sealed record DigestPreviewResponse(string Subject, string Text);
 
 public sealed record DigestMpResponse(string Slug, string Status);
 
+/// <summary>
+/// The rules that decide what MPs would receive, with their current values (design 8.4: shown on the methodology page).
+/// Times are Vilnius "HH:mm" or "off"; the share is a fraction.
+/// </summary>
+public sealed record DigestRulesResponse(
+    int ThresholdDefault,
+    int ThresholdMinimum,
+    string Weekly,
+    string BeforeVote,
+    int MaxPerWeek,
+    decimal SurgeMinimumShare,
+    int SurgeMinimumAccounts,
+    int SurgeWindowHours,
+    int GroupMinimum,
+    int OlderThanDays,
+    int ReasonsPerSide);
+
 /// <summary>Approving one urgent summary for an appeal (design 8.4); the reason is audited.</summary>
 public sealed record UrgentDigestRequest
 {
@@ -35,6 +52,7 @@ public sealed record UrgentDigestRequest
 public static class DigestRoutes
 {
     public const string Digests = ApiRoutes.Prefix + "/digests";
+    public const string Rules = Digests + "/rules";
     public const string Digest = Digests + "/{date}";
     public const string Mps = ApiRoutes.Prefix + "/moderation/digests/{id:guid}/mps";
     public const string Preview = ApiRoutes.Prefix + "/moderation/digests/{id:guid}/mps/{slug}";
@@ -51,6 +69,8 @@ public static class DigestRoutes
 public interface IDigestsApi
 {
     Task<ApiResult<IReadOnlyList<DigestRunResponse>>> GetDigestsAsync(CancellationToken cancellationToken = default);
+
+    Task<ApiResult<DigestRulesResponse>> GetRulesAsync(CancellationToken cancellationToken = default);
 
     Task<ApiResult<IReadOnlyList<DigestRunResponse>>> GetDigestAsync(DateOnly date, CancellationToken cancellationToken = default);
 

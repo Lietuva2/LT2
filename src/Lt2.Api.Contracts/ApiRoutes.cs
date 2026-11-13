@@ -81,6 +81,9 @@ public static class AppealRoutes
     public const string Rules = Appeals + "/rules";
     public const string Appeal = ApiRoutes.Prefix + "/bills/{number}/appeal";
     public const string Mine = Appeal + "/mine";
+    public const string History = Appeal + "/history";
+
+    public static string HistoryOf(string number) => AppealOf(number) + "/history";
     public const string Threshold = Appeal + "/threshold";
     public const string Position = Appeal + "/position";
     public const string Reasons = Appeal + "/reasons";

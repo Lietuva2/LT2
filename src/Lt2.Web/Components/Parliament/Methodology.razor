@@ -1,6 +1,8 @@
 @page "/metodika"
 @using Lt2.Api.Contracts.Meta
 @inject IMetaApi Meta
+@inject Lt2.Api.Contracts.Digests.IDigestsApi Digests
+@inject IStringLocalizer<Lt2.Web.Components.Appeals.AppealText> A
 @inject Formats F
 
 <PageTitle>@F.T["Method.Title"] · Lietuva 2.0</PageTitle>
@@ -46,6 +48,26 @@
         <p>@F.T["Method.Classification.1"]</p>
     </section>
 
+    @if (_rules is { } r)
+    {
+        @* Design 8.4: the rules that decide what MPs would receive, with their current values (runtime settings). *@
+        <section class="stack" aria-labelledby="m-digests" id="suvestiniu-taisykles">
+            <h2 id="m-digests">@A["Method.Digests"]</h2>
+            <p>@A["Method.Digests.Lead"]</p>
+            <dl class="facts" id="digest-rules">
+                <dt>@A["Method.Digests.Threshold"]</dt><dd class="num">@Fmt("Method.Digests.ThresholdValue", Formats.Number(r.ThresholdDefault), Formats.Number(r.ThresholdMinimum))</dd>
+                <dt>@A["Method.Digests.Weekly"]</dt><dd class="num">@(r.Weekly == "off" ? A["Method.Digests.Off"] : Fmt("Method.Digests.WeeklyValue", r.Weekly))</dd>
+                <dt>@A["Method.Digests.BeforeVote"]</dt><dd class="num">@(r.BeforeVote == "off" ? A["Method.Digests.Off"] : Fmt("Method.Digests.BeforeVoteValue", r.BeforeVote))</dd>
+                <dt>@A["Method.Digests.Ceiling"]</dt><dd class="num">@Fmt("Method.Digests.CeilingValue", r.MaxPerWeek)</dd>
+                <dt>@A["Method.Digests.Counts"]</dt><dd class="num">@Fmt("Method.Digests.CountsValue", r.OlderThanDays)</dd>
+                <dt>@A["Method.Digests.Reasons"]</dt><dd class="num">@Fmt("Method.Digests.ReasonsValue", r.ReasonsPerSide)</dd>
+                <dt>@A["Method.Digests.Surge"]</dt><dd class="num">@Fmt("Method.Digests.SurgeValue", Formats.Number((int)Math.Round(r.SurgeMinimumShare * 100)), Formats.Number(r.SurgeWindowHours), Formats.Number(r.SurgeMinimumAccounts))</dd>
+                <dt>@A["Method.Digests.Groups"]</dt><dd class="num">@Fmt("Method.Digests.GroupsValue", r.GroupMinimum)</dd>
+            </dl>
+            <p>@A["Method.Digests.NotSent"] <a href="/suvestines">@A["Digests.Title"]</a> · <a href="/moderavimo-taisykles">@A["Rules.Title"]</a></p>
+        </section>
+    }
+
     <section class="stack" aria-labelledby="m-not">
         <h2 id="m-not">@F.T["Method.Not"]</h2>
         <p>@F.T["Method.Not.1"]</p>
@@ -54,7 +76,13 @@
 
 @code {
     private DateTimeOffset? _lastSuccess;
+    private Lt2.Api.Contracts.Digests.DigestRulesResponse? _rules;
 
-    protected override async Task OnInitializedAsync() =>
+    protected override async Task OnInitializedAsync()
+    {
         _lastSuccess = (await Meta.GetImportsAsync()).Value?.Sources.FirstOrDefault()?.LastSuccessAt;
+        _rules = (await Digests.GetRulesAsync()).Value;
+    }
+
+    private string Fmt(string key, params object?[] values) => string.Format(System.Globalization.CultureInfo.InvariantCulture, A[key], values);
 }

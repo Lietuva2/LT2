@@ -77,6 +77,9 @@ internal sealed class HttpAppealsApi(ApiHttp http) : IAppealsApi
     public Task<ApiResult<AppealResponse>> GetAppealAsync(string number, CancellationToken cancellationToken = default) =>
         http.SendAsync<AppealResponse>(HttpMethod.Get, AppealRoutes.AppealOf(number), null, cancellationToken);
 
+    public Task<ApiResult<IReadOnlyList<DescriptionRevisionResponse>>> GetHistoryAsync(string number, CancellationToken cancellationToken = default) =>
+        http.SendAsync<IReadOnlyList<DescriptionRevisionResponse>>(HttpMethod.Get, AppealRoutes.HistoryOf(number), null, cancellationToken);
+
     public Task<ApiResult<MyAppealResponse>> GetMineAsync(string number, CancellationToken cancellationToken = default) =>
         http.SendAsync<MyAppealResponse>(HttpMethod.Get, AppealRoutes.MineOf(number), null, cancellationToken);
 
@@ -166,6 +169,9 @@ internal sealed class HttpDigestsApi(ApiHttp http) : Lt2.Api.Contracts.Digests.I
 {
     public Task<ApiResult<IReadOnlyList<Lt2.Api.Contracts.Digests.DigestRunResponse>>> GetDigestsAsync(CancellationToken cancellationToken = default) =>
         http.SendAsync<IReadOnlyList<Lt2.Api.Contracts.Digests.DigestRunResponse>>(HttpMethod.Get, Lt2.Api.Contracts.Digests.DigestRoutes.Digests, null, cancellationToken);
+
+    public Task<ApiResult<Lt2.Api.Contracts.Digests.DigestRulesResponse>> GetRulesAsync(CancellationToken cancellationToken = default) =>
+        http.SendAsync<Lt2.Api.Contracts.Digests.DigestRulesResponse>(HttpMethod.Get, Lt2.Api.Contracts.Digests.DigestRoutes.Rules, null, cancellationToken);
 
     public Task<ApiResult<IReadOnlyList<Lt2.Api.Contracts.Digests.DigestRunResponse>>> GetDigestAsync(DateOnly date, CancellationToken cancellationToken = default) =>
         http.SendAsync<IReadOnlyList<Lt2.Api.Contracts.Digests.DigestRunResponse>>(HttpMethod.Get, Lt2.Api.Contracts.Digests.DigestRoutes.DigestOn(date), null, cancellationToken);

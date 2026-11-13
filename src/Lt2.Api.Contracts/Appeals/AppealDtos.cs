@@ -134,3 +134,6 @@ public sealed record ReportRequest
 
     public string? Text { get; init; }
 }
+
+/// <summary>One edit of an appeal's neutral description (design 8.2: it keeps its edit history). Who edited is not shown.</summary>
+public sealed record DescriptionRevisionResponse(DateTimeOffset ChangedAt, string? OldText, string? NewText);

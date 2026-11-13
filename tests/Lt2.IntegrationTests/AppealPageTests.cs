@@ -1,5 +1,6 @@
 using System.Net;
 using System.Text.RegularExpressions;
+using Lt2.Api.Contracts;
 using Lt2.Api.Contracts.Appeals;
 using Lt2.IntegrationTests.Infrastructure;
 
@@ -220,5 +221,55 @@ public sealed partial class AppealPageTests(DatabaseFixture database) : ApiTest(
         var (member, _) = await Factory.MemberAsync();
         using var _m = member;
         (await PageAsync(member, "/moderavimas")).Html.ShouldContain("Moderuoti galima tik prisijungus darbuotojo prieigos raktu");
+    }
+
+    [Fact]
+    public async Task The_rules_for_moderators_and_the_summary_rules_with_their_current_values_are_public()
+    {
+        using var stranger = NewBrowser();
+        var (rulesStatus, rules) = await PageAsync(stranger, "/moderavimo-taisykles");
+        rulesStatus.ShouldBe(HttpStatusCode.OK);
+        rules.ShouldContain("Moderavimo taisyklės");
+        rules.ShouldContain("nemato, kas kurią pusę pasirinko");
+        rules.ShouldContain("mailto:moderatoriai@lt2.test");
+
+        var (_, method) = await PageAsync(stranger, "/metodika");
+        method.ShouldContain("Kas patektų į suvestines Seimo nariams");
+        method.ShouldContain("siūloma 100, ne mažiau kaip 50 dalyvių");
+        method.ShouldContain("pirmadienį 07:00");
+        method.ShouldContain("12:00 darbo dieną prieš posėdį");
+        method.ShouldContain("2 suvestinės vienam Seimo nariui");
+        method.ShouldContain("kai bent 30 % per paskutines 72 valandas");
+        method.ShouldContain("bent 20 žmonių");
+
+        var api = await stranger.GetJsonAsync<Lt2.Api.Contracts.Digests.DigestRulesResponse>(Lt2.Api.Contracts.Digests.DigestRoutes.Rules);
+        api.ShouldBe(new Lt2.Api.Contracts.Digests.DigestRulesResponse(100, 50, "07:00", "12:00", 2, 0.30m, 50, 72, 20, 30, 2));
+    }
+
+    [Fact]
+    public async Task The_edit_history_of_a_published_appeals_description_is_public_without_the_editor()
+    {
+        await Database.FreeBillAsync(AppealSteps.SecondBill);
+        var moderator = await ModeratorAsync();
+        var (initiator, _) = await Factory.MemberAsync("Rūta Mockutė");
+        using var _i = initiator;
+        var appeal = await (await initiator.OpenAppealAsync(AppealSteps.SecondBill, description: "Pirmasis, nepakankamai neutralus aprašymas.")).ReadAsync<AppealResponse>();
+        using var stranger = NewBrowser();
+        (await stranger.Client.GetAsync(AppealRoutes.HistoryOf(AppealSteps.SecondBill))).StatusCode.ShouldBe(HttpStatusCode.NotFound, "not before publication");
+
+        (await moderator.ReturnAppealAsync(appeal.Id, "Aprašymas turi būti neutralus.")).StatusCode.ShouldBe(HttpStatusCode.NoContent);
+        (await initiator.SendAsync(HttpMethod.Put, AppealRoutes.AppealOf(AppealSteps.SecondBill), new EditAppealRequest { Description = AppealSteps.Description, FirstReason = AppealSteps.AgainstReason }))
+            .StatusCode.ShouldBe(HttpStatusCode.NoContent);
+        (await moderator.PublishAsync(appeal.Id)).StatusCode.ShouldBe(HttpStatusCode.NoContent);
+
+        var history = await stranger.GetJsonAsync<List<DescriptionRevisionResponse>>(AppealRoutes.HistoryOf(AppealSteps.SecondBill));
+        history.Single().OldText.ShouldBe("Pirmasis, nepakankamai neutralus aprašymas.");
+        history.Single().NewText.ShouldBe(AppealSteps.Description);
+
+        var (status, html) = await PageAsync(stranger, "/seimas/XVP-0533/kreipimasis/istorija");
+        status.ShouldBe(HttpStatusCode.OK);
+        html.ShouldContain("Pirmasis, nepakankamai neutralus aprašymas.");
+        html.ShouldNotContain("Rūta Mockutė");
+        (await PageAsync(stranger, "/seimas/XVP-0533/kreipimasis")).Html.ShouldContain("href=\"/seimas/XVP-0533/kreipimasis/istorija\"");
     }
 }

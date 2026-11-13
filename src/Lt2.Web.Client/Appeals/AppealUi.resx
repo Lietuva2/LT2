@@ -155,4 +155,6 @@
 <data name="Mod.Done.Hold" xml:space="preserve"><value>Atlikta: siuntimas sulaikytas.</value></data>
 <data name="Mod.Done.Release" xml:space="preserve"><value>Atlikta: siuntimas leistas.</value></data>
 <data name="Mod.Done.Urgent" xml:space="preserve"><value>Atlikta: skubi suvestinė sudaryta (bandymas, nesiunčiama).</value></data>
+<data name="Admin.Setting.Digest:Weekly" xml:space="preserve"><value>Savaitinė suvestinė: pirmadienio laikas (HH:mm arba off)</value></data>
+<data name="Admin.Setting.Digest:BeforeVote" xml:space="preserve"><value>Suvestinė prieš posėdį: laikas (HH:mm arba off)</value></data>
 </root>

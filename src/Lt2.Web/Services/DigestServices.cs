@@ -17,8 +17,29 @@ internal static class DigestMapping
 }
 
 /// <summary>Server-side <see cref="IDigestsApi"/> for the pages; the preview needs an active moderator role.</summary>
-internal sealed class ServerDigestsApi(IDigests digests, IHttpContextAccessor accessor, ErrorMapper errors) : IDigestsApi
+internal sealed class ServerDigestsApi(IDigests digests, ISettings settings, IHttpContextAccessor accessor, ErrorMapper errors) : IDigestsApi
 {
+    public async Task<ApiResult<DigestRulesResponse>> GetRulesAsync(CancellationToken cancellationToken = default) =>
+        ApiResult<DigestRulesResponse>.Ok(await RulesAsync(settings, cancellationToken));
+
+    /// <summary>The current values of every rule that decides what MPs would receive.</summary>
+    public static async Task<DigestRulesResponse> RulesAsync(ISettings settings, CancellationToken ct)
+    {
+        var minimum = await settings.GetAsync(SettingKeys.DigestThresholdMinimum, ct);
+        return new DigestRulesResponse(
+            Math.Max(await settings.GetAsync(SettingKeys.DigestThresholdDefault, ct), minimum),
+            minimum,
+            await settings.GetAsync(SettingKeys.DigestWeekly, ct),
+            await settings.GetAsync(SettingKeys.DigestBeforeVote, ct),
+            await settings.GetAsync(SettingKeys.DigestMaxPerWeek, ct),
+            await settings.GetAsync(SettingKeys.SurgeMinimumShare, ct),
+            await settings.GetAsync(SettingKeys.SurgeMinimumAccounts, ct),
+            await settings.GetAsync(SettingKeys.SurgeWindowHours, ct),
+            GroupMinimum: 20,
+            OlderThanDays: 30,
+            ReasonsPerSide: 2);
+    }
+
     public async Task<ApiResult<IReadOnlyList<DigestRunResponse>>> GetDigestsAsync(CancellationToken cancellationToken = default) =>
         ApiResult<IReadOnlyList<DigestRunResponse>>.Ok((await digests.ListAsync(cancellationToken)).Select(DigestMapping.Map).ToList());
 

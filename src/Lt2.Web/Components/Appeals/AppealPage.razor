@@ -93,6 +93,10 @@
                 }
                 <p class="fine">
                     @T[a.Status == "open" || a.Status == "closed" ? "What.Approved" : "What.NotYetApproved"]
+                    @if (a.Status is "open" or "closed")
+                    {
+                        <text> · </text><a href="/seimas/@Uri.EscapeDataString(a.Bill.Number)/kreipimasis/istorija">@T["History.Link"]</a>
+                    }
                     @if (_bill?.ESeimasUrl is { } link)
                     {
                         <text> · </text><a href="@link" rel="external">@T["What.ESeimas"]</a>

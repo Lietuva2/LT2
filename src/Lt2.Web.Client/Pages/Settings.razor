@@ -50,7 +50,8 @@ else
 }
 
 @code {
-    private static readonly string[] ThisHalf = ["Digest:ThresholdDefault", "Digest:ThresholdMinimum"];
+    private static readonly string[] ThisHalf =
+        ["Digest:ThresholdDefault", "Digest:ThresholdMinimum", "Digest:Weekly", "Digest:BeforeVote", "Digest:MaxPerWeek", "Surge:MinimumShare", "Surge:MinimumAccounts", "Surge:WindowHours"];
     private readonly Dictionary<string, string?> _drafts = [];
     private bool _refused;
 
@@ -74,14 +75,15 @@ else
     private Task SaveAsync(string key) => RunAsync(async () =>
     {
         JsonElement value;
+        var draft = (_drafts.GetValueOrDefault(key) ?? "").Trim();
         try
         {
-            value = JsonDocument.Parse(_drafts.GetValueOrDefault(key) ?? "").RootElement.Clone();
+            value = JsonDocument.Parse(draft).RootElement.Clone();
         }
         catch (JsonException)
         {
-            Message = L["Admin.Invalid"];
-            return;
+            // A time setting is a string: "07:00" or "off" may be typed without quotes.
+            value = JsonSerializer.SerializeToElement(draft.Trim('"'));
         }
 
         var result = await Admin.UpdateSettingAsync(key, new UpdateSettingRequest { Value = value });

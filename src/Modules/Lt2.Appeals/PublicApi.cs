@@ -151,6 +151,9 @@ public interface IAppealsModule
 
     Task<Result<MyAppeal>> MineAsync(string billNumber, Guid userId, CancellationToken cancellationToken);
 
+    /// <summary>The description's edits (oldest first), public for a published appeal; no editor is named.</summary>
+    Task<Result<IReadOnlyList<(DateTimeOffset ChangedAt, string? OldText, string? NewText)>>> HistoryAsync(string billNumber, CancellationToken cancellationToken);
+
     /// <summary>Opens the appeal on a bill; <c>appeal.exists</c> if the bill already has one.</summary>
     Task<Result<AppealInfo>> OpenAsync(string billNumber, Guid userId, OpenAppeal request, CancellationToken cancellationToken);
 
