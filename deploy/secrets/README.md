@@ -13,6 +13,8 @@ Local secret files for `deploy/compose.yaml`, one value per file. Created by
 | `data_protection_key` | web | Base64 of 32 bytes; wraps the data-protection keys stored in PostgreSQL. |
 | `ip_hash_key` | web | Key for hashing client IP addresses in the audit log. |
 | `smtp_password` | worker | SMTP password; empty locally (Mailpit). |
+| `ai_api_key` | web, worker | Claude API key; empty keeps the AI features off. |
+| `mailpit_ui_auth` | mailpit | Server only, with `compose.shared-proxy.yaml`: the viewer's name and bcrypt hash (README.md, "The caught emails"). Not made by `init-secrets.py`; not used locally. |
 
 Production values live in the operations repository, encrypted with SOPS and age, and are mounted at deploy time
 (design 6.5). Never commit a real value.
