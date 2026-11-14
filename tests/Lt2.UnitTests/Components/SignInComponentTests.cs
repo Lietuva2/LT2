@@ -32,6 +32,11 @@ public sealed class SignInComponentTests : BunitContext
         Services.AddSingleton<IAuthApi>(_auth);
         Services.AddSingleton<IMeApi>(_me);
         Services.AddSingleton<Lt2.Api.Contracts.Follows.IFollowsApi>(new NoFollowsApi());
+
+        // "Mano organizacijos" on the account page (design 8.14.14): none.
+        var organisations = System.Reflection.DispatchProxy.Create<Lt2.Api.Contracts.Organisations.IOrganisationsApi, ApiFake>();
+        ((ApiFake)(object)organisations).On("GetMineAsync", Lt2.Api.Contracts.ApiResult<IReadOnlyList<Lt2.Api.Contracts.Organisations.MyOrganisationResponse>>.Ok([]));
+        Services.AddSingleton(organisations);
         _authorization = AddAuthorization();
         JSInterop.Mode = JSRuntimeMode.Loose;
         SetRendererInfo(new RendererInfo("WebAssembly", isInteractive: true));
@@ -389,7 +394,7 @@ public sealed class SignInComponentTests : BunitContext
     private sealed class NoFollowsApi : Lt2.Api.Contracts.Follows.IFollowsApi
     {
         public Task<ApiResult<Lt2.Api.Contracts.Follows.MyFollowsResponse>> GetMineAsync(CancellationToken cancellationToken = default) =>
-            Task.FromResult(ApiResult<Lt2.Api.Contracts.Follows.MyFollowsResponse>.Ok(new([], [], 200)));
+            Task.FromResult(ApiResult<Lt2.Api.Contracts.Follows.MyFollowsResponse>.Ok(new([], [], 200, [])));
 
         public Task<ApiResult> FollowBillAsync(string number, CancellationToken cancellationToken = default) => Task.FromResult(ApiResult.Ok());
 
@@ -398,6 +403,10 @@ public sealed class SignInComponentTests : BunitContext
         public Task<ApiResult> FollowMpAsync(string slug, CancellationToken cancellationToken = default) => Task.FromResult(ApiResult.Ok());
 
         public Task<ApiResult> UnfollowMpAsync(string slug, CancellationToken cancellationToken = default) => Task.FromResult(ApiResult.Ok());
+
+        public Task<ApiResult> FollowOrganisationAsync(string slug, CancellationToken cancellationToken = default) => Task.FromResult(ApiResult.Ok());
+
+        public Task<ApiResult> UnfollowOrganisationAsync(string slug, CancellationToken cancellationToken = default) => Task.FromResult(ApiResult.Ok());
 
         public Task<ApiResult<Lt2.Api.Contracts.Follows.NoticeSettingsResponse>> GetNoticesAsync(CancellationToken cancellationToken = default) =>
             Task.FromResult(ApiResult<Lt2.Api.Contracts.Follows.NoticeSettingsResponse>.Ok(new(true, true)));

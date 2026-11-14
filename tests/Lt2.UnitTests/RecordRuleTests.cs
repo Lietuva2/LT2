@@ -67,7 +67,7 @@ public sealed class RecordRuleTests
         RecordRules.UnderThresholdOnAgenda(participants, planned, reached).ShouldBe(listed);
 }
 
-/// <summary>Design 8.12.5 (decided 2026-11-14): the orders of /kreipimaisi and the front page's cards, and the search.</summary>
+/// <summary>Design 8.12.5 (decided 2026-11-14): the orders of /projektai and the front page's cards, and the search.</summary>
 public sealed class BillListRuleTests
 {
     private sealed record Bill(string Number, int Participants, int Arguments, DateOnly? Planned);

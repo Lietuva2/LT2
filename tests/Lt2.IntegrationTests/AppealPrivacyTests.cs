@@ -64,7 +64,7 @@ public sealed class AppealPrivacyTests(DatabaseFixture database) : ApiTest(datab
             AppealRoutes.Appeals, AppealRoutes.AppealOf(AppealSteps.ThirdBill), AppealRoutes.MineOf(AppealSteps.ThirdBill), AppealRoutes.Rules,
             AppealRoutes.ModerationQueue, ApiRoutes.Admin.Settings, ApiRoutes.Me.Root, ApiRoutes.Me.Sessions,
             AppealRoutes.HistoryOf(AppealSteps.ThirdBill), Lt2.Api.Contracts.Digests.DigestRoutes.Digests, Lt2.Api.Contracts.Digests.DigestRoutes.Rules,
-            ApiRoutes.Me.PartySupport, ApiRoutes.Me.Export, "/kreipimaisi", "/seimas/XVP-0618", "/suvestines", "/moderavimas",
+            ApiRoutes.Me.PartySupport, ApiRoutes.Me.Export, "/projektai", "/seimas/XVP-0618", "/suvestines", "/moderavimas",
             ApiRoutes.Me.Invitation, ApiRoutes.Admin.Invitations, "/sveiki", "/administravimas/kvietimai",
             Lt2.Api.Contracts.Feedback.FeedbackRoutes.Staff, "/atsiliepimai", "/moderavimas/atsiliepimai",
         };
@@ -157,7 +157,7 @@ public sealed class AppealPrivacyTests(DatabaseFixture database) : ApiTest(datab
             AppealRoutes.Appeals, AppealRoutes.AppealOf(AppealSteps.ThirdBill), AppealRoutes.HistoryOf(AppealSteps.ThirdBill),
             Lt2.Api.Contracts.Digests.DigestRoutes.Digests, AppealRoutes.ModerationQueue,
         };
-        var pages = new[] { "/seimas/XVP-0618", "/kreipimaisi", "/moderavimas" };
+        var pages = new[] { "/seimas/XVP-0618", "/projektai", "/moderavimas" };
 
         foreach (var (who, browser) in viewers)
         {
@@ -238,7 +238,7 @@ public sealed class AppealPrivacyTests(DatabaseFixture database) : ApiTest(datab
 
             (await stranger.AppealAsync(AppealSteps.ThirdBill)).Counts.ShouldBe(new SideCountsResponse(1, 0, 1, 0));
             var answers = new List<string>();
-            foreach (var uri in new[] { AppealRoutes.AppealOf(AppealSteps.ThirdBill), "/seimas/XVP-0618", AppealRoutes.Appeals, "/kreipimaisi" })
+            foreach (var uri in new[] { AppealRoutes.AppealOf(AppealSteps.ThirdBill), "/seimas/XVP-0618", AppealRoutes.Appeals, "/projektai" })
             {
                 foreach (var viewer in new[] { stranger, moderator.Browser })
                 {

@@ -2,14 +2,15 @@
 @inherits InteractiveBase
 @inject IFollowsApi Follows
 
-@* The account page's follows (design 8.11.2): the followed bills with their planned date or last stage result, the
-   followed MPs, "Nebesekti", and the two email switches. The person's own data only; every follow email links here. *@
+@* The account page's follows (design 8.11.2, 8.14.14): the followed bills with their planned date or last stage result,
+   the followed MPs and organisations, "Nebesekti", and the three email switches. The person's own data only; every follow
+   email links here. *@
 <section class="sheet stack" aria-labelledby="follows-title" id="sekami">
     <h2 id="follows-title">@L["Follows.Title"]</h2>
     <p>@L["Follows.Lead"]</p>
     @if (Mine is { } mine)
     {
-        @if (mine.Bills.Count == 0 && mine.Mps.Count == 0)
+        @if (mine.Bills.Count == 0 && mine.Mps.Count == 0 && mine.Organisations.Count == 0)
         {
             <p class="small" id="follows-none">@L["Follows.None"] <a href="/darbotvarke">@L["Follows.ToAgenda"]</a></p>
         }
@@ -60,14 +61,33 @@
                 }
             </ul>
         }
-        <p class="small num">@Text("Follows.Max", AppealNumbers.Of(mine.Bills.Count + mine.Mps.Count), AppealNumbers.Of(mine.Max))</p>
+        @if (mine.Organisations.Count > 0)
+        {
+            <h3>@L["Follows.Organisations"]</h3>
+            <ul class="rows" id="follows-organisations">
+                @foreach (var o in mine.Organisations)
+                {
+                    <li>
+                        <div class="rows__main">
+                            <a href="/o/@Uri.EscapeDataString(o.Slug)">@o.Name</a>
+                            <span class="small">@OrgLabelText(o)@(o.Status != "active" ? " · " + L["Org.State." + o.Status] : "")</span>
+                        </div>
+                        <div class="rows__side">
+                            <button type="button" class="btn btn--plain" disabled="@Locked" @onclick="() => UnfollowOrganisationAsync(o.Slug)">@L["Follow.Unfollow"]</button>
+                        </div>
+                    </li>
+                }
+            </ul>
+        }
+        <p class="small num">@Text("Follows.Max", AppealNumbers.Of(mine.Bills.Count + mine.Mps.Count + mine.Organisations.Count), AppealNumbers.Of(mine.Max))</p>
     }
     @if (Notices is { } notices)
     {
         <fieldset class="stack stack--tight" id="follow-notices">
             <legend class="label">@L["Follows.Emails"]</legend>
-            <label class="check"><input type="checkbox" id="notice-planned" checked="@notices.Planned" disabled="@Locked" @onchange="e => SetAsync(e.Value is true, notices.Voted)" /><span>@L["Follows.Email.planned"]</span></label>
-            <label class="check"><input type="checkbox" id="notice-voted" checked="@notices.Voted" disabled="@Locked" @onchange="e => SetAsync(notices.Planned, e.Value is true)" /><span>@L["Follows.Email.voted"]</span></label>
+            <label class="check"><input type="checkbox" id="notice-planned" checked="@notices.Planned" disabled="@Locked" @onchange="e => SetAsync(e.Value is true, notices.Voted, notices.Statements)" /><span>@L["Follows.Email.planned"]</span></label>
+            <label class="check"><input type="checkbox" id="notice-voted" checked="@notices.Voted" disabled="@Locked" @onchange="e => SetAsync(notices.Planned, e.Value is true, notices.Statements)" /><span>@L["Follows.Email.voted"]</span></label>
+            <label class="check"><input type="checkbox" id="notice-statements" checked="@notices.Statements" disabled="@Locked" @onchange="e => SetAsync(notices.Planned, notices.Voted, e.Value is true)" /><span>@L["Follows.Email.statements"]</span></label>
         </fieldset>
     }
     <Messages Message="@Message" Info="@Info" />
@@ -109,16 +129,25 @@
         Mine = (await Follows.GetMineAsync()).Value;
     }
 
-    private Task SetAsync(bool planned, bool voted) => RunAsync(async () =>
+    private Task UnfollowOrganisationAsync(string slug) => RunAsync(async () =>
     {
-        var result = await Follows.SetNoticesAsync(new NoticeSettingsRequest { Planned = planned, Voted = voted });
+        var result = await Follows.UnfollowOrganisationAsync(slug);
+        await AfterAsync(result);
+    });
+
+    private string OrgLabelText(FollowedOrganisationResponse o) =>
+        o.Label.ConfirmedBy == "domain" ? Text("Org.Label.domain", o.Label.Domain ?? "") : L["Org.Label." + (o.Label.ConfirmedBy ?? "none")];
+
+    private Task SetAsync(bool planned, bool voted, bool statements) => RunAsync(async () =>
+    {
+        var result = await Follows.SetNoticesAsync(new NoticeSettingsRequest { Planned = planned, Voted = voted, Statements = statements });
         if (!result.IsSuccess)
         {
             Show(result.Problem);
             return;
         }
 
-        Notices = new NoticeSettingsResponse(planned, voted);
+        Notices = new NoticeSettingsResponse(planned, voted, statements);
         Info = L["Follows.Saved"];
     });
 }

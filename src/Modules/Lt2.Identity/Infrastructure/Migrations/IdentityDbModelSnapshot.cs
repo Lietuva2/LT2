@@ -178,6 +178,15 @@ namespace Lt2.Identity.Infrastructure.Migrations
                         .HasColumnName("lookup")
                         .HasComputedColumnSql("upper(replace(replace(code, '-', ''), ' ', ''))", true);
 
+                    b.Property<Guid?>("OrganisationId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("organisation_id");
+
+                    b.Property<string>("OrganisationOff")
+                        .HasMaxLength(16)
+                        .HasColumnType("character varying(16)")
+                        .HasColumnName("organisation_off");
+
                     b.Property<DateTimeOffset?>("ReplacedAt")
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("replaced_at");
@@ -207,6 +216,11 @@ namespace Lt2.Identity.Infrastructure.Migrations
                     b.HasIndex("Lookup")
                         .IsUnique()
                         .HasDatabaseName("ix_invitation_lookup");
+
+                    b.HasIndex("OrganisationId")
+                        .IsUnique()
+                        .HasDatabaseName("ix_invitation_organisation_current")
+                        .HasFilter("kind = 'organisation' AND replaced_at IS NULL");
 
                     b.ToTable("invitation", "identity", t =>
                         {
@@ -282,6 +296,10 @@ namespace Lt2.Identity.Infrastructure.Migrations
                     b.Property<Guid?>("InvitationId")
                         .HasColumnType("uuid")
                         .HasColumnName("invitation_id");
+
+                    b.Property<int?>("InvitationLevel")
+                        .HasColumnType("integer")
+                        .HasColumnName("invitation_level");
 
                     b.Property<string>("NormalizedEmail")
                         .IsRequired()

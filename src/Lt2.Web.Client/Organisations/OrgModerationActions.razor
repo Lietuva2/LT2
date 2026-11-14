@@ -1,0 +1,131 @@
+@using Lt2.Api.Contracts.Organisations
+@inherits InteractiveBase
+@inject IOrganisationModerationApi Moderation
+
+@* The actions on an organisation or a statement (design 8.14.14), as on the queue's screen (8.3): each is its own control,
+   choosing one opens only its own field with one sentence on what it does, only the actions that apply to the item's state
+   are offered, one is open at a time, and the confirmation stays after the action closes. Each is recorded, audited and
+   emailed to the organisation's representatives. On a statement, "Riboti rašymą" reaches its writer as for an argument. *@
+<div class="stack stack--tight" id="org-actions-@Id">
+    @if (!_finished)
+    {
+        @if (_open is null)
+        {
+            <div class="actions" role="group" aria-label="@L["Mod.Actions"]">
+                @foreach (var action in Offered)
+                {
+                    <button type="button" class="@(action == Offered[0] ? "btn" : "btn btn--plain")" id="org-action-@action-@Id" disabled="@Locked" @onclick="() => Open(action)">@L["OrgMod.Action." + action]</button>
+                }
+            </div>
+        }
+        else if (_open == "restrict")
+        {
+            <RestrictAuthor Id="Id" Statement="true" Embedded="true" OnCancel="() => _open = null" OnDone="RestrictedAsync" />
+        }
+        else
+        {
+            <form class="sheet stack stack--tight" @onsubmit="SubmitAsync" novalidate aria-labelledby="org-action-title-@Id" id="org-action-form-@Id">
+                <h4 id="org-action-title-@Id">@L["OrgMod.Action." + _open]</h4>
+                <p class="small" id="org-action-sentence-@Id">@L["OrgMod.Sentence." + _open]</p>
+                <div class="field @(Errors.ContainsKey("statement") ? "field--error" : "")">
+                    <label for="org-statement-@Id">@L[Optional(_open) ? "OrgMod.Note" : _open == "confirm" ? "OrgMod.Checked" : "OrgMod.Statement"]</label>
+                    <textarea class="textarea" id="org-statement-@Id" maxlength="@AppealLimits.StatementMaxLength" @bind="_statement" @bind:event="oninput" disabled="@Locked"></textarea>
+                    <FieldError Errors="Errors" Field="statement" />
+                </div>
+                <div class="row">
+                    <button type="submit" class="btn" id="org-action-submit-@Id" disabled="@Locked">@L["OrgMod.Action." + _open]</button>
+                    <button type="button" class="btn btn--plain" disabled="@Locked" @onclick="() => _open = null">@L["Cancel"]</button>
+                </div>
+            </form>
+        }
+    }
+    <Messages Message="@Message" Info="@(Info ?? _done)" />
+</div>
+
+@code {
+    private string? _open;
+    private string? _done;
+    private bool _finished;
+    private string _statement = "";
+
+    [Parameter, EditorRequired] public Guid Id { get; set; }
+
+    /// <summary><c>organisation</c> or <c>statement</c>.</summary>
+    [Parameter, EditorRequired] public string Kind { get; set; } = "";
+
+    /// <summary>The organisation's status (<c>active</c>, <c>blocked</c>), or the statement's (<c>pending</c>, <c>published</c>).</summary>
+    [Parameter, EditorRequired] public string Status { get; set; } = "";
+
+    /// <summary>An organisation's confirmation: null while "Nepatvirtinta".</summary>
+    [Parameter] public string? ConfirmedBy { get; set; }
+
+    [Parameter] public EventCallback<string> OnDone { get; set; }
+
+    private IReadOnlyList<string> Offered => Kind == "organisation"
+        ? Status switch
+        {
+            "active" => ConfirmedBy is null ? ["keep", "confirm", "block"] : ["keep", "unconfirm", "block"],
+            "blocked" => ConfirmedBy is null ? ["unblock"] : ["unblock", "unconfirm"],
+            _ => [],
+        }
+        : Status switch
+        {
+            "pending" => ["publish", "hide", "restrict"],
+            "published" => ["seen", "hide", "restrict"],
+            _ => [],
+        };
+
+    private static bool Optional(string action) => action is "keep" or "publish" or "seen";
+
+    private void Open(string action)
+    {
+        _open = action;
+        _statement = "";
+        Errors = new Dictionary<string, string[]>();
+        if (action == "restrict")
+        {
+            _done = null;
+        }
+    }
+
+    private async Task RestrictedAsync()
+    {
+        _open = null;
+        _done = L["Restrict.Done"];
+        await OnDone.InvokeAsync("restrict");
+    }
+
+    private Task SubmitAsync() => RunAsync(async () =>
+    {
+        var action = _open!;
+        if (!Optional(action) && string.IsNullOrWhiteSpace(_statement))
+        {
+            Errors = new Dictionary<string, string[]> { ["statement"] = [L["OrgMod.StatementRequired"].Value] };
+            return;
+        }
+
+        var note = new ModerationRequest { Statement = string.IsNullOrWhiteSpace(_statement) ? null : _statement };
+        var statement = new StatementRequest { Statement = _statement };
+        var result = action switch
+        {
+            "keep" => await Moderation.KeepAsync(Id, note),
+            "block" => await Moderation.BlockAsync(Id, statement),
+            "unblock" => await Moderation.UnblockAsync(Id, statement),
+            "confirm" => await Moderation.ConfirmAsync(Id, statement),
+            "unconfirm" => await Moderation.UnconfirmAsync(Id, statement),
+            "publish" or "seen" => await Moderation.PublishStatementAsync(Id, note),
+            "hide" => await Moderation.HideStatementAsync(Id, statement),
+            _ => ApiResult.Fail(new ApiProblem { Status = 400, Code = "action" }),
+        };
+        if (!result.IsSuccess)
+        {
+            Show(result.Problem, "statement");
+            return;
+        }
+
+        _open = null;
+        _finished = true;
+        _done = L["OrgMod.Done." + action];
+        await OnDone.InvokeAsync(action);
+    });
+}

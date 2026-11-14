@@ -253,6 +253,12 @@ internal sealed class HttpFollowsApi(ApiHttp http) : Lt2.Api.Contracts.Follows.I
     public Task<ApiResult> UnfollowMpAsync(string slug, CancellationToken cancellationToken = default) =>
         http.SendAsync(HttpMethod.Delete, Lt2.Api.Contracts.Follows.FollowRoutes.MpOf(slug), null, cancellationToken);
 
+    public Task<ApiResult> FollowOrganisationAsync(string slug, CancellationToken cancellationToken = default) =>
+        http.SendAsync(HttpMethod.Put, Lt2.Api.Contracts.Follows.FollowRoutes.OrganisationOf(slug), null, cancellationToken);
+
+    public Task<ApiResult> UnfollowOrganisationAsync(string slug, CancellationToken cancellationToken = default) =>
+        http.SendAsync(HttpMethod.Delete, Lt2.Api.Contracts.Follows.FollowRoutes.OrganisationOf(slug), null, cancellationToken);
+
     public Task<ApiResult<Lt2.Api.Contracts.Follows.NoticeSettingsResponse>> GetNoticesAsync(CancellationToken cancellationToken = default) =>
         http.SendAsync<Lt2.Api.Contracts.Follows.NoticeSettingsResponse>(HttpMethod.Get, Lt2.Api.Contracts.Follows.FollowRoutes.Notices, null, cancellationToken);
 

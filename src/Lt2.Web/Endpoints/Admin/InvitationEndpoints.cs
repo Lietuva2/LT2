@@ -18,8 +18,8 @@ internal static class InvitationEndpoints
 {
     public static void Map(IEndpointRouteBuilder api)
     {
-        api.MapGet(ApiEndpoints.Relative(ApiRoutes.Admin.Invitations), async (int? days, string? code, IInvitations invitations, CancellationToken cancellationToken) =>
-                TypedResults.Ok(InvitationMapping.Map(await invitations.StatsAsync(days ?? 60, code, cancellationToken))))
+        api.MapGet(ApiEndpoints.Relative(ApiRoutes.Admin.Invitations), async (int? days, string? code, IInvitations invitations, Lt2.Appeals.IOrganisations organisations, CancellationToken cancellationToken) =>
+                TypedResults.Ok(await InvitationMapping.MapAsync(await invitations.StatsAsync(days ?? 60, code, cancellationToken), organisations, cancellationToken)))
             .WithName("GetInvitationStats")
             .WithTags("Admin")
             .RequireAuthorization(Policies.Administrator)

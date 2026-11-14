@@ -43,6 +43,37 @@ public sealed class FollowTemplateTests
         email.TextBody.ShouldNotContain("kreipim", Case.Insensitive, "nothing about the person's side or the appeal");
     }
 
+    [Theory]
+    [InlineData("domain", "lgs.pavyzdys.test", "patvirtinta per el. pašto adresą @lgs.pavyzdys.test")]
+    [InlineData("moderator", null, "patvirtino moderatorius")]
+    [InlineData(null, null, "nepatvirtinta")]
+    public void The_statement_email_has_the_organisation_its_label_the_bill_the_stance_and_a_full_link_and_nothing_else(string? by, string? domain, string label)
+    {
+        var templates = new FollowTemplates(
+            new StringLocalizer<EmailTemplates>(new ResourceManagerStringLocalizerFactory(Options.Create(new LocalizationOptions()), NullLoggerFactory.Instance)),
+            Options.Create(new SiteOptions { Address = "https://lt2.pavyzdys.test" }));
+        var email = templates.Statement(new FollowStatementEmail(
+            "ruta@pavyzdys.test", "Pavyzdinė asociacija", by, domain, "XVP-0412", "Gyventojų pajamų mokesčio įstatymo pataisa", "against", "/seimas/XVP-0412", "/sveiki#sekami"));
+        email.Subject.ShouldBe("Lietuva 2.0: „Pavyzdinė asociacija“ paskelbė poziciją dėl XVP-0412");
+        email.TextBody.ShouldContain($"„Pavyzdinė asociacija“ ({label})");
+        email.TextBody.ShouldContain("XVP-0412 · Gyventojų pajamų mokesčio įstatymo pataisa");
+        email.TextBody.ShouldContain("Pozicija: prašo balsuoti prieš.");
+        email.TextBody.ShouldContain("https://lt2.pavyzdys.test/seimas/XVP-0412");
+        email.TextBody.ShouldContain("https://lt2.pavyzdys.test/sveiki#sekami");
+        email.TextBody.ShouldNotContain("{", Case.Sensitive, "every placeholder is filled");
+        email.HtmlBody!.ShouldNotContain("<img", Case.Insensitive);
+    }
+
+    [Fact]
+    public void Every_stance_has_its_words_in_the_statement_email()
+    {
+        foreach (var stance in new[] { "for", "against", "remarks" })
+        {
+            var email = Templates().Statement(new FollowStatementEmail("r@pavyzdys.test", "Asociacija", null, null, "XVP-0412", "Pataisa", stance, "/seimas/XVP-0412", "/sveiki#sekami"));
+            email.TextBody.ShouldNotContain("Follow.Stance", Case.Sensitive, stance);
+        }
+    }
+
     [Fact]
     public void A_consensus_vote_says_so_without_numbers() =>
         Templates().Voted(new FollowVotedEmail("r@pavyzdys.test", "XVP-0533", "Pataisa", "presentation", new DateOnly(2026, 3, 17), true, null, null, null, null, "/seimas/balsavimai/1", [], "/sveiki#sekami"))

@@ -25,10 +25,14 @@ public static class AppealSteps
 
     /// <summary>
     /// Leaves the bill without a record, as if nobody had taken part: earlier tests' records on it are deleted with their
-    /// sides, arguments and marks (the foreign keys cascade).
+    /// sides, arguments and marks (the foreign keys cascade), and organisations' statements on it (design 8.14.14), which
+    /// refer to the bill by number, are deleted too.
     /// </summary>
-    public static Task FreeBillAsync(this DatabaseFixture database, string number) =>
-        database.ExecuteAsync("DELETE FROM appeals.appeal WHERE bill_number = @n", ("n", number));
+    public static async Task FreeBillAsync(this DatabaseFixture database, string number)
+    {
+        await database.ExecuteAsync("DELETE FROM appeals.organisation_statement WHERE bill_number = @n", ("n", number));
+        await database.ExecuteAsync("DELETE FROM appeals.appeal WHERE bill_number = @n", ("n", number));
+    }
 
     /// <summary>A completed member with a display name and, unless told otherwise, the consent to store positions.</summary>
     public static async Task<(TestBrowser Browser, string Email)> MemberAsync(this Lt2Factory factory, string? displayName = "Rūta Mockutė", bool consent = true)

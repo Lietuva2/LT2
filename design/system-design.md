@@ -249,8 +249,8 @@ ASP.NET Core Identity tables (users, roles, claims, tokens, passkeys), plus:
 
 | Table | Notes |
 |---|---|
-| `profile` | Display name, created date, normalised email (for the one-account-per-address rule), `verification_level` (`email` at the start; `phone` and the EU wallet can be added), invitation used. While the account is pending (6.2) it holds only the normalised address and the invitation code that was entered. |
-| `invitation` | Code (and its look-up form without dashes or spaces), kind (`team` or `personal`), who issued it (for a personal code: its member), uses left and expiry (team codes), completed registrations (a counter that never drops), level, switched off (when, by an administrator), replaced (when). Registration is by invitation during the closed trial. A use is counted when the registration is completed (6.2), not when it is started. |
+| `profile` | Display name, created date, normalised email (for the one-account-per-address rule), `verification_level` (`email` at the start; `phone` and the EU wallet can be added), invitation used. While the account is pending (6.2) it holds only the normalised address and the invitation code that was entered. [changed while building (8.14.14, stage B): never an organisation's code, which the browser keeps until completion; `invitation_level` holds the level of the code the registration was completed with, and for an organisation's code it is all that is kept: `invitation_id` and `invitation_code` stay empty.] |
+| `invitation` | Code (and its look-up form without dashes or spaces), kind (`team` or `personal`), who issued it (for a personal code: its member), uses left and expiry (team codes), completed registrations (a counter that never drops), level, switched off (when, by an administrator), replaced (when). Registration is by invitation during the closed trial. A use is counted when the registration is completed (6.2), not when it is started. [changed while building (8.14.14, stage B): the kind `organisation`, one current code per organisation, with `organisation_id` (the Appeals module's id) and no account; `organisation_off` (`blocked` or `closed`) follows the organisation, separate from an administrator's switch-off.] |
 | `invitation_daily` | Per code and Vilnius day: registrations completed. For the administrators' chart; no per-person history. |
 | `feedback` | Kind (`bug`, `idea`, `unclear`, `other` or none), text (up to 2 000 characters), page path and browser (each only if the member left them in), status (`new`, `seen`, `done`), internal note, replies, the day it came, and the account **only if** the member ticked "Galite man atsakyti". An item without that tick has no account, a random id and only the day, so nothing leads back to its author. Kept 12 months (a setting); linked items go with the account (8.10). |
 | `sign_in_code` | Account, hashed code, expiry, failed attempts, used time, and the known device it was issued to (empty for a code any browser may use). |
@@ -279,6 +279,11 @@ adresas" (https on `lrs.lt` or under it, at most 500 characters), filled in adva
 | `summary_attempt` | `bill_number` (key), tried time, outcome (`made`, `unavailable`, `insufficient`, `failed`, `overtaken`), whether the provider was asked, `retry_after` | [changed while building (8.13)] The summary job's last try per bill, also for a bill without a record; never a text and no person. Serves the daily number (tries that asked the provider since Vilnius midnight) and the wait before the next try. |
 
 | `ai_draft_request` | `id`, moderator, `bill_number`, requested time | [changed while building] That a moderator asked for an AI draft (8.11.4): never a text. For the hourly limit and to accept a description as started from a draft (8.12.3). Exported and deleted with the moderator's account. |
+| `organisation` | `id`, `slug`, `name`, `name_key`, `description`, `website`, `legal_code`, `declared_lobbyist`, `registered_by_user_id`, `status`, confirmation and block columns, `seen_at` | [changed while building (8.14.14, stage A)] An organisation's public profile; the columns are listed in 8.14.10. Who registered it is never public and is emptied with the account. Hidden from `lt2_readonly`. |
+| `organisation_representative` | `id`, `organisation_id`, `user_id`, `granted_by_user_id`, `granted_at`, `ended_at` | [changed while building] Who acts for an organisation; seen only by its other representatives. Deleted with the account; the last representative's deletion closes the organisation. Hidden from `lt2_readonly`. |
+| `organisation_invite` | `id`, `organisation_id`, `token_hash`, `created_by_user_id`, `created_at`, `expires_at`, `used_at` | [changed while building] A representative's one-time link (seven days). Hidden from `lt2_readonly`. |
+| `organisation_code` | `id`, `organisation_id`, `domain`, `code_hash`, `created_at`, `expires_at`, `failed_attempts`, `consumed_at`, `requested_by_user_id` | [changed while building] Confirmation by email domain, under the sign-in codes' rules; never the mailbox. Hidden from `lt2_readonly`. |
+| `organisation_statement` | `id`, `organisation_id`, `bill_number`, `stance`, `text`, `link`, `goal`, `status`, `screening_flags`, `seen_at`, `published_at`, `edited_at`, `withdrawn_at`, `written_by_user_id` | [changed while building] One per organisation per bill (8.14.3); never counted. Earlier versions in `revision` without a person. `written_by_user_id` is never public and is emptied with the account. Hidden from `lt2_readonly`. [changed while building (stage B): `first_public_at`, when it first became public, for the follow emails.] |
 
 ### 5.4 `notify`
 
@@ -291,9 +296,9 @@ adresas" (https on `lrs.lt` or under it, at most 500 characters), filled in adva
 | `mp_email_pref` | Per MP: frequency (default, weekly only, before votes only, stopped), confirmed extra recipient. |
 | `suppression` | Hashed addresses that bounced or asked to stop. |
 | `email_message` | Template, subject, provider message id, status. Bodies of digests are reproducible from the snapshot; other bodies are not stored. |
-| `follow` | (`user_id`, `kind`, `key`) primary key, created time. `kind`: bill (key: the number) or mp (key: the Seimas person id). Private: shown to nobody but the person; exported and deleted with the account (8.11.2). |
-| `notice_setting` | Per account: which follow emails are on (`planned`, `voted`); no row means both on. |
-| `bill_event` | (`bill_number`, `kind`, `key`) primary key, first seen, sent time, outcome. `kind`: planned (key: the date) or voted (key: the vote id). What followers are told about, recorded once (8.11.2). No person in it. [changed while building: an `outcome` column (`waiting`, `sent`, `skipped`, `superseded`) tells an event never to be sent from one waiting for the next day] |
+| `follow` | (`user_id`, `kind`, `key`) primary key, created time. `kind`: bill (key: the number) or mp (key: the Seimas person id). Private: shown to nobody but the person; exported and deleted with the account (8.11.2). [changed while building (8.14.14, stage B): or `organisation` (key: the organisation's id); `kind` up to 16 characters.] |
+| `notice_setting` | Per account: which follow emails are on (`planned`, `voted`); no row means both on. [changed while building (8.14.14, stage B): and `statements` (a followed organisation's statement became public); no row means all three on.] |
+| `bill_event` | (`bill_number`, `kind`, `key`) primary key, first seen, sent time, outcome. `kind`: planned (key: the date) or voted (key: the vote id). What followers are told about, recorded once (8.11.2). No person in it. [changed while building: an `outcome` column (`waiting`, `sent`, `skipped`, `superseded`) tells an event never to be sent from one waiting for the next day] [changed while building (8.14.14, stage B): `kind` `statement` (key: the statement's id) records, under its bill, that a followed organisation's statement became public; no person and no text in it] |
 
 ### 5.5 `audit`
 
@@ -306,7 +311,9 @@ without a deploy: the summary rules in 8.4 (the threshold of all bills, `Digest:
 per MP, and the share of change that counts as "changed notably", `Digest:NotableChange`), the reasons and "Man svarbu"
 marks a person may give per bill in 8.2 (`Appeals:ReasonsPerPerson`, `Appeals:EndorsementsPerPerson`, 0 = no limit,
 the default), the surge thresholds in 6.6,
-the code limits and the life of a pending account in 6.2, whether registration needs an invitation, uses per personal invitation code (`Registration:PersonalCodeUses`, 0 = no limit, the default), how long feedback is kept (`Feedback:KeepMonths`, 12), how many bills and MPs an account may follow (`Follows:MaxPerAccount`, 200), the Claude model of the description draft and of the AI summaries (`Ai:DraftModel`, `claude-sonnet-5-5`, 8.11.4, 8.13), how many AI summaries the job may ask for a day (`Ai:SummariesPerDay`, 30; 0 = off, 8.13). Each
+the code limits and the life of a pending account in 6.2, whether registration needs an invitation, uses per personal invitation code (`Registration:PersonalCodeUses`, 0 = no limit, the default), uses per organisation's invitation code (`Registration:OrganisationCodeUses`, 0 = no limit, the default; 8.14.14 stage B, on the settings screen under registration), how long feedback is kept (`Feedback:KeepMonths`, 12), how many bills and MPs an account may follow (`Follows:MaxPerAccount`, 200), how many organisations an account may
+register (`Organisations:PerAccount`, 3; closed ones do not count, 8.14.14; on the settings screen under
+"Organizacijos"), the Claude model of the description draft and of the AI summaries (`Ai:DraftModel`, `claude-sonnet-5-5`, 8.11.4, 8.13), how many AI summaries the job may ask for a day (`Ai:SummariesPerDay`, 30; 0 = off, 8.13). Each
 change is written to `audit`, and the current values of the rules that affect what MPs receive are shown on the public
 methodology page.
 
@@ -323,7 +330,8 @@ when to change it, its unit, the default, and the key in small type. The minimum
 the owner sets a number, and the screen says so.
 
 Database roles: `lt2_migrator` owns the schemas and runs migrations; `lt2_app` has data access only; `lt2_worker` the same
-plus the Hangfire schema; `lt2_readonly` for ad-hoc analysis has no access to `identity` or `appeals.position`.
+plus the Hangfire schema; `lt2_readonly` for ad-hoc analysis has no access to `identity` or `appeals.position`. [changed
+while building (8.14.14): nor to the five organisation tables, which hold an account beside an organisation.]
 
 ## 6. Security and privacy
 
@@ -719,7 +727,7 @@ except arguments that pre-screening flags or people report.
   text when a provider is configured (8.11.4), and a required statement; confirm (only an AI summary nobody has read), an
   optional note; remove the description, a required statement; for reasons: publish, hide, merge (choosing the
   target), restrict the author.
-- **Hiding a bill's record closes taking part on it [8.12.3, to confirm on the built result].** The page shows the bill
+- **Hiding a bill's record closes taking part on it [8.12.3; confirmed by the owner on 2026-11-14].** The page shows the bill
   and says that taking part is closed by the moderators, with the statement. The sides and arguments are **kept, for now
   [decided 2026-11-13, to be looked at again]**: nobody can see them, and deleting them on hide could not be undone if the
   hide was a mistake. Whether to delete them instead (data minimisation) will be looked at again. Hiding no longer frees
@@ -889,7 +897,7 @@ signed in). Below it "Artimiausiu metu Seime" (8.11.1), then one card for each o
 participants, left out while no bill has any (8.12.5): the bill, its stage and planned date, both sides with the counts
 for accounts older than 30 days, the bar, the threshold, and the most endorsed reason on each side (shown with its "Man
 svarbu" count, without its author), each card linking to the bill's page; then links to all bills and to the summaries,
-and the "not a representative poll" notice. It uses only the public answers behind `/kreipimaisi` and the bill pages.
+and the "not a representative poll" notice. It uses only the public answers behind `/projektai` and the bill pages.
 
 ### 8.8 API
 
@@ -1205,7 +1213,8 @@ bill's page. "Kreipimasis" stays the word for what people on a bill ask of MPs a
   - Status codes stay `open`, `closed` and `rejected` (hidden by a moderator). Rows from before 2026-11-14 that are no
     longer a bill's record are `superseded` (5.3).
   - The old addresses redirect permanently (301): `/seimas/{number}/kreipimasis` to `/seimas/{number}`,
-    `/seimas/{number}/kreipimasis/istorija` to `/seimas/{number}/istorija`, and `/kreipimaisi/naujas` to `/kreipimaisi`.
+    `/seimas/{number}/kreipimasis/istorija` to `/seimas/{number}/istorija`, and `/kreipimaisi/naujas` to the list,
+    `/projektai` (8.12.5).
   - The share line (8.11.5) appears once, under the threshold in the sides section right below the side buttons.
 
 #### 8.12.2 The threshold and what MPs receive
@@ -1215,6 +1224,8 @@ bill's page. "Kreipimasis" stays the word for what people on a bill ask of MPs a
 - A moderator can set a bill's own number, with a public statement (8.4); it then stays until a moderator changes it.
   Who set it is `default` or `moderator`.
 - A bill that has been in a summary really sent to MPs stays eligible, as before.
+- [Confirmed by the owner on 2026-11-14, on the built result: one threshold for all bills with a moderator's override,
+  and that a bill once sent stays eligible.]
 - Everything else in 8.4 stays: the schedule, the ceiling, "changed notably", hold and release, the urgent summary,
   the dry run, the public copies, and that only arguments a moderator has seen appear in a summary.
 - A bill enters the moderators' queue as "under its threshold and on the agenda" only when it has at least one
@@ -1260,7 +1271,7 @@ Nothing waits for approval before it is shown, except what pre-screening or a re
     written by bill number: `PUT /moderation/bills/{number}/description`.
   - "Palikti" is `POST /moderation/appeals/{id}/keep` (it was `/publish`).
   - A hidden record: the public answer has the status `rejected` with only the latest hide statement, no counts and no
-    arguments; the caller's own answer is empty; `/kreipimaisi` leaves the bill out; the agenda says "Dalyvavimas
+    arguments; the caller's own answer is empty; `/projektai` leaves the bill out; the agenda says "Dalyvavimas
     uždarytas" with a link to the bill.
   - A moderator's correction of a description an initiator wrote makes its source `moderator`, so "Aprašymą parašė …"
     is no longer shown for that text; an `ai-draft` description stays `ai-draft` when corrected, and an `ai` one becomes
@@ -1303,13 +1314,16 @@ the team, so no notice is owed.
 
 #### 8.12.5 Lists
 
-- **`/kreipimaisi`** lists active bills, with a search by number or title over all active bills and a filter
+- **`/projektai`** lists active bills, with a search by number or title over all active bills and a filter
   "Planuojami artimiausiu metu". Closed ones are on their own tab as before. **It can be sorted [decided by the owner on
   2026-11-14]:** by activity (the default), by participants, by arguments, or by planned date (soonest first). Activity
-  is the bill's participants on both sides together plus its published arguments [proposed: a plain sum; marks and
-  reports do not count]; bills with none come last, by planned date. The sort is a query parameter, so the page works
+  is the bill's participants on both sides together plus its published arguments [confirmed by the owner on 2026-11-14: a plain sum; marks
+  and reports do not count]; bills with none come last, by planned date. The sort is a query parameter, so the page works
   without JavaScript and its answer stays public and cacheable; each row shows the participants and the number of
-  arguments it was sorted by. The menu label stays "Kreipimaisi" **[to confirm: or "Projektai"]**.
+  arguments it was sorted by. **The menu item and the page's heading and title are "Projektai" [decided by the owner on
+  2026-11-14; they were "Kreipimaisi"].** The page's address follows the name: `/projektai`, and `/kreipimaisi`
+  answers 301 to it with its query kept [the designer's choice: the site is not open yet, so the old address is in
+  nobody's bookmarks]. The API's names do not change.
   [changed while building: the ties. Each sort breaks ties by activity, then by planned date (soonest first, none last),
   then by number; by planned date, bills without one come last. The parameter is `sort` = `activity`, `participants`,
   `arguments` or `planned` in the API and `rikiuoti` = `aktyvumas`, `dalyviai`, `argumentai`, `data` on the page; the
@@ -1469,8 +1483,10 @@ differ.]**
 
 ### 8.14 Organisations on a bill: a voice, not control
 
-**[Direction agreed by the owner on 2026-11-14: organisations get a voice on a bill, not control of it. Every detail
-below is proposed. Not scheduled; nothing here is built.]**
+**[Direction agreed by the owner on 2026-11-14: organisations get a voice on a bill, not control of it. Later that day
+the owner decided who may register and what moderators may do (8.14.2, 8.14.9, 8.14.12); the rest is proposed. That evening
+the owner decided to build it now, on the site only, in two stages (8.14.14).]**
+
 #### 8.14.1 Why a voice and not control
 
 Some bills have organisations that have worked on the issue for years: associations, unions, business and patient
@@ -1492,15 +1508,30 @@ nothing about the bill's record.
 
 #### 8.14.2 What an organisation is
 
-- **A verified legal person** with a public profile (`/o/{slug}`): name, legal entity code, website, a short
-  description in its own words, whether it declares itself a registered lobbyist, and the bills it has statements on.
-- **Verified by the team.** An administrator checks that the request comes from the organisation (its entry in the
-  Register of Legal Entities, and a message from an address on its own domain or its registered contact) and records
-  who checked and when. Audited.
-- **Who qualifies [to confirm]:** associations, foundations, unions, business associations, communities and
-  companies. Not political parties, which speak through their MPs and factions, and not state or municipal bodies.
-- **Representatives.** An administrator gives one or more member accounts the role of representative of that
-  organisation. A representative acts for it only in a passkey session, like staff (6.2). Their own side on any bill
+**[Decided by the owner on 2026-11-14: no list of who qualifies and nobody approves an organisation before it appears.
+Whoever wants in is in; limits come only if there turn out to be too many. Moderators act afterwards (8.14.9).]**
+
+- **A public profile** (`/o/{slug}`): name, website, a short description in its own words, whether it declares itself
+  a registered lobbyist, its legal entity code if it gives one, and the bills it has statements on. Any kind:
+  associations, companies, parties, communities, groups without legal form.
+- **Registered by a member, shown at once.** A signed-in member registers an organisation and is its first
+  representative. A small number per account [proposed: three] keeps one person from flooding the list.
+- **Confirmed or not, and the page says which [accepted by the owner on 2026-11-14].**
+  - An organisation starts as "Nepatvirtinta".
+  - It is confirmed without anyone's approval when a representative proves an email address on the domain of the
+    organisation's website, with a code sent there as at sign-in. The profile then says "Patvirtinta per el. pašto
+    adresą @domenas" and names the domain, so a reader sees exactly what was confirmed. Addresses of public mail
+    services confirm nothing.
+  - An organisation without a domain of its own can ask a moderator, who confirms it by hand and records what was
+    checked. Audited.
+  - Confirmation changes the label, and whether the organisation can be named to MPs (8.14.4). An unconfirmed
+    organisation can do everything else.
+  - It proves control of a domain, not that the organisation is who it says. A look-alike name or domain is
+    impersonation: a ground for a report and for blocking (8.14.9).
+- **Representatives.** A representative can add other members as representatives and remove them.
+  A representative acts for it in an ordinary signed-in session [changed on 2026-11-14 with open registration: a
+  passkey is not required while organisations are on the site only; to be looked at again before they are named to
+  MPs]. Their own side on any bill
   stays private and separate; nothing ties it to the organisation. Representatives' names are not public: a statement
   is the organisation's.
 - **Nothing is sold.** No payment buys a profile, a place, an order or a mention. Organisations appear on equal terms.
@@ -1508,8 +1539,8 @@ nothing about the bill's record.
 #### 8.14.3 The statement on a bill
 
 - **One statement per organisation per bill**, the same shape as an MP's response (5.3 `response`):
-  - a stance: asks to vote for, asks to vote against, or remarks without a side **[to confirm: whether "remarks" is
-    offered]**;
+  - a stance: asks to vote for, asks to vote against, or remarks without a side [confirmed by the owner on 2026-11-14: "remarks" is
+    offered];
   - a text of up to 1 500 characters of plain text, and one link to the organisation's full position;
   - published at once, like an argument: pre-screening flags it, anyone can report it, a moderator can hide it with a
     statement (8.12.3);
@@ -1525,6 +1556,10 @@ nothing about the bill's record.
 
 #### 8.14.4 What MPs receive
 
+**[Decided by the owner on 2026-11-14: organisations appear on the site first. The line below joins the summaries
+later, by its own decision, once confirmation and moderation have worked in practice. When it does, it names only
+confirmed organisations that a moderator has not kept out of summaries (8.14.9).]**
+
 - In the summary (8.4), each bill gets one more line after the arguments: which organisations ask to vote for, which
   against, and which sent remarks. Names only, each linking to the statement on the public page; no statement text in
   the email.
@@ -1536,7 +1571,7 @@ nothing about the bill's record.
 
 - An organisation with a stance for or against may set one public goal on that bill: a number of participants, shown
   in its statement with the progress, for example "Siekiame 1 000 dalyvių".
-- It counts participants on the organisation's side **[to confirm: or everyone on the bill]**. Both sides' counts
+- It counts participants on the organisation's side [confirmed by the owner on 2026-11-14]. Both sides' counts
   stay on the same page above it, as always.
 - It is the organisation's own target for its members and supporters. It does not change the threshold, the timing or
   anything MPs receive, and it does not appear in summaries.
@@ -1547,6 +1582,9 @@ nothing about the bill's record.
 - **No record ties a person to the organisation.** A registration through an organisation's link raises that link's
   counter and stores nothing else about where the account came from. The organisation sees the counter: how many
   registered through its link, nothing more.
+  **[Owner, 2026-11-14, on the built result]** The administrators' invitations page shows registrations per day for
+  organisations' codes as for every other code. On a day with few registrations an administrator could match a new
+  account to a code by its registration date; the owner judged this gap too small to change, and it stays.
 - **Following.** A member can follow an organisation (8.11.2) and is emailed when it publishes a statement. Private
   like every follow; no follower count is shown, to the organisation either.
 
@@ -1572,55 +1610,328 @@ nothing about the bill's record.
 
 - Statements are moderated after the fact, by the same rules as arguments. The public moderation rules (8.3) gain a
   part for organisations.
-- An administrator can suspend an organisation, with a statement. Its profile then says so and its statements are
-  hidden; lifting the suspension brings them back. Audited.
-- The methodology page explains what a statement is, that it is not counted, how organisations are verified, and that
-  nothing is paid for.
+- **What a moderator can do [decided by the owner on 2026-11-14].** Not refuse a registration: there is none to
+  refuse. Afterwards, each with a statement, audited and undoable:
+  - **block an organisation:** its profile says so, its statements are hidden and its representatives cannot publish;
+    lifting the block brings the statements back;
+  - **keep it out of summaries to MPs:** it stays on the site as it was; its representatives are told, with the
+    statement;
+  - **hide one statement**, as an argument is hidden (8.12.3).
+- A new organisation and each statement not yet seen appear in the moderators' queue to be looked at, not approved,
+  like arguments (8.3). Reports gain the ground "Apsimeta kita organizacija".
+- **Is the name on its website? [decided by the owner on 2026-11-14]** The moderator's look at a new organisation
+  includes its website: the queue shows the link, and the moderator opens it. This catches a real but unrelated domain
+  given for someone else's name, which the email check passes. It is not an automatic gate: names appear abbreviated,
+  in other grammatical cases, inside a logo or on pages built by scripts, so a gate would fail honest organisations,
+  and whoever owns a look-alike domain puts the name there anyway. **Later, only if there are too many to look at:** an
+  automatic check that fetches the page and flags "pavadinimas svetainėje nerastas" in the queue, deciding nothing,
+  like pre-screening. It would make the servers fetch addresses users give, so it needs its own protection and an
+  exception to the outbound allowlist (6.4); not built now.
+- The methodology page explains what a statement is, that it is not counted, what "Patvirtinta" does and does not mean, and
+  that nothing is paid for.
 
 #### 8.14.10 Data, in outline
 
 | Table | Holds |
 |---|---|
-| `organisation` | slug, name, legal entity code, website, description, kind, declared lobbyist (yes or no), status (verified, suspended), who verified and when |
+| `organisation` | slug, name, website, description, legal entity code (optional), declared lobbyist (yes or no), registered by and when, confirmed (by domain or by a moderator, the domain, when, who), blocked and kept out of summaries (each: statement, who, when) |
 | `organisation_representative` | organisation, user, granted by and when, ended when |
 | `organisation_statement` | organisation, bill, stance, text, link, goal (optional), status, published and edited times, written by (never public) |
 
 `follow` (5.4) gains the kind `organisation`. Invitation codes (5.2) gain the kind `organisation` with a counter and no
-link from the account. Statements live in the Appeals module beside `response`; organisations and representatives
-live with accounts and roles in Identity **[to decide when scheduled]**.
+link from the account. ~~Statements live in the Appeals module beside `response`; organisations and representatives
+live with accounts and roles in Identity **[to decide when scheduled]**.~~ [Decided by 8.14.14: all of them are tables of
+the Appeals module.]
 
-#### 8.14.11 Before any of it is built
+[changed while building (stage A, 2026-11-14): the tables as built, all in `appeals` (5.3)]
 
-- **A legal reading of the Law on Lobbying Activities:** whether an organisation's statement addressed to MPs through
-  the site, and the site passing it on in a summary, counts as lobbying for the organisation or makes the site an
-  intermediary, and what must then be declared and by whom.
-- **The data-protection impact assessment** (section 11, M2b) covers representatives and the invitation counter.
-- **Talks with a few organisations** on both sides of one real bill, as with MPs (`AGENTS.md`): whether a statement,
-  a line in the summary and a goal are worth their time.
-- **Order of work:** after M2b. Organisations in MPs' inboxes make sense only once summaries are really sent and
-  trusted.
+| Table | Holds |
+|---|---|
+| `organisation` | `id`, `slug` (unique, never changes or is reused), `name`, `name_key` (the name without case and extra spaces; unique among `active` ones), `description`, `website`, `legal_code`, `declared_lobbyist`, `registered_by_user_id` (emptied with the account; never public), `registered_at`, `status` (`active`, `blocked`, `closed`), `confirmed_by` (`domain`, `moderator` or null), `confirmed_domain`, `confirmed_at`, `confirmed_by_user_id` and `confirmation_note` (a moderator's hand), `domain_barred` (a moderator withdrew a confirmation: only a moderator confirms it now), `blocked_at`, `blocked_by_user_id`, `block_statement`, `closed_at`, `seen_at` (null while new or changed: in the queue), `screening_flags`, `changed_at`. "Kept out of summaries" is not built (stage A). |
+| `organisation_representative` | `id`, `organisation_id`, `user_id`, `granted_by_user_id` (whose link brought them), `granted_at`, `ended_at`; one current row per person and organisation. Deleted with the account. |
+| `organisation_invite` | `id`, `organisation_id`, `token_hash` (SHA-256 of the one-time link's token; the token itself is shown once), `created_by_user_id`, `created_at`, `expires_at` (seven days), `used_at`. |
+| `organisation_code` | `id`, `organisation_id`, `domain` (the website's host), `code_hash`, `created_at`, `expires_at`, `failed_attempts`, `consumed_at`, `requested_by_user_id`. Never the mailbox: it exists only in the outbox row until the email is sent. |
+| `organisation_statement` | `id`, `organisation_id`, `bill_number` (a statement never creates the bill's record), `stance` (`for`, `against`, `remarks`), `text`, `link`, `goal` (1 to 1 000 000, not with remarks), `status` (`pending`, `published`, `hidden`, `withdrawn`; one `pending`, `published` or `hidden` row per organisation and bill), `screening_flags`, `seen_at`, `published_at`, `edited_at`, `withdrawn_at`, `written_by_user_id` (the writer or last changer; never public; emptied with the account). |
 
-#### 8.14.12 For the owner to decide
+[changed while building (stage B, 2026-11-14)] `organisation_statement` gains `first_public_at` (when it first became
+public; the follow emails go by it). The organisation's invitation code is an `identity.invitation` of the kind
+`organisation` (`organisation_id`, `organisation_off`; 5.2) and a follow of an organisation a `notify.follow` of the kind
+`organisation` (5.4); nothing in `appeals` refers to either.
 
-1. Who qualifies: are companies in, are parties out?
-2. Is the stance "remarks without a side" offered?
-3. Does the goal count the organisation's side or everyone on the bill?
-4. Do organisations appear in summaries to MPs from the start, or first on the site only?
-5. Stage 3: whether a person may delegate their vote to an organisation is a stage 3 question. Nothing here assumes
-   it, and nothing here prevents it.
+Earlier names and websites, and earlier versions of a statement, are rows of `revision` (entity `organisation`, fields
+`name` and `website`; entity `statement`, field `version` holding the replaced version as JSON), all without a person.
+Reports (`report`) take the targets `organisation` and `statement` (its `appeal_id` is then empty), and moderation actions
+(`moderation_action`) the same target kinds.
 
-#### 8.14.13 Done when (if built)
+#### 8.14.11 Before organisations are named to MPs, and before the site opens
 
-- A verified organisation publishes a statement on a bill; it shows in its own section with both sides together; no
+Built now by the owner's decision of 2026-11-14, for the closed trial and on the site only. Still owed:
+
+- **A legal reading of the Law on Lobbying Activities**, before the site opens to the public and again before the line
+  joins the summaries: whether an organisation's statement addressed to MPs through the site, and the site passing it
+  on in a summary, counts as lobbying for the organisation or makes the site an intermediary, and what must then be
+  declared and by whom.
+- **The data-protection impact assessment** (section 11, M2b) covers representatives, the confirmation by email and
+  the invitation counter.
+- **Talks with a few organisations** on both sides of one real bill, as with MPs (`AGENTS.md`), now with something to
+  show them.
+#### 8.14.12 Decided, and what is still open
+
+Decided by the owner on 2026-11-14:
+
+1. Who qualifies: everyone who wants in; no list of kinds, no approval beforehand (8.14.2).
+2. Moderators cannot refuse a registration; they can block an organisation or keep it out of summaries (8.14.9).
+3. The stance "remarks without a side" is offered (8.14.3).
+4. The goal counts the organisation's own side (8.14.5).
+5. Organisations appear on the site first; summaries to MPs later (8.14.4).
+6. Whether a person may delegate their vote to an organisation is a stage 3 question. Nothing here assumes it, and
+   nothing here prevents it.
+
+7. Confirmation by email domain, with a moderator's hand for organisations without a domain, and a moderator's look
+   at the website in place of an automatic check of the name (8.14.2, 8.14.9).
+8. Build it now, on the site only (8.14.14).
+
+Still for the owner, on the built result: the details marked "designer's choice" in 8.14.14.
+#### 8.14.13 Done when
+
+- A member registers an organisation and publishes its statement on a bill with nobody approving either; it shows in its own section with both sides together; no
   count on the page changes.
 - Two organisations on opposite sides of one bill are shown alike, and neither can affect the other's statement, the
   threshold or the sending.
-- A summary lists the organisations by side with links, only for statements a moderator has seen.
+- A blocked organisation's statements disappear and come back when the block is lifted.
+- Once the line joins the summaries: a summary lists the organisations by side with links, only confirmed ones not kept
+  out by a moderator, and only for statements a moderator has seen.
 - No page, API answer, log line or email shows who registered through an organisation's link, who follows it, or how
   "its" members took sides.
 
-### 8.9 Done when
+#### 8.14.14 The build, in two stages
 
+**[Decided by the owner on 2026-11-14: build now. The split and the details below are the designer's choices where
+8.14.2 to 8.14.9 leave them open; each can be changed on the built result.]**
+
+**Stage A: organisations and their statements.**
+
+- **Where it lives.** Organisations, representatives, statements and the confirmation codes are tables of the Appeals
+  module (`appeals`), beside the moderation actions, reports and revisions they use. Emails go through the outbox.
+- **Registering** (`/organizacijos/nauja`, a signed-in member): name (3 to 120 characters; no other organisation that
+  is not blocked or closed has the same name, compared without case), description (up to 500 characters of plain text,
+  optional), website (optional; `https`, at most 200 characters), legal entity code (optional; 7 to 9 digits), "Esame
+  registruoti lobistai" (a tick, the organisation's own declaration). The address `/o/{slug}` is made from the name and
+  does not change when the name does. At most `Organisations:PerAccount` (3) organisations registered per account. A
+  person under a writing restriction (8.3) cannot register an organisation or publish for one. Pre-screening reads the
+  name, the description and every statement as it reads arguments.
+- **Changing the profile.** Any representative. The earlier names and websites stay in a public history on the profile.
+  A new name or website puts the organisation back in the moderators' queue to be looked at; a new website removes a
+  confirmation by domain unless the new host is the confirmed domain.
+- **Confirmation by domain.** A representative gives an email address; it must be on the website's host (without
+  `www.`) or a name under it, and not on the fixed list of public mail services kept in the code. A code is sent there
+  (the rules of sign-in codes: hashed, short-lived, a few attempts, a few an hour). Entering it confirms the
+  organisation and stores the domain and the time. The mailbox is not stored: only the domain. A moderator may
+  **confirm by hand** (a required note of what was checked; the profile then says "Patvirtino moderatorius") and may
+  **withdraw** any confirmation with a statement; after a withdrawal only a moderator can confirm that organisation.
+- **Representatives.** A representative makes a one-time link, valid seven days, and gives it to a colleague; a signed-in
+  member who opens it and agrees becomes a representative. Nobody is looked up by email. Representatives see each
+  other's display names; nobody else does, staff included, except that a moderator reaches a statement's writer to
+  restrict them, as with an argument (8.3). At most ten per organisation. A representative can remove another or leave;
+  the last one cannot leave and can only **close** the organisation: its statements on open bills are withdrawn, those
+  on closed bills stay as they were, and the profile says it is closed. Deleting the account of the last representative
+  closes it the same way. The account page (`/sveiki`) lists "Mano organizacijos"; the export has the person's
+  representative roles and the statements they wrote; `written by` is emptied when the account goes.
+- **Statements.** On an active bill whose record is not hidden or closed, a representative publishes the organisation's
+  one statement from the "Organizacijų pozicijos" section of the bill's page: stance (`for`, `against`, `remarks`), text
+  (1 to 1 500 characters), one link (optional; `https`, at most 500 characters, shown with its host), and with `for` or
+  `against` an optional goal (1 to 1 000 000 participants). It behaves as an argument does: shown at once unless
+  pre-screening flags it, then it waits for a moderator; "not yet seen" until a moderator looks. It can be changed
+  (every earlier version is public, under the statement on the organisation's profile) and withdrawn while the bill is
+  open, and is frozen when the bill closes. The goal shows as "Siekiame {N} dalyvių · dabar {n}", where n is the
+  participants on that side as counted on the page. A blocked, closed or hidden organisation's statements are shown
+  nowhere. The section says that statements are not counted among participants, and each statement carries the
+  organisation's label ("Nepatvirtinta", "Patvirtinta per el. pašto adresą @domenas" or "Patvirtino moderatorius").
+- **Pages.** `/organizacijos`: the public list with a search by name, in the order of the alphabet, each with its
+  label. `/o/{slug}`: the profile with its statements by bill. No new item in the menu; the list is linked from the
+  section on the bill's page, the account page and the methodology page.
+- **Moderation.** The queue lists new and changed organisations and statements that wait, are flagged, reported or not
+  yet seen. Actions, each with a statement, recorded, audited and emailed to the organisation's representatives with
+  the moderators' contact address: block and lift the block; hide and restore a statement; publish a waiting one;
+  confirm by hand; withdraw a confirmation; "Palikti". Blocked organisations and hidden statements are on the list of
+  hidden items with "Atkurti". Anyone signed in can report an organisation or a statement; the grounds add "Apsimeta
+  kita organizacija". The "Moderavimas" panel on the bill's page lists the bill's statements that wait or are flagged,
+  as it lists arguments. **"Keep out of summaries" is not built in this stage:** no summary names an organisation yet,
+  and a control that changes nothing would mislead; it is built with the line of 8.14.4.
+- **Public pages of rules.** The methodology page and the moderation rules gain their parts (8.14.9).
+
+**Stage B: bringing people (8.14.6), after stage A.** [Details are the designer's choices, as above.]
+
+- **The organisation's invitation code.** One per active organisation, made when a representative first asks for it:
+  an invitation of the kind `organisation` (5.2, 6.2), in the format and under the rules of personal codes, with its
+  own uses setting (`Registration:OrganisationCodeUses`, 0 = no limit, the default). Representatives see, in their
+  part of the profile, the link to the registration form, a link for each bill the organisation has a statement on
+  (the same code with `tikslas` set to that bill, 8.11.5), "Kopijuoti nuorodą", and one number: how many people
+  completed registration with the code. A representative can replace the code; the count carries over.
+  - **Nothing ties the new account to the organisation.** The profile of a person who registered with an
+    organisation's code keeps no code, unlike a personal one: only the level number it would have had. The code's
+    counter and daily totals rise, and that is all. The registration form says that whoever gave the code sees that it
+    was used, not by whom, as it does now.
+  - The code works only while the organisation is active: blocking switches it off and lifting the block switches it
+    on; closing switches it off for good. It belongs to the organisation, not to the representative who made it, and
+    stays when that person leaves or deletes their account.
+  - The administrators' invitations page lists organisations' codes by the organisation's name among the codes that
+    brought the most people, and can switch one off and on like any code.
+  - The number is not public and is never broken down: not by bill, not by day for the organisation, not by side.
+- **Following an organisation.** "Sekti" / "Nebesekti" on the profile, for a member; a visitor sees the link to sign
+  in. `follow` gains the kind `organisation`; it counts towards `Follows:MaxPerAccount`, is listed on the account page
+  with the bills and MPs, is in the export and goes with the account.
+  - A follower is emailed once when the organisation's statement on a bill first becomes public (not for changes, and
+    for a statement that waited, when a moderator publishes it): the organisation, its label, the bill's number and
+    title, the stance, and a link to the bill's page; never the statement's text, the follower's side or any count.
+    Only those who followed before that moment are told, and nobody is told about a statement older than three days
+    when the job first sees it (8.11.2). The account page gets a third switch for these emails.
+  - Private like every follow: no page, answer, email or log shows who follows an organisation, and no number of
+    followers is shown to anyone, the organisation included.
+
+**Done when (stage B):** registering with an organisation's code leaves nothing on the new account that names the code
+or the organisation; the representatives' number rises by one; a blocked organisation's code is refused with the usual
+one message; a follower gets one email for a new statement and none for a change; the privacy tests of 8.11.7 hold
+for the new kind of follow.
+
+[changed while building: stage B as built, on 2026-11-14. Each point is a detail stage B left open, or a reading of it;
+each can be changed on the built result.]
+- **Where and how.** The code is an `identity.invitation` of the kind `organisation` with the organisation's id
+  (`organisation_id`, an id the Identity module only stores) and no account (`issued_by_user_id` stays empty). The host
+  composes the representatives' answer: the Appeals module says whether the caller represents the organisation, whether it
+  is active and which bills it has public statements on (`IOrganisations.CodeAccessAsync`), the Identity module keeps the
+  code (`IOrganisationInvitations`). API: `GET /api/v1/organisations/{slug}/invitation` (never cached) and
+  `POST …/invitation/replace`. The Appeals module switches the codes with the organisation through
+  `IOrganisationCodeSwitch` (SharedKernel, implemented by Identity) inside its own transaction: block, lift, close, and
+  the closing by deleting the last representative's account. Following reads organisations through
+  `IOrganisationDirectory` (SharedKernel, implemented by Appeals). Migrations: one new one per module
+  (`OrganisationInvitations` in Identity, `OrganisationFollows` in Appeals and in Notifications); stage A's
+  `Organisations` is unchanged.
+- **The pending account holds no organisation's code.** 6.2 keeps the code entered on the pending account until
+  completion; for an organisation's code that would tie an address to the organisation for up to seven days, so the
+  server checks the code, keeps nothing of it, and the registration form keeps the typed code in the tab's session
+  storage (`lt2.kodas`) and sends it again with the completion. Completing on another device asks for the code again
+  (the form's existing "enter another code" step). Team and personal codes work as before.
+- **What the completed account keeps.** `invitation_id` and `invitation_code` stay empty; the new column
+  `profile.invitation_level` holds the level, and is now filled for every code (backfilled for completed profiles), so
+  levels and the new member's own code come from it. "Registered without a code" counts profiles without a level.
+- **The level** of an organisation's code is that of a personal code of the representative who first asked for it
+  (their level plus one); a replacement keeps it. Nothing of that person is kept on the code.
+- **One code, made on the first look.** The code is made when a representative first opens their part of the profile
+  in the browser while the organisation is active (a unique index allows one current code per organisation); a blocked
+  organisation that never had one gets it once the block is lifted.
+- **Two switches.** `invitation.organisation_off` (null, `blocked` or `closed`) follows the organisation and is separate
+  from the administrator's `switched_off_at`: lifting a block clears only `blocked`, so an administrator's switch-off
+  stays, and a closed organisation's code never comes back. An administrator may switch an organisation's code on again
+  unless it was replaced; while the organisation is blocked it still does not work. Either way a registration gets the
+  usual one message (`invitation.invalid`).
+- **Replacing** is refused while the organisation is blocked or closed (`invitation.organisation-inactive`) or the
+  administrator has the code off (`invitation.organisation-switched-off`). `Registration:OrganisationCodeUses` limits
+  each code, as `Registration:PersonalCodeUses` does, so a replacement starts a new allowance; the number carries over.
+- **The representatives' part.** Title "Organizacijos kvietimo nuoroda": the registration link, one link per bill with
+  a published statement (newest first, `tikslas` as in 8.11.5), each with "Kopijuoti nuorodą", the number ("Su
+  organizacijos kodu užsiregistravo: N", all its codes together) and "Pakeisti kodą nauju". Without a usable code the
+  part says why instead of showing links. It is filled in only once the island runs in the browser, never prerendered.
+- **The administrators' page** names an organisation's code by the organisation's name (looked up by the host), shows
+  its kind as "organizacijos kodas" and, while its organisation is blocked or closed, says so. Like every code it has its
+  per-day bars there; the organisation itself sees only the one number.
+- **Following.** `notify.follow` gains the kind `organisation` with the organisation's id as the key (the column `kind`
+  is widened to 16 characters). Only an active organisation can be followed (`organisation.not-found` otherwise, as for an
+  unknown one); one already followed stays in the account page's list, marked "Užblokuota" or "Uždaryta", until unfollowed.
+  The profile shows "Sekti" only while the organisation is active.
+- **When a statement becomes public.** `appeals.organisation_statement.first_public_at`: set when it is published at
+  once, when a moderator publishes it after it waited, or when a hidden one that was never public is restored; changes
+  never move it (statements shown or hidden before the column existed got their `published_at`). A statement withdrawn
+  and published anew is a new statement and is told again.
+- **The event** is a `notify.bill_event` of the kind `statement` under its bill, keyed by the statement's id: recorded
+  when the job first sees it, sent to followers whose follow is older than both that moment and `first_public_at`,
+  skipped when `first_public_at` is more than three days before the moment it was first seen, and skipped when, by the
+  time it would be sent, the statement is no longer public or its organisation is blocked or closed. The job looks back
+  seven days, as for votes.
+- **The email** names the organisation with its label in brackets, the bill's number and title, the stance in words
+  ("prašo balsuoti už", "prašo balsuoti prieš", "pastabos, be prašymo balsuoti už ar prieš"), the bill's page and the
+  account page, both full addresses (`SiteLinks.Absolute`). The third switch is `notice_setting.statements` (on unless
+  turned off; existing rows start on).
+
+**Not in either stage:** the line in summaries to MPs and "keep out of summaries" (8.14.4), and the automatic check of
+the website (8.14.9).
+
+**Done when (stage A):** 8.14.13 without its lines about summaries and invitation links, and:
+
+- a visitor, a member and a moderator get no answer, page, email or log line that names an organisation's
+  representatives or ties a representative's own side to it;
+- a code sent to an address outside the website's domain, or to a public mail service, confirms nothing;
+- a blocked organisation cannot publish, and lifting the block returns exactly what was hidden;
+- the bill's counts, threshold progress, lists, agenda and summaries are the same with and without statements.
+
+[changed while building: stage A as built, on 2026-11-14. Each point is a detail 8.14.2 to 8.14.14 left open, or a
+reading of them; each can be changed on the built result.]
+- **Where and how.** All in the Appeals module (`IOrganisations`, `IOrganisationModeration`), tables in 8.14.10, one
+  migration (`Organisations`). A statement refers to its bill by number and never creates the bill's record, so it cannot
+  change anything the record counts. The API is under `/api/v1/organisations`, `/api/v1/bills/{number}/organisations`,
+  `/api/v1/organisation-invites/{token}`, `/api/v1/me/organisations` and `/api/v1/moderation/organisations`,
+  `/moderation/statements/{id}/…`, `/moderation/bills/{number}/statements`.
+- **The confirmed domain** stored and shown ("@domenas") is the website's host without `www.`, also when the address
+  was on a name under it (`info@mail.lgs.lt` confirms `lgs.lt`). Hosts are compared in their IDN (punycode) form in lower
+  case. An address must be one plain mailbox: one `@`, no quoting, comments, routing (`%`, `!`) or address literals.
+- **Shared platforms.** Beside the fixed list of public mail services, the code keeps a fixed list of shared platforms
+  (social networks, site builders, blog and code hosts such as `facebook.com`, `wordpress.com`, `github.io`,
+  `sites.google.com`). A website on either list, or on a host without a dot, cannot be confirmed by domain; the
+  representative is told to ask the moderators.
+- **Code limits.** `SignIn:CodesPerHour` and `SignIn:CodesPerDay` count per organisation (the endpoint also has the
+  per-address-of-the-request limit of sign-in codes). Unlike sign-in, a representative over the limit is told so
+  (`confirm.too-many`): they are a known member, and nothing about an address is revealed. A new code replaces the
+  earlier one; a code sent for an earlier website, or before a moderator withdrew a confirmation, confirms nothing. An
+  organisation already confirmed (either way) is not offered a code.
+- **Pre-screening of the name and the description** flags, never hides: an organisation is shown at once (8.14.2), and
+  its flags are shown in the moderators' queue. A flagged statement waits, as an argument does. A changed statement is
+  screened again and is "not yet seen" again; if the change is flagged, the statement waits (its earlier version is not
+  shown meanwhile).
+- **Names.** "No other organisation with the same name" counts only active ones, so a blocked or closed one frees its
+  name; lifting a block is refused (`organisation.name-taken`) when another took the name meanwhile.
+- **The limit per account** (`Organisations:PerAccount`) counts the organisations the account registered that are not
+  closed; a blocked one counts.
+- **"A blocked, closed or hidden organisation"** is read as blocked or closed: there is no separate hiding of an
+  organisation; the block is it.
+- **Blocked** organisations: their representatives cannot publish, change, withdraw, make links, confirm or close;
+  they can see their management controls, remove another and leave (not the last). The organisation is left out of
+  `/organizacijos`; its profile says it is blocked, with the moderators' statement, and shows no statements.
+- **Closed** organisations keep their representatives' rows, so "Mano organizacijos" says "Uždaryta"; codes and links
+  stop working; the profile says when it closed and shows no statements; it is left out of `/organizacijos`. Deleting the
+  last representative's account closes it the same way, also when it is blocked.
+- **Representatives** are removed by the representative row's id, never an account id; a representative cannot remove
+  themself (they leave). The one-time link is a random token whose hash only is stored; it works once, within seven
+  days, while the organisation is active and has fewer than ten representatives.
+- **Withdrawing a statement** keeps its row as `withdrawn`, shown nowhere, and a new statement may follow. A hidden
+  statement cannot be changed or withdrawn by the organisation (`statement.hidden`): it is a moderator's to restore.
+- **No person in histories or the audit log.** The public histories (`revision`) carry no person, since the read-only
+  role reads that table. Members' actions on organisations (registering, changing, confirming, links, statements) are
+  recorded in the module's own tables and not audited, so no audit row ties a person to an organisation; moderators'
+  actions are audited as `moderation.organisation.*` and `moderation.statement.*`.
+- **Moderation.** The queue lists active organisations never looked at since registration or a new name or website, any
+  organisation with an open report, and statements of active organisations that wait, or are published and not yet seen
+  or reported. "Palikti" on a statement is the queue's "publish" on a published one (seen, reports closed). Every action
+  is emailed to each current representative separately, "Palikti" and a confirmation by hand included. The bill page's
+  panel has its own moderators-only answer (`GET /moderation/bills/{number}/statements`) and lists the bill's statements
+  that wait, are flagged, reported or not yet seen; the others are behind a fold. The queue's and the hidden list's
+  organisation parts load in the browser only.
+- **Hidden items**: a blocked organisation's "Atkurti" lifts the block (statement required); a hidden statement's
+  restores it while its bill takes statements.
+- **The read-only role** cannot read any of the five organisation tables: `organisation` and `organisation_statement`
+  hold who registered and who wrote, beside the organisation.
+- **Rate limits** (6.4): registering under the per-account limit of opening appeals (5 an hour), changes, statements and
+  links under the limit of writing arguments (20 an hour).
+- **`/organizacijos`** lists active organisations in Lithuanian alphabetical order, a search keeps names with every word
+  of the query, at most 500 shown.
+- **The goal's words**: "Siekiame {N} dalyvio · dabar {n}" after a number ending in 1 but not 11, otherwise
+  "dalyvių"; the progress counts everyone on the organisation's side as the page does, its representatives like anyone.
+- **On the bill's page** the section is shown with the open or closed record and on an active bill without one; a hidden
+  record shows nothing of it, and a finished bill nobody took part in shows the bill only, so a statement on such a bill
+  is seen only on the organisation's profile.
+- **Users' links** are shown with their host, `rel="nofollow noopener ugc"`, in a new tab; never fetched.
+- **The writing restriction email** now also says that registering organisations and publishing for them is restricted.
+
+### 8.9 Done when
 - A person can register, take a side and see it counted in under two minutes on a phone.
 - No API response, page, log line or email reveals another person's position (tested, and reviewed in the penetration
   test).
@@ -1660,6 +1971,25 @@ compose files. A CDN with DDoS protection in front of Caddy is recommended befor
 `local` (Docker Compose with a seeded database and recorded Seimas responses), `staging` (same compose on a separate small
 VPS or an isolated project, synthetic data only, emails captured and never delivered), `production`. Staging never
 receives production data.
+
+**The trial on the owner's VPS [decided by the owner on 2026-11-14: deploy `master` there, leaving everything else on
+the server as it is].** It is a staging environment, an isolated Compose project (`lt2`) on the Hostinger VPS, which
+also runs the owner's other sites:
+
+- **Data and emails.** The parliament data is the stand-in's, invented, and every page says so; the demonstration
+  record and organisations are seeded; emails are caught by Mailpit and never delivered (Mailpit listens on the
+  server's loopback only and is read through an SSH tunnel). Registration needs an invitation code made for this
+  server, not the one in `deploy/.env`. The request limits are the code's defaults.
+- **Behind the server's proxy.** Ports 80 and 443 belong to the Caddy that already serves the other sites. LT2 does
+  not start its own Caddy there: that Caddy gets one site block for LT2's hostname and reaches `web` over its Docker
+  network (`deploy/compose.shared-proxy.yaml`, `deploy/shared-proxy.Caddyfile`). The block keeps what LT2's own
+  Caddyfile does (compression, the 1 MB request limit, no `Server` header, the forwarded scheme), writes no access log
+  for the site, and adds `X-Robots-Tag: noindex, nofollow`, since a trial with invented data must not be indexed.
+  Nothing else on the server is changed: no other site's block, container, volume, port or firewall rule.
+- **Delivery.** Images are built from the deployed commit on the developer's machine and copied to the server over
+  SSH; nothing is pushed to a registry or to GitHub. The migrator runs once per deploy, as in 9.3.
+- **Not there yet, owed before production:** the host hardening of 9.1 (a named deploy user, a non-default SSH port,
+  user namespaces), two `web` instances, backups, telemetry and alerts (9.4), real email, the real Seimas data.
 
 ### 9.3 Delivery
 
@@ -1726,6 +2056,7 @@ No dates, in line with the rule that release dates are not promised. Each milest
 | **M2a Appeals without sending** | Registration by invitation, settings screen, appeals, positions, reasons, moderation, agenda watcher, digest generation in dry-run with public previews. | A closed group runs real bills end to end; summaries are read by people, not sent. |
 | **M2a+ Reasons to come** | The agenda page and the front page built on it, following bills and MPs with emails, asking for an appeal, appeals opened by moderators, the AI draft behind `IAiAssistant` (the Claude API, off until a provider and a key are configured), the share line (8.11). Asking for an appeal and appeals opened by moderators were replaced by M2a++ on 2026-11-14. | Section 8.11.7. A new visitor has something to read and a member alone has a reason to sign in. |
 | **M2a++ One object** | Every active bill open without proposals or approval; one page per bill; the lists and the agenda on participation; moderation after the fact (8.12). Then descriptions with their labels, the summary job and the text-source interface without a reader (8.13). | Sections 8.12.6 and 8.13. A member can act on any bill the day they register. |
+| **M2a org. Organisations on the site** | Organisations registered by members, confirmed by email domain or by a moderator, their statements and goals on bills, moderation after the fact (8.14.14 stage A); then invitation links and following (stage B). Not in summaries to MPs. | Sections 8.14.13 and 8.14.14. |
 | **M2b Sending** | Introduction letter, MP preferences, real summaries, profile take-over, MP responses, participant notifications, known devices for sign-in (6.2). | Section 8.9, the impact assessment, the legal check and the penetration test are done. |
 | **M3** | Stage 3 design: voting, delegation, AI summaries. | Separate document. |
 
@@ -1814,7 +2145,10 @@ Splitting M2 means the risky step (emailing every MP) happens only after the who
 
 - Organisations get a voice on a bill, not control of it (8.14): a verified profile, one statement per bill, a line
   in the summary to MPs, their own goal and invitation link; no threshold, timing, description or data about people.
-  Details proposed there, with five questions for the owner (8.14.12); not scheduled, after M2b.
+  Later that day: anyone may register an organisation, nobody approves it beforehand, moderators may block it or keep
+  it out of summaries, "remarks" is offered, the goal counts its own side, and it appears on the site before it appears
+  in summaries. Confirmation is by email domain or by a moderator; moderators look at the website themselves, with no
+  automatic check of the name. Built now, on the site only, in two stages (8.14.14).
 - Emails carry full addresses: `Site:Address`, deployment configuration (5.6).
 - A moderator who writes a bill's description also saves it; no second moderator (8.11.3, 8.12.3).
 - A bill's AI summary may be shown on the bill's page without a person reading it first, labelled as not reviewed by
@@ -1825,10 +2159,11 @@ Splitting M2 means the risky step (emailing every MP) happens only after the who
   "Moderavimas" panel on the bill's page shows the reports about the description; a moderator may record the official
   text's address for a description they write or correct.
 - The bill and the appeal are one object: every active bill is open, nobody starts or approves an appeal, moderation
-  acts afterwards (8.12). Details proposed there; to confirm on the built result: the menu label of `/kreipimaisi`,
-  one threshold for all bills with a moderator's override, and that hiding closes taking part on a bill.
+  acts afterwards (8.12). Confirmed on the built result on 2026-11-14: one threshold for all bills
+  with a moderator's override, that hiding closes taking part on a bill, and that a bill once sent stays eligible. The
+  list is "Projektai" at `/projektai` (it was "Kreipimaisi").
 - Arguments are moderated on the bill's page too, with the queue's actions, from a moderators-only answer (8.12.3).
-- `/kreipimaisi` can be sorted by activity (the default), participants, arguments or planned date; activity also picks the front page's six cards (8.12.5). To confirm: activity as a plain sum of participants and published arguments.
+- `/projektai` can be sorted by activity (the default), participants, arguments or planned date; activity also picks the front page's six cards (8.12.5). Confirmed: activity is a plain sum of participants and published arguments.
 
 **Decisions needed before the stage that uses them**
 

@@ -1,0 +1,257 @@
+@using Lt2.Api.Contracts.Organisations
+@inherits InteractiveBase
+@inject IOrganisationsApi Organisations
+@inject NavigationManager Navigation
+
+@* A representative's controls on the organisation's profile (design 8.14.14): the other representatives' display names,
+   a one-time link for a colleague, removing another, leaving or (the last one) closing, changing the profile, confirming
+   by email domain, the statements that wait or are hidden, and the organisation's invitation link with its one number
+   (OrganisationInvitationLink, design 8.14.14 stage B, asked only in the browser). Everything here comes from the caller's own answer
+   (GET …/organisations/{slug}/mine), which for anyone who is not a representative is empty: nothing renders for them, and
+   nobody else learns who the representatives are. *@
+@if (Management is { IsRepresentative: true } m)
+{
+    <section class="sheet sheet--cut stack" aria-labelledby="manage-title" id="manage">
+        <h2 id="manage-title">@L["Org.Manage.Title"]</h2>
+        <p class="small">@L["Org.Manage.Lead"]</p>
+        @if (m.Refusal is { } refusal)
+        {
+            <p class="note note--quiet" id="manage-refusal">@L["Org.Refusal." + refusal]</p>
+        }
+
+        @* Confirmation (design 8.14.2): by a code sent to an address on the website's domain, or by asking a moderator. *@
+        @if (Status == "active" && Label.ConfirmedBy is null)
+        {
+            <div class="stack stack--tight" id="confirm">
+                <h3>@L["Org.Confirm.Title"]</h3>
+                @if (m.DomainConfirmation is { } why)
+                {
+                    <p class="small" id="confirm-unavailable">@L["Org.Confirm.Unavailable." + why]@if (!string.IsNullOrWhiteSpace(Contact))
+                        {
+                            @(" ")@L["Org.Confirm.AskModerators"]@(" ")<a href="mailto:@Contact">@Contact</a>@(".")
+                        }</p>
+                }
+                else if (!_codeSent)
+                {
+                    <p class="small">@Text("Org.Confirm.Lead", m.WebsiteHost ?? "")</p>
+                    <form class="row" @onsubmit="SendCodeAsync" novalidate>
+                        <div class="field @(Errors.ContainsKey("address") ? "field--error" : "")">
+                            <label for="confirm-address">@L["Org.Confirm.Address"]</label>
+                            <input class="input" type="email" inputmode="email" autocomplete="off" spellcheck="false" id="confirm-address" placeholder="@($"info@{m.WebsiteHost}")"
+                                   @bind="_address" @bind:event="oninput" disabled="@Locked" />
+                            <FieldError Errors="Errors" Field="address" />
+                        </div>
+                        <button class="btn btn--plain" type="submit" id="confirm-send" disabled="@(Locked || string.IsNullOrWhiteSpace(_address))">@L["Org.Confirm.Send"]</button>
+                    </form>
+                    <p class="fine">@L["Org.Confirm.NotStored"]</p>
+                }
+                else
+                {
+                    <form class="row" @onsubmit="ConfirmAsync" novalidate>
+                        <div class="field @(Errors.ContainsKey("code") ? "field--error" : "")">
+                            <label for="confirm-code">@L["Org.Confirm.Code"]</label>
+                            <input class="input num" type="text" inputmode="numeric" autocomplete="one-time-code" id="confirm-code" maxlength="6"
+                                   @bind="_code" @bind:event="oninput" disabled="@Locked" />
+                            <FieldError Errors="Errors" Field="code" />
+                        </div>
+                        <button class="btn" type="submit" id="confirm-submit" disabled="@(Locked || string.IsNullOrWhiteSpace(_code))">@L["Org.Confirm.Submit"]</button>
+                        <button class="btn btn--plain" type="button" disabled="@Locked" @onclick="() => _codeSent = false">@L["Org.Confirm.Again"]</button>
+                    </form>
+                }
+            </div>
+        }
+
+        <div class="stack stack--tight" id="representatives">
+            <h3>@L["Org.Reps.Title"]</h3>
+            <p class="fine">@L["Org.Reps.Private"]</p>
+            <ul class="rows">
+                @foreach (var rep in m.Representatives)
+                {
+                    <li id="representative-@rep.Id">
+                        <div class="rows__main"><b>@(rep.DisplayName ?? L["Reasons.Anonymous"])@(rep.IsMe ? " " + L["Org.Reps.Me"] : "")</b><span class="small num">@Text("Org.Reps.Since", Dates.Day(rep.Since))</span></div>
+                        <div class="rows__side">
+                            @if (!rep.IsMe && Status != "closed")
+                            {
+                                <button class="btn btn--plain" type="button" id="remove-@rep.Id" disabled="@Locked" @onclick="() => RemoveAsync(rep.Id)">@L["Org.Reps.Remove"]</button>
+                            }
+                        </div>
+                    </li>
+                }
+            </ul>
+            @if (Status == "active")
+            {
+                @if (m.Representatives.Count < OrganisationLimits.RepresentativesMax)
+                {
+                    <p><button class="btn btn--plain" type="button" id="invite-create" disabled="@Locked" @onclick="InviteAsync">@L["Org.Invite.Create"]</button></p>
+                }
+                @if (_invite is { } invite)
+                {
+                    <div class="note note--quiet stack stack--tight" id="invite-link">
+                        <p>@Text("Org.Invite.Made", Dates.Day(invite.ExpiresAt))</p>
+                        <p class="statement__link"><code id="invite-url">@(Navigation.BaseUri.TrimEnd('/') + invite.Path)</code></p>
+                    </div>
+                }
+            }
+            @if (Status != "closed")
+            {
+                <div class="row">
+                    @if (m.Representatives.Count > 1)
+                    {
+                        <button class="linkish small" type="button" id="leave" disabled="@Locked" @onclick="ToggleLeave">@L["Org.Reps.Leave"]</button>
+                    }
+                    else if (Status == "active")
+                    {
+                        <button class="linkish small" type="button" id="close" disabled="@Locked" @onclick="ToggleClose">@L["Org.Close"]</button>
+                    }
+                </div>
+                @if (_confirming is { } confirming)
+                {
+                    <div class="row" role="group">
+                        <p class="small">@L["Org." + confirming + ".Confirm"]</p>
+                        <button class="btn btn--against" type="button" id="@confirming-confirm" disabled="@Locked" @onclick="() => FinishAsync(confirming)">@L["Org." + confirming + ".Yes"]</button>
+                        <button class="btn btn--plain" type="button" disabled="@Locked" @onclick="() => _confirming = null">@L["Cancel"]</button>
+                    </div>
+                }
+            }
+        </div>
+
+        @if (Status != "closed")
+        {
+            <OrganisationInvitationLink Slug="@Slug" />
+        }
+
+        @if (m.Statements.Where(s => s.Statement.Status != "published").ToList() is { Count: > 0 } unseen)
+        {
+            <div class="stack stack--tight" id="unseen-statements">
+                <h3>@L["Org.Manage.NotShown"]</h3>
+                <ul class="rows">
+                    @foreach (var s in unseen)
+                    {
+                        <li><div class="rows__main"><a href="/seimas/@Uri.EscapeDataString(s.Bill.Number)">@s.Bill.Number</a><span class="small">@L["Org.Status." + s.Statement.Status]</span></div></li>
+                    }
+                </ul>
+            </div>
+        }
+
+        @if (Status == "active" && m.Refusal is null)
+        {
+            <details id="edit-profile">
+                <summary class="linkish">@L["Org.Edit.Open"]</summary>
+                <OrganisationForm Slug="@Slug" Initial="Initial" OnSaved="Saved" />
+            </details>
+        }
+    </section>
+}
+<Messages Message="@Message" Info="@Info" />
+
+@code {
+    private bool _codeSent;
+    private string? _address;
+    private string? _code;
+    private string? _confirming;
+    private InviteCreatedResponse? _invite;
+
+    [Parameter, EditorRequired] public string Slug { get; set; } = "";
+
+    /// <summary>The profile's public state, from the server-rendered page.</summary>
+    [Parameter] public string Status { get; set; } = "active";
+
+    [Parameter] public OrganisationLabelResponse Label { get; set; } = new(null, null);
+
+    /// <summary>The profile as it is now, to start the change form from.</summary>
+    [Parameter] public OrganisationRequest Initial { get; set; } = new();
+
+    [Parameter] public string? Contact { get; set; }
+
+    [CascadingParameter] private Task<AuthenticationState>? AuthState { get; set; }
+
+    [PersistentState] public OrganisationManagementResponse? Management { get; set; }
+
+    [PersistentState] public bool? Asked { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        if (Asked == true)
+        {
+            return;
+        }
+
+        Asked = true;
+        if (AuthState is null || (await AuthState).User.Identity?.IsAuthenticated != true)
+        {
+            return;
+        }
+
+        Management = (await Organisations.GetManagementAsync(Slug)).Value;
+    }
+
+    private void Reload() => Navigation.NavigateTo(Navigation.Uri, forceLoad: true);
+
+    private void Saved() => Reload();
+
+    private void ToggleLeave() => _confirming = _confirming == "leave" ? null : "leave";
+
+    private void ToggleClose() => _confirming = _confirming == "close" ? null : "close";
+
+    private Task SendCodeAsync() => RunAsync(async () =>
+    {
+        var result = await Organisations.SendCodeAsync(Slug, new ConfirmationCodeRequest { Address = _address ?? "" });
+        if (!result.IsSuccess)
+        {
+            Show(result.Problem, "address");
+            return;
+        }
+
+        _codeSent = true;
+        Info = L["Org.Confirm.Sent"];
+    });
+
+    private Task ConfirmAsync() => RunAsync(async () =>
+    {
+        var result = await Organisations.ConfirmAsync(Slug, new ConfirmationRequest { Code = _code ?? "" });
+        if (!result.IsSuccess)
+        {
+            Show(result.Problem, "code");
+            return;
+        }
+
+        Reload();
+    });
+
+    private Task InviteAsync() => RunAsync(async () =>
+    {
+        var result = await Organisations.CreateInviteAsync(Slug);
+        if (!result.IsSuccess)
+        {
+            Show(result.Problem);
+            return;
+        }
+
+        _invite = result.Value;
+    });
+
+    private Task RemoveAsync(Guid id) => RunAsync(async () =>
+    {
+        var result = await Organisations.RemoveRepresentativeAsync(Slug, id);
+        if (!result.IsSuccess)
+        {
+            Show(result.Problem);
+            return;
+        }
+
+        Management = (await Organisations.GetManagementAsync(Slug)).Value ?? Management;
+        Info = L["Org.Reps.Removed"];
+    });
+
+    private Task FinishAsync(string what) => RunAsync(async () =>
+    {
+        var result = what == "close" ? await Organisations.CloseAsync(Slug) : await Organisations.LeaveAsync(Slug);
+        if (!result.IsSuccess)
+        {
+            Show(result.Problem);
+            return;
+        }
+
+        Reload();
+    });
+}

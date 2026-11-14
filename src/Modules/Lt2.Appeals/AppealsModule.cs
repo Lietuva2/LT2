@@ -11,7 +11,7 @@ namespace Lt2.Appeals;
 
 /// <summary>
 /// Registration of the Appeals module (design 8, 8.12): bills' records, positions, arguments, endorsements, reports, moderation.
-/// Needs <see cref="IParticipants"/> (Identity), <see cref="IBillCatalogue"/> (Parliament), <see cref="ISettings"/>,
+/// Needs <see cref="IParticipants"/> and <see cref="IOrganisationCodeSwitch"/> (Identity), <see cref="IBillCatalogue"/> (Parliament), <see cref="ISettings"/>,
 /// <see cref="IAuditLog"/> (Audit) and <see cref="IOutbox"/> (Notifications) from the host.
 /// </summary>
 public static class AppealsModule
@@ -41,7 +41,16 @@ public static class AppealsModule
         services.AddScoped<AppealReads>();
         services.AddScoped<BillRecords>();
         services.AddScoped<IAppealsModule, AppealsService>();
-        services.AddScoped<IAppealsModeration, ModerationService>();
+        services.AddScoped<ModerationService>();
+        services.AddScoped<IAppealsModeration>(sp => sp.GetRequiredService<ModerationService>());
+
+        // Design 8.14.14 (stage A): organisations and their statements, in this module beside the moderation they use.
+        services.AddScoped<OrganisationReads>();
+        services.AddScoped<IOrganisations, OrganisationsService>();
+        services.AddScoped<IOrganisationModeration, OrganisationModerationService>();
+
+        // Design 8.14.14 (stage B): following organisations reads them through this; the codes are Identity's (IOrganisationCodeSwitch).
+        services.AddScoped<IOrganisationDirectory, OrganisationDirectory>();
         services.AddScoped<IAppealsMaintenance, AppealsMaintenance>();
         services.AddScoped<IDigestSource, DigestSource>();
         services.AddScoped<IAccountData, AccountData>();

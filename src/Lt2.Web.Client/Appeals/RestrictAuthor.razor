@@ -1,10 +1,12 @@
 @using Lt2.Api.Contracts.Appeals
 @inherits InteractiveBase
 @inject IModerationApi ModerationApi
+@inject Lt2.Api.Contracts.Organisations.IOrganisationModerationApi OrganisationModeration
 
 @* Design 8.3: a moderator restricts the author of an argument from writing, reached from that argument in the queue.
    Before deciding, the moderator sees the display name, the person's arguments, earlier moderation actions and
-   restrictions; never the address, a side or a mark, and no account id: the person is reached through the argument. *@
+   restrictions; never the address, a side or a mark, and no account id: the person is reached through the argument. The
+   writer of an organisation's statement is reached the same way, through the statement (design 8.14.14). *@
 @if (!_open)
 {
     @if (!Embedded)
@@ -103,8 +105,11 @@ else
     private string _statement = "";
     private AuthorViewResponse? _view;
 
-    /// <summary>The argument whose author is restricted.</summary>
+    /// <summary>The argument whose author is restricted, or with <see cref="Statement"/> the statement whose writer is.</summary>
     [Parameter, EditorRequired] public Guid Id { get; set; }
+
+    /// <summary><see cref="Id"/> is an organisation's statement (design 8.14.14).</summary>
+    [Parameter] public bool Statement { get; set; }
 
     [Parameter] public EventCallback OnDone { get; set; }
 
@@ -137,7 +142,7 @@ else
     private Task OpenAsync() => RunAsync(async () =>
     {
         _open = true;
-        var view = await ModerationApi.GetAuthorOfReasonAsync(Id);
+        var view = Statement ? await OrganisationModeration.GetWriterAsync(Id) : await ModerationApi.GetAuthorOfReasonAsync(Id);
         if (!view.IsSuccess)
         {
             Show(view.Problem);
@@ -163,7 +168,7 @@ else
         }
 
         var request = new RestrictionRequest { Until = until, Statement = _statement };
-        var result = await ModerationApi.RestrictAuthorOfReasonAsync(Id, request);
+        var result = Statement ? await OrganisationModeration.RestrictWriterAsync(Id, request) : await ModerationApi.RestrictAuthorOfReasonAsync(Id, request);
         if (!result.IsSuccess)
         {
             Show(result.Problem, "statement", "until");

@@ -6,10 +6,14 @@
 # Logs carry no client addresses, cookies or tokens (AGENTS.md: "IPs are hashed"). Caddy cannot hash with a secret
 # key, and a plain hash of an IPv4 address is reversible by trying all 2^32 values, so the address fields are dropped
 # instead, as are request headers (antiforgery token, user agent) and response headers (session cookie). The web
-# application logs every request itself and hashes the address where the audit log needs one.
+# application logs every request itself and hashes the address where the audit log needs one. Invitation codes are
+# never written to logs (design 6.2): the registration link's `kodas` is dropped from the logged address.
 
 (no_personal_data) {
 	wrap json
+	request>uri query {
+		delete kodas
+	}
 	request>remote_ip delete
 	request>remote_port delete
 	request>client_ip delete

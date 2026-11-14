@@ -39,6 +39,10 @@ public static class ContractsServiceCollectionExtensions
         services.AddScoped<IValidator<Appeals.ModeratorPlannedRequest>, Appeals.ModeratorPlannedRequestValidator>();
         services.AddScoped<IValidator<Digests.UrgentDigestRequest>, Appeals.UrgentDigestRequestValidator>();
         services.AddScoped<IValidator<Appeals.DescriptionDraftRequest>, Appeals.DescriptionDraftRequestValidator>();
+        services.AddScoped<IValidator<Organisations.OrganisationRequest>, Organisations.OrganisationRequestValidator>();
+        services.AddScoped<IValidator<Organisations.OrganisationStatementRequest>, Organisations.OrganisationStatementRequestValidator>();
+        services.AddScoped<IValidator<Organisations.ConfirmationCodeRequest>, Organisations.ConfirmationCodeRequestValidator>();
+        services.AddScoped<IValidator<Organisations.ConfirmationRequest>, Organisations.ConfirmationRequestValidator>();
         return services;
     }
 }

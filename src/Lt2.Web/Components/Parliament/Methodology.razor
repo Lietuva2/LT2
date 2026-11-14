@@ -98,6 +98,23 @@
         <p>@A["Method.Descriptions.NotSent"]</p>
     </section>
 
+    @* Design 8.14.9, 8.14.14: what an organisation's statement is, that it is not counted, what "Patvirtinta" means and does
+       not, and that nothing is paid for. *@
+    <section class="stack" aria-labelledby="m-organisations" id="organizacijos">
+        <h2 id="m-organisations">@A["Method.Organisations"]</h2>
+        <p>@A["Method.Organisations.1"]</p>
+        <p id="statements-not-counted">@A["Method.Organisations.2"]</p>
+        <h3 id="m-organisation-labels">@A["Method.Organisations.Labels"]</h3>
+        <dl class="facts" id="organisation-labels">
+            <dt>@A["Method.Organisations.Label.none"]</dt><dd>@A["Method.Organisations.Means.none"]</dd>
+            <dt>@A["Method.Organisations.Label.domain"]</dt><dd>@A["Method.Organisations.Means.domain"]</dd>
+            <dt>@A["Method.Organisations.Label.moderator"]</dt><dd>@A["Method.Organisations.Means.moderator"]</dd>
+        </dl>
+        <p>@A["Method.Organisations.3"]</p>
+        <p id="nothing-paid">@A["Method.Organisations.4"]</p>
+        <p><a href="/organizacijos">@A["Method.Organisations.List"]</a> · <a href="/moderavimo-taisykles#Organisations">@A["Rules.Title"]</a></p>
+    </section>
+
     @if (_limits is { } l)
     {
         @* Design 8.2: the per-person limits are runtime settings; 0 means no limit (the default), said in words. *@

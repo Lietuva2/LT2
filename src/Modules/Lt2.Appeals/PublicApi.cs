@@ -79,7 +79,7 @@ public sealed record BillAppealState(string BillNumber, Guid? AppealId, string S
 public sealed record SurgeInfo(int SharePercent, int WindowHours, int RecentPositions, int FromNewAccounts);
 
 /// <summary>
-/// A bill in <c>/kreipimaisi</c> (design 8.12.5); <paramref name="Id"/> null while it has no record. <paramref name="Arguments"/>
+/// A bill in <c>/projektai</c> (design 8.12.5); <paramref name="Id"/> null while it has no record. <paramref name="Arguments"/>
 /// is how many published arguments it has.
 /// </summary>
 public sealed record AppealListItem(Guid? Id, BillFacts Bill, string Status, SideCounts Counts, ThresholdInfo Threshold, PlannedDate? Planned, int Arguments);
@@ -87,12 +87,12 @@ public sealed record AppealListItem(Guid? Id, BillFacts Bill, string Status, Sid
 public sealed record AppealPage(IReadOnlyList<AppealListItem> Items, int Total, string? NextCursor);
 
 /// <summary>
-/// What <c>/kreipimaisi</c> asks for (design 8.12.5): active bills (or, with <paramref name="Closed"/>, closed records), a
+/// What <c>/projektai</c> asks for (design 8.12.5): active bills (or, with <paramref name="Closed"/>, closed records), a
 /// search by number or title, only those planned soon, the order (<see cref="BillSorts"/>; activity by default) and the page.
 /// </summary>
 public sealed record BillListQuery(string? Search = null, bool PlannedOnly = false, bool Closed = false, string? Cursor = null, string? Sort = null);
 
-/// <summary>The orders of <c>/kreipimaisi</c> (design 8.12.5, decided 2026-11-14).</summary>
+/// <summary>The orders of <c>/projektai</c> (design 8.12.5, decided 2026-11-14).</summary>
 public static class BillSorts
 {
     public const string Activity = "activity";

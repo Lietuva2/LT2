@@ -8,7 +8,9 @@
 # LT2_SITE_ADDRESS (the domain), LT2_TLS (the ACME contact address), ports 80/443, COMPOSE_PROFILES empty (no Mailpit,
 # no stand-in), real SMTP settings, LT2_SEIMAS_BASE_ADDRESS and LT2_OUTBOUND_EXTRA_HOST empty (the worker then
 # imports from https://apps.lrs.lt/sip/).
-# Secrets are files in deploy/secrets/, mounted under /run/secrets and never committed (design 6.5).
+# Secrets are files in deploy/secrets/ (LT2_SECRETS_DIR elsewhere), mounted under /run/secrets and never committed
+# (design 6.5). LT2_IMAGE_TAG names the images' tag ("local" by default; a server tags them with the deployed commit).
+# Behind a server's existing Caddy, add compose.shared-proxy.yaml (README.md).
 # Database connections use passwords, never Kerberos: "GSS Encryption Mode=Disable" stops Npgsql looking for
 # libgssapi_krb5, which the chiselled images do not have (it logged an error at every start).
 
@@ -55,7 +57,7 @@ services:
       context: ..
       dockerfile: deploy/Dockerfile
       target: web
-    image: lt2/web:local
+    image: lt2/web:${LT2_IMAGE_TAG:-local}
     environment:
       ConnectionStrings__Lt2: Host=postgres;Port=5432;Database=lt2;Username=lt2_app;GSS Encryption Mode=Disable
       ReverseProxy__TrustForwardedHeaders: "true"
@@ -94,7 +96,7 @@ services:
       context: ..
       dockerfile: deploy/Dockerfile
       target: worker
-    image: lt2/worker:local
+    image: lt2/worker:${LT2_IMAGE_TAG:-local}
     environment:
       ConnectionStrings__Lt2: Host=postgres;Port=5432;Database=lt2;Username=lt2_worker;GSS Encryption Mode=Disable
       Email__Smtp__Host: ${LT2_SMTP_HOST:-mailpit}
@@ -134,7 +136,7 @@ services:
       context: ..
       dockerfile: deploy/Dockerfile
       target: migrator
-    image: lt2/migrator:local
+    image: lt2/migrator:${LT2_IMAGE_TAG:-local}
     restart: "no"
     command: ${LT2_MIGRATOR_ARGS:-}
     environment:
@@ -205,7 +207,7 @@ services:
     build:
       context: ..
       dockerfile: tools/Lt2.SeimasStandIn/Dockerfile
-    image: lt2/seimas-standin:local
+    image: lt2/seimas-standin:${LT2_IMAGE_TAG:-local}
     profiles: [local]
     restart: unless-stopped
     read_only: true
@@ -227,20 +229,20 @@ volumes:
 
 secrets:
   postgres_password:
-    file: ./secrets/postgres_password
+    file: ${LT2_SECRETS_DIR:-./secrets}/postgres_password
   db_migrator_password:
-    file: ./secrets/db_migrator_password
+    file: ${LT2_SECRETS_DIR:-./secrets}/db_migrator_password
   db_app_password:
-    file: ./secrets/db_app_password
+    file: ${LT2_SECRETS_DIR:-./secrets}/db_app_password
   db_worker_password:
-    file: ./secrets/db_worker_password
+    file: ${LT2_SECRETS_DIR:-./secrets}/db_worker_password
   db_readonly_password:
-    file: ./secrets/db_readonly_password
+    file: ${LT2_SECRETS_DIR:-./secrets}/db_readonly_password
   data_protection_key:
-    file: ./secrets/data_protection_key
+    file: ${LT2_SECRETS_DIR:-./secrets}/data_protection_key
   ip_hash_key:
-    file: ./secrets/ip_hash_key
+    file: ${LT2_SECRETS_DIR:-./secrets}/ip_hash_key
   smtp_password:
-    file: ./secrets/smtp_password
+    file: ${LT2_SECRETS_DIR:-./secrets}/smtp_password
   ai_api_key:
-    file: ./secrets/ai_api_key
+    file: ${LT2_SECRETS_DIR:-./secrets}/ai_api_key

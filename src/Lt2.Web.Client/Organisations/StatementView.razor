@@ -1,0 +1,74 @@
+@using Lt2.Api.Contracts.Organisations
+@inject IStringLocalizer<AppealUi> L
+
+@* One organisation's statement (design 8.14.3): the organisation and its label, the stance, the text, the link with its host
+   visible (never fetched by the server; nofollow, ugc), and with a goal "Siekiame {N} dalyvių · dabar {n}". All statements
+   look alike: same size, no highlighting (8.14.8). Never who wrote it. *@
+<article class="said statement" id="statement-@Statement.Id" aria-label="@(Name ?? L["Org.Statement"])">
+    @if (Name is not null)
+    {
+        <p class="row statement__who">
+            @if (Slug is not null)
+            {
+                <a class="statement__name" href="@OrganisationWords.ProfilePath(Slug)">@Name</a>
+            }
+            else
+            {
+                <b class="statement__name">@Name</b>
+            }
+            @if (Label is not null)
+            {
+                <OrgLabel Label="Label" />
+            }
+        </p>
+    }
+    @if (ShowStance)
+    {
+        <p><span class="@StanceClass">@L["Org.Stance." + Statement.Stance]</span></p>
+    }
+    <div class="bubble bubble--org voice">
+        @foreach (var paragraph in Statement.Text.Split('\n', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries))
+        {
+            <p>@paragraph</p>
+        }
+    </div>
+    <div class="said__by statement__meta">
+        @if (Statement.Link is { } link)
+        {
+            <span class="statement__link">@L["Org.Link"] <a href="@link" rel="@OrganisationWords.UserLinkRel" target="_blank">@(Statement.LinkHost ?? link)</a></span>
+        }
+        @if (Statement.Goal is { } goal)
+        {
+            <span class="statement__goal num" id="goal-@Statement.Id">@Goal(goal)</span>
+        }
+        <span class="small num">@Published</span>
+        @ChildContent
+    </div>
+</article>
+
+@code {
+    [Parameter, EditorRequired] public StatementResponse Statement { get; set; } = default!;
+
+    /// <summary>The organisation, on the bill's page; null on the organisation's own profile.</summary>
+    [Parameter] public string? Name { get; set; }
+
+    [Parameter] public string? Slug { get; set; }
+
+    [Parameter] public OrganisationLabelResponse? Label { get; set; }
+
+    [Parameter] public bool ShowStance { get; set; } = true;
+
+    /// <summary>The actions beside the statement (report, a representative's controls).</summary>
+    [Parameter] public RenderFragment? ChildContent { get; set; }
+
+    /// <summary>"Siekiame {N} dalyvių · dabar {n}"; without the count (a moderator's screen) only the goal.</summary>
+    private string Goal(int goal) => Statement.Progress is { } now
+        ? string.Format(System.Globalization.CultureInfo.InvariantCulture, L[OrganisationWords.GoalKey(goal)], AppealNumbers.Of(goal), AppealNumbers.Of(now))
+        : string.Format(System.Globalization.CultureInfo.InvariantCulture, L[OrganisationWords.GoalKey(goal) + "Only"], AppealNumbers.Of(goal));
+
+    private string StanceClass => Statement.Stance is "for" or "against" ? "choice choice--" + Statement.Stance : "choice choice--remarks";
+
+    private string Published => Statement.EditedAt is { } edited
+        ? string.Format(System.Globalization.CultureInfo.InvariantCulture, L["Org.PublishedEdited"], Dates.Day(Statement.PublishedAt), Dates.Day(edited))
+        : string.Format(System.Globalization.CultureInfo.InvariantCulture, L["Org.Published"], Dates.Day(Statement.PublishedAt));
+}

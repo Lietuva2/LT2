@@ -498,7 +498,7 @@ internal sealed class AppealsService(
         }
 
         await using var db = await contexts.CreateDbContextAsync(cancellationToken);
-        Guid appealId;
+        Guid? appealId;
         switch (request.TargetKind)
         {
             case "appeal":
@@ -519,6 +519,27 @@ internal sealed class AppealsService(
                 }
 
                 appealId = reason.AppealId;
+                break;
+            case "organisation":
+                // Design 8.14.14: an organisation shown on the site; a blocked or closed one is shown nowhere.
+                if (!await db.Organisations.AnyAsync(o => o.Id == request.TargetId && o.Status == OrganisationStatuses.Active, cancellationToken))
+                {
+                    return Error.NotFound("report.target-not-found");
+                }
+
+                appealId = null;
+                break;
+            case "statement":
+                var shown = await (from s in db.OrganisationStatements
+                                   join o in db.Organisations on s.OrganisationId equals o.Id
+                                   where s.Id == request.TargetId && s.Status == StatementStatuses.Published && o.Status == OrganisationStatuses.Active
+                                   select s.Id).AnyAsync(cancellationToken);
+                if (!shown)
+                {
+                    return Error.NotFound("report.target-not-found");
+                }
+
+                appealId = null;
                 break;
             default:
                 return Error.Validation("report.target", "targetKind");
@@ -754,8 +775,18 @@ internal static class ReportGrounds
 
     public static readonly IReadOnlyList<string> Description = [Inaccurate, .. All];
 
+    /// <summary>"Apsimeta kita organizacija" (design 8.14.9): an organisation or its statement may be reported as impersonation.</summary>
+    public const string Impersonation = "impersonation";
+
+    public static readonly IReadOnlyList<string> Organisation = [Impersonation, .. All];
+
     /// <summary>The grounds a report on this target may give.</summary>
-    public static IReadOnlyList<string> For(string targetKind) => targetKind == "appeal" ? Description : All;
+    public static IReadOnlyList<string> For(string targetKind) => targetKind switch
+    {
+        "appeal" => Description,
+        "organisation" or "statement" => Organisation,
+        _ => All,
+    };
 }
 
 /// <summary>

@@ -40,4 +40,15 @@
 <data name="Draft.SourceRequired" xml:space="preserve"><value>Įklijuokite oficialų tekstą: be jo juodraščio nebus.</value></data>
 <data name="Draft.SourceTooLong" xml:space="preserve"><value>Tekstas per ilgas: daugiausia 20 000 ženklų. Palikite tik tą dalį, kurioje aprašyta, ką projektas keičia.</value></data>
 <data name="Notices.Kind" xml:space="preserve"><value>Netinkami laiškų nustatymai.</value></data>
+<data name="Organisation.Name" xml:space="preserve"><value>Pavadinimas turi būti nuo 3 iki 120 ženklų.</value></data>
+<data name="Organisation.Description" xml:space="preserve"><value>Aprašymas per ilgas: ne daugiau kaip 500 ženklų.</value></data>
+<data name="Organisation.Website" xml:space="preserve"><value>Nurodykite svetainės adresą, prasidedantį https:// (ne daugiau kaip 200 ženklų).</value></data>
+<data name="Organisation.LegalCode" xml:space="preserve"><value>Juridinio asmens kodą sudaro nuo 7 iki 9 skaitmenų.</value></data>
+<data name="OrgStatement.Stance" xml:space="preserve"><value>Pasirinkite, ko organizacija prašo: balsuoti už, prieš, ar teikia pastabų.</value></data>
+<data name="OrgStatement.Required" xml:space="preserve"><value>Parašykite organizacijos poziciją.</value></data>
+<data name="OrgStatement.TooLong" xml:space="preserve"><value>Pozicija per ilga: ne daugiau kaip 1 500 ženklų.</value></data>
+<data name="OrgStatement.Link" xml:space="preserve"><value>Nurodykite nuorodą, prasidedančią https:// (ne daugiau kaip 500 ženklų).</value></data>
+<data name="OrgStatement.Goal" xml:space="preserve"><value>Tikslas – nuo 1 iki 1 000 000 dalyvių, ir tik kai organizacija prašo balsuoti už arba prieš.</value></data>
+<data name="Confirm.Address" xml:space="preserve"><value>Įveskite el. pašto adresą organizacijos svetainės domene.</value></data>
+<data name="Confirm.Code" xml:space="preserve"><value>Įveskite kodą iš laiško.</value></data>
 </root>

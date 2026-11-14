@@ -33,21 +33,55 @@ internal static class InvitationRules
 
     /// <summary>
     /// Whether a code lets a registration through at <paramref name="now"/>. Switched off, replaced or expired: no. A team
-    /// code needs a use left; a personal code needs fewer completed registrations than the setting allows (0 = no limit).
+    /// code needs a use left; a personal or an organisation's code needs fewer completed registrations than its setting
+    /// allows (<paramref name="perCodeLimit"/>, 0 = no limit; see <see cref="LimitFor"/>). An organisation's code works only
+    /// while its organisation is active (<paramref name="organisationOff"/> null, design 8.14.14 stage B).
     /// </summary>
     public static bool Usable(
         string kind, int usesLeft, int usedCount, DateTimeOffset? expiresAt, DateTimeOffset? switchedOffAt, DateTimeOffset? replacedAt,
-        int personalLimit, DateTimeOffset now)
+        int perCodeLimit, DateTimeOffset now, string? organisationOff = null)
     {
-        if (switchedOffAt is not null || replacedAt is not null || (expiresAt is { } end && end <= now))
+        if (switchedOffAt is not null || replacedAt is not null || organisationOff is not null || (expiresAt is { } end && end <= now))
         {
             return false;
         }
 
-        return kind == InvitationKinds.Personal
-            ? personalLimit == 0 || usedCount < personalLimit
+        return kind is InvitationKinds.Personal or InvitationKinds.Organisation
+            ? perCodeLimit == 0 || usedCount < perCodeLimit
             : usesLeft > 0;
     }
+
+    /// <summary>The uses setting that applies to a code of <paramref name="kind"/>: personal, organisation, or none (team codes count down).</summary>
+    public static int LimitFor(string kind, int personalLimit, int organisationLimit) => kind switch
+    {
+        InvitationKinds.Personal => personalLimit,
+        InvitationKinds.Organisation => organisationLimit,
+        _ => 0,
+    };
+
+    /// <summary>
+    /// An organisation's code brings people at the level a personal code of the representative who first asked for it
+    /// would: that member's level plus one. Nothing of that person is kept on the code.
+    /// </summary>
+    public static int OrganisationCodeLevel(int requesterLevel) => PersonalCodeLevel(requesterLevel);
+
+    /// <summary>
+    /// What a profile keeps of the code its registration was completed with (design 6.2, 8.14.14): a team or personal code
+    /// is kept with its level; an organisation's code only as its level, so nothing leads from the account to it.
+    /// </summary>
+    public static (Guid? InvitationId, string? Code, int? Level) KeptOnProfile(string? kind, Guid? id, string? code, int? level) =>
+        kind switch
+        {
+            null => (null, null, null),
+            InvitationKinds.Organisation => (null, null, level),
+            _ => (id, code, level),
+        };
+
+    /// <summary>
+    /// What a pending account holds of the code entered (design 6.2): a team or personal code until completion; never an
+    /// organisation's code, which the browser keeps until the registration is completed (design 8.14.14, stage B).
+    /// </summary>
+    public static string? HeldWhilePending(string kind, string code) => kind == InvitationKinds.Organisation ? null : code;
 
     /// <summary>A member's level: that of the code they registered with, or 1 when they registered without one.</summary>
     public static int MemberLevel(int? levelOfCodeUsed) => levelOfCodeUsed ?? 1;

@@ -1,0 +1,55 @@
+@using Lt2.Api.Contracts.Organisations
+@inherits InteractiveBase
+@inject IOrganisationModerationApi Moderation
+@inject NavigationManager Navigation
+
+@* The organisations' part of the "Moderavimas" panel on the bill's page (design 8.14.14): the bill's statements that wait,
+   are flagged or reported, with the queue's actions, and the other shown statements behind a fold. Rendered only when the
+   server found a moderator in a staff-passkey session, and filled only from the moderators-only answer, asked for in the
+   browser; for anyone else the server refuses it. After an action the page reloads to show the result. *@
+@if (Items is { Count: > 0 } items)
+{
+    <section class="sheet stack stack--tight" aria-labelledby="statement-panel-title" id="statement-panel">
+        <h3 id="statement-panel-title">@L["OrgMod.Panel.Title"]</h3>
+        @if (items.Where(NeedsLook).ToList() is { Count: > 0 } waiting)
+        {
+            @foreach (var item in waiting)
+            {
+                <StatementQueueItem Item="item" ShowBill="false" OnDone="Reload" />
+            }
+        }
+        else
+        {
+            <p class="small">@L["OrgMod.Panel.Nothing"]</p>
+        }
+        @if (items.Where(i => !NeedsLook(i)).ToList() is { Count: > 0 } others)
+        {
+            <details>
+                <summary class="linkish small">@Text("OrgMod.Panel.Others", others.Count)</summary>
+                @foreach (var item in others)
+                {
+                    <StatementQueueItem Item="item" ShowBill="false" OnDone="Reload" />
+                }
+            </details>
+        }
+    </section>
+}
+
+@code {
+    [Parameter, EditorRequired] public string Number { get; set; } = "";
+
+    private List<QueueStatementResponse>? Items { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        if (RendererInfo.IsInteractive)
+        {
+            Items = (await Moderation.GetOnBillAsync(Number)).Value?.ToList();
+        }
+    }
+
+    private void Reload(string _) => Navigation.NavigateTo(Navigation.Uri, forceLoad: true);
+
+    /// <summary>Waits for a moderator, carries a pre-screening flag, has an open report, or nobody has looked yet.</summary>
+    private static bool NeedsLook(QueueStatementResponse s) => s.Status == "pending" || s.Flags.Count > 0 || s.Reports.Count > 0 || !s.Seen;
+}

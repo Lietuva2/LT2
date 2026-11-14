@@ -729,7 +729,7 @@ internal sealed class ModerationService(
         return Result.Ok();
     }
 
-    private async Task<Result<AuthorView>> ViewAsync(Func<AppealsDb, IQueryable<Guid?>> who, string notFound, CancellationToken ct)
+    internal async Task<Result<AuthorView>> ViewAsync(Func<AppealsDb, IQueryable<Guid?>> who, string notFound, CancellationToken ct)
     {
         await using var db = await contexts.CreateDbContextAsync(ct);
         if (await who(db).FirstOrDefaultAsync(ct) is not { } userId)
@@ -754,7 +754,7 @@ internal sealed class ModerationService(
             restrictions.Select(w => Info(w, name, now)).ToList());
     }
 
-    private async Task<Result<Guid>> RestrictAsync(
+    internal async Task<Result<Guid>> RestrictAsync(
         Func<AppealsDb, IQueryable<Guid?>> who, string notFound, DateOnly? until, string statement, ModeratorActor moderator, string? contact, CancellationToken ct)
     {
         var now = clock.GetUtcNow();

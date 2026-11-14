@@ -227,8 +227,8 @@ namespace Lt2.Notifications.Infrastructure.Migrations
                         .HasColumnName("user_id");
 
                     b.Property<string>("Kind")
-                        .HasMaxLength(10)
-                        .HasColumnType("character varying(10)")
+                        .HasMaxLength(16)
+                        .HasColumnType("character varying(16)")
                         .HasColumnName("kind");
 
                     b.Property<string>("Key")
@@ -263,6 +263,10 @@ namespace Lt2.Notifications.Infrastructure.Migrations
                     b.Property<bool>("Planned")
                         .HasColumnType("boolean")
                         .HasColumnName("planned");
+
+                    b.Property<bool>("Statements")
+                        .HasColumnType("boolean")
+                        .HasColumnName("statements");
 
                     b.Property<bool>("Voted")
                         .HasColumnType("boolean")

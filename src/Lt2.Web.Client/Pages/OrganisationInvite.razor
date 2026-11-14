@@ -1,0 +1,62 @@
+@page "/organizacijos/kvietimas/{Token}"
+@attribute [Authorize]
+@rendermode InteractiveWebAssembly
+@using Lt2.Api.Contracts.Organisations
+@inherits InteractiveBase
+@inject IOrganisationsApi Organisations
+@inject NavigationManager Navigation
+
+@* A representative's one-time link (design 8.14.14): a signed-in member who opens it and agrees becomes a representative.
+   The link works once, within seven days; nobody is looked up by email. *@
+<PageTitle>@L["Org.Invite.PageTitle"]</PageTitle>
+
+<div class="stack">
+    <ol class="crumbs">
+        <li><a href="/organizacijos">@L["Org.List.Title"]</a></li>
+        <li>@L["Org.Invite.Title"]</li>
+    </ol>
+    <h1>@L["Org.Invite.Title"]</h1>
+    <NeedsScript />
+    @if (Invite is null)
+    {
+        <p class="note" role="alert" id="invite-missing">@L["Org.Invite.Missing"]</p>
+    }
+    else if (Invite.AlreadyRepresentative)
+    {
+        <p>@Text("Org.Invite.Already", Invite.Name) <a href="@OrganisationWords.ProfilePath(Invite.Slug)">@L["Org.Invite.ToProfile"]</a></p>
+    }
+    else if (!Invite.Usable)
+    {
+        <p class="note" role="alert" id="invite-used">@L["Org.Invite.Unusable"]</p>
+    }
+    else
+    {
+        <p class="lead">@Text("Org.Invite.Lead", Invite.Name)</p>
+        <p class="small">@L["Org.Invite.What"]</p>
+        <div class="row">
+            <button class="btn" type="button" id="invite-accept" disabled="@Locked" @onclick="AcceptAsync">@L["Org.Invite.Accept"]</button>
+            <a class="btn btn--plain" href="@OrganisationWords.ProfilePath(Invite.Slug)">@L["Cancel"]</a>
+        </div>
+    }
+    <Messages Message="@Message" Info="@Info" />
+</div>
+
+@code {
+    [Parameter] public string Token { get; set; } = "";
+
+    [PersistentState] public InviteResponse? Invite { get; set; }
+
+    protected override async Task OnInitializedAsync() => Invite ??= (await Organisations.GetInviteAsync(Token)).Value;
+
+    private Task AcceptAsync() => RunAsync(async () =>
+    {
+        var result = await Organisations.AcceptInviteAsync(Token);
+        if (!result.IsSuccess)
+        {
+            Show(result.Problem);
+            return;
+        }
+
+        Navigation.NavigateTo(OrganisationWords.ProfilePath(result.Value!.Slug), forceLoad: true);
+    });
+}

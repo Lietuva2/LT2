@@ -21,6 +21,60 @@ public static class MessageKinds
 
     /// <summary>The Seimas held a stage vote on a followed bill (design 8.11.2).</summary>
     public const string FollowVotedEmail = "email.follow-voted";
+
+    /// <summary>An organisation the person follows made a statement on a bill public (design 8.14.14, stage B).</summary>
+    public const string FollowStatementEmail = "email.follow-statement";
+
+    /// <summary>A code that confirms an organisation by its email domain (design 8.14.14).</summary>
+    public const string OrganisationCodeEmail = "email.organisation-code";
+
+    /// <summary>What a moderator did with an organisation or its statement, to its representatives (design 8.14.14).</summary>
+    public const string OrganisationNoticeEmail = "email.organisation-notice";
+}
+
+/// <summary>
+/// Payload of <see cref="MessageKinds.OrganisationCodeEmail"/> (design 8.14.14): the code that confirms an organisation by
+/// the domain of its website. The address exists only here, in the outbox row, until the email is sent; the Appeals module
+/// keeps only the domain.
+/// </summary>
+/// <param name="To">The address on the organisation's domain that a representative gave.</param>
+/// <param name="Code">The six-digit code.</param>
+/// <param name="ValidMinutes">How long the code is valid.</param>
+/// <param name="OrganisationName">The organisation's name, so the reader knows what is being confirmed.</param>
+/// <param name="Domain">The domain being confirmed, for example <c>lgs.lt</c>.</param>
+public sealed record OrganisationCodeEmail(string To, string Code, int ValidMinutes, string OrganisationName, string Domain);
+
+/// <summary>
+/// Payload of <see cref="MessageKinds.OrganisationNoticeEmail"/> (design 8.14.14): what a moderator did with an organisation
+/// or one of its statements, and why, to each of its representatives. Never names another representative or a side of a
+/// person.
+/// </summary>
+/// <param name="To">One representative's address.</param>
+/// <param name="Notice">One of <see cref="OrganisationNotices"/>.</param>
+/// <param name="OrganisationName">The organisation's name.</param>
+/// <param name="Path">The site path the notice points to: the organisation's profile, or the bill's page for a statement.</param>
+/// <param name="Statement">The moderator's statement of reasons, or the note; may be empty.</param>
+/// <param name="Contact">The moderators' address for objecting, when configured.</param>
+/// <param name="BillNumber">For a statement: the bill it is on.</param>
+/// <param name="BillTitle">For a statement: the bill's official title.</param>
+public sealed record OrganisationNoticeEmail(
+    string To, string Notice, string OrganisationName, string Path, string? Statement, string? Contact, string? BillNumber = null, string? BillTitle = null);
+
+/// <summary>The moderation outcomes an organisation's representatives are told about (design 8.14.14).</summary>
+public static class OrganisationNotices
+{
+    public const string Blocked = "blocked";
+    public const string Unblocked = "unblocked";
+    public const string Kept = "kept";
+    public const string Confirmed = "confirmed";
+    public const string ConfirmationWithdrawn = "confirmation-withdrawn";
+    public const string StatementPublished = "statement-published";
+    public const string StatementKept = "statement-kept";
+    public const string StatementHidden = "statement-hidden";
+    public const string StatementRestored = "statement-restored";
+
+    public static readonly IReadOnlyList<string> All =
+        [Blocked, Unblocked, Kept, Confirmed, ConfirmationWithdrawn, StatementPublished, StatementKept, StatementHidden, StatementRestored];
 }
 
 
@@ -51,6 +105,25 @@ public sealed record FollowVotedEmail(
     string? OfficialNote,
     string VotePath,
     IReadOnlyList<FollowedMpChoice> Mps,
+    string AccountPath);
+
+/// <summary>
+/// Payload of <see cref="MessageKinds.FollowStatementEmail"/> (design 8.14.14, stage B): an organisation the person follows
+/// made its statement on a bill public. The organisation, its label, the bill and the stance; never the statement's text,
+/// the person's side or any count.
+/// </summary>
+/// <param name="ConfirmedBy"><c>domain</c>, <c>moderator</c> or null ("Nepatvirtinta").</param>
+/// <param name="ConfirmedDomain">With <c>domain</c>: the domain shown as "@domenas".</param>
+/// <param name="Stance"><c>for</c>, <c>against</c> or <c>remarks</c>.</param>
+public sealed record FollowStatementEmail(
+    string To,
+    string OrganisationName,
+    string? ConfirmedBy,
+    string? ConfirmedDomain,
+    string BillNumber,
+    string BillTitle,
+    string Stance,
+    string BillPath,
     string AccountPath);
 
 /// <summary>

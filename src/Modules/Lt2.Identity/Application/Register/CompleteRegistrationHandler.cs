@@ -54,12 +54,12 @@ internal sealed class CompleteRegistrationHandler(
             // One answer for every code that does not work (design 6.2): unknown, switched off, replaced, expired, used up.
             var lookup = InvitationRules.Lookup(code);
             invitation = await db.Invitations.AsNoTracking().FirstOrDefaultAsync(i => i.Lookup == lookup, cancellationToken);
-            var personalLimit = await settings.GetAsync(SettingKeys.RegistrationPersonalCodeUses, cancellationToken);
+            var limit = invitation is null ? 0 : await Invitations.InvitationHandlers.LimitAsync(settings, invitation.Kind, cancellationToken);
             if (invitation is null
-                || !InvitationRules.Usable(invitation.Kind, invitation.UsesLeft, invitation.UsedCount, invitation.ExpiresAt, invitation.SwitchedOffAt, invitation.ReplacedAt, personalLimit, now)
+                || !InvitationRules.Usable(invitation.Kind, invitation.UsesLeft, invitation.UsedCount, invitation.ExpiresAt, invitation.SwitchedOffAt, invitation.ReplacedAt, limit, now, invitation.OrganisationOff)
 
                 // Counted atomically on the code and in the day's total: of two completions racing for the last use, one gets it.
-                || !await Invitations.InvitationHandlers.CountUseAsync(db, invitation, personalLimit, now, cancellationToken))
+                || !await Invitations.InvitationHandlers.CountUseAsync(db, invitation, limit, now, cancellationToken))
             {
                 return Error.Validation("invitation.invalid", "invitationCode");
             }
@@ -71,8 +71,10 @@ internal sealed class CompleteRegistrationHandler(
             return Error.Validation("invitation.required", "invitationCode");
         }
 
-        profile.InvitationCode = code;
-        profile.InvitationId = invitation?.Id;
+        // An organisation's code is kept only as its level (design 8.14.14, stage B): nothing on the account names the code
+        // or the organisation. Its counter and daily total rose above, as for any code.
+        (profile.InvitationId, profile.InvitationCode, profile.InvitationLevel) =
+            InvitationRules.KeptOnProfile(invitation?.Kind, invitation?.Id, code, invitation?.Level);
         profile.DisplayName = string.IsNullOrWhiteSpace(completion.DisplayName) ? null : completion.DisplayName.Trim();
         profile.RegisteredAt = now;
         db.Consents.Add(new Consent

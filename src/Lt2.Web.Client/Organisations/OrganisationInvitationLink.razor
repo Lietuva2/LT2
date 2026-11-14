@@ -1,0 +1,121 @@
+@using Lt2.Api.Contracts.Organisations
+@inherits InteractiveBase
+@inject IOrganisationsApi Organisations
+@inject NavigationManager Navigation
+@inject IJSRuntime JS
+
+@* The organisation's invitation link (design 8.14.14, stage B), inside the representatives' part of the profile: the link to
+   the registration form with the organisation's code, a link for each bill it has a public statement on (the same code,
+   landing on that bill), "Kopijuoti nuorodą", one number (how many completed registration with its codes; nothing about who,
+   when or on which side) and "replace the code". Asked only once the island runs in the browser, never while the server
+   prerenders, so neither the code nor the number is ever in the page's HTML. *@
+@if (Invitation is { } inv)
+{
+    <div class="stack stack--tight" id="org-code">
+        <h3>@L["Org.Code.Title"]</h3>
+        <p class="small">@L["Org.Code.Lead"]</p>
+        <p class="num" id="org-code-count"><b>@Text("Org.Code.Count", AppealNumbers.Of(inv.Completed))</b></p>
+        @if (inv.Usable && inv.Link is { } link)
+        {
+            <p class="share__link"><a href="@link" id="org-code-link">@Absolute(link)</a></p>
+            <div class="row">
+                <button type="button" class="btn btn--plain" id="org-code-copy" disabled="@Locked" @onclick="() => CopyAsync(link, null)">@L["Share.Copy"]</button>
+                @if (_copied == "")
+                {
+                    <span class="small" role="status">@L["Share.Copied"]</span>
+                }
+            </div>
+            @if (inv.Bills.Count > 0)
+            {
+                <p class="small">@L["Org.Code.BillsLead"]</p>
+                <ul class="rows" id="org-code-bills">
+                    @foreach (var b in inv.Bills)
+                    {
+                        @* One child: a row of ".rows" is a two-column grid, and three children would sit side by side. *@
+                        <li id="org-code-bill-@b.Bill.Number">
+                            <div class="stack stack--tight">
+                                <span><span class="num">@b.Bill.Number</span> · @b.Bill.Title</span>
+                                <span class="share__link small"><a href="@b.Link">@Absolute(b.Link)</a></span>
+                                <div class="row">
+                                    <button type="button" class="btn btn--plain" id="org-code-copy-@b.Bill.Number" disabled="@Locked" @onclick="() => CopyAsync(b.Link, b.Bill.Number)">@L["Share.Copy"]</button>
+                                    @if (_copied == b.Bill.Number)
+                                    {
+                                        <span class="small" role="status">@L["Share.Copied"]</span>
+                                    }
+                                </div>
+                            </div>
+                        </li>
+                    }
+                </ul>
+            }
+        }
+        else
+        {
+            <p class="small" id="org-code-off">@L[OffKey(inv)]@if (!inv.On && inv.Contact is { } contact)
+                {
+                    @(" ")@L["Org.Code.Ask"]@(" ")<a href="mailto:@contact">@contact</a>@(".")
+                }</p>
+        }
+        <p class="fine">@L["Org.Code.Private"]</p>
+        @if (inv.Code is not null && inv.On && !inv.OffWithOrganisation)
+        {
+            @if (_replacing)
+            {
+                <div class="row" role="group">
+                    <p class="small">@L["Org.Code.ReplaceConfirm"]</p>
+                    <button class="btn btn--against" type="button" id="org-code-replace-confirm" disabled="@Locked" @onclick="ReplaceAsync">@L["Org.Code.ReplaceYes"]</button>
+                    <button class="btn btn--plain" type="button" disabled="@Locked" @onclick="() => _replacing = false">@L["Cancel"]</button>
+                </div>
+            }
+            else
+            {
+                <p><button class="linkish small" type="button" id="org-code-replace" disabled="@Locked" @onclick="() => _replacing = true">@L["Org.Code.Replace"]</button></p>
+            }
+        }
+        <Messages Message="@Message" Info="@Info" />
+    </div>
+}
+
+@code {
+    private string? _copied;
+    private bool _replacing;
+
+    [Parameter, EditorRequired] public string Slug { get; set; } = "";
+
+    private OrganisationInvitationResponse? Invitation { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        // Only in the browser: the server's prerendered HTML never holds the code or the number.
+        if (RendererInfo.IsInteractive)
+        {
+            Invitation = (await Organisations.GetInvitationAsync(Slug)).Value;
+        }
+    }
+
+    private static string OffKey(OrganisationInvitationResponse inv) =>
+        inv.OffWithOrganisation ? "Org.Code.OffWithOrganisation" : !inv.On ? "Org.Code.SwitchedOff" : inv.Code is null ? "Org.Code.None" : "Org.Code.UsedUp";
+
+    private string Absolute(string link) => Navigation.ToAbsoluteUri(link).ToString();
+
+    private Task CopyAsync(string link, string? bill) => RunAsync(async () =>
+    {
+        await JS.InvokeVoidAsync("navigator.clipboard.writeText", Absolute(link));
+        _copied = bill ?? "";
+    });
+
+    private Task ReplaceAsync() => RunAsync(async () =>
+    {
+        var result = await Organisations.ReplaceInvitationAsync(Slug);
+        if (!result.IsSuccess)
+        {
+            Show(result.Problem);
+            return;
+        }
+
+        Invitation = result.Value;
+        _replacing = false;
+        _copied = null;
+        Info = L["Org.Code.Replaced"];
+    });
+}

@@ -46,14 +46,17 @@ internal sealed class RegisterHandler(
             // Case, dashes and spaces do not matter (design 6.2). One answer for every code that does not work.
             var lookup = InvitationRules.Lookup(registration.InvitationCode);
             var invitation = await db.Invitations.AsNoTracking().FirstOrDefaultAsync(i => i.Lookup == lookup, cancellationToken);
-            var personalLimit = await settings.GetAsync(SettingKeys.RegistrationPersonalCodeUses, cancellationToken);
             if (invitation is null
-                || !InvitationRules.Usable(invitation.Kind, invitation.UsesLeft, invitation.UsedCount, invitation.ExpiresAt, invitation.SwitchedOffAt, invitation.ReplacedAt, personalLimit, now))
+                || !InvitationRules.Usable(
+                    invitation.Kind, invitation.UsesLeft, invitation.UsedCount, invitation.ExpiresAt, invitation.SwitchedOffAt, invitation.ReplacedAt,
+                    await Invitations.InvitationHandlers.LimitAsync(settings, invitation.Kind, cancellationToken), now, invitation.OrganisationOff))
             {
                 return Error.Validation("invitation.invalid", "invitationCode");
             }
 
-            invitationCode = invitation.Code;
+            // An organisation's code is not written to the pending account (design 8.14.14, stage B): the browser sends it
+            // again when the registration is completed, so no row ever ties this address to the organisation.
+            invitationCode = InvitationRules.HeldWhilePending(invitation.Kind, invitation.Code);
         }
         else if (await settings.GetAsync(SettingKeys.RegistrationRequiresInvitation, cancellationToken))
         {

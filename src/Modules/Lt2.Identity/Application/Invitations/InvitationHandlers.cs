@@ -80,7 +80,8 @@ internal sealed class InvitationHandlers(IdentityDb db, IAuditLog audit, ISettin
             .Select(g => new { Level = g.Key, Completed = g.Sum(i => i.UsedCount) })
             .OrderBy(l => l.Level)
             .ToListAsync(cancellationToken);
-        var withoutCode = await db.Profiles.AsNoTracking().CountAsync(p => p.RegisteredAt != null && p.InvitationId == null, cancellationToken);
+        // An organisation's code leaves only its level on the profile (design 8.14.14), so "without a code" is "without a level".
+        var withoutCode = await db.Profiles.AsNoTracking().CountAsync(p => p.RegisteredAt != null && p.InvitationId == null && p.InvitationLevel == null, cancellationToken);
 
         return new InvitationStats(
             from,
@@ -94,7 +95,9 @@ internal sealed class InvitationHandlers(IdentityDb db, IAuditLog audit, ISettin
                     i.UsedCount,
                     i.SwitchedOffAt is null && i.ReplacedAt is null,
                     i.ReplacedAt is not null,
-                    Series(d => d.InvitationId == i.Id)))
+                    Series(d => d.InvitationId == i.Id),
+                    i.OrganisationId,
+                    i.OrganisationOff))
                 .ToList(),
             levels.Where(l => l.Completed > 0).Select(l => new InvitationLevel(l.Level, l.Completed)).ToList(),
             withoutCode);
@@ -114,9 +117,11 @@ internal sealed class InvitationHandlers(IdentityDb db, IAuditLog audit, ISettin
             return Error.NotFound("invitation.not-found");
         }
 
-        if (on && invitation.Kind == InvitationKinds.Personal && (invitation.IssuedByUserId is null || invitation.ReplacedAt is not null))
+        if (on && ((invitation.Kind == InvitationKinds.Personal && (invitation.IssuedByUserId is null || invitation.ReplacedAt is not null))
+            || (invitation.Kind == InvitationKinds.Organisation && invitation.ReplacedAt is not null)))
         {
-            // A deleted member's code, or one its member replaced, stays off.
+            // A deleted member's code, or one its member or organisation replaced, stays off. An organisation's code switched
+            // on while the organisation is blocked or closed still does not work: that is the organisation's state, not this switch.
             return Error.Conflict("invitation.cannot-switch-on");
         }
 
@@ -145,11 +150,12 @@ internal sealed class InvitationHandlers(IdentityDb db, IAuditLog audit, ISettin
     /// At completed registration (design 6.2): counts the use on the code and in the day's total, atomically, and makes
     /// the new member's own code. Returns false when the code no longer lets a registration through.
     /// </summary>
-    internal static async Task<bool> CountUseAsync(IdentityDb db, Invitation invitation, int personalLimit, DateTimeOffset now, CancellationToken ct)
+    internal static async Task<bool> CountUseAsync(IdentityDb db, Invitation invitation, int perCodeLimit, DateTimeOffset now, CancellationToken ct)
     {
-        var counted = invitation.Kind == InvitationKinds.Personal
+        var counted = invitation.Kind is InvitationKinds.Personal or InvitationKinds.Organisation
             ? await db.Invitations
-                .Where(i => i.Id == invitation.Id && i.SwitchedOffAt == null && i.ReplacedAt == null && (personalLimit == 0 || i.UsedCount < personalLimit))
+                .Where(i => i.Id == invitation.Id && i.SwitchedOffAt == null && i.ReplacedAt == null && i.OrganisationOff == null
+                    && (perCodeLimit == 0 || i.UsedCount < perCodeLimit))
                 .ExecuteUpdateAsync(s => s.SetProperty(i => i.UsedCount, i => i.UsedCount + 1), ct)
             : await db.Invitations
                 .Where(i => i.Id == invitation.Id && i.SwitchedOffAt == null && i.UsesLeft > 0)
@@ -182,15 +188,35 @@ internal sealed class InvitationHandlers(IdentityDb db, IAuditLog audit, ISettin
 
     internal static async Task<Invitation> CreatePersonalAsync(IdentityDb db, TimeProvider clock, Guid userId, int? level, CancellationToken ct)
     {
-        if (level is null)
+        level ??= InvitationRules.PersonalCodeLevel(await MemberLevelAsync(db, userId, ct));
+        return await CreateAsync(db, clock, InvitationKinds.Personal, userId, null, level.Value, ct);
+    }
+
+    /// <summary>A member's level (design 6.2): that of the code their registration was completed with, 1 without one.</summary>
+    internal static async Task<int> MemberLevelAsync(IdentityDb db, Guid userId, CancellationToken ct)
+    {
+        var kept = await db.Profiles.AsNoTracking().Where(p => p.UserId == userId).Select(p => new { p.InvitationLevel, p.InvitationId }).FirstOrDefaultAsync(ct);
+        var level = kept?.InvitationLevel;
+        if (level is null && kept?.InvitationId is { } used)
         {
-            var usedLevel = await (from p in db.Profiles.AsNoTracking()
-                                   join i in db.Invitations.AsNoTracking() on p.InvitationId equals i.Id
-                                   where p.UserId == userId
-                                   select (int?)i.Level).FirstOrDefaultAsync(ct);
-            level = InvitationRules.PersonalCodeLevel(InvitationRules.MemberLevel(usedLevel));
+            // Profiles completed before the level was kept on them.
+            level = await db.Invitations.AsNoTracking().Where(i => i.Id == used).Select(i => (int?)i.Level).FirstOrDefaultAsync(ct);
         }
 
+        return InvitationRules.MemberLevel(level);
+    }
+
+    /// <summary>The uses setting for codes of <paramref name="kind"/> (0 = no limit; team codes count their own uses down).</summary>
+    internal static async Task<int> LimitAsync(ISettings settings, string kind, CancellationToken ct) => kind switch
+    {
+        InvitationKinds.Personal => await settings.GetAsync(SettingKeys.RegistrationPersonalCodeUses, ct),
+        InvitationKinds.Organisation => await settings.GetAsync(SettingKeys.RegistrationOrganisationCodeUses, ct),
+        _ => 0,
+    };
+
+    /// <summary>Makes an unused code of the personal format, for a member or an organisation.</summary>
+    internal static async Task<Invitation> CreateAsync(IdentityDb db, TimeProvider clock, string kind, Guid? userId, Guid? organisationId, int level, CancellationToken ct)
+    {
         for (var attempt = 0; ; attempt++)
         {
             var code = InvitationRules.GeneratePersonal();
@@ -209,9 +235,10 @@ internal sealed class InvitationHandlers(IdentityDb db, IAuditLog audit, ISettin
             {
                 Id = Ids.New(clock),
                 Code = code,
-                Kind = InvitationKinds.Personal,
+                Kind = kind,
                 IssuedByUserId = userId,
-                Level = level.Value,
+                OrganisationId = organisationId,
+                Level = level,
                 CreatedAt = clock.GetUtcNow(),
             };
             db.Invitations.Add(invitation);
@@ -229,7 +256,7 @@ internal sealed class InvitationHandlers(IdentityDb db, IAuditLog audit, ISettin
         // Whether the code would let a registration through now (design 8.11.5: the share line has no link otherwise).
         var usable = InvitationRules.Usable(
             current.Kind, current.UsesLeft, current.UsedCount, current.ExpiresAt, current.SwitchedOffAt, current.ReplacedAt,
-            await settings.GetAsync(SettingKeys.RegistrationPersonalCodeUses, ct), clock.GetUtcNow());
+            await LimitAsync(settings, current.Kind, ct), clock.GetUtcNow(), current.OrganisationOff);
         return new MyInvitation(current.Code, InvitationRules.MemberCount(counts), current.SwitchedOffAt is null, usable);
     }
 }

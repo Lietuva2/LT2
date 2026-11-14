@@ -44,6 +44,19 @@ internal static class FollowRules
     public static bool IsRecipient(DateTimeOffset followedAt, DateTimeOffset firstSeen, DateTimeOffset? heldAt) =>
         followedAt < firstSeen && (heldAt is not { } held || followedAt < held);
 
-    /// <summary>A new follow is refused once the person follows <paramref name="max"/> bills and MPs together.</summary>
+    /// <summary>
+    /// An organisation's statement that first became public more than three days before the job first saw it is recorded and
+    /// never sent (design 8.14.14, stage B; the window of 8.11.2).
+    /// </summary>
+    public static bool StatementIsSendable(DateTimeOffset firstPublicAt, DateTimeOffset firstSeen) => firstSeen - firstPublicAt <= VoteSendWindow;
+
+    /// <summary>
+    /// A statement goes to those who followed the organisation before the job first saw it and before it became public, so
+    /// nobody is told about a statement from before they followed (design 8.14.14: "only those who followed before").
+    /// </summary>
+    public static bool IsStatementRecipient(DateTimeOffset followedAt, DateTimeOffset firstSeen, DateTimeOffset firstPublicAt) =>
+        IsRecipient(followedAt, firstSeen, firstPublicAt);
+
+    /// <summary>A new follow is refused once the person follows <paramref name="max"/> bills, MPs and organisations together.</summary>
     public static bool MayFollowMore(int following, int max) => following < max;
 }

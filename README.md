@@ -25,7 +25,7 @@ A modular monolith on .NET 10 (design sections 2–4):
 | `src/Lt2.Worker` | Hangfire server (PostgreSQL storage): the outbox dispatch loop and the parliament import (every 15 minutes on sitting days, hourly otherwise) |
 | `src/Lt2.Migrator` | Creates the database roles, applies every module's migrations, grants access; run once per deploy |
 | `tests/` | Unit, integration (Testcontainers), architecture (NetArchTest) and end-to-end (Playwright) tests |
-| `deploy/` | Dockerfile, `compose.yaml`, `Caddyfile`, secret generators |
+| `deploy/` | Dockerfile, `compose.yaml`, `Caddyfile`, secret generators; `compose.shared-proxy.yaml` and `shared-proxy.Caddyfile` for a server whose Caddy already holds ports 80 and 443 |
 | `tools/Lt2.SeimasStandIn` | Local and test only: a stand-in for the Seimas open-data service that answers with **invented** data |
 
 ## Run it locally
@@ -195,6 +195,78 @@ address), `LT2_HTTP_PORT=80`, `LT2_HTTPS_PORT=443`, `COMPOSE_PROFILES=` (no Mail
 `LT2_MIGRATOR_ARGS=` (no seeded invitation), `LT2_DEMO_DATA=` (no demonstration data), `LT2_MODERATION_CONTACT` (the real address), `LT2_AGENDA_BASE_ADDRESS`
 (the lrs.lt address, or empty), `LT2_SEIMAS_BASE_ADDRESS=` and `LT2_OUTBOUND_EXTRA_HOST=` (the worker
 then imports from `https://apps.lrs.lt/sip/`, the only host it may call), and mount real secrets.
+
+### Behind a server's existing Caddy
+
+A server whose ports 80 and 443 already belong to another Compose project's Caddy (the trial on the owner's VPS, design
+9.2) runs LT2 without its own Caddy. `deploy/compose.shared-proxy.yaml` keeps LT2's `caddy` from starting, publishes
+nothing on 80 or 443, and joins `web` to that Caddy's Docker network (`LT2_PROXY_NETWORK`) under the alias `lt2-web`.
+`deploy/shared-proxy.Caddyfile` is the site block to append to that Caddy's Caddyfile, with `lt2.example.org` replaced
+by the site's hostname: compression, the 1 MB request limit, no `Server` header, no access log, `X-Robots-Tag: noindex,
+nofollow`, and a `handle_errors` that keeps failed requests (client address, invitation code in the address) out of
+that Caddy's error log. Real hostnames, addresses and paths live only on the server, never in this repository.
+
+What survives a redeploy lives outside the application tree, here `$LT2_HOME` (for example a directory under `/srv`,
+owned by root):
+
+| Path | What |
+|---|---|
+| `$LT2_HOME/app/` | The deployed commit's tree (`git archive`), replaced on every deploy |
+| `$LT2_HOME/lt2.env` | The server's values, passed with `--env-file` instead of `deploy/.env` (mode 600) |
+| `$LT2_HOME/secrets/` | `sudo python3 deploy/init-secrets.py $LT2_HOME/secrets`: run as root, it gives each file to the container user that reads it and nobody else |
+| `$LT2_HOME/deployed-commit` | The commit that runs |
+
+`lt2.env` for a trial with invented data (the request limits and sign-in code limits stay the code's defaults; never
+`LT2_RATE_*`, `--local-code-limits` or `BANDYMAS-2026` on a server):
+
+```sh
+LT2_IMAGE_TAG=<deployed commit>
+LT2_SECRETS_DIR=<LT2_HOME>/secrets
+LT2_PROXY_NETWORK=<network of the server's Caddy>
+LT2_SITE_ADDRESS=lt2.example.org
+LT2_HTTPS_PORT=443
+COMPOSE_PROFILES=local
+LT2_MAILPIT_PORT=8025
+LT2_SMTP_HOST=mailpit
+LT2_SMTP_PORT=1025
+LT2_SMTP_SECURITY=None
+LT2_MAIL_FROM=prisijungimas@lt2.example.org
+LT2_MIGRATOR_ARGS=
+LT2_SEIMAS_BASE_ADDRESS=http://seimas-standin:8080/sip/
+LT2_OUTBOUND_EXTRA_HOST=seimas-standin
+LT2_AGENDA_BASE_ADDRESS=http://seimas-standin:8080/
+LT2_DEMO_DATA=true
+LT2_MODERATION_CONTACT=moderatoriai@lt2.example.org
+LT2_FEEDBACK_ISSUES_URL=https://github.com/Lietuva2/LT2/issues
+LT2_FEEDBACK_TEAM_ADDRESS=komanda@lt2.example.org
+LT2_AI_PROVIDER=
+```
+
+With `LT2_HTTPS_PORT=443` the links in emails are `https://lt2.example.org/...` (`SiteLinks` drops the default port).
+Mailpit listens on the server's loopback only; read it through a tunnel (`ssh -L 8025:127.0.0.1:8025 <server>`, then
+<http://localhost:8025>). Every compose command on the server is, from `$LT2_HOME/app`:
+
+```sh
+docker compose --env-file $LT2_HOME/lt2.env -f deploy/compose.yaml -f deploy/compose.shared-proxy.yaml <command>
+```
+
+To deploy a commit of `master` (images are built on a developer's machine from a clean checkout of that commit and
+copied over SSH; nothing goes to a registry):
+
+1. On the developer's machine, with `C` the full commit hash: `LT2_IMAGE_TAG=C docker compose -f deploy/compose.yaml
+   build web worker migrator seimas-standin`, then `docker save -o lt2-images.tar lt2/web:C lt2/worker:C lt2/migrator:C
+   lt2/seimas-standin:C` and `git archive -o lt2-app.tar.gz C`; copy both to the server with `scp`.
+2. On the server: `docker load -i lt2-images.tar`; unpack `lt2-app.tar.gz` into a new directory and swap it with
+   `$LT2_HOME/app` (keep the old one until the new one runs); write `C` to `$LT2_HOME/deployed-commit` and set
+   `LT2_IMAGE_TAG=C` in `lt2.env`.
+3. `up -d --no-build` (the command above): the migrator runs first, then `web` and `worker` are replaced. Check
+   `/health/ready` through the site. The first deploy then appends the site block to the server Caddy's Caddyfile
+   (append only: the file is often bind-mounted as a single file, so it must keep its inode), validates it with
+   `caddy validate` and applies it with `caddy reload` (graceful; never restart that Caddy). Later deploys leave it
+   alone.
+
+Invitations and the demonstration data are made once with `run --rm migrator --seed-invitation CODE:USES` and, after
+the worker's first import from the stand-in, `run --rm --no-deps migrator --demo-appeal`.
 
 ## Conventions
 

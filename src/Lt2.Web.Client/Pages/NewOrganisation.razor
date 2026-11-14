@@ -1,0 +1,48 @@
+@page "/organizacijos/nauja"
+@attribute [Authorize]
+@rendermode InteractiveWebAssembly
+@using Lt2.Api.Contracts.Organisations
+@inherits InteractiveBase
+@inject IAppealsApi Appeals
+@inject NavigationManager Navigation
+
+@* Registering an organisation (design 8.14.14): a signed-in member, shown at once, with nobody approving it; the member
+   becomes its first representative, and representatives are not public. A person under a writing restriction sees the
+   notice in place of the form. *@
+<PageTitle>@L["Org.Register.PageTitle"]</PageTitle>
+
+<div class="stack">
+    <ol class="crumbs">
+        <li><a href="/organizacijos">@L["Org.List.Title"]</a></li>
+        <li>@L["Org.Register.Title"]</li>
+    </ol>
+    <h1>@L["Org.Register.Title"]</h1>
+    <NeedsScript />
+    <p class="lead">@L["Org.Register.Lead"]</p>
+    <ul class="small stack stack--tight" id="register-what">
+        <li>@L["Org.Register.Point1"]</li>
+        <li>@L["Org.Register.Point2"]</li>
+        <li>@L["Org.Register.Point3"]</li>
+        <li>@L["Org.Register.Point4"]</li>
+    </ul>
+    <p class="fine"><a href="/metodika#organizacijos">@L["Org.Register.Method"]</a></p>
+</div>
+
+@if (Restriction is { Restricted: true } restriction)
+{
+    <WritingRestricted Restriction="restriction" />
+}
+else
+{
+    <section class="sheet stack" aria-label="@L["Org.Register.Title"]">
+        <OrganisationForm OnRegistered="Registered" />
+    </section>
+}
+
+@code {
+    [PersistentState] public MyRestrictionResponse? Restriction { get; set; }
+
+    protected override async Task OnInitializedAsync() => Restriction ??= (await Appeals.GetMyRestrictionAsync()).Value;
+
+    private void Registered(string slug) => Navigation.NavigateTo(OrganisationWords.ProfilePath(slug), forceLoad: true);
+}

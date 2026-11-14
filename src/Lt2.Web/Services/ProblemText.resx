@@ -96,4 +96,45 @@
 <data name="draft.failed" xml:space="preserve"><value>Juodraščio parengti nepavyko. Parašykite aprašymą patys arba pabandykite vėliau.</value></data>
 <data name="follow.limit" xml:space="preserve"><value>Pasiekėte, kiek daugiausia projektų ir Seimo narių galima sekti. Nustokite sekti ką nors kita.</value></data>
 <data name="mp.not-found" xml:space="preserve"><value>Tokio Seimo nario nėra.</value></data>
+<data name="organisation.not-found" xml:space="preserve"><value>Tokios organizacijos nėra.</value></data>
+<data name="organisation.name-empty" xml:space="preserve"><value>Įrašykite organizacijos pavadinimą.</value></data>
+<data name="organisation.name-length" xml:space="preserve"><value>Pavadinimas turi būti nuo 3 iki 120 ženklų.</value></data>
+<data name="organisation.name-taken" xml:space="preserve"><value>Organizacija tokiu pavadinimu jau yra. Jei tai jūsų organizacija, paprašykite jos atstovų pakviesti jus.</value></data>
+<data name="organisation.description-too-long" xml:space="preserve"><value>Aprašymas per ilgas: ne daugiau kaip 500 ženklų.</value></data>
+<data name="organisation.website-invalid" xml:space="preserve"><value>Nurodykite svetainės adresą, prasidedantį https:// (ne daugiau kaip 200 ženklų).</value></data>
+<data name="organisation.legal-code-invalid" xml:space="preserve"><value>Juridinio asmens kodą sudaro nuo 7 iki 9 skaitmenų.</value></data>
+<data name="organisation.limit" xml:space="preserve"><value>Iš vienos paskyros galima užregistruoti ne daugiau organizacijų, nei leidžia nustatymas. Uždarytos nesiskaičiuoja.</value></data>
+<data name="organisation.blocked" xml:space="preserve"><value>Organizacija užblokuota moderatorių: kol blokavimas galioja, atstovai negali skelbti ir keisti.</value></data>
+<data name="organisation.closed" xml:space="preserve"><value>Organizacija uždaryta.</value></data>
+<data name="organisation.not-active" xml:space="preserve"><value>Organizacija užblokuota arba uždaryta.</value></data>
+<data name="organisation.representatives-only" xml:space="preserve"><value>Tai gali tik organizacijos atstovai.</value></data>
+<data name="organisation.representatives-full" xml:space="preserve"><value>Organizacija jau turi 10 atstovų – daugiau negalima.</value></data>
+<data name="organisation.last-representative" xml:space="preserve"><value>Esate paskutinis atstovas: išeiti negalite, galite tik uždaryti organizaciją.</value></data>
+<data name="organisation.not-last" xml:space="preserve"><value>Organizaciją uždaryti gali tik paskutinis jos atstovas.</value></data>
+<data name="organisation.already-representative" xml:space="preserve"><value>Jūs jau esate šios organizacijos atstovas.</value></data>
+<data name="representative.not-found" xml:space="preserve"><value>Tokio atstovo nėra.</value></data>
+<data name="representative.self" xml:space="preserve"><value>Save pašalinti negalite – pasirinkite „Išeiti“.</value></data>
+<data name="invite.not-found" xml:space="preserve"><value>Tokios kvietimo nuorodos nėra.</value></data>
+<data name="invite.used" xml:space="preserve"><value>Ši kvietimo nuoroda jau panaudota arba nebegalioja. Paprašykite naujos.</value></data>
+<data name="confirm.no-website" xml:space="preserve"><value>Pirmiau nurodykite organizacijos svetainę: patvirtinama pagal jos domeną.</value></data>
+<data name="confirm.shared-website" xml:space="preserve"><value>Svetainė yra bendroje platformoje ar viešoje pašto tarnyboje, todėl domenu patvirtinti negalima. Paprašykite moderatorių.</value></data>
+<data name="confirm.address-invalid" xml:space="preserve"><value>Patikrinkite el. pašto adresą.</value></data>
+<data name="confirm.public-mail" xml:space="preserve"><value>Viešųjų pašto tarnybų adresai organizacijos nepatvirtina. Nurodykite adresą organizacijos domene.</value></data>
+<data name="confirm.wrong-domain" xml:space="preserve"><value>Adresas turi būti organizacijos svetainės domene arba jo subdomene.</value></data>
+<data name="confirm.barred" xml:space="preserve"><value>Moderatorius atšaukė šios organizacijos patvirtinimą: patvirtinti ją dabar gali tik moderatorius.</value></data>
+<data name="confirm.already" xml:space="preserve"><value>Organizacija jau patvirtinta.</value></data>
+<data name="confirm.too-many" xml:space="preserve"><value>Per daug kodų per trumpą laiką. Pabandykite vėliau.</value></data>
+<data name="confirm.code-invalid" xml:space="preserve"><value>Kodas neteisingas arba nebegalioja. Paprašykite naujo.</value></data>
+<data name="statement.stance-invalid" xml:space="preserve"><value>Pasirinkite, ko organizacija prašo: balsuoti už, prieš, ar teikia pastabų.</value></data>
+<data name="statement.empty" xml:space="preserve"><value>Parašykite organizacijos poziciją.</value></data>
+<data name="statement.too-long" xml:space="preserve"><value>Pozicija per ilga: ne daugiau kaip 1 500 ženklų.</value></data>
+<data name="statement.link-invalid" xml:space="preserve"><value>Nurodykite nuorodą, prasidedančią https:// (ne daugiau kaip 500 ženklų).</value></data>
+<data name="statement.goal-invalid" xml:space="preserve"><value>Tikslas – nuo 1 iki 1 000 000 dalyvių.</value></data>
+<data name="statement.goal-with-remarks" xml:space="preserve"><value>Tikslą galima nurodyti tik prašant balsuoti už arba prieš.</value></data>
+<data name="statement.bill-not-open" xml:space="preserve"><value>Šiam projektui pozicijų skelbti ar keisti nebegalima.</value></data>
+<data name="statement.hidden" xml:space="preserve"><value>Šios organizacijos poziciją dėl projekto paslėpė moderatorius.</value></data>
+<data name="statement.exists" xml:space="preserve"><value>Organizacija dėl šio projekto poziciją jau paskelbė.</value></data>
+<data name="statement.not-found" xml:space="preserve"><value>Tokios pozicijos nėra.</value></data>
+<data name="invitation.organisation-inactive" xml:space="preserve"><value>Kol organizacija užblokuota ar uždaryta, jos kvietimo kodo pakeisti negalima.</value></data>
+<data name="invitation.organisation-switched-off" xml:space="preserve"><value>Organizacijos kvietimo kodą išjungė administratorius, todėl naujo kol kas sukurti negalima.</value></data>
 </root>
