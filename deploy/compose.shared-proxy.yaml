@@ -5,6 +5,11 @@
 # That Caddy holds ports 80 and 443 and the certificates. LT2's own Caddy does not start and nothing here publishes 80
 # or 443; `web` also joins that Caddy's Docker network (LT2_PROXY_NETWORK, created by the other project) under the alias
 # lt2-web, which the site block in shared-proxy.Caddyfile proxies to. README.md, "Behind a server's existing Caddy".
+#
+# Mailpit (profile "local", a trial with caught emails) joins the same network as lt2-mailpit for the optional mail
+# viewer block, and asks for a name and password itself, from the password file mailpit_ui_auth in the secrets
+# directory (htpasswd lines, bcrypt), on every route to it, the server's loopback port included. Whoever reads it reads
+# every sign-in code (design 9.2). Locally, without this file, Mailpit stays open for the end-to-end tests.
 
 services:
   caddy:
@@ -18,7 +23,20 @@ services:
         # "web" is too generic a name on a network other projects share.
         aliases: [lt2-web]
 
+  mailpit:
+    environment:
+      MP_UI_AUTH_FILE: /run/secrets/mailpit_ui_auth
+    secrets:
+      - mailpit_ui_auth
+    networks:
+      shared-proxy:
+        aliases: [lt2-mailpit]
+
 networks:
   shared-proxy:
     name: ${LT2_PROXY_NETWORK:?set LT2_PROXY_NETWORK to the Docker network of the server's Caddy}
     external: true
+
+secrets:
+  mailpit_ui_auth:
+    file: ${LT2_SECRETS_DIR:-./secrets}/mailpit_ui_auth

@@ -216,6 +216,7 @@ owned by root):
 | `$LT2_HOME/lt2.env` | The server's values, passed with `--env-file` instead of `deploy/.env` (mode 600) |
 | `$LT2_HOME/secrets/` | `sudo python3 deploy/init-secrets.py $LT2_HOME/secrets`: run as root, it gives each file to the container user that reads it and nobody else |
 | `$LT2_HOME/deployed-commit` | The commit that runs |
+| `$LT2_HOME/mailpit-password` | The Mailpit viewer's password (mode 600; its hash is `secrets/mailpit_ui_auth`), see "The caught emails" below |
 
 `lt2.env` for a trial with invented data (the request limits and sign-in code limits stay the code's defaults; never
 `LT2_RATE_*`, `--local-code-limits` or `BANDYMAS-2026` on a server):
@@ -244,8 +245,7 @@ LT2_AI_PROVIDER=
 ```
 
 With `LT2_HTTPS_PORT=443` the links in emails are `https://lt2.example.org/...` (`SiteLinks` drops the default port).
-Mailpit listens on the server's loopback only; read it through a tunnel (`ssh -L 8025:127.0.0.1:8025 <server>`, then
-<http://localhost:8025>). Every compose command on the server is, from `$LT2_HOME/app`:
+Every compose command on the server is, from `$LT2_HOME/app`:
 
 ```sh
 docker compose --env-file $LT2_HOME/lt2.env -f deploy/compose.yaml -f deploy/compose.shared-proxy.yaml <command>
@@ -262,14 +262,34 @@ copied over SSH; nothing goes to a registry):
 2. On the server: `docker load -i lt2-images.tar`; unpack `lt2-app.tar.gz` into a new directory and swap it with
    `$LT2_HOME/app` (keep the old one until the new one runs); write `C` to `$LT2_HOME/deployed-commit` and set
    `LT2_IMAGE_TAG=C` in `lt2.env`.
-3. `up -d --no-build` (the command above): the migrator runs first, then `web` and `worker` are replaced. Check
-   `/health/ready` through the site. The first deploy then appends the site block to the server Caddy's Caddyfile
-   (append only: the file is often bind-mounted as a single file, so it must keep its inode), validates it with
-   `caddy validate` and applies it with `caddy reload` (graceful; never restart that Caddy). Later deploys leave it
-   alone.
+3. `run --rm --no-deps migrator` (the new migrations, while the old `web` still answers), then
+   `up -d --no-build --no-deps web worker mailpit seimas-standin`: `web` is down only while it is replaced, which is
+   when the server's Caddy logs 502s with visitors' addresses. (A plain `up -d --no-build` also works; it runs the
+   migrator while `web` waits.) Check `/health/ready` through the site. The first deploy then appends the site block to
+   the server Caddy's Caddyfile (append only: the file is often bind-mounted as a single file, so it must keep its
+   inode), validates it with `caddy validate` and applies it with `caddy reload` (graceful; never restart that Caddy).
+   Later deploys leave it alone.
 
 Invitations and the demonstration data are made once with `run --rm migrator --seed-invitation CODE:USES` and, after
 the worker's first import from the stand-in, `run --rm --no-deps migrator --demo-appeal`.
+
+**The caught emails** (design 9.2). Whoever reads Mailpit reads every sign-in code, so on a server Mailpit asks for a
+name and password itself: `compose.shared-proxy.yaml` gives it the password file `mailpit_ui_auth` from the secrets
+directory, and that holds on every route to it, the loopback port 8025 and the tunnel included. Without the override,
+locally, Mailpit stays open (the end-to-end tests read its API). Make the file once on the server, as root, with the
+password kept only in a root-only file (the hash comes from a throwaway Caddy container; nothing is installed):
+
+```sh
+umask 077
+python3 -c 'import secrets; print(secrets.token_urlsafe(24))' > $LT2_HOME/mailpit-password
+printf 'lt2:%s\n' "$(tr -d '\n' < $LT2_HOME/mailpit-password | docker run --rm -i --network none caddy:2 caddy hash-password)" \
+  > $LT2_HOME/secrets/mailpit_ui_auth
+```
+
+The viewer gets its own hostname, never a path of the site, from the second block of `deploy/shared-proxy.Caddyfile`
+(`mail.example.org` replaced), appended and reloaded like the first. The name is `lt2`; the password is read over SSH
+with `cat $LT2_HOME/mailpit-password`. To change it, write a new password file and hash, then
+`up -d --no-build --no-deps --force-recreate mailpit` (Mailpit keeps no messages over a restart).
 
 ## Conventions
 

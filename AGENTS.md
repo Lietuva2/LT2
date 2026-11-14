@@ -95,8 +95,9 @@ tests/Lt2.Parliament.ImportTests  Seimas client, parsers, register of assumption
                            the stand-in and PostgreSQL; live contract suite only with LT2_SEIMAS_LIVE=1
 deploy/                    Dockerfile, compose.yaml, Caddyfile, .env (local defaults), init-secrets.py (optional target
                            directory; as root on Linux gives each secret to the container user reading it), secrets/;
-                           compose.shared-proxy.yaml and shared-proxy.Caddyfile: behind a server's existing Caddy
-                           (design 9.2, README.md); LT2_SECRETS_DIR and LT2_IMAGE_TAG move secrets and tag images
+                           compose.shared-proxy.yaml and shared-proxy.Caddyfile: behind a server's existing Caddy, with
+                           the Mailpit viewer on its own hostname behind Mailpit's password file (design 9.2,
+                           README.md); LT2_SECRETS_DIR and LT2_IMAGE_TAG move secrets and tag images
 tools/Lt2.SeimasStandIn     local and test only: stand-in for the Seimas open data and the lrs.lt agenda page (/darbotvarke),
                            invented answers; never shipped. Recent/ (container only, never in tests) adds a sitting and
                            a stage vote dated two days before today, so the local agenda has recent votes

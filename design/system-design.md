@@ -1977,8 +1977,7 @@ the server as it is].** It is a staging environment, an isolated Compose project
 also runs the owner's other sites:
 
 - **Data and emails.** The parliament data is the stand-in's, invented, and every page says so; the demonstration
-  record and organisations are seeded; emails are caught by Mailpit and never delivered (Mailpit listens on the
-  server's loopback only and is read through an SSH tunnel). Registration needs an invitation code made for this
+  record and organisations are seeded; emails are caught by Mailpit and never delivered. Registration needs an invitation code made for this
   server, not the one in `deploy/.env`. The request limits are the code's defaults.
 - **Behind the server's proxy.** Ports 80 and 443 belong to the Caddy that already serves the other sites. LT2 does
   not start its own Caddy there: that Caddy gets one site block for LT2's hostname and reaches `web` over its Docker
@@ -1986,6 +1985,12 @@ also runs the owner's other sites:
   Caddyfile does (compression, the 1 MB request limit, no `Server` header, the forwarded scheme), writes no access log
   for the site, and adds `X-Robots-Tag: noindex, nofollow`, since a trial with invented data must not be indexed.
   Nothing else on the server is changed: no other site's block, container, volume, port or firewall rule.
+- **Reading the caught emails [decided by the owner on 2026-11-15].** Whoever reads Mailpit reads every sign-in code
+  and can sign in as anyone, staff included, so it is never open. Its web interface has its own hostname, served by
+  the server's Caddy over HTTPS only and marked `noindex`, and Mailpit itself asks for a name and password (its own
+  password file, generated on the server, the password kept in a root-only file there and nowhere else). Its own
+  hostname, not a path of the site: the viewer shows the HTML of emails and must not share the site's origin. No port
+  is opened for it; the SMTP port stays on the internal network. Locally Mailpit stays without a password.
 - **Delivery.** Images are built from the deployed commit on the developer's machine and copied to the server over
   SSH; nothing is pushed to a registry or to GitHub. The migrator runs once per deploy, as in 9.3.
 - **Not there yet, owed before production:** the host hardening of 9.1 (a named deploy user, a non-default SSH port,
