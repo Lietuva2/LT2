@@ -4,48 +4,112 @@
 @inject IStringLocalizer<AppealText> T
 @inject Formats F
 
-@* The published appeals (design 8.8 GET /appeals), server-rendered; sorting and paging are plain links. *@
+@* The bills people can take part on (design 8.12.5, GET /appeals), server-rendered and readable without JavaScript: every
+   active bill, by activity (participants plus published arguments) unless another order is chosen: participants,
+   arguments or planned date. The search, the filter "Planuojami artimiausiu metu", the order, the closed tab and paging
+   are a plain form and plain links; each row shows its participants and arguments. *@
 <PageTitle>@T["List.Title"] · Lietuva 2.0</PageTitle>
 
 <div class="stack">
     <p class="label">Lietuva 2.0</p>
     <h1>@T["List.Title"]</h1>
     <p class="lead">@T["List.Lead"]</p>
-    <div class="row">
-        <a class="btn" href="/kreipimaisi/naujas" id="new-appeal">@T["List.Open"]</a>
-        <span class="small">
-            @T["List.Sort"]
-            @if (Newest)
+    <nav class="row tabs" aria-label="@T["List.Tabs"]">
+        @if (Closed)
+        {
+            <a href="/kreipimaisi" id="tab-active">@T["List.Tab.Active"]</a>
+            <b aria-current="page" id="tab-closed">@T["List.Tab.Closed"]</b>
+        }
+        else
+        {
+            <b aria-current="page" id="tab-active">@T["List.Tab.Active"]</b>
+            <a href="/kreipimaisi?skirtukas=uzdaryti" id="tab-closed">@T["List.Tab.Closed"]</a>
+        }
+    </nav>
+    <form class="filters sheet" method="get" action="/kreipimaisi" role="search" id="bill-search">
+        @if (Closed)
+        {
+            <input type="hidden" name="skirtukas" value="uzdaryti" />
+        }
+        else if (Sort != "aktyvumas")
+        {
+            <input type="hidden" name="rikiuoti" value="@Sort" />
+        }
+        <div class="field">
+            <label for="q">@T["List.Search"]</label>
+            <input class="input" id="q" name="q" type="search" value="@Q" autocomplete="off" />
+        </div>
+        @if (!Closed)
+        {
+            <label class="check" for="planuojami">
+                <input type="checkbox" id="planuojami" name="planuojami" value="taip" checked="@Planned" />
+                <span>@T["List.Planned"]</span>
+            </label>
+        }
+        <div class="row">
+            <button class="btn" type="submit">@T["List.SearchButton"]</button>
+            @if (Filtered)
             {
-                <a href="/kreipimaisi">@T["List.SortParticipants"]</a><text> · </text><b>@T["List.SortNewest"]</b>
+                <a href="@(Closed ? "/kreipimaisi?skirtukas=uzdaryti" : "/kreipimaisi")">@T["List.Clear"]</a>
+            }
+        </div>
+    </form>
+</div>
+
+@if (!Closed)
+{
+    <p class="small" id="sort">
+        @T["List.Sort"]@(" ")
+        @for (var i = 0; i < SortNames.Length; i++)
+        {
+            var name = SortNames[i];
+            @if (i > 0)
+            {
+                @(" · ")
+            }
+            @if (name == Sort)
+            {
+                <b aria-current="true" id="sort-@name">@T["List.Sort." + name]</b>
             }
             else
             {
-                <b>@T["List.SortParticipants"]</b><text> · </text><a href="/kreipimaisi?rikiuoti=naujausi">@T["List.SortNewest"]</a>
+                <a href="@Link(null, name)" id="sort-@name">@T["List.Sort." + name]</a>
             }
-        </span>
-    </div>
-</div>
+        }
+    </p>
+}
 
 @if (_page is { } page)
 {
+    <p class="small num" role="status" id="found">@Fmt("List.Found", Formats.Number(page.Total))</p>
     @if (page.Items.Count == 0)
     {
-        <p id="no-appeals">@T["List.Empty"]</p>
+        <p id="no-appeals">@T[Closed ? "List.EmptyClosed" : "List.Empty"]</p>
     }
     else
     {
         <ul class="rows" id="appeals">
             @foreach (var item in page.Items)
             {
-                <li>
+                <li id="bill-@item.Bill.Number">
                     <div class="rows__main">
-                        <a href="/seimas/@Uri.EscapeDataString(item.Bill.Number)/kreipimasis"><b>@item.Bill.Title</b></a>
+                        <a href="/seimas/@Uri.EscapeDataString(item.Bill.Number)"><b>@item.Bill.Title</b></a>
                         <span class="small num">
-                            @item.Bill.Number ·
-                            @Fmt("List.Counts", Formats.Number(item.Counts.For), Formats.Number(item.Counts.ForOlderThan30Days), Formats.Number(item.Counts.Against), Formats.Number(item.Counts.AgainstOlderThan30Days))
+                            @item.Bill.Number@(" · ")
+                            @if (item.Counts.For + item.Counts.Against + item.Arguments == 0)
+                            {
+                                @T["List.Nobody"]
+                            }
+                            else
+                            {
+                                @Fmt("List.Activity", Formats.Number(item.Counts.For + item.Counts.Against), Formats.Number(item.Arguments))
+                            }
                         </span>
-                        <span class="small num">@Fmt("List.Threshold", Formats.Number(item.Threshold.Participants), Formats.Number(item.Threshold.Value))</span>
+                        @if (item.Counts.For + item.Counts.Against > 0)
+                        {
+                            <span class="small num">@Fmt("List.Counts", Formats.Number(item.Counts.For), Formats.Number(item.Counts.ForOlderThan30Days), Formats.Number(item.Counts.Against), Formats.Number(item.Counts.AgainstOlderThan30Days))</span>
+                            <span class="small num">@Fmt("List.Limit", Formats.Number(item.Threshold.Value))</span>
+                        }
                         @if (item.Planned is { } plan)
                         {
                             <span class="small">@Fmt("Planned", F.T["Month." + plan.Date.Month], plan.Date.Day)</span>
@@ -59,7 +123,7 @@
         </ul>
         @if (page.NextCursor is { } next)
         {
-            <p><a href="/kreipimaisi?@(Newest ? "rikiuoti=naujausi&" : "")nuo=@next">@T["List.More"]</a></p>
+            <p><a href="@Link(next, Sort)" id="more">@T["List.More"]</a></p>
         }
     }
 }
@@ -69,14 +133,66 @@
 @code {
     private AppealListResponse? _page;
 
-    [SupplyParameterFromQuery(Name = "rikiuoti")] public string? Sort { get; set; }
+    [SupplyParameterFromQuery(Name = "q")] public string? Q { get; set; }
+
+    [SupplyParameterFromQuery(Name = "planuojami")] public string? PlannedFlag { get; set; }
+
+    [SupplyParameterFromQuery(Name = "skirtukas")] public string? Tab { get; set; }
 
     [SupplyParameterFromQuery(Name = "nuo")] public string? From { get; set; }
 
-    private bool Newest => Sort == "naujausi";
+    [SupplyParameterFromQuery(Name = "rikiuoti")] public string? SortParameter { get; set; }
+
+    /// <summary>The orders on the page (design 8.12.5), in Lithuanian in the address; the first is the default.</summary>
+    private static readonly string[] SortNames = ["aktyvumas", "dalyviai", "argumentai", "data"];
+
+    private static readonly Dictionary<string, string> ApiSorts = new()
+    {
+        ["aktyvumas"] = "activity", ["dalyviai"] = "participants", ["argumentai"] = "arguments", ["data"] = "planned",
+    };
+
+    private string Sort => SortParameter is { } s && ApiSorts.ContainsKey(s) ? s : "aktyvumas";
+
+    private bool Closed => Tab == "uzdaryti";
+
+    private bool Planned => !Closed && PlannedFlag == "taip";
+
+    private bool Filtered => !string.IsNullOrWhiteSpace(Q) || Planned;
 
     protected override async Task OnParametersSetAsync() =>
-        _page = (await Appeals.GetAppealsAsync(Newest ? "newest" : null, From)).Value;
+        _page = (await Appeals.GetAppealsAsync(Q, Planned, Closed, From, Closed ? null : ApiSorts[Sort])).Value;
+
+    /// <summary>The same search, filter and tab, with the given page (none = the first) and order.</summary>
+    private string Link(string? next, string sort)
+    {
+        var query = new List<string>();
+        if (!Closed && sort != "aktyvumas")
+        {
+            query.Add("rikiuoti=" + sort);
+        }
+
+        if (!string.IsNullOrWhiteSpace(Q))
+        {
+            query.Add("q=" + Uri.EscapeDataString(Q.Trim()));
+        }
+
+        if (Planned)
+        {
+            query.Add("planuojami=taip");
+        }
+
+        if (Closed)
+        {
+            query.Add("skirtukas=uzdaryti");
+        }
+
+        if (next is not null)
+        {
+            query.Add("nuo=" + Uri.EscapeDataString(next));
+        }
+
+        return query.Count == 0 ? "/kreipimaisi" : "/kreipimaisi?" + string.Join("&", query);
+    }
 
     private string Fmt(string key, params object?[] values) => string.Format(System.Globalization.CultureInfo.InvariantCulture, T[key], values);
 }

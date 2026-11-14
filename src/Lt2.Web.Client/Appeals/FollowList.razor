@@ -1,0 +1,124 @@
+@using Lt2.Api.Contracts.Follows
+@inherits InteractiveBase
+@inject IFollowsApi Follows
+
+@* The account page's follows (design 8.11.2): the followed bills with their planned date or last stage result, the
+   followed MPs, "Nebesekti", and the two email switches. The person's own data only; every follow email links here. *@
+<section class="sheet stack" aria-labelledby="follows-title" id="sekami">
+    <h2 id="follows-title">@L["Follows.Title"]</h2>
+    <p>@L["Follows.Lead"]</p>
+    @if (Mine is { } mine)
+    {
+        @if (mine.Bills.Count == 0 && mine.Mps.Count == 0)
+        {
+            <p class="small" id="follows-none">@L["Follows.None"] <a href="/darbotvarke">@L["Follows.ToAgenda"]</a></p>
+        }
+        @if (mine.Bills.Count > 0)
+        {
+            <h3>@L["Follows.Bills"]</h3>
+            <ul class="rows" id="follows-bills">
+                @foreach (var b in mine.Bills)
+                {
+                    <li>
+                        <div class="rows__main">
+                            <span><a class="num" href="/seimas/@Uri.EscapeDataString(b.Number)">@b.Number</a> · @b.Title</span>
+                            <span class="small num">
+                                @if (b.Planned is { } plan)
+                                {
+                                    @Text("Follows.Planned", Dates.Day(plan.Date))
+                                }
+                                else if (b.LastStageResult is { } vote)
+                                {
+                                    @Text("Follows.Voted", Dates.Day(vote.HeldAt))
+                                    @(vote.IsConsensus ? " " + L["Follows.Consensus"] : " " + Text("Follows.Result", Number(vote.For), Number(vote.Against), Number(vote.Abstain)))
+                                }
+                                else
+                                {
+                                    @L["Follows.NothingYet"]
+                                }
+                            </span>
+                        </div>
+                        <div class="rows__side">
+                            <button type="button" class="btn btn--plain" disabled="@Locked" @onclick="() => UnfollowBillAsync(b.Number)">@L["Follow.Unfollow"]</button>
+                        </div>
+                    </li>
+                }
+            </ul>
+        }
+        @if (mine.Mps.Count > 0)
+        {
+            <h3>@L["Follows.Mps"]</h3>
+            <ul class="rows" id="follows-mps">
+                @foreach (var m in mine.Mps)
+                {
+                    <li>
+                        <div class="rows__main"><a href="/p/@m.Slug">@m.FirstName @m.LastName</a></div>
+                        <div class="rows__side">
+                            <button type="button" class="btn btn--plain" disabled="@Locked" @onclick="() => UnfollowMpAsync(m.Slug)">@L["Follow.Unfollow"]</button>
+                        </div>
+                    </li>
+                }
+            </ul>
+        }
+        <p class="small num">@Text("Follows.Max", AppealNumbers.Of(mine.Bills.Count + mine.Mps.Count), AppealNumbers.Of(mine.Max))</p>
+    }
+    @if (Notices is { } notices)
+    {
+        <fieldset class="stack stack--tight" id="follow-notices">
+            <legend class="label">@L["Follows.Emails"]</legend>
+            <label class="check"><input type="checkbox" id="notice-planned" checked="@notices.Planned" disabled="@Locked" @onchange="e => SetAsync(e.Value is true, notices.Voted)" /><span>@L["Follows.Email.planned"]</span></label>
+            <label class="check"><input type="checkbox" id="notice-voted" checked="@notices.Voted" disabled="@Locked" @onchange="e => SetAsync(notices.Planned, e.Value is true)" /><span>@L["Follows.Email.voted"]</span></label>
+        </fieldset>
+    }
+    <Messages Message="@Message" Info="@Info" />
+</section>
+
+@code {
+    [PersistentState] public MyFollowsResponse? Mine { get; set; }
+
+    [PersistentState] public NoticeSettingsResponse? Notices { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        Mine ??= (await Follows.GetMineAsync()).Value;
+        Notices ??= (await Follows.GetNoticesAsync()).Value;
+    }
+
+    private static string Number(int? value) => value is { } n ? AppealNumbers.Of(n) : "–";
+
+    private Task UnfollowBillAsync(string number) => RunAsync(async () =>
+    {
+        var result = await Follows.UnfollowBillAsync(number);
+        await AfterAsync(result);
+    });
+
+    private Task UnfollowMpAsync(string slug) => RunAsync(async () =>
+    {
+        var result = await Follows.UnfollowMpAsync(slug);
+        await AfterAsync(result);
+    });
+
+    private async Task AfterAsync(ApiResult result)
+    {
+        if (!result.IsSuccess)
+        {
+            Show(result.Problem);
+            return;
+        }
+
+        Mine = (await Follows.GetMineAsync()).Value;
+    }
+
+    private Task SetAsync(bool planned, bool voted) => RunAsync(async () =>
+    {
+        var result = await Follows.SetNoticesAsync(new NoticeSettingsRequest { Planned = planned, Voted = voted });
+        if (!result.IsSuccess)
+        {
+            Show(result.Problem);
+            return;
+        }
+
+        Notices = new NoticeSettingsResponse(planned, voted);
+        Info = L["Follows.Saved"];
+    });
+}

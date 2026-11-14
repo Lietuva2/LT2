@@ -62,7 +62,9 @@ public sealed record VoteTotalsResponse(int? For, int? Against, int? Abstain, in
 /// <param name="OfficialNote">The Seimas's own comment, for example that per-MP votes do not match the protocol totals.</param>
 public sealed record VoteSummaryResponse(VoteLink Vote, VoteTotalsResponse Totals, string? OfficialNote);
 
-public sealed record BillResponse(string Number, string Title, string? ESeimasUrl, IReadOnlyList<VoteSummaryResponse> Votes);
+/// <param name="Planned">The bill's current planned date (design 8.11.1: "Planuojama …"), from today on; null when none.</param>
+public sealed record BillResponse(
+    string Number, string Title, string? ESeimasUrl, IReadOnlyList<VoteSummaryResponse> Votes, Appeals.PlannedDateResponse? Planned = null);
 
 public sealed record BallotResponse(MpLink Mp, string? FactionLabel, string Choice);
 

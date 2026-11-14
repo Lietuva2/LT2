@@ -28,8 +28,15 @@ public static class NotificationsModule
             options.UseLt2Npgsql(sp.GetRequiredService<NpgsqlDataSource>(), Schema), ServiceLifetime.Scoped);
         services.AddSingleton<IOutbox, OutboxWriter>();
         services.AddLocalization();
+
+        // The site's own address for links in emails (design 5.6); empty keeps the paths.
+        services.AddOptions<SiteOptions>().Bind(configuration.GetSection(SiteOptions.Section))
+            .Validate(o => SiteLinks.IsValid(o.Address), "Site:Address must be empty or an https address of a host and nothing more, for example https://lietuva2.lt.")
+            .ValidateOnStart();
         services.AddSingleton<Digests.DigestText>();
         services.AddScoped<IDigests, Digests.DigestService>();
+        services.AddScoped<IFollows, Follows.FollowService>();
+        services.AddScoped<IAccountData, Follows.FollowAccountData>();
         services.AddSingleton<IModuleDatabase, NotificationsModuleDatabase>();
         return services;
     }
@@ -52,6 +59,9 @@ public static class NotificationsModule
         services.AddSingleton<FeedbackTemplates>();
         services.AddSingleton<IOutboxHandler, FeedbackReplyEmailHandler>();
         services.AddSingleton<IOutboxHandler, FeedbackNoticeEmailHandler>();
+        services.AddSingleton<FollowTemplates>();
+        services.AddSingleton<IOutboxHandler, FollowPlannedEmailHandler>();
+        services.AddSingleton<IOutboxHandler, FollowVotedEmailHandler>();
         services.AddSingleton<INotificationsDispatcher, OutboxDispatcher>();
         return services;
     }

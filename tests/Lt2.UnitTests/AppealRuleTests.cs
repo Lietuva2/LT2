@@ -134,7 +134,7 @@ public sealed class AppealRuleTests
     }
 }
 
-/// <summary>Design 8.4: the appeal's own, public threshold.</summary>
+/// <summary>Design 8.12.2: one threshold for all bills, a moderator's override, never below the minimum.</summary>
 public sealed class ThresholdRuleTests
 {
     private static readonly DateTimeOffset Summarised = new(2026, 11, 16, 5, 0, 0, TimeSpan.Zero);
@@ -155,37 +155,25 @@ public sealed class ThresholdRuleTests
     }
 
     [Fact]
-    public void The_initiator_may_change_the_threshold_until_the_appeal_first_enters_a_summary()
+    public void A_bill_without_its_own_number_has_the_default_read_now()
     {
-        ThresholdRules.CheckInitiatorChange(AppealStatuses.Open, ThresholdSetters.Initiator, null).ShouldBeNull();
-        ThresholdRules.CheckInitiatorChange(AppealStatuses.Pending, ThresholdSetters.Initiator, null).ShouldBeNull();
-        ThresholdRules.CheckInitiatorChange(AppealStatuses.Open, ThresholdSetters.Initiator, Summarised).ShouldBe("threshold.locked");
+        ThresholdRules.Effective(stored: null, defaultValue: 100, minimum: 50).ShouldBe(100);
+        ThresholdRules.Effective(stored: null, defaultValue: 250, minimum: 50).ShouldBe(250);
     }
 
     [Fact]
-    public void A_threshold_a_moderator_changed_is_final_for_the_initiator()
+    public void A_moderators_number_replaces_the_default()
     {
-        ThresholdRules.CheckInitiatorChange(AppealStatuses.Open, ThresholdSetters.Moderator, null).ShouldBe("threshold.set-by-moderator");
-        ThresholdRules.InitiatorMayChange(AppealStatuses.Open, ThresholdSetters.Moderator, null).ShouldBeFalse();
+        ThresholdRules.Effective(stored: 1000, defaultValue: 100, minimum: 50).ShouldBe(1000);
+        ThresholdRules.Effective(stored: 60, defaultValue: 100, minimum: 50).ShouldBe(60);
     }
 
     [Fact]
-    public void The_threshold_of_a_closed_or_rejected_appeal_does_not_change()
+    public void A_raised_minimum_lifts_every_bill_below_it()
     {
-        ThresholdRules.CheckInitiatorChange(AppealStatuses.Closed, ThresholdSetters.Initiator, null).ShouldBe("appeal.not-open");
-        ThresholdRules.CheckInitiatorChange(AppealStatuses.Rejected, ThresholdSetters.Initiator, null).ShouldBe("appeal.not-open");
+        ThresholdRules.Effective(stored: 60, defaultValue: 100, minimum: 150).ShouldBe(150);
+        ThresholdRules.Effective(stored: null, defaultValue: 100, minimum: 150).ShouldBe(150);
     }
-
-    [Fact]
-    public void A_raised_minimum_lifts_appeals_below_it()
-    {
-        ThresholdRules.Effective(stored: 60, minimum: 100, firstSummarisedAt: null).ShouldBe(100);
-        ThresholdRules.Effective(stored: 1000, minimum: 100, firstSummarisedAt: null).ShouldBe(1000);
-    }
-
-    [Fact]
-    public void An_appeal_already_in_summaries_keeps_its_threshold_when_the_minimum_is_raised() =>
-        ThresholdRules.Effective(stored: 60, minimum: 100, firstSummarisedAt: Summarised).ShouldBe(60);
 
     [Fact]
     public void The_threshold_counts_both_sides_together()
@@ -193,6 +181,10 @@ public sealed class ThresholdRuleTests
         ThresholdRules.Reached(participantsBothSides: 99, effectiveThreshold: 100).ShouldBeFalse();
         ThresholdRules.Reached(participantsBothSides: 100, effectiveThreshold: 100).ShouldBeTrue();
     }
+
+    [Fact]
+    public void A_bill_in_a_summary_really_sent_stays_eligible() =>
+        ThresholdRules.Reached(participantsBothSides: 10, effectiveThreshold: 100, firstSummarisedAt: Summarised).ShouldBeTrue();
 }
 
 /// <summary>Design 6.6 and 8.2: both sides together, each with the count for accounts older than 30 days.</summary>
@@ -282,7 +274,7 @@ public sealed class SurgeRuleTests
     }
 }
 
-/// <summary>Design 8.1: an appeal closes at the final Seimas vote and its counts are frozen.</summary>
+/// <summary>Design 8.1: a bill's record closes at the final Seimas vote and its counts are frozen.</summary>
 public sealed class ClosingRuleTests
 {
     [Fact]
@@ -290,7 +282,7 @@ public sealed class ClosingRuleTests
     {
         ClosingRules.ShouldClose(AppealStatuses.Open, 99100009).ShouldBeTrue();
         ClosingRules.ShouldClose(AppealStatuses.Open, null).ShouldBeFalse();
-        ClosingRules.ShouldClose(AppealStatuses.Pending, 99100009).ShouldBeFalse("a pending appeal waits for its moderator");
+        ClosingRules.ShouldClose(AppealStatuses.Rejected, 99100009).ShouldBeFalse("a hidden record stays hidden");
     }
 
     [Fact]

@@ -1,0 +1,53 @@
+@using Lt2.Api.Contracts.Agenda
+@inject IStringLocalizer<PageText> T
+@inject Formats F
+
+@* One planned bill (design 8.11.1, 8.12.5), on the agenda page and the front page: number, title, stage, and both sides
+   with a link to the bill's page, where anyone can take part; a bill nobody took part in says so. A bill the open data
+   does not know yet has no page here: its number links to the agenda source instead. *@
+<li id="agenda-@Item.Number">
+    <div class="rows__main">
+        <span class="row">
+            @if (Item.Title is not null)
+            {
+                <a class="tag tag--ink num" href="@BillPath">@Item.Number</a>
+            }
+            else
+            {
+                <span class="tag tag--ink num">@Item.Number</span>
+            }
+            @if (Item.Stage is { } stage)
+            {
+                <span class="tag">@F.Stage(stage)</span>
+            }
+            @if (Item.SetByModerator)
+            {
+                <span class="tag">@T["Agenda.ByModerator"]</span>
+            }
+        </span>
+        @if (Item.Title is { } title)
+        {
+            <a href="@BillPath">@title</a>
+        }
+        else
+        {
+            <span class="small">@T["Agenda.NoTitle"]</span>
+        }
+    </div>
+    <div class="rows__side">
+        @if (Item.Appeal is { } appeal)
+        {
+            <AgendaAppeal Appeal="appeal" Number="@Item.Number" />
+        }
+        else if (Item.SourceUrl is { } source && source.StartsWith("https://", StringComparison.Ordinal))
+        {
+            <a class="small" href="@source" rel="external">@T["Agenda.ToSource"]</a>
+        }
+    </div>
+</li>
+
+@code {
+    [Parameter, EditorRequired] public AgendaItemResponse Item { get; set; } = default!;
+
+    private string BillPath => "/seimas/" + Uri.EscapeDataString(Item.Number);
+}

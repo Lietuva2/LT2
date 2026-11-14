@@ -7,7 +7,11 @@ using Lt2.Web.Services;
 
 namespace Lt2.Web.Endpoints.Appeals;
 
-/// <summary><c>GET /api/v1/appeals?sort=&amp;cursor=</c>: published appeals with both sides' counts (design 8.8). Public.</summary>
+/// <summary>
+/// <c>GET /api/v1/appeals?q=&amp;planned=&amp;tab=&amp;sort=&amp;cursor=</c>: active bills with both sides' counts and their
+/// arguments, by activity (the default), participants, arguments or planned date; a search by number or title, those
+/// planned soon, or the closed tab (design 8.12.5). Public and the same for everyone.
+/// </summary>
 internal static class GetAppealsEndpoint
 {
     public static void Map(IEndpointRouteBuilder api) =>
@@ -18,6 +22,11 @@ internal static class GetAppealsEndpoint
             .Produces<AppealListResponse>()
             .Produces(StatusCodes.Status304NotModified);
 
-    private static async Task<IResult> HandleAsync(HttpContext http, IAppealsModule appeals, ErrorMapper errors, string? sort, string? cursor, CancellationToken cancellationToken) =>
-        PublicJson.From(http, errors, Lt2.SharedKernel.Result<AppealListResponse>.Success(AppealMapping.Map(await appeals.ListAsync(sort, cursor, cancellationToken))), maxAgeSeconds: 0);
+    private static async Task<IResult> HandleAsync(
+        HttpContext http, IAppealsModule appeals, ErrorMapper errors, string? q, bool? planned, string? tab, string? sort, string? cursor, CancellationToken cancellationToken) =>
+        PublicJson.From(
+            http,
+            errors,
+            Lt2.SharedKernel.Result<AppealListResponse>.Success(AppealMapping.Map(await appeals.ListAsync(new BillListQuery(q, planned == true, tab == "closed", cursor, sort), cancellationToken))),
+            maxAgeSeconds: 0);
 }

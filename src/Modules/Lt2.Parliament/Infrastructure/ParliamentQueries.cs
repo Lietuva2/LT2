@@ -293,6 +293,29 @@ internal sealed class ParliamentQueries(IDbContextFactory<ParliamentDb> contexts
             return new ImportsInfo(success, last?.StartedAt, last?.Status, await notice.IsParliamentDataInventedAsync(cancellationToken));
         }))!;
 
+    public async Task<IReadOnlyList<VoteSummary>> StageResultsSinceAsync(DateTimeOffset since, CancellationToken cancellationToken)
+    {
+        await using var db = await contexts.CreateDbContextAsync(cancellationToken);
+        var votes = await db.Votes.AsNoTracking()
+            .Where(v => v.Kind == VoteKind.StageResult && v.BillId != null && v.HeldAt >= since)
+            .OrderByDescending(v => v.HeldAt).ThenByDescending(v => v.Id)
+            .Take(200)
+            .ToListAsync(cancellationToken);
+        var bills = await BillsByIdAsync(db, votes.Select(v => v.BillId), cancellationToken);
+        return votes.Select(v => Summary(v, bills)).ToList();
+    }
+
+    public async Task<AgendaReadInfo> AgendaReadAsync(CancellationToken cancellationToken)
+    {
+        await using var db = await contexts.CreateDbContextAsync(cancellationToken);
+        var last = await db.AgendaSnapshots.AsNoTracking()
+            .Where(s => s.Failure == null)
+            .OrderByDescending(s => s.FetchedAt)
+            .Select(s => new { s.FetchedAt, s.Url })
+            .FirstOrDefaultAsync(cancellationToken);
+        return new AgendaReadInfo(last?.FetchedAt, last?.Url);
+    }
+
     // ---- Shared pieces ------------------------------------------------------------------------------------------------
 
     private static async Task<Term?> CurrentTermRowAsync(ParliamentDb db, CancellationToken cancellationToken) =>

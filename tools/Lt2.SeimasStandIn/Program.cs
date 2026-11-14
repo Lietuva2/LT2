@@ -5,7 +5,8 @@ using Lt2.SeimasStandIn;
 var builder = WebApplication.CreateSlimBuilder(args);
 builder.Logging.SetMinimumLevel(LogLevel.Warning);
 var directory = builder.Configuration["StandIn:ResponsesPath"] ?? Path.Combine(AppContext.BaseDirectory, "Responses");
-var responses = StandInResponses.Load(directory);
+// Local only: Recent/ holds a sitting and a stage vote dated relative to today, so the local agenda has recent votes.
+var responses = StandInResponses.Load(directory, builder.Configuration["StandIn:RecentPath"] ?? Path.Combine(AppContext.BaseDirectory, "Recent"));
 
 var app = builder.Build();
 app.Use(async (context, next) =>

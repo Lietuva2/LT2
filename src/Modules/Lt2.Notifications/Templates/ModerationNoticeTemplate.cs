@@ -4,14 +4,15 @@ using System.Text.Json;
 using Lt2.Notifications.Outbox;
 using Lt2.SharedKernel;
 using Microsoft.Extensions.Localization;
+using Microsoft.Extensions.Options;
 
 namespace Lt2.Notifications.Templates;
 
 /// <summary>
-/// The statement of reasons to an author (design 8.3, 8.6): what a moderator did with their appeal or argument, and why.
+/// The statement of reasons to an author (design 8.3, 8.6): what a moderator did with their argument, and why.
 /// It names the bill, never a side, and carries no tracking.
 /// </summary>
-internal sealed class ModerationNoticeTemplate(IStringLocalizer<EmailTemplates> l)
+internal sealed class ModerationNoticeTemplate(IStringLocalizer<EmailTemplates> l, IOptions<SiteOptions> site)
 {
     public EmailMessage Render(ModerationNoticeEmail model)
     {
@@ -25,7 +26,7 @@ internal sealed class ModerationNoticeTemplate(IStringLocalizer<EmailTemplates> 
         var paragraphs = new List<string>
         {
             l["SignInCode.Greeting"],
-            string.Format(CultureInfo.InvariantCulture, l[$"Moderation.{model.Notice}.Body"], bill, model.Path ?? $"/seimas/{model.BillNumber}/kreipimasis"),
+            string.Format(CultureInfo.InvariantCulture, l[$"Moderation.{model.Notice}.Body"], bill, SiteLinks.Absolute(site.Value.Address, model.Path ?? $"/seimas/{Uri.EscapeDataString(model.BillNumber)}")),
         };
         if (!string.IsNullOrWhiteSpace(model.Excerpt))
         {

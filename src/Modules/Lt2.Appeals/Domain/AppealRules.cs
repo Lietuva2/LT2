@@ -120,50 +120,30 @@ internal static class AppealRules
 }
 
 /// <summary>
-/// The appeal's threshold (design 8.4): public, set by the initiator (the form offers the default), never below the
-/// administrator's minimum, changeable by the initiator until the appeal first enters a summary, final once a moderator
-/// changed it.
+/// The threshold (design 8.12.2): one for all bills, <c>Digest:ThresholdDefault</c>, read when it is used and never below
+/// the administrator's minimum; a moderator may set a bill's own number, which stays until a moderator changes it. A bill
+/// that has been in a summary really sent to MPs stays eligible.
 /// </summary>
 internal static class ThresholdRules
 {
-    /// <summary>Anyone who sets a threshold, initiator or moderator, sets it at or above the minimum.</summary>
+    /// <summary>A moderator sets a bill's own number at or above the minimum.</summary>
     public static string? CheckRequested(int requested, int minimum) =>
         requested < minimum ? "threshold.below-minimum" : null;
 
     /// <summary>
-    /// The initiator may change the threshold while the appeal has never entered a summary and no moderator has
-    /// changed it; never on a closed or rejected appeal.
+    /// The threshold that applies today: the bill's own number if a moderator set one, otherwise the default; never below
+    /// the minimum, so raising the minimum lifts every bill under it.
     /// </summary>
-    public static string? CheckInitiatorChange(string status, string setBy, DateTimeOffset? firstSummarisedAt)
-    {
-        if (status is AppealStatuses.Closed or AppealStatuses.Rejected or AppealStatuses.Superseded)
-        {
-            return "appeal.not-open";
-        }
-
-        if (setBy == ThresholdSetters.Moderator)
-        {
-            return "threshold.set-by-moderator";
-        }
-
-        return firstSummarisedAt is not null ? "threshold.locked" : null;
-    }
-
-    /// <summary>Whether the initiator still controls the threshold (shown on the appeal page to the initiator only).</summary>
-    public static bool InitiatorMayChange(string status, string setBy, DateTimeOffset? firstSummarisedAt) =>
-        CheckInitiatorChange(status, setBy, firstSummarisedAt) is null;
+    public static int Effective(int? stored, int defaultValue, int minimum) => Math.Max(stored ?? defaultValue, minimum);
 
     /// <summary>
-    /// The threshold that applies today. If the minimum was raised after the appeal set its number, the appeal is lifted
-    /// to the minimum; an appeal already in summaries keeps its number (it stays in).
+    /// The threshold counts participants on both sides together. A bill already in a summary really sent to MPs stays
+    /// eligible whatever the threshold or the participants do later.
     /// </summary>
-    public static int Effective(int stored, int minimum, DateTimeOffset? firstSummarisedAt) =>
-        firstSummarisedAt is not null ? stored : Math.Max(stored, minimum);
+    public static bool Reached(int participantsBothSides, int effectiveThreshold, DateTimeOffset? firstSummarisedAt = null) =>
+        firstSummarisedAt is not null || participantsBothSides >= effectiveThreshold;
 
-    /// <summary>The threshold counts participants on both sides together.</summary>
-    public static bool Reached(int participantsBothSides, int effectiveThreshold) => participantsBothSides >= effectiveThreshold;
-
-    /// <summary>What the form offers: the default, but never below the minimum.</summary>
+    /// <summary>What a moderator's form starts from: the default, but never below the minimum.</summary>
     public static int Offered(int defaultValue, int minimum) => Math.Max(defaultValue, minimum);
 }
 
@@ -220,7 +200,7 @@ internal static class GroupRules
 /// <summary>Design 8.1: an appeal closes when the Seimas takes the final vote on its bill; the counts are frozen then.</summary>
 internal static class ClosingRules
 {
-    /// <summary>Only an open appeal closes, and only on a final vote; a pending one waits for its moderator.</summary>
+    /// <summary>Only an open record closes, and only on a final vote; a hidden one stays hidden.</summary>
     public static bool ShouldClose(string status, long? finalVoteId) => status == AppealStatuses.Open && finalVoteId is not null;
 
     /// <summary>The counts shown: frozen ones once closed, live ones before.</summary>
@@ -236,11 +216,13 @@ internal static class RuleErrors
     public static Error Of(string code) => code switch
     {
         "position.required" or "reason.limit" or "endorsement.other-side" or "endorsement.limit"
-            or "threshold.set-by-moderator" or "threshold.locked" or "appeal.not-open"
-            or "appeal.exists" or "proposal.exists" or "appeal.published-exists" or "moderation.wrong-state"
-            or "description-change.pending" => Error.Conflict(code),
-        "appeal.initiator-only" => Error.Forbidden(code),
+            or "appeal.not-open" or "moderation.wrong-state" or "draft.not-configured" => Error.Conflict(code),
+        "draft.too-many" => new Error(ErrorKind.TooManyRequests, code),
+        "statement.required" => Error.Validation(code, "statement"),
+        "draft.source-required" or "draft.source-too-long" => Error.Validation(code, "sourceText"),
+        "draft.none" => Error.Validation(code, "fromDraft"),
         "description.unchanged" => Error.Validation(code, "description"),
+        "description-url.invalid" => Error.Validation(code, "descriptionUrl"),
         "side.invalid" => Error.Validation(code, "side"),
         "reason.empty" or "reason.too-long" => Error.Validation(code, "text"),
         "description.empty" or "description.too-long" => Error.Validation(code, "description"),

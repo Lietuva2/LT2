@@ -8,7 +8,7 @@
     <p class="small">
         @L["Report.Visitor"] <a href="/prisijungti">@L["Report.SignIn"]</a>@if (!string.IsNullOrWhiteSpace(Contact))
         {
-            <text> </text>@L["Report.OrWrite"]<text> </text><a href="mailto:@Contact">@Contact</a>
+            @(" ")@L["Report.OrWrite"]@(" ")<a href="mailto:@Contact">@Contact</a>
         }.
     </p>
 </details>

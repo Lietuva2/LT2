@@ -76,7 +76,7 @@ public sealed class DigestTests(DatabaseFixture database) : ApiTest(database)
         {
             var (initiator, _) = await Factory.MemberAsync("Rūta Mockutė");
             using var _i = initiator;
-            var appeal = await Database.OpenPublishedAsync(initiator, moderator, AppealSteps.ThirdBill, "against", threshold: 2);
+            var appeal = await Database.PrepareBillAsync(initiator, moderator, AppealSteps.ThirdBill, "against", threshold: 2);
             var (member, _) = await Factory.MemberAsync("Giedrė Slapta");
             using var _m = member;
             (await member.TakeSideAsync(AppealSteps.ThirdBill, "for")).StatusCode.ShouldBe(HttpStatusCode.NoContent);
@@ -119,10 +119,10 @@ public sealed class DigestTests(DatabaseFixture database) : ApiTest(database)
             (held.RunId, held.Kind, held.RunDate, held.Status).ShouldBe((weekly.Id, "weekly", monday, "dry-run"));
             (held.Item.BillNumber, held.Item.For, held.Item.Against).ShouldBe(("XVP-0618", 1, 1));
             held.Item.Reasons.Select(r => r.Text).ShouldBe([AppealSteps.AgainstReason]);
-            using var appealPage = await stranger.Client.GetAsync("/seimas/XVP-0618/kreipimasis");
+            using var appealPage = await stranger.Client.GetAsync("/seimas/XVP-0618");
             var appealHtml = WebUtility.HtmlDecode(await appealPage.Content.ReadAsStringAsync());
             appealHtml.ShouldContain("Suvestinėse Seimo nariams");
-            appealHtml.ShouldNotContain("Šis kreipimasis dar nebuvo nė vienoje suvestinėje.");
+            appealHtml.ShouldNotContain("Šis projektas dar nebuvo nė vienoje suvestinėje.");
             appealHtml.ShouldContain($"href=\"{DigestRoutes.PageAt(monday, weekly.Id, "XVP-0618")}\"");
             html.ShouldContain($"id=\"{DigestRoutes.ItemAnchor(weekly.Id, "XVP-0618")}\"", customMessage: "the link lands on the appeal's item");
             (await stranger.Client.GetAsync(DigestRoutes.OfAppealOn("XVP-9999"))).StatusCode.ShouldBe(HttpStatusCode.NotFound);
@@ -171,7 +171,7 @@ public sealed class DigestTests(DatabaseFixture database) : ApiTest(database)
 
             var (initiator, _) = await Factory.MemberAsync();
             using var _i = initiator;
-            await Database.OpenPublishedAsync(initiator, moderator, AppealSteps.ThirdBill, "against", threshold: 1);
+            await Database.PrepareBillAsync(initiator, moderator, AppealSteps.ThirdBill, "against", threshold: 1);
             var (second, _) = await Factory.MemberAsync();
             using var _s = second;
             (await second.TakeSideAsync(AppealSteps.ThirdBill, "for")).StatusCode.ShouldBe(HttpStatusCode.NoContent);
@@ -209,10 +209,10 @@ public sealed class DigestTests(DatabaseFixture database) : ApiTest(database)
             // XVP-0618: one participant, no arguments at all. XVP-0533: an argument for, none against.
             var (first, _) = await Factory.MemberAsync();
             using var _f = first;
-            await Database.OpenPublishedAsync(first, moderator, AppealSteps.ThirdBill, side: null, threshold: 1);
+            await Database.PrepareBillAsync(first, moderator, AppealSteps.ThirdBill, side: null, threshold: 1);
             var (second, _) = await Factory.MemberAsync();
             using var _s = second;
-            await Database.OpenPublishedAsync(second, moderator, AppealSteps.SecondBill, side: null, threshold: 1);
+            await Database.PrepareBillAsync(second, moderator, AppealSteps.SecondBill, side: null, threshold: 1);
             var (participant, _) = await Factory.MemberAsync();
             using var _p = participant;
             (await participant.TakeSideAsync(AppealSteps.ThirdBill, "for")).StatusCode.ShouldBe(HttpStatusCode.NoContent);
@@ -260,14 +260,14 @@ public sealed class DigestTests(DatabaseFixture database) : ApiTest(database)
         {
             var (first, _) = await Factory.MemberAsync();
             using var _f = first;
-            await Database.OpenPublishedAsync(first, moderator, AppealSteps.ThirdBill, "against", threshold: 1);
+            await Database.PrepareBillAsync(first, moderator, AppealSteps.ThirdBill, "against", threshold: 1);
             await PlanAsync("XVP-0618", thursday);
             (await RunDueAsync(At(monday, 7, 5))).Single().Kind.ShouldBe("weekly");
 
             // Below threshold: not eligible; once eligible and planned for Thursday it enters Wednesday's summary.
             var (second, _) = await Factory.MemberAsync();
             using var _s = second;
-            var other = await Database.OpenPublishedAsync(second, moderator, AppealSteps.SecondBill, "for", threshold: 1);
+            var other = await Database.PrepareBillAsync(second, moderator, AppealSteps.SecondBill, "for", threshold: 1);
             await PlanAsync("XVP-0533", thursday, "consideration");
             (await RunDueAsync(At(thursday.AddDays(-1), 11, 30))).ShouldBeEmpty("before noon");
             var beforeVote = (await RunDueAsync(At(thursday.AddDays(-1), 12, 5))).Single();
@@ -301,7 +301,7 @@ public sealed class DigestTests(DatabaseFixture database) : ApiTest(database)
         {
             var (initiator, initiatorEmail) = await Factory.MemberAsync();
             using var _i = initiator;
-            var appeal = await Database.OpenPublishedAsync(initiator, moderator, AppealSteps.ThirdBill, "against", threshold: 1);
+            var appeal = await Database.PrepareBillAsync(initiator, moderator, AppealSteps.ThirdBill, "against", threshold: 1);
             await PlanAsync("XVP-0618", monday.AddDays(3));
 
             using (var hold = await moderator.PostAsync(AppealRoutes.With(AppealRoutes.HoldAppeal, appeal.Id), new StatementRequest { Statement = "Tikrinamas šuolis." }))

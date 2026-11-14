@@ -56,4 +56,25 @@ internal sealed class MpDirectory(IDbContextFactory<ParliamentDb> contexts) : IM
             .Where(d => d >= from && d <= to);
         return planned.Concat(held).Distinct().Order().ToList();
     }
+
+    public async Task<MpFacts?> FindMpAsync(string slug, CancellationToken cancellationToken)
+    {
+        await using var db = await contexts.CreateDbContextAsync(cancellationToken);
+
+        // Only people with a mandate: an MP's profile exists for them (design 7.3).
+        return await db.People.AsNoTracking()
+            .Where(p => p.Slug == slug && db.Mandates.Any(m => m.PersonId == p.Id))
+            .Select(p => new MpFacts(p.SeimasPersonId, p.Slug, p.FirstName, p.LastName))
+            .FirstOrDefaultAsync(cancellationToken);
+    }
+
+    public async Task<IReadOnlyDictionary<long, MpFacts>> MpsAsync(IReadOnlyCollection<long> seimasPersonIds, CancellationToken cancellationToken)
+    {
+        var ids = seimasPersonIds.ToList();
+        await using var db = await contexts.CreateDbContextAsync(cancellationToken);
+        return await db.People.AsNoTracking()
+            .Where(p => ids.Contains(p.SeimasPersonId))
+            .Select(p => new MpFacts(p.SeimasPersonId, p.Slug, p.FirstName, p.LastName))
+            .ToDictionaryAsync(p => p.SeimasPersonId, cancellationToken);
+    }
 }

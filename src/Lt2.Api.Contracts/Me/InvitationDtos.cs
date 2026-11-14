@@ -5,7 +5,8 @@ namespace Lt2.Api.Contracts.Me;
 /// completed registration with the caller's codes, and whether it is on. No names, dates or list. While an
 /// administrator has it switched off, <c>Contact</c> is the moderators' address for questions.
 /// </summary>
-public sealed record MyInvitationResponse(string Code, string Link, int Completed, bool On, string? Contact);
+/// <param name="Usable">The code lets a registration through now (on and not used up); the share line shows a link only then (design 8.11.5).</param>
+public sealed record MyInvitationResponse(string Code, string Link, int Completed, bool On, string? Contact, bool Usable = true);
 
 /// <summary>Registrations completed on one Vilnius day.</summary>
 public sealed record InvitationDayResponse(DateOnly Day, int Completed);

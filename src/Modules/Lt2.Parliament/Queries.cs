@@ -102,4 +102,13 @@ public interface IParliamentQueries
     Task<VoteDetail?> VoteAsync(long id, CancellationToken cancellationToken);
 
     Task<ImportsInfo> ImportsAsync(CancellationToken cancellationToken);
+
+    /// <summary>Stage-result votes on bills held at or after <paramref name="since"/>, newest first (design 8.11.1 "recently voted").</summary>
+    Task<IReadOnlyList<VoteSummary>> StageResultsSinceAsync(DateTimeOffset since, CancellationToken cancellationToken);
+
+    /// <summary>When the lrs.lt agenda page was last read successfully, and its address (design 8.11.1).</summary>
+    Task<AgendaReadInfo> AgendaReadAsync(CancellationToken cancellationToken);
 }
+
+/// <summary>The last successful read of the upcoming agenda; both null when it was never read.</summary>
+public sealed record AgendaReadInfo(DateTimeOffset? ReadAt, string? SourceUrl);

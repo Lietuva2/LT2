@@ -1,0 +1,63 @@
+@inherits InteractiveBase
+@inject Lt2.Api.Contracts.Follows.IFollowsApi Follows
+
+@* "Sekti" / "Nebesekti" a bill or an MP (design 8.11.2). Private: who follows what is shown to nobody, and there is no
+   follower count. A visitor gets a link to sign in instead. *@
+<div class="row follow" id="follow-@Kind">
+    @if (!_signedIn)
+    {
+        <a class="btn btn--plain" href="/prisijungti">@L["Follow.Follow"]</a>
+        <span class="small">@L["Follow.SignIn." + Kind]</span>
+    }
+    else
+    {
+        <button type="button" class="btn btn--plain" id="follow-toggle-@Kind" aria-pressed="@(Following == true ? "true" : "false")"
+                disabled="@(Locked || Following is null)" @onclick="ToggleAsync">@L[Following == true ? "Follow.Unfollow" : "Follow.Follow"]</button>
+        <span class="small">@L[(Following == true ? "Follow.Following." : "Follow.What.") + Kind]</span>
+    }
+    <Messages Message="@Message" Info="@Info" />
+</div>
+
+@code {
+    private bool _signedIn;
+
+    /// <summary><c>bill</c> or <c>mp</c>.</summary>
+    [Parameter, EditorRequired] public string Kind { get; set; } = "bill";
+
+    /// <summary>The bill's number or the MP's profile slug.</summary>
+    [Parameter, EditorRequired] public string Key { get; set; } = "";
+
+    [CascadingParameter] private Task<AuthenticationState>? AuthState { get; set; }
+
+    [PersistentState] public bool? Following { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        _signedIn = AuthState is not null && (await AuthState).User.Identity?.IsAuthenticated == true;
+        if (_signedIn && Following is null && (await Follows.GetMineAsync()).Value is { } mine)
+        {
+            Following = Kind == "mp"
+                ? mine.Mps.Any(m => m.Slug == Key)
+                : mine.Bills.Any(b => string.Equals(b.Number, Key, StringComparison.OrdinalIgnoreCase));
+        }
+    }
+
+    private Task ToggleAsync() => RunAsync(async () =>
+    {
+        var follow = Following != true;
+        var result = (Kind, follow) switch
+        {
+            ("mp", true) => await Follows.FollowMpAsync(Key),
+            ("mp", false) => await Follows.UnfollowMpAsync(Key),
+            (_, true) => await Follows.FollowBillAsync(Key),
+            _ => await Follows.UnfollowBillAsync(Key),
+        };
+        if (!result.IsSuccess)
+        {
+            Show(result.Problem);
+            return;
+        }
+
+        Following = follow;
+    });
+}

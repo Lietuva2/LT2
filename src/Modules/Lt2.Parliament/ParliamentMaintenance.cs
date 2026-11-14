@@ -88,6 +88,16 @@ public static class ParliamentMaintenance
         return await command.ExecuteScalarAsync(cancellationToken) as string;
     }
 
+    /// <summary>The bill's e-seimas address from the parliament data, or null (local demonstration data only).</summary>
+    public static async Task<string?> BillAddressAsync(string connectionString, string number, CancellationToken cancellationToken)
+    {
+        await using var connection = new NpgsqlConnection(connectionString);
+        await connection.OpenAsync(cancellationToken);
+        await using var command = new NpgsqlCommand("SELECT e_seimas_url FROM parliament.bill WHERE number = @n", connection);
+        command.Parameters.AddWithValue("n", number);
+        return await command.ExecuteScalarAsync(cancellationToken) as string;
+    }
+
     private static async Task ExecuteAsync(NpgsqlConnection connection, NpgsqlTransaction? transaction, string sql, CancellationToken cancellationToken)
     {
 #pragma warning disable CA2100 // Constant SQL; the only interpolation is a constant lock key.

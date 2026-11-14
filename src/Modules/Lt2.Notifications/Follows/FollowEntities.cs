@@ -1,0 +1,78 @@
+namespace Lt2.Notifications.Follows;
+
+/// <summary>
+/// <c>notify.follow</c> (design 5.4, 8.11.2): a member follows a bill (key: its number) or an MP (key: the Seimas person
+/// id). Private: shown to nobody but the person; exported and deleted with the account; never combined with sides or
+/// invitations.
+/// </summary>
+internal sealed class Follow
+{
+    public Guid UserId { get; set; }
+
+    /// <summary><see cref="FollowKinds.Bill"/> or <see cref="FollowKinds.Mp"/>.</summary>
+    public string Kind { get; set; } = "";
+
+    public string Key { get; set; } = "";
+
+    public DateTimeOffset CreatedAt { get; set; }
+}
+
+internal static class FollowKinds
+{
+    public const string Bill = "bill";
+    public const string Mp = "mp";
+}
+
+/// <summary><c>notify.notice_setting</c>: which follow emails a person gets; no row means both on (design 8.11.2).</summary>
+internal sealed class NoticeSetting
+{
+    public Guid UserId { get; set; }
+
+    public bool Planned { get; set; } = true;
+
+    public bool Voted { get; set; } = true;
+
+    public DateTimeOffset ChangedAt { get; set; }
+}
+
+/// <summary>
+/// <c>notify.bill_event</c> (design 5.4, 8.11.2): what followers are told about, recorded once, when the job first sees it:
+/// a planned date (key: the date) or a stage-result vote (key: the vote id). No person in it.
+/// </summary>
+internal sealed class BillEvent
+{
+    public string BillNumber { get; set; } = "";
+
+    /// <summary><see cref="BillEventKinds.Planned"/> or <see cref="BillEventKinds.Voted"/>.</summary>
+    public string Kind { get; set; } = "";
+
+    public string Key { get; set; } = "";
+
+    public DateTimeOffset FirstSeen { get; set; }
+
+    /// <summary>When its emails went to the outbox; null while waiting or when it is never sent.</summary>
+    public DateTimeOffset? SentAt { get; set; }
+
+    /// <summary>See <see cref="BillEventOutcomes"/>.</summary>
+    public string Outcome { get; set; } = BillEventOutcomes.Waiting;
+}
+
+internal static class BillEventKinds
+{
+    public const string Planned = "planned";
+    public const string Voted = "voted";
+}
+
+internal static class BillEventOutcomes
+{
+    /// <summary>To be sent: at once, or a planned date waiting for the next Vilnius day.</summary>
+    public const string Waiting = "waiting";
+
+    public const string Sent = "sent";
+
+    /// <summary>Recorded and never sent: a planned date already past, or a vote older than three days when first seen.</summary>
+    public const string Skipped = "skipped";
+
+    /// <summary>A waiting planned date that moved again before it was sent; the date current then is sent instead.</summary>
+    public const string Superseded = "superseded";
+}

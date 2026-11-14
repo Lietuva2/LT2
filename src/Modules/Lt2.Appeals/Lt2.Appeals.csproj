@@ -6,10 +6,15 @@
     <FrameworkReference Include="Microsoft.AspNetCore.App" />
     <PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" />
     <PackageReference Include="EFCore.NamingConventions" />
+    <PackageReference Include="Anthropic" />
     <PackageReference Include="Microsoft.EntityFrameworkCore.Design" PrivateAssets="all" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\..\Lt2.SharedKernel\Lt2.SharedKernel.csproj" />
+  </ItemGroup>
+  <ItemGroup>
+    <!-- The public AI prompts (design 8.11.4): files in the repository, read from the assembly by AiPrompts. -->
+    <EmbeddedResource Include="Ai\*.prompt.md" />
   </ItemGroup>
   <ItemGroup>
     <InternalsVisibleTo Include="Lt2.UnitTests" />

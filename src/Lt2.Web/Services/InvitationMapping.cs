@@ -11,7 +11,7 @@ internal static class InvitationMapping
     public static string Link(string code) => "/prisijungti?kodas=" + Uri.EscapeDataString(code);
 
     public static MyInvitationResponse Map(MyInvitation mine, IConfiguration configuration) =>
-        new(mine.Code, Link(mine.Code), mine.Completed, mine.On, mine.On ? null : AppealMapping.Contact(configuration));
+        new(mine.Code, Link(mine.Code), mine.Completed, mine.On, mine.On ? null : AppealMapping.Contact(configuration), mine.Usable);
 
     public static InvitationStatsResponse Map(InvitationStats s) => new(
         s.From,

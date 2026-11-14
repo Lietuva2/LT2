@@ -86,10 +86,15 @@ internal sealed class ServerMeApi(IIdentityModule identity, IMpDirectory mps, IH
     public Task<ApiResult<MyInvitationResponse>> ReplaceInvitationAsync(CancellationToken cancellationToken = default) =>
         InvitationAsync(id => invitations.ReplaceAsync(id, cancellationToken));
 
-    private async Task<ApiResult<MyInvitationResponse>> InvitationAsync(Func<Guid, Task<Result<MyInvitation>>> action) =>
-        AppealMapping.UserId(User) is { } id
-            ? errors.ToApiResult(await action(id), mine => InvitationMapping.Map(mine, configuration))
-            : ApiResult<MyInvitationResponse>.Fail(errors.ToProblem(Error.Unauthorized("auth.required")));
+    private async Task<ApiResult<MyInvitationResponse>> InvitationAsync(Func<Guid, Task<Result<MyInvitation>>> action)
+    {
+        if (AppealMapping.UserId(User) is not { } id)
+        {
+            return ApiResult<MyInvitationResponse>.Fail(errors.ToProblem(Error.Unauthorized("auth.required")));
+        }
+
+        return errors.ToApiResult(await action(id), mine => InvitationMapping.Map(mine, configuration));
+    }
 
     public async Task<ApiResult> SetPartySupportAsync(PartySupportRequest request, CancellationToken cancellationToken = default) =>
         errors.ToApiResult(await identity.SetPartySupportAsync(User, request.Party, await mps.PartiesAsync(cancellationToken), cancellationToken));

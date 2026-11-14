@@ -7,7 +7,7 @@ using Lt2.SharedKernel;
 
 namespace Lt2.IntegrationTests;
 
-/// <summary>Design 8.8 over HTTP: appeals, positions, arguments, endorsements, reports and the consent before a first position.</summary>
+/// <summary>Design 8.8, 8.12 over HTTP: every active bill open, positions, arguments, endorsements, reports and the consent before a first position.</summary>
 public sealed class AppealApiTests(DatabaseFixture database) : ApiTest(database)
 {
     private static readonly SemaphoreSlim ModeratorGate = new(1, 1);
@@ -36,106 +36,124 @@ public sealed class AppealApiTests(DatabaseFixture database) : ApiTest(database)
     }
 
     [Fact]
-    public async Task Opening_an_appeal_needs_a_signed_in_member()
-    {
-        using var stranger = NewBrowser();
-        using var response = await stranger.OpenAppealAsync(AppealSteps.SecondBill);
-        response.StatusCode.ShouldBe(HttpStatusCode.Unauthorized);
-    }
-
-    [Fact]
-    public async Task Opening_an_appeal_needs_no_positions_consent_because_it_stores_no_side()
+    public async Task An_active_bill_nobody_took_part_in_answers_the_empty_open_state_not_not_found()
     {
         await Database.FreeBillAsync(AppealSteps.SecondBill);
-        var (browser, email) = await Factory.MemberAsync(consent: false);
-        using var _b = browser;
-        using var response = await browser.OpenAppealAsync(AppealSteps.SecondBill);
-        response.StatusCode.ShouldBe(HttpStatusCode.Created, await response.Content.ReadAsStringAsync());
-        (await Database.ScalarAsync<long>("SELECT count(*) FROM appeals.position WHERE user_id = @u", ("u", await Database.UserIdAsync(email)))).ShouldBe(0);
-        (await Database.ScalarAsync<long>("SELECT count(*) FROM appeals.reason WHERE author_user_id = @u", ("u", await Database.UserIdAsync(email)))).ShouldBe(0);
-    }
-
-    [Fact]
-    public async Task An_opened_appeal_waits_for_a_moderator_and_only_its_initiator_sees_it()
-    {
-        await Database.FreeBillAsync(AppealSteps.SecondBill);
-        var (initiator, _) = await Factory.MemberAsync("Rūta Mockutė");
-        var (other, _) = await Factory.MemberAsync("Giedrė L.");
-        using var _i = initiator;
-        using var _o = other;
         using var stranger = NewBrowser();
+        var appeal = await stranger.AppealAsync(AppealSteps.SecondBill);
+        appeal.Id.ShouldBeNull("nobody took part and no moderator acted, so the bill has no record");
+        appeal.Status.ShouldBe("open");
+        appeal.Bill.Number.ShouldBe(AppealSteps.SecondBill);
+        appeal.Counts.ShouldBe(new SideCountsResponse(0, 0, 0, 0));
+        appeal.Threshold.ShouldBe(new ThresholdResponse(100, "default", null, 0, false, false));
+        appeal.Description.ShouldBeEmpty();
+        appeal.DescriptionSource.ShouldBeNull();
+        appeal.Reasons.ShouldBeEmpty();
 
-        using var opened = await initiator.OpenAppealAsync(AppealSteps.SecondBill, 1000);
-        opened.StatusCode.ShouldBe(HttpStatusCode.Created, await opened.Content.ReadAsStringAsync());
-        opened.Headers.Location!.ToString().ShouldBe("/api/v1/bills/XVP-0533/appeal");
-        var appeal = await opened.ReadAsync<AppealResponse>();
-        appeal.Status.ShouldBe("pending");
-        appeal.InitiatorName.ShouldBe("Rūta Mockutė");
-        appeal.Bill.Number.ShouldBe("XVP-0533");
-        appeal.Threshold.ShouldBe(new ThresholdResponse(1000, "initiator", null, 0, false, false));
-        appeal.Counts.ShouldBe(new SideCountsResponse(0, 0, 0, 0), "a new appeal has no participants, the initiator included");
-        appeal.Reasons.ShouldBeEmpty("no first argument");
-
-        (await initiator.AppealAsync(AppealSteps.SecondBill)).Status.ShouldBe("pending");
-        var mine = await initiator.MineAsync(AppealSteps.SecondBill);
+        var (member, _) = await Factory.MemberAsync();
+        using var _m = member;
+        var mine = await member.MineAsync(AppealSteps.SecondBill);
         mine.Side.ShouldBeNull();
-        mine.IsInitiator.ShouldBeTrue();
-        mine.MayChangeThreshold.ShouldBeTrue();
+        mine.Endorsed.ShouldBeEmpty();
         mine.MyReasons.ShouldBeEmpty();
         mine.ReasonsLeft.ShouldBeNull("no limit by default, so no counter");
-
-        // Nobody writes arguments on an appeal waiting for a moderator, the initiator included.
-        using (var early = await initiator.WriteReasonAsync(AppealSteps.SecondBill, "for", "Per anksti."))
-        {
-            early.IsSuccessStatusCode.ShouldBeFalse();
-        }
-
-        foreach (var browser in new[] { other, stranger })
-        {
-            using var hidden = await browser.Client.GetAsync(AppealRoutes.AppealOf(AppealSteps.SecondBill));
-            await hidden.ShouldBeProblemAsync(HttpStatusCode.NotFound, "appeal.not-found");
-        }
-
-        (await stranger.GetJsonAsync<AppealListResponse>(AppealRoutes.Appeals)).Items.ShouldNotContain(i => i.Id == appeal.Id);
+        mine.HasPositionConsent.ShouldBeTrue();
+        (await stranger.GetJsonAsync<IReadOnlyList<DescriptionRevisionResponse>>(AppealRoutes.HistoryOf(AppealSteps.SecondBill))).ShouldBeEmpty();
+        (await stranger.GetJsonAsync<AppealListResponse>(AppealRoutes.Appeals)).Items.ShouldContain(i => i.Bill.Number == AppealSteps.SecondBill && i.Id == null);
+        (await Database.ScalarAsync<long>("SELECT count(*) FROM appeals.appeal WHERE bill_number = @b", ("b", AppealSteps.SecondBill))).ShouldBe(0, "reading creates nothing");
     }
 
     [Fact]
-    public async Task An_appeal_is_opened_only_for_a_bill_that_exists()
+    public async Task A_bill_that_is_not_in_the_catalogue_is_not_found()
     {
+        using var stranger = NewBrowser();
+        using var missing = await stranger.Client.GetAsync(AppealRoutes.AppealOf("XVP-9999"));
+        await missing.ShouldBeProblemAsync(HttpStatusCode.NotFound, "bill.not-found");
         var (member, _) = await Factory.MemberAsync();
         using var _m = member;
-        using var response = await member.OpenAppealAsync("XVP-9999");
-        await response.ShouldBeProblemAsync(HttpStatusCode.NotFound, "bill.not-found");
+        using var side = await member.TakeSideAsync("XVP-9999", "for");
+        await side.ShouldBeProblemAsync(HttpStatusCode.NotFound, "bill.not-found");
     }
 
     [Fact]
-    public async Task A_threshold_below_the_minimum_is_refused()
+    public async Task A_member_takes_a_side_on_any_active_bill_at_once_and_two_arriving_together_land_on_one_record()
     {
         await Database.FreeBillAsync(AppealSteps.SecondBill);
-        var (member, _) = await Factory.MemberAsync();
-        using var _m = member;
-        using var response = await member.OpenAppealAsync(AppealSteps.SecondBill, threshold: 49);
-        await response.ShouldBeProblemAsync(HttpStatusCode.BadRequest, "threshold.below-minimum");
+        var members = new List<(TestBrowser Browser, string Email)>();
+        for (var i = 0; i < 6; i++)
+        {
+            members.Add(await Factory.MemberAsync());
+        }
+
+        try
+        {
+            // Nobody proposed, opened or approved anything: the first sides create the bill's record, once.
+            var answers = await Task.WhenAll(members.Select((m, i) => m.Browser.TakeSideAsync(AppealSteps.SecondBill, i % 2 == 0 ? "for" : "against")));
+            foreach (var answer in answers)
+            {
+                answer.StatusCode.ShouldBe(HttpStatusCode.NoContent, await answer.Content.ReadAsStringAsync());
+                answer.Dispose();
+            }
+
+            (await Database.ScalarAsync<long>("SELECT count(*) FROM appeals.appeal WHERE bill_number = @b", ("b", AppealSteps.SecondBill))).ShouldBe(1);
+            var appeal = await members[0].Browser.AppealAsync(AppealSteps.SecondBill);
+            appeal.Id.ShouldNotBeNull();
+            appeal.Counts.ShouldBe(new SideCountsResponse(3, 0, 3, 0));
+            (await Database.ScalarAsync<long>("SELECT count(*) FROM appeals.appeal WHERE bill_number = @b AND initiator_user_id IS NOT NULL", ("b", AppealSteps.SecondBill)))
+                .ShouldBe(0, "the record has no initiator: nothing says who was first");
+        }
+        finally
+        {
+            foreach (var (browser, _) in members)
+            {
+                browser.Dispose();
+            }
+        }
     }
 
-    [Theory]
-    [InlineData(0, "Aprašymas.")]
-    [InlineData(100, "")]
-    [InlineData(100, " ")]
-    public async Task An_appeal_needs_a_positive_threshold_and_a_description(int threshold, string description)
+    [Fact]
+    public async Task The_first_argument_on_a_bill_creates_its_record_too_and_a_refused_side_creates_nothing()
+    {
+        await Database.FreeBillAsync(AppealSteps.SecondBill);
+        var (refused, _) = await Factory.MemberAsync(consent: false);
+        using var _r = refused;
+        using (var noConsent = await refused.TakeSideAsync(AppealSteps.SecondBill, "for"))
+        {
+            await noConsent.ShouldBeProblemAsync(HttpStatusCode.Conflict, "consent.required");
+        }
+
+        (await Database.ScalarAsync<long>("SELECT count(*) FROM appeals.appeal WHERE bill_number = @b", ("b", AppealSteps.SecondBill))).ShouldBe(0);
+
+        using var wrote = await refused.WriteReasonAsync(AppealSteps.SecondBill, "against", "Rinkliavos padidės smulkiems verslams.");
+        wrote.StatusCode.ShouldBe(HttpStatusCode.Created, await wrote.Content.ReadAsStringAsync());
+        var appeal = await refused.AppealAsync(AppealSteps.SecondBill);
+        appeal.Id.ShouldNotBeNull();
+        appeal.Counts.ShouldBe(new SideCountsResponse(0, 0, 0, 0), "writing is not taking a side");
+        appeal.Reasons.Single().Text.ShouldBe("Rinkliavos padidės smulkiems verslams.");
+    }
+
+    [Fact]
+    public async Task Nothing_offers_proposing_or_asking_for_an_appeal_any_more()
     {
         var (member, _) = await Factory.MemberAsync();
         using var _m = member;
-        using var response = await member.OpenAppealAsync(AppealSteps.SecondBill, threshold, description);
-        await response.ShouldBeProblemAsync(HttpStatusCode.BadRequest, "validation");
-    }
+        using (var propose = await member.PostAsync(AppealRoutes.AppealOf(AppealSteps.SecondBill), new { description = "Aprašymas.", threshold = 100 }))
+        {
+            propose.StatusCode.ShouldBeOneOf(HttpStatusCode.NotFound, HttpStatusCode.MethodNotAllowed);
+        }
 
+        foreach (var path in new[] { "/proposals", "/requests", "/request", "/threshold", "/description-change" })
+        {
+            using var gone = await member.SendAsync(HttpMethod.Put, AppealRoutes.AppealOf(AppealSteps.SecondBill) + path, new { threshold = 1000 });
+            gone.StatusCode.ShouldBeOneOf(HttpStatusCode.NotFound, HttpStatusCode.MethodNotAllowed);
+        }
+    }
     [Fact]
     public async Task Published_appeals_are_listed_with_both_sides_and_their_older_account_counts()
     {
         var (initiator, initiatorEmail) = await Factory.MemberAsync();
         using var _i = initiator;
-        var appeal = await Database.OpenPublishedAsync(initiator, await ModeratorAsync(), AppealSteps.ThirdBill, "against");
+        var appeal = await Database.PrepareBillAsync(initiator, await ModeratorAsync(), AppealSteps.ThirdBill, "against");
         await Database.AgeAccountAsync(initiatorEmail, 45);
         var (supporter, _) = await Factory.MemberAsync();
         using var _s = supporter;
@@ -146,7 +164,7 @@ public sealed class AppealApiTests(DatabaseFixture database) : ApiTest(database)
         var item = list.Items.Single(i => i.Id == appeal.Id);
         item.Counts.ShouldBe(new SideCountsResponse(For: 1, ForOlderThan30Days: 0, Against: 1, AgainstOlderThan30Days: 1));
         item.Bill.Title.ShouldNotBeNullOrEmpty();
-        (await stranger.GetJsonAsync<AppealListResponse>(AppealRoutes.AppealsList("newest", null))).Items.ShouldContain(i => i.Id == appeal.Id);
+        item.Arguments.ShouldBe(1);
 
         var page = await stranger.AppealAsync(AppealSteps.ThirdBill);
         page.Status.ShouldBe("open");
@@ -160,7 +178,7 @@ public sealed class AppealApiTests(DatabaseFixture database) : ApiTest(database)
     {
         var (initiator, _) = await Factory.MemberAsync();
         using var _i = initiator;
-        await Database.OpenPublishedAsync(initiator, await ModeratorAsync(), AppealSteps.ThirdBill);
+        await Database.PrepareBillAsync(initiator, await ModeratorAsync(), AppealSteps.ThirdBill);
         using var stranger = NewBrowser();
 
         using var first = await stranger.Client.GetAsync(AppealRoutes.AppealOf(AppealSteps.ThirdBill));
@@ -176,7 +194,7 @@ public sealed class AppealApiTests(DatabaseFixture database) : ApiTest(database)
     {
         var (initiator, _) = await Factory.MemberAsync();
         using var _i = initiator;
-        await Database.OpenPublishedAsync(initiator, await ModeratorAsync(), AppealSteps.ThirdBill, "against");
+        await Database.PrepareBillAsync(initiator, await ModeratorAsync(), AppealSteps.ThirdBill, "against");
         var (member, _) = await Factory.MemberAsync();
         using var _m = member;
 
@@ -198,35 +216,19 @@ public sealed class AppealApiTests(DatabaseFixture database) : ApiTest(database)
     }
 
     [Fact]
-    public async Task A_side_is_for_or_against_and_only_on_a_published_appeal()
+    public async Task A_side_is_for_or_against()
     {
-        await Database.FreeBillAsync(AppealSteps.SecondBill);
-        var (initiator, _) = await Factory.MemberAsync();
         var (member, _) = await Factory.MemberAsync();
-        using var _i = initiator;
         using var _m = member;
-        (await initiator.OpenAppealAsync(AppealSteps.SecondBill)).StatusCode.ShouldBe(HttpStatusCode.Created);
-
-        using (var pending = await member.TakeSideAsync(AppealSteps.SecondBill, "for"))
-        {
-            await pending.ShouldBeProblemAsync(HttpStatusCode.NotFound, "appeal.not-found");
-        }
-
-        using (var ownPending = await initiator.TakeSideAsync(AppealSteps.SecondBill, "for"))
-        {
-            await ownPending.ShouldBeProblemAsync(HttpStatusCode.Conflict, "appeal.not-open");
-        }
-
         using var abstain = await member.TakeSideAsync(AppealSteps.SecondBill, "abstain");
         await abstain.ShouldBeProblemAsync(HttpStatusCode.BadRequest, "validation");
     }
-
     [Fact]
     public async Task Without_the_consent_no_side_is_stored()
     {
         var (initiator, _) = await Factory.MemberAsync();
         using var _i = initiator;
-        await Database.OpenPublishedAsync(initiator, await ModeratorAsync(), AppealSteps.ThirdBill);
+        await Database.PrepareBillAsync(initiator, await ModeratorAsync(), AppealSteps.ThirdBill);
         var (member, email) = await Factory.MemberAsync(consent: false);
         using var _m = member;
 
@@ -254,11 +256,11 @@ public sealed class AppealApiTests(DatabaseFixture database) : ApiTest(database)
     {
         var (initiator, _) = await Factory.MemberAsync();
         using var _i = initiator;
-        var appeal = await Database.OpenPublishedAsync(initiator, await ModeratorAsync(), AppealSteps.ThirdBill, "against");
+        var appeal = await Database.PrepareBillAsync(initiator, await ModeratorAsync(), AppealSteps.ThirdBill, "against");
         var (member, email) = await Factory.MemberAsync();
         using var _m = member;
         (await member.TakeSideAsync(AppealSteps.ThirdBill, "against")).StatusCode.ShouldBe(HttpStatusCode.NoContent);
-        var reasonId = appeal.Reasons.Count > 0 ? appeal.Reasons[0].Id : (await member.AppealAsync(AppealSteps.ThirdBill)).Reasons.Single().Id;
+        var reasonId = (await member.AppealAsync(AppealSteps.ThirdBill)).Reasons.Single().Id;
         (await member.SendAsync(HttpMethod.Put, AppealRoutes.EndorsementOf(reasonId))).StatusCode.ShouldBe(HttpStatusCode.NoContent);
         (await member.AppealAsync(AppealSteps.ThirdBill)).Counts.Against.ShouldBe(2);
 
@@ -285,7 +287,7 @@ public sealed class AppealApiTests(DatabaseFixture database) : ApiTest(database)
     {
         var (initiator, initiatorEmail) = await Factory.MemberAsync();
         using var _i = initiator;
-        await Database.OpenPublishedAsync(initiator, await ModeratorAsync(), AppealSteps.ThirdBill, "for");
+        await Database.PrepareBillAsync(initiator, await ModeratorAsync(), AppealSteps.ThirdBill, "for");
         await Database.AgeAccountAsync(initiatorEmail, 31);
         var (young, youngEmail) = await Factory.MemberAsync();
         using var _y = young;
@@ -300,7 +302,7 @@ public sealed class AppealApiTests(DatabaseFixture database) : ApiTest(database)
     {
         var (initiator, _) = await Factory.MemberAsync();
         using var _i = initiator;
-        await Database.OpenPublishedAsync(initiator, await ModeratorAsync(), AppealSteps.ThirdBill, "against");
+        await Database.PrepareBillAsync(initiator, await ModeratorAsync(), AppealSteps.ThirdBill, "against");
         var (member, _) = await Factory.MemberAsync("Mindaugas R.", consent: false);
         using var _m = member;
         var before = (await member.AppealAsync(AppealSteps.ThirdBill)).Counts;
@@ -345,7 +347,7 @@ public sealed class AppealApiTests(DatabaseFixture database) : ApiTest(database)
     {
         var (initiator, _) = await Factory.MemberAsync();
         using var _i = initiator;
-        await Database.OpenPublishedAsync(initiator, await ModeratorAsync(), AppealSteps.ThirdBill, "against");
+        await Database.PrepareBillAsync(initiator, await ModeratorAsync(), AppealSteps.ThirdBill, "against");
         var (member, _) = await Factory.MemberAsync("Mindaugas R.");
         using var _m = member;
         (await member.WriteReasonAsync(AppealSteps.ThirdBill, "for", "Gynyba finansuojama nekeliant PVM.")).StatusCode.ShouldBe(HttpStatusCode.Created);
@@ -376,7 +378,7 @@ public sealed class AppealApiTests(DatabaseFixture database) : ApiTest(database)
     {
         var (initiator, _) = await Factory.MemberAsync();
         using var _i = initiator;
-        await Database.OpenPublishedAsync(initiator, await ModeratorAsync(), AppealSteps.ThirdBill, "against");
+        await Database.PrepareBillAsync(initiator, await ModeratorAsync(), AppealSteps.ThirdBill, "against");
         var (member, _) = await Factory.MemberAsync();
         using var _m = member;
 
@@ -420,7 +422,7 @@ public sealed class AppealApiTests(DatabaseFixture database) : ApiTest(database)
     {
         var (initiator, _) = await Factory.MemberAsync();
         using var _i = initiator;
-        await Database.OpenPublishedAsync(initiator, await ModeratorAsync(), AppealSteps.ThirdBill, "against");
+        await Database.PrepareBillAsync(initiator, await ModeratorAsync(), AppealSteps.ThirdBill, "against");
         var writers = new List<TestBrowser>();
         for (var i = 0; i < 3; i++)
         {
@@ -476,7 +478,7 @@ public sealed class AppealApiTests(DatabaseFixture database) : ApiTest(database)
     {
         var (initiator, _) = await Factory.MemberAsync();
         using var _i = initiator;
-        var appeal = await Database.OpenPublishedAsync(initiator, await ModeratorAsync(), AppealSteps.ThirdBill, "against");
+        var appeal = await Database.PrepareBillAsync(initiator, await ModeratorAsync(), AppealSteps.ThirdBill, "against");
         var reasonId = (await initiator.AppealAsync(AppealSteps.ThirdBill)).Reasons.Single().Id;
         var (member, _) = await Factory.MemberAsync(consent: false);
         using var _m = member;
@@ -496,29 +498,6 @@ public sealed class AppealApiTests(DatabaseFixture database) : ApiTest(database)
         using var stranger = NewBrowser();
         using var anonymous = await stranger.PostAsync(AppealRoutes.Reports, new ReportRequest { TargetKind = "reason", TargetId = reasonId, Ground = "spam" });
         anonymous.StatusCode.ShouldBe(HttpStatusCode.Unauthorized);
-    }
-
-    [Fact]
-    public async Task The_initiator_changes_the_threshold_and_nobody_else_can()
-    {
-        var (initiator, _) = await Factory.MemberAsync();
-        using var _i = initiator;
-        await Database.OpenPublishedAsync(initiator, await ModeratorAsync(), AppealSteps.ThirdBill, "against", threshold: 100);
-        var (other, _) = await Factory.MemberAsync();
-        using var _o = other;
-
-        (await initiator.SendAsync(HttpMethod.Put, AppealRoutes.ThresholdOf(AppealSteps.ThirdBill), new ThresholdRequest { Threshold = 1000 })).StatusCode.ShouldBe(HttpStatusCode.NoContent);
-        (await other.AppealAsync(AppealSteps.ThirdBill)).Threshold.Value.ShouldBe(1000);
-
-        using (var below = await initiator.SendAsync(HttpMethod.Put, AppealRoutes.ThresholdOf(AppealSteps.ThirdBill), new ThresholdRequest { Threshold = 10 }))
-        {
-            await below.ShouldBeProblemAsync(HttpStatusCode.BadRequest, "threshold.below-minimum");
-        }
-
-        using var notTheirs = await other.SendAsync(HttpMethod.Put, AppealRoutes.ThresholdOf(AppealSteps.ThirdBill), new ThresholdRequest { Threshold = 5000 });
-        await notTheirs.ShouldBeProblemAsync(HttpStatusCode.Forbidden, "appeal.initiator-only");
-        (await Database.ScalarAsync<long>(
-            "SELECT count(*) FROM appeals.revision WHERE field = 'threshold' AND old_value = '100' AND new_value = '1000'")).ShouldBeGreaterThanOrEqualTo(1);
     }
 
     [Fact]

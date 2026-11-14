@@ -8,7 +8,7 @@ using Lt2.Web.Services;
 namespace Lt2.Web.Endpoints.Appeals;
 
 /// <summary>
-/// <c>GET /api/v1/bills/{number}/appeal/mine</c>: the caller's own side, "Man svarbu" marks and arguments on this appeal.
+/// <c>GET /api/v1/bills/{number}/appeal/mine</c>: the caller's own side, "Man svarbu" marks and arguments on this bill.
 /// The only answer that holds a side, and only the caller's; never cached.
 /// </summary>
 internal static class GetMyAppealEndpoint

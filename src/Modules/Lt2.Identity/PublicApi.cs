@@ -156,7 +156,8 @@ public interface IIdentityMaintenance
 }
 
 /// <summary>A member's own invitation code (design 6.2): the code, how many completed registration with their codes, and whether it is on.</summary>
-public sealed record MyInvitation(string Code, int Completed, bool On);
+/// <param name="Usable">The code would let a registration through now: on, not replaced, not used up (design 8.11.5).</param>
+public sealed record MyInvitation(string Code, int Completed, bool On, bool Usable = true);
 
 public sealed record InvitationDay(DateOnly Day, int Completed);
 

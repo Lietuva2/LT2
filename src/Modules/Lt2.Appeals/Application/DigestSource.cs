@@ -6,7 +6,7 @@ using Microsoft.EntityFrameworkCore;
 namespace Lt2.Appeals.Application;
 
 /// <summary>
-/// <see cref="IDigestSource"/>: every open appeal with the numbers a summary would carry. Only arguments a moderator has
+/// <see cref="IDigestSource"/>: every open bill record with the numbers a summary would carry. Only arguments a moderator has
 /// seen (design 8.3), the two most endorsed per side (design 8.4); no author, no person.
 /// </summary>
 internal sealed class DigestSource(
@@ -25,7 +25,7 @@ internal sealed class DigestSource(
 
         var ids = appeals.Select(a => a.Id).ToList();
         var counts = await reads.CountsAsync(db, ids, cancellationToken);
-        var minimum = await reads.MinimumAsync(cancellationToken);
+        var thresholdSettings = await reads.ThresholdSettingsAsync(cancellationToken);
         var titles = await bills.FindManyAsync(appeals.Select(a => a.BillNumber).ToList(), cancellationToken);
         var planned = await agenda.ForBillsAsync(appeals.Select(a => a.BillNumber).ToList(), cancellationToken);
         var seen = await db.Reasons.AsNoTracking()
@@ -38,7 +38,7 @@ internal sealed class DigestSource(
         foreach (var appeal in appeals)
         {
             var c = counts[appeal.Id];
-            var threshold = AppealReads.Threshold(appeal, c, minimum);
+            var threshold = AppealReads.Threshold(appeal, c, thresholdSettings);
             var surge = await reads.SurgeAsync(db, appeal.Id, cancellationToken);
             var top = Sides.All
                 .SelectMany(side => seen.Where(r => r.AppealId == appeal.Id && r.Side == side)

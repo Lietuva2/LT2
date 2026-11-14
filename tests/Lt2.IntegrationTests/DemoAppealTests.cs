@@ -65,8 +65,8 @@ public sealed class DemoAppealTests(DatabaseFixture database) : ApiTest(database
         {
             await Database.ExecuteAsync(
                 """
-                INSERT INTO appeals.appeal (id, bill_number, initiator_user_id, description, status, opened_at, published_at, sending, threshold, threshold_set_by, screening_flags, changed_at)
-                VALUES (@id, 'XVP-0412', @id, 'Jau esantis kreipimasis.', 'open', now(), now(), 'automatic', 100, 'initiator', '{}', now())
+                INSERT INTO appeals.appeal (id, bill_number, description, status, opened_at, published_at, sending, threshold_set_by, changed_at)
+                VALUES (@id, 'XVP-0412', '', 'open', now(), now(), 'automatic', 'default', now())
                 """,
                 ("id", existing));
         }
@@ -87,7 +87,7 @@ public sealed class DemoAppealTests(DatabaseFixture database) : ApiTest(database
         finally
         {
             await Database.ExecuteAsync("UPDATE parliament.import_run SET synthetic = true WHERE id = @id", ("id", run));
-            await Database.ExecuteAsync("UPDATE appeals.appeal SET status = 'rejected' WHERE id = @id", ("id", existing));
+            await Database.ExecuteAsync("DELETE FROM appeals.appeal WHERE id = @id", ("id", existing));
         }
     }
 
@@ -95,19 +95,34 @@ public sealed class DemoAppealTests(DatabaseFixture database) : ApiTest(database
     public async Task On_the_stand_ins_data_it_fills_the_appeal_once_and_the_page_shows_the_numbers()
     {
         await Database.FreeBillAsync(AppealSteps.TaxBill);
+        await Database.FreeBillAsync(DemoAppeal.AiBill);
         var first = await DemoAppeal.RunAsync(Configuration(true), Database.MigratorConnectionString, TimeProvider.System, CancellationToken.None);
         first.Status.ShouldBe("created");
         first.AccountsCreated.ShouldBe(6800 + 4280);
+        first.AiDescription.ShouldBe("created");
 
         var again = await DemoAppeal.RunAsync(Configuration(true), Database.MigratorConnectionString, TimeProvider.System, CancellationToken.None);
-        again.ShouldBe(new DemoAppeal.Outcome("already there", 0));
+        again.ShouldBe(new DemoAppeal.Outcome("already there", 0, "already there"));
 
         using var stranger = NewBrowser();
+
+        // Design 8.13: the second bill has an invented AI summary nobody has read, with its label, address and day.
+        var described = await stranger.AppealAsync(DemoAppeal.AiBill);
+        described.Description.ShouldBe(DemoAppeal.AiDescription);
+        described.DescriptionSource.ShouldBe("ai");
+        described.DescriptionUrl.ShouldNotBeNull().ShouldStartWith("https://e-seimas.lrs.lt/");
+        described.DescriptionAt.ShouldNotBeNull();
+        described.Counts.ShouldBe(new SideCountsResponse(0, 0, 0, 0));
+        var page = System.Net.WebUtility.HtmlDecode(await stranger.Client.GetStringAsync("/seimas/" + DemoAppeal.AiBill));
+        page.ShouldContain("Sukurta DI · žmonių neperžiūrėta");
+        await Database.FreeBillAsync(DemoAppeal.AiBill);
+
         var appeal = await stranger.AppealAsync(AppealSteps.TaxBill);
         appeal.Status.ShouldBe("open");
-        appeal.InitiatorName.ShouldBe("Rūta Mockutė");
+        appeal.DescriptionSource.ShouldBe("moderator");
+        appeal.DescriptionAuthor.ShouldBeNull("the record has no initiator (design 8.12)");
         appeal.Counts.ShouldBe(new SideCountsResponse(6800, 6150, 4280, 3900));
-        appeal.Threshold.ShouldBe(new ThresholdResponse(1000, "initiator", null, 11080, true, false));
+        appeal.Threshold.ShouldBe(new ThresholdResponse(100, "default", null, 11080, true, false));
         appeal.Surge.ShouldBeNull("the invented sides are spread over the appeal's life, not a surge of new accounts");
         appeal.Reasons.Select(r => (r.AuthorName, r.Endorsements)).ShouldBe(
             [("Giedrė L.", 1920), ("Rūta Mockutė", 1480), ("Mindaugas R.", 1310), ("Aistė Kazlaitė", 970)]);

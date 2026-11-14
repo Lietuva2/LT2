@@ -179,6 +179,101 @@ namespace Lt2.Notifications.Infrastructure.Migrations
                     b.ToTable("digest_run", "notify");
                 });
 
+            modelBuilder.Entity("Lt2.Notifications.Follows.BillEvent", b =>
+                {
+                    b.Property<string>("BillNumber")
+                        .HasMaxLength(40)
+                        .HasColumnType("character varying(40)")
+                        .HasColumnName("bill_number");
+
+                    b.Property<string>("Kind")
+                        .HasMaxLength(10)
+                        .HasColumnType("character varying(10)")
+                        .HasColumnName("kind");
+
+                    b.Property<string>("Key")
+                        .HasMaxLength(40)
+                        .HasColumnType("character varying(40)")
+                        .HasColumnName("key");
+
+                    b.Property<DateTimeOffset>("FirstSeen")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("first_seen");
+
+                    b.Property<string>("Outcome")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)")
+                        .HasColumnName("outcome");
+
+                    b.Property<DateTimeOffset?>("SentAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("sent_at");
+
+                    b.HasKey("BillNumber", "Kind", "Key")
+                        .HasName("pk_bill_event");
+
+                    b.HasIndex("Outcome")
+                        .HasDatabaseName("ix_bill_event_outcome")
+                        .HasFilter("outcome = 'waiting'");
+
+                    b.ToTable("bill_event", "notify");
+                });
+
+            modelBuilder.Entity("Lt2.Notifications.Follows.Follow", b =>
+                {
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("user_id");
+
+                    b.Property<string>("Kind")
+                        .HasMaxLength(10)
+                        .HasColumnType("character varying(10)")
+                        .HasColumnName("kind");
+
+                    b.Property<string>("Key")
+                        .HasMaxLength(40)
+                        .HasColumnType("character varying(40)")
+                        .HasColumnName("key");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("created_at");
+
+                    b.HasKey("UserId", "Kind", "Key")
+                        .HasName("pk_follow");
+
+                    b.HasIndex("Kind", "Key")
+                        .HasDatabaseName("ix_follow_kind_key");
+
+                    b.ToTable("follow", "notify");
+                });
+
+            modelBuilder.Entity("Lt2.Notifications.Follows.NoticeSetting", b =>
+                {
+                    b.Property<Guid>("UserId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid")
+                        .HasColumnName("user_id");
+
+                    b.Property<DateTimeOffset>("ChangedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("changed_at");
+
+                    b.Property<bool>("Planned")
+                        .HasColumnType("boolean")
+                        .HasColumnName("planned");
+
+                    b.Property<bool>("Voted")
+                        .HasColumnType("boolean")
+                        .HasColumnName("voted");
+
+                    b.HasKey("UserId")
+                        .HasName("pk_notice_setting");
+
+                    b.ToTable("notice_setting", "notify");
+                });
+
             modelBuilder.Entity("Lt2.Notifications.Outbox.OutboxRow", b =>
                 {
                     b.Property<Guid>("Id")

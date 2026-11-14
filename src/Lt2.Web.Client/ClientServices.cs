@@ -25,6 +25,8 @@ public static class ClientServices
         services.AddScoped<IMeApi, HttpMeApi>();
         services.AddScoped<Lt2.Api.Contracts.Appeals.IAppealsApi, HttpAppealsApi>();
         services.AddScoped<Lt2.Api.Contracts.Appeals.IModerationApi, HttpModerationApi>();
+        services.AddScoped<Lt2.Api.Contracts.Agenda.IAgendaApi, HttpAgendaApi>();
+        services.AddScoped<Lt2.Api.Contracts.Follows.IFollowsApi, HttpFollowsApi>();
         services.AddScoped<Lt2.Api.Contracts.Feedback.IFeedbackApi, HttpFeedbackApi>();
         services.AddScoped<Lt2.Api.Contracts.Appeals.IAdminApi, HttpAdminApi>();
         services.AddScoped<Lt2.Api.Contracts.Digests.IDigestsApi, HttpDigestsApi>();

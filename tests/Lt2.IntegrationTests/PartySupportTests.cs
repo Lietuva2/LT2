@@ -67,7 +67,7 @@ public sealed class PartySupportTests(DatabaseFixture database) : ApiTest(databa
         {
             var (initiator, _) = await Factory.MemberAsync();
             using var _i = initiator;
-            var appeal = await Database.OpenPublishedAsync(initiator, moderator.Browser, AppealSteps.ThirdBill, "against", threshold: 1);
+            var appeal = await Database.PrepareBillAsync(initiator, moderator.Browser, AppealSteps.ThirdBill, "against", threshold: 1);
 
             // Invented members: "for" 19 of the party and 30 others; "against" (with the initiator) 25 of the party and 3 others.
             var since = DateTimeOffset.UtcNow.AddDays(-90);

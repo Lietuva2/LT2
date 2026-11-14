@@ -15,7 +15,7 @@ namespace Lt2.Identity.Application.Account;
 /// and the account with everything that hangs on it (profile, consents, party support, sessions, codes, passkeys, roles).
 /// Counts fall; frozen summary snapshots keep their totals. Nothing is logged or audited with the address.
 /// </summary>
-internal sealed class AccountDataHandlers(IdentityDb db, IAccountData appeals, SignInManager<User> signIn, TimeProvider clock)
+internal sealed class AccountDataHandlers(IdentityDb db, IEnumerable<IAccountData> modules, SignInManager<User> signIn, TimeProvider clock)
 {
     public async Task<Result<object>> ExportAsync(ClaimsPrincipal principal, CancellationToken cancellationToken)
     {
@@ -41,10 +41,10 @@ internal sealed class AccountDataHandlers(IdentityDb db, IAccountData appeals, S
                            join r in db.Roles.AsNoTracking() on ur.RoleId equals r.Id
                            where ur.UserId == userId
                            select r.Name).ToListAsync(cancellationToken);
-        return new
+        var export = new Dictionary<string, object?>(StringComparer.Ordinal)
         {
-            exportedAt = DateTimeOffset.UtcNow,
-            account = new
+            ["exportedAt"] = clock.GetUtcNow(),
+            ["account"] = new
             {
                 email = user.Email,
                 displayName = profile.DisplayName,
@@ -56,15 +56,22 @@ internal sealed class AccountDataHandlers(IdentityDb db, IAccountData appeals, S
                 roles,
                 passkeys,
             },
-            consents,
-            partySupport = party,
+            ["consents"] = consents,
+            ["partySupport"] = party,
 
             // Only the feedback linked to the account (design 8.10); unlinked items lead to nobody.
-            feedback = (await db.Feedback.AsNoTracking().Where(f => f.UserId == userId).OrderBy(f => f.CreatedOn).ToListAsync(cancellationToken))
+            ["feedback"] = (await db.Feedback.AsNoTracking().Where(f => f.UserId == userId).OrderBy(f => f.CreatedOn).ToListAsync(cancellationToken))
                 .Select(f => new { f.Kind, f.Text, f.PagePath, f.Browser, f.CreatedOn, f.Status, replies = JsonDocument.Parse(f.Replies).RootElement.Clone() }),
-            sessions,
-            appeals = await appeals.ExportAsync(userId, cancellationToken),
+            ["sessions"] = sessions,
         };
+
+        // Each module's part: appeals (sides, arguments, requests …) and follows (design 8.11.2), each the person's own.
+        foreach (var module in modules)
+        {
+            export[module.Section] = await module.ExportAsync(userId, cancellationToken);
+        }
+
+        return export;
     }
 
     /// <summary>The person's own current code and how many completed registration with their codes; no names.</summary>
@@ -86,7 +93,10 @@ internal sealed class AccountDataHandlers(IdentityDb db, IAccountData appeals, S
 
         await using (var transaction = await db.Database.BeginTransactionAsync(cancellationToken))
         {
-            await appeals.EraseAsync(userId, transaction.GetDbTransaction(), cancellationToken);
+            foreach (var module in modules)
+            {
+                await module.EraseAsync(userId, transaction.GetDbTransaction(), cancellationToken);
+            }
 
             // The person's invitation codes stop working and keep nothing of them (design 6.2); their counts, levels and
             // daily totals stay as anonymous numbers. Codes the person registered with keep counting what they brought.

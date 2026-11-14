@@ -44,19 +44,12 @@ public sealed class WritingRestrictionTests(DatabaseFixture database) : ApiTest(
         var (moderator, administrator) = await StaffAsync();
         var (initiator, _) = await Factory.MemberAsync();
         using var _i = initiator;
-        await Database.OpenPublishedAsync(initiator, moderator.Browser, AppealSteps.ThirdBill, "against");
+        await Database.PrepareBillAsync(initiator, moderator.Browser, AppealSteps.ThirdBill, "against");
 
-        // The person: a side, an argument, and an appeal of their own that a moderator returned.
+        // The person: a side and an argument.
         var (person, email) = await Factory.MemberAsync("Rašanti Asmenybė");
         using var _p = person;
         await Database.FreeBillAsync(AppealSteps.SecondBill);
-        using (var opened = await person.OpenAppealAsync(AppealSteps.SecondBill, 100))
-        {
-            opened.StatusCode.ShouldBe(HttpStatusCode.Created);
-            var own = await opened.ReadAsync<AppealResponse>();
-            (await moderator.Browser.PostAsync(AppealRoutes.With(AppealRoutes.ReturnAppeal, own.Id), new StatementRequest { Statement = "Aprašymas nėra neutralus." }))
-                .StatusCode.ShouldBe(HttpStatusCode.NoContent);
-        }
 
         (await person.TakeSideAsync(AppealSteps.ThirdBill, "for")).StatusCode.ShouldBe(HttpStatusCode.NoContent);
         (await person.WriteReasonAsync(AppealSteps.ThirdBill, "for", "Argumentas, dėl kurio rašymas bus apribotas.")).StatusCode.ShouldBe(HttpStatusCode.Created);
@@ -73,33 +66,29 @@ public sealed class WritingRestrictionTests(DatabaseFixture database) : ApiTest(
         // Nothing public changes: the same answer, byte for byte, and no count moved.
         (await stranger.Client.GetStringAsync(AppealRoutes.AppealOf(AppealSteps.ThirdBill))).ShouldBe(publicBefore);
 
-        // The person's pages say so in place of the writing box and the edit form; nobody else's do.
-        foreach (var path in new[] { "/seimas/XVP-0618/kreipimasis", "/seimas/XVP-0533/kreipimasis" })
+        // The person's bill pages say so in place of the writing box, on a bill nobody took part in too; nobody else's do.
+        foreach (var path in new[] { "/seimas/XVP-0618", "/seimas/XVP-0533" })
         {
             var own = WebUtility.HtmlDecode(await person.Client.GetStringAsync(path));
             own.ShouldContain("Moderatorius apribojo jūsų galimybę rašyti.", customMessage: path);
             own.ShouldContain("Priežastis: Įžeidžiantys argumentai kitiems naudotojams.", customMessage: path);
         }
 
-        WebUtility.HtmlDecode(await initiator.Client.GetStringAsync("/seimas/XVP-0618/kreipimasis")).ShouldNotContain("apribojo");
-        WebUtility.HtmlDecode(await stranger.Client.GetStringAsync("/seimas/XVP-0618/kreipimasis")).ShouldNotContain("apribojo");
+        WebUtility.HtmlDecode(await initiator.Client.GetStringAsync("/seimas/XVP-0618")).ShouldNotContain("apribojo");
+        WebUtility.HtmlDecode(await stranger.Client.GetStringAsync("/seimas/XVP-0618")).ShouldNotContain("apribojo");
 
-        // Blocked: an argument, opening an appeal, editing one's returned appeal, a date flag.
+        // Blocked: an argument (on a bill without a record too, which stays without one) and a date flag.
         using (var reason = await person.WriteReasonAsync(AppealSteps.ThirdBill, "against", "Dar vienas argumentas."))
         {
             await reason.ShouldBeProblemAsync(HttpStatusCode.Forbidden, "writing.restricted");
         }
 
-        using (var open = await person.OpenAppealAsync(AppealSteps.ThirdBill, 100))
+        using (var fresh = await person.WriteReasonAsync(AppealSteps.SecondBill, "against", "Argumentas apie rinkliavas."))
         {
-            await open.ShouldBeProblemAsync(HttpStatusCode.Forbidden, "writing.restricted");
+            await fresh.ShouldBeProblemAsync(HttpStatusCode.Forbidden, "writing.restricted");
         }
 
-        using (var edit = await person.SendAsync(HttpMethod.Put, AppealRoutes.AppealOf(AppealSteps.SecondBill),
-                   new EditAppealRequest { Description = "Pataisytas neutralus aprašymas." }))
-        {
-            await edit.ShouldBeProblemAsync(HttpStatusCode.Forbidden, "writing.restricted");
-        }
+        (await Database.ScalarAsync<long>("SELECT count(*) FROM appeals.appeal WHERE bill_number = @b", ("b", AppealSteps.SecondBill))).ShouldBe(0);
 
         using (var flag = await person.PostAsync(AppealRoutes.FlagsOf(AppealSteps.ThirdBill), new FlagRequest { Kind = "date-wrong", Link = "https://www.lrs.lt/darbotvarke" }))
         {
@@ -160,7 +149,7 @@ public sealed class WritingRestrictionTests(DatabaseFixture database) : ApiTest(
         var (moderator, administrator) = await StaffAsync();
         var (initiator, _) = await Factory.MemberAsync();
         using var _i = initiator;
-        var appeal = await Database.OpenPublishedAsync(initiator, moderator.Browser, AppealSteps.ThirdBill, "against");
+        await Database.PrepareBillAsync(initiator, moderator.Browser, AppealSteps.ThirdBill, "against");
         var reasonId = (await initiator.AppealAsync(AppealSteps.ThirdBill)).Reasons.Single().Id;
 
         var (member, _) = await Factory.MemberAsync();
@@ -185,20 +174,20 @@ public sealed class WritingRestrictionTests(DatabaseFixture database) : ApiTest(
             (await browser.Client.GetAsync(AppealRoutes.With(AppealRoutes.ReasonAuthor, reasonId))).StatusCode.ShouldBe(HttpStatusCode.Forbidden, who);
         }
 
-        // The initiator, reached through the appeal; a past last day is refused; one restriction at a time.
-        using (var past = await moderator.Browser.PostAsync(AppealRoutes.With(AppealRoutes.RestrictAppealInitiator, appeal.Id), new RestrictionRequest { Until = new DateOnly(2020, 1, 1), Statement = "Per vėlu." }))
+        // A past last day is refused; one restriction at a time.
+        using (var past = await moderator.Browser.PostAsync(AppealRoutes.With(AppealRoutes.RestrictReasonAuthor, reasonId), new RestrictionRequest { Until = new DateOnly(2020, 1, 1), Statement = "Per vėlu." }))
         {
             await past.ShouldBeProblemAsync(HttpStatusCode.BadRequest, "restriction.until-past");
         }
 
-        using (var empty = await moderator.Browser.PostAsync(AppealRoutes.With(AppealRoutes.RestrictAppealInitiator, appeal.Id), new RestrictionRequest { Statement = " " }))
+        using (var empty = await moderator.Browser.PostAsync(AppealRoutes.With(AppealRoutes.RestrictReasonAuthor, reasonId), new RestrictionRequest { Statement = " " }))
         {
             empty.StatusCode.ShouldBe(HttpStatusCode.BadRequest, "a statement is required");
         }
 
         var today = DateOnly.FromDateTime(TimeZoneInfo.ConvertTime(DateTimeOffset.UtcNow, TimeZoneInfo.FindSystemTimeZoneById("Europe/Vilnius")).DateTime);
         // An administrator sets it, like any moderation action (decided 2026-11-13).
-        using (var set = await administrator.Browser.PostAsync(AppealRoutes.With(AppealRoutes.RestrictAppealInitiator, appeal.Id), new RestrictionRequest { Until = today.AddDays(3), Statement = "Kartojasi tie patys įžeidimai." }))
+        using (var set = await administrator.Browser.PostAsync(AppealRoutes.With(AppealRoutes.RestrictReasonAuthor, reasonId), new RestrictionRequest { Until = today.AddDays(3), Statement = "Kartojasi tie patys įžeidimai." }))
         {
             set.StatusCode.ShouldBe(HttpStatusCode.Created, await set.Content.ReadAsStringAsync());
         }
@@ -224,7 +213,7 @@ public sealed class WritingRestrictionTests(DatabaseFixture database) : ApiTest(
         var (moderator, _) = await StaffAsync();
         var (initiator, _) = await Factory.MemberAsync();
         using var _i = initiator;
-        await Database.OpenPublishedAsync(initiator, moderator.Browser, AppealSteps.ThirdBill, "for");
+        await Database.PrepareBillAsync(initiator, moderator.Browser, AppealSteps.ThirdBill, "for");
         var (person, email) = await Factory.MemberAsync("Peržiūrima Asmenybė");
         using var _p = person;
         (await person.TakeSideAsync(AppealSteps.ThirdBill, "for")).StatusCode.ShouldBe(HttpStatusCode.NoContent);
@@ -263,7 +252,7 @@ public sealed class WritingRestrictionTests(DatabaseFixture database) : ApiTest(
         var (moderator, _) = await StaffAsync();
         var (initiator, _) = await Factory.MemberAsync();
         using var _i = initiator;
-        await Database.OpenPublishedAsync(initiator, moderator.Browser, AppealSteps.ThirdBill, "against");
+        await Database.PrepareBillAsync(initiator, moderator.Browser, AppealSteps.ThirdBill, "against");
         var (person, email) = await Factory.MemberAsync("Išeinanti Asmenybė");
         using var _p = person;
         (await person.WriteReasonAsync(AppealSteps.ThirdBill, "for", "Argumentas prieš išeinant.")).StatusCode.ShouldBe(HttpStatusCode.Created);

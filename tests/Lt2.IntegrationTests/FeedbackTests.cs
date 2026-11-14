@@ -32,7 +32,7 @@ public sealed partial class FeedbackTests(DatabaseFixture database) : ApiTest(da
     }
 
     private static Task<HttpResponseMessage> SendAsync(TestBrowser browser, string text, bool mayReply, string? kind = null) =>
-        browser.PostAsync(FeedbackRoutes.Send, new FeedbackRequest { Text = text, Kind = kind, PagePath = "/seimas/XVP-0412/kreipimasis?x=1", Browser = "Edge 131", MayReply = mayReply });
+        browser.PostAsync(FeedbackRoutes.Send, new FeedbackRequest { Text = text, Kind = kind, PagePath = "/seimas/XVP-0412?x=1", Browser = "Edge 131", MayReply = mayReply });
 
     [Fact]
     public async Task A_linked_item_shows_the_name_to_staff_and_the_reply_goes_to_the_members_address_which_staff_never_see()
@@ -46,7 +46,7 @@ public sealed partial class FeedbackTests(DatabaseFixture database) : ApiTest(da
         using var list = await moderator.Browser.Client.GetAsync(FeedbackRoutes.Staff + "?kind=unclear&status=new");
         var json = await list.Content.ReadAsStringAsync();
         var item = JsonSerializer.Deserialize<List<FeedbackItemResponse>>(json, JsonSerializerOptions.Web)!.Single(i => i.Text == Text);
-        (item.Linked, item.DisplayName, item.PagePath, item.Browser).ShouldBe((true, "Atsiliepianti Narė", "/seimas/XVP-0412/kreipimasis", "Edge 131"));
+        (item.Linked, item.DisplayName, item.PagePath, item.Browser).ShouldBe((true, "Atsiliepianti Narė", "/seimas/XVP-0412", "Edge 131"));
         json.ShouldNotContain(email, Case.Insensitive);
         json.ShouldNotContain((await Database.UserIdAsync(email)).ToString(), Case.Insensitive);
 

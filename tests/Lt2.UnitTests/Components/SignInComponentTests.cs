@@ -31,6 +31,7 @@ public sealed class SignInComponentTests : BunitContext
         Services.AddLt2ClientComponents();
         Services.AddSingleton<IAuthApi>(_auth);
         Services.AddSingleton<IMeApi>(_me);
+        Services.AddSingleton<Lt2.Api.Contracts.Follows.IFollowsApi>(new NoFollowsApi());
         _authorization = AddAuthorization();
         JSInterop.Mode = JSRuntimeMode.Loose;
         SetRendererInfo(new RendererInfo("WebAssembly", isInteractive: true));
@@ -382,6 +383,26 @@ public sealed class SignInComponentTests : BunitContext
 
         public Task<ApiResult> SignInWithPasskeyAsync(PasskeyCredentialRequest request, CancellationToken cancellationToken = default) =>
             PasskeySignIn();
+    }
+
+    /// <summary>The account page's follow list (design 8.11.2) with nothing followed.</summary>
+    private sealed class NoFollowsApi : Lt2.Api.Contracts.Follows.IFollowsApi
+    {
+        public Task<ApiResult<Lt2.Api.Contracts.Follows.MyFollowsResponse>> GetMineAsync(CancellationToken cancellationToken = default) =>
+            Task.FromResult(ApiResult<Lt2.Api.Contracts.Follows.MyFollowsResponse>.Ok(new([], [], 200)));
+
+        public Task<ApiResult> FollowBillAsync(string number, CancellationToken cancellationToken = default) => Task.FromResult(ApiResult.Ok());
+
+        public Task<ApiResult> UnfollowBillAsync(string number, CancellationToken cancellationToken = default) => Task.FromResult(ApiResult.Ok());
+
+        public Task<ApiResult> FollowMpAsync(string slug, CancellationToken cancellationToken = default) => Task.FromResult(ApiResult.Ok());
+
+        public Task<ApiResult> UnfollowMpAsync(string slug, CancellationToken cancellationToken = default) => Task.FromResult(ApiResult.Ok());
+
+        public Task<ApiResult<Lt2.Api.Contracts.Follows.NoticeSettingsResponse>> GetNoticesAsync(CancellationToken cancellationToken = default) =>
+            Task.FromResult(ApiResult<Lt2.Api.Contracts.Follows.NoticeSettingsResponse>.Ok(new(true, true)));
+
+        public Task<ApiResult> SetNoticesAsync(Lt2.Api.Contracts.Follows.NoticeSettingsRequest request, CancellationToken cancellationToken = default) => Task.FromResult(ApiResult.Ok());
     }
 
     private sealed class FakeMeApi : IMeApi

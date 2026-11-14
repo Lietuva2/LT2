@@ -2,33 +2,26 @@ using Lt2.Api.Contracts.Admin;
 
 namespace Lt2.Api.Contracts.Appeals;
 
-/// <summary>Design 8.8: appeals, positions, arguments, endorsements and reports.</summary>
+/// <summary>Design 8.8, 8.12: bills as people take part on them, positions, arguments, endorsements and reports.</summary>
 public interface IAppealsApi
 {
     Task<ApiResult<AppealRulesResponse>> GetRulesAsync(CancellationToken cancellationToken = default);
 
-    /// <param name="sort"><c>participants</c> (default) or <c>newest</c>.</param>
-    Task<ApiResult<AppealListResponse>> GetAppealsAsync(string? sort = null, string? cursor = null, CancellationToken cancellationToken = default);
+    /// <summary>
+    /// <c>/kreipimaisi</c> (design 8.12.5): active bills in the order <paramref name="sort"/> (<c>activity</c> by default,
+    /// <c>participants</c>, <c>arguments</c>, <c>planned</c>); a search by number or title; only those planned soon; or, with
+    /// <paramref name="closed"/>, the closed ones.
+    /// </summary>
+    Task<ApiResult<AppealListResponse>> GetAppealsAsync(string? search = null, bool planned = false, bool closed = false, string? cursor = null, string? sort = null, CancellationToken cancellationToken = default);
 
+    /// <summary>The bill as people take part on it; an active bill nobody took part in answers the empty open state.</summary>
     Task<ApiResult<AppealResponse>> GetAppealAsync(string number, CancellationToken cancellationToken = default);
 
-    /// <summary>The caller's own side, marks and arguments on this appeal.</summary>
+    /// <summary>The caller's own side, marks and arguments on this bill.</summary>
     Task<ApiResult<MyAppealResponse>> GetMineAsync(string number, CancellationToken cancellationToken = default);
 
-    /// <summary>The public edit history of the appeal's neutral description.</summary>
+    /// <summary>The public edit history of the bill's description.</summary>
     Task<ApiResult<IReadOnlyList<DescriptionRevisionResponse>>> GetHistoryAsync(string number, CancellationToken cancellationToken = default);
-
-    /// <summary>How many proposals wait on the bill (design 8.1): a number only, public.</summary>
-    Task<ApiResult<ProposalsResponse>> GetProposalsAsync(string number, CancellationToken cancellationToken = default);
-
-    Task<ApiResult<AppealResponse>> OpenAsync(string number, OpenAppealRequest request, CancellationToken cancellationToken = default);
-
-    Task<ApiResult> EditAsync(string number, EditAppealRequest request, CancellationToken cancellationToken = default);
-
-    /// <summary>The initiator proposes a new description for an open appeal (design 8.1); shown once a moderator approves it.</summary>
-    Task<ApiResult> ProposeDescriptionAsync(string number, EditAppealRequest request, CancellationToken cancellationToken = default);
-
-    Task<ApiResult> ChangeThresholdAsync(string number, ThresholdRequest request, CancellationToken cancellationToken = default);
 
     Task<ApiResult> TakePositionAsync(string number, PositionRequest request, CancellationToken cancellationToken = default);
 
@@ -62,12 +55,8 @@ public interface IModerationApi
     /// <summary>The author of an argument, as a moderator sees them before restricting (design 8.3).</summary>
     Task<ApiResult<AuthorViewResponse>> GetAuthorOfReasonAsync(Guid reasonId, CancellationToken cancellationToken = default);
 
-    Task<ApiResult<AuthorViewResponse>> GetInitiatorOfAppealAsync(Guid appealId, CancellationToken cancellationToken = default);
-
     /// <summary>Restricts the argument's author from writing; a moderator role in a staff-passkey session.</summary>
     Task<ApiResult<RestrictionCreatedResponse>> RestrictAuthorOfReasonAsync(Guid reasonId, RestrictionRequest request, CancellationToken cancellationToken = default);
-
-    Task<ApiResult<RestrictionCreatedResponse>> RestrictInitiatorOfAppealAsync(Guid appealId, RestrictionRequest request, CancellationToken cancellationToken = default);
 
     /// <summary>The restrictions that hold now.</summary>
     Task<ApiResult<IReadOnlyList<RestrictionResponse>>> GetRestrictionsAsync(CancellationToken cancellationToken = default);
@@ -75,22 +64,16 @@ public interface IModerationApi
     /// <summary>Lifts a restriction early; a moderator or an administrator.</summary>
     Task<ApiResult> LiftRestrictionAsync(Guid restrictionId, StatementRequest request, CancellationToken cancellationToken = default);
 
-    Task<ApiResult> PublishAppealAsync(Guid appealId, ModerationRequest request, CancellationToken cancellationToken = default);
+    /// <summary>"Palikti": keeps a reported or flagged bill record as it is; its reports and date flags close.</summary>
+    Task<ApiResult> KeepAppealAsync(Guid appealId, ModerationRequest request, CancellationToken cancellationToken = default);
 
-    Task<ApiResult> ReturnAppealAsync(Guid appealId, StatementRequest request, CancellationToken cancellationToken = default);
-
+    /// <summary>Hides a bill's record: taking part on the bill closes, with the statement shown on its page (design 8.12.3).</summary>
     Task<ApiResult> HideAppealAsync(Guid appealId, StatementRequest request, CancellationToken cancellationToken = default);
-
-    /// <summary>Approves a proposed description change (design 8.1); the note to the initiator is optional.</summary>
-    Task<ApiResult> ApproveDescriptionAsync(Guid changeId, ModerationRequest request, CancellationToken cancellationToken = default);
-
-    /// <summary>Returns a proposed description change with a required note.</summary>
-    Task<ApiResult> ReturnDescriptionAsync(Guid changeId, StatementRequest request, CancellationToken cancellationToken = default);
 
     /// <summary>Hidden appeals and reasons, with who hid them, when and why (design 8.3).</summary>
     Task<ApiResult<HiddenItemsResponse>> GetHiddenAsync(CancellationToken cancellationToken = default);
 
-    /// <summary>"Atkurti": brings a hidden appeal back as it was; statement required (design 8.3).</summary>
+    /// <summary>"Atkurti": brings a hidden bill record back as it was; statement required (design 8.12.3).</summary>
     Task<ApiResult> RestoreAppealAsync(Guid appealId, StatementRequest request, CancellationToken cancellationToken = default);
 
     /// <summary>"Atkurti": brings a hidden reason back, while its appeal is open; statement required.</summary>
@@ -98,11 +81,20 @@ public interface IModerationApi
 
     Task<ApiResult> SetThresholdAsync(Guid appealId, ModeratorThresholdRequest request, CancellationToken cancellationToken = default);
 
-    /// <summary>The state a moderator's controls on the appeal page need (design 8.3); forbidden for anyone else.</summary>
-    Task<ApiResult<ModerationAppealResponse>> GetAppealAsync(Guid appealId, CancellationToken cancellationToken = default);
+    /// <summary>The state a moderator's controls on the bill's page need (design 8.12.3); forbidden for anyone else.</summary>
+    Task<ApiResult<ModerationBillResponse>> GetBillAsync(string number, CancellationToken cancellationToken = default);
 
-    /// <summary>Corrects an open appeal's description directly (design 8.1); the statement is required and goes to the initiator.</summary>
-    Task<ApiResult> CorrectDescriptionAsync(Guid appealId, ModeratorDescriptionRequest request, CancellationToken cancellationToken = default);
+    /// <summary>The bill's record for an action on it, created on an active bill that has none (design 8.12.1).</summary>
+    Task<ApiResult<BillRecordResponse>> EnsureRecordAsync(string number, CancellationToken cancellationToken = default);
+
+    /// <summary>Writes or corrects an active bill's description (design 8.12.3, 8.13); the statement is required.</summary>
+    Task<ApiResult> WriteDescriptionAsync(string number, ModeratorDescriptionRequest request, CancellationToken cancellationToken = default);
+
+    /// <summary>Confirms an AI summary nobody has read (design 8.13): it becomes "Sukurta DI · taisė žmonės"; the note is optional.</summary>
+    Task<ApiResult> ConfirmDescriptionAsync(string number, ModerationRequest request, CancellationToken cancellationToken = default);
+
+    /// <summary>Removes the bill's description (design 8.13); the statement is required, and the summary job never writes it again.</summary>
+    Task<ApiResult> RemoveDescriptionAsync(string number, StatementRequest request, CancellationToken cancellationToken = default);
 
     Task<ApiResult> PublishReasonAsync(Guid reasonId, ModerationRequest request, CancellationToken cancellationToken = default);
 
@@ -118,6 +110,13 @@ public interface IModerationApi
 
     /// <summary>Approves one urgent summary for the appeal's bill (design 8.4); a dry run in M2a.</summary>
     Task<ApiResult> UrgentAsync(Guid appealId, Digests.UrgentDigestRequest request, CancellationToken cancellationToken = default);
+
+
+    /// <summary>Whether an AI draft can be asked for (design 8.11.4).</summary>
+    Task<ApiResult<AiStatusResponse>> GetAiAsync(CancellationToken cancellationToken = default);
+
+    /// <summary>An AI draft of the description from pasted official text (design 8.11.4); refused when no provider is configured.</summary>
+    Task<ApiResult<DescriptionDraftResponse>> DraftDescriptionAsync(string number, DescriptionDraftRequest request, CancellationToken cancellationToken = default);
 }
 
 /// <summary>Design 8.8: the administrator's settings screen. Needs an active administrator role.</summary>

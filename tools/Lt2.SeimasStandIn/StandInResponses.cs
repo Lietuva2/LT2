@@ -32,7 +32,19 @@ internal sealed class StandInResponses
         _services = responses.Keys.Select(k => k.Split('?')[0]).ToHashSet(StringComparer.Ordinal);
     }
 
-    public static StandInResponses Load(string directory)
+    /// <summary>
+    /// Answers whose text holds <c>{{day:N}}</c> (today plus N days, <c>yyyy-MM-dd</c>), rendered when asked: the local
+    /// overlay's recent sitting and vote (design 8.11.1, "recently voted"), so the local agenda always has one.
+    /// </summary>
+    private readonly ConcurrentDictionary<string, string> _dated = new(StringComparer.Ordinal);
+
+    public static StandInResponses Load(string directory) => Load(directory, null);
+
+    /// <summary>
+    /// The canned answers of <paramref name="directory"/>, and, when given and present, those of <paramref name="overlay"/>
+    /// in their place (the local container's <c>Recent/</c>; tests never load it, so their data stays fixed).
+    /// </summary>
+    public static StandInResponses Load(string directory, string? overlay)
     {
         var responses = new Dictionary<string, byte[]>(StringComparer.Ordinal);
         foreach (var file in Directory.EnumerateFiles(directory, "*.xml"))
@@ -46,9 +58,37 @@ internal sealed class StandInResponses
             throw new InvalidOperationException($"No canned responses in {directory}.");
         }
 
+        var dated = new Dictionary<string, string>(StringComparer.Ordinal);
         var agenda = Path.Combine(directory, "agenda", "darbotvarke.html");
-        return new StandInResponses(responses) { AgendaTemplate = File.Exists(agenda) ? File.ReadAllText(agenda) : null };
+        if (overlay is not null && Directory.Exists(overlay))
+        {
+            foreach (var file in Directory.EnumerateFiles(overlay, "*.xml"))
+            {
+                var key = KeyFromFileName(Path.GetFileNameWithoutExtension(file));
+                responses[key] = File.ReadAllBytes(file);
+                dated[key] = File.ReadAllText(file);
+            }
+
+            var overlayAgenda = Path.Combine(overlay, "agenda", "darbotvarke.html");
+            agenda = File.Exists(overlayAgenda) ? overlayAgenda : agenda;
+        }
+
+        var loaded = new StandInResponses(responses) { AgendaTemplate = File.Exists(agenda) ? File.ReadAllText(agenda) : null };
+        foreach (var (key, text) in dated)
+        {
+            loaded._dated[key] = text;
+        }
+
+        return loaded;
     }
+
+    /// <summary><c>{{day:N}}</c> becomes <paramref name="today"/> plus N days, <c>yyyy-MM-dd</c>.</summary>
+    public static string RenderDays(string template, DateOnly today) =>
+        System.Text.RegularExpressions.Regex.Replace(
+            template,
+            @"\{\{day:(-?\d+)\}\}",
+            m => today.AddDays(int.Parse(m.Groups[1].Value, System.Globalization.CultureInfo.InvariantCulture))
+                .ToString("yyyy-MM-dd", System.Globalization.CultureInfo.InvariantCulture));
 
     /// <summary>
     /// The agenda page for <paramref name="today"/>: <c>{{sitting:N}}</c> becomes the N-th Tuesday or Thursday at least
@@ -94,6 +134,11 @@ internal sealed class StandInResponses
     public StandInResponse Respond(string service, IEnumerable<KeyValuePair<string, string>> query)
     {
         var key = Key(service, query);
+        if (_dated.TryGetValue(key, out var dated))
+        {
+            return new StandInResponse(200, Encoding.UTF8.GetBytes(RenderDays(dated, StandInHandler.Today())));
+        }
+
         if (_responses.TryGetValue(key, out var body))
         {
             return new StandInResponse(200, body);

@@ -8,9 +8,9 @@ using Lt2.Web.Services;
 namespace Lt2.Web.Endpoints.Appeals;
 
 /// <summary>
-/// <c>GET /api/v1/bills/{number}/appeal</c>: the appeal with both sides' counts, the threshold and the published
-/// arguments (design 8.8). A published appeal is public and the same for everyone; one waiting for a moderator is shown
-/// only to its initiator, and never cached.
+/// <c>GET /api/v1/bills/{number}/appeal</c>: the bill as people take part on it, with both sides' counts, the threshold and
+/// the published arguments (design 8.8, 8.12.1). Public and the same for everyone: an active bill nobody took part in
+/// answers the empty open state, not "not found".
 /// </summary>
 internal static class GetAppealEndpoint
 {
@@ -23,17 +23,11 @@ internal static class GetAppealEndpoint
             .Produces(StatusCodes.Status304NotModified)
             .ProducesProblem(StatusCodes.Status404NotFound);
 
-    private static async Task<IResult> HandleAsync(HttpContext http, ClaimsPrincipal user, IAppealsModule appeals, ErrorMapper errors, string number, CancellationToken cancellationToken)
+    private static async Task<IResult> HandleAsync(HttpContext http, IAppealsModule appeals, ErrorMapper errors, string number, CancellationToken cancellationToken)
     {
-        var result = await appeals.GetAsync(number, AppealMapping.UserId(user), cancellationToken);
-        if (!result.IsSuccess)
-        {
-            return errors.ToResult(result.Error!);
-        }
-
-        var response = AppealMapping.Map(result.Value);
-        return result.Value.Status is "open" or "closed"
-            ? PublicJson.From(http, errors, Lt2.SharedKernel.Result<AppealResponse>.Success(response), maxAgeSeconds: 0)
-            : TypedResults.Ok(response);
+        var result = await appeals.GetAsync(number, cancellationToken);
+        return result.IsSuccess
+            ? PublicJson.From(http, errors, Lt2.SharedKernel.Result<AppealResponse>.Success(AppealMapping.Map(result.Value)), maxAgeSeconds: 0)
+            : errors.ToResult(result.Error!);
     }
 }

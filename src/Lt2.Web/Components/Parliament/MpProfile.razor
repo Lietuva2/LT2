@@ -26,6 +26,9 @@
                 <h1>@p.Mp.FirstName @p.Mp.LastName</h1>
             </div>
         </div>
+        @* Design 8.11.2: "Sekti" an MP: how they vote on the bills one follows comes in the "voted" email. Private. *@
+        <Lt2.Web.Client.Components.NeedsScript />
+        <Lt2.Web.Client.Appeals.FollowButton Kind="mp" Key="@p.Mp.Slug" @rendermode="InteractiveWebAssembly" />
         <div class="row">
             @foreach (var m in p.Memberships.Where(m => m.Current && m.Body.Kind is "faction" or "committee" or "group"))
             {

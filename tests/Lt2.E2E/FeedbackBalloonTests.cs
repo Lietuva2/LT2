@@ -133,7 +133,7 @@ public sealed class FeedbackBalloonTests(AppealFlowTests.ModeratorFixture modera
         await using var context = await browser.NewContextAsync(new() { IgnoreHTTPSErrors = true, Locale = "lt-LT", ViewportSize = new ViewportSize { Width = width, Height = height } });
         var page = await context.NewPageAsync();
 
-        foreach (var path in new[] { "/seimas/XVP-0412/kreipimasis", "/prisijungti" })
+        foreach (var path in new[] { "/seimas/XVP-0412", "/prisijungti" })
         {
             var where = $"{path} at {width}";
             await page.GotoAsync(Base + path);
@@ -194,14 +194,14 @@ public sealed class FeedbackBalloonTests(AppealFlowTests.ModeratorFixture modera
         await PasskeyTests.RegisterAsync(a, "Atsiliepianti Narė");
 
         // With JavaScript: focus goes to the text field; the panel fits; the send button can be reached.
-        await a.GotoAsync($"{Base}/seimas/XVP-0412/kreipimasis");
+        await a.GotoAsync($"{Base}/seimas/XVP-0412");
         await NothingCoveredAtTheEndAsync(a);
         await SettledAsync(a);
         await a.Locator("summary.feedback__button").ClickAsync();
         var panel = a.Locator(".feedback__panel");
         await Assertions.Expect(panel.Locator("#fb-text-panel")).ToBeVisibleAsync();
         await Assertions.Expect(panel.Locator("#fb-text-panel")).ToBeFocusedAsync();
-        await Assertions.Expect(panel).ToContainTextAsync("/seimas/XVP-0412/kreipimasis");
+        await Assertions.Expect(panel).ToContainTextAsync("/seimas/XVP-0412");
         await Assertions.Expect(panel).ToContainTextAsync("Nerašykite, kurią pusę pasirinkote");
         await PanelFitsAsync(a, $"member at {width}");
         await panel.Locator("#fb-text-panel").FillAsync($"Bandomasis atsiliepimas ({width} px, su JavaScript).");

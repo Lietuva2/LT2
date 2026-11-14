@@ -23,59 +23,51 @@ internal static class AppealMapping
     public static ReasonResponse Map(ReasonInfo r) => new(r.Id, r.Side, r.Text, r.AuthorName, r.Endorsements, r.Status, r.CreatedAt);
 
     public static AppealResponse Map(AppealInfo a) => new(
-        a.Id, Map(a.Bill), a.Status, a.InitiatorName, a.Description, a.OpenedAt, a.PublishedAt, Map(a.Counts), Map(a.Threshold),
-        a.Reasons.Select(Map).ToList(), a.ReturnNote, Map(a.Surge), a.ClosingVoteId, a.ClosedAt, Map(a.Planned));
+        a.Id, Map(a.Bill), a.Status, a.Description, a.DescriptionSource, a.DescriptionAuthor, Map(a.Counts), Map(a.Threshold),
+        a.Reasons.Select(Map).ToList(), Map(a.Surge), a.ClosingVoteId, a.ClosedAt, Map(a.Planned), a.HiddenStatement, a.DescriptionUrl, a.DescriptionAt);
 
     public static PlannedDateResponse? Map(PlannedDate? p) => p is null ? null : new(p.Date, p.Stage, p.SourceUrl, p.SetByModerator);
 
     public static SurgeResponse? Map(SurgeInfo? s) => s is null ? null : new(s.SharePercent, s.WindowHours);
 
     public static AppealListResponse Map(AppealPage p) => new(
-        p.Items.Select(i => new AppealListItemResponse(i.Id, Map(i.Bill), Map(i.Counts), Map(i.Threshold), i.PublishedAt, Map(i.Planned))).ToList(),
+        p.Items.Select(i => new AppealListItemResponse(i.Id, Map(i.Bill), i.Status, Map(i.Counts), Map(i.Threshold), Map(i.Planned), i.Arguments)).ToList(),
         p.Total,
         p.NextCursor);
 
-    public static MyAppealResponse Map(MyAppeal m) => new(
-        m.Side, m.Endorsed, m.EndorsementsLeft, m.MyReasons.Select(Map).ToList(), m.ReasonsLeft, m.IsInitiator, m.MayChangeThreshold, m.HasPositionConsent,
-        m.DescriptionChange is { } d ? new MyDescriptionChangeResponse(d.Status, d.Text, d.Note, d.CreatedAt) : null);
+    public static MyAppealResponse Map(MyAppeal m) =>
+        new(m.Side, m.Endorsed, m.EndorsementsLeft, m.MyReasons.Select(Map).ToList(), m.ReasonsLeft, m.HasPositionConsent);
 
     public static AppealRulesResponse Map(AppealRulesInfo r) =>
-        new(r.ThresholdDefault, r.ThresholdMinimum, r.ReasonMaxLength, r.ReasonsPerPerson, r.EndorsementsPerPerson, r.DescriptionMaxLength);
+        new(r.ThresholdDefault, r.ThresholdMinimum, r.ReasonMaxLength, r.ReasonsPerPerson, r.EndorsementsPerPerson, r.DescriptionMaxLength, r.AiSummaries);
 
     public static QueueReportResponse Map(QueueReport r) => new(r.Id, r.Ground, r.Text, r.CreatedAt);
 
-    public static ModerationAppealResponse Map(ModerationAppealState s) =>
-        new(s.Id, s.Status, s.Description, s.Threshold, s.Held, Map(s.Planned), s.HasOpenItems);
+    public static ModerationBillResponse Map(ModerationBillState s) =>
+        new(s.Id, s.BillNumber, s.Status, s.Description, s.DescriptionSource, s.Threshold, s.ThresholdSetBy, s.Held, Map(s.Planned), s.HasOpenItems,
+            s.Reasons.Select(Map).ToList(), s.DescriptionUrl, s.DescriptionReports.Select(Map).ToList());
+
+    public static QueueReasonResponse Map(QueueReason r) => new(
+        r.Id, r.AppealId, Map(r.Bill), r.Side, r.Text, r.AuthorName, r.Status, r.Seen, r.Flags, r.Reports.Select(Map).ToList(),
+        r.MergeCandidates.Select(Map).ToList(), r.CreatedAt);
 
     public static ModerationQueueResponse Map(ModerationItems q) => new(
         q.Appeals.Select(a => new QueueAppealResponse(
-            a.Id, Map(a.Bill), a.Status, a.InitiatorName, a.Description, a.Threshold, a.Flags,
-            a.Reports.Select(Map).ToList(), a.OpenedAt, Map(a.Surge), Map(a.Planned),
-            (a.DateFlags ?? []).Select(f => new QueueFlagResponse(f.Id, f.Kind, f.Link, f.Note, f.CreatedAt)).ToList(),
-            a.UnderThresholdOnAgenda,
-            a.Held,
-            a.ProposalsOnBill,
-            a.Participants,
-            a.EffectiveThreshold)).ToList(),
-        q.Reasons.Select(r => new QueueReasonResponse(
-            r.Id, r.AppealId, Map(r.Bill), r.Side, r.Text, r.AuthorName, r.Status, r.Seen, r.Flags, r.Reports.Select(Map).ToList(),
-            r.MergeCandidates.Select(Map).ToList(), r.CreatedAt)).ToList(),
-        (q.DescriptionChanges ?? []).Select(d => new QueueDescriptionChangeResponse(
-            d.Id, d.AppealId, Map(d.Bill), d.InitiatorName, d.CurrentText, d.ProposedText, d.Flags, d.CreatedAt)).ToList());
+            a.Id, Map(a.Bill), a.Description, a.DescriptionSource, a.Threshold, a.Reports.Select(Map).ToList(), Map(a.Surge), Map(a.Planned),
+            a.DateFlags.Select(f => new QueueFlagResponse(f.Id, f.Kind, f.Link, f.Note, f.CreatedAt)).ToList(),
+            a.UnderThresholdOnAgenda, a.Held, a.Participants, a.DescriptionUrl)).ToList(),
+        q.Reasons.Select(Map).ToList());
 
     public static HiddenItemsResponse Map(HiddenItems h) => new(
-        h.Appeals.Select(a => new HiddenAppealResponse(
-            a.Id, Map(a.Bill), a.InitiatorName, a.Description, a.HiddenAt, a.HiddenBy, a.Statement, a.RestoresAs, a.RefusedBecause)).ToList(),
+        h.Appeals.Select(a => new HiddenAppealResponse(a.Id, Map(a.Bill), a.Description, a.HiddenAt, a.HiddenBy, a.Statement, a.RestoresAs)).ToList(),
         h.Reasons.Select(r => new HiddenReasonResponse(
             r.Id, Map(r.Bill), r.Side, r.Text, r.AuthorName, r.HiddenAt, r.HiddenBy, r.Statement, r.Restorable)).ToList());
-
-    public static OpenAppeal ToModule(OpenAppealRequest r) => new(r.Description, r.Threshold);
-
-    public static EditAppeal ToModule(EditAppealRequest r) => new(r.Description);
 
     public static NewReason ToModule(ReasonRequest r) => new(r.Side, r.Text);
 
     public static NewReport ToModule(ReportRequest r) => new(r.TargetKind, r.TargetId, r.Ground, r.Text);
+
+    public static ModeratorDescription ToModule(ModeratorDescriptionRequest r) => new(r.Description, r.Statement, r.FromDraft, r.DescriptionUrl);
 
     /// <summary>The signed-in account, or <c>null</c>.</summary>
     public static Guid? UserId(ClaimsPrincipal? user) =>
@@ -88,7 +80,6 @@ internal static class AppealMapping
     public static AuthorViewResponse Map(AuthorView v) => new(
         v.DisplayName,
         v.Reasons.Select(r => new AuthorReasonResponse(r.Id, r.BillNumber, r.Side, r.Text, r.Status, r.CreatedAt)).ToList(),
-        v.Appeals.Select(a => new AuthorAppealResponse(a.Id, a.BillNumber, a.Status, a.OpenedAt)).ToList(),
         v.Actions.Select(m => new ModerationEntryResponse(m.TargetKind, m.Action, m.Statement, m.At)).ToList(),
         v.Restrictions.Select(Map).ToList());
 
@@ -116,38 +107,21 @@ internal sealed class ServerAppealsApi(IAppealsModule appeals, IHttpContextAcces
     public async Task<ApiResult<AppealRulesResponse>> GetRulesAsync(CancellationToken cancellationToken = default) =>
         ApiResult<AppealRulesResponse>.Ok(AppealMapping.Map(await appeals.RulesAsync(cancellationToken)));
 
-    public async Task<ApiResult<AppealListResponse>> GetAppealsAsync(string? sort = null, string? cursor = null, CancellationToken cancellationToken = default) =>
-        ApiResult<AppealListResponse>.Ok(AppealMapping.Map(await appeals.ListAsync(sort, cursor, cancellationToken)));
+    public async Task<ApiResult<AppealListResponse>> GetAppealsAsync(string? search = null, bool planned = false, bool closed = false, string? cursor = null, string? sort = null, CancellationToken cancellationToken = default) =>
+        ApiResult<AppealListResponse>.Ok(AppealMapping.Map(await appeals.ListAsync(new BillListQuery(search, planned, closed, cursor, sort), cancellationToken)));
 
     public async Task<ApiResult<AppealResponse>> GetAppealAsync(string number, CancellationToken cancellationToken = default) =>
-        errors.ToApiResult(await appeals.GetAsync(number, UserId, cancellationToken), AppealMapping.Map);
+        errors.ToApiResult(await appeals.GetAsync(number, cancellationToken), AppealMapping.Map);
 
     public async Task<ApiResult<IReadOnlyList<DescriptionRevisionResponse>>> GetHistoryAsync(string number, CancellationToken cancellationToken = default) =>
         errors.ToApiResult(
             await appeals.HistoryAsync(number, cancellationToken),
             rows => (IReadOnlyList<DescriptionRevisionResponse>)rows.Select(r => new DescriptionRevisionResponse(r.ChangedAt, r.OldText, r.NewText)).ToList());
 
-    public async Task<ApiResult<ProposalsResponse>> GetProposalsAsync(string number, CancellationToken cancellationToken = default) =>
-        errors.ToApiResult(await appeals.ProposalsWaitingAsync(number, cancellationToken), n => new ProposalsResponse(n));
-
     public async Task<ApiResult<MyAppealResponse>> GetMineAsync(string number, CancellationToken cancellationToken = default) =>
         UserId is { } id
             ? errors.ToApiResult(await appeals.MineAsync(number, id, cancellationToken), AppealMapping.Map)
             : ApiResult<MyAppealResponse>.Fail(errors.ToProblem(SignInRequired));
-
-    public async Task<ApiResult<AppealResponse>> OpenAsync(string number, OpenAppealRequest request, CancellationToken cancellationToken = default) =>
-        UserId is { } id
-            ? errors.ToApiResult(await appeals.OpenAsync(number, id, AppealMapping.ToModule(request), cancellationToken), AppealMapping.Map)
-            : ApiResult<AppealResponse>.Fail(errors.ToProblem(SignInRequired));
-
-    public async Task<ApiResult> EditAsync(string number, EditAppealRequest request, CancellationToken cancellationToken = default) =>
-        await AsMemberAsync(id => appeals.EditAsync(number, id, AppealMapping.ToModule(request), cancellationToken));
-
-    public async Task<ApiResult> ProposeDescriptionAsync(string number, EditAppealRequest request, CancellationToken cancellationToken = default) =>
-        await AsMemberAsync(id => appeals.ProposeDescriptionAsync(number, id, AppealMapping.ToModule(request), cancellationToken));
-
-    public async Task<ApiResult> ChangeThresholdAsync(string number, ThresholdRequest request, CancellationToken cancellationToken = default) =>
-        await AsMemberAsync(id => appeals.ChangeThresholdAsync(number, id, request.Threshold, cancellationToken));
 
     public async Task<ApiResult> TakePositionAsync(string number, PositionRequest request, CancellationToken cancellationToken = default) =>
         await AsMemberAsync(id => appeals.TakePositionAsync(number, id, request.Side, cancellationToken));
@@ -201,16 +175,10 @@ internal sealed class ServerModerationApi(
             ? errors.ToApiResult(await moderation.AuthorOfReasonAsync(reasonId, cancellationToken), AppealMapping.Map)
             : ApiResult<AuthorViewResponse>.Fail(errors.ToProblem(Error.Forbidden("forbidden")));
 
-    public async Task<ApiResult<AuthorViewResponse>> GetInitiatorOfAppealAsync(Guid appealId, CancellationToken cancellationToken = default) =>
-        await IsModeratorAsync()
-            ? errors.ToApiResult(await moderation.InitiatorOfAppealAsync(appealId, cancellationToken), AppealMapping.Map)
-            : ApiResult<AuthorViewResponse>.Fail(errors.ToProblem(Error.Forbidden("forbidden")));
 
     public Task<ApiResult<RestrictionCreatedResponse>> RestrictAuthorOfReasonAsync(Guid reasonId, RestrictionRequest request, CancellationToken cancellationToken = default) =>
         RestrictAsync(m => moderation.RestrictAuthorOfReasonAsync(reasonId, request.Until, request.Statement, m, AppealMapping.Contact(configuration), cancellationToken));
 
-    public Task<ApiResult<RestrictionCreatedResponse>> RestrictInitiatorOfAppealAsync(Guid appealId, RestrictionRequest request, CancellationToken cancellationToken = default) =>
-        RestrictAsync(m => moderation.RestrictInitiatorOfAppealAsync(appealId, request.Until, request.Statement, m, AppealMapping.Contact(configuration), cancellationToken));
 
     public async Task<ApiResult<IReadOnlyList<RestrictionResponse>>> GetRestrictionsAsync(CancellationToken cancellationToken = default) =>
         await IsModeratorAsync()
@@ -237,14 +205,8 @@ internal sealed class ServerModerationApi(
             ? ApiResult<ModerationQueueResponse>.Ok(AppealMapping.Map(await moderation.QueueAsync(cancellationToken)))
             : ApiResult<ModerationQueueResponse>.Fail(errors.ToProblem(Error.Forbidden("forbidden")));
 
-    public Task<ApiResult> PublishAppealAsync(Guid appealId, ModerationRequest request, CancellationToken cancellationToken = default) =>
-        ActAsync(m => moderation.PublishAppealAsync(appealId, request.Statement, m, cancellationToken));
-
-    public Task<ApiResult> ApproveDescriptionAsync(Guid changeId, ModerationRequest request, CancellationToken cancellationToken = default) =>
-        ActAsync(m => moderation.ApproveDescriptionAsync(changeId, request.Statement, m, cancellationToken));
-
-    public Task<ApiResult> ReturnDescriptionAsync(Guid changeId, StatementRequest request, CancellationToken cancellationToken = default) =>
-        ActAsync(m => moderation.ReturnDescriptionAsync(changeId, request.Statement, m, cancellationToken));
+    public Task<ApiResult> KeepAppealAsync(Guid appealId, ModerationRequest request, CancellationToken cancellationToken = default) =>
+        ActAsync(m => moderation.KeepAppealAsync(appealId, request.Statement, m, cancellationToken));
 
     public async Task<ApiResult<HiddenItemsResponse>> GetHiddenAsync(CancellationToken cancellationToken = default) =>
         await IsModeratorAsync()
@@ -257,19 +219,28 @@ internal sealed class ServerModerationApi(
     public Task<ApiResult> RestoreReasonAsync(Guid reasonId, StatementRequest request, CancellationToken cancellationToken = default) =>
         ActAsync(m => moderation.RestoreReasonAsync(reasonId, request.Statement, m, cancellationToken));
 
-    public Task<ApiResult> ReturnAppealAsync(Guid appealId, StatementRequest request, CancellationToken cancellationToken = default) =>
-        ActAsync(m => moderation.ReturnAppealAsync(appealId, request.Statement, m, cancellationToken));
 
     public Task<ApiResult> HideAppealAsync(Guid appealId, StatementRequest request, CancellationToken cancellationToken = default) =>
         ActAsync(m => moderation.HideAppealAsync(appealId, request.Statement, m, cancellationToken));
 
-    public async Task<ApiResult<ModerationAppealResponse>> GetAppealAsync(Guid appealId, CancellationToken cancellationToken = default) =>
+    public async Task<ApiResult<ModerationBillResponse>> GetBillAsync(string number, CancellationToken cancellationToken = default) =>
         await IsModeratorAsync()
-            ? errors.ToApiResult(await moderation.AppealStateAsync(appealId, cancellationToken), AppealMapping.Map)
-            : ApiResult<ModerationAppealResponse>.Fail(errors.ToProblem(Error.Forbidden("forbidden")));
+            ? errors.ToApiResult(await moderation.BillStateAsync(number, cancellationToken), AppealMapping.Map)
+            : ApiResult<ModerationBillResponse>.Fail(errors.ToProblem(Error.Forbidden("forbidden")));
 
-    public Task<ApiResult> CorrectDescriptionAsync(Guid appealId, ModeratorDescriptionRequest request, CancellationToken cancellationToken = default) =>
-        ActAsync(m => moderation.CorrectDescriptionAsync(appealId, request.Description, request.Statement, m, cancellationToken));
+    public async Task<ApiResult<BillRecordResponse>> EnsureRecordAsync(string number, CancellationToken cancellationToken = default) =>
+        await IsModeratorAsync()
+            ? errors.ToApiResult(await moderation.RecordAsync(number, cancellationToken), id => new BillRecordResponse(id))
+            : ApiResult<BillRecordResponse>.Fail(errors.ToProblem(Error.Forbidden("forbidden")));
+
+    public Task<ApiResult> WriteDescriptionAsync(string number, ModeratorDescriptionRequest request, CancellationToken cancellationToken = default) =>
+        ActAsync(m => moderation.WriteDescriptionAsync(number, AppealMapping.ToModule(request), m, cancellationToken));
+
+    public Task<ApiResult> ConfirmDescriptionAsync(string number, ModerationRequest request, CancellationToken cancellationToken = default) =>
+        ActAsync(m => moderation.ConfirmDescriptionAsync(number, request.Statement, m, cancellationToken));
+
+    public Task<ApiResult> RemoveDescriptionAsync(string number, StatementRequest request, CancellationToken cancellationToken = default) =>
+        ActAsync(m => moderation.RemoveDescriptionAsync(number, request.Statement, m, cancellationToken));
 
     public Task<ApiResult> SetThresholdAsync(Guid appealId, ModeratorThresholdRequest request, CancellationToken cancellationToken = default) =>
         ActAsync(m => moderation.SetThresholdAsync(appealId, request.Threshold, request.Statement, m, cancellationToken));
@@ -298,6 +269,23 @@ internal sealed class ServerModerationApi(
             var made = await digests.UrgentAsync(appealId, request.Statement, new Lt2.Notifications.StaffActor(m.UserId, m.Role, m.IpHash), cancellationToken);
             return made.IsSuccess ? Result.Ok() : made.Error!;
         });
+
+    public async Task<ApiResult<AiStatusResponse>> GetAiAsync(CancellationToken cancellationToken = default) =>
+        await IsModeratorAsync()
+            ? ApiResult<AiStatusResponse>.Ok(new AiStatusResponse(moderation.DraftAvailable))
+            : ApiResult<AiStatusResponse>.Fail(errors.ToProblem(Error.Forbidden("forbidden")));
+
+    public async Task<ApiResult<DescriptionDraftResponse>> DraftDescriptionAsync(string number, DescriptionDraftRequest request, CancellationToken cancellationToken = default)
+    {
+        if (!await IsModeratorAsync())
+        {
+            return ApiResult<DescriptionDraftResponse>.Fail(errors.ToProblem(Error.Forbidden("forbidden")));
+        }
+
+        var http = accessor.HttpContext!;
+        var moderator = await AppealMapping.ModeratorAsync(identity, http.User, ipHasher.Hash(http), cancellationToken);
+        return errors.ToApiResult(await moderation.DraftDescriptionAsync(number, request.SourceText, moderator, cancellationToken), d => new DescriptionDraftResponse(d));
+    }
 
     private async Task<bool> IsModeratorAsync()
     {

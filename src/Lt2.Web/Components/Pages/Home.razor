@@ -3,12 +3,14 @@
 @inject IStringLocalizer<PageText> T
 @inject IStringLocalizer<Lt2.Web.Components.Appeals.AppealText> A
 @inject IAppealsApi Appeals
+@inject Lt2.Api.Contracts.Agenda.IAgendaApi Agenda
 @inject Formats F
 
-@* The front page (design 8.7, option B chosen 2026-11-13), server-rendered and public: the welcome with the turning logo
-   and the sign-in steps shared with /prisijungti (a greeting instead once signed in), then one summary per published
-   appeal with the most participants: both sides with the count for accounts older than 30 days, the threshold and the
-   most endorsed reason on each side, linking to the appeal. The note that this is not a representative poll closes it. *@
+@* The front page (design 8.7, option B chosen 2026-11-13; 8.12.5), server-rendered and public: the welcome with the
+   turning logo and the sign-in steps shared with /prisijungti (a greeting instead once signed in), "Artimiausiu metu
+   Seime", then one card for each of the six bills with the most activity: both sides with the count for accounts
+   older than 30 days, the threshold and the most endorsed reason on each side, linking to the bill. The note that this is
+   not a representative poll closes it. *@
 <PageTitle>Lietuva 2.0</PageTitle>
 
 <div class="welcome welcome--home">
@@ -33,22 +35,47 @@
     </AuthorizeView>
 </div>
 
+@* Design 8.11.1: what the Seimas will consider soon comes first, in the agenda page's rows, up to eight items. *@
+<section class="stack" aria-labelledby="h-home-coming" id="home-coming">
+    <div class="row">
+        <h2 id="h-home-coming">@T["Home.Coming"]</h2>
+        <a href="/darbotvarke">@T["Agenda.All"]</a>
+    </div>
+    @if (_coming.Count == 0)
+    {
+        <p id="home-none-planned">@T["Agenda.NonePlanned"]</p>
+    }
+    else
+    {
+        @foreach (var day in _coming)
+        {
+            <section class="stack stack--tight" aria-labelledby="h-home-day-@Formats.Day(day.Date)">
+                <h3 id="h-home-day-@Formats.Day(day.Date)">@string.Format(System.Globalization.CultureInfo.InvariantCulture, T["Agenda.Day"], F.Date(day.Date))</h3>
+                <ul class="rows">
+                    @foreach (var item in day.Items)
+                    {
+                        <AgendaItemRow Item="item" />
+                    }
+                </ul>
+            </section>
+        }
+    }
+</section>
+
+@* The cards only while some bill has participants: no empty heading (design 8.12.5). *@
+@if (_appeals.Count > 0)
+{
 <section class="stack" aria-labelledby="h-home-appeals" id="home-appeals">
     <div class="row">
         <h2 id="h-home-appeals">@T["Home.Appeals"]</h2>
         <a href="/kreipimaisi">@T["Home.AllAppeals"]</a>
         <a href="/suvestines">@T["Home.Digests"]</a>
     </div>
-    @if (_appeals.Count == 0)
-    {
-        <p id="home-no-appeals">@T["Home.AppealsNone"] <a href="/kreipimaisi/naujas">@A["List.Open"]</a></p>
-    }
-    else
-    {
+    @{
         <div class="cards">
             @foreach (var a in _appeals)
             {
-                var link = $"/seimas/{Uri.EscapeDataString(a.Bill.Number)}/kreipimasis";
+                var link = $"/seimas/{Uri.EscapeDataString(a.Bill.Number)}";
                 <article class="sheet stack stack--tight" aria-labelledby="h-@a.Bill.Number" id="home-appeal-@a.Bill.Number">
                     <div class="row">
                         <a class="tag tag--ink num" href="/seimas/@Uri.EscapeDataString(a.Bill.Number)">@a.Bill.Number</a>
@@ -90,19 +117,39 @@
             }
         </div>
     }
-    <p class="note note--quiet" id="not-a-poll">@A["NotAPoll"]</p>
 </section>
+}
+
+<p class="small">@T["Agenda.OlderNote"]</p>
+<p class="note note--quiet" id="not-a-poll">@A["NotAPoll"]</p>
 
 @code {
     private const int Shown = 6;
+    private const int ComingShown = 8;
     private static readonly string[] Sides = ["for", "against"];
     private List<AppealResponse> _appeals = [];
+    private List<Lt2.Api.Contracts.Agenda.AgendaDayResponse> _coming = [];
 
     protected override async Task OnInitializedAsync()
     {
-        // The list is by participants; each card needs its appeal's public reasons, so the few shown are read one by one.
-        var page = (await Appeals.GetAppealsAsync(null, null)).Value;
-        foreach (var item in page?.Items.Take(Shown) ?? [])
+        // Up to eight coming planned items, kept in their days (design 8.11.1).
+        var left = ComingShown;
+        foreach (var day in (await Agenda.GetAgendaAsync()).Value?.Days ?? [])
+        {
+            if (left <= 0)
+            {
+                break;
+            }
+
+            var items = day.Items.Take(left).ToList();
+            left -= items.Count;
+            _coming.Add(day with { Items = items });
+        }
+
+        // The list is by activity (participants plus arguments), those with none last; each card needs the bill's public
+        // reasons, so the few shown are read one by one.
+        var page = (await Appeals.GetAppealsAsync()).Value;
+        foreach (var item in page?.Items.Where(i => i.Counts.For + i.Counts.Against + i.Arguments > 0).Take(Shown) ?? [])
         {
             if ((await Appeals.GetAppealAsync(item.Bill.Number)).Value is { } appeal)
             {

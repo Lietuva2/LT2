@@ -6,8 +6,9 @@
 @inherits InteractiveBase
 @inject IModerationApi ModerationApi
 
-@* Hidden appeals and reasons (design 8.3): what was hidden, by whom, when and why, and "Atkurti". Moderators only, in a
-   staff-passkey session; the server refuses anything else. Nothing here shows who took which side. *@
+@* Hidden bills and reasons (design 8.3, 8.12.3): what was hidden, by whom, when and why, and "Atkurti". A hidden bill has
+   taking part closed; restoring it brings its sides and arguments back. Moderators only, in a staff-passkey session; the
+   server refuses anything else. Nothing here shows who took which side. *@
 <PageTitle>@L["Hidden.PageTitle"]</PageTitle>
 
 <div class="stack">
@@ -44,21 +45,20 @@ else
                     <span class="tag">@L["Hidden.RestoresAs." + appeal.RestoresAs]</span>
                 </div>
                 <h3 id="ha-@appeal.Id">@appeal.Bill.Title</h3>
-                <p class="small">@Text("Hidden.Initiator", appeal.InitiatorName ?? L["Reasons.Anonymous"])</p>
+
                 <p class="small num">@Hidden(appeal.HiddenAt, appeal.HiddenBy)</p>
                 @if (appeal.Statement is { } statement)
                 {
                     <p class="small">@Text("Hidden.Why", statement)</p>
                 }
-                <details>
-                    <summary class="linkish">@L["Open.Description"]</summary>
-                    <p class="voice">@appeal.Description</p>
-                </details>
-                @if (appeal.RefusedBecause is { } refused)
+                @if (appeal.Description.Length > 0)
                 {
-                    <p class="note note--quiet" id="refused-@appeal.Id">@L["Hidden.Refused." + refused]</p>
+                    <details>
+                        <summary class="linkish">@L["Mod.Description"]</summary>
+                        <p class="voice">@appeal.Description</p>
+                    </details>
                 }
-                <RestoreAction Id="appeal.Id" Kind="appeal" RestoresAs="@appeal.RestoresAs" Allowed="appeal.RefusedBecause is null" />
+                <RestoreAction Id="appeal.Id" Kind="appeal" RestoresAs="@appeal.RestoresAs" />
             </article>
         }
     </section>

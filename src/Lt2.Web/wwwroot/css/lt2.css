@@ -495,6 +495,14 @@ body > .page { width: 100%; }
 /* The theme switch sits in the navigation; hidden until lt2-theme.js shows it. */
 .top__nav .mark { align-self: center; }
 
+/* The signed-in menu fits one line beside the brand at 1280 px (design 8.12.5; it wrapped once "Darbotvarkė" was added):
+   on wide screens the menu's type is the secondary size and its gaps tighter. Nothing is forced onto one line, so a
+   narrower window still wraps the menu under the brand instead of scrolling sideways. */
+@media (min-width: 54rem) {
+  .top__nav { column-gap: var(--sp-4); font-size: var(--fs-1); }
+  .top__nav a, .top__signout button { white-space: nowrap; }
+}
+
 /* ---------- Appeals (M2a) ---------- */
 
 /* The threshold ruler: the fill is SVG (no inline styles under the content security policy); the ticks are the
@@ -582,3 +590,8 @@ body { padding-block-end: 4.5rem; }
 .said__actions { display: inline-flex; flex-wrap: nowrap; align-items: center; gap: var(--sp-3); white-space: nowrap; }
 .said__actions:has(.report-visitor[open]) { flex-wrap: wrap; white-space: normal; }
 @media (max-width: 64rem) { .pair--reasons { grid-template-columns: minmax(0, 1fr); } }
+
+/* The agenda (design 8.11.1): a bill's number tag inside a row keeps the tag's light-on-dark text, not the row link's ink. */
+.rows__main a.tag--ink { color: var(--sheet); font-weight: 600; }
+/* The share line (design 8.11.5): a long invitation link wraps instead of widening the page. */
+.share__link { overflow-wrap: anywhere; }

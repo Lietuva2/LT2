@@ -16,7 +16,7 @@ public sealed class AppealClosingTests(DatabaseFixture database) : ApiTest(datab
         using var moderator = await StaffMembers.ActiveAsync(Factory, Database, "moderator");
         var (initiator, _) = await Factory.MemberAsync();
         using var _i = initiator;
-        var appeal = await Database.OpenPublishedAsync(initiator, moderator.Browser, AppealSteps.ThirdBill, "against");
+        var appeal = await Database.PrepareBillAsync(initiator, moderator.Browser, AppealSteps.ThirdBill, "against");
         var (member, memberEmail) = await Factory.MemberAsync();
         using var _m = member;
         (await member.TakeSideAsync(AppealSteps.ThirdBill, "for")).StatusCode.ShouldBe(HttpStatusCode.NoContent);
@@ -55,7 +55,7 @@ public sealed class AppealClosingTests(DatabaseFixture database) : ApiTest(datab
             await Database.ExecuteAsync("DELETE FROM appeals.position WHERE user_id = @u", ("u", await Database.UserIdAsync(memberEmail)));
             (await stranger.AppealAsync(AppealSteps.ThirdBill)).Counts.For.ShouldBe(1);
 
-            using var page = await stranger.Client.GetAsync("/seimas/XVP-0618/kreipimasis");
+            using var page = await stranger.Client.GetAsync("/seimas/XVP-0618");
             var html = WebUtility.HtmlDecode(await page.Content.ReadAsStringAsync());
             html.ShouldContain("Seimas balsavo galutinai; skaičiai užfiksuoti");
             html.ShouldContain("Seimo sprendimas");
