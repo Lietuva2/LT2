@@ -282,9 +282,13 @@ password kept only in a root-only file (the hash comes from a throwaway Caddy co
 ```sh
 umask 077
 python3 -c 'import secrets; print(secrets.token_urlsafe(24))' > $LT2_HOME/mailpit-password
-printf 'lt2:%s\n' "$(tr -d '\n' < $LT2_HOME/mailpit-password | docker run --rm -i --network none caddy:2 caddy hash-password)" \
+printf 'lt2:%s\n' "$(docker run --rm -i --network none caddy:2 caddy hash-password < $LT2_HOME/mailpit-password)" \
   > $LT2_HOME/secrets/mailpit_ui_auth
+chmod 400 $LT2_HOME/secrets/mailpit_ui_auth
 ```
+
+`caddy hash-password` reads one line from standard input and fails with `EOF` without its line end, so pass the file
+as it is. Use a Caddy image already on the server if there is one.
 
 The viewer gets its own hostname, never a path of the site, from the second block of `deploy/shared-proxy.Caddyfile`
 (`mail.example.org` replaced), appended and reloaded like the first. The name is `lt2`; the password is read over SSH
