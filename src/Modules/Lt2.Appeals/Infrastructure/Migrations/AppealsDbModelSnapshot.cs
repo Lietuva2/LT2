@@ -343,6 +343,377 @@ namespace Lt2.Appeals.Infrastructure.Migrations
                     b.ToTable("moderation_action", "appeals");
                 });
 
+            modelBuilder.Entity("Lt2.Appeals.Domain.Organisation", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<string>("BlockStatement")
+                        .HasMaxLength(1000)
+                        .HasColumnType("character varying(1000)")
+                        .HasColumnName("block_statement");
+
+                    b.Property<DateTimeOffset?>("BlockedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("blocked_at");
+
+                    b.Property<Guid?>("BlockedByUserId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("blocked_by_user_id");
+
+                    b.Property<DateTimeOffset>("ChangedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("changed_at");
+
+                    b.Property<DateTimeOffset?>("ClosedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("closed_at");
+
+                    b.Property<string>("ConfirmationNote")
+                        .HasMaxLength(1000)
+                        .HasColumnType("character varying(1000)")
+                        .HasColumnName("confirmation_note");
+
+                    b.Property<DateTimeOffset?>("ConfirmedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("confirmed_at");
+
+                    b.Property<string>("ConfirmedBy")
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)")
+                        .HasColumnName("confirmed_by");
+
+                    b.Property<Guid?>("ConfirmedByUserId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("confirmed_by_user_id");
+
+                    b.Property<string>("ConfirmedDomain")
+                        .HasMaxLength(253)
+                        .HasColumnType("character varying(253)")
+                        .HasColumnName("confirmed_domain");
+
+                    b.Property<bool>("DeclaredLobbyist")
+                        .HasColumnType("boolean")
+                        .HasColumnName("declared_lobbyist");
+
+                    b.Property<string>("Description")
+                        .IsRequired()
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)")
+                        .HasColumnName("description");
+
+                    b.Property<bool>("DomainBarred")
+                        .HasColumnType("boolean")
+                        .HasColumnName("domain_barred");
+
+                    b.Property<string>("LegalCode")
+                        .HasMaxLength(9)
+                        .HasColumnType("character varying(9)")
+                        .HasColumnName("legal_code");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(120)
+                        .HasColumnType("character varying(120)")
+                        .HasColumnName("name");
+
+                    b.Property<string>("NameKey")
+                        .IsRequired()
+                        .HasMaxLength(120)
+                        .HasColumnType("character varying(120)")
+                        .HasColumnName("name_key");
+
+                    b.Property<DateTimeOffset>("RegisteredAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("registered_at");
+
+                    b.Property<Guid?>("RegisteredByUserId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("registered_by_user_id");
+
+                    b.PrimitiveCollection<string[]>("ScreeningFlags")
+                        .IsRequired()
+                        .HasColumnType("text[]")
+                        .HasColumnName("screening_flags");
+
+                    b.Property<DateTimeOffset?>("SeenAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("seen_at");
+
+                    b.Property<string>("Slug")
+                        .IsRequired()
+                        .HasMaxLength(68)
+                        .HasColumnType("character varying(68)")
+                        .HasColumnName("slug");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)")
+                        .HasColumnName("status");
+
+                    b.Property<string>("Website")
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)")
+                        .HasColumnName("website");
+
+                    b.HasKey("Id")
+                        .HasName("pk_organisation");
+
+                    b.HasIndex("NameKey")
+                        .IsUnique()
+                        .HasDatabaseName("ix_organisation_name_key_active")
+                        .HasFilter("status = 'active'");
+
+                    b.HasIndex("RegisteredByUserId")
+                        .HasDatabaseName("ix_organisation_registered_by_user_id");
+
+                    b.HasIndex("Slug")
+                        .IsUnique()
+                        .HasDatabaseName("ix_organisation_slug");
+
+                    b.ToTable("organisation", "appeals", t =>
+                        {
+                            t.HasCheckConstraint("ck_organisation_confirmed_by", "confirmed_by IS NULL OR confirmed_by IN ('domain', 'moderator')");
+
+                            t.HasCheckConstraint("ck_organisation_status", "status IN ('active', 'blocked', 'closed')");
+                        });
+                });
+
+            modelBuilder.Entity("Lt2.Appeals.Domain.OrganisationCode", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<byte[]>("CodeHash")
+                        .IsRequired()
+                        .HasColumnType("bytea")
+                        .HasColumnName("code_hash");
+
+                    b.Property<DateTimeOffset?>("ConsumedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("consumed_at");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("created_at");
+
+                    b.Property<string>("Domain")
+                        .IsRequired()
+                        .HasMaxLength(253)
+                        .HasColumnType("character varying(253)")
+                        .HasColumnName("domain");
+
+                    b.Property<DateTimeOffset>("ExpiresAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("expires_at");
+
+                    b.Property<int>("FailedAttempts")
+                        .HasColumnType("integer")
+                        .HasColumnName("failed_attempts");
+
+                    b.Property<Guid>("OrganisationId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("organisation_id");
+
+                    b.Property<Guid?>("RequestedByUserId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("requested_by_user_id");
+
+                    b.HasKey("Id")
+                        .HasName("pk_organisation_code");
+
+                    b.HasIndex("OrganisationId", "CreatedAt")
+                        .HasDatabaseName("ix_organisation_code_organisation_id_created_at");
+
+                    b.ToTable("organisation_code", "appeals");
+                });
+
+            modelBuilder.Entity("Lt2.Appeals.Domain.OrganisationInvite", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("created_at");
+
+                    b.Property<Guid?>("CreatedByUserId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("created_by_user_id");
+
+                    b.Property<DateTimeOffset>("ExpiresAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("expires_at");
+
+                    b.Property<Guid>("OrganisationId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("organisation_id");
+
+                    b.Property<byte[]>("TokenHash")
+                        .IsRequired()
+                        .HasColumnType("bytea")
+                        .HasColumnName("token_hash");
+
+                    b.Property<DateTimeOffset?>("UsedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("used_at");
+
+                    b.HasKey("Id")
+                        .HasName("pk_organisation_invite");
+
+                    b.HasIndex("OrganisationId")
+                        .HasDatabaseName("ix_organisation_invite_organisation_id");
+
+                    b.HasIndex("TokenHash")
+                        .IsUnique()
+                        .HasDatabaseName("ix_organisation_invite_token_hash");
+
+                    b.ToTable("organisation_invite", "appeals");
+                });
+
+            modelBuilder.Entity("Lt2.Appeals.Domain.OrganisationRepresentative", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<DateTimeOffset?>("EndedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("ended_at");
+
+                    b.Property<DateTimeOffset>("GrantedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("granted_at");
+
+                    b.Property<Guid?>("GrantedByUserId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("granted_by_user_id");
+
+                    b.Property<Guid>("OrganisationId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("organisation_id");
+
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("user_id");
+
+                    b.HasKey("Id")
+                        .HasName("pk_organisation_representative");
+
+                    b.HasIndex("UserId")
+                        .HasDatabaseName("ix_organisation_representative_user_id");
+
+                    b.HasIndex("OrganisationId", "UserId")
+                        .IsUnique()
+                        .HasDatabaseName("ix_organisation_representative_current")
+                        .HasFilter("ended_at IS NULL");
+
+                    b.ToTable("organisation_representative", "appeals");
+                });
+
+            modelBuilder.Entity("Lt2.Appeals.Domain.OrganisationStatement", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<string>("BillNumber")
+                        .IsRequired()
+                        .HasMaxLength(40)
+                        .HasColumnType("character varying(40)")
+                        .HasColumnName("bill_number");
+
+                    b.Property<DateTimeOffset?>("EditedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("edited_at");
+
+                    b.Property<DateTimeOffset?>("FirstPublicAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("first_public_at");
+
+                    b.Property<int?>("Goal")
+                        .HasColumnType("integer")
+                        .HasColumnName("goal");
+
+                    b.Property<string>("Link")
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)")
+                        .HasColumnName("link");
+
+                    b.Property<Guid>("OrganisationId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("organisation_id");
+
+                    b.Property<DateTimeOffset>("PublishedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("published_at");
+
+                    b.PrimitiveCollection<string[]>("ScreeningFlags")
+                        .IsRequired()
+                        .HasColumnType("text[]")
+                        .HasColumnName("screening_flags");
+
+                    b.Property<DateTimeOffset?>("SeenAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("seen_at");
+
+                    b.Property<string>("Stance")
+                        .IsRequired()
+                        .HasMaxLength(10)
+                        .HasColumnType("character varying(10)")
+                        .HasColumnName("stance");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)")
+                        .HasColumnName("status");
+
+                    b.Property<string>("Text")
+                        .IsRequired()
+                        .HasMaxLength(1500)
+                        .HasColumnType("character varying(1500)")
+                        .HasColumnName("text");
+
+                    b.Property<DateTimeOffset?>("WithdrawnAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("withdrawn_at");
+
+                    b.Property<Guid?>("WrittenByUserId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("written_by_user_id");
+
+                    b.HasKey("Id")
+                        .HasName("pk_organisation_statement");
+
+                    b.HasIndex("BillNumber", "Status")
+                        .HasDatabaseName("ix_organisation_statement_bill_number_status");
+
+                    b.HasIndex("OrganisationId", "BillNumber")
+                        .IsUnique()
+                        .HasDatabaseName("ix_organisation_statement_one_per_bill")
+                        .HasFilter("status IN ('pending', 'published', 'hidden')");
+
+                    b.HasIndex("OrganisationId", "FirstPublicAt")
+                        .HasDatabaseName("ix_organisation_statement_organisation_id_first_public_at");
+
+                    b.ToTable("organisation_statement", "appeals", t =>
+                        {
+                            t.HasCheckConstraint("ck_organisation_statement_goal", "goal IS NULL OR (goal BETWEEN 1 AND 1000000 AND stance <> 'remarks')");
+
+                            t.HasCheckConstraint("ck_organisation_statement_stance", "stance IN ('for', 'against', 'remarks')");
+                        });
+                });
+
             modelBuilder.Entity("Lt2.Appeals.Domain.Position", b =>
                 {
                     b.Property<Guid>("AppealId")
@@ -458,7 +829,7 @@ namespace Lt2.Appeals.Infrastructure.Migrations
                         .HasColumnType("uuid")
                         .HasColumnName("id");
 
-                    b.Property<Guid>("AppealId")
+                    b.Property<Guid?>("AppealId")
                         .HasColumnType("uuid")
                         .HasColumnName("appeal_id");
 
@@ -683,6 +1054,46 @@ namespace Lt2.Appeals.Infrastructure.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired()
                         .HasConstraintName("fk_flag_appeal_appeal_id");
+                });
+
+            modelBuilder.Entity("Lt2.Appeals.Domain.OrganisationCode", b =>
+                {
+                    b.HasOne("Lt2.Appeals.Domain.Organisation", null)
+                        .WithMany()
+                        .HasForeignKey("OrganisationId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
+                        .HasConstraintName("fk_organisation_code_organisation_organisation_id");
+                });
+
+            modelBuilder.Entity("Lt2.Appeals.Domain.OrganisationInvite", b =>
+                {
+                    b.HasOne("Lt2.Appeals.Domain.Organisation", null)
+                        .WithMany()
+                        .HasForeignKey("OrganisationId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
+                        .HasConstraintName("fk_organisation_invite_organisation_organisation_id");
+                });
+
+            modelBuilder.Entity("Lt2.Appeals.Domain.OrganisationRepresentative", b =>
+                {
+                    b.HasOne("Lt2.Appeals.Domain.Organisation", null)
+                        .WithMany()
+                        .HasForeignKey("OrganisationId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
+                        .HasConstraintName("fk_organisation_representative_organisation_organisation_id");
+                });
+
+            modelBuilder.Entity("Lt2.Appeals.Domain.OrganisationStatement", b =>
+                {
+                    b.HasOne("Lt2.Appeals.Domain.Organisation", null)
+                        .WithMany()
+                        .HasForeignKey("OrganisationId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
+                        .HasConstraintName("fk_organisation_statement_organisation_organisation_id");
                 });
 
             modelBuilder.Entity("Lt2.Appeals.Domain.Position", b =>

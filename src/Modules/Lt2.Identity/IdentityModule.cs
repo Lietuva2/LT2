@@ -109,9 +109,11 @@ public static class IdentityModule
         services.AddScoped<PartySupportHandlers>();
         services.AddScoped<AccountDataHandlers>();
         services.AddScoped<IInvitations, Application.Invitations.InvitationHandlers>();
+        services.AddScoped<IOrganisationInvitations, Application.Invitations.OrganisationInvitationHandlers>();
         services.AddScoped<IFeedback, Application.Feedback.FeedbackHandlers>();
         services.AddSingleton<IParticipants, ParticipantDirectory>();
         services.AddSingleton<IPartySupporters, PartySupporterDirectory>();
+        services.AddSingleton<IOrganisationCodeSwitch, Application.Invitations.OrganisationCodeSwitch>();
         services.AddScoped<IIdentityModule, IdentityModuleFacade>();
         services.AddScoped<IIdentityMaintenance, MaintenanceHandler>();
         services.AddSingleton<IModuleDatabase, IdentityModuleDatabase>();
@@ -135,6 +137,9 @@ public static class IdentityModule
     {
         services.AddSingleton<IParticipants, ParticipantDirectory>();
         services.AddSingleton<IPartySupporters, PartySupporterDirectory>();
+
+        // An organisation's codes follow it when Appeals work in another host closes one (design 8.14.14, stage B).
+        services.AddSingleton<IOrganisationCodeSwitch, Application.Invitations.OrganisationCodeSwitch>();
         return services;
     }
 

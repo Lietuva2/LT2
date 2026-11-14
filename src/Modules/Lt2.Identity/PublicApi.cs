@@ -161,8 +161,13 @@ public sealed record MyInvitation(string Code, int Completed, bool On, bool Usab
 
 public sealed record InvitationDay(DateOnly Day, int Completed);
 
-/// <summary>One code for administrators: a team code by its code, a personal code by its member's display name (null once deleted).</summary>
-public sealed record InvitationCodeStats(Guid Id, string Kind, string? Label, int Completed, bool On, bool Replaced, IReadOnlyList<InvitationDay> Days);
+/// <summary>
+/// One code for administrators: a team code by its code, a personal code by its member's display name (null once deleted),
+/// an organisation's code by <paramref name="OrganisationId"/> (the host names it). <paramref name="On"/> is the
+/// administrator's switch; <paramref name="OrganisationOff"/> is <c>blocked</c> or <c>closed</c> while the organisation is.
+/// </summary>
+public sealed record InvitationCodeStats(
+    Guid Id, string Kind, string? Label, int Completed, bool On, bool Replaced, IReadOnlyList<InvitationDay> Days, Guid? OrganisationId = null, string? OrganisationOff = null);
 
 /// <summary>Registrations completed at one level: 1 by team codes, 2 by codes of level-1 people, and so on.</summary>
 public sealed record InvitationLevel(int Level, int Completed);
@@ -191,6 +196,32 @@ public interface IInvitations
 
     /// <summary>An administrator switches a code off or on again, with a statement; audited.</summary>
     Task<Result<Unit>> SwitchAsync(Guid invitationId, bool on, string statement, Guid adminUserId, string role, string? ipHash, CancellationToken cancellationToken);
+}
+
+/// <summary>
+/// An organisation's invitation code as its representatives see it (design 8.14.14, stage B): the code (null while none was
+/// made), one number (everyone who completed registration with its codes), whether it lets a registration through now,
+/// whether an administrator has it on, and whether it is off with its organisation (blocked or closed).
+/// </summary>
+public sealed record OrganisationInvitation(string? Code, int Completed, bool Usable, bool On, bool OffWithOrganisation);
+
+/// <summary>
+/// Organisations' invitation codes (design 8.14.14, stage B). The caller (the host) has checked with the Appeals module that
+/// the person represents the organisation and whether it is active; this module knows only the organisation's id.
+/// </summary>
+public interface IOrganisationInvitations
+{
+    /// <summary>
+    /// The organisation's current code, made when first asked for while it is active, at the level a personal code of
+    /// <paramref name="requestedByUserId"/> would have; nothing of that person is kept on it.
+    /// </summary>
+    Task<Result<OrganisationInvitation>> ForOrganisationAsync(Guid organisationId, bool active, Guid requestedByUserId, CancellationToken cancellationToken);
+
+    /// <summary>
+    /// A new code; the old one stops working; the count carries over. Not while the organisation is not active
+    /// (<c>invitation.organisation-inactive</c>) or an administrator has the code switched off (<c>invitation.organisation-switched-off</c>).
+    /// </summary>
+    Task<Result<OrganisationInvitation>> ReplaceAsync(Guid organisationId, bool active, CancellationToken cancellationToken);
 }
 
 /// <summary>What a member sends (design 8.10). <c>MayReply</c> decides whether the item is linked to the account at all.</summary>

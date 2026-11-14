@@ -1,0 +1,105 @@
+@using Lt2.Api.Contracts.Organisations
+@inherits InteractiveBase
+@inject IOrganisationModerationApi Moderation
+
+@* The organisations' part of the moderators' queue (design 8.14.9, 8.14.14): new and changed organisations, to be looked at
+   and not approved (the website is a link the moderator opens; nothing fetches it), and statements that wait, are flagged,
+   reported or not yet seen. Who registered an organisation or wrote a statement is never shown here. *@
+@if (_refused)
+{
+    <p class="note" role="alert">@L["Mod.Refused"]</p>
+}
+else if (Queue is null)
+{
+    <p class="small">@L["Loading"]</p>
+}
+else
+{
+    <section class="stack" aria-labelledby="h-queue-organisations" id="queue-organisations">
+        <h2 id="h-queue-organisations">@L["OrgMod.Organisations"]</h2>
+        @if (Queue.Organisations.Count == 0)
+        {
+            <p class="small">@L["Mod.Empty"]</p>
+        }
+        @foreach (var org in Queue.Organisations)
+        {
+            <article class="sheet stack" id="queue-organisation-@org.Id" aria-labelledby="qo-@org.Id">
+                <div class="row">
+                    <span class="tag tag--ink">@L[org.Seen ? "OrgMod.Reported" : org.Changed ? "OrgMod.Changed" : "OrgMod.New"]</span>
+                    <OrgLabel Label="org.Label" />
+                    @if (org.Status == "blocked")
+                    {
+                        <span class="tag">@L["Org.State.blocked"]</span>
+                    }
+                    @foreach (var flag in org.Flags)
+                    {
+                        <span class="tag tag--people">@L["Mod.Flag." + flag]</span>
+                    }
+                </div>
+                <h3 id="qo-@org.Id"><a href="@OrganisationWords.ProfilePath(org.Slug)">@org.Name</a></h3>
+                <dl class="facts">
+                    <dt>@L["Org.Field.Website"]</dt>
+                    <dd>@if (org.Website is { } site) {<a href="@site" rel="@OrganisationWords.UserLinkRel" target="_blank" id="queue-website-@org.Id">@site</a>} else {@L["OrgMod.NoWebsite"]}</dd>
+                    @if (org.LegalCode is { } legal)
+                    {
+                        <dt>@L["Org.Field.LegalCode"]</dt><dd class="num">@legal</dd>
+                    }
+                    <dt>@L["Org.Profile.Lobbyist"]</dt><dd>@L[org.DeclaredLobbyist ? "OrgMod.Yes" : "OrgMod.No"]</dd>
+                    <dt>@L["Org.Profile.Registered"]</dt><dd class="num">@Dates.DayTime(org.RegisteredAt)</dd>
+                </dl>
+                @if (org.Description.Length > 0)
+                {
+                    <p class="voice">@org.Description</p>
+                }
+                <p class="fine">@L["OrgMod.LookAtWebsite"]</p>
+                @if (org.History.Count > 0)
+                {
+                    <ul class="rows">
+                        @foreach (var change in org.History)
+                        {
+                            <li><div class="rows__main"><span class="small num">@Dates.DayTime(change.At) · @L["Org.History." + change.Field]</span><span class="small">@(change.OldValue ?? "–") → @(change.NewValue ?? "–")</span></div></li>
+                        }
+                    </ul>
+                }
+                @if (org.DomainBarred)
+                {
+                    <p class="note note--quiet">@L["OrgMod.Barred"]</p>
+                }
+                <Reports Items="org.Reports" />
+                <OrgModerationActions Id="org.Id" Kind="organisation" Status="@org.Status" ConfirmedBy="@org.Label.ConfirmedBy" />
+            </article>
+        }
+    </section>
+
+    <section class="stack" aria-labelledby="h-queue-statements" id="queue-statements">
+        <h2 id="h-queue-statements">@L["OrgMod.Statements"]</h2>
+        @if (Queue.Statements.Count == 0)
+        {
+            <p class="small">@L["Mod.Empty"]</p>
+        }
+        @foreach (var s in Queue.Statements)
+        {
+            <StatementQueueItem Item="s" />
+        }
+    </section>
+}
+
+@code {
+    private bool _refused;
+
+    [PersistentState] public OrganisationModerationResponse? Queue { get; set; }
+
+    /// <summary>
+    /// Asked for only in the browser: while the page prerenders, the arguments' queue and the restrictions ask the server
+    /// too, and the staff check they all make shares one database context per request.
+    /// </summary>
+    protected override async Task OnInitializedAsync()
+    {
+        if (Queue is null && RendererInfo.IsInteractive)
+        {
+            var queue = await Moderation.GetQueueAsync();
+            _refused = !queue.IsSuccess;
+            Queue = queue.Value;
+        }
+    }
+}

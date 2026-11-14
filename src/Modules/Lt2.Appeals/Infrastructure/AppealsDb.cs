@@ -33,9 +33,20 @@ internal sealed class AppealsDb(DbContextOptions<AppealsDb> options) : DbContext
 
     public DbSet<SummaryAttempt> SummaryAttempts => Set<SummaryAttempt>();
 
+    public DbSet<Organisation> Organisations => Set<Organisation>();
+
+    public DbSet<OrganisationRepresentative> OrganisationRepresentatives => Set<OrganisationRepresentative>();
+
+    public DbSet<OrganisationInvite> OrganisationInvites => Set<OrganisationInvite>();
+
+    public DbSet<OrganisationCode> OrganisationCodes => Set<OrganisationCode>();
+
+    public DbSet<OrganisationStatement> OrganisationStatements => Set<OrganisationStatement>();
+
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         modelBuilder.HasDefaultSchema(AppealsModule.Schema);
+        OnOrganisationsCreating(modelBuilder);
 
         modelBuilder.Entity<Appeal>(e =>
         {
@@ -165,6 +176,83 @@ internal sealed class AppealsDb(DbContextOptions<AppealsDb> options) : DbContext
             e.HasKey(d => new { d.AppealId, d.Day });
             e.Property(d => d.NewAccountShare).HasPrecision(5, 4);
             e.HasOne<Appeal>().WithMany().HasForeignKey(d => d.AppealId).OnDelete(DeleteBehavior.Cascade);
+        });
+    }
+
+    /// <summary>Organisations and their statements (design 8.14.10, 8.14.14 stage A: tables of this module).</summary>
+    private static void OnOrganisationsCreating(ModelBuilder modelBuilder)
+    {
+        modelBuilder.Entity<Organisation>(e =>
+        {
+            e.ToTable("organisation");
+            e.HasKey(o => o.Id);
+            e.Property(o => o.Slug).HasMaxLength(OrganisationRules.SlugMaxLength + 8);
+            e.Property(o => o.Name).HasMaxLength(OrganisationRules.NameMaxLength);
+            e.Property(o => o.NameKey).HasMaxLength(OrganisationRules.NameMaxLength);
+            e.Property(o => o.Description).HasMaxLength(OrganisationRules.DescriptionMaxLength);
+            e.Property(o => o.Website).HasMaxLength(OrganisationRules.WebsiteMaxLength);
+            e.Property(o => o.LegalCode).HasMaxLength(9);
+            e.Property(o => o.Status).HasMaxLength(20);
+            e.Property(o => o.ConfirmedBy).HasMaxLength(20);
+            e.Property(o => o.ConfirmedDomain).HasMaxLength(253);
+            e.Property(o => o.ConfirmationNote).HasMaxLength(1000);
+            e.Property(o => o.BlockStatement).HasMaxLength(1000);
+            e.HasIndex(o => o.Slug).IsUnique();
+
+            // Design 8.14.14: no other organisation that is not blocked or closed has the same name, compared without case.
+            e.HasIndex(o => o.NameKey).IsUnique().HasFilter("status = 'active'").HasDatabaseName("ix_organisation_name_key_active");
+            e.HasIndex(o => o.RegisteredByUserId);
+            e.ToTable(t => t.HasCheckConstraint("ck_organisation_status", "status IN ('active', 'blocked', 'closed')"));
+            e.ToTable(t => t.HasCheckConstraint("ck_organisation_confirmed_by", "confirmed_by IS NULL OR confirmed_by IN ('domain', 'moderator')"));
+        });
+
+        modelBuilder.Entity<OrganisationRepresentative>(e =>
+        {
+            e.ToTable("organisation_representative");
+            e.HasKey(r => r.Id);
+            e.HasIndex(r => new { r.OrganisationId, r.UserId }).IsUnique().HasFilter("ended_at IS NULL").HasDatabaseName("ix_organisation_representative_current");
+            e.HasIndex(r => r.UserId);
+            e.HasOne<Organisation>().WithMany().HasForeignKey(r => r.OrganisationId).OnDelete(DeleteBehavior.Cascade);
+        });
+
+        modelBuilder.Entity<OrganisationInvite>(e =>
+        {
+            e.ToTable("organisation_invite");
+            e.HasKey(i => i.Id);
+            e.HasIndex(i => i.TokenHash).IsUnique();
+            e.HasIndex(i => i.OrganisationId);
+            e.HasOne<Organisation>().WithMany().HasForeignKey(i => i.OrganisationId).OnDelete(DeleteBehavior.Cascade);
+        });
+
+        modelBuilder.Entity<OrganisationCode>(e =>
+        {
+            e.ToTable("organisation_code");
+            e.HasKey(c => c.Id);
+            e.Property(c => c.Domain).HasMaxLength(253);
+            e.HasIndex(c => new { c.OrganisationId, c.CreatedAt });
+            e.HasOne<Organisation>().WithMany().HasForeignKey(c => c.OrganisationId).OnDelete(DeleteBehavior.Cascade);
+        });
+
+        modelBuilder.Entity<OrganisationStatement>(e =>
+        {
+            e.ToTable("organisation_statement");
+            e.HasKey(s => s.Id);
+            e.Property(s => s.BillNumber).HasMaxLength(40);
+            e.Property(s => s.Stance).HasMaxLength(10);
+            e.Property(s => s.Text).HasMaxLength(OrganisationRules.StatementMaxLength);
+            e.Property(s => s.Link).HasMaxLength(OrganisationRules.LinkMaxLength);
+            e.Property(s => s.Status).HasMaxLength(20);
+
+            // One statement per organisation per bill (design 8.14.3); a withdrawn one makes room for a new one.
+            e.HasIndex(s => new { s.OrganisationId, s.BillNumber }).IsUnique().HasFilter("status IN ('pending', 'published', 'hidden')")
+                .HasDatabaseName("ix_organisation_statement_one_per_bill");
+            e.HasIndex(s => new { s.BillNumber, s.Status });
+
+            // The follow job's look at what became public lately (design 8.14.14, stage B).
+            e.HasIndex(s => new { s.OrganisationId, s.FirstPublicAt });
+            e.HasOne<Organisation>().WithMany().HasForeignKey(s => s.OrganisationId).OnDelete(DeleteBehavior.Cascade);
+            e.ToTable(t => t.HasCheckConstraint("ck_organisation_statement_stance", "stance IN ('for', 'against', 'remarks')"));
+            e.ToTable(t => t.HasCheckConstraint("ck_organisation_statement_goal", "goal IS NULL OR (goal BETWEEN 1 AND 1000000 AND stance <> 'remarks')"));
         });
     }
 

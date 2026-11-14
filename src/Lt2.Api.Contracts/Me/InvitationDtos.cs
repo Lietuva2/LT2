@@ -11,8 +11,13 @@ public sealed record MyInvitationResponse(string Code, string Link, int Complete
 /// <summary>Registrations completed on one Vilnius day.</summary>
 public sealed record InvitationDayResponse(DateOnly Day, int Completed);
 
-/// <summary>One code for administrators; <c>Label</c> is a team code, or a personal code's member's display name (null once deleted).</summary>
-public sealed record InvitationCodeResponse(Guid Id, string Kind, string? Label, int Completed, bool On, bool Replaced, IReadOnlyList<InvitationDayResponse> Days);
+/// <summary>
+/// One code for administrators; <c>Label</c> is a team code, a personal code's member's display name (null once deleted), or
+/// an organisation's name (design 8.14.14, stage B). <c>On</c> is the administrator's switch; <c>OrganisationOff</c> is
+/// <c>blocked</c> or <c>closed</c> while an organisation's code is off with its organisation.
+/// </summary>
+public sealed record InvitationCodeResponse(
+    Guid Id, string Kind, string? Label, int Completed, bool On, bool Replaced, IReadOnlyList<InvitationDayResponse> Days, string? OrganisationOff = null);
 
 public sealed record InvitationLevelResponse(int Level, int Completed);
 

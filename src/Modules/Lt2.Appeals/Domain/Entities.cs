@@ -253,13 +253,13 @@ internal sealed class Report
 {
     public Guid Id { get; set; }
 
-    /// <summary><c>appeal</c> or <c>reason</c>.</summary>
+    /// <summary><c>appeal</c>, <c>reason</c>, <c>organisation</c> or <c>statement</c> (design 8.14.14).</summary>
     public string TargetKind { get; set; } = "";
 
     public Guid TargetId { get; set; }
 
-    /// <summary>The appeal the target belongs to.</summary>
-    public Guid AppealId { get; set; }
+    /// <summary>The bill's record the target belongs to; null for an organisation or its statement (design 8.14.14).</summary>
+    public Guid? AppealId { get; set; }
 
     public Guid ReporterUserId { get; set; }
 

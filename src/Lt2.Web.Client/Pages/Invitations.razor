@@ -9,7 +9,8 @@
 
 @* Design 6.2: invitation numbers for administrators in a staff-passkey session. Completed registrations per day, in
    total and for the codes that brought the most people, as a chart and a table; those codes (team codes by their code,
-   personal codes by the member's display name); numbers per level. Never who invited whom, never who used a code.
+   personal codes by the member's display name, organisations' codes by the organisation's name, design 8.14.14 stage B);
+   numbers per level. Never who invited whom, never who used a code.
    An administrator switches a code off or on again with a statement (audited). *@
 <PageTitle>@L["Inv.PageTitle"]</PageTitle>
 
@@ -77,7 +78,7 @@ else
                 <li class="stack stack--tight" id="inv-code-@item.Id">
                     <div class="rows__main">
                         <b>@(item.Label ?? L["Inv.Deleted"])</b>
-                        <span class="small">@L["Inv.Kind." + item.Kind] · @Text("Inv.CodeCount", item.Completed) · @(item.On ? L["Inv.On"] : item.Replaced ? L["Inv.Replaced"] : L["Inv.Off"])</span>
+                        <span class="small">@L["Inv.Kind." + item.Kind] · @Text("Inv.CodeCount", item.Completed) · @(item.On ? L["Inv.On"] : item.Replaced ? L["Inv.Replaced"] : L["Inv.Off"])@(item.OrganisationOff is { } off && !item.Replaced ? " · " + L["Inv.OrganisationOff." + off] : "")</span>
                     </div>
                     @if (item.Completed > 0)
                     {

@@ -312,7 +312,7 @@ internal sealed class ServerModerationApi(
 }
 
 /// <summary>Server-side <see cref="IAdminApi"/>, for the prerendered settings page.</summary>
-internal sealed class ServerAdminApi(ISettingsAdministration settings, IHttpContextAccessor accessor, IpHasher ipHasher, ErrorMapper errors, IInvitations invitations) : IAdminApi
+internal sealed class ServerAdminApi(ISettingsAdministration settings, IHttpContextAccessor accessor, IpHasher ipHasher, ErrorMapper errors, IInvitations invitations, IOrganisations organisations) : IAdminApi
 {
     public async Task<ApiResult<IReadOnlyList<SettingResponse>>> GetSettingsAsync(CancellationToken cancellationToken = default) =>
         await IsAdministratorAsync()
@@ -333,7 +333,7 @@ internal sealed class ServerAdminApi(ISettingsAdministration settings, IHttpCont
 
     public async Task<ApiResult<Lt2.Api.Contracts.Me.InvitationStatsResponse>> GetInvitationStatsAsync(string? code = null, CancellationToken cancellationToken = default) =>
         await IsAdministratorAsync()
-            ? ApiResult<Lt2.Api.Contracts.Me.InvitationStatsResponse>.Ok(InvitationMapping.Map(await invitations.StatsAsync(60, code, cancellationToken)))
+            ? ApiResult<Lt2.Api.Contracts.Me.InvitationStatsResponse>.Ok(await InvitationMapping.MapAsync(await invitations.StatsAsync(60, code, cancellationToken), organisations, cancellationToken))
             : ApiResult<Lt2.Api.Contracts.Me.InvitationStatsResponse>.Fail(errors.ToProblem(Error.Forbidden("forbidden")));
 
     public async Task<ApiResult> SwitchInvitationAsync(Guid invitationId, bool on, StatementRequest request, CancellationToken cancellationToken = default)

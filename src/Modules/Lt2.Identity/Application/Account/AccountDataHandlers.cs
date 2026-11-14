@@ -51,7 +51,9 @@ internal sealed class AccountDataHandlers(IdentityDb db, IEnumerable<IAccountDat
                 verificationLevel = profile.VerificationLevel,
                 createdAt = profile.CreatedAt,
                 registeredAt = profile.RegisteredAt,
+                // An organisation's code is not kept (design 8.14.14, stage B): only the level, as for any code.
                 invitationCode = profile.InvitationCode,
+                invitationLevel = profile.InvitationLevel,
                 myInvitation = await MyInvitationAsync(userId, cancellationToken),
                 roles,
                 passkeys,

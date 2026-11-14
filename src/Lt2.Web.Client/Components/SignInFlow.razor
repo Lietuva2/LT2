@@ -170,6 +170,13 @@
 
     private const string LandingKey = "lt2.tikslas";
 
+    /// <summary>
+    /// The invitation code typed at registration, kept in this tab's session storage until the registration is completed and
+    /// sent again then (design 8.14.14, stage B): the server does not keep an organisation's code on a pending account, so
+    /// nothing ties the address to the organisation. On another device the form asks for the code again.
+    /// </summary>
+    private const string CodeKey = "lt2.kodas";
+
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
         if (firstRender && RendererInfo.IsInteractive && LandingPath.Accept(Landing) is { } landing)
@@ -296,6 +303,11 @@
         {
             if (Show(await Auth.RegisterAsync(request)))
             {
+                if (request.InvitationCode is { } code)
+                {
+                    await StorageAsync("sessionStorage.setItem", CodeKey, code);
+                }
+
                 _registered = true;
                 _step = Step.Code;
             }
@@ -323,11 +335,13 @@
 
     private async Task CompleteAsync()
     {
+        // The code typed in the form when it was asked for again; otherwise the one this tab kept since registering.
+        var kept = _askInvitation ? null : await StorageAsync("sessionStorage.getItem", CodeKey);
         var request = new CompleteRegistrationRequest
         {
             DisplayName = string.IsNullOrWhiteSpace(_displayName) ? null : _displayName.Trim(),
             ConfirmsAdult = _adult,
-            InvitationCode = _askInvitation && !string.IsNullOrWhiteSpace(_invitation) ? _invitation.Trim() : null,
+            InvitationCode = _askInvitation && !string.IsNullOrWhiteSpace(_invitation) ? _invitation.Trim() : string.IsNullOrWhiteSpace(kept) ? null : kept.Trim(),
         };
         if (!Validate(CompletionValidator.Validate(request)))
         {
@@ -338,6 +352,7 @@
         {
             if (Show(await Me.CompleteRegistrationAsync(request)))
             {
+                await StorageAsync("sessionStorage.removeItem", CodeKey);
                 Navigation.NavigateTo(await NextPageAsync(), forceLoad: true);
                 return;
             }

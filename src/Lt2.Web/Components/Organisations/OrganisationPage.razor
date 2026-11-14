@@ -1,0 +1,183 @@
+@page "/o/{Slug}"
+@using Lt2.Api.Contracts.Organisations
+@using Lt2.Web.Client.Appeals
+@using Lt2.Web.Client.Organisations
+@inject IOrganisationsApi Organisations
+@inject IStringLocalizer<Lt2.Web.Client.Appeals.AppealUi> L
+@inject NavigationManager Navigation
+@inject IConfiguration Configuration
+
+@* An organisation's public profile (design 8.14.2, 8.14.14), server-rendered and readable without JavaScript: name, label,
+   whether it declares itself a registered lobbyist, its website with the host visible (never fetched by the server), legal
+   entity code, its own description, its statements by bill with every earlier version, and the public history of its names
+   and websites. A blocked organisation says so with the moderators' statement and shows no statements; a closed one says it
+   is closed. Representatives are named nowhere here; their controls are an island that asks the caller's own answer. *@
+@if (_profile is { } p)
+{
+    <PageTitle>@p.Name · Lietuva 2.0</PageTitle>
+    <div class="stack">
+        <ol class="crumbs">
+            <li><a href="/organizacijos">@L["Org.List.Title"]</a></li>
+            <li>@p.Name</li>
+        </ol>
+        <p class="label">@L["Org.Profile.Label"]</p>
+        <h1 id="organisation-name">@p.Name</h1>
+        <p class="row" id="organisation-tags">
+            <OrgLabel Label="p.Label" />
+            @if (p.DeclaredLobbyist)
+            {
+                <span class="tag" id="lobbyist">@L["Org.Profile.LobbyistTag"]</span>
+            }
+            @if (p.Status != "active")
+            {
+                <span class="tag tag--ink" id="organisation-state">@L["Org.State." + p.Status]</span>
+            }
+        </p>
+        <Lt2.Web.Client.Components.NeedsScript />
+        @* Design 8.14.14, stage B: "Sekti" an active organisation: an email when it makes a statement public. Private: no
+           follower count, for anyone, the organisation included. *@
+        @if (p.Status == "active")
+        {
+            <FollowButton Kind="organisation" Key="@p.Slug" @rendermode="InteractiveWebAssembly" />
+        }
+    </div>
+
+    @if (p.Status == "blocked")
+    {
+        <section class="sheet stack stack--tight" id="blocked" aria-labelledby="h-blocked">
+            <h2 id="h-blocked">@L["Org.Profile.Blocked"]</h2>
+            <p>@L["Org.Profile.BlockedLead"]</p>
+            @if (p.BlockStatement is { } why)
+            {
+                <p class="small" id="block-statement">@string.Format(System.Globalization.CultureInfo.InvariantCulture, L["Org.Profile.BlockedWhy"], why)</p>
+            }
+        </section>
+    }
+    else if (p.Status == "closed")
+    {
+        <p class="note note--quiet" id="closed">@string.Format(System.Globalization.CultureInfo.InvariantCulture, L["Org.Profile.Closed"], p.ClosedAt is { } closedAt ? Dates.Day(closedAt) : "")</p>
+    }
+
+    <div class="cols">
+        <div class="stack stack--loose">
+            <section class="stack" aria-labelledby="h-about" id="about">
+                <h2 id="h-about">@L["Org.Profile.About"]</h2>
+                @if (p.Description.Length > 0)
+                {
+                    @foreach (var paragraph in p.Description.Split('\n', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries))
+                    {
+                        <p>@paragraph</p>
+                    }
+                }
+                else
+                {
+                    <p class="small">@L["Org.Profile.NoDescription"]</p>
+                }
+                <dl class="facts">
+                    <dt>@L["Org.Field.Website"]</dt>
+                    <dd id="website">@if (p.Website is { } site) {<a href="@site" rel="@OrganisationWords.UserLinkRel" target="_blank">@p.WebsiteHost</a>} else {@L["Org.Profile.NoWebsite"]}</dd>
+                    @if (p.LegalCode is { } legal)
+                    {
+                        <dt>@L["Org.Field.LegalCode"]</dt>
+                        <dd class="num" id="legal-code">@legal</dd>
+                    }
+                    <dt>@L["Org.Profile.Lobbyist"]</dt>
+                    <dd>@L[p.DeclaredLobbyist ? "Org.Profile.LobbyistYes" : "Org.Profile.LobbyistNo"]</dd>
+                    <dt>@L["Org.Profile.Registered"]</dt>
+                    <dd class="num">@Dates.Day(p.RegisteredAt)</dd>
+                </dl>
+                <p class="fine" id="label-meaning">@L[LabelMeaning(p.Label)] <a href="/metodika#organizacijos">@L["Org.Profile.MethodLink"]</a></p>
+            </section>
+
+            @if (p.Status == "active")
+            {
+                <section class="stack" aria-labelledby="h-statements" id="statements">
+                    <h2 id="h-statements">@L["Org.Profile.Statements"]</h2>
+                    <p class="small">@L["Org.Profile.StatementsLead"]</p>
+                    @if (p.Statements.Count == 0)
+                    {
+                        <p class="small" id="no-statements">@L["Org.Profile.NoStatements"]</p>
+                    }
+                    @foreach (var s in p.Statements)
+                    {
+                        <div class="stack stack--tight" id="profile-statement-@s.Statement.Id">
+                            <h3><a href="/seimas/@Uri.EscapeDataString(s.Bill.Number)"><span class="num">@s.Bill.Number</span> · @s.Bill.Title</a></h3>
+                            <StatementView Statement="s.Statement" />
+                            @if (!s.BillOpen)
+                            {
+                                <p class="fine">@L["Org.Profile.Frozen"]</p>
+                            }
+                            @if (s.Earlier.Count > 0)
+                            {
+                                <details id="versions-@s.Statement.Id">
+                                    <summary class="linkish small">@string.Format(System.Globalization.CultureInfo.InvariantCulture, L["Org.Profile.Versions"], s.Earlier.Count)</summary>
+                                    <ol class="rows">
+                                        @foreach (var v in s.Earlier)
+                                        {
+                                            <li>
+                                                <div class="rows__main">
+                                                    <span class="small num">@string.Format(System.Globalization.CultureInfo.InvariantCulture, L["Org.Profile.ReplacedOn"], Dates.DayTime(v.ReplacedAt)) · @L["Org.Stance." + v.Stance]@(v.Goal is { } g ? " · " + string.Format(System.Globalization.CultureInfo.InvariantCulture, L[OrganisationWords.GoalKey(g) + "Only"], AppealNumbers.Of(g)) : "")</span>
+                                                    <span class="voice small">@v.Text</span>
+                                                    @if (v.Link is { } vl)
+                                                    {
+                                                        <span class="small statement__link">@L["Org.Link"] @vl</span>
+                                                    }
+                                                </div>
+                                            </li>
+                                        }
+                                    </ol>
+                                </details>
+                            }
+                        </div>
+                    }
+                </section>
+            }
+
+            @if (p.History.Count > 0)
+            {
+                <section class="stack stack--tight" aria-labelledby="h-history" id="history">
+                    <h2 id="h-history">@L["Org.Profile.History"]</h2>
+                    <ul class="rows">
+                        @foreach (var change in p.History)
+                        {
+                            <li><div class="rows__main"><span class="small num">@Dates.Day(change.At) · @L["Org.History." + change.Field]</span><span class="small">@(change.OldValue ?? "–") → @(change.NewValue ?? "–")</span></div></li>
+                        }
+                    </ul>
+                </section>
+            }
+        </div>
+
+        <aside class="stack">
+            <OrganisationManage Slug="@p.Slug" Status="@p.Status" Label="p.Label" Contact="@Contact" Initial="Initial(p)" @rendermode="InteractiveWebAssembly" />
+            @if (p.Status == "active")
+            {
+                <ReportOrganisation OrganisationId="p.Id" Contact="@Contact" @rendermode="InteractiveWebAssembly" />
+            }
+            <p class="note note--quiet">@L["Org.Profile.NotCounted"]</p>
+        </aside>
+    </div>
+}
+
+@code {
+    private OrganisationProfileResponse? _profile;
+
+    [Parameter] public string Slug { get; set; } = "";
+
+    private string? Contact => Configuration["Moderation:ContactAddress"] is { Length: > 0 } address ? address : null;
+
+    protected override async Task OnInitializedAsync()
+    {
+        _profile = (await Organisations.GetProfileAsync(Slug)).Value;
+        if (_profile is null)
+        {
+            Navigation.NotFound();
+        }
+    }
+
+    private static string LabelMeaning(OrganisationLabelResponse label) => "Org.Profile.Meaning." + (label.ConfirmedBy ?? "none");
+
+    private static OrganisationRequest Initial(OrganisationProfileResponse p) => new()
+    {
+        Name = p.Name, Description = p.Description, Website = p.Website, LegalCode = p.LegalCode, DeclaredLobbyist = p.DeclaredLobbyist,
+    };
+}

@@ -128,7 +128,7 @@ internal static class RecordRules
 }
 
 /// <summary>
-/// The orders of <c>/kreipimaisi</c> and the front page's cards (design 8.12.5, decided 2026-11-14). Activity is the bill's
+/// The orders of <c>/projektai</c> and the front page's cards (design 8.12.5, decided 2026-11-14). Activity is the bill's
 /// participants on both sides together plus its published arguments, a plain sum. Activity, participants and arguments
 /// put the most first; the planned date the soonest first. Ties go by activity, then by planned date (soonest first,
 /// bills without one last), then by number, so bills with nothing come last, by planned date.

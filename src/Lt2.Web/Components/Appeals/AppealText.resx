@@ -4,7 +4,7 @@
 <resheader name="version"><value>2.0</value></resheader>
 <resheader name="reader"><value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value></resheader>
 <resheader name="writer"><value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value></resheader>
-<data name="Nav.Appeals" xml:space="preserve"><value>Kreipimaisi</value></data>
+<data name="Nav.Appeals" xml:space="preserve"><value>Projektai</value></data>
 <data name="Anonymous" xml:space="preserve"><value>Lietuva 2.0 naudotojas</value></data>
 <data name="NotAPoll" xml:space="preserve"><value>Tai nėra reprezentatyvi apklausa: skaičiai rodo savanoriškai dalyvaujančių Lietuva 2.0 naudotojų nuomonę.</value></data>
 <data name="Status.closed" xml:space="preserve"><value>Uždarytas</value></data>
@@ -21,7 +21,7 @@
 <data name="Threshold.Explained" xml:space="preserve"><value>Riba – kiek dalyvių, abiejų pusių kartu, turi turėti projektas, kad patektų į suvestines Seimo nariams.</value></data>
 <data name="Threshold.Note" xml:space="preserve"><value>Moderatoriaus paaiškinimas: {0}</value></data>
 <data name="Stages.Heading" xml:space="preserve"><value>Eiga Seime</value></data>
-<data name="List.Title" xml:space="preserve"><value>Kreipimaisi</value></data>
+<data name="List.Title" xml:space="preserve"><value>Projektai</value></data>
 <data name="List.Lead" xml:space="preserve"><value>Seimo svarstomi projektai: dėl kiekvieno galite nurodyti, ko prašote Seimo narių – balsuoti už ar prieš – ir parašyti argumentų. Pirmiau rodomi projektai, dėl kurių Lietuva 2.0 naudotojai aktyviausi.</value></data>
 <data name="List.Sort" xml:space="preserve"><value>Rikiuoti:</value></data>
 <data name="List.Empty" xml:space="preserve"><value>Tokių projektų nerasta.</value></data>
@@ -175,4 +175,22 @@
 <data name="What.Source.initiator" xml:space="preserve"><value>Aprašymą parašė {0}</value></data>
 <data name="What.Source.moderator" xml:space="preserve"><value>Parašė moderatorius</value></data>
 <data name="List.Limit" xml:space="preserve"><value>riba {0}</value></data>
+<data name="Method.Organisations" xml:space="preserve"><value>Organizacijų pozicijos</value></data>
+<data name="Method.Organisations.1" xml:space="preserve"><value>Organizacija – asociacija, profesinė sąjunga, įmonė, partija, bendruomenė ar grupė be juridinio asmens statuso – gali paskelbti savo poziciją dėl Seimo projekto: prašo balsuoti už, prieš arba teikia pastabų. Ją registruoja ir jos vardu rašo nariai, jos atstovai; iš anksto niekas jos netvirtina, moderatoriai peržiūri po to. Atstovų vardai viešai nerodomi.</value></data>
+<data name="Method.Organisations.2" xml:space="preserve"><value>Pozicija nėra dalyvio balsas: ji neskaičiuojama tarp dalyvių, nepriartina projekto prie ribos, nepatenka į suvestines Seimo nariams ir neturi „Man svarbu“. Organizacija gali nurodyti tikslą – kiek dalyvių savo pusėje ji siekia, – bet tai tik jos pačios tikslas savo nariams ir rėmėjams.</value></data>
+<data name="Method.Organisations.Labels" xml:space="preserve"><value>Ką reiškia žymos</value></data>
+<data name="Method.Organisations.Label.none" xml:space="preserve"><value>Nepatvirtinta</value></data>
+<data name="Method.Organisations.Means.none" xml:space="preserve"><value>Niekas nepatikrino, ar organizacija valdo nurodytą svetainę. Nepatvirtinta organizacija gali daryti viską tą patį.</value></data>
+<data name="Method.Organisations.Label.domain" xml:space="preserve"><value>Patvirtinta per el. pašto adresą @domenas</value></data>
+<data name="Method.Organisations.Means.domain" xml:space="preserve"><value>Atstovas gavo kodą el. pašto adresu organizacijos svetainės domene (pavyzdžiui, info@domenas). Tai įrodo, kad organizacija valdo šį domeną, bet ne tai, kad ji yra ta, kuo save vadina. Viešųjų pašto tarnybų adresai nieko nepatvirtina; adreso nesaugome, tik domeną.</value></data>
+<data name="Method.Organisations.Label.moderator" xml:space="preserve"><value>Patvirtino moderatorius</value></data>
+<data name="Method.Organisations.Means.moderator" xml:space="preserve"><value>Organizaciją be savo domeno moderatorius patikrino kitu būdu ir užrašė, ką patikrino.</value></data>
+<data name="Method.Organisations.3" xml:space="preserve"><value>Panašus į kitos organizacijos pavadinimas ar domenas yra apsimetimas: apie jį galima pranešti („Apsimeta kita organizacija“), o moderatorius gali organizaciją užblokuoti.</value></data>
+<data name="Method.Organisations.4" xml:space="preserve"><value>Niekas neparduodama: jokia įmoka nesuteikia organizacijai profilio, vietos, eilės ar paminėjimo. Visos organizacijos rodomos vienodai, pozicijos – paskelbimo tvarka.</value></data>
+<data name="Method.Organisations.List" xml:space="preserve"><value>Visos organizacijos</value></data>
+<data name="Rules.Organisations" xml:space="preserve"><value>Organizacijos ir jų pozicijos</value></data>
+<data name="Rules.Organisations.1" xml:space="preserve"><value>Organizacijos registruojamos ir pozicijos skelbiamos be išankstinio patvirtinimo. Naujas ar pakeistu pavadinimu ar svetaine organizacijas, taip pat pozicijas, kurias automatinė patikra pažymėjo, apie kurias pranešta ar kurių dar niekas nematė, moderatoriai peržiūri po to; naujos organizacijos svetainę moderatorius atsiverčia pats ir patikrina, ar joje yra organizacijos pavadinimas.</value></data>
+<data name="Rules.Organisations.2" xml:space="preserve"><value>Moderatorius gali užblokuoti organizaciją (jos pozicijos niekur nerodomos, atstovai negali skelbti; atšaukus blokavimą grįžta lygiai tos pozicijos, kurios buvo rodomos), paslėpti ir atkurti poziciją, paskelbti laukiančią, patvirtinti organizaciją rankiniu būdu ir atšaukti bet kurį patvirtinimą. Atšaukus patvirtinimą, organizaciją patvirtinti gali tik moderatorius.</value></data>
+<data name="Rules.Organisations.3" xml:space="preserve"><value>Kiekvienas veiksmas užrašomas su paaiškinimu ir išsiunčiamas organizacijos atstovams kartu su moderatorių adresu. Pranešti apie organizaciją ar poziciją gali kiekvienas prisijungęs narys; tarp priežasčių yra „Apsimeta kita organizacija“.</value></data>
+<data name="Rules.Organisations.4" xml:space="preserve"><value>Atstovų vardai niekam nerodomi, moderatoriams taip pat. Pozicijos autorių moderatorius pasiekia tik per pačią poziciją, kai riboja jo galimybę rašyti, kaip ir argumento autorių.</value></data>
 </root>

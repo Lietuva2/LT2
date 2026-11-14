@@ -1,0 +1,116 @@
+@using Lt2.Api.Contracts.Organisations
+@inherits InteractiveBase
+@inject IOrganisationsApi Organisations
+@inject FluentValidation.IValidator<OrganisationRequest> Validator
+
+@* Registering an organisation or changing its profile (design 8.14.14): name (3 to 120 characters), description (up to 500,
+   optional), website (https, optional), legal entity code (7 to 9 digits, optional) and the organisation's own declaration
+   "Esame registruoti lobistai". The same validator as the server checks the fields first. A new name or website puts the
+   organisation back in the moderators' queue; earlier names and websites stay in the public history. *@
+<form class="stack" @onsubmit="SaveAsync" novalidate id="@(Slug is null ? "register-form" : "edit-form")">
+    <div class="field @(Errors.ContainsKey("name") ? "field--error" : "")">
+        <label for="org-name">@L["Org.Field.Name"]</label>
+        <input class="input" id="org-name" maxlength="@OrganisationLimits.NameMaxLength" autocomplete="organization" @bind="_name" @bind:event="oninput" disabled="@Locked" />
+        <FieldError Errors="Errors" Field="name" />
+    </div>
+    <div class="field @(Errors.ContainsKey("description") ? "field--error" : "")">
+        <label for="org-description">@L["Org.Field.Description"]</label>
+        <p class="field__hint num" id="org-description-hint">@Text("Org.Field.DescriptionHint", (_description ?? "").Length, OrganisationLimits.DescriptionMaxLength)</p>
+        <textarea class="textarea" id="org-description" rows="4" maxlength="@OrganisationLimits.DescriptionMaxLength" aria-describedby="org-description-hint"
+                  @bind="_description" @bind:event="oninput" disabled="@Locked"></textarea>
+        <FieldError Errors="Errors" Field="description" />
+    </div>
+    <div class="field @(Errors.ContainsKey("website") ? "field--error" : "")">
+        <label for="org-website">@L["Org.Field.Website"]</label>
+        <p class="field__hint" id="org-website-hint">@L["Org.Field.WebsiteHint"]</p>
+        <input class="input" type="url" inputmode="url" autocomplete="url" spellcheck="false" id="org-website" maxlength="@OrganisationLimits.WebsiteMaxLength" placeholder="https://"
+               aria-describedby="org-website-hint" @bind="_website" @bind:event="oninput" disabled="@Locked" />
+        <FieldError Errors="Errors" Field="website" />
+    </div>
+    <div class="field @(Errors.ContainsKey("legalCode") ? "field--error" : "")">
+        <label for="org-code">@L["Org.Field.LegalCode"]</label>
+        <input class="input num" type="text" inputmode="numeric" autocomplete="off" id="org-code" maxlength="9" @bind="_code" @bind:event="oninput" disabled="@Locked" />
+        <FieldError Errors="Errors" Field="legalCode" />
+    </div>
+    <label class="check">
+        <input type="checkbox" id="org-lobbyist" @bind="_lobbyist" disabled="@Locked" />
+        <span>@L["Org.Field.Lobbyist"]</span>
+    </label>
+    <div class="row">
+        <button type="submit" class="btn" id="org-submit" disabled="@(Locked || string.IsNullOrWhiteSpace(_name))">@(Slug is null ? L["Org.Register.Submit"] : L["Org.Edit.Submit"])</button>
+    </div>
+    <Messages Message="@Message" Info="@Info" />
+</form>
+
+@code {
+    private string _name = "";
+    private string? _description;
+    private string? _website;
+    private string? _code;
+    private bool _lobbyist;
+
+    /// <summary>The organisation being changed; null when registering a new one.</summary>
+    [Parameter] public string? Slug { get; set; }
+
+    [Parameter] public OrganisationRequest? Initial { get; set; }
+
+    /// <summary>After a change was saved.</summary>
+    [Parameter] public EventCallback OnSaved { get; set; }
+
+    /// <summary>After a registration: the new organisation's slug.</summary>
+    [Parameter] public EventCallback<string> OnRegistered { get; set; }
+
+    protected override void OnInitialized()
+    {
+        if (Initial is { } initial)
+        {
+            _name = initial.Name;
+            _description = initial.Description;
+            _website = initial.Website;
+            _code = initial.LegalCode;
+            _lobbyist = initial.DeclaredLobbyist;
+        }
+    }
+
+    private Task SaveAsync() => RunAsync(async () =>
+    {
+        var request = new OrganisationRequest
+        {
+            Name = _name,
+            Description = string.IsNullOrWhiteSpace(_description) ? null : _description,
+            Website = string.IsNullOrWhiteSpace(_website) ? null : _website.Trim(),
+            LegalCode = string.IsNullOrWhiteSpace(_code) ? null : _code.Trim(),
+            DeclaredLobbyist = _lobbyist,
+        };
+        var checkedHere = await Validator.ValidateAsync(request);
+        if (!checkedHere.IsValid)
+        {
+            Errors = checkedHere.Errors.GroupBy(e => char.ToLowerInvariant(e.PropertyName[0]) + e.PropertyName[1..])
+                .ToDictionary(g => g.Key, g => g.Select(e => e.ErrorMessage).ToArray(), StringComparer.OrdinalIgnoreCase);
+            return;
+        }
+
+        if (Slug is null)
+        {
+            var created = await Organisations.RegisterAsync(request);
+            if (!created.IsSuccess)
+            {
+                Show(created.Problem, "name", "description", "website", "legalCode");
+                return;
+            }
+
+            await OnRegistered.InvokeAsync(created.Value!.Slug);
+            return;
+        }
+
+        var changed = await Organisations.ChangeAsync(Slug, request);
+        if (!changed.IsSuccess)
+        {
+            Show(changed.Problem, "name", "description", "website", "legalCode");
+            return;
+        }
+
+        Info = L["Org.Edit.Saved"];
+        await OnSaved.InvokeAsync();
+    });
+}

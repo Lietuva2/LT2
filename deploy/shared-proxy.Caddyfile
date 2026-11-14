@@ -1,0 +1,32 @@
+# LT2's site block for a server whose own Caddy holds ports 80 and 443 (design 9.2, compose.shared-proxy.yaml).
+# Append it to that Caddy's Caddyfile with lt2.example.org replaced by the site's hostname (LT2_SITE_ADDRESS), then
+# validate and reload that Caddy (README.md). Certificates are that Caddy's business.
+#
+# It keeps what deploy/Caddyfile does: compression, the 1 MB request limit and no Server header; Caddy's proxy sends
+# the scheme (X-Forwarded-Proto) and the client's address (X-Forwarded-For, any incoming value replaced) by default.
+# It adds X-Robots-Tag, since a trial with invented data must not be indexed (drop those lines for production).
+# Logs: no `log` directive, so no access log for the site. A failed request (for example a 502 while web restarts) is
+# otherwise written to that Caddy's error log with the client's address, user agent and full address, invitation code
+# included; handle_errors answers it here instead, and Caddy then logs it only at debug level, which it does not write.
+lt2.example.org {
+	encode zstd gzip
+
+	request_body {
+		max_size 1MB
+	}
+
+	header {
+		-Server
+		X-Robots-Tag "noindex, nofollow"
+	}
+
+	reverse_proxy lt2-web:8080
+
+	handle_errors {
+		header {
+			-Server
+			X-Robots-Tag "noindex, nofollow"
+		}
+		respond {err.status_code}
+	}
+}

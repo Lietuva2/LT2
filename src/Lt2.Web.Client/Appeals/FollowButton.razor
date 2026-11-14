@@ -1,7 +1,7 @@
 @inherits InteractiveBase
 @inject Lt2.Api.Contracts.Follows.IFollowsApi Follows
 
-@* "Sekti" / "Nebesekti" a bill or an MP (design 8.11.2). Private: who follows what is shown to nobody, and there is no
+@* "Sekti" / "Nebesekti" a bill, an MP (design 8.11.2) or an organisation (design 8.14.14, stage B). Private: who follows what is shown to nobody, and there is no
    follower count. A visitor gets a link to sign in instead. *@
 <div class="row follow" id="follow-@Kind">
     @if (!_signedIn)
@@ -21,10 +21,10 @@
 @code {
     private bool _signedIn;
 
-    /// <summary><c>bill</c> or <c>mp</c>.</summary>
+    /// <summary><c>bill</c>, <c>mp</c> or <c>organisation</c>.</summary>
     [Parameter, EditorRequired] public string Kind { get; set; } = "bill";
 
-    /// <summary>The bill's number or the MP's profile slug.</summary>
+    /// <summary>The bill's number, or the MP's or the organisation's profile slug.</summary>
     [Parameter, EditorRequired] public string Key { get; set; } = "";
 
     [CascadingParameter] private Task<AuthenticationState>? AuthState { get; set; }
@@ -36,9 +36,12 @@
         _signedIn = AuthState is not null && (await AuthState).User.Identity?.IsAuthenticated == true;
         if (_signedIn && Following is null && (await Follows.GetMineAsync()).Value is { } mine)
         {
-            Following = Kind == "mp"
-                ? mine.Mps.Any(m => m.Slug == Key)
-                : mine.Bills.Any(b => string.Equals(b.Number, Key, StringComparison.OrdinalIgnoreCase));
+            Following = Kind switch
+            {
+                "mp" => mine.Mps.Any(m => m.Slug == Key),
+                "organisation" => mine.Organisations.Any(o => o.Slug == Key),
+                _ => mine.Bills.Any(b => string.Equals(b.Number, Key, StringComparison.OrdinalIgnoreCase)),
+            };
         }
     }
 
@@ -49,6 +52,8 @@
         {
             ("mp", true) => await Follows.FollowMpAsync(Key),
             ("mp", false) => await Follows.UnfollowMpAsync(Key),
+            ("organisation", true) => await Follows.FollowOrganisationAsync(Key),
+            ("organisation", false) => await Follows.UnfollowOrganisationAsync(Key),
             (_, true) => await Follows.FollowBillAsync(Key),
             _ => await Follows.UnfollowBillAsync(Key),
         };

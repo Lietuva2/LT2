@@ -1,0 +1,33 @@
+@inherits InteractiveBase
+
+@* "Pranešti" on an organisation's profile (design 8.14.9): anyone signed in may report it, with the ground "Apsimeta kita
+   organizacija" offered first; a visitor is told to sign in or write to the moderators. *@
+@if (_signedIn)
+{
+    @if (_open)
+    {
+        <ReportForm TargetKind="organisation" TargetId="OrganisationId" OnClose="() => _open = false" />
+    }
+    else
+    {
+        <p><button class="linkish small" type="button" id="report-organisation" disabled="@Locked" @onclick="() => _open = true">@L["Org.Report"]</button></p>
+    }
+}
+else
+{
+    <VisitorReport Contact="@Contact" />
+}
+
+@code {
+    private bool _signedIn;
+    private bool _open;
+
+    [Parameter, EditorRequired] public Guid OrganisationId { get; set; }
+
+    [Parameter] public string? Contact { get; set; }
+
+    [CascadingParameter] private Task<AuthenticationState>? AuthState { get; set; }
+
+    protected override async Task OnInitializedAsync() =>
+        _signedIn = AuthState is not null && (await AuthState).User.Identity?.IsAuthenticated == true;
+}

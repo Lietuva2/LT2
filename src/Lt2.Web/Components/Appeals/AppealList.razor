@@ -1,4 +1,4 @@
-@page "/kreipimaisi"
+@page "/projektai"
 @using Lt2.Api.Contracts.Appeals
 @inject IAppealsApi Appeals
 @inject IStringLocalizer<AppealText> T
@@ -17,16 +17,16 @@
     <nav class="row tabs" aria-label="@T["List.Tabs"]">
         @if (Closed)
         {
-            <a href="/kreipimaisi" id="tab-active">@T["List.Tab.Active"]</a>
+            <a href="/projektai" id="tab-active">@T["List.Tab.Active"]</a>
             <b aria-current="page" id="tab-closed">@T["List.Tab.Closed"]</b>
         }
         else
         {
             <b aria-current="page" id="tab-active">@T["List.Tab.Active"]</b>
-            <a href="/kreipimaisi?skirtukas=uzdaryti" id="tab-closed">@T["List.Tab.Closed"]</a>
+            <a href="/projektai?skirtukas=uzdaryti" id="tab-closed">@T["List.Tab.Closed"]</a>
         }
     </nav>
-    <form class="filters sheet" method="get" action="/kreipimaisi" role="search" id="bill-search">
+    <form class="filters sheet" method="get" action="/projektai" role="search" id="bill-search">
         @if (Closed)
         {
             <input type="hidden" name="skirtukas" value="uzdaryti" />
@@ -50,7 +50,7 @@
             <button class="btn" type="submit">@T["List.SearchButton"]</button>
             @if (Filtered)
             {
-                <a href="@(Closed ? "/kreipimaisi?skirtukas=uzdaryti" : "/kreipimaisi")">@T["List.Clear"]</a>
+                <a href="@(Closed ? "/projektai?skirtukas=uzdaryti" : "/projektai")">@T["List.Clear"]</a>
             }
         </div>
     </form>
@@ -191,7 +191,7 @@
             query.Add("nuo=" + Uri.EscapeDataString(next));
         }
 
-        return query.Count == 0 ? "/kreipimaisi" : "/kreipimaisi?" + string.Join("&", query);
+        return query.Count == 0 ? "/projektai" : "/projektai?" + string.Join("&", query);
     }
 
     private string Fmt(string key, params object?[] values) => string.Format(System.Globalization.CultureInfo.InvariantCulture, T[key], values);

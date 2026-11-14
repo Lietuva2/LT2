@@ -5,7 +5,7 @@ using Lt2.SharedKernel;
 
 namespace Lt2.Web.Services;
 
-/// <summary>The caller's follows (design 8.11.2) from the Notifications module. Only ever the caller's own.</summary>
+/// <summary>The caller's follows (design 8.11.2, 8.14.14) from the Notifications module. Only ever the caller's own.</summary>
 internal static class FollowMapping
 {
     public static async Task<MyFollowsResponse> MineAsync(IFollows follows, Guid userId, CancellationToken ct)
@@ -18,7 +18,9 @@ internal static class FollowMapping
                 AppealMapping.Map(b.Planned),
                 b.LastStageResult is { } v ? new FollowedVoteResponse(v.VoteId, v.Stage, v.HeldAt, v.IsConsensus, v.For, v.Against, v.Abstain) : null)).ToList(),
             mine.Mps.Select(m => new FollowedMpResponse(m.Slug, m.FirstName, m.LastName)).ToList(),
-            mine.Max);
+            mine.Max,
+            mine.Organisations.Select(o => new FollowedOrganisationResponse(
+                o.Slug, o.Name, new Lt2.Api.Contracts.Organisations.OrganisationLabelResponse(o.ConfirmedBy, o.ConfirmedDomain), o.Status)).ToList());
     }
 }
 
@@ -44,6 +46,12 @@ internal sealed class ServerFollowsApi(IFollows follows, IHttpContextAccessor ac
     public Task<ApiResult> UnfollowMpAsync(string slug, CancellationToken cancellationToken = default) =>
         AsMemberAsync(id => follows.UnfollowMpAsync(id, slug, cancellationToken));
 
+    public Task<ApiResult> FollowOrganisationAsync(string slug, CancellationToken cancellationToken = default) =>
+        AsMemberAsync(id => follows.FollowOrganisationAsync(id, slug, cancellationToken));
+
+    public Task<ApiResult> UnfollowOrganisationAsync(string slug, CancellationToken cancellationToken = default) =>
+        AsMemberAsync(id => follows.UnfollowOrganisationAsync(id, slug, cancellationToken));
+
     public async Task<ApiResult<NoticeSettingsResponse>> GetNoticesAsync(CancellationToken cancellationToken = default)
     {
         if (UserId is not { } id)
@@ -52,11 +60,11 @@ internal sealed class ServerFollowsApi(IFollows follows, IHttpContextAccessor ac
         }
 
         var n = await follows.NoticesAsync(id, cancellationToken);
-        return ApiResult<NoticeSettingsResponse>.Ok(new NoticeSettingsResponse(n.Planned, n.Voted));
+        return ApiResult<NoticeSettingsResponse>.Ok(new NoticeSettingsResponse(n.Planned, n.Voted, n.Statements));
     }
 
     public Task<ApiResult> SetNoticesAsync(NoticeSettingsRequest request, CancellationToken cancellationToken = default) =>
-        AsMemberAsync(id => follows.SetNoticesAsync(id, new NoticeSettings(request.Planned, request.Voted), cancellationToken));
+        AsMemberAsync(id => follows.SetNoticesAsync(id, new NoticeSettings(request.Planned, request.Voted, request.Statements), cancellationToken));
 
     private Guid? UserId => AppealMapping.UserId(accessor.HttpContext?.User);
 

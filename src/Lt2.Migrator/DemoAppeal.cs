@@ -39,8 +39,11 @@ public static class DemoAppeal
         "Projektas leistų savivaldybėms pačioms nustatyti vietinių rinkliavų dydį pagal paslaugos sąnaudas, o ne pagal bendrą visai šaliai dydį. " +
         "Rinkliavų dydžius savivaldybės turėtų skelbti iki kitų metų pradžios. Pataisa įsigaliotų 2027 m. sausio 1 d.";
 
-    /// <summary>What happened, for the console. <c>AiDescription</c>: <c>created</c>, <c>already there</c> or <c>left as it is</c>.</summary>
-    public sealed record Outcome(string Status, int AccountsCreated, string AiDescription);
+    /// <summary>
+    /// What happened, for the console. <c>AiDescription</c>: <c>created</c>, <c>already there</c> or <c>left as it is</c>.
+    /// <c>Organisations</c>: how many of the invented organisations on <see cref="Bill"/> were created (design 8.14.14).
+    /// </summary>
+    public sealed record Outcome(string Status, int AccountsCreated, string AiDescription, int Organisations = 0);
 
     public static async Task<Outcome> RunAsync(IConfiguration configuration, string connectionString, TimeProvider clock, CancellationToken cancellationToken)
     {
@@ -77,6 +80,12 @@ public static class DemoAppeal
         // The invented AI summary links to the bill's own e-seimas address from the (invented) parliament data.
         var address = await ParliamentMaintenance.BillAddressAsync(connectionString, AiBill, cancellationToken);
         var summary = await InventedAppeal.SeedAiDescriptionAsync(connectionString, AiBill, AiDescription, address, now.AddDays(-2), cancellationToken);
+
+        // Design 8.14.14: invented organisations with statements on the bill, so "Organizacijų pozicijos" can be seen. Their
+        // representatives are invented accounts of their own, with no side on any bill.
+        var organisations = Organisations();
+        await InventedMembers.CreateAsync(connectionString, OrganisationMembers(now), cancellationToken);
+        var organisationsCreated = await InventedOrganisations.SeedAsync(connectionString, organisations, now, cancellationToken);
         return new Outcome(
             outcome == InventedAppealOutcome.Created ? "created" : "already there",
             created,
@@ -85,8 +94,67 @@ public static class DemoAppeal
                 InventedAppealOutcome.Created => "created",
                 InventedAppealOutcome.AlreadyThere => "already there",
                 _ => "left as it is",
-            });
+            },
+            organisationsCreated);
     }
+
+    /// <summary>The invented organisations' representatives: accounts of their own, never given a side.</summary>
+    public static IReadOnlyList<InventedMember> OrganisationMembers(DateTimeOffset now) =>
+    [
+        new(OrganisationMember(1), $"demo.org1@{InventedMembers.Domain}", "Laura P.", now.AddDays(-200)),
+        new(OrganisationMember(2), $"demo.org2@{InventedMembers.Domain}", "Tomas V.", now.AddDays(-150)),
+        new(OrganisationMember(3), $"demo.org3@{InventedMembers.Domain}", "Eglė S.", now.AddDays(-120)),
+    ];
+
+    private static Guid OrganisationMember(int n) => new($"0193b000-0412-7000-9000-{n:D12}");
+
+    /// <summary>
+    /// Three invented organisations on <see cref="Bill"/> (design 8.14.14): one confirmed by an invented domain asking to
+    /// vote for, with a goal; one unconfirmed asking to vote against; one confirmed by a moderator with remarks. Names that
+    /// say they are examples, on the reserved <c>pavyzdys.test</c> domain.
+    /// </summary>
+    public static IReadOnlyList<InventedOrganisationSpec> Organisations() =>
+    [
+        new(
+            "pavyzdine-mokesciu-aiskumo-asociacija",
+            "Pavyzdinė mokesčių aiškumo asociacija",
+            "Išgalvota organizacija demonstraciniams duomenims: aiškina, kaip mokesčiai paliečia skirtingas pajamų grupes.",
+            "https://mokesciai.pavyzdys.test",
+            "domain",
+            OrganisationMember(1),
+            new InventedStatement(
+                Bill,
+                "for",
+                "Prašome balsuoti už. Trečias tarifas didžiausioms pajamoms sumažintų skirtumą tarp to, kiek nuo pajamų sumoka samdomi darbuotojai ir didžiausias pajamas gaunantys žmonės.\nSiūlome kartu įvertinti, kaip pataisa paveiks savivaldybių biudžetus.",
+                "https://mokesciai.pavyzdys.test/pozicija",
+                8000)),
+        new(
+            "pavyzdinis-seimos-verslu-samburis",
+            "Pavyzdinis šeimos verslų sambūris",
+            "Išgalvota organizacija demonstraciniams duomenims: smulkiųjų šeimos įmonių savininkai.",
+            "https://seimos-verslai.pavyzdys.test",
+            null,
+            OrganisationMember(2),
+            new InventedStatement(
+                Bill,
+                "against",
+                "Prašome balsuoti prieš. Akcijų pardavimo įskaičiavimas į tą pačią ribą paliestų vienkartinius įvykius, pavyzdžiui, šeimos verslo pardavimą išeinant į pensiją.",
+                null,
+                null)),
+        new(
+            "pavyzdine-viesuju-finansu-stebesena",
+            "Pavyzdinė viešųjų finansų stebėsena",
+            "Išgalvota organizacija demonstraciniams duomenims: stebi, kaip rengiami biudžeto pakeitimai.",
+            null,
+            "moderator",
+            OrganisationMember(3),
+            new InventedStatement(
+                Bill,
+                "remarks",
+                "Pastabos: aiškinamajame rašte nenurodyta, kiek žmonių paliestų naujas tarifas. Prašome šį skaičių paskelbti prieš svarstymą.",
+                "https://finansai.pavyzdys.test/pastabos",
+                null)),
+    ];
 
     /// <summary>The invented people and the appeal, the same on every run (fixed seed and identifiers).</summary>
     public static (IReadOnlyList<InventedMember> Members, InventedAppealSpec Appeal) Build(DateTimeOffset now)

@@ -69,6 +69,31 @@ internal sealed class FollowTemplates(IStringLocalizer<EmailTemplates> l, IOptio
         return Message(model.To, Format("Follow.Voted.Subject", model.BillNumber), paragraphs);
     }
 
+    /// <summary>
+    /// An organisation the person follows made its statement on a bill public (design 8.14.14, stage B): the organisation
+    /// with its label, the bill, the stance and a link to the bill's page. Never the statement's text, a side or a count.
+    /// </summary>
+    public EmailMessage Statement(FollowStatementEmail model)
+    {
+        ArgumentNullException.ThrowIfNull(model);
+        var label = model.ConfirmedBy switch
+        {
+            "domain" => Format("Follow.OrgLabel.domain", model.ConfirmedDomain ?? ""),
+            "moderator" => (string)l["Follow.OrgLabel.moderator"],
+            _ => (string)l["Follow.OrgLabel.none"],
+        };
+        var paragraphs = new List<string>
+        {
+            l["SignInCode.Greeting"],
+            Format("Follow.Statement.Body", model.OrganisationName, $"{model.BillNumber} · {model.BillTitle}", label),
+            Format("Follow.Statement.Stance", l["Follow.Stance." + model.Stance]),
+            Format("Follow.Statement.Read", Link(model.BillPath)),
+            Format("Follow.Statement.Footer", Link(model.AccountPath)),
+            l["SignInCode.Signature"],
+        };
+        return Message(model.To, Format("Follow.Statement.Subject", model.OrganisationName, model.BillNumber), paragraphs);
+    }
+
     private static string Day(DateOnly day) => day.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture);
 
     private static string Number(int? value) => value?.ToString(CultureInfo.InvariantCulture) ?? "–";
@@ -96,6 +121,14 @@ internal sealed class FollowPlannedEmailHandler(FollowTemplates templates, IEmai
 
     public Task HandleAsync(JsonElement payload, CancellationToken cancellationToken) =>
         transport.SendAsync(templates.Planned(payload.Deserialize<FollowPlannedEmail>(JsonSerializerOptions.Web) ?? throw new InvalidOperationException("Empty payload.")), cancellationToken);
+}
+
+internal sealed class FollowStatementEmailHandler(FollowTemplates templates, IEmailTransport transport) : IOutboxHandler
+{
+    public string Kind => MessageKinds.FollowStatementEmail;
+
+    public Task HandleAsync(JsonElement payload, CancellationToken cancellationToken) =>
+        transport.SendAsync(templates.Statement(payload.Deserialize<FollowStatementEmail>(JsonSerializerOptions.Web) ?? throw new InvalidOperationException("Empty payload.")), cancellationToken);
 }
 
 internal sealed class FollowVotedEmailHandler(FollowTemplates templates, IEmailTransport transport) : IOutboxHandler

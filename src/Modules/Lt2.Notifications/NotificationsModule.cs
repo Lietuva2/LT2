@@ -59,9 +59,13 @@ public static class NotificationsModule
         services.AddSingleton<FeedbackTemplates>();
         services.AddSingleton<IOutboxHandler, FeedbackReplyEmailHandler>();
         services.AddSingleton<IOutboxHandler, FeedbackNoticeEmailHandler>();
+        services.AddSingleton<OrganisationTemplates>();
+        services.AddSingleton<IOutboxHandler, OrganisationCodeEmailHandler>();
+        services.AddSingleton<IOutboxHandler, OrganisationNoticeEmailHandler>();
         services.AddSingleton<FollowTemplates>();
         services.AddSingleton<IOutboxHandler, FollowPlannedEmailHandler>();
         services.AddSingleton<IOutboxHandler, FollowVotedEmailHandler>();
+        services.AddSingleton<IOutboxHandler, FollowStatementEmailHandler>();
         services.AddSingleton<INotificationsDispatcher, OutboxDispatcher>();
         return services;
     }

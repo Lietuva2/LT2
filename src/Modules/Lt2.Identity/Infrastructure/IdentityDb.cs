@@ -82,6 +82,12 @@ internal sealed class IdentityDb(DbContextOptions<IdentityDb> options)
             b.Property(x => x.Kind).HasMaxLength(16).HasDefaultValue(InvitationKinds.Team);
             b.Property(x => x.Level).HasDefaultValue(1);
             b.HasIndex(x => x.IssuedByUserId);
+
+            // One current code per organisation (design 8.14.14, stage B); replaced ones keep counting what they brought.
+            b.Property(x => x.OrganisationOff).HasMaxLength(16);
+            b.HasIndex(x => x.OrganisationId).IsUnique()
+                .HasFilter("kind = 'organisation' AND replaced_at IS NULL")
+                .HasDatabaseName("ix_invitation_organisation_current");
             b.ToTable(t => t.HasCheckConstraint("ck_invitation_uses_left", "uses_left >= 0"));
         });
 

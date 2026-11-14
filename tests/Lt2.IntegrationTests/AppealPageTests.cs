@@ -9,7 +9,7 @@ namespace Lt2.IntegrationTests;
 /// <summary>
 /// The bill's page as the server renders it (design 8.12.1, design/ui/kreipimasis.html): one page for the bill and what
 /// people ask of MPs, readable without JavaScript, every number with both sides and the older-account counts, the "not a
-/// representative poll" note, nobody's side; the list /kreipimaisi and the old addresses.
+/// representative poll" note, nobody's side; the list /projektai and the old addresses.
 /// </summary>
 public sealed partial class AppealPageTests(DatabaseFixture database) : ApiTest(database)
 {
@@ -94,7 +94,7 @@ public sealed partial class AppealPageTests(DatabaseFixture database) : ApiTest(
         Regex.Count(main, "Argumentų dar nėra\\.").ShouldBe(2, "one empty state per side, server-rendered");
         main.ShouldContain("Tai nėra reprezentatyvi apklausa");
         (await stranger.AppealAsync(AppealSteps.ThirdBill)).Counts.ShouldBe(new SideCountsResponse(0, 0, 0, 0));
-        var (listStatus, _) = await PageAsync(stranger, "/kreipimaisi");
+        var (listStatus, _) = await PageAsync(stranger, "/projektai");
         listStatus.ShouldBe(HttpStatusCode.OK);
     }
 
@@ -200,13 +200,35 @@ public sealed partial class AppealPageTests(DatabaseFixture database) : ApiTest(
         {
             ("/seimas/XVP-0533/kreipimasis", "/seimas/XVP-0533"),
             ("/seimas/XVP-0533/kreipimasis/istorija", "/seimas/XVP-0533/istorija"),
-            ("/kreipimaisi/naujas", "/kreipimaisi"),
+            ("/kreipimaisi/naujas", "/projektai"),
         })
         {
             using var response = await stranger.Client.GetAsync(from);
             response.StatusCode.ShouldBe(HttpStatusCode.MovedPermanently, from);
             response.Headers.Location!.ToString().ShouldEndWith(to, Case.Sensitive, from);
         }
+    }
+
+    /// <summary>Design 8.12.5 (decided 2026-11-14): the list moved to /projektai; its old address answers 301 with its query.</summary>
+    [Fact]
+    public async Task The_old_list_address_redirects_permanently_to_projektai_with_its_query()
+    {
+        using var stranger = NewBrowser();
+        foreach (var (from, to) in new[]
+        {
+            ("/kreipimaisi", "/projektai"),
+            ("/kreipimaisi?rikiuoti=dalyviai&q=x", "/projektai?rikiuoti=dalyviai&q=x"),
+            ("/kreipimaisi?skirtukas=uzdaryti", "/projektai?skirtukas=uzdaryti"),
+        })
+        {
+            using var response = await stranger.Client.GetAsync(from);
+            response.StatusCode.ShouldBe(HttpStatusCode.MovedPermanently, from);
+            response.Headers.Location!.OriginalString.ShouldBe(to, from);
+        }
+
+        using var unrelated = await stranger.Client.GetAsync("/kreipimaisi-x");
+        unrelated.StatusCode.ShouldNotBe(HttpStatusCode.MovedPermanently, "only the list's own address is redirected");
+        unrelated.Headers.Location.ShouldBeNull();
     }
 
     [Fact]
@@ -244,21 +266,27 @@ public sealed partial class AppealPageTests(DatabaseFixture database) : ApiTest(
         await Database.PrepareBillAsync(initiator, await ModeratorAsync(), AppealSteps.ThirdBill, "for");
 
         using var stranger = NewBrowser();
-        var (status, html) = await PageAsync(stranger, "/kreipimaisi");
+        var (status, html) = await PageAsync(stranger, "/projektai");
         status.ShouldBe(HttpStatusCode.OK);
+
+        // Design 8.12.5 (decided 2026-11-14): the menu item, the heading and the title are "Projektai".
+        html.ShouldContain("<title>Projektai · Lietuva 2.0</title>");
+        html.ShouldContain("<h1>Projektai</h1>");
+        Regex.IsMatch(html, "<a href=\"/projektai\"[^>]*>Projektai</a>").ShouldBeTrue("the menu item");
+        html.ShouldNotContain("Kreipimaisi");
         html.ShouldContain("href=\"/seimas/XVP-0618\"");
         html.ShouldContain("href=\"/seimas/XVP-0533\"", customMessage: "every active bill is listed, also one nobody took part in");
         html.ShouldContain("dalyvių 1 · argumentų 1");
         html.ShouldContain("prašo už 1 (iš jų 0 – senesnės nei 30 d. paskyros), prieš 0 (iš jų 0)");
         html.IndexOf("id=\"bill-XVP-0618\"", StringComparison.Ordinal).ShouldBeLessThan(html.IndexOf("id=\"bill-XVP-0533\"", StringComparison.Ordinal), "most activity first");
         html.ShouldContain("<b aria-current=\"true\" id=\"sort-aktyvumas\">pagal aktyvumą</b>");
-        html.ShouldContain("href=\"/kreipimaisi?rikiuoti=argumentai\"");
-        html.ShouldNotContain("/kreipimaisi/naujas");
+        html.ShouldContain("href=\"/projektai?rikiuoti=argumentai\"");
+        html.ShouldNotContain("/kreipimaisi", customMessage: "the site links to /projektai directly, not through the redirect");
         ShouldSpeakOfUsersNotThePublic(html);
 
-        var (_, found) = await PageAsync(stranger, "/kreipimaisi?q=pajamu%20mokescio");
+        var (_, found) = await PageAsync(stranger, "/projektai?q=pajamu%20mokescio");
         found.ShouldNotContain("id=\"bill-XVP-0533\"");
-        var (_, foundLt) = await PageAsync(stranger, "/kreipimaisi?q=" + Uri.EscapeDataString("pajamų mokesčio"));
+        var (_, foundLt) = await PageAsync(stranger, "/projektai?q=" + Uri.EscapeDataString("pajamų mokesčio"));
         foundLt.ShouldContain("id=\"bill-XVP-0412\"");
         foundLt.ShouldNotContain("id=\"bill-XVP-0533\"");
 
@@ -266,10 +294,10 @@ public sealed partial class AppealPageTests(DatabaseFixture database) : ApiTest(
         await Database.PlanAsync(AppealSteps.SecondBill, ReasonsToComeSteps.VilniusToday().AddDays(3));
         try
         {
-            var (_, planned) = await PageAsync(stranger, "/kreipimaisi?planuojami=taip");
+            var (_, planned) = await PageAsync(stranger, "/projektai?planuojami=taip");
             planned.ShouldContain("id=\"bill-XVP-0533\"");
             planned.ShouldNotContain("id=\"bill-XVP-0618\"");
-            var (_, byDate) = await PageAsync(stranger, "/kreipimaisi?rikiuoti=data");
+            var (_, byDate) = await PageAsync(stranger, "/projektai?rikiuoti=data");
             byDate.IndexOf("id=\"bill-XVP-0533\"", StringComparison.Ordinal).ShouldBeLessThan(byDate.IndexOf("id=\"bill-XVP-0618\"", StringComparison.Ordinal), "the planned one first");
         }
         finally
@@ -277,7 +305,7 @@ public sealed partial class AppealPageTests(DatabaseFixture database) : ApiTest(
             await Database.UnplanAsync(AppealSteps.SecondBill);
         }
 
-        var (closedStatus, closed) = await PageAsync(stranger, "/kreipimaisi?skirtukas=uzdaryti");
+        var (closedStatus, closed) = await PageAsync(stranger, "/projektai?skirtukas=uzdaryti");
         closedStatus.ShouldBe(HttpStatusCode.OK);
         closed.ShouldNotContain("id=\"bill-XVP-0618\"", customMessage: "an open bill is not on the closed tab");
     }

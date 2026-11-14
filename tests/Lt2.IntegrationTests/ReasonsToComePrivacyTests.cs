@@ -100,7 +100,7 @@ public sealed class ReasonsToComePrivacyTests(DatabaseFixture database) : ApiTes
 
         using var visitor = NewBrowser();
         var firstId = (await Database.UserIdAsync(firstEmail)).ToString();
-        foreach (var route in new[] { AppealRoutes.AppealOf(AppealSteps.SecondBill), AppealRoutes.Appeals, AgendaRoutes.Agenda, "/seimas/" + AppealSteps.SecondBill, "/kreipimaisi" })
+        foreach (var route in new[] { AppealRoutes.AppealOf(AppealSteps.SecondBill), AppealRoutes.Appeals, AgendaRoutes.Agenda, "/seimas/" + AppealSteps.SecondBill, "/projektai" })
         {
             var body = WebUtility.HtmlDecode(await visitor.Client.GetStringAsync(route));
             body.ShouldNotContain("Pirmoji Dalyvė", Case.Sensitive, route);

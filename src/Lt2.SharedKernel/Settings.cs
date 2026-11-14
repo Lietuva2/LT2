@@ -73,6 +73,12 @@ public static class SettingKeys
     /// </summary>
     public static readonly SettingKey<int> RegistrationPersonalCodeUses = new("Registration:PersonalCodeUses", 0, v => v is >= 0 and <= 100000);
 
+    /// <summary>
+    /// Registrations one organisation's invitation code may bring (design 8.14.14, stage B); 0 = no limit, the default.
+    /// The personal codes' twin.
+    /// </summary>
+    public static readonly SettingKey<int> RegistrationOrganisationCodeUses = new("Registration:OrganisationCodeUses", 0, v => v is >= 0 and <= 100000);
+
     /// <summary>Months feedback from members is kept before the daily clean-up deletes it (design 8.10).</summary>
     public static readonly SettingKey<int> FeedbackKeepMonths = new("Feedback:KeepMonths", 12, v => v is > 0 and <= 60);
 
@@ -131,6 +137,12 @@ public static class SettingKeys
     /// </summary>
     public static readonly SettingKey<int> AiSummariesPerDay = new("Ai:SummariesPerDay", 30, v => v is >= 0 and <= 1000);
 
+    /// <summary>
+    /// Organisations one account may register (design 8.14.14, stage A): keeps one person from flooding the list. Counts
+    /// the organisations the account registered that are not closed (a blocked one counts).
+    /// </summary>
+    public static readonly SettingKey<int> OrganisationsPerAccount = new("Organisations:PerAccount", 3, v => v is > 0 and <= 100);
+
     /// <summary>Bills and MPs one account may follow together (design 8.11.2).</summary>
     public static readonly SettingKey<int> FollowsMaxPerAccount = new("Follows:MaxPerAccount", 200, v => v is > 0 and <= 10000);
 
@@ -147,6 +159,7 @@ public static class SettingKeys
     [
         RegistrationRequiresInvitation,
         RegistrationPersonalCodeUses,
+        RegistrationOrganisationCodeUses,
         FeedbackKeepMonths,
         PendingAccountDays,
         SignInCodesPerHour,
@@ -160,6 +173,7 @@ public static class SettingKeys
         AppealsReasonsPerPerson,
         AppealsEndorsementsPerPerson,
         FollowsMaxPerAccount,
+        OrganisationsPerAccount,
         AiDraftModel,
         AiSummariesPerDay,
         SurgeMinimumShare,

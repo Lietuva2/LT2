@@ -4,6 +4,7 @@
 @using Lt2.Api.Contracts.Parliament
 @using Lt2.Api.Contracts.Meta
 @using Lt2.Web.Client.Appeals
+@using Lt2.Web.Client.Organisations
 @inject IParliamentApi Api
 @inject IMetaApi Meta
 @inject IAppealsApi Appeals
@@ -27,7 +28,7 @@
     <PageTitle>@b.Number · @b.Title · Lietuva 2.0</PageTitle>
     <div class="stack">
         <ol class="crumbs">
-            <li><a href="/kreipimaisi">@A["Nav.Appeals"]</a></li>
+            <li><a href="/projektai">@A["Nav.Appeals"]</a></li>
             <li>@b.Number</li>
         </ol>
         <p class="label num">@F.T["Bill.Label"] · @b.Number</p>
@@ -211,12 +212,20 @@
                 }
 
                 <AppealReasons Number="@b.Number" Contact="@Contact" Moderator="_moderator" @rendermode="InteractiveWebAssembly" />
+
+                @* Design 8.14.14: organisations' statements, after the arguments; never counted. *@
+                <OrganisationPositions Number="@b.Number" Contact="@Contact" @rendermode="InteractiveWebAssembly" />
             </div>
 
             <aside class="stack">
                 @if (a.Status == "open")
                 {
                     <AppealModerationPanel Number="@b.Number" ESeimasUrl="@b.ESeimasUrl" @rendermode="InteractiveWebAssembly" />
+                }
+
+                @if (_moderator)
+                {
+                    <StatementModerationPanel Number="@b.Number" @rendermode="InteractiveWebAssembly" />
                 }
 
                 <section class="stack stack--tight" aria-labelledby="h-digests" id="digests">

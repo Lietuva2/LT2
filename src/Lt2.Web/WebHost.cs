@@ -82,6 +82,8 @@ internal static class WebHost
         services.AddScoped<IParliamentApi, ServerParliamentApi>();
         services.AddScoped<IAppealsApi, ServerAppealsApi>();
         services.AddScoped<IModerationApi, ServerModerationApi>();
+        services.AddScoped<Lt2.Api.Contracts.Organisations.IOrganisationsApi, ServerOrganisationsApi>();
+        services.AddScoped<Lt2.Api.Contracts.Organisations.IOrganisationModerationApi, ServerOrganisationModerationApi>();
         services.AddScoped<AgendaReads>();
         services.AddScoped<Lt2.Api.Contracts.Agenda.IAgendaApi, ServerAgendaApi>();
         services.AddScoped<Lt2.Api.Contracts.Follows.IFollowsApi, ServerFollowsApi>();
@@ -146,14 +148,16 @@ internal static class WebHost
     /// <summary>
     /// Design 8.12.1: the bill and the appeal are one page. The old appeal addresses (in emails, summaries and bookmarks)
     /// redirect permanently: <c>/seimas/{number}/kreipimasis</c> to the bill's page, its history to
-    /// <c>/seimas/{number}/istorija</c>, and the proposal form <c>/kreipimaisi/naujas</c> to the list.
+    /// <c>/seimas/{number}/istorija</c>, and the proposal form <c>/kreipimaisi/naujas</c> to the list. The list itself moved
+    /// from <c>/kreipimaisi</c> to <c>/projektai</c> (design 8.12.5); its old address keeps the query.
     /// </summary>
     private static void MapOldAppealAddresses(IEndpointRouteBuilder app)
     {
         static string Bill(string number) => "/seimas/" + Uri.EscapeDataString(number);
         app.MapGet("/seimas/{number}/kreipimasis", (string number) => Results.Redirect(Bill(number), permanent: true)).ExcludeFromDescription();
         app.MapGet("/seimas/{number}/kreipimasis/istorija", (string number) => Results.Redirect(Bill(number) + "/istorija", permanent: true)).ExcludeFromDescription();
-        app.MapGet("/kreipimaisi/naujas", () => Results.Redirect("/kreipimaisi", permanent: true)).ExcludeFromDescription();
+        app.MapGet("/kreipimaisi/naujas", () => Results.Redirect("/projektai", permanent: true)).ExcludeFromDescription();
+        app.MapGet("/kreipimaisi", (HttpRequest request) => Results.Redirect("/projektai" + request.QueryString, permanent: true)).ExcludeFromDescription();
     }
 
     private static bool IsApi(HttpContext context) =>

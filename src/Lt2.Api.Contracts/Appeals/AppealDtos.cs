@@ -23,10 +23,19 @@ public static class AppealLimits
     /// <summary>A bill's description may also be reported as inaccurate ("Pranešti apie klaidą", design 8.13); an argument may not.</summary>
     public static readonly IReadOnlyList<string> DescriptionReportGrounds = ["inaccurate", .. ReportGrounds];
 
-    /// <summary>The grounds a report on this target may give.</summary>
-    public static IReadOnlyList<string> ReportGroundsFor(string targetKind) => targetKind == "appeal" ? DescriptionReportGrounds : ReportGrounds;
+    /// <summary>An organisation or its statement may also be reported as "Apsimeta kita organizacija" (design 8.14.9).</summary>
+    public static readonly IReadOnlyList<string> OrganisationReportGrounds = ["impersonation", .. ReportGrounds];
 
-    public static readonly IReadOnlyList<string> ReportTargets = ["appeal", "reason"];
+    /// <summary>The grounds a report on this target may give.</summary>
+    public static IReadOnlyList<string> ReportGroundsFor(string targetKind) => targetKind switch
+    {
+        "appeal" => DescriptionReportGrounds,
+        "organisation" or "statement" => OrganisationReportGrounds,
+        _ => ReportGrounds,
+    };
+
+    /// <summary>A bill's description (<c>appeal</c>), an argument, an organisation or an organisation's statement (design 8.14.14).</summary>
+    public static readonly IReadOnlyList<string> ReportTargets = ["appeal", "reason", "organisation", "statement"];
 
     /// <summary>The longest official text's address a description may carry (<c>appeal.description_url</c>, design 8.13).</summary>
     public const int DescriptionUrlMaxLength = 500;
@@ -136,7 +145,7 @@ public sealed record FlagRequest
 public sealed record SurgeResponse(int SharePercent, int WindowHours);
 
 /// <summary>
-/// A bill in <c>/kreipimaisi</c> (design 8.12.5); <c>Id</c> null while it has no record; <c>Arguments</c> its published
+/// A bill in <c>/projektai</c> (design 8.12.5); <c>Id</c> null while it has no record; <c>Arguments</c> its published
 /// arguments.
 /// </summary>
 public sealed record AppealListItemResponse(Guid? Id, BillRefResponse Bill, string Status, SideCountsResponse Counts, ThresholdResponse Threshold, PlannedDateResponse? Planned, int Arguments);

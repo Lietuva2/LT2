@@ -1,0 +1,61 @@
+@page "/organizacijos"
+@using Lt2.Api.Contracts.Organisations
+@using Lt2.Web.Client.Organisations
+@inject IOrganisationsApi Organisations
+@inject IStringLocalizer<Lt2.Web.Client.Appeals.AppealUi> L
+
+@* The public list of organisations (design 8.14.14): server-rendered and readable without JavaScript, in the order of the
+   alphabet, each with its label, with a search by name as a plain form. Blocked and closed organisations are not listed;
+   their profiles say what became of them. No new menu item: the list is linked from the bills' pages, the account page
+   and the methodology. *@
+<PageTitle>@L["Org.List.Title"] · Lietuva 2.0</PageTitle>
+
+<div class="stack">
+    <p class="label">Lietuva 2.0</p>
+    <h1>@L["Org.List.Title"]</h1>
+    <p class="lead">@L["Org.List.Lead"]</p>
+    <form class="filters sheet" method="get" action="/organizacijos" role="search" id="organisation-search">
+        <div class="field">
+            <label for="q">@L["Org.List.Search"]</label>
+            <input class="input" id="q" name="q" type="search" value="@Q" autocomplete="off" />
+        </div>
+        <div class="row">
+            <button class="btn" type="submit">@L["Org.List.SearchButton"]</button>
+            @if (!string.IsNullOrWhiteSpace(Q))
+            {
+                <a href="/organizacijos">@L["Org.List.Clear"]</a>
+            }
+        </div>
+    </form>
+</div>
+
+@if (_page is { } page)
+{
+    <p class="small num" id="organisation-count">@string.Format(System.Globalization.CultureInfo.InvariantCulture, L["Org.List.Count"], page.Total)</p>
+    @if (page.Items.Count == 0)
+    {
+        <p id="no-organisations">@L[string.IsNullOrWhiteSpace(Q) ? "Org.List.None" : "Org.List.NoneFound"]</p>
+    }
+    else
+    {
+        <ul class="rows" id="organisations">
+            @foreach (var org in page.Items)
+            {
+                <li>
+                    <div class="rows__main"><a href="@OrganisationWords.ProfilePath(org.Slug)">@org.Name</a></div>
+                    <div class="rows__side"><OrgLabel Label="org.Label" /></div>
+                </li>
+            }
+        </ul>
+    }
+}
+
+<p class="row"><a class="btn btn--plain" href="/organizacijos/nauja" id="register-organisation">@L["Org.MyList.Register"]</a> <a href="/metodika#organizacijos">@L["Org.List.Method"]</a></p>
+
+@code {
+    private OrganisationListResponse? _page;
+
+    [SupplyParameterFromQuery(Name = "q")] public string? Q { get; set; }
+
+    protected override async Task OnInitializedAsync() => _page = (await Organisations.GetOrganisationsAsync(Q)).Value;
+}

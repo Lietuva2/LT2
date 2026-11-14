@@ -10,7 +10,8 @@ namespace Lt2.E2E;
 /// </summary>
 public sealed class LayoutTests(LayoutTests.ModeratorFixture moderator) : IClassFixture<LayoutTests.ModeratorFixture>
 {
-    private static readonly string[] Pages = ["/seimas/XVP-0412", "/seimas/XVP-0533", "/kreipimaisi", "/darbotvarke", "/"];
+    private static readonly string[] Pages =
+        ["/seimas/XVP-0412", "/seimas/XVP-0533", "/projektai", "/darbotvarke", "/", "/organizacijos", "/o/pavyzdine-mokesciu-aiskumo-asociacija"];
 
     private static string Base => SignUpTests.BaseUrl!.TrimEnd('/');
 

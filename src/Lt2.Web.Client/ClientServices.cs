@@ -30,6 +30,8 @@ public static class ClientServices
         services.AddScoped<Lt2.Api.Contracts.Feedback.IFeedbackApi, HttpFeedbackApi>();
         services.AddScoped<Lt2.Api.Contracts.Appeals.IAdminApi, HttpAdminApi>();
         services.AddScoped<Lt2.Api.Contracts.Digests.IDigestsApi, HttpDigestsApi>();
+        services.AddScoped<Lt2.Api.Contracts.Organisations.IOrganisationsApi, HttpOrganisationsApi>();
+        services.AddScoped<Lt2.Api.Contracts.Organisations.IOrganisationModerationApi, HttpOrganisationModerationApi>();
         services.AddLt2Validators();
         services.AddLt2ClientComponents();
         return services;

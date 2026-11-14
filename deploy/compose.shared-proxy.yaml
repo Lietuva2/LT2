@@ -1,0 +1,24 @@
+# Lietuva 2.0 behind a server's existing Caddy (design 9.2, the trial on the owner's VPS). Added to compose.yaml:
+#
+#   docker compose --env-file <server env file> -f deploy/compose.yaml -f deploy/compose.shared-proxy.yaml up -d
+#
+# That Caddy holds ports 80 and 443 and the certificates. LT2's own Caddy does not start and nothing here publishes 80
+# or 443; `web` also joins that Caddy's Docker network (LT2_PROXY_NETWORK, created by the other project) under the alias
+# lt2-web, which the site block in shared-proxy.Caddyfile proxies to. README.md, "Behind a server's existing Caddy".
+
+services:
+  caddy:
+    # A profile nobody enables: the service never starts with the stack. Started by name, it publishes nothing.
+    profiles: [own-proxy]
+    ports: !reset []
+
+  web:
+    networks:
+      shared-proxy:
+        # "web" is too generic a name on a network other projects share.
+        aliases: [lt2-web]
+
+networks:
+  shared-proxy:
+    name: ${LT2_PROXY_NETWORK:?set LT2_PROXY_NETWORK to the Docker network of the server's Caddy}
+    external: true

@@ -108,6 +108,11 @@ internal static class ApiEndpoints
 
         Agenda.GetAgendaEndpoint.Map(api);
         FollowEndpoints.Map(api);
+
+        Organisations.OrganisationEndpoints.Map(api);
+        Organisations.OrganisationRepresentativeEndpoints.Map(api);
+        Organisations.StatementEndpoints.Map(api);
+        Organisations.OrganisationModerationEndpoints.Map(api);
     }
 
     /// <summary>A route from <see cref="ApiRoutes"/> relative to the <c>/api/v1</c> group.</summary>

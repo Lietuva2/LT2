@@ -77,17 +77,17 @@ public interface IDigests
 /// <summary>A bill the person follows, with its planned date or its last stage result.</summary>
 public sealed record FollowedBill(Lt2.SharedKernel.BillFacts Bill, Lt2.SharedKernel.PlannedDate? Planned, Lt2.SharedKernel.StageVoteFacts? LastStageResult);
 
-/// <summary>The person's own follows (design 8.11.2). <c>Max</c>: how many bills and MPs together may be followed.</summary>
-public sealed record MyFollows(IReadOnlyList<FollowedBill> Bills, IReadOnlyList<Lt2.SharedKernel.MpFacts> Mps, int Max);
+/// <summary>The person's own follows (design 8.11.2, 8.14.14). <c>Max</c>: how many bills, MPs and organisations together may be followed.</summary>
+public sealed record MyFollows(IReadOnlyList<FollowedBill> Bills, IReadOnlyList<Lt2.SharedKernel.MpFacts> Mps, int Max, IReadOnlyList<Lt2.SharedKernel.OrganisationFacts> Organisations);
 
-/// <summary>Which follow emails are on.</summary>
-public sealed record NoticeSettings(bool Planned, bool Voted);
+/// <summary>Which follow emails are on: planned and voted bills (design 8.11.2), organisations' statements (design 8.14.14).</summary>
+public sealed record NoticeSettings(bool Planned, bool Voted, bool Statements = true);
 
 /// <summary>What one run of the follow job did: events recorded, events sent, emails written to the outbox.</summary>
 public sealed record FollowRunOutcome(int Recorded, int Sent, int Emails);
 
 /// <summary>
-/// Following bills and MPs (design 8.11.2). Every operation is the person's own: nothing here answers who follows what,
+/// Following bills, MPs (design 8.11.2) and organisations (design 8.14.14). Every operation is the person's own: nothing here answers who follows what,
 /// and nothing is combined with sides or invitations.
 /// </summary>
 public interface IFollows
@@ -104,13 +104,22 @@ public interface IFollows
 
     Task<Lt2.SharedKernel.Result<Lt2.SharedKernel.Unit>> UnfollowMpAsync(Guid userId, string slug, CancellationToken cancellationToken);
 
+    /// <summary>
+    /// Follows an active organisation by its profile slug (design 8.14.14, stage B): <c>organisation.not-found</c> (unknown,
+    /// blocked or closed), <c>member.required</c>, <c>follow.limit</c>.
+    /// </summary>
+    Task<Lt2.SharedKernel.Result<Lt2.SharedKernel.Unit>> FollowOrganisationAsync(Guid userId, string slug, CancellationToken cancellationToken);
+
+    Task<Lt2.SharedKernel.Result<Lt2.SharedKernel.Unit>> UnfollowOrganisationAsync(Guid userId, string slug, CancellationToken cancellationToken);
+
     Task<NoticeSettings> NoticesAsync(Guid userId, CancellationToken cancellationToken);
 
     Task<Lt2.SharedKernel.Result<Lt2.SharedKernel.Unit>> SetNoticesAsync(Guid userId, NoticeSettings settings, CancellationToken cancellationToken);
 
     /// <summary>
-    /// The worker job (every 15 minutes): records new planned dates and stage votes of followed bills and emails the
-    /// followers by the rules of design 8.11.2, through the outbox.
+    /// The worker job (every 15 minutes): records new planned dates and stage votes of followed bills, and statements of
+    /// followed organisations that became public, and emails the followers by the rules of design 8.11.2 and 8.14.14,
+    /// through the outbox.
     /// </summary>
     Task<FollowRunOutcome> RunAsync(DateTimeOffset now, CancellationToken cancellationToken);
 }

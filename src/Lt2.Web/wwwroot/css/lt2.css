@@ -595,3 +595,12 @@ body { padding-block-end: 4.5rem; }
 .rows__main a.tag--ink { color: var(--sheet); font-weight: 600; }
 /* The share line (design 8.11.5): a long invitation link wraps instead of widening the page. */
 .share__link { overflow-wrap: anywhere; }
+
+/* Organisations' statements (design 8.14.3, 8.14.14): all alike, no highlighting; their own voice beside the people's arguments.
+   A stance of remarks has a neutral mark; a user's link and the one-time link wrap instead of widening the page. */
+.bubble--org { --b-bg: var(--brand-tint); --b-ink: var(--ink); }
+.choice--remarks::before { background: none; box-shadow: inset 0 0 0 2px var(--abstain); }
+.statement__who { gap: var(--sp-2) var(--sp-3); }
+.statement__name { font-weight: 700; color: var(--ink); overflow-wrap: anywhere; }
+.statement__link, .statement__link a, #invite-url, .facts dd a { overflow-wrap: anywhere; }
+.statement__meta { flex-wrap: wrap; }

@@ -100,9 +100,10 @@ public sealed class DemoAppealTests(DatabaseFixture database) : ApiTest(database
         first.Status.ShouldBe("created");
         first.AccountsCreated.ShouldBe(6800 + 4280);
         first.AiDescription.ShouldBe("created");
+        first.Organisations.ShouldBe(3);
 
         var again = await DemoAppeal.RunAsync(Configuration(true), Database.MigratorConnectionString, TimeProvider.System, CancellationToken.None);
-        again.ShouldBe(new DemoAppeal.Outcome("already there", 0, "already there"));
+        again.ShouldBe(new DemoAppeal.Outcome("already there", 0, "already there", 0));
 
         using var stranger = NewBrowser();
 

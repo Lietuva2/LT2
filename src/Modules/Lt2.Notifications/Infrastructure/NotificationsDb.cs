@@ -68,7 +68,7 @@ internal sealed class NotificationsDb(DbContextOptions<NotificationsDb> options)
         {
             b.ToTable("follow");
             b.HasKey(x => new { x.UserId, x.Kind, x.Key });
-            b.Property(x => x.Kind).HasMaxLength(10);
+            b.Property(x => x.Kind).HasMaxLength(16);
             b.Property(x => x.Key).HasMaxLength(40);
             b.HasIndex(x => new { x.Kind, x.Key });
         });

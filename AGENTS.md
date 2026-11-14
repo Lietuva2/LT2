@@ -69,11 +69,13 @@ src/Modules/               Lt2.Identity, Lt2.Notifications, Lt2.Audit, Lt2.Parli
                            import, statistics); Lt2.Appeals (bills' records, positions, arguments, endorsements,
                            reports, moderation, rule-based pre-screening, flags, summaries content, descriptions written
                            by moderators, the AI draft in Ai/ with its public prompt file, the AI summary job
-                           (Application/DescriptionSummaries.cs) and the "unavailable" IBillTextSource). Notifications
+                           (Application/DescriptionSummaries.cs), the "unavailable" IBillTextSource, and organisations
+                           with their statements on bills, design 8.14.14). Notifications
                            also owns the summaries (Digests/) and following (Follows/: follows, email switches, bill
                            events). Modules talk through interfaces in SharedKernel (IParticipants, IBillCatalogue,
                            IPlannedAgenda, IMpDirectory, IDigestSource, IPartySupporters, IAccountData (one per module),
-                           IPositionErasure, IOutbox, IAuditLog, ISettings, IAiAssistant, IBillTextSource). The host
+                           IPositionErasure, IOutbox, IAuditLog, ISettings, IAiAssistant, IBillTextSource,
+                           IOrganisationDirectory, IOrganisationCodeSwitch). The host
                            composes the agenda (GET /api/v1/agenda) and /me/follows from the modules' interfaces.
 src/Lt2.Worker             Hangfire server: outbox dispatch loop, the parliament import, the agenda watcher (lrs.lt
                            pages; off unless Agenda:BaseAddress is set), appeals daily aggregates and closing, summaries
@@ -82,7 +84,8 @@ src/Lt2.Worker             Hangfire server: outbox dispatch loop, the parliament
                            clean-up
 src/Lt2.Migrator           creates the database roles, applies migrations and grants; also seeds invitations, grants
                            the first staff role, empties invented parliament data and (local stack only) fills the
-                           demonstration record on XVP-0412 and an invented AI summary on XVP-0533 (--demo-appeal);
+                           demonstration record on XVP-0412, three invented organisations with statements on it, and an
+                           invented AI summary on XVP-0533 (--demo-appeal);
                            run once per deploy
 tests/Lt2.UnitTests        rules and validators, plus bUnit tests of components (Components/)
 tests/Lt2.IntegrationTests API over HTTP against a real PostgreSQL (Testcontainers)
@@ -90,7 +93,10 @@ tests/Lt2.ArchitectureTests module boundaries, static assets
 tests/Lt2.E2E              Playwright and stack checks against a running compose stack; skipped without one
 tests/Lt2.Parliament.ImportTests  Seimas client, parsers, register of assumptions (Seimas/ASSUMPTIONS.md), import against
                            the stand-in and PostgreSQL; live contract suite only with LT2_SEIMAS_LIVE=1
-deploy/                    Dockerfile, compose.yaml, Caddyfile, .env (local defaults), init-secrets.py, secrets/
+deploy/                    Dockerfile, compose.yaml, Caddyfile, .env (local defaults), init-secrets.py (optional target
+                           directory; as root on Linux gives each secret to the container user reading it), secrets/;
+                           compose.shared-proxy.yaml and shared-proxy.Caddyfile: behind a server's existing Caddy
+                           (design 9.2, README.md); LT2_SECRETS_DIR and LT2_IMAGE_TAG move secrets and tag images
 tools/Lt2.SeimasStandIn     local and test only: stand-in for the Seimas open data and the lrs.lt agenda page (/darbotvarke),
                            invented answers; never shipped. Recent/ (container only, never in tests) adds a sitting and
                            a stage vote dated two days before today, so the local agenda has recent votes
@@ -209,8 +215,9 @@ official `@lrs.lt` address from open data; the link is tied to the Seimas person
 - The agenda (`/darbotvarke`, first in the menu) and the front page's "Artimiausiu metu Seime" come from one public,
   cacheable answer that holds nothing about the caller, and show both sides for every bill (a bill nobody took part in
   says so). The front page's cards are the six bills with the most activity, left out while none has any.
-  `/kreipimaisi` lists active bills, sorted by activity (participants plus published arguments; the default),
-  participants, arguments or planned date (owner, 2026-11-14), with a search and "Planuojami artimiausiu metu".
+  "Projektai" (`/projektai`; `/kreipimaisi` redirects there) lists active bills, sorted by activity (participants
+  plus published arguments; the default), participants, arguments or planned date (owner, 2026-11-14), with a search
+  and "Planuojami artimiausiu metu".
 - Following a bill or an MP is private: shown to nobody, no follower count, never combined with sides or invitations,
   in the export, deleted with the account, at most `Follows:MaxPerAccount`. Emails (planned, voted; each switchable on
   the account page) go once per event to those who followed before it; nothing older than three days, nothing about the
@@ -227,6 +234,33 @@ official `@lrs.lt` address from open data; the link is tied to the Seimas person
   that started from a draft says "Sukurta DI · taisė žmonės" for its whole life. The worker is configured the same way
   for the summary job (compose passes `Ai__Provider` and the key to both). Pre-screening of users' texts stays
   rule-based. Tests never call the real API.
+**Organisations (design 8.14, stage A of 8.14.14; built 2026-11-14).**
+- A voice on a bill, not control. A signed-in member registers an organisation (`/organizacijos/nauja`; at most
+  `Organisations:PerAccount`, 3, not counting closed ones), shown at once with nobody approving it, and is its first
+  representative. Profile `/o/{slug}` (the address never changes), list `/organizacijos`; no menu item.
+- Labels: "Nepatvirtinta", "Patvirtinta per el. pašto adresą @domenas" (a code sent to an address on the website's host
+  or a name under it; never a public mail service or shared platform; only the domain is kept), "Patvirtino
+  moderatorius". After a moderator withdraws a confirmation only a moderator confirms that organisation.
+- Representatives come only by a one-time link (seven days, at most ten); they see each other's display names and
+  nobody else does, staff included, except a moderator restricting a statement's writer. Nothing ties a
+  representative's own side to the organisation. The last one cannot leave, only close it; deleting that account closes it.
+- One statement per organisation per bill (`for`, `against`, `remarks`; up to 1 500 characters; an https link; with a
+  side an optional goal "Siekiame {N} dalyvių · dabar {n}"), in "Organizacijų pozicijos" after the arguments. Never
+  counted: counts, thresholds, lists, agenda, front page, statistics and summaries are the same with and without them,
+  and nothing about organisations goes to MPs yet. Edits keep public versions; frozen when the bill closes; none on a
+  hidden record.
+- Moderation after the fact: new and changed organisations and waiting, flagged, reported or unseen statements are in
+  the queue; block and lift (lifting returns exactly what was shown), hide and restore a statement, publish a waiting one,
+  confirm by hand, withdraw a confirmation, "Palikti"; each emailed to every representative. Report ground "Apsimeta kita
+  organizacija". Not built: "keep out of summaries".
+- Stage B (built 2026-11-14): one invitation code per organisation (Identity, kind `organisation`, no account on it; the
+  representatives' part of the profile shows its link, a link per bill with a statement and one number, filled in only in
+  the browser); a registration with it leaves only the level on the account (the pending account holds no such code: the
+  browser sends it again at completion); blocking switches it off, lifting on, closing for good, apart from an
+  administrator's switch; `Registration:OrganisationCodeUses`. Following an organisation (`follow` kind `organisation`, a
+  third email switch): one email when a statement first becomes public (`first_public_at`), never its text; no follower
+  count anywhere.
+
 **Summaries to MPs.**
 - Go to every sitting MP with an official address, joined or not. Nobody chooses recipients.
 - Weekly on Monday morning in sitting weeks, and the working day before a sitting with a relevant bill. At most two a

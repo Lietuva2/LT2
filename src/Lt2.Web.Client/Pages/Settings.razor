@@ -80,9 +80,10 @@ else
     /// <summary>The groups in the order the screen shows them, each with its settings in order (design 5.6).</summary>
     private static readonly (string Group, string[] Keys)[] Layout =
     [
-        ("registration", ["Registration:RequireInvitation", "Registration:PersonalCodeUses"]),
+        ("registration", ["Registration:RequireInvitation", "Registration:PersonalCodeUses", "Registration:OrganisationCodeUses"]),
         ("appeals", ["Digest:ThresholdDefault", "Digest:ThresholdMinimum", "Appeals:ReasonsPerPerson", "Appeals:EndorsementsPerPerson"]),
         ("follows", ["Follows:MaxPerAccount"]),
+        ("organisations", ["Organisations:PerAccount"]),
         ("ai", ["Ai:DraftModel", "Ai:SummariesPerDay"]),
         ("summaries", ["Digest:Weekly", "Digest:BeforeVote", "Digest:MaxPerWeek", "Digest:NotableChange"]),
         ("surge", ["Surge:MinimumShare", "Surge:MinimumAccounts", "Surge:WindowHours"]),

@@ -33,7 +33,7 @@
 <data name="Moderation.reason-restored.Body" xml:space="preserve"><value>moderatorius atkūrė jūsų anksčiau paslėptą argumentą kreipimesi dėl projekto {0}. „Man svarbu“ žymos, buvusios prie jo, paslepiant buvo ištrintos ir neatkuriamos. Projekto puslapis: {1}</value></data>
 <data name="Moderation.Excerpt" xml:space="preserve"><value>Argumentas: „{0}“</value></data>
 <data name="Restriction.restricted.Subject" xml:space="preserve"><value>Lietuva 2.0: jūsų galimybė rašyti apribota</value></data>
-<data name="Restriction.restricted.Body" xml:space="preserve"><value>moderatorius apribojo jūsų galimybę rašyti Lietuva 2.0: kol apribojimas galioja, negalite rašyti argumentų ir pranešti apie neteisingas datas.</value></data>
+<data name="Restriction.restricted.Body" xml:space="preserve"><value>moderatorius apribojo jūsų galimybę rašyti Lietuva 2.0: kol apribojimas galioja, negalite rašyti argumentų, pranešti apie neteisingas datas, registruoti organizacijų ir skelbti ar keisti jų pozicijų.</value></data>
 <data name="Restriction.Until" xml:space="preserve"><value>Apribojimas galioja iki {0} imtinai.</value></data>
 <data name="Restriction.UntilLifted" xml:space="preserve"><value>Apribojimas galioja, kol jį atšauks moderatorius.</value></data>
 <data name="Restriction.Untouched" xml:space="preserve"><value>Prisijungti, nurodyti, ko prašote, žymėti „Man svarbu“ ir pranešti apie turinį galite kaip anksčiau. Jūsų jau parašyti argumentai lieka.</value></data>
@@ -85,4 +85,38 @@
 <data name="Choice.none" xml:space="preserve"><value>balsavimo pagal asmenis nebuvo</value></data>
 <data name="Follow.VoteLink" xml:space="preserve"><value>Balsavimo rezultatai: {0}</value></data>
 <data name="Follow.Footer" xml:space="preserve"><value>Šį laišką gavote, nes sekate šį projektą Lietuva 2.0. Ką sekate ir kokius laiškus gaunate, galite pakeisti savo paskyroje: {0}</value></data>
+<data name="Organisation.Code.Subject" xml:space="preserve"><value>Lietuva 2.0 organizacijos patvirtinimo kodas: {0}</value></data>
+<data name="Organisation.Code.Intro" xml:space="preserve"><value>kodas, kuriuo patvirtinsite, kad organizacija „{0}“ valdo domeną {1}:</value></data>
+<data name="Organisation.Code.What" xml:space="preserve"><value>Kodą įveskite organizacijos puslapyje Lietuva 2.0. Patvirtinus prie organizacijos bus rodoma „Patvirtinta per el. pašto adresą @{1}“. Šio el. pašto adreso nesaugome, išsaugomas tik domenas.</value></data>
+<data name="Organisation.Code.Ignore" xml:space="preserve"><value>Jei kodo neprašėte, nieko daryti nereikia: be jo organizacija nebus patvirtinta.</value></data>
+<data name="Organisation.Why" xml:space="preserve"><value>Šį laišką gavote, nes esate šios organizacijos atstovas Lietuva 2.0.</value></data>
+<data name="Organisation.blocked.Subject" xml:space="preserve"><value>Lietuva 2.0: organizacija „{0}“ užblokuota</value></data>
+<data name="Organisation.blocked.Body" xml:space="preserve"><value>moderatorius užblokavo organizaciją „{0}“. Kol blokavimas galioja, jos pozicijos niekur nerodomos ir atstovai negali skelbti naujų. Organizacijos puslapis: {2}</value></data>
+<data name="Organisation.unblocked.Subject" xml:space="preserve"><value>Lietuva 2.0: organizacijos „{0}“ blokavimas atšauktas</value></data>
+<data name="Organisation.unblocked.Body" xml:space="preserve"><value>moderatorius atšaukė organizacijos „{0}“ blokavimą: jos pozicijos vėl rodomos tokios, kokios buvo, ir atstovai vėl gali skelbti. Organizacijos puslapis: {2}</value></data>
+<data name="Organisation.kept.Subject" xml:space="preserve"><value>Lietuva 2.0: organizacija „{0}“ peržiūrėta</value></data>
+<data name="Organisation.kept.Body" xml:space="preserve"><value>moderatorius peržiūrėjo organizacijos „{0}“ duomenis ir paliko juos tokius, kokie yra. Organizacijos puslapis: {2}</value></data>
+<data name="Organisation.confirmed.Subject" xml:space="preserve"><value>Lietuva 2.0: organizaciją „{0}“ patvirtino moderatorius</value></data>
+<data name="Organisation.confirmed.Body" xml:space="preserve"><value>moderatorius patvirtino organizaciją „{0}“: jos puslapyje ir prie pozicijų dabar rodoma „Patvirtino moderatorius“. Organizacijos puslapis: {2}</value></data>
+<data name="Organisation.confirmation-withdrawn.Subject" xml:space="preserve"><value>Lietuva 2.0: organizacijos „{0}“ patvirtinimas atšauktas</value></data>
+<data name="Organisation.confirmation-withdrawn.Body" xml:space="preserve"><value>moderatorius atšaukė organizacijos „{0}“ patvirtinimą: ji vėl rodoma kaip nepatvirtinta. Nuo šiol patvirtinti ją gali tik moderatorius; kodas el. paštu jos nebepatvirtins. Organizacijos puslapis: {2}</value></data>
+<data name="Organisation.statement-published.Subject" xml:space="preserve"><value>Lietuva 2.0: organizacijos „{0}“ pozicija paskelbta</value></data>
+<data name="Organisation.statement-published.Body" xml:space="preserve"><value>moderatorius peržiūrėjo ir paskelbė organizacijos „{0}“ poziciją dėl projekto {1}. Projekto puslapis: {2}</value></data>
+<data name="Organisation.statement-kept.Subject" xml:space="preserve"><value>Lietuva 2.0: organizacijos „{0}“ pozicija peržiūrėta</value></data>
+<data name="Organisation.statement-kept.Body" xml:space="preserve"><value>moderatorius peržiūrėjo organizacijos „{0}“ poziciją dėl projekto {1} ir paliko ją tokią, kokia yra. Projekto puslapis: {2}</value></data>
+<data name="Organisation.statement-hidden.Subject" xml:space="preserve"><value>Lietuva 2.0: organizacijos „{0}“ pozicija paslėpta</value></data>
+<data name="Organisation.statement-hidden.Body" xml:space="preserve"><value>moderatorius paslėpė organizacijos „{0}“ poziciją dėl projekto {1}. Projekto puslapis: {2}</value></data>
+<data name="Organisation.statement-restored.Subject" xml:space="preserve"><value>Lietuva 2.0: organizacijos „{0}“ pozicija atkurta</value></data>
+<data name="Organisation.statement-restored.Body" xml:space="preserve"><value>moderatorius atkūrė anksčiau paslėptą organizacijos „{0}“ poziciją dėl projekto {1}. Projekto puslapis: {2}</value></data>
+<data name="Follow.Statement.Subject" xml:space="preserve"><value>Lietuva 2.0: „{0}“ paskelbė poziciją dėl {1}</value></data>
+<data name="Follow.Statement.Body" xml:space="preserve"><value>jūsų sekama organizacija „{0}“ ({2}) paskelbė savo poziciją dėl projekto {1}.</value></data>
+<data name="Follow.Statement.Stance" xml:space="preserve"><value>Pozicija: {0}.</value></data>
+<data name="Follow.Statement.Read" xml:space="preserve"><value>Poziciją, kitų organizacijų pozicijas ir abiejų pusių argumentus rasite projekto puslapyje: {0}</value></data>
+<data name="Follow.Statement.Footer" xml:space="preserve"><value>Šį laišką gavote, nes sekate šią organizaciją Lietuva 2.0. Ką sekate ir kokius laiškus gaunate, galite pakeisti savo paskyroje: {0}</value></data>
+<data name="Follow.Stance.for" xml:space="preserve"><value>prašo balsuoti už</value></data>
+<data name="Follow.Stance.against" xml:space="preserve"><value>prašo balsuoti prieš</value></data>
+<data name="Follow.Stance.remarks" xml:space="preserve"><value>pastabos, be prašymo balsuoti už ar prieš</value></data>
+<data name="Follow.OrgLabel.none" xml:space="preserve"><value>nepatvirtinta</value></data>
+<data name="Follow.OrgLabel.domain" xml:space="preserve"><value>patvirtinta per el. pašto adresą @{0}</value></data>
+<data name="Follow.OrgLabel.moderator" xml:space="preserve"><value>patvirtino moderatorius</value></data>
 </root>

@@ -8,7 +8,7 @@ public interface IAppealsApi
     Task<ApiResult<AppealRulesResponse>> GetRulesAsync(CancellationToken cancellationToken = default);
 
     /// <summary>
-    /// <c>/kreipimaisi</c> (design 8.12.5): active bills in the order <paramref name="sort"/> (<c>activity</c> by default,
+    /// <c>/projektai</c> (design 8.12.5): active bills in the order <paramref name="sort"/> (<c>activity</c> by default,
     /// <c>participants</c>, <c>arguments</c>, <c>planned</c>); a search by number or title; only those planned soon; or, with
     /// <paramref name="closed"/>, the closed ones.
     /// </summary>
