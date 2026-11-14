@@ -2,7 +2,8 @@
 @inherits InteractiveBase
 @inject IAppealsApi Appeals
 
-@* A report (design 8.3, Digital Services Act notice and action) on an appeal or an argument. *@
+@* A report (design 8.3, Digital Services Act notice and action) on a bill's description or an argument. A description may
+   also be reported as inaccurate (design 8.13: "Pranešti apie klaidą"). *@
 @if (_sent)
 {
     <p class="note note--quiet" role="status">@L["Report.Sent"]</p>
@@ -12,7 +13,7 @@ else
     <form class="sheet sheet--quiet stack stack--tight" @onsubmit="SendAsync" novalidate aria-label="@L["Report.Title"]">
         <fieldset class="stack stack--tight">
             <legend class="label">@L["Report.Ground"]</legend>
-            @foreach (var ground in AppealLimits.ReportGrounds)
+            @foreach (var ground in AppealLimits.ReportGroundsFor(TargetKind))
             {
                 <label class="check">
                     <input type="radio" name="@($"ground-{TargetId:N}")" value="@ground" checked="@(_ground == ground)"

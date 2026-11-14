@@ -34,7 +34,7 @@ public sealed class MenuSignOutTests
             ViewportSize = new ViewportSize { Width = width, Height = height },
         });
         var page = await context.NewPageAsync();
-        await page.GotoAsync($"{Base}/seimas/XVP-0412/kreipimasis");
+        await page.GotoAsync($"{Base}/seimas/XVP-0412");
 
         var nav = page.Locator("nav.top__nav");
         await Assertions.Expect(nav.GetByRole(AriaRole.Link, new() { Name = "Mano paskyra" })).ToBeVisibleAsync();

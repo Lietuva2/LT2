@@ -17,7 +17,7 @@ public sealed class PlannedDateTests(DatabaseFixture database) : ApiTest(databas
         using var moderator = await StaffMembers.ActiveAsync(Factory, Database, "moderator");
         var (initiator, _) = await Factory.MemberAsync();
         using var _i = initiator;
-        var appeal = await Database.OpenPublishedAsync(initiator, moderator.Browser, AppealSteps.ThirdBill, "against", threshold: 500);
+        var appeal = await Database.PrepareBillAsync(initiator, moderator.Browser, AppealSteps.ThirdBill, "against", threshold: 500);
         var date = DateOnly.FromDateTime(DateTime.UtcNow.AddDays(6));
         await Database.ExecuteAsync(
             """
@@ -29,7 +29,7 @@ public sealed class PlannedDateTests(DatabaseFixture database) : ApiTest(databas
         {
             using var stranger = NewBrowser();
             (await stranger.AppealAsync(AppealSteps.ThirdBill)).Planned.ShouldBe(new PlannedDateResponse(date, "adoption", "https://e-seimas.lrs.lt/pavyzdys", false));
-            using (var page = await stranger.Client.GetAsync("/seimas/XVP-0618/kreipimasis"))
+            using (var page = await stranger.Client.GetAsync("/seimas/XVP-0618"))
             {
                 var html = WebUtility.HtmlDecode(await page.Content.ReadAsStringAsync());
                 html.ShouldContain("Planuojama ");
@@ -40,8 +40,8 @@ public sealed class PlannedDateTests(DatabaseFixture database) : ApiTest(databas
             // Under its threshold with the bill on the agenda: a moderator looks at it (design 8.3).
             var queued = (await moderator.Browser.GetJsonAsync<ModerationQueueResponse>(AppealRoutes.ModerationQueue)).Appeals.Single(a => a.Id == appeal.Id);
             queued.UnderThresholdOnAgenda.ShouldBeTrue();
-            queued.Participants.ShouldBe(1, "the note says how many take part: the initiator took a side");
-            queued.EffectiveThreshold.ShouldBe(500);
+            queued.Participants.ShouldBe(1, "the note says how many take part");
+            queued.Threshold.ShouldBe(500);
             queued.Planned!.Date.ShouldBe(date);
 
             var (outsider, _) = await Factory.MemberAsync();

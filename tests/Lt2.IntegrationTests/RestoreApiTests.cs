@@ -6,8 +6,8 @@ using Lt2.IntegrationTests.Infrastructure;
 namespace Lt2.IntegrationTests;
 
 /// <summary>
-/// Design 8.3 over HTTP: the moderators' list of hidden appeals and reasons, and "Atkurti", with a statement, audited, the
-/// author told; refused while another appeal on the bill is published.
+/// Design 8.3, 8.12.3 over HTTP: the moderators' list of hidden bill records and reasons, and "Atkurti", with a statement,
+/// audited; an argument's author is told. There is one record per bill, so nothing on the bill blocks restoring it.
 /// </summary>
 public sealed class RestoreApiTests(DatabaseFixture database) : ApiTest(database)
 {
@@ -46,18 +46,18 @@ public sealed class RestoreApiTests(DatabaseFixture database) : ApiTest(database
         var moderator = await ModeratorAsync();
         var (initiator, _) = await Factory.MemberAsync("Rūta Mockutė");
         using var _i = initiator;
-        var appeal = await Database.OpenPublishedAsync(initiator, moderator, Bill);
+        var appeal = await Database.PrepareBillAsync(initiator, moderator, Bill);
         await HideAsync(moderator, appeal.Id);
 
         var list = await moderator.GetJsonAsync<HiddenItemsResponse>(AppealRoutes.Hidden);
         var item = list.Appeals.Single(a => a.Id == appeal.Id);
         item.Bill.Number.ShouldBe(Bill);
-        item.InitiatorName.ShouldBe("Rūta Mockutė");
+
         item.Statement.ShouldBe("Netinkamas aprašymas.");
         item.HiddenAt.ShouldNotBeNull();
         item.HiddenBy.ShouldBeNull("the test moderator has no display name; a named one is shown by name");
         item.RestoresAs.ShouldBe("open");
-        item.RefusedBecause.ShouldBeNull();
+        item.Description.ShouldBe(AppealSteps.Description);
     }
 
     [Fact]
@@ -72,14 +72,14 @@ public sealed class RestoreApiTests(DatabaseFixture database) : ApiTest(database
     }
 
     [Fact]
-    public async Task Restoring_brings_the_appeal_back_open_with_its_sides_reasons_and_marks_and_tells_the_initiator()
+    public async Task Restoring_brings_the_record_back_open_with_its_sides_reasons_and_marks()
     {
         var moderator = await ModeratorAsync();
         var (initiator, initiatorEmail) = await Factory.MemberAsync("Rūta Mockutė");
         var (supporter, _) = await Factory.MemberAsync("Giedrė L.");
         using var _i = initiator;
         using var _s = supporter;
-        var appeal = await Database.OpenPublishedAsync(initiator, moderator, Bill);
+        var appeal = await Database.PrepareBillAsync(initiator, moderator, Bill);
         (await supporter.TakeSideAsync(Bill, "against")).Dispose();
         var reasonId = (await initiator.AppealAsync(Bill)).Reasons.Single().Id;
         (await supporter.SendAsync(HttpMethod.Put, AppealRoutes.EndorsementOf(reasonId), null)).Dispose();
@@ -98,8 +98,8 @@ public sealed class RestoreApiTests(DatabaseFixture database) : ApiTest(database
         after.Counts.ShouldBe(before.Counts, "the sides are as they were");
         after.Reasons.Single().Endorsements.ShouldBe(1, "the reason and its mark are as they were");
         (await Database.ScalarAsync<long>(
-            "SELECT count(*) FROM notify.outbox WHERE kind = 'email.moderation-notice' AND payload->>'to' = @to AND payload->>'notice' = 'appeal-restored' AND payload->>'statement' = @s",
-            ("to", initiatorEmail), ("s", Statement))).ShouldBe(1);
+            "SELECT count(*) FROM notify.outbox WHERE kind = 'email.moderation-notice' AND payload->>'to' = @to AND payload->>'notice' NOT LIKE 'reason-%'",
+            ("to", initiatorEmail))).ShouldBe(0, "a record has no author to email");
         (await Database.ScalarAsync<long>(
             "SELECT count(*) FROM audit.event WHERE action = 'moderation.appeal.restore' AND target = @t", ("t", "appeal:" + appeal.Id))).ShouldBe(1);
         (await moderator.GetJsonAsync<HiddenItemsResponse>(AppealRoutes.Hidden)).Appeals.ShouldNotContain(a => a.Id == appeal.Id);
@@ -111,7 +111,7 @@ public sealed class RestoreApiTests(DatabaseFixture database) : ApiTest(database
         var moderator = await ModeratorAsync();
         var (initiator, _) = await Factory.MemberAsync();
         using var _i = initiator;
-        var appeal = await Database.OpenPublishedAsync(initiator, moderator, Bill, side: null);
+        var appeal = await Database.PrepareBillAsync(initiator, moderator, Bill, side: null);
         await HideAsync(moderator, appeal.Id);
 
         using var refused = await RestoreAsync(moderator, appeal.Id, " ");
@@ -119,53 +119,30 @@ public sealed class RestoreApiTests(DatabaseFixture database) : ApiTest(database
     }
 
     [Fact]
-    public async Task Restoring_is_refused_while_another_appeal_on_the_bill_is_published()
+    public async Task A_closed_record_comes_back_closed_and_an_open_one_is_not_restored()
     {
         var moderator = await ModeratorAsync();
         var (first, _) = await Factory.MemberAsync();
-        var (second, _) = await Factory.MemberAsync();
         using var _f = first;
-        using var _s = second;
-        var hidden = await Database.OpenPublishedAsync(first, moderator, Bill, side: null);
-        await HideAsync(moderator, hidden.Id);
-        using (var opened = await second.OpenAppealAsync(Bill))
+        var record = await Database.PrepareBillAsync(first, moderator, Bill, side: null);
+        using (var open = await RestoreAsync(moderator, record.Id))
         {
-            var other = await opened.ReadAsync<AppealResponse>();
-            (await moderator.PublishAsync(other.Id)).Dispose();
+            await open.ShouldBeProblemAsync(HttpStatusCode.Conflict, "moderation.wrong-state");
         }
 
-        using var refused = await RestoreAsync(moderator, hidden.Id);
-        await refused.ShouldBeProblemAsync(HttpStatusCode.Conflict, "appeal.published-exists");
-        (await moderator.GetJsonAsync<HiddenItemsResponse>(AppealRoutes.Hidden)).Appeals.Single(a => a.Id == hidden.Id).RefusedBecause.ShouldBe("appeal.published-exists");
+        await Database.ExecuteAsync("UPDATE appeals.appeal SET closed_at = now() WHERE id = @id", ("id", record.Id));
+        try
+        {
+            await HideAsync(moderator, record.Id);
+            (await moderator.GetJsonAsync<HiddenItemsResponse>(AppealRoutes.Hidden)).Appeals.Single(a => a.Id == record.Id).RestoresAs.ShouldBe("closed");
+            (await RestoreAsync(moderator, record.Id)).StatusCode.ShouldBe(HttpStatusCode.NoContent);
+            (await Database.ScalarAsync<string>("SELECT status FROM appeals.appeal WHERE id = @id", ("id", record.Id))).ShouldBe("closed");
+        }
+        finally
+        {
+            await Database.FreeBillAsync(Bill);
+        }
     }
-
-    [Fact]
-    public async Task Restoring_a_published_appeal_while_proposals_wait_closes_them_as_publishing_does()
-    {
-        var moderator = await ModeratorAsync();
-        var (first, _) = await Factory.MemberAsync();
-        var (second, secondEmail) = await Factory.MemberAsync();
-        using var _f = first;
-        using var _s = second;
-        var hidden = await Database.OpenPublishedAsync(first, moderator, Bill, side: null);
-        await HideAsync(moderator, hidden.Id);
-        Guid waitingId;
-        using (var opened = await second.OpenAppealAsync(Bill))
-        {
-            waitingId = (await opened.ReadAsync<AppealResponse>()).Id;
-        }
-
-        using (var restored = await RestoreAsync(moderator, hidden.Id))
-        {
-            restored.StatusCode.ShouldBe(HttpStatusCode.NoContent, await restored.Content.ReadAsStringAsync());
-        }
-
-        (await Database.ScalarAsync<string>("SELECT status FROM appeals.appeal WHERE id = @id", ("id", waitingId))).ShouldBe("superseded");
-        (await Database.ScalarAsync<long>(
-            "SELECT count(*) FROM notify.outbox WHERE kind = 'email.moderation-notice' AND payload->>'to' = @to AND payload->>'notice' = 'appeal-superseded'",
-            ("to", secondEmail))).ShouldBe(1);
-    }
-
     [Fact]
     public async Task A_hidden_reason_is_listed_and_restored_without_its_marks()
     {
@@ -174,7 +151,7 @@ public sealed class RestoreApiTests(DatabaseFixture database) : ApiTest(database
         var (supporter, _) = await Factory.MemberAsync();
         using var _i = initiator;
         using var _s = supporter;
-        await Database.OpenPublishedAsync(initiator, moderator, Bill);
+        await Database.PrepareBillAsync(initiator, moderator, Bill);
         (await supporter.TakeSideAsync(Bill, "against")).Dispose();
         var reasonId = (await initiator.AppealAsync(Bill)).Reasons.Single().Id;
         (await supporter.SendAsync(HttpMethod.Put, AppealRoutes.EndorsementOf(reasonId), null)).Dispose();

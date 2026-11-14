@@ -53,6 +53,12 @@ public interface IMpDirectory
 
     /// <summary>Days with a plenary sitting in [from, to]: planned items and sittings in the open data.</summary>
     Task<IReadOnlyList<DateOnly>> SittingDaysAsync(DateOnly from, DateOnly to, CancellationToken cancellationToken);
+
+    /// <summary>An MP of any term by the profile's slug; null when unknown (design 8.11.2: following an MP).</summary>
+    Task<MpFacts?> FindMpAsync(string slug, CancellationToken cancellationToken);
+
+    /// <summary>MPs by Seimas person id; unknown ids are missing.</summary>
+    Task<IReadOnlyDictionary<long, MpFacts>> MpsAsync(IReadOnlyCollection<long> seimasPersonIds, CancellationToken cancellationToken);
 }
 
 /// <summary>

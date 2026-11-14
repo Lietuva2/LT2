@@ -1,0 +1,34 @@
+namespace Lt2.SharedKernel;
+
+/// <summary>
+/// Which public prompt a request is sent with (design 8.13, decided by the owner on 2026-11-14): the moderator's draft,
+/// which a person edits before saving (<c>description-draft.prompt.md</c>), or the summary job's text, shown at once
+/// without a person reading it (<c>description-summary.prompt.md</c>).
+/// </summary>
+public enum DraftPurpose
+{
+    ModeratorDraft,
+    Summary,
+}
+
+/// <summary>
+/// What a description draft is made from (design 8.11.4): the bill's number and title and the official text a moderator
+/// pasted, or the bill's explanatory note for the summary job (8.13). No personal data.
+/// </summary>
+public sealed record DraftSource(string BillNumber, string BillTitle, string SourceText, DraftPurpose Purpose = DraftPurpose.ModeratorDraft);
+
+/// <summary>
+/// The one interface to an AI provider (design 3, 8.11.4). The provider is an open decision (design section 12): until it is
+/// made, only a "not configured" implementation exists, and nothing in the product offers a draft.
+/// </summary>
+public interface IAiAssistant
+{
+    /// <summary>Whether a provider is configured; false means the draft button is not shown.</summary>
+    bool IsConfigured { get; }
+
+    /// <summary>
+    /// Two to four plain Lithuanian sentences on what the source says the bill changes, following the public prompt in the
+    /// repository; <c>draft.not-configured</c> without a provider.
+    /// </summary>
+    Task<Result<string>> DraftDescriptionAsync(DraftSource request, CancellationToken cancellationToken);
+}

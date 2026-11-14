@@ -59,6 +59,8 @@ services:
     environment:
       ConnectionStrings__Lt2: Host=postgres;Port=5432;Database=lt2;Username=lt2_app;GSS Encryption Mode=Disable
       ReverseProxy__TrustForwardedHeaders: "true"
+      # The site's own address, the one Caddy serves: links in emails and in the summary's text start with it (design 5.6).
+      Site__Address: https://${LT2_SITE_ADDRESS:-lt2.localhost}:${LT2_HTTPS_PORT:-8443}
       # Where visitors without a session may write to the moderators (design 8.3). Production sets the real address.
       Moderation__ContactAddress: ${LT2_MODERATION_CONTACT:-}
       # The repository's GitHub issues, linked from the feedback panel (design 8.10); nothing shown when empty.
@@ -68,10 +70,15 @@ services:
       RateLimits__CodeRequest__PermitLimit: ${LT2_RATE_CODE_REQUESTS:-10}
       RateLimits__Registration__PermitLimit: ${LT2_RATE_REGISTRATIONS:-20}
       RateLimits__SignIn__PermitLimit: ${LT2_RATE_SIGN_INS:-30}
+      # The AI draft of an appeal's description (design 8.11.4): "claude" with a key in deploy/secrets/ai_api_key turns it
+      # on; empty (the default) keeps it off and nothing offers a draft. Its host is then the only one the web may call.
+      Ai__Provider: ${LT2_AI_PROVIDER:-}
       OTEL_EXPORTER_OTLP_ENDPOINT: ${OTEL_EXPORTER_OTLP_ENDPOINT:-}
     secrets:
       - source: db_app_password
         target: Database__Password
+      - source: ai_api_key
+        target: Ai__ApiKey
       - source: data_protection_key
         target: DataProtection__KeyEncryptionKey
       - source: ip_hash_key
@@ -95,6 +102,8 @@ services:
       Email__Smtp__Security: ${LT2_SMTP_SECURITY:-None}
       Email__Smtp__UserName: ${LT2_SMTP_USERNAME:-}
       Email__Smtp__FromAddress: ${LT2_MAIL_FROM:-prisijungimas@lt2.localhost}
+      # The site's own address: links in the emails the worker sends start with it (design 5.6).
+      Site__Address: https://${LT2_SITE_ADDRESS:-lt2.localhost}:${LT2_HTTPS_PORT:-8443}
       # The Seimas open data. Production keeps the default; only the local .env points the worker at the stand-in.
       Seimas__BaseAddress: ${LT2_SEIMAS_BASE_ADDRESS:-https://apps.lrs.lt/sip/}
       Outbound__AllowedHosts__1: ${LT2_OUTBOUND_EXTRA_HOST:-}
@@ -102,12 +111,18 @@ services:
       Agenda__BaseAddress: ${LT2_AGENDA_BASE_ADDRESS:-}
       # Where at most one notice a day of new feedback goes (design 8.10); none when empty.
       Feedback__TeamAddress: ${LT2_FEEDBACK_TEAM_ADDRESS:-}
+      # The AI summaries of bills (design 8.13), the same switch as the web's draft: "claude" with a key in
+      # deploy/secrets/ai_api_key turns the provider on; empty (the default) keeps it off. Its host then joins the worker's
+      # allowlist. The job also needs a reader of the bills' official texts, which does not exist yet.
+      Ai__Provider: ${LT2_AI_PROVIDER:-}
       OTEL_EXPORTER_OTLP_ENDPOINT: ${OTEL_EXPORTER_OTLP_ENDPOINT:-}
     secrets:
       - source: db_worker_password
         target: Database__Password
       - source: smtp_password
         target: Email__Smtp__Password
+      - source: ai_api_key
+        target: Ai__ApiKey
     depends_on:
       migrator:
         condition: service_completed_successfully
@@ -227,3 +242,5 @@ secrets:
     file: ./secrets/ip_hash_key
   smtp_password:
     file: ./secrets/smtp_password
+  ai_api_key:
+    file: ./secrets/ai_api_key

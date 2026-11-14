@@ -42,10 +42,8 @@
 <data name="Reasons.SimilarTitle" xml:space="preserve"><value>Panašūs argumentai jau yra</value></data>
 <data name="Reasons.SimilarText" xml:space="preserve"><value>Gal jūsų mintį kas nors jau parašė? Jei argumentas tos pusės, kurios prašote patys, galite pažymėti „Man svarbu“; arba vis tiek paskelbkite savo.</value></data>
 <data name="Restrict.OpenAuthor" xml:space="preserve"><value>Riboti autoriaus rašymą…</value></data>
-<data name="Restrict.OpenInitiator" xml:space="preserve"><value>Riboti iniciatoriaus rašymą…</value></data>
 <data name="Restrict.Title" xml:space="preserve"><value>Riboti rašymą: {0}</value></data>
 <data name="Restrict.Reasons" xml:space="preserve"><value>Argumentai: {0}</value></data>
-<data name="Restrict.Appeals" xml:space="preserve"><value>Atidaryti kreipimaisi: {0}</value></data>
 <data name="Restrict.Actions" xml:space="preserve"><value>Ankstesni moderatorių veiksmai: {0}</value></data>
 <data name="Restrict.Earlier" xml:space="preserve"><value>Ankstesni apribojimai: {0}</value></data>
 <data name="Restrict.Holds" xml:space="preserve"><value>galioja</value></data>
@@ -67,13 +65,8 @@
 <data name="Restrict.Status.pending" xml:space="preserve"><value>laukia moderatoriaus</value></data>
 <data name="Restrict.Status.hidden" xml:space="preserve"><value>paslėptas</value></data>
 <data name="Restrict.Status.merged" xml:space="preserve"><value>sujungtas</value></data>
-<data name="Restrict.AppealStatus.pending" xml:space="preserve"><value>laukia moderatoriaus</value></data>
-<data name="Restrict.AppealStatus.returned" xml:space="preserve"><value>grąžintas taisyti</value></data>
-<data name="Restrict.AppealStatus.open" xml:space="preserve"><value>atviras</value></data>
-<data name="Restrict.AppealStatus.closed" xml:space="preserve"><value>uždarytas</value></data>
-<data name="Restrict.AppealStatus.rejected" xml:space="preserve"><value>paslėptas</value></data>
 <data name="Restrict.Target.reason" xml:space="preserve"><value>argumentas</value></data>
-<data name="Restrict.Target.appeal" xml:space="preserve"><value>kreipimasis</value></data>
+<data name="Restrict.Target.appeal" xml:space="preserve"><value>projektas</value></data>
 <data name="Restrict.Target.restriction" xml:space="preserve"><value>apribojimas</value></data>
 <data name="Restricted.Title" xml:space="preserve"><value>Moderatorius apribojo jūsų galimybę rašyti.</value></data>
 <data name="Restricted.Until" xml:space="preserve"><value>Apribojimas galioja iki {0} imtinai.</value></data>
@@ -94,7 +87,7 @@
 <data name="Reasons.Left" xml:space="preserve"><value>Argumentų dar galite parašyti: {0}.</value></data>
 <data name="Reasons.NoneLeft" xml:space="preserve"><value>Šiam projektui daugiau argumentų parašyti nebegalite.</value></data>
 <data name="Report.Open" xml:space="preserve"><value>Pranešti</value></data>
-<data name="Report.AppealOpen" xml:space="preserve"><value>Pranešti apie kreipimąsi</value></data>
+<data name="Report.AppealOpen" xml:space="preserve"><value>Pranešti apie klaidą</value></data>
 <data name="Report.Title" xml:space="preserve"><value>Pranešimas moderatoriams</value></data>
 <data name="Report.Ground" xml:space="preserve"><value>Kodėl pranešate?</value></data>
 <data name="Report.Ground.illegal" xml:space="preserve"><value>Neteisėtas turinys</value></data>
@@ -105,18 +98,6 @@
 <data name="Report.Text" xml:space="preserve"><value>Paaiškinimas (nebūtina)</value></data>
 <data name="Report.Submit" xml:space="preserve"><value>Pranešti moderatoriams</value></data>
 <data name="Report.Sent" xml:space="preserve"><value>Ačiū. Moderatoriai peržiūrės.</value></data>
-<data name="Open.SignIn" xml:space="preserve"><value>Prisijunkite, kad atidarytumėte kreipimąsi</value></data>
-<data name="Open.Title" xml:space="preserve"><value>Atidaryti kreipimąsi</value></data>
-<data name="Open.After" xml:space="preserve"><value>Kai moderatorius kreipimąsi paskelbs, galėsite – kaip ir visi kiti – parašyti argumentų už ar prieš ir, jei norite, nurodyti, ko prašote patys.</value></data>
-<data name="Open.Intro" xml:space="preserve"><value>Vienam projektui – vienas kreipimasis: visi, kurie prašo Seimo narių balsuoti už ar prieš, prisijungia prie jo. Kol kreipimasis nepaskelbtas, jį gali pasiūlyti keli nariai; moderatorius paskelbs vieną pasiūlymą. Savo pasiūlymą iki tol matote tik jūs.</value></data>
-<data name="Open.Waiting" xml:space="preserve"><value>Šiam projektui jau pateikta kreipimosi pasiūlymų, laukiančių moderatoriaus: {0}. Moderatorius paskelbs vieną iš jų. Kol to nepadarė, savo pasiūlymą galite pateikti ir jūs.</value></data>
-<data name="Open.Description" xml:space="preserve"><value>Ką keičia projektas</value></data>
-<data name="Open.DescriptionHint" xml:space="preserve"><value>Trumpai ir neutraliai, be vertinimų: šį aprašymą skaitys abiejų pusių dalyviai. Iki {0} ženklų.</value></data>
-<data name="Open.Threshold" xml:space="preserve"><value>Riba</value></data>
-<data name="Open.ThresholdBelow" xml:space="preserve"><value>Riba negali būti mažesnė nei {0}.</value></data>
-<data name="Open.ThresholdHint" xml:space="preserve"><value>Kiek dalyvių, abiejų pusių kartu, turi turėti kreipimasis, kad patektų į suvestines Seimo nariams. Riba bus vieša. Ne mažiau kaip {0}.</value></data>
-<data name="Open.Submit" xml:space="preserve"><value>Pateikti moderatoriui</value></data>
-<data name="Open.TakenMeanwhile" xml:space="preserve"><value>Šiam projektui kreipimasis jau yra, bet jo dabar parodyti negalime. Perkraukite puslapį po kelių minučių. Jūsų tekstas liko laukelyje.</value></data>
 <data name="Edit.Title" xml:space="preserve"><value>Pataisyti prieš paskelbiant</value></data>
 <data name="Edit.TitleReturned" xml:space="preserve"><value>Pataisyti ir pateikti dar kartą</value></data>
 <data name="Edit.Submit" xml:space="preserve"><value>Pateikti moderatoriui</value></data>
@@ -125,61 +106,36 @@
 <data name="Threshold.Save" xml:space="preserve"><value>Išsaugoti ribą</value></data>
 <data name="Mod.PageTitle" xml:space="preserve"><value>Moderavimas · Lietuva 2.0</value></data>
 <data name="Mod.Title" xml:space="preserve"><value>Moderavimas</value></data>
-<data name="Mod.Lead" xml:space="preserve"><value>Laukiantys kreipimosi pasiūlymai, aprašymo pakeitimai, pažymėti, praneštieji ir dar nematyti argumentai, taip pat paskelbti kreipimaisi, kuriems reikia jūsų sprendimo. Kiekvienas veiksmas registruojamas, o autorius gauna jūsų paaiškinimą.</value></data>
-<data name="Mod.Changes" xml:space="preserve"><value>Aprašymo pakeitimai</value></data>
-<data name="Mod.ChangeBy" xml:space="preserve"><value>Pasiūlė iniciatorius {0} · {1}</value></data>
-<data name="Mod.ChangeOld" xml:space="preserve"><value>Dabar rodomas aprašymas</value></data>
-<data name="Mod.ChangeNew" xml:space="preserve"><value>Siūlomas aprašymas</value></data>
+<data name="Mod.Lead" xml:space="preserve"><value>Projektai, kuriems reikia jūsų sprendimo (pranešta apie aprašymą, pastabos apie datą, staigus naujų paskyrų antplūdis, sulaikytas siuntimas, nepasiekta riba, nors projektas jau darbotvarkėje), ir pažymėti, praneštieji ar dar nematyti argumentai. Kiekvienas veiksmas registruojamas; argumento autorius gauna jūsų paaiškinimą.</value></data>
 <data name="Mod.Actions" xml:space="preserve"><value>Veiksmai</value></data>
 <data name="Mod.Note.Optional" xml:space="preserve"><value>Pastaba autoriui (nebūtina)</value></data>
-<data name="Mod.Note.Required" xml:space="preserve"><value>Pastaba autoriui (privaloma)</value></data>
-<data name="Change.Mod.Approve.Sentence" xml:space="preserve"><value>Siūlomas aprašymas pakeis dabartinį kreipimosi puslapyje, o dabartinis liks aprašymo istorijoje. Iniciatorius gaus laišką.</value></data>
-<data name="Change.Mod.Return.Sentence" xml:space="preserve"><value>Puslapyje liks dabartinis aprašymas. Iniciatorius gaus jūsų pastabą ir galės pasiūlyti naują pakeitimą.</value></data>
-<data name="Change.Mod.Approved" xml:space="preserve"><value>Naujas aprašymas paskelbtas. Iniciatorius gaus laišką.</value></data>
-<data name="Change.Mod.Returned" xml:space="preserve"><value>Pakeitimas grąžintas su pastaba. Iniciatorius gaus laišką.</value></data>
-<data name="Change.Open" xml:space="preserve"><value>Redaguoti aprašymą</value></data>
-<data name="Change.Title" xml:space="preserve"><value>Aprašymo pakeitimas</value></data>
-<data name="Change.Explained" xml:space="preserve"><value>Naujas aprašymas bus rodomas tik tada, kai jį patvirtins moderatorius; iki tol puslapyje lieka dabartinis. Ankstesni aprašymai matomi istorijoje.</value></data>
-<data name="Change.Submit" xml:space="preserve"><value>Siųsti moderatoriui</value></data>
-<data name="Change.Sent" xml:space="preserve"><value>Pakeitimas išsiųstas moderatoriui.</value></data>
-<data name="Change.Pending" xml:space="preserve"><value>Jūsų pasiūlytas aprašymo pakeitimas laukia moderatoriaus. Kol jis nepatvirtintas, puslapyje rodomas dabartinis aprašymas.</value></data>
-<data name="Change.ShowProposed" xml:space="preserve"><value>Rodyti pasiūlytą tekstą</value></data>
-<data name="Change.Returned" xml:space="preserve"><value>Moderatorius grąžino jūsų ankstesnį pakeitimą: {0}</value></data>
-<data name="Mod.HiddenLink" xml:space="preserve"><value>Paslėpti kreipimaisi ir argumentai</value></data>
-<data name="Hidden.PageTitle" xml:space="preserve"><value>Paslėpti kreipimaisi · Lietuva 2.0</value></data>
-<data name="Hidden.Title" xml:space="preserve"><value>Paslėpti kreipimaisi</value></data>
-<data name="Hidden.Lead" xml:space="preserve"><value>Moderatorių paslėpti kreipimaisi ir argumentai: kas, kada ir kodėl paslėpė. „Atkurti“ grąžina juos tokius, kokie buvo; autorius gauna jūsų paaiškinimą.</value></data>
-<data name="Hidden.Appeals" xml:space="preserve"><value>Kreipimaisi</value></data>
+<data name="Mod.HiddenLink" xml:space="preserve"><value>Paslėpti projektai ir argumentai</value></data>
+<data name="Hidden.PageTitle" xml:space="preserve"><value>Paslėpta · Lietuva 2.0</value></data>
+<data name="Hidden.Title" xml:space="preserve"><value>Paslėpti projektai ir argumentai</value></data>
+<data name="Hidden.Lead" xml:space="preserve"><value>Projektai, dėl kurių moderatoriai uždarė dalyvavimą, ir paslėpti argumentai: kas, kada ir kodėl paslėpė. „Atkurti“ grąžina juos tokius, kokie buvo.</value></data>
+<data name="Hidden.Appeals" xml:space="preserve"><value>Projektai</value></data>
 <data name="Hidden.Reasons" xml:space="preserve"><value>Argumentai</value></data>
 <data name="Hidden.None" xml:space="preserve"><value>Paslėptų nėra.</value></data>
-<data name="Hidden.Initiator" xml:space="preserve"><value>Iniciatorius: {0}</value></data>
 <data name="Hidden.When" xml:space="preserve"><value>Paslėpta {0} · paslėpė {1}</value></data>
 <data name="Hidden.Moderator" xml:space="preserve"><value>moderatorius</value></data>
 <data name="Hidden.WhenUnknown" xml:space="preserve"><value>Kada ir kas paslėpė – neužregistruota.</value></data>
 <data name="Hidden.Why" xml:space="preserve"><value>Paaiškinimas: {0}</value></data>
-<data name="Hidden.RestoresAs.open" xml:space="preserve"><value>Atkūrus bus paskelbtas</value></data>
+<data name="Hidden.RestoresAs.open" xml:space="preserve"><value>Atkūrus vėl bus galima dalyvauti</value></data>
 <data name="Hidden.RestoresAs.closed" xml:space="preserve"><value>Atkūrus bus uždarytas, kaip buvo</value></data>
-<data name="Hidden.RestoresAs.pending" xml:space="preserve"><value>Atkūrus lauks moderatoriaus</value></data>
-<data name="Hidden.Refused.appeal.published-exists" xml:space="preserve"><value>Šiam projektui dabar paskelbtas kitas kreipimasis, todėl šio atkurti negalima.</value></data>
-<data name="Hidden.Refused.proposal.exists" xml:space="preserve"><value>Šio pasiūlymo autorius šiam projektui turi kitą laukiantį pasiūlymą, todėl šio atkurti negalima.</value></data>
-<data name="Hidden.Refused.moderation.wrong-state" xml:space="preserve"><value>Šio kreipimosi atkurti negalima.</value></data>
-<data name="Hidden.ReasonNotOpen" xml:space="preserve"><value>Kreipimasis nebėra atviras, todėl argumento atkurti negalima.</value></data>
+<data name="Hidden.ReasonNotOpen" xml:space="preserve"><value>Dalyvauti dėl šio projekto nebegalima, todėl argumento atkurti negalima.</value></data>
 <data name="Hidden.Restore" xml:space="preserve"><value>Atkurti</value></data>
-<data name="Hidden.Statement" xml:space="preserve"><value>Paaiškinimas autoriui (privalomas)</value></data>
-<data name="Hidden.Restored" xml:space="preserve"><value>Atkurta. Autorius gaus jūsų paaiškinimą.</value></data>
-<data name="Hidden.RestoreAppeal.Sentence.open" xml:space="preserve"><value>Kreipimasis vėl bus paskelbtas su visomis pozicijomis, argumentais ir „Man svarbu“ žymomis, kaip buvo. Jei šiam projektui laukia kitų pasiūlymų, jie bus uždaryti, kaip paskelbus kreipimąsi.</value></data>
-<data name="Hidden.RestoreAppeal.Sentence.closed" xml:space="preserve"><value>Kreipimasis vėl bus rodomas uždarytas, su užfiksuotais skaičiais ir argumentais, kaip buvo.</value></data>
-<data name="Hidden.RestoreAppeal.Sentence.pending" xml:space="preserve"><value>Pasiūlymas dar nebuvo paskelbtas: jis grįš į eilę ir lauks moderatoriaus.</value></data>
+<data name="Hidden.Statement" xml:space="preserve"><value>Paaiškinimas (privalomas)</value></data>
+<data name="Hidden.Restored" xml:space="preserve"><value>Atkurta.</value></data>
+<data name="Hidden.RestoreAppeal.Sentence.open" xml:space="preserve"><value>Dalyvavimas dėl projekto vėl bus atviras: pozicijos, argumentai ir „Man svarbu“ žymos grįš tokie, kokie buvo.</value></data>
+<data name="Hidden.RestoreAppeal.Sentence.closed" xml:space="preserve"><value>Projektas vėl bus rodomas uždarytas, su užfiksuotais skaičiais ir argumentais, kaip buvo.</value></data>
 <data name="Hidden.RestoreReason.Sentence" xml:space="preserve"><value>Argumentas vėl bus rodomas. „Man svarbu“ žymos, ištrintos paslepiant, negrįš.</value></data>
 <data name="Mod.Refused" xml:space="preserve"><value>Moderuoti galima tik prisijungus darbuotojo prieigos raktu, kai moderatoriaus vaidmuo aktyvintas.</value></data>
-<data name="Mod.Appeals" xml:space="preserve"><value>Kreipimaisi</value></data>
+<data name="Mod.Appeals" xml:space="preserve"><value>Projektai</value></data>
 <data name="Mod.Reasons" xml:space="preserve"><value>Argumentai</value></data>
 <data name="Mod.Reason" xml:space="preserve"><value>Argumentas</value></data>
 <data name="Mod.Empty" xml:space="preserve"><value>Nieko nelaukia.</value></data>
-<data name="Mod.OpenedBy" xml:space="preserve"><value>Atidarė {0} · riba {1}</value></data>
-<data name="Mod.Proposals" xml:space="preserve"><value>Projektui {0} pateikta kreipimosi pasiūlymų: {1}. Jie rodomi kartu, seniausias pirmas. Skelbkite seniausią pasiūlymą, atitinkantį taisykles; tai rekomendacija, ne programos taisyklė. Paskelbus vieną, kiti laukiantys ir grąžinti pasiūlymai uždaromi, o jų autoriai gauna laišką be vardų.</value></data>
 <data name="Mod.Status.pending" xml:space="preserve"><value>Laukia peržiūros</value></data>
-<data name="Mod.Status.open" xml:space="preserve"><value>Paskelbtas</value></data>
+<data name="Mod.Status.open" xml:space="preserve"><value>Atviras</value></data>
 <data name="Mod.Status.published" xml:space="preserve"><value>Paskelbtas</value></data>
 <data name="Mod.Seen" xml:space="preserve"><value>Matytas, gautas pranešimas</value></data>
 <data name="Mod.NotSeen" xml:space="preserve"><value>Dar nematytas</value></data>
@@ -188,20 +144,19 @@
 <data name="Mod.Flag.personal-code" xml:space="preserve"><value>Asmens kodas</value></data>
 <data name="Mod.Flag.link" xml:space="preserve"><value>Nuoroda</value></data>
 <data name="Mod.Reports" xml:space="preserve"><value>Nariai pranešė apie šį turinį: {0}. Perskaitykite pranešimus: jei pažeidimo nėra, palikite, kitaip paslėpkite. Kas pranešė, nerodoma.</value></data>
+<data name="Mod.Reports.Description" xml:space="preserve"><value>Nariai pranešė apie šio projekto aprašymą: {0}. Perskaitykite pranešimus: jei aprašymas tikslus, palikite arba patvirtinkite; jei ne, pataisykite arba pašalinkite. Kas pranešė, nerodoma.</value></data>
 <data name="Mod.Statement" xml:space="preserve"><value>Paaiškinimas autoriui</value></data>
 <data name="Mod.Threshold" xml:space="preserve"><value>Nauja riba</value></data>
 <data name="Mod.MergeInto" xml:space="preserve"><value>Sujungti su</value></data>
 <data name="Mod.Publish" xml:space="preserve"><value>Skelbti</value></data>
 <data name="Mod.Keep" xml:space="preserve"><value>Palikti</value></data>
-<data name="Mod.Return" xml:space="preserve"><value>Grąžinti autoriui</value></data>
 <data name="Mod.Action.publish" xml:space="preserve"><value>Skelbti</value></data>
 <data name="Mod.Action.keep" xml:space="preserve"><value>Palikti</value></data>
-<data name="Mod.Action.return" xml:space="preserve"><value>Grąžinti autoriui</value></data>
 <data name="Mod.Action.hide" xml:space="preserve"><value>Paslėpti</value></data>
 <data name="Mod.Action.threshold" xml:space="preserve"><value>Keisti ribą</value></data>
 <data name="Mod.Action.describe" xml:space="preserve"><value>Taisyti aprašymą</value></data>
 <data name="ModPanel.Title" xml:space="preserve"><value>Moderavimas</value></data>
-<data name="ModPanel.Lead" xml:space="preserve"><value>Tai matote kaip moderatorius. Kiekvienas veiksmas registruojamas, o iniciatorius gauna jūsų paaiškinimą.</value></data>
+<data name="ModPanel.Lead" xml:space="preserve"><value>Tai matote kaip moderatorius. Kiekvienas veiksmas registruojamas; argumento autorius gauna jūsų paaiškinimą.</value></data>
 <data name="ModPanel.Queue" xml:space="preserve"><value>Moderavimo eilė</value></data>
 <data name="Mod.Action.planned" xml:space="preserve"><value>Pataisyti planuojamą datą</value></data>
 <data name="Mod.Action.hold" xml:space="preserve"><value>Sulaikyti siuntimą</value></data>
@@ -209,17 +164,24 @@
 <data name="Mod.Action.urgent" xml:space="preserve"><value>Patvirtinti skubią suvestinę</value></data>
 <data name="Mod.Action.merge" xml:space="preserve"><value>Sujungti</value></data>
 <data name="Mod.Action.restrict" xml:space="preserve"><value>Riboti autoriaus rašymą</value></data>
-<data name="Mod.Sentence.appeal.publish" xml:space="preserve"><value>Kreipimasis bus paskelbtas: jį matys visi, o nariai galės nurodyti, ko prašo, ir rašyti argumentus. Kiti šio projekto pasiūlymai bus uždaryti. Pastabą, jei ją parašysite, gaus iniciatorius.</value></data>
-<data name="Mod.Sentence.appeal.keep" xml:space="preserve"><value>Kreipimasis liks toks, koks yra; pranešimai apie jį ir pastabos apie datą bus uždaryti.</value></data>
-<data name="Mod.Sentence.appeal.return" xml:space="preserve"><value>Pasiūlymas grąžinamas iniciatoriui pataisyti; kol jis nepataisys, niekas kitas jo nemato. Iš pastabos iniciatorius sužinos, ką taisyti.</value></data>
-<data name="Mod.Sentence.appeal.hide" xml:space="preserve"><value>Kreipimasis bus paslėptas ir niekam nerodomas, o projektui bus galima pasiūlyti naują. Pozicijos lieka, kreipimąsi galima atkurti. Paaiškinimą gaus iniciatorius.</value></data>
-<data name="Mod.Sentence.appeal.threshold" xml:space="preserve"><value>Nauja riba pakeis iniciatoriaus nustatytą, ir iniciatorius jos nebegalės keisti. Paaiškinimas rodomas kreipimosi puslapyje ir siunčiamas iniciatoriui.</value></data>
-<data name="Mod.Sentence.appeal.describe" xml:space="preserve"><value>Pataisytas aprašymas bus rodomas iš karto, o ankstesnis liks aprašymo istorijoje. Paaiškinimą gaus iniciatorius.</value></data>
+<data name="Mod.Sentence.appeal.keep" xml:space="preserve"><value>Projektas liks toks, koks yra; pranešimai apie aprašymą ir pastabos apie datą bus uždaryti.</value></data>
+<data name="Mod.Sentence.appeal.hide" xml:space="preserve"><value>Dalyvavimas dėl projekto bus uždarytas: puslapyje liks tik projektas ir jūsų paaiškinimas. Pozicijos ir argumentai išsaugomi nematomi ir atkūrus grįžta.</value></data>
+<data name="Mod.Sentence.appeal.threshold" xml:space="preserve"><value>Projektas turės savo ribą vietoj bendros visiems projektams; ji liks, kol moderatorius jos nepakeis. Paaiškinimas rodomas projekto puslapyje.</value></data>
+<data name="Mod.Sentence.appeal.describe" xml:space="preserve"><value>Aprašymas bus rodomas iš karto projekto puslapyje su žyma „Parašė moderatorius“ (arba „Sukurta DI · taisė žmonės“, jei pradėjote nuo juodraščio ar taisote DI sukurtą aprašymą), o ankstesnis liks keitimų istorijoje. Paaiškinimas įrašomas į moderavimo žurnalą.</value></data>
+<data name="Mod.Sentence.appeal.confirm" xml:space="preserve"><value>Jūs perskaitėte DI sukurtą aprašymą ir jis tikslus. Tekstas liks toks pat, o žyma pasikeis į „Sukurta DI · taisė žmonės“. Pranešimai apie aprašymą bus uždaryti.</value></data>
+<data name="Mod.Sentence.appeal.undescribe" xml:space="preserve"><value>Aprašymas bus pašalintas: puslapyje bus parašyta, kad aprašymo dar nėra, o pašalintas tekstas liks keitimų istorijoje. DI šiam projektui aprašymo nebekurs; naują galės parašyti moderatorius.</value></data>
+<data name="Mod.Action.confirm" xml:space="preserve"><value>Patvirtinti aprašymą</value></data>
+<data name="Mod.Action.undescribe" xml:space="preserve"><value>Pašalinti aprašymą</value></data>
+<data name="Mod.Done.confirm" xml:space="preserve"><value>Atlikta: aprašymas patvirtintas.</value></data>
+<data name="Mod.Done.undescribe" xml:space="preserve"><value>Atlikta: aprašymas pašalintas.</value></data>
+<data name="Mod.Note.Record" xml:space="preserve"><value>Pastaba moderavimo žurnalui (nebūtina)</value></data>
+<data name="Mod.Source.ai" xml:space="preserve"><value>Sukurta DI · žmonių neperžiūrėta</value></data>
+<data name="Report.Ground.inaccurate" xml:space="preserve"><value>Aprašymas netikslus ar klaidingas</value></data>
 <data name="Mod.Sentence.appeal.planned" xml:space="preserve"><value>Data ir stadija, kada Seimas planuoja svarstyti projektą. Puslapyje rodoma „Planuojama …“, o pastabos apie datą uždaromos.</value></data>
-<data name="Mod.Sentence.appeal.hold" xml:space="preserve"><value>Kol siuntimas sulaikytas, kreipimasis nepatenka į jokią suvestinę Seimo nariams.</value></data>
-<data name="Mod.Sentence.appeal.release" xml:space="preserve"><value>Kreipimasis vėl pateks į suvestines Seimo nariams pagal įprastas taisykles.</value></data>
+<data name="Mod.Sentence.appeal.hold" xml:space="preserve"><value>Kol siuntimas sulaikytas, projektas nepatenka į jokią suvestinę Seimo nariams.</value></data>
+<data name="Mod.Sentence.appeal.release" xml:space="preserve"><value>Projektas vėl pateks į suvestines Seimo nariams pagal įprastas taisykles.</value></data>
 <data name="Mod.Sentence.appeal.urgent" xml:space="preserve"><value>Viena papildoma suvestinė šiam projektui ne pagal tvarkaraštį: kai balsavimas vyks anksčiau nei kita įprasta suvestinė. Ne dažniau kaip kartą per savaitę vienam projektui.</value></data>
-<data name="Mod.Sentence.reason.publish" xml:space="preserve"><value>Argumentas bus rodomas kreipimosi puslapyje ir galės patekti į suvestines. Pastabą, jei ją parašysite, gaus autorius.</value></data>
+<data name="Mod.Sentence.reason.publish" xml:space="preserve"><value>Argumentas bus rodomas projekto puslapyje ir galės patekti į suvestines. Pastabą, jei ją parašysite, gaus autorius.</value></data>
 <data name="Mod.Sentence.reason.keep" xml:space="preserve"><value>Argumentas liks rodomas ir bus pažymėtas kaip peržiūrėtas, todėl galės patekti į suvestines; pranešimai apie jį bus uždaryti.</value></data>
 <data name="Mod.Sentence.reason.hide" xml:space="preserve"><value>Argumentas bus paslėptas, o „Man svarbu“ žymos prie jo ištrintos. Jį galima atkurti, bet be žymų. Paaiškinimą gaus autorius.</value></data>
 <data name="Mod.Sentence.reason.merge" xml:space="preserve"><value>Argumentas bus sujungtas su pasirinktu panašiu: „Man svarbu“ žymos persikels prie jo, o šis nebebus rodomas. Paaiškinimą gaus autorius.</value></data>
@@ -227,10 +189,9 @@
 <data name="Mod.MergeChoose" xml:space="preserve"><value>Pasirinkite argumentą, su kuriuo sujungti.</value></data>
 <data name="Mod.Done.publish" xml:space="preserve"><value>Atlikta: paskelbta.</value></data>
 <data name="Mod.Done.keep" xml:space="preserve"><value>Atlikta: palikta, pranešimai uždaryti.</value></data>
-<data name="Mod.Done.return" xml:space="preserve"><value>Atlikta: grąžinta iniciatoriui.</value></data>
 <data name="Mod.Done.hide" xml:space="preserve"><value>Atlikta: paslėpta.</value></data>
 <data name="Mod.Done.threshold" xml:space="preserve"><value>Atlikta: riba pakeista.</value></data>
-<data name="Mod.Done.describe" xml:space="preserve"><value>Atlikta: aprašymas pataisytas.</value></data>
+<data name="Mod.Done.describe" xml:space="preserve"><value>Atlikta: aprašymas įrašytas.</value></data>
 <data name="Mod.Done.planned" xml:space="preserve"><value>Atlikta: planuojama data pataisyta.</value></data>
 <data name="Mod.Done.hold" xml:space="preserve"><value>Atlikta: siuntimas sulaikytas.</value></data>
 <data name="Mod.Done.release" xml:space="preserve"><value>Atlikta: siuntimas atnaujintas.</value></data>
@@ -303,7 +264,7 @@
 <data name="Inv.SwitchedOn" xml:space="preserve"><value>Kodas vėl įjungtas.</value></data><data name="Report.Visitor" xml:space="preserve"><value>Pranešti apie turinį moderatoriams gali prisijungę Lietuva 2.0 naudotojai:</value></data>
 <data name="Report.SignIn" xml:space="preserve"><value>prisijunkite</value></data>
 <data name="Report.OrWrite" xml:space="preserve"><value>arba parašykite moderatoriams adresu</value></data>
-<data name="Mod.Surge" xml:space="preserve"><value>Per paskutines {0} val. {1} % naujų pozicijų pateikė per tą laiką sukurtos paskyros, todėl kreipimosi puslapyje rodoma pastaba apie staigų šuolį. Galite sulaikyti siuntimą, kol išsiaiškinsite, arba nieko nedaryti.</value></data>
+<data name="Mod.Surge" xml:space="preserve"><value>Per paskutines {0} val. {1} % naujų pozicijų pateikė per tą laiką sukurtos paskyros, todėl projekto puslapyje rodoma pastaba apie staigų šuolį. Galite sulaikyti siuntimą, kol išsiaiškinsite, arba nieko nedaryti.</value></data>
 <data name="Flag.Open" xml:space="preserve"><value>Data neteisinga?</value></data>
 <data name="Flag.Kind" xml:space="preserve"><value>Kas negerai?</value></data>
 <data name="Flag.date-wrong" xml:space="preserve"><value>Nurodyta data neteisinga</value></data>
@@ -312,7 +273,7 @@
 <data name="Flag.Submit" xml:space="preserve"><value>Pranešti moderatoriams</value></data>
 <data name="Flag.Sent" xml:space="preserve"><value>Ačiū. Moderatorius patikrins ir, jei reikia, pataisys datą.</value></data>
 <data name="Mod.Planned" xml:space="preserve"><value>Planuojama: {0}{1}</value></data>
-<data name="Mod.UnderThreshold" xml:space="preserve"><value>Projektas įtrauktas į Seimo darbotvarkę, planuojama {0}. Kreipimasis turi {1} iš {2} dalyvių, todėl į suvestinę Seimo nariams nepateks. Galite patvirtinti vieną skubią suvestinę arba nieko nedaryti.</value></data>
+<data name="Mod.UnderThreshold" xml:space="preserve"><value>Projektas įtrauktas į Seimo darbotvarkę, planuojama {0}. Dalyvių {1} iš {2}, todėl į suvestinę Seimo nariams jis nepateks. Galite patvirtinti vieną skubią suvestinę arba nieko nedaryti.</value></data>
 <data name="Mod.DateFlags" xml:space="preserve"><value>Nariai praneša, kad planuojama data neteisinga arba balsuojama anksčiau ({0}). Patikrinkite nuorodas: pataisykite planuojamą datą, patvirtinkite skubią suvestinę arba palikite, kaip yra.</value></data>
 <data name="Mod.PlannedDate" xml:space="preserve"><value>Planuojama data</value></data>
 <data name="Mod.PlannedStage" xml:space="preserve"><value>Stadija</value></data>
@@ -323,7 +284,7 @@
 <data name="Mod.SetPlanned" xml:space="preserve"><value>Pakeisti datą</value></data>
 <data name="Mod.Hold" xml:space="preserve"><value>Sulaikyti siuntimą</value></data>
 <data name="Mod.Release" xml:space="preserve"><value>Leisti siųsti</value></data>
-<data name="Mod.Held" xml:space="preserve"><value>Siuntimas sulaikytas: kol jo neatnaujinsite, kreipimasis nepatenka į jokią suvestinę Seimo nariams.</value></data>
+<data name="Mod.Held" xml:space="preserve"><value>Siuntimas sulaikytas: kol jo neatnaujinsite, projektas nepatenka į jokią suvestinę Seimo nariams.</value></data>
 <data name="Mod.Urgent" xml:space="preserve"><value>Patvirtinti skubią suvestinę</value></data>
 <data name="Admin.Lead" xml:space="preserve"><value>Skaičiai ir laikai, kuriuos galima keisti be naujos versijos. Kiekvienas pakeitimas įrašomas į auditą.</value></data>
 <data name="Admin.Changed" xml:space="preserve"><value>pakeista {0}</value></data>
@@ -348,11 +309,11 @@
 <data name="Admin.Setting.Registration:PersonalCodeUses" xml:space="preserve"><value>Registracijų vienu asmeniniu kodu</value></data>
 <data name="Admin.Help.Registration:PersonalCodeUses" xml:space="preserve"><value>Kiek žmonių gali užsiregistruoti su vieno nario asmeniniu kvietimo kodu; 0 – neribojama. Ribokite, jei kodai imami platinti masiškai.</value></data>
 <data name="Admin.Unit.Registration:PersonalCodeUses" xml:space="preserve"><value>registracijos (0 – neribojama)</value></data>
-<data name="Admin.Setting.Digest:ThresholdDefault" xml:space="preserve"><value>Siūloma kreipimosi riba</value></data>
-<data name="Admin.Help.Digest:ThresholdDefault" xml:space="preserve"><value>Skaičius, kurį kreipimosi formoje mato pasiūlymo autorius. Jis gali jį pakeisti, bet ne mažiau už mažiausią ribą.</value></data>
+<data name="Admin.Setting.Digest:ThresholdDefault" xml:space="preserve"><value>Riba visiems projektams</value></data>
+<data name="Admin.Help.Digest:ThresholdDefault" xml:space="preserve"><value>Kiek dalyvių, abiejų pusių kartu, turi turėti projektas, kad patektų į suvestines Seimo nariams. Taikoma iš karto visiems projektams, kuriems moderatorius nenustatė savos ribos.</value></data>
 <data name="Admin.Unit.Digest:ThresholdDefault" xml:space="preserve"><value>dalyviai</value></data>
-<data name="Admin.Setting.Digest:ThresholdMinimum" xml:space="preserve"><value>Mažiausia kreipimosi riba</value></data>
-<data name="Admin.Help.Digest:ThresholdMinimum" xml:space="preserve"><value>Mažesnės ribos nustatyti negali nei autorius, nei moderatorius. Padidinus ją, kreipimaisi, dar nepatekę į suvestinę, pakeliami iki jos.</value></data>
+<data name="Admin.Setting.Digest:ThresholdMinimum" xml:space="preserve"><value>Mažiausia riba</value></data>
+<data name="Admin.Help.Digest:ThresholdMinimum" xml:space="preserve"><value>Mažesnės ribos nustatyti negali joks moderatorius, o mažesnė bendra riba pakeliama iki šios.</value></data>
 <data name="Admin.Unit.Digest:ThresholdMinimum" xml:space="preserve"><value>dalyviai</value></data>
 <data name="Admin.Setting.Appeals:ReasonsPerPerson" xml:space="preserve"><value>Argumentų vienam žmogui dėl projekto</value></data>
 <data name="Admin.Help.Appeals:ReasonsPerPerson" xml:space="preserve"><value>Kiek argumentų vienas žmogus gali parašyti dėl vieno projekto; 0 – neribojama. Įjunkite ribą, jei kas nors užtvindo kreipimąsi argumentais; jau parašyti nepašalinami.</value></data>
@@ -370,7 +331,7 @@
 <data name="Admin.Help.Digest:MaxPerWeek" xml:space="preserve"><value>Daugiausia tiek suvestinių Seimo narys gauna per savaitę; skubi suvestinė gali viršyti vienu. Mažinkite, jei laiškų per daug.</value></data>
 <data name="Admin.Unit.Digest:MaxPerWeek" xml:space="preserve"><value>suvestinės</value></data>
 <data name="Admin.Setting.Digest:NotableChange" xml:space="preserve"><value>Pastebimas dalyvių pokytis</value></data>
-<data name="Admin.Help.Digest:NotableChange" xml:space="preserve"><value>Kreipimasis vėl patenka į savaitinę suvestinę, jei jo dalyvių skaičius nuo paskutinės suvestinės pasikeitė bent tiek.</value></data>
+<data name="Admin.Help.Digest:NotableChange" xml:space="preserve"><value>Projektas vėl patenka į savaitinę suvestinę, jei jo dalyvių skaičius nuo paskutinės suvestinės pasikeitė bent tiek.</value></data>
 <data name="Admin.Unit.Digest:NotableChange" xml:space="preserve"><value>dalis (0.10 = 10 %)</value></data>
 <data name="Admin.Setting.Surge:MinimumShare" xml:space="preserve"><value>Šuolis: naujų paskyrų dalis</value></data>
 <data name="Admin.Help.Surge:MinimumShare" xml:space="preserve"><value>Pastaba apie šuolį rodoma, kai bent tokią dalį naujų pozicijų per laikotarpį pateikė per tą laiką sukurtos paskyros.</value></data>
@@ -393,4 +354,60 @@
 <data name="Admin.Setting.Registration:PendingAccountDays" xml:space="preserve"><value>Kiek dienų laikoma nebaigta registracija</value></data>
 <data name="Admin.Help.Registration:PendingAccountDays" xml:space="preserve"><value>Paskyra, kurios adresas nepatvirtintas arba registracija nebaigta, ištrinama po tiek dienų; tada tuo adresu galima registruotis iš naujo.</value></data>
 <data name="Admin.Unit.Registration:PendingAccountDays" xml:space="preserve"><value>dienos</value></data>
+<data name="Share.ToGo" xml:space="preserve"><value>Iki ribos trūksta {0} dalyvių</value></data>
+<data name="Share.Reached" xml:space="preserve"><value>Riba pasiekta</value></data>
+<data name="Share.Copy" xml:space="preserve"><value>Kopijuoti nuorodą</value></data>
+<data name="Share.Copied" xml:space="preserve"><value>Nukopijuota.</value></data>
+<data name="Share.NoLink" xml:space="preserve"><value>Jūsų kvietimo kodas šiuo metu neveikia, todėl nuorodos parodyti negalime. Daugiau – paskyros puslapyje.</value></data>
+<data name="Follow.Follow" xml:space="preserve"><value>Sekti</value></data>
+<data name="Follow.Unfollow" xml:space="preserve"><value>Nebesekti</value></data>
+<data name="Follow.SignIn.bill" xml:space="preserve"><value>Prisijungę gausite laišką, kai projektas bus įtrauktas į darbotvarkę ir kai Seimas dėl jo balsuos.</value></data>
+<data name="Follow.SignIn.mp" xml:space="preserve"><value>Prisijungę sužinosite, kaip šis Seimo narys balsavo dėl jūsų sekamų projektų.</value></data>
+<data name="Follow.What.bill" xml:space="preserve"><value>Gausite laišką, kai projektas bus įtrauktas į darbotvarkę ir kai Seimas dėl jo balsuos.</value></data>
+<data name="Follow.What.mp" xml:space="preserve"><value>Laiškuose apie jūsų sekamus projektus matysite, kaip balsavo šis Seimo narys.</value></data>
+<data name="Follow.Following.bill" xml:space="preserve"><value>Sekate šį projektą. Kas ką seka, niekas kitas nemato.</value></data>
+<data name="Follow.Following.mp" xml:space="preserve"><value>Sekate šį Seimo narį. Kas ką seka, niekas kitas nemato.</value></data>
+<data name="Follows.Title" xml:space="preserve"><value>Ką sekate</value></data>
+<data name="Follows.Lead" xml:space="preserve"><value>Apie sekamus projektus siunčiame laišką, kai projektas įtraukiamas į Seimo darbotvarkę ir kai Seimas dėl jo balsuoja. Kas ką seka, mato tik jūs.</value></data>
+<data name="Follows.None" xml:space="preserve"><value>Kol kas nieko nesekate. Projektą ar Seimo narį galite sekti jų puslapyje.</value></data>
+<data name="Follows.ToAgenda" xml:space="preserve"><value>Seimo darbotvarkė →</value></data>
+<data name="Follows.Bills" xml:space="preserve"><value>Projektai</value></data>
+<data name="Follows.Mps" xml:space="preserve"><value>Seimo nariai</value></data>
+<data name="Follows.Planned" xml:space="preserve"><value>Planuojama {0}</value></data>
+<data name="Follows.Voted" xml:space="preserve"><value>Paskutinis balsavimas {0}:</value></data>
+<data name="Follows.Result" xml:space="preserve"><value>už {0}, prieš {1}, susilaikė {2}</value></data>
+<data name="Follows.Consensus" xml:space="preserve"><value>pritarta bendru sutarimu</value></data>
+<data name="Follows.NothingYet" xml:space="preserve"><value>Darbotvarkėje kol kas nėra</value></data>
+<data name="Follows.Max" xml:space="preserve"><value>Sekate {0} iš daugiausia {1}.</value></data>
+<data name="Follows.Emails" xml:space="preserve"><value>Kokius laiškus gauti</value></data>
+<data name="Follows.Email.planned" xml:space="preserve"><value>Kai sekamas projektas įtraukiamas į darbotvarkę</value></data>
+<data name="Follows.Email.voted" xml:space="preserve"><value>Kai Seimas balsuoja dėl sekamo projekto</value></data>
+<data name="Follows.Saved" xml:space="preserve"><value>Išsaugota.</value></data>
+<data name="ModOpen.Source" xml:space="preserve"><value>Šaltinio tekstas</value></data>
+<data name="ModOpen.SourceHint" xml:space="preserve"><value>Įklijuokite tik oficialų tekstą, pavyzdžiui, aiškinamojo rašto dalį apie tai, ką projektas keičia, ne asmens duomenis.</value></data>
+<data name="ModOpen.SourceLength" xml:space="preserve"><value>{0} iš {1} ženklų</value></data>
+<data name="ModOpen.ESeimas" xml:space="preserve"><value>Projektas e. seime</value></data>
+<data name="ModOpen.Draft" xml:space="preserve"><value>Parengti juodraštį</value></data>
+<data name="ModOpen.DraftReady" xml:space="preserve"><value>Juodraštis įrašytas į aprašymą. Perskaitykite ir pataisykite prieš įrašydami.</value></data>
+<data name="ModOpen.FromDraft" xml:space="preserve"><value>Sukurta DI · taisė žmonės</value></data>
+<data name="Admin.Group.ai" xml:space="preserve"><value>Dirbtinis intelektas</value></data>
+<data name="Admin.GroupNote.ai" xml:space="preserve"><value>Dirbtinis intelektas naudojamas tik projektų aprašymams: moderatoriaus juodraščiui ir automatinėms santraukoms. Abu veikia tik kai paslauga prijungta (Ai:Provider ir raktas serverio paslaptyse); santraukoms dar reikia, kad būtų galima perskaityti oficialų projekto tekstą.</value></data>
+<data name="Admin.Setting.Ai:SummariesPerDay" xml:space="preserve"><value>DI santraukų per dieną</value></data>
+<data name="Admin.Help.Ai:SummariesPerDay" xml:space="preserve"><value>Daugiausia tiek projektų be aprašymo per dieną DI gali apibendrinti iš oficialaus teksto; santrauka rodoma iš karto su žyma „Sukurta DI · žmonių neperžiūrėta“. 0 išjungia santraukas. Mažinkite, jei moderatoriai nespėja perskaityti pranešimų apie klaidas.</value></data>
+<data name="Admin.Unit.Ai:SummariesPerDay" xml:space="preserve"><value>santraukos per dieną</value></data>
+<data name="Admin.Setting.Ai:DraftModel" xml:space="preserve"><value>Juodraščio modelis</value></data>
+<data name="Admin.Help.Ai:DraftModel" xml:space="preserve"><value>Claude modelio pavadinimas, kuriuo rengiamas aprašymo juodraštis, pvz., claude-sonnet-5-5. Keiskite tik žinodami, kad modelis palaiko tas pačias užklausos parinktis.</value></data>
+<data name="Admin.Unit.Ai:DraftModel" xml:space="preserve"><value>modelio pavadinimas</value></data>
+<data name="Admin.Group.follows" xml:space="preserve"><value>Sekimas</value></data>
+<data name="Admin.Setting.Follows:MaxPerAccount" xml:space="preserve"><value>Kiek projektų ir Seimo narių galima sekti</value></data>
+<data name="Admin.Help.Follows:MaxPerAccount" xml:space="preserve"><value>Daugiausia tiek projektų ir Seimo narių kartu vienas naudotojas gali sekti. Sumažinus jau sekami nepašalinami, tik nebegalima pridėti naujų.</value></data>
+<data name="Admin.Unit.Follows:MaxPerAccount" xml:space="preserve"><value>projektai ir Seimo nariai</value></data>
+<data name="Mod.Action.write" xml:space="preserve"><value>Rašyti aprašymą</value></data>
+<data name="Mod.Description" xml:space="preserve"><value>Apie ką projektas</value></data>
+<data name="Mod.DescriptionHint" xml:space="preserve"><value>Trumpai ir neutraliai, be vertinimų: ką projektas keičia pagal oficialų tekstą. Šį aprašymą skaitys abiejų pusių dalyviai.</value></data>
+<data name="Mod.DescriptionUrl" xml:space="preserve"><value>Oficialaus teksto adresas</value></data>
+<data name="Mod.DescriptionUrlHint" xml:space="preserve"><value>Neprivaloma. Oficialaus teksto, iš kurio parengtas aprašymas, adresas lrs.lt svetainėje, pvz., e-seimas.lrs.lt. Jis rodomas po aprašymu; palikus laukelį tuščią, adreso nebus.</value></data>
+<data name="ModPanel.Reasons" xml:space="preserve"><value>Argumentai, laukiantys peržiūros arba pažymėti</value></data>
+<data name="ModReason.Open" xml:space="preserve"><value>Moderuoti</value></data>
+<data name="Share.Lead" xml:space="preserve"><value>Pakvieskite kitus: jūsų asmeninė kvietimo nuoroda atveria šio projekto puslapį. Ji ta pati, kad ir ko prašote patys, ir nieko apie jūsų pasirinkimą neatskleidžia.</value></data>
 </root>

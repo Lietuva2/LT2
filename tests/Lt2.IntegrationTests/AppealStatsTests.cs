@@ -43,7 +43,7 @@ public sealed class AppealStatsTests(DatabaseFixture database) : ApiTest(databas
         var (moderator, _) = await StaffAsync();
         var (initiator, initiatorEmail) = await Factory.MemberAsync();
         using var _i = initiator;
-        var appeal = await Database.OpenPublishedAsync(initiator, moderator.Browser, AppealSteps.ThirdBill, "against");
+        var appeal = await Database.PrepareBillAsync(initiator, moderator.Browser, AppealSteps.ThirdBill, "against");
         await Database.AgeAccountAsync(initiatorEmail, 60);
         var (member, _) = await Factory.MemberAsync();
         using var _m = member;
@@ -70,7 +70,7 @@ public sealed class AppealStatsTests(DatabaseFixture database) : ApiTest(databas
         var (moderator, administrator) = await StaffAsync();
         var (initiator, initiatorEmail) = await Factory.MemberAsync();
         using var _i = initiator;
-        var appeal = await Database.OpenPublishedAsync(initiator, moderator.Browser, AppealSteps.ThirdBill, "against");
+        var appeal = await Database.PrepareBillAsync(initiator, moderator.Browser, AppealSteps.ThirdBill, "against");
         await Database.AgeAccountAsync(initiatorEmail, 60);
         await Database.ExecuteAsync("UPDATE appeals.position SET created_at = created_at - interval '10 days' WHERE appeal_id = @a", ("a", appeal.Id));
         for (var i = 0; i < 2; i++)
@@ -88,7 +88,7 @@ public sealed class AppealStatsTests(DatabaseFixture database) : ApiTest(databas
         {
             var surged = await stranger.AppealAsync(AppealSteps.ThirdBill);
             surged.Surge.ShouldBe(new SurgeResponse(100, 72));
-            using var page = await stranger.Client.GetAsync("/seimas/XVP-0618/kreipimasis");
+            using var page = await stranger.Client.GetAsync("/seimas/XVP-0618");
             WebUtility.HtmlDecode(await page.Content.ReadAsStringAsync())
                 .ShouldContain("Per paskutines 72 valandas 100 % pozicijų pateikė paskyros, sukurtos per tą patį laiką. Skaičius „senesnės nei 30 d.“ jų neapima.");
             var queued = (await moderator.Browser.GetJsonAsync<ModerationQueueResponse>(AppealRoutes.ModerationQueue)).Appeals.Single(a => a.Id == appeal.Id);

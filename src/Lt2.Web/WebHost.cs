@@ -6,6 +6,7 @@ using Lt2.Api.Contracts.Me;
 using Lt2.Api.Contracts.Meta;
 using Lt2.Api.Contracts.Parliament;
 using Lt2.Appeals;
+using Lt2.SharedKernel.Http;
 using Lt2.Audit;
 using Lt2.Identity;
 using Lt2.Notifications;
@@ -43,6 +44,16 @@ internal static class WebHost
         services.AddNotificationsModule(configuration);
         services.AddAuditModule();
         services.AddParliamentModule();
+
+        // Design 8.11.4: the AI draft through the Claude API only when configured (provider and key); then its host, and only
+        // it, is added to the outbound allowlist of the web host's HTTP clients (design 6.4).
+        if (AppealsModule.AiProviderHost(configuration) is { } aiHost)
+        {
+            configuration.AddInMemoryCollection(new Dictionary<string, string?> { [OutboundAllowlist.Section + ":ai"] = aiHost });
+        }
+
+        services.AddOutboundAllowlist(configuration);
+        services.AddAiAssistant(configuration);
         services.AddAppealsModule();
         RequireKeyEncryptionOutsideDevelopment(builder);
 
@@ -71,6 +82,9 @@ internal static class WebHost
         services.AddScoped<IParliamentApi, ServerParliamentApi>();
         services.AddScoped<IAppealsApi, ServerAppealsApi>();
         services.AddScoped<IModerationApi, ServerModerationApi>();
+        services.AddScoped<AgendaReads>();
+        services.AddScoped<Lt2.Api.Contracts.Agenda.IAgendaApi, ServerAgendaApi>();
+        services.AddScoped<Lt2.Api.Contracts.Follows.IFollowsApi, ServerFollowsApi>();
         services.AddSingleton<FeedbackLimiter>();
         services.AddScoped<Lt2.Api.Contracts.Feedback.IFeedbackApi, ServerFeedbackApi>();
         services.AddScoped<IAdminApi, ServerAdminApi>();
@@ -123,9 +137,23 @@ internal static class WebHost
         app.MapHealthChecks("/health/ready", new HealthCheckOptions { Predicate = check => check.Tags.Contains("ready") });
         app.MapOpenApi("/openapi/{documentName}.json");
         app.MapLt2Api();
+        MapOldAppealAddresses(app);
         app.MapRazorComponents<App>()
             .AddInteractiveWebAssemblyRenderMode()
             .AddAdditionalAssemblies(typeof(ClientAssembly).Assembly);
+    }
+
+    /// <summary>
+    /// Design 8.12.1: the bill and the appeal are one page. The old appeal addresses (in emails, summaries and bookmarks)
+    /// redirect permanently: <c>/seimas/{number}/kreipimasis</c> to the bill's page, its history to
+    /// <c>/seimas/{number}/istorija</c>, and the proposal form <c>/kreipimaisi/naujas</c> to the list.
+    /// </summary>
+    private static void MapOldAppealAddresses(IEndpointRouteBuilder app)
+    {
+        static string Bill(string number) => "/seimas/" + Uri.EscapeDataString(number);
+        app.MapGet("/seimas/{number}/kreipimasis", (string number) => Results.Redirect(Bill(number), permanent: true)).ExcludeFromDescription();
+        app.MapGet("/seimas/{number}/kreipimasis/istorija", (string number) => Results.Redirect(Bill(number) + "/istorija", permanent: true)).ExcludeFromDescription();
+        app.MapGet("/kreipimaisi/naujas", () => Results.Redirect("/kreipimaisi", permanent: true)).ExcludeFromDescription();
     }
 
     private static bool IsApi(HttpContext context) =>

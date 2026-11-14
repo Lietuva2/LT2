@@ -104,7 +104,7 @@ public sealed class ModerationNoticeTests
     private static ModerationNoticeTemplate Template()
     {
         var factory = new ResourceManagerStringLocalizerFactory(Options.Create(new LocalizationOptions()), NullLoggerFactory.Instance);
-        return new ModerationNoticeTemplate(new StringLocalizer<EmailTemplates>(factory));
+        return new ModerationNoticeTemplate(new StringLocalizer<EmailTemplates>(factory), Options.Create(new SiteOptions()));
     }
 
     public static TheoryData<string> Notices() => new(ModerationNotices.All);

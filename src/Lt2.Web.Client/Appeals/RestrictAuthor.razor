@@ -2,15 +2,14 @@
 @inherits InteractiveBase
 @inject IModerationApi ModerationApi
 
-@* Design 8.3: a moderator restricts the author of an argument or the initiator of an appeal from writing, reached from
-   that item in the queue. Before deciding, the moderator sees the display name, the person's arguments and appeals,
-   earlier moderation actions and restrictions; never the address, a side or a mark, and no account id: the person is
-   reached through the item. *@
+@* Design 8.3: a moderator restricts the author of an argument from writing, reached from that argument in the queue.
+   Before deciding, the moderator sees the display name, the person's arguments, earlier moderation actions and
+   restrictions; never the address, a side or a mark, and no account id: the person is reached through the argument. *@
 @if (!_open)
 {
     @if (!Embedded)
     {
-        <button class="linkish small" type="button" id="restrict-open-@Id" disabled="@Locked" @onclick="OpenAsync">@L[Kind == "reason" ? "Restrict.OpenAuthor" : "Restrict.OpenInitiator"]</button>
+        <button class="linkish small" type="button" id="restrict-open-@Id" disabled="@Locked" @onclick="OpenAsync">@L["Restrict.OpenAuthor"]</button>
     }
 }
 else
@@ -27,17 +26,6 @@ else
                     <li><div class="rows__main"><span class="small num">@r.BillNumber · <span class="choice choice--@r.Side">@L["Reasons." + r.Side]</span> · @L["Restrict.Status." + r.Status]</span><span class="voice">@r.Text</span></div></li>
                 }
             </ul>
-
-            @if (view.Appeals.Count > 0)
-            {
-                <p class="label num">@Text("Restrict.Appeals", view.Appeals.Count)</p>
-                <ul class="rows">
-                    @foreach (var a in view.Appeals)
-                    {
-                        <li><div class="rows__main"><span class="small num">@a.BillNumber · @L["Restrict.AppealStatus." + a.Status]</span></div></li>
-                    }
-                </ul>
-            }
 
             <p class="label num">@Text("Restrict.Actions", view.Actions.Count)</p>
             @if (view.Actions.Count > 0)
@@ -115,9 +103,7 @@ else
     private string _statement = "";
     private AuthorViewResponse? _view;
 
-    /// <summary><c>reason</c> (restrict its author) or <c>appeal</c> (restrict its initiator).</summary>
-    [Parameter, EditorRequired] public string Kind { get; set; } = "";
-
+    /// <summary>The argument whose author is restricted.</summary>
     [Parameter, EditorRequired] public Guid Id { get; set; }
 
     [Parameter] public EventCallback OnDone { get; set; }
@@ -151,7 +137,7 @@ else
     private Task OpenAsync() => RunAsync(async () =>
     {
         _open = true;
-        var view = Kind == "reason" ? await ModerationApi.GetAuthorOfReasonAsync(Id) : await ModerationApi.GetInitiatorOfAppealAsync(Id);
+        var view = await ModerationApi.GetAuthorOfReasonAsync(Id);
         if (!view.IsSuccess)
         {
             Show(view.Problem);
@@ -177,9 +163,7 @@ else
         }
 
         var request = new RestrictionRequest { Until = until, Statement = _statement };
-        var result = Kind == "reason"
-            ? await ModerationApi.RestrictAuthorOfReasonAsync(Id, request)
-            : await ModerationApi.RestrictInitiatorOfAppealAsync(Id, request);
+        var result = await ModerationApi.RestrictAuthorOfReasonAsync(Id, request);
         if (!result.IsSuccess)
         {
             Show(result.Problem, "statement", "until");

@@ -1,0 +1,116 @@
+@page "/darbotvarke"
+@using Lt2.Api.Contracts.Agenda
+@inject IAgendaApi Api
+@inject IStringLocalizer<PageText> T
+@inject IStringLocalizer<Lt2.Web.Components.Appeals.AppealText> A
+@inject Formats F
+
+@* The agenda (design 8.11.1): public, server-rendered, readable without JavaScript. What the Seimas plans to consider, by
+   day, earliest first, from the lrs.lt agenda (10–12 days ahead, changes often: "Planuojama …", never a countdown), and
+   the stage votes of the last seven days. Each bill shows both sides, or says nobody took part yet (design 8.12.5). *@
+<PageTitle>@T["Agenda.Title"] · Lietuva 2.0</PageTitle>
+
+<div class="stack">
+    <h1>@T["Agenda.Title"]</h1>
+    <p class="lead">@T["Agenda.Lead"]</p>
+</div>
+
+<section class="stack" aria-labelledby="h-coming" id="agenda-coming">
+    <h2 id="h-coming">@T["Agenda.Coming"]</h2>
+    <p class="small" id="agenda-source">
+        @* An explicit space: Razor drops the white space between the sentences. *@
+        @T["Agenda.Source"]@(" ")
+        @if (_agenda?.AgendaReadAt is { } readAt)
+        {
+            @Fmt("Agenda.ReadAt", Formats.Stamp(readAt))
+        }
+        else
+        {
+            @T["Agenda.NeverRead"]
+        }
+        @if (_agenda?.AgendaSourceUrl is { } source && source.StartsWith("https://", StringComparison.Ordinal))
+        {
+            @(" ")<a href="@source" rel="external">@T["Agenda.SourceLink"]</a>
+        }
+    </p>
+    @if (_agenda is null || _agenda.Days.Count == 0)
+    {
+        <p id="agenda-none">@T["Agenda.NonePlanned"]</p>
+    }
+    else
+    {
+        @foreach (var day in _agenda.Days)
+        {
+            <section class="stack stack--tight" aria-labelledby="h-day-@Formats.Day(day.Date)">
+                <h3 id="h-day-@Formats.Day(day.Date)">@Fmt("Agenda.Day", F.Date(day.Date))</h3>
+                <ul class="rows">
+                    @foreach (var item in day.Items)
+                    {
+                        <AgendaItemRow Item="item" />
+                    }
+                </ul>
+            </section>
+        }
+    }
+</section>
+
+<section class="stack" aria-labelledby="h-recent" id="agenda-recent">
+    <h2 id="h-recent">@T["Agenda.Recent"]</h2>
+    @if (_agenda is null || _agenda.RecentVotes.Count == 0)
+    {
+        <p id="agenda-no-recent">@T["Agenda.NoRecent"]</p>
+    }
+    else
+    {
+        <ul class="rows">
+            @foreach (var v in _agenda.RecentVotes)
+            {
+                <li id="recent-@v.VoteId">
+                    <div class="rows__main">
+                        <span class="row">
+                            <a class="tag tag--ink num" href="/seimas/@Uri.EscapeDataString(v.Number)">@v.Number</a>
+                            @if (v.Stage is { } stage)
+                            {
+                                <span class="tag">@F.Stage(stage)</span>
+                            }
+                            <span class="small num">@Formats.Day(DateOnly.FromDateTime(TimeZoneInfo.ConvertTime(v.HeldAt, Vilnius).DateTime))</span>
+                        </span>
+                        <a href="/seimas/@Uri.EscapeDataString(v.Number)">@v.Title</a>
+                        <span class="small">
+                            @if (v.IsConsensus)
+                            {
+                                <a href="/seimas/balsavimai/@v.VoteId">@F.T["Consensus.Tag"]</a>
+                            }
+                            else
+                            {
+                                <a class="num" href="/seimas/balsavimai/@v.VoteId">@Fmt("Agenda.Result", Formats.Number(v.Totals.For), Formats.Number(v.Totals.Against), Formats.Number(v.Totals.Abstain))</a>
+                            }
+                        </span>
+                        @if (v.OfficialNote is { } note)
+                        {
+                            <span class="note note--quiet small">@note</span>
+                        }
+                    </div>
+                    <div class="rows__side">
+                        @if (v.Appeal is { } appeal)
+                        {
+                            <AgendaAppeal Appeal="appeal" Number="@v.Number" />
+                        }
+                    </div>
+                </li>
+            }
+        </ul>
+    }
+</section>
+
+<p class="small">@T["Agenda.OlderNote"]</p>
+<p class="note note--quiet" id="not-a-poll">@A["NotAPoll"]</p>
+
+@code {
+    private static readonly TimeZoneInfo Vilnius = TimeZoneInfo.FindSystemTimeZoneById("Europe/Vilnius");
+    private AgendaResponse? _agenda;
+
+    protected override async Task OnInitializedAsync() => _agenda = (await Api.GetAgendaAsync()).Value;
+
+    private string Fmt(string key, params object?[] values) => string.Format(System.Globalization.CultureInfo.InvariantCulture, T[key], values);
+}

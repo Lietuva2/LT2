@@ -23,41 +23,23 @@
   <data name="Role.moderator" xml:space="preserve"><value>moderatoriaus</value></data>
   <data name="Role.administrator" xml:space="preserve"><value>administratoriaus</value></data>
   <data name="SignInCode.Signature" xml:space="preserve"><value>Lietuva 2.0</value></data>
-<data name="Moderation.appeal-published.Subject" xml:space="preserve"><value>Lietuva 2.0: kreipimasis dėl {0} paskelbtas</value></data>
-<data name="Moderation.appeal-published.Body" xml:space="preserve"><value>moderatorius peržiūrėjo ir paskelbė jūsų kreipimąsi dėl projekto {0}. Dabar jį mato visi, o Lietuva 2.0 naudotojai gali nurodyti, ko prašo, ir rašyti argumentus. Argumentų galite parašyti ir jūs – kreipimosi puslapyje, kaip ir visi kiti.</value></data>
-<data name="Moderation.appeal-returned.Subject" xml:space="preserve"><value>Lietuva 2.0: kreipimąsi dėl {0} reikia pataisyti</value></data>
-<data name="Moderation.appeal-returned.Body" xml:space="preserve"><value>moderatorius grąžino jūsų kreipimąsi dėl projekto {0}. Jo kol kas niekas kitas nemato. Pataisykite aprašymą ir pateikite kreipimąsi dar kartą.</value></data>
-<data name="Moderation.appeal-hidden.Subject" xml:space="preserve"><value>Lietuva 2.0: kreipimasis dėl {0} paslėptas</value></data>
-<data name="Moderation.appeal-hidden.Body" xml:space="preserve"><value>moderatorius paslėpė jūsų kreipimąsi dėl projekto {0}. Jis nebėra matomas.</value></data>
-<data name="Moderation.threshold-changed.Subject" xml:space="preserve"><value>Lietuva 2.0: pakeista kreipimosi dėl {0} riba</value></data>
-<data name="Moderation.threshold-changed.Body" xml:space="preserve"><value>moderatorius pakeitė jūsų kreipimosi dėl projekto {0} ribą. Naują ribą ir jos priežastį matote kreipimosi puslapyje. Moderatoriaus nustatytos ribos keisti nebegalite.</value></data>
 <data name="Moderation.reason-published.Subject" xml:space="preserve"><value>Lietuva 2.0: jūsų argumentas paskelbtas</value></data>
-<data name="Moderation.reason-published.Body" xml:space="preserve"><value>moderatorius peržiūrėjo ir paskelbė jūsų argumentą kreipimesi dėl projekto {0}.</value></data>
+<data name="Moderation.reason-published.Body" xml:space="preserve"><value>moderatorius peržiūrėjo ir paskelbė jūsų argumentą kreipimesi dėl projekto {0}. Projekto puslapis: {1}</value></data>
 <data name="Moderation.reason-hidden.Subject" xml:space="preserve"><value>Lietuva 2.0: jūsų argumentas paslėptas</value></data>
-<data name="Moderation.reason-hidden.Body" xml:space="preserve"><value>moderatorius paslėpė jūsų argumentą kreipimesi dėl projekto {0}.</value></data>
+<data name="Moderation.reason-hidden.Body" xml:space="preserve"><value>moderatorius paslėpė jūsų argumentą kreipimesi dėl projekto {0}. Projekto puslapis: {1}</value></data>
 <data name="Moderation.reason-merged.Subject" xml:space="preserve"><value>Lietuva 2.0: jūsų argumentas sujungtas su panašiu</value></data>
-<data name="Moderation.reason-merged.Body" xml:space="preserve"><value>moderatorius sujungė jūsų argumentą kreipimesi dėl projekto {0} su panašiu jau paskelbtu argumentu. „Man svarbu“ žymos perkeltos prie jo.</value></data>
-<data name="Moderation.appeal-superseded.Subject" xml:space="preserve"><value>Lietuva 2.0: dėl {0} paskelbtas kitas kreipimosi pasiūlymas</value></data>
-<data name="Moderation.appeal-superseded.Body" xml:space="preserve"><value>dėl projekto {0} buvo pateiktas ne vienas kreipimosi pasiūlymas, ir moderatorius paskelbė vieną iš jų. Vienam projektui skelbiamas vienas kreipimasis, todėl jūsų pasiūlymas uždarytas. Tai nėra jūsų teksto vertinimas. Paskelbtą kreipimąsi rasite čia: {1}. Jame, kaip ir visi kiti, galite nurodyti, ko prašote, ir rašyti argumentus.</value></data>
-<data name="Moderation.appeal-restored.Subject" xml:space="preserve"><value>Lietuva 2.0: kreipimasis dėl {0} atkurtas</value></data>
-<data name="Moderation.appeal-restored.Body" xml:space="preserve"><value>moderatorius atkūrė jūsų anksčiau paslėptą kreipimąsi dėl projekto {0}.</value></data>
+<data name="Moderation.reason-merged.Body" xml:space="preserve"><value>moderatorius sujungė jūsų argumentą kreipimesi dėl projekto {0} su panašiu jau paskelbtu argumentu. „Man svarbu“ žymos perkeltos prie jo. Projekto puslapis: {1}</value></data>
 <data name="Moderation.reason-restored.Subject" xml:space="preserve"><value>Lietuva 2.0: jūsų argumentas atkurtas</value></data>
-<data name="Moderation.reason-restored.Body" xml:space="preserve"><value>moderatorius atkūrė jūsų anksčiau paslėptą argumentą kreipimesi dėl projekto {0}. „Man svarbu“ žymos, buvusios prie jo, paslepiant buvo ištrintos ir neatkuriamos.</value></data>
-<data name="Moderation.description-approved.Subject" xml:space="preserve"><value>Lietuva 2.0: kreipimosi dėl {0} aprašymas pakeistas</value></data>
-<data name="Moderation.description-approved.Body" xml:space="preserve"><value>moderatorius patvirtino jūsų pasiūlytą kreipimosi dėl projekto {0} aprašymo pakeitimą. Naujas aprašymas jau rodomas kreipimosi puslapyje, o ankstesnis – aprašymo istorijoje.</value></data>
-<data name="Moderation.description-returned.Subject" xml:space="preserve"><value>Lietuva 2.0: aprašymo pakeitimas dėl {0} grąžintas</value></data>
-<data name="Moderation.description-returned.Body" xml:space="preserve"><value>moderatorius grąžino jūsų pasiūlytą kreipimosi dėl projekto {0} aprašymo pakeitimą. Puslapyje lieka ankstesnis aprašymas. Galite pasiūlyti naują pakeitimą.</value></data>
-<data name="Moderation.description-corrected.Subject" xml:space="preserve"><value>Lietuva 2.0: moderatorius pataisė kreipimosi dėl {0} aprašymą</value></data>
-<data name="Moderation.description-corrected.Body" xml:space="preserve"><value>moderatorius pataisė jūsų kreipimosi dėl projekto {0} aprašymą. Naujas aprašymas jau rodomas kreipimosi puslapyje, o ankstesnis – aprašymo istorijoje. Jei nesutinkate, galite pasiūlyti kitą pakeitimą.</value></data>
+<data name="Moderation.reason-restored.Body" xml:space="preserve"><value>moderatorius atkūrė jūsų anksčiau paslėptą argumentą kreipimesi dėl projekto {0}. „Man svarbu“ žymos, buvusios prie jo, paslepiant buvo ištrintos ir neatkuriamos. Projekto puslapis: {1}</value></data>
 <data name="Moderation.Excerpt" xml:space="preserve"><value>Argumentas: „{0}“</value></data>
 <data name="Restriction.restricted.Subject" xml:space="preserve"><value>Lietuva 2.0: jūsų galimybė rašyti apribota</value></data>
-<data name="Restriction.restricted.Body" xml:space="preserve"><value>moderatorius apribojo jūsų galimybę rašyti Lietuva 2.0: kol apribojimas galioja, negalite rašyti argumentų, atidaryti kreipimųsi, taisyti jų aprašymų ir pranešti apie neteisingas datas.</value></data>
+<data name="Restriction.restricted.Body" xml:space="preserve"><value>moderatorius apribojo jūsų galimybę rašyti Lietuva 2.0: kol apribojimas galioja, negalite rašyti argumentų ir pranešti apie neteisingas datas.</value></data>
 <data name="Restriction.Until" xml:space="preserve"><value>Apribojimas galioja iki {0} imtinai.</value></data>
 <data name="Restriction.UntilLifted" xml:space="preserve"><value>Apribojimas galioja, kol jį atšauks moderatorius.</value></data>
-<data name="Restriction.Untouched" xml:space="preserve"><value>Prisijungti, nurodyti, ko prašote, žymėti „Man svarbu“ ir pranešti apie turinį galite kaip anksčiau. Jūsų jau parašyti argumentai ir kreipimaisi lieka.</value></data>
+<data name="Restriction.Untouched" xml:space="preserve"><value>Prisijungti, nurodyti, ko prašote, žymėti „Man svarbu“ ir pranešti apie turinį galite kaip anksčiau. Jūsų jau parašyti argumentai lieka.</value></data>
 <data name="Restriction.Contact" xml:space="preserve"><value>Jei nesutinkate, parašykite moderatoriams: {0}</value></data>
 <data name="Restriction.lifted.Subject" xml:space="preserve"><value>Lietuva 2.0: rašymo apribojimas atšauktas</value></data>
-<data name="Restriction.lifted.Body" xml:space="preserve"><value>moderatorius atšaukė jūsų rašymo apribojimą: vėl galite rašyti argumentus, atidaryti kreipimusis ir pranešti apie datas.</value></data>
+<data name="Restriction.lifted.Body" xml:space="preserve"><value>moderatorius atšaukė jūsų rašymo apribojimą: vėl galite rašyti argumentus ir pranešti apie datas.</value></data>
 <data name="Feedback.Reply.Subject" xml:space="preserve"><value>Lietuva 2.0: atsakymas į jūsų atsiliepimą</value></data>
 <data name="Feedback.Reply.Body" xml:space="preserve"><value>ačiū už atsiliepimą. Lietuva 2.0 komanda jums atsako.</value></data>
 <data name="Feedback.Reply.Yours" xml:space="preserve"><value>Jūs rašėte: „{0}“</value></data>
@@ -78,6 +60,29 @@
 <data name="Digest.NoReasons.for" xml:space="preserve"><value>  Argumentų už dar nėra.</value></data>
 <data name="Digest.NoReasons.against" xml:space="preserve"><value>  Argumentų prieš dar nėra.</value></data>
 <data name="Digest.NotAPoll" xml:space="preserve"><value>Tai nėra reprezentatyvi apklausa: skaičiai rodo savanoriškai dalyvaujančių Lietuva 2.0 naudotojų nuomonę.</value></data>
-<data name="Digest.PublicCopy" xml:space="preserve"><value>Ta pati suvestinė viešai: /suvestines/{0}</value></data>
+<data name="Digest.PublicCopy" xml:space="preserve"><value>Ta pati suvestinė viešai: {0}</value></data>
 <data name="Digest.Skipped" xml:space="preserve"><value>(Šiam Seimo nariui ši suvestinė nebūtų siunčiama: viršytas savaitės laiškų skaičius.)</value></data>
+<data name="Stage.presentation" xml:space="preserve"><value>pateikimas</value></data>
+<data name="Stage.consideration" xml:space="preserve"><value>svarstymas</value></data>
+<data name="Stage.adoption" xml:space="preserve"><value>priėmimas</value></data>
+<data name="Follow.Stage" xml:space="preserve"><value>Etapas: {0}.</value></data>
+<data name="Follow.Planned.Subject" xml:space="preserve"><value>Lietuva 2.0: {0} planuojamas Seime {1}</value></data>
+<data name="Follow.Planned.Body" xml:space="preserve"><value>jūsų sekamas projektas {0} įtrauktas į Seimo posėdžio darbotvarkės projektą.</value></data>
+<data name="Follow.Planned.Date" xml:space="preserve"><value>Planuojama {0}.</value></data>
+<data name="Follow.Planned.Moves" xml:space="preserve"><value>Seimo darbotvarkės dažnai keičiasi, todėl data dar gali pasikeisti.</value></data>
+<data name="Follow.BillLink" xml:space="preserve"><value>Projektas: {0}</value></data>
+<data name="Follow.Voted.Subject" xml:space="preserve"><value>Lietuva 2.0: Seimas balsavo dėl {0}</value></data>
+<data name="Follow.Voted.Body" xml:space="preserve"><value>{1} Seimas balsavo dėl jūsų sekamo projekto {0}.</value></data>
+<data name="Follow.Voted.Result" xml:space="preserve"><value>Rezultatas: už {0}, prieš {1}, susilaikė {2}.</value></data>
+<data name="Follow.Voted.Consensus" xml:space="preserve"><value>Pritarta bendru sutarimu, be balsavimo pagal asmenis.</value></data>
+<data name="Follow.Voted.Note" xml:space="preserve"><value>Seimo pastaba: {0}</value></data>
+<data name="Follow.Voted.Mps" xml:space="preserve"><value>Kaip balsavo jūsų sekami Seimo nariai:</value></data>
+<data name="Follow.Voted.Mp" xml:space="preserve"><value>– {0}: {1}</value></data>
+<data name="Choice.for" xml:space="preserve"><value>už</value></data>
+<data name="Choice.against" xml:space="preserve"><value>prieš</value></data>
+<data name="Choice.abstain" xml:space="preserve"><value>susilaikė</value></data>
+<data name="Choice.did-not-vote" xml:space="preserve"><value>nebalsavo</value></data>
+<data name="Choice.none" xml:space="preserve"><value>balsavimo pagal asmenis nebuvo</value></data>
+<data name="Follow.VoteLink" xml:space="preserve"><value>Balsavimo rezultatai: {0}</value></data>
+<data name="Follow.Footer" xml:space="preserve"><value>Šį laišką gavote, nes sekate šį projektą Lietuva 2.0. Ką sekate ir kokius laiškus gaunate, galite pakeisti savo paskyroje: {0}</value></data>
 </root>

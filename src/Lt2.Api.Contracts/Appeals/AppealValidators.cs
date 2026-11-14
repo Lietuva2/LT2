@@ -26,25 +26,15 @@ internal static class AppealValidation
             : rule.Must(t => t is null || t.Trim().Length <= AppealLimits.StatementMaxLength).WithMessage(l["Statement.TooLong"]);
 }
 
-public sealed class OpenAppealRequestValidator : AbstractValidator<OpenAppealRequest>
+/// <summary>The pasted official text for an AI draft (design 8.11.4): required, at most 20 000 characters, never cut.</summary>
+public sealed class DescriptionDraftRequestValidator : AbstractValidator<DescriptionDraftRequest>
 {
-    public OpenAppealRequestValidator(IStringLocalizer<ValidationMessages> l)
-    {
-        RuleFor(x => x.Description).Description(l);
-        RuleFor(x => x.Threshold).GreaterThan(0).WithMessage(l["Threshold.Positive"]);
-    }
-}
+    public const int SourceMaxLength = 20_000;
 
-public sealed class EditAppealRequestValidator : AbstractValidator<EditAppealRequest>
-{
-    public EditAppealRequestValidator(IStringLocalizer<ValidationMessages> l) =>
-        RuleFor(x => x.Description).Description(l);
-}
-
-public sealed class ThresholdRequestValidator : AbstractValidator<ThresholdRequest>
-{
-    public ThresholdRequestValidator(IStringLocalizer<ValidationMessages> l) =>
-        RuleFor(x => x.Threshold).GreaterThan(0).WithMessage(l["Threshold.Positive"]);
+    public DescriptionDraftRequestValidator(IStringLocalizer<ValidationMessages> l) =>
+        RuleFor(x => x.SourceText).Cascade(CascadeMode.Stop)
+            .Must(t => !string.IsNullOrWhiteSpace(t)).WithMessage(l["Draft.SourceRequired"])
+            .Must(t => t.Length <= SourceMaxLength).WithMessage(l["Draft.SourceTooLong"]);
 }
 
 public sealed class PositionRequestValidator : AbstractValidator<PositionRequest>
@@ -67,7 +57,7 @@ public sealed class ReportRequestValidator : AbstractValidator<ReportRequest>
     {
         RuleFor(x => x.TargetKind).Must(k => AppealLimits.ReportTargets.Contains(k)).WithMessage(l["Report.Target"]);
         RuleFor(x => x.TargetId).NotEmpty().WithMessage(l["Report.Target"]);
-        RuleFor(x => x.Ground).Must(g => AppealLimits.ReportGrounds.Contains(g)).WithMessage(l["Report.Ground"]);
+        RuleFor(x => x.Ground).Must((x, g) => AppealLimits.ReportGroundsFor(x.TargetKind).Contains(g)).WithMessage(l["Report.Ground"]);
         RuleFor(x => x.Text).Must(t => t is null || t.Trim().Length <= AppealLimits.ReportTextMaxLength).WithMessage(l["Report.TooLong"]);
     }
 }
@@ -105,6 +95,9 @@ public sealed class ModeratorDescriptionRequestValidator : AbstractValidator<Mod
     {
         RuleFor(x => x.Description).Description(l);
         RuleFor(x => (string?)x.Statement).Statement(l, required: true).OverridePropertyName("statement");
+
+        // Design 8.13 (decided 2026-11-14): empty, or https on lrs.lt or under it, no user info, at most 500 characters.
+        RuleFor(x => x.DescriptionUrl).Must(OfficialTextAddress.IsAcceptable).WithMessage(l["DescriptionUrl.Invalid"]).OverridePropertyName("descriptionUrl");
     }
 }
 

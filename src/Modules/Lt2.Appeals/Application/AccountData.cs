@@ -9,12 +9,16 @@ namespace Lt2.Appeals.Application;
 /// <summary><see cref="IAccountData"/>: one person's data in the appeals schema, for export and deletion (design 6.5).</summary>
 internal sealed class AccountData(IDbContextFactory<AppealsDb> contexts, IPositionErasure positions) : IAccountData
 {
+    public string Section => "appeals";
+
     public async Task<object> ExportAsync(Guid userId, CancellationToken cancellationToken)
     {
         await using var db = await contexts.CreateDbContextAsync(cancellationToken);
         var bills = await db.Appeals.AsNoTracking().ToDictionaryAsync(a => a.Id, a => a.BillNumber, cancellationToken);
+
+        // Only from before 2026-11-14 (design 8.12.4): appeals whose proposal the person wrote.
         var appeals = await db.Appeals.AsNoTracking().Where(a => a.InitiatorUserId == userId)
-            .Select(a => new { bill = a.BillNumber, a.Description, a.Status, a.OpenedAt, a.Threshold }).ToListAsync(cancellationToken);
+            .Select(a => new { bill = a.BillNumber, a.Description, a.Status, a.OpenedAt }).ToListAsync(cancellationToken);
         var myPositions = (await db.Positions.AsNoTracking().Where(p => p.UserId == userId).ToListAsync(cancellationToken))
             .Select(p => new { bill = bills.GetValueOrDefault(p.AppealId), side = p.Side, takenAt = p.CreatedAt, changedAt = p.ChangedAt });
         var reasons = (await db.Reasons.AsNoTracking().Where(r => r.AuthorUserId == userId).ToListAsync(cancellationToken))
@@ -31,7 +35,16 @@ internal sealed class AccountData(IDbContextFactory<AppealsDb> contexts, IPositi
         // Restrictions on the person's writing (design 8.3): the person's own data, without who set or lifted them.
         var restrictions = (await db.WritingRestrictions.AsNoTracking().Where(w => w.UserId == userId).ToListAsync(cancellationToken))
             .Select(w => new { until = Domain.WritingRules.Until(w.EndsAt), statement = w.Statement, setAt = w.SetAt, liftedAt = w.LiftedAt, liftStatement = w.LiftStatement });
-        return new { appealsOpened = appeals, positions = myPositions, reasons, endorsements, reports, dateFlags = flags, writingRestrictions = restrictions };
+
+
+        // A moderator's own requests for AI drafts (design 8.11.4): bill and time only, as audited.
+        var drafts = await db.AiDraftRequests.AsNoTracking().Where(r => r.ModeratorUserId == userId).OrderBy(r => r.RequestedAt)
+            .Select(r => new { bill = r.BillNumber, requestedAt = r.RequestedAt }).ToListAsync(cancellationToken);
+        return new
+        {
+            appealsOpened = appeals, positions = myPositions, reasons, endorsements, reports, dateFlags = flags, writingRestrictions = restrictions,
+            aiDraftRequests = drafts,
+        };
     }
 
     public async Task EraseAsync(Guid userId, DbTransaction transaction, CancellationToken cancellationToken)
@@ -52,6 +65,9 @@ internal sealed class AccountData(IDbContextFactory<AppealsDb> contexts, IPositi
 
             // With the account (design 8.3); no hash of the address is kept anywhere.
             "DELETE FROM appeals.writing_restriction WHERE user_id = @user",
+
+            // A moderator's draft requests go with the account (design 8.11.4).
+            "DELETE FROM appeals.ai_draft_request WHERE moderator_user_id = @user",
         })
         {
 #pragma warning disable CA2100 // Constant SQL.

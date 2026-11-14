@@ -2,25 +2,26 @@ namespace Lt2.Api.Contracts.Appeals;
 
 public sealed record QueueReportResponse(Guid Id, string Ground, string? Text, DateTimeOffset CreatedAt);
 
-/// <summary>An appeal waiting for a moderator, or a published one that was reported.</summary>
+/// <summary>
+/// A bill's record in the moderators' queue (design 8.12.3): reported, flagged about its date, surging, held, or under its
+/// threshold on the agenda with at least one participant. <c>Threshold</c> is the one that applies. A report on the record is
+/// about its description; <c>DescriptionSource</c> (<c>ai</c> for an AI summary nobody has read) decides its actions, and
+/// <c>DescriptionUrl</c> is the address the description form starts from (design 8.13).
+/// </summary>
 public sealed record QueueAppealResponse(
     Guid Id,
     BillRefResponse Bill,
-    string Status,
-    string? InitiatorName,
     string Description,
+    string? DescriptionSource,
     int Threshold,
-    IReadOnlyList<string> Flags,
     IReadOnlyList<QueueReportResponse> Reports,
-    DateTimeOffset OpenedAt,
-    SurgeResponse? Surge = null,
-    PlannedDateResponse? Planned = null,
-    IReadOnlyList<QueueFlagResponse>? DateFlags = null,
-    bool UnderThresholdOnAgenda = false,
-    bool Held = false,
-    int ProposalsOnBill = 0,
-    int Participants = 0,
-    int EffectiveThreshold = 0);
+    SurgeResponse? Surge,
+    PlannedDateResponse? Planned,
+    IReadOnlyList<QueueFlagResponse> DateFlags,
+    bool UnderThresholdOnAgenda,
+    bool Held,
+    int Participants,
+    string? DescriptionUrl);
 
 public sealed record QueueFlagResponse(Guid Id, string Kind, string Link, string? Note, DateTimeOffset CreatedAt);
 
@@ -51,12 +52,11 @@ public sealed record QueueReasonResponse(
     DateTimeOffset CreatedAt);
 
 /// <summary>
-/// A hidden appeal (design 8.3): who hid it, when and why. <c>RestoresAs</c> is the status "Atkurti" gives it (open,
-/// closed or pending); <c>RefusedBecause</c> the code a restore would be refused with now, or null.
+/// A hidden bill record (design 8.12.3): who hid it, when and why. <c>RestoresAs</c> is the status "Atkurti" gives it (open
+/// or closed).
 /// </summary>
 public sealed record HiddenAppealResponse(
-    Guid Id, BillRefResponse Bill, string? InitiatorName, string Description, DateTimeOffset? HiddenAt, string? HiddenBy, string? Statement,
-    string RestoresAs, string? RefusedBecause);
+    Guid Id, BillRefResponse Bill, string Description, DateTimeOffset? HiddenAt, string? HiddenBy, string? Statement, string RestoresAs);
 
 /// <summary>A hidden reason; <c>Restorable</c> while its appeal is open.</summary>
 public sealed record HiddenReasonResponse(
@@ -65,23 +65,16 @@ public sealed record HiddenReasonResponse(
 /// <summary>The moderators' list of hidden appeals and reasons (design 8.3), newest hide first. Holds no position.</summary>
 public sealed record HiddenItemsResponse(IReadOnlyList<HiddenAppealResponse> Appeals, IReadOnlyList<HiddenReasonResponse> Reasons);
 
-/// <summary>A proposed description change (design 8.1): the approved text and the proposed one, side by side.</summary>
-public sealed record QueueDescriptionChangeResponse(
-    Guid Id, Guid AppealId, BillRefResponse Bill, string? InitiatorName, string CurrentText, string ProposedText, IReadOnlyList<string> Flags, DateTimeOffset CreatedAt);
+/// <summary>The moderators' queue (design 8.12.3). Holds no position of anyone.</summary>
+public sealed record ModerationQueueResponse(IReadOnlyList<QueueAppealResponse> Appeals, IReadOnlyList<QueueReasonResponse> Reasons);
 
-/// <summary>The moderators' queue (design 8.3). Holds no position of anyone.</summary>
-public sealed record ModerationQueueResponse(
-    IReadOnlyList<QueueAppealResponse> Appeals,
-    IReadOnlyList<QueueReasonResponse> Reasons,
-    IReadOnlyList<QueueDescriptionChangeResponse>? DescriptionChanges = null);
-
-/// <summary>Publishing: the statement to the author is optional.</summary>
+/// <summary>Publishing an argument or keeping something as it is: the statement is optional.</summary>
 public sealed record ModerationRequest
 {
     public string? Statement { get; init; }
 }
 
-/// <summary>Returning or hiding: the statement of reasons sent to the author is required (design 8.3).</summary>
+/// <summary>Hiding, restoring and the other actions: the statement of reasons is required (design 8.3).</summary>
 public sealed record StatementRequest
 {
     public string Statement { get; init; } = "";
@@ -91,24 +84,53 @@ public sealed record ModeratorThresholdRequest
 {
     public int Threshold { get; init; }
 
-    /// <summary>Shown on the appeal page with the new number (design 8.4).</summary>
+    /// <summary>Shown on the bill's page with its own number (design 8.12.2).</summary>
     public string Statement { get; init; } = "";
 }
 
-/// <summary>A moderator's correction of an open appeal's description (design 8.1); the statement goes to the initiator.</summary>
+/// <summary>
+/// A moderator writes or corrects a bill's description (design 8.12.3, 8.13), on any active bill. The statement is
+/// required and audited. <c>FromDraft</c>: the text started from an AI draft asked for on this bill (8.11.4); the page then
+/// says "Sukurta DI · taisė žmonės". <c>DescriptionUrl</c> is the official text's address ("Oficialaus teksto adresas",
+/// decided by the owner on 2026-11-14): it becomes the record's address, and empty or absent clears it; the form fills it in
+/// advance with the address the record has, so leaving it alone keeps it (<see cref="OfficialTextAddress"/>).
+/// </summary>
 public sealed record ModeratorDescriptionRequest
 {
     public string Description { get; init; } = "";
 
     public string Statement { get; init; } = "";
+
+    public bool FromDraft { get; init; }
+
+    public string? DescriptionUrl { get; init; }
 }
 
 /// <summary>
-/// The state a moderator's controls on the appeal page need (design 8.3): which actions apply. Holds no position and no
-/// person.
+/// The state a moderator's controls on the bill's page need (design 8.12.3): which actions apply, and the bill's waiting
+/// and published arguments as the queue shows them (arguments are moderated on the bill's page too, decided 2026-11-14).
+/// <c>Id</c> is the bill's record, null while it has none (an action creates it). <c>DescriptionUrl</c> is the address the
+/// description form starts from; <c>DescriptionReports</c> the open reports about the description, as the queue shows them
+/// (decided by the owner on 2026-11-14). Moderators only; holds no position and nothing about who reported.
 /// </summary>
-public sealed record ModerationAppealResponse(
-    Guid Id, string Status, string Description, int Threshold, bool Held, PlannedDateResponse? Planned, bool HasOpenItems);
+public sealed record ModerationBillResponse(
+    Guid? Id, string Number, string Status, string Description, string? DescriptionSource, int Threshold, string ThresholdSetBy, bool Held,
+    PlannedDateResponse? Planned, bool HasOpenItems, IReadOnlyList<QueueReasonResponse> Reasons,
+    string? DescriptionUrl, IReadOnlyList<QueueReportResponse> DescriptionReports);
+
+/// <summary>The bill's record a moderator acts on (design 8.12.1: found, or created on an active bill).</summary>
+public sealed record BillRecordResponse(Guid Id);
+
+/// <summary>Whether an AI draft can be asked for (design 8.11.4): false until a provider is configured.</summary>
+public sealed record AiStatusResponse(bool DraftAvailable);
+
+/// <summary>The official text a moderator pasted (the relevant part of the explanatory note), at most 20 000 characters.</summary>
+public sealed record DescriptionDraftRequest
+{
+    public string SourceText { get; init; } = "";
+}
+
+public sealed record DescriptionDraftResponse(string Draft);
 
 public sealed record MergeReasonRequest
 {
@@ -133,21 +155,18 @@ public sealed record RestrictionCreatedResponse(Guid Id);
 /// <summary>An argument on the author's screen for a moderator. Its side is the argument's, public anyway; never the person's.</summary>
 public sealed record AuthorReasonResponse(Guid Id, string BillNumber, string Side, string Text, string Status, DateTimeOffset CreatedAt);
 
-public sealed record AuthorAppealResponse(Guid Id, string BillNumber, string Status, DateTimeOffset OpenedAt);
-
-/// <summary>An earlier moderation action on the person's arguments, appeals or restrictions.</summary>
+/// <summary>An earlier moderation action on the person's arguments or restrictions.</summary>
 public sealed record ModerationEntryResponse(string TargetKind, string Action, string? Statement, DateTimeOffset At);
 
 /// <summary>A writing restriction for moderators; <c>Holds</c> is whether it applies now; <c>Until</c> null = until lifted.</summary>
 public sealed record RestrictionResponse(Guid Id, string? DisplayName, DateOnly? Until, string Statement, DateTimeOffset SetAt, bool Holds, DateTimeOffset? LiftedAt, string? LiftStatement);
 
 /// <summary>
-/// What a moderator sees before restricting a person (design 8.3): the display name, their arguments and appeals, earlier
-/// actions and restrictions. No address, no side of the person, no mark, no account id.
+/// What a moderator sees before restricting a person (design 8.3): the display name, their arguments, earlier actions and
+/// restrictions. No address, no side of the person, no mark, no account id.
 /// </summary>
 public sealed record AuthorViewResponse(
     string? DisplayName,
     IReadOnlyList<AuthorReasonResponse> Reasons,
-    IReadOnlyList<AuthorAppealResponse> Appeals,
     IReadOnlyList<ModerationEntryResponse> Actions,
     IReadOnlyList<RestrictionResponse> Restrictions);

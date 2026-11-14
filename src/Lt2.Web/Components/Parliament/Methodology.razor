@@ -76,6 +76,28 @@
         <p>@A["Method.Reasons.1"]</p>
     </section>
 
+    @* Design 8.13: how descriptions are made, what the labels mean, how to report an error. The paragraph on AI summaries
+       is shown only while the summary job can make them, so nothing promises a summary otherwise. *@
+    <section class="stack" aria-labelledby="m-descriptions" id="aprasymai">
+        <h2 id="m-descriptions">@A["Method.Descriptions"]</h2>
+        <p>@A["Method.Descriptions.1"]</p>
+        <h3 id="m-description-labels">@A["Method.Descriptions.Labels"]</h3>
+        <dl class="facts" id="description-labels">
+            <dt>@A["What.Source.ai"]</dt><dd>@A["Method.Descriptions.ai"]</dd>
+            <dt>@A["What.Source.ai-draft"]</dt><dd>@A["Method.Descriptions.ai-draft"]</dd>
+            <dt>@A["What.Source.moderator"]</dt><dd>@A["Method.Descriptions.moderator"]</dd>
+            <dt>@A["Method.Descriptions.InitiatorLabel"]</dt><dd>@A["Method.Descriptions.initiator"]</dd>
+        </dl>
+        @if (_limits is { AiSummaries: true })
+        {
+            <p id="ai-summaries">@A["Method.Descriptions.Job"]</p>
+        }
+        @* Design 8.13 (decided 2026-11-14): the page names both public prompts, the moderator's draft's and the job's. *@
+        <p id="ai-prompts">@Fmt("Method.Descriptions.Prompts", DraftPrompt, SummaryPrompt)</p>
+        <p id="report-description">@A["Method.Descriptions.Report"]</p>
+        <p>@A["Method.Descriptions.NotSent"]</p>
+    </section>
+
     @if (_limits is { } l)
     {
         @* Design 8.2: the per-person limits are runtime settings; 0 means no limit (the default), said in words. *@
@@ -96,6 +118,10 @@
 </div>
 
 @code {
+    /// <summary>The public prompts in the repository (design 8.11.4, 8.13), as the Appeals module embeds them.</summary>
+    private const string DraftPrompt = "src/Modules/Lt2.Appeals/Ai/description-draft.prompt.md";
+    private const string SummaryPrompt = "src/Modules/Lt2.Appeals/Ai/description-summary.prompt.md";
+
     private DateTimeOffset? _lastSuccess;
     private Lt2.Api.Contracts.Digests.DigestRulesResponse? _rules;
     private Lt2.Api.Contracts.Appeals.AppealRulesResponse? _limits;

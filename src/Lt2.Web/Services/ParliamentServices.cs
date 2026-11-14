@@ -13,7 +13,7 @@ namespace Lt2.Web.Services;
 /// The parliament reads both the HTTP endpoints and the server-rendered pages use: the module's answers mapped to the
 /// API contracts, or <c>not-found</c>.
 /// </summary>
-internal sealed class ParliamentReads(IParliamentQueries queries)
+internal sealed class ParliamentReads(IParliamentQueries queries, IPlannedAgenda agenda)
 {
     public const string ImportSource = "seimas-open-data";
     private static readonly Error NotFound = Error.NotFound("not-found");
@@ -60,8 +60,20 @@ internal sealed class ParliamentReads(IParliamentQueries queries)
         return new BillListResponse(page.Items.Select(b => new BillListItem(b.Number, b.Title, b.LastVoteAt)).ToList(), page.Total, page.NextCursor);
     }
 
-    public async Task<Result<BillResponse>> BillAsync(string number, CancellationToken ct) =>
-        await queries.BillAsync(number, ct) is { } b ? new BillResponse(b.Number, b.Title, b.ESeimasUrl, b.Votes.Select(Map).ToList()) : NotFound;
+    public async Task<Result<BillResponse>> BillAsync(string number, CancellationToken ct)
+    {
+        if (await queries.BillAsync(number, ct) is not { } b)
+        {
+            return NotFound;
+        }
+
+        var planned = (await agenda.ForBillsAsync([b.Number], ct)).GetValueOrDefault(b.Number);
+        return new BillResponse(b.Number, b.Title, b.ESeimasUrl, b.Votes.Select(Map).ToList(), AppealMapping.Map(planned));
+    }
+
+    /// <summary>A vote summary as the API writes it (the agenda's recent stage results use it too).</summary>
+    public static VoteTotalsResponse Totals(VoteSummary v) =>
+        new(v.Totals.For, v.Totals.Against, v.Totals.Abstain, v.Totals.Voted, v.Totals.Seats);
 
     public async Task<Result<VoteResponse>> VoteAsync(long id, CancellationToken ct) =>
         await queries.VoteAsync(id, ct) is { } v

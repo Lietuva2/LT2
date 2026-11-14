@@ -1,28 +1,48 @@
 namespace Lt2.Appeals.Domain;
 
-/// <summary><c>appeals.appeal</c>: the one object per bill where people take sides (design 5.3, 8.1).</summary>
+/// <summary>
+/// <c>appeals.appeal</c>: the bill's record, the Appeals module's own record of what people did on one Seimas bill (design
+/// 5.3, 8.12.1). One per bill (open, closed or hidden), created when first needed: the first side, argument or description,
+/// or a moderator's action on the bill. Nobody proposes, opens or approves it, and nothing public says who was first.
+/// </summary>
 internal sealed class Appeal
 {
     public Guid Id { get; set; }
 
-    /// <summary>
-    /// The Seimas bill number, the natural key of a bill (design 3). One published (open or closed) appeal per bill; before
-    /// that, several proposals, one waiting or returned per person (design 8.1).
-    /// </summary>
+    /// <summary>The Seimas bill number, the natural key of a bill (design 3). One record per bill (design 8.12.1).</summary>
     public string BillNumber { get; set; } = "";
 
-    public Guid InitiatorUserId { get; set; }
+    /// <summary>
+    /// Only on records from before 2026-11-14: the member whose proposal was published. Shown beside the description they
+    /// wrote ("Aprašymą parašė …") while it is theirs, and gives them no rights (design 8.12.4). Null on every new record.
+    /// </summary>
+    public Guid? InitiatorUserId { get; set; }
 
-    /// <summary>The initiator's neutral description of what the bill changes; approved by a moderator (design 8.2).</summary>
+    /// <summary>What the bill is about (design 8.13); empty while no description has been made.</summary>
     public string Description { get; set; } = "";
 
-    /// <summary>See <see cref="AppealStatuses"/>.</summary>
-    public string Status { get; set; } = AppealStatuses.Pending;
+    /// <summary>Who made the description: see <see cref="DescriptionSources"/>; null while there is none.</summary>
+    public string? DescriptionSource { get; set; }
 
-    /// <summary>When the initiator opened it.</summary>
+    /// <summary>
+    /// The address of the official text the description was made from, when known (design 8.13): set by the summary job,
+    /// kept while a moderator confirms or corrects that text, cleared when it is removed. Null for a moderator's own text.
+    /// </summary>
+    public string? DescriptionUrl { get; set; }
+
+    /// <summary>When the description's text was last made or changed (design 8.13: "the day it was made"); null without one.</summary>
+    public DateTimeOffset? DescriptionAt { get; set; }
+
+    /// <summary>See <see cref="AppealStatuses"/>.</summary>
+    public string Status { get; set; } = AppealStatuses.Open;
+
+    /// <summary>When the record was created.</summary>
     public DateTimeOffset OpenedAt { get; set; }
 
-    /// <summary>When a moderator published it.</summary>
+    /// <summary>
+    /// Since when people could take part: the creation time on a new record, the publication time on one from before
+    /// 2026-11-14. The daily aggregates start from it.
+    /// </summary>
     public DateTimeOffset? PublishedAt { get; set; }
 
     public DateTimeOffset? ClosedAt { get; set; }
@@ -30,7 +50,7 @@ internal sealed class Appeal
     /// <summary>The final Seimas vote that closed it.</summary>
     public long? ClosingVoteId { get; set; }
 
-    /// <summary>The counts frozen when the appeal closed (design 8.1); null while open.</summary>
+    /// <summary>The counts frozen when the record closed (design 8.1); null while open.</summary>
     public int? ClosedFor { get; set; }
 
     public int? ClosedForOlderThan30Days { get; set; }
@@ -42,115 +62,117 @@ internal sealed class Appeal
     /// <summary><c>automatic</c> or <c>held</c> (design 8.4; used by the summaries).</summary>
     public string Sending { get; set; } = "automatic";
 
-    public int Threshold { get; set; }
+    /// <summary>A moderator's own number for this bill (design 8.12.2); null = the default threshold of all bills.</summary>
+    public int? Threshold { get; set; }
 
     /// <summary>See <see cref="ThresholdSetters"/>.</summary>
-    public string ThresholdSetBy { get; set; } = ThresholdSetters.Initiator;
+    public string ThresholdSetBy { get; set; } = ThresholdSetters.Default;
 
-    /// <summary>A moderator's reason for changing the threshold, shown on the appeal page (design 8.4).</summary>
+    /// <summary>A moderator's public statement for setting the bill's own threshold, shown on the bill's page (design 8.4).</summary>
     public string? ThresholdNote { get; set; }
 
-    /// <summary>When the appeal first entered a summary; from then on the initiator cannot change the threshold.</summary>
+    /// <summary>When the bill first entered a summary really sent to MPs; from then on it stays eligible (design 8.12.2).</summary>
     public DateTimeOffset? FirstSummarisedAt { get; set; }
-
-    /// <summary>The moderator's note when the appeal was returned to its initiator.</summary>
-    public string? ReturnNote { get; set; }
-
-    /// <summary>What pre-screening flagged in the description, for the moderator.</summary>
-    public string[] ScreeningFlags { get; set; } = [];
 
     public DateTimeOffset ChangedAt { get; set; }
 }
 
 internal static class AppealStatuses
 {
-    /// <summary>Waiting for a moderator; visible only to the initiator.</summary>
-    public const string Pending = "pending";
-
-    /// <summary>Returned to the initiator with a note; visible only to the initiator, who may edit and send it again.</summary>
-    public const string Returned = "returned";
-
-    /// <summary>Published: anyone can read it, members can take a side.</summary>
+    /// <summary>People can take a side, write and mark arguments.</summary>
     public const string Open = "open";
 
-    /// <summary>The Seimas took the final vote (second half of M2a).</summary>
+    /// <summary>The Seimas took the final vote: the counts are frozen (design 8.1).</summary>
     public const string Closed = "closed";
 
-    /// <summary>Hidden by a moderator. The bill may get a new appeal.</summary>
+    /// <summary>
+    /// Hidden by a moderator: taking part on the bill is closed; sides and arguments are kept unseen and come back with
+    /// "Atkurti" (design 8.12.3).
+    /// </summary>
     public const string Rejected = "rejected";
 
-    /// <summary>A proposal closed because another proposal on the same bill was published (design 8.1). Visible to nobody.</summary>
+    /// <summary>
+    /// Only rows from before 2026-11-14 that are no longer a bill's record: proposals that were waiting, returned or closed
+    /// when the proposals went (design 8.12.4), and older hidden appeals on a bill that has another record. Shown to nobody.
+    /// </summary>
     public const string Superseded = "superseded";
 }
 
-/// <summary>
-/// <c>appeals.description_change</c>: the initiator's proposed new description of a published appeal (design 8.1). The
-/// page keeps the approved text until a moderator approves this one; at most one pending per appeal.
-/// </summary>
-internal sealed class DescriptionChange
-{
-    public Guid Id { get; set; }
-
-    public Guid AppealId { get; set; }
-
-    public string Text { get; set; } = "";
-
-    /// <summary>See <see cref="DescriptionChangeStatuses"/>.</summary>
-    public string Status { get; set; } = DescriptionChangeStatuses.Pending;
-
-    /// <summary>The moderator's note: optional on approval, required when returned.</summary>
-    public string? Note { get; set; }
-
-    public string[] ScreeningFlags { get; set; } = [];
-
-    public DateTimeOffset CreatedAt { get; set; }
-
-    public DateTimeOffset? DecidedAt { get; set; }
-}
-
-internal static class DescriptionChangeStatuses
-{
-    public const string Pending = "pending";
-    public const string Approved = "approved";
-    public const string Returned = "returned";
-}
-
-/// <summary>Design 8.1 (decided 2026-11-13): who may propose a new description, and when.</summary>
-internal static class DescriptionChangeRules
-{
-    /// <summary>
-    /// The initiator of an open appeal (not a closed one) proposes a new description, one pending at a time, and it must
-    /// differ from the text shown now.
-    /// </summary>
-    public static string? CheckProposal(string appealStatus, bool isInitiator, bool hasPending, string currentText, string proposedText)
-    {
-        if (!isInitiator)
-        {
-            return "appeal.initiator-only";
-        }
-
-        if (appealStatus != AppealStatuses.Open)
-        {
-            return "appeal.not-open";
-        }
-
-        if (hasPending)
-        {
-            return "description-change.pending";
-        }
-
-        return currentText == proposedText ? "description.unchanged" : null;
-    }
-
-    /// <summary>A moderator decides a pending change only while its appeal is open.</summary>
-    public static string? CheckDecision(string changeStatus, string appealStatus) =>
-        changeStatus == DescriptionChangeStatuses.Pending && appealStatus == AppealStatuses.Open ? null : "moderation.wrong-state";
-}
-
+/// <summary>Who set the threshold that applies to a bill (design 8.12.2).</summary>
 internal static class ThresholdSetters
+{
+    /// <summary>The default threshold of all bills, <c>Digest:ThresholdDefault</c>, read when it is used.</summary>
+    public const string Default = "default";
+
+    public const string Moderator = "moderator";
+}
+
+/// <summary>
+/// Who made a bill's description (design 5.3, 8.13): an initiator before 2026-11-14 (approved by a moderator), a moderator,
+/// a moderator starting from AI text, or the summary job alone. An <see cref="AiDraft"/> description keeps its label
+/// "Sukurta DI · taisė žmonės" when a moderator corrects it later; an <see cref="Ai"/> one becomes <see cref="AiDraft"/>
+/// once a moderator confirms or corrects it.
+/// </summary>
+internal static class DescriptionSources
 {
     public const string Initiator = "initiator";
     public const string Moderator = "moderator";
+    public const string AiDraft = "ai-draft";
+
+    /// <summary>Made by the summary job from official text; no person has read it ("Sukurta DI · žmonių neperžiūrėta").</summary>
+    public const string Ai = "ai";
+}
+
+/// <summary>
+/// <c>appeals.summary_attempt</c>: the summary job's last try on a bill (design 8.13), one row per bill: when, how it
+/// ended, and when the bill may be tried again. Never a text. A bill gets a row even while it has no record.
+/// </summary>
+internal sealed class SummaryAttempt
+{
+    public string BillNumber { get; set; } = "";
+
+    public DateTimeOffset TriedAt { get; set; }
+
+    /// <summary>See <see cref="SummaryOutcomes"/>.</summary>
+    public string Outcome { get; set; } = "";
+
+    /// <summary>Whether the provider was asked: only those tries count towards <c>Ai:SummariesPerDay</c>.</summary>
+    public bool AskedProvider { get; set; }
+
+    public DateTimeOffset RetryAfter { get; set; }
+}
+
+/// <summary>How a summary job's try on a bill ended (design 8.13).</summary>
+internal static class SummaryOutcomes
+{
+    /// <summary>A summary was stored as the bill's description.</summary>
+    public const string Made = "made";
+
+    /// <summary>The official text could not be read (or was longer than the provider is given).</summary>
+    public const string Unavailable = "unavailable";
+
+    /// <summary>The provider said the text is not enough to tell what the bill changes; nothing was stored.</summary>
+    public const string Insufficient = "insufficient";
+
+    /// <summary>The provider refused, cut off or failed; nothing was stored.</summary>
+    public const string Failed = "failed";
+
+    /// <summary>A person wrote or removed the description meanwhile; nothing was stored.</summary>
+    public const string Overtaken = "overtaken";
+}
+/// <summary>
+/// <c>appeals.ai_draft_request</c>: that a moderator asked for an AI draft of a description (design 8.11.4): who, which
+/// bill, when; never the texts. For the hourly limit and for accepting a description as started from a draft.
+/// </summary>
+internal sealed class AiDraftRequest
+{
+    public Guid Id { get; set; }
+
+    public Guid ModeratorUserId { get; set; }
+
+    public string BillNumber { get; set; } = "";
+
+    public DateTimeOffset RequestedAt { get; set; }
 }
 
 /// <summary>
@@ -205,7 +227,7 @@ internal sealed class Reason
 
 internal static class ReasonStatuses
 {
-    /// <summary>Flagged by pre-screening, or the initiator's first argument: waits for a moderator, visible to its author.</summary>
+    /// <summary>Flagged by pre-screening: waits for a moderator, visible to its author.</summary>
     public const string Pending = "pending";
 
     public const string Published = "published";

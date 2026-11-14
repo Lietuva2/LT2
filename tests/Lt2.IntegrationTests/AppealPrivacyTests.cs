@@ -42,7 +42,7 @@ public sealed class AppealPrivacyTests(DatabaseFixture database) : ApiTest(datab
         var (moderator, administrator) = await StaffAsync();
         var (initiator, _) = await Factory.MemberAsync();
         using var _i = initiator;
-        await Database.OpenPublishedAsync(initiator, moderator.Browser, AppealSteps.ThirdBill, "against");
+        await Database.PrepareBillAsync(initiator, moderator.Browser, AppealSteps.ThirdBill, "against");
         var (secret, secretEmail) = await Factory.MemberAsync("Slapta Pozicija");
         using var _s = secret;
         (await secret.TakeSideAsync(AppealSteps.ThirdBill, "for")).StatusCode.ShouldBe(HttpStatusCode.NoContent);
@@ -64,7 +64,7 @@ public sealed class AppealPrivacyTests(DatabaseFixture database) : ApiTest(datab
             AppealRoutes.Appeals, AppealRoutes.AppealOf(AppealSteps.ThirdBill), AppealRoutes.MineOf(AppealSteps.ThirdBill), AppealRoutes.Rules,
             AppealRoutes.ModerationQueue, ApiRoutes.Admin.Settings, ApiRoutes.Me.Root, ApiRoutes.Me.Sessions,
             AppealRoutes.HistoryOf(AppealSteps.ThirdBill), Lt2.Api.Contracts.Digests.DigestRoutes.Digests, Lt2.Api.Contracts.Digests.DigestRoutes.Rules,
-            ApiRoutes.Me.PartySupport, ApiRoutes.Me.Export, "/kreipimaisi", "/seimas/XVP-0618/kreipimasis", "/suvestines", "/moderavimas",
+            ApiRoutes.Me.PartySupport, ApiRoutes.Me.Export, "/kreipimaisi", "/seimas/XVP-0618", "/suvestines", "/moderavimas",
             ApiRoutes.Me.Invitation, ApiRoutes.Admin.Invitations, "/sveiki", "/administravimas/kvietimai",
             Lt2.Api.Contracts.Feedback.FeedbackRoutes.Staff, "/atsiliepimai", "/moderavimas/atsiliepimai",
         };
@@ -102,7 +102,7 @@ public sealed class AppealPrivacyTests(DatabaseFixture database) : ApiTest(datab
         var (moderator, administrator) = await StaffAsync();
         var (initiator, _) = await Factory.MemberAsync("Iniciatorė Prieš");
         using var _i = initiator;
-        await Database.OpenPublishedAsync(initiator, moderator.Browser, AppealSteps.ThirdBill, "against");
+        await Database.PrepareBillAsync(initiator, moderator.Browser, AppealSteps.ThirdBill, "against");
         var (other, _) = await Factory.MemberAsync("Ona Kitapusė");
         using var _o = other;
         (await other.TakeSideAsync(AppealSteps.ThirdBill, "against")).StatusCode.ShouldBe(HttpStatusCode.NoContent);
@@ -157,7 +157,7 @@ public sealed class AppealPrivacyTests(DatabaseFixture database) : ApiTest(datab
             AppealRoutes.Appeals, AppealRoutes.AppealOf(AppealSteps.ThirdBill), AppealRoutes.HistoryOf(AppealSteps.ThirdBill),
             Lt2.Api.Contracts.Digests.DigestRoutes.Digests, AppealRoutes.ModerationQueue,
         };
-        var pages = new[] { "/seimas/XVP-0618/kreipimasis", "/kreipimaisi", "/moderavimas" };
+        var pages = new[] { "/seimas/XVP-0618", "/kreipimaisi", "/moderavimas" };
 
         foreach (var (who, browser) in viewers)
         {
@@ -195,7 +195,7 @@ public sealed class AppealPrivacyTests(DatabaseFixture database) : ApiTest(datab
         }
 
         // The page really shows all four, so the comparison above was made.
-        var page = await stranger.Client.GetStringAsync("/seimas/XVP-0618/kreipimasis");
+        var page = await stranger.Client.GetStringAsync("/seimas/XVP-0618");
         reasons.ShouldAllBe(r => Block(page, r.Id, texts) != null);
     }
 
@@ -220,7 +220,7 @@ public sealed class AppealPrivacyTests(DatabaseFixture database) : ApiTest(datab
         {
             var (initiator, _) = await Factory.MemberAsync("Iniciatorė Bet Kuri");
             using var _i = initiator;
-            await Database.OpenPublishedAsync(initiator, moderator.Browser, AppealSteps.ThirdBill, side: null);
+            await Database.PrepareBillAsync(initiator, moderator.Browser, AppealSteps.ThirdBill, side: null);
             if (initiatorSide is not null)
             {
                 (await initiator.TakeSideAsync(AppealSteps.ThirdBill, initiatorSide)).StatusCode.ShouldBe(HttpStatusCode.NoContent);
@@ -238,7 +238,7 @@ public sealed class AppealPrivacyTests(DatabaseFixture database) : ApiTest(datab
 
             (await stranger.AppealAsync(AppealSteps.ThirdBill)).Counts.ShouldBe(new SideCountsResponse(1, 0, 1, 0));
             var answers = new List<string>();
-            foreach (var uri in new[] { AppealRoutes.AppealOf(AppealSteps.ThirdBill), "/seimas/XVP-0618/kreipimasis", AppealRoutes.Appeals, "/kreipimaisi" })
+            foreach (var uri in new[] { AppealRoutes.AppealOf(AppealSteps.ThirdBill), "/seimas/XVP-0618", AppealRoutes.Appeals, "/kreipimaisi" })
             {
                 foreach (var viewer in new[] { stranger, moderator.Browser })
                 {
@@ -354,9 +354,9 @@ public sealed class AppealPrivacyTests(DatabaseFixture database) : ApiTest(datab
         foreach (var path in new[]
         {
             "/api/v1/appeals", "/api/v1/appeals/rules", "/api/v1/bills/{number}/appeal", "/api/v1/bills/{number}/appeal/mine",
-            "/api/v1/bills/{number}/appeal/threshold", "/api/v1/bills/{number}/appeal/position", "/api/v1/bills/{number}/appeal/reasons",
-            "/api/v1/bills/{number}/appeal/reasons/similar", "/api/v1/reasons/{id}/endorsement", "/api/v1/reasons/{id}", "/api/v1/reports", "/api/v1/me/writing-restriction", "/api/v1/moderation/reasons/{id}/author", "/api/v1/moderation/appeals/{id}/initiator", "/api/v1/moderation/reasons/{id}/restrict-author", "/api/v1/moderation/appeals/{id}/restrict-initiator", "/api/v1/moderation/restrictions", "/api/v1/moderation/restrictions/{id}/lift", "/api/v1/me/invitation", "/api/v1/me/invitation/replace", "/api/v1/admin/invitations", "/api/v1/admin/invitations/{id}/switch-off", "/api/v1/admin/invitations/{id}/switch-on", "/api/v1/feedback", "/api/v1/moderation/feedback", "/api/v1/moderation/feedback/{id}", "/api/v1/moderation/feedback/{id}/reply", "/api/v1/moderation/queue",
-            "/api/v1/moderation/appeals/{id}/publish", "/api/v1/moderation/appeals/{id}/return", "/api/v1/moderation/appeals/{id}/hide",
+            "/api/v1/bills/{number}/appeal/position", "/api/v1/bills/{number}/appeal/reasons",
+            "/api/v1/bills/{number}/appeal/reasons/similar", "/api/v1/reasons/{id}/endorsement", "/api/v1/reasons/{id}", "/api/v1/reports", "/api/v1/me/writing-restriction", "/api/v1/moderation/reasons/{id}/author", "/api/v1/moderation/reasons/{id}/restrict-author", "/api/v1/moderation/restrictions", "/api/v1/moderation/restrictions/{id}/lift", "/api/v1/me/invitation", "/api/v1/me/invitation/replace", "/api/v1/admin/invitations", "/api/v1/admin/invitations/{id}/switch-off", "/api/v1/admin/invitations/{id}/switch-on", "/api/v1/feedback", "/api/v1/moderation/feedback", "/api/v1/moderation/feedback/{id}", "/api/v1/moderation/feedback/{id}/reply", "/api/v1/moderation/queue",
+            "/api/v1/moderation/appeals/{id}/keep", "/api/v1/moderation/bills/{number}", "/api/v1/moderation/bills/{number}/record", "/api/v1/moderation/bills/{number}/description", "/api/v1/moderation/appeals/{id}/hide",
             "/api/v1/moderation/appeals/{id}/threshold", "/api/v1/moderation/reasons/{id}/publish", "/api/v1/moderation/reasons/{id}/hide",
             "/api/v1/moderation/reasons/{id}/merge", "/api/v1/me/consents/positions", "/api/v1/bills/{number}/appeal/flags",
             "/api/v1/bills/{number}/appeal/history", "/api/v1/moderation/appeals/{id}/planned", "/api/v1/moderation/appeals/{id}/hold",
@@ -375,7 +375,7 @@ public sealed class AppealPrivacyTests(DatabaseFixture database) : ApiTest(datab
         var (moderator, _) = await StaffAsync();
         var (initiator, _) = await Factory.MemberAsync();
         using var _i = initiator;
-        var appeal = await Database.OpenPublishedAsync(initiator, moderator.Browser, AppealSteps.ThirdBill, "against");
+        var appeal = await Database.PrepareBillAsync(initiator, moderator.Browser, AppealSteps.ThirdBill, "against");
         var (member, email) = await Factory.MemberAsync();
         using var _m = member;
         var userId = await Database.UserIdAsync(email);
@@ -420,8 +420,9 @@ public sealed class AppealPrivacyTests(DatabaseFixture database) : ApiTest(datab
         var (initiator, initiatorEmail) = await logged.MemberAsync("Rūta Mockutė");
         using var _i = initiator;
         await Database.FreeBillAsync(AppealSteps.ThirdBill);
-        var opened = await (await initiator.OpenAppealAsync(AppealSteps.ThirdBill)).ReadAsync<AppealResponse>();
-        (await moderator.Browser.PublishAsync(opened.Id)).StatusCode.ShouldBe(HttpStatusCode.NoContent);
+        (await initiator.TakeSideAsync(AppealSteps.ThirdBill, "for")).StatusCode.ShouldBe(HttpStatusCode.NoContent);
+        (await moderator.Browser.SendAsync(HttpMethod.Put, AppealRoutes.BillDescriptionOf(AppealSteps.ThirdBill),
+            new ModeratorDescriptionRequest { Description = AppealSteps.Description, Statement = "Bandymas." })).StatusCode.ShouldBe(HttpStatusCode.NoContent);
         var (member, memberEmail) = await logged.MemberAsync("Giedrė L.");
         using var _m = member;
         (await member.TakeSideAsync(AppealSteps.ThirdBill, "for")).StatusCode.ShouldBe(HttpStatusCode.NoContent);

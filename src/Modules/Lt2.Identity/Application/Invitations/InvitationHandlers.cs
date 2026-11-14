@@ -12,7 +12,7 @@ namespace Lt2.Identity.Application.Invitations;
 /// the member sees only their count. Administrators see numbers per day, per code and per level, never who invited
 /// whom, and switch codes off and on. Nothing here reads anything about sides.
 /// </summary>
-internal sealed class InvitationHandlers(IdentityDb db, IAuditLog audit, TimeProvider clock) : IInvitations
+internal sealed class InvitationHandlers(IdentityDb db, IAuditLog audit, ISettings settings, TimeProvider clock) : IInvitations
 {
     public static readonly TimeZoneInfo Vilnius = TimeZoneInfo.FindSystemTimeZoneById("Europe/Vilnius");
 
@@ -226,6 +226,10 @@ internal sealed class InvitationHandlers(IdentityDb db, IAuditLog audit, TimePro
             .Where(i => i.Kind == InvitationKinds.Personal && i.IssuedByUserId == userId)
             .Select(i => i.UsedCount)
             .ToListAsync(ct);
-        return new MyInvitation(current.Code, InvitationRules.MemberCount(counts), current.SwitchedOffAt is null);
+        // Whether the code would let a registration through now (design 8.11.5: the share line has no link otherwise).
+        var usable = InvitationRules.Usable(
+            current.Kind, current.UsesLeft, current.UsedCount, current.ExpiresAt, current.SwitchedOffAt, current.ReplacedAt,
+            await settings.GetAsync(SettingKeys.RegistrationPersonalCodeUses, ct), clock.GetUtcNow());
+        return new MyInvitation(current.Code, InvitationRules.MemberCount(counts), current.SwitchedOffAt is null, usable);
     }
 }

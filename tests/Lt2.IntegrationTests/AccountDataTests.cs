@@ -18,7 +18,7 @@ public sealed class AccountDataTests(DatabaseFixture database) : ApiTest(databas
         using var moderator = await StaffMembers.ActiveAsync(Factory, Database, "moderator");
         var (initiator, initiatorEmail) = await Factory.MemberAsync("Rūta Mockutė");
         using var _i = initiator;
-        await Database.OpenPublishedAsync(initiator, moderator.Browser, AppealSteps.ThirdBill, "against");
+        await Database.PrepareBillAsync(initiator, moderator.Browser, AppealSteps.ThirdBill, "against");
         var othersReason = (await initiator.AppealAsync(AppealSteps.ThirdBill)).Reasons.Single();
         var (member, email) = await Factory.MemberAsync("Giedrė L.");
         using var _m = member;
@@ -68,7 +68,7 @@ public sealed class AccountDataTests(DatabaseFixture database) : ApiTest(databas
         {
             var (initiator, _) = await Factory.MemberAsync();
             using var _i = initiator;
-            var appeal = await Database.OpenPublishedAsync(initiator, moderator.Browser, AppealSteps.ThirdBill, "against", threshold: 1);
+            var appeal = await Database.PrepareBillAsync(initiator, moderator.Browser, AppealSteps.ThirdBill, "against", threshold: 1);
             var reasonId = (await initiator.AppealAsync(AppealSteps.ThirdBill)).Reasons.Single().Id;
             var (member, email) = await logged.MemberAsync("Ištrinamas Narys");
             using var _m = member;

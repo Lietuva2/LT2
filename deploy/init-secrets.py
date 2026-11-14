@@ -20,6 +20,7 @@ FILES = {
     "ip_hash_key": 24,
     "data_protection_key": 32,  # wraps the data-protection key ring; must be exactly 32 bytes
     "smtp_password": 0,  # empty locally: Mailpit needs no password
+    "ai_api_key": 0,  # empty: the AI draft (design 8.11.4) stays off until a Claude API key is put here and LT2_AI_PROVIDER=claude
 }
 
 

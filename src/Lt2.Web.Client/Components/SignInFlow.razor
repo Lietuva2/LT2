@@ -9,6 +9,7 @@
 @inject IValidator<RequestCodeRequest> CodeValidator
 @inject IValidator<SignInRequest> SignInValidator
 @inject IValidator<CompleteRegistrationRequest> CompletionValidator
+@inject IJSRuntime JS
 
 @* The sign-in and registration steps (design 6.2, layout of design/ui/prisijungimas.html): an email code or a passkey,
    registration with an invitation code, the code, then the display name and the age declaration. Used by the sign-in
@@ -160,6 +161,48 @@
     [SupplyParameterFromQuery(Name = "kodas")]
     public string? InvitationFromLink { get; set; }
 
+    /// <summary>
+    /// The page a share link lands on (design 8.11.5, <c>tikslas</c>): checked by <see cref="LandingPath"/>, kept in this
+    /// tab's session storage through the sign-in steps (they reload the page), and never sent to the server.
+    /// </summary>
+    [SupplyParameterFromQuery(Name = LandingPath.Parameter)]
+    public string? Landing { get; set; }
+
+    private const string LandingKey = "lt2.tikslas";
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender && RendererInfo.IsInteractive && LandingPath.Accept(Landing) is { } landing)
+        {
+            await StorageAsync("sessionStorage.setItem", LandingKey, landing);
+        }
+    }
+
+    /// <summary>Where a member goes once signed in: the share link's page if one waits in this tab, otherwise the account.</summary>
+    private async Task<string> NextPageAsync()
+    {
+        var stored = await StorageAsync("sessionStorage.getItem", LandingKey);
+        await StorageAsync("sessionStorage.removeItem", LandingKey);
+        return LandingPath.Accept(stored) ?? LandingPath.Accept(Landing) ?? "/sveiki";
+    }
+
+    /// <summary>Session storage may be blocked (private windows, settings): then the share link simply lands on the account.</summary>
+    private async Task<string?> StorageAsync(string function, params object[] arguments)
+    {
+        try
+        {
+            return function.EndsWith("getItem", StringComparison.Ordinal)
+                ? await JS.InvokeAsync<string?>(function, arguments)
+                : await JS.InvokeAsync<object?>(function, arguments) as string;
+        }
+#pragma warning disable CA1031 // Storage is a convenience: whatever fails, the person lands on the account page.
+        catch (Exception)
+#pragma warning restore CA1031
+        {
+            return null;
+        }
+    }
+
     /// <summary>The address as shown back to the person: first letter and domain only.</summary>
     private string Masked
     {
@@ -197,7 +240,7 @@
         {
             if (me.Value!.RegistrationComplete)
             {
-                Navigation.NavigateTo("/sveiki", forceLoad: true);
+                Navigation.NavigateTo(LandingPath.Accept(Landing) ?? "/sveiki", forceLoad: true);
                 return;
             }
 
@@ -271,7 +314,9 @@
         {
             if (Show(await Auth.SignInAsync(request)))
             {
-                Navigation.NavigateTo("/sveiki", forceLoad: true);
+                // A new account still finishes its registration first (via /sveiki); the share link's page waits until then.
+                var me = await Me.GetAsync();
+                Navigation.NavigateTo(me.Value?.RegistrationComplete == true ? await NextPageAsync() : "/sveiki", forceLoad: true);
             }
         });
     }
@@ -293,7 +338,7 @@
         {
             if (Show(await Me.CompleteRegistrationAsync(request)))
             {
-                Navigation.NavigateTo("/sveiki", forceLoad: true);
+                Navigation.NavigateTo(await NextPageAsync(), forceLoad: true);
                 return;
             }
 
@@ -352,7 +397,7 @@
 
             if (Show(await Auth.SignInWithPasskeyAsync(new PasskeyCredentialRequest { Credential = credential })))
             {
-                Navigation.NavigateTo("/sveiki", forceLoad: true);
+                Navigation.NavigateTo(await NextPageAsync(), forceLoad: true);
             }
         });
     }

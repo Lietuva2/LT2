@@ -4,11 +4,12 @@ using System.Text.Json;
 using Lt2.Notifications.Outbox;
 using Lt2.SharedKernel;
 using Microsoft.Extensions.Localization;
+using Microsoft.Extensions.Options;
 
 namespace Lt2.Notifications.Templates;
 
 /// <summary>Feedback emails (design 8.10): the team's reply to a member, and the daily notice to the team (a count, never text).</summary>
-internal sealed class FeedbackTemplates(IStringLocalizer<EmailTemplates> l)
+internal sealed class FeedbackTemplates(IStringLocalizer<EmailTemplates> l, IOptions<SiteOptions> site)
 {
     public EmailMessage Reply(FeedbackReplyEmail model)
     {
@@ -31,7 +32,7 @@ internal sealed class FeedbackTemplates(IStringLocalizer<EmailTemplates> l)
         return Message(
             model.To,
             string.Format(CultureInfo.InvariantCulture, l["Feedback.Notice.Subject"], model.Count),
-            [string.Format(CultureInfo.InvariantCulture, l["Feedback.Notice.Body"], model.Count, model.StaffPath)]);
+            [string.Format(CultureInfo.InvariantCulture, l["Feedback.Notice.Body"], model.Count, SiteLinks.Absolute(site.Value.Address, model.StaffPath))]);
     }
 
     private static EmailMessage Message(string to, string subject, IReadOnlyList<string> paragraphs)

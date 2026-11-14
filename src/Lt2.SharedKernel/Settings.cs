@@ -85,11 +85,11 @@ public static class SettingKeys
     /// <summary>Sign-in codes one address may be sent in a day; bounds guessing to five tries per code (design 6.2).</summary>
     public static readonly SettingKey<int> SignInCodesPerDay = new("SignIn:CodesPerDay", 10, v => v is > 0 and <= 50);
 
-    /// <summary>Default appeal threshold offered to the initiator (design 8.4).</summary>
+    /// <summary>The threshold of every bill without its own (design 8.12.2), read whenever it is used.</summary>
     public static readonly SettingKey<int> DigestThresholdDefault = new("Digest:ThresholdDefault", 100, v => v > 0);
 
     /// <summary>
-    /// The administrator's minimum appeal threshold (design 8.4): no initiator or moderator may set less. The design
+    /// The administrator's minimum threshold (design 8.12.2): no moderator may set less, and a default below it is lifted to it. The design
     /// names the setting but gives no value; 50 is a placeholder for the owner to set.
     /// </summary>
     public static readonly SettingKey<int> DigestThresholdMinimum = new("Digest:ThresholdMinimum", 50, v => v > 0);
@@ -118,6 +118,22 @@ public static class SettingKeys
     /// <summary>"Man svarbu" marks one person may give on one bill (design 8.2); 0 = no limit, the default.</summary>
     public static readonly SettingKey<int> AppealsEndorsementsPerPerson = new("Appeals:EndorsementsPerPerson", 0, v => v is >= 0 and <= 100);
 
+
+    /// <summary>
+    /// The Claude model that drafts appeal descriptions (design 8.11.4; provider decided by the owner on 2026-11-13). Used
+    /// only when the provider is configured.
+    /// </summary>
+    public static readonly SettingKey<string> AiDraftModel = new("Ai:DraftModel", "claude-sonnet-5-5", v => !string.IsNullOrWhiteSpace(v) && v.Length <= 100);
+
+    /// <summary>
+    /// AI summaries the summary job may ask the provider for in one Vilnius day (design 8.13); 0 switches the job off.
+    /// Used only when a provider is configured and a bill's official text can be read.
+    /// </summary>
+    public static readonly SettingKey<int> AiSummariesPerDay = new("Ai:SummariesPerDay", 30, v => v is >= 0 and <= 1000);
+
+    /// <summary>Bills and MPs one account may follow together (design 8.11.2).</summary>
+    public static readonly SettingKey<int> FollowsMaxPerAccount = new("Follows:MaxPerAccount", 200, v => v is > 0 and <= 10000);
+
     /// <summary>Surge note: share of recent positions from new accounts (design 6.6).</summary>
     public static readonly SettingKey<decimal> SurgeMinimumShare = new("Surge:MinimumShare", 0.30m, v => v is > 0 and <= 1);
 
@@ -143,6 +159,9 @@ public static class SettingKeys
         DigestNotableChange,
         AppealsReasonsPerPerson,
         AppealsEndorsementsPerPerson,
+        FollowsMaxPerAccount,
+        AiDraftModel,
+        AiSummariesPerDay,
         SurgeMinimumShare,
         SurgeMinimumAccounts,
         SurgeWindowHours,

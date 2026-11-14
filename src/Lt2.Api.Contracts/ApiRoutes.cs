@@ -82,7 +82,7 @@ public static class ParliamentRoutes
     public static string VoteById(long id) => $"{ApiRoutes.Prefix}/votes/{id.ToString(System.Globalization.CultureInfo.InvariantCulture)}";
 }
 
-/// <summary>Design 8.8: appeals, positions, arguments, endorsements, reports and moderation.</summary>
+/// <summary>Design 8.8, 8.12: bills as people take part on them, positions, arguments, endorsements, reports and moderation.</summary>
 public static class AppealRoutes
 {
     public const string Appeals = ApiRoutes.Prefix + "/appeals";
@@ -90,17 +90,32 @@ public static class AppealRoutes
     public const string Appeal = ApiRoutes.Prefix + "/bills/{number}/appeal";
     public const string Mine = Appeal + "/mine";
     public const string History = Appeal + "/history";
-    public const string Proposals = Appeal + "/proposals";
-    public const string DescriptionChange = Appeal + "/description-change";
-    public const string ApproveDescription = ApiRoutes.Prefix + "/moderation/description-changes/{id:guid}/approve";
-    public const string ReturnDescription = ApiRoutes.Prefix + "/moderation/description-changes/{id:guid}/return";
-
-    public static string DescriptionChangeOf(string number) => AppealOf(number) + "/description-change";
 
     public static string HistoryOf(string number) => AppealOf(number) + "/history";
 
-    public static string ProposalsOf(string number) => AppealOf(number) + "/proposals";
-    public const string Threshold = Appeal + "/threshold";
+    /// <summary>Design 8.12.3: a moderator's state of a bill, its record for an action, and its description; the AI draft (8.11.4).</summary>
+    public const string ModerationBill = ApiRoutes.Prefix + "/moderation/bills/{number}";
+    public const string BillRecord = ModerationBill + "/record";
+    public const string BillDescription = ModerationBill + "/description";
+
+    /// <summary>Design 8.13: a moderator confirms an AI summary nobody has read, or removes a description.</summary>
+    public const string ConfirmDescription = BillDescription + "/confirm";
+    public const string RemoveDescription = BillDescription + "/remove";
+    public const string Ai = ApiRoutes.Prefix + "/moderation/ai";
+    public const string DescriptionDraft = ModerationBill + "/description-draft";
+
+    public static string ModerationBillOf(string number) => $"{ApiRoutes.Prefix}/moderation/bills/{Uri.EscapeDataString(number)}";
+
+    public static string BillRecordOf(string number) => ModerationBillOf(number) + "/record";
+
+    public static string BillDescriptionOf(string number) => ModerationBillOf(number) + "/description";
+
+    public static string ConfirmDescriptionOf(string number) => BillDescriptionOf(number) + "/confirm";
+
+    public static string RemoveDescriptionOf(string number) => BillDescriptionOf(number) + "/remove";
+
+    public static string DescriptionDraftOf(string number) => ModerationBillOf(number) + "/description-draft";
+
     public const string Position = Appeal + "/position";
     public const string Reasons = Appeal + "/reasons";
     public const string SimilarReasons = Appeal + "/reasons/similar";
@@ -117,20 +132,18 @@ public static class AppealRoutes
     public const string ModerationQueue = ApiRoutes.Prefix + "/moderation/queue";
     public const string MyRestriction = ApiRoutes.Prefix + "/me/writing-restriction";
     public const string ReasonAuthor = ApiRoutes.Prefix + "/moderation/reasons/{id:guid}/author";
-    public const string AppealInitiator = ApiRoutes.Prefix + "/moderation/appeals/{id:guid}/initiator";
+
     public const string RestrictReasonAuthor = ApiRoutes.Prefix + "/moderation/reasons/{id:guid}/restrict-author";
-    public const string RestrictAppealInitiator = ApiRoutes.Prefix + "/moderation/appeals/{id:guid}/restrict-initiator";
+
     public const string Restrictions = ApiRoutes.Prefix + "/moderation/restrictions";
     public const string LiftRestriction = ApiRoutes.Prefix + "/moderation/restrictions/{id:guid}/lift";
-    public const string PublishAppeal = ApiRoutes.Prefix + "/moderation/appeals/{id:guid}/publish";
-    public const string ReturnAppeal = ApiRoutes.Prefix + "/moderation/appeals/{id:guid}/return";
+    public const string KeepAppeal = ApiRoutes.Prefix + "/moderation/appeals/{id:guid}/keep";
     public const string HideAppeal = ApiRoutes.Prefix + "/moderation/appeals/{id:guid}/hide";
     public const string Hidden = ApiRoutes.Prefix + "/moderation/hidden";
     public const string RestoreAppeal = ApiRoutes.Prefix + "/moderation/appeals/{id:guid}/restore";
     public const string RestoreReason = ApiRoutes.Prefix + "/moderation/reasons/{id:guid}/restore";
     public const string AppealThreshold = ApiRoutes.Prefix + "/moderation/appeals/{id:guid}/threshold";
-    public const string ModerationAppeal = ApiRoutes.Prefix + "/moderation/appeals/{id:guid}";
-    public const string AppealDescription = ApiRoutes.Prefix + "/moderation/appeals/{id:guid}/description";
+
     public const string PublishReason = ApiRoutes.Prefix + "/moderation/reasons/{id:guid}/publish";
     public const string HideReason = ApiRoutes.Prefix + "/moderation/reasons/{id:guid}/hide";
     public const string MergeReason = ApiRoutes.Prefix + "/moderation/reasons/{id:guid}/merge";
@@ -139,7 +152,6 @@ public static class AppealRoutes
 
     public static string MineOf(string number) => AppealOf(number) + "/mine";
 
-    public static string ThresholdOf(string number) => AppealOf(number) + "/threshold";
 
     public static string PositionOf(string number) => AppealOf(number) + "/position";
 
@@ -151,12 +163,32 @@ public static class AppealRoutes
 
     public static string ReasonOf(Guid reasonId) => $"{ApiRoutes.Prefix}/reasons/{reasonId}";
 
-    public static string AppealsList(string? sort, string? cursor)
+    /// <summary>
+    /// <c>GET /appeals</c> (design 8.12.5): <c>q</c> searches number and title, <c>planned=true</c> keeps those planned soon,
+    /// <c>tab=closed</c> lists the closed ones, <c>sort</c> is <c>activity</c> (the default), <c>participants</c>,
+    /// <c>arguments</c> or <c>planned</c>.
+    /// </summary>
+    public static string AppealsList(string? search, bool planned, bool closed, string? cursor, string? sort = null)
     {
         var query = new List<string>();
         if (!string.IsNullOrEmpty(sort))
         {
             query.Add("sort=" + Uri.EscapeDataString(sort));
+        }
+
+        if (!string.IsNullOrWhiteSpace(search))
+        {
+            query.Add("q=" + Uri.EscapeDataString(search.Trim()));
+        }
+
+        if (planned)
+        {
+            query.Add("planned=true");
+        }
+
+        if (closed)
+        {
+            query.Add("tab=closed");
         }
 
         if (!string.IsNullOrEmpty(cursor))

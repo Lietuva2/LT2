@@ -13,6 +13,8 @@ product code. What is being built, in order:
 | **M0 Foundation** | Solution skeleton, passwordless sign-in, security plumbing, deployment, monitoring. |
 | **M1 MP profiles** | Every MP of the current term imported from Seimas open data: mandate, faction, committees, contacts, voting record, statistics. |
 | **M2a Appeals without sending** | People take a side on a Seimas bill and give reasons; summaries for MPs are generated as previews only. |
+| **M2a+ Reasons to come** | The agenda page (`/darbotvarke`) and the front page built on it, following bills and MPs with emails, the AI draft of a description (Claude API, off until configured), the share line (design 8.11). Its asking for an appeal and appeals opened by moderators were replaced by M2a++. |
+| **M2a++ One object** | Every active bill open at once, one page per bill, no proposals, requests or approval; lists and agenda on participation; moderation after the fact (design 8.12). Then descriptions with their labels and the AI summary job (8.13). |
 | **M2b Sending** | Real summary emails to MPs, MP preferences, profile take-over, MP responses. |
 | **Stage 3** | Voting with delegation, AI summaries, analytics. Not designed yet; do not build towards it beyond what the design says. |
 
@@ -64,17 +66,24 @@ src/Lt2.Api.Contracts      DTOs, routes, client interfaces, validators (shared b
 src/Lt2.SharedKernel       Result type, identifiers (UUID v7), event base types, outbox, audit and settings
                            interfaces, connection strings; no clock of its own (TimeProvider is used)
 src/Modules/               Lt2.Identity, Lt2.Notifications, Lt2.Audit, Lt2.Parliament (Seimas open-data client,
-                           import, statistics); Lt2.Appeals (appeals, positions, arguments, endorsements, reports,
-                           moderation, rule-based pre-screening, flags, summaries content). Notifications also owns the
-                           summaries (Digests/). Modules talk through interfaces in SharedKernel (IParticipants,
-                           IBillCatalogue, IPlannedAgenda, IMpDirectory, IDigestSource, IPartySupporters, IAccountData,
-                           IPositionErasure, IOutbox, IAuditLog, ISettings)
+                           import, statistics); Lt2.Appeals (bills' records, positions, arguments, endorsements,
+                           reports, moderation, rule-based pre-screening, flags, summaries content, descriptions written
+                           by moderators, the AI draft in Ai/ with its public prompt file, the AI summary job
+                           (Application/DescriptionSummaries.cs) and the "unavailable" IBillTextSource). Notifications
+                           also owns the summaries (Digests/) and following (Follows/: follows, email switches, bill
+                           events). Modules talk through interfaces in SharedKernel (IParticipants, IBillCatalogue,
+                           IPlannedAgenda, IMpDirectory, IDigestSource, IPartySupporters, IAccountData (one per module),
+                           IPositionErasure, IOutbox, IAuditLog, ISettings, IAiAssistant, IBillTextSource). The host
+                           composes the agenda (GET /api/v1/agenda) and /me/follows from the modules' interfaces.
 src/Lt2.Worker             Hangfire server: outbox dispatch loop, the parliament import, the agenda watcher (lrs.lt
                            pages; off unless Agenda:BaseAddress is set), appeals daily aggregates and closing, summaries
-                           in dry-run (nothing is sent in M2a), a daily identity clean-up
+                           in dry-run (nothing is sent in M2a), the follow emails (every 15 minutes), the AI summaries
+                           of bills (hourly; makes nothing until a text reader and a provider exist), a daily identity
+                           clean-up
 src/Lt2.Migrator           creates the database roles, applies migrations and grants; also seeds invitations, grants
                            the first staff role, empties invented parliament data and (local stack only) fills the
-                           demonstration appeal on XVP-0412 (--demo-appeal); run once per deploy
+                           demonstration record on XVP-0412 and an invented AI summary on XVP-0533 (--demo-appeal);
+                           run once per deploy
 tests/Lt2.UnitTests        rules and validators, plus bUnit tests of components (Components/)
 tests/Lt2.IntegrationTests API over HTTP against a real PostgreSQL (Testcontainers)
 tests/Lt2.ArchitectureTests module boundaries, static assets
@@ -83,7 +92,8 @@ tests/Lt2.Parliament.ImportTests  Seimas client, parsers, register of assumption
                            the stand-in and PostgreSQL; live contract suite only with LT2_SEIMAS_LIVE=1
 deploy/                    Dockerfile, compose.yaml, Caddyfile, .env (local defaults), init-secrets.py, secrets/
 tools/Lt2.SeimasStandIn     local and test only: stand-in for the Seimas open data and the lrs.lt agenda page (/darbotvarke),
-                           invented answers; never shipped
+                           invented answers; never shipped. Recent/ (container only, never in tests) adds a sitting and
+                           a stage vote dated two days before today, so the local agenda has recent votes
 ```
 
 ```sh
@@ -158,32 +168,65 @@ participation (share of recorded votes in which the MP voted for, against or abs
 and their count shown). No expenses, rankings or scorecards. An MP takes over a profile through a link sent only to the
 official `@lrs.lt` address from open data; the link is tied to the Seimas person id.
 
-**Appeals.**
-- One published appeal per bill, always tied to a Seimas bill. Two sides: asks to vote for, asks to vote against.
-- Until one is published, several members may propose an appeal on the bill: one waiting or returned proposal per
-  person per bill, no cap per bill. The opening form says how many proposals wait (a number only, no names or texts).
-  Publishing one closes the others (status `superseded`); their authors are emailed with the link, naming nobody. The
-  initiator of record is the author of the published proposal.
-- One position per person per bill, private, changeable until the appeal closes at the final Seimas vote.
+**Appeals (design 8.12, decided by the owner on 2026-11-14; replaces proposals, requests and initiators).**
+- The bill and the appeal are one object: the bill's page `/seimas/{number}`. Every active bill (in the catalogue, no
+  final vote) is open at once: anyone signed in takes a side, writes and marks arguments, follows, shares, reports.
+  Nobody proposes, opens, asks for or approves an appeal. The old `/seimas/{n}/kreipimasis` addresses redirect.
+- The Appeals module keeps one record per bill (`appeals.appeal`: open, closed or hidden), created when first needed (the
+  first side, argument or description, or a moderator's action) under the bill's lock and a unique index. It has no
+  initiator, and nothing public says who took part first. Answers for an active bill without a record are the empty open
+  state, not "not found".
+- One position per person per bill, private, changeable until the bill closes at the final Seimas vote.
 - Reasons: plain text up to 500 characters, public with the author's display name, for either side, whatever the
   author's own (no side needed; the writing box preselects the author's side if any). Nothing public may tell whether
-  a reason is on its author's side. The author can withdraw their own reason while the appeal is open. Writing a reason
+  a reason is on its author's side. The author can withdraw their own reason while the bill is open. Writing a reason
   needs no positions consent: it is the author's own deliberate publication, public with name and chosen side.
 - "Man svarbu" endorses a reason on your own side.
 - Reasons and marks per person per bill are settings (`Appeals:ReasonsPerPerson`, `Appeals:EndorsementsPerPerson`);
   0 = no limit, the default. A limit switched on later removes nothing and counts only shown or waiting reasons.
-- The initiator opens the appeal with a neutral description and a threshold: no side, no first reason, so no
-  positions consent. A moderator publishes it; then the initiator writes reasons and takes a side like anyone else, or
-  never. Nothing marks a reason as the initiator's.
-- The initiator may propose a new description for an open appeal: the page keeps the approved text until a moderator
-  approves the change (one pending at a time, not on a closed appeal); the history page lists approved changes. A
-  moderator may also correct an open appeal's description directly, with a required statement emailed to the
-  initiator; it enters the history too. Moderators get the queue's actions on the appeal page itself.
-- **Threshold:** per appeal, public, set by the initiator, default 100, never below the administrator's minimum. The
-  initiator can change it until the appeal first enters a summary that is really sent (a dry run does not count). A
-  number changed by a moderator is final. There is
-  no objection flow in the product and no automatic override before a vote.
+- **Threshold:** one for all bills, `Digest:ThresholdDefault`, never below `Digest:ThresholdMinimum`; a moderator may set
+  a bill's own number with a public statement (who set it: `default` or `moderator`). A bill once in a summary really sent
+  stays eligible. No objection flow in the product and no automatic override before a vote.
+- **Descriptions** ("Apie ką projektas", design 8.13): one per bill, written or corrected by a moderator on any active
+  bill with a statement, or made by the summary job from official text, shown at once, with a public history; labelled
+  "Sukurta DI · žmonių neperžiūrėta" (the job's, read by nobody), "Sukurta DI · taisė žmonės" (a moderator confirmed or
+  corrected AI text), "Parašė moderatorius", or "Aprašymą parašė …" for an initiator's text from before 2026-11-14 (no
+  rights). Beside it: the day it was made, the official text it was made from when known, the history and "Pranešti
+  apie klaidą"; a report reaches the queue, where a moderator confirms (an `ai` text becomes `ai-draft`), corrects or
+  removes it. A description a person ever wrote, corrected or removed is never written over by the job. Without one the
+  page says so and links to the Seimas page. Descriptions never go to MPs.
+- **The summary job** (worker, hourly): active bills without a description, planned first (soonest first), then the most
+  participants; at most `Ai:SummariesPerDay` a Vilnius day (30; 0 = off); the text comes only through `IBillTextSource`,
+  which has **no reader** yet (only the "unavailable" one: e-seimas is unverified, design 7.1), so it makes nothing and
+  says so once in the log. An unavailable or insufficient text waits seven days. Audited per summary with the system as
+  the actor, never the text. Only the bill's number, title and official text go to the provider.
+- **Moderation after the fact:** nothing waits for approval except arguments flagged by pre-screening or reports. Hiding
+  a bill's record closes taking part on it (sides and arguments kept unseen; "Atkurti" brings them back). A moderator
+  in a staff-passkey session gets the queue's argument actions on the bill's page too (owner, 2026-11-14), from the
+  moderators-only answer `GET /moderation/bills/{number}`; nobody else sees a control or anything from it.
 
+**Reasons to come (design 8.11).**
+- The agenda (`/darbotvarke`, first in the menu) and the front page's "Artimiausiu metu Seime" come from one public,
+  cacheable answer that holds nothing about the caller, and show both sides for every bill (a bill nobody took part in
+  says so). The front page's cards are the six bills with the most activity, left out while none has any.
+  `/kreipimaisi` lists active bills, sorted by activity (participants plus published arguments; the default),
+  participants, arguments or planned date (owner, 2026-11-14), with a search and "Planuojami artimiausiu metu".
+- Following a bill or an MP is private: shown to nobody, no follower count, never combined with sides or invitations,
+  in the export, deleted with the account, at most `Follows:MaxPerAccount`. Emails (planned, voted; each switchable on
+  the account page) go once per event to those who followed before it; nothing older than three days, nothing about the
+  person's side, the bill's counts or other people.
+- Links in emails: a message carries the site path, and the template makes it a full address with
+  `SiteLinks.Absolute` from `Site:Address` (design 5.6). That is deployment configuration, never a runtime setting.
+- The share line: the personal invitation link with `tikslas` (a path under `/seimas/`, anything else ignored), landing
+  on the bill's page, kept only in the browser (session storage) through the sign-in steps; the same link whichever
+  side; no link when the code is off or used up.
+- The AI draft is only in a moderator's "write or correct the description" form, on any active bill, from pasted official
+  text: the Claude API (owner, 2026-11-13), the model the setting `Ai:DraftModel`, on only with `Ai:Provider` = `claude`
+  and a key in `deploy/secrets/ai_api_key`; otherwise nothing mentions a draft. The prompt is the public file
+  `src/Modules/Lt2.Appeals/Ai/description-draft.prompt.md`. Audited without text, 20 an hour per moderator; a description
+  that started from a draft says "Sukurta DI · taisė žmonės" for its whole life. The worker is configured the same way
+  for the summary job (compose passes `Ai__Provider` and the key to both). Pre-screening of users' texts stays
+  rule-based. Tests never call the real API.
 **Summaries to MPs.**
 - Go to every sitting MP with an official address, joined or not. Nobody chooses recipients.
 - Weekly on Monday morning in sitting weeks, and the working day before a sitting with a relevant bill. At most two a
@@ -198,9 +241,9 @@ official `@lrs.lt` address from open data; the link is tied to the Seimas person
 **Feedback.** A balloon on every page (and `/atsiliepimai`) lets members write to the team; an item is linked to the
 account only when the member allows a reply, otherwise nothing leads back; staff reply through the outbox; not public.
 
-**Moderation.** Anything that reaches MPs has passed a person. Every action is audited and the author gets the reason.
-A report button is on every appeal and reason. A moderator can restrict an account from writing (reasons, appeals,
-their edits, date flags), until a date or until lifted, with a statement emailed to the person; it never touches sides,
+**Moderation.** Anything that reaches MPs has passed a person. Every action is audited and an argument's author gets the reason.
+A report button is on every bill's description and reason. A moderator can restrict an account from writing (reasons and
+date flags), until a date or until lifted, with a statement emailed to the person; it never touches sides,
 marks, counts or sign-in, is never shown to anyone else, and goes with the account (no address hash is kept).
 
 ## Wording and tone

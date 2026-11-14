@@ -152,10 +152,33 @@ public sealed class FeedbackNoticeJob(Lt2.Identity.IFeedback feedback, IConfigur
     }
 }
 
+/// <summary>
+/// Following (design 8.11.2): records new planned dates and stage votes of followed bills and writes the follow emails to
+/// the outbox. The log line holds counts only.
+/// </summary>
+public sealed class FollowJob(IFollows follows, TimeProvider clock)
+{
+    [DisableConcurrentExecution(timeoutInSeconds: 30 * 60)]
+    public Task RunAsync(CancellationToken cancellationToken) => follows.RunAsync(clock.GetUtcNow(), cancellationToken);
+}
+
+/// <summary>
+/// The summary job (design 8.13): AI summaries for active bills without a description, at most <c>Ai:SummariesPerDay</c> a
+/// Vilnius day. Hourly, so bills new in the catalogue are taken the same day; asked once at start-up too. While no official
+/// text can be read, no provider is configured or the setting is 0, it makes nothing and says why once, not on every run.
+/// </summary>
+public sealed class DescriptionSummaryJob(IDescriptionSummaries summaries)
+{
+    [DisableConcurrentExecution(timeoutInSeconds: 60 * 60)]
+    [AutomaticRetry(Attempts = 0, OnAttemptsExceeded = AttemptsExceededAction.Delete)]
+    public Task RunAsync(CancellationToken cancellationToken) => summaries.RunAsync(cancellationToken);
+}
+
 /// <summary>Registers the recurring Hangfire jobs at start-up, in Vilnius time (design 3: <c>Europe/Vilnius</c> for schedules).</summary>
 internal sealed class RecurringJobs(IRecurringJobManager jobs) : IHostedService
 {
     public const string ParliamentImport = "parliament-import";
+    public const string DescriptionSummaries = "description-summaries";
 
     public Task StartAsync(CancellationToken cancellationToken)
     {
@@ -193,6 +216,21 @@ internal sealed class RecurringJobs(IRecurringJobManager jobs) : IHostedService
             job => job.RunAsync(CancellationToken.None),
             "*/15 * * * *",
             new RecurringJobOptions { TimeZone = vilnius });
+
+        // Design 8.11.2: every 15 minutes, a few minutes after the import (:00, :15 …) and the agenda watcher (:20).
+        jobs.AddOrUpdate<FollowJob>(
+            "follows",
+            job => job.RunAsync(CancellationToken.None),
+            "7,22,37,52 * * * *",
+            new RecurringJobOptions { TimeZone = vilnius });
+
+        // Design 8.13: hourly at :40, after the import and the agenda watcher; once at start-up too.
+        jobs.AddOrUpdate<DescriptionSummaryJob>(
+            DescriptionSummaries,
+            job => job.RunAsync(CancellationToken.None),
+            "40 * * * *",
+            new RecurringJobOptions { TimeZone = vilnius });
+        jobs.Trigger(DescriptionSummaries);
 
         // Ask once at start-up, so a fresh deployment (or the local stack) imports without waiting for the first period.
         jobs.Trigger(ParliamentImport);

@@ -24,9 +24,6 @@ public static class ContractsServiceCollectionExtensions
         services.AddScoped<IValidator<UpdateSettingRequest>, UpdateSettingRequestValidator>();
         services.AddScoped<IValidator<Me.PositionConsentRequest>, Me.PositionConsentRequestValidator>();
         services.AddScoped<IValidator<Me.PartySupportRequest>, Me.PartySupportRequestValidator>();
-        services.AddScoped<IValidator<Appeals.OpenAppealRequest>, Appeals.OpenAppealRequestValidator>();
-        services.AddScoped<IValidator<Appeals.EditAppealRequest>, Appeals.EditAppealRequestValidator>();
-        services.AddScoped<IValidator<Appeals.ThresholdRequest>, Appeals.ThresholdRequestValidator>();
         services.AddScoped<IValidator<Appeals.PositionRequest>, Appeals.PositionRequestValidator>();
         services.AddScoped<IValidator<Appeals.ReasonRequest>, Appeals.ReasonRequestValidator>();
         services.AddScoped<IValidator<Appeals.ReportRequest>, Appeals.ReportRequestValidator>();
@@ -41,6 +38,7 @@ public static class ContractsServiceCollectionExtensions
         services.AddScoped<IValidator<Appeals.FlagRequest>, Appeals.FlagRequestValidator>();
         services.AddScoped<IValidator<Appeals.ModeratorPlannedRequest>, Appeals.ModeratorPlannedRequestValidator>();
         services.AddScoped<IValidator<Digests.UrgentDigestRequest>, Appeals.UrgentDigestRequestValidator>();
+        services.AddScoped<IValidator<Appeals.DescriptionDraftRequest>, Appeals.DescriptionDraftRequestValidator>();
         return services;
     }
 }

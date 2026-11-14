@@ -160,8 +160,8 @@ public static class MigrationRunner
                 case "--demo-appeal":
                     var demo = await DemoAppeal.RunAsync(configuration, connectionString, TimeProvider.System, cancellationToken);
                     Log.Information(
-                        "Demonstration appeal on {Bill}: {Status}; invented accounts created: {Created}",
-                        DemoAppeal.Bill, demo.Status, demo.AccountsCreated);
+                        "Demonstration appeal on {Bill}: {Status}; invented accounts created: {Created}; AI description on {AiBill}: {AiStatus}",
+                        DemoAppeal.Bill, demo.Status, demo.AccountsCreated, DemoAppeal.AiBill, demo.AiDescription);
                     break;
                 case "--local-code-limits":
                     var raised = await LocalCodeLimits.RunAsync(configuration, connectionString, cancellationToken);

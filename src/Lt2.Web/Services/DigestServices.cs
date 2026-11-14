@@ -11,11 +11,14 @@ internal static class DigestMapping
     public static DigestRunResponse Map(DigestRunInfo r) => new(
         r.Id, r.Kind, r.RunDate, r.SittingDate, r.CreatedAt, r.Status, r.MpCount, r.Items.Select(Map).ToList());
 
-    /// <summary>The published appeal on <paramref name="number"/> and the summaries that held it; not found like the appeal itself.</summary>
+    /// <summary>
+    /// The summaries that held the bill on <paramref name="number"/> (design 8.7); none for an active bill without a record,
+    /// not found like the bill itself, and not found for a hidden record.
+    /// </summary>
     public static async Task<Result<List<AppealDigestResponse>>> ForAppealAsync(
         Lt2.Appeals.IAppealsModule appeals, IDigests digests, string number, CancellationToken ct)
     {
-        var appeal = await appeals.GetAsync(number, null, ct);
+        var appeal = await appeals.GetAsync(number, ct);
         if (!appeal.IsSuccess)
         {
             return appeal.Error!;
@@ -26,8 +29,13 @@ internal static class DigestMapping
             return Error.NotFound("appeal.not-found");
         }
 
-        // Each run of ForAppealAsync carries exactly this appeal's item.
-        return (await digests.ForAppealAsync(appeal.Value.Id, ct))
+        if (appeal.Value.Id is not { } id)
+        {
+            return new List<AppealDigestResponse>();
+        }
+
+        // Each run of ForAppealAsync carries exactly this record's item.
+        return (await digests.ForAppealAsync(id, ct))
             .Select(r => new AppealDigestResponse(r.Id, r.Kind, r.RunDate, r.SittingDate, r.Status, r.MpCount, Map(r.Items.Single())))
             .ToList();
     }

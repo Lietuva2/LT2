@@ -68,10 +68,6 @@ internal static class ApiEndpoints
         GetAppealEndpoint.Map(api);
         GetMyAppealEndpoint.Map(api);
         GetAppealHistoryEndpoint.Map(api);
-        GetProposalsEndpoint.Map(api);
-        OpenAppealEndpoint.Map(api);
-        EditAppealEndpoint.Map(api);
-        ChangeThresholdEndpoint.Map(api);
         TakePositionEndpoint.Map(api);
         ClearPositionEndpoint.Map(api);
         FindSimilarReasonsEndpoint.Map(api);
@@ -88,15 +84,11 @@ internal static class ApiEndpoints
 
         GetModerationQueueEndpoint.Map(api);
         GetReasonAuthorEndpoint.Map(api);
-        GetAppealInitiatorEndpoint.Map(api);
         RestrictAuthorEndpoints.Map(api);
         RestrictionsEndpoints.Map(api);
-        PublishAppealEndpoint.Map(api);
-        ReturnAppealEndpoint.Map(api);
+        KeepAppealEndpoint.Map(api);
         HideAppealEndpoint.Map(api);
         HiddenEndpoints.Map(api);
-        DescriptionChangeEndpoints.Map(api);
-        ProposeDescriptionEndpoint.Map(api);
         SetAppealThresholdEndpoint.Map(api);
         ModerationAppealEndpoints.Map(api);
         PublishReasonEndpoint.Map(api);
@@ -113,6 +105,9 @@ internal static class ApiEndpoints
         GetAppealDigestsEndpoint.Map(api);
         GetDigestMpsEndpoint.Map(api);
         GetDigestPreviewEndpoint.Map(api);
+
+        Agenda.GetAgendaEndpoint.Map(api);
+        FollowEndpoints.Map(api);
     }
 
     /// <summary>A route from <see cref="ApiRoutes"/> relative to the <c>/api/v1</c> group.</summary>

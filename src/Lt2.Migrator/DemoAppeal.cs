@@ -6,9 +6,10 @@ using Microsoft.Extensions.Configuration;
 namespace Lt2.Migrator;
 
 /// <summary>
-/// <c>--demo-appeal</c>: fills the appeal on XVP-0412 with invented accounts, so the local appeal page shows the
+/// <c>--demo-appeal</c>: fills the record of XVP-0412 with invented accounts, so the local bill page shows the
 /// prototype's numbers (design/ui/kreipimasis.html): 6 800 ask to vote for (6 150 of them accounts older than 30 days),
-/// 4 280 against (3 900), the prototype's four arguments with their "Man svarbu" counts.
+/// 4 280 against (3 900), the prototype's four arguments with their "Man svarbu" counts. It also gives <see cref="AiBill"/>
+/// an invented description with the source <c>ai</c> (design 8.13), under the same refusals.
 /// <para>
 /// It refuses unless both hold: the configuration says <c>Demo:Allowed=true</c> (only <c>deploy/.env</c>, the local
 /// defaults, sets it), and the parliament data is the stand-in's (<see cref="ParliamentMaintenance.IsDataInventedAsync"/>):
@@ -27,8 +28,19 @@ public static class DemoAppeal
         "Įvedamas trečias pajamų mokesčio tarifas: metinėms pajamoms, viršijančioms 60 vidutinių darbo užmokesčių, būtų taikomas 32 % tarifas vietoj 20 %.\n" +
         "Dividendai ir pajamos iš akcijų pardavimo įskaičiuojamos į tą pačią ribą. Pataisa įsigaliotų 2027 m. sausio 1 d.";
 
-    /// <summary>What happened, for the console.</summary>
-    public sealed record Outcome(string Status, int AccountsCreated);
+    /// <summary>
+    /// Design 8.13: a second bill gets an invented AI summary nobody has read (source <c>ai</c>), so the label "Sukurta DI ·
+    /// žmonių neperžiūrėta", "Pranešti apie klaidą" and the moderator's confirm, correct and remove can be seen locally
+    /// without a provider key. Invented text, not made by any AI.
+    /// </summary>
+    public const string AiBill = "XVP-0533";
+
+    public const string AiDescription =
+        "Projektas leistų savivaldybėms pačioms nustatyti vietinių rinkliavų dydį pagal paslaugos sąnaudas, o ne pagal bendrą visai šaliai dydį. " +
+        "Rinkliavų dydžius savivaldybės turėtų skelbti iki kitų metų pradžios. Pataisa įsigaliotų 2027 m. sausio 1 d.";
+
+    /// <summary>What happened, for the console. <c>AiDescription</c>: <c>created</c>, <c>already there</c> or <c>left as it is</c>.</summary>
+    public sealed record Outcome(string Status, int AccountsCreated, string AiDescription);
 
     public static async Task<Outcome> RunAsync(IConfiguration configuration, string connectionString, TimeProvider clock, CancellationToken cancellationToken)
     {
@@ -48,16 +60,32 @@ public static class DemoAppeal
             throw new InvalidOperationException($"Refused: bill {Bill} is not in the parliament data yet; let the worker import from the stand-in first.");
         }
 
+        if (await ParliamentMaintenance.BillTitleAsync(connectionString, AiBill, cancellationToken) is null)
+        {
+            throw new InvalidOperationException($"Refused: bill {AiBill} is not in the parliament data yet; let the worker import from the stand-in first.");
+        }
+
         var now = clock.GetUtcNow();
         var people = Build(now);
         var created = await InventedMembers.CreateAsync(connectionString, people.Members, cancellationToken);
         var outcome = await InventedAppeal.SeedAsync(connectionString, people.Appeal, cancellationToken);
-        return outcome switch
+        if (outcome == InventedAppealOutcome.BillTaken)
         {
-            InventedAppealOutcome.Created => new Outcome("created", created),
-            InventedAppealOutcome.AlreadyThere => new Outcome("already there", created),
-            _ => throw new InvalidOperationException($"Refused: {Bill} already has an appeal opened by someone else; hide it first if it should go."),
-        };
+            throw new InvalidOperationException($"Refused: {Bill} already has a record that people took part on; the demonstration fills only a bill nobody took part in.");
+        }
+
+        // The invented AI summary links to the bill's own e-seimas address from the (invented) parliament data.
+        var address = await ParliamentMaintenance.BillAddressAsync(connectionString, AiBill, cancellationToken);
+        var summary = await InventedAppeal.SeedAiDescriptionAsync(connectionString, AiBill, AiDescription, address, now.AddDays(-2), cancellationToken);
+        return new Outcome(
+            outcome == InventedAppealOutcome.Created ? "created" : "already there",
+            created,
+            summary switch
+            {
+                InventedAppealOutcome.Created => "created",
+                InventedAppealOutcome.AlreadyThere => "already there",
+                _ => "left as it is",
+            });
     }
 
     /// <summary>The invented people and the appeal, the same on every run (fixed seed and identifiers).</summary>
@@ -84,7 +112,7 @@ public static class DemoAppeal
             positions.Add(new InventedPosition(Id(n), side, since, taken));
         }
 
-        // The prototype's named authors: Rūta Mockutė opened the appeal.
+        // The prototype's named authors (design 8.12: nobody opened anything; the description is a moderator's).
         Add(1, "against", true, "Rūta Mockutė");
         Add(2, "for", true, "Giedrė L.");
         Add(3, "for", true, "Mindaugas R.");
@@ -112,6 +140,6 @@ public static class DemoAppeal
         };
 
         var opened = now.AddDays(-75);
-        return (members, new InventedAppealSpec(Bill, Id(1), Description, 1000, opened, positions, reasons));
+        return (members, new InventedAppealSpec(Bill, Description, opened, positions, reasons));
     }
 }

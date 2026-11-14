@@ -17,21 +17,25 @@ public sealed class SideSwitchTests : BunitContext
 {
     private const string Bill = "XVP-0412";
 
-    private readonly OpenAppealFormTests.AppealsApiFake _api;
+    private readonly ApiFake _api;
 
     public SideSwitchTests()
     {
         Services.AddLocalization();
         Services.AddLt2ClientComponents();
-        var api = DispatchProxy.Create<IAppealsApi, OpenAppealFormTests.AppealsApiFake>();
-        _api = (OpenAppealFormTests.AppealsApiFake)(object)api;
+        var api = DispatchProxy.Create<IAppealsApi, ApiFake>();
+        _api = (ApiFake)(object)api;
         var appeal = new AppealResponse(
-            Guid.NewGuid(), new BillRefResponse(Bill, "Gyventojų pajamų mokesčio įstatymo pataisa"), "open", "Rūta Mockutė", "Aprašymas.",
-            DateTimeOffset.UnixEpoch, DateTimeOffset.UnixEpoch, new SideCountsResponse(6800, 6000, 4280, 4000),
-            new ThresholdResponse(100, "initiator", null, 11080, true, false), [], null);
+            Guid.NewGuid(), new BillRefResponse(Bill, "Gyventojų pajamų mokesčio įstatymo pataisa"), "open", "Aprašymas.", "moderator", null,
+            new SideCountsResponse(6800, 6000, 4280, 4000), new ThresholdResponse(100, "default", null, 11080, true, false), []);
         _api.On("GetAppealAsync", ApiResult<AppealResponse>.Ok(appeal));
         _api.On("GetMyRestrictionAsync", ApiResult<MyRestrictionResponse>.Ok(new MyRestrictionResponse(false, null, null)));
         Services.AddSingleton(api);
+
+        // A member, not a moderator: the moderators' answer is refused (design 8.12.3).
+        var moderation = DispatchProxy.Create<IModerationApi, ApiFake>();
+        ((ApiFake)(object)moderation).On("GetBillAsync", ApiResult<ModerationBillResponse>.Fail(new ApiProblem { Status = 403, Code = "forbidden" }));
+        Services.AddSingleton(moderation);
         AddAuthorization().SetAuthorized("ruta.mockute@pavyzdys.test");
         JSInterop.Mode = JSRuntimeMode.Loose;
         SetRendererInfo(new RendererInfo("WebAssembly", isInteractive: true));
@@ -39,7 +43,7 @@ public sealed class SideSwitchTests : BunitContext
 
     private IRenderedComponent<AppealReasons> OpenWritingBox(string? ownSide)
     {
-        _api.On("GetMineAsync", ApiResult<MyAppealResponse>.Ok(new MyAppealResponse(ownSide, [], null, [], null, false, false, true)));
+        _api.On("GetMineAsync", ApiResult<MyAppealResponse>.Ok(new MyAppealResponse(ownSide, [], null, [], null, true)));
         var reasons = Render<AppealReasons>(p => p.Add(c => c.Number, Bill));
         reasons.Find("#add-reason").Click();
         return reasons;

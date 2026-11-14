@@ -24,6 +24,7 @@
 <data name="Feedback.Kind" xml:space="preserve"><value>Pasirinkite vieną iš pateiktų rūšių.</value></data>
 <data name="Reason.TooLong" xml:space="preserve"><value>Argumentas per ilgas: ne daugiau kaip 500 ženklų.</value></data>
 <data name="Description.Required" xml:space="preserve"><value>Trumpai ir neutraliai aprašykite, ką keičia projektas.</value></data>
+<data name="DescriptionUrl.Invalid" xml:space="preserve"><value>Nurodykite oficialaus teksto adresą lrs.lt svetainėje, prasidedantį https://, arba palikite laukelį tuščią.</value></data>
 <data name="Description.TooLong" xml:space="preserve"><value>Aprašymas per ilgas: ne daugiau kaip 1 500 ženklų.</value></data>
 <data name="Threshold.Positive" xml:space="preserve"><value>Riba turi būti teigiamas skaičius.</value></data>
 <data name="Report.Target" xml:space="preserve"><value>Nenurodyta, apie ką pranešate.</value></data>
@@ -36,4 +37,7 @@
 <data name="Flag.Link" xml:space="preserve"><value>Nurodykite nuorodą (http arba https), kur matyti tikroji data.</value></data>
 <data name="Planned.Date" xml:space="preserve"><value>Nurodykite datą.</value></data>
 <data name="Planned.Stage" xml:space="preserve"><value>Netinkama stadija.</value></data>
+<data name="Draft.SourceRequired" xml:space="preserve"><value>Įklijuokite oficialų tekstą: be jo juodraščio nebus.</value></data>
+<data name="Draft.SourceTooLong" xml:space="preserve"><value>Tekstas per ilgas: daugiausia 20 000 ženklų. Palikite tik tą dalį, kurioje aprašyta, ką projektas keičia.</value></data>
+<data name="Notices.Kind" xml:space="preserve"><value>Netinkami laiškų nustatymai.</value></data>
 </root>

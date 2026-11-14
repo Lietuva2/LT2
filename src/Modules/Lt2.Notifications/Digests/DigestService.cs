@@ -278,7 +278,9 @@ internal sealed class DigestService(
 internal sealed record DeliveryParty(string BillNumber, string Party, int? For, int? Against);
 
 /// <summary>The text an MP would read (design appendix A), for the moderators' preview. Never sent in M2a.</summary>
-internal sealed class DigestText(Microsoft.Extensions.Localization.IStringLocalizer<Templates.EmailTemplates> l)
+internal sealed class DigestText(
+    Microsoft.Extensions.Localization.IStringLocalizer<Templates.EmailTemplates> l,
+    Microsoft.Extensions.Options.IOptions<SiteOptions> site)
 {
     public DigestPreview Render(DigestRunInfo run, IReadOnlyList<DeliveryParty> party, string status)
     {
@@ -339,7 +341,7 @@ internal sealed class DigestText(Microsoft.Extensions.Localization.IStringLocali
         }
 
         text.AppendLine(l["Digest.NotAPoll"]);
-        text.AppendLine(F("Digest.PublicCopy", run.RunDate.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture)));
+        text.AppendLine(F("Digest.PublicCopy", SiteLinks.Absolute(site.Value.Address, "/suvestines/" + run.RunDate.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture))));
         if (status != "dry-run")
         {
             text.AppendLine(l["Digest.Skipped"]);

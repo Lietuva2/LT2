@@ -1,11 +1,16 @@
 @using Lt2.Api.Contracts.Appeals
 @inherits InteractiveBase
 @inject IAppealsApi Appeals
+@inject IModerationApi Moderation
+@inject NavigationManager Navigation
 
 @* The arguments of both sides (design 8.1, 8.2, design/ui/kreipimasis.html "Kodėl"): "Man svarbu" on one's own side, a
    report button on every argument, and writing a new one for either side (the person's own side preselected, if any),
    offered a similar existing one first. Prerendered on the server, so the arguments are readable without JavaScript;
-   nothing in an argument's markup depends on its author's side. *@
+   nothing in an argument's markup depends on its author's side. A moderator or an administrator in a staff-passkey session
+   also gets the queue's actions on each argument, behind "Moderuoti" (design 8.12.3, decided 2026-11-14): what they need
+   comes from the moderators' own answer, asked for only once the island runs in the browser, and for anyone else the
+   server refuses it, so nothing of it renders. *@
 <section class="stack" aria-labelledby="h-why" id="reasons">
     <h2 id="h-why">@L["Reasons.Title"]</h2>
     @if (Appeal is { } appeal)
@@ -52,6 +57,13 @@
                             @if (_reporting == reason.Id)
                             {
                                 <ReportForm TargetKind="reason" TargetId="reason.Id" OnClose="() => _reporting = null" />
+                            }
+                            @if (Moderated(reason.Id) is { } moderated)
+                            {
+                                <details class="moderate" id="moderate-@reason.Id">
+                                    <summary class="linkish small">@L["ModReason.Open"]</summary>
+                                    <ModerationActions Id="reason.Id" Kind="reason" Status="@moderated.Status" MergeCandidates="moderated.MergeCandidates" OnDone="Reload" OnRestricted="ReloadPage" />
+                                </details>
                             }
                             @if (_withdrawing == reason.Id)
                             {
@@ -167,11 +179,26 @@
     /// <summary>The moderators' contact address, for visitors who want to report.</summary>
     [Parameter] public string? Contact { get; set; }
 
+    /// <summary>
+    /// The server found a moderator or an administrator in a staff-passkey session; the server still refuses the
+    /// moderators' answer and every action to anyone else.
+    /// </summary>
+    [Parameter] public bool Moderator { get; set; }
+
     [CascadingParameter] private Task<AuthenticationState>? AuthState { get; set; }
 
     [PersistentState] public AppealResponse? Appeal { get; set; }
 
     [PersistentState] public MyAppealResponse? Mine { get; set; }
+
+    /// <summary>The moderators' answer for this bill: null for everyone else (the server refuses it).</summary>
+    private ModerationBillResponse? _moderation;
+
+    private QueueReasonResponse? Moderated(Guid reasonId) => _moderation?.Reasons.FirstOrDefault(r => r.Id == reasonId);
+
+    private void Reload(string _) => ReloadPage();
+
+    private void ReloadPage() => Navigation.NavigateTo(Navigation.Uri, forceLoad: true);
 
     /// <summary>The person's own writing restriction (design 8.3): the writing box gives way to the notice.</summary>
     [PersistentState] public MyRestrictionResponse? Restriction { get; set; }
@@ -229,6 +256,13 @@
         if (_signedIn)
         {
             Restriction ??= (await Appeals.GetMyRestrictionAsync()).Value;
+        }
+
+        // Only for a moderator (the page says so), and only in the browser: the prerendered page holds nothing of the
+        // moderators' answer, and nobody else asks for it.
+        if (Moderator && _signedIn && RendererInfo.IsInteractive && Appeal is { Id: not null, Status: "open" })
+        {
+            _moderation = (await Moderation.GetBillAsync(Number)).Value;
         }
     }
 

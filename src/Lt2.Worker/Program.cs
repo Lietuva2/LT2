@@ -64,10 +64,19 @@ builder.Services.AddNotificationsModule(configuration);
 builder.Services.AddNotificationsDispatcher(configuration);
 builder.Services.AddAuditModule();
 builder.Services.AddIdentityMaintenance();
+
+// Design 8.13: the summary job asks the Claude API only when configured (Ai:Provider and the key file), as the web host
+// does for the draft (8.11.4); then its host, and only it, joins the worker's outbound allowlist (design 6.4).
+if (AppealsModule.AiProviderHost(configuration) is { } aiHost)
+{
+    configuration.AddInMemoryCollection(new Dictionary<string, string?> { [OutboundAllowlist.Section + ":ai"] = aiHost });
+}
+
 builder.Services.AddOutboundAllowlist(configuration);
 builder.Services.AddParliamentModule();
 builder.Services.AddParliamentImport(configuration);
 builder.Services.AddIdentityDirectory();
+builder.Services.AddAiAssistant(configuration);
 builder.Services.AddAppealsModule();
 
 builder.Services.AddHangfire(hangfire => hangfire

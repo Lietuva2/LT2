@@ -25,11 +25,11 @@ public sealed class SettingsPageTests : BunitContext
     {
         Services.AddLocalization();
         Services.AddLt2ClientComponents();
-        var api = DispatchProxy.Create<IAdminApi, OpenAppealFormTests.AppealsApiFake>();
+        var api = DispatchProxy.Create<IAdminApi, ApiFake>();
         var settings = SettingKeys.All
             .Select(k => new SettingResponse { Key = k.Name, Value = k.DefaultValue, Default = k.DefaultValue })
             .ToList();
-        ((OpenAppealFormTests.AppealsApiFake)(object)api).On("GetSettingsAsync", ApiResult<IReadOnlyList<SettingResponse>>.Ok(settings));
+        ((ApiFake)(object)api).On("GetSettingsAsync", ApiResult<IReadOnlyList<SettingResponse>>.Ok(settings));
         Services.AddSingleton(api);
         AddAuthorization().SetAuthorized("administratorius@pavyzdys.test");
         JSInterop.Mode = JSRuntimeMode.Loose;

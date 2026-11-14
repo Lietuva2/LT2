@@ -6,8 +6,9 @@
 @inherits InteractiveBase
 @inject IModerationApi ModerationApi
 
-@* The moderators' queue (design 8.3): new appeals, flagged or reported arguments, reported appeals, arguments not yet
-   seen. Every action needs the active moderator role of a staff-passkey session; the server refuses anything else.
+@* The moderators' queue (design 8.12.3), moderation after the fact: bills that need a look (a reported description, date
+   flags, a surge, held, or under the threshold on the agenda with participants), and arguments flagged, reported or not
+   yet seen. Every action needs the active moderator role of a staff-passkey session; the server refuses anything else.
    Nothing here shows who took which side. *@
 <PageTitle>@L["Mod.PageTitle"]</PageTitle>
 
@@ -35,22 +36,11 @@ else
         {
             <p class="small">@L["Mod.Empty"]</p>
         }
-        @for (var i = 0; i < Queue.Appeals.Count; i++)
+        @foreach (var appeal in Queue.Appeals)
         {
-            var appeal = Queue.Appeals[i];
-            @if (appeal.ProposalsOnBill > 1 && (i == 0 || Queue.Appeals[i - 1].Bill.Number != appeal.Bill.Number))
-            {
-                @* A bill's proposals come together, oldest first (design 8.1): guidance, not a rule the code enforces. *@
-                <p class="note" id="proposals-@appeal.Bill.Number">@Text("Mod.Proposals", appeal.Bill.Number, AppealNumbers.Of(appeal.ProposalsOnBill))</p>
-            }
             <article class="sheet stack" id="queue-appeal-@appeal.Id" aria-labelledby="qa-@appeal.Id">
                 <div class="row">
-                    <span class="tag tag--ink num">@appeal.Bill.Number</span>
-                    <span class="tag">@L["Mod.Status." + appeal.Status]</span>
-                    @foreach (var flag in appeal.Flags)
-                    {
-                        <span class="tag tag--people">@L["Mod.Flag." + flag]</span>
-                    }
+                    <a class="tag tag--ink num" href="/seimas/@Uri.EscapeDataString(appeal.Bill.Number)">@appeal.Bill.Number</a>
                 </div>
                 <h3 id="qa-@appeal.Id">@appeal.Bill.Title</h3>
                 @if (appeal.Planned is { } plan)
@@ -65,13 +55,13 @@ else
                 {
                     <p class="note note--quiet" id="under-threshold-@appeal.Id">@Text("Mod.UnderThreshold",
                         appeal.Planned is { } onAgenda ? Dates.Day(onAgenda.Date) : "–",
-                        AppealNumbers.Of(appeal.Participants), AppealNumbers.Of(appeal.EffectiveThreshold))</p>
+                        AppealNumbers.Of(appeal.Participants), AppealNumbers.Of(appeal.Threshold))</p>
                 }
-                @if (appeal.DateFlags is { Count: > 0 } flags)
+                @if (appeal.DateFlags.Count > 0)
                 {
-                    <p class="note note--quiet num" id="date-flags-@appeal.Id">@Text("Mod.DateFlags", flags.Count)</p>
+                    <p class="note note--quiet num" id="date-flags-@appeal.Id">@Text("Mod.DateFlags", appeal.DateFlags.Count)</p>
                     <ul class="rows">
-                        @foreach (var flag in flags)
+                        @foreach (var flag in appeal.DateFlags)
                         {
                             <li><div class="rows__main"><b>@L["Flag." + flag.Kind]</b><a href="@flag.Link" rel="external noreferrer">@flag.Link</a>@if (flag.Note is { } note) {<span class="small">@note</span>}</div></li>
                         }
@@ -81,48 +71,25 @@ else
                 {
                     <p class="note" id="surge-@appeal.Id">@Text("Mod.Surge", surge.WindowHours, surge.SharePercent)</p>
                 }
-                <p class="small">@Text("Mod.OpenedBy", appeal.InitiatorName ?? L["Reasons.Anonymous"], AppealNumbers.Of(appeal.Threshold))</p>
-                <p class="label">@L["Open.Description"]</p>
-                <p class="voice">@appeal.Description</p>
+                @if (appeal.Description.Length > 0)
+                {
+                    <p class="row">
+                        <span class="label">@L["Mod.Description"]</span>
+                        @if (appeal.DescriptionSource == "ai")
+                        {
+                            <span class="tag" id="queue-ai-label-@appeal.Id">@L["Mod.Source.ai"]</span>
+                        }
+                    </p>
+                    <p class="voice">@appeal.Description</p>
+                }
 
-                <Reports Items="appeal.Reports" />
-                <ModerationActions Id="appeal.Id" Kind="appeal" Status="@appeal.Status" Held="appeal.Held" Threshold="appeal.Threshold" Planned="appeal.Planned" Description="@appeal.Description"
-                                   HasOpenItems="@(appeal.Reports.Count > 0 || appeal.DateFlags is { Count: > 0 })" OnRestricted="RestrictedAsync" />
+                <Reports Items="appeal.Reports" Description="true" />
+                <ModerationActions Id="appeal.Id" Number="@appeal.Bill.Number" Kind="appeal" Status="open" Held="appeal.Held" Threshold="appeal.Threshold" Planned="appeal.Planned"
+                                   Description="@appeal.Description" DescriptionSource="@appeal.DescriptionSource" DescriptionUrl="@appeal.DescriptionUrl"
+                                   HasOpenItems="@(appeal.Reports.Count > 0 || appeal.DateFlags.Count > 0)" />
             </article>
         }
     </section>
-
-    @if (Queue.DescriptionChanges is { Count: > 0 } changes)
-    {
-        <section class="stack" aria-labelledby="h-changes">
-            <h2 id="h-changes">@L["Mod.Changes"]</h2>
-            @foreach (var change in changes)
-            {
-                <article class="sheet stack" id="queue-change-@change.Id" aria-labelledby="qc-@change.Id">
-                    <div class="row">
-                        <span class="tag tag--ink num">@change.Bill.Number</span>
-                        @foreach (var flag in change.Flags)
-                        {
-                            <span class="tag tag--people">@L["Mod.Flag." + flag]</span>
-                        }
-                    </div>
-                    <h3 id="qc-@change.Id">@change.Bill.Title</h3>
-                    <p class="small">@Text("Mod.ChangeBy", change.InitiatorName ?? L["Reasons.Anonymous"], Dates.DayTime(change.CreatedAt))</p>
-                    <div class="compare">
-                        <div class="stack stack--tight">
-                            <p class="label">@L["Mod.ChangeOld"]</p>
-                            <p class="voice" id="change-old-@change.Id">@change.CurrentText</p>
-                        </div>
-                        <div class="stack stack--tight">
-                            <p class="label">@L["Mod.ChangeNew"]</p>
-                            <p class="voice" id="change-new-@change.Id">@change.ProposedText</p>
-                        </div>
-                    </div>
-                    <DescriptionChangeActions Id="change.Id" />
-                </article>
-            }
-        </section>
-    }
 
     <section class="stack" aria-labelledby="h-reasons">
         <h2 id="h-reasons">@L["Mod.Reasons"]</h2>

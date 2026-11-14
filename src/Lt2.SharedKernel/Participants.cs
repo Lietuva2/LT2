@@ -46,17 +46,21 @@ public interface IPositionErasure
 }
 
 /// <summary>
-/// What the Appeals module holds of one person (design 6.5): exported on request, erased with the account. Implemented by
-/// Appeals. The export holds only the person's own data.
+/// What one module holds of one person (design 6.5): exported on request, erased with the account. Implemented by Appeals
+/// (positions, marks, arguments, appeals opened before 2026-11-14, reports, flags, draft requests) and by Notifications (follows and
+/// the follow-email switches, design 8.11.2). The export holds only the person's own data.
 /// </summary>
 public interface IAccountData
 {
-    /// <summary>The person's positions, marks, arguments, opened appeals, reports and flags, as plain data.</summary>
+    /// <summary>The key of this module's part in the export, for example <c>appeals</c>.</summary>
+    string Section { get; }
+
+    /// <summary>The person's data in this module, as plain data.</summary>
     Task<object> ExportAsync(Guid userId, CancellationToken cancellationToken);
 
     /// <summary>
-    /// Deletes the person's positions, marks, arguments (with the marks on them), reports and flags in the caller's
-    /// transaction. Appeals the person opened stay, without a name. Counts fall; frozen summary snapshots are not touched.
+    /// Deletes the person's data in this module in the caller's transaction. Appeals the person opened stay, without a
+    /// name. Counts fall; frozen summary snapshots are not touched.
     /// </summary>
     Task EraseAsync(Guid userId, DbTransaction transaction, CancellationToken cancellationToken);
 }
@@ -72,11 +76,36 @@ public interface IBillCatalogue
     Task<IReadOnlyDictionary<string, BillFacts>> FindManyAsync(IReadOnlyCollection<string> numbers, CancellationToken cancellationToken);
 
     /// <summary>
+    /// Every active bill (design 8.12.1): in the catalogue and not finished, that is without a final vote
+    /// (<see cref="FinalVoteAsync"/>), by number.
+    /// </summary>
+    Task<IReadOnlyList<BillFacts>> ActiveAsync(CancellationToken cancellationToken);
+
+    /// <summary>
     /// The Seimas's final vote on the bill: the latest stage result at the adoption stage, or <c>null</c> while there is
     /// none. Rejection or withdrawal at an earlier stage is not in the open data (see design 5.1, bill status).
     /// </summary>
     Task<BillFinalVote?> FinalVoteAsync(string number, CancellationToken cancellationToken);
+
+    /// <summary>The stage-result votes on the given bills held at or after <paramref name="since"/>, oldest first (design 8.11.2).</summary>
+    Task<IReadOnlyList<StageVoteFacts>> StageResultsAsync(IReadOnlyCollection<string> numbers, DateTimeOffset since, CancellationToken cancellationToken);
+
+    /// <summary>
+    /// How the given MPs (Seimas person ids) voted in one vote: <c>for</c>, <c>against</c>, <c>abstain</c> or
+    /// <c>did-not-vote</c>; an MP without a ballot is missing. Public data about a public office.
+    /// </summary>
+    Task<IReadOnlyDictionary<long, string>> ChoicesAsync(long voteId, IReadOnlyCollection<long> seimasPersonIds, CancellationToken cancellationToken);
 }
+
+/// <summary>
+/// A stage-result vote on a bill (design 8.11.2): what the follow emails tell. <c>HasResult</c>: per-MP votes were read
+/// (never for a vote approved by consensus).
+/// </summary>
+public sealed record StageVoteFacts(
+    long VoteId, string BillNumber, string? Stage, DateTimeOffset HeldAt, bool IsConsensus, bool HasResult, int? For, int? Against, int? Abstain, string? OfficialNote);
+
+/// <summary>An MP as a follow refers to them: by the Seimas person id, stable across terms (design 8.11.2).</summary>
+public sealed record MpFacts(long SeimasPersonId, string Slug, string FirstName, string LastName);
 
 /// <summary>The vote that closes an appeal (design 8.1).</summary>
 public sealed record BillFinalVote(long VoteId, DateTimeOffset HeldAt);

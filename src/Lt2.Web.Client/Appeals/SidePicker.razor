@@ -4,8 +4,9 @@
 @inject IMeApi MeApi
 @inject NavigationManager Navigation
 
-@* Taking a side (design 8.1): the two buttons under the counts. A visitor gets links to sign in, which also work
-   without JavaScript. The side shown is only ever the visitor's own. *@
+@* Taking a side (design 8.12.1): the two buttons under the counts, on any active bill, the first side creating the bill's
+   record. A visitor gets links to sign in, which also work without JavaScript. The side shown is only ever the visitor's
+   own. The share line (8.11.5) follows right below, with the threshold. *@
 <div class="stack stack--tight" id="side-picker">
     @if (!_signedIn)
     {
@@ -47,6 +48,7 @@
                 @L["Side.Yours." + mySide]
                 <button type="button" class="linkish" disabled="@Locked" @onclick="ClearAsync">@L["Side.Withdraw"]</button>
             </p>
+
         }
         else
         {
@@ -62,6 +64,7 @@
     private bool _consentChecked;
 
     [Parameter, EditorRequired] public string Number { get; set; } = "";
+
 
     [CascadingParameter] private Task<AuthenticationState>? AuthState { get; set; }
 

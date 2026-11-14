@@ -5,28 +5,35 @@ using Microsoft.EntityFrameworkCore;
 
 namespace Lt2.Appeals.Application;
 
+/// <summary>The two threshold settings (design 8.12.2): the default of all bills and the administrator's minimum.</summary>
+internal sealed record ThresholdSettings(int Default, int Minimum);
+
 /// <summary>
-/// Reads shared by the handlers: counts, thresholds, arguments with their authors' names. Counts are aggregates read
-/// from <c>appeals.position</c>; no read here returns who took which side.
+/// Reads shared by the handlers: counts, thresholds, arguments with their authors' names, the bill's record. Counts are
+/// aggregates read from <c>appeals.position</c>; no read here returns who took which side.
 /// </summary>
-internal sealed class AppealReads(IParticipants participants, IBillCatalogue bills, ISettings settings, TimeProvider clock)
+internal sealed class AppealReads(
+    IParticipants participants, IBillCatalogue bills, ISettings settings, IAiAssistant assistant, IBillTextSource texts, TimeProvider clock)
 {
     public async Task<int> MinimumAsync(CancellationToken ct) => await settings.GetAsync(SettingKeys.DigestThresholdMinimum, ct);
 
+    public async Task<ThresholdSettings> ThresholdSettingsAsync(CancellationToken ct) =>
+        new(await settings.GetAsync(SettingKeys.DigestThresholdDefault, ct), await MinimumAsync(ct));
+
     public async Task<AppealRulesInfo> RulesAsync(CancellationToken ct)
     {
-        var minimum = await MinimumAsync(ct);
-        var offered = ThresholdRules.Offered(await settings.GetAsync(SettingKeys.DigestThresholdDefault, ct), minimum);
+        var threshold = await ThresholdSettingsAsync(ct);
         return new AppealRulesInfo(
-            offered,
-            minimum,
+            ThresholdRules.Offered(threshold.Default, threshold.Minimum),
+            threshold.Minimum,
             AppealRules.ReasonMaxLength,
             await settings.GetAsync(SettingKeys.AppealsReasonsPerPerson, ct),
             await settings.GetAsync(SettingKeys.AppealsEndorsementsPerPerson, ct),
-            AppealRules.DescriptionMaxLength);
+            AppealRules.DescriptionMaxLength,
+            assistant.IsConfigured && texts.CanRead && await settings.GetAsync(SettingKeys.AiSummariesPerDay, ct) > 0);
     }
 
-    /// <summary>The published counts of each given appeal: both sides, each with the count for accounts older than 30 days.</summary>
+    /// <summary>The published counts of each given record: both sides, each with the count for accounts older than 30 days.</summary>
     public async Task<Dictionary<Guid, SideCounts>> CountsAsync(AppealsDb db, IReadOnlyCollection<Guid> appealIds, CancellationToken ct)
     {
         var cutoff = CountRules.EstablishedBefore(clock.GetUtcNow());
@@ -45,7 +52,7 @@ internal sealed class AppealReads(IParticipants participants, IBillCatalogue bil
             });
     }
 
-    /// <summary>The surge note for an appeal, or <c>null</c> when the rule (design 6.6, three settings) does not hold.</summary>
+    /// <summary>The surge note for a record, or <c>null</c> when the rule (design 6.6, three settings) does not hold.</summary>
     public async Task<SurgeInfo?> SurgeAsync(AppealsDb db, Guid appealId, CancellationToken ct)
     {
         var hours = await settings.GetAsync(SettingKeys.SurgeWindowHours, ct);
@@ -65,16 +72,17 @@ internal sealed class AppealReads(IParticipants participants, IBillCatalogue bil
         return new SurgeInfo(SurgeRules.SharePercent(counts.Recent, counts.New), hours, counts.Recent, counts.New);
     }
 
-    public static ThresholdInfo Threshold(Appeal appeal, SideCounts counts, int minimum)
+    /// <summary>The threshold of a bill as everyone sees it; <paramref name="appeal"/> null for a bill without a record.</summary>
+    public static ThresholdInfo Threshold(Appeal? appeal, SideCounts counts, ThresholdSettings threshold)
     {
-        var effective = ThresholdRules.Effective(appeal.Threshold, minimum, appeal.FirstSummarisedAt);
+        var effective = ThresholdRules.Effective(appeal?.Threshold, threshold.Default, threshold.Minimum);
         return new ThresholdInfo(
             effective,
-            appeal.ThresholdSetBy,
-            appeal.ThresholdNote,
+            appeal?.ThresholdSetBy ?? ThresholdSetters.Default,
+            appeal?.ThresholdNote,
             counts.Total,
-            ThresholdRules.Reached(counts.Total, effective),
-            appeal.FirstSummarisedAt is not null);
+            ThresholdRules.Reached(counts.Total, effective, appeal?.FirstSummarisedAt),
+            appeal?.FirstSummarisedAt is not null);
     }
 
     public async Task<IReadOnlyDictionary<Guid, string?>> NamesAsync(IEnumerable<Guid> userIds, CancellationToken ct)
@@ -100,44 +108,81 @@ internal sealed class AppealReads(IParticipants participants, IBillCatalogue bil
     public static ReasonInfo ToInfo(Reason r, IReadOnlyDictionary<Guid, string?> names, IReadOnlyDictionary<Guid, int> endorsements) =>
         new(r.Id, r.Side, r.Text, names.GetValueOrDefault(r.AuthorUserId), endorsements.GetValueOrDefault(r.Id), r.Status, r.CreatedAt);
 
-    /// <summary>The bill's published appeal (open or closed), at most one (design 8.1).</summary>
-    public static Task<Appeal?> FindPublishedAsync(AppealsDb db, string billNumber, bool tracking, CancellationToken ct)
+    /// <summary>The bill's record (open, closed or hidden), at most one (design 8.12.1); null while the bill has none.</summary>
+    public static Task<Appeal?> FindRecordAsync(AppealsDb db, string billNumber, bool tracking, CancellationToken ct)
     {
         var number = NormaliseBillNumber(billNumber);
         var query = tracking ? db.Appeals : db.Appeals.AsNoTracking();
-        return query.FirstOrDefaultAsync(a => a.BillNumber == number && (a.Status == AppealStatuses.Open || a.Status == AppealStatuses.Closed), ct);
-    }
-
-    /// <summary>
-    /// The appeal a person sees on a bill (design 8.1): the published one if there is one, otherwise their own waiting or
-    /// returned proposal. Someone else's proposal is never found here.
-    /// </summary>
-    public static async Task<Appeal?> FindForAsync(AppealsDb db, string billNumber, Guid? viewer, bool tracking, CancellationToken ct)
-    {
-        if (await FindPublishedAsync(db, billNumber, tracking, ct) is { } published)
-        {
-            return published;
-        }
-
-        if (viewer is not { } userId)
-        {
-            return null;
-        }
-
-        var number = NormaliseBillNumber(billNumber);
-        var query = tracking ? db.Appeals : db.Appeals.AsNoTracking();
-        return await query.FirstOrDefaultAsync(
-            a => a.BillNumber == number && a.InitiatorUserId == userId && (a.Status == AppealStatuses.Pending || a.Status == AppealStatuses.Returned),
+        return query.FirstOrDefaultAsync(
+            a => a.BillNumber == number && (a.Status == AppealStatuses.Open || a.Status == AppealStatuses.Closed || a.Status == AppealStatuses.Rejected),
             ct);
     }
 
     public static string NormaliseBillNumber(string number) => number.Trim().ToUpperInvariant();
+}
 
-    /// <summary>A pending or returned proposal is visible only to its author (design 8.1); a rejected or superseded one to nobody.</summary>
-    public static bool IsVisibleTo(Appeal appeal, Guid? viewer) => appeal.Status switch
+/// <summary>
+/// Finding or creating a bill's record (design 8.12.1). The record is created when first needed, under the bill's lock and
+/// behind the unique index, so two people arriving at the same moment land on one row. Nothing about who caused it is kept.
+/// </summary>
+internal sealed class BillRecords(IBillCatalogue bills, TimeProvider clock)
+{
+    /// <summary>
+    /// The bill's record, created as an open one if the bill is active and has none. Must run inside a transaction (the
+    /// bill's lock is held until it ends). <c>bill.not-found</c> for a bill not in the catalogue, <c>appeal.not-open</c>
+    /// for a finished bill without a record. An existing record is returned whatever its status; the caller checks it.
+    /// </summary>
+    public async Task<Result<Appeal>> EnsureAsync(AppealsDb db, string billNumber, CancellationToken ct)
     {
-        AppealStatuses.Open or AppealStatuses.Closed => true,
-        AppealStatuses.Pending or AppealStatuses.Returned => viewer is { } v && v == appeal.InitiatorUserId,
-        _ => false,
-    };
+        if (await AppealReads.FindRecordAsync(db, billNumber, tracking: false, ct) is { } existing)
+        {
+            return existing;
+        }
+
+        var bill = await bills.FindAsync(AppealReads.NormaliseBillNumber(billNumber), ct);
+        if (bill is null)
+        {
+            return Error.NotFound("bill.not-found");
+        }
+
+        if (RecordRules.CheckParticipation(null, await bills.FinalVoteAsync(bill.Number, ct) is not null) is { } finished)
+        {
+            return RuleErrors.Of(finished);
+        }
+
+        // Only creating takes the bill's lock, so taking part on a bill that has its record is never serialised per bill.
+        await ParticipationLock.TakeBillAsync(db, bill.Number, ct);
+        if (await AppealReads.FindRecordAsync(db, bill.Number, tracking: false, ct) is { } meanwhile)
+        {
+            return meanwhile;
+        }
+
+        var now = clock.GetUtcNow();
+        var record = new Appeal
+        {
+            Id = Ids.New(clock),
+            BillNumber = bill.Number,
+            Status = AppealStatuses.Open,
+            OpenedAt = now,
+            PublishedAt = now,
+            ChangedAt = now,
+            ThresholdSetBy = ThresholdSetters.Default,
+        };
+        db.Appeals.Add(record);
+        await db.SaveChangesAsync(ct);
+        db.Entry(record).State = EntityState.Detached;
+        return record;
+    }
+
+    /// <summary>Whether the bill is active: in the catalogue and not finished by the Seimas (design 8.12.1).</summary>
+    public async Task<Result<BillFacts>> ActiveBillAsync(string billNumber, CancellationToken ct)
+    {
+        var bill = await bills.FindAsync(AppealReads.NormaliseBillNumber(billNumber), ct);
+        if (bill is null)
+        {
+            return Error.NotFound("bill.not-found");
+        }
+
+        return await bills.FinalVoteAsync(bill.Number, ct) is null ? bill : Error.Conflict("appeal.not-open");
+    }
 }

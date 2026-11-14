@@ -11,22 +11,26 @@ using Microsoft.Extensions.Localization;
 namespace Lt2.UnitTests.Components;
 
 /// <summary>
-/// Design 8.3 (decided 2026-11-13): each moderation action is its own control; choosing one opens only its own fields
-/// with one sentence; only the actions that apply to the item's state are offered; one is open at a time; the
-/// confirmation stays after the action closes.
+/// Design 8.3 (decided 2026-11-13), 8.12.3: each moderation action is its own control; choosing one opens only its own
+/// fields with one sentence; only the actions that apply to the item's state are offered; one is open at a time; the
+/// confirmation stays after the action closes. A bill's description is written by bill number on any active bill, and an
+/// action on a bill without a record creates the record first.
 /// </summary>
 public sealed class ModerationActionsTests : BunitContext
 {
+    private const string Bill = "XVP-0533";
     private static readonly Guid Item = Guid.Parse("0193a1b2-0000-7000-8000-000000000412");
 
-    private readonly OpenAppealFormTests.AppealsApiFake _api;
+    private readonly ApiFake _api;
 
     public ModerationActionsTests()
     {
         Services.AddLocalization();
+        Services.AddLt2Validators();
         Services.AddLt2ClientComponents();
-        var api = DispatchProxy.Create<IModerationApi, OpenAppealFormTests.AppealsApiFake>();
-        _api = (OpenAppealFormTests.AppealsApiFake)(object)api;
+        var api = DispatchProxy.Create<IModerationApi, ApiFake>();
+        _api = (ApiFake)(object)api;
+        _api.On("GetAiAsync", ApiResult<AiStatusResponse>.Ok(new AiStatusResponse(false)));
         Services.AddSingleton(api);
         JSInterop.Mode = JSRuntimeMode.Loose;
         SetRendererInfo(new RendererInfo("WebAssembly", isInteractive: true));
@@ -34,9 +38,12 @@ public sealed class ModerationActionsTests : BunitContext
 
     private string Text(string key) => Services.GetRequiredService<IStringLocalizer<AppealUi>>()[key];
 
-    private IRenderedComponent<ModerationActions> Render(string kind, string status, bool held = false, bool openItems = false, int candidates = 0, string? description = null) =>
+    private IRenderedComponent<ModerationActions> Render(
+        string kind, string status, bool held = false, bool openItems = false, int candidates = 0, string? description = "", bool noRecord = false, string? source = null) =>
         Render<ModerationActions>(p => p
-            .Add(c => c.Id, Item)
+            .Add(c => c.DescriptionSource, source)
+            .Add(c => c.Id, noRecord ? null : Item)
+            .Add(c => c.Number, kind == "appeal" ? Bill : null)
             .Add(c => c.Kind, kind)
             .Add(c => c.Status, status)
             .Add(c => c.Held, held)
@@ -47,29 +54,38 @@ public sealed class ModerationActionsTests : BunitContext
                 .Select(i => new ReasonResponse(Guid.NewGuid(), "for", "Panašus argumentas " + i, "Rūta Mockutė", i, "published", DateTimeOffset.UnixEpoch))
                 .ToList()));
 
+    private static string Key(IRenderedComponent<ModerationActions> actions) => actions.Instance.Id?.ToString() ?? Bill;
+
     private static string[] Offered(IRenderedComponent<ModerationActions> actions) =>
-        actions.FindAll("[role=group] button").Select(b => b.Id!.Replace("action-", "", StringComparison.Ordinal).Replace("-" + Item, "", StringComparison.Ordinal)).ToArray();
+        actions.FindAll("[role=group] button").Select(b => b.Id!.Replace("action-", "", StringComparison.Ordinal).Replace("-" + Key(actions), "", StringComparison.Ordinal)).ToArray();
 
     [Fact]
-    public void A_waiting_appeal_offers_publish_return_hide_threshold_and_restrict() =>
-        Offered(Render("appeal", "pending")).ShouldBe(["publish", "return", "hide", "threshold", "restrict"]);
-
-    [Fact]
-    public void An_open_appeal_offers_the_timing_actions_and_keep_only_when_something_was_reported() =>
-        Offered(Render("appeal", "open", openItems: true)).ShouldBe(["keep", "hide", "threshold", "planned", "hold", "urgent", "restrict"]);
-
-    [Fact]
-    public void An_open_appeal_offers_correcting_its_description_when_the_text_is_given_and_never_a_waiting_one()
+    public void An_open_bill_offers_the_description_the_timing_actions_and_keep_only_when_something_was_reported()
     {
-        Offered(Render("appeal", "open", description: "Projektas keičia rinkliavas.")).ShouldBe(["describe", "hide", "threshold", "planned", "hold", "urgent", "restrict"]);
-        Offered(Render("appeal", "open", openItems: true, description: "Projektas keičia rinkliavas.")).Take(2).ShouldBe(["keep", "describe"]);
-        Offered(Render("appeal", "pending", description: "Projektas keičia rinkliavas.")).ShouldNotContain("describe", "a proposal is returned to its author instead");
+        Offered(Render("appeal", "open", openItems: true)).ShouldBe(["keep", "describe", "threshold", "planned", "hold", "urgent", "hide"]);
+        Offered(Render("appeal", "open")).ShouldBe(["describe", "threshold", "planned", "hold", "urgent", "hide"]);
     }
 
     [Fact]
-    public void Correcting_the_description_starts_from_the_shown_text_and_the_item_stays_after_it()
+    public void Nothing_offers_publishing_returning_or_restricting_a_bill()
     {
-        _api.On("CorrectDescriptionAsync", ApiResult.Ok());
+        var offered = Offered(Render("appeal", "open", openItems: true));
+        offered.ShouldNotContain("publish");
+        offered.ShouldNotContain("return");
+        offered.ShouldNotContain("restrict", "a bill's record has no author to restrict (design 8.12.4)");
+    }
+
+    [Fact]
+    public void The_description_action_says_write_on_a_bill_without_one_and_correct_on_one_that_has_it()
+    {
+        Render("appeal", "open", description: "").Find($"#action-describe-{Item}").TextContent.ShouldBe(Text("Mod.Action.write"));
+        Render("appeal", "open", description: "Projektas keičia rinkliavas.").Find($"#action-describe-{Item}").TextContent.ShouldBe(Text("Mod.Action.describe"));
+    }
+
+    [Fact]
+    public void Writing_the_description_goes_by_bill_number_starts_from_the_shown_text_and_the_item_stays_after_it()
+    {
+        _api.On("WriteDescriptionAsync", ApiResult.Ok());
         var actions = Render("appeal", "open", description: "Projektas keičia rinkliavas.");
         actions.Find($"#action-describe-{Item}").Click();
 
@@ -80,11 +96,136 @@ public sealed class ModerationActionsTests : BunitContext
         actions.Find("form").Submit();
 
         actions.Markup.ShouldContain(Text("Mod.Done.describe"));
-        Offered(actions).ShouldContain("describe", "the appeal stays open; nothing is finished");
+        _api.Calls.ShouldContain("WriteDescriptionAsync");
+        Offered(actions).ShouldContain("describe", "the bill stays open; nothing is finished");
     }
 
     [Fact]
-    public void An_appeal_on_hold_offers_release_and_no_urgent_summary()
+    public void The_official_texts_address_starts_from_the_records_and_goes_with_the_description()
+    {
+        _api.On("WriteDescriptionAsync", ApiResult.Ok());
+        const string Address = "https://e-seimas.lrs.lt/portal/legalAct/lt/TAP/bandymas";
+        var actions = Render<ModerationActions>(p => p
+            .Add(c => c.Id, Item).Add(c => c.Number, Bill).Add(c => c.Kind, "appeal").Add(c => c.Status, "open")
+            .Add(c => c.Description, "DI santrauka.").Add(c => c.DescriptionSource, "ai").Add(c => c.DescriptionUrl, Address));
+        actions.Find($"#action-describe-{Item}").Click();
+
+        actions.Find($"label[for=describe-url-{Item}]").TextContent.ShouldBe(Text("Mod.DescriptionUrl"));
+        actions.Find($"#describe-url-{Item}").GetAttribute("value").ShouldBe(Address, "filled in advance, so leaving it alone keeps it");
+        actions.Find($"#describe-{Item}").Input("Pataisyta DI santrauka.");
+        actions.Find($"#statement-{Item}").Input("Pataisyta pagal aiškinamąjį raštą.");
+        actions.Find("form").Submit();
+
+        var sent = (ModeratorDescriptionRequest)_api.Arguments[_api.Calls.IndexOf("WriteDescriptionAsync")][1]!;
+        sent.DescriptionUrl.ShouldBe(Address);
+
+        // Opened again, the field starts from what was saved; emptied, it clears the address.
+        actions.Find($"#action-describe-{Item}").Click();
+        actions.Find($"#describe-url-{Item}").GetAttribute("value").ShouldBe(Address);
+        actions.Find($"#describe-url-{Item}").Input("  ");
+        actions.Find($"#describe-{Item}").Input("Dar kartą pataisyta santrauka.");
+        actions.Find($"#statement-{Item}").Input("Adresas netikslus.");
+        actions.Find("form").Submit();
+        ((ModeratorDescriptionRequest)_api.Arguments[_api.Calls.LastIndexOf("WriteDescriptionAsync")][1]!).DescriptionUrl.ShouldBeNull();
+    }
+
+    [Theory]
+    [InlineData("http://e-seimas.lrs.lt/portal/legalAct/lt/TAP/bandymas")]
+    [InlineData("https://evil-lrs.lt/")]
+    [InlineData("https://lrs.lt@evil.example/")]
+    public void A_refused_address_is_said_at_the_field_and_nothing_is_sent(string address)
+    {
+        _api.On("WriteDescriptionAsync", ApiResult.Ok());
+        var actions = Render("appeal", "open", description: "Projektas keičia rinkliavas.");
+        actions.Find($"#action-describe-{Item}").Click();
+        actions.Find($"#describe-url-{Item}").Input(address);
+        actions.Find($"#statement-{Item}").Input("Pridėtas adresas.");
+        actions.Find("form").Submit();
+
+        _api.Calls.ShouldNotContain("WriteDescriptionAsync");
+        var message = Services.GetRequiredService<IStringLocalizer<ValidationMessages>>()["DescriptionUrl.Invalid"].Value;
+        actions.Find($"#describe-url-{Item}").ParentElement!.ClassList.ShouldContain("field--error");
+        actions.Find($"#describe-url-{Item}").ParentElement!.TextContent.ShouldContain(message);
+    }
+
+    [Fact]
+    public void An_AI_summary_nobody_has_read_can_be_confirmed_corrected_or_removed_and_any_description_removed()
+    {
+        Offered(Render("appeal", "open", openItems: true, description: "DI santrauka.", source: "ai"))
+            .ShouldBe(["keep", "confirm", "describe", "undescribe", "threshold", "planned", "hold", "urgent", "hide"]);
+        Offered(Render("appeal", "open", description: "Moderatoriaus tekstas.", source: "moderator"))
+            .ShouldBe(["describe", "undescribe", "threshold", "planned", "hold", "urgent", "hide"]);
+        Offered(Render("appeal", "open", description: "Patvirtinta santrauka.", source: "ai-draft")).ShouldNotContain("confirm");
+    }
+
+    [Fact]
+    public void Confirming_goes_by_bill_number_with_an_optional_note_and_then_is_no_longer_offered()
+    {
+        _api.On("ConfirmDescriptionAsync", ApiResult.Ok());
+        var actions = Render("appeal", "open", openItems: true, description: "DI santrauka.", source: "ai");
+        actions.Find($"#action-confirm-{Item}").Click();
+        actions.Find($"#action-sentence-{Item}").TextContent.ShouldBe(Text("Mod.Sentence.appeal.confirm"));
+        actions.Find($"label[for=statement-{Item}]").TextContent.ShouldBe(Text("Mod.Note.Record"));
+        actions.Find("form").Submit();
+
+        actions.Markup.ShouldContain(Text("Mod.Done.confirm"));
+        _api.Calls.ShouldContain("ConfirmDescriptionAsync");
+        Offered(actions).ShouldNotContain("confirm");
+        Offered(actions).ShouldContain("undescribe");
+    }
+
+    [Fact]
+    public void Removing_asks_for_a_statement_and_then_the_bill_has_no_description_to_remove()
+    {
+        _api.On("RemoveDescriptionAsync", ApiResult.Ok());
+        var actions = Render("appeal", "open", description: "DI santrauka.", source: "ai");
+        actions.Find($"#action-undescribe-{Item}").Click();
+        actions.Find($"label[for=statement-{Item}]").TextContent.ShouldBe(Text("Mod.Statement.Required"));
+        actions.Find($"#statement-{Item}").Input("Santrauka klaidinga.");
+        actions.Find("form").Submit();
+
+        _api.Calls.ShouldContain("RemoveDescriptionAsync");
+        Offered(actions).ShouldBe(["describe", "threshold", "planned", "hold", "urgent", "hide"]);
+        actions.Find($"#action-describe-{Item}").TextContent.ShouldBe(Text("Mod.Action.write"));
+    }
+
+    [Fact]
+    public void Without_an_AI_provider_the_description_form_mentions_no_draft()
+    {
+        var actions = Render("appeal", "open");
+        actions.Find($"#action-describe-{Item}").Click();
+        actions.FindAll($"#describe-source-{Item}").ShouldBeEmpty();
+        actions.FindAll($"#describe-draft-{Item}").ShouldBeEmpty();
+        actions.Markup.ShouldNotContain(Text("ModOpen.Draft"));
+    }
+
+    [Fact]
+    public void With_an_AI_provider_the_description_form_offers_the_draft_from_pasted_official_text()
+    {
+        _api.On("GetAiAsync", ApiResult<AiStatusResponse>.Ok(new AiStatusResponse(true)));
+        var actions = Render("appeal", "open");
+        actions.Find($"#action-describe-{Item}").Click();
+        actions.FindAll($"#describe-source-{Item}").Count.ShouldBe(1);
+        actions.Find($"#describe-draft-{Item}").HasAttribute("disabled").ShouldBeTrue("no draft without a source text");
+    }
+
+    [Fact]
+    public void An_action_on_a_bill_without_a_record_creates_the_record_first()
+    {
+        var created = Guid.Parse("0193a1b2-0000-7000-8000-000000000533");
+        _api.On("EnsureRecordAsync", ApiResult<BillRecordResponse>.Ok(new BillRecordResponse(created)));
+        _api.On("HoldAsync", ApiResult.Ok());
+        var actions = Render("appeal", "open", noRecord: true);
+        actions.Find($"#action-hold-{Bill}").Click();
+        actions.Find($"#statement-{Bill}").Input("Šuolis, tikriname.");
+        actions.Find("form").Submit();
+
+        _api.Calls.Where(c => c is not "GetAiAsync").ShouldBe(["EnsureRecordAsync", "HoldAsync"]);
+        actions.Markup.ShouldContain(Text("Mod.Done.hold"));
+    }
+
+    [Fact]
+    public void A_bill_on_hold_offers_release_and_no_urgent_summary()
     {
         var offered = Offered(Render("appeal", "open", held: true));
         offered.ShouldContain("release");
@@ -138,10 +279,10 @@ public sealed class ModerationActionsTests : BunitContext
     [Fact]
     public void The_confirmation_stays_after_the_action_closes_and_a_finished_item_offers_nothing_more()
     {
-        _api.On("HideAppealAsync", ApiResult.Ok());
-        var actions = Render("appeal", "pending");
+        _api.On("HideReasonAsync", ApiResult.Ok());
+        var actions = Render("reason", "pending");
         actions.Find($"#action-hide-{Item}").Click();
-        actions.Find($"#statement-{Item}").Input("Netinkamas aprašymas.");
+        actions.Find($"#statement-{Item}").Input("Įžeidimas.");
         actions.Find("form").Submit();
 
         actions.FindAll("form").ShouldBeEmpty();

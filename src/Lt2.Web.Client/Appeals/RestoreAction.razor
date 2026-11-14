@@ -2,8 +2,8 @@
 @inherits InteractiveBase
 @inject IModerationApi ModerationApi
 
-@* "Atkurti" for a hidden appeal or reason (design 8.3): opens only its own field, a required statement sent to the
-   author, with one sentence on what it does. The confirmation stays after the action closes. *@
+@* "Atkurti" for a hidden bill or reason (design 8.3): opens only its own field, a required statement (sent to an
+   argument's author), with one sentence on what it does. The confirmation stays after the action closes. *@
 <div class="stack stack--tight" id="restore-@Id">
     @if (!_open)
     {
@@ -42,7 +42,7 @@
     /// <summary><c>appeal</c> or <c>reason</c>.</summary>
     [Parameter, EditorRequired] public string Kind { get; set; } = "";
 
-    /// <summary>For an appeal, the status it comes back with (open, closed, pending).</summary>
+    /// <summary>For a bill, the status it comes back with (open or closed).</summary>
     [Parameter] public string? RestoresAs { get; set; }
 
     /// <summary>False when the server would refuse now; the reason is shown beside the item.</summary>

@@ -8,9 +8,8 @@ using Lt2.Web.Services;
 namespace Lt2.Web.Endpoints.Moderation;
 
 /// <summary>
-/// <c>POST /api/v1/moderation/reasons/{id}/restrict-author</c> and <c>POST /api/v1/moderation/appeals/{id}/restrict-initiator</c>:
-/// a moderator or an administrator restricts the person from writing until a day or until lifted (design 8.3), in a
-/// staff-passkey session; the statement is required and emailed with the contact address; audited.
+/// <c>POST /api/v1/moderation/reasons/{id}/restrict-author</c>: a moderator or an administrator restricts the argument's
+/// author from writing until a day or until lifted (design 8.3), in a staff-passkey session; the statement is required and emailed with the contact address; audited.
 /// </summary>
 internal static class RestrictAuthorEndpoints
 {
@@ -20,17 +19,6 @@ internal static class RestrictAuthorEndpoints
                 IAppealsModeration moderation, IpHasher ipHasher, ErrorMapper errors, IConfiguration configuration, CancellationToken cancellationToken) =>
                 HandleAsync((m, contact) => moderation.RestrictAuthorOfReasonAsync(id, request.Until, request.Statement, m, contact, cancellationToken), user, context, identity, ipHasher, errors, configuration, cancellationToken))
             .WithName("RestrictReasonAuthor")
-            .WithTags("Moderation")
-            .RequireAuthorization(Policies.Moderator)
-            .WithValidation<RestrictionRequest>()
-            .Produces<RestrictionCreatedResponse>(StatusCodes.Status201Created)
-            .ProducesProblem(StatusCodes.Status404NotFound)
-            .ProducesProblem(StatusCodes.Status409Conflict);
-
-        api.MapPost(ApiEndpoints.Relative(AppealRoutes.RestrictAppealInitiator), (Guid id, RestrictionRequest request, ClaimsPrincipal user, HttpContext context, Lt2.Identity.IIdentityModule identity,
-                IAppealsModeration moderation, IpHasher ipHasher, ErrorMapper errors, IConfiguration configuration, CancellationToken cancellationToken) =>
-                HandleAsync((m, contact) => moderation.RestrictInitiatorOfAppealAsync(id, request.Until, request.Statement, m, contact, cancellationToken), user, context, identity, ipHasher, errors, configuration, cancellationToken))
-            .WithName("RestrictAppealInitiator")
             .WithTags("Moderation")
             .RequireAuthorization(Policies.Moderator)
             .WithValidation<RestrictionRequest>()

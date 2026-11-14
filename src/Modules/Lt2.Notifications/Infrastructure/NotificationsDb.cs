@@ -17,6 +17,12 @@ internal sealed class NotificationsDb(DbContextOptions<NotificationsDb> options)
 
     public DbSet<Digests.DigestDelivery> DigestDeliveries => Set<Digests.DigestDelivery>();
 
+    public DbSet<Lt2.Notifications.Follows.Follow> Follows => Set<Lt2.Notifications.Follows.Follow>();
+
+    public DbSet<Lt2.Notifications.Follows.NoticeSetting> NoticeSettings => Set<Lt2.Notifications.Follows.NoticeSetting>();
+
+    public DbSet<Lt2.Notifications.Follows.BillEvent> BillEvents => Set<Lt2.Notifications.Follows.BillEvent>();
+
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         modelBuilder.HasDefaultSchema(NotificationsModule.Schema);
@@ -55,6 +61,31 @@ internal sealed class NotificationsDb(DbContextOptions<NotificationsDb> options)
             b.Property(x => x.Status).HasMaxLength(20);
             b.Property(x => x.PartyNumbers).HasColumnType("jsonb");
             b.HasOne<Digests.DigestRun>().WithMany().HasForeignKey(x => x.RunId).OnDelete(DeleteBehavior.Cascade);
+        });
+
+        // Design 5.4, 8.11.2: follows (private), the follow-email switches, and the events followers are told about.
+        modelBuilder.Entity<Lt2.Notifications.Follows.Follow>(b =>
+        {
+            b.ToTable("follow");
+            b.HasKey(x => new { x.UserId, x.Kind, x.Key });
+            b.Property(x => x.Kind).HasMaxLength(10);
+            b.Property(x => x.Key).HasMaxLength(40);
+            b.HasIndex(x => new { x.Kind, x.Key });
+        });
+        modelBuilder.Entity<Lt2.Notifications.Follows.NoticeSetting>(b =>
+        {
+            b.ToTable("notice_setting");
+            b.HasKey(x => x.UserId);
+        });
+        modelBuilder.Entity<Lt2.Notifications.Follows.BillEvent>(b =>
+        {
+            b.ToTable("bill_event");
+            b.HasKey(x => new { x.BillNumber, x.Kind, x.Key });
+            b.Property(x => x.BillNumber).HasMaxLength(40);
+            b.Property(x => x.Kind).HasMaxLength(10);
+            b.Property(x => x.Key).HasMaxLength(40);
+            b.Property(x => x.Outcome).HasMaxLength(20);
+            b.HasIndex(x => x.Outcome).HasFilter("outcome = 'waiting'");
         });
     }
 }

@@ -2,12 +2,13 @@ using System.Net;
 using Lt2.Api.Contracts;
 using Lt2.Api.Contracts.Appeals;
 using Lt2.IntegrationTests.Infrastructure;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace Lt2.IntegrationTests;
 
 /// <summary>
-/// Design 8.3 over HTTP: the queue and the moderation actions. Each needs an active moderator role (a staff-passkey
-/// session), is audited, and tells the author why by email through the outbox.
+/// Design 8.3, 8.12.3 over HTTP: moderation after the fact, the queue and the actions. Each needs an active moderator role
+/// (a staff-passkey session), is audited, and tells an argument's author why by email through the outbox.
 /// </summary>
 public sealed class ModerationApiTests(DatabaseFixture database) : ApiTest(database)
 {
@@ -59,114 +60,72 @@ public sealed class ModerationApiTests(DatabaseFixture database) : ApiTest(datab
             await byCode.ShouldBeProblemAsync(HttpStatusCode.Forbidden, "forbidden");
         }
 
-        using var publish = await codeSession.PublishAsync(Guid.NewGuid());
-        await publish.ShouldBeProblemAsync(HttpStatusCode.Forbidden, "forbidden");
+        using var keep = await codeSession.PostAsync(AppealRoutes.With(AppealRoutes.KeepAppeal, Guid.NewGuid()), new ModerationRequest());
+        await keep.ShouldBeProblemAsync(HttpStatusCode.Forbidden, "forbidden");
 
         (await moderator.Browser.GetJsonAsync<ModerationQueueResponse>(AppealRoutes.ModerationQueue)).ShouldNotBeNull();
     }
 
     [Fact]
-    public async Task A_new_appeal_is_in_the_queue_and_publishing_it_opens_it_audits_and_tells_the_initiator()
+    public async Task Nothing_waits_for_approval_a_bill_nobody_reported_is_not_in_the_queue()
     {
-        await Database.FreeBillAsync(AppealSteps.SecondBill);
-        var (initiator, email) = await Factory.MemberAsync("Rūta Mockutė");
-        using var _i = initiator;
-        using var opened = await initiator.OpenAppealAsync(
-            AppealSteps.SecondBill, description: AppealSteps.Description + " Skambinkite +370 612 34567, paaiškinsiu.");
-        var appeal = await opened.ReadAsync<AppealResponse>();
+        var (member, _) = await Factory.MemberAsync();
+        using var _m = member;
         var moderator = (await ModeratorAsync()).Browser;
-
-        var queued = (await moderator.GetJsonAsync<ModerationQueueResponse>(AppealRoutes.ModerationQueue)).Appeals.Single(a => a.Id == appeal.Id);
-        queued.Status.ShouldBe("pending");
-        queued.InitiatorName.ShouldBe("Rūta Mockutė");
-        queued.Description.ShouldBe(AppealSteps.Description + " Skambinkite +370 612 34567, paaiškinsiu.");
-        queued.Flags.ShouldBe(["phone"], "the moderator reviews the description only; there is no first argument");
-
-        using (var published = await moderator.PublishAsync(appeal.Id, "Aprašymas neutralus."))
-        {
-            published.StatusCode.ShouldBe(HttpStatusCode.NoContent);
-        }
-
-        using var stranger = NewBrowser();
-        var page = await stranger.AppealAsync(AppealSteps.SecondBill);
-        page.Status.ShouldBe("open");
-        page.PublishedAt.ShouldNotBeNull();
-        page.Reasons.ShouldBeEmpty("opened without arguments; the initiator writes them like anyone else");
-        (await AuditAsync("moderation.appeal.publish", appeal.Id)).ShouldBe(1);
-        (await NoticesAsync(email, "appeal-published")).ShouldBe(1);
-        (await Database.ScalarAsync<long>("SELECT count(*) FROM appeals.moderation_action WHERE target_id = @t AND action = 'publish'", ("t", appeal.Id))).ShouldBe(1);
+        var appeal = await Database.PrepareBillAsync(member, moderator, AppealSteps.ThirdBill, "against");
         (await moderator.GetJsonAsync<ModerationQueueResponse>(AppealRoutes.ModerationQueue)).Appeals.ShouldNotContain(a => a.Id == appeal.Id);
-
-        using var twice = await moderator.ReturnAppealAsync(appeal.Id, "Per vėlu.");
-        await twice.ShouldBeProblemAsync(HttpStatusCode.Conflict, "moderation.wrong-state");
     }
 
     [Fact]
-    public async Task A_returned_appeal_carries_the_note_to_its_initiator_who_corrects_it_and_sends_it_again()
+    public async Task Hiding_a_bills_record_closes_taking_part_with_the_statement_on_its_page_and_keeps_sides_unseen()
     {
-        await Database.FreeBillAsync(AppealSteps.SecondBill);
-        var (initiator, email) = await Factory.MemberAsync();
-        using var _i = initiator;
-        var appeal = await (await initiator.OpenAppealAsync(AppealSteps.SecondBill, description: "Labai blogas projektas.")).ReadAsync<AppealResponse>();
+        var (member, email) = await Factory.MemberAsync();
+        using var _m = member;
         var moderator = (await ModeratorAsync()).Browser;
+        var appeal = await Database.PrepareBillAsync(member, moderator, AppealSteps.ThirdBill);
 
-        using (var noStatement = await moderator.ReturnAppealAsync(appeal.Id, " "))
+        using (var noStatement = await moderator.PostAsync(AppealRoutes.With(AppealRoutes.HideAppeal, appeal.Id), new StatementRequest { Statement = " " }))
         {
             await noStatement.ShouldBeProblemAsync(HttpStatusCode.BadRequest, "validation");
         }
-
-        (await moderator.ReturnAppealAsync(appeal.Id, "Aprašymas turi būti neutralus.")).StatusCode.ShouldBe(HttpStatusCode.NoContent);
-        var returned = await initiator.AppealAsync(AppealSteps.SecondBill);
-        returned.Status.ShouldBe("returned");
-        returned.ReturnNote.ShouldBe("Aprašymas turi būti neutralus.");
-        (await NoticesAsync(email, "appeal-returned")).ShouldBe(1);
-        (await Database.ScalarAsync<string>(
-            "SELECT payload->>'statement' FROM notify.outbox WHERE kind = 'email.moderation-notice' AND payload->>'to' = @to", ("to", email))).ShouldBe("Aprašymas turi būti neutralus.");
-
-        using (var edited = await initiator.SendAsync(HttpMethod.Put, AppealRoutes.AppealOf(AppealSteps.SecondBill), new EditAppealRequest
-        {
-            Description = AppealSteps.Description,
-        }))
-        {
-            edited.StatusCode.ShouldBe(HttpStatusCode.NoContent);
-        }
-
-        (await initiator.AppealAsync(AppealSteps.SecondBill)).Status.ShouldBe("pending");
-        (await Database.ScalarAsync<long>("SELECT count(*) FROM appeals.revision WHERE entity_id = @a AND field = 'description'", ("a", appeal.Id))).ShouldBe(1);
-        (await moderator.GetJsonAsync<ModerationQueueResponse>(AppealRoutes.ModerationQueue)).Appeals.ShouldContain(a => a.Id == appeal.Id);
-    }
-
-    [Fact]
-    public async Task A_hidden_appeal_disappears_and_leaves_the_bill_free_for_a_new_one()
-    {
-        var (initiator, email) = await Factory.MemberAsync();
-        using var _i = initiator;
-        var moderator = (await ModeratorAsync()).Browser;
-        var appeal = await Database.OpenPublishedAsync(initiator, moderator, AppealSteps.ThirdBill);
 
         (await moderator.PostAsync(AppealRoutes.With(AppealRoutes.HideAppeal, appeal.Id), new StatementRequest { Statement = "Neteisėtas turinys." }))
             .StatusCode.ShouldBe(HttpStatusCode.NoContent);
 
         using var stranger = NewBrowser();
-        using (var gone = await stranger.Client.GetAsync(AppealRoutes.AppealOf(AppealSteps.ThirdBill)))
+        var hidden = await stranger.AppealAsync(AppealSteps.ThirdBill);
+        hidden.Status.ShouldBe("rejected");
+        hidden.HiddenStatement.ShouldBe("Neteisėtas turinys.");
+        hidden.Counts.ShouldBe(new SideCountsResponse(0, 0, 0, 0), "nothing of the record is shown");
+        hidden.Reasons.ShouldBeEmpty();
+        hidden.Description.ShouldBeEmpty();
+        var page = WebUtility.HtmlDecode(await stranger.Client.GetStringAsync("/seimas/" + AppealSteps.ThirdBill));
+        page.ShouldContain("id=\"taking-part-closed\"");
+        page.ShouldContain("Neteisėtas turinys.");
+        page.ShouldNotContain("id=\"side-picker\"");
+
+        using (var side = await member.TakeSideAsync(AppealSteps.ThirdBill, "for"))
         {
-            await gone.ShouldBeProblemAsync(HttpStatusCode.NotFound, "appeal.not-found");
+            await side.ShouldBeProblemAsync(HttpStatusCode.Conflict, "appeal.not-open");
         }
 
+        (await Database.ScalarAsync<long>("SELECT count(*) FROM appeals.position WHERE appeal_id = @a", ("a", appeal.Id))).ShouldBe(1, "sides are kept, unseen");
+        (await Database.ScalarAsync<long>("SELECT count(*) FROM appeals.appeal WHERE bill_number = @b", ("b", AppealSteps.ThirdBill))).ShouldBe(1, "one record per bill: hiding frees nothing");
+        (await stranger.GetJsonAsync<AppealListResponse>(AppealRoutes.Appeals)).Items.ShouldNotContain(i => i.Bill.Number == AppealSteps.ThirdBill);
         (await AuditAsync("moderation.appeal.hide", appeal.Id)).ShouldBe(1);
-        (await NoticesAsync(email, "appeal-hidden")).ShouldBe(1);
-        var (next, _) = await Factory.MemberAsync();
-        using var _n = next;
-        (await next.OpenAppealAsync(AppealSteps.ThirdBill)).StatusCode.ShouldBe(HttpStatusCode.Created);
+        (await Database.ScalarAsync<long>("SELECT count(*) FROM notify.outbox WHERE kind = 'email.moderation-notice' AND payload->>'to' = @to AND payload->>'notice' NOT LIKE 'reason-%'", ("to", email)))
+            .ShouldBe(0, "a record has no author to email");
     }
 
     [Fact]
-    public async Task A_threshold_set_by_a_moderator_is_public_with_its_reason_and_final_for_the_initiator()
+    public async Task A_threshold_set_by_a_moderator_is_public_with_its_reason()
     {
-        var (initiator, email) = await Factory.MemberAsync();
-        using var _i = initiator;
+        var (member, email) = await Factory.MemberAsync();
+        using var _m = member;
         var moderator = (await ModeratorAsync()).Browser;
-        var appeal = await Database.OpenPublishedAsync(initiator, moderator, AppealSteps.ThirdBill, threshold: 5000);
+        var appeal = await Database.PrepareBillAsync(member, moderator, AppealSteps.ThirdBill);
+        using var stranger = NewBrowser();
+        (await stranger.AppealAsync(AppealSteps.ThirdBill)).Threshold.ShouldBe(new ThresholdResponse(100, "default", null, 1, false, false));
 
         using (var below = await moderator.SendAsync(HttpMethod.Put, AppealRoutes.With(AppealRoutes.AppealThreshold, appeal.Id), new ModeratorThresholdRequest { Threshold = 1, Statement = "Per maža." }))
         {
@@ -176,30 +135,26 @@ public sealed class ModerationApiTests(DatabaseFixture database) : ApiTest(datab
         (await moderator.SendAsync(HttpMethod.Put, AppealRoutes.With(AppealRoutes.AppealThreshold, appeal.Id), new ModeratorThresholdRequest
         {
             Threshold = 300,
-            Statement = "Riba buvo nepasiekiama ir užkirto kelią kitai pusei.",
+            Statement = "Bendra riba šiam projektui per maža.",
         })).StatusCode.ShouldBe(HttpStatusCode.NoContent);
 
-        using var stranger = NewBrowser();
-        (await stranger.AppealAsync(AppealSteps.ThirdBill)).Threshold.ShouldBe(new ThresholdResponse(300, "moderator", "Riba buvo nepasiekiama ir užkirto kelią kitai pusei.", 1, false, false));
-        (await NoticesAsync(email, "threshold-changed")).ShouldBe(1);
+        (await stranger.AppealAsync(AppealSteps.ThirdBill)).Threshold.ShouldBe(new ThresholdResponse(300, "moderator", "Bendra riba šiam projektui per maža.", 1, false, false));
         (await AuditAsync("moderation.appeal.threshold", appeal.Id)).ShouldBe(1);
-
-        using var initiatorChange = await initiator.SendAsync(HttpMethod.Put, AppealRoutes.ThresholdOf(AppealSteps.ThirdBill), new ThresholdRequest { Threshold = 100 });
-        await initiatorChange.ShouldBeProblemAsync(HttpStatusCode.Conflict, "threshold.set-by-moderator");
-        (await initiator.MineAsync(AppealSteps.ThirdBill)).MayChangeThreshold.ShouldBeFalse();
+        (await NoticesAsync(email, "threshold-changed")).ShouldBe(0);
     }
 
     [Fact]
-    public async Task A_moderator_corrects_the_description_directly_with_a_statement_to_the_initiator_and_it_enters_the_history()
+    public async Task A_moderator_writes_the_description_of_any_active_bill_creating_its_record_and_corrects_it_into_the_history()
     {
-        var (initiator, email) = await Factory.MemberAsync();
-        using var _i = initiator;
+        await Database.FreeBillAsync(AppealSteps.SecondBill);
+        var (member, _) = await Factory.MemberAsync();
+        using var _m = member;
         var moderator = (await ModeratorAsync()).Browser;
-        var appeal = await Database.OpenPublishedAsync(initiator, moderator, AppealSteps.ThirdBill);
-        var route = AppealRoutes.With(AppealRoutes.AppealDescription, appeal.Id);
+        var route = AppealRoutes.BillDescriptionOf(AppealSteps.SecondBill);
+        const string First = "Projektas keičia vietinių rinkliavų tvarką.";
         const string Corrected = "Projektas keičia vietinių rinkliavų tvarką: savivaldybės galės nustatyti rinkliavą už stovėjimą.";
 
-        using (var byMember = await initiator.SendAsync(HttpMethod.Put, route, new ModeratorDescriptionRequest { Description = Corrected, Statement = "Bandymas." }))
+        using (var byMember = await member.SendAsync(HttpMethod.Put, route, new ModeratorDescriptionRequest { Description = Corrected, Statement = "Bandymas." }))
         {
             await byMember.ShouldBeProblemAsync(HttpStatusCode.Forbidden, "forbidden");
         }
@@ -209,71 +164,84 @@ public sealed class ModerationApiTests(DatabaseFixture database) : ApiTest(datab
             await noStatement.ShouldBeProblemAsync(HttpStatusCode.BadRequest, "validation");
         }
 
-        using (var unchanged = await moderator.SendAsync(HttpMethod.Put, route, new ModeratorDescriptionRequest { Description = appeal.Description, Statement = "Be pakeitimų." }))
+        (await moderator.SendAsync(HttpMethod.Put, route, new ModeratorDescriptionRequest { Description = First, Statement = "Projektas darbotvarkėje." })).StatusCode.ShouldBe(HttpStatusCode.NoContent);
+        using var stranger = NewBrowser();
+        var described = await stranger.AppealAsync(AppealSteps.SecondBill);
+        described.Id.ShouldNotBeNull("writing the description created the bill's record");
+        described.Description.ShouldBe(First);
+        described.DescriptionSource.ShouldBe("moderator");
+        described.DescriptionAuthor.ShouldBeNull();
+        described.Counts.ShouldBe(new SideCountsResponse(0, 0, 0, 0));
+
+        using (var unchanged = await moderator.SendAsync(HttpMethod.Put, route, new ModeratorDescriptionRequest { Description = First, Statement = "Be pakeitimų." }))
         {
-            await unchanged.ShouldBeProblemAsync(HttpStatusCode.Conflict, "moderation.wrong-state");
+            await unchanged.ShouldBeProblemAsync(HttpStatusCode.BadRequest, "description.unchanged");
         }
 
         (await moderator.SendAsync(HttpMethod.Put, route, new ModeratorDescriptionRequest
         {
             Description = "  " + Corrected + " ",
-            Statement = "Aprašymas buvo šališkas: rinkliava vadinta mokesčiu vairuotojams.",
+            Statement = "Aprašymas buvo netikslus.",
         })).StatusCode.ShouldBe(HttpStatusCode.NoContent);
 
-        using var stranger = NewBrowser();
-        (await stranger.AppealAsync(AppealSteps.ThirdBill)).Description.ShouldBe(Corrected, "shown at once, trimmed, without waiting for anyone");
-        var history = await stranger.GetJsonAsync<List<DescriptionRevisionResponse>>(AppealRoutes.HistoryOf(AppealSteps.ThirdBill));
-        history.ShouldContain(h => h.NewText == Corrected && h.OldText == appeal.Description);
-        (await NoticesAsync(email, "description-corrected")).ShouldBe(1);
-        (await AuditAsync("moderation.appeal.describe", appeal.Id)).ShouldBe(1);
-        (await Database.ScalarAsync<long>("SELECT count(*) FROM appeals.moderation_action WHERE target_id = @t AND action = 'describe'", ("t", appeal.Id))).ShouldBe(1);
+        (await stranger.AppealAsync(AppealSteps.SecondBill)).Description.ShouldBe(Corrected, "shown at once, trimmed, without waiting for anyone");
+        var history = await stranger.GetJsonAsync<List<DescriptionRevisionResponse>>(AppealRoutes.HistoryOf(AppealSteps.SecondBill));
+        history.Select(h => (h.OldText, h.NewText)).ShouldBe([(null, First), (First, Corrected)]);
+        (await AuditAsync("moderation.appeal.describe", described.Id!.Value)).ShouldBe(2);
+        var page = WebUtility.HtmlDecode(await stranger.Client.GetStringAsync("/seimas/" + AppealSteps.SecondBill + "/istorija"));
+        page.ShouldContain(Corrected);
+        page.ShouldContain("aprašymo nebuvo");
+
+        using var unknown = await moderator.SendAsync(HttpMethod.Put, AppealRoutes.BillDescriptionOf("XVP-9999"), new ModeratorDescriptionRequest { Description = First, Statement = "Bandymas." });
+        await unknown.ShouldBeProblemAsync(HttpStatusCode.NotFound, "bill.not-found");
     }
 
     [Fact]
-    public async Task Only_a_moderator_reads_the_state_of_an_appeal_for_the_controls_on_its_page()
+    public async Task Only_a_moderator_reads_the_state_of_a_bill_for_the_controls_on_its_page_and_an_action_creates_the_record()
     {
-        var (initiator, _) = await Factory.MemberAsync();
-        using var _i = initiator;
+        await Database.FreeBillAsync(AppealSteps.SecondBill);
+        var (member, _) = await Factory.MemberAsync();
+        using var _m = member;
         var moderator = (await ModeratorAsync()).Browser;
-        var appeal = await Database.OpenPublishedAsync(initiator, moderator, AppealSteps.ThirdBill, threshold: 400);
-        var route = AppealRoutes.With(AppealRoutes.ModerationAppeal, appeal.Id);
+        var route = AppealRoutes.ModerationBillOf(AppealSteps.SecondBill);
 
         using var stranger = NewBrowser();
         (await stranger.Client.GetAsync(route)).StatusCode.ShouldBe(HttpStatusCode.Unauthorized);
-        using (var byMember = await initiator.Client.GetAsync(route))
+        using (var byMember = await member.Client.GetAsync(route))
         {
             await byMember.ShouldBeProblemAsync(HttpStatusCode.Forbidden, "forbidden");
         }
 
-        var state = await moderator.GetJsonAsync<ModerationAppealResponse>(route);
-        state.Id.ShouldBe(appeal.Id);
-        state.Status.ShouldBe("open");
-        state.Description.ShouldBe(appeal.Description);
-        state.Threshold.ShouldBe(400);
-        state.Held.ShouldBeFalse();
-        state.HasOpenItems.ShouldBeFalse();
+        using (var byMember = await member.PostAsync(AppealRoutes.BillRecordOf(AppealSteps.SecondBill)))
+        {
+            await byMember.ShouldBeProblemAsync(HttpStatusCode.Forbidden, "forbidden");
+        }
 
-        (await moderator.PostAsync(AppealRoutes.With(AppealRoutes.HoldAppeal, appeal.Id), new StatementRequest { Statement = "Laukiame Seimo darbotvarkės." }))
+        var empty = await moderator.ModerationBillAsync(AppealSteps.SecondBill);
+        empty.Id.ShouldBeNull();
+        empty.Status.ShouldBe("open");
+        empty.Threshold.ShouldBe(100);
+        empty.ThresholdSetBy.ShouldBe("default");
+        empty.Reasons.ShouldBeEmpty();
+
+        var id = await moderator.RecordIdAsync(AppealSteps.SecondBill);
+        (await moderator.RecordIdAsync(AppealSteps.SecondBill)).ShouldBe(id, "found the second time, not created again");
+        (await Database.ScalarAsync<long>("SELECT count(*) FROM audit.event WHERE target = @t", ("t", "appeal:" + id))).ShouldBe(0, "creating the record alone is not an action");
+
+        (await moderator.PostAsync(AppealRoutes.With(AppealRoutes.HoldAppeal, id), new StatementRequest { Statement = "Laukiame Seimo darbotvarkės." }))
             .StatusCode.ShouldBe(HttpStatusCode.NoContent);
-        (await initiator.PostAsync(AppealRoutes.Reports, new ReportRequest { TargetKind = "appeal", TargetId = appeal.Id, Ground = "other", Text = "Bandymas." }))
-            .StatusCode.ShouldBe(HttpStatusCode.NoContent);
-        state = await moderator.GetJsonAsync<ModerationAppealResponse>(route);
+        var state = await moderator.ModerationBillAsync(AppealSteps.SecondBill);
+        state.Id.ShouldBe(id);
         state.Held.ShouldBeTrue();
-        state.HasOpenItems.ShouldBeTrue("a report waits, so \"Palikti\" means something");
-
-        (await moderator.PostAsync(AppealRoutes.With(AppealRoutes.HideAppeal, appeal.Id), new StatementRequest { Statement = "Bandymas." }))
-            .StatusCode.ShouldBe(HttpStatusCode.NoContent);
-        using var hidden = await moderator.Client.GetAsync(route);
-        await hidden.ShouldBeProblemAsync(HttpStatusCode.NotFound, "appeal.not-found");
+        state.HasOpenItems.ShouldBeFalse();
     }
-
     [Fact]
     public async Task A_flagged_argument_waits_and_a_moderator_publishes_it()
     {
         var (initiator, _) = await Factory.MemberAsync();
         using var _i = initiator;
         var moderator = (await ModeratorAsync()).Browser;
-        await Database.OpenPublishedAsync(initiator, moderator, AppealSteps.ThirdBill, "against");
+        await Database.PrepareBillAsync(initiator, moderator, AppealSteps.ThirdBill, "against");
         var (author, email) = await Factory.MemberAsync();
         using var _a = author;
         (await author.TakeSideAsync(AppealSteps.ThirdBill, "for")).StatusCode.ShouldBe(HttpStatusCode.NoContent);
@@ -298,7 +266,7 @@ public sealed class ModerationApiTests(DatabaseFixture database) : ApiTest(datab
         var (initiator, email) = await Factory.MemberAsync();
         using var _i = initiator;
         var moderator = (await ModeratorAsync()).Browser;
-        await Database.OpenPublishedAsync(initiator, moderator, AppealSteps.ThirdBill, "against");
+        await Database.PrepareBillAsync(initiator, moderator, AppealSteps.ThirdBill, "against");
         var reasonId = (await initiator.AppealAsync(AppealSteps.ThirdBill)).Reasons.Single().Id;
         (await initiator.SendAsync(HttpMethod.Put, AppealRoutes.EndorsementOf(reasonId))).StatusCode.ShouldBe(HttpStatusCode.NoContent);
         var (reporter, _) = await Factory.MemberAsync();
@@ -324,7 +292,7 @@ public sealed class ModerationApiTests(DatabaseFixture database) : ApiTest(datab
         var (initiator, _) = await Factory.MemberAsync();
         using var _i = initiator;
         var moderator = (await ModeratorAsync()).Browser;
-        await Database.OpenPublishedAsync(initiator, moderator, AppealSteps.ThirdBill, "against");
+        await Database.PrepareBillAsync(initiator, moderator, AppealSteps.ThirdBill, "against");
         var original = (await initiator.AppealAsync(AppealSteps.ThirdBill)).Reasons.Single();
         var (author, email) = await Factory.MemberAsync();
         using var _a = author;
@@ -359,25 +327,217 @@ public sealed class ModerationApiTests(DatabaseFixture database) : ApiTest(datab
     }
 
     [Fact]
-    public async Task Keeping_a_reported_appeal_closes_its_reports_without_an_email()
+    public async Task Keeping_a_bill_whose_description_was_reported_closes_the_reports_without_an_email()
     {
-        var (initiator, email) = await Factory.MemberAsync();
-        using var _i = initiator;
+        var (member, email) = await Factory.MemberAsync();
+        using var _m = member;
         var moderator = (await ModeratorAsync()).Browser;
-        var appeal = await Database.OpenPublishedAsync(initiator, moderator, AppealSteps.ThirdBill);
+        var appeal = await Database.PrepareBillAsync(member, moderator, AppealSteps.ThirdBill);
         var (reporter, _) = await Factory.MemberAsync();
         using var _r = reporter;
         (await reporter.PostAsync(AppealRoutes.Reports, new ReportRequest { TargetKind = "appeal", TargetId = appeal.Id, Ground = "other" })).StatusCode.ShouldBe(HttpStatusCode.NoContent);
         (await moderator.GetJsonAsync<ModerationQueueResponse>(AppealRoutes.ModerationQueue)).Appeals.Single(a => a.Id == appeal.Id).Reports.Count.ShouldBe(1);
+        (await moderator.ModerationBillAsync(AppealSteps.ThirdBill)).HasOpenItems.ShouldBeTrue("a report waits, so \"Palikti\" means something");
 
-        (await moderator.PublishAsync(appeal.Id)).StatusCode.ShouldBe(HttpStatusCode.NoContent);
+        (await moderator.PostAsync(AppealRoutes.With(AppealRoutes.KeepAppeal, appeal.Id), new ModerationRequest())).StatusCode.ShouldBe(HttpStatusCode.NoContent);
         (await moderator.GetJsonAsync<ModerationQueueResponse>(AppealRoutes.ModerationQueue)).Appeals.ShouldNotContain(a => a.Id == appeal.Id);
-        (await NoticesAsync(email, "appeal-published")).ShouldBe(1, "only the first publication");
+        (await AuditAsync("moderation.appeal.keep", appeal.Id)).ShouldBe(1);
+        (await Database.ScalarAsync<long>("SELECT count(*) FROM notify.outbox WHERE kind = 'email.moderation-notice' AND payload->>'to' = @to AND payload->>'notice' NOT LIKE 'reason-%'", ("to", email)))
+            .ShouldBe(0);
     }
-}
 
-internal static class ModerationSteps
-{
-    public static Task<HttpResponseMessage> ReturnAppealAsync(this TestBrowser moderator, Guid appealId, string statement) =>
-        moderator.PostAsync(AppealRoutes.With(AppealRoutes.ReturnAppeal, appealId), new StatementRequest { Statement = statement });
+    [Fact]
+    public async Task A_description_is_reported_only_while_the_bill_has_one()
+    {
+        await Database.FreeBillAsync(AppealSteps.SecondBill);
+        var (member, _) = await Factory.MemberAsync();
+        using var _m = member;
+        (await member.TakeSideAsync(AppealSteps.SecondBill, "for")).StatusCode.ShouldBe(HttpStatusCode.NoContent);
+        var id = (await member.AppealAsync(AppealSteps.SecondBill)).Id!.Value;
+        using var report = await member.PostAsync(AppealRoutes.Reports, new ReportRequest { TargetKind = "appeal", TargetId = id, Ground = "other" });
+        await report.ShouldBeProblemAsync(HttpStatusCode.NotFound, "report.target-not-found");
+    }
+
+    /// <summary>
+    /// Design 8.13 (decided by the owner on 2026-11-14): the panel on the bill's page shows the open reports about the
+    /// description as the queue does (ground, the reporter's words, when), from the moderators-only answer; nobody else
+    /// receives any of it, a moderator's code session included.
+    /// </summary>
+    [Fact]
+    public async Task Reports_about_the_description_reach_the_panels_answer_and_nobody_but_a_moderator_receives_them()
+    {
+        var (member, _) = await Factory.MemberAsync();
+        using var _m = member;
+        var staff = await ModeratorAsync();
+        var moderator = staff.Browser;
+        var appeal = await Database.PrepareBillAsync(member, moderator, AppealSteps.ThirdBill);
+        var (reporter, _) = await Factory.MemberAsync("Pranešėja Bandomoji");
+        using var _r = reporter;
+        const string Said = "Tarifas taikomas nuo 60, ne nuo 40 vidutinių darbo užmokesčių (pranešimo bandymas).";
+        (await reporter.PostAsync(AppealRoutes.Reports, new ReportRequest { TargetKind = "appeal", TargetId = appeal.Id, Ground = "inaccurate", Text = Said }))
+            .StatusCode.ShouldBe(HttpStatusCode.NoContent);
+
+        // The moderator's answer: exactly what the queue shows for that report.
+        var state = await moderator.ModerationBillAsync(AppealSteps.ThirdBill);
+        var queued = (await moderator.GetJsonAsync<ModerationQueueResponse>(AppealRoutes.ModerationQueue)).Appeals.Single(a => a.Id == appeal.Id).Reports;
+        state.DescriptionReports.ShouldBe(queued);
+        var report = state.DescriptionReports.ShouldHaveSingleItem();
+        (report.Ground, report.Text).ShouldBe(("inaccurate", Said));
+        report.CreatedAt.ShouldBeGreaterThan(DateTimeOffset.UtcNow.AddMinutes(-5));
+        var moderatorsPage = WebUtility.HtmlDecode(await moderator.Client.GetStringAsync("/seimas/" + AppealSteps.ThirdBill));
+        moderatorsPage.ShouldContain("id=\"panel-description-reports\"");
+        moderatorsPage.ShouldContain(Said);
+
+        // Nobody else: not a visitor, a member, the reporter, nor the moderator in a code session.
+        using var stranger = NewBrowser();
+        using var codeSession = NewBrowser();
+        await codeSession.PostAsync(Lt2.Api.Contracts.ApiRoutes.Auth.Code, new Lt2.Api.Contracts.Auth.RequestCodeRequest { Email = staff.Email });
+        await codeSession.SignInWithCodeAsync(staff.Email);
+        var route = AppealRoutes.ModerationBillOf(AppealSteps.ThirdBill);
+        using (var byVisitor = await stranger.Client.GetAsync(route))
+        {
+            byVisitor.StatusCode.ShouldBe(HttpStatusCode.Unauthorized);
+            (await byVisitor.Content.ReadAsStringAsync()).ShouldNotContain(Said);
+        }
+
+        foreach (var browser in new[] { member, reporter, codeSession })
+        {
+            using var refused = await browser.Client.GetAsync(route);
+            await refused.ShouldBeProblemAsync(HttpStatusCode.Forbidden, "forbidden");
+        }
+
+        foreach (var (who, browser) in new[] { ("visitor", stranger), ("member", member), ("reporter", reporter), ("moderator's code session", codeSession) })
+        {
+            var page = WebUtility.HtmlDecode(await browser.Client.GetStringAsync("/seimas/" + AppealSteps.ThirdBill));
+            page.ShouldNotContain("panel-description-reports", customMessage: who);
+            page.ShouldNotContain("pranešimo bandymas", customMessage: who);
+            page.ShouldNotContain("id=\"moderation-panel\"", customMessage: who);
+        }
+
+        // Correcting the description from the panel closes its reports, as from the queue.
+        (await moderator.SendAsync(HttpMethod.Put, AppealRoutes.BillDescriptionOf(AppealSteps.ThirdBill),
+            new ModeratorDescriptionRequest { Description = AppealSteps.Description + " Taikoma nuo 2027 metų.", Statement = "Pataisyta pagal pranešimą." }))
+            .StatusCode.ShouldBe(HttpStatusCode.NoContent);
+        (await moderator.ModerationBillAsync(AppealSteps.ThirdBill)).DescriptionReports.ShouldBeEmpty();
+    }
+
+    /// <summary>
+    /// Design 8.13 (decided by the owner on 2026-11-14): a moderator records the official text's address with a description
+    /// they write or correct. Empty or https on lrs.lt or under it, no user info, at most 500 characters; the field's value
+    /// becomes the record's address and an empty one clears it. Shown as "Oficialus tekstas, iš kurio parengta".
+    /// </summary>
+    [Fact]
+    public async Task A_moderator_records_the_official_texts_address_with_the_description_and_an_empty_field_clears_it()
+    {
+        await Database.FreeBillAsync(AppealSteps.SecondBill);
+        var staff = await ModeratorAsync();
+        var moderator = staff.Browser;
+        var route = AppealRoutes.BillDescriptionOf(AppealSteps.SecondBill);
+        const string Text = "Projektas leidžia savivaldybėms nustatyti vietinių rinkliavų dydį pagal sąnaudas.";
+        const string Address = "https://e-seimas.lrs.lt/portal/legalAct/lt/TAP/bandymas-0533";
+        const string Other = "https://www.lrs.lt/sip/portal.show?p_r=35403&p_k=1&bandymas=0533";
+
+        // Refused at the field, on the server too; nothing is saved.
+        foreach (var refused in new[]
+        {
+            "https://evil-lrs.lt/bandymas", "https://lrs.lt.evil.example/bandymas", "https://lrs.lt@evil.example/bandymas",
+            "http://e-seimas.lrs.lt/bandymas", "https://e-seimas.lrs.lt/" + new string('a', 480),
+        })
+        {
+            using var response = await moderator.SendAsync(HttpMethod.Put, route, new ModeratorDescriptionRequest { Description = Text, Statement = "Bandymas.", DescriptionUrl = refused });
+            response.StatusCode.ShouldBe(HttpStatusCode.BadRequest, refused);
+            (await response.ProblemAsync()).GetProperty("errors").TryGetProperty("descriptionUrl", out _).ShouldBeTrue(refused);
+        }
+
+        (await Database.ScalarAsync<long>("SELECT count(*) FROM appeals.appeal WHERE bill_number = @b", ("b", AppealSteps.SecondBill))).ShouldBe(0);
+
+        // Saved with the description: shown at once beside it, and the form starts from it next time.
+        (await moderator.SendAsync(HttpMethod.Put, route, new ModeratorDescriptionRequest { Description = Text, Statement = "Parašyta pagal aiškinamąjį raštą.", DescriptionUrl = " " + Address + " " }))
+            .StatusCode.ShouldBe(HttpStatusCode.NoContent);
+        using var stranger = NewBrowser();
+        var described = await stranger.AppealAsync(AppealSteps.SecondBill);
+        (described.Description, described.DescriptionSource, described.DescriptionUrl).ShouldBe((Text, "moderator", Address));
+        (await moderator.ModerationBillAsync(AppealSteps.SecondBill)).DescriptionUrl.ShouldBe(Address);
+        var page = WebUtility.HtmlDecode(await stranger.Client.GetStringAsync("/seimas/" + AppealSteps.SecondBill));
+        page.ShouldContain($"<a href=\"{Address}\" rel=\"external\" id=\"description-from\">Oficialus tekstas, iš kurio parengta</a>");
+        (await Database.ScalarAsync<long>(
+            "SELECT count(*) FROM audit.event WHERE action = 'moderation.appeal.describe' AND target = @t AND details->'extra'->>'descriptionUrl' = @u",
+            ("t", "appeal:" + described.Id), ("u", Address))).ShouldBe(1, "the address is not personal data and is in the audit details");
+
+        // The same text and address change nothing; another address alone is a change, which leaves the text's history.
+        using (var unchanged = await moderator.SendAsync(HttpMethod.Put, route, new ModeratorDescriptionRequest { Description = Text, Statement = "Bandymas.", DescriptionUrl = Address }))
+        {
+            await unchanged.ShouldBeProblemAsync(HttpStatusCode.BadRequest, "description.unchanged");
+        }
+
+        (await moderator.SendAsync(HttpMethod.Put, route, new ModeratorDescriptionRequest { Description = Text, Statement = "Tikslesnis adresas.", DescriptionUrl = Other }))
+            .StatusCode.ShouldBe(HttpStatusCode.NoContent);
+        (await stranger.AppealAsync(AppealSteps.SecondBill)).DescriptionUrl.ShouldBe(Other);
+        (await stranger.GetJsonAsync<List<DescriptionRevisionResponse>>(AppealRoutes.HistoryOf(AppealSteps.SecondBill))).ShouldHaveSingleItem().NewText.ShouldBe(Text);
+
+        // An empty field clears it: the page no longer names an official text.
+        (await moderator.SendAsync(HttpMethod.Put, route, new ModeratorDescriptionRequest { Description = Text + " Taikoma nuo 2027 metų.", Statement = "Adresas netinka.", DescriptionUrl = "" }))
+            .StatusCode.ShouldBe(HttpStatusCode.NoContent);
+        (await stranger.AppealAsync(AppealSteps.SecondBill)).DescriptionUrl.ShouldBeNull();
+        WebUtility.HtmlDecode(await stranger.Client.GetStringAsync("/seimas/" + AppealSteps.SecondBill)).ShouldNotContain("id=\"description-from\"");
+
+        // The module applies the same rule whatever calls it, not only the endpoint's validator.
+        await using var scope = Factory.Services.CreateAsyncScope();
+        var module = scope.ServiceProvider.GetRequiredService<Lt2.Appeals.IAppealsModeration>();
+        var actor = new Lt2.Appeals.ModeratorActor(await Database.UserIdAsync(staff.Email), "moderator", null);
+        var direct = await module.WriteDescriptionAsync(AppealSteps.SecondBill, new Lt2.Appeals.ModeratorDescription(Text, "Bandymas.", false, "https://lrs.lt@evil.example/"), actor, CancellationToken.None);
+        direct.Error.ShouldNotBeNull().Code.ShouldBe("description-url.invalid");
+    }
+
+    /// <summary>Design 8.12.3 (decided by the owner on 2026-11-14): arguments are moderated on the bill's page too.</summary>
+    [Fact]
+    public async Task Arguments_are_moderated_on_the_bills_page_from_the_moderators_only_answer_with_the_queues_actions()
+    {
+        var (member, _) = await Factory.MemberAsync();
+        using var _m = member;
+        var moderator = (await ModeratorAsync()).Browser;
+        await Database.PrepareBillAsync(member, moderator, AppealSteps.ThirdBill, "against");
+        var (author, email) = await Factory.MemberAsync("Argumentų Autorė");
+        using var _a = author;
+        var shown = await (await author.WriteReasonAsync(AppealSteps.ThirdBill, "against", "Akcijų pardavimo įskaičiavimas paliestų šeimos verslų pardavimus.")).ReadAsync<ReasonCreatedResponse>();
+        var waiting = await (await author.WriteReasonAsync(AppealSteps.ThirdBill, "for", "Rašykite: autore@pavyzdys.test")).ReadAsync<ReasonCreatedResponse>();
+        waiting.Status.ShouldBe("pending");
+
+        // Nobody but a moderator gets the answer the controls need, nor any control on the page.
+        using var stranger = NewBrowser();
+        var route = AppealRoutes.ModerationBillOf(AppealSteps.ThirdBill);
+        (await stranger.Client.GetAsync(route)).StatusCode.ShouldBe(HttpStatusCode.Unauthorized);
+        using (var byMember = await member.Client.GetAsync(route))
+        {
+            await byMember.ShouldBeProblemAsync(HttpStatusCode.Forbidden, "forbidden");
+        }
+
+        foreach (var (who, browser) in new[] { ("visitor", stranger), ("member", member), ("author", author) })
+        {
+            var page = WebUtility.HtmlDecode(await browser.Client.GetStringAsync("/seimas/" + AppealSteps.ThirdBill));
+            page.ShouldNotContain("id=\"moderation-panel\"", customMessage: who);
+            page.ShouldNotContain("id=\"moderate-", customMessage: who);
+            page.ShouldNotContain("panel-reason-", customMessage: who);
+            page.ShouldNotContain("autore@pavyzdys.test", customMessage: who + ": a waiting argument is not shown to others");
+        }
+
+        // The moderator's answer carries the bill's arguments as the queue shows them; the panel lists the waiting one.
+        var state = await moderator.ModerationBillAsync(AppealSteps.ThirdBill);
+        var shownState = state.Reasons.Single(r => r.Id == shown.Id);
+        shownState.MergeCandidates.ShouldContain(r => r.Text == AppealSteps.AgainstReason);
+        state.Reasons.Single(r => r.Id == waiting.Id).Flags.ShouldBe(["email"]);
+        state.Reasons.ShouldAllBe(r => r.Status == "pending" || r.Status == "published");
+        var moderatorsPage = WebUtility.HtmlDecode(await moderator.Client.GetStringAsync("/seimas/" + AppealSteps.ThirdBill));
+        moderatorsPage.ShouldContain("id=\"panel-reason-" + waiting.Id + "\"");
+
+        // Hiding from the page is the queue's action: recorded, audited and told to the author.
+        (await moderator.PostAsync(AppealRoutes.With(AppealRoutes.HideReason, shown.Id), new StatementRequest { Statement = "Kartoja jau esamą argumentą įžeidžiamai." }))
+            .StatusCode.ShouldBe(HttpStatusCode.NoContent);
+        (await stranger.AppealAsync(AppealSteps.ThirdBill)).Reasons.ShouldNotContain(r => r.Id == shown.Id);
+        (await NoticesAsync(email, "reason-hidden")).ShouldBe(1);
+        (await AuditAsync("moderation.reason.hide", shown.Id)).ShouldBe(1);
+        (await Database.ScalarAsync<string>(
+            "SELECT payload->>'path' FROM notify.outbox WHERE kind = 'email.moderation-notice' AND payload->>'to' = @to", ("to", email))).ShouldBe("/seimas/" + AppealSteps.ThirdBill);
+        (await moderator.ModerationBillAsync(AppealSteps.ThirdBill)).Reasons.ShouldNotContain(r => r.Id == shown.Id, "restoring stays on the list of hidden items");
+    }
 }

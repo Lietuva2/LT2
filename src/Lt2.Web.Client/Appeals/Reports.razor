@@ -1,15 +1,16 @@
 @using Lt2.Api.Contracts.Appeals
 @inject Microsoft.Extensions.Localization.IStringLocalizer<AppealUi> L
 
-@* Open reports on a queue item: the ground and the reporter's words. Who reported is never shown. *@
+@* Open reports on an item, in the queue and in the panel on the bill's page alike: the ground, the reporter's words and
+   when (yyyy-MM-dd HH:mm, Vilnius). Who reported is never shown. *@
 @if (Items.Count > 0)
 {
-    <div class="stack stack--tight">
-        <p class="note note--quiet num">@string.Format(System.Globalization.CultureInfo.InvariantCulture, L["Mod.Reports"], Items.Count)</p>
+    <div class="stack stack--tight" id="@Id">
+        <p class="note note--quiet num">@string.Format(System.Globalization.CultureInfo.InvariantCulture, L[Description ? "Mod.Reports.Description" : "Mod.Reports"], Items.Count)</p>
         <ul class="rows">
             @foreach (var report in Items)
             {
-                <li><div class="rows__main"><b>@L["Report.Ground." + report.Ground]</b>@if (!string.IsNullOrEmpty(report.Text)) {<span class="small">@report.Text</span>}</div></li>
+                <li id="report-@report.Id"><div class="rows__main"><b>@L["Report.Ground." + report.Ground]</b>@if (!string.IsNullOrEmpty(report.Text)) {<span class="small">@report.Text</span>}<span class="small num">@Dates.DayTime(report.CreatedAt)</span></div></li>
             }
         </ul>
     </div>
@@ -17,4 +18,10 @@
 
 @code {
     [Parameter, EditorRequired] public IReadOnlyList<QueueReportResponse> Items { get; set; } = [];
+
+    /// <summary>The reports are on a bill's description (design 8.13), whose actions are keep, confirm, correct or remove.</summary>
+    [Parameter] public bool Description { get; set; }
+
+    /// <summary>The list's element id, when a page needs one.</summary>
+    [Parameter] public string? Id { get; set; }
 }

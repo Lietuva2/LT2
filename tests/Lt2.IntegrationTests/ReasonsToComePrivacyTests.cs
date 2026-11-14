@@ -1,0 +1,139 @@
+using System.Net;
+using Lt2.Api.Contracts;
+using Lt2.Api.Contracts.Agenda;
+using Lt2.Api.Contracts.Appeals;
+using Lt2.Api.Contracts.Follows;
+using Lt2.Api.Contracts.Parliament;
+using Lt2.IntegrationTests.Infrastructure;
+
+namespace Lt2.IntegrationTests;
+
+/// <summary>
+/// Design 8.11, 8.12 privacy, non-negotiable: who follows what is shown to nobody (no page, API answer or staff screen),
+/// there is no follower count, nothing combines follows with sides, the person's own follows leave only in their own
+/// answers, and nothing tells who took part first on a bill.
+/// </summary>
+public sealed class ReasonsToComePrivacyTests(DatabaseFixture database) : ApiTest(database)
+{
+    private static readonly string[] PublicAnswers =
+    [
+        AgendaRoutes.Agenda,
+        ParliamentRoutes.BillByNumber(AppealSteps.SecondBill),
+        ParliamentRoutes.MpBySlug(ReasonsToComeSteps.Petraitis),
+        AppealRoutes.AppealOf(AppealSteps.SecondBill),
+        AppealRoutes.Appeals,
+    ];
+
+    [Fact]
+    public async Task Following_changes_no_public_answer_there_is_no_follower_count()
+    {
+        await Database.FreeBillAsync(AppealSteps.TaxBill);
+        using var visitor = NewBrowser();
+        var before = new Dictionary<string, string>();
+        foreach (var route in PublicAnswers)
+        {
+            before[route] = await visitor.Client.GetStringAsync(route);
+        }
+
+        var (member, _) = await Factory.MemberAsync();
+        using var _m = member;
+        await member.FollowBillAsync(AppealSteps.SecondBill);
+        await member.FollowMpAsync(ReasonsToComeSteps.Petraitis);
+        foreach (var route in PublicAnswers)
+        {
+            (await visitor.Client.GetStringAsync(route)).ShouldBe(before[route], route);
+        }
+    }
+
+    [Fact]
+    public async Task Nobody_sees_another_persons_follows_or_requests()
+    {
+        await Database.FreeBillAsync(AppealSteps.SecondBill);
+        var (follower, followerEmail) = await Factory.MemberAsync("Ona Jonaitienė");
+        using var _f = follower;
+        await follower.FollowBillAsync(AppealSteps.SecondBill);
+        await follower.FollowMpAsync(ReasonsToComeSteps.Petraitis);
+        (await follower.TakeSideAsync(AppealSteps.SecondBill, "for")).Dispose();
+
+        var (other, _) = await Factory.MemberAsync();
+        using var _o = other;
+        var theirs = await other.GetJsonAsync<MyFollowsResponse>(FollowRoutes.Mine);
+        theirs.Bills.ShouldBeEmpty();
+        theirs.Mps.ShouldBeEmpty();
+
+        // The pages others see say nothing about the follower: no "Nebesekti", no "Jūs prašote", nobody first.
+        var bill = WebUtility.HtmlDecode(await other.Client.GetStringAsync("/seimas/" + AppealSteps.SecondBill));
+        bill.ShouldNotContain("Nebesekti");
+        bill.ShouldNotContain("Jūs prašote");
+        bill.ShouldNotContain("Ona Jonaitienė");
+
+        // Nor any staff screen: the queue, the bill's moderation state, the hidden list and the restrictions.
+        using var moderator = await StaffMembers.ActiveAsync(Factory, Database, "moderator");
+        await Database.PlanAsync(AppealSteps.SecondBill, ReasonsToComeSteps.VilniusToday().AddDays(3));
+        try
+        {
+            var followerId = (await Database.UserIdAsync(followerEmail)).ToString();
+            foreach (var route in new[] { AppealRoutes.ModerationBillOf(AppealSteps.SecondBill), AppealRoutes.ModerationQueue, AppealRoutes.Hidden, AppealRoutes.Restrictions })
+            {
+                var json = await moderator.Browser.Client.GetStringAsync(route);
+                json.ShouldNotContain(followerEmail, Case.Insensitive, route);
+                json.ShouldNotContain(followerId, Case.Insensitive, route);
+                json.ShouldNotContain("Ona Jonaitienė", Case.Sensitive, route);
+            }
+        }
+        finally
+        {
+            await Database.UnplanAsync(AppealSteps.SecondBill);
+        }
+    }
+
+    [Fact]
+    public async Task Nothing_public_tells_who_took_part_first_on_a_bill()
+    {
+        await Database.FreeBillAsync(AppealSteps.SecondBill);
+        var (first, firstEmail) = await Factory.MemberAsync("Pirmoji Dalyvė");
+        using var _f = first;
+        (await first.TakeSideAsync(AppealSteps.SecondBill, "against")).Dispose();
+        var (second, _) = await Factory.MemberAsync("Antrasis Dalyvis");
+        using var _s = second;
+        (await second.TakeSideAsync(AppealSteps.SecondBill, "for")).Dispose();
+
+        using var visitor = NewBrowser();
+        var firstId = (await Database.UserIdAsync(firstEmail)).ToString();
+        foreach (var route in new[] { AppealRoutes.AppealOf(AppealSteps.SecondBill), AppealRoutes.Appeals, AgendaRoutes.Agenda, "/seimas/" + AppealSteps.SecondBill, "/kreipimaisi" })
+        {
+            var body = WebUtility.HtmlDecode(await visitor.Client.GetStringAsync(route));
+            body.ShouldNotContain("Pirmoji Dalyvė", Case.Sensitive, route);
+            body.ShouldNotContain(firstId, Case.Insensitive, route);
+            body.ShouldNotContain("initiator", Case.Insensitive, route);
+            body.ShouldNotContain("atidarė", Case.Insensitive, route);
+        }
+
+        // The record itself keeps no trace of who caused it.
+        (await Database.ScalarAsync<long>("SELECT count(*) FROM appeals.appeal WHERE bill_number = @b AND initiator_user_id IS NULL", ("b", AppealSteps.SecondBill))).ShouldBe(1);
+        (await Database.ScalarAsync<long>("SELECT count(*) FROM audit.event WHERE target LIKE 'appeal:%' AND actor_user_id = @u", ("u", Guid.Parse(firstId)))).ShouldBe(0);
+    }
+    [Fact]
+    public async Task A_side_never_changes_what_the_follow_answer_holds()
+    {
+        using var moderator = await StaffMembers.ActiveAsync(Factory, Database, "moderator");
+        var (initiator, _) = await Factory.MemberAsync();
+        using var _i = initiator;
+        await Database.PrepareBillAsync(initiator, moderator.Browser, AppealSteps.ThirdBill, side: null);
+        var (member, _) = await Factory.MemberAsync();
+        using var _m = member;
+        await member.FollowBillAsync(AppealSteps.ThirdBill);
+        var before = await member.Client.GetStringAsync(FollowRoutes.Mine);
+        (await member.TakeSideAsync(AppealSteps.ThirdBill, "against")).Dispose();
+        (await member.Client.GetStringAsync(FollowRoutes.Mine)).ShouldBe(before);
+        before.ShouldNotContain("\"side\"");
+        before.ShouldNotContain("\"position\"");
+
+        // And the invitation answer the share line uses carries nothing about the bill or a side.
+        var invitation = await member.Client.GetStringAsync(ApiRoutes.Me.Invitation);
+        invitation.ShouldNotContain(AppealSteps.ThirdBill);
+        invitation.ShouldNotContain("against");
+        invitation.ShouldNotContain("\"side\"");
+        invitation.ShouldNotContain("tikslas");
+    }
+}

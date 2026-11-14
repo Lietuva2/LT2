@@ -56,7 +56,7 @@ public sealed class ReasonWithdrawalTests(DatabaseFixture database) : ApiTest(da
         {
             var (initiator, _) = await Factory.MemberAsync();
             using var _i = initiator;
-            var appeal = await Database.OpenPublishedAsync(initiator, moderator, AppealSteps.ThirdBill, "against", threshold: 1);
+            var appeal = await Database.PrepareBillAsync(initiator, moderator, AppealSteps.ThirdBill, "against", threshold: 1);
             var (author, _) = await Factory.MemberAsync("Autorė Atsiimanti", consent: false);
             using var _a = author;
             const string Text = "Šį argumentą autorė vėliau atsiims.";
@@ -141,7 +141,7 @@ public sealed class ReasonWithdrawalTests(DatabaseFixture database) : ApiTest(da
         {
             var (initiator, _) = await Factory.MemberAsync();
             using var _i = initiator;
-            await Database.OpenPublishedAsync(initiator, moderator, AppealSteps.ThirdBill, "against");
+            await Database.PrepareBillAsync(initiator, moderator, AppealSteps.ThirdBill, "against");
             var (writer, _) = await Factory.MemberAsync();
             using var _w = writer;
 

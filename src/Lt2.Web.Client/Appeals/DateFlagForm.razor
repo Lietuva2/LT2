@@ -2,9 +2,9 @@
 @inherits InteractiveBase
 @inject IAppealsApi Appeals
 
-@* Design 8.4: the initiator and participants can say the planned date is wrong or the bill is voted sooner, with a link
-   to the source; a moderator makes the change. Shown only to members who have a side on the appeal or opened it. *@
-@if (Mine is { } mine && (mine.Side is not null || mine.IsInitiator))
+@* Design 8.4: participants can say the planned date is wrong or the bill is voted sooner, with a link to the source; a
+   moderator makes the change. Shown only to members who have a side on the bill. *@
+@if (Mine is { Side: not null })
 {
     <details class="stack stack--tight" id="date-flag">
         <summary class="linkish small">@L["Flag.Open"]</summary>
