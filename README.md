@@ -202,9 +202,10 @@ A server whose ports 80 and 443 already belong to another Compose project's Cadd
 9.2) runs LT2 without its own Caddy. `deploy/compose.shared-proxy.yaml` keeps LT2's `caddy` from starting, publishes
 nothing on 80 or 443, and joins `web` to that Caddy's Docker network (`LT2_PROXY_NETWORK`) under the alias `lt2-web`.
 `deploy/shared-proxy.Caddyfile` is the site block to append to that Caddy's Caddyfile, with `lt2.example.org` replaced
-by the site's hostname: compression, the 1 MB request limit, no `Server` header, no access log, `X-Robots-Tag: noindex,
-nofollow`, and a `handle_errors` that keeps failed requests (client address, invitation code in the address) out of
-that Caddy's error log. Real hostnames, addresses and paths live only on the server, never in this repository.
+by the site's hostname: compression, the 1 MB request limit, no `Server` header, no access log and `X-Robots-Tag:
+noindex, nofollow`. A request that Caddy itself fails (a 502 while `web` restarts) still reaches that Caddy's error log
+with the client's address and full address; only that Caddy's global log options could drop them, and they belong to
+the other project. Real hostnames, addresses and paths live only on the server, never in this repository.
 
 What survives a redeploy lives outside the application tree, here `$LT2_HOME` (for example a directory under `/srv`,
 owned by root):
@@ -253,9 +254,11 @@ docker compose --env-file $LT2_HOME/lt2.env -f deploy/compose.yaml -f deploy/com
 To deploy a commit of `master` (images are built on a developer's machine from a clean checkout of that commit and
 copied over SSH; nothing goes to a registry):
 
-1. On the developer's machine, with `C` the full commit hash: `LT2_IMAGE_TAG=C docker compose -f deploy/compose.yaml
-   build web worker migrator seimas-standin`, then `docker save -o lt2-images.tar lt2/web:C lt2/worker:C lt2/migrator:C
-   lt2/seimas-standin:C` and `git archive -o lt2-app.tar.gz C`; copy both to the server with `scp`.
+1. On the developer's machine, with `C` the full commit hash: `git archive -o lt2-app.tar.gz C`, unpack it into an
+   empty directory (a working tree would add its ignored `bin/` and `obj/` to the build context) and there run
+   `LT2_IMAGE_TAG=C docker compose -f deploy/compose.yaml build web worker migrator seimas-standin`, then
+   `docker save --platform linux/amd64 -o lt2-images.tar lt2/web:C lt2/worker:C lt2/migrator:C lt2/seimas-standin:C`;
+   copy both files to the server with `scp`.
 2. On the server: `docker load -i lt2-images.tar`; unpack `lt2-app.tar.gz` into a new directory and swap it with
    `$LT2_HOME/app` (keep the old one until the new one runs); write `C` to `$LT2_HOME/deployed-commit` and set
    `LT2_IMAGE_TAG=C` in `lt2.env`.

@@ -5,9 +5,12 @@
 # It keeps what deploy/Caddyfile does: compression, the 1 MB request limit and no Server header; Caddy's proxy sends
 # the scheme (X-Forwarded-Proto) and the client's address (X-Forwarded-For, any incoming value replaced) by default.
 # It adds X-Robots-Tag, since a trial with invented data must not be indexed (drop those lines for production).
-# Logs: no `log` directive, so no access log for the site. A failed request (for example a 502 while web restarts) is
-# otherwise written to that Caddy's error log with the client's address, user agent and full address, invitation code
-# included; handle_errors answers it here instead, and Caddy then logs it only at debug level, which it does not write.
+#
+# Logs: no `log` directive, so no access log for the site. Not covered: a request that Caddy itself fails with a 5xx
+# (web stopped or restarting: 502) goes to that Caddy's error log with the client's address, user agent and full
+# address, an invitation code in it included. Only a global log filter drops those fields (as deploy/Caddyfile does
+# for LT2's own Caddy); a handle_errors here would hide them too, but error routes apply to every site of that server
+# and the other sites' errors would then no longer be logged.
 lt2.example.org {
 	encode zstd gzip
 
@@ -21,12 +24,4 @@ lt2.example.org {
 	}
 
 	reverse_proxy lt2-web:8080
-
-	handle_errors {
-		header {
-			-Server
-			X-Robots-Tag "noindex, nofollow"
-		}
-		respond {err.status_code}
-	}
 }
