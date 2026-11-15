@@ -176,6 +176,13 @@ If Windows has reserved port 8080, set `LT2_HTTP_PORT=8090` for every compose co
   `<StatementQueueItem>`; the bill page's islands share the caller's answers through `MyBillState`. A list whose items
   hold state or re-sort is keyed (`@key`), and an element id is unique on the page (a component shown twice takes an
   `IdPrefix`).
+- **Surfaces (design 8.16).** The ground carries what frames a page: title, lead, the way back, notices (`.note`), an
+  introduction, a plain row of links. What a person comes to read or act on lies on a `.sheet`, one unit per sheet (a
+  list, a table, a part of a bill's page, a form, a queue item); a sheet is never inside a sheet. A form or panel that
+  opens inside a sheet is `.sheet--quiet`, and a quiet sheet never stands on the ground. A component used both inside
+  and outside a sheet takes a `Panel` parameter and drops its own sheet inside one (`QueueReasonItem`,
+  `StatementQueueItem`). Filters and sort links of a list sit on the ground directly above the list's sheet, on every
+  list page.
 
 ## Security and privacy rules
 

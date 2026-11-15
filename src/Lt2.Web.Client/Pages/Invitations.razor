@@ -33,7 +33,7 @@ else if (Stats is not { } stats)
 }
 else
 {
-    <section class="stack" aria-labelledby="inv-days">
+    <section class="sheet stack" aria-labelledby="inv-days">
         <h2 id="inv-days">@L.Format("Inv.Days", Display.Day(stats.From), Display.Day(stats.To))</h2>
         <p class="num" id="inv-total">@L.Format("Inv.Total", Display.Number(stats.Total), Display.Number(stats.WithoutCode))</p>
         <DayBars Days="stats.Days" Label="@L["Inv.Chart"]" />
@@ -51,7 +51,7 @@ else
         </details>
     </section>
 
-    <section class="stack" aria-labelledby="inv-levels">
+    <section class="sheet stack" aria-labelledby="inv-levels">
         <h2 id="inv-levels">@L["Inv.Levels"]</h2>
         <table class="table num" id="inv-levels-table">
             <thead><tr><th>@L["Inv.Level"]</th><th>@L["Inv.Completed"]</th></tr></thead>
@@ -72,7 +72,7 @@ else
             <input class="input" id="inv-find" @bind="_find" disabled="@Locked" />
             <button class="btn btn--plain" type="submit" disabled="@Locked">@L["Inv.FindSubmit"]</button>
         </form>
-        <ul class="rows" id="inv-codes-list">
+        <ul class="rows sheet" id="inv-codes-list">
             @foreach (var item in stats.Codes)
             {
                 <li class="stack stack--tight" id="inv-code-@item.Id" @key="item.Id">

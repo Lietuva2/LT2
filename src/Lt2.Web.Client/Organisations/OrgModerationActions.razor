@@ -24,7 +24,7 @@
         }
         else
         {
-            <form class="sheet stack stack--tight" @onsubmit="SubmitAsync" novalidate aria-labelledby="org-action-title-@Id" id="org-action-form-@Id">
+            <form class="sheet sheet--quiet stack stack--tight" @onsubmit="SubmitAsync" novalidate aria-labelledby="org-action-title-@Id" id="org-action-form-@Id">
                 <h4 id="org-action-title-@Id">@L["OrgMod.Action." + _open]</h4>
                 <p class="small" id="org-action-sentence-@Id">@L["OrgMod.Sentence." + _open]</p>
                 <div class="field @ErrorClass("statement")">

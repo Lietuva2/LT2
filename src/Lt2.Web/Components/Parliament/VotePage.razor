@@ -61,12 +61,12 @@
 
     @if (v.Ballots.Count > 0)
     {
-        <section class="stack" aria-labelledby="h-seats">
+        <section class="sheet stack" aria-labelledby="h-seats">
             <h2 id="h-seats">@F.T["Vote.SeatMap"]</h2>
             <SeatMap Ballots="v.Ballots" />
         </section>
 
-        <section class="stack" aria-labelledby="h-factions">
+        <section class="sheet stack" aria-labelledby="h-factions">
             <h2 id="h-factions">@F.T["Vote.Factions"]</h2>
             <div class="table-wrap">
                 <table class="table">

@@ -4,7 +4,7 @@
 @* A statement as a moderator sees it, in the queue and in the panel on the bill's page alike: the bill, the organisation and
    its label, waiting or seen, pre-screening flags, open reports, the text and link, and the actions. Never who wrote it.
    Its statement's ids start with "mod-", so on the bill's page they do not repeat those of the public list. *@
-<article class="sheet stack stack--tight" id="queue-statement-@Item.Id" aria-label="@L["Org.Statement"]">
+<article class="@(Panel ? "stack stack--tight" : "sheet stack stack--tight")" id="queue-statement-@Item.Id" aria-label="@L["Org.Statement"]">
     <div class="row">
         @if (ShowBill)
         {
@@ -25,6 +25,9 @@
     [Parameter, EditorRequired] public QueueStatementResponse Item { get; set; } = default!;
 
     [Parameter] public bool ShowBill { get; set; } = true;
+
+    /// <summary>In the panel on the bill's page, which is a sheet already: no sheet of its own.</summary>
+    [Parameter] public bool Panel { get; set; }
 
     [Parameter] public EventCallback<string> OnDone { get; set; }
 
