@@ -5,6 +5,7 @@
 @inject IStringLocalizer<Lt2.Web.Components.Appeals.AppealText> A
 @inject IStringLocalizer<AppealUi> U
 @inject Lt2.Web.Services.FrontPageAgenda Agenda
+@inject Lt2.Api.Contracts.Digests.IDigestsApi Digests
 @inject Formats F
 
 @* The front page (design 8.7, reworked 2026-11-15: variant A, with the member's panel of variant C; the mockup is in
@@ -58,7 +59,13 @@
         <Authorized>@Timeline(true)</Authorized>
         <NotAuthorized>@Timeline(false)</NotAuthorized>
     </AuthorizeView>
-    <p class="small">@T["Agenda.OlderNote"]</p>
+    @* Design 8.15: "riba" repeats in the rows, so what it is is said once, beside the note under the timeline (a hint, as on
+       /darbotvarke); none per row. The number is the runtime setting, read with the page through the settings' own short
+       cache, not kept in the front page's copy of the agenda. *@
+    <p class="small" id="home-older-note">@T["Agenda.OlderNote"]@if (_threshold is { } threshold)
+        {
+            @(" · ")<Lt2.Web.Client.Components.Hint Id="threshold-what" Text="@A["Threshold.What"]" Answer="@(A["Threshold.Meaning"] + " " + A.Format("Threshold.NowList", Display.Number(threshold)))" More="/metodika#riba" />
+        }</p>
     <p class="note note--quiet" id="not-a-poll">@A["NotAPoll"]</p>
 </section>
 
@@ -86,9 +93,13 @@
     private List<MyAgendaBill> _panel = [];
     private List<string> _numbers = [];
 
+    /// <summary>The threshold that holds now for a bill without its own (a runtime setting), for the hint under the timeline.</summary>
+    private int? _threshold;
+
     protected override async Task OnInitializedAsync()
     {
         _agenda = await Agenda.ReadAsync(CancellationToken.None);
+        _threshold = (await Digests.GetRulesAsync()).Value?.ThresholdDefault;
         var left = ComingShown;
         foreach (var day in _agenda.Days)
         {

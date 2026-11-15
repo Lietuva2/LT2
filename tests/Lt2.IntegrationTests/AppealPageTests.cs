@@ -378,7 +378,7 @@ public sealed partial class AppealPageTests(DatabaseFixture database) : ApiTest(
 
     /// <summary>
     /// Design 8.15: "Kas yra riba?" answers in place with the number that holds now: a bill's own threshold when a moderator
-    /// set one, otherwise the current setting, which the lists' hint and the methodology's row "Riba" say too.
+    /// set one, otherwise the current setting, which the lists' hint and the methodology's row "Riba" (without repeating the word) say too.
     /// </summary>
     [Fact]
     public async Task The_threshold_hint_says_the_number_that_holds_now_for_the_bill_and_follows_the_setting()
@@ -407,7 +407,7 @@ public sealed partial class AppealPageTests(DatabaseFixture database) : ApiTest(
             var agenda = HintOf((await PageAsync(stranger, "/darbotvarke")).Html, "threshold-what");
             (agenda.Answer, agenda.More).ShouldBe(listHint);
 
-            (await PageAsync(stranger, "/metodika")).Html.ShouldContain($"<dd class=\"num\">{Meaning} Dabar – 120. Šį skaičių gali keisti administratorius");
+            (await PageAsync(stranger, "/metodika")).Html.ShouldContain("<dd class=\"num\">dalyvių skaičius (abi pusės kartu), kurį pasiekęs projektas gali patekti į suvestines Seimo nariams. Dabar – 120. Šį skaičių gali keisti administratorius");
         }
 
         HintOf((await PageAsync(stranger, "/seimas/" + AppealSteps.SecondBill)).Html, "threshold-what").Answer.ShouldBe(Meaning + " Dabar – 100.", "the setting is back");
@@ -426,7 +426,7 @@ public sealed partial class AppealPageTests(DatabaseFixture database) : ApiTest(
         var (_, method) = await PageAsync(stranger, "/metodika");
         method.ShouldContain("Kas patektų į suvestines Seimo nariams");
         // Design 8.15: the row "Riba" says what the threshold is, then its number as what holds now and who can change it.
-        method.ShouldContain("<dt id=\"riba\">Riba</dt><dd class=\"num\">Riba – dalyvių skaičius (abi pusės kartu), kurį pasiekęs projektas gali patekti į suvestines Seimo nariams. Dabar – 100. Šį skaičių gali keisti administratorius, o moderatorius – nustatyti projektui kitą, ne mažesnį už mažiausią ribą (dabar – 50).</dd>");
+        method.ShouldContain("<dt id=\"riba\">Riba</dt><dd class=\"num\">dalyvių skaičius (abi pusės kartu), kurį pasiekęs projektas gali patekti į suvestines Seimo nariams. Dabar – 100. Šį skaičių gali keisti administratorius, o moderatorius – nustatyti projektui kitą, ne mažesnį už mažiausią ribą (dabar – 50).</dd>");
         method.ShouldNotContain("visiems projektams");
         method.ShouldContain("pirmadienį 07:00");
         method.ShouldContain("12:00 darbo dieną prieš posėdį");

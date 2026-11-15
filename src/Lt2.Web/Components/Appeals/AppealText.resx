@@ -64,8 +64,9 @@
 <data name="History.Before" xml:space="preserve"><value>Buvo</value></data>
 <data name="History.After" xml:space="preserve"><value>Tapo</value></data>
 <data name="Method.Digests" xml:space="preserve"><value>Kas patektų į suvestines Seimo nariams</value></data>
-<data name="Method.Digests.Lead" xml:space="preserve"><value>Šios taisyklės nusprendžia, apie kuriuos projektus Seimo nariai sužinotų. Skaičiai – dabartinės reikšmės; administratorius gali jas keisti, ir kiekvienas pakeitimas įrašomas.</value></data>
+<data name="Method.Digests.Lead" xml:space="preserve"><value>Šios taisyklės nusprendžia, apie kuriuos projektus Seimo nariai sužinotų. Skaičiai – dabartinės reikšmės: daugumą jų gali keisti administratorius, ir kiekvienas pakeitimas įrašomas, o paskyrų amžius, argumentų skaičius kiekvienai pusei ir mažiausia grupė nustatyti programoje.</value></data>
 <data name="Method.Digests.Threshold" xml:space="preserve"><value>Riba</value></data>
+<data name="Method.Digests.ThresholdMeaning" xml:space="preserve"><value>dalyvių skaičius (abi pusės kartu), kurį pasiekęs projektas gali patekti į suvestines Seimo nariams.</value></data>
 <data name="Method.Digests.ThresholdValue" xml:space="preserve"><value>Dabar – {0}. Šį skaičių gali keisti administratorius, o moderatorius – nustatyti projektui kitą, ne mažesnį už mažiausią ribą (dabar – {1}).</value></data>
 <data name="Method.Digests.Weekly" xml:space="preserve"><value>Savaitinė suvestinė</value></data>
 <data name="Method.Digests.WeeklyValue" xml:space="preserve"><value>pirmadienį {0}, posėdžių savaitėmis</value></data>

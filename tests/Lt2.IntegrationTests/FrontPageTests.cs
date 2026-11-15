@@ -231,9 +231,17 @@ public sealed partial class FrontPageTests(DatabaseFixture database) : ApiTest(d
         html.IndexOf("Kaip tai veikia", StringComparison.Ordinal).ShouldBeLessThan(html.IndexOf("Artimiausiu metu Seime", StringComparison.Ordinal));
         html.IndexOf("Artimiausiu metu Seime", StringComparison.Ordinal).ShouldBeLessThan(html.IndexOf("id=\"not-a-poll\"", StringComparison.Ordinal));
 
+        // Design 8.15: "Kas yra riba?" once, beside the note under the timeline, with the number that holds now; none per row.
+        Regex.Count(html, "class=\"hint__trigger\" id=\"threshold-what\"").ShouldBe(1);
+        html.ShouldContain("Riba – dalyvių skaičius (abi pusės kartu), kurį pasiekęs projektas gali patekti į suvestines Seimo nariams. Dabar – ");
+        html.IndexOf("id=\"home-older-note\"", StringComparison.Ordinal).ShouldBeLessThan(html.IndexOf("id=\"threshold-what\"", StringComparison.Ordinal));
+
         // The member's "Kaip tai veikia" lands on the same steps on the methodology page.
         var method = WebUtility.HtmlDecode(await visitor.Client.GetStringAsync("/metodika"));
         method.ShouldContain("id=\"kaip-tai-veikia\"");
+
+        // The summary rules' row "Riba" does not repeat its own word.
+        method.ShouldMatch("<dt id=\"riba\">Riba</dt><dd class=\"num\">dalyvių skaičius");
         method.ShouldContain("Seimo nariai sužino");
     }
 

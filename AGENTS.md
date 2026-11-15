@@ -287,7 +287,7 @@ links to it.
   links to register or sign in, never a form; a member gets "Jūsų projektai" and their marks in the rows, islands filled
   in the browser from `GET /me/bills` (one request, never prerendered; it also says whether the caller gave the positions
   consent), so the HTML is the same for every member. The timeline is on a `.sheet`, "Organizacijos" on the ground
-  (design 8.16). A coming bill with an open record offers "Prašau balsuoti" with "už" and "prieš" in its row (owner,
+  (design 8.16); "Kas yra riba?" is one hint beside the note under the timeline, as on `/darbotvarke`. A coming bill with an open record offers "Prašau balsuoti" with "už" and "prieš" in its row (owner,
   2026-11-15): a visitor's are `LandingPath.SignInLink` links to the bill's page; a member's side column is one island
   (`MyAgendaSide`, disabled before it starts) that takes, changes ("Atsiimti" withdraws) the side with the bill page's
   request, asks the first-time consent across the row with the shared `<PositionConsentForm>` (also in `SidePicker`), then
