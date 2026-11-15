@@ -129,6 +129,13 @@ public sealed class DescriptionSummaryTests(DatabaseFixture database) : ApiTest(
 
     private static DateOnly Today => ReasonsToComeSteps.VilniusToday();
 
+    /// <summary>The job's audit entries for a bill with the system as the actor and the model named, ever: the audit log is
+    /// never cleared, so a test counts from where it started.</summary>
+    private Task<long> SummariesAuditedAsync(string bill) =>
+        Database.ScalarAsync<long>(
+            "SELECT count(*) FROM audit.event WHERE action = 'description.summary.made' AND target = @t AND actor_user_id IS NULL AND actor_role = 'system' AND details->>'model' = 'claude-sonnet-5-5'",
+            ("t", "bill:" + bill));
+
     /// <summary>Pretends the job's tries happened <paramref name="days"/> days earlier (its daily number and waits move with them).</summary>
     private Task AgeAttemptsAsync(int days) =>
         Database.ExecuteAsync(
@@ -188,6 +195,8 @@ public sealed class DescriptionSummaryTests(DatabaseFixture database) : ApiTest(
             (await visitor.GetJsonAsync<AppealRulesResponse>(AppealRoutes.Rules)).AiSummaries.ShouldBeTrue();
             WebUtility.HtmlDecode(await visitor.Client.GetStringAsync("/metodika")).ShouldContain("id=\"ai-summaries\"");
 
+            // The class's other tests summarise the same bill, in an order that changes with the folder the tests run from.
+            var auditedBefore = await SummariesAuditedAsync(AppealSteps.SecondBill);
             var asked = Summaries.Assistant.Asked.Count;
             (await RunAsync(Summaries)).ShouldBe(new SummaryRun("done", 2, 2));
             Summaries.Assistant.Asked.Skip(asked).Select(a => a.BillNumber).ShouldBe([AppealSteps.SecondBill, AppealSteps.ThirdBill], "planned first, soonest first");
@@ -208,9 +217,7 @@ public sealed class DescriptionSummaryTests(DatabaseFixture database) : ApiTest(
             (await visitor.RecordAsync(AppealSteps.TaxBill)).Description.ShouldBeEmpty("the daily number was reached");
 
             // Audited with the system as the actor: the bill and the model, never the text.
-            (await Database.ScalarAsync<long>(
-                "SELECT count(*) FROM audit.event WHERE action = 'description.summary.made' AND target = @t AND actor_user_id IS NULL AND actor_role = 'system' AND details->>'model' = 'claude-sonnet-5-5'",
-                ("t", "bill:" + AppealSteps.SecondBill))).ShouldBe(1);
+            (await SummariesAuditedAsync(AppealSteps.SecondBill)).ShouldBe(auditedBefore + 1);
             (await Database.ScalarAsync<long>(
                 "SELECT count(*) FROM audit.event WHERE action = 'description.summary.made' AND coalesce(details::text, '') LIKE '%santraukos bandymas%'")).ShouldBe(0);
 

@@ -288,13 +288,31 @@ public sealed class DigestTests(DatabaseFixture database) : ApiTest(database)
             (await moderator.PostAsync(AppealRoutes.With(AppealRoutes.ReleaseRecord, record.Id), new StatementRequest { Statement = "Patikrinta." })).StatusCode.ShouldBe(HttpStatusCode.NoContent);
             (await Database.ScalarAsync<long>("SELECT count(*) FROM audit.event WHERE action IN ('moderation.record.hold', 'moderation.record.release') AND target = @t", ("t", "record:" + record.Id))).ShouldBe(2);
 
-            // This week already had its summary for everyone (ceiling 1); an urgent one may still go, once per bill per week.
-            await Database.ExecuteAsync("UPDATE appeals.bill_record SET sending = 'automatic' WHERE id = @a", ("a", record.Id));
+            // An urgent summary is made in this real week, which other classes' urgent summaries share (AccountDataTests,
+            // PartySupportTests), so the ceiling is set from what the week already holds: one above the most any MP has had.
+            // A first urgent summary on another bill then brings every MP who had the most to the ceiling, and this one may
+            // still go to them, exceeding it by one.
+            var (other, _) = await Factory.MemberAsync();
+            using var _o = other;
+            var first = await Database.PrepareBillAsync(other, moderator, AppealSteps.SecondBill, "for", threshold: 1);
+            var weekStart = ReasonsToComeSteps.MondayInWeeks(0);
+            var most = await Database.ScalarAsync<long>(
+                "SELECT coalesce(max(n), 0) FROM (SELECT count(*) AS n FROM notify.digest_delivery d JOIN notify.digest_run r ON r.id = d.run_id WHERE d.status = 'dry-run' AND r.run_date >= @from AND r.run_date < @to GROUP BY d.mp_slug) AS per_mp",
+                ("from", weekStart), ("to", weekStart.AddDays(7)));
+            most.ShouldBeLessThan(7, "the ceiling can be set at most to 7");
+            await admin.SetSettingAsync("Digest:MaxPerWeek", (int)most + 1);
+            await Database.ExecuteAsync("UPDATE appeals.bill_record SET sending = 'automatic' WHERE id = ANY(@a)", ("a", new[] { record.Id, first.Id }));
+            using var reachesTheCeiling = await moderator.PostAsync(AppealRoutes.With(DigestRoutes.Urgent, first.Id), new UrgentDigestRequest { Statement = "Bandymas: pasiekiamos lubos." });
+            reachesTheCeiling.StatusCode.ShouldBe(HttpStatusCode.Created, await reachesTheCeiling.Content.ReadAsStringAsync());
+            var everyone = (await reachesTheCeiling.ReadAsync<DigestRunResponse>()).MpCount;
+            everyone.ShouldBeGreaterThan(0);
+
             using var urgent = await moderator.PostAsync(AppealRoutes.With(DigestRoutes.Urgent, record.Id), new UrgentDigestRequest { Statement = "Įtraukta į rytojaus darbotvarkę." });
             urgent.StatusCode.ShouldBe(HttpStatusCode.Created, await urgent.Content.ReadAsStringAsync());
             var run = await urgent.ReadAsync<DigestRunResponse>();
             run.Kind.ShouldBe("urgent");
-            run.MpCount.ShouldBeGreaterThan(0);
+            run.MpCount.ShouldBe(everyone, "an urgent summary may exceed the ceiling by one");
+            (await Database.ScalarAsync<long>("SELECT count(*) FROM notify.digest_delivery WHERE run_id = @r AND status = 'skipped-ceiling'", ("r", run.Id))).ShouldBe(0);
             (await Database.ScalarAsync<long>("SELECT count(*) FROM audit.event WHERE action = 'digest.urgent.approved' AND actor_role = 'moderator'")).ShouldBeGreaterThanOrEqualTo(1);
             using var again = await moderator.PostAsync(AppealRoutes.With(DigestRoutes.Urgent, record.Id), new UrgentDigestRequest { Statement = "Dar kartą." });
             await again.ShouldBeProblemAsync(HttpStatusCode.Conflict, "digest.urgent-already");
@@ -308,6 +326,7 @@ public sealed class DigestTests(DatabaseFixture database) : ApiTest(database)
             await admin.ResetSettingAsync("Digest:MaxPerWeek");
             await admin.ResetSettingAsync("Digest:ThresholdMinimum");
             await Database.ExecuteAsync("DELETE FROM parliament.planned_item WHERE bill_number IN ('XVP-0618', 'XVP-0533')");
+            await Database.FreeBillAsync(AppealSteps.SecondBill);
         }
     }
 
