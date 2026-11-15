@@ -50,10 +50,10 @@
                 <span class="label">@U["Agenda.Organisations"]</span>
                 @foreach (var org in Item.Organisations)
                 {
-                    <span class="org-item"><span class="@OrganisationWords.StanceClass(org.Stance)">@U["Agenda.Stance." + org.Stance]</span> <a href="@OrganisationWords.ProfilePath(org.Slug)">@org.Name</a>@if (org.Label.ConfirmedBy is null)
+                    <span class="org-item"><span class="@OrganisationWords.StanceClass(org.Stance)">@U["Agenda.Stance." + org.Stance]</span> <span class="org-item__name"><a href="@OrganisationWords.ProfilePath(org.Slug)">@org.Name</a>@if (org.Label.ConfirmedBy is null)
                         {
                             @(" ")<OrgLabel Label="org.Label" />
-                        }</span>
+                        }</span></span>
                 }
             </p>
         }

@@ -2,7 +2,8 @@
 @inject IStringLocalizer<AppealUi> L
 
 @* A bill's public numbers in the front page's timeline (design 8.7): both sides with the count for accounts older than 30
-   days in brackets, the bar and the threshold; a bill nobody took part in says so. The page explains the brackets and
+   days in brackets, the bar and the threshold; a bill nobody took part in says so. A line breaks only after a "·", never
+   inside a part ("The row lines up"). The page explains the brackets and
    says the numbers are not a representative poll right under the timeline. Plain markup, no island of its own: the server
    renders it in every row, and the member's island of a row (MyAgendaSide) renders the same component, with the bill's
    live numbers after the member's own action. "Nobody yet" is left out only where the island says so (the page's agenda
@@ -17,11 +18,14 @@
 else
 {
     <span class="small num" id="@(Id is null ? null : "home-counts-" + Id)">
-        <span class="choice choice--for">@L["Agenda.For"]</span> @Display.Number(Record.Counts.For) (@Display.Number(Record.Counts.ForOlderThan30Days))
-        · <span class="choice choice--against">@L["Agenda.Against"]</span> @Display.Number(Record.Counts.Against) (@Display.Number(Record.Counts.AgainstOlderThan30Days))
+        <span class="nowrap"><span class="choice choice--for">@L["Agenda.For"]</span> @Display.Number(Record.Counts.For) (@Display.Number(Record.Counts.ForOlderThan30Days)) ·</span>
+        <span class="nowrap"><span class="choice choice--against">@L["Agenda.Against"]</span> @Display.Number(Record.Counts.Against) (@Display.Number(Record.Counts.AgainstOlderThan30Days))</span>
     </span>
     <SplitBar For="Record.Counts.For" Against="Record.Counts.Against" Abstain="0" Small="true" />
-    <span class="small num"><b>@Display.Number(Record.Threshold.Participants)</b> @L.Format("Threshold.Progress", Display.Number(Record.Threshold.Value))@(Record.Threshold.Reached ? " · " + L["Agenda.Reached"] : "")</span>
+    <span class="small num"><span class="nowrap"><b>@Display.Number(Record.Threshold.Participants)</b> @L.Format("Threshold.Progress", Display.Number(Record.Threshold.Value))@(Record.Threshold.Reached ? " ·" : "")</span>@if (Record.Threshold.Reached)
+        {
+            @(" ")<span class="nowrap">@L["Agenda.Reached"]</span>
+        }</span>
 }
 
 @code {

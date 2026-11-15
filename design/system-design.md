@@ -1029,6 +1029,18 @@ and the "not a representative poll" notice. It uses only the public answers behi
   - Nothing changes in what is private: the member's side is only in their own answer, filled in the browser, and the
     page's HTML stays the same for every member. `GET /me/bills` also says whether the caller has given the positions
     consent, so the row knows whether to ask.
+- **The row lines up [decided on 2026-11-15, from the owner's phone: "this doesn't line up on mobile"].** At every
+  width the parts of a row share their edges; nothing depends on how a line happens to wrap.
+  - The organisations are a small list: "Organizacijos" on a line of its own, then one organisation per line. The
+    stances form one column and the names another, so every name starts at the same place whatever the stance word's
+    length; a long name wraps inside its own column, and "Nepatvirtinta" follows its name there. (Before, the label,
+    the stances and the names flowed as one wrapped line, so on a phone a name sat beside one stance and under
+    another.)
+  - The numbers, the bar and the two buttons have one width: the buttons together are exactly as wide as the bar.
+    Where the row is one column (under 54rem) that block is as wide as the row up to 26rem; beside the title (wider
+    screens) it is the side column.
+  - A line of numbers breaks only between its parts, at the "·": a side's word, count and bracket stay together, and
+    so does "riba pasiekta".
 - **Organisations** have one plain block below the agenda (a heading, the text and the links on the ground, no sheet:
   8.16): what they are, that their statements are shown apart and
   not counted, and links to the list and to registration. In the timeline they are ordered as on the bill's page (for,
@@ -1070,7 +1082,9 @@ nothing is saved before it; a visitor's buttons lead to sign-in and back to the 
 a visitor sees the introduction and the agenda and no form; a member sees their own bills first and no
 introduction; with JavaScript off the public page is complete and nothing of a member's own is in it; the page's HTML
 is identical for two different signed-in members; an agenda with no participants and no organisations still reads
-well; no sideways scroll at 390 px; the first screen at 1280 px shows the agenda's heading.
+well; no sideways scroll at 390 px; the first screen at 1280 px shows the agenda's heading; at 360 px, 390 px and
+1280 px every organisation's name in a row starts at the same horizontal place and the two side buttons end where the
+bar ends.
 ### 8.8 API
 
 Since 8.12 the answers about a bill are keyed by its number and return the empty open state (no record id, zero counts)

@@ -157,6 +157,7 @@ a:hover { text-decoration-thickness: 3px; }
 h1[tabindex="-1"]:focus { outline: none; }
 
 .num { font-variant-numeric: tabular-nums; }
+.nowrap { white-space: nowrap; }
 .visually-hidden {
   position: absolute; width: 1px; height: 1px; overflow: hidden;
   clip-path: inset(50%); white-space: nowrap;
@@ -712,10 +713,14 @@ body { padding-block-end: 4.5rem; }
 .tl-item__side .splitbar, .tl-item__main .splitbar { width: 100%; }
 .tl-item .note { max-width: none; }
 
-/* The organisations on a bill: names with their stance, never counted. */
-.org-line { display: flex; flex-wrap: wrap; align-items: baseline; gap: var(--sp-1) var(--sp-3); }
-.org-line .label { margin-right: var(--sp-1); }
-.org-item { display: inline-flex; flex-wrap: wrap; gap: var(--sp-1) var(--sp-2); align-items: baseline; }
+/* The organisations on a bill: names with their stance, never counted (design 8.7, "The row lines up"). The label on a
+   line of its own, then one organisation per line: the stances one column, the names another, so every name starts at
+   the same place; a long name wraps in its own column, with "Nepatvirtinta" after it. */
+.org-line { display: grid; grid-template-columns: max-content minmax(0, 1fr); align-items: baseline; gap: var(--sp-1) var(--sp-2); }
+.org-line .label { grid-column: 1 / -1; }
+.org-item { display: contents; }
+.org-item__name { min-width: 0; }
+.org-item__name .tag { margin-inline-start: var(--sp-1); }
 .org-item a { color: var(--ink); overflow-wrap: anywhere; }
 
 /* A row's action (the votes' rows); the member's own mark under the title. */
@@ -723,7 +728,7 @@ body { padding-block-end: 4.5rem; }
 .mine { display: inline-flex; flex-wrap: wrap; gap: var(--sp-2); align-items: center; }
 
 /* Taking a side in the row (design 8.7): "Prašau balsuoti" with "už" and "prieš" side by side under the numbers, in the
-   side column at any width; the consent before a first side spans the whole row. */
+   side column at any width, together as wide as the bar; the consent before a first side spans the whole row. */
 .tl-ask { display: flex; flex-direction: column; gap: var(--sp-1); width: 100%; max-width: 15rem; }
 .tl-ask__sides { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--sp-2); }
 .tl-ask__sides .btn { padding-inline: var(--sp-2); }
@@ -743,6 +748,8 @@ body { padding-block-end: 4.5rem; }
   .tl-date { position: static; flex-direction: row; flex-wrap: wrap; align-items: baseline; gap: var(--sp-2); }
   .tl-date b { font-size: var(--fs-4); }
   .tl-item { grid-template-columns: minmax(0, 1fr); }
+  .tl-item__side { max-width: 26rem; }
+  .tl-ask { max-width: none; }
 }
 @media (max-width: 36rem) {
   .intro-steps { grid-template-columns: minmax(0, 1fr); gap: var(--sp-4); }
