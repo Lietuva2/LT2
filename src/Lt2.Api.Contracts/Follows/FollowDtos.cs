@@ -19,10 +19,9 @@ public sealed record FollowedMpResponse(string Slug, string FirstName, string La
 public sealed record FollowedOrganisationResponse(string Slug, string Name, OrganisationLabelResponse Label, string Status);
 
 /// <summary>
-/// The caller's own follows (design 8.8 <c>GET /me/follows</c>); never cached. <c>Max</c> is how many bills, MPs and
-/// organisations together may be followed.
+/// The caller's own follows (design 8.8 <c>GET /me/follows</c>); never cached. There is no limit on how many (design 8.11.2).
 /// </summary>
-public sealed record MyFollowsResponse(IReadOnlyList<FollowedBillResponse> Bills, IReadOnlyList<FollowedMpResponse> Mps, int Max, IReadOnlyList<FollowedOrganisationResponse> Organisations);
+public sealed record MyFollowsResponse(IReadOnlyList<FollowedBillResponse> Bills, IReadOnlyList<FollowedMpResponse> Mps, IReadOnlyList<FollowedOrganisationResponse> Organisations);
 
 /// <summary>
 /// Which follow emails are on: a followed bill is planned; the Seimas voted on it (design 8.11.2); a followed organisation

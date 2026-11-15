@@ -43,7 +43,6 @@
   <data name="Consensus.Tag" xml:space="preserve"><value>Pritarta bendru sutarimu</value></data>
   <data name="Consensus.NoVotes" xml:space="preserve"><value>Atskirų Seimo narių balsų nėra</value></data>
   <data name="NoResult" xml:space="preserve"><value>Rezultatų dar nėra</value></data>
-  <data name="Split.Aria" xml:space="preserve"><value>{0} už, {1} prieš, {2} susilaikė</value></data>
   <data name="Faction.Position" xml:space="preserve"><value>Frakcija ({0}): {1}</value></data>
   <data name="Faction.Counts" xml:space="preserve"><value>{0} už · {1} prieš · {2} susilaikė</value></data>
   <data name="Mps.Title" xml:space="preserve"><value>Seimo nariai</value></data>

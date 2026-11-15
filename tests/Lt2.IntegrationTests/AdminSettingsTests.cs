@@ -133,6 +133,35 @@ public sealed class AdminSettingsTests(DatabaseFixture database) : ApiTest(datab
         await wrong.ShouldBeProblemAsync(HttpStatusCode.BadRequest, "setting.invalid");
     }
 
+    [Fact]
+    public async Task A_stored_row_of_a_removed_setting_breaks_neither_the_list_nor_the_settings_page()
+    {
+        // Follows:MaxPerAccount was removed on 2026-11-15 (design 8.11.2); a database may still hold its row.
+        const string Removed = "Follows:MaxPerAccount";
+        using var staff = await StaffMembers.SharedAsync(Factory, Database, "administrator");
+        var admin = staff.Browser;
+        await Database.ExecuteAsync(
+            "INSERT INTO config.setting (key, value, changed_at) VALUES (@k, '200'::jsonb, now()) ON CONFLICT (key) DO UPDATE SET value = '200'::jsonb",
+            ("k", Removed));
+        try
+        {
+            (await Database.ScalarAsync<long>("SELECT count(*) FROM config.setting WHERE key = @k", ("k", Removed))).ShouldBe(1, "the row is there");
+            using var list = await admin.Client.GetAsync(ApiRoutes.Admin.Settings);
+            list.StatusCode.ShouldBe(HttpStatusCode.OK);
+            var settings = (await list.Content.ReadFromJsonAsync<List<SettingResponse>>())!;
+            settings.ShouldNotBeEmpty();
+            settings.Select(s => s.Key).ShouldNotContain(Removed);
+            using var page = await admin.Client.GetAsync("/administravimas/nustatymai");
+            page.StatusCode.ShouldBe(HttpStatusCode.OK);
+            using var change = await admin.SendAsync(HttpMethod.Put, ApiRoutes.Admin.SettingByKey(Removed), new UpdateSettingRequest { Value = JsonSerializer.SerializeToElement(1) });
+            await change.ShouldBeProblemAsync(HttpStatusCode.NotFound, "setting.unknown");
+        }
+        finally
+        {
+            await Database.ExecuteAsync("DELETE FROM config.setting WHERE key = @k", ("k", Removed));
+        }
+    }
+
     private async Task SignInWithCodeAsync(TestBrowser browser, string email)
     {
         using (await browser.PostAsync(ApiRoutes.Auth.Code, new RequestCodeRequest { Email = email }))

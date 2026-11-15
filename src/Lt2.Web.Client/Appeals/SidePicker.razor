@@ -19,28 +19,19 @@
     }
     else if (_consentFor is { } wanted)
     {
-        <div class="sheet sheet--quiet stack stack--tight" role="group" aria-labelledby="consent-title">
-            <h3 id="consent-title">@L["Consent.Title"]</h3>
-            <p>@L["Consent.Text"]</p>
-            <label class="check">
-                <input type="checkbox" id="consent-check" @bind="_consentChecked" disabled="@Locked" />
-                <span>@L["Consent.Check"]</span>
-            </label>
-            <div class="row">
-                <button type="button" class="btn @(wanted == "for" ? "btn--for" : "btn--against")" disabled="@(Locked || !_consentChecked)"
-                        @onclick="() => ConsentAndTakeAsync(wanted)">@L["Consent.Submit." + wanted]</button>
-                <button type="button" class="btn btn--plain" disabled="@Locked" @onclick="() => _consentFor = null">@L["Cancel"]</button>
-            </div>
-        </div>
+        <PositionConsentForm Side="@wanted" Locked="Locked" OnConfirm="() => ConsentAndTakeAsync(wanted)" OnCancel="() => _consentFor = null" />
     }
     else
     {
-        <div class="pair">
+        <div class="pair sides">
             @foreach (var side in AppealLimits.Sides)
             {
                 var chosen = Mine?.Side == side;
                 <button type="button" class="btn btn--@side btn--wide" id="side-@side" aria-pressed="@(chosen ? "true" : "false")"
-                        disabled="@(Locked || Mine is null)" @onclick="() => ChooseAsync(side)">@L["Side." + side]</button>
+                        disabled="@(Locked || Mine is null)" @onclick="() => ChooseAsync(side)">@if (chosen)
+                {
+                    <span class="sides__check" aria-hidden="true">✓</span>
+                }@L["Side." + side]</button>
             }
         </div>
         @if (Mine?.Side is { } mySide)
@@ -65,7 +56,6 @@
 
     private bool _signedIn;
     private string? _consentFor;
-    private bool _consentChecked;
 
     [Parameter, EditorRequired] public string Number { get; set; } = "";
 
@@ -85,7 +75,6 @@
         if (Mine is { HasPositionConsent: false })
         {
             _consentFor = side;
-            _consentChecked = false;
             return;
         }
 
@@ -113,13 +102,21 @@
         }
 
         var result = await Appeals.TakePositionAsync(Number, new PositionRequest { Side = side });
+        if (result.Problem?.Code == "consent.required")
+        {
+            // The consent was withdrawn since the page was read: ask for it again.
+            _consentFor = side;
+            return;
+        }
+
         if (!result.IsSuccess)
         {
             Show(result.Problem);
             return;
         }
 
-        // The counts on the page are server-rendered: show them with the change.
+        // The counts on the page are server-rendered: show them with the change. A first side also followed the bill
+        // (design 8.11.2), which the follow button reads afresh.
         Navigation.NavigateTo(Navigation.Uri, forceLoad: true);
     }
 

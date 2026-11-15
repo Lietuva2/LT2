@@ -41,6 +41,12 @@ internal static class RateLimitPolicies
 
     /// <summary>A member's own answers a page asks for in one go (design 8.7, <c>/me/bills</c>), per account.</summary>
     public const string OwnRead = "own-read";
+
+    /// <summary>
+    /// Taking, changing or withdrawing a side, following and unfollowing (bills, MPs, organisations) and "Man svarbu" (mark
+    /// and unmark), one shared limit per account (design 8.11.2): a guard against a runaway script, not a product rule.
+    /// </summary>
+    public const string Participation = "participation";
 }
 
 internal sealed class RateLimitOptions
@@ -61,6 +67,9 @@ internal sealed class RateLimitOptions
 
     /// <summary>Generous for a person moving between pages; it stops a script asking about every bill one by one.</summary>
     public FixedWindow OwnRead { get; set; } = new() { PermitLimit = 120, WindowSeconds = 60 };
+
+    /// <summary>No person presses sides, follows and marks this often; a script that does is stopped.</summary>
+    public FixedWindow Participation { get; set; } = new() { PermitLimit = 60, WindowSeconds = 60 };
 
     internal sealed class FixedWindow
     {
@@ -130,6 +139,7 @@ internal static class SecurityServices
             options.AddPolicy(RateLimitPolicies.WriteReason, context => PerAccount(context, Limits(context).WriteReason));
             options.AddPolicy(RateLimitPolicies.Report, context => PerAccount(context, Limits(context).Report));
             options.AddPolicy(RateLimitPolicies.OwnRead, context => PerAccount(context, Limits(context).OwnRead));
+            options.AddPolicy(RateLimitPolicies.Participation, context => PerAccount(context, Limits(context).Participation));
         });
 
         return services;

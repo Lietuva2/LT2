@@ -353,7 +353,6 @@
 <data name="Follows.Result" xml:space="preserve"><value>už {0}, prieš {1}, susilaikė {2}</value></data>
 <data name="Follows.Consensus" xml:space="preserve"><value>pritarta bendru sutarimu</value></data>
 <data name="Follows.NothingYet" xml:space="preserve"><value>Darbotvarkėje kol kas nėra</value></data>
-<data name="Follows.Max" xml:space="preserve"><value>Sekate {0} iš daugiausia {1}.</value></data>
 <data name="Follows.Emails" xml:space="preserve"><value>Kokius laiškus gauti</value></data>
 <data name="Follows.Email.planned" xml:space="preserve"><value>Kai sekamas projektas įtraukiamas į darbotvarkę</value></data>
 <data name="Follows.Email.voted" xml:space="preserve"><value>Kai Seimas balsuoja dėl sekamo projekto</value></data>
@@ -373,10 +372,6 @@
 <data name="Admin.Setting.Ai:DraftModel" xml:space="preserve"><value>Juodraščio modelis</value></data>
 <data name="Admin.Help.Ai:DraftModel" xml:space="preserve"><value>Claude modelio pavadinimas, kuriuo rengiamas aprašymo juodraštis, pvz., claude-sonnet-5-5. Keiskite tik žinodami, kad modelis palaiko tas pačias užklausos parinktis.</value></data>
 <data name="Admin.Unit.Ai:DraftModel" xml:space="preserve"><value>modelio pavadinimas</value></data>
-<data name="Admin.Group.follows" xml:space="preserve"><value>Sekimas</value></data>
-<data name="Admin.Setting.Follows:MaxPerAccount" xml:space="preserve"><value>Kiek projektų ir Seimo narių galima sekti</value></data>
-  <data name="Admin.Help.Follows:MaxPerAccount" xml:space="preserve"><value>Daugiausia tiek projektų, Seimo narių ir organizacijų kartu vienas naudotojas gali sekti. Sumažinus jau sekami nepašalinami, tik nebegalima pridėti naujų.</value></data>
-<data name="Admin.Unit.Follows:MaxPerAccount" xml:space="preserve"><value>projektai ir Seimo nariai</value></data>
 <data name="Mod.Action.write" xml:space="preserve"><value>Rašyti aprašymą</value></data>
 <data name="Mod.Description" xml:space="preserve"><value>Apie ką projektas</value></data>
 <data name="Mod.DescriptionHint" xml:space="preserve"><value>Trumpai ir neutraliai, be vertinimų: ką projektas keičia pagal oficialų tekstą. Šį aprašymą skaitys abiejų pusių dalyviai.</value></data>
@@ -631,7 +626,6 @@
   <data name="Agenda.Stance.for" xml:space="preserve"><value>už</value></data>
   <data name="Agenda.Stance.against" xml:space="preserve"><value>prieš</value></data>
   <data name="Agenda.Stance.remarks" xml:space="preserve"><value>pastabos</value></data>
-  <data name="Agenda.Action.TakePart" xml:space="preserve"><value>Nurodyti, ko prašote</value></data>
   <data name="Agenda.Action.Side" xml:space="preserve"><value>Argumentai ir pozicijos</value></data>
   <data name="Agenda.Action.Votes" xml:space="preserve"><value>Kaip balsavo Seimo nariai</value></data>
   <data name="Mine.Title" xml:space="preserve"><value>Jūsų projektai</value></data>
@@ -647,4 +641,14 @@
   <data name="Mine.None" xml:space="preserve"><value>Šiuo metu darbotvarkėje nėra projektų, kuriuos sekate ar dėl kurių nurodėte, ko prašote.</value></data>
   <data name="Mine.All" xml:space="preserve"><value>Visi sekami projektai ir Seimo nariai →</value></data>
   <data name="Agenda.Nobody" xml:space="preserve"><value>Dar niekas nenurodė, ko prašo</value></data>
+  <data name="Agenda.For" xml:space="preserve"><value>už</value></data>
+  <data name="Agenda.Against" xml:space="preserve"><value>prieš</value></data>
+  <data name="Agenda.NobodyClosed" xml:space="preserve"><value>Niekas nedalyvavo</value></data>
+  <data name="Agenda.Reached" xml:space="preserve"><value>riba pasiekta</value></data>
+  <data name="Threshold.Progress" xml:space="preserve"><value>dalyvių · riba {0}</value></data>
+  <data name="Agenda.Ask" xml:space="preserve"><value>Prašau balsuoti</value></data>
+  <data name="Agenda.Ask.for" xml:space="preserve"><value>Prašau balsuoti už projektą {0}</value></data>
+  <data name="Agenda.Ask.against" xml:space="preserve"><value>Prašau balsuoti prieš projektą {0}</value></data>
+  <data name="Agenda.Withdraw" xml:space="preserve"><value>Atsiimti, ko prašote dėl projekto {0}</value></data>
+  <data name="Agenda.Followed" xml:space="preserve"><value>Dabar sekate šį projektą.</value></data>
 </root>

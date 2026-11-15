@@ -97,29 +97,6 @@ public sealed class OrganisationFollowTests(DatabaseFixture database) : ApiTest(
     }
 
     [Fact]
-    public async Task Organisations_count_towards_the_follow_limit()
-    {
-        using var admin = await StaffMembers.SharedAsync(Factory, Database, "administrator");
-        var (rep, _) = await Factory.MemberAsync();
-        using var _r = rep;
-        var created = await rep.RegisterOrganisationAsync();
-        var (member, _) = await Factory.MemberAsync();
-        using var _m = member;
-        await member.FollowBillAsync(AppealSteps.TaxBill);
-        await admin.Browser.SetSettingAsync("Follows:MaxPerAccount", 1);
-
-        try
-        {
-            using var refused = await member.SendAsync(HttpMethod.Put, FollowRoutes.OrganisationOf(created.Slug));
-            await refused.ShouldBeProblemAsync(HttpStatusCode.Conflict, "follow.limit");
-        }
-        finally
-        {
-            await admin.Browser.ResetSettingAsync("Follows:MaxPerAccount");
-        }
-    }
-
-    [Fact]
     public async Task A_follower_gets_one_email_for_a_new_statement_with_a_full_link_and_none_for_a_change_and_nothing_of_its_text()
     {
         await Database.FreeBillAsync(AppealSteps.SecondBill);

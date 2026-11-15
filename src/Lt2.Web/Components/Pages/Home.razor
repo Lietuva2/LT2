@@ -40,7 +40,9 @@
     </NotAuthorized>
 </AuthorizeView>
 
-<section class="stack" aria-labelledby="h-home-coming" id="home-coming">
+@* The agenda is the page's content, so it is on a sheet; the two notes that explain its numbers sit on it, under the
+   timeline. "Organizacijos" below is a plain block on the ground (design 8.16). *@
+<section class="sheet stack home-agenda" aria-labelledby="h-home-coming" id="home-coming">
     <div class="row">
         <h2 id="h-home-coming">@T["Home.Coming"]</h2>
         <a href="/darbotvarke">@T["Agenda.All"]</a>
@@ -60,7 +62,7 @@
     <p class="note note--quiet" id="not-a-poll">@A["NotAPoll"]</p>
 </section>
 
-<section class="sheet sheet--quiet stack stack--tight" aria-labelledby="h-home-organisations" id="home-organisations">
+<section class="stack stack--tight" aria-labelledby="h-home-organisations" id="home-organisations">
     <h2 id="h-home-organisations">@T["Home.Organisations"]</h2>
     <p>@T["Home.OrganisationsText"]</p>
     <p class="row"><a href="/organizacijos">@T["Home.OrganisationsList"]</a> <a href="/organizacijos/nauja">@T["Home.OrganisationsRegister"]</a></p>
@@ -180,13 +182,22 @@
                                     <MyAgendaMark Number="@v.Number" Numbers="_numbers" Place="@($"voted-{v.VoteId}")" @rendermode="InteractiveWebAssembly" />
                                 }
                             </div>
-                            <div class="tl-item__side">
-                                @if (v.Record is { Status: not "rejected" } record)
-                                {
-                                    <RecordFigures Record="record" Member="member" Number="@v.Number" Numbers="_numbers" Place="@($"voted-{v.VoteId}")" />
-                                }
-                                <a class="btn btn--plain cta" href="/seimas/balsavimai/@v.VoteId">@U["Agenda.Action.Votes"]</a>
-                            </div>
+                            @if (member && v.Record is { Status: "open", Counts: { For: 0, Against: 0 } } nobodyYet)
+                            {
+                                @* "Nobody yet" is left out in the browser for a member who has just taken a side (the page's
+                                   agenda is up to a minute old); the votes' rows offer no sides (design 8.7). *@
+                                <MyAgendaSide Number="@v.Number" Numbers="_numbers" Place="@($"voted-{v.VoteId}")" Record="nobodyYet" VoteId="v.VoteId" @rendermode="InteractiveWebAssembly" />
+                            }
+                            else
+                            {
+                                <div class="tl-item__side">
+                                    @if (v.Record is { Status: not "rejected" } record)
+                                    {
+                                        <RecordFigures Record="record" Id="@($"voted-{v.VoteId}")" />
+                                    }
+                                    <a class="btn btn--plain cta" href="/seimas/balsavimai/@v.VoteId">@U["Agenda.Action.Votes"]</a>
+                                </div>
+                            }
                         </li>
                     }
                 </ul>

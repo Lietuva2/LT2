@@ -200,7 +200,7 @@ internal sealed class AppealsService(
             facts?.HasPositionConsent == true);
     }
 
-    public async Task<Result<Unit>> TakePositionAsync(string billNumber, Guid userId, string side, CancellationToken cancellationToken)
+    public async Task<Result<bool>> TakePositionAsync(string billNumber, Guid userId, string side, CancellationToken cancellationToken)
     {
         if (AppealRules.CheckSide(side) is { } invalid)
         {
@@ -261,7 +261,7 @@ internal sealed class AppealsService(
 
         await db.SaveChangesAsync(cancellationToken);
         await transaction.CommitAsync(cancellationToken);
-        return Result.Ok();
+        return position is null;
     }
 
     public async Task<Result<Unit>> ClearPositionAsync(string billNumber, Guid userId, CancellationToken cancellationToken)

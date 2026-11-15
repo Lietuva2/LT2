@@ -60,7 +60,4 @@ internal static class FollowRules
     /// </summary>
     public static bool IsStatementRecipient(DateTimeOffset followedAt, DateTimeOffset firstSeen, DateTimeOffset firstPublicAt) =>
         IsRecipient(followedAt, firstSeen, firstPublicAt);
-
-    /// <summary>A new follow is refused once the person follows <paramref name="max"/> bills, MPs and organisations together.</summary>
-    public static bool MayFollowMore(int following, int max) => following < max;
 }

@@ -111,4 +111,5 @@
 <data name="Data.DeleteCancel" xml:space="preserve"><value>Ne, palikti</value></data>
 <data name="Data.DeleteStaffNeedsPasskey" xml:space="preserve"><value>Tai darbuotojo paskyra: ją ištrinti galima tik prisijungus darbuotojo prieigos raktu. Atsijunkite ir prisijunkite tuo prieigos raktu.</value></data>
 <data name="Data.DeleteStaffKept" xml:space="preserve"><value>Tai, ką darėte kaip moderatorius ar administratorius, liks užrašyta su paskyros numeriu, bet be jūsų vardo ir adreso.</value></data>
-<data name="Data.DeleteStaffMore" xml:space="preserve"><value>Kas saugoma ir kas ištrinama</value></data></root>
+<data name="Data.DeleteStaffMore" xml:space="preserve"><value>Kas saugoma ir kas ištrinama</value></data>
+<data name="Split.Aria" xml:space="preserve"><value>{0} už, {1} prieš, {2} susilaikė</value></data></root>

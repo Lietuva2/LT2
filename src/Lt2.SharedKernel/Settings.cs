@@ -143,8 +143,6 @@ public static class SettingKeys
     /// </summary>
     public static readonly SettingKey<int> OrganisationsPerAccount = new("Organisations:PerAccount", 3, v => v is > 0 and <= 100);
 
-    /// <summary>Bills, MPs and organisations one account may follow together (design 8.11.2, 8.14.14).</summary>
-    public static readonly SettingKey<int> FollowsMaxPerAccount = new("Follows:MaxPerAccount", 200, v => v is > 0 and <= 10000);
 
     /// <summary>Surge note: share of recent positions from new accounts (design 6.6).</summary>
     public static readonly SettingKey<decimal> SurgeMinimumShare = new("Surge:MinimumShare", 0.30m, v => v is > 0 and <= 1);
@@ -172,7 +170,6 @@ public static class SettingKeys
         DigestNotableChange,
         AppealsReasonsPerPerson,
         AppealsEndorsementsPerPerson,
-        FollowsMaxPerAccount,
         OrganisationsPerAccount,
         AiDraftModel,
         AiSummariesPerDay,

@@ -83,8 +83,10 @@ internal static class WebHost
         services.AddScoped<Lt2.Api.Contracts.Agenda.IAgendaApi, ServerAgendaApi>();
         services.AddScoped<Lt2.Api.Contracts.Follows.IFollowsApi, ServerFollowsApi>();
         services.AddScoped<MyBillsReads>();
+        services.AddScoped<TakingSides>();
         services.AddScoped<Lt2.Api.Contracts.Me.IMyBillsApi, ServerMyBillsApi>();
         services.AddScoped<FrontPageAgenda>();
+        services.AddSingleton<FrontPageFreshness>();
         services.AddSingleton<FeedbackLimiter>();
         services.AddScoped<Lt2.Api.Contracts.Feedback.IFeedbackApi, ServerFeedbackApi>();
         services.AddScoped<IAdminApi, ServerAdminApi>();

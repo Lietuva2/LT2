@@ -66,7 +66,7 @@ src/Lt2.Hosting            what the web host and the worker set up the same way:
                            (Observability.AddLt2Observability); no module references it
 src/Lt2.Web.Client         Blazor WebAssembly components and HTTP implementations of the API clients; the interface's
                            shared pieces: Components/InteractiveBase<TText>, Display (numbers and dates, Vilnius),
-                           StringLocalizerExtensions (Format), CopyLink, FieldError, Messages
+                           StringLocalizerExtensions (Format), CopyLink, FieldError, Messages, SplitBar
 src/Lt2.Api.Contracts      DTOs, routes, client interfaces, validators (shared by server, client and tests)
 src/Lt2.SharedKernel       Result type, identifiers (UUID v7), outbox, audit and settings interfaces, connection
                            strings and the one EF Core set-up (Persistence/: UseLt2Npgsql), VilniusTime (the
@@ -173,7 +173,9 @@ If Windows has reserved port 8080, set `LT2_HTTP_PORT=8090` for every compose co
   `L.Format(key, …)`; numbers and dates are `Display` (`Number`, `Day`, `DayTime`, `Today(TimeProvider)`), on the
   server pages too; the moderators' contact address is `Configuration.ModeratorContact()`. A link to copy is
   `<CopyLink>`; "Atkurti" is `<RestoreForm>`; a queued argument is `<QueueReasonItem>`, a queued statement
-  `<StatementQueueItem>`; the bill page's islands share the caller's answers through `MyBillState`. A list whose items
+  `<StatementQueueItem>`; the positions consent before a first side is `<PositionConsentForm>`; the bill page's islands
+  share the caller's answers through `MyBillState`, the front page's through `MyAgendaState` (its `Changed` event tells
+  the others after a member's action). A list whose items
   hold state or re-sort is keyed (`@key`), and an element id is unique on the page (a component shown twice takes an
   `IdPrefix`).
 
@@ -272,16 +274,34 @@ official `@lrs.lt` address from open data; the link is tied to the Seimas person
   counted). The front page (design 8.7, reworked 2026-11-15; mockup `design/ui/pradzia.html`) is that agenda as a
   timeline of sitting days: a visitor first gets "Kaip tai veikia" (the same texts as `/metodika#kaip-tai-veikia`) and
   links to register or sign in, never a form; a member gets "Jūsų projektai" and their marks in the rows, islands filled
-  in the browser from `GET /me/bills` (one request, never prerendered), so the HTML is the same for every member. The
-  server keeps the front page's agenda in memory for 60 s (`FrontPageAgenda`; a test removes `FrontPageAgenda.CacheKey`
-  instead of waiting); the agenda page, the bill's page and the API stay live.
+  in the browser from `GET /me/bills` (one request, never prerendered; it also says whether the caller gave the positions
+  consent), so the HTML is the same for every member. The timeline is on a `.sheet`, "Organizacijos" on the ground
+  (design 8.16). A coming bill with an open record offers "Prašau balsuoti" with "už" and "prieš" in its row (owner,
+  2026-11-15): a visitor's are `LandingPath.SignInLink` links to the bill's page; a member's side column is one island
+  (`MyAgendaSide`, disabled before it starts) that takes, changes ("Atsiimti" withdraws) the side with the bill page's
+  request, asks the first-time consent across the row with the shared `<PositionConsentForm>` (also in `SidePicker`), then
+  shows the bill's live numbers from `GET /bills/{n}/record`; the other islands follow through `MyAgendaState.Changed`.
+  The figures are one component (`Lt2.Web.Client/Agenda/RecordFigures`, with `SplitBar` in `Lt2.Web.Client/Components`),
+  rendered by the server and by the island; with a side and a copy that says zero, the island reads the live numbers once on
+  start. The server keeps the front page's agenda in memory for 60 s (`FrontPageAgenda`; a test removes
+  `FrontPageAgenda.CacheKey` instead of waiting). A side taken, changed or withdrawn marks the copy out of date
+  (`FrontPageFreshness`, marked by `TakingSides` for every API client): the first request once the copy is 2 s old reads
+  the agenda again; other changes wait for the minute. The agenda page, the bill's page and the API stay live.
   "Projektai" (`/projektai`; `/kreipimaisi` redirects there) lists active bills, sorted by activity (participants
   plus published arguments; the default), participants, arguments or planned date (owner, 2026-11-14), with a search
   and "Planuojami artimiausiu metu".
-- Following a bill or an MP is private: shown to nobody, no follower count, never combined with sides or invitations,
-  in the export, deleted with the account, at most `Follows:MaxPerAccount`. Emails (planned, voted; each switchable on
-  the account page) go once per event to those who followed before it; nothing older than three days, nothing about the
-  person's side, the bill's counts or other people.
+- Following a bill or an MP is private: shown to nobody, no follower count, never combined with sides or invitations
+  (the person's own `/me/bills` gives them both), in the export, deleted with the account; there is no limit on how much a
+  person follows (owner, 2026-11-15: `Follows:MaxPerAccount` and `follow.limit` are gone). Emails (planned, voted; each
+  switchable on the account page) go once per event to those who followed before it; nothing older than three days,
+  nothing about the person's side, the bill's counts or other people.
+- Taking a side follows the bill (design 8.11.2, owner 2026-11-15): a member's first side on a bill (no side before)
+  follows it in the same request, composed by the host (`Lt2.Web/Services/TakingSides`: the Appeals module saves the
+  side, then `IFollows.FollowBillAsync`), on the bill's page and in a front-page row alike. The side is never refused or
+  undone because the follow failed. Changing a side adds nothing, withdrawing it keeps the follow, "Nebesekti" keeps the
+  side; sides from before were not backfilled. The follow row holds nothing about the side.
+- Taking, changing or withdrawing a side, following and unfollowing (bills, MPs, organisations) and "Man svarbu" share
+  one per-account request limit, `RateLimits:Participation` (60 a minute): a guard against a runaway script, not a rule.
 - Links in emails: a message carries the site path, and the template makes it a full address with
   `SiteLinks.Absolute` from `Site:Address` (design 5.6). That is deployment configuration, never a runtime setting.
 - The share line: the personal invitation link with `tikslas` beside the code after the `#` (a path under `/seimas/`, anything else ignored), landing

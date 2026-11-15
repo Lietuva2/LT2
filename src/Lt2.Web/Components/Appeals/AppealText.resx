@@ -16,7 +16,6 @@
 <data name="What.ESeimas" xml:space="preserve"><value>Projekto tekstas e. seime</value></data>
 <data name="Threshold.Heading" xml:space="preserve"><value>Riba</value></data>
 <data name="Threshold.Aria" xml:space="preserve"><value>{0} dalyvių iš {1}</value></data>
-<data name="Threshold.Progress" xml:space="preserve"><value>dalyvių · riba {0}</value></data>
 <data name="Threshold.SetBy.moderator" xml:space="preserve"><value>Šio projekto ribą nustatė moderatorius.</value></data>
 <data name="Threshold.Note" xml:space="preserve"><value>Moderatoriaus paaiškinimas: {0}</value></data>
 <data name="List.Title" xml:space="preserve"><value>Projektai</value></data>

@@ -114,9 +114,11 @@ public sealed class AppealFlowTests(AppealFlowTests.ModeratorFixture moderator) 
         await Assertions.Expect(mine).ToBeVisibleAsync();
         await Assertions.Expect(b.Locator("#count-for .figure__num")).ToHaveTextAsync(Number(forBefore), new() { Timeout = 10_000 });
 
-        // 3. ... then takes a side: the consent is asked first, then the side is counted and shown only to them.
+        // 3. ... then takes a side: the consent is asked first, then the side is counted and shown only to them, and the
+        // bill they did not follow is followed (design 8.11.2).
         var forButton = b.Locator("#side-for");
         await Assertions.Expect(forButton).ToBeEnabledAsync(new() { Timeout = 60_000 });
+        await Assertions.Expect(b.Locator("#follow-toggle-bill")).ToHaveTextAsync("Sekti", new() { Timeout = 60_000 });
         await forButton.ClickAsync();
         await Assertions.Expect(b.Locator("#consent-title")).ToBeVisibleAsync();
         await b.Locator("#consent-check").CheckAsync();
@@ -125,6 +127,8 @@ public sealed class AppealFlowTests(AppealFlowTests.ModeratorFixture moderator) 
         await Assertions.Expect(b.Locator("#count-for .figure__num")).ToHaveTextAsync(Number(forBefore + 1));
         await Assertions.Expect(b.Locator("#count-against .figure__num")).ToHaveTextAsync(Number(againstBefore), new() { Timeout = 5_000 });
         await Assertions.Expect(b.Locator("#nobody-yet")).ToHaveCountAsync(0);
+        await Assertions.Expect(b.Locator("#follow-toggle-bill")).ToHaveTextAsync("Nebesekti", new() { Timeout = 60_000 });
+        await Assertions.Expect(b.Locator("#follow-toggle-bill")).ToHaveAttributeAsync("aria-pressed", "true");
         await Assertions.Expect(b.Locator("#share-line")).ToBeVisibleAsync(new() { Timeout = 30_000 });
         (await b.Locator("#share-link").GetAttributeAsync("href"))!.ShouldContain("tikslas=%2Fseimas%2F" + bill, Case.Sensitive, "the share link lands on the bill's page");
 

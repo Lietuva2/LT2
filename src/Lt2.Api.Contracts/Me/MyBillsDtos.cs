@@ -11,9 +11,10 @@ public sealed record MyBillResponse(string Number, string? Side, bool Following)
 
 /// <summary>
 /// <c>GET /api/v1/me/bills?numbers=…</c>: one row for each asked bill the caller has a side on or follows, in the order
-/// asked; a bill with neither is left out.
+/// asked; a bill with neither is left out. <c>HasPositionConsent</c>: the caller has given the positions consent (design
+/// 6.5), so a side taken in a row of the front page is saved at once; without it the row asks for the consent first.
 /// </summary>
-public sealed record MyBillsResponse(IReadOnlyList<MyBillResponse> Bills);
+public sealed record MyBillsResponse(IReadOnlyList<MyBillResponse> Bills, bool HasPositionConsent);
 
 /// <summary>The bills asked about in one request.</summary>
 public sealed record MyBillsQuery

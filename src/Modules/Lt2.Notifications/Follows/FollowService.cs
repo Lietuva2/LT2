@@ -22,7 +22,6 @@ internal sealed class FollowService(
     IPlannedAgenda agenda,
     IMpDirectory mps,
     IOrganisationDirectory organisations,
-    ISettings settings,
     IOutbox outbox,
     TimeProvider clock,
     ILogger<FollowService> logger) : IFollows
@@ -57,7 +56,6 @@ internal sealed class FollowService(
                     votes.GetValueOrDefault(n)))
                 .ToList(),
             ids.Select(id => people.GetValueOrDefault(id)).OfType<MpFacts>().ToList(),
-            await settings.GetAsync(SettingKeys.FollowsMaxPerAccount, cancellationToken),
             organisationIds.Select(id => known.GetValueOrDefault(id)).OfType<OrganisationFacts>().ToList());
     }
 
@@ -163,6 +161,7 @@ internal sealed class FollowService(
         return e;
     }
 
+    /// <summary>Adds a follow; following again changes nothing. There is no limit on how much a person follows (design 8.11.2).</summary>
     private async Task<Result<Unit>> AddAsync(Guid userId, string kind, string key, CancellationToken ct)
     {
         if (await participants.FindAsync(userId, ct) is null)
@@ -173,17 +172,12 @@ internal sealed class FollowService(
         await using var db = await contexts.CreateDbContextAsync(ct);
         await using var transaction = await db.Database.BeginTransactionAsync(ct);
 
-        // One person's follows are counted under their own lock, so the limit holds under parallel requests.
+        // Under the person's own lock, so two requests at once (a double press, a first side and "Sekti") make one follow
+        // and never hit the primary key.
         await db.Database.ExecuteSqlRawAsync("SELECT pg_advisory_xact_lock(hashtextextended({0}, 0))", ["lt2.follows:" + userId.ToString("N")], ct);
         if (await db.Follows.AnyAsync(f => f.UserId == userId && f.Kind == kind && f.Key == key, ct))
         {
             return Result.Ok();
-        }
-
-        var count = await db.Follows.CountAsync(f => f.UserId == userId, ct);
-        if (!FollowRules.MayFollowMore(count, await settings.GetAsync(SettingKeys.FollowsMaxPerAccount, ct)))
-        {
-            return Error.Conflict("follow.limit");
         }
 
         db.Follows.Add(new Follow { UserId = userId, Kind = kind, Key = key, CreatedAt = clock.GetUtcNow() });

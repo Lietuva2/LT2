@@ -111,13 +111,6 @@ public sealed class FollowRuleTests
     }
 
     [Fact]
-    public void A_person_follows_at_most_the_settings_number_of_bills_and_MPs()
-    {
-        FollowRules.MayFollowMore(199, 200).ShouldBeTrue();
-        FollowRules.MayFollowMore(200, 200).ShouldBeFalse();
-    }
-
-    [Fact]
     public void A_planned_event_is_keyed_by_its_date_and_a_vote_by_its_id()
     {
         FollowRules.PlannedKey(new DateOnly(2026, 11, 19)).ShouldBe("2026-11-19");

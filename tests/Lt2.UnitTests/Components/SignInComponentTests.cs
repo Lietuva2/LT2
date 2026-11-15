@@ -418,7 +418,7 @@ public sealed class SignInComponentTests : BunitContext
     private sealed class NoFollowsApi : Lt2.Api.Contracts.Follows.IFollowsApi
     {
         public Task<ApiResult<Lt2.Api.Contracts.Follows.MyFollowsResponse>> GetMineAsync(CancellationToken cancellationToken = default) =>
-            Task.FromResult(ApiResult<Lt2.Api.Contracts.Follows.MyFollowsResponse>.Ok(new([], [], 200, [])));
+            Task.FromResult(ApiResult<Lt2.Api.Contracts.Follows.MyFollowsResponse>.Ok(new([], [], [])));
 
         public Task<ApiResult> FollowBillAsync(string number, CancellationToken cancellationToken = default) => Task.FromResult(ApiResult.Ok());
 

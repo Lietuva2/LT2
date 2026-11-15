@@ -70,23 +70,73 @@ internal sealed class AgendaReads(IPlannedAgenda agenda, IBillCatalogue bills, I
 
 /// <summary>
 /// The front page's agenda (design 8.7, "Cached"): the same public answer for everyone, kept in memory for
-/// <see cref="Lifetime"/>, so the most visited page costs the database one read a minute. It is built only by
+/// <see cref="Lifetime"/>, so the most visited page costs the database one read a minute. A side taken, changed or
+/// withdrawn marks the copy out of date (<see cref="FrontPageFreshness"/>), and the next request reads the agenda again,
+/// but never within <see cref="FrontPageFreshness.MinimumAge"/> of the copy being made. It is built only by
 /// <see cref="AgendaReads"/>, which takes no caller, and holds only <see cref="AgendaResponse"/>, which has no field about
 /// anyone; nothing of a member's own can enter it. The agenda page, the bill's page and the API stay live.
 /// </summary>
-internal sealed class FrontPageAgenda(AgendaReads reads, IMemoryCache cache)
+internal sealed class FrontPageAgenda(AgendaReads reads, IMemoryCache cache, FrontPageFreshness freshness)
 {
     public static readonly TimeSpan Lifetime = TimeSpan.FromSeconds(60);
 
     /// <summary>The cache entry's key; a test removes it to read afresh without waiting.</summary>
     public const string CacheKey = "front-page:agenda";
 
-    public async Task<AgendaResponse> ReadAsync(CancellationToken ct) =>
-        (await cache.GetOrCreateAsync(CacheKey, entry =>
+    public async Task<AgendaResponse> ReadAsync(CancellationToken ct)
+    {
+        if (freshness.TakeRebuild())
+        {
+            cache.Remove(CacheKey);
+        }
+
+        return (await cache.GetOrCreateAsync(CacheKey, entry =>
         {
             entry.AbsoluteExpirationRelativeToNow = Lifetime;
+            freshness.Built();
             return reads.ReadAsync(ct);
         }))!;
+    }
+}
+
+/// <summary>
+/// Whether the front page's copy of the agenda is out of date (design 8.7, "Cached"; owner, 2026-11-15): one per
+/// application. The host marks it after a side is taken, changed or withdrawn (<see cref="TakingSides"/>); other changes
+/// wait for the minute. A stale copy is rebuilt by the first request once it is at least <see cref="MinimumAge"/> old;
+/// a younger one is served and stays stale, so however many sides are taken the page reads the agenda at most once every
+/// two seconds. No timers: a timestamp and a flag, read and written atomically.
+/// </summary>
+internal sealed class FrontPageFreshness(TimeProvider clock)
+{
+    /// <summary>A copy is never replaced sooner than this after it was made.</summary>
+    public static readonly TimeSpan MinimumAge = TimeSpan.FromSeconds(2);
+
+    private long _builtAt;
+    private int _stale;
+
+    /// <summary>A side was taken, changed or withdrawn: the copy no longer shows the counts.</summary>
+    public void MarkStale() => Volatile.Write(ref _stale, 1);
+
+    /// <summary>
+    /// True when the copy is stale and old enough to be replaced; the flag is then cleared by this one caller, who
+    /// rebuilds. A side marked meanwhile sets it again for the next copy.
+    /// </summary>
+    public bool TakeRebuild()
+    {
+        if (Volatile.Read(ref _stale) == 0 || clock.GetUtcNow().UtcTicks - Interlocked.Read(ref _builtAt) < MinimumAge.Ticks)
+        {
+            return false;
+        }
+
+        return Interlocked.CompareExchange(ref _stale, 0, 1) == 1;
+    }
+
+    /// <summary>A new copy is being made now, from the database as it is: it is not stale (a side marked after this sets it again).</summary>
+    public void Built()
+    {
+        Volatile.Write(ref _stale, 0);
+        Interlocked.Exchange(ref _builtAt, clock.GetUtcNow().UtcTicks);
+    }
 }
 
 /// <summary>Server-side <see cref="IAgendaApi"/> for the server-rendered agenda and front pages.</summary>

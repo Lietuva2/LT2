@@ -1,0 +1,37 @@
+@inject IStringLocalizer<AppealUi> L
+
+@* The positions consent before a first side (design 6.5): the same title, text, checkbox and buttons wherever a side is
+   taken, on the bill's page (SidePicker) and in a row of the front page (MyAgendaSide). The component that shows it gives
+   the consent and takes the side when "Sutinku ir …" is pressed; nothing is saved before that, and "Atšaukti" only closes
+   it. A quiet sheet: it opens within the content (design 8.16). *@
+<div class="sheet sheet--quiet stack stack--tight" role="group" aria-labelledby="@(IdPrefix)consent-title" id="@(IdPrefix)consent">
+    <h3 id="@(IdPrefix)consent-title">@L["Consent.Title"]</h3>
+    <p>@L["Consent.Text"]</p>
+    <label class="check">
+        <input type="checkbox" id="@(IdPrefix)consent-check" @bind="checkedBox" disabled="@Locked" />
+        <span>@L["Consent.Check"]</span>
+    </label>
+    <div class="row">
+        <button type="button" class="btn @(Side == "for" ? "btn--for" : "btn--against")" id="@(IdPrefix)consent-submit" disabled="@(Locked || !checkedBox)"
+                @onclick="OnConfirm">@L["Consent.Submit." + Side]</button>
+        <button type="button" class="btn btn--plain" id="@(IdPrefix)consent-cancel" disabled="@Locked" @onclick="OnCancel">@L["Cancel"]</button>
+    </div>
+</div>
+
+@code {
+    private bool checkedBox;
+
+    /// <summary>The side the person pressed: <c>for</c> or <c>against</c>.</summary>
+    [Parameter, EditorRequired] public string Side { get; set; } = "";
+
+    /// <summary>While the island has not started or an action runs, nothing can be pressed.</summary>
+    [Parameter] public bool Locked { get; set; }
+
+    /// <summary>Before the ids, when the form can be on a page more than once (the front page's rows).</summary>
+    [Parameter] public string IdPrefix { get; set; } = "";
+
+    /// <summary>"Sutinku ir prašau balsuoti …", pressed with the box checked.</summary>
+    [Parameter] public EventCallback OnConfirm { get; set; }
+
+    [Parameter] public EventCallback OnCancel { get; set; }
+}

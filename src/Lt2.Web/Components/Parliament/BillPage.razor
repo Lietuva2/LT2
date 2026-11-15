@@ -13,6 +13,7 @@
 @inject NavigationManager Navigation
 @inject IConfiguration Configuration
 @inject IStringLocalizer<Lt2.Web.Components.Appeals.AppealText> A
+@inject IStringLocalizer<AppealUi> U
 @inject IHttpContextAccessor Http
 @inject Microsoft.AspNetCore.Authorization.IAuthorizationService Authorization
 
@@ -160,7 +161,7 @@
                         <div class="ruler" role="img" aria-label="@A.Format("Threshold.Aria", Display.Number(a.Threshold.Participants), Display.Number(a.Threshold.Value))">
                             <svg viewBox="0 0 1000 10" preserveAspectRatio="none" aria-hidden="true"><rect class="ruler__bar" x="0" y="0" height="10" width="@RulerWidth(a.Threshold)" /></svg>
                         </div>
-                        <p class="num"><b>@Display.Number(a.Threshold.Participants)</b> @A.Format("Threshold.Progress", Display.Number(a.Threshold.Value))</p>
+                        <p class="num"><b>@Display.Number(a.Threshold.Participants)</b> @U.Format("Threshold.Progress", Display.Number(a.Threshold.Value))</p>
                         @* Design 8.15: what the threshold is, one click away on the methodology page; a bill's own threshold
                            stays said here with the moderator's statement (design 8.12). *@
                         <p class="small"><a href="/metodika#riba" id="threshold-what">@A["Threshold.What"]</a></p>

@@ -1,0 +1,210 @@
+@using Lt2.Api.Contracts.Agenda
+@inherits InteractiveBase<AppealUi>
+@implements IDisposable
+@inject MyAgendaState State
+@inject IAppealsApi Appeals
+@inject IMeApi MeApi
+
+@* A member's side column in a row of the front page's timeline (design 8.7, "Taking a side in the row"), for a bill whose
+   record is open. Under the bill's numbers a coming bill offers "Prašau balsuoti" with "už" and "prieš": one press saves
+   the side with the same request and rules as the bill's page; the pressed button shows the member's side, the other one
+   changes it, "Atsiimti" withdraws it, and with a side the row links to "Argumentai ir pozicijos". The first side ever asks
+   for the positions consent across the row's whole width (PositionConsentForm, the bill page's form); nothing is saved
+   before it. A first side also follows the bill (design 8.11.2, on the server); "Sekate" then shows in the row's mark and
+   the panel, which read the shared answer again (MyAgendaState.Changed). After the member's own action the row shows the
+   bill's live numbers from its public answer, not the page's copy that may be a minute old; so does it once on start when
+   that copy says nobody took part but the member's own answer has a side. A row of the last week's
+   votes (VoteId) offers no sides, only "Kaip balsavo Seimo nariai".
+
+   Rendered straight into the row (the side column and, while asked, the consent as the row's last part). While the server
+   prerenders and before the island has started the numbers are the page's, "nobody yet" reads as for anyone and the
+   buttons are disabled: the same HTML for every member, nothing of the member's own in it. *@
+<div class="tl-item__side" id="home-side-@Place">
+    <RecordFigures Record="Shown" HideNobody="@(_mine?.Side is not null)" Id="@Place" />
+    @if (VoteId is { } vote)
+    {
+        <a class="btn btn--plain cta" href="/seimas/balsavimai/@vote">@L["Agenda.Action.Votes"]</a>
+    }
+    else
+    {
+        <div class="tl-ask">
+            <span class="small">@L["Agenda.Ask"]</span>
+            <div class="tl-ask__sides sides">
+                @foreach (var side in AppealLimits.Sides)
+                {
+                    var chosen = _mine?.Side == side;
+                    <button type="button" class="btn btn--@side cta" id="home-@side-@Place" aria-pressed="@(chosen ? "true" : "false")"
+                            aria-label="@L.Format("Agenda.Ask." + side, Number)" disabled="@(Locked || _answer is null)"
+                            @onclick="() => ChooseAsync(side)">@if (chosen)
+                        {
+                            <span class="sides__check" aria-hidden="true">✓</span>
+                        }@L[side == "for" ? "Agenda.For" : "Agenda.Against"]</button>
+                }
+            </div>
+        </div>
+        @if (_mine?.Side is not null)
+        {
+            <p class="small tl-ask__after">
+                <button type="button" class="linkish" id="home-withdraw-@Place" aria-label="@L.Format("Agenda.Withdraw", Number)" disabled="@Locked"
+                        @onclick="ClearAsync">@L["Side.Withdraw"]</button>
+                <a href="@BillPath" id="home-action-@Place">@L["Agenda.Action.Side"]</a>
+            </p>
+        }
+        <Messages Message="@Message" Info="@Info" />
+    }
+</div>
+@if (_consentFor is { } wanted)
+{
+    <div class="tl-item__consent" id="home-consent-@Place">
+        <PositionConsentForm Side="@wanted" Locked="Locked" IdPrefix="@($"home-{Place}-")"
+                             OnConfirm="() => ConsentAndTakeAsync(wanted)" OnCancel="() => _consentFor = null" />
+    </div>
+}
+
+@code {
+    private MyAgendaAnswer? _answer;
+    private MyBillResponse? _mine;
+    private AgendaRecordResponse? _live;
+    private string? _consentFor;
+
+    [Parameter, EditorRequired] public string Number { get; set; } = "";
+
+    /// <summary>Every bill the page shows, so all the islands share one request.</summary>
+    [Parameter, EditorRequired] public IReadOnlyList<string> Numbers { get; set; } = [];
+
+    /// <summary>The row's place, for the element ids (see MyAgendaMark).</summary>
+    [Parameter, EditorRequired] public string Place { get; set; } = "";
+
+    /// <summary>The bill's public numbers as the page has them (public, the same for everyone; up to a minute old).</summary>
+    [Parameter, EditorRequired] public AgendaRecordResponse Record { get; set; } = default!;
+
+    /// <summary>A row of the last week's votes: no sides to take, the link to the vote instead.</summary>
+    [Parameter] public long? VoteId { get; set; }
+
+    private AgendaRecordResponse Shown => _live ?? Record;
+
+    private string BillPath => "/seimas/" + Uri.EscapeDataString(Number);
+
+    protected override async Task OnInitializedAsync()
+    {
+        // Only in the browser: the server never asks, so nothing of the member's own is in the page's HTML.
+        if (RendererInfo.IsInteractive && await IsSignedInAsync())
+        {
+            State.Changed += OnChanged;
+            await ReadAsync();
+
+            // The page's copy is up to a minute old: when it says nobody took part but the member's own answer has a side,
+            // the bill's live numbers are read once (the same answer as after an action). No request in any other case.
+            if (_mine?.Side is not null && Record.Counts.For + Record.Counts.Against == 0)
+            {
+                await ReadLiveAsync();
+            }
+        }
+    }
+
+    public void Dispose() => State.Changed -= OnChanged;
+
+    private async Task ReadAsync()
+    {
+        _answer = await State.MineAsync(Numbers);
+        _mine = _answer?.Bills.GetValueOrDefault(Number);
+    }
+
+    private void OnChanged() => _ = InvokeAsync(async () =>
+    {
+        await ReadAsync();
+        StateHasChanged();
+    });
+
+    private Task ChooseAsync(string side) => RunAsync(async () =>
+    {
+        if (_mine?.Side == side)
+        {
+            return;
+        }
+
+        if (_answer is { HasPositionConsent: false })
+        {
+            _consentFor = side;
+            return;
+        }
+
+        await TakeAsync(side);
+    });
+
+    private Task ConsentAndTakeAsync(string side) => RunAsync(async () =>
+    {
+        var consent = await MeApi.GivePositionConsentAsync(new PositionConsentRequest { TextVersion = PositionConsentText.Version });
+        if (!consent.IsSuccess)
+        {
+            Show(consent.Problem);
+            return;
+        }
+
+        State.SetConsent(true);
+        _consentFor = null;
+        await TakeAsync(side);
+    });
+
+    private async Task TakeAsync(string side)
+    {
+        var wasFollowing = _mine?.Following == true;
+        var result = await Appeals.TakePositionAsync(Number, new PositionRequest { Side = side });
+        if (result.Problem?.Code == "consent.required")
+        {
+            // The consent was withdrawn since the page was read: ask for it here, as for a first side.
+            State.SetConsent(false);
+            await ReadAsync();
+            _consentFor = side;
+            return;
+        }
+
+        if (!result.IsSuccess)
+        {
+            Show(result.Problem);
+            return;
+        }
+
+        await AfterChangeAsync();
+        if (!wasFollowing && _mine?.Following == true)
+        {
+            Info = L["Agenda.Followed"];
+        }
+    }
+
+    private Task ClearAsync() => RunAsync(async () =>
+    {
+        var result = await Appeals.ClearPositionAsync(Number);
+        if (!result.IsSuccess)
+        {
+            Show(result.Problem);
+            return;
+        }
+
+        await AfterChangeAsync();
+    });
+
+    /// <summary>The bill's live numbers from its public answer, and the member's own answer read again for every island.</summary>
+    private async Task AfterChangeAsync()
+    {
+        await ReadLiveAsync();
+        await State.RefreshAsync();
+        await ReadAsync();
+    }
+
+    /// <summary>The bill's live numbers from its public answer; a failed read keeps the numbers shown.</summary>
+    private async Task ReadLiveAsync()
+    {
+        try
+        {
+            if ((await Appeals.GetRecordAsync(Number)).Value is { } live)
+            {
+                _live = new AgendaRecordResponse(live.Id, live.Status, live.Counts, live.Threshold);
+            }
+        }
+        catch (HttpRequestException)
+        {
+            // The page's copy stays; the next action reads again.
+        }
+    }
+}

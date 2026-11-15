@@ -1,18 +1,26 @@
+using System.Text.Json;
+using System.Text.RegularExpressions;
 using Microsoft.Playwright;
 
 namespace Lt2.E2E;
 
 /// <summary>
 /// Design 8.7, the reworked front page, against the running stack ("Done when"): a visitor sees the introduction and the
-/// agenda and no form; a member sees their own bills first and no introduction; with JavaScript off the public page is
-/// complete and nothing of a member's own is in it; no sideways scroll at 390 px; at 1280 px the first screen shows the
-/// agenda's heading. Screenshots for the owner go to LT2_E2E_START_SHOTS (default output/start-page/built).
+/// agenda and no form, and a coming bill's "už" and "prieš" are links to sign in that come back to the bill's page; a member
+/// sees their own bills first and no introduction, takes a side in a row with one press (the first time after the consent,
+/// asked in the row), changes and withdraws it there, and the row then shows the bill's live numbers; with JavaScript off
+/// the public page is complete and nothing of a member's own is in it; the page's HTML is the same for two members; no
+/// sideways scroll at 390 px; at 1280 px the first screen shows the agenda's heading. Screenshots for the owner go to
+/// LT2_E2E_START_SHOTS (default output/start-page/built).
 /// </summary>
-public sealed class StartPageTests
+public sealed partial class StartPageTests
 {
     private static string Base => E2ESteps.Base;
 
     private static string Shots => Environment.GetEnvironmentVariable("LT2_E2E_START_SHOTS") is { Length: > 0 } dir ? dir : Path.Combine("output", "start-page", "built");
+
+    /// <summary>The coming rows that offer the sides (an open record).</summary>
+    private const string AskRows = "#home-coming li.tl-item:has(.tl-ask)";
 
     [Theory]
     [InlineData(1280, 900)]
@@ -33,6 +41,10 @@ public sealed class StartPageTests
         await Assertions.Expect(page.Locator("#my-agenda")).ToHaveCountAsync(0);
         await Assertions.Expect(page.Locator("#h-home-coming")).ToBeVisibleAsync();
         await Assertions.Expect(page.Locator("#not-a-poll")).ToBeVisibleAsync();
+
+        // Design 8.16: the agenda is on a sheet, "Organizacijos" on the ground.
+        await Assertions.Expect(page.Locator("#home-coming")).ToHaveClassAsync(new Regex(@"\bsheet\b"));
+        await Assertions.Expect(page.Locator("#home-organisations")).Not.ToHaveClassAsync(new Regex(@"\bsheet\b"));
         await E2ESteps.NoSidewaysScrollAsync(page, $"/ at {width}");
         if (width == 1280)
         {
@@ -42,8 +54,121 @@ public sealed class StartPageTests
 
         (await page.EvaluateAsync<bool>("() => document.querySelector('.home-how').compareDocumentPosition(document.querySelector('#home-coming')) & Node.DOCUMENT_POSITION_FOLLOWING"))
             .ShouldBeTrue("the steps come before the agenda, on a phone too");
+        await SidesFitSideBySideAsync(page.Locator(AskRows).First);
         Directory.CreateDirectory(Shots);
         await page.ScreenshotAsync(new() { Path = Path.Combine(Shots, $"visitor-{width}.png"), FullPage = true });
+    }
+
+    [Fact]
+    public async Task A_visitors_sides_are_links_to_sign_in_that_come_back_to_the_bill()
+    {
+        Assert.SkipWhen(string.IsNullOrEmpty(SignUpTests.BaseUrl), "LT2_E2E_BASE_URL is not set; start the stack and set it to run end-to-end tests.");
+        using var playwright = await Playwright.CreateAsync();
+        await using var browser = await playwright.Chromium.LaunchAsync(new() { Channel = SignUpTests.Channel, Headless = true });
+
+        // No script needed: the links work with JavaScript off.
+        await using var context = await browser.NewContextAsync(new() { IgnoreHTTPSErrors = true, Locale = "lt-LT", JavaScriptEnabled = false });
+        var page = await context.NewPageAsync();
+        await page.GotoAsync(Base + "/");
+        var row = page.Locator(AskRows).First;
+        await Assertions.Expect(row).ToBeVisibleAsync(new() { Timeout = E2ESteps.Slow });
+        var number = (await row.Locator("a.tl-item__title").GetAttributeAsync("href"))!["/seimas/".Length..];
+        var expected = "/prisijungti#tikslas=" + Uri.EscapeDataString("/seimas/" + number);
+        await Assertions.Expect(row.Locator(".tl-ask")).ToContainTextAsync("Prašau balsuoti");
+        foreach (var (side, word) in new[] { ("for", "už"), ("against", "prieš") })
+        {
+            var link = row.Locator($".tl-ask a.btn--{side}");
+            await Assertions.Expect(link).ToHaveAttributeAsync("href", expected);
+            await Assertions.Expect(link).ToHaveTextAsync(word);
+            await Assertions.Expect(link).ToHaveAttributeAsync("aria-label", $"Prašau balsuoti {word} projektą {number}");
+        }
+
+        await Assertions.Expect(page.Locator("#home-coming .tl-ask button")).ToHaveCountAsync(0, new() { Timeout = 1000 });
+        await row.Locator(".tl-ask a.btn--for").ClickAsync();
+        await page.WaitForURLAsync(new Regex("/prisijungti"), new() { Timeout = E2ESteps.Slow });
+        new Uri(page.Url).Fragment.ShouldBe("#tikslas=" + Uri.EscapeDataString("/seimas/" + number), "signing in comes back to the bill's page");
+    }
+
+    [Fact]
+    public async Task A_member_takes_a_side_in_a_row_with_one_press_after_the_consent_changes_it_and_withdraws_it()
+    {
+        Assert.SkipWhen(string.IsNullOrEmpty(SignUpTests.BaseUrl), "LT2_E2E_BASE_URL is not set; start the stack and set it to run end-to-end tests.");
+        await using var member = await PasskeyBrowser.StartAsync("native", 1280, 900);
+        var page = member.Page;
+        await PasskeyTests.RegisterAsync(page, "Eilutės Narė");
+        await page.GotoAsync(Base + "/");
+        var row = page.Locator(AskRows).First;
+        await Assertions.Expect(row).ToBeVisibleAsync(new() { Timeout = E2ESteps.Slow });
+        var number = (await row.Locator("a.tl-item__title").GetAttributeAsync("href"))!["/seimas/".Length..];
+        var place = (await row.GetAttributeAsync("id"))!["agenda-".Length..];
+        var forButton = page.Locator($"#home-for-{place}");
+        var againstButton = page.Locator($"#home-against-{place}");
+        await Assertions.Expect(forButton).ToBeEnabledAsync(new() { Timeout = E2ESteps.Slow });
+        await Assertions.Expect(forButton).ToHaveAttributeAsync("aria-label", $"Prašau balsuoti už projektą {number}");
+        try
+        {
+            // The first side ever: the consent is asked in the row, across its width; nothing is saved before it.
+            await forButton.ClickAsync();
+            var consent = page.Locator($"#home-consent-{place}");
+            await Assertions.Expect(consent).ToBeVisibleAsync();
+            await Assertions.Expect(consent).ToContainTextAsync("Prieš išsaugant jūsų poziciją");
+            (await MySideAsync(page, number)).ShouldBeNull("nothing saved before the consent");
+            var consentBox = await consent.BoundingBoxAsync();
+            var rowBox = await row.BoundingBoxAsync();
+            ((double)consentBox!.Width).ShouldBeGreaterThan(rowBox!.Width * 0.9, "across the row's whole width");
+            await page.Locator($"#home-{place}-consent-cancel").ClickAsync();
+            await Assertions.Expect(consent).ToHaveCountAsync(0);
+            (await MySideAsync(page, number)).ShouldBeNull("\"Atšaukti\" leaves the row as it was");
+            await Assertions.Expect(forButton).ToHaveAttributeAsync("aria-pressed", "false");
+
+            await forButton.ClickAsync();
+            await page.Locator($"#home-{place}-consent-check").CheckAsync();
+            await page.Locator($"#home-{place}-consent-submit").ClickAsync();
+            await Assertions.Expect(forButton).ToHaveAttributeAsync("aria-pressed", "true", new() { Timeout = E2ESteps.Slow });
+            (await MySideAsync(page, number)).ShouldBe("for");
+
+            // The row's numbers are the bill's live ones, the member's side among them; a first side follows the bill
+            // (design 8.11.2), and the mark under the title and the panel show it without a reload.
+            await Assertions.Expect(page.Locator($"#home-counts-{place}")).ToBeVisibleAsync(new() { Timeout = E2ESteps.Slow });
+            var shown = Regex.Replace(await page.Locator($"#home-counts-{place}").InnerTextAsync(), @"[\s\u00A0\u202F]", "");
+            shown.ShouldStartWith("už" + await LiveForAsync(page, number) + "(", Case.Sensitive, "the bill's live numbers, the member's side among them");
+            await Assertions.Expect(row.Locator(".mine")).ToContainTextAsync("Sekate");
+            await Assertions.Expect(row.Locator(".mine .choice--for")).ToBeVisibleAsync();
+            await Assertions.Expect(page.Locator($"#my-agenda-{number}")).ToBeVisibleAsync();
+            await Assertions.Expect(page.Locator($"#home-action-{place}")).ToHaveTextAsync("Argumentai ir pozicijos");
+            await Assertions.Expect(page.Locator($"#home-action-{place}")).ToHaveAttributeAsync("href", "/seimas/" + number);
+            await Assertions.Expect(row.Locator("[role=status]")).ToContainTextAsync("Dabar sekate šį projektą.");
+
+            // Reloaded, the row shows the count they are part of (design 8.7, "Cached"): the side marked the page's copy
+            // out of date; within the copy's first two seconds the island reads the live numbers instead. The server's
+            // own page shows it too once the copy may be replaced.
+            var live = await LiveForAsync(page, number);
+            await page.ReloadAsync();
+            await Assertions.Expect(forButton).ToHaveAttributeAsync("aria-pressed", "true", new() { Timeout = E2ESteps.Slow });
+            await Assertions.Expect(page.Locator($"#home-counts-{place}")).ToContainTextAsync(live.ToString(System.Globalization.CultureInfo.InvariantCulture));
+            (await ServerCountAsync(page, place, number)).ShouldBe(live, "the server's page after a side, without waiting for the minute");
+
+            // The other button changes it, with one press: no consent again.
+            await againstButton.ClickAsync();
+            await Assertions.Expect(againstButton).ToHaveAttributeAsync("aria-pressed", "true", new() { Timeout = E2ESteps.Slow });
+            await Assertions.Expect(forButton).ToHaveAttributeAsync("aria-pressed", "false");
+            await Assertions.Expect(page.Locator($"#home-consent-{place}")).ToHaveCountAsync(0);
+            (await MySideAsync(page, number)).ShouldBe("against");
+            await Assertions.Expect(row.Locator(".mine .choice--against")).ToBeVisibleAsync();
+
+            // "Atsiimti" withdraws it; the follow stays.
+            await page.Locator($"#home-withdraw-{place}").ClickAsync();
+            await Assertions.Expect(againstButton).ToHaveAttributeAsync("aria-pressed", "false", new() { Timeout = E2ESteps.Slow });
+            await Assertions.Expect(page.Locator($"#home-withdraw-{place}")).ToHaveCountAsync(0);
+            (await MySideAsync(page, number)).ShouldBeNull();
+            await Assertions.Expect(row.Locator(".mine")).ToContainTextAsync("Sekate");
+            await E2ESteps.NoSidewaysScrollAsync(page, "/ after taking a side in a row");
+        }
+        finally
+        {
+            await E2ESteps.ApiAsync(page, "DELETE", $"/api/v1/bills/{number}/record/position");
+            await E2ESteps.ApiAsync(page, "DELETE", $"/api/v1/bills/{number}/follow");
+        }
     }
 
     [Fact]
@@ -54,18 +179,27 @@ public sealed class StartPageTests
         var page = member.Page;
         await PasskeyTests.RegisterAsync(page, "Pradžios Narė");
 
-        // The first planned bill with a page: the member follows it and asks for "už" on it.
+        // The first planned bill with sides: the member asks for "už" on it, which also follows it (design 8.11.2).
         await page.GotoAsync(Base + "/");
-        var first = page.Locator("#home-coming .tl-item a.tl-item__title").First;
+        var first = page.Locator(AskRows).First;
         await Assertions.Expect(first).ToBeVisibleAsync(new() { Timeout = E2ESteps.Slow });
-        var number = (await first.GetAttributeAsync("href"))!["/seimas/".Length..];
-        var rowId = await first.Locator("xpath=ancestor::li[contains(@class, 'tl-item')][1]").GetAttributeAsync("id");
-        var date = rowId!["agenda-".Length..("agenda-".Length + 10)];
+        var number = (await first.Locator("a.tl-item__title").GetAttributeAsync("href"))!["/seimas/".Length..];
+        var place = (await first.GetAttributeAsync("id"))!["agenda-".Length..];
+        var other = page.Locator(AskRows).Nth(1);
+        var otherPlace = (await other.GetAttributeAsync("id"))!["agenda-".Length..];
         (await E2ESteps.ApiAsync(page, "PUT", "/api/v1/me/consents/positions", new { textVersion = "2026-11-13" })).Status.ShouldBeOneOf(204, 200);
         (await E2ESteps.ApiAsync(page, "PUT", $"/api/v1/bills/{number}/record/position", new { side = "for" })).Status.ShouldBe(204);
-        (await E2ESteps.ApiAsync(page, "PUT", $"/api/v1/bills/{number}/follow")).Status.ShouldBe(204);
         try
         {
+            // For the owner's screenshots, one more row shows the consent open: the answer is made to say the consent is
+            // missing (only in this browser), so pressing "prieš" there asks for it; nothing is saved.
+            await page.RouteAsync("**/api/v1/me/bills?*", async route =>
+            {
+                var response = await route.FetchAsync();
+                var json = JsonSerializer.Deserialize<Dictionary<string, JsonElement>>(await response.TextAsync())!;
+                json["hasPositionConsent"] = JsonSerializer.SerializeToElement(false);
+                await route.FulfillAsync(new() { Response = response, Body = JsonSerializer.Serialize(json) });
+            });
             foreach (var (width, height) in new[] { (1280, 900), (390, 844) })
             {
                 await page.SetViewportSizeAsync(width, height);
@@ -79,21 +213,25 @@ public sealed class StartPageTests
                 await Assertions.Expect(mine).ToBeVisibleAsync(new() { Timeout = E2ESteps.Slow });
                 await Assertions.Expect(mine.Locator(".choice--for")).ToHaveTextAsync("už");
                 await Assertions.Expect(mine.Locator($"#my-agenda-share-{number}")).ToBeVisibleAsync();
-                var row = page.Locator($"#agenda-{date}-{number}");
+                var row = page.Locator($"#agenda-{place}");
                 await Assertions.Expect(row.Locator(".mine")).ToContainTextAsync("Sekate", new() { Timeout = E2ESteps.Slow });
-                await Assertions.Expect(row.Locator($"#home-action-{date}-{number}")).ToHaveTextAsync("Argumentai ir pozicijos");
+                await Assertions.Expect(page.Locator($"#home-for-{place}")).ToHaveAttributeAsync("aria-pressed", "true");
+                await Assertions.Expect(page.Locator($"#home-action-{place}")).ToHaveTextAsync("Argumentai ir pozicijos");
+                await SidesFitSideBySideAsync(row);
 
                 // The page's agenda may be a minute old and still say nobody took a side: never beside the member's own side.
-                await Assertions.Expect(row.Locator($"#home-nobody-{date}-{number}")).ToHaveCountAsync(0);
+                await Assertions.Expect(row.Locator($"#home-nobody-{place}")).ToHaveCountAsync(0);
                 (await page.EvaluateAsync<bool>("() => document.querySelector('#my-agenda').compareDocumentPosition(document.querySelector('#home-coming')) & Node.DOCUMENT_POSITION_FOLLOWING"))
                     .ShouldBeTrue("the member's own bills come first");
-                await E2ESteps.NoSidewaysScrollAsync(page, $"/ for a member at {width}");
                 if (width == 1280)
                 {
                     var heading = await page.Locator("#h-home-coming").BoundingBoxAsync();
                     (heading!.Y + heading.Height).ShouldBeLessThanOrEqualTo(height, "the agenda's heading is on the first screen");
                 }
 
+                await page.Locator($"#home-against-{otherPlace}").ClickAsync();
+                await Assertions.Expect(page.Locator($"#home-consent-{otherPlace}")).ToBeVisibleAsync();
+                await E2ESteps.NoSidewaysScrollAsync(page, $"/ for a member at {width}, with the consent open in a row");
                 Directory.CreateDirectory(Shots);
                 await page.ScreenshotAsync(new() { Path = Path.Combine(Shots, $"member-{width}.png"), FullPage = true });
             }
@@ -103,10 +241,15 @@ public sealed class StartPageTests
             await page.EmulateMediaAsync(new() { ColorScheme = ColorScheme.Dark });
             await page.GotoAsync(Base + "/");
             await Assertions.Expect(page.Locator($"#my-agenda-{number}")).ToBeVisibleAsync(new() { Timeout = E2ESteps.Slow });
+            await Assertions.Expect(page.Locator($"#home-for-{place}")).ToHaveAttributeAsync("aria-pressed", "true");
+            await page.Locator($"#home-against-{otherPlace}").ClickAsync();
+            await Assertions.Expect(page.Locator($"#home-consent-{otherPlace}")).ToBeVisibleAsync();
             await page.ScreenshotAsync(new() { Path = Path.Combine(Shots, "member-1280-dark.png"), FullPage = true });
             await page.EmulateMediaAsync(new() { ColorScheme = ColorScheme.Light });
+            await page.UnrouteAllAsync();
 
-            // With JavaScript off the member's page is the public page: nothing of their own is in it.
+            // With JavaScript off the member's page is the public page: nothing of their own is in it, and the sides are
+            // disabled, the same for every member.
             await using var noScript = await page.Context.Browser!.NewContextAsync(new()
             {
                 IgnoreHTTPSErrors = true, Locale = "lt-LT", JavaScriptEnabled = false, StorageState = await page.Context.StorageStateAsync(),
@@ -118,13 +261,51 @@ public sealed class StartPageTests
             await Assertions.Expect(plain.Locator("#my-agenda")).ToHaveCountAsync(0);
             await Assertions.Expect(plain.Locator(".mine")).ToHaveCountAsync(0);
             (await plain.Locator("main").InnerTextAsync()).ShouldNotContain("Jūs prašote balsuoti");
-            await Assertions.Expect(plain.Locator($"#home-action-{date}-{number}")).ToHaveTextAsync("Nurodyti, ko prašote");
+            await Assertions.Expect(plain.Locator($"#home-for-{place}")).ToBeDisabledAsync();
+            await Assertions.Expect(plain.Locator($"#home-for-{place}")).ToHaveAttributeAsync("aria-pressed", "false");
+            await Assertions.Expect(plain.Locator($"#home-withdraw-{place}")).ToHaveCountAsync(0);
         }
         finally
         {
             // The demonstration bill's numbers are what other tests count on: the side and the follow go again.
+            await page.UnrouteAllAsync();
             await E2ESteps.ApiAsync(page, "DELETE", $"/api/v1/bills/{number}/record/position");
             await E2ESteps.ApiAsync(page, "DELETE", $"/api/v1/bills/{number}/follow");
+        }
+    }
+
+    [Fact]
+    public async Task The_pages_html_is_the_same_for_two_members()
+    {
+        Assert.SkipWhen(string.IsNullOrEmpty(SignUpTests.BaseUrl), "LT2_E2E_BASE_URL is not set; start the stack and set it to run end-to-end tests.");
+        await using var first = await PasskeyBrowser.StartAsync("native", 1280, 900);
+        await PasskeyTests.RegisterAsync(first.Page, "Pirmoji Pradžios");
+        await using var second = await PasskeyBrowser.StartAsync("native", 1280, 900);
+        await PasskeyTests.RegisterAsync(second.Page, "Antrasis Pradžios");
+
+        // The first one has a side and a follow, the second none: still the same page.
+        await first.Page.GotoAsync(Base + "/");
+        var row = first.Page.Locator(AskRows).First;
+        await Assertions.Expect(row).ToBeVisibleAsync(new() { Timeout = E2ESteps.Slow });
+        var number = (await row.Locator("a.tl-item__title").GetAttributeAsync("href"))!["/seimas/".Length..];
+        (await E2ESteps.ApiAsync(first.Page, "PUT", "/api/v1/me/consents/positions", new { textVersion = "2026-11-13" })).Status.ShouldBeOneOf(204, 200);
+        (await E2ESteps.ApiAsync(first.Page, "PUT", $"/api/v1/bills/{number}/record/position", new { side = "for" })).Status.ShouldBe(204);
+        try
+        {
+            // Read within a few seconds of each other, so both come from the same minute of the front page's cache.
+            var firstHtml = System.Net.WebUtility.HtmlDecode(await (await first.Page.Context.APIRequest.GetAsync(Base + "/")).TextAsync());
+            var secondHtml = System.Net.WebUtility.HtmlDecode(await (await second.Page.Context.APIRequest.GetAsync(Base + "/")).TextAsync());
+            firstHtml.ShouldContain("Sveiki sugrįžę", customMessage: "the members' version of the page");
+            firstHtml.ShouldContain($"id=\"home-for-{(await row.GetAttributeAsync("id"))!["agenda-".Length..]}\"");
+            Frameless(firstHtml).ShouldBe(Frameless(secondHtml), "the same page for every member, apart from the frame");
+            firstHtml.ShouldNotContain("aria-pressed=\"true\"");
+            firstHtml.ShouldNotContain("Pirmoji Pradžios");
+            secondHtml.ShouldNotContain("Antrasis Pradžios");
+        }
+        finally
+        {
+            await E2ESteps.ApiAsync(first.Page, "DELETE", $"/api/v1/bills/{number}/record/position");
+            await E2ESteps.ApiAsync(first.Page, "DELETE", $"/api/v1/bills/{number}/follow");
         }
     }
 
@@ -145,4 +326,78 @@ public sealed class StartPageTests
         await Assertions.Expect(page.Locator("#home-organisations")).ToBeVisibleAsync();
         await Assertions.Expect(page.Locator("#not-a-poll")).ToBeVisibleAsync();
     }
+
+    /// <summary>"už" and "prieš" stand side by side in the row, both whole.</summary>
+    private static async Task SidesFitSideBySideAsync(ILocator row)
+    {
+        var sides = row.Locator(".tl-ask__sides > *");
+        (await sides.CountAsync()).ShouldBe(2);
+        var a = (await sides.Nth(0).BoundingBoxAsync())!;
+        var b = (await sides.Nth(1).BoundingBoxAsync())!;
+        ((double)Math.Abs(a.Y - b.Y)).ShouldBeLessThan(2, "on one line");
+        (await sides.EvaluateAllAsync<bool>("els => els.every(e => e.scrollWidth <= e.clientWidth + 1)")).ShouldBeTrue("the words fit in the buttons");
+    }
+
+    /// <summary>The member's own side on the bill, from their own answer.</summary>
+    private static async Task<string?> MySideAsync(IPage page, string number)
+    {
+        var (status, body) = await E2ESteps.ApiAsync(page, "GET", $"/api/v1/bills/{number}/record/mine");
+        status.ShouldBe(200, body);
+        var side = JsonDocument.Parse(body).RootElement.GetProperty("side");
+        return side.ValueKind == JsonValueKind.Null ? null : side.GetString();
+    }
+
+    /// <summary>The bill's live "for" count from its public answer.</summary>
+    private static async Task<int> LiveForAsync(IPage page, string number)
+    {
+        var (status, body) = await E2ESteps.ApiAsync(page, "GET", $"/api/v1/bills/{number}/record");
+        status.ShouldBe(200, body);
+        var count = JsonDocument.Parse(body).RootElement.GetProperty("counts").GetProperty("for").GetInt32();
+        count.ShouldBeGreaterThan(0, "the member's own side is in it");
+        return count;
+    }
+
+    /// <summary>
+    /// The "for" count the server renders in a row (no script), read until it may have been rebuilt: a copy marked out of
+    /// date is replaced by the first request once it is two seconds old, so this asks for at most a few seconds.
+    /// </summary>
+    private static async Task<int?> ServerCountAsync(IPage page, string place, string number)
+    {
+        var pattern = new Regex("id=\"home-counts-" + Regex.Escape(place) + "\"[^>]*>\\s*<span class=\"choice choice--for\">[^<]*</span>\\s*([\\d\\u00A0 ]+?)\\s*\\(");
+        int? last = null;
+        var until = DateTime.UtcNow.AddSeconds(10);
+        var live = await LiveForAsync(page, number);
+        while (DateTime.UtcNow < until)
+        {
+            var html = System.Net.WebUtility.HtmlDecode(await (await page.Context.APIRequest.GetAsync(Base + "/")).TextAsync());
+            var match = pattern.Match(html);
+            last = match.Success ? int.Parse(Regex.Replace(match.Groups[1].Value, @"\D", ""), System.Globalization.CultureInfo.InvariantCulture) : null;
+            if (last == live)
+            {
+                break;
+            }
+
+            // The copy may still be younger than two seconds: ask again shortly (a poll, not a fixed wait for a result).
+            await page.WaitForTimeoutAsync(300);
+        }
+
+        return last;
+    }
+
+    /// <summary>The page without what the frame varies per request and per session: antiforgery tokens and Blazor's markers.</summary>
+    private static string Frameless(string html)
+    {
+        html = AntiforgeryValue().Replace(html, "value=\"…\"");
+        html = BlazorState().Replace(html, "<!--Blazor-state-->");
+        return PrerenderId().Replace(html, "\"prerenderId\":\"…\"");
+    }
+
+    [GeneratedRegex("value=\"[A-Za-z0-9_\\-]{40,}\"")]
+    private static partial Regex AntiforgeryValue();
+
+    [GeneratedRegex("<!--Blazor-(WebAssembly-)?Component-State:[^>]*-->")]
+    private static partial Regex BlazorState();
+
+    [GeneratedRegex("\"prerenderId\":\"[^\"]*\"")]
+    private static partial Regex PrerenderId();
 }
