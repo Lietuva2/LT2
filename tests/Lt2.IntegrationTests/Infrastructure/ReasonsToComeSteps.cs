@@ -75,7 +75,9 @@ public static class ReasonsToComeSteps
     /// <summary>
     /// The Monday <paramref name="weeks"/> weeks after this week's, for a sitting week of a test's own. Summaries and
     /// planned dates stay in the shared database, so each class keeps to its own weeks: DigestTests 2, 4, 6, 8 to 10 and 16,
-    /// DescriptionSummaryTests 11, OrganisationCountTests 13, ReasonWithdrawalTests 14. Take an unused number.
+    /// DescriptionSummaryTests 11, OrganisationCountTests 13, ReasonWithdrawalTests 14. Take an unused number. An urgent
+    /// summary is always made in this real week (week 0), which every class making one shares: a test that counts the
+    /// ceiling there starts from what the week already holds.
     /// </summary>
     public static DateOnly MondayInWeeks(int weeks)
     {
