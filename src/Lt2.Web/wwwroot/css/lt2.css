@@ -538,6 +538,34 @@ legend { padding: 0; font-weight: 600; }
 .report-visitor > summary { display: inline; }
 .report-visitor[open] > p { margin-top: var(--sp-2); }
 
+/* A hint (design 8.15): the short answer without leaving the page. The trigger is a button with a dotted underline, so it
+   does not read as a link that leaves the page. The panel is the browser's popover: without script it stands in the
+   middle of the screen (the browser's default place); js/lt2-hints.js adds .hint__panel--placed and sets top and left
+   beside the trigger. Never wider than the screen less a margin, in both themes through the tokens. */
+.hint__trigger {
+  padding: 0; border: 0; background: none; cursor: help;
+  font: inherit; color: var(--link); text-align: inherit;
+  text-decoration: underline dotted; text-decoration-thickness: 2px; text-underline-offset: 3px;
+}
+.hint__trigger:hover { text-decoration-style: solid; }
+/* Its own rule: a browser without :has() or :popover-open drops only this one. */
+.hint:has(.hint__panel:popover-open) .hint__trigger { text-decoration-style: solid; }
+.hint__panel {
+  inline-size: max-content; max-inline-size: min(22rem, 100vw - 1rem); max-block-size: calc(100vh - 1rem);
+  margin: auto; padding: var(--sp-3) var(--sp-4);
+  background: var(--sheet); color: var(--ink); border: 1px solid var(--rule);
+  box-shadow: 0 0.5rem 1.5rem rgb(0 0 0 / 0.2);
+  font-family: var(--font-text); font-size: var(--fs-1); font-weight: 400; font-variant-numeric: normal;
+  line-height: 1.45; text-align: start; white-space: normal; overflow-wrap: break-word; overflow-y: auto;
+}
+.hint__panel:popover-open { display: flex; flex-direction: column; align-items: flex-start; gap: var(--sp-2); }
+.hint__panel--placed { inset: auto; margin: 0; }
+.hint__more { color: var(--link); }
+@media (prefers-reduced-motion: no-preference) {
+  .hint__panel:popover-open { animation: hint-in 0.12s ease-out; }
+}
+@keyframes hint-in { from { opacity: 0; } to { opacity: 1; } }
+
 /* A live region (status and error messages, "copied"): in the page from the start so screen readers announce what appears
    in it, taking no room of its own while empty. */
 .live { display: contents; }

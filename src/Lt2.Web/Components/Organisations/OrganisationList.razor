@@ -32,7 +32,11 @@
 @if (_page is { } page)
 {
     <div class="sheet stack" id="organisation-results">
-        <p class="small num" id="organisation-count">@L.Format("Org.List.Count", Display.Number(page.Total))</p>
+        @* Design 8.15: the labels repeat in the rows, so what they mean is said once, beside the list (a hint). *@
+        <p class="small num" id="organisation-count">@L.Format("Org.List.Count", Display.Number(page.Total))@if (page.Items.Count > 0)
+            {
+                @(" · ")<Lt2.Web.Client.Components.Hint Id="labels-what" Text="@L["Org.List.LabelsWhat"]" Answer="@L["Org.List.LabelsAnswer"]" More="/metodika#m-organisation-labels" />
+            }</p>
         @if (page.Items.Count == 0)
         {
             <p id="no-organisations">@L[string.IsNullOrWhiteSpace(Q) ? "Org.List.None" : "Org.List.NoneFound"]</p>

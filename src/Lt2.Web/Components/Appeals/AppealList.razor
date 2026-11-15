@@ -1,6 +1,7 @@
 @page "/projektai"
 @using Lt2.Api.Contracts.Appeals
 @inject IAppealsApi Appeals
+@inject Lt2.Api.Contracts.Digests.IDigestsApi Digests
 @inject IStringLocalizer<AppealText> T
 @inject Formats F
 
@@ -122,7 +123,11 @@
                     </li>
                 }
             </ul>
-            <p class="small" id="older-note">@T["List.OlderNote"]</p>
+            @* Design 8.15: "riba" repeats in the rows, so what it is is said once, beside the list (a hint). *@
+            <p class="small" id="older-note">@T["List.OlderNote"]@if (_threshold is { } threshold)
+                {
+                    @(" · ")<Lt2.Web.Client.Components.Hint Id="threshold-what" Text="@T["Threshold.What"]" Answer="@(T["Threshold.Meaning"] + " " + T.Format("Threshold.NowList", Display.Number(threshold)))" More="/metodika#riba" />
+                }</p>
             @if (page.NextCursor is { } next)
             {
                 <p><a href="@Link(next, Sort)" id="more">@T["List.More"]</a></p>
@@ -162,8 +167,14 @@
 
     private bool Filtered => !string.IsNullOrWhiteSpace(Q) || Planned;
 
-    protected override async Task OnParametersSetAsync() =>
+    /// <summary>The threshold that holds now for a bill without its own (a runtime setting), for the hint beside the list.</summary>
+    private int? _threshold;
+
+    protected override async Task OnParametersSetAsync()
+    {
         _page = (await Appeals.GetAppealsAsync(Q, Planned, Closed, From, Closed ? null : ApiSorts[Sort])).Value;
+        _threshold = (await Digests.GetRulesAsync()).Value?.ThresholdDefault;
+    }
 
     /// <summary>The same search, filter and tab, with the given page (none = the first) and order.</summary>
     private string Link(string? next, string sort)

@@ -161,9 +161,10 @@
                             <svg viewBox="0 0 1000 10" preserveAspectRatio="none" aria-hidden="true"><rect class="ruler__bar" x="0" y="0" height="10" width="@RulerWidth(a.Threshold)" /></svg>
                         </div>
                         <p class="num"><b>@Display.Number(a.Threshold.Participants)</b> @A.Format("Threshold.Progress", Display.Number(a.Threshold.Value))</p>
-                        @* Design 8.15: what the threshold is, one click away on the methodology page; a bill's own threshold
-                           stays said here with the moderator's statement (design 8.12). *@
-                        <p class="small"><a href="/metodika#riba" id="threshold-what">@A["Threshold.What"]</a></p>
+                        @* Design 8.15: what the threshold is and what it does, in place (a hint), with the number that holds
+                           now for this bill; the rest on the methodology page. A bill's own threshold stays said here with the
+                           moderator's statement (design 8.12). *@
+                        <p class="small"><Lt2.Web.Client.Components.Hint Id="threshold-what" Text="@A["Threshold.What"]" Answer="@ThresholdAnswer(a.Threshold)" More="/metodika#riba" /></p>
                         @if (a.Threshold.SetBy == "moderator")
                         {
                             <p class="small" id="threshold-set-by">@A["Threshold.SetBy.moderator"]</p>
@@ -370,6 +371,10 @@
         bill.Votes.LastOrDefault(v => v.Vote.Kind == "stage-result")?.Vote.Stage;
 
     private static int ToGo(ThresholdResponse t) => Math.Max(0, t.Value - t.Participants);
+
+    /// <summary>"Kas yra riba?": what the threshold is and does, then the number that holds now for this bill (design 8.15).</summary>
+    private string ThresholdAnswer(ThresholdResponse t) =>
+        A["Threshold.Meaning"] + " " + A.Format(t.SetBy == "moderator" ? "Threshold.NowOwn" : "Threshold.Now", Display.Number(t.Value));
 
     private static string RulerWidth(ThresholdResponse t) =>
         (t.Value <= 0 ? 1000 : Math.Min(1000.0, 1000.0 * t.Participants / t.Value)).ToString("0.#", System.Globalization.CultureInfo.InvariantCulture);

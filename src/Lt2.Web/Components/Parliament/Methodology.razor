@@ -65,7 +65,9 @@
             <h2 id="m-digests">@A["Method.Digests"]</h2>
             <p>@A["Method.Digests.Lead"]</p>
             <dl class="facts" id="digest-rules">
-                <dt id="riba">@A["Method.Digests.Threshold"]</dt><dd class="num">@A.Format("Method.Digests.ThresholdValue", Display.Number(r.ThresholdDefault), Display.Number(r.ThresholdMinimum))</dd>
+                @* Design 8.15: the row starts with the sentence of the bill page's "Kas yra riba?", then says the number as
+                   what holds now and who can change it. *@
+                <dt id="riba">@A["Method.Digests.Threshold"]</dt><dd class="num">@A["Threshold.Meaning"] @A.Format("Method.Digests.ThresholdValue", Display.Number(r.ThresholdDefault), Display.Number(r.ThresholdMinimum))</dd>
                 <dt>@A["Method.Digests.Weekly"]</dt><dd class="num">@(r.Weekly == "off" ? A["Method.Digests.Off"] : A.Format("Method.Digests.WeeklyValue", r.Weekly))</dd>
                 <dt>@A["Method.Digests.Notable"]</dt><dd class="num">@A.Format("Method.Digests.NotableValue", Display.Number((int)Math.Round(r.NotableChange * 100)))</dd>
                 <dt>@A["Method.Digests.BeforeVote"]</dt><dd class="num">@(r.BeforeVote == "off" ? A["Method.Digests.Off"] : A.Format("Method.Digests.BeforeVoteValue", r.BeforeVote))</dd>

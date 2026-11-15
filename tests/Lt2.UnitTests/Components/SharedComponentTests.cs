@@ -46,6 +46,34 @@ public sealed class SharedComponentTests : BunitContext
         JSInterop.VerifyInvoke("navigator.clipboard.writeText").Arguments.ShouldBe(["http://localhost/prisijungti#kodas=ABCD"]);
     }
 
+    /// <summary>
+    /// Design 8.15, "A hint": a real button that opens its own popover with the browser alone (so a press works with
+    /// JavaScript off), tells screen readers it opens a description, and links "Plačiau" only when there is more.
+    /// </summary>
+    [Fact]
+    public void A_hint_is_a_button_that_opens_its_own_popover_with_the_answer_and_more_only_when_given()
+    {
+        var hint = Render<Hint>(p => p.Add(c => c.Id, "threshold-what").Add(c => c.Text, "Kas yra riba?")
+            .Add(c => c.Answer, "Riba – dalyvių skaičius. Dabar – 100.").Add(c => c.More, "/metodika#riba"));
+
+        var trigger = hint.Find("#threshold-what");
+        trigger.TagName.ShouldBe("BUTTON");
+        trigger.GetAttribute("type").ShouldBe("button");
+        trigger.TextContent.ShouldBe("Kas yra riba?");
+        trigger.GetAttribute("popovertarget").ShouldBe("threshold-what-panel");
+        hint.Find("#" + trigger.GetAttribute("aria-describedby")).TextContent.ShouldBe(Services.GetRequiredService<IStringLocalizer<UiText>>()["Hint.Opens"]);
+        var panel = hint.Find("#threshold-what-panel");
+        panel.GetAttribute("popover").ShouldBe("auto");
+        panel.QuerySelector(".hint__answer")!.TextContent.ShouldBe("Riba – dalyvių skaičius. Dabar – 100.");
+        panel.QuerySelector("a")!.GetAttribute("href").ShouldBe("/metodika#riba");
+        panel.QuerySelector("a")!.TextContent.ShouldBe("Plačiau");
+        hint.FindAll("div, p").ShouldBeEmpty(customMessage: "only phrasing content, so a hint can stand inside a paragraph");
+        hint.FindAll(".hint__trigger + .visually-hidden + .hint__panel").ShouldHaveSingleItem("the panel follows the trigger, so its link comes next when tabbing");
+
+        var bare = Render<Hint>(p => p.Add(c => c.Id, "labels-what").Add(c => c.Text, "Ką reiškia žymos?").Add(c => c.Answer, "Žyma sako, ar organizacija patikrinta."));
+        bare.FindAll("a").ShouldBeEmpty(customMessage: "no \"Plačiau\" where there is nothing more to say");
+    }
+
     [Fact]
     public void A_browser_that_refuses_the_clipboard_gets_a_message_not_a_broken_island()
     {

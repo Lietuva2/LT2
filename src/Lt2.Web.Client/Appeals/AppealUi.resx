@@ -523,7 +523,8 @@
 <data name="Org.Profile.Meaning.none" xml:space="preserve"><value>„Nepatvirtinta“: niekas nepatikrino, ar organizacija tikrai valdo nurodytą svetainę.</value></data>
 <data name="Org.Profile.Meaning.domain" xml:space="preserve"><value>„Patvirtinta per el. pašto adresą“: organizacijos atstovas gavo kodą el. pašto adresu nurodytame domene. Tai rodo, kad organizacija valdo domeną, bet ne tai, kad ji yra ta, kuo save vadina.</value></data>
 <data name="Org.Profile.Meaning.moderator" xml:space="preserve"><value>„Patvirtino moderatorius“: organizacija be savo domeno, kurią moderatorius patikrino kitu būdu.</value></data>
-<data name="Org.Profile.MethodLink" xml:space="preserve"><value>Daugiau</value></data>
+<data name="Org.List.LabelsWhat" xml:space="preserve"><value>Ką reiškia žymos?</value></data>
+<data name="Org.List.LabelsAnswer" xml:space="preserve"><value>Žyma sako, ar organizacija patikrinta: „Patvirtinta per el. pašto adresą“ – jos atstovas gavo kodą adresu jos svetainės domene, „Patvirtino moderatorius“ – moderatorius ją patikrino kitu būdu, „Nepatvirtinta“ – niekas netikrino. Patvirtinimas rodo tik tai, kas patikrinta, ne tai, kad organizacija yra ta, kuo save vadina.</value></data>
 <data name="Org.Profile.Statements" xml:space="preserve"><value>Pozicijos dėl projektų</value></data>
 <data name="Org.Profile.NoStatements" xml:space="preserve"><value>Organizacija dar nepaskelbė nė vienos pozicijos.</value></data>
 <data name="Org.Profile.Frozen" xml:space="preserve"><value>Seimas dėl projekto jau balsavo: pozicija nebekeičiama.</value></data>

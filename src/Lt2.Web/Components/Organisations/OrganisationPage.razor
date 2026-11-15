@@ -86,11 +86,8 @@
                     <dt>@L["Org.Profile.Registered"]</dt>
                     <dd class="num">@Display.Day(p.RegisteredAt)</dd>
                 </dl>
-                @* Design 8.15: what the label means is one click away. *@
-                <details class="more stack stack--tight" id="label-meaning">
-                    <summary class="linkish small">@L["Org.Profile.MeaningMore"]</summary>
-                    <p class="fine">@L[LabelMeaning(p.Label)] <a href="/metodika#organizacijos">@L["Org.Profile.MethodLink"]</a></p>
-                </details>
+                @* Design 8.15: what this label means, in place (a hint); every label on the methodology page. *@
+                <p class="small"><Lt2.Web.Client.Components.Hint Id="label-meaning" Text="@L["Org.Profile.MeaningMore"]" Answer="@L[LabelMeaning(p.Label)]" More="/metodika#m-organisation-labels" /></p>
                 @* Design 8.16: the report form is a quiet sheet, so it opens inside this sheet, not on the ground. *@
                 @if (p.Status == "active")
                 {

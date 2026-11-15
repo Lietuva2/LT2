@@ -156,7 +156,7 @@ else
             @if (Me.StaffAccount)
             {
                 @* Design 6.9: what one did as staff outlives the account; said where it cannot be undone (design 8.15). *@
-                <p class="note" id="delete-staff-kept">@L["Data.DeleteStaffKept"] <a href="/metodika#privatumas">@L["Data.DeleteStaffMore"]</a></p>
+                <p class="note" id="delete-staff-kept">@L["Data.DeleteStaffKept"]@(" ")<Hint Id="delete-staff-more" Text="@L["Data.DeleteStaffMore"]" Answer="@L["Data.DeleteStaffMoreAnswer"]" More="/metodika#istrynimas" /></p>
             }
             <div class="row">
                 <button type="button" class="btn btn--against" id="delete-confirm" disabled="@Locked" @onclick="DeleteAccountAsync">@L["Data.DeleteConfirm"]</button>

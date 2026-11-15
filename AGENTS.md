@@ -66,7 +66,7 @@ src/Lt2.Hosting            what the web host and the worker set up the same way:
                            (Observability.AddLt2Observability); no module references it
 src/Lt2.Web.Client         Blazor WebAssembly components and HTTP implementations of the API clients; the interface's
                            shared pieces: Components/InteractiveBase<TText>, Display (numbers and dates, Vilnius),
-                           StringLocalizerExtensions (Format), CopyLink, FieldError, Messages
+                           StringLocalizerExtensions (Format), CopyLink, FieldError, Messages, Hint
 src/Lt2.Api.Contracts      DTOs, routes, client interfaces, validators (shared by server, client and tests)
 src/Lt2.SharedKernel       Result type, identifiers (UUID v7), outbox, audit and settings interfaces, connection
                            strings and the one EF Core set-up (Persistence/: UseLt2Npgsql), VilniusTime (the
@@ -370,8 +370,19 @@ a moderator's statement). **The one collapsing pattern** is the browser's own
 opens on server-rendered pages and in an island before it starts; an island never sets `open` from code (`js/lt2-disclosures.js`,
 loaded on every page, gives a disclosure the person opened before the island started the same state once the island
 has replaced the markup); the summary
-names what opens ("Kaip tai veikia", "Kas yra riba?"; a bare "Plačiau" only when it is the only one on the screen).
+names what opens ("Kaip tai veikia"; a bare "Plačiau" only when it is the only one on the screen).
 **New screens follow the rule from the start.** `design/text-audit-2026-11-15.md` is the screen-by-screen record.
+
+**A hint (design 8.15): the short answer without leaving the page, the first place for a term or a number.** A term or a
+number whose answer fits one or two sentences gets `<Hint Id="…" Text="Kas yra riba?" Answer="…" More="/metodika#…" />`
+(`Lt2.Web.Client/Components/Hint.razor`; on server pages write it `<Lt2.Web.Client.Components.Hint …/>`): a dotted-underlined
+`<button>` and the browser's own popover, so a press opens it without JavaScript; `js/lt2-hints.js` (every page, listeners
+on the document) adds hover and keyboard focus after a delay, the place beside the word inside the screen, Escape back to
+the trigger. The answer says what the thing is and does first, then the number; a setting is said as what holds now
+("Dabar – 100"), and a bill's own value when it has one. `More` ("Plačiau") only where there is more to say. A longer
+explanation, a list of steps or a form stays a `details.more`; how the site works in general stays on `/metodika`; a link
+that would leave the page only to explain a term is a hint instead. In a list, one hint beside the list (near its note
+line), never one per row. An island never opens a hint from code; a hint is phrasing content and may stand in a paragraph.
 
 - The interface is in **Lithuanian**. New copy is read by a native speaker before it is shown externally.
 - Neutral-to-positive towards politicians: connection and explanation, not control. Prefer "skirtumas" over
