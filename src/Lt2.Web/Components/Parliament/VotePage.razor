@@ -85,21 +85,7 @@
             </div>
         </section>
 
-        <section class="stack" aria-labelledby="h-ballots">
-            <h2 id="h-ballots">@F.T["Vote.Ballots"]</h2>
-            <ul class="rows">
-                @foreach (var b in v.Ballots)
-                {
-                    <li>
-                        <div class="rows__main">
-                            <a href="/p/@b.Mp.Slug">@b.Mp.FirstName @b.Mp.LastName</a>
-                            <span class="small">@(b.FactionLabel ?? F.T["Vote.NoFaction"])</span>
-                        </div>
-                        <div class="rows__side"><span class="@Formats.ChoiceClass(b.Choice)">@F.Choice(b.Choice)</span></div>
-                    </li>
-                }
-            </ul>
-        </section>
+        <VoteBallots VoteId="vote.Id" Ballots="v.Ballots" Factions="v.Factions" />
     }
 
     <p class="small">@if (!SameText(heading, v.AgendaItemTitle)) { @F.T["Vote.Item"]<text>: </text>@v.AgendaItemTitle<text> · </text> }@F.T["Vote.Sitting"]: <span class="num">@F.Time(v.SittingStartsAt)</span></p>

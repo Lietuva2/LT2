@@ -13,7 +13,7 @@ public sealed class AppealClosingTests(DatabaseFixture database) : ApiTest(datab
     private const long FinalVote = 99199618;
 
     [Fact]
-    public async Task The_final_vote_closes_the_record_freezes_the_counts_and_the_page_shows_how_each_mp_voted()
+    public async Task The_final_vote_closes_the_record_freezes_the_counts_and_the_page_links_to_each_mps_ballot()
     {
         using var moderator = await StaffMembers.SharedAsync(Factory, Database, "moderator");
         var (initiator, _) = await Factory.MemberAsync();
@@ -61,9 +61,12 @@ public sealed class AppealClosingTests(DatabaseFixture database) : ApiTest(datab
             var html = WebUtility.HtmlDecode(await page.Content.ReadAsStringAsync());
             html.ShouldContain("Seimas balsavo galutinai; skaičiai užfiksuoti");
             html.ShouldContain("Seimo sprendimas");
-            html.ShouldContain("Kaip balsavo kiekvienas Seimo narys");
-            html.ShouldContain("Jonas Petraitis");
+            html.ShouldContain($"<a href=\"/seimas/balsavimai/{FinalVote}#balsai\" id=\"each-mp\">Kaip balsavo kiekvienas Seimo narys</a>");
             html.ShouldContain("class=\"seatmap\"");
+            var result = html[html.IndexOf("id=\"seimas-result\"", StringComparison.Ordinal)..];
+            result = result[..result.IndexOf("</section>", StringComparison.Ordinal)];
+            result.ShouldNotContain("<ul class=\"rows\"", customMessage: "design 8.17: the list of each MP's ballot is only on the vote's page");
+            result.ShouldNotContain("href=\"/p/", customMessage: "no MP's row on the bill's page");
             html.ShouldNotContain("id=\"side-for\"", customMessage: "no side can be taken any more");
         }
         finally

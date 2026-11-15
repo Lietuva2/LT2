@@ -217,7 +217,11 @@ code and level, never who invited whom, and can switch codes off. Invitations ar
 participation (share of recorded votes in which the MP voted for, against or abstained) and voted with the faction
 (only votes where at least two thirds of the faction's voting members chose the same option; free votes are excluded
 and their count shown). No expenses, rankings or scorecards. An MP takes over a profile through a link sent only to the
-official `@lrs.lt` address from open data; the link is tied to the Seimas person id.
+official `@lrs.lt` address from open data; the link is tied to the Seimas person id. Each MP's ballot on a vote is listed
+in one place, the vote's page (`/seimas/balsavimai/{id}#balsai`, design 8.17: `VoteBallots`, filtered by `BallotList` in
+Lt2.Web.Client): a name search without case or diacritics, a faction dropdown (with "Be frakcijos"), the ballot, 20 rows
+then 40 more, its state in the address (`q`, `frakcija`, `balsas`, `rodyti`) with no script; a closed bill's page only
+links to it.
 
 **Appeals (design 8.12, decided by the owner on 2026-11-14; replaces proposals, requests and initiators).**
 - The bill and the appeal are one object: the bill's page `/seimas/{number}`. Every active bill (in the catalogue, no
