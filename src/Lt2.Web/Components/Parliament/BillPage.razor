@@ -71,7 +71,7 @@
     {
         <div class="cols">
             <div class="stack stack--loose">
-                <section class="stack" aria-labelledby="h-what" id="about">
+                <section class="sheet stack" aria-labelledby="h-what" id="about">
                     <h2 id="h-what">@A["What.Heading"]</h2>
                     @if (a.Description.Length > 0)
                     {
@@ -181,7 +181,7 @@
 
                 @if (_closingVote is { } vote)
                 {
-                    <section class="stack" aria-labelledby="h-result" id="seimas-result">
+                    <section class="sheet stack" aria-labelledby="h-result" id="seimas-result">
                         <h2 id="h-result">@A["Closed.Heading"]</h2>
                         <p class="small">@F.Stage(vote.Summary.Vote.Stage) · @F.Date(vote.Summary.Vote.HeldAt) · <a href="/seimas/balsavimai/@vote.Summary.Vote.Id">@A["Closed.VotePage"]</a></p>
                         @if (vote.Summary.Vote.IsConsensus)
@@ -229,7 +229,7 @@
                     <StatementModerationPanel Number="@b.Number" @rendermode="InteractiveWebAssembly" />
                 }
 
-                <section class="stack stack--tight" aria-labelledby="h-digests" id="digests">
+                <section class="sheet stack stack--tight" aria-labelledby="h-digests" id="digests">
                     <h3 id="h-digests">@A["Digests.OnAppeal.Heading"]</h3>
                     @if (_digests.Count == 0)
                     {
@@ -266,7 +266,7 @@
         </div>
     }
 
-    <section class="stack" aria-labelledby="h-stages">
+    <section class="sheet stack" aria-labelledby="h-stages">
         <h2 id="h-stages">@F.T["Bill.Stages"]</h2>
         <ol class="stages">
             @foreach (var stage in Stages)
@@ -305,7 +305,7 @@
         }
     </section>
 
-    <section class="stack" aria-labelledby="h-votes">
+    <section class="sheet stack" aria-labelledby="h-votes">
         <h2 id="h-votes">@F.T["Bill.Votes"]</h2>
         @if (b.Votes.Count == 0)
         {

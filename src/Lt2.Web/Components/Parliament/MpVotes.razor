@@ -17,14 +17,16 @@
         <h1>@F.T.Format("Mp.Votes.Title", $"{p.Mp.FirstName} {p.Mp.LastName}")</h1>
     </div>
 
-    @if (votes.Items.Count == 0)
-    {
-        <p>@F.T["Mp.NoVotes"]</p>
-    }
-    else
-    {
-        <MpVoteRows Votes="votes.Items" />
-    }
+    <div class="sheet stack" id="mp-votes">
+        @if (votes.Items.Count == 0)
+        {
+            <p>@F.T["Mp.NoVotes"]</p>
+        }
+        else
+        {
+            <MpVoteRows Votes="votes.Items" />
+        }
+    </div>
 
     <p class="row">
         <a href="/p/@p.Mp.Slug">@F.T["Mp.Votes.Back"]</a>

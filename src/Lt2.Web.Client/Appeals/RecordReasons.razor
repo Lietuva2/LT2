@@ -12,7 +12,7 @@
    comes from the moderators' own answer, asked for only once the island runs in the browser (the panel beside it hands
    over its own, MyBillState), and for anyone else the server refuses it, so nothing of it renders. Each argument is keyed by its id: "Man svarbu" re-sorts the list, and an
    open form must stay with its own argument. *@
-<section class="stack" aria-labelledby="h-why" id="reasons">
+<section class="sheet stack" aria-labelledby="h-why" id="reasons">
     <h2 id="h-why">@L["Reasons.Title"]</h2>
     @if (Record is { } record)
     {
@@ -109,7 +109,7 @@
 
         @if (_writing && Mine is not null)
         {
-            <form class="sheet stack" @onsubmit="SubmitAsync" novalidate aria-labelledby="write-title" id="write-reason">
+            <form class="sheet sheet--quiet stack" @onsubmit="SubmitAsync" novalidate aria-labelledby="write-title" id="write-reason">
                 <h3 id="write-title">@L["Reasons.WriteTitle"]</h3>
                 @* A two-part switch over real radio inputs (owner, 2026-11-13): the chosen half filled in its side's colour;
                    neither when the person has no side and has not chosen yet. Either side may be chosen (design 8.2;

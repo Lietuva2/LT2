@@ -14,7 +14,7 @@
         <p class="lead">@F.T.Format("Mps.Lead", _term.Name)</p>
     }
 
-    <form class="filters sheet" method="get" action="/seimo-nariai" role="search">
+    <form class="filters" method="get" action="/seimo-nariai" role="search">
         <div class="field">
             <label for="q">@F.T["Mps.Search"]</label>
             <input class="input" id="q" name="q" type="search" value="@Q" autocomplete="off" />
@@ -63,7 +63,7 @@ else
             continue;
         }
 
-        <section class="stack" aria-label="@F.T[heading]">
+        <section class="sheet stack" aria-label="@F.T[heading]">
             <h2>@F.T[heading]</h2>
             <ul class="rows">
                 @foreach (var mp in group)

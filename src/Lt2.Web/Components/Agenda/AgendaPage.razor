@@ -15,7 +15,7 @@
     <p class="lead">@T["Agenda.Lead"]</p>
 </div>
 
-<section class="stack" aria-labelledby="h-coming" id="agenda-coming">
+<section class="sheet stack" aria-labelledby="h-coming" id="agenda-coming">
     <h2 id="h-coming">@T["Agenda.Coming"]</h2>
     <p class="small" id="agenda-source">
         @* An explicit space: Razor drops the white space between the sentences. *@
@@ -54,7 +54,7 @@
     }
 </section>
 
-<section class="stack" aria-labelledby="h-recent" id="agenda-recent">
+<section class="sheet stack" aria-labelledby="h-recent" id="agenda-recent">
     <h2 id="h-recent">@T["Agenda.Recent"]</h2>
     @if (_agenda is null || _agenda.RecentVotes.Count == 0)
     {

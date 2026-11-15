@@ -29,7 +29,7 @@
         }
         else
         {
-            <form class="sheet stack stack--tight" @onsubmit="SubmitAsync" novalidate aria-labelledby="action-title-@Key" id="action-form-@Key">
+            <form class="sheet sheet--quiet stack stack--tight" @onsubmit="SubmitAsync" novalidate aria-labelledby="action-title-@Key" id="action-form-@Key">
                 <h4 id="action-title-@Key">@L[ActionLabel(_open)]</h4>
                 <p class="small" id="action-sentence-@Key">@L["Mod.Sentence." + SentenceKind + "." + _open]</p>
 

@@ -14,7 +14,7 @@
     <p class="label">Lietuva 2.0</p>
     <h1>@L["Org.List.Title"]</h1>
     <p class="lead">@L["Org.List.Lead"]</p>
-    <form class="filters sheet" method="get" action="/organizacijos" role="search" id="organisation-search">
+    <form class="filters" method="get" action="/organizacijos" role="search" id="organisation-search">
         <div class="field">
             <label for="q">@L["Org.List.Search"]</label>
             <input class="input" id="q" name="q" type="search" value="@Q" autocomplete="off" />
@@ -31,23 +31,25 @@
 
 @if (_page is { } page)
 {
-    <p class="small num" id="organisation-count">@L.Format("Org.List.Count", Display.Number(page.Total))</p>
-    @if (page.Items.Count == 0)
-    {
-        <p id="no-organisations">@L[string.IsNullOrWhiteSpace(Q) ? "Org.List.None" : "Org.List.NoneFound"]</p>
-    }
-    else
-    {
-        <ul class="rows" id="organisations">
-            @foreach (var org in page.Items)
-            {
-                <li>
-                    <div class="rows__main"><a href="@OrganisationWords.ProfilePath(org.Slug)">@org.Name</a></div>
-                    <div class="rows__side"><OrgLabel Label="org.Label" /></div>
-                </li>
-            }
-        </ul>
-    }
+    <div class="sheet stack" id="organisation-results">
+        <p class="small num" id="organisation-count">@L.Format("Org.List.Count", Display.Number(page.Total))</p>
+        @if (page.Items.Count == 0)
+        {
+            <p id="no-organisations">@L[string.IsNullOrWhiteSpace(Q) ? "Org.List.None" : "Org.List.NoneFound"]</p>
+        }
+        else
+        {
+            <ul class="rows" id="organisations">
+                @foreach (var org in page.Items)
+                {
+                    <li>
+                        <div class="rows__main"><a href="@OrganisationWords.ProfilePath(org.Slug)">@org.Name</a></div>
+                        <div class="rows__side"><OrgLabel Label="org.Label" /></div>
+                    </li>
+                }
+            </ul>
+        }
+    </div>
 }
 
 <p class="row"><a class="btn btn--plain" href="/organizacijos/nauja" id="register-organisation">@L["Org.MyList.Register"]</a> <a href="/metodika#organizacijos">@L["Org.List.Method"]</a></p>

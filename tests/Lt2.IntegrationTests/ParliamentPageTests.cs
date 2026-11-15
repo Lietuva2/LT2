@@ -50,7 +50,7 @@ public sealed partial class ParliamentPageTests(DatabaseFixture database) : ApiT
     public async Task The_mp_list_shows_sitting_and_former_mps_and_filters_with_a_plain_get_form()
     {
         var html = await OkAsync("/seimo-nariai");
-        html.ShouldContain("<form class=\"filters sheet\" method=\"get\" action=\"/seimo-nariai\"");
+        html.ShouldContain("<form class=\"filters\" method=\"get\" action=\"/seimo-nariai\"", customMessage: "design 8.16: the filters lie on the ground above the list's sheet");
         foreach (var name in new[] { "Jonas Petraitis", "Ona Jonaitienė", "Aurelija Kadagytė" })
         {
             html.ShouldContain(name);

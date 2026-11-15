@@ -87,7 +87,7 @@
                 <SourceLine UpdatedAt="@_updatedAt" />
             </section>
 
-            <section class="stack" aria-labelledby="h-votes">
+            <section class="sheet stack" aria-labelledby="h-votes">
                 <h2 id="h-votes">@F.T["Mp.RecentVotes"]</h2>
                 @if (p.RecentVotes.Count == 0)
                 {
@@ -144,7 +144,7 @@
 
             @if (p.Memberships.Any(m => !m.Current))
             {
-                <section class="stack stack--tight" aria-labelledby="h-former-roles">
+                <section class="sheet stack stack--tight" aria-labelledby="h-former-roles">
                     <h3 id="h-former-roles">@F.T["Mp.FormerRoles"]</h3>
                     <dl class="facts">
                         @foreach (var m in p.Memberships.Where(m => !m.Current))
@@ -158,7 +158,7 @@
 
             @if (p.Contacts.Count > 0)
             {
-                <section class="stack stack--tight" aria-labelledby="h-contacts">
+                <section class="sheet stack stack--tight" aria-labelledby="h-contacts">
                     <h3 id="h-contacts">@F.T["Mp.Contacts"]</h3>
                     <ul class="stack stack--tight">
                         @foreach (var c in p.Contacts)

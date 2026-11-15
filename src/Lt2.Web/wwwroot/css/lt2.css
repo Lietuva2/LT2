@@ -449,6 +449,21 @@ body > .page { width: 100%; }
   padding: var(--sp-3) var(--sp-5); background: var(--note-bg); color: var(--note-ink);
 }
 #blazor-error-ui .reload { margin-left: var(--sp-3); color: inherit; }
+
+/* ---------- Surfaces (design 8.16) ---------- */
+
+/* The ground frames, a sheet carries the content, a quiet sheet opens inside a sheet and steps back from it. In the dark
+   theme the prototype's quiet sheet was lighter than the sheet, so it stood forward instead; here it lies between the
+   sheet and the ground, as in the light theme, which also keeps a quiet note readable on it. */
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) { --sheet-2: #111915; }
+}
+:root[data-theme="dark"] { --sheet-2: #111915; }
+/* A long word or address in the content wraps inside its sheet instead of widening the page. */
+.sheet { overflow-wrap: break-word; }
+/* "Man svarbu" is filled with the sheet's colour, which shows only on the ground; on a sheet it takes the slate tint. */
+.sheet .mark:not([aria-pressed="true"]) { background: var(--slate-tint); }
+
 /* ---------- Parliament pages (M1) ---------- */
 
 /* Split bar and seat map: SVG rendered on the server, coloured by the vote tokens. */
