@@ -200,18 +200,11 @@
                                 <p class="note note--quiet">@officialNote</p>
                             }
                             <SeatMap Ballots="vote.Ballots" />
-                            <details class="more stack stack--tight">
-                                <summary class="linkish small">@A["Closed.EachMp"]</summary>
-                                <ul class="rows">
-                                    @foreach (var ballot in vote.Ballots.OrderBy(x => x.Mp.LastName, StringComparer.Create(new System.Globalization.CultureInfo("lt-LT"), false)))
-                                    {
-                                        <li>
-                                            <div class="rows__main"><a href="/p/@ballot.Mp.Slug">@ballot.Mp.FirstName @ballot.Mp.LastName</a><span class="small">@ballot.FactionLabel</span></div>
-                                            <div class="rows__side"><span class="@Formats.ChoiceClass(ballot.Choice)">@F.Choice(ballot.Choice)</span></div>
-                                        </li>
-                                    }
-                                </ul>
-                            </details>
+                            @if (vote.Ballots.Count > 0)
+                            {
+                                @* Design 8.17: the list of each MP's ballot lives only on the vote's page. *@
+                                <p class="small"><a href="/seimas/balsavimai/@vote.Summary.Vote.Id#balsai" id="each-mp">@A["Closed.EachMp"]</a></p>
+                            }
                         }
                     </section>
                 }
