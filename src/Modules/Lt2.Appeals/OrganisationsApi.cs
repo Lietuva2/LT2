@@ -152,7 +152,8 @@ public sealed record QueueStatement(
     bool Seen,
     IReadOnlyList<string> Flags,
     IReadOnlyList<QueueReport> Reports,
-    DateTimeOffset PublishedAt);
+    DateTimeOffset PublishedAt,
+    bool BillFinished = false);
 
 public sealed record OrganisationModerationItems(IReadOnlyList<QueueOrganisation> Organisations, IReadOnlyList<QueueStatement> Statements);
 
@@ -266,6 +267,9 @@ public interface IOrganisationModeration
 
     /// <summary>Publishes a waiting statement, or marks a published one seen ("Palikti"); its open reports close.</summary>
     Task<Result<Unit>> PublishStatementAsync(Guid statementId, string? statement, StaffActor moderator, string? contact, CancellationToken cancellationToken);
+
+    /// <summary>Design 6.9: "Palikti" on a statement that still waited when the bill closed; it stays unpublished.</summary>
+    Task<Result<Unit>> KeepStatementAsync(Guid statementId, string? statement, StaffActor moderator, string? contact, CancellationToken cancellationToken);
 
     Task<Result<Unit>> HideStatementAsync(Guid statementId, string statement, StaffActor moderator, string? contact, CancellationToken cancellationToken);
 

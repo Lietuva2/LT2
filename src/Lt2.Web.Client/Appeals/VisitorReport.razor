@@ -1,4 +1,5 @@
 @inject Microsoft.Extensions.Localization.IStringLocalizer<AppealUi> L
+@inject NavigationManager Navigation
 
 @* "Pranešti" for a visitor without a session (design 8.3: a report button on every record and argument, for anyone).
    Reports in the product need a member; a visitor is told to sign in or to write to the moderators. A <details>
@@ -6,7 +7,7 @@
 <details class="more report-visitor">
     <summary class="linkish small">@(BillRecord ? L["Report.AppealOpen"] : L["Report.Open"])</summary>
     <p class="small">
-        @L["Report.Visitor"] <a href="/prisijungti">@L["Report.SignIn"]</a>@if (!string.IsNullOrWhiteSpace(Contact))
+        @L["Report.Visitor"] <a href="@SignInHref">@L["Report.SignIn"]</a>@if (!string.IsNullOrWhiteSpace(Contact))
         {
             @(" ")@L["Report.OrWrite"]@(" ")<a href="mailto:@Contact">@Contact</a>
         }.
@@ -14,6 +15,9 @@
 </details>
 
 @code {
+    /// <summary>The sign-in page that brings the visitor back to this page when it is a bill's (design 6.9).</summary>
+    private string SignInHref => LandingPath.SignInLink(LandingPath.PathOf(Navigation.Uri, Navigation.BaseUri));
+
     /// <summary>The moderators' contact address from configuration (<c>Moderation:ContactAddress</c>); none when not set.</summary>
     [Parameter] public string? Contact { get; set; }
 

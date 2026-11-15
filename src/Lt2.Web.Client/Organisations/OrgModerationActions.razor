@@ -57,6 +57,9 @@
     /// <summary>The organisation's status (<c>active</c>, <c>blocked</c>), or the statement's (<c>pending</c>, <c>published</c>).</summary>
     [Parameter, EditorRequired] public string Status { get; set; } = "";
 
+    /// <summary>For a statement: the bill's final vote is recorded. A statement still waiting then is never published (design 6.9).</summary>
+    [Parameter] public bool BillFinished { get; set; }
+
     /// <summary>An organisation's confirmation: null while "Nepatvirtinta".</summary>
     [Parameter] public string? ConfirmedBy { get; set; }
 
@@ -71,12 +74,13 @@
         }
         : Status switch
         {
+            "pending" when BillFinished => ["leave", "hide"],
             "pending" => ["publish", "hide", "restrict"],
             "published" => ["seen", "hide", "restrict"],
             _ => [],
         };
 
-    private static bool Optional(string action) => action is "keep" or "publish" or "seen";
+    private static bool Optional(string action) => action is "keep" or "publish" or "seen" or "leave";
 
     private void Open(string action)
     {
@@ -115,6 +119,7 @@
             "confirm" => await Moderation.ConfirmAsync(Id, statement),
             "unconfirm" => await Moderation.UnconfirmAsync(Id, statement),
             "publish" or "seen" => await Moderation.PublishStatementAsync(Id, note),
+            "leave" => await Moderation.KeepStatementAsync(Id, note),
             "hide" => await Moderation.HideStatementAsync(Id, statement),
             _ => ApiResult.Fail(new ApiProblem { Status = 400, Code = "action" }),
         };

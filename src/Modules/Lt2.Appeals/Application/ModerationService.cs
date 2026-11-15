@@ -34,30 +34,36 @@ internal sealed class ModerationService(
         var reportedIds = openReports.Select(r => r.TargetId).ToHashSet();
 
         // Open records come into the queue when reported, flagged about their date, surging (design 6.6), held, or under
-        // their threshold on the agenda with at least one participant (design 8.12.2).
-        var openRecords = await db.BillRecords.AsNoTracking().Where(a => a.Status == BillRecordStatuses.Open).ToListAsync(cancellationToken);
-        var openIds = openRecords.Select(a => a.Id).ToList();
-        var surges = await reads.SurgesAsync(db, openIds, cancellationToken);
+        // their threshold on the agenda with at least one participant (design 8.12.2). A closed record comes in only when
+        // its description is reported (design 6.9, "Reports after the final vote").
+        var records = await db.BillRecords.AsNoTracking()
+            .Where(a => a.Status == BillRecordStatuses.Open || (a.Status == BillRecordStatuses.Closed && reportedIds.Contains(a.Id)))
+            .ToListAsync(cancellationToken);
+        var openRecords = records.Where(a => a.Status == BillRecordStatuses.Open).ToList();
+        var surges = await reads.SurgesAsync(db, openRecords.Select(a => a.Id).ToList(), cancellationToken);
         var openFlags = await db.Flags.AsNoTracking().Where(f => f.Status == "open").OrderBy(f => f.CreatedAt).ToListAsync(cancellationToken);
         var planned = await agenda.ForBillsAsync(openRecords.Select(a => a.BillNumber).ToList(), cancellationToken);
-        var counts = await reads.CountsAsync(db, openIds, cancellationToken);
+        var counts = await reads.ShownCountsAsync(db, records, cancellationToken);
         var threshold = await reads.ThresholdSettingsAsync(cancellationToken);
-        var thresholds = openRecords.ToDictionary(a => a.Id, a => AppealReads.Threshold(a, counts[a.Id], threshold));
+        var thresholds = records.ToDictionary(a => a.Id, a => AppealReads.Threshold(a, counts[a.Id], threshold));
         var underThresholdOnAgenda = openRecords
             .Where(a => RecordRules.UnderThresholdOnAgenda(counts[a.Id].Total, planned.ContainsKey(a.BillNumber), thresholds[a.Id].Reached))
             .Select(a => a.Id)
             .ToHashSet();
-        var listed = openRecords
+        var listed = records
             .Where(a => reportedIds.Contains(a.Id) || surges.ContainsKey(a.Id) || openFlags.Any(f => f.RecordId == a.Id)
                 || underThresholdOnAgenda.Contains(a.Id) || a.Sending == "held")
             .OrderBy(a => a.ChangedAt)
             .Take(QueueLimit)
             .ToList();
 
+        // Arguments of open records that wait, are reported or not yet seen; of closed records only reported ones (6.9).
         var reasons = await db.Reasons.AsNoTracking()
-            .Where(r => db.BillRecords.Any(a => a.Id == r.RecordId && a.Status == BillRecordStatuses.Open)
-                && (r.Status == ReasonStatuses.Pending
-                    || (r.Status == ReasonStatuses.Published && (r.SeenAt == null || reportedIds.Contains(r.Id)))))
+            .Where(r => (db.BillRecords.Any(a => a.Id == r.RecordId && a.Status == BillRecordStatuses.Open)
+                    && (r.Status == ReasonStatuses.Pending
+                        || (r.Status == ReasonStatuses.Published && (r.SeenAt == null || reportedIds.Contains(r.Id)))))
+                || (db.BillRecords.Any(a => a.Id == r.RecordId && a.Status == BillRecordStatuses.Closed)
+                    && r.Status == ReasonStatuses.Published && reportedIds.Contains(r.Id)))
             .OrderBy(r => r.CreatedAt)
             .Take(QueueLimit)
             .ToListAsync(cancellationToken);
@@ -78,7 +84,8 @@ internal sealed class ModerationService(
             underThresholdOnAgenda.Contains(a.Id),
             a.Sending == "held",
             counts[a.Id].Total,
-            a.Description.Length == 0 ? null : a.DescriptionUrl)).ToList();
+            a.Description.Length == 0 ? null : a.DescriptionUrl,
+            a.Status)).ToList();
 
         return new ModerationItems(queueRecords, await QueueReasonsAsync(db, reasons, openReports, cancellationToken));
     }
@@ -110,21 +117,26 @@ internal sealed class ModerationService(
             r.SeenAt is not null,
             r.ScreeningFlags,
             openReports.Where(o => o.TargetId == r.Id).Select(o => new QueueReport(o.Id, o.Ground, o.Text, o.CreatedAt)).ToList(),
-            ReasonSimilarity.MostSimilar(
-                    r.Text,
-                    candidates.Where(c => c.RecordId == r.RecordId && c.Side == r.Side && c.Id != r.Id),
-                    c => c.Text)
-                .Select(c => AppealReads.ToInfo(c, names, endorsements))
-                .ToList(),
-            r.CreatedAt)).ToList();
+            // Merging is refused on a closed record (design 6.9), so nothing is offered to merge into there.
+            recordOf[r.RecordId].Status != BillRecordStatuses.Open
+                ? []
+                : ReasonSimilarity.MostSimilar(
+                        r.Text,
+                        candidates.Where(c => c.RecordId == r.RecordId && c.Side == r.Side && c.Id != r.Id),
+                        c => c.Text)
+                    .Select(c => AppealReads.ToInfo(c, names, endorsements))
+                    .ToList(),
+            r.CreatedAt,
+            recordOf[r.RecordId].Status)).ToList();
     }
 
     public Task<Result<Unit>> KeepRecordAsync(Guid recordId, string? statement, StaffActor moderator, CancellationToken cancellationToken) =>
         Refused(statement, required: false) ?? OnRecordAsync(recordId, moderator, "keep", statement, answersReports: true, async (db, record, now) =>
         {
-            if (record.Status != BillRecordStatuses.Open)
+            // On an open record, or on a closed one to answer a report (design 6.9).
+            if (RecordRules.CheckRecordAction(record.Status, "keep") is { } refused)
             {
-                return Error.Conflict("moderation.wrong-state");
+                return RuleErrors.Of(refused);
             }
 
             // Kept as it is: its open date flags close (the reports close with the record of the action).
@@ -182,7 +194,7 @@ internal sealed class ModerationService(
                 var record = recordOf[r.RecordId];
                 return new HiddenReason(
                     r.Id, Bill(record.BillNumber), r.Side, r.Text, names.GetValueOrDefault(r.AuthorUserId), hide?.CreatedAt,
-                    hide is null ? null : names.GetValueOrDefault(hide.ModeratorUserId), hide?.Statement, record.Status == BillRecordStatuses.Open);
+                    hide is null ? null : names.GetValueOrDefault(hide.ModeratorUserId), hide?.Statement, record.Status is BillRecordStatuses.Open or BillRecordStatuses.Closed);
             })
             .OrderByDescending(r => r.HiddenAt ?? DateTimeOffset.MinValue)
             .Take(QueueLimit * 2)
@@ -624,10 +636,10 @@ internal sealed class ModerationService(
             return Error.NotFound("reason.not-found");
         }
 
-        if (record.Status != BillRecordStatuses.Open)
+        // On a closed record only hiding, restoring and "Palikti" answer a report (design 6.9); on a hidden one nothing.
+        if (RecordRules.CheckReasonAction(record.Status, action, reason.Status) is { } refused)
         {
-            // Arguments on a closed or hidden record stay as they are.
-            return Error.Conflict("moderation.wrong-state");
+            return RuleErrors.Of(refused);
         }
 
         var now = clock.GetUtcNow();

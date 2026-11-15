@@ -50,6 +50,9 @@ internal sealed class HttpMeApi(ApiHttp http) : IMeApi
     public Task<ApiResult> ActivateRoleAsync(RoleActivationRequest request, CancellationToken cancellationToken = default) =>
         http.SendAsync(HttpMethod.Post, ApiRoutes.Me.RoleActivation, request, cancellationToken);
 
+    public Task<ApiResult> ConfirmPasskeyAsync(PasskeyCredentialRequest request, CancellationToken cancellationToken = default) =>
+        http.SendAsync(HttpMethod.Post, ApiRoutes.Me.PasskeyConfirmation, request, cancellationToken);
+
     public Task<ApiResult> GivePositionConsentAsync(PositionConsentRequest request, CancellationToken cancellationToken = default) =>
         http.SendAsync(HttpMethod.Put, ApiRoutes.Me.PositionConsent, request, cancellationToken);
 

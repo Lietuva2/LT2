@@ -315,6 +315,22 @@ internal static partial class OrganisationRules
         RecordRules.CheckParticipation(recordStatus, billFinished) is null ? null : "statement.bill-not-open";
 
     /// <summary>
+    /// A moderator publishes a waiting statement, or marks a published one seen (design 8.14.14). A statement that still
+    /// waited when the bill's final vote was recorded can no longer be published (design 6.9): it was not public then, and
+    /// what was public is frozen.
+    /// </summary>
+    public static string? CheckPublish(string statementStatus, bool billFinished) => statementStatus switch
+    {
+        StatementStatuses.Pending => billFinished ? "statement.waiting-bill-closed" : null,
+        StatementStatuses.Published => null,
+        _ => "moderation.wrong-state",
+    };
+
+    /// <summary>"Palikti" on a statement that still waited when the bill closed (design 6.9): only there.</summary>
+    public static string? CheckKeepWaiting(string statementStatus, bool billFinished) =>
+        statementStatus == StatementStatuses.Pending && billFinished ? null : "moderation.wrong-state";
+
+    /// <summary>
     /// The statements shown anywhere public: published, of an active organisation. A blocked or closed organisation's
     /// statements are shown nowhere; lifting a block shows again exactly the published ones, nothing withdrawn or hidden.
     /// </summary>

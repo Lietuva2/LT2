@@ -119,7 +119,7 @@ public sealed partial class AppealPageTests(DatabaseFixture database) : ApiTest(
         (await stranger.GetJsonAsync<List<Lt2.Api.Contracts.Digests.RecordDigestResponse>>(Lt2.Api.Contracts.Digests.DigestRoutes.OfRecordOn(AppealSteps.ThirdBill))).ShouldBeEmpty();
 
         // Visitors get links to sign in instead of buttons: they work without JavaScript.
-        html.ShouldContain("<a class=\"btn btn--for btn--wide\" href=\"/prisijungti\">Prašau balsuoti už</a>");
+        html.ShouldContain("<a class=\"btn btn--for btn--wide\" href=\"/prisijungti#tikslas=%2Fseimas%2FXVP-0618\">Prašau balsuoti už</a>");
         html.ShouldNotContain("Jūs prašote balsuoti");
     }
 
@@ -164,7 +164,7 @@ public sealed partial class AppealPageTests(DatabaseFixture database) : ApiTest(
         html.ShouldContain("<summary class=\"linkish small\">Pranešti apie klaidą</summary>", customMessage: "design 8.13: beside the description");
         Regex.Count(html, "<summary class=\"linkish small\">Pranešti</summary>").ShouldBe(2);
         html.ShouldContain("Pranešti apie turinį moderatoriams gali prisijungę Lietuva 2.0 naudotojai:");
-        html.ShouldContain("<a href=\"/prisijungti\">prisijunkite</a>");
+        html.ShouldContain("<a href=\"/prisijungti#tikslas=%2Fseimas%2FXVP-0618\">prisijunkite</a>");
         html.ShouldContain("<a href=\"mailto:moderatoriai@lt2.test\">moderatoriai@lt2.test</a>");
         html.ShouldNotContain("id=\"report-appeal\"");
 
@@ -224,7 +224,7 @@ public sealed partial class AppealPageTests(DatabaseFixture database) : ApiTest(
         html.ShouldContain("id=\"nobody-yet\"");
         html.ShouldContain("Dėl šio projekto dar niekas nenurodė, ko prašo Seimo narių.");
         html.ShouldContain("Šio projekto aprašymo dar nėra.");
-        html.ShouldContain("<a class=\"btn btn--for btn--wide\" href=\"/prisijungti\">Prašau balsuoti už</a>");
+        html.ShouldContain("<a class=\"btn btn--for btn--wide\" href=\"/prisijungti#tikslas=%2Fseimas%2FXVP-0533\">Prašau balsuoti už</a>");
         Regex.Count(MainOf(html), "Argumentų dar nėra\\.").ShouldBe(2);
         // Design 8.15: what the threshold is, one click away on the methodology page; the default needs no sentence.
         html.ShouldContain("<a href=\"/metodika#riba\" id=\"threshold-what\">Kas yra riba?</a>");

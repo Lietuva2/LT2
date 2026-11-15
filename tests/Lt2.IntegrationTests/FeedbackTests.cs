@@ -55,6 +55,38 @@ public sealed partial class FeedbackTests(DatabaseFixture database) : ApiTest(da
         (await Database.ScalarAsync<long>("SELECT count(*) FROM identity.feedback WHERE text = @t", ("t", Text))).ShouldBe(0);
     }
 
+    /// <summary>Design 6.9: feedback handling is audited: the item, the old and new status, who; never a text.</summary>
+    [Fact]
+    public async Task A_change_of_status_or_note_is_audited_with_who_and_both_statuses_and_no_text()
+    {
+        var moderator = await ModeratorAsync();
+        var (member, _) = await Factory.MemberAsync("Audituojama Narė");
+        using var _m = member;
+        const string Text = "Atsiliepimas, kurio tekstas neturi patekti į auditą.";
+        const string Note = "Vidinė pastaba, kurios irgi neturi būti audite.";
+        (await SendAsync(member, Text, mayReply: false, "idea")).StatusCode.ShouldBe(HttpStatusCode.NoContent);
+        var item = (await moderator.Browser.GetJsonAsync<List<FeedbackItemResponse>>(FeedbackRoutes.Staff + "?kind=idea&status=new")).Single(i => i.Text == Text);
+
+        (await moderator.Browser.SendAsync(HttpMethod.Put, FeedbackRoutes.ItemOf(item.Id), new FeedbackUpdateRequest { Status = "seen", Note = Note }))
+            .StatusCode.ShouldBe(HttpStatusCode.NoContent);
+
+        var moderatorId = await Database.UserIdAsync(moderator.Email);
+        var details = await Database.ScalarAsync<string>(
+            "SELECT details::text FROM audit.event WHERE action = 'feedback.updated' AND target = @t AND actor_user_id = @u AND actor_role = 'moderator'",
+            ("t", "feedback:" + item.Id), ("u", moderatorId));
+        details.ShouldNotBeNull();
+        using (var parsed = JsonDocument.Parse(details))
+        {
+            parsed.RootElement.GetProperty("from").GetString().ShouldBe("new");
+            parsed.RootElement.GetProperty("to").GetString().ShouldBe("seen");
+            parsed.RootElement.GetProperty("noteChanged").GetBoolean().ShouldBeTrue();
+        }
+
+        (await Database.ScalarAsync<long>(
+            "SELECT count(*) FROM audit.event WHERE target = @t AND (coalesce(details::text, '') LIKE '%' || @a || '%' OR coalesce(details::text, '') LIKE '%' || @b || '%')",
+            ("t", "feedback:" + item.Id), ("a", "tekstas neturi"), ("b", "Vidinė pastaba"))).ShouldBe(0, "no text of the item or the note");
+    }
+
     [Fact]
     public async Task An_unlinked_item_has_no_path_back_to_its_author_in_any_table_or_answer_and_no_reply()
     {

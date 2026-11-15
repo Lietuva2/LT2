@@ -49,13 +49,13 @@ internal static class AppealMapping
 
     public static QueueReasonResponse Map(QueueReason r) => new(
         r.Id, r.RecordId, Map(r.Bill), r.Side, r.Text, r.AuthorName, r.Status, r.Seen, r.Flags, r.Reports.Select(Map).ToList(),
-        r.MergeCandidates.Select(Map).ToList(), r.CreatedAt);
+        r.MergeCandidates.Select(Map).ToList(), r.CreatedAt, r.RecordStatus);
 
     public static ModerationQueueResponse Map(ModerationItems q) => new(
         q.Records.Select(a => new QueueRecordResponse(
             a.Id, Map(a.Bill), a.Description, a.DescriptionSource, a.Threshold, a.Reports.Select(Map).ToList(), Map(a.Surge), Map(a.Planned),
             a.DateFlags.Select(f => new QueueFlagResponse(f.Id, f.Kind, f.Link, f.Note, f.CreatedAt)).ToList(),
-            a.UnderThresholdOnAgenda, a.Held, a.Participants, a.DescriptionUrl)).ToList(),
+            a.UnderThresholdOnAgenda, a.Held, a.Participants, a.DescriptionUrl, a.Status)).ToList(),
         q.Reasons.Select(Map).ToList());
 
     public static HiddenItemsResponse Map(HiddenItems h) => new(
@@ -336,6 +336,11 @@ internal sealed class ServerAdminApi(ISettingsAdministration settings, IHttpCont
         }
 
         var http = accessor.HttpContext!;
+        if (await Endpoints.Admin.FreshConfirmation.MissingAsync(http.RequestServices.GetRequiredService<IIdentityModule>(), http.User, cancellationToken) is { } missing)
+        {
+            return ApiResult<SettingResponse>.Fail(errors.ToProblem(missing));
+        }
+
         var result = await settings.UpdateAsync(key, request.Value, http.User.UserId()!.Value, Roles.Administrator, ipHasher.Hash(http), cancellationToken);
         return errors.ToApiResult(result, SettingMapping.ToResponse);
     }

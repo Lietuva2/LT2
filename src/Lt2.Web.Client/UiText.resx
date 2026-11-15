@@ -109,4 +109,6 @@
   <data name="Data.DeleteWarning" xml:space="preserve"><value>Paskyra bus ištrinta visam laikui kartu su jūsų pozicijomis, „Man svarbu“ žymomis, argumentais ir pranešimais. Bendri skaičiai sumažės, o jau sudarytose suvestinėse liks tokie, kokie buvo. To atšaukti negalima.</value></data>
 <data name="Data.DeleteConfirm" xml:space="preserve"><value>Taip, ištrinti paskyrą</value></data>
 <data name="Data.DeleteCancel" xml:space="preserve"><value>Ne, palikti</value></data>
-</root>
+<data name="Data.DeleteStaffNeedsPasskey" xml:space="preserve"><value>Tai darbuotojo paskyra: ją ištrinti galima tik prisijungus darbuotojo prieigos raktu. Atsijunkite ir prisijunkite tuo prieigos raktu.</value></data>
+<data name="Data.DeleteStaffKept" xml:space="preserve"><value>Tai, ką darėte kaip moderatorius ar administratorius, liks užrašyta su paskyros numeriu, bet be jūsų vardo ir adreso.</value></data>
+<data name="Data.DeleteStaffMore" xml:space="preserve"><value>Kas saugoma ir kas ištrinama</value></data></root>

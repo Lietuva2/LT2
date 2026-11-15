@@ -285,6 +285,30 @@ public sealed class SignInComponentTests : BunitContext
         page.WaitForAssertion(() => _me.Activations.ShouldHaveSingleItem().Code.ShouldBe("7kq2-m9xd-4trb-hc0p"));
     }
 
+    /// <summary>Design 6.9: a staff account is deleted only from its staff passkey session; the page says so in a code session.</summary>
+    [Fact]
+    public void A_staff_member_sees_how_to_delete_the_account_in_a_code_session_and_what_stays_in_the_staff_session()
+    {
+        SignedIn(FakeMeApi.Member with { Roles = ["member", "moderator"], StaffAccount = true });
+        var codeSession = Render<Hello>();
+        codeSession.Find("#delete-staff-passkey").TextContent.ShouldBe(Text("Data.DeleteStaffNeedsPasskey"));
+        codeSession.FindAll("#delete-account").ShouldBeEmpty();
+        codeSession.FindAll("#export").ShouldNotBeEmpty("the export is unchanged");
+
+        SignedIn(FakeMeApi.Member with { Roles = ["member", "moderator"], StaffAccount = true, ActiveStaffRoles = ["moderator"] });
+        var staffSession = Render<Hello>();
+        staffSession.FindAll("#delete-staff-passkey").ShouldBeEmpty();
+        staffSession.Find("#delete-account").Click();
+        staffSession.Find("#delete-staff-kept").TextContent.ShouldContain(Text("Data.DeleteStaffKept"));
+        staffSession.Find("#delete-staff-kept a").GetAttribute("href").ShouldBe("/metodika#privatumas");
+
+        SignedIn(FakeMeApi.Member);
+        var member = Render<Hello>();
+        member.Find("#delete-account").Click();
+        member.FindAll("#delete-staff-kept").ShouldBeEmpty("an ordinary account is unchanged");
+        member.FindAll("#delete-confirm").ShouldNotBeEmpty();
+    }
+
     [Fact]
     public void A_refused_activation_code_shows_the_servers_explanation()
     {
@@ -464,6 +488,8 @@ public sealed class SignInComponentTests : BunitContext
         public List<RoleActivationRequest> Activations { get; } = [];
 
         public Func<RoleActivationRequest, Task<ApiResult>> Activate { get; set; } = _ => Task.FromResult(ApiResult.Ok());
+
+        public Task<ApiResult> ConfirmPasskeyAsync(PasskeyCredentialRequest request, CancellationToken cancellationToken = default) => Task.FromResult(ApiResult.Ok());
 
         public Task<ApiResult> ActivateRoleAsync(RoleActivationRequest request, CancellationToken cancellationToken = default)
         {

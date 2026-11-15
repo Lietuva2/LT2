@@ -21,7 +21,8 @@ public sealed record QueueRecordResponse(
     bool UnderThresholdOnAgenda,
     bool Held,
     int Participants,
-    string? DescriptionUrl);
+    string? DescriptionUrl,
+    string Status = "open");
 
 public sealed record QueueFlagResponse(Guid Id, string Kind, string Link, string? Note, DateTimeOffset CreatedAt);
 
@@ -49,7 +50,8 @@ public sealed record QueueReasonResponse(
     IReadOnlyList<string> Flags,
     IReadOnlyList<QueueReportResponse> Reports,
     IReadOnlyList<ReasonResponse> MergeCandidates,
-    DateTimeOffset CreatedAt);
+    DateTimeOffset CreatedAt,
+    string RecordStatus = "open");
 
 /// <summary>
 /// A hidden bill record (design 8.12.3): who hid it, when and why. <c>RestoresAs</c> is the status "Atkurti" gives it (open

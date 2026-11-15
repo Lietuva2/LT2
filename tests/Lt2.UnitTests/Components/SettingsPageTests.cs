@@ -4,6 +4,8 @@ using Bunit;
 using Lt2.Api.Contracts;
 using Lt2.Api.Contracts.Admin;
 using Lt2.Api.Contracts.Appeals;
+using Lt2.Api.Contracts.Auth;
+using Lt2.Api.Contracts.Me;
 using Lt2.SharedKernel;
 using Lt2.Web.Client;
 using Lt2.Web.Client.Appeals;
@@ -29,14 +31,64 @@ public sealed class SettingsPageTests : BunitContext
         var settings = SettingKeys.All
             .Select(k => new SettingResponse { Key = k.Name, Value = k.DefaultValue, Default = k.DefaultValue })
             .ToList();
-        ((ApiFake)(object)api).On("GetSettingsAsync", ApiResult<IReadOnlyList<SettingResponse>>.Ok(settings));
+        Admin = (ApiFake)(object)api;
+        Admin.On("GetSettingsAsync", ApiResult<IReadOnlyList<SettingResponse>>.Ok(settings));
         Services.AddSingleton(api);
+        var auth = DispatchProxy.Create<IAuthApi, ApiFake>();
+        ((ApiFake)(object)auth).On("GetPasskeyRequestOptionsAsync", ApiResult<string>.Ok("{\"challenge\":\"AAAA\"}"));
+        Services.AddSingleton(auth);
+        var me = DispatchProxy.Create<IMeApi, ApiFake>();
+        MeFake = (ApiFake)(object)me;
+        MeFake.On("ConfirmPasskeyAsync", ApiResult.Ok());
+        Services.AddSingleton(me);
         AddAuthorization().SetAuthorized("administratorius@pavyzdys.test");
         JSInterop.Mode = JSRuntimeMode.Loose;
         SetRendererInfo(new RendererInfo("WebAssembly", isInteractive: true));
     }
 
+    private ApiFake Admin { get; }
+
+    private ApiFake MeFake { get; }
+
     private IStringLocalizer<AppealUi> L => Services.GetRequiredService<IStringLocalizer<AppealUi>>();
+
+    private static ApiResult<SettingResponse> ConfirmationRequired() =>
+        ApiResult<SettingResponse>.Fail(new ApiProblem { Status = 403, Code = "passkey.confirmation-required", Detail = "Patvirtinkite veiksmą prieigos raktu." });
+
+    /// <summary>Design 6.9: the server asks for the passkey again; the page confirms it once and saves again.</summary>
+    [Fact]
+    public void A_save_the_server_refuses_for_a_stale_confirmation_asks_the_passkey_and_saves_again()
+    {
+        Admin.OnEach("UpdateSettingAsync", ConfirmationRequired(), ApiResult<SettingResponse>.Ok(new SettingResponse { Key = "Feedback:KeepMonths", Value = JsonSerializer.SerializeToElement(6) }));
+        var module = JSInterop.SetupModule("./js/passkeys.js");
+        module.Setup<bool>("isSupported").SetResult(true);
+        module.Setup<string>("get", _ => true).SetResult("{\"id\":\"staff-key\"}");
+        var page = Render<Settings>();
+
+        page.Find("#admin-passkey-note").TextContent.ShouldBe(L["Admin.PasskeyNote"].Value);
+        page.Find("#setting-Feedback-KeepMonths").Change("6");
+        page.Find("#row-setting-Feedback-KeepMonths button").Click();
+
+        page.WaitForAssertion(() => Admin.Calls.Count(c => c == "UpdateSettingAsync").ShouldBe(2));
+        MeFake.Calls.ShouldBe(["ConfirmPasskeyAsync"]);
+        page.WaitForAssertion(() => page.Markup.ShouldContain(L.Format("Admin.SavedOne", L["Admin.Setting.Feedback:KeepMonths"].Value)));
+    }
+
+    [Fact]
+    public void Cancelling_the_passkey_prompt_saves_nothing_and_says_how_to_try_again()
+    {
+        Admin.On("UpdateSettingAsync", ConfirmationRequired());
+        var module = JSInterop.SetupModule("./js/passkeys.js");
+        module.Setup<bool>("isSupported").SetResult(true);
+        module.Setup<string>("get", _ => true).SetException(new Microsoft.JSInterop.JSException("NotAllowedError"));
+        var page = Render<Settings>();
+
+        page.Find("#row-setting-Feedback-KeepMonths button").Click();
+
+        page.WaitForAssertion(() => page.Markup.ShouldContain(L["Admin.Passkey.Cancelled"].Value));
+        Admin.Calls.Count(c => c == "UpdateSettingAsync").ShouldBe(1, "no second save without the confirmation");
+        MeFake.Calls.ShouldBeEmpty();
+    }
 
     [Fact]
     public void Every_setting_has_a_label_a_sentence_and_a_unit_and_shows_its_default_and_key()

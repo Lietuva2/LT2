@@ -1,4 +1,6 @@
 using System.Net;
+using Lt2.Api.Contracts;
+using Lt2.Api.Contracts.Appeals;
 using Lt2.Appeals;
 using Lt2.IntegrationTests.Infrastructure;
 using Microsoft.Extensions.DependencyInjection;
@@ -123,4 +125,140 @@ public sealed class AppealClosingTests(DatabaseFixture database) : ApiTest(datab
             await Database.FreeBillAsync(AppealSteps.ThirdBill);
         }
     }
+
+    /// <summary>
+    /// Design 6.9 (owner, 2026-11-15): reports after the final vote reach the queue. On a closed record a moderator hides and
+    /// restores an argument, corrects or removes the description and answers with "Palikti", each with a statement and
+    /// audited, an argument's author told; the frozen counts stay. Everything else on a closed record stays refused.
+    /// </summary>
+    [Fact]
+    public async Task After_the_final_vote_reports_reach_the_queue_and_only_the_allowed_actions_answer_them()
+    {
+        using var moderator = await StaffMembers.SharedAsync(Factory, Database, "moderator");
+        var mod = moderator.Browser;
+        var (author, _) = await Factory.MemberAsync();
+        using var _a = author;
+        var record = await Database.PrepareBillAsync(author, mod, AppealSteps.ThirdBill, "against");
+        var kept = (await author.RecordAsync(AppealSteps.ThirdBill)).Reasons.Single().Id;
+        var (other, otherEmail) = await Factory.MemberAsync("Giedrė Bandomoji");
+        using var _o = other;
+        (await other.TakeSideAsync(AppealSteps.ThirdBill, "for")).StatusCode.ShouldBe(HttpStatusCode.NoContent);
+        var hidden = await (await other.WriteReasonAsync(AppealSteps.ThirdBill, "for", "Pajamų mokesčio tarifai turi būti progresiniai.")).ReadAsync<ReasonCreatedResponse>();
+        (await other.SendAsync(HttpMethod.Put, AppealRoutes.EndorsementOf(hidden.Id))).StatusCode.ShouldBe(HttpStatusCode.NoContent);
+
+        await AddFinalVoteAsync();
+        try
+        {
+            await using (var scope = Factory.Services.CreateAsyncScope())
+            {
+                (await scope.ServiceProvider.GetRequiredService<IAppealsMaintenance>().CloseFinishedAsync(CancellationToken.None)).ShouldBe(1);
+            }
+
+            using var stranger = NewBrowser();
+            var frozen = (await stranger.RecordAsync(AppealSteps.ThirdBill)).Counts;
+            var (reporter, _) = await Factory.MemberAsync("Pranešėjas Bandomasis");
+            using var _r = reporter;
+            foreach (var (kind, id) in new[] { ("reason", kept), ("reason", hidden.Id), ("record", record.Id) })
+            {
+                using var reported = await reporter.PostAsync(AppealRoutes.Reports, new ReportRequest { TargetKind = kind, TargetId = id, Ground = "other" });
+                reported.StatusCode.ShouldBe(HttpStatusCode.NoContent, await reported.Content.ReadAsStringAsync());
+            }
+
+            var queue = await mod.GetJsonAsync<ModerationQueueResponse>(AppealRoutes.ModerationQueue);
+            var queuedRecord = queue.Records.Single(r => r.Id == record.Id);
+            (queuedRecord.Status, queuedRecord.Reports.Count).ShouldBe(("closed", 1));
+            queue.Reasons.Single(r => r.Id == kept).RecordStatus.ShouldBe("closed");
+            queue.Reasons.Single(r => r.Id == hidden.Id).RecordStatus.ShouldBe("closed");
+            (await mod.ModerationBillAsync(AppealSteps.ThirdBill)).Status.ShouldBe("closed");
+
+            // Refused on a closed record: the threshold, holding the sending, merging.
+            foreach (var refused in new[]
+            {
+                await mod.SendAsync(HttpMethod.Put, AppealRoutes.With(AppealRoutes.RecordThreshold, record.Id), new ModeratorThresholdRequest { Threshold = 150, Statement = "Bandymas." }),
+                await mod.PostAsync(AppealRoutes.With(AppealRoutes.HoldRecord, record.Id), new StatementRequest { Statement = "Bandymas." }),
+                await mod.PostAsync(AppealRoutes.With(AppealRoutes.MergeReason, hidden.Id), new MergeReasonRequest { IntoReasonId = kept, Statement = "Bandymas." }),
+            })
+            {
+                using (refused)
+                {
+                    await refused.ShouldBeProblemAsync(HttpStatusCode.Conflict, "moderation.wrong-state");
+                }
+            }
+
+            // "Palikti" on an argument and on the description, each answering its report.
+            (await mod.PostAsync(AppealRoutes.With(AppealRoutes.PublishReason, kept), new ModerationRequest { Statement = "Argumentas taisyklių nepažeidžia." }))
+                .StatusCode.ShouldBe(HttpStatusCode.NoContent);
+            (await mod.PostAsync(AppealRoutes.With(AppealRoutes.KeepRecord, record.Id), new ModerationRequest { Statement = "Aprašymas tikslus." }))
+                .StatusCode.ShouldBe(HttpStatusCode.NoContent);
+
+            // Correcting and removing the description.
+            using (var corrected = await mod.SendAsync(
+                HttpMethod.Put, AppealRoutes.BillDescriptionOf(AppealSteps.ThirdBill), new ModeratorDescriptionRequest { Description = "Pataisytas aprašymas po galutinio balsavimo.", Statement = "Taisau klaidą." }))
+            {
+                corrected.StatusCode.ShouldBe(HttpStatusCode.NoContent, await corrected.Content.ReadAsStringAsync());
+            }
+
+            (await stranger.RecordAsync(AppealSteps.ThirdBill)).Description.ShouldBe("Pataisytas aprašymas po galutinio balsavimo.");
+            using (var removed = await mod.PostAsync(AppealRoutes.RemoveDescriptionOf(AppealSteps.ThirdBill), new StatementRequest { Statement = "Aprašymas klaidino." }))
+            {
+                removed.StatusCode.ShouldBe(HttpStatusCode.NoContent, await removed.Content.ReadAsStringAsync());
+            }
+
+            (await stranger.RecordAsync(AppealSteps.ThirdBill)).Description.ShouldBeEmpty();
+
+            // Hiding and restoring an argument: its author is told each time; the frozen counts stay.
+            (await mod.PostAsync(AppealRoutes.With(AppealRoutes.HideReason, hidden.Id), new StatementRequest { Statement = "Pažeidžia taisykles." }))
+                .StatusCode.ShouldBe(HttpStatusCode.NoContent);
+            var afterHide = await stranger.RecordAsync(AppealSteps.ThirdBill);
+            afterHide.Reasons.ShouldNotContain(r => r.Id == hidden.Id);
+            afterHide.Counts.ShouldBe(frozen);
+            (await mod.PostAsync(AppealRoutes.With(AppealRoutes.RestoreReason, hidden.Id), new StatementRequest { Statement = "Klaida, grąžinu." }))
+                .StatusCode.ShouldBe(HttpStatusCode.NoContent);
+            var afterRestore = await stranger.RecordAsync(AppealSteps.ThirdBill);
+            afterRestore.Reasons.ShouldContain(r => r.Id == hidden.Id);
+            afterRestore.Counts.ShouldBe(frozen);
+            afterRestore.Status.ShouldBe("closed");
+            foreach (var notice in new[] { "reason-hidden", "reason-restored" })
+            {
+                (await Database.ScalarAsync<long>(
+                    "SELECT count(*) FROM notify.outbox WHERE kind = 'email.moderation-notice' AND payload->>'to' = @to AND payload->>'notice' = @n", ("to", otherEmail), ("n", notice)))
+                    .ShouldBe(1, notice);
+            }
+
+            // "Palikti" on a published argument is recorded as a publish; the first one marked it seen before the vote.
+            foreach (var (action, target, count) in new[]
+            {
+                ("moderation.reason.publish", "reason:" + kept, 2L), ("moderation.record.keep", "record:" + record.Id, 1L), ("moderation.record.undescribe", "record:" + record.Id, 1L),
+                ("moderation.reason.hide", "reason:" + hidden.Id, 1L), ("moderation.reason.restore", "reason:" + hidden.Id, 1L),
+            })
+            {
+                (await Database.ScalarAsync<long>("SELECT count(*) FROM audit.event WHERE action = @a AND target = @t", ("a", action), ("t", target))).ShouldBe(count, action);
+            }
+
+            (await Database.ScalarAsync<long>("SELECT count(*) FROM appeals.report WHERE status = 'open' AND target_id IN (@a, @b, @c)", ("a", kept), ("b", hidden.Id), ("c", record.Id)))
+                .ShouldBe(0, "every report answered");
+            var after = await mod.GetJsonAsync<ModerationQueueResponse>(AppealRoutes.ModerationQueue);
+            after.Records.ShouldNotContain(r => r.Id == record.Id);
+            after.Reasons.ShouldNotContain(r => r.RecordId == record.Id);
+
+            using var late = await other.WriteReasonAsync(AppealSteps.ThirdBill, "for", "Dar vienas argumentas.");
+            await late.ShouldBeProblemAsync(HttpStatusCode.Conflict, "record.not-open");
+        }
+        finally
+        {
+            await RemoveFinalVoteAsync();
+            await Database.FreeBillAsync(AppealSteps.ThirdBill);
+        }
+    }
+
+    private Task AddFinalVoteAsync() =>
+        Database.ExecuteAsync(
+            """
+            INSERT INTO parliament.vote (id, agenda_item_id, bill_id, held_at, wording, type, kind, stage, is_consensus, has_result, "for", against, abstain, voted, seats)
+            SELECT @id, agenda_item_id, bill_id, held_at + interval '7 days', 'Priėmimas', type, 'StageResult', 'Adoption', false, true, "for", against, abstain, voted, seats
+            FROM parliament.vote WHERE id = 99100102
+            """,
+            ("id", FinalVote));
+
+    private Task RemoveFinalVoteAsync() => Database.ExecuteAsync("DELETE FROM parliament.vote WHERE id = @id", ("id", FinalVote));
 }

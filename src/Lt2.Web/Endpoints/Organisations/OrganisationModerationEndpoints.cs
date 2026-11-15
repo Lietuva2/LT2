@@ -41,6 +41,7 @@ internal static class OrganisationModerationEndpoints
         Act<StatementRequest>(api, OrganisationRoutes.Confirm, "ConfirmOrganisationByHand", (m, id, r, a, c, ct) => m.ConfirmAsync(id, r.Statement, a, c, ct));
         Act<StatementRequest>(api, OrganisationRoutes.Unconfirm, "WithdrawOrganisationConfirmation", (m, id, r, a, c, ct) => m.WithdrawConfirmationAsync(id, r.Statement, a, c, ct));
         Act<ModerationRequest>(api, OrganisationRoutes.PublishStatement, "PublishStatement", (m, id, r, a, c, ct) => m.PublishStatementAsync(id, r.Statement, a, c, ct));
+        Act<ModerationRequest>(api, OrganisationRoutes.KeepStatement, "KeepStatement", (m, id, r, a, c, ct) => m.KeepStatementAsync(id, r.Statement, a, c, ct));
         Act<StatementRequest>(api, OrganisationRoutes.HideStatement, "HideStatement", (m, id, r, a, c, ct) => m.HideStatementAsync(id, r.Statement, a, c, ct));
         Act<StatementRequest>(api, OrganisationRoutes.RestoreStatement, "RestoreStatement", (m, id, r, a, c, ct) => m.RestoreStatementAsync(id, r.Statement, a, c, ct));
 

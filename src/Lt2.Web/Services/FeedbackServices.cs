@@ -45,23 +45,11 @@ internal sealed class ServerFeedbackApi(IFeedback feedback, FeedbackLimiter limi
             ? ApiResult<IReadOnlyList<FeedbackItemResponse>>.Ok((await feedback.ListAsync(kind, status, cancellationToken)).Select(Map).ToList())
             : ApiResult<IReadOnlyList<FeedbackItemResponse>>.Fail(errors.ToProblem(Error.Forbidden("forbidden")));
 
-    public async Task<ApiResult> UpdateAsync(Guid id, FeedbackUpdateRequest request, CancellationToken cancellationToken = default) =>
-        await IsStaffAsync()
-            ? errors.ToApiResult(await feedback.UpdateAsync(id, request.Status, request.Note, cancellationToken))
-            : ApiResult.Fail(errors.ToProblem(Error.Forbidden("forbidden")));
+    public Task<ApiResult> UpdateAsync(Guid id, FeedbackUpdateRequest request, CancellationToken cancellationToken = default) =>
+        ServerStaff.ActAsync(accessor, Identity, ipHasher, errors, staff => feedback.UpdateAsync(id, request.Status, request.Note, staff, cancellationToken));
 
-    public async Task<ApiResult> ReplyAsync(Guid id, FeedbackReplyRequest request, CancellationToken cancellationToken = default)
-    {
-        if (!await IsStaffAsync())
-        {
-            return ApiResult.Fail(errors.ToProblem(Error.Forbidden("forbidden")));
-        }
-
-        var http = accessor.HttpContext!;
-        var identity = http.RequestServices.GetRequiredService<IIdentityModule>();
-        var staff = await AppealMapping.ModeratorAsync(identity, http.User, ipHasher.Hash(http), cancellationToken);
-        return errors.ToApiResult(await feedback.ReplyAsync(id, request.Text, staff.UserId, staff.Role, staff.IpHash, cancellationToken));
-    }
+    public Task<ApiResult> ReplyAsync(Guid id, FeedbackReplyRequest request, CancellationToken cancellationToken = default) =>
+        ServerStaff.ActAsync(accessor, Identity, ipHasher, errors, staff => feedback.ReplyAsync(id, request.Text, staff, cancellationToken));
 
     /// <summary>The daily limit, then the module. Used by the endpoint and the form alike.</summary>
     public static async Task<Result<Unit>> SendAsync(IFeedback feedback, FeedbackLimiter limiter, Guid userId, FeedbackRequest request, CancellationToken ct)
@@ -77,6 +65,9 @@ internal sealed class ServerFeedbackApi(IFeedback feedback, FeedbackLimiter limi
     public static FeedbackItemResponse Map(FeedbackInfo f) => new(
         f.Id, f.Kind, f.Text, f.Status, f.Note, f.PagePath, f.Browser, f.CreatedOn, f.Linked, f.DisplayName,
         f.Replies.Select(r => new FeedbackReplyResponse(r.At, r.Text)).ToList());
+
+    /// <summary>Null without a request; <see cref="ServerStaff.ActAsync"/> refuses then before using it.</summary>
+    private IIdentityModule Identity => accessor.HttpContext?.RequestServices.GetRequiredService<IIdentityModule>()!;
 
     private async Task<bool> IsStaffAsync()
     {

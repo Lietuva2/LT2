@@ -64,7 +64,6 @@
 <data name="Restrict.Status.hidden" xml:space="preserve"><value>paslėptas</value></data>
 <data name="Restrict.Status.merged" xml:space="preserve"><value>sujungtas</value></data>
 <data name="Restrict.Target.reason" xml:space="preserve"><value>argumentas</value></data>
-<data name="Restrict.Target.appeal" xml:space="preserve"><value>projektas</value></data>
 <data name="Restrict.Target.restriction" xml:space="preserve"><value>apribojimas</value></data>
 <data name="Restricted.Title" xml:space="preserve"><value>Moderatorius apribojo jūsų galimybę rašyti.</value></data>
 <data name="Restricted.Until" xml:space="preserve"><value>Apribojimas galioja iki {0} imtinai.</value></data>
@@ -574,6 +573,9 @@
 <data name="OrgMod.Done.publish" xml:space="preserve"><value>Pozicija paskelbta.</value></data>
 <data name="OrgMod.Done.seen" xml:space="preserve"><value>Palikta.</value></data>
 <data name="OrgMod.Done.hide" xml:space="preserve"><value>Pozicija paslėpta.</value></data>
+<data name="OrgMod.Action.leave" xml:space="preserve"><value>Palikti</value></data>
+<data name="OrgMod.Sentence.leave" xml:space="preserve"><value>Seimas dėl projekto jau balsavo galutinai, todėl laukianti pozicija nebebus paskelbta. Ji liks nepaskelbta, atviri pranešimai bus uždaryti, atstovams bus pranešta.</value></data>
+<data name="OrgMod.Done.leave" xml:space="preserve"><value>Palikta nepaskelbta.</value></data>
 <data name="OrgMod.Panel.Title" xml:space="preserve"><value>Organizacijų pozicijos</value></data>
 <data name="OrgMod.Panel.Nothing" xml:space="preserve"><value>Laukiančių ar pažymėtų pozicijų nėra.</value></data>
 <data name="OrgMod.Panel.Others" xml:space="preserve"><value>Kitos pozicijos ({0})</value></data>
@@ -623,4 +625,6 @@
   <data name="Restrict.Action.restore" xml:space="preserve"><value>atkurta</value></data>
   <data name="Restrict.Action.restrict" xml:space="preserve"><value>apribotas rašymas</value></data>
   <data name="Restrict.Action.lift" xml:space="preserve"><value>apribojimas panaikintas</value></data>
-</root>
+<data name="Admin.PasskeyNote" xml:space="preserve"><value>Išsaugant nustatymą naršyklė gali paprašyti dar kartą patvirtinti darbuotojo prieigos raktu: to reikia, jei paskutinį kartą jį patvirtinote daugiau nei prieš 10 minučių.</value></data>
+<data name="Admin.Passkey.Unsupported" xml:space="preserve"><value>Nustatymas neišsaugotas: ši naršyklė negali patvirtinti prieigos raktu. Atidarykite šį puslapį naršyklėje, kurioje yra jūsų darbuotojo prieigos raktas.</value></data>
+<data name="Admin.Passkey.Cancelled" xml:space="preserve"><value>Nustatymas neišsaugotas, nes prieigos raktu nepatvirtinote. Spauskite „Išsaugoti“ dar kartą ir patvirtinkite.</value></data></root>

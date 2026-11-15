@@ -63,7 +63,7 @@
                             {
                                 <details class="more moderate" id="moderate-@reason.Id">
                                     <summary class="linkish small">@L["ModReason.Open"]</summary>
-                                    <ModerationActions Id="reason.Id" Kind="reason" Status="@moderated.Status" MergeCandidates="moderated.MergeCandidates" OnDone="Reload" OnRestricted="ReloadPage" />
+                                    <ModerationActions Id="reason.Id" Kind="reason" Status="@moderated.Status" RecordStatus="@moderated.RecordStatus" MergeCandidates="moderated.MergeCandidates" OnDone="Reload" OnRestricted="ReloadPage" />
                                 </details>
                             }
                             @if (_withdrawing == reason.Id)
@@ -215,7 +215,7 @@
         // Only for a moderator (the page says so; nobody else asks), and only in the browser: a "Moderuoti" opened before
         // the island starts would close when it does. The panel beside it hands over the answer it brought from the
         // server (MyBillState), so usually nothing is asked again.
-        if (Moderator && _signedIn && RendererInfo.IsInteractive && Record is { Id: not null, Status: "open" })
+        if (Moderator && _signedIn && RendererInfo.IsInteractive && Record is { Id: not null, Status: "open" or "closed" })
         {
             _moderation = await State.ModerationAsync(Number);
         }

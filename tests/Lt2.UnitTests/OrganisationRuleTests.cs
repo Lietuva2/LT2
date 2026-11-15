@@ -343,4 +343,17 @@ public sealed class OrganisationRuleTests
         OrganisationWords.LabelKey(new OrganisationLabelResponse("domain", "asociacija.test")).ShouldBe("Org.Label.domain");
         OrganisationWords.LabelKey(new OrganisationLabelResponse("moderator", null)).ShouldBe("Org.Label.moderator");
     }
+
+    /// <summary>Design 6.9 (owner, 2026-11-15): a statement still waiting when the bill closes is never published.</summary>
+    [Fact]
+    public void A_waiting_statement_is_published_only_while_the_bill_is_open_and_palikti_leaves_it_after()
+    {
+        OrganisationRules.CheckPublish(StatementStatuses.Pending, billFinished: false).ShouldBeNull();
+        OrganisationRules.CheckPublish(StatementStatuses.Pending, billFinished: true).ShouldBe("statement.waiting-bill-closed");
+        OrganisationRules.CheckPublish(StatementStatuses.Published, billFinished: true).ShouldBeNull("\"Palikti\" on a published one answers its reports");
+        OrganisationRules.CheckPublish(StatementStatuses.Hidden, billFinished: false).ShouldBe("moderation.wrong-state");
+        OrganisationRules.CheckKeepWaiting(StatementStatuses.Pending, billFinished: true).ShouldBeNull();
+        OrganisationRules.CheckKeepWaiting(StatementStatuses.Pending, billFinished: false).ShouldBe("moderation.wrong-state");
+        OrganisationRules.CheckKeepWaiting(StatementStatuses.Published, billFinished: true).ShouldBe("moderation.wrong-state");
+    }
 }

@@ -138,4 +138,61 @@ public sealed class OrganisationModerationTests(DatabaseFixture database) : ApiT
         using var refused = await member.PostAsync(OrganisationRoutes.With(OrganisationRoutes.Block, created.Id), new StatementRequest { Statement = "Ne moderatorius." });
         refused.StatusCode.ShouldBe(HttpStatusCode.Forbidden);
     }
+
+    /// <summary>
+    /// Design 6.9 (owner, 2026-11-15): a statement still waiting when the bill closes is never published. The queue still
+    /// shows it and offers only "Palikti" and hiding; "Palikti" keeps it unpublished and tells the representatives.
+    /// </summary>
+    [Fact]
+    public async Task A_statement_still_waiting_when_the_bill_closes_cannot_be_published_and_palikti_leaves_it_unpublished()
+    {
+        const long finalVote = 99199620;
+        using var moderator = await StaffMembers.SharedAsync(Factory, Database, "moderator");
+        await Database.FreeBillAsync(AppealSteps.ThirdBill);
+        var (member, email) = await Factory.MemberAsync();
+        using var _m = member;
+        var created = await member.RegisterOrganisationAsync();
+        var waiting = await member.PublishStatementAsync(AppealSteps.ThirdBill, created.Slug, "for", "Rašykite mums: laukianti@pavyzdys.test");
+        waiting.Status.ShouldBe("pending");
+        using (var early = await moderator.Browser.PostAsync(OrganisationRoutes.With(OrganisationRoutes.KeepStatement, waiting.Id), new ModerationRequest()))
+        {
+            await early.ShouldBeProblemAsync(HttpStatusCode.Conflict, "moderation.wrong-state");
+        }
+
+        await Database.ExecuteAsync(
+            """
+            INSERT INTO parliament.vote (id, agenda_item_id, bill_id, held_at, wording, type, kind, stage, is_consensus, has_result, "for", against, abstain, voted, seats)
+            SELECT @id, agenda_item_id, bill_id, held_at + interval '7 days', 'Priėmimas', type, 'StageResult', 'Adoption', false, true, "for", against, abstain, voted, seats
+            FROM parliament.vote WHERE id = 99100102
+            """,
+            ("id", finalVote));
+        try
+        {
+            using (var publish = await moderator.Browser.PostAsync(OrganisationRoutes.With(OrganisationRoutes.PublishStatement, waiting.Id), new ModerationRequest()))
+            {
+                await publish.ShouldBeProblemAsync(HttpStatusCode.Conflict, "statement.waiting-bill-closed");
+                (await publish.Content.ReadAsStringAsync()).ShouldContain("Seimas dėl šio projekto jau balsavo galutinai");
+            }
+
+            var queued = (await moderator.Browser.GetJsonAsync<OrganisationModerationResponse>(OrganisationRoutes.ModerationQueue)).Statements.Single(s => s.Id == waiting.Id);
+            (queued.Status, queued.BillFinished).ShouldBe(("pending", true));
+
+            using (var kept = await moderator.Browser.PostAsync(OrganisationRoutes.With(OrganisationRoutes.KeepStatement, waiting.Id), new ModerationRequest { Statement = "Seimas jau balsavo." }))
+            {
+                kept.StatusCode.ShouldBe(HttpStatusCode.NoContent, await kept.Content.ReadAsStringAsync());
+            }
+
+            (await moderator.Browser.GetJsonAsync<OrganisationModerationResponse>(OrganisationRoutes.ModerationQueue)).Statements.ShouldNotContain(s => s.Id == waiting.Id);
+            using var visitor = NewBrowser();
+            (await visitor.StatementsAsync(AppealSteps.ThirdBill)).Items.ShouldNotContain(i => i.OrganisationId == created.Id);
+            (await Database.ScalarAsync<string>("SELECT status FROM appeals.organisation_statement WHERE id = @id", ("id", waiting.Id))).ShouldBe("pending");
+            (await Database.OrganisationNoticesAsync(email)).ShouldContain("statement-kept");
+            (await Database.ScalarAsync<long>("SELECT count(*) FROM audit.event WHERE action = 'moderation.statement.keep' AND target = @t", ("t", "statement:" + waiting.Id))).ShouldBe(1);
+        }
+        finally
+        {
+            await Database.ExecuteAsync("DELETE FROM parliament.vote WHERE id = @id", ("id", finalVote));
+            await Database.FreeBillAsync(AppealSteps.ThirdBill);
+        }
+    }
 }

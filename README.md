@@ -97,7 +97,9 @@ The person then adds a passkey on the "Sveiki" page, signs in with it, and enter
 passkey becomes the staff passkey and any other passkey on the account is removed. Use `run --rm` so the container, and
 the console output it keeps, is removed afterwards. Later grants and resets go through `POST /api/v1/admin/roles` and
 `POST /api/v1/admin/accounts/reset`, which need a passkey confirmation from the last ten minutes
-(`POST /api/v1/me/passkey-confirmation`).
+(`POST /api/v1/me/passkey-confirmation`). Saving a runtime setting (`PUT /api/v1/admin/settings/{key}`) needs the same
+confirmation; the settings page asks for the staff passkey itself when the last one is older (design 6.9). An account
+with an activated staff role can be deleted only from a session signed in with its staff passkey.
 
 Stop with `docker compose -f deploy/compose.yaml down` (add `-v` to delete the database).
 
@@ -202,7 +204,12 @@ separate secret. Nothing secret is committed; `deploy/secrets/README.md` lists e
 | `OTEL_EXPORTER_OTLP_ENDPOINT` | Turns on the OpenTelemetry exporter (traces, metrics, logs); off when empty |
 
 Runtime settings that an administrator may change without a deploy (design 5.6) live in `config.setting`; every change
-is written to `audit.event`.
+is written to `audit.event`, and saving one needs a fresh staff passkey confirmation (design 6.9).
+
+The read-only database role `lt2_readonly` (for analysis) reads exactly the tables on `DatabaseRoles.ReadableTables` in
+`src/Lt2.Migrator/DatabaseRoles.cs` and nothing else; every other table is on `DatabaseRoles.WithheldTables`. Each run
+of the migrator brings an existing database to that state. A new table is invisible to the role until it is listed,
+and `tests/Lt2.ArchitectureTests/ReadonlyRoleTests.cs` fails until it is on one of the two lists (design 6.9).
 
 For a production-shaped run, override `deploy/.env`: `LT2_SITE_ADDRESS` (the domain), `LT2_TLS` (the ACME contact
 address), `LT2_HTTP_PORT=80`, `LT2_HTTPS_PORT=443`, `COMPOSE_PROFILES=` (no Mailpit), the `LT2_SMTP_*` values and

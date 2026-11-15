@@ -205,6 +205,35 @@ public sealed class StaffPasskeyTests(DatabaseFixture database) : ApiTest(databa
         (await AuditCountAsync(email, "passkey.added")).ShouldBe(1);
     }
 
+    /// <summary>Design 6.9: saving a setting asks for the passkey again; switching an invitation code does not.</summary>
+    [Fact]
+    public async Task Saving_a_setting_needs_a_fresh_passkey_confirmation_and_switching_a_code_does_not()
+    {
+        using var admin = await StaffMembers.ActiveAsync(Factory, Database, "administrator");
+        var request = new UpdateSettingRequest { Value = System.Text.Json.JsonSerializer.SerializeToElement(12) };
+
+        await AgeConfirmationAsync(admin.Email, minutes: 11);
+        using (var stale = await admin.Browser.SendAsync(HttpMethod.Put, ApiRoutes.Admin.SettingByKey("Feedback:KeepMonths"), request))
+        {
+            await stale.ShouldBeProblemAsync(HttpStatusCode.Forbidden, "passkey.confirmation-required");
+        }
+
+        (await Database.ScalarAsync<long>("SELECT count(*) FROM audit.event WHERE action = 'setting.changed' AND actor_user_id = @u", ("u", await Database.UserIdAsync(admin.Email))))
+            .ShouldBe(0, "nothing was saved");
+
+        // An invitation code is switched without a new confirmation.
+        var (member, _) = await Factory.MemberAsync();
+        using var _m = member;
+        var code = await member.GetJsonAsync<MyInvitationResponse>(ApiRoutes.Me.Invitation);
+        var invitationId = await Database.ScalarAsync<Guid>("SELECT id FROM identity.invitation WHERE code = @c", ("c", code.Code));
+        (await admin.Browser.PostAsync(ApiRoutes.Admin.SwitchInvitation(invitationId, on: false), new Lt2.Api.Contracts.Appeals.StatementRequest { Statement = "Bandymas." }))
+            .StatusCode.ShouldBe(HttpStatusCode.NoContent);
+
+        (await admin.Browser.ConfirmPasskeyAsync(admin.Authenticator)).StatusCode.ShouldBe(HttpStatusCode.NoContent);
+        using var saved = await admin.Browser.SendAsync(HttpMethod.Put, ApiRoutes.Admin.SettingByKey("Feedback:KeepMonths"), request);
+        saved.StatusCode.ShouldBe(HttpStatusCode.OK, await saved.Content.ReadAsStringAsync());
+    }
+
     [Fact]
     public async Task The_administrator_api_grants_a_role_with_a_code_shown_once_after_a_fresh_confirmation()
     {

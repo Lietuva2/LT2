@@ -176,4 +176,21 @@ public sealed class LandingPathTests
     [Fact]
     public void A_share_link_never_points_off_the_site() =>
         Should.Throw<ArgumentException>(() => LandingPath.ShareLink("/prisijungti?kodas=ABCD-EFGH", "https://piktas.example/"));
+    /// <summary>Design 6.9 (owner, 2026-11-15): a sign-in link on a bill's page brings the person back to the bill.</summary>
+    [Fact]
+    public void A_sign_in_link_on_a_bills_page_carries_the_page_after_the_hash_and_only_a_page_under_seimas()
+    {
+        LandingPath.SignInLink("/seimas/XVP-0412").ShouldBe("/prisijungti#tikslas=%2Fseimas%2FXVP-0412");
+        LandingPath.SignInLink("/administravimas").ShouldBe("/prisijungti");
+        LandingPath.SignInLink("https://piktas.example/seimas/XVP-0412").ShouldBe("/prisijungti");
+        LandingPath.SignInLink(null).ShouldBe("/prisijungti");
+        InvitationLink.FromFragment("https://lt2.test" + LandingPath.SignInLink("/seimas/XVP-0412"), LandingPath.Parameter).ShouldBe("/seimas/XVP-0412");
+    }
+
+    [Theory]
+    [InlineData("https://lt2.test/seimas/XVP-0412", "/seimas/XVP-0412")]
+    [InlineData("https://lt2.test/seimas/XVP-0412?x=1#argumentai", "/seimas/XVP-0412")]
+    [InlineData("https://lt2.test/", "/")]
+    public void The_page_path_is_read_from_the_address_without_query_or_fragment(string address, string path) =>
+        LandingPath.PathOf(address, "https://lt2.test/").ShouldBe(path);
 }

@@ -67,8 +67,9 @@ internal sealed class FeedbackHandlers(IdentityDb db, IOutbox outbox, IAuditLog 
             .ToList();
     }
 
-    public async Task<Result<Unit>> UpdateAsync(Guid id, string status, string? note, CancellationToken cancellationToken)
+    public async Task<Result<Unit>> UpdateAsync(Guid id, string status, string? note, StaffActor staff, CancellationToken cancellationToken)
     {
+        ArgumentNullException.ThrowIfNull(staff);
         if (!FeedbackRules.Statuses.Contains(status))
         {
             return Error.Validation("feedback.status", "status");
@@ -79,13 +80,38 @@ internal sealed class FeedbackHandlers(IdentityDb db, IOutbox outbox, IAuditLog 
             return Error.Validation("feedback.note", "note");
         }
 
-        var changed = await db.Feedback.Where(f => f.Id == id)
-            .ExecuteUpdateAsync(s => s.SetProperty(f => f.Status, status).SetProperty(f => f.Note, string.IsNullOrWhiteSpace(note) ? null : note.Trim()), cancellationToken);
-        return changed == 0 ? Error.NotFound("feedback.not-found") : Result.Ok();
+        await using var transaction = await db.Database.BeginTransactionAsync(cancellationToken);
+        var item = await db.Feedback.FirstOrDefaultAsync(f => f.Id == id, cancellationToken);
+        if (item is null)
+        {
+            return Error.NotFound("feedback.not-found");
+        }
+
+        var from = item.Status;
+        var newNote = string.IsNullOrWhiteSpace(note) ? null : note.Trim();
+        var noteChanged = !string.Equals(item.Note, newNote, StringComparison.Ordinal);
+        item.Status = status;
+        item.Note = newNote;
+        await db.SaveChangesAsync(cancellationToken);
+
+        // Design 6.9: who changed what, never the note's or the feedback's text.
+        await audit.WriteAsync(
+            new AuditEntry(
+                "feedback.updated",
+                staff.UserId,
+                staff.Role,
+                "feedback:" + id,
+                JsonSerializer.SerializeToElement(new { from, to = status, noteChanged }, JsonSerializerOptions.Web),
+                staff.IpHash),
+            transaction.GetDbTransaction(),
+            cancellationToken);
+        await transaction.CommitAsync(cancellationToken);
+        return Result.Ok();
     }
 
-    public async Task<Result<Unit>> ReplyAsync(Guid id, string text, Guid staffUserId, string role, string? ipHash, CancellationToken cancellationToken)
+    public async Task<Result<Unit>> ReplyAsync(Guid id, string text, StaffActor staff, CancellationToken cancellationToken)
     {
+        ArgumentNullException.ThrowIfNull(staff);
         if (FeedbackRules.CheckText(text) is not null)
         {
             return Error.Validation("feedback.reply", "text");
@@ -120,7 +146,7 @@ internal sealed class FeedbackHandlers(IdentityDb db, IOutbox outbox, IAuditLog 
             transaction.GetDbTransaction(),
             cancellationToken);
         await audit.WriteAsync(
-            new AuditEntry("feedback.replied", staffUserId, role, "feedback:" + id, null, ipHash),
+            new AuditEntry("feedback.replied", staff.UserId, staff.Role, "feedback:" + id, null, staff.IpHash),
             transaction.GetDbTransaction(),
             cancellationToken);
         await transaction.CommitAsync(cancellationToken);

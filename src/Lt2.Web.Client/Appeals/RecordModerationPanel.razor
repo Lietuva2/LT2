@@ -6,11 +6,12 @@
 @* "Moderavimas" on the bill's page (design 8.12.3), rendered only when the server found a moderator or an administrator
    in a staff-passkey session: the open reports about the description (8.13) and the actions on the bill, "Rašyti
    aprašymą" among them, on any active bill, with or without a record, and the bill's arguments that wait or are
-   flagged, with the queue's actions. The state comes from the moderators' own answer, asked for once while the server
+   flagged, with the queue's actions. On a closed record (after the final vote, design 6.9) only the actions the rules
+   leave there: hide or restore an argument, correct or remove the description, "Palikti". The state comes from the moderators' own answer, asked for once while the server
    prerenders the moderator's page (shared with the arguments' "Moderuoti" through MyBillState) and not again in the
    browser; for anyone else the server refuses it and nothing renders. After an action the page reloads, so it shows
    the result. *@
-@if (State is { Status: "open" } state)
+@if (State is { Status: "open" or "closed" } state)
 {
     <section class="sheet stack stack--tight" aria-labelledby="moderation-panel-title" id="moderation-panel">
         <h3 id="moderation-panel-title">@L["ModPanel.Title"]</h3>

@@ -116,6 +116,64 @@ public sealed class AccountDataTests(DatabaseFixture database) : ApiTest(databas
         }
     }
 
+    /// <summary>Design 6.9: a staff account is deleted only from a session signed in with its staff passkey.</summary>
+    [Fact]
+    public async Task A_staff_account_is_refused_deletion_from_a_code_session_and_deleted_from_its_staff_passkey_session()
+    {
+        using var moderator = await StaffMembers.ActiveAsync(Factory, Database, "moderator");
+        using var mailbox = NewBrowser();
+        using (var request = await mailbox.PostAsync(ApiRoutes.Auth.Code, new Lt2.Api.Contracts.Auth.RequestCodeRequest { Email = moderator.Email }))
+        {
+            request.StatusCode.ShouldBe(HttpStatusCode.Accepted);
+        }
+
+        await mailbox.SignInWithCodeAsync(moderator.Email);
+        var me = await mailbox.GetJsonAsync<MeResponse>(ApiRoutes.Me.Root);
+        (me.StaffAccount, me.ActiveStaffRoles.Count).ShouldBe((true, 0), "the account page knows to say what to do");
+        using (var refused = await mailbox.SendAsync(HttpMethod.Delete, ApiRoutes.Me.Root))
+        {
+            await refused.ShouldBeProblemAsync(HttpStatusCode.Forbidden, "account.staff-passkey-required");
+        }
+
+        (await mailbox.Client.GetAsync(ApiRoutes.Me.Export)).StatusCode.ShouldBe(HttpStatusCode.OK, "the export is unchanged");
+        (await Database.ScalarAsync<long>("SELECT count(*) FROM identity.\"user\" WHERE email = @e", ("e", moderator.Email))).ShouldBe(1);
+
+        (await moderator.Browser.SendAsync(HttpMethod.Delete, ApiRoutes.Me.Root)).StatusCode.ShouldBe(HttpStatusCode.NoContent);
+        (await Database.ScalarAsync<long>("SELECT count(*) FROM identity.\"user\" WHERE email = @e", ("e", moderator.Email))).ShouldBe(0);
+    }
+
+    /// <summary>Design 6.9: a moderator's actions outlive the account, with its id and without any name.</summary>
+    [Fact]
+    public async Task A_deleted_moderators_actions_keep_the_id_and_show_no_name()
+    {
+        using var moderator = await StaffMembers.ActiveAsync(Factory, Database, "moderator");
+        using var other = await StaffMembers.ActiveAsync(Factory, Database, "moderator");
+        var (author, _) = await Factory.MemberAsync();
+        using var _a = author;
+        await Database.PrepareBillAsync(author, moderator.Browser, AppealSteps.ThirdBill, "against");
+        var reasonId = (await author.RecordAsync(AppealSteps.ThirdBill)).Reasons.Single().Id;
+        (await moderator.Browser.PostAsync(AppealRoutes.With(AppealRoutes.HideReason, reasonId), new StatementRequest { Statement = "Pažeidžia taisykles." }))
+            .StatusCode.ShouldBe(HttpStatusCode.NoContent);
+        var moderatorId = await Database.UserIdAsync(moderator.Email);
+        var name = await Database.ScalarAsync<string>("SELECT display_name FROM identity.profile WHERE user_id = @u", ("u", moderatorId));
+        const string ActionsSql = "SELECT count(*) FROM appeals.moderation_action WHERE moderator_user_id = @u AND target_id = @r";
+        var actions = await Database.ScalarAsync<long>(ActionsSql, ("u", moderatorId), ("r", reasonId));
+        actions.ShouldBeGreaterThan(0);
+
+        (await moderator.Browser.SendAsync(HttpMethod.Delete, ApiRoutes.Me.Root)).StatusCode.ShouldBe(HttpStatusCode.NoContent);
+
+        (await Database.ScalarAsync<long>(ActionsSql, ("u", moderatorId), ("r", reasonId))).ShouldBe(actions, "the actions keep the account's id");
+        (await Database.ScalarAsync<long>("SELECT count(*) FROM audit.event WHERE actor_user_id = @u", ("u", moderatorId))).ShouldBeGreaterThan(0);
+        (await Database.ScalarAsync<long>("SELECT count(*) FROM identity.profile WHERE user_id = @u", ("u", moderatorId))).ShouldBe(0, "the id leads to no person");
+        var listed = (await other.Browser.GetJsonAsync<HiddenItemsResponse>(AppealRoutes.Hidden)).Reasons.Single(r => r.Id == reasonId);
+        listed.HiddenBy.ShouldBeNull("no name: the screen says only that a moderator hid it");
+        listed.Statement.ShouldBe("Pažeidžia taisykles.");
+        if (name is not null)
+        {
+            (await other.Browser.Client.GetStringAsync(AppealRoutes.Hidden)).ShouldNotContain(name);
+        }
+    }
+
     /// <summary>Design 6.8: the outbox forgets a deleted account: nothing addressed to it waits or stays failed.</summary>
     [Fact]
     public async Task Deleting_the_account_leaves_no_email_to_its_address_in_the_outbox()

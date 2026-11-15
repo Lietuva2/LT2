@@ -65,6 +65,9 @@ internal sealed class ServerMeApi(IIdentityModule identity, IMpDirectory mps, IH
     public async Task<ApiResult> ActivateRoleAsync(RoleActivationRequest request, CancellationToken cancellationToken = default) =>
         errors.ToApiResult(await identity.ActivateRoleAsync(User, request.Code, IpHash, cancellationToken));
 
+    public async Task<ApiResult> ConfirmPasskeyAsync(PasskeyCredentialRequest request, CancellationToken cancellationToken = default) =>
+        errors.ToApiResult(await identity.ConfirmPasskeyAsync(User, request.Credential, cancellationToken));
+
     public async Task<ApiResult> GivePositionConsentAsync(PositionConsentRequest request, CancellationToken cancellationToken = default) =>
         errors.ToApiResult(await identity.GivePositionConsentAsync(User, request.TextVersion, cancellationToken));
 
@@ -127,6 +130,7 @@ internal static class Mapping
         ActiveStaffRoles = account.ActiveStaffRoles,
         AwaitingActivation = account.AwaitingActivation,
         HasPositionConsent = account.HasPositionConsent,
+        StaffAccount = account.StaffAccount,
     };
 
     public static SessionResponse ToResponse(SessionSummary session) => new()

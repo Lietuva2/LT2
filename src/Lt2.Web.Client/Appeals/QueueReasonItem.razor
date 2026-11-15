@@ -23,7 +23,7 @@
         <div class="said__by"><b>@(Reason.AuthorName ?? L["Reasons.Anonymous"])</b></div>
     </div>
     <Reports Items="Reason.Reports" />
-    <ModerationActions Id="Reason.Id" Kind="reason" Status="@Reason.Status" MergeCandidates="Reason.MergeCandidates" IdPrefix="@(Panel ? "panel-" : "")"
+    <ModerationActions Id="Reason.Id" Kind="reason" Status="@Reason.Status" RecordStatus="@Reason.RecordStatus" MergeCandidates="Reason.MergeCandidates" IdPrefix="@(Panel ? "panel-" : "")"
                        OnDone="OnDone" OnRestricted="OnRestricted" />
 </article>
 

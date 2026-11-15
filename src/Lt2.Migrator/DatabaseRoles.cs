@@ -8,7 +8,7 @@ namespace Lt2.Migrator;
 /// <item><c>lt2_migrator</c> owns the schemas and runs migrations;</item>
 /// <item><c>lt2_app</c> has data access only, and may only insert into <c>audit.event</c>;</item>
 /// <item><c>lt2_worker</c> the same, plus its own <c>hangfire</c> schema;</item>
-/// <item><c>lt2_readonly</c> reads for analysis, with no access to <c>identity</c>, <c>notify</c>, <c>appeals.position</c> or <c>appeals.endorsement</c>.</item>
+/// <item><c>lt2_readonly</c> reads for analysis exactly the tables on <see cref="ReadableTables"/> (design 6.9), nothing else.</item>
 /// </list>
 /// </summary>
 public static class DatabaseRoles
@@ -22,27 +22,55 @@ public static class DatabaseRoles
     /// <summary>Schemas where the application and worker read and write.</summary>
     public static readonly string[] DataSchemas = ["identity", "notify", "config", "parliament", "appeals"];
 
-    /// <summary>Schemas the read-only role may see.</summary>
-    public static readonly string[] ReadableSchemas = ["parliament", "appeals", "config"];
+    /// <summary>
+    /// Every schema the application's databases hold. Each of their tables is on <see cref="ReadableTables"/> or
+    /// <see cref="WithheldTables"/>; <see cref="HangfireSchema"/> is the worker's and withheld as a whole.
+    /// </summary>
+    public static readonly string[] AllSchemas = ["identity", "notify", "audit", "config", "parliament", "appeals"];
 
     /// <summary>
-    /// Tables in readable schemas that stay hidden from the read-only role: positions (design 5.5), and the "Man svarbu"
-    /// marks, which are allowed only on one's own side and so tell the side as well; and moderators' writing
-    /// restrictions on accounts (design 8.3), which are never shown to anyone but the person and staff.
-    /// <para>
-    /// Organisations (design 8.14.14): who represents one is told to nobody but its other representatives, so the tables
-    /// that hold an account beside an organisation stay hidden too: representatives, one-time links, confirmation codes,
-    /// and the organisation and statement rows (who registered it, who wrote a statement). Their public content is in the
-    /// public API.
-    /// </para>
+    /// What <c>lt2_readonly</c> may read (design 5.5, 6.9: "only what is listed"): the public parliament data, the bills'
+    /// records with their arguments, reports, flags, moderation actions and history, the daily counts, and the settings.
+    /// A table that is not here is invisible to it, also after a migration adds one: a test fails until the new table is put
+    /// on this list or on <see cref="WithheldTables"/>.
     /// </summary>
-    public static readonly string[] HiddenTables =
+    public static readonly string[] ReadableTables =
     [
-        "appeals.position", "appeals.endorsement", "appeals.writing_restriction",
-        "appeals.organisation", "appeals.organisation_representative", "appeals.organisation_invite", "appeals.organisation_code",
-        "appeals.organisation_statement",
+        "appeals.ai_draft_request", "appeals.bill_record", "appeals.daily_stat", "appeals.flag", "appeals.moderation_action",
+        "appeals.reason", "appeals.report", "appeals.revision", "appeals.summary_attempt",
+        "config.setting",
+        "parliament.agenda_item", "parliament.agenda_snapshot", "parliament.ballot", "parliament.bill", "parliament.body",
+        "parliament.contact", "parliament.faction_position", "parliament.fetch_state", "parliament.import_run", "parliament.mandate",
+        "parliament.membership", "parliament.mp_stat", "parliament.person", "parliament.planned_item", "parliament.raw_document",
+        "parliament.session", "parliament.sitting", "parliament.term", "parliament.vote",
     ];
 
+    /// <summary>
+    /// What <c>lt2_readonly</c> never reads, each for a reason:
+    /// <list type="bullet">
+    /// <item>positions (design 5.5), and the "Man svarbu" marks, which tell the side too;</item>
+    /// <item>moderators' writing restrictions on accounts (design 8.3), shown to nobody but the person and staff;</item>
+    /// <item>organisations' tables, which hold an account beside an organisation (who represents, registered, wrote,
+    /// was invited, asked for a code; design 8.14.14); their public content is in the public API;</item>
+    /// <item>every account table (<c>identity</c>), the outbox, follows and their emails (<c>notify</c>), the audit log;</item>
+    /// <item>the migrations' history, the migrator's business only.</item>
+    /// </list>
+    /// </summary>
+    public static readonly string[] WithheldTables =
+    [
+        "appeals.endorsement", "appeals.position", "appeals.writing_restriction",
+        "appeals.organisation", "appeals.organisation_code", "appeals.organisation_invite", "appeals.organisation_representative",
+        "appeals.organisation_statement",
+        "audit.event",
+        "identity.consent", "identity.data_protection_key", "identity.feedback", "identity.invitation", "identity.invitation_daily",
+        "identity.party_support", "identity.profile", "identity.role", "identity.role_activation", "identity.role_claim",
+        "identity.session", "identity.sign_in_code", "identity.user", "identity.user_claim", "identity.user_login",
+        "identity.user_passkey", "identity.user_role", "identity.user_token",
+        "notify.bill_event", "notify.digest_delivery", "notify.digest_item", "notify.digest_run", "notify.follow",
+        "notify.notice_setting", "notify.outbox",
+        "appeals.__ef_migrations_history", "audit.__ef_migrations_history", "identity.__ef_migrations_history",
+        "notify.__ef_migrations_history", "parliament.__ef_migrations_history",
+    ];
     /// <summary>
     /// Run with a superuser (or a role with CREATEROLE) once per deploy: creates the login roles, sets their passwords
     /// and hands the database to <c>lt2_migrator</c>. Idempotent.
@@ -138,33 +166,7 @@ public static class DatabaseRoles
             """,
             cancellationToken);
 
-        foreach (var schema in ReadableSchemas)
-        {
-            var s = Identifier(schema);
-            await ExecuteAsync(
-                migrator,
-                $"""
-                GRANT USAGE ON SCHEMA {s} TO {Readonly};
-                GRANT SELECT ON ALL TABLES IN SCHEMA {s} TO {Readonly};
-                """,
-                cancellationToken);
-        }
-
-        foreach (var table in HiddenTables)
-        {
-            await ExecuteAsync(
-                migrator,
-                $"""
-                DO $$
-                BEGIN
-                    IF to_regclass('{table}') IS NOT NULL THEN
-                        REVOKE ALL ON TABLE {table} FROM {Readonly};
-                    END IF;
-                END $$;
-                """,
-                cancellationToken);
-        }
-
+        await GrantReadOnlyAsync(migrator, cancellationToken);
         // Migration history is the migrator's business only. A module's history table lives in its first schema
         // (audit's covers config too), so revoke wherever such a table actually exists rather than per data schema.
         await ExecuteAsync(
@@ -184,6 +186,54 @@ public static class DatabaseRoles
     }
 
     private const string HistoryTable = "__ef_migrations_history";
+
+    /// <summary>
+    /// <c>lt2_readonly</c> ends up with SELECT on exactly the existing tables of <see cref="ReadableTables"/>, USAGE on their
+    /// schemas only, and nothing else: whatever earlier grants left ("every table but") is revoked, so an existing database
+    /// reaches the same state as a new one. No default privileges, so a new table stays invisible until it is listed.
+    /// </summary>
+    private static async Task GrantReadOnlyAsync(NpgsqlConnection migrator, CancellationToken cancellationToken)
+    {
+        var readableSchemas = ReadableSchemas().ToHashSet(StringComparer.Ordinal);
+        var existing = new List<string>();
+        await using (var tables = new NpgsqlCommand("SELECT schemaname || '.' || tablename FROM pg_tables WHERE schemaname = ANY(@schemas)", migrator))
+        {
+            tables.Parameters.AddWithValue("schemas", AllSchemas);
+            await using var reader = await tables.ExecuteReaderAsync(cancellationToken);
+            while (await reader.ReadAsync(cancellationToken))
+            {
+                existing.Add(reader.GetString(0));
+            }
+        }
+
+        foreach (var table in existing)
+        {
+            var (schema, name) = (table[..table.IndexOf('.', StringComparison.Ordinal)], table[(table.IndexOf('.', StringComparison.Ordinal) + 1)..]);
+            var target = $"{Identifier(schema)}.{Identifier(name)}";
+            await ExecuteAsync(
+                migrator,
+                ReadableTables.Contains(table, StringComparer.Ordinal) ? $"GRANT SELECT ON TABLE {target} TO {Readonly};" : $"REVOKE ALL ON TABLE {target} FROM {Readonly};",
+                cancellationToken);
+        }
+
+        foreach (var schema in AllSchemas.Append(HangfireSchema))
+        {
+            await ExecuteAsync(
+                migrator,
+                $"""
+                DO $$
+                BEGIN
+                    IF EXISTS (SELECT FROM pg_namespace WHERE nspname = '{schema}') THEN
+                        {(readableSchemas.Contains(schema) ? $"GRANT USAGE ON SCHEMA {Identifier(schema)} TO {Readonly};" : $"REVOKE ALL ON SCHEMA {Identifier(schema)} FROM {Readonly};")}
+                    END IF;
+                END $$;
+                """,
+                cancellationToken);
+        }
+    }
+
+    /// <summary>The schemas of <see cref="ReadableTables"/>.</summary>
+    private static IEnumerable<string> ReadableSchemas() => ReadableTables.Select(t => t[..t.IndexOf('.', StringComparison.Ordinal)]).Distinct(StringComparer.Ordinal);
 
     private static async Task ExecuteAsync(NpgsqlConnection connection, string sql, CancellationToken cancellationToken)
     {

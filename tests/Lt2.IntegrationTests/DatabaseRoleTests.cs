@@ -92,6 +92,47 @@ public sealed class DatabaseRoleTests(DatabaseFixture database)
         await ShouldBeRefusedAsync(readonlyConnection, "SELECT count(*) FROM appeals.position", "appeals.position after a second deploy");
     }
 
+    [Fact]
+    public async Task The_read_only_role_reads_exactly_the_granted_tables_on_a_new_database()
+    {
+        await ReadsExactlyTheGrantedTablesAsync();
+    }
+
+    [Fact]
+    public async Task A_database_with_the_old_every_table_but_grants_ends_in_the_same_state_and_a_new_table_stays_invisible()
+    {
+        await using var migrator = new NpgsqlConnection(database.MigratorConnectionString);
+        await migrator.OpenAsync();
+        try
+        {
+            // The grants before 2026-11-15 (design 6.9 replaced them): every table of three schemas, then a hand-kept list
+            // revoked. A table added later (here appeals.extra_test) was readable by the next deploy's grants.
+            await ExecuteAsync(migrator, "CREATE TABLE appeals.extra_test (id int)");
+            foreach (var schema in new[] { "parliament", "appeals", "config" })
+            {
+                await ExecuteAsync(migrator, $"GRANT USAGE ON SCHEMA {schema} TO {DatabaseRoles.Readonly}; GRANT SELECT ON ALL TABLES IN SCHEMA {schema} TO {DatabaseRoles.Readonly};");
+            }
+
+            foreach (var hidden in new[] { "appeals.position", "appeals.endorsement", "appeals.writing_restriction", "appeals.organisation", "appeals.organisation_representative", "appeals.organisation_invite", "appeals.organisation_code", "appeals.organisation_statement" })
+            {
+                await ExecuteAsync(migrator, $"REVOKE ALL ON TABLE {hidden} FROM {DatabaseRoles.Readonly}");
+            }
+
+            (await database.ScalarAsync<bool>("SELECT has_table_privilege(@r, 'appeals.extra_test', 'SELECT')", ("r", DatabaseRoles.Readonly))).ShouldBeTrue("the old grants");
+
+            // The migrator runs again with the lists.
+            await DatabaseRoles.GrantAsync(migrator, CancellationToken.None);
+
+            await using var readonlyConnection = await OpenAsync(DatabaseRoles.Readonly);
+            await ShouldBeRefusedAsync(readonlyConnection, "SELECT count(*) FROM appeals.extra_test", "a table on neither list");
+            await ReadsExactlyTheGrantedTablesAsync("appeals.extra_test");
+        }
+        finally
+        {
+            await ExecuteAsync(migrator, "DROP TABLE IF EXISTS appeals.extra_test");
+        }
+    }
+
     [Theory]
     [MemberData(nameof(RunningRoles))]
     public async Task Only_the_migrator_can_create_tables(string role)
@@ -115,6 +156,52 @@ public sealed class DatabaseRoleTests(DatabaseFixture database)
         }
 
         await ShouldBeRefusedAsync(connection, "CREATE SCHEMA extra", $"{role} creating a schema");
+    }
+
+    /// <summary>
+    /// Every table of every module schema: readable by <c>lt2_readonly</c> exactly when it is on the granted list (tried as
+    /// that role, and by the catalogue), and no USAGE on a schema without a granted table.
+    /// </summary>
+    private async Task ReadsExactlyTheGrantedTablesAsync(params string[] unlisted)
+    {
+        await using var readonlyConnection = await OpenAsync(DatabaseRoles.Readonly);
+        var tables = new List<string>();
+        foreach (var schema in DatabaseRoles.AllSchemas)
+        {
+            tables.AddRange(await TablesInAsync(schema));
+        }
+
+        foreach (var quoted in tables)
+        {
+            var table = quoted.Replace("\"", "", StringComparison.Ordinal);
+            var granted = DatabaseRoles.ReadableTables.Contains(table);
+            (granted || DatabaseRoles.WithheldTables.Contains(table) || unlisted.Contains(table)).ShouldBeTrue($"{table} is on neither list");
+            (await database.ScalarAsync<bool>("SELECT has_table_privilege(@r, @t, 'SELECT')", ("r", DatabaseRoles.Readonly), ("t", quoted))).ShouldBe(granted, table);
+            if (granted)
+            {
+#pragma warning disable CA2100 // Test statements built from catalogue names.
+                await using var command = new NpgsqlCommand($"SELECT count(*) FROM {quoted}", readonlyConnection);
+#pragma warning restore CA2100
+                await command.ExecuteScalarAsync();
+            }
+            else
+            {
+                await ShouldBeRefusedAsync(readonlyConnection, $"SELECT count(*) FROM {quoted}", table);
+            }
+        }
+
+        foreach (var schema in new[] { "identity", "notify", "audit", DatabaseRoles.HangfireSchema })
+        {
+            (await database.ScalarAsync<bool>("SELECT has_schema_privilege(@r, @s, 'USAGE')", ("r", DatabaseRoles.Readonly), ("s", schema))).ShouldBeFalse(schema);
+        }
+    }
+
+    private static async Task ExecuteAsync(NpgsqlConnection connection, string sql)
+    {
+#pragma warning disable CA2100 // Test statements built from constants.
+        await using var command = new NpgsqlCommand(sql, connection);
+#pragma warning restore CA2100
+        await command.ExecuteNonQueryAsync();
     }
 
     private async Task<NpgsqlConnection> OpenAsync(string role)

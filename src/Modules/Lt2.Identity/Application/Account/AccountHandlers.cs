@@ -23,7 +23,8 @@ internal sealed class AccountHandlers(IdentityDb db, UserManager<User> users, St
         var profile = await db.Profiles.AsNoTracking().FirstAsync(p => p.UserId == user.Id, cancellationToken);
         var roles = await users.GetRolesAsync(user);
         var passkeys = await users.GetPasskeysAsync(user);
-        var session = (await staff.ForAsync(principal, cancellationToken))?.ToSession() ?? StaffSession.None;
+        var state = await staff.ForAsync(principal, cancellationToken);
+        var session = state?.ToSession() ?? StaffSession.None;
         var now = clock.GetUtcNow();
         var awaitingActivation = await db.RoleActivations.AnyAsync(
             a => a.UserId == user.Id && a.UsedAt == null && a.ExpiresAt > now,
@@ -39,7 +40,8 @@ internal sealed class AccountHandlers(IdentityDb db, UserManager<User> users, St
             !profile.IsPending,
             session.ActiveRoles,
             awaitingActivation,
-            await CurrentPositionConsent.Of(db.Consents, user.Id).AnyAsync(cancellationToken));
+            await CurrentPositionConsent.Of(db.Consents, user.Id).AnyAsync(cancellationToken),
+            state?.AccountHasActiveStaffRole == true);
     }
 
     public async Task<IReadOnlyList<SessionSummary>> SessionsAsync(ClaimsPrincipal principal, CancellationToken cancellationToken)

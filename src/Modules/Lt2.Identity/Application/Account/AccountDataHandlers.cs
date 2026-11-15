@@ -1,5 +1,6 @@
 using System.Security.Claims;
 using System.Text.Json;
+using Lt2.Identity.Application.Staff;
 using Lt2.Identity.Domain;
 using Lt2.Identity.Infrastructure;
 using Lt2.SharedKernel;
@@ -17,8 +18,10 @@ namespace Lt2.Identity.Application.Account;
 /// Counts fall; frozen summary snapshots keep their totals. Nothing is logged or audited with the address.
 /// </summary>
 internal sealed class AccountDataHandlers(
-    IdentityDb db, IEnumerable<IAccountData> modules, UserManager<User> users, SignInManager<User> signIn, IOutbox outbox, TimeProvider clock)
+    IdentityDb db, IEnumerable<IAccountData> modules, UserManager<User> users, SignInManager<User> signIn, IOutbox outbox, StaffAccess staff, TimeProvider clock)
 {
+    internal static readonly Error StaffPasskeyRequired = Error.Forbidden("account.staff-passkey-required");
+
     public async Task<Result<object>> ExportAsync(ClaimsPrincipal principal, CancellationToken cancellationToken)
     {
         if (principal.UserId() is not { } userId)
@@ -93,6 +96,13 @@ internal sealed class AccountDataHandlers(
         if (principal.UserId() is not { } userId)
         {
             return Error.Unauthorized("auth.required");
+        }
+
+        // Design 6.9: an account with an active staff role is deleted only from a session signed in with its staff passkey,
+        // so getting into the mailbox is not enough to remove a staff member.
+        if (await staff.ForAsync(principal, cancellationToken) is { AccountHasActiveStaffRole: true, StaffPasskeySession: false })
+        {
+            return StaffPasskeyRequired;
         }
 
         var address = await db.Users.AsNoTracking().Where(u => u.Id == userId).Select(u => u.Email).FirstOrDefaultAsync(cancellationToken);

@@ -310,4 +310,76 @@ public sealed class DigestTests(DatabaseFixture database) : ApiTest(database)
             await Database.ExecuteAsync("DELETE FROM parliament.planned_item WHERE bill_number IN ('XVP-0618', 'XVP-0533')");
         }
     }
+
+    /// <summary>
+    /// Design 6.9 (owner, 2026-11-15): hiding an argument on a closed record changes neither the frozen counts nor a summary
+    /// already made that holds it.
+    /// </summary>
+    [Fact]
+    public async Task Hiding_an_argument_after_the_final_vote_changes_neither_the_frozen_counts_nor_a_summary_already_made()
+    {
+        const long finalVote = 99199619;
+        var (moderator, admin) = ((await ModeratorAsync()).Browser, (await AdministratorAsync()).Browser);
+        await admin.SetSettingAsync("Digest:ThresholdMinimum", 1);
+        var monday = ReasonsToComeSteps.MondayInWeeks(18);
+        try
+        {
+            var (initiator, _) = await Factory.MemberAsync();
+            using var _i = initiator;
+            await Database.PrepareBillAsync(initiator, moderator, AppealSteps.ThirdBill, "against", threshold: 2);
+            var reasonId = (await initiator.RecordAsync(AppealSteps.ThirdBill)).Reasons.Single().Id;
+            var (member, _) = await Factory.MemberAsync();
+            using var _m = member;
+            (await member.TakeSideAsync(AppealSteps.ThirdBill, "against")).StatusCode.ShouldBe(HttpStatusCode.NoContent);
+            (await member.SendAsync(HttpMethod.Put, AppealRoutes.EndorsementOf(reasonId))).StatusCode.ShouldBe(HttpStatusCode.NoContent);
+            await PlanAsync("XVP-0618", monday.AddDays(3));
+            var weekly = (await RunDueAsync(At(monday, 7, 15))).Single();
+            weekly.Items.Single(i => i.BillNumber == "XVP-0618").Reasons.Select(r => r.Text).ShouldBe([AppealSteps.AgainstReason]);
+
+            await Database.ExecuteAsync(
+                """
+                INSERT INTO parliament.vote (id, agenda_item_id, bill_id, held_at, wording, type, kind, stage, is_consensus, has_result, "for", against, abstain, voted, seats)
+                SELECT @id, agenda_item_id, bill_id, held_at + interval '7 days', 'Priėmimas', type, 'StageResult', 'Adoption', false, true, "for", against, abstain, voted, seats
+                FROM parliament.vote WHERE id = 99100102
+                """,
+                ("id", finalVote));
+            try
+            {
+                await using (var scope = Factory.Services.CreateAsyncScope())
+                {
+                    (await scope.ServiceProvider.GetRequiredService<Lt2.Appeals.IAppealsMaintenance>().CloseFinishedAsync(CancellationToken.None)).ShouldBe(1);
+                }
+
+                using var stranger = NewBrowser();
+                var closed = await stranger.RecordAsync(AppealSteps.ThirdBill);
+                closed.Status.ShouldBe("closed");
+                var summary = await stranger.GetJsonAsync<List<DigestRunResponse>>(DigestRoutes.DigestOn(monday));
+                var held = await stranger.GetJsonAsync<List<RecordDigestResponse>>(DigestRoutes.OfRecordOn(AppealSteps.ThirdBill));
+                var items = await Database.ScalarAsync<string>("SELECT string_agg(reasons::text || ':' || for_count || '/' || against_count, '|' ORDER BY id) FROM notify.digest_item WHERE bill_number = 'XVP-0618'");
+
+                (await moderator.PostAsync(AppealRoutes.With(AppealRoutes.HideReason, reasonId), new StatementRequest { Statement = "Pažeidžia taisykles." }))
+                    .StatusCode.ShouldBe(HttpStatusCode.NoContent);
+
+                var after = await stranger.RecordAsync(AppealSteps.ThirdBill);
+                after.Reasons.ShouldBeEmpty("the argument is hidden");
+                after.Counts.ShouldBe(closed.Counts, "the counts were frozen at the final vote");
+                JsonSerializer.Serialize(await stranger.GetJsonAsync<List<DigestRunResponse>>(DigestRoutes.DigestOn(monday)))
+                    .ShouldBe(JsonSerializer.Serialize(summary), "the summary already made keeps its frozen text");
+                JsonSerializer.Serialize(await stranger.GetJsonAsync<List<RecordDigestResponse>>(DigestRoutes.OfRecordOn(AppealSteps.ThirdBill)))
+                    .ShouldBe(JsonSerializer.Serialize(held));
+                (await Database.ScalarAsync<string>("SELECT string_agg(reasons::text || ':' || for_count || '/' || against_count, '|' ORDER BY id) FROM notify.digest_item WHERE bill_number = 'XVP-0618'"))
+                    .ShouldBe(items);
+            }
+            finally
+            {
+                await Database.ExecuteAsync("DELETE FROM parliament.vote WHERE id = @id", ("id", finalVote));
+                await Database.FreeBillAsync(AppealSteps.ThirdBill);
+            }
+        }
+        finally
+        {
+            await admin.ResetSettingAsync("Digest:ThresholdMinimum");
+            await Database.ExecuteAsync("DELETE FROM parliament.planned_item WHERE bill_number IN ('XVP-0618', 'XVP-0533')");
+        }
+    }
 }

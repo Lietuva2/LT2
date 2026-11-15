@@ -583,6 +583,7 @@ changes what a person can do on the site; the questions that do are in section 1
   remove the description, and answer the report with "Palikti", each with a statement, audited, the author told, as
   on an open one. The frozen counts and the summaries already made do not change. Everything else on a closed record
   stays refused.
+  [as built] Hiding the whole record of a closed bill was possible before this decision and stays possible.
 - **Party numbers (8.2).** They stay as built: each party's number is shown when that party has at least 20 people.
   That a smaller group can sometimes be worked out by subtraction is accepted.
 - **A statement still waiting when the bill closes (8.14.14).** It can no longer be published: it was not public when
@@ -591,12 +592,17 @@ changes what a person can do on the site; the questions that do are in section 1
   the records of what they did as staff (moderation actions, statements, restrictions, confirmations) keep the
   account's id, for accountability; the id then leads to no person, name or address. The page that says what is
   stored and what is deleted says so.
+  [as built] The code already kept these ids; the methodology page and a staff account's delete confirmation now say
+  so. Where a screen names who hid something, a deleted account reads "paslėpė moderatorius". A moderator's AI draft
+  requests (a rate-limit table, each also audited) still go with the account (8.11.4).
 - **The read-only database role sees only what is listed (5.5).** `lt2_readonly` is granted the tables on a list,
   never "every table but". A new table is invisible to it until someone adds it, and a test fails when a table is on
   neither the granted list nor the withheld list, so each new table gets a decision.
 - **Deleting a staff account needs the staff passkey (6.2).** An account that holds a staff role can be deleted only
   from a session signed in with its staff passkey; a session from an email code is told so. Ordinary accounts and the
   data export are unchanged.
+  [as built] "Holds a staff role" means a role that was activated: a role granted but never activated, or an account
+  an administrator has reset, has no staff passkey to sign in with and is deleted like an ordinary account.
 - **Changing a setting asks for the passkey again (6.2).** Saving a runtime setting needs the same fresh passkey
   confirmation as changing roles. Switching an invitation code off or on does not.
 - **Feedback handling is audited (8.10).** A change of a feedback item's status or note leaves an audit entry with
@@ -979,6 +985,54 @@ for accounts older than 30 days, the bar, the threshold, and the most endorsed r
 svarbu" count, without its author), each card linking to the bill's page; then links to all bills and to the summaries,
 and the "not a representative poll" notice. It uses only the public answers behind `/projektai` and the bill pages.
 
+**The front page, reworked [decided by the owner on 2026-11-15: led by the agenda, not by summary-style cards; variant
+"A" chosen from three mockups, with the member's panel of variant "C"; the layout above is replaced when this is
+built].** The page is the agenda with what a person can do about it. The chosen mockup is kept under `design/ui/`.
+
+- **A visitor** sees, in this order: the logo, "Lietuva 2.0" and one line of lead text; the trial note with two links,
+  to register with an invitation code and to sign in (no sign-in form on the page: the form stays on `/prisijungti`);
+  "Kaip tai veikia", four numbered steps (the Seimas plans; you say what you ask; you explain why; MPs learn of it,
+  with the note that in the trial nothing is sent), and one paragraph on following and on what stays private, linking
+  to "Kas matoma viešai, o kas ne" on the methodology page; then the agenda. This introduction is the one place where
+  the short-texts rule of 8.15 does not apply: a new person must learn what the site is.
+- **The agenda** ("Artimiausiu metu Seime", with a link to the whole agenda and the line on where it comes from and
+  when it was last read) is a timeline: one block per sitting day, "Planuojama" with the date and the weekday, at
+  most eight coming items in all as today, then "Balsuota" for the votes of the last seven days. Each coming bill
+  shows its number, stage and title; both sides with the counts for accounts older than 30 days, the bar and the
+  threshold, or "Dar niekas nenurodė, ko prašo"; the organisations that have a public statement on it, as names with
+  their stance, each linking to its profile; and one action, "Nurodyti, ko prašote", leading to the bill's page. A
+  voted bill shows the result and "Kaip balsavo Seimo nariai", leading to the vote's page. An item that is not in the
+  open data yet shows what the agenda says and a link to the source, as today. The notes that explain the brackets
+  and that this is not a representative poll sit directly under the timeline.
+- **Organisations** have one plain block below the agenda: what they are, that their statements are shown apart and
+  not counted, and links to the list and to registration. In the timeline they are ordered as on the bill's page (for,
+  against, remarks; within each, in the order published), never by size, and never counted.
+- **A signed-in member** sees no introduction: "Sveiki sugrįžę" with links to "Kaip tai veikia" and the account; then
+  "Jūsų projektai", a panel of the bills they follow or took a side on that are on the agenda or were voted on in
+  the last week, each with its planned date, their own side or "Dar nenurodėte, ko prašote", the last vote's result,
+  and the share link when they have taken a side; then the same timeline, where their bills carry "Sekate" and their
+  own side, and the action on a bill where they took a side reads "Argumentai ir pozicijos". The trial note about
+  summaries stays at the foot.
+- **Privacy.** The page the server renders is the same public page for everyone. Everything that is the member's own
+  (the panel, the marks in the rows) is filled in the browser from the member's own answers and is never rendered on
+  the server or cached. Nothing shows who took which side or who follows what.
+- **Data.** The agenda's public answer gains, for each bill, the organisations with a public statement on it (address,
+  name, label, stance), so the page still needs one public answer. The member's own side for the bills shown comes in
+  one request, not one per bill. No new rule about what is stored or shown.
+- **Cached [decided by the owner on 2026-11-15].** The public answer the page is built from (the agenda with its
+  counts and organisations) is the same for everyone, so the server keeps it in memory for 60 seconds and builds the
+  page from that: the most visited page costs the database one read a minute, not one per visitor. The numbers on
+  the front page can therefore be up to a minute behind the bill's own page, which stays live. Nothing of a member's
+  own is in that answer or in the cache. The HTML itself is still answered `no-store`, because a page with an island
+  carries a per-visitor antiforgery token (6.8); letting a proxy or a CDN cache visitors' pages needs that token moved
+  out of the page first and is left for when a CDN goes in front of the site (9.1, section 12).
+- **Gone from the page:** the sign-in form, the six cards "Aktyviausi projektai" with their arguments (the list at
+  `/projektai` is sorted by activity and shows the same bills), and the three introductory paragraphs.
+
+**Done when:** a visitor sees the introduction and the agenda and no form; a member sees their own bills first and no
+introduction; with JavaScript off the public page is complete and nothing of a member's own is in it; the page's HTML
+is identical for two different signed-in members; an agenda with no participants and no organisations still reads
+well; no sideways scroll at 390 px; the first screen at 1280 px shows the agenda's heading.
 ### 8.8 API
 
 Since 8.12 the answers about a bill are keyed by its number and return the empty open state (no record id, zero counts)
@@ -2059,6 +2113,8 @@ paragraph inline, put the rest under a link or on the methodology page. The rule
   change; its new Lithuanian texts are drafts until a native speaker has read them.
 - **New screens follow the rule.** A text added later that explains instead of labels goes behind a link or to the
   methodology page from the start.
+- **One exception [decided by the owner on 2026-11-15]:** the front page's introduction for a visitor (8.7). A new
+  person has to learn what the site is, so it may be as long as that takes, in short headed steps, not a wall of text.
 
 **Done when:** the organisation registration form shows one sentence before its first field and the rest behind "Kaip
 tai veikia"; every row of the annex is applied or listed as not applied with the reason; no screen lost a text from

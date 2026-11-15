@@ -462,7 +462,8 @@ public sealed class AppealFlowTests(AppealFlowTests.ModeratorFixture moderator) 
         await Assertions.Expect(page.GetByText("Didžiausias pajamas gaunantys dabar moka mažesnį efektyvųjį tarifą nei samdomi darbuotojai.")).ToBeVisibleAsync();
         await Assertions.Expect(page.GetByText("Man svarbu · 1 920")).ToBeVisibleAsync();
         await Assertions.Expect(page.Locator("#not-a-poll")).ToHaveTextAsync("Tai nėra reprezentatyvi apklausa: skaičiai rodo savanoriškai dalyvaujančių Lietuva 2.0 naudotojų nuomonę.");
-        await Assertions.Expect(page.Locator("a.btn--for")).ToHaveAttributeAsync("href", "/prisijungti");
+        // Design 6.9: the sign-in link brings the visitor back to the bill.
+        await Assertions.Expect(page.Locator("a.btn--for")).ToHaveAttributeAsync("href", "/prisijungti#tikslas=%2Fseimas%2FXVP-0412");
 
         // Reporting without JavaScript and without a session: the disclosure opens and says how.
         await page.Locator("#about").GetByText("Pranešti apie klaidą", new() { Exact = true }).ClickAsync();

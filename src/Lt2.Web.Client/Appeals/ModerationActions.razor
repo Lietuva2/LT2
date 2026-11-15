@@ -173,6 +173,9 @@
 
     [Parameter] public string Status { get; set; } = "";
 
+    /// <summary>For an argument: its record's status. On a closed record only hiding and "Palikti" are offered (design 6.9).</summary>
+    [Parameter] public string RecordStatus { get; set; } = "open";
+
     [Parameter] public IReadOnlyList<ReasonResponse>? MergeCandidates { get; set; }
 
     /// <summary>For a bill: its sending is held.</summary>
@@ -217,6 +220,9 @@
     private IReadOnlyList<string> Offered => (Kind, Status) switch
     {
         ("record", "open") => [.. (HasOpenItems ? new[] { "keep" } : []), .. DescriptionActions, "threshold", "planned", IsHeld ? "release" : "hold", .. (IsHeld ? Array.Empty<string>() : ["urgent"]), "hide"],
+        ("record", "closed") => [.. (HasOpenItems ? new[] { "keep" } : []), .. ClosedDescriptionActions, "hide"],
+        ("reason", "published") when RecordStatus == "closed" => ["keep", "hide"],
+        ("reason", _) when RecordStatus == "closed" => ["hide"],
         ("reason", "pending") => ["publish", "hide", .. (MergeCandidates is { Count: > 0 } ? new[] { "merge" } : []), "restrict"],
         ("reason", _) => ["keep", "hide", .. (MergeCandidates is { Count: > 0 } ? new[] { "merge" } : []), "restrict"],
         _ => [],
@@ -229,6 +235,14 @@
     private string[] DescriptionActions => Number is null
         ? []
         : [.. (CurrentSource == "ai" ? new[] { "confirm" } : []), "describe", .. (string.IsNullOrEmpty(CurrentDescription) ? Array.Empty<string>() : ["undescribe"])];
+
+    /// <summary>
+    /// The description's actions on a closed record (design 6.9): correct it or remove one that exists. Confirming an AI
+    /// summary is not among them.
+    /// </summary>
+    private string[] ClosedDescriptionActions => Number is null
+        ? []
+        : ["describe", .. (string.IsNullOrEmpty(CurrentDescription) ? Array.Empty<string>() : ["undescribe"])];
 
     /// <summary>The description as it is after this control's own actions (the queue does not reload).</summary>
     private string? CurrentDescription => _descriptionNow ?? Description;

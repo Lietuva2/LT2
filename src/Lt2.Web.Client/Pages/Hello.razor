@@ -145,9 +145,19 @@ else
         <h2 id="data-title">@L["Data.Title"]</h2>
         <p>@L["Data.Text"]</p>
         <p><a class="btn btn--plain" href="/api/v1/me/export" download id="export">@L["Data.Export"]</a></p>
-        @if (_confirmDelete)
+        @if (Me.StaffAccount && Me.ActiveStaffRoles.Count == 0)
+        {
+            @* Design 6.9: a staff account is deleted only from a session signed in with its staff passkey. *@
+            <p class="note note--quiet" id="delete-staff-passkey">@L["Data.DeleteStaffNeedsPasskey"]</p>
+        }
+        else if (_confirmDelete)
         {
             <p class="note" role="alert">@L["Data.DeleteWarning"]</p>
+            @if (Me.StaffAccount)
+            {
+                @* Design 6.9: what one did as staff outlives the account; said where it cannot be undone (design 8.15). *@
+                <p class="note" id="delete-staff-kept">@L["Data.DeleteStaffKept"] <a href="/metodika#privatumas">@L["Data.DeleteStaffMore"]</a></p>
+            }
             <div class="row">
                 <button type="button" class="btn btn--against" id="delete-confirm" disabled="@Locked" @onclick="DeleteAccountAsync">@L["Data.DeleteConfirm"]</button>
                 <button type="button" class="btn btn--plain" disabled="@Locked" @onclick="() => _confirmDelete = false">@L["Data.DeleteCancel"]</button>

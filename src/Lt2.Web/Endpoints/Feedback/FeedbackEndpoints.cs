@@ -36,23 +36,16 @@ internal static class FeedbackEndpoints
             .RequireAuthorization(Policies.Moderator)
             .Produces<IReadOnlyList<FeedbackItemResponse>>();
 
-        api.MapPut(ApiEndpoints.Relative(FeedbackRoutes.Item), async (Guid id, FeedbackUpdateRequest request, IFeedback feedback, ErrorMapper errors, CancellationToken cancellationToken) =>
-            {
-                var result = await feedback.UpdateAsync(id, request.Status, request.Note, cancellationToken);
-                return result.IsSuccess ? Results.NoContent() : errors.ToResult(result.Error!);
-            })
+        api.MapPut(ApiEndpoints.Relative(FeedbackRoutes.Item), (Guid id, FeedbackUpdateRequest request, HttpContext context, IFeedback feedback, CancellationToken cancellationToken) =>
+                Moderation.ModeratorEndpoint.ActAsync(context, staff => feedback.UpdateAsync(id, request.Status, request.Note, staff, cancellationToken)))
             .WithName("UpdateFeedback")
             .WithTags("Feedback")
             .RequireAuthorization(Policies.Moderator)
             .Produces(StatusCodes.Status204NoContent)
             .ProducesProblem(StatusCodes.Status404NotFound);
 
-        api.MapPost(ApiEndpoints.Relative(FeedbackRoutes.Reply), async (Guid id, FeedbackReplyRequest request, ClaimsPrincipal user, HttpContext context, IIdentityModule identity, IFeedback feedback, IpHasher ipHasher, ErrorMapper errors, CancellationToken cancellationToken) =>
-            {
-                var staff = await AppealMapping.ModeratorAsync(identity, user, ipHasher.Hash(context), cancellationToken);
-                var result = await feedback.ReplyAsync(id, request.Text, staff.UserId, staff.Role, staff.IpHash, cancellationToken);
-                return result.IsSuccess ? Results.NoContent() : errors.ToResult(result.Error!);
-            })
+        api.MapPost(ApiEndpoints.Relative(FeedbackRoutes.Reply), (Guid id, FeedbackReplyRequest request, HttpContext context, IFeedback feedback, CancellationToken cancellationToken) =>
+                Moderation.ModeratorEndpoint.ActAsync(context, staff => feedback.ReplyAsync(id, request.Text, staff, cancellationToken)))
             .WithName("ReplyToFeedback")
             .WithTags("Feedback")
             .RequireAuthorization(Policies.Moderator)

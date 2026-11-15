@@ -37,6 +37,9 @@ public static class OrganisationRoutes
     public const string Confirm = ModerationQueue + "/{id:guid}/confirm";
     public const string Unconfirm = ModerationQueue + "/{id:guid}/unconfirm";
     public const string PublishStatement = ApiRoutes.Prefix + "/moderation/statements/{id:guid}/publish";
+
+    /// <summary>Design 6.9: "Palikti" on a statement that still waited when the bill closed.</summary>
+    public const string KeepStatement = ApiRoutes.Prefix + "/moderation/statements/{id:guid}/keep";
     public const string HideStatement = ApiRoutes.Prefix + "/moderation/statements/{id:guid}/hide";
     public const string RestoreStatement = ApiRoutes.Prefix + "/moderation/statements/{id:guid}/restore";
     public const string StatementWriter = ApiRoutes.Prefix + "/moderation/statements/{id:guid}/writer";
@@ -151,6 +154,9 @@ public interface IOrganisationModerationApi
     Task<ApiResult> UnconfirmAsync(Guid organisationId, StatementRequest request, CancellationToken cancellationToken = default);
 
     Task<ApiResult> PublishStatementAsync(Guid statementId, ModerationRequest request, CancellationToken cancellationToken = default);
+
+    /// <summary>Design 6.9: "Palikti" on a statement that still waited when the bill closed; it stays unpublished.</summary>
+    Task<ApiResult> KeepStatementAsync(Guid statementId, ModerationRequest request, CancellationToken cancellationToken = default);
 
     Task<ApiResult> HideStatementAsync(Guid statementId, StatementRequest request, CancellationToken cancellationToken = default);
 

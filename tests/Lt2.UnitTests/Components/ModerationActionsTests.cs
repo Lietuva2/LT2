@@ -39,9 +39,11 @@ public sealed class ModerationActionsTests : BunitContext
     private string Text(string key) => Services.GetRequiredService<IStringLocalizer<AppealUi>>()[key];
 
     private IRenderedComponent<ModerationActions> Render(
-        string kind, string status, bool held = false, bool openItems = false, int candidates = 0, string? description = "", bool noRecord = false, string? source = null) =>
+        string kind, string status, bool held = false, bool openItems = false, int candidates = 0, string? description = "", bool noRecord = false, string? source = null,
+        string recordStatus = "open") =>
         Render<ModerationActions>(p => p
             .Add(c => c.DescriptionSource, source)
+            .Add(c => c.RecordStatus, recordStatus)
             .Add(c => c.Id, noRecord ? null : Item)
             .Add(c => c.Number, kind == "record" ? Bill : null)
             .Add(c => c.Kind, kind)
@@ -239,6 +241,16 @@ public sealed class ModerationActionsTests : BunitContext
     {
         Offered(Render("reason", "pending")).ShouldBe(["publish", "hide", "restrict"]);
         Offered(Render("reason", "published", candidates: 2)).ShouldBe(["keep", "hide", "merge", "restrict"]);
+    }
+
+    /// <summary>Design 6.9 (owner, 2026-11-15): after the final vote only the actions the rules leave are offered.</summary>
+    [Fact]
+    public void A_closed_bill_offers_palikti_the_description_and_hiding_only()
+    {
+        Offered(Render("record", "closed", openItems: true, description: "Aprašymas.")).ShouldBe(["keep", "describe", "undescribe", "hide"]);
+        Offered(Render("record", "closed", description: "")).ShouldBe(["describe", "hide"]);
+        Offered(Render("reason", "published", candidates: 2, recordStatus: "closed")).ShouldBe(["keep", "hide"]);
+        Offered(Render("reason", "pending", candidates: 2, recordStatus: "closed")).ShouldBe(["hide"]);
     }
 
     [Fact]

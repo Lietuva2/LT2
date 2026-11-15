@@ -9,7 +9,10 @@ public sealed record Registration(string Email, string? InvitationCode);
 /// <summary>What a person gives once their address is proven (design 6.2).</summary>
 public sealed record RegistrationCompletion(string? DisplayName, bool ConfirmsAdult, string? InvitationCode);
 
-/// <summary>The signed-in person's own account.</summary>
+/// <summary>
+/// The signed-in person's own account. <paramref name="StaffAccount"/>: the account holds an activated staff role (whatever
+/// this session is), so deleting it needs a session signed in with its staff passkey (design 6.9).
+/// </summary>
 public sealed record AccountSummary(
     Guid Id,
     string Email,
@@ -21,7 +24,8 @@ public sealed record AccountSummary(
     bool RegistrationComplete,
     IReadOnlyList<string> ActiveStaffRoles,
     bool AwaitingActivation,
-    bool HasPositionConsent = false);
+    bool HasPositionConsent = false,
+    bool StaffAccount = false);
 
 /// <summary>
 /// What the current session may do as staff (design 6.2): the staff roles that work in it (only when signed in with the
@@ -241,10 +245,11 @@ public interface IFeedback
 
     Task<IReadOnlyList<FeedbackInfo>> ListAsync(string? kind, string? status, CancellationToken cancellationToken);
 
-    Task<Result<Unit>> UpdateAsync(Guid id, string status, string? note, CancellationToken cancellationToken);
+    /// <summary>Changes an item's status and the team's note; audited with the old and new status and who did it, never a text (design 6.9).</summary>
+    Task<Result<Unit>> UpdateAsync(Guid id, string status, string? note, StaffActor staff, CancellationToken cancellationToken);
 
     /// <summary>A reply to a linked item, sent through the outbox to the member's address; audited without its text.</summary>
-    Task<Result<Unit>> ReplyAsync(Guid id, string text, Guid staffUserId, string role, string? ipHash, CancellationToken cancellationToken);
+    Task<Result<Unit>> ReplyAsync(Guid id, string text, StaffActor staff, CancellationToken cancellationToken);
 
     /// <summary>At most one notice a day to the team address with the number of new items; none when nothing is new.</summary>
     Task<int> SendNoticeAsync(string? teamAddress, CancellationToken cancellationToken);

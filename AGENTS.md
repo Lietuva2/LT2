@@ -188,7 +188,11 @@ code review.
 - Group numbers (for example supporters of a party) are shown only for groups of at least 20.
 - Sign-in has no passwords: an emailed one-time code or a passkey. A staff role works only in a session signed in
   with a staff passkey; a code session is a member session, whatever roles the account has. Politicians need a
-  passkey too. Responses never reveal whether an email is registered.
+  passkey too. Responses never reveal whether an email is registered. Changing roles, resetting an account and saving
+  a runtime setting need a fresh passkey confirmation (`FreshConfirmation`, the last ten minutes); a staff account is
+  deleted only from its staff passkey session; what a staff member did keeps their account id after deletion (design 6.9).
+- The read-only database role reads only the tables on `DatabaseRoles.ReadableTables`; a new table goes on that list
+  or on `DatabaseRoles.WithheldTables` in the same change (an architecture test fails otherwise).
 - Session cookie only (`__Host-`, Secure, HttpOnly, SameSite=Lax). No tokens in the browser. Every state-changing
   call needs the antiforgery header and passes the Origin check. CORS stays off.
 - No secrets in the repository or in images. No real personal data in tests or fixtures.
@@ -254,6 +258,12 @@ official `@lrs.lt` address from open data; the link is tied to the Seimas person
   a bill's record closes taking part on it (sides and arguments kept unseen; "Atkurti" brings them back). A moderator
   in a staff-passkey session gets the queue's argument actions on the bill's page too (owner, 2026-11-14), from the
   moderators-only answer `GET /moderation/bills/{number}`; nobody else sees a control or anything from it.
+- **After the final vote** (design 6.9, owner 2026-11-15): a report about an argument or the description of a closed
+  record reaches the queue. On a closed record a moderator can only hide and restore an argument, correct or remove the
+  description and answer a report with "Palikti" (and hide the whole record, as before); each with a statement, audited,
+  the author told. The frozen counts and summaries already made never change. Everything else (threshold, holds,
+  urgent summaries, merging, publishing a waiting argument, confirming a description) stays refused; the rules live in
+  `RecordRules.CheckRecordAction` / `CheckReasonAction`, and the bill's moderators' panel and the queue offer exactly them.
 
 **Reasons to come (design 8.11).**
 - The agenda (`/darbotvarke`, first in the menu) and the front page's "Artimiausiu metu Seime" come from one public,
@@ -271,6 +281,8 @@ official `@lrs.lt` address from open data; the link is tied to the Seimas person
 - The share line: the personal invitation link with `tikslas` beside the code after the `#` (a path under `/seimas/`, anything else ignored), landing
   on the bill's page, kept only in the browser (session storage) through the sign-in steps; the same link whichever
   side; no link when the code is off or used up.
+- Sign-in links on a bill's page (side picker, follow, report; owner 2026-11-15) carry the page the same way
+  (`LandingPath.SignInLink`: `/prisijungti#tikslas=...`), so signing in and registering both end on the bill.
 - The AI draft is only in a moderator's "write or correct the description" form, on any active bill, from pasted official
   text: the Claude API (owner, 2026-11-13), the model the setting `Ai:DraftModel`, on only with `Ai:Provider` = `claude`
   and a key in `deploy/secrets/ai_api_key`; otherwise nothing mentions a draft. The prompt is the public file
@@ -297,6 +309,9 @@ official `@lrs.lt` address from open data; the link is tied to the Seimas person
   the queue; block and lift (lifting returns exactly what was shown), hide and restore a statement, publish a waiting one,
   confirm by hand, withdraw a confirmation, "Palikti"; each emailed to every representative. Report ground "Apsimeta kita
   organizacija". Not built: "keep out of summaries".
+- A statement still waiting when its bill closes (owner, 2026-11-15) can no longer be published (error
+  `statement.waiting-bill-closed`); the queue still shows it and offers only "Palikti" (`/moderation/statements/{id}/keep`:
+  it stays unpublished, leaves the queue unless reported, representatives are told) and hiding.
 - Stage B (built 2026-11-14): one invitation code per organisation (Identity, kind `organisation`, no account on it; the
   representatives' part of the profile shows its link, a link per bill with a statement and one number, filled in only in
   the browser); a registration with it leaves only the level on the account (the pending account holds no such code: the

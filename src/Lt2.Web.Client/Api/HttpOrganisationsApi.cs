@@ -98,6 +98,9 @@ internal sealed class HttpOrganisationModerationApi(ApiHttp http) : IOrganisatio
     public Task<ApiResult> PublishStatementAsync(Guid statementId, ModerationRequest request, CancellationToken cancellationToken = default) =>
         http.SendAsync(HttpMethod.Post, OrganisationRoutes.With(OrganisationRoutes.PublishStatement, statementId), request, cancellationToken);
 
+    public Task<ApiResult> KeepStatementAsync(Guid statementId, ModerationRequest request, CancellationToken cancellationToken = default) =>
+        http.SendAsync(HttpMethod.Post, OrganisationRoutes.With(OrganisationRoutes.KeepStatement, statementId), request, cancellationToken);
+
     public Task<ApiResult> HideStatementAsync(Guid statementId, StatementRequest request, CancellationToken cancellationToken = default) =>
         http.SendAsync(HttpMethod.Post, OrganisationRoutes.With(OrganisationRoutes.HideStatement, statementId), request, cancellationToken);
 

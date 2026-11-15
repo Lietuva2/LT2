@@ -47,7 +47,7 @@ internal sealed class OrganisationModerationService(
         var statements = await (from s in db.OrganisationStatements.AsNoTracking()
                                 join o in db.Organisations.AsNoTracking() on s.OrganisationId equals o.Id
                                 where o.Status == OrganisationStatuses.Active
-                                    && (s.Status == StatementStatuses.Pending
+                                    && ((s.Status == StatementStatuses.Pending && (s.SeenAt == null || reported.Contains(s.Id)))
                                         || (s.Status == StatementStatuses.Published && (s.SeenAt == null || reported.Contains(s.Id))))
                                 orderby s.PublishedAt
                                 select s)
@@ -193,11 +193,12 @@ internal sealed class OrganisationModerationService(
         }, cancellationToken);
 
     public Task<Result<Unit>> PublishStatementAsync(Guid statementId, string? statement, StaffActor moderator, string? contact, CancellationToken cancellationToken) =>
-        Refused(statement, required: false) ?? OnStatementAsync(statementId, moderator, "publish", StatementRules.Normalise(statement), contact, (_, s, _, now) =>
+        Refused(statement, required: false) ?? OnStatementAsync(statementId, moderator, "publish", StatementRules.Normalise(statement), contact, (_, s, bill, now) =>
         {
-            if (s.Status is not (StatementStatuses.Pending or StatementStatuses.Published))
+            // A statement that still waited when the bill closed is never published (design 6.9).
+            if (OrganisationRules.CheckPublish(s.Status, bill?.Finished == true) is { } refused)
             {
-                return Task.FromResult<(string?, string?)>(("moderation.wrong-state", null));
+                return Task.FromResult<(string?, string?)>((refused, null));
             }
 
             var waited = s.Status == StatementStatuses.Pending;
@@ -207,6 +208,22 @@ internal sealed class OrganisationModerationService(
             // A statement that waited becomes public now: its followers are told from this moment (design 8.14.14, stage B).
             s.FirstPublicAt ??= now;
             return Task.FromResult<(string?, string?)>((null, waited ? OrganisationNotices.StatementPublished : OrganisationNotices.StatementKept));
+        }, cancellationToken);
+
+    /// <summary>
+    /// "Palikti" on a statement that still waited when the bill closed (design 6.9): it stays unpublished, is marked seen
+    /// and leaves the queue unless reported again; its representatives are told it was looked at and left as it is.
+    /// </summary>
+    public Task<Result<Unit>> KeepStatementAsync(Guid statementId, string? statement, StaffActor moderator, string? contact, CancellationToken cancellationToken) =>
+        Refused(statement, required: false) ?? OnStatementAsync(statementId, moderator, "keep", StatementRules.Normalise(statement), contact, (_, s, bill, now) =>
+        {
+            if (OrganisationRules.CheckKeepWaiting(s.Status, bill?.Finished == true) is { } refused)
+            {
+                return Task.FromResult<(string?, string?)>((refused, null));
+            }
+
+            s.SeenAt = now;
+            return Task.FromResult<(string?, string?)>((null, OrganisationNotices.StatementKept));
         }, cancellationToken);
 
     public Task<Result<Unit>> HideStatementAsync(Guid statementId, string statement, StaffActor moderator, string? contact, CancellationToken cancellationToken) =>
@@ -260,13 +277,15 @@ internal sealed class OrganisationModerationService(
     {
         var ids = statements.Select(s => s.OrganisationId).Distinct().ToList();
         var organisations = await db.Organisations.AsNoTracking().Where(o => ids.Contains(o.Id)).ToDictionaryAsync(o => o.Id, ct);
-        var facts = await reads.BillFactsAsync(statements.Select(s => s.BillNumber).Distinct().ToList(), ct);
+        var billsOf = await reads.BillsAsync(db, statements.Select(s => s.BillNumber).ToList(), ct);
         return statements.Select(s =>
         {
             var o = organisations[s.OrganisationId];
+            var bill = billsOf.GetValueOrDefault(AppealReads.NormaliseBillNumber(s.BillNumber));
             return new QueueStatement(
-                s.Id, facts.GetValueOrDefault(s.BillNumber) ?? new BillFacts(s.BillNumber, s.BillNumber), o.Id, o.Slug, o.Name, OrganisationReads.Label(o),
-                s.Stance, s.Text, s.Link, s.Goal, s.Status, s.SeenAt is not null, s.ScreeningFlags, ReportsOn(reports, s.Id), s.PublishedAt);
+                s.Id, bill?.Bill ?? new BillFacts(s.BillNumber, s.BillNumber), o.Id, o.Slug, o.Name, OrganisationReads.Label(o),
+                s.Stance, s.Text, s.Link, s.Goal, s.Status, s.SeenAt is not null, s.ScreeningFlags, ReportsOn(reports, s.Id), s.PublishedAt,
+                bill?.Finished == true);
         }).ToList();
     }
 

@@ -38,8 +38,30 @@ internal static class RecordRules
     public static string? CheckRestore(string status) => status == BillRecordStatuses.Rejected ? null : "moderation.wrong-state";
 
     /// <summary>
-    /// A moderator writes or corrects the description of an active bill's open record (design 8.12.3, 8.13), with a
-    /// required statement; the text or the official text's address must differ from what is shown.
+    /// What a moderator may still do on a closed record (design 6.9, "Reports after the final vote"): answer a report with
+    /// "Palikti", and correct or remove the description. The record's arguments have their own rule,
+    /// <see cref="CheckReasonAction"/>. Everything else on a closed record stays refused; on an open record every action
+    /// is allowed here (each has its own checks besides).
+    /// </summary>
+    public static string? CheckRecordAction(string recordStatus, string action) =>
+        recordStatus == BillRecordStatuses.Open || (recordStatus == BillRecordStatuses.Closed && action is "keep" or "describe" or "undescribe")
+            ? null
+            : "moderation.wrong-state";
+
+    /// <summary>
+    /// What a moderator may do with an argument by its record's status (design 6.9): anything on an open record; on a closed
+    /// one only hide and restore it, and answer a report on a published one with "Palikti" (publishing a published
+    /// argument marks it seen). Publishing a waiting one, merging, and anything on a hidden record are refused.
+    /// </summary>
+    public static string? CheckReasonAction(string recordStatus, string action, string reasonStatus) =>
+        recordStatus == BillRecordStatuses.Open
+        || (recordStatus == BillRecordStatuses.Closed && (action is "hide" or "restore" || (action == "publish" && reasonStatus == ReasonStatuses.Published)))
+            ? null
+            : "moderation.wrong-state";
+
+    /// <summary>
+    /// A moderator writes or corrects the description of a bill's open record, or of its closed one (design 8.12.3, 8.13,
+    /// 6.9), with a required statement; the text or the official text's address must differ from what is shown.
     /// </summary>
     public static string? CheckDescriptionWrite(string recordStatus, string currentText, string newText, string? statement, string? currentUrl = null, string? newUrl = null)
     {
@@ -48,9 +70,9 @@ internal static class RecordRules
             return "statement.required";
         }
 
-        if (recordStatus != BillRecordStatuses.Open)
+        if (CheckRecordAction(recordStatus, "describe") is { } refused)
         {
-            return "moderation.wrong-state";
+            return refused;
         }
 
         return currentText == newText && currentUrl == newUrl ? "description.unchanged" : null;
@@ -97,8 +119,8 @@ internal static class RecordRules
         recordStatus == BillRecordStatuses.Open && descriptionSource == DescriptionSources.Ai ? null : "moderation.wrong-state";
 
     /// <summary>
-    /// A moderator removes a description (design 8.13), whatever made it, with a required statement; the bill then says it
-    /// has none, and the summary job never writes it again.
+    /// A moderator removes a description (design 8.13), whatever made it, on an open or a closed record (6.9), with a
+    /// required statement; the bill then says it has none, and the summary job never writes it again.
     /// </summary>
     public static string? CheckRemove(string recordStatus, string currentText, string? statement)
     {
@@ -107,7 +129,7 @@ internal static class RecordRules
             return "statement.required";
         }
 
-        return recordStatus == BillRecordStatuses.Open && currentText.Length > 0 ? null : "moderation.wrong-state";
+        return CheckRecordAction(recordStatus, "undescribe") is null && currentText.Length > 0 ? null : "moderation.wrong-state";
     }
 
     /// <summary>

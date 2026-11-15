@@ -272,7 +272,8 @@ public sealed record QueueStatementResponse(
     bool Seen,
     IReadOnlyList<string> Flags,
     IReadOnlyList<QueueReportResponse> Reports,
-    DateTimeOffset PublishedAt);
+    DateTimeOffset PublishedAt,
+    bool BillFinished = false);
 
 public sealed record OrganisationModerationResponse(IReadOnlyList<QueueOrganisationResponse> Organisations, IReadOnlyList<QueueStatementResponse> Statements);
 

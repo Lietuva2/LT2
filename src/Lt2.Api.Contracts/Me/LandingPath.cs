@@ -35,6 +35,23 @@ public static partial class LandingPath
         return invitationLink + separator + Parameter + "=" + Uri.EscapeDataString(accepted);
     }
 
+    /// <summary>
+    /// The sign-in page that brings the person back to <paramref name="path"/> after signing in or registering (design 6.9:
+    /// the sign-in links on a bill's page), with <c>tikslas</c> after the <c>#</c> (design 6.8). Only a path that
+    /// <see cref="Accept"/> takes is carried; for any other the plain sign-in page.
+    /// </summary>
+    public static string SignInLink(string? path) =>
+        Accept(path) is { } accepted ? InvitationLink.Page + "#" + Parameter + "=" + Uri.EscapeDataString(accepted) : InvitationLink.Page;
+
+    /// <summary>The path of the page the browser is on (no query, no fragment), from a navigation address and its base.</summary>
+    public static string PathOf(string address, string baseAddress)
+    {
+        ArgumentNullException.ThrowIfNull(address);
+        ArgumentNullException.ThrowIfNull(baseAddress);
+        var relative = address.StartsWith(baseAddress, StringComparison.Ordinal) ? address[baseAddress.Length..] : address;
+        return "/" + relative.Split('?', '#')[0].TrimStart('/');
+    }
+
     [GeneratedRegex(@"^/seimas/[A-Za-z0-9_\-]+(/[A-Za-z0-9_\-]+)*$", RegexOptions.CultureInvariant)]
     private static partial Regex Shape();
 }

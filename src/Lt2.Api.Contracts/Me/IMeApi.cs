@@ -15,6 +15,12 @@ public interface IMeApi
     /// <summary>Uses a staff role activation code in the current passkey session (design 6.2).</summary>
     Task<ApiResult> ActivateRoleAsync(RoleActivationRequest request, CancellationToken cancellationToken = default);
 
+    /// <summary>
+    /// A fresh confirmation with the staff passkey (design 6.2: the ten-minute rule for sensitive actions such as saving a
+    /// setting); the assertion answers <see cref="Auth.IAuthApi.GetPasskeyRequestOptionsAsync"/>.
+    /// </summary>
+    Task<ApiResult> ConfirmPasskeyAsync(Auth.PasskeyCredentialRequest request, CancellationToken cancellationToken = default);
+
     /// <summary>Gives the explicit consent to store positions (design 6.5).</summary>
     Task<ApiResult> GivePositionConsentAsync(PositionConsentRequest request, CancellationToken cancellationToken = default);
 

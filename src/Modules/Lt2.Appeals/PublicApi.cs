@@ -151,7 +151,8 @@ public sealed record QueueRecord(
     bool UnderThresholdOnAgenda,
     bool Held,
     int Participants,
-    string? DescriptionUrl);
+    string? DescriptionUrl,
+    string Status = "open");
 
 /// <summary>
 /// What a moderator's controls on the bill's page need (design 8.12.3): the state that decides which actions apply, and
@@ -183,7 +184,8 @@ public sealed record QueueReason(
     IReadOnlyList<string> Flags,
     IReadOnlyList<QueueReport> Reports,
     IReadOnlyList<ReasonInfo> MergeCandidates,
-    DateTimeOffset CreatedAt);
+    DateTimeOffset CreatedAt,
+    string RecordStatus = "open");
 
 /// <summary>The moderators' queue (design 8.12.3): bills' records that need a look, and arguments.</summary>
 public sealed record ModerationItems(IReadOnlyList<QueueRecord> Records, IReadOnlyList<QueueReason> Reasons);

@@ -206,7 +206,9 @@
 
         // Design 6.8: the code and the landing page of a link made now are after the "#", which only the browser sees.
         // They are taken into the form and removed from the address bar, so the address can be copied without them.
-        var address = Navigation.Uri;
+        // The address is asked from the browser itself: after a link followed inside the site, this component can render
+        // before the navigation manager has heard of the new address, and its Uri would still be the page left behind.
+        var address = await BrowserAddressAsync();
         var code = InvitationLink.FromFragment(address, InvitationLink.CodeParameter);
         var landing = LandingPath.Accept(InvitationLink.FromFragment(address, LandingPath.Parameter)) ?? LandingPath.Accept(Landing);
         if (landing is not null)
@@ -290,6 +292,19 @@
 #pragma warning restore CA1031
         {
             return null;
+        }
+    }
+
+    /// <summary>The address the browser shows, with its "#" part; the navigation manager's when the browser cannot be asked.</summary>
+    private async Task<string> BrowserAddressAsync()
+    {
+        try
+        {
+            return await JS.InvokeAsync<string?>("location.toString") ?? Navigation.Uri;
+        }
+        catch (JSException)
+        {
+            return Navigation.Uri;
         }
     }
 
