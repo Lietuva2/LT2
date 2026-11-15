@@ -691,6 +691,7 @@ GET /api/v1/factions            GET /api/v1/factions/{slug}
 GET /api/v1/committees          GET /api/v1/committees/{slug}
 GET /api/v1/bills?status=&q=&cursor=
 GET /api/v1/bills/{number}
+GET /api/v1/votes?q=&kind=&until=&limit=&cursor=   the history of votes, newest first (8.18)
 GET /api/v1/votes/{id}                      totals, wording, notes, faction positions, every ballot
 GET /api/v1/meta/imports                    last successful import per source
 ```
@@ -1004,7 +1005,8 @@ and the "not a representative poll" notice. It uses only the public answers behi
   so nobody takes an unconfirmed name for a checked one; the full label is on the bill's page and the profile); and
   the two sides to take, right in the row (see "Taking a side in the row" below; until 2026-11-15 the row had one
   action, "Nurodyti, ko prašote", leading to the bill's page). A
-  voted bill shows the result and "Kaip balsavo Seimo nariai", leading to the vote's page. An item that is not in the
+  voted bill shows the result and "Kaip balsavo Seimo nariai", leading to the vote's page; under the last voted day
+  "Ankstesni balsavimai →" leads to the history of votes (8.18). An item that is not in the
   open data yet shows what the agenda says and a link to the source, as today. The notes that explain the brackets
   and that this is not a representative poll sit directly under the timeline.
 - **Taking a side in the row [decided by the owner on 2026-11-15, on the built page: "someone may have a position
@@ -1219,7 +1221,8 @@ A public page, `/darbotvarke` ("Seimo darbotvarkė"), server-rendered, readable 
   progress to the threshold, and a link to the bill's page; a bill nobody took part in says so and links to its page
   (8.12.5). [changed while building: a bill whose record is hidden says "Dalyvavimas uždarytas" with a link to it]
 - **Recently voted.** The stage results of the last seven days from open data: bill, stage, day, the result (or
-  "bendru sutarimu"), linking to the vote page; beside it the bill's counts.
+  "bendru sutarimu"), linking to the vote page; beside it the bill's counts. Under it "Ankstesni balsavimai →" leads
+  to the history of votes (8.18).
 - Dates are "Planuojama …", never a countdown; the page says that the agenda comes from lrs.lt about 10–12 days ahead
   and changes often, with the source link and the time it was last read. Without any planned item it says so and still
   shows the recent votes.
@@ -2294,6 +2297,57 @@ ballot and its count matches; a search without diacritics finds the MP; the fact
 faction and ballot combine; everything works
 with JavaScript off; the closed bill's page links to the list and has no copy of it; a consensus vote and a vote
 without ballots show no list and no controls.
+
+### 8.18 The history of the Seimas's votes
+
+**[Asked by the owner on 2026-11-15: "Dėl ko Seimas balsavo per pastarąsias 7 dienas: how do we see an older
+history?" How is the designer's.]** Until now a vote older than seven days could be reached only from its bill's page,
+from an MP's votes or, for a closed record, from the closed tab of "Projektai": there was no list of the Seimas's
+votes and nothing led on from "Balsuota".
+
+- **One page,** `/seimas/balsavimai` ("Seimo balsavimai"): public, server-rendered, readable without JavaScript, the
+  same for everyone. It is the long form of "Balsuota" on the start page and of "recently voted" on the agenda page,
+  and both link to it with "Ankstesni balsavimai →", also when the last seven days had no vote. The vote's page
+  (`/seimas/balsavimai/{id}`) links up to it. It is not added to the menu.
+- **What it lists:** votes grouped by the day they were held (Vilnius day), the newest day first, within a day the
+  latest first; each day with its date and weekday, as the days of the timeline are. A row shows the bill's number
+  and title linking to the bill's page, the stage, the result ("už · prieš · susilaikė" with the bar, or "bendru
+  sutarimu"), the official note if there is one, and "Kaip balsavo Seimo nariai" leading to the vote's page. A vote
+  that is not a stage result also says what it is (a vote on an amendment, a procedural vote, another vote) and shows
+  its wording; a vote without a bill shows the agenda item's title in the bill's place.
+- **No participants' numbers in the rows.** The bill's numbers at the time of an earlier vote are not kept, and
+  today's numbers beside a vote held months ago would read as what people asked then. The bill's page shows both, and
+  the closed tab of "Projektai" shows the numbers a record closed with.
+- **Which votes:** one list to choose from, "Projektų etapų balsavimai" (the default: what "Balsuota" shows, the
+  stage results on bills), "Tik priėmimai" (the stage results of adoption) and "Visi balsavimai" (also amendments,
+  procedural and other votes).
+- **Search:** one field that finds by the bill's number or title, ignoring case and Lithuanian diacritics, as the
+  search of "Projektai" does. Nothing found says so and offers to clear.
+- **Going back in time:** a date, "Iki", shows the votes held on that day or earlier, so any month can be reached
+  directly. Without it the list starts at the latest vote.
+- **A part at a time:** the first 30 votes and "Rodyti daugiau", which adds 30 each time, with "Rodoma {n} iš {m}"
+  and landing on the first newly shown row, as on the ballot list (8.17). One page shows at most 300; after that the
+  link is "Senesni balsavimai →", which starts again from the day of the last vote shown ("Iki" set to it). A day
+  that is cut by the part shown simply continues when more is shown. [changed while building: when all 300 fall on
+  one day, "Iki" is set to the day before, because starting again from that day would show the same 300 again; the
+  rest of that day is then found by searching for its bill]
+- **How it works:** the page's address carries the state (`?q=`, `?kas=etapai|priemimai|visi`, `?iki=YYYY-MM-DD`,
+  `?rodyti=`): the controls are one GET form and the rest are links, so it works with JavaScript off and any view can
+  be linked to; no island and no script. Unknown, malformed or oversized values fall back to the defaults, never to
+  an error. The votes shown are read and counted in the database a part at a time, never all loaded to be cut in
+  memory.
+- **API:** `GET /api/v1/votes?q=&kind=&until=&limit=&cursor=`, public, cached with an ETag like the rest of 7.4; it
+  holds nothing about the caller. The page is built on the same answer.
+- **Surfaces (8.16):** the controls on the ground directly above the list; the list on a sheet.
+- **Texts (8.15):** one short lead that says what the list is and where it comes from; the attribution and the
+  invented-data notice as on every page of open data.
+
+**Done when:** the start page and the agenda page lead to the list; it shows the stage results newest first, grouped
+by day, and each row leads to its vote and its bill; "Visi balsavimai" adds the amendments and the procedural votes
+with their kind and wording, and "Tik priėmimai" leaves only adoptions; a search without diacritics finds a bill's
+votes; "Iki" shows only that day's and earlier votes; with more than 30 votes the list grows by 30 and says how many
+are shown; everything works with JavaScript off; a malformed address shows the default list; no sideways scroll at
+390 px.
 
 ## 9. Hosting and operations
 

@@ -66,6 +66,12 @@ public sealed record VoteSummaryResponse(VoteLink Vote, VoteTotalsResponse Total
 public sealed record BillResponse(
     string Number, string Title, string? ESeimasUrl, IReadOnlyList<VoteSummaryResponse> Votes, Appeals.PlannedDateResponse? Planned = null);
 
+/// <summary>One vote of the history (design 8.18); <paramref name="AgendaItemTitle"/> names a vote without a bill.</summary>
+public sealed record VoteListItem(VoteSummaryResponse Summary, string AgendaItemTitle);
+
+/// <param name="Total">How many votes the search, the kind and the day find in all.</param>
+public sealed record VoteListResponse(IReadOnlyList<VoteListItem> Items, int Total, string? NextCursor);
+
 public sealed record BallotResponse(MpLink Mp, string? FactionLabel, string Choice);
 
 public sealed record VoteResponse(

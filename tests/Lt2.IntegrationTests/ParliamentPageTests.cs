@@ -29,7 +29,7 @@ public sealed partial class ParliamentPageTests(DatabaseFixture database) : ApiT
 
     public static TheoryData<string> Pages() => new(
         "/seimo-nariai", "/p/jonas-petraitis", "/p/jonas-petraitis/balsavimai", "/frakcijos/reformu-partijos-frakcija",
-        "/komitetai/biudzeto-ir-finansu-komitetas", "/seimas/XVP-0412", "/seimas/balsavimai/99100002", "/metodika");
+        "/komitetai/biudzeto-ir-finansu-komitetas", "/seimas/XVP-0412", "/seimas/balsavimai", "/seimas/balsavimai/99100002", "/metodika");
 
     [Theory]
     [MemberData(nameof(Pages))]

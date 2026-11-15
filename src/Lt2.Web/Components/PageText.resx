@@ -64,4 +64,5 @@
   <data name="Home.OrganisationsText" xml:space="preserve"><value>Asociacijos, bendruomenės, įmonės ir kitos organizacijos skelbia savo pozicijas dėl projektų – kiekviena savo vardu. Jų pozicijos rodomos atskirai ir neskaičiuojamos tarp dalyvių.</value></data>
   <data name="Home.OrganisationsList" xml:space="preserve"><value>Visos organizacijos →</value></data>
   <data name="Home.OrganisationsRegister" xml:space="preserve"><value>Registruoti organizaciją →</value></data>
+  <data name="Agenda.Older" xml:space="preserve"><value>Ankstesni balsavimai →</value></data>
 </root>

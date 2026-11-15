@@ -166,33 +166,12 @@
                     @foreach (var v in day)
                     {
                         <li class="tl-item" id="recent-@v.VoteId">
-                            <div class="tl-item__main">
-                                <span class="row">
-                                    <a class="tag tag--ink num" href="/seimas/@Uri.EscapeDataString(v.Number)">@v.Number</a>
-                                    @if (v.Stage is { } stage)
-                                    {
-                                        <span class="tag">@F.Stage(stage)</span>
-                                    }
-                                </span>
-                                <a class="tl-item__title" href="/seimas/@Uri.EscapeDataString(v.Number)">@v.Title</a>
-                                @if (v.IsConsensus)
-                                {
-                                    <span class="small">@F.T["Consensus.Tag"]</span>
-                                }
-                                else
-                                {
-                                    <span class="small num">@T.Format("Agenda.Result", Display.Number(v.Totals.For), Display.Number(v.Totals.Against), Display.Number(v.Totals.Abstain))</span>
-                                    <SplitBar For="v.Totals.For" Against="v.Totals.Against" Abstain="v.Totals.Abstain" Small="true" />
-                                }
-                                @if (v.OfficialNote is { } note)
-                                {
-                                    <span class="note note--quiet small">@note</span>
-                                }
+                            <VotedItemMain Number="@v.Number" Title="@v.Title" Stage="@v.Stage" IsConsensus="v.IsConsensus" Totals="v.Totals" OfficialNote="@v.OfficialNote">
                                 @if (member)
                                 {
                                     <MyAgendaMark Number="@v.Number" Numbers="_numbers" Place="@($"voted-{v.VoteId}")" @rendermode="InteractiveWebAssembly" />
                                 }
-                            </div>
+                            </VotedItemMain>
                             @if (member && v.Record is { Status: "open", Counts: { For: 0, Against: 0 } } nobodyYet)
                             {
                                 @* "Nobody yet" is left out in the browser for a member who has just taken a side (the page's
@@ -214,5 +193,8 @@
                 </ul>
             </section>
         }
+
+        // Design 8.18: the long form of "Balsuota", under the last voted day, also when the last seven days had none.
+        <p class="tl-older" id="home-votes-older"><a href="@Lt2.Web.Client.Parliament.VoteHistory.Path">@T["Agenda.Older"]</a></p>
     };
 }

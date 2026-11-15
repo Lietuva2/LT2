@@ -24,5 +24,12 @@ public interface IParliamentApi
 
     Task<ApiResult<BillResponse>> GetBillAsync(string number, CancellationToken cancellationToken = default);
 
+    /// <summary>
+    /// Design 8.18: the history of votes, newest first: <paramref name="kind"/> one of <see cref="VoteListQuery"/>'s kinds,
+    /// <paramref name="q"/> a bill's number or title, <paramref name="until"/> the last Vilnius day included.
+    /// </summary>
+    Task<ApiResult<VoteListResponse>> GetVotesAsync(
+        string? q = null, string? kind = null, DateOnly? until = null, int? limit = null, string? cursor = null, CancellationToken cancellationToken = default);
+
     Task<ApiResult<VoteResponse>> GetVoteAsync(long id, CancellationToken cancellationToken = default);
 }

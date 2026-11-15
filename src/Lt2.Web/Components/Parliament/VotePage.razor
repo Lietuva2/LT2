@@ -14,12 +14,14 @@
     <PageTitle>@F.T["Vote.Label"] · @heading · Lietuva 2.0</PageTitle>
 
     <div class="stack">
-        @if (vote.Bill is { } bill)
-        {
-            <ol class="crumbs">
+        @* Design 8.18: up to the history of votes, then the vote's bill. *@
+        <ol class="crumbs">
+            <li><a href="@Lt2.Web.Client.Parliament.VoteHistory.Path" id="to-vote-history">@F.T["Votes.Title"]</a></li>
+            @if (vote.Bill is { } bill)
+            {
                 <li><a href="/seimas/@bill.Number">@bill.Number</a></li>
-            </ol>
-        }
+            }
+        </ol>
         <p class="label num">@string.Join(" · ", Label(vote))</p>
         <h1>@heading</h1>
         @if (wording is not null)

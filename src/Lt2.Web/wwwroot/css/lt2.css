@@ -672,7 +672,7 @@ body { padding-block-end: 4.5rem; }
 .statement__link, .statement__link a, #invite-url, .facts dd a { overflow-wrap: anywhere; }
 .statement__meta { flex-wrap: wrap; }
 
-/* ---------- The front page (design 8.7, reworked 2026-11-15; mockup design/ui/start.html) ---------- */
+/* ---------- The front page (design 8.7, reworked 2026-11-15; mockup design/ui/pradzia.html) ---------- */
 
 /* The visitor's head: the turning logo, the name and one line, the trial note with the links to register or sign in. */
 .home-head { display: grid; grid-template-columns: 7rem minmax(0, 1fr) auto; gap: var(--sp-5); align-items: center; }
@@ -713,6 +713,9 @@ body { padding-block-end: 4.5rem; }
 .tl-item__side .splitbar, .tl-item__main .splitbar { width: 100%; }
 .tl-item .note { max-width: none; }
 
+/* "Ankstesni balsavimai" under the last voted day (design 8.18): in the column of the rows, beside no date. */
+.tl-older { margin: 0; padding-inline-start: calc(9rem + var(--sp-5)); }
+
 /* The organisations on a bill: names with their stance, never counted (design 8.7, "The row lines up"). The label on a
    line of its own, then one organisation per line: the stances one column, the names another, so every name starts at
    the same place; a long name wraps in its own column, with "Nepatvirtinta" after it. */
@@ -747,6 +750,7 @@ body { padding-block-end: 4.5rem; }
   .tl-day { grid-template-columns: minmax(0, 1fr); gap: var(--sp-3); }
   .tl-date { position: static; flex-direction: row; flex-wrap: wrap; align-items: baseline; gap: var(--sp-2); }
   .tl-date b { font-size: var(--fs-4); }
+  .tl-older { padding-inline-start: 0; }
   .tl-item { grid-template-columns: minmax(0, 1fr); }
   .tl-item__side { max-width: 26rem; }
   .tl-ask { max-width: none; }

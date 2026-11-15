@@ -1,0 +1,83 @@
+@using Lt2.Api.Contracts.Parliament
+@inject IStringLocalizer<PageText> T
+@inject Formats F
+
+@* The main column of a voted row of the timeline: the start page's "Balsuota" (design 8.7) and the history of votes (8.18).
+   The bill's number and stage, its title linking to the bill, the result (or the consensus mark) with the bar, and the
+   official note. The history also names a vote that is not a stage result and shows its wording; a vote without a bill
+   has the agenda item's title in the bill's place. What only the start page has (the member's mark) is the child content. *@
+<div class="tl-item__main">
+    <span class="row">
+        @if (Number is not null)
+        {
+            <a class="tag tag--ink num" href="@BillPath">@Number</a>
+        }
+        @if (Stage is not null)
+        {
+            <span class="tag">@F.Stage(Stage)</span>
+        }
+        @if (Kind is not null && Kind != "stage-result")
+        {
+            <span class="tag">@F.Kind(Kind)</span>
+        }
+    </span>
+    @if (Number is not null)
+    {
+        <a class="tl-item__title" href="@BillPath">@Title</a>
+    }
+    else
+    {
+        <b class="tl-item__title">@Title</b>
+    }
+    @if (Wording is not null)
+    {
+        <span class="small">@Wording</span>
+    }
+    @if (IsConsensus)
+    {
+        <span class="small">@F.T["Consensus.Tag"]</span>
+    }
+    else if (!HasResult)
+    {
+        <span class="small">@F.T["NoResult"]</span>
+    }
+    else
+    {
+        <span class="small num">@T.Format("Agenda.Result", Display.Number(Totals.For), Display.Number(Totals.Against), Display.Number(Totals.Abstain))</span>
+        <SplitBar For="Totals.For" Against="Totals.Against" Abstain="Totals.Abstain" Small="true" />
+    }
+    @if (OfficialNote is not null)
+    {
+        <span class="note note--quiet small">@OfficialNote</span>
+    }
+    @ChildContent
+</div>
+
+@code {
+    /// <summary>The bill's number; null for a vote without a bill.</summary>
+    [Parameter] public string? Number { get; set; }
+
+    /// <summary>The bill's title, or the agenda item's for a vote without a bill.</summary>
+    [Parameter, EditorRequired] public string Title { get; set; } = "";
+
+    [Parameter] public string? Stage { get; set; }
+
+    /// <summary>The vote's kind, said when it is not a stage result; null where every row is one (the start page).</summary>
+    [Parameter] public string? Kind { get; set; }
+
+    /// <summary>What was voted on, for a vote that is not a stage result.</summary>
+    [Parameter] public string? Wording { get; set; }
+
+    [Parameter] public bool IsConsensus { get; set; }
+
+    /// <summary>False until the per-MP results are read; the totals come with them.</summary>
+    [Parameter] public bool HasResult { get; set; } = true;
+
+    [Parameter, EditorRequired] public VoteTotalsResponse Totals { get; set; } = default!;
+
+    [Parameter] public string? OfficialNote { get; set; }
+
+    [Parameter] public RenderFragment? ChildContent { get; set; }
+
+    private string BillPath => "/seimas/" + Uri.EscapeDataString(Number!);
+}

@@ -244,7 +244,7 @@ public sealed class ParliamentApiTests(DatabaseFixture database) : ApiTest(datab
         var document = await browser.Client.GetStringAsync("/openapi/v1.json");
 
         foreach (var path in new[] { "/api/v1/terms/current", "/api/v1/mps", "/api/v1/mps/{slug}", "/api/v1/mps/{slug}/votes", "/api/v1/factions", "/api/v1/factions/{slug}",
-            "/api/v1/committees", "/api/v1/committees/{slug}", "/api/v1/bills", "/api/v1/bills/{number}", "/api/v1/votes/{id}", "/api/v1/meta/imports" })
+            "/api/v1/committees", "/api/v1/committees/{slug}", "/api/v1/bills", "/api/v1/bills/{number}", "/api/v1/votes", "/api/v1/votes/{id}", "/api/v1/meta/imports" })
         {
             document.ShouldContain($"\"{path}\"", customMessage: path);
         }
