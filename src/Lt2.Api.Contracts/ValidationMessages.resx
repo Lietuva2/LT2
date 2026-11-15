@@ -51,4 +51,6 @@
 <data name="OrgStatement.Goal" xml:space="preserve"><value>Tikslas – nuo 1 iki 1 000 000 dalyvių, ir tik kai organizacija prašo balsuoti už arba prieš.</value></data>
 <data name="Confirm.Address" xml:space="preserve"><value>Įveskite el. pašto adresą organizacijos svetainės domene.</value></data>
 <data name="Confirm.Code" xml:space="preserve"><value>Įveskite kodą iš laiško.</value></data>
+  <data name="MyBills.Count" xml:space="preserve"><value>Nurodykite nuo 1 iki 30 projektų numerių.</value></data>
+  <data name="MyBills.Number" xml:space="preserve"><value>Projekto numeris netinka.</value></data>
 </root>

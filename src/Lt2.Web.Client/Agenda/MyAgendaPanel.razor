@@ -1,0 +1,104 @@
+@inherits InteractiveBase<AppealUi>
+@inject MyAgendaState State
+
+@* "Jūsų projektai" at the top of the front page for a member (design 8.7, from variant C): the bills on the agenda or voted
+   in the last week that the member follows or took a side on, each with its planned date, their own side or "Dar
+   nenurodėte, ko prašote", the last vote's result, and the share link when they have taken a side. The public facts come
+   from the page (the same for every member); the member's own come from their own answers, asked only in the browser, so
+   nothing shows until they have loaded and nothing of them is in the page's HTML. *@
+@if (_rows is { } rows)
+{
+    <section class="sheet stack stack--tight my-agenda" aria-labelledby="h-my-agenda" id="my-agenda">
+        <h2 id="h-my-agenda">@L["Mine.Title"]</h2>
+        @if (rows.Count == 0)
+        {
+            <p class="small" id="my-agenda-none">@L["Mine.None"]</p>
+        }
+        else
+        {
+            <ul class="my-agenda__list">
+                @foreach (var (bill, mine) in rows)
+                {
+                    <li id="my-agenda-@bill.Number" @key="bill.Number">
+                        <span class="row">
+                            <a class="tag tag--ink num" href="@BillPath(bill.Number)">@bill.Number</a>
+                            @if (bill.Planned is { } planned)
+                            {
+                                <span class="tag">@L.Format("Mine.Planned", planned)</span>
+                            }
+                        </span>
+                        <a class="my-agenda__title" href="@BillPath(bill.Number)">@bill.Title</a>
+                        <span class="small">
+                            @if (mine.Following)
+                            {
+                                @L["Mine.Following"]@(" · ")
+                            }
+                            @if (mine.Side is { } side)
+                            {
+                                @L["Mine.Side"]@(" ")<span class="choice choice--@side">@L["Mine.Side." + side]</span>
+                            }
+                            else
+                            {
+                                <a href="@BillPath(bill.Number)">@L["Mine.NoSideAction"]</a>
+                            }
+                        </span>
+                        @if (bill.LastVote is { } vote)
+                        {
+                            <span class="small num">@L.Format("Mine.LastVote", vote)</span>
+                        }
+                        @if (mine.Side is not null && _shareLink is { } link)
+                        {
+                            <div class="stack stack--tight">
+                                <span class="small">@L["Mine.Share"]</span>
+                                <CopyLink Link="@LandingPath.ShareLink(link, BillPath(bill.Number))" ButtonId="@($"my-agenda-share-{bill.Number}")" />
+                            </div>
+                        }
+                    </li>
+                }
+            </ul>
+        }
+        <p class="small"><a href="/sveiki#sekami">@L["Mine.All"]</a></p>
+    </section>
+}
+else if (Message is not null)
+{
+    @* The member's own answer did not come: say so, so the panel is not silently missing. *@
+    <section class="sheet stack stack--tight my-agenda" aria-labelledby="h-my-agenda" id="my-agenda-failed">
+        <h2 id="h-my-agenda">@L["Mine.Title"]</h2>
+        <Messages Message="@Message" />
+    </section>
+}
+
+@code {
+    private List<(MyAgendaBill Bill, MyBillResponse Mine)>? _rows;
+    private string? _shareLink;
+
+    /// <summary>The public bills of the page's agenda and the last week's votes, in the order the panel lists them.</summary>
+    [Parameter, EditorRequired] public IReadOnlyList<MyAgendaBill> Bills { get; set; } = [];
+
+    /// <summary>Every bill the page shows (the timeline's marks ask with the same list, so the page asks once).</summary>
+    [Parameter, EditorRequired] public IReadOnlyList<string> Numbers { get; set; } = [];
+
+    private static string BillPath(string number) => "/seimas/" + Uri.EscapeDataString(number);
+
+    protected override async Task OnInitializedAsync()
+    {
+        // Only in the browser: while the server prerenders, the panel is not there at all.
+        if (!RendererInfo.IsInteractive || !await IsSignedInAsync())
+        {
+            return;
+        }
+
+        if (await State.MineAsync(Numbers) is not { } mine)
+        {
+            Message = L["Error.Generic"];
+            return;
+        }
+
+        _rows = Bills.Where(b => mine.ContainsKey(b.Number)).Select(b => (b, mine[b.Number])).ToList();
+        if (_rows.Any(r => r.Mine.Side is not null) && await State.InvitationAsync() is { Usable: true } invitation)
+        {
+            _shareLink = invitation.Link;
+        }
+    }
+}

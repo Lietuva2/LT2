@@ -126,6 +126,32 @@ internal sealed class OrganisationsService(
             rows.Select(r => new BillStatement(r.o.Id, r.o.Slug, r.o.Name, OrganisationReads.Label(r.o), OrganisationReads.Info(r.s, counts))).ToList());
     }
 
+    public async Task<IReadOnlyDictionary<string, IReadOnlyList<BillOrganisation>>> ShownOnBillsAsync(IReadOnlyCollection<string> billNumbers, CancellationToken cancellationToken)
+    {
+        var numbers = billNumbers.Select(AppealReads.NormaliseBillNumber).Distinct().ToList();
+        if (numbers.Count == 0)
+        {
+            return new Dictionary<string, IReadOnlyList<BillOrganisation>>(StringComparer.Ordinal);
+        }
+
+        await using var db = await contexts.CreateDbContextAsync(cancellationToken);
+        var rows = await (from s in db.OrganisationStatements.AsNoTracking().Shown(db.Organisations)
+                          join o in db.Organisations.AsNoTracking() on s.OrganisationId equals o.Id
+                          where numbers.Contains(s.BillNumber)
+                          orderby s.PublishedAt, s.Id
+                          select new { s.BillNumber, s.Stance, o })
+            .ToListAsync(cancellationToken);
+
+        // As on the bill's page: for, against, remarks; within each, the order published (a stable sort keeps it).
+        return rows.GroupBy(r => r.BillNumber, StringComparer.Ordinal).ToDictionary(
+            g => g.Key,
+            g => (IReadOnlyList<BillOrganisation>)g
+                .OrderBy(r => OrganisationRules.StanceOrder(r.Stance))
+                .Select(r => new BillOrganisation(r.o.Slug, r.o.Name, OrganisationReads.Label(r.o), r.Stance))
+                .ToList(),
+            StringComparer.Ordinal);
+    }
+
     public async Task<Result<OrganisationCreated>> RegisterAsync(Guid userId, NewOrganisation request, CancellationToken cancellationToken)
     {
         if (CheckProfile(request) is { } broken)

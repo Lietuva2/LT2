@@ -178,45 +178,6 @@ public sealed partial class AgendaTests(DatabaseFixture database) : ApiTest(data
     }
 
     [Fact]
-    public async Task The_front_page_shows_the_coming_items_first_and_no_empty_record_heading()
-    {
-        await Database.PlanAsync(AppealSteps.SecondBill, ReasonsToComeSteps.VilniusToday().AddDays(2));
-
-        // No published record for the moment: earlier tests' records are hidden for the check and brought back after it.
-        var open = await Database.ScalarAsync<string>("SELECT coalesce(string_agg(id::text, ','), '') FROM appeals.bill_record WHERE status = 'open'") ?? "";
-        var closed = await Database.ScalarAsync<string>("SELECT coalesce(string_agg(id::text, ','), '') FROM appeals.bill_record WHERE status = 'closed'") ?? "";
-        var published = open + closed;
-        await Database.ExecuteAsync("UPDATE appeals.bill_record SET status = 'rejected' WHERE status IN ('open', 'closed')");
-        try
-        {
-            using var visitor = NewBrowser();
-            var html = WebUtility.HtmlDecode(await visitor.Client.GetStringAsync("/"));
-            html.ShouldContain("Artimiausiu metu Seime");
-            html.ShouldMatch("id=\"agenda-\\d{4}-\\d{2}-\\d{2}-" + AppealSteps.SecondBill + "\"");
-            html.ShouldContain("href=\"/darbotvarke\"");
-            html.ShouldNotContain("id=\"home-appeals\"");
-            html.ShouldContain("Tai nėra reprezentatyvi apklausa");
-            html.IndexOf("Artimiausiu metu Seime", StringComparison.Ordinal).ShouldBeLessThan(html.IndexOf("id=\"not-a-poll\"", StringComparison.Ordinal));
-        }
-        finally
-        {
-            foreach (var (ids, status) in new[] { (open, "open"), (closed, "closed") }.Where(x => x.Item1.Length > 0))
-            {
-                await Database.ExecuteAsync(
-                    "UPDATE appeals.bill_record SET status = @s WHERE id = ANY(string_to_array(@ids, ',')::uuid[])", ("s", status), ("ids", ids));
-            }
-
-            await Database.UnplanAsync(AppealSteps.SecondBill);
-        }
-
-        using var again = NewBrowser();
-        if (published.Length > 0)
-        {
-            WebUtility.HtmlDecode(await again.Client.GetStringAsync("/")).ShouldContain("id=\"home-appeals\"");
-        }
-    }
-
-    [Fact]
     public async Task The_agenda_is_first_in_the_menu()
     {
         using var visitor = NewBrowser();

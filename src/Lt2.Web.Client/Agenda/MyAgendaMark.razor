@@ -1,0 +1,67 @@
+@inherits InteractiveBase<AppealUi>
+@inject MyAgendaState State
+
+@* A member's own mark in a row of the front page's timeline (design 8.7): "Sekate" and their own side, or the row's action,
+   which reads "Argumentai ir pozicijos" on a bill where they took a side. Filled only in the browser from the member's own
+   answer (MyAgendaState, one request for the whole page): while the server prerenders, the mark is empty and the action
+   reads as for anyone and "nobody yet" is said as for anyone, so the page's HTML is the same for every member. *@
+@if (Part == "nobody")
+{
+    @if (_mine?.Side is null)
+    {
+        <span class="small" id="home-nobody-@Place">@L["Agenda.Nobody"]</span>
+    }
+}
+else if (Part == "action")
+{
+    <a class="btn btn--plain cta" href="@BillPath" id="home-action-@Place">@L[_mine?.Side is null ? "Agenda.Action.TakePart" : "Agenda.Action.Side"]</a>
+}
+else if (_mine is { } mine)
+{
+    <p class="mine small" id="home-mine-@Place">
+        @if (mine.Following)
+        {
+            <span class="tag tag--people">@L["Mine.Following"]</span>
+        }
+        @if (mine.Side is { } side)
+        {
+            @L["Mine.Side"]@(" ")<span class="choice choice--@side">@L["Mine.Side." + side]</span>
+        }
+        else
+        {
+            @L["Mine.NoSide"]
+        }
+    </p>
+}
+
+@code {
+    private MyBillResponse? _mine;
+
+    [Parameter, EditorRequired] public string Number { get; set; } = "";
+
+    /// <summary>Every bill the page shows, so all the marks share one request.</summary>
+    [Parameter, EditorRequired] public IReadOnlyList<string> Numbers { get; set; } = [];
+
+    /// <summary>
+    /// Where the row is, for the element ids: a bill may be planned on two days and voted in the same week, so its number
+    /// alone would repeat an id. The planned rows pass <c>{yyyy-MM-dd}-{number}</c>, the voted ones <c>voted-{vote id}</c>.
+    /// </summary>
+    [Parameter, EditorRequired] public string Place { get; set; } = "";
+
+    /// <summary>
+    /// <c>mark</c> (under the title), <c>action</c> (the row's button), or <c>nobody</c>: the public "Dar niekas nenurodė,
+    /// ko prašo", left out for a member whose own answer says they took a side (the page's agenda is up to a minute old).
+    /// </summary>
+    [Parameter] public string Part { get; set; } = "mark";
+
+    private string BillPath => "/seimas/" + Uri.EscapeDataString(Number);
+
+    protected override async Task OnInitializedAsync()
+    {
+        // Only in the browser: the server never asks, so nothing of the member's own is in the page's HTML.
+        if (RendererInfo.IsInteractive && await IsSignedInAsync())
+        {
+            _mine = (await State.MineAsync(Numbers))?.GetValueOrDefault(Number);
+        }
+    }
+}

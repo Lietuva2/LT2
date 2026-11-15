@@ -150,4 +150,12 @@
   <data name="Method.Not.1" xml:space="preserve"><value>Profiliuose nėra reitingų, balų ar Seimo narių palyginimų tarpusavyje, nėra ir Seimo narių išlaidų. Profilis rodo, ką Seimo narys darė, o ne vertina.</value></data>
   <data name="Method.Classification" xml:space="preserve"><value>Kaip atpažįstamos projekto stadijos</value></data>
   <data name="Method.Classification.1" xml:space="preserve"><value>Ar balsavimas buvo dėl projekto pateikimo, svarstymo ar priėmimo, nustatoma pagal balsavimo formuluotę. Ko taisyklės negali priskirti, rodoma kaip kitas balsavimas be stadijos.</value></data>
+  <data name="Date.DayMonth" xml:space="preserve"><value>{0} {1} d.</value></data>
+  <data name="Weekday.Monday" xml:space="preserve"><value>pirmadienis</value></data>
+  <data name="Weekday.Tuesday" xml:space="preserve"><value>antradienis</value></data>
+  <data name="Weekday.Wednesday" xml:space="preserve"><value>trečiadienis</value></data>
+  <data name="Weekday.Thursday" xml:space="preserve"><value>ketvirtadienis</value></data>
+  <data name="Weekday.Friday" xml:space="preserve"><value>penktadienis</value></data>
+  <data name="Weekday.Saturday" xml:space="preserve"><value>šeštadienis</value></data>
+  <data name="Weekday.Sunday" xml:space="preserve"><value>sekmadienis</value></data>
 </root>

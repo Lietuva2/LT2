@@ -33,6 +33,9 @@ public static class ApiRoutes
         public const string Invitation = Root + "/invitation";
         public const string ReplaceInvitation = Root + "/invitation/replace";
 
+        /// <summary>The caller's own side and follow for the bills asked about (design 8.7).</summary>
+        public const string Bills = Root + "/bills";
+
         public static string SessionById(Guid id) => $"{Sessions}/{id}";
     }
 

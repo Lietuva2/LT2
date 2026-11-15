@@ -38,6 +38,9 @@ internal static class RateLimitPolicies
 
     /// <summary>Reports, per account (design 6.4).</summary>
     public const string Report = "appeal-report";
+
+    /// <summary>A member's own answers a page asks for in one go (design 8.7, <c>/me/bills</c>), per account.</summary>
+    public const string OwnRead = "own-read";
 }
 
 internal sealed class RateLimitOptions
@@ -55,6 +58,9 @@ internal sealed class RateLimitOptions
     public FixedWindow WriteReason { get; set; } = new() { PermitLimit = 20, WindowSeconds = 60 * 60 };
 
     public FixedWindow Report { get; set; } = new() { PermitLimit = 20, WindowSeconds = 60 * 60 };
+
+    /// <summary>Generous for a person moving between pages; it stops a script asking about every bill one by one.</summary>
+    public FixedWindow OwnRead { get; set; } = new() { PermitLimit = 120, WindowSeconds = 60 };
 
     internal sealed class FixedWindow
     {
@@ -123,6 +129,7 @@ internal static class SecurityServices
             options.AddPolicy(RateLimitPolicies.RegisterOrganisation, context => PerAccount(context, Limits(context).RegisterOrganisation));
             options.AddPolicy(RateLimitPolicies.WriteReason, context => PerAccount(context, Limits(context).WriteReason));
             options.AddPolicy(RateLimitPolicies.Report, context => PerAccount(context, Limits(context).Report));
+            options.AddPolicy(RateLimitPolicies.OwnRead, context => PerAccount(context, Limits(context).OwnRead));
         });
 
         return services;

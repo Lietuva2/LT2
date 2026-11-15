@@ -61,6 +61,13 @@ internal sealed class FollowService(
             organisationIds.Select(id => known.GetValueOrDefault(id)).OfType<OrganisationFacts>().ToList());
     }
 
+    public async Task<IReadOnlySet<string>> FollowedBillNumbersAsync(Guid userId, CancellationToken cancellationToken)
+    {
+        await using var db = await contexts.CreateDbContextAsync(cancellationToken);
+        var numbers = await db.Follows.AsNoTracking().Where(f => f.UserId == userId && f.Kind == FollowKinds.Bill).Select(f => f.Key).ToListAsync(cancellationToken);
+        return numbers.ToHashSet(StringComparer.Ordinal);
+    }
+
     public async Task<Result<Unit>> FollowBillAsync(Guid userId, string number, CancellationToken cancellationToken)
     {
         var bill = await bills.FindAsync(number.Trim().ToUpperInvariant(), cancellationToken);

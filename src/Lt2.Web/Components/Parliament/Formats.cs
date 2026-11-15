@@ -19,6 +19,12 @@ internal sealed class Formats(IStringLocalizer<ParliamentText> t)
 
     public string Date(DateTimeOffset at) => Date(Display.DayOf(at));
 
+    /// <summary>A day in words without the year, "lapkričio 19 d." (the front page's timeline, design 8.7).</summary>
+    public string DayMonth(DateOnly date) => t.Format("Date.DayMonth", t[$"Month.{date.Month}"], date.Day);
+
+    /// <summary>The weekday in words, "ketvirtadienis".</summary>
+    public string Weekday(DateOnly date) => t[$"Weekday.{date.DayOfWeek}"];
+
     public string Time(DateTimeOffset at) => t.Format("Time.Format", Date(at), Display.Time(at));
 
     public string Choice(string? code) => code is null ? t["Consensus.Tag"] : t[$"Choice.{code}"];

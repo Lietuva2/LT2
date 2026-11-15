@@ -51,8 +51,9 @@ public sealed partial class SignUpTests
 
         await page.GotoAsync(BaseUrl!);
         await Assertions.Expect(page.GetByRole(AriaRole.Heading, new() { Level = 1 })).ToContainTextAsync("Lietuva");
-        // The front page carries the sign-in steps (design 8.7): registration opens in place.
-        await page.GetByRole(AriaRole.Button, new() { Name = "Registruokitės su kvietimo kodu." }).ClickAsync();
+        // The front page links to registration (design 8.7: the form itself is on /prisijungti).
+        await page.GetByRole(AriaRole.Link, new() { Name = "Registruokitės", Exact = true }).ClickAsync();
+        await page.WaitForURLAsync(new System.Text.RegularExpressions.Regex("/prisijungti"));
 
         await Assertions.Expect(page.GetByRole(AriaRole.Heading, new() { Name = "Nauja paskyra" })).ToBeVisibleAsync();
         await WaitForInteractivityAsync(page);

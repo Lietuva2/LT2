@@ -1,140 +1,94 @@
 @page "/"
-@using Lt2.Api.Contracts.Appeals
+@using Lt2.Api.Contracts.Agenda
+@using Lt2.Web.Client.Appeals
 @inject IStringLocalizer<PageText> T
 @inject IStringLocalizer<Lt2.Web.Components.Appeals.AppealText> A
-@inject IAppealsApi Appeals
-@inject Lt2.Api.Contracts.Agenda.IAgendaApi Agenda
+@inject IStringLocalizer<AppealUi> U
+@inject Lt2.Web.Services.FrontPageAgenda Agenda
 @inject Formats F
 
-@* The front page (design 8.7, option B chosen 2026-11-13; 8.12.5), server-rendered and public: the welcome with the
-   turning logo and the sign-in steps shared with /prisijungti (a greeting instead once signed in), "Artimiausiu metu
-   Seime", then one card for each of the six bills with the most activity: both sides with the count for accounts
-   older than 30 days, the threshold and the most endorsed reason on each side, linking to the bill. The note that this is
-   not a representative poll closes it. *@
+@* The front page (design 8.7, reworked 2026-11-15: variant A, with the member's panel of variant C; the mockup is in
+   design/ui/pradzia.html and pradzia-narys.html). The page is the agenda with what a person can do about it, built from the one public agenda
+   answer kept in memory for a minute (FrontPageAgenda). A visitor first gets the introduction ("Kaip tai veikia") and
+   the links to register or sign in, never a form; a member gets "Sveiki sugrįžę" and "Jūsų projektai". Everything that
+   is a member's own (the panel, the marks and actions in the rows) is an island filled in the browser from their own
+   answers, so the server renders the same page for every member and nothing per person is in it. *@
 <PageTitle>Lietuva 2.0</PageTitle>
 
-<div class="welcome welcome--home">
-    <div class="stack">
-        <lt2-logo-spin period="14"></lt2-logo-spin>
-        <h1 id="home-title">Lietuva 2.0</h1>
-        <p class="lead">@T["Home.Kicker"]</p>
-        <p>@T["Home.Lede"]</p>
-        <p class="note">@T["Home.Trial"]</p>
-    </div>
-    <AuthorizeView>
-        <Authorized>
-            <section class="sheet sheet--cut stack" aria-labelledby="h-home-welcome" id="home-signed-in">
-                <h2 id="h-home-welcome">@T["Home.Welcome"]</h2>
+<AuthorizeView>
+    <Authorized>
+        <div class="stack stack--tight" id="home-welcome">
+            <h1 id="home-title" class="home-h1-s">@T["Home.Welcome"]</h1>
+            <p class="small"><a href="/metodika#kaip-tai-veikia" id="home-how-link">@T["Home.HowLink"]</a> · <a href="/sveiki">@T["Nav.Account"]</a></p>
+            <Lt2.Web.Client.Components.NeedsScript />
+        </div>
+        <MyAgendaPanel Bills="_panel" Numbers="_numbers" @rendermode="InteractiveWebAssembly" />
+    </Authorized>
+    <NotAuthorized>
+        <div class="home-head" id="home-head">
+            <lt2-logo-spin period="14"></lt2-logo-spin>
+            <div class="stack stack--tight">
+                <h1 id="home-title">Lietuva 2.0</h1>
+                <p class="lead">@T["Home.Lead"]</p>
+            </div>
+            <div class="stack stack--tight home-head__signin" id="home-sign-in">
+                <p class="note">@T["Home.Trial"]</p>
+                <p class="small">@T["Home.HaveCode"] <a href="/prisijungti?registruotis=true" id="home-register">@T["Home.Register"]</a> · @T["Home.HaveAccount"] <a href="/prisijungti" id="home-sign-in-link">@T["Home.SignIn"]</a></p>
+            </div>
+        </div>
+        <HowItWorks />
+    </NotAuthorized>
+</AuthorizeView>
 
-                <a class="btn btn--wide" href="/sveiki">@T["Home.ToAccount"]</a>
-            </section>
-        </Authorized>
-        <NotAuthorized>
-            <Lt2.Web.Client.Components.SignInFlow @rendermode="InteractiveWebAssembly" />
-        </NotAuthorized>
-    </AuthorizeView>
-</div>
-
-@* Design 8.11.1: what the Seimas will consider soon comes first, in the agenda page's rows, up to eight items. *@
 <section class="stack" aria-labelledby="h-home-coming" id="home-coming">
     <div class="row">
         <h2 id="h-home-coming">@T["Home.Coming"]</h2>
         <a href="/darbotvarke">@T["Agenda.All"]</a>
     </div>
+    <p class="small" id="home-agenda-source">
+        @T["Agenda.Source"]@(" ")@(_agenda?.AgendaReadAt is { } readAt ? T.Format("Agenda.ReadAt", Display.DayTime(readAt)) : T["Agenda.NeverRead"])
+    </p>
     @if (_coming.Count == 0)
     {
         <p id="home-none-planned">@T["Agenda.NonePlanned"]</p>
     }
-    else
-    {
-        @foreach (var day in _coming)
-        {
-            <section class="stack stack--tight" aria-labelledby="h-home-day-@Display.Day(day.Date)">
-                <h3 id="h-home-day-@Display.Day(day.Date)">@T.Format("Agenda.Day", F.Date(day.Date))</h3>
-                <ul class="rows">
-                    @foreach (var item in day.Items)
-                    {
-                        <AgendaItemRow Item="item" Day="day.Date" />
-                    }
-                </ul>
-            </section>
-        }
-    }
+    <AuthorizeView>
+        <Authorized>@Timeline(true)</Authorized>
+        <NotAuthorized>@Timeline(false)</NotAuthorized>
+    </AuthorizeView>
+    <p class="small">@T["Agenda.OlderNote"]</p>
+    <p class="note note--quiet" id="not-a-poll">@A["NotAPoll"]</p>
 </section>
 
-@* The cards only while some bill has participants: no empty heading (design 8.12.5). *@
-@if (_records.Count > 0)
-{
-<section class="stack" aria-labelledby="h-home-appeals" id="home-appeals">
-    <div class="row">
-        <h2 id="h-home-appeals">@T["Home.Appeals"]</h2>
-        <a href="/projektai">@T["Home.AllAppeals"]</a>
-        <a href="/suvestines">@T["Home.Digests"]</a>
-    </div>
-    @{
-        <div class="cards">
-            @foreach (var a in _records)
-            {
-                var link = $"/seimas/{Uri.EscapeDataString(a.Bill.Number)}";
-                <article class="sheet stack stack--tight" aria-labelledby="h-@a.Bill.Number" id="home-appeal-@a.Bill.Number">
-                    <div class="row">
-                        <a class="tag tag--ink num" href="/seimas/@Uri.EscapeDataString(a.Bill.Number)">@a.Bill.Number</a>
-                        @if (a.Planned is { } plan)
-                        {
-                            @if (plan.Stage is { } stage)
-                            {
-                                <span class="tag">@F.Stage(stage)</span>
-                            }
-                            <span class="tag">@A.Format("Planned", F.T["Month." + plan.Date.Month], plan.Date.Day)</span>
-                        }
-                    </div>
-                    <h3 id="h-@a.Bill.Number"><a class="card__title" href="@link">@a.Bill.Title</a></h3>
-                    <div class="counts num">
-                        <p><b class="counts__for">@Display.Number(a.Counts.For)</b> @T["Home.For"] <span class="small">@T.Format("Home.Older", Display.Number(a.Counts.ForOlderThan30Days))</span></p>
-                        <p><b class="counts__against">@Display.Number(a.Counts.Against)</b> @T["Home.Against"] <span class="small">@T.Format("Home.Older", Display.Number(a.Counts.AgainstOlderThan30Days))</span></p>
-                    </div>
-                    <SplitBar For="a.Counts.For" Against="a.Counts.Against" Abstain="0" Small="true" />
-                    <p class="small num">
-                        <b>@Display.Number(a.Threshold.Participants)</b> @A.Format("Threshold.Progress", Display.Number(a.Threshold.Value))
-                        · @(a.Threshold.Reached ? T["Home.Reached"] : T.Format("Home.ToGo", Display.Number(Math.Max(0, a.Threshold.Value - a.Threshold.Participants))))
-                    </p>
-                    @foreach (var side in Sides)
-                    {
-                        @if (a.Reasons.Where(r => r.Side == side).OrderByDescending(r => r.Endorsements).ThenBy(r => r.CreatedAt).FirstOrDefault() is { } top)
-                        {
-                            <div class="said">
-                                <p class="bubble bubble--people voice"><span class="choice choice--@side">@A["Digests.Side." + side]</span> @top.Text</p>
-                                <div class="said__by"><span class="small num">@A.Format("Digests.Endorsed", Display.Number(top.Endorsements))</span></div>
-                            </div>
-                        }
-                        else
-                        {
-                            <p class="small"><span class="choice choice--@side">@A["Digests.Side." + side]</span> @T["Home.NoReasons"]</p>
-                        }
-                    }
-                    <p><a href="@link">@T["Home.OpenAppeal"]</a></p>
-                </article>
-            }
-        </div>
-    }
+<section class="sheet sheet--quiet stack stack--tight" aria-labelledby="h-home-organisations" id="home-organisations">
+    <h2 id="h-home-organisations">@T["Home.Organisations"]</h2>
+    <p>@T["Home.OrganisationsText"]</p>
+    <p class="row"><a href="/organizacijos">@T["Home.OrganisationsList"]</a> <a href="/organizacijos/nauja">@T["Home.OrganisationsRegister"]</a></p>
 </section>
-}
 
-<p class="small">@T["Agenda.OlderNote"]</p>
-<p class="note note--quiet" id="not-a-poll">@A["NotAPoll"]</p>
+<p class="row" id="home-more"><a href="/projektai">@T["Home.AllAppeals"]</a> <a href="/suvestines">@T["Home.Digests"]</a> <a href="/seimo-nariai">@T["Nav.Mps"]</a></p>
+
+<AuthorizeView>
+    <Authorized>
+        <p class="note" id="home-trial-summaries">@T["Home.TrialSummaries"]</p>
+    </Authorized>
+</AuthorizeView>
 
 @code {
-    private const int Shown = 6;
+    /// <summary>At most eight coming planned items in all, kept in their days (design 8.11.1, 8.7).</summary>
     private const int ComingShown = 8;
-    private static readonly string[] Sides = ["for", "against"];
-    private List<BillRecordResponse> _records = [];
-    private List<Lt2.Api.Contracts.Agenda.AgendaDayResponse> _coming = [];
+
+    private AgendaResponse? _agenda;
+    private List<AgendaDayResponse> _coming = [];
+    private List<IGrouping<DateOnly, AgendaVoteResponse>> _voted = [];
+    private List<MyAgendaBill> _panel = [];
+    private List<string> _numbers = [];
 
     protected override async Task OnInitializedAsync()
     {
-        // Up to eight coming planned items, kept in their days (design 8.11.1).
+        _agenda = await Agenda.ReadAsync(CancellationToken.None);
         var left = ComingShown;
-        foreach (var day in (await Agenda.GetAgendaAsync()).Value?.Days ?? [])
+        foreach (var day in _agenda.Days)
         {
             if (left <= 0)
             {
@@ -146,15 +100,97 @@
             _coming.Add(day with { Items = items });
         }
 
-        // The list is by activity (participants plus arguments), those with none last; each card needs the bill's public
-        // reasons, so the few shown are read one by one.
-        var page = (await Appeals.GetAppealsAsync()).Value;
-        foreach (var item in page?.Items.Where(i => i.Counts.For + i.Counts.Against + i.Arguments > 0).Take(Shown) ?? [])
+        _voted = _agenda.RecentVotes.GroupBy(v => Display.DayOf(v.HeldAt)).OrderByDescending(g => g.Key).ToList();
+
+        // The member's panel lists, of these public bills, those that are theirs; the islands learn which in the browser.
+        var lastVotes = _agenda.RecentVotes.GroupBy(v => v.Number, StringComparer.Ordinal)
+            .ToDictionary(g => g.Key, g => g.OrderByDescending(v => v.HeldAt).First(), StringComparer.Ordinal);
+        foreach (var (day, item) in _coming.SelectMany(d => d.Items.Select(i => (d.Date, i))))
         {
-            if ((await Appeals.GetRecordAsync(item.Bill.Number)).Value is { } record)
+            if (item.Title is { } title && _panel.All(p => p.Number != item.Number))
             {
-                _records.Add(record);
+                _panel.Add(new MyAgendaBill(item.Number, title, F.DayMonth(day), LastVote(lastVotes.GetValueOrDefault(item.Number))));
             }
         }
+
+        foreach (var vote in _agenda.RecentVotes.OrderByDescending(v => v.HeldAt))
+        {
+            if (_panel.All(p => p.Number != vote.Number))
+            {
+                _panel.Add(new MyAgendaBill(vote.Number, vote.Title, null, LastVote(vote)));
+            }
+        }
+
+        _numbers = _panel.Select(p => p.Number).Take(Lt2.Api.Contracts.Me.MyBillsQuery.MaxNumbers).ToList();
     }
+
+    /// <summary>"svarstymas, lapkričio 13 d.: už 69 · prieš 31 · susilaikė 18", or the consensus mark.</summary>
+    private string? LastVote(AgendaVoteResponse? vote) => vote is null
+        ? null
+        : F.Stage(vote.Stage).ToLowerInvariant() + ", " + F.DayMonth(Display.DayOf(vote.HeldAt)) + ": "
+            + (vote.IsConsensus ? F.T["Consensus.Tag"].Value : T.Format("Agenda.Result", Display.Number(vote.Totals.For), Display.Number(vote.Totals.Against), Display.Number(vote.Totals.Abstain)));
+
+    private RenderFragment Timeline(bool member) => __builder =>
+    {
+        foreach (var day in _coming)
+        {
+            <section class="tl-day" aria-label="@($"{T["Agenda.Planned"]} {F.DayMonth(day.Date)}")" id="home-day-@Display.Day(day.Date)">
+                <div class="tl-date"><span class="label">@T["Agenda.Planned"]</span><b>@F.DayMonth(day.Date)</b><span class="small">@F.Weekday(day.Date)</span></div>
+                <ul class="tl-items">
+                    @foreach (var item in day.Items)
+                    {
+                        <TimelineItem Item="item" Day="day.Date" Member="member" Numbers="_numbers" />
+                    }
+                </ul>
+            </section>
+        }
+
+        foreach (var day in _voted)
+        {
+            <section class="tl-day tl-past" aria-label="@($"{T["Agenda.Voted"]} {F.DayMonth(day.Key)}")" id="home-voted-@Display.Day(day.Key)">
+                <div class="tl-date"><span class="label">@T["Agenda.Voted"]</span><b>@F.DayMonth(day.Key)</b><span class="small">@F.Weekday(day.Key)</span></div>
+                <ul class="tl-items">
+                    @foreach (var v in day)
+                    {
+                        <li class="tl-item" id="recent-@v.VoteId">
+                            <div class="tl-item__main">
+                                <span class="row">
+                                    <a class="tag tag--ink num" href="/seimas/@Uri.EscapeDataString(v.Number)">@v.Number</a>
+                                    @if (v.Stage is { } stage)
+                                    {
+                                        <span class="tag">@F.Stage(stage)</span>
+                                    }
+                                </span>
+                                <a class="tl-item__title" href="/seimas/@Uri.EscapeDataString(v.Number)">@v.Title</a>
+                                @if (v.IsConsensus)
+                                {
+                                    <span class="small">@F.T["Consensus.Tag"]</span>
+                                }
+                                else
+                                {
+                                    <span class="small num">@T.Format("Agenda.Result", Display.Number(v.Totals.For), Display.Number(v.Totals.Against), Display.Number(v.Totals.Abstain))</span>
+                                    <SplitBar For="v.Totals.For" Against="v.Totals.Against" Abstain="v.Totals.Abstain" Small="true" />
+                                }
+                                @if (v.OfficialNote is { } note)
+                                {
+                                    <span class="note note--quiet small">@note</span>
+                                }
+                                @if (member)
+                                {
+                                    <MyAgendaMark Number="@v.Number" Numbers="_numbers" Place="@($"voted-{v.VoteId}")" @rendermode="InteractiveWebAssembly" />
+                                }
+                            </div>
+                            <div class="tl-item__side">
+                                @if (v.Record is { Status: not "rejected" } record)
+                                {
+                                    <RecordFigures Record="record" Member="member" Number="@v.Number" Numbers="_numbers" Place="@($"voted-{v.VoteId}")" />
+                                }
+                                <a class="btn btn--plain cta" href="/seimas/balsavimai/@v.VoteId">@U["Agenda.Action.Votes"]</a>
+                            </div>
+                        </li>
+                    }
+                </ul>
+            </section>
+        }
+    };
 }

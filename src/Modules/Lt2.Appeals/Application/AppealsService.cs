@@ -763,6 +763,22 @@ internal sealed class AppealsService(
             StringComparer.Ordinal);
     }
 
+    public async Task<IReadOnlyDictionary<string, string>> MySidesAsync(Guid userId, IReadOnlyCollection<string> billNumbers, CancellationToken cancellationToken)
+    {
+        var numbers = billNumbers.Select(AppealReads.NormaliseBillNumber).Distinct().ToList();
+        if (numbers.Count == 0)
+        {
+            return new Dictionary<string, string>(StringComparer.Ordinal);
+        }
+
+        await using var db = await contexts.CreateDbContextAsync(cancellationToken);
+        return await (from p in db.Positions.AsNoTracking()
+                      join r in db.BillRecords.AsNoTracking().Records() on p.RecordId equals r.Id
+                      where p.UserId == userId && numbers.Contains(r.BillNumber) && r.Status != BillRecordStatuses.Rejected
+                      select new { r.BillNumber, p.Side })
+            .ToDictionaryAsync(x => x.BillNumber, x => x.Side, StringComparer.Ordinal, cancellationToken);
+    }
+
     internal static Revision Revise(string kind, Guid id, string field, string? oldValue, string? newValue, Guid? by, DateTimeOffset at) => new()
     {
         Id = Guid.CreateVersion7(at),

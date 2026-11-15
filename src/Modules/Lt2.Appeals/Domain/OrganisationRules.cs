@@ -370,6 +370,17 @@ internal static partial class OrganisationRules
         Stances.Against => againstCount,
         _ => null,
     };
+
+    /// <summary>
+    /// Where a stance's statements come on a bill's page and in the front page's agenda (design 8.14.3, 8.7): for, then
+    /// against, then remarks; never by size.
+    /// </summary>
+    public static int StanceOrder(string stance) => stance switch
+    {
+        Stances.For => 0,
+        Stances.Against => 1,
+        _ => 2,
+    };
 }
 
 /// <summary>

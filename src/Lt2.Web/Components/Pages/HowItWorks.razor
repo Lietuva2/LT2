@@ -1,0 +1,23 @@
+@inject IStringLocalizer<Lt2.Web.Components.Appeals.AppealText> A
+
+@* "Kaip tai veikia" (design 8.7): four numbered steps and one paragraph on following and on what stays private. The same
+   texts on the visitor's front page and at the top of the methodology page (/metodika#kaip-tai-veikia), where a member's
+   "Kaip tai veikia" link leads. The one place where the short-texts rule of 8.15 does not apply. *@
+<section class="stack home-how" aria-labelledby="@($"{IdPrefix}how-title")" id="@Id">
+    <h2 id="@($"{IdPrefix}how-title")">@A["HowItWorks.Title"]</h2>
+    <ol class="intro-steps">
+        @for (var step = 1; step <= 4; step++)
+        {
+            <li><h3>@A[$"HowItWorks.{step}.Title"]</h3><p>@A[$"HowItWorks.{step}.Text"]</p></li>
+        }
+    </ol>
+    <p>@A["HowItWorks.Follow"] <a href="/metodika#privatumas">@A["HowItWorks.PrivacyLink"]</a></p>
+</section>
+
+@code {
+    /// <summary>The section's id: the methodology's anchor there, none needed on the front page.</summary>
+    [Parameter] public string? Id { get; set; }
+
+    /// <summary>Keeps the heading's id unique where the page has other headings of its own.</summary>
+    [Parameter] public string IdPrefix { get; set; } = "";
+}
