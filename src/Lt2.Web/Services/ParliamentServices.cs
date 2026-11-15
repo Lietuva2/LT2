@@ -75,6 +75,20 @@ internal sealed class ParliamentReads(IParliamentQueries queries, IPlannedAgenda
     public static VoteTotalsResponse Totals(VoteSummary v) =>
         new(v.Totals.For, v.Totals.Against, v.Totals.Abstain, v.Totals.Voted, v.Totals.Seats);
 
+    /// <summary>Design 8.18: the history of votes; the kind and the search are read as <see cref="VoteListQuery"/> reads them.</summary>
+    public async Task<Result<VoteListResponse>> VotesAsync(string? q, string? kind, DateOnly? until, int? limit, string? cursor, CancellationToken ct)
+    {
+        var historyKind = VoteListQuery.Kind(kind) switch
+        {
+            VoteListQuery.All => VoteHistoryKind.All,
+            VoteListQuery.Adoptions => VoteHistoryKind.Adoptions,
+            _ => VoteHistoryKind.StageResults,
+        };
+        var size = limit is { } n ? Math.Clamp(n, 1, VoteListQuery.MaxLimit) : VoteListQuery.DefaultLimit;
+        var page = await queries.VoteHistoryAsync(new VoteHistoryFilter(VoteListQuery.Query(q), historyKind, until, cursor, size), ct);
+        return new VoteListResponse(page.Items.Select(i => new VoteListItem(Map(i.Summary), i.AgendaItemTitle)).ToList(), page.Total, page.NextCursor);
+    }
+
     public async Task<Result<VoteResponse>> VoteAsync(long id, CancellationToken ct) =>
         await queries.VoteAsync(id, ct) is { } v
             ? new VoteResponse(
@@ -147,6 +161,10 @@ internal sealed class ServerParliamentApi(ParliamentReads reads, ErrorMapper err
 
     public async Task<ApiResult<BillResponse>> GetBillAsync(string number, CancellationToken cancellationToken = default) =>
         errors.ToApiResult(await reads.BillAsync(number, cancellationToken), x => x);
+
+    public async Task<ApiResult<VoteListResponse>> GetVotesAsync(
+        string? q = null, string? kind = null, DateOnly? until = null, int? limit = null, string? cursor = null, CancellationToken cancellationToken = default) =>
+        errors.ToApiResult(await reads.VotesAsync(q, kind, until, limit, cursor, cancellationToken), x => x);
 
     public async Task<ApiResult<VoteResponse>> GetVoteAsync(long id, CancellationToken cancellationToken = default) =>
         errors.ToApiResult(await reads.VoteAsync(id, cancellationToken), x => x);

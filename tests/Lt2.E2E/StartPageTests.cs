@@ -10,7 +10,8 @@ namespace Lt2.E2E;
 /// sees their own bills first and no introduction, takes a side in a row with one press (the first time after the consent,
 /// asked in the row), changes and withdraws it there, and the row then shows the bill's live numbers; with JavaScript off
 /// the public page is complete and nothing of a member's own is in it; the page's HTML is the same for two members; no
-/// sideways scroll at 390 px; at 1280 px the first screen shows the agenda's heading. Screenshots for the owner go to
+/// sideways scroll at 390 px; at 1280 px the first screen shows the agenda's heading; at 360, 390 and 1280 px a row's
+/// organisation names start at one place and the side buttons end where the bar ends ("The row lines up"). Screenshots for the owner go to
 /// LT2_E2E_START_SHOTS (default output/start-page/built).
 /// </summary>
 public sealed partial class StartPageTests
@@ -57,6 +58,28 @@ public sealed partial class StartPageTests
         await SidesFitSideBySideAsync(page.Locator(AskRows).First);
         Directory.CreateDirectory(Shots);
         await page.ScreenshotAsync(new() { Path = Path.Combine(Shots, $"visitor-{width}.png"), FullPage = true });
+    }
+
+    [Theory]
+    [InlineData(360, 740)]
+    [InlineData(390, 844)]
+    [InlineData(1280, 900)]
+    public async Task A_row_lines_up_at_every_width(int width, int height)
+    {
+        Assert.SkipWhen(string.IsNullOrEmpty(SignUpTests.BaseUrl), "LT2_E2E_BASE_URL is not set; start the stack and set it to run end-to-end tests.");
+        using var playwright = await Playwright.CreateAsync();
+        await using var browser = await playwright.Chromium.LaunchAsync(new() { Channel = SignUpTests.Channel, Headless = true });
+        await using var context = await browser.NewContextAsync(new() { IgnoreHTTPSErrors = true, Locale = "lt-LT", ViewportSize = new() { Width = width, Height = height } });
+        var page = await context.NewPageAsync();
+        await page.GotoAsync(Base + "/");
+
+        // The demonstration bill: several organisations with a statement, the numbers and the sides to take.
+        var row = page.Locator("#home-coming li.tl-item[id$='-XVP-0412']:has(.tl-ask)").First;
+        await Assertions.Expect(row).ToBeVisibleAsync(new() { Timeout = E2ESteps.Slow });
+        (await row.Locator(".org-item__name").CountAsync()).ShouldBeGreaterThan(1, "the demonstration bill names several organisations");
+        (await row.Locator(".tl-item__side .nowrap").CountAsync()).ShouldBeGreaterThan(1, "the demonstration bill has numbers, in parts");
+        await RowLinesUpAsync(row, $"XVP-0412 at {width}");
+        await E2ESteps.NoSidewaysScrollAsync(page, $"/ at {width}");
     }
 
     [Fact]
@@ -200,7 +223,7 @@ public sealed partial class StartPageTests
                 json["hasPositionConsent"] = JsonSerializer.SerializeToElement(false);
                 await route.FulfillAsync(new() { Response = response, Body = JsonSerializer.Serialize(json) });
             });
-            foreach (var (width, height) in new[] { (1280, 900), (390, 844) })
+            foreach (var (width, height) in new[] { (1280, 900), (390, 844), (360, 740) })
             {
                 await page.SetViewportSizeAsync(width, height);
                 await page.GotoAsync(Base + "/");
@@ -218,6 +241,7 @@ public sealed partial class StartPageTests
                 await Assertions.Expect(page.Locator($"#home-for-{place}")).ToHaveAttributeAsync("aria-pressed", "true");
                 await Assertions.Expect(page.Locator($"#home-action-{place}")).ToHaveTextAsync("Argumentai ir pozicijos");
                 await SidesFitSideBySideAsync(row);
+                await RowLinesUpAsync(row, $"a member's row at {width}");
 
                 // The page's agenda may be a minute old and still say nobody took a side: never beside the member's own side.
                 await Assertions.Expect(row.Locator($"#home-nobody-{place}")).ToHaveCountAsync(0);
@@ -338,6 +362,37 @@ public sealed partial class StartPageTests
         (await sides.EvaluateAllAsync<bool>("els => els.every(e => e.scrollWidth <= e.clientWidth + 1)")).ShouldBeTrue("the words fit in the buttons");
     }
 
+    /// <summary>
+    /// Design 8.7, "The row lines up": every organisation's name starts at the same place, its stance before it; the two side
+    /// buttons are exactly as wide as the bar; each part of a line of numbers stays on one line.
+    /// </summary>
+    private static async Task RowLinesUpAsync(ILocator row, string where)
+    {
+        var names = row.Locator(".org-item__name");
+        var lefts = new List<float>();
+        for (var i = 0; i < await names.CountAsync(); i++)
+        {
+            var name = names.Nth(i);
+            lefts.Add((await name.BoundingBoxAsync())!.X);
+            (await name.EvaluateAsync<string>("e => e.previousElementSibling?.className ?? ''")).ShouldStartWith("choice", Case.Sensitive, $"the stance before the name: {where}");
+        }
+
+        if (lefts.Count > 0)
+        {
+            ((double)(lefts.Max() - lefts.Min())).ShouldBeLessThanOrEqualTo(1, $"every organisation's name starts at the same place: {where}");
+        }
+
+        var sides = (await row.Locator(".tl-ask__sides").BoundingBoxAsync())!;
+        var bar = (await row.Locator(".splitbar").First.BoundingBoxAsync())!;
+        ((double)Math.Abs(sides.X + sides.Width - (bar.X + bar.Width))).ShouldBeLessThanOrEqualTo(1, $"the buttons end where the bar ends: {where}");
+        ((double)Math.Abs(sides.X - bar.X)).ShouldBeLessThanOrEqualTo(1, $"the buttons start where the bar starts: {where}");
+        var parts = row.Locator(".tl-item__side .nowrap");
+
+        // One line is less than two font sizes high; a part broken over two lines is more.
+        (await parts.EvaluateAllAsync<string[]>("els => els.filter(e => e.getBoundingClientRect().height >= 2 * parseFloat(getComputedStyle(e).fontSize)).map(e => e.textContent)"))
+            .ShouldBeEmpty($"a line of numbers breaks only between its parts: {where}");
+    }
+
     /// <summary>The member's own side on the bill, from their own answer.</summary>
     private static async Task<string?> MySideAsync(IPage page, string number)
     {
@@ -363,7 +418,7 @@ public sealed partial class StartPageTests
     /// </summary>
     private static async Task<int?> ServerCountAsync(IPage page, string place, string number)
     {
-        var pattern = new Regex("id=\"home-counts-" + Regex.Escape(place) + "\"[^>]*>\\s*<span class=\"choice choice--for\">[^<]*</span>\\s*([\\d\\u00A0 ]+?)\\s*\\(");
+        var pattern = new Regex("id=\"home-counts-" + Regex.Escape(place) + "\"[^>]*>\\s*<span class=\"nowrap\"><span class=\"choice choice--for\">[^<]*</span>\\s*([\\d\\u00A0 ]+?)\\s*\\(");
         int? last = null;
         var until = DateTime.UtcNow.AddSeconds(10);
         var live = await LiveForAsync(page, number);

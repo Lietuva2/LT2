@@ -1,0 +1,139 @@
+@page "/seimas/balsavimai"
+@using Lt2.Api.Contracts.Parliament
+@using Lt2.Api.Contracts.Meta
+@using Lt2.Web.Client.Parliament
+@inject IParliamentApi Api
+@inject IMetaApi Meta
+@inject Formats F
+@inject IStringLocalizer<Lt2.Web.Components.Appeals.AppealText> A
+@inject IStringLocalizer<Lt2.Web.Client.Appeals.AppealUi> U
+
+@* Design 8.18: the history of the Seimas's votes, the long form of the start page's "Balsuota" and of the agenda's
+   "recently voted". Public, server-rendered, the same for everyone: no island, no script, nothing about the caller and no
+   participants' numbers in the rows (today's numbers beside an old vote would read as what people asked then). The state
+   is the address (VoteHistory reads it); the controls are one GET form on the ground above the list's sheet (8.16). The
+   votes are read and counted a part at a time by the API (GET /api/v1/votes), never all loaded. *@
+<PageTitle>@F.T["Votes.Title"] · Lietuva 2.0</PageTitle>
+
+<div class="stack">
+    <h1>@F.T["Votes.Title"]</h1>
+    <p class="lead">@F.T["Votes.Lead"]</p>
+    <form class="filters" method="get" action="@VoteHistory.Path" role="search" id="votes-search">
+        <div class="field">
+            <label for="votes-q">@A["List.Search"]</label>
+            <input class="input" id="votes-q" name="q" type="search" value="@_state.Query" maxlength="@VoteListQuery.MaxQueryLength" autocomplete="off" />
+        </div>
+        <div class="field">
+            <label for="votes-kas">@F.T["Votes.Kind"]</label>
+            <select class="input" id="votes-kas" name="kas">
+                @foreach (var (slug, _) in VoteHistory.Kinds)
+                {
+                    <option value="@slug" selected="@(slug == _state.Kind)">@F.T["Votes.Kind." + slug]</option>
+                }
+            </select>
+        </div>
+        <div class="field">
+            <label for="votes-iki">@F.T["Votes.Until"]</label>
+            <p class="field__hint" id="votes-iki-hint">@U.Format("Date.Hint", Display.DateExample)</p>
+            <input class="input num" id="votes-iki" name="iki" type="text" inputmode="numeric" autocomplete="off" pattern="@Display.DatePattern"
+                   placeholder="@Display.DateExample" value="@(_state.Until is { } until ? Display.Day(until) : null)" aria-describedby="votes-iki-hint" />
+        </div>
+        <div class="row">
+            <button class="btn" type="submit">@F.T["Mps.Show"]</button>
+            @if (_state.Filtered)
+            {
+                <a href="@VoteHistory.Path" id="votes-clear">@F.T["Ballots.Clear"]</a>
+            }
+        </div>
+    </form>
+</div>
+
+<div class="sheet stack" id="@VoteHistory.ListId">
+    @if (_items.Count == 0)
+    {
+        @if (_state.Filtered)
+        {
+            <p id="votes-none">@F.T["Votes.None"] <a href="@VoteHistory.Path">@F.T["Ballots.Clear"]</a></p>
+        }
+        else
+        {
+            <p id="votes-none">@F.T["Bill.NoVotes"]</p>
+        }
+    }
+    else
+    {
+        @foreach (var day in VoteHistory.Days(_items))
+        {
+            <section class="tl-day tl-past" aria-label="@F.Date(day.Day)" id="diena-@Display.Day(day.Day)">
+                <div class="tl-date"><span class="label">@F.T.Format("Votes.Year", day.Day.Year)</span><b>@F.DayMonth(day.Day)</b><span class="small">@F.Weekday(day.Day)</span></div>
+                <ul class="tl-items">
+                    @foreach (var row in day.Rows)
+                    {
+                        var vote = row.Vote.Summary.Vote;
+                        var (title, wording) = Describe(row.Vote);
+                        <li class="tl-item" id="@VoteHistory.Row(row.Number)">
+                            <VotedItemMain Number="@vote.Bill?.Number" Title="@title" Stage="@vote.Stage" Kind="@vote.Kind" Wording="@wording"
+                                           IsConsensus="vote.IsConsensus" HasResult="vote.HasResult" Totals="row.Vote.Summary.Totals" OfficialNote="@row.Vote.Summary.OfficialNote" />
+                            <div class="tl-item__side">
+                                <a class="btn btn--plain cta" href="/seimas/balsavimai/@vote.Id">@U["Agenda.Action.Votes"]</a>
+                            </div>
+                        </li>
+                    }
+                </ul>
+            </section>
+        }
+        <div class="row">
+            <p class="small num" role="status" id="votes-shown">@F.T.Format("Ballots.Shown", Display.Number(_items.Count), Display.Number(_total))</p>
+            @if (VoteHistory.More(_state, _items.Count, _total) is { } more)
+            {
+                @* Lands on the first row added, so the reader goes on where they stopped (as the ballot list, 8.17). *@
+                <a class="btn btn--plain" href="@more" id="votes-more">@F.T["Ballots.More"]</a>
+            }
+            @if (VoteHistory.Older(_state, _items, _total) is { } older)
+            {
+                <a class="btn btn--plain" href="@older" id="votes-older">@F.T["Votes.Older"]</a>
+            }
+        </div>
+    }
+</div>
+
+<SourceLine UpdatedAt="@_updatedAt" />
+
+@code {
+    private VoteHistoryState _state = VoteHistory.Read(null, null, null, null);
+    private IReadOnlyList<VoteListItem> _items = [];
+    private int _total;
+    private DateTimeOffset? _updatedAt;
+
+    [SupplyParameterFromQuery(Name = "q")] public string? Query { get; set; }
+
+    [SupplyParameterFromQuery(Name = "kas")] public string? Kind { get; set; }
+
+    [SupplyParameterFromQuery(Name = "iki")] public string? Until { get; set; }
+
+    [SupplyParameterFromQuery(Name = "rodyti")] public string? Show { get; set; }
+
+    protected override async Task OnParametersSetAsync()
+    {
+        _state = VoteHistory.Read(Query, Kind, Until, Show);
+        var page = (await Api.GetVotesAsync(_state.Query, _state.ApiKind, _state.Until, _state.Shown)).Value;
+        _items = page?.Items ?? [];
+        _total = page?.Total ?? 0;
+        _updatedAt = (await Meta.GetImportsAsync()).Value?.Sources.FirstOrDefault()?.LastSuccessAt;
+    }
+
+    /// <summary>
+    /// The row's title and the line under it: the bill's title, with the wording for a vote that is not a stage result;
+    /// without a bill, the agenda item's title and the wording, said once when they say the same (as the vote's page).
+    /// </summary>
+    private static (string Title, string? Wording) Describe(VoteListItem item)
+    {
+        var vote = item.Summary.Vote;
+        if (vote.Bill is { } bill)
+        {
+            return (bill.Title, vote.Kind == "stage-result" || string.IsNullOrWhiteSpace(vote.Wording) ? null : vote.Wording);
+        }
+
+        return VotePage.Heading(item.AgendaItemTitle, vote.Wording);
+    }
+}

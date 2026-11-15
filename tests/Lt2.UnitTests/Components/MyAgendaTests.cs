@@ -319,4 +319,26 @@ public sealed class MyAgendaTests : BunitContext
         side.Find("[role=alert]").TextContent.ShouldBe("Projektas jau uždarytas.");
         side.Find("#home-for-2026-11-19-XVP-0618").GetAttribute("aria-pressed").ShouldBe("false");
     }
+
+    [Fact]
+    public void A_line_of_numbers_breaks_only_between_its_parts()
+    {
+        // Design 8.7, "The row lines up": a side's word, count and bracket stay together, so do the participants with the
+        // threshold, and "riba pasiekta"; the "·" ends a part, so no line starts with it.
+        var record = new AgendaRecordResponse(null, "open", new SideCountsResponse(6800, 6195, 4280, 3917), new ThresholdResponse(10000, "default", null, 11080, true, false));
+        var figures = Render<RecordFigures>(p => p.Add(c => c.Record, record).Add(c => c.Id, "2026-11-19-XVP-0412"));
+        var forPart = $"{Text("Agenda.For")} {Display.Number(6800)} ({Display.Number(6195)})";
+        var againstPart = $"{Text("Agenda.Against")} {Display.Number(4280)} ({Display.Number(3917)})";
+
+        figures.FindAll("#home-counts-2026-11-19-XVP-0412 > .nowrap").Select(e => Flat(e.TextContent)).ShouldBe([Flat(forPart + " ·"), Flat(againstPart)]);
+        var threshold = figures.FindAll(".nowrap").Skip(2).Select(e => Flat(e.TextContent)).ToList();
+        threshold.Count.ShouldBe(2, "the participants with the threshold, and \"riba pasiekta\"");
+        threshold[0].ShouldStartWith(Flat(Display.Number(11080) + " "));
+        threshold[0].ShouldEndWith(Flat(Display.Number(10000) + " ·"));
+        threshold[1].ShouldBe(Text("Agenda.Reached"));
+        Flat(figures.Find("#home-counts-2026-11-19-XVP-0412").TextContent).ShouldBe(Flat(forPart + " · " + againstPart), "the same words as before, only kept together");
+    }
+
+    /// <summary>The text with every run of white space (the numbers' own spaces included) as one space.</summary>
+    private static string Flat(string text) => System.Text.RegularExpressions.Regex.Replace(text, @"\s+", " ").Trim();
 }

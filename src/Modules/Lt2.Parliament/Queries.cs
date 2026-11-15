@@ -74,6 +74,27 @@ public sealed record BallotInfo(MpRef Mp, string? FactionLabel, string Choice);
 
 public sealed record VoteDetail(VoteSummary Summary, DateTimeOffset SittingStartsAt, string AgendaItemTitle, IReadOnlyList<FactionSplit> Factions, IReadOnlyList<BallotInfo> Ballots);
 
+/// <summary>Which votes the history lists (design 8.18).</summary>
+public enum VoteHistoryKind
+{
+    /// <summary>The stage results on bills (the default, what "Balsuota" shows).</summary>
+    StageResults,
+
+    /// <summary>The stage results of adoption.</summary>
+    Adoptions,
+
+    /// <summary>Every vote, with or without a bill.</summary>
+    All,
+}
+
+/// <param name="Query">A bill's number or title, without case or diacritics; a vote without a bill never matches.</param>
+/// <param name="Until">The last Vilnius day included.</param>
+public sealed record VoteHistoryFilter(string? Query, VoteHistoryKind Kind, DateOnly? Until, string? Cursor, int Limit);
+
+public sealed record VoteHistoryItem(VoteSummary Summary, string AgendaItemTitle);
+
+public sealed record VoteHistoryPage(IReadOnlyList<VoteHistoryItem> Items, int Total, string? NextCursor);
+
 /// <param name="LastSuccessAt">When the last successful import finished.</param>
 /// <param name="ParliamentDataInvented">The data came from the stand-in.</param>
 public sealed record ImportsInfo(DateTimeOffset? LastSuccessAt, DateTimeOffset? LastRunAt, string? LastRunStatus, bool ParliamentDataInvented);
@@ -100,6 +121,12 @@ public interface IParliamentQueries
     Task<BillDetail?> BillAsync(string number, CancellationToken cancellationToken);
 
     Task<VoteDetail?> VoteAsync(long id, CancellationToken cancellationToken);
+
+    /// <summary>
+    /// The history of votes, newest first (design 8.18), read and counted in the database a part at a time; at most 300
+    /// in one part.
+    /// </summary>
+    Task<VoteHistoryPage> VoteHistoryAsync(VoteHistoryFilter filter, CancellationToken cancellationToken);
 
     Task<ImportsInfo> ImportsAsync(CancellationToken cancellationToken);
 

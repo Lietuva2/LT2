@@ -283,6 +283,46 @@ internal sealed class ParliamentQueries(IDbContextFactory<ParliamentDb> contexts
         return new VoteDetail(Summary(row.v, bills), row.StartsAt, row.Title, factions, ballots);
     }
 
+    public async Task<VoteHistoryPage> VoteHistoryAsync(VoteHistoryFilter filter, CancellationToken cancellationToken)
+    {
+        ArgumentNullException.ThrowIfNull(filter);
+        await using var db = await contexts.CreateDbContextAsync(cancellationToken);
+        var votes = filter.Kind switch
+        {
+            VoteHistoryKind.All => db.Votes.AsNoTracking(),
+            VoteHistoryKind.Adoptions => db.Votes.AsNoTracking().Where(v => v.Kind == VoteKind.StageResult && v.BillId != null && v.Stage == BillStage.Adoption),
+            _ => db.Votes.AsNoTracking().Where(v => v.Kind == VoteKind.StageResult && v.BillId != null),
+        };
+
+        // "Held on that day or earlier": before the next Vilnius midnight. The last day there is has no next one.
+        if (filter.Until is { } until && until < DateOnly.MaxValue)
+        {
+            var stop = VilniusTime.StartOf(until.AddDays(1));
+            votes = votes.Where(v => v.HeldAt < stop);
+        }
+
+        // The search folds the bills in memory, as the bill list does (a few thousand at most), then filters the votes
+        // by them in the database.
+        if (!string.IsNullOrWhiteSpace(filter.Query))
+        {
+            var q = Fold(filter.Query);
+            var bills = await db.Bills.AsNoTracking().Select(b => new { b.Id, b.Number, b.Title }).ToListAsync(cancellationToken);
+            var found = bills.Where(b => Fold(b.Number + " " + b.Title).Contains(q, StringComparison.Ordinal)).Select(b => (Guid?)b.Id).ToList();
+            votes = votes.Where(v => found.Contains(v.BillId));
+        }
+
+        var total = await votes.CountAsync(cancellationToken);
+        var offset = Offset(filter.Cursor);
+        var limit = Math.Clamp(filter.Limit, 1, 300);
+        var rows = await (from v in votes
+                          join i in db.AgendaItems on v.AgendaItemId equals i.Id
+                          orderby v.HeldAt descending, v.Id descending
+                          select new { v, i.Title }).Skip(offset).Take(limit).ToListAsync(cancellationToken);
+        var refs = await BillsByIdAsync(db, rows.Select(r => r.v.BillId), cancellationToken);
+        var next = offset + limit < total ? (offset + limit).ToString(CultureInfo.InvariantCulture) : null;
+        return new VoteHistoryPage(rows.Select(r => new VoteHistoryItem(Summary(r.v, refs), r.Title)).ToList(), total, next);
+    }
+
     public async Task<ImportsInfo> ImportsAsync(CancellationToken cancellationToken) =>
         (await cache.GetOrCreateAsync("parliament:imports", async entry =>
         {

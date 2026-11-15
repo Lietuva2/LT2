@@ -87,6 +87,12 @@ public sealed partial class FrontPageTests(DatabaseFixture database) : ApiTest(d
             foreach (var slug in expected)
             {
                 html.ShouldContain($"href=\"/o/{slug}\"");
+
+                // "The row lines up": the stance, then the name and "Nepatvirtinta" together in one cell of their own.
+                var stance = shown.Single(s => s.Slug == slug).Stance;
+                html.ShouldMatch(
+                    $"<span class=\"org-item\"><span class=\"choice choice--{stance}\">[^<]+</span>\\s*<span class=\"org-item__name\"><a href=\"/o/{Regex.Escape(slug)}\">[^<]+</a>\\s*<span class=\"tag[^\"]*\" data-org-label=\"none\">Nepatvirtinta</span>\\s*</span></span>",
+                    $"{slug}: the stance before the name, the name and its label in one cell");
             }
 
             html.ShouldNotContain($"href=\"/o/{blocked.Slug}\"");

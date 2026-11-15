@@ -230,7 +230,10 @@ official `@lrs.lt` address from open data; the link is tied to the Seimas person
 in one place, the vote's page (`/seimas/balsavimai/{id}#balsai`, design 8.17: `VoteBallots`, filtered by `BallotList` in
 Lt2.Web.Client): a name search without case or diacritics, a faction dropdown (with "Be frakcijos"), the ballot, 20 rows
 then 40 more, its state in the address (`q`, `frakcija`, `balsas`, `rodyti`) with no script; a closed bill's page only
-links to it.
+links to it. The history of votes (`/seimas/balsavimai`, design 8.18: `VoteHistoryPage`, its address state in
+`VoteHistory` in Lt2.Web.Client, `GET /api/v1/votes` read and counted in the database a part at a time) groups votes by
+Vilnius day, 30 then 30 more up to 300, with no participants' numbers; its rows share `VotedItemMain` with the start
+page's "Balsuota".
 
 **Appeals (design 8.12, decided by the owner on 2026-11-14; replaces proposals, requests and initiators).**
 - The bill and the appeal are one object: the bill's page `/seimas/{number}`. Every active bill (in the catalogue, no

@@ -20,6 +20,7 @@ public sealed class ParliamentPageTests
         ("faction", "/frakcijos/regionu-aljanso-frakcija", "Regionų aljanso frakcija"),
         ("committee", "/komitetai/biudzeto-ir-finansu-komitetas", "Biudžeto ir finansų komitetas"),
         ("bill", "/seimas/XVP-0412", "Gyventojų pajamų mokesčio įstatymo pataisa"),
+        ("votes", "/seimas/balsavimai", "Seimo balsavimai"),
         ("vote", "/seimas/balsavimai/99100002", "Gyventojų pajamų mokesčio įstatymo pataisa"),
         ("vote-consensus", "/seimas/balsavimai/99100003", "Vietinių rinkliavų įstatymo pataisa"),
         ("vote-note", "/seimas/balsavimai/99100004", "Atliekų tvarkymo įstatymo pataisa"),
