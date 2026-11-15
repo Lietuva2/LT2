@@ -264,14 +264,14 @@ ASP.NET Core Identity tables (users, roles, claims, tokens, passkeys), plus:
 
 | Table | Key columns | Notes |
 |---|---|---|
-| `appeal` | `id`, `bill_number`, description, `description_source`, `description_url`, `description_at`, status, opened, published and closed times, `closing_vote_id`, frozen counts, `sending` (automatic or held), `threshold`, `threshold_set_by` (default or moderator), `threshold_note`, `first_summarised_at`, `initiator_user_id` (old rows only) | The bill's record (8.12.1): the Appeals module's own record of what people did on one bill, created when first needed (the first side, argument or description, or a moderator's action), never proposed or approved. One per bill: a unique partial index over the statuses open, closed and rejected (hidden by a moderator, 8.12.3). Status `superseded` marks only rows from before 2026-11-14 that are no longer a bill's record (proposals closed when the proposals went, older hidden appeals). The description is empty until a moderator writes one or the summary job makes one; `description_source` (`initiator`, `moderator`, `ai-draft`, `ai`, 8.13) is null without one. [changed while building (8.13): `description_url` is the official text it was made from when known (set by the summary job, kept when a moderator confirms or corrects that text, cleared on removal) and `description_at` when its text was made or last changed.] [changed while building (8.13, the owner's
+| `bill_record` | `id`, `bill_number`, description, `description_source`, `description_url`, `description_at`, status, opened, published and closed times, `closing_vote_id`, frozen counts, `sending` (automatic or held), `threshold`, `threshold_set_by` (default or moderator), `threshold_note`, `first_summarised_at`, `initiator_user_id` (old rows only) | The bill's record (8.12.1): the Appeals module's own record of what people did on one bill, created when first needed (the first side, argument or description, or a moderator's action), never proposed or approved. One per bill: a unique partial index over the statuses open, closed and rejected (hidden by a moderator, 8.12.3). Status `superseded` marks only rows from before 2026-11-14 that are no longer a bill's record (proposals closed when the proposals went, older hidden appeals). The description is empty until a moderator writes one or the summary job makes one; `description_source` (`initiator`, `moderator`, `ai-draft`, `ai`, 8.13) is null without one. [changed while building (8.13): `description_url` is the official text it was made from when known (set by the summary job, kept when a moderator confirms or corrects that text, cleared on removal) and `description_at` when its text was made or last changed.] [changed while building (8.13, the owner's
 last block): a moderator who writes or corrects a description sets `description_url` from the form's "Oficialaus teksto
 adresas" (https on `lrs.lt` or under it, at most 500 characters), filled in advance with the current one; empty clears it.] `threshold` is null for the default of all bills, or a moderator's number for this bill (8.12.2). `first_summarised_at` is set by the first summary really sent to MPs, not by a dry run (8.4). `initiator_user_id` is set only on records from before 2026-11-14 and only names the author beside a description they wrote. [changed while building: `return_note` and the description's `screening_flags` were dropped with the proposals] |
-| `position` | (`appeal_id`, `user_id`) primary key, `side` (for or against), created and changed times | One row per person per bill. Becomes the direct LT2 vote in stage 3. |
-| `daily_stat` | `appeal_id`, date, counts per side, counts for accounts older than 30 days, share of new accounts | For the trend chart and surge detection. **No per-person history of opinion changes is stored.** |
-| `reason` | `id`, `appeal_id`, `side`, `author_user_id`, text (up to 500 characters), status, `merged_into_id` | Status: pending, published, hidden, merged. `side` is the side the argument supports, chosen by its author, whatever the author's own position (8.2). |
+| `position` | (`record_id`, `user_id`) primary key, `side` (for or against), created and changed times | One row per person per bill. Becomes the direct LT2 vote in stage 3. |
+| `daily_stat` | `record_id`, date, counts per side, counts for accounts older than 30 days, share of new accounts | For the trend chart and surge detection. **No per-person history of opinion changes is stored.** |
+| `reason` | `id`, `record_id`, `side`, `author_user_id`, text (up to 500 characters), status, `merged_into_id` | Status: pending, published, hidden, merged. `side` is the side the argument supports, chosen by its author, whatever the author's own position (8.2). |
 | `endorsement` | (`reason_id`, `user_id`) | "Man svarbu" on a reason; only on your own side; how many per bill is a setting, no limit by default (8.2). |
-| `response` | `appeal_id`, `person_id`, stance, text, published and edited times, `written_by_user_id` | One per MP per bill; edits keep history. |
+| `response` | `record_id`, `person_id`, stance, text, published and edited times, `written_by_user_id` | One per MP per bill; edits keep history. |
 | `report` | target, reporter, ground, status | Notice-and-action under the Digital Services Act. |
 | `moderation_action` | moderator, target, action, statement of reasons, time | The statement is sent to the author. |
 | `writing_restriction` | `id`, `user_id`, `ends_at` (null = until lifted), statement, set by and when, lifted by, when and why | A moderator's restriction on writing (8.3). Lives with the writing rules in this module; deleted with the account; never shown to anyone but the person and staff. |
@@ -291,7 +291,7 @@ adresas" (https on `lrs.lt` or under it, at most 500 characters), filled in adva
 |---|---|
 | `outbox` | Kind, `jsonb` payload, due time, attempts, error. Written in the same transaction as the change; dispatched with `FOR UPDATE SKIP LOCKED`. |
 | `digest_run` | Kind (weekly, before-vote, urgent, introduction), scheduled time, status, who approved. |
-| `digest_item` | Per run and appeal: counts per side, counts for accounts older than 30 days, top reasons (text and "Man svarbu" count, without the author's name), planned date and stage. A frozen snapshot: what MPs were told. |
+| `digest_item` | Per run and bill's record (`record_id`): counts per side, counts for accounts older than 30 days, top reasons (text and "Man svarbu" count, without the author's name), planned date and stage. A frozen snapshot: what MPs were told. |
 | `digest_delivery` | Per run and MP: sent, skipped by preference, suppressed, bounced; the MP-specific numbers. |
 | `mp_email_pref` | Per MP: frequency (default, weekly only, before votes only, stopped), confirmed extra recipient. |
 | `suppression` | Hashed addresses that bounced or asked to stop. |
@@ -524,6 +524,92 @@ SBOM per release, images signed and pulled by digest. Containers run as non-root
 file system and dropped capabilities. A `security.txt` and a disclosure address. An external penetration test before the
 first real summary is sent.
 
+### 6.8 Rules made explicit after the code review of 2026-11-15
+
+**[Designer's reading of rules this document already has, written down so the code can be checked against them. None
+changes what a person can do on the site; the questions that do are in section 12.]**
+
+- **Nothing held back becomes public through history.** A text that pre-screening held and no moderator published was
+  never public, and no history shows it: an organisation statement's "earlier versions" (8.14.14) are only the
+  versions that were public.
+- **A flagged change is looked at.** When an organisation changes its description and pre-screening flags the new
+  text, the organisation returns to the moderators' queue, as it does for a new name or website (8.14.14).
+- **A report is closed only by an action that answers it.** Keeping, hiding, restoring, publishing, describing and
+  confirming answer a report on their target; setting a threshold or a planned date, holding and releasing do not.
+- **A finished bill is finished for everyone at the same moment.** Once the bill's final vote is recorded, taking part
+  (a side, an argument, "Man svarbu", a withdrawal) is refused, as an organisation's statement already is, whether or
+  not the hourly job has closed the record yet.
+- **Writes to one bill's record are serialised.** A moderator's description and the summary job's text cannot
+  overwrite each other, and a description a person wrote is never written over by the job (8.13).
+- **A reset ends sessions.** When an administrator resets a staff account or a role is activated, the sessions that
+  were signed in with the removed passkeys end in the same step (6.2).
+- **One current code.** A member has at most one personal invitation code that works, enforced by the database, as
+  an organisation has (6.2, 8.14.6).
+- **Limits hold under parallel requests.** Sign-in codes per address, "one urgent summary a week" and the summary
+  ceilings are counted under a lock (6.2, 8.4).
+- **Rules are checked where the data is written.** A rule checked only by the HTTP validators does not hold for
+  callers inside the server: the explicit consent for party support, the display name's length and a moderation
+  statement's presence and length are checked by the module that stores them.
+- **The outbox forgets.** Deleting an account, and purging an unfinished registration, delete the outbox rows
+  addressed to that person that were not sent. Rows that failed are deleted after 30 days. An error stored or logged
+  for a failed email holds the error's type and the server's status code, never its text, which can quote the address.
+- **Sign-in codes go first.** The dispatcher sends sign-in and confirmation codes before any other waiting email, so
+  a large batch of follow emails cannot delay a code past its lifetime (8.4 separates the streams by sender address;
+  this is the order within the queue).
+- **Redirects stay inside the allowlist.** An outbound request does not follow a redirect to a host that is not on
+  the allowlist (6.4).
+- **Codes and tokens are not sent in addresses.** A link the site makes carries its secret after the `#`: the
+  invitation code of a registration link (`/prisijungti#kodas=…`, with `tikslas` beside it) and the token of a
+  representative's invitation. The browser never sends that part, so no proxy and no application log can hold it,
+  on a shared server included (9.2). The page reads it in the browser and passes it to the API in a request body,
+  never in a path or a query. A link in the old form (`?kodas=…`) still works, and the proxy's filter that drops
+  `kodas` from the logged address stays for those (6.2).
+- **Forwarded addresses are believed only from the proxy itself.** On a shared Docker network the proxy's
+  neighbours are not the proxy: the application believes the forwarding headers only from the proxy's own address,
+  named in its configuration, not from a whole network.
+- **A signed-in page is not stored.** HTML pages answered to a signed-in session carry `Cache-Control: no-store`,
+  as `/api` already does: such a page can hold the person's own side or invitation code (6.4). Today visitors'
+  pages are not stored either, because a page with an island issues an antiforgery token; making them cacheable
+  would be its own change.
+- **A page that parses to nothing changes nothing.** When the agenda watcher finds sitting dates but no bill at all
+  while planned items exist, it keeps the items, records the run as failed and alerts (8.9), until the owner decides
+  otherwise (section 12).
+### 6.9 Decisions after the code review of 2026-11-15
+
+**[Decided by the owner on 2026-11-15, on the questions the review raised. Each line says where it applies.]**
+
+- **Reports after the final vote (8.3, 8.12).** A report about an argument or a description on a closed bill reaches
+  the moderators' queue like any other. On a closed record a moderator can hide and restore an argument, correct or
+  remove the description, and answer the report with "Palikti", each with a statement, audited, the author told, as
+  on an open one. The frozen counts and the summaries already made do not change. Everything else on a closed record
+  stays refused.
+  [as built] Hiding the whole record of a closed bill was possible before this decision and stays possible.
+- **Party numbers (8.2).** They stay as built: each party's number is shown when that party has at least 20 people.
+  That a smaller group can sometimes be worked out by subtraction is accepted.
+- **A statement still waiting when the bill closes (8.14.14).** It can no longer be published: it was not public when
+  the bill closed, and what is public then is frozen. The queue still shows it, with "Palikti" and hiding only.
+- **A moderator's or administrator's actions outlive the account (6.5).** When a staff member's account is deleted,
+  the records of what they did as staff (moderation actions, statements, restrictions, confirmations) keep the
+  account's id, for accountability; the id then leads to no person, name or address. The page that says what is
+  stored and what is deleted says so.
+  [as built] The code already kept these ids; the methodology page and a staff account's delete confirmation now say
+  so. Where a screen names who hid something, a deleted account reads "paslėpė moderatorius". A moderator's AI draft
+  requests (a rate-limit table, each also audited) still go with the account (8.11.4).
+- **The read-only database role sees only what is listed (5.5).** `lt2_readonly` is granted the tables on a list,
+  never "every table but". A new table is invisible to it until someone adds it, and a test fails when a table is on
+  neither the granted list nor the withheld list, so each new table gets a decision.
+- **Deleting a staff account needs the staff passkey (6.2).** An account that holds a staff role can be deleted only
+  from a session signed in with its staff passkey; a session from an email code is told so. Ordinary accounts and the
+  data export are unchanged.
+  [as built] "Holds a staff role" means a role that was activated: a role granted but never activated, or an account
+  an administrator has reset, has no staff passkey to sign in with and is deleted like an ordinary account.
+- **Changing a setting asks for the passkey again (6.2).** Saving a runtime setting needs the same fresh passkey
+  confirmation as changing roles. Switching an invitation code off or on does not.
+- **Feedback handling is audited (8.10).** A change of a feedback item's status or note leaves an audit entry with
+  the item, the old and new status and who did it, without the note's or the feedback's text.
+- **Signing in from a bill brings the person back to it (8.11.5).** The sign-in links on a bill's page (taking a
+  side, following, reporting) carry the page as `tikslas`, after the `#` like every such link (6.8), so signing in or
+  registering ends on that bill, not on the account page.
 ## 7. Stage 1: MP profiles
 
 ### 7.1 Sources
@@ -899,6 +985,54 @@ for accounts older than 30 days, the bar, the threshold, and the most endorsed r
 svarbu" count, without its author), each card linking to the bill's page; then links to all bills and to the summaries,
 and the "not a representative poll" notice. It uses only the public answers behind `/projektai` and the bill pages.
 
+**The front page, reworked [decided by the owner on 2026-11-15: led by the agenda, not by summary-style cards; variant
+"A" chosen from three mockups, with the member's panel of variant "C"; the layout above is replaced when this is
+built].** The page is the agenda with what a person can do about it. The chosen mockup is kept under `design/ui/`.
+
+- **A visitor** sees, in this order: the logo, "Lietuva 2.0" and one line of lead text; the trial note with two links,
+  to register with an invitation code and to sign in (no sign-in form on the page: the form stays on `/prisijungti`);
+  "Kaip tai veikia", four numbered steps (the Seimas plans; you say what you ask; you explain why; MPs learn of it,
+  with the note that in the trial nothing is sent), and one paragraph on following and on what stays private, linking
+  to "Kas matoma viešai, o kas ne" on the methodology page; then the agenda. This introduction is the one place where
+  the short-texts rule of 8.15 does not apply: a new person must learn what the site is.
+- **The agenda** ("Artimiausiu metu Seime", with a link to the whole agenda and the line on where it comes from and
+  when it was last read) is a timeline: one block per sitting day, "Planuojama" with the date and the weekday, at
+  most eight coming items in all as today, then "Balsuota" for the votes of the last seven days. Each coming bill
+  shows its number, stage and title; both sides with the counts for accounts older than 30 days, the bar and the
+  threshold, or "Dar niekas nenurodė, ko prašo"; the organisations that have a public statement on it, as names with
+  their stance, each linking to its profile; and one action, "Nurodyti, ko prašote", leading to the bill's page. A
+  voted bill shows the result and "Kaip balsavo Seimo nariai", leading to the vote's page. An item that is not in the
+  open data yet shows what the agenda says and a link to the source, as today. The notes that explain the brackets
+  and that this is not a representative poll sit directly under the timeline.
+- **Organisations** have one plain block below the agenda: what they are, that their statements are shown apart and
+  not counted, and links to the list and to registration. In the timeline they are ordered as on the bill's page (for,
+  against, remarks; within each, in the order published), never by size, and never counted.
+- **A signed-in member** sees no introduction: "Sveiki sugrįžę" with links to "Kaip tai veikia" and the account; then
+  "Jūsų projektai", a panel of the bills they follow or took a side on that are on the agenda or were voted on in
+  the last week, each with its planned date, their own side or "Dar nenurodėte, ko prašote", the last vote's result,
+  and the share link when they have taken a side; then the same timeline, where their bills carry "Sekate" and their
+  own side, and the action on a bill where they took a side reads "Argumentai ir pozicijos". The trial note about
+  summaries stays at the foot.
+- **Privacy.** The page the server renders is the same public page for everyone. Everything that is the member's own
+  (the panel, the marks in the rows) is filled in the browser from the member's own answers and is never rendered on
+  the server or cached. Nothing shows who took which side or who follows what.
+- **Data.** The agenda's public answer gains, for each bill, the organisations with a public statement on it (address,
+  name, label, stance), so the page still needs one public answer. The member's own side for the bills shown comes in
+  one request, not one per bill. No new rule about what is stored or shown.
+- **Cached [decided by the owner on 2026-11-15].** The public answer the page is built from (the agenda with its
+  counts and organisations) is the same for everyone, so the server keeps it in memory for 60 seconds and builds the
+  page from that: the most visited page costs the database one read a minute, not one per visitor. The numbers on
+  the front page can therefore be up to a minute behind the bill's own page, which stays live. Nothing of a member's
+  own is in that answer or in the cache. The HTML itself is still answered `no-store`, because a page with an island
+  carries a per-visitor antiforgery token (6.8); letting a proxy or a CDN cache visitors' pages needs that token moved
+  out of the page first and is left for when a CDN goes in front of the site (9.1, section 12).
+- **Gone from the page:** the sign-in form, the six cards "Aktyviausi projektai" with their arguments (the list at
+  `/projektai` is sorted by activity and shows the same bills), and the three introductory paragraphs.
+
+**Done when:** a visitor sees the introduction and the agenda and no form; a member sees their own bills first and no
+introduction; with JavaScript off the public page is complete and nothing of a member's own is in it; the page's HTML
+is identical for two different signed-in members; an agenda with no participants and no organisations still reads
+well; no sideways scroll at 390 px; the first screen at 1280 px shows the agenda's heading.
 ### 8.8 API
 
 Since 8.12 the answers about a bill are keyed by its number and return the empty open state (no record id, zero counts)
@@ -908,25 +1042,25 @@ for an active bill nobody has taken part in, not "not found"; a finished bill no
 GET    /api/v1/appeals?q=&planned=&tab=&sort=&cursor=    active bills, by activity (default), participants, arguments or
                                                          planned date; q searches number and title, planned=true those
                                                          planned soon, tab=closed the closed ones (8.12.5)
-GET    /api/v1/bills/{number}/appeal                     counts, threshold, description, reasons, planned date
-GET    /api/v1/bills/{number}/appeal/mine                the caller's own side, marks and reasons (never cached)
-GET    /api/v1/bills/{number}/appeal/history             the description's public edit history
-PUT    /api/v1/bills/{number}/appeal/position            take or change a side (creates the bill's record if needed)
-DELETE /api/v1/bills/{number}/appeal/position
-POST   /api/v1/bills/{number}/appeal/reasons             side (either), text (creates the bill's record if needed)
-POST   /api/v1/bills/{number}/appeal/reasons/similar     similar existing reasons, offered first
+GET    /api/v1/bills/{number}/record                     counts, threshold, description, reasons, planned date
+GET    /api/v1/bills/{number}/record/mine                the caller's own side, marks and reasons (never cached)
+GET    /api/v1/bills/{number}/record/history             the description's public edit history
+PUT    /api/v1/bills/{number}/record/position            take or change a side (creates the bill's record if needed)
+DELETE /api/v1/bills/{number}/record/position
+POST   /api/v1/bills/{number}/record/reasons             side (either), text (creates the bill's record if needed)
+POST   /api/v1/bills/{number}/record/reasons/similar     similar existing reasons, offered first
 DELETE /api/v1/reasons/{id}                              the author withdraws their own reason, while the bill is open
 PUT    /api/v1/reasons/{id}/endorsement    DELETE /api/v1/reasons/{id}/endorsement
-POST   /api/v1/bills/{number}/appeal/flags               "date is wrong", "voted sooner" (participants)
+POST   /api/v1/bills/{number}/record/flags               "date is wrong", "voted sooner" (participants)
 GET    /api/v1/me/writing-restriction                    the caller's own restriction, if any (never cached)
 GET    /api/v1/moderation/reasons/{id}/author            name, their reasons, earlier actions and restrictions
 POST   /api/v1/moderation/reasons/{id}/restrict-author   statement, until (a date) or none = until lifted
 GET    /api/v1/moderation/restrictions                   current restrictions (moderator or administrator)
 POST   /api/v1/moderation/restrictions/{id}/lift         statement (moderator or administrator)
-POST   /api/v1/reports                                   on a reason, or on a bill's description (target appeal; it may
+POST   /api/v1/reports                                   on a reason, or on a bill's description (target record; it may
                                                          also give the ground "inaccurate", 8.13)
 GET    /api/v1/digests            GET /api/v1/digests/{date}
-GET    /api/v1/bills/{number}/appeal/digests             the summaries that held the bill, as frozen (8.7)
+GET    /api/v1/bills/{number}/record/digests             the summaries that held the bill, as frozen (8.7)
 GET    /api/v1/agenda                                    coming planned items by day and last week's stage results, each
                                                          with the bill's public numbers (8.11.1, 8.12.5)
 GET    /api/v1/me/follows                                the caller's followed bills and MPs (never cached)
@@ -949,17 +1083,17 @@ POST   /api/v1/moderation/feedback/{id}/reply      (linked items only; sent thro
 POST   /api/v1/admin/invitations/{id}/switch-off   POST /api/v1/admin/invitations/{id}/switch-on   (statement)
 
 POST   /api/v1/mps/{slug}/claim
-PUT    /api/v1/bills/{number}/appeal/responses/mine
+PUT    /api/v1/bills/{number}/record/responses/mine
 GET    /api/v1/mp-preferences/{token}     PUT /api/v1/mp-preferences/{token}
 
 GET    /api/v1/moderation/queue                          bills' records and reasons that need a look (8.12.3)
 POST   /api/v1/moderation/reasons/{id}/publish  …/hide  …/merge  …/restore
-POST   /api/v1/moderation/appeals/{id}/keep              "Palikti": a reported or flagged bill stays as it is
-POST   /api/v1/moderation/appeals/{id}/hide              taking part on the bill closes (statement)
-POST   /api/v1/moderation/appeals/{id}/restore           (statement)
-PUT    /api/v1/moderation/appeals/{id}/threshold         the bill's own number (statement)
-PUT    /api/v1/moderation/appeals/{id}/planned           date, stage (statement)
-POST   /api/v1/moderation/appeals/{id}/hold     …/release     …/urgent        (statement)
+POST   /api/v1/moderation/records/{id}/keep              "Palikti": a reported or flagged bill stays as it is
+POST   /api/v1/moderation/records/{id}/hide              taking part on the bill closes (statement)
+POST   /api/v1/moderation/records/{id}/restore           (statement)
+PUT    /api/v1/moderation/records/{id}/threshold         the bill's own number (statement)
+PUT    /api/v1/moderation/records/{id}/planned           date, stage (statement)
+POST   /api/v1/moderation/records/{id}/hold     …/release     …/urgent        (statement)
 GET    /api/v1/moderation/hidden                         hidden bills and reasons (who hid them, when, why)
 GET    /api/v1/moderation/bills/{number}                 the state the bill page's panel needs, also without a record, and the bill's arguments with what the queue shows for each
 POST   /api/v1/moderation/bills/{number}/record          the bill's record for an action, created if needed (8.12.1)
@@ -1106,7 +1240,7 @@ Only in the moderator's form "write or correct the description" on any active bi
   Lithuanian sentences on what the text says the bill changes: no evaluation, no arguments for or against, nothing
   that is not in the source, and to say so when the source is not enough.
 - A description that started from a draft says "Sukurta DI · taisė žmonės" beside it for its whole life, also after a
-  moderator corrects it. `appeal.description_source` holds `initiator`, `moderator`, `ai-draft` or `ai` (the summary
+  moderator corrects it. `bill_record.description_source` holds `initiator`, `moderator`, `ai-draft` or `ai` (the summary
   job's text nobody has read, 8.13) (5.3).
 - Asking for a draft is audited (who, which bill, when; not the text), at most 20 an hour per moderator.
 - **The provider [decided by the owner on 2026-11-13]: the Claude API (Anthropic, first-party), for the draft only.**
@@ -1197,7 +1331,14 @@ bill's page. "Kreipimasis" stays the word for what people on a bill ask of MPs a
   taken a side yet. The public answers for such a bill return this empty open state, not "not found".
 - **A finished bill** nobody took part in shows the bill only. One with participants is closed as in 8.1: frozen
   counts beside the Seimas result.
-- **The record.** The Appeals module keeps its `appeal` row per bill as its own record of what people did on the bill
+- **Its name [decided by the owner on 2026-11-15].** Since nobody starts an appeal, the code calls the per-bill row
+  what it is, the bill's record: the entity `BillRecord`, the table `appeals.bill_record`, columns and names that
+  pointed at an "appeal" pointing at a record. "Appeal" in the singular no longer names an object in the code. The
+  module stays `Appeals` and its schema `appeals`: "kreipimasis" (appeal) remains the word for what people on a bill
+  ask of MPs and for what the summaries carry (Appendix B), and the settings keys under `Appeals:` stay. A bill is
+  never called a record and a record never a "project": the bill is the `parliament.bill` row. Where sections 5 to 8
+  still say "the `appeal` row" or "an appeal's …" of the object, they mean the record.
+- **The record.** The Appeals module keeps its `bill_record` row per bill as its own record of what people did on the bill
   (the `parliament` tables stay the import's). It is created when first needed: the first side, argument or
   description, or a moderator's action on the bill. Creation takes the bill's lock and the unique index, as publishing
   did, so two people arriving together make one row. The row has no initiator and nothing public says who was first.
@@ -1208,7 +1349,7 @@ bill's page. "Kreipimasis" stays the word for what people on a bill ask of MPs a
   - Taking a side checks the positions consent before the record is created, so a refused attempt creates nothing; the
     bill's lock is taken only when the record is created, so taking part on a bill that has its record is never
     serialised per bill.
-  - A finished bill nobody took part in: the public answer is "not found" (`appeal.not-found`) and the page shows the
+  - A finished bill nobody took part in: the public answer is "not found" (`record.not-found`) and the page shows the
     bill only.
   - Status codes stay `open`, `closed` and `rejected` (hidden by a moderator). Rows from before 2026-11-14 that are no
     longer a bill's record are `superseded` (5.3).
@@ -1269,7 +1410,7 @@ Nothing waits for approval before it is shown, except what pre-screening or a re
     Before an action that needs the record's id, the page calls `POST /moderation/bills/{number}/record`, which finds or
     creates the record; creating it alone shows nothing new, is not an action and is not audited. The description is
     written by bill number: `PUT /moderation/bills/{number}/description`.
-  - "Palikti" is `POST /moderation/appeals/{id}/keep` (it was `/publish`).
+  - "Palikti" is `POST /moderation/records/{id}/keep` (it was `/publish`).
   - A hidden record: the public answer has the status `rejected` with only the latest hide statement, no counts and no
     arguments; the caller's own answer is empty; `/projektai` leaves the bill out; the agenda says "Dalyvavimas
     uždarytas" with a link to the bill.
@@ -1278,7 +1419,7 @@ Nothing waits for approval before it is shown, except what pre-screening or a re
     `ai-draft` when a moderator confirms or corrects it (8.13).
   - Nothing done to a record is emailed (hide, restore, threshold, description): it has no author. Only an argument's
     author is emailed, and those emails link to `/seimas/{number}`.
-  - A report on the target `appeal` is a report about the bill's description and is accepted only while the record has
+  - A report on the target `record` is a report about the bill's description and is accepted only while the record has
     one.
   - Date flags: participants only (someone with a side on the bill).
   - The moderators' author screen lists the person's arguments only, and restricting an appeal's initiator is gone; a
@@ -1400,7 +1541,7 @@ never overwrites a person's text, and a reported summary reaches the queue and c
 
 [changed while building: the details of 8.13 as built, on 2026-11-14]
 - **Beside the description:** the label; "Parengta …" with the day its text was made or last changed
-  (`appeal.description_at`); "Oficialus tekstas, iš kurio parengta" when the address is known (`appeal.description_url`:
+  (`bill_record.description_at`); "Oficialus tekstas, iš kurio parengta" when the address is known (`bill_record.description_url`:
   set by the job, kept when a moderator confirms or corrects that text, cleared on removal; a moderator's own text has
   none, and the bill's e-seimas link stays beside it as before); the history; and "Pranešti apie klaidą" right under it
   (it was below the arguments). A report on a description may give the ground "Aprašymas netikslus ar klaidingas"
@@ -1408,7 +1549,7 @@ never overwrites a person's text, and a reported summary reaches the queue and c
 - **Confirm** is offered only for an `ai` description, with an optional note (it publishes nothing new, like "Palikti");
   **remove** works on any description, with a required statement, and writes the removal into the public history
   ("aprašymas pašalintas"). Both act by bill number (`POST …/description/confirm`, `…/remove`), close the open reports on
-  the description, are recorded and audited (`moderation.appeal.confirm`, `moderation.appeal.undescribe`) and emailed to
+  the description, are recorded and audited (`moderation.record.confirm`, `moderation.record.undescribe`; entries written before 2026-11-15 keep `moderation.appeal.…`, as the audit log is append-only) and emailed to
   nobody. A moderator's correction of an `ai` text makes it `ai-draft`.
 - **"Touched by a person"** is read from the public history: a description revision with a person on it (written,
   corrected or removed). The job writes its revision without a person. Confirming changes no text, but a confirmed text
@@ -1660,7 +1801,7 @@ public; the follow emails go by it). The organisation's invitation code is an `i
 
 Earlier names and websites, and earlier versions of a statement, are rows of `revision` (entity `organisation`, fields
 `name` and `website`; entity `statement`, field `version` holding the replaced version as JSON), all without a person.
-Reports (`report`) take the targets `organisation` and `statement` (its `appeal_id` is then empty), and moderation actions
+Reports (`report`) take the targets `organisation` and `statement` (its `record_id` is then empty), and moderation actions
 (`moderation_action`) the same target kinds.
 
 #### 8.14.11 Before organisations are named to MPs, and before the site opens
@@ -1943,6 +2084,42 @@ reading of them; each can be changed on the built result.]
   sending on wrong ones.
 - Deleting an account removes its positions and lowers the live counts.
 
+### 8.15 Explanatory text on screens
+
+**[Decided by the owner on 2026-11-15, on the built site: "too much explanatory texts, which add noise"; keep the first
+paragraph inline, put the rest under a link or on the methodology page. The rule and the pattern are the designer's.]**
+
+- **What a screen shows without being asked:** its title, at most one short paragraph that says what this is, the
+  fields with their labels, and the action. Every other explanation is one click away.
+- **One click away means one of two places.** On the same page, collapsed behind a short link that names what opens
+  ("Kaip tai veikia", "Kas yra riba?"; a bare "Plačiau" only where it is the only one on the screen). Or on the
+  methodology page (`/metodika`) or the moderation rules, reached by a short link to the part that says it. A text
+  that explains how the site works in general belongs on the methodology page and is not repeated on screens.
+- **What stays inline, always:** what becomes public and under whose name; what cannot be undone; a consent and what
+  it covers; the notice that the data is invented; "this is not a representative poll" wherever the numbers are;
+  that summaries are a trial and nothing is sent; status and error messages; labels; a field's hint when it is needed
+  to fill the field (a format, a limit); and what this design requires beside a piece of data (a description's source
+  label and date, the count of accounts older than 30 days, a moderator's statement).
+- **One pattern for collapsed text:** the browser's own `<details>` with the class `more` and a link-looking summary.
+  Opening it needs no script, so it works on server-rendered pages, with JavaScript off, and inside an island before
+  it starts. An island never sets its open state from code. When an island starts it replaces the prerendered markup,
+  which would close what the person had opened; one small script (`lt2-disclosures.js`) remembers which were opened
+  and opens them again. The existing disclosures take the same class.
+- **The methodology page takes what leaves the screens:** new parts "Planuojamos datos" and "Kas matoma viešai, o kas
+  ne", two sentences more in "Organizacijų pozicijos", two rows more in the summary rules, an address for the row
+  "Riba" (`/metodika#riba`), and a lead that describes the whole site, not only MP profiles.
+- **Screen by screen:** `design/text-audit-2026-11-15.md` lists every explanatory text with what happens to it (keep,
+  shorten, under a link, to the methodology page, delete) and the new wording. It is the specification for this
+  change; its new Lithuanian texts are drafts until a native speaker has read them.
+- **New screens follow the rule.** A text added later that explains instead of labels goes behind a link or to the
+  methodology page from the start.
+- **One exception [decided by the owner on 2026-11-15]:** the front page's introduction for a visitor (8.7). A new
+  person has to learn what the site is, so it may be as long as that takes, in short headed steps, not a wall of text.
+
+**Done when:** the organisation registration form shows one sentence before its first field and the rest behind "Kaip
+tai veikia"; every row of the annex is applied or listed as not applied with the reason; no screen lost a text from
+"what stays inline"; every link to a methodology part lands on a part that exists; the collapsed texts open without
+JavaScript.
 ## 9. Hosting and operations
 
 ### 9.1 Layout
@@ -1986,11 +2163,14 @@ also runs the owner's other sites:
   for the site, and adds `X-Robots-Tag: noindex, nofollow`, since a trial with invented data must not be indexed.
   Nothing else on the server is changed: no other site's block, container, volume, port or firewall rule.
 - **Reading the caught emails [decided by the owner on 2026-11-15].** Whoever reads Mailpit reads every sign-in code
-  and can sign in as anyone, staff included, so it is never open. Its web interface has its own hostname, served by
-  the server's Caddy over HTTPS only and marked `noindex`, and Mailpit itself asks for a name and password (its own
-  password file, generated on the server, the password kept in a root-only file there and nowhere else). Its own
-  hostname, not a path of the site: the viewer shows the HTML of emails and must not share the site's origin. No port
-  is opened for it; the SMTP port stays on the internal network. Locally Mailpit stays without a password.
+  and can sign in to any account (a staff account only as an ordinary member, 6.2), so it is never open. Its web
+  interface has its own hostname, served by the server's Caddy over HTTPS only and marked `noindex`, and Mailpit
+  itself asks for a name and password (its own password file, generated on the server). The password is in a
+  root-only file on the server and in one copy that the owner keeps in their own private storage, to read the emails
+  from another device. It is nowhere else: in no repository and on no developer's machine. Whoever changes the
+  password replaces the owner's copy too. Its own hostname, not a path of the site: the viewer shows the HTML of
+  emails and must not share the site's origin. No port is opened for it; the SMTP port stays on the internal network.
+  Locally Mailpit stays without a password.
 - **Delivery.** Images are built from the deployed commit on the developer's machine and copied to the server over
   SSH; nothing is pushed to a registry or to GitHub. The migrator runs once per deploy, as in 9.3.
 - **Not there yet, owed before production:** the host hardening of 9.1 (a named deploy user, a non-default SSH port,

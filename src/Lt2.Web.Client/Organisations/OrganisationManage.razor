@@ -1,5 +1,5 @@
 @using Lt2.Api.Contracts.Organisations
-@inherits InteractiveBase
+@inherits InteractiveBase<AppealUi>
 @inject IOrganisationsApi Organisations
 @inject NavigationManager Navigation
 
@@ -33,13 +33,13 @@
                 }
                 else if (!_codeSent)
                 {
-                    <p class="small">@Text("Org.Confirm.Lead", m.WebsiteHost ?? "")</p>
+                    <p class="small">@L.Format("Org.Confirm.Lead", m.WebsiteHost ?? "")</p>
                     <form class="row" @onsubmit="SendCodeAsync" novalidate>
-                        <div class="field @(Errors.ContainsKey("address") ? "field--error" : "")">
+                        <div class="field @ErrorClass("address")">
                             <label for="confirm-address">@L["Org.Confirm.Address"]</label>
                             <input class="input" type="email" inputmode="email" autocomplete="off" spellcheck="false" id="confirm-address" placeholder="@($"info@{m.WebsiteHost}")"
-                                   @bind="_address" @bind:event="oninput" disabled="@Locked" />
-                            <FieldError Errors="Errors" Field="address" />
+                                   aria-invalid="@Invalid("address")" aria-describedby="@DescribedBy("address", "confirm-address")" @bind="_address" @bind:event="oninput" disabled="@Locked" />
+                            <FieldError Errors="Errors" Field="address" For="confirm-address" />
                         </div>
                         <button class="btn btn--plain" type="submit" id="confirm-send" disabled="@(Locked || string.IsNullOrWhiteSpace(_address))">@L["Org.Confirm.Send"]</button>
                     </form>
@@ -48,11 +48,11 @@
                 else
                 {
                     <form class="row" @onsubmit="ConfirmAsync" novalidate>
-                        <div class="field @(Errors.ContainsKey("code") ? "field--error" : "")">
+                        <div class="field @ErrorClass("code")">
                             <label for="confirm-code">@L["Org.Confirm.Code"]</label>
                             <input class="input num" type="text" inputmode="numeric" autocomplete="one-time-code" id="confirm-code" maxlength="6"
-                                   @bind="_code" @bind:event="oninput" disabled="@Locked" />
-                            <FieldError Errors="Errors" Field="code" />
+                                   aria-invalid="@Invalid("code")" aria-describedby="@DescribedBy("code", "confirm-code")" @bind="_code" @bind:event="oninput" disabled="@Locked" />
+                            <FieldError Errors="Errors" Field="code" For="confirm-code" />
                         </div>
                         <button class="btn" type="submit" id="confirm-submit" disabled="@(Locked || string.IsNullOrWhiteSpace(_code))">@L["Org.Confirm.Submit"]</button>
                         <button class="btn btn--plain" type="button" disabled="@Locked" @onclick="() => _codeSent = false">@L["Org.Confirm.Again"]</button>
@@ -63,12 +63,11 @@
 
         <div class="stack stack--tight" id="representatives">
             <h3>@L["Org.Reps.Title"]</h3>
-            <p class="fine">@L["Org.Reps.Private"]</p>
             <ul class="rows">
                 @foreach (var rep in m.Representatives)
                 {
-                    <li id="representative-@rep.Id">
-                        <div class="rows__main"><b>@(rep.DisplayName ?? L["Reasons.Anonymous"])@(rep.IsMe ? " " + L["Org.Reps.Me"] : "")</b><span class="small num">@Text("Org.Reps.Since", Dates.Day(rep.Since))</span></div>
+                    <li id="representative-@rep.Id" @key="rep.Id">
+                        <div class="rows__main"><b>@(rep.DisplayName ?? L["Reasons.Anonymous"])@(rep.IsMe ? " " + L["Org.Reps.Me"] : "")</b><span class="small num">@L.Format("Org.Reps.Since", Display.Day(rep.Since))</span></div>
                         <div class="rows__side">
                             @if (!rep.IsMe && Status != "closed")
                             {
@@ -87,8 +86,8 @@
                 @if (_invite is { } invite)
                 {
                     <div class="note note--quiet stack stack--tight" id="invite-link">
-                        <p>@Text("Org.Invite.Made", Dates.Day(invite.ExpiresAt))</p>
-                        <p class="statement__link"><code id="invite-url">@(Navigation.BaseUri.TrimEnd('/') + invite.Path)</code></p>
+                        <p>@L.Format("Org.Invite.Made", Display.Day(invite.ExpiresAt))</p>
+                        <p class="statement__link"><code id="invite-url">@Navigation.ToAbsoluteUri(invite.Path)</code></p>
                     </div>
                 }
             }
@@ -135,8 +134,8 @@
 
         @if (Status == "active" && m.Refusal is null)
         {
-            <details id="edit-profile">
-                <summary class="linkish">@L["Org.Edit.Open"]</summary>
+            <details class="more stack stack--tight" id="edit-profile">
+                <summary class="linkish small">@L["Org.Edit.Open"]</summary>
                 <OrganisationForm Slug="@Slug" Initial="Initial" OnSaved="Saved" />
             </details>
         }
@@ -163,8 +162,6 @@
 
     [Parameter] public string? Contact { get; set; }
 
-    [CascadingParameter] private Task<AuthenticationState>? AuthState { get; set; }
-
     [PersistentState] public OrganisationManagementResponse? Management { get; set; }
 
     [PersistentState] public bool? Asked { get; set; }
@@ -177,7 +174,7 @@
         }
 
         Asked = true;
-        if (AuthState is null || (await AuthState).User.Identity?.IsAuthenticated != true)
+        if (!await IsSignedInAsync())
         {
             return;
         }
@@ -195,10 +192,8 @@
 
     private Task SendCodeAsync() => RunAsync(async () =>
     {
-        var result = await Organisations.SendCodeAsync(Slug, new ConfirmationCodeRequest { Address = _address ?? "" });
-        if (!result.IsSuccess)
+        if (!Succeeded(await Organisations.SendCodeAsync(Slug, new ConfirmationCodeRequest { Address = _address ?? "" }), "address"))
         {
-            Show(result.Problem, "address");
             return;
         }
 
@@ -208,10 +203,8 @@
 
     private Task ConfirmAsync() => RunAsync(async () =>
     {
-        var result = await Organisations.ConfirmAsync(Slug, new ConfirmationRequest { Code = _code ?? "" });
-        if (!result.IsSuccess)
+        if (!Succeeded(await Organisations.ConfirmAsync(Slug, new ConfirmationRequest { Code = _code ?? "" }), "code"))
         {
-            Show(result.Problem, "code");
             return;
         }
 
@@ -221,9 +214,8 @@
     private Task InviteAsync() => RunAsync(async () =>
     {
         var result = await Organisations.CreateInviteAsync(Slug);
-        if (!result.IsSuccess)
+        if (!Succeeded(result))
         {
-            Show(result.Problem);
             return;
         }
 
@@ -232,10 +224,8 @@
 
     private Task RemoveAsync(Guid id) => RunAsync(async () =>
     {
-        var result = await Organisations.RemoveRepresentativeAsync(Slug, id);
-        if (!result.IsSuccess)
+        if (!Succeeded(await Organisations.RemoveRepresentativeAsync(Slug, id)))
         {
-            Show(result.Problem);
             return;
         }
 
@@ -245,10 +235,8 @@
 
     private Task FinishAsync(string what) => RunAsync(async () =>
     {
-        var result = what == "close" ? await Organisations.CloseAsync(Slug) : await Organisations.LeaveAsync(Slug);
-        if (!result.IsSuccess)
+        if (!Succeeded(what == "close" ? await Organisations.CloseAsync(Slug) : await Organisations.LeaveAsync(Slug)))
         {
-            Show(result.Problem);
             return;
         }
 

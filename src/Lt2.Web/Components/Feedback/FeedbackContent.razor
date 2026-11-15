@@ -20,13 +20,17 @@
 </AuthorizeView>
 @if (IssuesUrl is { } issues)
 {
-    <p class="small" id="feedback-issues-@Scope">@T["Issues"] <a href="@issues" rel="external noreferrer">@T["IssuesLink"]</a>. @T["IssuesPublic"]</p>
+    @* Design 8.15: reporting on GitHub, and that it is public there, one click away. *@
+    <details class="more stack stack--tight" id="feedback-issues-@Scope">
+        <summary class="linkish small">@T["IssuesMore"]</summary>
+        <p class="small">@T["Issues"] <a href="@issues" rel="external noreferrer">@T["IssuesLink"]</a>. @T["IssuesPublic"]</p>
+    </details>
 }
 
 @code {
     [Parameter, EditorRequired] public string Scope { get; set; } = "panel";
 
-    private string? Contact => Configuration["Moderation:ContactAddress"] is { Length: > 0 } address ? address : null;
+    private string? Contact => Configuration.ModeratorContact();
 
     private string? IssuesUrl =>
         Configuration["Feedback:IssuesUrl"] is { Length: > 0 } url && Uri.TryCreate(url, UriKind.Absolute, out var parsed) && parsed.Scheme == Uri.UriSchemeHttps ? url : null;

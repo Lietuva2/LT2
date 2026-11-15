@@ -112,7 +112,7 @@ internal sealed class ParliamentReads(IParliamentQueries queries, IPlannedAgenda
     private static MpVoteResponse Map(MpVote v) => new(Map(v.Vote), v.Choice, v.Faction is { } f ? Map(f) : null);
 
     private static VoteSummaryResponse Map(VoteSummary v) =>
-        new(Map(v.Vote), new VoteTotalsResponse(v.Totals.For, v.Totals.Against, v.Totals.Abstain, v.Totals.Voted, v.Totals.Seats), v.OfficialNote);
+        new(Map(v.Vote), Totals(v), v.OfficialNote);
 }
 
 /// <summary>Server-side <see cref="IParliamentApi"/> for the server-rendered pages: the same reads as the endpoints, in-process.</summary>

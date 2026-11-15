@@ -35,8 +35,6 @@ internal static class ReasonSimilarity
         return Math.Max(Dice(Stems(left), Stems(right)), Dice(Trigrams(left), Trigrams(right)));
     }
 
-    public static bool AreSimilar(string a, string b) => Score(a, b) >= Threshold;
-
     /// <summary>The existing arguments most like <paramref name="text"/>, best first, those at or above the threshold only.</summary>
     public static IReadOnlyList<T> MostSimilar<T>(string text, IEnumerable<T> existing, Func<T, string> textOf) =>
         existing

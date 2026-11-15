@@ -19,7 +19,7 @@ internal static class GetAppealsEndpoint
             .WithName("GetAppeals")
             .WithTags("Appeals")
             .AllowAnonymous()
-            .Produces<AppealListResponse>()
+            .Produces<BillListResponse>()
             .Produces(StatusCodes.Status304NotModified);
 
     private static async Task<IResult> HandleAsync(
@@ -27,6 +27,6 @@ internal static class GetAppealsEndpoint
         PublicJson.From(
             http,
             errors,
-            Lt2.SharedKernel.Result<AppealListResponse>.Success(AppealMapping.Map(await appeals.ListAsync(new BillListQuery(q, planned == true, tab == "closed", cursor, sort), cancellationToken))),
+            Lt2.SharedKernel.Result<BillListResponse>.Success(AppealMapping.Map(await appeals.ListAsync(new BillListQuery(q, planned == true, tab == "closed", cursor, sort), cancellationToken))),
             maxAgeSeconds: 0);
 }

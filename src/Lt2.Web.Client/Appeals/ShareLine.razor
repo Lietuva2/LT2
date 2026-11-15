@@ -1,7 +1,5 @@
-@inherits InteractiveBase
+@inherits InteractiveBase<AppealUi>
 @inject IMeApi MeApi
-@inject NavigationManager Navigation
-@inject IJSRuntime JS
 
 @* Sharing towards the threshold (design 8.11.5), for a signed-in member only: how many are still missing (or that the
    threshold is reached), the member's personal invitation link that lands on this page, and a copy button. The link is the
@@ -10,18 +8,11 @@
 @if (_member && Invitation is { } mine)
 {
     <div class="stack stack--tight share" id="share-line">
-        <p class="small num"><b>@(ToGo > 0 ? Text("Share.ToGo", AppealNumbers.Of(ToGo)) : L["Share.Reached"])</b></p>
+        <p class="small num"><b>@(ToGo > 0 ? L.Format("Share.ToGo", Display.Number(ToGo)) : L["Share.Reached"])</b></p>
         <p class="small">@L["Share.Lead"]</p>
         @if (mine.Usable)
         {
-            <p class="share__link"><a href="@Link(mine)" id="share-link">@Absolute(mine)</a></p>
-            <div class="row">
-                <button type="button" class="btn btn--plain" id="share-copy" disabled="@Locked" @onclick="CopyAsync">@L["Share.Copy"]</button>
-                @if (_copied)
-                {
-                    <span class="small" role="status">@L["Share.Copied"]</span>
-                }
-            </div>
+            <CopyLink Link="@LandingPath.ShareLink(mine.Link, Path)" LinkId="share-link" ButtonId="share-copy" />
         }
         else
         {
@@ -32,7 +23,6 @@
 
 @code {
     private bool _member;
-    private bool _copied;
 
     /// <summary>The page the link lands on: the bill's page, for example <c>/seimas/XVP-0412</c>.</summary>
     [Parameter, EditorRequired] public string Path { get; set; } = "";
@@ -40,31 +30,16 @@
     /// <summary>Participants still missing to the threshold (0 = reached).</summary>
     [Parameter] public int ToGo { get; set; }
 
-    [CascadingParameter] private Task<AuthenticationState>? AuthState { get; set; }
-
     private MyInvitationResponse? Invitation { get; set; }
 
     protected override async Task OnInitializedAsync()
     {
         // Asked only once the island runs in the browser: the line needs script anyway (copying), and while the server
         // prerenders, other islands of the page use the same request's account context.
-        _member = AuthState is not null && (await AuthState).User.Identity?.IsAuthenticated == true;
+        _member = await IsSignedInAsync();
         if (_member && RendererInfo.IsInteractive)
         {
             Invitation = (await MeApi.GetInvitationAsync()).Value;
         }
     }
-
-    private string Link(MyInvitationResponse mine) => LandingPath.ShareLink(mine.Link, Path);
-
-    private string Absolute(MyInvitationResponse mine) => Navigation.ToAbsoluteUri(Link(mine)).ToString();
-
-    private Task CopyAsync() => RunAsync(async () =>
-    {
-        if (Invitation is { } mine)
-        {
-            await JS.InvokeVoidAsync("navigator.clipboard.writeText", Absolute(mine));
-            _copied = true;
-        }
-    });
 }

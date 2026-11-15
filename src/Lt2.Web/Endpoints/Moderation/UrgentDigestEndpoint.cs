@@ -7,7 +7,7 @@ using Lt2.Web.Services;
 namespace Lt2.Web.Endpoints.Moderation;
 
 /// <summary>
-/// <c>POST /api/v1/moderation/appeals/{id}/urgent</c>: a moderator approves one urgent summary for the appeal's bill
+/// <c>POST /api/v1/moderation/records/{id}/urgent</c>: a moderator approves one urgent summary for the record's bill
 /// (design 8.4): to every MP, both sides, may exceed the weekly ceiling by one. A dry run in M2a. Audited.
 /// </summary>
 internal static class UrgentDigestEndpoint
@@ -34,7 +34,7 @@ internal static class UrgentDigestEndpoint
         CancellationToken cancellationToken)
     {
         var moderator = await AppealMapping.ModeratorAsync(identity, user, ipHasher.Hash(context), cancellationToken);
-        var result = await digests.UrgentAsync(id, request.Statement, new StaffActor(moderator.UserId, moderator.Role, moderator.IpHash), cancellationToken);
+        var result = await digests.UrgentAsync(id, request.Statement, moderator, cancellationToken);
         return result.IsSuccess
             ? TypedResults.Created(DigestRoutes.DigestOn(result.Value.RunDate), DigestMapping.Map(result.Value))
             : errors.ToResult(result.Error!);

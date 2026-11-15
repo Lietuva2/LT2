@@ -66,7 +66,7 @@ internal sealed class ServerFollowsApi(IFollows follows, IHttpContextAccessor ac
     public Task<ApiResult> SetNoticesAsync(NoticeSettingsRequest request, CancellationToken cancellationToken = default) =>
         AsMemberAsync(id => follows.SetNoticesAsync(id, new NoticeSettings(request.Planned, request.Voted, request.Statements), cancellationToken));
 
-    private Guid? UserId => AppealMapping.UserId(accessor.HttpContext?.User);
+    private Guid? UserId => accessor.HttpContext?.User.UserId();
 
     private async Task<ApiResult> AsMemberAsync(Func<Guid, Task<Result<Unit>>> action) =>
         UserId is { } id ? errors.ToApiResult(await action(id)) : ApiResult.Fail(errors.ToProblem(SignInRequired));

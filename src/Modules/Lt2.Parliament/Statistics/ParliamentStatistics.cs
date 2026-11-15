@@ -1,6 +1,7 @@
 using Lt2.Parliament.Domain;
 using Lt2.Parliament.Import.Parsing;
 using Lt2.Parliament.Infrastructure;
+using Lt2.SharedKernel;
 using Microsoft.EntityFrameworkCore;
 
 namespace Lt2.Parliament.Statistics;
@@ -18,8 +19,6 @@ internal interface IParliamentStatistics
 
 internal sealed class ParliamentStatistics(ParliamentDb db, TimeProvider clock) : IParliamentStatistics
 {
-    private static readonly TimeZoneInfo Vilnius = TimeZoneInfo.FindSystemTimeZoneById("Europe/Vilnius");
-
     public async Task ApplyFactionPositionsAsync(
         long voteId,
         IEnumerable<(string? Label, BallotChoice Choice)> rows,
@@ -56,7 +55,7 @@ internal sealed class ParliamentStatistics(ParliamentDb db, TimeProvider clock) 
                            join ses in db.Sessions on s.SessionId equals ses.Id
                            where ses.TermId == termId && v.HasResult && !v.IsConsensus
                            select new { v.Id, v.HeldAt }).ToListAsync(cancellationToken);
-        var voteDays = votes.ToDictionary(v => v.Id, v => DateOnly.FromDateTime(TimeZoneInfo.ConvertTime(v.HeldAt, Vilnius).DateTime));
+        var voteDays = votes.ToDictionary(v => v.Id, v => VilniusTime.DateOf(v.HeldAt));
         var voteIds = voteDays.Keys.ToList();
         var positions = (await db.FactionPositions.AsNoTracking().Where(p => voteIds.Contains(p.VoteId))
                 .Select(p => new { p.VoteId, p.FactionLabel, p.Position }).ToListAsync(cancellationToken))
@@ -64,12 +63,20 @@ internal sealed class ParliamentStatistics(ParliamentDb db, TimeProvider clock) 
 
         var mandates = await db.Mandates.AsNoTracking().Where(m => m.TermId == termId).ToListAsync(cancellationToken);
         var stats = await db.MpStats.Where(s => s.TermId == termId).ToDictionaryAsync(s => s.PersonId, cancellationToken);
+
+        // Every ballot of the term's recorded votes at once, grouped by person.
+        var ballotsByPerson = (await (from b in db.Ballots.AsNoTracking()
+                                      join v in db.Votes on b.VoteId equals v.Id
+                                      join i in db.AgendaItems on v.AgendaItemId equals i.Id
+                                      join s in db.Sittings on i.SittingId equals s.Id
+                                      join ses in db.Sessions on s.SessionId equals ses.Id
+                                      where ses.TermId == termId && v.HasResult && !v.IsConsensus
+                                      select new { b.PersonId, b.VoteId, b.FactionLabel, b.Choice }).ToListAsync(cancellationToken))
+            .ToLookup(b => b.PersonId);
         var now = clock.GetUtcNow();
         foreach (var mandate in mandates)
         {
-            var ballots = (await db.Ballots.AsNoTracking().Where(b => b.PersonId == mandate.PersonId && voteIds.Contains(b.VoteId))
-                    .Select(b => new { b.VoteId, b.FactionLabel, b.Choice }).ToListAsync(cancellationToken))
-                .ToDictionary(b => b.VoteId);
+            var ballots = ballotsByPerson[mandate.PersonId].ToDictionary(b => b.VoteId);
 
             var facts = voteDays
                 .Where(v => v.Value >= mandate.From && (mandate.To is null || v.Value <= mandate.To))

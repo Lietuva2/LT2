@@ -146,10 +146,12 @@ internal sealed class ImportHarness : IAsyncDisposable
 {
     private readonly ServiceProvider _services;
 
-    public ImportHarness(ImportDatabase database, StandInResponses? responses = null)
+    /// <param name="settings">Configuration that replaces the defaults below (for example another agenda address).</param>
+    /// <param name="agendaHandler">The agenda page's server, when it is not the stand-in (a page that never answers).</param>
+    public ImportHarness(ImportDatabase database, StandInResponses? responses = null, IReadOnlyDictionary<string, string?>? settings = null, HttpMessageHandler? agendaHandler = null)
     {
         StandIn = new StandInHandler(responses ?? StandInFixture.Responses());
-        var configuration = new ConfigurationBuilder().AddInMemoryCollection(new Dictionary<string, string?>
+        var values = new Dictionary<string, string?>
         {
             ["Seimas:BaseAddress"] = "http://seimas-standin.test/sip/",
             ["Seimas:TermId"] = "10",
@@ -161,7 +163,13 @@ internal sealed class ImportHarness : IAsyncDisposable
             ["Outbound:AllowedHosts:0"] = "seimas-standin.test",
             ["Agenda:BaseAddress"] = "http://seimas-standin.test/",
             ["Agenda:TimeoutSeconds"] = "2",
-        }).Build();
+        };
+        foreach (var (key, value) in settings ?? new Dictionary<string, string?>())
+        {
+            values[key] = value;
+        }
+
+        var configuration = new ConfigurationBuilder().AddInMemoryCollection(values).Build();
         var services = new ServiceCollection();
         services.AddLogging(b => b.SetMinimumLevel(LogLevel.Warning).AddProvider(Logs));
         services.AddSingleton<TimeProvider>(Clock);
@@ -172,7 +180,7 @@ internal sealed class ImportHarness : IAsyncDisposable
             .ConfigurePrimaryHttpMessageHandler(() => StandIn)
             .SetHandlerLifetime(Timeout.InfiniteTimeSpan);
         services.AddHttpClient(Lt2.Parliament.Import.Agenda.AgendaWatcher.HttpClientName)
-            .ConfigurePrimaryHttpMessageHandler(() => StandIn)
+            .ConfigurePrimaryHttpMessageHandler(() => agendaHandler ?? StandIn)
             .SetHandlerLifetime(Timeout.InfiniteTimeSpan);
         _services = services.BuildServiceProvider();
     }

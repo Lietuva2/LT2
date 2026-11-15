@@ -16,7 +16,7 @@
         </ol>
         <p class="label">@F.T[$"Body.{b.Body.Kind}"]</p>
         <h1>@b.Body.Name</h1>
-        <p class="small num">@b.Term.Name · @F.Format("Body.Count", Formats.Number(b.Body.Members))</p>
+        <p class="small num">@b.Term.Name · @F.T.Format("Body.Count", Display.Number(b.Body.Members))</p>
     </div>
 
     <div class="cols">
@@ -35,7 +35,7 @@
                             @foreach (var v in b.RecentVotes)
                             {
                                 <VoteRow Vote="v.Vote">
-                                    <span class="@PositionClass(v.Split.Position)">@F.Position(v.Split.Position)</span>
+                                    <span class="@Formats.ChoiceClass(v.Split.Position)">@F.Position(v.Split.Position)</span>
                                     <span class="small num">@F.Counts(v.Split.For, v.Split.Against, v.Split.Abstain)</span>
                                 </VoteRow>
                             }
@@ -80,12 +80,4 @@
 
         _updatedAt = (await Meta.GetImportsAsync()).Value?.Sources.FirstOrDefault()?.LastSuccessAt;
     }
-
-    private static string PositionClass(string position) => position switch
-    {
-        "for" => "choice choice--for",
-        "against" => "choice choice--against",
-        "abstain" => "choice",
-        _ => "choice choice--absent",
-    };
 }

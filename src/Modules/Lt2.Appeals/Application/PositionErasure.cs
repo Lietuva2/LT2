@@ -19,9 +19,9 @@ internal sealed class PositionErasure : IPositionErasure
             throw new ArgumentException("Erasing positions needs a PostgreSQL transaction.", nameof(transaction));
         }
 
-        await using (var lockCommand = new NpgsqlCommand("SELECT pg_advisory_xact_lock(hashtextextended(@key, 0))", connection, npgsql))
+        await using (var lockCommand = new NpgsqlCommand(AdvisoryLocks.Sql, connection, npgsql))
         {
-            lockCommand.Parameters.AddWithValue("key", ParticipationLock.KeyOf(userId));
+            lockCommand.Parameters.AddWithValue("key", AdvisoryLocks.PersonKey(userId));
             await lockCommand.ExecuteNonQueryAsync(cancellationToken);
         }
 

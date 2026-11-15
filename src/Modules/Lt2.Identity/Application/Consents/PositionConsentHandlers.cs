@@ -16,7 +16,7 @@ internal sealed class PositionConsentHandlers(IdentityDb db, IPositionErasure er
 {
     public async Task<Result<Unit>> GiveAsync(ClaimsPrincipal principal, string textVersion, CancellationToken cancellationToken)
     {
-        if (!Guid.TryParse(principal.FindFirstValue(ClaimTypes.NameIdentifier), out var userId))
+        if (principal.UserId() is not { } userId)
         {
             return Error.Unauthorized("auth.required");
         }
@@ -28,9 +28,7 @@ internal sealed class PositionConsentHandlers(IdentityDb db, IPositionErasure er
         }
 
         var now = clock.GetUtcNow();
-        var current = await db.Consents.AnyAsync(
-            c => c.UserId == userId && c.Kind == PositionConsent.Kind && c.TextVersion == textVersion && c.WithdrawnAt == null,
-            cancellationToken);
+        var current = await CurrentPositionConsent.Of(db.Consents, userId).AnyAsync(cancellationToken);
         if (!current)
         {
             db.Consents.Add(new Consent
@@ -49,7 +47,7 @@ internal sealed class PositionConsentHandlers(IdentityDb db, IPositionErasure er
 
     public async Task<Result<Unit>> WithdrawAsync(ClaimsPrincipal principal, CancellationToken cancellationToken)
     {
-        if (!Guid.TryParse(principal.FindFirstValue(ClaimTypes.NameIdentifier), out var userId))
+        if (principal.UserId() is not { } userId)
         {
             return Error.Unauthorized("auth.required");
         }
@@ -77,7 +75,7 @@ internal sealed class PartySupportHandlers(IdentityDb db, TimeProvider clock)
 
     public async Task<Result<string?>> GetAsync(ClaimsPrincipal principal, CancellationToken cancellationToken)
     {
-        if (!Guid.TryParse(principal.FindFirstValue(ClaimTypes.NameIdentifier), out var userId))
+        if (principal.UserId() is not { } userId)
         {
             return Error.Unauthorized("auth.required");
         }
@@ -85,9 +83,9 @@ internal sealed class PartySupportHandlers(IdentityDb db, TimeProvider clock)
         return await db.PartySupports.AsNoTracking().Where(p => p.UserId == userId).Select(p => p.Party).FirstOrDefaultAsync(cancellationToken);
     }
 
-    public async Task<Result<Unit>> SetAsync(ClaimsPrincipal principal, string? party, IReadOnlyCollection<string> allowed, CancellationToken cancellationToken)
+    public async Task<Result<Unit>> SetAsync(ClaimsPrincipal principal, string? party, bool consent, IReadOnlyCollection<string> allowed, CancellationToken cancellationToken)
     {
-        if (!Guid.TryParse(principal.FindFirstValue(ClaimTypes.NameIdentifier), out var userId))
+        if (principal.UserId() is not { } userId)
         {
             return Error.Unauthorized("auth.required");
         }
@@ -95,6 +93,12 @@ internal sealed class PartySupportHandlers(IdentityDb db, TimeProvider clock)
         if (party is not null && !allowed.Contains(party))
         {
             return Error.Validation("party.unknown", "party");
+        }
+
+        // A party is a political opinion: stored only with the explicit consent given with it (design 5.2, 6.8).
+        if (party is not null && !consent)
+        {
+            return Error.Validation("party.consent-required", "consent");
         }
 
         var now = clock.GetUtcNow();
@@ -129,29 +133,41 @@ internal sealed class ParticipantDirectory(NpgsqlDataSource dataSource) : IParti
 {
     public async Task<ParticipantFacts?> FindAsync(Guid userId, CancellationToken cancellationToken)
     {
-        await using var command = dataSource.CreateCommand(
-            """
-            SELECT p.display_name, u.email, p.registered_at,
-                   EXISTS (SELECT 1 FROM identity.consent c
-                           WHERE c.user_id = p.user_id AND c.kind = @kind AND c.text_version = @version AND c.withdrawn_at IS NULL)
-            FROM identity.profile p JOIN identity."user" u ON u.id = p.user_id
-            WHERE p.user_id = @id AND p.registered_at IS NOT NULL
-            """);
-        command.Parameters.AddWithValue("id", userId);
-        command.Parameters.AddWithValue("kind", PositionConsent.Kind);
-        command.Parameters.AddWithValue("version", PositionConsent.TextVersion);
-        await using var reader = await command.ExecuteReaderAsync(cancellationToken);
-        if (!await reader.ReadAsync(cancellationToken))
+        var found = await FindManyAsync([userId], cancellationToken);
+        return found.GetValueOrDefault(userId);
+    }
+
+    public async Task<IReadOnlyDictionary<Guid, ParticipantFacts>> FindManyAsync(IReadOnlyCollection<Guid> userIds, CancellationToken cancellationToken)
+    {
+        var result = new Dictionary<Guid, ParticipantFacts>();
+        if (userIds.Count == 0)
         {
-            return null;
+            return result;
         }
 
-        return new ParticipantFacts(
-            userId,
-            reader.IsDBNull(0) ? null : reader.GetString(0),
-            reader.GetString(1),
-            reader.GetFieldValue<DateTimeOffset>(2),
-            reader.GetBoolean(3));
+#pragma warning disable CA2100 // Constant SQL: the consent condition is a constant of this module.
+        await using var command = dataSource.CreateCommand(
+            $"""
+            SELECT p.user_id, p.display_name, u.email, p.registered_at, {CurrentPositionConsent.ExistsSql}
+            FROM identity.profile p JOIN identity."user" u ON u.id = p.user_id
+            WHERE p.user_id = ANY(@ids) AND p.registered_at IS NOT NULL
+            """);
+#pragma warning restore CA2100
+        command.Parameters.AddWithValue("ids", userIds.Distinct().ToArray());
+        CurrentPositionConsent.AddParameters(command);
+        await using var reader = await command.ExecuteReaderAsync(cancellationToken);
+        while (await reader.ReadAsync(cancellationToken))
+        {
+            var id = reader.GetGuid(0);
+            result[id] = new ParticipantFacts(
+                id,
+                reader.IsDBNull(1) ? null : reader.GetString(1),
+                reader.GetString(2),
+                reader.GetFieldValue<DateTimeOffset>(3),
+                reader.GetBoolean(4));
+        }
+
+        return result;
     }
 
     public async Task<IReadOnlyDictionary<Guid, string?>> DisplayNamesAsync(IReadOnlyCollection<Guid> userIds, CancellationToken cancellationToken)

@@ -19,22 +19,6 @@ namespace Lt2.IntegrationTests;
 public sealed class OrganisationFollowTests(DatabaseFixture database) : ApiTest(database)
 {
     private const string StatementEmail = "email.follow-statement";
-    private static readonly SemaphoreSlim Gate = new(1, 1);
-    private static StaffMember? _moderator;
-
-    private async Task<TestBrowser> ModeratorAsync()
-    {
-        await Gate.WaitAsync();
-        try
-        {
-            _moderator ??= await StaffMembers.ActiveAsync(Factory, Database, "moderator");
-            return _moderator.Browser;
-        }
-        finally
-        {
-            Gate.Release();
-        }
-    }
 
     private async Task<FollowRunOutcome> RunJobAsync()
     {
@@ -60,7 +44,7 @@ public sealed class OrganisationFollowTests(DatabaseFixture database) : ApiTest(
     }
 
     [Fact]
-    public async Task A_member_follows_an_organisation_from_its_profile_and_sees_it_with_its_label_on_the_account_page()
+    public async Task A_member_follows_an_organisation_sees_it_with_its_label_in_the_follow_answer_and_on_the_account_page()
     {
         using var visitor = NewBrowser();
         var (rep, _) = await Factory.MemberAsync();
@@ -82,7 +66,7 @@ public sealed class OrganisationFollowTests(DatabaseFixture database) : ApiTest(
         }
 
         // A blocked organisation cannot be followed; one already followed stays in the list, marked, and can be unfollowed.
-        var moderator = await ModeratorAsync();
+        var moderator = (await ModeratorAsync()).Browser;
         await moderator.ActAsync(OrganisationRoutes.Block, created.Id, "Bandymas.");
         var (late, _) = await Factory.MemberAsync();
         using var _l = late;
@@ -92,7 +76,7 @@ public sealed class OrganisationFollowTests(DatabaseFixture database) : ApiTest(
         }
 
         (await member.GetJsonAsync<MyFollowsResponse>(FollowRoutes.Mine)).Organisations.Single().Status.ShouldBe("blocked");
-        (await member.SendAsync(HttpMethod.Delete, FollowRoutes.OrganisationOf(created.Slug))).Dispose();
+        (await member.SendAsync(HttpMethod.Delete, FollowRoutes.OrganisationOf(created.Slug))).StatusCode.ShouldBe(HttpStatusCode.NoContent);
         (await member.GetJsonAsync<MyFollowsResponse>(FollowRoutes.Mine)).Organisations.ShouldBeEmpty();
         await moderator.ActAsync(OrganisationRoutes.Unblock, created.Id, "Bandymas.");
 
@@ -102,25 +86,27 @@ public sealed class OrganisationFollowTests(DatabaseFixture database) : ApiTest(
         (await member.SendAsync(HttpMethod.Put, FollowRoutes.Notices, new NoticeSettingsRequest { Planned = true, Voted = true, Statements = false })).StatusCode.ShouldBe(HttpStatusCode.NoContent);
         (await member.GetJsonAsync<NoticeSettingsResponse>(FollowRoutes.Notices)).ShouldBe(new NoticeSettingsResponse(true, true, false));
 
-        // The profile offers "Sekti" (an island); the account page has the switch.
+        // The profile offers "Sekti" (an island); the account page lists the organisation and has the third switch.
         var profile = WebUtility.HtmlDecode(await member.Client.GetStringAsync("/o/" + created.Slug));
         profile.ShouldContain("id=\"follow-organisation\"");
+        await FollowAsync(member, created.Slug);
+        var account = WebUtility.HtmlDecode(await member.Client.GetStringAsync("/sveiki"));
+        account.ShouldContain("id=\"follows-organisations\"");
+        account.ShouldContain(created.Slug);
+        account.ShouldContain("id=\"notice-statements\"");
     }
 
     [Fact]
     public async Task Organisations_count_towards_the_follow_limit()
     {
-        using var admin = await StaffMembers.ActiveAsync(Factory, Database, "administrator");
+        using var admin = await StaffMembers.SharedAsync(Factory, Database, "administrator");
         var (rep, _) = await Factory.MemberAsync();
         using var _r = rep;
         var created = await rep.RegisterOrganisationAsync();
         var (member, _) = await Factory.MemberAsync();
         using var _m = member;
         await member.FollowBillAsync(AppealSteps.TaxBill);
-        using (var set = await admin.Browser.SendAsync(HttpMethod.Put, ApiRoutes.Admin.SettingByKey("Follows:MaxPerAccount"), new Lt2.Api.Contracts.Admin.UpdateSettingRequest { Value = JsonSerializer.SerializeToElement(1) }))
-        {
-            set.StatusCode.ShouldBe(HttpStatusCode.OK);
-        }
+        await admin.Browser.SetSettingAsync("Follows:MaxPerAccount", 1);
 
         try
         {
@@ -129,7 +115,7 @@ public sealed class OrganisationFollowTests(DatabaseFixture database) : ApiTest(
         }
         finally
         {
-            (await admin.Browser.SendAsync(HttpMethod.Put, ApiRoutes.Admin.SettingByKey("Follows:MaxPerAccount"), new Lt2.Api.Contracts.Admin.UpdateSettingRequest { Value = JsonSerializer.SerializeToElement(200) })).Dispose();
+            await admin.Browser.ResetSettingAsync("Follows:MaxPerAccount");
         }
     }
 
@@ -153,11 +139,16 @@ public sealed class OrganisationFollowTests(DatabaseFixture database) : ApiTest(
             root.GetProperty("billPath").GetString().ShouldBe("/seimas/" + AppealSteps.SecondBill);
             root.GetProperty("accountPath").GetString().ShouldBe("/sveiki#sekami");
             root.GetProperty("confirmedBy").ValueKind.ShouldBe(JsonValueKind.Null);
+
+            // Exactly these fields: no text, no goal, no count, no side, nobody else. (A substring check failed by chance:
+            // the address and the organisation's name carry random hex digits, which can hold "50".)
+            root.EnumerateObject().Select(p => p.Name).ShouldBe(
+                ["to", "organisationName", "confirmedBy", "confirmedDomain", "billNumber", "billTitle", "stance", "billPath", "accountPath"], ignoreOrder: true);
+            root.GetProperty("to").GetString().ShouldBe(email);
+            root.GetProperty("organisationName").GetString().ShouldBe((await rep.ProfileAsync(org.Slug)).Name);
         }
 
         payload.ShouldNotContain(Text);
-        payload.ShouldNotContain("50", Case.Sensitive, "no goal or count");
-        payload.ShouldNotContain("side", Case.Insensitive);
 
         // Recorded once, under its bill, with no person in it.
         await RunJobAsync();
@@ -210,7 +201,7 @@ public sealed class OrganisationFollowTests(DatabaseFixture database) : ApiTest(
     [Fact]
     public async Task A_statement_that_waited_is_emailed_when_published_and_none_for_a_blocked_or_hidden_one()
     {
-        var moderator = await ModeratorAsync();
+        var moderator = (await ModeratorAsync()).Browser;
         await Database.FreeBillAsync(AppealSteps.TaxBill);
         var (rep, org, follower, email) = await FollowedOrganisationAsync();
         using var _r = rep;
@@ -240,6 +231,7 @@ public sealed class OrganisationFollowTests(DatabaseFixture database) : ApiTest(
         var (otherRep, otherOrg, otherFollower, otherEmail) = await FollowedOrganisationAsync();
         using var _or = otherRep;
         using var _of = otherFollower;
+        await Database.FreeBillAsync(AppealSteps.SecondBill);
         await otherRep.PublishStatementAsync(AppealSteps.SecondBill, otherOrg.Slug, "remarks", "Pastabos prieš blokavimą.");
         await moderator.ActAsync(OrganisationRoutes.Block, otherOrg.Id, "Bandymas.");
         await RunJobAsync();
@@ -270,7 +262,7 @@ public sealed class OrganisationFollowTests(DatabaseFixture database) : ApiTest(
     [Fact]
     public async Task Nobody_sees_who_follows_an_organisation_and_there_is_no_follower_count_for_anyone()
     {
-        var moderator = await ModeratorAsync();
+        var moderator = (await ModeratorAsync()).Browser;
         var (rep, repEmail) = await Factory.MemberAsync("Organizacijos Atstovė");
         using var _r = rep;
         var created = await rep.RegisterOrganisationAsync();

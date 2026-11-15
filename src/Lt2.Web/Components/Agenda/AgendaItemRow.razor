@@ -5,7 +5,7 @@
 @* One planned bill (design 8.11.1, 8.12.5), on the agenda page and the front page: number, title, stage, and both sides
    with a link to the bill's page, where anyone can take part; a bill nobody took part in says so. A bill the open data
    does not know yet has no page here: its number links to the agenda source instead. *@
-<li id="agenda-@Item.Number">
+<li id="agenda-@Display.Day(Day)-@Item.Number">
     <div class="rows__main">
         <span class="row">
             @if (Item.Title is not null)
@@ -35,9 +35,9 @@
         }
     </div>
     <div class="rows__side">
-        @if (Item.Appeal is { } appeal)
+        @if (Item.Record is { } record)
         {
-            <AgendaAppeal Appeal="appeal" Number="@Item.Number" />
+            <AgendaRecord Record="record" Number="@Item.Number" />
         }
         else if (Item.SourceUrl is { } source && source.StartsWith("https://", StringComparison.Ordinal))
         {
@@ -48,6 +48,9 @@
 
 @code {
     [Parameter, EditorRequired] public AgendaItemResponse Item { get; set; } = default!;
+
+    /// <summary>The sitting day the row is under: part of its id, since a bill may be planned on more than one day.</summary>
+    [Parameter, EditorRequired] public DateOnly Day { get; set; }
 
     private string BillPath => "/seimas/" + Uri.EscapeDataString(Item.Number);
 }

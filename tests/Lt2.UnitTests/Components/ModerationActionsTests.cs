@@ -39,11 +39,13 @@ public sealed class ModerationActionsTests : BunitContext
     private string Text(string key) => Services.GetRequiredService<IStringLocalizer<AppealUi>>()[key];
 
     private IRenderedComponent<ModerationActions> Render(
-        string kind, string status, bool held = false, bool openItems = false, int candidates = 0, string? description = "", bool noRecord = false, string? source = null) =>
+        string kind, string status, bool held = false, bool openItems = false, int candidates = 0, string? description = "", bool noRecord = false, string? source = null,
+        string recordStatus = "open") =>
         Render<ModerationActions>(p => p
             .Add(c => c.DescriptionSource, source)
+            .Add(c => c.RecordStatus, recordStatus)
             .Add(c => c.Id, noRecord ? null : Item)
-            .Add(c => c.Number, kind == "appeal" ? Bill : null)
+            .Add(c => c.Number, kind == "record" ? Bill : null)
             .Add(c => c.Kind, kind)
             .Add(c => c.Status, status)
             .Add(c => c.Held, held)
@@ -62,14 +64,14 @@ public sealed class ModerationActionsTests : BunitContext
     [Fact]
     public void An_open_bill_offers_the_description_the_timing_actions_and_keep_only_when_something_was_reported()
     {
-        Offered(Render("appeal", "open", openItems: true)).ShouldBe(["keep", "describe", "threshold", "planned", "hold", "urgent", "hide"]);
-        Offered(Render("appeal", "open")).ShouldBe(["describe", "threshold", "planned", "hold", "urgent", "hide"]);
+        Offered(Render("record", "open", openItems: true)).ShouldBe(["keep", "describe", "threshold", "planned", "hold", "urgent", "hide"]);
+        Offered(Render("record", "open")).ShouldBe(["describe", "threshold", "planned", "hold", "urgent", "hide"]);
     }
 
     [Fact]
     public void Nothing_offers_publishing_returning_or_restricting_a_bill()
     {
-        var offered = Offered(Render("appeal", "open", openItems: true));
+        var offered = Offered(Render("record", "open", openItems: true));
         offered.ShouldNotContain("publish");
         offered.ShouldNotContain("return");
         offered.ShouldNotContain("restrict", "a bill's record has no author to restrict (design 8.12.4)");
@@ -78,15 +80,15 @@ public sealed class ModerationActionsTests : BunitContext
     [Fact]
     public void The_description_action_says_write_on_a_bill_without_one_and_correct_on_one_that_has_it()
     {
-        Render("appeal", "open", description: "").Find($"#action-describe-{Item}").TextContent.ShouldBe(Text("Mod.Action.write"));
-        Render("appeal", "open", description: "Projektas keičia rinkliavas.").Find($"#action-describe-{Item}").TextContent.ShouldBe(Text("Mod.Action.describe"));
+        Render("record", "open", description: "").Find($"#action-describe-{Item}").TextContent.ShouldBe(Text("Mod.Action.write"));
+        Render("record", "open", description: "Projektas keičia rinkliavas.").Find($"#action-describe-{Item}").TextContent.ShouldBe(Text("Mod.Action.describe"));
     }
 
     [Fact]
     public void Writing_the_description_goes_by_bill_number_starts_from_the_shown_text_and_the_item_stays_after_it()
     {
         _api.On("WriteDescriptionAsync", ApiResult.Ok());
-        var actions = Render("appeal", "open", description: "Projektas keičia rinkliavas.");
+        var actions = Render("record", "open", description: "Projektas keičia rinkliavas.");
         actions.Find($"#action-describe-{Item}").Click();
 
         actions.Find($"#action-sentence-{Item}").TextContent.ShouldBe(Text("Mod.Sentence.appeal.describe"));
@@ -106,7 +108,7 @@ public sealed class ModerationActionsTests : BunitContext
         _api.On("WriteDescriptionAsync", ApiResult.Ok());
         const string Address = "https://e-seimas.lrs.lt/portal/legalAct/lt/TAP/bandymas";
         var actions = Render<ModerationActions>(p => p
-            .Add(c => c.Id, Item).Add(c => c.Number, Bill).Add(c => c.Kind, "appeal").Add(c => c.Status, "open")
+            .Add(c => c.Id, Item).Add(c => c.Number, Bill).Add(c => c.Kind, "record").Add(c => c.Status, "open")
             .Add(c => c.Description, "DI santrauka.").Add(c => c.DescriptionSource, "ai").Add(c => c.DescriptionUrl, Address));
         actions.Find($"#action-describe-{Item}").Click();
 
@@ -136,7 +138,7 @@ public sealed class ModerationActionsTests : BunitContext
     public void A_refused_address_is_said_at_the_field_and_nothing_is_sent(string address)
     {
         _api.On("WriteDescriptionAsync", ApiResult.Ok());
-        var actions = Render("appeal", "open", description: "Projektas keičia rinkliavas.");
+        var actions = Render("record", "open", description: "Projektas keičia rinkliavas.");
         actions.Find($"#action-describe-{Item}").Click();
         actions.Find($"#describe-url-{Item}").Input(address);
         actions.Find($"#statement-{Item}").Input("Pridėtas adresas.");
@@ -151,18 +153,18 @@ public sealed class ModerationActionsTests : BunitContext
     [Fact]
     public void An_AI_summary_nobody_has_read_can_be_confirmed_corrected_or_removed_and_any_description_removed()
     {
-        Offered(Render("appeal", "open", openItems: true, description: "DI santrauka.", source: "ai"))
+        Offered(Render("record", "open", openItems: true, description: "DI santrauka.", source: "ai"))
             .ShouldBe(["keep", "confirm", "describe", "undescribe", "threshold", "planned", "hold", "urgent", "hide"]);
-        Offered(Render("appeal", "open", description: "Moderatoriaus tekstas.", source: "moderator"))
+        Offered(Render("record", "open", description: "Moderatoriaus tekstas.", source: "moderator"))
             .ShouldBe(["describe", "undescribe", "threshold", "planned", "hold", "urgent", "hide"]);
-        Offered(Render("appeal", "open", description: "Patvirtinta santrauka.", source: "ai-draft")).ShouldNotContain("confirm");
+        Offered(Render("record", "open", description: "Patvirtinta santrauka.", source: "ai-draft")).ShouldNotContain("confirm");
     }
 
     [Fact]
     public void Confirming_goes_by_bill_number_with_an_optional_note_and_then_is_no_longer_offered()
     {
         _api.On("ConfirmDescriptionAsync", ApiResult.Ok());
-        var actions = Render("appeal", "open", openItems: true, description: "DI santrauka.", source: "ai");
+        var actions = Render("record", "open", openItems: true, description: "DI santrauka.", source: "ai");
         actions.Find($"#action-confirm-{Item}").Click();
         actions.Find($"#action-sentence-{Item}").TextContent.ShouldBe(Text("Mod.Sentence.appeal.confirm"));
         actions.Find($"label[for=statement-{Item}]").TextContent.ShouldBe(Text("Mod.Note.Record"));
@@ -178,7 +180,7 @@ public sealed class ModerationActionsTests : BunitContext
     public void Removing_asks_for_a_statement_and_then_the_bill_has_no_description_to_remove()
     {
         _api.On("RemoveDescriptionAsync", ApiResult.Ok());
-        var actions = Render("appeal", "open", description: "DI santrauka.", source: "ai");
+        var actions = Render("record", "open", description: "DI santrauka.", source: "ai");
         actions.Find($"#action-undescribe-{Item}").Click();
         actions.Find($"label[for=statement-{Item}]").TextContent.ShouldBe(Text("Mod.Statement.Required"));
         actions.Find($"#statement-{Item}").Input("Santrauka klaidinga.");
@@ -192,7 +194,7 @@ public sealed class ModerationActionsTests : BunitContext
     [Fact]
     public void Without_an_AI_provider_the_description_form_mentions_no_draft()
     {
-        var actions = Render("appeal", "open");
+        var actions = Render("record", "open");
         actions.Find($"#action-describe-{Item}").Click();
         actions.FindAll($"#describe-source-{Item}").ShouldBeEmpty();
         actions.FindAll($"#describe-draft-{Item}").ShouldBeEmpty();
@@ -203,7 +205,7 @@ public sealed class ModerationActionsTests : BunitContext
     public void With_an_AI_provider_the_description_form_offers_the_draft_from_pasted_official_text()
     {
         _api.On("GetAiAsync", ApiResult<AiStatusResponse>.Ok(new AiStatusResponse(true)));
-        var actions = Render("appeal", "open");
+        var actions = Render("record", "open");
         actions.Find($"#action-describe-{Item}").Click();
         actions.FindAll($"#describe-source-{Item}").Count.ShouldBe(1);
         actions.Find($"#describe-draft-{Item}").HasAttribute("disabled").ShouldBeTrue("no draft without a source text");
@@ -213,9 +215,9 @@ public sealed class ModerationActionsTests : BunitContext
     public void An_action_on_a_bill_without_a_record_creates_the_record_first()
     {
         var created = Guid.Parse("0193a1b2-0000-7000-8000-000000000533");
-        _api.On("EnsureRecordAsync", ApiResult<BillRecordResponse>.Ok(new BillRecordResponse(created)));
+        _api.On("EnsureRecordAsync", ApiResult<BillRecordIdResponse>.Ok(new BillRecordIdResponse(created)));
         _api.On("HoldAsync", ApiResult.Ok());
-        var actions = Render("appeal", "open", noRecord: true);
+        var actions = Render("record", "open", noRecord: true);
         actions.Find($"#action-hold-{Bill}").Click();
         actions.Find($"#statement-{Bill}").Input("Šuolis, tikriname.");
         actions.Find("form").Submit();
@@ -227,7 +229,7 @@ public sealed class ModerationActionsTests : BunitContext
     [Fact]
     public void A_bill_on_hold_offers_release_and_no_urgent_summary()
     {
-        var offered = Offered(Render("appeal", "open", held: true));
+        var offered = Offered(Render("record", "open", held: true));
         offered.ShouldContain("release");
         offered.ShouldNotContain("hold");
         offered.ShouldNotContain("urgent");
@@ -241,10 +243,20 @@ public sealed class ModerationActionsTests : BunitContext
         Offered(Render("reason", "published", candidates: 2)).ShouldBe(["keep", "hide", "merge", "restrict"]);
     }
 
+    /// <summary>Design 6.9 (owner, 2026-11-15): after the final vote only the actions the rules leave are offered.</summary>
+    [Fact]
+    public void A_closed_bill_offers_palikti_the_description_and_hiding_only()
+    {
+        Offered(Render("record", "closed", openItems: true, description: "Aprašymas.")).ShouldBe(["keep", "describe", "undescribe", "hide"]);
+        Offered(Render("record", "closed", description: "")).ShouldBe(["describe", "hide"]);
+        Offered(Render("reason", "published", candidates: 2, recordStatus: "closed")).ShouldBe(["keep", "hide"]);
+        Offered(Render("reason", "pending", candidates: 2, recordStatus: "closed")).ShouldBe(["hide"]);
+    }
+
     [Fact]
     public void Choosing_an_action_opens_only_its_own_fields_with_its_sentence()
     {
-        var actions = Render("appeal", "open");
+        var actions = Render("record", "open");
         actions.Find($"#action-planned-{Item}").Click();
 
         actions.FindAll("[role=group]").ShouldBeEmpty("one action is open at a time");
@@ -261,12 +273,12 @@ public sealed class ModerationActionsTests : BunitContext
     [Fact]
     public void The_planned_date_is_a_text_field_in_the_form_yyyy_MM_dd_and_a_wrong_one_is_not_sent()
     {
-        var actions = Render("appeal", "open");
+        var actions = Render("record", "open");
         actions.Find($"#action-planned-{Item}").Click();
         var date = actions.Find($"#planned-{Item}");
         date.GetAttribute("type").ShouldBe("text");
         date.GetAttribute("inputmode").ShouldBe("numeric");
-        date.GetAttribute("placeholder").ShouldBe(Dates.Example);
+        date.GetAttribute("placeholder").ShouldBe(Display.DateExample);
 
         date.Change("19.11.2026");
         actions.Find($"#statement-{Item}").Input("Darbotvarkė pasikeitė.");
@@ -294,7 +306,7 @@ public sealed class ModerationActionsTests : BunitContext
     public void Holding_keeps_the_item_and_offers_release_next()
     {
         _api.On("HoldAsync", ApiResult.Ok());
-        var actions = Render("appeal", "open");
+        var actions = Render("record", "open");
         actions.Find($"#action-hold-{Item}").Click();
         actions.Find($"#statement-{Item}").Input("Šuolis, tikriname.");
         actions.Find("form").Submit();

@@ -2,6 +2,7 @@ using System.Security.Claims;
 using Lt2.Api.Contracts;
 using Lt2.Api.Contracts.Appeals;
 using Lt2.Appeals;
+using Lt2.SharedKernel;
 using Lt2.Web.Security;
 using Lt2.Web.Services;
 
@@ -21,5 +22,5 @@ internal static class GetMyRestrictionEndpoint
             .Produces<MyRestrictionResponse>();
 
     private static async Task<IResult> HandleAsync(ClaimsPrincipal user, IAppealsModule appeals, CancellationToken cancellationToken) =>
-        TypedResults.Ok(AppealMapping.Map(await appeals.MyRestrictionAsync(AppealMapping.UserId(user)!.Value, cancellationToken)));
+        TypedResults.Ok(AppealMapping.Map(await appeals.MyRestrictionAsync(user.UserId()!.Value, cancellationToken)));
 }

@@ -18,12 +18,16 @@ public class ApiFake : DispatchProxy
 
     public void On(string method, ApiResult answer) => _answers[method] = Task.FromResult(answer);
 
+    /// <summary>Answers successive calls of <paramref name="method"/> in turn; the last answer repeats.</summary>
+    public void OnEach<T>(string method, params ApiResult<T>[] answers) =>
+        _answers[method] = new Queue<object>(answers.Select(a => (object)Task.FromResult(a)));
+
     protected override object? Invoke(MethodInfo? targetMethod, object?[]? args)
     {
         Calls.Add(targetMethod!.Name);
         Arguments.Add(args ?? []);
         return _answers.TryGetValue(targetMethod.Name, out var answer)
-            ? answer
+            ? answer is Queue<object> queue ? (queue.Count > 1 ? queue.Dequeue() : queue.Peek()) : answer
             : throw new NotSupportedException($"{targetMethod.DeclaringType?.Name}.{targetMethod.Name} was not expected here.");
     }
 }

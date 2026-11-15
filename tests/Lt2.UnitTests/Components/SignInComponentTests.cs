@@ -241,7 +241,7 @@ public sealed class SignInComponentTests : BunitContext
 
         page.Find("form").Submit();
 
-        page.Find("#confirmsAdult-error").TextContent.ShouldBe("Registruotis gali tik 18 metų ir vyresni asmenys.");
+        page.Find("#reg-age-error").TextContent.ShouldBe("Registruotis gali tik 18 metų ir vyresni asmenys.");
         _me.Completions.ShouldBeEmpty();
     }
 
@@ -262,7 +262,7 @@ public sealed class SignInComponentTests : BunitContext
         page.Find("#reg-age").Change(true);
         page.Find("form").Submit();
 
-        page.WaitForElement("#invitationCode-error").TextContent.ShouldBe(usedUp);
+        page.WaitForElement("#complete-invite-error").TextContent.ShouldBe(usedUp);
         page.Find("#complete-invite").Input("BANDYMAS-2026");
         page.Find("form").Submit();
 
@@ -283,6 +283,30 @@ public sealed class SignInComponentTests : BunitContext
         page.Find("section[aria-labelledby=activation-title] form").Submit();
 
         page.WaitForAssertion(() => _me.Activations.ShouldHaveSingleItem().Code.ShouldBe("7kq2-m9xd-4trb-hc0p"));
+    }
+
+    /// <summary>Design 6.9: a staff account is deleted only from its staff passkey session; the page says so in a code session.</summary>
+    [Fact]
+    public void A_staff_member_sees_how_to_delete_the_account_in_a_code_session_and_what_stays_in_the_staff_session()
+    {
+        SignedIn(FakeMeApi.Member with { Roles = ["member", "moderator"], StaffAccount = true });
+        var codeSession = Render<Hello>();
+        codeSession.Find("#delete-staff-passkey").TextContent.ShouldBe(Text("Data.DeleteStaffNeedsPasskey"));
+        codeSession.FindAll("#delete-account").ShouldBeEmpty();
+        codeSession.FindAll("#export").ShouldNotBeEmpty("the export is unchanged");
+
+        SignedIn(FakeMeApi.Member with { Roles = ["member", "moderator"], StaffAccount = true, ActiveStaffRoles = ["moderator"] });
+        var staffSession = Render<Hello>();
+        staffSession.FindAll("#delete-staff-passkey").ShouldBeEmpty();
+        staffSession.Find("#delete-account").Click();
+        staffSession.Find("#delete-staff-kept").TextContent.ShouldContain(Text("Data.DeleteStaffKept"));
+        staffSession.Find("#delete-staff-kept a").GetAttribute("href").ShouldBe("/metodika#privatumas");
+
+        SignedIn(FakeMeApi.Member);
+        var member = Render<Hello>();
+        member.Find("#delete-account").Click();
+        member.FindAll("#delete-staff-kept").ShouldBeEmpty("an ordinary account is unchanged");
+        member.FindAll("#delete-confirm").ShouldNotBeEmpty();
     }
 
     [Fact]
@@ -354,7 +378,7 @@ public sealed class SignInComponentTests : BunitContext
     [Fact]
     public void The_note_component_renders_nothing_without_text()
     {
-        Render<Messages>().Markup.Trim().ShouldBeEmpty();
+        Render<Messages>().FindAll(".note").ShouldBeEmpty("the status region is there, empty, so what appears in it is announced");
         Render<Messages>(p => p.Add(m => m.Message, "Klaida")).Find(".note").TextContent.ShouldBe("Klaida");
     }
 
@@ -465,6 +489,8 @@ public sealed class SignInComponentTests : BunitContext
 
         public Func<RoleActivationRequest, Task<ApiResult>> Activate { get; set; } = _ => Task.FromResult(ApiResult.Ok());
 
+        public Task<ApiResult> ConfirmPasskeyAsync(PasskeyCredentialRequest request, CancellationToken cancellationToken = default) => Task.FromResult(ApiResult.Ok());
+
         public Task<ApiResult> ActivateRoleAsync(RoleActivationRequest request, CancellationToken cancellationToken = default)
         {
             Activations.Add(request);
@@ -486,7 +512,7 @@ public sealed class SignInComponentTests : BunitContext
         public Task<ApiResult> DeleteAccountAsync(CancellationToken cancellationToken = default) => Task.FromResult(ApiResult.Ok());
 
         public Task<ApiResult<MyInvitationResponse>> GetInvitationAsync(CancellationToken cancellationToken = default) =>
-            Task.FromResult(ApiResult<MyInvitationResponse>.Ok(new MyInvitationResponse("ABCD-EFGH", "/prisijungti?kodas=ABCD-EFGH", 0, true, null)));
+            Task.FromResult(ApiResult<MyInvitationResponse>.Ok(new MyInvitationResponse("ABCD-EFGH", "/prisijungti#kodas=ABCD-EFGH", 0, true, null)));
 
         public Task<ApiResult<MyInvitationResponse>> ReplaceInvitationAsync(CancellationToken cancellationToken = default) => GetInvitationAsync(cancellationToken);
 

@@ -5,6 +5,7 @@ using Lt2.Identity.Infrastructure;
 using Lt2.SharedKernel;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Storage;
 
 namespace Lt2.Identity.Application.Account;
 
@@ -22,7 +23,8 @@ internal sealed class AccountHandlers(IdentityDb db, UserManager<User> users, St
         var profile = await db.Profiles.AsNoTracking().FirstAsync(p => p.UserId == user.Id, cancellationToken);
         var roles = await users.GetRolesAsync(user);
         var passkeys = await users.GetPasskeysAsync(user);
-        var session = (await staff.ForAsync(principal, cancellationToken))?.ToSession() ?? StaffSession.None;
+        var state = await staff.ForAsync(principal, cancellationToken);
+        var session = state?.ToSession() ?? StaffSession.None;
         var now = clock.GetUtcNow();
         var awaitingActivation = await db.RoleActivations.AnyAsync(
             a => a.UserId == user.Id && a.UsedAt == null && a.ExpiresAt > now,
@@ -38,14 +40,13 @@ internal sealed class AccountHandlers(IdentityDb db, UserManager<User> users, St
             !profile.IsPending,
             session.ActiveRoles,
             awaitingActivation,
-            await db.Consents.AnyAsync(
-                c => c.UserId == user.Id && c.Kind == PositionConsent.Kind && c.TextVersion == PositionConsent.TextVersion && c.WithdrawnAt == null,
-                cancellationToken));
+            await CurrentPositionConsent.Of(db.Consents, user.Id).AnyAsync(cancellationToken),
+            state?.AccountHasActiveStaffRole == true);
     }
 
     public async Task<IReadOnlyList<SessionSummary>> SessionsAsync(ClaimsPrincipal principal, CancellationToken cancellationToken)
     {
-        if (!TryGetUserId(principal, out var userId))
+        if (principal.UserId() is not { } userId)
         {
             return [];
         }
@@ -64,7 +65,7 @@ internal sealed class AccountHandlers(IdentityDb db, UserManager<User> users, St
 
     public async Task<Result<Unit>> EndSessionAsync(ClaimsPrincipal principal, Guid sessionId, CancellationToken cancellationToken)
     {
-        if (!TryGetUserId(principal, out var userId))
+        if (principal.UserId() is not { } userId)
         {
             return Error.Unauthorized("auth.required");
         }
@@ -75,15 +76,13 @@ internal sealed class AccountHandlers(IdentityDb db, UserManager<User> users, St
         return deleted == 1 ? Result.Ok() : Error.NotFound("session.not-found");
     }
 
-    private static bool TryGetUserId(ClaimsPrincipal principal, out Guid userId) =>
-        Guid.TryParse(principal.FindFirstValue(ClaimTypes.NameIdentifier), out userId);
 }
 
 /// <summary>
 /// Housekeeping: old sign-in codes, expired sessions, and accounts still pending after the configured number of days
-/// (design 6.2), so an address typed by a stranger is not kept.
+/// (design 6.2), so an address typed by a stranger is not kept, nor any unsent email to it (design 6.8).
 /// </summary>
-internal sealed class MaintenanceHandler(IdentityDb db, ISettings settings, TimeProvider clock) : IIdentityMaintenance
+internal sealed class MaintenanceHandler(IdentityDb db, IOutbox outbox, ISettings settings, TimeProvider clock) : IIdentityMaintenance
 {
     public async Task<int> PurgeExpiredAsync(CancellationToken cancellationToken)
     {
@@ -93,13 +92,23 @@ internal sealed class MaintenanceHandler(IdentityDb db, ISettings settings, Time
         var sessions = await db.Sessions.Where(s => s.ExpiresAt < now).ExecuteDeleteAsync(cancellationToken);
 
         var pendingCutoff = now - TimeSpan.FromDays(await settings.GetAsync(SettingKeys.PendingAccountDays, cancellationToken));
-        var pending = await db.Users
-            .Where(u => db.Profiles.Any(p => p.UserId == u.Id && p.RegisteredAt == null && p.CreatedAt < pendingCutoff))
-            .ExecuteDeleteAsync(cancellationToken);
+        var expired = db.Users.Where(u => db.Profiles.Any(p => p.UserId == u.Id && p.RegisteredAt == null && p.CreatedAt < pendingCutoff));
+        int pending;
+        await using (var transaction = await db.Database.BeginTransactionAsync(cancellationToken))
+        {
+            var addresses = await expired.Where(u => u.Email != null).Select(u => u.Email!).ToListAsync(cancellationToken);
+            if (addresses.Count > 0)
+            {
+                await outbox.ForgetAsync(addresses, transaction.GetDbTransaction(), cancellationToken);
+            }
+
+            pending = await expired.ExecuteDeleteAsync(cancellationToken);
+            await transaction.CommitAsync(cancellationToken);
+        }
 
         // Feedback is kept for the setting's months (design 8.10).
         var feedback = await Feedback.FeedbackHandlers.DeleteOldAsync(
-            db, FeedbackRules.KeepFrom(Feedback.FeedbackHandlers.TodayIn(clock), await settings.GetAsync(SettingKeys.FeedbackKeepMonths, cancellationToken)), cancellationToken);
+            db, FeedbackRules.KeepFrom(VilniusTime.Today(clock), await settings.GetAsync(SettingKeys.FeedbackKeepMonths, cancellationToken)), cancellationToken);
         return codes + sessions + pending + feedback;
     }
 }

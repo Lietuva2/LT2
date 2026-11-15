@@ -85,6 +85,24 @@ public sealed class SignInCodeTests(DatabaseFixture database) : ApiTest(database
     }
 
     [Fact]
+    public async Task Parallel_requests_cannot_pass_the_hourly_limit_together()
+    {
+        using var browser = NewBrowser();
+        var email = TestData.Email();
+        await browser.RegisterAsync(email);
+
+        // One code sent; four more fit in the hour. Twelve requests at once must not all see room (design 6.8).
+        var answers = await Task.WhenAll(Enumerable.Range(0, 12)
+            .Select(_ => browser.PostAsync(ApiRoutes.Auth.Code, new RequestCodeRequest { Email = email })));
+
+        answers.ShouldAllBe(a => a.StatusCode == HttpStatusCode.Accepted);
+        (await Factory.OutboxCountAsync(email)).ShouldBe(5, "five codes an hour, however the requests arrive");
+        (await Database.ScalarAsync<long>(
+            "SELECT count(*) FROM identity.sign_in_code c JOIN identity.\"user\" u ON u.id = c.user_id WHERE u.email = @e",
+            ("e", email))).ShouldBe(5);
+    }
+
+    [Fact]
     public async Task A_new_code_replaces_the_previous_one()
     {
         using var browser = NewBrowser();

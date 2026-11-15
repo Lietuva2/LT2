@@ -7,16 +7,10 @@
     <PackageReference Include="Microsoft.AspNetCore.Components.WebAssembly.Server" />
     <PackageReference Include="Microsoft.AspNetCore.OpenApi" />
     <PackageReference Include="FluentValidation.DependencyInjectionExtensions" />
-    <PackageReference Include="Serilog.AspNetCore" />
-    <PackageReference Include="Serilog.Sinks.OpenTelemetry" />
-    <PackageReference Include="OpenTelemetry.Extensions.Hosting" />
-    <PackageReference Include="OpenTelemetry.Exporter.OpenTelemetryProtocol" />
-    <PackageReference Include="OpenTelemetry.Instrumentation.AspNetCore" />
-    <PackageReference Include="OpenTelemetry.Instrumentation.Http" />
-    <PackageReference Include="Npgsql.OpenTelemetry" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\Lt2.Api.Contracts\Lt2.Api.Contracts.csproj" />
+    <ProjectReference Include="..\Lt2.Hosting\Lt2.Hosting.csproj" />
     <ProjectReference Include="..\Lt2.SharedKernel\Lt2.SharedKernel.csproj" />
     <ProjectReference Include="..\Lt2.Web.Client\Lt2.Web.Client.csproj" />
     <ProjectReference Include="..\Modules\Lt2.Identity\Lt2.Identity.csproj" />

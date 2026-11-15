@@ -6,35 +6,62 @@ namespace Lt2.Appeals.Domain;
 /// </summary>
 internal static class RecordRules
 {
-    /// <summary>The longest official text's address (<c>appeal.description_url</c>).</summary>
+    /// <summary>The longest official text's address (<c>record.description_url</c>).</summary>
     public const int DescriptionUrlMaxLength = 500;
 
     /// <summary>A row in one of these statuses is the bill's record; at most one per bill (a unique index stands behind it).</summary>
-    public static bool IsRecord(string status) => status is AppealStatuses.Open or AppealStatuses.Closed or AppealStatuses.Rejected;
+    public static readonly string[] RecordStatuses = [BillRecordStatuses.Open, BillRecordStatuses.Closed, BillRecordStatuses.Rejected];
+
+    public static bool IsRecord(string status) => RecordStatuses.Contains(status);
 
     /// <summary>
-    /// Whether a member may take part on a bill now (design 8.12.1): on its open record, or on an active bill that has no
-    /// record yet (the record is then created). A closed record, a hidden one (taking part closed by the moderators) and a
-    /// finished bill without a record refuse with <c>appeal.not-open</c>.
+    /// Whether a member may take part on a bill now (design 8.12.1, 6.8): on its open record, or on an active bill that has
+    /// no record yet (the record is then created). A closed record, a hidden one (taking part closed by the moderators) and
+    /// a finished bill refuse with <c>record.not-open</c>, the last from the moment its final vote is recorded, whether or
+    /// not the hourly job has closed the record yet.
     /// </summary>
     /// <param name="recordStatus">The record's status, or null when the bill has none.</param>
     /// <param name="billFinished">The Seimas has finished the bill (its final vote is in the open data).</param>
-    public static string? CheckParticipation(string? recordStatus, bool billFinished) => recordStatus switch
-    {
-        AppealStatuses.Open => null,
-        null => billFinished ? "appeal.not-open" : null,
-        _ => "appeal.not-open",
-    };
-
-    /// <summary>A hidden record comes back as it was (design 8.12.3): closed if it had closed, otherwise open.</summary>
-    public static string RestoredStatus(DateTimeOffset? closedAt) => closedAt is not null ? AppealStatuses.Closed : AppealStatuses.Open;
-
-    /// <summary>Only a hidden record can be restored; there is one record per bill, so nothing else on the bill blocks it.</summary>
-    public static string? CheckRestore(string status) => status == AppealStatuses.Rejected ? null : "moderation.wrong-state";
+    public static string? CheckParticipation(string? recordStatus, bool billFinished) =>
+        !billFinished && recordStatus is null or BillRecordStatuses.Open ? null : "record.not-open";
 
     /// <summary>
-    /// A moderator writes or corrects the description of an active bill's open record (design 8.12.3, 8.13), with a
-    /// required statement; the text or the official text's address must differ from what is shown.
+    /// Whether the Seimas has finished the bill (design 6.8: the same moment for everyone): its record is closed, or its
+    /// final vote is recorded.
+    /// </summary>
+    public static bool IsFinished(string? recordStatus, bool finalVoteRecorded) => recordStatus == BillRecordStatuses.Closed || finalVoteRecorded;
+
+    /// <summary>A hidden record comes back as it was (design 8.12.3): closed if it had closed, otherwise open.</summary>
+    public static string RestoredStatus(DateTimeOffset? closedAt) => closedAt is not null ? BillRecordStatuses.Closed : BillRecordStatuses.Open;
+
+    /// <summary>Only a hidden record can be restored; there is one record per bill, so nothing else on the bill blocks it.</summary>
+    public static string? CheckRestore(string status) => status == BillRecordStatuses.Rejected ? null : "moderation.wrong-state";
+
+    /// <summary>
+    /// What a moderator may still do on a closed record (design 6.9, "Reports after the final vote"): answer a report with
+    /// "Palikti", and correct or remove the description. The record's arguments have their own rule,
+    /// <see cref="CheckReasonAction"/>. Everything else on a closed record stays refused; on an open record every action
+    /// is allowed here (each has its own checks besides).
+    /// </summary>
+    public static string? CheckRecordAction(string recordStatus, string action) =>
+        recordStatus == BillRecordStatuses.Open || (recordStatus == BillRecordStatuses.Closed && action is "keep" or "describe" or "undescribe")
+            ? null
+            : "moderation.wrong-state";
+
+    /// <summary>
+    /// What a moderator may do with an argument by its record's status (design 6.9): anything on an open record; on a closed
+    /// one only hide and restore it, and answer a report on a published one with "Palikti" (publishing a published
+    /// argument marks it seen). Publishing a waiting one, merging, and anything on a hidden record are refused.
+    /// </summary>
+    public static string? CheckReasonAction(string recordStatus, string action, string reasonStatus) =>
+        recordStatus == BillRecordStatuses.Open
+        || (recordStatus == BillRecordStatuses.Closed && (action is "hide" or "restore" || (action == "publish" && reasonStatus == ReasonStatuses.Published)))
+            ? null
+            : "moderation.wrong-state";
+
+    /// <summary>
+    /// A moderator writes or corrects the description of a bill's open record, or of its closed one (design 8.12.3, 8.13,
+    /// 6.9), with a required statement; the text or the official text's address must differ from what is shown.
     /// </summary>
     public static string? CheckDescriptionWrite(string recordStatus, string currentText, string newText, string? statement, string? currentUrl = null, string? newUrl = null)
     {
@@ -43,9 +70,9 @@ internal static class RecordRules
             return "statement.required";
         }
 
-        if (recordStatus != AppealStatuses.Open)
+        if (CheckRecordAction(recordStatus, "describe") is { } refused)
         {
-            return "moderation.wrong-state";
+            return refused;
         }
 
         return currentText == newText && currentUrl == newUrl ? "description.unchanged" : null;
@@ -68,28 +95,13 @@ internal static class RecordRules
             return null;
         }
 
-        const string Prefix = "https://";
-        const string Invalid = "description-url.invalid";
-        if (address.Length > DescriptionUrlMaxLength || address.Any(c => char.IsWhiteSpace(c) || char.IsControl(c) || c == '\\')
-            || !address.StartsWith(Prefix, StringComparison.OrdinalIgnoreCase))
+        if (!HttpsAddress.TryParse(address, DescriptionUrlMaxLength, out var uri))
         {
-            return Invalid;
-        }
-
-        var authority = address[Prefix.Length..];
-        var end = authority.IndexOfAny(['/', '?', '#']);
-        if ((end < 0 ? authority : authority[..end]).Contains('@', StringComparison.Ordinal))
-        {
-            return Invalid;
-        }
-
-        if (!Uri.TryCreate(address, UriKind.Absolute, out var uri) || uri.Scheme != Uri.UriSchemeHttps || uri.UserInfo.Length > 0)
-        {
-            return Invalid;
+            return "description-url.invalid";
         }
 
         var host = uri.IdnHost;
-        return host.Equals("lrs.lt", StringComparison.OrdinalIgnoreCase) || host.EndsWith(".lrs.lt", StringComparison.OrdinalIgnoreCase) ? null : Invalid;
+        return host.Equals("lrs.lt", StringComparison.OrdinalIgnoreCase) || host.EndsWith(".lrs.lt", StringComparison.OrdinalIgnoreCase) ? null : "description-url.invalid";
     }
 
     /// <summary>
@@ -104,11 +116,11 @@ internal static class RecordRules
     /// then becomes <c>ai-draft</c> ("Sukurta DI · taisė žmonės"); the text stays as it is. The note is optional.
     /// </summary>
     public static string? CheckConfirm(string recordStatus, string? descriptionSource) =>
-        recordStatus == AppealStatuses.Open && descriptionSource == DescriptionSources.Ai ? null : "moderation.wrong-state";
+        recordStatus == BillRecordStatuses.Open && descriptionSource == DescriptionSources.Ai ? null : "moderation.wrong-state";
 
     /// <summary>
-    /// A moderator removes a description (design 8.13), whatever made it, with a required statement; the bill then says it
-    /// has none, and the summary job never writes it again.
+    /// A moderator removes a description (design 8.13), whatever made it, on an open or a closed record (6.9), with a
+    /// required statement; the bill then says it has none, and the summary job never writes it again.
     /// </summary>
     public static string? CheckRemove(string recordStatus, string currentText, string? statement)
     {
@@ -117,7 +129,7 @@ internal static class RecordRules
             return "statement.required";
         }
 
-        return recordStatus == AppealStatuses.Open && currentText.Length > 0 ? null : "moderation.wrong-state";
+        return CheckRecordAction(recordStatus, "undescribe") is null && currentText.Length > 0 ? null : "moderation.wrong-state";
     }
 
     /// <summary>

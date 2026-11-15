@@ -51,7 +51,7 @@ internal static class OrganisationMapping
 
     public static QueueStatementResponse Map(QueueStatement s) => new(
         s.Id, AppealMapping.Map(s.Bill), s.OrganisationId, s.Slug, s.OrganisationName, Map(s.Label), s.Stance, s.Text, s.Link, s.Goal, s.Status, s.Seen, s.Flags,
-        s.Reports.Select(AppealMapping.Map).ToList(), s.PublishedAt);
+        s.Reports.Select(AppealMapping.Map).ToList(), s.PublishedAt, s.BillFinished);
 
     public static OrganisationModerationResponse Map(OrganisationModerationItems q) => new(
         q.Organisations.Select(o => new QueueOrganisationResponse(
@@ -122,7 +122,7 @@ internal sealed class ServerOrganisationsApi(
 
     private static readonly Error SignInRequired = Error.Unauthorized("auth.required");
 
-    private Guid? UserId => AppealMapping.UserId(accessor.HttpContext?.User);
+    private Guid? UserId => accessor.HttpContext?.User.UserId();
 
     public async Task<ApiResult<OrganisationListResponse>> GetOrganisationsAsync(string? search = null, CancellationToken cancellationToken = default) =>
         ApiResult<OrganisationListResponse>.Ok(OrganisationMapping.Map(await organisations.ListAsync(search, cancellationToken)));
@@ -167,10 +167,10 @@ internal sealed class ServerOrganisationsApi(
             ? errors.ToApiResult(await organisations.InviteViewAsync(token, id, cancellationToken), v => new InviteResponse(v.Slug, v.Name, v.Usable, v.AlreadyRepresentative))
             : ApiResult<InviteResponse>.Fail(errors.ToProblem(SignInRequired));
 
-    public async Task<ApiResult<OrganisationCreatedResponse>> AcceptInviteAsync(string token, CancellationToken cancellationToken = default) =>
+    public async Task<ApiResult<InviteAcceptedResponse>> AcceptInviteAsync(string token, CancellationToken cancellationToken = default) =>
         UserId is { } id
-            ? errors.ToApiResult(await organisations.AcceptInviteAsync(token, id, cancellationToken), slug => new OrganisationCreatedResponse(Guid.Empty, slug))
-            : ApiResult<OrganisationCreatedResponse>.Fail(errors.ToProblem(SignInRequired));
+            ? errors.ToApiResult(await organisations.AcceptInviteAsync(token, id, cancellationToken), slug => new InviteAcceptedResponse(slug))
+            : ApiResult<InviteAcceptedResponse>.Fail(errors.ToProblem(SignInRequired));
 
     public Task<ApiResult> RemoveRepresentativeAsync(string slug, Guid representativeId, CancellationToken cancellationToken = default) =>
         AsMemberAsync(id => organisations.RemoveRepresentativeAsync(slug, representativeId, id, cancellationToken));
@@ -238,6 +238,9 @@ internal sealed class ServerOrganisationModerationApi(
     public Task<ApiResult> PublishStatementAsync(Guid statementId, ModerationRequest request, CancellationToken cancellationToken = default) =>
         ActAsync(m => moderation.PublishStatementAsync(statementId, request.Statement, m, Contact, cancellationToken));
 
+    public Task<ApiResult> KeepStatementAsync(Guid statementId, ModerationRequest request, CancellationToken cancellationToken = default) =>
+        ActAsync(m => moderation.KeepStatementAsync(statementId, request.Statement, m, Contact, cancellationToken));
+
     public Task<ApiResult> HideStatementAsync(Guid statementId, StatementRequest request, CancellationToken cancellationToken = default) =>
         ActAsync(m => moderation.HideStatementAsync(statementId, request.Statement, m, Contact, cancellationToken));
 
@@ -265,26 +268,7 @@ internal sealed class ServerOrganisationModerationApi(
 
     private string? Contact => AppealMapping.Contact(configuration);
 
-    private async Task<bool> IsModeratorAsync()
-    {
-        var http = accessor.HttpContext;
-        if (http is null)
-        {
-            return false;
-        }
+    private Task<bool> IsModeratorAsync() => ServerStaff.IsAllowedAsync(accessor, Policies.Moderator);
 
-        var authorization = http.RequestServices.GetRequiredService<Microsoft.AspNetCore.Authorization.IAuthorizationService>();
-        return (await authorization.AuthorizeAsync(http.User, http, Policies.Moderator)).Succeeded;
-    }
-
-    private async Task<ApiResult> ActAsync(Func<ModeratorActor, Task<Result<Unit>>> action)
-    {
-        if (!await IsModeratorAsync())
-        {
-            return ApiResult.Fail(errors.ToProblem(Forbidden));
-        }
-
-        var http = accessor.HttpContext!;
-        return errors.ToApiResult(await action(await AppealMapping.ModeratorAsync(identity, http.User, ipHasher.Hash(http), http.RequestAborted)));
-    }
+    private Task<ApiResult> ActAsync(Func<StaffActor, Task<Result<Unit>>> action) => ServerStaff.ActAsync(accessor, identity, ipHasher, errors, action);
 }

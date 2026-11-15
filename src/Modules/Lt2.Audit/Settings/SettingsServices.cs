@@ -83,8 +83,36 @@ internal sealed class SettingsAdministration(AuditDb db, IAuditLog audit, IMemor
             return Error.Validation("setting.invalid", "value");
         }
 
+        return (await ApplyAsync(definition, value, actorUserId, actorRole, ipHash, onlyIfDifferent: false, cancellationToken))!;
+    }
+
+    public async Task<Result<bool>> SetAsServerAsync(string key, JsonElement value, string actorRole, CancellationToken cancellationToken)
+    {
+        var definition = SettingKeys.Find(key);
+        if (definition is null)
+        {
+            return Error.NotFound("setting.unknown");
+        }
+
+        if (!definition.IsValid(value))
+        {
+            return Error.Validation("setting.invalid", "value");
+        }
+
+        return await ApplyAsync(definition, value, null, actorRole, null, onlyIfDifferent: true, cancellationToken) is not null;
+    }
+
+    /// <summary>Writes the value and its audit entry in one transaction; with <paramref name="onlyIfDifferent"/>, a value already stored writes nothing (null).</summary>
+    private async Task<SettingValue?> ApplyAsync(
+        ISettingKey definition, JsonElement value, Guid? actorUserId, string actorRole, string? ipHash, bool onlyIfDifferent, CancellationToken cancellationToken)
+    {
         await using var transaction = await db.Database.BeginTransactionAsync(cancellationToken);
         var row = await db.Settings.FirstOrDefaultAsync(s => s.Key == definition.Name, cancellationToken);
+        if (onlyIfDifferent && row is not null && JsonElement.DeepEquals(Parse(row.Value), value))
+        {
+            return null;
+        }
+
         var previous = row?.Value ?? definition.DefaultValue.GetRawText();
         if (row is null)
         {

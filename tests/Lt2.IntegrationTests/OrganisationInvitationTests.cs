@@ -19,25 +19,6 @@ namespace Lt2.IntegrationTests;
 /// </summary>
 public sealed class OrganisationInvitationTests(DatabaseFixture database) : ApiTest(database)
 {
-    private static readonly SemaphoreSlim Gate = new(1, 1);
-    private static StaffMember? _administrator;
-    private static StaffMember? _moderator;
-
-    private async Task<(TestBrowser Admin, TestBrowser Moderator)> StaffAsync()
-    {
-        await Gate.WaitAsync();
-        try
-        {
-            _administrator ??= await StaffMembers.ActiveAsync(Factory, Database, "administrator");
-            _moderator ??= await StaffMembers.ActiveAsync(Factory, Database, "moderator");
-            return (_administrator.Browser, _moderator.Browser);
-        }
-        finally
-        {
-            Gate.Release();
-        }
-    }
-
     private static Task<OrganisationInvitationResponse> CodeAsync(TestBrowser representative, string slug) =>
         representative.GetJsonAsync<OrganisationInvitationResponse>(OrganisationRoutes.InvitationOf(slug));
 
@@ -68,17 +49,17 @@ public sealed class OrganisationInvitationTests(DatabaseFixture database) : ApiT
         var code = await CodeAsync(rep, created.Slug);
         var theCode = code.Code!;
         theCode.ShouldMatch("^[2-9A-HJKMNP-TV-Z]{4}-[2-9A-HJKMNP-TV-Z]{4}$");
-        code.Link.ShouldBe("/prisijungti?kodas=" + code.Code);
+        code.Link.ShouldBe("/prisijungti#kodas=" + code.Code);
         (code.Completed, code.Usable, code.On, code.OffWithOrganisation, code.Contact).ShouldBe((0, true, true, false, (string?)null));
         var bill = code.Bills.Single();
         bill.Bill.Number.ShouldBe(AppealSteps.ThirdBill);
-        bill.Link.ShouldBe($"/prisijungti?kodas={code.Code}&tikslas=%2Fseimas%2F{AppealSteps.ThirdBill}");
+        bill.Link.ShouldBe($"/prisijungti#kodas={code.Code}&tikslas=%2Fseimas%2F{AppealSteps.ThirdBill}");
 
         // One code per organisation: a second representative gets the same one, and asking again makes no new one.
         var invite = await (await rep.PostAsync(OrganisationRoutes.InvitesOf(created.Slug), new { })).ReadAsync<InviteCreatedResponse>();
         var (second, _) = await Factory.MemberAsync("Antras Kodo Atstovas");
         using var _s = second;
-        (await second.PostAsync(OrganisationRoutes.AcceptInviteOf(invite.Token), new { })).Dispose();
+        (await second.PostAsync(OrganisationRoutes.AcceptInvite, new InviteTokenRequest { Token = invite.Token })).Dispose();
         (await CodeAsync(second, created.Slug)).Code.ShouldBe(code.Code);
         (await Database.ScalarAsync<long>("SELECT count(*) FROM identity.invitation WHERE kind = 'organisation'"
             + " AND organisation_id = (SELECT id FROM appeals.organisation WHERE slug = @s)", ("s", created.Slug))).ShouldBe(1);
@@ -117,9 +98,9 @@ public sealed class OrganisationInvitationTests(DatabaseFixture database) : ApiT
     [Fact]
     public async Task Registering_with_an_organisations_code_leaves_nothing_on_the_new_account_that_names_the_code_or_the_organisation()
     {
-        var (admin, _) = await StaffAsync();
-        var sink = new AppealPrivacyTests.CollectingSink();
-        await using var logged = new AppealPrivacyTests.LoggingFactory(Database, sink);
+        var admin = (await AdministratorAsync()).Browser;
+        var sink = new CollectingSink();
+        await using var logged = new LoggingFactory(Database, sink);
         const string OrganisationName = "Slaptoji Narystės Sąjunga";
         var (rep, _) = await logged.MemberAsync("Sąjungos Atstovė");
         using var _r = rep;
@@ -209,7 +190,7 @@ public sealed class OrganisationInvitationTests(DatabaseFixture database) : ApiT
     [Fact]
     public async Task A_blocked_organisations_code_is_refused_with_the_usual_message_and_an_administrators_switch_off_survives_a_lifted_block()
     {
-        var (admin, moderator) = await StaffAsync();
+        var (admin, moderator) = ((await AdministratorAsync()).Browser, (await ModeratorAsync()).Browser);
         var (rep, _) = await Factory.MemberAsync("Blokuojamos Atstovas");
         using var _r = rep;
         var created = await rep.RegisterOrganisationAsync();
@@ -274,7 +255,7 @@ public sealed class OrganisationInvitationTests(DatabaseFixture database) : ApiT
         var invite = await (await asker.PostAsync(OrganisationRoutes.InvitesOf(created.Slug), new { })).ReadAsync<InviteCreatedResponse>();
         var (other, _) = await Factory.MemberAsync("Likęs Atstovas");
         using var _o = other;
-        (await other.PostAsync(OrganisationRoutes.AcceptInviteOf(invite.Token), new { })).Dispose();
+        (await other.PostAsync(OrganisationRoutes.AcceptInvite, new InviteTokenRequest { Token = invite.Token })).Dispose();
 
         // The one who asked for it deletes the account: the code keeps working.
         (await asker.SendAsync(HttpMethod.Delete, ApiRoutes.Me.Root)).StatusCode.ShouldBe(HttpStatusCode.NoContent);
@@ -311,7 +292,7 @@ public sealed class OrganisationInvitationTests(DatabaseFixture database) : ApiT
     [Fact]
     public async Task Replacing_the_code_stops_the_old_one_and_the_number_carries_over_and_a_setting_limits_each_code()
     {
-        var (admin, _) = await StaffAsync();
+        var admin = (await AdministratorAsync()).Browser;
         var (rep, _) = await Factory.MemberAsync("Keičianti Atstovė");
         using var _r = rep;
         var created = await rep.RegisterOrganisationAsync();
@@ -328,7 +309,7 @@ public sealed class OrganisationInvitationTests(DatabaseFixture database) : ApiT
             await refused.ShouldBeProblemAsync(HttpStatusCode.BadRequest, "invitation.invalid");
         }
 
-        await SetAsync(admin, "Registration:OrganisationCodeUses", 1);
+        await admin.SetSettingAsync("Registration:OrganisationCodeUses", 1);
         try
         {
             var (two, _) = await RegisterWithAsync(replaced.Code!);
@@ -347,13 +328,7 @@ public sealed class OrganisationInvitationTests(DatabaseFixture database) : ApiT
         }
         finally
         {
-            await SetAsync(admin, "Registration:OrganisationCodeUses", 0);
+            await admin.ResetSettingAsync("Registration:OrganisationCodeUses");
         }
-    }
-
-    private static async Task SetAsync(TestBrowser admin, string key, object value)
-    {
-        using var response = await admin.SendAsync(HttpMethod.Put, ApiRoutes.Admin.SettingByKey(key), new UpdateSettingRequest { Value = JsonSerializer.SerializeToElement(value) });
-        response.StatusCode.ShouldBe(HttpStatusCode.OK, await response.Content.ReadAsStringAsync());
     }
 }

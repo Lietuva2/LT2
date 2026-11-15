@@ -1,8 +1,8 @@
 using Lt2.Notifications.Outbox;
 using Lt2.SharedKernel;
+using Lt2.SharedKernel.Persistence;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Design;
-using Npgsql;
 
 namespace Lt2.Notifications.Infrastructure;
 
@@ -50,7 +50,7 @@ internal sealed class NotificationsDb(DbContextOptions<NotificationsDb> options)
             b.Property(x => x.Stage).HasMaxLength(16);
             b.Property(x => x.Reasons).HasColumnType("jsonb");
             b.HasIndex(x => x.RunId);
-            b.HasIndex(x => x.AppealId);
+            b.HasIndex(x => x.RecordId);
             b.HasOne<Digests.DigestRun>().WithMany().HasForeignKey(x => x.RunId).OnDelete(DeleteBehavior.Cascade);
         });
         modelBuilder.Entity<Digests.DigestDelivery>(b =>
@@ -88,17 +88,6 @@ internal sealed class NotificationsDb(DbContextOptions<NotificationsDb> options)
             b.HasIndex(x => x.Outcome).HasFilter("outcome = 'waiting'");
         });
     }
-}
-
-internal static class DbContextOptionsExtensions
-{
-    public static DbContextOptionsBuilder UseLt2Npgsql(this DbContextOptionsBuilder options, NpgsqlDataSource dataSource, string schema) =>
-        options.UseNpgsql(dataSource, o => o.MigrationsHistoryTable("__ef_migrations_history", schema))
-            .UseSnakeCaseNamingConvention();
-
-    public static DbContextOptionsBuilder UseLt2Npgsql(this DbContextOptionsBuilder options, string connectionString, string schema) =>
-        options.UseNpgsql(connectionString, o => o.MigrationsHistoryTable("__ef_migrations_history", schema))
-            .UseSnakeCaseNamingConvention();
 }
 
 /// <summary>Used by <c>dotnet ef</c> only.</summary>

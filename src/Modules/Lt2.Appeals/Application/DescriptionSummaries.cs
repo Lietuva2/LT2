@@ -76,7 +76,7 @@ internal sealed class DescriptionSummaries(
         _ = notices.ShouldSay("done");
         var now = clock.GetUtcNow();
         await using var db = await contexts.CreateDbContextAsync(cancellationToken);
-        var dayStart = SummaryRules.VilniusDayStart(now);
+        var dayStart = VilniusTime.StartOf(VilniusTime.DateOf(now));
         var askedToday = await db.SummaryAttempts.CountAsync(a => a.AskedProvider && a.TriedAt >= dayStart, cancellationToken);
         var left = SummaryRules.LeftToday(perDay, askedToday);
         if (left == 0)
@@ -145,12 +145,12 @@ internal sealed class DescriptionSummaries(
     {
         var active = await bills.ActiveAsync(ct);
         var numbers = active.Select(b => b.Number).ToList();
-        var onBills = await db.Appeals.AsNoTracking()
-            .Where(a => numbers.Contains(a.BillNumber) && (a.Status == AppealStatuses.Open || a.Status == AppealStatuses.Closed || a.Status == AppealStatuses.Rejected))
+        var onBills = await db.BillRecords.AsNoTracking().Records()
+            .Where(a => numbers.Contains(a.BillNumber))
             .ToDictionaryAsync(a => a.BillNumber, StringComparer.Ordinal, ct);
         var recordIds = onBills.Values.Select(a => a.Id).ToList();
         var touched = (await db.Revisions.AsNoTracking()
-                .Where(r => r.EntityKind == "appeal" && r.Field == "description" && r.ChangedByUserId != null && recordIds.Contains(r.EntityId))
+                .Where(r => r.EntityKind == "record" && r.Field == "description" && r.ChangedByUserId != null && recordIds.Contains(r.EntityId))
                 .Select(r => r.EntityId)
                 .Distinct()
                 .ToListAsync(ct))
@@ -158,7 +158,7 @@ internal sealed class DescriptionSummaries(
         var attempts = await db.SummaryAttempts.AsNoTracking()
             .Where(a => numbers.Contains(a.BillNumber))
             .ToDictionaryAsync(a => a.BillNumber, a => a.RetryAfter, StringComparer.Ordinal, ct);
-        var counts = await reads.CountsAsync(db, onBills.Values.Where(a => a.Status == AppealStatuses.Open).Select(a => a.Id).ToList(), ct);
+        var counts = await reads.CountsAsync(db, onBills.Values.Where(a => a.Status == BillRecordStatuses.Open).Select(a => a.Id).ToList(), ct);
         var planned = await agenda.ForBillsAsync(numbers, ct);
 
         var due = active.Where(b =>
@@ -176,7 +176,8 @@ internal sealed class DescriptionSummaries(
 
     /// <summary>
     /// Stores the summary as the bill's description, creating the record if needed, unless a person wrote or removed one
-    /// meanwhile. Audited with the system as the actor: the bill, the model, the time; never the text.
+    /// meanwhile. Under the bill's lock, so a moderator's description cannot be written over (design 6.8). Audited with
+    /// the system as the actor: the bill, the model, the time; never the text.
     /// </summary>
     private async Task<bool> StoreAsync(string billNumber, string summary, string address, CancellationToken ct)
     {
@@ -184,23 +185,23 @@ internal sealed class DescriptionSummaries(
         await using var db = await contexts.CreateDbContextAsync(ct);
         await using var transaction = await db.Database.BeginTransactionAsync(ct);
         var now = clock.GetUtcNow();
-        var ensured = await records.EnsureAsync(db, billNumber, ct);
-        var appeal = ensured.IsSuccess ? await db.Appeals.FirstAsync(a => a.Id == ensured.Value!.Id, ct) : null;
-        var touched = appeal is not null && await db.Revisions.AnyAsync(
-            r => r.EntityKind == "appeal" && r.EntityId == appeal.Id && r.Field == "description" && r.ChangedByUserId != null, ct);
-        if (appeal is null || !SummaryRules.IsDue(appeal.Status, appeal.Description, touched, null, now))
+        var ensured = await records.EnsureAsync(db, billNumber, ct, forWrite: true);
+        var record = ensured.IsSuccess ? ensured.Value : null;
+        var touched = record is not null && await db.Revisions.AnyAsync(
+            r => r.EntityKind == "record" && r.EntityId == record.Id && r.Field == "description" && r.ChangedByUserId != null, ct);
+        if (record is null || !SummaryRules.IsDue(record.Status, record.Description, touched, null, now))
         {
             await transaction.RollbackAsync(ct);
             await AttemptAsync(billNumber, SummaryOutcomes.Overtaken, askedProvider: true, ct);
             return false;
         }
 
-        db.Revisions.Add(AppealsService.Revise("appeal", appeal.Id, "description", null, summary, null, now));
-        appeal.Description = summary;
-        appeal.DescriptionSource = DescriptionSources.Ai;
-        appeal.DescriptionUrl = address.Length <= 500 ? address : null;
-        appeal.DescriptionAt = now;
-        appeal.ChangedAt = now;
+        db.Revisions.Add(AppealsService.Revise("record", record.Id, "description", null, summary, null, now));
+        record.Description = summary;
+        record.DescriptionSource = DescriptionSources.Ai;
+        record.DescriptionUrl = address.Length <= 500 ? address : null;
+        record.DescriptionAt = now;
+        record.ChangedAt = now;
         Upsert(db, await db.SummaryAttempts.FirstOrDefaultAsync(a => a.BillNumber == billNumber, ct), billNumber, SummaryOutcomes.Made, true, now);
         await db.SaveChangesAsync(ct);
         var details = JsonSerializer.SerializeToElement(new { bill = billNumber, model }, JsonSerializerOptions.Web);

@@ -6,7 +6,7 @@
   <resheader name="writer"><value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value></resheader>
   <data name="SignIn.PageTitle" xml:space="preserve"><value>Prisijungimas · Lietuva 2.0</value></data>
   <data name="Welcome.Title" xml:space="preserve"><value>Gyvas pokalbis tarp žmonių ir jų atstovų</value></data>
-  <data name="Welcome.Lead" xml:space="preserve"><value>Pasakykite Seimo nariams, kaip prašote balsuoti, ir sužinokite, ką jie atsakė.</value></data>
+  <data name="Welcome.Lead" xml:space="preserve"><value>Pasakykite Seimo nariams, kaip prašote balsuoti.</value></data>
   <data name="NoScript" xml:space="preserve"><value>Prisijungti ir registruotis galima tik įjungus „JavaScript“. Įjunkite jį naršyklės nustatymuose ir perkraukite puslapį.</value></data>
   <data name="NeedsScript" xml:space="preserve"><value>Šios puslapio dalies mygtukams reikia „JavaScript“: be jo puslapį galite skaityti, bet nieko pakeisti negalite. Įjunkite jį naršyklės nustatymuose ir perkraukite puslapį.</value></data>
   <data name="SignIn.Title" xml:space="preserve"><value>Prisijunkite</value></data>
@@ -15,7 +15,7 @@
   <data name="Email.Placeholder" xml:space="preserve"><value>vardas@pavyzdys.lt</value></data>
   <data name="SignIn.SendCode" xml:space="preserve"><value>Atsiųsti kodą</value></data>
   <data name="SignIn.Passkey" xml:space="preserve"><value>Prisijungti prieigos raktu</value></data>
-  <data name="SignIn.PasskeyHint" xml:space="preserve"><value>Prieigos raktas – tai piršto atspaudas, veidas arba įrenginio PIN kodas vietoj kodo el. paštu.</value></data>
+  <data name="SignIn.PasskeyHint" xml:space="preserve"><value>Piršto atspaudu, veidu ar įrenginio PIN kodu – be kodo el. paštu.</value></data>
   <data name="SignIn.NoAccount" xml:space="preserve"><value>Neturite paskyros?</value></data>
   <data name="SignIn.ToRegister" xml:space="preserve"><value>Registruokitės su kvietimo kodu.</value></data>
   <data name="Register.Label" xml:space="preserve"><value>Registracija</value></data>
@@ -23,8 +23,6 @@
   <data name="MyInvitation.Title" xml:space="preserve"><value>Jūsų kvietimo kodas</value></data>
 <data name="MyInvitation.Lead" xml:space="preserve"><value>Pakvieskite kitus: nuoroda atveria registraciją su jūsų kodu, o kodą galima įvesti ir ranka.</value></data>
 <data name="MyInvitation.Code" xml:space="preserve"><value>Kodas:</value></data>
-<data name="MyInvitation.Copy" xml:space="preserve"><value>Kopijuoti nuorodą</value></data>
-<data name="MyInvitation.Copied" xml:space="preserve"><value>Nuoroda nukopijuota.</value></data>
 <data name="MyInvitation.Count" xml:space="preserve"><value>Su jūsų kodu užsiregistravo: {0}.</value></data>
 <data name="MyInvitation.Private" xml:space="preserve"><value>Matote tik skaičių – ne kas užsiregistravo ir ne kada.</value></data>
 <data name="MyInvitation.Off" xml:space="preserve"><value>Jūsų kvietimo kodą išjungė administratorius, todėl juo užsiregistruoti dabar negalima. Klausimų turite? Rašykite</value></data>
@@ -32,13 +30,13 @@
 <data name="MyInvitation.ReplaceConfirm" xml:space="preserve"><value>Bus sukurtas naujas kodas, o senasis nebetiks. Skaičius išliks.</value></data>
 <data name="MyInvitation.ReplaceYes" xml:space="preserve"><value>Sukurti naują kodą</value></data>
 <data name="MyInvitation.Cancel" xml:space="preserve"><value>Atšaukti</value></data><data name="Invitation.Label" xml:space="preserve"><value>Kvietimo kodas</value></data>
-  <data name="Invitation.Hint" xml:space="preserve"><value>Kol platforma bandoma, registruotis galima tik su kvietimu. Kas jums davė kodą, matys, kad juo užsiregistruota, bet ne kas užsiregistravo.</value></data>
+  <data name="Invitation.Hint" xml:space="preserve"><value>Kol vyksta bandymas, registruotis galima tik su kvietimo kodu. Kodą davęs žmogus matys tik skaičių, ne jus.</value></data>
   <data name="DisplayName.Label" xml:space="preserve"><value>Vardas, kurį matys kiti</value></data>
   <data name="DisplayName.Placeholder" xml:space="preserve"><value>Rūta M.</value></data>
   <data name="DisplayName.Hint" xml:space="preserve"><value>Šį vardą kiti matys prie jūsų parašytų argumentų. Ar prašote balsuoti už, ar prieš – nemato niekas.</value></data>
   <data name="Adult.Label" xml:space="preserve"><value>Man yra 18 metų arba daugiau</value></data>
   <data name="Register.Submit" xml:space="preserve"><value>Registruotis</value></data>
-  <data name="Register.Fine" xml:space="preserve"><value>Išsiųsime laišką šiuo adresu. Ar adresas jau registruotas, čia neparodome.</value></data>
+  <data name="Register.Fine" xml:space="preserve"><value>Išsiųsime laišką šiuo adresu.</value></data>
   <data name="Register.HaveAccount" xml:space="preserve"><value>Jau turite paskyrą?</value></data>
   <data name="Register.ToSignIn" xml:space="preserve"><value>Prisijunkite.</value></data>
   <data name="Code.Title" xml:space="preserve"><value>Įveskite kodą</value></data>
@@ -70,7 +68,6 @@
   <data name="Loading" xml:space="preserve"><value>Įkeliama…</value></data>
   <data name="Hello.PageTitle" xml:space="preserve"><value>Sveiki · Lietuva 2.0</value></data>
   <data name="Hello.Greeting" xml:space="preserve"><value>Sveiki, {0}!</value></data>
-  <data name="Hello.SignedIn" xml:space="preserve"><value>Esate prisijungę prie Lietuva 2.0.</value></data>
   <data name="Level.email" xml:space="preserve"><value>El. paštas patvirtintas</value></data>
   <data name="Level.none" xml:space="preserve"><value>El. paštas dar nepatvirtintas</value></data>
   <data name="Role.member" xml:space="preserve"><value>Narys</value></data>
@@ -82,7 +79,7 @@
   <data name="Passkeys.Add" xml:space="preserve"><value>Sukurti prieigos raktą</value></data>
   <data name="Passkeys.Added" xml:space="preserve"><value>Prieigos raktas sukurtas.</value></data>
   <data name="Sessions.Title" xml:space="preserve"><value>Jūsų sesijos</value></data>
-  <data name="Sessions.Text" xml:space="preserve"><value>Čia matote, kur esate prisijungę. Nepažįstamą sesiją galite baigti.</value></data>
+  <data name="Sessions.Text" xml:space="preserve"><value>Nepažįstamą sesiją galite baigti.</value></data>
   <data name="Sessions.Current" xml:space="preserve"><value>Ši sesija</value></data>
   <data name="Sessions.End" xml:space="preserve"><value>Baigti</value></data>
   <data name="Sessions.LastSeen" xml:space="preserve"><value>paskutinį kartą {0}</value></data>
@@ -106,10 +103,12 @@
 <data name="Party.Saved" xml:space="preserve"><value>Išsaugota.</value></data>
 <data name="Party.Removed" xml:space="preserve"><value>Partija pašalinta.</value></data>
 <data name="Data.Title" xml:space="preserve"><value>Jūsų duomenys</value></data>
-<data name="Data.Text" xml:space="preserve"><value>Galite atsisiųsti viską, ką mums pateikėte, arba ištrinti paskyrą. Ištrynus paskyrą, ištrinamos ir jūsų pozicijos, „Man svarbu“ žymos, argumentai ir pranešimai, o bendri skaičiai sumažėja. Jau sudarytose suvestinėse skaičiai lieka tokie, kokie buvo.</value></data>
+  <data name="Data.Text" xml:space="preserve"><value>Galite atsisiųsti viską, ką mums pateikėte, arba ištrinti paskyrą.</value></data>
 <data name="Data.Export" xml:space="preserve"><value>Atsisiųsti mano duomenis</value></data>
 <data name="Data.Delete" xml:space="preserve"><value>Ištrinti paskyrą</value></data>
-<data name="Data.DeleteWarning" xml:space="preserve"><value>Paskyra bus ištrinta visam laikui. To atšaukti negalima.</value></data>
+  <data name="Data.DeleteWarning" xml:space="preserve"><value>Paskyra bus ištrinta visam laikui kartu su jūsų pozicijomis, „Man svarbu“ žymomis, argumentais ir pranešimais. Bendri skaičiai sumažės, o jau sudarytose suvestinėse liks tokie, kokie buvo. To atšaukti negalima.</value></data>
 <data name="Data.DeleteConfirm" xml:space="preserve"><value>Taip, ištrinti paskyrą</value></data>
 <data name="Data.DeleteCancel" xml:space="preserve"><value>Ne, palikti</value></data>
-</root>
+<data name="Data.DeleteStaffNeedsPasskey" xml:space="preserve"><value>Tai darbuotojo paskyra: ją ištrinti galima tik prisijungus darbuotojo prieigos raktu. Atsijunkite ir prisijunkite tuo prieigos raktu.</value></data>
+<data name="Data.DeleteStaffKept" xml:space="preserve"><value>Tai, ką darėte kaip moderatorius ar administratorius, liks užrašyta su paskyros numeriu, bet be jūsų vardo ir adreso.</value></data>
+<data name="Data.DeleteStaffMore" xml:space="preserve"><value>Kas saugoma ir kas ištrinama</value></data></root>

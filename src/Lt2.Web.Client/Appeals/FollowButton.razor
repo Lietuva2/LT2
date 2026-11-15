@@ -1,4 +1,5 @@
-@inherits InteractiveBase
+@inherits InteractiveBase<AppealUi>
+@inject NavigationManager Navigation
 @inject Lt2.Api.Contracts.Follows.IFollowsApi Follows
 
 @* "Sekti" / "Nebesekti" a bill, an MP (design 8.11.2) or an organisation (design 8.14.14, stage B). Private: who follows what is shown to nobody, and there is no
@@ -6,7 +7,7 @@
 <div class="row follow" id="follow-@Kind">
     @if (!_signedIn)
     {
-        <a class="btn btn--plain" href="/prisijungti">@L["Follow.Follow"]</a>
+        <a class="btn btn--plain" href="@SignInHref">@L["Follow.Follow"]</a>
         <span class="small">@L["Follow.SignIn." + Kind]</span>
     }
     else
@@ -19,6 +20,9 @@
 </div>
 
 @code {
+    /// <summary>The sign-in page that brings the visitor back to this page when it is a bill's (design 6.9).</summary>
+    private string SignInHref => LandingPath.SignInLink(LandingPath.PathOf(Navigation.Uri, Navigation.BaseUri));
+
     private bool _signedIn;
 
     /// <summary><c>bill</c>, <c>mp</c> or <c>organisation</c>.</summary>
@@ -27,13 +31,11 @@
     /// <summary>The bill's number, or the MP's or the organisation's profile slug.</summary>
     [Parameter, EditorRequired] public string Key { get; set; } = "";
 
-    [CascadingParameter] private Task<AuthenticationState>? AuthState { get; set; }
-
     [PersistentState] public bool? Following { get; set; }
 
     protected override async Task OnInitializedAsync()
     {
-        _signedIn = AuthState is not null && (await AuthState).User.Identity?.IsAuthenticated == true;
+        _signedIn = await IsSignedInAsync();
         if (_signedIn && Following is null && (await Follows.GetMineAsync()).Value is { } mine)
         {
             Following = Kind switch

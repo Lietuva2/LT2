@@ -3,6 +3,7 @@ using Hangfire;
 using Hangfire.PostgreSql;
 using Lt2.Appeals;
 using Lt2.Audit;
+using Lt2.Hosting;
 using Lt2.Identity;
 using Lt2.Notifications;
 using Lt2.Parliament;
@@ -10,52 +11,12 @@ using Lt2.SharedKernel.Http;
 using Lt2.SharedKernel.Persistence;
 using Lt2.Worker;
 using Npgsql;
-using OpenTelemetry.Metrics;
-using OpenTelemetry.Resources;
-using OpenTelemetry.Trace;
-using Serilog;
-using Serilog.Formatting.Compact;
 
 // Lt2.Worker: Hangfire server for scheduled and retried jobs, plus the outbox dispatcher (design 3, 9.1).
 var builder = Host.CreateApplicationBuilder(args);
 builder.Configuration.AddKeyPerFile("/run/secrets", optional: true, reloadOnChange: false);
 var configuration = builder.Configuration;
-var otlpEndpoint = configuration["OTEL_EXPORTER_OTLP_ENDPOINT"];
-
-builder.Services.AddSerilog((_, logger) =>
-{
-    logger.ReadFrom.Configuration(configuration).Enrich.FromLogContext().Enrich.WithProperty("service", "lt2-worker");
-    if (builder.Environment.IsDevelopment())
-    {
-        logger.WriteTo.Console(formatProvider: CultureInfo.InvariantCulture);
-    }
-    else
-    {
-        logger.WriteTo.Console(new RenderedCompactJsonFormatter());
-    }
-
-    if (!string.IsNullOrEmpty(otlpEndpoint))
-    {
-        logger.WriteTo.OpenTelemetry(options => options.Endpoint = otlpEndpoint);
-    }
-});
-var telemetry = builder.Services.AddOpenTelemetry().ConfigureResource(r => r.AddService("lt2-worker"));
-telemetry.WithTracing(t =>
-{
-    t.AddNpgsql();
-    if (!string.IsNullOrEmpty(otlpEndpoint))
-    {
-        t.AddOtlpExporter();
-    }
-});
-telemetry.WithMetrics(m =>
-{
-    m.AddMeter("Npgsql");
-    if (!string.IsNullOrEmpty(otlpEndpoint))
-    {
-        m.AddOtlpExporter();
-    }
-});
+builder.AddLt2Observability("lt2-worker");
 
 var connectionString = ConnectionStrings.Build(configuration);
 builder.Services.AddSingleton(TimeProvider.System);
@@ -66,12 +27,7 @@ builder.Services.AddAuditModule();
 builder.Services.AddIdentityMaintenance();
 
 // Design 8.13: the summary job asks the Claude API only when configured (Ai:Provider and the key file), as the web host
-// does for the draft (8.11.4); then its host, and only it, joins the worker's outbound allowlist (design 6.4).
-if (AppealsModule.AiProviderHost(configuration) is { } aiHost)
-{
-    configuration.AddInMemoryCollection(new Dictionary<string, string?> { [OutboundAllowlist.Section + ":ai"] = aiHost });
-}
-
+// does for the draft (8.11.4); AddAiAssistant then adds its host, and only it, to the outbound allowlist (design 6.4).
 builder.Services.AddOutboundAllowlist(configuration);
 builder.Services.AddParliamentModule();
 builder.Services.AddParliamentImport(configuration);

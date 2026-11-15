@@ -15,42 +15,27 @@ public sealed class RestoreApiTests(DatabaseFixture database) : ApiTest(database
     private const string Statement = "Paslėpta per klaidą.";
 
     private static readonly SemaphoreSlim ModeratorGate = new(1, 1);
-    private static StaffMember? _moderator;
 
-    private async Task<TestBrowser> ModeratorAsync()
+    private static async Task HideAsync(TestBrowser moderator, Guid recordId)
     {
-        await ModeratorGate.WaitAsync();
-        try
-        {
-            _moderator ??= await StaffMembers.ActiveAsync(Factory, Database, "moderator");
-            return _moderator.Browser;
-        }
-        finally
-        {
-            ModeratorGate.Release();
-        }
-    }
-
-    private static async Task HideAsync(TestBrowser moderator, Guid appealId)
-    {
-        using var hidden = await moderator.PostAsync(AppealRoutes.With(AppealRoutes.HideAppeal, appealId), new StatementRequest { Statement = "Netinkamas aprašymas." });
+        using var hidden = await moderator.PostAsync(AppealRoutes.With(AppealRoutes.HideRecord, recordId), new StatementRequest { Statement = "Netinkamas aprašymas." });
         hidden.StatusCode.ShouldBe(HttpStatusCode.NoContent, await hidden.Content.ReadAsStringAsync());
     }
 
-    private static Task<HttpResponseMessage> RestoreAsync(TestBrowser moderator, Guid appealId, string statement = Statement) =>
-        moderator.PostAsync(AppealRoutes.With(AppealRoutes.RestoreAppeal, appealId), new StatementRequest { Statement = statement });
+    private static Task<HttpResponseMessage> RestoreAsync(TestBrowser moderator, Guid recordId, string statement = Statement) =>
+        moderator.PostAsync(AppealRoutes.With(AppealRoutes.RestoreRecord, recordId), new StatementRequest { Statement = statement });
 
     [Fact]
-    public async Task The_hidden_list_says_who_hid_an_appeal_when_and_why_and_what_restoring_would_do()
+    public async Task The_hidden_list_says_who_hid_a_record_when_and_why_and_what_restoring_would_do()
     {
-        var moderator = await ModeratorAsync();
+        var moderator = (await ModeratorAsync()).Browser;
         var (initiator, _) = await Factory.MemberAsync("Rūta Mockutė");
         using var _i = initiator;
-        var appeal = await Database.PrepareBillAsync(initiator, moderator, Bill);
-        await HideAsync(moderator, appeal.Id);
+        var record = await Database.PrepareBillAsync(initiator, moderator, Bill);
+        await HideAsync(moderator, record.Id);
 
         var list = await moderator.GetJsonAsync<HiddenItemsResponse>(AppealRoutes.Hidden);
-        var item = list.Appeals.Single(a => a.Id == appeal.Id);
+        var item = list.Records.Single(a => a.Id == record.Id);
         item.Bill.Number.ShouldBe(Bill);
 
         item.Statement.ShouldBe("Netinkamas aprašymas.");
@@ -74,26 +59,26 @@ public sealed class RestoreApiTests(DatabaseFixture database) : ApiTest(database
     [Fact]
     public async Task Restoring_brings_the_record_back_open_with_its_sides_reasons_and_marks()
     {
-        var moderator = await ModeratorAsync();
+        var moderator = (await ModeratorAsync()).Browser;
         var (initiator, initiatorEmail) = await Factory.MemberAsync("Rūta Mockutė");
         var (supporter, _) = await Factory.MemberAsync("Giedrė L.");
         using var _i = initiator;
         using var _s = supporter;
-        var appeal = await Database.PrepareBillAsync(initiator, moderator, Bill);
+        var record = await Database.PrepareBillAsync(initiator, moderator, Bill);
         (await supporter.TakeSideAsync(Bill, "against")).Dispose();
-        var reasonId = (await initiator.AppealAsync(Bill)).Reasons.Single().Id;
+        var reasonId = (await initiator.RecordAsync(Bill)).Reasons.Single().Id;
         (await supporter.SendAsync(HttpMethod.Put, AppealRoutes.EndorsementOf(reasonId), null)).Dispose();
-        var before = await initiator.AppealAsync(Bill);
-        await HideAsync(moderator, appeal.Id);
+        var before = await initiator.RecordAsync(Bill);
+        await HideAsync(moderator, record.Id);
 
-        using (var restored = await RestoreAsync(moderator, appeal.Id))
+        using (var restored = await RestoreAsync(moderator, record.Id))
         {
             restored.StatusCode.ShouldBe(HttpStatusCode.NoContent, await restored.Content.ReadAsStringAsync());
         }
 
         using var stranger = NewBrowser();
-        var after = await stranger.AppealAsync(Bill);
-        after.Id.ShouldBe(appeal.Id);
+        var after = await stranger.RecordAsync(Bill);
+        after.Id.ShouldBe(record.Id);
         after.Status.ShouldBe("open");
         after.Counts.ShouldBe(before.Counts, "the sides are as they were");
         after.Reasons.Single().Endorsements.ShouldBe(1, "the reason and its mark are as they were");
@@ -101,27 +86,27 @@ public sealed class RestoreApiTests(DatabaseFixture database) : ApiTest(database
             "SELECT count(*) FROM notify.outbox WHERE kind = 'email.moderation-notice' AND payload->>'to' = @to AND payload->>'notice' NOT LIKE 'reason-%'",
             ("to", initiatorEmail))).ShouldBe(0, "a record has no author to email");
         (await Database.ScalarAsync<long>(
-            "SELECT count(*) FROM audit.event WHERE action = 'moderation.appeal.restore' AND target = @t", ("t", "appeal:" + appeal.Id))).ShouldBe(1);
-        (await moderator.GetJsonAsync<HiddenItemsResponse>(AppealRoutes.Hidden)).Appeals.ShouldNotContain(a => a.Id == appeal.Id);
+            "SELECT count(*) FROM audit.event WHERE action = 'moderation.record.restore' AND target = @t", ("t", "record:" + record.Id))).ShouldBe(1);
+        (await moderator.GetJsonAsync<HiddenItemsResponse>(AppealRoutes.Hidden)).Records.ShouldNotContain(a => a.Id == record.Id);
     }
 
     [Fact]
     public async Task Restoring_needs_a_statement()
     {
-        var moderator = await ModeratorAsync();
+        var moderator = (await ModeratorAsync()).Browser;
         var (initiator, _) = await Factory.MemberAsync();
         using var _i = initiator;
-        var appeal = await Database.PrepareBillAsync(initiator, moderator, Bill, side: null);
-        await HideAsync(moderator, appeal.Id);
+        var record = await Database.PrepareBillAsync(initiator, moderator, Bill, side: null);
+        await HideAsync(moderator, record.Id);
 
-        using var refused = await RestoreAsync(moderator, appeal.Id, " ");
+        using var refused = await RestoreAsync(moderator, record.Id, " ");
         refused.StatusCode.ShouldBe(HttpStatusCode.BadRequest);
     }
 
     [Fact]
     public async Task A_closed_record_comes_back_closed_and_an_open_one_is_not_restored()
     {
-        var moderator = await ModeratorAsync();
+        var moderator = (await ModeratorAsync()).Browser;
         var (first, _) = await Factory.MemberAsync();
         using var _f = first;
         var record = await Database.PrepareBillAsync(first, moderator, Bill, side: null);
@@ -130,13 +115,13 @@ public sealed class RestoreApiTests(DatabaseFixture database) : ApiTest(database
             await open.ShouldBeProblemAsync(HttpStatusCode.Conflict, "moderation.wrong-state");
         }
 
-        await Database.ExecuteAsync("UPDATE appeals.appeal SET closed_at = now() WHERE id = @id", ("id", record.Id));
+        await Database.ExecuteAsync("UPDATE appeals.bill_record SET closed_at = now() WHERE id = @id", ("id", record.Id));
         try
         {
             await HideAsync(moderator, record.Id);
-            (await moderator.GetJsonAsync<HiddenItemsResponse>(AppealRoutes.Hidden)).Appeals.Single(a => a.Id == record.Id).RestoresAs.ShouldBe("closed");
+            (await moderator.GetJsonAsync<HiddenItemsResponse>(AppealRoutes.Hidden)).Records.Single(a => a.Id == record.Id).RestoresAs.ShouldBe("closed");
             (await RestoreAsync(moderator, record.Id)).StatusCode.ShouldBe(HttpStatusCode.NoContent);
-            (await Database.ScalarAsync<string>("SELECT status FROM appeals.appeal WHERE id = @id", ("id", record.Id))).ShouldBe("closed");
+            (await Database.ScalarAsync<string>("SELECT status FROM appeals.bill_record WHERE id = @id", ("id", record.Id))).ShouldBe("closed");
         }
         finally
         {
@@ -146,14 +131,14 @@ public sealed class RestoreApiTests(DatabaseFixture database) : ApiTest(database
     [Fact]
     public async Task A_hidden_reason_is_listed_and_restored_without_its_marks()
     {
-        var moderator = await ModeratorAsync();
+        var moderator = (await ModeratorAsync()).Browser;
         var (initiator, initiatorEmail) = await Factory.MemberAsync("Rūta Mockutė");
         var (supporter, _) = await Factory.MemberAsync();
         using var _i = initiator;
         using var _s = supporter;
         await Database.PrepareBillAsync(initiator, moderator, Bill);
         (await supporter.TakeSideAsync(Bill, "against")).Dispose();
-        var reasonId = (await initiator.AppealAsync(Bill)).Reasons.Single().Id;
+        var reasonId = (await initiator.RecordAsync(Bill)).Reasons.Single().Id;
         (await supporter.SendAsync(HttpMethod.Put, AppealRoutes.EndorsementOf(reasonId), null)).Dispose();
         using (var hide = await moderator.PostAsync(AppealRoutes.With(AppealRoutes.HideReason, reasonId), new StatementRequest { Statement = "Įžeidžia." }))
         {
@@ -170,7 +155,7 @@ public sealed class RestoreApiTests(DatabaseFixture database) : ApiTest(database
             restore.StatusCode.ShouldBe(HttpStatusCode.NoContent, await restore.Content.ReadAsStringAsync());
         }
 
-        var shown = (await initiator.AppealAsync(Bill)).Reasons.Single(r => r.Id == reasonId);
+        var shown = (await initiator.RecordAsync(Bill)).Reasons.Single(r => r.Id == reasonId);
         shown.Endorsements.ShouldBe(0, "the hide deleted its marks, and they do not come back");
         (await Database.ScalarAsync<long>(
             "SELECT count(*) FROM notify.outbox WHERE kind = 'email.moderation-notice' AND payload->>'to' = @to AND payload->>'notice' = 'reason-restored'",

@@ -5,7 +5,7 @@ namespace Lt2.Api.Contracts.Appeals;
 // description source initiator | moderator | ai-draft | ai (made by the summary job, read by nobody; design 8.13).
 // Every active bill is open: the answers for one nobody has taken part on are the empty open state (no id, zero counts).
 // No response carries another person's position or tells who took part first: the only side of a person any answer holds
-// is the caller's own, in MyAppealResponse.
+// is the caller's own, in MyBillRecordResponse.
 
 /// <summary>The limits of taking part, the same numbers the server enforces (design 8.2, <c>AGENTS.md</c>).</summary>
 public static class AppealLimits
@@ -29,16 +29,24 @@ public static class AppealLimits
     /// <summary>The grounds a report on this target may give.</summary>
     public static IReadOnlyList<string> ReportGroundsFor(string targetKind) => targetKind switch
     {
-        "appeal" => DescriptionReportGrounds,
+        "record" => DescriptionReportGrounds,
         "organisation" or "statement" => OrganisationReportGrounds,
         _ => ReportGrounds,
     };
 
-    /// <summary>A bill's description (<c>appeal</c>), an argument, an organisation or an organisation's statement (design 8.14.14).</summary>
-    public static readonly IReadOnlyList<string> ReportTargets = ["appeal", "reason", "organisation", "statement"];
+    /// <summary>A bill's description (<c>record</c>), an argument, an organisation or an organisation's statement (design 8.14.14).</summary>
+    public static readonly IReadOnlyList<string> ReportTargets = ["record", "reason", "organisation", "statement"];
 
-    /// <summary>The longest official text's address a description may carry (<c>appeal.description_url</c>, design 8.13).</summary>
+    /// <summary>The longest official text's address a description may carry (<c>record.description_url</c>, design 8.13).</summary>
     public const int DescriptionUrlMaxLength = 500;
+
+    /// <summary>The pasted official text for an AI draft (design 8.11.4): never cut, so the form says the length instead.</summary>
+    public const int DraftSourceMaxLength = 20_000;
+
+    /// <summary>A date flag's link to its source and its note (design 8.4).</summary>
+    public const int FlagLinkMaxLength = 500;
+
+    public const int FlagNoteMaxLength = 1000;
 }
 
 /// <summary>
@@ -110,7 +118,7 @@ public sealed record ReasonResponse(Guid Id, string Side, string Text, string? A
 /// <c>HiddenStatement</c>. <c>DescriptionUrl</c> is the official text the description was made from, when known, and
 /// <c>DescriptionAt</c> when its text was made or last changed (design 8.13).
 /// </summary>
-public sealed record AppealResponse(
+public sealed record BillRecordResponse(
     Guid? Id,
     BillRefResponse Bill,
     string Status,
@@ -148,12 +156,12 @@ public sealed record SurgeResponse(int SharePercent, int WindowHours);
 /// A bill in <c>/projektai</c> (design 8.12.5); <c>Id</c> null while it has no record; <c>Arguments</c> its published
 /// arguments.
 /// </summary>
-public sealed record AppealListItemResponse(Guid? Id, BillRefResponse Bill, string Status, SideCountsResponse Counts, ThresholdResponse Threshold, PlannedDateResponse? Planned, int Arguments);
+public sealed record BillListItemResponse(Guid? Id, BillRefResponse Bill, string Status, SideCountsResponse Counts, ThresholdResponse Threshold, PlannedDateResponse? Planned, int Arguments);
 
-public sealed record AppealListResponse(IReadOnlyList<AppealListItemResponse> Items, int Total, string? NextCursor);
+public sealed record BillListResponse(IReadOnlyList<BillListItemResponse> Items, int Total, string? NextCursor);
 
 /// <summary>The caller's own part on a bill. Never cached, never shown to anyone else.</summary>
-public sealed record MyAppealResponse(
+public sealed record MyBillRecordResponse(
     string? Side,
     IReadOnlyList<Guid> Endorsed,
     int? EndorsementsLeft,
@@ -163,7 +171,7 @@ public sealed record MyAppealResponse(
 
 /// <summary>
 /// The numbers the forms show (design 8.2, 8.12.2). <c>ReasonsPerPerson</c> and <c>EndorsementsPerPerson</c> are the
-/// settings' current limits per person per bill; 0 means no limit. In <see cref="MyAppealResponse"/> a <c>null</c>
+/// settings' current limits per person per bill; 0 means no limit. In <see cref="MyBillRecordResponse"/> a <c>null</c>
 /// "left" means no limit. <c>AiSummaries</c>: the summary job can make descriptions (design 8.13: a provider configured,
 /// official texts readable, <c>Ai:SummariesPerDay</c> not 0); while false nothing promises one.
 /// </summary>
@@ -192,7 +200,7 @@ public sealed record ReasonRequest
 /// <summary>A report (design 8.3, Digital Services Act notice and action) on a bill's description or an argument.</summary>
 public sealed record ReportRequest
 {
-    /// <summary><c>appeal</c> (the bill's description) or <c>reason</c>.</summary>
+    /// <summary><c>record</c> (the bill's description) or <c>reason</c>.</summary>
     public string TargetKind { get; init; } = "";
 
     public Guid TargetId { get; init; }

@@ -10,43 +10,106 @@ public sealed class RecordRuleTests
     public void A_member_takes_part_on_an_active_bill_without_a_record_and_on_an_open_record()
     {
         RecordRules.CheckParticipation(null, billFinished: false).ShouldBeNull();
-        RecordRules.CheckParticipation(AppealStatuses.Open, billFinished: false).ShouldBeNull();
+        RecordRules.CheckParticipation(BillRecordStatuses.Open, billFinished: false).ShouldBeNull();
     }
 
     [Theory]
-    [InlineData(AppealStatuses.Closed)]
-    [InlineData(AppealStatuses.Rejected)]
+    [InlineData(BillRecordStatuses.Closed)]
+    [InlineData(BillRecordStatuses.Rejected)]
     public void A_closed_or_hidden_record_takes_no_sides_or_arguments(string status) =>
-        RecordRules.CheckParticipation(status, billFinished: false).ShouldBe("appeal.not-open");
+        RecordRules.CheckParticipation(status, billFinished: false).ShouldBe("record.not-open");
 
     [Fact]
     public void A_finished_bill_nobody_took_part_in_gets_no_record() =>
-        RecordRules.CheckParticipation(null, billFinished: true).ShouldBe("appeal.not-open");
+        RecordRules.CheckParticipation(null, billFinished: true).ShouldBe("record.not-open");
+
+    [Fact]
+    public void Taking_part_ends_when_the_final_vote_is_recorded_before_the_record_is_closed()
+    {
+        RecordRules.CheckParticipation(BillRecordStatuses.Open, billFinished: true).ShouldBe("record.not-open");
+        RecordRules.IsFinished(BillRecordStatuses.Open, finalVoteRecorded: true).ShouldBeTrue();
+        RecordRules.IsFinished(BillRecordStatuses.Closed, finalVoteRecorded: false).ShouldBeTrue();
+        RecordRules.IsFinished(null, finalVoteRecorded: false).ShouldBeFalse();
+    }
 
     [Theory]
-    [InlineData(AppealStatuses.Open, true)]
-    [InlineData(AppealStatuses.Closed, true)]
-    [InlineData(AppealStatuses.Rejected, true)]
-    [InlineData(AppealStatuses.Superseded, false)]
+    [InlineData(null, true, "statement.required")]
+    [InlineData("  ", true, "statement.required")]
+    [InlineData(null, false, null)]
+    [InlineData("Paaiškinimas.", true, null)]
+    public void A_moderators_statement_is_checked_where_it_is_stored(string? statement, bool required, string? error) =>
+        StatementRules.Check(statement, required).ShouldBe(error);
+
+    [Fact]
+    public void A_moderators_statement_is_at_most_1000_characters()
+    {
+        StatementRules.Check(new string('a', 1000), required: true).ShouldBeNull();
+        StatementRules.Check(new string('a', 1001), required: false).ShouldBe("staff-statement.too-long");
+    }
+
+    [Theory]
+    [InlineData(BillRecordStatuses.Open, true)]
+    [InlineData(BillRecordStatuses.Closed, true)]
+    [InlineData(BillRecordStatuses.Rejected, true)]
+    [InlineData(BillRecordStatuses.Superseded, false)]
     public void Open_closed_and_hidden_rows_are_the_bills_record_old_superseded_ones_are_not(string status, bool record) =>
         RecordRules.IsRecord(status).ShouldBe(record);
 
     [Fact]
     public void A_hidden_record_comes_back_as_it_was()
     {
-        RecordRules.RestoredStatus(closedAt: null).ShouldBe(AppealStatuses.Open);
-        RecordRules.RestoredStatus(closedAt: DateTimeOffset.UnixEpoch).ShouldBe(AppealStatuses.Closed);
-        RecordRules.CheckRestore(AppealStatuses.Rejected).ShouldBeNull();
-        RecordRules.CheckRestore(AppealStatuses.Open).ShouldBe("moderation.wrong-state");
+        RecordRules.RestoredStatus(closedAt: null).ShouldBe(BillRecordStatuses.Open);
+        RecordRules.RestoredStatus(closedAt: DateTimeOffset.UnixEpoch).ShouldBe(BillRecordStatuses.Closed);
+        RecordRules.CheckRestore(BillRecordStatuses.Rejected).ShouldBeNull();
+        RecordRules.CheckRestore(BillRecordStatuses.Open).ShouldBe("moderation.wrong-state");
     }
 
     [Fact]
     public void A_moderator_writes_a_description_on_an_open_record_with_a_statement_and_a_changed_text()
     {
-        RecordRules.CheckDescriptionWrite(AppealStatuses.Open, "", "Projektas keičia rinkliavas.", "Projektas darbotvarkėje.").ShouldBeNull();
-        RecordRules.CheckDescriptionWrite(AppealStatuses.Open, "", "Projektas keičia rinkliavas.", " ").ShouldBe("statement.required");
-        RecordRules.CheckDescriptionWrite(AppealStatuses.Closed, "", "Projektas keičia rinkliavas.", "Taisau.").ShouldBe("moderation.wrong-state");
-        RecordRules.CheckDescriptionWrite(AppealStatuses.Open, "Tas pats.", "Tas pats.", "Taisau.").ShouldBe("description.unchanged");
+        RecordRules.CheckDescriptionWrite(BillRecordStatuses.Open, "", "Projektas keičia rinkliavas.", "Projektas darbotvarkėje.").ShouldBeNull();
+        RecordRules.CheckDescriptionWrite(BillRecordStatuses.Open, "", "Projektas keičia rinkliavas.", " ").ShouldBe("statement.required");
+        RecordRules.CheckDescriptionWrite(BillRecordStatuses.Rejected, "", "Projektas keičia rinkliavas.", "Taisau.").ShouldBe("moderation.wrong-state");
+        RecordRules.CheckDescriptionWrite(BillRecordStatuses.Open, "Tas pats.", "Tas pats.", "Taisau.").ShouldBe("description.unchanged");
+    }
+
+    [Fact]
+    public void After_the_final_vote_a_moderator_still_corrects_or_removes_the_description_but_does_not_confirm_it()
+    {
+        RecordRules.CheckDescriptionWrite(BillRecordStatuses.Closed, "Senas.", "Pataisytas.", "Taisau klaidą.").ShouldBeNull();
+        RecordRules.CheckRemove(BillRecordStatuses.Closed, "Senas.", "Klaidingas.").ShouldBeNull();
+        RecordRules.CheckRemove(BillRecordStatuses.Rejected, "Senas.", "Klaidingas.").ShouldBe("moderation.wrong-state");
+        RecordRules.CheckConfirm(BillRecordStatuses.Closed, DescriptionSources.Ai).ShouldBe("moderation.wrong-state");
+    }
+
+    [Theory]
+    [InlineData("keep", null)]
+    [InlineData("describe", null)]
+    [InlineData("undescribe", null)]
+    [InlineData("threshold", "moderation.wrong-state")]
+    [InlineData("hold", "moderation.wrong-state")]
+    [InlineData("release", "moderation.wrong-state")]
+    [InlineData("urgent", "moderation.wrong-state")]
+    [InlineData("confirm", "moderation.wrong-state")]
+    public void On_a_closed_record_only_palikti_and_the_description_remain_of_the_record_actions(string action, string? error)
+    {
+        RecordRules.CheckRecordAction(BillRecordStatuses.Closed, action).ShouldBe(error);
+        RecordRules.CheckRecordAction(BillRecordStatuses.Open, action).ShouldBeNull();
+        RecordRules.CheckRecordAction(BillRecordStatuses.Rejected, action).ShouldBe("moderation.wrong-state");
+    }
+
+    [Theory]
+    [InlineData("hide", ReasonStatuses.Published, null)]
+    [InlineData("hide", ReasonStatuses.Pending, null)]
+    [InlineData("restore", ReasonStatuses.Hidden, null)]
+    [InlineData("publish", ReasonStatuses.Published, null)]
+    [InlineData("publish", ReasonStatuses.Pending, "moderation.wrong-state")]
+    [InlineData("merge", ReasonStatuses.Published, "moderation.wrong-state")]
+    public void On_a_closed_record_an_argument_is_only_hidden_restored_or_kept(string action, string reasonStatus, string? error)
+    {
+        RecordRules.CheckReasonAction(BillRecordStatuses.Closed, action, reasonStatus).ShouldBe(error);
+        RecordRules.CheckReasonAction(BillRecordStatuses.Open, action, reasonStatus).ShouldBeNull();
+        RecordRules.CheckReasonAction(BillRecordStatuses.Rejected, action, reasonStatus).ShouldBe("moderation.wrong-state");
     }
 
     [Fact]

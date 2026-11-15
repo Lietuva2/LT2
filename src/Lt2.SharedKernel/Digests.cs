@@ -4,11 +4,11 @@ namespace Lt2.SharedKernel;
 public sealed record DigestReason(string Side, string Text, int Endorsements);
 
 /// <summary>
-/// An appeal as the summaries see it (design 8.4): both sides with the counts for accounts older than 30 days, the
+/// A record as the summaries see it (design 8.4): both sides with the counts for accounts older than 30 days, the
 /// threshold, the surge note, the planned date, and the most endorsed arguments a moderator has seen.
 /// </summary>
 public sealed record DigestCandidate(
-    Guid AppealId,
+    Guid RecordId,
     string BillNumber,
     string BillTitle,
     int For,
@@ -32,11 +32,11 @@ public sealed record PartyNumbers(string Party, int? For, int? Against);
 /// <summary>What the summaries read from the Appeals module. Implemented by Appeals.</summary>
 public interface IDigestSource
 {
-    /// <summary>Every open appeal with its numbers now; the summary rules decide which go in.</summary>
+    /// <summary>Every open record with its numbers now; the summary rules decide which go in.</summary>
     Task<IReadOnlyList<DigestCandidate>> CandidatesAsync(CancellationToken cancellationToken);
 
-    /// <summary>Per appeal and party, the supporters on each side, with every group under 20 already withheld.</summary>
-    Task<IReadOnlyDictionary<Guid, IReadOnlyList<PartyNumbers>>> PartyNumbersAsync(IReadOnlyCollection<Guid> appealIds, CancellationToken cancellationToken);
+    /// <summary>Per record and party, the supporters on each side, with every group under 20 already withheld.</summary>
+    Task<IReadOnlyDictionary<Guid, IReadOnlyList<PartyNumbers>>> PartyNumbersAsync(IReadOnlyCollection<Guid> recordIds, CancellationToken cancellationToken);
 }
 
 /// <summary>A sitting MP a summary would go to. No address: M2a never sends, so none leaves the Parliament module.</summary>

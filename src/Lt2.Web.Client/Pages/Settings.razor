@@ -4,14 +4,20 @@
 @using System.Text.Json
 @using Lt2.Api.Contracts.Admin
 @using Lt2.Api.Contracts.Appeals
+@using Lt2.Api.Contracts.Auth
+@using Lt2.Api.Contracts.Me
 @using Lt2.Web.Client.Appeals
-@inherits InteractiveBase
+@inherits InteractiveBase<AppealUi>
 @inject IAdminApi Admin
+@inject IAuthApi Auth
+@inject IMeApi Me
+@inject Passkeys PasskeyBrowser
 
 @* The administrator's settings screen (design 5.6, decided 2026-11-13): grouped under headings, each setting with a plain
    label, one sentence on what it does and when to change it, its unit, the default and the key in small type; the
    rarely changed security limits in their own group, which says so. Each change is audited by the server. Needs the
-   active administrator role of a staff-passkey session. *@
+   active administrator role of a staff-passkey session, and saving asks for the staff passkey again unless it was
+   confirmed in the last ten minutes (design 6.9: the server's ten-minute rule, the same as for changing roles). *@
 <PageTitle>@L["Admin.PageTitle"]</PageTitle>
 
 <div class="stack">
@@ -19,6 +25,7 @@
     <h1>@L["Admin.Title"]</h1>
     <NeedsScript />
     <p class="lead">@L["Admin.Lead"]</p>
+    <p class="small" id="admin-passkey-note">@L["Admin.PasskeyNote"]</p>
 </div>
 
 <Messages Message="@Message" Info="@Info" />
@@ -57,16 +64,19 @@ else
                                 <span class="note note--quiet" id="placeholder-minimum">@L["Admin.MinimumPlaceholder"]</span>
                             }
                             <span class="fine">
-                                @Text("Admin.DefaultIs", Shown(setting.Default)) ·
-                                @(setting.ChangedAt is { } at ? Text("Admin.Changed", Dates.DayTime(at)) : L["Admin.NotChanged"]) ·
+                                @L.Format("Admin.DefaultIs", Shown(setting.Default)) ·
+                                @(setting.ChangedAt is { } at ? L.Format("Admin.Changed", Display.DayTime(at)) : L["Admin.NotChanged"]) ·
                                 <code>@setting.Key</code>
                             </span>
                         </div>
                         <div class="rows__side row">
-                            <input class="input num settings__value" id="@id" aria-describedby="help-@id unit-@id"
+                            <input class="input num settings__value" id="@id" aria-describedby="@DescribedFor(setting.Key, id)"
                                    value="@(_drafts.GetValueOrDefault(setting.Key) ?? Shown(setting.Value))"
                                    @onchange="e => _drafts[setting.Key] = e.Value?.ToString()" disabled="@Locked" />
-                            <span class="small" id="unit-@id">@Unit(setting.Key)</span>
+                            @if (Unit(setting.Key) is { Length: > 0 } unit)
+                            {
+                                <span class="small" id="unit-@id">@unit</span>
+                            }
                             <button type="button" class="btn btn--plain" disabled="@Locked" @onclick="() => SaveAsync(setting.Key)">@L["Admin.Save"]</button>
                         </div>
                     </li>
@@ -91,6 +101,9 @@ else
         ("security", ["SignIn:CodesPerHour", "SignIn:CodesPerDay", "Registration:PendingAccountDays"]),
     ];
 
+    /// <summary>The server's answer when the staff passkey must be confirmed again.</summary>
+    private const string ConfirmationRequired = "passkey.confirmation-required";
+
     private readonly Dictionary<string, string?> _drafts = [];
     private bool _refused;
 
@@ -100,8 +113,31 @@ else
     {
         if (Items is null)
         {
-            await LoadAsync();
+            var settings = await Admin.GetSettingsAsync();
+            _refused = settings.Problem?.Status is 401 or 403;
+            Items = settings.Value?.ToList();
+            if (!settings.IsSuccess && !_refused)
+            {
+                Show(settings.Problem);
+            }
         }
+    }
+
+    /// <summary>The help and the unit beside a value, only those the setting has.</summary>
+    private string? DescribedFor(string key, string id)
+    {
+        var ids = new List<string>();
+        if (Help(key) is not null)
+        {
+            ids.Add("help-" + id);
+        }
+
+        if (Unit(key).Length > 0)
+        {
+            ids.Add("unit-" + id);
+        }
+
+        return ids.Count == 0 ? null : string.Join(" ", ids);
     }
 
     /// <summary>The settings by group; one the screen does not know yet goes into "other", so nothing is hidden.</summary>
@@ -124,28 +160,70 @@ else
         }
     }
 
+    /// <summary>Reads the settings again; a failure is said in the note and the screen stays as it was.</summary>
     private async Task LoadAsync()
     {
         var settings = await Admin.GetSettingsAsync();
-        _refused = !settings.IsSuccess;
-        Items = settings.Value?.ToList();
+        if (Succeeded(settings))
+        {
+            Items = settings.Value!.ToList();
+        }
     }
 
     private Task SaveAsync(string key) => RunAsync(async () =>
     {
-        var draft = (_drafts.GetValueOrDefault(key) ?? "").Trim();
-        var value = Read(draft);
-        var result = await Admin.UpdateSettingAsync(key, new UpdateSettingRequest { Value = value });
-        if (!result.IsSuccess)
+        // Nothing typed: the value shown is the one saved again, never an empty text.
+        var draft = (_drafts.GetValueOrDefault(key) ?? Shown(Items?.FirstOrDefault(s => s.Key == key)?.Value)).Trim();
+        var request = new UpdateSettingRequest { Value = Read(draft) };
+        var saved = await Admin.UpdateSettingAsync(key, request);
+        if (saved.Problem?.Code == ConfirmationRequired)
         {
-            Show(result.Problem);
+            // The server asks for the staff passkey again (design 6.9): confirm it, then save once more.
+            if (!await ConfirmPasskeyAsync())
+            {
+                return;
+            }
+
+            saved = await Admin.UpdateSettingAsync(key, request);
+        }
+
+        if (!Succeeded(saved))
+        {
             return;
         }
 
         _drafts.Remove(key);
         await LoadAsync();
-        Info = Text("Admin.SavedOne", Name(key));
+        Info ??= L.Format("Admin.SavedOne", Name(key));
     });
+
+    /// <summary>
+    /// The staff passkey once more, in this session (design 6.2's ten-minute rule): the browser's passkey prompt, then the
+    /// server's check. False, with the message set, when the browser cannot, the person cancels or the server refuses.
+    /// </summary>
+    private async Task<bool> ConfirmPasskeyAsync()
+    {
+        if (!await PasskeyBrowser.IsSupportedAsync())
+        {
+            Message = L["Admin.Passkey.Unsupported"];
+            return false;
+        }
+
+        var options = await Auth.GetPasskeyRequestOptionsAsync();
+        if (!Succeeded(options))
+        {
+            return false;
+        }
+
+        var credential = await PasskeyBrowser.GetAsync(options.Value!);
+        if (credential is null)
+        {
+            Message = L["Admin.Passkey.Cancelled"];
+            return false;
+        }
+
+        return Succeeded(await Me.ConfirmPasskeyAsync(new PasskeyCredentialRequest { Credential = credential }));
+    }
 
     /// <summary>What was typed, as the server expects it: a number, true or false ("taip"/"ne" too), or a text.</summary>
     private static JsonElement Read(string draft)

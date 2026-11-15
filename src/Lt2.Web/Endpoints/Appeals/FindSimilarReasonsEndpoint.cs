@@ -8,7 +8,7 @@ using Lt2.Web.Services;
 namespace Lt2.Web.Endpoints.Appeals;
 
 /// <summary>
-/// <c>POST /api/v1/bills/{number}/appeal/reasons/similar</c>: published arguments on the same side that look like the one
+/// <c>POST /api/v1/bills/{number}/record/reasons/similar</c>: published arguments on the same side that look like the one
 /// being written, so the existing one can be offered first (design 8.1). Changes nothing.
 /// </summary>
 internal static class FindSimilarReasonsEndpoint

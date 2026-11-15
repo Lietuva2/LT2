@@ -1,5 +1,6 @@
-using System.Text.Json;
 using System.Security.Claims;
+using System.Text.Json;
+using Lt2.Identity.Application.Staff;
 using Lt2.Identity.Domain;
 using Lt2.Identity.Infrastructure;
 using Lt2.SharedKernel;
@@ -12,14 +13,18 @@ namespace Lt2.Identity.Application.Account;
 /// <summary>
 /// Design 6.5: a person downloads everything they gave and deletes the account. Deletion removes, in one transaction,
 /// what the Appeals module holds of them (positions, marks, arguments, reports, flags; through <see cref="IAccountData"/>)
-/// and the account with everything that hangs on it (profile, consents, party support, sessions, codes, passkeys, roles).
+/// and the account with everything that hangs on it (profile, consents, party support, sessions, codes, passkeys, roles)
+/// and the unsent emails to it.
 /// Counts fall; frozen summary snapshots keep their totals. Nothing is logged or audited with the address.
 /// </summary>
-internal sealed class AccountDataHandlers(IdentityDb db, IEnumerable<IAccountData> modules, SignInManager<User> signIn, TimeProvider clock)
+internal sealed class AccountDataHandlers(
+    IdentityDb db, IEnumerable<IAccountData> modules, UserManager<User> users, SignInManager<User> signIn, IOutbox outbox, StaffAccess staff, TimeProvider clock)
 {
+    internal static readonly Error StaffPasskeyRequired = Error.Forbidden("account.staff-passkey-required");
+
     public async Task<Result<object>> ExportAsync(ClaimsPrincipal principal, CancellationToken cancellationToken)
     {
-        if (!Guid.TryParse(principal.FindFirstValue(ClaimTypes.NameIdentifier), out var userId))
+        if (principal.UserId() is not { } userId)
         {
             return Error.Unauthorized("auth.required");
         }
@@ -36,7 +41,7 @@ internal sealed class AccountDataHandlers(IdentityDb db, IEnumerable<IAccountDat
         var party = await db.PartySupports.AsNoTracking().Where(p => p.UserId == userId).Select(p => new { p.Party, p.GivenAt }).FirstOrDefaultAsync(cancellationToken);
         var sessions = await db.Sessions.AsNoTracking().Where(s => s.UserId == userId)
             .Select(s => new { s.CreatedAt, s.LastSeenAt, s.Device, s.Method }).ToListAsync(cancellationToken);
-        var passkeys = await db.Set<IdentityUserPasskey<Guid>>().AsNoTracking().CountAsync(p => p.UserId == userId, cancellationToken);
+        var passkeys = (await users.GetPasskeysAsync(user)).Select(p => new { name = p.Name, createdAt = p.CreatedAt }).ToList();
         var roles = await (from ur in db.UserRoles.AsNoTracking()
                            join r in db.Roles.AsNoTracking() on ur.RoleId equals r.Id
                            where ur.UserId == userId
@@ -63,11 +68,11 @@ internal sealed class AccountDataHandlers(IdentityDb db, IEnumerable<IAccountDat
 
             // Only the feedback linked to the account (design 8.10); unlinked items lead to nobody.
             ["feedback"] = (await db.Feedback.AsNoTracking().Where(f => f.UserId == userId).OrderBy(f => f.CreatedOn).ToListAsync(cancellationToken))
-                .Select(f => new { f.Kind, f.Text, f.PagePath, f.Browser, f.CreatedOn, f.Status, replies = JsonDocument.Parse(f.Replies).RootElement.Clone() }),
+                .Select(f => new { f.Kind, f.Text, f.PagePath, f.Browser, f.CreatedOn, f.Status, replies = JsonSerializer.Deserialize<JsonElement>(f.Replies) }),
             ["sessions"] = sessions,
         };
 
-        // Each module's part: appeals (sides, arguments, requests …) and follows (design 8.11.2), each the person's own.
+        // Each module's part: appeals (sides, arguments, reports, flags, organisations …) and follows (design 8.11.2), each the person's own.
         foreach (var module in modules)
         {
             export[module.Section] = await module.ExportAsync(userId, cancellationToken);
@@ -88,11 +93,19 @@ internal sealed class AccountDataHandlers(IdentityDb db, IEnumerable<IAccountDat
 
     public async Task<Result<Unit>> DeleteAsync(ClaimsPrincipal principal, CancellationToken cancellationToken)
     {
-        if (!Guid.TryParse(principal.FindFirstValue(ClaimTypes.NameIdentifier), out var userId))
+        if (principal.UserId() is not { } userId)
         {
             return Error.Unauthorized("auth.required");
         }
 
+        // Design 6.9: an account with an active staff role is deleted only from a session signed in with its staff passkey,
+        // so getting into the mailbox is not enough to remove a staff member.
+        if (await staff.ForAsync(principal, cancellationToken) is { AccountHasActiveStaffRole: true, StaffPasskeySession: false })
+        {
+            return StaffPasskeyRequired;
+        }
+
+        var address = await db.Users.AsNoTracking().Where(u => u.Id == userId).Select(u => u.Email).FirstOrDefaultAsync(cancellationToken);
         await using (var transaction = await db.Database.BeginTransactionAsync(cancellationToken))
         {
             foreach (var module in modules)
@@ -108,6 +121,12 @@ internal sealed class AccountDataHandlers(IdentityDb db, IEnumerable<IAccountDat
                     s => s.SetProperty(i => i.IssuedByUserId, (Guid?)null)
                         .SetProperty(i => i.SwitchedOffAt, i => i.Kind == InvitationKinds.Personal ? (i.SwitchedOffAt ?? now) : i.SwitchedOffAt),
                     cancellationToken);
+
+            // Emails to the person that were not sent go too (design 6.8: the outbox forgets).
+            if (address is not null)
+            {
+                await outbox.ForgetAsync([address], transaction.GetDbTransaction(), cancellationToken);
+            }
 
             // The user row cascades to profile, consents, party support, sessions, codes, passkeys, roles, activations.
             await db.Users.Where(u => u.Id == userId).ExecuteDeleteAsync(cancellationToken);

@@ -8,7 +8,7 @@ public sealed record QueueReportResponse(Guid Id, string Ground, string? Text, D
 /// about its description; <c>DescriptionSource</c> (<c>ai</c> for an AI summary nobody has read) decides its actions, and
 /// <c>DescriptionUrl</c> is the address the description form starts from (design 8.13).
 /// </summary>
-public sealed record QueueAppealResponse(
+public sealed record QueueRecordResponse(
     Guid Id,
     BillRefResponse Bill,
     string Description,
@@ -21,11 +21,12 @@ public sealed record QueueAppealResponse(
     bool UnderThresholdOnAgenda,
     bool Held,
     int Participants,
-    string? DescriptionUrl);
+    string? DescriptionUrl,
+    string Status = "open");
 
 public sealed record QueueFlagResponse(Guid Id, string Kind, string Link, string? Note, DateTimeOffset CreatedAt);
 
-/// <summary>A moderator's planned date or stage for the appeal's bill (design 8.4), with the reason.</summary>
+/// <summary>A moderator's planned date or stage for the record's bill (design 8.4), with the reason.</summary>
 public sealed record ModeratorPlannedRequest
 {
     public DateOnly Date { get; init; }
@@ -39,7 +40,7 @@ public sealed record ModeratorPlannedRequest
 /// <summary>An argument for a moderator: flagged by pre-screening, reported, or not yet seen.</summary>
 public sealed record QueueReasonResponse(
     Guid Id,
-    Guid AppealId,
+    Guid RecordId,
     BillRefResponse Bill,
     string Side,
     string Text,
@@ -49,24 +50,25 @@ public sealed record QueueReasonResponse(
     IReadOnlyList<string> Flags,
     IReadOnlyList<QueueReportResponse> Reports,
     IReadOnlyList<ReasonResponse> MergeCandidates,
-    DateTimeOffset CreatedAt);
+    DateTimeOffset CreatedAt,
+    string RecordStatus = "open");
 
 /// <summary>
 /// A hidden bill record (design 8.12.3): who hid it, when and why. <c>RestoresAs</c> is the status "Atkurti" gives it (open
 /// or closed).
 /// </summary>
-public sealed record HiddenAppealResponse(
+public sealed record HiddenRecordResponse(
     Guid Id, BillRefResponse Bill, string Description, DateTimeOffset? HiddenAt, string? HiddenBy, string? Statement, string RestoresAs);
 
-/// <summary>A hidden reason; <c>Restorable</c> while its appeal is open.</summary>
+/// <summary>A hidden reason; <c>Restorable</c> while its record is open.</summary>
 public sealed record HiddenReasonResponse(
     Guid Id, BillRefResponse Bill, string Side, string Text, string? AuthorName, DateTimeOffset? HiddenAt, string? HiddenBy, string? Statement, bool Restorable);
 
-/// <summary>The moderators' list of hidden appeals and reasons (design 8.3), newest hide first. Holds no position.</summary>
-public sealed record HiddenItemsResponse(IReadOnlyList<HiddenAppealResponse> Appeals, IReadOnlyList<HiddenReasonResponse> Reasons);
+/// <summary>The moderators' list of hidden records and reasons (design 8.3), newest hide first. Holds no position.</summary>
+public sealed record HiddenItemsResponse(IReadOnlyList<HiddenRecordResponse> Records, IReadOnlyList<HiddenReasonResponse> Reasons);
 
 /// <summary>The moderators' queue (design 8.12.3). Holds no position of anyone.</summary>
-public sealed record ModerationQueueResponse(IReadOnlyList<QueueAppealResponse> Appeals, IReadOnlyList<QueueReasonResponse> Reasons);
+public sealed record ModerationQueueResponse(IReadOnlyList<QueueRecordResponse> Records, IReadOnlyList<QueueReasonResponse> Reasons);
 
 /// <summary>Publishing an argument or keeping something as it is: the statement is optional.</summary>
 public sealed record ModerationRequest
@@ -119,7 +121,7 @@ public sealed record ModerationBillResponse(
     string? DescriptionUrl, IReadOnlyList<QueueReportResponse> DescriptionReports);
 
 /// <summary>The bill's record a moderator acts on (design 8.12.1: found, or created on an active bill).</summary>
-public sealed record BillRecordResponse(Guid Id);
+public sealed record BillRecordIdResponse(Guid Id);
 
 /// <summary>Whether an AI draft can be asked for (design 8.11.4): false until a provider is configured.</summary>
 public sealed record AiStatusResponse(bool DraftAvailable);

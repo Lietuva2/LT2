@@ -29,7 +29,8 @@ services:
   caddy:
     image: caddy:2.10
     restart: unless-stopped
-    # Caddy listens on the published ports themselves (Caddyfile http_port/https_port), so its redirects are right.
+    # Caddy listens on the published ports themselves (http_port in the Caddyfile, the HTTPS port in its site address), so
+    # its redirects are right.
     ports:
       - "${LT2_HTTP_PORT:-8080}:${LT2_HTTP_PORT:-8080}"
       - "${LT2_HTTPS_PORT:-8443}:${LT2_HTTPS_PORT:-8443}"
@@ -60,7 +61,9 @@ services:
     image: lt2/web:${LT2_IMAGE_TAG:-local}
     environment:
       ConnectionStrings__Lt2: Host=postgres;Port=5432;Database=lt2;Username=lt2_app;GSS Encryption Mode=Disable
-      ReverseProxy__TrustForwardedHeaders: "true"
+      # Design 6.8: X-Forwarded-For and -Proto are believed only from this proxy (LT2's own Caddy, by its service name on
+      # the edge network); compose.shared-proxy.yaml names the server's Caddy instead.
+      ReverseProxy__Address: caddy
       # The site's own address, the one Caddy serves: links in emails and in the summary's text start with it (design 5.6).
       Site__Address: https://${LT2_SITE_ADDRESS:-lt2.localhost}:${LT2_HTTPS_PORT:-8443}
       # Where visitors without a session may write to the moderators (design 8.3). Production sets the real address.
@@ -113,6 +116,9 @@ services:
       Agenda__BaseAddress: ${LT2_AGENDA_BASE_ADDRESS:-}
       # Where at most one notice a day of new feedback goes (design 8.10); none when empty.
       Feedback__TeamAddress: ${LT2_FEEDBACK_TEAM_ADDRESS:-}
+      # The follow emails' schedule (design 8.11.2). Empty: every 15 minutes. Only the local .env sets it (every minute), so
+      # an end-to-end run does not wait a quarter of an hour for the email.
+      Jobs__FollowsCron: ${LT2_FOLLOWS_CRON:-}
       # The AI summaries of bills (design 8.13), the same switch as the web's draft: "claude" with a key in
       # deploy/secrets/ai_api_key turns the provider on; empty (the default) keeps it off. Its host then joins the worker's
       # allowlist. The job also needs a reader of the bills' official texts, which does not exist yet.

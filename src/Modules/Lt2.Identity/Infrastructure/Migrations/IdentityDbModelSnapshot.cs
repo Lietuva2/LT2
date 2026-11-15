@@ -222,6 +222,11 @@ namespace Lt2.Identity.Infrastructure.Migrations
                         .HasDatabaseName("ix_invitation_organisation_current")
                         .HasFilter("kind = 'organisation' AND replaced_at IS NULL");
 
+                    b.HasIndex(new[] { "IssuedByUserId" }, "ix_invitation_personal_current")
+                        .IsUnique()
+                        .HasDatabaseName("ix_invitation_personal_current")
+                        .HasFilter("kind = 'personal' AND replaced_at IS NULL");
+
                     b.ToTable("invitation", "identity", t =>
                         {
                             t.HasCheckConstraint("ck_invitation_uses_left", "uses_left >= 0");

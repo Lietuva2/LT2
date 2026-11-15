@@ -2,7 +2,7 @@ using Lt2.SharedKernel;
 
 namespace Lt2.Appeals.Domain;
 
-/// <summary>The two sides of an appeal (design 8.2). Abstaining is not a request to an MP, so it is not offered.</summary>
+/// <summary>The two sides of a record (design 8.2). Abstaining is not a request to an MP, so it is not offered.</summary>
 internal static class Sides
 {
     public const string For = "for";
@@ -159,8 +159,6 @@ internal static class CountRules
     /// <summary>The moment before which an account must have become a member to count as older than 30 days.</summary>
     public static DateTimeOffset EstablishedBefore(DateTimeOffset now) => now - EstablishedAge;
 
-    public static bool IsOlderThan30Days(DateTimeOffset memberSince, DateTimeOffset now) => memberSince <= EstablishedBefore(now);
-
     /// <summary>Builds the published counts; refuses numbers that cannot be true (an older-than-30-days count above its total).</summary>
     public static SideCounts Publish(int forTotal, int forOlder, int againstTotal, int againstOlder)
     {
@@ -197,17 +195,40 @@ internal static class GroupRules
     }
 }
 
-/// <summary>Design 8.1: an appeal closes when the Seimas takes the final vote on its bill; the counts are frozen then.</summary>
+/// <summary>Design 8.1: a record closes when the Seimas takes the final vote on its bill; the counts are frozen then.</summary>
 internal static class ClosingRules
 {
     /// <summary>Only an open record closes, and only on a final vote; a hidden one stays hidden.</summary>
-    public static bool ShouldClose(string status, long? finalVoteId) => status == AppealStatuses.Open && finalVoteId is not null;
+    public static bool ShouldClose(string status, long? finalVoteId) => status == BillRecordStatuses.Open && finalVoteId is not null;
 
     /// <summary>The counts shown: frozen ones once closed, live ones before.</summary>
     public static SideCounts Shown(SideCounts live, int? closedFor, int? closedForOlder, int? closedAgainst, int? closedAgainstOlder) =>
         closedFor is { } f && closedForOlder is { } fo && closedAgainst is { } a && closedAgainstOlder is { } ao
             ? CountRules.Publish(f, fo, a, ao)
             : live;
+
+    /// <summary>The record's counts were frozen when it closed; its live counts are not needed then.</summary>
+    public static bool IsFrozen(BillRecord record) =>
+        record.ClosedFor is not null && record.ClosedForOlderThan30Days is not null && record.ClosedAgainst is not null && record.ClosedAgainstOlderThan30Days is not null;
+
+    /// <summary>The counts a record shows: its frozen ones once closed, otherwise <paramref name="live"/>.</summary>
+    public static SideCounts Shown(BillRecord record, SideCounts live) =>
+        Shown(live, record.ClosedFor, record.ClosedForOlderThan30Days, record.ClosedAgainst, record.ClosedAgainstOlderThan30Days);
+}
+
+/// <summary>
+/// A moderator's statement of reasons (design 8.3, 6.8: checked where it is stored, not only by the HTTP validators):
+/// plain text of at most 1 000 characters once trimmed; required for every action but "Palikti", publishing and confirming.
+/// </summary>
+internal static class StatementRules
+{
+    public const int MaxLength = StaffStatements.MaxLength;
+
+    /// <summary>The code of <see cref="StaffStatements.Check"/>: the one rule for every staff statement.</summary>
+    public static string? Check(string? statement, bool required) => StaffStatements.Check(statement, required)?.Code;
+
+    /// <summary>The statement as stored: trimmed, or null when none was given.</summary>
+    public static string? Normalise(string? statement) => string.IsNullOrWhiteSpace(statement) ? null : statement.Trim();
 }
 
 /// <summary>Turns a rule's error code into the module's error.</summary>
@@ -216,9 +237,9 @@ internal static class RuleErrors
     public static Error Of(string code) => code switch
     {
         "position.required" or "reason.limit" or "endorsement.other-side" or "endorsement.limit"
-            or "appeal.not-open" or "moderation.wrong-state" or "draft.not-configured" => Error.Conflict(code),
+            or "record.not-open" or "moderation.wrong-state" or "draft.not-configured" => Error.Conflict(code),
         "draft.too-many" => new Error(ErrorKind.TooManyRequests, code),
-        "statement.required" => Error.Validation(code, "statement"),
+        "statement.required" or "staff-statement.too-long" => Error.Validation(code, "statement"),
         "draft.source-required" or "draft.source-too-long" => Error.Validation(code, "sourceText"),
         "draft.none" => Error.Validation(code, "fromDraft"),
         "description.unchanged" => Error.Validation(code, "description"),

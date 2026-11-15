@@ -37,7 +37,7 @@ public sealed class AppealFlowTests(AppealFlowTests.ModeratorFixture moderator) 
         var sides = 0;
         a.Request += (_, request) =>
         {
-            if (request.Method == "PUT" && request.Url.EndsWith($"/bills/{bill}/appeal/position", StringComparison.Ordinal))
+            if (request.Method == "PUT" && request.Url.EndsWith($"/bills/{bill}/record/position", StringComparison.Ordinal))
             {
                 sides++;
             }
@@ -81,7 +81,9 @@ public sealed class AppealFlowTests(AppealFlowTests.ModeratorFixture moderator) 
         var add = b.Locator("#add-reason");
         await Assertions.Expect(add).ToBeEnabledAsync(new() { Timeout = 60_000 });
         await add.ClickAsync();
-        await Assertions.Expect(b.Locator("#write-reason")).ToContainTextAsync("nepriklausomai nuo to, ko prašote patys");
+        // Design 8.15 (annex B25): "either side" is said by the switch itself and the methodology's "Argumentai".
+        await Assertions.Expect(b.Locator("#write-reason")).Not.ToContainTextAsync("nepriklausomai nuo to, ko prašote patys");
+        await Assertions.Expect(b.Locator("#write-reason")).ToContainTextAsync("Argumentas bus viešas su jūsų vardu ir pasirinkta puse");
         // The side is the two-part switch "Už | Prieš" (owner, 2026-11-13): with no side of one's own, neither half.
         await Assertions.Expect(b.Locator("#reason-side .switch__half")).ToHaveTextAsync(["Už", "Prieš"]);
         await Assertions.Expect(b.Locator("#reason-side-for")).Not.ToBeCheckedAsync();
@@ -132,7 +134,7 @@ public sealed class AppealFlowTests(AppealFlowTests.ModeratorFixture moderator) 
         await Assertions.Expect(b.Locator("#not-a-poll")).ToContainTextAsync("Tai nėra reprezentatyvi apklausa");
         await Assertions.Expect(mine.GetByRole(AriaRole.Button, new() { Name = "Atsiimti", Exact = true })).ToBeVisibleAsync();
         await ActionsOnOneLineAsync(b);
-        await NoSidewaysScrollAsync(b);
+        await E2ESteps.NoSidewaysScrollAsync(b);
         await b.ScreenshotAsync(new() { Path = Shot($"bill-open-{width}.png"), FullPage = true });
 
         // 5. The first member sees the counts but not the other's side, takes the other side, gets "prieš" preselected
@@ -157,7 +159,7 @@ public sealed class AppealFlowTests(AppealFlowTests.ModeratorFixture moderator) 
         var own = a.Locator("#reasons-for .said").Filter(new() { HasText = other });
         await Assertions.Expect(own).ToBeVisibleAsync();
         await Assertions.Expect(a.Locator("#count-against .figure__num")).ToHaveTextAsync(Number(againstBefore + 1));
-        await NoSidewaysScrollAsync(a);
+        await E2ESteps.NoSidewaysScrollAsync(a);
         await Assertions.Expect(a.Locator("#reasons-for .said").Filter(new() { HasText = text }).GetByRole(AriaRole.Button, new() { Name = "Atsiimti" })).ToHaveCountAsync(0);
         await own.GetByRole(AriaRole.Button, new() { Name = "Atsiimti", Exact = true }).ClickAsync();
         await a.GetByRole(AriaRole.Button, new() { Name = "Atsiimti argumentą" }).ClickAsync();
@@ -242,31 +244,40 @@ public sealed class AppealFlowTests(AppealFlowTests.ModeratorFixture moderator) 
         await moderate.ScreenshotAsync(new() { Path = Shot("moderate-argument-1280.png") });
         await ActAsync(moderate, "hide", "Bandymas: argumentas paslepiamas puslapyje.");
         await Assertions.Expect(mod.Locator("#reasons-for .said").Filter(new() { HasText = shownText })).ToHaveCountAsync(0, new() { Timeout = 30_000 });
-        var mail = await MailAsync(email, "jūsų argumentas paslėptas");
+        var mail = await Mailpit.MailAsync(email, "jūsų argumentas paslėptas");
         mail.ShouldContain($"/seimas/{Bill}");
         mail.ShouldContain("Bandymas: argumentas paslepiamas puslapyje.");
-        await NoSidewaysScrollAsync(mod);
+        await E2ESteps.NoSidewaysScrollAsync(mod);
 
         // Hiding the bill closes taking part, with the statement; restoring brings everything back.
-        await ActAsync(panel, "hide", "Bandymas: dalyvavimas uždaromas ir atkuriamas.");
-        await Assertions.Expect(mod.Locator("#taking-part-closed")).ToContainTextAsync("Bandymas: dalyvavimas uždaromas ir atkuriamas.", new() { Timeout = 30_000 });
-        await w.ReloadAsync();
-        await Assertions.Expect(w.Locator("#taking-part-closed")).ToBeVisibleAsync();
-        await Assertions.Expect(w.Locator("#side-picker")).ToHaveCountAsync(0);
-        await w.ScreenshotAsync(new() { Path = Shot("bill-closed-by-moderators-1280.png"), FullPage = true });
-        await mod.GotoAsync($"{Base}/moderavimas/paslepti");
-        var hidden = mod.Locator("article[id^='hidden-appeal-']").Filter(new() { HasText = Bill });
-        await Assertions.Expect(hidden).ToContainTextAsync("Atkūrus vėl bus galima dalyvauti", new() { Timeout = 60_000 });
-        var restore = hidden.Locator("button[id^='restore-open-']");
-        await Assertions.Expect(restore).ToBeEnabledAsync(new() { Timeout = 60_000 });
-        await restore.ClickAsync();
-        await hidden.Locator("textarea[id^='restore-statement-']").FillAsync("Bandymas: atkuriama.");
-        await hidden.Locator("form button[type=submit]").ClickAsync();
-        await Assertions.Expect(hidden.GetByText("Atkurta.")).ToBeVisibleAsync();
-        await w.ReloadAsync();
-        await Assertions.Expect(w.Locator("#side-picker")).ToBeVisibleAsync(new() { Timeout = 30_000 });
-        await ShowAllReasonsAsync(w);
-        await Assertions.Expect(w.Locator("#reasons-against .said").Filter(new() { HasText = waitingText })).ToBeVisibleAsync();
+        // Restored in the finally too, so a failure here never leaves the bill closed for the classes that read it.
+        try
+        {
+            await ActAsync(panel, "hide", "Bandymas: dalyvavimas uždaromas ir atkuriamas.");
+            await Assertions.Expect(mod.Locator("#taking-part-closed")).ToContainTextAsync("Bandymas: dalyvavimas uždaromas ir atkuriamas.", new() { Timeout = 30_000 });
+            await w.ReloadAsync();
+            await Assertions.Expect(w.Locator("#taking-part-closed")).ToBeVisibleAsync();
+            await Assertions.Expect(w.Locator("#side-picker")).ToHaveCountAsync(0);
+            await w.ScreenshotAsync(new() { Path = Shot("bill-closed-by-moderators-1280.png"), FullPage = true });
+            await mod.GotoAsync($"{Base}/moderavimas/paslepti");
+            var hidden = mod.Locator("article[id^='hidden-appeal-']").Filter(new() { HasText = Bill });
+            await Assertions.Expect(hidden).ToContainTextAsync("Atkūrus vėl bus galima dalyvauti", new() { Timeout = 60_000 });
+            var restore = hidden.Locator("button[id^='restore-open-']");
+            await Assertions.Expect(restore).ToBeEnabledAsync(new() { Timeout = 60_000 });
+            await restore.ClickAsync();
+            await hidden.Locator("textarea[id^='restore-statement-']").FillAsync("Bandymas: atkuriama.");
+            await hidden.Locator("form button[type=submit]").ClickAsync();
+            await Assertions.Expect(hidden.GetByText("Atkurta.")).ToBeVisibleAsync();
+            await w.ReloadAsync();
+            await Assertions.Expect(w.Locator("#side-picker")).ToBeVisibleAsync(new() { Timeout = 30_000 });
+            await ShowAllReasonsAsync(w);
+            await Assertions.Expect(w.Locator("#reasons-against .said").Filter(new() { HasText = waitingText })).ToBeVisibleAsync();
+
+        }
+        finally
+        {
+            await RestoreIfHiddenAsync(mod, Bill);
+        }
 
         writer.ConsoleErrors.ShouldBeEmpty();
         await TakeBackAsync(w, Bill);
@@ -278,14 +289,15 @@ public sealed class AppealFlowTests(AppealFlowTests.ModeratorFixture moderator) 
     /// moderators' queue, where a moderator confirms the text; the label becomes "Sukurta DI · taisė žmonės". A second report
     /// shows in the "Moderavimas" panel on the bill's page, where the moderator corrects the description with the official
     /// text's address (decided by the owner on 2026-11-14), refused first for a host that is not lrs.lt; the page then links
-    /// "Oficialus tekstas, iš kurio parengta". Neither can be taken back through the product: <c>output/cleanup-hidden.sql</c>
-    /// clears the test's text and its reports, and the migrator's <c>--demo-appeal</c> puts the demonstration summary back.
+    /// "Oficialus tekstas, iš kurio parengta". Neither can be taken back through the product, so the test puts the demonstration summary
+    /// back itself, before and after (<see cref="ResetDemonstrationSummaryAsync"/>).
     /// </summary>
     [Fact]
     public async Task A_member_reports_the_ai_summary_a_moderator_confirms_it_from_the_queue_and_corrects_it_with_its_address_on_the_page()
     {
         Assert.SkipWhen(string.IsNullOrEmpty(SignUpTests.BaseUrl), "LT2_E2E_BASE_URL is not set; start the stack and set it to run end-to-end tests.");
         const string Bill = "XVP-0533";
+        await ResetDemonstrationSummaryAsync();
         var mod = await moderator.PageAsync();
 
         await using var reader = await PasskeyBrowser.StartAsync("native", 1280, 800);
@@ -314,7 +326,7 @@ public sealed class AppealFlowTests(AppealFlowTests.ModeratorFixture moderator) 
         await Assertions.Expect(item).ToContainTextAsync("Aprašymas netikslus ar klaidingas");
         await Assertions.Expect(item).ToContainTextAsync(run);
         await Assertions.Expect(item.Locator("[role=group] button").Nth(1)).ToHaveTextAsync("Patvirtinti aprašymą", new() { Timeout = 60_000 });
-        await NoSidewaysScrollAsync(mod);
+        await E2ESteps.NoSidewaysScrollAsync(mod);
         await ActAsync(item, "confirm");
         await Assertions.Expect(item.GetByText("Atlikta: aprašymas patvirtintas.")).ToBeVisibleAsync(new() { Timeout = 30_000 });
         await Assertions.Expect(item.Locator("button[id^='action-confirm-']")).ToHaveCountAsync(0);
@@ -360,7 +372,7 @@ public sealed class AppealFlowTests(AppealFlowTests.ModeratorFixture moderator) 
 
         // The same form at 390 px: nothing scrolls sideways.
         await mod.SetViewportSizeAsync(390, 844);
-        await NoSidewaysScrollAsync(mod);
+        await E2ESteps.NoSidewaysScrollAsync(mod);
         await panel.Locator("form[id^='action-form-']").ScreenshotAsync(new() { Path = Shot("description-form-390.png") });
         await mod.SetViewportSizeAsync(1280, 800);
 
@@ -380,6 +392,35 @@ public sealed class AppealFlowTests(AppealFlowTests.ModeratorFixture moderator) 
         await Assertions.Expect(r.Locator("#moderation-panel")).ToHaveCountAsync(0);
         await r.Locator("#about").ScreenshotAsync(new() { Path = Shot("visitor-after-save-1280.png") });
         reader.ConsoleErrors.ShouldBeEmpty();
+
+        // The demonstration summary goes back to "nobody has read it" for the next run and for people using the stack.
+        await ResetDemonstrationSummaryAsync();
+    }
+
+    /// <summary>
+    /// The product cannot make a summary unread again (a confirmation and a correction stand for the description's whole
+    /// life, design 8.13), so this test puts the local stack's demonstration summary on XVP-0533 back before it starts, the
+    /// way <c>output/cleanup-hidden.sql</c> does: a run's corrected text, its reports and confirmations go, and the migrator's
+    /// repeatable <c>--demo-appeal</c> writes the invented summary again. Local stack only (it needs the docker CLI).
+    /// </summary>
+    private static async Task ResetDemonstrationSummaryAsync()
+    {
+        const string Sql =
+            """
+            begin;
+            create temp table own as select id from appeals.bill_record where bill_number = 'XVP-0533';
+            delete from appeals.report where target_kind = 'record' and target_id in (select id from own);
+            delete from appeals.moderation_action where target_kind = 'record' and action = 'confirm' and target_id in (select id from own);
+            delete from appeals.revision where entity_kind = 'record' and field = 'description' and entity_id in (select id from own)
+              and (old_value like '%(E2E bandymas)%' or new_value like '%(E2E bandymas)%');
+            update appeals.bill_record set description = '', description_source = null, description_url = null, description_at = null
+             where id in (select id from own) and description like '%(E2E bandymas)%';
+            update appeals.bill_record set description_source = 'ai'
+             where id in (select id from own) and description like 'Projektas leistų savivaldybėms pačioms nustatyti%';
+            commit;
+            """;
+        await Compose.RunAsync("exec", "-T", "postgres", "sh", "-c", "psql -U \"$POSTGRES_USER\" -d lt2 -v ON_ERROR_STOP=1 -q -c \"$0\"", Sql);
+        await Compose.RunAsync("run", "--rm", "--no-deps", "migrator", "--demo-appeal");
     }
 
     /// <summary>The background colour of one half of the side switch.</summary>
@@ -421,14 +462,15 @@ public sealed class AppealFlowTests(AppealFlowTests.ModeratorFixture moderator) 
         await Assertions.Expect(page.GetByText("Didžiausias pajamas gaunantys dabar moka mažesnį efektyvųjį tarifą nei samdomi darbuotojai.")).ToBeVisibleAsync();
         await Assertions.Expect(page.GetByText("Man svarbu · 1 920")).ToBeVisibleAsync();
         await Assertions.Expect(page.Locator("#not-a-poll")).ToHaveTextAsync("Tai nėra reprezentatyvi apklausa: skaičiai rodo savanoriškai dalyvaujančių Lietuva 2.0 naudotojų nuomonę.");
-        await Assertions.Expect(page.Locator("a.btn--for")).ToHaveAttributeAsync("href", "/prisijungti");
+        // Design 6.9: the sign-in link brings the visitor back to the bill.
+        await Assertions.Expect(page.Locator("a.btn--for")).ToHaveAttributeAsync("href", "/prisijungti#tikslas=%2Fseimas%2FXVP-0412");
 
         // Reporting without JavaScript and without a session: the disclosure opens and says how.
         await page.Locator("#about").GetByText("Pranešti apie klaidą", new() { Exact = true }).ClickAsync();
         // Beside the description (design 8.13); the arguments' own disclosures stay closed.
         await Assertions.Expect(page.Locator("#about").GetByText("Pranešti apie turinį moderatoriams gali prisijungę Lietuva 2.0 naudotojai:")).ToBeVisibleAsync();
         await Assertions.Expect(page.Locator("#about a[href='mailto:moderatoriai@lt2.localhost']")).ToBeVisibleAsync();
-        await NoSidewaysScrollAsync(page);
+        await E2ESteps.NoSidewaysScrollAsync(page);
         await page.ScreenshotAsync(new() { Path = Shot("bill-no-javascript-390.png"), FullPage = true });
 
         await page.GotoAsync($"{Base}/projektai");
@@ -450,8 +492,8 @@ public sealed class AppealFlowTests(AppealFlowTests.ModeratorFixture moderator) 
             """
             async () => {
               const token = (await (await fetch('/api/v1/auth/antiforgery')).json()).token;
-              const appeal = await (await fetch('/api/v1/bills/XVP-0412/appeal')).json();
-              const r = await fetch('/api/v1/moderation/appeals/' + appeal.id + '/urgent', {
+              const record = await (await fetch('/api/v1/bills/XVP-0412/record')).json();
+              const r = await fetch('/api/v1/moderation/records/' + record.id + '/urgent', {
                 method: 'POST', headers: { 'Content-Type': 'application/json', 'X-XSRF-TOKEN': token },
                 body: JSON.stringify({ statement: 'Demonstracinė suvestinė.' }) });
               return r.status;
@@ -475,7 +517,7 @@ public sealed class AppealFlowTests(AppealFlowTests.ModeratorFixture moderator) 
         await Assertions.Expect(page.GetByText("6 800").First).ToBeVisibleAsync();
         await Assertions.Expect(page.Locator("#not-a-poll")).ToContainTextAsync("Tai nėra reprezentatyvi apklausa");
         (await page.ContentAsync()).ShouldNotContain("Rūta Mockutė", customMessage: "a summary names nobody");
-        await NoSidewaysScrollAsync(page);
+        await E2ESteps.NoSidewaysScrollAsync(page);
         await page.ScreenshotAsync(new() { Path = Shot($"summary-no-javascript-{width}.png"), FullPage = true });
 
         // The summaries' links to bills still work, and the bill lists the summary.
@@ -534,7 +576,7 @@ public sealed class AppealFlowTests(AppealFlowTests.ModeratorFixture moderator) 
         await Assertions.Expect(notice).ToContainTextAsync("kol jį atšauks moderatorius");
         await Assertions.Expect(notice).ToContainTextAsync("Priežastis: Bandymas: rašymas apribojamas, kol bus atšauktas.");
         await Assertions.Expect(w.Locator("#add-reason")).ToHaveCountAsync(0);
-        await NoSidewaysScrollAsync(w);
+        await E2ESteps.NoSidewaysScrollAsync(w);
         await w.ScreenshotAsync(new() { Path = Shot("author-restricted-1280.png"), FullPage = true });
         author.ConsoleErrors.ShouldBeEmpty();
 
@@ -547,8 +589,8 @@ public sealed class AppealFlowTests(AppealFlowTests.ModeratorFixture moderator) 
               const out = [];
               for (const r of await (await fetch('/api/v1/moderation/restrictions')).json())
                 if (r.displayName === 'Ribojama Autorė') out.push((await post('/api/v1/moderation/restrictions/' + r.id + '/lift', { statement: 'Bandymo pabaiga.' })).status);
-              const appeal = await (await fetch('/api/v1/bills/XVP-0412/appeal')).json();
-              for (const r of appeal.reasons)
+              const record = await (await fetch('/api/v1/bills/XVP-0412/record')).json();
+              for (const r of record.reasons)
                 if (r.text.startsWith(text)) out.push((await post('/api/v1/moderation/reasons/' + r.id + '/hide', { statement: 'Bandymo duomenys išvalomi.' })).status);
               return JSON.stringify(out);
             }
@@ -559,8 +601,6 @@ public sealed class AppealFlowTests(AppealFlowTests.ModeratorFixture moderator) 
         done.Length.ShouldBeGreaterThanOrEqualTo(2);
         done.ShouldAllBe(status => status == 204);
     }
-
-    private static readonly string MailpitUrl = Environment.GetEnvironmentVariable("LT2_E2E_MAILPIT_URL") ?? "http://localhost:8025";
 
     /// <summary>Presses "Paskelbti"; an earlier run's argument may be offered as similar first, then publishes anyway.</summary>
     private static async Task PublishReasonAsync(IPage page)
@@ -605,12 +645,32 @@ public sealed class AppealFlowTests(AppealFlowTests.ModeratorFixture moderator) 
             """
             async ([bill, side, text]) => {
               const token = (await (await fetch('/api/v1/auth/antiforgery')).json()).token;
-              const r = await fetch('/api/v1/bills/' + bill + '/appeal/reasons', { method: 'POST', headers: { 'Content-Type': 'application/json', 'X-XSRF-TOKEN': token },
+              const r = await fetch('/api/v1/bills/' + bill + '/record/reasons', { method: 'POST', headers: { 'Content-Type': 'application/json', 'X-XSRF-TOKEN': token },
                 body: JSON.stringify({ side, text }) });
               return (await r.json()).status;
             }
             """,
             new[] { bill, side, text });
+
+    /// <summary>Restores the bill's record through the API if it is among the hidden items; used in a <c>finally</c>.</summary>
+    private static async Task RestoreIfHiddenAsync(IPage moderatorPage, string bill)
+    {
+        var statuses = await moderatorPage.EvaluateAsync<int[]>(
+            """
+            async (bill) => {
+              const token = (await (await fetch('/api/v1/auth/antiforgery')).json()).token;
+              const hidden = await (await fetch('/api/v1/moderation/hidden')).json();
+              const out = [];
+              for (const a of hidden.records ?? [])
+                if (JSON.stringify(a).includes(bill))
+                  out.push((await fetch('/api/v1/moderation/records/' + a.id + '/restore', { method: 'POST',
+                    headers: { 'X-XSRF-TOKEN': token, 'Content-Type': 'application/json' }, body: JSON.stringify({ statement: 'Bandymo pabaiga.' }) })).status);
+              return out;
+            }
+            """,
+            bill);
+        statuses.ShouldAllBe(status => status == 204);
+    }
 
     /// <summary>
     /// Takes back, through the API, what the signed-in person did on the bill: their side is cleared and their arguments
@@ -623,8 +683,8 @@ public sealed class AppealFlowTests(AppealFlowTests.ModeratorFixture moderator) 
             async (bill) => {
               const token = (await (await fetch('/api/v1/auth/antiforgery')).json()).token;
               const del = url => fetch(url, { method: 'DELETE', headers: { 'X-XSRF-TOKEN': token } });
-              const out = [(await del('/api/v1/bills/' + bill + '/appeal/position')).status];
-              const mine = await (await fetch('/api/v1/bills/' + bill + '/appeal/mine')).json();
+              const out = [(await del('/api/v1/bills/' + bill + '/record/position')).status];
+              const mine = await (await fetch('/api/v1/bills/' + bill + '/record/mine')).json();
               for (const r of mine.myReasons) if (r.status === 'published' || r.status === 'pending') out.push((await del('/api/v1/reasons/' + r.id)).status);
               return JSON.stringify(out);
             }
@@ -633,33 +693,11 @@ public sealed class AppealFlowTests(AppealFlowTests.ModeratorFixture moderator) 
         JsonSerializer.Deserialize<int[]>(json)!.ShouldAllBe(status => status == 204);
     }
 
-    /// <summary>The text of the newest email to <paramref name="to"/> whose subject has <paramref name="subject"/>.</summary>
-    private static async Task<string> MailAsync(string to, string subject)
-    {
-        using var http = new HttpClient { BaseAddress = new Uri(MailpitUrl) };
-        for (var attempt = 0; ; attempt++)
-        {
-            var search = JsonDocument.Parse(await http.GetStringAsync($"/api/v1/search?query={Uri.EscapeDataString($"to:\"{to}\" subject:\"{subject}\"")}")).RootElement;
-            if (search.GetProperty("messages").GetArrayLength() > 0)
-            {
-                var id = search.GetProperty("messages")[0].GetProperty("ID").GetString();
-                return JsonDocument.Parse(await http.GetStringAsync($"/api/v1/message/{id}")).RootElement.GetProperty("Text").GetString()!;
-            }
-
-            attempt.ShouldBeLessThan(60, $"an email to {to} about \"{subject}\" arrives in Mailpit");
-            await Task.Delay(500);
-        }
-    }
-
     private static string Shot(string name)
     {
         Directory.CreateDirectory(Path.Combine("output", "appeals"));
         return Path.Combine("output", "appeals", name);
     }
-
-    private static async Task NoSidewaysScrollAsync(IPage page) =>
-        (await page.EvaluateAsync<int>("() => document.documentElement.scrollWidth - document.documentElement.clientWidth"))
-            .ShouldBeLessThanOrEqualTo(0, "no horizontal scrolling");
 
     /// <summary>
     /// Every description a test writes carries this, so a person reading the local stack can tell the tests' text apart.

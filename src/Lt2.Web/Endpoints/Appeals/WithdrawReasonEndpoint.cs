@@ -2,14 +2,15 @@ using System.Security.Claims;
 using Lt2.Api.Contracts;
 using Lt2.Api.Contracts.Appeals;
 using Lt2.Appeals;
+using Lt2.SharedKernel;
 using Lt2.Web.Security;
 using Lt2.Web.Services;
 
 namespace Lt2.Web.Endpoints.Appeals;
 
 /// <summary>
-/// <c>DELETE /api/v1/reasons/{id}</c>: the author withdraws their own argument while the appeal is open (design 8.2). It
-/// goes with its "Man svarbu" marks; nobody else can withdraw it (403); on an appeal that is not open, 409.
+/// <c>DELETE /api/v1/reasons/{id}</c>: the author withdraws their own argument while the record is open (design 8.2). It
+/// goes with its "Man svarbu" marks; nobody else can withdraw it (403); on a record that is not open, 409.
 /// </summary>
 internal static class WithdrawReasonEndpoint
 {
@@ -29,7 +30,7 @@ internal static class WithdrawReasonEndpoint
         ErrorMapper errors,
         CancellationToken cancellationToken)
     {
-        var id = AppealMapping.UserId(user)!.Value;
+        var id = user.UserId()!.Value;
         var result = await appeals.WithdrawReasonAsync(reasonId, id, cancellationToken);
         return result.IsSuccess ? TypedResults.NoContent() : errors.ToResult(result.Error!);
     }

@@ -1,5 +1,3 @@
-using System.Net.Http.Json;
-using System.Text.Json;
 using Microsoft.Playwright;
 
 namespace Lt2.E2E;
@@ -12,8 +10,6 @@ namespace Lt2.E2E;
 public sealed class FeedbackBalloonTests(AppealFlowTests.ModeratorFixture moderator) : IClassFixture<AppealFlowTests.ModeratorFixture>
 {
     private static string Base => SignUpTests.BaseUrl!.TrimEnd('/');
-
-    private static readonly string MailpitUrl = Environment.GetEnvironmentVariable("LT2_E2E_MAILPIT_URL") ?? "http://localhost:8025";
 
     /// <summary>At the end of the page, the closed button lies over no text or control (while scrolling it may pass over text).</summary>
     private static async Task NothingCoveredAtTheEndAsync(IPage page)
@@ -155,10 +151,14 @@ public sealed class FeedbackBalloonTests(AppealFlowTests.ModeratorFixture modera
             await Assertions.Expect(panel.GetByRole(AriaRole.Heading)).ToHaveTextAsync("Atsiliepimai Lietuva 2.0 komandai");
             await Assertions.Expect(panel).ToContainTextAsync("Nepavyksta prisijungti? Parašykite mums:");
             await Assertions.Expect(panel.Locator("a[href='mailto:moderatoriai@lt2.localhost']")).ToBeVisibleAsync();
-            await Assertions.Expect(panel.Locator("a[href='https://github.com/Lietuva2/LT2/issues']")).ToBeVisibleAsync();
-            await Assertions.Expect(panel).ToContainTextAsync("viešas ir rodomas su jūsų GitHub vardu");
             await Assertions.Expect(panel.Locator("form")).ToHaveCountAsync(0);
             await Assertions.Expect(panel.Locator("#feedback-title")).ToBeFocusedAsync();
+
+            // Design 8.15 (annex F-5): reporting on GitHub is one click away, behind "Pranešti viešai GitHub".
+            await Assertions.Expect(panel.Locator("a[href='https://github.com/Lietuva2/LT2/issues']")).ToBeHiddenAsync();
+            await panel.Locator("details[id^='feedback-issues-'] > summary").ClickAsync();
+            await Assertions.Expect(panel.Locator("a[href='https://github.com/Lietuva2/LT2/issues']")).ToBeVisibleAsync();
+            await Assertions.Expect(panel).ToContainTextAsync("viešas ir rodomas su jūsų GitHub vardu");
             await PanelFitsAsync(page, where);
             await ReachableAsync(page, panel.Locator("a[href='mailto:moderatoriai@lt2.localhost']"), where);
             await ShotsAsync(page, $"balloon-visitor{path.Replace('/', '-')}-{width}");
@@ -265,21 +265,7 @@ public sealed class FeedbackBalloonTests(AppealFlowTests.ModeratorFixture modera
         await item.GetByRole(AriaRole.Button, new() { Name = "Siųsti atsakymą" }).ClickAsync();
         await Assertions.Expect(mod.GetByText("Atsakymas išsiųstas.")).ToBeVisibleAsync();
 
-        using var http = new HttpClient { BaseAddress = new Uri(MailpitUrl) };
-        for (var attempt = 0; ; attempt++)
-        {
-            var search = await http.GetFromJsonAsync<JsonElement>($"/api/v1/search?query={Uri.EscapeDataString($"to:\"{email}\" subject:\"atsakymas\"")}");
-            if (search.GetProperty("messages").GetArrayLength() > 0)
-            {
-                var id = search.GetProperty("messages")[0].GetProperty("ID").GetString();
-                var message = await http.GetFromJsonAsync<JsonElement>($"/api/v1/message/{id}");
-                message.GetProperty("Text").GetString()!.ShouldContain("Moderavimo taisyklės");
-                break;
-            }
-
-            attempt.ShouldBeLessThan(60, "the reply arrives in Mailpit");
-            await Task.Delay(500);
-        }
+        (await Mailpit.MailAsync(email, "atsakymas")).ShouldContain("Moderavimo taisyklės");
     }
 
     private static string Shot(string name)

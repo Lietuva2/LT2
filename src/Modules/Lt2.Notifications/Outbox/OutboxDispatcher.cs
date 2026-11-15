@@ -1,22 +1,31 @@
-using System.Text.Json;
+using Lt2.SharedKernel;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Npgsql;
+using NpgsqlTypes;
 
 namespace Lt2.Notifications.Outbox;
 
 /// <summary>
-/// Takes due rows with <c>FOR UPDATE SKIP LOCKED</c>, so several workers never send the same message, hands each to its
-/// handler, deletes it on success and reschedules it with backoff on failure. Delivery is at least once.
+/// Takes due rows with <c>FOR UPDATE SKIP LOCKED</c>, so several workers never send the same message, renders each with
+/// its kind's template and sends the batch over one connection; deletes a row on success and reschedules it with backoff
+/// on failure. Delivery is at least once. Codes go first (design 6.8), so bulk mail cannot hold one past its lifetime.
 /// </summary>
 internal sealed class OutboxDispatcher(
     NpgsqlDataSource dataSource,
-    IEnumerable<IOutboxHandler> handlers,
+    IEnumerable<IEmailRenderer> renderers,
+    IEmailTransport transport,
     IOptions<OutboxOptions> options,
     TimeProvider clock,
     ILogger<OutboxDispatcher> logger) : INotificationsDispatcher
 {
-    private readonly Dictionary<string, IOutboxHandler> _handlers = handlers.ToDictionary(h => h.Kind, StringComparer.Ordinal);
+    /// <summary>Kinds a person is waiting for with a code in hand: sent before any other due message.</summary>
+    internal static readonly string[] FirstKinds = [MessageKinds.SignInCodeEmail, MessageKinds.OrganisationCodeEmail];
+
+    /// <summary>How long a message that gave up is kept for a person to look at (design 6.8).</summary>
+    internal static readonly TimeSpan KeepFailed = TimeSpan.FromDays(30);
+
+    private readonly Dictionary<string, IEmailRenderer> _renderers = renderers.ToDictionary(h => h.Kind, StringComparer.Ordinal);
 
     public async Task<int> DispatchDueAsync(CancellationToken cancellationToken)
     {
@@ -29,7 +38,7 @@ internal sealed class OutboxDispatcher(
             SELECT id, kind, payload::text, attempts
             FROM notify.outbox
             WHERE failed_at IS NULL AND due_at <= @now
-            ORDER BY due_at
+            ORDER BY kind = ANY(@first) DESC, due_at
             LIMIT @batch
             FOR UPDATE SKIP LOCKED
             """,
@@ -37,6 +46,7 @@ internal sealed class OutboxDispatcher(
             transaction))
         {
             select.Parameters.AddWithValue("now", clock.GetUtcNow());
+            select.Parameters.AddWithValue("first", NpgsqlDbType.Array | NpgsqlDbType.Text, FirstKinds);
             select.Parameters.AddWithValue("batch", options.Value.BatchSize);
             await using var reader = await select.ExecuteReaderAsync(cancellationToken);
             while (await reader.ReadAsync(cancellationToken))
@@ -45,47 +55,12 @@ internal sealed class OutboxDispatcher(
             }
         }
 
-        foreach (var row in rows)
+        if (rows.Count > 0)
         {
-            try
+            await using var mail = await transport.ConnectAsync(cancellationToken);
+            foreach (var row in rows)
             {
-                if (!_handlers.TryGetValue(row.Kind, out var handler))
-                {
-                    throw new InvalidOperationException($"No handler for outbox kind '{row.Kind}'.");
-                }
-
-                using var payload = JsonDocument.Parse(row.Payload);
-                await handler.HandleAsync(payload.RootElement, cancellationToken);
-                await ExecuteAsync(connection, transaction, "DELETE FROM notify.outbox WHERE id = @id", row.Id, null, cancellationToken);
-                logger.LogInformation("Outbox message {MessageId} of kind {Kind} sent", row.Id, row.Kind);
-            }
-#pragma warning disable CA1031 // One failing message must not stop the others; the error is recorded on the row.
-            catch (Exception ex) when (ex is not OperationCanceledException)
-#pragma warning restore CA1031
-            {
-                var attempts = row.Attempts + 1;
-                var giveUp = attempts >= options.Value.MaxAttempts;
-                logger.LogWarning(ex, "Outbox message {MessageId} of kind {Kind} failed (attempt {Attempt})", row.Id, row.Kind, attempts);
-                await ExecuteAsync(
-                    connection,
-                    transaction,
-                    """
-                    UPDATE notify.outbox
-                    SET attempts = @attempts, last_attempt_at = @now, last_error = @error,
-                        due_at = @due, failed_at = CASE WHEN @giveUp THEN @now ELSE NULL END
-                    WHERE id = @id
-                    """,
-                    row.Id,
-                    command =>
-                    {
-                        var now = clock.GetUtcNow();
-                        command.Parameters.AddWithValue("attempts", attempts);
-                        command.Parameters.AddWithValue("now", now);
-                        command.Parameters.AddWithValue("error", Truncate(ex.GetType().Name + ": " + ex.Message, 2000));
-                        command.Parameters.AddWithValue("due", now + Backoff(attempts));
-                        command.Parameters.AddWithValue("giveUp", giveUp);
-                    },
-                    cancellationToken);
+                await SendAsync(connection, transaction, mail, row, cancellationToken);
             }
         }
 
@@ -93,11 +68,74 @@ internal sealed class OutboxDispatcher(
         return rows.Count;
     }
 
+    public async Task<int> PurgeFailedAsync(CancellationToken cancellationToken)
+    {
+        await using var command = dataSource.CreateCommand("DELETE FROM notify.outbox WHERE failed_at IS NOT NULL AND failed_at < @cutoff");
+        command.Parameters.AddWithValue("cutoff", clock.GetUtcNow() - KeepFailed);
+        return await command.ExecuteNonQueryAsync(cancellationToken);
+    }
+
     /// <summary>10 s, 20 s, 40 s … capped at one hour.</summary>
     internal static TimeSpan Backoff(int attempts) =>
         TimeSpan.FromSeconds(Math.Min(3600, 10 * Math.Pow(2, Math.Max(0, attempts - 1))));
 
-    private static string Truncate(string value, int length) => value.Length <= length ? value : value[..length];
+    /// <summary>
+    /// What is stored and logged of a failed send (design 6.8): the error's type and the mail server's status code, never
+    /// its text, which can quote the recipient's address.
+    /// </summary>
+    internal static string Describe(Exception error)
+    {
+        ArgumentNullException.ThrowIfNull(error);
+        return error is MailKit.Net.Smtp.SmtpCommandException smtp
+            ? $"{error.GetType().Name} {(int)smtp.StatusCode}"
+            : error.GetType().Name;
+    }
+
+    private async Task SendAsync(
+        NpgsqlConnection connection, NpgsqlTransaction transaction, IEmailConnection mail, (Guid Id, string Kind, string Payload, int Attempts) row, CancellationToken cancellationToken)
+    {
+        try
+        {
+            if (!_renderers.TryGetValue(row.Kind, out var renderer))
+            {
+                throw new InvalidOperationException($"No template for outbox kind '{row.Kind}'.");
+            }
+
+            using var payload = System.Text.Json.JsonDocument.Parse(row.Payload);
+            await mail.SendAsync(renderer.Render(payload.RootElement), cancellationToken);
+            await ExecuteAsync(connection, transaction, "DELETE FROM notify.outbox WHERE id = @id", row.Id, null, cancellationToken);
+            logger.LogInformation("Outbox message {MessageId} of kind {Kind} sent", row.Id, row.Kind);
+        }
+#pragma warning disable CA1031 // One failing message must not stop the others; the error is recorded on the row.
+        catch (Exception ex) when (ex is not OperationCanceledException)
+#pragma warning restore CA1031
+        {
+            var attempts = row.Attempts + 1;
+            var giveUp = attempts >= options.Value.MaxAttempts;
+            var error = Describe(ex);
+            logger.LogWarning("Outbox message {MessageId} of kind {Kind} failed (attempt {Attempt}): {Error}", row.Id, row.Kind, attempts, error);
+            await ExecuteAsync(
+                connection,
+                transaction,
+                """
+                UPDATE notify.outbox
+                SET attempts = @attempts, last_attempt_at = @now, last_error = @error,
+                    due_at = @due, failed_at = CASE WHEN @giveUp THEN @now ELSE NULL END
+                WHERE id = @id
+                """,
+                row.Id,
+                command =>
+                {
+                    var now = clock.GetUtcNow();
+                    command.Parameters.AddWithValue("attempts", attempts);
+                    command.Parameters.AddWithValue("now", now);
+                    command.Parameters.AddWithValue("error", error);
+                    command.Parameters.AddWithValue("due", now + Backoff(attempts));
+                    command.Parameters.AddWithValue("giveUp", giveUp);
+                },
+                cancellationToken);
+        }
+    }
 
     private static async Task ExecuteAsync(
         NpgsqlConnection connection,

@@ -21,8 +21,6 @@ internal static class SummaryRules
     /// </summary>
     public const string NotEnoughAnswer = "Iš pateikto teksto neaišku, ką projektas keičia.";
 
-    private static readonly TimeZoneInfo Vilnius = TimeZoneInfo.FindSystemTimeZoneById("Europe/Vilnius");
-
     /// <summary>
     /// Whether the job may make a summary for a bill now: it has no record, or an open one without a description that no
     /// person ever wrote or removed, and its last try allows another.
@@ -32,7 +30,7 @@ internal static class SummaryRules
     /// <param name="touchedByPerson">A person wrote, corrected or removed the description at some time.</param>
     /// <param name="retryAfter">The earliest next try after the last one, or null when never tried.</param>
     public static bool IsDue(string? recordStatus, string? currentText, bool touchedByPerson, DateTimeOffset? retryAfter, DateTimeOffset now) =>
-        recordStatus is null or AppealStatuses.Open
+        recordStatus is null or BillRecordStatuses.Open
         && string.IsNullOrEmpty(currentText)
         && !touchedByPerson
         && (retryAfter is null || retryAfter <= now);
@@ -58,12 +56,4 @@ internal static class SummaryRules
     /// <summary>The model's answer says the source is not enough (the prompt's fixed sentence, with or without quotes).</summary>
     public static bool IsNotEnough(string answer) =>
         answer.Contains(NotEnoughAnswer.TrimEnd('.'), StringComparison.OrdinalIgnoreCase);
-
-    /// <summary>The start of today in Vilnius, as a UTC instant: the daily number counts from it.</summary>
-    public static DateTimeOffset VilniusDayStart(DateTimeOffset now)
-    {
-        var local = TimeZoneInfo.ConvertTime(now, Vilnius);
-        var midnight = local.Date;
-        return new DateTimeOffset(midnight, Vilnius.GetUtcOffset(midnight)).ToUniversalTime();
-    }
 }

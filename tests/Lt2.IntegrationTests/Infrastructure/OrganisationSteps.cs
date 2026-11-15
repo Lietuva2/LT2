@@ -66,7 +66,7 @@ public static class OrganisationSteps
         return JsonSerializer.Deserialize<List<string>>(json ?? "[]")!;
     }
 
-    /// <summary>Confirms the organisation by a code sent to <c>info@</c> its host; returns the host.</summary>
+    /// <summary>Confirms the organisation by a code sent to <c>info@</c> its host, as a representative does.</summary>
     public static async Task ConfirmByDomainAsync(this TestBrowser representative, DatabaseFixture database, string slug, string host)
     {
         var address = "info@" + host;

@@ -42,14 +42,14 @@
         else
         {
             <div class="totals">
-                <div class="figure figure--m figure--for"><span class="label">@F.Choice("for")</span><span class="figure__num">@Formats.Number(totals.For)</span></div>
-                <div class="figure figure--m figure--against"><span class="label">@F.Choice("against")</span><span class="figure__num">@Formats.Number(totals.Against)</span></div>
-                <div class="figure figure--m"><span class="label">@F.Choice("abstain")</span><span class="figure__num">@Formats.Number(totals.Abstain)</span></div>
+                <div class="figure figure--m figure--for"><span class="label">@F.Choice("for")</span><span class="figure__num">@Display.Number(totals.For)</span></div>
+                <div class="figure figure--m figure--against"><span class="label">@F.Choice("against")</span><span class="figure__num">@Display.Number(totals.Against)</span></div>
+                <div class="figure figure--m"><span class="label">@F.Choice("abstain")</span><span class="figure__num">@Display.Number(totals.Abstain)</span></div>
             </div>
             <SplitBar For="totals.For" Against="totals.Against" Abstain="totals.Abstain" />
             @if (totals.Voted is { } voted)
             {
-                <p class="small num">@(totals.Seats is { } seats ? F.Format("Vote.Voted", Formats.Number(voted), Formats.Number(seats)) : F.Format("Vote.VotedOnly", Formats.Number(voted)))</p>
+                <p class="small num">@(totals.Seats is { } seats ? F.T.Format("Vote.Voted", Display.Number(voted), Display.Number(seats)) : F.T.Format("Vote.VotedOnly", Display.Number(voted)))</p>
             }
             @if (v.Summary.OfficialNote is { } note)
             {

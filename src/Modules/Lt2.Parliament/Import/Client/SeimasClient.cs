@@ -1,39 +1,16 @@
 using System.Xml;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
-using Polly.CircuitBreaker;
-using Polly.Timeout;
 
 namespace Lt2.Parliament.Import.Client;
 
 /// <summary>
-/// Every call of the Seimas open-data chain (design 7.1). Returns raw bodies: storing and parsing are the import's job.
-/// Fails only with <see cref="SeimasUnavailableException"/> (after retries) or cancellation.
+/// Every call of the Seimas open-data chain (design 7.1), built with <see cref="SeimasRequest"/>. Returns raw bodies:
+/// storing and parsing are the import's job. Fails with <see cref="SeimasUnavailableException"/> (after retries), with
+/// <c>OutboundHostNotAllowedException</c> when the configured address is not on the allowlist, or on cancellation.
 /// </summary>
 internal interface ISeimasClient
 {
-    /// <summary><c>p2b.ad_seimo_kadencijos</c>: all terms.</summary>
-    Task<SeimasResponse> GetTermsAsync(CancellationToken cancellationToken);
-
-    /// <summary><c>p2b.ad_seimo_nariai?kadencijos_id=</c>: the MPs of a term with memberships and contacts.</summary>
-    Task<SeimasResponse> GetMembersAsync(int termId, CancellationToken cancellationToken);
-
-    /// <summary><c>p2b.ad_seimo_sesijos?kadencijos_id=</c>: the sessions of a term.</summary>
-    Task<SeimasResponse> GetSessionsAsync(int termId, CancellationToken cancellationToken);
-
-    /// <summary><c>p2b.ad_seimo_posedziai?sesijos_id=</c>: the sittings of a session that have started.</summary>
-    Task<SeimasResponse> GetSittingsAsync(long sessionId, CancellationToken cancellationToken);
-
-    /// <summary><c>p2b.ad_sp_darbotvarke?posedzio_id=</c>: the agenda items of a sitting.</summary>
-    Task<SeimasResponse> GetAgendaAsync(long sittingId, CancellationToken cancellationToken);
-
-    /// <summary><c>p2b.ad_sp_klausimo_svarstymo_eiga</c>: how a sitting's items were considered, with their votes.</summary>
-    Task<SeimasResponse> GetProceedingsAsync(long sittingId, CancellationToken cancellationToken);
-
-    /// <summary><c>p2b.ad_sp_balsavimo_rezultatai?balsavimo_id=</c>: totals and each MP's vote with faction.</summary>
-    Task<SeimasResponse> GetVoteResultsAsync(long voteId, CancellationToken cancellationToken);
-
-    /// <summary>Any request of the chain.</summary>
     Task<SeimasResponse> GetAsync(SeimasRequest request, CancellationToken cancellationToken);
 }
 
@@ -82,27 +59,6 @@ internal sealed class SeimasClient(
 {
     public const string HttpClientName = "seimas";
 
-    public Task<SeimasResponse> GetTermsAsync(CancellationToken cancellationToken) =>
-        GetAsync(SeimasRequest.Terms(), cancellationToken);
-
-    public Task<SeimasResponse> GetMembersAsync(int termId, CancellationToken cancellationToken) =>
-        GetAsync(SeimasRequest.Members(termId), cancellationToken);
-
-    public Task<SeimasResponse> GetSessionsAsync(int termId, CancellationToken cancellationToken) =>
-        GetAsync(SeimasRequest.Sessions(termId), cancellationToken);
-
-    public Task<SeimasResponse> GetSittingsAsync(long sessionId, CancellationToken cancellationToken) =>
-        GetAsync(SeimasRequest.Sittings(sessionId), cancellationToken);
-
-    public Task<SeimasResponse> GetAgendaAsync(long sittingId, CancellationToken cancellationToken) =>
-        GetAsync(SeimasRequest.Agenda(sittingId), cancellationToken);
-
-    public Task<SeimasResponse> GetProceedingsAsync(long sittingId, CancellationToken cancellationToken) =>
-        GetAsync(SeimasRequest.Proceedings(options.Value.ProceedingsParameter, sittingId), cancellationToken);
-
-    public Task<SeimasResponse> GetVoteResultsAsync(long voteId, CancellationToken cancellationToken) =>
-        GetAsync(SeimasRequest.VoteResults(voteId), cancellationToken);
-
     public async Task<SeimasResponse> GetAsync(SeimasRequest request, CancellationToken cancellationToken)
     {
         ArgumentNullException.ThrowIfNull(request);
@@ -125,14 +81,14 @@ internal sealed class SeimasClient(
                 body = await response.Content.ReadAsByteArrayAsync(cancellationToken);
                 synthetic = response.Headers.Contains(SyntheticMarker.Header);
             }
-            catch (Exception ex) when (IsOutage(ex, cancellationToken))
+            catch (Exception ex) when (HttpOutage.Is(ex, cancellationToken))
             {
                 throw new SeimasUnavailableException(request, ex.GetType().Name, ex);
             }
 
             if (IsWellFormedXml(body))
             {
-                synthetic |= ContainsMarker(body);
+                synthetic |= SyntheticMarker.IsIn(body);
                 return new SeimasResponse(request, url, body, synthetic, clock.GetUtcNow());
             }
 
@@ -145,13 +101,6 @@ internal sealed class SeimasClient(
         }
     }
 
-    private static bool IsOutage(Exception ex, CancellationToken cancellationToken) => ex switch
-    {
-        HttpRequestException or TimeoutRejectedException or BrokenCircuitException => true,
-        TaskCanceledException or OperationCanceledException => !cancellationToken.IsCancellationRequested,
-        IOException => true,
-        _ => false,
-    };
 
     internal static bool IsWellFormedXml(byte[] body)
     {
@@ -175,7 +124,4 @@ internal sealed class SeimasClient(
             return false;
         }
     }
-
-    private static bool ContainsMarker(byte[] body) =>
-        body.AsSpan().IndexOf(System.Text.Encoding.UTF8.GetBytes(SyntheticMarker.Comment)) >= 0;
 }

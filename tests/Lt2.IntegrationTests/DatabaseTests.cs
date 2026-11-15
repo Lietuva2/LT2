@@ -4,6 +4,7 @@ using Lt2.Notifications;
 using Lt2.SharedKernel;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
 using Npgsql;
 
 namespace Lt2.IntegrationTests;
@@ -86,11 +87,107 @@ public sealed class DatabaseTests(DatabaseFixture database)
         transport.Sent.Where(m => emails.Contains(m.To)).Select(m => m.To).ShouldBe(emails, ignoreOrder: true);
     }
 
-    private ServiceProvider WorkerServices(CapturingTransport transport)
+    [Fact]
+    public async Task A_sign_in_code_is_sent_before_bulk_mail_that_waited_longer()
     {
-        var configuration = new ConfigurationBuilder().Build();
+        var transport = new CapturingTransport();
+        await using var provider = WorkerServices(transport, batchSize: 1);
+        var dispatcher = provider.GetRequiredService<INotificationsDispatcher>();
+        while (await dispatcher.DispatchDueAsync(CancellationToken.None) > 0)
+        {
+        }
+
+        // Follow emails due an hour ago, then a code due now (design 6.8: codes go first).
+        var follower = TestData.Email();
+        await using (var connection = await provider.GetRequiredService<NpgsqlDataSource>().OpenConnectionAsync())
+        await using (var transaction = await connection.BeginTransactionAsync())
+        {
+            for (var i = 0; i < 3; i++)
+            {
+                await provider.GetRequiredService<IOutbox>().EnqueueAsync(
+                    OutboxMessage.Create(
+                        MessageKinds.FollowPlannedEmail,
+                        new FollowPlannedEmail(follower, "XVP-0412", "Gyventojų pajamų mokesčio įstatymo pataisa", null, new DateOnly(2026, 12, 1), "/seimas/XVP-0412", "/sveiki"),
+                        DateTimeOffset.UtcNow.AddHours(-1)),
+                    transaction);
+            }
+
+            await transaction.CommitAsync();
+        }
+
+        var email = TestData.Email();
+        await EnqueueAsync(provider, email);
+
+        var before = transport.Sent.Count;
+        await dispatcher.DispatchDueAsync(CancellationToken.None);
+        transport.Sent.Skip(before).Select(m => m.To).ShouldBe([email], "the one message of the batch is the code");
+        while (await dispatcher.DispatchDueAsync(CancellationToken.None) > 0)
+        {
+        }
+
+        transport.Sent.Count(m => m.To == follower).ShouldBe(3);
+    }
+
+    [Fact]
+    public async Task A_failure_keeps_only_the_type_of_the_error_and_old_failures_are_purged()
+    {
+        var transport = new CapturingTransport { Fail = true };
+        await using var provider = WorkerServices(transport);
+        var email = TestData.Email();
+        await EnqueueAsync(provider, email);
+        while (await provider.GetRequiredService<INotificationsDispatcher>().DispatchDueAsync(CancellationToken.None) > 0)
+        {
+        }
+
+        (await database.ScalarAsync<string>("SELECT last_error FROM notify.outbox WHERE payload->>'to' = @to", ("to", email)))
+            .ShouldBe("InvalidOperationException", "never the error's text, which can quote the address");
+
+        await database.ExecuteAsync("UPDATE notify.outbox SET failed_at = now() - interval '31 days' WHERE payload->>'to' = @to", ("to", email));
+        (await provider.GetRequiredService<INotificationsDispatcher>().PurgeFailedAsync(CancellationToken.None)).ShouldBeGreaterThanOrEqualTo(1);
+        (await database.ScalarAsync<long>("SELECT count(*) FROM notify.outbox WHERE payload->>'to' = @to", ("to", email))).ShouldBe(0);
+    }
+
+    /// <summary>
+    /// Design 6.8 and the log rule of AGENTS.md, on the worker's side: a send that fails with an error quoting the address
+    /// leaves the address and the error's text in no log line, at any level, the exception included.
+    /// </summary>
+    [Fact]
+    public async Task A_failed_send_logs_neither_the_address_nor_the_errors_text()
+    {
+        var logs = new CollectingLogs();
+        var transport = new CapturingTransport { Fail = true };
+        await using var provider = WorkerServices(transport, logs: logs);
+        var email = TestData.Email();
+        await EnqueueAsync(provider, email);
+        while (await provider.GetRequiredService<INotificationsDispatcher>().DispatchDueAsync(CancellationToken.None) > 0)
+        {
+        }
+
+        var lines = logs.Lines;
+        lines.ShouldContain(l => l.Contains("failed", StringComparison.Ordinal), "the failure was logged");
+        foreach (var line in lines)
+        {
+            line.ShouldNotContain(email, Case.Insensitive);
+            line.ShouldNotContain("@pavyzdys.test", Case.Insensitive);
+            line.ShouldNotContain("rejected", Case.Insensitive, "the error's text, which quotes the address");
+        }
+
+        await database.ExecuteAsync("DELETE FROM notify.outbox WHERE payload->>'to' = @to", ("to", email));
+    }
+
+    private ServiceProvider WorkerServices(CapturingTransport transport, int batchSize = 20, CollectingLogs? logs = null)
+    {
+        var configuration = new ConfigurationBuilder()
+            .AddInMemoryCollection(new Dictionary<string, string?> { ["Outbox:BatchSize"] = batchSize.ToString(System.Globalization.CultureInfo.InvariantCulture) })
+            .Build();
         var services = new ServiceCollection();
-        services.AddLogging();
+        services.AddLogging(b =>
+        {
+            if (logs is not null)
+            {
+                b.SetMinimumLevel(LogLevel.Trace).AddProvider(logs);
+            }
+        });
         services.AddSingleton(TimeProvider.System);
         services.AddSingleton(NpgsqlDataSource.Create(database.WorkerConnectionString));
         services.AddNotificationsModule(configuration);
@@ -110,6 +207,44 @@ public sealed class DatabaseTests(DatabaseFixture database)
         await transaction.CommitAsync();
     }
 
+    /// <summary>Every log line at every level, with its exception, as text.</summary>
+    private sealed class CollectingLogs : ILoggerProvider
+    {
+        private readonly List<string> _lines = [];
+
+        public List<string> Lines
+        {
+            get
+            {
+                lock (_lines)
+                {
+                    return [.. _lines];
+                }
+            }
+        }
+
+        public ILogger CreateLogger(string categoryName) => new Logger(this);
+
+        public void Dispose()
+        {
+        }
+
+        private sealed class Logger(CollectingLogs owner) : ILogger
+        {
+            public IDisposable? BeginScope<TState>(TState state)
+                where TState : notnull => null;
+
+            public bool IsEnabled(LogLevel logLevel) => true;
+
+            public void Log<TState>(LogLevel logLevel, EventId eventId, TState state, Exception? exception, Func<TState, Exception?, string> formatter)
+            {
+                lock (owner._lines)
+                {
+                    owner._lines.Add(formatter(state, exception) + " " + exception);
+                }
+            }
+        }
+    }
     private sealed class CapturingTransport : IEmailTransport
     {
         private readonly List<EmailMessage> _sent = [];
@@ -118,7 +253,7 @@ public sealed class DatabaseTests(DatabaseFixture database)
 
         public TimeSpan Delay { get; init; }
 
-        public IReadOnlyList<EmailMessage> Sent
+        public List<EmailMessage> Sent
         {
             get
             {
@@ -134,7 +269,7 @@ public sealed class DatabaseTests(DatabaseFixture database)
             await Task.Delay(Delay, cancellationToken);
             if (Fail)
             {
-                throw new InvalidOperationException("SMTP is down (test).");
+                throw new InvalidOperationException($"SMTP is down (test): 550 <{message.To}> rejected.");
             }
 
             lock (_sent)

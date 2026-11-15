@@ -2,6 +2,7 @@ using System.Security.Claims;
 using Lt2.Api.Contracts;
 using Lt2.Api.Contracts.Me;
 using Lt2.Identity;
+using Lt2.SharedKernel;
 using Lt2.Web.Security;
 using Lt2.Web.Services;
 
@@ -18,7 +19,7 @@ internal static class InvitationEndpoints
     {
         api.MapGet(ApiEndpoints.Relative(ApiRoutes.Me.Invitation), async (ClaimsPrincipal user, IInvitations invitations, IConfiguration configuration, ErrorMapper errors, CancellationToken cancellationToken) =>
             {
-                var result = await invitations.MineAsync(AppealMapping.UserId(user)!.Value, cancellationToken);
+                var result = await invitations.MineAsync(user.UserId()!.Value, cancellationToken);
                 return result.IsSuccess ? Results.Ok(InvitationMapping.Map(result.Value!, configuration)) : errors.ToResult(result.Error!);
             })
             .WithName("GetMyInvitation")
@@ -28,7 +29,7 @@ internal static class InvitationEndpoints
 
         api.MapPost(ApiEndpoints.Relative(ApiRoutes.Me.ReplaceInvitation), async (ClaimsPrincipal user, IInvitations invitations, IConfiguration configuration, ErrorMapper errors, CancellationToken cancellationToken) =>
             {
-                var result = await invitations.ReplaceAsync(AppealMapping.UserId(user)!.Value, cancellationToken);
+                var result = await invitations.ReplaceAsync(user.UserId()!.Value, cancellationToken);
                 return result.IsSuccess ? Results.Ok(InvitationMapping.Map(result.Value!, configuration)) : errors.ToResult(result.Error!);
             })
             .WithName("ReplaceMyInvitation")

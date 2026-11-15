@@ -1,5 +1,5 @@
 @using Lt2.Api.Contracts.Follows
-@inherits InteractiveBase
+@inherits InteractiveBase<AppealUi>
 @inject IFollowsApi Follows
 
 @* The account page's follows (design 8.11.2, 8.14.14): the followed bills with their planned date or last stage result,
@@ -26,12 +26,12 @@
                             <span class="small num">
                                 @if (b.Planned is { } plan)
                                 {
-                                    @Text("Follows.Planned", Dates.Day(plan.Date))
+                                    @L.Format("Follows.Planned", Display.Day(plan.Date))
                                 }
                                 else if (b.LastStageResult is { } vote)
                                 {
-                                    @Text("Follows.Voted", Dates.Day(vote.HeldAt))
-                                    @(vote.IsConsensus ? " " + L["Follows.Consensus"] : " " + Text("Follows.Result", Number(vote.For), Number(vote.Against), Number(vote.Abstain)))
+                                    @L.Format("Follows.Voted", Display.Day(vote.HeldAt))
+                                    @(vote.IsConsensus ? " " + L["Follows.Consensus"] : " " + L.Format("Follows.Result", Display.Number(vote.For), Display.Number(vote.Against), Display.Number(vote.Abstain)))
                                 }
                                 else
                                 {
@@ -70,7 +70,7 @@
                     <li>
                         <div class="rows__main">
                             <a href="/o/@Uri.EscapeDataString(o.Slug)">@o.Name</a>
-                            <span class="small">@OrgLabelText(o)@(o.Status != "active" ? " · " + L["Org.State." + o.Status] : "")</span>
+                            <span class="small">@OrganisationWords.LabelText(L, o.Label)@(o.Status != "active" ? " · " + L["Org.State." + o.Status] : "")</span>
                         </div>
                         <div class="rows__side">
                             <button type="button" class="btn btn--plain" disabled="@Locked" @onclick="() => UnfollowOrganisationAsync(o.Slug)">@L["Follow.Unfollow"]</button>
@@ -79,11 +79,11 @@
                 }
             </ul>
         }
-        <p class="small num">@Text("Follows.Max", AppealNumbers.Of(mine.Bills.Count + mine.Mps.Count + mine.Organisations.Count), AppealNumbers.Of(mine.Max))</p>
+        <p class="small num">@L.Format("Follows.Max", Display.Number(mine.Bills.Count + mine.Mps.Count + mine.Organisations.Count), Display.Number(mine.Max))</p>
     }
     @if (Notices is { } notices)
     {
-        <fieldset class="stack stack--tight" id="follow-notices">
+        <fieldset class="stack stack--tight" id="follow-notices" @key="_noticesShown">
             <legend class="label">@L["Follows.Emails"]</legend>
             <label class="check"><input type="checkbox" id="notice-planned" checked="@notices.Planned" disabled="@Locked" @onchange="e => SetAsync(e.Value is true, notices.Voted, notices.Statements)" /><span>@L["Follows.Email.planned"]</span></label>
             <label class="check"><input type="checkbox" id="notice-voted" checked="@notices.Voted" disabled="@Locked" @onchange="e => SetAsync(notices.Planned, e.Value is true, notices.Statements)" /><span>@L["Follows.Email.voted"]</span></label>
@@ -94,6 +94,8 @@
 </section>
 
 @code {
+    private int _noticesShown;
+
     [PersistentState] public MyFollowsResponse? Mine { get; set; }
 
     [PersistentState] public NoticeSettingsResponse? Notices { get; set; }
@@ -104,7 +106,7 @@
         Notices ??= (await Follows.GetNoticesAsync()).Value;
     }
 
-    private static string Number(int? value) => value is { } n ? AppealNumbers.Of(n) : "–";
+    
 
     private Task UnfollowBillAsync(string number) => RunAsync(async () =>
     {
@@ -135,14 +137,14 @@
         await AfterAsync(result);
     });
 
-    private string OrgLabelText(FollowedOrganisationResponse o) =>
-        o.Label.ConfirmedBy == "domain" ? Text("Org.Label.domain", o.Label.Domain ?? "") : L["Org.Label." + (o.Label.ConfirmedBy ?? "none")];
 
     private Task SetAsync(bool planned, bool voted, bool statements) => RunAsync(async () =>
     {
         var result = await Follows.SetNoticesAsync(new NoticeSettingsRequest { Planned = planned, Voted = voted, Statements = statements });
         if (!result.IsSuccess)
         {
+            // The box the person clicked shows the saved state again: rebuilt, since the values themselves did not change.
+            _noticesShown++;
             Show(result.Problem);
             return;
         }

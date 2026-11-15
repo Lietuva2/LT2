@@ -22,7 +22,7 @@ public sealed class OrganisationPrivacyTests(DatabaseFixture database) : ApiTest
     [Fact]
     public async Task No_public_answer_page_or_staff_screen_names_a_representative_or_who_wrote_a_statement()
     {
-        using var moderator = await StaffMembers.ActiveAsync(Factory, Database, "moderator");
+        using var moderator = await StaffMembers.SharedAsync(Factory, Database, "moderator");
         await Database.FreeBillAsync(AppealSteps.SecondBill);
         var (rep, repEmail) = await Factory.MemberAsync(RepresentativeName);
         using var _r = rep;
@@ -30,11 +30,11 @@ public sealed class OrganisationPrivacyTests(DatabaseFixture database) : ApiTest
         var invite = await (await rep.PostAsync(OrganisationRoutes.InvitesOf(created.Slug), new { })).ReadAsync<InviteCreatedResponse>();
         var (second, secondEmail) = await Factory.MemberAsync(SecondName);
         using var _s = second;
-        (await second.PostAsync(OrganisationRoutes.AcceptInviteOf(invite.Token), new { })).Dispose();
+        (await second.PostAsync(OrganisationRoutes.AcceptInvite, new InviteTokenRequest { Token = invite.Token })).StatusCode.ShouldBe(HttpStatusCode.OK);
         var saved = await second.PublishStatementAsync(AppealSteps.SecondBill, created.Slug, "for", "Pozicija privatumo bandymui.");
         var (reporter, _) = await Factory.MemberAsync();
         using var _rp = reporter;
-        (await reporter.PostAsync(AppealRoutes.Reports, new ReportRequest { TargetKind = "statement", TargetId = saved.Id, Ground = "impersonation" })).Dispose();
+        (await reporter.PostAsync(AppealRoutes.Reports, new ReportRequest { TargetKind = "statement", TargetId = saved.Id, Ground = "impersonation" })).StatusCode.ShouldBe(HttpStatusCode.NoContent);
 
         var secrets = new[]
         {
@@ -48,7 +48,7 @@ public sealed class OrganisationPrivacyTests(DatabaseFixture database) : ApiTest
         var publicRoutes = new[]
         {
             OrganisationRoutes.List(null), OrganisationRoutes.Of(created.Slug), OrganisationRoutes.OnBillOf(AppealSteps.SecondBill),
-            AppealRoutes.AppealOf(AppealSteps.SecondBill), "/o/" + created.Slug, "/organizacijos", "/seimas/" + AppealSteps.SecondBill,
+            AppealRoutes.RecordOf(AppealSteps.SecondBill), "/o/" + created.Slug, "/organizacijos", "/seimas/" + AppealSteps.SecondBill,
         };
         foreach (var browser in new[] { visitor, stranger })
         {
@@ -141,14 +141,14 @@ public sealed class OrganisationPrivacyTests(DatabaseFixture database) : ApiTest
     [Fact]
     public async Task A_notice_email_goes_to_each_representative_and_names_nobody_else()
     {
-        using var moderator = await StaffMembers.ActiveAsync(Factory, Database, "moderator");
+        using var moderator = await StaffMembers.SharedAsync(Factory, Database, "moderator");
         var (rep, repEmail) = await Factory.MemberAsync(RepresentativeName);
         using var _r = rep;
         var created = await rep.RegisterOrganisationAsync();
         var invite = await (await rep.PostAsync(OrganisationRoutes.InvitesOf(created.Slug), new { })).ReadAsync<InviteCreatedResponse>();
         var (second, secondEmail) = await Factory.MemberAsync(SecondName);
         using var _s = second;
-        (await second.PostAsync(OrganisationRoutes.AcceptInviteOf(invite.Token), new { })).Dispose();
+        (await second.PostAsync(OrganisationRoutes.AcceptInvite, new InviteTokenRequest { Token = invite.Token })).StatusCode.ShouldBe(HttpStatusCode.OK);
         await moderator.Browser.ActAsync(OrganisationRoutes.Block, created.Id, "Bandymas.");
         var payloads = await Database.ScalarAsync<string>(
             "SELECT string_agg(payload::text, '\n') FROM notify.outbox WHERE kind = 'email.organisation-notice' AND payload->>'organisationName' = @n",
@@ -179,6 +179,60 @@ public sealed class OrganisationPrivacyTests(DatabaseFixture database) : ApiTest
         // A profile's and a statement's public history carries no person (appeals.revision is readable for analysis).
         (await Database.ScalarAsync<long>(
             "SELECT count(*) FROM appeals.revision WHERE entity_kind IN ('organisation', 'statement') AND changed_by_user_id IS NOT NULL")).ShouldBe(0);
+    }
+
+    /// <summary>
+    /// Design 6.8: nothing held back becomes public through history. A statement pre-screening held, never published by a
+    /// moderator, and then changed, appears in no earlier version: not on the profile, its page or any public answer.
+    /// </summary>
+    [Fact]
+    public async Task A_held_statements_text_never_becomes_public_through_the_history_of_its_versions()
+    {
+        await Database.FreeBillAsync(AppealSteps.SecondBill);
+        var (rep, _) = await Factory.MemberAsync();
+        using var _r = rep;
+        var created = await rep.RegisterOrganisationAsync();
+        const string Held = "Skambinkite mums 861234567, paaiškinsime laikytą poziciją.";
+        const string Clean = "Pritariame projektui, nes jis mažina administracinę naštą.";
+        const string Later = "Pritariame projektui; plačiau mūsų svetainėje.";
+
+        var held = await rep.PublishStatementAsync(AppealSteps.SecondBill, created.Slug, "for", Held);
+        held.Status.ShouldBe("pending", "pre-screening holds a phone number");
+        (await rep.PublishStatementAsync(AppealSteps.SecondBill, created.Slug, "for", Clean)).Status.ShouldBe("published");
+        (await rep.PublishStatementAsync(AppealSteps.SecondBill, created.Slug, "for", Later)).Status.ShouldBe("published");
+
+        // A version kept before 2026-11-15 does not say whether it was public: the one replaced when the statement first
+        // became public had waited, and is not shown either.
+        await Database.ExecuteAsync(
+            """
+            INSERT INTO appeals.revision (id, entity_kind, entity_id, field, old_value, new_value, changed_by_user_id, changed_at)
+            SELECT gen_random_uuid(), 'statement', s.id, 'version', @json, NULL, NULL, s.first_public_at FROM appeals.organisation_statement s WHERE s.id = @s
+            """,
+            ("json", "{\"stance\":\"for\",\"text\":\"Sena laukusi versija be požymių.\",\"link\":null,\"goal\":null}"), ("s", held.Id));
+
+        using var visitor = NewBrowser();
+        var (stranger, _) = await Factory.MemberAsync();
+        using var _s = stranger;
+        foreach (var browser in new[] { visitor, stranger })
+        {
+            foreach (var route in new[]
+            {
+                OrganisationRoutes.Of(created.Slug), "/o/" + created.Slug, OrganisationRoutes.OnBillOf(AppealSteps.SecondBill), OrganisationRoutes.List(null),
+                AppealRoutes.RecordOf(AppealSteps.SecondBill), "/seimas/" + AppealSteps.SecondBill,
+            })
+            {
+                var body = WebUtility.HtmlDecode(await browser.Client.GetStringAsync(route));
+                body.ShouldNotContain("861234567", customMessage: route);
+                body.ShouldNotContain("laikytą poziciją", customMessage: route);
+                body.ShouldNotContain("Sena laukusi versija", customMessage: route);
+            }
+        }
+
+        // The version that was public is in the history, under the statement on the profile.
+        (await visitor.Client.GetStringAsync(OrganisationRoutes.Of(created.Slug))).ShouldContain(Clean);
+        (await Database.ScalarAsync<long>(
+            "SELECT count(*) FROM appeals.revision WHERE entity_kind = 'statement' AND entity_id = @s AND old_value LIKE '%861234567%'", ("s", held.Id))).ShouldBe(0, "not even kept");
+        await Database.ClearStatementsAsync(AppealSteps.SecondBill);
     }
 
     [Theory]

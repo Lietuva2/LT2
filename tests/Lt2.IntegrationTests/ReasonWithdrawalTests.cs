@@ -10,37 +10,13 @@ using Microsoft.Extensions.DependencyInjection;
 namespace Lt2.IntegrationTests;
 
 /// <summary>
-/// Design 8.2 (decided 2026-11-13): an author withdraws their own argument while the appeal is open; the per-person
+/// Design 8.2 (decided 2026-11-13): an author withdraws their own argument while the record is open; the per-person
 /// limits are runtime settings, off by default, and a limit switched on later removes nothing and counts only shown or
 /// waiting arguments.
 /// </summary>
 public sealed class ReasonWithdrawalTests(DatabaseFixture database) : ApiTest(database)
 {
-    private static readonly SemaphoreSlim Gate = new(1, 1);
-    private static StaffMember? _moderator;
-    private static StaffMember? _administrator;
-    private static readonly TimeZoneInfo Vilnius = TimeZoneInfo.FindSystemTimeZoneById("Europe/Vilnius");
-
-    private async Task<(TestBrowser Moderator, TestBrowser Administrator)> StaffAsync()
-    {
-        await Gate.WaitAsync();
-        try
-        {
-            _moderator ??= await StaffMembers.ActiveAsync(Factory, Database, "moderator");
-            _administrator ??= await StaffMembers.ActiveAsync(Factory, Database, "administrator");
-            return (_moderator.Browser, _administrator.Browser);
-        }
-        finally
-        {
-            Gate.Release();
-        }
-    }
-
-    private static async Task SetAsync(TestBrowser admin, string key, object value)
-    {
-        using var response = await admin.SendAsync(HttpMethod.Put, ApiRoutes.Admin.SettingByKey(key), new UpdateSettingRequest { Value = JsonSerializer.SerializeToElement(value) });
-        response.StatusCode.ShouldBe(HttpStatusCode.OK, await response.Content.ReadAsStringAsync());
-    }
+    private static readonly TimeZoneInfo Vilnius = Lt2.SharedKernel.VilniusTime.Zone;
 
     private static Task<HttpResponseMessage> WithdrawAsync(TestBrowser browser, Guid reasonId) =>
         browser.SendAsync(HttpMethod.Delete, AppealRoutes.ReasonOf(reasonId));
@@ -48,15 +24,14 @@ public sealed class ReasonWithdrawalTests(DatabaseFixture database) : ApiTest(da
     [Fact]
     public async Task An_author_withdraws_their_own_argument_with_its_marks_nobody_else_can_and_a_made_summary_keeps_its_text()
     {
-        var (moderator, admin) = await StaffAsync();
-        await SetAsync(admin, "Digest:ThresholdMinimum", 1);
-        var today = DateOnly.FromDateTime(TimeZoneInfo.ConvertTime(DateTimeOffset.UtcNow, Vilnius).DateTime);
-        var monday = today.AddDays(7 * 14 - (((int)today.DayOfWeek + 6) % 7));
+        var (moderator, admin) = ((await ModeratorAsync()).Browser, (await AdministratorAsync()).Browser);
+        await admin.SetSettingAsync("Digest:ThresholdMinimum", 1);
+        var monday = ReasonsToComeSteps.MondayInWeeks(14);
         try
         {
             var (initiator, _) = await Factory.MemberAsync();
             using var _i = initiator;
-            var appeal = await Database.PrepareBillAsync(initiator, moderator, AppealSteps.ThirdBill, "against", threshold: 1);
+            var record = await Database.PrepareBillAsync(initiator, moderator, AppealSteps.ThirdBill, "against", threshold: 1);
             var (author, _) = await Factory.MemberAsync("Autorė Atsiimanti", consent: false);
             using var _a = author;
             const string Text = "Šį argumentą autorė vėliau atsiims.";
@@ -65,7 +40,7 @@ public sealed class ReasonWithdrawalTests(DatabaseFixture database) : ApiTest(da
                 written.StatusCode.ShouldBe(HttpStatusCode.Created);
             }
 
-            var reasonId = (await author.AppealAsync(AppealSteps.ThirdBill)).Reasons.Single(r => r.Text == Text).Id;
+            var reasonId = (await author.RecordAsync(AppealSteps.ThirdBill)).Reasons.Single(r => r.Text == Text).Id;
             var (marker, _) = await Factory.MemberAsync();
             using var _m = marker;
             (await marker.TakeSideAsync(AppealSteps.ThirdBill, "for")).StatusCode.ShouldBe(HttpStatusCode.NoContent);
@@ -73,7 +48,7 @@ public sealed class ReasonWithdrawalTests(DatabaseFixture database) : ApiTest(da
             (await marker.PostAsync(AppealRoutes.Reports, new ReportRequest { TargetKind = "reason", TargetId = reasonId, Ground = "spam" })).StatusCode.ShouldBe(HttpStatusCode.NoContent);
 
             // A summary made before the withdrawal (a dry run in a week of its own) holds the seen argument.
-            await Database.ExecuteAsync("UPDATE appeals.reason SET seen_at = now() WHERE appeal_id = @a", ("a", appeal.Id));
+            await Database.ExecuteAsync("UPDATE appeals.reason SET seen_at = now() WHERE record_id = @a", ("a", record.Id));
             await Database.ExecuteAsync(
                 "INSERT INTO parliament.planned_item (id, bill_number, planned_date, stage, source, first_seen, last_seen) VALUES (gen_random_uuid(), 'XVP-0618', @d, 'adoption', 'agenda', now(), now())",
                 ("d", monday.AddDays(3)));
@@ -100,7 +75,7 @@ public sealed class ReasonWithdrawalTests(DatabaseFixture database) : ApiTest(da
 
             (await WithdrawAsync(author, reasonId)).StatusCode.ShouldBe(HttpStatusCode.NoContent);
 
-            (await marker.AppealAsync(AppealSteps.ThirdBill)).Reasons.ShouldNotContain(r => r.Id == reasonId);
+            (await marker.RecordAsync(AppealSteps.ThirdBill)).Reasons.ShouldNotContain(r => r.Id == reasonId);
             (await marker.MineAsync(AppealSteps.ThirdBill)).Endorsed.ShouldBeEmpty("the marks go with it");
             (await author.MineAsync(AppealSteps.ThirdBill)).MyReasons.ShouldBeEmpty();
             (await Database.ScalarAsync<long>("SELECT count(*) FROM appeals.reason WHERE id = @r", ("r", reasonId))).ShouldBe(0);
@@ -119,15 +94,15 @@ public sealed class ReasonWithdrawalTests(DatabaseFixture database) : ApiTest(da
 
             (await WithdrawAsync(author, reasonId)).StatusCode.ShouldBe(HttpStatusCode.NotFound);
 
-            // On a closed appeal an argument stays (proposed in design 8.2): the initiator's first one.
+            // On a closed record an argument stays (proposed in design 8.2): the initiator's first one.
             var first = (await initiator.MineAsync(AppealSteps.ThirdBill)).MyReasons.Single().Id;
-            await Database.ExecuteAsync("UPDATE appeals.appeal SET status = 'closed', closed_at = now() WHERE id = @a", ("a", appeal.Id));
+            await Database.ExecuteAsync("UPDATE appeals.bill_record SET status = 'closed', closed_at = now() WHERE id = @a", ("a", record.Id));
             using var closed = await WithdrawAsync(initiator, first);
-            await closed.ShouldBeProblemAsync(HttpStatusCode.Conflict, "appeal.not-open");
+            await closed.ShouldBeProblemAsync(HttpStatusCode.Conflict, "record.not-open");
         }
         finally
         {
-            await SetAsync(admin, "Digest:ThresholdMinimum", 50);
+            await admin.ResetSettingAsync("Digest:ThresholdMinimum");
             await Database.ExecuteAsync("DELETE FROM parliament.planned_item WHERE bill_number = 'XVP-0618'");
             await Database.FreeBillAsync(AppealSteps.ThirdBill);
         }
@@ -136,7 +111,7 @@ public sealed class ReasonWithdrawalTests(DatabaseFixture database) : ApiTest(da
     [Fact]
     public async Task A_limit_switched_on_later_removes_nothing_and_counts_only_shown_or_waiting_arguments()
     {
-        var (moderator, admin) = await StaffAsync();
+        var (moderator, admin) = ((await ModeratorAsync()).Browser, (await AdministratorAsync()).Browser);
         try
         {
             var (initiator, _) = await Factory.MemberAsync();
@@ -153,7 +128,7 @@ public sealed class ReasonWithdrawalTests(DatabaseFixture database) : ApiTest(da
 
             (await writer.MineAsync(AppealSteps.ThirdBill)).ReasonsLeft.ShouldBeNull();
 
-            await SetAsync(admin, "Appeals:ReasonsPerPerson", 2);
+            await admin.SetSettingAsync("Appeals:ReasonsPerPerson", 2);
             (await writer.GetJsonAsync<AppealRulesResponse>(AppealRoutes.Rules)).ReasonsPerPerson.ShouldBe(2);
             var mine = await writer.MineAsync(AppealSteps.ThirdBill);
             mine.ReasonsLeft.ShouldBe(0);
@@ -175,9 +150,8 @@ public sealed class ReasonWithdrawalTests(DatabaseFixture database) : ApiTest(da
         }
         finally
         {
-            await SetAsync(admin, "Appeals:ReasonsPerPerson", 0);
+            await admin.ResetSettingAsync("Appeals:ReasonsPerPerson");
             await Database.FreeBillAsync(AppealSteps.ThirdBill);
         }
     }
-
 }

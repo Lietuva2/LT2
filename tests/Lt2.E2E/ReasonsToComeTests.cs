@@ -58,32 +58,85 @@ public sealed partial class ReasonsToComeTests
         await Assertions.Expect(follow).ToHaveTextAsync("Sekti");
         member.ConsoleErrors.ShouldBeEmpty();
     }
+
+    /// <summary>
+    /// Design 6.8: a link made now carries the code and the landing after the "#" (the browser never sends that part); a
+    /// link in the old form, with them in the query, still works. Either way a landing off the site is ignored.
+    /// </summary>
     [Fact]
     public async Task The_share_link_lands_a_new_member_on_the_bill_and_a_link_off_the_site_is_ignored()
     {
         Assert.SkipWhen(string.IsNullOrEmpty(SignUpTests.BaseUrl), "LT2_E2E_BASE_URL is not set; start the stack and set it to run end-to-end tests.");
-        (await RegisterThroughAsync("%2Fseimas%2FXVP-0412")).ShouldEndWith("/seimas/XVP-0412");
-        (await RegisterThroughAsync("https%3A%2F%2Fpiktas.example%2Fseimas%2FXVP-0412")).ShouldEndWith("/sveiki");
+        var code = Uri.EscapeDataString(SignUpTests.Invitation);
+        (await RegisterThroughAsync($"/prisijungti#kodas={code}&tikslas=%2Fseimas%2FXVP-0412")).ShouldEndWith("/seimas/XVP-0412");
+        (await RegisterThroughAsync($"/prisijungti?kodas={code}&tikslas=%2Fseimas%2FXVP-0412")).ShouldEndWith("/seimas/XVP-0412", customMessage: "the old form still works");
+        (await RegisterThroughAsync($"/prisijungti#kodas={code}&tikslas=https%3A%2F%2Fpiktas.example%2Fseimas%2FXVP-0412")).ShouldEndWith("/sveiki");
     }
 
-    /// <summary>Registers a new member from an invitation link with <c>tikslas</c>; returns where they land.</summary>
-    private static async Task<string> RegisterThroughAsync(string landing)
+    /// <summary>
+    /// Design 6.9 (owner, 2026-11-15): the sign-in links on a bill's page bring the person back to the bill, whether they
+    /// register from there or sign in with an account they already have.
+    /// </summary>
+    [Fact]
+    public async Task Registering_or_signing_in_from_a_bills_page_comes_back_to_the_bill()
+    {
+        Assert.SkipWhen(string.IsNullOrEmpty(SignUpTests.BaseUrl), "LT2_E2E_BASE_URL is not set; start the stack and set it to run end-to-end tests.");
+        const string Bill = "/seimas/XVP-0618";
+        var email = E2ESteps.NewEmail("is.projekto");
+
+        // A visitor takes a side: the link goes to the sign-in page with the bill after the "#"; they register there.
+        await using (var visitor = await PasskeyBrowser.StartAsync("native"))
+        {
+            var page = visitor.Page;
+            await page.GotoAsync(Base + Bill);
+            var side = page.Locator("main a.btn--for");
+            await Assertions.Expect(side).ToHaveAttributeAsync("href", "/prisijungti#tikslas=%2Fseimas%2FXVP-0618", new() { Timeout = E2ESteps.Slow });
+            await side.ClickAsync();
+
+            // The sign-in steps take the part after the "#" out of the address as soon as they have read it, so by now
+            // the address may or may not still carry it.
+            await page.WaitForURLAsync(new Regex("/prisijungti(#.*)?$"), new() { Timeout = E2ESteps.Slow });
+            await SignUpTests.WaitForInteractivityAsync(page);
+            await page.GetByRole(AriaRole.Button, new() { Name = "Registruokitės su kvietimo kodu." }).ClickAsync();
+            await E2ESteps.RegisterHereAsync(page, email, "Iš Projekto Puslapio", SignUpTests.Invitation);
+            await page.WaitForURLAsync(new Regex(Bill + "$"), new() { Timeout = E2ESteps.Slow });
+            visitor.ConsoleErrors.ShouldBeEmpty();
+        }
+
+        // The same person, signed out, follows the bill: they sign in with the emailed code and come back to it.
+        await using var returning = await PasskeyBrowser.StartAsync("native");
+        var again = returning.Page;
+        await again.GotoAsync(Base + Bill);
+        var follow = again.Locator("main").GetByRole(AriaRole.Link, new() { Name = "Sekti", Exact = true });
+        await Assertions.Expect(follow).ToHaveAttributeAsync("href", "/prisijungti#tikslas=%2Fseimas%2FXVP-0618", new() { Timeout = E2ESteps.Slow });
+        await follow.ClickAsync();
+        await SignUpTests.WaitForInteractivityAsync(again);
+        var registrationCode = await Mailpit.CodeAsync(email);
+        await again.GetByLabel("El. paštas").FillAsync(email);
+        await again.GetByRole(AriaRole.Button, new() { Name = "Atsiųsti kodą" }).ClickAsync();
+        var code = registrationCode;
+        for (var tries = 0; code == registrationCode && tries < 90; tries++)
+        {
+            await Task.Delay(500);
+            code = await Mailpit.CodeAsync(email);
+        }
+
+        code.ShouldNotBe(registrationCode, "a new sign-in code arrives");
+        await again.GetByLabel("Šešių skaitmenų kodas").FillAsync(code);
+        await again.GetByRole(AriaRole.Button, new() { Name = "Prisijungti", Exact = true }).ClickAsync();
+        await again.WaitForURLAsync(new Regex(Bill + "$"), new() { Timeout = E2ESteps.Slow });
+        returning.ConsoleErrors.ShouldBeEmpty();
+    }
+
+    /// <summary>Registers a new member from an invitation link (a path with its query or "#" part); returns where they land.</summary>
+    private static async Task<string> RegisterThroughAsync(string link)
     {
         await using var newcomer = await PasskeyBrowser.StartAsync("native");
         var page = newcomer.Page;
-        var email = $"naujas.narys.{Guid.NewGuid():N}@pavyzdys.test";
-        await page.GotoAsync($"{Base}/prisijungti?kodas={Uri.EscapeDataString(SignUpTests.Invitation)}&tikslas={landing}");
-        await SignUpTests.WaitForInteractivityAsync(page);
-        await page.GetByLabel("El. paštas").FillAsync(email);
-        await page.GetByRole(AriaRole.Button, new() { Name = "Registruotis", Exact = true }).ClickAsync();
-        await page.GetByLabel("Šešių skaitmenų kodas").FillAsync(await SignUpTests.CodeFromMailpitAsync(email));
-        await page.GetByRole(AriaRole.Button, new() { Name = "Prisijungti", Exact = true }).ClickAsync();
-        await Assertions.Expect(page.GetByRole(AriaRole.Heading, new() { Name = "Dar du dalykai" })).ToBeVisibleAsync();
-        await SignUpTests.WaitForInteractivityAsync(page);
-        await page.GetByLabel("Vardas, kurį matys kiti").FillAsync("Pakviesta Narė");
-        await page.GetByLabel("Man yra 18 metų arba daugiau").CheckAsync();
-        await page.GetByRole(AriaRole.Button, new() { Name = "Baigti registraciją" }).ClickAsync();
-        await page.WaitForURLAsync(Landed());
+        await page.GotoAsync(Base + link);
+        await Assertions.Expect(page.GetByLabel("Kvietimo kodas")).ToHaveValueAsync(SignUpTests.Invitation, new() { Timeout = E2ESteps.Slow });
+        await E2ESteps.RegisterHereAsync(page, E2ESteps.NewEmail("naujas.narys"), "Pakviesta Narė");
+        await page.WaitForURLAsync(Landed(), new() { Timeout = E2ESteps.Slow });
         return new Uri(page.Url).AbsolutePath;
     }
 

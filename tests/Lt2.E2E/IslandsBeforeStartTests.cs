@@ -1,3 +1,4 @@
+using System.Text.Json;
 using System.Text.RegularExpressions;
 using Microsoft.Playwright;
 
@@ -111,6 +112,42 @@ public sealed partial class IslandsBeforeStartTests(AppealFlowTests.ModeratorFix
             await NothingUsableBeforeStartAsync(member.Page.Context, path);
         }
     }
+
+    [Fact]
+    public async Task For_a_representative_and_an_invited_member_nothing_in_an_island_can_be_used_before_it_has_started()
+    {
+        Assert.SkipWhen(string.IsNullOrEmpty(SignUpTests.BaseUrl), "LT2_E2E_BASE_URL is not set; start the stack and set it to run end-to-end tests.");
+        await using var representative = await PasskeyBrowser.StartAsync("native", 1280, 800);
+        await PasskeyTests.RegisterAsync(representative.Page, "Laukianti Atstovė");
+        var r = representative.Page;
+        var (created, createdBody) = await E2ESteps.ApiAsync(r, "POST", "/api/v1/organisations",
+            new { name = $"Salų bandymo draugija {DateTime.UtcNow:HHmmssfff} {OrganisationFlowTests.Marker}", description = "Išgalvota organizacija (E2E bandymas)." });
+        created.ShouldBe(201, createdBody);
+        var slug = JsonDocument.Parse(createdBody).RootElement.GetProperty("slug").GetString()!;
+        try
+        {
+            var (made, inviteBody) = await E2ESteps.ApiAsync(r, "POST", $"/api/v1/organisations/{slug}/invites", new { });
+            made.ShouldBe(200, inviteBody);
+            var invite = JsonDocument.Parse(inviteBody).RootElement.GetProperty("path").GetString()!;
+            invite.ShouldStartWith("/organizacijos/kvietimas#", Case.Sensitive, "design 6.8: the token after the #");
+
+            // The representative's own part of the profile: the managing island with its forms.
+            await NothingUsableBeforeStartAsync(r.Context, $"/o/{slug}");
+
+            // Another member opens the one-time link. Before WebAssembly starts the page shows only that JavaScript is
+            // needed: the server never sees the token, so it cannot say whose invitation this is. Once the island runs,
+            // it reads the token and offers "Tapti atstovu".
+            await using var colleague = await PasskeyBrowser.StartAsync("native", 1280, 800);
+            await PasskeyTests.RegisterAsync(colleague.Page, "Pakviesta Kolegė");
+            await NothingUsableBeforeStartAsync(colleague.Page.Context, invite);
+            await colleague.Page.GotoAsync(E2ESteps.Base + invite);
+            await Assertions.Expect(colleague.Page.Locator("#invite-accept")).ToBeEnabledAsync(new() { Timeout = E2ESteps.Slow });
+            (await colleague.Page.ContentAsync()).ShouldNotContain("invite-missing");
+        }
+        finally
+        {
+            await E2ESteps.CloseOrganisationAsync(r, slug);
+        }    }
 
     [Fact]
     public async Task For_staff_nothing_in_an_island_can_be_used_before_it_has_started()

@@ -26,12 +26,22 @@ internal sealed class CompleteRegistrationHandler(
             return Error.Validation("adult.required", "confirmsAdult");
         }
 
-        if (!Guid.TryParse(principal.FindFirstValue(ClaimTypes.NameIdentifier), out var userId))
+        // Checked here as well as by the form's validator (design 6.8): callers inside the server skip the validator.
+        if (ProfileRules.CheckDisplayName(completion.DisplayName) is { } nameError)
+        {
+            return Error.Validation(nameError, "displayName");
+        }
+
+        if (principal.UserId() is not { } userId)
         {
             return Error.Unauthorized("auth.required");
         }
 
-        var profile = await db.Profiles.FirstOrDefaultAsync(p => p.UserId == userId, cancellationToken);
+        // The profile row is locked for the transaction: of two completions at once, the second sees it completed.
+        await using var transaction = await db.Database.BeginTransactionAsync(cancellationToken);
+        var profile = await db.Profiles
+            .FromSqlInterpolated($"SELECT * FROM identity.profile WHERE user_id = {userId} FOR UPDATE")
+            .FirstOrDefaultAsync(cancellationToken);
         if (profile is null)
         {
             return Error.Unauthorized("auth.required");
@@ -47,7 +57,6 @@ internal sealed class CompleteRegistrationHandler(
             ? profile.InvitationCode
             : completion.InvitationCode;
 
-        await using var transaction = await db.Database.BeginTransactionAsync(cancellationToken);
         Invitation? invitation = null;
         if (code is not null)
         {
@@ -56,7 +65,7 @@ internal sealed class CompleteRegistrationHandler(
             invitation = await db.Invitations.AsNoTracking().FirstOrDefaultAsync(i => i.Lookup == lookup, cancellationToken);
             var limit = invitation is null ? 0 : await Invitations.InvitationHandlers.LimitAsync(settings, invitation.Kind, cancellationToken);
             if (invitation is null
-                || !InvitationRules.Usable(invitation.Kind, invitation.UsesLeft, invitation.UsedCount, invitation.ExpiresAt, invitation.SwitchedOffAt, invitation.ReplacedAt, limit, now, invitation.OrganisationOff)
+                || !InvitationRules.Usable(invitation, limit, now)
 
                 // Counted atomically on the code and in the day's total: of two completions racing for the last use, one gets it.
                 || !await Invitations.InvitationHandlers.CountUseAsync(db, invitation, limit, now, cancellationToken))
@@ -75,7 +84,7 @@ internal sealed class CompleteRegistrationHandler(
         // or the organisation. Its counter and daily total rose above, as for any code.
         (profile.InvitationId, profile.InvitationCode, profile.InvitationLevel) =
             InvitationRules.KeptOnProfile(invitation?.Kind, invitation?.Id, code, invitation?.Level);
-        profile.DisplayName = string.IsNullOrWhiteSpace(completion.DisplayName) ? null : completion.DisplayName.Trim();
+        profile.DisplayName = ProfileRules.DisplayName(completion.DisplayName);
         profile.RegisteredAt = now;
         db.Consents.Add(new Consent
         {
@@ -88,7 +97,8 @@ internal sealed class CompleteRegistrationHandler(
         db.UserRoles.Add(new IdentityUserRole<Guid> { UserId = userId, RoleId = SeedRoles.MemberId });
         await db.SaveChangesAsync(cancellationToken);
 
-        // The new member's own invitation code, one level below them (design 6.2).
+        // The new member's own invitation code, one level below them (design 6.2), under the member's code lock.
+        await IdentityLocks.PersonalCodeAsync(db, userId, cancellationToken);
         await Invitations.InvitationHandlers.CreatePersonalAsync(
             db, clock, userId, InvitationRules.PersonalCodeLevel(InvitationRules.MemberLevel(invitation?.Level)), cancellationToken);
         await transaction.CommitAsync(cancellationToken);

@@ -8,7 +8,7 @@ namespace Lt2.Web.Endpoints.Moderation;
 
 /// <summary>
 /// <c>GET /api/v1/moderation/reasons/{id}/author</c>: the argument's author as a moderator sees them before restricting
-/// (design 8.3): name, arguments, appeals, earlier actions and restrictions. No address, side, mark or account id.
+/// (design 8.3): name, arguments, bills, earlier actions and restrictions. No address, side, mark or account id.
 /// </summary>
 internal static class GetReasonAuthorEndpoint
 {

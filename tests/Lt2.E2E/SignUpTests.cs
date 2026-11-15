@@ -1,5 +1,3 @@
-using System.Net.Http.Json;
-using System.Text.Json;
 using System.Text.RegularExpressions;
 using Microsoft.Playwright;
 
@@ -16,8 +14,7 @@ namespace Lt2.E2E;
 public sealed partial class SignUpTests
 {
     internal static readonly string? BaseUrl = Environment.GetEnvironmentVariable("LT2_E2E_BASE_URL");
-    private static readonly string MailpitUrl = Environment.GetEnvironmentVariable("LT2_E2E_MAILPIT_URL") ?? "http://localhost:8025";
-    internal static readonly string Invitation = Environment.GetEnvironmentVariable("LT2_E2E_INVITATION") ?? "BANDYMAS-2026";
+   internal static readonly string Invitation = Environment.GetEnvironmentVariable("LT2_E2E_INVITATION") ?? "BANDYMAS-2026";
     internal static readonly string? Channel = Environment.GetEnvironmentVariable("LT2_E2E_BROWSER_CHANNEL");
 
     [Theory]
@@ -50,7 +47,7 @@ public sealed partial class SignUpTests
             }
         };
 
-        var email = $"ruta.mockute.{Guid.NewGuid():N}@pavyzdys.test";
+        var email = E2ESteps.NewEmail();
 
         await page.GotoAsync(BaseUrl!);
         await Assertions.Expect(page.GetByRole(AriaRole.Heading, new() { Level = 1 })).ToContainTextAsync("Lietuva");
@@ -69,7 +66,7 @@ public sealed partial class SignUpTests
         await Assertions.Expect(codeField).ToBeVisibleAsync();
         await Assertions.Expect(page.GetByText("Jei gavote kelis laiškus, tinka tik naujausias kodas.")).ToBeVisibleAsync();
         await ExpectNoNoteAsync(page);
-        var code = await CodeFromMailpitAsync(email);
+        var code = await Mailpit.CodeAsync(email);
 
         // A wrong code first: the refusal is shown in Lithuanian under the field, and no stray note appears.
         await codeField.FillAsync(code == "000000" ? "111111" : "000000");
@@ -81,8 +78,8 @@ public sealed partial class SignUpTests
         await page.GetByRole(AriaRole.Button, new() { Name = "Prisijungti", Exact = true }).ClickAsync();
 
         // The address is proven; only now are the name and the age declaration asked, with nothing filled in.
-        await page.WaitForURLAsync(new Regex("/prisijungti$"));
-        await Assertions.Expect(page.GetByRole(AriaRole.Heading, new() { Name = "Dar du dalykai" })).ToBeVisibleAsync();
+        await page.WaitForURLAsync(new Regex("/prisijungti$"), new() { Timeout = E2ESteps.Slow });
+        await Assertions.Expect(page.GetByRole(AriaRole.Heading, new() { Name = "Dar du dalykai" })).ToBeVisibleAsync(new() { Timeout = E2ESteps.Slow });
         await WaitForInteractivityAsync(page);
         var name = page.GetByLabel("Vardas, kurį matys kiti");
         await Assertions.Expect(name).ToHaveValueAsync("");
@@ -91,7 +88,7 @@ public sealed partial class SignUpTests
         await page.GetByLabel("Man yra 18 metų arba daugiau").CheckAsync();
         await page.GetByRole(AriaRole.Button, new() { Name = "Baigti registraciją" }).ClickAsync();
 
-        await page.WaitForURLAsync(new Regex("/sveiki$"));
+        await page.WaitForURLAsync(new Regex("/sveiki$"), new() { Timeout = E2ESteps.Slow });
         await Assertions.Expect(page.GetByRole(AriaRole.Heading, new() { Level = 1 })).ToHaveTextAsync("Sveiki, Rūta M.!");
         await Assertions.Expect(page.GetByText("El. paštas patvirtintas")).ToBeVisibleAsync();
         await Assertions.Expect(page.GetByText("Ši sesija")).ToBeVisibleAsync();
@@ -106,8 +103,7 @@ public sealed partial class SignUpTests
         session.Path.ShouldBe("/");
         session.Domain.ShouldNotStartWith(".");
 
-        var scroll = await page.EvaluateAsync<int>("() => document.documentElement.scrollWidth - document.documentElement.clientWidth");
-        scroll.ShouldBeLessThanOrEqualTo(0, "no horizontal scrolling");
+        await E2ESteps.NoSidewaysScrollAsync(page);
 
         Directory.CreateDirectory("output");
         await page.ScreenshotAsync(new PageScreenshotOptions { Path = Path.Combine("output", $"hello-{width}.png"), FullPage = true });
@@ -133,28 +129,4 @@ public sealed partial class SignUpTests
     internal static async Task WaitForInteractivityAsync(IPage page) =>
         await page.Locator("main form input:not([disabled]):not([type=hidden])").First
             .WaitForAsync(new() { State = WaitForSelectorState.Visible, Timeout = 60_000 });
-
-    internal static async Task<string> CodeFromMailpitAsync(string email)
-    {
-        using var http = new HttpClient { BaseAddress = new Uri(MailpitUrl) };
-        for (var attempt = 0; attempt < 60; attempt++)
-        {
-            var search = await http.GetFromJsonAsync<JsonElement>($"/api/v1/search?query={Uri.EscapeDataString($"to:\"{email}\"")}");
-            var messages = search.GetProperty("messages");
-            if (messages.GetArrayLength() > 0)
-            {
-                var id = messages[0].GetProperty("ID").GetString();
-                var message = await http.GetFromJsonAsync<JsonElement>($"/api/v1/message/{id}");
-                messages[0].GetProperty("Subject").GetString().ShouldStartWith("Lietuva 2.0 prisijungimo kodas");
-                return SixDigits().Match(message.GetProperty("Text").GetString()!).Value;
-            }
-
-            await Task.Delay(500);
-        }
-
-        throw new TimeoutException($"No email for {email} arrived in Mailpit.");
-    }
-
-    [GeneratedRegex(@"\b\d{6}\b")]
-    private static partial Regex SixDigits();
 }

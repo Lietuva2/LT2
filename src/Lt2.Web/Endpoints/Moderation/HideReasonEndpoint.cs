@@ -1,9 +1,7 @@
-using System.Security.Claims;
 using Lt2.Api.Contracts;
 using Lt2.Api.Contracts.Appeals;
 using Lt2.Appeals;
 using Lt2.Web.Security;
-using Lt2.Web.Services;
 
 namespace Lt2.Web.Endpoints.Moderation;
 
@@ -20,19 +18,6 @@ internal static class HideReasonEndpoint
             .ProducesProblem(StatusCodes.Status404NotFound)
             .ProducesProblem(StatusCodes.Status409Conflict);
 
-    private static async Task<IResult> HandleAsync(
-        Guid id,
-        StatementRequest request,
-        ClaimsPrincipal user,
-        HttpContext context,
-        Lt2.Identity.IIdentityModule identity,
-        IAppealsModeration moderation,
-        IpHasher ipHasher,
-        ErrorMapper errors,
-        CancellationToken cancellationToken)
-    {
-        var moderator = await AppealMapping.ModeratorAsync(identity, user, ipHasher.Hash(context), cancellationToken);
-        var result = await moderation.HideReasonAsync(id, request.Statement, moderator, cancellationToken);
-        return result.IsSuccess ? TypedResults.NoContent() : errors.ToResult(result.Error!);
-    }
+    private static Task<IResult> HandleAsync(Guid id, StatementRequest request, HttpContext context, IAppealsModeration moderation, CancellationToken cancellationToken) =>
+        ModeratorEndpoint.ActAsync(context, m => moderation.HideReasonAsync(id, request.Statement, m, cancellationToken));
 }

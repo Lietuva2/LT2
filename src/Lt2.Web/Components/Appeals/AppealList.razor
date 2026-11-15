@@ -81,7 +81,7 @@
 
 @if (_page is { } page)
 {
-    <p class="small num" role="status" id="found">@Fmt("List.Found", Formats.Number(page.Total))</p>
+    <p class="small num" role="status" id="found">@T.Format("List.Found", Display.Number(page.Total))</p>
     @if (page.Items.Count == 0)
     {
         <p id="no-appeals">@T[Closed ? "List.EmptyClosed" : "List.Empty"]</p>
@@ -91,7 +91,7 @@
         <ul class="rows" id="appeals">
             @foreach (var item in page.Items)
             {
-                <li id="bill-@item.Bill.Number">
+                <li id="bill-@item.Bill.Number" @key="item.Bill.Number">
                     <div class="rows__main">
                         <a href="/seimas/@Uri.EscapeDataString(item.Bill.Number)"><b>@item.Bill.Title</b></a>
                         <span class="small num">
@@ -102,17 +102,17 @@
                             }
                             else
                             {
-                                @Fmt("List.Activity", Formats.Number(item.Counts.For + item.Counts.Against), Formats.Number(item.Arguments))
+                                @T.Format("List.Activity", Display.Number(item.Counts.For + item.Counts.Against), Display.Number(item.Arguments))
                             }
                         </span>
                         @if (item.Counts.For + item.Counts.Against > 0)
                         {
-                            <span class="small num">@Fmt("List.Counts", Formats.Number(item.Counts.For), Formats.Number(item.Counts.ForOlderThan30Days), Formats.Number(item.Counts.Against), Formats.Number(item.Counts.AgainstOlderThan30Days))</span>
-                            <span class="small num">@Fmt("List.Limit", Formats.Number(item.Threshold.Value))</span>
+                            <span class="small num">@T.Format("List.Counts", Display.Number(item.Counts.For), Display.Number(item.Counts.ForOlderThan30Days), Display.Number(item.Counts.Against), Display.Number(item.Counts.AgainstOlderThan30Days))</span>
+                            <span class="small num">@T.Format("List.Limit", Display.Number(item.Threshold.Value))</span>
                         }
                         @if (item.Planned is { } plan)
                         {
-                            <span class="small">@Fmt("Planned", F.T["Month." + plan.Date.Month], plan.Date.Day)</span>
+                            <span class="small">@T.Format("Planned", F.T["Month." + plan.Date.Month], plan.Date.Day)</span>
                         }
                     </div>
                     <div class="rows__side">
@@ -121,6 +121,7 @@
                 </li>
             }
         </ul>
+        <p class="small" id="older-note">@T["List.OlderNote"]</p>
         @if (page.NextCursor is { } next)
         {
             <p><a href="@Link(next, Sort)" id="more">@T["List.More"]</a></p>
@@ -131,7 +132,7 @@
 <p class="note note--quiet" id="not-a-poll">@T["NotAPoll"]</p>
 
 @code {
-    private AppealListResponse? _page;
+    private BillListResponse? _page;
 
     [SupplyParameterFromQuery(Name = "q")] public string? Q { get; set; }
 
@@ -193,6 +194,4 @@
 
         return query.Count == 0 ? "/projektai" : "/projektai?" + string.Join("&", query);
     }
-
-    private string Fmt(string key, params object?[] values) => string.Format(System.Globalization.CultureInfo.InvariantCulture, T[key], values);
 }

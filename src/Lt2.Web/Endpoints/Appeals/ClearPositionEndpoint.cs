@@ -2,12 +2,13 @@ using System.Security.Claims;
 using Lt2.Api.Contracts;
 using Lt2.Api.Contracts.Appeals;
 using Lt2.Appeals;
+using Lt2.SharedKernel;
 using Lt2.Web.Security;
 using Lt2.Web.Services;
 
 namespace Lt2.Web.Endpoints.Appeals;
 
-/// <summary><c>DELETE /api/v1/bills/{number}/appeal/position</c>: withdraw one's side on this bill, with one's "Man svarbu" marks on it.</summary>
+/// <summary><c>DELETE /api/v1/bills/{number}/record/position</c>: withdraw one's side on this bill, with one's "Man svarbu" marks on it.</summary>
 internal static class ClearPositionEndpoint
 {
     public static void Map(IEndpointRouteBuilder api) =>
@@ -25,7 +26,7 @@ internal static class ClearPositionEndpoint
         ErrorMapper errors,
         CancellationToken cancellationToken)
     {
-        var id = AppealMapping.UserId(user)!.Value;
+        var id = user.UserId()!.Value;
         var result = await appeals.ClearPositionAsync(number, id, cancellationToken);
         return result.IsSuccess ? TypedResults.NoContent() : errors.ToResult(result.Error!);
     }

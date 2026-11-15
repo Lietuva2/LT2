@@ -16,6 +16,8 @@ internal sealed class SignInCodeIssuer(IdentityDb db, IOutbox outbox, ISettings 
     /// <summary>Must be called inside <paramref name="transaction"/>, so the code and its email commit together.</summary>
     public async Task IssueAsync(User user, IDbContextTransaction transaction, CancellationToken cancellationToken)
     {
+        // The limits are counted under the account's lock, so parallel requests cannot pass them together (design 6.8).
+        await IdentityLocks.SignInCodesAsync(db, user.Id, cancellationToken);
         var now = clock.GetUtcNow();
         var hourAgo = now - SignInCodeRules.Hour;
         var dayAgo = now - SignInCodeRules.Day;

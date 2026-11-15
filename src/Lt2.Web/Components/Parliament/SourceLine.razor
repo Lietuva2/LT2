@@ -3,7 +3,7 @@
 @* Every page with Seimas data: the CC BY 4.0 attribution, when the data was imported, and how it is counted. *@
 <p class="fine">
     @F.T["Source.Text"] <a href="https://creativecommons.org/licenses/by/4.0/deed.lt" rel="license">@F.T["Source.Licence"]</a>
-    · @(UpdatedAt is { } at ? F.Format("Source.Updated", F.Time(at)) : F.T["Source.NotYet"])
+    · @(UpdatedAt is { } at ? F.T.Format("Source.Updated", F.Time(at)) : F.T["Source.NotYet"])
     @if (!HideMethodology)
     {
         <text> · </text><a href="/metodika">@F.T["Source.How"]</a>

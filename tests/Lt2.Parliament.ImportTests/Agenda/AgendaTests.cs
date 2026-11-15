@@ -111,6 +111,72 @@ public sealed class AgendaWatcherTests(ImportDatabase database) : IAsyncLifetime
     }
 }
 
+/// <summary>Design 6.8, 8.9: a run that cannot read the page is recorded as failed and changes nothing.</summary>
+[Collection(ImportDatabaseGroup.Name)]
+public sealed class AgendaWatcherFailureTests(ImportDatabase database) : IAsyncLifetime
+{
+    public async ValueTask InitializeAsync() => await database.ResetAsync();
+
+    public ValueTask DisposeAsync() => ValueTask.CompletedTask;
+
+    [Fact]
+    public async Task An_agenda_address_off_the_allowlist_is_a_failed_run_with_an_error_line()
+    {
+        await using var harness = new ImportHarness(database, settings: new Dictionary<string, string?> { ["Agenda:BaseAddress"] = "https://www.lrs.test/" });
+
+        var outcome = await harness.RunAgendaAsync();
+
+        outcome.Status.ShouldBe("failed");
+        outcome.Problem.ShouldBe("host not allowed");
+        harness.Logs.Errors.ShouldContain(e => e.Contains("Agenda page could not be fetched", StringComparison.Ordinal));
+        harness.TakeRequests().ShouldBeEmpty();
+    }
+
+    [Fact]
+    public async Task An_agenda_page_that_never_answers_is_a_failed_run_and_the_planned_dates_stay()
+    {
+        await using (var first = new ImportHarness(database))
+        {
+            (await first.RunAgendaAsync()).Status.ShouldBe("succeeded");
+        }
+
+        await using var harness = new ImportHarness(database, agendaHandler: new NeverAnswers());
+
+        var outcome = await harness.RunAgendaAsync();
+
+        outcome.Status.ShouldBe("failed");
+        harness.Logs.Errors.ShouldContain(e => e.Contains("TimeoutRejectedException", StringComparison.Ordinal));
+        (await harness.PlannedAsync(new DateOnly(2026, 11, 1), new DateOnly(2026, 12, 31))).Count.ShouldBe(3);
+    }
+
+    [Fact]
+    public async Task A_page_with_sitting_dates_but_no_bill_keeps_the_planned_items_and_is_recorded_as_failed()
+    {
+        var responses = StandInFixture.Responses();
+        await using var harness = new ImportHarness(database, responses);
+        await harness.RunAgendaAsync();
+
+        responses.ReplaceAgenda("<html><body><h2>{{sitting:1}} posėdis</h2><table><tr><td>10.00</td><td>Klausimai bus paskelbti vėliau</td></tr></table></body></html>");
+        var outcome = await harness.RunAgendaAsync();
+
+        outcome.Status.ShouldBe("failed");
+        outcome.Problem.ShouldBe(AgendaWatcher.EmptyPage);
+        harness.Logs.Errors.ShouldContain(e => e.Contains("Agenda page refused", StringComparison.Ordinal));
+        (await harness.PlannedAsync(new DateOnly(2026, 11, 1), new DateOnly(2026, 12, 31))).Count.ShouldBe(3);
+        (await database.ScalarAsync<long>("SELECT count(*) FROM parliament.agenda_snapshot WHERE failure IS NOT NULL")).ShouldBe(1);
+    }
+
+    /// <summary>A server that accepts the request and never answers: the resilience pipeline's time-out ends it.</summary>
+    private sealed class NeverAnswers : HttpMessageHandler
+    {
+        protected override async Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken)
+        {
+            await Task.Delay(Timeout.Infinite, cancellationToken);
+            return new HttpResponseMessage();
+        }
+    }
+}
+
 /// <summary>
 /// The register against the real lrs.lt page. Skipped unless <c>LT2_LRS_LIVE=1</c>; <c>LT2_LRS_AGENDA_URL</c> gives the page
 /// (the real address is assumption A7). It fetches once and reports what the parser found.

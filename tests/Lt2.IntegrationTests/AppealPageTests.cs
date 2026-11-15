@@ -13,23 +13,6 @@ namespace Lt2.IntegrationTests;
 /// </summary>
 public sealed partial class AppealPageTests(DatabaseFixture database) : ApiTest(database)
 {
-    private static readonly SemaphoreSlim Gate = new(1, 1);
-    private static StaffMember? _moderator;
-
-    private async Task<TestBrowser> ModeratorAsync()
-    {
-        await Gate.WaitAsync();
-        try
-        {
-            _moderator ??= await StaffMembers.ActiveAsync(Factory, Database, "moderator");
-            return _moderator.Browser;
-        }
-        finally
-        {
-            Gate.Release();
-        }
-    }
-
     private static async Task<(HttpStatusCode Status, string Html)> PageAsync(TestBrowser browser, string path)
     {
         using var response = await browser.Client.GetAsync(path);
@@ -56,16 +39,16 @@ public sealed partial class AppealPageTests(DatabaseFixture database) : ApiTest(
     private static string MainOf(string html) => html[html.IndexOf("<main", StringComparison.Ordinal)..html.IndexOf("</main>", StringComparison.Ordinal)];
 
     /// <summary>
-    /// Found by Playwright on the stack: a member's appeal page renders several components that read runtime settings at
+    /// Found by Playwright on the stack: a member's record page renders several components that read runtime settings at
     /// the same moment; with the settings cache cold they all reached the one scoped settings context and the page
     /// answered 500. Every request here starts with an empty cache.
     /// </summary>
     [Fact]
-    public async Task A_members_appeal_page_renders_when_the_settings_cache_is_empty()
+    public async Task A_members_record_page_renders_when_the_settings_cache_is_empty()
     {
         var (initiator, _) = await Factory.MemberAsync();
         using var _i = initiator;
-        await Database.PrepareBillAsync(initiator, await ModeratorAsync(), AppealSteps.ThirdBill, "against");
+        await Database.PrepareBillAsync(initiator, (await ModeratorAsync()).Browser, AppealSteps.ThirdBill, "against");
         var (member, _) = await Factory.MemberAsync();
         using var _m = member;
         var cache = (Microsoft.Extensions.Caching.Memory.MemoryCache)Microsoft.Extensions.DependencyInjection.ServiceProviderServiceExtensions
@@ -79,13 +62,13 @@ public sealed partial class AppealPageTests(DatabaseFixture database) : ApiTest(
         }
     }
 
-    /// <summary>Design 8.1: an appeal is opened without arguments, so a published one may have none, on either side.</summary>
+    /// <summary>Design 8.1: a record is opened without arguments, so a published one may have none, on either side.</summary>
     [Fact]
-    public async Task An_open_appeal_without_participants_or_arguments_says_so_on_both_sides_without_javascript()
+    public async Task An_open_record_without_participants_or_arguments_says_so_on_both_sides_without_javascript()
     {
         var (initiator, _) = await Factory.MemberAsync();
         using var _i = initiator;
-        await Database.PrepareBillAsync(initiator, await ModeratorAsync(), AppealSteps.ThirdBill, side: null);
+        await Database.PrepareBillAsync(initiator, (await ModeratorAsync()).Browser, AppealSteps.ThirdBill, side: null);
         using var stranger = NewBrowser();
 
         var (status, html) = await PageAsync(stranger, "/seimas/XVP-0618");
@@ -93,17 +76,17 @@ public sealed partial class AppealPageTests(DatabaseFixture database) : ApiTest(
         var main = MainOf(html);
         Regex.Count(main, "Argumentų dar nėra\\.").ShouldBe(2, "one empty state per side, server-rendered");
         main.ShouldContain("Tai nėra reprezentatyvi apklausa");
-        (await stranger.AppealAsync(AppealSteps.ThirdBill)).Counts.ShouldBe(new SideCountsResponse(0, 0, 0, 0));
+        (await stranger.RecordAsync(AppealSteps.ThirdBill)).Counts.ShouldBe(new SideCountsResponse(0, 0, 0, 0));
         var (listStatus, _) = await PageAsync(stranger, "/projektai");
         listStatus.ShouldBe(HttpStatusCode.OK);
     }
 
     [Fact]
-    public async Task The_appeal_page_shows_both_sides_with_older_account_counts_the_description_arguments_and_the_note()
+    public async Task The_record_page_shows_both_sides_with_older_account_counts_the_description_arguments_and_the_note()
     {
         var (initiator, initiatorEmail) = await Factory.MemberAsync(displayName: null);
         using var _i = initiator;
-        await Database.PrepareBillAsync(initiator, await ModeratorAsync(), AppealSteps.ThirdBill, "against", threshold: 1000);
+        await Database.PrepareBillAsync(initiator, (await ModeratorAsync()).Browser, AppealSteps.ThirdBill, "against", threshold: 1000);
         await Database.AgeAccountAsync(initiatorEmail, 60);
         var (supporter, _) = await Factory.MemberAsync();
         using var _s = supporter;
@@ -130,13 +113,13 @@ public sealed partial class AppealPageTests(DatabaseFixture database) : ApiTest(
         html.ShouldNotContain(" style=\"");
         ShouldSpeakOfUsersNotThePublic(html);
 
-        // Before its first summary the appeal says so, and the public answer behind it is empty.
+        // Before its first summary the record says so, and the public answer behind it is empty.
         html.ShouldContain("Suvestinėse Seimo nariams");
         html.ShouldContain("Šis projektas dar nebuvo nė vienoje suvestinėje.");
-        (await stranger.GetJsonAsync<List<Lt2.Api.Contracts.Digests.AppealDigestResponse>>(Lt2.Api.Contracts.Digests.DigestRoutes.OfAppealOn(AppealSteps.ThirdBill))).ShouldBeEmpty();
+        (await stranger.GetJsonAsync<List<Lt2.Api.Contracts.Digests.RecordDigestResponse>>(Lt2.Api.Contracts.Digests.DigestRoutes.OfRecordOn(AppealSteps.ThirdBill))).ShouldBeEmpty();
 
         // Visitors get links to sign in instead of buttons: they work without JavaScript.
-        html.ShouldContain("<a class=\"btn btn--for btn--wide\" href=\"/prisijungti\">Prašau balsuoti už</a>");
+        html.ShouldContain("<a class=\"btn btn--for btn--wide\" href=\"/prisijungti#tikslas=%2Fseimas%2FXVP-0618\">Prašau balsuoti už</a>");
         html.ShouldNotContain("Jūs prašote balsuoti");
     }
 
@@ -145,7 +128,7 @@ public sealed partial class AppealPageTests(DatabaseFixture database) : ApiTest(
     {
         var (initiator, _) = await Factory.MemberAsync();
         using var _i = initiator;
-        await Database.PrepareBillAsync(initiator, await ModeratorAsync(), AppealSteps.ThirdBill, "against");
+        await Database.PrepareBillAsync(initiator, (await ModeratorAsync()).Browser, AppealSteps.ThirdBill, "against");
         var (member, _) = await Factory.MemberAsync();
         using var _m = member;
         (await member.TakeSideAsync(AppealSteps.ThirdBill, "for")).StatusCode.ShouldBe(HttpStatusCode.NoContent);
@@ -167,25 +150,25 @@ public sealed partial class AppealPageTests(DatabaseFixture database) : ApiTest(
     {
         var (initiator, _) = await Factory.MemberAsync();
         using var _i = initiator;
-        await Database.PrepareBillAsync(initiator, await ModeratorAsync(), AppealSteps.ThirdBill, "against");
+        await Database.PrepareBillAsync(initiator, (await ModeratorAsync()).Browser, AppealSteps.ThirdBill, "against");
         var (writer, _) = await Factory.MemberAsync();
         using var _w = writer;
         (await writer.TakeSideAsync(AppealSteps.ThirdBill, "for")).StatusCode.ShouldBe(HttpStatusCode.NoContent);
         (await writer.WriteReasonAsync(AppealSteps.ThirdBill, "for", "Gynyba finansuojama nekeliant PVM.")).StatusCode.ShouldBe(HttpStatusCode.Created);
 
         // A visitor without a session (this HTML is what a browser with JavaScript off gets): a <details> per argument and
-        // one for the appeal, telling them to sign in or to write to the configured address. No form, no anonymous report.
+        // one for the record, telling them to sign in or to write to the configured address. No form, no anonymous report.
         using var stranger = NewBrowser();
         var (_, html) = await PageAsync(stranger, "/seimas/XVP-0618");
-        Regex.Count(html, "<details class=\"report-visitor\">").ShouldBe(3, "two arguments and the description");
+        Regex.Count(html, "<details class=\"more report-visitor\">").ShouldBe(3, "two arguments and the description");
         html.ShouldContain("<summary class=\"linkish small\">Pranešti apie klaidą</summary>", customMessage: "design 8.13: beside the description");
         Regex.Count(html, "<summary class=\"linkish small\">Pranešti</summary>").ShouldBe(2);
         html.ShouldContain("Pranešti apie turinį moderatoriams gali prisijungę Lietuva 2.0 naudotojai:");
-        html.ShouldContain("<a href=\"/prisijungti\">prisijunkite</a>");
+        html.ShouldContain("<a href=\"/prisijungti#tikslas=%2Fseimas%2FXVP-0618\">prisijunkite</a>");
         html.ShouldContain("<a href=\"mailto:moderatoriai@lt2.test\">moderatoriai@lt2.test</a>");
         html.ShouldNotContain("id=\"report-appeal\"");
 
-        // A member reports in the product: a button on the appeal and on each argument.
+        // A member reports in the product: a button on the record and on each argument.
         var (_, member) = await PageAsync(writer, "/seimas/XVP-0618");
         member.ShouldContain("id=\"report-appeal\"");
         Regex.Count(member, ">Pranešti</button>").ShouldBe(2);
@@ -241,9 +224,11 @@ public sealed partial class AppealPageTests(DatabaseFixture database) : ApiTest(
         html.ShouldContain("id=\"nobody-yet\"");
         html.ShouldContain("Dėl šio projekto dar niekas nenurodė, ko prašo Seimo narių.");
         html.ShouldContain("Šio projekto aprašymo dar nėra.");
-        html.ShouldContain("<a class=\"btn btn--for btn--wide\" href=\"/prisijungti\">Prašau balsuoti už</a>");
+        html.ShouldContain("<a class=\"btn btn--for btn--wide\" href=\"/prisijungti#tikslas=%2Fseimas%2FXVP-0533\">Prašau balsuoti už</a>");
         Regex.Count(MainOf(html), "Argumentų dar nėra\\.").ShouldBe(2);
-        html.ShouldContain("Riba ta pati visiems projektams.");
+        // Design 8.15: what the threshold is, one click away on the methodology page; the default needs no sentence.
+        html.ShouldContain("<a href=\"/metodika#riba\" id=\"threshold-what\">Kas yra riba?</a>");
+        html.ShouldNotContain("Riba ta pati visiems projektams.");
         html.ShouldNotContain("Pranešti apie klaidą", customMessage: "no description, nothing to report");
         foreach (var gone in new[] { "Noriu kreipimosi", "kreipimosi dar nėra", "Atidaryti kreipimąsi", "pasiūl", "iniciator" })
         {
@@ -251,7 +236,7 @@ public sealed partial class AppealPageTests(DatabaseFixture database) : ApiTest(
         }
 
         ShouldSpeakOfUsersNotThePublic(html);
-        (await Database.ScalarAsync<long>("SELECT count(*) FROM appeals.appeal WHERE bill_number = 'XVP-0533'")).ShouldBe(0, "showing the page creates nothing");
+        (await Database.ScalarAsync<long>("SELECT count(*) FROM appeals.bill_record WHERE bill_number = 'XVP-0533'")).ShouldBe(0, "showing the page creates nothing");
 
         var (missing, _) = await PageAsync(stranger, "/seimas/XVP-9999");
         missing.ShouldBe(HttpStatusCode.NotFound);
@@ -263,7 +248,7 @@ public sealed partial class AppealPageTests(DatabaseFixture database) : ApiTest(
         await Database.FreeBillAsync(AppealSteps.SecondBill);
         var (initiator, _) = await Factory.MemberAsync();
         using var _i = initiator;
-        await Database.PrepareBillAsync(initiator, await ModeratorAsync(), AppealSteps.ThirdBill, "for");
+        await Database.PrepareBillAsync(initiator, (await ModeratorAsync()).Browser, AppealSteps.ThirdBill, "for");
 
         using var stranger = NewBrowser();
         var (status, html) = await PageAsync(stranger, "/projektai");
@@ -277,7 +262,8 @@ public sealed partial class AppealPageTests(DatabaseFixture database) : ApiTest(
         html.ShouldContain("href=\"/seimas/XVP-0618\"");
         html.ShouldContain("href=\"/seimas/XVP-0533\"", customMessage: "every active bill is listed, also one nobody took part in");
         html.ShouldContain("dalyvių 1 · argumentų 1");
-        html.ShouldContain("prašo už 1 (iš jų 0 – senesnės nei 30 d. paskyros), prieš 0 (iš jų 0)");
+        html.ShouldContain("už 1 (0) · prieš 0 (0)");
+        html.ShouldContain("Skliaustuose – kiek iš jų paskyrų senesnės nei 30 d.", customMessage: "one legend under the list (design 8.15, annex P2)");
         html.IndexOf("id=\"bill-XVP-0618\"", StringComparison.Ordinal).ShouldBeLessThan(html.IndexOf("id=\"bill-XVP-0533\"", StringComparison.Ordinal), "most activity first");
         html.ShouldContain("<b aria-current=\"true\" id=\"sort-aktyvumas\">pagal aktyvumą</b>");
         html.ShouldContain("href=\"/projektai?rikiuoti=argumentai\"");
@@ -314,7 +300,7 @@ public sealed partial class AppealPageTests(DatabaseFixture database) : ApiTest(
     public async Task The_list_answer_is_sorted_by_the_asked_order_and_public()
     {
         await Database.FreeBillAsync(AppealSteps.SecondBill);
-        var moderator = await ModeratorAsync();
+        var moderator = (await ModeratorAsync()).Browser;
         var (a, _) = await Factory.MemberAsync();
         var (b, _) = await Factory.MemberAsync();
         using var _a = a;
@@ -328,12 +314,12 @@ public sealed partial class AppealPageTests(DatabaseFixture database) : ApiTest(
 
         // XVP-0618: 2 participants, 1 argument (activity 3); XVP-0533: 0 participants, 3 arguments (activity 3).
         using var stranger = NewBrowser();
-        string[] Order(string? sort) => stranger.GetJsonAsync<AppealListResponse>(AppealRoutes.AppealsList(null, false, false, null, sort)).Result
+        async Task<string[]> Order(string? sort) => (await stranger.GetJsonAsync<BillListResponse>(AppealRoutes.AppealsList(null, false, false, null, sort)))
             .Items.Select(i => i.Bill.Number).Where(n => n is AppealSteps.SecondBill or AppealSteps.ThirdBill).ToArray();
-        Order("participants").ShouldBe([AppealSteps.ThirdBill, AppealSteps.SecondBill]);
-        Order("arguments").ShouldBe([AppealSteps.SecondBill, AppealSteps.ThirdBill]);
-        Order(null).ShouldBe([AppealSteps.SecondBill, AppealSteps.ThirdBill], "equal activity, then by number");
-        var item = (await stranger.GetJsonAsync<AppealListResponse>(AppealRoutes.Appeals)).Items.Single(i => i.Bill.Number == AppealSteps.SecondBill);
+        (await Order("participants")).ShouldBe([AppealSteps.ThirdBill, AppealSteps.SecondBill]);
+        (await Order("arguments")).ShouldBe([AppealSteps.SecondBill, AppealSteps.ThirdBill]);
+        (await Order(null)).ShouldBe([AppealSteps.SecondBill, AppealSteps.ThirdBill], "equal activity, then by number");
+        var item = (await stranger.GetJsonAsync<BillListResponse>(AppealRoutes.Appeals)).Items.Single(i => i.Bill.Number == AppealSteps.SecondBill);
         item.Arguments.ShouldBe(3);
         item.Counts.ShouldBe(new SideCountsResponse(0, 0, 0, 0));
         using var response = await stranger.Client.GetAsync(AppealRoutes.AppealsList(null, false, false, null, "arguments"));
@@ -358,7 +344,7 @@ public sealed partial class AppealPageTests(DatabaseFixture database) : ApiTest(
         const string Flagged = "Daugiau rasite https://pavyzdys.test/rinkliavos";
         (await writer.WriteReasonAsync(AppealSteps.SecondBill, "for", Flagged)).Dispose();
 
-        var (status, html) = await PageAsync(await ModeratorAsync(), "/moderavimas");
+        var (status, html) = await PageAsync((await ModeratorAsync()).Browser, "/moderavimas");
         status.ShouldBe(HttpStatusCode.OK);
         html.ShouldContain(Flagged);
         // Each action is its own control (design 8.3); the fields open only when one is chosen.
@@ -404,7 +390,7 @@ public sealed partial class AppealPageTests(DatabaseFixture database) : ApiTest(
     public async Task The_edit_history_of_a_description_is_public_without_the_editor()
     {
         await Database.FreeBillAsync(AppealSteps.SecondBill);
-        var moderator = await ModeratorAsync();
+        var moderator = (await ModeratorAsync()).Browser;
         foreach (var text in new[] { "Pirmasis, nepakankamai tikslus aprašymas.", AppealSteps.Description })
         {
             (await moderator.SendAsync(HttpMethod.Put, AppealRoutes.BillDescriptionOf(AppealSteps.SecondBill), new ModeratorDescriptionRequest { Description = text, Statement = "Bandymas." }))

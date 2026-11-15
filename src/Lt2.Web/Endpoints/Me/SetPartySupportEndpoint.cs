@@ -25,7 +25,7 @@ internal static class SetPartySupportEndpoint
     private static async Task<IResult> HandleAsync(
         PartySupportRequest request, ClaimsPrincipal user, IIdentityModule identity, IMpDirectory mps, ErrorMapper errors, CancellationToken cancellationToken)
     {
-        var result = await identity.SetPartySupportAsync(user, request.Party, await mps.PartiesAsync(cancellationToken), cancellationToken);
+        var result = await identity.SetPartySupportAsync(user, request.Party, request.Consent, await mps.PartiesAsync(cancellationToken), cancellationToken);
         return result.IsSuccess ? TypedResults.NoContent() : errors.ToResult(result.Error!);
     }
 }

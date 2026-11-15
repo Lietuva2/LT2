@@ -11,7 +11,7 @@
     <h1 id="mps-title">@F.T["Mps.Title"]</h1>
     @if (_term is not null)
     {
-        <p class="lead">@F.Format("Mps.Lead", _term.Name)</p>
+        <p class="lead">@F.T.Format("Mps.Lead", _term.Name)</p>
     }
 
     <form class="filters sheet" method="get" action="/seimo-nariai" role="search">
@@ -47,7 +47,7 @@
             }
         </div>
     </form>
-    <p class="small num" role="status">@F.Format("Mps.Found", Formats.Number(_mps.Count))</p>
+    <p class="small num" role="status">@F.T.Format("Mps.Found", Display.Number(_mps.Count))</p>
 </section>
 
 @if (_mps.Count == 0)
@@ -99,7 +99,7 @@ else
                 <ul class="stack stack--tight">
                     @foreach (var body in list)
                     {
-                        <li><a href="/@path/@body.Slug">@body.Name</a> <span class="small num">(@F.Format("Mps.Members", Formats.Number(body.Members)))</span></li>
+                        <li><a href="/@path/@body.Slug">@body.Name</a> <span class="small num">(@F.T.Format("Mps.Members", Display.Number(body.Members)))</span></li>
                     }
                 </ul>
             </div>

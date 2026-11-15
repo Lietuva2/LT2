@@ -21,7 +21,7 @@
             }
         </section>
     }
-    @if (Configuration["Moderation:ContactAddress"] is { Length: > 0 } contact)
+    @if (Configuration.ModeratorContact() is { } contact)
     {
         <p>@T["Rules.Contact"] <a href="mailto:@contact">@contact</a></p>
     }

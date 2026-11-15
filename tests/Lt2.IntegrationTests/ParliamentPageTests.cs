@@ -80,7 +80,8 @@ public sealed partial class ParliamentPageTests(DatabaseFixture database) : ApiT
         html.ShouldContain("5 iš 7, kai frakcija turėjo poziciją");
         html.ShouldContain("frakcija balsavo laisvai: 0");
         html.ShouldContain("pavyzdys.jonas.petraitis@lrs.lt");
-        html.ShouldContain("Profilis sudarytas automatiškai iš Seimo atvirųjų duomenų.");
+        html.ShouldNotContain("Profilis sudarytas automatiškai", customMessage: "the source line says it (design 8.15, annex M-2)");
+        html.ShouldContain("Šaltinis:");
     }
 
     [Fact]

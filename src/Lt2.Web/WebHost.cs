@@ -8,6 +8,7 @@ using Lt2.Api.Contracts.Parliament;
 using Lt2.Appeals;
 using Lt2.SharedKernel.Http;
 using Lt2.Audit;
+using Lt2.Hosting;
 using Lt2.Identity;
 using Lt2.Notifications;
 using Lt2.Parliament;
@@ -18,7 +19,6 @@ using Lt2.Web.Endpoints;
 using Lt2.Web.Security;
 using Lt2.Web.Services;
 using Microsoft.AspNetCore.Diagnostics.HealthChecks;
-using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.AspNetCore.Localization;
 using Npgsql;
 using Serilog;
@@ -45,13 +45,8 @@ internal static class WebHost
         services.AddAuditModule();
         services.AddParliamentModule();
 
-        // Design 8.11.4: the AI draft through the Claude API only when configured (provider and key); then its host, and only
-        // it, is added to the outbound allowlist of the web host's HTTP clients (design 6.4).
-        if (AppealsModule.AiProviderHost(configuration) is { } aiHost)
-        {
-            configuration.AddInMemoryCollection(new Dictionary<string, string?> { [OutboundAllowlist.Section + ":ai"] = aiHost });
-        }
-
+        // Design 8.11.4: the AI draft through the Claude API only when configured (provider and key); AddAiAssistant then
+        // adds its host, and only it, to the outbound allowlist of the web host's HTTP clients (design 6.4).
         services.AddOutboundAllowlist(configuration);
         services.AddAiAssistant(configuration);
         services.AddAppealsModule();
@@ -97,7 +92,7 @@ internal static class WebHost
 
     public static void UseLt2Web(this WebApplication app)
     {
-        app.UseForwardedHeaders();
+        TrustedProxy.UseTrustedForwardedHeaders(app);
         app.UseLt2SecurityHeaders();
         if (!app.Environment.IsDevelopment())
         {
@@ -146,7 +141,7 @@ internal static class WebHost
     }
 
     /// <summary>
-    /// Design 8.12.1: the bill and the appeal are one page. The old appeal addresses (in emails, summaries and bookmarks)
+    /// Design 8.12.1: the bill and the record are one page. The old record addresses (in emails, summaries and bookmarks)
     /// redirect permanently: <c>/seimas/{number}/kreipimasis</c> to the bill's page, its history to
     /// <c>/seimas/{number}/istorija</c>, and the proposal form <c>/kreipimaisi/naujas</c> to the list. The list itself moved
     /// from <c>/kreipimaisi</c> to <c>/projektai</c> (design 8.12.5); its old address keeps the query.
@@ -171,21 +166,5 @@ internal static class WebHost
             throw new InvalidOperationException(
                 "DataProtection:KeyEncryptionKey must be supplied (as a secret file) outside development.");
         }
-    }
-
-    internal static IServiceCollection AddForwardedHeadersFromConfiguration(this IServiceCollection services, IConfiguration configuration)
-    {
-        services.Configure<ForwardedHeadersOptions>(options =>
-        {
-            options.ForwardedHeaders = ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto;
-            options.ForwardLimit = 1;
-            if (configuration.GetValue<bool>("ReverseProxy:TrustForwardedHeaders"))
-            {
-                // The web container is reachable only through Caddy on the internal network.
-                options.KnownIPNetworks.Clear();
-                options.KnownProxies.Clear();
-            }
-        });
-        return services;
     }
 }

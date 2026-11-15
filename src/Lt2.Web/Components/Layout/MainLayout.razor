@@ -34,7 +34,7 @@
 
 <main class="page stack stack--loose">
     @Body
-    @if (OnSignInPage && Configuration["Moderation:ContactAddress"] is { Length: > 0 } contact)
+    @if (OnSignInPage && Configuration.ModeratorContact() is { } contact)
     {
         @* Design 8.10: on the sign-in and registration page, a way out for whoever cannot sign in. *@
         <p class="small" id="cannot-sign-in">@F["CannotSignIn"] <a href="mailto:@contact">@contact</a></p>

@@ -47,9 +47,7 @@ internal sealed class RegisterHandler(
             var lookup = InvitationRules.Lookup(registration.InvitationCode);
             var invitation = await db.Invitations.AsNoTracking().FirstOrDefaultAsync(i => i.Lookup == lookup, cancellationToken);
             if (invitation is null
-                || !InvitationRules.Usable(
-                    invitation.Kind, invitation.UsesLeft, invitation.UsedCount, invitation.ExpiresAt, invitation.SwitchedOffAt, invitation.ReplacedAt,
-                    await Invitations.InvitationHandlers.LimitAsync(settings, invitation.Kind, cancellationToken), now, invitation.OrganisationOff))
+                || !InvitationRules.Usable(invitation, await Invitations.InvitationHandlers.LimitAsync(settings, invitation.Kind, cancellationToken), now))
             {
                 return Error.Validation("invitation.invalid", "invitationCode");
             }

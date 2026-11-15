@@ -1,11 +1,11 @@
 namespace Lt2.Appeals.Domain;
 
 /// <summary>
-/// <c>appeals.appeal</c>: the bill's record, the Appeals module's own record of what people did on one Seimas bill (design
+/// <c>appeals.bill_record</c>: the bill's record, the Appeals module's own record of what people did on one Seimas bill (design
 /// 5.3, 8.12.1). One per bill (open, closed or hidden), created when first needed: the first side, argument or description,
 /// or a moderator's action on the bill. Nobody proposes, opens or approves it, and nothing public says who was first.
 /// </summary>
-internal sealed class Appeal
+internal sealed class BillRecord
 {
     public Guid Id { get; set; }
 
@@ -33,8 +33,8 @@ internal sealed class Appeal
     /// <summary>When the description's text was last made or changed (design 8.13: "the day it was made"); null without one.</summary>
     public DateTimeOffset? DescriptionAt { get; set; }
 
-    /// <summary>See <see cref="AppealStatuses"/>.</summary>
-    public string Status { get; set; } = AppealStatuses.Open;
+    /// <summary>See <see cref="BillRecordStatuses"/>.</summary>
+    public string Status { get; set; } = BillRecordStatuses.Open;
 
     /// <summary>When the record was created.</summary>
     public DateTimeOffset OpenedAt { get; set; }
@@ -77,7 +77,7 @@ internal sealed class Appeal
     public DateTimeOffset ChangedAt { get; set; }
 }
 
-internal static class AppealStatuses
+internal static class BillRecordStatuses
 {
     /// <summary>People can take a side, write and mark arguments.</summary>
     public const string Open = "open";
@@ -176,12 +176,12 @@ internal sealed class AiDraftRequest
 }
 
 /// <summary>
-/// <c>appeals.position</c>: one person's side on one bill (design 5.3). One row per person per appeal; changing the side
+/// <c>appeals.position</c>: one person's side on one bill (design 5.3). One row per person per record; changing the side
 /// overwrites it, and no history of earlier sides is kept anywhere.
 /// </summary>
 internal sealed class Position
 {
-    public Guid AppealId { get; set; }
+    public Guid RecordId { get; set; }
 
     public Guid UserId { get; set; }
 
@@ -204,7 +204,7 @@ internal sealed class Reason
 {
     public Guid Id { get; set; }
 
-    public Guid AppealId { get; set; }
+    public Guid RecordId { get; set; }
 
     public string Side { get; set; } = "";
 
@@ -242,8 +242,8 @@ internal sealed class Endorsement
 
     public Guid UserId { get; set; }
 
-    /// <summary>The appeal of the argument, so the three-per-bill limit is one indexed count.</summary>
-    public Guid AppealId { get; set; }
+    /// <summary>The record of the argument, so the three-per-bill limit is one indexed count.</summary>
+    public Guid RecordId { get; set; }
 
     public DateTimeOffset CreatedAt { get; set; }
 }
@@ -253,13 +253,13 @@ internal sealed class Report
 {
     public Guid Id { get; set; }
 
-    /// <summary><c>appeal</c>, <c>reason</c>, <c>organisation</c> or <c>statement</c> (design 8.14.14).</summary>
+    /// <summary><c>record</c>, <c>reason</c>, <c>organisation</c> or <c>statement</c> (design 8.14.14).</summary>
     public string TargetKind { get; set; } = "";
 
     public Guid TargetId { get; set; }
 
     /// <summary>The bill's record the target belongs to; null for an organisation or its statement (design 8.14.14).</summary>
-    public Guid? AppealId { get; set; }
+    public Guid? RecordId { get; set; }
 
     public Guid ReporterUserId { get; set; }
 
@@ -344,13 +344,12 @@ internal sealed class Revision
 }
 
 /// <summary>
-/// <c>appeals.daily_stat</c>: the daily aggregate counts per appeal (design 5.3), for the trend chart and surge
-/// detection. Filled by the daily aggregation job (second half of M2a). The only source of trends: no per-person
-/// history is stored.
+/// <c>appeals.daily_stat</c>: the daily aggregate counts per record (design 5.3), for the trend chart and surge
+/// detection. Filled by the daily aggregation job. The only source of trends: no per-person history is stored.
 /// </summary>
 internal sealed class DailyStat
 {
-    public Guid AppealId { get; set; }
+    public Guid RecordId { get; set; }
 
     public DateOnly Day { get; set; }
 
@@ -364,6 +363,9 @@ internal sealed class DailyStat
 
     /// <summary>Share of that day's new positions taken by accounts younger than 30 days.</summary>
     public decimal NewAccountShare { get; set; }
+
+    /// <summary>When the row was computed: a row computed after its day ended is final (<see cref="DailyStatRules"/>).</summary>
+    public DateTimeOffset? ComputedAt { get; set; }
 }
 
 /// <summary>
@@ -374,7 +376,7 @@ internal sealed class Flag
 {
     public Guid Id { get; set; }
 
-    public Guid AppealId { get; set; }
+    public Guid RecordId { get; set; }
 
     /// <summary><c>date-wrong</c> or <c>sooner</c>.</summary>
     public string Kind { get; set; } = "";

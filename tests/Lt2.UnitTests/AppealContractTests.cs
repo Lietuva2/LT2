@@ -27,6 +27,20 @@ public sealed class AppealContractTests
     public void The_consent_text_the_client_shows_is_the_version_in_force() =>
         PositionConsentText.Version.ShouldBe(PositionConsent.TextVersion);
 
+    /// <summary>
+    /// Modules do not reference the contracts (they run in the browser), so the few rules both state are pinned here: the
+    /// form and the module that stores the data refuse the same things (design 6.8).
+    /// </summary>
+    [Fact]
+    public void The_account_and_feedback_forms_and_the_identity_module_use_the_same_limits()
+    {
+        Lt2.Api.Contracts.Auth.AuthRules.DisplayNameMaxLength.ShouldBe(Lt2.Identity.Domain.ProfileRules.DisplayNameMaxLength);
+        Lt2.Api.Contracts.Feedback.FeedbackLimits.TextMaxLength.ShouldBe(Lt2.Identity.Domain.FeedbackRules.TextMaxLength);
+        Lt2.Api.Contracts.Feedback.FeedbackLimits.Kinds.ShouldBe(Lt2.Identity.Domain.FeedbackRules.Kinds);
+        Lt2.Api.Contracts.Feedback.FeedbackLimits.Statuses.ShouldBe(Lt2.Identity.Domain.FeedbackRules.Statuses);
+        AppealLimits.StatementMaxLength.ShouldBe(StaffStatements.MaxLength);
+    }
+
     [Fact]
     public void Returning_or_hiding_needs_a_statement_of_reasons()
     {

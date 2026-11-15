@@ -2,10 +2,8 @@
 @inject IStringLocalizer<AppealUi> L
 
 @* The organisation's label (design 8.14.2): exactly what was confirmed, nothing more. *@
-<span class="tag @(Label.ConfirmedBy is null ? "" : "tag--brand")" data-org-label="@(Label.ConfirmedBy ?? "none")">@Text</span>
+<span class="tag @(Label.ConfirmedBy is null ? "" : "tag--brand")" data-org-label="@(Label.ConfirmedBy ?? "none")">@OrganisationWords.LabelText(L, Label)</span>
 
 @code {
     [Parameter, EditorRequired] public OrganisationLabelResponse Label { get; set; } = new(null, null);
-
-    private string Text => string.Format(System.Globalization.CultureInfo.InvariantCulture, L[OrganisationWords.LabelKey(Label)], Label.Domain);
 }

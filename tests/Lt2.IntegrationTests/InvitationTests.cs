@@ -16,23 +16,6 @@ namespace Lt2.IntegrationTests;
 /// </summary>
 public sealed class InvitationTests(DatabaseFixture database) : ApiTest(database)
 {
-    private static readonly SemaphoreSlim Gate = new(1, 1);
-    private static StaffMember? _administrator;
-
-    private async Task<TestBrowser> AdministratorAsync()
-    {
-        await Gate.WaitAsync();
-        try
-        {
-            _administrator ??= await StaffMembers.ActiveAsync(Factory, Database, "administrator");
-            return _administrator.Browser;
-        }
-        finally
-        {
-            Gate.Release();
-        }
-    }
-
     /// <summary>A new person registers with <paramref name="code"/> and completes; returns the browser and address.</summary>
     private async Task<(TestBrowser Browser, string Email)> RegisterWithAsync(string code, string name = "Pakviestas Asmuo")
     {
@@ -53,7 +36,7 @@ public sealed class InvitationTests(DatabaseFixture database) : ApiTest(database
         using var _i = inviter;
         var mine = await MineAsync(inviter);
         mine.Code.ShouldMatch("^[2-9A-HJKMNP-TV-Z]{4}-[2-9A-HJKMNP-TV-Z]{4}$");
-        mine.Link.ShouldBe("/prisijungti?kodas=" + mine.Code);
+        mine.Link.ShouldBe("/prisijungti#kodas=" + mine.Code);
         (mine.Completed, mine.On, mine.Contact).ShouldBe((0, true, (string?)null));
         (await MineAsync(inviter)).Code.ShouldBe(mine.Code, "one code per member");
 
@@ -87,7 +70,7 @@ public sealed class InvitationTests(DatabaseFixture database) : ApiTest(database
     [Fact]
     public async Task Replacing_a_code_stops_the_old_one_and_keeps_the_count_and_a_setting_can_limit_personal_codes()
     {
-        var admin = await AdministratorAsync();
+        var admin = (await AdministratorAsync()).Browser;
         var (inviter, _) = await Factory.MemberAsync("Keičianti Narė");
         using var _i = inviter;
         var old = (await MineAsync(inviter)).Code;
@@ -108,7 +91,7 @@ public sealed class InvitationTests(DatabaseFixture database) : ApiTest(database
             await refused.ShouldBeProblemAsync(HttpStatusCode.BadRequest, "invitation.invalid");
         }
 
-        await SetAsync(admin, "Registration:PersonalCodeUses", 1);
+        await admin.SetSettingAsync("Registration:PersonalCodeUses", 1);
         try
         {
             var (two, _) = await RegisterWithAsync(mine.Code);
@@ -119,14 +102,35 @@ public sealed class InvitationTests(DatabaseFixture database) : ApiTest(database
         }
         finally
         {
-            await SetAsync(admin, "Registration:PersonalCodeUses", 0);
+            await admin.ResetSettingAsync("Registration:PersonalCodeUses");
         }
+    }
+
+    [Fact]
+    public async Task Parallel_requests_for_a_members_code_leave_one_code_that_works()
+    {
+        var (member, email) = await Factory.MemberAsync("Skubanti Narė");
+        using var _m = member;
+
+        // A member from before personal codes: none yet, so the first requests make one (design 6.8: one current code).
+        await Database.ExecuteAsync(
+            "DELETE FROM identity.invitation WHERE kind = 'personal' AND issued_by_user_id = (SELECT id FROM identity.\"user\" WHERE email = @e)", ("e", email));
+        var made = await Task.WhenAll(Enumerable.Range(0, 8).Select(_ => member.Client.GetAsync(ApiRoutes.Me.Invitation)));
+        made.ShouldAllBe(r => r.StatusCode == HttpStatusCode.OK);
+        var codes = await Task.WhenAll(made.Select(async r => (await r.ReadAsync<MyInvitationResponse>()).Code));
+        codes.Distinct().Count().ShouldBe(1, "every parallel request sees the same new code");
+
+        var replaced = await Task.WhenAll(Enumerable.Range(0, 4).Select(_ => member.PostAsync(ApiRoutes.Me.ReplaceInvitation, new { })));
+        replaced.ShouldAllBe(r => r.StatusCode == HttpStatusCode.OK);
+        (await Database.ScalarAsync<long>(
+            "SELECT count(*) FROM identity.invitation WHERE kind = 'personal' AND replaced_at IS NULL AND issued_by_user_id = (SELECT id FROM identity.\"user\" WHERE email = @e)",
+            ("e", email))).ShouldBe(1);
     }
 
     [Fact]
     public async Task An_administrator_sees_numbers_only_and_switches_a_code_off_and_on_with_a_statement()
     {
-        var admin = await AdministratorAsync();
+        var admin = (await AdministratorAsync()).Browser;
         var (inviter, _) = await Factory.MemberAsync("Statistikos Narė");
         using var _i = inviter;
         var code = (await MineAsync(inviter)).Code;
@@ -182,7 +186,7 @@ public sealed class InvitationTests(DatabaseFixture database) : ApiTest(database
     [Fact]
     public async Task When_the_inviter_deletes_the_account_the_code_stops_and_keeps_nothing_of_them_and_export_shows_own_codes()
     {
-        var admin = await AdministratorAsync();
+        var admin = (await AdministratorAsync()).Browser;
         var (inviter, inviterEmail) = await Factory.MemberAsync("Išeinanti Kviečiančioji");
         using var _i = inviter;
         var code = (await MineAsync(inviter)).Code;
@@ -221,11 +225,5 @@ public sealed class InvitationTests(DatabaseFixture database) : ApiTest(database
         await on.ShouldBeProblemAsync(HttpStatusCode.Conflict, "invitation.cannot-switch-on");
         var stats = await admin.GetJsonAsync<InvitationStatsResponse>(ApiRoutes.Admin.Invitations + "?code=" + code);
         stats.Codes.Single().Label.ShouldBeNull("nothing of the deleted inviter stays on the code");
-    }
-
-    private static async Task SetAsync(TestBrowser admin, string key, object value)
-    {
-        using var response = await admin.SendAsync(HttpMethod.Put, ApiRoutes.Admin.SettingByKey(key), new UpdateSettingRequest { Value = JsonSerializer.SerializeToElement(value) });
-        response.StatusCode.ShouldBe(HttpStatusCode.OK, await response.Content.ReadAsStringAsync());
     }
 }

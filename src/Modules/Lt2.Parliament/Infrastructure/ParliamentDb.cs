@@ -1,5 +1,6 @@
 using Lt2.Parliament.Domain;
 using Lt2.SharedKernel;
+using Lt2.SharedKernel.Persistence;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Design;
 
@@ -190,8 +191,7 @@ internal sealed class ParliamentDb(DbContextOptions<ParliamentDb> options) : DbC
     internal static DbContextOptions<ParliamentDb> Options(string connectionString)
     {
         var builder = new DbContextOptionsBuilder<ParliamentDb>();
-        builder.UseNpgsql(connectionString, o => o.MigrationsHistoryTable("__ef_migrations_history", ParliamentModule.Schema))
-            .UseSnakeCaseNamingConvention();
+        builder.UseLt2Npgsql(connectionString, ParliamentModule.Schema);
         return builder.Options;
     }
 }

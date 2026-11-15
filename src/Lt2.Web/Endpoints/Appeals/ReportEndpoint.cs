@@ -2,12 +2,16 @@ using System.Security.Claims;
 using Lt2.Api.Contracts;
 using Lt2.Api.Contracts.Appeals;
 using Lt2.Appeals;
+using Lt2.SharedKernel;
 using Lt2.Web.Security;
 using Lt2.Web.Services;
 
 namespace Lt2.Web.Endpoints.Appeals;
 
-/// <summary><c>POST /api/v1/reports</c>: report an appeal or an argument (design 8.3, Digital Services Act notice and action).</summary>
+/// <summary>
+/// <c>POST /api/v1/reports</c>: report a bill's description, an argument, an organisation or an organisation's statement
+/// (design 8.3, 8.14.9; Digital Services Act notice and action).
+/// </summary>
 internal static class ReportEndpoint
 {
     public static void Map(IEndpointRouteBuilder api) =>
@@ -28,7 +32,7 @@ internal static class ReportEndpoint
         ErrorMapper errors,
         CancellationToken cancellationToken)
     {
-        var id = AppealMapping.UserId(user)!.Value;
+        var id = user.UserId()!.Value;
         var result = await appeals.ReportAsync(id, AppealMapping.ToModule(request), cancellationToken);
         return result.IsSuccess ? TypedResults.NoContent() : errors.ToResult(result.Error!);
     }

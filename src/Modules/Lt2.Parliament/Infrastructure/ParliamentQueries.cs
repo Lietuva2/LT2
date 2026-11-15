@@ -3,6 +3,7 @@ using System.Text;
 using Lt2.Parliament.Domain;
 using Lt2.Parliament.Import.Parsing;
 using Lt2.Parliament.Statistics;
+using Lt2.SharedKernel;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Caching.Memory;
 
@@ -63,11 +64,10 @@ internal static class Codes
 
 internal sealed class ParliamentQueries(IDbContextFactory<ParliamentDb> contexts, IParliamentDataNotice notice, IMemoryCache cache, TimeProvider clock) : IParliamentQueries
 {
-    private static readonly TimeZoneInfo Vilnius = TimeZoneInfo.FindSystemTimeZoneById("Europe/Vilnius");
     private static readonly CultureInfo Lithuanian = CultureInfo.GetCultureInfo("lt-LT");
     private static readonly StringComparer ByLithuanian = StringComparer.Create(Lithuanian, ignoreCase: true);
 
-    private DateOnly Today => DateOnly.FromDateTime(TimeZoneInfo.ConvertTime(clock.GetUtcNow(), Vilnius).DateTime);
+    private DateOnly Today => VilniusTime.Today(clock);
 
     public async Task<TermInfo?> CurrentTermAsync(CancellationToken cancellationToken)
     {
@@ -318,9 +318,7 @@ internal sealed class ParliamentQueries(IDbContextFactory<ParliamentDb> contexts
 
     // ---- Shared pieces ------------------------------------------------------------------------------------------------
 
-    private static async Task<Term?> CurrentTermRowAsync(ParliamentDb db, CancellationToken cancellationToken) =>
-        await db.Terms.AsNoTracking().Where(t => db.Mandates.Any(m => m.TermId == t.Id))
-            .OrderByDescending(t => t.To == null).ThenByDescending(t => t.Id).FirstOrDefaultAsync(cancellationToken);
+    private static Task<Term?> CurrentTermRowAsync(ParliamentDb db, CancellationToken cancellationToken) => CurrentTerm.FindAsync(db, cancellationToken);
 
     /// <summary>Every MP of the term with the faction of today (none in the mixed group; the last one, for a former MP).</summary>
     private async Task<Dictionary<Guid, MpSummary>> SummariesAsync(ParliamentDb db, int termId, CancellationToken cancellationToken)
@@ -337,7 +335,7 @@ internal sealed class ParliamentQueries(IDbContextFactory<ParliamentDb> contexts
         return people.ToDictionary(x => x.p.Id, x =>
         {
             // A sitting MP's faction is today's, or none (the mixed group is not a faction); a former MP's, the last one.
-            var sitting = x.m.To is null || x.m.To >= today;
+            var sitting = CurrentTerm.IsSitting(x.m, today);
             var faction = factions.Where(f => f.PersonId == x.p.Id && (!sitting || f.To is null || f.To >= today))
                 .OrderByDescending(f => f.From).FirstOrDefault();
             return new MpSummary(x.p.Slug, x.p.FirstName, x.p.LastName, x.p.Gender, sitting, faction is null ? null : Ref(faction.b), x.m.NominatingParty);
@@ -367,8 +365,8 @@ internal sealed class ParliamentQueries(IDbContextFactory<ParliamentDb> contexts
     /// <summary>The votes of the term held during the mandate, newest first, with the MP's choice and faction split.</summary>
     private static async Task<MpVotePage> VotesOfAsync(ParliamentDb db, Person person, Mandate mandate, int termId, int offset, int limit, CancellationToken cancellationToken)
     {
-        var start = XmlRead.VilniusToUtc(mandate.From.ToDateTime(TimeOnly.MinValue));
-        var stop = mandate.To is { } last ? XmlRead.VilniusToUtc(last.AddDays(1).ToDateTime(TimeOnly.MinValue)) : new DateTimeOffset(3000, 1, 1, 0, 0, 0, TimeSpan.Zero);
+        var start = VilniusTime.StartOf(mandate.From);
+        var stop = mandate.To is { } last ? VilniusTime.StartOf(last.AddDays(1)) : new DateTimeOffset(3000, 1, 1, 0, 0, 0, TimeSpan.Zero);
         var votes = await (from v in db.Votes.AsNoTracking()
                            join i in db.AgendaItems on v.AgendaItemId equals i.Id
                            join s in db.Sittings on i.SittingId equals s.Id

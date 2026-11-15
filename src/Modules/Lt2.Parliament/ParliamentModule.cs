@@ -4,6 +4,7 @@ using Lt2.Parliament.Infrastructure;
 using Lt2.Parliament.Statistics;
 using Lt2.SharedKernel;
 using Lt2.SharedKernel.Http;
+using Lt2.SharedKernel.Persistence;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -22,11 +23,7 @@ public static class ParliamentModule
     {
         // A factory as well as the scoped context: the read side takes a context per call, because the layout and the
         // page query at the same time while a page is rendered on the server (one shared context failed with a 500).
-        services.AddDbContextFactory<ParliamentDb>((sp, options) =>
-            options.UseNpgsql(
-                    sp.GetRequiredService<NpgsqlDataSource>(),
-                    o => o.MigrationsHistoryTable("__ef_migrations_history", Schema))
-                .UseSnakeCaseNamingConvention());
+        services.AddDbContextFactory<ParliamentDb>((sp, options) => options.UseLt2Npgsql(sp.GetRequiredService<NpgsqlDataSource>(), Schema));
         services.AddSingleton<IModuleDatabase, ParliamentModuleDatabase>();
         services.AddMemoryCache();
         services.AddScoped<IParliamentDataNotice, ParliamentDataNotice>();

@@ -1,105 +1,103 @@
 @using Lt2.Api.Contracts.Appeals
-@inherits InteractiveBase
+@inherits InteractiveBase<AppealUi>
 @inject IModerationApi ModerationApi
 @inject Lt2.Api.Contracts.Organisations.IOrganisationModerationApi OrganisationModeration
+@inject TimeProvider Clock
 
-@* Design 8.3: a moderator restricts the author of an argument from writing, reached from that argument in the queue.
-   Before deciding, the moderator sees the display name, the person's arguments, earlier moderation actions and
-   restrictions; never the address, a side or a mark, and no account id: the person is reached through the argument. The
-   writer of an organisation's statement is reached the same way, through the statement (design 8.14.14). *@
-@if (!_open)
-{
-    @if (!Embedded)
+@* Design 8.3: a moderator restricts the author of an argument from writing, chosen among the argument's actions in the
+   queue ("Riboti rašymą"); it loads as soon as it opens. Before deciding, the moderator sees the display name, the
+   person's arguments, earlier moderation actions and restrictions; never the address, a side or a mark, and no account
+   id: the person is reached through the argument. The writer of an organisation's statement is reached the same way,
+   through the statement (design 8.14.14). "Atšaukti" is there from the start, so a failed load never leaves the
+   moderator stuck. *@
+<section class="sheet sheet--quiet stack" aria-labelledby="restrict-title-@Key" id="restrict-@Key">
+    @if (_view is { } view)
     {
-        <button class="linkish small" type="button" id="restrict-open-@Id" disabled="@Locked" @onclick="OpenAsync">@L["Restrict.OpenAuthor"]</button>
-    }
-}
-else
-{
-    <section class="sheet sheet--quiet stack" aria-labelledby="restrict-title-@Id" id="restrict-@Id">
-        @if (_view is { } view)
-        {
-            <h4 id="restrict-title-@Id">@Text("Restrict.Title", view.DisplayName ?? L["Reasons.Anonymous"])</h4>
+        <h4 id="restrict-title-@Key">@L.Format("Restrict.Title", view.DisplayName ?? L["Reasons.Anonymous"])</h4>
 
-            <p class="label num">@Text("Restrict.Reasons", view.Reasons.Count)</p>
+        <p class="label num">@L.Format("Restrict.Reasons", Display.Number(view.Reasons.Count))</p>
+        <ul class="rows">
+            @foreach (var r in view.Reasons)
+            {
+                <li><div class="rows__main"><span class="small num">@r.BillNumber · <span class="choice choice--@r.Side">@L["Reasons." + r.Side]</span> · @L["Restrict.Status." + r.Status]</span><span class="voice">@r.Text</span></div></li>
+            }
+        </ul>
+
+        <p class="label num">@L.Format("Restrict.Actions", Display.Number(view.Actions.Count))</p>
+        @if (view.Actions.Count > 0)
+        {
             <ul class="rows">
-                @foreach (var r in view.Reasons)
+                @foreach (var m in view.Actions)
                 {
-                    <li><div class="rows__main"><span class="small num">@r.BillNumber · <span class="choice choice--@r.Side">@L["Reasons." + r.Side]</span> · @L["Restrict.Status." + r.Status]</span><span class="voice">@r.Text</span></div></li>
+                    <li><div class="rows__main"><span class="small num">@Display.Day(m.At) · @L.OrElse("Restrict.Target." + m.TargetKind, m.TargetKind) · @L.OrElse("Restrict.Action." + m.Action, m.Action)</span>@if (m.Statement is { } s) {<span class="small">@s</span>}</div></li>
                 }
             </ul>
-
-            <p class="label num">@Text("Restrict.Actions", view.Actions.Count)</p>
-            @if (view.Actions.Count > 0)
-            {
-                <ul class="rows">
-                    @foreach (var m in view.Actions)
-                    {
-                        <li><div class="rows__main"><span class="small num">@Dates.Day(m.At) · @L["Restrict.Target." + m.TargetKind] · @m.Action</span>@if (m.Statement is { } s) {<span class="small">@s</span>}</div></li>
-                    }
-                </ul>
-            }
-
-            @if (view.Restrictions.Count > 0)
-            {
-                <p class="label num">@Text("Restrict.Earlier", view.Restrictions.Count)</p>
-                <ul class="rows">
-                    @foreach (var w in view.Restrictions)
-                    {
-                        <li><div class="rows__main"><span class="small num">@Dates.Day(w.SetAt) · @Until(w.Until)@(w.Holds ? " · " + L["Restrict.Holds"] : "")</span><span class="small">@w.Statement</span></div></li>
-                    }
-                </ul>
-            }
-
-            <form class="stack stack--tight" @onsubmit="RestrictAsync" novalidate>
-                <fieldset class="stack stack--tight">
-                    <legend class="label">@L["Restrict.Length"]</legend>
-                    @* Two exclusive choices read better as the two-part switch (owner, 2026-11-13). *@
-                    <div class="switch">
-                        <label class="switch__half switch__half--plain">
-                            <input class="switch__input" type="radio" name="restrict-length-@Id" id="restrict-dated-@Id" checked="@_dated" @onchange="() => _dated = true" disabled="@Locked" />
-                            <span>@L["Restrict.UntilDay"]</span>
-                        </label>
-                        <label class="switch__half switch__half--plain">
-                            <input class="switch__input" type="radio" name="restrict-length-@Id" id="restrict-lifted-@Id" checked="@(!_dated)" @onchange="() => _dated = false" disabled="@Locked" />
-                            <span>@L["Restrict.UntilLifted"]</span>
-                        </label>
-                    </div>
-                    @if (_dated)
-                    {
-                        <div class="field @(Errors.ContainsKey("until") ? "field--error" : "")">
-                            <label for="restrict-until-@Id">@L["Restrict.LastDay"]</label>
-                            <p class="field__hint" id="restrict-until-hint-@Id">@Text("Date.Hint", Dates.Example)</p>
-                            <input class="input num" type="text" inputmode="numeric" autocomplete="off" pattern="@Dates.Pattern" placeholder="@Dates.Example"
-                                   id="restrict-until-@Id" aria-describedby="restrict-until-hint-@Id" @bind="_until" disabled="@Locked" />
-                            <FieldError Errors="Errors" Field="until" />
-                        </div>
-                    }
-                </fieldset>
-                <div class="field @(Errors.ContainsKey("statement") ? "field--error" : "")">
-                    <label for="restrict-statement-@Id">@L["Restrict.Statement"]</label>
-                    <p class="field__hint">@L["Restrict.StatementHint"]</p>
-                    <textarea class="textarea" id="restrict-statement-@Id" maxlength="@AppealLimits.StatementMaxLength" @bind="_statement" disabled="@Locked"></textarea>
-                    <FieldError Errors="Errors" Field="statement" />
-                </div>
-                <div class="row">
-                    <button type="submit" class="btn" id="restrict-submit-@Id" disabled="@Locked">@L["Restrict.Submit"]</button>
-                    <button type="button" class="btn btn--plain" disabled="@Locked" @onclick="CancelAsync">@L["Cancel"]</button>
-                </div>
-            </form>
         }
-        else
+
+        @if (view.Restrictions.Count > 0)
+        {
+            <p class="label num">@L.Format("Restrict.Earlier", Display.Number(view.Restrictions.Count))</p>
+            <ul class="rows">
+                @foreach (var w in view.Restrictions)
+                {
+                    <li><div class="rows__main"><span class="small num">@Display.Day(w.SetAt) · @Until(w.Until)@(w.Holds ? " · " + L["Restrict.Holds"] : "")</span><span class="small">@w.Statement</span></div></li>
+                }
+            </ul>
+        }
+
+        <form class="stack stack--tight" @onsubmit="RestrictAsync" novalidate>
+            <fieldset class="stack stack--tight">
+                <legend class="label">@L["Restrict.Length"]</legend>
+                @* Two exclusive choices read better as the two-part switch (owner, 2026-11-13). *@
+                <div class="switch">
+                    <label class="switch__half switch__half--plain">
+                        <input class="switch__input" type="radio" name="restrict-length-@Key" id="restrict-dated-@Key" checked="@_dated" @onchange="() => _dated = true" disabled="@Locked" />
+                        <span>@L["Restrict.UntilDay"]</span>
+                    </label>
+                    <label class="switch__half switch__half--plain">
+                        <input class="switch__input" type="radio" name="restrict-length-@Key" id="restrict-lifted-@Key" checked="@(!_dated)" @onchange="() => _dated = false" disabled="@Locked" />
+                        <span>@L["Restrict.UntilLifted"]</span>
+                    </label>
+                </div>
+                @if (_dated)
+                {
+                    <div class="field @ErrorClass("until")">
+                        <label for="restrict-until-@Key">@L["Restrict.LastDay"]</label>
+                        <p class="field__hint" id="restrict-until-hint-@Key">@L.Format("Date.Hint", Display.DateExample)</p>
+                        <input class="input num" type="text" inputmode="numeric" autocomplete="off" pattern="@Display.DatePattern" placeholder="@Display.DateExample"
+                               id="restrict-until-@Key" aria-describedby="@DescribedBy("until", $"restrict-until-{Key}", $"restrict-until-hint-{Key}")" aria-invalid="@Invalid("until")"
+                               @bind="_until" disabled="@Locked" />
+                        <FieldError Errors="Errors" Field="until" For="@($"restrict-until-{Key}")" />
+                    </div>
+                }
+            </fieldset>
+            <div class="field @ErrorClass("statement")">
+                <label for="restrict-statement-@Key">@L["Restrict.Statement"]</label>
+                <p class="field__hint" id="restrict-statement-hint-@Key">@L["Restrict.StatementHint"]</p>
+                <textarea class="textarea" id="restrict-statement-@Key" maxlength="@AppealLimits.StatementMaxLength" @bind="_statement" disabled="@Locked"
+                          aria-describedby="@DescribedBy("statement", $"restrict-statement-{Key}", $"restrict-statement-hint-{Key}")" aria-invalid="@Invalid("statement")"></textarea>
+                <FieldError Errors="Errors" Field="statement" For="@($"restrict-statement-{Key}")" />
+            </div>
+            <div class="row">
+                <button type="submit" class="btn" id="restrict-submit-@Key" disabled="@Locked">@L["Restrict.Submit"]</button>
+                <button type="button" class="btn btn--plain" disabled="@Locked" @onclick="CancelAsync">@L["Cancel"]</button>
+            </div>
+        </form>
+    }
+    else
+    {
+        @if (Busy || !RendererInfo.IsInteractive)
         {
             <p class="small">@L["Loading"]</p>
         }
-    </section>
-}
-
-@* Outside the panel, so the confirmation stays visible after the panel closes. *@
-<Messages Message="@Message" Info="@Info" />
+        <div class="row">
+            <button type="button" class="btn btn--plain" id="restrict-cancel-@Key" disabled="@Busy" @onclick="CancelAsync">@L["Cancel"]</button>
+        </div>
+    }
+    <Messages Message="@Message" Info="@Info" />
+</section>
 
 @code {
-    private bool _open;
     private bool _dated = true;
     private string? _until;
     private string _statement = "";
@@ -111,46 +109,34 @@ else
     /// <summary><see cref="Id"/> is an organisation's statement (design 8.14.14).</summary>
     [Parameter] public bool Statement { get; set; }
 
+    /// <summary>The start of the element ids (the action list's own prefix).</summary>
+    [Parameter] public string IdPrefix { get; set; } = "";
+
     [Parameter] public EventCallback OnDone { get; set; }
 
-    /// <summary>
-    /// One action among the item's others (design 8.3): opened by the action list rather than its own link, so it loads at
-    /// once; "Atšaukti" hands control back through <see cref="OnCancel"/>.
-    /// </summary>
-    [Parameter] public bool Embedded { get; set; }
-
+    /// <summary>"Atšaukti": hands control back to the action list.</summary>
     [Parameter] public EventCallback OnCancel { get; set; }
 
-    protected override async Task OnInitializedAsync()
-    {
-        if (Embedded && RendererInfo.IsInteractive)
-        {
-            await OpenAsync();
-        }
-    }
+    private string Key => IdPrefix + Id;
 
-    private async Task CancelAsync()
-    {
-        _open = false;
-        await OnCancel.InvokeAsync();
-    }
+    protected override Task OnInitializedAsync() => RendererInfo.IsInteractive ? LoadAsync() : Task.CompletedTask;
+
+    private Task CancelAsync() => OnCancel.InvokeAsync();
 
     private string Until(DateOnly? until) => until is { } day
-        ? Text("Restrict.UntilShown", Dates.Day(day))
+        ? L.Format("Restrict.UntilShown", Display.Day(day))
         : L["Restrict.UntilLifted"];
 
-    private Task OpenAsync() => RunAsync(async () =>
+    private Task LoadAsync() => RunAsync(async () =>
     {
-        _open = true;
         var view = Statement ? await OrganisationModeration.GetWriterAsync(Id) : await ModerationApi.GetAuthorOfReasonAsync(Id);
-        if (!view.IsSuccess)
+        if (!Succeeded(view))
         {
-            Show(view.Problem);
             return;
         }
 
         _view = view.Value;
-        _until ??= Dates.Day(DateOnly.FromDateTime(DateTime.Today).AddDays(7));
+        _until ??= Display.Day(Display.Today(Clock).AddDays(7));
     });
 
     private Task RestrictAsync() => RunAsync(async () =>
@@ -158,9 +144,9 @@ else
         DateOnly? until = null;
         if (_dated)
         {
-            if (!Dates.TryRead(_until, out var day))
+            if (!Display.TryReadDate(_until, out var day))
             {
-                Errors = new Dictionary<string, string[]> { ["until"] = [Text("Date.Invalid", Dates.Example)] };
+                FieldFails("until", L.Format("Date.Invalid", Display.DateExample));
                 return;
             }
 
@@ -168,16 +154,12 @@ else
         }
 
         var request = new RestrictionRequest { Until = until, Statement = _statement };
-        var result = Statement ? await OrganisationModeration.RestrictWriterAsync(Id, request) : await ModerationApi.RestrictAuthorOfReasonAsync(Id, request);
-        if (!result.IsSuccess)
+        if (!Succeeded(Statement ? await OrganisationModeration.RestrictWriterAsync(Id, request) : await ModerationApi.RestrictAuthorOfReasonAsync(Id, request), "statement", "until"))
         {
-            Show(result.Problem, "statement", "until");
             return;
         }
 
-        _open = false;
         _statement = "";
-        Info = L["Restrict.Done"];
         await OnDone.InvokeAsync();
     });
 }

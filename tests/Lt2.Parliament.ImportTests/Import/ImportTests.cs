@@ -1,4 +1,5 @@
 using Lt2.Parliament.ImportTests.StandIn;
+using Lt2.SeimasStandIn;
 using Npgsql;
 
 namespace Lt2.Parliament.ImportTests.Import;
@@ -146,6 +147,63 @@ public sealed class ImportTests(ImportDatabase database) : IAsyncLifetime
 
         (await database.SnapshotAsync()).ShouldBe(first);
         (await CountAsync("raw_document")).ShouldBe(20, "an unchanged response is not stored twice");
+    }
+
+    [Fact]
+    public async Task A_raised_parser_version_applies_the_stored_responses_again_without_asking_the_service()
+    {
+        await using var import = new ImportHarness(database);
+        await import.RunAsync();
+        var expected = await database.SnapshotAsync();
+
+        // As if the parser changed: every stored response was applied by an older version, and the data drifted.
+        await database.ScalarAsync<int>("WITH u AS (UPDATE parliament.fetch_state SET parser_version = 0 RETURNING 1) SELECT count(*)::int FROM u");
+        await database.ScalarAsync<int>("WITH u AS (UPDATE parliament.bill SET title = 'Pasenęs pavadinimas' RETURNING 1) SELECT count(*)::int FROM u");
+        import.TakeRequests();
+
+        var outcome = await import.RunAsync();
+
+        outcome.Status.ShouldBe("succeeded");
+        import.TakeRequests().ShouldBe(["/sip/p2b.ad_seimo_posedziai?sesijos_id=99000102"], "only what is due anyway is asked for; the rest is re-applied from storage");
+        (await database.SnapshotAsync()).ShouldBe(expected);
+        (await database.ScalarAsync<long>("SELECT count(*) FROM parliament.fetch_state WHERE parser_version <> " + global::Lt2.Parliament.Import.ParliamentImporter.ParserVersion)).ShouldBe(0);
+    }
+
+    [Fact]
+    public async Task A_run_cut_off_with_its_process_is_marked_failed_by_the_next_run()
+    {
+        await database.ScalarAsync<int>(
+            "WITH i AS (INSERT INTO parliament.import_run (id, started_at, status, source, synthetic, requests, changes) VALUES (gen_random_uuid(), now() - interval '2 hours', 'running', 'x', true, 3, 0) RETURNING 1) SELECT count(*)::int FROM i");
+        await using var import = new ImportHarness(database);
+
+        await import.RunAsync();
+
+        (await database.RowsAsync("SELECT status, error FROM parliament.import_run WHERE source = 'x'")).ShouldBe(["failed | abandoned"]);
+    }
+
+    [Fact]
+    public async Task A_vote_result_missing_when_first_asked_is_asked_for_again_later_however_old_the_vote()
+    {
+        var responses = StandInFixture.Responses();
+        const string result = "p2b.ad_sp_balsavimo_rezultatai?balsavimo_id=99100102";
+        var published = responses.Text(result);
+        responses.Replace(result, StandInResponses.EmptyDocument);
+        await using var import = new ImportHarness(database, responses);
+        await import.RunAsync();
+        (await database.ScalarAsync<bool>("SELECT has_result FROM parliament.vote WHERE id = 99100102")).ShouldBeFalse();
+
+        // The 15 September vote is long past the refetch window; the result appears in open data later.
+        responses.Replace(result, published);
+        import.Clock.Advance(TimeSpan.FromHours(2));
+        import.TakeRequests();
+        await import.RunAsync();
+        import.TakeRequests().ShouldNotContain("/sip/" + result, "not again within the day");
+
+        import.Clock.Advance(TimeSpan.FromDays(1));
+        await import.RunAsync();
+
+        import.TakeRequests().ShouldContain("/sip/" + result);
+        (await database.ScalarAsync<bool>("SELECT has_result FROM parliament.vote WHERE id = 99100102")).ShouldBeTrue();
     }
 
     [Fact]

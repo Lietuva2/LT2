@@ -28,7 +28,7 @@ internal static class OrganisationEndpoints
 
         api.MapPost(ApiEndpoints.Relative(OrganisationRoutes.Organisations), RegisterAsync)
             .WithName("RegisterOrganisation").WithTags("Organisations").RequireAuthorization(Policies.Member)
-            .WithValidation<OrganisationRequest>().RequireRateLimiting(RateLimitPolicies.OpenAppeal)
+            .WithValidation<OrganisationRequest>().RequireRateLimiting(RateLimitPolicies.RegisterOrganisation)
             .Produces<OrganisationCreatedResponse>(StatusCodes.Status201Created).ProducesProblem(StatusCodes.Status409Conflict);
 
         api.MapPut(ApiEndpoints.Relative(OrganisationRoutes.Organisation), ChangeAsync)
@@ -58,21 +58,21 @@ internal static class OrganisationEndpoints
 
     private static async Task<IResult> RegisterAsync(OrganisationRequest request, ClaimsPrincipal user, IOrganisations organisations, ErrorMapper errors, CancellationToken cancellationToken)
     {
-        var result = await organisations.RegisterAsync(AppealMapping.UserId(user)!.Value, OrganisationMapping.ToModule(request), cancellationToken);
+        var result = await organisations.RegisterAsync(user.UserId()!.Value, OrganisationMapping.ToModule(request), cancellationToken);
         return result.IsSuccess
             ? TypedResults.Created(OrganisationRoutes.Of(result.Value.Slug), new OrganisationCreatedResponse(result.Value.Id, result.Value.Slug))
             : errors.ToResult(result.Error!);
     }
 
     private static async Task<IResult> ChangeAsync(string slug, OrganisationRequest request, ClaimsPrincipal user, IOrganisations organisations, ErrorMapper errors, CancellationToken cancellationToken) =>
-        Outcome(await organisations.ChangeAsync(slug, AppealMapping.UserId(user)!.Value, OrganisationMapping.ToModule(request), cancellationToken), errors);
+        Outcome(await organisations.ChangeAsync(slug, user.UserId()!.Value, OrganisationMapping.ToModule(request), cancellationToken), errors);
 
     private static async Task<IResult> MineAsync(ClaimsPrincipal user, IOrganisations organisations, CancellationToken cancellationToken) =>
-        TypedResults.Ok((await organisations.MineAsync(AppealMapping.UserId(user)!.Value, cancellationToken)).Select(OrganisationMapping.Map).ToList());
+        TypedResults.Ok((await organisations.MineAsync(user.UserId()!.Value, cancellationToken)).Select(OrganisationMapping.Map).ToList());
 
     private static async Task<IResult> ManagementAsync(string slug, ClaimsPrincipal user, IOrganisations organisations, ErrorMapper errors, CancellationToken cancellationToken)
     {
-        var result = await organisations.ManagementAsync(slug, AppealMapping.UserId(user)!.Value, cancellationToken);
+        var result = await organisations.ManagementAsync(slug, user.UserId()!.Value, cancellationToken);
         return result.IsSuccess ? TypedResults.Ok(OrganisationMapping.Map(result.Value)) : errors.ToResult(result.Error!);
     }
 
@@ -104,13 +104,13 @@ internal static class OrganisationRepresentativeEndpoints
             .RequireRateLimiting(RateLimitPolicies.WriteReason)
             .Produces<InviteCreatedResponse>().ProducesProblem(StatusCodes.Status409Conflict);
 
-        api.MapGet(ApiEndpoints.Relative(OrganisationRoutes.Invite), InviteViewAsync)
+        api.MapPost(ApiEndpoints.Relative(OrganisationRoutes.Invite), InviteViewAsync)
             .WithName("GetOrganisationInvite").WithTags("Organisations").RequireAuthorization(Policies.Member)
             .Produces<InviteResponse>().ProducesProblem(StatusCodes.Status404NotFound);
 
         api.MapPost(ApiEndpoints.Relative(OrganisationRoutes.AcceptInvite), AcceptAsync)
             .WithName("AcceptOrganisationInvite").WithTags("Organisations").RequireAuthorization(Policies.Member)
-            .Produces<OrganisationCreatedResponse>().ProducesProblem(StatusCodes.Status404NotFound).ProducesProblem(StatusCodes.Status409Conflict);
+            .Produces<InviteAcceptedResponse>().ProducesProblem(StatusCodes.Status404NotFound).ProducesProblem(StatusCodes.Status409Conflict);
 
         api.MapDelete(ApiEndpoints.Relative(OrganisationRoutes.Representative), RemoveAsync)
             .WithName("RemoveOrganisationRepresentative").WithTags("Organisations").RequireAuthorization(Policies.Member)
@@ -139,7 +139,7 @@ internal static class OrganisationRepresentativeEndpoints
         HttpContext http, string slug, ClaimsPrincipal user, IOrganisations organisations, Lt2.Identity.IOrganisationInvitations codes, IConfiguration configuration, ErrorMapper errors, CancellationToken cancellationToken)
     {
         http.Response.Headers.CacheControl = "no-store";
-        var result = await OrganisationInvitationMapping.GetAsync(organisations, codes, configuration, slug, AppealMapping.UserId(user)!.Value, replace: false, cancellationToken);
+        var result = await OrganisationInvitationMapping.GetAsync(organisations, codes, configuration, slug, user.UserId()!.Value, replace: false, cancellationToken);
         return result.IsSuccess ? TypedResults.Ok(result.Value) : errors.ToResult(result.Error!);
     }
 
@@ -147,44 +147,44 @@ internal static class OrganisationRepresentativeEndpoints
         HttpContext http, string slug, ClaimsPrincipal user, IOrganisations organisations, Lt2.Identity.IOrganisationInvitations codes, IConfiguration configuration, ErrorMapper errors, CancellationToken cancellationToken)
     {
         http.Response.Headers.CacheControl = "no-store";
-        var result = await OrganisationInvitationMapping.GetAsync(organisations, codes, configuration, slug, AppealMapping.UserId(user)!.Value, replace: true, cancellationToken);
+        var result = await OrganisationInvitationMapping.GetAsync(organisations, codes, configuration, slug, user.UserId()!.Value, replace: true, cancellationToken);
         return result.IsSuccess ? TypedResults.Ok(result.Value) : errors.ToResult(result.Error!);
     }
 
     private static async Task<IResult> SendCodeAsync(string slug, ConfirmationCodeRequest request, ClaimsPrincipal user, IOrganisations organisations, ErrorMapper errors, CancellationToken cancellationToken) =>
-        OrganisationEndpoints.Outcome(await organisations.SendCodeAsync(slug, AppealMapping.UserId(user)!.Value, request.Address, cancellationToken), errors);
+        OrganisationEndpoints.Outcome(await organisations.SendCodeAsync(slug, user.UserId()!.Value, request.Address, cancellationToken), errors);
 
     private static async Task<IResult> ConfirmAsync(string slug, ConfirmationRequest request, ClaimsPrincipal user, IOrganisations organisations, ErrorMapper errors, CancellationToken cancellationToken) =>
-        OrganisationEndpoints.Outcome(await organisations.ConfirmAsync(slug, AppealMapping.UserId(user)!.Value, request.Code, cancellationToken), errors);
+        OrganisationEndpoints.Outcome(await organisations.ConfirmAsync(slug, user.UserId()!.Value, request.Code, cancellationToken), errors);
 
     private static async Task<IResult> InviteAsync(string slug, ClaimsPrincipal user, IOrganisations organisations, ErrorMapper errors, CancellationToken cancellationToken)
     {
-        var result = await organisations.InviteAsync(slug, AppealMapping.UserId(user)!.Value, cancellationToken);
+        var result = await organisations.InviteAsync(slug, user.UserId()!.Value, cancellationToken);
         return result.IsSuccess ? TypedResults.Ok(OrganisationMapping.Map(result.Value)) : errors.ToResult(result.Error!);
     }
 
-    private static async Task<IResult> InviteViewAsync(string token, ClaimsPrincipal user, IOrganisations organisations, ErrorMapper errors, CancellationToken cancellationToken)
+    private static async Task<IResult> InviteViewAsync(InviteTokenRequest request, ClaimsPrincipal user, IOrganisations organisations, ErrorMapper errors, CancellationToken cancellationToken)
     {
-        var result = await organisations.InviteViewAsync(token, AppealMapping.UserId(user)!.Value, cancellationToken);
+        var result = await organisations.InviteViewAsync(request.Token ?? "", user.UserId()!.Value, cancellationToken);
         return result.IsSuccess
             ? TypedResults.Ok(new InviteResponse(result.Value.Slug, result.Value.Name, result.Value.Usable, result.Value.AlreadyRepresentative))
             : errors.ToResult(result.Error!);
     }
 
-    private static async Task<IResult> AcceptAsync(string token, ClaimsPrincipal user, IOrganisations organisations, ErrorMapper errors, CancellationToken cancellationToken)
+    private static async Task<IResult> AcceptAsync(InviteTokenRequest request, ClaimsPrincipal user, IOrganisations organisations, ErrorMapper errors, CancellationToken cancellationToken)
     {
-        var result = await organisations.AcceptInviteAsync(token, AppealMapping.UserId(user)!.Value, cancellationToken);
-        return result.IsSuccess ? TypedResults.Ok(new OrganisationCreatedResponse(Guid.Empty, result.Value)) : errors.ToResult(result.Error!);
+        var result = await organisations.AcceptInviteAsync(request.Token ?? "", user.UserId()!.Value, cancellationToken);
+        return result.IsSuccess ? TypedResults.Ok(new InviteAcceptedResponse(result.Value)) : errors.ToResult(result.Error!);
     }
 
     private static async Task<IResult> RemoveAsync(string slug, Guid id, ClaimsPrincipal user, IOrganisations organisations, ErrorMapper errors, CancellationToken cancellationToken) =>
-        OrganisationEndpoints.Outcome(await organisations.RemoveRepresentativeAsync(slug, id, AppealMapping.UserId(user)!.Value, cancellationToken), errors);
+        OrganisationEndpoints.Outcome(await organisations.RemoveRepresentativeAsync(slug, id, user.UserId()!.Value, cancellationToken), errors);
 
     private static async Task<IResult> LeaveAsync(string slug, ClaimsPrincipal user, IOrganisations organisations, ErrorMapper errors, CancellationToken cancellationToken) =>
-        OrganisationEndpoints.Outcome(await organisations.LeaveAsync(slug, AppealMapping.UserId(user)!.Value, cancellationToken), errors);
+        OrganisationEndpoints.Outcome(await organisations.LeaveAsync(slug, user.UserId()!.Value, cancellationToken), errors);
 
     private static async Task<IResult> CloseAsync(string slug, ClaimsPrincipal user, IOrganisations organisations, ErrorMapper errors, CancellationToken cancellationToken) =>
-        OrganisationEndpoints.Outcome(await organisations.CloseAsync(slug, AppealMapping.UserId(user)!.Value, cancellationToken), errors);
+        OrganisationEndpoints.Outcome(await organisations.CloseAsync(slug, user.UserId()!.Value, cancellationToken), errors);
 }
 
 /// <summary>
@@ -224,17 +224,17 @@ internal static class StatementEndpoints
 
     private static async Task<IResult> MineAsync(string number, ClaimsPrincipal user, IOrganisations organisations, ErrorMapper errors, CancellationToken cancellationToken)
     {
-        var result = await organisations.MineOnBillAsync(number, AppealMapping.UserId(user)!.Value, cancellationToken);
+        var result = await organisations.MineOnBillAsync(number, user.UserId()!.Value, cancellationToken);
         return result.IsSuccess ? TypedResults.Ok(result.Value.Select(OrganisationMapping.Map).ToList()) : errors.ToResult(result.Error!);
     }
 
     private static async Task<IResult> SaveAsync(
         string number, string slug, OrganisationStatementRequest request, ClaimsPrincipal user, IOrganisations organisations, ErrorMapper errors, CancellationToken cancellationToken)
     {
-        var result = await organisations.SaveStatementAsync(number, slug, AppealMapping.UserId(user)!.Value, OrganisationMapping.ToModule(request), cancellationToken);
+        var result = await organisations.SaveStatementAsync(number, slug, user.UserId()!.Value, OrganisationMapping.ToModule(request), cancellationToken);
         return result.IsSuccess ? TypedResults.Ok(new StatementSavedResponse(result.Value.Id, result.Value.Status)) : errors.ToResult(result.Error!);
     }
 
     private static async Task<IResult> WithdrawAsync(string number, string slug, ClaimsPrincipal user, IOrganisations organisations, ErrorMapper errors, CancellationToken cancellationToken) =>
-        OrganisationEndpoints.Outcome(await organisations.WithdrawStatementAsync(number, slug, AppealMapping.UserId(user)!.Value, cancellationToken), errors);
+        OrganisationEndpoints.Outcome(await organisations.WithdrawStatementAsync(number, slug, user.UserId()!.Value, cancellationToken), errors);
 }

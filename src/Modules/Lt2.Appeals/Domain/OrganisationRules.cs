@@ -312,14 +312,53 @@ internal static partial class OrganisationRules
     /// (design 8.14.14): a hidden record (taking part closed) accepts none, and a closed bill freezes it.
     /// </summary>
     public static string? CheckBillOpen(string? recordStatus, bool billFinished) =>
-        billFinished || recordStatus is not (null or AppealStatuses.Open) ? "statement.bill-not-open" : null;
+        RecordRules.CheckParticipation(recordStatus, billFinished) is null ? null : "statement.bill-not-open";
 
     /// <summary>
-    /// Shown anywhere public: the statement is published and its organisation active. A blocked or closed organisation's
+    /// A moderator publishes a waiting statement, or marks a published one seen (design 8.14.14). A statement that still
+    /// waited when the bill's final vote was recorded can no longer be published (design 6.9): it was not public then, and
+    /// what was public is frozen.
+    /// </summary>
+    public static string? CheckPublish(string statementStatus, bool billFinished) => statementStatus switch
+    {
+        StatementStatuses.Pending => billFinished ? "statement.waiting-bill-closed" : null,
+        StatementStatuses.Published => null,
+        _ => "moderation.wrong-state",
+    };
+
+    /// <summary>"Palikti" on a statement that still waited when the bill closed (design 6.9): only there.</summary>
+    public static string? CheckKeepWaiting(string statementStatus, bool billFinished) =>
+        statementStatus == StatementStatuses.Pending && billFinished ? null : "moderation.wrong-state";
+
+    /// <summary>
+    /// The statements shown anywhere public: published, of an active organisation. A blocked or closed organisation's
     /// statements are shown nowhere; lifting a block shows again exactly the published ones, nothing withdrawn or hidden.
     /// </summary>
-    public static bool IsShown(string organisationStatus, string statementStatus) =>
-        organisationStatus == OrganisationStatuses.Active && statementStatus == StatementStatuses.Published;
+    public static IQueryable<OrganisationStatement> Shown(this IQueryable<OrganisationStatement> statements, IQueryable<Organisation> organisations) =>
+        statements.Where(s => s.Status == StatementStatuses.Published
+            && organisations.Any(o => o.Id == s.OrganisationId && o.Status == OrganisationStatuses.Active));
+
+    /// <summary>
+    /// A changed profile goes back to the moderators' queue (design 8.14.14, 6.8) for a new name or website, and for a new
+    /// description that pre-screening flags.
+    /// </summary>
+    public static bool ReturnsToQueue(bool nameChanged, bool websiteChanged, bool descriptionChanged, bool descriptionFlagged) =>
+        nameChanged || websiteChanged || (descriptionChanged && descriptionFlagged);
+
+    /// <summary>
+    /// When a statement changes, the version it replaces goes into the public history only if it was public (design 6.8):
+    /// a text that pre-screening held and no moderator published never becomes public through the history.
+    /// </summary>
+    public static bool KeepsVersion(string replacedStatus) => replacedStatus == StatementStatuses.Published;
+
+    /// <summary>
+    /// Whether a kept version is shown (design 6.8). Versions kept since 2026-11-15 say they were public. Older ones do not,
+    /// and are shown only when they were certainly public: replaced after the statement first became public, and with a
+    /// text pre-screening does not flag (a flagged text waited, unless a moderator published it; hiding that one too errs
+    /// on the safe side).
+    /// </summary>
+    public static bool ShowsVersion(bool? markedPublic, DateTimeOffset replacedAt, DateTimeOffset? firstPublicAt, bool flagged) =>
+        markedPublic ?? (firstPublicAt is { } first && replacedAt > first && !flagged);
 
     /// <summary>
     /// The goal's progress (design 8.14.5): the participants on the organisation's side as the page counts them. Remarks
@@ -340,8 +379,18 @@ internal static partial class OrganisationRules
 /// </summary>
 internal static class HttpsAddress
 {
-    public static bool IsAcceptable(string? value, int maxLength)
+    public static bool IsAcceptable(string? value, int maxLength) =>
+        TryParse(value, maxLength, out var uri)
+        && uri.HostNameType == UriHostNameType.Dns && uri.IdnHost.Trim('.').Contains('.', StringComparison.Ordinal);
+
+    /// <summary>
+    /// An absolute <c>https</c> address once trimmed: within <paramref name="maxLength"/>, no white space, control
+    /// characters or backslashes, and no user name or password (not even an empty one: no <c>@</c> before the path).
+    /// The callers add their rule for the host (<see cref="IsAcceptable"/>, <see cref="RecordRules.CheckDescriptionUrl"/>).
+    /// </summary>
+    public static bool TryParse(string? value, int maxLength, out Uri uri)
     {
+        uri = null!;
         var address = value?.Trim();
         if (string.IsNullOrEmpty(address) || address.Length > maxLength || address.Any(c => char.IsWhiteSpace(c) || char.IsControl(c) || c == '\\'))
         {
@@ -361,8 +410,13 @@ internal static class HttpsAddress
             return false;
         }
 
-        return Uri.TryCreate(address, UriKind.Absolute, out var uri) && uri.Scheme == Uri.UriSchemeHttps && uri.UserInfo.Length == 0
-            && uri.HostNameType == UriHostNameType.Dns && uri.IdnHost.Trim('.').Contains('.', StringComparison.Ordinal);
+        if (!Uri.TryCreate(address, UriKind.Absolute, out var parsed) || parsed.Scheme != Uri.UriSchemeHttps || parsed.UserInfo.Length > 0)
+        {
+            return false;
+        }
+
+        uri = parsed;
+        return true;
     }
 
     /// <summary>The host as a reader sees it beside the link (design 8.14.14: "shown with its host"), without <c>www.</c>.</summary>

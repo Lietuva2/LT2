@@ -68,6 +68,11 @@ internal sealed class StaffHandlers(
             .Where(p => p.CredentialId != passkeyId)
             .ExecuteDeleteAsync(cancellationToken);
 
+        // The sessions signed in with the removed passkeys end with them (design 6.8).
+        var sessionsEnded = await db.Sessions
+            .Where(s => s.UserId == state.UserId && s.PasskeyId != null && s.PasskeyId != passkeyId)
+            .ExecuteDeleteAsync(cancellationToken);
+
         var email = (await users.FindByIdAsync(state.UserId.ToString()))!.Email!;
         var actor = new Actor(state.UserId, activation.Role, ipHash);
         await events.RecordAsync(
@@ -85,7 +90,7 @@ internal sealed class StaffHandlers(
                 "passkey.removed",
                 state.UserId,
                 actor,
-                new { count = removed, reason = "role-activation" },
+                new { count = removed, reason = "role-activation", sessionsEnded },
                 null,
                 cancellationToken);
         }
@@ -127,7 +132,12 @@ internal sealed class StaffHandlers(
             return StaffPasskeyRequired;
         }
 
-        await users.AddOrUpdatePasskeyAsync(assertion.User, assertion.Passkey);
+        // The new signature counter must be stored, or the confirmation does not count (as at sign-in).
+        if (!(await users.AddOrUpdatePasskeyAsync(assertion.User, assertion.Passkey)).Succeeded)
+        {
+            return Lt2.Identity.Application.Passkeys.PasskeyHandlers.InvalidPasskey;
+        }
+
         var now = clock.GetUtcNow();
         await db.Sessions
             .Where(s => s.Id == state.Session.Id)

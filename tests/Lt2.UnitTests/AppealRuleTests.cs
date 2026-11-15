@@ -3,7 +3,7 @@ using Lt2.Appeals.Domain;
 
 namespace Lt2.UnitTests;
 
-/// <summary>Design 8.2 and <c>AGENTS.md</c> "Appeals": one appeal per bill, one position per person, two sides, arguments, "Man svarbu".</summary>
+/// <summary>Design 8.2 and <c>AGENTS.md</c> "Appeals": one record per bill, one position per person, two sides, arguments, "Man svarbu".</summary>
 public sealed class AppealRuleTests
 {
     [Theory]
@@ -195,10 +195,12 @@ public sealed class CountRuleTests
     [Fact]
     public void An_account_counts_as_older_than_30_days_once_thirty_full_days_have_passed()
     {
-        CountRules.IsOlderThan30Days(Now.AddDays(-30), Now).ShouldBeTrue();
-        CountRules.IsOlderThan30Days(Now.AddDays(-30).AddSeconds(1), Now).ShouldBeFalse();
-        CountRules.IsOlderThan30Days(Now.AddDays(-400), Now).ShouldBeTrue();
-        CountRules.IsOlderThan30Days(Now, Now).ShouldBeFalse();
+        // The counts take a member as older than 30 days when they became one at or before this moment.
+        var cutoff = CountRules.EstablishedBefore(Now);
+        (Now.AddDays(-30) <= cutoff).ShouldBeTrue();
+        (Now.AddDays(-30).AddSeconds(1) <= cutoff).ShouldBeFalse();
+        (Now.AddDays(-400) <= cutoff).ShouldBeTrue();
+        (Now <= cutoff).ShouldBeFalse();
     }
 
     [Fact]
@@ -274,19 +276,40 @@ public sealed class SurgeRuleTests
     }
 }
 
+/// <summary>Design 5.3: a finished day's aggregate is written once, after the day, and not changed by later days.</summary>
+public sealed class DailyStatRuleTests
+{
+    private static readonly DateTimeOffset DayEnd = new(2026, 11, 14, 22, 0, 0, TimeSpan.Zero);
+
+    [Fact]
+    public void A_day_still_running_is_rewritten_on_every_run() =>
+        DailyStatRules.ShouldWrite(DayEnd, DayEnd.AddHours(-1), DayEnd.AddHours(-2)).ShouldBeTrue();
+
+    [Fact]
+    public void A_finished_day_is_written_by_the_first_run_after_it_ended()
+    {
+        DailyStatRules.ShouldWrite(DayEnd, DayEnd.AddMinutes(5), computedAt: null).ShouldBeTrue("no row yet");
+        DailyStatRules.ShouldWrite(DayEnd, DayEnd.AddMinutes(5), DayEnd.AddHours(-1)).ShouldBeTrue("the row is the day so far");
+    }
+
+    [Fact]
+    public void A_finished_days_final_row_is_left_alone() =>
+        DailyStatRules.ShouldWrite(DayEnd, DayEnd.AddHours(20), DayEnd.AddMinutes(5)).ShouldBeFalse("later changes of side are not that day's");
+}
+
 /// <summary>Design 8.1: a bill's record closes at the final Seimas vote and its counts are frozen.</summary>
 public sealed class ClosingRuleTests
 {
     [Fact]
-    public void An_open_appeal_closes_when_its_bill_has_a_final_vote()
+    public void An_open_record_closes_when_its_bill_has_a_final_vote()
     {
-        ClosingRules.ShouldClose(AppealStatuses.Open, 99100009).ShouldBeTrue();
-        ClosingRules.ShouldClose(AppealStatuses.Open, null).ShouldBeFalse();
-        ClosingRules.ShouldClose(AppealStatuses.Rejected, 99100009).ShouldBeFalse("a hidden record stays hidden");
+        ClosingRules.ShouldClose(BillRecordStatuses.Open, 99100009).ShouldBeTrue();
+        ClosingRules.ShouldClose(BillRecordStatuses.Open, null).ShouldBeFalse();
+        ClosingRules.ShouldClose(BillRecordStatuses.Rejected, 99100009).ShouldBeFalse("a hidden record stays hidden");
     }
 
     [Fact]
-    public void A_closed_appeal_shows_its_frozen_counts_whatever_happens_to_positions_later()
+    public void A_closed_record_shows_its_frozen_counts_whatever_happens_to_positions_later()
     {
         var live = CountRules.Publish(5, 1, 3, 0);
         ClosingRules.Shown(live, 7, 2, 4, 1).ShouldBe(CountRules.Publish(7, 2, 4, 1));

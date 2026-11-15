@@ -26,27 +26,19 @@ public sealed class InvitationFlowTests
         await Assertions.Expect(a.Locator("#invite-count")).ToHaveTextAsync("Su jūsų kodu užsiregistravo: 0.");
         var url = await link.InnerTextAsync();
         var code = await a.Locator("#invite-code").InnerTextAsync();
-        url.ShouldEndWith("/prisijungti?kodas=" + code);
+        url.ShouldEndWith("/prisijungti#kodas=" + code, Case.Sensitive, "design 6.8: the code after the #, never sent by the browser");
         await a.ScreenshotAsync(new() { Path = Shot("invitation-account-1280.png"), FullPage = true });
 
         // The invited person follows the link: registration, with the code filled in and the plain notice.
         await using var invited = await PasskeyBrowser.StartAsync("native", 390, 844);
         var b = invited.Page;
-        var email = $"pakviesta.{Guid.NewGuid():N}@pavyzdys.test";
+        var email = E2ESteps.NewEmail("pakviesta");
         await b.GotoAsync(url);
         await SignUpTests.WaitForInteractivityAsync(b);
         await Assertions.Expect(b.GetByLabel("Kvietimo kodas")).ToHaveValueAsync(code);
-        await Assertions.Expect(b.GetByText("matys, kad juo užsiregistruota, bet ne kas užsiregistravo")).ToBeVisibleAsync();
-        await b.GetByLabel("El. paštas").FillAsync(email);
-        await b.GetByRole(AriaRole.Button, new() { Name = "Registruotis", Exact = true }).ClickAsync();
-        await b.GetByLabel("Šešių skaitmenų kodas").FillAsync(await SignUpTests.CodeFromMailpitAsync(email));
-        await b.GetByRole(AriaRole.Button, new() { Name = "Prisijungti", Exact = true }).ClickAsync();
-        await Assertions.Expect(b.GetByRole(AriaRole.Heading, new() { Name = "Dar du dalykai" })).ToBeVisibleAsync();
-        await SignUpTests.WaitForInteractivityAsync(b);
-        await b.GetByLabel("Vardas, kurį matys kiti").FillAsync("Pakviesta Asmenybė");
-        await b.GetByLabel("Man yra 18 metų arba daugiau").CheckAsync();
-        await b.GetByRole(AriaRole.Button, new() { Name = "Baigti registraciją" }).ClickAsync();
-        await b.WaitForURLAsync(new Regex("/sveiki$"));
+        await Assertions.Expect(b.GetByText("Kodą davęs žmogus matys tik skaičių, ne jus.")).ToBeVisibleAsync();
+        await E2ESteps.RegisterHereAsync(b, email, "Pakviesta Asmenybė");
+        await b.WaitForURLAsync(new Regex("/sveiki$"), new() { Timeout = E2ESteps.Slow });
 
         // The inviter's count rises; nothing names the invited person.
         await a.ReloadAsync();

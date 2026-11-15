@@ -87,12 +87,16 @@ internal sealed class RoleAdministration(IdentityDb db, AccountEvents events, Ti
         // Every activation goes, used or not: the roles stay granted but inactive until a new code is used.
         await db.RoleActivations.Where(a => a.UserId == userId).ExecuteDeleteAsync(cancellationToken);
 
+        // The sessions signed in with the removed passkeys end in the same step (design 6.8): a lost or stolen passkey
+        // leaves no session behind, not even a member one.
+        var sessionsEnded = await db.Sessions.Where(s => s.UserId == userId && s.PasskeyId != null).ExecuteDeleteAsync(cancellationToken);
+
         await events.RecordAsync(
             transaction.GetDbTransaction(),
             "account.reset",
             userId,
             actor,
-            new { passkeysRemoved = removed },
+            new { passkeysRemoved = removed, sessionsEnded },
             new AccountNoticeEmail(account.Value.Email, AccountNotices.AccountReset, PasskeysRemoved: removed),
             cancellationToken);
         await transaction.CommitAsync(cancellationToken);

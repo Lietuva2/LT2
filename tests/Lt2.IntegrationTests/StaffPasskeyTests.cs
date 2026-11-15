@@ -8,8 +8,6 @@ using Lt2.IntegrationTests.Infrastructure;
 using Lt2.Migrator;
 using Microsoft.Extensions.Configuration;
 using Serilog;
-using Serilog.Core;
-using Serilog.Events;
 
 namespace Lt2.IntegrationTests;
 
@@ -76,9 +74,11 @@ public sealed class StaffPasskeyTests(DatabaseFixture database) : ApiTest(databa
 
         (await MeAsync(staff)).PasskeyCount.ShouldBe(1, "every other passkey on the account is removed");
         (await staff.Client.GetAsync(ApiRoutes.Admin.Settings)).StatusCode.ShouldBe(HttpStatusCode.OK);
-        using (var stillAttacker = await attackerSession.Client.GetAsync(ApiRoutes.Admin.Settings))
+
+        // The attacker's session was signed in with a passkey the activation removed: it ends with it (design 6.8).
+        using (var stillAttacker = await attackerSession.Client.GetAsync(ApiRoutes.Me.Root))
         {
-            await stillAttacker.ShouldBeProblemAsync(HttpStatusCode.Forbidden, "forbidden");
+            stillAttacker.StatusCode.ShouldBe(HttpStatusCode.Unauthorized);
         }
 
         using var again = NewBrowser();
@@ -205,6 +205,35 @@ public sealed class StaffPasskeyTests(DatabaseFixture database) : ApiTest(databa
         (await AuditCountAsync(email, "passkey.added")).ShouldBe(1);
     }
 
+    /// <summary>Design 6.9: saving a setting asks for the passkey again; switching an invitation code does not.</summary>
+    [Fact]
+    public async Task Saving_a_setting_needs_a_fresh_passkey_confirmation_and_switching_a_code_does_not()
+    {
+        using var admin = await StaffMembers.ActiveAsync(Factory, Database, "administrator");
+        var request = new UpdateSettingRequest { Value = System.Text.Json.JsonSerializer.SerializeToElement(12) };
+
+        await AgeConfirmationAsync(admin.Email, minutes: 11);
+        using (var stale = await admin.Browser.SendAsync(HttpMethod.Put, ApiRoutes.Admin.SettingByKey("Feedback:KeepMonths"), request))
+        {
+            await stale.ShouldBeProblemAsync(HttpStatusCode.Forbidden, "passkey.confirmation-required");
+        }
+
+        (await Database.ScalarAsync<long>("SELECT count(*) FROM audit.event WHERE action = 'setting.changed' AND actor_user_id = @u", ("u", await Database.UserIdAsync(admin.Email))))
+            .ShouldBe(0, "nothing was saved");
+
+        // An invitation code is switched without a new confirmation.
+        var (member, _) = await Factory.MemberAsync();
+        using var _m = member;
+        var code = await member.GetJsonAsync<MyInvitationResponse>(ApiRoutes.Me.Invitation);
+        var invitationId = await Database.ScalarAsync<Guid>("SELECT id FROM identity.invitation WHERE code = @c", ("c", code.Code));
+        (await admin.Browser.PostAsync(ApiRoutes.Admin.SwitchInvitation(invitationId, on: false), new Lt2.Api.Contracts.Appeals.StatementRequest { Statement = "Bandymas." }))
+            .StatusCode.ShouldBe(HttpStatusCode.NoContent);
+
+        (await admin.Browser.ConfirmPasskeyAsync(admin.Authenticator)).StatusCode.ShouldBe(HttpStatusCode.NoContent);
+        using var saved = await admin.Browser.SendAsync(HttpMethod.Put, ApiRoutes.Admin.SettingByKey("Feedback:KeepMonths"), request);
+        saved.StatusCode.ShouldBe(HttpStatusCode.OK, await saved.Content.ReadAsStringAsync());
+    }
+
     [Fact]
     public async Task The_administrator_api_grants_a_role_with_a_code_shown_once_after_a_fresh_confirmation()
     {
@@ -266,10 +295,13 @@ public sealed class StaffPasskeyTests(DatabaseFixture database) : ApiTest(databa
             reset.StatusCode.ShouldBe(HttpStatusCode.NoContent, await reset.Content.ReadAsStringAsync());
         }
 
-        var me = await MeAsync(target.Browser);
+        // The open staff session was signed in with a removed passkey: it ends at once (design 6.8).
+        (await target.Browser.Client.GetAsync(ApiRoutes.Admin.Settings)).StatusCode.ShouldBe(HttpStatusCode.Unauthorized, "at once, in the open session too");
+        using var mailbox = NewBrowser();
+        await SignInFromMailboxAsync(mailbox, target.Email);
+        var me = await MeAsync(mailbox);
         me.PasskeyCount.ShouldBe(0);
         me.ActiveStaffRoles.ShouldBeEmpty();
-        (await target.Browser.Client.GetAsync(ApiRoutes.Admin.Settings)).StatusCode.ShouldBe(HttpStatusCode.Forbidden, "at once, in the open session too");
         (await NoticesAsync(target.Email)).ShouldContain("account-reset");
         (await AuditCountAsync(target.Email, "account.reset")).ShouldBe(1);
 
@@ -283,6 +315,29 @@ public sealed class StaffPasskeyTests(DatabaseFixture database) : ApiTest(databa
         (await staff.SignInWithPasskeyAsync(newKey)).StatusCode.ShouldBe(HttpStatusCode.NoContent);
         (await staff.ActivateRoleAsync(code)).StatusCode.ShouldBe(HttpStatusCode.NoContent);
         (await staff.Client.GetAsync(ApiRoutes.Admin.Settings)).StatusCode.ShouldBe(HttpStatusCode.OK);
+    }
+
+    [Fact]
+    public async Task A_reset_ends_every_session_signed_in_with_a_removed_passkey_and_keeps_the_code_sessions()
+    {
+        using var admin = await StaffMembers.ActiveAsync(Factory, Database, "administrator");
+        using var target = await StaffMembers.ActiveAsync(Factory, Database, "moderator");
+        using var secondDevice = NewBrowser();
+        (await secondDevice.SignInWithPasskeyAsync(target.Authenticator)).StatusCode.ShouldBe(HttpStatusCode.NoContent);
+        using var codeSession = NewBrowser();
+        await SignInFromMailboxAsync(codeSession, target.Email);
+
+        using (var reset = await admin.Browser.PostAsync(ApiRoutes.Admin.ResetAccount, new ResetAccountRequest { Email = target.Email }))
+        {
+            reset.StatusCode.ShouldBe(HttpStatusCode.NoContent, await reset.Content.ReadAsStringAsync());
+        }
+
+        (await target.Browser.Client.GetAsync(ApiRoutes.Me.Root)).StatusCode.ShouldBe(HttpStatusCode.Unauthorized);
+        (await secondDevice.Client.GetAsync(ApiRoutes.Me.Root)).StatusCode.ShouldBe(HttpStatusCode.Unauthorized);
+        (await codeSession.Client.GetAsync(ApiRoutes.Me.Root)).StatusCode.ShouldBe(HttpStatusCode.OK, "a code session was not signed in with a passkey");
+        (await Database.ScalarAsync<long>(
+            "SELECT count(*) FROM identity.session WHERE passkey_id IS NOT NULL AND user_id = (SELECT id FROM identity.\"user\" WHERE email = @e)",
+            ("e", target.Email))).ShouldBe(0);
     }
 
     [Fact]
@@ -327,8 +382,8 @@ public sealed class StaffPasskeyTests(DatabaseFixture database) : ApiTest(databa
         var code = System.Text.RegularExpressions.Regex.Match(printed, "[0-9A-Z]{4}-[0-9A-Z]{4}-[0-9A-Z]{4}-[0-9A-Z]{4}").Value;
         code.ShouldNotBeNullOrEmpty(printed);
         printed.ShouldNotContain(email);
-        sink.Rendered.ShouldNotBeEmpty();
-        sink.Rendered.ShouldAllBe(line => !line.Contains(code) && !line.Contains(email));
+        sink.Lines.ShouldNotBeEmpty();
+        sink.Lines.ShouldAllBe(line => !line.Contains(code) && !line.Contains(email));
 
         using var key = new SoftwareAuthenticator();
         (await person.AddPasskeyAsync(key)).StatusCode.ShouldBe(HttpStatusCode.NoContent);
@@ -381,30 +436,4 @@ public sealed class StaffPasskeyTests(DatabaseFixture database) : ApiTest(databa
             "SELECT count(*) FROM audit.event WHERE action = @a AND target = (SELECT id::text FROM identity.\"user\" WHERE email = @e)",
             ("a", action),
             ("e", email));
-
-    private sealed class CollectingSink : ILogEventSink
-    {
-        private readonly List<string> _rendered = [];
-
-        public IReadOnlyList<string> Rendered
-        {
-            get
-            {
-                lock (_rendered)
-                {
-                    return _rendered.ToList();
-                }
-            }
-        }
-
-        public void Emit(LogEvent logEvent)
-        {
-            ArgumentNullException.ThrowIfNull(logEvent);
-            var properties = string.Join(" ", logEvent.Properties.Select(p => $"{p.Key}={p.Value}"));
-            lock (_rendered)
-            {
-                _rendered.Add(logEvent.RenderMessage(System.Globalization.CultureInfo.InvariantCulture) + " " + properties);
-            }
-        }
-    }
 }

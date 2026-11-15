@@ -1,6 +1,8 @@
 using System.Globalization;
 using System.Net;
 using System.Text.RegularExpressions;
+using Lt2.Parliament.Import.Parsing;
+using Lt2.Parliament.Infrastructure;
 
 namespace Lt2.Parliament.Import.Agenda;
 
@@ -128,13 +130,9 @@ internal static partial class AgendaParser
         return new DateOnly(year, month, day);
     }
 
+    /// <summary>The stage word found in the row, read by the same rule as the open data's stages (<see cref="VoteRules.Stage"/>).</summary>
     internal static string? StageOf(string text) => StagePattern().Match(text) is { Success: true } m
-        ? m.Groups["s"].Value.ToLower(CultureInfo.GetCultureInfo("lt-LT")) switch
-        {
-            "pateikim" => "presentation",
-            "svarstym" => "consideration",
-            _ => "adoption",
-        }
+        ? Codes.Of(VoteRules.Stage(m.Value))
         : null;
 
     /// <summary>The genitive month name, for pages and the stand-in.</summary>

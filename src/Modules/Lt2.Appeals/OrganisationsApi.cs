@@ -152,7 +152,8 @@ public sealed record QueueStatement(
     bool Seen,
     IReadOnlyList<string> Flags,
     IReadOnlyList<QueueReport> Reports,
-    DateTimeOffset PublishedAt);
+    DateTimeOffset PublishedAt,
+    bool BillFinished = false);
 
 public sealed record OrganisationModerationItems(IReadOnlyList<QueueOrganisation> Organisations, IReadOnlyList<QueueStatement> Statements);
 
@@ -251,29 +252,32 @@ public interface IOrganisationModeration
     Task<HiddenOrganisationItems> HiddenAsync(CancellationToken cancellationToken);
 
     /// <summary>"Palikti": the organisation was looked at and stays as it is; its open reports close.</summary>
-    Task<Result<Unit>> KeepAsync(Guid organisationId, string? note, ModeratorActor moderator, string? contact, CancellationToken cancellationToken);
+    Task<Result<Unit>> KeepAsync(Guid organisationId, string? note, StaffActor moderator, string? contact, CancellationToken cancellationToken);
 
-    Task<Result<Unit>> BlockAsync(Guid organisationId, string statement, ModeratorActor moderator, string? contact, CancellationToken cancellationToken);
+    Task<Result<Unit>> BlockAsync(Guid organisationId, string statement, StaffActor moderator, string? contact, CancellationToken cancellationToken);
 
     /// <summary>Lifts a block: exactly the statements that were shown before come back.</summary>
-    Task<Result<Unit>> UnblockAsync(Guid organisationId, string statement, ModeratorActor moderator, string? contact, CancellationToken cancellationToken);
+    Task<Result<Unit>> UnblockAsync(Guid organisationId, string statement, StaffActor moderator, string? contact, CancellationToken cancellationToken);
 
     /// <summary>Confirms by hand, with a required note of what was checked: "Patvirtino moderatorius".</summary>
-    Task<Result<Unit>> ConfirmAsync(Guid organisationId, string note, ModeratorActor moderator, string? contact, CancellationToken cancellationToken);
+    Task<Result<Unit>> ConfirmAsync(Guid organisationId, string note, StaffActor moderator, string? contact, CancellationToken cancellationToken);
 
     /// <summary>Withdraws any confirmation; after that only a moderator can confirm the organisation.</summary>
-    Task<Result<Unit>> WithdrawConfirmationAsync(Guid organisationId, string statement, ModeratorActor moderator, string? contact, CancellationToken cancellationToken);
+    Task<Result<Unit>> WithdrawConfirmationAsync(Guid organisationId, string statement, StaffActor moderator, string? contact, CancellationToken cancellationToken);
 
     /// <summary>Publishes a waiting statement, or marks a published one seen ("Palikti"); its open reports close.</summary>
-    Task<Result<Unit>> PublishStatementAsync(Guid statementId, string? statement, ModeratorActor moderator, string? contact, CancellationToken cancellationToken);
+    Task<Result<Unit>> PublishStatementAsync(Guid statementId, string? statement, StaffActor moderator, string? contact, CancellationToken cancellationToken);
 
-    Task<Result<Unit>> HideStatementAsync(Guid statementId, string statement, ModeratorActor moderator, string? contact, CancellationToken cancellationToken);
+    /// <summary>Design 6.9: "Palikti" on a statement that still waited when the bill closed; it stays unpublished.</summary>
+    Task<Result<Unit>> KeepStatementAsync(Guid statementId, string? statement, StaffActor moderator, string? contact, CancellationToken cancellationToken);
+
+    Task<Result<Unit>> HideStatementAsync(Guid statementId, string statement, StaffActor moderator, string? contact, CancellationToken cancellationToken);
 
     /// <summary>"Atkurti": a hidden statement comes back as published, while its bill takes statements.</summary>
-    Task<Result<Unit>> RestoreStatementAsync(Guid statementId, string statement, ModeratorActor moderator, string? contact, CancellationToken cancellationToken);
+    Task<Result<Unit>> RestoreStatementAsync(Guid statementId, string statement, StaffActor moderator, string? contact, CancellationToken cancellationToken);
 
     /// <summary>What a moderator sees before restricting a statement's writer, as for an argument's author (design 8.3).</summary>
     Task<Result<AuthorView>> WriterOfStatementAsync(Guid statementId, CancellationToken cancellationToken);
 
-    Task<Result<Guid>> RestrictWriterOfStatementAsync(Guid statementId, DateOnly? until, string statement, ModeratorActor moderator, string? contact, CancellationToken cancellationToken);
+    Task<Result<Guid>> RestrictWriterOfStatementAsync(Guid statementId, DateOnly? until, string statement, StaffActor moderator, string? contact, CancellationToken cancellationToken);
 }

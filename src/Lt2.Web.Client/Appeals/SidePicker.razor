@@ -1,8 +1,9 @@
 @using Lt2.Api.Contracts.Appeals
-@inherits InteractiveBase
+@inherits InteractiveBase<AppealUi>
 @inject IAppealsApi Appeals
 @inject IMeApi MeApi
 @inject NavigationManager Navigation
+@inject MyBillState State
 
 @* Taking a side (design 8.12.1): the two buttons under the counts, on any active bill, the first side creating the bill's
    record. A visitor gets links to sign in, which also work without JavaScript. The side shown is only ever the visitor's
@@ -11,8 +12,8 @@
     @if (!_signedIn)
     {
         <div class="pair">
-            <a class="btn btn--for btn--wide" href="/prisijungti">@L["Side.for"]</a>
-            <a class="btn btn--against btn--wide" href="/prisijungti">@L["Side.against"]</a>
+            <a class="btn btn--for btn--wide" href="@SignInHref">@L["Side.for"]</a>
+            <a class="btn btn--against btn--wide" href="@SignInHref">@L["Side.against"]</a>
         </div>
         <p class="small">@L["Side.SignIn"]</p>
     }
@@ -59,23 +60,23 @@
 </div>
 
 @code {
+    /// <summary>The sign-in page that brings the visitor back to this page when it is a bill's (design 6.9).</summary>
+    private string SignInHref => LandingPath.SignInLink(LandingPath.PathOf(Navigation.Uri, Navigation.BaseUri));
+
     private bool _signedIn;
     private string? _consentFor;
     private bool _consentChecked;
 
     [Parameter, EditorRequired] public string Number { get; set; } = "";
 
-
-    [CascadingParameter] private Task<AuthenticationState>? AuthState { get; set; }
-
-    [PersistentState] public MyAppealResponse? Mine { get; set; }
+    [PersistentState] public MyBillRecordResponse? Mine { get; set; }
 
     protected override async Task OnInitializedAsync()
     {
-        _signedIn = AuthState is not null && (await AuthState).User.Identity?.IsAuthenticated == true;
+        _signedIn = await IsSignedInAsync();
         if (_signedIn && Mine is null)
         {
-            Mine = (await Appeals.GetMineAsync(Number)).Value;
+            Mine = await State.MineAsync(Number);
         }
     }
 

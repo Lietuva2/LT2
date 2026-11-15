@@ -11,6 +11,18 @@ public sealed record ParliamentReset(long ImportRuns, long RawDocuments, long Pe
 public static class ParliamentMaintenance
 {
     /// <summary>
+    /// The one rule for "real Seimas data is stored": import runs, stored responses or agenda pages not marked synthetic.
+    /// Both the reset and the demonstration data refuse while it counts anything. (The site's banner, <see
+    /// cref="IParliamentDataNotice"/>, keeps its own meaning: any stored response from the stand-in.)
+    /// </summary>
+    private const string RealRows =
+        """
+        SELECT (SELECT count(*) FROM parliament.import_run WHERE NOT synthetic)
+             + (SELECT count(*) FROM parliament.raw_document WHERE NOT synthetic)
+             + (SELECT count(*) FROM parliament.agenda_snapshot WHERE NOT synthetic)
+        """;
+
+    /// <summary>
     /// The way back from invented data: empties every parliament table (the migration history stays), so the next import
     /// starts from nothing, for example when the local stack switches from the stand-in to the real service. Refuses
     /// (<c>parliament.reset.real-data</c>) unless every import run stored so far was synthetic and every stored response
@@ -30,10 +42,7 @@ public static class ParliamentMaintenance
         {
             await using var transaction = await connection.BeginTransactionAsync(cancellationToken);
             await ExecuteAsync(connection, transaction, "LOCK TABLE parliament.import_run, parliament.raw_document IN EXCLUSIVE MODE", cancellationToken);
-            var real = await ScalarAsync<long>(connection, transaction, "SELECT count(*) FROM parliament.import_run WHERE NOT synthetic", cancellationToken)
-                + await ScalarAsync<long>(connection, transaction, "SELECT count(*) FROM parliament.raw_document WHERE NOT synthetic", cancellationToken)
-                + await ScalarAsync<long>(connection, transaction, "SELECT count(*) FROM parliament.agenda_snapshot WHERE NOT synthetic", cancellationToken);
-            if (real > 0)
+            if (await ScalarAsync<long>(connection, transaction, RealRows, cancellationToken) > 0)
             {
                 return Error.Conflict("parliament.reset.real-data");
             }
@@ -72,28 +81,24 @@ public static class ParliamentMaintenance
         await using var connection = new NpgsqlConnection(connectionString);
         await connection.OpenAsync(cancellationToken);
         var synthetic = await ScalarAsync<long>(connection, null, "SELECT count(*) FROM parliament.raw_document WHERE synthetic", cancellationToken);
-        var real = await ScalarAsync<long>(connection, null, "SELECT count(*) FROM parliament.import_run WHERE NOT synthetic", cancellationToken)
-            + await ScalarAsync<long>(connection, null, "SELECT count(*) FROM parliament.raw_document WHERE NOT synthetic", cancellationToken)
-            + await ScalarAsync<long>(connection, null, "SELECT count(*) FROM parliament.agenda_snapshot WHERE NOT synthetic", cancellationToken);
-        return synthetic > 0 && real == 0;
+        return synthetic > 0 && await ScalarAsync<long>(connection, null, RealRows, cancellationToken) == 0;
     }
 
     /// <summary>The official title of a stored bill, or <c>null</c>.</summary>
-    public static async Task<string?> BillTitleAsync(string connectionString, string number, CancellationToken cancellationToken)
-    {
-        await using var connection = new NpgsqlConnection(connectionString);
-        await connection.OpenAsync(cancellationToken);
-        await using var command = new NpgsqlCommand("SELECT title FROM parliament.bill WHERE number = @n", connection);
-        command.Parameters.AddWithValue("n", number);
-        return await command.ExecuteScalarAsync(cancellationToken) as string;
-    }
+    public static Task<string?> BillTitleAsync(string connectionString, string number, CancellationToken cancellationToken) =>
+        BillColumnAsync(connectionString, "SELECT title FROM parliament.bill WHERE number = @n", number, cancellationToken);
 
     /// <summary>The bill's e-seimas address from the parliament data, or null (local demonstration data only).</summary>
-    public static async Task<string?> BillAddressAsync(string connectionString, string number, CancellationToken cancellationToken)
+    public static Task<string?> BillAddressAsync(string connectionString, string number, CancellationToken cancellationToken) =>
+        BillColumnAsync(connectionString, "SELECT e_seimas_url FROM parliament.bill WHERE number = @n", number, cancellationToken);
+
+    private static async Task<string?> BillColumnAsync(string connectionString, string sql, string number, CancellationToken cancellationToken)
     {
         await using var connection = new NpgsqlConnection(connectionString);
         await connection.OpenAsync(cancellationToken);
-        await using var command = new NpgsqlCommand("SELECT e_seimas_url FROM parliament.bill WHERE number = @n", connection);
+#pragma warning disable CA2100 // Constant SQL from this class; the bill number is a parameter.
+        await using var command = new NpgsqlCommand(sql, connection);
+#pragma warning restore CA2100
         command.Parameters.AddWithValue("n", number);
         return await command.ExecuteScalarAsync(cancellationToken) as string;
     }

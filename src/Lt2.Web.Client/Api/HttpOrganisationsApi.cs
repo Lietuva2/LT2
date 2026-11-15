@@ -38,10 +38,10 @@ internal sealed class HttpOrganisationsApi(ApiHttp http) : IOrganisationsApi
         http.SendAsync<InviteCreatedResponse>(HttpMethod.Post, OrganisationRoutes.InvitesOf(slug), new { }, cancellationToken);
 
     public Task<ApiResult<InviteResponse>> GetInviteAsync(string token, CancellationToken cancellationToken = default) =>
-        http.SendAsync<InviteResponse>(HttpMethod.Get, OrganisationRoutes.InviteOf(token), null, cancellationToken);
+        http.SendAsync<InviteResponse>(HttpMethod.Post, OrganisationRoutes.Invite, new InviteTokenRequest { Token = token }, cancellationToken);
 
-    public Task<ApiResult<OrganisationCreatedResponse>> AcceptInviteAsync(string token, CancellationToken cancellationToken = default) =>
-        http.SendAsync<OrganisationCreatedResponse>(HttpMethod.Post, OrganisationRoutes.AcceptInviteOf(token), new { }, cancellationToken);
+    public Task<ApiResult<InviteAcceptedResponse>> AcceptInviteAsync(string token, CancellationToken cancellationToken = default) =>
+        http.SendAsync<InviteAcceptedResponse>(HttpMethod.Post, OrganisationRoutes.AcceptInvite, new InviteTokenRequest { Token = token }, cancellationToken);
 
     public Task<ApiResult> RemoveRepresentativeAsync(string slug, Guid representativeId, CancellationToken cancellationToken = default) =>
         http.SendAsync(HttpMethod.Delete, OrganisationRoutes.RepresentativeOf(slug, representativeId), null, cancellationToken);
@@ -97,6 +97,9 @@ internal sealed class HttpOrganisationModerationApi(ApiHttp http) : IOrganisatio
 
     public Task<ApiResult> PublishStatementAsync(Guid statementId, ModerationRequest request, CancellationToken cancellationToken = default) =>
         http.SendAsync(HttpMethod.Post, OrganisationRoutes.With(OrganisationRoutes.PublishStatement, statementId), request, cancellationToken);
+
+    public Task<ApiResult> KeepStatementAsync(Guid statementId, ModerationRequest request, CancellationToken cancellationToken = default) =>
+        http.SendAsync(HttpMethod.Post, OrganisationRoutes.With(OrganisationRoutes.KeepStatement, statementId), request, cancellationToken);
 
     public Task<ApiResult> HideStatementAsync(Guid statementId, StatementRequest request, CancellationToken cancellationToken = default) =>
         http.SendAsync(HttpMethod.Post, OrganisationRoutes.With(OrganisationRoutes.HideStatement, statementId), request, cancellationToken);

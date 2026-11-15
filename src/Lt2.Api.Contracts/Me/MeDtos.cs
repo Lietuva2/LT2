@@ -20,7 +20,7 @@ public sealed record MeResponse
     /// <summary>
     /// <c>false</c> while the account is pending (design 6.2): the address is proven but the display name and the age
     /// declaration have not been given yet. A pending account can only complete the registration, see and end its
-    /// sessions, and sign out.
+    /// sessions, export or delete what it holds, and sign out.
     /// </summary>
     public bool RegistrationComplete { get; init; }
 
@@ -35,6 +35,12 @@ public sealed record MeResponse
 
     /// <summary>The explicit consent to store positions (design 6.5) is given to the text version in force.</summary>
     public bool HasPositionConsent { get; init; }
+
+    /// <summary>
+    /// The account holds an activated staff role, in any session. Deleting it needs a session signed in with its staff
+    /// passkey, which is when <see cref="ActiveStaffRoles"/> is not empty (design 6.9).
+    /// </summary>
+    public bool StaffAccount { get; init; }
 }
 
 /// <summary>The version of the consent text the client shows (design 6.5); the server accepts consent to this one only.</summary>

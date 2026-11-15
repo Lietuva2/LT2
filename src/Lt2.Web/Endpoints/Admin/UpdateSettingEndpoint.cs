@@ -8,7 +8,10 @@ using Lt2.Web.Services;
 
 namespace Lt2.Web.Endpoints.Admin;
 
-/// <summary><c>PUT /api/v1/admin/settings/{key}</c>: changes one setting; the change is written to the audit log.</summary>
+/// <summary>
+/// <c>PUT /api/v1/admin/settings/{key}</c>: changes one setting; the change is written to the audit log. Needs a fresh
+/// passkey confirmation (design 6.9).
+/// </summary>
 internal static class UpdateSettingEndpoint
 {
     public static void Map(IEndpointRouteBuilder api) =>
@@ -26,11 +29,18 @@ internal static class UpdateSettingEndpoint
         ClaimsPrincipal user,
         HttpContext context,
         ISettingsAdministration settings,
+        Lt2.Identity.IIdentityModule identity,
         IpHasher ipHasher,
         ErrorMapper errors,
         CancellationToken cancellationToken)
     {
-        var actor = Guid.Parse(user.FindFirstValue(ClaimTypes.NameIdentifier)!);
+        // Design 6.9: saving a setting asks for the passkey again, as changing roles does.
+        if (await FreshConfirmation.RequireAsync(identity, user, errors, cancellationToken) is { } refused)
+        {
+            return refused;
+        }
+
+        var actor = user.UserId()!.Value;
         var result = await settings.UpdateAsync(key, request.Value, actor, Roles.Administrator, ipHasher.Hash(context), cancellationToken);
         return result.IsSuccess ? TypedResults.Ok(SettingMapping.ToResponse(result.Value)) : errors.ToResult(result.Error!);
     }

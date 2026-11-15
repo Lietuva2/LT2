@@ -1,5 +1,5 @@
 @using Lt2.Api.Contracts.Organisations
-@inherits InteractiveBase
+@inherits InteractiveBase<AppealUi>
 @inject IOrganisationModerationApi Moderation
 
 @* Blocked organisations and hidden statements on the moderators' list of hidden items (design 8.14.14), with who did it,
@@ -15,14 +15,15 @@
         }
         @foreach (var org in items.Organisations)
         {
-            <article class="sheet stack stack--tight" id="hidden-organisation-@org.Id" aria-labelledby="ho-@org.Id">
+            <article class="sheet stack stack--tight" id="hidden-organisation-@org.Id" aria-labelledby="ho-@org.Id" @key="org.Id">
                 <h3 id="ho-@org.Id"><a href="@OrganisationWords.ProfilePath(org.Slug)">@org.Name</a></h3>
-                <p class="small num">@When(org.BlockedAt, org.BlockedBy)</p>
+                <p class="small num">@ModerationWords.Hidden(L, org.BlockedAt, org.BlockedBy)</p>
                 @if (org.Statement is { } statement)
                 {
-                    <p class="small">@Text("Hidden.Why", statement)</p>
+                    <p class="small">@L.Format("Hidden.Why", statement)</p>
                 }
-                <OrgRestore Id="org.Id" Kind="organisation" />
+                <RestoreForm Id="org.Id" IdPrefix="org-restore" Sentence="@L["OrgMod.Restore.Sentence.organisation"]" StatementLabel="@L["OrgMod.Statement"]"
+                             Restore="request => Moderation.UnblockAsync(org.Id, request)" />
             </article>
         }
     </section>
@@ -35,23 +36,24 @@
         }
         @foreach (var s in items.Statements)
         {
-            <article class="sheet stack stack--tight" id="hidden-statement-@s.Id" aria-label="@L["Org.Statement"]">
+            <article class="sheet stack stack--tight" id="hidden-statement-@s.Id" aria-label="@L["Org.Statement"]" @key="s.Id">
                 <div class="row">
                     <span class="tag tag--ink num">@s.Bill.Number</span>
                     <b>@s.OrganisationName</b>
-                    <span class="choice choice--@(s.Stance is "for" or "against" ? s.Stance : "remarks")">@L["Org.Stance." + s.Stance]</span>
+                    <span class="@OrganisationWords.StanceClass(s.Stance)">@L["Org.Stance." + s.Stance]</span>
                 </div>
                 <p class="voice">@s.Text</p>
-                <p class="small num">@When(s.HiddenAt, s.HiddenBy)</p>
+                <p class="small num">@ModerationWords.Hidden(L, s.HiddenAt, s.HiddenBy)</p>
                 @if (s.Statement is { } statement)
                 {
-                    <p class="small">@Text("Hidden.Why", statement)</p>
+                    <p class="small">@L.Format("Hidden.Why", statement)</p>
                 }
                 @if (!s.Restorable)
                 {
                     <p class="note note--quiet">@L["OrgMod.Hidden.NotOpen"]</p>
                 }
-                <OrgRestore Id="s.Id" Kind="statement" Allowed="s.Restorable" />
+                <RestoreForm Id="s.Id" IdPrefix="org-restore" Sentence="@L["OrgMod.Restore.Sentence.statement"]" StatementLabel="@L["OrgMod.Statement"]"
+                             Allowed="s.Restorable" Restore="request => Moderation.RestoreStatementAsync(s.Id, request)" />
             </article>
         }
     </section>
@@ -71,7 +73,4 @@
             Items ??= (await Moderation.GetHiddenAsync()).Value;
         }
     }
-
-    private string When(DateTimeOffset? at, string? by) =>
-        at is { } when ? Text("Hidden.When", Dates.DayTime(when), by ?? L["Hidden.Moderator"]) : L["Hidden.WhenUnknown"];
 }

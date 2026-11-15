@@ -65,6 +65,9 @@ internal sealed class ServerMeApi(IIdentityModule identity, IMpDirectory mps, IH
     public async Task<ApiResult> ActivateRoleAsync(RoleActivationRequest request, CancellationToken cancellationToken = default) =>
         errors.ToApiResult(await identity.ActivateRoleAsync(User, request.Code, IpHash, cancellationToken));
 
+    public async Task<ApiResult> ConfirmPasskeyAsync(PasskeyCredentialRequest request, CancellationToken cancellationToken = default) =>
+        errors.ToApiResult(await identity.ConfirmPasskeyAsync(User, request.Credential, cancellationToken));
+
     public async Task<ApiResult> GivePositionConsentAsync(PositionConsentRequest request, CancellationToken cancellationToken = default) =>
         errors.ToApiResult(await identity.GivePositionConsentAsync(User, request.TextVersion, cancellationToken));
 
@@ -88,7 +91,7 @@ internal sealed class ServerMeApi(IIdentityModule identity, IMpDirectory mps, IH
 
     private async Task<ApiResult<MyInvitationResponse>> InvitationAsync(Func<Guid, Task<Result<MyInvitation>>> action)
     {
-        if (AppealMapping.UserId(User) is not { } id)
+        if (User.UserId() is not { } id)
         {
             return ApiResult<MyInvitationResponse>.Fail(errors.ToProblem(Error.Unauthorized("auth.required")));
         }
@@ -97,7 +100,7 @@ internal sealed class ServerMeApi(IIdentityModule identity, IMpDirectory mps, IH
     }
 
     public async Task<ApiResult> SetPartySupportAsync(PartySupportRequest request, CancellationToken cancellationToken = default) =>
-        errors.ToApiResult(await identity.SetPartySupportAsync(User, request.Party, await mps.PartiesAsync(cancellationToken), cancellationToken));
+        errors.ToApiResult(await identity.SetPartySupportAsync(User, request.Party, request.Consent, await mps.PartiesAsync(cancellationToken), cancellationToken));
 
     private string? IpHash => accessor.HttpContext is { } context ? ipHasher.Hash(context) : null;
 
@@ -127,6 +130,7 @@ internal static class Mapping
         ActiveStaffRoles = account.ActiveStaffRoles,
         AwaitingActivation = account.AwaitingActivation,
         HasPositionConsent = account.HasPositionConsent,
+        StaffAccount = account.StaffAccount,
     };
 
     public static SessionResponse ToResponse(SessionSummary session) => new()

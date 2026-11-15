@@ -3,6 +3,7 @@ using Lt2.Api.Contracts.Auth;
 using Lt2.Api.Contracts.Me;
 using Lt2.Web.Client.Api;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.DependencyInjection.Extensions;
 
 namespace Lt2.Web.Client;
 
@@ -25,11 +26,9 @@ public static class ClientServices
         services.AddScoped<IMeApi, HttpMeApi>();
         services.AddScoped<Lt2.Api.Contracts.Appeals.IAppealsApi, HttpAppealsApi>();
         services.AddScoped<Lt2.Api.Contracts.Appeals.IModerationApi, HttpModerationApi>();
-        services.AddScoped<Lt2.Api.Contracts.Agenda.IAgendaApi, HttpAgendaApi>();
         services.AddScoped<Lt2.Api.Contracts.Follows.IFollowsApi, HttpFollowsApi>();
         services.AddScoped<Lt2.Api.Contracts.Feedback.IFeedbackApi, HttpFeedbackApi>();
         services.AddScoped<Lt2.Api.Contracts.Appeals.IAdminApi, HttpAdminApi>();
-        services.AddScoped<Lt2.Api.Contracts.Digests.IDigestsApi, HttpDigestsApi>();
         services.AddScoped<Lt2.Api.Contracts.Organisations.IOrganisationsApi, HttpOrganisationsApi>();
         services.AddScoped<Lt2.Api.Contracts.Organisations.IOrganisationModerationApi, HttpOrganisationModerationApi>();
         services.AddLt2Validators();
@@ -41,6 +40,8 @@ public static class ClientServices
     public static IServiceCollection AddLt2ClientComponents(this IServiceCollection services)
     {
         services.AddScoped<Passkeys>();
+        services.AddScoped<Appeals.MyBillState>();
+        services.TryAddSingleton(TimeProvider.System);
         return services;
     }
 }

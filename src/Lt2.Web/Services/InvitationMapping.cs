@@ -8,8 +8,8 @@ namespace Lt2.Web.Services;
 /// <summary>Invitation answers (design 6.2): the member's own code with its link, and the administrators' numbers.</summary>
 internal static class InvitationMapping
 {
-    /// <summary>The registration form with the code filled in (a relative link; the page shows it in full).</summary>
-    public static string Link(string code) => "/prisijungti?kodas=" + Uri.EscapeDataString(code);
+    /// <summary>The registration form with the code filled in (design 6.8: the code after the <c>#</c>).</summary>
+    public static string Link(string code) => InvitationLink.For(code);
 
     public static MyInvitationResponse Map(MyInvitation mine, IConfiguration configuration) =>
         new(mine.Code, Link(mine.Code), mine.Completed, mine.On, mine.On ? null : AppealMapping.Contact(configuration), mine.Usable);

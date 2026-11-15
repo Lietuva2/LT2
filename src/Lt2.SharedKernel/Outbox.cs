@@ -20,4 +20,10 @@ public sealed record OutboxMessage(string Kind, JsonElement Payload, DateTimeOff
 public interface IOutbox
 {
     Task EnqueueAsync(OutboxMessage message, DbTransaction transaction, CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Deletes every message addressed to <paramref name="addresses"/> that was not sent, waiting or failed (design 6.8:
+    /// the outbox forgets a deleted account and an unfinished registration), in the caller's transaction. Returns how many.
+    /// </summary>
+    Task<int> ForgetAsync(IReadOnlyCollection<string> addresses, DbTransaction transaction, CancellationToken cancellationToken = default);
 }

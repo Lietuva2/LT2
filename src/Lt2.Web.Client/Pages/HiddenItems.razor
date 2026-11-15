@@ -3,7 +3,7 @@
 @rendermode InteractiveWebAssembly
 @using Lt2.Api.Contracts.Appeals
 @using Lt2.Web.Client.Appeals
-@inherits InteractiveBase
+@inherits InteractiveBase<AppealUi>
 @inject IModerationApi ModerationApi
 
 @* Hidden bills and reasons (design 8.3, 8.12.3): what was hidden, by whom, when and why, and "Atkurti". A hidden bill has
@@ -21,6 +21,8 @@
     <p class="lead">@L["Hidden.Lead"]</p>
 </div>
 
+<Messages Message="@Message" Info="@Info" />
+
 @if (_refused)
 {
     <p class="note" role="alert">@L["Mod.Refused"]</p>
@@ -33,32 +35,33 @@ else
 {
     <section class="stack" aria-labelledby="h-hidden-appeals">
         <h2 id="h-hidden-appeals">@L["Hidden.Appeals"]</h2>
-        @if (Items.Appeals.Count == 0)
+        @if (Items.Records.Count == 0)
         {
             <p class="small">@L["Hidden.None"]</p>
         }
-        @foreach (var appeal in Items.Appeals)
+        @foreach (var record in Items.Records)
         {
-            <article class="sheet stack stack--tight" id="hidden-appeal-@appeal.Id" aria-labelledby="ha-@appeal.Id">
+            <article class="sheet stack stack--tight" id="hidden-appeal-@record.Id" aria-labelledby="ha-@record.Id" @key="record.Id">
                 <div class="row">
-                    <span class="tag tag--ink num">@appeal.Bill.Number</span>
-                    <span class="tag">@L["Hidden.RestoresAs." + appeal.RestoresAs]</span>
+                    <span class="tag tag--ink num">@record.Bill.Number</span>
+                    <span class="tag">@L["Hidden.RestoresAs." + record.RestoresAs]</span>
                 </div>
-                <h3 id="ha-@appeal.Id">@appeal.Bill.Title</h3>
+                <h3 id="ha-@record.Id">@record.Bill.Title</h3>
 
-                <p class="small num">@Hidden(appeal.HiddenAt, appeal.HiddenBy)</p>
-                @if (appeal.Statement is { } statement)
+                <p class="small num">@ModerationWords.Hidden(L, record.HiddenAt, record.HiddenBy)</p>
+                @if (record.Statement is { } statement)
                 {
-                    <p class="small">@Text("Hidden.Why", statement)</p>
+                    <p class="small">@L.Format("Hidden.Why", statement)</p>
                 }
-                @if (appeal.Description.Length > 0)
+                @if (record.Description.Length > 0)
                 {
-                    <details>
-                        <summary class="linkish">@L["Mod.Description"]</summary>
-                        <p class="voice">@appeal.Description</p>
+                    <details class="more stack stack--tight">
+                        <summary class="linkish small">@L["Mod.Description"]</summary>
+                        <p class="voice">@record.Description</p>
                     </details>
                 }
-                <RestoreAction Id="appeal.Id" Kind="appeal" RestoresAs="@appeal.RestoresAs" />
+                <RestoreForm Id="record.Id" IdPrefix="restore" Sentence="@L["Hidden.RestoreAppeal.Sentence." + (record.RestoresAs ?? "open")]"
+                             StatementLabel="@L["Hidden.Statement"]" Restore="request => ModerationApi.RestoreRecordAsync(record.Id, request)" />
             </article>
         }
     </section>
@@ -71,7 +74,7 @@ else
         }
         @foreach (var reason in Items.Reasons)
         {
-            <article class="sheet stack stack--tight" id="hidden-reason-@reason.Id" aria-label="@L["Mod.Reason"]">
+            <article class="sheet stack stack--tight" id="hidden-reason-@reason.Id" aria-label="@L["Mod.Reason"]" @key="reason.Id">
                 <div class="row">
                     <span class="tag tag--ink num">@reason.Bill.Number</span>
                     <span class="choice choice--@reason.Side">@L["Reasons." + reason.Side]</span>
@@ -80,16 +83,17 @@ else
                     <p class="bubble bubble--people voice">@reason.Text</p>
                     <div class="said__by"><b>@(reason.AuthorName ?? L["Reasons.Anonymous"])</b></div>
                 </div>
-                <p class="small num">@Hidden(reason.HiddenAt, reason.HiddenBy)</p>
+                <p class="small num">@ModerationWords.Hidden(L, reason.HiddenAt, reason.HiddenBy)</p>
                 @if (reason.Statement is { } statement)
                 {
-                    <p class="small">@Text("Hidden.Why", statement)</p>
+                    <p class="small">@L.Format("Hidden.Why", statement)</p>
                 }
                 @if (!reason.Restorable)
                 {
                     <p class="note note--quiet">@L["Hidden.ReasonNotOpen"]</p>
                 }
-                <RestoreAction Id="reason.Id" Kind="reason" Allowed="reason.Restorable" />
+                <RestoreForm Id="reason.Id" IdPrefix="restore" Sentence="@L["Hidden.RestoreReason.Sentence"]" StatementLabel="@L["Hidden.Statement"]"
+                             Allowed="reason.Restorable" Restore="request => ModerationApi.RestoreReasonAsync(reason.Id, request)" />
             </article>
         }
     </section>
@@ -108,13 +112,12 @@ else
         if (Items is null)
         {
             var items = await ModerationApi.GetHiddenAsync();
-            _refused = !items.IsSuccess;
+            _refused = items.Problem?.Status is 401 or 403;
             Items = items.Value;
+            if (!items.IsSuccess && !_refused)
+            {
+                Show(items.Problem);
+            }
         }
     }
-
-    private string Hidden(DateTimeOffset? at, string? by) =>
-        at is { } when
-            ? Text("Hidden.When", Dates.DayTime(when), by ?? L["Hidden.Moderator"])
-            : L["Hidden.WhenUnknown"];
 }

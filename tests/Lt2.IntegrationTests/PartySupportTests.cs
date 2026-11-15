@@ -1,4 +1,5 @@
 using System.Net;
+using System.Security.Claims;
 using System.Text.Json;
 using Lt2.Api.Contracts;
 using Lt2.Api.Contracts.Admin;
@@ -8,6 +9,7 @@ using Lt2.Identity;
 using Lt2.IntegrationTests.Infrastructure;
 using Lt2.Notifications;
 using Lt2.SharedKernel;
+using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace Lt2.IntegrationTests;
@@ -53,21 +55,40 @@ public sealed class PartySupportTests(DatabaseFixture database) : ApiTest(databa
         (await Database.ScalarAsync<long>("SELECT count(*) FROM identity.consent WHERE user_id = @u AND kind = 'party-support' AND withdrawn_at IS NULL", ("u", userId))).ShouldBe(0);
     }
 
+    /// <summary>Design 6.8: the consent is checked where the party is stored, so a caller inside the server cannot skip it.</summary>
+    [Fact]
+    public async Task Without_consent_no_party_is_stored_through_the_in_process_client_either()
+    {
+        var (member, email) = await Factory.MemberAsync();
+        using var _m = member;
+        var userId = await Database.UserIdAsync(email);
+        await using var scope = Factory.Services.CreateAsyncScope();
+        scope.ServiceProvider.GetRequiredService<IHttpContextAccessor>().HttpContext = new DefaultHttpContext
+        {
+            User = new ClaimsPrincipal(new ClaimsIdentity([new Claim(ClaimTypes.NameIdentifier, userId.ToString()), new Claim(ClaimTypes.Role, "member")], "test")),
+            RequestServices = scope.ServiceProvider,
+        };
+
+        var result = await scope.ServiceProvider.GetRequiredService<IMeApi>().SetPartySupportAsync(new PartySupportRequest { Party = Party, Consent = false });
+
+        result.IsSuccess.ShouldBeFalse();
+        result.Problem!.Code.ShouldBe("party.consent-required");
+        (await Database.ScalarAsync<long>("SELECT count(*) FROM identity.party_support WHERE user_id = @u", ("u", userId))).ShouldBe(0);
+        (await Database.ScalarAsync<long>("SELECT count(*) FROM identity.consent WHERE user_id = @u AND kind = 'party-support'", ("u", userId))).ShouldBe(0);
+    }
+
     [Fact]
     public async Task A_group_under_20_shows_no_number_anywhere_not_even_by_subtraction()
     {
-        using var moderator = await StaffMembers.ActiveAsync(Factory, Database, "moderator");
-        using var admin = await StaffMembers.ActiveAsync(Factory, Database, "administrator");
-        using (var set = await admin.Browser.SendAsync(HttpMethod.Put, ApiRoutes.Admin.SettingByKey("Digest:ThresholdMinimum"), new UpdateSettingRequest { Value = JsonSerializer.SerializeToElement(1) }))
-        {
-            set.StatusCode.ShouldBe(HttpStatusCode.OK);
-        }
+        using var moderator = await StaffMembers.SharedAsync(Factory, Database, "moderator");
+        using var admin = await StaffMembers.SharedAsync(Factory, Database, "administrator");
+        await admin.Browser.SetSettingAsync("Digest:ThresholdMinimum", 1);
 
         try
         {
             var (initiator, _) = await Factory.MemberAsync();
             using var _i = initiator;
-            var appeal = await Database.PrepareBillAsync(initiator, moderator.Browser, AppealSteps.ThirdBill, "against", threshold: 1);
+            var record = await Database.PrepareBillAsync(initiator, moderator.Browser, AppealSteps.ThirdBill, "against", threshold: 1);
 
             // Invented members: "for" 19 of the party and 30 others; "against" (with the initiator) 25 of the party and 3 others.
             var since = DateTimeOffset.UtcNow.AddDays(-90);
@@ -78,8 +99,8 @@ public sealed class PartySupportTests(DatabaseFixture database) : ApiTest(databa
                 foreach (var m in who)
                 {
                     await Database.ExecuteAsync(
-                        "INSERT INTO appeals.position (appeal_id, user_id, side, created_at, changed_at, member_since) VALUES (@a, @u, @s, now(), now(), @m)",
-                        ("a", appeal.Id), ("u", m.Id), ("s", side), ("m", since));
+                        "INSERT INTO appeals.position (record_id, user_id, side, created_at, changed_at, member_since) VALUES (@a, @u, @s, now(), now(), @m)",
+                        ("a", record.Id), ("u", m.Id), ("s", side), ("m", since));
                     if (party)
                     {
                         await Database.ExecuteAsync("INSERT INTO identity.party_support (user_id, party, given_at) VALUES (@u, @p, now())", ("u", m.Id), ("p", Party));
@@ -94,15 +115,15 @@ public sealed class PartySupportTests(DatabaseFixture database) : ApiTest(databa
 
             await using var scope = Factory.Services.CreateAsyncScope();
             var source = scope.ServiceProvider.GetRequiredService<IDigestSource>();
-            (await source.PartyNumbersAsync([appeal.Id], CancellationToken.None))[appeal.Id].ShouldBeEmpty(
+            (await source.PartyNumbersAsync([record.Id], CancellationToken.None))[record.Id].ShouldBeEmpty(
                 "19 for is under 20; 25 against would leave 3 others (2 + the initiator) to be read by subtraction");
 
             await AddAsync(members.Skip(76).Take(1), "for", party: true);
-            var numbers = (await source.PartyNumbersAsync([appeal.Id], CancellationToken.None))[appeal.Id].Single();
+            var numbers = (await source.PartyNumbersAsync([record.Id], CancellationToken.None))[record.Id].Single();
             numbers.ShouldBe(new PartyNumbers(Party, 20, null));
 
             // An urgent summary (dry run): the MP of that party would read the 20; nobody else, and no public copy, sees a party.
-            using var urgent = await moderator.Browser.PostAsync(AppealRoutes.With(DigestRoutes.Urgent, appeal.Id), new UrgentDigestRequest { Statement = "Bandymas." });
+            using var urgent = await moderator.Browser.PostAsync(AppealRoutes.With(DigestRoutes.Urgent, record.Id), new UrgentDigestRequest { Statement = "Bandymas." });
             urgent.StatusCode.ShouldBe(HttpStatusCode.Created, await urgent.Content.ReadAsStringAsync());
             var run = await urgent.ReadAsync<DigestRunResponse>();
             var preview = await moderator.Browser.GetJsonAsync<DigestPreviewResponse>(DigestRoutes.PreviewOf(run.Id, "jonas-petraitis"));
@@ -119,7 +140,7 @@ public sealed class PartySupportTests(DatabaseFixture database) : ApiTest(databa
         }
         finally
         {
-            using var restore = await admin.Browser.SendAsync(HttpMethod.Put, ApiRoutes.Admin.SettingByKey("Digest:ThresholdMinimum"), new UpdateSettingRequest { Value = JsonSerializer.SerializeToElement(50) });
+            await admin.Browser.ResetSettingAsync("Digest:ThresholdMinimum");
             await Database.FreeBillAsync(AppealSteps.ThirdBill);
         }
     }

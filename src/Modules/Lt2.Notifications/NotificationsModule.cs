@@ -4,6 +4,7 @@ using Lt2.Notifications.Outbox;
 using Lt2.Notifications.Templates;
 using Lt2.Notifications.Transports;
 using Lt2.SharedKernel;
+using Lt2.SharedKernel.Persistence;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -49,24 +50,31 @@ public static class NotificationsModule
         services.AddOptions<OutboxOptions>().Bind(configuration.GetSection(OutboxOptions.Section));
         services.AddSingleton<IEmailTransport, SmtpEmailTransport>();
         services.AddSingleton<SignInCodeTemplate>();
-        services.AddSingleton<IOutboxHandler, SignInCodeEmailHandler>();
         services.AddSingleton<AccountNoticeTemplate>();
-        services.AddSingleton<IOutboxHandler, AccountNoticeEmailHandler>();
         services.AddSingleton<ModerationNoticeTemplate>();
-        services.AddSingleton<IOutboxHandler, ModerationNoticeEmailHandler>();
         services.AddSingleton<WritingRestrictionTemplate>();
-        services.AddSingleton<IOutboxHandler, WritingRestrictionEmailHandler>();
         services.AddSingleton<FeedbackTemplates>();
-        services.AddSingleton<IOutboxHandler, FeedbackReplyEmailHandler>();
-        services.AddSingleton<IOutboxHandler, FeedbackNoticeEmailHandler>();
         services.AddSingleton<OrganisationTemplates>();
-        services.AddSingleton<IOutboxHandler, OrganisationCodeEmailHandler>();
-        services.AddSingleton<IOutboxHandler, OrganisationNoticeEmailHandler>();
         services.AddSingleton<FollowTemplates>();
-        services.AddSingleton<IOutboxHandler, FollowPlannedEmailHandler>();
-        services.AddSingleton<IOutboxHandler, FollowVotedEmailHandler>();
-        services.AddSingleton<IOutboxHandler, FollowStatementEmailHandler>();
+
+        // Every outbox kind and the template that renders it.
+        services.AddEmail<SignInCodeEmail, SignInCodeTemplate>(MessageKinds.SignInCodeEmail, t => t.Render);
+        services.AddEmail<AccountNoticeEmail, AccountNoticeTemplate>(MessageKinds.AccountNoticeEmail, t => t.Render);
+        services.AddEmail<ModerationNoticeEmail, ModerationNoticeTemplate>(MessageKinds.ModerationNoticeEmail, t => t.Render);
+        services.AddEmail<WritingRestrictionEmail, WritingRestrictionTemplate>(MessageKinds.WritingRestrictionEmail, t => t.Render);
+        services.AddEmail<FeedbackReplyEmail, FeedbackTemplates>(MessageKinds.FeedbackReplyEmail, t => t.Reply);
+        services.AddEmail<FeedbackNoticeEmail, FeedbackTemplates>(MessageKinds.FeedbackNoticeEmail, t => t.Notice);
+        services.AddEmail<OrganisationCodeEmail, OrganisationTemplates>(MessageKinds.OrganisationCodeEmail, t => t.Render);
+        services.AddEmail<OrganisationNoticeEmail, OrganisationTemplates>(MessageKinds.OrganisationNoticeEmail, t => t.Render);
+        services.AddEmail<FollowPlannedEmail, FollowTemplates>(MessageKinds.FollowPlannedEmail, t => t.Planned);
+        services.AddEmail<FollowVotedEmail, FollowTemplates>(MessageKinds.FollowVotedEmail, t => t.Voted);
+        services.AddEmail<FollowStatementEmail, FollowTemplates>(MessageKinds.FollowStatementEmail, t => t.Statement);
         services.AddSingleton<INotificationsDispatcher, OutboxDispatcher>();
         return services;
     }
+
+    private static void AddEmail<TModel, TTemplate>(this IServiceCollection services, string kind, Func<TTemplate, Func<TModel, EmailMessage>> render)
+        where TModel : class
+        where TTemplate : notnull =>
+        services.AddSingleton<IEmailRenderer>(sp => new EmailRenderer<TModel>(kind, render(sp.GetRequiredService<TTemplate>())));
 }

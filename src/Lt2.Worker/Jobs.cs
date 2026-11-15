@@ -62,14 +62,25 @@ public sealed class IdentityPurgeJob(IIdentityMaintenance maintenance, ILogger<I
     }
 }
 
+/// <summary>Daily housekeeping of the outbox (design 6.8): messages that gave up more than 30 days ago are deleted.</summary>
+public sealed class OutboxPurgeJob(INotificationsDispatcher dispatcher, ILogger<OutboxPurgeJob> logger)
+{
+    public async Task RunAsync(CancellationToken cancellationToken)
+    {
+        var removed = await dispatcher.PurgeFailedAsync(cancellationToken);
+        logger.LogInformation("Outbox housekeeping removed {Rows} failed messages", removed);
+    }
+}
+
 /// <summary>
 /// Design 7.2: the Seimas open-data import. Asked every 15 minutes; runs when due (every 15 minutes on sitting days,
 /// hourly otherwise, at once if it never succeeded). A Seimas outage fails the run, which Hangfire shows; the site keeps
-/// the last good data and the next run resumes.
+/// the last good data and the next run resumes. No Hangfire lock: the import's own advisory lock makes a second run
+/// return "skipped" at once, whereas waiting for a Hangfire lock would hold one of the two workers for up to an hour
+/// while a long first import runs.
 /// </summary>
 public sealed class ParliamentImportJob(IParliamentImport import, ILogger<ParliamentImportJob> logger)
 {
-    [DisableConcurrentExecution(timeoutInSeconds: 60 * 60)]
     [AutomaticRetry(Attempts = 0, OnAttemptsExceeded = AttemptsExceededAction.Delete)]
     public async Task RunAsync(CancellationToken cancellationToken)
     {
@@ -88,7 +99,7 @@ public sealed class ParliamentImportJob(IParliamentImport import, ILogger<Parlia
 }
 
 /// <summary>
-/// The daily aggregate of appeals (design 5.3): yesterday's row once the day is over, today's so far. Hourly, so a missed
+/// The daily aggregate of the bills' records (design 5.3): yesterday's row once the day is over, today's so far. Hourly, so a missed
 /// run catches up; a day's row is overwritten by the next run for that day.
 /// </summary>
 public sealed class AppealsDailyJob(IAppealsMaintenance maintenance, TimeProvider clock, ILogger<AppealsDailyJob> logger)
@@ -96,11 +107,11 @@ public sealed class AppealsDailyJob(IAppealsMaintenance maintenance, TimeProvide
     [DisableConcurrentExecution(timeoutInSeconds: 30 * 60)]
     public async Task RunAsync(CancellationToken cancellationToken)
     {
-        var today = DateOnly.FromDateTime(TimeZoneInfo.ConvertTime(clock.GetUtcNow(), TimeZoneInfo.FindSystemTimeZoneById("Europe/Vilnius")).DateTime);
-        var appeals = await maintenance.AggregateDayAsync(today.AddDays(-1), cancellationToken);
+        var today = Lt2.SharedKernel.VilniusTime.Today(clock);
+        var records = await maintenance.AggregateDayAsync(today.AddDays(-1), cancellationToken);
         await maintenance.AggregateDayAsync(today, cancellationToken);
         var closed = await maintenance.CloseFinishedAsync(cancellationToken);
-        logger.LogInformation("Daily appeal aggregates written for {Appeals} appeals; {Closed} closed after the final vote", appeals, closed);
+        logger.LogInformation("Daily aggregates written for {Records} records; {Closed} closed after the final vote", records, closed);
     }
 }
 
@@ -134,7 +145,7 @@ public sealed class DigestJob(IDigests digests, TimeProvider clock, ILogger<Dige
         var made = await digests.RunDueAsync(clock.GetUtcNow(), cancellationToken);
         foreach (var run in made)
         {
-            logger.LogInformation("Summary {Kind} made in dry-run: {Items} appeals, {Mps} MPs", run.Kind, run.Items.Count, run.MpCount);
+            logger.LogInformation("Summary {Kind} made in dry-run: {Items} bills, {Mps} MPs", run.Kind, run.Items.Count, run.MpCount);
         }
     }
 }
@@ -175,18 +186,26 @@ public sealed class DescriptionSummaryJob(IDescriptionSummaries summaries)
 }
 
 /// <summary>Registers the recurring Hangfire jobs at start-up, in Vilnius time (design 3: <c>Europe/Vilnius</c> for schedules).</summary>
-internal sealed class RecurringJobs(IRecurringJobManager jobs) : IHostedService
+internal sealed class RecurringJobs(IRecurringJobManager jobs, IConfiguration configuration) : IHostedService
 {
     public const string ParliamentImport = "parliament-import";
     public const string DescriptionSummaries = "description-summaries";
 
+    /// <summary>The follow job's schedule unless the configuration sets <c>Jobs:FollowsCron</c>.</summary>
+    public const string FollowsCron = "7,22,37,52 * * * *";
+
     public Task StartAsync(CancellationToken cancellationToken)
     {
-        var vilnius = TimeZoneInfo.FindSystemTimeZoneById("Europe/Vilnius");
+        var vilnius = Lt2.SharedKernel.VilniusTime.Zone;
         jobs.AddOrUpdate<IdentityPurgeJob>(
             "identity-purge",
             job => job.RunAsync(CancellationToken.None),
             "15 3 * * *",
+            new RecurringJobOptions { TimeZone = vilnius });
+        jobs.AddOrUpdate<OutboxPurgeJob>(
+            "outbox-purge",
+            job => job.RunAsync(CancellationToken.None),
+            "25 3 * * *",
             new RecurringJobOptions { TimeZone = vilnius });
         jobs.AddOrUpdate<ParliamentImportJob>(
             ParliamentImport,
@@ -217,11 +236,12 @@ internal sealed class RecurringJobs(IRecurringJobManager jobs) : IHostedService
             "*/15 * * * *",
             new RecurringJobOptions { TimeZone = vilnius });
 
-        // Design 8.11.2: every 15 minutes, a few minutes after the import (:00, :15 …) and the agenda watcher (:20).
+        // Design 8.11.2: every 15 minutes, a few minutes after the import (:00, :15 …) and the agenda watcher (:20). The local
+        // stack may set Jobs:FollowsCron (deploy/.env: every minute), so the end-to-end follow email arrives without a wait.
         jobs.AddOrUpdate<FollowJob>(
             "follows",
             job => job.RunAsync(CancellationToken.None),
-            "7,22,37,52 * * * *",
+            configuration["Jobs:FollowsCron"] is { Length: > 0 } followsCron ? followsCron : FollowsCron,
             new RecurringJobOptions { TimeZone = vilnius });
 
         // Design 8.13: hourly at :40, after the import and the agenda watcher; once at start-up too.

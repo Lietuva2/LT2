@@ -16,7 +16,7 @@
         <figcaption class="row small">
             @foreach (var code in Order.Where(c => Ballots.Any(b => b.Choice == c)))
             {
-                <span class="@Formats.ChoiceClass(code)">@F.Choice(code) <span class="num">@Formats.Number(Ballots.Count(b => b.Choice == code))</span></span>
+                <span class="@Formats.ChoiceClass(code)">@F.Choice(code) <span class="num">@Display.Number(Ballots.Count(b => b.Choice == code))</span></span>
             }
         </figcaption>
     </figure>

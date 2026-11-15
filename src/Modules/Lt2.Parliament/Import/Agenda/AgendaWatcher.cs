@@ -1,7 +1,9 @@
 using System.Security.Cryptography;
 using System.Text;
+using Lt2.Parliament.Import.Client;
 using Lt2.Parliament.Infrastructure;
 using Lt2.SharedKernel;
+using Lt2.SharedKernel.Http;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
@@ -88,7 +90,9 @@ internal sealed class AgendaWatcher(
     ILogger<AgendaWatcher> logger) : IAgendaWatch
 {
     public const string HttpClientName = "lrs-agenda";
-    private const string SyntheticHeader = "X-Lt2-Synthetic";
+
+    /// <summary>The failure recorded for a page with sitting dates and no bill while planned items exist.</summary>
+    internal const string EmptyPage = "sitting dates but no bill found while planned items exist: the page layout may have changed";
 
     public async Task<AgendaOutcome> RunAsync(CancellationToken cancellationToken)
     {
@@ -98,27 +102,34 @@ internal sealed class AgendaWatcher(
         }
 
         var url = new Uri(options.Value.BaseAddress, options.Value.ListPath);
-        string html;
+        byte[] body;
         bool synthetic;
         try
         {
             using var client = http.CreateClient(HttpClientName);
             using var response = await client.GetAsync(url, cancellationToken);
             response.EnsureSuccessStatusCode();
-            html = Encoding.UTF8.GetString(await response.Content.ReadAsByteArrayAsync(cancellationToken));
-            synthetic = response.Headers.Contains(SyntheticHeader);
+            body = await response.Content.ReadAsByteArrayAsync(cancellationToken);
+            synthetic = SyntheticMarker.IsOn(response, body);
         }
-        catch (Exception ex) when (ex is HttpRequestException or TaskCanceledException && !cancellationToken.IsCancellationRequested)
+        catch (Exception ex) when (HttpOutage.Is(ex, cancellationToken) || ex is OutboundHostNotAllowedException)
         {
-            // Alerting (design 9.4): an error line. The last good dates and the moderators' corrections stay.
-            logger.LogError(ex, "Agenda page could not be fetched; planned dates unchanged");
-            return new AgendaOutcome("failed", 0, 0, "fetch failed");
+            // Alerting (design 9.4): an error line and a failed run. The last good dates and the moderators' corrections
+            // stay. A host off the allowlist is a configuration error, reported the same way.
+            logger.LogError(ex, "Agenda page could not be fetched ({Reason}); planned dates unchanged", ex.GetType().Name);
+            return new AgendaOutcome("failed", 0, 0, ex is OutboundHostNotAllowedException ? "host not allowed" : "fetch failed");
         }
 
+        var html = Encoding.UTF8.GetString(body);
         var parse = AgendaParser.Parse(html, url.ToString());
         var now = clock.GetUtcNow();
         await using var db = await contexts.CreateDbContextAsync(cancellationToken);
-        var body = Encoding.UTF8.GetBytes(html);
+
+        // Design 6.8: a page with sitting dates but not one bill, while planned items exist, changes nothing.
+        var today = VilniusTime.DateOf(now);
+        var empty = parse.Succeeded && parse.Rows.Count == 0
+            && await db.PlannedItems.AnyAsync(p => p.GoneAt == null && p.PlannedDate >= today, cancellationToken);
+        var failure = empty ? EmptyPage : parse.Failure;
         db.AgendaSnapshots.Add(new AgendaSnapshot
         {
             Id = Ids.New(clock),
@@ -127,18 +138,18 @@ internal sealed class AgendaWatcher(
             Body = ParliamentImporter.Compress(body),
             Synthetic = synthetic,
             FetchedAt = now,
-            Failure = parse.Failure,
+            Failure = failure,
             Rows = parse.Rows.Count,
         });
 
-        if (!parse.Succeeded)
+        if (failure is not null)
         {
             await db.SaveChangesAsync(cancellationToken);
-            logger.LogError("Agenda page refused: {Failure}; planned dates unchanged until a moderator or a readable page changes them", parse.Failure);
-            return new AgendaOutcome("refused", parse.Rows.Count, 0, parse.Failure);
+            logger.LogError("Agenda page refused: {Failure}; planned dates unchanged until a moderator or a readable page changes them", failure);
+            return new AgendaOutcome(empty ? "failed" : "refused", parse.Rows.Count, 0, failure);
         }
 
-        var changes = Apply(db, parse.Rows, now);
+        var changes = await ApplyAsync(db, parse.Rows, now, cancellationToken);
         await db.SaveChangesAsync(cancellationToken);
         logger.LogInformation("Agenda read: {Rows} planned items, {Changes} changes", parse.Rows.Count, changes);
         return new AgendaOutcome("succeeded", parse.Rows.Count, changes, null);
@@ -148,11 +159,10 @@ internal sealed class AgendaWatcher(
     /// Brings the agenda rows in line with the page: unchanged rows are seen again, a moved date or stage replaces the
     /// row, and a future item missing from the page is marked gone. Moderator rows are never touched here.
     /// </summary>
-    internal int Apply(ParliamentDb db, IReadOnlyList<AgendaRow> rows, DateTimeOffset now)
+    private async Task<int> ApplyAsync(ParliamentDb db, IReadOnlyList<AgendaRow> rows, DateTimeOffset now, CancellationToken cancellationToken)
     {
-        var today = DateOnly.FromDateTime(TimeZoneInfo.ConvertTime(now, PlannedAgenda.Vilnius).DateTime);
-        var active = db.PlannedItems.Where(p => p.Source == "agenda" && p.GoneAt == null).ToList();
-        var changes = 0;
+        var today = VilniusTime.DateOf(now);
+        var active = await db.PlannedItems.Where(p => p.Source == "agenda" && p.GoneAt == null).ToListAsync(cancellationToken);        var changes = 0;
         foreach (var row in rows)
         {
             var same = active.FirstOrDefault(p => p.BillNumber == row.BillNumber && p.PlannedDate == row.SittingDate && p.Stage == row.Stage);

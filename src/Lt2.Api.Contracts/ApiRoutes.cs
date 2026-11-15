@@ -87,11 +87,11 @@ public static class AppealRoutes
 {
     public const string Appeals = ApiRoutes.Prefix + "/appeals";
     public const string Rules = Appeals + "/rules";
-    public const string Appeal = ApiRoutes.Prefix + "/bills/{number}/appeal";
-    public const string Mine = Appeal + "/mine";
-    public const string History = Appeal + "/history";
+    public const string Record = ApiRoutes.Prefix + "/bills/{number}/record";
+    public const string Mine = Record + "/mine";
+    public const string History = Record + "/history";
 
-    public static string HistoryOf(string number) => AppealOf(number) + "/history";
+    public static string HistoryOf(string number) => RecordOf(number) + "/history";
 
     /// <summary>Design 8.12.3: a moderator's state of a bill, its record for an action, and its description; the AI draft (8.11.4).</summary>
     public const string ModerationBill = ApiRoutes.Prefix + "/moderation/bills/{number}";
@@ -116,18 +116,18 @@ public static class AppealRoutes
 
     public static string DescriptionDraftOf(string number) => ModerationBillOf(number) + "/description-draft";
 
-    public const string Position = Appeal + "/position";
-    public const string Reasons = Appeal + "/reasons";
-    public const string SimilarReasons = Appeal + "/reasons/similar";
+    public const string Position = Record + "/position";
+    public const string Reasons = Record + "/reasons";
+    public const string SimilarReasons = Record + "/reasons/similar";
     public const string Endorsement = ApiRoutes.Prefix + "/reasons/{id:guid}/endorsement";
     public const string Reason = ApiRoutes.Prefix + "/reasons/{id:guid}";
     public const string Reports = ApiRoutes.Prefix + "/reports";
-    public const string Flags = Appeal + "/flags";
-    public const string AppealPlanned = ApiRoutes.Prefix + "/moderation/appeals/{id:guid}/planned";
-    public const string HoldAppeal = ApiRoutes.Prefix + "/moderation/appeals/{id:guid}/hold";
-    public const string ReleaseAppeal = ApiRoutes.Prefix + "/moderation/appeals/{id:guid}/release";
+    public const string Flags = Record + "/flags";
+    public const string RecordPlanned = ApiRoutes.Prefix + "/moderation/records/{id:guid}/planned";
+    public const string HoldRecord = ApiRoutes.Prefix + "/moderation/records/{id:guid}/hold";
+    public const string ReleaseRecord = ApiRoutes.Prefix + "/moderation/records/{id:guid}/release";
 
-    public static string FlagsOf(string number) => AppealOf(number) + "/flags";
+    public static string FlagsOf(string number) => RecordOf(number) + "/flags";
 
     public const string ModerationQueue = ApiRoutes.Prefix + "/moderation/queue";
     public const string MyRestriction = ApiRoutes.Prefix + "/me/writing-restriction";
@@ -137,27 +137,27 @@ public static class AppealRoutes
 
     public const string Restrictions = ApiRoutes.Prefix + "/moderation/restrictions";
     public const string LiftRestriction = ApiRoutes.Prefix + "/moderation/restrictions/{id:guid}/lift";
-    public const string KeepAppeal = ApiRoutes.Prefix + "/moderation/appeals/{id:guid}/keep";
-    public const string HideAppeal = ApiRoutes.Prefix + "/moderation/appeals/{id:guid}/hide";
+    public const string KeepRecord = ApiRoutes.Prefix + "/moderation/records/{id:guid}/keep";
+    public const string HideRecord = ApiRoutes.Prefix + "/moderation/records/{id:guid}/hide";
     public const string Hidden = ApiRoutes.Prefix + "/moderation/hidden";
-    public const string RestoreAppeal = ApiRoutes.Prefix + "/moderation/appeals/{id:guid}/restore";
+    public const string RestoreRecord = ApiRoutes.Prefix + "/moderation/records/{id:guid}/restore";
     public const string RestoreReason = ApiRoutes.Prefix + "/moderation/reasons/{id:guid}/restore";
-    public const string AppealThreshold = ApiRoutes.Prefix + "/moderation/appeals/{id:guid}/threshold";
+    public const string RecordThreshold = ApiRoutes.Prefix + "/moderation/records/{id:guid}/threshold";
 
     public const string PublishReason = ApiRoutes.Prefix + "/moderation/reasons/{id:guid}/publish";
     public const string HideReason = ApiRoutes.Prefix + "/moderation/reasons/{id:guid}/hide";
     public const string MergeReason = ApiRoutes.Prefix + "/moderation/reasons/{id:guid}/merge";
 
-    public static string AppealOf(string number) => $"{ApiRoutes.Prefix}/bills/{Uri.EscapeDataString(number)}/appeal";
+    public static string RecordOf(string number) => $"{ApiRoutes.Prefix}/bills/{Uri.EscapeDataString(number)}/record";
 
-    public static string MineOf(string number) => AppealOf(number) + "/mine";
+    public static string MineOf(string number) => RecordOf(number) + "/mine";
 
 
-    public static string PositionOf(string number) => AppealOf(number) + "/position";
+    public static string PositionOf(string number) => RecordOf(number) + "/position";
 
-    public static string ReasonsOf(string number) => AppealOf(number) + "/reasons";
+    public static string ReasonsOf(string number) => RecordOf(number) + "/reasons";
 
-    public static string SimilarReasonsOf(string number) => AppealOf(number) + "/reasons/similar";
+    public static string SimilarReasonsOf(string number) => RecordOf(number) + "/reasons/similar";
 
     public static string EndorsementOf(Guid reasonId) => $"{ApiRoutes.Prefix}/reasons/{reasonId}/endorsement";
 

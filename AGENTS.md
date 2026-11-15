@@ -60,11 +60,20 @@ JavaScript framework.
 ```
 design/                    system-design.md, the agreed design; ui/ the interface prototype (tokens, sample pages)
 src/Lt2.Web                host: API endpoints in Endpoints/<Module>/ (one per file), Blazor server rendering,
-                           auth, security middleware
-src/Lt2.Web.Client         Blazor WebAssembly components and HTTP implementations of the API clients
+                           auth, security middleware (forwarding headers believed only from ReverseProxy:Address,
+                           Security/TrustedProxy.cs; no-store on pages answered to a signed-in session)
+src/Lt2.Hosting            what the web host and the worker set up the same way: Serilog and OpenTelemetry
+                           (Observability.AddLt2Observability); no module references it
+src/Lt2.Web.Client         Blazor WebAssembly components and HTTP implementations of the API clients; the interface's
+                           shared pieces: Components/InteractiveBase<TText>, Display (numbers and dates, Vilnius),
+                           StringLocalizerExtensions (Format), CopyLink, FieldError, Messages
 src/Lt2.Api.Contracts      DTOs, routes, client interfaces, validators (shared by server, client and tests)
-src/Lt2.SharedKernel       Result type, identifiers (UUID v7), event base types, outbox, audit and settings
-                           interfaces, connection strings; no clock of its own (TimeProvider is used)
+src/Lt2.SharedKernel       Result type, identifiers (UUID v7), outbox, audit and settings interfaces, connection
+                           strings and the one EF Core set-up (Persistence/: UseLt2Npgsql), VilniusTime (the
+                           Europe/Vilnius zone and its days), the signed-in account (ClaimsPrincipal.UserId()), the
+                           staff actor (StaffActor) and staff statements (StaffStatements), the outbound allowlist
+                           (Http/: hosts from Outbound:AllowedHosts plus AddOutboundHost; redirects followed only within
+                           it); no clock of its own (TimeProvider is used)
 src/Modules/               Lt2.Identity, Lt2.Notifications, Lt2.Audit, Lt2.Parliament (Seimas open-data client,
                            import, statistics); Lt2.Appeals (bills' records, positions, arguments, endorsements,
                            reports, moderation, rule-based pre-screening, flags, summaries content, descriptions written
@@ -78,10 +87,12 @@ src/Modules/               Lt2.Identity, Lt2.Notifications, Lt2.Audit, Lt2.Parli
                            IOrganisationDirectory, IOrganisationCodeSwitch). The host
                            composes the agenda (GET /api/v1/agenda) and /me/follows from the modules' interfaces.
 src/Lt2.Worker             Hangfire server: outbox dispatch loop, the parliament import, the agenda watcher (lrs.lt
-                           pages; off unless Agenda:BaseAddress is set), appeals daily aggregates and closing, summaries
+                           pages; off unless Agenda:BaseAddress is set), the daily aggregates and closing of the bills' records, summaries
                            in dry-run (nothing is sent in M2a), the follow emails (every 15 minutes), the AI summaries
                            of bills (hourly; makes nothing until a text reader and a provider exist), a daily identity
-                           clean-up
+                           clean-up (with the unsent mail of purged registrations) and a daily outbox clean-up (failed
+                           messages after 30 days); the dispatcher sends sign-in and confirmation codes first, a batch
+                           over one SMTP connection, and stores only an error's type and status code (design 6.8)
 src/Lt2.Migrator           creates the database roles, applies migrations and grants; also seeds invitations, grants
                            the first staff role, empties invented parliament data and (local stack only) fills the
                            demonstration record on XVP-0412, three invented organisations with statements on it, and an
@@ -93,11 +104,12 @@ tests/Lt2.ArchitectureTests module boundaries, static assets
 tests/Lt2.E2E              Playwright and stack checks against a running compose stack; skipped without one
 tests/Lt2.Parliament.ImportTests  Seimas client, parsers, register of assumptions (Seimas/ASSUMPTIONS.md), import against
                            the stand-in and PostgreSQL; live contract suite only with LT2_SEIMAS_LIVE=1
-deploy/                    Dockerfile, compose.yaml, Caddyfile, .env (local defaults), init-secrets.py (optional target
+deploy/                    Dockerfile (restore layer first; .dockerignore at the root), compose.yaml, Caddyfile, .env (local defaults), init-secrets.py (optional target
                            directory; as root on Linux gives each secret to the container user reading it), secrets/;
                            compose.shared-proxy.yaml and shared-proxy.Caddyfile: behind a server's existing Caddy, with
                            the Mailpit viewer on its own hostname behind Mailpit's password file (design 9.2,
-                           README.md); LT2_SECRETS_DIR and LT2_IMAGE_TAG move secrets and tag images
+                           README.md; LT2_PROXY_HOST names that Caddy, the only sender whose forwarding headers count);
+                           LT2_SECRETS_DIR and LT2_IMAGE_TAG move secrets and tag images
 tools/Lt2.SeimasStandIn     local and test only: stand-in for the Seimas open data and the lrs.lt agenda page (/darbotvarke),
                            invented answers; never shipped. Recent/ (container only, never in tests) adds a sitting and
                            a stage vote dated two days before today, so the local agenda has recent votes
@@ -130,7 +142,7 @@ If Windows has reserved port 8080, set `LT2_HTTP_PORT=8090` for every compose co
   `Lt2.Api.Contracts`; in the browser they call HTTP, on the server the same handler in-process. Every operation has an
   integration test over HTTP.
 - **Public pages work without JavaScript** and are server-rendered. Only signed-in features use WebAssembly.
-- **Island controls stay disabled until the island is interactive** (`InteractiveBase.Locked`, or `!RendererInfo.IsInteractive`),
+- **Island controls stay disabled until the island is interactive** (`InteractiveBase<TText>.Locked`, or `!RendererInfo.IsInteractive`),
   fields included, and the page carries `<NeedsScript />`. `tests/Lt2.E2E/IslandsBeforeStartTests.cs` walks the pages with the
   WebAssembly runtime blocked; add a new island page there.
 - **Counted rules are pure functions with unit tests** whose names read as the rule: statistics, thresholds, summary
@@ -140,7 +152,30 @@ If Windows has reserved port 8080, set `LT2_HTTP_PORT=8090` for every compose co
 - **Imports are repeatable.** Store every Seimas response raw, parse separately, upsert by Seimas identifiers.
 - A feature is one folder: contract, validator, handler, endpoint, tests.
 - Times are UTC in the database; schedules and display use `Europe/Vilnius`. Use `TimeProvider`, never `DateTime.Now`.
+  Vilnius days come from `VilniusTime` in SharedKernel (`Zone`, `DateOf`, `Today`, `StartOf`); do not look the zone up again.
+- The signed-in account is `principal.UserId()` (SharedKernel); a staff member acting is a `StaffActor`. A module's
+  `DbContext` is configured with `UseLt2Npgsql` (SharedKernel/Persistence), nowhere by hand.
+- Limits that count rows (codes per address, one current invitation code, one urgent summary a week, follows per
+  account) are counted under a PostgreSQL advisory lock in the same transaction (design 6.8); Identity's are in
+  `IdentityLocks`, Appeals' in `AdvisoryLocks`.
+- Every email is built by `EmailLayout` (Notifications/Templates) and rendered from its outbox kind by one
+  `EmailRenderer<T>` registered in `NotificationsModule`; shared texts use the `Email.*` keys of `EmailTemplates.resx`.
+  Deleting an account or purging a pending one calls `IOutbox.ForgetAsync` in the same transaction.
+- Rules are checked where the data is written (design 6.8), not only by the HTTP validators: a module service enforces
+  them for every caller. A moderator's statement goes through `StatementRules` in Appeals and `StaffStatements` elsewhere
+  (the same rule); a moderator's action endpoint runs through
+  `ModeratorEndpoint.ActAsync` (`src/Lt2.Web/Endpoints/Moderation`).
 - User-facing text goes through `IStringLocalizer`. User input is plain text, encoded on output.
+- **One way to do each thing in the interface.** An interactive component inherits `InteractiveBase<TText>`
+  (`Lt2.Web.Client/Components`; `TText` is its resource marker): `RunAsync` for every action (one at a time, failures
+  become the message), `Succeeded`/`Show` for an answer, `Valid` for the shared validator, `IsSignedInAsync`, and
+  `ErrorClass`/`Invalid`/`DescribedBy` with `<FieldError For="input-id">` for field errors. A text with placeholders is
+  `L.Format(key, …)`; numbers and dates are `Display` (`Number`, `Day`, `DayTime`, `Today(TimeProvider)`), on the
+  server pages too; the moderators' contact address is `Configuration.ModeratorContact()`. A link to copy is
+  `<CopyLink>`; "Atkurti" is `<RestoreForm>`; a queued argument is `<QueueReasonItem>`, a queued statement
+  `<StatementQueueItem>`; the bill page's islands share the caller's answers through `MyBillState`. A list whose items
+  hold state or re-sort is keyed (`@key`), and an element id is unique on the page (a component shown twice takes an
+  `IdPrefix`).
 
 ## Security and privacy rules
 
@@ -153,12 +188,21 @@ code review.
 - Group numbers (for example supporters of a party) are shown only for groups of at least 20.
 - Sign-in has no passwords: an emailed one-time code or a passkey. A staff role works only in a session signed in
   with a staff passkey; a code session is a member session, whatever roles the account has. Politicians need a
-  passkey too. Responses never reveal whether an email is registered.
+  passkey too. Responses never reveal whether an email is registered. Changing roles, resetting an account and saving
+  a runtime setting need a fresh passkey confirmation (`FreshConfirmation`, the last ten minutes); a staff account is
+  deleted only from its staff passkey session; what a staff member did keeps their account id after deletion (design 6.9).
+- The read-only database role reads only the tables on `DatabaseRoles.ReadableTables`; a new table goes on that list
+  or on `DatabaseRoles.WithheldTables` in the same change (an architecture test fails otherwise).
 - Session cookie only (`__Host-`, Secure, HttpOnly, SameSite=Lax). No tokens in the browser. Every state-changing
   call needs the antiforgery header and passes the Origin check. CORS stays off.
 - No secrets in the repository or in images. No real personal data in tests or fixtures.
 - No tracking pixels or click tracking in any email.
-- Outbound requests go only to the allowlisted hosts.
+- Outbound requests go only to the allowlisted hosts, and follow no redirect to another host.
+- Codes and tokens are not sent in addresses: a link the site makes carries its secret after the `#` (`/prisijungti#kodas=…`,
+  a representative's `/organizacijos/kvietimas#…`); the page reads it and sends it in a request body (design 6.8). Old
+  `?kodas=` links still work.
+- Forwarding headers count only from the proxy named in `ReverseProxy:Address`. A page answered to a signed-in session is
+  `no-store`.
 
 ## Product rules to keep consistent
 
@@ -179,10 +223,13 @@ official `@lrs.lt` address from open data; the link is tied to the Seimas person
 - The bill and the appeal are one object: the bill's page `/seimas/{number}`. Every active bill (in the catalogue, no
   final vote) is open at once: anyone signed in takes a side, writes and marks arguments, follows, shares, reports.
   Nobody proposes, opens, asks for or approves an appeal. The old `/seimas/{n}/kreipimasis` addresses redirect.
-- The Appeals module keeps one record per bill (`appeals.appeal`: open, closed or hidden), created when first needed (the
+- The Appeals module keeps one record per bill (`appeals.bill_record`: open, closed or hidden), created when first needed (the
   first side, argument or description, or a moderator's action) under the bill's lock and a unique index. It has no
   initiator, and nothing public says who took part first. Answers for an active bill without a record are the empty open
   state, not "not found".
+- The code calls that row the bill's record (design 8.12, owner 2026-11-15): the entity `BillRecord`, columns `record_id`,
+  error codes `record.*`, the stored kind `record`. "Appeal" in the singular names no object in the code; the module,
+  its schema `appeals`, the `Appeals:` settings and the word *kreipimasis* stay.
 - One position per person per bill, private, changeable until the bill closes at the final Seimas vote.
 - Reasons: plain text up to 500 characters, public with the author's display name, for either side, whatever the
   author's own (no side needed; the writing box preselects the author's side if any). Nothing public may tell whether
@@ -211,6 +258,12 @@ official `@lrs.lt` address from open data; the link is tied to the Seimas person
   a bill's record closes taking part on it (sides and arguments kept unseen; "Atkurti" brings them back). A moderator
   in a staff-passkey session gets the queue's argument actions on the bill's page too (owner, 2026-11-14), from the
   moderators-only answer `GET /moderation/bills/{number}`; nobody else sees a control or anything from it.
+- **After the final vote** (design 6.9, owner 2026-11-15): a report about an argument or the description of a closed
+  record reaches the queue. On a closed record a moderator can only hide and restore an argument, correct or remove the
+  description and answer a report with "Palikti" (and hide the whole record, as before); each with a statement, audited,
+  the author told. The frozen counts and summaries already made never change. Everything else (threshold, holds,
+  urgent summaries, merging, publishing a waiting argument, confirming a description) stays refused; the rules live in
+  `RecordRules.CheckRecordAction` / `CheckReasonAction`, and the bill's moderators' panel and the queue offer exactly them.
 
 **Reasons to come (design 8.11).**
 - The agenda (`/darbotvarke`, first in the menu) and the front page's "Artimiausiu metu Seime" come from one public,
@@ -225,9 +278,11 @@ official `@lrs.lt` address from open data; the link is tied to the Seimas person
   person's side, the bill's counts or other people.
 - Links in emails: a message carries the site path, and the template makes it a full address with
   `SiteLinks.Absolute` from `Site:Address` (design 5.6). That is deployment configuration, never a runtime setting.
-- The share line: the personal invitation link with `tikslas` (a path under `/seimas/`, anything else ignored), landing
+- The share line: the personal invitation link with `tikslas` beside the code after the `#` (a path under `/seimas/`, anything else ignored), landing
   on the bill's page, kept only in the browser (session storage) through the sign-in steps; the same link whichever
   side; no link when the code is off or used up.
+- Sign-in links on a bill's page (side picker, follow, report; owner 2026-11-15) carry the page the same way
+  (`LandingPath.SignInLink`: `/prisijungti#tikslas=...`), so signing in and registering both end on the bill.
 - The AI draft is only in a moderator's "write or correct the description" form, on any active bill, from pasted official
   text: the Claude API (owner, 2026-11-13), the model the setting `Ai:DraftModel`, on only with `Ai:Provider` = `claude`
   and a key in `deploy/secrets/ai_api_key`; otherwise nothing mentions a draft. The prompt is the public file
@@ -254,6 +309,9 @@ official `@lrs.lt` address from open data; the link is tied to the Seimas person
   the queue; block and lift (lifting returns exactly what was shown), hide and restore a statement, publish a waiting one,
   confirm by hand, withdraw a confirmation, "Palikti"; each emailed to every representative. Report ground "Apsimeta kita
   organizacija". Not built: "keep out of summaries".
+- A statement still waiting when its bill closes (owner, 2026-11-15) can no longer be published (error
+  `statement.waiting-bill-closed`); the queue still shows it and offers only "Palikti" (`/moderation/statements/{id}/keep`:
+  it stays unpublished, leaves the queue unless reported, representatives are told) and hiding.
 - Stage B (built 2026-11-14): one invitation code per organisation (Identity, kind `organisation`, no account on it; the
   representatives' part of the profile shows its link, a link per bill with a statement and one number, filled in only in
   the browser); a registration with it leaves only the level on the account (the pending account holds no such code: the
@@ -283,6 +341,21 @@ marks, counts or sign-in, is never shown to anyone else, and goes with the accou
 
 ## Wording and tone
 
+**Explanatory text (design 8.15, owner 2026-11-15).** A screen shows its title, at most one short paragraph that says
+what it is, the fields with their labels, and the action; every other explanation is one click away: collapsed on the
+page, or on the methodology page (`/metodika`) or the moderation rules, reached by a short link to the part that says
+it (the part must exist; give it an `id`). What always stays inline: what becomes public and under whose name, what
+cannot be undone, a consent and what it covers, the invented-data notice, "not a representative poll" beside the
+numbers, that summaries are a trial and nothing is sent, status and error messages, labels, a field's hint needed to
+fill it (format, limit), and what the design requires beside data (a description's label and date, the 30-day count,
+a moderator's statement). **The one collapsing pattern** is the browser's own
+`<details class="more stack stack--tight"><summary class="linkish small">…</summary>…</details>`: no script, so it
+opens on server-rendered pages and in an island before it starts; an island never sets `open` from code (`js/lt2-disclosures.js`,
+loaded on every page, gives a disclosure the person opened before the island started the same state once the island
+has replaced the markup); the summary
+names what opens ("Kaip tai veikia", "Kas yra riba?"; a bare "Plačiau" only when it is the only one on the screen).
+**New screens follow the rule from the start.** `design/text-audit-2026-11-15.md` is the screen-by-screen record.
+
 - The interface is in **Lithuanian**. New copy is read by a native speaker before it is shown externally.
 - Neutral-to-positive towards politicians: connection and explanation, not control. Prefer "skirtumas" over
   "atotrūkis"; neutral chips, not warning colours, for differences.
@@ -305,6 +378,30 @@ for 6 800, against 4 280; MP **Jonas Petraitis** (Reformų partija), whose posit
 Jonaitienė** (Pilietinė sąjunga); expert **Rūta Mockutė**. Recorded Seimas responses used as fixtures are real public
 data; everything about users is invented.
 
+Addresses in tests end in `@pavyzdys.test`; hosts (an organisation's website, the site's own address) are invented names
+under `.test`. Only the rules about public mail services name real providers (gmail.com, inbox.lt …), because those
+rules are about them.
+
+## Writing tests
+
+- **Use the shared steps; add to them rather than copy.** Integration tests: `tests/Lt2.IntegrationTests/Infrastructure/`
+  (`AppealSteps`, `OrganisationSteps`, `ReasonsToComeSteps` with `VilniusToday` and `MondayInWeeks`, `SettingsSteps`,
+  `StaffMembers`, `LoggingFactory`). End-to-end tests: `tests/Lt2.E2E/E2ESteps.cs` (registration from any link,
+  `Mailpit`, screenshots, API calls from the page, closing a test's organisation).
+- **Staff:** `ModeratorAsync()` / `AdministratorAsync()` of `ApiTest` give the run's shared staff members. Only a test about
+  the staff account itself (passkeys, sessions, a reset, a per-moderator limit) makes its own with `StaffMembers.ActiveAsync`.
+- **Settings:** change one through the application that reads it (each keeps a short cache) with `SetSettingAsync`, and
+  put it back in a `finally` with `ResetSettingAsync` (the design's default) or `WithSettingAsync` (the value before);
+  never with a number written into the test.
+- **A check that something is absent must be able to fail.** Assert the status of every set-up step and of every read a
+  privacy sweep makes; compare an answer's exact set of fields rather than searching a payload that holds random ids for a
+  short string; prove the swept answer held what it is about.
+- **Shared data:** the integration tests share one database and run one at a time; a test frees the bill it uses
+  (`FreeBillAsync`) and keeps to its own summary weeks (`MondayInWeeks`). The end-to-end classes share one stack and run one
+  at a time; a test that hides or changes a demonstration bill restores it in a `finally`, and every name a run gives an
+  organisation carries "(E2E)".
+- **Waits:** no fixed sleeps. In end-to-end tests a step after a navigation or a sign-in waits up to `E2ESteps.Slow`
+  (60 s); Playwright's default of 5 s failed when an integration run shared the machine.
 ## Seimas open data
 
 - Base `https://apps.lrs.lt/sip/` (CC BY 4.0; show the attribution). Chain: `p2b.ad_seimo_kadencijos` →

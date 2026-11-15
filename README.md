@@ -16,7 +16,8 @@ A modular monolith on .NET 10 (design sections 2–4):
 | `src/Lt2.Web` | ASP.NET Core host: `/api/v1` minimal-API endpoints (one per file), Blazor server rendering, security plumbing |
 | `src/Lt2.Web.Client` | Blazor WebAssembly: the interactive sign-in, registration and "hello" pages; HTTP implementations of the API clients |
 | `src/Lt2.Api.Contracts` | DTOs, routes, typed client interfaces, FluentValidation validators shared by browser and server |
-| `src/Lt2.SharedKernel` | Result type, identifiers, outbox, audit and settings abstractions |
+| `src/Lt2.SharedKernel` | Result type, identifiers, outbox, audit and settings abstractions, the outbound allowlist |
+| `src/Lt2.Hosting` | What the web host and the worker set up the same way: Serilog and OpenTelemetry (`AddLt2Observability`) |
 | `src/Modules/Lt2.Identity` | Accounts, registration by invitation, emailed sign-in codes, passkeys, sessions — schema `identity` |
 | `src/Modules/Lt2.Notifications` | Transactional outbox, dispatcher, SMTP transport, the sign-in code email — schema `notify` |
 | `src/Modules/Lt2.Audit` | Append-only audit log and runtime settings — schemas `audit`, `config` |
@@ -25,7 +26,7 @@ A modular monolith on .NET 10 (design sections 2–4):
 | `src/Lt2.Worker` | Hangfire server (PostgreSQL storage): the outbox dispatch loop and the parliament import (every 15 minutes on sitting days, hourly otherwise) |
 | `src/Lt2.Migrator` | Creates the database roles, applies every module's migrations, grants access; run once per deploy |
 | `tests/` | Unit, integration (Testcontainers), architecture (NetArchTest) and end-to-end (Playwright) tests |
-| `deploy/` | Dockerfile, `compose.yaml`, `Caddyfile`, secret generators; `compose.shared-proxy.yaml` and `shared-proxy.Caddyfile` for a server whose Caddy already holds ports 80 and 443 |
+| `deploy/` | Dockerfile (with `.dockerignore` at the root), `compose.yaml`, `Caddyfile`, secret generators; `compose.shared-proxy.yaml` and `shared-proxy.Caddyfile` for a server whose Caddy already holds ports 80 and 443 |
 | `tools/Lt2.SeimasStandIn` | Local and test only: a stand-in for the Seimas open-data service that answers with **invented** data |
 
 ## Run it locally
@@ -59,7 +60,7 @@ docker compose -f deploy/compose.yaml up --build
 docker compose -f deploy/compose.yaml run --rm --no-deps migrator --reset-parliament
 ```
 
-The demonstration appeal on XVP-0412 (6 800 invented accounts asking to vote for, 4 280 against, the prototype's
+The demonstration record on XVP-0412 (6 800 invented accounts asking to vote for, 4 280 against, the prototype's
 arguments) is written by the migrator on the local stack only: it refuses unless `LT2_DEMO_DATA=true` (set in
 `deploy/.env`) and the parliament data is the stand-in's. Running it again changes nothing.
 
@@ -96,7 +97,9 @@ The person then adds a passkey on the "Sveiki" page, signs in with it, and enter
 passkey becomes the staff passkey and any other passkey on the account is removed. Use `run --rm` so the container, and
 the console output it keeps, is removed afterwards. Later grants and resets go through `POST /api/v1/admin/roles` and
 `POST /api/v1/admin/accounts/reset`, which need a passkey confirmation from the last ten minutes
-(`POST /api/v1/me/passkey-confirmation`).
+(`POST /api/v1/me/passkey-confirmation`). Saving a runtime setting (`PUT /api/v1/admin/settings/{key}`) needs the same
+confirmation; the settings page asks for the staff passkey itself when the last one is older (design 6.9). An account
+with an activated staff role can be deleted only from a session signed in with its staff passkey.
 
 Stop with `docker compose -f deploy/compose.yaml down` (add `-v` to delete the database).
 
@@ -168,6 +171,19 @@ no client address, header or token (it reads `docker compose logs caddy`, so the
 dotnet test --project tests/Lt2.E2E
 ```
 
+The classes run one after another (`tests/Lt2.E2E/xunit.runner.json`): they share one stack and its demonstration
+bills, and some hide, restore or count them. A whole run takes about 13 minutes; do not run it while the
+integration suite runs on the same machine. The local `.env` runs the follow job every minute (`LT2_FOLLOWS_CRON`), so
+the follow email `OrganisationInvitationFlowTests` waits for arrives within about a minute; production leaves the
+variable unset (every 15 minutes).
+
+Each test takes back what it can through the API (sides, arguments, restrictions, its organisations are closed), in a
+`finally` where a failure would otherwise leave a bill hidden. What it cannot take back (accounts, feedback, closed
+organisations, descriptions it wrote) stays on the stack; the tests are written to pass on top of it. To remove it,
+keeping the demonstration data, run `output/cleanup-e2e.ps1` beside the worktree (outside the repository): it runs
+`cleanup-hidden.sql` and `cleanup-e2e.sql` (every account on `@pavyzdys.test` except the demonstration members
+`demo.*`, with what they made) and then the migrator's `--demo-appeal`.
+
 ## Configuration and secrets
 
 Settings come from `appsettings.json`, environment variables and, in containers, one file per secret under
@@ -181,27 +197,34 @@ separate secret. Nothing secret is committed; `deploy/secrets/README.md` lists e
 | `DataProtection:KeyEncryptionKey` | Base64 32-byte key wrapping the data-protection keys stored in PostgreSQL; required outside development |
 | `Security:IpHashKey` | Key for hashing client IP addresses in the audit log |
 | `Email:Smtp:*` | SMTP host, port, security, user, password, from address (Mailpit locally; the provider is not chosen yet) |
-| `ReverseProxy:TrustForwardedHeaders` | Trust `X-Forwarded-*` from Caddy (the web container is reachable only through it) |
+| `ReverseProxy:Address` | The proxy whose `X-Forwarded-For`/`-Proto` are believed (design 6.8): a host name resolved through Docker's DNS (again when the proxy's address changes) or an IP address; `caddy` in `compose.yaml`, `LT2_PROXY_HOST` with `compose.shared-proxy.yaml`; empty (the default) believes no forwarding header |
 | `RateLimits:*` | Per-IP limits for code requests, registration and sign-in attempts |
 | `Seimas:*` | Worker: open-data base address (`https://apps.lrs.lt/sip/`), term, retries, time-outs, request spacing |
-| `Outbound:AllowedHosts` | Hosts any outbound HTTP request may go to (`apps.lrs.lt` in the worker); others are refused |
+| `Outbound:AllowedHosts` | Hosts any outbound HTTP request may go to (`apps.lrs.lt` in the worker; the AI provider's host joins when it is configured); others are refused, a redirect to them included |
 | `OTEL_EXPORTER_OTLP_ENDPOINT` | Turns on the OpenTelemetry exporter (traces, metrics, logs); off when empty |
 
 Runtime settings that an administrator may change without a deploy (design 5.6) live in `config.setting`; every change
-is written to `audit.event`.
+is written to `audit.event`, and saving one needs a fresh staff passkey confirmation (design 6.9).
+
+The read-only database role `lt2_readonly` (for analysis) reads exactly the tables on `DatabaseRoles.ReadableTables` in
+`src/Lt2.Migrator/DatabaseRoles.cs` and nothing else; every other table is on `DatabaseRoles.WithheldTables`. Each run
+of the migrator brings an existing database to that state. A new table is invisible to the role until it is listed,
+and `tests/Lt2.ArchitectureTests/ReadonlyRoleTests.cs` fails until it is on one of the two lists (design 6.9).
 
 For a production-shaped run, override `deploy/.env`: `LT2_SITE_ADDRESS` (the domain), `LT2_TLS` (the ACME contact
 address), `LT2_HTTP_PORT=80`, `LT2_HTTPS_PORT=443`, `COMPOSE_PROFILES=` (no Mailpit), the `LT2_SMTP_*` values and
 `LT2_MIGRATOR_ARGS=` (no seeded invitation), `LT2_DEMO_DATA=` (no demonstration data), `LT2_MODERATION_CONTACT` (the real address), `LT2_AGENDA_BASE_ADDRESS`
-(the lrs.lt address, or empty), `LT2_SEIMAS_BASE_ADDRESS=` and `LT2_OUTBOUND_EXTRA_HOST=` (the worker
-then imports from `https://apps.lrs.lt/sip/`, the only host it may call), and mount real secrets.
+(the lrs.lt address, or empty), `LT2_SEIMAS_BASE_ADDRESS=` (the worker then imports from `https://apps.lrs.lt/sip/`),
+`LT2_OUTBOUND_EXTRA_HOST` (the agenda page's host when `LT2_AGENDA_BASE_ADDRESS` is set, otherwise empty: then
+`apps.lrs.lt` is the only host the worker may call; a redirect to another host is refused too), and mount real secrets.
 
 ### Behind a server's existing Caddy
 
 A server whose ports 80 and 443 already belong to another Compose project's Caddy (the trial on the owner's VPS, design
 9.2) runs LT2 without its own Caddy. `deploy/compose.shared-proxy.yaml` keeps LT2's `caddy` from starting, publishes
 nothing on 80 or 443, and joins `web` to that Caddy's Docker network (`LT2_PROXY_NETWORK`) under the alias `lt2-web`.
-`deploy/shared-proxy.Caddyfile` is the site block to append to that Caddy's Caddyfile, with `lt2.example.org` replaced
+Forwarded client addresses are believed only from that Caddy, named by `LT2_PROXY_HOST` (design 6.8), not from the other
+containers on the shared network. `deploy/shared-proxy.Caddyfile` is the site block to append to that Caddy's Caddyfile, with `lt2.example.org` replaced
 by the site's hostname: compression, the 1 MB request limit, no `Server` header, no access log and `X-Robots-Tag:
 noindex, nofollow`. A request that Caddy itself fails (a 502 while `web` restarts) still reaches that Caddy's error log
 with the client's address and full address; only that Caddy's global log options could drop them, and they belong to
@@ -216,7 +239,7 @@ owned by root):
 | `$LT2_HOME/lt2.env` | The server's values, passed with `--env-file` instead of `deploy/.env` (mode 600) |
 | `$LT2_HOME/secrets/` | `sudo python3 deploy/init-secrets.py $LT2_HOME/secrets`: run as root, it gives each file to the container user that reads it and nobody else |
 | `$LT2_HOME/deployed-commit` | The commit that runs |
-| `$LT2_HOME/mailpit-password` | The Mailpit viewer's password (mode 600; its hash is `secrets/mailpit_ui_auth`), see "The caught emails" below |
+| `$LT2_HOME/mailpit-password` | The Mailpit viewer's password (mode 600; its hash is `secrets/mailpit_ui_auth`; the owner keeps the one other copy), see "The caught emails" below |
 
 `lt2.env` for a trial with invented data (the request limits and sign-in code limits stay the code's defaults; never
 `LT2_RATE_*`, `--local-code-limits` or `BANDYMAS-2026` on a server):
@@ -225,6 +248,7 @@ owned by root):
 LT2_IMAGE_TAG=<deployed commit>
 LT2_SECRETS_DIR=<LT2_HOME>/secrets
 LT2_PROXY_NETWORK=<network of the server's Caddy>
+LT2_PROXY_HOST=<the server Caddy's container name or alias on that network>
 LT2_SITE_ADDRESS=lt2.example.org
 LT2_HTTPS_PORT=443
 COMPOSE_PROFILES=local
@@ -276,24 +300,30 @@ the worker's first import from the stand-in, `run --rm --no-deps migrator --demo
 **The caught emails** (design 9.2). Whoever reads Mailpit reads every sign-in code, so on a server Mailpit asks for a
 name and password itself: `compose.shared-proxy.yaml` gives it the password file `mailpit_ui_auth` from the secrets
 directory, and that holds on every route to it, the loopback port 8025 and the tunnel included. Without the override,
-locally, Mailpit stays open (the end-to-end tests read its API). Make the file once on the server, as root, with the
-password kept only in a root-only file (the hash comes from a throwaway Caddy container; nothing is installed):
+locally, Mailpit stays open (the end-to-end tests read its API). The password is in a root-only file on the server and in
+one copy the owner keeps in their own private storage, to read the emails from another device; it is nowhere else, in
+no repository and on no developer's machine (design 9.2). Make the file once on the server, as root (the hash comes
+from a throwaway Caddy container; nothing is installed). The hash is taken first and the file written only when there
+is one, so a failed `docker run` never leaves `lt2:` with an empty hash:
 
 ```sh
 umask 077
 python3 -c 'import secrets; print(secrets.token_urlsafe(24))' > $LT2_HOME/mailpit-password
-printf 'lt2:%s\n' "$(docker run --rm -i --network none caddy:2 caddy hash-password < $LT2_HOME/mailpit-password)" \
-  > $LT2_HOME/secrets/mailpit_ui_auth
-chmod 400 $LT2_HOME/secrets/mailpit_ui_auth
+if hash="$(docker run --rm -i --network none caddy:2 caddy hash-password < $LT2_HOME/mailpit-password)" && [ -n "$hash" ]; then
+  printf 'lt2:%s\n' "$hash" > $LT2_HOME/secrets/mailpit_ui_auth && chmod 400 $LT2_HOME/secrets/mailpit_ui_auth
+else
+  echo "hashing failed: mailpit_ui_auth not written" >&2
+fi
 ```
 
 `caddy hash-password` reads one line from standard input and fails with `EOF` without its line end, so pass the file
 as it is. Use a Caddy image already on the server if there is one.
 
 The viewer gets its own hostname, never a path of the site, from the second block of `deploy/shared-proxy.Caddyfile`
-(`mail.example.org` replaced), appended and reloaded like the first. The name is `lt2`; the password is read over SSH
-with `cat $LT2_HOME/mailpit-password`. To change it, write a new password file and hash, then
-`up -d --no-build --no-deps --force-recreate mailpit` (Mailpit keeps no messages over a restart).
+(`mail.example.org` replaced), appended and reloaded like the first. The name is `lt2`; the owner takes the password
+over SSH once (`cat $LT2_HOME/mailpit-password`) into their own private storage. To change it, write a new password
+file and hash as above, run `up -d --no-build --no-deps --force-recreate mailpit` (Mailpit keeps no messages over a
+restart), and replace the owner's copy with the new password.
 
 ## Conventions
 

@@ -3,7 +3,7 @@
 @rendermode InteractiveWebAssembly
 @using Lt2.Api.Contracts.Appeals
 @using Lt2.Web.Client.Appeals
-@inherits InteractiveBase
+@inherits InteractiveBase<AppealUi>
 @inject IModerationApi ModerationApi
 
 @* The moderators' queue (design 8.12.3), moderation after the fact: bills that need a look (a reported description, date
@@ -20,6 +20,8 @@
     <p class="row"><a href="/moderavimas" id="queue-refresh">@L["Mod.Refresh"]</a> <a href="/moderavimas/paslepti" id="hidden-link">@L["Mod.HiddenLink"]</a></p>
 </div>
 
+<Messages Message="@Message" Info="@Info" />
+
 @if (_refused)
 {
     <p class="note" role="alert">@L["Mod.Refused"]</p>
@@ -32,61 +34,61 @@ else
 {
     <section class="stack" aria-labelledby="h-appeals">
         <h2 id="h-appeals">@L["Mod.Appeals"]</h2>
-        @if (Queue.Appeals.Count == 0)
+        @if (Queue.Records.Count == 0)
         {
             <p class="small">@L["Mod.Empty"]</p>
         }
-        @foreach (var appeal in Queue.Appeals)
+        @foreach (var record in Queue.Records)
         {
-            <article class="sheet stack" id="queue-appeal-@appeal.Id" aria-labelledby="qa-@appeal.Id">
+            <article class="sheet stack" id="queue-appeal-@record.Id" aria-labelledby="qa-@record.Id" @key="record.Id">
                 <div class="row">
-                    <a class="tag tag--ink num" href="/seimas/@Uri.EscapeDataString(appeal.Bill.Number)">@appeal.Bill.Number</a>
+                    <a class="tag tag--ink num" href="/seimas/@Uri.EscapeDataString(record.Bill.Number)">@record.Bill.Number</a>
                 </div>
-                <h3 id="qa-@appeal.Id">@appeal.Bill.Title</h3>
-                @if (appeal.Planned is { } plan)
+                <h3 id="qa-@record.Id">@record.Bill.Title</h3>
+                @if (record.Planned is { } plan)
                 {
-                    <p class="small num">@Text("Mod.Planned", Dates.Day(plan.Date), plan.Stage is { } s ? " · " + L["Mod.Stage." + s] : "")</p>
+                    <p class="small num">@L.Format("Mod.Planned", Display.Day(plan.Date), plan.Stage is { } s ? " · " + L["Mod.Stage." + s] : "")</p>
                 }
-                @if (appeal.Held)
+                @if (record.Held)
                 {
-                    <p class="note note--quiet" id="held-@appeal.Id">@L["Mod.Held"]</p>
+                    <p class="note note--quiet" id="held-@record.Id">@L["Mod.Held"]</p>
                 }
-                @if (appeal.UnderThresholdOnAgenda)
+                @if (record.UnderThresholdOnAgenda)
                 {
-                    <p class="note note--quiet" id="under-threshold-@appeal.Id">@Text("Mod.UnderThreshold",
-                        appeal.Planned is { } onAgenda ? Dates.Day(onAgenda.Date) : "–",
-                        AppealNumbers.Of(appeal.Participants), AppealNumbers.Of(appeal.Threshold))</p>
+                    <p class="note note--quiet" id="under-threshold-@record.Id">@L.Format("Mod.UnderThreshold",
+                        record.Planned is { } onAgenda ? Display.Day(onAgenda.Date) : "–",
+                        Display.Number(record.Participants), Display.Number(record.Threshold))</p>
                 }
-                @if (appeal.DateFlags.Count > 0)
+                @if (record.DateFlags.Count > 0)
                 {
-                    <p class="note note--quiet num" id="date-flags-@appeal.Id">@Text("Mod.DateFlags", appeal.DateFlags.Count)</p>
+                    <p class="note note--quiet num" id="date-flags-@record.Id">@L.Format("Mod.DateFlags", Display.Number(record.DateFlags.Count))</p>
                     <ul class="rows">
-                        @foreach (var flag in appeal.DateFlags)
+                        @foreach (var flag in record.DateFlags)
                         {
                             <li><div class="rows__main"><b>@L["Flag." + flag.Kind]</b><a href="@flag.Link" rel="external noreferrer">@flag.Link</a>@if (flag.Note is { } note) {<span class="small">@note</span>}</div></li>
                         }
                     </ul>
                 }
-                @if (appeal.Surge is { } surge)
+                @if (record.Surge is { } surge)
                 {
-                    <p class="note" id="surge-@appeal.Id">@Text("Mod.Surge", surge.WindowHours, surge.SharePercent)</p>
+                    <p class="note" id="surge-@record.Id">@L.Format("Mod.Surge", Display.Number(surge.WindowHours), Display.Number(surge.SharePercent))</p>
                 }
-                @if (appeal.Description.Length > 0)
+                @if (record.Description.Length > 0)
                 {
                     <p class="row">
                         <span class="label">@L["Mod.Description"]</span>
-                        @if (appeal.DescriptionSource == "ai")
+                        @if (record.DescriptionSource == "ai")
                         {
-                            <span class="tag" id="queue-ai-label-@appeal.Id">@L["Mod.Source.ai"]</span>
+                            <span class="tag" id="queue-ai-label-@record.Id">@L["Mod.Source.ai"]</span>
                         }
                     </p>
-                    <p class="voice">@appeal.Description</p>
+                    <p class="voice">@record.Description</p>
                 }
 
-                <Reports Items="appeal.Reports" Description="true" />
-                <ModerationActions Id="appeal.Id" Number="@appeal.Bill.Number" Kind="appeal" Status="open" Held="appeal.Held" Threshold="appeal.Threshold" Planned="appeal.Planned"
-                                   Description="@appeal.Description" DescriptionSource="@appeal.DescriptionSource" DescriptionUrl="@appeal.DescriptionUrl"
-                                   HasOpenItems="@(appeal.Reports.Count > 0 || appeal.DateFlags.Count > 0)" />
+                <Reports Items="record.Reports" Description="true" />
+                <ModerationActions Id="record.Id" Number="@record.Bill.Number" Kind="record" Status="@record.Status" Held="record.Held" Threshold="record.Threshold" Planned="record.Planned"
+                                   Description="@record.Description" DescriptionSource="@record.DescriptionSource" DescriptionUrl="@record.DescriptionUrl"
+                                   HasOpenItems="@(record.Reports.Count > 0 || record.DateFlags.Count > 0)" />
             </article>
         }
     </section>
@@ -99,23 +101,7 @@ else
         }
         @foreach (var reason in Queue.Reasons)
         {
-            <article class="sheet stack" id="queue-reason-@reason.Id" aria-label="@L["Mod.Reason"]">
-                <div class="row">
-                    <span class="tag tag--ink num">@reason.Bill.Number</span>
-                    <span class="choice choice--@reason.Side">@L["Reasons." + reason.Side]</span>
-                    <span class="tag">@L[reason.Status == "pending" ? "Mod.Status.pending" : reason.Seen ? "Mod.Seen" : "Mod.NotSeen"]</span>
-                    @foreach (var flag in reason.Flags)
-                    {
-                        <span class="tag tag--people">@L["Mod.Flag." + flag]</span>
-                    }
-                </div>
-                <div class="said">
-                    <p class="bubble bubble--people voice">@reason.Text</p>
-                    <div class="said__by"><b>@(reason.AuthorName ?? L["Reasons.Anonymous"])</b></div>
-                </div>
-                <Reports Items="reason.Reports" />
-                <ModerationActions Id="reason.Id" Kind="reason" Status="@reason.Status" MergeCandidates="reason.MergeCandidates" OnRestricted="RestrictedAsync" />
-            </article>
+            <QueueReasonItem @key="reason.Id" Reason="reason" OnRestricted="RestrictedAsync" />
         }
     </section>
 
@@ -135,15 +121,14 @@ else
     {
         if (Queue is null)
         {
-            await LoadAsync();
+            var queue = await ModerationApi.GetQueueAsync();
+            _refused = queue.Problem?.Status is 401 or 403;
+            Queue = queue.Value;
+            if (!queue.IsSuccess && !_refused)
+            {
+                Show(queue.Problem);
+            }
         }
-    }
-
-    private async Task LoadAsync()
-    {
-        var queue = await ModerationApi.GetQueueAsync();
-        _refused = !queue.IsSuccess;
-        Queue = queue.Value;
     }
 
     private async Task RestrictedAsync()

@@ -1,0 +1,71 @@
+@page "/seimas/{Number}/istorija"
+@using Lt2.Api.Contracts.Appeals
+@inject IAppealsApi Appeals
+@inject IStringLocalizer<AppealText> T
+@inject Formats F
+@inject NavigationManager Navigation
+
+@* Design 8.2, 8.13: the bill's description keeps its edit history, public. Who edited is not shown. *@
+@if (_record is { } a)
+{
+    <PageTitle>@a.Bill.Number · @T["History.Title"] · Lietuva 2.0</PageTitle>
+    <div class="stack">
+        <ol class="crumbs">
+            <li><a href="/projektai">@T["Nav.Appeals"]</a></li>
+            <li><a href="/seimas/@Uri.EscapeDataString(a.Bill.Number)">@a.Bill.Number</a></li>
+            <li>@T["History.Title"]</li>
+        </ol>
+        <h1>@T["History.Title"]</h1>
+        <p class="lead">@a.Bill.Title</p>
+    </div>
+    <section class="stack" aria-labelledby="h-now">
+        <h2 id="h-now">@T["History.Now"]</h2>
+        @if (a.Description.Length > 0)
+        {
+            <p class="voice">@a.Description</p>
+        }
+        else
+        {
+            <p>@T["What.None"]</p>
+        }
+    </section>
+    <section class="stack" aria-labelledby="h-edits" id="edits">
+        <h2 id="h-edits">@T["History.Edits"]</h2>
+        @if (_history is not { Count: > 0 } edits)
+        {
+            <p>@T["History.None"]</p>
+        }
+        else
+        {
+            <ol class="rows">
+                @foreach (var edit in edits)
+                {
+                    <li>
+                        <div class="rows__main">
+                            <span class="small num">@Display.DayTime(edit.ChangedAt)</span>
+                            <span class="label">@T["History.Before"]</span><span>@(edit.OldText ?? T["History.NoneBefore"])</span>
+                            <span class="label">@T["History.After"]</span><span>@(edit.NewText ?? T["History.Removed"])</span>
+                        </div>
+                    </li>
+                }
+            </ol>
+        }
+    </section>
+}
+
+@code {
+    private BillRecordResponse? _record;
+    private IReadOnlyList<DescriptionRevisionResponse>? _history;
+
+    [Parameter] public string Number { get; set; } = "";
+
+    protected override async Task OnInitializedAsync()
+    {
+        _history = (await Appeals.GetHistoryAsync(Number)).Value;
+        _record = _history is null ? null : (await Appeals.GetRecordAsync(Number)).Value;
+        if (_record is null)
+        {
+            Navigation.NotFound();
+        }
+    }
+}

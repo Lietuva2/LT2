@@ -1,12 +1,16 @@
-@* A general error (design/ui: .note) and a short confirmation (.note--quiet) under a form. *@
+@* A general error (design/ui: .note) and a short confirmation (.note--quiet) under a form. An error is an alert, which
+   screen readers announce as it appears. A confirmation is polite: its live region is in the page before anything is
+   said in it, since a status region that arrives already filled is often not read; `.live` takes no room while empty. *@
 @if (Message is not null)
 {
     <p class="note" role="alert">@Message</p>
 }
-@if (Info is not null)
-{
-    <p class="note note--quiet" role="status">@Info</p>
-}
+<div class="live" role="status">
+    @if (Info is not null)
+    {
+        <p class="note note--quiet">@Info</p>
+    }
+</div>
 
 @code {
     [Parameter]
