@@ -16,6 +16,7 @@ internal static class EndorseEndpoint
             .WithName("Endorse")
             .WithTags("Appeals")
             .RequireAuthorization(Policies.Member)
+            .RequireRateLimiting(RateLimitPolicies.Participation)
             .Produces(StatusCodes.Status204NoContent)
             .ProducesProblem(StatusCodes.Status404NotFound)
             .ProducesProblem(StatusCodes.Status409Conflict);

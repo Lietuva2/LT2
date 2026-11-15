@@ -1,11 +1,12 @@
 @using System.Globalization
-@inject Formats F
+@inject IStringLocalizer<UiText> T
 
-@* For, against and abstained as one bar, drawn as SVG (the content security policy allows no inline styles). *@
+@* For, against and abstained as one bar, drawn as SVG (the content security policy allows no inline styles). In the client
+   project, so a server-rendered page and an island (the front page's row after a member's own action) draw it alike. *@
 @if (Total > 0)
 {
     <svg class="splitbar @(Small ? "splitbar--s" : "")" viewBox="0 0 1000 10" preserveAspectRatio="none" role="img"
-         aria-label="@F.T.Format("Split.Aria", Display.Number(For), Display.Number(Against), Display.Number(Abstain))">
+         aria-label="@T.Format("Split.Aria", Display.Number(For), Display.Number(Against), Display.Number(Abstain))">
         <rect class="splitbar__for" x="0" y="0" width="@W(For)" height="10" />
         <rect class="splitbar__against" x="@W(For)" y="0" width="@W(Against)" height="10" />
         <rect class="splitbar__abstain" x="@W((For ?? 0) + (Against ?? 0))" y="0" width="@W(Abstain)" height="10" />

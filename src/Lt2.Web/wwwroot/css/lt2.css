@@ -430,6 +430,23 @@ body > .page { width: 100%; }
 }
 
 
+/* The side buttons ("už", "prieš") keep their own colour on hover, a little darker (the prototype's .btn:hover would
+   turn them the action's green). */
+.btn--for:hover { --btn-bg: var(--for); }
+.btn--against:hover { --btn-bg: var(--against); }
+
+/* The two sides on a bill's page and in a front-page row (.sides): with no side yet both are filled; once a side is
+   taken the chosen one stays filled with a check mark before the word (aria-hidden; the state is aria-pressed) and
+   the other is outlined in its colour on the sheet, still a button that changes the side. The outlined word is in ink:
+   the side colours on a dark sheet are under 4.5:1 for text, while the 2px outline keeps over 3:1 in both themes. */
+.sides .btn[aria-pressed="true"] { box-shadow: none; }
+.sides__check { font-weight: 800; }
+.sides:has(.btn[aria-pressed="true"]) .btn[aria-pressed="false"] { --btn-bg: var(--sheet); color: var(--ink); filter: none; }
+.sides:has(.btn[aria-pressed="true"]) .btn--for[aria-pressed="false"] { box-shadow: inset 0 0 0 2px var(--for); }
+.sides:has(.btn[aria-pressed="true"]) .btn--against[aria-pressed="false"] { box-shadow: inset 0 0 0 2px var(--against); }
+.sides:has(.btn[aria-pressed="true"]) .btn--for[aria-pressed="false"]:hover:not(:disabled) { --btn-bg: var(--for-tint); }
+.sides:has(.btn[aria-pressed="true"]) .btn--against[aria-pressed="false"]:hover:not(:disabled) { --btn-bg: var(--against-tint); }
+
 /* An action that reads as a link (resend the code, switch form). */
 .linkish {
   padding: 0; border: 0; background: none; cursor: pointer;
@@ -449,6 +466,21 @@ body > .page { width: 100%; }
   padding: var(--sp-3) var(--sp-5); background: var(--note-bg); color: var(--note-ink);
 }
 #blazor-error-ui .reload { margin-left: var(--sp-3); color: inherit; }
+
+/* ---------- Surfaces (design 8.16) ---------- */
+
+/* The ground frames, a sheet carries the content, a quiet sheet opens inside a sheet and steps back from it. In the dark
+   theme the prototype's quiet sheet was lighter than the sheet, so it stood forward instead; here it lies between the
+   sheet and the ground, as in the light theme, which also keeps a quiet note readable on it. */
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) { --sheet-2: #111915; }
+}
+:root[data-theme="dark"] { --sheet-2: #111915; }
+/* A long word or address in the content wraps inside its sheet instead of widening the page. */
+.sheet { overflow-wrap: break-word; }
+/* "Man svarbu" is filled with the sheet's colour, which shows only on the ground; on a sheet it takes the slate tint. */
+.sheet .mark:not([aria-pressed="true"]) { background: var(--slate-tint); }
+
 /* ---------- Parliament pages (M1) ---------- */
 
 /* Split bar and seat map: SVG rendered on the server, coloured by the vote tokens. */
@@ -522,6 +554,34 @@ legend { padding: 0; font-weight: 600; }
 .more.stack--tight > :not(summary) + :not(summary) { margin-top: var(--sp-3); }
 .report-visitor > summary { display: inline; }
 .report-visitor[open] > p { margin-top: var(--sp-2); }
+
+/* A hint (design 8.15): the short answer without leaving the page. The trigger is a button with a dotted underline, so it
+   does not read as a link that leaves the page. The panel is the browser's popover: without script it stands in the
+   middle of the screen (the browser's default place); js/lt2-hints.js adds .hint__panel--placed and sets top and left
+   beside the trigger. Never wider than the screen less a margin, in both themes through the tokens. */
+.hint__trigger {
+  padding: 0; border: 0; background: none; cursor: help;
+  font: inherit; color: var(--link); text-align: inherit;
+  text-decoration: underline dotted; text-decoration-thickness: 2px; text-underline-offset: 3px;
+}
+.hint__trigger:hover { text-decoration-style: solid; }
+/* Its own rule: a browser without :has() or :popover-open drops only this one. */
+.hint:has(.hint__panel:popover-open) .hint__trigger { text-decoration-style: solid; }
+.hint__panel {
+  inline-size: max-content; max-inline-size: min(22rem, 100vw - 1rem); max-block-size: calc(100vh - 1rem);
+  margin: auto; padding: var(--sp-3) var(--sp-4);
+  background: var(--sheet); color: var(--ink); border: 1px solid var(--rule);
+  box-shadow: 0 0.5rem 1.5rem rgb(0 0 0 / 0.2);
+  font-family: var(--font-text); font-size: var(--fs-1); font-weight: 400; font-variant-numeric: normal;
+  line-height: 1.45; text-align: start; white-space: normal; overflow-wrap: break-word; overflow-y: auto;
+}
+.hint__panel:popover-open { display: flex; flex-direction: column; align-items: flex-start; gap: var(--sp-2); }
+.hint__panel--placed { inset: auto; margin: 0; }
+.hint__more { color: var(--link); }
+@media (prefers-reduced-motion: no-preference) {
+  .hint__panel:popover-open { animation: hint-in 0.12s ease-out; }
+}
+@keyframes hint-in { from { opacity: 0; } to { opacity: 1; } }
 
 /* A live region (status and error messages, "copied"): in the page from the start so screen readers announce what appears
    in it, taking no room of its own while empty. */
@@ -631,6 +691,10 @@ body { padding-block-end: 4.5rem; }
 }
 .intro-steps h3 { font-size: var(--fs-3); }
 
+/* The agenda's sheet (design 8.16): a sheet stands apart by itself, so it comes one step closer to what is above it,
+   which keeps its heading on the first screen at 1280 px (design 8.7). */
+.home-agenda { margin-block-start: calc(var(--sp-6) - var(--sp-7)); }
+
 /* The timeline: one block per sitting day, the day's date beside its bills. */
 .tl-day { display: grid; grid-template-columns: 9rem minmax(0, 1fr); gap: var(--sp-5); align-items: start; }
 .tl-date { position: sticky; top: var(--sp-4); display: flex; flex-direction: column; gap: var(--sp-1); }
@@ -654,9 +718,17 @@ body { padding-block-end: 4.5rem; }
 .org-item { display: inline-flex; flex-wrap: wrap; gap: var(--sp-1) var(--sp-2); align-items: baseline; }
 .org-item a { color: var(--ink); overflow-wrap: anywhere; }
 
-/* One action per row; the member's own mark under the title. */
+/* A row's action (the votes' rows); the member's own mark under the title. */
 .cta { min-height: 2.25rem; padding: 0 var(--sp-3); font-size: var(--fs-1); }
 .mine { display: inline-flex; flex-wrap: wrap; gap: var(--sp-2); align-items: center; }
+
+/* Taking a side in the row (design 8.7): "Prašau balsuoti" with "už" and "prieš" side by side under the numbers, in the
+   side column at any width; the consent before a first side spans the whole row. */
+.tl-ask { display: flex; flex-direction: column; gap: var(--sp-1); width: 100%; max-width: 15rem; }
+.tl-ask__sides { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--sp-2); }
+.tl-ask__sides .btn { padding-inline: var(--sp-2); }
+.tl-ask__after { display: flex; flex-wrap: wrap; align-items: baseline; gap: var(--sp-1) var(--sp-3); }
+.tl-item__consent { grid-column: 1 / -1; min-width: 0; }
 
 /* "Jūsų projektai" (from variant C): the member's own bills, filled in the browser. */
 .my-agenda__list { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(auto-fill, minmax(min(20rem, 100%), 1fr)); gap: var(--sp-5); }

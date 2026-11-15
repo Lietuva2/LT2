@@ -160,8 +160,14 @@ public sealed class ExplanatoryTextTests
             await ShootAsync(page, "/sveiki", $"account-{width}.png");
             await ShootAsync(page, "/suvestines", $"summaries-{width}.png");
             await ShootAsync(page, "/o/pavyzdine-mokesciu-aiskumo-asociacija", $"organisation-profile-{width}.png");
-            await page.Locator("details#label-meaning > summary").ClickAsync();
-            await page.Locator("#about").ScreenshotAsync(new() { Path = Path.Combine(shots, $"organisation-label-meaning-open-{width}.png") });
+            await page.Locator("#label-meaning").ClickAsync();
+            // A hint's panel lies in the top layer, over the page: the screen as the person sees it.
+            await Assertions.Expect(page.Locator("#label-meaning-panel")).ToBeVisibleAsync();
+            await page.ScreenshotAsync(new() { Path = Path.Combine(shots, $"organisation-label-meaning-open-{width}.png") });
+            await ShootAsync(page, "/seimas/XVP-0412", $"bill-threshold-hint-closed-{width}.png");
+            await page.Locator("#threshold-what").ClickAsync();
+            await Assertions.Expect(page.Locator("#threshold-what-panel")).ToBeVisibleAsync();
+            await page.ScreenshotAsync(new() { Path = Path.Combine(shots, $"bill-threshold-hint-open-{width}.png") });
             await ShootAsync(page, "/metodika", $"methodology-{width}.png");
             foreach (var part in new[] { "planuojamos-datos", "privatumas", "organizacijos", "suvestiniu-taisykles", "ribos-zmogui" })
             {

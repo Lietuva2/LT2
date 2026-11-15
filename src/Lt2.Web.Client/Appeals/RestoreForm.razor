@@ -16,7 +16,7 @@
     }
     else
     {
-        <form class="sheet stack stack--tight" @onsubmit="RestoreAsync" novalidate aria-labelledby="@($"{IdPrefix}-title-{Id}")">
+        <form class="sheet sheet--quiet stack stack--tight" @onsubmit="RestoreAsync" novalidate aria-labelledby="@($"{IdPrefix}-title-{Id}")">
             <h4 id="@($"{IdPrefix}-title-{Id}")">@L["Hidden.Restore"]</h4>
             <p class="small">@Sentence</p>
             <div class="field @ErrorClass("statement")">

@@ -178,7 +178,7 @@ with a side on an open bill, 11 explanatory lines are visible before scrolling t
 | B19 | `Share.ToGo` / `Share.Reached` (AU) | `ShareLine.razor:13` | Iki ribos trūksta {0} dalyvių · Riba pasiekta | keep (data) | |
 | B20 | `Share.Lead` (AU) | `ShareLine.razor:14` `.small` | Pakvieskite kitus: jūsų asmeninė kvietimo nuoroda atveria šio projekto puslapį. Ji ta pati, kad ir ko prašote patys, ir nieko apie jūsų pasirinkimą neatskleidžia. | shorten to one sentence; keeps the reassurance that sharing reveals nothing | [juodraštis] Pakvieskite kitus savo kvietimo nuoroda: ji atveria šį projektą ir neatskleidžia, ko prašote jūs. |
 | B21 | `Share.NoLink` (AU) | `ShareLine.razor:28` `.small` | Jūsų kvietimo kodas šiuo metu neveikia, todėl nuorodos parodyti negalime. Daugiau – paskyros puslapyje. | keep (status) | |
-| B22 | `Closed.EachMp` (AT) | `:199` summary | Kaip balsavo kiekvienas Seimo narys | keep; give the `<details>` the class `more` | |
+| B22 | `Closed.EachMp` (AT) | `:199` summary | Kaip balsavo kiekvienas Seimo narys | keep; give the `<details>` the class `more`. **Superseded by 8.17** (2026-11-15): the `<details>` list is gone; the closed bill links to the vote page's ballot list (`#balsai`) | |
 
 ### 2b. Arguments (`AppealReasons.razor`)
 

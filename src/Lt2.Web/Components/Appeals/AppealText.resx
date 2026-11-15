@@ -16,7 +16,6 @@
 <data name="What.ESeimas" xml:space="preserve"><value>Projekto tekstas e. seime</value></data>
 <data name="Threshold.Heading" xml:space="preserve"><value>Riba</value></data>
 <data name="Threshold.Aria" xml:space="preserve"><value>{0} dalyvių iš {1}</value></data>
-<data name="Threshold.Progress" xml:space="preserve"><value>dalyvių · riba {0}</value></data>
 <data name="Threshold.SetBy.moderator" xml:space="preserve"><value>Šio projekto ribą nustatė moderatorius.</value></data>
 <data name="Threshold.Note" xml:space="preserve"><value>Moderatoriaus paaiškinimas: {0}</value></data>
 <data name="List.Title" xml:space="preserve"><value>Projektai</value></data>
@@ -65,9 +64,10 @@
 <data name="History.Before" xml:space="preserve"><value>Buvo</value></data>
 <data name="History.After" xml:space="preserve"><value>Tapo</value></data>
 <data name="Method.Digests" xml:space="preserve"><value>Kas patektų į suvestines Seimo nariams</value></data>
-<data name="Method.Digests.Lead" xml:space="preserve"><value>Šios taisyklės nusprendžia, apie kuriuos projektus Seimo nariai sužinotų. Skaičiai – dabartinės reikšmės; administratorius gali jas keisti, ir kiekvienas pakeitimas įrašomas.</value></data>
+<data name="Method.Digests.Lead" xml:space="preserve"><value>Šios taisyklės nusprendžia, apie kuriuos projektus Seimo nariai sužinotų. Skaičiai – dabartinės reikšmės: daugumą jų gali keisti administratorius, ir kiekvienas pakeitimas įrašomas, o paskyrų amžius, argumentų skaičius kiekvienai pusei ir mažiausia grupė nustatyti programoje.</value></data>
 <data name="Method.Digests.Threshold" xml:space="preserve"><value>Riba</value></data>
-<data name="Method.Digests.ThresholdValue" xml:space="preserve"><value>{0} dalyvių, abiejų pusių kartu, visiems projektams; moderatorius gali nustatyti projektui kitą, ne mažesnę kaip {1}</value></data>
+<data name="Method.Digests.ThresholdMeaning" xml:space="preserve"><value>dalyvių skaičius (abi pusės kartu), kurį pasiekęs projektas gali patekti į suvestines Seimo nariams.</value></data>
+<data name="Method.Digests.ThresholdValue" xml:space="preserve"><value>Dabar – {0}. Šį skaičių gali keisti administratorius, o moderatorius – nustatyti projektui kitą, ne mažesnį už mažiausią ribą (dabar – {1}).</value></data>
 <data name="Method.Digests.Weekly" xml:space="preserve"><value>Savaitinė suvestinė</value></data>
 <data name="Method.Digests.WeeklyValue" xml:space="preserve"><value>pirmadienį {0}, posėdžių savaitėmis</value></data>
 <data name="Method.Digests.Notable" xml:space="preserve"><value>Kas patenka į savaitinę suvestinę</value></data>
@@ -183,6 +183,10 @@
 <data name="Rules.Organisations.4" xml:space="preserve"><value>Atstovų vardai niekam nerodomi, moderatoriams taip pat. Pozicijos autorių moderatorius pasiekia tik per pačią poziciją, kai riboja jo galimybę rašyti, kaip ir argumento autorių.</value></data>
 <data name="Rules.Organisations.5" xml:space="preserve"><value>Jei Seimas galutinai balsavo, kol pozicija dar laukė peržiūros, jos paskelbti nebegalima: moderatorius ją palieka nepaskelbtą arba paslepia, o atstovai apie tai gauna laišką.</value></data>
   <data name="Threshold.What" xml:space="preserve"><value>Kas yra riba?</value></data>
+  <data name="Threshold.Meaning" xml:space="preserve"><value>Riba – dalyvių skaičius (abi pusės kartu), kurį pasiekęs projektas gali patekti į suvestines Seimo nariams.</value></data>
+  <data name="Threshold.Now" xml:space="preserve"><value>Dabar – {0}.</value></data>
+  <data name="Threshold.NowOwn" xml:space="preserve"><value>Šiam projektui moderatorius nustatė savą ribą: dabar – {0}.</value></data>
+  <data name="Threshold.NowList" xml:space="preserve"><value>Dabar – {0}, jei moderatorius projektui nenustatė kitos; eilutėje rodoma to projekto riba.</value></data>
   <data name="List.OlderNote" xml:space="preserve"><value>Skliaustuose – kiek iš jų paskyrų senesnės nei 30 d.</value></data>
   <data name="Digests.HowLink" xml:space="preserve"><value>Kaip sudaroma suvestinė →</value></data>
   <data name="Method.Dates" xml:space="preserve"><value>Planuojamos datos</value></data>

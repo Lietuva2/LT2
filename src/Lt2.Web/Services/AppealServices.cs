@@ -97,7 +97,7 @@ internal static class AppealMapping
 /// Server-side <see cref="IAppealsApi"/> (design 3.1): the server-rendered pages and the prerendered interactive
 /// components call the module in-process, as the signed-in person of the current request.
 /// </summary>
-internal sealed class ServerAppealsApi(IAppealsModule appeals, IHttpContextAccessor accessor, ErrorMapper errors) : IAppealsApi
+internal sealed class ServerAppealsApi(IAppealsModule appeals, TakingSides sides, IHttpContextAccessor accessor, ErrorMapper errors) : IAppealsApi
 {
     private static readonly Error SignInRequired = Error.Unauthorized("auth.required");
 
@@ -121,10 +121,10 @@ internal sealed class ServerAppealsApi(IAppealsModule appeals, IHttpContextAcces
             : ApiResult<MyBillRecordResponse>.Fail(errors.ToProblem(SignInRequired));
 
     public async Task<ApiResult> TakePositionAsync(string number, PositionRequest request, CancellationToken cancellationToken = default) =>
-        await AsMemberAsync(id => appeals.TakePositionAsync(number, id, request.Side, cancellationToken));
+        await AsMemberAsync(id => sides.TakeAsync(number, id, request.Side, cancellationToken));
 
     public async Task<ApiResult> ClearPositionAsync(string number, CancellationToken cancellationToken = default) =>
-        await AsMemberAsync(id => appeals.ClearPositionAsync(number, id, cancellationToken));
+        await AsMemberAsync(id => sides.ClearAsync(number, id, cancellationToken));
 
     public async Task<ApiResult<IReadOnlyList<ReasonResponse>>> FindSimilarAsync(string number, ReasonRequest request, CancellationToken cancellationToken = default) =>
         errors.ToApiResult(

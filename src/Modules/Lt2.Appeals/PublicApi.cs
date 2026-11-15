@@ -222,7 +222,11 @@ public interface IAppealsModule
     /// <summary>The description's edits (oldest first), public; no editor is named. Empty for a bill without a record.</summary>
     Task<Result<IReadOnlyList<(DateTimeOffset ChangedAt, string? OldText, string? NewText)>>> HistoryAsync(string billNumber, CancellationToken cancellationToken);
 
-    Task<Result<Unit>> TakePositionAsync(string billNumber, Guid userId, string side, CancellationToken cancellationToken);
+    /// <summary>
+    /// Takes or changes the person's side. The value is true when the person had no side on the bill before (a first side,
+    /// for which the host follows the bill, design 8.11.2), false when their side was kept or changed.
+    /// </summary>
+    Task<Result<bool>> TakePositionAsync(string billNumber, Guid userId, string side, CancellationToken cancellationToken);
 
     Task<Result<Unit>> ClearPositionAsync(string billNumber, Guid userId, CancellationToken cancellationToken);
 

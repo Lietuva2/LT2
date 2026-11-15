@@ -311,7 +311,7 @@ without a deploy: the summary rules in 8.4 (the threshold of all bills, `Digest:
 per MP, and the share of change that counts as "changed notably", `Digest:NotableChange`), the reasons and "Man svarbu"
 marks a person may give per bill in 8.2 (`Appeals:ReasonsPerPerson`, `Appeals:EndorsementsPerPerson`, 0 = no limit,
 the default), the surge thresholds in 6.6,
-the code limits and the life of a pending account in 6.2, whether registration needs an invitation, uses per personal invitation code (`Registration:PersonalCodeUses`, 0 = no limit, the default), uses per organisation's invitation code (`Registration:OrganisationCodeUses`, 0 = no limit, the default; 8.14.14 stage B, on the settings screen under registration), how long feedback is kept (`Feedback:KeepMonths`, 12), how many bills and MPs an account may follow (`Follows:MaxPerAccount`, 200), how many organisations an account may
+the code limits and the life of a pending account in 6.2, whether registration needs an invitation, uses per personal invitation code (`Registration:PersonalCodeUses`, 0 = no limit, the default), uses per organisation's invitation code (`Registration:OrganisationCodeUses`, 0 = no limit, the default; 8.14.14 stage B, on the settings screen under registration), how long feedback is kept (`Feedback:KeepMonths`, 12), how many organisations an account may
 register (`Organisations:PerAccount`, 3; closed ones do not count, 8.14.14; on the settings screen under
 "Organizacijos"), the Claude model of the description draft and of the AI summaries (`Ai:DraftModel`, `claude-sonnet-5-5`, 8.11.4, 8.13), how many AI summaries the job may ask for a day (`Ai:SummariesPerDay`, 30; 0 = off, 8.13). Each
 change is written to `audit`, and the current values of the rules that affect what MPs receive are shown on the public
@@ -1002,18 +1002,43 @@ and the "not a representative poll" notice. It uses only the public answers behi
   threshold, or "Dar niekas nenurodė, ko prašo"; the organisations that have a public statement on it, as names with
   their stance, each linking to its profile (an unconfirmed one keeps the short tag "Nepatvirtinta" after its name,
   so nobody takes an unconfirmed name for a checked one; the full label is on the bill's page and the profile); and
-  one action, "Nurodyti, ko prašote", leading to the bill's page. A
+  the two sides to take, right in the row (see "Taking a side in the row" below; until 2026-11-15 the row had one
+  action, "Nurodyti, ko prašote", leading to the bill's page). A
   voted bill shows the result and "Kaip balsavo Seimo nariai", leading to the vote's page. An item that is not in the
   open data yet shows what the agenda says and a link to the source, as today. The notes that explain the brackets
   and that this is not a representative poll sit directly under the timeline.
-- **Organisations** have one plain block below the agenda: what they are, that their statements are shown apart and
+- **Taking a side in the row [decided by the owner on 2026-11-15, on the built page: "someone may have a position
+  without going to details, and could vote at once"; the title is the way to the details].** Under a coming bill's
+  numbers the row says "Prašau balsuoti" and offers two buttons, "už" and "prieš".
+  - A member presses one and the side is saved at once: the same request and the same rules as on the bill's page
+    (8.12.1: the consent, one position per person per bill, the limits). The pressed button shows their side; pressing
+    the other one changes it; "Atsiimti" withdraws it. Once they have a side the row also links to "Argumentai ir
+    pozicijos" on the bill's page, where the reasons are written.
+  - The first side a member ever takes needs the positions consent (6.5). It is asked right in the row, across the
+    row's width, with the same text, checkbox and buttons as on the bill's page (one shared component, not a copy);
+    nothing is saved before it is given, and "Atšaukti" leaves the row as it was.
+  - After the member's own action the row shows that bill's live numbers, read from the bill's public answer, not the
+    front page's copy that may be a minute old: a person who has just pressed "už" sees the count they are part of.
+    The other rows stay as they were.
+  - A visitor's two buttons are links to sign in that come back to the bill's page (6.9), as the side buttons on the
+    bill's page are. The side is not carried through signing in: it is taken on the bill's page after it.
+  - Before the island has started, and with JavaScript off, a member's buttons are disabled; the title leads to the
+    bill's page.
+  - A closed or hidden record and a bill the open data does not know have no buttons, as before. The votes of the last
+    week keep "Kaip balsavo Seimo nariai".
+  - Nothing changes in what is private: the member's side is only in their own answer, filled in the browser, and the
+    page's HTML stays the same for every member. `GET /me/bills` also says whether the caller has given the positions
+    consent, so the row knows whether to ask.
+- **Organisations** have one plain block below the agenda (a heading, the text and the links on the ground, no sheet:
+  8.16): what they are, that their statements are shown apart and
   not counted, and links to the list and to registration. In the timeline they are ordered as on the bill's page (for,
   against, remarks; within each, in the order published), never by size, and never counted.
 - **A signed-in member** sees no introduction: "Sveiki sugrįžę" with links to "Kaip tai veikia" and the account; then
   "Jūsų projektai", a panel of the bills they follow or took a side on that are on the agenda or were voted on in
   the last week, each with its planned date, their own side or "Dar nenurodėte, ko prašote", the last vote's result,
   and the share link when they have taken a side; then the same timeline, where their bills carry "Sekate" and their
-  own side, and the action on a bill where they took a side reads "Argumentai ir pozicijos". The trial note about
+  own side, and on a bill where they took a side the pressed button shows it, with "Atsiimti" and a link "Argumentai
+  ir pozicijos" to the bill's page. The trial note about
   summaries stays at the foot.
 - **Privacy.** The page the server renders is the same public page for everyone. Everything that is the member's own
   (the panel, the marks in the rows) is filled in the browser from the member's own answers and is never rendered on
@@ -1024,7 +1049,13 @@ and the "not a representative poll" notice. It uses only the public answers behi
 - **Cached [decided by the owner on 2026-11-15].** The public answer the page is built from (the agenda with its
   counts and organisations) is the same for everyone, so the server keeps it in memory for 60 seconds and builds the
   page from that: the most visited page costs the database one read a minute, not one per visitor. The numbers on
-  the front page can therefore be up to a minute behind the bill's own page, which stays live. A member who has just
+  the front page can therefore be up to a minute behind the bill's own page, which stays live.
+  **A side taken, changed or withdrawn marks the copy as out of date [decided by the owner on 2026-11-15]:** the next
+  request for the page reads the agenda again, so a person who takes a side and reloads sees the count they are part
+  of. To keep the cache worth having when many people take sides at once, a copy is never replaced within two seconds
+  of being made: the page then costs the database at most one read every two seconds, however many sides are taken.
+  Other changes (an organisation's statement, a moderator's action, a new planned date) still wait for the minute.
+  A member who has just
   taken a side is not told "Dar niekas nenurodė, ko prašo" on that bill meanwhile: their own answer, which is live,
   takes that line away for them. Nothing of a member's
   own is in that answer or in the cache. The HTML itself is still answered `no-store`, because a page with an island
@@ -1033,7 +1064,10 @@ and the "not a representative poll" notice. It uses only the public answers behi
 - **Gone from the page:** the sign-in form, the six cards "Aktyviausi projektai" with their arguments (the list at
   `/projektai` is sorted by activity and shows the same bills), and the three introductory paragraphs.
 
-**Done when:** a visitor sees the introduction and the agenda and no form; a member sees their own bills first and no
+**Done when:** a member who has given the consent takes a side from a row with one press, changes it and withdraws it
+there, and the row then shows the bill's live numbers; a member who has not is asked for the consent in the row and
+nothing is saved before it; a visitor's buttons lead to sign-in and back to the bill;
+a visitor sees the introduction and the agenda and no form; a member sees their own bills first and no
 introduction; with JavaScript off the public page is complete and nothing of a member's own is in it; the page's HTML
 is identical for two different signed-in members; an agenda with no participants and no organisations still reads
 well; no sideways scroll at 390 px; the first screen at 1280 px shows the agenda's heading.
@@ -1212,13 +1246,35 @@ A visitor sees a link to sign in instead.
     to those who followed the bill before the vote was held as well as before it was first seen (an import runs some
     minutes after a vote, and someone who follows in between would otherwise be told about a vote from before they
     followed). A planned date's moment is when it is first seen.
+- **Taking a side follows the bill [decided by the owner on 2026-11-15: "Sekti" and a bill appearing among "Jūsų
+  projektai" after taking a side overlapped and it was not clear which does what].** There is one notion: a bill a
+  person follows is theirs, on their list, and they hear about it. Taking a side is one way to start following it.
+  - When a member takes a side on a bill they do not follow, the bill is followed for them in the same action, on the
+    bill's page and in a row of the front page alike. The page shows it at once: the button reads "Nebesekti" and the
+    row carries "Sekate". Changing the side changes nothing about the follow.
+  - "Sekti" stays for following without a side. "Nebesekti" stops the emails and keeps the side: the two are undone
+    separately, and withdrawing a side does not unfollow (the person may still want to hear; one press unfollows).
+  - The side is never refused or delayed because of the follow: if following fails, the side is saved and the bill is
+    simply not followed.
+  - What they then get is the two emails above under the same rules and the same two switches: from that moment on,
+    never about an event from before. This delivers, for a person with a side, the "planned" and "voted" notices of
+    8.6 without a second mechanism.
+  - Sides taken before this was built are left as they are: no follow is made for them afterwards.
+  - "Jūsų projektai" (8.7) still lists bills the member follows or has a side on, so a person who unfollowed keeps
+    seeing the bill they have a side on, without "Sekate".
 - **The account page** lists the followed bills (planned date or last stage result) and MPs, with "Nebesekti", and the
   two switches. Each email ends with a link there (`/sveiki#sekami`); there is no token link in this round.
   Links in these and all other emails are full addresses built from `Site:Address` (5.6) [decided by the owner on
   2026-11-14].
 - **Private.** Who follows what is shown to nobody: no page, API answer, admin screen or log, and no public follower
-  count. Follows are never combined with sides or invitations; they are in the person's export and go with the
-  account. At most `Follows:MaxPerAccount` (200) per account.
+  count. A follow holds nothing about a side, also when taking a side made it, and follows are never combined with
+  sides or invitations on any screen or in any answer about other people (the person's own answer, `/me/bills`, gives
+  them both); they are in the person's export and go with the
+  account. **There is no limit on how much a person follows [decided by the owner on 2026-11-15: "no one will do what
+  we guard for"; the setting `Follows:MaxPerAccount` (200) and the refusal `follow.limit` are removed].** What stays
+  is a plain request limit against a runaway script, which no person meets and which is not a rule of the product:
+  taking, changing or withdrawing a side, following and unfollowing, and "Man svarbu" share one limit of 60 requests a
+  minute per account (`RateLimits`, like the others in 6.4); until now these had none.
 - It lives in the Notifications module (user notification settings, section 2): tables `follow` and `bill_event` (5.4).
   A worker job runs it every 15 minutes, after the import and the agenda watcher.
 - The participant notices of 8.6 (M2b) will be sent through the same events, so a person who both follows a bill and
@@ -1927,7 +1983,7 @@ Still for the owner, on the built result: the details marked "designer's choice"
     brought the most people, and can switch one off and on like any code.
   - The number is not public and is never broken down: not by bill, not by day for the organisation, not by side.
 - **Following an organisation.** "Sekti" / "Nebesekti" on the profile, for a member; a visitor sees the link to sign
-  in. `follow` gains the kind `organisation`; it counts towards `Follows:MaxPerAccount`, is listed on the account page
+  in. `follow` gains the kind `organisation`; it is listed on the account page
   with the bills and MPs, is in the export and goes with the account.
   - A follower is emailed once when the organisation's statement on a bill first becomes public (not for changes, and
     for a statement that waited, when a moderator publishes it): the organisation, its label, the bill's number and
@@ -2120,13 +2176,111 @@ paragraph inline, put the rest under a link or on the methodology page. The rule
   change; its new Lithuanian texts are drafts until a native speaker has read them.
 - **New screens follow the rule.** A text added later that explains instead of labels goes behind a link or to the
   methodology page from the start.
+- **A hint: the short answer without leaving the page [decided by the owner on 2026-11-15: "Kas yra riba?" led to a
+  row of the methodology page that gave a number and did not say what the threshold is; a short description should
+  open in place, and the page be left only for more].** It is the third place an explanation can be, and the first
+  to use for a term or a number:
+  - **What it is:** a word or a short question on the screen ("Kas yra riba?") that opens a small panel beside it
+    with the answer in one or two sentences and, only where there is more to say, a link "Plačiau" to the part of the
+    methodology page or the rules. The answer says what the thing is and what it does first, and a number after it.
+  - **How it opens:** on hover and on keyboard focus after a short delay, and on a press or a tap, which also keeps
+    it open; it closes on Escape, on a press elsewhere and when the pointer and the focus have left both the word and
+    the panel. The pointer can move into the panel and use its link. On a phone a tap opens it and a tap elsewhere
+    closes it; the panel never reaches beyond the screen's edges.
+  - **How it is built:** a button and the browser's own popover, so a press opens it with JavaScript off too (the
+    panel then appears in the middle of the screen); one small script adds the hover, the delay and the place beside
+    the word. One component for every hint; an island never opens it from code. A hint's trigger looks different from
+    a link that leaves the page (a dotted underline), and screen readers are told it opens a description.
+  - **What goes where now:** a term or a number whose answer fits two sentences gets a hint; a longer explanation, a
+    list of steps or a form stays collapsed on the page (`details.more`); how the site works in general stays on the
+    methodology page. A link that today leaves the page only to explain a term becomes a hint with "Plačiau". In a
+    list, the hint is said once beside the list, not in every row.
+  - **A number that is a setting is said as one.** A value an administrator or a moderator can change (the threshold
+    above all) is worded as what holds now, never as a fixed fact: "Dabar – 100", and who can change it. A bill with
+    its own threshold shows that bill's number in the hint.
+  - **The threshold's answer** (a draft for the native reader): "Riba – dalyvių skaičius (abi pusės kartu), kurį
+    pasiekęs projektas gali patekti į suvestines Seimo nariams. Dabar – {n}." [as built: "gali patekti", because
+    reaching the threshold only makes a bill eligible; a summary holds it by the rules of 8.4, and a moderator's hold
+    keeps it out] The methodology's row "Riba" starts with the
+    same sentence, then says that the administrator can change the number and that a moderator can set another for a
+    bill, not lower than the minimum.
 - **One exception [decided by the owner on 2026-11-15]:** the front page's introduction for a visitor (8.7). A new
   person has to learn what the site is, so it may be as long as that takes, in short headed steps, not a wall of text.
 
 **Done when:** the organisation registration form shows one sentence before its first field and the rest behind "Kaip
 tai veikia"; every row of the annex is applied or listed as not applied with the reason; no screen lost a text from
 "what stays inline"; every link to a methodology part lands on a part that exists; the collapsed texts open without
-JavaScript.
+JavaScript; "Kas yra riba?" answers in place what the threshold is and what it does, with the number that holds now
+for that bill; every hint opens by hover, focus, press and tap, closes on Escape, stays within a 390 px screen and
+opens by a press with JavaScript off; no link is left that leaves the page only to explain a term.
+
+### 8.16 Surfaces: what lies on a sheet and what on the ground
+
+**[Decided by the owner on 2026-11-15, on the built start page: asked why some sections are white and others grey, and
+that the answer be applied to the whole site. The rule is the designer's.]** The stylesheet has three surfaces. Until now
+nothing said which is for what, and the start page had its main content on the ground and a lesser block on a sheet.
+
+- **Ground** (`--ground`, the page itself) carries what frames the content: the page's title and lead, the way back,
+  notices (`.note`), an introduction, a plain row of links, the footer.
+- **Sheet** (`.sheet`, white) carries the content: what a person came to the page to read or to act on. A list, a
+  table, the parts of a bill's page, a profile, a form, a panel of the person's own things, an item of a queue. One
+  unit of content is one sheet; a sheet is never put inside a sheet.
+- **Quiet sheet** (`.sheet--quiet`) is only ever inside a sheet: a part that opens within the content and steps back
+  from it, such as the consent before a first side, a report form, a restriction form. It never stands by itself on
+  the ground.
+- **The test for a page:** its main content is on a sheet, and nothing lesser than the main content is on a sheet while
+  the main content lies on the ground. Controls that only filter or sort a list lie on the ground directly above the
+  list, and the list is on a sheet (or each of its items is), the same way on every list page.
+- **Notices are not surfaces.** `.note` and `.note--quiet` keep their own colours wherever they stand.
+- **One exception:** the start page's introduction for a visitor ("Kaip tai veikia", 8.7) stays on the ground: it
+  frames the agenda, which is the page's content and is on a sheet.
+- **The start page by this rule:** "Jūsų projektai" on a sheet, the agenda's timeline on a sheet, "Organizacijos" plain
+  on the ground.
+- **Pages of several parts** (a bill, an MP's profile, an organisation, a vote) give each part its own sheet; a text
+  that is one document (the methodology, the moderation rules) is one sheet.
+- **A control drawn in the sheet's own colour** (the "Man svarbu" mark) takes the tint when it stands on a sheet, so it
+  keeps its shape.
+- **Floating panels** (the feedback form, 8.10) are overlays above the page and not part of this.
+- **Dark theme:** the quiet sheet's colour lies between the ground and the sheet, as in the light theme, so it steps
+  back there too (until now it was the lightest of the three).
+
+**Done when:** every page of the site (public, a member's, an organisation's, the moderators' and the staff's) has been
+looked at in the light theme against the test, with the result listed page by page; no quiet sheet stands on the
+ground; no sheet is inside a sheet.
+
+### 8.17 The list of MPs' ballots on a vote
+
+**[Decided by the owner on 2026-11-15: the list of up to 141 MPs must be searchable and shown a part at a time, "possibly
+with a show more button". How is the designer's.]** Until now the vote's page listed every MP's ballot in full, and a
+closed bill's page repeated the same list behind "Kaip balsavo kiekvienas Seimo narys".
+
+- **One place.** The list lives on the vote's page (`/seimas/balsavimai/{id}`, part `#balsai`), in one component. A
+  closed bill's page keeps the result, the seat map and a link to that part; it no longer carries its own copy.
+- **What it shows:** MPs in the order of their last names (Lithuanian alphabet), each with the faction and the
+  ballot; the first 20, and "Rodyti daugiau", which adds 40 each time, with "Rodoma {n} iš {m}" beside it.
+- **By ballot:** a row of links above the list, "Visi", "Už", "Prieš", "Susilaikė" and the MPs who did not vote, each
+  with its count. The counts are of the ballots listed, so they add up to the list even where the official totals
+  differ (the official note stays beside the result).
+- **Search:** one field that finds by first name or last name, ignoring case and Lithuanian diacritics
+  ("zemaitaitis" finds "Žemaitaitis"). Nothing found says so and offers to clear.
+- **By faction [decided by the owner on 2026-11-15: a separate list to choose from, not part of the text search]:** a
+  dropdown beside the search, "Visos frakcijos" and then the factions that have a ballot in this vote, by name, with
+  the MPs without a faction last; built and worded like the one on the MP list (`/seimo-nariai`). Search, faction and
+  ballot combine, and the counts beside the ballots are those within the search and the faction chosen.
+- **"Rodyti daugiau"** lands on the first newly shown row, so the reader keeps their place [as built].
+- **How it works:** the page's own address carries the state (`?q=`, `?frakcija=`, `?balsas=`, `?rodyti=`), as the MP list does:
+  the search is a GET form and the rest are links, all landing on `#balsai`. So it works with JavaScript off, a
+  filtered list can be linked to, and no island, script or new API is needed; the site's enhanced navigation swaps the
+  list in place. Unknown or oversized values fall back to the defaults, never to an error.
+- **Surfaces (8.16):** the list with its controls is one sheet.
+- Nothing about a signed-in member is on this page, so it stays the same public page for everyone.
+
+**Done when:** a vote with 141 ballots shows 20 and grows by 40; each ballot link shows exactly the MPs with that
+ballot and its count matches; a search without diacritics finds the MP; the faction chosen shows only its MPs; search,
+faction and ballot combine; everything works
+with JavaScript off; the closed bill's page links to the list and has no copy of it; a consensus vote and a vote
+without ballots show no list and no controls.
+
 ## 9. Hosting and operations
 
 ### 9.1 Layout

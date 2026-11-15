@@ -18,7 +18,7 @@
         <h1>@T["History.Title"]</h1>
         <p class="lead">@a.Bill.Title</p>
     </div>
-    <section class="stack" aria-labelledby="h-now">
+    <section class="sheet stack" aria-labelledby="h-now">
         <h2 id="h-now">@T["History.Now"]</h2>
         @if (a.Description.Length > 0)
         {
@@ -29,7 +29,7 @@
             <p>@T["What.None"]</p>
         }
     </section>
-    <section class="stack" aria-labelledby="h-edits" id="edits">
+    <section class="sheet stack" aria-labelledby="h-edits" id="edits">
         <h2 id="h-edits">@T["History.Edits"]</h2>
         @if (_history is not { Count: > 0 } edits)
         {

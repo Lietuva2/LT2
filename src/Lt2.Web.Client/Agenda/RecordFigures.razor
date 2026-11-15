@@ -1,0 +1,35 @@
+@using Lt2.Api.Contracts.Agenda
+@inject IStringLocalizer<AppealUi> L
+
+@* A bill's public numbers in the front page's timeline (design 8.7): both sides with the count for accounts older than 30
+   days in brackets, the bar and the threshold; a bill nobody took part in says so. The page explains the brackets and
+   says the numbers are not a representative poll right under the timeline. Plain markup, no island of its own: the server
+   renders it in every row, and the member's island of a row (MyAgendaSide) renders the same component, with the bill's
+   live numbers after the member's own action. "Nobody yet" is left out only where the island says so (the page's agenda
+   is up to a minute old, so a member who has just taken a side must not read that nobody has). *@
+@if (Record.Counts.For + Record.Counts.Against == 0)
+{
+    @if (!HideNobody)
+    {
+        <span class="small" id="@(Id is null ? null : "home-nobody-" + Id)">@L[Record.Status == "closed" ? "Agenda.NobodyClosed" : "Agenda.Nobody"]</span>
+    }
+}
+else
+{
+    <span class="small num" id="@(Id is null ? null : "home-counts-" + Id)">
+        <span class="choice choice--for">@L["Agenda.For"]</span> @Display.Number(Record.Counts.For) (@Display.Number(Record.Counts.ForOlderThan30Days))
+        · <span class="choice choice--against">@L["Agenda.Against"]</span> @Display.Number(Record.Counts.Against) (@Display.Number(Record.Counts.AgainstOlderThan30Days))
+    </span>
+    <SplitBar For="Record.Counts.For" Against="Record.Counts.Against" Abstain="0" Small="true" />
+    <span class="small num"><b>@Display.Number(Record.Threshold.Participants)</b> @L.Format("Threshold.Progress", Display.Number(Record.Threshold.Value))@(Record.Threshold.Reached ? " · " + L["Agenda.Reached"] : "")</span>
+}
+
+@code {
+    [Parameter, EditorRequired] public AgendaRecordResponse Record { get; set; } = default!;
+
+    /// <summary>Leaves out "Dar niekas nenurodė, ko prašo": the member's own answer says they have a side on the bill.</summary>
+    [Parameter] public bool HideNobody { get; set; }
+
+    /// <summary>The row's place (see MyAgendaSide), for the ids of the line "nobody yet" and the counts; none when not given.</summary>
+    [Parameter] public string? Id { get; set; }
+}

@@ -23,7 +23,7 @@
         <div class="stack stack--loose">
             @if (IsFaction)
             {
-                <section class="stack" aria-labelledby="h-positions">
+                <section class="sheet stack" aria-labelledby="h-positions">
                     <h2 id="h-positions">@F.T["Body.Positions"]</h2>
                     @if (b.RecentVotes.Count == 0)
                     {
@@ -43,7 +43,7 @@
                     }
                 </section>
             }
-            <section class="stack" aria-labelledby="h-members">
+            <section class="sheet stack" aria-labelledby="h-members">
                 <h2 id="h-members">@F.T["Body.Members"]</h2>
                 <MemberRows Members="b.Members.Where(m => m.Current).ToList()" />
             </section>
@@ -51,7 +51,7 @@
         <aside class="stack">
             @if (b.Members.Any(m => !m.Current))
             {
-                <section class="stack stack--tight" aria-labelledby="h-former">
+                <section class="sheet stack stack--tight" aria-labelledby="h-former">
                     <h3 id="h-former">@F.T["Body.FormerMembers"]</h3>
                     <MemberRows Members="b.Members.Where(m => !m.Current).ToList()" />
                 </section>

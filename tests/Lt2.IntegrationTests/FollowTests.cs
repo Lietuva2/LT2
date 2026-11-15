@@ -38,7 +38,6 @@ public sealed class FollowTests(DatabaseFixture database) : ApiTest(database)
         mine.Bills.Single().Number.ShouldBe(AppealSteps.TaxBill);
         mine.Bills.Single().Title.ShouldBe("Gyventojų pajamų mokesčio įstatymo pataisa");
         mine.Mps.Single().LastName.ShouldBe("Petraitis");
-        mine.Max.ShouldBe(200);
 
         using (var unknownBill = await member.SendAsync(HttpMethod.Put, FollowRoutes.BillOf("XVP-9999")))
         {

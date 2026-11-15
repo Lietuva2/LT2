@@ -97,7 +97,6 @@
 <data name="draft.source-too-long" xml:space="preserve"><value>Tekstas per ilgas: daugiausia 20 000 ženklų.</value></data>
 <data name="draft.none" xml:space="preserve"><value>Šiam projektui juodraščio neprašėte, todėl aprašymas negali būti pažymėtas kaip parengtas dirbtinio intelekto.</value></data>
 <data name="draft.failed" xml:space="preserve"><value>Juodraščio parengti nepavyko. Parašykite aprašymą patys arba pabandykite vėliau.</value></data>
-<data name="follow.limit" xml:space="preserve"><value>Pasiekėte, kiek daugiausia projektų ir Seimo narių galima sekti. Nustokite sekti ką nors kita.</value></data>
 <data name="mp.not-found" xml:space="preserve"><value>Tokio Seimo nario nėra.</value></data>
 <data name="organisation.not-found" xml:space="preserve"><value>Tokios organizacijos nėra.</value></data>
 <data name="organisation.name-empty" xml:space="preserve"><value>Įrašykite organizacijos pavadinimą.</value></data>

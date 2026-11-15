@@ -35,6 +35,22 @@ public sealed partial class AppealPageTests(DatabaseFixture database) : ApiTest(
         Regex.IsMatch(Regex.Replace(people, "<a [^>]*>[^<]*</a>|href=\"[^\"]*\"", ""), "balsavim", RegexOptions.IgnoreCase).ShouldBeFalse();
     }
 
+    /// <summary>
+    /// A hint as the page renders it (design 8.15): a button with the trigger's id opening its own popover panel, the
+    /// answer, and the "Plačiau" address (null when there is none).
+    /// </summary>
+    internal static (string Trigger, string Answer, string? More) HintOf(string html, string id)
+    {
+        var at = Regex.Escape(id);
+        var match = Regex.Match(html,
+            $"<button type=\"button\" class=\"hint__trigger\" id=\"{at}\" popovertarget=\"{at}-panel\" aria-describedby=\"{at}-says\">(?<trigger>[^<]*)</button>"
+            + $"<span class=\"visually-hidden\" id=\"{at}-says\">Atveria trumpą paaiškinimą</span>"
+            + $"<span class=\"hint__panel\" id=\"{at}-panel\" popover=\"auto\"><span class=\"hint__answer\">(?<answer>[^<]*)</span>(?:<a class=\"hint__more\" href=\"(?<more>[^\"]*)\">Plačiau</a>)?</span>");
+        match.Success.ShouldBeTrue($"a hint #{id} on the page");
+        Regex.Count(html, $"id=\"{at}\"").ShouldBe(1, $"#{id} is unique");
+        return (match.Groups["trigger"].Value, match.Groups["answer"].Value, match.Groups["more"].Success ? match.Groups["more"].Value : null);
+    }
+
     /// <summary>The page's own content; the layout's navigation is checked elsewhere.</summary>
     private static string MainOf(string html) => html[html.IndexOf("<main", StringComparison.Ordinal)..html.IndexOf("</main>", StringComparison.Ordinal)];
 
@@ -226,8 +242,10 @@ public sealed partial class AppealPageTests(DatabaseFixture database) : ApiTest(
         html.ShouldContain("Šio projekto aprašymo dar nėra.");
         html.ShouldContain("<a class=\"btn btn--for btn--wide\" href=\"/prisijungti#tikslas=%2Fseimas%2FXVP-0533\">Prašau balsuoti už</a>");
         Regex.Count(MainOf(html), "Argumentų dar nėra\\.").ShouldBe(2);
-        // Design 8.15: what the threshold is, one click away on the methodology page; the default needs no sentence.
-        html.ShouldContain("<a href=\"/metodika#riba\" id=\"threshold-what\">Kas yra riba?</a>");
+        // Design 8.15: what the threshold is, answered in place by a hint with the number that holds now; the default needs
+        // no sentence of its own.
+        HintOf(html, "threshold-what").ShouldBe(("Kas yra riba?", "Riba – dalyvių skaičius (abi pusės kartu), kurį pasiekęs projektas gali patekti į suvestines Seimo nariams. Dabar – 100.", "/metodika#riba"));
+        html.ShouldNotContain("<a href=\"/metodika#riba\" id=\"threshold-what\"", customMessage: "no link leaves the page only to explain the term");
         html.ShouldNotContain("Riba ta pati visiems projektams.");
         html.ShouldNotContain("Pranešti apie klaidą", customMessage: "no description, nothing to report");
         foreach (var gone in new[] { "Noriu kreipimosi", "kreipimosi dar nėra", "Atidaryti kreipimąsi", "pasiūl", "iniciator" })
@@ -358,6 +376,43 @@ public sealed partial class AppealPageTests(DatabaseFixture database) : ApiTest(
         (await PageAsync(member, "/moderavimas")).Html.ShouldContain("Moderuoti galima tik prisijungus darbuotojo prieigos raktu");
     }
 
+    /// <summary>
+    /// Design 8.15: "Kas yra riba?" answers in place with the number that holds now: a bill's own threshold when a moderator
+    /// set one, otherwise the current setting, which the lists' hint and the methodology's row "Riba" (without repeating the word) say too.
+    /// </summary>
+    [Fact]
+    public async Task The_threshold_hint_says_the_number_that_holds_now_for_the_bill_and_follows_the_setting()
+    {
+        const string Meaning = "Riba – dalyvių skaičius (abi pusės kartu), kurį pasiekęs projektas gali patekti į suvestines Seimo nariams.";
+        var moderator = (await ModeratorAsync()).Browser;
+        await Database.PrepareBillAsync(moderator, moderator, AppealSteps.ThirdBill, side: null, threshold: 150);
+        await Database.FreeBillAsync(AppealSteps.SecondBill);
+        using var stranger = NewBrowser();
+
+        var (ownStatus, own) = await PageAsync(stranger, "/seimas/" + AppealSteps.ThirdBill);
+        ownStatus.ShouldBe(HttpStatusCode.OK);
+        HintOf(own, "threshold-what").ShouldBe(("Kas yra riba?", Meaning + " Šiam projektui moderatorius nustatė savą ribą: dabar – 150.", "/metodika#riba"));
+        own.ShouldContain("id=\"threshold-set-by\"", customMessage: "the moderator's own number is still said beside the progress");
+
+        var admin = (await AdministratorAsync()).Browser;
+        await using (await admin.WithSettingAsync("Digest:ThresholdDefault", 120))
+        {
+            HintOf((await PageAsync(stranger, "/seimas/" + AppealSteps.SecondBill)).Html, "threshold-what").Answer.ShouldBe(Meaning + " Dabar – 120.");
+            HintOf((await PageAsync(stranger, "/seimas/" + AppealSteps.ThirdBill)).Html, "threshold-what").Answer.ShouldEndWith("dabar – 150.", customMessage: "a bill's own number does not follow the default");
+
+            // "riba" repeats in the lists' rows: one hint beside the list says what it is and the default that holds now.
+            var listHint = (Meaning + " Dabar – 120, jei moderatorius projektui nenustatė kitos; eilutėje rodoma to projekto riba.", "/metodika#riba");
+            var list = HintOf((await PageAsync(stranger, "/projektai")).Html, "threshold-what");
+            (list.Answer, list.More).ShouldBe(listHint);
+            var agenda = HintOf((await PageAsync(stranger, "/darbotvarke")).Html, "threshold-what");
+            (agenda.Answer, agenda.More).ShouldBe(listHint);
+
+            (await PageAsync(stranger, "/metodika")).Html.ShouldContain("<dd class=\"num\">dalyvių skaičius (abi pusės kartu), kurį pasiekęs projektas gali patekti į suvestines Seimo nariams. Dabar – 120. Šį skaičių gali keisti administratorius");
+        }
+
+        HintOf((await PageAsync(stranger, "/seimas/" + AppealSteps.SecondBill)).Html, "threshold-what").Answer.ShouldBe(Meaning + " Dabar – 100.", "the setting is back");
+    }
+
     [Fact]
     public async Task The_rules_for_moderators_and_the_summary_rules_with_their_current_values_are_public()
     {
@@ -370,7 +425,9 @@ public sealed partial class AppealPageTests(DatabaseFixture database) : ApiTest(
 
         var (_, method) = await PageAsync(stranger, "/metodika");
         method.ShouldContain("Kas patektų į suvestines Seimo nariams");
-        method.ShouldContain("100 dalyvių, abiejų pusių kartu, visiems projektams");
+        // Design 8.15: the row "Riba" says what the threshold is, then its number as what holds now and who can change it.
+        method.ShouldContain("<dt id=\"riba\">Riba</dt><dd class=\"num\">dalyvių skaičius (abi pusės kartu), kurį pasiekęs projektas gali patekti į suvestines Seimo nariams. Dabar – 100. Šį skaičių gali keisti administratorius, o moderatorius – nustatyti projektui kitą, ne mažesnį už mažiausią ribą (dabar – 50).</dd>");
+        method.ShouldNotContain("visiems projektams");
         method.ShouldContain("pirmadienį 07:00");
         method.ShouldContain("12:00 darbo dieną prieš posėdį");
         method.ShouldContain("2 suvestinės vienam Seimo nariui");

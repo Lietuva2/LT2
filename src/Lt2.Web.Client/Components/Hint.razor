@@ -1,0 +1,29 @@
+@inject IStringLocalizer<UiText> T
+
+@* Design 8.15, "A hint": a word or a short question that opens a small panel beside it with the short answer and, only
+   where there is more to say, "Plačiau" to the part of the methodology page or the rules. The browser's own popover: a
+   press opens it with JavaScript off too (the panel then stands in the middle of the screen, the browser's default), a
+   press elsewhere or Escape closes it. js/lt2-hints.js adds the opening on hover and keyboard focus after a short delay
+   and the place beside the word. Only phrasing content (spans), so a hint can stand inside a paragraph; the panel follows
+   the trigger in the markup, so its link comes next when tabbing. One component for every hint, on server pages and in
+   islands alike; an island never opens it from code. *@
+<span class="hint"><button type="button" class="hint__trigger" id="@Id" popovertarget="@PanelId" aria-describedby="@SaysId">@Text</button><span class="visually-hidden" id="@SaysId">@T["Hint.Opens"]</span><span class="hint__panel" id="@PanelId" popover="auto"><span class="hint__answer">@Answer</span>@if (More is { Length: > 0 } more)
+{<a class="hint__more" href="@more">@T["Hint.More"]</a>}</span></span>
+
+@code {
+    /// <summary>The trigger's id, unique on the page and stable (tests and links may use it); the panel is <c>{Id}-panel</c>.</summary>
+    [Parameter, EditorRequired] public string Id { get; set; } = "";
+
+    /// <summary>The word or the short question on the screen, for example "Kas yra riba?".</summary>
+    [Parameter, EditorRequired] public string Text { get; set; } = "";
+
+    /// <summary>The answer in one or two sentences: what the thing is and what it does first, a number after it.</summary>
+    [Parameter, EditorRequired] public string Answer { get; set; } = "";
+
+    /// <summary>Where the longer explanation is ("Plačiau"), only when there is more to say; none = no link.</summary>
+    [Parameter] public string? More { get; set; }
+
+    private string PanelId => Id + "-panel";
+
+    private string SaysId => Id + "-says";
+}

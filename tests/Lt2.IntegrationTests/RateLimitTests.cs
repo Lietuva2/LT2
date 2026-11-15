@@ -105,5 +105,39 @@ public sealed class RateLimitTests(DatabaseFixture database) : IAsyncDisposable
         (await _factory.OutboxCountAsync(email)).ShouldBe(before);
     }
 
+    /// <summary>
+    /// Design 8.11.2: taking, changing or withdrawing a side, following and unfollowing, and "Man svarbu" share one limit of
+    /// 60 requests a minute per account, a guard against a runaway script.
+    /// </summary>
+    [Fact]
+    public async Task The_61st_side_follow_or_mark_of_one_account_in_a_minute_is_refused_and_another_account_is_not()
+    {
+        var (member, _) = await _factory.MemberAsync();
+        using var _m = member;
+        var (other, _) = await _factory.MemberAsync();
+        using var _o = other;
+
+        // 60 follows and unfollows in turn, all allowed.
+        for (var i = 0; i < 30; i++)
+        {
+            using var follow = await member.SendAsync(HttpMethod.Put, Lt2.Api.Contracts.Follows.FollowRoutes.BillOf(AppealSteps.TaxBill));
+            follow.StatusCode.ShouldBe(HttpStatusCode.NoContent, $"follow {i + 1}");
+            using var unfollow = await member.SendAsync(HttpMethod.Delete, Lt2.Api.Contracts.Follows.FollowRoutes.BillOf(AppealSteps.TaxBill));
+            unfollow.StatusCode.ShouldBe(HttpStatusCode.NoContent, $"unfollow {i + 1}");
+        }
+
+        // The 61st, a side this time: the same limit.
+        using var limited = await member.TakeSideAsync(AppealSteps.TaxBill, "for");
+        await limited.ShouldBeProblemAsync(HttpStatusCode.TooManyRequests, "rate-limited");
+        limited.Headers.RetryAfter.ShouldNotBeNull();
+        using var mark = await member.SendAsync(HttpMethod.Put, Lt2.Api.Contracts.Follows.FollowRoutes.MpOf(ReasonsToComeSteps.Petraitis));
+        await mark.ShouldBeProblemAsync(HttpStatusCode.TooManyRequests, "rate-limited");
+
+        // Another account is counted on its own.
+        using var theirs = await other.SendAsync(HttpMethod.Put, Lt2.Api.Contracts.Follows.FollowRoutes.BillOf(AppealSteps.TaxBill));
+        theirs.StatusCode.ShouldBe(HttpStatusCode.NoContent);
+        using var _u = await other.SendAsync(HttpMethod.Delete, Lt2.Api.Contracts.Follows.FollowRoutes.BillOf(AppealSteps.TaxBill));
+    }
+
     public async ValueTask DisposeAsync() => await _factory.DisposeAsync();
 }

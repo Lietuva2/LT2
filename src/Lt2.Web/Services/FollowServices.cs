@@ -18,7 +18,6 @@ internal static class FollowMapping
                 AppealMapping.Map(b.Planned),
                 b.LastStageResult is { } v ? new FollowedVoteResponse(v.VoteId, v.Stage, v.HeldAt, v.IsConsensus, v.For, v.Against, v.Abstain) : null)).ToList(),
             mine.Mps.Select(m => new FollowedMpResponse(m.Slug, m.FirstName, m.LastName)).ToList(),
-            mine.Max,
             mine.Organisations.Select(o => new FollowedOrganisationResponse(
                 o.Slug, o.Name, new Lt2.Api.Contracts.Organisations.OrganisationLabelResponse(o.ConfirmedBy, o.ConfirmedDomain), o.Status)).ToList());
     }

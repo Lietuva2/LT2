@@ -15,7 +15,7 @@
         {
             @foreach (var item in waiting)
             {
-                <StatementQueueItem @key="item.Id" Item="item" ShowBill="false" OnDone="Reload" />
+                <StatementQueueItem @key="item.Id" Item="item" ShowBill="false" Panel="true" OnDone="Reload" />
             }
         }
         else
@@ -28,7 +28,7 @@
                 <summary class="linkish small">@L.Format("OrgMod.Panel.Others", Display.Number(others.Count))</summary>
                 @foreach (var item in others)
                 {
-                    <StatementQueueItem @key="item.Id" Item="item" ShowBill="false" OnDone="Reload" />
+                    <StatementQueueItem @key="item.Id" Item="item" ShowBill="false" Panel="true" OnDone="Reload" />
                 }
             </details>
         }

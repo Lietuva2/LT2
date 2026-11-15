@@ -1,11 +1,13 @@
 @inherits InteractiveBase<AppealUi>
+@implements IDisposable
 @inject MyAgendaState State
 
 @* "Jūsų projektai" at the top of the front page for a member (design 8.7, from variant C): the bills on the agenda or voted
    in the last week that the member follows or took a side on, each with its planned date, their own side or "Dar
    nenurodėte, ko prašote", the last vote's result, and the share link when they have taken a side. The public facts come
    from the page (the same for every member); the member's own come from their own answers, asked only in the browser, so
-   nothing shows until they have loaded and nothing of them is in the page's HTML. *@
+   nothing shows until they have loaded and nothing of them is in the page's HTML. When the member takes, changes or
+   withdraws a side in a row of the timeline, the panel follows without a reload (MyAgendaState.Changed). *@
 @if (_rows is { } rows)
 {
     <section class="sheet stack stack--tight my-agenda" aria-labelledby="h-my-agenda" id="my-agenda">
@@ -89,16 +91,32 @@ else if (Message is not null)
             return;
         }
 
-        if (await State.MineAsync(Numbers) is not { } mine)
+        State.Changed += OnChanged;
+        await ReadAsync();
+    }
+
+    public void Dispose() => State.Changed -= OnChanged;
+
+    private async Task ReadAsync()
+    {
+        if (await State.MineAsync(Numbers) is not { } answer)
         {
             Message = L["Error.Generic"];
             return;
         }
 
+        Message = null;
+        var mine = answer.Bills;
         _rows = Bills.Where(b => mine.ContainsKey(b.Number)).Select(b => (b, mine[b.Number])).ToList();
-        if (_rows.Any(r => r.Mine.Side is not null) && await State.InvitationAsync() is { Usable: true } invitation)
+        if (_shareLink is null && _rows.Any(r => r.Mine.Side is not null) && await State.InvitationAsync() is { Usable: true } invitation)
         {
             _shareLink = invitation.Link;
         }
     }
+
+    private void OnChanged() => _ = InvokeAsync(async () =>
+    {
+        await ReadAsync();
+        StateHasChanged();
+    });
 }

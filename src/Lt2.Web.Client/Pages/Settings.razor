@@ -42,7 +42,7 @@ else
 {
     @foreach (var (group, keys) in Groups(Items))
     {
-        <section class="stack" aria-labelledby="h-@group" id="group-@group">
+        <section class="sheet stack" aria-labelledby="h-@group" id="group-@group">
             <h2 id="h-@group">@L["Admin.Group." + group]</h2>
             @if (L["Admin.GroupNote." + group] is { ResourceNotFound: false } note)
             {
@@ -92,7 +92,6 @@ else
     [
         ("registration", ["Registration:RequireInvitation", "Registration:PersonalCodeUses", "Registration:OrganisationCodeUses"]),
         ("appeals", ["Digest:ThresholdDefault", "Digest:ThresholdMinimum", "Appeals:ReasonsPerPerson", "Appeals:EndorsementsPerPerson"]),
-        ("follows", ["Follows:MaxPerAccount"]),
         ("organisations", ["Organisations:PerAccount"]),
         ("ai", ["Ai:DraftModel", "Ai:SummariesPerDay"]),
         ("summaries", ["Digest:Weekly", "Digest:BeforeVote", "Digest:MaxPerWeek", "Digest:NotableChange"]),

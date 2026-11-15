@@ -1,18 +1,21 @@
 @using Lt2.Api.Contracts.Agenda
+@using Lt2.Api.Contracts.Appeals
+@using Lt2.Api.Contracts.Me
 @using Lt2.Web.Client.Appeals
 @using Lt2.Web.Client.Organisations
 @inject IStringLocalizer<PageText> T
-@inject IStringLocalizer<Lt2.Web.Components.Appeals.AppealText> A
 @inject IStringLocalizer<AppealUi> U
 @inject Formats F
 
 @* One planned bill in the front page's timeline (design 8.7): number, stage and title; both sides with the counts for
    accounts older than 30 days, the bar and the threshold, or "Dar niekas nenurodė, ko prašo"; the organisations with a
    public statement on it as names with their stance (an unconfirmed one keeps "Nepatvirtinta"; the full label is on the
-   bill's page and the profile), ordered as on the bill's page and never counted; and one
-   action leading to the bill's page. For a member the mark and the action are islands filled in the browser (MyAgendaMark);
-   everything here is public and the same for everyone. A bill the open data does not know yet shows what the agenda says
-   and its source. *@
+   bill's page and the profile), ordered as on the bill's page and never counted; and, on a bill whose record is open,
+   "Prašau balsuoti" with "už" and "prieš" ("Taking a side in the row"). A visitor's two are links to sign in that come back
+   to the bill's page; a member's side column is an island (MyAgendaSide) that takes the side in the row, and the mark under
+   the title is another (MyAgendaMark), both filled in the browser; everything here is public and the same for everyone. A
+   closed or hidden record and a bill the open data does not know yet have no sides to take; the last shows what the
+   agenda says and its source. *@
 <li class="tl-item" id="agenda-@Display.Day(Day)-@Item.Number">
     <div class="tl-item__main">
         <span class="row">
@@ -59,36 +62,48 @@
             <MyAgendaMark Number="@Item.Number" Numbers="Numbers" Place="@Place" @rendermode="InteractiveWebAssembly" />
         }
     </div>
-    <div class="tl-item__side">
-        @if (Item.Record is not { } record)
-        {
-            @if (Item.SourceUrl is { } source && source.StartsWith("https://", StringComparison.Ordinal))
+    @if (Member && Item.Record is { Status: "open" } open)
+    {
+        <MyAgendaSide Number="@Item.Number" Numbers="Numbers" Place="@Place" Record="open" @rendermode="InteractiveWebAssembly" />
+    }
+    else
+    {
+        <div class="tl-item__side">
+            @if (Item.Record is not { } record)
             {
-                <a class="small" href="@source" rel="external">@T["Agenda.ToSource"]</a>
+                @if (Item.SourceUrl is { } source && source.StartsWith("https://", StringComparison.Ordinal))
+                {
+                    <a class="small" href="@source" rel="external">@T["Agenda.ToSource"]</a>
+                }
             }
-        }
-        else if (record.Status == "rejected")
-        {
-            <span class="small">@T["Agenda.TakingPartClosed"]</span>
-            <a class="small" href="@BillPath">@T["Agenda.ToBill"]</a>
-        }
-        else
-        {
-            <RecordFigures Record="record" Member="Member" Number="@Item.Number" Numbers="Numbers" Place="@Place" />
-            @if (record.Status == "closed")
+            else if (record.Status == "rejected")
             {
+                <span class="small">@T["Agenda.TakingPartClosed"]</span>
                 <a class="small" href="@BillPath">@T["Agenda.ToBill"]</a>
-            }
-            else if (Member)
-            {
-                <MyAgendaMark Number="@Item.Number" Numbers="Numbers" Place="@Place" Part="action" @rendermode="InteractiveWebAssembly" />
             }
             else
             {
-                <a class="btn btn--plain cta" href="@BillPath">@U["Agenda.Action.TakePart"]</a>
+                <RecordFigures Record="record" Id="@Place" />
+                @if (record.Status == "closed")
+                {
+                    <a class="small" href="@BillPath">@T["Agenda.ToBill"]</a>
+                }
+                else
+                {
+                    @* A visitor: the sides lead to signing in and back to the bill's page (design 6.9), where the side is taken. *@
+                    <div class="tl-ask">
+                        <span class="small">@U["Agenda.Ask"]</span>
+                        <div class="tl-ask__sides sides">
+                            @foreach (var side in AppealLimits.Sides)
+                            {
+                                <a class="btn btn--@side cta" id="home-@side-@Place" href="@SignInHref" aria-label="@U.Format("Agenda.Ask." + side, Item.Number)">@U[side == "for" ? "Agenda.For" : "Agenda.Against"]</a>
+                            }
+                        </div>
+                    </div>
+                }
             }
-        }
-    </div>
+        </div>
+    }
 </li>
 
 @code {
@@ -97,13 +112,15 @@
     /// <summary>The sitting day the row is under: part of its id, since a bill may be planned on more than one day.</summary>
     [Parameter, EditorRequired] public DateOnly Day { get; set; }
 
-    /// <summary>Rendered for a signed-in member: the mark and the action become islands. The same for every member.</summary>
+    /// <summary>Rendered for a signed-in member: the mark and the side column become islands. The same for every member.</summary>
     [Parameter] public bool Member { get; set; }
 
     /// <summary>Every bill the page shows, for the members' islands to ask about in one request.</summary>
     [Parameter] public IReadOnlyList<string> Numbers { get; set; } = [];
 
     private string BillPath => "/seimas/" + Uri.EscapeDataString(Item.Number);
+
+    private string SignInHref => LandingPath.SignInLink(BillPath);
 
     private string Place => Display.Day(Day) + "-" + Item.Number;
 }

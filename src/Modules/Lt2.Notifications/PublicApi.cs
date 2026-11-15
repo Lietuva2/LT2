@@ -87,8 +87,8 @@ public interface IDigests
 /// <summary>A bill the person follows, with its planned date or its last stage result.</summary>
 public sealed record FollowedBill(Lt2.SharedKernel.BillFacts Bill, Lt2.SharedKernel.PlannedDate? Planned, Lt2.SharedKernel.StageVoteFacts? LastStageResult);
 
-/// <summary>The person's own follows (design 8.11.2, 8.14.14). <c>Max</c>: how many bills, MPs and organisations together may be followed.</summary>
-public sealed record MyFollows(IReadOnlyList<FollowedBill> Bills, IReadOnlyList<Lt2.SharedKernel.MpFacts> Mps, int Max, IReadOnlyList<Lt2.SharedKernel.OrganisationFacts> Organisations);
+/// <summary>The person's own follows (design 8.11.2, 8.14.14); there is no limit on how many.</summary>
+public sealed record MyFollows(IReadOnlyList<FollowedBill> Bills, IReadOnlyList<Lt2.SharedKernel.MpFacts> Mps, IReadOnlyList<Lt2.SharedKernel.OrganisationFacts> Organisations);
 
 /// <summary>Which follow emails are on: planned and voted bills (design 8.11.2), organisations' statements (design 8.14.14).</summary>
 public sealed record NoticeSettings(bool Planned, bool Voted, bool Statements = true);
@@ -107,19 +107,23 @@ public interface IFollows
     /// <summary>The numbers of the bills the person follows, in one read (design 8.7, the front page); their own only.</summary>
     Task<IReadOnlySet<string>> FollowedBillNumbersAsync(Guid userId, CancellationToken cancellationToken);
 
-    /// <summary>Follows a bill: <c>bill.not-found</c>, <c>member.required</c>, <c>follow.limit</c>; following again changes nothing.</summary>
+    /// <summary>
+    /// Follows a bill: <c>bill.not-found</c>, <c>member.required</c>; following again changes nothing. Also used by the host
+    /// when a person takes a first side on the bill (design 8.11.2); the follow holds nothing about the side.
+    /// </summary>
     Task<Lt2.SharedKernel.Result<Lt2.SharedKernel.Unit>> FollowBillAsync(Guid userId, string number, CancellationToken cancellationToken);
+
 
     Task<Lt2.SharedKernel.Result<Lt2.SharedKernel.Unit>> UnfollowBillAsync(Guid userId, string number, CancellationToken cancellationToken);
 
-    /// <summary>Follows an MP by profile slug: <c>mp.not-found</c>, <c>member.required</c>, <c>follow.limit</c>.</summary>
+    /// <summary>Follows an MP by profile slug: <c>mp.not-found</c>, <c>member.required</c>.</summary>
     Task<Lt2.SharedKernel.Result<Lt2.SharedKernel.Unit>> FollowMpAsync(Guid userId, string slug, CancellationToken cancellationToken);
 
     Task<Lt2.SharedKernel.Result<Lt2.SharedKernel.Unit>> UnfollowMpAsync(Guid userId, string slug, CancellationToken cancellationToken);
 
     /// <summary>
     /// Follows an active organisation by its profile slug (design 8.14.14, stage B): <c>organisation.not-found</c> (unknown,
-    /// blocked or closed), <c>member.required</c>, <c>follow.limit</c>.
+    /// blocked or closed), <c>member.required</c>.
     /// </summary>
     Task<Lt2.SharedKernel.Result<Lt2.SharedKernel.Unit>> FollowOrganisationAsync(Guid userId, string slug, CancellationToken cancellationToken);
 

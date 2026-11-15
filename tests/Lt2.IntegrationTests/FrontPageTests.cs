@@ -115,19 +115,33 @@ public sealed partial class FrontPageTests(DatabaseFixture database) : ApiTest(d
 
         var query = new MyBillsQuery { Numbers = [AppealSteps.SecondBill, AppealSteps.ThirdBill, AppealSteps.TaxBill] }.ToQueryString();
         var mine = await first.GetJsonAsync<MyBillsResponse>(ApiRoutes.Me.Bills + "?" + query);
-        mine.Bills.ShouldBe([new MyBillResponse(AppealSteps.SecondBill, "for", false), new MyBillResponse(AppealSteps.ThirdBill, null, true)]);
+        mine.Bills.ShouldBe([new MyBillResponse(AppealSteps.SecondBill, "for", true), new MyBillResponse(AppealSteps.ThirdBill, null, true)], "a first side follows the bill (design 8.11.2)");
         var theirs = await second.GetJsonAsync<MyBillsResponse>(ApiRoutes.Me.Bills + "?" + query);
-        theirs.Bills.ShouldBe([new MyBillResponse(AppealSteps.SecondBill, "against", false)], "the other member's own only");
+        theirs.Bills.ShouldBe([new MyBillResponse(AppealSteps.SecondBill, "against", true)], "the other member's own only");
 
         // Exactly these fields: nothing else about the bill or anyone.
         using var raw = await first.Client.GetAsync(ApiRoutes.Me.Bills + "?" + query);
         raw.Headers.CacheControl!.NoStore.ShouldBeTrue("a member's own answer is never stored");
         using var document = JsonDocument.Parse(await raw.Content.ReadAsStringAsync());
-        document.RootElement.EnumerateObject().Select(p => p.Name).ShouldBe(["bills"]);
+        document.RootElement.EnumerateObject().Select(p => p.Name).ShouldBe(["bills", "hasPositionConsent"]);
+        document.RootElement.GetProperty("hasPositionConsent").GetBoolean().ShouldBeTrue("the caller's own consent, once on the answer");
         foreach (var row in document.RootElement.GetProperty("bills").EnumerateArray())
         {
             row.EnumerateObject().Select(p => p.Name).ShouldBe(["number", "side", "following"]);
         }
+
+        // Design 8.7: whether the caller gave the positions consent, so a row of the front page knows whether to ask.
+        var (unconsented, _) = await Factory.MemberAsync(consent: false);
+        using var _u = unconsented;
+        var theirsWithout = await unconsented.GetJsonAsync<MyBillsResponse>(ApiRoutes.Me.Bills + "?" + query);
+        theirsWithout.Bills.ShouldBeEmpty();
+        theirsWithout.HasPositionConsent.ShouldBeFalse();
+        using (var given = await unconsented.SendAsync(HttpMethod.Put, ApiRoutes.Me.PositionConsent, new PositionConsentRequest { TextVersion = PositionConsentText.Version }))
+        {
+            given.IsSuccessStatusCode.ShouldBeTrue(await given.Content.ReadAsStringAsync());
+        }
+
+        (await unconsented.GetJsonAsync<MyBillsResponse>(ApiRoutes.Me.Bills + "?" + query)).HasPositionConsent.ShouldBeTrue("given now");
 
         using var visitor = NewBrowser();
         using var refused = await visitor.Client.GetAsync(ApiRoutes.Me.Bills + "?" + query);
@@ -217,9 +231,17 @@ public sealed partial class FrontPageTests(DatabaseFixture database) : ApiTest(d
         html.IndexOf("Kaip tai veikia", StringComparison.Ordinal).ShouldBeLessThan(html.IndexOf("Artimiausiu metu Seime", StringComparison.Ordinal));
         html.IndexOf("Artimiausiu metu Seime", StringComparison.Ordinal).ShouldBeLessThan(html.IndexOf("id=\"not-a-poll\"", StringComparison.Ordinal));
 
+        // Design 8.15: "Kas yra riba?" once, beside the note under the timeline, with the number that holds now; none per row.
+        Regex.Count(html, "class=\"hint__trigger\" id=\"threshold-what\"").ShouldBe(1);
+        html.ShouldContain("Riba – dalyvių skaičius (abi pusės kartu), kurį pasiekęs projektas gali patekti į suvestines Seimo nariams. Dabar – ");
+        html.IndexOf("id=\"home-older-note\"", StringComparison.Ordinal).ShouldBeLessThan(html.IndexOf("id=\"threshold-what\"", StringComparison.Ordinal));
+
         // The member's "Kaip tai veikia" lands on the same steps on the methodology page.
         var method = WebUtility.HtmlDecode(await visitor.Client.GetStringAsync("/metodika"));
         method.ShouldContain("id=\"kaip-tai-veikia\"");
+
+        // The summary rules' row "Riba" does not repeat its own word.
+        method.ShouldMatch("<dt id=\"riba\">Riba</dt><dd class=\"num\">dalyvių skaičius");
         method.ShouldContain("Seimo nariai sužino");
     }
 
@@ -243,21 +265,25 @@ public sealed partial class FrontPageTests(DatabaseFixture database) : ApiTest(d
             JsonSerializer.Serialize(cached, JsonSerializerOptions.Web).ShouldBe(JsonSerializer.Serialize(publicAnswer, JsonSerializerOptions.Web), "nothing in it but the public answer");
             JsonSerializer.Serialize(cached, JsonSerializerOptions.Web).ShouldNotContain(email, Case.Insensitive);
 
-            // Within its lifetime the page is built from it: a new side does not show until it goes.
+            // Within its lifetime the page is built from it: a change that is not a side (here the member withdraws the
+            // positions consent, which deletes their side) does not show until it goes. Sides mark it out of date:
+            // FrontPageFreshnessTests.
             var countBefore = cached!.Days.SelectMany(d => d.Items).Single(i => i.Number == AppealSteps.SecondBill).Record!.Counts.For;
-            var (another, _) = await Factory.MemberAsync();
-            using var _a = another;
-            (await another.TakeSideAsync(AppealSteps.SecondBill, "for")).StatusCode.ShouldBe(HttpStatusCode.NoContent);
+            using (var withdrawn = await member.SendAsync(HttpMethod.Delete, ApiRoutes.Me.PositionConsent))
+            {
+                withdrawn.IsSuccessStatusCode.ShouldBeTrue(await withdrawn.Content.ReadAsStringAsync());
+            }
+
             await visitor.Client.GetStringAsync("/");
             Cached()!.Days.SelectMany(d => d.Items).Single(i => i.Number == AppealSteps.SecondBill).Record!.Counts.For.ShouldBe(countBefore, "reused");
             (await visitor.GetJsonAsync<AgendaResponse>(AgendaRoutes.Agenda)).Days.SelectMany(d => d.Items)
-                .Single(i => i.Number == AppealSteps.SecondBill).Record!.Counts.For.ShouldBe(countBefore + 1, "the API stays live");
+                .Single(i => i.Number == AppealSteps.SecondBill).Record!.Counts.For.ShouldBe(countBefore - 1, "the API stays live");
             FrontPageAgenda.Lifetime.ShouldBe(TimeSpan.FromSeconds(60));
 
             // Once it goes, the page reads afresh.
             ForgetFrontPage();
             await visitor.Client.GetStringAsync("/");
-            Cached()!.Days.SelectMany(d => d.Items).Single(i => i.Number == AppealSteps.SecondBill).Record!.Counts.For.ShouldBe(countBefore + 1);
+            Cached()!.Days.SelectMany(d => d.Items).Single(i => i.Number == AppealSteps.SecondBill).Record!.Counts.For.ShouldBe(countBefore - 1);
         }
         finally
         {

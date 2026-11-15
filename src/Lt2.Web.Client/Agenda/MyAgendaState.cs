@@ -10,29 +10,74 @@ namespace Lt2.Web.Client.Agenda;
 public sealed record MyAgendaBill(string Number, string Title, string? Planned, string? LastVote);
 
 /// <summary>
+/// The member's own answer for the front page: their rows by bill number, and whether they have given the positions
+/// consent (design 6.5), so a row knows whether to ask for it before a first side.
+/// </summary>
+public sealed record MyAgendaAnswer(IReadOnlyDictionary<string, MyBillResponse> Bills, bool HasPositionConsent);
+
+/// <summary>
 /// The member's own answers for the front page (design 8.7), asked once in the browser and shared by its islands (the panel
-/// "Jūsų projektai" and the marks in the timeline's rows): one <c>/me/bills</c> request for all the bills shown, and the
-/// invitation answer for the share link. Never asked while the server prerenders, so nothing of it is in the page's HTML.
-/// A failed answer is not kept, so the next island asks again.
+/// "Jūsų projektai", the marks under the titles and the side columns of the timeline's rows): one <c>/me/bills</c> request
+/// for all the bills shown, and the invitation answer for the share link. Never asked while the server prerenders, so
+/// nothing of it is in the page's HTML. A failed answer is not kept, so the next island asks again. After a member's own
+/// action in a row the answer is read again (<see cref="RefreshAsync"/>) and <see cref="Changed"/> tells every island.
 /// </summary>
 public sealed class MyAgendaState(IMyBillsApi bills, IMeApi me)
 {
+    private IReadOnlyList<string> _numbers = [];
     private string? _key;
-    private Task<IReadOnlyDictionary<string, MyBillResponse>?>? _mine;
+    private Task<MyAgendaAnswer?>? _mine;
     private Task<MyInvitationResponse?>? _invitation;
 
-    /// <summary>The caller's own rows for the given bills, by number; null when the answer failed.</summary>
-    public Task<IReadOnlyDictionary<string, MyBillResponse>?> MineAsync(IReadOnlyList<string> numbers)
+    /// <summary>The member's own answer changed (a side taken, changed or withdrawn): read it again.</summary>
+    public event Action? Changed;
+
+    /// <summary>The caller's own answer for the given bills; null when it failed.</summary>
+    public Task<MyAgendaAnswer?> MineAsync(IReadOnlyList<string> numbers)
     {
         ArgumentNullException.ThrowIfNull(numbers);
         var key = string.Join(",", numbers);
         if (_mine is null || _key != key || _mine.IsFaulted || (_mine.IsCompletedSuccessfully && _mine.Result is null))
         {
             _key = key;
+            _numbers = numbers;
             _mine = FetchAsync(numbers);
         }
 
         return _mine;
+    }
+
+    /// <summary>
+    /// Reads the caller's own answer again after their action in a row (the server may also have followed the bill, design
+    /// 8.11.2) and tells every island. A failed read keeps the answer before it.
+    /// </summary>
+    public async Task RefreshAsync()
+    {
+        if (_key is null)
+        {
+            return;
+        }
+
+        try
+        {
+            if (await FetchAsync(_numbers) is { } fresh)
+            {
+                _mine = Task.FromResult<MyAgendaAnswer?>(fresh);
+            }
+        }
+        finally
+        {
+            Changed?.Invoke();
+        }
+    }
+
+    /// <summary>Notes the consent as given, or as missing when the server refused a side without it.</summary>
+    public void SetConsent(bool given)
+    {
+        if (_mine is { IsCompletedSuccessfully: true, Result: { } answer } && answer.HasPositionConsent != given)
+        {
+            _mine = Task.FromResult<MyAgendaAnswer?>(answer with { HasPositionConsent = given });
+        }
     }
 
     /// <summary>The caller's own invitation answer, for the share link.</summary>
@@ -46,15 +91,17 @@ public sealed class MyAgendaState(IMyBillsApi bills, IMeApi me)
         return _invitation;
     }
 
-    private async Task<IReadOnlyDictionary<string, MyBillResponse>?> FetchAsync(IReadOnlyList<string> numbers)
+    private async Task<MyAgendaAnswer?> FetchAsync(IReadOnlyList<string> numbers)
     {
         if (numbers.Count == 0)
         {
-            return new Dictionary<string, MyBillResponse>(StringComparer.OrdinalIgnoreCase);
+            return new MyAgendaAnswer(new Dictionary<string, MyBillResponse>(StringComparer.OrdinalIgnoreCase), false);
         }
 
         var answer = await bills.GetAsync(new MyBillsQuery { Numbers = numbers.Take(MyBillsQuery.MaxNumbers).ToList() });
-        return answer.Value?.Bills.ToDictionary(b => b.Number, StringComparer.OrdinalIgnoreCase);
+        return answer.Value is { } value
+            ? new MyAgendaAnswer(value.Bills.ToDictionary(b => b.Number, StringComparer.OrdinalIgnoreCase), value.HasPositionConsent)
+            : null;
     }
 
     private async Task<MyInvitationResponse?> InvitationFetchAsync() => (await me.GetInvitationAsync()).Value;

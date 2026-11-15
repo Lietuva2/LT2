@@ -11,7 +11,8 @@ namespace Lt2.Web.Endpoints.Me;
 /// <summary>
 /// Following (design 8.11.2), a member's own: <c>GET /me/follows</c> (followed bills, MPs and organisations; never cached, as every <c>/api</c> answer that does not say otherwise),
 /// <c>PUT/DELETE /bills/{number}/follow</c>, <c>PUT/DELETE /mps/{slug}/follow</c>, <c>PUT/DELETE /organisations/{slug}/follow</c>,
-/// <c>GET/PUT /me/notices</c>. No endpoint answers who follows anything.
+/// <c>GET/PUT /me/notices</c>. No endpoint answers who follows anything. There is no limit on how much a person follows; following and
+/// unfollowing share the per-account request limit <see cref="RateLimitPolicies.Participation"/> with taking sides and "Man svarbu".
 /// </summary>
 internal static class FollowEndpoints
 {
@@ -21,25 +22,25 @@ internal static class FollowEndpoints
             .WithName("GetMyFollows").WithTags("Me").RequireAuthorization(Policies.Member).Produces<MyFollowsResponse>();
         api.MapPut(ApiEndpoints.Relative(FollowRoutes.Bill), (string number, ClaimsPrincipal user, IFollows f, ErrorMapper e, CancellationToken ct) =>
                 RunAsync(user, e, id => f.FollowBillAsync(id, number, ct)))
-            .WithName("FollowBill").WithTags("Me").RequireAuthorization(Policies.Member)
-            .Produces(StatusCodes.Status204NoContent).ProducesProblem(StatusCodes.Status404NotFound).ProducesProblem(StatusCodes.Status409Conflict);
+            .WithName("FollowBill").WithTags("Me").RequireAuthorization(Policies.Member).RequireRateLimiting(RateLimitPolicies.Participation)
+            .Produces(StatusCodes.Status204NoContent).ProducesProblem(StatusCodes.Status404NotFound);
         api.MapDelete(ApiEndpoints.Relative(FollowRoutes.Bill), (string number, ClaimsPrincipal user, IFollows f, ErrorMapper e, CancellationToken ct) =>
                 RunAsync(user, e, id => f.UnfollowBillAsync(id, number, ct)))
-            .WithName("UnfollowBill").WithTags("Me").RequireAuthorization(Policies.Member).Produces(StatusCodes.Status204NoContent);
+            .WithName("UnfollowBill").WithTags("Me").RequireAuthorization(Policies.Member).RequireRateLimiting(RateLimitPolicies.Participation).Produces(StatusCodes.Status204NoContent);
         api.MapPut(ApiEndpoints.Relative(FollowRoutes.Mp), (string slug, ClaimsPrincipal user, IFollows f, ErrorMapper e, CancellationToken ct) =>
                 RunAsync(user, e, id => f.FollowMpAsync(id, slug, ct)))
-            .WithName("FollowMp").WithTags("Me").RequireAuthorization(Policies.Member)
-            .Produces(StatusCodes.Status204NoContent).ProducesProblem(StatusCodes.Status404NotFound).ProducesProblem(StatusCodes.Status409Conflict);
+            .WithName("FollowMp").WithTags("Me").RequireAuthorization(Policies.Member).RequireRateLimiting(RateLimitPolicies.Participation)
+            .Produces(StatusCodes.Status204NoContent).ProducesProblem(StatusCodes.Status404NotFound);
         api.MapDelete(ApiEndpoints.Relative(FollowRoutes.Mp), (string slug, ClaimsPrincipal user, IFollows f, ErrorMapper e, CancellationToken ct) =>
                 RunAsync(user, e, id => f.UnfollowMpAsync(id, slug, ct)))
-            .WithName("UnfollowMp").WithTags("Me").RequireAuthorization(Policies.Member).Produces(StatusCodes.Status204NoContent);
+            .WithName("UnfollowMp").WithTags("Me").RequireAuthorization(Policies.Member).RequireRateLimiting(RateLimitPolicies.Participation).Produces(StatusCodes.Status204NoContent);
         api.MapPut(ApiEndpoints.Relative(FollowRoutes.Organisation), (string slug, ClaimsPrincipal user, IFollows f, ErrorMapper e, CancellationToken ct) =>
                 RunAsync(user, e, id => f.FollowOrganisationAsync(id, slug, ct)))
-            .WithName("FollowOrganisation").WithTags("Me").RequireAuthorization(Policies.Member)
-            .Produces(StatusCodes.Status204NoContent).ProducesProblem(StatusCodes.Status404NotFound).ProducesProblem(StatusCodes.Status409Conflict);
+            .WithName("FollowOrganisation").WithTags("Me").RequireAuthorization(Policies.Member).RequireRateLimiting(RateLimitPolicies.Participation)
+            .Produces(StatusCodes.Status204NoContent).ProducesProblem(StatusCodes.Status404NotFound);
         api.MapDelete(ApiEndpoints.Relative(FollowRoutes.Organisation), (string slug, ClaimsPrincipal user, IFollows f, ErrorMapper e, CancellationToken ct) =>
                 RunAsync(user, e, id => f.UnfollowOrganisationAsync(id, slug, ct)))
-            .WithName("UnfollowOrganisation").WithTags("Me").RequireAuthorization(Policies.Member).Produces(StatusCodes.Status204NoContent);
+            .WithName("UnfollowOrganisation").WithTags("Me").RequireAuthorization(Policies.Member).RequireRateLimiting(RateLimitPolicies.Participation).Produces(StatusCodes.Status204NoContent);
         api.MapGet(ApiEndpoints.Relative(FollowRoutes.Notices), NoticesAsync)
             .WithName("GetNotices").WithTags("Me").RequireAuthorization(Policies.Member).Produces<NoticeSettingsResponse>();
         api.MapPut(ApiEndpoints.Relative(FollowRoutes.Notices), (NoticeSettingsRequest request, ClaimsPrincipal user, IFollows f, ErrorMapper e, CancellationToken ct) =>

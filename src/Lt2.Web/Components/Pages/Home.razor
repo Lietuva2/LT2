@@ -5,6 +5,7 @@
 @inject IStringLocalizer<Lt2.Web.Components.Appeals.AppealText> A
 @inject IStringLocalizer<AppealUi> U
 @inject Lt2.Web.Services.FrontPageAgenda Agenda
+@inject Lt2.Api.Contracts.Digests.IDigestsApi Digests
 @inject Formats F
 
 @* The front page (design 8.7, reworked 2026-11-15: variant A, with the member's panel of variant C; the mockup is in
@@ -40,7 +41,9 @@
     </NotAuthorized>
 </AuthorizeView>
 
-<section class="stack" aria-labelledby="h-home-coming" id="home-coming">
+@* The agenda is the page's content, so it is on a sheet; the two notes that explain its numbers sit on it, under the
+   timeline. "Organizacijos" below is a plain block on the ground (design 8.16). *@
+<section class="sheet stack home-agenda" aria-labelledby="h-home-coming" id="home-coming">
     <div class="row">
         <h2 id="h-home-coming">@T["Home.Coming"]</h2>
         <a href="/darbotvarke">@T["Agenda.All"]</a>
@@ -56,11 +59,17 @@
         <Authorized>@Timeline(true)</Authorized>
         <NotAuthorized>@Timeline(false)</NotAuthorized>
     </AuthorizeView>
-    <p class="small">@T["Agenda.OlderNote"]</p>
+    @* Design 8.15: "riba" repeats in the rows, so what it is is said once, beside the note under the timeline (a hint, as on
+       /darbotvarke); none per row. The number is the runtime setting, read with the page through the settings' own short
+       cache, not kept in the front page's copy of the agenda. *@
+    <p class="small" id="home-older-note">@T["Agenda.OlderNote"]@if (_threshold is { } threshold)
+        {
+            @(" · ")<Lt2.Web.Client.Components.Hint Id="threshold-what" Text="@A["Threshold.What"]" Answer="@(A["Threshold.Meaning"] + " " + A.Format("Threshold.NowList", Display.Number(threshold)))" More="/metodika#riba" />
+        }</p>
     <p class="note note--quiet" id="not-a-poll">@A["NotAPoll"]</p>
 </section>
 
-<section class="sheet sheet--quiet stack stack--tight" aria-labelledby="h-home-organisations" id="home-organisations">
+<section class="stack stack--tight" aria-labelledby="h-home-organisations" id="home-organisations">
     <h2 id="h-home-organisations">@T["Home.Organisations"]</h2>
     <p>@T["Home.OrganisationsText"]</p>
     <p class="row"><a href="/organizacijos">@T["Home.OrganisationsList"]</a> <a href="/organizacijos/nauja">@T["Home.OrganisationsRegister"]</a></p>
@@ -84,9 +93,13 @@
     private List<MyAgendaBill> _panel = [];
     private List<string> _numbers = [];
 
+    /// <summary>The threshold that holds now for a bill without its own (a runtime setting), for the hint under the timeline.</summary>
+    private int? _threshold;
+
     protected override async Task OnInitializedAsync()
     {
         _agenda = await Agenda.ReadAsync(CancellationToken.None);
+        _threshold = (await Digests.GetRulesAsync()).Value?.ThresholdDefault;
         var left = ComingShown;
         foreach (var day in _agenda.Days)
         {
@@ -180,13 +193,22 @@
                                     <MyAgendaMark Number="@v.Number" Numbers="_numbers" Place="@($"voted-{v.VoteId}")" @rendermode="InteractiveWebAssembly" />
                                 }
                             </div>
-                            <div class="tl-item__side">
-                                @if (v.Record is { Status: not "rejected" } record)
-                                {
-                                    <RecordFigures Record="record" Member="member" Number="@v.Number" Numbers="_numbers" Place="@($"voted-{v.VoteId}")" />
-                                }
-                                <a class="btn btn--plain cta" href="/seimas/balsavimai/@v.VoteId">@U["Agenda.Action.Votes"]</a>
-                            </div>
+                            @if (member && v.Record is { Status: "open", Counts: { For: 0, Against: 0 } } nobodyYet)
+                            {
+                                @* "Nobody yet" is left out in the browser for a member who has just taken a side (the page's
+                                   agenda is up to a minute old); the votes' rows offer no sides (design 8.7). *@
+                                <MyAgendaSide Number="@v.Number" Numbers="_numbers" Place="@($"voted-{v.VoteId}")" Record="nobodyYet" VoteId="v.VoteId" @rendermode="InteractiveWebAssembly" />
+                            }
+                            else
+                            {
+                                <div class="tl-item__side">
+                                    @if (v.Record is { Status: not "rejected" } record)
+                                    {
+                                        <RecordFigures Record="record" Id="@($"voted-{v.VoteId}")" />
+                                    }
+                                    <a class="btn btn--plain cta" href="/seimas/balsavimai/@v.VoteId">@U["Agenda.Action.Votes"]</a>
+                                </div>
+                            }
                         </li>
                     }
                 </ul>
