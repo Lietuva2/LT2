@@ -35,11 +35,13 @@
     }
     else if (Invite is not null)
     {
-        <p class="lead">@L.Format("Org.Invite.Lead", Invite.Name)</p>
-        <p class="small">@L["Org.Invite.What"]</p>
-        <div class="row">
-            <button class="btn" type="button" id="invite-accept" disabled="@Locked" @onclick="AcceptAsync">@L["Org.Invite.Accept"]</button>
-            <a class="btn btn--plain" href="@OrganisationWords.ProfilePath(Invite.Slug)">@L["Cancel"]</a>
+        <div class="sheet stack" id="invite">
+            <p class="lead">@L.Format("Org.Invite.Lead", Invite.Name)</p>
+            <p class="small">@L["Org.Invite.What"]</p>
+            <div class="row">
+                <button class="btn" type="button" id="invite-accept" disabled="@Locked" @onclick="AcceptAsync">@L["Org.Invite.Accept"]</button>
+                <a class="btn btn--plain" href="@OrganisationWords.ProfilePath(Invite.Slug)">@L["Cancel"]</a>
+            </div>
         </div>
     }
     <Messages Message="@Message" Info="@Info" />

@@ -1,6 +1,7 @@
 @page "/darbotvarke"
 @using Lt2.Api.Contracts.Agenda
 @inject IAgendaApi Api
+@inject Lt2.Api.Contracts.Digests.IDigestsApi Digests
 @inject IStringLocalizer<PageText> T
 @inject IStringLocalizer<Lt2.Web.Components.Appeals.AppealText> A
 @inject Formats F
@@ -15,7 +16,7 @@
     <p class="lead">@T["Agenda.Lead"]</p>
 </div>
 
-<section class="stack" aria-labelledby="h-coming" id="agenda-coming">
+<section class="sheet stack" aria-labelledby="h-coming" id="agenda-coming">
     <h2 id="h-coming">@T["Agenda.Coming"]</h2>
     <p class="small" id="agenda-source">
         @* An explicit space: Razor drops the white space between the sentences. *@
@@ -54,7 +55,7 @@
     }
 </section>
 
-<section class="stack" aria-labelledby="h-recent" id="agenda-recent">
+<section class="sheet stack" aria-labelledby="h-recent" id="agenda-recent">
     <h2 id="h-recent">@T["Agenda.Recent"]</h2>
     @if (_agenda is null || _agenda.RecentVotes.Count == 0)
     {
@@ -103,12 +104,23 @@
     }
 </section>
 
-<p class="small">@T["Agenda.OlderNote"]</p>
+@* Design 8.15: "riba" repeats in the rows, so what it is is said once, beside the list's note (a hint). *@
+<p class="small" id="agenda-older-note">@T["Agenda.OlderNote"]@if (_threshold is { } threshold)
+    {
+        @(" · ")<Lt2.Web.Client.Components.Hint Id="threshold-what" Text="@A["Threshold.What"]" Answer="@(A["Threshold.Meaning"] + " " + A.Format("Threshold.NowList", Display.Number(threshold)))" More="/metodika#riba" />
+    }</p>
 <p class="note note--quiet" id="not-a-poll">@A["NotAPoll"]</p>
 
 @code {
 
     private AgendaResponse? _agenda;
 
-    protected override async Task OnInitializedAsync() => _agenda = (await Api.GetAgendaAsync()).Value;
+    /// <summary>The threshold that holds now for a bill without its own (a runtime setting), for the hint beside the list.</summary>
+    private int? _threshold;
+
+    protected override async Task OnInitializedAsync()
+    {
+        _agenda = (await Api.GetAgendaAsync()).Value;
+        _threshold = (await Digests.GetRulesAsync()).Value?.ThresholdDefault;
+    }
 }

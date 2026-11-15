@@ -300,7 +300,10 @@ public sealed class SignInComponentTests : BunitContext
         staffSession.FindAll("#delete-staff-passkey").ShouldBeEmpty();
         staffSession.Find("#delete-account").Click();
         staffSession.Find("#delete-staff-kept").TextContent.ShouldContain(Text("Data.DeleteStaffKept"));
-        staffSession.Find("#delete-staff-kept a").GetAttribute("href").ShouldBe("/metodika#privatumas");
+        // Design 8.15: what is kept and what is deleted is answered in place (a hint), not by leaving the confirmation.
+        staffSession.Find("#delete-staff-kept #delete-staff-more").TextContent.ShouldBe(Text("Data.DeleteStaffMore"));
+        staffSession.Find("#delete-staff-more-panel .hint__answer").TextContent.ShouldBe(Text("Data.DeleteStaffMoreAnswer"));
+        staffSession.Find("#delete-staff-more-panel a").GetAttribute("href").ShouldBe("/metodika#istrynimas");
 
         SignedIn(FakeMeApi.Member);
         var member = Render<Hello>();

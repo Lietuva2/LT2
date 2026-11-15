@@ -7,7 +7,7 @@
    counted. Prerendered from the public, cacheable answer, so it reads without JavaScript. A representative's controls come
    from the caller's own answer (GET …/organisations/mine), asked for only for a signed-in member; nothing in the public
    markup tells who represents an organisation or ties a member's own side to it. *@
-<section class="stack" aria-labelledby="h-organisations" id="organisations">
+<section class="sheet stack" aria-labelledby="h-organisations" id="organisations">
     <h2 id="h-organisations">@L["Org.Section.Title"]</h2>
     <p class="small" id="organisations-not-counted">@L["Org.Section.NotCounted"] <a href="/organizacijos">@L["Org.Section.All"]</a></p>
     @if (Statements is { } statements)
@@ -66,7 +66,7 @@
         }
         @foreach (var org in mine)
         {
-            <div class="sheet stack stack--tight" id="my-organisation-@org.Slug" aria-label="@org.Name" @key="org.Slug">
+            <div class="sheet sheet--quiet stack stack--tight" id="my-organisation-@org.Slug" aria-label="@org.Name" @key="org.Slug">
                 <p class="row"><b>@L.Format("Org.Mine.Title", org.Name)</b> <OrgLabel Label="org.Label" /></p>
                 <p class="fine">@L["Org.Mine.Private"]</p>
                 @if (org.Statement is { } own)

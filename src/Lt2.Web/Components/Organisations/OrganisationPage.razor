@@ -60,7 +60,7 @@
 
     <div class="cols">
         <div class="stack stack--loose">
-            <section class="stack" aria-labelledby="h-about" id="about">
+            <section class="sheet stack" aria-labelledby="h-about" id="about">
                 <h2 id="h-about">@L["Org.Profile.About"]</h2>
                 @if (p.Description.Length > 0)
                 {
@@ -86,16 +86,18 @@
                     <dt>@L["Org.Profile.Registered"]</dt>
                     <dd class="num">@Display.Day(p.RegisteredAt)</dd>
                 </dl>
-                @* Design 8.15: what the label means is one click away. *@
-                <details class="more stack stack--tight" id="label-meaning">
-                    <summary class="linkish small">@L["Org.Profile.MeaningMore"]</summary>
-                    <p class="fine">@L[LabelMeaning(p.Label)] <a href="/metodika#organizacijos">@L["Org.Profile.MethodLink"]</a></p>
-                </details>
+                @* Design 8.15: what this label means, in place (a hint); every label on the methodology page. *@
+                <p class="small"><Lt2.Web.Client.Components.Hint Id="label-meaning" Text="@L["Org.Profile.MeaningMore"]" Answer="@L[LabelMeaning(p.Label)]" More="/metodika#m-organisation-labels" /></p>
+                @* Design 8.16: the report form is a quiet sheet, so it opens inside this sheet, not on the ground. *@
+                @if (p.Status == "active")
+                {
+                    <ReportOrganisation OrganisationId="p.Id" Contact="@Contact" @rendermode="InteractiveWebAssembly" />
+                }
             </section>
 
             @if (p.Status == "active")
             {
-                <section class="stack" aria-labelledby="h-statements" id="statements">
+                <section class="sheet stack" aria-labelledby="h-statements" id="statements">
                     <h2 id="h-statements">@L["Org.Profile.Statements"]</h2>
 
                     @if (p.Statements.Count == 0)
@@ -139,7 +141,7 @@
 
             @if (p.History.Count > 0)
             {
-                <section class="stack stack--tight" aria-labelledby="h-history" id="history">
+                <section class="sheet stack stack--tight" aria-labelledby="h-history" id="history">
                     <h2 id="h-history">@L["Org.Profile.History"]</h2>
                     <ul class="rows">
                         @foreach (var change in p.History)
@@ -153,10 +155,6 @@
 
         <aside class="stack">
             <OrganisationManage Slug="@p.Slug" Status="@p.Status" Label="p.Label" Contact="@Contact" Initial="Initial(p)" @rendermode="InteractiveWebAssembly" />
-            @if (p.Status == "active")
-            {
-                <ReportOrganisation OrganisationId="p.Id" Contact="@Contact" @rendermode="InteractiveWebAssembly" />
-            }
             <p class="note note--quiet">@L["Org.Section.NotCounted"]</p>
         </aside>
     </div>

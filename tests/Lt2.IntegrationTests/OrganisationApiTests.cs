@@ -42,7 +42,12 @@ public sealed class OrganisationApiTests(DatabaseFixture database) : ApiTest(dat
         var html = WebUtility.HtmlDecode(await visitor.Client.GetStringAsync("/o/" + created.Slug));
         html.ShouldContain(name);
         html.ShouldContain("Nepatvirtinta");
-        WebUtility.HtmlDecode(await visitor.Client.GetStringAsync("/organizacijos?q=" + Uri.EscapeDataString(name))).ShouldContain(name);
+        // Design 8.15: what this label means is answered in place (a hint), every label on the methodology page.
+        AppealPageTests.HintOf(html, "label-meaning").ShouldBe(("Ką reiškia ši žyma?", "„Nepatvirtinta“: niekas nepatikrino, ar organizacija tikrai valdo nurodytą svetainę.", "/metodika#m-organisation-labels"));
+        var listed = WebUtility.HtmlDecode(await visitor.Client.GetStringAsync("/organizacijos?q=" + Uri.EscapeDataString(name)));
+        listed.ShouldContain(name);
+        // The labels repeat in the rows: what they mean is said once, beside the list.
+        AppealPageTests.HintOf(listed, "labels-what").Trigger.ShouldBe("Ką reiškia žymos?");
 
         // A new organisation is in the moderators' queue to be looked at, not approved.
         var moderator = (await ModeratorAsync()).Browser;
