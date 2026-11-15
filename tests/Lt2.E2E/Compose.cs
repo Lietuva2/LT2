@@ -9,9 +9,9 @@ internal static class Compose
         Environment.GetEnvironmentVariable("LT2_E2E_COMPOSE_FILE") ?? Path.Combine(RepositoryRoot(), "deploy", "compose.yaml");
 
     /// <summary>
-    /// One compose command at a time: test classes run in parallel, and two migrator runs at once (each moderator fixture
-    /// grants its role through the migrator, which also re-applies grants) collide in PostgreSQL ("tuple concurrently
-    /// updated"). A deploy runs the migrator once; only the tests could run it twice at the same moment.
+    /// One compose command at a time. The classes now run one after another (xunit.runner.json); the gate stays in case
+    /// parallel runs come back: two migrator runs at once (each staff fixture grants its role through the migrator, which
+    /// also re-applies grants) collide in PostgreSQL ("tuple concurrently updated").
     /// </summary>
     private static readonly SemaphoreSlim OneAtATime = new(1, 1);
 

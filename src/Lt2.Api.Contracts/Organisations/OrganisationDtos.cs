@@ -12,6 +12,11 @@ public static class OrganisationLimits
 {
     public const int NameMinLength = 3;
     public const int NameMaxLength = 120;
+
+    /// <summary>A legal entity code: 7 to 9 digits (optional).</summary>
+    public const int LegalCodeMinLength = 7;
+
+    public const int LegalCodeMaxLength = 9;
     public const int DescriptionMaxLength = 500;
     public const int WebsiteMaxLength = 200;
     public const int StatementMaxLength = 1500;
@@ -19,13 +24,16 @@ public static class OrganisationLimits
     public const int GoalMax = 1_000_000;
     public const int RepresentativesMax = 10;
 
+    /// <summary>The page a representative's one-time link opens, without the token.</summary>
+    public const string InvitePage = "/organizacijos/kvietimas";
+
     public static readonly IReadOnlyList<string> Stances = ["for", "against", "remarks"];
 
     /// <summary>The stances that may carry a goal (design 8.14.5).</summary>
     public static readonly IReadOnlyList<string> GoalStances = ["for", "against"];
 
-    /// <summary>The page a one-time link opens (design 8.14.14).</summary>
-    public static string InvitePath(string token) => "/organizacijos/kvietimas/" + Uri.EscapeDataString(token);
+    /// <summary>The page a one-time link opens (design 8.14.14); the token is after the <c>#</c>, so the browser never sends it (design 6.8).</summary>
+    public static string InvitePath(string token) => InvitePage + "#" + Uri.EscapeDataString(token);
 }
 
 /// <summary>
@@ -147,6 +155,9 @@ public sealed record MyBillOrganisationResponse(Guid OrganisationId, string Slug
 
 public sealed record OrganisationCreatedResponse(Guid Id, string Slug);
 
+/// <summary>A representative's one-time link accepted: the organisation's address, where the page goes next.</summary>
+public sealed record InviteAcceptedResponse(string Slug);
+
 public sealed record StatementSavedResponse(Guid Id, string Status);
 
 /// <summary>A one-time link: shown once, valid until <c>ExpiresAt</c>; <c>Path</c> is the page that accepts it.</summary>
@@ -217,6 +228,12 @@ public sealed record ConfirmationCodeRequest
 public sealed record ConfirmationRequest
 {
     public string Code { get; init; } = "";
+}
+
+/// <summary>A representative's one-time token (design 8.14.14), sent in the body of the request (design 6.8).</summary>
+public sealed record InviteTokenRequest
+{
+    public string Token { get; init; } = "";
 }
 
 /// <summary>A new or changed organisation in the moderators' queue (design 8.14.9).</summary>

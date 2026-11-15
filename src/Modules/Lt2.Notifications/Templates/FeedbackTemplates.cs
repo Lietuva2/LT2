@@ -1,7 +1,3 @@
-using System.Globalization;
-using System.Net;
-using System.Text.Json;
-using Lt2.Notifications.Outbox;
 using Lt2.SharedKernel;
 using Microsoft.Extensions.Localization;
 using Microsoft.Extensions.Options;
@@ -14,52 +10,24 @@ internal sealed class FeedbackTemplates(IStringLocalizer<EmailTemplates> l, IOpt
     public EmailMessage Reply(FeedbackReplyEmail model)
     {
         ArgumentNullException.ThrowIfNull(model);
-        return Message(
+        return EmailLayout.Build(
             model.To,
             l["Feedback.Reply.Subject"],
             [
-                l["SignInCode.Greeting"],
+                l[EmailText.Greeting],
                 l["Feedback.Reply.Body"],
-                string.Format(CultureInfo.InvariantCulture, l["Feedback.Reply.Yours"], model.Excerpt),
-                string.Format(CultureInfo.InvariantCulture, l["Feedback.Reply.Answer"], model.Reply),
-                l["SignInCode.Signature"],
+                l.Format("Feedback.Reply.Yours", model.Excerpt),
+                l.Format("Feedback.Reply.Answer", model.Reply),
+                l[EmailText.Signature],
             ]);
     }
 
     public EmailMessage Notice(FeedbackNoticeEmail model)
     {
         ArgumentNullException.ThrowIfNull(model);
-        return Message(
+        return EmailLayout.Build(
             model.To,
-            string.Format(CultureInfo.InvariantCulture, l["Feedback.Notice.Subject"], model.Count),
-            [string.Format(CultureInfo.InvariantCulture, l["Feedback.Notice.Body"], model.Count, SiteLinks.Absolute(site.Value.Address, model.StaffPath))]);
+            l.Format("Feedback.Notice.Subject", model.Count),
+            [l.Format("Feedback.Notice.Body", model.Count, SiteLinks.Absolute(site.Value.Address, model.StaffPath))]);
     }
-
-    private static EmailMessage Message(string to, string subject, IReadOnlyList<string> paragraphs)
-    {
-        var text = string.Join("\n\n", paragraphs) + "\n";
-        var html = string.Concat(paragraphs.Select(p => $"<p>{WebUtility.HtmlEncode(p)}</p>"));
-        return new EmailMessage(
-            to,
-            subject,
-            text,
-            $"<!doctype html><html lang=\"lt\"><body style=\"font-family:system-ui,sans-serif;color:#1e293b\">{html}</body></html>",
-            EmailCategory.Transactional);
-    }
-}
-
-internal sealed class FeedbackReplyEmailHandler(FeedbackTemplates templates, IEmailTransport transport) : IOutboxHandler
-{
-    public string Kind => MessageKinds.FeedbackReplyEmail;
-
-    public Task HandleAsync(JsonElement payload, CancellationToken cancellationToken) =>
-        transport.SendAsync(templates.Reply(payload.Deserialize<FeedbackReplyEmail>(JsonSerializerOptions.Web) ?? throw new InvalidOperationException("Empty payload.")), cancellationToken);
-}
-
-internal sealed class FeedbackNoticeEmailHandler(FeedbackTemplates templates, IEmailTransport transport) : IOutboxHandler
-{
-    public string Kind => MessageKinds.FeedbackNoticeEmail;
-
-    public Task HandleAsync(JsonElement payload, CancellationToken cancellationToken) =>
-        transport.SendAsync(templates.Notice(payload.Deserialize<FeedbackNoticeEmail>(JsonSerializerOptions.Web) ?? throw new InvalidOperationException("Empty payload.")), cancellationToken);
 }

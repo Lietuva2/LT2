@@ -83,20 +83,24 @@ public sealed class SummaryFactory(DatabaseFixture database) : Lt2Factory(databa
 /// queue and is confirmed, corrected or removed; visitors and members see the label and the report control and nothing of
 /// the moderators'; summaries to MPs carry no description.
 /// </summary>
-public sealed class DescriptionSummaryTests(DatabaseFixture database) : ApiTest(database), IAsyncDisposable
+public sealed class DescriptionSummaryTests(DatabaseFixture database) : ApiTest(database)
 {
     private static readonly string[] Bills = [AppealSteps.TaxBill, AppealSteps.SecondBill, AppealSteps.ThirdBill];
-    private static readonly TimeZoneInfo Vilnius = TimeZoneInfo.FindSystemTimeZoneById("Europe/Vilnius");
+    private static readonly TimeZoneInfo Vilnius = Lt2.SharedKernel.VilniusTime.Zone;
 
-    private SummaryFactory? _summaries;
+    private static readonly Lock FactoryGate = new();
+    private static SummaryFactory? _summaries;
 
-    private SummaryFactory Summaries => _summaries ??= new SummaryFactory(Database);
-
-    public async ValueTask DisposeAsync()
+    /// <summary>One for the whole run, like <see cref="ApiTest.Factory"/>: a host per test was slow. The tests count what the
+    /// fakes were asked from where they started and clear what they set.</summary>
+    private SummaryFactory Summaries
     {
-        if (_summaries is not null)
+        get
         {
-            await _summaries.DisposeAsync();
+            lock (FactoryGate)
+            {
+                return _summaries ??= new SummaryFactory(Database);
+            }
         }
     }
 
@@ -118,18 +122,12 @@ public sealed class DescriptionSummaryTests(DatabaseFixture database) : ApiTest(
         return await scope.ServiceProvider.GetRequiredService<IDescriptionSummaries>().RunAsync(CancellationToken.None);
     }
 
-    private static async Task SetAsync(TestBrowser admin, string key, object value)
-    {
-        using var response = await admin.SendAsync(HttpMethod.Put, ApiRoutes.Admin.SettingByKey(key), new UpdateSettingRequest { Value = JsonSerializer.SerializeToElement(value) });
-        response.StatusCode.ShouldBe(HttpStatusCode.OK, await response.Content.ReadAsStringAsync());
-    }
-
     private Task PlanAsync(string bill, DateOnly date) =>
         Database.ExecuteAsync(
             "INSERT INTO parliament.planned_item (id, bill_number, planned_date, stage, source, first_seen, last_seen) VALUES (gen_random_uuid(), @b, @d, 'adoption', 'agenda', now(), now())",
             ("b", bill), ("d", date));
 
-    private static DateOnly Today => DateOnly.FromDateTime(TimeZoneInfo.ConvertTime(DateTimeOffset.UtcNow, Vilnius).DateTime);
+    private static DateOnly Today => ReasonsToComeSteps.VilniusToday();
 
     /// <summary>Pretends the job's tries happened <paramref name="days"/> days earlier (its daily number and waits move with them).</summary>
     private Task AgeAttemptsAsync(int days) =>
@@ -159,7 +157,7 @@ public sealed class DescriptionSummaryTests(DatabaseFixture database) : ApiTest(
         page.ShouldNotContain("santrauk", Case.Insensitive);
 
         // A moderator still writes a description, and a member still takes a side.
-        using var moderator = await StaffMembers.ActiveAsync(Factory, Database, "moderator");
+        using var moderator = await StaffMembers.SharedAsync(Factory, Database, "moderator");
         var (member, _) = await Factory.MemberAsync("Giedrė Slapta");
         using var _m = member;
         var prepared = await Database.PrepareBillAsync(member, moderator.Browser, AppealSteps.SecondBill, "for");
@@ -171,8 +169,8 @@ public sealed class DescriptionSummaryTests(DatabaseFixture database) : ApiTest(
     public async Task With_a_provider_and_texts_the_job_fills_descriptions_planned_first_then_by_participants_within_the_daily_number()
     {
         await FreshAsync();
-        using var admin = await StaffMembers.ActiveAsync(Summaries, Database, "administrator");
-        await SetAsync(admin.Browser, "Ai:SummariesPerDay", 2);
+        using var admin = await StaffMembers.SharedAsync(Summaries, Database, "administrator");
+        await admin.Browser.SetSettingAsync("Ai:SummariesPerDay", 2);
         try
         {
             foreach (var bill in Bills)
@@ -224,14 +222,14 @@ public sealed class DescriptionSummaryTests(DatabaseFixture database) : ApiTest(
             (await visitor.AppealAsync(AppealSteps.TaxBill)).Counts.For.ShouldBe(1, "the side taken before stays on the record the summary joined");
 
             // 0 switches the job off.
-            await SetAsync(admin.Browser, "Ai:SummariesPerDay", 0);
+            await admin.Browser.SetSettingAsync("Ai:SummariesPerDay", 0);
             await FreshAsync();
             (await RunAsync(Summaries)).ShouldBe(new SummaryRun("off", 0, 0));
             (await visitor.GetJsonAsync<AppealRulesResponse>(AppealRoutes.Rules)).AiSummaries.ShouldBeFalse();
         }
         finally
         {
-            await SetAsync(admin.Browser, "Ai:SummariesPerDay", 30);
+            await admin.Browser.ResetSettingAsync("Ai:SummariesPerDay");
             Summaries.Texts.Clear();
             await FreshAsync();
         }
@@ -276,7 +274,7 @@ public sealed class DescriptionSummaryTests(DatabaseFixture database) : ApiTest(
     public async Task The_job_never_writes_over_a_persons_text_or_a_removed_one()
     {
         await FreshAsync();
-        using var moderator = await StaffMembers.ActiveAsync(Summaries, Database, "moderator");
+        using var moderator = await StaffMembers.SharedAsync(Summaries, Database, "moderator");
         try
         {
             foreach (var bill in Bills)
@@ -317,11 +315,69 @@ public sealed class DescriptionSummaryTests(DatabaseFixture database) : ApiTest(
         }
     }
 
+    /// <summary>
+    /// Design 6.8, 8.13: writes to one bill's record are serialised. While a moderator's description is being saved on a
+    /// record that exists, the job waits for it and then leaves the person's text alone, instead of writing over it.
+    /// </summary>
+    [Fact]
+    public async Task The_job_waits_for_a_moderators_description_being_saved_and_does_not_write_over_it()
+    {
+        await FreshAsync();
+        using var moderator = await StaffMembers.SharedAsync(Summaries, Database, "moderator");
+        const string Persons = "Moderatoriaus aprašymas, saugomas tuo pačiu metu kaip santrauka.";
+        try
+        {
+            Summaries.Texts[AppealSteps.TaxBill] = null;
+            Summaries.Texts[AppealSteps.SecondBill] = null;
+            Summaries.Texts[AppealSteps.ThirdBill] = FakeBillTexts.Note(AppealSteps.ThirdBill);
+            var record = await moderator.Browser.RecordIdAsync(AppealSteps.ThirdBill);
+
+            // The moderator's save, as the service does it: under the bill's lock, not yet committed.
+            await using var connection = new Npgsql.NpgsqlConnection(Database.AdminConnectionString);
+            await connection.OpenAsync();
+            await using var transaction = await connection.BeginTransactionAsync();
+            async Task RunSqlAsync(string sql)
+            {
+#pragma warning disable CA2100 // Fixed SQL of the test.
+                await using var command = new Npgsql.NpgsqlCommand(sql, connection, transaction);
+#pragma warning restore CA2100
+                command.Parameters.AddWithValue("a", record);
+                command.Parameters.AddWithValue("t", Persons);
+                command.Parameters.AddWithValue("k", "lt2.appeal-bill:" + AppealSteps.ThirdBill);
+                await command.ExecuteNonQueryAsync();
+            }
+
+            await RunSqlAsync("SELECT pg_advisory_xact_lock(hashtextextended(@k, 0))");
+            await RunSqlAsync("UPDATE appeals.appeal SET description = @t, description_source = 'moderator', description_at = now() WHERE id = @a");
+            await RunSqlAsync(
+                "INSERT INTO appeals.revision (id, entity_kind, entity_id, field, old_value, new_value, changed_by_user_id, changed_at) VALUES (gen_random_uuid(), 'appeal', @a, 'description', NULL, @t, gen_random_uuid(), now())");
+
+            var run = RunAsync(Summaries);
+            for (var waited = 0; waited < 100 && await Database.ScalarAsync<long>("SELECT count(*) FROM pg_locks WHERE NOT granted") == 0; waited++)
+            {
+                await Task.Delay(100);
+            }
+
+            (await Database.ScalarAsync<long>("SELECT count(*) FROM pg_locks WHERE NOT granted")).ShouldBeGreaterThan(0, "the job waits for the moderator's save");
+            await transaction.CommitAsync();
+            (await run).Made.ShouldBe(0);
+
+            var after = await moderator.Browser.AppealAsync(AppealSteps.ThirdBill);
+            (after.Description, after.DescriptionSource).ShouldBe((Persons, "moderator"));
+            (await Database.ScalarAsync<string>("SELECT outcome FROM appeals.summary_attempt WHERE bill_number = @b", ("b", AppealSteps.ThirdBill))).ShouldBe("overtaken");
+        }
+        finally
+        {
+            Summaries.Texts.Clear();
+            await FreshAsync();
+        }
+    }
+
     [Fact]
     public async Task A_reported_summary_reaches_the_queue_and_is_confirmed_corrected_or_removed()
     {
         await FreshAsync();
-        using var moderator = await StaffMembers.ActiveAsync(Summaries, Database, "moderator");
+        using var moderator = await StaffMembers.SharedAsync(Summaries, Database, "moderator");
         var (member, _) = await Summaries.MemberAsync("Rūta Mockutė");
         using var _m = member;
         try
@@ -470,11 +526,10 @@ public sealed class DescriptionSummaryTests(DatabaseFixture database) : ApiTest(
     public async Task Summaries_to_MPs_and_their_public_copies_carry_no_description()
     {
         await FreshAsync();
-        using var admin = await StaffMembers.ActiveAsync(Summaries, Database, "administrator");
-        using var moderator = await StaffMembers.ActiveAsync(Summaries, Database, "moderator");
-        await SetAsync(admin.Browser, "Digest:ThresholdMinimum", 1);
-        var today = Today;
-        var monday = today.AddDays(7 * 11 - (((int)today.DayOfWeek + 6) % 7));
+        using var admin = await StaffMembers.SharedAsync(Summaries, Database, "administrator");
+        using var moderator = await StaffMembers.SharedAsync(Summaries, Database, "moderator");
+        await admin.Browser.SetSettingAsync("Digest:ThresholdMinimum", 1);
+        var monday = ReasonsToComeSteps.MondayInWeeks(11);
         try
         {
             Summaries.Texts[AppealSteps.ThirdBill] = FakeBillTexts.Note(AppealSteps.ThirdBill);
@@ -520,7 +575,7 @@ public sealed class DescriptionSummaryTests(DatabaseFixture database) : ApiTest(
         }
         finally
         {
-            await SetAsync(admin.Browser, "Digest:ThresholdMinimum", 50);
+            await admin.Browser.ResetSettingAsync("Digest:ThresholdMinimum");
             Summaries.Texts.Clear();
             await FreshAsync();
         }

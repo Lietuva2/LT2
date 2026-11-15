@@ -1,7 +1,7 @@
 @using Lt2.Api.Contracts.Appeals
-@inherits InteractiveBase
+@inherits InteractiveBase<AppealUi>
 @inject IAppealsApi Appeals
-@inject IModerationApi Moderation
+@inject MyBillState State
 @inject NavigationManager Navigation
 
 @* The arguments of both sides (design 8.1, 8.2, design/ui/kreipimasis.html "Kodėl"): "Man svarbu" on one's own side, a
@@ -9,8 +9,9 @@
    offered a similar existing one first. Prerendered on the server, so the arguments are readable without JavaScript;
    nothing in an argument's markup depends on its author's side. A moderator or an administrator in a staff-passkey session
    also gets the queue's actions on each argument, behind "Moderuoti" (design 8.12.3, decided 2026-11-14): what they need
-   comes from the moderators' own answer, asked for only once the island runs in the browser, and for anyone else the
-   server refuses it, so nothing of it renders. *@
+   comes from the moderators' own answer, asked for only once the island runs in the browser (the panel beside it hands
+   over its own, MyBillState), and for anyone else the server refuses it, so nothing of it renders. Each argument is keyed by its id: "Man svarbu" re-sorts the list, and an
+   open form must stay with its own argument. *@
 <section class="stack" aria-labelledby="h-why" id="reasons">
     <h2 id="h-why">@L["Reasons.Title"]</h2>
     @if (Appeal is { } appeal)
@@ -27,19 +28,19 @@
                     }
                     @foreach (var reason in _showAll ? all : all.Take(Shown))
                     {
-                        <div class="said" id="reason-@reason.Id">
+                        <div class="said" id="reason-@reason.Id" @key="reason.Id">
                             <p class="bubble bubble--people voice">@reason.Text</p>
                             @* The name, then the actions as one group that never wraps item by item (owner, 2026-11-13): when
                                the two do not fit side by side, the name takes its own line above. *@
                             <div class="said__by">
                                 <b class="said__name">@(reason.AuthorName ?? L["Reasons.Anonymous"])</b>
-                                <span class="said__actions" id="actions-@reason.Id">
+                                <span class="said__actions" id="said-actions-@reason.Id">
                                     @if (_signedIn)
                                     {
                                         var endorsed = Mine?.Endorsed.Contains(reason.Id) == true;
                                         <button class="mark num" type="button" aria-pressed="@(endorsed ? "true" : "false")"
                                                 disabled="@(Locked || !MayEndorse(reason, endorsed))" title="@EndorseHint(reason, endorsed)"
-                                                @onclick="() => ToggleEndorsementAsync(reason.Id, endorsed)">@Text("Reasons.Endorse", AppealNumbers.Of(reason.Endorsements))</button>
+                                                @onclick="() => ToggleEndorsementAsync(reason.Id, endorsed)">@L.Format("Reasons.Endorse", Display.Number(reason.Endorsements))</button>
                                         <button class="linkish small" type="button" disabled="@Locked" @onclick="() => _reporting = _reporting == reason.Id ? null : reason.Id">@L["Report.Open"]</button>
                                         @if (IsMine(reason) && appeal.Status == "open")
                                         {
@@ -49,7 +50,7 @@
                                     }
                                     else
                                     {
-                                        <span class="mark num">@Text("Reasons.Endorse", AppealNumbers.Of(reason.Endorsements))</span>
+                                        <span class="mark num">@L.Format("Reasons.Endorse", Display.Number(reason.Endorsements))</span>
                                         <VisitorReport Contact="@Contact" />
                                     }
                                 </span>
@@ -60,7 +61,7 @@
                             }
                             @if (Moderated(reason.Id) is { } moderated)
                             {
-                                <details class="moderate" id="moderate-@reason.Id">
+                                <details class="more moderate" id="moderate-@reason.Id">
                                     <summary class="linkish small">@L["ModReason.Open"]</summary>
                                     <ModerationActions Id="reason.Id" Kind="reason" Status="@moderated.Status" MergeCandidates="moderated.MergeCandidates" OnDone="Reload" OnRestricted="ReloadPage" />
                                 </details>
@@ -83,10 +84,10 @@
             {
                 <button class="btn btn--plain" type="button" id="add-reason" disabled="@Locked" @onclick="StartWriting">@L["Reasons.Write"]</button>
             }
-            @if (appeal.Reasons.Count > Shown * 2 || appeal.Reasons.GroupBy(r => r.Side).Any(g => g.Count() > Shown))
+            @if (appeal.Reasons.GroupBy(r => r.Side).Any(g => g.Count() > Shown))
             {
                 <button class="linkish" type="button" disabled="@Locked" @onclick="() => _showAll = !_showAll">
-                    @(_showAll ? L["Reasons.Fewer"] : Text("Reasons.All", appeal.Reasons.Count))
+                    @(_showAll ? L["Reasons.Fewer"] : L.Format("Reasons.All", Display.Number(appeal.Reasons.Count)))
                 </button>
             }
         </div>
@@ -98,8 +99,8 @@
         @if (_signedIn && Mine is { } mine)
         {
             // Counters only while a limit is set (design 8.2: none by default, so usually nothing but the side note).
-            var marks = mine.Side is null ? L["Reasons.NeedSide"].Value : mine.EndorsementsLeft is { } e ? Text("Reasons.EndorsementsLeft", e) : null;
-            var reasons = mine.ReasonsLeft switch { null => null, > 0 and var r => Text("Reasons.Left", r), _ => L["Reasons.NoneLeft"].Value };
+            var marks = mine.Side is null ? L["Reasons.NeedSide"].Value : mine.EndorsementsLeft is { } e ? L.Format("Reasons.EndorsementsLeft", Display.Number(e)) : null;
+            var reasons = mine.ReasonsLeft switch { null => null, > 0 and var r => L.Format("Reasons.Left", Display.Number(r)), _ => L["Reasons.NoneLeft"].Value };
             @if (marks is not null || reasons is not null)
             {
                 <p class="small num" id="reasons-note">@marks @reasons</p>
@@ -110,29 +111,29 @@
         {
             <form class="sheet stack" @onsubmit="SubmitAsync" novalidate aria-labelledby="write-title" id="write-reason">
                 <h3 id="write-title">@L["Reasons.WriteTitle"]</h3>
-                <p class="small">@L["Reasons.EitherSide"]</p>
                 @* A two-part switch over real radio inputs (owner, 2026-11-13): the chosen half filled in its side's colour;
-                   neither when the person has no side and has not chosen yet. *@
-                <fieldset class="field stack stack--tight @(Errors.ContainsKey("side") ? "field--error" : "")">
+                   neither when the person has no side and has not chosen yet. Either side may be chosen (design 8.2;
+                   the methodology's "Argumentai" says so, design 8.15). *@
+                <fieldset class="field stack stack--tight @ErrorClass("side")">
                     <legend>@L["Reasons.SideLegend"]</legend>
                     <div class="switch" id="reason-side">
                         @foreach (var side in AppealLimits.Sides)
                         {
                             <label class="switch__half switch__half--@side">
                                 <input class="switch__input" type="radio" name="reason-side" id="reason-side-@side" value="@side" checked="@(_side == side)"
-                                       @onchange="() => ChooseSide(side)" disabled="@Locked" />
+                                       @onchange="() => ChooseSide(side)" disabled="@Locked" aria-invalid="@Invalid("side")" />
                                 <span>@L["Reasons.Switch." + side]</span>
                             </label>
                         }
                     </div>
-                    <FieldError Errors="Errors" Field="side" />
+                    <FieldError Errors="Errors" Field="side" For="reason-side" />
                 </fieldset>
-                <div class="field @(Errors.ContainsKey("text") ? "field--error" : "")">
+                <div class="field @ErrorClass("text")">
                     <label for="reason-text">@L["Reasons.Label"]</label>
-                    <textarea class="textarea" id="reason-text" maxlength="@AppealLimits.ReasonMaxLength" aria-describedby="reason-hint"
-                              @bind="_text" @bind:event="oninput" disabled="@Locked"></textarea>
-                    <p class="field__hint num" id="reason-hint">@Text("Reasons.Hint", _text.Length, AppealLimits.ReasonMaxLength)</p>
-                    <FieldError Errors="Errors" Field="text" />
+                    <textarea class="textarea" id="reason-text" maxlength="@AppealLimits.ReasonMaxLength" aria-describedby="@DescribedBy("text", "reason-text", "reason-hint")"
+                              aria-invalid="@Invalid("text")" @bind="_text" @bind:event="oninput" disabled="@Locked"></textarea>
+                    <p class="field__hint num" id="reason-hint">@L.Format("Reasons.Hint", Display.Number(_text.Length), Display.Number(AppealLimits.ReasonMaxLength))</p>
+                    <FieldError Errors="Errors" Field="text" For="reason-text" />
                 </div>
                 @if (_similar is { Count: > 0 } similar)
                 {
@@ -142,12 +143,12 @@
                         @foreach (var reason in similar)
                         {
                             var endorsed = Mine.Endorsed.Contains(reason.Id);
-                            <div class="said">
+                            <div class="said" @key="reason.Id">
                                 <p class="bubble bubble--people voice">@reason.Text</p>
                                 <div class="said__by">
                                     <b>@(reason.AuthorName ?? L["Reasons.Anonymous"])</b>
                                     <button class="mark num" type="button" aria-pressed="@(endorsed ? "true" : "false")" disabled="@(Locked || !MayEndorse(reason, endorsed))"
-                                            @onclick="() => ToggleEndorsementAsync(reason.Id, endorsed)">@Text("Reasons.Endorse", AppealNumbers.Of(reason.Endorsements))</button>
+                                            @onclick="() => ToggleEndorsementAsync(reason.Id, endorsed)">@L.Format("Reasons.Endorse", Display.Number(reason.Endorsements))</button>
                                 </div>
                             </div>
                         }
@@ -171,8 +172,13 @@
     private bool _showAll;
     private bool _writing;
     private string _text = "";
+    private string? _side;
+    private Guid? _withdrawing;
     private IReadOnlyList<ReasonResponse>? _similar;
     private Guid? _reporting;
+
+    /// <summary>The moderators' answer for this bill: null for everyone else (the server refuses it).</summary>
+    private ModerationBillResponse? _moderation;
 
     [Parameter, EditorRequired] public string Number { get; set; } = "";
 
@@ -185,14 +191,35 @@
     /// </summary>
     [Parameter] public bool Moderator { get; set; }
 
-    [CascadingParameter] private Task<AuthenticationState>? AuthState { get; set; }
-
     [PersistentState] public AppealResponse? Appeal { get; set; }
 
     [PersistentState] public MyAppealResponse? Mine { get; set; }
 
-    /// <summary>The moderators' answer for this bill: null for everyone else (the server refuses it).</summary>
-    private ModerationBillResponse? _moderation;
+    /// <summary>The person's own writing restriction (design 8.3): the writing box gives way to the notice.</summary>
+    [PersistentState] public MyRestrictionResponse? Restriction { get; set; }
+
+
+    /// <summary>An argument may be written for either side, with or without a side of one's own (design 8.2).</summary>
+    private bool CanWrite => _signedIn && Appeal?.Status == "open" && Restriction is not { Restricted: true } && Mine is { } mine && mine.ReasonsLeft is null or > 0;
+
+    protected override async Task OnInitializedAsync()
+    {
+        _signedIn = await IsSignedInAsync();
+        Appeal ??= (await Appeals.GetAppealAsync(Number)).Value;
+        if (_signedIn)
+        {
+            Mine ??= await State.MineAsync(Number);
+            Restriction ??= await State.RestrictionAsync();
+        }
+
+        // Only for a moderator (the page says so; nobody else asks), and only in the browser: a "Moderuoti" opened before
+        // the island starts would close when it does. The panel beside it hands over the answer it brought from the
+        // server (MyBillState), so usually nothing is asked again.
+        if (Moderator && _signedIn && RendererInfo.IsInteractive && Appeal is { Id: not null, Status: "open" })
+        {
+            _moderation = await State.ModerationAsync(Number);
+        }
+    }
 
     private QueueReasonResponse? Moderated(Guid reasonId) => _moderation?.Reasons.FirstOrDefault(r => r.Id == reasonId);
 
@@ -200,25 +227,13 @@
 
     private void ReloadPage() => Navigation.NavigateTo(Navigation.Uri, forceLoad: true);
 
-    /// <summary>The person's own writing restriction (design 8.3): the writing box gives way to the notice.</summary>
-    [PersistentState] public MyRestrictionResponse? Restriction { get; set; }
-
-    private string? _side;
-
-    /// <summary>An argument may be written for either side, with or without a side of one's own (design 8.2).</summary>
-    private bool CanWrite => _signedIn && Appeal?.Status == "open" && Restriction is not { Restricted: true } && Mine is { } mine && mine.ReasonsLeft is null or > 0;
-
-    private Guid? _withdrawing;
-
     /// <summary>One's own argument, known only from the never-cached "mine" answer.</summary>
     private bool IsMine(ReasonResponse reason) => Mine?.MyReasons.Any(r => r.Id == reason.Id) == true;
 
     private Task WithdrawAsync(Guid reasonId) => RunAsync(async () =>
     {
-        var result = await Appeals.WithdrawReasonAsync(reasonId);
-        if (!result.IsSuccess)
+        if (!Succeeded(await Appeals.WithdrawReasonAsync(reasonId)))
         {
-            Show(result.Problem);
             return;
         }
 
@@ -241,29 +256,7 @@
     {
         _side = side;
         _similar = null;
-        Errors = new Dictionary<string, string[]>();
-    }
-
-    protected override async Task OnInitializedAsync()
-    {
-        _signedIn = AuthState is not null && (await AuthState).User.Identity?.IsAuthenticated == true;
-        Appeal ??= (await Appeals.GetAppealAsync(Number)).Value;
-        if (_signedIn && Mine is null)
-        {
-            Mine = (await Appeals.GetMineAsync(Number)).Value;
-        }
-
-        if (_signedIn)
-        {
-            Restriction ??= (await Appeals.GetMyRestrictionAsync()).Value;
-        }
-
-        // Only for a moderator (the page says so), and only in the browser: the prerendered page holds nothing of the
-        // moderators' answer, and nobody else asks for it.
-        if (Moderator && _signedIn && RendererInfo.IsInteractive && Appeal is { Id: not null, Status: "open" })
-        {
-            _moderation = (await Moderation.GetBillAsync(Number)).Value;
-        }
+        Errors = NoErrors();
     }
 
     private bool MayEndorse(ReasonResponse reason, bool endorsed) =>
@@ -277,10 +270,8 @@
 
     private Task ToggleEndorsementAsync(Guid reasonId, bool endorsed) => RunAsync(async () =>
     {
-        var result = endorsed ? await Appeals.RemoveEndorsementAsync(reasonId) : await Appeals.EndorseAsync(reasonId);
-        if (!result.IsSuccess)
+        if (!Succeeded(endorsed ? await Appeals.RemoveEndorsementAsync(reasonId) : await Appeals.EndorseAsync(reasonId)))
         {
-            Show(result.Problem);
             return;
         }
 
@@ -295,7 +286,7 @@
     {
         if (_side is null)
         {
-            Errors = new Dictionary<string, string[]> { ["side"] = [L["Reasons.ChooseSide"].Value] };
+            FieldFails("side", L["Reasons.ChooseSide"]);
             return;
         }
 
@@ -303,9 +294,8 @@
         if (_similar is null)
         {
             var similar = await Appeals.FindSimilarAsync(Number, request);
-            if (!similar.IsSuccess)
+            if (!Succeeded(similar, "text"))
             {
-                Show(similar.Problem, "text");
                 return;
             }
 
@@ -317,9 +307,8 @@
         }
 
         var written = await Appeals.WriteReasonAsync(Number, request);
-        if (!written.IsSuccess)
+        if (!Succeeded(written, "text"))
         {
-            Show(written.Problem, "text");
             return;
         }
 
@@ -334,12 +323,13 @@
         _side = null;
         _text = "";
         _similar = null;
-        Errors = new Dictionary<string, string[]>();
+        Errors = NoErrors();
     }
 
     private async Task ReloadAsync()
     {
+        State.Forget(Number);
         Appeal = (await Appeals.GetAppealAsync(Number)).Value ?? Appeal;
-        Mine = (await Appeals.GetMineAsync(Number)).Value ?? Mine;
+        Mine = await State.MineAsync(Number) ?? Mine;
     }
 }

@@ -18,8 +18,9 @@ public enum DraftPurpose
 public sealed record DraftSource(string BillNumber, string BillTitle, string SourceText, DraftPurpose Purpose = DraftPurpose.ModeratorDraft);
 
 /// <summary>
-/// The one interface to an AI provider (design 3, 8.11.4). The provider is an open decision (design section 12): until it is
-/// made, only a "not configured" implementation exists, and nothing in the product offers a draft.
+/// The one interface to an AI provider (design 3, 8.11.4): the Claude API (decided by the owner on 2026-11-13), on only with
+/// <c>Ai:Provider</c> = <c>claude</c> and a key; otherwise the "not configured" implementation answers, and nothing in the
+/// product offers a draft.
 /// </summary>
 public interface IAiAssistant
 {

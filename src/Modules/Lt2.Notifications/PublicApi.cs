@@ -1,27 +1,39 @@
+using Lt2.SharedKernel;
+
 namespace Lt2.Notifications;
 
 /// <summary>Sends due outbox messages. Called in a loop by the worker.</summary>
 public interface INotificationsDispatcher
 {
-    /// <summary>Dispatches one batch of due messages and returns how many were handled (sent or failed).</summary>
+    /// <summary>
+    /// Dispatches one batch of due messages, sign-in and confirmation codes first (design 6.8), over one connection, and
+    /// returns how many were handled (sent or failed).
+    /// </summary>
     Task<int> DispatchDueAsync(CancellationToken cancellationToken);
-}
 
-/// <summary>Which sending stream a message belongs to, so a problem with one cannot block the other (design 8.4).</summary>
-public enum EmailCategory
-{
-    /// <summary>Sign-in codes and other messages a person asked for.</summary>
-    Transactional,
-
-    /// <summary>Summaries to MPs.</summary>
-    Digest,
+    /// <summary>Deletes messages that gave up more than 30 days ago (design 6.8: the outbox forgets); returns how many.</summary>
+    Task<int> PurgeFailedAsync(CancellationToken cancellationToken);
 }
 
 /// <summary>An email ready to send: plain text always, light HTML optionally.</summary>
-public sealed record EmailMessage(string To, string Subject, string TextBody, string? HtmlBody, EmailCategory Category);
+public sealed record EmailMessage(string To, string Subject, string TextBody, string? HtmlBody);
 
 /// <summary>Delivers email. SMTP today; the provider is chosen later (design section 12).</summary>
 public interface IEmailTransport
+{
+    /// <summary>Sends one message on a connection of its own.</summary>
+    Task SendAsync(EmailMessage message, CancellationToken cancellationToken);
+
+    /// <summary>
+    /// A connection for one batch: every message sent through it shares it. Without an override each message is sent on
+    /// its own (<see cref="SendAsync"/>).
+    /// </summary>
+    Task<IEmailConnection> ConnectAsync(CancellationToken cancellationToken) =>
+        Task.FromResult<IEmailConnection>(new Transports.MessageByMessage(this));
+}
+
+/// <summary>A connection to the mail server, held for one batch of messages.</summary>
+public interface IEmailConnection : IAsyncDisposable
 {
     Task SendAsync(EmailMessage message, CancellationToken cancellationToken);
 }
@@ -49,8 +61,6 @@ public sealed record DigestRunInfo(
 /// <summary>What one MP would read (design 8.9: a moderator can read any MP's summary before a real send).</summary>
 public sealed record DigestPreview(string Subject, string Text);
 
-/// <summary>Who approves an urgent summary, for the audit log.</summary>
-public sealed record StaffActor(Guid UserId, string Role, string? IpHash);
 
 /// <summary>Summaries to MPs in dry-run (design 8.4, 8.7, 8.9). Nothing here sends anything.</summary>
 public interface IDigests

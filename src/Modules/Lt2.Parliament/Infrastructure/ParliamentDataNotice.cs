@@ -4,7 +4,8 @@ using Microsoft.Extensions.Caching.Memory;
 namespace Lt2.Parliament.Infrastructure;
 
 /// <summary>
-/// Whether the stored parliament data is invented: true as soon as any stored response came from the stand-in. Asked on
+/// Whether the stored parliament data is invented: true as soon as any stored response came from the stand-in (not the
+/// migrator's stricter rule in <see cref="ParliamentMaintenance"/>, which also asks that nothing real is stored). Asked on
 /// every page, so the answer is cached for a minute. Each call has its own context: the layout and the page ask at the
 /// same time while a page is rendered.
 /// </summary>

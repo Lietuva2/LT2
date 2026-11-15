@@ -67,9 +67,19 @@ public static class ReasonsToComeSteps
 
     public static Task<string?> LatestEmailAsync(this DatabaseFixture database, string kind, string to) =>
         database.ScalarAsync<string>(
-            "SELECT payload::text FROM notify.outbox WHERE kind = @k AND payload->>'to' = @to ORDER BY created_at DESC LIMIT 1", ("k", kind), ("to", to));
+            "SELECT payload::text FROM notify.outbox WHERE kind = @k AND payload->>'to' = @to ORDER BY created_at DESC, id DESC LIMIT 1", ("k", kind), ("to", to));
 
     /// <summary>Today in Vilnius, the day planned dates are compared with.</summary>
-    public static DateOnly VilniusToday() =>
-        DateOnly.FromDateTime(TimeZoneInfo.ConvertTime(DateTimeOffset.UtcNow, TimeZoneInfo.FindSystemTimeZoneById("Europe/Vilnius")).DateTime);
+    public static DateOnly VilniusToday() => Lt2.SharedKernel.VilniusTime.DateOf(DateTimeOffset.UtcNow);
+
+    /// <summary>
+    /// The Monday <paramref name="weeks"/> weeks after this week's, for a sitting week of a test's own. Summaries and
+    /// planned dates stay in the shared database, so each class keeps to its own weeks: DigestTests 2, 4, 6, 8 to 10 and 16,
+    /// DescriptionSummaryTests 11, OrganisationCountTests 13, ReasonWithdrawalTests 14. Take an unused number.
+    /// </summary>
+    public static DateOnly MondayInWeeks(int weeks)
+    {
+        var today = VilniusToday();
+        return today.AddDays(7 * weeks - (((int)today.DayOfWeek + 6) % 7));
+    }
 }

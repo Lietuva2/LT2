@@ -10,21 +10,26 @@ internal static class RecordRules
     public const int DescriptionUrlMaxLength = 500;
 
     /// <summary>A row in one of these statuses is the bill's record; at most one per bill (a unique index stands behind it).</summary>
-    public static bool IsRecord(string status) => status is AppealStatuses.Open or AppealStatuses.Closed or AppealStatuses.Rejected;
+    public static readonly string[] RecordStatuses = [AppealStatuses.Open, AppealStatuses.Closed, AppealStatuses.Rejected];
+
+    public static bool IsRecord(string status) => RecordStatuses.Contains(status);
 
     /// <summary>
-    /// Whether a member may take part on a bill now (design 8.12.1): on its open record, or on an active bill that has no
-    /// record yet (the record is then created). A closed record, a hidden one (taking part closed by the moderators) and a
-    /// finished bill without a record refuse with <c>appeal.not-open</c>.
+    /// Whether a member may take part on a bill now (design 8.12.1, 6.8): on its open record, or on an active bill that has
+    /// no record yet (the record is then created). A closed record, a hidden one (taking part closed by the moderators) and
+    /// a finished bill refuse with <c>appeal.not-open</c>, the last from the moment its final vote is recorded, whether or
+    /// not the hourly job has closed the record yet.
     /// </summary>
     /// <param name="recordStatus">The record's status, or null when the bill has none.</param>
     /// <param name="billFinished">The Seimas has finished the bill (its final vote is in the open data).</param>
-    public static string? CheckParticipation(string? recordStatus, bool billFinished) => recordStatus switch
-    {
-        AppealStatuses.Open => null,
-        null => billFinished ? "appeal.not-open" : null,
-        _ => "appeal.not-open",
-    };
+    public static string? CheckParticipation(string? recordStatus, bool billFinished) =>
+        !billFinished && recordStatus is null or AppealStatuses.Open ? null : "appeal.not-open";
+
+    /// <summary>
+    /// Whether the Seimas has finished the bill (design 6.8: the same moment for everyone): its record is closed, or its
+    /// final vote is recorded.
+    /// </summary>
+    public static bool IsFinished(string? recordStatus, bool finalVoteRecorded) => recordStatus == AppealStatuses.Closed || finalVoteRecorded;
 
     /// <summary>A hidden record comes back as it was (design 8.12.3): closed if it had closed, otherwise open.</summary>
     public static string RestoredStatus(DateTimeOffset? closedAt) => closedAt is not null ? AppealStatuses.Closed : AppealStatuses.Open;
@@ -68,28 +73,13 @@ internal static class RecordRules
             return null;
         }
 
-        const string Prefix = "https://";
-        const string Invalid = "description-url.invalid";
-        if (address.Length > DescriptionUrlMaxLength || address.Any(c => char.IsWhiteSpace(c) || char.IsControl(c) || c == '\\')
-            || !address.StartsWith(Prefix, StringComparison.OrdinalIgnoreCase))
+        if (!HttpsAddress.TryParse(address, DescriptionUrlMaxLength, out var uri))
         {
-            return Invalid;
-        }
-
-        var authority = address[Prefix.Length..];
-        var end = authority.IndexOfAny(['/', '?', '#']);
-        if ((end < 0 ? authority : authority[..end]).Contains('@', StringComparison.Ordinal))
-        {
-            return Invalid;
-        }
-
-        if (!Uri.TryCreate(address, UriKind.Absolute, out var uri) || uri.Scheme != Uri.UriSchemeHttps || uri.UserInfo.Length > 0)
-        {
-            return Invalid;
+            return "description-url.invalid";
         }
 
         var host = uri.IdnHost;
-        return host.Equals("lrs.lt", StringComparison.OrdinalIgnoreCase) || host.EndsWith(".lrs.lt", StringComparison.OrdinalIgnoreCase) ? null : Invalid;
+        return host.Equals("lrs.lt", StringComparison.OrdinalIgnoreCase) || host.EndsWith(".lrs.lt", StringComparison.OrdinalIgnoreCase) ? null : "description-url.invalid";
     }
 
     /// <summary>

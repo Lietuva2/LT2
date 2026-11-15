@@ -15,22 +15,6 @@ namespace Lt2.IntegrationTests;
 /// </summary>
 public sealed partial class FeedbackTests(DatabaseFixture database) : ApiTest(database)
 {
-    private static readonly SemaphoreSlim Gate = new(1, 1);
-    private static StaffMember? _moderator;
-
-    private async Task<StaffMember> ModeratorAsync()
-    {
-        await Gate.WaitAsync();
-        try
-        {
-            return _moderator ??= await StaffMembers.ActiveAsync(Factory, Database, "moderator");
-        }
-        finally
-        {
-            Gate.Release();
-        }
-    }
-
     private static Task<HttpResponseMessage> SendAsync(TestBrowser browser, string text, bool mayReply, string? kind = null) =>
         browser.PostAsync(FeedbackRoutes.Send, new FeedbackRequest { Text = text, Kind = kind, PagePath = "/seimas/XVP-0412?x=1", Browser = "Edge 131", MayReply = mayReply });
 

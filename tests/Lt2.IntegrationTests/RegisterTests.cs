@@ -6,6 +6,8 @@ using Lt2.Api.Contracts.Me;
 using Lt2.Audit;
 using Lt2.Identity;
 using Lt2.IntegrationTests.Infrastructure;
+using Lt2.Notifications;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Npgsql;
 
@@ -263,6 +265,7 @@ public sealed class RegisterTests(DatabaseFixture database) : ApiTest(database)
         services.AddSingleton(TimeProvider.System);
         services.AddSingleton(NpgsqlDataSource.Create(Database.WorkerConnectionString));
         services.AddAuditModule();
+        services.AddNotificationsModule(new ConfigurationBuilder().Build());
         services.AddIdentityMaintenance();
         await using (var provider = services.BuildServiceProvider())
         await using (var scope = provider.CreateAsyncScope())
@@ -274,6 +277,10 @@ public sealed class RegisterTests(DatabaseFixture database) : ApiTest(database)
         (await AccountsAsync(recent)).ShouldBe(1, "pending, but recent");
         (await AccountsAsync(completed)).ShouldBe(1, "completed accounts are kept");
         (await Database.ScalarAsync<long>("SELECT count(*) FROM identity.\"user\" WHERE email = @e", ("e", stale))).ShouldBe(0);
+
+        // Design 6.8: the outbox forgets the purged address too; the recent one still has its sign-in code waiting.
+        (await Database.ScalarAsync<long>("SELECT count(*) FROM notify.outbox WHERE lower(payload->>'to') = lower(@e)", ("e", stale))).ShouldBe(0);
+        (await Database.ScalarAsync<long>("SELECT count(*) FROM notify.outbox WHERE lower(payload->>'to') = lower(@e)", ("e", recent))).ShouldBeGreaterThan(0);
     }
 
     [Fact]

@@ -20,7 +20,7 @@ public sealed record MeResponse
     /// <summary>
     /// <c>false</c> while the account is pending (design 6.2): the address is proven but the display name and the age
     /// declaration have not been given yet. A pending account can only complete the registration, see and end its
-    /// sessions, and sign out.
+    /// sessions, export or delete what it holds, and sign out.
     /// </summary>
     public bool RegistrationComplete { get; init; }
 

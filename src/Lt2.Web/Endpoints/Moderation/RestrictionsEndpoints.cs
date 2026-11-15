@@ -1,4 +1,3 @@
-using System.Security.Claims;
 using Lt2.Api.Contracts;
 using Lt2.Api.Contracts.Appeals;
 using Lt2.Appeals;
@@ -33,20 +32,6 @@ internal static class RestrictionsEndpoints
             .ProducesProblem(StatusCodes.Status409Conflict);
     }
 
-    private static async Task<IResult> LiftAsync(
-        Guid id,
-        StatementRequest request,
-        ClaimsPrincipal user,
-        HttpContext context,
-        Lt2.Identity.IIdentityModule identity,
-        IAppealsModeration moderation,
-        IpHasher ipHasher,
-        ErrorMapper errors,
-        IConfiguration configuration,
-        CancellationToken cancellationToken)
-    {
-        var moderator = await AppealMapping.ModeratorAsync(identity, user, ipHasher.Hash(context), cancellationToken);
-        var result = await moderation.LiftRestrictionAsync(id, request.Statement, moderator, AppealMapping.Contact(configuration), cancellationToken);
-        return result.IsSuccess ? TypedResults.NoContent() : errors.ToResult(result.Error!);
-    }
+    private static Task<IResult> LiftAsync(Guid id, StatementRequest request, HttpContext context, IAppealsModeration moderation, CancellationToken cancellationToken) =>
+        ModeratorEndpoint.ActAsync(context, m => moderation.LiftRestrictionAsync(id, request.Statement, m, ModeratorEndpoint.Contact(context), cancellationToken));
 }

@@ -1,4 +1,5 @@
 using System.Net;
+using System.Security.Claims;
 using System.Text.Json;
 using Lt2.Api.Contracts;
 using Lt2.Api.Contracts.Admin;
@@ -8,6 +9,7 @@ using Lt2.Identity;
 using Lt2.IntegrationTests.Infrastructure;
 using Lt2.Notifications;
 using Lt2.SharedKernel;
+using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace Lt2.IntegrationTests;
@@ -53,15 +55,34 @@ public sealed class PartySupportTests(DatabaseFixture database) : ApiTest(databa
         (await Database.ScalarAsync<long>("SELECT count(*) FROM identity.consent WHERE user_id = @u AND kind = 'party-support' AND withdrawn_at IS NULL", ("u", userId))).ShouldBe(0);
     }
 
+    /// <summary>Design 6.8: the consent is checked where the party is stored, so a caller inside the server cannot skip it.</summary>
+    [Fact]
+    public async Task Without_consent_no_party_is_stored_through_the_in_process_client_either()
+    {
+        var (member, email) = await Factory.MemberAsync();
+        using var _m = member;
+        var userId = await Database.UserIdAsync(email);
+        await using var scope = Factory.Services.CreateAsyncScope();
+        scope.ServiceProvider.GetRequiredService<IHttpContextAccessor>().HttpContext = new DefaultHttpContext
+        {
+            User = new ClaimsPrincipal(new ClaimsIdentity([new Claim(ClaimTypes.NameIdentifier, userId.ToString()), new Claim(ClaimTypes.Role, "member")], "test")),
+            RequestServices = scope.ServiceProvider,
+        };
+
+        var result = await scope.ServiceProvider.GetRequiredService<IMeApi>().SetPartySupportAsync(new PartySupportRequest { Party = Party, Consent = false });
+
+        result.IsSuccess.ShouldBeFalse();
+        result.Problem!.Code.ShouldBe("party.consent-required");
+        (await Database.ScalarAsync<long>("SELECT count(*) FROM identity.party_support WHERE user_id = @u", ("u", userId))).ShouldBe(0);
+        (await Database.ScalarAsync<long>("SELECT count(*) FROM identity.consent WHERE user_id = @u AND kind = 'party-support'", ("u", userId))).ShouldBe(0);
+    }
+
     [Fact]
     public async Task A_group_under_20_shows_no_number_anywhere_not_even_by_subtraction()
     {
-        using var moderator = await StaffMembers.ActiveAsync(Factory, Database, "moderator");
-        using var admin = await StaffMembers.ActiveAsync(Factory, Database, "administrator");
-        using (var set = await admin.Browser.SendAsync(HttpMethod.Put, ApiRoutes.Admin.SettingByKey("Digest:ThresholdMinimum"), new UpdateSettingRequest { Value = JsonSerializer.SerializeToElement(1) }))
-        {
-            set.StatusCode.ShouldBe(HttpStatusCode.OK);
-        }
+        using var moderator = await StaffMembers.SharedAsync(Factory, Database, "moderator");
+        using var admin = await StaffMembers.SharedAsync(Factory, Database, "administrator");
+        await admin.Browser.SetSettingAsync("Digest:ThresholdMinimum", 1);
 
         try
         {
@@ -119,7 +140,7 @@ public sealed class PartySupportTests(DatabaseFixture database) : ApiTest(databa
         }
         finally
         {
-            using var restore = await admin.Browser.SendAsync(HttpMethod.Put, ApiRoutes.Admin.SettingByKey("Digest:ThresholdMinimum"), new UpdateSettingRequest { Value = JsonSerializer.SerializeToElement(50) });
+            await admin.Browser.ResetSettingAsync("Digest:ThresholdMinimum");
             await Database.FreeBillAsync(AppealSteps.ThirdBill);
         }
     }

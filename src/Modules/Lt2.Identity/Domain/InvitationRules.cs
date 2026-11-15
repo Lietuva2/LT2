@@ -46,10 +46,22 @@ internal static class InvitationRules
             return false;
         }
 
-        return kind is InvitationKinds.Personal or InvitationKinds.Organisation
+        return LimitedBySetting(kind)
             ? perCodeLimit == 0 || usedCount < perCodeLimit
             : usesLeft > 0;
     }
+
+    /// <summary><see cref="Usable(string, int, int, DateTimeOffset?, DateTimeOffset?, DateTimeOffset?, int, DateTimeOffset, string?)"/> for a stored code.</summary>
+    public static bool Usable(Invitation invitation, int perCodeLimit, DateTimeOffset now)
+    {
+        ArgumentNullException.ThrowIfNull(invitation);
+        return Usable(
+            invitation.Kind, invitation.UsesLeft, invitation.UsedCount, invitation.ExpiresAt, invitation.SwitchedOffAt, invitation.ReplacedAt,
+            perCodeLimit, now, invitation.OrganisationOff);
+    }
+
+    /// <summary>Personal and organisation codes are limited by a uses setting; team codes count their own uses down.</summary>
+    public static bool LimitedBySetting(string kind) => kind is InvitationKinds.Personal or InvitationKinds.Organisation;
 
     /// <summary>The uses setting that applies to a code of <paramref name="kind"/>: personal, organisation, or none (team codes count down).</summary>
     public static int LimitFor(string kind, int personalLimit, int organisationLimit) => kind switch

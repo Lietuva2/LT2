@@ -1,5 +1,6 @@
 using Lt2.Appeals.Domain;
 using Lt2.SharedKernel;
+using Lt2.SharedKernel.Persistence;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Design;
 
@@ -259,8 +260,15 @@ internal sealed class AppealsDb(DbContextOptions<AppealsDb> options) : DbContext
     internal static DbContextOptions<AppealsDb> Options(string connectionString)
     {
         var builder = new DbContextOptionsBuilder<AppealsDb>();
-        builder.UseNpgsql(connectionString, o => o.MigrationsHistoryTable("__ef_migrations_history", AppealsModule.Schema))
-            .UseSnakeCaseNamingConvention();
+        builder.UseLt2Npgsql(connectionString, AppealsModule.Schema);
+        return builder.Options;
+    }
+
+    /// <summary>Options on a connection the caller owns (another module's transaction, as when an account is deleted).</summary>
+    internal static DbContextOptions<AppealsDb> Options(System.Data.Common.DbConnection connection)
+    {
+        var builder = new DbContextOptionsBuilder<AppealsDb>();
+        builder.UseLt2Npgsql(connection, AppealsModule.Schema);
         return builder.Options;
     }
 }

@@ -1,30 +1,29 @@
 @page "/sveiki"
 @attribute [Authorize]
 @rendermode InteractiveWebAssembly
+@inherits InteractiveBase<UiText>
 @inject IMeApi MeApi
 @inject IAuthApi Auth
-@inject IStringLocalizer<UiText> T
 @inject NavigationManager Navigation
 @inject Passkeys PasskeyBrowser
 
-<PageTitle>@T["Hello.PageTitle"]</PageTitle>
+<PageTitle>@L["Hello.PageTitle"]</PageTitle>
 
 @if (Me is null)
 {
-    <p class="small">@T["Loading"]</p>
+    <p class="small">@L["Loading"]</p>
 }
 else
 {
     <section class="stack" aria-labelledby="hello-title">
         <p class="label">Lietuva 2.0</p>
-        <h1 id="hello-title">@T["Hello.Greeting", Me.DisplayName ?? Me.Email]</h1>
+        <h1 id="hello-title">@L.Format("Hello.Greeting", Me.DisplayName ?? Me.Email)</h1>
         <NeedsScript />
-        <p class="lead">@T["Hello.SignedIn"]</p>
         <p class="row">
-            <span class="tag @(Me.VerificationLevel == "email" ? "tag--people" : "")">@T["Level." + Me.VerificationLevel]</span>
+            <span class="tag @(Me.VerificationLevel == "email" ? "tag--people" : "")">@L["Level." + Me.VerificationLevel]</span>
             @foreach (var role in Me.Roles)
             {
-                <span class="tag tag--brand">@T["Role." + role]</span>
+                <span class="tag tag--brand">@L["Role." + role]</span>
             }
         </p>
     </section>
@@ -33,49 +32,49 @@ else
     {
         @* A granted staff role waits for the one-time code the administrator passed on (design 6.2). *@
         <section class="sheet sheet--cut stack" aria-labelledby="activation-title">
-            <h2 id="activation-title">@T["Activation.Title"]</h2>
-            <p>@T["Activation.Text"]</p>
+            <h2 id="activation-title">@L["Activation.Title"]</h2>
+            <p>@L["Activation.Text"]</p>
             <form class="stack" @onsubmit="ActivateAsync" novalidate>
                 <div class="field">
-                    <label for="activation-code">@T["Activation.Label"]</label>
+                    <label for="activation-code">@L["Activation.Label"]</label>
                     <input class="input num" id="activation-code" autocomplete="off" autocapitalize="characters" spellcheck="false"
                            @bind="_activationCode" @bind:event="oninput" disabled="@Locked" />
                 </div>
-                <button class="btn" type="submit" disabled="@Locked">@T["Activation.Submit"]</button>
+                <button class="btn" type="submit" disabled="@Locked">@L["Activation.Submit"]</button>
             </form>
         </section>
     }
 
     <div class="pair">
         <section class="sheet sheet--cut stack" aria-labelledby="passkeys-title">
-            <h2 id="passkeys-title">@T["Passkeys.Title"]</h2>
-            <p>@T["Passkeys.Text"]</p>
-            <p class="small num">@T["Passkeys.Count", Me.PasskeyCount]</p>
-            <button type="button" class="btn" disabled="@Locked" @onclick="AddPasskeyAsync">@T["Passkeys.Add"]</button>
+            <h2 id="passkeys-title">@L["Passkeys.Title"]</h2>
+            <p>@L["Passkeys.Text"]</p>
+            <p class="small num">@L.Format("Passkeys.Count", Display.Number(Me.PasskeyCount))</p>
+            <button type="button" class="btn" disabled="@Locked" @onclick="AddPasskeyAsync">@L["Passkeys.Add"]</button>
         </section>
 
         <section class="sheet stack" aria-labelledby="sessions-title">
-            <h2 id="sessions-title">@T["Sessions.Title"]</h2>
-            <p>@T["Sessions.Text"]</p>
+            <h2 id="sessions-title">@L["Sessions.Title"]</h2>
+            <p>@L["Sessions.Text"]</p>
             <ul class="rows">
                 @foreach (var session in Sessions ?? [])
                 {
-                    <li>
+                    <li @key="session.Id">
                         <div class="rows__main">
-                            <b>@(session.Device ?? T["Sessions.UnknownDevice"])</b>
+                            <b>@(session.Device ?? L["Sessions.UnknownDevice"])</b>
                             <span class="small">
-                                @T["Sessions.Method." + (string.IsNullOrEmpty(session.Method) ? "unknown" : session.Method)] ·
-                                <span class="num">@T["Sessions.LastSeen", Format(session.LastSeenAt)]</span>
+                                @L["Sessions.Method." + (string.IsNullOrEmpty(session.Method) ? "unknown" : session.Method)] ·
+                                <span class="num">@L.Format("Sessions.LastSeen", Display.DayTime(session.LastSeenAt))</span>
                             </span>
                         </div>
                         <div class="rows__side">
                             @if (session.IsCurrent)
                             {
-                                <span class="tag tag--people">@T["Sessions.Current"]</span>
+                                <span class="tag tag--people">@L["Sessions.Current"]</span>
                             }
                             else
                             {
-                                <button type="button" class="btn btn--plain" disabled="@Locked" @onclick="() => EndSessionAsync(session.Id)">@T["Sessions.End"]</button>
+                                <button type="button" class="btn btn--plain" disabled="@Locked" @onclick="() => EndSessionAsync(session.Id)">@L["Sessions.End"]</button>
                             }
                         </div>
                     </li>
@@ -86,11 +85,11 @@ else
 
     @if (Me.ActiveStaffRoles.Count > 0)
     {
-        <nav class="row" aria-label="@T["Staff.Nav"]">
-            <a class="btn btn--plain" href="/moderavimas">@T["Staff.Moderation"]</a>
+        <nav class="row" aria-label="@L["Staff.Nav"]">
+            <a class="btn btn--plain" href="/moderavimas">@L["Staff.Moderation"]</a>
             @if (Me.ActiveStaffRoles.Contains("administrator"))
             {
-                <a class="btn btn--plain" href="/administravimas/nustatymai">@T["Staff.Settings"]</a>
+                <a class="btn btn--plain" href="/administravimas/nustatymai">@L["Staff.Settings"]</a>
             }
         </nav>
     }
@@ -99,12 +98,12 @@ else
     {
         @* Private and optional (design 5.2): used only for group numbers of at least 20 in summaries to MPs. *@
         <section class="sheet stack" aria-labelledby="party-title" id="party-support">
-            <h2 id="party-title">@T["Party.Title"]</h2>
-            <p>@T["Party.Text"]</p>
+            <h2 id="party-title">@L["Party.Title"]</h2>
+            <p>@L["Party.Text"]</p>
             <div class="field">
-                <label for="party-choice">@T["Party.Label"]</label>
+                <label for="party-choice">@L["Party.Label"]</label>
                 <select class="input" id="party-choice" @bind="_partyChoice" disabled="@Locked">
-                    <option value="">@T["Party.None"]</option>
+                    <option value="">@L["Party.None"]</option>
                     @foreach (var choice in party.Choices)
                     {
                         <option value="@choice">@choice</option>
@@ -115,10 +114,10 @@ else
             {
                 <label class="check">
                     <input type="checkbox" id="party-consent" @bind="_partyConsent" disabled="@Locked" />
-                    <span>@T["Party.Consent"]</span>
+                    <span>@L["Party.Consent"]</span>
                 </label>
             }
-            <p><button type="button" class="btn btn--plain" disabled="@(Locked || (!string.IsNullOrEmpty(_partyChoice) && _partyChoice != party.Party && !_partyConsent))" @onclick="SavePartyAsync">@T["Party.Save"]</button></p>
+            <p><button type="button" class="btn btn--plain" disabled="@(Locked || (!string.IsNullOrEmpty(_partyChoice) && _partyChoice != party.Party && !_partyConsent))" @onclick="SavePartyAsync">@L["Party.Save"]</button></p>
         </section>
     }
 
@@ -126,9 +125,9 @@ else
     {
         @* Withdrawing the consent deletes every position (design 6.5). *@
         <section class="sheet stack" aria-labelledby="consent-title">
-            <h2 id="consent-title">@T["PositionConsent.Title"]</h2>
-            <p>@T["PositionConsent.Text"]</p>
-            <p><button type="button" class="btn btn--plain" id="withdraw-consent" disabled="@Locked" @onclick="WithdrawConsentAsync">@T["PositionConsent.Withdraw"]</button></p>
+            <h2 id="consent-title">@L["PositionConsent.Title"]</h2>
+            <p>@L["PositionConsent.Text"]</p>
+            <p><button type="button" class="btn btn--plain" id="withdraw-consent" disabled="@Locked" @onclick="WithdrawConsentAsync">@L["PositionConsent.Withdraw"]</button></p>
         </section>
     }
 
@@ -140,41 +139,36 @@ else
 
     <MyInvitationCode />
 
-    @* Design 6.5: everything the person gave, and deleting the account. *@
+    @* Design 6.5: everything the person gave, and deleting the account. What deleting removes is said in the confirmation
+       it opens, the step before anything is deleted (design 8.15: what cannot be undone stays where the person acts). *@
     <section class="sheet stack" aria-labelledby="data-title" id="my-data">
-        <h2 id="data-title">@T["Data.Title"]</h2>
-        <p>@T["Data.Text"]</p>
-        <p><a class="btn btn--plain" href="/api/v1/me/export" download id="export">@T["Data.Export"]</a></p>
+        <h2 id="data-title">@L["Data.Title"]</h2>
+        <p>@L["Data.Text"]</p>
+        <p><a class="btn btn--plain" href="/api/v1/me/export" download id="export">@L["Data.Export"]</a></p>
         @if (_confirmDelete)
         {
-            <p class="note" role="alert">@T["Data.DeleteWarning"]</p>
+            <p class="note" role="alert">@L["Data.DeleteWarning"]</p>
             <div class="row">
-                <button type="button" class="btn btn--against" id="delete-confirm" disabled="@Locked" @onclick="DeleteAccountAsync">@T["Data.DeleteConfirm"]</button>
-                <button type="button" class="btn btn--plain" disabled="@Locked" @onclick="() => _confirmDelete = false">@T["Data.DeleteCancel"]</button>
+                <button type="button" class="btn btn--against" id="delete-confirm" disabled="@Locked" @onclick="DeleteAccountAsync">@L["Data.DeleteConfirm"]</button>
+                <button type="button" class="btn btn--plain" disabled="@Locked" @onclick="() => _confirmDelete = false">@L["Data.DeleteCancel"]</button>
             </div>
         }
         else
         {
-            <p><button type="button" class="btn btn--plain" id="delete-account" disabled="@Locked" @onclick="() => _confirmDelete = true">@T["Data.Delete"]</button></p>
+            <p><button type="button" class="btn btn--plain" id="delete-account" disabled="@Locked" @onclick="() => _confirmDelete = true">@L["Data.Delete"]</button></p>
         }
     </section>
 
-    <p><button type="button" class="btn btn--plain" disabled="@Locked" @onclick="SignOutAsync">@T["SignOut"]</button></p>
+    <p><button type="button" class="btn btn--plain" disabled="@Locked" @onclick="SignOutAsync">@L["SignOut"]</button></p>
 }
 
-<Messages Message="@_message" Info="@_info" />
+<Messages Message="@Message" Info="@Info" />
 
 @code {
-    private bool _busy;
-    private string? _message;
-    private string? _info;
     private string _activationCode = "";
-
-    /// <summary>
-    /// Controls stay disabled until WebAssembly has taken over the server-rendered page: the prerendered form cannot
-    /// act, and anything typed into it would be lost when the interactive component replaces it.
-    /// </summary>
-    private bool Locked => _busy || !RendererInfo.IsInteractive;
+    private string _partyChoice = "";
+    private bool _confirmDelete;
+    private bool _partyConsent;
 
     [PersistentState]
     public MeResponse? Me { get; set; }
@@ -184,10 +178,6 @@ else
 
     [PersistentState]
     public PartySupportResponse? Party { get; set; }
-
-    private string _partyChoice = "";
-    private bool _confirmDelete;
-    private bool _partyConsent;
 
     protected override async Task OnInitializedAsync()
     {
@@ -215,23 +205,18 @@ else
         _partyChoice = Party?.Party ?? "";
     }
 
-    private async Task SavePartyAsync()
+    private Task SavePartyAsync() => RunAsync(async () =>
     {
-        await RunAsync(async () =>
+        var party = string.IsNullOrEmpty(_partyChoice) ? null : _partyChoice;
+        if (!Succeeded(await MeApi.SetPartySupportAsync(new PartySupportRequest { Party = party, Consent = _partyConsent })))
         {
-            var party = string.IsNullOrEmpty(_partyChoice) ? null : _partyChoice;
-            var result = await MeApi.SetPartySupportAsync(new PartySupportRequest { Party = party, Consent = _partyConsent });
-            if (!result.IsSuccess)
-            {
-                _message = result.Problem!.Errors?.Values.FirstOrDefault()?.FirstOrDefault() ?? result.Problem.Detail ?? T["Error.Generic"];
-                return;
-            }
+            return;
+        }
 
-            _info = T[party is null ? "Party.Removed" : "Party.Saved"];
-            _partyConsent = false;
-            Party = (await MeApi.GetPartySupportAsync()).Value;
-        });
-    }
+        Info = L[party is null ? "Party.Removed" : "Party.Saved"];
+        _partyConsent = false;
+        Party = (await MeApi.GetPartySupportAsync()).Value;
+    });
 
     private async Task<List<SessionResponse>> LoadSessionsAsync()
     {
@@ -239,157 +224,87 @@ else
         return sessions.IsSuccess ? sessions.Value!.ToList() : [];
     }
 
-    private async Task AddPasskeyAsync()
+    private Task AddPasskeyAsync() => RunAsync(async () =>
     {
-        await RunAsync(async () =>
+        if (!await PasskeyBrowser.IsSupportedAsync())
         {
-            if (!await PasskeyBrowser.IsSupportedAsync())
-            {
-                _message = T["Passkey.Unsupported"];
-                return;
-            }
+            Message = L["Passkey.Unsupported"];
+            return;
+        }
 
-            var options = await Auth.GetPasskeyCreationOptionsAsync();
-            if (!options.IsSuccess)
-            {
-                _message = options.Problem!.Detail ?? T["Error.Generic"];
-                return;
-            }
+        var options = await Auth.GetPasskeyCreationOptionsAsync();
+        if (!Succeeded(options))
+        {
+            return;
+        }
 
-            var credential = await PasskeyBrowser.CreateAsync(options.Value!);
-            if (credential is null)
-            {
-                _message = T["Passkey.Cancelled"];
-                return;
-            }
+        var credential = await PasskeyBrowser.CreateAsync(options.Value!);
+        if (credential is null)
+        {
+            Message = L["Passkey.Cancelled"];
+            return;
+        }
 
-            var result = await Auth.AddPasskeyAsync(new PasskeyCredentialRequest { Credential = credential });
-            if (!result.IsSuccess)
-            {
-                _message = result.Problem!.Detail ?? T["Error.Generic"];
-                return;
-            }
+        if (!Succeeded(await Auth.AddPasskeyAsync(new PasskeyCredentialRequest { Credential = credential })))
+        {
+            return;
+        }
 
-            _info = T["Passkeys.Added"];
-            var me = await MeApi.GetAsync();
-            if (me.IsSuccess)
-            {
-                Me = me.Value;
-            }
-        });
-    }
+        Info = L["Passkeys.Added"];
+        await ReloadMeAsync();
+    });
 
-    private async Task ActivateAsync()
+    private Task ActivateAsync() => RunAsync(async () =>
     {
-        await RunAsync(async () =>
+        if (!Succeeded(await MeApi.ActivateRoleAsync(new RoleActivationRequest { Code = _activationCode.Trim() })))
         {
-            var result = await MeApi.ActivateRoleAsync(new RoleActivationRequest { Code = _activationCode.Trim() });
-            if (!result.IsSuccess)
-            {
-                _message = result.Problem!.Errors?.Values.FirstOrDefault()?.FirstOrDefault()
-                    ?? result.Problem.Detail
-                    ?? T["Error.Generic"];
-                return;
-            }
+            return;
+        }
 
-            _activationCode = "";
-            _info = T["Activation.Done"];
-            var me = await MeApi.GetAsync();
-            if (me.IsSuccess)
-            {
-                Me = me.Value;
-            }
-        });
-    }
+        _activationCode = "";
+        Info = L["Activation.Done"];
+        await ReloadMeAsync();
+    });
 
-    private async Task EndSessionAsync(Guid id)
+    private Task EndSessionAsync(Guid id) => RunAsync(async () =>
     {
-        await RunAsync(async () =>
-        {
-            var result = await MeApi.EndSessionAsync(id);
-            if (!result.IsSuccess)
-            {
-                _message = result.Problem!.Detail ?? T["Error.Generic"];
-            }
+        Succeeded(await MeApi.EndSessionAsync(id));
+        Sessions = await LoadSessionsAsync();
+    });
 
-            Sessions = await LoadSessionsAsync();
-        });
-    }
-
-    private async Task WithdrawConsentAsync()
+    private Task WithdrawConsentAsync() => RunAsync(async () =>
     {
-        await RunAsync(async () =>
+        if (!Succeeded(await MeApi.WithdrawPositionConsentAsync()))
         {
-            var result = await MeApi.WithdrawPositionConsentAsync();
-            if (!result.IsSuccess)
-            {
-                _message = result.Problem!.Detail ?? T["Error.Generic"];
-                return;
-            }
+            return;
+        }
 
-            _info = T["PositionConsent.Withdrawn"];
-            var me = await MeApi.GetAsync();
-            if (me.IsSuccess)
-            {
-                Me = me.Value;
-            }
-        });
-    }
+        Info = L["PositionConsent.Withdrawn"];
+        await ReloadMeAsync();
+    });
 
-    private async Task DeleteAccountAsync()
+    private Task DeleteAccountAsync() => RunAsync(async () =>
     {
-        await RunAsync(async () =>
+        if (Succeeded(await MeApi.DeleteAccountAsync()))
         {
-            var result = await MeApi.DeleteAccountAsync();
-            if (!result.IsSuccess)
-            {
-                _message = result.Problem!.Detail ?? T["Error.Generic"];
-                return;
-            }
-
             Navigation.NavigateTo("/", forceLoad: true);
-        });
-    }
+        }
+    });
 
-    private async Task SignOutAsync()
+    private Task SignOutAsync() => RunAsync(async () =>
     {
-        await RunAsync(async () =>
+        if (Succeeded(await Auth.SignOutAsync()))
         {
-            var result = await Auth.SignOutAsync();
-            if (!result.IsSuccess)
-            {
-                _message = result.Problem!.Detail ?? T["Error.Generic"];
-                return;
-            }
-
             Navigation.NavigateTo("/", forceLoad: true);
-        });
-    }
+        }
+    });
 
-    private async Task RunAsync(Func<Task> action)
+    private async Task ReloadMeAsync()
     {
-        _message = null;
-        _info = null;
-        _busy = true;
-        try
+        var me = await MeApi.GetAsync();
+        if (me.IsSuccess)
         {
-            await action();
-        }
-        catch (HttpRequestException)
-        {
-            _message = T["Error.Network"];
-        }
-        catch (Exception ex) when (ex is System.Text.Json.JsonException or NotSupportedException)
-        {
-            // An answer the client could not read: say so rather than leave the page silent.
-            _message = T["Error.Generic"];
-        }
-        finally
-        {
-            _busy = false;
+            Me = me.Value;
         }
     }
-
-    /// <summary>A moment as the pages show it in numbers: yyyy-MM-dd HH:mm, Vilnius time.</summary>
-    private static string Format(DateTimeOffset value) => Lt2.Web.Client.Appeals.Dates.DayTime(value);
 }

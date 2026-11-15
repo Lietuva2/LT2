@@ -1,4 +1,9 @@
 using System.Net;
+using System.Security.Claims;
+using Microsoft.AspNetCore.Builder;
+using Microsoft.AspNetCore.Hosting;
+using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.TestHost;
 using Lt2.IntegrationTests.Infrastructure;
 
 namespace Lt2.IntegrationTests;
@@ -85,6 +90,62 @@ public sealed class HostTests(DatabaseFixture database) : ApiTest(database)
         html.ShouldContain($"Sveiki, {email}!");
     }
 
+    [Fact]
+    public async Task A_signed_in_page_of_the_site_is_not_stored()
+    {
+        var (member, _) = await Factory.MemberAsync();
+        using var _m = member;
+        foreach (var path in new[] { "/darbotvarke", "/sveiki" })
+        {
+            using var page = await member.Client.GetAsync(path);
+            page.StatusCode.ShouldBe(HttpStatusCode.OK, path);
+            page.Content.Headers.ContentType!.MediaType.ShouldBe("text/html", path);
+            page.Headers.CacheControl.ShouldNotBeNull(path).NoStore.ShouldBeTrue(path);
+        }
+    }
+
+    /// <summary>
+    /// Design 6.8, the rule itself on a bare pipeline: the site's pages are no-store for everyone today anyway, because every
+    /// page with an island carries an antiforgery token and ASP.NET Core marks such answers <c>no-cache, no-store</c>.
+    /// </summary>
+    [Fact]
+    public async Task The_security_headers_make_html_for_a_signed_in_session_no_store_and_leave_a_visitors_html_alone()
+    {
+        var builder = WebApplication.CreateSlimBuilder();
+        builder.WebHost.UseTestServer();
+        await using var app = builder.Build();
+        app.Use((context, next) =>
+        {
+            if (context.Request.Headers.ContainsKey("X-Test-Signed-In"))
+            {
+                context.User = new ClaimsPrincipal(new ClaimsIdentity([new Claim(ClaimTypes.NameIdentifier, Guid.NewGuid().ToString())], "test"));
+            }
+
+            return next(context);
+        });
+        Lt2.Web.Security.SecurityHeaders.UseLt2SecurityHeaders(app);
+        app.MapGet("/page", () => Results.Content("<p>Puslapis</p>", "text/html; charset=utf-8"));
+        app.MapGet("/file.txt", () => Results.Text("tekstas"));
+        await app.StartAsync(TestContext.Current.CancellationToken);
+        using var client = app.GetTestClient();
+
+        async Task<bool> NoStoreAsync(string path, bool signedIn)
+        {
+            using var request = new HttpRequestMessage(HttpMethod.Get, path);
+            if (signedIn)
+            {
+                request.Headers.Add("X-Test-Signed-In", "1");
+            }
+
+            using var response = await client.SendAsync(request, TestContext.Current.CancellationToken);
+            response.StatusCode.ShouldBe(HttpStatusCode.OK);
+            return response.Headers.CacheControl?.NoStore ?? false;
+        }
+
+        (await NoStoreAsync("/page", signedIn: true)).ShouldBeTrue("a signed-in page");
+        (await NoStoreAsync("/page", signedIn: false)).ShouldBeFalse("a visitor's page");
+        (await NoStoreAsync("/file.txt", signedIn: true)).ShouldBeFalse("not a page");
+    }
     [Fact]
     public async Task Health_endpoints_answer()
     {

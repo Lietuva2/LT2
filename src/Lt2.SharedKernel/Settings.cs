@@ -143,7 +143,7 @@ public static class SettingKeys
     /// </summary>
     public static readonly SettingKey<int> OrganisationsPerAccount = new("Organisations:PerAccount", 3, v => v is > 0 and <= 100);
 
-    /// <summary>Bills and MPs one account may follow together (design 8.11.2).</summary>
+    /// <summary>Bills, MPs and organisations one account may follow together (design 8.11.2, 8.14.14).</summary>
     public static readonly SettingKey<int> FollowsMaxPerAccount = new("Follows:MaxPerAccount", 200, v => v is > 0 and <= 10000);
 
     /// <summary>Surge note: share of recent positions from new accounts (design 6.6).</summary>

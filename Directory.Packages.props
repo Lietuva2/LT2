@@ -19,7 +19,6 @@
     <PackageVersion Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="$(AspNetCoreVersion)" />
     <PackageVersion Include="Microsoft.Extensions.Http" Version="$(AspNetCoreVersion)" />
     <PackageVersion Include="Microsoft.Extensions.Http.Resilience" Version="10.11.0" />
-    <PackageVersion Include="Microsoft.Extensions.TimeProvider.Testing" Version="10.11.0" />
     <PackageVersion Include="Microsoft.Extensions.Hosting" Version="$(AspNetCoreVersion)" />
     <PackageVersion Include="Microsoft.Extensions.Configuration.KeyPerFile" Version="$(AspNetCoreVersion)" />
     <PackageVersion Include="Microsoft.EntityFrameworkCore" Version="$(EfCoreVersion)" />

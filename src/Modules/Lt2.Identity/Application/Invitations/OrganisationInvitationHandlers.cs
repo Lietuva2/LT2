@@ -19,8 +19,8 @@ internal sealed class OrganisationInvitationHandlers(IdentityDb db, ISettings se
     public async Task<Result<OrganisationInvitation>> ForOrganisationAsync(Guid organisationId, bool active, Guid requestedByUserId, CancellationToken cancellationToken)
     {
         await using var transaction = await db.Database.BeginTransactionAsync(cancellationToken);
-        await LockAsync(organisationId, cancellationToken);
-        var current = await CurrentAsync(organisationId, cancellationToken);
+        await IdentityLocks.OrganisationCodeAsync(db, organisationId, cancellationToken);
+        var current = await InvitationHandlers.CurrentAsync(db, InvitationKinds.Organisation, organisationId, cancellationToken);
         if (current is null && active)
         {
             current = await InvitationHandlers.CreateAsync(
@@ -40,8 +40,8 @@ internal sealed class OrganisationInvitationHandlers(IdentityDb db, ISettings se
         }
 
         await using var transaction = await db.Database.BeginTransactionAsync(cancellationToken);
-        await LockAsync(organisationId, cancellationToken);
-        var current = await CurrentAsync(organisationId, cancellationToken);
+        await IdentityLocks.OrganisationCodeAsync(db, organisationId, cancellationToken);
+        var current = await InvitationHandlers.CurrentAsync(db, InvitationKinds.Organisation, organisationId, cancellationToken);
         if (current is null)
         {
             return Error.NotFound("invitation.not-found");
@@ -53,22 +53,10 @@ internal sealed class OrganisationInvitationHandlers(IdentityDb db, ISettings se
             return Error.Conflict("invitation.organisation-switched-off");
         }
 
-        await db.Invitations.Where(i => i.Id == current.Id).ExecuteUpdateAsync(s => s.SetProperty(i => i.ReplacedAt, clock.GetUtcNow()), cancellationToken);
-        var replacement = await InvitationHandlers.CreateAsync(db, clock, InvitationKinds.Organisation, null, organisationId, current.Level, cancellationToken);
+        var replacement = await InvitationHandlers.ReplaceCurrentAsync(db, clock, current, cancellationToken);
         await transaction.CommitAsync(cancellationToken);
         return await InfoAsync(organisationId, replacement, cancellationToken);
     }
-
-    /// <summary>The organisation's code that is not replaced (it may be switched off), or null.</summary>
-    private Task<Invitation?> CurrentAsync(Guid organisationId, CancellationToken ct) =>
-        db.Invitations.AsNoTracking()
-            .Where(i => i.Kind == InvitationKinds.Organisation && i.OrganisationId == organisationId && i.ReplacedAt == null)
-            .OrderByDescending(i => i.CreatedAt)
-            .FirstOrDefaultAsync(ct);
-
-    /// <summary>One organisation's code is made or replaced at a time, so two representatives asking at once get the same one.</summary>
-    private Task<int> LockAsync(Guid organisationId, CancellationToken ct) =>
-        db.Database.ExecuteSqlRawAsync("SELECT pg_advisory_xact_lock(hashtextextended({0}, 0))", ["lt2.organisation-code:" + organisationId.ToString("N")], ct);
 
     private async Task<OrganisationInvitation> InfoAsync(Guid organisationId, Invitation? current, CancellationToken ct)
     {
@@ -82,9 +70,7 @@ internal sealed class OrganisationInvitationHandlers(IdentityDb db, ISettings se
             return new OrganisationInvitation(null, completed, false, true, false);
         }
 
-        var usable = InvitationRules.Usable(
-            current.Kind, current.UsesLeft, current.UsedCount, current.ExpiresAt, current.SwitchedOffAt, current.ReplacedAt,
-            await InvitationHandlers.LimitAsync(settings, current.Kind, ct), clock.GetUtcNow(), current.OrganisationOff);
+        var usable = InvitationRules.Usable(current, await InvitationHandlers.LimitAsync(settings, current.Kind, ct), clock.GetUtcNow());
         return new OrganisationInvitation(current.Code, completed, usable, current.SwitchedOffAt is null, current.OrganisationOff is not null);
     }
 }

@@ -53,9 +53,9 @@
 
 	header -Server
 
-	reverse_proxy web:8080 {
-		header_up X-Forwarded-Proto {scheme}
-	}
+	# Caddy sends X-Forwarded-For (any incoming value replaced) and X-Forwarded-Proto itself; the application believes
+	# them only from this container (ReverseProxy__Address in compose.yaml).
+	reverse_proxy web:8080
 
 	log {
 		output stdout

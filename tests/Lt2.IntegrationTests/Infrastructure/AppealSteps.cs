@@ -8,10 +8,10 @@ using Lt2.SharedKernel;
 
 namespace Lt2.IntegrationTests.Infrastructure;
 
-/// <summary>Steps on a bill as a browser takes them (design 8.12). Bills come from the invented parliament.</summary>
 /// <summary>A bill a test prepared: its record and number.</summary>
 public sealed record PreparedBill(Guid Id, string Number);
 
+/// <summary>Steps on a bill as a browser takes them (design 8.12). Bills come from the invented parliament.</summary>
 public static class AppealSteps
 {
     /// <summary>The invented parliament's bills, all active; tests free the one they use first (one record per bill).</summary>
@@ -99,6 +99,14 @@ public static class AppealSteps
     public static async Task<T> GetJsonAsync<T>(this TestBrowser browser, string uri)
     {
         using var response = await browser.Client.GetAsync(uri);
+        response.StatusCode.ShouldBe(HttpStatusCode.OK, $"{uri}: {await response.Content.ReadAsStringAsync()}");
+        return (await response.Content.ReadFromJsonAsync<T>(JsonSerializerOptions.Web))!;
+    }
+
+    /// <summary>A POST whose answer is read like a GET's (a token in the body instead of the address, design 6.8).</summary>
+    public static async Task<T> PostJsonAsync<T>(this TestBrowser browser, string uri, object body)
+    {
+        using var response = await browser.PostAsync(uri, body);
         response.StatusCode.ShouldBe(HttpStatusCode.OK, $"{uri}: {await response.Content.ReadAsStringAsync()}");
         return (await response.Content.ReadFromJsonAsync<T>(JsonSerializerOptions.Web))!;
     }

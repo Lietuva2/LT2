@@ -38,7 +38,7 @@ internal static class ResetAccountEndpoint
             return refused;
         }
 
-        var actor = new Actor(Guid.Parse(user.FindFirstValue(ClaimTypes.NameIdentifier)!), Roles.Administrator, ipHasher.Hash(context));
+        var actor = new Actor(user.UserId()!.Value, Roles.Administrator, ipHasher.Hash(context));
         var result = await administration.ResetAccountAsync(request.Email, actor, cancellationToken);
         return result.IsSuccess ? TypedResults.NoContent() : errors.ToResult(result.Error!);
     }

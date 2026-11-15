@@ -49,6 +49,14 @@ internal static class SecurityHeaders
                     headers.CacheControl = "no-store";
                 }
 
+                // Design 6.8: a page answered to a signed-in session can hold the person's own side or invitation code,
+                // so no browser or proxy keeps it. A visitor's page is the same for everyone and may be kept.
+                if (context.User.Identity?.IsAuthenticated == true
+                    && context.Response.ContentType?.StartsWith("text/html", StringComparison.OrdinalIgnoreCase) == true)
+                {
+                    headers.CacheControl = "no-store";
+                }
+
                 return Task.CompletedTask;
             });
             return next(context);

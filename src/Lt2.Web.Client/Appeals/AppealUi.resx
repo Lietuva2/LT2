@@ -10,7 +10,7 @@
 <data name="Cancel" xml:space="preserve"><value>Atšaukti</value></data>
 <data name="Side.for" xml:space="preserve"><value>Prašau balsuoti už</value></data>
 <data name="Side.against" xml:space="preserve"><value>Prašau balsuoti prieš</value></data>
-<data name="Side.Private" xml:space="preserve"><value>Jūsų pasirinkimas nėra viešas. Jį galite keisti, kol Seimas nebalsavo.</value></data>
+  <data name="Side.Private" xml:space="preserve"><value>Jūsų pasirinkimas nėra viešas.</value></data>
 <data name="Side.SignIn" xml:space="preserve"><value>Prisijunkite, kad galėtumėte nurodyti, ko prašote. Jūsų pasirinkimas nebus viešas.</value></data>
 <data name="Side.Yours.for" xml:space="preserve"><value>Jūs prašote balsuoti už. Tai matote tik jūs.</value></data>
 <data name="Side.Yours.against" xml:space="preserve"><value>Jūs prašote balsuoti prieš. Tai matote tik jūs.</value></data>
@@ -30,7 +30,6 @@
 <data name="Reasons.Fewer" xml:space="preserve"><value>Rodyti mažiau</value></data>
 <data name="Reasons.Write" xml:space="preserve"><value>Parašyti argumentą</value></data>
 <data name="Reasons.WriteTitle" xml:space="preserve"><value>Jūsų argumentas</value></data>
-<data name="Reasons.EitherSide" xml:space="preserve"><value>Argumentą galite parašyti už arba prieš, nepriklausomai nuo to, ko prašote patys, ir net jei dar nenurodėte. Prie argumento nerodoma, ko prašote jūs.</value></data>
 <data name="Reasons.SideLegend" xml:space="preserve"><value>Argumentas</value></data>
 <data name="Reasons.Switch.for" xml:space="preserve"><value>Už</value></data>
 <data name="Reasons.Switch.against" xml:space="preserve"><value>Prieš</value></data>
@@ -40,8 +39,7 @@
 <data name="Reasons.Submit" xml:space="preserve"><value>Paskelbti</value></data>
 <data name="Reasons.PublishAnyway" xml:space="preserve"><value>Vis tiek paskelbti savo</value></data>
 <data name="Reasons.SimilarTitle" xml:space="preserve"><value>Panašūs argumentai jau yra</value></data>
-<data name="Reasons.SimilarText" xml:space="preserve"><value>Gal jūsų mintį kas nors jau parašė? Jei argumentas tos pusės, kurios prašote patys, galite pažymėti „Man svarbu“; arba vis tiek paskelbkite savo.</value></data>
-<data name="Restrict.OpenAuthor" xml:space="preserve"><value>Riboti autoriaus rašymą…</value></data>
+  <data name="Reasons.SimilarText" xml:space="preserve"><value>Gal jūsų mintį kas nors jau parašė? Galite pažymėti „Man svarbu“ arba vis tiek paskelbti savo.</value></data>
 <data name="Restrict.Title" xml:space="preserve"><value>Riboti rašymą: {0}</value></data>
 <data name="Restrict.Reasons" xml:space="preserve"><value>Argumentai: {0}</value></data>
 <data name="Restrict.Actions" xml:space="preserve"><value>Ankstesni moderatorių veiksmai: {0}</value></data>
@@ -98,15 +96,9 @@
 <data name="Report.Text" xml:space="preserve"><value>Paaiškinimas (nebūtina)</value></data>
 <data name="Report.Submit" xml:space="preserve"><value>Pranešti moderatoriams</value></data>
 <data name="Report.Sent" xml:space="preserve"><value>Ačiū. Moderatoriai peržiūrės.</value></data>
-<data name="Edit.Title" xml:space="preserve"><value>Pataisyti prieš paskelbiant</value></data>
-<data name="Edit.TitleReturned" xml:space="preserve"><value>Pataisyti ir pateikti dar kartą</value></data>
-<data name="Edit.Submit" xml:space="preserve"><value>Pateikti moderatoriui</value></data>
-<data name="Threshold.Change" xml:space="preserve"><value>Keisti ribą</value></data>
-<data name="Threshold.Label" xml:space="preserve"><value>Nauja riba</value></data>
-<data name="Threshold.Save" xml:space="preserve"><value>Išsaugoti ribą</value></data>
 <data name="Mod.PageTitle" xml:space="preserve"><value>Moderavimas · Lietuva 2.0</value></data>
 <data name="Mod.Title" xml:space="preserve"><value>Moderavimas</value></data>
-<data name="Mod.Lead" xml:space="preserve"><value>Projektai, kuriems reikia jūsų sprendimo (pranešta apie aprašymą, pastabos apie datą, staigus naujų paskyrų antplūdis, sulaikytas siuntimas, nepasiekta riba, nors projektas jau darbotvarkėje), ir pažymėti, praneštieji ar dar nematyti argumentai. Kiekvienas veiksmas registruojamas; argumento autorius gauna jūsų paaiškinimą.</value></data>
+  <data name="Mod.Lead" xml:space="preserve"><value>Projektai ir argumentai, kuriems reikia jūsų sprendimo. Kiekvienas veiksmas registruojamas; argumento autorius gauna jūsų paaiškinimą.</value></data>
 <data name="Mod.Actions" xml:space="preserve"><value>Veiksmai</value></data>
 <data name="Mod.Note.Optional" xml:space="preserve"><value>Pastaba autoriui (nebūtina)</value></data>
 <data name="Mod.HiddenLink" xml:space="preserve"><value>Paslėpti projektai ir argumentai</value></data>
@@ -135,8 +127,6 @@
 <data name="Mod.Reason" xml:space="preserve"><value>Argumentas</value></data>
 <data name="Mod.Empty" xml:space="preserve"><value>Nieko nelaukia.</value></data>
 <data name="Mod.Status.pending" xml:space="preserve"><value>Laukia peržiūros</value></data>
-<data name="Mod.Status.open" xml:space="preserve"><value>Atviras</value></data>
-<data name="Mod.Status.published" xml:space="preserve"><value>Paskelbtas</value></data>
 <data name="Mod.Seen" xml:space="preserve"><value>Matytas, gautas pranešimas</value></data>
 <data name="Mod.NotSeen" xml:space="preserve"><value>Dar nematytas</value></data>
 <data name="Mod.Flag.email" xml:space="preserve"><value>El. pašto adresas</value></data>
@@ -145,11 +135,8 @@
 <data name="Mod.Flag.link" xml:space="preserve"><value>Nuoroda</value></data>
 <data name="Mod.Reports" xml:space="preserve"><value>Nariai pranešė apie šį turinį: {0}. Perskaitykite pranešimus: jei pažeidimo nėra, palikite, kitaip paslėpkite. Kas pranešė, nerodoma.</value></data>
 <data name="Mod.Reports.Description" xml:space="preserve"><value>Nariai pranešė apie šio projekto aprašymą: {0}. Perskaitykite pranešimus: jei aprašymas tikslus, palikite arba patvirtinkite; jei ne, pataisykite arba pašalinkite. Kas pranešė, nerodoma.</value></data>
-<data name="Mod.Statement" xml:space="preserve"><value>Paaiškinimas autoriui</value></data>
 <data name="Mod.Threshold" xml:space="preserve"><value>Nauja riba</value></data>
 <data name="Mod.MergeInto" xml:space="preserve"><value>Sujungti su</value></data>
-<data name="Mod.Publish" xml:space="preserve"><value>Skelbti</value></data>
-<data name="Mod.Keep" xml:space="preserve"><value>Palikti</value></data>
 <data name="Mod.Action.publish" xml:space="preserve"><value>Skelbti</value></data>
 <data name="Mod.Action.keep" xml:space="preserve"><value>Palikti</value></data>
 <data name="Mod.Action.hide" xml:space="preserve"><value>Paslėpti</value></data>
@@ -200,16 +187,10 @@
 <data name="Mod.Refresh" xml:space="preserve"><value>Atnaujinti eilę</value></data>
 <data name="Date.Hint" xml:space="preserve"><value>Data skaičiais, pvz., {0}</value></data>
 <data name="Date.Invalid" xml:space="preserve"><value>Įrašykite datą skaičiais: metai-mėnuo-diena, pvz., {0}.</value></data>
-<data name="Mod.Hide" xml:space="preserve"><value>Paslėpti</value></data>
-<data name="Mod.SetThreshold" xml:space="preserve"><value>Pakeisti ribą</value></data>
-<data name="Mod.Merge" xml:space="preserve"><value>Sujungti</value></data>
 <data name="Admin.PageTitle" xml:space="preserve"><value>Nustatymai · Lietuva 2.0</value></data>
 <data name="Admin.Title" xml:space="preserve"><value>Nustatymai</value></data>
 <data name="Admin.Refused" xml:space="preserve"><value>Nustatymus keisti galima tik prisijungus darbuotojo prieigos raktu, kai administratoriaus vaidmuo aktyvintas.</value></data>
-<data name="Admin.Default" xml:space="preserve"><value>numatytoji reikšmė</value></data>
 <data name="Admin.Save" xml:space="preserve"><value>Išsaugoti</value></data>
-<data name="Admin.Saved" xml:space="preserve"><value>Išsaugota.</value></data>
-<data name="Admin.Invalid" xml:space="preserve"><value>Reikšmė turi būti skaičius, true arba false.</value></data>
 <data name="Fb.PageTitle" xml:space="preserve"><value>Atsiliepimai · Lietuva 2.0</value></data>
 <data name="Fb.Title" xml:space="preserve"><value>Atsiliepimai</value></data>
 <data name="Fb.Lead" xml:space="preserve"><value>Ką naudotojai parašė komandai. Atsakyti galima tik į susietus atsiliepimus; jie keliauja el. paštu, kurio adreso nematote.</value></data>
@@ -264,7 +245,7 @@
 <data name="Inv.SwitchedOn" xml:space="preserve"><value>Kodas vėl įjungtas.</value></data><data name="Report.Visitor" xml:space="preserve"><value>Pranešti apie turinį moderatoriams gali prisijungę Lietuva 2.0 naudotojai:</value></data>
 <data name="Report.SignIn" xml:space="preserve"><value>prisijunkite</value></data>
 <data name="Report.OrWrite" xml:space="preserve"><value>arba parašykite moderatoriams adresu</value></data>
-<data name="Mod.Surge" xml:space="preserve"><value>Per paskutines {0} val. {1} % naujų pozicijų pateikė per tą laiką sukurtos paskyros, todėl projekto puslapyje rodoma pastaba apie staigų šuolį. Galite sulaikyti siuntimą, kol išsiaiškinsite, arba nieko nedaryti.</value></data>
+  <data name="Mod.Surge" xml:space="preserve"><value>Per paskutines {0} val. {1} % naujų pozicijų pateikė per tą laiką sukurtos paskyros; projekto puslapyje rodoma pastaba apie šuolį.</value></data>
 <data name="Flag.Open" xml:space="preserve"><value>Data neteisinga?</value></data>
 <data name="Flag.Kind" xml:space="preserve"><value>Kas negerai?</value></data>
 <data name="Flag.date-wrong" xml:space="preserve"><value>Nurodyta data neteisinga</value></data>
@@ -273,19 +254,14 @@
 <data name="Flag.Submit" xml:space="preserve"><value>Pranešti moderatoriams</value></data>
 <data name="Flag.Sent" xml:space="preserve"><value>Ačiū. Moderatorius patikrins ir, jei reikia, pataisys datą.</value></data>
 <data name="Mod.Planned" xml:space="preserve"><value>Planuojama: {0}{1}</value></data>
-<data name="Mod.UnderThreshold" xml:space="preserve"><value>Projektas įtrauktas į Seimo darbotvarkę, planuojama {0}. Dalyvių {1} iš {2}, todėl į suvestinę Seimo nariams jis nepateks. Galite patvirtinti vieną skubią suvestinę arba nieko nedaryti.</value></data>
-<data name="Mod.DateFlags" xml:space="preserve"><value>Nariai praneša, kad planuojama data neteisinga arba balsuojama anksčiau ({0}). Patikrinkite nuorodas: pataisykite planuojamą datą, patvirtinkite skubią suvestinę arba palikite, kaip yra.</value></data>
+  <data name="Mod.UnderThreshold" xml:space="preserve"><value>Projektas įtrauktas į Seimo darbotvarkę, planuojama {0}. Dalyvių {1} iš {2}, todėl į suvestinę Seimo nariams jis nepateks.</value></data>
+  <data name="Mod.DateFlags" xml:space="preserve"><value>Nariai praneša, kad planuojama data neteisinga arba balsuojama anksčiau ({0}). Patikrinkite nuorodas.</value></data>
 <data name="Mod.PlannedDate" xml:space="preserve"><value>Planuojama data</value></data>
 <data name="Mod.PlannedStage" xml:space="preserve"><value>Stadija</value></data>
-<data name="Mod.Stage.none" xml:space="preserve"><value>Nenurodyta</value></data>
 <data name="Mod.Stage.presentation" xml:space="preserve"><value>Pateikimas</value></data>
 <data name="Mod.Stage.consideration" xml:space="preserve"><value>Svarstymas</value></data>
 <data name="Mod.Stage.adoption" xml:space="preserve"><value>Priėmimas</value></data>
-<data name="Mod.SetPlanned" xml:space="preserve"><value>Pakeisti datą</value></data>
-<data name="Mod.Hold" xml:space="preserve"><value>Sulaikyti siuntimą</value></data>
-<data name="Mod.Release" xml:space="preserve"><value>Leisti siųsti</value></data>
 <data name="Mod.Held" xml:space="preserve"><value>Siuntimas sulaikytas: kol jo neatnaujinsite, projektas nepatenka į jokią suvestinę Seimo nariams.</value></data>
-<data name="Mod.Urgent" xml:space="preserve"><value>Patvirtinti skubią suvestinę</value></data>
 <data name="Admin.Lead" xml:space="preserve"><value>Skaičiai ir laikai, kuriuos galima keisti be naujos versijos. Kiekvienas pakeitimas įrašomas į auditą.</value></data>
 <data name="Admin.Changed" xml:space="preserve"><value>pakeista {0}</value></data>
 <data name="Admin.NotChanged" xml:space="preserve"><value>nekeista</value></data>
@@ -316,7 +292,7 @@
 <data name="Admin.Help.Digest:ThresholdMinimum" xml:space="preserve"><value>Mažesnės ribos nustatyti negali joks moderatorius, o mažesnė bendra riba pakeliama iki šios.</value></data>
 <data name="Admin.Unit.Digest:ThresholdMinimum" xml:space="preserve"><value>dalyviai</value></data>
 <data name="Admin.Setting.Appeals:ReasonsPerPerson" xml:space="preserve"><value>Argumentų vienam žmogui dėl projekto</value></data>
-<data name="Admin.Help.Appeals:ReasonsPerPerson" xml:space="preserve"><value>Kiek argumentų vienas žmogus gali parašyti dėl vieno projekto; 0 – neribojama. Įjunkite ribą, jei kas nors užtvindo kreipimąsi argumentais; jau parašyti nepašalinami.</value></data>
+  <data name="Admin.Help.Appeals:ReasonsPerPerson" xml:space="preserve"><value>Kiek argumentų vienas žmogus gali parašyti dėl vieno projekto; 0 – neribojama. Įjunkite ribą, jei kas nors užtvindo projekto puslapį argumentais; jau parašyti nepašalinami.</value></data>
 <data name="Admin.Unit.Appeals:ReasonsPerPerson" xml:space="preserve"><value>argumentai (0 – neribojama)</value></data>
 <data name="Admin.Setting.Appeals:EndorsementsPerPerson" xml:space="preserve"><value>„Man svarbu“ žymų vienam žmogui dėl projekto</value></data>
 <data name="Admin.Help.Appeals:EndorsementsPerPerson" xml:space="preserve"><value>Kiek argumentų vienas žmogus gali pažymėti „Man svarbu“ dėl vieno projekto; 0 – neribojama. Jau padėtos žymos nepašalinamos.</value></data>
@@ -365,10 +341,10 @@
 <data name="Follow.SignIn.mp" xml:space="preserve"><value>Prisijungę sužinosite, kaip šis Seimo narys balsavo dėl jūsų sekamų projektų.</value></data>
 <data name="Follow.What.bill" xml:space="preserve"><value>Gausite laišką, kai projektas bus įtrauktas į darbotvarkę ir kai Seimas dėl jo balsuos.</value></data>
 <data name="Follow.What.mp" xml:space="preserve"><value>Laiškuose apie jūsų sekamus projektus matysite, kaip balsavo šis Seimo narys.</value></data>
-<data name="Follow.Following.bill" xml:space="preserve"><value>Sekate šį projektą. Kas ką seka, niekas kitas nemato.</value></data>
-<data name="Follow.Following.mp" xml:space="preserve"><value>Sekate šį Seimo narį. Kas ką seka, niekas kitas nemato.</value></data>
+  <data name="Follow.Following.bill" xml:space="preserve"><value>Sekate. To niekas kitas nemato.</value></data>
+  <data name="Follow.Following.mp" xml:space="preserve"><value>Sekate. To niekas kitas nemato.</value></data>
 <data name="Follows.Title" xml:space="preserve"><value>Ką sekate</value></data>
-<data name="Follows.Lead" xml:space="preserve"><value>Apie sekamus projektus siunčiame laišką, kai projektas įtraukiamas į Seimo darbotvarkę ir kai Seimas dėl jo balsuoja; apie sekamas organizacijas – kai jos paskelbia poziciją dėl projekto. Kas ką seka, mato tik jūs.</value></data>
+  <data name="Follows.Lead" xml:space="preserve"><value>Ką sekate, matote tik jūs.</value></data>
 <data name="Follows.None" xml:space="preserve"><value>Kol kas nieko nesekate. Projektą, Seimo narį ar organizaciją galite sekti jų puslapyje.</value></data>
 <data name="Follows.ToAgenda" xml:space="preserve"><value>Seimo darbotvarkė →</value></data>
 <data name="Follows.Bills" xml:space="preserve"><value>Projektai</value></data>
@@ -400,7 +376,7 @@
 <data name="Admin.Unit.Ai:DraftModel" xml:space="preserve"><value>modelio pavadinimas</value></data>
 <data name="Admin.Group.follows" xml:space="preserve"><value>Sekimas</value></data>
 <data name="Admin.Setting.Follows:MaxPerAccount" xml:space="preserve"><value>Kiek projektų ir Seimo narių galima sekti</value></data>
-<data name="Admin.Help.Follows:MaxPerAccount" xml:space="preserve"><value>Daugiausia tiek projektų ir Seimo narių kartu vienas naudotojas gali sekti. Sumažinus jau sekami nepašalinami, tik nebegalima pridėti naujų.</value></data>
+  <data name="Admin.Help.Follows:MaxPerAccount" xml:space="preserve"><value>Daugiausia tiek projektų, Seimo narių ir organizacijų kartu vienas naudotojas gali sekti. Sumažinus jau sekami nepašalinami, tik nebegalima pridėti naujų.</value></data>
 <data name="Admin.Unit.Follows:MaxPerAccount" xml:space="preserve"><value>projektai ir Seimo nariai</value></data>
 <data name="Mod.Action.write" xml:space="preserve"><value>Rašyti aprašymą</value></data>
 <data name="Mod.Description" xml:space="preserve"><value>Apie ką projektas</value></data>
@@ -409,7 +385,7 @@
 <data name="Mod.DescriptionUrlHint" xml:space="preserve"><value>Neprivaloma. Oficialaus teksto, iš kurio parengtas aprašymas, adresas lrs.lt svetainėje, pvz., e-seimas.lrs.lt. Jis rodomas po aprašymu; palikus laukelį tuščią, adreso nebus.</value></data>
 <data name="ModPanel.Reasons" xml:space="preserve"><value>Argumentai, laukiantys peržiūros arba pažymėti</value></data>
 <data name="ModReason.Open" xml:space="preserve"><value>Moderuoti</value></data>
-<data name="Share.Lead" xml:space="preserve"><value>Pakvieskite kitus: jūsų asmeninė kvietimo nuoroda atveria šio projekto puslapį. Ji ta pati, kad ir ko prašote patys, ir nieko apie jūsų pasirinkimą neatskleidžia.</value></data>
+  <data name="Share.Lead" xml:space="preserve"><value>Pakvieskite kitus savo kvietimo nuoroda: ji atveria šį projektą ir neatskleidžia, ko prašote jūs.</value></data>
 <data name="Org.Label.none" xml:space="preserve"><value>Nepatvirtinta</value></data>
 <data name="Org.Label.domain" xml:space="preserve"><value>Patvirtinta per el. pašto adresą @{0}</value></data>
 <data name="Org.Label.moderator" xml:space="preserve"><value>Patvirtino moderatorius</value></data>
@@ -425,13 +401,13 @@
 <data name="Org.Published" xml:space="preserve"><value>Paskelbta {0}</value></data>
 <data name="Org.PublishedEdited" xml:space="preserve"><value>Paskelbta {0}, pakeista {1}</value></data>
 <data name="Org.Section.Title" xml:space="preserve"><value>Organizacijų pozicijos</value></data>
-<data name="Org.Section.NotCounted" xml:space="preserve"><value>Tai organizacijų nuomonės jų pačių vardu. Jos neskaičiuojamos tarp dalyvių ir nekeičia nei skaičių, nei artėjimo prie ribos.</value></data>
+  <data name="Org.Section.NotCounted" xml:space="preserve"><value>Organizacijų pozicijos neskaičiuojamos tarp dalyvių.</value></data>
 <data name="Org.Section.All" xml:space="preserve"><value>Visos organizacijos</value></data>
 <data name="Org.Section.None" xml:space="preserve"><value>Kol kas nėra.</value></data>
 <data name="Org.Section.Frozen" xml:space="preserve"><value>Seimas dėl projekto jau balsavo: pozicijos nebekeičiamos.</value></data>
-<data name="Org.Section.Register" xml:space="preserve"><value>Atstovaujate organizacijai? Užregistruokite ją ir paskelbkite jos poziciją.</value></data>
+  <data name="Org.Section.Register" xml:space="preserve"><value>Atstovaujate organizacijai? Užregistruokite ją.</value></data>
 <data name="Org.Mine.Title" xml:space="preserve"><value>Jūsų organizacija „{0}“</value></data>
-<data name="Org.Mine.Private" xml:space="preserve"><value>Tai matote tik jūs ir kiti organizacijos atstovai. Pozicija skelbiama organizacijos vardu: kas ją parašė, nerodoma, ir ji niekaip nesusijusi su tuo, ko prašote jūs pats.</value></data>
+  <data name="Org.Mine.Private" xml:space="preserve"><value>Tai matote tik jūs ir kiti atstovai.</value></data>
 <data name="Org.Status.pending" xml:space="preserve"><value>Laukia moderatoriaus</value></data>
 <data name="Org.Status.published" xml:space="preserve"><value>Paskelbta</value></data>
 <data name="Org.Status.hidden" xml:space="preserve"><value>Paslėpė moderatorius</value></data>
@@ -446,14 +422,14 @@
 <data name="Org.Form.WithdrawConfirm" xml:space="preserve"><value>Pozicija nebebus rodoma. Ankstesnės jos versijos lieka organizacijos puslapyje. Atsiimti?</value></data>
 <data name="Org.Form.WithdrawYes" xml:space="preserve"><value>Taip, atsiimti</value></data>
 <data name="Org.Form.Title" xml:space="preserve"><value>„{0}“ pozicija</value></data>
-<data name="Org.Form.Lead" xml:space="preserve"><value>Pozicija skelbiama iš karto organizacijos vardu, su jos žyma. Kiekvienas pakeitimas lieka viešoje istorijoje organizacijos puslapyje. Pozicija neskaičiuojama tarp dalyvių.</value></data>
+  <data name="Org.Form.Lead" xml:space="preserve"><value>Pozicija skelbiama iš karto organizacijos vardu, o kiekvienas jos pakeitimas lieka viešoje istorijoje.</value></data>
 <data name="Org.Form.Stance" xml:space="preserve"><value>Ko organizacija prašo Seimo narių</value></data>
 <data name="Org.Form.Text" xml:space="preserve"><value>Pozicija</value></data>
 <data name="Org.Form.TextHint" xml:space="preserve"><value>{0} / {1} ženklų</value></data>
 <data name="Org.Form.Link" xml:space="preserve"><value>Nuoroda į visą poziciją (nebūtina)</value></data>
-<data name="Org.Form.LinkHint" xml:space="preserve"><value>Adresas, prasidedantis https://. Šalia bus rodomas svetainės pavadinimas.</value></data>
+  <data name="Org.Form.LinkHint" xml:space="preserve"><value>Adresas, prasidedantis https://.</value></data>
 <data name="Org.Form.Goal" xml:space="preserve"><value>Tikslas: kiek dalyvių siekiate (nebūtina)</value></data>
-<data name="Org.Form.GoalHint" xml:space="preserve"><value>Skaičiuojami dalyviai, prašantys to paties, ko prašo organizacija. Tikslas tik jūsų nariams ir rėmėjams: jis nekeičia ribos ir nepatenka į suvestines.</value></data>
+  <data name="Org.Form.GoalHint" xml:space="preserve"><value>Skaičiuojami dalyviai, prašantys to paties, ko prašo organizacija.</value></data>
 <data name="Org.Form.GoalInvalid" xml:space="preserve"><value>Įrašykite skaičių nuo 1 iki 1 000 000.</value></data>
 <data name="Org.Form.Submit" xml:space="preserve"><value>Skelbti</value></data>
 <data name="Org.Form.Pending" xml:space="preserve"><value>Pozicija išsaugota. Automatinė patikra rado, ką turėtų peržiūrėti moderatorius: kol jis peržiūrės, ją matote tik jūs ir kiti atstovai.</value></data>
@@ -469,7 +445,7 @@
 <data name="Org.Confirm.Unavailable.confirm.already" xml:space="preserve"><value>Organizacija jau patvirtinta.</value></data>
 <data name="Org.Confirm.Unavailable.organisation.not-active" xml:space="preserve"><value>Užblokuotos ar uždarytos organizacijos patvirtinti negalima.</value></data>
 <data name="Org.Confirm.AskModerators" xml:space="preserve"><value>Organizacija be savo domeno gali paprašyti moderatorių:</value></data>
-<data name="Org.Confirm.Lead" xml:space="preserve"><value>Nurodykite el. pašto adresą domene {0} (arba jo subdomene). Atsiųsime kodą; jį įvedus, prie organizacijos bus rodoma, kad ji patvirtinta per el. pašto adresą šiame domene.</value></data>
+  <data name="Org.Confirm.Lead" xml:space="preserve"><value>Nurodykite el. pašto adresą domene {0} arba jo subdomene – atsiųsime kodą.</value></data>
 <data name="Org.Confirm.Address" xml:space="preserve"><value>El. pašto adresas organizacijos domene</value></data>
 <data name="Org.Confirm.Send" xml:space="preserve"><value>Siųsti kodą</value></data>
 <data name="Org.Confirm.NotStored" xml:space="preserve"><value>Adreso nesaugome: išsaugomas tik domenas. Viešųjų pašto tarnybų adresai organizacijos nepatvirtina.</value></data>
@@ -478,14 +454,13 @@
 <data name="Org.Confirm.Again" xml:space="preserve"><value>Siųsti kitą kodą</value></data>
 <data name="Org.Confirm.Sent" xml:space="preserve"><value>Kodą išsiuntėme. Jis galioja 10 min.</value></data>
 <data name="Org.Reps.Title" xml:space="preserve"><value>Atstovai</value></data>
-<data name="Org.Reps.Private" xml:space="preserve"><value>Atstovų vardus matote tik jūs ir kiti atstovai; viešai jie nerodomi.</value></data>
 <data name="Org.Reps.Me" xml:space="preserve"><value>(jūs)</value></data>
 <data name="Org.Reps.Since" xml:space="preserve"><value>atstovauja nuo {0}</value></data>
 <data name="Org.Reps.Remove" xml:space="preserve"><value>Pašalinti</value></data>
 <data name="Org.Reps.Removed" xml:space="preserve"><value>Atstovas pašalintas.</value></data>
 <data name="Org.Reps.Leave" xml:space="preserve"><value>Nebeatstovauti organizacijai</value></data>
 <data name="Org.Invite.Create" xml:space="preserve"><value>Pakviesti kolegą atstovauti</value></data>
-<data name="Org.Invite.Made" xml:space="preserve"><value>Perduokite šią nuorodą kolegai. Ji tinka vieną kartą, iki {0}. Ją atvėręs ir sutikęs prisijungęs narys taps atstovu.</value></data>
+  <data name="Org.Invite.Made" xml:space="preserve"><value>Perduokite šią nuorodą kolegai. Ji tinka vieną kartą, iki {0}.</value></data>
 <data name="Org.Close" xml:space="preserve"><value>Uždaryti organizaciją</value></data>
 <data name="Org.leave.Confirm" xml:space="preserve"><value>Nebeatstovausite šiai organizacijai. Grįžti galėsite tik su kito atstovo kvietimu.</value></data>
 <data name="Org.leave.Yes" xml:space="preserve"><value>Taip, nebeatstovauti</value></data>
@@ -498,16 +473,15 @@
 <data name="Org.Field.Description" xml:space="preserve"><value>Trumpas aprašymas savais žodžiais (nebūtina)</value></data>
 <data name="Org.Field.DescriptionHint" xml:space="preserve"><value>{0} / {1} ženklų</value></data>
 <data name="Org.Field.Website" xml:space="preserve"><value>Svetainė</value></data>
-<data name="Org.Field.WebsiteHint" xml:space="preserve"><value>Nebūtina. Adresas, prasidedantis https://. Pagal svetainės domeną organizaciją galėsite patvirtinti.</value></data>
+  <data name="Org.Field.WebsiteHint" xml:space="preserve"><value>Nebūtina. Adresas, prasidedantis https://.</value></data>
 <data name="Org.Field.LegalCode" xml:space="preserve"><value>Juridinio asmens kodas (nebūtina)</value></data>
 <data name="Org.Field.Lobbyist" xml:space="preserve"><value>Esame registruoti lobistai</value></data>
 <data name="Org.Register.PageTitle" xml:space="preserve"><value>Registruoti organizaciją · Lietuva 2.0</value></data>
 <data name="Org.Register.Title" xml:space="preserve"><value>Registruoti organizaciją</value></data>
-<data name="Org.Register.Lead" xml:space="preserve"><value>Organizacija gali skelbti savo poziciją dėl Seimo projektų – savo vardu, atskiroje projekto puslapio dalyje.</value></data>
-<data name="Org.Register.Point1" xml:space="preserve"><value>Organizacija rodoma iš karto; niekas jos iš anksto netvirtina. Moderatoriai peržiūri naujas organizacijas po to.</value></data>
-<data name="Org.Register.Point2" xml:space="preserve"><value>Jūs tapsite pirmuoju jos atstovu. Atstovų vardai viešai nerodomi, o tai, ko prašote jūs pats, lieka privatu ir su organizacija nesiejama.</value></data>
+  <data name="Org.Register.Lead" xml:space="preserve"><value>Užregistruota organizacija iš karto rodoma viešai ir savo vardu gali skelbti pozicijas dėl Seimo projektų.</value></data>
+  <data name="Org.Register.Point1" xml:space="preserve"><value>Niekas jos iš anksto netvirtina; moderatoriai naujas organizacijas peržiūri vėliau.</value></data>
+  <data name="Org.Register.Point2" xml:space="preserve"><value>Jūs tapsite pirmuoju jos atstovu. Atstovų vardai viešai nerodomi, o tai, ko prašote jūs pats, su organizacija nesiejama.</value></data>
 <data name="Org.Register.Point3" xml:space="preserve"><value>Iš pradžių organizacija rodoma kaip „Nepatvirtinta“. Ją patvirtinsite el. pašto adresu organizacijos svetainės domene arba paprašę moderatorių.</value></data>
-<data name="Org.Register.Point4" xml:space="preserve"><value>Niekas neparduodama: jokia įmoka nesuteikia vietos, eilės ar paminėjimo.</value></data>
 <data name="Org.Register.Method" xml:space="preserve"><value>Kaip veikia organizacijos ir ką reiškia patvirtinimas</value></data>
 <data name="Org.Register.Submit" xml:space="preserve"><value>Registruoti</value></data>
 <data name="Org.Invite.PageTitle" xml:space="preserve"><value>Kvietimas atstovauti organizacijai · Lietuva 2.0</value></data>
@@ -517,17 +491,16 @@
 <data name="Org.Invite.ToProfile" xml:space="preserve"><value>Į organizacijos puslapį</value></data>
 <data name="Org.Invite.Unusable" xml:space="preserve"><value>Ši kvietimo nuoroda jau panaudota arba nebegalioja. Paprašykite atstovo naujos.</value></data>
 <data name="Org.Invite.Lead" xml:space="preserve"><value>Jus kviečia atstovauti organizacijai „{0}“.</value></data>
-<data name="Org.Invite.What" xml:space="preserve"><value>Atstovas gali skelbti ir keisti organizacijos pozicijas, keisti jos duomenis ir kviesti kitus. Jūsų vardą matys tik kiti atstovai; tai, ko prašote jūs pats, lieka privatu.</value></data>
+  <data name="Org.Invite.What" xml:space="preserve"><value>Atstovas skelbia organizacijos pozicijas, keičia jos duomenis ir kviečia kitus. Jūsų vardą matys tik kiti atstovai.</value></data>
 <data name="Org.Invite.Accept" xml:space="preserve"><value>Tapti atstovu</value></data>
 <data name="Org.MyList.Title" xml:space="preserve"><value>Mano organizacijos</value></data>
 <data name="Org.MyList.None" xml:space="preserve"><value>Jūs neatstovaujate jokiai organizacijai.</value></data>
 <data name="Org.MyList.Register" xml:space="preserve"><value>Registruoti organizaciją</value></data>
 <data name="Org.MyList.All" xml:space="preserve"><value>Visos organizacijos</value></data>
-<data name="Org.State.active" xml:space="preserve"><value>Veikia</value></data>
 <data name="Org.State.blocked" xml:space="preserve"><value>Užblokuota</value></data>
 <data name="Org.State.closed" xml:space="preserve"><value>Uždaryta</value></data>
 <data name="Org.List.Title" xml:space="preserve"><value>Organizacijos</value></data>
-<data name="Org.List.Lead" xml:space="preserve"><value>Organizacijos, skelbiančios savo pozicijas dėl Seimo projektų. Prie kiekvienos parašyta, ar ir kaip ji patvirtinta. Pozicijos neskaičiuojamos tarp dalyvių.</value></data>
+  <data name="Org.List.Lead" xml:space="preserve"><value>Organizacijos, skelbiančios pozicijas dėl Seimo projektų. Jų pozicijos neskaičiuojamos tarp dalyvių.</value></data>
 <data name="Org.List.Search" xml:space="preserve"><value>Ieškoti pagal pavadinimą</value></data>
 <data name="Org.List.SearchButton" xml:space="preserve"><value>Ieškoti</value></data>
 <data name="Org.List.Clear" xml:space="preserve"><value>Rodyti visas</value></data>
@@ -553,13 +526,11 @@
 <data name="Org.Profile.Meaning.moderator" xml:space="preserve"><value>„Patvirtino moderatorius“: organizacija be savo domeno, kurią moderatorius patikrino kitu būdu.</value></data>
 <data name="Org.Profile.MethodLink" xml:space="preserve"><value>Daugiau</value></data>
 <data name="Org.Profile.Statements" xml:space="preserve"><value>Pozicijos dėl projektų</value></data>
-<data name="Org.Profile.StatementsLead" xml:space="preserve"><value>Kiekviena pozicija rodoma su visomis ankstesnėmis versijomis.</value></data>
 <data name="Org.Profile.NoStatements" xml:space="preserve"><value>Organizacija dar nepaskelbė nė vienos pozicijos.</value></data>
 <data name="Org.Profile.Frozen" xml:space="preserve"><value>Seimas dėl projekto jau balsavo: pozicija nebekeičiama.</value></data>
 <data name="Org.Profile.Versions" xml:space="preserve"><value>Ankstesnės versijos ({0})</value></data>
 <data name="Org.Profile.ReplacedOn" xml:space="preserve"><value>pakeista {0}</value></data>
 <data name="Org.Profile.History" xml:space="preserve"><value>Pavadinimo ir svetainės istorija</value></data>
-<data name="Org.Profile.NotCounted" xml:space="preserve"><value>Organizacijų pozicijos neskaičiuojamos tarp dalyvių ir nekeičia projektų skaičių.</value></data>
 <data name="Org.History.name" xml:space="preserve"><value>Pavadinimas</value></data>
 <data name="Org.History.website" xml:space="preserve"><value>Svetainė</value></data>
 <data name="Org.Report" xml:space="preserve"><value>Pranešti apie organizaciją</value></data>
@@ -616,10 +587,10 @@
 <data name="Admin.Help.Organisations:PerAccount" xml:space="preserve"><value>Neleidžia vienam žmogui užplūsti sąrašo. Uždarytos organizacijos nesiskaičiuoja, užblokuotos skaičiuojasi. Sumažinus jau užregistruotos lieka.</value></data>
 <data name="Admin.Unit.Organisations:PerAccount" xml:space="preserve"><value>organizacijos</value></data>
 <data name="Org.Code.Title" xml:space="preserve"><value>Organizacijos kvietimo nuoroda</value></data>
-<data name="Org.Code.Lead" xml:space="preserve"><value>Ši nuoroda atveria registracijos formą su organizacijos kvietimo kodu. Dalinkitės ja su savo nariais ir rėmėjais.</value></data>
+  <data name="Org.Code.Lead" xml:space="preserve"><value>Dalinkitės ja su nariais ir rėmėjais: nuoroda atveria registraciją su organizacijos kvietimo kodu.</value></data>
 <data name="Org.Code.Count" xml:space="preserve"><value>Su organizacijos kodu užsiregistravo: {0}</value></data>
-<data name="Org.Code.BillsLead" xml:space="preserve"><value>Nuorodos su tuo pačiu kodu, kurios po registracijos atveria projektą, dėl kurio organizacija paskelbė poziciją:</value></data>
-<data name="Org.Code.Private" xml:space="preserve"><value>Matote tik, kiek žmonių užbaigė registraciją su organizacijos kodu: ne kas jie, ne kada ir ne kurią pusę renkasi. Naujos paskyros su organizacija niekas nesieja.</value></data>
+  <data name="Org.Code.BillsLead" xml:space="preserve"><value>Tas pats kodas, bet po registracijos atveriamas projektas:</value></data>
+  <data name="Org.Code.Private" xml:space="preserve"><value>Matote tik skaičių: ne kas užsiregistravo, ne kada ir ne kurią pusę pasirinko.</value></data>
 <data name="Org.Code.OffWithOrganisation" xml:space="preserve"><value>Kol organizacija užblokuota, jos kvietimo kodas neveikia, todėl nuorodos parodyti negalime.</value></data>
 <data name="Org.Code.SwitchedOff" xml:space="preserve"><value>Organizacijos kvietimo kodą išjungė administratorius, todėl nuorodos parodyti negalime.</value></data>
 <data name="Org.Code.Ask" xml:space="preserve"><value>Klausimus siųskite moderatoriams:</value></data>
@@ -631,7 +602,7 @@
 <data name="Org.Code.Replaced" xml:space="preserve"><value>Kodas pakeistas. Ankstesnės nuorodos nebeveikia.</value></data>
 <data name="Follow.SignIn.organisation" xml:space="preserve"><value>Prisijungę gausite laišką, kai organizacija paskelbs poziciją dėl projekto.</value></data>
 <data name="Follow.What.organisation" xml:space="preserve"><value>Gausite laišką, kai organizacija paskelbs poziciją dėl projekto.</value></data>
-<data name="Follow.Following.organisation" xml:space="preserve"><value>Sekate šią organizaciją. Kas ką seka, niekas kitas nemato, ir pati organizacija taip pat.</value></data>
+  <data name="Follow.Following.organisation" xml:space="preserve"><value>Sekate. To niekas kitas nemato.</value></data>
 <data name="Follows.Organisations" xml:space="preserve"><value>Organizacijos</value></data>
 <data name="Follows.Email.statements" xml:space="preserve"><value>Kai sekama organizacija paskelbia poziciją dėl projekto</value></data>
 <data name="Inv.Kind.organisation" xml:space="preserve"><value>organizacijos kodas</value></data>
@@ -640,4 +611,16 @@
 <data name="Admin.Setting.Registration:OrganisationCodeUses" xml:space="preserve"><value>Registracijų vienu organizacijos kodu</value></data>
 <data name="Admin.Help.Registration:OrganisationCodeUses" xml:space="preserve"><value>Kiek žmonių gali užsiregistruoti su vienos organizacijos kvietimo kodu; 0 – neribojama. Ribokite, jei organizacijų kodai imami platinti masiškai.</value></data>
 <data name="Admin.Unit.Registration:OrganisationCodeUses" xml:space="preserve"><value>registracijos (0 – neribojama)</value></data>
+  <data name="Org.Register.More" xml:space="preserve"><value>Kaip tai veikia</value></data>
+  <data name="Org.Profile.MeaningMore" xml:space="preserve"><value>Ką reiškia ši žyma?</value></data>
+  <data name="Org.Profile.LegalCode" xml:space="preserve"><value>Juridinio asmens kodas</value></data>
+  <data name="Share.CopyFailed" xml:space="preserve"><value>Nepavyko nukopijuoti: pažymėkite nuorodą ir nukopijuokite patys.</value></data>
+  <data name="Restrict.Target.statement" xml:space="preserve"><value>pozicija</value></data>
+  <data name="Restrict.Action.publish" xml:space="preserve"><value>paskelbta</value></data>
+  <data name="Restrict.Action.keep" xml:space="preserve"><value>palikta</value></data>
+  <data name="Restrict.Action.hide" xml:space="preserve"><value>paslėpta</value></data>
+  <data name="Restrict.Action.merge" xml:space="preserve"><value>sujungta su kitu argumentu</value></data>
+  <data name="Restrict.Action.restore" xml:space="preserve"><value>atkurta</value></data>
+  <data name="Restrict.Action.restrict" xml:space="preserve"><value>apribotas rašymas</value></data>
+  <data name="Restrict.Action.lift" xml:space="preserve"><value>apribojimas panaikintas</value></data>
 </root>

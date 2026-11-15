@@ -2,6 +2,7 @@ using System.Security.Claims;
 using Lt2.Api.Contracts;
 using Lt2.Api.Contracts.Feedback;
 using Lt2.Identity;
+using Lt2.SharedKernel;
 using Lt2.Web.Security;
 using Lt2.Web.Services;
 
@@ -18,7 +19,7 @@ internal static class FeedbackEndpoints
     {
         api.MapPost(ApiEndpoints.Relative(FeedbackRoutes.Send), async (FeedbackRequest request, ClaimsPrincipal user, IFeedback feedback, FeedbackLimiter limiter, ErrorMapper errors, CancellationToken cancellationToken) =>
             {
-                var result = await ServerFeedbackApi.SendAsync(feedback, limiter, AppealMapping.UserId(user)!.Value, request, cancellationToken);
+                var result = await ServerFeedbackApi.SendAsync(feedback, limiter, user.UserId()!.Value, request, cancellationToken);
                 return result.IsSuccess ? Results.NoContent() : errors.ToResult(result.Error!);
             })
             .WithName("SendFeedback")

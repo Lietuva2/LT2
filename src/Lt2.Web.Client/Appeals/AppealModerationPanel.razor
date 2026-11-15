@@ -1,14 +1,15 @@
 @using Lt2.Api.Contracts.Appeals
-@inherits InteractiveBase
-@inject IModerationApi Moderation
+@inherits InteractiveBase<AppealUi>
+@inject MyBillState Mine
 @inject NavigationManager Navigation
 
-@* "Moderavimas" on the bill's page (design 8.12.3), for a moderator or an administrator in a staff-passkey session only:
-   the open reports about the description (8.13) and the actions on the bill, "Rašyti aprašymą" among them, on any active
-   bill, with or without a record, and the bill's
-   arguments that wait or are flagged, with the queue's actions. The state comes
-   from the moderators' own answer: for anyone else the server refuses it while prerendering, nothing renders, and the
-   browser does not ask again. After an action the page reloads, so it shows the result. *@
+@* "Moderavimas" on the bill's page (design 8.12.3), rendered only when the server found a moderator or an administrator
+   in a staff-passkey session: the open reports about the description (8.13) and the actions on the bill, "Rašyti
+   aprašymą" among them, on any active bill, with or without a record, and the bill's arguments that wait or are
+   flagged, with the queue's actions. The state comes from the moderators' own answer, asked for once while the server
+   prerenders the moderator's page (shared with the arguments' "Moderuoti" through MyBillState) and not again in the
+   browser; for anyone else the server refuses it and nothing renders. After an action the page reloads, so it shows
+   the result. *@
 @if (State is { Status: "open" } state)
 {
     <section class="sheet stack stack--tight" aria-labelledby="moderation-panel-title" id="moderation-panel">
@@ -18,7 +19,7 @@
         <Reports Items="state.DescriptionReports" Description="true" Id="panel-description-reports" />
         <ModerationActions Id="state.Id" Number="@state.Number" Kind="appeal" Status="@state.Status" Held="state.Held" Threshold="state.Threshold" Planned="state.Planned"
                            Description="@state.Description" DescriptionSource="@state.DescriptionSource" DescriptionUrl="@state.DescriptionUrl" ESeimasUrl="@ESeimasUrl"
-                           HasOpenItems="state.HasOpenItems" OnDone="Reload" />
+                           HasOpenItems="state.HasOpenItems" IdPrefix="panel-" OnDone="Reload" />
 
         @* Arguments that wait or are flagged (decided 2026-11-14): other visitors do not see them; the same actions as the queue. *@
         @if (state.Reasons.Where(NeedsLook).ToList() is { Count: > 0 } waiting)
@@ -26,22 +27,7 @@
             <h4 id="moderation-panel-reasons">@L["ModPanel.Reasons"]</h4>
             @foreach (var reason in waiting)
             {
-                <article class="stack stack--tight" id="panel-reason-@reason.Id" aria-label="@L["Mod.Reason"]">
-                    <div class="row">
-                        <span class="choice choice--@reason.Side">@L["Reasons." + reason.Side]</span>
-                        <span class="tag">@L[reason.Status == "pending" ? "Mod.Status.pending" : reason.Seen ? "Mod.Seen" : "Mod.NotSeen"]</span>
-                        @foreach (var flag in reason.Flags)
-                        {
-                            <span class="tag tag--people">@L["Mod.Flag." + flag]</span>
-                        }
-                    </div>
-                    <div class="said">
-                        <p class="bubble bubble--people voice">@reason.Text</p>
-                        <div class="said__by"><b>@(reason.AuthorName ?? L["Reasons.Anonymous"])</b></div>
-                    </div>
-                    <Reports Items="reason.Reports" />
-                    <ModerationActions Id="reason.Id" Kind="reason" Status="@reason.Status" MergeCandidates="reason.MergeCandidates" OnDone="Reload" OnRestricted="() => Reload(string.Empty)" />
-                </article>
+                <QueueReasonItem @key="reason.Id" Reason="reason" Panel="true" OnDone="Reload" OnRestricted="() => Reload(string.Empty)" />
             }
         }
     </section>
@@ -53,27 +39,29 @@
     /// <summary>The bill's text on e-seimas, for the field of pasted official text (design 8.11.4).</summary>
     [Parameter] public string? ESeimasUrl { get; set; }
 
-    [CascadingParameter] private Task<AuthenticationState>? AuthState { get; set; }
-
     [PersistentState] public ModerationBillResponse? State { get; set; }
 
-    /// <summary>Set once the server has asked, so the browser does not ask again for someone who is not a moderator.</summary>
+    /// <summary>Set once the server has asked, so the browser does not ask again.</summary>
     [PersistentState] public bool? Asked { get; set; }
 
     protected override async Task OnInitializedAsync()
     {
         if (Asked == true)
         {
+            // In the browser: hand the answer the server brought to the arguments' "Moderuoti".
+            if (State is { } known)
+            {
+                Mine.Remember(Number, known);
+            }
+
             return;
         }
 
         Asked = true;
-        if (AuthState is null || (await AuthState).User.Identity?.IsAuthenticated != true)
+        if (await IsSignedInAsync())
         {
-            return;
+            State = await Mine.ModerationAsync(Number);
         }
-
-        State = (await Moderation.GetBillAsync(Number)).Value;
     }
 
     private void Reload(string _) => Navigation.NavigateTo(Navigation.Uri, forceLoad: true);

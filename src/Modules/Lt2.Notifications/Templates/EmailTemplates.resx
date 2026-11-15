@@ -5,9 +5,9 @@
   <resheader name="reader"><value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value></resheader>
   <resheader name="writer"><value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value></resheader>
   <data name="SignInCode.Subject" xml:space="preserve"><value>Lietuva 2.0 prisijungimo kodas: {0}</value></data>
-  <data name="SignInCode.Greeting" xml:space="preserve"><value>Laba diena,</value></data>
+  <data name="Email.Greeting" xml:space="preserve"><value>Laba diena,</value></data>
   <data name="SignInCode.Intro" xml:space="preserve"><value>jūsų prisijungimo prie Lietuva 2.0 kodas:</value></data>
-  <data name="SignInCode.Validity" xml:space="preserve"><value>Kodas galioja {0} min. ir tinka tik vieną kartą.</value></data>
+  <data name="Email.CodeValidity" xml:space="preserve"><value>Kodas galioja {0} min. ir tinka tik vieną kartą.</value></data>
   <data name="SignInCode.NewestOnly" xml:space="preserve"><value>Kodą galite įvesti bet kurioje naršyklėje. Jei gavote kelis laiškus, tinka tik naujausias kodas.</value></data>
   <data name="SignInCode.Ignore" xml:space="preserve"><value>Jei kodo neprašėte, nieko daryti nereikia: be šio kodo niekas negalės prisijungti prie jūsų paskyros.</value></data>
   <data name="Notice.passkey-added.Subject" xml:space="preserve"><value>Lietuva 2.0: prie paskyros pridėtas prieigos raktas</value></data>
@@ -22,7 +22,7 @@
   <data name="Notice.NotYou" xml:space="preserve"><value>Jei to nedarėte jūs, nedelsdami praneškite Lietuva 2.0 komandai.</value></data>
   <data name="Role.moderator" xml:space="preserve"><value>moderatoriaus</value></data>
   <data name="Role.administrator" xml:space="preserve"><value>administratoriaus</value></data>
-  <data name="SignInCode.Signature" xml:space="preserve"><value>Lietuva 2.0</value></data>
+  <data name="Email.Signature" xml:space="preserve"><value>Lietuva 2.0</value></data>
 <data name="Moderation.reason-published.Subject" xml:space="preserve"><value>Lietuva 2.0: jūsų argumentas paskelbtas</value></data>
 <data name="Moderation.reason-published.Body" xml:space="preserve"><value>moderatorius peržiūrėjo ir paskelbė jūsų argumentą kreipimesi dėl projekto {0}. Projekto puslapis: {1}</value></data>
 <data name="Moderation.reason-hidden.Subject" xml:space="preserve"><value>Lietuva 2.0: jūsų argumentas paslėptas</value></data>
@@ -37,7 +37,7 @@
 <data name="Restriction.Until" xml:space="preserve"><value>Apribojimas galioja iki {0} imtinai.</value></data>
 <data name="Restriction.UntilLifted" xml:space="preserve"><value>Apribojimas galioja, kol jį atšauks moderatorius.</value></data>
 <data name="Restriction.Untouched" xml:space="preserve"><value>Prisijungti, nurodyti, ko prašote, žymėti „Man svarbu“ ir pranešti apie turinį galite kaip anksčiau. Jūsų jau parašyti argumentai lieka.</value></data>
-<data name="Restriction.Contact" xml:space="preserve"><value>Jei nesutinkate, parašykite moderatoriams: {0}</value></data>
+<data name="Email.Contact" xml:space="preserve"><value>Jei nesutinkate, parašykite moderatoriams: {0}</value></data>
 <data name="Restriction.lifted.Subject" xml:space="preserve"><value>Lietuva 2.0: rašymo apribojimas atšauktas</value></data>
 <data name="Restriction.lifted.Body" xml:space="preserve"><value>moderatorius atšaukė jūsų rašymo apribojimą: vėl galite rašyti argumentus ir pranešti apie datas.</value></data>
 <data name="Feedback.Reply.Subject" xml:space="preserve"><value>Lietuva 2.0: atsakymas į jūsų atsiliepimą</value></data>
@@ -45,7 +45,7 @@
 <data name="Feedback.Reply.Yours" xml:space="preserve"><value>Jūs rašėte: „{0}“</value></data>
 <data name="Feedback.Reply.Answer" xml:space="preserve"><value>Atsakymas: {0}</value></data>
 <data name="Feedback.Notice.Subject" xml:space="preserve"><value>Lietuva 2.0: nauji atsiliepimai ({0})</value></data>
-<data name="Feedback.Notice.Body" xml:space="preserve"><value>Naujų atsiliepimų: {0}. Juos rasite {1} (reikia darbuotojo prieigos rakto).</value></data><data name="Moderation.Statement" xml:space="preserve"><value>Moderatoriaus paaiškinimas: {0}</value></data>
+<data name="Feedback.Notice.Body" xml:space="preserve"><value>Naujų atsiliepimų: {0}. Juos rasite {1} (reikia darbuotojo prieigos rakto).</value></data><data name="Email.Statement" xml:space="preserve"><value>Moderatoriaus paaiškinimas: {0}</value></data>
 <data name="Moderation.Rules" xml:space="preserve"><value>Šį laišką gavote, nes esate šio turinio autorius.</value></data>
 <data name="Digest.Subject" xml:space="preserve"><value>Lietuva 2.0 suvestinė Seimo nariams, {0}</value></data>
 <data name="Digest.Intro" xml:space="preserve"><value>projektų šioje suvestinėje: {0}. Dėl jų į Seimo narius kreipiasi Lietuva 2.0 naudotojai.</value></data>

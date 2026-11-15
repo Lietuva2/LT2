@@ -73,6 +73,8 @@ internal sealed class AccountData(IDbContextFactory<AppealsDb> contexts, IPositi
         await EraseOrganisationRolesAsync(userId, npgsql, cancellationToken);
         foreach (var sql in new[]
         {
+            // The person's arguments go; open reports on them are closed, as when an argument is withdrawn.
+            "UPDATE appeals.report SET status = 'closed', closed_at = @now WHERE status = 'open' AND target_id IN (SELECT id FROM appeals.reason WHERE author_user_id = @user)",
             "DELETE FROM appeals.endorsement WHERE reason_id IN (SELECT id FROM appeals.reason WHERE author_user_id = @user)",
             "UPDATE appeals.reason SET merged_into_id = NULL WHERE merged_into_id IN (SELECT id FROM appeals.reason WHERE author_user_id = @user)",
             "DELETE FROM appeals.reason WHERE author_user_id = @user",
@@ -85,21 +87,26 @@ internal sealed class AccountData(IDbContextFactory<AppealsDb> contexts, IPositi
             // A moderator's draft requests go with the account (design 8.11.4).
             "DELETE FROM appeals.ai_draft_request WHERE moderator_user_id = @user",
 
-            // Design 8.14.14: representative roles go; who registered, granted, asked for a code, made a link, wrote a
-            // statement or changed a profile is emptied. The organisations and their statements stay.
+            // Design 8.14.14: representative roles go; who registered, granted, asked for a code, made a link or wrote a
+            // statement is emptied. The organisations and their statements stay. (A profile's and a statement's history,
+            // appeals.revision, never holds a person.)
             "DELETE FROM appeals.organisation_representative WHERE user_id = @user",
             "UPDATE appeals.organisation_representative SET granted_by_user_id = NULL WHERE granted_by_user_id = @user",
             "UPDATE appeals.organisation SET registered_by_user_id = NULL WHERE registered_by_user_id = @user",
             "UPDATE appeals.organisation_statement SET written_by_user_id = NULL WHERE written_by_user_id = @user",
             "UPDATE appeals.organisation_invite SET created_by_user_id = NULL WHERE created_by_user_id = @user",
             "UPDATE appeals.organisation_code SET requested_by_user_id = NULL WHERE requested_by_user_id = @user",
-            "UPDATE appeals.revision SET changed_by_user_id = NULL WHERE changed_by_user_id = @user AND entity_kind IN ('organisation', 'statement')",
         })
         {
 #pragma warning disable CA2100 // Constant SQL.
             await using var command = new NpgsqlCommand(sql, connection, npgsql);
 #pragma warning restore CA2100
             command.Parameters.AddWithValue("user", userId);
+            if (sql.Contains("@now", StringComparison.Ordinal))
+            {
+                command.Parameters.AddWithValue("now", clock.GetUtcNow());
+            }
+
             await command.ExecuteNonQueryAsync(cancellationToken);
         }
     }
@@ -110,11 +117,7 @@ internal sealed class AccountData(IDbContextFactory<AppealsDb> contexts, IPositi
     /// </summary>
     private async Task EraseOrganisationRolesAsync(Guid userId, NpgsqlTransaction transaction, CancellationToken ct)
     {
-        var options = new DbContextOptionsBuilder<AppealsDb>()
-            .UseNpgsql(transaction.Connection!, o => o.MigrationsHistoryTable("__ef_migrations_history", AppealsModule.Schema))
-            .UseSnakeCaseNamingConvention()
-            .Options;
-        await using var db = new AppealsDb(options);
+        await using var db = new AppealsDb(AppealsDb.Options(transaction.Connection!));
         await db.Database.UseTransactionAsync(transaction, ct);
         var mine = await db.OrganisationRepresentatives.AsNoTracking()
             .Where(r => r.UserId == userId && r.EndedAt == null)
@@ -122,7 +125,7 @@ internal sealed class AccountData(IDbContextFactory<AppealsDb> contexts, IPositi
             .ToListAsync(ct);
         foreach (var id in mine)
         {
-            await OrganisationReads.LockAsync(db, id, ct);
+            await AdvisoryLocks.OrganisationAsync(db, id, ct);
             var o = await db.Organisations.FirstAsync(x => x.Id == id, ct);
             var others = await db.OrganisationRepresentatives.CountAsync(r => r.OrganisationId == id && r.EndedAt == null && r.UserId != userId, ct);
             if (others == 0 && o.Status != OrganisationStatuses.Closed)

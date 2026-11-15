@@ -23,6 +23,30 @@ public sealed class RecordRuleTests
     public void A_finished_bill_nobody_took_part_in_gets_no_record() =>
         RecordRules.CheckParticipation(null, billFinished: true).ShouldBe("appeal.not-open");
 
+    [Fact]
+    public void Taking_part_ends_when_the_final_vote_is_recorded_before_the_record_is_closed()
+    {
+        RecordRules.CheckParticipation(AppealStatuses.Open, billFinished: true).ShouldBe("appeal.not-open");
+        RecordRules.IsFinished(AppealStatuses.Open, finalVoteRecorded: true).ShouldBeTrue();
+        RecordRules.IsFinished(AppealStatuses.Closed, finalVoteRecorded: false).ShouldBeTrue();
+        RecordRules.IsFinished(null, finalVoteRecorded: false).ShouldBeFalse();
+    }
+
+    [Theory]
+    [InlineData(null, true, "statement.required")]
+    [InlineData("  ", true, "statement.required")]
+    [InlineData(null, false, null)]
+    [InlineData("Paaiškinimas.", true, null)]
+    public void A_moderators_statement_is_checked_where_it_is_stored(string? statement, bool required, string? error) =>
+        StatementRules.Check(statement, required).ShouldBe(error);
+
+    [Fact]
+    public void A_moderators_statement_is_at_most_1000_characters()
+    {
+        StatementRules.Check(new string('a', 1000), required: true).ShouldBeNull();
+        StatementRules.Check(new string('a', 1001), required: false).ShouldBe("staff-statement.too-long");
+    }
+
     [Theory]
     [InlineData(AppealStatuses.Open, true)]
     [InlineData(AppealStatuses.Closed, true)]

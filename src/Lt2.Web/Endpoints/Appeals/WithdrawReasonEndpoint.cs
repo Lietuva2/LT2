@@ -2,6 +2,7 @@ using System.Security.Claims;
 using Lt2.Api.Contracts;
 using Lt2.Api.Contracts.Appeals;
 using Lt2.Appeals;
+using Lt2.SharedKernel;
 using Lt2.Web.Security;
 using Lt2.Web.Services;
 
@@ -29,7 +30,7 @@ internal static class WithdrawReasonEndpoint
         ErrorMapper errors,
         CancellationToken cancellationToken)
     {
-        var id = AppealMapping.UserId(user)!.Value;
+        var id = user.UserId()!.Value;
         var result = await appeals.WithdrawReasonAsync(reasonId, id, cancellationToken);
         return result.IsSuccess ? TypedResults.NoContent() : errors.ToResult(result.Error!);
     }

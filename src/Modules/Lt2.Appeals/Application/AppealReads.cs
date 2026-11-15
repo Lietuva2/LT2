@@ -8,6 +8,13 @@ namespace Lt2.Appeals.Application;
 /// <summary>The two threshold settings (design 8.12.2): the default of all bills and the administrator's minimum.</summary>
 internal sealed record ThresholdSettings(int Default, int Minimum);
 
+/// <summary>Query filters used by every read of bills' records.</summary>
+internal static class AppealQueries
+{
+    /// <summary>The rows that are a bill's record (open, closed or hidden; <see cref="RecordRules.RecordStatuses"/>).</summary>
+    public static IQueryable<Appeal> Records(this IQueryable<Appeal> appeals) => appeals.Where(a => RecordRules.RecordStatuses.Contains(a.Status));
+}
+
 /// <summary>
 /// Reads shared by the handlers: counts, thresholds, arguments with their authors' names, the bill's record. Counts are
 /// aggregates read from <c>appeals.position</c>; no read here returns who took which side.
@@ -33,16 +40,21 @@ internal sealed class AppealReads(
             assistant.IsConfigured && texts.CanRead && await settings.GetAsync(SettingKeys.AiSummariesPerDay, ct) > 0);
     }
 
-    /// <summary>The published counts of each given record: both sides, each with the count for accounts older than 30 days.</summary>
+    /// <summary>The live counts of each given record: both sides, each with the count for accounts older than 30 days.</summary>
     public async Task<Dictionary<Guid, SideCounts>> CountsAsync(AppealsDb db, IReadOnlyCollection<Guid> appealIds, CancellationToken ct)
     {
+        if (appealIds.Count == 0)
+        {
+            return [];
+        }
+
         var cutoff = CountRules.EstablishedBefore(clock.GetUtcNow());
         var rows = await db.Positions.AsNoTracking()
             .Where(p => appealIds.Contains(p.AppealId))
             .GroupBy(p => new { p.AppealId, p.Side })
             .Select(g => new { g.Key.AppealId, g.Key.Side, Total = g.Count(), Older = g.Count(p => p.MemberSince <= cutoff) })
             .ToListAsync(ct);
-        return appealIds.ToDictionary(
+        return appealIds.Distinct().ToDictionary(
             id => id,
             id =>
             {
@@ -52,25 +64,44 @@ internal sealed class AppealReads(
             });
     }
 
-    /// <summary>The surge note for a record, or <c>null</c> when the rule (design 6.6, three settings) does not hold.</summary>
-    public async Task<SurgeInfo?> SurgeAsync(AppealsDb db, Guid appealId, CancellationToken ct)
+    /// <summary>
+    /// The counts each given record shows (design 8.1): frozen ones once closed, live ones before. Live counts are read only
+    /// for records that have none frozen.
+    /// </summary>
+    public async Task<Dictionary<Guid, SideCounts>> ShownCountsAsync(AppealsDb db, IReadOnlyCollection<Appeal> records, CancellationToken ct)
     {
+        var live = await CountsAsync(db, records.Where(r => !ClosingRules.IsFrozen(r)).Select(r => r.Id).ToList(), ct);
+        return records.ToDictionary(r => r.Id, r => ClosingRules.Shown(r, live.GetValueOrDefault(r.Id) ?? SideCounts.None));
+    }
+
+    /// <summary>
+    /// The surge note of each given record that has one (design 6.6, three settings): records where the rule does not hold
+    /// are left out. One query for all of them.
+    /// </summary>
+    public async Task<Dictionary<Guid, SurgeInfo>> SurgesAsync(AppealsDb db, IReadOnlyCollection<Guid> appealIds, CancellationToken ct)
+    {
+        if (appealIds.Count == 0)
+        {
+            return [];
+        }
+
         var hours = await settings.GetAsync(SettingKeys.SurgeWindowHours, ct);
         var share = await settings.GetAsync(SettingKeys.SurgeMinimumShare, ct);
         var minimum = await settings.GetAsync(SettingKeys.SurgeMinimumAccounts, ct);
         var since = clock.GetUtcNow() - TimeSpan.FromHours(hours);
-        var counts = await db.Positions.AsNoTracking()
-            .Where(p => p.AppealId == appealId && p.CreatedAt >= since)
-            .GroupBy(p => 1)
-            .Select(g => new { Recent = g.Count(), New = g.Count(p => p.MemberSince >= since) })
-            .FirstOrDefaultAsync(ct);
-        if (counts is null || !SurgeRules.IsSurge(counts.Recent, counts.New, share, minimum))
-        {
-            return null;
-        }
-
-        return new SurgeInfo(SurgeRules.SharePercent(counts.Recent, counts.New), hours, counts.Recent, counts.New);
+        var rows = await db.Positions.AsNoTracking()
+            .Where(p => appealIds.Contains(p.AppealId) && p.CreatedAt >= since)
+            .GroupBy(p => p.AppealId)
+            .Select(g => new { AppealId = g.Key, Recent = g.Count(), New = g.Count(p => p.MemberSince >= since) })
+            .ToListAsync(ct);
+        return rows
+            .Where(r => SurgeRules.IsSurge(r.Recent, r.New, share, minimum))
+            .ToDictionary(r => r.AppealId, r => new SurgeInfo(SurgeRules.SharePercent(r.Recent, r.New), hours, r.Recent, r.New));
     }
+
+    /// <summary>The surge note for a record, or <c>null</c> when the rule (design 6.6) does not hold.</summary>
+    public async Task<SurgeInfo?> SurgeAsync(AppealsDb db, Guid appealId, CancellationToken ct) =>
+        (await SurgesAsync(db, [appealId], ct)).GetValueOrDefault(appealId);
 
     /// <summary>The threshold of a bill as everyone sees it; <paramref name="appeal"/> null for a bill without a record.</summary>
     public static ThresholdInfo Threshold(Appeal? appeal, SideCounts counts, ThresholdSettings threshold)
@@ -113,9 +144,7 @@ internal sealed class AppealReads(
     {
         var number = NormaliseBillNumber(billNumber);
         var query = tracking ? db.Appeals : db.Appeals.AsNoTracking();
-        return query.FirstOrDefaultAsync(
-            a => a.BillNumber == number && (a.Status == AppealStatuses.Open || a.Status == AppealStatuses.Closed || a.Status == AppealStatuses.Rejected),
-            ct);
+        return query.Records().FirstOrDefaultAsync(a => a.BillNumber == number, ct);
     }
 
     public static string NormaliseBillNumber(string number) => number.Trim().ToUpperInvariant();
@@ -131,15 +160,23 @@ internal sealed class BillRecords(IBillCatalogue bills, TimeProvider clock)
     /// The bill's record, created as an open one if the bill is active and has none. Must run inside a transaction (the
     /// bill's lock is held until it ends). <c>bill.not-found</c> for a bill not in the catalogue, <c>appeal.not-open</c>
     /// for a finished bill without a record. An existing record is returned whatever its status; the caller checks it.
+    /// With <paramref name="forWrite"/> the bill's lock is taken first and the record comes back tracked: the caller
+    /// changes it, and writes to one bill's record are serialised (design 6.8).
     /// </summary>
-    public async Task<Result<Appeal>> EnsureAsync(AppealsDb db, string billNumber, CancellationToken ct)
+    public async Task<Result<Appeal>> EnsureAsync(AppealsDb db, string billNumber, CancellationToken ct, bool forWrite = false)
     {
-        if (await AppealReads.FindRecordAsync(db, billNumber, tracking: false, ct) is { } existing)
+        var number = AppealReads.NormaliseBillNumber(billNumber);
+        if (forWrite)
+        {
+            await AdvisoryLocks.BillAsync(db, number, ct);
+        }
+
+        if (await AppealReads.FindRecordAsync(db, number, tracking: forWrite, ct) is { } existing)
         {
             return existing;
         }
 
-        var bill = await bills.FindAsync(AppealReads.NormaliseBillNumber(billNumber), ct);
+        var bill = await bills.FindAsync(number, ct);
         if (bill is null)
         {
             return Error.NotFound("bill.not-found");
@@ -150,11 +187,15 @@ internal sealed class BillRecords(IBillCatalogue bills, TimeProvider clock)
             return RuleErrors.Of(finished);
         }
 
-        // Only creating takes the bill's lock, so taking part on a bill that has its record is never serialised per bill.
-        await ParticipationLock.TakeBillAsync(db, bill.Number, ct);
-        if (await AppealReads.FindRecordAsync(db, bill.Number, tracking: false, ct) is { } meanwhile)
+        // Only creating, or writing, takes the bill's lock, so taking part on a bill that has its record is never serialised
+        // per bill.
+        if (!forWrite)
         {
-            return meanwhile;
+            await AdvisoryLocks.BillAsync(db, number, ct);
+            if (await AppealReads.FindRecordAsync(db, number, tracking: false, ct) is { } meanwhile)
+            {
+                return meanwhile;
+            }
         }
 
         var now = clock.GetUtcNow();
@@ -170,7 +211,11 @@ internal sealed class BillRecords(IBillCatalogue bills, TimeProvider clock)
         };
         db.Appeals.Add(record);
         await db.SaveChangesAsync(ct);
-        db.Entry(record).State = EntityState.Detached;
+        if (!forWrite)
+        {
+            db.Entry(record).State = EntityState.Detached;
+        }
+
         return record;
     }
 
@@ -185,4 +230,13 @@ internal sealed class BillRecords(IBillCatalogue bills, TimeProvider clock)
 
         return await bills.FinalVoteAsync(bill.Number, ct) is null ? bill : Error.Conflict("appeal.not-open");
     }
+
+    /// <summary>
+    /// Whether the Seimas has finished the bill (design 6.8, <see cref="RecordRules.IsFinished"/>): the one answer for taking
+    /// part and for organisations' statements.
+    /// </summary>
+    public async Task<bool> IsFinishedAsync(string? recordStatus, string billNumber, CancellationToken ct) =>
+        RecordRules.IsFinished(
+            recordStatus,
+            finalVoteRecorded: recordStatus != AppealStatuses.Closed && await bills.FinalVoteAsync(AppealReads.NormaliseBillNumber(billNumber), ct) is not null);
 }

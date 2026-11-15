@@ -19,15 +19,15 @@ public sealed class ReasonSimilarityTests
 
     [Fact]
     public void Case_punctuation_and_lithuanian_letters_do_not_make_an_argument_different() =>
-        ReasonSimilarity.AreSimilar(Existing, "didziausias pajamas gaunantys dabar moka mazesni efektyvuji tarifa nei samdomi darbuotojai").ShouldBeTrue();
+        ReasonSimilarity.Score(Existing, "didziausias pajamas gaunantys dabar moka mazesni efektyvuji tarifa nei samdomi darbuotojai").ShouldBeGreaterThanOrEqualTo(ReasonSimilarity.Threshold);
 
     [Fact]
     public void Other_word_endings_and_small_rewordings_are_still_similar() =>
-        ReasonSimilarity.AreSimilar(Existing, "Daugiausia pajamų gaunantieji moka mažesnį efektyvų tarifą negu samdomi darbuotojai").ShouldBeTrue();
+        ReasonSimilarity.Score(Existing, "Daugiausia pajamų gaunantieji moka mažesnį efektyvų tarifą negu samdomi darbuotojai").ShouldBeGreaterThanOrEqualTo(ReasonSimilarity.Threshold);
 
     [Fact]
     public void A_different_argument_is_not_similar() =>
-        ReasonSimilarity.AreSimilar(Existing, "Gynyba finansuojama nekeliant PVM.").ShouldBeFalse();
+        ReasonSimilarity.Score(Existing, "Gynyba finansuojama nekeliant PVM.").ShouldBeLessThan(ReasonSimilarity.Threshold);
 
     [Fact]
     public void At_most_three_similar_arguments_are_offered_most_similar_first()
@@ -130,5 +130,15 @@ public sealed class ModerationNoticeTests
     {
         var text = Template().Render(new ModerationNoticeEmail("ruta@pavyzdys.test", notice, "XVP-0412", "Pataisa", null)).TextBody;
         System.Text.RegularExpressions.Regex.IsMatch(text, @"(?i)(?<!\p{L})(už|prieš|for|against)(?!\p{L})").ShouldBeFalse(text);
+    }
+
+    [Fact]
+    public void The_line_breaks_of_a_statement_are_kept_in_the_html_part_and_its_text_is_encoded()
+    {
+        var email = Template().Render(new ModerationNoticeEmail(
+            "ruta@pavyzdys.test", ModerationNotices.ReasonHidden, "XVP-0412", "Pataisa", "Pirma eilutė.\r\nAntra <eilutė>.\nTrečia."));
+
+        email.HtmlBody.ShouldNotBeNull().ShouldContain("Pirma eilutė.<br>Antra &lt;eilutė&gt;.<br>Trečia.");
+        email.TextBody.ShouldContain("Pirma eilutė.\r\nAntra <eilutė>.\nTrečia.");
     }
 }

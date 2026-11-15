@@ -20,8 +20,9 @@ public static class OrganisationRoutes
     /// <summary>Design 8.14.14, stage B: the organisation's invitation code, to its representatives only.</summary>
     public const string Invitation = Organisation + "/invitation";
     public const string ReplaceInvitation = Invitation + "/replace";
-    public const string Invite = ApiRoutes.Prefix + "/organisation-invites/{token}";
-    public const string AcceptInvite = Invite + "/accept";
+    /// <summary>A representative's one-time link: the token goes in the request body, never in the address (design 6.8).</summary>
+    public const string Invite = ApiRoutes.Prefix + "/organisation-invites/view";
+    public const string AcceptInvite = ApiRoutes.Prefix + "/organisation-invites/accept";
     public const string Mine = ApiRoutes.Prefix + "/me/organisations";
     public const string OnBill = ApiRoutes.Prefix + "/bills/{number}/organisations";
     public const string MineOnBill = OnBill + "/mine";
@@ -64,10 +65,6 @@ public static class OrganisationRoutes
 
     public static string ReplaceInvitationOf(string slug) => Of(slug) + "/invitation/replace";
 
-    public static string InviteOf(string token) => $"{ApiRoutes.Prefix}/organisation-invites/{Uri.EscapeDataString(token)}";
-
-    public static string AcceptInviteOf(string token) => InviteOf(token) + "/accept";
-
     public static string OnBillOf(string number) => $"{ApiRoutes.Prefix}/bills/{Uri.EscapeDataString(number)}/organisations";
 
     public static string MineOnBillOf(string number) => OnBillOf(number) + "/mine";
@@ -108,7 +105,7 @@ public interface IOrganisationsApi
 
     Task<ApiResult<InviteResponse>> GetInviteAsync(string token, CancellationToken cancellationToken = default);
 
-    Task<ApiResult<OrganisationCreatedResponse>> AcceptInviteAsync(string token, CancellationToken cancellationToken = default);
+    Task<ApiResult<InviteAcceptedResponse>> AcceptInviteAsync(string token, CancellationToken cancellationToken = default);
 
     Task<ApiResult> RemoveRepresentativeAsync(string slug, Guid representativeId, CancellationToken cancellationToken = default);
 
@@ -173,7 +170,7 @@ public sealed class OrganisationRequestValidator : AbstractValidator<Organisatio
             .WithMessage(l["Organisation.Name"]);
         RuleFor(x => x.Description).Must(d => d is null || d.Trim().Length <= OrganisationLimits.DescriptionMaxLength).WithMessage(l["Organisation.Description"]);
         RuleFor(x => x.Website).Must(w => UserLink.IsEmptyOrAcceptable(w, OrganisationLimits.WebsiteMaxLength)).WithMessage(l["Organisation.Website"]);
-        RuleFor(x => x.LegalCode).Must(c => string.IsNullOrWhiteSpace(c) || (c.Trim().Length is >= 7 and <= 9 && c.Trim().All(char.IsAsciiDigit)))
+        RuleFor(x => x.LegalCode).Must(c => string.IsNullOrWhiteSpace(c) || (c.Trim().Length is >= OrganisationLimits.LegalCodeMinLength and <= OrganisationLimits.LegalCodeMaxLength && c.Trim().All(char.IsAsciiDigit)))
             .WithMessage(l["Organisation.LegalCode"]);
     }
 }

@@ -39,6 +39,14 @@ public static class AppealLimits
 
     /// <summary>The longest official text's address a description may carry (<c>appeal.description_url</c>, design 8.13).</summary>
     public const int DescriptionUrlMaxLength = 500;
+
+    /// <summary>The pasted official text for an AI draft (design 8.11.4): never cut, so the form says the length instead.</summary>
+    public const int DraftSourceMaxLength = 20_000;
+
+    /// <summary>A date flag's link to its source and its note (design 8.4).</summary>
+    public const int FlagLinkMaxLength = 500;
+
+    public const int FlagNoteMaxLength = 1000;
 }
 
 /// <summary>

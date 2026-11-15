@@ -29,7 +29,7 @@ internal static class AppealValidation
 /// <summary>The pasted official text for an AI draft (design 8.11.4): required, at most 20 000 characters, never cut.</summary>
 public sealed class DescriptionDraftRequestValidator : AbstractValidator<DescriptionDraftRequest>
 {
-    public const int SourceMaxLength = 20_000;
+    public const int SourceMaxLength = AppealLimits.DraftSourceMaxLength;
 
     public DescriptionDraftRequestValidator(IStringLocalizer<ValidationMessages> l) =>
         RuleFor(x => x.SourceText).Cascade(CascadeMode.Stop)
@@ -115,9 +115,9 @@ public sealed class FlagRequestValidator : AbstractValidator<FlagRequest>
     public FlagRequestValidator(IStringLocalizer<ValidationMessages> l)
     {
         RuleFor(x => x.Kind).Must(k => k is "date-wrong" or "sooner").WithMessage(l["Flag.Kind"]);
-        RuleFor(x => x.Link).Must(link => link.Length <= 500 && Uri.TryCreate(link, UriKind.Absolute, out var uri) && uri.Scheme is "http" or "https")
+        RuleFor(x => x.Link).Must(link => link.Length <= AppealLimits.FlagLinkMaxLength && Uri.TryCreate(link, UriKind.Absolute, out var uri) && uri.Scheme is "http" or "https")
             .WithMessage(l["Flag.Link"]);
-        RuleFor(x => x.Note).Must(n => n is null || n.Trim().Length <= 1000).WithMessage(l["Report.TooLong"]);
+        RuleFor(x => x.Note).Must(n => n is null || n.Trim().Length <= AppealLimits.FlagNoteMaxLength).WithMessage(l["Report.TooLong"]);
     }
 }
 

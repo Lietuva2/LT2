@@ -1,0 +1,13 @@
+# What docker build never needs from the repository (deploy/Dockerfile, tools/Lt2.SeimasStandIn/Dockerfile): build
+# output of a working tree (a Windows obj/ would break the restore inside the image), secrets, the git history, editor
+# and agent folders, test results.
+**/bin/
+**/obj/
+.git/
+.vs/
+.vscode/
+.idea/
+.claude/
+deploy/secrets/
+**/TestResults/
+tests/Lt2.E2E/output/

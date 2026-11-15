@@ -1,0 +1,39 @@
+@using Lt2.Api.Contracts.Appeals
+@inject IStringLocalizer<AppealUi> L
+
+@* An argument as a moderator sees it, in the queue and in the panel on the bill's page alike (design 8.3, 8.12.3): the
+   side it was written for, waiting or seen, pre-screening flags, the text and the author's display name, open reports,
+   and the actions. Never the author's own side. In the panel its ids start with "panel-", so they do not repeat the
+   ids of the same argument in the public list beside it. *@
+<article class="@(Panel ? "stack stack--tight" : "sheet stack")" id="@(Panel ? "panel" : "queue")-reason-@Reason.Id" aria-label="@L["Mod.Reason"]">
+    <div class="row">
+        @if (!Panel)
+        {
+            <span class="tag tag--ink num">@Reason.Bill.Number</span>
+        }
+        <span class="choice choice--@Reason.Side">@L["Reasons." + Reason.Side]</span>
+        <span class="tag">@L[ModerationWords.StatusKey(Reason.Status, Reason.Seen)]</span>
+        @foreach (var flag in Reason.Flags)
+        {
+            <span class="tag tag--people">@L["Mod.Flag." + flag]</span>
+        }
+    </div>
+    <div class="said">
+        <p class="bubble bubble--people voice">@Reason.Text</p>
+        <div class="said__by"><b>@(Reason.AuthorName ?? L["Reasons.Anonymous"])</b></div>
+    </div>
+    <Reports Items="Reason.Reports" />
+    <ModerationActions Id="Reason.Id" Kind="reason" Status="@Reason.Status" MergeCandidates="Reason.MergeCandidates" IdPrefix="@(Panel ? "panel-" : "")"
+                       OnDone="OnDone" OnRestricted="OnRestricted" />
+</article>
+
+@code {
+    [Parameter, EditorRequired] public QueueReasonResponse Reason { get; set; } = default!;
+
+    /// <summary>In the panel on the bill's page: no bill tag, a lighter frame, ids starting with "panel-".</summary>
+    [Parameter] public bool Panel { get; set; }
+
+    [Parameter] public EventCallback<string> OnDone { get; set; }
+
+    [Parameter] public EventCallback OnRestricted { get; set; }
+}

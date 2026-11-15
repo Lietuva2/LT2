@@ -31,7 +31,7 @@
 
 @if (_page is { } page)
 {
-    <p class="small num" id="organisation-count">@string.Format(System.Globalization.CultureInfo.InvariantCulture, L["Org.List.Count"], page.Total)</p>
+    <p class="small num" id="organisation-count">@L.Format("Org.List.Count", Display.Number(page.Total))</p>
     @if (page.Items.Count == 0)
     {
         <p id="no-organisations">@L[string.IsNullOrWhiteSpace(Q) ? "Org.List.None" : "Org.List.NoneFound"]</p>

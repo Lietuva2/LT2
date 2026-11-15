@@ -445,7 +445,11 @@ body > .page { width: 100%; }
   text-decoration: underline; text-decoration-thickness: 1.5px; text-underline-offset: 3px;
 }
 .linkish:hover { text-decoration-thickness: 3px; }
-.btn:disabled, .linkish:disabled { opacity: 0.6; cursor: progress; }
+.btn:disabled, .linkish:disabled, .mark:disabled { opacity: 0.6; cursor: not-allowed; }
+/* A disabled plain button does not answer the pointer as if it could be pressed. */
+.btn--plain:disabled:hover { background: none; color: var(--ink); }
+/* A textarea with an error is marked like an input with one. */
+.field--error .textarea { border-color: var(--error); }
 
 /* Blazor's error bar. */
 #blazor-error-ui {
@@ -514,8 +518,22 @@ body > .page { width: 100%; }
 fieldset { margin: 0; padding: 0; border: 0; min-width: 0; }
 legend { padding: 0; font-weight: 600; }
 .said__by .linkish { font-size: var(--fs-1); }
-.report-visitor > summary { display: inline; cursor: pointer; }
+/* A text one click away (design 8.15, owner 2026-11-15): the browser's own <details class="more">, a link-looking summary
+   without the triangle, the opened text spaced like a stack. No script, so it opens on server-rendered pages and inside
+   an island before it starts. The visitor's "Pranešti" stays inline beside the argument's other actions. */
+.more > summary { align-self: flex-start; cursor: pointer; list-style: none; }
+.more > summary::-webkit-details-marker { display: none; }
+.more > summary::marker { content: ""; }
+/* A <details> lays out what follows its summary in one block of its own, so the stack's gap does not reach between those
+   children: a paragraph and the .fine link under it would touch. Give them the stack's gap as a margin instead. */
+.more.stack > :not(summary) + :not(summary) { margin-top: var(--sp-5); }
+.more.stack--tight > :not(summary) + :not(summary) { margin-top: var(--sp-3); }
+.report-visitor > summary { display: inline; }
 .report-visitor[open] > p { margin-top: var(--sp-2); }
+
+/* A live region (status and error messages, "copied"): in the page from the start so screen readers announce what appears
+   in it, taking no room of its own while empty. */
+.live { display: contents; }
 
 /* Feedback balloon (design 8.10): a disclosure, so it opens and closes without JavaScript. The button floats in the
    bottom corner at every width; the page ends with room for it, so nothing at the end of a page lies under it (while
@@ -545,10 +563,6 @@ body { padding-block-end: 4.5rem; }
 }
 @keyframes feedback-slide { from { transform: translateY(0.75rem); opacity: 0; } to { transform: none; opacity: 1; } }
 
-/* Old and new text side by side (a proposed description change, design 8.1); one under the other on a phone. */
-.compare { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--sp-5); }
-.compare > * { border-left: 3px solid var(--rule); padding-left: var(--sp-4); }
-@media (max-width: 36rem) { .compare { grid-template-columns: minmax(0, 1fr); gap: var(--sp-4); } }
 
 /* A queue item's actions (design 8.3): one control each, wrapping on a narrow screen; choosing one opens its fields. */
 .actions { display: flex; flex-wrap: wrap; gap: var(--sp-2) var(--sp-3); align-items: center; }

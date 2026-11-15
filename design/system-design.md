@@ -524,6 +524,56 @@ SBOM per release, images signed and pulled by digest. Containers run as non-root
 file system and dropped capabilities. A `security.txt` and a disclosure address. An external penetration test before the
 first real summary is sent.
 
+### 6.8 Rules made explicit after the code review of 2026-11-15
+
+**[Designer's reading of rules this document already has, written down so the code can be checked against them. None
+changes what a person can do on the site; the questions that do are in section 12.]**
+
+- **Nothing held back becomes public through history.** A text that pre-screening held and no moderator published was
+  never public, and no history shows it: an organisation statement's "earlier versions" (8.14.14) are only the
+  versions that were public.
+- **A flagged change is looked at.** When an organisation changes its description and pre-screening flags the new
+  text, the organisation returns to the moderators' queue, as it does for a new name or website (8.14.14).
+- **A report is closed only by an action that answers it.** Keeping, hiding, restoring, publishing, describing and
+  confirming answer a report on their target; setting a threshold or a planned date, holding and releasing do not.
+- **A finished bill is finished for everyone at the same moment.** Once the bill's final vote is recorded, taking part
+  (a side, an argument, "Man svarbu", a withdrawal) is refused, as an organisation's statement already is, whether or
+  not the hourly job has closed the record yet.
+- **Writes to one bill's record are serialised.** A moderator's description and the summary job's text cannot
+  overwrite each other, and a description a person wrote is never written over by the job (8.13).
+- **A reset ends sessions.** When an administrator resets a staff account or a role is activated, the sessions that
+  were signed in with the removed passkeys end in the same step (6.2).
+- **One current code.** A member has at most one personal invitation code that works, enforced by the database, as
+  an organisation has (6.2, 8.14.6).
+- **Limits hold under parallel requests.** Sign-in codes per address, "one urgent summary a week" and the summary
+  ceilings are counted under a lock (6.2, 8.4).
+- **Rules are checked where the data is written.** A rule checked only by the HTTP validators does not hold for
+  callers inside the server: the explicit consent for party support, the display name's length and a moderation
+  statement's presence and length are checked by the module that stores them.
+- **The outbox forgets.** Deleting an account, and purging an unfinished registration, delete the outbox rows
+  addressed to that person that were not sent. Rows that failed are deleted after 30 days. An error stored or logged
+  for a failed email holds the error's type and the server's status code, never its text, which can quote the address.
+- **Sign-in codes go first.** The dispatcher sends sign-in and confirmation codes before any other waiting email, so
+  a large batch of follow emails cannot delay a code past its lifetime (8.4 separates the streams by sender address;
+  this is the order within the queue).
+- **Redirects stay inside the allowlist.** An outbound request does not follow a redirect to a host that is not on
+  the allowlist (6.4).
+- **Codes and tokens are not sent in addresses.** A link the site makes carries its secret after the `#`: the
+  invitation code of a registration link (`/prisijungti#kodas=…`, with `tikslas` beside it) and the token of a
+  representative's invitation. The browser never sends that part, so no proxy and no application log can hold it,
+  on a shared server included (9.2). The page reads it in the browser and passes it to the API in a request body,
+  never in a path or a query. A link in the old form (`?kodas=…`) still works, and the proxy's filter that drops
+  `kodas` from the logged address stays for those (6.2).
+- **Forwarded addresses are believed only from the proxy itself.** On a shared Docker network the proxy's
+  neighbours are not the proxy: the application believes the forwarding headers only from the proxy's own address,
+  named in its configuration, not from a whole network.
+- **A signed-in page is not stored.** HTML pages answered to a signed-in session carry `Cache-Control: no-store`,
+  as `/api` already does: such a page can hold the person's own side or invitation code (6.4). Today visitors'
+  pages are not stored either, because a page with an island issues an antiforgery token; making them cacheable
+  would be its own change.
+- **A page that parses to nothing changes nothing.** When the agenda watcher finds sitting dates but no bill at all
+  while planned items exist, it keeps the items, records the run as failed and alerts (8.9), until the owner decides
+  otherwise (section 12).
 ## 7. Stage 1: MP profiles
 
 ### 7.1 Sources
@@ -1943,6 +1993,40 @@ reading of them; each can be changed on the built result.]
   sending on wrong ones.
 - Deleting an account removes its positions and lowers the live counts.
 
+### 8.15 Explanatory text on screens
+
+**[Decided by the owner on 2026-11-15, on the built site: "too much explanatory texts, which add noise"; keep the first
+paragraph inline, put the rest under a link or on the methodology page. The rule and the pattern are the designer's.]**
+
+- **What a screen shows without being asked:** its title, at most one short paragraph that says what this is, the
+  fields with their labels, and the action. Every other explanation is one click away.
+- **One click away means one of two places.** On the same page, collapsed behind a short link that names what opens
+  ("Kaip tai veikia", "Kas yra riba?"; a bare "Plačiau" only where it is the only one on the screen). Or on the
+  methodology page (`/metodika`) or the moderation rules, reached by a short link to the part that says it. A text
+  that explains how the site works in general belongs on the methodology page and is not repeated on screens.
+- **What stays inline, always:** what becomes public and under whose name; what cannot be undone; a consent and what
+  it covers; the notice that the data is invented; "this is not a representative poll" wherever the numbers are;
+  that summaries are a trial and nothing is sent; status and error messages; labels; a field's hint when it is needed
+  to fill the field (a format, a limit); and what this design requires beside a piece of data (a description's source
+  label and date, the count of accounts older than 30 days, a moderator's statement).
+- **One pattern for collapsed text:** the browser's own `<details>` with the class `more` and a link-looking summary.
+  Opening it needs no script, so it works on server-rendered pages, with JavaScript off, and inside an island before
+  it starts. An island never sets its open state from code. When an island starts it replaces the prerendered markup,
+  which would close what the person had opened; one small script (`lt2-disclosures.js`) remembers which were opened
+  and opens them again. The existing disclosures take the same class.
+- **The methodology page takes what leaves the screens:** new parts "Planuojamos datos" and "Kas matoma viešai, o kas
+  ne", two sentences more in "Organizacijų pozicijos", two rows more in the summary rules, an address for the row
+  "Riba" (`/metodika#riba`), and a lead that describes the whole site, not only MP profiles.
+- **Screen by screen:** `design/text-audit-2026-11-15.md` lists every explanatory text with what happens to it (keep,
+  shorten, under a link, to the methodology page, delete) and the new wording. It is the specification for this
+  change; its new Lithuanian texts are drafts until a native speaker has read them.
+- **New screens follow the rule.** A text added later that explains instead of labels goes behind a link or to the
+  methodology page from the start.
+
+**Done when:** the organisation registration form shows one sentence before its first field and the rest behind "Kaip
+tai veikia"; every row of the annex is applied or listed as not applied with the reason; no screen lost a text from
+"what stays inline"; every link to a methodology part lands on a part that exists; the collapsed texts open without
+JavaScript.
 ## 9. Hosting and operations
 
 ### 9.1 Layout
@@ -1986,11 +2070,14 @@ also runs the owner's other sites:
   for the site, and adds `X-Robots-Tag: noindex, nofollow`, since a trial with invented data must not be indexed.
   Nothing else on the server is changed: no other site's block, container, volume, port or firewall rule.
 - **Reading the caught emails [decided by the owner on 2026-11-15].** Whoever reads Mailpit reads every sign-in code
-  and can sign in as anyone, staff included, so it is never open. Its web interface has its own hostname, served by
-  the server's Caddy over HTTPS only and marked `noindex`, and Mailpit itself asks for a name and password (its own
-  password file, generated on the server, the password kept in a root-only file there and nowhere else). Its own
-  hostname, not a path of the site: the viewer shows the HTML of emails and must not share the site's origin. No port
-  is opened for it; the SMTP port stays on the internal network. Locally Mailpit stays without a password.
+  and can sign in to any account (a staff account only as an ordinary member, 6.2), so it is never open. Its web
+  interface has its own hostname, served by the server's Caddy over HTTPS only and marked `noindex`, and Mailpit
+  itself asks for a name and password (its own password file, generated on the server). The password is in a
+  root-only file on the server and in one copy that the owner keeps in their own private storage, to read the emails
+  from another device. It is nowhere else: in no repository and on no developer's machine. Whoever changes the
+  password replaces the owner's copy too. Its own hostname, not a path of the site: the viewer shows the HTML of
+  emails and must not share the site's origin. No port is opened for it; the SMTP port stays on the internal network.
+  Locally Mailpit stays without a password.
 - **Delivery.** Images are built from the deployed commit on the developer's machine and copied to the server over
   SSH; nothing is pushed to a registry or to GitHub. The migrator runs once per deploy, as in 9.3.
 - **Not there yet, owed before production:** the host hardening of 9.1 (a named deploy user, a non-default SSH port,

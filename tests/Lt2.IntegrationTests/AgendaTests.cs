@@ -16,7 +16,7 @@ public sealed partial class AgendaTests(DatabaseFixture database) : ApiTest(data
     [Fact]
     public async Task The_agenda_lists_planned_bills_by_day_with_both_sides_for_every_bill()
     {
-        using var moderator = await StaffMembers.ActiveAsync(Factory, Database, "moderator");
+        using var moderator = await StaffMembers.SharedAsync(Factory, Database, "moderator");
         var (initiator, _) = await Factory.MemberAsync();
         using var _i = initiator;
         var appeal = await Database.PrepareBillAsync(initiator, moderator.Browser, AppealSteps.ThirdBill, "for");
@@ -50,7 +50,7 @@ public sealed partial class AgendaTests(DatabaseFixture database) : ApiTest(data
             var html = WebUtility.HtmlDecode(await visitor.Client.GetStringAsync("/darbotvarke"));
             html.ShouldContain("<h1>Seimo darbotvarkė</h1>");
             html.ShouldContain("Planuojama ");
-            html.ShouldContain("id=\"agenda-" + AppealSteps.SecondBill + "\"");
+            html.ShouldMatch("id=\"agenda-\\d{4}-\\d{2}-\\d{2}-" + AppealSteps.SecondBill + "\"");
             html.ShouldContain("Dar niekas nenurodė, ko prašo");
             html.ShouldNotContain("Kreipimosi prašo");
             html.ShouldNotContain("/kreipimasis\"");
@@ -61,6 +61,35 @@ public sealed partial class AgendaTests(DatabaseFixture database) : ApiTest(data
         {
             await Database.UnplanAsync(AppealSteps.SecondBill);
             await Database.UnplanAsync(AppealSteps.ThirdBill);
+        }
+    }
+
+    [Fact]
+    public async Task A_bill_whose_moderator_date_has_passed_is_on_the_agenda_at_its_newer_date()
+    {
+        await Database.FreeBillAsync(AppealSteps.SecondBill);
+        var today = ReasonsToComeSteps.VilniusToday();
+        await Database.UnplanAsync(AppealSteps.SecondBill);
+        await Database.ExecuteAsync(
+            """
+            INSERT INTO parliament.planned_item (id, bill_number, planned_date, stage, source, first_seen, last_seen, note)
+            VALUES (gen_random_uuid(), @b, @past, 'consideration', 'moderator', now() - interval '20 days', now() - interval '20 days', 'Pataisyta data.'),
+                   (gen_random_uuid(), @b, @next, 'adoption', 'agenda', now(), now(), NULL)
+            """,
+            ("b", AppealSteps.SecondBill), ("past", today.AddDays(-3)), ("next", today.AddDays(4)));
+        try
+        {
+            using var visitor = NewBrowser();
+            var agenda = await visitor.GetJsonAsync<AgendaResponse>(AgendaRoutes.Agenda);
+            var item = agenda.Days.Single(d => d.Date == today.AddDays(4)).Items.Single(i => i.Number == AppealSteps.SecondBill);
+            item.Stage.ShouldBe("adoption");
+
+            var html = WebUtility.HtmlDecode(await visitor.Client.GetStringAsync("/darbotvarke"));
+            html.ShouldContain($"id=\"agenda-{today.AddDays(4):yyyy-MM-dd}-{AppealSteps.SecondBill}\"");
+        }
+        finally
+        {
+            await Database.UnplanAsync(AppealSteps.SecondBill);
         }
     }
 
@@ -163,7 +192,7 @@ public sealed partial class AgendaTests(DatabaseFixture database) : ApiTest(data
             using var visitor = NewBrowser();
             var html = WebUtility.HtmlDecode(await visitor.Client.GetStringAsync("/"));
             html.ShouldContain("Artimiausiu metu Seime");
-            html.ShouldContain("id=\"agenda-" + AppealSteps.SecondBill + "\"");
+            html.ShouldMatch("id=\"agenda-\\d{4}-\\d{2}-\\d{2}-" + AppealSteps.SecondBill + "\"");
             html.ShouldContain("href=\"/darbotvarke\"");
             html.ShouldNotContain("id=\"home-appeals\"");
             html.ShouldContain("Tai nėra reprezentatyvi apklausa");

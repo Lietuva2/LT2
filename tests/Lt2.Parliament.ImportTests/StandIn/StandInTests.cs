@@ -16,13 +16,13 @@ public sealed class StandInTests
 
         var responses = new[]
         {
-            await client.GetTermsAsync(default),
-            await client.GetMembersAsync(10, default),
-            await client.GetSessionsAsync(10, default),
-            await client.GetSittingsAsync(99000101, default),
-            await client.GetAgendaAsync(99001001, default),
-            await client.GetProceedingsAsync(99001001, default),
-            await client.GetVoteResultsAsync(99100002, default),
+            await client.GetAsync(SeimasRequest.Terms(), default),
+            await client.GetAsync(SeimasRequest.Members(10), default),
+            await client.GetAsync(SeimasRequest.Sessions(10), default),
+            await client.GetAsync(SeimasRequest.Sittings(99000101), default),
+            await client.GetAsync(SeimasRequest.Agenda(99001001), default),
+            await client.GetAsync(SeimasRequest.Proceedings("posedzio_id", 99001001), default),
+            await client.GetAsync(SeimasRequest.VoteResults(99100002), default),
         };
 
         responses.ShouldAllBe(r => r.Synthetic);
@@ -35,7 +35,7 @@ public sealed class StandInTests
     {
         var client = SeimasClientTests.Build(new StandInHandler(StandInFixture.Responses()));
 
-        var response = await client.GetVoteResultsAsync(12345, default);
+        var response = await client.GetAsync(SeimasRequest.VoteResults(12345), default);
 
         Encoding.UTF8.GetString(response.Body).ShouldContain("<SeimoInformacija/>");
         response.Synthetic.ShouldBeTrue();

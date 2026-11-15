@@ -1,0 +1,57 @@
+@inherits InteractiveBase<Lt2.Web.Client.Appeals.AppealUi>
+@inject NavigationManager Navigation
+@inject IJSRuntime JS
+
+@* A link to share and "Kopijuoti nuorodą" (design 6.2, 8.11.5, 8.14.14): the full address shown (optionally), what the
+   caller puts between, and the copy button with its status in a live region that is in the page from the start. A
+   browser that refuses the clipboard gets a message instead of an error. *@
+@if (LinkId is not null)
+{
+    <p class="share__link"><a href="@Link" id="@LinkId">@Absolute</a></p>
+}
+@ChildContent
+<div class="row">
+    <button type="button" class="btn btn--plain" id="@ButtonId" disabled="@Locked" @onclick="CopyAsync">@L["Share.Copy"]</button>
+    <span class="small live" role="status">@_said</span>
+</div>
+
+@code {
+    private string? _said;
+    private string? _copiedLink;
+
+    /// <summary>The link, relative to the site (for example <c>/prisijungti#kodas=…</c>) or absolute.</summary>
+    [Parameter, EditorRequired] public string Link { get; set; } = "";
+
+    /// <summary>When set, the address is shown above the button as a link with this id.</summary>
+    [Parameter] public string? LinkId { get; set; }
+
+    [Parameter, EditorRequired] public string ButtonId { get; set; } = "";
+
+    [Parameter] public RenderFragment? ChildContent { get; set; }
+
+    private string Absolute => Navigation.ToAbsoluteUri(Link).ToString();
+
+    protected override void OnParametersSet()
+    {
+        // A replaced code is a new link: "copied" no longer applies.
+        if (_copiedLink is not null && _copiedLink != Link)
+        {
+            _said = null;
+            _copiedLink = null;
+        }
+    }
+
+    private Task CopyAsync() => RunAsync(async () =>
+    {
+        try
+        {
+            await JS.InvokeVoidAsync("navigator.clipboard.writeText", Absolute);
+            _said = L["Share.Copied"];
+            _copiedLink = Link;
+        }
+        catch (JSException)
+        {
+            _said = L["Share.CopyFailed"];
+        }
+    });
+}

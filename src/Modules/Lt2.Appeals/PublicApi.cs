@@ -5,7 +5,7 @@ namespace Lt2.Appeals;
 // What the Appeals module answers and accepts. Codes are lower-case English words, stable for the API: side for |
 // against; record status open | closed | rejected (hidden by a moderator); reason status pending | published | hidden |
 // merged; threshold set by default | moderator; description source initiator | moderator | ai-draft | ai; report target
-// appeal | reason.
+// appeal (its description) | reason | organisation | statement.
 //
 // Design 8.12: every active bill is open. A bill's record (the appeal) is created when first needed and has no
 // initiator; the answers for an active bill without one are the empty open state, not "not found".
@@ -132,9 +132,6 @@ public sealed record ReasonCreated(Guid Id, string Status);
 
 public sealed record NewReport(string TargetKind, Guid TargetId, string Ground, string? Text);
 
-/// <summary>Who acts as a moderator, for the audit log (design 8.3).</summary>
-public sealed record ModeratorActor(Guid UserId, string Role, string? IpHash);
-
 public sealed record QueueReport(Guid Id, string Ground, string? Text, DateTimeOffset CreatedAt);
 
 /// <summary>
@@ -256,28 +253,28 @@ public interface IAppealsModeration
     Task<ModerationItems> QueueAsync(CancellationToken cancellationToken);
 
     /// <summary>"Palikti": keeps a reported or flagged record as it is; its open reports and date flags close.</summary>
-    Task<Result<Unit>> KeepAppealAsync(Guid appealId, string? statement, ModeratorActor moderator, CancellationToken cancellationToken);
+    Task<Result<Unit>> KeepAppealAsync(Guid appealId, string? statement, StaffActor moderator, CancellationToken cancellationToken);
 
     /// <summary>Hides a bill's record: taking part on the bill closes; sides and arguments are kept unseen (design 8.12.3).</summary>
-    Task<Result<Unit>> HideAppealAsync(Guid appealId, string statement, ModeratorActor moderator, CancellationToken cancellationToken);
+    Task<Result<Unit>> HideAppealAsync(Guid appealId, string statement, StaffActor moderator, CancellationToken cancellationToken);
 
     /// <summary>
     /// Writes or corrects the description of an active bill (design 8.12.3, 8.13), creating the bill's record if needed:
     /// shown at once, recorded in the public history, audited with the required statement.
     /// </summary>
-    Task<Result<Unit>> WriteDescriptionAsync(string billNumber, ModeratorDescription request, ModeratorActor moderator, CancellationToken cancellationToken);
+    Task<Result<Unit>> WriteDescriptionAsync(string billNumber, ModeratorDescription request, StaffActor moderator, CancellationToken cancellationToken);
 
     /// <summary>
     /// Confirms an AI summary nobody has read (design 8.13): the text stays and its label becomes "Sukurta DI · taisė
     /// žmonės" (<c>ai-draft</c>). Audited with the optional note; open reports on the description close.
     /// </summary>
-    Task<Result<Unit>> ConfirmDescriptionAsync(string billNumber, string? note, ModeratorActor moderator, CancellationToken cancellationToken);
+    Task<Result<Unit>> ConfirmDescriptionAsync(string billNumber, string? note, StaffActor moderator, CancellationToken cancellationToken);
 
     /// <summary>
     /// Removes the bill's description, whatever made it (design 8.13), with a required statement: the bill then says it has
     /// none, the removal is in the public history, and the summary job never writes a description on the bill again.
     /// </summary>
-    Task<Result<Unit>> RemoveDescriptionAsync(string billNumber, string statement, ModeratorActor moderator, CancellationToken cancellationToken);
+    Task<Result<Unit>> RemoveDescriptionAsync(string billNumber, string statement, StaffActor moderator, CancellationToken cancellationToken);
 
     /// <summary>The state a moderator's controls on the bill's page need; <c>bill.not-found</c> for an unknown bill.</summary>
     Task<Result<ModerationBillState>> BillStateAsync(string billNumber, CancellationToken cancellationToken);
@@ -286,34 +283,34 @@ public interface IAppealsModeration
     /// The bill's record for a moderator's action on it (design 8.12.1: an action creates it): found or created on an
     /// active bill. Creating it alone shows nothing new and is not an action.
     /// </summary>
-    Task<Result<Guid>> RecordAsync(string billNumber, CancellationToken cancellationToken);
+    Task<Result<Guid>> EnsureRecordAsync(string billNumber, CancellationToken cancellationToken);
 
     /// <summary>Hidden records and reasons, newest hide first, with who hid them, when and why (design 8.3).</summary>
     Task<HiddenItems> HiddenAsync(CancellationToken cancellationToken);
 
     /// <summary>Brings a hidden record back as it was (design 8.12.3): open, or closed if it had closed.</summary>
-    Task<Result<Unit>> RestoreAppealAsync(Guid appealId, string statement, ModeratorActor moderator, CancellationToken cancellationToken);
+    Task<Result<Unit>> RestoreAppealAsync(Guid appealId, string statement, StaffActor moderator, CancellationToken cancellationToken);
 
     /// <summary>Brings a hidden reason back as published, while its bill is open; its marks are gone (design 8.3).</summary>
-    Task<Result<Unit>> RestoreReasonAsync(Guid reasonId, string statement, ModeratorActor moderator, CancellationToken cancellationToken);
+    Task<Result<Unit>> RestoreReasonAsync(Guid reasonId, string statement, StaffActor moderator, CancellationToken cancellationToken);
 
     /// <summary>Sets the bill's own threshold with a public statement (design 8.12.2); it stays until a moderator changes it.</summary>
-    Task<Result<Unit>> SetThresholdAsync(Guid appealId, int threshold, string statement, ModeratorActor moderator, CancellationToken cancellationToken);
+    Task<Result<Unit>> SetThresholdAsync(Guid appealId, int threshold, string statement, StaffActor moderator, CancellationToken cancellationToken);
 
-    Task<Result<Unit>> PublishReasonAsync(Guid reasonId, string? statement, ModeratorActor moderator, CancellationToken cancellationToken);
+    Task<Result<Unit>> PublishReasonAsync(Guid reasonId, string? statement, StaffActor moderator, CancellationToken cancellationToken);
 
-    Task<Result<Unit>> HideReasonAsync(Guid reasonId, string statement, ModeratorActor moderator, CancellationToken cancellationToken);
+    Task<Result<Unit>> HideReasonAsync(Guid reasonId, string statement, StaffActor moderator, CancellationToken cancellationToken);
 
-    Task<Result<Unit>> MergeReasonAsync(Guid reasonId, Guid intoReasonId, string statement, ModeratorActor moderator, CancellationToken cancellationToken);
+    Task<Result<Unit>> MergeReasonAsync(Guid reasonId, Guid intoReasonId, string statement, StaffActor moderator, CancellationToken cancellationToken);
 
     /// <summary>Holds sending for the bill (design 8.4): it enters no summary until released.</summary>
-    Task<Result<Unit>> HoldAsync(Guid appealId, string statement, ModeratorActor moderator, CancellationToken cancellationToken);
+    Task<Result<Unit>> HoldAsync(Guid appealId, string statement, StaffActor moderator, CancellationToken cancellationToken);
 
     /// <summary>Releases a held bill: summaries take it again by their rules.</summary>
-    Task<Result<Unit>> ReleaseAsync(Guid appealId, string statement, ModeratorActor moderator, CancellationToken cancellationToken);
+    Task<Result<Unit>> ReleaseAsync(Guid appealId, string statement, StaffActor moderator, CancellationToken cancellationToken);
 
     /// <summary>Corrects the planned date or stage of the bill (design 8.4); closes its open date flags.</summary>
-    Task<Result<Unit>> SetPlannedAsync(Guid appealId, DateOnly date, string? stage, string statement, ModeratorActor moderator, CancellationToken cancellationToken);
+    Task<Result<Unit>> SetPlannedAsync(Guid appealId, DateOnly date, string? stage, string statement, StaffActor moderator, CancellationToken cancellationToken);
 
     /// <summary>
     /// What a moderator sees before restricting the author of an argument (design 8.3): the display name, their arguments,
@@ -325,13 +322,13 @@ public interface IAppealsModeration
     /// Restricts the author of the argument from writing until a day (inclusive) or, with <paramref name="until"/> null,
     /// until lifted; audited and emailed with the moderators' <paramref name="contact"/> address. Returns the restriction id.
     /// </summary>
-    Task<Result<Guid>> RestrictAuthorOfReasonAsync(Guid reasonId, DateOnly? until, string statement, ModeratorActor moderator, string? contact, CancellationToken cancellationToken);
+    Task<Result<Guid>> RestrictAuthorOfReasonAsync(Guid reasonId, DateOnly? until, string statement, StaffActor moderator, string? contact, CancellationToken cancellationToken);
 
     /// <summary>Restrictions that hold now, for the moderators' screen.</summary>
     Task<IReadOnlyList<RestrictionInfo>> RestrictionsAsync(CancellationToken cancellationToken);
 
     /// <summary>Lifts a restriction early (a moderator or an administrator); audited and emailed.</summary>
-    Task<Result<Unit>> LiftRestrictionAsync(Guid restrictionId, string statement, ModeratorActor moderator, string? contact, CancellationToken cancellationToken);
+    Task<Result<Unit>> LiftRestrictionAsync(Guid restrictionId, string statement, StaffActor moderator, string? contact, CancellationToken cancellationToken);
 
     /// <summary>Whether an AI draft of a description can be asked for: a provider is configured (design 8.11.4).</summary>
     bool DraftAvailable { get; }
@@ -340,7 +337,7 @@ public interface IAppealsModeration
     /// An AI draft of a neutral description from the pasted official text (design 8.11.4): <c>draft.not-configured</c>
     /// without a provider. Audited (who, which bill, when; not the text), at most 20 an hour per moderator.
     /// </summary>
-    Task<Result<string>> DraftDescriptionAsync(string billNumber, string sourceText, ModeratorActor moderator, CancellationToken cancellationToken);
+    Task<Result<string>> DraftDescriptionAsync(string billNumber, string sourceText, StaffActor moderator, CancellationToken cancellationToken);
 }
 
 /// <summary>
@@ -392,7 +389,10 @@ public interface IDescriptionSummaries
 /// <summary>Scheduled work of the Appeals module, run by the worker.</summary>
 public interface IAppealsMaintenance
 {
-    /// <summary>Writes (or rewrites) the daily aggregate of every bill's open or closed record for one Vilnius day; returns how many.</summary>
+    /// <summary>
+    /// Writes the daily aggregate of every bill's open or closed record for one Vilnius day: today's rows on every run, a
+    /// finished day's once, by the first run after it ended. Returns how many rows were written.
+    /// </summary>
     Task<int> AggregateDayAsync(DateOnly day, CancellationToken cancellationToken);
 
     /// <summary>Closes every open record whose bill had its final Seimas vote, freezing the counts; returns how many.</summary>

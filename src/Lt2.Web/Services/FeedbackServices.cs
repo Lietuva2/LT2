@@ -36,7 +36,7 @@ internal sealed class FeedbackLimiter : IDisposable
 internal sealed class ServerFeedbackApi(IFeedback feedback, FeedbackLimiter limiter, IHttpContextAccessor accessor, IpHasher ipHasher, ErrorMapper errors) : IFeedbackApi
 {
     public async Task<ApiResult> SendAsync(FeedbackRequest request, CancellationToken cancellationToken = default) =>
-        AppealMapping.UserId(accessor.HttpContext?.User) is { } userId
+        accessor.HttpContext?.User.UserId() is { } userId
             ? errors.ToApiResult(await SendAsync(feedback, limiter, userId, request, cancellationToken))
             : ApiResult.Fail(errors.ToProblem(Error.Unauthorized("auth.required")));
 

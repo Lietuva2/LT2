@@ -4,7 +4,8 @@
 #
 # That Caddy holds ports 80 and 443 and the certificates. LT2's own Caddy does not start and nothing here publishes 80
 # or 443; `web` also joins that Caddy's Docker network (LT2_PROXY_NETWORK, created by the other project) under the alias
-# lt2-web, which the site block in shared-proxy.Caddyfile proxies to. README.md, "Behind a server's existing Caddy".
+# lt2-web, which the site block in shared-proxy.Caddyfile proxies to, and believes forwarded client addresses only from that
+# Caddy (LT2_PROXY_HOST). README.md, "Behind a server's existing Caddy".
 #
 # Mailpit (profile "local", a trial with caught emails) joins the same network as lt2-mailpit for the optional mail
 # viewer block, and asks for a name and password itself, from the password file mailpit_ui_auth in the secrets
@@ -18,6 +19,10 @@ services:
     ports: !reset []
 
   web:
+    environment:
+      # Design 6.8: the forwarding headers are believed only from the server's Caddy, named as Docker's DNS knows it on
+      # LT2_PROXY_NETWORK (its container name or an alias), not from the other containers on that shared network.
+      ReverseProxy__Address: ${LT2_PROXY_HOST:?set LT2_PROXY_HOST to the name of the server's Caddy on LT2_PROXY_NETWORK}
     networks:
       shared-proxy:
         # "web" is too generic a name on a network other projects share.

@@ -1,5 +1,5 @@
 @using Lt2.Api.Contracts.Appeals
-@inherits InteractiveBase
+@inherits InteractiveBase<AppealUi>
 @inject IModerationApi ModerationApi
 
 @* Design 8.3: the writing restrictions that hold now, for moderators and administrators, each with lifting early (a
@@ -18,16 +18,17 @@
     {
         @foreach (var item in Items)
         {
-            <article class="sheet stack stack--tight" id="restriction-@item.Id">
-                <p><b>@(item.DisplayName ?? L["Reasons.Anonymous"])</b> · <span class="num">@(item.Until is { } day ? Text("Restrict.UntilShown", Dates.Day(day)) : L["Restrict.UntilLifted"])</span></p>
+            <article class="sheet stack stack--tight" id="restriction-@item.Id" @key="item.Id">
+                <p><b>@(item.DisplayName ?? L["Reasons.Anonymous"])</b> · <span class="num">@(item.Until is { } day ? L.Format("Restrict.UntilShown", Display.Day(day)) : L["Restrict.UntilLifted"])</span></p>
                 <p class="small">@item.Statement</p>
                 @if (_lifting == item.Id)
                 {
                     <form class="stack stack--tight" @onsubmit="() => LiftAsync(item.Id)" novalidate>
-                        <div class="field @(Errors.ContainsKey("statement") ? "field--error" : "")">
+                        <div class="field @ErrorClass("statement")">
                             <label for="lift-statement-@item.Id">@L["Restrict.LiftStatement"]</label>
-                            <textarea class="textarea" id="lift-statement-@item.Id" maxlength="@AppealLimits.StatementMaxLength" @bind="_statement" disabled="@Locked"></textarea>
-                            <FieldError Errors="Errors" Field="statement" />
+                            <textarea class="textarea" id="lift-statement-@item.Id" maxlength="@AppealLimits.StatementMaxLength" @bind="_statement" disabled="@Locked"
+                                      aria-invalid="@Invalid("statement")" aria-describedby="@DescribedBy("statement", $"lift-statement-{item.Id}")"></textarea>
+                            <FieldError Errors="Errors" Field="statement" For="@($"lift-statement-{item.Id}")" />
                         </div>
                         <div class="row">
                             <button type="submit" class="btn" id="lift-submit-@item.Id" disabled="@Locked">@L["Restrict.Lift"]</button>
@@ -37,7 +38,7 @@
                 }
                 else
                 {
-                    <p><button class="linkish small" type="button" id="lift-open-@item.Id" disabled="@Locked" @onclick="() => _lifting = item.Id">@L["Restrict.Lift"]</button></p>
+                    <p><button class="linkish small" type="button" id="lift-open-@item.Id" disabled="@Locked" @onclick="() => StartLifting(item.Id)">@L["Restrict.Lift"]</button></p>
                 }
             </article>
         }
@@ -63,12 +64,17 @@
         StateHasChanged();
     }
 
+    private void StartLifting(Guid id)
+    {
+        _lifting = id;
+        _statement = "";
+        ClearMessages();
+    }
+
     private Task LiftAsync(Guid id) => RunAsync(async () =>
     {
-        var result = await ModerationApi.LiftRestrictionAsync(id, new StatementRequest { Statement = _statement });
-        if (!result.IsSuccess)
+        if (!Succeeded(await ModerationApi.LiftRestrictionAsync(id, new StatementRequest { Statement = _statement }), "statement"))
         {
-            Show(result.Problem, "statement");
             return;
         }
 

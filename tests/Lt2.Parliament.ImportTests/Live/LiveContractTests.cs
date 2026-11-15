@@ -20,7 +20,7 @@ public sealed class LiveContractTests(ITestOutputHelper output)
     public async Task The_live_service_confirms_every_line_of_the_register()
     {
         Assert.SkipUnless(Environment.GetEnvironmentVariable("LT2_SEIMAS_LIVE") == "1",
-            "Set LT2_SEIMAS_LIVE=1 to check the register against the real Seimas open data (closed until 2026-11-16).");
+            "Set LT2_SEIMAS_LIVE=1 to check the register against the real Seimas open data.");
 
         var baseAddress = Environment.GetEnvironmentVariable("LT2_SEIMAS_BASE_ADDRESS") ?? "https://apps.lrs.lt/sip/";
         var parameter = Environment.GetEnvironmentVariable("LT2_SEIMAS_PROCEEDINGS_PARAMETER") ?? "posedzio_id";

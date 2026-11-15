@@ -4,6 +4,8 @@ using Lt2.Api.Contracts;
 using Lt2.Api.Contracts.Admin;
 using Lt2.Api.Contracts.Appeals;
 using Lt2.Api.Contracts.Digests;
+using Lt2.Api.Contracts.Feedback;
+using Lt2.Api.Contracts.Follows;
 using Lt2.Api.Contracts.Me;
 using Lt2.IntegrationTests.Infrastructure;
 
@@ -15,7 +17,7 @@ public sealed class AccountDataTests(DatabaseFixture database) : ApiTest(databas
     [Fact]
     public async Task The_export_holds_everything_the_person_gave_and_nothing_of_anyone_else()
     {
-        using var moderator = await StaffMembers.ActiveAsync(Factory, Database, "moderator");
+        using var moderator = await StaffMembers.SharedAsync(Factory, Database, "moderator");
         var (initiator, initiatorEmail) = await Factory.MemberAsync("Rūta Mockutė");
         using var _i = initiator;
         await Database.PrepareBillAsync(initiator, moderator.Browser, AppealSteps.ThirdBill, "against");
@@ -55,14 +57,11 @@ public sealed class AccountDataTests(DatabaseFixture database) : ApiTest(databas
     [Fact]
     public async Task Deleting_the_account_removes_positions_marks_consents_and_counts_but_not_frozen_summaries_and_logs_nothing()
     {
-        var sink = new AppealPrivacyTests.CollectingSink();
-        await using var logged = new AppealPrivacyTests.LoggingFactory(Database, sink);
-        using var moderator = await StaffMembers.ActiveAsync(Factory, Database, "moderator");
-        using var admin = await StaffMembers.ActiveAsync(Factory, Database, "administrator");
-        using (var minimum = await admin.Browser.SendAsync(HttpMethod.Put, ApiRoutes.Admin.SettingByKey("Digest:ThresholdMinimum"), new UpdateSettingRequest { Value = JsonSerializer.SerializeToElement(1) }))
-        {
-            minimum.StatusCode.ShouldBe(HttpStatusCode.OK);
-        }
+        var sink = new CollectingSink();
+        await using var logged = new LoggingFactory(Database, sink);
+        using var moderator = await StaffMembers.SharedAsync(Factory, Database, "moderator");
+        using var admin = await StaffMembers.SharedAsync(Factory, Database, "administrator");
+        await admin.Browser.SetSettingAsync("Digest:ThresholdMinimum", 1);
 
         try
         {
@@ -113,7 +112,108 @@ public sealed class AccountDataTests(DatabaseFixture database) : ApiTest(databas
         }
         finally
         {
-            using var restore = await admin.Browser.SendAsync(HttpMethod.Put, ApiRoutes.Admin.SettingByKey("Digest:ThresholdMinimum"), new UpdateSettingRequest { Value = JsonSerializer.SerializeToElement(50) });
+            await admin.Browser.ResetSettingAsync("Digest:ThresholdMinimum");
         }
+    }
+
+    /// <summary>Design 6.8: the outbox forgets a deleted account: nothing addressed to it waits or stays failed.</summary>
+    [Fact]
+    public async Task Deleting_the_account_leaves_no_email_to_its_address_in_the_outbox()
+    {
+        var (member, email) = await Factory.MemberAsync("Pamirštamas Narys");
+        using var _m = member;
+        var (other, otherEmail) = await Factory.MemberAsync();
+        using var _o = other;
+        (await Database.ScalarAsync<long>("SELECT count(*) FROM notify.outbox WHERE payload->>'to' = @e", ("e", email))).ShouldBeGreaterThan(0, "the sign-in code is still waiting");
+        await Database.ExecuteAsync(
+            """
+            INSERT INTO notify.outbox (id, kind, payload, created_at, due_at, attempts, failed_at, last_error)
+            VALUES (gen_random_uuid(), 'email.feedback-reply', jsonb_build_object('to', upper(@e), 'reply', 'Ačiū', 'excerpt', 'x'), now(), now(), 8, now(), 'SmtpCommandException 550')
+            """,
+            ("e", email));
+
+        (await member.SendAsync(HttpMethod.Delete, ApiRoutes.Me.Root)).StatusCode.ShouldBe(HttpStatusCode.NoContent);
+
+        (await Database.ScalarAsync<long>("SELECT count(*) FROM notify.outbox WHERE lower(payload->>'to') = lower(@e)", ("e", email))).ShouldBe(0);
+        (await Database.ScalarAsync<long>("SELECT count(*) FROM notify.outbox WHERE payload->>'to' = @e", ("e", otherEmail))).ShouldBeGreaterThan(0, "nobody else's mail");
+    }
+
+    /// <summary>Design 6.5, 8.3: an argument deleted with its author's account leaves no open report behind, as a withdrawn one.</summary>
+    [Fact]
+    public async Task Deleting_the_account_closes_the_open_reports_on_its_arguments()
+    {
+        using var moderator = await StaffMembers.SharedAsync(Factory, Database, "moderator");
+        var (author, _) = await Factory.MemberAsync();
+        using var _a = author;
+        await Database.PrepareBillAsync(author, moderator.Browser, AppealSteps.ThirdBill, "against");
+        var reasonId = (await author.AppealAsync(AppealSteps.ThirdBill)).Reasons.Single().Id;
+        var (reporter, _) = await Factory.MemberAsync();
+        using var _r = reporter;
+        (await reporter.PostAsync(AppealRoutes.Reports, new ReportRequest { TargetKind = "reason", TargetId = reasonId, Ground = "spam" })).StatusCode.ShouldBe(HttpStatusCode.NoContent);
+
+        (await author.SendAsync(HttpMethod.Delete, ApiRoutes.Me.Root)).StatusCode.ShouldBe(HttpStatusCode.NoContent);
+        (await Database.ScalarAsync<long>("SELECT count(*) FROM appeals.reason WHERE id = @r", ("r", reasonId))).ShouldBe(0);
+        (await Database.ScalarAsync<long>("SELECT count(*) FROM appeals.report WHERE target_id = @r AND status = 'open'", ("r", reasonId))).ShouldBe(0);
+    }
+
+    /// <summary>
+    /// Design 6.5, 6.8: after an account is deleted, no column anywhere holds its id and no email waits for its address.
+    /// The sweep reads every column whose name ends in <c>user_id</c> in every module's schema, so a table added later is
+    /// swept without changing this test. Only the append-only audit log keeps who acted (design 5.5).
+    /// </summary>
+    [Fact]
+    public async Task Deleting_the_account_leaves_its_id_in_no_column_of_any_table_and_no_mail_to_its_address()
+    {
+        var moderator = await ModeratorAsync();
+        var (other, _) = await Factory.MemberAsync();
+        using var _o = other;
+        await Database.PrepareBillAsync(other, moderator.Browser, AppealSteps.SecondBill, "for");
+        var othersReason = (await other.AppealAsync(AppealSteps.SecondBill)).Reasons.Single().Id;
+
+        // The person does everything a member can: a side, an argument, a mark, a report, follows of every kind, the email
+        // switches, party support, feedback that may be answered, and an organisation they represent.
+        var (person, email) = await Factory.MemberAsync("Visur Pabuvusi");
+        var userId = await Database.UserIdAsync(email);
+        (await person.TakeSideAsync(AppealSteps.SecondBill, "for")).StatusCode.ShouldBe(HttpStatusCode.NoContent);
+        (await person.WriteReasonAsync(AppealSteps.SecondBill, "for", "Visur pabuvusios argumentas, kuris dings su paskyra.")).StatusCode.ShouldBe(HttpStatusCode.Created);
+        (await person.SendAsync(HttpMethod.Put, AppealRoutes.EndorsementOf(othersReason))).StatusCode.ShouldBe(HttpStatusCode.NoContent);
+        (await person.PostAsync(AppealRoutes.Reports, new ReportRequest { TargetKind = "reason", TargetId = othersReason, Ground = "spam" })).StatusCode.ShouldBe(HttpStatusCode.NoContent);
+        await person.FollowBillAsync(AppealSteps.SecondBill);
+        await person.FollowMpAsync(ReasonsToComeSteps.Petraitis);
+        var (rep, _) = await Factory.MemberAsync();
+        using var _r = rep;
+        var followed = await rep.RegisterOrganisationAsync();
+        (await person.SendAsync(HttpMethod.Put, FollowRoutes.OrganisationOf(followed.Slug))).StatusCode.ShouldBe(HttpStatusCode.NoContent);
+        (await person.SendAsync(HttpMethod.Put, FollowRoutes.Notices, new NoticeSettingsRequest { Planned = true, Voted = false, Statements = true })).StatusCode.ShouldBe(HttpStatusCode.NoContent);
+        (await person.SendAsync(HttpMethod.Put, ApiRoutes.Me.PartySupport, new PartySupportRequest { Party = "Reformų partija", Consent = true })).StatusCode.ShouldBe(HttpStatusCode.NoContent);
+        (await person.PostAsync(FeedbackRoutes.Send, new FeedbackRequest { Text = "Atsiliepimas, į kurį galima atsakyti.", PagePath = "/sveiki", MayReply = true })).StatusCode.ShouldBe(HttpStatusCode.NoContent);
+        var own = await person.RegisterOrganisationAsync();
+        await person.PublishStatementAsync(AppealSteps.SecondBill, own.Slug, "remarks", "Organizacijos pastabos, kurių rašytojas išnyks.");
+
+        (await person.SendAsync(HttpMethod.Delete, ApiRoutes.Me.Root)).StatusCode.ShouldBe(HttpStatusCode.NoContent);
+
+        var columns = await Database.ScalarAsync<string>(
+            """
+            SELECT string_agg(format('%I.%I.%I', table_schema, table_name, column_name), ',')
+            FROM information_schema.columns
+            WHERE table_schema IN ('identity', 'appeals', 'notify', 'audit', 'config', 'parliament') AND column_name LIKE '%user_id'
+              AND data_type = 'uuid' AND format('%I.%I', table_schema, column_name) <> 'audit.actor_user_id'
+            """);
+        var holding = new List<string>();
+        foreach (var column in columns!.Split(','))
+        {
+            var parts = column.Split('.');
+#pragma warning disable CA2100 // Names read from the catalogue and quoted by format('%I').
+            if (await Database.ScalarAsync<long>($"SELECT count(*) FROM {parts[0]}.{parts[1]} WHERE {parts[2]} = @u", ("u", userId)) > 0)
+#pragma warning restore CA2100
+            {
+                holding.Add(column);
+            }
+        }
+
+        holding.ShouldBeEmpty("no column holds the deleted account's id");
+        columns.Split(',').Length.ShouldBeGreaterThan(20, "the sweep found the modules' columns");
+        (await Database.ScalarAsync<long>("SELECT count(*) FROM notify.outbox WHERE lower(payload->>'to') = lower(@e)", ("e", email))).ShouldBe(0, "design 6.8: the outbox forgets");
+        (await Database.ScalarAsync<long>("SELECT count(*) FROM identity.\"user\" WHERE email = @e", ("e", email))).ShouldBe(0);
     }
 }

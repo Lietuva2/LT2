@@ -9,7 +9,7 @@
             <div class="rows__main">
                 <a href="/p/@m.Mp.Slug">@m.Mp.FirstName @m.Mp.LastName</a>
                 <span class="small">@m.Role</span>
-                <span class="small num">@(m.To is { } to ? F.Format("Dates.Range", F.Date(m.From), F.Date(to)) : F.Format("Dates.Since", F.Date(m.From)))</span>
+                <span class="small num">@(m.To is { } to ? F.T.Format("Dates.Range", F.Date(m.From), F.Date(to)) : F.T.Format("Dates.Since", F.Date(m.From)))</span>
             </div>
         </li>
     }

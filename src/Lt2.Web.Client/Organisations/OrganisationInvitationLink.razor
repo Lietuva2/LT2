@@ -1,8 +1,6 @@
 @using Lt2.Api.Contracts.Organisations
-@inherits InteractiveBase
+@inherits InteractiveBase<AppealUi>
 @inject IOrganisationsApi Organisations
-@inject NavigationManager Navigation
-@inject IJSRuntime JS
 
 @* The organisation's invitation link (design 8.14.14, stage B), inside the representatives' part of the profile: the link to
    the registration form with the organisation's code, a link for each bill it has a public statement on (the same code,
@@ -14,17 +12,10 @@
     <div class="stack stack--tight" id="org-code">
         <h3>@L["Org.Code.Title"]</h3>
         <p class="small">@L["Org.Code.Lead"]</p>
-        <p class="num" id="org-code-count"><b>@Text("Org.Code.Count", AppealNumbers.Of(inv.Completed))</b></p>
+        <p class="num" id="org-code-count"><b>@L.Format("Org.Code.Count", Display.Number(inv.Completed))</b></p>
         @if (inv.Usable && inv.Link is { } link)
         {
-            <p class="share__link"><a href="@link" id="org-code-link">@Absolute(link)</a></p>
-            <div class="row">
-                <button type="button" class="btn btn--plain" id="org-code-copy" disabled="@Locked" @onclick="() => CopyAsync(link, null)">@L["Share.Copy"]</button>
-                @if (_copied == "")
-                {
-                    <span class="small" role="status">@L["Share.Copied"]</span>
-                }
-            </div>
+            <CopyLink Link="@link" LinkId="org-code-link" ButtonId="org-code-copy" />
             @if (inv.Bills.Count > 0)
             {
                 <p class="small">@L["Org.Code.BillsLead"]</p>
@@ -32,17 +23,10 @@
                     @foreach (var b in inv.Bills)
                     {
                         @* One child: a row of ".rows" is a two-column grid, and three children would sit side by side. *@
-                        <li id="org-code-bill-@b.Bill.Number">
+                        <li id="org-code-bill-@b.Bill.Number" @key="b.Bill.Number">
                             <div class="stack stack--tight">
                                 <span><span class="num">@b.Bill.Number</span> · @b.Bill.Title</span>
-                                <span class="share__link small"><a href="@b.Link">@Absolute(b.Link)</a></span>
-                                <div class="row">
-                                    <button type="button" class="btn btn--plain" id="org-code-copy-@b.Bill.Number" disabled="@Locked" @onclick="() => CopyAsync(b.Link, b.Bill.Number)">@L["Share.Copy"]</button>
-                                    @if (_copied == b.Bill.Number)
-                                    {
-                                        <span class="small" role="status">@L["Share.Copied"]</span>
-                                    }
-                                </div>
+                                <CopyLink Link="@b.Link" LinkId="@($"org-code-bill-link-{b.Bill.Number}")" ButtonId="@($"org-code-copy-{b.Bill.Number}")" />
                             </div>
                         </li>
                     }
@@ -77,7 +61,6 @@
 }
 
 @code {
-    private string? _copied;
     private bool _replacing;
 
     [Parameter, EditorRequired] public string Slug { get; set; } = "";
@@ -96,26 +79,16 @@
     private static string OffKey(OrganisationInvitationResponse inv) =>
         inv.OffWithOrganisation ? "Org.Code.OffWithOrganisation" : !inv.On ? "Org.Code.SwitchedOff" : inv.Code is null ? "Org.Code.None" : "Org.Code.UsedUp";
 
-    private string Absolute(string link) => Navigation.ToAbsoluteUri(link).ToString();
-
-    private Task CopyAsync(string link, string? bill) => RunAsync(async () =>
-    {
-        await JS.InvokeVoidAsync("navigator.clipboard.writeText", Absolute(link));
-        _copied = bill ?? "";
-    });
-
     private Task ReplaceAsync() => RunAsync(async () =>
     {
         var result = await Organisations.ReplaceInvitationAsync(Slug);
-        if (!result.IsSuccess)
+        if (!Succeeded(result))
         {
-            Show(result.Problem);
             return;
         }
 
         Invitation = result.Value;
         _replacing = false;
-        _copied = null;
         Info = L["Org.Code.Replaced"];
     });
 }

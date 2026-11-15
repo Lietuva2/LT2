@@ -51,10 +51,10 @@
                 <div class="pair pair--keep">
                     <div class="figure figure--m" id="participation">
                         <span class="label">@F.T["Stat.Participation"]</span>
-                        @if (Formats.Percent(p.Statistics?.Participation) is { } share)
+                        @if (Display.Percent(p.Statistics?.Participation) is { } share)
                         {
                             <span class="figure__num">@share</span>
-                            <span class="small num">@F.Format("Stat.ParticipationCount", Formats.Number(p.Statistics!.VotesTakenPart), Formats.Number(p.Statistics.VotesHeld))</span>
+                            <span class="small num">@F.T.Format("Stat.ParticipationCount", Display.Number(p.Statistics!.VotesTakenPart), Display.Number(p.Statistics.VotesHeld))</span>
                         }
                         else
                         {
@@ -64,10 +64,10 @@
                     </div>
                     <div class="figure figure--m" id="with-faction">
                         <span class="label">@F.T["Stat.WithFaction"]</span>
-                        @if (Formats.Percent(p.Statistics?.WithFaction) is { } withShare)
+                        @if (Display.Percent(p.Statistics?.WithFaction) is { } withShare)
                         {
                             <span class="figure__num">@withShare</span>
-                            <span class="small num">@F.Format("Stat.WithFactionCount", Formats.Number(p.Statistics!.VotedWithFaction), Formats.Number(p.Statistics.VotesWithFactionPosition))</span>
+                            <span class="small num">@F.T.Format("Stat.WithFactionCount", Display.Number(p.Statistics!.VotedWithFaction), Display.Number(p.Statistics.VotesWithFactionPosition))</span>
                         }
                         else
                         {
@@ -76,7 +76,7 @@
                         }
                         @if (p.Statistics is { } s && (s.VotesWithFactionPosition > 0 || s.FreeVotes > 0))
                         {
-                            <span class="small num">@F.Format("Stat.Free", Formats.Number(s.FreeVotes))</span>
+                            <span class="small num">@F.T.Format("Stat.Free", Display.Number(s.FreeVotes))</span>
                         }
                         @if (_factionPeriods.Count > 0)
                         {
@@ -150,7 +150,7 @@
                         @foreach (var m in p.Memberships.Where(m => !m.Current))
                         {
                             <dt><BodyName Body="m.Body" /></dt>
-                            <dd>@m.Role, <span class="num">@F.Format("Dates.Range", F.Date(m.From), m.To is { } end ? F.Date(end) : "")</span></dd>
+                            <dd>@m.Role, <span class="num">@F.T.Format("Dates.Range", F.Date(m.From), m.To is { } end ? F.Date(end) : "")</span></dd>
                         }
                     </dl>
                 </section>
@@ -178,7 +178,6 @@
                 </section>
             }
 
-            <p class="note note--quiet">@F.T["Mp.Auto"]</p>
         </aside>
     </div>
 }
@@ -200,7 +199,7 @@
         }
 
         _updatedAt = (await Meta.GetImportsAsync()).Value?.Sources.FirstOrDefault()?.LastSuccessAt;
-        var today = DateOnly.FromDateTime(TimeZoneInfo.ConvertTime(Clock.GetUtcNow(), TimeZoneInfo.FindSystemTimeZoneById("Europe/Vilnius")).DateTime);
+        var today = Display.Today(Clock);
         _factionPeriods = FactionCoverage.PeriodsWhenIncomplete(_mp.Mandate, _mp.Memberships, today);
     }
 
@@ -208,13 +207,13 @@
     private string PeriodLine()
     {
         var periods = string.Join("; ", _factionPeriods.Select(Period));
-        var line = F.Format("Stat.FactionPeriod", periods);
+        var line = F.T.Format("Stat.FactionPeriod", periods);
         return periods.EndsWith('.') && line.EndsWith(periods + ".", StringComparison.Ordinal) ? line[..^1] : line;
     }
 
     /// <summary>"Reformų partijos frakcija, 2024 m. lapkričio 14 d. – 2026 m. balandžio 30 d." or "…, nuo …".</summary>
     private string Period(MembershipResponse m) =>
-        m.Body.Name + ", " + (m.To is { } to ? F.Format("Dates.Range", F.Date(m.From), F.Date(to)) : F.Format("Dates.Since", F.Date(m.From)));
+        m.Body.Name + ", " + (m.To is { } to ? F.T.Format("Dates.Range", F.Date(m.From), F.Date(to)) : F.T.Format("Dates.Since", F.Date(m.From)));
 
     private static string Initials(MpListItem mp) => $"{mp.FirstName[..1]}{mp.LastName[..1]}";
 

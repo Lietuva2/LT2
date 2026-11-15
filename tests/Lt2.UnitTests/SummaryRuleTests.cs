@@ -87,13 +87,6 @@ public sealed class SummaryRuleTests
         SummaryRules.IsNotEnough(answer).ShouldBe(notEnough);
 
     [Fact]
-    public void A_day_starts_at_midnight_in_Vilnius()
-    {
-        SummaryRules.VilniusDayStart(new DateTimeOffset(2026, 11, 14, 21, 30, 0, TimeSpan.Zero)).ShouldBe(new DateTimeOffset(2026, 11, 14, 22, 0, 0, TimeSpan.Zero).AddDays(-1));
-        SummaryRules.VilniusDayStart(new DateTimeOffset(2026, 11, 14, 22, 30, 0, TimeSpan.Zero)).ShouldBe(new DateTimeOffset(2026, 11, 14, 22, 0, 0, TimeSpan.Zero));
-    }
-
-    [Fact]
     public void Why_the_job_makes_nothing_is_said_once_not_on_every_run_and_again_when_the_reason_changes()
     {
         var notices = new Lt2.Appeals.Application.SummaryJobNotices();

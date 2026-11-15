@@ -42,7 +42,7 @@
                 {
                     <li>
                         <div class="rows__main">
-                            <span class="small num">@Formats.Stamp(edit.ChangedAt)</span>
+                            <span class="small num">@Display.DayTime(edit.ChangedAt)</span>
                             <span class="label">@T["History.Before"]</span><span>@(edit.OldText ?? T["History.NoneBefore"])</span>
                             <span class="label">@T["History.After"]</span><span>@(edit.NewText ?? T["History.Removed"])</span>
                         </div>

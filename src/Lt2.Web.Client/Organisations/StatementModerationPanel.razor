@@ -1,5 +1,5 @@
 @using Lt2.Api.Contracts.Organisations
-@inherits InteractiveBase
+@inherits InteractiveBase<AppealUi>
 @inject IOrganisationModerationApi Moderation
 @inject NavigationManager Navigation
 
@@ -15,7 +15,7 @@
         {
             @foreach (var item in waiting)
             {
-                <StatementQueueItem Item="item" ShowBill="false" OnDone="Reload" />
+                <StatementQueueItem @key="item.Id" Item="item" ShowBill="false" OnDone="Reload" />
             }
         }
         else
@@ -24,11 +24,11 @@
         }
         @if (items.Where(i => !NeedsLook(i)).ToList() is { Count: > 0 } others)
         {
-            <details>
-                <summary class="linkish small">@Text("OrgMod.Panel.Others", others.Count)</summary>
+            <details class="more stack stack--tight">
+                <summary class="linkish small">@L.Format("OrgMod.Panel.Others", Display.Number(others.Count))</summary>
                 @foreach (var item in others)
                 {
-                    <StatementQueueItem Item="item" ShowBill="false" OnDone="Reload" />
+                    <StatementQueueItem @key="item.Id" Item="item" ShowBill="false" OnDone="Reload" />
                 }
             </details>
         }

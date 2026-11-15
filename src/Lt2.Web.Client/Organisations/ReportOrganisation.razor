@@ -1,4 +1,4 @@
-@inherits InteractiveBase
+@inherits InteractiveBase<AppealUi>
 
 @* "Pranešti" on an organisation's profile (design 8.14.9): anyone signed in may report it, with the ground "Apsimeta kita
    organizacija" offered first; a visitor is told to sign in or write to the moderators. *@
@@ -26,8 +26,6 @@ else
 
     [Parameter] public string? Contact { get; set; }
 
-    [CascadingParameter] private Task<AuthenticationState>? AuthState { get; set; }
-
     protected override async Task OnInitializedAsync() =>
-        _signedIn = AuthState is not null && (await AuthState).User.Identity?.IsAuthenticated == true;
+        _signedIn = await IsSignedInAsync();
 }

@@ -33,7 +33,7 @@ internal sealed class StaffAccess(IdentityDb db, TimeProvider clock)
 {
     public async Task<StaffState?> ForAsync(ClaimsPrincipal principal, CancellationToken cancellationToken)
     {
-        if (!Guid.TryParse(principal.FindFirstValue(ClaimTypes.NameIdentifier), out var userId))
+        if (principal.UserId() is not { } userId)
         {
             return null;
         }

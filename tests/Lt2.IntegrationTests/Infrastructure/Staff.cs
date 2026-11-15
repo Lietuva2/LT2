@@ -60,11 +60,19 @@ public static class StaffSteps
     }
 }
 
-/// <summary>A member who is an active staff member: signed in with the staff passkey after activation.</summary>
-public sealed record StaffMember(string Email, TestBrowser Browser, SoftwareAuthenticator Authenticator) : IDisposable
+/// <summary>
+/// A member who is an active staff member: signed in with the staff passkey after activation. A <paramref name="Shared"/>
+/// one belongs to every test of the run (<see cref="StaffMembers.SharedAsync"/>): disposing it does nothing.
+/// </summary>
+public sealed record StaffMember(string Email, TestBrowser Browser, SoftwareAuthenticator Authenticator, bool Shared = false) : IDisposable
 {
     public void Dispose()
     {
+        if (Shared)
+        {
+            return;
+        }
+
         Browser.Dispose();
         Authenticator.Dispose();
     }
@@ -72,6 +80,33 @@ public sealed record StaffMember(string Email, TestBrowser Browser, SoftwareAuth
 
 public static class StaffMembers
 {
+    private static readonly SemaphoreSlim Gate = new(1, 1);
+    private static readonly Dictionary<(Lt2Factory Factory, string Role), StaffMember> Made = [];
+
+    /// <summary>
+    /// One active staff member per application and role for the whole run: making one takes a registration, a passkey and
+    /// a grant through the migrator, so tests that only need someone in the role share them. A test about the staff
+    /// account itself (its passkeys, sessions, a reset) makes its own with <see cref="ActiveAsync"/>.
+    /// </summary>
+    public static async Task<StaffMember> SharedAsync(Lt2Factory factory, DatabaseFixture database, string role)
+    {
+        await Gate.WaitAsync();
+        try
+        {
+            if (!Made.TryGetValue((factory, role), out var member))
+            {
+                member = await ActiveAsync(factory, database, role) with { Shared = true };
+                Made[(factory, role)] = member;
+            }
+
+            return member;
+        }
+        finally
+        {
+            Gate.Release();
+        }
+    }
+
     /// <summary>
     /// Registers a member, adds a passkey, grants the role from the server, signs in with the passkey in a new browser
     /// and activates the role there.

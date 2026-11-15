@@ -20,13 +20,13 @@ public sealed class SeimasClientTests
         var handler = new ScriptedHandler(_ => Ok(Xml));
         var client = Build(handler);
 
-        await client.GetTermsAsync(default);
-        await client.GetMembersAsync(10, default);
-        await client.GetSessionsAsync(10, default);
-        await client.GetSittingsAsync(-501, default);
-        await client.GetAgendaAsync(-502, default);
-        await client.GetProceedingsAsync(-502, default);
-        await client.GetVoteResultsAsync(-60034, default);
+        await client.GetAsync(SeimasRequest.Terms(), default);
+        await client.GetAsync(SeimasRequest.Members(10), default);
+        await client.GetAsync(SeimasRequest.Sessions(10), default);
+        await client.GetAsync(SeimasRequest.Sittings(-501), default);
+        await client.GetAsync(SeimasRequest.Agenda(-502), default);
+        await client.GetAsync(SeimasRequest.Proceedings("posedzio_id", -502), default);
+        await client.GetAsync(SeimasRequest.VoteResults(-60034), default);
 
         handler.Requests.Select(u => u.PathAndQuery).ShouldBe(
         [
@@ -42,12 +42,12 @@ public sealed class SeimasClientTests
     }
 
     [Fact]
-    public async Task The_parameter_of_the_proceedings_service_is_configuration_until_it_is_confirmed()
+    public async Task The_proceedings_request_carries_the_parameter_name_it_is_given_since_the_name_is_still_configuration()
     {
         var handler = new ScriptedHandler(_ => Ok(Xml));
-        var client = Build(handler, ("Seimas:ProceedingsParameter", "darbotvarkes_klausimo_id"));
+        var client = Build(handler);
 
-        await client.GetProceedingsAsync(77, default);
+        await client.GetAsync(SeimasRequest.Proceedings("darbotvarkes_klausimo_id", 77), default);
 
         handler.Requests.Single().PathAndQuery.ShouldBe("/sip/p2b.ad_sp_klausimo_svarstymo_eiga?darbotvarkes_klausimo_id=77");
     }
@@ -58,7 +58,7 @@ public sealed class SeimasClientTests
         var handler = new ScriptedHandler(n => n <= 2 ? throw new HttpRequestException("connection reset") : Ok(Xml));
         var client = Build(handler);
 
-        var response = await client.GetTermsAsync(default);
+        var response = await client.GetAsync(SeimasRequest.Terms(), default);
 
         handler.Requests.Count.ShouldBe(3);
         Encoding.UTF8.GetString(response.Body).ShouldBe(Xml);
@@ -71,7 +71,7 @@ public sealed class SeimasClientTests
         var handler = new ScriptedHandler(n => n == 1 ? new HttpResponseMessage(HttpStatusCode.ServiceUnavailable) : Ok(Xml));
         var client = Build(handler);
 
-        await client.GetTermsAsync(default);
+        await client.GetAsync(SeimasRequest.Terms(), default);
 
         handler.Requests.Count.ShouldBe(2);
     }
@@ -82,7 +82,7 @@ public sealed class SeimasClientTests
         var handler = new ScriptedHandler(_ => new HttpResponseMessage(HttpStatusCode.BadGateway));
         var client = Build(handler);
 
-        var failure = await Should.ThrowAsync<SeimasUnavailableException>(() => client.GetMembersAsync(10, default));
+        var failure = await Should.ThrowAsync<SeimasUnavailableException>(() => client.GetAsync(SeimasRequest.Members(10), default));
 
         failure.Request.ShouldBe(SeimasRequest.Members(10));
         handler.Requests.Count.ShouldBe(1 + 3);
@@ -94,7 +94,7 @@ public sealed class SeimasClientTests
         var handler = new ScriptedHandler(n => n == 1 ? Hang() : Ok(Xml));
         var client = Build(handler);
 
-        await client.GetTermsAsync(default);
+        await client.GetAsync(SeimasRequest.Terms(), default);
 
         handler.Requests.Count.ShouldBe(2);
     }
@@ -105,7 +105,7 @@ public sealed class SeimasClientTests
         var handler = new ScriptedHandler(n => n == 1 ? Ok("<SeimoInformacija><BendriBalsav") : Ok(Xml));
         var client = Build(handler);
 
-        await client.GetVoteResultsAsync(-60034, default);
+        await client.GetAsync(SeimasRequest.VoteResults(-60034), default);
 
         handler.Requests.Count.ShouldBe(2);
     }
@@ -116,7 +116,7 @@ public sealed class SeimasClientTests
         var handler = new ScriptedHandler(_ => Ok("<html>Paslauga laikinai neveikia"));
         var client = Build(handler);
 
-        await Should.ThrowAsync<SeimasUnavailableException>(() => client.GetTermsAsync(default));
+        await Should.ThrowAsync<SeimasUnavailableException>(() => client.GetAsync(SeimasRequest.Terms(), default));
         handler.Requests.Count.ShouldBe(3);
     }
 
@@ -126,9 +126,31 @@ public sealed class SeimasClientTests
         var handler = new ScriptedHandler(_ => Ok(Xml));
         var client = Build(handler, ("Seimas:BaseAddress", "https://kitur.test/sip/"));
 
-        await Should.ThrowAsync<OutboundHostNotAllowedException>(() => client.GetTermsAsync(default));
+        await Should.ThrowAsync<OutboundHostNotAllowedException>(() => client.GetAsync(SeimasRequest.Terms(), default));
 
         handler.Requests.ShouldBeEmpty();
+    }
+
+    [Fact]
+    public async Task A_redirect_to_a_host_off_the_allowlist_is_refused_and_not_followed()
+    {
+        var handler = new ScriptedHandler(_ => Redirect("https://kitur.test/sip/p2b.ad_seimo_kadencijos"));
+        var client = Build(handler);
+
+        await Should.ThrowAsync<OutboundHostNotAllowedException>(() => client.GetAsync(SeimasRequest.Terms(), default));
+
+        handler.Requests.Select(u => u.Host).ShouldBe(["seimas.test"], "the other host is never asked");
+    }
+
+    [Fact]
+    public async Task A_redirect_within_the_allowlist_is_followed()
+    {
+        var handler = new ScriptedHandler(n => n == 1 ? Redirect("/sip/kitas/p2b.ad_seimo_kadencijos") : Ok(Xml));
+        var client = Build(handler);
+
+        (await client.GetAsync(SeimasRequest.Terms(), default)).Body.Length.ShouldBeGreaterThan(0);
+
+        handler.Requests.Select(u => u.PathAndQuery).ShouldBe(["/sip/p2b.ad_seimo_kadencijos", "/sip/kitas/p2b.ad_seimo_kadencijos"]);
     }
 
     [Fact]
@@ -142,7 +164,7 @@ public sealed class SeimasClientTests
         });
         var client = Build(handler);
 
-        (await client.GetTermsAsync(default)).Synthetic.ShouldBeTrue();
+        (await client.GetAsync(SeimasRequest.Terms(), default)).Synthetic.ShouldBeTrue();
     }
 
     [Fact]
@@ -151,7 +173,7 @@ public sealed class SeimasClientTests
         var handler = new ScriptedHandler(_ => Ok("<?xml version=\"1.0\"?><!-- LT2-SYNTHETIC --><SeimoInformacija/>"));
         var client = Build(handler);
 
-        (await client.GetTermsAsync(default)).Synthetic.ShouldBeTrue();
+        (await client.GetAsync(SeimasRequest.Terms(), default)).Synthetic.ShouldBeTrue();
     }
 
     [Fact]
@@ -161,9 +183,9 @@ public sealed class SeimasClientTests
         var client = Build(handler, ("Seimas:MinimumIntervalMilliseconds", "150"));
         var started = DateTimeOffset.UtcNow;
 
-        await client.GetTermsAsync(default);
-        await client.GetTermsAsync(default);
-        await client.GetTermsAsync(default);
+        await client.GetAsync(SeimasRequest.Terms(), default);
+        await client.GetAsync(SeimasRequest.Terms(), default);
+        await client.GetAsync(SeimasRequest.Terms(), default);
 
         (DateTimeOffset.UtcNow - started).ShouldBeGreaterThanOrEqualTo(TimeSpan.FromMilliseconds(290));
     }
@@ -193,6 +215,13 @@ public sealed class SeimasClientTests
             .ConfigurePrimaryHttpMessageHandler(() => handler)
             .SetHandlerLifetime(Timeout.InfiniteTimeSpan);
         return services.BuildServiceProvider().GetRequiredService<ISeimasClient>();
+    }
+
+    private static HttpResponseMessage Redirect(string location)
+    {
+        var response = new HttpResponseMessage(HttpStatusCode.Found);
+        response.Headers.Location = new Uri(location, UriKind.RelativeOrAbsolute);
+        return response;
     }
 
     private static HttpResponseMessage Ok(string body) =>

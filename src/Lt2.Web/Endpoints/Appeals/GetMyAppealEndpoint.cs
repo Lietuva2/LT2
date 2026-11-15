@@ -2,6 +2,7 @@ using System.Security.Claims;
 using Lt2.Api.Contracts;
 using Lt2.Api.Contracts.Appeals;
 using Lt2.Appeals;
+using Lt2.SharedKernel;
 using Lt2.Web.Security;
 using Lt2.Web.Services;
 
@@ -23,7 +24,7 @@ internal static class GetMyAppealEndpoint
 
     private static async Task<IResult> HandleAsync(string number, ClaimsPrincipal user, IAppealsModule appeals, ErrorMapper errors, CancellationToken cancellationToken)
     {
-        var result = await appeals.MineAsync(number, AppealMapping.UserId(user)!.Value, cancellationToken);
+        var result = await appeals.MineAsync(number, user.UserId()!.Value, cancellationToken);
         return result.IsSuccess ? TypedResults.Ok(AppealMapping.Map(result.Value)) : errors.ToResult(result.Error!);
     }
 }

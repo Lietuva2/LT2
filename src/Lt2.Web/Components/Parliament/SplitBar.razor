@@ -5,7 +5,7 @@
 @if (Total > 0)
 {
     <svg class="splitbar @(Small ? "splitbar--s" : "")" viewBox="0 0 1000 10" preserveAspectRatio="none" role="img"
-         aria-label="@F.Format("Split.Aria", Formats.Number(For), Formats.Number(Against), Formats.Number(Abstain))">
+         aria-label="@F.T.Format("Split.Aria", Display.Number(For), Display.Number(Against), Display.Number(Abstain))">
         <rect class="splitbar__for" x="0" y="0" width="@W(For)" height="10" />
         <rect class="splitbar__against" x="@W(For)" y="0" width="@W(Against)" height="10" />
         <rect class="splitbar__abstain" x="@W((For ?? 0) + (Against ?? 0))" y="0" width="@W(Abstain)" height="10" />

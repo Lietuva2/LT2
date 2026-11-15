@@ -38,8 +38,7 @@ internal sealed class SessionTicketStore(
     public async Task<string> StoreAsync(AuthenticationTicket ticket, HttpContext httpContext, CancellationToken cancellationToken)
     {
         ArgumentNullException.ThrowIfNull(ticket);
-        var userId = Guid.Parse(ticket.Principal.FindFirstValue(ClaimTypes.NameIdentifier)
-            ?? throw new InvalidOperationException("The ticket has no user id."));
+        var userId = ticket.Principal.UserId() ?? throw new InvalidOperationException("The ticket has no user id.");
         var now = clock.GetUtcNow();
         var passkey = ticket.Principal.FindFirstValue(PasskeyClaim) is { Length: > 0 } encoded
             ? Microsoft.AspNetCore.WebUtilities.WebEncoders.Base64UrlDecode(encoded)

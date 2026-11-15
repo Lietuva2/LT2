@@ -16,38 +16,7 @@ namespace Lt2.IntegrationTests;
 /// </summary>
 public sealed class DigestTests(DatabaseFixture database) : ApiTest(database)
 {
-    private static readonly SemaphoreSlim Gate = new(1, 1);
-    private static StaffMember? _moderator;
-    private static StaffMember? _administrator;
-    private static readonly TimeZoneInfo Vilnius = TimeZoneInfo.FindSystemTimeZoneById("Europe/Vilnius");
-
-    private async Task<(TestBrowser Moderator, TestBrowser Administrator)> StaffAsync()
-    {
-        await Gate.WaitAsync();
-        try
-        {
-            _moderator ??= await StaffMembers.ActiveAsync(Factory, Database, "moderator");
-            _administrator ??= await StaffMembers.ActiveAsync(Factory, Database, "administrator");
-            return (_moderator.Browser, _administrator.Browser);
-        }
-        finally
-        {
-            Gate.Release();
-        }
-    }
-
-    private static async Task SetAsync(TestBrowser admin, string key, object value)
-    {
-        using var response = await admin.SendAsync(HttpMethod.Put, ApiRoutes.Admin.SettingByKey(key), new UpdateSettingRequest { Value = JsonSerializer.SerializeToElement(value) });
-        response.StatusCode.ShouldBe(HttpStatusCode.OK, await response.Content.ReadAsStringAsync());
-    }
-
-    /// <summary>The Monday of a week some weeks ahead, so each test has its own weeks.</summary>
-    private static DateOnly MondayIn(int weeks)
-    {
-        var today = DateOnly.FromDateTime(TimeZoneInfo.ConvertTime(DateTimeOffset.UtcNow, Vilnius).DateTime);
-        return today.AddDays(7 * weeks - (((int)today.DayOfWeek + 6) % 7));
-    }
+    private static readonly TimeZoneInfo Vilnius = Lt2.SharedKernel.VilniusTime.Zone;
 
     private static DateTimeOffset At(DateOnly day, int hour, int minute = 0)
     {
@@ -69,9 +38,9 @@ public sealed class DigestTests(DatabaseFixture database) : ApiTest(database)
     [Fact]
     public async Task The_weekly_summary_freezes_both_sides_and_seen_arguments_publishes_them_and_sends_nothing()
     {
-        var (moderator, admin) = await StaffAsync();
-        await SetAsync(admin, "Digest:ThresholdMinimum", 1);
-        var monday = MondayIn(2);
+        var (moderator, admin) = ((await ModeratorAsync()).Browser, (await AdministratorAsync()).Browser);
+        await admin.SetSettingAsync("Digest:ThresholdMinimum", 1);
+        var monday = ReasonsToComeSteps.MondayInWeeks(2);
         try
         {
             var (initiator, _) = await Factory.MemberAsync("Rūta Mockutė");
@@ -149,7 +118,7 @@ public sealed class DigestTests(DatabaseFixture database) : ApiTest(database)
         }
         finally
         {
-            await SetAsync(admin, "Digest:ThresholdMinimum", 50);
+            await admin.ResetSettingAsync("Digest:ThresholdMinimum");
             await Database.ExecuteAsync("DELETE FROM parliament.planned_item WHERE bill_number IN ('XVP-0618', 'XVP-0533')");
         }
     }
@@ -157,9 +126,9 @@ public sealed class DigestTests(DatabaseFixture database) : ApiTest(database)
     [Fact]
     public async Task Changing_the_notable_change_setting_changes_which_grown_appeals_a_weekly_summary_holds()
     {
-        var (moderator, admin) = await StaffAsync();
-        await SetAsync(admin, "Digest:ThresholdMinimum", 1);
-        var first = MondayIn(8);
+        var (moderator, admin) = ((await ModeratorAsync()).Browser, (await AdministratorAsync()).Browser);
+        await admin.SetSettingAsync("Digest:ThresholdMinimum", 1);
+        var first = ReasonsToComeSteps.MondayInWeeks(8);
         try
         {
             // Another bill on each week's agenda makes them sitting weeks; XVP-0618 itself is never planned, so it can
@@ -184,15 +153,15 @@ public sealed class DigestTests(DatabaseFixture database) : ApiTest(database)
             (await third.TakeSideAsync(AppealSteps.ThirdBill, "for")).StatusCode.ShouldBe(HttpStatusCode.NoContent);
 
             // 2 → 3 participants is a change of 50 %.
-            await SetAsync(admin, "Digest:NotableChange", 0.6m);
+            await admin.SetSettingAsync("Digest:NotableChange", 0.6m);
             Bills(await RunDueAsync(At(first.AddDays(7), 7, 5))).ShouldNotContain("XVP-0618", "50 % is under the set 60 %");
-            await SetAsync(admin, "Digest:NotableChange", 0.5m);
+            await admin.SetSettingAsync("Digest:NotableChange", 0.5m);
             Bills(await RunDueAsync(At(first.AddDays(14), 7, 5))).ShouldContain("XVP-0618", "50 % reaches the set 50 %");
         }
         finally
         {
-            await SetAsync(admin, "Digest:NotableChange", 0.10m);
-            await SetAsync(admin, "Digest:ThresholdMinimum", 50);
+            await admin.ResetSettingAsync("Digest:NotableChange");
+            await admin.ResetSettingAsync("Digest:ThresholdMinimum");
             await Database.ExecuteAsync("DELETE FROM parliament.planned_item WHERE bill_number IN ('XVP-0618', 'XVP-0533')");
         }
     }
@@ -201,9 +170,9 @@ public sealed class DigestTests(DatabaseFixture database) : ApiTest(database)
     [Fact]
     public async Task A_summary_copes_with_an_appeal_without_arguments_and_with_a_side_without_any()
     {
-        var (moderator, admin) = await StaffAsync();
-        await SetAsync(admin, "Digest:ThresholdMinimum", 1);
-        var monday = MondayIn(16);
+        var (moderator, admin) = ((await ModeratorAsync()).Browser, (await AdministratorAsync()).Browser);
+        await admin.SetSettingAsync("Digest:ThresholdMinimum", 1);
+        var monday = ReasonsToComeSteps.MondayInWeeks(16);
         try
         {
             // XVP-0618: one participant, no arguments at all. XVP-0533: an argument for, none against.
@@ -241,7 +210,7 @@ public sealed class DigestTests(DatabaseFixture database) : ApiTest(database)
         }
         finally
         {
-            await SetAsync(admin, "Digest:ThresholdMinimum", 50);
+            await admin.ResetSettingAsync("Digest:ThresholdMinimum");
             await Database.ExecuteAsync("DELETE FROM parliament.planned_item WHERE bill_number IN ('XVP-0618', 'XVP-0533')");
         }
 
@@ -251,10 +220,10 @@ public sealed class DigestTests(DatabaseFixture database) : ApiTest(database)
     [Fact]
     public async Task A_before_vote_summary_comes_the_day_before_and_the_weekly_ceiling_holds_per_mp()
     {
-        var (moderator, admin) = await StaffAsync();
-        await SetAsync(admin, "Digest:ThresholdMinimum", 1);
-        await SetAsync(admin, "Digest:MaxPerWeek", 1);
-        var monday = MondayIn(4);
+        var (moderator, admin) = ((await ModeratorAsync()).Browser, (await AdministratorAsync()).Browser);
+        await admin.SetSettingAsync("Digest:ThresholdMinimum", 1);
+        await admin.SetSettingAsync("Digest:MaxPerWeek", 1);
+        var monday = ReasonsToComeSteps.MondayInWeeks(4);
         var thursday = monday.AddDays(3);
         try
         {
@@ -284,8 +253,8 @@ public sealed class DigestTests(DatabaseFixture database) : ApiTest(database)
         }
         finally
         {
-            await SetAsync(admin, "Digest:MaxPerWeek", 2);
-            await SetAsync(admin, "Digest:ThresholdMinimum", 50);
+            await admin.ResetSettingAsync("Digest:MaxPerWeek");
+            await admin.ResetSettingAsync("Digest:ThresholdMinimum");
             await Database.ExecuteAsync("DELETE FROM parliament.planned_item WHERE bill_number IN ('XVP-0618', 'XVP-0533')");
         }
     }
@@ -293,10 +262,10 @@ public sealed class DigestTests(DatabaseFixture database) : ApiTest(database)
     [Fact]
     public async Task A_held_appeal_enters_no_summary_until_released_and_one_urgent_summary_may_exceed_the_ceiling()
     {
-        var (moderator, admin) = await StaffAsync();
-        await SetAsync(admin, "Digest:ThresholdMinimum", 1);
-        await SetAsync(admin, "Digest:MaxPerWeek", 1);
-        var monday = MondayIn(6);
+        var (moderator, admin) = ((await ModeratorAsync()).Browser, (await AdministratorAsync()).Browser);
+        await admin.SetSettingAsync("Digest:ThresholdMinimum", 1);
+        await admin.SetSettingAsync("Digest:MaxPerWeek", 1);
+        var monday = ReasonsToComeSteps.MondayInWeeks(6);
         try
         {
             var (initiator, initiatorEmail) = await Factory.MemberAsync();
@@ -336,8 +305,8 @@ public sealed class DigestTests(DatabaseFixture database) : ApiTest(database)
         }
         finally
         {
-            await SetAsync(admin, "Digest:MaxPerWeek", 2);
-            await SetAsync(admin, "Digest:ThresholdMinimum", 50);
+            await admin.ResetSettingAsync("Digest:MaxPerWeek");
+            await admin.ResetSettingAsync("Digest:ThresholdMinimum");
             await Database.ExecuteAsync("DELETE FROM parliament.planned_item WHERE bill_number IN ('XVP-0618', 'XVP-0533')");
         }
     }

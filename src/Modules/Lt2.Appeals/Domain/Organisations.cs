@@ -62,7 +62,10 @@ internal sealed class Organisation
 
     public DateTimeOffset? ClosedAt { get; set; }
 
-    /// <summary>When a moderator last looked; null while new or changed (name or website), so it is in the queue.</summary>
+    /// <summary>
+    /// When a moderator last looked; null while new, or changed in its name or website, or in its description when
+    /// pre-screening flags the new one (design 6.8), so it is in the queue.
+    /// </summary>
     public DateTimeOffset? SeenAt { get; set; }
 
     /// <summary>What pre-screening found in the name and the description, for the moderator.</summary>
@@ -231,5 +234,5 @@ internal static class StatementStatuses
     public const string Withdrawn = "withdrawn";
 
     /// <summary>The statuses that hold the organisation's one statement on a bill (a partial unique index).</summary>
-    public static readonly IReadOnlyList<string> Holding = [Pending, Published, Hidden];
+    public static readonly string[] Holding = [Pending, Published, Hidden];
 }

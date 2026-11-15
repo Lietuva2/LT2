@@ -1,3 +1,5 @@
+using Lt2.SharedKernel;
+
 namespace Lt2.Appeals.Domain;
 
 /// <summary>
@@ -6,8 +8,6 @@ namespace Lt2.Appeals.Domain;
 /// </summary>
 internal static class WritingRules
 {
-    public static readonly TimeZoneInfo Vilnius = TimeZoneInfo.FindSystemTimeZoneById("Europe/Vilnius");
-
     /// <summary>Whether one restriction holds at <paramref name="now"/>: not lifted, and either open-ended or not yet over.</summary>
     public static bool Holds(DateTimeOffset? endsAt, DateTimeOffset? liftedAt, DateTimeOffset now) =>
         liftedAt is null && (endsAt is null || now < endsAt);
@@ -17,17 +17,12 @@ internal static class WritingRules
         !restrictions.Any(r => Holds(r.EndsAt, r.LiftedAt, now));
 
     /// <summary>"Until 20 November" means the whole of that day in Vilnius: it ends at the start of the next day.</summary>
-    public static DateTimeOffset EndsAt(DateOnly untilInclusive)
-    {
-        var local = untilInclusive.AddDays(1).ToDateTime(TimeOnly.MinValue);
-        return new DateTimeOffset(local, Vilnius.GetUtcOffset(local)).ToUniversalTime();
-    }
+    public static DateTimeOffset EndsAt(DateOnly untilInclusive) => VilniusTime.StartOf(untilInclusive.AddDays(1));
 
     /// <summary>The last day of a dated restriction, as the person and the moderator read it.</summary>
-    public static DateOnly? Until(DateTimeOffset? endsAt) =>
-        endsAt is { } end ? DateOnly.FromDateTime(TimeZoneInfo.ConvertTime(end, Vilnius).DateTime).AddDays(-1) : null;
+    public static DateOnly? Until(DateTimeOffset? endsAt) => endsAt is { } end ? VilniusTime.DateOf(end).AddDays(-1) : null;
 
     /// <summary>A date in the past would restrict nothing: the last day must be today or later.</summary>
     public static string? CheckUntil(DateOnly? untilInclusive, DateTimeOffset now) =>
-        untilInclusive is { } day && day < DateOnly.FromDateTime(TimeZoneInfo.ConvertTime(now, Vilnius).DateTime) ? "restriction.until-past" : null;
+        untilInclusive is { } day && day < VilniusTime.DateOf(now) ? "restriction.until-past" : null;
 }

@@ -1,5 +1,5 @@
 @using Lt2.Api.Contracts.Organisations
-@inherits InteractiveBase
+@inherits InteractiveBase<AppealUi>
 @inject IOrganisationModerationApi Moderation
 
 @* The organisations' part of the moderators' queue (design 8.14.9, 8.14.14): new and changed organisations, to be looked at
@@ -42,10 +42,10 @@ else
                     <dd>@if (org.Website is { } site) {<a href="@site" rel="@OrganisationWords.UserLinkRel" target="_blank" id="queue-website-@org.Id">@site</a>} else {@L["OrgMod.NoWebsite"]}</dd>
                     @if (org.LegalCode is { } legal)
                     {
-                        <dt>@L["Org.Field.LegalCode"]</dt><dd class="num">@legal</dd>
+                        <dt>@L["Org.Profile.LegalCode"]</dt><dd class="num">@legal</dd>
                     }
                     <dt>@L["Org.Profile.Lobbyist"]</dt><dd>@L[org.DeclaredLobbyist ? "OrgMod.Yes" : "OrgMod.No"]</dd>
-                    <dt>@L["Org.Profile.Registered"]</dt><dd class="num">@Dates.DayTime(org.RegisteredAt)</dd>
+                    <dt>@L["Org.Profile.Registered"]</dt><dd class="num">@Display.DayTime(org.RegisteredAt)</dd>
                 </dl>
                 @if (org.Description.Length > 0)
                 {
@@ -57,7 +57,7 @@ else
                     <ul class="rows">
                         @foreach (var change in org.History)
                         {
-                            <li><div class="rows__main"><span class="small num">@Dates.DayTime(change.At) · @L["Org.History." + change.Field]</span><span class="small">@(change.OldValue ?? "–") → @(change.NewValue ?? "–")</span></div></li>
+                            <li><div class="rows__main"><span class="small num">@Display.DayTime(change.At) · @L["Org.History." + change.Field]</span><span class="small">@(change.OldValue ?? "–") → @(change.NewValue ?? "–")</span></div></li>
                         }
                     </ul>
                 }

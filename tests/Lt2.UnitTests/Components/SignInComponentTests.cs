@@ -241,7 +241,7 @@ public sealed class SignInComponentTests : BunitContext
 
         page.Find("form").Submit();
 
-        page.Find("#confirmsAdult-error").TextContent.ShouldBe("Registruotis gali tik 18 metų ir vyresni asmenys.");
+        page.Find("#reg-age-error").TextContent.ShouldBe("Registruotis gali tik 18 metų ir vyresni asmenys.");
         _me.Completions.ShouldBeEmpty();
     }
 
@@ -262,7 +262,7 @@ public sealed class SignInComponentTests : BunitContext
         page.Find("#reg-age").Change(true);
         page.Find("form").Submit();
 
-        page.WaitForElement("#invitationCode-error").TextContent.ShouldBe(usedUp);
+        page.WaitForElement("#complete-invite-error").TextContent.ShouldBe(usedUp);
         page.Find("#complete-invite").Input("BANDYMAS-2026");
         page.Find("form").Submit();
 
@@ -354,7 +354,7 @@ public sealed class SignInComponentTests : BunitContext
     [Fact]
     public void The_note_component_renders_nothing_without_text()
     {
-        Render<Messages>().Markup.Trim().ShouldBeEmpty();
+        Render<Messages>().FindAll(".note").ShouldBeEmpty("the status region is there, empty, so what appears in it is announced");
         Render<Messages>(p => p.Add(m => m.Message, "Klaida")).Find(".note").TextContent.ShouldBe("Klaida");
     }
 
@@ -486,7 +486,7 @@ public sealed class SignInComponentTests : BunitContext
         public Task<ApiResult> DeleteAccountAsync(CancellationToken cancellationToken = default) => Task.FromResult(ApiResult.Ok());
 
         public Task<ApiResult<MyInvitationResponse>> GetInvitationAsync(CancellationToken cancellationToken = default) =>
-            Task.FromResult(ApiResult<MyInvitationResponse>.Ok(new MyInvitationResponse("ABCD-EFGH", "/prisijungti?kodas=ABCD-EFGH", 0, true, null)));
+            Task.FromResult(ApiResult<MyInvitationResponse>.Ok(new MyInvitationResponse("ABCD-EFGH", "/prisijungti#kodas=ABCD-EFGH", 0, true, null)));
 
         public Task<ApiResult<MyInvitationResponse>> ReplaceInvitationAsync(CancellationToken cancellationToken = default) => GetInvitationAsync(cancellationToken);
 

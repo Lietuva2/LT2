@@ -345,8 +345,7 @@ internal sealed class Revision
 
 /// <summary>
 /// <c>appeals.daily_stat</c>: the daily aggregate counts per appeal (design 5.3), for the trend chart and surge
-/// detection. Filled by the daily aggregation job (second half of M2a). The only source of trends: no per-person
-/// history is stored.
+/// detection. Filled by the daily aggregation job. The only source of trends: no per-person history is stored.
 /// </summary>
 internal sealed class DailyStat
 {
@@ -364,6 +363,9 @@ internal sealed class DailyStat
 
     /// <summary>Share of that day's new positions taken by accounts younger than 30 days.</summary>
     public decimal NewAccountShare { get; set; }
+
+    /// <summary>When the row was computed: a row computed after its day ended is final (<see cref="DailyStatRules"/>).</summary>
+    public DateTimeOffset? ComputedAt { get; set; }
 }
 
 /// <summary>

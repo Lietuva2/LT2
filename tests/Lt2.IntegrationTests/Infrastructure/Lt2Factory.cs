@@ -22,6 +22,9 @@ public class Lt2Factory(DatabaseFixture database, int codeRequestLimit = 1000, i
         builder.UseSetting("ConnectionStrings:Lt2", Database.AppConnectionString);
         builder.UseSetting("Security:IpHashKey", "test-ip-hash-key");
         builder.UseSetting("Moderation:ContactAddress", "moderatoriai@lt2.test");
+        // No test calls a real AI provider, whatever the environment of the machine says (AGENTS.md); tests that need one put a fake in.
+        builder.UseSetting("Ai:Provider", "");
+        builder.UseSetting("Ai:ApiKey", "");
         builder.UseSetting("RateLimits:CodeRequest:PermitLimit", codeRequestLimit.ToString(System.Globalization.CultureInfo.InvariantCulture));
         builder.UseSetting("RateLimits:CodeRequest:WindowSeconds", "600");
         builder.UseSetting("RateLimits:Registration:PermitLimit", registrationLimit.ToString(System.Globalization.CultureInfo.InvariantCulture));

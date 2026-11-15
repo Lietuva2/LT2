@@ -22,7 +22,7 @@
         @T["Agenda.Source"]@(" ")
         @if (_agenda?.AgendaReadAt is { } readAt)
         {
-            @Fmt("Agenda.ReadAt", Formats.Stamp(readAt))
+            @T.Format("Agenda.ReadAt", Display.DayTime(readAt))
         }
         else
         {
@@ -41,12 +41,12 @@
     {
         @foreach (var day in _agenda.Days)
         {
-            <section class="stack stack--tight" aria-labelledby="h-day-@Formats.Day(day.Date)">
-                <h3 id="h-day-@Formats.Day(day.Date)">@Fmt("Agenda.Day", F.Date(day.Date))</h3>
+            <section class="stack stack--tight" aria-labelledby="h-day-@Display.Day(day.Date)">
+                <h3 id="h-day-@Display.Day(day.Date)">@T.Format("Agenda.Day", F.Date(day.Date))</h3>
                 <ul class="rows">
                     @foreach (var item in day.Items)
                     {
-                        <AgendaItemRow Item="item" />
+                        <AgendaItemRow Item="item" Day="day.Date" />
                     }
                 </ul>
             </section>
@@ -73,7 +73,7 @@
                             {
                                 <span class="tag">@F.Stage(stage)</span>
                             }
-                            <span class="small num">@Formats.Day(DateOnly.FromDateTime(TimeZoneInfo.ConvertTime(v.HeldAt, Vilnius).DateTime))</span>
+                            <span class="small num">@Display.Day(v.HeldAt)</span>
                         </span>
                         <a href="/seimas/@Uri.EscapeDataString(v.Number)">@v.Title</a>
                         <span class="small">
@@ -83,7 +83,7 @@
                             }
                             else
                             {
-                                <a class="num" href="/seimas/balsavimai/@v.VoteId">@Fmt("Agenda.Result", Formats.Number(v.Totals.For), Formats.Number(v.Totals.Against), Formats.Number(v.Totals.Abstain))</a>
+                                <a class="num" href="/seimas/balsavimai/@v.VoteId">@T.Format("Agenda.Result", Display.Number(v.Totals.For), Display.Number(v.Totals.Against), Display.Number(v.Totals.Abstain))</a>
                             }
                         </span>
                         @if (v.OfficialNote is { } note)
@@ -107,10 +107,8 @@
 <p class="note note--quiet" id="not-a-poll">@A["NotAPoll"]</p>
 
 @code {
-    private static readonly TimeZoneInfo Vilnius = TimeZoneInfo.FindSystemTimeZoneById("Europe/Vilnius");
+
     private AgendaResponse? _agenda;
 
     protected override async Task OnInitializedAsync() => _agenda = (await Api.GetAgendaAsync()).Value;
-
-    private string Fmt(string key, params object?[] values) => string.Format(System.Globalization.CultureInfo.InvariantCulture, T[key], values);
 }

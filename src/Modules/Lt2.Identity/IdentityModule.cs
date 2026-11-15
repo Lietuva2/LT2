@@ -254,8 +254,8 @@ internal sealed class IdentityModuleFacade(
     public Task<Result<string?>> GetPartySupportAsync(ClaimsPrincipal user, CancellationToken cancellationToken) =>
         parties.GetAsync(user, cancellationToken);
 
-    public Task<Result<Unit>> SetPartySupportAsync(ClaimsPrincipal user, string? party, IReadOnlyCollection<string> allowed, CancellationToken cancellationToken) =>
-        parties.SetAsync(user, party, allowed, cancellationToken);
+    public Task<Result<Unit>> SetPartySupportAsync(ClaimsPrincipal user, string? party, bool consent, IReadOnlyCollection<string> allowed, CancellationToken cancellationToken) =>
+        parties.SetAsync(user, party, consent, allowed, cancellationToken);
 
     public Task<Result<object>> ExportAsync(ClaimsPrincipal user, CancellationToken cancellationToken) => data.ExportAsync(user, cancellationToken);
 
@@ -270,8 +270,10 @@ public static class IdentityAdministration
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(code);
         await using var db = new IdentityDb(IdentityDb.StandaloneOptions(connectionString));
+        // Compared as typed codes are (case, dashes and spaces do not matter), as the unique look-up column is.
         var normalized = Invitation.NormalizeCode(code);
-        if (await db.Invitations.AnyAsync(i => i.Code == normalized, cancellationToken))
+        var lookup = InvitationRules.Lookup(normalized);
+        if (await db.Invitations.AnyAsync(i => i.Lookup == lookup, cancellationToken))
         {
             return false;
         }

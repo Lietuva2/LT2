@@ -1,5 +1,5 @@
 @using Lt2.Api.Contracts.Organisations
-@inherits InteractiveBase
+@inherits InteractiveBase<AppealUi>
 @inject IOrganisationModerationApi Moderation
 
 @* The actions on an organisation or a statement (design 8.14.14), as on the queue's screen (8.3): each is its own control,
@@ -20,17 +20,18 @@
         }
         else if (_open == "restrict")
         {
-            <RestrictAuthor Id="Id" Statement="true" Embedded="true" OnCancel="() => _open = null" OnDone="RestrictedAsync" />
+            <RestrictAuthor Id="Id" Statement="true" IdPrefix="org-" OnCancel="() => _open = null" OnDone="RestrictedAsync" />
         }
         else
         {
             <form class="sheet stack stack--tight" @onsubmit="SubmitAsync" novalidate aria-labelledby="org-action-title-@Id" id="org-action-form-@Id">
                 <h4 id="org-action-title-@Id">@L["OrgMod.Action." + _open]</h4>
                 <p class="small" id="org-action-sentence-@Id">@L["OrgMod.Sentence." + _open]</p>
-                <div class="field @(Errors.ContainsKey("statement") ? "field--error" : "")">
+                <div class="field @ErrorClass("statement")">
                     <label for="org-statement-@Id">@L[Optional(_open) ? "OrgMod.Note" : _open == "confirm" ? "OrgMod.Checked" : "OrgMod.Statement"]</label>
-                    <textarea class="textarea" id="org-statement-@Id" maxlength="@AppealLimits.StatementMaxLength" @bind="_statement" @bind:event="oninput" disabled="@Locked"></textarea>
-                    <FieldError Errors="Errors" Field="statement" />
+                    <textarea class="textarea" id="org-statement-@Id" maxlength="@AppealLimits.StatementMaxLength" @bind="_statement" @bind:event="oninput" disabled="@Locked"
+                              aria-invalid="@Invalid("statement")" aria-describedby="@DescribedBy("statement", $"org-statement-{Id}")"></textarea>
+                    <FieldError Errors="Errors" Field="statement" For="@($"org-statement-{Id}")" />
                 </div>
                 <div class="row">
                     <button type="submit" class="btn" id="org-action-submit-@Id" disabled="@Locked">@L["OrgMod.Action." + _open]</button>
@@ -81,7 +82,7 @@
     {
         _open = action;
         _statement = "";
-        Errors = new Dictionary<string, string[]>();
+        ClearMessages();
         if (action == "restrict")
         {
             _done = null;
@@ -100,7 +101,7 @@
         var action = _open!;
         if (!Optional(action) && string.IsNullOrWhiteSpace(_statement))
         {
-            Errors = new Dictionary<string, string[]> { ["statement"] = [L["OrgMod.StatementRequired"].Value] };
+            FieldFails("statement", L["OrgMod.StatementRequired"]);
             return;
         }
 
@@ -117,9 +118,8 @@
             "hide" => await Moderation.HideStatementAsync(Id, statement),
             _ => ApiResult.Fail(new ApiProblem { Status = 400, Code = "action" }),
         };
-        if (!result.IsSuccess)
+        if (!Succeeded(result, "statement"))
         {
-            Show(result.Problem, "statement");
             return;
         }
 

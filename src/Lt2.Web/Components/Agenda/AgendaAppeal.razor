@@ -17,10 +17,10 @@ else if (Appeal.Counts.For + Appeal.Counts.Against == 0)
 else
 {
     <span class="small num">
-        <span class="choice choice--for">@T["Agenda.For"]</span> @Formats.Number(Appeal.Counts.For) (@Formats.Number(Appeal.Counts.ForOlderThan30Days))
-        · <span class="choice choice--against">@T["Agenda.Against"]</span> @Formats.Number(Appeal.Counts.Against) (@Formats.Number(Appeal.Counts.AgainstOlderThan30Days))
+        <span class="choice choice--for">@T["Agenda.For"]</span> @Display.Number(Appeal.Counts.For) (@Display.Number(Appeal.Counts.ForOlderThan30Days))
+        · <span class="choice choice--against">@T["Agenda.Against"]</span> @Display.Number(Appeal.Counts.Against) (@Display.Number(Appeal.Counts.AgainstOlderThan30Days))
     </span>
-    <span class="small num">@Fmt("Agenda.Threshold", Formats.Number(Appeal.Threshold.Participants), Formats.Number(Appeal.Threshold.Value))</span>
+    <span class="small num">@T.Format("Agenda.Threshold", Display.Number(Appeal.Threshold.Participants), Display.Number(Appeal.Threshold.Value))</span>
     <a class="small" href="@BillPath">@T[Appeal.Status == "closed" ? "Agenda.ToClosedAppeal" : "Agenda.ToAppeal"]</a>
 }
 
@@ -30,6 +30,4 @@ else
     [Parameter, EditorRequired] public string Number { get; set; } = "";
 
     private string BillPath => "/seimas/" + Uri.EscapeDataString(Number);
-
-    private string Fmt(string key, params object?[] values) => string.Format(System.Globalization.CultureInfo.InvariantCulture, T[key], values);
 }

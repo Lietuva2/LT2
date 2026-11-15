@@ -1,5 +1,6 @@
 using Lt2.Identity.Domain;
 using Lt2.SharedKernel;
+using Lt2.SharedKernel.Persistence;
 using Microsoft.AspNetCore.DataProtection.EntityFrameworkCore;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
@@ -88,6 +89,11 @@ internal sealed class IdentityDb(DbContextOptions<IdentityDb> options)
             b.HasIndex(x => x.OrganisationId).IsUnique()
                 .HasFilter("kind = 'organisation' AND replaced_at IS NULL")
                 .HasDatabaseName("ix_invitation_organisation_current");
+
+            // One current code per member (design 6.8), as for organisations.
+            b.HasIndex(x => x.IssuedByUserId, "ix_invitation_personal_current").IsUnique()
+                .HasFilter("kind = 'personal' AND replaced_at IS NULL")
+                .HasDatabaseName("ix_invitation_personal_current");
             b.ToTable(t => t.HasCheckConstraint("ck_invitation_uses_left", "uses_left >= 0"));
         });
 
@@ -175,15 +181,13 @@ internal sealed class IdentityDb(DbContextOptions<IdentityDb> options)
         var services = new ServiceCollection();
         services.Configure<IdentityOptions>(o => o.Stores.SchemaVersion = IdentitySchemaVersions.Version3);
         var builder = new DbContextOptionsBuilder<IdentityDb>();
-        builder.UseNpgsql(connectionString, o => o.MigrationsHistoryTable("__ef_migrations_history", IdentityModule.Schema))
-            .UseSnakeCaseNamingConvention()
+        builder.UseLt2Npgsql(connectionString, IdentityModule.Schema)
             .UseApplicationServiceProvider(services.BuildServiceProvider());
         return builder.Options;
     }
 
     internal static void Configure(DbContextOptionsBuilder options, NpgsqlDataSource dataSource) =>
-        options.UseNpgsql(dataSource, o => o.MigrationsHistoryTable("__ef_migrations_history", IdentityModule.Schema))
-            .UseSnakeCaseNamingConvention();
+        options.UseLt2Npgsql(dataSource, IdentityModule.Schema);
 }
 
 /// <summary>The three roles, seeded by the migration with fixed identifiers.</summary>

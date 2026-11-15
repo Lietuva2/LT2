@@ -48,19 +48,23 @@ public sealed class AiFactory(DatabaseFixture database) : Lt2Factory(database)
 /// nothing offers a draft and every other path works; with one (a fake here: no test calls a real provider) the draft fills
 /// the description, is audited without its text, is limited to 20 an hour, and the bill says "Sukurta DI · taisė žmonės".
 /// </summary>
-public sealed class AiDraftTests(DatabaseFixture database) : ApiTest(database), IAsyncDisposable
+public sealed class AiDraftTests(DatabaseFixture database) : ApiTest(database)
 {
     private const string Source = "Aiškinamasis raštas. Projektu siūloma nustatyti trečią 32 % gyventojų pajamų mokesčio tarifą metinėms pajamoms, viršijančioms 60 VDU.";
 
-    private AiFactory? _ai;
+    private static readonly Lock FactoryGate = new();
+    private static AiFactory? _ai;
 
-    private AiFactory Ai => _ai ??= new AiFactory(Database);
-
-    public async ValueTask DisposeAsync()
+    /// <summary>One for the whole run, like <see cref="ApiTest.Factory"/>: a host per test was slow. The tests count what the
+    /// fakes were asked from where they started and clear what they set.</summary>
+    private AiFactory Ai
     {
-        if (_ai is not null)
+        get
         {
-            await _ai.DisposeAsync();
+            lock (FactoryGate)
+            {
+                return _ai ??= new AiFactory(Database);
+            }
         }
     }
 

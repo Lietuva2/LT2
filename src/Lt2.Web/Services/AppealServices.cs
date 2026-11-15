@@ -69,9 +69,6 @@ internal static class AppealMapping
 
     public static ModeratorDescription ToModule(ModeratorDescriptionRequest r) => new(r.Description, r.Statement, r.FromDraft, r.DescriptionUrl);
 
-    /// <summary>The signed-in account, or <c>null</c>.</summary>
-    public static Guid? UserId(ClaimsPrincipal? user) =>
-        Guid.TryParse(user?.FindFirstValue(ClaimTypes.NameIdentifier), out var id) ? id : null;
 
     public static MyRestrictionResponse Map(MyRestriction? r) => r is null ? new(false, null, null) : new(true, r.Until, r.Statement);
 
@@ -88,11 +85,11 @@ internal static class AppealMapping
         configuration["Moderation:ContactAddress"] is { Length: > 0 } address ? address : null;
 
     /// <summary>The moderator for the audit log: the role that works in this session (moderator first).</summary>
-    public static async Task<ModeratorActor> ModeratorAsync(IIdentityModule identity, ClaimsPrincipal user, string? ipHash, CancellationToken cancellationToken)
+    public static async Task<StaffActor> ModeratorAsync(IIdentityModule identity, ClaimsPrincipal user, string? ipHash, CancellationToken cancellationToken)
     {
         var session = await identity.GetStaffSessionAsync(user, cancellationToken);
         var role = session.Has(Roles.Moderator) ? Roles.Moderator : Roles.Administrator;
-        return new ModeratorActor(UserId(user) ?? throw new InvalidOperationException("A moderator is signed in."), role, ipHash);
+        return new StaffActor(user.UserId() ?? throw new InvalidOperationException("A moderator is signed in."), role, ipHash);
     }
 }
 
@@ -159,7 +156,7 @@ internal sealed class ServerAppealsApi(IAppealsModule appeals, IHttpContextAcces
     public async Task<ApiResult> FlagDateAsync(string number, FlagRequest request, CancellationToken cancellationToken = default) =>
         await AsMemberAsync(id => appeals.FlagDateAsync(number, id, new NewFlag(request.Kind, request.Link, request.Note), cancellationToken));
 
-    private Guid? UserId => AppealMapping.UserId(accessor.HttpContext?.User);
+    private Guid? UserId => accessor.HttpContext?.User.UserId();
 
     private async Task<ApiResult> AsMemberAsync(Func<Guid, Task<Result<Unit>>> action) =>
         UserId is { } id ? errors.ToApiResult(await action(id)) : ApiResult.Fail(errors.ToProblem(SignInRequired));
@@ -188,15 +185,14 @@ internal sealed class ServerModerationApi(
     public Task<ApiResult> LiftRestrictionAsync(Guid restrictionId, StatementRequest request, CancellationToken cancellationToken = default) =>
         ActAsync(m => moderation.LiftRestrictionAsync(restrictionId, request.Statement, m, AppealMapping.Contact(configuration), cancellationToken));
 
-    private async Task<ApiResult<RestrictionCreatedResponse>> RestrictAsync(Func<ModeratorActor, Task<Result<Guid>>> action)
+    private async Task<ApiResult<RestrictionCreatedResponse>> RestrictAsync(Func<StaffActor, Task<Result<Guid>>> action)
     {
-        var http = accessor.HttpContext;
-        var authorization = http?.RequestServices.GetRequiredService<Microsoft.AspNetCore.Authorization.IAuthorizationService>();
-        if (http is null || authorization is null || !(await authorization.AuthorizeAsync(http.User, http, Policies.Moderator)).Succeeded)
+        if (!await IsModeratorAsync())
         {
             return ApiResult<RestrictionCreatedResponse>.Fail(errors.ToProblem(Error.Forbidden("forbidden")));
         }
 
+        var http = accessor.HttpContext!;
         return errors.ToApiResult(await action(await AppealMapping.ModeratorAsync(identity, http.User, ipHasher.Hash(http), http.RequestAborted)), id => new RestrictionCreatedResponse(id));
     }
 
@@ -230,7 +226,7 @@ internal sealed class ServerModerationApi(
 
     public async Task<ApiResult<BillRecordResponse>> EnsureRecordAsync(string number, CancellationToken cancellationToken = default) =>
         await IsModeratorAsync()
-            ? errors.ToApiResult(await moderation.RecordAsync(number, cancellationToken), id => new BillRecordResponse(id))
+            ? errors.ToApiResult(await moderation.EnsureRecordAsync(number, cancellationToken), id => new BillRecordResponse(id))
             : ApiResult<BillRecordResponse>.Fail(errors.ToProblem(Error.Forbidden("forbidden")));
 
     public Task<ApiResult> WriteDescriptionAsync(string number, ModeratorDescriptionRequest request, CancellationToken cancellationToken = default) =>
@@ -266,7 +262,7 @@ internal sealed class ServerModerationApi(
     public Task<ApiResult> UrgentAsync(Guid appealId, Lt2.Api.Contracts.Digests.UrgentDigestRequest request, CancellationToken cancellationToken = default) =>
         ActAsync(async m =>
         {
-            var made = await digests.UrgentAsync(appealId, request.Statement, new Lt2.Notifications.StaffActor(m.UserId, m.Role, m.IpHash), cancellationToken);
+            var made = await digests.UrgentAsync(appealId, request.Statement, m, cancellationToken);
             return made.IsSuccess ? Result.Ok() : made.Error!;
         });
 
@@ -287,7 +283,18 @@ internal sealed class ServerModerationApi(
         return errors.ToApiResult(await moderation.DraftDescriptionAsync(number, request.SourceText, moderator, cancellationToken), d => new DescriptionDraftResponse(d));
     }
 
-    private async Task<bool> IsModeratorAsync()
+    private Task<bool> IsModeratorAsync() => ServerStaff.IsAllowedAsync(accessor, Policies.Moderator);
+
+    private Task<ApiResult> ActAsync(Func<StaffActor, Task<Result<Unit>>> action) => ServerStaff.ActAsync(accessor, identity, ipHasher, errors, action);
+}
+
+/// <summary>
+/// The staff checks of the server-side API clients: the same policies the endpoints require, applied to the current
+/// request, and a moderator's action run as that moderator.
+/// </summary>
+internal static class ServerStaff
+{
+    public static async Task<bool> IsAllowedAsync(IHttpContextAccessor accessor, string policy)
     {
         var http = accessor.HttpContext;
         if (http is null)
@@ -296,12 +303,14 @@ internal sealed class ServerModerationApi(
         }
 
         var authorization = http.RequestServices.GetRequiredService<Microsoft.AspNetCore.Authorization.IAuthorizationService>();
-        return (await authorization.AuthorizeAsync(http.User, http, Policies.Moderator)).Succeeded;
+        return (await authorization.AuthorizeAsync(http.User, http, policy)).Succeeded;
     }
 
-    private async Task<ApiResult> ActAsync(Func<ModeratorActor, Task<Result<Unit>>> action)
+    /// <summary>A moderator's action, refused unless the request passes <see cref="Policies.Moderator"/>.</summary>
+    public static async Task<ApiResult> ActAsync(
+        IHttpContextAccessor accessor, IIdentityModule identity, IpHasher ipHasher, ErrorMapper errors, Func<StaffActor, Task<Result<Unit>>> action)
     {
-        if (!await IsModeratorAsync())
+        if (!await IsAllowedAsync(accessor, Policies.Moderator))
         {
             return ApiResult.Fail(errors.ToProblem(Error.Forbidden("forbidden")));
         }
@@ -327,7 +336,7 @@ internal sealed class ServerAdminApi(ISettingsAdministration settings, IHttpCont
         }
 
         var http = accessor.HttpContext!;
-        var result = await settings.UpdateAsync(key, request.Value, AppealMapping.UserId(http.User)!.Value, Roles.Administrator, ipHasher.Hash(http), cancellationToken);
+        var result = await settings.UpdateAsync(key, request.Value, http.User.UserId()!.Value, Roles.Administrator, ipHasher.Hash(http), cancellationToken);
         return errors.ToApiResult(result, SettingMapping.ToResponse);
     }
 
@@ -344,18 +353,8 @@ internal sealed class ServerAdminApi(ISettingsAdministration settings, IHttpCont
         }
 
         var http = accessor.HttpContext!;
-        return errors.ToApiResult(await invitations.SwitchAsync(invitationId, on, request.Statement, AppealMapping.UserId(http.User)!.Value, Roles.Administrator, ipHasher.Hash(http), cancellationToken));
+        return errors.ToApiResult(await invitations.SwitchAsync(invitationId, on, request.Statement, http.User.UserId()!.Value, Roles.Administrator, ipHasher.Hash(http), cancellationToken));
     }
 
-    private async Task<bool> IsAdministratorAsync()
-    {
-        var http = accessor.HttpContext;
-        if (http is null)
-        {
-            return false;
-        }
-
-        var authorization = http.RequestServices.GetRequiredService<Microsoft.AspNetCore.Authorization.IAuthorizationService>();
-        return (await authorization.AuthorizeAsync(http.User, http, Policies.Administrator)).Succeeded;
-    }
+    private Task<bool> IsAdministratorAsync() => ServerStaff.IsAllowedAsync(accessor, Policies.Administrator);
 }

@@ -215,26 +215,6 @@ internal sealed class HttpAdminApi(ApiHttp http) : IAdminApi
         http.SendAsync(HttpMethod.Post, ApiRoutes.Admin.SwitchInvitation(invitationId, on), request, cancellationToken);
 }
 
-internal sealed class HttpDigestsApi(ApiHttp http) : Lt2.Api.Contracts.Digests.IDigestsApi
-{
-    public Task<ApiResult<IReadOnlyList<Lt2.Api.Contracts.Digests.DigestRunResponse>>> GetDigestsAsync(CancellationToken cancellationToken = default) =>
-        http.SendAsync<IReadOnlyList<Lt2.Api.Contracts.Digests.DigestRunResponse>>(HttpMethod.Get, Lt2.Api.Contracts.Digests.DigestRoutes.Digests, null, cancellationToken);
-
-    public Task<ApiResult<Lt2.Api.Contracts.Digests.DigestRulesResponse>> GetRulesAsync(CancellationToken cancellationToken = default) =>
-        http.SendAsync<Lt2.Api.Contracts.Digests.DigestRulesResponse>(HttpMethod.Get, Lt2.Api.Contracts.Digests.DigestRoutes.Rules, null, cancellationToken);
-
-    public Task<ApiResult<IReadOnlyList<Lt2.Api.Contracts.Digests.DigestRunResponse>>> GetDigestAsync(DateOnly date, CancellationToken cancellationToken = default) =>
-        http.SendAsync<IReadOnlyList<Lt2.Api.Contracts.Digests.DigestRunResponse>>(HttpMethod.Get, Lt2.Api.Contracts.Digests.DigestRoutes.DigestOn(date), null, cancellationToken);
-
-    public Task<ApiResult<IReadOnlyList<Lt2.Api.Contracts.Digests.AppealDigestResponse>>> GetAppealDigestsAsync(string number, CancellationToken cancellationToken = default) =>
-        http.SendAsync<IReadOnlyList<Lt2.Api.Contracts.Digests.AppealDigestResponse>>(HttpMethod.Get, Lt2.Api.Contracts.Digests.DigestRoutes.OfAppealOn(number), null, cancellationToken);
-
-    public Task<ApiResult<IReadOnlyList<Lt2.Api.Contracts.Digests.DigestMpResponse>>> GetMpsAsync(Guid runId, CancellationToken cancellationToken = default) =>
-        http.SendAsync<IReadOnlyList<Lt2.Api.Contracts.Digests.DigestMpResponse>>(HttpMethod.Get, Lt2.Api.Contracts.Digests.DigestRoutes.MpsOf(runId), null, cancellationToken);
-
-    public Task<ApiResult<Lt2.Api.Contracts.Digests.DigestPreviewResponse>> GetPreviewAsync(Guid runId, string slug, CancellationToken cancellationToken = default) =>
-        http.SendAsync<Lt2.Api.Contracts.Digests.DigestPreviewResponse>(HttpMethod.Get, Lt2.Api.Contracts.Digests.DigestRoutes.PreviewOf(runId, slug), null, cancellationToken);
-}
 
 internal sealed class HttpFollowsApi(ApiHttp http) : Lt2.Api.Contracts.Follows.IFollowsApi
 {
@@ -266,11 +246,6 @@ internal sealed class HttpFollowsApi(ApiHttp http) : Lt2.Api.Contracts.Follows.I
         http.SendAsync(HttpMethod.Put, Lt2.Api.Contracts.Follows.FollowRoutes.Notices, request, cancellationToken);
 }
 
-internal sealed class HttpAgendaApi(ApiHttp http) : Lt2.Api.Contracts.Agenda.IAgendaApi
-{
-    public Task<ApiResult<Lt2.Api.Contracts.Agenda.AgendaResponse>> GetAgendaAsync(CancellationToken cancellationToken = default) =>
-        http.SendAsync<Lt2.Api.Contracts.Agenda.AgendaResponse>(HttpMethod.Get, Lt2.Api.Contracts.Agenda.AgendaRoutes.Agenda, null, cancellationToken);
-}
 
 internal sealed class HttpFeedbackApi(ApiHttp http) : Lt2.Api.Contracts.Feedback.IFeedbackApi
 {

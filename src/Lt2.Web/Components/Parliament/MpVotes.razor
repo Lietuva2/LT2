@@ -8,13 +8,13 @@
 
 @if (_mp is { } p && _votes is { } votes)
 {
-    <PageTitle>@F.Format("Mp.Votes.Title", $"{p.Mp.FirstName} {p.Mp.LastName}") · Lietuva 2.0</PageTitle>
+    <PageTitle>@F.T.Format("Mp.Votes.Title", $"{p.Mp.FirstName} {p.Mp.LastName}") · Lietuva 2.0</PageTitle>
     <div class="stack">
         <ol class="crumbs">
             <li><a href="/seimo-nariai">@F.T["Mps.Title"]</a></li>
             <li><a href="/p/@p.Mp.Slug">@p.Mp.FirstName @p.Mp.LastName</a></li>
         </ol>
-        <h1>@F.Format("Mp.Votes.Title", $"{p.Mp.FirstName} {p.Mp.LastName}")</h1>
+        <h1>@F.T.Format("Mp.Votes.Title", $"{p.Mp.FirstName} {p.Mp.LastName}")</h1>
     </div>
 
     @if (votes.Items.Count == 0)

@@ -1,4 +1,4 @@
-@inherits InteractiveBase
+@inherits InteractiveBase<AppealUi>
 @inject Lt2.Api.Contracts.Follows.IFollowsApi Follows
 
 @* "Sekti" / "Nebesekti" a bill, an MP (design 8.11.2) or an organisation (design 8.14.14, stage B). Private: who follows what is shown to nobody, and there is no
@@ -27,13 +27,11 @@
     /// <summary>The bill's number, or the MP's or the organisation's profile slug.</summary>
     [Parameter, EditorRequired] public string Key { get; set; } = "";
 
-    [CascadingParameter] private Task<AuthenticationState>? AuthState { get; set; }
-
     [PersistentState] public bool? Following { get; set; }
 
     protected override async Task OnInitializedAsync()
     {
-        _signedIn = AuthState is not null && (await AuthState).User.Identity?.IsAuthenticated == true;
+        _signedIn = await IsSignedInAsync();
         if (_signedIn && Following is null && (await Follows.GetMineAsync()).Value is { } mine)
         {
             Following = Kind switch

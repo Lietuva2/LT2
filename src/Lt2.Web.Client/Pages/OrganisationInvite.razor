@@ -1,13 +1,16 @@
+@page "/organizacijos/kvietimas"
 @page "/organizacijos/kvietimas/{Token}"
 @attribute [Authorize]
 @rendermode InteractiveWebAssembly
 @using Lt2.Api.Contracts.Organisations
-@inherits InteractiveBase
+@inherits InteractiveBase<AppealUi>
 @inject IOrganisationsApi Organisations
 @inject NavigationManager Navigation
 
 @* A representative's one-time link (design 8.14.14): a signed-in member who opens it and agrees becomes a representative.
-   The link works once, within seven days; nobody is looked up by email. *@
+   The link works once, within seven days; nobody is looked up by email. Design 6.8: the token is after the "#", read in the
+   browser and sent in request bodies, so the page rendered on the server knows nothing of it. An old link with the token
+   in the path still works. *@
 <PageTitle>@L["Org.Invite.PageTitle"]</PageTitle>
 
 <div class="stack">
@@ -17,21 +20,22 @@
     </ol>
     <h1>@L["Org.Invite.Title"]</h1>
     <NeedsScript />
-    @if (Invite is null)
+    @* Nothing until the browser has read the token: the server cannot know it. *@
+    @if (_read && Invite is null)
     {
         <p class="note" role="alert" id="invite-missing">@L["Org.Invite.Missing"]</p>
     }
-    else if (Invite.AlreadyRepresentative)
+    else if (Invite is { AlreadyRepresentative: true })
     {
-        <p>@Text("Org.Invite.Already", Invite.Name) <a href="@OrganisationWords.ProfilePath(Invite.Slug)">@L["Org.Invite.ToProfile"]</a></p>
+        <p>@L.Format("Org.Invite.Already", Invite.Name) <a href="@OrganisationWords.ProfilePath(Invite.Slug)">@L["Org.Invite.ToProfile"]</a></p>
     }
-    else if (!Invite.Usable)
+    else if (Invite is { Usable: false })
     {
         <p class="note" role="alert" id="invite-used">@L["Org.Invite.Unusable"]</p>
     }
-    else
+    else if (Invite is not null)
     {
-        <p class="lead">@Text("Org.Invite.Lead", Invite.Name)</p>
+        <p class="lead">@L.Format("Org.Invite.Lead", Invite.Name)</p>
         <p class="small">@L["Org.Invite.What"]</p>
         <div class="row">
             <button class="btn" type="button" id="invite-accept" disabled="@Locked" @onclick="AcceptAsync">@L["Org.Invite.Accept"]</button>
@@ -42,15 +46,29 @@
 </div>
 
 @code {
-    [Parameter] public string Token { get; set; } = "";
+    private bool _read;
+    private string? _token;
 
-    [PersistentState] public InviteResponse? Invite { get; set; }
+    /// <summary>The token of an old link, in the path; a link made now has it after the "#".</summary>
+    [Parameter] public string? Token { get; set; }
 
-    protected override async Task OnInitializedAsync() => Invite ??= (await Organisations.GetInviteAsync(Token)).Value;
+    private InviteResponse? Invite { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        if (!RendererInfo.IsInteractive)
+        {
+            return;
+        }
+
+        _token = string.IsNullOrWhiteSpace(Token) ? InvitationLink.Fragment(Navigation.Uri) : Token.Trim();
+        Invite = _token is null ? null : (await Organisations.GetInviteAsync(_token)).Value;
+        _read = true;
+    }
 
     private Task AcceptAsync() => RunAsync(async () =>
     {
-        var result = await Organisations.AcceptInviteAsync(Token);
+        var result = await Organisations.AcceptInviteAsync(_token ?? "");
         if (!result.IsSuccess)
         {
             Show(result.Problem);

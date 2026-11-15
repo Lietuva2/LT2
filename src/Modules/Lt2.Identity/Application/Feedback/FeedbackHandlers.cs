@@ -16,7 +16,6 @@ internal sealed class FeedbackHandlers(IdentityDb db, IOutbox outbox, IAuditLog 
 {
     public const string StaffPath = "/moderavimas/atsiliepimai";
 
-    private static readonly TimeZoneInfo Vilnius = TimeZoneInfo.FindSystemTimeZoneById("Europe/Vilnius");
 
     public async Task<Result<Unit>> SendAsync(Guid userId, NewFeedback feedback, CancellationToken cancellationToken)
     {
@@ -46,7 +45,7 @@ internal sealed class FeedbackHandlers(IdentityDb db, IOutbox outbox, IAuditLog 
             Text = feedback.Text.Trim(),
             PagePath = FeedbackRules.PagePath(feedback.PagePath),
             Browser = FeedbackRules.BrowserAsSent(feedback.Browser),
-            CreatedOn = Today(),
+            CreatedOn = VilniusTime.Today(clock),
         });
         await db.SaveChangesAsync(cancellationToken);
         return Result.Ok();
@@ -87,7 +86,7 @@ internal sealed class FeedbackHandlers(IdentityDb db, IOutbox outbox, IAuditLog 
 
     public async Task<Result<Unit>> ReplyAsync(Guid id, string text, Guid staffUserId, string role, string? ipHash, CancellationToken cancellationToken)
     {
-        if (string.IsNullOrWhiteSpace(text) || text.Trim().Length > FeedbackRules.TextMaxLength)
+        if (FeedbackRules.CheckText(text) is not null)
         {
             return Error.Validation("feedback.reply", "text");
         }
@@ -153,9 +152,6 @@ internal sealed class FeedbackHandlers(IdentityDb db, IOutbox outbox, IAuditLog 
     internal static Task<int> DeleteOldAsync(IdentityDb db, DateOnly keepFrom, CancellationToken ct) =>
         db.Feedback.Where(f => f.CreatedOn < keepFrom).ExecuteDeleteAsync(ct);
 
-    internal static DateOnly TodayIn(TimeProvider clock) => DateOnly.FromDateTime(TimeZoneInfo.ConvertTime(clock.GetUtcNow(), Vilnius).DateTime);
-
-    private DateOnly Today() => TodayIn(clock);
 
     private static List<FeedbackReply> Replies(string json) =>
         JsonSerializer.Deserialize<List<FeedbackReply>>(json, JsonSerializerOptions.Web) ?? [];

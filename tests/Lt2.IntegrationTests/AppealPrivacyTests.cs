@@ -4,10 +4,7 @@ using System.Text.RegularExpressions;
 using Lt2.Api.Contracts;
 using Lt2.Api.Contracts.Appeals;
 using Lt2.IntegrationTests.Infrastructure;
-using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.DependencyInjection;
-using Serilog.Core;
-using Serilog.Events;
 
 namespace Lt2.IntegrationTests;
 
@@ -17,25 +14,6 @@ namespace Lt2.IntegrationTests;
 /// </summary>
 public sealed class AppealPrivacyTests(DatabaseFixture database) : ApiTest(database)
 {
-    private static readonly SemaphoreSlim Gate = new(1, 1);
-    private static StaffMember? _moderator;
-    private static StaffMember? _administrator;
-
-    private async Task<(StaffMember Moderator, StaffMember Administrator)> StaffAsync()
-    {
-        await Gate.WaitAsync();
-        try
-        {
-            _moderator ??= await StaffMembers.ActiveAsync(Factory, Database, "moderator");
-            _administrator ??= await StaffMembers.ActiveAsync(Factory, Database, "administrator");
-            return (_moderator, _administrator);
-        }
-        finally
-        {
-            Gate.Release();
-        }
-    }
-
     [Fact]
     public async Task No_answer_to_anyone_reveals_another_persons_side()
     {
@@ -75,6 +53,7 @@ public sealed class AppealPrivacyTests(DatabaseFixture database) : ApiTest(datab
             {
                 using var response = await browser.Client.GetAsync(uri);
                 var body = await response.Content.ReadAsStringAsync();
+                Answered(response, who, uri);
                 body.ShouldNotContain(secretId, Case.Insensitive, $"{who} {uri}");
                 body.ShouldNotContain("Slapta Pozicija", Case.Insensitive, $"{who} {uri}: the person wrote nothing public");
                 body.ShouldNotContain(secretEmail, Case.Insensitive, $"{who} {uri}");
@@ -164,14 +143,22 @@ public sealed class AppealPrivacyTests(DatabaseFixture database) : ApiTest(datab
             foreach (var uri in jsonReads)
             {
                 using var response = await browser.Client.GetAsync(uri);
+                Answered(response, who, uri);
                 if (!response.IsSuccessStatusCode)
                 {
+                    // Refused to this viewer (a visitor or member on a staff answer): nothing to compare.
                     continue;
                 }
 
                 // An argument can appear in several kinds of object (a queue item, a merge candidate): compare like with like.
                 var found = new Dictionary<(Guid Id, string Kind), string>();
                 Collect(JsonDocument.Parse(await response.Content.ReadAsStringAsync()).RootElement, reasons.Select(r => r.Id).ToHashSet(), varying, found);
+                if (uri == AppealRoutes.AppealOf(AppealSteps.ThirdBill))
+                {
+                    // The bill's answer holds all four, so the comparison below is made, not skipped.
+                    reasons.ShouldAllBe(r => found.Keys.Any(k => k.Id == r.Id), $"{who} {uri} holds every argument");
+                }
+
                 foreach (var (side, ids, why) in pairs)
                 {
                     foreach (var kind in found.Keys.Select(k => k.Kind).Distinct())
@@ -262,12 +249,19 @@ public sealed class AppealPrivacyTests(DatabaseFixture database) : ApiTest(datab
             .ShouldBe(0);
     }
 
-    /// <summary>An answer with ids, times, Blazor's comments and persisted state blanked; what is left must not depend on anyone's side.</summary>
+    /// <summary>
+    /// A swept read must have been answered: refused to this viewer (401, 403, or a redirect to sign in) or shown. A route
+    /// that is not found or fails would pass every "does not contain" check while checking nothing.
+    /// </summary>
+    private static void Answered(HttpResponseMessage response, string who, string uri) =>
+        response.StatusCode.ShouldBeOneOf([HttpStatusCode.OK, HttpStatusCode.Redirect, HttpStatusCode.Unauthorized, HttpStatusCode.Forbidden], $"{who} {uri}");
+    /// <summary>An answer with ids, times and dates as pages print them, Blazor's comments and persisted state blanked; what is left must not depend on anyone's side.</summary>
     private static string Blank(string body)
     {
         var text = Regex.Replace(body, "<!--.*?-->", "", RegexOptions.Singleline);
         text = Regex.Replace(text, "[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}", "ID");
         text = Regex.Replace(text, @"\d{4}-\d{2}-\d{2}T[0-9:.+\-Z]+", "TIME");
+        text = Regex.Replace(text, @"\d{4}-\d{2}-\d{2}( \d{2}:\d{2})?", "DAY");
         return Regex.Replace(text, "name=\"__RequestVerificationToken\"[^>]*", "TOKEN");
     }
 
@@ -395,15 +389,19 @@ public sealed class AppealPrivacyTests(DatabaseFixture database) : ApiTest(datab
         (await Database.ScalarAsync<long>("SELECT count(*) FROM appeals.revision")).ShouldBe(revisionsBefore);
         (await Database.ScalarAsync<long>("SELECT count(*) FROM appeals.daily_stat WHERE appeal_id = @a", ("a", appeal.Id))).ShouldBe(0);
 
-        // Nothing else in the database holds this account next to a side: no table besides position and endorsement
-        // has both a side and an account column.
-        (await Database.ScalarAsync<long>(
+        // Nothing else in the database holds an account next to a side or a stance. Only the person's own position, and the
+        // two kinds of text published under a chosen side on purpose (an argument with its author's name, an organisation's
+        // statement with its writer kept for moderators), have both; any other table with both, under any column names
+        // ending in user_id, is a defect.
+        (await Database.ScalarAsync<string>(
             """
-            SELECT count(*) FROM information_schema.columns s
+            SELECT coalesce(string_agg(DISTINCT s.table_schema || '.' || s.table_name || '.' || u.column_name, ', '), '')
+            FROM information_schema.columns s
             JOIN information_schema.columns u ON u.table_schema = s.table_schema AND u.table_name = s.table_name
-            WHERE s.column_name = 'side' AND u.column_name = 'user_id'
-              AND s.table_schema || '.' || s.table_name <> 'appeals.position'
-            """)).ShouldBe(0);
+            WHERE s.column_name IN ('side', 'stance') AND u.column_name LIKE '%user_id'
+              AND s.table_schema || '.' || s.table_name || '.' || u.column_name NOT IN
+                  ('appeals.position.user_id', 'appeals.reason.author_user_id', 'appeals.organisation_statement.written_by_user_id')
+            """)).ShouldBe("");
         (await Database.ScalarAsync<long>(
             "SELECT count(*) FROM appeals.revision WHERE changed_by_user_id = @u OR old_value IN ('for','against') OR new_value IN ('for','against')",
             ("u", userId))).ShouldBe(0);
@@ -441,45 +439,6 @@ public sealed class AppealPrivacyTests(DatabaseFixture database) : ApiTest(datab
             line.ShouldNotContain(memberEmail, Case.Insensitive);
             line.ShouldNotContain("@pavyzdys.test", Case.Insensitive);
             Regex.IsMatch(line, "(?i)\"(for|against)\"|side\\W{0,3}(for|against)|=\\s*'?(for|against)\\b").ShouldBeFalse(line);
-        }
-    }
-
-    /// <summary>The web application with every log line, from Debug up, collected (EF Core's SQL included).</summary>
-    internal sealed class LoggingFactory(DatabaseFixture database, CollectingSink sink) : Lt2Factory(database)
-    {
-        protected override void ConfigureWebHost(IWebHostBuilder builder)
-        {
-            base.ConfigureWebHost(builder);
-            builder.UseSetting("Serilog:MinimumLevel:Default", "Debug");
-            builder.UseSetting("Serilog:MinimumLevel:Override:Microsoft", "Debug");
-            builder.UseSetting("Serilog:MinimumLevel:Override:Microsoft.AspNetCore", "Debug");
-            builder.ConfigureServices(services => services.AddSingleton<ILogEventSink>(sink));
-        }
-    }
-
-    internal sealed class CollectingSink : ILogEventSink
-    {
-        private readonly List<string> _lines = [];
-
-        public List<string> Lines
-        {
-            get
-            {
-                lock (_lines)
-                {
-                    return [.. _lines];
-                }
-            }
-        }
-
-        public void Emit(LogEvent logEvent)
-        {
-            ArgumentNullException.ThrowIfNull(logEvent);
-            var properties = string.Join(" ", logEvent.Properties.Select(p => $"{p.Key}={p.Value}"));
-            lock (_lines)
-            {
-                _lines.Add(logEvent.RenderMessage(System.Globalization.CultureInfo.InvariantCulture) + " " + properties + " " + logEvent.Exception);
-            }
         }
     }
 }

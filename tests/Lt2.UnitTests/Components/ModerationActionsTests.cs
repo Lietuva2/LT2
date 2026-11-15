@@ -266,7 +266,7 @@ public sealed class ModerationActionsTests : BunitContext
         var date = actions.Find($"#planned-{Item}");
         date.GetAttribute("type").ShouldBe("text");
         date.GetAttribute("inputmode").ShouldBe("numeric");
-        date.GetAttribute("placeholder").ShouldBe(Dates.Example);
+        date.GetAttribute("placeholder").ShouldBe(Display.DateExample);
 
         date.Change("19.11.2026");
         actions.Find($"#statement-{Item}").Input("Darbotvarkė pasikeitė.");

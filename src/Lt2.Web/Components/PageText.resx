@@ -19,7 +19,6 @@
   <data name="Home.Trial" xml:space="preserve"><value>Vyksta uždaras bandymas: registruotis galima tik su kvietimo kodu.</value></data>
   <data name="Home.ToAccount" xml:space="preserve"><value>Mano paskyra</value></data>
   <data name="Home.Welcome" xml:space="preserve"><value>Sveiki sugrįžę</value></data>
-  <data name="Home.WelcomeText" xml:space="preserve"><value>Paskyroje rasite sekamus projektus, nustatymus ir kvietimo kodą.</value></data>
   <data name="Home.Appeals" xml:space="preserve"><value>Aktyviausi projektai</value></data>
   <data name="Home.AllAppeals" xml:space="preserve"><value>Visi projektai</value></data>
   <data name="Home.Digests" xml:space="preserve"><value>Suvestinės Seimo nariams</value></data>
@@ -40,9 +39,9 @@
   <data name="NotFound.Home" xml:space="preserve"><value>Į pradžios puslapį</value></data>
   <data name="Nav.Agenda" xml:space="preserve"><value>Darbotvarkė</value></data>
   <data name="Agenda.Title" xml:space="preserve"><value>Seimo darbotvarkė</value></data>
-  <data name="Agenda.Lead" xml:space="preserve"><value>Ką Seimas planuoja svarstyti artimiausiu metu ir dėl ko balsavo per pastarąją savaitę. Prie kiekvieno projekto matyti, ko prašo Lietuva 2.0 naudotojai; dalyvauti galima dėl kiekvieno.</value></data>
+  <data name="Agenda.Lead" xml:space="preserve"><value>Ką Seimas planuoja svarstyti artimiausiu metu ir dėl ko balsavo per pastarąją savaitę.</value></data>
   <data name="Agenda.Coming" xml:space="preserve"><value>Ką Seimas planuoja svarstyti</value></data>
-  <data name="Agenda.Source" xml:space="preserve"><value>Darbotvarkių projektus lrs.lt skelbia maždaug 10–12 dienų į priekį, ir jie dažnai keičiasi, todėl datos gali pasislinkti.</value></data>
+  <data name="Agenda.Source" xml:space="preserve"><value>Darbotvarkių projektai dažnai keičiasi, todėl datos gali pasislinkti.</value></data>
   <data name="Agenda.ReadAt" xml:space="preserve"><value>Paskutinį kartą perskaityta {0}.</value></data>
   <data name="Agenda.NeverRead" xml:space="preserve"><value>Darbotvarkės iš lrs.lt dar nepavyko perskaityti.</value></data>
   <data name="Agenda.SourceLink" xml:space="preserve"><value>Darbotvarkė lrs.lt</value></data>

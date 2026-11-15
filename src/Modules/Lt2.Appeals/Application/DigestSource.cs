@@ -33,13 +33,14 @@ internal sealed class DigestSource(
             .Select(r => new { r.Id, r.AppealId, r.Side, r.Text, r.CreatedAt })
             .ToListAsync(cancellationToken);
         var endorsements = await AppealReads.EndorsementCountsAsync(db, seen.Select(r => r.Id).ToList(), cancellationToken);
+        var surges = await reads.SurgesAsync(db, ids, cancellationToken);
 
         var result = new List<DigestCandidate>();
         foreach (var appeal in appeals)
         {
             var c = counts[appeal.Id];
             var threshold = AppealReads.Threshold(appeal, c, thresholdSettings);
-            var surge = await reads.SurgeAsync(db, appeal.Id, cancellationToken);
+            var surge = surges.GetValueOrDefault(appeal.Id);
             var top = Sides.All
                 .SelectMany(side => seen.Where(r => r.AppealId == appeal.Id && r.Side == side)
                     .OrderByDescending(r => endorsements.GetValueOrDefault(r.Id)).ThenBy(r => r.CreatedAt)
@@ -78,19 +79,29 @@ internal sealed class DigestSource(
         var ids = appealIds.ToList();
         await using var db = await contexts.CreateDbContextAsync(cancellationToken);
         var totals = await reads.CountsAsync(db, ids, cancellationToken);
+
+        // One query per party for all the records, not one per record and party.
+        var sidesByParty = new Dictionary<string, List<(Guid AppealId, string Side, int Count)>>();
+        foreach (var (party, users) in byParty)
+        {
+            var userList = users.ToList();
+            sidesByParty[party] = (await db.Positions.AsNoTracking()
+                    .Where(p => ids.Contains(p.AppealId) && userList.Contains(p.UserId))
+                    .GroupBy(p => new { p.AppealId, p.Side })
+                    .Select(g => new { g.Key.AppealId, g.Key.Side, Count = g.Count() })
+                    .ToListAsync(cancellationToken))
+                .Select(r => (r.AppealId, r.Side, r.Count))
+                .ToList();
+        }
+
         foreach (var appealId in ids)
         {
             var numbers = new List<PartyNumbers>();
-            foreach (var (party, users) in byParty)
+            foreach (var (party, _) in byParty)
             {
-                var userList = users.ToList();
-                var sides = await db.Positions.AsNoTracking()
-                    .Where(p => p.AppealId == appealId && userList.Contains(p.UserId))
-                    .GroupBy(p => p.Side)
-                    .Select(g => new { g.Key, Count = g.Count() })
-                    .ToListAsync(cancellationToken);
-                var forCount = sides.FirstOrDefault(s => s.Key == Sides.For)?.Count ?? 0;
-                var againstCount = sides.FirstOrDefault(s => s.Key == Sides.Against)?.Count ?? 0;
+                var sides = sidesByParty[party].Where(s => s.AppealId == appealId).ToList();
+                var forCount = sides.FirstOrDefault(s => s.Side == Sides.For).Count;
+                var againstCount = sides.FirstOrDefault(s => s.Side == Sides.Against).Count;
 
                 // Each side's group is published only from 20 people (design 6.3, 8.4), and only when the rest of that
                 // side is not a smaller group that subtraction from the total shown beside it would reveal.

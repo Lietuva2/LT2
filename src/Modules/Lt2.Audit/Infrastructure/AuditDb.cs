@@ -1,7 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Design;
 using Lt2.SharedKernel;
-using Npgsql;
+using Lt2.SharedKernel.Persistence;
 
 namespace Lt2.Audit.Infrastructure;
 
@@ -68,17 +68,6 @@ internal sealed class AuditDb(DbContextOptions<AuditDb> options) : DbContext(opt
             b.Property(x => x.Value).HasColumnType("jsonb");
         });
     }
-}
-
-internal static class DbContextOptionsExtensions
-{
-    public static DbContextOptionsBuilder UseLt2Npgsql(this DbContextOptionsBuilder options, NpgsqlDataSource dataSource, string schema) =>
-        options.UseNpgsql(dataSource, o => o.MigrationsHistoryTable("__ef_migrations_history", schema))
-            .UseSnakeCaseNamingConvention();
-
-    public static DbContextOptionsBuilder UseLt2Npgsql(this DbContextOptionsBuilder options, string connectionString, string schema) =>
-        options.UseNpgsql(connectionString, o => o.MigrationsHistoryTable("__ef_migrations_history", schema))
-            .UseSnakeCaseNamingConvention();
 }
 
 /// <summary>Used by <c>dotnet ef</c> only.</summary>

@@ -14,7 +14,7 @@ public sealed class PlannedDateTests(DatabaseFixture database) : ApiTest(databas
     [Fact]
     public async Task A_planned_date_is_shown_flagged_by_participants_and_corrected_by_a_moderator()
     {
-        using var moderator = await StaffMembers.ActiveAsync(Factory, Database, "moderator");
+        using var moderator = await StaffMembers.SharedAsync(Factory, Database, "moderator");
         var (initiator, _) = await Factory.MemberAsync();
         using var _i = initiator;
         var appeal = await Database.PrepareBillAsync(initiator, moderator.Browser, AppealSteps.ThirdBill, "against", threshold: 500);

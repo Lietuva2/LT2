@@ -22,3 +22,17 @@ internal static class SurgeRules
     public static decimal NewAccountShare(int newPositions, int fromYoungAccounts) =>
         newPositions == 0 ? 0 : Math.Round((decimal)fromYoungAccounts / newPositions, 4, MidpointRounding.ToZero);
 }
+
+/// <summary>When the daily aggregate (design 5.3 <c>daily_stat</c>) writes a day's row.</summary>
+internal static class DailyStatRules
+{
+    /// <summary>
+    /// A day still running is rewritten on every run ("today so far"). A finished day is written once, by the first run
+    /// after it ended, and then left alone: positions keep changing after the day, and counting those changes into it would
+    /// make its trend wrong. A row without the time it was computed (written before that time was kept) is rewritten.
+    /// </summary>
+    /// <param name="dayEnd">The instant the day ends (the next Vilnius midnight).</param>
+    /// <param name="computedAt">When the day's row was computed, or null when it has none.</param>
+    public static bool ShouldWrite(DateTimeOffset dayEnd, DateTimeOffset now, DateTimeOffset? computedAt) =>
+        now < dayEnd || computedAt is null || computedAt < dayEnd;
+}

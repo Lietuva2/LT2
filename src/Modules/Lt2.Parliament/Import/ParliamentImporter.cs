@@ -36,14 +36,18 @@ internal sealed class ParliamentImporter(
 
     private ImportRun _run = new();
 
+    /// <summary>Where each request stands, read once per run and kept current as requests are applied.</summary>
+    private Dictionary<string, FetchState> _states = new(StringComparer.Ordinal);
+
     public async Task<bool> IsDueAsync(CancellationToken cancellationToken)
     {
         var lastSuccess = await db.ImportRuns.Where(r => r.Status == "succeeded").MaxAsync(r => (DateTimeOffset?)r.StartedAt, cancellationToken);
         var lastStart = await db.ImportRuns.MaxAsync(r => (DateTimeOffset?)r.StartedAt, cancellationToken);
         var now = clock.GetUtcNow();
-        var vilnius = TimeZoneInfo.FindSystemTimeZoneById("Europe/Vilnius");
-        var todayStart = XmlRead.VilniusToUtc(TimeZoneInfo.ConvertTime(now, vilnius).Date);
-        var sittingToday = await db.Sittings.AnyAsync(s => s.StartsAt >= todayStart && s.StartsAt < todayStart.AddDays(1), cancellationToken);
+        var today = VilniusTime.DateOf(now);
+        var todayStart = VilniusTime.StartOf(today);
+        var tomorrowStart = VilniusTime.StartOf(today.AddDays(1));
+        var sittingToday = await db.Sittings.AnyAsync(s => s.StartsAt >= todayStart && s.StartsAt < tomorrowStart, cancellationToken);
         return ImportSchedule.IsDue(now, lastSuccess, lastStart, sittingToday);
     }
 
@@ -76,6 +80,12 @@ internal sealed class ParliamentImporter(
     private async Task<ImportOutcome> RunLockedAsync(CancellationToken cancellationToken)
     {
         var settings = options.Value;
+
+        // A run still "running" while this one holds the lock was cut off (the process died): it did not succeed.
+        await db.ImportRuns.Where(r => r.Status == "running")
+            .ExecuteUpdateAsync(
+                s => s.SetProperty(r => r.Status, "failed").SetProperty(r => r.Error, "abandoned").SetProperty(r => r.FinishedAt, clock.GetUtcNow()),
+                cancellationToken);
         _run = new ImportRun { Id = Ids.New(clock), StartedAt = clock.GetUtcNow(), Source = settings.BaseAddress?.ToString() ?? "" };
         db.ImportRuns.Add(_run);
         await db.SaveChangesAsync(cancellationToken);
@@ -127,6 +137,7 @@ internal sealed class ParliamentImporter(
         var now = clock.GetUtcNow();
         var recent = now - TimeSpan.FromDays(settings.RefetchDays);
         var termId = settings.TermId;
+        _states = await db.FetchStates.AsNoTracking().ToDictionaryAsync(s => s.Request, StringComparer.Ordinal, ct);
 
         await ImportAsync(SeimasRequest.Terms(), s => now - s.FetchedAt >= Daily, ApplyTerms, ct);
         if (!await db.Terms.AnyAsync(t => t.Id == termId, ct))
@@ -156,26 +167,39 @@ internal sealed class ParliamentImporter(
                                join i in db.AgendaItems on v.AgendaItemId equals i.Id
                                where i.SittingId == sitting.Id && !v.IsConsensus
                                orderby v.HeldAt
-                               select new { v.Id, v.HeldAt }).ToListAsync(ct);
+                               select new { v.Id, v.HeldAt, v.HasResult }).ToListAsync(ct);
             foreach (var vote in votes)
             {
+                // A result still missing is asked for again on a slow back-off, however old the vote: it may come late.
                 var fresh = vote.HeldAt >= recent;
-                await ImportAsync(SeimasRequest.VoteResults(vote.Id), _ => fresh, body => ApplyVoteResult(termId, vote.Id, body, ct), ct);
+                await ImportAsync(
+                    SeimasRequest.VoteResults(vote.Id),
+                    s => fresh || (!vote.HasResult && ImportSchedule.IsMissingResultDue(now, vote.HeldAt, s.FetchedAt)),
+                    body => ApplyVoteResult(termId, vote.Id, body, ct),
+                    ct);
             }
         }
     }
 
     /// <summary>
-    /// One request: skipped when it was parsed by this parser version and <paramref name="due"/> says it cannot have
-    /// changed; otherwise fetched, stored raw, and parsed from the stored body unless it is the body already applied.
+    /// One request: skipped when it was parsed and <paramref name="due"/> says it cannot have changed (a response parsed
+    /// by an older parser is then applied again from the stored body, without asking the service); otherwise fetched,
+    /// stored raw, and parsed from the stored body unless it is the body already applied by this parser.
     /// </summary>
     private async Task ImportAsync(SeimasRequest request, Func<FetchState, bool> due, Func<byte[], Task> apply, CancellationToken ct)
     {
         var key = request.RelativeUri;
-        var state = await db.FetchStates.AsNoTracking().FirstOrDefaultAsync(s => s.Request == key, ct);
-        var applied = state is { ParsedAt: not null } && state.ParserVersion == ParserVersion;
-        if (applied && !due(state!))
+        var state = _states.GetValueOrDefault(key);
+        var parsed = state is { ParsedAt: not null };
+        var applied = parsed && state!.ParserVersion == ParserVersion;
+        if (parsed && !due(state!))
         {
+            if (!applied)
+            {
+                var stored = await db.RawDocuments.AsNoTracking().Where(r => r.Id == state!.RawDocumentId).Select(r => r.Body).FirstAsync(ct);
+                await ApplyStoredAsync(key, Decompress(stored), apply, ct);
+            }
+
             return;
         }
 
@@ -209,7 +233,7 @@ internal sealed class ParliamentImporter(
         }
 
         var unchanged = applied && state!.RawDocumentId == raw.Id;
-        var tracked = await db.FetchStates.FirstOrDefaultAsync(s => s.Request == key, ct);
+        var tracked = await db.FetchStates.FindAsync([key], ct);
         if (tracked is null)
         {
             tracked = new FetchState { Request = key };
@@ -224,22 +248,27 @@ internal sealed class ParliamentImporter(
         }
 
         await db.SaveChangesAsync(ct); // the raw response is stored before anything is parsed
-        if (unchanged)
+        db.ChangeTracker.Clear();
+        _states[key] = tracked;
+        if (!unchanged)
         {
-            db.ChangeTracker.Clear();
-            return;
+            await ApplyStoredAsync(key, Decompress(raw.Body), apply, ct);
         }
+    }
 
-        // Parse from what was stored, and commit the data together with "parsed".
-        var body = Decompress(raw.Body);
+    /// <summary>Parses a stored body and commits the data together with "parsed by this parser version".</summary>
+    private async Task ApplyStoredAsync(string key, byte[] body, Func<byte[], Task> apply, CancellationToken ct)
+    {
         await using var transaction = await db.Database.BeginTransactionAsync(ct);
         await apply(body);
+        var tracked = await db.FetchStates.FindAsync([key], ct) ?? throw new InvalidOperationException($"No fetch state for {key}.");
         tracked.ParsedAt = clock.GetUtcNow();
         tracked.ParserVersion = ParserVersion;
         _run.Changes += CountDataChanges();
         await db.SaveChangesAsync(ct);
         await transaction.CommitAsync(ct);
         db.ChangeTracker.Clear();
+        _states[key] = tracked;
     }
 
     private int CountDataChanges() => db.ChangeTracker.Entries()
@@ -495,7 +524,7 @@ internal sealed class ParliamentImporter(
                                 select p).ToListAsync(ct);
         var bySeimasId = termPeople.ToDictionary(p => p.SeimasPersonId);
         var byName = termPeople.GroupBy(p => NameKey(p.FirstName, p.LastName)).Where(g => g.Count() == 1).ToDictionary(g => g.Key, g => g.Single());
-        var day = DateOnly.FromDateTime(TimeZoneInfo.ConvertTime(vote.HeldAt, TimeZoneInfo.FindSystemTimeZoneById("Europe/Vilnius")).DateTime);
+        var day = VilniusTime.DateOf(vote.HeldAt);
         var factionOf = await FactionMembershipsOnAsync(termId, day, ct);
 
         var existing = await db.Ballots.Where(b => b.VoteId == voteId).ToDictionaryAsync(b => b.PersonId, ct);
@@ -535,14 +564,18 @@ internal sealed class ParliamentImporter(
         await statistics.ApplyFactionPositionsAsync(voteId, parsed.Ballots.Select(b => (b.FactionLabel, b.Choice)), factionByLabel, ct);
     }
 
-    /// <summary>Each person's faction body on a day, from the memberships with dates.</summary>
+    /// <summary>
+    /// Each person's faction body on a day, from the memberships with dates. On the day of a change both the old and the
+    /// new membership cover the day: the one that began last counts.
+    /// </summary>
     private async Task<Dictionary<Guid, Guid?>> FactionMembershipsOnAsync(int termId, DateOnly day, CancellationToken ct)
     {
         var rows = await (from m in db.Memberships.AsNoTracking()
                           join b in db.Bodies on m.BodyId equals b.Id
                           where b.TermId == termId && b.Kind == BodyKind.Faction && m.From <= day && (m.To == null || m.To >= day)
-                          select new { m.PersonId, m.BodyId }).ToListAsync(ct);
-        return rows.GroupBy(r => r.PersonId).ToDictionary(g => g.Key, g => (Guid?)g.First().BodyId);
+                          select new { m.PersonId, m.BodyId, m.From }).ToListAsync(ct);
+        return rows.GroupBy(r => r.PersonId)
+            .ToDictionary(g => g.Key, g => (Guid?)g.OrderByDescending(r => r.From).ThenBy(r => r.BodyId).First().BodyId);
     }
 
     private static string NameKey(string first, string last) =>

@@ -19,6 +19,9 @@ public interface IParticipants
     /// <summary>A member whose registration is complete; <c>null</c> for an unknown or pending account.</summary>
     Task<ParticipantFacts?> FindAsync(Guid userId, CancellationToken cancellationToken);
 
+    /// <summary>The members among <paramref name="userIds"/> whose registration is complete, in one query; others are missing.</summary>
+    Task<IReadOnlyDictionary<Guid, ParticipantFacts>> FindManyAsync(IReadOnlyCollection<Guid> userIds, CancellationToken cancellationToken);
+
     /// <summary>Public display names (or <c>null</c> where none was given) of the given accounts that exist.</summary>
     Task<IReadOnlyDictionary<Guid, string?>> DisplayNamesAsync(IReadOnlyCollection<Guid> userIds, CancellationToken cancellationToken);
 }
@@ -89,6 +92,9 @@ public interface IBillCatalogue
 
     /// <summary>The stage-result votes on the given bills held at or after <paramref name="since"/>, oldest first (design 8.11.2).</summary>
     Task<IReadOnlyList<StageVoteFacts>> StageResultsAsync(IReadOnlyCollection<string> numbers, DateTimeOffset since, CancellationToken cancellationToken);
+
+    /// <summary>Each given bill's latest stage-result vote, by bill number; a bill without one is missing.</summary>
+    Task<IReadOnlyDictionary<string, StageVoteFacts>> LatestStageResultsAsync(IReadOnlyCollection<string> numbers, CancellationToken cancellationToken);
 
     /// <summary>
     /// How the given MPs (Seimas person ids) voted in one vote: <c>for</c>, <c>against</c>, <c>abstain</c> or

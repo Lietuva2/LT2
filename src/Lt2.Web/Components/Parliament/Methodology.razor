@@ -18,7 +18,7 @@
         <h2 id="m-source">@F.T["Method.Source"]</h2>
         <p>@F.T["Method.Source.1"]</p>
         <p>@F.T["Method.Source.2"]</p>
-        <p class="num">@(_lastSuccess is { } at ? F.Format("Method.Source.Last", F.Time(at)) : F.T["Method.Source.Never"])</p>
+        <p class="num">@(_lastSuccess is { } at ? F.T.Format("Method.Source.Last", F.Time(at)) : F.T["Method.Source.Never"])</p>
         <SourceLine UpdatedAt="@_lastSuccess" HideMethodology="true" />
     </section>
 
@@ -49,6 +49,12 @@
         <p>@F.T["Method.Classification.1"]</p>
     </section>
 
+    @* Design 8.15: why a planned date moves and how a wrong one is corrected (was beside every planned date). *@
+    <section class="stack" aria-labelledby="m-dates" id="planuojamos-datos">
+        <h2 id="m-dates">@A["Method.Dates"]</h2>
+        <p>@A["Method.Dates.1"]</p>
+    </section>
+
     @if (_rules is { } r)
     {
         @* Design 8.4: the rules that decide what MPs would receive, with their current values (runtime settings). *@
@@ -56,19 +62,28 @@
             <h2 id="m-digests">@A["Method.Digests"]</h2>
             <p>@A["Method.Digests.Lead"]</p>
             <dl class="facts" id="digest-rules">
-                <dt>@A["Method.Digests.Threshold"]</dt><dd class="num">@Fmt("Method.Digests.ThresholdValue", Formats.Number(r.ThresholdDefault), Formats.Number(r.ThresholdMinimum))</dd>
-                <dt>@A["Method.Digests.Weekly"]</dt><dd class="num">@(r.Weekly == "off" ? A["Method.Digests.Off"] : Fmt("Method.Digests.WeeklyValue", r.Weekly))</dd>
-                <dt>@A["Method.Digests.Notable"]</dt><dd class="num">@Fmt("Method.Digests.NotableValue", Formats.Number((int)Math.Round(r.NotableChange * 100)))</dd>
-                <dt>@A["Method.Digests.BeforeVote"]</dt><dd class="num">@(r.BeforeVote == "off" ? A["Method.Digests.Off"] : Fmt("Method.Digests.BeforeVoteValue", r.BeforeVote))</dd>
-                <dt>@A["Method.Digests.Ceiling"]</dt><dd class="num">@Fmt("Method.Digests.CeilingValue", r.MaxPerWeek)</dd>
-                <dt>@A["Method.Digests.Counts"]</dt><dd class="num">@Fmt("Method.Digests.CountsValue", r.OlderThanDays)</dd>
-                <dt>@A["Method.Digests.Reasons"]</dt><dd class="num">@Fmt("Method.Digests.ReasonsValue", r.ReasonsPerSide)</dd>
-                <dt>@A["Method.Digests.Surge"]</dt><dd class="num">@Fmt("Method.Digests.SurgeValue", Formats.Number((int)Math.Round(r.SurgeMinimumShare * 100)), Formats.Number(r.SurgeWindowHours), Formats.Number(r.SurgeMinimumAccounts))</dd>
-                <dt>@A["Method.Digests.Groups"]</dt><dd class="num">@Fmt("Method.Digests.GroupsValue", r.GroupMinimum)</dd>
+                <dt id="riba">@A["Method.Digests.Threshold"]</dt><dd class="num">@A.Format("Method.Digests.ThresholdValue", Display.Number(r.ThresholdDefault), Display.Number(r.ThresholdMinimum))</dd>
+                <dt>@A["Method.Digests.Weekly"]</dt><dd class="num">@(r.Weekly == "off" ? A["Method.Digests.Off"] : A.Format("Method.Digests.WeeklyValue", r.Weekly))</dd>
+                <dt>@A["Method.Digests.Notable"]</dt><dd class="num">@A.Format("Method.Digests.NotableValue", Display.Number((int)Math.Round(r.NotableChange * 100)))</dd>
+                <dt>@A["Method.Digests.BeforeVote"]</dt><dd class="num">@(r.BeforeVote == "off" ? A["Method.Digests.Off"] : A.Format("Method.Digests.BeforeVoteValue", r.BeforeVote))</dd>
+                <dt>@A["Method.Digests.Ceiling"]</dt><dd class="num">@A.Format("Method.Digests.CeilingValue", Display.Number(r.MaxPerWeek))</dd>
+                <dt>@A["Method.Digests.Counts"]</dt><dd class="num">@A.Format("Method.Digests.CountsValue", Display.Number(r.OlderThanDays))</dd>
+                <dt>@A["Method.Digests.Reasons"]</dt><dd class="num">@A.Format("Method.Digests.ReasonsValue", Display.Number(r.ReasonsPerSide))</dd>
+                <dt>@A["Method.Digests.Surge"]</dt><dd class="num">@A.Format("Method.Digests.SurgeValue", Display.Number((int)Math.Round(r.SurgeMinimumShare * 100)), Display.Number(r.SurgeWindowHours), Display.Number(r.SurgeMinimumAccounts))</dd>
+                <dt>@A["Method.Digests.Groups"]</dt><dd class="num">@A.Format("Method.Digests.GroupsValue", Display.Number(r.GroupMinimum))</dd>
+                @* Design 8.15: who would receive a summary and what its public copy holds (were on the summaries page). *@
+                <dt id="kas-gautu">@A["Digests.Who"]</dt><dd>@A["Digests.WhoValue"]</dd>
+                <dt id="viesa-kopija">@A["Method.Digests.PublicCopy"]</dt><dd>@A["Method.Digests.PublicCopyValue"]</dd>
             </dl>
             <p>@A["Method.Digests.NotSent"] <a href="/suvestines">@A["Digests.Title"]</a> · <a href="/moderavimo-taisykles">@A["Rules.Title"]</a></p>
         </section>
     }
+
+    @* Design 8.15: what is public and what is not, said once here; the screens say only the short part where one acts. *@
+    <section class="stack" aria-labelledby="m-privacy" id="privatumas">
+        <h2 id="m-privacy">@A["Method.Privacy"]</h2>
+        <p>@A["Method.Privacy.1"]</p>
+    </section>
 
     @* Design 8.2 (decided 2026-11-13): an argument is its author's own deliberate publication; no positions consent. *@
     <section class="stack" aria-labelledby="m-reasons" id="argumentai">
@@ -93,7 +108,7 @@
             <p id="ai-summaries">@A["Method.Descriptions.Job"]</p>
         }
         @* Design 8.13 (decided 2026-11-14): the page names both public prompts, the moderator's draft's and the job's. *@
-        <p id="ai-prompts">@Fmt("Method.Descriptions.Prompts", DraftPrompt, SummaryPrompt)</p>
+        <p id="ai-prompts">@A.Format("Method.Descriptions.Prompts", DraftPrompt, SummaryPrompt)</p>
         <p id="report-description">@A["Method.Descriptions.Report"]</p>
         <p>@A["Method.Descriptions.NotSent"]</p>
     </section>
@@ -103,6 +118,7 @@
     <section class="stack" aria-labelledby="m-organisations" id="organizacijos">
         <h2 id="m-organisations">@A["Method.Organisations"]</h2>
         <p>@A["Method.Organisations.1"]</p>
+        <p id="organisations-private">@A["Method.Organisations.Private"]</p>
         <p id="statements-not-counted">@A["Method.Organisations.2"]</p>
         <h3 id="m-organisation-labels">@A["Method.Organisations.Labels"]</h3>
         <dl class="facts" id="organisation-labels">
@@ -121,8 +137,8 @@
         <section class="stack" aria-labelledby="m-limits" id="ribos-zmogui">
             <h2 id="m-limits">@A["Method.Limits"]</h2>
             <dl class="facts" id="person-limits">
-                <dt>@A["Method.Limits.Reasons"]</dt><dd class="num">@(l.ReasonsPerPerson == 0 ? A["Method.Limits.None"] : Fmt("Method.Limits.ReasonsValue", Formats.Number(l.ReasonsPerPerson)))</dd>
-                <dt>@A["Method.Limits.Endorsements"]</dt><dd class="num">@(l.EndorsementsPerPerson == 0 ? A["Method.Limits.None"] : Fmt("Method.Limits.EndorsementsValue", Formats.Number(l.EndorsementsPerPerson)))</dd>
+                <dt>@A["Method.Limits.Reasons"]</dt><dd class="num">@(l.ReasonsPerPerson == 0 ? A["Method.Limits.None"] : A.Format("Method.Limits.ReasonsValue", Display.Number(l.ReasonsPerPerson)))</dd>
+                <dt>@A["Method.Limits.Endorsements"]</dt><dd class="num">@(l.EndorsementsPerPerson == 0 ? A["Method.Limits.None"] : A.Format("Method.Limits.EndorsementsValue", Display.Number(l.EndorsementsPerPerson)))</dd>
             </dl>
             <p>@A["Method.Limits.Note"]</p>
         </section>
@@ -149,6 +165,4 @@
         _rules = (await Digests.GetRulesAsync()).Value;
         _limits = (await Appeals.GetRulesAsync()).Value;
     }
-
-    private string Fmt(string key, params object?[] values) => string.Format(System.Globalization.CultureInfo.InvariantCulture, A[key], values);
 }

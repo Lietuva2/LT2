@@ -1,4 +1,3 @@
-using System.Text.Json;
 using Lt2.Appeals.Domain;
 using Lt2.Appeals.Infrastructure;
 using Lt2.SharedKernel;
@@ -19,7 +18,7 @@ internal sealed class OrganisationModerationService(
     OrganisationReads reads,
     AppealReads appealReads,
     ModerationService moderation,
-    IAuditLog audit,
+    ModerationRecorder recorder,
     IOutbox outbox,
     IOrganisationCodeSwitch codes,
     TimeProvider clock) : IOrganisationModeration
@@ -86,12 +85,7 @@ internal sealed class OrganisationModerationService(
         var organisationIds = hidden.Select(s => s.OrganisationId).Distinct().ToList();
         var organisationOf = await db.Organisations.AsNoTracking().Where(o => organisationIds.Contains(o.Id)).ToDictionaryAsync(o => o.Id, cancellationToken);
         var names = await appealReads.NamesAsync(blocked.Select(o => o.BlockedByUserId).OfType<Guid>().Concat(hides.Values.Select(m => m.ModeratorUserId)), cancellationToken);
-        var facts = await reads.BillsAsync(hidden.Select(s => s.BillNumber).Distinct().ToList(), cancellationToken);
-        var open = new Dictionary<string, bool>(StringComparer.Ordinal);
-        foreach (var number in hidden.Select(s => s.BillNumber).Distinct())
-        {
-            open[number] = (await reads.BillAsync(db, number, cancellationToken))?.Open == true;
-        }
+        var billsOf = await reads.BillsAsync(db, hidden.Select(s => s.BillNumber).ToList(), cancellationToken);
 
         return new HiddenOrganisationItems(
             blocked.OrderByDescending(o => o.BlockedAt)
@@ -100,16 +94,17 @@ internal sealed class OrganisationModerationService(
             hidden.Select(s =>
                 {
                     var hide = hides.GetValueOrDefault(s.Id);
+                    var bill = billsOf.GetValueOrDefault(AppealReads.NormaliseBillNumber(s.BillNumber));
                     return new HiddenStatement(
-                        s.Id, facts.GetValueOrDefault(s.BillNumber) ?? new BillFacts(s.BillNumber, s.BillNumber), organisationOf[s.OrganisationId].Name, s.Stance, s.Text,
-                        hide?.CreatedAt, hide is null ? null : names.GetValueOrDefault(hide.ModeratorUserId), hide?.Statement, open.GetValueOrDefault(s.BillNumber));
+                        s.Id, bill?.Bill ?? new BillFacts(s.BillNumber, s.BillNumber), organisationOf[s.OrganisationId].Name, s.Stance, s.Text,
+                        hide?.CreatedAt, hide is null ? null : names.GetValueOrDefault(hide.ModeratorUserId), hide?.Statement, bill?.Open == true);
                 })
                 .OrderByDescending(s => s.HiddenAt ?? DateTimeOffset.MinValue)
                 .ToList());
     }
 
-    public Task<Result<Unit>> KeepAsync(Guid organisationId, string? note, ModeratorActor moderator, string? contact, CancellationToken cancellationToken) =>
-        OnOrganisationAsync(organisationId, moderator, "keep", Trimmed(note), OrganisationNotices.Kept, contact, null, (_, o, now) =>
+    public Task<Result<Unit>> KeepAsync(Guid organisationId, string? note, StaffActor moderator, string? contact, CancellationToken cancellationToken) =>
+        Refused(note, required: false) ?? OnOrganisationAsync(organisationId, moderator, "keep", StatementRules.Normalise(note), OrganisationNotices.Kept, contact, null, (_, o, now) =>
         {
             if (o.Status != OrganisationStatuses.Active)
             {
@@ -120,8 +115,8 @@ internal sealed class OrganisationModerationService(
             return Task.FromResult<string?>(null);
         }, cancellationToken);
 
-    public Task<Result<Unit>> BlockAsync(Guid organisationId, string statement, ModeratorActor moderator, string? contact, CancellationToken cancellationToken) =>
-        Required(statement) ?? OnOrganisationAsync(organisationId, moderator, "block", statement.Trim(), OrganisationNotices.Blocked, contact, OrganisationCodeStates.Blocked, (_, o, now) =>
+    public Task<Result<Unit>> BlockAsync(Guid organisationId, string statement, StaffActor moderator, string? contact, CancellationToken cancellationToken) =>
+        Refused(statement, required: true) ?? OnOrganisationAsync(organisationId, moderator, "block", statement.Trim(), OrganisationNotices.Blocked, contact, OrganisationCodeStates.Blocked, (_, o, now) =>
         {
             if (o.Status != OrganisationStatuses.Active)
             {
@@ -138,8 +133,8 @@ internal sealed class OrganisationModerationService(
             return Task.FromResult<string?>(null);
         }, cancellationToken);
 
-    public Task<Result<Unit>> UnblockAsync(Guid organisationId, string statement, ModeratorActor moderator, string? contact, CancellationToken cancellationToken) =>
-        Required(statement) ?? OnOrganisationAsync(organisationId, moderator, "unblock", statement.Trim(), OrganisationNotices.Unblocked, contact, OrganisationCodeStates.Active, async (db, o, now) =>
+    public Task<Result<Unit>> UnblockAsync(Guid organisationId, string statement, StaffActor moderator, string? contact, CancellationToken cancellationToken) =>
+        Refused(statement, required: true) ?? OnOrganisationAsync(organisationId, moderator, "unblock", statement.Trim(), OrganisationNotices.Unblocked, contact, OrganisationCodeStates.Active, async (db, o, now) =>
         {
             if (o.Status != OrganisationStatuses.Blocked)
             {
@@ -160,8 +155,8 @@ internal sealed class OrganisationModerationService(
             return null;
         }, cancellationToken);
 
-    public Task<Result<Unit>> ConfirmAsync(Guid organisationId, string note, ModeratorActor moderator, string? contact, CancellationToken cancellationToken) =>
-        Required(note) ?? OnOrganisationAsync(organisationId, moderator, "confirm", note.Trim(), OrganisationNotices.Confirmed, contact, null, (_, o, now) =>
+    public Task<Result<Unit>> ConfirmAsync(Guid organisationId, string note, StaffActor moderator, string? contact, CancellationToken cancellationToken) =>
+        Refused(note, required: true) ?? OnOrganisationAsync(organisationId, moderator, "confirm", note.Trim(), OrganisationNotices.Confirmed, contact, null, (_, o, now) =>
         {
             if (o.Status != OrganisationStatuses.Active || o.ConfirmedBy is not null)
             {
@@ -177,8 +172,8 @@ internal sealed class OrganisationModerationService(
             return Task.FromResult<string?>(null);
         }, cancellationToken);
 
-    public Task<Result<Unit>> WithdrawConfirmationAsync(Guid organisationId, string statement, ModeratorActor moderator, string? contact, CancellationToken cancellationToken) =>
-        Required(statement) ?? OnOrganisationAsync(organisationId, moderator, "unconfirm", statement.Trim(), OrganisationNotices.ConfirmationWithdrawn, contact, null, async (db, o, now) =>
+    public Task<Result<Unit>> WithdrawConfirmationAsync(Guid organisationId, string statement, StaffActor moderator, string? contact, CancellationToken cancellationToken) =>
+        Refused(statement, required: true) ?? OnOrganisationAsync(organisationId, moderator, "unconfirm", statement.Trim(), OrganisationNotices.ConfirmationWithdrawn, contact, null, async (db, o, now) =>
         {
             if (o.ConfirmedBy is null || o.Status == OrganisationStatuses.Closed)
             {
@@ -197,8 +192,8 @@ internal sealed class OrganisationModerationService(
             return null;
         }, cancellationToken);
 
-    public Task<Result<Unit>> PublishStatementAsync(Guid statementId, string? statement, ModeratorActor moderator, string? contact, CancellationToken cancellationToken) =>
-        OnStatementAsync(statementId, moderator, "publish", Trimmed(statement), contact, (_, s, _, now) =>
+    public Task<Result<Unit>> PublishStatementAsync(Guid statementId, string? statement, StaffActor moderator, string? contact, CancellationToken cancellationToken) =>
+        Refused(statement, required: false) ?? OnStatementAsync(statementId, moderator, "publish", StatementRules.Normalise(statement), contact, (_, s, _, now) =>
         {
             if (s.Status is not (StatementStatuses.Pending or StatementStatuses.Published))
             {
@@ -214,8 +209,8 @@ internal sealed class OrganisationModerationService(
             return Task.FromResult<(string?, string?)>((null, waited ? OrganisationNotices.StatementPublished : OrganisationNotices.StatementKept));
         }, cancellationToken);
 
-    public Task<Result<Unit>> HideStatementAsync(Guid statementId, string statement, ModeratorActor moderator, string? contact, CancellationToken cancellationToken) =>
-        Required(statement) ?? OnStatementAsync(statementId, moderator, "hide", statement.Trim(), contact, (_, s, _, now) =>
+    public Task<Result<Unit>> HideStatementAsync(Guid statementId, string statement, StaffActor moderator, string? contact, CancellationToken cancellationToken) =>
+        Refused(statement, required: true) ?? OnStatementAsync(statementId, moderator, "hide", statement.Trim(), contact, (_, s, _, now) =>
         {
             if (s.Status is not (StatementStatuses.Pending or StatementStatuses.Published))
             {
@@ -227,8 +222,8 @@ internal sealed class OrganisationModerationService(
             return Task.FromResult<(string?, string?)>((null, OrganisationNotices.StatementHidden));
         }, cancellationToken);
 
-    public Task<Result<Unit>> RestoreStatementAsync(Guid statementId, string statement, ModeratorActor moderator, string? contact, CancellationToken cancellationToken) =>
-        Required(statement) ?? OnStatementAsync(statementId, moderator, "restore", statement.Trim(), contact, (_, s, bill, now) =>
+    public Task<Result<Unit>> RestoreStatementAsync(Guid statementId, string statement, StaffActor moderator, string? contact, CancellationToken cancellationToken) =>
+        Refused(statement, required: true) ?? OnStatementAsync(statementId, moderator, "restore", statement.Trim(), contact, (_, s, bill, now) =>
         {
             if (s.Status != StatementStatuses.Hidden || bill?.Open != true)
             {
@@ -244,13 +239,12 @@ internal sealed class OrganisationModerationService(
     public Task<Result<AuthorView>> WriterOfStatementAsync(Guid statementId, CancellationToken cancellationToken) =>
         moderation.ViewAsync(db => db.OrganisationStatements.Where(s => s.Id == statementId).Select(s => s.WrittenByUserId), "statement.not-found", cancellationToken);
 
-    public Task<Result<Guid>> RestrictWriterOfStatementAsync(Guid statementId, DateOnly? until, string statement, ModeratorActor moderator, string? contact, CancellationToken cancellationToken) =>
+    public Task<Result<Guid>> RestrictWriterOfStatementAsync(Guid statementId, DateOnly? until, string statement, StaffActor moderator, string? contact, CancellationToken cancellationToken) =>
         moderation.RestrictAsync(db => db.OrganisationStatements.Where(s => s.Id == statementId).Select(s => s.WrittenByUserId), "statement.not-found", until, statement, moderator, contact, cancellationToken);
 
-    private static Task<Result<Unit>>? Required(string? statement) =>
-        string.IsNullOrWhiteSpace(statement) ? Task.FromResult<Result<Unit>>(Error.Validation("statement.required", "statement")) : null;
-
-    private static string? Trimmed(string? value) => string.IsNullOrWhiteSpace(value) ? null : value.Trim();
+    /// <summary>A moderator's statement checked where it is stored (design 6.8): the refusal, or null when it passes.</summary>
+    private static Task<Result<Unit>>? Refused(string? statement, bool required) =>
+        StatementRules.Check(statement, required) is { } broken ? Task.FromResult<Result<Unit>>(RuleErrors.Of(broken)) : null;
 
     private static Task<List<Report>> OpenReportsAsync(AppealsDb db, CancellationToken ct) =>
         db.Reports.AsNoTracking().Where(r => r.Status == "open" && Kinds.Contains(r.TargetKind)).OrderBy(r => r.CreatedAt).ToListAsync(ct);
@@ -266,7 +260,7 @@ internal sealed class OrganisationModerationService(
     {
         var ids = statements.Select(s => s.OrganisationId).Distinct().ToList();
         var organisations = await db.Organisations.AsNoTracking().Where(o => ids.Contains(o.Id)).ToDictionaryAsync(o => o.Id, ct);
-        var facts = await reads.BillsAsync(statements.Select(s => s.BillNumber).Distinct().ToList(), ct);
+        var facts = await reads.BillFactsAsync(statements.Select(s => s.BillNumber).Distinct().ToList(), ct);
         return statements.Select(s =>
         {
             var o = organisations[s.OrganisationId];
@@ -282,11 +276,11 @@ internal sealed class OrganisationModerationService(
     private delegate Task<(string? Refusal, string? Notice)> StatementAction(AppealsDb db, OrganisationStatement statement, BillForStatements? bill, DateTimeOffset now);
 
     private async Task<Result<Unit>> OnOrganisationAsync(
-        Guid organisationId, ModeratorActor moderator, string action, string? statement, string notice, string? contact, string? codeState, OrganisationAction apply, CancellationToken ct)
+        Guid organisationId, StaffActor moderator, string action, string? statement, string notice, string? contact, string? codeState, OrganisationAction apply, CancellationToken ct)
     {
         await using var db = await contexts.CreateDbContextAsync(ct);
         await using var transaction = await db.Database.BeginTransactionAsync(ct);
-        await OrganisationReads.LockAsync(db, organisationId, ct);
+        await AdvisoryLocks.OrganisationAsync(db, organisationId, ct);
         var o = await db.Organisations.FirstOrDefaultAsync(x => x.Id == organisationId, ct);
         if (o is null)
         {
@@ -306,7 +300,7 @@ internal sealed class OrganisationModerationService(
         }
 
         o.ChangedAt = now;
-        await RecordAsync(db, transaction, "organisation", o.Id, action, statement, moderator, now, new { organisation = o.Slug }, ct);
+        await recorder.RecordAsync(db, transaction, "organisation", o.Id, action, statement, moderator, now, null, new { organisation = o.Slug }, answersReports: true, ct);
         await NotifyAsync(db, transaction, o, notice, $"/o/{Uri.EscapeDataString(o.Slug)}", statement, contact, null, ct);
         await db.SaveChangesAsync(ct);
         await transaction.CommitAsync(ct);
@@ -314,7 +308,7 @@ internal sealed class OrganisationModerationService(
     }
 
     private async Task<Result<Unit>> OnStatementAsync(
-        Guid statementId, ModeratorActor moderator, string action, string? statement, string? contact, StatementAction apply, CancellationToken ct)
+        Guid statementId, StaffActor moderator, string action, string? statement, string? contact, StatementAction apply, CancellationToken ct)
     {
         await using var db = await contexts.CreateDbContextAsync(ct);
         await using var transaction = await db.Database.BeginTransactionAsync(ct);
@@ -324,7 +318,7 @@ internal sealed class OrganisationModerationService(
             return Error.NotFound("statement.not-found");
         }
 
-        await OrganisationReads.LockAsync(db, s.OrganisationId, ct);
+        await AdvisoryLocks.OrganisationAsync(db, s.OrganisationId, ct);
         var o = await db.Organisations.AsNoTracking().FirstAsync(x => x.Id == s.OrganisationId, ct);
         if (o.Status == OrganisationStatuses.Closed)
         {
@@ -339,7 +333,7 @@ internal sealed class OrganisationModerationService(
             return Error.Conflict(refused);
         }
 
-        await RecordAsync(db, transaction, "statement", s.Id, action, statement, moderator, now, new { organisation = o.Slug, bill = s.BillNumber }, ct);
+        await recorder.RecordAsync(db, transaction, "statement", s.Id, action, statement, moderator, now, s.BillNumber, new { organisation = o.Slug }, answersReports: true, ct);
         if (notice is not null)
         {
             await NotifyAsync(db, transaction, o, notice, $"/seimas/{Uri.EscapeDataString(s.BillNumber)}", statement, contact, bill?.Bill ?? new BillFacts(s.BillNumber, s.BillNumber), ct);
@@ -348,23 +342,6 @@ internal sealed class OrganisationModerationService(
         await db.SaveChangesAsync(ct);
         await transaction.CommitAsync(ct);
         return Result.Ok();
-    }
-
-    /// <summary>The moderation record, the audit entry and the closing of open reports on the target, in one transaction.</summary>
-    private async Task RecordAsync(
-        AppealsDb db, IDbContextTransaction transaction, string kind, Guid targetId, string action, string? statement, ModeratorActor moderator, DateTimeOffset now, object details, CancellationToken ct)
-    {
-        db.ModerationActions.Add(new ModerationAction
-        {
-            Id = Ids.New(clock), ModeratorUserId = moderator.UserId, TargetKind = kind, TargetId = targetId, Action = action, Statement = statement, CreatedAt = now,
-        });
-        await db.Reports.Where(r => r.TargetId == targetId && r.Status == "open")
-            .ExecuteUpdateAsync(s => s.SetProperty(r => r.Status, "closed").SetProperty(r => r.ClosedAt, now), ct);
-        await audit.WriteAsync(
-            new AuditEntry($"moderation.{kind}.{action}", moderator.UserId, moderator.Role, $"{kind}:{targetId}",
-                JsonSerializer.SerializeToElement(new { statement, extra = details }, JsonSerializerOptions.Web), moderator.IpHash),
-            transaction.GetDbTransaction(),
-            ct);
     }
 
     /// <summary>Each current representative is told what a moderator did and why (design 8.14.14); never who the others are.</summary>

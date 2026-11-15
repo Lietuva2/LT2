@@ -13,25 +13,6 @@ namespace Lt2.IntegrationTests;
 /// </summary>
 public sealed class WritingRestrictionTests(DatabaseFixture database) : ApiTest(database)
 {
-    private static readonly SemaphoreSlim Gate = new(1, 1);
-    private static StaffMember? _moderator;
-    private static StaffMember? _administrator;
-
-    private async Task<(StaffMember Moderator, StaffMember Administrator)> StaffAsync()
-    {
-        await Gate.WaitAsync();
-        try
-        {
-            _moderator ??= await StaffMembers.ActiveAsync(Factory, Database, "moderator");
-            _administrator ??= await StaffMembers.ActiveAsync(Factory, Database, "administrator");
-            return (_moderator, _administrator);
-        }
-        finally
-        {
-            Gate.Release();
-        }
-    }
-
     private static Task<HttpResponseMessage> RestrictAuthorAsync(TestBrowser staff, Guid reasonId, DateOnly? until = null, string statement = "Įžeidžiantys argumentai kitiems naudotojams.") =>
         staff.PostAsync(AppealRoutes.With(AppealRoutes.RestrictReasonAuthor, reasonId), new RestrictionRequest { Until = until, Statement = statement });
 
@@ -185,7 +166,7 @@ public sealed class WritingRestrictionTests(DatabaseFixture database) : ApiTest(
             empty.StatusCode.ShouldBe(HttpStatusCode.BadRequest, "a statement is required");
         }
 
-        var today = DateOnly.FromDateTime(TimeZoneInfo.ConvertTime(DateTimeOffset.UtcNow, TimeZoneInfo.FindSystemTimeZoneById("Europe/Vilnius")).DateTime);
+        var today = ReasonsToComeSteps.VilniusToday();
         // An administrator sets it, like any moderation action (decided 2026-11-13).
         using (var set = await administrator.Browser.PostAsync(AppealRoutes.With(AppealRoutes.RestrictReasonAuthor, reasonId), new RestrictionRequest { Until = today.AddDays(3), Statement = "Kartojasi tie patys įžeidimai." }))
         {
@@ -222,7 +203,7 @@ public sealed class WritingRestrictionTests(DatabaseFixture database) : ApiTest(
         var reasonId = reasons.Single(r => r.AuthorName == "Peržiūrima Asmenybė").Id;
         (await person.SendAsync(HttpMethod.Put, AppealRoutes.EndorsementOf(reasons.Single(r => r.Side == "for").Id))).StatusCode.ShouldBe(HttpStatusCode.NoContent);
 
-        var today = DateOnly.FromDateTime(TimeZoneInfo.ConvertTime(DateTimeOffset.UtcNow, TimeZoneInfo.FindSystemTimeZoneById("Europe/Vilnius")).DateTime);
+        var today = ReasonsToComeSteps.VilniusToday();
         (await RestrictAuthorAsync(moderator.Browser, reasonId, today, "Vienos dienos apribojimas.")).StatusCode.ShouldBe(HttpStatusCode.Created);
 
         using var view = await moderator.Browser.Client.GetAsync(AppealRoutes.With(AppealRoutes.ReasonAuthor, reasonId));

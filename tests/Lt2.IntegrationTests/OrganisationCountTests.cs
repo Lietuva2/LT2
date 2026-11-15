@@ -22,7 +22,7 @@ namespace Lt2.IntegrationTests;
 /// </summary>
 public sealed class OrganisationCountTests(DatabaseFixture database) : ApiTest(database)
 {
-    private static readonly TimeZoneInfo Vilnius = TimeZoneInfo.FindSystemTimeZoneById("Europe/Vilnius");
+    private static readonly TimeZoneInfo Vilnius = Lt2.SharedKernel.VilniusTime.Zone;
 
     [Fact]
     public async Task Counts_lists_agenda_front_page_daily_statistics_and_summary_candidates_are_the_same_with_and_without_statements()
@@ -70,13 +70,12 @@ public sealed class OrganisationCountTests(DatabaseFixture database) : ApiTest(d
     [Fact]
     public async Task A_summary_made_while_a_bill_has_statements_carries_none_of_them()
     {
-        using var admin = await StaffMembers.ActiveAsync(Factory, Database, "administrator");
-        using var moderator = await StaffMembers.ActiveAsync(Factory, Database, "moderator");
-        await SetAsync(admin.Browser, "Digest:ThresholdMinimum", 1);
+        using var admin = await StaffMembers.SharedAsync(Factory, Database, "administrator");
+        using var moderator = await StaffMembers.SharedAsync(Factory, Database, "moderator");
+        await admin.Browser.SetSettingAsync("Digest:ThresholdMinimum", 1);
         await Database.FreeBillAsync(AppealSteps.ThirdBill);
         await Database.ClearStatementsAsync(AppealSteps.ThirdBill);
-        var today = DateOnly.FromDateTime(TimeZoneInfo.ConvertTime(DateTimeOffset.UtcNow, Vilnius).DateTime);
-        var monday = today.AddDays(7 * 13 - (((int)today.DayOfWeek + 6) % 7));
+        var monday = ReasonsToComeSteps.MondayInWeeks(13);
         const string Marker = "organizacijosžymabandymui";
         var name = OrganisationSteps.NewName("Suvestinių bandymo asociacija");
         try
@@ -128,7 +127,7 @@ public sealed class OrganisationCountTests(DatabaseFixture database) : ApiTest(d
         }
         finally
         {
-            await SetAsync(admin.Browser, "Digest:ThresholdMinimum", 50);
+            await admin.Browser.ResetSettingAsync("Digest:ThresholdMinimum");
             await Database.ExecuteAsync("DELETE FROM parliament.planned_item WHERE bill_number = @b AND source = 'agenda' AND planned_date = @d", ("b", AppealSteps.ThirdBill), ("d", monday.AddDays(2)));
             await Database.ExecuteAsync("UPDATE appeals.organisation_statement SET status = 'withdrawn' WHERE bill_number = @b", ("b", AppealSteps.ThirdBill));
             await Database.FreeBillAsync(AppealSteps.ThirdBill);
@@ -148,16 +147,11 @@ public sealed class OrganisationCountTests(DatabaseFixture database) : ApiTest(d
     private async Task<string> DailyAsync()
     {
         await using var scope = Factory.Services.CreateAsyncScope();
-        var day = DateOnly.FromDateTime(TimeZoneInfo.ConvertTime(DateTimeOffset.UtcNow, Vilnius).DateTime);
+        var day = ReasonsToComeSteps.VilniusToday();
         await scope.ServiceProvider.GetRequiredService<IAppealsMaintenance>().AggregateDayAsync(day, CancellationToken.None);
         return await Database.ScalarAsync<string>(
-            "SELECT row_to_json(d)::text FROM appeals.daily_stat d JOIN appeals.appeal a ON a.id = d.appeal_id WHERE a.bill_number = @b AND d.day = @d",
+            // The statistics only: when the row was computed is bookkeeping and moves with every run.
+            "SELECT (to_jsonb(d) - 'computed_at')::text FROM appeals.daily_stat d JOIN appeals.appeal a ON a.id = d.appeal_id WHERE a.bill_number = @b AND d.day = @d",
             ("b", AppealSteps.SecondBill), ("d", day)) ?? "";
-    }
-
-    private static async Task SetAsync(TestBrowser admin, string key, object value)
-    {
-        using var response = await admin.SendAsync(HttpMethod.Put, ApiRoutes.Admin.SettingByKey(key), new UpdateSettingRequest { Value = JsonSerializer.SerializeToElement(value) });
-        response.StatusCode.ShouldBe(HttpStatusCode.OK, await response.Content.ReadAsStringAsync());
     }
 }

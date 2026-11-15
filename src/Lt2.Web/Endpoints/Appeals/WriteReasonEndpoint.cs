@@ -2,6 +2,7 @@ using System.Security.Claims;
 using Lt2.Api.Contracts;
 using Lt2.Api.Contracts.Appeals;
 using Lt2.Appeals;
+using Lt2.SharedKernel;
 using Lt2.Web.Security;
 using Lt2.Web.Services;
 
@@ -27,7 +28,7 @@ internal static class WriteReasonEndpoint
 
     private static async Task<IResult> HandleAsync(string number, ReasonRequest request, ClaimsPrincipal user, IAppealsModule appeals, ErrorMapper errors, CancellationToken cancellationToken)
     {
-        var result = await appeals.WriteReasonAsync(number, AppealMapping.UserId(user)!.Value, AppealMapping.ToModule(request), cancellationToken);
+        var result = await appeals.WriteReasonAsync(number, user.UserId()!.Value, AppealMapping.ToModule(request), cancellationToken);
         return result.IsSuccess
             ? TypedResults.Created(AppealRoutes.AppealOf(number), new ReasonCreatedResponse(result.Value.Id, result.Value.Status))
             : errors.ToResult(result.Error!);

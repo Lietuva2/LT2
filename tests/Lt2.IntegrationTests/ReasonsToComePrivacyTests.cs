@@ -27,7 +27,7 @@ public sealed class ReasonsToComePrivacyTests(DatabaseFixture database) : ApiTes
     [Fact]
     public async Task Following_changes_no_public_answer_there_is_no_follower_count()
     {
-        await Database.FreeBillAsync(AppealSteps.TaxBill);
+        await Database.FreeBillAsync(AppealSteps.SecondBill);
         using var visitor = NewBrowser();
         var before = new Dictionary<string, string>();
         foreach (var route in PublicAnswers)
@@ -53,7 +53,7 @@ public sealed class ReasonsToComePrivacyTests(DatabaseFixture database) : ApiTes
         using var _f = follower;
         await follower.FollowBillAsync(AppealSteps.SecondBill);
         await follower.FollowMpAsync(ReasonsToComeSteps.Petraitis);
-        (await follower.TakeSideAsync(AppealSteps.SecondBill, "for")).Dispose();
+        (await follower.TakeSideAsync(AppealSteps.SecondBill, "for")).StatusCode.ShouldBe(HttpStatusCode.NoContent);
 
         var (other, _) = await Factory.MemberAsync();
         using var _o = other;
@@ -68,7 +68,7 @@ public sealed class ReasonsToComePrivacyTests(DatabaseFixture database) : ApiTes
         bill.ShouldNotContain("Ona Jonaitienė");
 
         // Nor any staff screen: the queue, the bill's moderation state, the hidden list and the restrictions.
-        using var moderator = await StaffMembers.ActiveAsync(Factory, Database, "moderator");
+        using var moderator = await StaffMembers.SharedAsync(Factory, Database, "moderator");
         await Database.PlanAsync(AppealSteps.SecondBill, ReasonsToComeSteps.VilniusToday().AddDays(3));
         try
         {
@@ -93,10 +93,10 @@ public sealed class ReasonsToComePrivacyTests(DatabaseFixture database) : ApiTes
         await Database.FreeBillAsync(AppealSteps.SecondBill);
         var (first, firstEmail) = await Factory.MemberAsync("Pirmoji Dalyvė");
         using var _f = first;
-        (await first.TakeSideAsync(AppealSteps.SecondBill, "against")).Dispose();
+        (await first.TakeSideAsync(AppealSteps.SecondBill, "against")).StatusCode.ShouldBe(HttpStatusCode.NoContent);
         var (second, _) = await Factory.MemberAsync("Antrasis Dalyvis");
         using var _s = second;
-        (await second.TakeSideAsync(AppealSteps.SecondBill, "for")).Dispose();
+        (await second.TakeSideAsync(AppealSteps.SecondBill, "for")).StatusCode.ShouldBe(HttpStatusCode.NoContent);
 
         using var visitor = NewBrowser();
         var firstId = (await Database.UserIdAsync(firstEmail)).ToString();
@@ -116,7 +116,7 @@ public sealed class ReasonsToComePrivacyTests(DatabaseFixture database) : ApiTes
     [Fact]
     public async Task A_side_never_changes_what_the_follow_answer_holds()
     {
-        using var moderator = await StaffMembers.ActiveAsync(Factory, Database, "moderator");
+        using var moderator = await StaffMembers.SharedAsync(Factory, Database, "moderator");
         var (initiator, _) = await Factory.MemberAsync();
         using var _i = initiator;
         await Database.PrepareBillAsync(initiator, moderator.Browser, AppealSteps.ThirdBill, side: null);
@@ -124,7 +124,7 @@ public sealed class ReasonsToComePrivacyTests(DatabaseFixture database) : ApiTes
         using var _m = member;
         await member.FollowBillAsync(AppealSteps.ThirdBill);
         var before = await member.Client.GetStringAsync(FollowRoutes.Mine);
-        (await member.TakeSideAsync(AppealSteps.ThirdBill, "against")).Dispose();
+        (await member.TakeSideAsync(AppealSteps.ThirdBill, "against")).StatusCode.ShouldBe(HttpStatusCode.NoContent);
         (await member.Client.GetStringAsync(FollowRoutes.Mine)).ShouldBe(before);
         before.ShouldNotContain("\"side\"");
         before.ShouldNotContain("\"position\"");

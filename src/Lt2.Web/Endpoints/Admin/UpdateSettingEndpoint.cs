@@ -30,7 +30,7 @@ internal static class UpdateSettingEndpoint
         ErrorMapper errors,
         CancellationToken cancellationToken)
     {
-        var actor = Guid.Parse(user.FindFirstValue(ClaimTypes.NameIdentifier)!);
+        var actor = user.UserId()!.Value;
         var result = await settings.UpdateAsync(key, request.Value, actor, Roles.Administrator, ipHasher.Hash(context), cancellationToken);
         return result.IsSuccess ? TypedResults.Ok(SettingMapping.ToResponse(result.Value)) : errors.ToResult(result.Error!);
     }

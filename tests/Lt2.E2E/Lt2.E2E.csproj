@@ -2,4 +2,8 @@
   <ItemGroup>
     <PackageReference Include="Microsoft.Playwright" />
   </ItemGroup>
+  <ItemGroup>
+    <!-- The classes share one stack and its demonstration bills (some hide, restore or count them), so they run one at a time. -->
+    <Content Include="xunit.runner.json" CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
 </Project>

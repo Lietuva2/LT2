@@ -195,10 +195,12 @@ public sealed class CountRuleTests
     [Fact]
     public void An_account_counts_as_older_than_30_days_once_thirty_full_days_have_passed()
     {
-        CountRules.IsOlderThan30Days(Now.AddDays(-30), Now).ShouldBeTrue();
-        CountRules.IsOlderThan30Days(Now.AddDays(-30).AddSeconds(1), Now).ShouldBeFalse();
-        CountRules.IsOlderThan30Days(Now.AddDays(-400), Now).ShouldBeTrue();
-        CountRules.IsOlderThan30Days(Now, Now).ShouldBeFalse();
+        // The counts take a member as older than 30 days when they became one at or before this moment.
+        var cutoff = CountRules.EstablishedBefore(Now);
+        (Now.AddDays(-30) <= cutoff).ShouldBeTrue();
+        (Now.AddDays(-30).AddSeconds(1) <= cutoff).ShouldBeFalse();
+        (Now.AddDays(-400) <= cutoff).ShouldBeTrue();
+        (Now <= cutoff).ShouldBeFalse();
     }
 
     [Fact]
@@ -272,6 +274,27 @@ public sealed class SurgeRuleTests
         SurgeRules.NewAccountShare(0, 0).ShouldBe(0);
         SurgeRules.NewAccountShare(3, 1).ShouldBe(0.3333m);
     }
+}
+
+/// <summary>Design 5.3: a finished day's aggregate is written once, after the day, and not changed by later days.</summary>
+public sealed class DailyStatRuleTests
+{
+    private static readonly DateTimeOffset DayEnd = new(2026, 11, 14, 22, 0, 0, TimeSpan.Zero);
+
+    [Fact]
+    public void A_day_still_running_is_rewritten_on_every_run() =>
+        DailyStatRules.ShouldWrite(DayEnd, DayEnd.AddHours(-1), DayEnd.AddHours(-2)).ShouldBeTrue();
+
+    [Fact]
+    public void A_finished_day_is_written_by_the_first_run_after_it_ended()
+    {
+        DailyStatRules.ShouldWrite(DayEnd, DayEnd.AddMinutes(5), computedAt: null).ShouldBeTrue("no row yet");
+        DailyStatRules.ShouldWrite(DayEnd, DayEnd.AddMinutes(5), DayEnd.AddHours(-1)).ShouldBeTrue("the row is the day so far");
+    }
+
+    [Fact]
+    public void A_finished_days_final_row_is_left_alone() =>
+        DailyStatRules.ShouldWrite(DayEnd, DayEnd.AddHours(20), DayEnd.AddMinutes(5)).ShouldBeFalse("later changes of side are not that day's");
 }
 
 /// <summary>Design 8.1: a bill's record closes at the final Seimas vote and its counts are frozen.</summary>

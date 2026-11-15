@@ -8,8 +8,16 @@ namespace Lt2.SharedKernel;
 /// </summary>
 /// <param name="ConfirmedBy"><c>domain</c>, <c>moderator</c> or null ("Nepatvirtinta").</param>
 /// <param name="ConfirmedDomain">With <c>domain</c>: the domain shown as "@domenas".</param>
-/// <param name="Status"><c>active</c>, <c>blocked</c> or <c>closed</c>.</param>
+/// <param name="Status">One of <see cref="OrganisationStatus"/>.</param>
 public sealed record OrganisationFacts(Guid Id, string Slug, string Name, string? ConfirmedBy, string? ConfirmedDomain, string Status);
+
+/// <summary>An organisation's status as other modules see it (<see cref="OrganisationFacts.Status"/>).</summary>
+public static class OrganisationStatus
+{
+    public const string Active = "active";
+    public const string Blocked = "blocked";
+    public const string Closed = "closed";
+}
 
 /// <summary>
 /// A statement that is public now (design 8.14.14, stage B): what the follow emails tell. <paramref name="FirstPublicAt"/> is

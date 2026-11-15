@@ -133,10 +133,10 @@ public interface IIdentityModule
     Task<Result<string?>> GetPartySupportAsync(ClaimsPrincipal user, CancellationToken cancellationToken);
 
     /// <summary>
-    /// Sets the party (one of <paramref name="allowed"/>) with the explicit consent it needs, or with <c>null</c> removes it and
-    /// its consent. Stored without history.
+    /// Sets the party (one of <paramref name="allowed"/>) with the explicit consent it needs (<paramref name="consent"/>;
+    /// refused with <c>party.consent-required</c> without it), or with <c>null</c> removes it and its consent. Stored without history.
     /// </summary>
-    Task<Result<Unit>> SetPartySupportAsync(ClaimsPrincipal user, string? party, IReadOnlyCollection<string> allowed, CancellationToken cancellationToken);
+    Task<Result<Unit>> SetPartySupportAsync(ClaimsPrincipal user, string? party, bool consent, IReadOnlyCollection<string> allowed, CancellationToken cancellationToken);
 
     /// <summary>Everything the person gave (design 6.5), their own data only.</summary>
     Task<Result<object>> ExportAsync(ClaimsPrincipal user, CancellationToken cancellationToken);

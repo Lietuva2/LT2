@@ -1,5 +1,5 @@
 @using Lt2.Api.Contracts.Organisations
-@inherits InteractiveBase
+@inherits InteractiveBase<AppealUi>
 @inject IOrganisationsApi Organisations
 
 @* "Organizacijų pozicijos" on the bill's page (design 8.14.3, 8.14.14), after the arguments: for and against side by side
@@ -24,7 +24,7 @@
                     }
                     @foreach (var item in items)
                     {
-                        <StatementView Statement="item.Statement" Name="@item.Name" Slug="@item.Slug" Label="item.Label" ShowStance="false">
+                        <StatementView @key="item.Statement.Id" Statement="item.Statement" Name="@item.Name" Slug="@item.Slug" Label="item.Label" ShowStance="false">
                             @Report(item.Statement.Id)
                         </StatementView>
                         @if (_reporting == item.Statement.Id)
@@ -42,7 +42,7 @@
                 <h3><span class="choice choice--remarks">@L["Org.Stance.remarks"]</span></h3>
                 @foreach (var item in remarks)
                 {
-                    <StatementView Statement="item.Statement" Name="@item.Name" Slug="@item.Slug" Label="item.Label" ShowStance="false">
+                    <StatementView @key="item.Statement.Id" Statement="item.Statement" Name="@item.Name" Slug="@item.Slug" Label="item.Label" ShowStance="false">
                         @Report(item.Statement.Id)
                     </StatementView>
                     @if (_reporting == item.Statement.Id)
@@ -66,13 +66,13 @@
         }
         @foreach (var org in mine)
         {
-            <div class="sheet stack stack--tight" id="my-organisation-@org.Slug" aria-label="@org.Name">
-                <p class="row"><b>@Text("Org.Mine.Title", org.Name)</b> <OrgLabel Label="org.Label" /></p>
+            <div class="sheet stack stack--tight" id="my-organisation-@org.Slug" aria-label="@org.Name" @key="org.Slug">
+                <p class="row"><b>@L.Format("Org.Mine.Title", org.Name)</b> <OrgLabel Label="org.Label" /></p>
                 <p class="fine">@L["Org.Mine.Private"]</p>
                 @if (org.Statement is { } own)
                 {
                     <p class="row small">
-                        <span class="choice choice--@(own.Stance is "for" or "against" ? own.Stance : "remarks")">@L["Org.Stance." + own.Stance]</span>
+                        <span class="@OrganisationWords.StanceClass(own.Stance)">@L["Org.Stance." + own.Stance]</span>
                         <span class="tag" id="my-statement-status-@org.Slug">@L["Org.Status." + own.Status]</span>
                     </p>
                 }
@@ -105,9 +105,9 @@
                     else
                     {
                         <form class="stack" @onsubmit="() => SaveAsync(org.Slug)" novalidate id="statement-form-@org.Slug" aria-labelledby="statement-form-title-@org.Slug">
-                            <h3 id="statement-form-title-@org.Slug">@Text("Org.Form.Title", org.Name)</h3>
+                            <h3 id="statement-form-title-@org.Slug">@L.Format("Org.Form.Title", org.Name)</h3>
                             <p class="small">@L["Org.Form.Lead"]</p>
-                            <fieldset class="field stack stack--tight @(Errors.ContainsKey("stance") ? "field--error" : "")">
+                            <fieldset class="field stack stack--tight @ErrorClass("stance")">
                                 <legend>@L["Org.Form.Stance"]</legend>
                                 @foreach (var stance in OrganisationLimits.Stances)
                                 {
@@ -117,30 +117,31 @@
                                         <span>@L["Org.Stance." + stance]</span>
                                     </label>
                                 }
-                                <FieldError Errors="Errors" Field="stance" />
+                                <FieldError Errors="Errors" Field="stance" For="@($"stance-{org.Slug}")" />
                             </fieldset>
-                            <div class="field @(Errors.ContainsKey("text") ? "field--error" : "")">
+                            <div class="field @ErrorClass("text")">
                                 <label for="statement-text-@org.Slug">@L["Org.Form.Text"]</label>
-                                <textarea class="textarea" id="statement-text-@org.Slug" rows="8" maxlength="@OrganisationLimits.StatementMaxLength" aria-describedby="statement-text-hint-@org.Slug"
+                                <textarea class="textarea" id="statement-text-@org.Slug" rows="8" maxlength="@OrganisationLimits.StatementMaxLength" aria-invalid="@Invalid("text")"
+                                          aria-describedby="@DescribedBy("text", $"statement-text-{org.Slug}", $"statement-text-hint-{org.Slug}")"
                                           @bind="_text" @bind:event="oninput" disabled="@Locked"></textarea>
-                                <p class="field__hint num" id="statement-text-hint-@org.Slug">@Text("Org.Form.TextHint", _text.Length, AppealNumbers.Of(OrganisationLimits.StatementMaxLength))</p>
-                                <FieldError Errors="Errors" Field="text" />
+                                <p class="field__hint num" id="statement-text-hint-@org.Slug">@L.Format("Org.Form.TextHint", Display.Number(_text.Length), Display.Number(OrganisationLimits.StatementMaxLength))</p>
+                                <FieldError Errors="Errors" Field="text" For="@($"statement-text-{org.Slug}")" />
                             </div>
-                            <div class="field @(Errors.ContainsKey("link") ? "field--error" : "")">
+                            <div class="field @ErrorClass("link")">
                                 <label for="statement-link-@org.Slug">@L["Org.Form.Link"]</label>
                                 <p class="field__hint" id="statement-link-hint-@org.Slug">@L["Org.Form.LinkHint"]</p>
                                 <input class="input" type="url" inputmode="url" autocomplete="off" spellcheck="false" id="statement-link-@org.Slug" maxlength="@OrganisationLimits.LinkMaxLength"
-                                       aria-describedby="statement-link-hint-@org.Slug" placeholder="https://" @bind="_link" @bind:event="oninput" disabled="@Locked" />
-                                <FieldError Errors="Errors" Field="link" />
+                                       aria-describedby="@DescribedBy("link", $"statement-link-{org.Slug}", $"statement-link-hint-{org.Slug}")" aria-invalid="@Invalid("link")" placeholder="https://" @bind="_link" @bind:event="oninput" disabled="@Locked" />
+                                <FieldError Errors="Errors" Field="link" For="@($"statement-link-{org.Slug}")" />
                             </div>
                             @if (_stance is "for" or "against")
                             {
-                                <div class="field @(Errors.ContainsKey("goal") ? "field--error" : "")">
+                                <div class="field @ErrorClass("goal")">
                                     <label for="statement-goal-@org.Slug">@L["Org.Form.Goal"]</label>
                                     <p class="field__hint" id="statement-goal-hint-@org.Slug">@L["Org.Form.GoalHint"]</p>
-                                    <input class="input num" type="text" inputmode="numeric" autocomplete="off" id="statement-goal-@org.Slug" aria-describedby="statement-goal-hint-@org.Slug"
+                                    <input class="input num" type="text" inputmode="numeric" autocomplete="off" id="statement-goal-@org.Slug" aria-describedby="@DescribedBy("goal", $"statement-goal-{org.Slug}", $"statement-goal-hint-{org.Slug}")" aria-invalid="@Invalid("goal")"
                                            @bind="_goal" @bind:event="oninput" disabled="@Locked" />
-                                    <FieldError Errors="Errors" Field="goal" />
+                                    <FieldError Errors="Errors" Field="goal" For="@($"statement-goal-{org.Slug}")" />
                                 </div>
                             }
                             <div class="row">
@@ -172,8 +173,6 @@
     /// <summary>The moderators' contact address, for visitors who want to report.</summary>
     [Parameter] public string? Contact { get; set; }
 
-    [CascadingParameter] private Task<AuthenticationState>? AuthState { get; set; }
-
     [PersistentState] public BillStatementsResponse? Statements { get; set; }
 
     /// <summary>The organisations the caller represents and their statements here: the caller's own, never-cached answer.</summary>
@@ -181,7 +180,7 @@
 
     protected override async Task OnInitializedAsync()
     {
-        _signedIn = AuthState is not null && (await AuthState).User.Identity?.IsAuthenticated == true;
+        _signedIn = await IsSignedInAsync();
         Statements ??= (await Organisations.GetOnBillAsync(Number)).Value;
         if (_signedIn && Mine is null)
         {
@@ -209,13 +208,13 @@
         _text = org.Statement?.Text ?? "";
         _link = org.Statement?.Link;
         _goal = org.Statement?.Goal is { } goal ? goal.ToString(System.Globalization.CultureInfo.InvariantCulture) : null;
-        Errors = new Dictionary<string, string[]>();
+        Errors = NoErrors();
     }
 
     private void Cancel()
     {
         _editing = null;
-        Errors = new Dictionary<string, string[]>();
+        Errors = NoErrors();
     }
 
     private Task SaveAsync(string slug) => RunAsync(async () =>
@@ -226,7 +225,7 @@
             if (!int.TryParse(_goal.Replace(" ", "", StringComparison.Ordinal).Replace(" ", "", StringComparison.Ordinal), System.Globalization.NumberStyles.None,
                     System.Globalization.CultureInfo.InvariantCulture, out var parsed))
             {
-                Errors = new Dictionary<string, string[]> { ["goal"] = [L["Org.Form.GoalInvalid"].Value] };
+                FieldFails("goal", L["Org.Form.GoalInvalid"]);
                 return;
             }
 
@@ -235,9 +234,8 @@
 
         var request = new OrganisationStatementRequest { Stance = _stance ?? "", Text = _text, Link = string.IsNullOrWhiteSpace(_link) ? null : _link, Goal = goal };
         var saved = await Organisations.SaveStatementAsync(Number, slug, request);
-        if (!saved.IsSuccess)
+        if (!Succeeded(saved, "stance", "text", "link", "goal"))
         {
-            Show(saved.Problem, "stance", "text", "link", "goal");
             return;
         }
 
@@ -248,10 +246,8 @@
 
     private Task WithdrawAsync(string slug) => RunAsync(async () =>
     {
-        var result = await Organisations.WithdrawStatementAsync(Number, slug);
-        if (!result.IsSuccess)
+        if (!Succeeded(await Organisations.WithdrawStatementAsync(Number, slug)))
         {
-            Show(result.Problem);
             return;
         }
 

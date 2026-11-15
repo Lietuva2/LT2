@@ -4,20 +4,20 @@ using Microsoft.EntityFrameworkCore;
 namespace Lt2.Parliament.Infrastructure;
 
 /// <summary><see cref="IMpDirectory"/>: sitting MPs of the current term, their parties, and the sitting days.</summary>
-internal sealed class MpDirectory(IDbContextFactory<ParliamentDb> contexts) : IMpDirectory
+internal sealed class MpDirectory(IDbContextFactory<ParliamentDb> contexts, TimeProvider clock) : IMpDirectory
 {
     public async Task<IReadOnlyList<MpRecipient>> SittingMpsAsync(CancellationToken cancellationToken)
     {
         await using var db = await contexts.CreateDbContextAsync(cancellationToken);
-        var term = await db.Terms.AsNoTracking().OrderByDescending(t => t.From).Select(t => (int?)t.Id).FirstOrDefaultAsync(cancellationToken);
+        var term = await CurrentTerm.FindAsync(db, cancellationToken);
         if (term is null)
         {
             return [];
         }
 
-        var rows = await (from m in db.Mandates.AsNoTracking()
+        var rows = await (from m in db.Mandates.AsNoTracking().Where(CurrentTerm.SittingOn(VilniusTime.Today(clock)))
                           join p in db.People.AsNoTracking() on m.PersonId equals p.Id
-                          where m.TermId == term && m.To == null
+                          where m.TermId == term.Id
                           select new
                           {
                               p.Slug,
@@ -52,7 +52,7 @@ internal sealed class MpDirectory(IDbContextFactory<ParliamentDb> contexts) : IM
         var start = new DateTimeOffset(from.ToDateTime(TimeOnly.MinValue), TimeSpan.Zero).AddDays(-1);
         var end = new DateTimeOffset(to.ToDateTime(TimeOnly.MinValue), TimeSpan.Zero).AddDays(2);
         var held = (await db.Sittings.AsNoTracking().Where(s => s.StartsAt >= start && s.StartsAt < end).Select(s => s.StartsAt).ToListAsync(cancellationToken))
-            .Select(s => DateOnly.FromDateTime(TimeZoneInfo.ConvertTime(s, PlannedAgenda.Vilnius).DateTime))
+            .Select(s => VilniusTime.DateOf(s))
             .Where(d => d >= from && d <= to);
         return planned.Concat(held).Distinct().Order().ToList();
     }

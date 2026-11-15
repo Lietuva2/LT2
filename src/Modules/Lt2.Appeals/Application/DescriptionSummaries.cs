@@ -76,7 +76,7 @@ internal sealed class DescriptionSummaries(
         _ = notices.ShouldSay("done");
         var now = clock.GetUtcNow();
         await using var db = await contexts.CreateDbContextAsync(cancellationToken);
-        var dayStart = SummaryRules.VilniusDayStart(now);
+        var dayStart = VilniusTime.StartOf(VilniusTime.DateOf(now));
         var askedToday = await db.SummaryAttempts.CountAsync(a => a.AskedProvider && a.TriedAt >= dayStart, cancellationToken);
         var left = SummaryRules.LeftToday(perDay, askedToday);
         if (left == 0)
@@ -145,8 +145,8 @@ internal sealed class DescriptionSummaries(
     {
         var active = await bills.ActiveAsync(ct);
         var numbers = active.Select(b => b.Number).ToList();
-        var onBills = await db.Appeals.AsNoTracking()
-            .Where(a => numbers.Contains(a.BillNumber) && (a.Status == AppealStatuses.Open || a.Status == AppealStatuses.Closed || a.Status == AppealStatuses.Rejected))
+        var onBills = await db.Appeals.AsNoTracking().Records()
+            .Where(a => numbers.Contains(a.BillNumber))
             .ToDictionaryAsync(a => a.BillNumber, StringComparer.Ordinal, ct);
         var recordIds = onBills.Values.Select(a => a.Id).ToList();
         var touched = (await db.Revisions.AsNoTracking()
@@ -176,7 +176,8 @@ internal sealed class DescriptionSummaries(
 
     /// <summary>
     /// Stores the summary as the bill's description, creating the record if needed, unless a person wrote or removed one
-    /// meanwhile. Audited with the system as the actor: the bill, the model, the time; never the text.
+    /// meanwhile. Under the bill's lock, so a moderator's description cannot be written over (design 6.8). Audited with
+    /// the system as the actor: the bill, the model, the time; never the text.
     /// </summary>
     private async Task<bool> StoreAsync(string billNumber, string summary, string address, CancellationToken ct)
     {
@@ -184,8 +185,8 @@ internal sealed class DescriptionSummaries(
         await using var db = await contexts.CreateDbContextAsync(ct);
         await using var transaction = await db.Database.BeginTransactionAsync(ct);
         var now = clock.GetUtcNow();
-        var ensured = await records.EnsureAsync(db, billNumber, ct);
-        var appeal = ensured.IsSuccess ? await db.Appeals.FirstAsync(a => a.Id == ensured.Value!.Id, ct) : null;
+        var ensured = await records.EnsureAsync(db, billNumber, ct, forWrite: true);
+        var appeal = ensured.IsSuccess ? ensured.Value : null;
         var touched = appeal is not null && await db.Revisions.AnyAsync(
             r => r.EntityKind == "appeal" && r.EntityId == appeal.Id && r.Field == "description" && r.ChangedByUserId != null, ct);
         if (appeal is null || !SummaryRules.IsDue(appeal.Status, appeal.Description, touched, null, now))

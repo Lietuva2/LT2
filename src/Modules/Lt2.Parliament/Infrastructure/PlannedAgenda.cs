@@ -9,8 +9,6 @@ namespace Lt2.Parliament.Infrastructure;
 /// <summary><see cref="IPlannedAgenda"/>: the current planned date of bills, the moderator's row first.</summary>
 internal sealed class PlannedAgenda(IDbContextFactory<ParliamentDb> contexts, TimeProvider clock) : IPlannedAgenda
 {
-    public static readonly TimeZoneInfo Vilnius = TimeZoneInfo.FindSystemTimeZoneById("Europe/Vilnius");
-
     public async Task<IReadOnlyDictionary<string, PlannedDate>> ForBillsAsync(IReadOnlyCollection<string> numbers, CancellationToken cancellationToken)
     {
         var list = numbers.ToList();
@@ -25,11 +23,14 @@ internal sealed class PlannedAgenda(IDbContextFactory<ParliamentDb> contexts, Ti
 
     public async Task<IReadOnlyList<PlannedDate>> BetweenAsync(DateOnly from, DateOnly to, CancellationToken cancellationToken)
     {
+        // The same order as ForBillsAsync: rows outside the window are left out first, then each bill's current row is
+        // chosen, so a moderator's row whose date has passed does not hide a newer date from the agenda page.
         await using var db = await contexts.CreateDbContextAsync(cancellationToken);
-        var rows = await db.PlannedItems.AsNoTracking().Where(p => p.GoneAt == null).ToListAsync(cancellationToken);
+        var rows = await db.PlannedItems.AsNoTracking()
+            .Where(p => p.GoneAt == null && p.PlannedDate >= from && p.PlannedDate <= to)
+            .ToListAsync(cancellationToken);
         return rows.GroupBy(p => p.BillNumber)
             .Select(g => ToDate(Current(g)))
-            .Where(p => p.Date >= from && p.Date <= to)
             .OrderBy(p => p.Date).ThenBy(p => p.BillNumber, StringComparer.Ordinal)
             .ToList();
     }
@@ -73,5 +74,5 @@ internal sealed class PlannedAgenda(IDbContextFactory<ParliamentDb> contexts, Ti
 
     private static PlannedDate ToDate(PlannedItem p) => new(p.BillNumber, p.PlannedDate, p.Stage, p.SourceUrl, p.Source == "moderator");
 
-    private DateOnly Today() => DateOnly.FromDateTime(TimeZoneInfo.ConvertTime(clock.GetUtcNow(), Vilnius).DateTime);
+    private DateOnly Today() => VilniusTime.Today(clock);
 }

@@ -2,6 +2,7 @@ using System.Text.Json;
 using Lt2.Audit.Infrastructure;
 using Lt2.Audit.Settings;
 using Lt2.SharedKernel;
+using Lt2.SharedKernel.Persistence;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Npgsql;
@@ -42,4 +43,10 @@ public interface ISettingsAdministration
         string actorRole,
         string? ipHash,
         CancellationToken cancellationToken);
+
+    /// <summary>
+    /// A change made from the server (the migrator), audited with the given role and no account; a value already stored
+    /// changes nothing and is not audited. True when it changed.
+    /// </summary>
+    Task<Result<bool>> SetAsServerAsync(string key, JsonElement value, string actorRole, CancellationToken cancellationToken);
 }

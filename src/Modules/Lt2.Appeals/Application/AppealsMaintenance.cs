@@ -8,18 +8,16 @@ namespace Lt2.Appeals.Application;
 /// <summary>
 /// The daily aggregate (design 5.3 <c>daily_stat</c>): per appeal and Vilnius day, the counts per side and for accounts
 /// older than 30 days at the end of the day, and the share of that day's new positions taken by accounts younger than
-/// 30 days. The only source of trends: no per-person history exists. Re-running a day overwrites its row.
+/// 30 days. The only source of trends: no per-person history exists. Today's row is rewritten on every run; a finished
+/// day's row is written once after the day ends (<see cref="DailyStatRules.ShouldWrite"/>).
 /// </summary>
 internal sealed class AppealsMaintenance(
     IDbContextFactory<AppealsDb> contexts, AppealReads reads, IBillCatalogue bills, IAuditLog audit, TimeProvider clock) : IAppealsMaintenance
 {
-    private static readonly TimeZoneInfo Vilnius = TimeZoneInfo.FindSystemTimeZoneById("Europe/Vilnius");
-
     public async Task<int> AggregateDayAsync(DateOnly day, CancellationToken cancellationToken)
     {
-        var start = new DateTimeOffset(day.ToDateTime(TimeOnly.MinValue), Vilnius.GetUtcOffset(day.ToDateTime(TimeOnly.MinValue))).ToUniversalTime();
-        var next = day.AddDays(1).ToDateTime(TimeOnly.MinValue);
-        var end = new DateTimeOffset(next, Vilnius.GetUtcOffset(next)).ToUniversalTime();
+        var start = VilniusTime.StartOf(day);
+        var end = VilniusTime.StartOf(day.AddDays(1));
         var now = clock.GetUtcNow();
         var asOf = end < now ? end : now;
         var established = CountRules.EstablishedBefore(asOf);
@@ -30,37 +28,49 @@ internal sealed class AppealsMaintenance(
                 && a.PublishedAt != null && a.PublishedAt < end && (a.ClosedAt == null || a.ClosedAt >= start))
             .Select(a => a.Id)
             .ToListAsync(cancellationToken);
-        foreach (var appealId in appeals)
+        var computed = await db.DailyStats.AsNoTracking()
+            .Where(d => d.Day == day && appeals.Contains(d.AppealId))
+            .ToDictionaryAsync(d => d.AppealId, d => d.ComputedAt, cancellationToken);
+        var due = appeals.Where(id => DailyStatRules.ShouldWrite(end, now, computed.GetValueOrDefault(id))).ToList();
+        if (due.Count == 0)
         {
-            var rows = await db.Positions.AsNoTracking()
-                .Where(p => p.AppealId == appealId && p.CreatedAt < asOf)
-                .GroupBy(p => p.Side)
-                .Select(g => new
-                {
-                    Side = g.Key,
-                    Total = g.Count(),
-                    Older = g.Count(p => p.MemberSince <= established),
-                    New = g.Count(p => p.CreatedAt >= start),
-                    NewYoung = g.Count(p => p.CreatedAt >= start && p.MemberSince > established),
-                })
-                .ToListAsync(cancellationToken);
-            var forRow = rows.FirstOrDefault(r => r.Side == Sides.For);
-            var againstRow = rows.FirstOrDefault(r => r.Side == Sides.Against);
-            var share = SurgeRules.NewAccountShare(rows.Sum(r => r.New), rows.Sum(r => r.NewYoung));
+            return 0;
+        }
+
+        // One query for every record due, not one per record.
+        var rows = await db.Positions.AsNoTracking()
+            .Where(p => due.Contains(p.AppealId) && p.CreatedAt < asOf)
+            .GroupBy(p => new { p.AppealId, p.Side })
+            .Select(g => new
+            {
+                g.Key.AppealId,
+                g.Key.Side,
+                Total = g.Count(),
+                Older = g.Count(p => p.MemberSince <= established),
+                New = g.Count(p => p.CreatedAt >= start),
+                NewYoung = g.Count(p => p.CreatedAt >= start && p.MemberSince > established),
+            })
+            .ToListAsync(cancellationToken);
+        foreach (var appealId in due)
+        {
+            var forRow = rows.FirstOrDefault(r => r.AppealId == appealId && r.Side == Sides.For);
+            var againstRow = rows.FirstOrDefault(r => r.AppealId == appealId && r.Side == Sides.Against);
+            var mine = rows.Where(r => r.AppealId == appealId).ToList();
+            var share = SurgeRules.NewAccountShare(mine.Sum(r => r.New), mine.Sum(r => r.NewYoung));
             await db.Database.ExecuteSqlRawAsync(
                 """
-                INSERT INTO appeals.daily_stat (appeal_id, day, for_count, against_count, for_older_than30days, against_older_than30days, new_account_share)
-                VALUES ({0}, {1}, {2}, {3}, {4}, {5}, {6})
+                INSERT INTO appeals.daily_stat (appeal_id, day, for_count, against_count, for_older_than30days, against_older_than30days, new_account_share, computed_at)
+                VALUES ({0}, {1}, {2}, {3}, {4}, {5}, {6}, {7})
                 ON CONFLICT (appeal_id, day) DO UPDATE SET
                   for_count = EXCLUDED.for_count, against_count = EXCLUDED.against_count,
                   for_older_than30days = EXCLUDED.for_older_than30days, against_older_than30days = EXCLUDED.against_older_than30days,
-                  new_account_share = EXCLUDED.new_account_share
+                  new_account_share = EXCLUDED.new_account_share, computed_at = EXCLUDED.computed_at
                 """,
-                [appealId, day, forRow?.Total ?? 0, againstRow?.Total ?? 0, forRow?.Older ?? 0, againstRow?.Older ?? 0, share],
+                [appealId, day, forRow?.Total ?? 0, againstRow?.Total ?? 0, forRow?.Older ?? 0, againstRow?.Older ?? 0, share, now],
                 cancellationToken);
         }
 
-        return appeals.Count;
+        return due.Count;
     }
 
     public async Task<int> CloseFinishedAsync(CancellationToken cancellationToken)
@@ -76,7 +86,9 @@ internal sealed class AppealsMaintenance(
                 continue;
             }
 
+            // Under the bill's lock, as every write to a record (design 6.8).
             await using var transaction = await db.Database.BeginTransactionAsync(cancellationToken);
+            await AdvisoryLocks.BillAsync(db, candidate.BillNumber, cancellationToken);
             var appeal = await db.Appeals.FirstAsync(a => a.Id == candidate.Id, cancellationToken);
             if (appeal.Status != AppealStatuses.Open)
             {
@@ -106,6 +118,4 @@ internal sealed class AppealsMaintenance(
 
         return closed;
     }
-
-    public static DateOnly VilniusToday(DateTimeOffset now) => DateOnly.FromDateTime(TimeZoneInfo.ConvertTime(now, Vilnius).DateTime);
 }

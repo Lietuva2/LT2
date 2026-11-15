@@ -55,11 +55,20 @@ internal sealed record SeimasResponse(SeimasRequest Request, Uri Url, byte[] Bod
 
 /// <summary>
 /// How a stand-in response announces itself. The stand-in sends the header on every response, and every canned file
-/// carries the comment; either one marks the stored document, and through it the site, as invented data.
+/// carries the comment; either one marks the stored document, and through it the site, as invented data. The open-data
+/// client and the agenda watcher both read it here.
 /// </summary>
 internal static class SyntheticMarker
 {
     public const string Header = "X-Lt2-Synthetic";
 
     public const string Comment = "LT2-SYNTHETIC";
+
+    private static readonly byte[] CommentBytes = System.Text.Encoding.UTF8.GetBytes(Comment);
+
+    /// <summary>Whether a response is the stand-in's: the header on it, or the comment in its body.</summary>
+    public static bool IsOn(HttpResponseMessage response, byte[] body) => response.Headers.Contains(Header) || IsIn(body);
+
+    /// <summary>Whether the body carries the comment.</summary>
+    public static bool IsIn(byte[] body) => body.AsSpan().IndexOf(CommentBytes) >= 0;
 }

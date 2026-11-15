@@ -1,8 +1,8 @@
 @using FluentValidation
+@inherits InteractiveBase<UiText>
 @inject IAuthApi Auth
 @inject IMeApi Me
 @inject AuthenticationStateProvider AuthenticationState
-@inject IStringLocalizer<UiText> T
 @inject NavigationManager Navigation
 @inject Passkeys PasskeyBrowser
 @inject IValidator<RegisterRequest> RegisterValidator
@@ -15,118 +15,119 @@
    registration with an invitation code, the code, then the display name and the age declaration. Used by the sign-in
    page and the front page; the controls stay disabled until WebAssembly runs, and without JavaScript the note says why. *@
 <div class="stack">
-    <noscript><p class="note">@T["NoScript"]</p></noscript>
+    <noscript><p class="note">@L["NoScript"]</p></noscript>
     @switch (_step)
     {
         case Step.SignIn:
-            <form class="sheet sheet--cut stack" @onsubmit="RequestCodeAsync" novalidate aria-labelledby="form-title">
-                <h2 id="form-title">@T["SignIn.Title"]</h2>
-                <p>@T["SignIn.Intro"]</p>
+            <form class="sheet sheet--cut stack" action="@FormAction" @onsubmit="RequestCodeAsync" novalidate aria-labelledby="form-title">
+                <h2 id="form-title">@L["SignIn.Title"]</h2>
+                <p>@L["SignIn.Intro"]</p>
                 <div class="field @ErrorClass("email")">
-                    <label for="email">@T["Email.Label"]</label>
+                    <label for="email">@L["Email.Label"]</label>
                     <input class="input" id="email" type="email" autocomplete="email webauthn" inputmode="email"
-                           placeholder="@T["Email.Placeholder"]" @bind="_email" @bind:event="oninput" disabled="@Locked"
-                           aria-invalid="@Invalid("email")" aria-describedby="@Describe("email")" />
-                    <FieldError Errors="_errors" Field="email" />
+                           placeholder="@L["Email.Placeholder"]" @bind="_email" @bind:event="oninput" disabled="@Locked"
+                           aria-invalid="@Invalid("email")" aria-describedby="@DescribedBy("email", "email")" />
+                    <FieldError Errors="Errors" Field="email" For="email" />
                 </div>
-                <button class="btn btn--wide" type="submit" disabled="@Locked">@T["SignIn.SendCode"]</button>
-                <button class="btn btn--plain btn--wide" type="button" disabled="@Locked" @onclick="SignInWithPasskeyAsync">@T["SignIn.Passkey"]</button>
-                <p class="small">@T["SignIn.PasskeyHint"]</p>
-                <p class="small">@T["SignIn.NoAccount"] <button type="button" class="linkish" disabled="@Locked" @onclick="() => Go(Step.Register)">@T["SignIn.ToRegister"]</button></p>
-                <Messages Message="@_message" Info="@_info" />
+                <button class="btn btn--wide" type="submit" disabled="@Locked">@L["SignIn.SendCode"]</button>
+                <button class="btn btn--plain btn--wide" type="button" disabled="@Locked" @onclick="SignInWithPasskeyAsync">@L["SignIn.Passkey"]</button>
+                <p class="small">@L["SignIn.PasskeyHint"]</p>
+                <p class="small">@L["SignIn.NoAccount"] <button type="button" class="linkish" disabled="@Locked" @onclick="() => Go(Step.Register)">@L["SignIn.ToRegister"]</button></p>
+                <Messages Message="@Message" Info="@Info" />
             </form>
             break;
 
         case Step.Register:
-            <form class="sheet sheet--cut stack" @onsubmit="RegisterAsync" novalidate aria-labelledby="form-title">
-                <p class="label">@T["Register.Label"]</p>
-                <h2 id="form-title">@T["Register.Title"]</h2>
+            <form class="sheet sheet--cut stack" action="@FormAction" @onsubmit="RegisterAsync" novalidate aria-labelledby="form-title">
+                <p class="label">@L["Register.Label"]</p>
+                <h2 id="form-title">@L["Register.Title"]</h2>
                 <div class="field @ErrorClass("email")">
-                    <label for="reg-email">@T["Email.Label"]</label>
+                    <label for="reg-email">@L["Email.Label"]</label>
                     <input class="input" id="reg-email" type="email" autocomplete="email" inputmode="email"
                            @bind="_email" @bind:event="oninput" disabled="@Locked"
-                           aria-invalid="@Invalid("email")" aria-describedby="@Describe("email")" />
-                    <FieldError Errors="_errors" Field="email" />
+                           aria-invalid="@Invalid("email")" aria-describedby="@DescribedBy("email", "reg-email")" />
+                    <FieldError Errors="Errors" Field="email" For="reg-email" />
                 </div>
                 <div class="field @ErrorClass("invitationCode")">
-                    <label for="reg-invite">@T["Invitation.Label"]</label>
+                    <label for="reg-invite">@L["Invitation.Label"]</label>
                     <input class="input num" id="reg-invite" autocomplete="off" autocapitalize="characters"
                            @bind="_invitation" @bind:event="oninput" disabled="@Locked"
-                           aria-invalid="@Invalid("invitationCode")" aria-describedby="reg-invite-hint @Describe("invitationCode")" />
-                    <p class="field__hint" id="reg-invite-hint">@T["Invitation.Hint"]</p>
-                    <FieldError Errors="_errors" Field="invitationCode" />
+                           aria-invalid="@Invalid("invitationCode")" aria-describedby="@DescribedBy("invitationCode", "reg-invite", "reg-invite-hint")" />
+                    <p class="field__hint" id="reg-invite-hint">@L["Invitation.Hint"]</p>
+                    <FieldError Errors="Errors" Field="invitationCode" For="reg-invite" />
                 </div>
-                <button class="btn btn--wide" type="submit" disabled="@Locked">@T["Register.Submit"]</button>
-                <p class="fine">@T["Register.Fine"]</p>
-                <p class="small">@T["Register.HaveAccount"] <button type="button" class="linkish" disabled="@Locked" @onclick="() => Go(Step.SignIn)">@T["Register.ToSignIn"]</button></p>
-                <Messages Message="@_message" Info="@_info" />
+                <button class="btn btn--wide" type="submit" disabled="@Locked">@L["Register.Submit"]</button>
+                <p class="fine">@L["Register.Fine"]</p>
+                <p class="small">@L["Register.HaveAccount"] <button type="button" class="linkish" disabled="@Locked" @onclick="() => Go(Step.SignIn)">@L["Register.ToSignIn"]</button></p>
+                <Messages Message="@Message" Info="@Info" />
             </form>
             break;
 
         case Step.Complete:
-            <form class="sheet sheet--cut stack" @onsubmit="CompleteAsync" novalidate aria-labelledby="form-title">
-                <p class="label">@T["Complete.Label"]</p>
-                <h2 id="form-title">@T["Complete.Title"]</h2>
-                <p>@T["Complete.Confirmed.Before"] <b>@Masked</b> @T["Complete.Confirmed.After"]</p>
+            <form class="sheet sheet--cut stack" action="@FormAction" @onsubmit="CompleteAsync" novalidate aria-labelledby="form-title">
+                <p class="label">@L["Complete.Label"]</p>
+                <h2 id="form-title">@L["Complete.Title"]</h2>
+                <p>@L["Complete.Confirmed.Before"] <b>@Masked</b> @L["Complete.Confirmed.After"]</p>
                 <div class="field @ErrorClass("displayName")">
-                    <label for="reg-name">@T["DisplayName.Label"]</label>
-                    <input class="input" id="reg-name" autocomplete="nickname" placeholder="@T["DisplayName.Placeholder"]"
+                    <label for="reg-name">@L["DisplayName.Label"]</label>
+                    <input class="input" id="reg-name" autocomplete="nickname" placeholder="@L["DisplayName.Placeholder"]"
                            @bind="_displayName" @bind:event="oninput" disabled="@Locked"
-                           aria-describedby="reg-name-hint @Describe("displayName")" />
-                    <p class="field__hint" id="reg-name-hint">@T["DisplayName.Hint"]</p>
-                    <FieldError Errors="_errors" Field="displayName" />
+                           aria-invalid="@Invalid("displayName")" aria-describedby="@DescribedBy("displayName", "reg-name", "reg-name-hint")" />
+                    <p class="field__hint" id="reg-name-hint">@L["DisplayName.Hint"]</p>
+                    <FieldError Errors="Errors" Field="displayName" For="reg-name" />
                 </div>
                 <div class="field @ErrorClass("confirmsAdult")">
                     <label class="check" for="reg-age">
-                        <input type="checkbox" id="reg-age" @bind="_adult" disabled="@Locked" aria-describedby="@Describe("confirmsAdult")" />
-                        <span>@T["Adult.Label"]</span>
+                        <input type="checkbox" id="reg-age" @bind="_adult" disabled="@Locked"
+                               aria-invalid="@Invalid("confirmsAdult")" aria-describedby="@DescribedBy("confirmsAdult", "reg-age")" />
+                        <span>@L["Adult.Label"]</span>
                     </label>
-                    <FieldError Errors="_errors" Field="confirmsAdult" />
+                    <FieldError Errors="Errors" Field="confirmsAdult" For="reg-age" />
                 </div>
                 @if (_askInvitation)
                 {
                     <div class="field @ErrorClass("invitationCode")">
-                        <label for="complete-invite">@T["Invitation.Label"]</label>
+                        <label for="complete-invite">@L["Invitation.Label"]</label>
                         <input class="input num" id="complete-invite" autocomplete="off" autocapitalize="characters"
                                @bind="_invitation" @bind:event="oninput" disabled="@Locked"
-                               aria-invalid="@Invalid("invitationCode")" aria-describedby="@Describe("invitationCode")" />
-                        <FieldError Errors="_errors" Field="invitationCode" />
+                               aria-invalid="@Invalid("invitationCode")" aria-describedby="@DescribedBy("invitationCode", "complete-invite")" />
+                        <FieldError Errors="Errors" Field="invitationCode" For="complete-invite" />
                     </div>
                 }
-                <button class="btn btn--wide" type="submit" disabled="@Locked">@T["Complete.Submit"]</button>
-                <p class="small"><button type="button" class="linkish" disabled="@Locked" @onclick="SignOutAsync">@T["Complete.SignOut"]</button></p>
-                <Messages Message="@_message" Info="@_info" />
+                <button class="btn btn--wide" type="submit" disabled="@Locked">@L["Complete.Submit"]</button>
+                <p class="small"><button type="button" class="linkish" disabled="@Locked" @onclick="SignOutAsync">@L["Complete.SignOut"]</button></p>
+                <Messages Message="@Message" Info="@Info" />
             </form>
             break;
 
         default:
-            <form class="sheet sheet--cut stack" @onsubmit="SignInAsync" novalidate aria-labelledby="form-title">
-                <h2 id="form-title">@T["Code.Title"]</h2>
+            <form class="sheet sheet--cut stack" action="@FormAction" @onsubmit="SignInAsync" novalidate aria-labelledby="form-title">
+                <h2 id="form-title">@L["Code.Title"]</h2>
                 <p role="status">
                     @if (_registered)
                     {
-                        @T["Code.SentAfterRegister.Before"] <b>@Masked</b>@T["Code.SentAfterRegister.After"]
+                        @L["Code.SentAfterRegister.Before"] <b>@Masked</b>@L["Code.SentAfterRegister.After"]
                     }
                     else
                     {
-                        @T["Code.SentAfterRequest.Before"] <b>@Masked</b> @T["Code.SentAfterRequest.After"]
+                        @L["Code.SentAfterRequest.Before"] <b>@Masked</b> @L["Code.SentAfterRequest.After"]
                     }
                 </p>
                 <div class="field @ErrorClass("code")">
-                    <label for="code">@T["Code.Label"]</label>
+                    <label for="code">@L["Code.Label"]</label>
                     <input class="input input--code num" id="code" inputmode="numeric" autocomplete="one-time-code" maxlength="6"
                            @bind="_code" @bind:event="oninput" disabled="@Locked"
-                           aria-invalid="@Invalid("code")" aria-describedby="@Describe("code")" />
-                    <FieldError Errors="_errors" Field="code" />
+                           aria-invalid="@Invalid("code")" aria-describedby="@DescribedBy("code", "code")" />
+                    <FieldError Errors="Errors" Field="code" For="code" />
                 </div>
-                <button class="btn btn--wide" type="submit" disabled="@Locked">@T["Code.Submit"]</button>
+                <button class="btn btn--wide" type="submit" disabled="@Locked">@L["Code.Submit"]</button>
                 <p class="small">
-                    @T["Code.NewestOnly"]
-                    <button type="button" class="linkish" disabled="@Locked" @onclick="ResendAsync">@T["Code.Resend"]</button>
+                    @L["Code.NewestOnly"]
+                    <button type="button" class="linkish" disabled="@Locked" @onclick="ResendAsync">@L["Code.Resend"]</button>
                     ·
-                    <button type="button" class="linkish" disabled="@Locked" @onclick="() => Go(_registered ? Step.Register : Step.SignIn)">@T["Code.ChangeEmail"]</button>
+                    <button type="button" class="linkish" disabled="@Locked" @onclick="() => Go(_registered ? Step.Register : Step.SignIn)">@L["Code.ChangeEmail"]</button>
                 </p>
-                <Messages Message="@_message" Info="@_info" />
+                <Messages Message="@Message" Info="@Info" />
             </form>
             break;
     }
@@ -134,39 +135,6 @@
 
 @code {
     private enum Step { SignIn, Register, Code, Complete }
-
-    private Step _step = Step.SignIn;
-    private bool _registered;
-    private string _email = "";
-    private string? _invitation;
-    private string? _displayName;
-    private bool _adult;
-    private bool _askInvitation;
-    private string _code = "";
-    private bool _busy;
-    private string? _message;
-    private string? _info;
-    private IReadOnlyDictionary<string, string[]> _errors = new Dictionary<string, string[]>();
-
-    /// <summary>
-    /// Controls stay disabled until WebAssembly has taken over the server-rendered page: the prerendered form cannot
-    /// act, and anything typed into it would be lost when the interactive component replaces it.
-    /// </summary>
-    private bool Locked => _busy || !RendererInfo.IsInteractive;
-
-    [SupplyParameterFromQuery(Name = "registruotis")]
-    public bool? StartWithRegistration { get; set; }
-
-    /// <summary>A member's invitation link (design 6.2): opens the registration form with the code filled in.</summary>
-    [SupplyParameterFromQuery(Name = "kodas")]
-    public string? InvitationFromLink { get; set; }
-
-    /// <summary>
-    /// The page a share link lands on (design 8.11.5, <c>tikslas</c>): checked by <see cref="LandingPath"/>, kept in this
-    /// tab's session storage through the sign-in steps (they reload the page), and never sent to the server.
-    /// </summary>
-    [SupplyParameterFromQuery(Name = LandingPath.Parameter)]
-    public string? Landing { get; set; }
 
     private const string LandingKey = "lt2.tikslas";
 
@@ -177,11 +145,126 @@
     /// </summary>
     private const string CodeKey = "lt2.kodas";
 
+    private Step _step = Step.SignIn;
+    private bool _registered;
+    private string _email = "";
+    private string? _invitation;
+    private string? _displayName;
+    private bool _adult;
+    private bool _askInvitation;
+    private string _code = "";
+
+    [SupplyParameterFromQuery(Name = "registruotis")]
+    public bool? StartWithRegistration { get; set; }
+
+    /// <summary>
+    /// A member's invitation link in the old form (<c>?kodas=…</c>, design 6.2): opens the registration form with the code
+    /// filled in. Links made now carry the code after the <c>#</c> (design 6.8), read in <see cref="OnAfterRenderAsync"/>.
+    /// </summary>
+    [SupplyParameterFromQuery(Name = InvitationLink.CodeParameter)]
+    public string? InvitationFromLink { get; set; }
+
+    /// <summary>
+    /// The page a share link lands on (design 8.11.5, <c>tikslas</c>): checked by <see cref="LandingPath"/>, kept in this
+    /// tab's session storage through the sign-in steps (they reload the page), and never sent to the server.
+    /// </summary>
+    [SupplyParameterFromQuery(Name = LandingPath.Parameter)]
+    public string? Landing { get; set; }
+
+    /// <summary>
+    /// The forms' address: the page without its query. The page rendered on the server would otherwise repeat the address
+    /// it was asked for in each form, an old link's invitation code included (design 6.8).
+    /// </summary>
+    private string FormAction => "/" + Navigation.ToBaseRelativePath(Navigation.Uri).Split('?', '#')[0];
+
+    /// <summary>The address as shown back to the person: first letter and domain only.</summary>
+    private string Masked
+    {
+        get
+        {
+            var email = _email.Trim();
+            var at = email.LastIndexOf('@');
+            return at <= 0 ? email : email[0] + "•••" + email[at..];
+        }
+    }
+
+    /// <summary>The fields whose errors this step shows under the field itself; any other error goes into the note.</summary>
+    private string[] FieldsOnThisStep => _step switch
+    {
+        Step.SignIn => ["email"],
+        Step.Register => ["email", "invitationCode"],
+        Step.Code => ["code"],
+        _ => ["displayName", "confirmsAdult", "invitationCode"],
+    };
+
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
-        if (firstRender && RendererInfo.IsInteractive && LandingPath.Accept(Landing) is { } landing)
+        if (!firstRender || !RendererInfo.IsInteractive)
         {
+            return;
+        }
+
+        // Design 6.8: the code and the landing page of a link made now are after the "#", which only the browser sees.
+        // They are taken into the form and removed from the address bar, so the address can be copied without them.
+        var address = Navigation.Uri;
+        var code = InvitationLink.FromFragment(address, InvitationLink.CodeParameter);
+        var landing = LandingPath.Accept(InvitationLink.FromFragment(address, LandingPath.Parameter)) ?? LandingPath.Accept(Landing);
+        if (landing is not null)
+        {
+            Landing = landing;
             await StorageAsync("sessionStorage.setItem", LandingKey, landing);
+        }
+
+        if (code is not null && _step is Step.SignIn or Step.Register)
+        {
+            _step = Step.Register;
+            _invitation = code;
+        }
+
+        if (address.Contains('#', StringComparison.Ordinal))
+        {
+            await RemoveFragmentAsync(address[..address.IndexOf('#', StringComparison.Ordinal)]);
+        }
+
+        if (code is not null)
+        {
+            StateHasChanged();
+        }
+    }
+
+    protected override async Task OnInitializedAsync()
+    {
+        if (StartWithRegistration == true)
+        {
+            _step = Step.Register;
+        }
+
+        // An old link's code is in the query: taken only in the browser, so the page rendered on the server never holds it.
+        if (RendererInfo.IsInteractive && !string.IsNullOrWhiteSpace(InvitationFromLink))
+        {
+            _step = Step.Register;
+            _invitation ??= InvitationFromLink.Trim();
+        }
+
+        // Someone signed in whose account is still pending finishes the registration here; a member goes on. Visitors
+        // are not asked: /api/v1/me would answer 401, which the browser logs as an error on every visit.
+        var state = await AuthenticationState.GetAuthenticationStateAsync();
+        if (state.User.Identity?.IsAuthenticated != true)
+        {
+            return;
+        }
+
+        var me = await Me.GetAsync();
+        if (me.IsSuccess)
+        {
+            if (me.Value!.RegistrationComplete)
+            {
+                Navigation.NavigateTo(LandingPath.Accept(Landing) ?? "/sveiki", forceLoad: true);
+                return;
+            }
+
+            _email = me.Value.Email;
+            _step = Step.Complete;
         }
     }
 
@@ -210,76 +293,33 @@
         }
     }
 
-    /// <summary>The address as shown back to the person: first letter and domain only.</summary>
-    private string Masked
+    /// <summary>The address without its "#" part, in place (no reload); a browser that refuses keeps it, which is harmless.</summary>
+    private async Task RemoveFragmentAsync(string address)
     {
-        get
+        try
         {
-            var email = _email.Trim();
-            var at = email.LastIndexOf('@');
-            return at <= 0 ? email : email[0] + "•••" + email[at..];
+            await JS.InvokeVoidAsync("history.replaceState", null, "", address);
+        }
+        catch (JSException)
+        {
+            // Nothing to do: the code is never sent anyway.
         }
     }
-
-    protected override async Task OnInitializedAsync()
-    {
-        if (StartWithRegistration == true)
-        {
-            _step = Step.Register;
-        }
-
-        if (!string.IsNullOrWhiteSpace(InvitationFromLink))
-        {
-            _step = Step.Register;
-            _invitation ??= InvitationFromLink.Trim();
-        }
-
-        // Someone signed in whose account is still pending finishes the registration here; a member goes on. Visitors
-        // are not asked: /api/v1/me would answer 401, which the browser logs as an error on every visit.
-        var state = await AuthenticationState.GetAuthenticationStateAsync();
-        if (state.User.Identity?.IsAuthenticated != true)
-        {
-            return;
-        }
-
-        var me = await Me.GetAsync();
-        if (me.IsSuccess)
-        {
-            if (me.Value!.RegistrationComplete)
-            {
-                Navigation.NavigateTo(LandingPath.Accept(Landing) ?? "/sveiki", forceLoad: true);
-                return;
-            }
-
-            _email = me.Value.Email;
-            _step = Step.Complete;
-        }
-    }
-
-    private string? ErrorClass(string field) => _errors.ContainsKey(field) ? "field--error" : null;
-
-    private string? Invalid(string field) => _errors.ContainsKey(field) ? "true" : null;
-
-    private string? Describe(string field) => _errors.ContainsKey(field) ? field + "-error" : null;
 
     private void Go(Step step)
     {
         _step = step;
         _code = "";
-        Clear();
+        ClearMessages();
     }
 
-    private async Task RequestCodeAsync()
+    private Task RequestCodeAsync()
     {
         var request = new RequestCodeRequest { Email = _email.Trim() };
-        if (!Validate(CodeValidator.Validate(request)))
+        ClearMessages();
+        return !Valid(CodeValidator.Validate(request)) ? Task.CompletedTask : RunAsync(async () =>
         {
-            return;
-        }
-
-        await RunAsync(async () =>
-        {
-            if (Show(await Auth.RequestCodeAsync(request)))
+            if (Succeeded(await Auth.RequestCodeAsync(request), FieldsOnThisStep))
             {
                 _registered = false;
                 _step = Step.Code;
@@ -287,21 +327,17 @@
         });
     }
 
-    private async Task RegisterAsync()
+    private Task RegisterAsync()
     {
         var request = new RegisterRequest
         {
             Email = _email.Trim(),
             InvitationCode = string.IsNullOrWhiteSpace(_invitation) ? null : _invitation.Trim(),
         };
-        if (!Validate(RegisterValidator.Validate(request)))
+        ClearMessages();
+        return !Valid(RegisterValidator.Validate(request)) ? Task.CompletedTask : RunAsync(async () =>
         {
-            return;
-        }
-
-        await RunAsync(async () =>
-        {
-            if (Show(await Auth.RegisterAsync(request)))
+            if (Succeeded(await Auth.RegisterAsync(request), FieldsOnThisStep))
             {
                 if (request.InvitationCode is { } code)
                 {
@@ -314,17 +350,13 @@
         });
     }
 
-    private async Task SignInAsync()
+    private Task SignInAsync()
     {
         var request = new SignInRequest { Email = _email.Trim(), Code = _code.Trim() };
-        if (!Validate(SignInValidator.Validate(request)))
+        ClearMessages();
+        return !Valid(SignInValidator.Validate(request)) ? Task.CompletedTask : RunAsync(async () =>
         {
-            return;
-        }
-
-        await RunAsync(async () =>
-        {
-            if (Show(await Auth.SignInAsync(request)))
+            if (Succeeded(await Auth.SignInAsync(request), FieldsOnThisStep))
             {
                 // A new account still finishes its registration first (via /sveiki); the share link's page waits until then.
                 var me = await Me.GetAsync();
@@ -343,14 +375,15 @@
             ConfirmsAdult = _adult,
             InvitationCode = _askInvitation && !string.IsNullOrWhiteSpace(_invitation) ? _invitation.Trim() : string.IsNullOrWhiteSpace(kept) ? null : kept.Trim(),
         };
-        if (!Validate(CompletionValidator.Validate(request)))
+        ClearMessages();
+        if (!Valid(CompletionValidator.Validate(request)))
         {
             return;
         }
 
         await RunAsync(async () =>
         {
-            if (Show(await Me.CompleteRegistrationAsync(request)))
+            if (Succeeded(await Me.CompleteRegistrationAsync(request), FieldsOnThisStep))
             {
                 await StorageAsync("sessionStorage.removeItem", CodeKey);
                 Navigation.NavigateTo(await NextPageAsync(), forceLoad: true);
@@ -358,147 +391,53 @@
             }
 
             // The invitation held has run out or is no longer valid: ask for another in the same form (design 6.2).
-            if (_errors.ContainsKey("invitationCode"))
+            if (Errors.ContainsKey("invitationCode"))
             {
                 _askInvitation = true;
             }
         });
     }
 
-    private async Task SignOutAsync()
+    private Task SignOutAsync() => RunAsync(async () =>
     {
-        await RunAsync(async () =>
+        if (Succeeded(await Auth.SignOutAsync()))
         {
-            if (Show(await Auth.SignOutAsync()))
-            {
-                Navigation.NavigateTo("/", forceLoad: true);
-            }
-        });
-    }
-
-    private async Task ResendAsync()
-    {
-        await RunAsync(async () =>
-        {
-            if (Show(await Auth.RequestCodeAsync(new RequestCodeRequest { Email = _email.Trim() })))
-            {
-                _info = T["Code.Resent"];
-            }
-        });
-    }
-
-    private async Task SignInWithPasskeyAsync()
-    {
-        await RunAsync(async () =>
-        {
-            if (!await PasskeyBrowser.IsSupportedAsync())
-            {
-                _message = T["Passkey.Unsupported"];
-                return;
-            }
-
-            var options = await Auth.GetPasskeyRequestOptionsAsync();
-            if (!Show(options))
-            {
-                return;
-            }
-
-            var credential = await PasskeyBrowser.GetAsync(options.Value!);
-            if (credential is null)
-            {
-                _message = T["Passkey.Cancelled"];
-                return;
-            }
-
-            if (Show(await Auth.SignInWithPasskeyAsync(new PasskeyCredentialRequest { Credential = credential })))
-            {
-                Navigation.NavigateTo(await NextPageAsync(), forceLoad: true);
-            }
-        });
-    }
-
-    private async Task RunAsync(Func<Task> action)
-    {
-        Clear();
-        _busy = true;
-        try
-        {
-            await action();
+            Navigation.NavigateTo("/", forceLoad: true);
         }
-        catch (HttpRequestException)
-        {
-            _message = T["Error.Network"];
-        }
-        catch (Exception ex) when (ex is System.Text.Json.JsonException or NotSupportedException)
-        {
-            // An answer the client could not read: say so rather than leave the page silent.
-            _message = T["Error.Generic"];
-        }
-        finally
-        {
-            _busy = false;
-        }
-    }
+    });
 
-    private bool Validate(FluentValidation.Results.ValidationResult result)
+    private Task ResendAsync() => RunAsync(async () =>
     {
-        Clear();
-        if (result.IsValid)
+        if (Succeeded(await Auth.RequestCodeAsync(new RequestCodeRequest { Email = _email.Trim() }), FieldsOnThisStep))
         {
-            return true;
+            Info = L["Code.Resent"];
+        }
+    });
+
+    private Task SignInWithPasskeyAsync() => RunAsync(async () =>
+    {
+        if (!await PasskeyBrowser.IsSupportedAsync())
+        {
+            Message = L["Passkey.Unsupported"];
+            return;
         }
 
-        _errors = result.Errors
-            .GroupBy(e => char.ToLowerInvariant(e.PropertyName[0]) + e.PropertyName[1..])
-            .ToDictionary(g => g.Key, g => g.Select(e => e.ErrorMessage).ToArray());
-        return false;
-    }
-
-    private bool Show(ApiResult result)
-    {
-        if (result.IsSuccess)
+        var options = await Auth.GetPasskeyRequestOptionsAsync();
+        if (!Succeeded(options, FieldsOnThisStep))
         {
-            return true;
+            return;
         }
 
-        var problem = result.Problem!;
-        if (problem.Errors is { Count: > 0 })
+        var credential = await PasskeyBrowser.GetAsync(options.Value!);
+        if (credential is null)
         {
-            _errors = problem.Errors;
-
-            // An error about something this step has no field for (for example the passkey credential) goes into the
-            // note, so no refusal is ever silent.
-            var unseen = problem.Errors
-                .Where(e => !FieldsOnThisStep.Contains(e.Key))
-                .SelectMany(e => e.Value)
-                .Distinct()
-                .ToList();
-            if (unseen.Count > 0)
-            {
-                _message = string.Join(" ", unseen);
-            }
-        }
-        else
-        {
-            _message = problem.Detail ?? T["Error.Generic"];
+            Message = L["Passkey.Cancelled"];
+            return;
         }
 
-        return false;
-    }
-
-    /// <summary>The fields whose errors this step shows under the field itself.</summary>
-    private string[] FieldsOnThisStep => _step switch
-    {
-        Step.SignIn => ["email"],
-        Step.Register => ["email", "invitationCode"],
-        Step.Code => ["code"],
-        _ => ["displayName", "confirmsAdult", "invitationCode"],
-    };
-
-    private void Clear()
-    {
-        _message = null;
-        _info = null;
-        _errors = new Dictionary<string, string[]>();
-    }
+        if (Succeeded(await Auth.SignInWithPasskeyAsync(new PasskeyCredentialRequest { Credential = credential }), FieldsOnThisStep))
+        {
+            Navigation.NavigateTo(await NextPageAsync(), forceLoad: true);
+        }
+    });
 }

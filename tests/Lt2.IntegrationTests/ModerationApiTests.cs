@@ -12,22 +12,6 @@ namespace Lt2.IntegrationTests;
 /// </summary>
 public sealed class ModerationApiTests(DatabaseFixture database) : ApiTest(database)
 {
-    private static readonly SemaphoreSlim Gate = new(1, 1);
-    private static StaffMember? _moderator;
-
-    private async Task<StaffMember> ModeratorAsync()
-    {
-        await Gate.WaitAsync();
-        try
-        {
-            return _moderator ??= await StaffMembers.ActiveAsync(Factory, Database, "moderator");
-        }
-        finally
-        {
-            Gate.Release();
-        }
-    }
-
     private Task<long> NoticesAsync(string email, string notice) =>
         Database.ScalarAsync<long>(
             "SELECT count(*) FROM notify.outbox WHERE kind = 'email.moderation-notice' AND payload->>'to' = @to AND payload->>'notice' = @n",
@@ -484,7 +468,7 @@ public sealed class ModerationApiTests(DatabaseFixture database) : ApiTest(datab
         // The module applies the same rule whatever calls it, not only the endpoint's validator.
         await using var scope = Factory.Services.CreateAsyncScope();
         var module = scope.ServiceProvider.GetRequiredService<Lt2.Appeals.IAppealsModeration>();
-        var actor = new Lt2.Appeals.ModeratorActor(await Database.UserIdAsync(staff.Email), "moderator", null);
+        var actor = new Lt2.SharedKernel.StaffActor(await Database.UserIdAsync(staff.Email), "moderator", null);
         var direct = await module.WriteDescriptionAsync(AppealSteps.SecondBill, new Lt2.Appeals.ModeratorDescription(Text, "Bandymas.", false, "https://lrs.lt@evil.example/"), actor, CancellationToken.None);
         direct.Error.ShouldNotBeNull().Code.ShouldBe("description-url.invalid");
     }
@@ -539,5 +523,75 @@ public sealed class ModerationApiTests(DatabaseFixture database) : ApiTest(datab
         (await Database.ScalarAsync<string>(
             "SELECT payload->>'path' FROM notify.outbox WHERE kind = 'email.moderation-notice' AND payload->>'to' = @to", ("to", email))).ShouldBe("/seimas/" + AppealSteps.ThirdBill);
         (await moderator.ModerationBillAsync(AppealSteps.ThirdBill)).Reasons.ShouldNotContain(r => r.Id == shown.Id, "restoring stays on the list of hidden items");
+    }
+
+    /// <summary>Design 6.8: a report is closed only by an action that answers it; a threshold, holding or releasing do not.</summary>
+    [Fact]
+    public async Task A_threshold_holding_or_releasing_leaves_a_report_on_the_description_open()
+    {
+        var (member, _) = await Factory.MemberAsync();
+        using var _m = member;
+        var moderator = (await ModeratorAsync()).Browser;
+        var appeal = await Database.PrepareBillAsync(member, moderator, AppealSteps.ThirdBill);
+        var (reporter, _) = await Factory.MemberAsync();
+        using var _r = reporter;
+        (await reporter.PostAsync(AppealRoutes.Reports, new ReportRequest { TargetKind = "appeal", TargetId = appeal.Id, Ground = "inaccurate", Text = "Tarifas kitas." }))
+            .StatusCode.ShouldBe(HttpStatusCode.NoContent);
+
+        (await moderator.SendAsync(HttpMethod.Put, AppealRoutes.With(AppealRoutes.AppealThreshold, appeal.Id), new ModeratorThresholdRequest { Threshold = 150, Statement = "Kitas slenkstis." }))
+            .StatusCode.ShouldBe(HttpStatusCode.NoContent);
+        (await moderator.PostAsync(AppealRoutes.With(AppealRoutes.HoldAppeal, appeal.Id), new StatementRequest { Statement = "Sulaikoma." })).StatusCode.ShouldBe(HttpStatusCode.NoContent);
+        (await moderator.PostAsync(AppealRoutes.With(AppealRoutes.ReleaseAppeal, appeal.Id), new StatementRequest { Statement = "Paleidžiama." })).StatusCode.ShouldBe(HttpStatusCode.NoContent);
+        (await moderator.ModerationBillAsync(AppealSteps.ThirdBill)).DescriptionReports.ShouldHaveSingleItem("none of these answers the report");
+        (await moderator.GetJsonAsync<ModerationQueueResponse>(AppealRoutes.ModerationQueue)).Appeals.Single(a => a.Id == appeal.Id).Reports.Count.ShouldBe(1);
+
+        // "Palikti" answers it.
+        (await moderator.PostAsync(AppealRoutes.With(AppealRoutes.KeepAppeal, appeal.Id), new ModerationRequest())).StatusCode.ShouldBe(HttpStatusCode.NoContent);
+        (await moderator.ModerationBillAsync(AppealSteps.ThirdBill)).DescriptionReports.ShouldBeEmpty();
+    }
+
+    /// <summary>Design 8.13: an address changed alone leaves the description's label (its source) as it is.</summary>
+    [Fact]
+    public async Task Changing_only_the_official_texts_address_keeps_the_descriptions_label()
+    {
+        var (member, _) = await Factory.MemberAsync();
+        using var _m = member;
+        var moderator = (await ModeratorAsync()).Browser;
+        var appeal = await Database.PrepareBillAsync(member, moderator, AppealSteps.ThirdBill, side: null);
+
+        // The summary job's text nobody has read yet ("Sukurta DI · žmonių neperžiūrėta").
+        await Database.ExecuteAsync("UPDATE appeals.appeal SET description_source = 'ai' WHERE id = @a", ("a", appeal.Id));
+        (await moderator.SendAsync(HttpMethod.Put, AppealRoutes.BillDescriptionOf(AppealSteps.ThirdBill),
+                new ModeratorDescriptionRequest { Description = AppealSteps.Description, Statement = "Tik adresas.", DescriptionUrl = "https://e-seimas.lrs.lt/portal/legalAct/lt/TAP/bandymas-0618" }))
+            .StatusCode.ShouldBe(HttpStatusCode.NoContent);
+        using var stranger = NewBrowser();
+        (await stranger.AppealAsync(AppealSteps.ThirdBill)).DescriptionSource.ShouldBe("ai", "an address alone is not reading or correcting the text");
+
+        // A changed text is a moderator's correction.
+        (await moderator.SendAsync(HttpMethod.Put, AppealRoutes.BillDescriptionOf(AppealSteps.ThirdBill),
+                new ModeratorDescriptionRequest { Description = AppealSteps.Description + " Nuo 2027 metų.", Statement = "Pataisyta.", DescriptionUrl = "https://e-seimas.lrs.lt/portal/legalAct/lt/TAP/bandymas-0618" }))
+            .StatusCode.ShouldBe(HttpStatusCode.NoContent);
+        (await stranger.AppealAsync(AppealSteps.ThirdBill)).DescriptionSource.ShouldBe("ai-draft");
+    }
+
+    /// <summary>Design 6.8: a moderator's statement is checked by the module that stores it, whatever calls it.</summary>
+    [Fact]
+    public async Task The_module_checks_a_moderators_statement_whatever_calls_it()
+    {
+        var (member, _) = await Factory.MemberAsync();
+        using var _m = member;
+        var staff = await ModeratorAsync();
+        var appeal = await Database.PrepareBillAsync(member, staff.Browser, AppealSteps.ThirdBill, side: null);
+        await using var scope = Factory.Services.CreateAsyncScope();
+        var module = scope.ServiceProvider.GetRequiredService<Lt2.Appeals.IAppealsModeration>();
+        var actor = new Lt2.SharedKernel.StaffActor(await Database.UserIdAsync(staff.Email), "moderator", null);
+
+        (await module.HoldAsync(appeal.Id, "", actor, CancellationToken.None)).Error.ShouldNotBeNull().Code.ShouldBe("statement.required");
+        (await module.ReleaseAsync(appeal.Id, " ", actor, CancellationToken.None)).Error.ShouldNotBeNull().Code.ShouldBe("statement.required");
+        (await module.SetPlannedAsync(appeal.Id, new DateOnly(2027, 1, 15), null, "", actor, CancellationToken.None)).Error.ShouldNotBeNull().Code.ShouldBe("statement.required");
+        (await module.HideAppealAsync(appeal.Id, new string('a', 1001), actor, CancellationToken.None)).Error.ShouldNotBeNull().Code.ShouldBe("staff-statement.too-long");
+        (await module.KeepAppealAsync(appeal.Id, new string('a', 1001), actor, CancellationToken.None)).Error.ShouldNotBeNull().Code.ShouldBe("staff-statement.too-long");
+        (await Database.ScalarAsync<long>("SELECT count(*) FROM appeals.moderation_action WHERE target_id = @a AND action IN ('hold', 'release', 'planned', 'hide', 'keep')", ("a", appeal.Id)))
+            .ShouldBe(0, "nothing was recorded");
     }
 }

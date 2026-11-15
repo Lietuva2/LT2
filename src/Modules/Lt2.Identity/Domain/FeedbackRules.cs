@@ -6,7 +6,7 @@ namespace Lt2.Identity.Domain;
 internal static partial class FeedbackRules
 {
     public const int TextMaxLength = 2000;
-    public const int PerAccountPerDay = 10;
+
 
     public static readonly IReadOnlyList<string> Kinds = ["bug", "idea", "unclear", "other"];
     public static readonly IReadOnlyList<string> Statuses = ["new", "seen", "done"];

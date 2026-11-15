@@ -34,7 +34,7 @@ internal static class UrgentDigestEndpoint
         CancellationToken cancellationToken)
     {
         var moderator = await AppealMapping.ModeratorAsync(identity, user, ipHasher.Hash(context), cancellationToken);
-        var result = await digests.UrgentAsync(id, request.Statement, new StaffActor(moderator.UserId, moderator.Role, moderator.IpHash), cancellationToken);
+        var result = await digests.UrgentAsync(id, request.Statement, moderator, cancellationToken);
         return result.IsSuccess
             ? TypedResults.Created(DigestRoutes.DigestOn(result.Value.RunDate), DigestMapping.Map(result.Value))
             : errors.ToResult(result.Error!);

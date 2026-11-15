@@ -15,7 +15,7 @@ public sealed class OrganisationModerationTests(DatabaseFixture database) : ApiT
     [Fact]
     public async Task A_blocked_organisation_cannot_publish_its_statements_disappear_and_lifting_the_block_returns_exactly_what_was_hidden()
     {
-        using var moderator = await StaffMembers.ActiveAsync(Factory, Database, "moderator");
+        using var moderator = await StaffMembers.SharedAsync(Factory, Database, "moderator");
         foreach (var bill in new[] { AppealSteps.TaxBill, AppealSteps.SecondBill, AppealSteps.ThirdBill })
         {
             await Database.FreeBillAsync(bill);
@@ -84,10 +84,38 @@ public sealed class OrganisationModerationTests(DatabaseFixture database) : ApiT
         }
     }
 
+    /// <summary>Design 8.14.14, 6.8: a changed description that pre-screening flags brings the organisation back to the queue.</summary>
+    [Fact]
+    public async Task A_flagged_new_description_brings_a_seen_organisation_back_to_the_queue()
+    {
+        using var moderator = await StaffMembers.SharedAsync(Factory, Database, "moderator");
+        var (member, _) = await Factory.MemberAsync();
+        using var _m = member;
+        var name = OrganisationSteps.NewName();
+        var created = await member.RegisterOrganisationAsync(name);
+        await moderator.Browser.ActAsync(OrganisationRoutes.Keep, created.Id, "Peržiūrėta.");
+
+        async Task<bool> QueuedAsync() =>
+            (await moderator.Browser.GetJsonAsync<OrganisationModerationResponse>(OrganisationRoutes.ModerationQueue)).Organisations.Any(o => o.Id == created.Id);
+
+        async Task ChangeAsync(string description)
+        {
+            using var changed = await member.SendAsync(HttpMethod.Put, OrganisationRoutes.Of(created.Slug), new OrganisationRequest { Name = name, Description = description });
+            changed.StatusCode.ShouldBe(HttpStatusCode.NoContent, await changed.Content.ReadAsStringAsync());
+        }
+
+        (await QueuedAsync()).ShouldBeFalse("seen");
+        await ChangeAsync("Kitas išgalvotos organizacijos aprašymas.");
+        (await QueuedAsync()).ShouldBeFalse("a description pre-screening does not flag is not looked at again");
+        await ChangeAsync("Rašykite info@pavyzdys.test arba skambinkite 861234567.");
+        var queued = (await moderator.Browser.GetJsonAsync<OrganisationModerationResponse>(OrganisationRoutes.ModerationQueue)).Organisations.Single(o => o.Id == created.Id);
+        queued.Description.ShouldContain("861234567");
+    }
+
     [Fact]
     public async Task Every_moderation_action_is_recorded_and_audited_without_an_address_or_a_text()
     {
-        using var moderator = await StaffMembers.ActiveAsync(Factory, Database, "moderator");
+        using var moderator = await StaffMembers.SharedAsync(Factory, Database, "moderator");
         var (member, email) = await Factory.MemberAsync();
         using var _m = member;
         var created = await member.RegisterOrganisationAsync();

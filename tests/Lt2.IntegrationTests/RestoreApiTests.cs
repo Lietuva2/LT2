@@ -15,21 +15,6 @@ public sealed class RestoreApiTests(DatabaseFixture database) : ApiTest(database
     private const string Statement = "Paslėpta per klaidą.";
 
     private static readonly SemaphoreSlim ModeratorGate = new(1, 1);
-    private static StaffMember? _moderator;
-
-    private async Task<TestBrowser> ModeratorAsync()
-    {
-        await ModeratorGate.WaitAsync();
-        try
-        {
-            _moderator ??= await StaffMembers.ActiveAsync(Factory, Database, "moderator");
-            return _moderator.Browser;
-        }
-        finally
-        {
-            ModeratorGate.Release();
-        }
-    }
 
     private static async Task HideAsync(TestBrowser moderator, Guid appealId)
     {
@@ -43,7 +28,7 @@ public sealed class RestoreApiTests(DatabaseFixture database) : ApiTest(database
     [Fact]
     public async Task The_hidden_list_says_who_hid_an_appeal_when_and_why_and_what_restoring_would_do()
     {
-        var moderator = await ModeratorAsync();
+        var moderator = (await ModeratorAsync()).Browser;
         var (initiator, _) = await Factory.MemberAsync("Rūta Mockutė");
         using var _i = initiator;
         var appeal = await Database.PrepareBillAsync(initiator, moderator, Bill);
@@ -74,7 +59,7 @@ public sealed class RestoreApiTests(DatabaseFixture database) : ApiTest(database
     [Fact]
     public async Task Restoring_brings_the_record_back_open_with_its_sides_reasons_and_marks()
     {
-        var moderator = await ModeratorAsync();
+        var moderator = (await ModeratorAsync()).Browser;
         var (initiator, initiatorEmail) = await Factory.MemberAsync("Rūta Mockutė");
         var (supporter, _) = await Factory.MemberAsync("Giedrė L.");
         using var _i = initiator;
@@ -108,7 +93,7 @@ public sealed class RestoreApiTests(DatabaseFixture database) : ApiTest(database
     [Fact]
     public async Task Restoring_needs_a_statement()
     {
-        var moderator = await ModeratorAsync();
+        var moderator = (await ModeratorAsync()).Browser;
         var (initiator, _) = await Factory.MemberAsync();
         using var _i = initiator;
         var appeal = await Database.PrepareBillAsync(initiator, moderator, Bill, side: null);
@@ -121,7 +106,7 @@ public sealed class RestoreApiTests(DatabaseFixture database) : ApiTest(database
     [Fact]
     public async Task A_closed_record_comes_back_closed_and_an_open_one_is_not_restored()
     {
-        var moderator = await ModeratorAsync();
+        var moderator = (await ModeratorAsync()).Browser;
         var (first, _) = await Factory.MemberAsync();
         using var _f = first;
         var record = await Database.PrepareBillAsync(first, moderator, Bill, side: null);
@@ -146,7 +131,7 @@ public sealed class RestoreApiTests(DatabaseFixture database) : ApiTest(database
     [Fact]
     public async Task A_hidden_reason_is_listed_and_restored_without_its_marks()
     {
-        var moderator = await ModeratorAsync();
+        var moderator = (await ModeratorAsync()).Browser;
         var (initiator, initiatorEmail) = await Factory.MemberAsync("Rūta Mockutė");
         var (supporter, _) = await Factory.MemberAsync();
         using var _i = initiator;

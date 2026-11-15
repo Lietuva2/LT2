@@ -1,7 +1,8 @@
-@* The error line under a field (design/ui: .field__error). The id lets the input point at it with aria-describedby. *@
+@* The error line under a field (design/ui: .field__error). Its id is the input's id + "-error", unique on the page, so
+   the input points at it with aria-describedby (InteractiveBase.DescribedBy). *@
 @if (Errors.TryGetValue(Field, out var messages))
 {
-    <p class="field__error" id="@Id" role="alert">@string.Join(" ", messages)</p>
+    <p class="field__error" id="@IdFor(For ?? Field)" role="alert">@string.Join(" ", messages)</p>
 }
 
 @code {
@@ -11,5 +12,9 @@
     [Parameter, EditorRequired]
     public string Field { get; set; } = "";
 
-    public string Id => Field + "-error";
+    /// <summary>The id of the input the error belongs to; the field name when the form has only one such field.</summary>
+    [Parameter]
+    public string? For { get; set; }
+
+    public static string IdFor(string inputId) => inputId + "-error";
 }

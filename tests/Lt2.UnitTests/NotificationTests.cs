@@ -80,4 +80,14 @@ public sealed class NotificationTests
         OutboxDispatcher.Backoff(4).ShouldBe(TimeSpan.FromSeconds(80));
         OutboxDispatcher.Backoff(20).ShouldBe(TimeSpan.FromHours(1));
     }
+
+    [Fact]
+    public void A_failed_send_is_described_by_the_error_type_and_status_code_never_the_servers_text()
+    {
+        var rejected = new MailKit.Net.Smtp.SmtpCommandException(
+            MailKit.Net.Smtp.SmtpErrorCode.RecipientNotAccepted, MailKit.Net.Smtp.SmtpStatusCode.MailboxUnavailable, "5.1.1 <ruta@pavyzdys.test>: Recipient address rejected");
+
+        OutboxDispatcher.Describe(rejected).ShouldBe("SmtpCommandException 550");
+        OutboxDispatcher.Describe(new IOException("ruta@pavyzdys.test")).ShouldBe("IOException");
+    }
 }

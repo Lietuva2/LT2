@@ -1,8 +1,8 @@
-using System.Security.Claims;
 using Lt2.Api.Contracts.Appeals;
 using Lt2.Api.Contracts.Organisations;
 using Lt2.Appeals;
 using Lt2.SharedKernel;
+using Lt2.Web.Endpoints.Moderation;
 using Lt2.Web.Security;
 using Lt2.Web.Services;
 
@@ -58,26 +58,15 @@ internal static class OrganisationModerationEndpoints
             .Produces<RestrictionCreatedResponse>(StatusCodes.Status201Created).ProducesProblem(StatusCodes.Status404NotFound).ProducesProblem(StatusCodes.Status409Conflict);
     }
 
-    private delegate Task<Result<Unit>> Action<in T>(IOrganisationModeration moderation, Guid id, T request, ModeratorActor moderator, string? contact, CancellationToken ct);
+    private delegate Task<Result<Unit>> Action<in T>(IOrganisationModeration moderation, Guid id, T request, StaffActor moderator, string? contact, CancellationToken ct);
 
     private static void Act<T>(IEndpointRouteBuilder api, string route, string name, Action<T> action) =>
-        api.MapPost(ApiEndpoints.Relative(route), async (
-                Guid id, T request, ClaimsPrincipal user, HttpContext context, Lt2.Identity.IIdentityModule identity, IOrganisationModeration moderation,
-                IpHasher ipHasher, ErrorMapper errors, IConfiguration configuration, CancellationToken ct) =>
-            {
-                var moderator = await AppealMapping.ModeratorAsync(identity, user, ipHasher.Hash(context), ct);
-                return OrganisationEndpoints.Outcome(await action(moderation, id, request, moderator, AppealMapping.Contact(configuration), ct), errors);
-            })
+        api.MapPost(ApiEndpoints.Relative(route), (Guid id, T request, HttpContext context, IOrganisationModeration moderation, CancellationToken ct) =>
+                ModeratorEndpoint.ActAsync(context, m => action(moderation, id, request, m, ModeratorEndpoint.Contact(context), ct)))
             .WithName(name).WithTags("Moderation").RequireAuthorization(Policies.Moderator)
             .WithValidation<T>()
             .Produces(StatusCodes.Status204NoContent).ProducesProblem(StatusCodes.Status404NotFound).ProducesProblem(StatusCodes.Status409Conflict);
 
-    private static async Task<IResult> RestrictAsync(
-        Guid id, RestrictionRequest request, ClaimsPrincipal user, HttpContext context, Lt2.Identity.IIdentityModule identity, IOrganisationModeration moderation,
-        IpHasher ipHasher, ErrorMapper errors, IConfiguration configuration, CancellationToken cancellationToken)
-    {
-        var moderator = await AppealMapping.ModeratorAsync(identity, user, ipHasher.Hash(context), cancellationToken);
-        var result = await moderation.RestrictWriterOfStatementAsync(id, request.Until, request.Statement, moderator, AppealMapping.Contact(configuration), cancellationToken);
-        return result.IsSuccess ? TypedResults.Created(Lt2.Api.Contracts.AppealRoutes.Restrictions, new RestrictionCreatedResponse(result.Value)) : errors.ToResult(result.Error!);
-    }
+    private static Task<IResult> RestrictAsync(Guid id, RestrictionRequest request, HttpContext context, IOrganisationModeration moderation, CancellationToken cancellationToken) =>
+        ModeratorEndpoint.RestrictAsync(context, (m, contact) => moderation.RestrictWriterOfStatementAsync(id, request.Until, request.Statement, m, contact, cancellationToken));
 }

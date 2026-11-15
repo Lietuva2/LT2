@@ -1,0 +1,71 @@
+@using Lt2.Api.Contracts.Appeals
+@inherits InteractiveBase<AppealUi>
+
+@* "Atkurti" on the moderators' list of hidden items (design 8.3, 8.14.14), for a bill, an argument, an organisation or a
+   statement: opens only its own field, a required statement (sent to whoever the item belongs to), with one sentence on
+   what it does. The confirmation stays after the action closes. *@
+<div class="stack stack--tight" id="@($"{IdPrefix}-{Id}")">
+    @if (!_open)
+    {
+        @if (_done is null)
+        {
+            <div class="row">
+                <button type="button" class="btn btn--plain" id="@($"{IdPrefix}-open-{Id}")" disabled="@(Locked || !Allowed)" @onclick="() => _open = true">@L["Hidden.Restore"]</button>
+            </div>
+        }
+    }
+    else
+    {
+        <form class="sheet stack stack--tight" @onsubmit="RestoreAsync" novalidate aria-labelledby="@($"{IdPrefix}-title-{Id}")">
+            <h4 id="@($"{IdPrefix}-title-{Id}")">@L["Hidden.Restore"]</h4>
+            <p class="small">@Sentence</p>
+            <div class="field @ErrorClass("statement")">
+                <label for="@StatementId">@StatementLabel</label>
+                <textarea class="textarea" id="@StatementId" maxlength="@AppealLimits.StatementMaxLength" @bind="_statement" disabled="@Locked"
+                          aria-invalid="@Invalid("statement")" aria-describedby="@DescribedBy("statement", StatementId)"></textarea>
+                <FieldError Errors="Errors" Field="statement" For="@StatementId" />
+            </div>
+            <div class="row">
+                <button type="submit" class="btn" id="@($"{IdPrefix}-submit-{Id}")" disabled="@Locked">@L["Hidden.Restore"]</button>
+                <button type="button" class="btn btn--plain" disabled="@Locked" @onclick="() => _open = false">@L["Cancel"]</button>
+            </div>
+        </form>
+    }
+    <Messages Message="@Message" Info="@(Info ?? _done)" />
+</div>
+
+@code {
+    private bool _open;
+    private string _statement = "";
+    private string? _done;
+
+    [Parameter, EditorRequired] public Guid Id { get; set; }
+
+    /// <summary>The start of the element ids: <c>restore</c> (bills and arguments), <c>org-restore</c> (organisations).</summary>
+    [Parameter, EditorRequired] public string IdPrefix { get; set; } = "restore";
+
+    /// <summary>One sentence on what restoring does.</summary>
+    [Parameter, EditorRequired] public string Sentence { get; set; } = "";
+
+    /// <summary>The label of the statement, saying who receives it.</summary>
+    [Parameter, EditorRequired] public string StatementLabel { get; set; } = "";
+
+    /// <summary>False when the server would refuse now; the reason is shown beside the item.</summary>
+    [Parameter] public bool Allowed { get; set; } = true;
+
+    /// <summary>The restoring call itself.</summary>
+    [Parameter, EditorRequired] public Func<StatementRequest, Task<ApiResult>> Restore { get; set; } = default!;
+
+    private string StatementId => $"{IdPrefix}-statement-{Id}";
+
+    private Task RestoreAsync() => RunAsync(async () =>
+    {
+        if (!Succeeded(await Restore(new StatementRequest { Statement = _statement }), "statement"))
+        {
+            return;
+        }
+
+        _open = false;
+        _done = L["Hidden.Restored"];
+    });
+}

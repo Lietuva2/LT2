@@ -16,31 +16,7 @@ namespace Lt2.IntegrationTests;
 /// </summary>
 public sealed class ReasonWithdrawalTests(DatabaseFixture database) : ApiTest(database)
 {
-    private static readonly SemaphoreSlim Gate = new(1, 1);
-    private static StaffMember? _moderator;
-    private static StaffMember? _administrator;
-    private static readonly TimeZoneInfo Vilnius = TimeZoneInfo.FindSystemTimeZoneById("Europe/Vilnius");
-
-    private async Task<(TestBrowser Moderator, TestBrowser Administrator)> StaffAsync()
-    {
-        await Gate.WaitAsync();
-        try
-        {
-            _moderator ??= await StaffMembers.ActiveAsync(Factory, Database, "moderator");
-            _administrator ??= await StaffMembers.ActiveAsync(Factory, Database, "administrator");
-            return (_moderator.Browser, _administrator.Browser);
-        }
-        finally
-        {
-            Gate.Release();
-        }
-    }
-
-    private static async Task SetAsync(TestBrowser admin, string key, object value)
-    {
-        using var response = await admin.SendAsync(HttpMethod.Put, ApiRoutes.Admin.SettingByKey(key), new UpdateSettingRequest { Value = JsonSerializer.SerializeToElement(value) });
-        response.StatusCode.ShouldBe(HttpStatusCode.OK, await response.Content.ReadAsStringAsync());
-    }
+    private static readonly TimeZoneInfo Vilnius = Lt2.SharedKernel.VilniusTime.Zone;
 
     private static Task<HttpResponseMessage> WithdrawAsync(TestBrowser browser, Guid reasonId) =>
         browser.SendAsync(HttpMethod.Delete, AppealRoutes.ReasonOf(reasonId));
@@ -48,10 +24,9 @@ public sealed class ReasonWithdrawalTests(DatabaseFixture database) : ApiTest(da
     [Fact]
     public async Task An_author_withdraws_their_own_argument_with_its_marks_nobody_else_can_and_a_made_summary_keeps_its_text()
     {
-        var (moderator, admin) = await StaffAsync();
-        await SetAsync(admin, "Digest:ThresholdMinimum", 1);
-        var today = DateOnly.FromDateTime(TimeZoneInfo.ConvertTime(DateTimeOffset.UtcNow, Vilnius).DateTime);
-        var monday = today.AddDays(7 * 14 - (((int)today.DayOfWeek + 6) % 7));
+        var (moderator, admin) = ((await ModeratorAsync()).Browser, (await AdministratorAsync()).Browser);
+        await admin.SetSettingAsync("Digest:ThresholdMinimum", 1);
+        var monday = ReasonsToComeSteps.MondayInWeeks(14);
         try
         {
             var (initiator, _) = await Factory.MemberAsync();
@@ -127,7 +102,7 @@ public sealed class ReasonWithdrawalTests(DatabaseFixture database) : ApiTest(da
         }
         finally
         {
-            await SetAsync(admin, "Digest:ThresholdMinimum", 50);
+            await admin.ResetSettingAsync("Digest:ThresholdMinimum");
             await Database.ExecuteAsync("DELETE FROM parliament.planned_item WHERE bill_number = 'XVP-0618'");
             await Database.FreeBillAsync(AppealSteps.ThirdBill);
         }
@@ -136,7 +111,7 @@ public sealed class ReasonWithdrawalTests(DatabaseFixture database) : ApiTest(da
     [Fact]
     public async Task A_limit_switched_on_later_removes_nothing_and_counts_only_shown_or_waiting_arguments()
     {
-        var (moderator, admin) = await StaffAsync();
+        var (moderator, admin) = ((await ModeratorAsync()).Browser, (await AdministratorAsync()).Browser);
         try
         {
             var (initiator, _) = await Factory.MemberAsync();
@@ -153,7 +128,7 @@ public sealed class ReasonWithdrawalTests(DatabaseFixture database) : ApiTest(da
 
             (await writer.MineAsync(AppealSteps.ThirdBill)).ReasonsLeft.ShouldBeNull();
 
-            await SetAsync(admin, "Appeals:ReasonsPerPerson", 2);
+            await admin.SetSettingAsync("Appeals:ReasonsPerPerson", 2);
             (await writer.GetJsonAsync<AppealRulesResponse>(AppealRoutes.Rules)).ReasonsPerPerson.ShouldBe(2);
             var mine = await writer.MineAsync(AppealSteps.ThirdBill);
             mine.ReasonsLeft.ShouldBe(0);
@@ -175,9 +150,8 @@ public sealed class ReasonWithdrawalTests(DatabaseFixture database) : ApiTest(da
         }
         finally
         {
-            await SetAsync(admin, "Appeals:ReasonsPerPerson", 0);
+            await admin.ResetSettingAsync("Appeals:ReasonsPerPerson");
             await Database.FreeBillAsync(AppealSteps.ThirdBill);
         }
     }
-
 }

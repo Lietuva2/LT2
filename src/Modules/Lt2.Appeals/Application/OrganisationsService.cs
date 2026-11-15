@@ -31,10 +31,9 @@ internal sealed class OrganisationsService(
         await using var db = await contexts.CreateDbContextAsync(cancellationToken);
         var active = await db.Organisations.AsNoTracking().Where(o => o.Status == OrganisationStatuses.Active).ToListAsync(cancellationToken);
         var words = (search ?? "").Split(' ', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
-        var lithuanian = StringComparer.Create(new System.Globalization.CultureInfo("lt-LT"), ignoreCase: true);
         var matching = active
             .Where(o => words.All(w => o.Name.Contains(w, StringComparison.OrdinalIgnoreCase)))
-            .OrderBy(o => o.Name, lithuanian)
+            .OrderBy(o => o.Name, OrganisationReads.NameOrder)
             .ThenBy(o => o.Slug, StringComparer.Ordinal)
             .ToList();
         return new OrganisationListPage(
@@ -80,14 +79,9 @@ internal sealed class OrganisationsService(
         }
 
         var numbers = rows.Select(s => s.BillNumber).Distinct().ToList();
-        var facts = await reads.BillsAsync(numbers, ct);
+        var billsOf = await reads.BillsAsync(db, numbers, ct);
         var counts = await reads.CountsAsync(db, numbers, ct);
-        var open = new Dictionary<string, bool>(StringComparer.Ordinal);
-        foreach (var number in numbers)
-        {
-            open[number] = (await reads.BillAsync(db, number, ct))?.Open == true;
-        }
-
+        var firstPublic = rows.ToDictionary(s => s.Id, s => s.FirstPublicAt);
         var ids = rows.Select(s => s.Id).ToList();
         var versions = (await db.Revisions.AsNoTracking()
                 .Where(r => r.EntityKind == "statement" && ids.Contains(r.EntityId) && r.Field == "version")
@@ -95,11 +89,13 @@ internal sealed class OrganisationsService(
                 .Select(r => new { r.EntityId, r.ChangedAt, r.OldValue })
                 .ToListAsync(ct))
             .GroupBy(r => r.EntityId)
-            .ToDictionary(g => g.Key, g => (IReadOnlyList<StatementVersion>)g.Select(r => OrganisationReads.Version(r.ChangedAt, r.OldValue)).OfType<StatementVersion>().ToList());
+            .ToDictionary(
+                g => g.Key,
+                g => (IReadOnlyList<StatementVersion>)g.Select(r => OrganisationReads.Version(r.ChangedAt, r.OldValue, firstPublic[g.Key])).OfType<StatementVersion>().ToList());
         return rows.Select(s => new ProfileStatement(
-            facts.GetValueOrDefault(s.BillNumber) ?? new BillFacts(s.BillNumber, s.BillNumber),
+            billsOf.GetValueOrDefault(s.BillNumber)?.Bill ?? new BillFacts(s.BillNumber, s.BillNumber),
             OrganisationReads.Info(s, counts.GetValueOrDefault(s.BillNumber)),
-            open.GetValueOrDefault(s.BillNumber),
+            billsOf.GetValueOrDefault(s.BillNumber)?.Open == true,
             versions.GetValueOrDefault(s.Id) ?? [])).ToList();
     }
 
@@ -117,9 +113,9 @@ internal sealed class OrganisationsService(
             return new BillStatements(bill.Bill.Number, false, []);
         }
 
-        var rows = await (from s in db.OrganisationStatements.AsNoTracking()
+        var rows = await (from s in db.OrganisationStatements.AsNoTracking().Shown(db.Organisations)
                           join o in db.Organisations.AsNoTracking() on s.OrganisationId equals o.Id
-                          where s.BillNumber == bill.Bill.Number && s.Status == StatementStatuses.Published && o.Status == OrganisationStatuses.Active
+                          where s.BillNumber == bill.Bill.Number
                           orderby s.PublishedAt, s.Id
                           select new { s, o })
             .ToListAsync(cancellationToken);
@@ -145,14 +141,14 @@ internal sealed class OrganisationsService(
         await using var transaction = await db.Database.BeginTransactionAsync(cancellationToken);
 
         // The person's lock: the limit per account holds under parallel requests.
-        await ParticipationLock.TakeAsync(db, userId, cancellationToken);
+        await AdvisoryLocks.PersonAsync(db, userId, cancellationToken);
         if (await participants.FindAsync(userId, cancellationToken) is null)
         {
             return Error.Forbidden("member.required");
         }
 
         var now = clock.GetUtcNow();
-        if (await OrganisationReads.RestrictedAsync(db, userId, now, cancellationToken))
+        if (await WritingRestrictionReads.IsRestrictedAsync(db, userId, now, cancellationToken))
         {
             return Error.Forbidden("writing.restricted");
         }
@@ -228,19 +224,21 @@ internal sealed class OrganisationsService(
 
         var website = OrganisationRules.Optional(request.Website);
 
-        // Earlier names and websites stay in the public history; a new name or website puts the organisation back in the
-        // moderators' queue (design 8.14.14). The history carries no person: appeals.revision is readable for analysis.
-        var looked = false;
-        if (name != o.Name)
+        // Earlier names and websites stay in the public history; a new name or website, or a new description that
+        // pre-screening flags, puts the organisation back in the moderators' queue (design 8.14.14, 6.8). The history
+        // carries no person: appeals.revision is readable for analysis.
+        var nameChanged = name != o.Name;
+        var websiteChanged = website != o.Website;
+        var descriptionChanged = description != o.Description;
+        var descriptionFlagged = descriptionChanged && description.Length > 0 && (await screening.ScreenAsync(description, cancellationToken)).Count > 0;
+        if (nameChanged)
         {
             db.Revisions.Add(AppealsService.Revise("organisation", o.Id, "name", o.Name, name, null, now));
-            looked = true;
         }
 
-        if (website != o.Website)
+        if (websiteChanged)
         {
             db.Revisions.Add(AppealsService.Revise("organisation", o.Id, "website", o.Website, website, null, now));
-            looked = true;
             if (!OrganisationRules.KeepsConfirmation(o.ConfirmedBy, o.ConfirmedDomain, website))
             {
                 o.ConfirmedBy = null;
@@ -261,7 +259,7 @@ internal sealed class OrganisationsService(
         o.DeclaredLobbyist = request.DeclaredLobbyist;
         o.ScreeningFlags = [.. flags];
         o.ChangedAt = now;
-        if (looked)
+        if (OrganisationRules.ReturnsToQueue(nameChanged, websiteChanged, descriptionChanged, descriptionFlagged))
         {
             o.SeenAt = null;
         }
@@ -283,8 +281,7 @@ internal sealed class OrganisationsService(
                           where r.UserId == userId && r.EndedAt == null
                           select o)
             .ToListAsync(cancellationToken);
-        var lithuanian = StringComparer.Create(new System.Globalization.CultureInfo("lt-LT"), ignoreCase: true);
-        return rows.OrderBy(o => o.Name, lithuanian).Select(o => new MyOrganisation(o.Slug, o.Name, o.Status, OrganisationReads.Label(o))).ToList();
+        return rows.OrderBy(o => o.Name, OrganisationReads.NameOrder).Select(o => new MyOrganisation(o.Slug, o.Name, o.Status, OrganisationReads.Label(o))).ToList();
     }
 
     public async Task<Result<OrganisationManagement>> ManagementAsync(string slug, Guid userId, CancellationToken cancellationToken)
@@ -314,10 +311,10 @@ internal sealed class OrganisationsService(
             .OrderByDescending(s => s.PublishedAt)
             .ToListAsync(cancellationToken);
         var numbers = statements.Select(s => s.BillNumber).Distinct().ToList();
-        var facts = await reads.BillsAsync(numbers, cancellationToken);
+        var facts = await reads.BillFactsAsync(numbers, cancellationToken);
         var counts = await reads.CountsAsync(db, numbers, cancellationToken);
         var refusal = OrganisationRules.CheckActive(o.Status)
-            ?? (await OrganisationReads.RestrictedAsync(db, userId, clock.GetUtcNow(), cancellationToken) ? "writing.restricted" : null);
+            ?? (await WritingRestrictionReads.IsRestrictedAsync(db, userId, clock.GetUtcNow(), cancellationToken) ? "writing.restricted" : null);
         return new OrganisationManagement(
             true,
             representatives.Select(r => new RepresentativeInfo(r.Id, names.GetValueOrDefault(r.UserId), r.UserId == userId, r.GrantedAt)).ToList(),
@@ -495,7 +492,7 @@ internal sealed class OrganisationsService(
             return Error.NotFound("invite.not-found");
         }
 
-        await OrganisationReads.LockAsync(db, invite.OrganisationId, cancellationToken);
+        await AdvisoryLocks.OrganisationAsync(db, invite.OrganisationId, cancellationToken);
         await db.Entry(invite).ReloadAsync(cancellationToken);
         var o = await db.Organisations.AsNoTracking().FirstAsync(x => x.Id == invite.OrganisationId, cancellationToken);
         var now = clock.GetUtcNow();
@@ -621,15 +618,13 @@ internal sealed class OrganisationsService(
         AppealsDb db, OrganisationReads reads, IOrganisationCodeSwitch codes, System.Data.Common.DbTransaction transaction, Organisation o, DateTimeOffset now, CancellationToken ct)
     {
         var statements = await db.OrganisationStatements
-            .Where(s => s.OrganisationId == o.Id && (s.Status == StatementStatuses.Pending || s.Status == StatementStatuses.Published || s.Status == StatementStatuses.Hidden))
+            .Where(s => s.OrganisationId == o.Id && StatementStatuses.Holding.Contains(s.Status))
             .ToListAsync(ct);
-        foreach (var s in statements)
+        var billsOf = await reads.BillsAsync(db, statements.Select(s => s.BillNumber).ToList(), ct);
+        foreach (var s in statements.Where(s => billsOf.GetValueOrDefault(AppealReads.NormaliseBillNumber(s.BillNumber))?.Open == true))
         {
-            if ((await reads.BillAsync(db, s.BillNumber, ct))?.Open == true)
-            {
-                s.Status = StatementStatuses.Withdrawn;
-                s.WithdrawnAt = now;
-            }
+            s.Status = StatementStatuses.Withdrawn;
+            s.WithdrawnAt = now;
         }
 
         await db.OrganisationCodes.Where(c => c.OrganisationId == o.Id && c.ConsumedAt == null).ExecuteUpdateAsync(s => s.SetProperty(c => c.ConsumedAt, now), ct);
@@ -653,9 +648,9 @@ internal sealed class OrganisationsService(
         var organisations = await (from r in db.OrganisationRepresentatives.AsNoTracking()
                                    join o in db.Organisations.AsNoTracking() on r.OrganisationId equals o.Id
                                    where r.UserId == userId && r.EndedAt == null && o.Status != OrganisationStatuses.Closed
-                                   orderby o.Name
                                    select o)
             .ToListAsync(cancellationToken);
+        organisations = organisations.OrderBy(o => o.Name, OrganisationReads.NameOrder).ToList();
         if (organisations.Count == 0)
         {
             return Result<IReadOnlyList<MyBillOrganisation>>.Success([]);
@@ -666,7 +661,7 @@ internal sealed class OrganisationsService(
             .Where(s => ids.Contains(s.OrganisationId) && s.BillNumber == bill.Bill.Number && s.Status != StatementStatuses.Withdrawn)
             .ToListAsync(cancellationToken);
         var counts = (await reads.CountsAsync(db, [bill.Bill.Number], cancellationToken))[bill.Bill.Number];
-        var restricted = await OrganisationReads.RestrictedAsync(db, userId, clock.GetUtcNow(), cancellationToken);
+        var restricted = await WritingRestrictionReads.IsRestrictedAsync(db, userId, clock.GetUtcNow(), cancellationToken);
         return organisations.Select(o =>
         {
             var statement = statements.FirstOrDefault(s => s.OrganisationId == o.Id);
@@ -688,7 +683,7 @@ internal sealed class OrganisationsService(
 
         await using var db = await contexts.CreateDbContextAsync(cancellationToken);
         await using var transaction = await db.Database.BeginTransactionAsync(cancellationToken);
-        await ParticipationLock.TakeAsync(db, userId, cancellationToken);
+        await AdvisoryLocks.PersonAsync(db, userId, cancellationToken);
         var acting = await ActingAsync(db, slug, userId, write: true, cancellationToken);
         if (!acting.IsSuccess)
         {
@@ -709,8 +704,7 @@ internal sealed class OrganisationsService(
         var now = clock.GetUtcNow();
         var status = flags.Count > 0 ? StatementStatuses.Pending : StatementStatuses.Published;
         var existing = await db.OrganisationStatements.FirstOrDefaultAsync(
-            s => s.OrganisationId == o.Id && s.BillNumber == bill.Bill.Number
-                && (s.Status == StatementStatuses.Pending || s.Status == StatementStatuses.Published || s.Status == StatementStatuses.Hidden),
+            s => s.OrganisationId == o.Id && s.BillNumber == bill.Bill.Number && StatementStatuses.Holding.Contains(s.Status),
             cancellationToken);
         if (existing is { Status: StatementStatuses.Hidden })
         {
@@ -725,8 +719,13 @@ internal sealed class OrganisationsService(
                 return new StatementSaved(existing.Id, existing.Status);
             }
 
-            // Every earlier version is public, under the statement on the profile (design 8.14.14).
-            db.Revisions.Add(AppealsService.Revise("statement", existing.Id, "version", OrganisationReads.VersionJson(existing), null, null, now));
+            // Every earlier version that was public stays public, under the statement on the profile (design 8.14.14); a
+            // version that waited for a moderator was never public and is kept nowhere (design 6.8).
+            if (OrganisationRules.KeepsVersion(existing.Status))
+            {
+                db.Revisions.Add(AppealsService.Revise("statement", existing.Id, "version", OrganisationReads.VersionJson(existing), null, null, now));
+            }
+
             existing.Stance = request.Stance;
             existing.Text = text;
             existing.Link = link;
@@ -811,8 +810,7 @@ internal sealed class OrganisationsService(
         var now = clock.GetUtcNow();
         statement.Status = StatementStatuses.Withdrawn;
         statement.WithdrawnAt = now;
-        await db.Reports.Where(r => r.TargetId == statement.Id && r.Status == "open")
-            .ExecuteUpdateAsync(s => s.SetProperty(r => r.Status, "closed").SetProperty(r => r.ClosedAt, now), cancellationToken);
+        await ModerationRecorder.CloseReportsAsync(db, statement.Id, now, cancellationToken);
         await db.SaveChangesAsync(cancellationToken);
         await transaction.CommitAsync(cancellationToken);
         return Result.Ok();
@@ -839,7 +837,7 @@ internal sealed class OrganisationsService(
                 .Select(s => s.BillNumber)
                 .ToListAsync(cancellationToken)
             : [];
-        var facts = await reads.BillsAsync(numbers, cancellationToken);
+        var facts = await reads.BillFactsAsync(numbers, cancellationToken);
         return new OrganisationCodeAccess(o.Id, active, numbers.Select(n => facts.GetValueOrDefault(n) ?? new BillFacts(n, n)).ToList());
     }
 
@@ -866,7 +864,7 @@ internal sealed class OrganisationsService(
             return Error.NotFound("organisation.not-found");
         }
 
-        await OrganisationReads.LockAsync(db, found.Id, ct);
+        await AdvisoryLocks.OrganisationAsync(db, found.Id, ct);
         var o = await db.Organisations.FirstAsync(x => x.Id == found.Id, ct);
         if (!await OrganisationReads.IsRepresentativeAsync(db, o.Id, userId, ct))
         {
@@ -883,7 +881,7 @@ internal sealed class OrganisationsService(
             return OrganisationErrors.Of(inactive);
         }
 
-        return await OrganisationReads.RestrictedAsync(db, userId, clock.GetUtcNow(), ct) ? Error.Forbidden("writing.restricted") : o;
+        return await WritingRestrictionReads.IsRestrictedAsync(db, userId, clock.GetUtcNow(), ct) ? Error.Forbidden("writing.restricted") : o;
     }
 
     private static string? CheckProfile(NewOrganisation request) =>

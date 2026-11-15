@@ -2,6 +2,8 @@ using Lt2.Appeals.Application;
 using Lt2.Appeals.Infrastructure;
 using Lt2.Appeals.Screening;
 using Lt2.SharedKernel;
+using Lt2.SharedKernel.Http;
+using Lt2.SharedKernel.Persistence;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
@@ -21,11 +23,7 @@ public static class AppealsModule
     public static IServiceCollection AddAppealsModule(this IServiceCollection services)
     {
         // A context per operation: a page renders several components at once, and they must not share one context.
-        services.AddDbContextFactory<AppealsDb>((sp, options) =>
-            options.UseNpgsql(
-                    sp.GetRequiredService<NpgsqlDataSource>(),
-                    o => o.MigrationsHistoryTable("__ef_migrations_history", Schema))
-                .UseSnakeCaseNamingConvention());
+        services.AddDbContextFactory<AppealsDb>((sp, options) => options.UseLt2Npgsql(sp.GetRequiredService<NpgsqlDataSource>(), Schema));
         services.AddSingleton<IModuleDatabase, AppealsModuleDatabase>();
         services.TryAddSingleton(TimeProvider.System);
         services.AddSingleton<IPositionErasure, PositionErasure>();
@@ -40,6 +38,7 @@ public static class AppealsModule
         services.AddScoped<IDescriptionSummaries, DescriptionSummaries>();
         services.AddScoped<AppealReads>();
         services.AddScoped<BillRecords>();
+        services.AddScoped<ModerationRecorder>();
         services.AddScoped<IAppealsModule, AppealsService>();
         services.AddScoped<ModerationService>();
         services.AddScoped<IAppealsModeration>(sp => sp.GetRequiredService<ModerationService>());
@@ -71,6 +70,8 @@ public static class AppealsModule
             return services;
         }
 
+        // Design 6.4: the provider's host, and only it, joins the outbound allowlist of the host that switched it on.
+        services.AddOutboundHost(Ai.AiConfiguration.ClaudeHost);
         services.AddHttpClient(Ai.AiConfiguration.HttpClientName, c => c.Timeout = TimeSpan.FromMinutes(5));
         services.AddSingleton<IAiAssistant>(sp => new Ai.ClaudeAiAssistant(
             sp.GetRequiredService<IHttpClientFactory>(),

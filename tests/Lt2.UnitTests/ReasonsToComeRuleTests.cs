@@ -153,9 +153,25 @@ public sealed class LandingPathTests
     public void Anything_else_is_ignored(string? path) => LandingPath.Accept(path).ShouldBeNull();
 
     [Fact]
-    public void The_share_link_is_the_personal_invitation_link_with_the_page_to_land_on() =>
+    public void The_share_link_is_the_personal_invitation_link_with_the_page_to_land_on_both_after_the_hash() =>
+        LandingPath.ShareLink(InvitationLink.For("ABCD-EFGH"), "/seimas/XVP-0412")
+            .ShouldBe("/prisijungti#kodas=ABCD-EFGH&tikslas=%2Fseimas%2FXVP-0412");
+
+    [Fact]
+    public void An_old_invitation_link_with_the_code_in_the_query_still_gets_the_page_beside_it() =>
         LandingPath.ShareLink("/prisijungti?kodas=ABCD-EFGH", "/seimas/XVP-0412")
             .ShouldBe("/prisijungti?kodas=ABCD-EFGH&tikslas=%2Fseimas%2FXVP-0412");
+
+    [Fact]
+    public void The_code_and_the_page_are_read_back_from_after_the_hash_and_nothing_from_the_query()
+    {
+        const string Address = "https://lt2.test/prisijungti?x=1#kodas=ABCD-EFGH&tikslas=%2Fseimas%2FXVP-0412";
+        InvitationLink.FromFragment(Address, InvitationLink.CodeParameter).ShouldBe("ABCD-EFGH");
+        InvitationLink.FromFragment(Address, LandingPath.Parameter).ShouldBe("/seimas/XVP-0412");
+        InvitationLink.FromFragment("https://lt2.test/prisijungti?kodas=ABCD-EFGH", InvitationLink.CodeParameter).ShouldBeNull();
+        InvitationLink.Fragment("https://lt2.test/organizacijos/kvietimas#tok%2Ben").ShouldBe("tok+en");
+        InvitationLink.Fragment("https://lt2.test/organizacijos/kvietimas").ShouldBeNull();
+    }
 
     [Fact]
     public void A_share_link_never_points_off_the_site() =>

@@ -1,4 +1,3 @@
-using System.Security.Claims;
 using Lt2.Api.Contracts;
 using Lt2.Api.Contracts.Appeals;
 using Lt2.Appeals;
@@ -29,7 +28,7 @@ internal static class ModerationAppealEndpoints
             .ProducesProblem(StatusCodes.Status404NotFound)
             .ProducesProblem(StatusCodes.Status409Conflict);
 
-        api.MapPost(ApiEndpoints.Relative(AppealRoutes.BillRecord), RecordAsync)
+        api.MapPost(ApiEndpoints.Relative(AppealRoutes.BillRecord), EnsureRecordAsync)
             .WithName("EnsureBillRecord")
             .WithTags("Moderation")
             .RequireAuthorization(Policies.Moderator)
@@ -86,44 +85,25 @@ internal static class ModerationAppealEndpoints
         return result.IsSuccess ? TypedResults.Ok(AppealMapping.Map(result.Value!)) : errors.ToResult(result.Error!);
     }
 
-    private static async Task<IResult> RecordAsync(string number, IAppealsModeration moderation, ErrorMapper errors, CancellationToken cancellationToken)
+    private static async Task<IResult> EnsureRecordAsync(string number, IAppealsModeration moderation, ErrorMapper errors, CancellationToken cancellationToken)
     {
-        var result = await moderation.RecordAsync(number, cancellationToken);
+        var result = await moderation.EnsureRecordAsync(number, cancellationToken);
         return result.IsSuccess ? TypedResults.Ok(new BillRecordResponse(result.Value)) : errors.ToResult(result.Error!);
     }
 
-    private static async Task<IResult> DescribeAsync(
-        string number, ModeratorDescriptionRequest request, ClaimsPrincipal user, HttpContext context, Lt2.Identity.IIdentityModule identity,
-        IAppealsModeration moderation, IpHasher ipHasher, ErrorMapper errors, CancellationToken cancellationToken)
-    {
-        var moderator = await AppealMapping.ModeratorAsync(identity, user, ipHasher.Hash(context), cancellationToken);
-        var result = await moderation.WriteDescriptionAsync(number, AppealMapping.ToModule(request), moderator, cancellationToken);
-        return result.IsSuccess ? TypedResults.NoContent() : errors.ToResult(result.Error!);
-    }
+    private static Task<IResult> DescribeAsync(string number, ModeratorDescriptionRequest request, HttpContext context, IAppealsModeration moderation, CancellationToken cancellationToken) =>
+        ModeratorEndpoint.ActAsync(context, m => moderation.WriteDescriptionAsync(number, AppealMapping.ToModule(request), m, cancellationToken));
 
-    private static async Task<IResult> ConfirmAsync(
-        string number, ModerationRequest request, ClaimsPrincipal user, HttpContext context, Lt2.Identity.IIdentityModule identity,
-        IAppealsModeration moderation, IpHasher ipHasher, ErrorMapper errors, CancellationToken cancellationToken)
-    {
-        var moderator = await AppealMapping.ModeratorAsync(identity, user, ipHasher.Hash(context), cancellationToken);
-        var result = await moderation.ConfirmDescriptionAsync(number, request.Statement, moderator, cancellationToken);
-        return result.IsSuccess ? TypedResults.NoContent() : errors.ToResult(result.Error!);
-    }
+    private static Task<IResult> ConfirmAsync(string number, ModerationRequest request, HttpContext context, IAppealsModeration moderation, CancellationToken cancellationToken) =>
+        ModeratorEndpoint.ActAsync(context, m => moderation.ConfirmDescriptionAsync(number, request.Statement, m, cancellationToken));
 
-    private static async Task<IResult> RemoveAsync(
-        string number, StatementRequest request, ClaimsPrincipal user, HttpContext context, Lt2.Identity.IIdentityModule identity,
-        IAppealsModeration moderation, IpHasher ipHasher, ErrorMapper errors, CancellationToken cancellationToken)
-    {
-        var moderator = await AppealMapping.ModeratorAsync(identity, user, ipHasher.Hash(context), cancellationToken);
-        var result = await moderation.RemoveDescriptionAsync(number, request.Statement, moderator, cancellationToken);
-        return result.IsSuccess ? TypedResults.NoContent() : errors.ToResult(result.Error!);
-    }
+    private static Task<IResult> RemoveAsync(string number, StatementRequest request, HttpContext context, IAppealsModeration moderation, CancellationToken cancellationToken) =>
+        ModeratorEndpoint.ActAsync(context, m => moderation.RemoveDescriptionAsync(number, request.Statement, m, cancellationToken));
 
     private static async Task<IResult> DraftAsync(
-        string number, DescriptionDraftRequest request, ClaimsPrincipal user, HttpContext context, Lt2.Identity.IIdentityModule identity,
-        IAppealsModeration moderation, IpHasher ipHasher, ErrorMapper errors, CancellationToken ct)
+        string number, DescriptionDraftRequest request, HttpContext context, IAppealsModeration moderation, ErrorMapper errors, CancellationToken ct)
     {
-        var moderator = await AppealMapping.ModeratorAsync(identity, user, ipHasher.Hash(context), ct);
+        var moderator = await ModeratorEndpoint.ModeratorAsync(context);
         var result = await moderation.DraftDescriptionAsync(number, request.SourceText, moderator, ct);
         return result.IsSuccess ? TypedResults.Ok(new DescriptionDraftResponse(result.Value)) : errors.ToResult(result.Error!);
     }

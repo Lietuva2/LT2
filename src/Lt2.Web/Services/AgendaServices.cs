@@ -16,12 +16,10 @@ internal sealed class AgendaReads(IPlannedAgenda agenda, IBillCatalogue bills, I
     /// <summary>"Recently voted": the stage results of the last seven days.</summary>
     public const int RecentDays = 7;
 
-    private static readonly TimeZoneInfo Vilnius = TimeZoneInfo.FindSystemTimeZoneById("Europe/Vilnius");
-
     public async Task<AgendaResponse> ReadAsync(CancellationToken ct)
     {
         var now = clock.GetUtcNow();
-        var today = DateOnly.FromDateTime(TimeZoneInfo.ConvertTime(now, Vilnius).DateTime);
+        var today = VilniusTime.DateOf(now);
         var planned = await agenda.BetweenAsync(today, DateOnly.MaxValue, ct);
         var recent = await parliament.StageResultsSinceAsync(now.AddDays(-RecentDays), ct);
         var numbers = planned.Select(p => p.BillNumber).Concat(recent.Select(v => v.Vote.Bill!.Number)).Distinct().ToList();

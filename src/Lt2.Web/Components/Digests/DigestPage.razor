@@ -21,7 +21,7 @@
             }
         </ol>
         <p class="label">@T["Digests.Label"]</p>
-        <h1>@(Date is null ? T["Digests.Title"] : Fmt("Digests.Of", F.Date(runs[0].RunDate)))</h1>
+        <h1>@(Date is null ? T["Digests.Title"] : T.Format("Digests.Of", F.Date(runs[0].RunDate)))</h1>
         <p class="lead">@T["Digests.Lead"]</p>
         <p class="note" id="dry-run">@T["Digests.DryRun"]</p>
     </div>
@@ -34,11 +34,11 @@
                     <h2 id="h-@run.Id">@T["Digests.Kind." + run.Kind] · @F.Date(run.RunDate)</h2>
                     <div class="row">
                         <span class="tag tag--ink">@T["Digests.Status." + run.Status]</span>
-                        <span class="tag num">@Fmt("Digests.Mps", Formats.Number(run.MpCount))</span>
-                        <span class="tag num">@Fmt("Digests.Items", Formats.Number(run.Items.Count))</span>
+                        <span class="tag num">@T.Format("Digests.Mps", Display.Number(run.MpCount))</span>
+                        <span class="tag num">@T.Format("Digests.Items", Display.Number(run.Items.Count))</span>
                         @if (Date is null)
                         {
-                            <a href="/suvestines/@run.RunDate.ToString("yyyy-MM-dd", System.Globalization.CultureInfo.InvariantCulture)">@T["Digests.Open"]</a>
+                            <a href="/suvestines/@Display.Day(run.RunDate)">@T["Digests.Open"]</a>
                         }
                     </div>
                     @foreach (var item in run.Items)
@@ -52,26 +52,26 @@
                                 }
                                 @if (item.PlannedDate is { } planned)
                                 {
-                                    <span class="tag">@Fmt("Planned", F.T["Month." + planned.Month], planned.Day)</span>
+                                    <span class="tag">@T.Format("Planned", F.T["Month." + planned.Month], planned.Day)</span>
                                 }
                             </div>
                             <h3><a href="/seimas/@Uri.EscapeDataString(item.BillNumber)">@item.BillTitle</a></h3>
                             <div class="pair pair--keep">
                                 <div class="figure figure--for figure--m">
                                     <span class="label">@T["Sides.for"]</span>
-                                    <span class="figure__num">@Formats.Number(item.For)</span>
-                                    <span class="small num">@Fmt("Sides.Older", Formats.Number(item.ForOlderThan30Days))</span>
+                                    <span class="figure__num">@Display.Number(item.For)</span>
+                                    <span class="small num">@T.Format("Sides.Older", Display.Number(item.ForOlderThan30Days))</span>
                                 </div>
                                 <div class="figure figure--against figure--m">
                                     <span class="label">@T["Sides.against"]</span>
-                                    <span class="figure__num">@Formats.Number(item.Against)</span>
-                                    <span class="small num">@Fmt("Sides.Older", Formats.Number(item.AgainstOlderThan30Days))</span>
+                                    <span class="figure__num">@Display.Number(item.Against)</span>
+                                    <span class="small num">@T.Format("Sides.Older", Display.Number(item.AgainstOlderThan30Days))</span>
                                 </div>
                             </div>
                             <SplitBar For="item.For" Against="item.Against" Abstain="0" Small="true" />
                             @if (item.SurgeSharePercent is { } share)
                             {
-                                <p class="note">@Fmt("Surge.Note", Formats.Number(item.SurgeWindowHours), Formats.Number(share))</p>
+                                <p class="note">@T.Format("Surge.Note", Display.Number(item.SurgeWindowHours), Display.Number(share))</p>
                             }
                             <div class="pair">
                                 @foreach (var side in new[] { "for", "against" })
@@ -86,7 +86,7 @@
                                         {
                                             <div class="said">
                                                 <p class="bubble bubble--people voice">@reason.Text</p>
-                                                <div class="said__by"><span class="num">@Fmt("Digests.Endorsed", Formats.Number(reason.Endorsements))</span></div>
+                                                <div class="said__by"><span class="num">@T.Format("Digests.Endorsed", Display.Number(reason.Endorsements))</span></div>
                                             </div>
                                         }
                                     </div>
@@ -99,15 +99,8 @@
         </div>
 
         <aside class="stack">
-            <section class="sheet stack stack--tight" aria-labelledby="h-how">
-                <h3 id="h-how">@T["Digests.How"]</h3>
-                <dl class="facts">
-                    <dt>@T["Digests.Who"]</dt><dd>@T["Digests.WhoValue"]</dd>
-                    <dt>@T["Digests.When"]</dt><dd>@T["Digests.WhenValue"]</dd>
-                    <dt>@T["Digests.What"]</dt><dd>@T["Digests.WhatValue"]</dd>
-                </dl>
-                <p class="small">@T["Digests.Seen"] <a href="/metodika">@T["Digests.Methodology"]</a></p>
-            </section>
+            @* Design 8.15: who would receive a summary, when and what goes in are on the methodology page. *@
+            <p><a href="/metodika#suvestiniu-taisykles" id="digest-how">@T["Digests.HowLink"]</a></p>
             @if (Date is null && runs.Count > 1)
             {
                 <section class="stack stack--tight" aria-labelledby="h-earlier">
@@ -115,13 +108,12 @@
                     <ul class="rows">
                         @foreach (var run in runs.Skip(1))
                         {
-                            <li><div class="rows__main"><a href="/suvestines/@run.RunDate.ToString("yyyy-MM-dd", System.Globalization.CultureInfo.InvariantCulture)" class="num">@Formats.Day(run.RunDate)</a><span class="small">@T["Digests.Kind." + run.Kind] · @Fmt("Digests.Items", Formats.Number(run.Items.Count))</span></div></li>
+                            <li><div class="rows__main"><a href="/suvestines/@Display.Day(run.RunDate)" class="num">@Display.Day(run.RunDate)</a><span class="small">@T["Digests.Kind." + run.Kind] · @T.Format("Digests.Items", Display.Number(run.Items.Count))</span></div></li>
                         }
                     </ul>
                 </section>
             }
             <p class="note note--quiet" id="not-a-poll">@T["NotAPoll"]</p>
-            <p class="fine">@T["Digests.NoMpFigures"]</p>
         </aside>
     </div>
 }
@@ -160,6 +152,4 @@ else
             Navigation.NotFound();
         }
     }
-
-    private string Fmt(string key, params object?[] values) => string.Format(System.Globalization.CultureInfo.InvariantCulture, T[key], values);
 }

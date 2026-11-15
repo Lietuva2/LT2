@@ -8,6 +8,46 @@ namespace Lt2.IntegrationTests;
 /// <summary>Design 6.4: rate-limit policies per client for code requests and registration.</summary>
 public sealed class RateLimitTests(DatabaseFixture database) : IAsyncDisposable
 {
+    /// <summary>Design 6.8: a forwarded address counts only from the proxy named in configuration.</summary>
+    [Theory]
+    [InlineData("192.0.2.10", true)]
+    [InlineData("192.0.2.99", false)]
+    [InlineData("", false)]
+    public async Task A_forwarded_client_address_is_believed_only_from_the_configured_proxy(string proxy, bool believed)
+    {
+        await using var factory = new ProxyFactory(database, proxy);
+        using var browser = factory.NewBrowser();
+        for (var i = 0; i < 3; i++)
+        {
+            using var allowed = await SendCodeRequestAsync(browser, "203.0.113.1");
+            allowed.StatusCode.ShouldBe(HttpStatusCode.Accepted);
+        }
+
+        // Another forwarded address: a new visitor if the header is believed, the same limited one if it is not.
+        using var next = await SendCodeRequestAsync(browser, "203.0.113.2");
+        next.StatusCode.ShouldBe(believed ? HttpStatusCode.Accepted : HttpStatusCode.TooManyRequests);
+    }
+
+    private static async Task<HttpResponseMessage> SendCodeRequestAsync(TestBrowser browser, string forwardedFor)
+    {
+        using var request = new HttpRequestMessage(HttpMethod.Post, ApiRoutes.Auth.Code)
+        {
+            Content = System.Net.Http.Json.JsonContent.Create(new RequestCodeRequest { Email = TestData.Email() }),
+        };
+        request.Headers.Add("X-Forwarded-For", forwardedFor);
+        request.Headers.Add(ApiHeaders.Antiforgery, await browser.AntiforgeryTokenAsync());
+        return await browser.Client.SendAsync(request);
+    }
+
+    /// <summary>The test client comes from 192.0.2.10 (<see cref="Lt2Factory.ClientAddress"/>); the proxy is whatever is configured.</summary>
+    private sealed class ProxyFactory(DatabaseFixture database, string proxy) : Lt2Factory(database, codeRequestLimit: 3)
+    {
+        protected override void ConfigureWebHost(Microsoft.AspNetCore.Hosting.IWebHostBuilder builder)
+        {
+            base.ConfigureWebHost(builder);
+            builder.UseSetting("ReverseProxy:Address", proxy);
+        }
+    }
     private readonly Lt2Factory _factory = new(database, codeRequestLimit: 3, registrationLimit: 2);
 
     [Fact]

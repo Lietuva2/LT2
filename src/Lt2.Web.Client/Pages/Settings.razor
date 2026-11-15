@@ -5,7 +5,7 @@
 @using Lt2.Api.Contracts.Admin
 @using Lt2.Api.Contracts.Appeals
 @using Lt2.Web.Client.Appeals
-@inherits InteractiveBase
+@inherits InteractiveBase<AppealUi>
 @inject IAdminApi Admin
 
 @* The administrator's settings screen (design 5.6, decided 2026-11-13): grouped under headings, each setting with a plain
@@ -57,16 +57,19 @@ else
                                 <span class="note note--quiet" id="placeholder-minimum">@L["Admin.MinimumPlaceholder"]</span>
                             }
                             <span class="fine">
-                                @Text("Admin.DefaultIs", Shown(setting.Default)) ·
-                                @(setting.ChangedAt is { } at ? Text("Admin.Changed", Dates.DayTime(at)) : L["Admin.NotChanged"]) ·
+                                @L.Format("Admin.DefaultIs", Shown(setting.Default)) ·
+                                @(setting.ChangedAt is { } at ? L.Format("Admin.Changed", Display.DayTime(at)) : L["Admin.NotChanged"]) ·
                                 <code>@setting.Key</code>
                             </span>
                         </div>
                         <div class="rows__side row">
-                            <input class="input num settings__value" id="@id" aria-describedby="help-@id unit-@id"
+                            <input class="input num settings__value" id="@id" aria-describedby="@DescribedFor(setting.Key, id)"
                                    value="@(_drafts.GetValueOrDefault(setting.Key) ?? Shown(setting.Value))"
                                    @onchange="e => _drafts[setting.Key] = e.Value?.ToString()" disabled="@Locked" />
-                            <span class="small" id="unit-@id">@Unit(setting.Key)</span>
+                            @if (Unit(setting.Key) is { Length: > 0 } unit)
+                            {
+                                <span class="small" id="unit-@id">@unit</span>
+                            }
                             <button type="button" class="btn btn--plain" disabled="@Locked" @onclick="() => SaveAsync(setting.Key)">@L["Admin.Save"]</button>
                         </div>
                     </li>
@@ -100,8 +103,31 @@ else
     {
         if (Items is null)
         {
-            await LoadAsync();
+            var settings = await Admin.GetSettingsAsync();
+            _refused = settings.Problem?.Status is 401 or 403;
+            Items = settings.Value?.ToList();
+            if (!settings.IsSuccess && !_refused)
+            {
+                Show(settings.Problem);
+            }
         }
+    }
+
+    /// <summary>The help and the unit beside a value, only those the setting has.</summary>
+    private string? DescribedFor(string key, string id)
+    {
+        var ids = new List<string>();
+        if (Help(key) is not null)
+        {
+            ids.Add("help-" + id);
+        }
+
+        if (Unit(key).Length > 0)
+        {
+            ids.Add("unit-" + id);
+        }
+
+        return ids.Count == 0 ? null : string.Join(" ", ids);
     }
 
     /// <summary>The settings by group; one the screen does not know yet goes into "other", so nothing is hidden.</summary>
@@ -124,27 +150,29 @@ else
         }
     }
 
+    /// <summary>Reads the settings again; a failure is said in the note and the screen stays as it was.</summary>
     private async Task LoadAsync()
     {
         var settings = await Admin.GetSettingsAsync();
-        _refused = !settings.IsSuccess;
-        Items = settings.Value?.ToList();
+        if (Succeeded(settings))
+        {
+            Items = settings.Value!.ToList();
+        }
     }
 
     private Task SaveAsync(string key) => RunAsync(async () =>
     {
-        var draft = (_drafts.GetValueOrDefault(key) ?? "").Trim();
+        // Nothing typed: the value shown is the one saved again, never an empty text.
+        var draft = (_drafts.GetValueOrDefault(key) ?? Shown(Items?.FirstOrDefault(s => s.Key == key)?.Value)).Trim();
         var value = Read(draft);
-        var result = await Admin.UpdateSettingAsync(key, new UpdateSettingRequest { Value = value });
-        if (!result.IsSuccess)
+        if (!Succeeded(await Admin.UpdateSettingAsync(key, new UpdateSettingRequest { Value = value })))
         {
-            Show(result.Problem);
             return;
         }
 
         _drafts.Remove(key);
         await LoadAsync();
-        Info = Text("Admin.SavedOne", Name(key));
+        Info ??= L.Format("Admin.SavedOne", Name(key));
     });
 
     /// <summary>What was typed, as the server expects it: a number, true or false ("taip"/"ne" too), or a text.</summary>

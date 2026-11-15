@@ -29,7 +29,7 @@ internal static class InvitationEndpoints
         {
             api.MapPost(ApiEndpoints.Relative(route), async (Guid id, StatementRequest request, ClaimsPrincipal user, HttpContext context, IInvitations invitations, IpHasher ipHasher, ErrorMapper errors, CancellationToken cancellationToken) =>
                 {
-                    var result = await invitations.SwitchAsync(id, on, request.Statement, AppealMapping.UserId(user)!.Value, Roles.Administrator, ipHasher.Hash(context), cancellationToken);
+                    var result = await invitations.SwitchAsync(id, on, request.Statement, user.UserId()!.Value, Roles.Administrator, ipHasher.Hash(context), cancellationToken);
                     return result.IsSuccess ? Results.NoContent() : errors.ToResult(result.Error!);
                 })
                 .WithName(on ? "SwitchOnInvitation" : "SwitchOffInvitation")

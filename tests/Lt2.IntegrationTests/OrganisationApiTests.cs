@@ -14,23 +14,6 @@ namespace Lt2.IntegrationTests;
 /// </summary>
 public sealed class OrganisationApiTests(DatabaseFixture database) : ApiTest(database)
 {
-    private static readonly SemaphoreSlim Gate = new(1, 1);
-    private static StaffMember? _moderator;
-
-    private async Task<TestBrowser> ModeratorAsync()
-    {
-        await Gate.WaitAsync();
-        try
-        {
-            _moderator ??= await StaffMembers.ActiveAsync(Factory, Database, "moderator");
-            return _moderator.Browser;
-        }
-        finally
-        {
-            Gate.Release();
-        }
-    }
-
     [Fact]
     public async Task A_member_registers_an_organisation_shown_at_once_unconfirmed_and_becomes_its_representative()
     {
@@ -62,7 +45,7 @@ public sealed class OrganisationApiTests(DatabaseFixture database) : ApiTest(dat
         WebUtility.HtmlDecode(await visitor.Client.GetStringAsync("/organizacijos?q=" + Uri.EscapeDataString(name))).ShouldContain(name);
 
         // A new organisation is in the moderators' queue to be looked at, not approved.
-        var moderator = await ModeratorAsync();
+        var moderator = (await ModeratorAsync()).Browser;
         var queue = await moderator.GetJsonAsync<OrganisationModerationResponse>(OrganisationRoutes.ModerationQueue);
         queue.Organisations.ShouldContain(o => o.Id == created.Id && !o.Seen && !o.Changed);
     }
@@ -82,8 +65,8 @@ public sealed class OrganisationApiTests(DatabaseFixture database) : ApiTest(dat
         foreach (var (request, field) in new (OrganisationRequest, string)[]
         {
             (new OrganisationRequest { Name = "Ab" }, "name"),
-            (new OrganisationRequest { Name = OrganisationSteps.NewName(), Website = "http://lgs.lt" }, "website"),
-            (new OrganisationRequest { Name = OrganisationSteps.NewName(), Website = "https://user@lgs.lt" }, "website"),
+            (new OrganisationRequest { Name = OrganisationSteps.NewName(), Website = "http://asociacija.test" }, "website"),
+            (new OrganisationRequest { Name = OrganisationSteps.NewName(), Website = "https://user@asociacija.test" }, "website"),
             (new OrganisationRequest { Name = OrganisationSteps.NewName(), LegalCode = "12345" }, "legalCode"),
             (new OrganisationRequest { Name = OrganisationSteps.NewName(), Description = new string('a', 501) }, "description"),
         })
@@ -104,8 +87,8 @@ public sealed class OrganisationApiTests(DatabaseFixture database) : ApiTest(dat
     [Fact]
     public async Task An_account_registers_at_most_the_settings_number_of_organisations()
     {
-        using var admin = await StaffMembers.ActiveAsync(Factory, Database, "administrator");
-        await SetAsync(admin.Browser, "Organisations:PerAccount", 2);
+        using var admin = await StaffMembers.SharedAsync(Factory, Database, "administrator");
+        await admin.Browser.SetSettingAsync("Organisations:PerAccount", 2);
         try
         {
             var (member, _) = await Factory.MemberAsync();
@@ -127,14 +110,14 @@ public sealed class OrganisationApiTests(DatabaseFixture database) : ApiTest(dat
         }
         finally
         {
-            await SetAsync(admin.Browser, "Organisations:PerAccount", 3);
+            await admin.Browser.ResetSettingAsync("Organisations:PerAccount");
         }
     }
 
     [Fact]
     public async Task Changing_the_name_or_website_keeps_a_public_history_and_puts_the_organisation_back_in_the_queue()
     {
-        var moderator = await ModeratorAsync();
+        var moderator = (await ModeratorAsync()).Browser;
         var (member, _) = await Factory.MemberAsync();
         using var _m = member;
         var host = OrganisationSteps.NewHost();
@@ -237,7 +220,7 @@ public sealed class OrganisationApiTests(DatabaseFixture database) : ApiTest(dat
     [Fact]
     public async Task A_website_on_a_shared_platform_cannot_be_confirmed_by_domain_and_a_moderator_confirms_by_hand()
     {
-        var moderator = await ModeratorAsync();
+        var moderator = (await ModeratorAsync()).Browser;
         var (member, email) = await Factory.MemberAsync();
         using var _m = member;
         var created = await member.RegisterOrganisationAsync(website: "https://www.facebook.com/pavyzdine-bendrija");
@@ -261,7 +244,7 @@ public sealed class OrganisationApiTests(DatabaseFixture database) : ApiTest(dat
     [Fact]
     public async Task After_a_moderator_withdraws_a_confirmation_a_code_confirms_nothing()
     {
-        var moderator = await ModeratorAsync();
+        var moderator = (await ModeratorAsync()).Browser;
         var (member, email) = await Factory.MemberAsync();
         using var _m = member;
         var host = OrganisationSteps.NewHost();
@@ -299,20 +282,20 @@ public sealed class OrganisationApiTests(DatabaseFixture database) : ApiTest(dat
         using var invited = await first.PostAsync(OrganisationRoutes.InvitesOf(created.Slug), new { });
         invited.StatusCode.ShouldBe(HttpStatusCode.OK, await invited.Content.ReadAsStringAsync());
         var invite = await invited.ReadAsync<InviteCreatedResponse>();
-        invite.Path.ShouldStartWith("/organizacijos/kvietimas/");
+        invite.Path.ShouldStartWith("/organizacijos/kvietimas#");
         invite.ExpiresAt.ShouldBeGreaterThan(DateTimeOffset.UtcNow.AddDays(6.9));
 
         var (second, _) = await Factory.MemberAsync("Tomas Pavyzdys");
         using var _s = second;
-        (await second.GetJsonAsync<InviteResponse>(OrganisationRoutes.InviteOf(invite.Token))).Usable.ShouldBeTrue();
-        using (var accepted = await second.PostAsync(OrganisationRoutes.AcceptInviteOf(invite.Token), new { }))
+        (await second.PostJsonAsync<InviteResponse>(OrganisationRoutes.Invite, new InviteTokenRequest { Token = invite.Token })).Usable.ShouldBeTrue();
+        using (var accepted = await second.PostAsync(OrganisationRoutes.AcceptInvite, new InviteTokenRequest { Token = invite.Token }))
         {
             accepted.StatusCode.ShouldBe(HttpStatusCode.OK, await accepted.Content.ReadAsStringAsync());
         }
 
         var (third, _) = await Factory.MemberAsync();
         using var _t = third;
-        using (var again = await third.PostAsync(OrganisationRoutes.AcceptInviteOf(invite.Token), new { }))
+        using (var again = await third.PostAsync(OrganisationRoutes.AcceptInvite, new InviteTokenRequest { Token = invite.Token }))
         {
             await again.ShouldBeProblemAsync(HttpStatusCode.Conflict, "invite.used");
         }
@@ -359,7 +342,7 @@ public sealed class OrganisationApiTests(DatabaseFixture database) : ApiTest(dat
         var invite = await (await first.PostAsync(OrganisationRoutes.InvitesOf(created.Slug), new { })).ReadAsync<InviteCreatedResponse>();
         var (second, _) = await Factory.MemberAsync();
         using var _s = second;
-        (await second.PostAsync(OrganisationRoutes.AcceptInviteOf(invite.Token), new { })).Dispose();
+        (await second.PostAsync(OrganisationRoutes.AcceptInvite, new InviteTokenRequest { Token = invite.Token })).Dispose();
         var reps = (await first.GetJsonAsync<OrganisationManagementResponse>(OrganisationRoutes.ManagementOf(created.Slug))).Representatives;
         var me = reps.Single(r => r.IsMe);
         using (var self = await first.SendAsync(HttpMethod.Delete, OrganisationRoutes.RepresentativeOf(created.Slug, me.Id)))
@@ -426,7 +409,7 @@ public sealed class OrganisationApiTests(DatabaseFixture database) : ApiTest(dat
     [Fact]
     public async Task A_flagged_statement_waits_for_a_moderator_who_publishes_it_and_the_representatives_are_told()
     {
-        var moderator = await ModeratorAsync();
+        var moderator = (await ModeratorAsync()).Browser;
         await Database.FreeBillAsync(AppealSteps.ThirdBill);
         var (member, email) = await Factory.MemberAsync();
         using var _m = member;
@@ -457,7 +440,7 @@ public sealed class OrganisationApiTests(DatabaseFixture database) : ApiTest(dat
     [Fact]
     public async Task A_hidden_record_or_a_finished_bill_takes_no_statement_and_a_closed_bill_freezes_it()
     {
-        var moderator = await ModeratorAsync();
+        var moderator = (await ModeratorAsync()).Browser;
         var (member, _) = await Factory.MemberAsync();
         using var _m = member;
         var created = await member.RegisterOrganisationAsync();
@@ -498,7 +481,7 @@ public sealed class OrganisationApiTests(DatabaseFixture database) : ApiTest(dat
     [Fact]
     public async Task A_writing_restriction_reached_through_a_statement_stops_registering_and_publishing()
     {
-        var moderator = await ModeratorAsync();
+        var moderator = (await ModeratorAsync()).Browser;
         await Database.FreeBillAsync(AppealSteps.ThirdBill);
         var (member, _) = await Factory.MemberAsync("Rašanti Atstovė");
         using var _m = member;
@@ -530,7 +513,7 @@ public sealed class OrganisationApiTests(DatabaseFixture database) : ApiTest(dat
     [Fact]
     public async Task Anyone_signed_in_reports_an_organisation_or_a_statement_as_impersonation_and_palikti_closes_it()
     {
-        var moderator = await ModeratorAsync();
+        var moderator = (await ModeratorAsync()).Browser;
         await Database.FreeBillAsync(AppealSteps.ThirdBill);
         var (member, email) = await Factory.MemberAsync();
         using var _m = member;
@@ -597,11 +580,5 @@ public sealed class OrganisationApiTests(DatabaseFixture database) : ApiTest(dat
             "SELECT count(*) FROM appeals.organisation_statement WHERE written_by_user_id = @u", ("u", userId))).ShouldBe(0);
         (await Database.ScalarAsync<long>("SELECT count(*) FROM appeals.organisation WHERE registered_by_user_id = @u", ("u", userId))).ShouldBe(0);
         (await Database.ScalarAsync<string>("SELECT status FROM appeals.organisation_statement WHERE organisation_id = @o", ("o", created.Id))).ShouldBe("withdrawn");
-    }
-
-    private static async Task SetAsync(TestBrowser admin, string key, object value)
-    {
-        using var response = await admin.SendAsync(HttpMethod.Put, ApiRoutes.Admin.SettingByKey(key), new UpdateSettingRequest { Value = JsonSerializer.SerializeToElement(value) });
-        response.StatusCode.ShouldBe(HttpStatusCode.OK, await response.Content.ReadAsStringAsync());
     }
 }

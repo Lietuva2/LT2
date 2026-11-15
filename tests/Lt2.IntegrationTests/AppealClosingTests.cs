@@ -13,7 +13,7 @@ public sealed class AppealClosingTests(DatabaseFixture database) : ApiTest(datab
     [Fact]
     public async Task The_final_vote_closes_the_appeal_freezes_the_counts_and_the_page_shows_how_each_mp_voted()
     {
-        using var moderator = await StaffMembers.ActiveAsync(Factory, Database, "moderator");
+        using var moderator = await StaffMembers.SharedAsync(Factory, Database, "moderator");
         var (initiator, _) = await Factory.MemberAsync();
         using var _i = initiator;
         var appeal = await Database.PrepareBillAsync(initiator, moderator.Browser, AppealSteps.ThirdBill, "against");
@@ -67,6 +67,58 @@ public sealed class AppealClosingTests(DatabaseFixture database) : ApiTest(datab
         finally
         {
             await Database.ExecuteAsync("DELETE FROM parliament.ballot WHERE vote_id = @id", ("id", FinalVote));
+            await Database.ExecuteAsync("DELETE FROM parliament.vote WHERE id = @id", ("id", FinalVote));
+            await Database.FreeBillAsync(AppealSteps.ThirdBill);
+        }
+    }
+
+    /// <summary>
+    /// Design 6.8: a finished bill is finished for everyone at the same moment. Once the final vote is recorded, taking part
+    /// is refused as an organisation's statement already is, before the hourly job has closed the record.
+    /// </summary>
+    [Fact]
+    public async Task Taking_part_ends_when_the_final_vote_is_recorded_before_the_job_closes_the_record()
+    {
+        using var moderator = await StaffMembers.SharedAsync(Factory, Database, "moderator");
+        var (author, _) = await Factory.MemberAsync();
+        using var _a = author;
+        await Database.PrepareBillAsync(author, moderator.Browser, AppealSteps.ThirdBill, "against");
+        var reasonId = (await author.AppealAsync(AppealSteps.ThirdBill)).Reasons.Single().Id;
+        var (member, _) = await Factory.MemberAsync();
+        using var _m = member;
+        (await member.TakeSideAsync(AppealSteps.ThirdBill, "against")).StatusCode.ShouldBe(HttpStatusCode.NoContent);
+
+        await Database.ExecuteAsync(
+            """
+            INSERT INTO parliament.vote (id, agenda_item_id, bill_id, held_at, wording, type, kind, stage, is_consensus, has_result, "for", against, abstain, voted, seats)
+            SELECT @id, agenda_item_id, bill_id, held_at + interval '7 days', 'Priėmimas', type, 'StageResult', 'Adoption', false, true, "for", against, abstain, voted, seats
+            FROM parliament.vote WHERE id = 99100102
+            """,
+            ("id", FinalVote));
+        try
+        {
+            using var stranger = NewBrowser();
+            (await stranger.AppealAsync(AppealSteps.ThirdBill)).Status.ShouldBe("open", "the job has not run");
+
+            foreach (var refused in new[]
+            {
+                await member.TakeSideAsync(AppealSteps.ThirdBill, "for"),
+                await member.SendAsync(HttpMethod.Delete, Lt2.Api.Contracts.AppealRoutes.PositionOf(AppealSteps.ThirdBill)),
+                await member.WriteReasonAsync(AppealSteps.ThirdBill, "for", "Per vėlu, Seimas jau nubalsavo."),
+                await member.SendAsync(HttpMethod.Put, Lt2.Api.Contracts.AppealRoutes.EndorsementOf(reasonId)),
+                await author.SendAsync(HttpMethod.Delete, Lt2.Api.Contracts.AppealRoutes.ReasonOf(reasonId)),
+            })
+            {
+                using (refused)
+                {
+                    await refused.ShouldBeProblemAsync(HttpStatusCode.Conflict, "appeal.not-open");
+                }
+            }
+
+            (await stranger.AppealAsync(AppealSteps.ThirdBill)).Counts.Against.ShouldBe(2, "nothing changed after the final vote");
+        }
+        finally
+        {
             await Database.ExecuteAsync("DELETE FROM parliament.vote WHERE id = @id", ("id", FinalVote));
             await Database.FreeBillAsync(AppealSteps.ThirdBill);
         }

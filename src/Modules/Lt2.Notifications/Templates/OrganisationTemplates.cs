@@ -1,7 +1,4 @@
 using System.Globalization;
-using System.Net;
-using System.Text.Json;
-using Lt2.Notifications.Outbox;
 using Lt2.SharedKernel;
 using Microsoft.Extensions.Localization;
 using Microsoft.Extensions.Options;
@@ -20,24 +17,15 @@ internal sealed class OrganisationTemplates(IStringLocalizer<EmailTemplates> l, 
         ArgumentNullException.ThrowIfNull(model);
         string[] paragraphs =
         [
-            l["SignInCode.Greeting"],
-            string.Format(CultureInfo.InvariantCulture, l["Organisation.Code.Intro"], model.OrganisationName, model.Domain),
+            l[EmailText.Greeting],
+            l.Format("Organisation.Code.Intro", model.OrganisationName, model.Domain),
             model.Code,
-            string.Format(CultureInfo.InvariantCulture, l["SignInCode.Validity"], model.ValidMinutes.ToString(CultureInfo.InvariantCulture)),
-            string.Format(CultureInfo.InvariantCulture, l["Organisation.Code.What"], model.OrganisationName, model.Domain),
+            l.Format(EmailText.CodeValidity, model.ValidMinutes.ToString(CultureInfo.InvariantCulture)),
+            l.Format("Organisation.Code.What", model.OrganisationName, model.Domain),
             l["Organisation.Code.Ignore"],
-            l["SignInCode.Signature"],
+            l[EmailText.Signature],
         ];
-        var text = string.Join("\n\n", paragraphs) + "\n";
-        var html = string.Concat(paragraphs.Select((p, i) => i == 2
-            ? $"<p style=\"font-size:28px;font-weight:700;letter-spacing:4px\">{WebUtility.HtmlEncode(p)}</p>"
-            : $"<p>{WebUtility.HtmlEncode(p)}</p>"));
-        return new EmailMessage(
-            model.To,
-            string.Format(CultureInfo.InvariantCulture, l["Organisation.Code.Subject"], model.Code),
-            text,
-            $"<!doctype html><html lang=\"lt\"><body style=\"font-family:system-ui,sans-serif;color:#1e293b\">{html}</body></html>",
-            EmailCategory.Transactional);
+        return EmailLayout.Build(model.To, l.Format("Organisation.Code.Subject", model.Code), paragraphs, highlighted: 2);
     }
 
     public EmailMessage Render(OrganisationNoticeEmail model)
@@ -52,52 +40,21 @@ internal sealed class OrganisationTemplates(IStringLocalizer<EmailTemplates> l, 
         var bill = model.BillNumber is { } number ? $"{number} · {model.BillTitle ?? number}" : "";
         var paragraphs = new List<string>
         {
-            l["SignInCode.Greeting"],
-            string.Format(CultureInfo.InvariantCulture, l[$"Organisation.{model.Notice}.Body"], model.OrganisationName, bill, link),
+            l[EmailText.Greeting],
+            l.Format($"Organisation.{model.Notice}.Body", model.OrganisationName, bill, link),
         };
         if (!string.IsNullOrWhiteSpace(model.Statement))
         {
-            paragraphs.Add(string.Format(CultureInfo.InvariantCulture, l["Moderation.Statement"], model.Statement));
+            paragraphs.Add(l.Format(EmailText.Statement, model.Statement));
         }
 
         if (!string.IsNullOrWhiteSpace(model.Contact))
         {
-            paragraphs.Add(string.Format(CultureInfo.InvariantCulture, l["Restriction.Contact"], model.Contact));
+            paragraphs.Add(l.Format(EmailText.Contact, model.Contact));
         }
 
         paragraphs.Add(l["Organisation.Why"]);
-        paragraphs.Add(l["SignInCode.Signature"]);
-        var text = string.Join("\n\n", paragraphs) + "\n";
-        var html = string.Concat(paragraphs.Select(p => $"<p>{WebUtility.HtmlEncode(p)}</p>"));
-        return new EmailMessage(
-            model.To,
-            string.Format(CultureInfo.InvariantCulture, l[$"Organisation.{model.Notice}.Subject"], model.OrganisationName),
-            text,
-            $"<!doctype html><html lang=\"lt\"><body style=\"font-family:system-ui,sans-serif;color:#1e293b\">{html}</body></html>",
-            EmailCategory.Transactional);
-    }
-}
-
-internal sealed class OrganisationCodeEmailHandler(OrganisationTemplates template, IEmailTransport transport) : IOutboxHandler
-{
-    public string Kind => MessageKinds.OrganisationCodeEmail;
-
-    public Task HandleAsync(JsonElement payload, CancellationToken cancellationToken)
-    {
-        var model = payload.Deserialize<OrganisationCodeEmail>(JsonSerializerOptions.Web)
-            ?? throw new InvalidOperationException("Empty organisation code payload.");
-        return transport.SendAsync(template.Render(model), cancellationToken);
-    }
-}
-
-internal sealed class OrganisationNoticeEmailHandler(OrganisationTemplates template, IEmailTransport transport) : IOutboxHandler
-{
-    public string Kind => MessageKinds.OrganisationNoticeEmail;
-
-    public Task HandleAsync(JsonElement payload, CancellationToken cancellationToken)
-    {
-        var model = payload.Deserialize<OrganisationNoticeEmail>(JsonSerializerOptions.Web)
-            ?? throw new InvalidOperationException("Empty organisation notice payload.");
-        return transport.SendAsync(template.Render(model), cancellationToken);
+        paragraphs.Add(l[EmailText.Signature]);
+        return EmailLayout.Build(model.To, l.Format($"Organisation.{model.Notice}.Subject", model.OrganisationName), paragraphs);
     }
 }

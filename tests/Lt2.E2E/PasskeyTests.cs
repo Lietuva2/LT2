@@ -126,20 +126,10 @@ public sealed partial class PasskeyTests
     /// <summary>Registers through the pages: address and invitation, the emailed code, then name and age.</summary>
     internal static async Task<string> RegisterAsync(IPage page, string displayName = "Rūta M.")
     {
-        var email = $"ruta.mockute.{Guid.NewGuid():N}@pavyzdys.test";
-        await page.GotoAsync(SignUpTests.BaseUrl!.TrimEnd('/') + "/prisijungti?registruotis=true");
-        await SignUpTests.WaitForInteractivityAsync(page);
-        await page.GetByLabel("El. paštas").FillAsync(email);
-        await page.GetByLabel("Kvietimo kodas").FillAsync(SignUpTests.Invitation);
-        await page.GetByRole(AriaRole.Button, new() { Name = "Registruotis", Exact = true }).ClickAsync();
-        await page.GetByLabel("Šešių skaitmenų kodas").FillAsync(await SignUpTests.CodeFromMailpitAsync(email));
-        await page.GetByRole(AriaRole.Button, new() { Name = "Prisijungti", Exact = true }).ClickAsync();
-        await Assertions.Expect(page.GetByRole(AriaRole.Heading, new() { Name = "Dar du dalykai" })).ToBeVisibleAsync();
-        await SignUpTests.WaitForInteractivityAsync(page);
-        await page.GetByLabel("Vardas, kurį matys kiti").FillAsync(displayName);
-        await page.GetByLabel("Man yra 18 metų arba daugiau").CheckAsync();
-        await page.GetByRole(AriaRole.Button, new() { Name = "Baigti registraciją" }).ClickAsync();
-        await page.WaitForURLAsync(new Regex("/sveiki$"));
+        var email = E2ESteps.NewEmail();
+        await page.GotoAsync(E2ESteps.Base + "/prisijungti?registruotis=true");
+        await E2ESteps.RegisterHereAsync(page, email, displayName, SignUpTests.Invitation);
+        await page.WaitForURLAsync(new Regex("/sveiki$"), new() { Timeout = E2ESteps.Slow });
         await Assertions.Expect(page.GetByText("prisijungta kodu")).ToBeVisibleAsync();
         return email;
     }

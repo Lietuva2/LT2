@@ -6,11 +6,11 @@
 @if (Items.Count > 0)
 {
     <div class="stack stack--tight" id="@Id">
-        <p class="note note--quiet num">@string.Format(System.Globalization.CultureInfo.InvariantCulture, L[Description ? "Mod.Reports.Description" : "Mod.Reports"], Items.Count)</p>
+        <p class="note note--quiet num">@L.Format(Description ? "Mod.Reports.Description" : "Mod.Reports", Display.Number(Items.Count))</p>
         <ul class="rows">
             @foreach (var report in Items)
             {
-                <li id="report-@report.Id"><div class="rows__main"><b>@L["Report.Ground." + report.Ground]</b>@if (!string.IsNullOrEmpty(report.Text)) {<span class="small">@report.Text</span>}<span class="small num">@Dates.DayTime(report.CreatedAt)</span></div></li>
+                <li id="report-@report.Id"><div class="rows__main"><b>@L["Report.Ground." + report.Ground]</b>@if (!string.IsNullOrEmpty(report.Text)) {<span class="small">@report.Text</span>}<span class="small num">@Display.DayTime(report.CreatedAt)</span></div></li>
             }
         </ul>
     </div>

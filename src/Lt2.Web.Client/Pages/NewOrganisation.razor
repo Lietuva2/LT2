@@ -2,7 +2,7 @@
 @attribute [Authorize]
 @rendermode InteractiveWebAssembly
 @using Lt2.Api.Contracts.Organisations
-@inherits InteractiveBase
+@inherits InteractiveBase<AppealUi>
 @inject IAppealsApi Appeals
 @inject NavigationManager Navigation
 
@@ -18,14 +18,18 @@
     </ol>
     <h1>@L["Org.Register.Title"]</h1>
     <NeedsScript />
-    <p class="lead">@L["Org.Register.Lead"]</p>
-    <ul class="small stack stack--tight" id="register-what">
-        <li>@L["Org.Register.Point1"]</li>
-        <li>@L["Org.Register.Point2"]</li>
-        <li>@L["Org.Register.Point3"]</li>
-        <li>@L["Org.Register.Point4"]</li>
-    </ul>
-    <p class="fine"><a href="/metodika#organizacijos">@L["Org.Register.Method"]</a></p>
+    @* Design 8.15: one sentence before the form (what becomes public, at once); how it works one click away, a <details>
+       that opens without JavaScript and before the island starts. *@
+    <p class="lead" id="register-lead">@L["Org.Register.Lead"]</p>
+    <details class="more stack stack--tight" id="register-more">
+        <summary class="linkish small">@L["Org.Register.More"]</summary>
+        <ul class="small stack stack--tight" id="register-what">
+            <li>@L["Org.Register.Point1"]</li>
+            <li>@L["Org.Register.Point2"]</li>
+            <li>@L["Org.Register.Point3"]</li>
+        </ul>
+        <p class="fine"><a href="/metodika#organizacijos">@L["Org.Register.Method"]</a></p>
+    </details>
 </div>
 
 @if (Restriction is { Restricted: true } restriction)

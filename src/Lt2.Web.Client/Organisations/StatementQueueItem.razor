@@ -2,20 +2,21 @@
 @inject IStringLocalizer<AppealUi> L
 
 @* A statement as a moderator sees it, in the queue and in the panel on the bill's page alike: the bill, the organisation and
-   its label, waiting or seen, pre-screening flags, open reports, the text and link, and the actions. Never who wrote it. *@
+   its label, waiting or seen, pre-screening flags, open reports, the text and link, and the actions. Never who wrote it.
+   Its statement's ids start with "mod-", so on the bill's page they do not repeat those of the public list. *@
 <article class="sheet stack stack--tight" id="queue-statement-@Item.Id" aria-label="@L["Org.Statement"]">
     <div class="row">
         @if (ShowBill)
         {
             <a class="tag tag--ink num" href="/seimas/@Uri.EscapeDataString(Item.Bill.Number)">@Item.Bill.Number</a>
         }
-        <span class="tag">@L[Item.Status == "pending" ? "Mod.Status.pending" : Item.Seen ? "Mod.Seen" : "Mod.NotSeen"]</span>
+        <span class="tag">@L[ModerationWords.StatusKey(Item.Status, Item.Seen)]</span>
         @foreach (var flag in Item.Flags)
         {
             <span class="tag tag--people">@L["Mod.Flag." + flag]</span>
         }
     </div>
-    <StatementView Statement="Statement" Name="@Item.OrganisationName" Slug="@Item.Slug" Label="Item.Label" />
+    <StatementView Statement="Statement" Name="@Item.OrganisationName" Slug="@Item.Slug" Label="Item.Label" IdPrefix="mod-" />
     <Reports Items="Item.Reports" />
     <OrgModerationActions Id="Item.Id" Kind="statement" Status="@Item.Status" OnDone="OnDone" />
 </article>

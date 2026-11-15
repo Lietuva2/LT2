@@ -25,7 +25,7 @@
         <Authorized>
             <section class="sheet sheet--cut stack" aria-labelledby="h-home-welcome" id="home-signed-in">
                 <h2 id="h-home-welcome">@T["Home.Welcome"]</h2>
-                <p>@T["Home.WelcomeText"]</p>
+
                 <a class="btn btn--wide" href="/sveiki">@T["Home.ToAccount"]</a>
             </section>
         </Authorized>
@@ -49,12 +49,12 @@
     {
         @foreach (var day in _coming)
         {
-            <section class="stack stack--tight" aria-labelledby="h-home-day-@Formats.Day(day.Date)">
-                <h3 id="h-home-day-@Formats.Day(day.Date)">@string.Format(System.Globalization.CultureInfo.InvariantCulture, T["Agenda.Day"], F.Date(day.Date))</h3>
+            <section class="stack stack--tight" aria-labelledby="h-home-day-@Display.Day(day.Date)">
+                <h3 id="h-home-day-@Display.Day(day.Date)">@T.Format("Agenda.Day", F.Date(day.Date))</h3>
                 <ul class="rows">
                     @foreach (var item in day.Items)
                     {
-                        <AgendaItemRow Item="item" />
+                        <AgendaItemRow Item="item" Day="day.Date" />
                     }
                 </ul>
             </section>
@@ -85,18 +85,18 @@
                             {
                                 <span class="tag">@F.Stage(stage)</span>
                             }
-                            <span class="tag">@Fmt(A, "Planned", F.T["Month." + plan.Date.Month], plan.Date.Day)</span>
+                            <span class="tag">@A.Format("Planned", F.T["Month." + plan.Date.Month], plan.Date.Day)</span>
                         }
                     </div>
                     <h3 id="h-@a.Bill.Number"><a class="card__title" href="@link">@a.Bill.Title</a></h3>
                     <div class="counts num">
-                        <p><b class="counts__for">@Formats.Number(a.Counts.For)</b> @T["Home.For"] <span class="small">@Fmt(T, "Home.Older", Formats.Number(a.Counts.ForOlderThan30Days))</span></p>
-                        <p><b class="counts__against">@Formats.Number(a.Counts.Against)</b> @T["Home.Against"] <span class="small">@Fmt(T, "Home.Older", Formats.Number(a.Counts.AgainstOlderThan30Days))</span></p>
+                        <p><b class="counts__for">@Display.Number(a.Counts.For)</b> @T["Home.For"] <span class="small">@T.Format("Home.Older", Display.Number(a.Counts.ForOlderThan30Days))</span></p>
+                        <p><b class="counts__against">@Display.Number(a.Counts.Against)</b> @T["Home.Against"] <span class="small">@T.Format("Home.Older", Display.Number(a.Counts.AgainstOlderThan30Days))</span></p>
                     </div>
                     <SplitBar For="a.Counts.For" Against="a.Counts.Against" Abstain="0" Small="true" />
                     <p class="small num">
-                        <b>@Formats.Number(a.Threshold.Participants)</b> @Fmt(A, "Threshold.Progress", Formats.Number(a.Threshold.Value))
-                        · @(a.Threshold.Reached ? T["Home.Reached"] : Fmt(T, "Home.ToGo", Formats.Number(Math.Max(0, a.Threshold.Value - a.Threshold.Participants))))
+                        <b>@Display.Number(a.Threshold.Participants)</b> @A.Format("Threshold.Progress", Display.Number(a.Threshold.Value))
+                        · @(a.Threshold.Reached ? T["Home.Reached"] : T.Format("Home.ToGo", Display.Number(Math.Max(0, a.Threshold.Value - a.Threshold.Participants))))
                     </p>
                     @foreach (var side in Sides)
                     {
@@ -104,7 +104,7 @@
                         {
                             <div class="said">
                                 <p class="bubble bubble--people voice"><span class="choice choice--@side">@A["Digests.Side." + side]</span> @top.Text</p>
-                                <div class="said__by"><span class="small num">@Fmt(A, "Digests.Endorsed", Formats.Number(top.Endorsements))</span></div>
+                                <div class="said__by"><span class="small num">@A.Format("Digests.Endorsed", Display.Number(top.Endorsements))</span></div>
                             </div>
                         }
                         else
@@ -157,7 +157,4 @@
             }
         }
     }
-
-    private static string Fmt(IStringLocalizer localizer, string key, params object?[] values) =>
-        string.Format(System.Globalization.CultureInfo.InvariantCulture, localizer[key], values);
 }

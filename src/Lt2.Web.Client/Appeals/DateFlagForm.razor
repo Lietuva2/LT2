@@ -1,12 +1,13 @@
 @using Lt2.Api.Contracts.Appeals
-@inherits InteractiveBase
+@inherits InteractiveBase<AppealUi>
 @inject IAppealsApi Appeals
+@inject MyBillState State
 
 @* Design 8.4: participants can say the planned date is wrong or the bill is voted sooner, with a link to the source; a
    moderator makes the change. Shown only to members who have a side on the bill. *@
 @if (Mine is { Side: not null })
 {
-    <details class="stack stack--tight" id="date-flag">
+    <details class="more stack stack--tight" id="date-flag">
         <summary class="linkish small">@L["Flag.Open"]</summary>
         @if (_sent)
         {
@@ -29,14 +30,15 @@
                         </label>
                     }
                 </fieldset>
-                <div class="field @(Errors.ContainsKey("link") ? "field--error" : "")">
+                <div class="field @ErrorClass("link")">
                     <label for="flag-link">@L["Flag.Link"]</label>
-                    <input class="input" id="flag-link" type="url" maxlength="500" @bind="_link" disabled="@Locked" />
-                    <FieldError Errors="Errors" Field="link" />
+                    <input class="input" id="flag-link" type="url" maxlength="@AppealLimits.FlagLinkMaxLength" @bind="_link" disabled="@Locked"
+                           aria-invalid="@Invalid("link")" aria-describedby="@DescribedBy("link", "flag-link")" />
+                    <FieldError Errors="Errors" Field="link" For="flag-link" />
                 </div>
                 <div class="field">
                     <label for="flag-note">@L["Report.Text"]</label>
-                    <textarea class="textarea" id="flag-note" maxlength="1000" @bind="_note" disabled="@Locked"></textarea>
+                    <textarea class="textarea" id="flag-note" maxlength="@AppealLimits.FlagNoteMaxLength" @bind="_note" disabled="@Locked"></textarea>
                 </div>
                 <button type="submit" class="btn btn--plain" disabled="@(Locked || _kind is null)">@L["Flag.Submit"]</button>
                 <Messages Message="@Message" Info="@Info" />
@@ -54,8 +56,6 @@
 
     [Parameter, EditorRequired] public string Number { get; set; } = "";
 
-    [CascadingParameter] private Task<AuthenticationState>? AuthState { get; set; }
-
     [PersistentState] public MyAppealResponse? Mine { get; set; }
 
     /// <summary>The person's own writing restriction (design 8.3): flags are writing, so the form gives way to the notice.</summary>
@@ -63,22 +63,18 @@
 
     protected override async Task OnInitializedAsync()
     {
-        if (AuthState is not null && (await AuthState).User.Identity?.IsAuthenticated == true)
+        if (await IsSignedInAsync())
         {
-            Mine ??= (await Appeals.GetMineAsync(Number)).Value;
-            Restriction ??= (await Appeals.GetMyRestrictionAsync()).Value;
+            Mine ??= await State.MineAsync(Number);
+            Restriction ??= await State.RestrictionAsync();
         }
     }
 
     private Task SendAsync() => RunAsync(async () =>
     {
-        var result = await Appeals.FlagDateAsync(Number, new FlagRequest { Kind = _kind!, Link = _link.Trim(), Note = _note });
-        if (!result.IsSuccess)
+        if (Succeeded(await Appeals.FlagDateAsync(Number, new FlagRequest { Kind = _kind!, Link = _link.Trim(), Note = _note }), "link"))
         {
-            Show(result.Problem, "link");
-            return;
+            _sent = true;
         }
-
-        _sent = true;
     });
 }

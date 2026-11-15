@@ -40,8 +40,7 @@
                 {
                     <span class="tag">@F.Stage(plannedStage)</span>
                 }
-                <span class="tag" id="planned">@Fmt("Bill.Planned", F.Date(plan.Date))</span>
-                <span class="small">@A["Bill.PlannedMoves"]</span>
+                <span class="tag" id="planned">@A.Format("Bill.Planned", F.Date(plan.Date))</span>
             }
             else if (LastStage(b) is { } done)
             {
@@ -64,7 +63,7 @@
             <p>@A["Hidden.Lead"]</p>
             @if (!string.IsNullOrWhiteSpace(hidden.HiddenStatement))
             {
-                <p class="small" id="hidden-statement">@Fmt("Hidden.Statement", hidden.HiddenStatement)</p>
+                <p class="small" id="hidden-statement">@A.Format("Hidden.Statement", hidden.HiddenStatement)</p>
             }
         </section>
     }
@@ -89,7 +88,7 @@
                             }
                             else if (a.DescriptionSource == "initiator")
                             {
-                                @Fmt("What.Source.initiator", a.DescriptionAuthor ?? A["Anonymous"])
+                                @A.Format("What.Source.initiator", a.DescriptionAuthor ?? A["Anonymous"])
                             }
                             else
                             {
@@ -97,7 +96,7 @@
                             }
                             @if (a.DescriptionAt is { } madeAt)
                             {
-                                @(" · ")<span id="description-made">@Fmt("What.MadeOn", F.Date(madeAt))</span>
+                                @(" · ")<span id="description-made">@A.Format("What.MadeOn", F.Date(madeAt))</span>
                             }
                             @if (a.DescriptionUrl is { } from)
                             {
@@ -129,13 +128,13 @@
                     <div class="pair pair--keep">
                         <div class="figure figure--for" id="count-for">
                             <span class="label">@A["Sides.for"]</span>
-                            <span class="figure__num">@Formats.Number(a.Counts.For)</span>
-                            <span class="small num">@Fmt("Sides.Older", Formats.Number(a.Counts.ForOlderThan30Days))</span>
+                            <span class="figure__num">@Display.Number(a.Counts.For)</span>
+                            <span class="small num">@A.Format("Sides.Older", Display.Number(a.Counts.ForOlderThan30Days))</span>
                         </div>
                         <div class="figure figure--against" id="count-against">
                             <span class="label">@A["Sides.against"]</span>
-                            <span class="figure__num">@Formats.Number(a.Counts.Against)</span>
-                            <span class="small num">@Fmt("Sides.Older", Formats.Number(a.Counts.AgainstOlderThan30Days))</span>
+                            <span class="figure__num">@Display.Number(a.Counts.Against)</span>
+                            <span class="small num">@A.Format("Sides.Older", Display.Number(a.Counts.AgainstOlderThan30Days))</span>
                         </div>
                     </div>
                     <SplitBar For="a.Counts.For" Against="a.Counts.Against" Abstain="0" />
@@ -145,11 +144,11 @@
                     }
                     @if (a.Status == "closed" && a.ClosedAt is { } closedAt)
                     {
-                        <p class="small" id="frozen-note">@Fmt("Closed.Frozen", F.Date(closedAt))</p>
+                        <p class="small" id="frozen-note">@A.Format("Closed.Frozen", F.Date(closedAt))</p>
                     }
                     @if (a.Surge is { } surge)
                     {
-                        <p class="note" id="surge-note">@Fmt("Surge.Note", Formats.Number(surge.WindowHours), Formats.Number(surge.SharePercent))</p>
+                        <p class="note" id="surge-note">@A.Format("Surge.Note", Display.Number(surge.WindowHours), Display.Number(surge.SharePercent))</p>
                     }
                     @if (a.Status == "open")
                     {
@@ -158,14 +157,20 @@
 
                     <div class="stack stack--tight" id="threshold">
                         <h3 id="h-reach">@A["Threshold.Heading"]</h3>
-                        <div class="ruler" role="img" aria-label="@Fmt("Threshold.Aria", Formats.Number(a.Threshold.Participants), Formats.Number(a.Threshold.Value))">
+                        <div class="ruler" role="img" aria-label="@A.Format("Threshold.Aria", Display.Number(a.Threshold.Participants), Display.Number(a.Threshold.Value))">
                             <svg viewBox="0 0 1000 10" preserveAspectRatio="none" aria-hidden="true"><rect class="ruler__bar" x="0" y="0" height="10" width="@RulerWidth(a.Threshold)" /></svg>
                         </div>
-                        <p class="num"><b>@Formats.Number(a.Threshold.Participants)</b> @Fmt("Threshold.Progress", Formats.Number(a.Threshold.Value))</p>
-                        <p class="small">@A["Threshold.SetBy." + a.Threshold.SetBy]@(" ")@A["Threshold.Explained"]</p>
+                        <p class="num"><b>@Display.Number(a.Threshold.Participants)</b> @A.Format("Threshold.Progress", Display.Number(a.Threshold.Value))</p>
+                        @* Design 8.15: what the threshold is, one click away on the methodology page; a bill's own threshold
+                           stays said here with the moderator's statement (design 8.12). *@
+                        <p class="small"><a href="/metodika#riba" id="threshold-what">@A["Threshold.What"]</a></p>
+                        @if (a.Threshold.SetBy == "moderator")
+                        {
+                            <p class="small" id="threshold-set-by">@A["Threshold.SetBy.moderator"]</p>
+                        }
                         @if (a.Threshold.Note is { } thresholdNote)
                         {
-                            <p class="small" id="threshold-note">@Fmt("Threshold.Note", thresholdNote)</p>
+                            <p class="small" id="threshold-note">@A.Format("Threshold.Note", thresholdNote)</p>
                         }
                         @if (a.Status == "open")
                         {
@@ -186,17 +191,17 @@
                         else
                         {
                             <div class="totals">
-                                <div class="figure figure--for figure--m"><span class="label">@F.Choice("for")</span><span class="figure__num">@Formats.Number(vote.Summary.Totals.For)</span></div>
-                                <div class="figure figure--against figure--m"><span class="label">@F.Choice("against")</span><span class="figure__num">@Formats.Number(vote.Summary.Totals.Against)</span></div>
-                                <div class="figure figure--m"><span class="label">@F.Choice("abstain")</span><span class="figure__num">@Formats.Number(vote.Summary.Totals.Abstain)</span></div>
+                                <div class="figure figure--for figure--m"><span class="label">@F.Choice("for")</span><span class="figure__num">@Display.Number(vote.Summary.Totals.For)</span></div>
+                                <div class="figure figure--against figure--m"><span class="label">@F.Choice("against")</span><span class="figure__num">@Display.Number(vote.Summary.Totals.Against)</span></div>
+                                <div class="figure figure--m"><span class="label">@F.Choice("abstain")</span><span class="figure__num">@Display.Number(vote.Summary.Totals.Abstain)</span></div>
                             </div>
                             @if (vote.Summary.OfficialNote is { } officialNote)
                             {
                                 <p class="note note--quiet">@officialNote</p>
                             }
                             <SeatMap Ballots="vote.Ballots" />
-                            <details>
-                                <summary class="linkish">@A["Closed.EachMp"]</summary>
+                            <details class="more stack stack--tight">
+                                <summary class="linkish small">@A["Closed.EachMp"]</summary>
                                 <ul class="rows">
                                     @foreach (var ballot in vote.Ballots.OrderBy(x => x.Mp.LastName, StringComparer.Create(new System.Globalization.CultureInfo("lt-LT"), false)))
                                     {
@@ -218,13 +223,9 @@
             </div>
 
             <aside class="stack">
-                @if (a.Status == "open")
-                {
-                    <AppealModerationPanel Number="@b.Number" ESeimasUrl="@b.ESeimasUrl" @rendermode="InteractiveWebAssembly" />
-                }
-
                 @if (_moderator)
                 {
+                    <AppealModerationPanel Number="@b.Number" ESeimasUrl="@b.ESeimasUrl" @rendermode="InteractiveWebAssembly" />
                     <StatementModerationPanel Number="@b.Number" @rendermode="InteractiveWebAssembly" />
                 }
 
@@ -241,10 +242,10 @@
                             {
                                 <li>
                                     <div class="rows__main">
-                                        <span><a href="@DigestRoutes.PageAt(d.RunDate, d.RunId, d.Item.BillNumber)" class="num">@Formats.Day(d.RunDate)</a> · <span class="small">@A["Digests.Kind." + d.Kind]</span></span>
+                                        <span><a href="@DigestRoutes.PageAt(d.RunDate, d.RunId, d.Item.BillNumber)" class="num">@Display.Day(d.RunDate)</a> · <span class="small">@A["Digests.Kind." + d.Kind]</span></span>
                                         <span class="small num">
-                                            <span class="choice choice--for">@A["Digests.Side.for"]</span> @Formats.Number(d.Item.For) (@Formats.Number(d.Item.ForOlderThan30Days))
-                                            · <span class="choice choice--against">@A["Digests.Side.against"]</span> @Formats.Number(d.Item.Against) (@Formats.Number(d.Item.AgainstOlderThan30Days))
+                                            <span class="choice choice--for">@A["Digests.Side.for"]</span> @Display.Number(d.Item.For) (@Display.Number(d.Item.ForOlderThan30Days))
+                                            · <span class="choice choice--against">@A["Digests.Side.against"]</span> @Display.Number(d.Item.Against) (@Display.Number(d.Item.AgainstOlderThan30Days))
                                         </span>
                                     </div>
                                 </li>
@@ -284,7 +285,7 @@
                     }
                     else
                     {
-                        <b class="num"><a href="/seimas/balsavimai/@result.Vote.Id">@Formats.Number(result.Totals.For) : @Formats.Number(result.Totals.Against)</a></b>
+                        <b class="num"><a href="/seimas/balsavimai/@result.Vote.Id">@Display.Number(result.Totals.For) : @Display.Number(result.Totals.Against)</a></b>
                         <span class="small num">@F.Date(result.Vote.HeldAt)</span>
                     }
                 </li>
@@ -340,7 +341,7 @@
     [Parameter] public string Number { get; set; } = "";
 
     /// <summary>Where visitors without a session may write to the moderators (configuration, not a promise in code).</summary>
-    private string? Contact => Configuration["Moderation:ContactAddress"] is { Length: > 0 } address ? address : null;
+    private string? Contact => Configuration.ModeratorContact();
 
     protected override async Task OnInitializedAsync()
     {
@@ -376,8 +377,6 @@
         bill.Votes.LastOrDefault(v => v.Vote.Kind == "stage-result")?.Vote.Stage;
 
     private static int ToGo(ThresholdResponse t) => Math.Max(0, t.Value - t.Participants);
-
-    private string Fmt(string key, params object?[] values) => string.Format(System.Globalization.CultureInfo.InvariantCulture, A[key], values);
 
     private static string RulerWidth(ThresholdResponse t) =>
         (t.Value <= 0 ? 1000 : Math.Min(1000.0, 1000.0 * t.Participants / t.Value)).ToString("0.#", System.Globalization.CultureInfo.InvariantCulture);

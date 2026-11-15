@@ -4,7 +4,7 @@
 @* One organisation's statement (design 8.14.3): the organisation and its label, the stance, the text, the link with its host
    visible (never fetched by the server; nofollow, ugc), and with a goal "Siekiame {N} dalyvių · dabar {n}". All statements
    look alike: same size, no highlighting (8.14.8). Never who wrote it. *@
-<article class="said statement" id="statement-@Statement.Id" aria-label="@(Name ?? L["Org.Statement"])">
+<article class="said statement" id="@(IdPrefix)statement-@Statement.Id" aria-label="@(Name ?? L["Org.Statement"])">
     @if (Name is not null)
     {
         <p class="row statement__who">
@@ -24,7 +24,7 @@
     }
     @if (ShowStance)
     {
-        <p><span class="@StanceClass">@L["Org.Stance." + Statement.Stance]</span></p>
+        <p><span class="@OrganisationWords.StanceClass(Statement.Stance)">@L["Org.Stance." + Statement.Stance]</span></p>
     }
     <div class="bubble bubble--org voice">
         @foreach (var paragraph in Statement.Text.Split('\n', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries))
@@ -39,7 +39,7 @@
         }
         @if (Statement.Goal is { } goal)
         {
-            <span class="statement__goal num" id="goal-@Statement.Id">@Goal(goal)</span>
+            <span class="statement__goal num" id="@(IdPrefix)goal-@Statement.Id">@Goal(goal)</span>
         }
         <span class="small num">@Published</span>
         @ChildContent
@@ -58,17 +58,18 @@
 
     [Parameter] public bool ShowStance { get; set; } = true;
 
+    /// <summary>The start of the element ids (<c>mod-</c> in the moderators' panel, so the public list's ids stay unique).</summary>
+    [Parameter] public string IdPrefix { get; set; } = "";
+
     /// <summary>The actions beside the statement (report, a representative's controls).</summary>
     [Parameter] public RenderFragment? ChildContent { get; set; }
 
     /// <summary>"Siekiame {N} dalyvių · dabar {n}"; without the count (a moderator's screen) only the goal.</summary>
     private string Goal(int goal) => Statement.Progress is { } now
-        ? string.Format(System.Globalization.CultureInfo.InvariantCulture, L[OrganisationWords.GoalKey(goal)], AppealNumbers.Of(goal), AppealNumbers.Of(now))
-        : string.Format(System.Globalization.CultureInfo.InvariantCulture, L[OrganisationWords.GoalKey(goal) + "Only"], AppealNumbers.Of(goal));
-
-    private string StanceClass => Statement.Stance is "for" or "against" ? "choice choice--" + Statement.Stance : "choice choice--remarks";
+        ? L.Format(OrganisationWords.GoalKey(goal), Display.Number(goal), Display.Number(now))
+        : L.Format(OrganisationWords.GoalKey(goal) + "Only", Display.Number(goal));
 
     private string Published => Statement.EditedAt is { } edited
-        ? string.Format(System.Globalization.CultureInfo.InvariantCulture, L["Org.PublishedEdited"], Dates.Day(Statement.PublishedAt), Dates.Day(edited))
-        : string.Format(System.Globalization.CultureInfo.InvariantCulture, L["Org.Published"], Dates.Day(Statement.PublishedAt));
+        ? L.Format("Org.PublishedEdited", Display.Day(Statement.PublishedAt), Display.Day(edited))
+        : L.Format("Org.Published", Display.Day(Statement.PublishedAt));
 }

@@ -1,5 +1,5 @@
 @using Lt2.Api.Contracts.Organisations
-@inherits InteractiveBase
+@inherits InteractiveBase<AppealUi>
 @inject IOrganisationsApi Organisations
 @inject FluentValidation.IValidator<OrganisationRequest> Validator
 
@@ -8,29 +8,31 @@
    "Esame registruoti lobistai". The same validator as the server checks the fields first. A new name or website puts the
    organisation back in the moderators' queue; earlier names and websites stay in the public history. *@
 <form class="stack" @onsubmit="SaveAsync" novalidate id="@(Slug is null ? "register-form" : "edit-form")">
-    <div class="field @(Errors.ContainsKey("name") ? "field--error" : "")">
+    <div class="field @ErrorClass("name")">
         <label for="org-name">@L["Org.Field.Name"]</label>
-        <input class="input" id="org-name" maxlength="@OrganisationLimits.NameMaxLength" autocomplete="organization" @bind="_name" @bind:event="oninput" disabled="@Locked" />
-        <FieldError Errors="Errors" Field="name" />
+        <input class="input" id="org-name" maxlength="@OrganisationLimits.NameMaxLength" autocomplete="organization" @bind="_name" @bind:event="oninput" disabled="@Locked"
+               aria-invalid="@Invalid("name")" aria-describedby="@DescribedBy("name", "org-name")" />
+        <FieldError Errors="Errors" Field="name" For="org-name" />
     </div>
-    <div class="field @(Errors.ContainsKey("description") ? "field--error" : "")">
+    <div class="field @ErrorClass("description")">
         <label for="org-description">@L["Org.Field.Description"]</label>
-        <p class="field__hint num" id="org-description-hint">@Text("Org.Field.DescriptionHint", (_description ?? "").Length, OrganisationLimits.DescriptionMaxLength)</p>
-        <textarea class="textarea" id="org-description" rows="4" maxlength="@OrganisationLimits.DescriptionMaxLength" aria-describedby="org-description-hint"
-                  @bind="_description" @bind:event="oninput" disabled="@Locked"></textarea>
-        <FieldError Errors="Errors" Field="description" />
+        <p class="field__hint num" id="org-description-hint">@L.Format("Org.Field.DescriptionHint", Display.Number((_description ?? "").Length), Display.Number(OrganisationLimits.DescriptionMaxLength))</p>
+        <textarea class="textarea" id="org-description" rows="4" maxlength="@OrganisationLimits.DescriptionMaxLength" aria-describedby="@DescribedBy("description", "org-description", "org-description-hint")"
+                  aria-invalid="@Invalid("description")" @bind="_description" @bind:event="oninput" disabled="@Locked"></textarea>
+        <FieldError Errors="Errors" Field="description" For="org-description" />
     </div>
-    <div class="field @(Errors.ContainsKey("website") ? "field--error" : "")">
+    <div class="field @ErrorClass("website")">
         <label for="org-website">@L["Org.Field.Website"]</label>
         <p class="field__hint" id="org-website-hint">@L["Org.Field.WebsiteHint"]</p>
         <input class="input" type="url" inputmode="url" autocomplete="url" spellcheck="false" id="org-website" maxlength="@OrganisationLimits.WebsiteMaxLength" placeholder="https://"
-               aria-describedby="org-website-hint" @bind="_website" @bind:event="oninput" disabled="@Locked" />
-        <FieldError Errors="Errors" Field="website" />
+               aria-describedby="@DescribedBy("website", "org-website", "org-website-hint")" aria-invalid="@Invalid("website")" @bind="_website" @bind:event="oninput" disabled="@Locked" />
+        <FieldError Errors="Errors" Field="website" For="org-website" />
     </div>
-    <div class="field @(Errors.ContainsKey("legalCode") ? "field--error" : "")">
-        <label for="org-code">@L["Org.Field.LegalCode"]</label>
-        <input class="input num" type="text" inputmode="numeric" autocomplete="off" id="org-code" maxlength="9" @bind="_code" @bind:event="oninput" disabled="@Locked" />
-        <FieldError Errors="Errors" Field="legalCode" />
+    <div class="field @ErrorClass("legalCode")">
+        <label for="org-legal-code">@L["Org.Field.LegalCode"]</label>
+        <input class="input num" type="text" inputmode="numeric" autocomplete="off" id="org-legal-code" maxlength="@OrganisationLimits.LegalCodeMaxLength"
+               aria-invalid="@Invalid("legalCode")" aria-describedby="@DescribedBy("legalCode", "org-legal-code")" @bind="_code" @bind:event="oninput" disabled="@Locked" />
+        <FieldError Errors="Errors" Field="legalCode" For="org-legal-code" />
     </div>
     <label class="check">
         <input type="checkbox" id="org-lobbyist" @bind="_lobbyist" disabled="@Locked" />
@@ -82,20 +84,16 @@
             LegalCode = string.IsNullOrWhiteSpace(_code) ? null : _code.Trim(),
             DeclaredLobbyist = _lobbyist,
         };
-        var checkedHere = await Validator.ValidateAsync(request);
-        if (!checkedHere.IsValid)
+        if (!Valid(await Validator.ValidateAsync(request)))
         {
-            Errors = checkedHere.Errors.GroupBy(e => char.ToLowerInvariant(e.PropertyName[0]) + e.PropertyName[1..])
-                .ToDictionary(g => g.Key, g => g.Select(e => e.ErrorMessage).ToArray(), StringComparer.OrdinalIgnoreCase);
             return;
         }
 
         if (Slug is null)
         {
             var created = await Organisations.RegisterAsync(request);
-            if (!created.IsSuccess)
+            if (!Succeeded(created, "name", "description", "website", "legalCode"))
             {
-                Show(created.Problem, "name", "description", "website", "legalCode");
                 return;
             }
 
@@ -103,10 +101,8 @@
             return;
         }
 
-        var changed = await Organisations.ChangeAsync(Slug, request);
-        if (!changed.IsSuccess)
+        if (!Succeeded(await Organisations.ChangeAsync(Slug, request), "name", "description", "website", "legalCode"))
         {
-            Show(changed.Problem, "name", "description", "website", "legalCode");
             return;
         }
 

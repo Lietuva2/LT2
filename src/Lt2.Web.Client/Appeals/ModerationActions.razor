@@ -1,5 +1,5 @@
 @using Lt2.Api.Contracts.Appeals
-@inherits InteractiveBase
+@inherits InteractiveBase<AppealUi>
 @inject IModerationApi Moderation
 @inject FluentValidation.IValidator<ModeratorDescriptionRequest> DescriptionValidator
 
@@ -9,7 +9,8 @@
    merge) leaves the confirmation in place of the controls. On a bill without a record (Id null) the first action creates
    it (design 8.12.1). "Rašyti aprašymą" works on any active bill and offers the AI draft from pasted official text only
    when a provider is configured (8.11.4); without one nothing here mentions a draft. A bill's description can also be
-   confirmed (only an AI summary nobody has read) or removed (design 8.13). *@
+   confirmed (only an AI summary nobody has read) or removed (design 8.13). Every element id carries IdPrefix, so the same
+   item's actions in the panel and in the list beside it never share an id. *@
 <div class="stack stack--tight" id="actions-@Key">
     @if (!_finished)
     {
@@ -24,7 +25,7 @@
         }
         else if (_open == "restrict" && Id is { } reasonId)
         {
-            <RestrictAuthor Id="reasonId" Embedded="true" OnCancel="Close" OnDone="RestrictedAsync" />
+            <RestrictAuthor Id="reasonId" IdPrefix="@IdPrefix" OnCancel="Close" OnDone="RestrictedAsync" />
         }
         else
         {
@@ -36,7 +37,7 @@
                 {
                     @if (_ai is { DraftAvailable: true })
                     {
-                        <div class="field @(Errors.ContainsKey("sourceText") ? "field--error" : "")">
+                        <div class="field @ErrorClass("sourceText")">
                             <label for="describe-source-@Key">@L["ModOpen.Source"]</label>
                             <p class="field__hint" id="describe-source-hint-@Key">
                                 @L["ModOpen.SourceHint"]
@@ -46,14 +47,14 @@
                                 }
                             </p>
                             @* No maxlength: the browser would cut a long paste silently; the length is checked and said instead. *@
-                            <textarea class="textarea" id="describe-source-@Key" aria-describedby="describe-source-hint-@Key"
-                                      @bind="_source" @bind:event="oninput" disabled="@Locked"></textarea>
-                            <p class="small num @(_source.Length > SourceMax ? "field__error" : "")">@Text("ModOpen.SourceLength", AppealNumbers.Of(_source.Length), AppealNumbers.Of(SourceMax))</p>
-                            <FieldError Errors="Errors" Field="sourceText" />
+                            <textarea class="textarea" id="describe-source-@Key" aria-describedby="@DescribedBy("sourceText", $"describe-source-{Key}", $"describe-source-hint-{Key}")"
+                                      aria-invalid="@Invalid("sourceText")" @bind="_source" @bind:event="oninput" disabled="@Locked"></textarea>
+                            <p class="small num @(_source.Length > AppealLimits.DraftSourceMaxLength ? "field__error" : "")">@L.Format("ModOpen.SourceLength", Display.Number(_source.Length), Display.Number(AppealLimits.DraftSourceMaxLength))</p>
+                            <FieldError Errors="Errors" Field="sourceText" For="@($"describe-source-{Key}")" />
                         </div>
                         <p><button type="button" class="btn btn--plain" id="describe-draft-@Key" disabled="@(Locked || string.IsNullOrWhiteSpace(_source))" @onclick="DraftAsync">@L["ModOpen.Draft"]</button></p>
                     }
-                    <div class="field @(Errors.ContainsKey("description") ? "field--error" : "")">
+                    <div class="field @ErrorClass("description")">
                         <label for="describe-@Key">@L["Mod.Description"]</label>
                         <p class="field__hint" id="describe-hint-@Key">
                             @L["Mod.DescriptionHint"]
@@ -62,37 +63,39 @@
                                 @(" ")<span class="tag" id="describe-from-draft-@Key">@L["ModOpen.FromDraft"]</span>
                             }
                         </p>
-                        <textarea class="textarea" id="describe-@Key" rows="10" maxlength="@AppealLimits.DescriptionMaxLength" aria-describedby="describe-hint-@Key"
-                                  @bind="_description" @bind:event="oninput" disabled="@Locked"></textarea>
-                        <FieldError Errors="Errors" Field="description" />
+                        <textarea class="textarea" id="describe-@Key" rows="10" maxlength="@AppealLimits.DescriptionMaxLength" aria-describedby="@DescribedBy("description", $"describe-{Key}", $"describe-hint-{Key}")"
+                                  aria-invalid="@Invalid("description")" @bind="_description" @bind:event="oninput" disabled="@Locked"></textarea>
+                        <FieldError Errors="Errors" Field="description" For="@($"describe-{Key}")" />
                     </div>
                     @* Design 8.13 (decided 2026-11-14): filled in advance with the record's address, so leaving it keeps it;
                        empty clears it. The same rule here and on the server (OfficialTextAddress). *@
-                    <div class="field @(Errors.ContainsKey("descriptionUrl") ? "field--error" : "")">
+                    <div class="field @ErrorClass("descriptionUrl")">
                         <label for="describe-url-@Key">@L["Mod.DescriptionUrl"]</label>
                         <p class="field__hint" id="describe-url-hint-@Key">@L["Mod.DescriptionUrlHint"]</p>
-                        <input class="input" type="url" inputmode="url" autocomplete="off" spellcheck="false" id="describe-url-@Key" aria-describedby="describe-url-hint-@Key"
+                        <input class="input" type="url" inputmode="url" autocomplete="off" spellcheck="false" id="describe-url-@Key"
+                               aria-describedby="@DescribedBy("descriptionUrl", $"describe-url-{Key}", $"describe-url-hint-{Key}")" aria-invalid="@Invalid("descriptionUrl")"
                                maxlength="@AppealLimits.DescriptionUrlMaxLength" @bind="_descriptionUrl" @bind:event="oninput" disabled="@Locked" />
-                        <FieldError Errors="Errors" Field="descriptionUrl" />
+                        <FieldError Errors="Errors" Field="descriptionUrl" For="@($"describe-url-{Key}")" />
                     </div>
                 }
                 @if (_open == "threshold")
                 {
-                    <div class="field @(Errors.ContainsKey("threshold") ? "field--error" : "")">
+                    <div class="field @ErrorClass("threshold")">
                         <label for="threshold-@Key">@L["Mod.Threshold"]</label>
-                        <input class="input num" type="number" inputmode="numeric" id="threshold-@Key" min="1" step="1" @bind="_threshold" disabled="@Locked" />
-                        <FieldError Errors="Errors" Field="threshold" />
+                        <input class="input num" type="number" inputmode="numeric" id="threshold-@Key" min="1" step="1" @bind="_threshold" disabled="@Locked"
+                               aria-invalid="@Invalid("threshold")" aria-describedby="@DescribedBy("threshold", $"threshold-{Key}")" />
+                        <FieldError Errors="Errors" Field="threshold" For="@($"threshold-{Key}")" />
                     </div>
                 }
                 @if (_open == "planned")
                 {
                     <div class="pair">
-                        <div class="field @(Errors.ContainsKey("date") ? "field--error" : "")">
+                        <div class="field @ErrorClass("date")">
                             <label for="planned-@Key">@L["Mod.PlannedDate"]</label>
-                            <p class="field__hint" id="planned-hint-@Key">@Text("Date.Hint", Dates.Example)</p>
-                            <input class="input num" type="text" inputmode="numeric" autocomplete="off" pattern="@Dates.Pattern" placeholder="@Dates.Example"
-                                   id="planned-@Key" aria-describedby="planned-hint-@Key" @bind="_planned" disabled="@Locked" />
-                            <FieldError Errors="Errors" Field="date" />
+                            <p class="field__hint" id="planned-hint-@Key">@L.Format("Date.Hint", Display.DateExample)</p>
+                            <input class="input num" type="text" inputmode="numeric" autocomplete="off" pattern="@Display.DatePattern" placeholder="@Display.DateExample"
+                                   id="planned-@Key" aria-describedby="@DescribedBy("date", $"planned-{Key}", $"planned-hint-{Key}")" aria-invalid="@Invalid("date")" @bind="_planned" disabled="@Locked" />
+                            <FieldError Errors="Errors" Field="date" For="@($"planned-{Key}")" />
                         </div>
                         <div class="field">
                             <label for="stage-@Key">@L["Mod.PlannedStage"]</label>
@@ -106,23 +109,24 @@
                 }
                 @if (_open == "merge" && MergeCandidates is { Count: > 0 })
                 {
-                    <fieldset class="stack stack--tight @(Errors.ContainsKey("into") ? "field--error" : "")">
+                    <fieldset class="stack stack--tight @ErrorClass("into")">
                         <legend class="label">@L["Mod.MergeInto"]</legend>
                         @foreach (var candidate in MergeCandidates)
                         {
                             <label class="check">
                                 <input type="radio" name="merge-@Key" value="@candidate.Id" checked="@(_mergeInto == candidate.Id)" @onchange="() => _mergeInto = candidate.Id" disabled="@Locked" />
-                                <span>@candidate.Text <span class="small num">(@AppealNumbers.Of(candidate.Endorsements))</span></span>
+                                <span>@candidate.Text <span class="small num">(@Display.Number(candidate.Endorsements))</span></span>
                             </label>
                         }
-                        <FieldError Errors="Errors" Field="into" />
+                        <FieldError Errors="Errors" Field="into" For="@($"merge-{Key}")" />
                     </fieldset>
                 }
 
-                <div class="field @(Errors.ContainsKey("statement") ? "field--error" : "")">
+                <div class="field @ErrorClass("statement")">
                     <label for="statement-@Key">@L[StatementLabel(_open)]</label>
-                    <textarea class="textarea" id="statement-@Key" maxlength="@AppealLimits.StatementMaxLength" @bind="_statement" @bind:event="oninput" disabled="@Locked"></textarea>
-                    <FieldError Errors="Errors" Field="statement" />
+                    <textarea class="textarea" id="statement-@Key" maxlength="@AppealLimits.StatementMaxLength" @bind="_statement" @bind:event="oninput" disabled="@Locked"
+                              aria-invalid="@Invalid("statement")" aria-describedby="@DescribedBy("statement", $"statement-{Key}")"></textarea>
+                    <FieldError Errors="Errors" Field="statement" For="@($"statement-{Key}")" />
                 </div>
                 <div class="row">
                     <button type="submit" class="btn" id="action-submit-@Key" disabled="@Locked">@L[ActionLabel(_open)]</button>
@@ -136,7 +140,6 @@
 </div>
 
 @code {
-    private const int SourceMax = 20_000;
     private string? _open;
     private string? _done;
     private bool _finished;
@@ -193,6 +196,9 @@
     /// <summary>The item has open reports or date flags, so "keep" means something.</summary>
     [Parameter] public bool HasOpenItems { get; set; }
 
+    /// <summary>The start of every element id here (<c>panel-</c> in the panel on the bill's page), so ids stay unique.</summary>
+    [Parameter] public string IdPrefix { get; set; } = "";
+
     /// <summary>After an action: the item's queue may change (the page decides whether to reload).</summary>
     [Parameter] public EventCallback<string> OnDone { get; set; }
 
@@ -201,8 +207,8 @@
 
     private bool IsHeld => _held ?? Held;
 
-    /// <summary>Element ids: the item's id, or the bill's number while it has no record.</summary>
-    private string Key => Id?.ToString() ?? Number ?? "new";
+    /// <summary>Element ids: the prefix and the item's id, or the bill's number while it has no record.</summary>
+    private string Key => IdPrefix + (Id?.ToString() ?? Number ?? "new");
 
     /// <summary>The actions that apply to the item's state, the main one first (design 8.3, 8.12.3).</summary>
     private IReadOnlyList<string> Offered => (Kind, Status) switch
@@ -243,16 +249,14 @@
     /// <summary>Actions after which the item has left the queue for good.</summary>
     private static bool Finishes(string action) => action is "publish" or "keep" or "hide" or "merge";
 
-    private async Task OpenAsync(string action)
+    /// <summary>Opens one action's fields; "describe" first asks whether the AI draft is available, with the controls locked.</summary>
+    private Task OpenAsync(string action) => RunAsync(async () =>
     {
         _open = action;
         _statement = "";
         _done = null;
-        Message = null;
-        Info = null;
-        Errors = new Dictionary<string, string[]>();
         _threshold = Threshold;
-        _planned = Planned is { } p ? Dates.Day(p.Date) : null;
+        _planned = Planned is { } p ? Display.Day(p.Date) : null;
         _stage = Planned?.Stage ?? "consideration";
         _mergeInto = null;
         _description = CurrentDescription ?? "";
@@ -261,9 +265,10 @@
         _fromDraft = false;
         if (action == "describe" && _ai is null)
         {
+            // Without an answer the form works as without a provider: nothing mentions a draft.
             _ai = (await Moderation.GetAiAsync()).Value;
         }
-    }
+    });
 
     private void Close() => _open = null;
 
@@ -277,9 +282,8 @@
     private Task DraftAsync() => RunAsync(async () =>
     {
         var result = await Moderation.DraftDescriptionAsync(Number!, new DescriptionDraftRequest { SourceText = _source });
-        if (!result.IsSuccess)
+        if (!Succeeded(result, "sourceText"))
         {
-            Show(result.Problem, "sourceText");
             return;
         }
 
@@ -292,16 +296,13 @@
     private Task SubmitAsync() => RunAsync(async () =>
     {
         var action = _open!;
-        if (Check(action) is { } errors)
+        if (!Checked(action))
         {
-            Errors = errors;
             return;
         }
 
-        var result = await SendAsync(action);
-        if (!result.IsSuccess)
+        if (!Succeeded(await SendAsync(action), "statement", "threshold", "date", "stage", "description", "descriptionUrl"))
         {
-            Show(result.Problem, "statement", "threshold", "date", "stage", "description", "descriptionUrl");
             return;
         }
 
@@ -325,27 +326,22 @@
     });
 
     /// <summary>What the form can tell before sending: a typed date in the form yyyy-MM-dd, a chosen merge target.</summary>
-    private Dictionary<string, string[]>? Check(string action)
+    private bool Checked(string action)
     {
-        if (action == "planned" && !Dates.TryRead(_planned, out _))
+        if (action == "planned" && !Display.TryReadDate(_planned, out _))
         {
-            return new() { ["date"] = [Text("Date.Invalid", Dates.Example)] };
+            FieldFails("date", L.Format("Date.Invalid", Display.DateExample));
+            return false;
         }
 
         if (action == "merge" && _mergeInto is null)
         {
-            return new() { ["into"] = [L["Mod.MergeChoose"]] };
+            FieldFails("into", L["Mod.MergeChoose"]);
+            return false;
         }
 
         // The description, the statement and the official text's address: the same validator the server applies.
-        if (action == "describe" && DescriptionValidator.Validate(DescribeRequest()) is { IsValid: false } invalid)
-        {
-            return invalid.Errors
-                .GroupBy(e => char.ToLowerInvariant(e.PropertyName[0]) + e.PropertyName[1..], StringComparer.OrdinalIgnoreCase)
-                .ToDictionary(g => g.Key, g => g.Select(e => e.ErrorMessage).ToArray(), StringComparer.OrdinalIgnoreCase);
-        }
-
-        return null;
+        return action != "describe" || Valid(DescriptionValidator.Validate(DescribeRequest()));
     }
 
     private ModeratorDescriptionRequest DescribeRequest() =>
@@ -395,7 +391,7 @@
             "keep" => await Moderation.KeepAppealAsync(id.Value, note),
             "hide" => await Moderation.HideAppealAsync(id.Value, statement),
             "threshold" => await Moderation.SetThresholdAsync(id.Value, new ModeratorThresholdRequest { Threshold = _threshold ?? 0, Statement = _statement }),
-            "planned" => await Moderation.SetPlannedAsync(id.Value, new ModeratorPlannedRequest { Date = Dates.TryRead(_planned, out var day) ? day : default, Stage = _stage, Statement = _statement }),
+            "planned" => await Moderation.SetPlannedAsync(id.Value, new ModeratorPlannedRequest { Date = Display.TryReadDate(_planned, out var day) ? day : default, Stage = _stage, Statement = _statement }),
             "hold" => await Moderation.HoldAsync(id.Value, statement),
             "release" => await Moderation.ReleaseAsync(id.Value, statement),
             "urgent" => await Moderation.UrgentAsync(id.Value, new Lt2.Api.Contracts.Digests.UrgentDigestRequest { Statement = _statement }),

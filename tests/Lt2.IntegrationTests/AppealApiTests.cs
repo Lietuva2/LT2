@@ -4,6 +4,7 @@ using Lt2.Api.Contracts.Appeals;
 using Lt2.Api.Contracts.Me;
 using Lt2.IntegrationTests.Infrastructure;
 using Lt2.SharedKernel;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace Lt2.IntegrationTests;
 
@@ -11,21 +12,6 @@ namespace Lt2.IntegrationTests;
 public sealed class AppealApiTests(DatabaseFixture database) : ApiTest(database)
 {
     private static readonly SemaphoreSlim ModeratorGate = new(1, 1);
-    private static StaffMember? _moderator;
-
-    private async Task<TestBrowser> ModeratorAsync()
-    {
-        await ModeratorGate.WaitAsync();
-        try
-        {
-            _moderator ??= await StaffMembers.ActiveAsync(Factory, Database, "moderator");
-            return _moderator.Browser;
-        }
-        finally
-        {
-            ModeratorGate.Release();
-        }
-    }
 
     [Fact]
     public async Task The_rules_offer_the_default_threshold_and_state_the_minimum_to_anyone()
@@ -153,7 +139,7 @@ public sealed class AppealApiTests(DatabaseFixture database) : ApiTest(database)
     {
         var (initiator, initiatorEmail) = await Factory.MemberAsync();
         using var _i = initiator;
-        var appeal = await Database.PrepareBillAsync(initiator, await ModeratorAsync(), AppealSteps.ThirdBill, "against");
+        var appeal = await Database.PrepareBillAsync(initiator, (await ModeratorAsync()).Browser, AppealSteps.ThirdBill, "against");
         await Database.AgeAccountAsync(initiatorEmail, 45);
         var (supporter, _) = await Factory.MemberAsync();
         using var _s = supporter;
@@ -178,7 +164,7 @@ public sealed class AppealApiTests(DatabaseFixture database) : ApiTest(database)
     {
         var (initiator, _) = await Factory.MemberAsync();
         using var _i = initiator;
-        await Database.PrepareBillAsync(initiator, await ModeratorAsync(), AppealSteps.ThirdBill);
+        await Database.PrepareBillAsync(initiator, (await ModeratorAsync()).Browser, AppealSteps.ThirdBill);
         using var stranger = NewBrowser();
 
         using var first = await stranger.Client.GetAsync(AppealRoutes.AppealOf(AppealSteps.ThirdBill));
@@ -194,7 +180,7 @@ public sealed class AppealApiTests(DatabaseFixture database) : ApiTest(database)
     {
         var (initiator, _) = await Factory.MemberAsync();
         using var _i = initiator;
-        await Database.PrepareBillAsync(initiator, await ModeratorAsync(), AppealSteps.ThirdBill, "against");
+        await Database.PrepareBillAsync(initiator, (await ModeratorAsync()).Browser, AppealSteps.ThirdBill, "against");
         var (member, _) = await Factory.MemberAsync();
         using var _m = member;
 
@@ -228,7 +214,7 @@ public sealed class AppealApiTests(DatabaseFixture database) : ApiTest(database)
     {
         var (initiator, _) = await Factory.MemberAsync();
         using var _i = initiator;
-        await Database.PrepareBillAsync(initiator, await ModeratorAsync(), AppealSteps.ThirdBill);
+        await Database.PrepareBillAsync(initiator, (await ModeratorAsync()).Browser, AppealSteps.ThirdBill);
         var (member, email) = await Factory.MemberAsync(consent: false);
         using var _m = member;
 
@@ -256,7 +242,7 @@ public sealed class AppealApiTests(DatabaseFixture database) : ApiTest(database)
     {
         var (initiator, _) = await Factory.MemberAsync();
         using var _i = initiator;
-        var appeal = await Database.PrepareBillAsync(initiator, await ModeratorAsync(), AppealSteps.ThirdBill, "against");
+        var appeal = await Database.PrepareBillAsync(initiator, (await ModeratorAsync()).Browser, AppealSteps.ThirdBill, "against");
         var (member, email) = await Factory.MemberAsync();
         using var _m = member;
         (await member.TakeSideAsync(AppealSteps.ThirdBill, "against")).StatusCode.ShouldBe(HttpStatusCode.NoContent);
@@ -287,7 +273,7 @@ public sealed class AppealApiTests(DatabaseFixture database) : ApiTest(database)
     {
         var (initiator, initiatorEmail) = await Factory.MemberAsync();
         using var _i = initiator;
-        await Database.PrepareBillAsync(initiator, await ModeratorAsync(), AppealSteps.ThirdBill, "for");
+        await Database.PrepareBillAsync(initiator, (await ModeratorAsync()).Browser, AppealSteps.ThirdBill, "for");
         await Database.AgeAccountAsync(initiatorEmail, 31);
         var (young, youngEmail) = await Factory.MemberAsync();
         using var _y = young;
@@ -302,7 +288,7 @@ public sealed class AppealApiTests(DatabaseFixture database) : ApiTest(database)
     {
         var (initiator, _) = await Factory.MemberAsync();
         using var _i = initiator;
-        await Database.PrepareBillAsync(initiator, await ModeratorAsync(), AppealSteps.ThirdBill, "against");
+        await Database.PrepareBillAsync(initiator, (await ModeratorAsync()).Browser, AppealSteps.ThirdBill, "against");
         var (member, _) = await Factory.MemberAsync("Mindaugas R.", consent: false);
         using var _m = member;
         var before = (await member.AppealAsync(AppealSteps.ThirdBill)).Counts;
@@ -347,7 +333,7 @@ public sealed class AppealApiTests(DatabaseFixture database) : ApiTest(database)
     {
         var (initiator, _) = await Factory.MemberAsync();
         using var _i = initiator;
-        await Database.PrepareBillAsync(initiator, await ModeratorAsync(), AppealSteps.ThirdBill, "against");
+        await Database.PrepareBillAsync(initiator, (await ModeratorAsync()).Browser, AppealSteps.ThirdBill, "against");
         var (member, _) = await Factory.MemberAsync("Mindaugas R.");
         using var _m = member;
         (await member.WriteReasonAsync(AppealSteps.ThirdBill, "for", "Gynyba finansuojama nekeliant PVM.")).StatusCode.ShouldBe(HttpStatusCode.Created);
@@ -378,7 +364,7 @@ public sealed class AppealApiTests(DatabaseFixture database) : ApiTest(database)
     {
         var (initiator, _) = await Factory.MemberAsync();
         using var _i = initiator;
-        await Database.PrepareBillAsync(initiator, await ModeratorAsync(), AppealSteps.ThirdBill, "against");
+        await Database.PrepareBillAsync(initiator, (await ModeratorAsync()).Browser, AppealSteps.ThirdBill, "against");
         var (member, _) = await Factory.MemberAsync();
         using var _m = member;
 
@@ -398,31 +384,23 @@ public sealed class AppealApiTests(DatabaseFixture database) : ApiTest(database)
     public async Task Man_svarbu_is_for_ones_own_side_within_a_limit_when_one_is_set_and_goes_when_the_side_changes()
     {
         // The limit is off by default (design 8.2); this test switches it on at 3 and back off.
-        var administrator = await StaffMembers.ActiveAsync(Factory, Database, "administrator");
-        await SetEndorsementLimitAsync(administrator.Browser, 3);
+        var administrator = await StaffMembers.SharedAsync(Factory, Database, "administrator");
+        await administrator.Browser.SetSettingAsync("Appeals:EndorsementsPerPerson", 3);
         try
         {
             await MarksWithinTheLimitAsync();
         }
         finally
         {
-            await SetEndorsementLimitAsync(administrator.Browser, 0);
+            await administrator.Browser.ResetSettingAsync("Appeals:EndorsementsPerPerson");
         }
-    }
-
-    private static async Task SetEndorsementLimitAsync(TestBrowser admin, int limit)
-    {
-        using var response = await admin.SendAsync(
-            HttpMethod.Put, ApiRoutes.Admin.SettingByKey("Appeals:EndorsementsPerPerson"),
-            new Lt2.Api.Contracts.Admin.UpdateSettingRequest { Value = System.Text.Json.JsonSerializer.SerializeToElement(limit) });
-        response.StatusCode.ShouldBe(HttpStatusCode.OK, await response.Content.ReadAsStringAsync());
     }
 
     private async Task MarksWithinTheLimitAsync()
     {
         var (initiator, _) = await Factory.MemberAsync();
         using var _i = initiator;
-        await Database.PrepareBillAsync(initiator, await ModeratorAsync(), AppealSteps.ThirdBill, "against");
+        await Database.PrepareBillAsync(initiator, (await ModeratorAsync()).Browser, AppealSteps.ThirdBill, "against");
         var writers = new List<TestBrowser>();
         for (var i = 0; i < 3; i++)
         {
@@ -478,7 +456,7 @@ public sealed class AppealApiTests(DatabaseFixture database) : ApiTest(database)
     {
         var (initiator, _) = await Factory.MemberAsync();
         using var _i = initiator;
-        var appeal = await Database.PrepareBillAsync(initiator, await ModeratorAsync(), AppealSteps.ThirdBill, "against");
+        var appeal = await Database.PrepareBillAsync(initiator, (await ModeratorAsync()).Browser, AppealSteps.ThirdBill, "against");
         var reasonId = (await initiator.AppealAsync(AppealSteps.ThirdBill)).Reasons.Single().Id;
         var (member, _) = await Factory.MemberAsync(consent: false);
         using var _m = member;
@@ -520,5 +498,29 @@ public sealed class AppealApiTests(DatabaseFixture database) : ApiTest(database)
         using var _m = member;
         using var noToken = await member.SendAsync(HttpMethod.Put, AppealRoutes.PositionOf(AppealSteps.ThirdBill), new PositionRequest { Side = "for" }, antiforgery: false);
         await noToken.ShouldBeProblemAsync(HttpStatusCode.Forbidden, "antiforgery.invalid");
+    }
+
+    /// <summary>
+    /// Design 8.4: one open date flag per person and bill. The same flag sent several times at once stands once and every
+    /// sending succeeds (the unique index catches the race; nothing answers 500). The race is not certain to happen on
+    /// every run; when it does, this test fails without the fix.
+    /// </summary>
+    [Fact]
+    public async Task A_date_flag_sent_several_times_at_once_stands_once_and_every_sending_succeeds()
+    {
+        await Database.FreeBillAsync(AppealSteps.ThirdBill);
+        var (member, email) = await Factory.MemberAsync();
+        using var _m = member;
+        (await member.TakeSideAsync(AppealSteps.ThirdBill, "for")).StatusCode.ShouldBe(HttpStatusCode.NoContent);
+        var userId = await Database.UserIdAsync(email);
+
+        var results = await Task.WhenAll(Enumerable.Range(0, 8).Select(async _ =>
+        {
+            await using var scope = Factory.Services.CreateAsyncScope();
+            var module = scope.ServiceProvider.GetRequiredService<Lt2.Appeals.IAppealsModule>();
+            return await module.FlagDateAsync(AppealSteps.ThirdBill, userId, new Lt2.Appeals.NewFlag("date-wrong", "https://www.lrs.lt/darbotvarke", null), CancellationToken.None);
+        }));
+        results.ShouldAllBe(r => r.IsSuccess);
+        (await Database.ScalarAsync<long>("SELECT count(*) FROM appeals.flag WHERE reporter_user_id = @u AND status = 'open'", ("u", userId))).ShouldBe(1);
     }
 }

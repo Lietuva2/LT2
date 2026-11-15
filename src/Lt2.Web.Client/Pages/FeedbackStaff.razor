@@ -3,7 +3,7 @@
 @rendermode InteractiveWebAssembly
 @using Lt2.Api.Contracts.Feedback
 @using Lt2.Web.Client.Appeals
-@inherits InteractiveBase
+@inherits InteractiveBase<AppealUi>
 @inject IFeedbackApi FeedbackApi
 
 @* Design 8.10: feedback from members, for moderators and administrators in a staff-passkey session. Filter by kind and
@@ -30,7 +30,7 @@ else if (Items is null)
 }
 else
 {
-    <form class="row" @onsubmit="LoadAsync" id="fb-filter">
+    <form class="row" @onsubmit="FilterAsync" id="fb-filter">
         <label class="small" for="fb-kind">@L["Fb.Kind"]</label>
         <select class="input" id="fb-kind" @bind="_kind" disabled="@Locked">
             <option value="">@L["Fb.All"]</option>
@@ -56,15 +56,15 @@ else
     }
     @foreach (var item in Items)
     {
-        <article class="sheet stack stack--tight" id="fb-item-@item.Id" aria-label="@L["Fb.Item"]">
+        <article class="sheet stack stack--tight" id="fb-item-@item.Id" aria-label="@L["Fb.Item"]" @key="item.Id">
             <div class="row">
-                <span class="tag num">@Lt2.Web.Client.Appeals.Dates.Day(item.CreatedOn)</span>
+                <span class="tag num">@Display.Day(item.CreatedOn)</span>
                 @if (item.Kind is { } k)
                 {
                     <span class="tag">@L["Fb.Kind." + k]</span>
                 }
                 <span class="tag">@L["Fb.Status." + item.Status]</span>
-                <span class="small">@(item.Linked ? Text("Fb.From", item.DisplayName ?? L["Reasons.Anonymous"]) : L["Fb.Unlinked"])</span>
+                <span class="small">@(item.Linked ? L.Format("Fb.From", item.DisplayName ?? L["Reasons.Anonymous"]) : L["Fb.Unlinked"])</span>
             </div>
             <p class="voice">@item.Text</p>
             @if (item.PagePath is not null || item.Browser is not null)
@@ -73,7 +73,7 @@ else
             }
             @foreach (var reply in item.Replies)
             {
-                <p class="small">@Text("Fb.Replied", Lt2.Web.Client.Appeals.Dates.DayTime(reply.At)) @reply.Text</p>
+                <p class="small">@L.Format("Fb.Replied", Display.DayTime(reply.At)) @reply.Text</p>
             }
             <div class="row">
                 <select class="input" aria-label="@L["Fb.Status"]" id="fb-set-status-@item.Id" @onchange="e => _statuses[item.Id] = e.Value?.ToString()" disabled="@Locked">
@@ -90,7 +90,7 @@ else
             {
                 <div class="field">
                     <label for="fb-reply-@item.Id">@L["Fb.Reply"]</label>
-                    <textarea class="textarea" id="fb-reply-@item.Id" maxlength="@FeedbackLimits.TextMaxLength" @onchange="e => _replies[item.Id] = e.Value?.ToString()" disabled="@Locked"></textarea>
+                    <textarea class="textarea" id="fb-reply-@item.Id" maxlength="@FeedbackLimits.TextMaxLength" value="@_replies.GetValueOrDefault(item.Id)" @onchange="e => _replies[item.Id] = e.Value?.ToString()" disabled="@Locked"></textarea>
                     <p class="field__hint">@L["Fb.ReplyHint"]</p>
                     <button class="btn" type="button" id="fb-send-@item.Id" disabled="@Locked" @onclick="() => ReplyAsync(item.Id)">@L["Fb.Send"]</button>
                 </div>
@@ -113,15 +113,26 @@ else
     {
         if (Items is null)
         {
-            await LoadAsync();
+            var items = await FeedbackApi.ListAsync();
+            _refused = items.Problem?.Status is 401 or 403;
+            Items = items.Value?.ToList();
+            if (!items.IsSuccess && !_refused)
+            {
+                Show(items.Problem);
+            }
         }
     }
 
+    private Task FilterAsync() => RunAsync(LoadAsync);
+
+    /// <summary>Reads the list again with the filter; a failure is said in the note and the list stays as it was.</summary>
     private async Task LoadAsync()
     {
         var items = await FeedbackApi.ListAsync(_kind.Length == 0 ? null : _kind, _status.Length == 0 ? null : _status);
-        _refused = !items.IsSuccess;
-        Items = items.Value?.ToList();
+        if (Succeeded(items))
+        {
+            Items = items.Value!.ToList();
+        }
     }
 
     private Task SaveAsync(FeedbackItemResponse item) => RunAsync(async () =>
@@ -131,27 +142,27 @@ else
             Status = _statuses.GetValueOrDefault(item.Id) ?? item.Status,
             Note = _notes.GetValueOrDefault(item.Id) ?? item.Note,
         });
-        if (!result.IsSuccess)
+        if (!Succeeded(result))
         {
-            Show(result.Problem);
             return;
         }
 
+        _statuses.Remove(item.Id);
+        _notes.Remove(item.Id);
         await LoadAsync();
-        Info = L["Fb.Saved"];
+        Info ??= L["Fb.Saved"];
     });
 
     private Task ReplyAsync(Guid id) => RunAsync(async () =>
     {
         var result = await FeedbackApi.ReplyAsync(id, new FeedbackReplyRequest { Text = _replies.GetValueOrDefault(id) ?? "" });
-        if (!result.IsSuccess)
+        if (!Succeeded(result))
         {
-            Show(result.Problem);
             return;
         }
 
         _replies.Remove(id);
         await LoadAsync();
-        Info = L["Fb.Sent"];
+        Info ??= L["Fb.Sent"];
     });
 }

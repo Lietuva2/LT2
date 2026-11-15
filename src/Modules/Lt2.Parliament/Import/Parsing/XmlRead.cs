@@ -1,6 +1,7 @@
 using System.Globalization;
 using System.Xml;
 using System.Xml.Linq;
+using Lt2.SharedKernel;
 
 namespace Lt2.Parliament.Import.Parsing;
 
@@ -24,7 +25,6 @@ internal static class XmlRead
     public const string AnywhereInDocument = "(document)";
 
     private static readonly AsyncLocal<HashSet<XmlUse>?> Recorder = new();
-    private static readonly TimeZoneInfo Vilnius = TimeZoneInfo.FindSystemTimeZoneById("Europe/Vilnius");
 
     /// <summary>Tests: records every name read on this async flow until disposed.</summary>
     public static IDisposable Record(HashSet<XmlUse> uses)
@@ -106,9 +106,9 @@ internal static class XmlRead
     public static DateTimeOffset? OptionalTime(this XElement element, string attribute) =>
         element.Optional(attribute) is { } text ? Time(element, attribute, text) : null;
 
-    internal static DateTimeOffset VilniusToUtc(DateTime local)
+    private static DateTimeOffset VilniusToUtc(DateTime local)
     {
-        var offset = Vilnius.GetUtcOffset(DateTime.SpecifyKind(local, DateTimeKind.Unspecified));
+        var offset = VilniusTime.Zone.GetUtcOffset(DateTime.SpecifyKind(local, DateTimeKind.Unspecified));
         return new DateTimeOffset(DateTime.SpecifyKind(local, DateTimeKind.Unspecified), offset).ToUniversalTime();
     }
 
