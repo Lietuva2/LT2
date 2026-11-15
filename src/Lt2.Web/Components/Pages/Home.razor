@@ -63,7 +63,7 @@
 </section>
 
 @* The cards only while some bill has participants: no empty heading (design 8.12.5). *@
-@if (_appeals.Count > 0)
+@if (_records.Count > 0)
 {
 <section class="stack" aria-labelledby="h-home-appeals" id="home-appeals">
     <div class="row">
@@ -73,7 +73,7 @@
     </div>
     @{
         <div class="cards">
-            @foreach (var a in _appeals)
+            @foreach (var a in _records)
             {
                 var link = $"/seimas/{Uri.EscapeDataString(a.Bill.Number)}";
                 <article class="sheet stack stack--tight" aria-labelledby="h-@a.Bill.Number" id="home-appeal-@a.Bill.Number">
@@ -127,7 +127,7 @@
     private const int Shown = 6;
     private const int ComingShown = 8;
     private static readonly string[] Sides = ["for", "against"];
-    private List<AppealResponse> _appeals = [];
+    private List<BillRecordResponse> _records = [];
     private List<Lt2.Api.Contracts.Agenda.AgendaDayResponse> _coming = [];
 
     protected override async Task OnInitializedAsync()
@@ -151,9 +151,9 @@
         var page = (await Appeals.GetAppealsAsync()).Value;
         foreach (var item in page?.Items.Where(i => i.Counts.For + i.Counts.Against + i.Arguments > 0).Take(Shown) ?? [])
         {
-            if ((await Appeals.GetAppealAsync(item.Bill.Number)).Value is { } appeal)
+            if ((await Appeals.GetRecordAsync(item.Bill.Number)).Value is { } record)
             {
-                _appeals.Add(appeal);
+                _records.Add(record);
             }
         }
     }

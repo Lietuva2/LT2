@@ -15,28 +15,28 @@ internal static class DigestMapping
     /// The summaries that held the bill on <paramref name="number"/> (design 8.7); none for an active bill without a record,
     /// not found like the bill itself, and not found for a hidden record.
     /// </summary>
-    public static async Task<Result<List<AppealDigestResponse>>> ForAppealAsync(
+    public static async Task<Result<List<RecordDigestResponse>>> ForRecordAsync(
         Lt2.Appeals.IAppealsModule appeals, IDigests digests, string number, CancellationToken ct)
     {
-        var appeal = await appeals.GetAsync(number, ct);
-        if (!appeal.IsSuccess)
+        var record = await appeals.GetAsync(number, ct);
+        if (!record.IsSuccess)
         {
-            return appeal.Error!;
+            return record.Error!;
         }
 
-        if (appeal.Value.Status is not ("open" or "closed"))
+        if (record.Value.Status is not ("open" or "closed"))
         {
-            return Error.NotFound("appeal.not-found");
+            return Error.NotFound("record.not-found");
         }
 
-        if (appeal.Value.Id is not { } id)
+        if (record.Value.Id is not { } id)
         {
-            return new List<AppealDigestResponse>();
+            return new List<RecordDigestResponse>();
         }
 
-        // Each run of ForAppealAsync carries exactly this record's item.
-        return (await digests.ForAppealAsync(id, ct))
-            .Select(r => new AppealDigestResponse(r.Id, r.Kind, r.RunDate, r.SittingDate, r.Status, r.MpCount, Map(r.Items.Single())))
+        // Each run of ForRecordAsync carries exactly this record's item.
+        return (await digests.ForRecordAsync(id, ct))
+            .Select(r => new RecordDigestResponse(r.Id, r.Kind, r.RunDate, r.SittingDate, r.Status, r.MpCount, Map(r.Items.Single())))
             .ToList();
     }
 
@@ -78,8 +78,8 @@ internal sealed class ServerDigestsApi(
     public async Task<ApiResult<IReadOnlyList<DigestRunResponse>>> GetDigestAsync(DateOnly date, CancellationToken cancellationToken = default) =>
         ApiResult<IReadOnlyList<DigestRunResponse>>.Ok((await digests.OnDateAsync(date, cancellationToken)).Select(DigestMapping.Map).ToList());
 
-    public async Task<ApiResult<IReadOnlyList<AppealDigestResponse>>> GetAppealDigestsAsync(string number, CancellationToken cancellationToken = default) =>
-        errors.ToApiResult(await DigestMapping.ForAppealAsync(appeals, digests, number, cancellationToken), list => (IReadOnlyList<AppealDigestResponse>)list);
+    public async Task<ApiResult<IReadOnlyList<RecordDigestResponse>>> GetRecordDigestsAsync(string number, CancellationToken cancellationToken = default) =>
+        errors.ToApiResult(await DigestMapping.ForRecordAsync(appeals, digests, number, cancellationToken), list => (IReadOnlyList<RecordDigestResponse>)list);
 
     public async Task<ApiResult<IReadOnlyList<DigestMpResponse>>> GetMpsAsync(Guid runId, CancellationToken cancellationToken = default) =>
         await IsModeratorAsync()

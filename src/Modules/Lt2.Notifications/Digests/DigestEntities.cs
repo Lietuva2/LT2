@@ -26,7 +26,7 @@ internal sealed class DigestRun
     public int MpCount { get; set; }
 }
 
-/// <summary><c>notify.digest_item</c>: one appeal in a summary, frozen as it was (design 6.6, 8.7). No person in it.</summary>
+/// <summary><c>notify.digest_item</c>: one record in a summary, frozen as it was (design 6.6, 8.7). No person in it.</summary>
 internal sealed class DigestItem
 {
     public Guid Id { get; set; }
@@ -35,7 +35,7 @@ internal sealed class DigestItem
 
     public int Position { get; set; }
 
-    public Guid AppealId { get; set; }
+    public Guid RecordId { get; set; }
 
     public string BillNumber { get; set; } = "";
 
@@ -73,6 +73,6 @@ internal sealed class DigestDelivery
 
     public string Status { get; set; } = "dry-run";
 
-    /// <summary>Per appeal of the run: the MP's party numbers, as JSON; empty when no group reached 20.</summary>
+    /// <summary>Per record of the run: the MP's party numbers, as JSON; empty when no group reached 20.</summary>
     public string PartyNumbers { get; set; } = "[]";
 }

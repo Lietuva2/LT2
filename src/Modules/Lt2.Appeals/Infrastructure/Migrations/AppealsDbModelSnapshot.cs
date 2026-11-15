@@ -53,7 +53,7 @@ namespace Lt2.Appeals.Infrastructure.Migrations
                     b.ToTable("ai_draft_request", "appeals");
                 });
 
-            modelBuilder.Entity("Lt2.Appeals.Domain.Appeal", b =>
+            modelBuilder.Entity("Lt2.Appeals.Domain.BillRecord", b =>
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
@@ -158,27 +158,27 @@ namespace Lt2.Appeals.Infrastructure.Migrations
                         .HasColumnName("threshold_set_by");
 
                     b.HasKey("Id")
-                        .HasName("pk_appeal");
+                        .HasName("pk_bill_record");
 
                     b.HasIndex("BillNumber")
                         .IsUnique()
-                        .HasDatabaseName("ix_appeal_bill_number_record")
+                        .HasDatabaseName("ix_bill_record_bill_number")
                         .HasFilter("status IN ('open', 'closed', 'rejected')");
 
                     b.HasIndex("Status")
-                        .HasDatabaseName("ix_appeal_status");
+                        .HasDatabaseName("ix_bill_record_status");
 
-                    b.ToTable("appeal", "appeals", t =>
+                    b.ToTable("bill_record", "appeals", t =>
                         {
-                            t.HasCheckConstraint("ck_appeal_threshold_positive", "threshold > 0");
+                            t.HasCheckConstraint("ck_bill_record_threshold_positive", "threshold > 0");
                         });
                 });
 
             modelBuilder.Entity("Lt2.Appeals.Domain.DailyStat", b =>
                 {
-                    b.Property<Guid>("AppealId")
+                    b.Property<Guid>("RecordId")
                         .HasColumnType("uuid")
-                        .HasColumnName("appeal_id");
+                        .HasColumnName("record_id");
 
                     b.Property<DateOnly>("Day")
                         .HasColumnType("date")
@@ -209,7 +209,7 @@ namespace Lt2.Appeals.Infrastructure.Migrations
                         .HasColumnType("numeric(5,4)")
                         .HasColumnName("new_account_share");
 
-                    b.HasKey("AppealId", "Day")
+                    b.HasKey("RecordId", "Day")
                         .HasName("pk_daily_stat");
 
                     b.ToTable("daily_stat", "appeals");
@@ -225,19 +225,19 @@ namespace Lt2.Appeals.Infrastructure.Migrations
                         .HasColumnType("uuid")
                         .HasColumnName("user_id");
 
-                    b.Property<Guid>("AppealId")
-                        .HasColumnType("uuid")
-                        .HasColumnName("appeal_id");
-
                     b.Property<DateTimeOffset>("CreatedAt")
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("created_at");
 
+                    b.Property<Guid>("RecordId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("record_id");
+
                     b.HasKey("ReasonId", "UserId")
                         .HasName("pk_endorsement");
 
-                    b.HasIndex("AppealId", "UserId")
-                        .HasDatabaseName("ix_endorsement_appeal_id_user_id");
+                    b.HasIndex("RecordId", "UserId")
+                        .HasDatabaseName("ix_endorsement_record_id_user_id");
 
                     b.ToTable("endorsement", "appeals");
                 });
@@ -248,10 +248,6 @@ namespace Lt2.Appeals.Infrastructure.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uuid")
                         .HasColumnName("id");
-
-                    b.Property<Guid>("AppealId")
-                        .HasColumnType("uuid")
-                        .HasColumnName("appeal_id");
 
                     b.Property<DateTimeOffset?>("ClosedAt")
                         .HasColumnType("timestamp with time zone")
@@ -278,6 +274,10 @@ namespace Lt2.Appeals.Infrastructure.Migrations
                         .HasColumnType("character varying(1000)")
                         .HasColumnName("note");
 
+                    b.Property<Guid>("RecordId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("record_id");
+
                     b.Property<Guid>("ReporterUserId")
                         .HasColumnType("uuid")
                         .HasColumnName("reporter_user_id");
@@ -291,13 +291,13 @@ namespace Lt2.Appeals.Infrastructure.Migrations
                     b.HasKey("Id")
                         .HasName("pk_flag");
 
-                    b.HasIndex("AppealId", "ReporterUserId")
+                    b.HasIndex("RecordId", "ReporterUserId")
                         .IsUnique()
-                        .HasDatabaseName("ix_flag_appeal_id_reporter_user_id")
+                        .HasDatabaseName("ix_flag_record_id_reporter_user_id")
                         .HasFilter("status = 'open'");
 
-                    b.HasIndex("AppealId", "Status")
-                        .HasDatabaseName("ix_flag_appeal_id_status");
+                    b.HasIndex("RecordId", "Status")
+                        .HasDatabaseName("ix_flag_record_id_status");
 
                     b.ToTable("flag", "appeals");
                 });
@@ -720,9 +720,9 @@ namespace Lt2.Appeals.Infrastructure.Migrations
 
             modelBuilder.Entity("Lt2.Appeals.Domain.Position", b =>
                 {
-                    b.Property<Guid>("AppealId")
+                    b.Property<Guid>("RecordId")
                         .HasColumnType("uuid")
-                        .HasColumnName("appeal_id");
+                        .HasColumnName("record_id");
 
                     b.Property<Guid>("UserId")
                         .HasColumnType("uuid")
@@ -746,7 +746,7 @@ namespace Lt2.Appeals.Infrastructure.Migrations
                         .HasColumnType("character varying(10)")
                         .HasColumnName("side");
 
-                    b.HasKey("AppealId", "UserId")
+                    b.HasKey("RecordId", "UserId")
                         .HasName("pk_position");
 
                     b.HasIndex("UserId")
@@ -765,10 +765,6 @@ namespace Lt2.Appeals.Infrastructure.Migrations
                         .HasColumnType("uuid")
                         .HasColumnName("id");
 
-                    b.Property<Guid>("AppealId")
-                        .HasColumnType("uuid")
-                        .HasColumnName("appeal_id");
-
                     b.Property<Guid>("AuthorUserId")
                         .HasColumnType("uuid")
                         .HasColumnName("author_user_id");
@@ -780,6 +776,10 @@ namespace Lt2.Appeals.Infrastructure.Migrations
                     b.Property<Guid?>("MergedIntoId")
                         .HasColumnType("uuid")
                         .HasColumnName("merged_into_id");
+
+                    b.Property<Guid>("RecordId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("record_id");
 
                     b.PrimitiveCollection<string[]>("ScreeningFlags")
                         .IsRequired()
@@ -814,11 +814,11 @@ namespace Lt2.Appeals.Infrastructure.Migrations
                     b.HasIndex("MergedIntoId")
                         .HasDatabaseName("ix_reason_merged_into_id");
 
-                    b.HasIndex("AppealId", "AuthorUserId")
-                        .HasDatabaseName("ix_reason_appeal_id_author_user_id");
+                    b.HasIndex("RecordId", "AuthorUserId")
+                        .HasDatabaseName("ix_reason_record_id_author_user_id");
 
-                    b.HasIndex("AppealId", "Status")
-                        .HasDatabaseName("ix_reason_appeal_id_status");
+                    b.HasIndex("RecordId", "Status")
+                        .HasDatabaseName("ix_reason_record_id_status");
 
                     b.ToTable("reason", "appeals", t =>
                         {
@@ -833,10 +833,6 @@ namespace Lt2.Appeals.Infrastructure.Migrations
                         .HasColumnType("uuid")
                         .HasColumnName("id");
 
-                    b.Property<Guid?>("AppealId")
-                        .HasColumnType("uuid")
-                        .HasColumnName("appeal_id");
-
                     b.Property<DateTimeOffset?>("ClosedAt")
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("closed_at");
@@ -850,6 +846,10 @@ namespace Lt2.Appeals.Infrastructure.Migrations
                         .HasMaxLength(40)
                         .HasColumnType("character varying(40)")
                         .HasColumnName("ground");
+
+                    b.Property<Guid?>("RecordId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("record_id");
 
                     b.Property<Guid>("ReporterUserId")
                         .HasColumnType("uuid")
@@ -1025,39 +1025,39 @@ namespace Lt2.Appeals.Infrastructure.Migrations
 
             modelBuilder.Entity("Lt2.Appeals.Domain.DailyStat", b =>
                 {
-                    b.HasOne("Lt2.Appeals.Domain.Appeal", null)
+                    b.HasOne("Lt2.Appeals.Domain.BillRecord", null)
                         .WithMany()
-                        .HasForeignKey("AppealId")
+                        .HasForeignKey("RecordId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired()
-                        .HasConstraintName("fk_daily_stat_appeal_appeal_id");
+                        .HasConstraintName("fk_daily_stat_bill_record_record_id");
                 });
 
             modelBuilder.Entity("Lt2.Appeals.Domain.Endorsement", b =>
                 {
-                    b.HasOne("Lt2.Appeals.Domain.Appeal", null)
-                        .WithMany()
-                        .HasForeignKey("AppealId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired()
-                        .HasConstraintName("fk_endorsement_appeal_appeal_id");
-
                     b.HasOne("Lt2.Appeals.Domain.Reason", null)
                         .WithMany()
                         .HasForeignKey("ReasonId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired()
                         .HasConstraintName("fk_endorsement_reason_reason_id");
+
+                    b.HasOne("Lt2.Appeals.Domain.BillRecord", null)
+                        .WithMany()
+                        .HasForeignKey("RecordId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
+                        .HasConstraintName("fk_endorsement_bill_record_record_id");
                 });
 
             modelBuilder.Entity("Lt2.Appeals.Domain.Flag", b =>
                 {
-                    b.HasOne("Lt2.Appeals.Domain.Appeal", null)
+                    b.HasOne("Lt2.Appeals.Domain.BillRecord", null)
                         .WithMany()
-                        .HasForeignKey("AppealId")
+                        .HasForeignKey("RecordId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired()
-                        .HasConstraintName("fk_flag_appeal_appeal_id");
+                        .HasConstraintName("fk_flag_bill_record_record_id");
                 });
 
             modelBuilder.Entity("Lt2.Appeals.Domain.OrganisationCode", b =>
@@ -1102,28 +1102,28 @@ namespace Lt2.Appeals.Infrastructure.Migrations
 
             modelBuilder.Entity("Lt2.Appeals.Domain.Position", b =>
                 {
-                    b.HasOne("Lt2.Appeals.Domain.Appeal", null)
+                    b.HasOne("Lt2.Appeals.Domain.BillRecord", null)
                         .WithMany()
-                        .HasForeignKey("AppealId")
+                        .HasForeignKey("RecordId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired()
-                        .HasConstraintName("fk_position_appeal_appeal_id");
+                        .HasConstraintName("fk_position_bill_record_record_id");
                 });
 
             modelBuilder.Entity("Lt2.Appeals.Domain.Reason", b =>
                 {
-                    b.HasOne("Lt2.Appeals.Domain.Appeal", null)
-                        .WithMany()
-                        .HasForeignKey("AppealId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired()
-                        .HasConstraintName("fk_reason_appeal_appeal_id");
-
                     b.HasOne("Lt2.Appeals.Domain.Reason", null)
                         .WithMany()
                         .HasForeignKey("MergedIntoId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .HasConstraintName("fk_reason_reason_merged_into_id");
+
+                    b.HasOne("Lt2.Appeals.Domain.BillRecord", null)
+                        .WithMany()
+                        .HasForeignKey("RecordId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
+                        .HasConstraintName("fk_reason_bill_record_record_id");
                 });
 #pragma warning restore 612, 618
         }

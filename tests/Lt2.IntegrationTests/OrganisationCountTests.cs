@@ -36,7 +36,7 @@ public sealed class OrganisationCountTests(DatabaseFixture database) : ApiTest(d
         using var visitor = NewBrowser();
         var routes = new[]
         {
-            AppealRoutes.AppealOf(AppealSteps.SecondBill), AppealRoutes.Appeals, AppealRoutes.AppealsList(null, false, false, null, "participants"),
+            AppealRoutes.RecordOf(AppealSteps.SecondBill), AppealRoutes.Appeals, AppealRoutes.AppealsList(null, false, false, null, "participants"),
             AppealRoutes.AppealsList(null, false, false, null, "arguments"), AgendaRoutes.Agenda, "/",
         };
         var before = new Dictionary<string, string>();
@@ -81,7 +81,7 @@ public sealed class OrganisationCountTests(DatabaseFixture database) : ApiTest(d
         try
         {
             var record = await moderator.Browser.RecordIdAsync(AppealSteps.ThirdBill);
-            using (var set = await moderator.Browser.SendAsync(HttpMethod.Put, AppealRoutes.With(AppealRoutes.AppealThreshold, record), new ModeratorThresholdRequest { Threshold = 1, Statement = "Bandymas." }))
+            using (var set = await moderator.Browser.SendAsync(HttpMethod.Put, AppealRoutes.With(AppealRoutes.RecordThreshold, record), new ModeratorThresholdRequest { Threshold = 1, Statement = "Bandymas." }))
             {
                 set.StatusCode.ShouldBe(HttpStatusCode.NoContent, await set.Content.ReadAsStringAsync());
             }
@@ -151,7 +151,7 @@ public sealed class OrganisationCountTests(DatabaseFixture database) : ApiTest(d
         await scope.ServiceProvider.GetRequiredService<IAppealsMaintenance>().AggregateDayAsync(day, CancellationToken.None);
         return await Database.ScalarAsync<string>(
             // The statistics only: when the row was computed is bookkeeping and moves with every run.
-            "SELECT (to_jsonb(d) - 'computed_at')::text FROM appeals.daily_stat d JOIN appeals.appeal a ON a.id = d.appeal_id WHERE a.bill_number = @b AND d.day = @d",
+            "SELECT (to_jsonb(d) - 'computed_at')::text FROM appeals.daily_stat d JOIN appeals.bill_record a ON a.id = d.record_id WHERE a.bill_number = @b AND d.day = @d",
             ("b", AppealSteps.SecondBill), ("d", day)) ?? "";
     }
 }

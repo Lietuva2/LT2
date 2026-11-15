@@ -8,20 +8,20 @@
         <p><button type="button" class="linkish small" id="report-appeal" disabled="@Locked" @onclick="() => _open = !_open">@L["Report.AppealOpen"]</button></p>
         @if (_open)
         {
-            <ReportForm TargetKind="appeal" TargetId="AppealId" OnClose="() => _open = false" />
+            <ReportForm TargetKind="record" TargetId="RecordId" OnClose="() => _open = false" />
         }
     </div>
 }
 else
 {
-    <VisitorReport Contact="@Contact" Appeal="true" />
+    <VisitorReport Contact="@Contact" BillRecord="true" />
 }
 
 @code {
     private bool _signedIn;
     private bool _open;
 
-    [Parameter, EditorRequired] public Guid AppealId { get; set; }
+    [Parameter, EditorRequired] public Guid RecordId { get; set; }
 
     [Parameter] public string? Contact { get; set; }
 

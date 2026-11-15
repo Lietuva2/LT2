@@ -66,7 +66,7 @@
 
     [Parameter, EditorRequired] public string Number { get; set; } = "";
 
-    [PersistentState] public MyAppealResponse? Mine { get; set; }
+    [PersistentState] public MyBillRecordResponse? Mine { get; set; }
 
     protected override async Task OnInitializedAsync()
     {

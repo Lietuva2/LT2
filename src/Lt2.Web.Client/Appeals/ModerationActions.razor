@@ -31,7 +31,7 @@
         {
             <form class="sheet stack stack--tight" @onsubmit="SubmitAsync" novalidate aria-labelledby="action-title-@Key" id="action-form-@Key">
                 <h4 id="action-title-@Key">@L[ActionLabel(_open)]</h4>
-                <p class="small" id="action-sentence-@Key">@L["Mod.Sentence." + Kind + "." + _open]</p>
+                <p class="small" id="action-sentence-@Key">@L["Mod.Sentence." + SentenceKind + "." + _open]</p>
 
                 @if (_open == "describe")
                 {
@@ -165,8 +165,11 @@
     /// <summary>For a bill: its number, which the description and a new record go by.</summary>
     [Parameter] public string? Number { get; set; }
 
-    /// <summary><c>appeal</c> (a bill's record) or <c>reason</c>.</summary>
+    /// <summary><c>record</c> (a bill's record) or <c>reason</c>.</summary>
     [Parameter, EditorRequired] public string Kind { get; set; } = "";
+
+    /// <summary>The kind as the resource keys name it: their keys for a record still say <c>appeal</c> (kept on purpose).</summary>
+    private string SentenceKind => Kind == "record" ? "appeal" : Kind;
 
     [Parameter] public string Status { get; set; } = "";
 
@@ -213,7 +216,7 @@
     /// <summary>The actions that apply to the item's state, the main one first (design 8.3, 8.12.3).</summary>
     private IReadOnlyList<string> Offered => (Kind, Status) switch
     {
-        ("appeal", "open") => [.. (HasOpenItems ? new[] { "keep" } : []), .. DescriptionActions, "threshold", "planned", IsHeld ? "release" : "hold", .. (IsHeld ? Array.Empty<string>() : ["urgent"]), "hide"],
+        ("record", "open") => [.. (HasOpenItems ? new[] { "keep" } : []), .. DescriptionActions, "threshold", "planned", IsHeld ? "release" : "hold", .. (IsHeld ? Array.Empty<string>() : ["urgent"]), "hide"],
         ("reason", "pending") => ["publish", "hide", .. (MergeCandidates is { Count: > 0 } ? new[] { "merge" } : []), "restrict"],
         ("reason", _) => ["keep", "hide", .. (MergeCandidates is { Count: > 0 } ? new[] { "merge" } : []), "restrict"],
         _ => [],
@@ -388,8 +391,8 @@
 
         return action switch
         {
-            "keep" => await Moderation.KeepAppealAsync(id.Value, note),
-            "hide" => await Moderation.HideAppealAsync(id.Value, statement),
+            "keep" => await Moderation.KeepRecordAsync(id.Value, note),
+            "hide" => await Moderation.HideRecordAsync(id.Value, statement),
             "threshold" => await Moderation.SetThresholdAsync(id.Value, new ModeratorThresholdRequest { Threshold = _threshold ?? 0, Statement = _statement }),
             "planned" => await Moderation.SetPlannedAsync(id.Value, new ModeratorPlannedRequest { Date = Display.TryReadDate(_planned, out var day) ? day : default, Stage = _stage, Statement = _statement }),
             "hold" => await Moderation.HoldAsync(id.Value, statement),

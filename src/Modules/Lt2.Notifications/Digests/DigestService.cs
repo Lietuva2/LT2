@@ -75,7 +75,7 @@ internal sealed class DigestService(
         return made;
     }
 
-    public async Task<Result<DigestRunInfo>> UrgentAsync(Guid appealId, string statement, StaffActor moderator, CancellationToken cancellationToken)
+    public async Task<Result<DigestRunInfo>> UrgentAsync(Guid recordId, string statement, StaffActor moderator, CancellationToken cancellationToken)
     {
         // The moderator's statement is checked where it is stored (design 6.8), not only by the form.
         if (StaffStatements.Check(statement) is { } invalid)
@@ -85,10 +85,10 @@ internal sealed class DigestService(
 
         var now = clock.GetUtcNow();
         var today = VilniusTime.DateOf(now);
-        var candidate = (await source.CandidatesAsync(cancellationToken)).FirstOrDefault(c => c.AppealId == appealId);
+        var candidate = (await source.CandidatesAsync(cancellationToken)).FirstOrDefault(c => c.RecordId == recordId);
         if (candidate is null)
         {
-            return Error.NotFound("appeal.not-found");
+            return Error.NotFound("record.not-found");
         }
 
         if (candidate.Held)
@@ -104,7 +104,7 @@ internal sealed class DigestService(
             db, DigestRules.Urgent, today, null, [candidate], moderator, now, cancellationToken, statement.Trim(),
             stillDue: async () => !await (from r in db.DigestRuns
                                           join i in db.DigestItems on r.Id equals i.RunId
-                                          where r.Kind == DigestRules.Urgent && i.AppealId == appealId && r.RunDate >= weekStart && r.RunDate < weekStart.AddDays(7)
+                                          where r.Kind == DigestRules.Urgent && i.RecordId == recordId && r.RunDate >= weekStart && r.RunDate < weekStart.AddDays(7)
                                           select r.Id).AnyAsync(cancellationToken),
             notDue: Error.Conflict("digest.urgent-already"));
     }
@@ -123,12 +123,12 @@ internal sealed class DigestService(
         return await InfoAsync(db, runs, cancellationToken);
     }
 
-    public async Task<IReadOnlyList<DigestRunInfo>> ForAppealAsync(Guid appealId, CancellationToken cancellationToken)
+    public async Task<IReadOnlyList<DigestRunInfo>> ForRecordAsync(Guid recordId, CancellationToken cancellationToken)
     {
         await using var db = await contexts.CreateDbContextAsync(cancellationToken);
-        var runIds = db.DigestItems.Where(i => i.AppealId == appealId).Select(i => i.RunId);
+        var runIds = db.DigestItems.Where(i => i.RecordId == recordId).Select(i => i.RunId);
         var runs = await db.DigestRuns.AsNoTracking().Where(r => runIds.Contains(r.Id)).OrderByDescending(r => r.CreatedAt).ToListAsync(cancellationToken);
-        return await InfoAsync(db, runs, cancellationToken, appealId);
+        return await InfoAsync(db, runs, cancellationToken, recordId);
     }
 
     public async Task<Result<DigestPreview>> PreviewAsync(Guid runId, string mpSlug, CancellationToken cancellationToken)
@@ -165,7 +165,7 @@ internal sealed class DigestService(
         var recipients = (await mps.SittingMpsAsync(ct)).Where(m => m.HasOfficialAddress).ToList();
         var maxPerWeek = await settings.GetAsync(SettingKeys.DigestMaxPerWeek, ct);
         var weekStart = DigestRules.WeekStart(today);
-        var party = await source.PartyNumbersAsync(items.Select(i => i.AppealId).ToList(), ct);
+        var party = await source.PartyNumbersAsync(items.Select(i => i.RecordId).ToList(), ct);
 
         await using var transaction = await db.Database.BeginTransactionAsync(ct);
         await db.Database.ExecuteSqlRawAsync(LockSql, ct);
@@ -197,7 +197,7 @@ internal sealed class DigestService(
                 Id = Ids.New(clock),
                 RunId = run.Id,
                 Position = position++,
-                AppealId = c.AppealId,
+                RecordId = c.RecordId,
                 BillNumber = c.BillNumber,
                 BillTitle = c.BillTitle,
                 Stage = c.Planned?.Stage,
@@ -217,7 +217,7 @@ internal sealed class DigestService(
             var within = DigestRules.WithinCeiling(counts.GetValueOrDefault(mp.Slug), maxPerWeek, kind == DigestRules.Urgent);
             var mine = mp.Party is null
                 ? []
-                : items.Select(i => party.GetValueOrDefault(i.AppealId)?.FirstOrDefault(p => p.Party == mp.Party) is { } n
+                : items.Select(i => party.GetValueOrDefault(i.RecordId)?.FirstOrDefault(p => p.Party == mp.Party) is { } n
                         ? new DeliveryParty(i.BillNumber, n.Party, n.For, n.Against)
                         : null)
                     .OfType<DeliveryParty>()
@@ -246,7 +246,7 @@ internal sealed class DigestService(
         return (await InfoAsync(db, [run], ct))[0];
     }
 
-    /// <summary>Participants (both sides) of each appeal in the latest summary that held it: one row per appeal, from SQL.</summary>
+    /// <summary>Participants (both sides) of each record in the latest summary that held it: one row per record, from SQL.</summary>
     private static async Task<IReadOnlyDictionary<Guid, int>> LastParticipantsAsync(NotificationsDb db, CancellationToken ct)
     {
         var connection = db.Database.GetDbConnection();
@@ -258,9 +258,9 @@ internal sealed class DigestService(
         await using var command = connection.CreateCommand();
         command.CommandText =
             """
-            SELECT DISTINCT ON (i.appeal_id) i.appeal_id, i.for_count + i.against_count
+            SELECT DISTINCT ON (i.record_id) i.record_id, i.for_count + i.against_count
             FROM notify.digest_item i JOIN notify.digest_run r ON r.id = i.run_id
-            ORDER BY i.appeal_id, r.created_at DESC
+            ORDER BY i.record_id, r.created_at DESC
             """;
         var result = new Dictionary<Guid, int>();
         await using var reader = await command.ExecuteReaderAsync(ct);
@@ -272,19 +272,19 @@ internal sealed class DigestService(
         return result;
     }
 
-    /// <summary>Appeals that week's Monday summary already showed with the same sitting date.</summary>
+    /// <summary>Records that week's Monday summary already showed with the same sitting date.</summary>
     private static async Task<IReadOnlySet<Guid>> CoveredByMondayAsync(NotificationsDb db, DateOnly weekStart, DateOnly sitting, CancellationToken ct) =>
         (await (from i in db.DigestItems
                 join r in db.DigestRuns on i.RunId equals r.Id
                 where r.Kind == DigestRules.Weekly && r.RunDate == weekStart && i.PlannedDate == sitting
-                select i.AppealId).ToListAsync(ct)).ToHashSet();
+                select i.RecordId).ToListAsync(ct)).ToHashSet();
 
-    /// <summary>The runs as their public copy shows them; with <paramref name="appealId"/>, only that appeal's item.</summary>
-    private static async Task<IReadOnlyList<DigestRunInfo>> InfoAsync(NotificationsDb db, IReadOnlyList<DigestRun> runs, CancellationToken ct, Guid? appealId = null)
+    /// <summary>The runs as their public copy shows them; with <paramref name="recordId"/>, only that record's item.</summary>
+    private static async Task<IReadOnlyList<DigestRunInfo>> InfoAsync(NotificationsDb db, IReadOnlyList<DigestRun> runs, CancellationToken ct, Guid? recordId = null)
     {
         var ids = runs.Select(r => r.Id).ToList();
         var items = await db.DigestItems.AsNoTracking()
-            .Where(i => ids.Contains(i.RunId) && (appealId == null || i.AppealId == appealId))
+            .Where(i => ids.Contains(i.RunId) && (recordId == null || i.RecordId == recordId))
             .OrderBy(i => i.Position).ToListAsync(ct);
         return runs.Select(r => new DigestRunInfo(
                 r.Id,

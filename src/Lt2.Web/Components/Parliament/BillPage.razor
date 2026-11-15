@@ -16,7 +16,7 @@
 @inject IHttpContextAccessor Http
 @inject Microsoft.AspNetCore.Authorization.IAuthorizationService Authorization
 
-@* The bill and the appeal are one page (design 8.12.1), server-rendered and readable without JavaScript: number, title,
+@* The bill and the record are one page (design 8.12.1), server-rendered and readable without JavaScript: number, title,
    stage and "Planuojama …"; what the bill is about (8.13) with its label; both sides with the counts for accounts older
    than 30 days, the threshold and the share line; the arguments; the summaries that held the bill (8.7); the Seimas votes.
    Every active bill is open at once: before anyone has taken part the same controls show zero counts and one line saying
@@ -46,7 +46,7 @@
             {
                 <span class="tag" id="last-stage">@F.Stage(done)</span>
             }
-            @if (_appeal?.Status == "closed")
+            @if (_record?.Status == "closed")
             {
                 <span class="tag" id="appeal-status">@A["Status.closed"]</span>
             }
@@ -55,7 +55,7 @@
         <FollowButton Kind="bill" Key="@b.Number" @rendermode="InteractiveWebAssembly" />
     </div>
 
-    @if (_appeal is { Status: "rejected" } hidden)
+    @if (_record is { Status: "rejected" } hidden)
     {
         @* Design 8.12.3: taking part is closed by the moderators; sides and arguments are kept unseen. *@
         <section class="sheet stack stack--tight" id="taking-part-closed" aria-labelledby="h-closed-by-moderators">
@@ -67,7 +67,7 @@
             }
         </section>
     }
-    else if (_appeal is { } a)
+    else if (_record is { } a)
     {
         <div class="cols">
             <div class="stack stack--loose">
@@ -110,7 +110,7 @@
                         </p>
                         @if (a.Id is { } describedRecord)
                         {
-                            <ReportAppeal AppealId="describedRecord" Contact="@Contact" @rendermode="InteractiveWebAssembly" />
+                            <ReportDescription RecordId="describedRecord" Contact="@Contact" @rendermode="InteractiveWebAssembly" />
                         }
                     }
                     else
@@ -216,7 +216,7 @@
                     </section>
                 }
 
-                <AppealReasons Number="@b.Number" Contact="@Contact" Moderator="_moderator" @rendermode="InteractiveWebAssembly" />
+                <RecordReasons Number="@b.Number" Contact="@Contact" Moderator="_moderator" @rendermode="InteractiveWebAssembly" />
 
                 @* Design 8.14.14: organisations' statements, after the arguments; never counted. *@
                 <OrganisationPositions Number="@b.Number" Contact="@Contact" @rendermode="InteractiveWebAssembly" />
@@ -225,7 +225,7 @@
             <aside class="stack">
                 @if (_moderator)
                 {
-                    <AppealModerationPanel Number="@b.Number" ESeimasUrl="@b.ESeimasUrl" @rendermode="InteractiveWebAssembly" />
+                    <RecordModerationPanel Number="@b.Number" ESeimasUrl="@b.ESeimasUrl" @rendermode="InteractiveWebAssembly" />
                     <StatementModerationPanel Number="@b.Number" @rendermode="InteractiveWebAssembly" />
                 }
 
@@ -330,10 +330,10 @@
 @code {
     private static readonly string[] Stages = ["presentation", "consideration", "adoption"];
     private BillResponse? _bill;
-    private AppealResponse? _appeal;
+    private BillRecordResponse? _record;
     private DateTimeOffset? _updatedAt;
     private VoteResponse? _closingVote;
-    private IReadOnlyList<AppealDigestResponse> _digests = [];
+    private IReadOnlyList<RecordDigestResponse> _digests = [];
 
     /// <summary>A moderator or an administrator in a staff-passkey session: the arguments then carry the queue's actions.</summary>
     private bool _moderator;
@@ -355,18 +355,18 @@
         _updatedAt = (await Meta.GetImportsAsync()).Value?.Sources.FirstOrDefault()?.LastSuccessAt;
 
         // The empty open state for an active bill nobody took part in; nothing for a finished one (the bill only).
-        _appeal = (await Appeals.GetAppealAsync(_bill.Number)).Value;
-        if (_appeal is { Id: not null, Status: "open" or "closed" })
+        _record = (await Appeals.GetRecordAsync(_bill.Number)).Value;
+        if (_record is { Id: not null, Status: "open" or "closed" })
         {
-            _digests = (await Digests.GetAppealDigestsAsync(_bill.Number)).Value ?? [];
+            _digests = (await Digests.GetRecordDigestsAsync(_bill.Number)).Value ?? [];
         }
 
-        if (_appeal is { Status: "open" } && Http.HttpContext is { } http && http.User.Identity?.IsAuthenticated == true)
+        if (_record is { Status: "open" } && Http.HttpContext is { } http && http.User.Identity?.IsAuthenticated == true)
         {
             _moderator = (await Authorization.AuthorizeAsync(http.User, http, Lt2.Web.Security.Policies.Moderator)).Succeeded;
         }
 
-        if (_appeal?.ClosingVoteId is { } voteId)
+        if (_record?.ClosingVoteId is { } voteId)
         {
             _closingVote = (await Api.GetVoteAsync(voteId)).Value;
         }

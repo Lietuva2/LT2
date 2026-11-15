@@ -30,7 +30,7 @@ internal static class SummaryRules
     /// <param name="touchedByPerson">A person wrote, corrected or removed the description at some time.</param>
     /// <param name="retryAfter">The earliest next try after the last one, or null when never tried.</param>
     public static bool IsDue(string? recordStatus, string? currentText, bool touchedByPerson, DateTimeOffset? retryAfter, DateTimeOffset now) =>
-        recordStatus is null or AppealStatuses.Open
+        recordStatus is null or BillRecordStatuses.Open
         && string.IsNullOrEmpty(currentText)
         && !touchedByPerson
         && (retryAfter is null || retryAfter <= now);

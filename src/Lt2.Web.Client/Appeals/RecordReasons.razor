@@ -14,12 +14,12 @@
    open form must stay with its own argument. *@
 <section class="stack" aria-labelledby="h-why" id="reasons">
     <h2 id="h-why">@L["Reasons.Title"]</h2>
-    @if (Appeal is { } appeal)
+    @if (Record is { } record)
     {
         <div class="pair pair--reasons">
             @foreach (var side in AppealLimits.Sides)
             {
-                var all = appeal.Reasons.Where(r => r.Side == side).ToList();
+                var all = record.Reasons.Where(r => r.Side == side).ToList();
                 <div class="stack" id="reasons-@side">
                     <h3><span class="choice choice--@side">@L["Reasons." + side]</span></h3>
                     @if (all.Count == 0)
@@ -42,7 +42,7 @@
                                                 disabled="@(Locked || !MayEndorse(reason, endorsed))" title="@EndorseHint(reason, endorsed)"
                                                 @onclick="() => ToggleEndorsementAsync(reason.Id, endorsed)">@L.Format("Reasons.Endorse", Display.Number(reason.Endorsements))</button>
                                         <button class="linkish small" type="button" disabled="@Locked" @onclick="() => _reporting = _reporting == reason.Id ? null : reason.Id">@L["Report.Open"]</button>
-                                        @if (IsMine(reason) && appeal.Status == "open")
+                                        @if (IsMine(reason) && record.Status == "open")
                                         {
                                             <button class="linkish small" type="button" id="withdraw-@reason.Id" disabled="@Locked"
                                                     @onclick="() => _withdrawing = _withdrawing == reason.Id ? null : reason.Id">@L["Reasons.Withdraw"]</button>
@@ -84,14 +84,14 @@
             {
                 <button class="btn btn--plain" type="button" id="add-reason" disabled="@Locked" @onclick="StartWriting">@L["Reasons.Write"]</button>
             }
-            @if (appeal.Reasons.GroupBy(r => r.Side).Any(g => g.Count() > Shown))
+            @if (record.Reasons.GroupBy(r => r.Side).Any(g => g.Count() > Shown))
             {
                 <button class="linkish" type="button" disabled="@Locked" @onclick="() => _showAll = !_showAll">
-                    @(_showAll ? L["Reasons.Fewer"] : L.Format("Reasons.All", Display.Number(appeal.Reasons.Count)))
+                    @(_showAll ? L["Reasons.Fewer"] : L.Format("Reasons.All", Display.Number(record.Reasons.Count)))
                 </button>
             }
         </div>
-        @if (_signedIn && appeal.Status == "open" && Restriction is { Restricted: true } restriction)
+        @if (_signedIn && record.Status == "open" && Restriction is { Restricted: true } restriction)
         {
             <WritingRestricted Restriction="restriction" />
         }
@@ -191,21 +191,21 @@
     /// </summary>
     [Parameter] public bool Moderator { get; set; }
 
-    [PersistentState] public AppealResponse? Appeal { get; set; }
+    [PersistentState] public BillRecordResponse? Record { get; set; }
 
-    [PersistentState] public MyAppealResponse? Mine { get; set; }
+    [PersistentState] public MyBillRecordResponse? Mine { get; set; }
 
     /// <summary>The person's own writing restriction (design 8.3): the writing box gives way to the notice.</summary>
     [PersistentState] public MyRestrictionResponse? Restriction { get; set; }
 
 
     /// <summary>An argument may be written for either side, with or without a side of one's own (design 8.2).</summary>
-    private bool CanWrite => _signedIn && Appeal?.Status == "open" && Restriction is not { Restricted: true } && Mine is { } mine && mine.ReasonsLeft is null or > 0;
+    private bool CanWrite => _signedIn && Record?.Status == "open" && Restriction is not { Restricted: true } && Mine is { } mine && mine.ReasonsLeft is null or > 0;
 
     protected override async Task OnInitializedAsync()
     {
         _signedIn = await IsSignedInAsync();
-        Appeal ??= (await Appeals.GetAppealAsync(Number)).Value;
+        Record ??= (await Appeals.GetRecordAsync(Number)).Value;
         if (_signedIn)
         {
             Mine ??= await State.MineAsync(Number);
@@ -215,7 +215,7 @@
         // Only for a moderator (the page says so; nobody else asks), and only in the browser: a "Moderuoti" opened before
         // the island starts would close when it does. The panel beside it hands over the answer it brought from the
         // server (MyBillState), so usually nothing is asked again.
-        if (Moderator && _signedIn && RendererInfo.IsInteractive && Appeal is { Id: not null, Status: "open" })
+        if (Moderator && _signedIn && RendererInfo.IsInteractive && Record is { Id: not null, Status: "open" })
         {
             _moderation = await State.ModerationAsync(Number);
         }
@@ -260,7 +260,7 @@
     }
 
     private bool MayEndorse(ReasonResponse reason, bool endorsed) =>
-        Appeal?.Status == "open" && Mine is { } mine && (endorsed || (mine.Side == reason.Side && mine.EndorsementsLeft is null or > 0));
+        Record?.Status == "open" && Mine is { } mine && (endorsed || (mine.Side == reason.Side && mine.EndorsementsLeft is null or > 0));
 
     private string? EndorseHint(ReasonResponse reason, bool endorsed) =>
         MayEndorse(reason, endorsed) ? null
@@ -276,9 +276,9 @@
         }
 
         await ReloadAsync();
-        if (_similar is not null && Appeal is not null)
+        if (_similar is not null && Record is not null)
         {
-            _similar = _similar.Select(s => Appeal.Reasons.FirstOrDefault(r => r.Id == s.Id) ?? s).ToList();
+            _similar = _similar.Select(s => Record.Reasons.FirstOrDefault(r => r.Id == s.Id) ?? s).ToList();
         }
     });
 
@@ -329,7 +329,7 @@
     private async Task ReloadAsync()
     {
         State.Forget(Number);
-        Appeal = (await Appeals.GetAppealAsync(Number)).Value ?? Appeal;
+        Record = (await Appeals.GetRecordAsync(Number)).Value ?? Record;
         Mine = await State.MineAsync(Number) ?? Mine;
     }
 }

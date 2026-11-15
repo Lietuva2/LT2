@@ -450,7 +450,7 @@ public sealed class OrganisationApiTests(DatabaseFixture database) : ApiTest(dat
         try
         {
             // Hidden: taking part closed; nothing of the organisations is shown and nothing is accepted.
-            using (var hidden = await moderator.PostAsync(AppealRoutes.With(AppealRoutes.HideAppeal, record), new StatementRequest { Statement = "Bandymas." }))
+            using (var hidden = await moderator.PostAsync(AppealRoutes.With(AppealRoutes.HideRecord, record), new StatementRequest { Statement = "Bandymas." }))
             {
                 hidden.StatusCode.ShouldBe(HttpStatusCode.NoContent);
             }
@@ -463,7 +463,7 @@ public sealed class OrganisationApiTests(DatabaseFixture database) : ApiTest(dat
             }
 
             // Closed: shown, frozen.
-            await Database.ExecuteAsync("UPDATE appeals.appeal SET status = 'closed', closed_at = now(), closed_for = 0, closed_for_older_than30days = 0, closed_against = 0, closed_against_older_than30days = 0 WHERE id = @id", ("id", record));
+            await Database.ExecuteAsync("UPDATE appeals.bill_record SET status = 'closed', closed_at = now(), closed_for = 0, closed_for_older_than30days = 0, closed_against = 0, closed_against_older_than30days = 0 WHERE id = @id", ("id", record));
             var statements = await visitor.StatementsAsync(AppealSteps.ThirdBill);
             statements.Open.ShouldBeFalse();
             statements.Items.ShouldContain(i => i.OrganisationId == created.Id);

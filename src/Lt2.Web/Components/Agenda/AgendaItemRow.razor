@@ -35,9 +35,9 @@
         }
     </div>
     <div class="rows__side">
-        @if (Item.Appeal is { } appeal)
+        @if (Item.Record is { } record)
         {
-            <AgendaAppeal Appeal="appeal" Number="@Item.Number" />
+            <AgendaRecord Record="record" Number="@Item.Number" />
         }
         else if (Item.SourceUrl is { } source && source.StartsWith("https://", StringComparison.Ordinal))
         {

@@ -5,12 +5,12 @@ using Lt2.Web.Security;
 
 namespace Lt2.Web.Endpoints.Moderation;
 
-/// <summary><c>PUT /api/v1/moderation/appeals/{id}/threshold</c>: a moderator sets the bill's own threshold, shown with the statement as its reason (design 8.12.2). Audited.</summary>
-internal static class SetAppealThresholdEndpoint
+/// <summary><c>PUT /api/v1/moderation/records/{id}/threshold</c>: a moderator sets the bill's own threshold, shown with the statement as its reason (design 8.12.2). Audited.</summary>
+internal static class SetRecordThresholdEndpoint
 {
     public static void Map(IEndpointRouteBuilder api) =>
-        api.MapPut(ApiEndpoints.Relative(AppealRoutes.AppealThreshold), HandleAsync)
-            .WithName("SetAppealThreshold")
+        api.MapPut(ApiEndpoints.Relative(AppealRoutes.RecordThreshold), HandleAsync)
+            .WithName("SetRecordThreshold")
             .WithTags("Moderation")
             .RequireAuthorization(Policies.Moderator)
             .WithValidation<ModeratorThresholdRequest>()

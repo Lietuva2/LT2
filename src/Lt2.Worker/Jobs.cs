@@ -99,7 +99,7 @@ public sealed class ParliamentImportJob(IParliamentImport import, ILogger<Parlia
 }
 
 /// <summary>
-/// The daily aggregate of appeals (design 5.3): yesterday's row once the day is over, today's so far. Hourly, so a missed
+/// The daily aggregate of the bills' records (design 5.3): yesterday's row once the day is over, today's so far. Hourly, so a missed
 /// run catches up; a day's row is overwritten by the next run for that day.
 /// </summary>
 public sealed class AppealsDailyJob(IAppealsMaintenance maintenance, TimeProvider clock, ILogger<AppealsDailyJob> logger)
@@ -108,10 +108,10 @@ public sealed class AppealsDailyJob(IAppealsMaintenance maintenance, TimeProvide
     public async Task RunAsync(CancellationToken cancellationToken)
     {
         var today = Lt2.SharedKernel.VilniusTime.Today(clock);
-        var appeals = await maintenance.AggregateDayAsync(today.AddDays(-1), cancellationToken);
+        var records = await maintenance.AggregateDayAsync(today.AddDays(-1), cancellationToken);
         await maintenance.AggregateDayAsync(today, cancellationToken);
         var closed = await maintenance.CloseFinishedAsync(cancellationToken);
-        logger.LogInformation("Daily appeal aggregates written for {Appeals} appeals; {Closed} closed after the final vote", appeals, closed);
+        logger.LogInformation("Daily aggregates written for {Records} records; {Closed} closed after the final vote", records, closed);
     }
 }
 
@@ -145,7 +145,7 @@ public sealed class DigestJob(IDigests digests, TimeProvider clock, ILogger<Dige
         var made = await digests.RunDueAsync(clock.GetUtcNow(), cancellationToken);
         foreach (var run in made)
         {
-            logger.LogInformation("Summary {Kind} made in dry-run: {Items} appeals, {Mps} MPs", run.Kind, run.Items.Count, run.MpCount);
+            logger.LogInformation("Summary {Kind} made in dry-run: {Items} bills, {Mps} MPs", run.Kind, run.Items.Count, run.MpCount);
         }
     }
 }

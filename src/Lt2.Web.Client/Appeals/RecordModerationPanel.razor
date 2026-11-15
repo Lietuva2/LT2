@@ -17,7 +17,7 @@
         <p class="small">@L["ModPanel.Lead"] <a href="/moderavimas">@L["ModPanel.Queue"]</a></p>
         @* The open reports about the description, as the queue shows them, beside its actions (decided 2026-11-14). *@
         <Reports Items="state.DescriptionReports" Description="true" Id="panel-description-reports" />
-        <ModerationActions Id="state.Id" Number="@state.Number" Kind="appeal" Status="@state.Status" Held="state.Held" Threshold="state.Threshold" Planned="state.Planned"
+        <ModerationActions Id="state.Id" Number="@state.Number" Kind="record" Status="@state.Status" Held="state.Held" Threshold="state.Threshold" Planned="state.Planned"
                            Description="@state.Description" DescriptionSource="@state.DescriptionSource" DescriptionUrl="@state.DescriptionUrl" ESeimasUrl="@ESeimasUrl"
                            HasOpenItems="state.HasOpenItems" IdPrefix="panel-" OnDone="Reload" />
 

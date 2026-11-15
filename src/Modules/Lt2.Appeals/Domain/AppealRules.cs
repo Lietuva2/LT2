@@ -2,7 +2,7 @@ using Lt2.SharedKernel;
 
 namespace Lt2.Appeals.Domain;
 
-/// <summary>The two sides of an appeal (design 8.2). Abstaining is not a request to an MP, so it is not offered.</summary>
+/// <summary>The two sides of a record (design 8.2). Abstaining is not a request to an MP, so it is not offered.</summary>
 internal static class Sides
 {
     public const string For = "for";
@@ -195,11 +195,11 @@ internal static class GroupRules
     }
 }
 
-/// <summary>Design 8.1: an appeal closes when the Seimas takes the final vote on its bill; the counts are frozen then.</summary>
+/// <summary>Design 8.1: a record closes when the Seimas takes the final vote on its bill; the counts are frozen then.</summary>
 internal static class ClosingRules
 {
     /// <summary>Only an open record closes, and only on a final vote; a hidden one stays hidden.</summary>
-    public static bool ShouldClose(string status, long? finalVoteId) => status == AppealStatuses.Open && finalVoteId is not null;
+    public static bool ShouldClose(string status, long? finalVoteId) => status == BillRecordStatuses.Open && finalVoteId is not null;
 
     /// <summary>The counts shown: frozen ones once closed, live ones before.</summary>
     public static SideCounts Shown(SideCounts live, int? closedFor, int? closedForOlder, int? closedAgainst, int? closedAgainstOlder) =>
@@ -208,11 +208,11 @@ internal static class ClosingRules
             : live;
 
     /// <summary>The record's counts were frozen when it closed; its live counts are not needed then.</summary>
-    public static bool IsFrozen(Appeal record) =>
+    public static bool IsFrozen(BillRecord record) =>
         record.ClosedFor is not null && record.ClosedForOlderThan30Days is not null && record.ClosedAgainst is not null && record.ClosedAgainstOlderThan30Days is not null;
 
     /// <summary>The counts a record shows: its frozen ones once closed, otherwise <paramref name="live"/>.</summary>
-    public static SideCounts Shown(Appeal record, SideCounts live) =>
+    public static SideCounts Shown(BillRecord record, SideCounts live) =>
         Shown(live, record.ClosedFor, record.ClosedForOlderThan30Days, record.ClosedAgainst, record.ClosedAgainstOlderThan30Days);
 }
 
@@ -237,7 +237,7 @@ internal static class RuleErrors
     public static Error Of(string code) => code switch
     {
         "position.required" or "reason.limit" or "endorsement.other-side" or "endorsement.limit"
-            or "appeal.not-open" or "moderation.wrong-state" or "draft.not-configured" => Error.Conflict(code),
+            or "record.not-open" or "moderation.wrong-state" or "draft.not-configured" => Error.Conflict(code),
         "draft.too-many" => new Error(ErrorKind.TooManyRequests, code),
         "statement.required" or "staff-statement.too-long" => Error.Validation(code, "statement"),
         "draft.source-required" or "draft.source-too-long" => Error.Validation(code, "sourceText"),

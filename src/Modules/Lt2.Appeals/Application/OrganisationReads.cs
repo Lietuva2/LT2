@@ -8,13 +8,13 @@ using Microsoft.EntityFrameworkCore;
 namespace Lt2.Appeals.Application;
 
 /// <summary>Where a bill stands for statements (design 8.14.14): its facts, its record's status and whether the Seimas finished it.</summary>
-internal sealed record BillForStatements(BillFacts Bill, Appeal? Record, bool Finished)
+internal sealed record BillForStatements(BillFacts Bill, BillRecord? Record, bool Finished)
 {
     /// <summary>The bill takes statements: active, and its record (if any) open.</summary>
     public bool Open => OrganisationRules.CheckBillOpen(Record?.Status, Finished) is null;
 
     /// <summary>Taking part was closed by the moderators: nothing of the organisations is shown either.</summary>
-    public bool Hidden => Record?.Status == AppealStatuses.Rejected;
+    public bool Hidden => Record?.Status == BillRecordStatuses.Rejected;
 }
 
 /// <summary>Reads shared by the organisation handlers. Nothing here returns who represents an organisation.</summary>
@@ -66,7 +66,7 @@ internal sealed class OrganisationReads(IBillCatalogue bills, AppealReads reads,
 
         var facts = await bills.FindManyAsync(numbers, ct);
         var active = (await bills.ActiveAsync(ct)).Select(b => b.Number).ToHashSet(StringComparer.Ordinal);
-        var onBills = await db.Appeals.AsNoTracking().Records().Where(a => numbers.Contains(a.BillNumber)).ToDictionaryAsync(a => a.BillNumber, StringComparer.Ordinal, ct);
+        var onBills = await db.BillRecords.AsNoTracking().Records().Where(a => numbers.Contains(a.BillNumber)).ToDictionaryAsync(a => a.BillNumber, StringComparer.Ordinal, ct);
         return numbers.Where(facts.ContainsKey).ToDictionary(
             n => n,
             n =>
@@ -81,8 +81,8 @@ internal sealed class OrganisationReads(IBillCatalogue bills, AppealReads reads,
     public async Task<Dictionary<string, SideCounts>> CountsAsync(AppealsDb db, IReadOnlyCollection<string> billNumbers, CancellationToken ct)
     {
         var numbers = billNumbers.Distinct().ToList();
-        var onBills = await db.Appeals.AsNoTracking()
-            .Where(a => numbers.Contains(a.BillNumber) && (a.Status == AppealStatuses.Open || a.Status == AppealStatuses.Closed))
+        var onBills = await db.BillRecords.AsNoTracking()
+            .Where(a => numbers.Contains(a.BillNumber) && (a.Status == BillRecordStatuses.Open || a.Status == BillRecordStatuses.Closed))
             .ToListAsync(ct);
         var shown = await reads.ShownCountsAsync(db, onBills, ct);
         var result = numbers.ToDictionary(n => n, _ => SideCounts.None, StringComparer.Ordinal);

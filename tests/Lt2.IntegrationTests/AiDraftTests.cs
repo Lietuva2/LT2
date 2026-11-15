@@ -151,7 +151,7 @@ public sealed class AiDraftTests(DatabaseFixture database) : ApiTest(database)
         }
 
         using var visitor = Ai.NewBrowser();
-        (await visitor.AppealAsync(AppealSteps.SecondBill)).DescriptionSource.ShouldBe("ai-draft");
+        (await visitor.RecordAsync(AppealSteps.SecondBill)).DescriptionSource.ShouldBe("ai-draft");
         WebUtility.HtmlDecode(await visitor.Client.GetStringAsync("/seimas/" + AppealSteps.SecondBill)).ShouldContain("Sukurta DI · taisė žmonės");
 
         // A later correction without a draft keeps the label for the description's whole life.
@@ -162,7 +162,7 @@ public sealed class AiDraftTests(DatabaseFixture database) : ApiTest(database)
             corrected.StatusCode.ShouldBe(HttpStatusCode.NoContent);
         }
 
-        (await visitor.AppealAsync(AppealSteps.SecondBill)).DescriptionSource.ShouldBe("ai-draft");
+        (await visitor.RecordAsync(AppealSteps.SecondBill)).DescriptionSource.ShouldBe("ai-draft");
     }
 
     [Fact]

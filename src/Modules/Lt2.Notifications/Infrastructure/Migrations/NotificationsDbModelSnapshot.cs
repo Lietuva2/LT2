@@ -66,10 +66,6 @@ namespace Lt2.Notifications.Infrastructure.Migrations
                         .HasColumnType("integer")
                         .HasColumnName("against_older_than30days");
 
-                    b.Property<Guid>("AppealId")
-                        .HasColumnType("uuid")
-                        .HasColumnName("appeal_id");
-
                     b.Property<string>("BillNumber")
                         .IsRequired()
                         .HasMaxLength(40)
@@ -102,6 +98,10 @@ namespace Lt2.Notifications.Infrastructure.Migrations
                         .HasColumnType("jsonb")
                         .HasColumnName("reasons");
 
+                    b.Property<Guid>("RecordId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("record_id");
+
                     b.Property<Guid>("RunId")
                         .HasColumnType("uuid")
                         .HasColumnName("run_id");
@@ -122,8 +122,8 @@ namespace Lt2.Notifications.Infrastructure.Migrations
                     b.HasKey("Id")
                         .HasName("pk_digest_item");
 
-                    b.HasIndex("AppealId")
-                        .HasDatabaseName("ix_digest_item_appeal_id");
+                    b.HasIndex("RecordId")
+                        .HasDatabaseName("ix_digest_item_record_id");
 
                     b.HasIndex("RunId")
                         .HasDatabaseName("ix_digest_item_run_id");

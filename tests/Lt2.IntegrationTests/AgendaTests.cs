@@ -19,7 +19,7 @@ public sealed partial class AgendaTests(DatabaseFixture database) : ApiTest(data
         using var moderator = await StaffMembers.SharedAsync(Factory, Database, "moderator");
         var (initiator, _) = await Factory.MemberAsync();
         using var _i = initiator;
-        var appeal = await Database.PrepareBillAsync(initiator, moderator.Browser, AppealSteps.ThirdBill, "for");
+        var record = await Database.PrepareBillAsync(initiator, moderator.Browser, AppealSteps.ThirdBill, "for");
         await Database.FreeBillAsync(AppealSteps.SecondBill);
 
         var today = ReasonsToComeSteps.VilniusToday();
@@ -35,16 +35,16 @@ public sealed partial class AgendaTests(DatabaseFixture database) : ApiTest(data
             var second = agenda.Days.Single(d => d.Date == today.AddDays(5)).Items.Single(i => i.Number == AppealSteps.SecondBill);
             second.Title.ShouldNotBeNull();
             second.Stage.ShouldBe("adoption");
-            second.Appeal.ShouldNotBeNull("both sides for every bill (design 8.12.5)");
-            second.Appeal.Id.ShouldBeNull();
-            second.Appeal.Status.ShouldBe("open");
-            second.Appeal.Counts.ShouldBe(new Lt2.Api.Contracts.Appeals.SideCountsResponse(0, 0, 0, 0));
+            second.Record.ShouldNotBeNull("both sides for every bill (design 8.12.5)");
+            second.Record.Id.ShouldBeNull();
+            second.Record.Status.ShouldBe("open");
+            second.Record.Counts.ShouldBe(new Lt2.Api.Contracts.Appeals.SideCountsResponse(0, 0, 0, 0));
 
             var third = agenda.Days.Single(d => d.Date == today.AddDays(7)).Items.Single(i => i.Number == AppealSteps.ThirdBill);
-            third.Appeal.ShouldNotBeNull();
-            third.Appeal.Id.ShouldBe(appeal.Id);
-            third.Appeal.Counts.For.ShouldBe(1);
-            third.Appeal.Threshold.Participants.ShouldBe(1);
+            third.Record.ShouldNotBeNull();
+            third.Record.Id.ShouldBe(record.Id);
+            third.Record.Counts.For.ShouldBe(1);
+            third.Record.Threshold.Participants.ShouldBe(1);
 
             // The page, without JavaScript: planned dates in words, never a countdown, and the not-a-poll notice.
             var html = WebUtility.HtmlDecode(await visitor.Client.GetStringAsync("/darbotvarke"));
@@ -178,15 +178,15 @@ public sealed partial class AgendaTests(DatabaseFixture database) : ApiTest(data
     }
 
     [Fact]
-    public async Task The_front_page_shows_the_coming_items_first_and_no_empty_appeal_heading()
+    public async Task The_front_page_shows_the_coming_items_first_and_no_empty_record_heading()
     {
         await Database.PlanAsync(AppealSteps.SecondBill, ReasonsToComeSteps.VilniusToday().AddDays(2));
 
-        // No published appeal for the moment: earlier tests' appeals are hidden for the check and brought back after it.
-        var open = await Database.ScalarAsync<string>("SELECT coalesce(string_agg(id::text, ','), '') FROM appeals.appeal WHERE status = 'open'") ?? "";
-        var closed = await Database.ScalarAsync<string>("SELECT coalesce(string_agg(id::text, ','), '') FROM appeals.appeal WHERE status = 'closed'") ?? "";
+        // No published record for the moment: earlier tests' records are hidden for the check and brought back after it.
+        var open = await Database.ScalarAsync<string>("SELECT coalesce(string_agg(id::text, ','), '') FROM appeals.bill_record WHERE status = 'open'") ?? "";
+        var closed = await Database.ScalarAsync<string>("SELECT coalesce(string_agg(id::text, ','), '') FROM appeals.bill_record WHERE status = 'closed'") ?? "";
         var published = open + closed;
-        await Database.ExecuteAsync("UPDATE appeals.appeal SET status = 'rejected' WHERE status IN ('open', 'closed')");
+        await Database.ExecuteAsync("UPDATE appeals.bill_record SET status = 'rejected' WHERE status IN ('open', 'closed')");
         try
         {
             using var visitor = NewBrowser();
@@ -203,7 +203,7 @@ public sealed partial class AgendaTests(DatabaseFixture database) : ApiTest(data
             foreach (var (ids, status) in new[] { (open, "open"), (closed, "closed") }.Where(x => x.Item1.Length > 0))
             {
                 await Database.ExecuteAsync(
-                    "UPDATE appeals.appeal SET status = @s WHERE id = ANY(string_to_array(@ids, ',')::uuid[])", ("s", status), ("ids", ids));
+                    "UPDATE appeals.bill_record SET status = @s WHERE id = ANY(string_to_array(@ids, ',')::uuid[])", ("s", status), ("ids", ids));
             }
 
             await Database.UnplanAsync(AppealSteps.SecondBill);

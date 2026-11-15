@@ -7,14 +7,14 @@ using Lt2.Web.Services;
 namespace Lt2.Web.Endpoints.Appeals;
 
 /// <summary>
-/// <c>GET /api/v1/bills/{number}/appeal/history</c>: the public history of the bill's description (design 8.13): empty for
+/// <c>GET /api/v1/bills/{number}/record/history</c>: the public history of the bill's description (design 8.13): empty for
 /// a bill without a record, not found for a hidden one; who edited is not shown.
 /// </summary>
-internal static class GetAppealHistoryEndpoint
+internal static class GetRecordHistoryEndpoint
 {
     public static void Map(IEndpointRouteBuilder api) =>
         api.MapGet(ApiEndpoints.Relative(AppealRoutes.History), HandleAsync)
-            .WithName("GetAppealHistory")
+            .WithName("GetRecordHistory")
             .WithTags("Appeals")
             .AllowAnonymous()
             .Produces<IReadOnlyList<DescriptionRevisionResponse>>()

@@ -37,7 +37,7 @@ public sealed class AppealFlowTests(AppealFlowTests.ModeratorFixture moderator) 
         var sides = 0;
         a.Request += (_, request) =>
         {
-            if (request.Method == "PUT" && request.Url.EndsWith($"/bills/{bill}/appeal/position", StringComparison.Ordinal))
+            if (request.Method == "PUT" && request.Url.EndsWith($"/bills/{bill}/record/position", StringComparison.Ordinal))
             {
                 sides++;
             }
@@ -408,14 +408,14 @@ public sealed class AppealFlowTests(AppealFlowTests.ModeratorFixture moderator) 
         const string Sql =
             """
             begin;
-            create temp table own as select id from appeals.appeal where bill_number = 'XVP-0533';
-            delete from appeals.report where target_kind = 'appeal' and target_id in (select id from own);
-            delete from appeals.moderation_action where target_kind = 'appeal' and action = 'confirm' and target_id in (select id from own);
-            delete from appeals.revision where entity_kind = 'appeal' and field = 'description' and entity_id in (select id from own)
+            create temp table own as select id from appeals.bill_record where bill_number = 'XVP-0533';
+            delete from appeals.report where target_kind = 'record' and target_id in (select id from own);
+            delete from appeals.moderation_action where target_kind = 'record' and action = 'confirm' and target_id in (select id from own);
+            delete from appeals.revision where entity_kind = 'record' and field = 'description' and entity_id in (select id from own)
               and (old_value like '%(E2E bandymas)%' or new_value like '%(E2E bandymas)%');
-            update appeals.appeal set description = '', description_source = null, description_url = null, description_at = null
+            update appeals.bill_record set description = '', description_source = null, description_url = null, description_at = null
              where id in (select id from own) and description like '%(E2E bandymas)%';
-            update appeals.appeal set description_source = 'ai'
+            update appeals.bill_record set description_source = 'ai'
              where id in (select id from own) and description like 'Projektas leistų savivaldybėms pačioms nustatyti%';
             commit;
             """;
@@ -491,8 +491,8 @@ public sealed class AppealFlowTests(AppealFlowTests.ModeratorFixture moderator) 
             """
             async () => {
               const token = (await (await fetch('/api/v1/auth/antiforgery')).json()).token;
-              const appeal = await (await fetch('/api/v1/bills/XVP-0412/appeal')).json();
-              const r = await fetch('/api/v1/moderation/appeals/' + appeal.id + '/urgent', {
+              const record = await (await fetch('/api/v1/bills/XVP-0412/record')).json();
+              const r = await fetch('/api/v1/moderation/records/' + record.id + '/urgent', {
                 method: 'POST', headers: { 'Content-Type': 'application/json', 'X-XSRF-TOKEN': token },
                 body: JSON.stringify({ statement: 'Demonstracinė suvestinė.' }) });
               return r.status;
@@ -588,8 +588,8 @@ public sealed class AppealFlowTests(AppealFlowTests.ModeratorFixture moderator) 
               const out = [];
               for (const r of await (await fetch('/api/v1/moderation/restrictions')).json())
                 if (r.displayName === 'Ribojama Autorė') out.push((await post('/api/v1/moderation/restrictions/' + r.id + '/lift', { statement: 'Bandymo pabaiga.' })).status);
-              const appeal = await (await fetch('/api/v1/bills/XVP-0412/appeal')).json();
-              for (const r of appeal.reasons)
+              const record = await (await fetch('/api/v1/bills/XVP-0412/record')).json();
+              for (const r of record.reasons)
                 if (r.text.startsWith(text)) out.push((await post('/api/v1/moderation/reasons/' + r.id + '/hide', { statement: 'Bandymo duomenys išvalomi.' })).status);
               return JSON.stringify(out);
             }
@@ -644,7 +644,7 @@ public sealed class AppealFlowTests(AppealFlowTests.ModeratorFixture moderator) 
             """
             async ([bill, side, text]) => {
               const token = (await (await fetch('/api/v1/auth/antiforgery')).json()).token;
-              const r = await fetch('/api/v1/bills/' + bill + '/appeal/reasons', { method: 'POST', headers: { 'Content-Type': 'application/json', 'X-XSRF-TOKEN': token },
+              const r = await fetch('/api/v1/bills/' + bill + '/record/reasons', { method: 'POST', headers: { 'Content-Type': 'application/json', 'X-XSRF-TOKEN': token },
                 body: JSON.stringify({ side, text }) });
               return (await r.json()).status;
             }
@@ -660,9 +660,9 @@ public sealed class AppealFlowTests(AppealFlowTests.ModeratorFixture moderator) 
               const token = (await (await fetch('/api/v1/auth/antiforgery')).json()).token;
               const hidden = await (await fetch('/api/v1/moderation/hidden')).json();
               const out = [];
-              for (const a of hidden.appeals ?? [])
+              for (const a of hidden.records ?? [])
                 if (JSON.stringify(a).includes(bill))
-                  out.push((await fetch('/api/v1/moderation/appeals/' + a.id + '/restore', { method: 'POST',
+                  out.push((await fetch('/api/v1/moderation/records/' + a.id + '/restore', { method: 'POST',
                     headers: { 'X-XSRF-TOKEN': token, 'Content-Type': 'application/json' }, body: JSON.stringify({ statement: 'Bandymo pabaiga.' }) })).status);
               return out;
             }
@@ -682,8 +682,8 @@ public sealed class AppealFlowTests(AppealFlowTests.ModeratorFixture moderator) 
             async (bill) => {
               const token = (await (await fetch('/api/v1/auth/antiforgery')).json()).token;
               const del = url => fetch(url, { method: 'DELETE', headers: { 'X-XSRF-TOKEN': token } });
-              const out = [(await del('/api/v1/bills/' + bill + '/appeal/position')).status];
-              const mine = await (await fetch('/api/v1/bills/' + bill + '/appeal/mine')).json();
+              const out = [(await del('/api/v1/bills/' + bill + '/record/position')).status];
+              const mine = await (await fetch('/api/v1/bills/' + bill + '/record/mine')).json();
               for (const r of mine.myReasons) if (r.status === 'published' || r.status === 'pending') out.push((await del('/api/v1/reasons/' + r.id)).status);
               return JSON.stringify(out);
             }

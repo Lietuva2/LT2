@@ -38,7 +38,7 @@ public interface IEmailConnection : IAsyncDisposable
     Task SendAsync(EmailMessage message, CancellationToken cancellationToken);
 }
 
-/// <summary>One appeal as frozen in a summary. No person: counts, the surge note and arguments without authors.</summary>
+/// <summary>One record as frozen in a summary. No person: counts, the surge note and arguments without authors.</summary>
 public sealed record DigestItemInfo(
     string BillNumber,
     string BillTitle,
@@ -68,15 +68,15 @@ public interface IDigests
     /// <summary>Makes the weekly and before-vote summaries that are due at <paramref name="now"/>; returns those made.</summary>
     Task<IReadOnlyList<DigestRunInfo>> RunDueAsync(DateTimeOffset now, CancellationToken cancellationToken);
 
-    /// <summary>One urgent summary for an appeal, approved by a moderator; may exceed the weekly ceiling by one.</summary>
-    Task<Lt2.SharedKernel.Result<DigestRunInfo>> UrgentAsync(Guid appealId, string statement, StaffActor moderator, CancellationToken cancellationToken);
+    /// <summary>One urgent summary for a record, approved by a moderator; may exceed the weekly ceiling by one.</summary>
+    Task<Lt2.SharedKernel.Result<DigestRunInfo>> UrgentAsync(Guid recordId, string statement, StaffActor moderator, CancellationToken cancellationToken);
 
     Task<IReadOnlyList<DigestRunInfo>> ListAsync(CancellationToken cancellationToken);
 
     Task<IReadOnlyList<DigestRunInfo>> OnDateAsync(DateOnly date, CancellationToken cancellationToken);
 
-    /// <summary>The summaries that held one appeal, newest first; each run carries only that appeal's frozen item.</summary>
-    Task<IReadOnlyList<DigestRunInfo>> ForAppealAsync(Guid appealId, CancellationToken cancellationToken);
+    /// <summary>The summaries that held one record, newest first; each run carries only that record's frozen item.</summary>
+    Task<IReadOnlyList<DigestRunInfo>> ForRecordAsync(Guid recordId, CancellationToken cancellationToken);
 
     Task<Lt2.SharedKernel.Result<DigestPreview>> PreviewAsync(Guid runId, string mpSlug, CancellationToken cancellationToken);
 

@@ -6,7 +6,7 @@ using Microsoft.Extensions.Options;
 
 namespace Lt2.UnitTests;
 
-/// <summary>Design 8.11.2, 8.11.3: the follow emails and the email to those who asked for an appeal. No tracking, nobody named.</summary>
+/// <summary>Design 8.11.2, 8.11.3: the follow emails and the email to those who asked for a record. No tracking, nobody named.</summary>
 public sealed class FollowTemplateTests
 {
     private static FollowTemplates Templates() =>
@@ -40,7 +40,7 @@ public sealed class FollowTemplateTests
         email.TextBody.ShouldContain("– Jonas Petraitis: prieš");
         email.TextBody.ShouldContain("– Ona Jonaitienė: nebalsavo");
         email.TextBody.ShouldContain("/seimas/balsavimai/99100006");
-        email.TextBody.ShouldNotContain("kreipim", Case.Insensitive, "nothing about the person's side or the appeal");
+        email.TextBody.ShouldNotContain("kreipim", Case.Insensitive, "nothing about the person's side or the record");
     }
 
     [Theory]

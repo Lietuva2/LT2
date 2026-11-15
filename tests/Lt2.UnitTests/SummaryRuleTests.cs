@@ -35,23 +35,23 @@ public sealed class SummaryRuleTests
     public void A_bill_without_a_record_or_with_an_open_record_without_a_description_is_due()
     {
         SummaryRules.IsDue(null, null, touchedByPerson: false, retryAfter: null, Now).ShouldBeTrue();
-        SummaryRules.IsDue(AppealStatuses.Open, "", touchedByPerson: false, retryAfter: null, Now).ShouldBeTrue();
+        SummaryRules.IsDue(BillRecordStatuses.Open, "", touchedByPerson: false, retryAfter: null, Now).ShouldBeTrue();
     }
 
     [Fact]
     public void A_description_is_never_written_over_whoever_made_it()
     {
-        SummaryRules.IsDue(AppealStatuses.Open, "Moderatoriaus aprašymas.", touchedByPerson: true, retryAfter: null, Now).ShouldBeFalse();
-        SummaryRules.IsDue(AppealStatuses.Open, "Ankstesnė DI santrauka.", touchedByPerson: false, retryAfter: null, Now).ShouldBeFalse();
+        SummaryRules.IsDue(BillRecordStatuses.Open, "Moderatoriaus aprašymas.", touchedByPerson: true, retryAfter: null, Now).ShouldBeFalse();
+        SummaryRules.IsDue(BillRecordStatuses.Open, "Ankstesnė DI santrauka.", touchedByPerson: false, retryAfter: null, Now).ShouldBeFalse();
     }
 
     [Fact]
     public void A_description_a_person_removed_is_never_made_again() =>
-        SummaryRules.IsDue(AppealStatuses.Open, "", touchedByPerson: true, retryAfter: null, Now).ShouldBeFalse();
+        SummaryRules.IsDue(BillRecordStatuses.Open, "", touchedByPerson: true, retryAfter: null, Now).ShouldBeFalse();
 
     [Theory]
-    [InlineData(AppealStatuses.Closed)]
-    [InlineData(AppealStatuses.Rejected)]
+    [InlineData(BillRecordStatuses.Closed)]
+    [InlineData(BillRecordStatuses.Rejected)]
     public void A_closed_or_hidden_record_gets_no_summary(string status) =>
         SummaryRules.IsDue(status, "", touchedByPerson: false, retryAfter: null, Now).ShouldBeFalse();
 
@@ -100,20 +100,20 @@ public sealed class SummaryRuleTests
     [Fact]
     public void A_moderator_confirms_only_an_AI_summary_nobody_has_read_on_an_open_record()
     {
-        RecordRules.CheckConfirm(AppealStatuses.Open, DescriptionSources.Ai).ShouldBeNull();
-        RecordRules.CheckConfirm(AppealStatuses.Open, DescriptionSources.AiDraft).ShouldBe("moderation.wrong-state");
-        RecordRules.CheckConfirm(AppealStatuses.Open, DescriptionSources.Moderator).ShouldBe("moderation.wrong-state");
-        RecordRules.CheckConfirm(AppealStatuses.Open, null).ShouldBe("moderation.wrong-state");
-        RecordRules.CheckConfirm(AppealStatuses.Closed, DescriptionSources.Ai).ShouldBe("moderation.wrong-state");
+        RecordRules.CheckConfirm(BillRecordStatuses.Open, DescriptionSources.Ai).ShouldBeNull();
+        RecordRules.CheckConfirm(BillRecordStatuses.Open, DescriptionSources.AiDraft).ShouldBe("moderation.wrong-state");
+        RecordRules.CheckConfirm(BillRecordStatuses.Open, DescriptionSources.Moderator).ShouldBe("moderation.wrong-state");
+        RecordRules.CheckConfirm(BillRecordStatuses.Open, null).ShouldBe("moderation.wrong-state");
+        RecordRules.CheckConfirm(BillRecordStatuses.Closed, DescriptionSources.Ai).ShouldBe("moderation.wrong-state");
     }
 
     [Fact]
     public void A_moderator_removes_any_description_with_a_statement()
     {
-        RecordRules.CheckRemove(AppealStatuses.Open, "Aprašymas.", "Netikslus.").ShouldBeNull();
-        RecordRules.CheckRemove(AppealStatuses.Open, "Aprašymas.", " ").ShouldBe("statement.required");
-        RecordRules.CheckRemove(AppealStatuses.Open, "", "Netikslus.").ShouldBe("moderation.wrong-state");
-        RecordRules.CheckRemove(AppealStatuses.Rejected, "Aprašymas.", "Netikslus.").ShouldBe("moderation.wrong-state");
+        RecordRules.CheckRemove(BillRecordStatuses.Open, "Aprašymas.", "Netikslus.").ShouldBeNull();
+        RecordRules.CheckRemove(BillRecordStatuses.Open, "Aprašymas.", " ").ShouldBe("statement.required");
+        RecordRules.CheckRemove(BillRecordStatuses.Open, "", "Netikslus.").ShouldBe("moderation.wrong-state");
+        RecordRules.CheckRemove(BillRecordStatuses.Rejected, "Aprašymas.", "Netikslus.").ShouldBe("moderation.wrong-state");
     }
 
     [Theory]

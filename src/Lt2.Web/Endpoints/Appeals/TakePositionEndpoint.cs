@@ -8,7 +8,7 @@ using Lt2.Web.Services;
 
 namespace Lt2.Web.Endpoints.Appeals;
 
-/// <summary><c>PUT /api/v1/bills/{number}/appeal/position</c>: take or change a side. The row is overwritten; no earlier side is kept (design 5.3).</summary>
+/// <summary><c>PUT /api/v1/bills/{number}/record/position</c>: take or change a side. The row is overwritten; no earlier side is kept (design 5.3).</summary>
 internal static class TakePositionEndpoint
 {
     public static void Map(IEndpointRouteBuilder api) =>

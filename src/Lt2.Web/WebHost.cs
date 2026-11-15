@@ -141,7 +141,7 @@ internal static class WebHost
     }
 
     /// <summary>
-    /// Design 8.12.1: the bill and the appeal are one page. The old appeal addresses (in emails, summaries and bookmarks)
+    /// Design 8.12.1: the bill and the record are one page. The old record addresses (in emails, summaries and bookmarks)
     /// redirect permanently: <c>/seimas/{number}/kreipimasis</c> to the bill's page, its history to
     /// <c>/seimas/{number}/istorija</c>, and the proposal form <c>/kreipimaisi/naujas</c> to the list. The list itself moved
     /// from <c>/kreipimaisi</c> to <c>/projektai</c> (design 8.12.5); its old address keeps the query.

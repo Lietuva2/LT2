@@ -5,12 +5,12 @@ using Lt2.Web.Security;
 
 namespace Lt2.Web.Endpoints.Moderation;
 
-/// <summary><c>POST /api/v1/moderation/appeals/{id}/hold</c>: holds sending for the bill: it enters no summary until released (design 8.4). Audited.</summary>
-internal static class HoldAppealEndpoint
+/// <summary><c>POST /api/v1/moderation/records/{id}/hold</c>: holds sending for the bill: it enters no summary until released (design 8.4). Audited.</summary>
+internal static class HoldRecordEndpoint
 {
     public static void Map(IEndpointRouteBuilder api) =>
-        api.MapPost(ApiEndpoints.Relative(AppealRoutes.HoldAppeal), HandleAsync)
-            .WithName("HoldAppeal")
+        api.MapPost(ApiEndpoints.Relative(AppealRoutes.HoldRecord), HandleAsync)
+            .WithName("HoldRecord")
             .WithTags("Moderation")
             .RequireAuthorization(Policies.Moderator)
             .WithValidation<StatementRequest>()

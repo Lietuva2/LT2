@@ -60,7 +60,7 @@ docker compose -f deploy/compose.yaml up --build
 docker compose -f deploy/compose.yaml run --rm --no-deps migrator --reset-parliament
 ```
 
-The demonstration appeal on XVP-0412 (6 800 invented accounts asking to vote for, 4 280 against, the prototype's
+The demonstration record on XVP-0412 (6 800 invented accounts asking to vote for, 4 280 against, the prototype's
 arguments) is written by the migrator on the local stack only: it refuses unless `LT2_DEMO_DATA=true` (set in
 `deploy/.env`) and the parliament data is the stand-in's. Running it again changes nothing.
 

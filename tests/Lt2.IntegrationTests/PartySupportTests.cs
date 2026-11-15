@@ -88,7 +88,7 @@ public sealed class PartySupportTests(DatabaseFixture database) : ApiTest(databa
         {
             var (initiator, _) = await Factory.MemberAsync();
             using var _i = initiator;
-            var appeal = await Database.PrepareBillAsync(initiator, moderator.Browser, AppealSteps.ThirdBill, "against", threshold: 1);
+            var record = await Database.PrepareBillAsync(initiator, moderator.Browser, AppealSteps.ThirdBill, "against", threshold: 1);
 
             // Invented members: "for" 19 of the party and 30 others; "against" (with the initiator) 25 of the party and 3 others.
             var since = DateTimeOffset.UtcNow.AddDays(-90);
@@ -99,8 +99,8 @@ public sealed class PartySupportTests(DatabaseFixture database) : ApiTest(databa
                 foreach (var m in who)
                 {
                     await Database.ExecuteAsync(
-                        "INSERT INTO appeals.position (appeal_id, user_id, side, created_at, changed_at, member_since) VALUES (@a, @u, @s, now(), now(), @m)",
-                        ("a", appeal.Id), ("u", m.Id), ("s", side), ("m", since));
+                        "INSERT INTO appeals.position (record_id, user_id, side, created_at, changed_at, member_since) VALUES (@a, @u, @s, now(), now(), @m)",
+                        ("a", record.Id), ("u", m.Id), ("s", side), ("m", since));
                     if (party)
                     {
                         await Database.ExecuteAsync("INSERT INTO identity.party_support (user_id, party, given_at) VALUES (@u, @p, now())", ("u", m.Id), ("p", Party));
@@ -115,15 +115,15 @@ public sealed class PartySupportTests(DatabaseFixture database) : ApiTest(databa
 
             await using var scope = Factory.Services.CreateAsyncScope();
             var source = scope.ServiceProvider.GetRequiredService<IDigestSource>();
-            (await source.PartyNumbersAsync([appeal.Id], CancellationToken.None))[appeal.Id].ShouldBeEmpty(
+            (await source.PartyNumbersAsync([record.Id], CancellationToken.None))[record.Id].ShouldBeEmpty(
                 "19 for is under 20; 25 against would leave 3 others (2 + the initiator) to be read by subtraction");
 
             await AddAsync(members.Skip(76).Take(1), "for", party: true);
-            var numbers = (await source.PartyNumbersAsync([appeal.Id], CancellationToken.None))[appeal.Id].Single();
+            var numbers = (await source.PartyNumbersAsync([record.Id], CancellationToken.None))[record.Id].Single();
             numbers.ShouldBe(new PartyNumbers(Party, 20, null));
 
             // An urgent summary (dry run): the MP of that party would read the 20; nobody else, and no public copy, sees a party.
-            using var urgent = await moderator.Browser.PostAsync(AppealRoutes.With(DigestRoutes.Urgent, appeal.Id), new UrgentDigestRequest { Statement = "Bandymas." });
+            using var urgent = await moderator.Browser.PostAsync(AppealRoutes.With(DigestRoutes.Urgent, record.Id), new UrgentDigestRequest { Statement = "Bandymas." });
             urgent.StatusCode.ShouldBe(HttpStatusCode.Created, await urgent.Content.ReadAsStringAsync());
             var run = await urgent.ReadAsync<DigestRunResponse>();
             var preview = await moderator.Browser.GetJsonAsync<DigestPreviewResponse>(DigestRoutes.PreviewOf(run.Id, "jonas-petraitis"));

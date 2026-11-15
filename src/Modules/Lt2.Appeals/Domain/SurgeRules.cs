@@ -3,7 +3,7 @@ namespace Lt2.Appeals.Domain;
 /// <summary>
 /// Surge detection (design 6.6): when a large share of the recent positions on a bill come from accounts created in the
 /// same recent days (default: at least 30 % of the last 72 hours' positions and at least 50 accounts; all settings),
-/// the appeal page and the summary say so in neutral words and a moderator is asked whether to hold the send.
+/// the record page and the summary say so in neutral words and a moderator is asked whether to hold the send.
 /// </summary>
 internal static class SurgeRules
 {

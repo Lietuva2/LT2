@@ -37,21 +37,21 @@ internal sealed class AgendaReads(IPlannedAgenda agenda, IBillCatalogue bills, I
                     {
                         var state = states.GetValueOrDefault(p.BillNumber);
                         return new AgendaItemResponse(
-                            p.BillNumber, facts.GetValueOrDefault(p.BillNumber)?.Title, p.Stage, p.SetByModerator, p.SourceUrl, Appeal(state));
+                            p.BillNumber, facts.GetValueOrDefault(p.BillNumber)?.Title, p.Stage, p.SetByModerator, p.SourceUrl, Record(state));
                     })
                     .ToList()))
             .ToList();
         var votes = recent
             .Select(v => new AgendaVoteResponse(
                 v.Vote.Id, v.Vote.Bill!.Number, v.Vote.Bill.Title, v.Vote.Stage, v.Vote.HeldAt, v.Vote.IsConsensus, ParliamentReads.Totals(v), v.OfficialNote,
-                Appeal(states.GetValueOrDefault(v.Vote.Bill.Number))))
+                Record(states.GetValueOrDefault(v.Vote.Bill.Number))))
             .ToList();
         return new AgendaResponse(days, votes, read.ReadAt, read.SourceUrl);
     }
 
     /// <summary>A bill the catalogue knows has numbers (zeros while nobody took part); one it does not know has none.</summary>
-    private static AgendaAppealResponse? Appeal(BillAppealState? state) =>
-        state is null ? null : new AgendaAppealResponse(state.AppealId, state.Status, AppealMapping.Map(state.Counts), AppealMapping.Map(state.Threshold));
+    private static AgendaRecordResponse? Record(BillRecordState? state) =>
+        state is null ? null : new AgendaRecordResponse(state.RecordId, state.Status, AppealMapping.Map(state.Counts), AppealMapping.Map(state.Threshold));
 }
 
 /// <summary>Server-side <see cref="IAgendaApi"/> for the server-rendered agenda and front pages.</summary>

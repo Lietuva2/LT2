@@ -35,9 +35,9 @@ public sealed class WritingRestrictionTests(DatabaseFixture database) : ApiTest(
         (await person.TakeSideAsync(AppealSteps.ThirdBill, "for")).StatusCode.ShouldBe(HttpStatusCode.NoContent);
         (await person.WriteReasonAsync(AppealSteps.ThirdBill, "for", "Argumentas, dėl kurio rašymas bus apribotas.")).StatusCode.ShouldBe(HttpStatusCode.Created);
         using var stranger = NewBrowser();
-        var before = await stranger.AppealAsync(AppealSteps.ThirdBill);
+        var before = await stranger.RecordAsync(AppealSteps.ThirdBill);
         var reasonId = before.Reasons.Single(r => r.AuthorName == "Rašanti Asmenybė").Id;
-        var publicBefore = await stranger.Client.GetStringAsync(AppealRoutes.AppealOf(AppealSteps.ThirdBill));
+        var publicBefore = await stranger.Client.GetStringAsync(AppealRoutes.RecordOf(AppealSteps.ThirdBill));
 
         using (var set = await RestrictAuthorAsync(moderator.Browser, reasonId))
         {
@@ -45,7 +45,7 @@ public sealed class WritingRestrictionTests(DatabaseFixture database) : ApiTest(
         }
 
         // Nothing public changes: the same answer, byte for byte, and no count moved.
-        (await stranger.Client.GetStringAsync(AppealRoutes.AppealOf(AppealSteps.ThirdBill))).ShouldBe(publicBefore);
+        (await stranger.Client.GetStringAsync(AppealRoutes.RecordOf(AppealSteps.ThirdBill))).ShouldBe(publicBefore);
 
         // The person's bill pages say so in place of the writing box, on a bill nobody took part in too; nobody else's do.
         foreach (var path in new[] { "/seimas/XVP-0618", "/seimas/XVP-0533" })
@@ -69,7 +69,7 @@ public sealed class WritingRestrictionTests(DatabaseFixture database) : ApiTest(
             await fresh.ShouldBeProblemAsync(HttpStatusCode.Forbidden, "writing.restricted");
         }
 
-        (await Database.ScalarAsync<long>("SELECT count(*) FROM appeals.appeal WHERE bill_number = @b", ("b", AppealSteps.SecondBill))).ShouldBe(0);
+        (await Database.ScalarAsync<long>("SELECT count(*) FROM appeals.bill_record WHERE bill_number = @b", ("b", AppealSteps.SecondBill))).ShouldBe(0);
 
         using (var flag = await person.PostAsync(AppealRoutes.FlagsOf(AppealSteps.ThirdBill), new FlagRequest { Kind = "date-wrong", Link = "https://www.lrs.lt/darbotvarke" }))
         {
@@ -131,7 +131,7 @@ public sealed class WritingRestrictionTests(DatabaseFixture database) : ApiTest(
         var (initiator, _) = await Factory.MemberAsync();
         using var _i = initiator;
         await Database.PrepareBillAsync(initiator, moderator.Browser, AppealSteps.ThirdBill, "against");
-        var reasonId = (await initiator.AppealAsync(AppealSteps.ThirdBill)).Reasons.Single().Id;
+        var reasonId = (await initiator.RecordAsync(AppealSteps.ThirdBill)).Reasons.Single().Id;
 
         var (member, _) = await Factory.MemberAsync();
         using var _m = member;
@@ -199,7 +199,7 @@ public sealed class WritingRestrictionTests(DatabaseFixture database) : ApiTest(
         using var _p = person;
         (await person.TakeSideAsync(AppealSteps.ThirdBill, "for")).StatusCode.ShouldBe(HttpStatusCode.NoContent);
         (await person.WriteReasonAsync(AppealSteps.ThirdBill, "against", "Argumentas prieš, nors pats prašo už.")).StatusCode.ShouldBe(HttpStatusCode.Created);
-        var reasons = (await person.AppealAsync(AppealSteps.ThirdBill)).Reasons;
+        var reasons = (await person.RecordAsync(AppealSteps.ThirdBill)).Reasons;
         var reasonId = reasons.Single(r => r.AuthorName == "Peržiūrima Asmenybė").Id;
         (await person.SendAsync(HttpMethod.Put, AppealRoutes.EndorsementOf(reasons.Single(r => r.Side == "for").Id))).StatusCode.ShouldBe(HttpStatusCode.NoContent);
 
@@ -237,7 +237,7 @@ public sealed class WritingRestrictionTests(DatabaseFixture database) : ApiTest(
         var (person, email) = await Factory.MemberAsync("Išeinanti Asmenybė");
         using var _p = person;
         (await person.WriteReasonAsync(AppealSteps.ThirdBill, "for", "Argumentas prieš išeinant.")).StatusCode.ShouldBe(HttpStatusCode.Created);
-        var reasonId = (await person.AppealAsync(AppealSteps.ThirdBill)).Reasons.Single(r => r.AuthorName == "Išeinanti Asmenybė").Id;
+        var reasonId = (await person.RecordAsync(AppealSteps.ThirdBill)).Reasons.Single(r => r.AuthorName == "Išeinanti Asmenybė").Id;
         (await RestrictAuthorAsync(moderator.Browser, reasonId)).StatusCode.ShouldBe(HttpStatusCode.Created);
         var userId = await Database.UserIdAsync(email);
 

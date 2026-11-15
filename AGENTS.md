@@ -87,7 +87,7 @@ src/Modules/               Lt2.Identity, Lt2.Notifications, Lt2.Audit, Lt2.Parli
                            IOrganisationDirectory, IOrganisationCodeSwitch). The host
                            composes the agenda (GET /api/v1/agenda) and /me/follows from the modules' interfaces.
 src/Lt2.Worker             Hangfire server: outbox dispatch loop, the parliament import, the agenda watcher (lrs.lt
-                           pages; off unless Agenda:BaseAddress is set), appeals daily aggregates and closing, summaries
+                           pages; off unless Agenda:BaseAddress is set), the daily aggregates and closing of the bills' records, summaries
                            in dry-run (nothing is sent in M2a), the follow emails (every 15 minutes), the AI summaries
                            of bills (hourly; makes nothing until a text reader and a provider exist), a daily identity
                            clean-up (with the unsent mail of purged registrations) and a daily outbox clean-up (failed
@@ -219,10 +219,13 @@ official `@lrs.lt` address from open data; the link is tied to the Seimas person
 - The bill and the appeal are one object: the bill's page `/seimas/{number}`. Every active bill (in the catalogue, no
   final vote) is open at once: anyone signed in takes a side, writes and marks arguments, follows, shares, reports.
   Nobody proposes, opens, asks for or approves an appeal. The old `/seimas/{n}/kreipimasis` addresses redirect.
-- The Appeals module keeps one record per bill (`appeals.appeal`: open, closed or hidden), created when first needed (the
+- The Appeals module keeps one record per bill (`appeals.bill_record`: open, closed or hidden), created when first needed (the
   first side, argument or description, or a moderator's action) under the bill's lock and a unique index. It has no
   initiator, and nothing public says who took part first. Answers for an active bill without a record are the empty open
   state, not "not found".
+- The code calls that row the bill's record (design 8.12, owner 2026-11-15): the entity `BillRecord`, columns `record_id`,
+  error codes `record.*`, the stored kind `record`. "Appeal" in the singular names no object in the code; the module,
+  its schema `appeals`, the `Appeals:` settings and the word *kreipimasis* stay.
 - One position per person per bill, private, changeable until the bill closes at the final Seimas vote.
 - Reasons: plain text up to 500 characters, public with the author's display name, for either side, whatever the
   author's own (no side needed; the writing box preselects the author's side if any). Nothing public may tell whether

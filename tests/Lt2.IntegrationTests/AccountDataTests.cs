@@ -21,7 +21,7 @@ public sealed class AccountDataTests(DatabaseFixture database) : ApiTest(databas
         var (initiator, initiatorEmail) = await Factory.MemberAsync("Rūta Mockutė");
         using var _i = initiator;
         await Database.PrepareBillAsync(initiator, moderator.Browser, AppealSteps.ThirdBill, "against");
-        var othersReason = (await initiator.AppealAsync(AppealSteps.ThirdBill)).Reasons.Single();
+        var othersReason = (await initiator.RecordAsync(AppealSteps.ThirdBill)).Reasons.Single();
         var (member, email) = await Factory.MemberAsync("Giedrė L.");
         using var _m = member;
         (await member.TakeSideAsync(AppealSteps.ThirdBill, "against")).StatusCode.ShouldBe(HttpStatusCode.NoContent);
@@ -67,8 +67,8 @@ public sealed class AccountDataTests(DatabaseFixture database) : ApiTest(databas
         {
             var (initiator, _) = await Factory.MemberAsync();
             using var _i = initiator;
-            var appeal = await Database.PrepareBillAsync(initiator, moderator.Browser, AppealSteps.ThirdBill, "against", threshold: 1);
-            var reasonId = (await initiator.AppealAsync(AppealSteps.ThirdBill)).Reasons.Single().Id;
+            var record = await Database.PrepareBillAsync(initiator, moderator.Browser, AppealSteps.ThirdBill, "against", threshold: 1);
+            var reasonId = (await initiator.RecordAsync(AppealSteps.ThirdBill)).Reasons.Single().Id;
             var (member, email) = await logged.MemberAsync("Ištrinamas Narys");
             using var _m = member;
             var userId = await Database.UserIdAsync(email);
@@ -76,9 +76,9 @@ public sealed class AccountDataTests(DatabaseFixture database) : ApiTest(databas
             (await member.SendAsync(HttpMethod.Put, AppealRoutes.EndorsementOf(reasonId))).StatusCode.ShouldBe(HttpStatusCode.NoContent);
             (await member.WriteReasonAsync(AppealSteps.ThirdBill, "against", "Šis argumentas dings su paskyra.")).StatusCode.ShouldBe(HttpStatusCode.Created);
             (await member.SendAsync(HttpMethod.Put, ApiRoutes.Me.PartySupport, new PartySupportRequest { Party = "Reformų partija", Consent = true })).StatusCode.ShouldBe(HttpStatusCode.NoContent);
-            (await member.AppealAsync(AppealSteps.ThirdBill)).Counts.Against.ShouldBe(2);
+            (await member.RecordAsync(AppealSteps.ThirdBill)).Counts.Against.ShouldBe(2);
 
-            using var urgent = await moderator.Browser.PostAsync(AppealRoutes.With(DigestRoutes.Urgent, appeal.Id), new UrgentDigestRequest { Statement = "Prieš ištrynimą." });
+            using var urgent = await moderator.Browser.PostAsync(AppealRoutes.With(DigestRoutes.Urgent, record.Id), new UrgentDigestRequest { Statement = "Prieš ištrynimą." });
             var frozen = await urgent.ReadAsync<DigestRunResponse>();
             frozen.Items.Single().Against.ShouldBe(2);
 
@@ -97,7 +97,7 @@ public sealed class AccountDataTests(DatabaseFixture database) : ApiTest(databas
             }
 
             using var stranger = NewBrowser();
-            var after = await stranger.AppealAsync(AppealSteps.ThirdBill);
+            var after = await stranger.RecordAsync(AppealSteps.ThirdBill);
             after.Counts.Against.ShouldBe(1, "the count falls");
             after.Reasons.Single().Endorsements.ShouldBe(0);
             (await stranger.GetJsonAsync<List<DigestRunResponse>>(DigestRoutes.DigestOn(frozen.RunDate))).Single(r => r.Id == frozen.Id).Items.Single().Against
@@ -146,7 +146,7 @@ public sealed class AccountDataTests(DatabaseFixture database) : ApiTest(databas
         var (author, _) = await Factory.MemberAsync();
         using var _a = author;
         await Database.PrepareBillAsync(author, moderator.Browser, AppealSteps.ThirdBill, "against");
-        var reasonId = (await author.AppealAsync(AppealSteps.ThirdBill)).Reasons.Single().Id;
+        var reasonId = (await author.RecordAsync(AppealSteps.ThirdBill)).Reasons.Single().Id;
         var (reporter, _) = await Factory.MemberAsync();
         using var _r = reporter;
         (await reporter.PostAsync(AppealRoutes.Reports, new ReportRequest { TargetKind = "reason", TargetId = reasonId, Ground = "spam" })).StatusCode.ShouldBe(HttpStatusCode.NoContent);
@@ -168,7 +168,7 @@ public sealed class AccountDataTests(DatabaseFixture database) : ApiTest(databas
         var (other, _) = await Factory.MemberAsync();
         using var _o = other;
         await Database.PrepareBillAsync(other, moderator.Browser, AppealSteps.SecondBill, "for");
-        var othersReason = (await other.AppealAsync(AppealSteps.SecondBill)).Reasons.Single().Id;
+        var othersReason = (await other.RecordAsync(AppealSteps.SecondBill)).Reasons.Single().Id;
 
         // The person does everything a member can: a side, an argument, a mark, a report, follows of every kind, the email
         // switches, party support, feedback that may be answered, and an organisation they represent.

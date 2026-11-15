@@ -429,7 +429,7 @@ body > .page { width: 100%; }
   .welcome lt2-logo-spin { width: 9rem; }
 }
 
-/* The front page (option B, owner 2026-11-13): the same welcome with a smaller logo, then one summary card per appeal. */
+/* The front page (option B, owner 2026-11-13): the same welcome with a smaller logo, then one summary card per bill. */
 .welcome--home lt2-logo-spin { width: min(16rem, 60%); }
 @media (max-width: 54rem) { .welcome--home lt2-logo-spin { width: 8rem; } }
 .cards { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(18rem, 100%), 1fr)); gap: var(--sp-5); align-items: start; }

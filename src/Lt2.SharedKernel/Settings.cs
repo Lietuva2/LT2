@@ -110,7 +110,7 @@ public static class SettingKeys
     public static readonly SettingKey<int> DigestMaxPerWeek = new("Digest:MaxPerWeek", 2, v => v is > 0 and <= 7);
 
     /// <summary>
-    /// "Changed notably" for the weekly summary (design 8.4): the share by which an appeal's participants (both sides)
+    /// "Changed notably" for the weekly summary (design 8.4): the share by which a record's participants (both sides)
     /// changed since the last summary that held it. Decided by the owner on 2026-11-13, default 10 %.
     /// </summary>
     public static readonly SettingKey<decimal> DigestNotableChange = new("Digest:NotableChange", 0.10m, v => v is > 0 and <= 1);
@@ -126,7 +126,7 @@ public static class SettingKeys
 
 
     /// <summary>
-    /// The Claude model that drafts appeal descriptions (design 8.11.4; provider decided by the owner on 2026-11-13). Used
+    /// The Claude model that drafts record descriptions (design 8.11.4; provider decided by the owner on 2026-11-13). Used
     /// only when the provider is configured.
     /// </summary>
     public static readonly SettingKey<string> AiDraftModel = new("Ai:DraftModel", "claude-sonnet-5-5", v => !string.IsNullOrWhiteSpace(v) && v.Length <= 100);

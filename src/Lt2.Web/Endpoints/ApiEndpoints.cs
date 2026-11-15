@@ -65,9 +65,9 @@ internal static class ApiEndpoints
 
         GetAppealRulesEndpoint.Map(api);
         GetAppealsEndpoint.Map(api);
-        GetAppealEndpoint.Map(api);
-        GetMyAppealEndpoint.Map(api);
-        GetAppealHistoryEndpoint.Map(api);
+        GetRecordEndpoint.Map(api);
+        GetMyRecordEndpoint.Map(api);
+        GetRecordHistoryEndpoint.Map(api);
         TakePositionEndpoint.Map(api);
         ClearPositionEndpoint.Map(api);
         FindSimilarReasonsEndpoint.Map(api);
@@ -86,23 +86,23 @@ internal static class ApiEndpoints
         GetReasonAuthorEndpoint.Map(api);
         RestrictAuthorEndpoints.Map(api);
         RestrictionsEndpoints.Map(api);
-        KeepAppealEndpoint.Map(api);
-        HideAppealEndpoint.Map(api);
+        KeepRecordEndpoint.Map(api);
+        HideRecordEndpoint.Map(api);
         HiddenEndpoints.Map(api);
-        SetAppealThresholdEndpoint.Map(api);
-        ModerationAppealEndpoints.Map(api);
+        SetRecordThresholdEndpoint.Map(api);
+        ModerationRecordEndpoints.Map(api);
         PublishReasonEndpoint.Map(api);
         HideReasonEndpoint.Map(api);
         MergeReasonEndpoint.Map(api);
         SetPlannedEndpoint.Map(api);
-        HoldAppealEndpoint.Map(api);
-        ReleaseAppealEndpoint.Map(api);
+        HoldRecordEndpoint.Map(api);
+        ReleaseRecordEndpoint.Map(api);
         UrgentDigestEndpoint.Map(api);
 
         GetDigestRulesEndpoint.Map(api);
         GetDigestsEndpoint.Map(api);
         GetDigestEndpoint.Map(api);
-        GetAppealDigestsEndpoint.Map(api);
+        GetRecordDigestsEndpoint.Map(api);
         GetDigestMpsEndpoint.Map(api);
         GetDigestPreviewEndpoint.Map(api);
 

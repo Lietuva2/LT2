@@ -9,12 +9,12 @@ namespace Lt2.Web.Client.Appeals;
 /// </summary>
 public sealed class MyBillState(IAppealsApi appeals, IModerationApi moderation)
 {
-    private readonly Dictionary<string, Task<MyAppealResponse?>> mine = new(StringComparer.OrdinalIgnoreCase);
+    private readonly Dictionary<string, Task<MyBillRecordResponse?>> mine = new(StringComparer.OrdinalIgnoreCase);
     private readonly Dictionary<string, Task<ModerationBillResponse?>> moderated = new(StringComparer.OrdinalIgnoreCase);
     private Task<MyRestrictionResponse?>? restriction;
 
     /// <summary>The person's own side, arguments and marks on the bill (never cached anywhere else).</summary>
-    public Task<MyAppealResponse?> MineAsync(string number) =>
+    public Task<MyBillRecordResponse?> MineAsync(string number) =>
         Cached(mine, number, async () => (await appeals.GetMineAsync(number)).Value);
 
     /// <summary>The person's own writing restriction (design 8.3).</summary>

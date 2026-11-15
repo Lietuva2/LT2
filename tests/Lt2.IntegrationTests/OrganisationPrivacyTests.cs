@@ -48,7 +48,7 @@ public sealed class OrganisationPrivacyTests(DatabaseFixture database) : ApiTest
         var publicRoutes = new[]
         {
             OrganisationRoutes.List(null), OrganisationRoutes.Of(created.Slug), OrganisationRoutes.OnBillOf(AppealSteps.SecondBill),
-            AppealRoutes.AppealOf(AppealSteps.SecondBill), "/o/" + created.Slug, "/organizacijos", "/seimas/" + AppealSteps.SecondBill,
+            AppealRoutes.RecordOf(AppealSteps.SecondBill), "/o/" + created.Slug, "/organizacijos", "/seimas/" + AppealSteps.SecondBill,
         };
         foreach (var browser in new[] { visitor, stranger })
         {
@@ -218,7 +218,7 @@ public sealed class OrganisationPrivacyTests(DatabaseFixture database) : ApiTest
             foreach (var route in new[]
             {
                 OrganisationRoutes.Of(created.Slug), "/o/" + created.Slug, OrganisationRoutes.OnBillOf(AppealSteps.SecondBill), OrganisationRoutes.List(null),
-                AppealRoutes.AppealOf(AppealSteps.SecondBill), "/seimas/" + AppealSteps.SecondBill,
+                AppealRoutes.RecordOf(AppealSteps.SecondBill), "/seimas/" + AppealSteps.SecondBill,
             })
             {
                 var body = WebUtility.HtmlDecode(await browser.Client.GetStringAsync(route));

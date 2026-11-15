@@ -16,7 +16,7 @@ namespace Lt2.Web.Endpoints.Moderation;
 /// <c>GET /moderation/ai</c> says whether an AI draft can be asked for and <c>POST …/description-draft</c> asks for one
 /// from pasted official text (design 8.11.4; refused while no provider is configured).
 /// </summary>
-internal static class ModerationAppealEndpoints
+internal static class ModerationRecordEndpoints
 {
     public static void Map(IEndpointRouteBuilder api)
     {
@@ -32,7 +32,7 @@ internal static class ModerationAppealEndpoints
             .WithName("EnsureBillRecord")
             .WithTags("Moderation")
             .RequireAuthorization(Policies.Moderator)
-            .Produces<BillRecordResponse>()
+            .Produces<BillRecordIdResponse>()
             .ProducesProblem(StatusCodes.Status404NotFound)
             .ProducesProblem(StatusCodes.Status409Conflict);
 
@@ -88,7 +88,7 @@ internal static class ModerationAppealEndpoints
     private static async Task<IResult> EnsureRecordAsync(string number, IAppealsModeration moderation, ErrorMapper errors, CancellationToken cancellationToken)
     {
         var result = await moderation.EnsureRecordAsync(number, cancellationToken);
-        return result.IsSuccess ? TypedResults.Ok(new BillRecordResponse(result.Value)) : errors.ToResult(result.Error!);
+        return result.IsSuccess ? TypedResults.Ok(new BillRecordIdResponse(result.Value)) : errors.ToResult(result.Error!);
     }
 
     private static Task<IResult> DescribeAsync(string number, ModeratorDescriptionRequest request, HttpContext context, IAppealsModeration moderation, CancellationToken cancellationToken) =>

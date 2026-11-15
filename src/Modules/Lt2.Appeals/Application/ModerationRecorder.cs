@@ -18,7 +18,7 @@ internal sealed class ModerationRecorder(IAuditLog audit, TimeProvider clock)
 {
     private static readonly JsonSerializerOptions Details = new(JsonSerializerOptions.Web) { DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull };
 
-    /// <param name="kind">The target's kind: <c>appeal</c>, <c>reason</c>, <c>restriction</c>, <c>organisation</c> or <c>statement</c>.</param>
+    /// <param name="kind">The target's kind: <c>record</c>, <c>reason</c>, <c>restriction</c>, <c>organisation</c> or <c>statement</c>.</param>
     /// <param name="bill">The bill the action is about, when there is one.</param>
     /// <param name="details">Further details for the audit entry, or null.</param>
     /// <param name="answersReports">The action answers the open reports on its target, which then close.</param>

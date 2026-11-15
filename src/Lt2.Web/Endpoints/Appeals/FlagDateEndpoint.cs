@@ -9,7 +9,7 @@ using Lt2.Web.Services;
 namespace Lt2.Web.Endpoints.Appeals;
 
 /// <summary>
-/// <c>POST /api/v1/bills/{number}/appeal/flags</c>: "the date is wrong" or "this is being voted sooner", with a link to
+/// <c>POST /api/v1/bills/{number}/record/flags</c>: "the date is wrong" or "this is being voted sooner", with a link to
 /// the source (design 8.4). Only a participant (a member with a side on the open bill) who may write; one open flag per
 /// person and bill, a second changes nothing. A moderator corrects the date.
 /// </summary>

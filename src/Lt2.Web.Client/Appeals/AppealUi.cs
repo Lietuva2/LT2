@@ -2,7 +2,7 @@ using Microsoft.Extensions.Localization;
 
 namespace Lt2.Web.Client.Appeals;
 
-/// <summary>Marker type for the Lithuanian texts of the appeal, organisation and staff components in AppealUi.resx.</summary>
+/// <summary>Marker type for the Lithuanian texts of the record, organisation and staff components in AppealUi.resx.</summary>
 public sealed class AppealUi;
 
 /// <summary>Words the moderators' screens share (design 8.3, 8.12.3, 8.14.14).</summary>

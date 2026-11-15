@@ -71,15 +71,15 @@ public static class DemoAppeal
         var now = clock.GetUtcNow();
         var people = Build(now);
         var created = await InventedMembers.CreateAsync(connectionString, people.Members, cancellationToken);
-        var outcome = await InventedAppeal.SeedAsync(connectionString, people.Appeal, cancellationToken);
-        if (outcome == InventedAppealOutcome.BillTaken)
+        var outcome = await InventedRecord.SeedAsync(connectionString, people.Record, cancellationToken);
+        if (outcome == InventedRecordOutcome.BillTaken)
         {
             throw new InvalidOperationException($"Refused: {Bill} already has a record that people took part on; the demonstration fills only a bill nobody took part in.");
         }
 
         // The invented AI summary links to the bill's own e-seimas address from the (invented) parliament data.
         var address = await ParliamentMaintenance.BillAddressAsync(connectionString, AiBill, cancellationToken);
-        var summary = await InventedAppeal.SeedAiDescriptionAsync(connectionString, AiBill, AiDescription, address, now.AddDays(-2), cancellationToken);
+        var summary = await InventedRecord.SeedAiDescriptionAsync(connectionString, AiBill, AiDescription, address, now.AddDays(-2), cancellationToken);
 
         // Design 8.14.14: invented organisations with statements on the bill, so "Organizacijų pozicijos" can be seen. Their
         // representatives are invented accounts of their own, with no side on any bill.
@@ -87,12 +87,12 @@ public static class DemoAppeal
         await InventedMembers.CreateAsync(connectionString, OrganisationMembers(now), cancellationToken);
         var organisationsCreated = await InventedOrganisations.SeedAsync(connectionString, organisations, now, cancellationToken);
         return new Outcome(
-            outcome == InventedAppealOutcome.Created ? "created" : "already there",
+            outcome == InventedRecordOutcome.Created ? "created" : "already there",
             created,
             summary switch
             {
-                InventedAppealOutcome.Created => "created",
-                InventedAppealOutcome.AlreadyThere => "already there",
+                InventedRecordOutcome.Created => "created",
+                InventedRecordOutcome.AlreadyThere => "already there",
                 _ => "left as it is",
             },
             organisationsCreated);
@@ -156,8 +156,8 @@ public static class DemoAppeal
                 null)),
     ];
 
-    /// <summary>The invented people and the appeal, the same on every run (fixed seed and identifiers).</summary>
-    public static (IReadOnlyList<InventedMember> Members, InventedAppealSpec Appeal) Build(DateTimeOffset now)
+    /// <summary>The invented people and the record, the same on every run (fixed seed and identifiers).</summary>
+    public static (IReadOnlyList<InventedMember> Members, InventedRecordSpec Record) Build(DateTimeOffset now)
     {
         var random = new Random(412);
         var members = new List<InventedMember>();
@@ -172,7 +172,7 @@ public static class DemoAppeal
             var since = older ? Older() : Newer();
             members.Add(new InventedMember(Id(n), $"demo.{n:D5}@{InventedMembers.Domain}", name, since));
 
-            // Sides taken at any time since the appeal opened (not all on day one), so the invented data does not read as
+            // Sides taken at any time since the record opened (not all on day one), so the invented data does not read as
             // a surge of new accounts.
             var opened = now.AddDays(-75);
             var earliest = since > opened ? since : opened;
@@ -208,6 +208,6 @@ public static class DemoAppeal
         };
 
         var opened = now.AddDays(-75);
-        return (members, new InventedAppealSpec(Bill, Description, opened, positions, reasons));
+        return (members, new InventedRecordSpec(Bill, Description, opened, positions, reasons));
     }
 }

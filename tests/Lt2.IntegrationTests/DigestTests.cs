@@ -45,7 +45,7 @@ public sealed class DigestTests(DatabaseFixture database) : ApiTest(database)
         {
             var (initiator, _) = await Factory.MemberAsync("Rūta Mockutė");
             using var _i = initiator;
-            var appeal = await Database.PrepareBillAsync(initiator, moderator, AppealSteps.ThirdBill, "against", threshold: 2);
+            var record = await Database.PrepareBillAsync(initiator, moderator, AppealSteps.ThirdBill, "against", threshold: 2);
             var (member, _) = await Factory.MemberAsync("Giedrė Slapta");
             using var _m = member;
             (await member.TakeSideAsync(AppealSteps.ThirdBill, "for")).StatusCode.ShouldBe(HttpStatusCode.NoContent);
@@ -83,18 +83,18 @@ public sealed class DigestTests(DatabaseFixture database) : ApiTest(database)
                 (await Database.ScalarAsync<long>("SELECT count(*) FROM notify.digest_item WHERE reasons::text LIKE @p OR bill_title LIKE @p", ("p", "%" + person + "%"))).ShouldBe(0);
             }
 
-            // The appeal lists the summary that held it, with its frozen numbers, and links to its item on the public page.
-            var held = (await stranger.GetJsonAsync<List<AppealDigestResponse>>(DigestRoutes.OfAppealOn(AppealSteps.ThirdBill))).ShouldHaveSingleItem();
+            // The record lists the summary that held it, with its frozen numbers, and links to its item on the public page.
+            var held = (await stranger.GetJsonAsync<List<RecordDigestResponse>>(DigestRoutes.OfRecordOn(AppealSteps.ThirdBill))).ShouldHaveSingleItem();
             (held.RunId, held.Kind, held.RunDate, held.Status).ShouldBe((weekly.Id, "weekly", monday, "dry-run"));
             (held.Item.BillNumber, held.Item.For, held.Item.Against).ShouldBe(("XVP-0618", 1, 1));
             held.Item.Reasons.Select(r => r.Text).ShouldBe([AppealSteps.AgainstReason]);
-            using var appealPage = await stranger.Client.GetAsync("/seimas/XVP-0618");
-            var appealHtml = WebUtility.HtmlDecode(await appealPage.Content.ReadAsStringAsync());
-            appealHtml.ShouldContain("Suvestinėse Seimo nariams");
-            appealHtml.ShouldNotContain("Šis projektas dar nebuvo nė vienoje suvestinėje.");
-            appealHtml.ShouldContain($"href=\"{DigestRoutes.PageAt(monday, weekly.Id, "XVP-0618")}\"");
-            html.ShouldContain($"id=\"{DigestRoutes.ItemAnchor(weekly.Id, "XVP-0618")}\"", customMessage: "the link lands on the appeal's item");
-            (await stranger.Client.GetAsync(DigestRoutes.OfAppealOn("XVP-9999"))).StatusCode.ShouldBe(HttpStatusCode.NotFound);
+            using var recordPage = await stranger.Client.GetAsync("/seimas/XVP-0618");
+            var recordHtml = WebUtility.HtmlDecode(await recordPage.Content.ReadAsStringAsync());
+            recordHtml.ShouldContain("Suvestinėse Seimo nariams");
+            recordHtml.ShouldNotContain("Šis projektas dar nebuvo nė vienoje suvestinėje.");
+            recordHtml.ShouldContain($"href=\"{DigestRoutes.PageAt(monday, weekly.Id, "XVP-0618")}\"");
+            html.ShouldContain($"id=\"{DigestRoutes.ItemAnchor(weekly.Id, "XVP-0618")}\"", customMessage: "the link lands on the record's item");
+            (await stranger.Client.GetAsync(DigestRoutes.OfRecordOn("XVP-9999"))).StatusCode.ShouldBe(HttpStatusCode.NotFound);
 
             (await Database.ScalarAsync<long>(
                 "SELECT count(*) FROM information_schema.columns WHERE table_schema = 'notify' AND table_name LIKE 'digest%' AND (column_name LIKE '%user%' OR column_name LIKE '%email%' OR column_name LIKE '%address%')"))
@@ -111,10 +111,10 @@ public sealed class DigestTests(DatabaseFixture database) : ApiTest(database)
             preview.Text.ShouldNotContain("Rūta Mockutė");
             (await stranger.Client.GetAsync(DigestRoutes.PreviewOf(weekly.Id, mps[0].Slug))).StatusCode.ShouldBe(HttpStatusCode.Unauthorized);
 
-            // A later change to the appeal does not change what the summary said.
+            // A later change to the record does not change what the summary said.
             (await initiator.TakeSideAsync(AppealSteps.ThirdBill, "for")).StatusCode.ShouldBe(HttpStatusCode.NoContent);
             (await stranger.GetJsonAsync<List<DigestRunResponse>>(DigestRoutes.DigestOn(monday))).Single().Items.Single(i => i.BillNumber == "XVP-0618").Against.ShouldBe(1);
-            (await stranger.GetJsonAsync<List<AppealDigestResponse>>(DigestRoutes.OfAppealOn(AppealSteps.ThirdBill))).Single().Item.Against.ShouldBe(1);
+            (await stranger.GetJsonAsync<List<RecordDigestResponse>>(DigestRoutes.OfRecordOn(AppealSteps.ThirdBill))).Single().Item.Against.ShouldBe(1);
         }
         finally
         {
@@ -124,7 +124,7 @@ public sealed class DigestTests(DatabaseFixture database) : ApiTest(database)
     }
 
     [Fact]
-    public async Task Changing_the_notable_change_setting_changes_which_grown_appeals_a_weekly_summary_holds()
+    public async Task Changing_the_notable_change_setting_changes_which_grown_records_a_weekly_summary_holds()
     {
         var (moderator, admin) = ((await ModeratorAsync()).Browser, (await AdministratorAsync()).Browser);
         await admin.SetSettingAsync("Digest:ThresholdMinimum", 1);
@@ -166,9 +166,9 @@ public sealed class DigestTests(DatabaseFixture database) : ApiTest(database)
         }
     }
 
-    /// <summary>Design 8.1: appeals are opened without arguments, so a summary meets a side, or a whole appeal, with none.</summary>
+    /// <summary>Design 8.1: records are opened without arguments, so a summary meets a side, or a whole record, with none.</summary>
     [Fact]
-    public async Task A_summary_copes_with_an_appeal_without_arguments_and_with_a_side_without_any()
+    public async Task A_summary_copes_with_a_record_without_arguments_and_with_a_side_without_any()
     {
         var (moderator, admin) = ((await ModeratorAsync()).Browser, (await AdministratorAsync()).Browser);
         await admin.SetSettingAsync("Digest:ThresholdMinimum", 1);
@@ -201,7 +201,7 @@ public sealed class DigestTests(DatabaseFixture database) : ApiTest(database)
             var mps = await moderator.GetJsonAsync<List<DigestMpResponse>>(DigestRoutes.MpsOf(weekly.Id));
             var text = (await moderator.GetJsonAsync<DigestPreviewResponse>(DigestRoutes.PreviewOf(weekly.Id, mps[0].Slug))).Text;
             Regex(text, "Argumentų už dar nėra.").ShouldBe(1, "XVP-0618 has none for");
-            Regex(text, "Argumentų prieš dar nėra.").ShouldBe(2, "neither appeal has one against");
+            Regex(text, "Argumentų prieš dar nėra.").ShouldBe(2, "neither record has one against");
             text.ShouldContain("Vienintelis argumentas už.");
 
             using var stranger = NewBrowser();
@@ -260,7 +260,7 @@ public sealed class DigestTests(DatabaseFixture database) : ApiTest(database)
     }
 
     [Fact]
-    public async Task A_held_appeal_enters_no_summary_until_released_and_one_urgent_summary_may_exceed_the_ceiling()
+    public async Task A_held_record_enters_no_summary_until_released_and_one_urgent_summary_may_exceed_the_ceiling()
     {
         var (moderator, admin) = ((await ModeratorAsync()).Browser, (await AdministratorAsync()).Browser);
         await admin.SetSettingAsync("Digest:ThresholdMinimum", 1);
@@ -270,38 +270,38 @@ public sealed class DigestTests(DatabaseFixture database) : ApiTest(database)
         {
             var (initiator, initiatorEmail) = await Factory.MemberAsync();
             using var _i = initiator;
-            var appeal = await Database.PrepareBillAsync(initiator, moderator, AppealSteps.ThirdBill, "against", threshold: 1);
+            var record = await Database.PrepareBillAsync(initiator, moderator, AppealSteps.ThirdBill, "against", threshold: 1);
             await PlanAsync("XVP-0618", monday.AddDays(3));
 
-            using (var hold = await moderator.PostAsync(AppealRoutes.With(AppealRoutes.HoldAppeal, appeal.Id), new StatementRequest { Statement = "Tikrinamas šuolis." }))
+            using (var hold = await moderator.PostAsync(AppealRoutes.With(AppealRoutes.HoldRecord, record.Id), new StatementRequest { Statement = "Tikrinamas šuolis." }))
             {
                 hold.StatusCode.ShouldBe(HttpStatusCode.NoContent, await hold.Content.ReadAsStringAsync());
             }
 
-            (await moderator.GetJsonAsync<Lt2.Api.Contracts.Appeals.ModerationQueueResponse>(AppealRoutes.ModerationQueue)).Appeals.Single(a => a.Id == appeal.Id).Held.ShouldBeTrue();
-            (await RunDueAsync(At(monday, 7, 10))).ShouldBeEmpty("a held appeal enters no summary");
-            using (var urgentHeld = await moderator.PostAsync(AppealRoutes.With(DigestRoutes.Urgent, appeal.Id), new UrgentDigestRequest { Statement = "Skubiai." }))
+            (await moderator.GetJsonAsync<Lt2.Api.Contracts.Appeals.ModerationQueueResponse>(AppealRoutes.ModerationQueue)).Records.Single(a => a.Id == record.Id).Held.ShouldBeTrue();
+            (await RunDueAsync(At(monday, 7, 10))).ShouldBeEmpty("a held record enters no summary");
+            using (var urgentHeld = await moderator.PostAsync(AppealRoutes.With(DigestRoutes.Urgent, record.Id), new UrgentDigestRequest { Statement = "Skubiai." }))
             {
                 await urgentHeld.ShouldBeProblemAsync(HttpStatusCode.Conflict, "digest.held");
             }
 
-            (await moderator.PostAsync(AppealRoutes.With(AppealRoutes.ReleaseAppeal, appeal.Id), new StatementRequest { Statement = "Patikrinta." })).StatusCode.ShouldBe(HttpStatusCode.NoContent);
-            (await Database.ScalarAsync<long>("SELECT count(*) FROM audit.event WHERE action IN ('moderation.appeal.hold', 'moderation.appeal.release') AND target = @t", ("t", "appeal:" + appeal.Id))).ShouldBe(2);
+            (await moderator.PostAsync(AppealRoutes.With(AppealRoutes.ReleaseRecord, record.Id), new StatementRequest { Statement = "Patikrinta." })).StatusCode.ShouldBe(HttpStatusCode.NoContent);
+            (await Database.ScalarAsync<long>("SELECT count(*) FROM audit.event WHERE action IN ('moderation.record.hold', 'moderation.record.release') AND target = @t", ("t", "record:" + record.Id))).ShouldBe(2);
 
             // This week already had its summary for everyone (ceiling 1); an urgent one may still go, once per bill per week.
-            await Database.ExecuteAsync("UPDATE appeals.appeal SET sending = 'automatic' WHERE id = @a", ("a", appeal.Id));
-            using var urgent = await moderator.PostAsync(AppealRoutes.With(DigestRoutes.Urgent, appeal.Id), new UrgentDigestRequest { Statement = "Įtraukta į rytojaus darbotvarkę." });
+            await Database.ExecuteAsync("UPDATE appeals.bill_record SET sending = 'automatic' WHERE id = @a", ("a", record.Id));
+            using var urgent = await moderator.PostAsync(AppealRoutes.With(DigestRoutes.Urgent, record.Id), new UrgentDigestRequest { Statement = "Įtraukta į rytojaus darbotvarkę." });
             urgent.StatusCode.ShouldBe(HttpStatusCode.Created, await urgent.Content.ReadAsStringAsync());
             var run = await urgent.ReadAsync<DigestRunResponse>();
             run.Kind.ShouldBe("urgent");
             run.MpCount.ShouldBeGreaterThan(0);
             (await Database.ScalarAsync<long>("SELECT count(*) FROM audit.event WHERE action = 'digest.urgent.approved' AND actor_role = 'moderator'")).ShouldBeGreaterThanOrEqualTo(1);
-            using var again = await moderator.PostAsync(AppealRoutes.With(DigestRoutes.Urgent, appeal.Id), new UrgentDigestRequest { Statement = "Dar kartą." });
+            using var again = await moderator.PostAsync(AppealRoutes.With(DigestRoutes.Urgent, record.Id), new UrgentDigestRequest { Statement = "Dar kartą." });
             await again.ShouldBeProblemAsync(HttpStatusCode.Conflict, "digest.urgent-already");
             (await Database.ScalarAsync<long>("SELECT count(*) FROM notify.outbox WHERE payload->>'to' = @to AND kind = 'email.moderation-notice' AND payload->>'notice' NOT IN ('appeal-published')", ("to", initiatorEmail))).ShouldBe(0, "timing is not the author's content");
 
             using var member = NewBrowser();
-            (await member.Client.PostAsync(AppealRoutes.With(DigestRoutes.Urgent, appeal.Id), null)).StatusCode.ShouldBe(HttpStatusCode.Unauthorized);
+            (await member.Client.PostAsync(AppealRoutes.With(DigestRoutes.Urgent, record.Id), null)).StatusCode.ShouldBe(HttpStatusCode.Unauthorized);
         }
         finally
         {

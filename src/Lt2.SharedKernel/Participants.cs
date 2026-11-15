@@ -113,7 +113,7 @@ public sealed record StageVoteFacts(
 /// <summary>An MP as a follow refers to them: by the Seimas person id, stable across terms (design 8.11.2).</summary>
 public sealed record MpFacts(long SeimasPersonId, string Slug, string FirstName, string LastName);
 
-/// <summary>The vote that closes an appeal (design 8.1).</summary>
+/// <summary>The vote that closes a record (design 8.1).</summary>
 public sealed record BillFinalVote(long VoteId, DateTimeOffset HeldAt);
 
 /// <summary>

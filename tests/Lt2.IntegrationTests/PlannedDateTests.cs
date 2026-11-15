@@ -6,8 +6,8 @@ using Lt2.IntegrationTests.Infrastructure;
 namespace Lt2.IntegrationTests;
 
 /// <summary>
-/// Design 8.3, 8.4: planned dates on the appeal ("Planuojama …"), flags from participants, a moderator's correction that
-/// takes precedence over the agenda pages, and the appeal under its threshold whose bill reached the agenda in the queue.
+/// Design 8.3, 8.4: planned dates on the record ("Planuojama …"), flags from participants, a moderator's correction that
+/// takes precedence over the agenda pages, and the record under its threshold whose bill reached the agenda in the queue.
 /// </summary>
 public sealed class PlannedDateTests(DatabaseFixture database) : ApiTest(database)
 {
@@ -17,7 +17,7 @@ public sealed class PlannedDateTests(DatabaseFixture database) : ApiTest(databas
         using var moderator = await StaffMembers.SharedAsync(Factory, Database, "moderator");
         var (initiator, _) = await Factory.MemberAsync();
         using var _i = initiator;
-        var appeal = await Database.PrepareBillAsync(initiator, moderator.Browser, AppealSteps.ThirdBill, "against", threshold: 500);
+        var record = await Database.PrepareBillAsync(initiator, moderator.Browser, AppealSteps.ThirdBill, "against", threshold: 500);
         var date = DateOnly.FromDateTime(DateTime.UtcNow.AddDays(6));
         await Database.ExecuteAsync(
             """
@@ -28,7 +28,7 @@ public sealed class PlannedDateTests(DatabaseFixture database) : ApiTest(databas
         try
         {
             using var stranger = NewBrowser();
-            (await stranger.AppealAsync(AppealSteps.ThirdBill)).Planned.ShouldBe(new PlannedDateResponse(date, "adoption", "https://e-seimas.lrs.lt/pavyzdys", false));
+            (await stranger.RecordAsync(AppealSteps.ThirdBill)).Planned.ShouldBe(new PlannedDateResponse(date, "adoption", "https://e-seimas.lrs.lt/pavyzdys", false));
             using (var page = await stranger.Client.GetAsync("/seimas/XVP-0618"))
             {
                 var html = WebUtility.HtmlDecode(await page.Content.ReadAsStringAsync());
@@ -38,7 +38,7 @@ public sealed class PlannedDateTests(DatabaseFixture database) : ApiTest(databas
             }
 
             // Under its threshold with the bill on the agenda: a moderator looks at it (design 8.3).
-            var queued = (await moderator.Browser.GetJsonAsync<ModerationQueueResponse>(AppealRoutes.ModerationQueue)).Appeals.Single(a => a.Id == appeal.Id);
+            var queued = (await moderator.Browser.GetJsonAsync<ModerationQueueResponse>(AppealRoutes.ModerationQueue)).Records.Single(a => a.Id == record.Id);
             queued.UnderThresholdOnAgenda.ShouldBeTrue();
             queued.Participants.ShouldBe(1, "the note says how many take part");
             queued.Threshold.ShouldBe(500);
@@ -58,12 +58,12 @@ public sealed class PlannedDateTests(DatabaseFixture database) : ApiTest(databas
             }
 
             (await initiator.PostAsync(AppealRoutes.FlagsOf(AppealSteps.ThirdBill), flag)).StatusCode.ShouldBe(HttpStatusCode.NoContent);
-            var flags = (await moderator.Browser.GetJsonAsync<ModerationQueueResponse>(AppealRoutes.ModerationQueue)).Appeals.Single(a => a.Id == appeal.Id).DateFlags!;
+            var flags = (await moderator.Browser.GetJsonAsync<ModerationQueueResponse>(AppealRoutes.ModerationQueue)).Records.Single(a => a.Id == record.Id).DateFlags!;
             flags.Single().Kind.ShouldBe("sooner");
             flags.Single().Link.ShouldBe("https://www.lrs.lt/pavyzdys");
 
             var corrected = date.AddDays(-3);
-            using (var set = await moderator.Browser.SendAsync(HttpMethod.Put, AppealRoutes.With(AppealRoutes.AppealPlanned, appeal.Id), new ModeratorPlannedRequest
+            using (var set = await moderator.Browser.SendAsync(HttpMethod.Put, AppealRoutes.With(AppealRoutes.RecordPlanned, record.Id), new ModeratorPlannedRequest
             {
                 Date = corrected,
                 Stage = "consideration",
@@ -73,16 +73,16 @@ public sealed class PlannedDateTests(DatabaseFixture database) : ApiTest(databas
                 set.StatusCode.ShouldBe(HttpStatusCode.NoContent, await set.Content.ReadAsStringAsync());
             }
 
-            (await stranger.AppealAsync(AppealSteps.ThirdBill)).Planned.ShouldBe(new PlannedDateResponse(corrected, "consideration", null, true));
-            (await Database.ScalarAsync<long>("SELECT count(*) FROM appeals.flag WHERE appeal_id = @a AND status = 'open'", ("a", appeal.Id))).ShouldBe(0);
+            (await stranger.RecordAsync(AppealSteps.ThirdBill)).Planned.ShouldBe(new PlannedDateResponse(corrected, "consideration", null, true));
+            (await Database.ScalarAsync<long>("SELECT count(*) FROM appeals.flag WHERE record_id = @a AND status = 'open'", ("a", record.Id))).ShouldBe(0);
             (await Database.ScalarAsync<long>(
-                "SELECT count(*) FROM audit.event WHERE action = 'moderation.appeal.planned' AND target = @t AND actor_role = 'moderator'", ("t", "appeal:" + appeal.Id))).ShouldBe(1);
+                "SELECT count(*) FROM audit.event WHERE action = 'moderation.record.planned' AND target = @t AND actor_role = 'moderator'", ("t", "record:" + record.Id))).ShouldBe(1);
 
             // A new agenda row for the bill does not override the moderator's date.
             await Database.ExecuteAsync(
                 "INSERT INTO parliament.planned_item (id, bill_number, planned_date, stage, source, first_seen, last_seen) VALUES (gen_random_uuid(), 'XVP-0618', @d, 'adoption', 'agenda', now(), now())",
                 ("d", date.AddDays(1)));
-            (await stranger.AppealAsync(AppealSteps.ThirdBill)).Planned!.Date.ShouldBe(corrected);
+            (await stranger.RecordAsync(AppealSteps.ThirdBill)).Planned!.Date.ShouldBe(corrected);
         }
         finally
         {

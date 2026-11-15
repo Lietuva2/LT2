@@ -9,17 +9,17 @@ using Lt2.Web.Services;
 namespace Lt2.Web.Endpoints.Appeals;
 
 /// <summary>
-/// <c>GET /api/v1/bills/{number}/appeal/mine</c>: the caller's own side, "Man svarbu" marks and arguments on this bill.
+/// <c>GET /api/v1/bills/{number}/record/mine</c>: the caller's own side, "Man svarbu" marks and arguments on this bill.
 /// The only answer that holds a side, and only the caller's; never cached.
 /// </summary>
-internal static class GetMyAppealEndpoint
+internal static class GetMyRecordEndpoint
 {
     public static void Map(IEndpointRouteBuilder api) =>
         api.MapGet(ApiEndpoints.Relative(AppealRoutes.Mine), HandleAsync)
-            .WithName("GetMyAppeal")
+            .WithName("GetMyRecord")
             .WithTags("Appeals")
             .RequireAuthorization(Policies.Member)
-            .Produces<MyAppealResponse>()
+            .Produces<MyBillRecordResponse>()
             .ProducesProblem(StatusCodes.Status404NotFound);
 
     private static async Task<IResult> HandleAsync(string number, ClaimsPrincipal user, IAppealsModule appeals, ErrorMapper errors, CancellationToken cancellationToken)

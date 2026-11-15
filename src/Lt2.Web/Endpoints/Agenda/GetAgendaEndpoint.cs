@@ -6,7 +6,7 @@ namespace Lt2.Web.Endpoints.Agenda;
 
 /// <summary>
 /// <c>GET /api/v1/agenda</c> (design 8.11.1): the coming planned items by day and the last seven days' stage results, each
-/// with its bill's public appeal numbers or how many ask for one. Public and cacheable with an ETag: nothing about the
+/// with its bill's public record numbers or how many ask for one. Public and cacheable with an ETag: nothing about the
 /// caller is in it.
 /// </summary>
 internal static class GetAgendaEndpoint

@@ -8,18 +8,18 @@ using Lt2.Web.Services;
 namespace Lt2.Web.Endpoints.Appeals;
 
 /// <summary>
-/// <c>GET /api/v1/bills/{number}/appeal</c>: the bill as people take part on it, with both sides' counts, the threshold and
+/// <c>GET /api/v1/bills/{number}/record</c>: the bill as people take part on it, with both sides' counts, the threshold and
 /// the published arguments (design 8.8, 8.12.1). Public and the same for everyone: an active bill nobody took part in
 /// answers the empty open state, not "not found".
 /// </summary>
-internal static class GetAppealEndpoint
+internal static class GetRecordEndpoint
 {
     public static void Map(IEndpointRouteBuilder api) =>
-        api.MapGet(ApiEndpoints.Relative(AppealRoutes.Appeal), HandleAsync)
-            .WithName("GetAppeal")
+        api.MapGet(ApiEndpoints.Relative(AppealRoutes.Record), HandleAsync)
+            .WithName("GetRecord")
             .WithTags("Appeals")
             .AllowAnonymous()
-            .Produces<AppealResponse>()
+            .Produces<BillRecordResponse>()
             .Produces(StatusCodes.Status304NotModified)
             .ProducesProblem(StatusCodes.Status404NotFound);
 
@@ -27,7 +27,7 @@ internal static class GetAppealEndpoint
     {
         var result = await appeals.GetAsync(number, cancellationToken);
         return result.IsSuccess
-            ? PublicJson.From(http, errors, Lt2.SharedKernel.Result<AppealResponse>.Success(AppealMapping.Map(result.Value)), maxAgeSeconds: 0)
+            ? PublicJson.From(http, errors, Lt2.SharedKernel.Result<BillRecordResponse>.Success(AppealMapping.Map(result.Value)), maxAgeSeconds: 0)
             : errors.ToResult(result.Error!);
     }
 }

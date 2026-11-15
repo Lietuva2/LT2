@@ -20,7 +20,7 @@ public sealed class ReasonsToComePrivacyTests(DatabaseFixture database) : ApiTes
         AgendaRoutes.Agenda,
         ParliamentRoutes.BillByNumber(AppealSteps.SecondBill),
         ParliamentRoutes.MpBySlug(ReasonsToComeSteps.Petraitis),
-        AppealRoutes.AppealOf(AppealSteps.SecondBill),
+        AppealRoutes.RecordOf(AppealSteps.SecondBill),
         AppealRoutes.Appeals,
     ];
 
@@ -100,7 +100,7 @@ public sealed class ReasonsToComePrivacyTests(DatabaseFixture database) : ApiTes
 
         using var visitor = NewBrowser();
         var firstId = (await Database.UserIdAsync(firstEmail)).ToString();
-        foreach (var route in new[] { AppealRoutes.AppealOf(AppealSteps.SecondBill), AppealRoutes.Appeals, AgendaRoutes.Agenda, "/seimas/" + AppealSteps.SecondBill, "/projektai" })
+        foreach (var route in new[] { AppealRoutes.RecordOf(AppealSteps.SecondBill), AppealRoutes.Appeals, AgendaRoutes.Agenda, "/seimas/" + AppealSteps.SecondBill, "/projektai" })
         {
             var body = WebUtility.HtmlDecode(await visitor.Client.GetStringAsync(route));
             body.ShouldNotContain("Pirmoji Dalyvė", Case.Sensitive, route);
@@ -110,8 +110,8 @@ public sealed class ReasonsToComePrivacyTests(DatabaseFixture database) : ApiTes
         }
 
         // The record itself keeps no trace of who caused it.
-        (await Database.ScalarAsync<long>("SELECT count(*) FROM appeals.appeal WHERE bill_number = @b AND initiator_user_id IS NULL", ("b", AppealSteps.SecondBill))).ShouldBe(1);
-        (await Database.ScalarAsync<long>("SELECT count(*) FROM audit.event WHERE target LIKE 'appeal:%' AND actor_user_id = @u", ("u", Guid.Parse(firstId)))).ShouldBe(0);
+        (await Database.ScalarAsync<long>("SELECT count(*) FROM appeals.bill_record WHERE bill_number = @b AND initiator_user_id IS NULL", ("b", AppealSteps.SecondBill))).ShouldBe(1);
+        (await Database.ScalarAsync<long>("SELECT count(*) FROM audit.event WHERE target LIKE 'record:%' AND actor_user_id = @u", ("u", Guid.Parse(firstId)))).ShouldBe(0);
     }
     [Fact]
     public async Task A_side_never_changes_what_the_follow_answer_holds()

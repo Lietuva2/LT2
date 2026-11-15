@@ -3,7 +3,7 @@ using Lt2.Appeals.Domain;
 
 namespace Lt2.UnitTests;
 
-/// <summary>Design 8.2 and <c>AGENTS.md</c> "Appeals": one appeal per bill, one position per person, two sides, arguments, "Man svarbu".</summary>
+/// <summary>Design 8.2 and <c>AGENTS.md</c> "Appeals": one record per bill, one position per person, two sides, arguments, "Man svarbu".</summary>
 public sealed class AppealRuleTests
 {
     [Theory]
@@ -301,15 +301,15 @@ public sealed class DailyStatRuleTests
 public sealed class ClosingRuleTests
 {
     [Fact]
-    public void An_open_appeal_closes_when_its_bill_has_a_final_vote()
+    public void An_open_record_closes_when_its_bill_has_a_final_vote()
     {
-        ClosingRules.ShouldClose(AppealStatuses.Open, 99100009).ShouldBeTrue();
-        ClosingRules.ShouldClose(AppealStatuses.Open, null).ShouldBeFalse();
-        ClosingRules.ShouldClose(AppealStatuses.Rejected, 99100009).ShouldBeFalse("a hidden record stays hidden");
+        ClosingRules.ShouldClose(BillRecordStatuses.Open, 99100009).ShouldBeTrue();
+        ClosingRules.ShouldClose(BillRecordStatuses.Open, null).ShouldBeFalse();
+        ClosingRules.ShouldClose(BillRecordStatuses.Rejected, 99100009).ShouldBeFalse("a hidden record stays hidden");
     }
 
     [Fact]
-    public void A_closed_appeal_shows_its_frozen_counts_whatever_happens_to_positions_later()
+    public void A_closed_record_shows_its_frozen_counts_whatever_happens_to_positions_later()
     {
         var live = CountRules.Publish(5, 1, 3, 0);
         ClosingRules.Shown(live, 7, 2, 4, 1).ShouldBe(CountRules.Publish(7, 2, 4, 1));

@@ -31,7 +31,7 @@ public static class AppealSteps
     public static async Task FreeBillAsync(this DatabaseFixture database, string number)
     {
         await database.ExecuteAsync("DELETE FROM appeals.organisation_statement WHERE bill_number = @n", ("n", number));
-        await database.ExecuteAsync("DELETE FROM appeals.appeal WHERE bill_number = @n", ("n", number));
+        await database.ExecuteAsync("DELETE FROM appeals.bill_record WHERE bill_number = @n", ("n", number));
     }
 
     /// <summary>A completed member with a display name and, unless told otherwise, the consent to store positions.</summary>
@@ -69,14 +69,14 @@ public static class AppealSteps
             described.StatusCode.ShouldBe(HttpStatusCode.NoContent, await described.Content.ReadAsStringAsync());
         }
 
-        var appeal = await moderator.AppealAsync(number);
+        var record = await moderator.RecordAsync(number);
         if (threshold != 100)
         {
-            using var set = await moderator.SendAsync(HttpMethod.Put, AppealRoutes.With(AppealRoutes.AppealThreshold, appeal.Id!.Value), new ModeratorThresholdRequest { Threshold = threshold, Statement = "Bandymas." });
+            using var set = await moderator.SendAsync(HttpMethod.Put, AppealRoutes.With(AppealRoutes.RecordThreshold, record.Id!.Value), new ModeratorThresholdRequest { Threshold = threshold, Statement = "Bandymas." });
             set.StatusCode.ShouldBe(HttpStatusCode.NoContent, await set.Content.ReadAsStringAsync());
         }
 
-        var prepared = new PreparedBill(appeal.Id!.Value, number);
+        var prepared = new PreparedBill(record.Id!.Value, number);
         if (side is null)
         {
             return prepared;
@@ -111,7 +111,7 @@ public static class AppealSteps
         return (await response.Content.ReadFromJsonAsync<T>(JsonSerializerOptions.Web))!;
     }
 
-    public static Task<AppealResponse> AppealAsync(this TestBrowser browser, string number) => browser.GetJsonAsync<AppealResponse>(AppealRoutes.AppealOf(number));
+    public static Task<BillRecordResponse> RecordAsync(this TestBrowser browser, string number) => browser.GetJsonAsync<BillRecordResponse>(AppealRoutes.RecordOf(number));
 
     /// <summary>The moderators' state of a bill (design 8.12.3).</summary>
     public static Task<ModerationBillResponse> ModerationBillAsync(this TestBrowser moderator, string number) =>
@@ -122,10 +122,10 @@ public static class AppealSteps
     {
         using var response = await moderator.PostAsync(AppealRoutes.BillRecordOf(number), new { });
         response.StatusCode.ShouldBe(HttpStatusCode.OK, await response.Content.ReadAsStringAsync());
-        return (await response.ReadAsync<BillRecordResponse>()).Id;
+        return (await response.ReadAsync<BillRecordIdResponse>()).Id;
     }
 
-    public static Task<MyAppealResponse> MineAsync(this TestBrowser browser, string number) => browser.GetJsonAsync<MyAppealResponse>(AppealRoutes.MineOf(number));
+    public static Task<MyBillRecordResponse> MineAsync(this TestBrowser browser, string number) => browser.GetJsonAsync<MyBillRecordResponse>(AppealRoutes.MineOf(number));
 
     /// <summary>Makes the account look as if it became a member <paramref name="days"/> days ago (and its positions with it).</summary>
     public static async Task AgeAccountAsync(this DatabaseFixture database, string email, int days)

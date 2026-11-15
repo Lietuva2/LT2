@@ -5,18 +5,18 @@ using Microsoft.Extensions.DependencyInjection;
 
 namespace Lt2.IntegrationTests;
 
-/// <summary>Design 8.1: the appeal closes when the Seimas takes the final vote; the counts are frozen and the result shown.</summary>
+/// <summary>Design 8.1: the record closes when the Seimas takes the final vote; the counts are frozen and the result shown.</summary>
 public sealed class AppealClosingTests(DatabaseFixture database) : ApiTest(database)
 {
     private const long FinalVote = 99199618;
 
     [Fact]
-    public async Task The_final_vote_closes_the_appeal_freezes_the_counts_and_the_page_shows_how_each_mp_voted()
+    public async Task The_final_vote_closes_the_record_freezes_the_counts_and_the_page_shows_how_each_mp_voted()
     {
         using var moderator = await StaffMembers.SharedAsync(Factory, Database, "moderator");
         var (initiator, _) = await Factory.MemberAsync();
         using var _i = initiator;
-        var appeal = await Database.PrepareBillAsync(initiator, moderator.Browser, AppealSteps.ThirdBill, "against");
+        var record = await Database.PrepareBillAsync(initiator, moderator.Browser, AppealSteps.ThirdBill, "against");
         var (member, memberEmail) = await Factory.MemberAsync();
         using var _m = member;
         (await member.TakeSideAsync(AppealSteps.ThirdBill, "for")).StatusCode.ShouldBe(HttpStatusCode.NoContent);
@@ -40,20 +40,20 @@ public sealed class AppealClosingTests(DatabaseFixture database) : ApiTest(datab
             (await maintenance.CloseFinishedAsync(CancellationToken.None)).ShouldBe(0, "closed once");
 
             using var stranger = NewBrowser();
-            var closed = await stranger.AppealAsync(AppealSteps.ThirdBill);
+            var closed = await stranger.RecordAsync(AppealSteps.ThirdBill);
             closed.Status.ShouldBe("closed");
             closed.ClosingVoteId.ShouldBe(FinalVote);
             closed.Counts.For.ShouldBe(1);
-            (await Database.ScalarAsync<long>("SELECT count(*) FROM audit.event WHERE action = 'appeal.closed' AND target = @t", ("t", "appeal:" + appeal.Id))).ShouldBe(1);
+            (await Database.ScalarAsync<long>("SELECT count(*) FROM audit.event WHERE action = 'record.closed' AND target = @t", ("t", "record:" + record.Id))).ShouldBe(1);
 
             using (var late = await member.TakeSideAsync(AppealSteps.ThirdBill, "against"))
             {
-                await late.ShouldBeProblemAsync(HttpStatusCode.Conflict, "appeal.not-open");
+                await late.ShouldBeProblemAsync(HttpStatusCode.Conflict, "record.not-open");
             }
 
             // A position removed later (an account deleted) does not change the frozen numbers.
             await Database.ExecuteAsync("DELETE FROM appeals.position WHERE user_id = @u", ("u", await Database.UserIdAsync(memberEmail)));
-            (await stranger.AppealAsync(AppealSteps.ThirdBill)).Counts.For.ShouldBe(1);
+            (await stranger.RecordAsync(AppealSteps.ThirdBill)).Counts.For.ShouldBe(1);
 
             using var page = await stranger.Client.GetAsync("/seimas/XVP-0618");
             var html = WebUtility.HtmlDecode(await page.Content.ReadAsStringAsync());
@@ -83,7 +83,7 @@ public sealed class AppealClosingTests(DatabaseFixture database) : ApiTest(datab
         var (author, _) = await Factory.MemberAsync();
         using var _a = author;
         await Database.PrepareBillAsync(author, moderator.Browser, AppealSteps.ThirdBill, "against");
-        var reasonId = (await author.AppealAsync(AppealSteps.ThirdBill)).Reasons.Single().Id;
+        var reasonId = (await author.RecordAsync(AppealSteps.ThirdBill)).Reasons.Single().Id;
         var (member, _) = await Factory.MemberAsync();
         using var _m = member;
         (await member.TakeSideAsync(AppealSteps.ThirdBill, "against")).StatusCode.ShouldBe(HttpStatusCode.NoContent);
@@ -98,7 +98,7 @@ public sealed class AppealClosingTests(DatabaseFixture database) : ApiTest(datab
         try
         {
             using var stranger = NewBrowser();
-            (await stranger.AppealAsync(AppealSteps.ThirdBill)).Status.ShouldBe("open", "the job has not run");
+            (await stranger.RecordAsync(AppealSteps.ThirdBill)).Status.ShouldBe("open", "the job has not run");
 
             foreach (var refused in new[]
             {
@@ -111,11 +111,11 @@ public sealed class AppealClosingTests(DatabaseFixture database) : ApiTest(datab
             {
                 using (refused)
                 {
-                    await refused.ShouldBeProblemAsync(HttpStatusCode.Conflict, "appeal.not-open");
+                    await refused.ShouldBeProblemAsync(HttpStatusCode.Conflict, "record.not-open");
                 }
             }
 
-            (await stranger.AppealAsync(AppealSteps.ThirdBill)).Counts.Against.ShouldBe(2, "nothing changed after the final vote");
+            (await stranger.RecordAsync(AppealSteps.ThirdBill)).Counts.Against.ShouldBe(2, "nothing changed after the final vote");
         }
         finally
         {

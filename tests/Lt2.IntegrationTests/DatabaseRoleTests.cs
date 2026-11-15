@@ -79,7 +79,7 @@ public sealed class DatabaseRoleTests(DatabaseFixture database)
             await ShouldBeRefusedAsync(readonlyConnection, $"SELECT user_id FROM {hidden} LIMIT 1", hidden + " by column");
         }
 
-        foreach (var visible in new[] { "appeals.appeal", "appeals.reason", "appeals.daily_stat", "config.setting" })
+        foreach (var visible in new[] { "appeals.bill_record", "appeals.reason", "appeals.daily_stat", "config.setting" })
         {
             await using var command = new NpgsqlCommand($"SELECT count(*) FROM {visible}", readonlyConnection);
             await command.ExecuteScalarAsync();

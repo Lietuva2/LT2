@@ -35,33 +35,33 @@ else
 {
     <section class="stack" aria-labelledby="h-hidden-appeals">
         <h2 id="h-hidden-appeals">@L["Hidden.Appeals"]</h2>
-        @if (Items.Appeals.Count == 0)
+        @if (Items.Records.Count == 0)
         {
             <p class="small">@L["Hidden.None"]</p>
         }
-        @foreach (var appeal in Items.Appeals)
+        @foreach (var record in Items.Records)
         {
-            <article class="sheet stack stack--tight" id="hidden-appeal-@appeal.Id" aria-labelledby="ha-@appeal.Id" @key="appeal.Id">
+            <article class="sheet stack stack--tight" id="hidden-appeal-@record.Id" aria-labelledby="ha-@record.Id" @key="record.Id">
                 <div class="row">
-                    <span class="tag tag--ink num">@appeal.Bill.Number</span>
-                    <span class="tag">@L["Hidden.RestoresAs." + appeal.RestoresAs]</span>
+                    <span class="tag tag--ink num">@record.Bill.Number</span>
+                    <span class="tag">@L["Hidden.RestoresAs." + record.RestoresAs]</span>
                 </div>
-                <h3 id="ha-@appeal.Id">@appeal.Bill.Title</h3>
+                <h3 id="ha-@record.Id">@record.Bill.Title</h3>
 
-                <p class="small num">@ModerationWords.Hidden(L, appeal.HiddenAt, appeal.HiddenBy)</p>
-                @if (appeal.Statement is { } statement)
+                <p class="small num">@ModerationWords.Hidden(L, record.HiddenAt, record.HiddenBy)</p>
+                @if (record.Statement is { } statement)
                 {
                     <p class="small">@L.Format("Hidden.Why", statement)</p>
                 }
-                @if (appeal.Description.Length > 0)
+                @if (record.Description.Length > 0)
                 {
                     <details class="more stack stack--tight">
                         <summary class="linkish small">@L["Mod.Description"]</summary>
-                        <p class="voice">@appeal.Description</p>
+                        <p class="voice">@record.Description</p>
                     </details>
                 }
-                <RestoreForm Id="appeal.Id" IdPrefix="restore" Sentence="@L["Hidden.RestoreAppeal.Sentence." + (appeal.RestoresAs ?? "open")]"
-                             StatementLabel="@L["Hidden.Statement"]" Restore="request => ModerationApi.RestoreAppealAsync(appeal.Id, request)" />
+                <RestoreForm Id="record.Id" IdPrefix="restore" Sentence="@L["Hidden.RestoreAppeal.Sentence." + (record.RestoresAs ?? "open")]"
+                             StatementLabel="@L["Hidden.Statement"]" Restore="request => ModerationApi.RestoreRecordAsync(record.Id, request)" />
             </article>
         }
     </section>

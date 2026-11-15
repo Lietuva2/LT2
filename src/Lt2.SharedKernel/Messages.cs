@@ -80,7 +80,7 @@ public static class OrganisationNotices
 
 /// <summary>
 /// Payload of <see cref="MessageKinds.FollowPlannedEmail"/> (design 8.11.2): a followed bill's planned date. Nothing about
-/// the person's side, the appeal's counts or other people.
+/// the person's side, the record's counts or other people.
 /// </summary>
 /// <param name="Stage"><c>presentation</c>, <c>consideration</c>, <c>adoption</c> or null.</param>
 public sealed record FollowPlannedEmail(string To, string BillNumber, string BillTitle, string? Stage, DateOnly Date, string BillPath, string AccountPath);

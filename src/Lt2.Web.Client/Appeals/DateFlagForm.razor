@@ -56,7 +56,7 @@
 
     [Parameter, EditorRequired] public string Number { get; set; } = "";
 
-    [PersistentState] public MyAppealResponse? Mine { get; set; }
+    [PersistentState] public MyBillRecordResponse? Mine { get; set; }
 
     /// <summary>The person's own writing restriction (design 8.3): flags are writing, so the form gives way to the notice.</summary>
     [PersistentState] public MyRestrictionResponse? Restriction { get; set; }

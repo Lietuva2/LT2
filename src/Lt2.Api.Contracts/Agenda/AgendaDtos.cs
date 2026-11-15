@@ -11,14 +11,14 @@ namespace Lt2.Api.Contracts.Agenda;
 /// <c>Id</c> is the bill's record, null while nobody has taken part; <c>Status</c> is <c>open</c>, <c>closed</c> or
 /// <c>rejected</c> (taking part closed by the moderators, no numbers shown).
 /// </summary>
-public sealed record AgendaAppealResponse(Guid? Id, string Status, SideCountsResponse Counts, ThresholdResponse Threshold);
+public sealed record AgendaRecordResponse(Guid? Id, string Status, SideCountsResponse Counts, ThresholdResponse Threshold);
 
 /// <summary>
 /// One planned item. <c>Title</c> is null when the bill is not (yet) in the open data, and then the bill has no page here
-/// and no <c>Appeal</c>.
+/// and no <c>Record</c>.
 /// </summary>
 public sealed record AgendaItemResponse(
-    string Number, string? Title, string? Stage, bool SetByModerator, string? SourceUrl, AgendaAppealResponse? Appeal);
+    string Number, string? Title, string? Stage, bool SetByModerator, string? SourceUrl, AgendaRecordResponse? Record);
 
 /// <summary>The items planned for one sitting day ("Planuojama …").</summary>
 public sealed record AgendaDayResponse(DateOnly Date, IReadOnlyList<AgendaItemResponse> Items);
@@ -26,7 +26,7 @@ public sealed record AgendaDayResponse(DateOnly Date, IReadOnlyList<AgendaItemRe
 /// <summary>A stage result of the last seven days, with the bill's public numbers.</summary>
 public sealed record AgendaVoteResponse(
     long VoteId, string Number, string Title, string? Stage, DateTimeOffset HeldAt, bool IsConsensus, VoteTotalsResponse Totals, string? OfficialNote,
-    AgendaAppealResponse? Appeal);
+    AgendaRecordResponse? Record);
 
 /// <param name="AgendaReadAt">When the lrs.lt agenda was last read; null when never.</param>
 /// <param name="AgendaSourceUrl">Where it was read from.</param>

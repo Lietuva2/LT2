@@ -5,13 +5,13 @@ namespace Lt2.Appeals;
 // What the Appeals module answers and accepts. Codes are lower-case English words, stable for the API: side for |
 // against; record status open | closed | rejected (hidden by a moderator); reason status pending | published | hidden |
 // merged; threshold set by default | moderator; description source initiator | moderator | ai-draft | ai; report target
-// appeal (its description) | reason | organisation | statement.
+// record (its description) | reason | organisation | statement.
 //
-// Design 8.12: every active bill is open. A bill's record (the appeal) is created when first needed and has no
+// Design 8.12: every active bill is open. A bill's record (the record) is created when first needed and has no
 // initiator; the answers for an active bill without one are the empty open state, not "not found".
 //
 // Privacy (design 6.1, 6.3): nothing here carries another person's position, and nothing tells who took part first on a
-// bill. The only side of a person any operation returns is the caller's own, in MyAppeal.
+// bill. The only side of a person any operation returns is the caller's own, in MyBillRecord.
 
 /// <summary>
 /// Both sides together, each with the count for accounts older than 30 days (design 6.6). Built only through the
@@ -46,7 +46,7 @@ public sealed record ReasonInfo(Guid Id, string Side, string Text, string? Autho
 /// <param name="DescriptionUrl">The official text the description was made from, when known (design 8.13).</param>
 /// <param name="DescriptionAt">When the description's text was made or last changed; null without one or when unknown.</param>
 /// <param name="HiddenStatement">For a hidden record: the moderators' statement; nothing else of it is shown.</param>
-public sealed record AppealInfo(
+public sealed record BillRecordInfo(
     Guid? Id,
     BillFacts Bill,
     string Status,
@@ -68,9 +68,9 @@ public sealed record AppealInfo(
 /// A bill as the agenda shows it (design 8.12.5): its record's public numbers, or zeros for an active bill nobody took
 /// part in. Nothing about any person.
 /// </summary>
-/// <param name="AppealId">The record; null while the bill has none.</param>
+/// <param name="RecordId">The record; null while the bill has none.</param>
 /// <param name="Status"><c>open</c>, <c>closed</c>, or <c>rejected</c>.</param>
-public sealed record BillAppealState(string BillNumber, Guid? AppealId, string Status, SideCounts Counts, ThresholdInfo Threshold);
+public sealed record BillRecordState(string BillNumber, Guid? RecordId, string Status, SideCounts Counts, ThresholdInfo Threshold);
 
 /// <summary>
 /// The surge note (design 6.6): in the last <paramref name="WindowHours"/> hours, <paramref name="SharePercent"/> % of the
@@ -82,9 +82,9 @@ public sealed record SurgeInfo(int SharePercent, int WindowHours, int RecentPosi
 /// A bill in <c>/projektai</c> (design 8.12.5); <paramref name="Id"/> null while it has no record. <paramref name="Arguments"/>
 /// is how many published arguments it has.
 /// </summary>
-public sealed record AppealListItem(Guid? Id, BillFacts Bill, string Status, SideCounts Counts, ThresholdInfo Threshold, PlannedDate? Planned, int Arguments);
+public sealed record BillListItem(Guid? Id, BillFacts Bill, string Status, SideCounts Counts, ThresholdInfo Threshold, PlannedDate? Planned, int Arguments);
 
-public sealed record AppealPage(IReadOnlyList<AppealListItem> Items, int Total, string? NextCursor);
+public sealed record BillListPage(IReadOnlyList<BillListItem> Items, int Total, string? NextCursor);
 
 /// <summary>
 /// What <c>/projektai</c> asks for (design 8.12.5): active bills (or, with <paramref name="Closed"/>, closed records), a
@@ -110,7 +110,7 @@ public static class BillSorts
 /// The caller's own part on one bill: their side (only ever their own), their "Man svarbu" marks and arguments, and what
 /// they may still do. The same empty answer for an active bill without a record.
 /// </summary>
-public sealed record MyAppeal(
+public sealed record MyBillRecord(
     string? Side,
     IReadOnlyList<Guid> Endorsed,
     int? EndorsementsLeft,
@@ -138,7 +138,7 @@ public sealed record QueueReport(Guid Id, string Ground, string? Text, DateTimeO
 /// A bill's record in the moderators' queue (design 8.12.3): reported, flagged about its date, surging, held, or under its
 /// threshold on the agenda with at least one participant.
 /// </summary>
-public sealed record QueueAppeal(
+public sealed record QueueRecord(
     Guid Id,
     BillFacts Bill,
     string Description,
@@ -173,7 +173,7 @@ public sealed record NewFlag(string Kind, string Link, string? Note);
 /// <summary>An argument for a moderator: flagged, reported, or not yet seen.</summary>
 public sealed record QueueReason(
     Guid Id,
-    Guid AppealId,
+    Guid RecordId,
     BillFacts Bill,
     string Side,
     string Text,
@@ -186,7 +186,7 @@ public sealed record QueueReason(
     DateTimeOffset CreatedAt);
 
 /// <summary>The moderators' queue (design 8.12.3): bills' records that need a look, and arguments.</summary>
-public sealed record ModerationItems(IReadOnlyList<QueueAppeal> Appeals, IReadOnlyList<QueueReason> Reasons);
+public sealed record ModerationItems(IReadOnlyList<QueueRecord> Records, IReadOnlyList<QueueReason> Reasons);
 
 /// <summary>
 /// A moderator writes or corrects a bill's description (design 8.12.3, 8.13); <c>FromDraft</c>: it started from an AI draft.
@@ -206,16 +206,16 @@ public interface IAppealsModule
     /// <summary>
     /// Active bills (design 8.12.5) in the asked order, activity by default; or the closed records.
     /// </summary>
-    Task<AppealPage> ListAsync(BillListQuery query, CancellationToken cancellationToken);
+    Task<BillListPage> ListAsync(BillListQuery query, CancellationToken cancellationToken);
 
     /// <summary>
     /// The bill as people take part on it, the same for everyone: its record, or the empty open state for an active bill
-    /// without one. <c>bill.not-found</c> for an unknown bill, <c>appeal.not-found</c> for a finished bill nobody took
+    /// without one. <c>bill.not-found</c> for an unknown bill, <c>record.not-found</c> for a finished bill nobody took
     /// part in (the page shows the bill only).
     /// </summary>
-    Task<Result<AppealInfo>> GetAsync(string billNumber, CancellationToken cancellationToken);
+    Task<Result<BillRecordInfo>> GetAsync(string billNumber, CancellationToken cancellationToken);
 
-    Task<Result<MyAppeal>> MineAsync(string billNumber, Guid userId, CancellationToken cancellationToken);
+    Task<Result<MyBillRecord>> MineAsync(string billNumber, Guid userId, CancellationToken cancellationToken);
 
     /// <summary>The description's edits (oldest first), public; no editor is named. Empty for a bill without a record.</summary>
     Task<Result<IReadOnlyList<(DateTimeOffset ChangedAt, string? OldText, string? NewText)>>> HistoryAsync(string billNumber, CancellationToken cancellationToken);
@@ -244,7 +244,7 @@ public interface IAppealsModule
     Task<Result<Unit>> FlagDateAsync(string billNumber, Guid userId, NewFlag request, CancellationToken cancellationToken);
 
     /// <summary>Each given bill's public numbers (design 8.12.5); bills not in the catalogue are missing.</summary>
-    Task<IReadOnlyDictionary<string, BillAppealState>> BillStatesAsync(IReadOnlyCollection<string> billNumbers, CancellationToken cancellationToken);
+    Task<IReadOnlyDictionary<string, BillRecordState>> BillStatesAsync(IReadOnlyCollection<string> billNumbers, CancellationToken cancellationToken);
 }
 
 /// <summary>Moderation after the fact (design 8.12.3). Every action is audited; an argument's author is told why.</summary>
@@ -253,10 +253,10 @@ public interface IAppealsModeration
     Task<ModerationItems> QueueAsync(CancellationToken cancellationToken);
 
     /// <summary>"Palikti": keeps a reported or flagged record as it is; its open reports and date flags close.</summary>
-    Task<Result<Unit>> KeepAppealAsync(Guid appealId, string? statement, StaffActor moderator, CancellationToken cancellationToken);
+    Task<Result<Unit>> KeepRecordAsync(Guid recordId, string? statement, StaffActor moderator, CancellationToken cancellationToken);
 
     /// <summary>Hides a bill's record: taking part on the bill closes; sides and arguments are kept unseen (design 8.12.3).</summary>
-    Task<Result<Unit>> HideAppealAsync(Guid appealId, string statement, StaffActor moderator, CancellationToken cancellationToken);
+    Task<Result<Unit>> HideRecordAsync(Guid recordId, string statement, StaffActor moderator, CancellationToken cancellationToken);
 
     /// <summary>
     /// Writes or corrects the description of an active bill (design 8.12.3, 8.13), creating the bill's record if needed:
@@ -289,13 +289,13 @@ public interface IAppealsModeration
     Task<HiddenItems> HiddenAsync(CancellationToken cancellationToken);
 
     /// <summary>Brings a hidden record back as it was (design 8.12.3): open, or closed if it had closed.</summary>
-    Task<Result<Unit>> RestoreAppealAsync(Guid appealId, string statement, StaffActor moderator, CancellationToken cancellationToken);
+    Task<Result<Unit>> RestoreRecordAsync(Guid recordId, string statement, StaffActor moderator, CancellationToken cancellationToken);
 
     /// <summary>Brings a hidden reason back as published, while its bill is open; its marks are gone (design 8.3).</summary>
     Task<Result<Unit>> RestoreReasonAsync(Guid reasonId, string statement, StaffActor moderator, CancellationToken cancellationToken);
 
     /// <summary>Sets the bill's own threshold with a public statement (design 8.12.2); it stays until a moderator changes it.</summary>
-    Task<Result<Unit>> SetThresholdAsync(Guid appealId, int threshold, string statement, StaffActor moderator, CancellationToken cancellationToken);
+    Task<Result<Unit>> SetThresholdAsync(Guid recordId, int threshold, string statement, StaffActor moderator, CancellationToken cancellationToken);
 
     Task<Result<Unit>> PublishReasonAsync(Guid reasonId, string? statement, StaffActor moderator, CancellationToken cancellationToken);
 
@@ -304,13 +304,13 @@ public interface IAppealsModeration
     Task<Result<Unit>> MergeReasonAsync(Guid reasonId, Guid intoReasonId, string statement, StaffActor moderator, CancellationToken cancellationToken);
 
     /// <summary>Holds sending for the bill (design 8.4): it enters no summary until released.</summary>
-    Task<Result<Unit>> HoldAsync(Guid appealId, string statement, StaffActor moderator, CancellationToken cancellationToken);
+    Task<Result<Unit>> HoldAsync(Guid recordId, string statement, StaffActor moderator, CancellationToken cancellationToken);
 
     /// <summary>Releases a held bill: summaries take it again by their rules.</summary>
-    Task<Result<Unit>> ReleaseAsync(Guid appealId, string statement, StaffActor moderator, CancellationToken cancellationToken);
+    Task<Result<Unit>> ReleaseAsync(Guid recordId, string statement, StaffActor moderator, CancellationToken cancellationToken);
 
     /// <summary>Corrects the planned date or stage of the bill (design 8.4); closes its open date flags.</summary>
-    Task<Result<Unit>> SetPlannedAsync(Guid appealId, DateOnly date, string? stage, string statement, StaffActor moderator, CancellationToken cancellationToken);
+    Task<Result<Unit>> SetPlannedAsync(Guid recordId, DateOnly date, string? stage, string statement, StaffActor moderator, CancellationToken cancellationToken);
 
     /// <summary>
     /// What a moderator sees before restricting the author of an argument (design 8.3): the display name, their arguments,
@@ -343,14 +343,14 @@ public interface IAppealsModeration
 /// <summary>
 /// A hidden record for the moderators' list (design 8.12.3). <paramref name="RestoresAs"/> is the status "Atkurti" gives it.
 /// </summary>
-public sealed record HiddenAppeal(
+public sealed record HiddenRecord(
     Guid Id, BillFacts Bill, string Description, DateTimeOffset? HiddenAt, string? HiddenBy, string? Statement, string RestoresAs);
 
 /// <summary>A hidden reason for the moderators' list; it can be restored only while its bill's record is open.</summary>
 public sealed record HiddenReason(
     Guid Id, BillFacts Bill, string Side, string Text, string? AuthorName, DateTimeOffset? HiddenAt, string? HiddenBy, string? Statement, bool Restorable);
 
-public sealed record HiddenItems(IReadOnlyList<HiddenAppeal> Appeals, IReadOnlyList<HiddenReason> Reasons);
+public sealed record HiddenItems(IReadOnlyList<HiddenRecord> Records, IReadOnlyList<HiddenReason> Reasons);
 
 /// <summary>The caller's own writing restriction (design 8.3): its last day (null = until lifted) and the statement.</summary>
 public sealed record MyRestriction(DateOnly? Until, string Statement);

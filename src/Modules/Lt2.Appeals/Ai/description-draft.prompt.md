@@ -1,5 +1,5 @@
 <!--
-  Lietuva 2.0: the prompt for the AI draft of an appeal's neutral description (design 8.11.4). Public on purpose: this is
+  Lietuva 2.0: the prompt for the AI draft of a bill's neutral description (design 8.11.4). Public on purpose: this is
   exactly what the provider (the Claude API, decided by the owner on 2026-11-13) receives as the system prompt, with the
   bill's number and title filled in; the official text the moderator pasted is the user message, whole. A moderator's
   draft fills the description field, and a person edits and publishes it. The summary job (design 8.13), whose answer

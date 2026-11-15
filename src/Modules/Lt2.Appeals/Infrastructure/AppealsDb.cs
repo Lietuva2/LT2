@@ -9,7 +9,7 @@ namespace Lt2.Appeals.Infrastructure;
 /// <summary>The Appeals module's tables, all in schema <c>appeals</c> (design 5.3).</summary>
 internal sealed class AppealsDb(DbContextOptions<AppealsDb> options) : DbContext(options)
 {
-    public DbSet<Appeal> Appeals => Set<Appeal>();
+    public DbSet<BillRecord> BillRecords => Set<BillRecord>();
 
     public DbSet<Position> Positions => Set<Position>();
 
@@ -49,9 +49,9 @@ internal sealed class AppealsDb(DbContextOptions<AppealsDb> options) : DbContext
         modelBuilder.HasDefaultSchema(AppealsModule.Schema);
         OnOrganisationsCreating(modelBuilder);
 
-        modelBuilder.Entity<Appeal>(e =>
+        modelBuilder.Entity<BillRecord>(e =>
         {
-            e.ToTable("appeal");
+            e.ToTable("bill_record");
             e.HasKey(a => a.Id);
             e.Property(a => a.BillNumber).HasMaxLength(40);
             e.Property(a => a.Description).HasMaxLength(AppealRules.DescriptionMaxLength);
@@ -63,18 +63,18 @@ internal sealed class AppealsDb(DbContextOptions<AppealsDb> options) : DbContext
             e.Property(a => a.ThresholdNote).HasMaxLength(1000);
 
             // One record per bill (design 8.12.1): two people arriving together make one row.
-            e.HasIndex(a => a.BillNumber).IsUnique().HasFilter("status IN ('open', 'closed', 'rejected')").HasDatabaseName("ix_appeal_bill_number_record");
+            e.HasIndex(a => a.BillNumber).IsUnique().HasFilter("status IN ('open', 'closed', 'rejected')").HasDatabaseName("ix_bill_record_bill_number");
             e.HasIndex(a => a.Status);
-            e.ToTable(t => t.HasCheckConstraint("ck_appeal_threshold_positive", "threshold > 0"));
+            e.ToTable(t => t.HasCheckConstraint("ck_bill_record_threshold_positive", "threshold > 0"));
         });
 
         modelBuilder.Entity<Position>(e =>
         {
             e.ToTable("position");
-            e.HasKey(p => new { p.AppealId, p.UserId });
+            e.HasKey(p => new { p.RecordId, p.UserId });
             e.Property(p => p.Side).HasMaxLength(10);
             e.HasIndex(p => p.UserId);
-            e.HasOne<Appeal>().WithMany().HasForeignKey(p => p.AppealId).OnDelete(DeleteBehavior.Cascade);
+            e.HasOne<BillRecord>().WithMany().HasForeignKey(p => p.RecordId).OnDelete(DeleteBehavior.Cascade);
             e.ToTable(t => t.HasCheckConstraint("ck_position_side", "side IN ('for', 'against')"));
         });
 
@@ -85,9 +85,9 @@ internal sealed class AppealsDb(DbContextOptions<AppealsDb> options) : DbContext
             e.Property(r => r.Side).HasMaxLength(10);
             e.Property(r => r.Text).HasMaxLength(AppealRules.ReasonMaxLength);
             e.Property(r => r.Status).HasMaxLength(20);
-            e.HasIndex(r => new { r.AppealId, r.Status });
-            e.HasIndex(r => new { r.AppealId, r.AuthorUserId });
-            e.HasOne<Appeal>().WithMany().HasForeignKey(r => r.AppealId).OnDelete(DeleteBehavior.Cascade);
+            e.HasIndex(r => new { r.RecordId, r.Status });
+            e.HasIndex(r => new { r.RecordId, r.AuthorUserId });
+            e.HasOne<BillRecord>().WithMany().HasForeignKey(r => r.RecordId).OnDelete(DeleteBehavior.Cascade);
             e.HasOne<Reason>().WithMany().HasForeignKey(r => r.MergedIntoId).OnDelete(DeleteBehavior.Restrict);
             e.ToTable(t => t.HasCheckConstraint("ck_reason_side", "side IN ('for', 'against')"));
         });
@@ -96,9 +96,9 @@ internal sealed class AppealsDb(DbContextOptions<AppealsDb> options) : DbContext
         {
             e.ToTable("endorsement");
             e.HasKey(x => new { x.ReasonId, x.UserId });
-            e.HasIndex(x => new { x.AppealId, x.UserId });
+            e.HasIndex(x => new { x.RecordId, x.UserId });
             e.HasOne<Reason>().WithMany().HasForeignKey(x => x.ReasonId).OnDelete(DeleteBehavior.Cascade);
-            e.HasOne<Appeal>().WithMany().HasForeignKey(x => x.AppealId).OnDelete(DeleteBehavior.Cascade);
+            e.HasOne<BillRecord>().WithMany().HasForeignKey(x => x.RecordId).OnDelete(DeleteBehavior.Cascade);
         });
 
         modelBuilder.Entity<Report>(e =>
@@ -149,9 +149,9 @@ internal sealed class AppealsDb(DbContextOptions<AppealsDb> options) : DbContext
             e.Property(f => f.Link).HasMaxLength(500);
             e.Property(f => f.Note).HasMaxLength(1000);
             e.Property(f => f.Status).HasMaxLength(20);
-            e.HasIndex(f => new { f.AppealId, f.Status });
-            e.HasIndex(f => new { f.AppealId, f.ReporterUserId }).IsUnique().HasFilter("status = 'open'");
-            e.HasOne<Appeal>().WithMany().HasForeignKey(f => f.AppealId).OnDelete(DeleteBehavior.Cascade);
+            e.HasIndex(f => new { f.RecordId, f.Status });
+            e.HasIndex(f => new { f.RecordId, f.ReporterUserId }).IsUnique().HasFilter("status = 'open'");
+            e.HasOne<BillRecord>().WithMany().HasForeignKey(f => f.RecordId).OnDelete(DeleteBehavior.Cascade);
         });
 
         modelBuilder.Entity<AiDraftRequest>(e =>
@@ -174,9 +174,9 @@ internal sealed class AppealsDb(DbContextOptions<AppealsDb> options) : DbContext
         modelBuilder.Entity<DailyStat>(e =>
         {
             e.ToTable("daily_stat");
-            e.HasKey(d => new { d.AppealId, d.Day });
+            e.HasKey(d => new { d.RecordId, d.Day });
             e.Property(d => d.NewAccountShare).HasPrecision(5, 4);
-            e.HasOne<Appeal>().WithMany().HasForeignKey(d => d.AppealId).OnDelete(DeleteBehavior.Cascade);
+            e.HasOne<BillRecord>().WithMany().HasForeignKey(d => d.RecordId).OnDelete(DeleteBehavior.Cascade);
         });
     }
 

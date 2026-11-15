@@ -9,10 +9,10 @@ namespace Lt2.Appeals.Application;
 internal sealed record ThresholdSettings(int Default, int Minimum);
 
 /// <summary>Query filters used by every read of bills' records.</summary>
-internal static class AppealQueries
+internal static class RecordQueries
 {
     /// <summary>The rows that are a bill's record (open, closed or hidden; <see cref="RecordRules.RecordStatuses"/>).</summary>
-    public static IQueryable<Appeal> Records(this IQueryable<Appeal> appeals) => appeals.Where(a => RecordRules.RecordStatuses.Contains(a.Status));
+    public static IQueryable<BillRecord> Records(this IQueryable<BillRecord> appeals) => appeals.Where(a => RecordRules.RecordStatuses.Contains(a.Status));
 }
 
 /// <summary>
@@ -41,25 +41,25 @@ internal sealed class AppealReads(
     }
 
     /// <summary>The live counts of each given record: both sides, each with the count for accounts older than 30 days.</summary>
-    public async Task<Dictionary<Guid, SideCounts>> CountsAsync(AppealsDb db, IReadOnlyCollection<Guid> appealIds, CancellationToken ct)
+    public async Task<Dictionary<Guid, SideCounts>> CountsAsync(AppealsDb db, IReadOnlyCollection<Guid> recordIds, CancellationToken ct)
     {
-        if (appealIds.Count == 0)
+        if (recordIds.Count == 0)
         {
             return [];
         }
 
         var cutoff = CountRules.EstablishedBefore(clock.GetUtcNow());
         var rows = await db.Positions.AsNoTracking()
-            .Where(p => appealIds.Contains(p.AppealId))
-            .GroupBy(p => new { p.AppealId, p.Side })
-            .Select(g => new { g.Key.AppealId, g.Key.Side, Total = g.Count(), Older = g.Count(p => p.MemberSince <= cutoff) })
+            .Where(p => recordIds.Contains(p.RecordId))
+            .GroupBy(p => new { p.RecordId, p.Side })
+            .Select(g => new { g.Key.RecordId, g.Key.Side, Total = g.Count(), Older = g.Count(p => p.MemberSince <= cutoff) })
             .ToListAsync(ct);
-        return appealIds.Distinct().ToDictionary(
+        return recordIds.Distinct().ToDictionary(
             id => id,
             id =>
             {
-                var forRow = rows.FirstOrDefault(r => r.AppealId == id && r.Side == Sides.For);
-                var againstRow = rows.FirstOrDefault(r => r.AppealId == id && r.Side == Sides.Against);
+                var forRow = rows.FirstOrDefault(r => r.RecordId == id && r.Side == Sides.For);
+                var againstRow = rows.FirstOrDefault(r => r.RecordId == id && r.Side == Sides.Against);
                 return CountRules.Publish(forRow?.Total ?? 0, forRow?.Older ?? 0, againstRow?.Total ?? 0, againstRow?.Older ?? 0);
             });
     }
@@ -68,7 +68,7 @@ internal sealed class AppealReads(
     /// The counts each given record shows (design 8.1): frozen ones once closed, live ones before. Live counts are read only
     /// for records that have none frozen.
     /// </summary>
-    public async Task<Dictionary<Guid, SideCounts>> ShownCountsAsync(AppealsDb db, IReadOnlyCollection<Appeal> records, CancellationToken ct)
+    public async Task<Dictionary<Guid, SideCounts>> ShownCountsAsync(AppealsDb db, IReadOnlyCollection<BillRecord> records, CancellationToken ct)
     {
         var live = await CountsAsync(db, records.Where(r => !ClosingRules.IsFrozen(r)).Select(r => r.Id).ToList(), ct);
         return records.ToDictionary(r => r.Id, r => ClosingRules.Shown(r, live.GetValueOrDefault(r.Id) ?? SideCounts.None));
@@ -78,9 +78,9 @@ internal sealed class AppealReads(
     /// The surge note of each given record that has one (design 6.6, three settings): records where the rule does not hold
     /// are left out. One query for all of them.
     /// </summary>
-    public async Task<Dictionary<Guid, SurgeInfo>> SurgesAsync(AppealsDb db, IReadOnlyCollection<Guid> appealIds, CancellationToken ct)
+    public async Task<Dictionary<Guid, SurgeInfo>> SurgesAsync(AppealsDb db, IReadOnlyCollection<Guid> recordIds, CancellationToken ct)
     {
-        if (appealIds.Count == 0)
+        if (recordIds.Count == 0)
         {
             return [];
         }
@@ -90,30 +90,30 @@ internal sealed class AppealReads(
         var minimum = await settings.GetAsync(SettingKeys.SurgeMinimumAccounts, ct);
         var since = clock.GetUtcNow() - TimeSpan.FromHours(hours);
         var rows = await db.Positions.AsNoTracking()
-            .Where(p => appealIds.Contains(p.AppealId) && p.CreatedAt >= since)
-            .GroupBy(p => p.AppealId)
-            .Select(g => new { AppealId = g.Key, Recent = g.Count(), New = g.Count(p => p.MemberSince >= since) })
+            .Where(p => recordIds.Contains(p.RecordId) && p.CreatedAt >= since)
+            .GroupBy(p => p.RecordId)
+            .Select(g => new { RecordId = g.Key, Recent = g.Count(), New = g.Count(p => p.MemberSince >= since) })
             .ToListAsync(ct);
         return rows
             .Where(r => SurgeRules.IsSurge(r.Recent, r.New, share, minimum))
-            .ToDictionary(r => r.AppealId, r => new SurgeInfo(SurgeRules.SharePercent(r.Recent, r.New), hours, r.Recent, r.New));
+            .ToDictionary(r => r.RecordId, r => new SurgeInfo(SurgeRules.SharePercent(r.Recent, r.New), hours, r.Recent, r.New));
     }
 
     /// <summary>The surge note for a record, or <c>null</c> when the rule (design 6.6) does not hold.</summary>
-    public async Task<SurgeInfo?> SurgeAsync(AppealsDb db, Guid appealId, CancellationToken ct) =>
-        (await SurgesAsync(db, [appealId], ct)).GetValueOrDefault(appealId);
+    public async Task<SurgeInfo?> SurgeAsync(AppealsDb db, Guid recordId, CancellationToken ct) =>
+        (await SurgesAsync(db, [recordId], ct)).GetValueOrDefault(recordId);
 
-    /// <summary>The threshold of a bill as everyone sees it; <paramref name="appeal"/> null for a bill without a record.</summary>
-    public static ThresholdInfo Threshold(Appeal? appeal, SideCounts counts, ThresholdSettings threshold)
+    /// <summary>The threshold of a bill as everyone sees it; <paramref name="record"/> null for a bill without a record.</summary>
+    public static ThresholdInfo Threshold(BillRecord? record, SideCounts counts, ThresholdSettings threshold)
     {
-        var effective = ThresholdRules.Effective(appeal?.Threshold, threshold.Default, threshold.Minimum);
+        var effective = ThresholdRules.Effective(record?.Threshold, threshold.Default, threshold.Minimum);
         return new ThresholdInfo(
             effective,
-            appeal?.ThresholdSetBy ?? ThresholdSetters.Default,
-            appeal?.ThresholdNote,
+            record?.ThresholdSetBy ?? ThresholdSetters.Default,
+            record?.ThresholdNote,
             counts.Total,
-            ThresholdRules.Reached(counts.Total, effective, appeal?.FirstSummarisedAt),
-            appeal?.FirstSummarisedAt is not null);
+            ThresholdRules.Reached(counts.Total, effective, record?.FirstSummarisedAt),
+            record?.FirstSummarisedAt is not null);
     }
 
     public async Task<IReadOnlyDictionary<Guid, string?>> NamesAsync(IEnumerable<Guid> userIds, CancellationToken ct)
@@ -140,10 +140,10 @@ internal sealed class AppealReads(
         new(r.Id, r.Side, r.Text, names.GetValueOrDefault(r.AuthorUserId), endorsements.GetValueOrDefault(r.Id), r.Status, r.CreatedAt);
 
     /// <summary>The bill's record (open, closed or hidden), at most one (design 8.12.1); null while the bill has none.</summary>
-    public static Task<Appeal?> FindRecordAsync(AppealsDb db, string billNumber, bool tracking, CancellationToken ct)
+    public static Task<BillRecord?> FindRecordAsync(AppealsDb db, string billNumber, bool tracking, CancellationToken ct)
     {
         var number = NormaliseBillNumber(billNumber);
-        var query = tracking ? db.Appeals : db.Appeals.AsNoTracking();
+        var query = tracking ? db.BillRecords : db.BillRecords.AsNoTracking();
         return query.Records().FirstOrDefaultAsync(a => a.BillNumber == number, ct);
     }
 
@@ -158,12 +158,12 @@ internal sealed class BillRecords(IBillCatalogue bills, TimeProvider clock)
 {
     /// <summary>
     /// The bill's record, created as an open one if the bill is active and has none. Must run inside a transaction (the
-    /// bill's lock is held until it ends). <c>bill.not-found</c> for a bill not in the catalogue, <c>appeal.not-open</c>
+    /// bill's lock is held until it ends). <c>bill.not-found</c> for a bill not in the catalogue, <c>record.not-open</c>
     /// for a finished bill without a record. An existing record is returned whatever its status; the caller checks it.
     /// With <paramref name="forWrite"/> the bill's lock is taken first and the record comes back tracked: the caller
     /// changes it, and writes to one bill's record are serialised (design 6.8).
     /// </summary>
-    public async Task<Result<Appeal>> EnsureAsync(AppealsDb db, string billNumber, CancellationToken ct, bool forWrite = false)
+    public async Task<Result<BillRecord>> EnsureAsync(AppealsDb db, string billNumber, CancellationToken ct, bool forWrite = false)
     {
         var number = AppealReads.NormaliseBillNumber(billNumber);
         if (forWrite)
@@ -199,17 +199,17 @@ internal sealed class BillRecords(IBillCatalogue bills, TimeProvider clock)
         }
 
         var now = clock.GetUtcNow();
-        var record = new Appeal
+        var record = new BillRecord
         {
             Id = Ids.New(clock),
             BillNumber = bill.Number,
-            Status = AppealStatuses.Open,
+            Status = BillRecordStatuses.Open,
             OpenedAt = now,
             PublishedAt = now,
             ChangedAt = now,
             ThresholdSetBy = ThresholdSetters.Default,
         };
-        db.Appeals.Add(record);
+        db.BillRecords.Add(record);
         await db.SaveChangesAsync(ct);
         if (!forWrite)
         {
@@ -228,7 +228,7 @@ internal sealed class BillRecords(IBillCatalogue bills, TimeProvider clock)
             return Error.NotFound("bill.not-found");
         }
 
-        return await bills.FinalVoteAsync(bill.Number, ct) is null ? bill : Error.Conflict("appeal.not-open");
+        return await bills.FinalVoteAsync(bill.Number, ct) is null ? bill : Error.Conflict("record.not-open");
     }
 
     /// <summary>
@@ -238,5 +238,5 @@ internal sealed class BillRecords(IBillCatalogue bills, TimeProvider clock)
     public async Task<bool> IsFinishedAsync(string? recordStatus, string billNumber, CancellationToken ct) =>
         RecordRules.IsFinished(
             recordStatus,
-            finalVoteRecorded: recordStatus != AppealStatuses.Closed && await bills.FinalVoteAsync(AppealReads.NormaliseBillNumber(billNumber), ct) is not null);
+            finalVoteRecorded: recordStatus != BillRecordStatuses.Closed && await bills.FinalVoteAsync(AppealReads.NormaliseBillNumber(billNumber), ct) is not null);
 }

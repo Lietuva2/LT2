@@ -8,7 +8,7 @@ using Lt2.Web.Services;
 
 namespace Lt2.Web.Endpoints.Appeals;
 
-/// <summary><c>DELETE /api/v1/bills/{number}/appeal/position</c>: withdraw one's side on this bill, with one's "Man svarbu" marks on it.</summary>
+/// <summary><c>DELETE /api/v1/bills/{number}/record/position</c>: withdraw one's side on this bill, with one's "Man svarbu" marks on it.</summary>
 internal static class ClearPositionEndpoint
 {
     public static void Map(IEndpointRouteBuilder api) =>

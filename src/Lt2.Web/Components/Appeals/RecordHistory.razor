@@ -6,7 +6,7 @@
 @inject NavigationManager Navigation
 
 @* Design 8.2, 8.13: the bill's description keeps its edit history, public. Who edited is not shown. *@
-@if (_appeal is { } a)
+@if (_record is { } a)
 {
     <PageTitle>@a.Bill.Number · @T["History.Title"] · Lietuva 2.0</PageTitle>
     <div class="stack">
@@ -54,7 +54,7 @@
 }
 
 @code {
-    private AppealResponse? _appeal;
+    private BillRecordResponse? _record;
     private IReadOnlyList<DescriptionRevisionResponse>? _history;
 
     [Parameter] public string Number { get; set; } = "";
@@ -62,8 +62,8 @@
     protected override async Task OnInitializedAsync()
     {
         _history = (await Appeals.GetHistoryAsync(Number)).Value;
-        _appeal = _history is null ? null : (await Appeals.GetAppealAsync(Number)).Value;
-        if (_appeal is null)
+        _record = _history is null ? null : (await Appeals.GetRecordAsync(Number)).Value;
+        if (_record is null)
         {
             Navigation.NotFound();
         }
