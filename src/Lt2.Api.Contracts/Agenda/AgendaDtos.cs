@@ -3,7 +3,7 @@ using Lt2.Api.Contracts.Parliament;
 
 namespace Lt2.Api.Contracts.Agenda;
 
-// Design 8.11.1, 8.12.5: the agenda page's one public, cacheable answer. It holds nothing about the caller: planned items
+// Design 8.11.1, 8.12.5, 8.7: the agenda page's and the front page's one public, cacheable answer. It holds nothing about the caller: planned items
 // and recent stage results with each bill's public numbers, both sides for every bill.
 
 /// <summary>
@@ -14,11 +14,19 @@ namespace Lt2.Api.Contracts.Agenda;
 public sealed record AgendaRecordResponse(Guid? Id, string Status, SideCountsResponse Counts, ThresholdResponse Threshold);
 
 /// <summary>
+/// An organisation with a public statement on the bill (design 8.7): its profile's address, name, label and stance
+/// (<c>for</c>, <c>against</c>, <c>remarks</c>); never its text and never a count.
+/// </summary>
+public sealed record AgendaOrganisationResponse(string Slug, string Name, Organisations.OrganisationLabelResponse Label, string Stance);
+
+/// <summary>
 /// One planned item. <c>Title</c> is null when the bill is not (yet) in the open data, and then the bill has no page here
-/// and no <c>Record</c>.
+/// and no <c>Record</c>. <c>Organisations</c> are those with a public statement on it, ordered as on the bill's page (for,
+/// against, remarks; within each, in the order published); none while its record is hidden.
 /// </summary>
 public sealed record AgendaItemResponse(
-    string Number, string? Title, string? Stage, bool SetByModerator, string? SourceUrl, AgendaRecordResponse? Record);
+    string Number, string? Title, string? Stage, bool SetByModerator, string? SourceUrl, AgendaRecordResponse? Record,
+    IReadOnlyList<AgendaOrganisationResponse> Organisations);
 
 /// <summary>The items planned for one sitting day ("Planuojama …").</summary>
 public sealed record AgendaDayResponse(DateOnly Date, IReadOnlyList<AgendaItemResponse> Items);

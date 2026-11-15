@@ -104,6 +104,9 @@ public interface IFollows
 {
     Task<MyFollows> MineAsync(Guid userId, CancellationToken cancellationToken);
 
+    /// <summary>The numbers of the bills the person follows, in one read (design 8.7, the front page); their own only.</summary>
+    Task<IReadOnlySet<string>> FollowedBillNumbersAsync(Guid userId, CancellationToken cancellationToken);
+
     /// <summary>Follows a bill: <c>bill.not-found</c>, <c>member.required</c>, <c>follow.limit</c>; following again changes nothing.</summary>
     Task<Lt2.SharedKernel.Result<Lt2.SharedKernel.Unit>> FollowBillAsync(Guid userId, string number, CancellationToken cancellationToken);
 

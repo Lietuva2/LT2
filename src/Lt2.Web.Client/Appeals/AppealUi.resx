@@ -627,4 +627,24 @@
   <data name="Restrict.Action.lift" xml:space="preserve"><value>apribojimas panaikintas</value></data>
 <data name="Admin.PasskeyNote" xml:space="preserve"><value>Išsaugant nustatymą naršyklė gali paprašyti dar kartą patvirtinti darbuotojo prieigos raktu: to reikia, jei paskutinį kartą jį patvirtinote daugiau nei prieš 10 minučių.</value></data>
 <data name="Admin.Passkey.Unsupported" xml:space="preserve"><value>Nustatymas neišsaugotas: ši naršyklė negali patvirtinti prieigos raktu. Atidarykite šį puslapį naršyklėje, kurioje yra jūsų darbuotojo prieigos raktas.</value></data>
-<data name="Admin.Passkey.Cancelled" xml:space="preserve"><value>Nustatymas neišsaugotas, nes prieigos raktu nepatvirtinote. Spauskite „Išsaugoti“ dar kartą ir patvirtinkite.</value></data></root>
+<data name="Admin.Passkey.Cancelled" xml:space="preserve"><value>Nustatymas neišsaugotas, nes prieigos raktu nepatvirtinote. Spauskite „Išsaugoti“ dar kartą ir patvirtinkite.</value></data>  <data name="Agenda.Organisations" xml:space="preserve"><value>Organizacijos</value></data>
+  <data name="Agenda.Stance.for" xml:space="preserve"><value>už</value></data>
+  <data name="Agenda.Stance.against" xml:space="preserve"><value>prieš</value></data>
+  <data name="Agenda.Stance.remarks" xml:space="preserve"><value>pastabos</value></data>
+  <data name="Agenda.Action.TakePart" xml:space="preserve"><value>Nurodyti, ko prašote</value></data>
+  <data name="Agenda.Action.Side" xml:space="preserve"><value>Argumentai ir pozicijos</value></data>
+  <data name="Agenda.Action.Votes" xml:space="preserve"><value>Kaip balsavo Seimo nariai</value></data>
+  <data name="Mine.Title" xml:space="preserve"><value>Jūsų projektai</value></data>
+  <data name="Mine.Following" xml:space="preserve"><value>Sekate</value></data>
+  <data name="Mine.Side" xml:space="preserve"><value>Jūs prašote balsuoti</value></data>
+  <data name="Mine.Side.for" xml:space="preserve"><value>už</value></data>
+  <data name="Mine.Side.against" xml:space="preserve"><value>prieš</value></data>
+  <data name="Mine.NoSide" xml:space="preserve"><value>Dar nenurodėte, ko prašote</value></data>
+  <data name="Mine.NoSideAction" xml:space="preserve"><value>Dar nenurodėte, ko prašote →</value></data>
+  <data name="Mine.Planned" xml:space="preserve"><value>Planuojama {0}</value></data>
+  <data name="Mine.LastVote" xml:space="preserve"><value>Paskutinis balsavimas: {0}</value></data>
+  <data name="Mine.Share" xml:space="preserve"><value>Pakvieskite kitus savo kvietimo nuoroda:</value></data>
+  <data name="Mine.None" xml:space="preserve"><value>Šiuo metu darbotvarkėje nėra projektų, kuriuos sekate ar dėl kurių nurodėte, ko prašote.</value></data>
+  <data name="Mine.All" xml:space="preserve"><value>Visi sekami projektai ir Seimo nariai →</value></data>
+  <data name="Agenda.Nobody" xml:space="preserve"><value>Dar niekas nenurodė, ko prašo</value></data>
+</root>

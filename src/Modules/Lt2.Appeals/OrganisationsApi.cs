@@ -73,6 +73,12 @@ public sealed record BillStatement(Guid OrganisationId, string Slug, string Name
 /// </summary>
 public sealed record BillStatements(string BillNumber, bool Open, IReadOnlyList<BillStatement> Items);
 
+/// <summary>
+/// An organisation with a public statement on a bill, as a name with its stance (design 8.7, the front page's agenda): no
+/// text, no count. <c>Stance</c> is <c>for</c>, <c>against</c> or <c>remarks</c>.
+/// </summary>
+public sealed record BillOrganisation(string Slug, string Name, OrganisationLabel Label, string Stance);
+
 /// <summary>One of the caller's organisations ("Mano organizacijos").</summary>
 public sealed record MyOrganisation(string Slug, string Name, string Status, OrganisationLabel Label);
 
@@ -177,6 +183,14 @@ public interface IOrganisations
 
     /// <summary>"Organizacijų pozicijos" on a bill; <c>bill.not-found</c> for an unknown bill.</summary>
     Task<Result<BillStatements>> OnBillAsync(string billNumber, CancellationToken cancellationToken);
+
+    /// <summary>
+    /// For each given bill, the organisations whose statement on it is public, in one read for all the bills, ordered as on
+    /// the bill's page: for, against, remarks, and within each in the order published (design 8.7). Blocked and closed
+    /// organisations and hidden, waiting or withdrawn statements are not there; a bill without any is missing. Whether a
+    /// bill's record is hidden is the caller's to check (its page then shows none).
+    /// </summary>
+    Task<IReadOnlyDictionary<string, IReadOnlyList<BillOrganisation>>> ShownOnBillsAsync(IReadOnlyCollection<string> billNumbers, CancellationToken cancellationToken);
 
     /// <summary>A member registers an organisation and becomes its first representative; shown at once.</summary>
     Task<Result<OrganisationCreated>> RegisterAsync(Guid userId, NewOrganisation request, CancellationToken cancellationToken);

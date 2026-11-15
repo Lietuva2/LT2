@@ -194,4 +194,15 @@
   <data name="Method.Digests.PublicCopy" xml:space="preserve"><value>Vieša kopija</value></data>
   <data name="Method.Digests.PublicCopyValue" xml:space="preserve"><value>kiekviena suvestinė skelbiama puslapyje „Suvestinės“ su tais pačiais skaičiais, tik be skaičių, skirtų konkrečiam Seimo nariui</value></data>
   <data name="Method.Limits" xml:space="preserve"><value>Ribos vienam žmogui</value></data>
+  <data name="HowItWorks.Title" xml:space="preserve"><value>Kaip tai veikia</value></data>
+  <data name="HowItWorks.1.Title" xml:space="preserve"><value>Seimas planuoja</value></data>
+  <data name="HowItWorks.1.Text" xml:space="preserve"><value>Iš Seimo darbotvarkių lrs.lt matome, kokius projektus ir kurią dieną Seimas planuoja svarstyti.</value></data>
+  <data name="HowItWorks.2.Title" xml:space="preserve"><value>Jūs nurodote, ko prašote</value></data>
+  <data name="HowItWorks.2.Text" xml:space="preserve"><value>Dėl kiekvieno projekto, kurio Seimas dar nebaigė svarstyti, galite paprašyti Seimo narių balsuoti už arba prieš. Ko prašote, niekam nerodome – viešai matyti tik bendri skaičiai.</value></data>
+  <data name="HowItWorks.3.Title" xml:space="preserve"><value>Paaiškinate kodėl</value></data>
+  <data name="HowItWorks.3.Text" xml:space="preserve"><value>Parašykite argumentą arba pažymėkite „Man svarbu“ prie kitų. Argumentai vieši ir rodomi su autoriaus vardu, bet neparodo, ko autorius prašo.</value></data>
+  <data name="HowItWorks.4.Title" xml:space="preserve"><value>Seimo nariai sužino</value></data>
+  <data name="HowItWorks.4.Text" xml:space="preserve"><value>Kai dalyvių skaičius pasiekia ribą, projektas patenka į suvestinę Seimo nariams: abi pusės ir svarbiausi argumentai. Kol vyksta bandymas, suvestinės sudaromos, bet Seimo nariams nesiunčiamos.</value></data>
+  <data name="HowItWorks.Follow" xml:space="preserve"><value>Projektus ir Seimo narius galite sekti: laišku pranešime, kai projektas bus įtrauktas į darbotvarkę ir kai Seimas dėl jo balsuos, o po balsavimo matysite, kaip balsavo kiekvienas Seimo narys. Ką sekate, mato tik jūs.</value></data>
+  <data name="HowItWorks.PrivacyLink" xml:space="preserve"><value>Kas matoma viešai, o kas ne →</value></data>
 </root>

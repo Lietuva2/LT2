@@ -1,0 +1,109 @@
+<!doctype html>
+<!-- Design 8.7: the front page as the owner chose it on 2026-11-15 (variant A, the narys's view). The member's panel "Jūsų projektai" comes from variant C (output/start-page/c-member.html, not kept here). The dashed magenta frames and their label exist only in this mockup: they mark what the site fills in the browser from the member's own answers. The stylesheet is the site's own; the rules in the <style> block below are the ones the site has in lt2.css (.home-head, .intro-steps, .tl-*), named a-* here. -->
+<html lang="lt"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="light dark">
+<title>A · Savaitė Seime · narys</title>
+<link rel="stylesheet" href="fonts/fonts.css"><link rel="stylesheet" href="../../src/Lt2.Web/wwwroot/css/lt2.css">
+<script src="lt2-theme.js"></script>
+<script src="lt2-logo-spin.js" defer></script>
+<style>
+/* Mockup-only: shared helpers. */
+.mk-private { outline: 2px dashed #b0306a; outline-offset: 6px; position: relative; margin-top: 1.25rem; }
+.mk-private::before { content: "Maketas: mato tik šis narys · įkeliama naršyklėje"; position: absolute; top: -1.6rem; left: -6px;
+  font: 600 11px/1.5 ui-monospace, Consolas, monospace; color: #fff; background: #b0306a; padding: 0 6px; max-width: calc(100% + 12px); }
+.mk-private--inline { margin-top: 0; outline-offset: 2px; }
+.mk-private--inline::before { content: none; }
+.mk-h1-s { font-size: var(--fs-5); }
+.org-item { display: inline-flex; flex-wrap: wrap; gap: var(--sp-1) var(--sp-2); align-items: baseline; margin-right: var(--sp-2); }
+.org-line { display: flex; flex-wrap: wrap; align-items: baseline; gap: var(--sp-1) var(--sp-2); }
+.org-line .label { margin-right: var(--sp-1); }
+.org-line a { color: var(--ink); }
+.cta { display: inline-flex; min-height: 2.25rem; padding: 0 var(--sp-3); font-size: var(--fs-1); }
+.mine { display: inline-flex; flex-wrap: wrap; gap: var(--sp-2); align-items: center; }
+.intro-steps { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: var(--sp-5); counter-reset: step; list-style: none; padding: 0; margin: 0; }
+.intro-steps > li { display: flex; flex-direction: column; gap: var(--sp-2); }
+.intro-steps > li::before { counter-increment: step; content: counter(step); font: 800 var(--fs-4)/1 var(--font-display);
+  width: 2.5rem; height: 2.5rem; display: grid; place-items: center; background: var(--brand-deep); color: #fff;
+  clip-path: polygon(0 0, 100% 0, 100% 70%, 70% 100%, 0 100%); }
+.intro-steps h3 { font-size: var(--fs-3); }
+.intro-steps p { margin: 0; }
+@media (max-width: 64rem) { .intro-steps { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@media (max-width: 36rem) { .intro-steps { grid-template-columns: minmax(0, 1fr); gap: var(--sp-4); }
+  .intro-steps > li { display: grid; grid-template-columns: 2.5rem minmax(0, 1fr); gap: var(--sp-1) var(--sp-3); }
+  .intro-steps > li::before { grid-row: span 2; } .intro-steps h3 { align-self: center; } }
+
+.a-head { display: grid; grid-template-columns: 7rem minmax(0, 1fr) auto; gap: var(--sp-5); align-items: center; }
+.a-head lt2-logo-spin { width: 100%; }
+.a-head h1 { font-size: var(--fs-5); }
+.a-head .lead { margin: 0; }
+.a-how { border-top: 4px solid var(--brand-deep); padding-top: var(--sp-5); }
+.a-day { display: grid; grid-template-columns: 9rem minmax(0, 1fr); gap: var(--sp-5); align-items: start; }
+.a-date { position: sticky; top: var(--sp-4); display: flex; flex-direction: column; gap: var(--sp-1); }
+.a-date b { font: 800 var(--fs-5)/0.95 var(--font-display); }
+.a-item { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 15rem); gap: var(--sp-3) var(--sp-5);
+  padding-block: var(--sp-4); border-top: 1px solid var(--rule); }
+.a-items > .a-item:last-child { border-bottom: 1px solid var(--rule); }
+.a-item__main { display: flex; flex-direction: column; gap: var(--sp-2); min-width: 0; }
+.a-item__main > a { font-weight: 700; color: var(--ink); font-size: var(--fs-2); }
+.a-item__side { display: flex; flex-direction: column; gap: var(--sp-2); align-items: flex-start; }
+.a-item__side .splitbar { width: 100%; }
+.a-items { list-style: none; margin: 0; padding: 0; }
+.a-past .a-date b { color: var(--ink-2); }
+.a-mine { display: flex; flex-wrap: wrap; gap: var(--sp-3); }
+.a-mine > a { display: flex; flex-direction: column; gap: var(--sp-1); background: var(--sheet); padding: var(--sp-3) var(--sp-4);
+  color: var(--ink); text-decoration: none; min-width: min(100%, 17rem); flex: 1 1 17rem; }
+.a-mine > a b { font-weight: 700; }
+.a-mine > a:hover b { text-decoration: underline; }
+@media (max-width: 54rem) {
+  .a-head { grid-template-columns: 4.5rem minmax(0, 1fr); }
+  .a-head__signin { grid-column: 1 / -1; }
+  .a-day { grid-template-columns: minmax(0, 1fr); gap: var(--sp-3); }
+  .a-date { position: static; flex-direction: row; flex-wrap: wrap; align-items: baseline; gap: var(--sp-2); }
+  .a-date b { font-size: var(--fs-4); }
+  .a-item { grid-template-columns: minmax(0, 1fr); }
+}
+
+</style></head>
+<body>
+<header class="page top">
+  <a class="top__brand" href="#"><svg viewBox="28 44 604 474" aria-hidden="true" class="logo"><g stroke-width="10" stroke-linejoin="round">
+    <path class="logo-slate" d="M70 78L345 106L352 58L396 108L292 112L293 240L168 243L165 316L40 298Z"/>
+    <path class="logo-leaf" d="M318 142L556 130L558 190L618 192L566 256L570 352L330 368Z"/>
+    <path class="logo-brand" d="M200 265L292 270L300 396L478 390L532 466L476 470L474 506L186 490Z"/></g></svg>Lietuva 2.0</a>
+  <nav class="top__nav" aria-label="Pagrindinis meniu"><a href="#">Darbotvarkė</a><a href="#">Seimo nariai</a><a href="#">Projektai</a><a href="#">Suvestinės</a><a href="#">Kaip skaičiuojama</a><a href="#">Mano paskyra</a><form class="top__signout" onsubmit="return false"><button type="submit">Atsijungti</button></form><button class="mark" type="button" id="theme-switch" data-theme-switch hidden></button></nav>
+</header>
+<div class="page"><p class="note" role="note" id="invented-data">Seimo narių ir balsavimų duomenys čia išgalvoti – tai tik bandymas.</p></div>
+<main class="page stack stack--loose">
+
+<div class="stack stack--tight">
+  <h1 class="mk-h1-s">Sveiki sugrįžę</h1>
+  <p class="small"><a href="#">Kaip tai veikia</a> · <a href="#">Mano paskyra</a></p>
+</div>
+<section class="mk-private stack stack--tight" aria-label="Jūsų projektai">
+  <h2 class="visually-hidden">Jūsų projektai</h2>
+  <div class="a-mine">
+    <a href="#"><span class="small">Planuojama lapkričio 17 d. · Sekate</span><b>XVP-0533 Vietinių rinkliavų įstatymo pataisa</b><span class="small">Dar nenurodėte, ko prašote →</span></a>
+    <a href="#"><span class="small">Planuojama lapkričio 19 d. · Sekate</span><b>XVP-0412 Gyventojų pajamų mokesčio įstatymo pataisa</b><span class="small">Jūs prašote balsuoti <span class="choice choice--for">už</span></span></a>
+  </div></section>
+
+<section class="stack" aria-labelledby="h-a-coming">
+  <div class="row"><h2 id="h-a-coming">Artimiausiu metu Seime</h2><a href="#">Visa darbotvarkė →</a></div>
+  <p class="small">Darbotvarkių projektai dažnai keičiasi, todėl datos gali pasislinkti. Paskutinį kartą perskaityta 2026-11-15 07:24.</p>
+  <section class="a-day " aria-label="Planuojama lapkričio 17 d."><div class="a-date"><span class="label">Planuojama</span><b>lapkričio 17 d.</b><span class="small">antradienis</span></div><ul class="a-items"><li class="a-item"><div class="a-item__main"><span class="row"><a class="tag tag--ink num" href="#/seimas/XVP-0533">XVP-0533</a><span class="tag">Priėmimas</span></span><a href="#/seimas/XVP-0533">Vietinių rinkliavų įstatymo pataisa</a><p class="mk-private mk-private--inline mine small" ><span class="tag tag--people">Sekate</span> Dar nenurodėte, ko prašote</p></div><div class="a-item__side"><span class="small">Dar niekas nenurodė, ko prašo</span><a class="btn btn--plain cta" href="#">Nurodyti, ko prašote</a></div></li><li class="a-item"><div class="a-item__main"><span class="row"><span class="tag tag--ink num">XVP-0777</span><span class="tag">Pateikimas</span></span><span class="small">Projekto atviruosiuose Seimo duomenyse dar nėra.</span></div><div class="a-item__side"><a class="small" href="#">Darbotvarkėje lrs.lt</a></div></li></ul></section>
+  <section class="a-day " aria-label="Planuojama lapkričio 19 d."><div class="a-date"><span class="label">Planuojama</span><b>lapkričio 19 d.</b><span class="small">ketvirtadienis</span></div><ul class="a-items"><li class="a-item"><div class="a-item__main"><span class="row"><a class="tag tag--ink num" href="#/seimas/XVP-0412">XVP-0412</a><span class="tag">Priėmimas</span></span><a href="#/seimas/XVP-0412">Gyventojų pajamų mokesčio įstatymo pataisa</a><p class="small org-line"><span class="label">Organizacijos</span> <span class="org-item"><span class="choice choice--for">už</span> <a href="#">Pavyzdinė mokesčių aiškumo asociacija</a></span><span class="org-item"><span class="choice choice--against">prieš</span> <a href="#">Pavyzdinis šeimos verslų sambūris</a></span><span class="org-item"><span class="choice choice--remarks">pastabos</span> <a href="#">Pavyzdinė viešųjų finansų stebėsena</a></span></p><p class="mk-private mk-private--inline mine small" ><span class="tag tag--people">Sekate</span> Jūs prašote balsuoti <span class="choice choice--for">už</span></p></div><div class="a-item__side"><span class="small num"><span class="choice choice--for">už</span> 6 800 (6 182) · <span class="choice choice--against">prieš</span> 4 280 (3 912)</span><svg class="splitbar splitbar--s" viewBox="0 0 1000 10" preserveAspectRatio="none" role="img" aria-label="6 800 už, 4 280 prieš"><rect class="splitbar__for" x="0" y="0" width="613.7" height="10"/><rect class="splitbar__against" x="613.7" y="0" width="386.3" height="10"/><rect class="splitbar__abstain" x="1000.0" y="0" width="0.0" height="10"/></svg><span class="small num"><b>11 080</b> dalyvių · riba 100 · riba pasiekta</span><a class="btn btn--plain cta" href="#">Argumentai ir pozicijos</a></div></li><li class="a-item"><div class="a-item__main"><span class="row"><a class="tag tag--ink num" href="#/seimas/XVP-0618">XVP-0618</a><span class="tag">Priėmimas</span></span><a href="#/seimas/XVP-0618">Atliekų tvarkymo įstatymo pataisa</a></div><div class="a-item__side"><span class="small">Dar niekas nenurodė, ko prašo</span><a class="btn btn--plain cta" href="#">Nurodyti, ko prašote</a></div></li></ul></section>
+  <section class="a-day a-past" aria-label="Balsuota lapkričio 13 d."><div class="a-date"><span class="label">Balsuota</span><b>lapkričio 13 d.</b><span class="small">penktadienis</span></div><ul class="a-items"><li class="a-item"><div class="a-item__main"><span class="row"><a class="tag tag--ink num" href="#/seimas/XVP-0533">XVP-0533</a><span class="tag">Svarstymas</span></span><a href="#">Vietinių rinkliavų įstatymo pataisa</a><span class="small num">69 už · 31 prieš · 18 susilaikė</span><svg class="splitbar splitbar--s" viewBox="0 0 1000 10" preserveAspectRatio="none" role="img" aria-label="69 už, 31 prieš"><rect class="splitbar__for" x="0" y="0" width="584.7" height="10"/><rect class="splitbar__against" x="584.7" y="0" width="262.7" height="10"/><rect class="splitbar__abstain" x="847.5" y="0" width="152.5" height="10"/></svg></div><div class="a-item__side"><span class="small">Dar niekas nenurodė, ko prašo</span><a class="btn btn--plain cta" href="#">Kaip balsavo Seimo nariai</a></div></li></ul></section>
+  <p class="small">Skliaustuose – kiek iš jų paskyrų senesnės nei 30 d.</p>
+  <p class="note note--quiet" id="not-a-poll">Tai nėra reprezentatyvi apklausa: skaičiai rodo savanoriškai dalyvaujančių Lietuva 2.0 naudotojų nuomonę.</p>
+</section>
+
+<section class="sheet sheet--quiet stack stack--tight" aria-labelledby="h-a-orgs">
+  <h2 id="h-a-orgs">Organizacijos</h2>
+  <p>Asociacijos, bendruomenės, įmonės ir kitos organizacijos skelbia savo pozicijas dėl projektų – kiekviena savo vardu.
+  Jų pozicijos rodomos atskirai ir neskaičiuojamos tarp dalyvių.</p>
+  <p class="row"><a href="#">Visos organizacijos →</a> <a href="#">Registruoti organizaciją →</a></p>
+</section>
+<p class="row"><a href="#">Visi projektai</a> <a href="#">Suvestinės Seimo nariams</a> <a href="#">Seimo nariai</a></p>
+<p class="note">Vyksta uždaras bandymas: suvestinės sudaromos, bet Seimo nariams nesiunčiamos.</p>
+</main>
+<footer class="page foot"><p>Lietuva 2.0 · uždaras bandymas</p></footer>
+</body></html>

@@ -28,16 +28,10 @@ public sealed class FocusRingTests
         (await heading.EvaluateAsync<bool>("h => h.matches(':focus-visible')")).ShouldBeTrue("the browser counts the load focus as keyboard focus");
         (await heading.EvaluateAsync<string>("h => getComputedStyle(h).outlineStyle")).ShouldBe("none");
 
-        // Tab on to the first link. How many presses that takes depends on whether the sign-in island has started: before
-        // it, its fields are disabled and the first press reaches a link; after it, the fields and buttons come first.
-        var tag = string.Empty;
-        for (var presses = 0; presses < 10 && tag != "A"; presses++)
-        {
-            await page.Keyboard.PressAsync("Tab");
-            tag = await page.EvaluateAsync<string>("() => document.activeElement.tagName");
-        }
-
-        tag.ShouldBe("A");
+        // Tab on from the heading: the first stop is the link to register (design 8.7: no sign-in form on the page).
+        await page.Keyboard.PressAsync("Tab");
+        (await page.EvaluateAsync<string>("() => document.activeElement.tagName")).ShouldBe("A");
+        (await page.EvaluateAsync<string>("() => document.activeElement.id")).ShouldBe("home-register");
         (await page.EvaluateAsync<string>("() => getComputedStyle(document.activeElement).outlineStyle")).ShouldBe("solid");
     }
 }

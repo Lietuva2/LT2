@@ -429,14 +429,6 @@ body > .page { width: 100%; }
   .welcome lt2-logo-spin { width: 9rem; }
 }
 
-/* The front page (option B, owner 2026-11-13): the same welcome with a smaller logo, then one summary card per bill. */
-.welcome--home lt2-logo-spin { width: min(16rem, 60%); }
-@media (max-width: 54rem) { .welcome--home lt2-logo-spin { width: 8rem; } }
-.cards { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(18rem, 100%), 1fr)); gap: var(--sp-5); align-items: start; }
-.card__title { color: inherit; }
-.counts b { font-size: var(--fs-3); }
-.counts__for { color: var(--for); }
-.counts__against { color: var(--against); }
 
 /* An action that reads as a link (resend the code, switch form). */
 .linkish {
@@ -618,3 +610,71 @@ body { padding-block-end: 4.5rem; }
 .statement__name { font-weight: 700; color: var(--ink); overflow-wrap: anywhere; }
 .statement__link, .statement__link a, #invite-url, .facts dd a { overflow-wrap: anywhere; }
 .statement__meta { flex-wrap: wrap; }
+
+/* ---------- The front page (design 8.7, reworked 2026-11-15; mockup design/ui/start.html) ---------- */
+
+/* The visitor's head: the turning logo, the name and one line, the trial note with the links to register or sign in. */
+.home-head { display: grid; grid-template-columns: 7rem minmax(0, 1fr) auto; gap: var(--sp-5); align-items: center; }
+.home-head lt2-logo-spin { width: 100%; }
+.home-head h1, .home-h1-s { font-size: var(--fs-5); }
+.home-head .lead { margin: 0; }
+.home-head__signin { max-inline-size: 32rem; }
+
+/* "Kaip tai veikia": four numbered steps (also at the top of /metodika#kaip-tai-veikia). */
+.home-how { border-top: 4px solid var(--brand-deep); padding-top: var(--sp-5); }
+.intro-steps { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: var(--sp-5); counter-reset: step; list-style: none; padding: 0; margin: 0; }
+.intro-steps > li { display: flex; flex-direction: column; gap: var(--sp-2); }
+.intro-steps > li::before {
+  counter-increment: step; content: counter(step); font: 800 var(--fs-4)/1 var(--font-display);
+  width: 2.5rem; height: 2.5rem; display: grid; place-items: center; background: var(--brand-deep); color: #ffffff;
+  clip-path: polygon(0 0, 100% 0, 100% 70%, 70% 100%, 0 100%);
+}
+.intro-steps h3 { font-size: var(--fs-3); }
+
+/* The timeline: one block per sitting day, the day's date beside its bills. */
+.tl-day { display: grid; grid-template-columns: 9rem minmax(0, 1fr); gap: var(--sp-5); align-items: start; }
+.tl-date { position: sticky; top: var(--sp-4); display: flex; flex-direction: column; gap: var(--sp-1); }
+.tl-date b { font: 800 var(--fs-5)/0.95 var(--font-display); }
+.tl-past .tl-date b { color: var(--ink-2); }
+.tl-items { list-style: none; margin: 0; padding: 0; }
+.tl-item {
+  display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 15rem); gap: var(--sp-3) var(--sp-5);
+  padding-block: var(--sp-4); border-top: 1px solid var(--rule);
+}
+.tl-items > .tl-item:last-child { border-bottom: 1px solid var(--rule); }
+.tl-item__main { display: flex; flex-direction: column; gap: var(--sp-2); min-width: 0; }
+.tl-item__title { font-weight: 700; color: var(--ink); overflow-wrap: break-word; }
+.tl-item__side { display: flex; flex-direction: column; gap: var(--sp-2); align-items: flex-start; min-width: 0; }
+.tl-item__side .splitbar, .tl-item__main .splitbar { width: 100%; }
+.tl-item .note { max-width: none; }
+
+/* The organisations on a bill: names with their stance, never counted. */
+.org-line { display: flex; flex-wrap: wrap; align-items: baseline; gap: var(--sp-1) var(--sp-3); }
+.org-line .label { margin-right: var(--sp-1); }
+.org-item { display: inline-flex; flex-wrap: wrap; gap: var(--sp-1) var(--sp-2); align-items: baseline; }
+.org-item a { color: var(--ink); overflow-wrap: anywhere; }
+
+/* One action per row; the member's own mark under the title. */
+.cta { min-height: 2.25rem; padding: 0 var(--sp-3); font-size: var(--fs-1); }
+.mine { display: inline-flex; flex-wrap: wrap; gap: var(--sp-2); align-items: center; }
+
+/* "Jūsų projektai" (from variant C): the member's own bills, filled in the browser. */
+.my-agenda__list { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(auto-fill, minmax(min(20rem, 100%), 1fr)); gap: var(--sp-5); }
+.my-agenda__list > li { display: flex; flex-direction: column; gap: var(--sp-2); padding-top: var(--sp-3); border-top: 1px solid var(--rule); min-width: 0; }
+.my-agenda__title { font-weight: 700; color: var(--ink); overflow-wrap: break-word; }
+
+@media (max-width: 64rem) { .intro-steps { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@media (max-width: 54rem) {
+  .home-head { grid-template-columns: 4.5rem minmax(0, 1fr); }
+  .home-head__signin { grid-column: 1 / -1; max-inline-size: none; }
+  .tl-day { grid-template-columns: minmax(0, 1fr); gap: var(--sp-3); }
+  .tl-date { position: static; flex-direction: row; flex-wrap: wrap; align-items: baseline; gap: var(--sp-2); }
+  .tl-date b { font-size: var(--fs-4); }
+  .tl-item { grid-template-columns: minmax(0, 1fr); }
+}
+@media (max-width: 36rem) {
+  .intro-steps { grid-template-columns: minmax(0, 1fr); gap: var(--sp-4); }
+  .intro-steps > li { display: grid; grid-template-columns: 2.5rem minmax(0, 1fr); gap: var(--sp-1) var(--sp-3); }
+  .intro-steps > li::before { grid-row: span 2; }
+  .intro-steps h3 { align-self: center; }
+}

@@ -24,6 +24,7 @@ public static class ClientServices
         services.AddScoped(sp => new ApiHttp(sp.GetRequiredService<IHttpClientFactory>().CreateClient(HttpClientName)));
         services.AddScoped<IAuthApi, HttpAuthApi>();
         services.AddScoped<IMeApi, HttpMeApi>();
+        services.AddScoped<IMyBillsApi, HttpMyBillsApi>();
         services.AddScoped<Lt2.Api.Contracts.Appeals.IAppealsApi, HttpAppealsApi>();
         services.AddScoped<Lt2.Api.Contracts.Appeals.IModerationApi, HttpModerationApi>();
         services.AddScoped<Lt2.Api.Contracts.Follows.IFollowsApi, HttpFollowsApi>();
@@ -41,6 +42,7 @@ public static class ClientServices
     {
         services.AddScoped<Passkeys>();
         services.AddScoped<Appeals.MyBillState>();
+        services.AddScoped<Agenda.MyAgendaState>();
         services.TryAddSingleton(TimeProvider.System);
         return services;
     }

@@ -247,6 +247,12 @@ public interface IAppealsModule
 
     /// <summary>Each given bill's public numbers (design 8.12.5); bills not in the catalogue are missing.</summary>
     Task<IReadOnlyDictionary<string, BillRecordState>> BillStatesAsync(IReadOnlyCollection<string> billNumbers, CancellationToken cancellationToken);
+
+    /// <summary>
+    /// The caller's own side on each given bill that has one, in one read (design 8.7, the front page): the person's own,
+    /// never anyone else's. A bill whose record the moderators hid is left out, as its page shows no taking part.
+    /// </summary>
+    Task<IReadOnlyDictionary<string, string>> MySidesAsync(Guid userId, IReadOnlyCollection<string> billNumbers, CancellationToken cancellationToken);
 }
 
 /// <summary>Moderation after the fact (design 8.12.3). Every action is audited; an argument's author is told why.</summary>

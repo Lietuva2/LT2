@@ -1,0 +1,109 @@
+@using Lt2.Api.Contracts.Agenda
+@using Lt2.Web.Client.Appeals
+@using Lt2.Web.Client.Organisations
+@inject IStringLocalizer<PageText> T
+@inject IStringLocalizer<Lt2.Web.Components.Appeals.AppealText> A
+@inject IStringLocalizer<AppealUi> U
+@inject Formats F
+
+@* One planned bill in the front page's timeline (design 8.7): number, stage and title; both sides with the counts for
+   accounts older than 30 days, the bar and the threshold, or "Dar niekas nenurodė, ko prašo"; the organisations with a
+   public statement on it as names with their stance (an unconfirmed one keeps "Nepatvirtinta"; the full label is on the
+   bill's page and the profile), ordered as on the bill's page and never counted; and one
+   action leading to the bill's page. For a member the mark and the action are islands filled in the browser (MyAgendaMark);
+   everything here is public and the same for everyone. A bill the open data does not know yet shows what the agenda says
+   and its source. *@
+<li class="tl-item" id="agenda-@Display.Day(Day)-@Item.Number">
+    <div class="tl-item__main">
+        <span class="row">
+            @if (Item.Title is not null)
+            {
+                <a class="tag tag--ink num" href="@BillPath">@Item.Number</a>
+            }
+            else
+            {
+                <span class="tag tag--ink num">@Item.Number</span>
+            }
+            @if (Item.Stage is { } stage)
+            {
+                <span class="tag">@F.Stage(stage)</span>
+            }
+            @if (Item.SetByModerator)
+            {
+                <span class="tag">@T["Agenda.ByModerator"]</span>
+            }
+        </span>
+        @if (Item.Title is { } title)
+        {
+            <a class="tl-item__title" href="@BillPath">@title</a>
+        }
+        else
+        {
+            <span class="small">@T["Agenda.NoTitle"]</span>
+        }
+        @if (Item.Organisations.Count > 0)
+        {
+            <p class="small org-line" id="agenda-organisations-@Item.Number">
+                <span class="label">@U["Agenda.Organisations"]</span>
+                @foreach (var org in Item.Organisations)
+                {
+                    <span class="org-item"><span class="@OrganisationWords.StanceClass(org.Stance)">@U["Agenda.Stance." + org.Stance]</span> <a href="@OrganisationWords.ProfilePath(org.Slug)">@org.Name</a>@if (org.Label.ConfirmedBy is null)
+                        {
+                            @(" ")<OrgLabel Label="org.Label" />
+                        }</span>
+                }
+            </p>
+        }
+        @if (Member && Item.Title is not null)
+        {
+            <MyAgendaMark Number="@Item.Number" Numbers="Numbers" Place="@Place" @rendermode="InteractiveWebAssembly" />
+        }
+    </div>
+    <div class="tl-item__side">
+        @if (Item.Record is not { } record)
+        {
+            @if (Item.SourceUrl is { } source && source.StartsWith("https://", StringComparison.Ordinal))
+            {
+                <a class="small" href="@source" rel="external">@T["Agenda.ToSource"]</a>
+            }
+        }
+        else if (record.Status == "rejected")
+        {
+            <span class="small">@T["Agenda.TakingPartClosed"]</span>
+            <a class="small" href="@BillPath">@T["Agenda.ToBill"]</a>
+        }
+        else
+        {
+            <RecordFigures Record="record" Member="Member" Number="@Item.Number" Numbers="Numbers" Place="@Place" />
+            @if (record.Status == "closed")
+            {
+                <a class="small" href="@BillPath">@T["Agenda.ToBill"]</a>
+            }
+            else if (Member)
+            {
+                <MyAgendaMark Number="@Item.Number" Numbers="Numbers" Place="@Place" Part="action" @rendermode="InteractiveWebAssembly" />
+            }
+            else
+            {
+                <a class="btn btn--plain cta" href="@BillPath">@U["Agenda.Action.TakePart"]</a>
+            }
+        }
+    </div>
+</li>
+
+@code {
+    [Parameter, EditorRequired] public AgendaItemResponse Item { get; set; } = default!;
+
+    /// <summary>The sitting day the row is under: part of its id, since a bill may be planned on more than one day.</summary>
+    [Parameter, EditorRequired] public DateOnly Day { get; set; }
+
+    /// <summary>Rendered for a signed-in member: the mark and the action become islands. The same for every member.</summary>
+    [Parameter] public bool Member { get; set; }
+
+    /// <summary>Every bill the page shows, for the members' islands to ask about in one request.</summary>
+    [Parameter] public IReadOnlyList<string> Numbers { get; set; } = [];
+
+    private string BillPath => "/seimas/" + Uri.EscapeDataString(Item.Number);
+
+    private string Place => Display.Day(Day) + "-" + Item.Number;
+}

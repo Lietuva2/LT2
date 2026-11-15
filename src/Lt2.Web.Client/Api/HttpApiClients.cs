@@ -268,3 +268,12 @@ internal sealed class HttpFeedbackApi(ApiHttp http) : Lt2.Api.Contracts.Feedback
     public Task<ApiResult> ReplyAsync(Guid id, Lt2.Api.Contracts.Feedback.FeedbackReplyRequest request, CancellationToken cancellationToken = default) =>
         http.SendAsync(HttpMethod.Post, Lt2.Api.Contracts.Feedback.FeedbackRoutes.ReplyOf(id), request, cancellationToken);
 }
+
+internal sealed class HttpMyBillsApi(ApiHttp http) : IMyBillsApi
+{
+    public Task<ApiResult<MyBillsResponse>> GetAsync(MyBillsQuery query, CancellationToken cancellationToken = default)
+    {
+        ArgumentNullException.ThrowIfNull(query);
+        return http.SendAsync<MyBillsResponse>(HttpMethod.Get, ApiRoutes.Me.Bills + "?" + query.ToQueryString(), null, cancellationToken);
+    }
+}

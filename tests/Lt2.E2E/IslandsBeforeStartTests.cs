@@ -95,7 +95,8 @@ public sealed partial class IslandsBeforeStartTests(AppealFlowTests.ModeratorFix
         using var playwright = await Playwright.CreateAsync();
         await using var browser = await playwright.Chromium.LaunchAsync(new() { Channel = SignUpTests.Channel, Headless = true });
         await using var context = await browser.NewContextAsync(new() { IgnoreHTTPSErrors = true, Locale = "lt-LT" });
-        foreach (var path in new[] { "/", "/prisijungti", "/seimas/XVP-0412", "/seimas/XVP-0533", "/p/jonas-petraitis", "/o/pavyzdine-mokesciu-aiskumo-asociacija" })
+        // The front page has no island for a visitor (design 8.7: no sign-in form there), so it is checked for a member.
+        foreach (var path in new[] { "/prisijungti", "/seimas/XVP-0412", "/seimas/XVP-0533", "/p/jonas-petraitis", "/o/pavyzdine-mokesciu-aiskumo-asociacija" })
         {
             await NothingUsableBeforeStartAsync(context, path);
         }
@@ -107,7 +108,7 @@ public sealed partial class IslandsBeforeStartTests(AppealFlowTests.ModeratorFix
         Assert.SkipWhen(string.IsNullOrEmpty(SignUpTests.BaseUrl), "LT2_E2E_BASE_URL is not set; start the stack and set it to run end-to-end tests.");
         await using var member = await PasskeyBrowser.StartAsync("native", 1280, 800);
         await PasskeyTests.RegisterAsync(member.Page, "Laukianti Pradžios");
-        foreach (var path in new[] { "/sveiki", "/seimas/XVP-0412", "/seimas/XVP-0533", "/p/jonas-petraitis", "/organizacijos/nauja", "/o/pavyzdine-mokesciu-aiskumo-asociacija" })
+        foreach (var path in new[] { "/", "/sveiki", "/seimas/XVP-0412", "/seimas/XVP-0533", "/p/jonas-petraitis", "/organizacijos/nauja", "/o/pavyzdine-mokesciu-aiskumo-asociacija" })
         {
             await NothingUsableBeforeStartAsync(member.Page.Context, path);
         }

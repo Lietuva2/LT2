@@ -268,7 +268,13 @@ official `@lrs.lt` address from open data; the link is tied to the Seimas person
 **Reasons to come (design 8.11).**
 - The agenda (`/darbotvarke`, first in the menu) and the front page's "Artimiausiu metu Seime" come from one public,
   cacheable answer that holds nothing about the caller, and show both sides for every bill (a bill nobody took part in
-  says so). The front page's cards are the six bills with the most activity, left out while none has any.
+  says so); the answer also names, per bill, the organisations with a public statement (as on the bill's page, never
+  counted). The front page (design 8.7, reworked 2026-11-15; mockup `design/ui/pradzia.html`) is that agenda as a
+  timeline of sitting days: a visitor first gets "Kaip tai veikia" (the same texts as `/metodika#kaip-tai-veikia`) and
+  links to register or sign in, never a form; a member gets "Jūsų projektai" and their marks in the rows, islands filled
+  in the browser from `GET /me/bills` (one request, never prerendered), so the HTML is the same for every member. The
+  server keeps the front page's agenda in memory for 60 s (`FrontPageAgenda`; a test removes `FrontPageAgenda.CacheKey`
+  instead of waiting); the agenda page, the bill's page and the API stay live.
   "Projektai" (`/projektai`; `/kreipimaisi` redirects there) lists active bills, sorted by activity (participants
   plus published arguments; the default), participants, arguments or planned date (owner, 2026-11-14), with a search
   and "Planuojami artimiausiu metu".
@@ -302,8 +308,8 @@ official `@lrs.lt` address from open data; the link is tied to the Seimas person
   representative's own side to the organisation. The last one cannot leave, only close it; deleting that account closes it.
 - One statement per organisation per bill (`for`, `against`, `remarks`; up to 1 500 characters; an https link; with a
   side an optional goal "Siekiame {N} dalyvių · dabar {n}"), in "Organizacijų pozicijos" after the arguments. Never
-  counted: counts, thresholds, lists, agenda, front page, statistics and summaries are the same with and without them,
-  and nothing about organisations goes to MPs yet. Edits keep public versions; frozen when the bill closes; none on a
+  counted: counts, thresholds, lists, statistics and summaries are the same with and without them (the agenda and the
+  front page name them beside a bill, never with a number), and nothing about organisations goes to MPs yet. Edits keep public versions; frozen when the bill closes; none on a
   hidden record.
 - Moderation after the fact: new and changed organisations and waiting, flagged, reported or unseen statements are in
   the queue; block and lift (lifting returns exactly what was shown), hide and restore a statement, publish a waiting one,

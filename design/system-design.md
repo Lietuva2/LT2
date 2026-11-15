@@ -976,7 +976,8 @@ it, newest first: the day, the kind, and both sides as frozen there with the cou
 linking to that bill's item on the summary's public page. Before the first it says the bill has not been in a summary
 yet. The summaries keep their own menu item and pages; each item there links back to the bill's page.
 
-**The front page [decided 2026-11-13, layout "B" chosen from three mockups].** The front page (`/`), public and
+**The front page [decided 2026-11-13, layout "B" chosen from three mockups; superseded on 2026-11-15 by the reworked
+page below, kept here as history].** The front page (`/`), public and
 server-rendered, opens with the sign-in page's welcome: the turning logo (the page's only one), the title and
 introduction, and beside it the same sign-in steps as `/prisijungti` (a short greeting with a link to the account once
 signed in). Below it "Artimiausiu metu Seime" (8.11.1), then one card for each of the six bills with the most
@@ -986,8 +987,7 @@ svarbu" count, without its author), each card linking to the bill's page; then l
 and the "not a representative poll" notice. It uses only the public answers behind `/projektai` and the bill pages.
 
 **The front page, reworked [decided by the owner on 2026-11-15: led by the agenda, not by summary-style cards; variant
-"A" chosen from three mockups, with the member's panel of variant "C"; the layout above is replaced when this is
-built].** The page is the agenda with what a person can do about it. The chosen mockup is kept under `design/ui/`.
+"A" chosen from three mockups, with the member's panel of variant "C"; it replaces the layout above].** The page is the agenda with what a person can do about it. The chosen mockup is kept under `design/ui/`.
 
 - **A visitor** sees, in this order: the logo, "Lietuva 2.0" and one line of lead text; the trial note with two links,
   to register with an invitation code and to sign in (no sign-in form on the page: the form stays on `/prisijungti`);
@@ -1000,7 +1000,9 @@ built].** The page is the agenda with what a person can do about it. The chosen 
   most eight coming items in all as today, then "Balsuota" for the votes of the last seven days. Each coming bill
   shows its number, stage and title; both sides with the counts for accounts older than 30 days, the bar and the
   threshold, or "Dar niekas nenurodė, ko prašo"; the organisations that have a public statement on it, as names with
-  their stance, each linking to its profile; and one action, "Nurodyti, ko prašote", leading to the bill's page. A
+  their stance, each linking to its profile (an unconfirmed one keeps the short tag "Nepatvirtinta" after its name,
+  so nobody takes an unconfirmed name for a checked one; the full label is on the bill's page and the profile); and
+  one action, "Nurodyti, ko prašote", leading to the bill's page. A
   voted bill shows the result and "Kaip balsavo Seimo nariai", leading to the vote's page. An item that is not in the
   open data yet shows what the agenda says and a link to the source, as today. The notes that explain the brackets
   and that this is not a representative poll sit directly under the timeline.
@@ -1022,7 +1024,9 @@ built].** The page is the agenda with what a person can do about it. The chosen 
 - **Cached [decided by the owner on 2026-11-15].** The public answer the page is built from (the agenda with its
   counts and organisations) is the same for everyone, so the server keeps it in memory for 60 seconds and builds the
   page from that: the most visited page costs the database one read a minute, not one per visitor. The numbers on
-  the front page can therefore be up to a minute behind the bill's own page, which stays live. Nothing of a member's
+  the front page can therefore be up to a minute behind the bill's own page, which stays live. A member who has just
+  taken a side is not told "Dar niekas nenurodė, ko prašo" on that bill meanwhile: their own answer, which is live,
+  takes that line away for them. Nothing of a member's
   own is in that answer or in the cache. The HTML itself is still answered `no-store`, because a page with an island
   carries a per-visitor antiforgery token (6.8); letting a proxy or a CDN cache visitors' pages needs that token moved
   out of the page first and is left for when a CDN goes in front of the site (9.1, section 12).
@@ -1062,8 +1066,11 @@ POST   /api/v1/reports                                   on a reason, or on a bi
 GET    /api/v1/digests            GET /api/v1/digests/{date}
 GET    /api/v1/bills/{number}/record/digests             the summaries that held the bill, as frozen (8.7)
 GET    /api/v1/agenda                                    coming planned items by day and last week's stage results, each
-                                                         with the bill's public numbers (8.11.1, 8.12.5)
+                                                         with the bill's public numbers (8.11.1, 8.12.5) and the
+                                                         organisations with a public statement on it (8.7)
 GET    /api/v1/me/follows                                the caller's followed bills and MPs (never cached)
+GET    /api/v1/me/bills?numbers=A,B                      the caller's own side and follow for up to 30 bills, in one
+                                                         request (8.7, the front page; never cached; nothing else)
 PUT    /api/v1/bills/{number}/follow            DELETE /api/v1/bills/{number}/follow
 PUT    /api/v1/mps/{slug}/follow                DELETE /api/v1/mps/{slug}/follow
 GET    /api/v1/me/notices                       PUT /api/v1/me/notices     which follow emails are on (8.11.2)
