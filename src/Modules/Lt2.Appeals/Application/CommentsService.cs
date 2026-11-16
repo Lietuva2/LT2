@@ -52,9 +52,9 @@ internal sealed class CommentsService(
             .OrderBy(c => c.CreatedAt).ThenBy(c => c.Id)
             .ToListAsync(cancellationToken);
         var taken = rows.Take(CommentRules.Shown(shown, rows.Count)).ToList();
-        var views = await ViewsAsync(db, taken, cancellationToken);
+        var (views, cards) = await ViewsAsync(db, taken, cancellationToken);
         var on = await SwitchAsync(kind, cancellationToken);
-        return new CommentThread(kind, targetId, bill.Bill.Number, rows.Count, bill.Open && on && target.Writable, bill.Open, views);
+        return new CommentThread(kind, targetId, bill.Bill.Number, rows.Count, bill.Open && on && target.Writable, bill.Open, views, cards);
     }
 
     public async Task<IReadOnlyDictionary<Guid, int>> CountsAsync(string kind, IReadOnlyCollection<Guid> targetIds, CancellationToken cancellationToken)
@@ -467,8 +467,11 @@ internal sealed class CommentsService(
         _ => settings.GetAsync(SettingKeys.CommentsOnResponses, ct),
     };
 
-    /// <summary>The public views of the given comments, in their order, with who agreed (oldest agreement first).</summary>
-    private async Task<IReadOnlyList<CommentView>> ViewsAsync(AppealsDb db, IReadOnlyList<Comment> rows, CancellationToken ct)
+    /// <summary>
+    /// The public views of the given comments, in their order, with who agreed (oldest agreement first), and one card per person
+    /// with a public profile among the names (design 8.25.4): the authors in their own voice and those who agreed.
+    /// </summary>
+    private async Task<(IReadOnlyList<CommentView> Views, IReadOnlyList<AuthorCard> Cards)> ViewsAsync(AppealsDb db, IReadOnlyList<Comment> rows, CancellationToken ct)
     {
         var ids = rows.Select(c => c.Id).ToList();
         var agreements = ids.Count == 0
@@ -476,8 +479,18 @@ internal sealed class CommentsService(
             : await db.CommentAgreements.AsNoTracking().Where(a => ids.Contains(a.CommentId)).OrderBy(a => a.CreatedAt).ThenBy(a => a.UserId).ToListAsync(ct);
         var authors = await AuthorsAsync(db, rows, ct);
         var names = await reads.NamesAsync(agreements.Select(a => a.UserId).Distinct(), ct);
+        var people = rows.Where(c => c.SpeaksAs == CommentVoices.Person && c.AuthorUserId is not null).Select(c => c.AuthorUserId!.Value).Concat(agreements.Select(a => a.UserId)).Distinct().ToList();
+        var profiles = await reads.ProfilesAsync(people, ct);
         var byComment = agreements.ToLookup(a => a.CommentId);
-        return rows.Select(c => new CommentView(c.Id, authors[c.Id], c.Text, c.CreatedAt, byComment[c.Id].Select(a => names.GetValueOrDefault(a.UserId)).ToList())).ToList();
+        var views = rows.Select(c => new CommentView(
+                c.Id,
+                c.SpeaksAs == CommentVoices.Person && c.AuthorUserId is { } a ? authors[c.Id] with { ProfileId = profiles.GetValueOrDefault(a)?.ProfileId } : authors[c.Id],
+                c.Text,
+                c.CreatedAt,
+                byComment[c.Id].Select(x => new CommentAgreer(names.GetValueOrDefault(x.UserId), profiles.GetValueOrDefault(x.UserId)?.ProfileId)).ToList()))
+            .ToList();
+        var cards = profiles.Values.OrderBy(p => p.ProfileId, StringComparer.Ordinal).Select(p => new AuthorCard(p.ProfileId, p.DisplayName, p.About)).ToList();
+        return (views, cards);
     }
 
     /// <summary>The name each comment is shown under (design 8.23.2): never the person behind an organisation's or an MP's comment.</summary>

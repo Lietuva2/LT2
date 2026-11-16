@@ -67,35 +67,46 @@ public interface IFollowerCounts
     Task<int> MemberAsync(string profileId, CancellationToken cancellationToken);
 }
 
+/// <summary>The kinds of a member's own texts (design 8.25.2): an argument, or a comment written in their own voice (8.23.2).</summary>
+public static class MemberTextKinds
+{
+    public const string Argument = "argument";
+
+    public const string Comment = "comment";
+}
+
 /// <summary>
-/// A published argument as a member's public page lists it (design 8.25.2): its bill, the side it was written for (public
-/// anyway beside it), when it became public and its text. Nothing about the author's own side.
+/// A published text as a member's public page lists it (design 8.25.2): an argument with the side it was written for (public
+/// anyway beside it), or a comment in the member's own voice with the kind of text it stands under (<c>reason</c>,
+/// <c>statement</c>, <c>response</c>); its bill, when it became public and its text. Nothing about the author's own side, and
+/// never a comment written as an organisation or an MP.
 /// </summary>
-public sealed record MemberArgumentFacts(Guid ReasonId, string BillNumber, string BillTitle, string Side, string Text, DateTimeOffset PublishedAt);
+public sealed record MemberTextFacts(Guid Id, string Kind, string BillNumber, string BillTitle, string? Side, string? On, string Text, DateTimeOffset PublishedAt);
 
-/// <summary>One page of a member's published arguments, newest first, and whether there are more.</summary>
-public sealed record MemberArgumentsPage(IReadOnlyList<MemberArgumentFacts> Items, bool More);
+/// <summary>One page of a member's published texts, newest first, and whether there are more.</summary>
+public sealed record MemberTextsPage(IReadOnlyList<MemberTextFacts> Items, bool More);
 
-/// <summary>An argument that became public, for the follow emails about a member (design 8.25.5). No text.</summary>
-public sealed record PublishedArgumentFacts(Guid ReasonId, Guid AuthorUserId, string BillNumber, DateTimeOffset PublishedAt);
+/// <summary>A text that became public (an argument or an own-voice comment), for the follow emails about a member (design 8.25.5). No text.</summary>
+public sealed record PublishedTextFacts(Guid Id, string Kind, Guid AuthorUserId, string BillNumber, DateTimeOffset PublishedAt);
 
-/// <summary>A member's texts in their own voice (design 8.25.2), implemented by Appeals: arguments today, comments when built.</summary>
+/// <summary>
+/// A member's texts in their own voice (design 8.25.2), implemented by Appeals: published arguments and the comments written as
+/// a person (8.23.2) that the bill's page shows. Never "Sutinku" (8.23.10: not listed on the profile).
+/// </summary>
 public interface IMemberTexts
 {
     /// <summary>
-    /// The member's published arguments on bills whose record is not hidden, newest first, the first <paramref name="take"/>.
-    /// Never hidden, waiting, merged or withdrawn ones.
+    /// The member's shown texts, newest first, the first <paramref name="take"/>: published arguments on bills whose record is
+    /// not hidden, and published comments in their own voice whose target is shown on such a bill. Never hidden, waiting,
+    /// merged or withdrawn ones.
     /// </summary>
-    Task<MemberArgumentsPage> PublishedAsync(Guid userId, int take, CancellationToken cancellationToken);
+    Task<MemberTextsPage> PublishedAsync(Guid userId, int take, CancellationToken cancellationToken);
 
     /// <summary>
-    /// Of the given authors, the arguments that first became public at or after <paramref name="since"/> and are public now, on
-    /// bills whose record is not hidden; oldest first.
+    /// Of the given authors, the texts that first became public at or after <paramref name="since"/> and are shown now, as
+    /// <see cref="PublishedAsync"/> says; oldest first.
     /// </summary>
-    Task<IReadOnlyList<PublishedArgumentFacts>> PublishedSinceAsync(IReadOnlyCollection<Guid> authors, DateTimeOffset since, CancellationToken cancellationToken);
-
-    /// <summary>Whether the argument is public now (published, its record not hidden).</summary>
-    Task<bool> IsPublicAsync(Guid reasonId, CancellationToken cancellationToken);
+    Task<IReadOnlyList<PublishedTextFacts>> PublishedSinceAsync(IReadOnlyCollection<Guid> authors, DateTimeOffset since, CancellationToken cancellationToken);
 }
 
 /// <summary>

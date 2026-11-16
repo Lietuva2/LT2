@@ -10,7 +10,7 @@ namespace Lt2.Web.Services;
 
 /// <summary>
 /// A member's public page, composed by the host (design 8.25.6) from Identity (the name, "Apie mane", the profile id),
-/// Notifications (the number of followers) and Appeals (the published arguments). Nothing private of the member reaches it.
+/// Notifications (the number of followers) and Appeals (the published arguments and comments). Nothing private of the member reaches it.
 /// </summary>
 internal sealed class MemberReads(IPublicProfiles profiles, IFollowerCounts followers, IMemberTexts texts)
 {
@@ -27,7 +27,7 @@ internal sealed class MemberReads(IPublicProfiles profiles, IFollowerCounts foll
         };
     }
 
-    /// <summary>The member's published arguments, newest first, the first <paramref name="shown"/> (10 at least).</summary>
+    /// <summary>The member's published arguments and own-voice comments, newest first, the first <paramref name="shown"/> (10 at least).</summary>
     public async Task<Result<MemberTextsResponse>> TextsAsync(string id, int? shown, CancellationToken ct)
     {
         var (state, profile) = await profiles.FindAsync(id, ct);
@@ -38,7 +38,7 @@ internal sealed class MemberReads(IPublicProfiles profiles, IFollowerCounts foll
 
         var page = await texts.PublishedAsync(profile.UserId, ProfileLimits.Shown(shown), ct);
         return new MemberTextsResponse(
-            page.Items.Select(a => new MemberArgumentResponse(a.ReasonId, new BillRefResponse(a.BillNumber, a.BillTitle), a.Side, a.Text, a.PublishedAt)).ToList(),
+            page.Items.Select(a => new MemberTextResponse(a.Id, a.Kind, new BillRefResponse(a.BillNumber, a.BillTitle), a.Side, a.On, a.Text, a.PublishedAt)).ToList(),
             page.More);
     }
 }

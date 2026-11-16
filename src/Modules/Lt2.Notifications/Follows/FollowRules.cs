@@ -28,6 +28,13 @@ internal static class FollowRules
     public static string IdKey(Guid id) => id.ToString("D", CultureInfo.InvariantCulture);
 
     /// <summary>
+    /// The anchor of a member's text on the bill's page (design 8.25.5): <c>reason-{id}</c> for an argument,
+    /// <c>komentaras-{id}</c> for a comment (design 8.23.6).
+    /// </summary>
+    public static string TextAnchor(string kind, Guid id) =>
+        kind == MemberTextKinds.Comment ? "komentaras-" + id.ToString("N", CultureInfo.InvariantCulture) : "reason-" + id.ToString("D", CultureInfo.InvariantCulture);
+
+    /// <summary>
     /// The key of a comments notice's record (design 8.23.14, no person): the argument's id (its first 80 bits, as 20 hexadecimal
     /// digits) and the run's moment in milliseconds, within the 40 characters the key has.
     /// </summary>

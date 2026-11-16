@@ -73,18 +73,24 @@ public static class CommentLimits
 /// <summary>
 /// The name a comment is shown under (design 8.23.2). <c>person</c>: <see cref="Name"/> is the display name, or null
 /// ("Lietuva 2.0 naudotojas"); <c>organisation</c>: the organisation's name, profile and label; <c>mp</c>: the MP. Never
-/// the person behind an organisation's or an MP's comment.
+/// the person behind an organisation's or an MP's comment. <c>ProfileId</c>: for a person with a public profile (design
+/// 8.25.4), the name links to <c>/nariai/{id}</c> with its card; null for everyone else and for the other voices.
 /// </summary>
-public sealed record CommentAuthorResponse(string Voice, string? Name, string? OrganisationSlug, OrganisationLabelResponse? Label, MpResponderResponse? Mp);
+public sealed record CommentAuthorResponse(string Voice, string? Name, string? OrganisationSlug, OrganisationLabelResponse? Label, MpResponderResponse? Mp, string? ProfileId = null);
 
-/// <summary>A shown comment: its name, time, text and who agreed (display names, oldest first; null for one without a name).</summary>
-public sealed record CommentResponse(Guid Id, CommentAuthorResponse Author, string Text, DateTimeOffset CreatedAt, IReadOnlyList<string?> AgreedBy);
+/// <summary>One who agreed (design 8.23.10): the display name (null: "Lietuva 2.0 naudotojas") and the public profile id when they have one.</summary>
+public sealed record CommentAgreerResponse(string? Name, string? ProfileId = null);
+
+/// <summary>A shown comment: its name, time, text and who agreed (oldest first).</summary>
+public sealed record CommentResponse(Guid Id, CommentAuthorResponse Author, string Text, DateTimeOffset CreatedAt, IReadOnlyList<CommentAgreerResponse> AgreedBy);
 
 /// <summary>
 /// The shown comments of one target, oldest first: <see cref="Count"/> in all, the first ones in <see cref="Items"/>.
-/// <c>Open</c>: a member may write here now; <c>BillOpen</c>: "Sutinku" and deleting still work.
+/// <c>Open</c>: a member may write here now; <c>BillOpen</c>: "Sutinku" and deleting still work. <c>Cards</c>: once per person
+/// with a public profile among the names shown (design 8.25.4), no follower number.
 /// </summary>
-public sealed record CommentThreadResponse(string Kind, Guid TargetId, string BillNumber, int Count, bool Open, bool BillOpen, IReadOnlyList<CommentResponse> Items);
+public sealed record CommentThreadResponse(
+    string Kind, Guid TargetId, string BillNumber, int Count, bool Open, bool BillOpen, IReadOnlyList<CommentResponse> Items, IReadOnlyList<AuthorCardResponse>? Cards = null);
 
 /// <summary>The caller's voice under one target where it is not a person's (<c>organisation</c>, <c>mp</c>), or why not (a code).</summary>
 public sealed record CommentTargetVoiceResponse(string Kind, Guid TargetId, string? Voice, string? Refusal);

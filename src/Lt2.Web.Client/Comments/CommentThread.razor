@@ -21,6 +21,11 @@
     <summary class="linkish small" id="aptarimas-summary-@Key">@(ShownCount > 0 ? L.Format("Comments.Title.Count", Display.Number(ShownCount)) : L["Comments.Title"])</summary>
     @if (_thread is { } thread)
     {
+        @* Design 8.25.4: the card of each public profile among this thread's names, once per thread, for js/lt2-cards.js. *@
+        @foreach (var card in thread.Cards ?? [])
+        {
+            <template id="@CardId(card.ProfileId)" @key="card.ProfileId"><p><b>@card.Name</b></p>@if (card.About is { } about) {<p class="small">@TextExcerpt.Of(about, CardShown).Shown</p>}<p class="small"><a href="@ProfileRoutes.Page(card.ProfileId)">@L["Card.Open"]</a></p></template>
+        }
         @if (thread.Items.Count > 0)
         {
             <ol class="stack stack--tight comments__list" id="comments-@Key">
@@ -59,7 +64,7 @@
                         {
                             <details class="more stack stack--tight" id="@id-all-agreed">
                                 <summary class="linkish small">@L["Comments.AgreedAll"]</summary>
-                                <p class="small">@string.Join(", ", c.AgreedBy.Select(PersonName))</p>
+                                <p class="small">@for (var i = 0; i < c.AgreedBy.Count; i++) { @(i > 0 ? ", " : "")@Person(c.AgreedBy[i]) }</p>
                             </details>
                         }
                         @if (_confirming == c.Id)
@@ -223,13 +228,53 @@
 
     private string PersonName(string? name) => name ?? L["Comments.NoName"].Value;
 
-    /// <summary>"Sutinka: Rūta Mockutė, Tomas ir dar 3" (design 8.23.10): the first two names, then how many more.</summary>
-    private string Agreed(CommentResponse c) => c.AgreedBy.Count switch
+    /// <summary>About this many characters of "Apie mane" in a card (design 8.25.4: "the first lines"), as beside arguments.</summary>
+    private const int CardShown = 200;
+
+    /// <summary>A card's template id: per thread, so two threads on one page never share an id.</summary>
+    private string CardId(string profileId) => $"card-{Key}-{profileId}";
+
+    /// <summary>
+    /// "Sutinka: Rūta Mockutė, Tomas ir dar 3" (design 8.23.10): the first two names, then how many more; a name of a member
+    /// with a public profile is a link to it with its card (design 8.25.4).
+    /// </summary>
+    private RenderFragment Agreed(CommentResponse c) => __builder =>
     {
-        0 => "",
-        1 => L.Format("Comments.Agreed.One", PersonName(c.AgreedBy[0])),
-        2 => L.Format("Comments.Agreed.Two", PersonName(c.AgreedBy[0]), PersonName(c.AgreedBy[1])),
-        _ => L.Format("Comments.Agreed.More", PersonName(c.AgreedBy[0]), PersonName(c.AgreedBy[1]), Display.Number(c.AgreedBy.Count - 2)),
+        var words = c.AgreedBy.Count switch
+        {
+            0 => "",
+            1 => L.Format("Comments.Agreed.One", "\u0001"),
+            2 => L.Format("Comments.Agreed.Two", "\u0001", "\u0002"),
+            _ => L.Format("Comments.Agreed.More", "\u0001", "\u0002", Display.Number(c.AgreedBy.Count - 2)),
+        };
+        foreach (var piece in System.Text.RegularExpressions.Regex.Split(words, "([\u0001\u0002])"))
+        {
+            switch (piece)
+            {
+                case "\u0001":
+                    @Person(c.AgreedBy[0])
+                    break;
+                case "\u0002":
+                    @Person(c.AgreedBy[1])
+                    break;
+                default:
+                    @piece
+                    break;
+            }
+        }
+    };
+
+    /// <summary>One who agreed: a link with its card for a member with a public profile, the plain name otherwise.</summary>
+    private RenderFragment Person(CommentAgreerResponse a) => __builder =>
+    {
+        if (a.ProfileId is { } profileId)
+        {
+            <a href="@ProfileRoutes.Page(profileId)" data-card="@CardId(profileId)">@PersonName(a.Name)</a>
+        }
+        else
+        {
+            @PersonName(a.Name)
+        }
     };
 
     /// <summary>"Sutinku" for a member, not on one's own comment, not for an MP's own account, only while the bill is open.</summary>
@@ -266,8 +311,16 @@
                 <span class="tag">@L["Comments.Mark.Mp"]</span>
                 break;
             default:
-                @* Plain text until public profiles exist (design 8.23.12): to connect to the profile (8.25). *@
-                <b class="comment__name">@PersonName(a.Name)</b>
+                if (a.ProfileId is { } profileId)
+                {
+                    @* Design 8.25.4: a member with a public profile: the name leads to their page, with a card. *@
+                    <a class="comment__name" href="@ProfileRoutes.Page(profileId)" data-card="@CardId(profileId)">@PersonName(a.Name)</a>
+                }
+                else
+                {
+                    <b class="comment__name">@PersonName(a.Name)</b>
+                }
+
                 break;
         }
     };

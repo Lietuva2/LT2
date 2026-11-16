@@ -123,13 +123,13 @@ internal sealed class FollowTemplates(IStringLocalizer<EmailTemplates> l, IOptio
         var paragraphs = new List<string>
         {
             l[EmailText.Greeting],
-            Format("Follow.Member.Body", model.MemberName, $"{model.BillNumber} · {model.BillTitle}"),
-            Format("Follow.Member.Read", Link(model.ArgumentPath)),
+            Format("Follow.Member.Body." + What(model.What), model.MemberName, $"{model.BillNumber} · {model.BillTitle}"),
+            Format("Follow.Member.Read." + What(model.What), Link(model.TextPath)),
             Format("Follow.Member.Profile", Link(model.ProfilePath)),
             Format("Follow.Member.Footer", Link(model.AccountPath)),
             l[EmailText.Signature],
         };
-        return Message(model.To, Format("Follow.Member.Subject", model.MemberName, model.BillNumber), paragraphs);
+        return Message(model.To, Format("Follow.Member.Subject." + What(model.What), model.MemberName, model.BillNumber), paragraphs);
     }
 
     /// <summary>The "planned" part of a gathered email (design 8.24): a line per bill with the date current when the email was made.</summary>
@@ -199,7 +199,7 @@ internal sealed class FollowTemplates(IStringLocalizer<EmailTemplates> l, IOptio
     public string MemberPart(IReadOnlyList<FollowMemberEmail> items)
     {
         ArgumentNullException.ThrowIfNull(items);
-        var lines = items.Select(m => Format("Gathered.Member.Line", m.MemberName, $"{m.BillNumber} · {m.BillTitle}", Link(m.ArgumentPath)));
+        var lines = items.Select(m => Format("Gathered.Member.Line." + What(m.What), m.MemberName, $"{m.BillNumber} · {m.BillTitle}", Link(m.TextPath)));
         return l["Gathered.Member.Title"] + "\n" + string.Join("\n", lines);
     }
 
@@ -213,6 +213,9 @@ internal sealed class FollowTemplates(IStringLocalizer<EmailTemplates> l, IOptio
         var lines = items.SelectMany(m => m.Arguments).Select(a => "– " + Format("Comments.Notice.Line", $"{a.BillNumber} · {a.BillTitle}", Link(a.Path)));
         return l["Gathered.Comments.Title"] + "\n" + string.Join("\n", lines);
     }
+
+    /// <summary>A followed member's text: a comment, or an argument (also for anything unknown).</summary>
+    private static string What(string? what) => what == MemberTextKinds.Comment ? MemberTextKinds.Comment : MemberTextKinds.Argument;
 
     private string Label(string? confirmedBy, string? domain) => confirmedBy switch
     {

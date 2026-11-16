@@ -28,7 +28,9 @@ internal sealed class CommentReads(IComments comments, ICommentModeration modera
 
         var t = result.Value!;
         var names = await MpNamesAsync(t.Items.Select(i => i.Author.SeimasPersonId), ct);
-        return new CommentThreadResponse(t.Kind, t.TargetId, t.BillNumber, t.Count, t.Open, t.BillOpen, t.Items.Select(i => Map(i, names)).ToList());
+        return new CommentThreadResponse(
+            t.Kind, t.TargetId, t.BillNumber, t.Count, t.Open, t.BillOpen, t.Items.Select(i => Map(i, names)).ToList(),
+            t.Cards.Select(c => new AuthorCardResponse(c.ProfileId, c.Name, c.About)).ToList());
     }
 
     public async Task<Result<MyCommentsResponse>> MineAsync(ClaimsPrincipal user, string number, CancellationToken ct)
@@ -109,7 +111,7 @@ internal sealed class CommentReads(IComments comments, ICommentModeration modera
     {
         "organisation" => new CommentAuthorResponse(a.Voice, a.OrganisationName, a.OrganisationSlug, a.Label is { } l ? new OrganisationLabelResponse(l.ConfirmedBy, l.Domain) : null, null),
         "mp" => new CommentAuthorResponse(a.Voice, null, null, null, Mp(a.SeimasPersonId, names)),
-        _ => new CommentAuthorResponse(a.Voice, a.DisplayName, null, null, null),
+        _ => new CommentAuthorResponse(a.Voice, a.DisplayName, null, null, null, a.ProfileId),
     };
 
     private static MpResponderResponse? Mp(long? person, IReadOnlyDictionary<long, MpFacts> names) =>
@@ -118,7 +120,7 @@ internal sealed class CommentReads(IComments comments, ICommentModeration modera
         : new MpResponderResponse("", "", p.ToString(System.Globalization.CultureInfo.InvariantCulture), null);
 
     private static CommentResponse Map(CommentView v, IReadOnlyDictionary<long, MpFacts> names) =>
-        new(v.Id, Map(v.Author, names), v.Text, v.CreatedAt, v.AgreedBy);
+        new(v.Id, Map(v.Author, names), v.Text, v.CreatedAt, v.AgreedBy.Select(x => new CommentAgreerResponse(x.Name, x.ProfileId)).ToList());
 
     private static QueueCommentResponse Map(QueueComment q, IReadOnlyDictionary<long, MpFacts> names) => new(
         q.Id, AppealMapping.Map(q.Bill), Map(q.Author, names), q.Text, q.CreatedAt, q.Status, q.Reports.Select(AppealMapping.Map).ToList(),

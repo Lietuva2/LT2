@@ -854,20 +854,23 @@
   <data name="Followers.Line" xml:space="preserve"><value>Sekėjai: {0}</value></data>
   <data name="Followers.Hint" xml:space="preserve"><value>Kas yra sekėjai?</value></data>
   <data name="Followers.Answer" xml:space="preserve"><value>Tiek Lietuva 2.0 narių paprašė laiškų apie tai. Tai ne palaikymas ir ne reprezentatyvi apklausa; kas seka, nerodome niekam.</value></data>
-  <data name="Follow.What.member" xml:space="preserve"><value>Gausite laišką, kai narys paskelbs argumentą.</value></data>
-  <data name="Follow.Following.member" xml:space="preserve"><value>Sekate: gausite laišką, kai narys paskelbs argumentą.</value></data>
-  <data name="Follow.SignIn.member" xml:space="preserve"><value>Prisijungę gausite laišką, kai narys paskelbs argumentą.</value></data>
+  <data name="Follow.What.member" xml:space="preserve"><value>Gausite laišką, kai narys paskelbs argumentą ar komentarą.</value></data>
+  <data name="Follow.Following.member" xml:space="preserve"><value>Sekate: gausite laišką, kai narys paskelbs argumentą ar komentarą.</value></data>
+  <data name="Follow.SignIn.member" xml:space="preserve"><value>Prisijungę gausite laišką, kai narys paskelbs argumentą ar komentarą.</value></data>
   <data name="Follow.Own" xml:space="preserve"><value>Tai jūsų viešas profilis.</value></data>
   <data name="Follow.OwnLink" xml:space="preserve"><value>Keisti profilį</value></data>
   <data name="Follows.Members" xml:space="preserve"><value>Nariai</value></data>
-  <data name="Follows.Email.members" xml:space="preserve"><value>Kai sekamas narys paskelbia argumentą</value></data>
+  <data name="Follows.Email.members" xml:space="preserve"><value>Kai sekamas narys paskelbia argumentą ar komentarą</value></data>
   <data name="Member.Label" xml:space="preserve"><value>Lietuva 2.0 narys</value></data>
   <data name="Member.GoneTitle" xml:space="preserve"><value>Šio profilio nebėra</value></data>
   <data name="Member.Gone" xml:space="preserve"><value>Narys išjungė savo viešą profilį. Šis adresas daugiau nenaudojamas.</value></data>
-  <data name="Member.Arguments" xml:space="preserve"><value>Argumentai</value></data>
-  <data name="Member.NoArguments" xml:space="preserve"><value>Narys dar nepaskelbė argumentų.</value></data>
+  <data name="Member.Arguments" xml:space="preserve"><value>Argumentai ir komentarai</value></data>
+  <data name="Member.NoArguments" xml:space="preserve"><value>Narys dar nepaskelbė argumentų ar komentarų.</value></data>
   <data name="Member.ArgumentFor.for" xml:space="preserve"><value>argumentas už</value></data>
   <data name="Member.ArgumentFor.against" xml:space="preserve"><value>argumentas prieš</value></data>
+  <data name="Member.CommentOn.reason" xml:space="preserve"><value>komentaras po argumentu</value></data>
+  <data name="Member.CommentOn.statement" xml:space="preserve"><value>komentaras po organizacijos pozicija</value></data>
+  <data name="Member.CommentOn.response" xml:space="preserve"><value>komentaras po Seimo nario atsakymu</value></data>
   <data name="Member.ReadOnBill" xml:space="preserve"><value>Skaityti projekto puslapyje</value></data>
   <data name="Member.More" xml:space="preserve"><value>Rodyti daugiau</value></data>
   <data name="Member.Note" xml:space="preserve"><value>Šį puslapį narys įsijungė pats. Čia matyti tik tai, ką jis paskelbė viešai.</value></data>

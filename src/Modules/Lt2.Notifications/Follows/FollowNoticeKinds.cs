@@ -549,10 +549,10 @@ internal sealed class ResponseNotices(
 }
 
 /// <summary>
-/// A followed member published an argument (design 8.25.5; kind <c>member</c>, key: the argument): the member's display name,
-/// the bill and the links to the argument and to the member's page, never the text, its side or a count. Told to those who
-/// followed the member before it became public and before the job saw it, never to its author; left out when by the time the
-/// email is made the argument is no longer public or the member's profile is switched off.
+/// A followed member published an argument or a comment in their own voice (design 8.25.5; kind <c>member</c>, key: the text's
+/// id, under its bill): the member's display name, the bill and the links to the text and to the member's page, never the text,
+/// a side or a count. Told to those who followed the member before it became public and before the job saw it, never to its
+/// author; left out when by the time the email is made the text is no longer shown or the member's profile is switched off.
 /// </summary>
 internal sealed class MemberNotices(
     IDbContextFactory<NotificationsDb> contexts, IBillCatalogue bills, IPublicProfiles profiles, IMemberTexts texts) : IMemberNoticeKind
@@ -567,13 +567,13 @@ internal sealed class MemberNotices(
         }
 
         var published = await texts.PublishedSinceAsync(shown.Values.Select(p => p.UserId).ToList(), now - FollowRules.EventLookBack, cancellationToken);
-        var keys = published.Select(a => FollowRules.IdKey(a.ReasonId)).ToList();
+        var keys = published.Select(a => FollowRules.IdKey(a.Id)).ToList();
         var known = (await db.BillEvents.AsNoTracking().Where(e => e.Kind == BillEventKinds.Member && keys.Contains(e.Key)).Select(e => e.Key).ToListAsync(cancellationToken))
             .ToHashSet(StringComparer.Ordinal);
         var recorded = 0;
         foreach (var argument in published)
         {
-            var key = FollowRules.IdKey(argument.ReasonId);
+            var key = FollowRules.IdKey(argument.Id);
             if (known.Add(key))
             {
                 FollowEvents.Record(db, argument.BillNumber, BillEventKinds.Member, key, now, FollowRules.MemberArgumentIsSendable(argument.PublishedAt, now));
@@ -602,7 +602,7 @@ internal sealed class MemberNotices(
         var shown = await FollowedProfilesAsync(pass.Db, cancellationToken);
         var byAuthor = shown.Values.ToDictionary(p => p.UserId);
         var published = (await texts.PublishedSinceAsync(byAuthor.Keys.ToList(), pass.Now - FollowRules.EventLookBack, cancellationToken))
-            .ToDictionary(a => FollowRules.IdKey(a.ReasonId), StringComparer.Ordinal);
+            .ToDictionary(a => FollowRules.IdKey(a.Id), StringComparer.Ordinal);
         var followers = await FollowEvents.FollowersAsync(pass.Db, FollowKinds.Member, shown.Keys.ToList(), cancellationToken);
         var facts = await bills.FindManyAsync(events.Select(e => e.BillNumber).Distinct().ToList(), cancellationToken);
         var due = new List<DueNotice>();
@@ -622,9 +622,10 @@ internal sealed class MemberNotices(
                 {
                     due.Add(new DueNotice(f.UserId, e.FirstSeen, to => OutboxMessage.Create(MessageKinds.FollowMemberEmail, new FollowMemberEmail(
                         to, author.DisplayName, bill.Number, bill.Title,
-                        FollowEvents.BillPath(bill.Number) + "#reason-" + argument.ReasonId.ToString("D"),
+                        FollowEvents.BillPath(bill.Number) + "#" + FollowRules.TextAnchor(argument.Kind, argument.Id),
                         "/nariai/" + author.ProfileId,
-                        NoticeDelivery.AccountPath))));
+                        NoticeDelivery.AccountPath,
+                        argument.Kind))));
                 }
             }
 

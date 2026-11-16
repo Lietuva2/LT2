@@ -16,19 +16,25 @@ public sealed record CommentSpeaker(long SeimasPersonId, bool PasskeySession, bo
 /// <summary>
 /// The name a comment is shown under (design 8.23.2): a person's display name (null: "Lietuva 2.0 naudotojas"); an
 /// organisation's name, profile address and label with the mark "Organizacija"; or the MP (by Seimas person number) with the
-/// mark "Seimo narys arba jo biuras". Never the person behind an organisation's or an MP's comment.
+/// mark "Seimo narys arba jo biuras". Never the person behind an organisation's or an MP's comment. <paramref name="ProfileId"/>:
+/// a person's public profile id when they have one (design 8.25.4), never for the other voices.
 /// </summary>
-public sealed record CommentAuthor(string Voice, string? DisplayName, string? OrganisationName, string? OrganisationSlug, OrganisationLabel? Label, long? SeimasPersonId);
+public sealed record CommentAuthor(string Voice, string? DisplayName, string? OrganisationName, string? OrganisationSlug, OrganisationLabel? Label, long? SeimasPersonId, string? ProfileId = null);
 
-/// <summary>A shown comment: who, when, the text, and who agreed (display names, oldest agreement first; null: no name given).</summary>
-public sealed record CommentView(Guid Id, CommentAuthor Author, string Text, DateTimeOffset CreatedAt, IReadOnlyList<string?> AgreedBy);
+/// <summary>One who agreed with a comment (design 8.23.10): the display name (null: none given) and the public profile id when they have one (8.25.4).</summary>
+public sealed record CommentAgreer(string? Name, string? ProfileId);
+
+/// <summary>A shown comment: who, when, the text, and who agreed (oldest agreement first).</summary>
+public sealed record CommentView(Guid Id, CommentAuthor Author, string Text, DateTimeOffset CreatedAt, IReadOnlyList<CommentAgreer> AgreedBy);
 
 /// <summary>
 /// The shown comments of one target, oldest first (design 8.23.6). <c>Count</c>: all shown; <c>Items</c>: the first
 /// <c>Shown</c>. <c>Open</c>: a member may write here now (the bill open, the kind switched on, the target open to comments);
-/// <c>BillOpen</c>: "Sutinku" and deleting still work (not on a closed bill).
+/// <c>BillOpen</c>: "Sutinku" and deleting still work (not on a closed bill). <c>Cards</c>: once per person with a public
+/// profile among the names shown (authors and those who agreed, design 8.25.4).
 /// </summary>
-public sealed record CommentThread(string Kind, Guid TargetId, string BillNumber, int Count, bool Open, bool BillOpen, IReadOnlyList<CommentView> Items);
+public sealed record CommentThread(
+    string Kind, Guid TargetId, string BillNumber, int Count, bool Open, bool BillOpen, IReadOnlyList<CommentView> Items, IReadOnlyList<AuthorCard> Cards);
 
 /// <summary>In whose name the caller writes under one target, where it is not as a person, or why they cannot write there.</summary>
 public sealed record CommentTargetVoice(string Kind, Guid TargetId, string? Voice, string? Refusal);

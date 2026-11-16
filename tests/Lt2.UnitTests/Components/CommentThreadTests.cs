@@ -41,12 +41,15 @@ public sealed class CommentThreadTests : BunitContext
         JSInterop.Mode = JSRuntimeMode.Loose;
     }
 
+    private const string RutaProfile = "rutaprof01";
+
     private static CommentThreadResponse Thread() => new("reason", Target, Bill, 3, true, true,
     [
-        new(PersonComment, new CommentAuthorResponse("person", "Rūta Mockutė", null, null, null), "Šaltinis: https://pavyzdys.test/tyrimas ir http://kitas.pavyzdys.test", DateTimeOffset.UnixEpoch, ["Tomas", null, "Ona Jonaitienė"]),
+        new(PersonComment, new CommentAuthorResponse("person", "Rūta Mockutė", null, null, null, RutaProfile), "Šaltinis: https://pavyzdys.test/tyrimas ir http://kitas.pavyzdys.test", DateTimeOffset.UnixEpoch,
+            [new("Tomas"), new(null), new("Ona Jonaitienė")]),
         new(OrganisationComment, new CommentAuthorResponse("organisation", "Pavyzdinė asociacija", "pavyzdine-asociacija", new OrganisationLabelResponse(null, null), null), "Asociacijos pastaba.", DateTimeOffset.UnixEpoch.AddHours(1), []),
-        new(MpComment, new CommentAuthorResponse("mp", null, null, null, new MpResponderResponse("jonas-petraitis", "Jonas", "Petraitis", null)), "Seimo nario pastaba.", DateTimeOffset.UnixEpoch.AddHours(2), ["Rūta Mockutė"]),
-    ]);
+        new(MpComment, new CommentAuthorResponse("mp", null, null, null, new MpResponderResponse("jonas-petraitis", "Jonas", "Petraitis", null)), "Seimo nario pastaba.", DateTimeOffset.UnixEpoch.AddHours(2), [new("Rūta Mockutė", RutaProfile)]),
+    ], [new AuthorCardResponse(RutaProfile, "Rūta Mockutė", "Mokytoja iš Kauno.")]);
 
     private IRenderedComponent<CommentThread> RenderThread() =>
         Render<CommentThread>(p => p.Add(c => c.Kind, "reason").Add(c => c.TargetId, Target).Add(c => c.Number, Bill).Add(c => c.Thread, Thread())
@@ -70,6 +73,27 @@ public sealed class CommentThreadTests : BunitContext
         thread.FindAll("button[id$='-agree'], button[id$='-delete']").ShouldBeEmpty("no member's controls for a visitor");
         thread.Find($"#comments-sign-in-{Target:N} a").GetAttribute("href").ShouldStartWith("/prisijungti#tikslas=");
         _comments.Calls.ShouldBeEmpty("nothing of the caller's is read while the server renders");
+    }
+
+    /// <summary>
+    /// Design 8.23.2, 8.23.10 with 8.25.4: a person with a public profile is a link to it with its card, beside their comment and
+    /// among those who agreed; anyone else a plain name; an organisation's or an MP's comment never leads to a person.
+    /// </summary>
+    [Fact]
+    public void A_name_with_a_public_profile_beside_a_comment_and_in_sutinka_links_to_the_profile_with_its_card_and_others_stay_plain()
+    {
+        SetRendererInfo(new RendererInfo("Static", isInteractive: false));
+        var thread = RenderThread();
+
+        var name = thread.Find($"#{CommentLimits.ElementId(PersonComment)} a.comment__name");
+        name.GetAttribute("href").ShouldBe("/nariai/" + RutaProfile);
+        var card = name.GetAttribute("data-card")!;
+        thread.FindAll($"template#{card}").ShouldHaveSingleItem("one card per person in the thread").InnerHtml.ShouldContain("Mokytoja iš Kauno.");
+        thread.Find($"#{CommentLimits.ElementId(MpComment)}-agreed a").GetAttribute("data-card").ShouldBe(card, "the same card beside a \"Sutinku\"");
+        thread.Find($"#{CommentLimits.ElementId(PersonComment)}-agreed").QuerySelectorAll("a").ShouldBeEmpty("Tomas and an unnamed member have no profile");
+        thread.FindAll($"#{CommentLimits.ElementId(PersonComment)}-all-agreed a").ShouldBeEmpty();
+        thread.Find($"#{CommentLimits.ElementId(OrganisationComment)} .comment__name").GetAttribute("href").ShouldBe("/o/pavyzdine-asociacija");
+        thread.FindAll("a[href^=\"/nariai/\"]").Count.ShouldBe(2, "the person's own comment and their \"Sutinku\"");
     }
 
     [Fact]

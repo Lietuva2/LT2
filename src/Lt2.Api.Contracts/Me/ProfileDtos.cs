@@ -30,11 +30,16 @@ public sealed record ProfileRequest
 /// <summary>A member's public page (design 8.25.2): the display name, "Apie mane" and the number of followers.</summary>
 public sealed record MemberProfileResponse(string ProfileId, string DisplayName, string? About, int Followers);
 
-/// <summary>A published argument on a member's page: its bill, the side it was written for, when it became public, its text.</summary>
-public sealed record MemberArgumentResponse(Guid Id, BillRefResponse Bill, string Side, string Text, DateTimeOffset PublishedAt);
+/// <summary>
+/// A published text on a member's page (design 8.25.2): <c>Kind</c> <c>argument</c> with the <c>Side</c> it was written for,
+/// or <c>comment</c> (in the member's own voice) with <c>On</c>, the kind of text it stands under (<c>reason</c>,
+/// <c>statement</c>, <c>response</c>); its bill, when it became public, its text. The link is the bill's page with
+/// <c>#reason-{id}</c> or <c>#komentaras-{id}</c>.
+/// </summary>
+public sealed record MemberTextResponse(Guid Id, string Kind, BillRefResponse Bill, string? Side, string? On, string Text, DateTimeOffset PublishedAt);
 
 /// <summary>The member's texts, newest first, the first <c>Shown</c>; <c>More</c> when there are more.</summary>
-public sealed record MemberTextsResponse(IReadOnlyList<MemberArgumentResponse> Items, bool More);
+public sealed record MemberTextsResponse(IReadOnlyList<MemberTextResponse> Items, bool More);
 
 /// <summary>A report of a member's public profile (design 8.25.6).</summary>
 public sealed record MemberReportRequest

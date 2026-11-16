@@ -8,8 +8,9 @@
 
 @* A member's public page (design 8.25.2), by the member's own choice ("Viešas profilis"), server-rendered and readable
    without script: the name, "Apie mane", the number of followers, "Sekti" and "Pranešti", and the member's published
-   arguments, newest first, 10 and "Rodyti daugiau" by the page's address (?rodyti=). Indexed: no noindex. Never the person's
-   sides, "Man svarbu", follows, party, invitations, organisations, counts of their texts or who follows them. A retired id
+   arguments and own-voice comments, newest first, 10 and "Rodyti daugiau" by the page's address (?rodyti=). Indexed: no
+   noindex. Never the person's sides, "Man svarbu", "Sutinku", follows, party, invitations, organisations, counts of their
+   texts or who follows them. A retired id
    answers 410 with one line, an id never issued the site's 404; both are marked noindex. Asked again each time (no-cache),
    so a profile switched off is gone at once. *@
 @if (_gone)
@@ -57,11 +58,20 @@ else if (_profile is { } p)
                     <ol class="rows" id="member-arguments">
                         @foreach (var a in texts.Items)
                         {
-                            <li class="member-text" id="member-argument-@a.Id" @key="a.Id">
+                            var comment = a.Kind == Lt2.SharedKernel.MemberTextKinds.Comment;
+                            <li class="member-text" id="@((comment ? "member-comment-" : "member-argument-") + a.Id)" @key="a.Id">
                                 <span class="small"><a href="/seimas/@Uri.EscapeDataString(a.Bill.Number)"><span class="num">@a.Bill.Number</span> · @a.Bill.Title</a></span>
-                                <span class="small"><span class="choice choice--@a.Side">@L["Member.ArgumentFor." + a.Side]</span> · <span class="num">@Display.Day(a.PublishedAt)</span></span>
+                                @if (comment)
+                                {
+                                    @* Design 8.25.2, 8.23.6: a comment in the member's own voice, with what it stands under; no side. *@
+                                    <span class="small">@L["Member.CommentOn." + a.On] · <span class="num">@Display.Day(a.PublishedAt)</span></span>
+                                }
+                                else
+                                {
+                                    <span class="small"><span class="choice choice--@a.Side">@L["Member.ArgumentFor." + a.Side]</span> · <span class="num">@Display.Day(a.PublishedAt)</span></span>
+                                }
                                 <span class="voice">@Lt2.Web.Client.TextExcerpt.Of(a.Text).Shown@(Lt2.Web.Client.TextExcerpt.Of(a.Text).Rest is null ? "" : " …")</span>
-                                <a class="small" href="/seimas/@Uri.EscapeDataString(a.Bill.Number)#reason-@a.Id">@L["Member.ReadOnBill"]</a>
+                                <a class="small" href="/seimas/@Uri.EscapeDataString(a.Bill.Number)#@(comment ? Lt2.Api.Contracts.Comments.CommentLimits.ElementId(a.Id) : "reason-" + a.Id)">@L["Member.ReadOnBill"]</a>
                             </li>
                         }
                     </ol>

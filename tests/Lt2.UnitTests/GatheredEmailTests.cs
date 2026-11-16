@@ -30,6 +30,8 @@ public sealed class GatheredEmailTests
             new NoticePart<FollowPlannedEmail>(MessageKinds.FollowPlannedEmail, 10, follow.PlannedPart),
             new NoticePart<FollowStatementEmail>(MessageKinds.FollowStatementEmail, 30, follow.StatementPart),
             new NoticePart<FollowVotedEmail>(MessageKinds.FollowVotedEmail, 20, follow.VotedPart),
+            new NoticePart<CommentNoticeEmail>(MessageKinds.CommentNoticeEmail, 60, follow.CommentsPart),
+            new NoticePart<FollowMemberEmail>(MessageKinds.FollowMemberEmail, 50, follow.MemberPart),
         ];
         return new GatheredTemplates(L, site, parts);
     }
@@ -104,4 +106,36 @@ public sealed class GatheredEmailTests
         Should.Throw<InvalidOperationException>(() => Templates().Render(new GatheredNoticesEmail(To, "immediate",
             [Item("email.unknown", new { to = To }), Item(MessageKinds.FollowPlannedEmail, new FollowPlannedEmail(To, Bill, Title, null, new DateOnly(2026, 11, 19), "/seimas/XVP-0412", "/sveiki/sekimas#sekami"))],
             "/sveiki/sekimas#sekami")));
+
+    /// <summary>
+    /// The kinds that joined from the profiles and the comments (design 8.25.5, 8.23.9): their parts come after the four follow
+    /// parts, a line per argument with the bill and the link; never an argument's or a comment's text, a writer, a count or
+    /// "Sutinku". Comments of two runs for the same person come in one part.
+    /// </summary>
+    [Fact]
+    public void A_followed_members_argument_and_comments_under_ones_own_have_their_own_parts_last_with_only_names_bills_and_links()
+    {
+        var everything = Everything("daily");
+        var email = everything with
+        {
+            Notices =
+            [
+                Item(MessageKinds.CommentNoticeEmail, new CommentNoticeEmail(To, [new CommentedArgumentLine(Bill, Title, "/seimas/XVP-0412#reason-a")], "/sveiki/sekimas#sekami")),
+                .. everything.Notices,
+                Item(MessageKinds.FollowMemberEmail, new FollowMemberEmail(To, "Rūta Mockutė", Bill, Title, "/seimas/XVP-0412#reason-b", "/nariai/abcd1234", "/sveiki/sekimas#sekami")),
+                Item(MessageKinds.CommentNoticeEmail, new CommentNoticeEmail(To, [new CommentedArgumentLine("XVP-0533", "Kita pataisa", "/seimas/XVP-0533#reason-c")], "/sveiki/sekimas#sekami")),
+            ],
+        };
+        var text = Templates().Render(email).TextBody;
+        var answers = text.IndexOf("Seimo narių atsakymai:", StringComparison.Ordinal);
+        var members = text.IndexOf("Ką paskelbė sekami nariai:", StringComparison.Ordinal);
+        var comments = text.IndexOf("Nauji komentarai po jūsų argumentais:", StringComparison.Ordinal);
+        members.ShouldBeGreaterThan(answers);
+        comments.ShouldBeGreaterThan(members);
+        text.IndexOf("Nauji komentarai", comments + 1, StringComparison.Ordinal).ShouldBe(-1, "one part for the comments");
+        text.ShouldContain("– Rūta Mockutė paskelbė argumentą dėl XVP-0412 · " + Title + ". https://lietuva2.test/seimas/XVP-0412#reason-b");
+        text.ShouldContain("– XVP-0412 · " + Title + ": https://lietuva2.test/seimas/XVP-0412#reason-a");
+        text.ShouldContain("– XVP-0533 · Kita pataisa: https://lietuva2.test/seimas/XVP-0533#reason-c");
+        text.ShouldNotContain("Sutinku", Case.Insensitive);
+    }
 }

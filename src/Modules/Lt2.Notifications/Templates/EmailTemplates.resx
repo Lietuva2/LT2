@@ -188,10 +188,13 @@
   <data name="MpMail.extra-welcome.Body" xml:space="preserve"><value>Seimo narys patvirtino, kad šiuo adresu siųstume jo suvestinių kopijas. Seimo narys: {0}. Kiekvienoje kopijoje bus nuoroda „Nebegauti kopijų“; ja galite atsisakyti ir dabar: {2}</value></data>
   <data name="MpMail.extra-removed.Subject" xml:space="preserve"><value>Lietuva 2.0: papildomas gavėjas pašalintas</value></data>
   <data name="MpMail.extra-removed.Body" xml:space="preserve"><value>suvestinių kopijos papildomu adresu nebesiunčiamos: {1}. Seimo narys: {0}.</value></data>
-  <data name="Follow.Member.Subject" xml:space="preserve"><value>Lietuva 2.0: {0} paskelbė argumentą dėl {1}</value></data>
-  <data name="Follow.Member.Body" xml:space="preserve"><value>jūsų sekamas narys {0} paskelbė argumentą dėl projekto {1}.</value></data>
-  <data name="Follow.Member.Read" xml:space="preserve"><value>Argumentą ir kitus abiejų pusių argumentus rasite projekto puslapyje: {0}</value></data>
-  <data name="Follow.Member.Profile" xml:space="preserve"><value>Visi nario argumentai – jo profilyje: {0}</value></data>
+  <data name="Follow.Member.Subject.argument" xml:space="preserve"><value>Lietuva 2.0: {0} paskelbė argumentą dėl {1}</value></data>
+  <data name="Follow.Member.Subject.comment" xml:space="preserve"><value>Lietuva 2.0: {0} parašė komentarą dėl {1}</value></data>
+  <data name="Follow.Member.Body.argument" xml:space="preserve"><value>jūsų sekamas narys {0} paskelbė argumentą dėl projekto {1}.</value></data>
+  <data name="Follow.Member.Body.comment" xml:space="preserve"><value>jūsų sekamas narys {0} parašė komentarą dėl projekto {1}.</value></data>
+  <data name="Follow.Member.Read.argument" xml:space="preserve"><value>Argumentą ir kitus abiejų pusių argumentus rasite projekto puslapyje: {0}</value></data>
+  <data name="Follow.Member.Read.comment" xml:space="preserve"><value>Komentarą ir visą aptarimą rasite projekto puslapyje: {0}</value></data>
+  <data name="Follow.Member.Profile" xml:space="preserve"><value>Visi nario argumentai ir komentarai – jo profilyje: {0}</value></data>
   <data name="Follow.Member.Footer" xml:space="preserve"><value>Šį laišką gavote, nes sekate šį narį Lietuva 2.0. Ką sekate ir kokius laiškus gaunate, galite pakeisti savo paskyroje: {0}</value></data>
   <data name="Profile.about-hidden.Subject" xml:space="preserve"><value>Lietuva 2.0: jūsų „Apie mane“ paslėptas</value></data>
   <data name="Profile.about-hidden.Body" xml:space="preserve"><value>moderatorius paslėpė jūsų profilio tekstą „Apie mane“. Jis niekur nerodomas, kol neparašysite naujo.</value></data>
@@ -206,7 +209,7 @@
   <data name="Gathered.Intro.immediate" xml:space="preserve"><value>štai kas nutiko dėl to, ką sekate Lietuva 2.0:</value></data>
   <data name="Gathered.Intro.daily" xml:space="preserve"><value>štai kas nutiko nuo ankstesnio dienos laiško dėl to, ką sekate Lietuva 2.0:</value></data>
   <data name="Gathered.Intro.weekly" xml:space="preserve"><value>štai kas nutiko nuo ankstesnio savaitės laiško dėl to, ką sekate Lietuva 2.0:</value></data>
-  <data name="Gathered.Footer" xml:space="preserve"><value>Šį laišką gavote, nes Lietuva 2.0 sekate projektus, organizacijas ar narius arba rašote argumentus. Kokius laiškus gaunate ir kaip dažnai, galite pakeisti savo paskyroje: {0}</value></data>
+  <data name="Gathered.Footer" xml:space="preserve"><value>Šį laišką gavote pagal savo laiškų pasirinkimus Lietuva 2.0. Kokius laiškus gaunate ir kaip dažnai, galite pakeisti savo paskyroje: {0}</value></data>
   <data name="Gathered.Planned.Title" xml:space="preserve"><value>Planuojama Seime:</value></data>
   <data name="Gathered.Planned.Line" xml:space="preserve"><value>– {0}. Planuojama {1}. {2}</value></data>
   <data name="Gathered.Planned.DateStage" xml:space="preserve"><value>{0} ({1})</value></data>
@@ -216,8 +219,9 @@
   <data name="Gathered.Statement.Line" xml:space="preserve"><value>– {0} „{1}“ ({2}) dėl {3}: {4}. {5}</value></data>
   <data name="Gathered.Responses.Title" xml:space="preserve"><value>Seimo narių atsakymai:</value></data>
   <data name="Gathered.Responses.Line" xml:space="preserve"><value>– {0} {1}: {2}</value></data>
-  <data name="Gathered.Member.Title" xml:space="preserve"><value>Sekamų narių argumentai:</value></data>
-  <data name="Gathered.Member.Line" xml:space="preserve"><value>– {0} paskelbė argumentą dėl {1}. {2}</value></data>
+  <data name="Gathered.Member.Title" xml:space="preserve"><value>Ką paskelbė sekami nariai:</value></data>
+  <data name="Gathered.Member.Line.argument" xml:space="preserve"><value>– {0} paskelbė argumentą dėl {1}. {2}</value></data>
+  <data name="Gathered.Member.Line.comment" xml:space="preserve"><value>– {0} parašė komentarą dėl {1}. {2}</value></data>
   <data name="Gathered.Comments.Title" xml:space="preserve"><value>Nauji komentarai po jūsų argumentais:</value></data>
   <data name="Moderation.comment-hidden.Subject" xml:space="preserve"><value>Lietuva 2.0: jūsų komentaras paslėptas</value></data>
   <data name="Moderation.comment-hidden.Body" xml:space="preserve"><value>moderatorius paslėpė jūsų komentarą dėl projekto {0}. Projekto puslapis: {1}</value></data>

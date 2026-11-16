@@ -86,10 +86,11 @@ public static class ProfileNotices
 }
 
 /// <summary>
-/// Payload of <see cref="MessageKinds.FollowMemberEmail"/> (design 8.25.5): a member the person follows published an argument.
-/// The member's display name, the bill and the link; never the argument's text, its side, or any count.
+/// Payload of <see cref="MessageKinds.FollowMemberEmail"/> (design 8.25.5): a member the person follows published an argument
+/// or a comment in their own voice (<paramref name="What"/>: <see cref="MemberTextKinds"/>). The member's display name, the
+/// bill and the link to the text on the bill's page; never the text, a side, or any count.
 /// </summary>
-public sealed record FollowMemberEmail(string To, string MemberName, string BillNumber, string BillTitle, string ArgumentPath, string ProfilePath, string AccountPath);
+public sealed record FollowMemberEmail(string To, string MemberName, string BillNumber, string BillTitle, string TextPath, string ProfilePath, string AccountPath, string What = MemberTextKinds.Argument);
 
 /// <summary>
 /// Payload of <see cref="MessageKinds.MpResponseNoticeEmail"/> (design 8.5.5): what a moderator did with an MP's response on a

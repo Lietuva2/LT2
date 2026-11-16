@@ -26,9 +26,9 @@ public sealed class CommentTests(DatabaseFixture database) : ApiTest(database)
     /// <summary>A vote on <see cref="Bill"/> to copy an adoption vote from (as <c>MpResponseTests</c>).</summary>
     private const long BillVote = 99100102;
 
-    private static readonly string[] ThreadFields = ["billNumber", "billOpen", "count", "items", "kind", "open", "targetId"];
+    private static readonly string[] ThreadFields = ["billNumber", "billOpen", "cards", "count", "items", "kind", "open", "targetId"];
     private static readonly string[] CommentFields = ["agreedBy", "author", "createdAt", "id", "text"];
-    private static readonly string[] AuthorFields = ["label", "mp", "name", "organisationSlug", "voice"];
+    private static readonly string[] AuthorFields = ["label", "mp", "name", "organisationSlug", "profileId", "voice"];
 
     [Fact]
     public async Task A_member_comments_under_an_argument_a_statement_and_a_response_and_each_is_public_at_once_under_the_display_name()
@@ -212,13 +212,13 @@ public sealed class CommentTests(DatabaseFixture database) : ApiTest(database)
             (await first.AgreeAsync(comment)).StatusCode.ShouldBe(HttpStatusCode.NoContent);
             (await first.AgreeAsync(comment)).StatusCode.ShouldBe(HttpStatusCode.NoContent, "again changes nothing");
             (await second.AgreeAsync(comment)).StatusCode.ShouldBe(HttpStatusCode.NoContent);
-            (await visitor.ThreadAsync("reason", bill.ReasonId)).Items.Single().AgreedBy.ShouldBe(["Pirmas Sutinkantis", null]);
+            (await visitor.ThreadAsync("reason", bill.ReasonId)).Items.Single().AgreedBy.Select(a => a.Name).ShouldBe(["Pirmas Sutinkantis", null]);
             var mine = await first.MyCommentsAsync(Bill);
             (mine.AgreedBefore, mine.Agreed.Contains(comment)).ShouldBe((true, true));
 
             await (await writer.AgreeAsync(comment)).ShouldBeProblemAsync(HttpStatusCode.Conflict, "agreement.own-comment");
             (await first.DisagreeAsync(comment)).StatusCode.ShouldBe(HttpStatusCode.NoContent);
-            (await visitor.ThreadAsync("reason", bill.ReasonId)).Items.Single().AgreedBy.ShouldBe([null]);
+            (await visitor.ThreadAsync("reason", bill.ReasonId)).Items.Single().AgreedBy.Select(a => a.Name).ShouldBe([null]);
 
             // No positions consent is asked: a member without it agrees all the same.
             var (noConsent, _) = await Factory.MemberAsync("Be Sutikimo", consent: false);
@@ -304,7 +304,7 @@ public sealed class CommentTests(DatabaseFixture database) : ApiTest(database)
                 restored.StatusCode.ShouldBe(HttpStatusCode.NoContent, await restored.Content.ReadAsStringAsync());
             }
 
-            (await visitor.ThreadAsync("reason", bill.ReasonId)).Items.Single().AgreedBy.ShouldBe(["Tomas Atstovas"]);
+            (await visitor.ThreadAsync("reason", bill.ReasonId)).Items.Single().AgreedBy.Select(a => a.Name).ShouldBe(["Tomas Atstovas"]);
 
             // A withdrawn argument takes its discussion with it.
             using (var withdrawn = await bill.ArgumentAuthor.SendAsync(HttpMethod.Delete, AppealRoutes.ReasonOf(bill.ReasonId)))
@@ -436,7 +436,15 @@ public sealed class CommentTests(DatabaseFixture database) : ApiTest(database)
             {
                 CommentSteps.Fields(item).ShouldBe(CommentFields);
                 CommentSteps.Fields(item.GetProperty("author")).ShouldBe(AuthorFields);
+                item.GetProperty("author").GetProperty("profileId").ValueKind.ShouldBe(JsonValueKind.Null, "nobody here has a public profile (design 8.25.4)");
+                foreach (var agreer in item.GetProperty("agreedBy").EnumerateArray())
+                {
+                    CommentSteps.Fields(agreer).ShouldBe(["name", "profileId"]);
+                    agreer.GetProperty("profileId").ValueKind.ShouldBe(JsonValueKind.Null);
+                }
             }
+
+            document.RootElement.GetProperty("cards").GetArrayLength().ShouldBe(0, "no card without a public profile");
 
             // Three people, three sides (for, against, none): the items differ only in their own words and names.
             json.ShouldNotContain("\"for\"");
