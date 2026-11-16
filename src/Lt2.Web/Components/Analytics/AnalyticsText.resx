@@ -58,6 +58,6 @@
   <data name="Unity.Split" xml:space="preserve"><value>Kur nuomonės skyrėsi labiausiai</value></data>
   <data name="Unity.None" xml:space="preserve"><value>Per šį laikotarpį frakcijų balsavimų nėra.</value></data>
   <data name="Unity.NoPosition" xml:space="preserve"><value>Balsavimų su frakcijos pozicija nėra.</value></data>
-  <data name="Mine.Title" xml:space="preserve"><value>Kas balsuoja taip kaip jūs</value></data>
+  <data name="Mine.Title" xml:space="preserve"><value>Kas Seime balsuoja taip, kaip prašote jūs</value></data>
   <data name="Mine.Lead" xml:space="preserve"><value>Jūsų pozicijos dėl projektų, dėl kurių Seimas jau balsavo galutinai, palygintos su viešais frakcijų ir Seimo narių balsavimais. Tai palyginimas jūsų žiniai, ne Seimo narių vertinimas; jį matote tik jūs.</value></data>
 </root>

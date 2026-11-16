@@ -270,7 +270,7 @@ internal sealed class AnalyticsReads(
 }
 
 /// <summary>
-/// "Kas balsuoja taip kaip jūs" (design 8.26.4), for the caller only: their own sides on closed records (Appeals) against
+/// "Kas Seime balsuoja taip, kaip prašote jūs" (design 8.26.4), for the caller only: their own sides on closed records (Appeals) against
 /// the MPs' public ballots and the factions' positions at those records' closing votes (Parliament). Made the first time the
 /// member's page asks and kept for the member in server memory (<see cref="AnalyticsCopies"/>, the owner, 2026-11-16);
 /// never stored elsewhere or logged, and the answer is under <c>/api</c>, which says <c>no-store</c>.

@@ -681,7 +681,7 @@ Other official sources, used as **links first** and imported only where a stage 
 | Chief Official Ethics Commission (VTEK) | Declarations of private interests | Link only. |
 
 Deliberately not shown: parliamentary expenses and anything else that grades the MP's work, and no ranking or comparison
-of MPs by any number (one exception, owner 2026-11-16: a member's own "Kas balsuoja taip kaip jūs", seen by that member
+of MPs by any number (one exception, owner 2026-11-16: a member's own "Kas Seime balsuoja taip, kaip prašote jūs", seen by that member
 only, 8.26.4). The concept's tone is connection and explanation, and the profile shows what the MP did. The one
 number on it that is not about the MP's work is how many members follow the MP (8.11.2, owner 2026-11-16; designed, not
 built): it says how many chose to hear about the MP, not what the MP did or how well, and, as the designer proposes, it
@@ -3779,9 +3779,8 @@ counted ("Suskaičiuota …"): they are a kept copy, at most an hour old (8.26.6
    and no bar, only the counts and "maža imtis" (as everywhere on the page, 8.26.2; after the review of 2026-11-16). The
    factions stand in order of their seats today, then by name: side by side, not ranked. Under each a `details.more`
    lists the three votes where the faction split most (8.26.3), each linking to the vote's page.
-4. **"Kas balsuoja taip kaip jūs"**: the member's own comparison (8.26.4), an island filled in the browser.
-   [The reviewer's proposal, awaiting the owner: the heading "Kas Seime balsuoja taip, kaip prašote jūs" (a comma, and
-   members do not vote).]
+4. **"Kas Seime balsuoja taip, kaip prašote jūs"**: the member's own comparison (8.26.4), an island filled in the browser. [Renamed by the owner on
+   2026-11-16 after the review, from "Kas balsuoja taip kaip jūs": a comma, and members do not vote.]
 
 #### 8.26.2 The rules of the comparison (pure functions, `AnalyticsRules` in SharedKernel)
 
@@ -3810,7 +3809,7 @@ newest first on a tie). The mixed group is no faction and is not shown. Two labe
 to the same faction in one vote are one tally: their counts are added and the position worked out again from the sum,
 so no vote counts twice. Under 20 votes with a position the share is not given (8.26.1).
 
-#### 8.26.4 "Kas balsuoja taip kaip jūs"
+#### 8.26.4 "Kas Seime balsuoja taip, kaip prašote jūs"
 
 - **For the caller only** (`GET /api/v1/me/analytics/agreement`): made from the caller's own sides on closed records
   and the MPs' public ballots at those records' closing votes, the first time the member's page asks for it, and then
@@ -4196,8 +4195,9 @@ Designed, not built (8.23-8.25):
 - The page is built without delegation: the figures, the Seimas beside the members on closed bills, faction unity and
   the member's own comparison; showing how many MPs took over their profile and setting factions side by side are
   allowed (8.26.1).
-- "Kas balsuoja taip kaip jūs" lists MPs in order of agreement for the member who asks, seen by nobody else: the one
-  exception to "no ranking or comparison of MPs by any number" (7.3, 8.26.4).
+- "Kas Seime balsuoja taip, kaip prašote jūs" lists MPs in order of agreement for the member who asks, seen by nobody else: the one
+  exception to "no ranking or comparison of MPs by any number" (7.3, 8.26.4). Its heading, renamed after the review: "Kas
+  Seime balsuoja taip, kaip prašote jūs" (members do not vote).
 - The Seimas's majority is the majority of those who voted; a consensus counts as "for" (8.26.2).
 - The page is the fourth tab under "Projektai", "Analitika" (8.21).
 - One fixed sample of 20 for every number on the page, not a setting; below it, counts and "maža imtis" and no share

@@ -521,7 +521,7 @@ page's "Balsuota".
 **Analytics (design 8.26, owner 2026-11-16).** `/seimas/analitika` (`Components/Analytics/AnalyticsPage`), public and
 server-rendered from `GET /api/v1/analytics` (composed in `Lt2.Web/Services/AnalyticsServices.cs`): the four figures, the
 Seimas's share "for" beside the members' frozen counts on closed bills, faction unity (`FactionUnityRule` in Parliament).
-"Kas balsuoja taip kaip jūs" is the island `MyAgreement` from `GET /api/v1/me/analytics/agreement`: the caller's own sides
+"Kas Seime balsuoja taip, kaip prašote jūs" is the island `MyAgreement` from `GET /api/v1/me/analytics/agreement`: the caller's own sides
 against the MPs' ballots, the only place MPs are ordered by a number; the server-side API client refuses it, so no page
 holds it. Kept copies (owner, 2026-11-16) live only in memory (`AnalyticsCopies`): the public answer per filter and data
 version, served as it is while one background refresh runs once it is an hour old; a member's comparison per account until

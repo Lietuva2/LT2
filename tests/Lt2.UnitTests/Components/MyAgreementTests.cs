@@ -10,7 +10,7 @@ using Microsoft.Extensions.DependencyInjection;
 namespace Lt2.UnitTests.Components;
 
 /// <summary>
-/// Design 8.26.4: "Kas balsuoja taip kaip jūs" is filled only in the browser and only for the caller: nothing is asked or
+/// Design 8.26.4: "Kas Seime balsuoja taip, kaip prašote jūs" is filled only in the browser and only for the caller: nothing is asked or
 /// shown while the server prerenders, a visitor gets the sign-in link back to the page, and a member's rows show a share
 /// only from 20 common votes, "maža imtis" below.
 /// </summary>
