@@ -44,14 +44,8 @@ internal sealed class FollowService(
         var organisationIds = OrganisationIds(follows);
         var known = await organisations.FindManyAsync(organisationIds, cancellationToken);
         var memberIds = follows.Where(f => f.Kind == FollowKinds.Member).Select(f => f.Key).ToList();
-        var members = new List<FollowedMember>();
-        foreach (var id in memberIds)
-        {
-            if ((await profiles.FindAsync(id, cancellationToken)).Profile is { } profile)
-            {
-                members.Add(new FollowedMember(profile.ProfileId, profile.DisplayName));
-            }
-        }
+        var shownMembers = memberIds.Count == 0 ? new Dictionary<string, PublicProfileFacts>() : await profiles.PublicByIdsAsync(memberIds, cancellationToken);
+        var members = memberIds.Select(id => shownMembers.GetValueOrDefault(id)).OfType<PublicProfileFacts>().Select(p => new FollowedMember(p.ProfileId, p.DisplayName)).ToList();
 
         return new MyFollows(
             numbers.Select(n => new FollowedBill(
@@ -184,8 +178,10 @@ internal sealed class FollowService(
         await using var db = await contexts.CreateDbContextAsync(cancellationToken);
         await using var transaction = await db.Database.BeginTransactionAsync(cancellationToken);
 
-        // Under the delivery's lock, so a run never reads the choice half changed.
-        await db.Database.ExecuteSqlRawAsync("SELECT pg_advisory_xact_lock(hashtextextended({0}, 0))", ["lt2.follows.delivery"], cancellationToken);
+        // Under the person's own lock, so two saves at once build on each other. Not under the delivery's lock: a run reads
+        // every choice in one query at its start and the change is one row's update, so a run sees the choice whole, before or
+        // after; a save never waits for a run.
+        await db.Database.ExecuteSqlRawAsync("SELECT pg_advisory_xact_lock(hashtextextended({0}, 0))", ["lt2.follows.frequency:" + userId.ToString("N")], cancellationToken);
         var row = await db.NoticeSettings.FirstOrDefaultAsync(n => n.UserId == userId, cancellationToken);
         var current = row is null ? RhythmChoice.Default : new RhythmChoice(row.Frequency, row.FrequencySince, row.PreviousFrequency, row.PreviousSince);
         var now = clock.GetUtcNow();
@@ -223,6 +219,18 @@ internal sealed class FollowService(
         var outcome = new FollowRunOutcome(recorded, delivered.Notices, delivered.Emails);
         logger.LogInformation("Follow job: {Recorded} events recorded, {Sent} things told, {Emails} emails", outcome.Recorded, outcome.Sent, outcome.Emails);
         return outcome;
+    }
+
+    public async Task<int> PurgeEventsAsync(DateTimeOffset now, CancellationToken cancellationToken)
+    {
+        var cutoff = now - FollowRules.EventRetention;
+        var today = FollowRules.PlannedKey(VilniusTime.DateOf(now));
+        await using var db = await contexts.CreateDbContextAsync(cancellationToken);
+        // A planned date's key is its yyyy-MM-dd, so it compares as text.
+        var events = await db.Database.ExecuteSqlRawAsync(
+            "DELETE FROM notify.bill_event WHERE first_seen < {0} AND (kind <> {1} OR key < {2})", [cutoff, BillEventKinds.Planned, today], cancellationToken);
+        var passes = await db.RhythmPasses.Where(r => r.MadeAt < cutoff).ExecuteDeleteAsync(cancellationToken);
+        return events + passes;
     }
 
     private static List<long> MpIds(IEnumerable<Follow> follows) =>
@@ -283,7 +291,7 @@ internal sealed class FollowAccountData(IDbContextFactory<NotificationsDb> conte
         var follows = await db.Follows.AsNoTracking().Where(f => f.UserId == userId).OrderBy(f => f.CreatedAt)
             .Select(f => new { kind = f.Kind, key = f.Key, followedAt = f.CreatedAt }).ToListAsync(cancellationToken);
         var notices = await db.NoticeSettings.AsNoTracking().Where(n => n.UserId == userId)
-            .Select(n => new { planned = n.Planned, voted = n.Voted, statements = n.Statements, responses = n.Responses, members = n.Members, comments = n.Comments, frequency = n.Frequency, frequencySince = n.FrequencySince, changedAt = n.ChangedAt }).FirstOrDefaultAsync(cancellationToken);
+            .Select(n => new { planned = n.Planned, voted = n.Voted, statements = n.Statements, responses = n.Responses, members = n.Members, comments = n.Comments, frequency = n.Frequency, frequencySince = n.FrequencySince, previousFrequency = n.PreviousFrequency, previousSince = n.PreviousSince, changedAt = n.ChangedAt }).FirstOrDefaultAsync(cancellationToken);
         return new { follows, emails = notices };
     }
 

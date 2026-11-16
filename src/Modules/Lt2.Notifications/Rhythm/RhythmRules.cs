@@ -48,6 +48,12 @@ internal sealed record RhythmChoice(string Frequency, DateTimeOffset? Since, str
 /// <summary>Design 8.24 as pure functions: whose email an event goes in, and when the gathered emails are due.</summary>
 internal static class RhythmRules
 {
+    /// <summary>
+    /// How soon a change may be undone as if it had not been made (design 8.24): one run of the follow job. Later, the choice
+    /// left may have had its own email meanwhile, and restoring it would tell twice what that email held.
+    /// </summary>
+    public static readonly TimeSpan UndoWindow = TimeSpan.FromMinutes(15);
+
     /// <summary>The weekly email's day (design 8.24: Monday, every week).</summary>
     public const DayOfWeek WeeklyDay = DayOfWeek.Monday;
 
@@ -69,12 +75,22 @@ internal static class RhythmRules
 
     /// <summary>
     /// The choice after a person picks <paramref name="frequency"/> at <paramref name="now"/>: the same choice changes nothing;
-    /// another keeps the one it replaces, so what waited for that one's email still comes in it (design 8.24).
+    /// going back within <see cref="UndoWindow"/> to the choice just left undoes the change (it holds again from its own start,
+    /// so a mis-click corrected at once loses nothing that waited for it, nor anything seen meanwhile); any other keeps the one
+    /// it replaces, so what waited
+    /// for that one's email still comes in it (design 8.24).
     /// </summary>
     public static RhythmChoice Change(RhythmChoice current, string frequency, DateTimeOffset now)
     {
         ArgumentNullException.ThrowIfNull(current);
-        return current.Frequency == frequency ? current : new RhythmChoice(frequency, now, current.Frequency, current.Since);
+        if (current.Frequency == frequency)
+        {
+            return current;
+        }
+
+        return current.Previous == frequency && current.Since is { } since && now >= since && now - since <= UndoWindow
+            ? new RhythmChoice(frequency, current.PreviousSince, null, null)
+            : new RhythmChoice(frequency, now, current.Frequency, current.Since);
     }
 
     /// <summary>Which choice's emails a pass makes; an early pass serves the two gathered choices.</summary>
@@ -135,4 +151,20 @@ internal static class RhythmRules
         var local = day.ToDateTime(at);
         return new DateTimeOffset(local, VilniusTime.Zone.GetUtcOffset(local)).ToUniversalTime();
     }
+}
+
+/// <summary>
+/// <c>notify.rhythm_pass</c> (design 8.24): that the daily email of a Vilnius day, or the weekly email of a week (its Monday),
+/// was made. No person in it. The pass is not made again for the same period, even when <c>Follows:ResponsesAt</c> moves to a
+/// later hour the same day.
+/// </summary>
+internal sealed class RhythmPassMade
+{
+    /// <summary><c>daily</c> or <c>weekly</c>.</summary>
+    public string Pass { get; set; } = "";
+
+    /// <summary>The Vilnius day of the daily email, or the Monday of the weekly one.</summary>
+    public DateOnly Period { get; set; }
+
+    public DateTimeOffset MadeAt { get; set; }
 }

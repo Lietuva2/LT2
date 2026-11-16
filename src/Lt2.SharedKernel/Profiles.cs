@@ -38,6 +38,9 @@ public interface IPublicProfiles
     /// <summary>The public profiles among the given accounts, in one read; accounts without one are missing.</summary>
     Task<IReadOnlyDictionary<Guid, PublicProfileFacts>> ForAccountsAsync(IReadOnlyCollection<Guid> userIds, CancellationToken cancellationToken);
 
+    /// <summary>The profiles that are public now among the given ids, in one read; any other id is missing.</summary>
+    Task<IReadOnlyDictionary<string, PublicProfileFacts>> PublicByIdsAsync(IReadOnlyCollection<string> profileIds, CancellationToken cancellationToken);
+
     /// <summary>The profile behind an id, and whether the id is public, retired or unknown.</summary>
     Task<(ProfileIdState State, PublicProfileFacts? Profile)> FindAsync(string profileId, CancellationToken cancellationToken);
 }

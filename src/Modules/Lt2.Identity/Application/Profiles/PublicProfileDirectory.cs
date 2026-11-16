@@ -34,6 +34,28 @@ internal sealed class PublicProfileDirectory(NpgsqlDataSource dataSource) : IPub
         return result;
     }
 
+    public async Task<IReadOnlyDictionary<string, PublicProfileFacts>> PublicByIdsAsync(IReadOnlyCollection<string> profileIds, CancellationToken cancellationToken)
+    {
+        var result = new Dictionary<string, PublicProfileFacts>(StringComparer.Ordinal);
+        var ids = profileIds.Where(ProfileRules.IsWellFormedId).Distinct(StringComparer.Ordinal).ToArray();
+        if (ids.Length == 0)
+        {
+            return result;
+        }
+
+        await using var command = dataSource.CreateCommand(
+            $"SELECT {Columns} FROM identity.profile p WHERE p.public_profile_id = ANY(@ids) AND p.display_name IS NOT NULL");
+        command.Parameters.AddWithValue("ids", ids);
+        await using var reader = await command.ExecuteReaderAsync(cancellationToken);
+        while (await reader.ReadAsync(cancellationToken))
+        {
+            var facts = Read(reader);
+            result[facts.ProfileId] = facts;
+        }
+
+        return result;
+    }
+
     public async Task<(ProfileIdState State, PublicProfileFacts? Profile)> FindAsync(string profileId, CancellationToken cancellationToken)
     {
         if (!ProfileRules.IsWellFormedId(profileId))

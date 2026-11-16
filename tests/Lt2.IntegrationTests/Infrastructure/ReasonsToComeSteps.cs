@@ -41,6 +41,12 @@ public static class ReasonsToComeSteps
         database.ExecuteAsync("UPDATE parliament.vote SET held_at = @h WHERE id = @v", ("h", heldAt), ("v", voteId));
 
     /// <summary>Forgets the follow events of a bill, so a test sees its own events as new.</summary>
+    /// <summary>
+    /// Forgets which daily and weekly emails were made (design 8.24: one a day, one a week). The runs of one test at chosen
+    /// moments make a period's pass, which another test choosing the same moment must not find made.
+    /// </summary>
+    public static Task ForgetRhythmPassesAsync(this DatabaseFixture database) => database.ExecuteAsync("DELETE FROM notify.rhythm_pass");
+
     public static Task ForgetEventsAsync(this DatabaseFixture database, string bill) =>
         database.ExecuteAsync("DELETE FROM notify.bill_event WHERE bill_number = @b", ("b", bill));
 

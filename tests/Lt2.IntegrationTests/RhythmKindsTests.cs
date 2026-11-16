@@ -23,6 +23,9 @@ public sealed class RhythmKindsTests(DatabaseFixture database) : ApiTest(databas
     private const string OwnText = "Skaitytojos pačios argumentas apie šią pataisą.";
     private const string CommentText = "Slaptas komentaras po skaitytojos argumentu.";
 
+    /// <summary>When the test started: the runs are at moments chosen from it (a comment's window stops two minutes before its run).</summary>
+    private readonly DateTimeOffset _started = DateTimeOffset.UtcNow;
+
     private async Task RunAtAsync(DateTimeOffset now)
     {
         await using var scope = Factory.Services.CreateAsyncScope();
@@ -43,6 +46,7 @@ public sealed class RhythmKindsTests(DatabaseFixture database) : ApiTest(databas
     {
         await Database.FreeBillAsync(Bill);
         await Database.ForgetEventsAsync(Bill);
+        await Database.ForgetRhythmPassesAsync();
         await Database.ExecuteAsync("DELETE FROM notify.bill_event WHERE kind = 'comment'");
         var (author, _, profileId) = await Factory.PublicMemberAsync("Sekama Autorė");
         var (follower, followerEmail) = await Factory.MemberAsync("Skaitytoja Ritmė");
@@ -81,7 +85,7 @@ public sealed class RhythmKindsTests(DatabaseFixture database) : ApiTest(databas
         var (email, followed, own, _, browsers) = await ArrangeAsync(NoticeFrequencies.Daily);
         try
         {
-            var seen = DateTimeOffset.UtcNow.AddSeconds(1);
+            var seen = _started.AddMinutes(5);
             await RunAtAsync(seen);
             (await MailAsync(email)).ShouldBeEmpty("a daily choice waits for the morning");
 
@@ -120,13 +124,13 @@ public sealed class RhythmKindsTests(DatabaseFixture database) : ApiTest(databas
         var (email, _, _, _, browsers) = await ArrangeAsync(NoticeFrequencies.Immediate);
         try
         {
-            await RunAtAsync(DateTimeOffset.UtcNow.AddSeconds(1));
+            await RunAtAsync(_started.AddMinutes(5));
             var (kind, gathered) = (await MailAsync(email)).ShouldHaveSingleItem("one email for the run");
             kind.ShouldBe(MessageKinds.GatheredNoticesEmail);
             gathered.GetProperty("rhythm").GetString().ShouldBe("immediate");
             gathered.GetProperty("notices").GetArrayLength().ShouldBe(2);
             HoldsNoText(gathered);
-            await RunAtAsync(DateTimeOffset.UtcNow.AddMinutes(15));
+            await RunAtAsync(_started.AddMinutes(20));
             (await MailAsync(email)).Count.ShouldBe(1, "told once");
         }
         finally
@@ -143,7 +147,7 @@ public sealed class RhythmKindsTests(DatabaseFixture database) : ApiTest(databas
         var (email, followed, _, comment, browsers) = await ArrangeAsync(NoticeFrequencies.Daily);
         try
         {
-            var seen = DateTimeOffset.UtcNow.AddSeconds(1);
+            var seen = _started.AddMinutes(5);
             await RunAtAsync(seen);
             (await Database.ScalarAsync<long>("SELECT count(*) FROM notify.bill_event WHERE kind = 'comment' AND bill_number = @b", ("b", Bill)))
                 .ShouldBe(1, "the comment was seen and recorded");
@@ -159,6 +163,59 @@ public sealed class RhythmKindsTests(DatabaseFixture database) : ApiTest(databas
         finally
         {
             browsers.ForEach(b => b.Dispose());
+            await Database.FreeBillAsync(Bill);
+            await Database.ForgetEventsAsync(Bill);
+        }
+    }
+
+    /// <summary>
+    /// Design 8.23.9, 8.24: one argument commented on in three runs before the morning comes as one line in the daily email,
+    /// with the day, and nothing in it tells how many runs found comments.
+    /// </summary>
+    [Fact]
+    public async Task One_argument_commented_on_in_three_runs_is_one_line_of_the_daily_email()
+    {
+        await Database.FreeBillAsync(Bill);
+        await Database.ForgetEventsAsync(Bill);
+        await Database.ForgetRhythmPassesAsync();
+        await Database.ExecuteAsync("DELETE FROM notify.bill_event WHERE kind = 'comment'");
+        var (author, authorEmail) = await Factory.MemberAsync("Argumento Autorė");
+        var (commenter, _) = await Factory.MemberAsync("Trissyk Komentuojantis");
+        using var _a = author;
+        using var _c = commenter;
+        try
+        {
+            using (var chosen = await author.SendAsync(HttpMethod.Put, NoticeFrequencyRoutes.Mine, new NoticeFrequencyRequest { Frequency = NoticeFrequencies.Daily }))
+            {
+                chosen.StatusCode.ShouldBe(HttpStatusCode.NoContent);
+            }
+
+            var own = await WrittenAsync(author, "for", OwnText);
+            var at = new List<DateTimeOffset>();
+            for (var i = 1; i <= 3; i++)
+            {
+                var comment = await commenter.CommentOkAsync("reason", own, $"Komentaras numeris {i}.");
+                at.Add(new DateTimeOffset(DateTime.SpecifyKind(await Database.ScalarAsync<DateTime>("SELECT created_at FROM appeals.comment WHERE id = @c", ("c", comment)), DateTimeKind.Utc)));
+            }
+
+            // Three runs whose windows (each stopping two minutes before its run) hold one comment each.
+            var margin = TimeSpan.FromMinutes(2);
+            await RunAtAsync(at[0] + ((at[1] - at[0]) / 2) + margin);
+            await RunAtAsync(at[1] + ((at[2] - at[1]) / 2) + margin);
+            await RunAtAsync(at[2] + TimeSpan.FromSeconds(1) + margin);
+            (await Database.ScalarAsync<long>("SELECT count(*) FROM notify.bill_event WHERE kind = 'comment' AND bill_number = @b", ("b", Bill))).ShouldBe(3, "three runs found comments");
+            (await MailAsync(authorEmail)).ShouldBeEmpty();
+
+            var morning = VilniusTime.StartOf(VilniusTime.DateOf(at[2] + margin).AddDays(1)).AddHours(8).AddMinutes(30);
+            await RunAtAsync(morning);
+            var (kind, notice) = (await MailAsync(authorEmail)).ShouldHaveSingleItem();
+            kind.ShouldBe(MessageKinds.CommentNoticeEmail, "one thing alone: the argument once");
+            var line = notice.GetProperty("arguments").EnumerateArray().ShouldHaveSingleItem();
+            line.GetProperty("path").GetString().ShouldBe($"/seimas/{Bill}#reason-{own:D}");
+            line.GetProperty("day").GetString().ShouldNotBeNullOrEmpty();
+        }
+        finally
+        {
             await Database.FreeBillAsync(Bill);
             await Database.ForgetEventsAsync(Bill);
         }

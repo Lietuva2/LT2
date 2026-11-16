@@ -174,9 +174,17 @@ public sealed class CommentRuleTests
     public void The_comments_notice_reads_since_the_last_run_that_told_someone_and_never_more_than_three_days_back()
     {
         var now = new DateTimeOffset(2026, 11, 17, 10, 0, 0, TimeSpan.Zero);
-        FollowRules.CommentsSince(null, now).ShouldBe(now.AddHours(-1), "the first run reads the last hour");
-        FollowRules.CommentsSince(now.AddMinutes(-15), now).ShouldBe(now.AddMinutes(-15));
-        FollowRules.CommentsSince(now.AddDays(-10), now).ShouldBe(now.AddDays(-3));
+        var m = FollowRules.CommentsMargin;
+        FollowRules.CommentsWindow(null, now).ShouldBe((now.AddHours(-1) - m, now - m), "the first run reads the last hour");
+        FollowRules.CommentsWindow(now.AddMinutes(-15), now).ShouldBe((now.AddMinutes(-15) - m, now - m), "from where the run before stopped");
+        FollowRules.CommentsWindow(now.AddDays(-10), now).ShouldBe((now.AddDays(-3), now - m));
+
+        // Design 8.23.14: successive windows meet, so a comment written just before a run but committed after its read (stamped
+        // inside the margin) is read by the next run.
+        var next = now.AddMinutes(15);
+        FollowRules.CommentsWindow(now, next).Since.ShouldBe(FollowRules.CommentsWindow(now.AddMinutes(-15), now).Until);
+        var late = now.AddSeconds(-30);
+        (late >= FollowRules.CommentsWindow(now, next).Since && late < FollowRules.CommentsWindow(now, next).Until).ShouldBeTrue();
         FollowRules.CommentKey(Target, now).Length.ShouldBeLessThanOrEqualTo(40, "notify.bill_event.key");
     }
 
@@ -193,6 +201,29 @@ public sealed class CommentRuleTests
         email.Subject.ShouldBe("Lietuva 2.0: nauji komentarai po jūsų argumentu");
         email.TextBody.ShouldContain($"XVP-0412 · Gyventojų pajamų mokesčio įstatymo pataisa: https://lt2.test/seimas/XVP-0412#reason-{Target}");
         email.TextBody.ShouldContain("https://lt2.test/paskyra#sekami");
+    }
+
+    /// <summary>
+    /// The browser look of 2026-11-16: the footer says "šis argumentas" for one and "šie argumentai" for many; a line carries its
+    /// day; a followed member is named after a colon, neither declined nor gendered (AGENTS.md).
+    /// </summary>
+    [Fact]
+    public void The_notice_speaks_of_one_argument_or_many_rightly_lines_carry_their_day_and_a_member_is_named_after_a_colon()
+    {
+        var template = new FollowTemplates(
+            new StringLocalizer<EmailTemplates>(new ResourceManagerStringLocalizerFactory(Options.Create(new LocalizationOptions()), NullLoggerFactory.Instance)),
+            Options.Create(new SiteOptions { Address = "https://lt2.test" }));
+        CommentedArgumentLine Line(string n) => new($"XVP-{n}", "Pataisa", $"/seimas/XVP-{n}#reason-x", new DateOnly(2026, 11, 15));
+        var one = template.Comments(new CommentNoticeEmail("ruta.mockute@pavyzdys.test", [Line("0412")], "/paskyra/sekimas#sekami")).TextBody;
+        one.ShouldContain("nes šis argumentas – jūsų");
+        one.ShouldContain("2026-11-15 XVP-0412 · Pataisa:");
+        var many = template.Comments(new CommentNoticeEmail("ruta.mockute@pavyzdys.test", [Line("0412"), Line("0533")], "/paskyra/sekimas#sekami")).TextBody;
+        many.ShouldContain("nes šie argumentai – jūsų");
+
+        var member = template.Member(new FollowMemberEmail("ona@pavyzdys.test", "Eglė Beržinytė", "XVP-0412", "Pataisa", "/seimas/XVP-0412#reason-x", "/nariai/egle-berzinyte-abcdefgh23", "/paskyra/sekimas#sekami", MemberTextKinds.Comment, new DateOnly(2026, 11, 15)));
+        member.TextBody.ShouldContain("Parašė jūsų sekamas narys: Eglė Beržinytė.");
+        member.TextBody.ShouldContain("Paskelbta 2026-11-15.");
+        member.TextBody.ShouldNotContain("narys Eglė", Case.Sensitive);
     }
 
     [Fact]

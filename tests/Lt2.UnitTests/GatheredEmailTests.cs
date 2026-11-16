@@ -133,7 +133,7 @@ public sealed class GatheredEmailTests
         members.ShouldBeGreaterThan(answers);
         comments.ShouldBeGreaterThan(members);
         text.IndexOf("Nauji komentarai", comments + 1, StringComparison.Ordinal).ShouldBe(-1, "one part for the comments");
-        text.ShouldContain("– Rūta Mockutė paskelbė argumentą dėl XVP-0412 · " + Title + ". https://lietuva2.test/seimas/XVP-0412#reason-b");
+        text.ShouldContain("– argumentas dėl XVP-0412 · " + Title + ". Paskelbė: Rūta Mockutė. https://lietuva2.test/seimas/XVP-0412#reason-b");
         text.ShouldContain("– XVP-0412 · " + Title + ": https://lietuva2.test/seimas/XVP-0412#reason-a");
         text.ShouldContain("– XVP-0533 · Kita pataisa: https://lietuva2.test/seimas/XVP-0533#reason-c");
         text.ShouldNotContain("Sutinku", Case.Insensitive);

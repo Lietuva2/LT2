@@ -269,7 +269,7 @@ internal sealed class VotedNotices(IDbContextFactory<NotificationsDb> contexts, 
         var votes = (await bills.StageResultsAsync(numbers, pass.Now - FollowRules.EventLookBack, cancellationToken))
             .ToDictionary(v => FollowRules.VotedKey(v.VoteId), StringComparer.Ordinal);
         var facts = await bills.FindManyAsync(numbers, cancellationToken);
-        var due = new List<DueNotice>();
+        var told = new List<(BillEvent Event, StageVoteFacts Vote, List<Guid> People)>();
         foreach (var e in events)
         {
             if (votes.GetValueOrDefault(e.Key) is not { } vote)
@@ -279,18 +279,39 @@ internal sealed class VotedNotices(IDbContextFactory<NotificationsDb> contexts, 
                 continue;
             }
 
-            var bill = facts.GetValueOrDefault(e.BillNumber) ?? new BillFacts(e.BillNumber, e.BillNumber);
-            var told = followers[e.BillNumber]
+            told.Add((e, vote, followers[e.BillNumber]
                 .Where(f => FollowRules.IsRecipient(f.CreatedAt, e.FirstSeen, vote.HeldAt) && pass.Tells(f.UserId, e.FirstSeen, n => n.Voted))
                 .Select(f => f.UserId)
                 .Distinct()
-                .ToList();
-            var choices = await FollowedMpChoicesAsync(pass.Db, told, vote, cancellationToken);
+                .ToList()));
+        }
+
+        // The MPs each told person follows and their names: read once for the whole pass, not per vote.
+        var people = told.SelectMany(t => t.People).Distinct().ToList();
+        var followedMps = people.Count == 0
+            ? Enumerable.Empty<(Guid UserId, long Mp)>().ToLookup(x => x.UserId, x => x.Mp)
+            : (await pass.Db.Follows.AsNoTracking().Where(f => people.Contains(f.UserId) && f.Kind == FollowKinds.Mp).Select(f => new { f.UserId, f.Key }).ToListAsync(cancellationToken))
+                .ToLookup(f => f.UserId, f => long.Parse(f.Key, CultureInfo.InvariantCulture));
+        var allMps = followedMps.SelectMany(g => g).Distinct().ToList();
+        var mpFacts = allMps.Count == 0 ? new Dictionary<long, MpFacts>() : await mps.MpsAsync(allMps, cancellationToken);
+
+        var due = new List<DueNotice>();
+        foreach (var (e, vote, toldPeople) in told)
+        {
+            var bill = facts.GetValueOrDefault(e.BillNumber) ?? new BillFacts(e.BillNumber, e.BillNumber);
+
+            // One read per vote, of only the ballots of MPs someone told follows.
+            var wanted = toldPeople.SelectMany(p => followedMps[p]).Distinct().Where(mpFacts.ContainsKey).ToList();
+            var ballots = vote.HasResult && wanted.Count > 0 ? await bills.ChoicesAsync(vote.VoteId, wanted, cancellationToken) : new Dictionary<long, string>();
             var day = VilniusTime.DateOf(vote.HeldAt);
             var votePath = "/seimas/balsavimai/" + vote.VoteId.ToString(CultureInfo.InvariantCulture);
-            foreach (var userId in told)
+            foreach (var userId in toldPeople)
             {
-                var theirs = choices(userId);
+                var theirs = followedMps[userId]
+                    .Where(mpFacts.ContainsKey)
+                    .Select(id => new FollowedMpChoice(mpFacts[id].FirstName + " " + mpFacts[id].LastName, vote.HasResult ? ballots.GetValueOrDefault(id, "did-not-vote") : null))
+                    .OrderBy(c => c.Name, LithuanianOrder)
+                    .ToList();
                 due.Add(new DueNotice(userId, e.FirstSeen, to => OutboxMessage.Create(MessageKinds.FollowVotedEmail, new FollowVotedEmail(
                     to, bill.Number, bill.Title, vote.Stage, day, vote.IsConsensus, vote.For, vote.Against, vote.Abstain,
                     vote.OfficialNote, votePath, theirs, NoticeDelivery.AccountPath))));
@@ -301,34 +322,7 @@ internal sealed class VotedNotices(IDbContextFactory<NotificationsDb> contexts, 
 
         return due;
     }
-
-    /// <summary>For a voted email: how each MP a person follows voted (public data), with every lookup made once.</summary>
-    private async Task<Func<Guid, IReadOnlyList<FollowedMpChoice>>> FollowedMpChoicesAsync(
-        NotificationsDb db, List<Guid> people, StageVoteFacts vote, CancellationToken ct)
-    {
-        if (people.Count == 0)
-        {
-            return _ => [];
-        }
-
-        var follows = await db.Follows.AsNoTracking().Where(f => people.Contains(f.UserId) && f.Kind == FollowKinds.Mp).ToListAsync(ct);
-        var byPerson = follows.ToLookup(f => f.UserId, f => long.Parse(f.Key, CultureInfo.InvariantCulture));
-        var all = byPerson.SelectMany(g => g).Distinct().ToList();
-        if (all.Count == 0)
-        {
-            return _ => [];
-        }
-
-        var facts = await mps.MpsAsync(all, ct);
-        var ballots = vote.HasResult ? await bills.ChoicesAsync(vote.VoteId, all, ct) : new Dictionary<long, string>();
-        return person => byPerson[person]
-            .Where(facts.ContainsKey)
-            .Select(id => new FollowedMpChoice(facts[id].FirstName + " " + facts[id].LastName, vote.HasResult ? ballots.GetValueOrDefault(id, "did-not-vote") : null))
-            .OrderBy(c => c.Name, LithuanianOrder)
-            .ToList();
-    }
 }
-
 /// <summary>
 /// A followed organisation's statement on a bill became public (design 8.14.14, stage B; kind <c>statement</c>, key: the
 /// statement): the organisation with its label, the bill and the stance, never the text. Left out when it is no longer public or
@@ -625,7 +619,8 @@ internal sealed class MemberNotices(
                         FollowEvents.BillPath(bill.Number) + "#" + FollowRules.TextAnchor(argument.Kind, argument.Id),
                         MemberAddress.Page(author.ProfileId, author.DisplayName),
                         NoticeDelivery.AccountPath,
-                        argument.Kind))));
+                        argument.Kind,
+                        VilniusTime.DateOf(argument.PublishedAt)))));
                 }
             }
 
@@ -639,26 +634,17 @@ internal sealed class MemberNotices(
     private async Task<Dictionary<string, PublicProfileFacts>> FollowedProfilesAsync(NotificationsDb db, CancellationToken ct)
     {
         var ids = await db.Follows.AsNoTracking().Where(f => f.Kind == FollowKinds.Member).Select(f => f.Key).Distinct().ToListAsync(ct);
-        var shown = new Dictionary<string, PublicProfileFacts>(StringComparer.Ordinal);
-        foreach (var id in ids)
-        {
-            if ((await profiles.FindAsync(id, ct)).Profile is { } profile)
-            {
-                shown[id] = profile;
-            }
-        }
-
-        return shown;
+        return new Dictionary<string, PublicProfileFacts>(await profiles.PublicByIdsAsync(ids, ct), StringComparer.Ordinal);
     }
 }
 
 /// <summary>
 /// New comments under a member's own arguments (design 8.23.9; kind <c>comment</c>, one record per argument per run that found
 /// some, key: <see cref="FollowRules.CommentKey"/>): the bill and the link to the argument, never a comment's text, its writer,
-/// how many or "Sutinku". Each run reads the comments written since the run before that found some (design 8.23.14). The
-/// author is not a follower: the argument's own author is told, by the switch <c>comments</c>, in their rhythm (design 8.24).
-/// An argument whose comments in that window are all deleted or hidden by the time the email is made, or that is no longer
-/// shown, is left out.
+/// how many or "Sutinku". Each run reads the comments of its window (<see cref="FollowRules.CommentsWindow"/>). The author is
+/// not a follower: the argument's own author is told, by the switch <c>comments</c>, in their rhythm (design 8.24). An email
+/// holds one line per argument however many runs found comments on it, with the day of the latest; an argument whose
+/// comments in those windows are all deleted or hidden by the time the email is made, or that is no longer shown, is left out.
 /// </summary>
 internal sealed class CommentNotices(IDbContextFactory<NotificationsDb> contexts, IBillCatalogue bills, ICommentFeed comments) : IMemberNoticeKind
 {
@@ -670,13 +656,13 @@ internal sealed class CommentNotices(IDbContextFactory<NotificationsDb> contexts
         // Under one lock, so two runs at once read one window and record it once.
         await db.Database.ExecuteSqlRawAsync("SELECT pg_advisory_xact_lock(hashtextextended({0}, 0))", ["lt2.follows.comments"], cancellationToken);
         var last = await db.BillEvents.AsNoTracking().Where(e => e.Kind == BillEventKinds.Comment).MaxAsync(e => (DateTimeOffset?)e.FirstSeen, cancellationToken);
-        var since = FollowRules.CommentsSince(last, now);
-        if (since >= now)
+        if (last >= now)
         {
             return 0;
         }
 
-        var commented = await comments.CommentedArgumentsAsync(since, now, cancellationToken);
+        var (since, until) = FollowRules.CommentsWindow(last, now);
+        var commented = since >= until ? [] : await comments.CommentedArgumentsAsync(since, until, cancellationToken);
         foreach (var argument in commented)
         {
             FollowEvents.Record(db, argument.BillNumber, BillEventKinds.Comment, FollowRules.CommentKey(argument.ReasonId, now), now, sendable: true);
@@ -701,8 +687,9 @@ internal sealed class CommentNotices(IDbContextFactory<NotificationsDb> contexts
             return [];
         }
 
-        // Each run's window again, read now: what is still shown, and whose argument it is (the record holds no person).
-        // A window never reaches further back than three days (FollowRules.CommentsSince), so older records only say "not the first run".
+        // Each run's window again (the record holds no person), from one read of the comments of all of them: what is still
+        // shown, and whose argument it is. A window never reaches further back than three days, so older records only say
+        // "not the first run".
         var runs = events.Select(e => e.FirstSeen).Distinct().Order().ToList();
         var horizon = runs[0] - FollowRules.VoteSendWindow;
         var lastRun = runs[^1];
@@ -712,18 +699,19 @@ internal sealed class CommentNotices(IDbContextFactory<NotificationsDb> contexts
             .Distinct()
             .ToListAsync(cancellationToken);
         var older = await pass.Db.BillEvents.AsNoTracking().AnyAsync(e => e.Kind == BillEventKinds.Comment && e.FirstSeen < horizon, cancellationToken);
-        var still = new Dictionary<(string Number, string Key), CommentedArgument>();
-        foreach (var run in runs)
+        var windows = runs.ToDictionary(r => r, r => FollowRules.CommentsWindow(earlier.Where(t => t < r).Select(t => (DateTimeOffset?)t).DefaultIfEmpty(older ? horizon : null).Max(), r));
+        var times = await comments.CommentTimesAsync(windows.Values.Min(w => w.Since), windows.Values.Max(w => w.Until), cancellationToken);
+        var still = new Dictionary<(string Number, string Key), CommentedArgumentAt>();
+        foreach (var (run, (since, until)) in windows)
         {
-            var before = earlier.Where(t => t < run).Select(t => (DateTimeOffset?)t).DefaultIfEmpty(older ? horizon : null).Max();
-            foreach (var argument in await comments.CommentedArgumentsAsync(FollowRules.CommentsSince(before, run), run, cancellationToken))
+            foreach (var comment in times.Where(c => c.At >= since && c.At < until))
             {
-                still[(argument.BillNumber, FollowRules.CommentKey(argument.ReasonId, run))] = argument;
+                still[(comment.BillNumber, FollowRules.CommentKey(comment.ReasonId, run))] = comment;
             }
         }
 
-        var facts = await bills.FindManyAsync(events.Select(e => e.BillNumber).Distinct().ToList(), cancellationToken);
-        var due = new List<DueNotice>();
+        // One line per argument and person in this pass, whatever the number of runs that found comments on it.
+        var told = new Dictionary<(Guid Author, Guid Reason), (CommentedArgumentAt Argument, DateTimeOffset FirstSeen, DateTimeOffset LastSeen)>();
         foreach (var e in events)
         {
             if (still.GetValueOrDefault((e.BillNumber, e.Key)) is not { } argument)
@@ -732,15 +720,26 @@ internal sealed class CommentNotices(IDbContextFactory<NotificationsDb> contexts
                 continue;
             }
 
-            if (pass.Tells(argument.AuthorUserId, e.FirstSeen, n => n.Comments))
+            var key = (argument.AuthorUserId, argument.ReasonId);
+            told[key] = told.TryGetValue(key, out var seen)
+                ? (argument, seen.FirstSeen < e.FirstSeen ? seen.FirstSeen : e.FirstSeen, seen.LastSeen > e.FirstSeen ? seen.LastSeen : e.FirstSeen)
+                : (argument, e.FirstSeen, e.FirstSeen);
+            FollowEvents.Taken(e, pass);
+        }
+
+        var facts = await bills.FindManyAsync(told.Values.Select(t => t.Argument.BillNumber).Distinct().ToList(), cancellationToken);
+        var due = new List<DueNotice>();
+        foreach (var (argument, firstSeen, lastSeen) in told.Values.OrderBy(t => t.Argument.BillNumber, StringComparer.Ordinal))
+        {
+            if (!pass.Tells(argument.AuthorUserId, firstSeen, n => n.Comments))
             {
-                var bill = facts.GetValueOrDefault(e.BillNumber) ?? new BillFacts(e.BillNumber, e.BillNumber);
-                var line = new CommentedArgumentLine(bill.Number, bill.Title, FollowEvents.BillPath(bill.Number) + "#reason-" + argument.ReasonId.ToString("D"));
-                due.Add(new DueNotice(argument.AuthorUserId, e.FirstSeen, to => OutboxMessage.Create(MessageKinds.CommentNoticeEmail, new CommentNoticeEmail(
-                    to, [line], NoticeDelivery.AccountPath))));
+                continue;
             }
 
-            FollowEvents.Taken(e, pass);
+            var bill = facts.GetValueOrDefault(argument.BillNumber) ?? new BillFacts(argument.BillNumber, argument.BillNumber);
+            var line = new CommentedArgumentLine(bill.Number, bill.Title, FollowEvents.BillPath(bill.Number) + "#reason-" + argument.ReasonId.ToString("D"), VilniusTime.DateOf(lastSeen));
+            due.Add(new DueNotice(argument.AuthorUserId, firstSeen, to => OutboxMessage.Create(MessageKinds.CommentNoticeEmail, new CommentNoticeEmail(
+                to, [line], NoticeDelivery.AccountPath))));
         }
 
         return due;

@@ -52,6 +52,32 @@ public sealed class EmailRhythmRuleTests
         RhythmRules.ChoiceAt(third, Vilnius(17, 10)).ShouldBe(Frequencies.Immediate);
     }
 
+    /// <summary>Design 8.24: a mis-click corrected at once loses nothing (daily → weekly → daily within minutes).</summary>
+    [Fact]
+    public void Going_back_to_the_choice_just_left_restores_it_so_nothing_waiting_for_it_is_dropped()
+    {
+        var daily = Chose(Frequencies.Daily, Vilnius(10, 9), Frequencies.Weekly, Vilnius(1, 9));
+        var weekly = RhythmRules.Change(daily, Frequencies.Weekly, Vilnius(17, 9));
+        var back = RhythmRules.Change(weekly, Frequencies.Daily, Vilnius(17, 9, 2));
+        back.ShouldBe(new RhythmChoice(Frequencies.Daily, Vilnius(10, 9), null, null));
+        RhythmRules.ChoiceAt(back, Vilnius(16, 20)).ShouldBe(Frequencies.Daily, "what waited for the morning still comes in it");
+        RhythmRules.ChoiceAt(back, Vilnius(17, 9, 1)).ShouldBe(Frequencies.Daily, "what was seen during the mis-click too");
+    }
+
+    /// <summary>The same for an item still waiting under "Iš karto" (the one-a-day limit of planned dates).</summary>
+    [Fact]
+    public void Going_back_to_Is_karto_keeps_what_waited_under_it()
+    {
+        var daily = RhythmRules.Change(RhythmChoice.Default, Frequencies.Daily, Vilnius(17, 9));
+        var back = RhythmRules.Change(daily, Frequencies.Immediate, Vilnius(17, 9, 1));
+        RhythmRules.ChoiceAt(back, Vilnius(16, 20)).ShouldBe(Frequencies.Immediate);
+        RhythmRules.ChoiceAt(back, Vilnius(17, 9, 0)).ShouldBe(Frequencies.Immediate, "seen during the mis-click: told with the runs as before");
+
+        var weekly = Chose(Frequencies.Weekly, Vilnius(10, 9), Frequencies.Immediate, null);
+        var twice = RhythmRules.Change(RhythmRules.Change(weekly, Frequencies.Immediate, Vilnius(17, 9)), Frequencies.Weekly, Vilnius(17, 9, 1));
+        RhythmRules.ChoiceAt(twice, Vilnius(16, 20)).ShouldBe(Frequencies.Weekly, "back to the weekly choice it waited for");
+    }
+
     [Fact]
     public void Picking_the_same_choice_again_changes_nothing()
     {

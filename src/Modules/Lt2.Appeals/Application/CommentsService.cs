@@ -405,6 +405,20 @@ internal sealed class CommentsService(
         return rows.Select(r => new CommentedArgument(r.AuthorUserId, r.ReasonId, r.BillNumber)).ToList();
     }
 
+    public async Task<IReadOnlyList<CommentedArgumentAt>> CommentTimesAsync(DateTimeOffset since, DateTimeOffset until, CancellationToken cancellationToken)
+    {
+        await using var db = await contexts.CreateDbContextAsync(cancellationToken);
+        var rows = await (from c in db.Comments.AsNoTracking()
+                          join r in db.Reasons.AsNoTracking() on c.TargetId equals r.Id
+                          join b in db.BillRecords.AsNoTracking() on r.RecordId equals b.Id
+                          where c.TargetKind == CommentKinds.Reason && c.Status == CommentStatuses.Published && c.CreatedAt >= since && c.CreatedAt < until
+                              && r.Status == ReasonStatuses.Published && (b.Status == BillRecordStatuses.Open || b.Status == BillRecordStatuses.Closed)
+                              && (c.AuthorUserId == null || c.AuthorUserId != r.AuthorUserId)
+                          select new { r.AuthorUserId, ReasonId = r.Id, b.BillNumber, c.CreatedAt })
+            .ToListAsync(cancellationToken);
+        return rows.Select(r => new CommentedArgumentAt(r.AuthorUserId, r.ReasonId, r.BillNumber, r.CreatedAt)).ToList();
+    }
+
     /// <summary>A comment that is published with its target shown, and its bill (not hidden); null otherwise.</summary>
     private async Task<(Comment Comment, BillForStatements Bill)?> ShownCommentAsync(AppealsDb db, Guid commentId, CancellationToken ct)
     {

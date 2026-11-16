@@ -84,10 +84,18 @@ internal sealed class FollowTemplates(IStringLocalizer<EmailTemplates> l, IOptio
             l[EmailText.Greeting],
             Format("Follow.Statement.Body", model.OrganisationName, $"{model.BillNumber} · {model.BillTitle}", label),
             Format("Follow.Statement.Stance", l["Follow.Stance." + model.Stance]),
+        };
+        if (model.Day is { } published)
+        {
+            paragraphs.Add(Format("Follow.PublishedOn", Day(published)));
+        }
+
+        paragraphs.AddRange(
+        [
             Format("Follow.Statement.Read", Link(model.BillPath)),
             Format("Follow.Statement.Footer", Link(model.AccountPath)),
             l[EmailText.Signature],
-        };
+        ]);
         return Message(model.To, Format("Follow.Statement.Subject", model.OrganisationName, model.BillNumber), paragraphs);
     }
 
@@ -124,11 +132,19 @@ internal sealed class FollowTemplates(IStringLocalizer<EmailTemplates> l, IOptio
         {
             l[EmailText.Greeting],
             Format("Follow.Member.Body." + What(model.What), model.MemberName, $"{model.BillNumber} · {model.BillTitle}"),
+        };
+        if (model.Day is { } published)
+        {
+            paragraphs.Add(Format("Follow.PublishedOn", Day(published)));
+        }
+
+        paragraphs.AddRange(
+        [
             Format("Follow.Member.Read." + What(model.What), Link(model.TextPath)),
             Format("Follow.Member.Profile", Link(model.ProfilePath)),
             Format("Follow.Member.Footer", Link(model.AccountPath)),
             l[EmailText.Signature],
-        };
+        ]);
         return Message(model.To, Format("Follow.Member.Subject." + What(model.What), model.MemberName, model.BillNumber), paragraphs);
     }
 
@@ -199,7 +215,7 @@ internal sealed class FollowTemplates(IStringLocalizer<EmailTemplates> l, IOptio
     public string MemberPart(IReadOnlyList<FollowMemberEmail> items)
     {
         ArgumentNullException.ThrowIfNull(items);
-        var lines = items.Select(m => Format("Gathered.Member.Line." + What(m.What), m.MemberName, $"{m.BillNumber} · {m.BillTitle}", Link(m.TextPath)));
+        var lines = items.Select(m => Format("Gathered.Member.Line." + What(m.What), m.MemberName, $"{m.BillNumber} · {m.BillTitle}", Link(m.TextPath), m.Day is { } day ? Day(day) : "").Replace("–  ", "– ", StringComparison.Ordinal));
         return l["Gathered.Member.Title"] + "\n" + string.Join("\n", lines);
     }
 
@@ -210,7 +226,11 @@ internal sealed class FollowTemplates(IStringLocalizer<EmailTemplates> l, IOptio
     public string CommentsPart(IReadOnlyList<CommentNoticeEmail> items)
     {
         ArgumentNullException.ThrowIfNull(items);
-        var lines = items.SelectMany(m => m.Arguments).Select(a => "– " + Format("Comments.Notice.Line", $"{a.BillNumber} · {a.BillTitle}", Link(a.Path)));
+        // One line per argument (design 8.23.9), with the latest day if two things in one email name it.
+        var lines = items.SelectMany(m => m.Arguments)
+            .GroupBy(a => a.Path, StringComparer.Ordinal)
+            .Select(g => g.OrderByDescending(a => a.Day).First())
+            .Select(a => "– " + CommentLine(a));
         return l["Gathered.Comments.Title"] + "\n" + string.Join("\n", lines);
     }
 
@@ -230,16 +250,19 @@ internal sealed class FollowTemplates(IStringLocalizer<EmailTemplates> l, IOptio
     public EmailMessage Comments(CommentNoticeEmail model)
     {
         ArgumentNullException.ThrowIfNull(model);
-        var lines = model.Arguments.Select(a => Format("Comments.Notice.Line", $"{a.BillNumber} · {a.BillTitle}", Link(a.Path)));
+        var lines = model.Arguments.Select(CommentLine);
         var paragraphs = new List<string>
         {
             l[EmailText.Greeting],
             l[model.Arguments.Count == 1 ? "Comments.Notice.Body.One" : "Comments.Notice.Body.Many"] + "\n" + string.Join("\n", lines),
-            Format("Comments.Notice.Footer", Link(model.AccountPath)),
+            Format(model.Arguments.Count == 1 ? "Comments.Notice.Footer.One" : "Comments.Notice.Footer.Many", Link(model.AccountPath)),
             l[EmailText.Signature],
         };
         return Message(model.To, l["Comments.Notice.Subject"], paragraphs);
     }
+
+    private string CommentLine(CommentedArgumentLine a) =>
+        Format("Comments.Notice.Line", $"{a.BillNumber} · {a.BillTitle}", Link(a.Path), a.Day is { } day ? Day(day) : "").TrimStart();
 
     private static string Day(DateOnly day) => day.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture);
 

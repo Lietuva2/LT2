@@ -622,10 +622,13 @@ public sealed class CommentTests(DatabaseFixture database) : ApiTest(database)
         }
     }
 
+    /// <summary>A run late enough that its comments' window (which stops two minutes before the run, design 8.23.14) holds what was just written.</summary>
+    private static readonly TimeSpan FollowRulesMargin = TimeSpan.FromMinutes(3);
+
     private async Task<FollowRunOutcome> RunJobAsync()
     {
         await using var scope = Factory.Services.CreateAsyncScope();
-        return await scope.ServiceProvider.GetRequiredService<IFollows>().RunAsync(DateTimeOffset.UtcNow.AddSeconds(1), TestContext.Current.CancellationToken);
+        return await scope.ServiceProvider.GetRequiredService<IFollows>().RunAsync(DateTimeOffset.UtcNow + FollowRulesMargin, TestContext.Current.CancellationToken);
     }
 
     private async Task<string> CandidatesAsync()

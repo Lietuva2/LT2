@@ -55,6 +55,20 @@ internal sealed class NoticeDelivery(
                 Pass.Weekly => RhythmRules.WeeklyCut(now, morningAt),
                 _ => null,
             };
+
+            // At most one daily email a Vilnius day and one weekly email a week (design 8.24): a period's pass is made once,
+            // whatever hour Follows:ResponsesAt names later that day; a missed one is made at the next run (a catch-up).
+            if (cut is { } periodCut)
+            {
+                var kind = which == Pass.Daily ? Frequencies.Daily : Frequencies.Weekly;
+                var period = VilniusTime.DateOf(periodCut);
+                if (await db.RhythmPasses.AnyAsync(r => r.Pass == kind && r.Period == period, cancellationToken))
+                {
+                    continue;
+                }
+
+                db.RhythmPasses.Add(new RhythmPassMade { Pass = kind, Period = period, MadeAt = now });
+            }
             var pass = new NoticePass(which, now, cut, morningAt, db, choices);
             foreach (var kind in kinds)
             {

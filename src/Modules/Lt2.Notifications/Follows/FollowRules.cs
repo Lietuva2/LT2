@@ -15,6 +15,12 @@ internal static class FollowRules
     /// </summary>
     public static readonly TimeSpan EventLookBack = TimeSpan.FromDays(14);
 
+    /// <summary>
+    /// How long the follow job's records are kept (design 8.24, the designer's proposal: 30 days): past the 14-day look-back,
+    /// a weekly email's week and the three-day rule, so no pass can still need an older one.
+    /// </summary>
+    public static readonly TimeSpan EventRetention = TimeSpan.FromDays(30);
+
     public static string PlannedKey(DateOnly date) => date.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture);
 
     public static DateOnly PlannedDateOf(string key) => DateOnly.ParseExact(key, "yyyy-MM-dd", CultureInfo.InvariantCulture);
@@ -45,15 +51,21 @@ internal static class FollowRules
     public static readonly TimeSpan CommentsFirstLookBack = TimeSpan.FromHours(1);
 
     /// <summary>
-    /// Where the comments notice reads from (design 8.23.9, 8.23.14): the moment of the last run that told someone, or the last
-    /// hour on the first run; never more than three days back, as nothing older is sent (design 8.11.2).
+    /// How long before a run its comments' window ends (design 8.23.14): a comment is stamped when it is written and becomes
+    /// visible when its transaction commits, so the window stops this far behind the run and the next one starts there.
     /// </summary>
-    public static DateTimeOffset CommentsSince(DateTimeOffset? lastTold, DateTimeOffset now)
-    {
-        var since = lastTold ?? now - CommentsFirstLookBack;
-        return since < now - VoteSendWindow ? now - VoteSendWindow : since;
-    }
+    public static readonly TimeSpan CommentsMargin = TimeSpan.FromMinutes(2);
 
+    /// <summary>
+    /// The comments one run of the notice reads (design 8.23.9, 8.23.14): from where the last run that told someone stopped
+    /// (or the last hour on the first run) to the run's moment less <see cref="CommentsMargin"/>; the windows of successive runs
+    /// meet without a gap or an overlap; never more than three days back, as nothing older is sent (design 8.11.2).
+    /// </summary>
+    public static (DateTimeOffset Since, DateTimeOffset Until) CommentsWindow(DateTimeOffset? lastTold, DateTimeOffset now)
+    {
+        var since = (lastTold ?? now - CommentsFirstLookBack) - CommentsMargin;
+        return (since < now - VoteSendWindow ? now - VoteSendWindow : since, now - CommentsMargin);
+    }
     /// <summary>A planned date already in the past when first seen is recorded and never sent (so a backfill sends nothing).</summary>
     public static bool PlannedIsSendable(DateOnly plannedDate, DateTimeOffset firstSeen) => plannedDate >= VilniusTime.DateOf(firstSeen);
 

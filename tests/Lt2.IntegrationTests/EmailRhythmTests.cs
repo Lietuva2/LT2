@@ -50,6 +50,11 @@ public sealed class EmailRhythmTests(DatabaseFixture database) : ApiTest(databas
         if (frequency is not null)
         {
             await ChooseAsync(browser, frequency);
+
+            // Chosen long before the test's week, so a later change in the test is a change, not an undone mis-click (design 8.24).
+            await Database.ExecuteAsync(
+                "UPDATE notify.notice_setting SET frequency_since = @at WHERE user_id = (SELECT id FROM identity.\"user\" WHERE email = @e)",
+                ("at", Monday.AddDays(-30).ToDateTime(TimeOnly.MinValue, DateTimeKind.Utc)), ("e", email));
         }
 
         return (browser, email);
@@ -78,6 +83,8 @@ public sealed class EmailRhythmTests(DatabaseFixture database) : ApiTest(databas
             await Database.ForgetEventsAsync(bill);
         }
 
+        await Database.ForgetRhythmPassesAsync();
+
         await Database.PlanAsync(PlannedBill, planned, "adoption");
         return await Database.MoveVoteAsync(ReasonsToComeSteps.TaxConsiderationVote, Seen.AddHours(-1));
     }
@@ -91,6 +98,8 @@ public sealed class EmailRhythmTests(DatabaseFixture database) : ApiTest(databas
         {
             await Database.ForgetEventsAsync(bill);
         }
+
+        await Database.ForgetRhythmPassesAsync();
     }
 
     [Fact]
@@ -294,7 +303,7 @@ public sealed class EmailRhythmTests(DatabaseFixture database) : ApiTest(databas
                 var follower = await FollowerAsync(frequency);
                 people.Add(follower);
                 using var off = await follower.Browser.SendAsync(
-                    HttpMethod.Put, FollowRoutes.Notices, new NoticeSettingsRequest { Planned = false, Voted = false, Statements = false, Responses = false });
+                    HttpMethod.Put, FollowRoutes.Notices, new NoticeSettingsRequest { Planned = false, Voted = false, Statements = false, Responses = false, Members = false, Comments = false });
                 off.StatusCode.ShouldBe(HttpStatusCode.NoContent);
             }
 

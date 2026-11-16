@@ -60,7 +60,7 @@ public static class MessageKinds
 }
 
 /// <summary>One argument of the person's that got a comment (design 8.23.9): the bill and the link to the argument; never the comment.</summary>
-public sealed record CommentedArgumentLine(string BillNumber, string BillTitle, string Path);
+public sealed record CommentedArgumentLine(string BillNumber, string BillTitle, string Path, DateOnly? Day = null);
 
 /// <summary>
 /// Payload of <see cref="MessageKinds.CommentNoticeEmail"/> (design 8.23.9): "there are new comments under your argument", one
@@ -90,7 +90,7 @@ public static class ProfileNotices
 /// or a comment in their own voice (<paramref name="What"/>: <see cref="MemberTextKinds"/>). The member's display name, the
 /// bill and the link to the text on the bill's page; never the text, a side, or any count.
 /// </summary>
-public sealed record FollowMemberEmail(string To, string MemberName, string BillNumber, string BillTitle, string TextPath, string ProfilePath, string AccountPath, string What = MemberTextKinds.Argument);
+public sealed record FollowMemberEmail(string To, string MemberName, string BillNumber, string BillTitle, string TextPath, string ProfilePath, string AccountPath, string What = MemberTextKinds.Argument, DateOnly? Day = null);
 
 /// <summary>
 /// Payload of <see cref="MessageKinds.MpResponseNoticeEmail"/> (design 8.5.5): what a moderator did with an MP's response on a

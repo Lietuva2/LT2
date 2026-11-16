@@ -314,4 +314,12 @@ public interface IFollows
     /// through the outbox.
     /// </summary>
     Task<FollowRunOutcome> RunAsync(DateTimeOffset now, CancellationToken cancellationToken);
+
+    /// <summary>
+    /// Daily housekeeping (design 8.24, the designer's proposal in section 12): deletes the follow job's records that no pass
+    /// can still need: events first seen more than <c>FollowRules.EventRetention</c> ago (a planned date only once it is past,
+    /// so a date still current is never recorded and told again), and the made daily and weekly passes as old. Returns the rows
+    /// deleted.
+    /// </summary>
+    Task<int> PurgeEventsAsync(DateTimeOffset now, CancellationToken cancellationToken);
 }
