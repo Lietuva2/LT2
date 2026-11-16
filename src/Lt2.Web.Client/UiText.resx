@@ -180,8 +180,7 @@
   <data name="Mp.Mail.Saved" xml:space="preserve"><value>Išsaugota. Patvirtinimas išsiųstas oficialiu adresu.</value></data>
   <data name="Tabs.Label" xml:space="preserve"><value>Projektai</value></data>
   <data name="Tabs.Agenda" xml:space="preserve"><value>Darbotvarkė</value></data>
-  <data name="Tabs.Bills" xml:space="preserve"><value>Visi projektai</value></data>
-  <data name="Tabs.Votes" xml:space="preserve"><value>Balsavimai</value></data>
+  <data name="Tabs.Bills" xml:space="preserve"><value>Projektai</value></data>
   <data name="Tabs.Digests" xml:space="preserve"><value>Suvestinės</value></data>
   <data name="Terms.Check.Before" xml:space="preserve"><value>Sutinku su</value></data>
   <data name="Terms.Check.Link" xml:space="preserve"><value>naudojimo taisyklėmis</value></data>
@@ -189,12 +188,12 @@
   <data name="Privacy.Sentence.Link" xml:space="preserve"><value>privatumo pranešime</value></data>
   <data name="TermsAccept.PageTitle" xml:space="preserve"><value>Naudojimo taisyklės · Lietuva 2.0</value></data>
   <data name="TermsAccept.Title" xml:space="preserve"><value>Naudojimo taisyklės</value></data>
-  <data name="TermsAccept.Changed" xml:space="preserve"><value>Lietuva 2.0 dabar turi naudojimo taisykles: kam skirta paskyra, ką galima skelbti, kaip veikia moderavimas ir kaip išeiti. Kad galėtumėte toliau dalyvauti, sutikite su jomis.</value><comment>Says what changed in the version in force (TermsOfUse.Version); rewrite it with every new version.</comment></data>
+  <data name="TermsAccept.Changed" xml:space="preserve"><value>Kad galėtumėte dalyvauti, sutikite su naudojimo taisyklėmis. Jose rašoma, kam skirta paskyra, ką galima skelbti, kaip veikia moderavimas ir kaip išeiti.</value><comment>Neutral on purpose: before the launch nothing is worded as new or changed (AGENTS.md, "Lithuanian and tone"). Only when terms already published to people really change does this text say what changed.</comment></data>
   <data name="TermsAccept.Read" xml:space="preserve"><value>Perskaityti naudojimo taisykles</value></data>
   <data name="TermsAccept.InForce" xml:space="preserve"><value>Galioja nuo {0}.</value></data>
   <data name="TermsAccept.Accept" xml:space="preserve"><value>Sutinku</value></data>
   <data name="TermsAccept.Leave.Before" xml:space="preserve"><value>Kol nesutinkate, galite skaityti, atsisiųsti savo duomenis ir ištrinti paskyrą:</value></data>
   <data name="TermsAccept.Leave.Link" xml:space="preserve"><value>Jūsų duomenys</value></data>
-  <data name="Hello.TermsRequired" xml:space="preserve"><value>Naudojimo taisyklės pasikeitė. Kol su jomis nesutiksite, galite tik skaityti, atsisiųsti savo duomenis ir ištrinti paskyrą.</value></data>
+  <data name="Hello.TermsRequired" xml:space="preserve"><value>Kol nesutikote su naudojimo taisyklėmis, galite tik skaityti, atsisiųsti savo duomenis ir ištrinti paskyrą.</value></data>
   <data name="Hello.TermsLink" xml:space="preserve"><value>Peržiūrėti ir sutikti</value></data>
 </root>

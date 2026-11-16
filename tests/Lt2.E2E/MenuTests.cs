@@ -5,7 +5,7 @@ namespace Lt2.E2E;
 
 /// <summary>
 /// Design 8.21 against the stack: the menu (logo, "Projektai", "Seimo nariai", "Prisijungti" or "Paskyra") on one line at 360,
-/// 390 and 1280 px in both themes, for a visitor and a member; the four tabs of "Projektai" reaching each other; the account
+/// 390 and 1280 px in both themes, for a visitor and a member; the three tabs of "Projektai" reaching each other; the account
 /// item with the keyboard, its name and links filled in the browser only. Screenshots go to <c>output/menu</c>.
 /// </summary>
 public sealed class MenuTests
@@ -85,7 +85,7 @@ public sealed class MenuTests
     }
 
     [Fact]
-    public async Task Each_of_the_four_tabs_reaches_the_other_three_and_marks_its_page()
+    public async Task Each_of_the_three_tabs_reaches_the_other_two_and_marks_its_page()
     {
         Assert.SkipWhen(string.IsNullOrEmpty(SignUpTests.BaseUrl), "LT2_E2E_BASE_URL is not set; start the stack and set it to run end-to-end tests.");
         await using var visitor = await PasskeyBrowser.StartAsync("native", 390, 844);
@@ -93,8 +93,7 @@ public sealed class MenuTests
         (string Path, string Tab, string Id)[] tabs =
         [
             ("/darbotvarke", "Darbotvarkė", "tab-darbotvarke"),
-            ("/projektai", "Visi projektai", "tab-projektai"),
-            ("/seimas/balsavimai", "Balsavimai", "tab-seimas-balsavimai"),
+            ("/projektai", "Projektai", "tab-projektai"),
             ("/suvestines", "Suvestinės", "tab-suvestines"),
         ];
 
@@ -116,8 +115,15 @@ public sealed class MenuTests
             }
         }
 
+        // The history of votes is no tab: the agenda's voted list links to it, and it leads back by a breadcrumb.
+        await page.GotoAsync(E2ESteps.Base + "/darbotvarke");
+        await page.Locator("#agenda-votes-older a").ClickAsync();
+        await page.WaitForURLAsync(new Regex("/seimas/balsavimai$"), new() { Timeout = E2ESteps.Slow });
+        await Assertions.Expect(page.Locator("#project-tabs")).ToHaveCountAsync(0);
+        await Assertions.Expect(page.Locator("#nav-projects")).ToHaveAttributeAsync("aria-current", "true");
+        await page.Locator("#to-agenda").ClickAsync();
+        await page.WaitForURLAsync(new Regex("/darbotvarke$"), new() { Timeout = E2ESteps.Slow });
         Directory.CreateDirectory(Shots);
-        await page.GotoAsync(E2ESteps.Base + "/seimas/balsavimai");
         await page.Locator("main").ScreenshotAsync(new() { Path = Path.Combine(Shots, "tabs-390.png") });
         visitor.ConsoleErrors.ShouldBeEmpty();
     }

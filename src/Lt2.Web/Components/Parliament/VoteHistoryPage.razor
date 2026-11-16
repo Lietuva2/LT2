@@ -16,8 +16,11 @@
 <PageTitle>@F.T["Votes.Title"] · Lietuva 2.0</PageTitle>
 
 <div class="stack">
+    @* Design 8.21: no tab of its own; back to the agenda, whose voted list links here. *@
+    <ol class="crumbs">
+        <li><a href="@Lt2.Web.Client.Components.MenuSections.ProjectsHome" id="to-agenda">@F.T["Votes.Agenda"]</a></li>
+    </ol>
     <h1>@F.T["Votes.Title"]</h1>
-    <ProjectTabs Current="ProjectTab.Votes" />
     <p class="lead">@F.T["Votes.Lead"]</p>
     <form class="filters" method="get" action="@VoteHistory.Path" role="search" id="votes-search">
         <div class="field">
