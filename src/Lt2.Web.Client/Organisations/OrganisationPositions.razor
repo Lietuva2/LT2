@@ -190,6 +190,9 @@
     /// <summary>"Rodyti daugiau komentarų" (design 8.23.14).</summary>
     [SupplyParameterFromQuery(Name = CommentLimits.ShowParameter)] public string? CommentsShown { get; set; }
 
+    /// <summary>The responses' page parameter (design 8.5.6), kept in the links this part builds.</summary>
+    [SupplyParameterFromQuery(Name = Lt2.Api.Contracts.Mps.MpResponseLimits.ShowParameter)] public string? ResponsesShown { get; set; }
+
     /// <summary>The organisations the caller represents and their statements here: the caller's own, never-cached answer.</summary>
     [PersistentState] public List<MyBillOrganisationResponse>? Mine { get; set; }
 
@@ -208,7 +211,7 @@
     private RenderFragment Thread(StatementResponse statement) => __builder =>
     {
         <CommentThread Kind="statement" TargetId="statement.Id" Number="@Number" Thread="@Threads?.GetValueOrDefault(statement.Id)" Count="statement.Comments"
-                       Open="@(CommentPaging.Asked(CommentsShown, statement.Id) is not null)" PagePath="@("/seimas/" + Uri.EscapeDataString(Number))" Contact="@Contact" Moderator="Moderator" />
+                       Open="@(CommentPaging.Asked(CommentsShown, statement.Id) is not null)" Asked="@CommentPaging.Asked(CommentsShown, statement.Id)" PagePath="@CommentPaging.PagePath(Number, ResponsesShown)" Contact="@Contact" Moderator="Moderator" />
     };
 
     private async Task<Dictionary<Guid, CommentThreadResponse>> ThreadsAsync()

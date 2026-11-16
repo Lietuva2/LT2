@@ -51,7 +51,11 @@ public sealed record QueueReasonResponse(
     IReadOnlyList<QueueReportResponse> Reports,
     IReadOnlyList<ReasonResponse> MergeCandidates,
     DateTimeOffset CreatedAt,
-    string RecordStatus = "open");
+    string RecordStatus = "open")
+{
+    /// <summary>How many comments go with the argument when it is merged (design 8.23.7).</summary>
+    public int Comments { get; init; }
+}
 
 /// <summary>
 /// A hidden bill record (design 8.12.3): who hid it, when and why. <c>RestoresAs</c> is the status "Atkurti" gives it (open

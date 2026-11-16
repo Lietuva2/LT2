@@ -50,7 +50,7 @@ internal static class AppealMapping
 
     public static QueueReasonResponse Map(QueueReason r) => new(
         r.Id, r.RecordId, Map(r.Bill), r.Side, r.Text, r.AuthorName, r.Status, r.Seen, r.Flags, r.Reports.Select(Map).ToList(),
-        r.MergeCandidates.Select(Map).ToList(), r.CreatedAt, r.RecordStatus);
+        r.MergeCandidates.Select(Map).ToList(), r.CreatedAt, r.RecordStatus) { Comments = r.Comments };
 
     public static ModerationQueueResponse Map(ModerationItems q) => new(
         q.Records.Select(a => new QueueRecordResponse(

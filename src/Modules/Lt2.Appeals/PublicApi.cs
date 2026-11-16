@@ -197,7 +197,11 @@ public sealed record QueueReason(
     IReadOnlyList<QueueReport> Reports,
     IReadOnlyList<ReasonInfo> MergeCandidates,
     DateTimeOffset CreatedAt,
-    string RecordStatus = "open");
+    string RecordStatus = "open")
+{
+    /// <summary>How many comments go with it when it is merged (design 8.23.7: the confirmation says so).</summary>
+    public int Comments { get; init; }
+}
 
 /// <summary>The moderators' queue (design 8.12.3): bills' records that need a look, and arguments.</summary>
 public sealed record ModerationItems(IReadOnlyList<QueueRecord> Records, IReadOnlyList<QueueReason> Reasons);

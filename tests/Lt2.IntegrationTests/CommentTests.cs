@@ -69,6 +69,14 @@ public sealed class CommentTests(DatabaseFixture database) : ApiTest(database)
             page.ShouldContain("Aptarimas (1)");
             page.ShouldContain("Argumentas svarus, bet trūksta skaičių.");
             page.ShouldContain("Ačiū už atsakymą, laukiame balsavimo.");
+
+            // The same lists for a member: what differs is only filled in the browser (design 8.23.6).
+            var (reader, _) = await Factory.MemberAsync("Skaitanti Narė");
+            using var _rd = reader;
+            var memberPage = WebUtility.HtmlDecode(await reader.Client.GetStringAsync("/seimas/" + Bill));
+            var lists = CommentLists(page);
+            lists.Count.ShouldBe(3, "the swept page holds the three threads");
+            CommentLists(memberPage).ShouldBe(lists);
         }
         finally
         {
@@ -325,10 +333,19 @@ public sealed class CommentTests(DatabaseFixture database) : ApiTest(database)
 
             // A withdrawn response stays with its discussion, read-only; written again, it opens again.
             var response = (await mp.Browser.RespondOkAsync(Bill, "for", "Balsuosiu už.")).Id;
-            await member.CommentOkAsync("response", response, "Po atsakymu.");
+            var underResponse = await member.CommentOkAsync("response", response, "Po atsakymu.");
+            var (other, _) = await Factory.MemberAsync("Sutikusi Prieš Atsiimant");
+            using var _ot = other;
+            (await other.AgreeAsync(underResponse)).StatusCode.ShouldBe(HttpStatusCode.NoContent, "agreed while it was open");
             (await mp.Browser.WithdrawResponseAsync(Bill)).StatusCode.ShouldBe(HttpStatusCode.NoContent);
             var thread = await visitor.ThreadAsync("response", response);
-            (thread.Count, thread.Open).ShouldBe((1, false));
+            (thread.Count, thread.Open, thread.BillOpen).ShouldBe((1, false, false), "read-only: no writing, no Sutinku, no deleting");
+
+            // Read-only means no "Sutinku" given or taken back and no deleting (design 8.23.7).
+            await (await bill.Representative.AgreeAsync(underResponse)).ShouldBeProblemAsync(HttpStatusCode.Conflict, "comment.read-only");
+            await (await other.DisagreeAsync(underResponse)).ShouldBeProblemAsync(HttpStatusCode.Conflict, "comment.read-only");
+            await (await member.DeleteCommentAsync(underResponse)).ShouldBeProblemAsync(HttpStatusCode.Conflict, "comment.read-only");
+            (await visitor.ThreadAsync("response", response)).Items.Single().AgreedBy.Count.ShouldBe(1, "the mark stays as it was");
             await (await member.CommentAsync("response", response, "Dar vienas.")).ShouldBeProblemAsync(HttpStatusCode.Conflict, "comment.target-closed");
             await mp.Browser.RespondOkAsync(Bill, "for", "Balsuosiu už, vėl.");
             (await visitor.ThreadAsync("response", response)).Open.ShouldBeTrue();
@@ -470,11 +487,12 @@ public sealed class CommentTests(DatabaseFixture database) : ApiTest(database)
             {
                 AppealRoutes.Appeals, AppealRoutes.AppealsList(null, false, false, null, "participants"),
                 AppealRoutes.AppealsList(null, false, false, null, "arguments"), AppealRoutes.AppealsList(null, false, false, null, "activity"), AgendaRoutes.Agenda,
+                "/", "/darbotvarke", "/projektai", "/seimas/analitika",
             };
             var before = new Dictionary<string, string>();
             foreach (var route in routes)
             {
-                before[route] = await visitor.Client.GetStringAsync(route);
+                before[route] = Steady(await visitor.Client.GetStringAsync(route));
             }
 
             var recordBefore = await visitor.RecordAsync(Bill);
@@ -490,7 +508,9 @@ public sealed class CommentTests(DatabaseFixture database) : ApiTest(database)
             await member.CommentOkAsync("statement", bill.StatementId, "Komentaras po pozicija.");
             foreach (var route in routes)
             {
-                (await visitor.Client.GetStringAsync(route)).ShouldBe(before[route], route);
+                var after = Steady(await visitor.Client.GetStringAsync(route));
+                var at = Enumerable.Range(0, Math.Min(after.Length, before[route].Length)).FirstOrDefault(i => after[i] != before[route][i]);
+                after.ShouldBe(before[route], $"{route} differs at {at}: «{before[route][Math.Max(0, at - 80)..Math.Min(before[route].Length, at + 120)]}» → «{after[Math.Max(0, at - 80)..Math.Min(after.Length, at + 120)]}»");
             }
 
             var record = await visitor.RecordAsync(Bill);
@@ -624,6 +644,21 @@ public sealed class CommentTests(DatabaseFixture database) : ApiTest(database)
 
     /// <summary>A run late enough that its comments' window (which stops two minutes before the run, design 8.23.14) holds what was just written.</summary>
     private static readonly TimeSpan FollowRulesMargin = TimeSpan.FromMinutes(3);
+
+    /// <summary>
+    /// A page without what changes on every request: the request-forgery token, a script's nonce and the islands' markers with
+    /// their protected state (which the islands' visible markup, compared, renders).
+    /// </summary>
+    private static string Steady(string html) =>
+        System.Text.RegularExpressions.Regex.Replace(
+            System.Text.RegularExpressions.Regex.Replace(html, "(name=\"__RequestVerificationToken\" value=\"|nonce=\")[^\"]*\"", "$1\""),
+            "<!--Blazor[^>]*-->",
+            "<!--Blazor-->");
+
+    /// <summary>Each thread's list of comments as the server rendered it.</summary>
+    private static List<string> CommentLists(string html) =>
+        System.Text.RegularExpressions.Regex.Matches(html, "<ol class=\"stack stack--tight comments__list\" id=\"comments-[0-9a-f]+\">.*?</ol>", System.Text.RegularExpressions.RegexOptions.Singleline)
+            .Select(m => m.Value).ToList();
 
     private async Task<FollowRunOutcome> RunJobAsync()
     {

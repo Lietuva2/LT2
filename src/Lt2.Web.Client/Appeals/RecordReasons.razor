@@ -80,13 +80,13 @@
                             {
                                 <details class="more moderate" id="moderate-@reason.Id">
                                     <summary class="linkish small">@L["ModReason.Open"]</summary>
-                                    <ModerationActions Id="reason.Id" Kind="reason" Status="@moderated.Status" RecordStatus="@moderated.RecordStatus" MergeCandidates="moderated.MergeCandidates" OnDone="Reload" OnRestricted="ReloadPage" />
+                                    <ModerationActions Id="reason.Id" Kind="reason" Status="@moderated.Status" RecordStatus="@moderated.RecordStatus" MergeCandidates="moderated.MergeCandidates" Comments="moderated.Comments" OnDone="Reload" OnRestricted="ReloadPage" />
                                 </details>
                             }
                             @* Design 8.23.6: "Aptarimas" under the argument, on its sheet; prerendered with the island for the
                                arguments shown first, read when first opened for those revealed by "show all". *@
                             <CommentThread Kind="reason" TargetId="reason.Id" Number="@Number" Thread="@Threads?.GetValueOrDefault(reason.Id)" Count="reason.Comments"
-                                           Open="@(CommentPaging.Asked(CommentsShown, reason.Id) is not null)" PagePath="@PagePath" Contact="@Contact" Moderator="Moderator" />
+                                           Open="@(CommentPaging.Asked(CommentsShown, reason.Id) is not null)" Asked="@CommentPaging.Asked(CommentsShown, reason.Id)" PagePath="@PagePath" Contact="@Contact" Moderator="Moderator" />
                             @if (_withdrawing == reason.Id)
                             {
                                 <div class="row" role="group" aria-label="@L["Reasons.Withdraw"]">
@@ -228,7 +228,10 @@
     /// <summary>"Rodyti daugiau komentarų": which target's comments the address asks for, and how many (design 8.23.14).</summary>
     [SupplyParameterFromQuery(Name = CommentLimits.ShowParameter)] public string? CommentsShown { get; set; }
 
-    private string PagePath => "/seimas/" + Uri.EscapeDataString(Number);
+    /// <summary>The responses' page parameter (design 8.5.6), kept in the links this part builds.</summary>
+    [SupplyParameterFromQuery(Name = Lt2.Api.Contracts.Mps.MpResponseLimits.ShowParameter)] public string? ResponsesShown { get; set; }
+
+    private string PagePath => CommentPaging.PagePath(Number, ResponsesShown);
 
     [PersistentState] public MyBillRecordResponse? Mine { get; set; }
 
@@ -244,6 +247,9 @@
         _signedIn = await IsSignedInAsync();
         Record ??= (await Appeals.GetRecordAsync(Number)).Value;
         Threads ??= await ThreadsAsync();
+
+        // "Rodyti daugiau komentarų" under an argument the page shows only after "show all": shown already (design 8.23.6).
+        _showAll = Record?.Reasons is { } reasons && reasons.Any(r => CommentPaging.Asked(CommentsShown, r.Id) is not null && !FirstShown(reasons).Contains(r.Id));
         if (_signedIn)
         {
             Mine ??= await State.MineAsync(Number);
@@ -271,7 +277,7 @@
             return threads;
         }
 
-        foreach (var reason in AppealLimits.Sides.SelectMany(side => record.Reasons.Where(r => r.Side == side).Take(Shown)))
+        foreach (var reason in record.Reasons.Where(r => FirstShown(record.Reasons).Contains(r.Id) || CommentPaging.Asked(CommentsShown, r.Id) is not null))
         {
             if ((await CommentsApi.GetThreadAsync("reason", reason.Id, CommentPaging.Asked(CommentsShown, reason.Id))).Value is { } thread)
             {
@@ -281,6 +287,10 @@
 
         return threads;
     }
+
+    /// <summary>The arguments shown before "show all": the first two of each side (design 8.12.1).</summary>
+    private static HashSet<Guid> FirstShown(IReadOnlyList<ReasonResponse> reasons) =>
+        AppealLimits.Sides.SelectMany(side => reasons.Where(r => r.Side == side).Take(Shown)).Select(r => r.Id).ToHashSet();
 
     private QueueReasonResponse? Moderated(Guid reasonId) => _moderation?.Reasons.FirstOrDefault(r => r.Id == reasonId);
 

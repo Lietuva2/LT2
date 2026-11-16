@@ -197,6 +197,8 @@
   <data name="comment.bill-not-open" xml:space="preserve"><value>Dėl šio projekto aptarimas tik skaitomas: Seimas jau balsavo arba dalyvavimą uždarė moderatoriai.</value></data>
   <data name="comment.target-not-found" xml:space="preserve"><value>Teksto, po kuriuo norite komentuoti, nebėra.</value></data>
   <data name="comment.target-closed" xml:space="preserve"><value>Po atsiimtu atsakymu naujų komentarų rašyti negalima.</value></data>
+  <data name="comment.read-only" xml:space="preserve"><value>Šis aptarimas tik skaitomas: atsakymas atsiimtas.</value></data>
+  <data name="comment.hidden" xml:space="preserve"><value>Šį komentarą paslėpė moderatoriai, todėl ištrinti jo negalima.</value></data>
   <data name="comment.limit" xml:space="preserve"><value>Po šiuo tekstu jau parašėte {0} komentarus – tiek, kiek leidžiama vienam žmogui.</value></data>
   <data name="comment.not-found" xml:space="preserve"><value>Tokio komentaro nėra.</value></data>
   <data name="comment.author-only" xml:space="preserve"><value>Šį komentarą ištrinti gali tik jo autorius.</value></data>

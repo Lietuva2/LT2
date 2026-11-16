@@ -29,11 +29,12 @@
         @if (thread.Items.Count > 0)
         {
             <ol class="stack stack--tight comments__list" id="comments-@Key">
-                @foreach (var c in thread.Items)
+                @for (var position = 1; position <= thread.Items.Count; position++)
                 {
+                    var c = thread.Items[position - 1];
                     var id = CommentLimits.ElementId(c.Id);
                     <li class="comment stack stack--tight" id="@id" @key="c.Id">
-                        <p class="row comment__who">
+                        <p class="row comment__who" id="@CommentPaging.PositionAnchor(TargetId, position)">
                             @Name(c.Author)
                             <span class="small num">@Display.DayTime(c.CreatedAt)</span>
                         </p>
@@ -107,7 +108,7 @@
         {
             <div class="row">
                 <p class="small num" role="status">@L.Format("Comments.Shown", Display.Number(thread.Items.Count), Display.Number(thread.Count))</p>
-                <a class="btn btn--plain" id="comments-more-@Key" href="@CommentPaging.Address(PagePath, TargetId, more, CommentLimits.ElementId(thread.Items[^1].Id))">@L["Comments.More"]</a>
+                <a class="btn btn--plain" id="comments-more-@Key" href="@CommentPaging.Address(PagePath, TargetId, more, CommentPaging.PositionAnchor(TargetId, thread.Items.Count + 1))">@L["Comments.More"]</a>
             </div>
         }
         @if (!thread.BillOpen)
@@ -157,6 +158,9 @@
     /// <summary>Rendered open: the page's address asked for more of this target's comments (design 8.23.6).</summary>
     [Parameter] public bool Open { get; set; }
 
+    /// <summary>How many comments the page's address asks for (design 8.23.14); a thread read on first opening reads as many.</summary>
+    [Parameter] public int? Asked { get; set; }
+
     /// <summary>The page's path (with its other parameters), for "Rodyti daugiau komentarų" and the sign-in link.</summary>
     [Parameter, EditorRequired] public string PagePath { get; set; } = "";
 
@@ -173,7 +177,9 @@
     protected override async Task OnInitializedAsync()
     {
         _thread = Thread;
-        _signedIn = await IsSignedInAsync();
+        // The list the server renders is the same for everyone (design 8.23.6): a member's own controls come once the island
+        // runs in the browser.
+        _signedIn = RendererInfo.IsInteractive && await IsSignedInAsync();
         State.Changed += OnChanged;
 
         // The caller's own answer and the moderators' one only in the browser: the server-rendered list is the same for all.
@@ -220,7 +226,7 @@
         }
 
         _loading = true;
-        await RunAsync(async () => _thread = (await Comments.GetThreadAsync(Kind, TargetId)).Value);
+        await RunAsync(async () => _thread = (await Comments.GetThreadAsync(Kind, TargetId, Asked)).Value);
         _loading = false;
     }
 

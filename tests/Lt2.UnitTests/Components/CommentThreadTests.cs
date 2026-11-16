@@ -143,4 +143,36 @@ public sealed class CommentThreadTests : BunitContext
         var hiddenList = Render<CommentModerationView>(p => p.Add(c => c.Hidden, true));
         hiddenList.Find("#hidden-comments").TextContent.ShouldContain("Moderatorius M.");
     }
+
+    /// <summary>
+    /// Design 8.23.14: "Rodyti daugiau komentarų" lands on the first new comment, which the page gives the position anchor, and
+    /// keeps the page's other parameters.
+    /// </summary>
+    [Fact]
+    public void Rodyti_daugiau_komentaru_lands_on_the_first_new_comment_by_its_position()
+    {
+        SetRendererInfo(new RendererInfo("Static", isInteractive: false));
+        var items = Enumerable.Range(1, 10).Select(i => new CommentResponse(
+            Guid.Parse($"0193a1b2-0000-7000-8000-0000000001{i:D2}"), new CommentAuthorResponse("person", "Narys " + i, null, null, null), "Komentaras " + i, DateTimeOffset.UnixEpoch.AddMinutes(i), [])).ToList();
+        var thread = Render<CommentThread>(p => p.Add(c => c.Kind, "reason").Add(c => c.TargetId, Target).Add(c => c.Number, Bill)
+            .Add(c => c.Thread, new CommentThreadResponse("reason", Target, Bill, 12, true, true, items)).Add(c => c.Count, 12)
+            .Add(c => c.PagePath, "/seimas/" + Bill + "?atsakymai=20"));
+        thread.Find($"#{CommentPaging.PositionAnchor(Target, 10)}").ShouldNotBeNull("each comment carries its position");
+        thread.Find($"#comments-more-{Target:N}").GetAttribute("href")
+            .ShouldBe($"/seimas/{Bill}?atsakymai=20&komentarai={Target:N}-12#{CommentPaging.PositionAnchor(Target, 11)}");
+    }
+
+    /// <summary>Design 8.23.7: under a withdrawn response the discussion is read-only: no "Sutinku", no deleting, for anyone.</summary>
+    [Fact]
+    public void A_read_only_discussion_offers_no_sutinku_and_no_deleting_even_to_the_author()
+    {
+        AddAuthorization().SetAuthorized("ruta.mockute@pavyzdys.test");
+        SetRendererInfo(new RendererInfo("WebAssembly", isInteractive: true));
+        _comments.On("GetMineAsync", ApiResult<MyCommentsResponse>.Ok(new(true, false, false, [PersonComment], [PersonComment], [], [], 0, new Dictionary<Guid, int>())));
+        var readOnly = Thread() with { Open = false, BillOpen = false };
+        var thread = Render<CommentThread>(p => p.Add(c => c.Kind, "response").Add(c => c.TargetId, Target).Add(c => c.Number, Bill).Add(c => c.Thread, readOnly)
+            .Add(c => c.Count, 3).Add(c => c.PagePath, "/seimas/" + Bill));
+        thread.FindAll("li.comment").Count.ShouldBe(3, "the discussion reads");
+        thread.FindAll("button[id$='-agree'], button[id$='-delete']").ShouldBeEmpty();
+    }
 }

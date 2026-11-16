@@ -41,7 +41,7 @@
                         {
                             @* Design 8.23.6: "Aptarimas" under a shown response (a withdrawn one read-only), an island of its own here. *@
                             <CommentThread Kind="response" TargetId="item.Response.Id" Number="@Number" Thread="thread" Count="thread.Count"
-                                           Open="@(CommentPaging.Asked(CommentsShown, item.Response.Id) is not null)" PagePath="@PagePath" Contact="@Contact" Moderator="Moderator"
+                                           Open="@(CommentPaging.Asked(CommentsShown, item.Response.Id) is not null)" Asked="@CommentPaging.Asked(CommentsShown, item.Response.Id)" PagePath="@PagePath" Contact="@Contact" Moderator="Moderator"
                                            @rendermode="InteractiveWebAssembly" />
                         }
                     </li>

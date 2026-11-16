@@ -106,6 +106,7 @@ internal sealed class ModerationService(
         var names = await reads.NamesAsync(allReasons.Select(r => r.AuthorUserId), ct);
         var endorsements = await AppealReads.EndorsementCountsAsync(db, allReasons.Select(r => r.Id).Distinct().ToList(), ct);
         var billFacts = await reads.BillsAsync(recordOf.Values.Select(a => a.BillNumber).Distinct().ToList(), ct);
+        var comments = await CommentCascade.CountsAsync(db, CommentKinds.Reason, reasons.Select(r => r.Id).ToList(), ct);
         return reasons.Select(r => new QueueReason(
             r.Id,
             r.RecordId,
@@ -127,7 +128,7 @@ internal sealed class ModerationService(
                     .Select(c => AppealReads.ToInfo(c, names, endorsements))
                     .ToList(),
             r.CreatedAt,
-            recordOf[r.RecordId].Status)).ToList();
+            recordOf[r.RecordId].Status) { Comments = comments.GetValueOrDefault(r.Id) }).ToList();
     }
 
     public Task<Result<Unit>> KeepRecordAsync(Guid recordId, string? statement, StaffActor moderator, CancellationToken cancellationToken) =>

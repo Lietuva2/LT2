@@ -97,6 +97,17 @@ public static class CommentPaging
     /// <summary>The next step, or null when every comment is shown.</summary>
     public static int? More(int shown, int total) => shown < total ? Math.Min(shown + CommentLimits.Step, total) : null;
 
+    /// <summary>
+    /// The anchor of the <paramref name="position"/>-th comment of a target (1-based): "Rodyti daugiau komentarų" lands on the
+    /// first new one, whose own id the link cannot know (design 8.23.14).
+    /// </summary>
+    public static string PositionAnchor(Guid targetId, int position) =>
+        "komentaras-" + targetId.ToString("N") + "-" + position.ToString(CultureInfo.InvariantCulture);
+
+    /// <summary>The page's path with the responses' page parameter kept (design 8.5.6), for the links the islands build.</summary>
+    public static string PagePath(string number, string? responsesShown) =>
+        "/seimas/" + Uri.EscapeDataString(number) + (string.IsNullOrEmpty(responsesShown) ? "" : "?" + Lt2.Api.Contracts.Mps.MpResponseLimits.ShowParameter + "=" + Uri.EscapeDataString(responsesShown));
+
     /// <summary>The page's address asking for <paramref name="count"/> comments of the target, landing on <paramref name="anchor"/>.</summary>
     public static string Address(string path, Guid targetId, int count, string anchor)
     {

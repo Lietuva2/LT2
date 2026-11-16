@@ -588,8 +588,8 @@ internal sealed class AppealsService(
                 recordId = null;
                 break;
             case "comment":
-                // Design 8.23.8: a comment that is shown (published; its target's state is the moderators' to see).
-                if (!await db.Comments.AnyAsync(c => c.Id == request.TargetId && c.Status == CommentStatuses.Published, cancellationToken))
+                // Design 8.23.8: a comment that is shown (published, its target shown, its bill's record not hidden).
+                if (!await CommentsService.IsShownAsync(db, request.TargetId, cancellationToken))
                 {
                     return Error.NotFound("report.target-not-found");
                 }

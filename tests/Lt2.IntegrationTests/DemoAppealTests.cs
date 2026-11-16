@@ -107,6 +107,10 @@ public sealed class DemoAppealTests(DatabaseFixture database) : ApiTest(database
         first.ClosedBill.ShouldBe("not imported yet");
         again.ShouldBe(new DemoAppeal.Outcome("already there", 0, "already there", 0, ClosedBill: "not imported yet"));
 
+        // Design 8.23.6: invented comments with "Sutinku" under an argument and a statement, once whatever the runs.
+        (await Database.ScalarAsync<long>("SELECT count(*) FROM appeals.comment WHERE bill_number = @b", ("b", DemoAppeal.Bill))).ShouldBe(3);
+        (await Database.ScalarAsync<long>("SELECT count(*) FROM appeals.comment_agreement a JOIN appeals.comment c ON c.id = a.comment_id WHERE c.bill_number = @b", ("b", DemoAppeal.Bill))).ShouldBe(3);
+
         using var stranger = NewBrowser();
 
         // Design 8.13: the second bill has an invented AI summary nobody has read, with its label, address and day.

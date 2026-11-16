@@ -41,8 +41,9 @@ internal sealed class CommentsService(
         }
 
         await using var db = await contexts.CreateDbContextAsync(cancellationToken);
-        if (await TargetAsync(db, kind, targetId, cancellationToken) is not { Shown: true } target
-            || await bills.BillAsync(db, target.BillNumber, cancellationToken) is not { Hidden: false } bill)
+        if (await TargetAsync(db, kind, targetId, cancellationToken) is not { } target
+            || await bills.BillAsync(db, target.BillNumber, cancellationToken) is not { } bill
+            || !CommentRules.IsShown(CommentStatuses.Published, target.Shown, bill.Hidden))
         {
             return Error.NotFound("comment.target-not-found");
         }
@@ -54,7 +55,8 @@ internal sealed class CommentsService(
         var taken = rows.Take(CommentRules.Shown(shown, rows.Count)).ToList();
         var (views, cards) = await ViewsAsync(db, taken, cancellationToken);
         var on = await SwitchAsync(kind, cancellationToken);
-        return new CommentThread(kind, targetId, bill.Bill.Number, rows.Count, bill.Open && on && target.Writable, bill.Open, views, cards);
+        // Read-only on a closed bill and under a withdrawn response (design 8.23.7): no new comment, no "Sutinku", no deleting.
+        return new CommentThread(kind, targetId, bill.Bill.Number, rows.Count, bill.Open && on && target.Writable, bill.Open && target.Writable, views, cards);
     }
 
     public async Task<IReadOnlyDictionary<Guid, int>> CountsAsync(string kind, IReadOnlyCollection<Guid> targetIds, CancellationToken cancellationToken)
@@ -77,7 +79,7 @@ internal sealed class CommentsService(
         var ids = onBill.Select(c => c.Id).ToList();
         var represented = await db.OrganisationRepresentatives.AsNoTracking()
             .Where(r => r.UserId == userId && r.EndedAt == null).Select(r => r.OrganisationId).ToListAsync(cancellationToken);
-        var deletable = onBill.Where(c => CommentRules.MayDelete(
+        var deletable = onBill.Where(c => c.Status == CommentStatuses.Published && CommentRules.MayDelete(
                 c.SpeaksAs,
                 c.AuthorUserId == userId,
                 c.OrganisationId is { } o && represented.Contains(o),
@@ -237,11 +239,22 @@ internal sealed class CommentsService(
                 : Error.Forbidden("comment.author-only");
         }
 
-        // On a closed bill nobody deletes (design 8.23.7): the discussion is read-only.
+        // A hidden comment is the moderators' to restore, as a hidden argument is (design 8.3): its author cannot delete it.
+        if (comment.Status != CommentStatuses.Published)
+        {
+            return Error.Conflict("comment.hidden");
+        }
+
+        // On a closed bill, and under a withdrawn response, nobody deletes (design 8.23.7): the discussion is read-only.
         var bill = await bills.BillAsync(db, comment.BillNumber, cancellationToken);
         if (CommentRules.CheckBillOpen(bill?.Record?.Status, bill?.Finished ?? true) is { } closed)
         {
             return Error.Conflict(closed);
+        }
+
+        if (await TargetAsync(db, comment.TargetKind, comment.TargetId, cancellationToken) is { Writable: false })
+        {
+            return Error.Conflict("comment.read-only");
         }
 
         var now = clock.GetUtcNow();
@@ -265,12 +278,20 @@ internal sealed class CommentsService(
     {
         await using var db = await contexts.CreateDbContextAsync(cancellationToken);
         await using var transaction = await db.Database.BeginTransactionAsync(cancellationToken);
+
+        // Under the comment's lock, which hiding, restoring and deleting take: a mark never outlives a hide or a deletion.
+        await AdvisoryLocks.CommentAsync(db, commentId, cancellationToken);
         if (await ShownCommentAsync(db, commentId, cancellationToken) is not { } shown)
         {
             return Error.NotFound("comment.not-found");
         }
 
-        var (comment, bill) = shown;
+        var (comment, bill, target) = shown;
+        if (!target.Writable)
+        {
+            return Error.Conflict("comment.read-only");
+        }
+
         var participant = await participants.FindAsync(userId, cancellationToken);
         if (participant is null)
         {
@@ -301,6 +322,11 @@ internal sealed class CommentsService(
             // Pressed twice at once: one mark stands.
             return Result.Ok();
         }
+        catch (DbUpdateException ex) when (ex.InnerException is Npgsql.PostgresException { SqlState: Npgsql.PostgresErrorCodes.ForeignKeyViolation })
+        {
+            // The comment went meanwhile (its target withdrawn, the account deleted): nothing to agree with.
+            return Error.NotFound("comment.not-found");
+        }
 
         await transaction.CommitAsync(cancellationToken);
         return Result.Ok();
@@ -309,19 +335,27 @@ internal sealed class CommentsService(
     public async Task<Result<Unit>> RemoveAgreementAsync(Guid userId, Guid commentId, CancellationToken cancellationToken)
     {
         await using var db = await contexts.CreateDbContextAsync(cancellationToken);
+        await using var transaction = await db.Database.BeginTransactionAsync(cancellationToken);
+        await AdvisoryLocks.CommentAsync(db, commentId, cancellationToken);
         if (await db.Comments.AsNoTracking().FirstOrDefaultAsync(c => c.Id == commentId, cancellationToken) is not { } comment)
         {
             return Error.NotFound("comment.not-found");
         }
 
-        // Frozen when the bill closes (design 8.23.10): nothing given or taken back.
+        // Frozen when the bill closes, and under a withdrawn response (design 8.23.7, 8.23.10): nothing given or taken back.
         var bill = await bills.BillAsync(db, comment.BillNumber, cancellationToken);
         if (CommentRules.CheckBillOpen(bill?.Record?.Status, bill?.Finished ?? true) is { } closed)
         {
             return Error.Conflict(closed);
         }
 
+        if (await TargetAsync(db, comment.TargetKind, comment.TargetId, cancellationToken) is { Writable: false })
+        {
+            return Error.Conflict("comment.read-only");
+        }
+
         await db.CommentAgreements.Where(a => a.CommentId == commentId && a.UserId == userId).ExecuteDeleteAsync(cancellationToken);
+        await transaction.CommitAsync(cancellationToken);
         return Result.Ok();
     }
 
@@ -420,23 +454,40 @@ internal sealed class CommentsService(
     }
 
     /// <summary>A comment that is published with its target shown, and its bill (not hidden); null otherwise.</summary>
-    private async Task<(Comment Comment, BillForStatements Bill)?> ShownCommentAsync(AppealsDb db, Guid commentId, CancellationToken ct)
+    private async Task<(Comment Comment, BillForStatements Bill, TargetState Target)?> ShownCommentAsync(AppealsDb db, Guid commentId, CancellationToken ct)
     {
-        if (await db.Comments.AsNoTracking().FirstOrDefaultAsync(c => c.Id == commentId && c.Status == CommentStatuses.Published, ct) is not { } comment
-            || await TargetAsync(db, comment.TargetKind, comment.TargetId, ct) is not { Shown: true }
-            || await bills.BillAsync(db, comment.BillNumber, ct) is not { Hidden: false } bill)
+        if (await db.Comments.AsNoTracking().FirstOrDefaultAsync(c => c.Id == commentId, ct) is not { } comment
+            || await TargetAsync(db, comment.TargetKind, comment.TargetId, ct) is not { } target
+            || await bills.BillAsync(db, comment.BillNumber, ct) is not { } bill
+            || !CommentRules.IsShown(comment.Status, target.Shown, bill.Hidden))
         {
             return null;
         }
 
-        return (comment, bill);
+        return (comment, bill, target);
+    }
+
+    /// <summary>
+    /// Whether a comment is shown on its bill's page (design 8.23.7, <see cref="CommentRules.IsShown"/>), for a report (design
+    /// 8.23.8): published, its target shown, the bill's record not hidden.
+    /// </summary>
+    internal static async Task<bool> IsShownAsync(AppealsDb db, Guid commentId, CancellationToken ct)
+    {
+        if (await db.Comments.AsNoTracking().FirstOrDefaultAsync(c => c.Id == commentId, ct) is not { } comment)
+        {
+            return false;
+        }
+
+        var target = await TargetAsync(db, comment.TargetKind, comment.TargetId, ct);
+        var record = await AppealReads.FindRecordAsync(db, comment.BillNumber, tracking: false, ct);
+        return CommentRules.IsShown(comment.Status, target?.Shown == true, record?.Status == BillRecordStatuses.Rejected);
     }
 
     /// <summary>
     /// Where a target stands for its comments (design 8.23.3, 8.23.7): shown (its comments are), open to new ones, the bill it is
     /// on, and for a statement or a response whose it is. Null for an unknown target.
     /// </summary>
-    private static async Task<TargetState?> TargetAsync(AppealsDb db, string kind, Guid targetId, CancellationToken ct)
+    internal static async Task<TargetState?> TargetAsync(AppealsDb db, string kind, Guid targetId, CancellationToken ct)
     {
         switch (kind)
         {
@@ -645,7 +696,7 @@ internal sealed class CommentsService(
 
     /// <param name="Shown">The target is shown, so its comments are.</param>
     /// <param name="Writable">The target takes new comments (a withdrawn response does not).</param>
-    private sealed record TargetState(string BillNumber, bool Shown, bool Writable, Guid? OrganisationId, long? SeimasPersonId, string? Text, Guid? ReasonAuthorUserId);
+    internal sealed record TargetState(string BillNumber, bool Shown, bool Writable, Guid? OrganisationId, long? SeimasPersonId, string? Text, Guid? ReasonAuthorUserId);
 }
 
 /// <summary>

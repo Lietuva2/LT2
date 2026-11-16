@@ -31,7 +31,7 @@
         {
             <form class="sheet sheet--quiet stack stack--tight" @onsubmit="SubmitAsync" novalidate aria-labelledby="action-title-@Key" id="action-form-@Key">
                 <h4 id="action-title-@Key">@L[ActionLabel(_open)]</h4>
-                <p class="small" id="action-sentence-@Key">@L["Mod.Sentence." + SentenceKind + "." + _open]</p>
+                <p class="small" id="action-sentence-@Key">@L["Mod.Sentence." + SentenceKind + "." + _open]@if (_open == "merge" && Comments > 0) {@(" ")@L.Format("Mod.Sentence.reason.merge.Comments", Display.Number(Comments))}</p>
 
                 @if (_open == "describe")
                 {
@@ -177,6 +177,9 @@
     [Parameter] public string RecordStatus { get; set; } = "open";
 
     [Parameter] public IReadOnlyList<ReasonResponse>? MergeCandidates { get; set; }
+
+    /// <summary>The argument's comments, which a merge deletes (design 8.23.7): the confirmation says how many.</summary>
+    [Parameter] public int Comments { get; set; }
 
     /// <summary>For a bill: its sending is held.</summary>
     [Parameter] public bool Held { get; set; }

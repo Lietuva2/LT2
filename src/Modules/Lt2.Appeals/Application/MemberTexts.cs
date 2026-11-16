@@ -111,7 +111,7 @@ internal sealed class MemberTexts(IDbContextFactory<AppealsDb> contexts, IBillCa
                 .Where(a => numbers.Contains(a.BillNumber) && a.Status == BillRecordStatuses.Rejected)
                 .Select(a => a.BillNumber).ToListAsync(ct))
             .ToHashSet(StringComparer.Ordinal);
-        return rows.Where(c => shownTargets.Contains(c.TargetId) && !hiddenBills.Contains(c.BillNumber)).ToList();
+        return rows.Where(c => CommentRules.IsShown(c.Status, shownTargets.Contains(c.TargetId), hiddenBills.Contains(c.BillNumber))).ToList();
     }
 
     private sealed record Row(Guid Id, string Kind, string BillNumber, string? Side, string? On, string Text, DateTimeOffset PublishedAt);
