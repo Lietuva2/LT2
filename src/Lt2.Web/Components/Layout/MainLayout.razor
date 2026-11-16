@@ -76,6 +76,10 @@
     /// <summary><c>page</c> on the item's own page, <c>true</c> on a page under it, nothing elsewhere.</summary>
     private string? Current(bool inSection, string own) => !inSection ? null : Path == own ? "page" : "true";
 
+    [CascadingParameter] public HttpContext? HttpContext { get; set; }
+
+    // Read before the page renders (InventedDataNotice): an error or a re-executed "not found" page does not wait for an
+    // asynchronous read here. The read below is only for a render without that answer.
     protected override async Task OnInitializedAsync() =>
-        _parliamentDataInvented = (await Meta.GetImportsAsync()).Value?.ParliamentDataInvented == true;
+        _parliamentDataInvented = InventedDataNotice.Of(HttpContext) ?? (await Meta.GetImportsAsync()).Value?.ParliamentDataInvented == true;
 }

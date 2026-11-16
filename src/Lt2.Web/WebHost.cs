@@ -16,6 +16,7 @@ using Lt2.Usage;
 using Lt2.SharedKernel.Persistence;
 using Lt2.Web.Client;
 using Lt2.Web.Components;
+using Lt2.Web.Components.Layout;
 using Lt2.Web.Endpoints;
 using Lt2.Web.Security;
 using Lt2.Web.Services;
@@ -144,6 +145,9 @@ internal static class WebHost
         // Routing after the status-code pages, so the re-executed "/nerasta" request is routed to its page.
         app.UseRouting();
 
+        // The layout's invented-data notice, read before a page renders: an error or a re-executed status page renders in one
+        // pass and cannot wait for it (Components/Layout/InventedDataNotice).
+        app.UseInventedDataNotice();
 
         // Design 8.19.4: the path of an MP's link holds its token; every log line keeps the path without it (Lt2.Hosting's
         // SecretPaths, applied to all log events and to the traces).
