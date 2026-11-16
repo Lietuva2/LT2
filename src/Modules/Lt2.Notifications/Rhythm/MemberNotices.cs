@@ -5,8 +5,8 @@ using Lt2.SharedKernel;
 namespace Lt2.Notifications.Rhythm;
 
 /// <summary>
-/// One kind of member email that goes in the person's rhythm (design 8.24): today the four follow emails (planned, voted, an
-/// organisation's statement, MPs' answers); later the notice of comments (8.23.9) and followed members (8.25). A kind joins
+/// One kind of member email that goes in the person's rhythm (design 8.24): the four follow emails (planned, voted, an
+/// organisation's statement, MPs' answers), followed members' texts (8.25.5) and comments under one's arguments (8.23.9). A kind joins
 /// by declaring itself, with no change to the follow job:
 /// <list type="number">
 /// <item>a class implementing this interface, registered in <see cref="NotificationsModule.AddNotificationsModule"/> with

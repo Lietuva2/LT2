@@ -16,6 +16,8 @@ product code. What is being built, in order:
 | **M2a+ Reasons to come** | The agenda page (`/darbotvarke`) and the front page built on it, following bills and MPs with emails, the AI draft of a description (Claude API, off until configured), the share line (design 8.11). Its asking for an appeal and appeals opened by moderators were replaced by M2a++. |
 | **M2a++ One object** | Every active bill open at once, one page per bill, no proposals, requests or approval; lists and agenda on participation; moderation after the fact (design 8.12). Then descriptions with their labels and the AI summary job (8.13). |
 | **M2d Profiles** | (Owner, 2026-11-16: before comments.) The account area as four screens; public profiles by the member's choice, "Apie mane", the name's card, following a member, follower numbers on every followed thing's own page (design 8.21, 8.25, 8.11.2). The public party is a designer's proposal (8.25.9), not built. |
+| **Email rhythm** | (Owner, 2026-11-16.) How often a member's emails come, one delivery for every member email kind, the gathered email (design 8.24). |
+| **M2c Comments** | (Owner, 2026-11-16: after M2d.) "Aptarimas" under arguments, statements and responses, "Sutinku", moderation, the argument author's notice in the rhythm; names link to public profiles (design 8.23, 8.25). |
 | **M2b Sending** | Real summary emails to MPs, MP preferences, profile take-over, MP responses. Built first (owner, 2026-11-15): the link of design 8.5.1–8.5.4 (recognised at once, the take-over, the office), then the response (8.5.5–8.5.7). Then (2026-11-16) sending itself, design 8.19: `Digest:Sending`, approval, the real email, preferences without an account, the introduction letter, the suppression list; off by default. Then (2026-11-16) design 8.20: the followers' email about MPs' answers and known browsers for sign-in. |
 | **Stage 3** | Voting with delegation, AI summaries, analytics. Not designed yet; do not build towards it beyond what the design says. |
 
@@ -350,10 +352,10 @@ change shows beside older arguments too.
 parts).** Four screens, each its own page with its own forms, joined by `<AccountTabs>` (`Lt2.Web.Client/Components`, the
 `#account-parts` row of plain links, the current one `aria-current`, no script), with the same title and the terms note:
 "Profilis" `/sveiki` (level and roles, the display name `MyDisplayName`, "Apie mane" and "Viešas profilis" `MyProfile`, party
-support `MyPartySupport`), "Sekimas ir laiškai" `/sveiki/sekimas` (`FollowList`, `#sekami`), "Dalyvavimas" `/sveiki/dalyvavimas`
+support `MyPartySupport`), "Sekimas ir laiškai" `/sveiki/sekimas` (`FollowList`, `#sekami`; `EmailRhythm`, `#laisku-daznis`), "Dalyvavimas" `/sveiki/dalyvavimas`
 (`MyMp`, `MyOrganisations`, `MyInvitationCode` `#my-invitation`, the staff part), "Saugumas ir duomenys" `/sveiki/saugumas`
 (passkeys, sessions, known browsers `#zinomos-narsykles`, the positions consent, export and deletion `#my-data`, signing out).
-The addresses are `AccountScreens` (`Lt2.Api.Contracts/Me`): links in emails, legal texts and pages are built from it, never
+The addresses are `AccountScreens` (`Lt2.SharedKernel/AccountScreens.cs`, also compiled into Lt2.Web.Client): links in emails, legal texts and pages are built from it, never
 written by hand. A visitor sent to sign in from one comes back to it (`LandingPath` accepts `/sveiki…`). Every screen is
 `no-store` and carries `<NeedsScript />`; `IslandsBeforeStartTests` walks all four.
 
@@ -371,15 +373,19 @@ written by hand. A visitor sent to sign in from one comes back to it (`LandingPa
   emailed to the person, keeps it or restores it (`/moderation/profiles…`, `ProfileModerationView`); a hidden text shows
   nowhere until the person writes another.
 - The page (`Lt2.Web/Components/Members/MemberPage`, composed by the host from Identity, Notifications and Appeals) shows the
-  name, "Apie mane", the follower number and the member's published arguments on bills whose record is not hidden, newest
-  first, 10 and "Rodyti daugiau" by `?rodyti=` (no script). Never sides, "Man svarbu", follows, party, invitations,
-  organisations, anything written as an organisation or MP, counts of the person's texts, or who follows.
-- Beside an argument, the name of a member with a public profile is a link with a card (`RecordReasons`, `js/lt2-cards.js`,
-  one `<template>` per profile id from `BillRecordResponse.Cards`); `ReasonResponse.AuthorProfileId` is null for everyone else, and no public answer carries
-  an account id. The MP's own account cannot switch a profile on (`mp.takes-no-part`).
+  name, "Apie mane", the follower number and the member's texts (`IMemberTexts`, Appeals): published arguments and the
+  comments they wrote in their own voice that the bill's page shows, on bills whose record is not hidden, newest first, 10 and "Rodyti daugiau" by `?rodyti=` (no script). Never sides, "Man svarbu", follows, party, invitations,
+  organisations, anything written as an organisation or MP, "Sutinku" (the designer's proposal), counts of the person's
+  texts, or who follows.
+- Beside an argument, a comment and a "Sutinku" name, the name of a member with a public profile is a link with a card
+  (`js/lt2-cards.js`; `RecordReasons` with one `<template>` per profile id from `BillRecordResponse.Cards`, `CommentThread`
+  with one per person and thread from `CommentThreadResponse.Cards`); `ReasonResponse.AuthorProfileId`,
+  `CommentAuthorResponse.ProfileId` and `CommentAgreerResponse.ProfileId` are null for everyone else (and for an
+  organisation's or MP's voice), and no public answer carries an account id. The moderators' queue keeps the plain name. The MP's own account cannot switch a profile on (`mp.takes-no-part`).
 - Following a member (`follow` kind `member`, key the profile id; `PUT|DELETE /members/{id}/follow`; `member.not-found` for
-  anything not public): a line by email when the member publishes an argument (bill number, title, link, never the text),
-  the switch `members` ("Kai sekamas narys paskelbia"). Exported and deleted with the account; the profile, the text, the
+  anything not public): a line by email when the member publishes an argument or an own-voice comment (bill number, title,
+  link, never the text; the designer's proposal), in the follower's rhythm (`MemberNotices`), the switch `members` ("Kai
+  sekamas narys paskelbia argumentą ar komentarą"). Exported and deleted with the account; the profile, the text, the
   consent and the reports a person made are in the export.
 
 **MP profiles.** Compiled automatically from Seimas open data for every MP, joined or not. Two statistics:
@@ -462,7 +468,7 @@ page's "Balsuota".
   a reason is on its author's side. The author can withdraw their own reason while the bill is open. Writing a reason
   needs no positions consent: it is the author's own deliberate publication, public with name and chosen side.
 - **One length for members' texts (owner, 2026-11-16):** `Texts:MaxLength` (characters, 2 000; 0 = no limit) for
-  arguments, organisations' statements and MPs' responses (and comments and "Apie mane" when built), checked where each
+  arguments, organisations' statements and MPs' responses (and comments and "Apie mane"), checked where each
   is written (`AppealRules.CheckReasonText`, `OrganisationRules.CheckStatement`, `ResponseRules.CheckResponse`, all through
   `AppealRules.TooLong`; the refusal names the number); the one technical ceiling, 20 000 (`MemberTextLength.Ceiling` =
   `SettingKeys.MemberTextCeiling` = `MemberTextLimits.Ceiling` in the contracts), holds whatever the setting says and is all
@@ -553,7 +559,8 @@ page's "Balsuota".
   one email per run (`GatheredNoticesEmail`; one thing alone keeps its own email). The rules are `RhythmRules` (pure). An
   event belongs to the choice the person had when the job first saw it. A member email kind joins by declaring itself: an
   `IMemberNoticeKind` (record, then take per pass and mark its events) and its part (`AddNoticePart`). The kinds: planned,
-  voted, statements, MPs' answers and followed members (`MemberNotices`, switch `members`); codes, account and moderation
+  voted, statements, MPs' answers, followed members (`MemberNotices`, switch `members`) and comments under one's arguments
+  (`CommentNotices`, switch `comments`); codes, account and moderation
   notices, feedback and MP mail never go through it.
 - Taking a side follows the bill (design 8.11.2, owner 2026-11-15): a member's first side on a bill (no side before)
   follows it in the same request, composed by the host (`Lt2.Web/Services/TakingSides`: the Appeals module saves the
@@ -676,9 +683,9 @@ address is a link (`CommentLinks`, `rel="nofollow ugc noopener noreferrer"`). `C
 inline. The discussion follows its target (`CommentCascade`): withdrawn or merged goes, hidden hides, a closed bill is
 read-only. The thread is `Lt2.Web.Client/Comments/CommentThread` (inside the arguments' and statements' islands, its own island
 under responses), the caller's answer `CommentState` (browser only), reports target `comment`, moderators' list
-`CommentModerationView`/`CommentQueueItem`, actions also on the bill's page. The author's notice is queued only in
-`FollowService.RunCommentsAsync` (outbox kind `email.comment-notice`, switch `comments`). Names are plain text until public
-profiles exist (8.25).
+`CommentModerationView`/`CommentQueueItem`, actions also on the bill's page. The author's notice is one kind of the rhythm,
+`CommentNotices` (Notifications; outbox kind `email.comment-notice` alone, its own part of the gathered email; switch
+`comments`, the last on the follows screen). A person's name links to their public profile when they have one (8.25.4).
 
 **Moderation.** Anything that reaches MPs has passed a person. Every action is audited and an argument's author gets the reason.
 A report button is on every bill's description and reason. A moderator can restrict an account from writing (reasons,

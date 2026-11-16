@@ -105,7 +105,7 @@ internal static class BillEventKinds
     /// <summary>An MP's response on the bill became public, or changed stance (design 8.20.1, 8.24; key: <see cref="FollowRules.ResponseKey"/>). No member and no text.</summary>
     public const string Response = "response";
 
-    /// <summary>A followed member published an argument on the bill (design 8.25.5; key: the argument id). No person, no text.</summary>
+    /// <summary>A followed member published an argument or an own-voice comment on the bill (design 8.25.5; key: its id). No person, no text.</summary>
     public const string Member = "member";
 
     /// <summary>
