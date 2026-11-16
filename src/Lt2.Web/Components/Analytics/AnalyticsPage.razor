@@ -109,6 +109,7 @@
                 <span class="key key--members">@T["Compare.Members"]</span>
                 <span>@T["Compare.Half"] @T.Format("Compare.Latest", Display.Number(d.SmallSample), Display.Number(Lt2.Web.Services.AnalyticsReads.PlotSize))</span>
             </p>
+            <div class="dotplot-wrap">
             <svg class="dotplot" viewBox="0 0 @PlotWidth @PlotHeight(dots.Count)" role="img" aria-label="@T["Compare.Aria"]" id="compare-plot">
                 @foreach (var tick in Ticks)
                 {
@@ -129,6 +130,7 @@
                     </g>
                 }
             </svg>
+            </div>
         }
         @if (d.Bills.Count == 0)
         {
@@ -139,7 +141,7 @@
             <details class="more stack stack--tight" id="compare-table">
                 <summary class="linkish small">@T["Compare.Table"]</summary>
                 <div class="table-wrap">
-                    <table class="table">
+                    <table class="table analytics-table">
                         <thead>
                             <tr>
                                 <th scope="col">@T["Compare.Bill"]</th>
