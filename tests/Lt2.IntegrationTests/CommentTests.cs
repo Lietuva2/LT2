@@ -586,6 +586,34 @@ public sealed class CommentTests(DatabaseFixture database) : ApiTest(database)
             await Database.FreeBillAsync(Bill);
         }
     }
+    [Fact]
+    public async Task The_moderators_list_page_shows_a_reported_comment_and_the_hidden_list_a_hidden_one()
+    {
+        var sink = new CollectingSink();
+        await using var logged = new LoggingFactory(Database, sink);
+        var moderator = await StaffMembers.ActiveAsync(logged, Database, "moderator");
+        using var _s = moderator;
+        var bill = await logged.PrepareCommentedBillAsync(Database, moderator.Browser, Bill);
+        var (writer, _) = await logged.MemberAsync("Puslapyje Rodoma");
+        try
+        {
+            var comment = await writer.CommentOkAsync("statement", bill.StatementId, "Komentaras moderatorių sąraše.");
+            await bill.Representative.ReportCommentAsync(comment);
+            using var page = await moderator.Browser.Client.GetAsync("/moderavimas");
+            page.StatusCode.ShouldBe(HttpStatusCode.OK, string.Join("\n", sink.Lines.Where(l => l.Contains("xception", StringComparison.Ordinal)).Take(3)));
+            var html = WebUtility.HtmlDecode(await page.Content.ReadAsStringAsync());
+            html.ShouldContain("Komentaras moderatorių sąraše.");
+            html.ShouldNotContain("Tomas Atstovas", Case.Sensitive, "who reported is never shown");
+            await moderator.Browser.ActOnCommentAsync(CommentRoutes.Hide, comment);
+            var hidden = WebUtility.HtmlDecode(await moderator.Browser.Client.GetStringAsync("/moderavimas/paslepti"));
+            hidden.ShouldContain("Komentaras moderatorių sąraše.");
+        }
+        finally
+        {
+            await Database.FreeBillAsync(Bill);
+        }
+    }
+
     private async Task<FollowRunOutcome> RunJobAsync()
     {
         await using var scope = Factory.Services.CreateAsyncScope();

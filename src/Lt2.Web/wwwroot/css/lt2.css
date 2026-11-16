@@ -904,3 +904,13 @@ body { padding-block-end: 4.5rem; }
 
 /* Design 8.27: "Lankomumas". A long path or host wraps, so the number beside it stays on a phone's screen. */
 .usage-name { overflow-wrap: anywhere; }
+
+/* Design 8.23.6: "Aptarimas" lies on its target's sheet, below it and set in; the list is not a sheet, the writing box a quiet one. */
+.comments { margin-left: var(--sp-5); }
+.comments__list { list-style: none; padding: 0; margin: 0; }
+.comment { padding-left: var(--sp-3); border-left: 2px solid var(--rule); }
+.comment__who { gap: var(--sp-2) var(--sp-3); font-size: var(--fs-1); color: var(--ink-2); }
+.comment__name { overflow-wrap: anywhere; color: var(--ink); }
+.comment__text a { overflow-wrap: anywhere; }
+.comment__meta { padding-left: 0; }
+@media (max-width: 30rem) { .comments { margin-left: var(--sp-2); } }

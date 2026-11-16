@@ -273,4 +273,9 @@
   <data name="Digests.Short.sent" xml:space="preserve"><value>išsiųsta</value></data>
   <data name="Digests.Short.cancelled" xml:space="preserve"><value>nesiųsta</value></data>
   <data name="Digests.Short.expired" xml:space="preserve"><value>nesiųsta</value></data>
+  <data name="Rules.Comments" xml:space="preserve"><value>Komentarai</value></data>
+  <data name="Rules.Comments.1" xml:space="preserve"><value>Komentarai po argumentais, organizacijų pozicijomis ir Seimo narių atsakymais iš anksto netikrinami: jie paskelbiami iš karto. Komentaro, kuriame yra el. pašto adresas, telefono numeris ar asmens kodas, paskelbti nepavyks – jį reikia pataisyti. Nuorodos leidžiamos.</value></data>
+  <data name="Rules.Comments.2" xml:space="preserve"><value>Apie bet kurį komentarą galima pranešti mygtuku „Pranešti“. Tada moderatorius komentarą palieka arba paslepia; paslėptas komentaras dingsta iš puslapio kartu su „Sutinku“ prie jo, o jo autorius el. paštu gauna paaiškinimą. Piktnaudžiaujančiam moderatorius gali apriboti galimybę rašyti.</value></data>
+  <data name="Method.Comments" xml:space="preserve"><value>Aptarimas ir „Sutinku“</value></data>
+  <data name="Method.Comments.1" xml:space="preserve"><value>Po argumentu, organizacijos pozicija ar Seimo nario atsakymu galima parašyti komentarą – jis viešas, su jūsų vardu (organizacijos atstovas po savo organizacijos pozicija rašo organizacijos vardu, Seimo narys ar jo biuras po savo atsakymu – Seimo nario vardu). „Sutinku“ prie komentaro taip pat viešas: prie komentaro matomas jūsų vardas. Priešingai, „Man svarbu“ prie argumento lieka privatus, nes jį galima žymėti tik savo pusės argumentams ir jis išduotų jūsų pusę; komentaras ir „Sutinku“ jūsų pusės neparodo. Komentarai ir „Sutinku“ neįskaičiuojami į jokius skaičius ir nesiunčiami Seimo nariams.</value></data>
 </root>

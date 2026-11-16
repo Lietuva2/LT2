@@ -170,7 +170,7 @@ public sealed partial class NavigationTests(DatabaseFixture database) : ApiTest(
 
         html.ShouldContain($"<title>{title} · Lietuva 2.0</title>");
         html.ShouldContain($">{title}</h1>");
-        html.ShouldContain("Versija 2026-11-17, galioja nuo 2026-11-17.");
+        html.ShouldContain("Versija 2026-11-18, galioja nuo 2026-11-18.");
         html.ShouldContain(part);
         html.ShouldContain("[bus įrašyta]", customMessage: "what the owner has not given yet is marked, not invented");
     }

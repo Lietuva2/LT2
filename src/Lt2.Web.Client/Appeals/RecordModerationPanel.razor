@@ -40,7 +40,7 @@
             <ul class="stack stack--tight" id="moderation-panel-comment-list">
                 @foreach (var c in reported)
                 {
-                    <li @key="c.Id"><a href="#@Lt2.Api.Contracts.Comments.CommentLimits.ElementId(c.Id)">@(c.Text.Length > 80 ? c.Text[..80] + "…" : c.Text)</a>
+                    <li @key="c.Id"><a href="/seimas/@Uri.EscapeDataString(Number)#@Lt2.Api.Contracts.Comments.CommentLimits.ElementId(c.Id)">@(c.Text.Length > 80 ? c.Text[..80] + "…" : c.Text)</a>
                         <span class="small num">(@Display.Number(c.Reports.Count))</span></li>
                 }
             </ul>
