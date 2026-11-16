@@ -84,10 +84,12 @@
     {
         <fieldset class="stack stack--tight" id="follow-notices" @key="_noticesShown">
             <legend class="label">@L["Follows.Emails"]</legend>
-            <label class="check"><input type="checkbox" id="notice-planned" checked="@notices.Planned" disabled="@Locked" @onchange="e => SetAsync(e.Value is true, notices.Voted, notices.Statements, notices.Responses)" /><span>@L["Follows.Email.planned"]</span></label>
-            <label class="check"><input type="checkbox" id="notice-voted" checked="@notices.Voted" disabled="@Locked" @onchange="e => SetAsync(notices.Planned, e.Value is true, notices.Statements, notices.Responses)" /><span>@L["Follows.Email.voted"]</span></label>
-            <label class="check"><input type="checkbox" id="notice-statements" checked="@notices.Statements" disabled="@Locked" @onchange="e => SetAsync(notices.Planned, notices.Voted, e.Value is true, notices.Responses)" /><span>@L["Follows.Email.statements"]</span></label>
-            <label class="check"><input type="checkbox" id="notice-responses" checked="@notices.Responses" disabled="@Locked" @onchange="e => SetAsync(notices.Planned, notices.Voted, notices.Statements, e.Value is true)" /><span>@L["Follows.Email.responses"]</span></label>
+            <label class="check"><input type="checkbox" id="notice-planned" checked="@notices.Planned" disabled="@Locked" @onchange="e => SetAsync(e.Value is true, notices.Voted, notices.Statements, notices.Responses, notices.Comments)" /><span>@L["Follows.Email.planned"]</span></label>
+            <label class="check"><input type="checkbox" id="notice-voted" checked="@notices.Voted" disabled="@Locked" @onchange="e => SetAsync(notices.Planned, e.Value is true, notices.Statements, notices.Responses, notices.Comments)" /><span>@L["Follows.Email.voted"]</span></label>
+            <label class="check"><input type="checkbox" id="notice-statements" checked="@notices.Statements" disabled="@Locked" @onchange="e => SetAsync(notices.Planned, notices.Voted, e.Value is true, notices.Responses, notices.Comments)" /><span>@L["Follows.Email.statements"]</span></label>
+            <label class="check"><input type="checkbox" id="notice-responses" checked="@notices.Responses" disabled="@Locked" @onchange="e => SetAsync(notices.Planned, notices.Voted, notices.Statements, e.Value is true, notices.Comments)" /><span>@L["Follows.Email.responses"]</span></label>
+            @* Design 8.23.9: the fifth switch, about the person's own arguments rather than what they follow. *@
+            <label class="check"><input type="checkbox" id="notice-comments" checked="@notices.Comments" disabled="@Locked" @onchange="e => SetAsync(notices.Planned, notices.Voted, notices.Statements, notices.Responses, e.Value is true)" /><span>@L["Follows.Email.comments"]</span></label>
         </fieldset>
     }
     <Messages Message="@Message" Info="@Info" />
@@ -138,9 +140,9 @@
     });
 
 
-    private Task SetAsync(bool planned, bool voted, bool statements, bool responses) => RunAsync(async () =>
+    private Task SetAsync(bool planned, bool voted, bool statements, bool responses, bool comments) => RunAsync(async () =>
     {
-        var result = await Follows.SetNoticesAsync(new NoticeSettingsRequest { Planned = planned, Voted = voted, Statements = statements, Responses = responses });
+        var result = await Follows.SetNoticesAsync(new NoticeSettingsRequest { Planned = planned, Voted = voted, Statements = statements, Responses = responses, Comments = comments });
         if (!result.IsSuccess)
         {
             // The box the person clicked shows the saved state again: rebuilt, since the values themselves did not change.
@@ -149,7 +151,7 @@
             return;
         }
 
-        Notices = new NoticeSettingsResponse(planned, voted, statements, responses);
+        Notices = new NoticeSettingsResponse(planned, voted, statements, responses, comments);
         Info = L["Follows.Saved"];
     });
 }

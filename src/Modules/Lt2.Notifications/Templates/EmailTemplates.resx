@@ -188,4 +188,22 @@
   <data name="MpMail.extra-welcome.Body" xml:space="preserve"><value>Seimo narys patvirtino, kad šiuo adresu siųstume jo suvestinių kopijas. Seimo narys: {0}. Kiekvienoje kopijoje bus nuoroda „Nebegauti kopijų“; ja galite atsisakyti ir dabar: {2}</value></data>
   <data name="MpMail.extra-removed.Subject" xml:space="preserve"><value>Lietuva 2.0: papildomas gavėjas pašalintas</value></data>
   <data name="MpMail.extra-removed.Body" xml:space="preserve"><value>suvestinių kopijos papildomu adresu nebesiunčiamos: {1}. Seimo narys: {0}.</value></data>
+  <data name="Moderation.comment-hidden.Subject" xml:space="preserve"><value>Lietuva 2.0: jūsų komentaras paslėptas</value></data>
+  <data name="Moderation.comment-hidden.Body" xml:space="preserve"><value>moderatorius paslėpė jūsų komentarą dėl projekto {0}. Projekto puslapis: {1}</value></data>
+  <data name="Moderation.comment-restored.Subject" xml:space="preserve"><value>Lietuva 2.0: jūsų komentaras atkurtas</value></data>
+  <data name="Moderation.comment-restored.Body" xml:space="preserve"><value>moderatorius atkūrė jūsų anksčiau paslėptą komentarą dėl projekto {0}. „Sutinku“, buvę prie jo, paslepiant buvo ištrinti ir neatkuriami. Projekto puslapis: {1}</value></data>
+  <data name="Moderation.CommentExcerpt" xml:space="preserve"><value>Komentaras: „{0}“</value></data>
+  <data name="Organisation.comment-hidden.Subject" xml:space="preserve"><value>Lietuva 2.0: organizacijos „{0}“ komentaras paslėptas</value></data>
+  <data name="Organisation.comment-hidden.Body" xml:space="preserve"><value>moderatorius paslėpė organizacijos „{0}“ vardu parašytą komentarą dėl projekto {1}. Projekto puslapis: {2}</value></data>
+  <data name="Organisation.comment-restored.Subject" xml:space="preserve"><value>Lietuva 2.0: organizacijos „{0}“ komentaras atkurtas</value></data>
+  <data name="Organisation.comment-restored.Body" xml:space="preserve"><value>moderatorius atkūrė organizacijos „{0}“ vardu parašytą komentarą dėl projekto {1}. Projekto puslapis: {2}</value></data>
+  <data name="Mp.comment-hidden.Subject" xml:space="preserve"><value>Lietuva 2.0: Seimo nario komentaras paslėptas</value></data>
+  <data name="Mp.comment-hidden.Body" xml:space="preserve"><value>moderatorius paslėpė Seimo nario vardu parašytą komentarą dėl projekto {1}. Seimo narys: {0}. Projekto puslapis: {2}</value></data>
+  <data name="Mp.comment-restored.Subject" xml:space="preserve"><value>Lietuva 2.0: Seimo nario komentaras atkurtas</value></data>
+  <data name="Mp.comment-restored.Body" xml:space="preserve"><value>moderatorius atkūrė Seimo nario vardu parašytą komentarą dėl projekto {1}. Seimo narys: {0}. Projekto puslapis: {2}</value></data>
+  <data name="Comments.Notice.Subject" xml:space="preserve"><value>Lietuva 2.0: nauji komentarai po jūsų argumentu</value></data>
+  <data name="Comments.Notice.Body.One" xml:space="preserve"><value>po jūsų argumentu atsirado naujų komentarų:</value></data>
+  <data name="Comments.Notice.Body.Many" xml:space="preserve"><value>po jūsų argumentais atsirado naujų komentarų:</value></data>
+  <data name="Comments.Notice.Line" xml:space="preserve"><value>{0}: {1}</value></data>
+  <data name="Comments.Notice.Footer" xml:space="preserve"><value>Šį laišką gavote, nes esate šių argumentų autorius. Šiuos laiškus galite išjungti savo paskyroje: {0}</value></data>
 </root>

@@ -178,4 +178,19 @@
   <data name="introduction.invalid" xml:space="preserve"><value>Užpildykite laiško temą, tekstą, pasirašančiojo vardą, pavardę ir pareigas.</value></data>
   <data name="suppression.exists" xml:space="preserve"><value>Šis adresas jau yra sąraše.</value></data>
   <data name="suppression.not-found" xml:space="preserve"><value>Tokio įrašo sąraše nėra.</value></data>
+  <data name="comment.empty" xml:space="preserve"><value>Parašykite komentarą.</value></data>
+  <data name="comment.too-long" xml:space="preserve"><value>Komentaras per ilgas: ne daugiau kaip {0} ženklų.</value></data>
+  <data name="comment.screened" xml:space="preserve"><value>Komentare yra asmens duomenų. Pašalinkite juos ir siųskite dar kartą.</value></data>
+  <data name="comment.screened.email" xml:space="preserve"><value>Komentare yra el. pašto adresas. Pašalinkite jį ir siųskite dar kartą.</value></data>
+  <data name="comment.screened.phone" xml:space="preserve"><value>Komentare yra telefono numeris. Pašalinkite jį ir siųskite dar kartą.</value></data>
+  <data name="comment.screened.personal-code" xml:space="preserve"><value>Komentare yra asmens kodas. Pašalinkite jį ir siųskite dar kartą.</value></data>
+  <data name="comment.screened.several" xml:space="preserve"><value>Komentare yra el. pašto adresas, telefono numeris ar asmens kodas. Pašalinkite juos ir siųskite dar kartą.</value></data>
+  <data name="comments.off" xml:space="preserve"><value>Šiuo metu naujų komentarų čia rašyti negalima. Jau parašyti lieka matomi.</value></data>
+  <data name="comment.bill-not-open" xml:space="preserve"><value>Dėl šio projekto aptarimas tik skaitomas: Seimas jau balsavo arba dalyvavimą uždarė moderatoriai.</value></data>
+  <data name="comment.target-not-found" xml:space="preserve"><value>Teksto, po kuriuo norite komentuoti, nebėra.</value></data>
+  <data name="comment.target-closed" xml:space="preserve"><value>Po atsiimtu atsakymu naujų komentarų rašyti negalima.</value></data>
+  <data name="comment.limit" xml:space="preserve"><value>Po šiuo tekstu jau parašėte {0} komentarus – tiek, kiek leidžiama vienam žmogui.</value></data>
+  <data name="comment.not-found" xml:space="preserve"><value>Tokio komentaro nėra.</value></data>
+  <data name="comment.author-only" xml:space="preserve"><value>Šį komentarą ištrinti gali tik jo autorius.</value></data>
+  <data name="agreement.own-comment" xml:space="preserve"><value>„Sutinku“ negalima pažymėti prie savo komentaro.</value></data>
 </root>

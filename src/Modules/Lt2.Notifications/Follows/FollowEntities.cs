@@ -39,6 +39,9 @@ internal sealed class NoticeSetting
     /// <summary>MPs answered on a bill the person follows (design 8.20.1, "Seimo narių atsakymai").</summary>
     public bool Responses { get; set; } = true;
 
+    /// <summary>Someone commented under the person's own argument (design 8.23.9, "Kai mano argumentą pakomentuoja").</summary>
+    public bool Comments { get; set; } = true;
+
     public DateTimeOffset ChangedAt { get; set; }
 }
 
@@ -74,6 +77,12 @@ internal static class BillEventKinds
 
     /// <summary>MPs answered on the bill on one Vilnius day (design 8.20.1; key: the day). No person and no text.</summary>
     public const string Response = "response";
+
+    /// <summary>
+    /// An argument on the bill got comments and its author was told (design 8.23.9, 8.23.14; key: the argument's id and the run's
+    /// moment). No person and no text; the latest one's <see cref="BillEvent.FirstSeen"/> is where the next run starts reading.
+    /// </summary>
+    public const string Comment = "comment";
 }
 
 internal static class BillEventOutcomes

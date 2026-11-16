@@ -113,6 +113,24 @@ internal sealed class FollowTemplates(IStringLocalizer<EmailTemplates> l, IOptio
         return Message(model.To, Format("Follow.Responses.Subject", model.BillNumber), paragraphs);
     }
 
+    /// <summary>
+    /// New comments under the person's own arguments (design 8.23.9): one line per argument (the bill and the link to the
+    /// argument). Never a comment's text, its writer, how many, or anything about "Sutinku".
+    /// </summary>
+    public EmailMessage Comments(CommentNoticeEmail model)
+    {
+        ArgumentNullException.ThrowIfNull(model);
+        var lines = model.Arguments.Select(a => Format("Comments.Notice.Line", $"{a.BillNumber} · {a.BillTitle}", Link(a.Path)));
+        var paragraphs = new List<string>
+        {
+            l[EmailText.Greeting],
+            l[model.Arguments.Count == 1 ? "Comments.Notice.Body.One" : "Comments.Notice.Body.Many"] + "\n" + string.Join("\n", lines),
+            Format("Comments.Notice.Footer", Link(model.AccountPath)),
+            l[EmailText.Signature],
+        };
+        return Message(model.To, l["Comments.Notice.Subject"], paragraphs);
+    }
+
     private static string Day(DateOnly day) => day.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture);
 
     private static string Number(int? value) => value?.ToString(CultureInfo.InvariantCulture) ?? "–";

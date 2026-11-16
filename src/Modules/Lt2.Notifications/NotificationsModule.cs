@@ -81,6 +81,7 @@ public static class NotificationsModule
         services.AddEmail<FollowVotedEmail, FollowTemplates>(MessageKinds.FollowVotedEmail, t => t.Voted);
         services.AddEmail<FollowStatementEmail, FollowTemplates>(MessageKinds.FollowStatementEmail, t => t.Statement);
         services.AddEmail<FollowResponsesEmail, FollowTemplates>(MessageKinds.FollowResponsesEmail, t => t.Responses);
+        services.AddEmail<CommentNoticeEmail, FollowTemplates>(MessageKinds.CommentNoticeEmail, t => t.Comments);
         services.AddEmail<MpTakeoverLinkEmail, MpTemplates>(MessageKinds.MpTakeoverLinkEmail, t => t.Render);
         services.AddEmail<MpResponseNoticeEmail, MpTemplates>(MessageKinds.MpResponseNoticeEmail, t => t.Response);
         services.AddEmail<MpMail.MpDigestEmail, MpMailTemplates>(MpMail.MpMailKinds.Digest, t => t.Digest);

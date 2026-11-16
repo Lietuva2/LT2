@@ -22,6 +22,19 @@ internal static class FollowRules
     /// <summary>The key of an organisation's follow, and of a statement's event: the id in the Appeals module.</summary>
     public static string IdKey(Guid id) => id.ToString("D", CultureInfo.InvariantCulture);
 
+    /// <summary>How far back the comments notice's first run looks (design 8.23.14): the last hour.</summary>
+    public static readonly TimeSpan CommentsFirstLookBack = TimeSpan.FromHours(1);
+
+    /// <summary>
+    /// Where the comments notice reads from (design 8.23.9, 8.23.14): the moment of the last run that told someone, or the last
+    /// hour on the first run; never more than three days back, as nothing older is sent (design 8.11.2).
+    /// </summary>
+    public static DateTimeOffset CommentsSince(DateTimeOffset? lastTold, DateTimeOffset now)
+    {
+        var since = lastTold ?? now - CommentsFirstLookBack;
+        return since < now - VoteSendWindow ? now - VoteSendWindow : since;
+    }
+
     /// <summary>A planned date already in the past when first seen is recorded and never sent (so a backfill sends nothing).</summary>
     public static bool PlannedIsSendable(DateOnly plannedDate, DateTimeOffset firstSeen) => plannedDate >= VilniusTime.DateOf(firstSeen);
 

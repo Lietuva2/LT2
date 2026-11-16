@@ -24,6 +24,7 @@ internal sealed class FollowService(
     IMpDirectory mps,
     IOrganisationDirectory organisations,
     IMpResponseFeed responses,
+    ICommentFeed comments,
     IMpLinks links,
     ISettings settings,
     IOutbox outbox,
@@ -95,7 +96,7 @@ internal sealed class FollowService(
     {
         await using var db = await contexts.CreateDbContextAsync(cancellationToken);
         var row = await db.NoticeSettings.AsNoTracking().FirstOrDefaultAsync(n => n.UserId == userId, cancellationToken);
-        return new NoticeSettings(row?.Planned ?? true, row?.Voted ?? true, row?.Statements ?? true, row?.Responses ?? true);
+        return new NoticeSettings(row?.Planned ?? true, row?.Voted ?? true, row?.Statements ?? true, row?.Responses ?? true, row?.Comments ?? true);
     }
 
     public async Task<Result<Unit>> SetNoticesAsync(Guid userId, NoticeSettings settings, CancellationToken cancellationToken)
@@ -117,6 +118,7 @@ internal sealed class FollowService(
         row.Voted = settings.Voted;
         row.Statements = settings.Statements;
         row.Responses = settings.Responses;
+        row.Comments = settings.Comments;
         row.ChangedAt = clock.GetUtcNow();
         await db.SaveChangesAsync(cancellationToken);
         return Result.Ok();
@@ -142,8 +144,11 @@ internal sealed class FollowService(
         var bills = await RunBillsAsync(now, cancellationToken);
         var statements = await RunStatementsAsync(now, cancellationToken);
         var answers = await RunResponsesAsync(now, cancellationToken);
+        var commented = await RunCommentsAsync(now, cancellationToken);
         var outcome = new FollowRunOutcome(
-            bills.Recorded + statements.Recorded + answers.Recorded, bills.Sent + statements.Sent + answers.Sent, bills.Emails + statements.Emails + answers.Emails);
+            bills.Recorded + statements.Recorded + answers.Recorded + commented.Recorded,
+            bills.Sent + statements.Sent + answers.Sent + commented.Sent,
+            bills.Emails + statements.Emails + answers.Emails + commented.Emails);
         logger.LogInformation("Follow job: {Recorded} events recorded, {Sent} sent, {Emails} emails", outcome.Recorded, outcome.Sent, outcome.Emails);
         return outcome;
     }
@@ -462,6 +467,76 @@ internal sealed class FollowService(
         return new FollowRunOutcome(fresh.Count, fresh.Count, emails);
     }
 
+    /// <summary>
+    /// The notice of comments under a person's arguments (design 8.23.9), "Iš karto": at every run, each author is told in one
+    /// email about the arguments of theirs that got a comment from someone else since the run before (one line per argument:
+    /// the bill and the link; never a comment's text, writer, how many, or "Sutinku"). Comments deleted or hidden by now, and
+    /// arguments no longer shown, are not told; with the switch off nothing is sent. What was told is recorded per argument
+    /// (<c>bill_event</c> kind <c>comment</c>, no person); the latest record is where the next run starts (design 8.23.14).
+    /// <para>
+    /// The one place a comment notice is queued: the email rhythm (design 8.24, built separately) is to take this over, holding
+    /// the lines for a person's daily or weekly email instead of sending them now.
+    /// </para>
+    /// </summary>
+    private async Task<FollowRunOutcome> RunCommentsAsync(DateTimeOffset now, CancellationToken cancellationToken)
+    {
+        var none = new FollowRunOutcome(0, 0, 0);
+        await using var db = await contexts.CreateDbContextAsync(cancellationToken);
+        await using var transaction = await db.Database.BeginTransactionAsync(cancellationToken);
+
+        // Under one lock, so two runs at once read one window and tell once.
+        await db.Database.ExecuteSqlRawAsync("SELECT pg_advisory_xact_lock(hashtextextended({0}, 0))", ["lt2.follows.comments"], cancellationToken);
+        var last = await db.BillEvents.AsNoTracking().Where(e => e.Kind == BillEventKinds.Comment).MaxAsync(e => (DateTimeOffset?)e.FirstSeen, cancellationToken);
+        var since = FollowRules.CommentsSince(last, now);
+        if (since >= now)
+        {
+            return none;
+        }
+
+        var commented = await comments.CommentedArgumentsAsync(since, now, cancellationToken);
+        if (commented.Count == 0)
+        {
+            return none;
+        }
+
+        var key = now.UtcDateTime.ToString("O", CultureInfo.InvariantCulture);
+        foreach (var argument in commented)
+        {
+            db.BillEvents.Add(new BillEvent
+            {
+                BillNumber = argument.BillNumber,
+                Kind = BillEventKinds.Comment,
+                Key = FollowRules.IdKey(argument.ReasonId) + ":" + key,
+                FirstSeen = now,
+                SentAt = now,
+                Outcome = BillEventOutcomes.Sent,
+            });
+        }
+
+        await db.SaveChangesAsync(cancellationToken);
+        var facts = await bills.FindManyAsync(commented.Select(a => a.BillNumber).Distinct().ToList(), cancellationToken);
+        var byAuthor = commented.ToLookup(a => a.AuthorUserId);
+        var emails = await SendAsync(
+            db,
+            byAuthor.Select(g => new Follow { UserId = g.Key }),
+            n => n.Comments,
+            (person, _) => OutboxMessage.Create(MessageKinds.CommentNoticeEmail, new CommentNoticeEmail(
+                person.Email,
+                byAuthor[person.UserId]
+                    .OrderBy(a => a.BillNumber, StringComparer.Ordinal)
+                    .Select(a =>
+                    {
+                        var bill = facts.GetValueOrDefault(a.BillNumber) ?? new BillFacts(a.BillNumber, a.BillNumber);
+                        return new CommentedArgumentLine(bill.Number, bill.Title, "/seimas/" + Uri.EscapeDataString(bill.Number) + "#reason-" + a.ReasonId);
+                    })
+                    .ToList(),
+                AccountPath)),
+            transaction,
+            cancellationToken);
+        await transaction.CommitAsync(cancellationToken);
+        return new FollowRunOutcome(commented.Count, commented.Count, emails);
+    }
+
     /// <summary>The answers as the email lists them: by stance ("už", "prieš", "neapsisprendė"), then by last name, as on the bill's page.</summary>
     private static List<FollowedResponse> Listed(
         IEnumerable<PublicResponseFacts> told, IReadOnlyDictionary<long, MpFacts> mpsOf, IReadOnlyDictionary<long, string> factions) =>
@@ -553,7 +628,7 @@ internal sealed class FollowAccountData(IDbContextFactory<NotificationsDb> conte
         var follows = await db.Follows.AsNoTracking().Where(f => f.UserId == userId).OrderBy(f => f.CreatedAt)
             .Select(f => new { kind = f.Kind, key = f.Key, followedAt = f.CreatedAt }).ToListAsync(cancellationToken);
         var notices = await db.NoticeSettings.AsNoTracking().Where(n => n.UserId == userId)
-            .Select(n => new { planned = n.Planned, voted = n.Voted, statements = n.Statements, responses = n.Responses, changedAt = n.ChangedAt }).FirstOrDefaultAsync(cancellationToken);
+            .Select(n => new { planned = n.Planned, voted = n.Voted, statements = n.Statements, responses = n.Responses, comments = n.Comments, changedAt = n.ChangedAt }).FirstOrDefaultAsync(cancellationToken);
         return new { follows, emails = notices };
     }
 
