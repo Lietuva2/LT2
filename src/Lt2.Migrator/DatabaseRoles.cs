@@ -23,14 +23,21 @@ public static class DatabaseRoles
     public static readonly string[] DataSchemas = ["identity", "notify", "config", "parliament", "appeals"];
 
     /// <summary>
+    /// Schemas only the application reads and writes: the usage statistics (design 8.27), counted by the web host alone; the
+    /// worker has no business with their salts.
+    /// </summary>
+    public static readonly string[] AppOnlySchemas = ["usage"];
+
+    /// <summary>
     /// Every schema the application's databases hold. Each of their tables is on <see cref="ReadableTables"/> or
     /// <see cref="WithheldTables"/>; <see cref="HangfireSchema"/> is the worker's and withheld as a whole.
     /// </summary>
-    public static readonly string[] AllSchemas = ["identity", "notify", "audit", "config", "parliament", "appeals"];
+    public static readonly string[] AllSchemas = ["identity", "notify", "audit", "config", "parliament", "appeals", "usage"];
 
     /// <summary>
     /// What <c>lt2_readonly</c> may read (design 5.5, 6.9: "only what is listed"): the public parliament data, the bills'
-    /// records with their arguments, reports, flags, moderation actions and history, the daily counts, and the settings.
+    /// records with their arguments, reports, flags, moderation actions and history, the daily counts, the settings, and the
+    /// usage statistics' counts (design 8.27).
     /// A table that is not here is invisible to it, also after a migration adds one: a test fails until the new table is put
     /// on this list or on <see cref="WithheldTables"/>.
     /// </summary>
@@ -43,6 +50,7 @@ public static class DatabaseRoles
         "parliament.contact", "parliament.faction_position", "parliament.fetch_state", "parliament.import_run", "parliament.mandate",
         "parliament.membership", "parliament.mp_stat", "parliament.person", "parliament.planned_item", "parliament.raw_document",
         "parliament.session", "parliament.sitting", "parliament.term", "parliament.vote",
+        "usage.page", "usage.referrer", "usage.total",
     ];
 
     /// <summary>
@@ -56,6 +64,8 @@ public static class DatabaseRoles
     /// <item>every account table (<c>identity</c>, the known browsers of design 8.20.2 included), the outbox, follows and their emails (<c>notify</c>), the audit log;</item>
     /// <item>MP mail (design 8.19.7): the MPs' choices and extra recipients, their links, the introduction letter's versions with
     /// who wrote them, and the suppression list;</item>
+    /// <item>the usage statistics' salts and sketches of the periods under way (design 8.27): with a salt, a guessed address and
+    /// browser could be tested against a sketch until the period ends;</item>
     /// <item>the migrations' history, the migrator's business only.</item>
     /// </list>
     /// </summary>
@@ -76,6 +86,7 @@ public static class DatabaseRoles
         "notify.introduction_letter", "notify.mp_email_pref", "notify.mp_mail_token", "notify.suppression",
         "appeals.__ef_migrations_history", "audit.__ef_migrations_history", "identity.__ef_migrations_history",
         "notify.__ef_migrations_history", "parliament.__ef_migrations_history",
+        "usage.sketch", "usage.__ef_migrations_history",
     ];
     /// <summary>
     /// Run with a superuser (or a role with CREATEROLE) once per deploy: creates the login roles, sets their passwords
@@ -158,6 +169,24 @@ public static class DatabaseRoles
                     GRANT SELECT, INSERT, UPDATE, DELETE ON TABLES TO {App}, {Worker};
                 ALTER DEFAULT PRIVILEGES FOR ROLE {Migrator} IN SCHEMA {s}
                     GRANT USAGE, SELECT ON SEQUENCES TO {App}, {Worker};
+                """,
+                cancellationToken);
+        }
+
+        foreach (var schema in AppOnlySchemas)
+        {
+            var s = Identifier(schema);
+            await ExecuteAsync(
+                migrator,
+                $"""
+                GRANT USAGE ON SCHEMA {s} TO {App};
+                GRANT SELECT, INSERT, UPDATE, DELETE ON ALL TABLES IN SCHEMA {s} TO {App};
+                ALTER DEFAULT PRIVILEGES FOR ROLE {Migrator} IN SCHEMA {s}
+                    GRANT SELECT, INSERT, UPDATE, DELETE ON TABLES TO {App};
+                REVOKE ALL ON ALL TABLES IN SCHEMA {s} FROM {Worker};
+                REVOKE ALL ON SCHEMA {s} FROM {Worker};
+                ALTER DEFAULT PRIVILEGES FOR ROLE {Migrator} IN SCHEMA {s}
+                    REVOKE ALL ON TABLES FROM {Worker};
                 """,
                 cancellationToken);
         }

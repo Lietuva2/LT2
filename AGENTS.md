@@ -120,6 +120,9 @@ src/Modules/               Lt2.Identity, Lt2.Notifications, Lt2.Audit, Lt2.Parli
                            participant through MpAccounts.Refusal (SharedKernel) wherever a participant is checked.
                            Identity also owns known browsers (Application/SignIn/KnownBrowsers.cs, design 8.20.2: the
                            __Host-lt2.device cookie, identity.known_device, the code allowance they choose).
+src/Modules/Lt2.Usage      the site's own usage statistics (design 8.27): UsageRules and Sketch (HyperLogLog) pure,
+                           UsageCounter in the web host's memory, written every minute; the host feeds it from
+                           Services/UsageServices.cs; the screen /administravimas/lankomumas (UsageAdmin)
 src/Lt2.Worker             Hangfire server: outbox dispatch loop, the parliament import, the agenda watcher (lrs.lt
                            pages; off unless Agenda:BaseAddress is set), the daily aggregates and closing of the bills' records, summaries
                            (every 15 minutes: waiting ones expire, due ones are made: a dry run, waiting or sent by
@@ -134,7 +137,8 @@ src/Lt2.Migrator           creates the database roles, applies migrations and gr
                            official address without an invitation (--official-addresses-without-invitation; only where
                            Demo:Allowed, the local stack and the trial) and (local stack only) fills the
                            demonstration record on XVP-0412, three invented organisations with statements on it, and an
-                           invented AI summary on XVP-0533 (--demo-appeal);
+                           invented AI summary on XVP-0533 and a closed invented bill XVP-0707 with invented positions
+                           (design 8.26.5) (--demo-appeal);
                            run once per deploy
 tests/Lt2.UnitTests        rules and validators, plus bUnit tests of components (Components/)
 tests/Lt2.IntegrationTests API over HTTP against a real PostgreSQL (Testcontainers)
@@ -154,7 +158,8 @@ tools/run_tests.py          runs a test project in a chosen order (or each class
                             and for end-to-end runs prints what tests could leave on the stack before and after
 tools/Lt2.SeimasStandIn     local and test only: stand-in for the Seimas open data and the lrs.lt agenda page (/darbotvarke),
                            invented answers; never shipped. Recent/ (container only, never in tests) adds a sitting and
-                           a stage vote dated two days before today, so the local agenda has recent votes
+                           a stage vote dated two days before today, so the local agenda has recent votes, and an adoption
+                           vote nine days before today on XVP-0707, for the analytics page
 ```
 
 ```sh
@@ -275,7 +280,7 @@ code review.
   (`Security:DeviceHashKey`, the secret `device_hash_key`). Every state-changing
   call needs the antiforgery header and passes the Origin check, except the one-click stop of an MP's emails (design 8.19.4),
   which mail programs send. CORS stays off.
-- **Nothing non-essential in the browser (design 8.22.1), so no cookie banner.** No analytics, no third-party script, font or
+- **Nothing non-essential in the browser (design 8.22.1), so no cookie banner.** No third-party analytics, no third-party script, font or
   embed, no advertising or measurement cookie. What the site keeps is one list, `Security/BrowserStorage.Inventory` (the
   session, the passkey step, the request-forgery and the known-browser cookies; `lt2-theme` in local storage once a theme is
   chosen; `lt2.tikslas` and `lt2.kodas` in session storage, `Lt2.Web.Client/BrowserKeys`). The privacy notice's
@@ -285,6 +290,11 @@ code review.
   stored.
 - No secrets in the repository or in images. No real personal data in tests or fixtures.
 - No tracking pixels or click tracking in any email.
+- **Usage statistics (design 8.27)** are counted on the server only: a visitor is the network and the user agent hashed
+  with a random salt of the day, month and year into a sketch; a signed-in session counts its account. A page counts
+  under its route (a token never), staff and MP pages stay out of the list. `usage.sketch` holds the salts and sketches
+  only while their period lasts (a candidate can be tested against them until then, 8.27.2), only `lt2_app` reaches it,
+  and it is withheld from `lt2_readonly`. Nothing is added to the browser for it.
 - Outbound requests go only to the allowlisted hosts, and follow no redirect to another host.
 - Codes and tokens are not sent in addresses: a link the site makes carries its secret after the `#` (`/prisijungti#kodas=…`,
   a representative's `/organizacijos/kvietimas#…`, an MP's take-over link `/seimo-narys/perimti#…`, an office member's
@@ -519,8 +529,11 @@ page's "Balsuota".
 **Analytics (design 8.26, owner 2026-11-16).** `/seimas/analitika` (`Components/Analytics/AnalyticsPage`), public and
 server-rendered from `GET /api/v1/analytics` (composed in `Lt2.Web/Services/AnalyticsServices.cs`): the four figures, the
 Seimas's share "for" beside the members' frozen counts on closed bills, faction unity (`FactionUnityRule` in Parliament).
-"Kas balsuoja taip kaip jūs" is the island `MyAgreement` from `GET /api/v1/me/analytics/agreement`: the caller's own sides
-against the MPs' ballots, never stored or prerendered, the only place MPs are ordered by a number. Every rule is
+"Kas Seime balsuoja taip, kaip prašote jūs" is the island `MyAgreement` from `GET /api/v1/me/analytics/agreement`: the caller's own sides
+against the MPs' ballots, the only place MPs are ordered by a number; the server-side API client refuses it, so no page
+holds it. Kept copies (owner, 2026-11-16) live only in memory (`AnalyticsCopies`): the public answer per filter and data
+version, served as it is while one background refresh runs once it is an hour old; a member's comparison per account until
+12 idle hours, sign-out, account deletion or consent withdrawal (`Forget`). Every rule is
 `AnalyticsRules` (SharedKernel); one sample of 20 (`AnalyticsRules.SmallSample`, not a setting) below which no share is
 shown, only counts and "maža imtis"; the Seimas's majority is that of those who voted, a consensus counting as "for".
 **Organisations (design 8.14, stage A of 8.14.14; built 2026-11-14).**

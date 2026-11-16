@@ -348,6 +348,15 @@ pending account is kept), which says so. Each setting shows a plain Lithuanian l
 when to change it, its unit, the default, and the key in small type. The minimum threshold's 50 is a placeholder until
 the owner sets a number, and the screen says so.
 
+### 5.7 `usage`
+
+The site's own usage statistics (8.27). `sketch`: per period (`day`, `month`, `year`, by its first Vilnius day) and
+audience (`visitor`, `member`), the random salt and the HyperLogLog registers of a period under way; deleted when the
+period ends; withheld from `lt2_readonly`. While it lasts, a candidate visitor or account can be tested against it
+(8.27.2). `total`: per period, distinct visitors and members (approximate) and page views of visitors, members and
+robots. `page`: views per Vilnius day and route. `referrer`: visitors per Vilnius day and referring host. These three
+name no person. Only `lt2_app` reads and writes the schema.
+
 Database roles: `lt2_migrator` owns the schemas and runs migrations; `lt2_app` has data access only; `lt2_worker` the same
 plus the Hangfire schema; `lt2_readonly` for ad-hoc analysis has no access to `identity` or `appeals.position`. [changed
 while building (8.14.14): nor to the five organisation tables, which hold an account beside an organisation.]
@@ -540,6 +549,9 @@ No screen and no API returns another person's position. Group numbers are publis
 - **Encryption.** Disk encryption on the VPS volume, TLS to the database inside the Docker network, encrypted backups.
   ASP.NET Core data-protection keys are stored in PostgreSQL, wrapped with a key supplied as a secret.
 - **Logs** carry request ids, never emails or sides; IPs are hashed with a rotating key and kept 30 days.
+- **Usage statistics** (8.27): a visitor's address and browser, or a member's account, are hashed with a random salt of
+  the day, month and year into an aggregate sketch; while the period lasts the salt and the sketch are stored and a
+  candidate can be tested against them (8.27.2); when it ends both are deleted and only counts remain.
 - **Secrets** live outside the repository and outside images: encrypted with SOPS and age in a private operations
   repository, mounted as files at deploy, rotated on a schedule and after any staff change.
 - **Before launch:** a data protection impact assessment (required for large-scale processing of special-category data), a
@@ -681,7 +693,7 @@ Other official sources, used as **links first** and imported only where a stage 
 | Chief Official Ethics Commission (VTEK) | Declarations of private interests | Link only. |
 
 Deliberately not shown: parliamentary expenses and anything else that grades the MP's work, and no ranking or comparison
-of MPs by any number (one exception, owner 2026-11-16: a member's own "Kas balsuoja taip kaip jūs", seen by that member
+of MPs by any number (one exception, owner 2026-11-16: a member's own "Kas Seime balsuoja taip, kaip prašote jūs", seen by that member
 only, 8.26.4). The concept's tone is connection and explanation, and the profile shows what the MP did. The one
 number on it that is not about the MP's work is how many members follow the MP (8.11.2, owner 2026-11-16; designed, not
 built): it says how many chose to hear about the MP, not what the MP did or how well, and, as the designer proposes, it
@@ -2979,14 +2991,14 @@ lines on a phone.
 
 - **The menu:** the logo, "Projektai", "Seimo nariai", and "Prisijungti" for a visitor or the account item for a
   member. It fits one line at 360 px.
-- **"Projektai" is one item with three tabs:** "Darbotvarkė" (`/darbotvarke`), "Projektai" (`/projektai`; named "Visi projektai" until the owner shortened it on 2026-11-16) and
+- **"Projektai" is one item with four tabs:** "Darbotvarkė" (`/darbotvarke`), "Projektai" (`/projektai`; named "Visi projektai" until the owner shortened it on 2026-11-16) and
   "Suvestinės" (`/suvestines`). **[Changed by the owner on 2026-11-16, on the built result: "Balsavimai" was a fourth
   tab; the link under the agenda's voted list (8.18) is enough, and the row is shorter on a phone. The history of votes
   keeps its address, has no tab row, and leads back to the agenda by a breadcrumb.]** **[Owner, 2026-11-16: a fourth
   tab, "Analitika" (`/seimas/analitika`, 8.26), after "Suvestinės".]** The item opens the
   agenda **[designer's proposal: what is coming is the most useful first view]**. The tabs are a row of plain links
-  under the page's heading on these three pages, the current one marked; no script. Addresses do not change. The menu
-  item is marked current on the three pages and on everything under them (the history of votes, a bill, a vote, a summary).
+  under the page's heading on these four pages, the current one marked; no script. Addresses do not change. The menu
+  item is marked current on the four pages and on everything under them (the history of votes, a bill, a vote, a summary).
 - **The account item** reads "Paskyra" **[designer's proposal: not the person's name, so the page's HTML stays the same
   for every member]**. It is a disclosure that works without script, holding "Mano paskyra" and "Atsijungti". With
   script, the opened item also shows the person's name at the top and the links their account has: "Moderavimas",
@@ -3016,7 +3028,7 @@ lines on a phone.
   - "Apie": "Metodika", "Moderavimo taisyklės", "Naudojimo taisyklės", "Privatumas" (8.22);
   - "Dalyvauti": "Organizacijos", "Atsiliepimai".
 - **The theme switch** moves to the footer, so a visitor has it too. It works as before and is absent without script.
-- **Done when:** the menu is one line at 360, 390 and 1280 px; each of the three tabs is reachable from the other two
+- **Done when:** the menu is one line at 360, 390 and 1280 px; each of the four tabs is reachable from the other three
   and marked; every page that was in the old menu is one press from the menu or the footer; the account item works
   with and without script and with the keyboard; no served page holds a member's name or role links.
 - [changed while building (2026-11-16): "Seimo nariai" is marked current on the list and on everything under it as well (a
@@ -3034,8 +3046,10 @@ privacy notice correct as drafts as the site changes; the lawyer reads them once
 
 #### 8.22.1 No banner, as a rule of the design
 
-- **Nothing that is not strictly necessary is stored in the browser.** No analytics, no third-party scripts, fonts or
-  embeds, no advertising or measurement cookies. Consent under the e-privacy rules is needed only for storage that is
+- **Nothing that is not strictly necessary is stored in the browser.** No third-party analytics, no third-party scripts,
+  fonts or embeds, no advertising or measurement cookie or storage key. [changed 2026-11-16 (8.27): the site counts its
+  own use on its own server, in aggregate, from the requests it answers anyway; that stores and reads nothing in the
+  browser, so the inventory below is unchanged.] Consent under the e-privacy rules is needed only for storage that is
   not strictly necessary for the service the person asked for, so the site shows no cookie banner. Adding anything that
   would need one is a design change, not a build detail.
 - If such a thing were ever added, its consent would be asked separately and could be refused without losing the
@@ -3074,7 +3088,13 @@ privacy notice correct as drafts as the site changes; the lawyer reads them once
 - **"Privatumo pranešimas"** at `/privatumas`: who is responsible, what is kept and why (the address, sides as
   special-category data under consent, what a person publishes, follows, sessions and known browsers, hashed addresses
   in logs for 30 days), who else processes it, how long, the person's rights and how to use them on the account page
-  (export, deletion, withdrawing consent), where to complain. A draft for the lawyer, versioned like the terms.
+  (export, deletion, withdrawing consent), where to complain. [changed 2026-11-16 (8.27): also the usage statistics:
+  "Lankomumo skaičiai" among the data (address and browser, or the account, hashed with a salt of the day, month and
+  year; while the period lasts the salt and the summary are kept and could show whether a given address or account was
+  counted, the deleted account's too; then only counts; administrators see them), its retention and its legal basis
+  ("[bus įrašyta]" for the lawyer); the "Slapukai ir naršyklės atmintis" paragraph says no analytics, advertising or
+  tracking cookies of any kind and that the site counts on its server. Nobody has seen the notice yet, so its version
+  stays.] A draft for the lawyer, versioned like the terms.
 - Its part **"Slapukai ir naršyklės atmintis"** lists the inventory of 8.22.1 with what each is for and how long it
   lasts.
 - Linked from the footer, the registration form, the consent before the first side, and every email's footer.
@@ -3747,10 +3767,12 @@ page is a fourth tab, "Analitika", under "Projektai" (8.21); and one fixed sampl
 #### 8.26.1 What the page shows
 
 Public, server-rendered, the same for everyone and nothing about the caller, apart from one island. Two filters in one GET
-form on the ground (8.16), with no script: the period (`metai`: the whole current term, the default, or one calendar year
-of it, Vilnius days) and the accounts counted (`paskyros=senesnes`: only accounts older than 30 days, from the counts every
-record keeps for them). The lead says once that the numbers are from self-selected Lietuva 2.0 users and are not a
-representative poll; the same line stands beside the comparison of sides (8.2, `AGENTS.md`).
+form on the ground (8.16), with no script: the period ("Laikotarpis", `metai`: the whole current term by its name, the
+default, or one calendar year of it, Vilnius days) and the accounts counted ("Skaičiuojamos paskyros", `paskyros=senesnes`:
+"Visos" or "Tik senesnės nei 30 d.", from the counts every record keeps for them). The lead says once that the numbers are
+from self-selected Lietuva 2.0 users and are not a representative poll; the established line ("Tai nėra reprezentatyvi
+apklausa: …") stands beside the figures and the comparison of sides (8.2, `AGENTS.md`). The figures say when they were
+counted ("Suskaičiuota …"): they are a kept copy, at most an hour old (8.26.6).
 
 1. **Four figures.**
    - *Projects members took part in*: of the bills in the catalogue that were on the agenda of a sitting held in the
@@ -3760,27 +3782,32 @@ representative poll; the same line stands beside the comparison of sides (8.2, `
      before; a hidden record counts nothing). With the filter, only the older accounts' counts.
    - *Majorities agreed*: of the closed bills of the period that can be compared (8.26.2), those where the members'
      majority and the Seimas's majority chose the same; "x iš N", with a percentage only when N is 20 or more, otherwise
-     "maža imtis". Nothing when N is 0.
+     "maža imtis". When N is 0, one line says there is no such bill yet.
    - *MPs who took over their profile*: sitting MPs whose profile is taken over (8.5.2), of all sitting MPs, today. The
      period does not apply.
-2. **The comparison of sides** ("Balsų „už“ dalis: Seimas ir Lietuva 2.0 naudotojai"): a dot plot drawn by the server
-   (SVG, a `<title>` per dot for the exact numbers, no script), one row per comparable closed bill of the period, the
-   latest 10 by their closing vote, with the line at 50 %, and "Rodyti lentelę" (`details.more`) with every closed bill
-   of the period that has at least one side: the bill, the Seimas's share "for", the members' share "for" (or their counts
-   and "maža imtis" under 20), and the majority of those who voted in the Seimas ("už" or "ne").
+2. **The comparison of sides** ("„Už“ dalis: Seimo balsavimas ir Lietuva 2.0 naudotojų pozicijos"; members' sides are
+   positions, never "balsai"): a dot plot drawn by the server (SVG, a `<title>` per dot for the exact numbers, no script),
+   one row per comparable closed bill of the period, at most the latest 10 by their closing vote (the line above it says
+   so), with the line at 50 %, and "Rodyti lentelę" (`details.more`) with every closed bill of the period that has at
+   least one side: the bill, the Seimas's share "for" (with the Seimas's own note on the result when it has one), the
+   members' share "for" (or their counts and "maža imtis" under 20), and the majority of those who voted in the Seimas
+   ("„už“" or "ne „už“"). A share that rounds to 50 % without being exactly half is written with as many decimals as it
+   takes not to read as 50 % ("50,4 %"), so a majority and its absence never look the same.
 3. **Faction unity** ("Frakcijų vieningumas"): per faction of the current term with a recorded vote in the period, the
    share of its members' ballots that chose the faction's position, over the votes where it had one (the two-thirds rule
-   of 7.3), the number of those votes and the number of free votes; "maža imtis" under 20 votes with a position. The
-   factions stand in order of their seats today, then by name: side by side, not ranked. Under each bar a
-   `details.more` lists the three votes where the faction split most (8.26.3), each linking to the vote's page.
-4. **"Kas balsuoja taip kaip jūs"**: the member's own comparison (8.26.4), an island filled in the browser.
+   of 7.3), the number of those votes and the number of free votes. Under 20 votes with a position there is no share
+   and no bar, only the counts and "maža imtis" (as everywhere on the page, 8.26.2; after the review of 2026-11-16). The
+   factions stand in order of their seats today, then by name: side by side, not ranked. Under each a `details.more`
+   lists the three votes where the faction split most (8.26.3), each linking to the vote's page.
+4. **"Kas Seime balsuoja taip, kaip prašote jūs"**: the member's own comparison (8.26.4), an island filled in the browser. [Renamed by the owner on
+   2026-11-16 after the review, from "Kas balsuoja taip kaip jūs": a comma, and members do not vote.]
 
 #### 8.26.2 The rules of the comparison (pure functions, `AnalyticsRules` in SharedKernel)
 
 - **A closed bill of the period**: a closed record (8.1; hidden ones are left out) whose closing vote was held in the
   period.
 - **The Seimas's share "for"**: for ÷ (for + against + abstain) at the closing vote. A vote adopted by consensus has no
-  numbers: it is shown as "bendru sutarimu", has no dot, and counts as a majority "for". A vote whose per-MP results are
+  numbers: it is shown as "pritarta bendru sutarimu", has no dot, and counts as a majority "for". A vote whose per-MP results are
   not read yet is not compared.
 - **The Seimas's majority** is the majority of those who voted: "for" when the votes for are more than half of for,
   against and abstain together; otherwise not "for". Open data gives no "adopted" or "rejected", and the legal rule counts
@@ -3798,20 +3825,26 @@ From the faction positions the import keeps per vote (5.1 `faction_position`), o
 chose it, divided by the sum of the members who voted in those votes (pooled, so a large vote weighs more than a small
 one). Free votes are counted beside it, never in it. A vote's split is the share of the faction's largest option among
 its members who voted; the three lowest are where it split most (free votes included, at least two members voting, the
-newest first on a tie). The mixed group is no faction and is not shown.
+newest first on a tie). The mixed group is no faction and is not shown. Two labels of the per-MP results that resolve
+to the same faction in one vote are one tally: their counts are added and the position worked out again from the sum,
+so no vote counts twice. Under 20 votes with a position the share is not given (8.26.1).
 
-#### 8.26.4 "Kas balsuoja taip kaip jūs"
+#### 8.26.4 "Kas Seime balsuoja taip, kaip prašote jūs"
 
-- **For the caller only** (`GET /api/v1/me/analytics/agreement`): read per request from the caller's own sides on closed
-  records and the MPs' public ballots at those records' closing votes; never stored, cached or logged, and never
-  prerendered: the server-rendered page holds only the part's heading and one line; a visitor's island offers the
-  sign-in link back to the page (`LandingPath.SignInLink`).
+- **For the caller only** (`GET /api/v1/me/analytics/agreement`): made from the caller's own sides on closed records
+  and the MPs' public ballots at those records' closing votes, the first time the member's page asks for it, and then
+  kept for the member in server memory (8.26.6; the owner, 2026-11-16: "built asynchronously the first time the page is
+  opened, and then saved for the whole session"). Never written to a table, the browser or a log, and never in a
+  server-rendered page: the server-side API client refuses it, and the page holds only the part's heading and one line.
+  A visitor gets the sign-in link back to the page (`LandingPath.SignInLink`) already in the server's HTML, so it works
+  without JavaScript; the page carries `<NeedsScript />` for a member without it.
 - **An MP matches** on a bill when the MP's ballot at the closing vote is the caller's side; an abstention does not
   match; an MP who did not vote, or a vote by consensus, is not in the sample. **A faction matches** when its position
   (two thirds) is the caller's side; a free vote is not in its sample. Every MP with a ballot at those votes is listed,
-  with the faction of today (or the last one) and "buvęs Seimo narys" for a former MP.
+  with the faction of today (or the last one) and "mandatas baigėsi" for an MP whose mandate ended.
 - **Order (owner, 2026-11-16):** factions, then MPs; within each, those with 20 common votes or more by the share of
   agreement, highest first (then by name); then those with fewer, by name, with "sutapo 3 iš 4 · maža imtis" and no bar.
+  MPs by name means as every list of MPs: last name, then first name.
   Nobody with no common vote is listed. The heading line says on how many closed bills the caller took a side, and how
   many of them the Seimas adopted by consensus (no ballots).
 - It is a comparison for the member, not a judgement of MPs: the line under the heading says so and that nobody else sees
@@ -3825,16 +3858,37 @@ the table still lists the closed bills with their counts and "maža imtis", and 
 member's own comparison then shows fractions with "maža imtis", or, without a side on any closed bill, one line and the
 link to `/projektai`.
 
-#### 8.26.6 API
+**Demonstration data (local stack only, after the review of 2026-11-16):** the stand-in's local overlay
+(`tools/Lt2.SeimasStandIn/Recent`) adds a sitting nine days ago with an adoption vote, with per-MP ballots, on an invented
+bill XVP-0707 "Viešųjų pirkimų įstatymo pataisa"; `--demo-appeal` gives it invented positions taken before the vote (1 240
+for, 1 100 of them older than 30 days; 860 against, 760) and two arguments, and closes its record as the closing job
+would, so the plot, the table and a member's comparison can be seen. The example numbers of XVP-0412 are unchanged.
+Tests never load the overlay.
+
+#### 8.26.6 API and kept copies
 
 ```
-GET /api/v1/analytics?year=2026&accounts=older   public, cacheable, nothing about the caller
+GET /api/v1/analytics?year=2026&accounts=older   public, with an ETag, nothing about the caller
 GET /api/v1/me/analytics/agreement                 the caller's own comparison; no-store, as every signed-in answer
 ```
 
 `year` is a calendar year of the current term (anything else is the whole term); `accounts=older` counts only accounts
-older than 30 days. The public answer carries the four figures, the comparable and listed bills with their numbers, and
-the factions with their three most split votes.
+older than 30 days. The public answer carries when it was counted, the four figures, the comparable and listed bills with
+their numbers, and the factions with their three most split votes.
+
+**Kept copies (the owner, 2026-11-16, section 12).** Both live in the web process's memory only (`AnalyticsCopies`):
+never a table, never the browser (8.22.1), never a cacheable HTTP answer.
+- *The public answer*: one copy for everybody per filter combination. Once it is an hour old it is still served as it
+  is while one refresh runs in the background, so no visitor waits except the first after a start or after the data
+  version changed. Its key holds that data version: the closed records (one closes, is hidden or restored) and the last
+  finished import, so those changes show at once; sides taken on open bills show within about an hour, and the page says
+  when its numbers were counted. Who refreshes is one method (`AnalyticsCopies.Refresh`); a periodic job could take it
+  over without changing anything else. **[Open, the owner's question of 2026-11-16: whether a periodic job should make
+  the copy instead of a visit; the measured cost is in the report of that day. Until decided: no job, no table.]**
+- *A member's comparison*: one copy per account, made the first time the member's page asks, kept while the member keeps
+  using it (12 hours without a request ends it), made again when the data version changes, and dropped at sign-out,
+  account deletion and withdrawal of the positions consent. At most 10 000 accounts are kept; the oldest go first. It
+  reveals the member's sides, so it is treated as a side: never logged, never in an answer to anyone else.
 
 #### 8.26.7 Not built, and why
 
@@ -3854,7 +3908,116 @@ the factions with their three most split votes.
 - Every number follows 8.26.2–8.26.4 in a unit test whose name reads as the rule; consensus votes have no share; under 20
   a sample shows counts and "maža imtis".
 - The public answer is the same for a visitor and a member; the caller's comparison answers only the caller, holds
-  nothing of another person, and a visitor gets 401.
+  nothing of another person, a visitor gets 401, and no server-rendered page holds any of it.
+- Faction unity shows no share under 20 votes with a position; the page is in the end-to-end lists of islands before
+  start, layout and explanatory text.
+
+### 8.27 Usage statistics: the team's own counting
+
+**[Decided by the owner on 2026-11-16 and built the same day: the team sees how many people use the site without Google
+Analytics or anything like it. No cookie, no script, nothing sent to anyone; counted on the server by IP address and
+browser; approximate numbers are enough. The salt of a period is kept in the database until the period ends; the
+year is counted as well as the day and the month. Corrected the same day after a review: pages are counted by their
+route, staff and MP pages are left out of the list, distinct counting waits for the stored salts, and the texts say what
+the stored salts and sketches allow.]**
+
+#### 8.27.1 What is counted
+
+- **A page view:** a `GET` of a page (not `/api`, the framework's files, health checks, the API description, or
+  `/nerasta` and `/klaida` asked for directly) answered 200 with HTML, and not one the browser fetched or prerendered on
+  its own (`Sec-Purpose` or `Purpose` with `prefetch`; Chrome's prerender is left out even when the person then opens
+  the page). Redirects, "not found", errors, `HEAD` and `POST` are no visit. Static files never reach the counting
+  (routing answers them first).
+- **Who:** a request in a signed-in session counts the **account** (a member), whatever browser string it sends; any
+  other request counts the **visitor**. A member is never also a visitor for the same request.
+- **A visitor** is the network and the browser: the IP address (the one `ReverseProxy:Address` lets through, 6.8),
+  IPv6 by its first 64 bits only, and the `User-Agent`. Nothing else the browser sends is used: more would be
+  fingerprinting.
+- **Robots:** an empty user agent, one that does not start with `Mozilla/`, or one naming a robot or a tool (a name
+  ending in "bot" followed by a version or a separator, a `+http` contact, crawl, spider, curl, python, headless …) is
+  counted only as one number of robots' page views a day, in no other number and in no list.
+- **The page** is counted under its route, not the address asked for: `/seimas/{Number}` with the bill's number in
+  capitals, `/p/{Slug}`, `/o/{Slug}`, `/frakcijos/{Slug}`, `/komitetai/{Slug}` with the address in small letters,
+  `/seimas/balsavimai/{Id}`, `/suvestines/{Date}`. Any other route parameter (a link's token) is `***`, and the query is
+  never part of it. So `/METODIKA` and `/metodika` are one page, and nothing typed into an address can become a page.
+  The old organisation invitation route with the token in its path is gone (its link carries the token after the `#`).
+- **Left out of the list of pages** (their views still count in the totals): `/administravimas`, `/moderavimas`,
+  `/seimo-narys`, `/suvestines/nustatymai`, `/suvestines/kopijos`, `/organizacijos/kvietimas`, `/prisijungti/raktas`.
+  At the trial's numbers their counts would tell when one moderator, administrator, MP or office member was active.
+- **Referring sites:** the host only (lower case, without `www.` or a port), never the path or the query, and nothing
+  for the site's own pages; counted once per visitor (or account) and day, at most three sites per visitor, so one
+  client cannot fill the list. The screen shows them as visitors who came from each.
+- **Caps:** at most 2 000 pages and 500 referring sites a day, the most viewed first in each minute's batch; the rest
+  are counted together as "(kiti)" and "(kitos)". The same caps hold in memory, so a flood waits in bounded space.
+
+#### 8.27.2 How a visitor is counted, and what the stored salts allow
+
+- Each day, month and year has its own **random salt** (32 bytes, never made from a date or a key), one for visitors and
+  one for members. A visitor's hash is HMAC-SHA256 of the network and the user agent with the salt; a member's, of the
+  account's id. The hash goes into a **HyperLogLog sketch** of the period (2^14 registers, 16 KB, about 0.8 % standard
+  error; within about 1 % at the trial's numbers). No hash, address, user agent or account is written as such.
+- The salts and sketches of the periods under way are in `usage.sketch` (withheld from `lt2_readonly`). Every minute the
+  web host merges what it counted into them and writes the estimates into `usage.total`. At start it reads the stored
+  salts before anyone is counted; should the database be away, page views are counted and distinct visitors and members
+  wait until a write reaches it, so a restart or a deploy counts nobody twice. **When a period ends, its count is
+  written and its salt and sketch are deleted.**
+- **What this allows while a period lasts.** With the salt, someone holding a copy of the database can compute a
+  candidate's hash and look at its register: a "no" is certain, a "yes" is wrong only about n/16 384 of the time, so at
+  the trial's numbers it is nearly sure. For a visitor this needs the exact address and browser string. For members it
+  needs nothing: the account ids are all in `identity`, so the member sketches give an almost exact list of the accounts
+  active that day, month and year, and it outlives signing out, a session's end and the account's deletion until the
+  period ends (a year's sketch lasts up to twelve months). The sketch row is rewritten every minute, so two copies of the
+  database, or the WAL archive planned in section 9, show which registers changed in which minute. "Nothing links one
+  period to another" and "nothing can be tested" hold once the period has ended, for a copy taken after it.
+  [Decided by the owner on 2026-11-16: the members' year sketch is kept, with what it allows said in the privacy notice.]
+- **Now on the site:** distinct visitors and accounts with a page in the last five minutes, held in memory only, under a
+  salt of the process that is never stored. The referring sites already counted today are held the same way.
+- The finished counts (`usage.total`, `usage.page`, `usage.referrer`) are kept: they hold nothing about anyone, and they
+  are readable by `lt2_readonly`.
+
+#### 8.27.3 What the numbers cannot tell
+
+Said on the screen in a `details.more`:
+
+- many people behind one address (an office, a mobile carrier, the Seimas itself) with the same browser count once;
+  modern Chrome reports little about the system, so identical office computers look alike;
+- one person on two networks, in two browsers, or after a browser update counts twice;
+- a member counts as a visitor before signing in;
+- robots that pretend to be browsers count as visitors;
+- visitors and members are approximate (about 1 %); page views are exact; referring sites are visitors, not views;
+- staff, MP and office pages are not in the list, only in the totals.
+
+#### 8.27.4 The screen
+
+"Lankomumas" at `/administravimas/lankomumas`, for administrators in a staff-passkey session (the account item's
+"Lankomumas"); anyone else is told it is for them only. It reads `GET /api/v1/admin/usage?days=` (1, 7 or 30; anything
+else reads as 7, the screen's first view), which first writes what is counted so far. It shows: who is on the site now
+(visitors, members); the days as bars for visitors and for members, each with its highest day as the scale, and a table
+(visitors, members, views, robots' views); the months; the years; the most viewed pages and the referring sites of the
+chosen range. The lists begin at the first counted day, at most 30 days and 12 months back. Nothing on it is about a
+person.
+
+#### 8.27.5 Built as
+
+The module `Lt2.Usage` (schema `usage`, read and written by `lt2_app` only; the worker does not count): `UsageRules`
+and `Sketch` (pure, unit-tested), `UsageCounter` (in memory, a singleton of the web host) and its minute's write under
+an advisory lock, `UsageReports`. The host hands it every answered `GET` after authentication, with the route and its
+values (`Lt2.Web/Services/UsageServices.cs`); a failure to count is logged without the request and never touches the
+answer. With two web hosts (9.2, before production) each counts on its own: "now on the site" shows each host's share,
+and in a period's first minute each may make its own salt before one is stored, so a visitor seen by both then counts
+twice for that period.
+
+#### 8.27.6 Done when
+
+- A visitor's pages count once a day, month and year and every page counts as a view; two browsers behind one address
+  count as two; a signed-in member counts as the account and not as a visitor, whatever browser string it sends.
+- Robots, the API, errors, redirects, `HEAD` and prefetches are no visit; robots' pages are a number of their own.
+- A page is counted under its route; a link's token and the query never reach a stored path; staff and MP pages are not
+  listed; a referring site is its host only, once per visitor and day.
+- A restarted web host counts a visitor it already counted that day once, also when the database was away at its start.
+- An ended period keeps its count and loses its salt and sketch; the periods under way keep theirs.
+- Only an administrator in a staff session reads the numbers; the answer's fields are numbers, days, paths and hosts only.
+- The browser keeps nothing new (8.22.1's inventory unchanged; the storage tests pass).
 
 ## 9. Hosting and operations
 
@@ -4114,6 +4277,10 @@ Built on 2026-11-16:
   the change (6.2).
 - The terms and the privacy notice are kept correct as drafts by us as the site changes, and the lawyer reads them once,
   before going live, not per change (8.22).
+- The site counts its own use: visitors by IP address and browser, members by account, now, by day, month and year,
+  with pages and referring sites; no cookie, no script, no third party, no banner; salts kept until the period ends;
+  approximate numbers are enough (8.27). Members are counted by year as well, though the year's sketch lets anyone
+  holding the whole database list the accounts active that year until it ends (8.27.2).
 
 Designed, not built (8.23-8.25):
 
@@ -4154,6 +4321,23 @@ Designed, not built (8.23-8.25):
   now, after this branch is verified (11, "Follower counts"); the member's comes with 8.25. Two limits are the
   designer's proposals (below): counts, not rankings; and a follow never becomes a delegation by itself.
 
+**Decided by the owner on 2026-11-16: the analytics page (8.26)**
+
+- The page is built without delegation: the figures, the Seimas beside the members on closed bills, faction unity and
+  the member's own comparison; showing how many MPs took over their profile and setting factions side by side are
+  allowed (8.26.1).
+- "Kas Seime balsuoja taip, kaip prašote jūs" lists MPs in order of agreement for the member who asks, seen by nobody else: the one
+  exception to "no ranking or comparison of MPs by any number" (7.3, 8.26.4). Its heading, renamed after the review: "Kas
+  Seime balsuoja taip, kaip prašote jūs" (members do not vote).
+- The Seimas's majority is the majority of those who voted; a consensus counts as "for" (8.26.2).
+- The page is the fourth tab under "Projektai", "Analitika" (8.21).
+- One fixed sample of 20 for every number on the page, not a setting; below it, counts and "maža imtis" and no share
+  (8.26.2), faction unity included (after the review of 2026-11-16).
+- **Kept copies:** "I think we may cache this quite long, say per-session, with the personal sections like "who votes like
+  you" built asynchronously the first time the page is opened, and then saved for the whole session." Built as 8.26.6:
+  the public numbers kept for an hour (one copy for everyone per filter), the member's comparison made the first time
+  their page asks and kept in server memory for the member until they sign out or stop using it.
+
 **Proposed by the designer on 2026-11-16**
 
 Read by the owner without objection, so written as the rule (the alternative in brackets where there was one):
@@ -4189,6 +4373,7 @@ Built, awaiting the owner's word:
 | Email provider | An EU-owned service (for example Brevo or Scaleway) or Amazon SES in an EU region. Compare deliverability to `lrs.lt`, price, processor terms. | M0 |
 | How accounts are verified once registration is open | **Stay with email** and label numbers as email-confirmed accounts; or add **phone verification** (an EU provider such as Infobip or Sinch, or a Lithuanian bulk-SMS service; paid per message; Lithuanian numbers only would exclude people abroad); or wait for the EU Digital Identity Wallet. The public pages promise one account per confirmed phone number, so staying with email also means rewording them. | Before M2b |
 | CDN and DDoS protection | Bunny (EU) or Cloudflare. | Before M2b |
+| Legal reading of the usage statistics | The lawyer gives the legal basis of the site's own counting (8.27: IP address and browser hashed with a salt kept until the day, month or year ends; counts only; `Privacy.Basis.Fact2.Value` is "[bus įrašyta]") and says whether e-privacy Art. 5(3) applies to it. The EDPB's Guidelines 2/2023 bring tracking by IP address under 5(3) when the address goes to a third party for tracking across sites; ours is first-party, on one site, and keeps nothing beyond the period. If 5(3) applies after all, the counting stops or asks consent; it never becomes a banner by default. | Before going live |
 | Legal reading of the consent texts | A lawyer reads the positions consent texts together with the rule that writing a reason needs no consent (8.2): a reason is the author's own deliberate publication, public with name and chosen side, and withdrawable. **[Owner, 2026-11-16: until going live we keep the terms, the privacy notice and the consent texts correct as drafts as the site changes; the lawyer reads them all once, before going live, not per change.]** When comments, "Sutinku" and the public profile are built, these keys change with them (a new terms version, 8.22.2): the terms (`LegalText.resx`: `Terms.Purpose.2`, `Terms.Publish.2`, `Terms.Publish.5`, `Terms.Moderation.1`, `Terms.Moderation.2`, `Terms.Leave.1`) and the privacy notice (`Privacy.Data.Fact2.Value`, `Privacy.Data.Fact5.Value`, `Privacy.Rights.Fact5.Value`) name what a member publishes or allows: comments, "Sutinku" under the name, the public profile with "Apie mane", being followed; the positions consent texts (`UiText.resx` `PositionConsent.Text`, `LegalText.resx` `Privacy.Positions.3`, which name "Man svarbu") and the methodology's "Kas matoma viešai, o kas ne" (`AppealText.resx` `Method.Privacy` and its part) say in one sentence that "Man svarbu" stays private (it tells the side) while "Sutinku" on a comment is public under the name and tied to no side (8.23.10); a new consent text, the "Viešas profilis" form's (kind `public-profile`), with its own version, saying that the page
 is indexed, that others may follow and that the number of followers is shown (8.25.1); the privacy notice says a
 search engine's copy outlives switching the profile off. When follower numbers are built (8.11.2), the privacy notice says that how many follow a bill, an MP, an organisation or a member is public and who follows is not: `Privacy.Data.Fact6.Value` (today "Ką sekate, mato tik jūs") gains that each follow is counted in a public number naming nobody; to check with it: `Terms.Purpose.2` (following as what an account is for), `Terms.Leave.1` (deleting the account lowers the shared numbers, the follower numbers among them) and `Privacy.Rights.Fact5.Value` (unfollowing); a change to a `Terms.*` text is a new terms version (8.22.2). The methodology's `AppealText.resx` `Method.Privacy.1` and `Method.Privacy.Follow` (`/metodika#sekimas`) say what the number is and is not. Questions for the reading: comments carry no side and need no consent, as reasons (8.23.1); a public "Sutinku" is opinion data the person makes public themself (whether GDPR Art. 9(2)(e) is the ground, and whether the inline sentence suffices); a public profile gathers one person's published opinions in one place, by their choice (8.25), and "Apie mane" can state a political opinion or membership. | Once, before going live |
@@ -4223,6 +4408,8 @@ search engine's copy outlives switching the profile off. When follower numbers a
 | A followed member watched and pressed (8.25.5) | The profile switch is the consent to being followed and ends every follow at once; only the number of followers shows, nobody (the person included) is told who follows; harassment in comments answered by reports, hiding and the writing restriction. What stays: one particular follower cannot be blocked without showing followers. |
 | The product drifts from "people tell MPs" towards a social network (8.25, 8.11.2) | Chosen by the owner on 2026-11-16, with a number of followers on every thing that can be followed, members included. The number stands only on the thing's own page and nothing is ranked, sorted or listed by it (proposed, 8.11.2); who follows is invisible to all but the follower; summaries carry no follower number. What stays: a visible count invites collecting followers, which is what a social network rewards. |
 | MPs' follower numbers read as a popularity score or a scorecard (7.1, 8.11.2) | Before 2026-11-16 the rule was that no follower count is shown, so the question did not arise; the owner chose the numbers as delegation's predecessor. What now stands between a number and a scorecard: no ordering (no list sorted by it, no "most followed", no number in list rows), no comparison (no total per faction or party, nothing set beside another MP's number), and the note that these are self-selected users who asked for emails, not supporters and not a representative poll (all proposed, 8.11.2). What stays: anyone can open profiles one by one and build the table elsewhere; the site does not make it. |
+| A bill rejected or withdrawn before its adoption stage is never compared on the analytics page (8.26.7): 8.1 says its record closes then, but the code closes a record only at the adoption-stage vote, which such a bill never gets | Said in 8.26.7; the comparison covers bills with an adoption-stage vote. Closing on an earlier rejection needs the open data to say so (the bill's status, 5.1), which is not read yet. |
+| A member's comparison kept in server memory (8.26.6) reveals their sides to anyone who can read the web process's memory | Kept only in memory, never in a table, a log or the browser, bounded to 10 000 members and dropped after 12 idle hours, at sign-out, account deletion and withdrawal of the positions consent; the same exposure as the sides themselves in the database. |
 | Running costs outlive enthusiasm (the old platform's fate) | One VPS, no paid infrastructure beyond email and backup storage. |
 | Stage 2 ships before stage 3 and the public pages say otherwise | Update the pages when this order is agreed (below). |
 

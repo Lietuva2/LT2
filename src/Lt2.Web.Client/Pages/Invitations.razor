@@ -36,7 +36,7 @@ else
     <section class="sheet stack" aria-labelledby="inv-days">
         <h2 id="inv-days">@L.Format("Inv.Days", Display.Day(stats.From), Display.Day(stats.To))</h2>
         <p class="num" id="inv-total">@L.Format("Inv.Total", Display.Number(stats.Total), Display.Number(stats.WithoutCode))</p>
-        <DayBars Days="stats.Days" Label="@L["Inv.Chart"]" />
+        <DayBars Days="@Bars(stats.Days)" Label="@L["Inv.Chart"]" />
         <details class="more stack stack--tight">
             <summary class="linkish small">@L["Inv.Table"]</summary>
             <table class="table num" id="inv-days-table">
@@ -82,7 +82,7 @@ else
                     </div>
                     @if (item.Completed > 0)
                     {
-                        <DayBars Days="item.Days" Label="@L.Format("Inv.CodeChart", item.Label ?? L["Inv.Deleted"])" />
+                        <DayBars Days="@Bars(item.Days)" Label="@L.Format("Inv.CodeChart", item.Label ?? L["Inv.Deleted"])" />
                     }
                     @if (!item.Replaced)
                     {
@@ -130,6 +130,9 @@ else
             Stats = stats.Value;
         }
     }
+
+    private static IReadOnlyList<(DateOnly Day, int Value)> Bars(IEnumerable<InvitationDayResponse> days) =>
+        days.Select(d => (d.Day, d.Completed)).ToList();
 
     private Task FindAsync() => RunAsync(() => LoadAsync(_find));
 

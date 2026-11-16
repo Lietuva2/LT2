@@ -67,6 +67,9 @@ public static class ApiRoutes
         public const string SwitchOnInvitation = Prefix + "/admin/invitations/{id:guid}/switch-on";
 
         public static string SwitchInvitation(Guid id, bool on) => $"{Invitations}/{id}/{(on ? "switch-on" : "switch-off")}";
+
+        /// <summary>Design 8.27: the site's own usage statistics (<c>?days=</c> for the pages and referring sites).</summary>
+        public const string Usage = Prefix + "/admin/usage";
     }
 }
 

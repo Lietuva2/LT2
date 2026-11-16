@@ -3,6 +3,7 @@
      Seimas response. {{day:N}} is today plus N days (yyyy-MM-dd), so the local agenda page has votes from the last week. --><SeimoInformacija>
   <SeimoSesija sesijos_id="99000102" pavadinimas="Rudens sesija" data_nuo="2026-09-10" data_iki="">
     <SeimoPosėdis posėdžio_id="99001101" numeris="241" tipas="Rytinis" pradžia="2026-09-15 10:00" pabaiga="2026-09-15 13:15"/>
+    <SeimoPosėdis posėdžio_id="99001103" numeris="258" tipas="Rytinis" pradžia="{{day:-9}} 10:00" pabaiga="{{day:-9}} 12:40"/>
     <SeimoPosėdis posėdžio_id="99001102" numeris="262" tipas="Rytinis" pradžia="{{day:-2}} 10:00" pabaiga="{{day:-2}} 13:05"/>
   </SeimoSesija>
 </SeimoInformacija>

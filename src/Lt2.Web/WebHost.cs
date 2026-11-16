@@ -12,6 +12,7 @@ using Lt2.Hosting;
 using Lt2.Identity;
 using Lt2.Notifications;
 using Lt2.Parliament;
+using Lt2.Usage;
 using Lt2.SharedKernel.Persistence;
 using Lt2.Web.Client;
 using Lt2.Web.Components;
@@ -50,6 +51,8 @@ internal static class WebHost
         services.AddOutboundAllowlist(configuration);
         services.AddAiAssistant(configuration);
         services.AddAppealsModule();
+        services.AddUsageModule();
+        services.AddUsageCounting();
         RequireKeyEncryptionOutsideDevelopment(builder);
 
         // Security plumbing (design 6.4).
@@ -89,6 +92,7 @@ internal static class WebHost
         services.AddScoped<MyBillsReads>();
         services.AddScoped<TakingSides>();
         services.AddScoped<Lt2.Api.Contracts.Me.IMyBillsApi, ServerMyBillsApi>();
+        services.AddSingleton<AnalyticsCopies>();
         services.AddScoped<AnalyticsReads>();
         services.AddScoped<MyAgreementReads>();
         services.AddScoped<Lt2.Api.Contracts.Analytics.IAnalyticsApi, ServerAnalyticsApi>();
@@ -97,6 +101,7 @@ internal static class WebHost
         services.AddSingleton<FeedbackLimiter>();
         services.AddScoped<Lt2.Api.Contracts.Feedback.IFeedbackApi, ServerFeedbackApi>();
         services.AddScoped<IAdminApi, ServerAdminApi>();
+        services.AddScoped<Lt2.Api.Contracts.Admin.IUsageApi, ServerUsageApi>();
         services.AddScoped<Lt2.Api.Contracts.Digests.IDigestsApi, ServerDigestsApi>();
         services.AddScoped<MpMailHost>();
         services.AddScoped<Lt2.Api.Contracts.Digests.IMpMailApi, ServerMpMailApi>();
@@ -146,6 +151,10 @@ internal static class WebHost
         });
 
         app.UseAuthentication();
+
+        // Design 8.27: the site's own usage statistics, after authentication so a signed-in session counts its account. It
+        // looks at a request only when it is answered; static files never reach it (they are answered by routing).
+        app.UseUsageCounting();
 
         // Design 8.22.2: a member who has not accepted the terms in force may write nothing but the exempt routes; before
         // authorization, so the refusal is the same whatever else the route requires.

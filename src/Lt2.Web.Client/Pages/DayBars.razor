@@ -1,24 +1,23 @@
-@using Lt2.Api.Contracts.Me
-
-@* Registrations per day as bars, drawn as SVG on the server (no script library; readable without JavaScript). Each bar
-   has a title with its day and number; the numbers are also in a table beside it. *@
+@* Numbers per day as bars (registrations, design 6.2; visitors and members, design 8.27), drawn as SVG on the server (no
+   script library; readable without JavaScript). Each bar has a title with its day and number; the numbers are also in a
+   table beside it. *@
 @if (Days.Count > 0)
 {
-    var max = Math.Max(1, Days.Max(d => d.Completed));
+    var max = Math.Max(1, Days.Max(d => d.Value));
     <svg class="daybars" viewBox="0 0 @(Days.Count * 10) 60" preserveAspectRatio="none" role="img" aria-label="@Label">
         @for (var i = 0; i < Days.Count; i++)
         {
             var day = Days[i];
-            var height = 58.0 * day.Completed / max;
+            var height = 58.0 * day.Value / max;
             <rect class="splitbar__for" x="@(i * 10 + 1)" y="@F(60 - height)" width="8" height="@F(height)">
-                <title>@day.Day.ToString("yyyy-MM-dd", System.Globalization.CultureInfo.InvariantCulture): @day.Completed</title>
+                <title>@Display.Day(day.Day): @day.Value</title>
             </rect>
         }
     </svg>
 }
 
 @code {
-    [Parameter, EditorRequired] public IReadOnlyList<InvitationDayResponse> Days { get; set; } = [];
+    [Parameter, EditorRequired] public IReadOnlyList<(DateOnly Day, int Value)> Days { get; set; } = [];
 
     [Parameter, EditorRequired] public string Label { get; set; } = "";
 

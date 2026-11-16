@@ -3,7 +3,7 @@
 @inherits InteractiveBase<AnalyticsUi>
 @inject IAnalyticsApi Api
 
-@* "Kas balsuoja taip kaip jūs" (design 8.26.4): the caller's own sides on closed bills against the factions' positions and
+@* "Kas Seime balsuoja taip, kaip prašote jūs" (design 8.26.4): the caller's own sides on closed bills against the factions' positions and
    the MPs' public ballots, asked only in the browser and only for the caller, so nothing of it is in the page's HTML and
    nobody else sees it. Factions first, then MPs; those with 20 common votes or more by their share, the rest by name with
    "maža imtis" (owner, 2026-11-16). No controls: the list of every MP opens with the browser's own disclosure. *@
@@ -85,15 +85,16 @@ else if (Message is not null)
 
     protected override async Task OnInitializedAsync()
     {
-        // Only in the browser: while the server prerenders, the part is empty (design 8.26.4).
-        if (!RendererInfo.IsInteractive)
-        {
-            return;
-        }
-
+        // A visitor gets the sign-in link already in the server's HTML, so it works without JavaScript too. A member's
+        // comparison is asked only in the browser: while the server prerenders, the part is empty (design 8.26.4).
         if (!await IsSignedInAsync())
         {
             _visitor = true;
+            return;
+        }
+
+        if (!RendererInfo.IsInteractive)
+        {
             return;
         }
 

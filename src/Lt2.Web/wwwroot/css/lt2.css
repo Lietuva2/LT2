@@ -503,7 +503,10 @@ body > .page { width: 100%; }
 /* Analytics (design 8.26): the four figures, the dot plot, the faction and agreement bars. SVG drawn on the server or in
    the island, coloured here (the content security policy allows no inline styles). */
 .analytics-figures { display: grid; grid-template-columns: repeat(auto-fit, minmax(13rem, 1fr)); gap: var(--sp-5); }
-.dotplot { display: block; width: 100%; height: auto; }
+/* On a phone the plot keeps a readable size and scrolls sideways in its own box; the page never does. */
+.dotplot-wrap { overflow-x: auto; }
+.dotplot { display: block; width: 100%; min-width: 30rem; height: auto; }
+.analytics-table { min-width: 34rem; }
 .dotplot text { fill: var(--ink-2); font-size: 12px; }
 .dotplot__axis { stroke: var(--rule); stroke-width: 1; stroke-dasharray: 2 3; }
 .dotplot__half { stroke: var(--ink-2); stroke-width: 1.5; }
@@ -898,3 +901,6 @@ body { padding-block-end: 4.5rem; }
   #storage-inventory td { display: block; padding: var(--sp-1) 0; border: 0; }
   #storage-inventory td::before { content: attr(data-label) ": "; font-weight: 600; color: var(--ink-2); }
 }
+
+/* Design 8.27: "Lankomumas". A long path or host wraps, so the number beside it stays on a phone's screen. */
+.usage-name { overflow-wrap: anywhere; }

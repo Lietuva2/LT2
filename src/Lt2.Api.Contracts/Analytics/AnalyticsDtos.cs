@@ -37,7 +37,8 @@ public static class AnalyticsRoutes
 /// <summary>
 /// Design 8.26.1: the public analytics, the same for everyone. <paramref name="Year"/> is the year shown, null for the whole
 /// term; <paramref name="Years"/> are the years the period may be (newest first). <paramref name="SmallSample"/> is the
-/// sample under which no share is shown (20).
+/// sample under which no share is shown (20). <paramref name="CountedAt"/>: when these numbers were counted (they are kept
+/// for up to an hour, design 8.26.6).
 /// </summary>
 public sealed record AnalyticsResponse(
     string TermName,
@@ -45,6 +46,7 @@ public sealed record AnalyticsResponse(
     int? Year,
     bool OlderAccounts,
     int SmallSample,
+    DateTimeOffset CountedAt,
     AnalyticsFiguresResponse Figures,
     IReadOnlyList<BillComparisonResponse> Bills,
     IReadOnlyList<FactionUnityResponse> Factions);
@@ -55,7 +57,8 @@ public sealed record AnalyticsFiguresResponse(
 
 /// <summary>
 /// A closed bill of the period with at least one position (design 8.26.1–2), the latest closing vote first.
-/// <paramref name="MembersShareFor"/> only from 20 positions; <paramref name="Dot"/>: it stands in the plot.
+/// <paramref name="MembersShareFor"/> only from 20 positions; <paramref name="Dot"/>: it stands in the plot;
+/// <paramref name="OfficialNote"/>: the Seimas's own note on the result (for example that per-MP votes do not match the totals).
 /// </summary>
 public sealed record BillComparisonResponse(
     string Number,
@@ -70,9 +73,13 @@ public sealed record BillComparisonResponse(
     decimal? MembersShareFor,
     bool Compared,
     bool? Agreed,
-    bool Dot);
+    bool Dot,
+    string? OfficialNote);
 
-/// <summary>A faction's unity over the period (design 8.26.3); <paramref name="SmallSample"/>: fewer than 20 votes with a position.</summary>
+/// <summary>
+/// A faction's unity over the period (design 8.26.3). <paramref name="SmallSample"/>: fewer than 20 votes with a position, and
+/// then <paramref name="Share"/> is null (only the counts are shown, with "maža imtis").
+/// </summary>
 public sealed record FactionUnityResponse(
     string Slug, string Name, int Seats, int VotesWithPosition, int FreeVotes, decimal? Share, bool SmallSample, IReadOnlyList<SplitVoteResponse> MostSplit);
 

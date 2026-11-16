@@ -45,6 +45,9 @@ public static class Display
 
     public static string Day(DateOnly day) => day.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture);
 
+    /// <summary>A month as numbers, <c>yyyy-MM</c>.</summary>
+    public static string Month(DateOnly day) => day.ToString("yyyy-MM", CultureInfo.InvariantCulture);
+
     /// <summary>The Vilnius day of a moment.</summary>
     public static string Day(DateTimeOffset at) => Day(DayOf(at));
 

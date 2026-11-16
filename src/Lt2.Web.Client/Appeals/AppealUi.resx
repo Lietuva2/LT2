@@ -814,4 +814,41 @@
   <data name="Supp.RemoveAddress" xml:space="preserve"><value>Pašalinti šį adresą</value></data>
   <data name="Supp.Added" xml:space="preserve"><value>Adresas įrašytas į sąrašą.</value></data>
   <data name="Supp.Removed" xml:space="preserve"><value>Įrašas pašalintas.</value></data>
+  <data name="Usage.PageTitle" xml:space="preserve"><value>Lankomumas · Administravimas · Lietuva 2.0</value></data>
+  <data name="Usage.Title" xml:space="preserve"><value>Lankomumas</value></data>
+  <data name="Usage.Lead" xml:space="preserve"><value>Kiek žmonių lankosi svetainėje. Skaičiuojame savo serveryje, be slapukų ir scenarijų; čia tik bendri skaičiai, nieko apie konkretų žmogų.</value></data>
+  <data name="Usage.About" xml:space="preserve"><value>Kaip skaičiuojama ir ko skaičiai nerodo</value></data>
+  <data name="Usage.About.1" xml:space="preserve"><value>Lankytojas – IP adresas kartu su naršyklės aprašu (IPv6 adreso – tik tinklo dalis), narys – paskyra, kai puslapis atvertas prisijungus. Jie su atsitiktiniais dienos, mėnesio ir metų raktais sudedami į santrauką, iš kurios skaičiuojama, kiek buvo skirtingų. Kol laikotarpis nesibaigė, raktas ir santrauka saugomi duomenų bazėje: kas turėtų visą duomenų bazę, galėtų patikrinti, ar konkreti paskyra ar adresas su naršykle buvo užskaityti. Laikotarpiui pasibaigus raktas ir santrauka ištrinami, ir to patikrinti nebeįmanoma.</value></data>
+  <data name="Usage.About.2" xml:space="preserve"><value>Skaičiuojami tik sėkmingai atverti puslapiai, ne API užklausos, failai ar nukreipimai, ir ne tie, kuriuos naršyklė parsisiuntė iš anksto pati. Lankytojų ir narių skaičiai apytiksliai (paklaida – apie 1 %), peržiūrų – tikslūs. Prie kitų svetainių – kiek lankytojų per dieną iš jų atėjo (vieno lankytojo – ne daugiau kaip trys svetainės).</value></data>
+  <data name="Usage.About.3" xml:space="preserve"><value>Ko skaičiai nerodo: daug žmonių, besijungiančių per tą patį adresą (biuras, mobiliojo ryšio operatorius, Seimas), su vienodomis naršyklėmis skaičiuojami kaip vienas (naujos „Chrome“ versijos apie sistemą praneša mažai, todėl vienodi biuro kompiuteriai atrodo vienodai); tas pats žmogus kitame tinkle ar kita naršykle – kaip du; narys, kol neprisijungė, skaičiuojamas kaip lankytojas; robotai, kurie neprisistato, – kaip lankytojai.</value></data>
+  <data name="Usage.Online" xml:space="preserve"><value>Dabar svetainėje</value></data>
+  <data name="Usage.OnlineCounts" xml:space="preserve"><value>Lankytojų: {0} · Narių: {1}</value></data>
+  <data name="Usage.OnlineNote" xml:space="preserve"><value>Tie, kas atvėrė puslapį per pastarąsias 5 minutes.</value></data>
+  <data name="Usage.Days" xml:space="preserve"><value>Per dieną, {0}–{1}</value></data>
+  <data name="Usage.VisitorsChart" xml:space="preserve"><value>Lankytojai per dieną</value></data>
+  <data name="Usage.MembersChart" xml:space="preserve"><value>Nariai per dieną</value></data>
+  <data name="Usage.Table" xml:space="preserve"><value>Skaičiai lentele</value></data>
+  <data name="Usage.Day" xml:space="preserve"><value>Diena</value></data>
+  <data name="Usage.Month" xml:space="preserve"><value>Mėnuo</value></data>
+  <data name="Usage.Year" xml:space="preserve"><value>Metai</value></data>
+  <data name="Usage.Visitors" xml:space="preserve"><value>Lankytojai</value></data>
+  <data name="Usage.Members" xml:space="preserve"><value>Nariai</value></data>
+  <data name="Usage.Views" xml:space="preserve"><value>Peržiūros</value></data>
+  <data name="Usage.Crawlers" xml:space="preserve"><value>Robotų peržiūros</value></data>
+  <data name="Usage.Months" xml:space="preserve"><value>Per mėnesį</value></data>
+  <data name="Usage.Years" xml:space="preserve"><value>Per metus</value></data>
+  <data name="Usage.Range" xml:space="preserve"><value>Puslapiai ir iš kur ateinama</value></data>
+  <data name="Usage.Range.1" xml:space="preserve"><value>Šiandien</value></data>
+  <data name="Usage.Range.7" xml:space="preserve"><value>7 dienos</value></data>
+  <data name="Usage.Range.30" xml:space="preserve"><value>30 dienų</value></data>
+  <data name="Usage.Pages" xml:space="preserve"><value>Dažniausiai atverti puslapiai</value></data>
+  <data name="Usage.Path" xml:space="preserve"><value>Adresas</value></data>
+  <data name="Usage.Referrers" xml:space="preserve"><value>Iš kitų svetainių</value></data>
+  <data name="Usage.Host" xml:space="preserve"><value>Svetainė</value></data>
+  <data name="Usage.NoPages" xml:space="preserve"><value>Atvertų puslapių nėra.</value></data>
+  <data name="Usage.NoReferrers" xml:space="preserve"><value>Iš kitų svetainių neatėjo niekas.</value></data>
+  <data name="Usage.About.4" xml:space="preserve"><value>Darbuotojų, Seimo narių ir jų biurų puslapiai, laiškų nuorodos ir kvietimai į organizaciją į puslapių sąrašą neįtraukiami (jų peržiūros skaičiuojamos tik bendrai), kad iš jų nebūtų matyti, kada kuris žmogus lankėsi.</value></data>
+  <data name="Usage.Refused" xml:space="preserve"><value>Šį puslapį gali matyti tik administratorius, prisijungęs darbuotojo prieigos raktu.</value></data>
+  <data name="Usage.ChartMost" xml:space="preserve"><value>Daugiausia per dieną: {0} ({1}).</value></data>
+  <data name="Usage.Referred" xml:space="preserve"><value>Atėjo lankytojų</value></data>
 </root>

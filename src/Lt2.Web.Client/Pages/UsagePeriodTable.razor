@@ -1,0 +1,40 @@
+@using Lt2.Api.Contracts.Admin
+@inject IStringLocalizer<AppealUi> L
+
+@* Design 8.27: days, months or years of the usage statistics as a table, newest first. "Puslapiai" are the pages people
+   opened (visitors and members together); robots' pages are counted apart and in no other column. *@
+<div class="table-wrap">
+    <table class="table num" id="@Id">
+        <thead>
+            <tr>
+                <th scope="col">@First</th>
+                <th scope="col">@L["Usage.Visitors"]</th>
+                <th scope="col">@L["Usage.Members"]</th>
+                <th scope="col">@L["Usage.Views"]</th>
+                <th scope="col">@L["Usage.Crawlers"]</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var row in Rows)
+            {
+                <tr @key="row.Starts">
+                    <td class="nowrap">@Name(row.Starts)</td>
+                    <td>@Display.Number(row.Visitors)</td>
+                    <td>@Display.Number(row.Members)</td>
+                    <td>@Display.Number(row.VisitorViews + row.MemberViews)</td>
+                    <td>@Display.Number(row.CrawlerViews)</td>
+                </tr>
+            }
+        </tbody>
+    </table>
+</div>
+
+@code {
+    [Parameter, EditorRequired] public IReadOnlyList<UsagePeriodResponse> Rows { get; set; } = [];
+
+    [Parameter, EditorRequired] public string Id { get; set; } = "";
+
+    [Parameter, EditorRequired] public string First { get; set; } = "";
+
+    [Parameter, EditorRequired] public Func<DateOnly, string> Name { get; set; } = d => d.ToString();
+}

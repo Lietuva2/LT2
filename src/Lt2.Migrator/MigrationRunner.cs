@@ -1,6 +1,7 @@
 using System.Globalization;
 using Lt2.Appeals;
 using Lt2.Audit;
+using Lt2.Usage;
 using Lt2.Identity;
 using Lt2.Notifications;
 using Lt2.Parliament;
@@ -160,8 +161,8 @@ public static class MigrationRunner
                 case "--demo-appeal":
                     var demo = await DemoAppeal.RunAsync(configuration, connectionString, TimeProvider.System, cancellationToken);
                     Log.Information(
-                        "Demonstration record on {Bill}: {Status}; invented accounts created: {Created}; AI description on {AiBill}: {AiStatus}; invented organisations created: {Organisations}; invented accounts that accepted the terms of use now: {Terms}",
-                        DemoAppeal.Bill, demo.Status, demo.AccountsCreated, DemoAppeal.AiBill, demo.AiDescription, demo.Organisations, demo.TermsAccepted);
+                        "Demonstration record on {Bill}: {Status}; invented accounts created: {Created}; AI description on {AiBill}: {AiStatus}; invented organisations created: {Organisations}; invented accounts that accepted the terms of use now: {Terms}; closed demonstration bill {ClosedBill}: {Closed}",
+                        DemoAppeal.Bill, demo.Status, demo.AccountsCreated, DemoAppeal.AiBill, demo.AiDescription, demo.Organisations, demo.TermsAccepted, DemoAppeal.ClosedBill, demo.ClosedBill);
                     break;
                 case "--local-code-limits":
                     var raised = await LocalCodeLimits.RunAsync(configuration, connectionString, cancellationToken);
@@ -207,6 +208,7 @@ public static class MigrationRunner
         services.AddAuditModule();
         services.AddParliamentModule();
         services.AddAppealsModule();
+        services.AddUsageModule();
         using var provider = services.BuildServiceProvider();
         return provider.GetServices<IModuleDatabase>().ToList();
     }

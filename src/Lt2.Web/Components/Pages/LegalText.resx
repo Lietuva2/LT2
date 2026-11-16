@@ -88,10 +88,14 @@
   <data name="Privacy.Data.Fact9.Value" xml:space="preserve"><value>Tai, ką parašote komandai. Su paskyra susiejama tik tada, kai pažymite „Galite man atsakyti“.</value></data>
   <data name="Privacy.Data.Fact10.Term" xml:space="preserve"><value>Techniniai žurnalai</value></data>
   <data name="Privacy.Data.Fact10.Value" xml:space="preserve"><value>Kad pastebėtume gedimus ir piktnaudžiavimą. IP adresas įrašomas tik kaip neatkuriama santrauka su reguliariai keičiamu raktu; el. pašto adresų ir pozicijų žurnaluose nėra.</value></data>
+  <data name="Privacy.Data.Fact11.Term" xml:space="preserve"><value>Lankomumo skaičiai</value></data>
+  <data name="Privacy.Data.Fact11.Value" xml:space="preserve"><value>Kad žinotume, kiek žmonių naudojasi svetaine. Skaičiuojame patys savo serveryje: iš IP adreso ir naršyklės aprašo (kokia naršyklė ir sistema), o prisijungus – iš paskyros, su atsitiktiniais dienos, mėnesio ir metų raktais sudarome santrauką, iš kurios skaičiuojame, kiek buvo skirtingų lankytojų ir narių. Kol diena, mėnuo ar metai nesibaigė, raktas ir santrauka saugomi, ir turint visą duomenų bazę iš jų būtų galima patikrinti, ar konkretus adresas su naršykle ar paskyra (ir jau ištrinta) tuo laikotarpiu buvo užskaityti; kai laikotarpis baigiasi, jie ištrinami ir lieka tik bendri skaičiai. Taip pat saugome, kiek kartų per dieną atvertas kiekvienas puslapis ir iš kurių svetainių ateita (tik svetainės pavadinimas). Kuriuos puslapius atvėrėte, nesaugome; skaičius mato tik administratoriai; naršyklėje nieko neįrašome ir nieko neperduodame kitiems.</value></data>
   <data name="Privacy.Basis" xml:space="preserve"><value>Kuo remdamiesi tvarkome duomenis</value></data>
   <data name="Privacy.Basis.1" xml:space="preserve"><value>Paskyrą ir tai, be ko ja naudotis neįmanoma, tvarkome pagal naudojimo taisykles, su kuriomis sutinkate registruodamiesi. Pozicijas ir partiją – tik pagal jūsų aiškų sutikimą.</value></data>
   <data name="Privacy.Basis.Fact1.Term" xml:space="preserve"><value>Techninių žurnalų teisinis pagrindas</value></data>
   <data name="Privacy.Basis.Fact1.Value" xml:space="preserve"><value>[bus įrašyta]</value><comment>PLACEHOLDER (lawyer): the legal basis of the technical logs (hashed addresses, 30 days); the design names none.</comment></data>
+  <data name="Privacy.Basis.Fact2.Term" xml:space="preserve"><value>Lankomumo skaičiavimo teisinis pagrindas</value></data>
+  <data name="Privacy.Basis.Fact2.Value" xml:space="preserve"><value>[bus įrašyta]</value><comment>PLACEHOLDER (lawyer): the legal basis of the site's own usage statistics (design 8.27: IP address and user agent hashed with a salt of the day, month and year, kept until the period ends; aggregate counts only), and whether e-privacy Art. 5(3) applies to it (design 12).</comment></data>
   <data name="Privacy.Positions" xml:space="preserve"><value>Jūsų pozicijos</value></data>
   <data name="Privacy.Positions.1" xml:space="preserve"><value>Ar prašote balsuoti už, ar prieš, yra jūsų politinė nuomonė – ypatingai saugomi asmens duomenys. Ją saugome tik gavę jūsų aiškų sutikimą, kurio paprašome prieš pirmą kartą nurodant, ko prašote.</value></data>
   <data name="Privacy.Positions.2" xml:space="preserve"><value>Jūsų pozicijos niekam nerodome: nei kitiems naudotojams, nei moderatoriams, nei administratoriams, nei Seimo nariams. Viešai ir suvestinėse skelbiami tik bendri skaičiai, o partijų palaikytojų skaičiai – tik kai grupėje bent 20 žmonių. Pozicijų keitimo istorijos nesaugome: pokyčiai skaičiuojami iš bendrų kiekvienos dienos skaičių.</value></data>
@@ -130,6 +134,8 @@
   <data name="Privacy.Retention.Fact9.Value" xml:space="preserve"><value>Lieka ir ištrynus jų paskyrą, kad būtų aišku, kas ką padarė; prie jų lieka tik paskyros numeris, kuris nebeveda nei prie vardo, nei prie adreso.</value></data>
   <data name="Privacy.Retention.Fact10.Term" xml:space="preserve"><value>Suvestinės</value></data>
   <data name="Privacy.Retention.Fact10.Value" xml:space="preserve"><value>Jau sudarytų suvestinių bendri skaičiai nesikeičia ir ištrynus paskyrą: tai įrašas, ką gavo Seimo nariai.</value></data>
+  <data name="Privacy.Retention.Fact11.Term" xml:space="preserve"><value>Lankomumo skaičiai</value></data>
+  <data name="Privacy.Retention.Fact11.Value" xml:space="preserve"><value>Laikotarpio raktas ir santrauka saugomi, kol baigiasi diena, mėnuo ar metai (metų – iki 12 mėnesių), tada ištrinami. Bendri skaičiai lieka: juose nieko apie atskirą žmogų.</value></data>
   <data name="Privacy.Rights" xml:space="preserve"><value>Jūsų teisės ir kaip jomis naudotis</value></data>
   <data name="Privacy.Rights.1" xml:space="preserve"><value>Turite teisę susipažinti su savo duomenimis, juos gauti, ištaisyti ar ištrinti, atšaukti sutikimą, apriboti duomenų tvarkymą ir jam prieštarauti. Daugumą to padarysite patys paskyros puslapyje:</value></data>
   <data name="Privacy.Rights.Fact1.Term" xml:space="preserve"><value>Gauti savo duomenis</value></data>
@@ -151,7 +157,7 @@
   <data name="Privacy.Complaints.Fact1.Term" xml:space="preserve"><value>Inspekcijos kontaktai</value></data>
   <data name="Privacy.Complaints.Fact1.Value" xml:space="preserve"><value>[bus įrašyta]</value><comment>PLACEHOLDER (owner/lawyer): the State Data Protection Inspectorate's address, email and website, checked at the time of publishing.</comment></data>
   <data name="Privacy.Storage" xml:space="preserve"><value>Slapukai ir naršyklės atmintis</value></data>
-  <data name="Privacy.Storage.1" xml:space="preserve"><value>Naršyklėje saugome tik tai, kas būtina, kad svetainė veiktų taip, kaip prašote. Nenaudojame analitikos, reklamos ar sekimo slapukų, kitų svetainių scenarijų, šriftų ar įterpinių, todėl sutikimo slapukams neklausiame. Štai viskas, ką saugome:</value></data>
+  <data name="Privacy.Storage.1" xml:space="preserve"><value>Naršyklėje saugome tik tai, kas būtina, kad svetainė veiktų taip, kaip prašote. Nenaudojame jokių analitikos, reklamos ar sekimo slapukų, kitų svetainių scenarijų, šriftų ar įterpinių, todėl sutikimo slapukams neklausiame. Lankomumą skaičiuojame savo serveryje, naršyklėje nieko neįrašydami. Štai viskas, ką saugome:</value></data>
   <data name="Privacy.Changes" xml:space="preserve"><value>Pakeitimai</value></data>
   <data name="Privacy.Changes.1" xml:space="preserve"><value>Pakeistas pranešimas gauna naują versiją ir datą; ji rodoma šio puslapio viršuje.</value></data>
 

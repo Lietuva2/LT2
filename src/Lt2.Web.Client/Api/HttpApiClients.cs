@@ -301,3 +301,10 @@ internal sealed class HttpMyBillsApi(ApiHttp http) : IMyBillsApi
         return http.SendAsync<MyBillsResponse>(HttpMethod.Get, ApiRoutes.Me.Bills + "?" + query.ToQueryString(), null, cancellationToken);
     }
 }
+
+/// <summary>The browser's <see cref="IUsageApi"/> (design 8.27).</summary>
+internal sealed class HttpUsageApi(ApiHttp http) : IUsageApi
+{
+    public Task<ApiResult<UsageResponse>> GetAsync(int days = UsageRoutes.DefaultRange, CancellationToken cancellationToken = default) =>
+        http.SendAsync<UsageResponse>(HttpMethod.Get, UsageRoutes.Api(days), null, cancellationToken);
+}

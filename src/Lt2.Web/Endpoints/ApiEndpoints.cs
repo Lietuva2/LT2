@@ -83,6 +83,7 @@ internal static class ApiEndpoints
         GetMyRestrictionEndpoint.Map(api);
         Me.InvitationEndpoints.Map(api);
         Admin.InvitationEndpoints.Map(api);
+        Admin.UsageEndpoint.Map(api);
         Feedback.FeedbackEndpoints.Map(api);
         ReportEndpoint.Map(api);
         FlagDateEndpoint.Map(api);

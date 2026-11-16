@@ -834,6 +834,15 @@ internal sealed class AppealsService(
         return closed.Select(r => new ClosedRecordFacts(r.BillNumber, r.ClosingVoteId!.Value, r.ClosedAt!.Value, counts[r.Id])).ToList();
     }
 
+    public async Task<string> ClosedRecordsVersionAsync(CancellationToken cancellationToken)
+    {
+        await using var db = await contexts.CreateDbContextAsync(cancellationToken);
+        var closed = db.BillRecords.AsNoTracking().Records().Where(r => r.Status == BillRecordStatuses.Closed);
+        var count = await closed.CountAsync(cancellationToken);
+        var last = await closed.MaxAsync(r => (DateTimeOffset?)r.ChangedAt, cancellationToken);
+        return count.ToString(CultureInfo.InvariantCulture) + "/" + (last?.UtcTicks.ToString(CultureInfo.InvariantCulture) ?? "-");
+    }
+
     public async Task<IReadOnlyList<MyClosedSide>> MyClosedSidesAsync(Guid userId, CancellationToken cancellationToken)
     {
         await using var db = await contexts.CreateDbContextAsync(cancellationToken);

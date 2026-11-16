@@ -5,6 +5,7 @@ using Lt2.Identity;
 using Lt2.Migrator;
 using Lt2.Notifications;
 using Lt2.Parliament;
+using Lt2.Usage;
 using Microsoft.EntityFrameworkCore;
 
 namespace Lt2.ArchitectureTests;
@@ -18,7 +19,7 @@ public sealed class ReadonlyRoleTests
     private static readonly Assembly[] ModuleAssemblies =
     [
         typeof(IdentityModule).Assembly, typeof(ParliamentModule).Assembly, typeof(AppealsModule).Assembly,
-        typeof(NotificationsModule).Assembly, typeof(AuditModule).Assembly,
+        typeof(NotificationsModule).Assembly, typeof(AuditModule).Assembly, typeof(UsageModule).Assembly,
     ];
 
     [Fact]
@@ -47,6 +48,14 @@ public sealed class ReadonlyRoleTests
         }
 
         DatabaseRoles.ReadableTables.ShouldNotContain(t => t.StartsWith("identity.", StringComparison.Ordinal) || t.StartsWith("notify.", StringComparison.Ordinal));
+    }
+
+    [Fact]
+    public void The_usage_statistics_salts_and_sketches_are_withheld_and_only_their_counts_are_read()
+    {
+        DatabaseRoles.WithheldTables.ShouldContain("usage.sketch");
+        DatabaseRoles.ReadableTables.Where(t => t.StartsWith("usage.", StringComparison.Ordinal)).Order()
+            .ShouldBe(["usage.page", "usage.referrer", "usage.total"]);
     }
 
     /// <summary>Each module's tables as its model maps them, and its migrations history table in its first schema.</summary>

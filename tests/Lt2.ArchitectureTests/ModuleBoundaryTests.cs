@@ -5,6 +5,7 @@ using Lt2.Audit;
 using Lt2.Identity;
 using Lt2.Notifications;
 using Lt2.Parliament;
+using Lt2.Usage;
 using Microsoft.EntityFrameworkCore;
 using NetArchTest.Rules;
 
@@ -25,6 +26,7 @@ public sealed class ModuleBoundaryTests
         new("Lt2.Appeals", typeof(AppealsModule).Assembly, ["appeals"]),
         new("Lt2.Notifications", typeof(NotificationsModule).Assembly, ["notify"]),
         new("Lt2.Audit", typeof(AuditModule).Assembly, ["audit", "config"]),
+        new("Lt2.Usage", typeof(UsageModule).Assembly, ["usage"]),
     ];
 
     private static readonly string[] AllSchemas = Modules.SelectMany(m => m.Schemas).Concat(["hangfire"]).ToArray();
