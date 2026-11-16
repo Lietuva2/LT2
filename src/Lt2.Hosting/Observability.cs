@@ -34,6 +34,7 @@ public static class Observability
             logger.ReadFrom.Configuration(configuration)
                 .ReadFrom.Services(services)
                 .Enrich.FromLogContext()
+                .Enrich.With<SecretPathEnricher>()
                 .Enrich.WithProperty("service", serviceName);
             if (json)
             {
@@ -61,7 +62,19 @@ public static class Observability
         {
             if (web)
             {
-                tracing.AddAspNetCoreInstrumentation(o => o.Filter = context => !context.Request.Path.StartsWithSegments("/health"));
+                tracing.AddAspNetCoreInstrumentation(o =>
+                {
+                    o.Filter = context => !context.Request.Path.StartsWithSegments("/health");
+
+                    // Design 8.19.4: a trace keeps an MP link's path without its token, as the logs do.
+                    o.EnrichWithHttpRequest = (activity, request) =>
+                    {
+                        if (SecretPaths.Redact(request.Path.Value) is { } path && path != request.Path.Value)
+                        {
+                            activity.SetTag("url.path", path);
+                        }
+                    };
+                });
             }
 
             tracing.AddHttpClientInstrumentation().AddNpgsql();

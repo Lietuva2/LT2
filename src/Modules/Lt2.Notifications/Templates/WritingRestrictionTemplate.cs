@@ -1,6 +1,7 @@
 using System.Globalization;
 using Lt2.SharedKernel;
 using Microsoft.Extensions.Localization;
+using Microsoft.Extensions.Options;
 
 namespace Lt2.Notifications.Templates;
 
@@ -8,7 +9,7 @@ namespace Lt2.Notifications.Templates;
 /// A moderator restricted the person from writing, or lifted that (design 8.3): the statement, the end ("until" a day or
 /// until lifted), what still works, and where to object. Never a side; no tracking.
 /// </summary>
-internal sealed class WritingRestrictionTemplate(IStringLocalizer<EmailTemplates> l)
+internal sealed class WritingRestrictionTemplate(IStringLocalizer<EmailTemplates> l, IOptions<SiteOptions> site)
 {
     public EmailMessage Render(WritingRestrictionEmail model)
     {
@@ -34,6 +35,6 @@ internal sealed class WritingRestrictionTemplate(IStringLocalizer<EmailTemplates
         }
 
         paragraphs.Add(l[EmailText.Signature]);
-        return EmailLayout.Build(model.To, l[$"Restriction.{model.Notice}.Subject"], paragraphs);
+        return EmailLayout.Build(model.To, l[$"Restriction.{model.Notice}.Subject"], paragraphs, EmailLayout.Footer(l, site.Value.Address));
     }
 }

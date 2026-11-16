@@ -17,6 +17,14 @@ internal sealed class NotificationsDb(DbContextOptions<NotificationsDb> options)
 
     public DbSet<Digests.DigestDelivery> DigestDeliveries => Set<Digests.DigestDelivery>();
 
+    public DbSet<Digests.MpEmailPref> MpEmailPrefs => Set<Digests.MpEmailPref>();
+
+    public DbSet<Digests.MpMailToken> MpMailTokens => Set<Digests.MpMailToken>();
+
+    public DbSet<Digests.IntroductionLetter> IntroductionLetters => Set<Digests.IntroductionLetter>();
+
+    public DbSet<Digests.Suppression> Suppressions => Set<Digests.Suppression>();
+
     public DbSet<Lt2.Notifications.Follows.Follow> Follows => Set<Lt2.Notifications.Follows.Follow>();
 
     public DbSet<Lt2.Notifications.Follows.NoticeSetting> NoticeSettings => Set<Lt2.Notifications.Follows.NoticeSetting>();
@@ -40,7 +48,9 @@ internal sealed class NotificationsDb(DbContextOptions<NotificationsDb> options)
             b.HasKey(x => x.Id);
             b.Property(x => x.Kind).HasMaxLength(20);
             b.Property(x => x.Status).HasMaxLength(20);
+            b.Property(x => x.Statement).HasMaxLength(StaffStatements.MaxLength);
             b.HasIndex(x => x.RunDate);
+            b.HasIndex(x => x.Status).HasFilter("status = 'waiting'");
         });
         modelBuilder.Entity<Digests.DigestItem>(b =>
         {
@@ -56,11 +66,51 @@ internal sealed class NotificationsDb(DbContextOptions<NotificationsDb> options)
         modelBuilder.Entity<Digests.DigestDelivery>(b =>
         {
             b.ToTable("digest_delivery");
-            b.HasKey(x => new { x.RunId, x.MpSlug });
+            b.HasKey(x => new { x.RunId, x.MpSlug, x.Recipient });
             b.Property(x => x.MpSlug).HasMaxLength(200);
+            b.Property(x => x.Recipient).HasMaxLength(10).HasDefaultValue(Digests.Recipients.Official);
             b.Property(x => x.Status).HasMaxLength(20);
             b.Property(x => x.PartyNumbers).HasColumnType("jsonb");
+            b.HasIndex(x => new { x.SeimasPersonId, x.Status });
             b.HasOne<Digests.DigestRun>().WithMany().HasForeignKey(x => x.RunId).OnDelete(DeleteBehavior.Cascade);
+        });
+
+        // Design 8.19.4 to 8.19.6: the MPs' choices, their links, the introduction letter and the suppression list.
+        modelBuilder.Entity<Digests.MpEmailPref>(b =>
+        {
+            b.ToTable("mp_email_pref");
+            b.HasKey(x => x.SeimasPersonId);
+            b.Property(x => x.SeimasPersonId).ValueGeneratedNever();
+            b.Property(x => x.Frequency).HasMaxLength(16);
+            b.Property(x => x.ExtraAddress).HasMaxLength(254);
+        });
+        modelBuilder.Entity<Digests.MpMailToken>(b =>
+        {
+            b.ToTable("mp_mail_token");
+            b.HasKey(x => x.Id);
+            b.Property(x => x.Kind).HasMaxLength(16);
+            b.Property(x => x.TokenHash).HasMaxLength(64);
+            b.HasIndex(x => x.TokenHash).IsUnique();
+            b.HasIndex(x => new { x.SeimasPersonId, x.Kind });
+        });
+        modelBuilder.Entity<Digests.IntroductionLetter>(b =>
+        {
+            b.ToTable("introduction_letter");
+            b.HasKey(x => x.Version);
+            b.Property(x => x.Version).ValueGeneratedNever();
+            b.Property(x => x.Subject).HasMaxLength(200);
+            b.Property(x => x.Text).HasMaxLength(10000);
+            b.Property(x => x.SignerName).HasMaxLength(200);
+            b.Property(x => x.SignerRole).HasMaxLength(200);
+        });
+        modelBuilder.Entity<Digests.Suppression>(b =>
+        {
+            b.ToTable("suppression");
+            b.HasKey(x => x.Id);
+            b.Property(x => x.AddressHash).HasMaxLength(64);
+            b.Property(x => x.Reason).HasMaxLength(16);
+            b.Property(x => x.Statement).HasMaxLength(StaffStatements.MaxLength);
+            b.HasIndex(x => x.AddressHash).IsUnique();
         });
 
         // Design 5.4, 8.11.2: follows (private), the follow-email switches, and the events followers are told about.

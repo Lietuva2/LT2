@@ -91,6 +91,28 @@ internal sealed class FollowTemplates(IStringLocalizer<EmailTemplates> l, IOptio
         return Message(model.To, Format("Follow.Statement.Subject", model.OrganisationName, model.BillNumber), paragraphs);
     }
 
+    /// <summary>
+    /// MPs answered on a bill the person follows (design 8.20.1): one email per bill per day, the morning after. Each MP's
+    /// name (nominative), faction and stance, and the link to the bill's part "Seimo narių atsakymai". Never an explanation's
+    /// text, the person's side, a count or anyone else.
+    /// </summary>
+    public EmailMessage Responses(FollowResponsesEmail model)
+    {
+        ArgumentNullException.ThrowIfNull(model);
+        var lines = model.Responses.Select(r => r.Faction is { Length: > 0 } faction
+            ? Format("Follow.Responses.MpWithFaction", r.Name, faction, l["Follow.Responses.Stance." + r.Stance])
+            : Format("Follow.Responses.Mp", r.Name, l["Follow.Responses.Stance." + r.Stance]));
+        var paragraphs = new List<string>
+        {
+            l[EmailText.Greeting],
+            Format("Follow.Responses.Body", $"{model.BillNumber} · {model.BillTitle}", Day(model.Day)) + "\n" + string.Join("\n", lines),
+            Format("Follow.Responses.Read", Link(model.BillPath)),
+            Format("Follow.Footer", Link(model.AccountPath)),
+            l[EmailText.Signature],
+        };
+        return Message(model.To, Format("Follow.Responses.Subject", model.BillNumber), paragraphs);
+    }
+
     private static string Day(DateOnly day) => day.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture);
 
     private static string Number(int? value) => value?.ToString(CultureInfo.InvariantCulture) ?? "–";
@@ -99,5 +121,5 @@ internal sealed class FollowTemplates(IStringLocalizer<EmailTemplates> l, IOptio
 
     private string Format(string key, params object?[] values) => l.Format(key, values);
 
-    private static EmailMessage Message(string to, string subject, IReadOnlyList<string> paragraphs) => EmailLayout.Build(to, subject, paragraphs);
+    private EmailMessage Message(string to, string subject, IReadOnlyList<string> paragraphs) => EmailLayout.Build(to, subject, paragraphs, EmailLayout.Footer(l, site.Value.Address));
 }

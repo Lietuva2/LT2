@@ -7,13 +7,14 @@
 # key, and a plain hash of an IPv4 address is reversible by trying all 2^32 values, so the address fields are dropped
 # instead, as are request headers (antiforgery token, user agent) and response headers (session cookie). The web
 # application logs every request itself and hashes the address where the audit log needs one. Invitation codes are
-# never written to logs (design 6.2): the registration link's `kodas` is dropped from the logged address.
+# never written to logs (design 6.2): the value of the registration link's `kodas` is replaced with *** in the logged
+# address. An MP's link carries its token in the path (design 8.19.4: the preferences, confirmation and copy pages, and the
+# one-click stop that mail programs need), so that token is replaced the same way. One expression does both, because Caddy
+# 2.10 takes one filter per field.
 
 (no_personal_data) {
 	wrap json
-	request>uri query {
-		delete kodas
-	}
+	request>uri regexp "(kodas=)[^&#]*|(/(?:api/v1/mp-mail|suvestines/nustatymai(?:/patvirtinti)?|suvestines/kopijos)/)[A-Za-z0-9_%-]{20,}" "${1}${2}***"
 	request>remote_ip delete
 	request>remote_port delete
 	request>client_ip delete

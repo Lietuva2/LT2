@@ -45,6 +45,17 @@ public sealed class LayoutTests(LayoutTests.ModeratorFixture moderator) : IClass
         var page = await moderator.PageAsync();
         await ShootAllAsync(page, "moderator", checkMenu: true);
         await page.SetViewportSizeAsync(1280, 900);
+
+        // Design 8.21: the account item of a staff passkey session offers the staff screens it has, read in the browser.
+        await page.GotoAsync($"{Base}/darbotvarke");
+        await page.Locator("#account-toggle").ClickAsync();
+        await Assertions.Expect(page.Locator("[data-account-link=moderation]")).ToBeVisibleAsync();
+        await Assertions.Expect(page.Locator("[data-account-link=settings]")).ToBeHiddenAsync();
+        await Assertions.Expect(page.Locator("[data-account-link=invitations]")).ToBeHiddenAsync();
+        await Assertions.Expect(page.Locator("[data-account-name]")).ToHaveTextAsync("Moderatorius L.");
+        Directory.CreateDirectory(Shots);
+        await page.ScreenshotAsync(new() { Path = Path.Combine(Shots, "account-moderator-1280.png") });
+        await page.Keyboard.PressAsync("Escape");
         await page.GotoAsync($"{Base}/seimas/XVP-0533");
         await Assertions.Expect(page.Locator("#moderation-panel")).ToBeVisibleAsync(new() { Timeout = 60_000 });
     }

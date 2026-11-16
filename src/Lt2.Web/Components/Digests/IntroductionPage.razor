@@ -1,0 +1,66 @@
+@page "/suvestines/pristatymas"
+@using Lt2.Api.Contracts.Digests
+@inject IDigestsApi Digests
+@inject IStringLocalizer<AppealText> T
+
+@* Design 8.19.5: the introduction letter as it was sent to MPs, with its date and signer, and the earlier versions. Public and
+   server-rendered; never who wrote it on the site or to whom it went. *@
+<PageTitle>@T["Intro.Title"] · Lietuva 2.0</PageTitle>
+
+<div class="stack">
+    <ol class="crumbs">
+        <li><a href="/suvestines">@T["Digests.Title"]</a></li>
+        <li>@T["Intro.Title"]</li>
+    </ol>
+    <p class="label">@T["Digests.Label"]</p>
+    <h1>@T["Intro.Title"]</h1>
+    @if (_letters is not { Count: > 0 })
+    {
+        <p class="lead" id="intro-none">@T["Intro.None"]</p>
+    }
+    else
+    {
+        <p class="lead">@T["Intro.Lead"]</p>
+    }
+</div>
+
+@if (_letters is { Count: > 0 } letters)
+{
+    var current = letters[0];
+    <article class="sheet stack" aria-labelledby="intro-subject" id="intro-current">
+        <p class="small num" id="intro-sent">@T.Format("Intro.Sent", current.SentAt is { } at ? Display.Day(at) : "")</p>
+        <h2 id="intro-subject">@current.Subject</h2>
+        @foreach (var paragraph in Paragraphs(current.Text))
+        {
+            <p>@paragraph</p>
+        }
+        <p id="intro-signer"><b>@current.SignerName</b><br />@current.SignerRole</p>
+        @if (letters.Count > 1)
+        {
+            <details class="more stack stack--tight" id="intro-earlier">
+                <summary class="linkish small">@T["Intro.Earlier"]</summary>
+                @foreach (var letter in letters.Skip(1))
+                {
+                    <div class="sheet--quiet stack stack--tight" id="intro-version-@letter.Version">
+                        <p class="small num">@T.Format("Intro.Sent", letter.SentAt is { } sentAt ? Display.Day(sentAt) : "")</p>
+                        <h3>@letter.Subject</h3>
+                        @foreach (var paragraph in Paragraphs(letter.Text))
+                        {
+                            <p>@paragraph</p>
+                        }
+                        <p><b>@letter.SignerName</b><br />@letter.SignerRole</p>
+                    </div>
+                }
+            </details>
+        }
+    </article>
+}
+
+@code {
+    private IReadOnlyList<IntroductionLetterResponse>? _letters;
+
+    protected override async Task OnInitializedAsync() => _letters = (await Digests.GetIntroductionAsync()).Value;
+
+    private static string[] Paragraphs(string text) =>
+        text.ReplaceLineEndings("\n").Split("\n\n", StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
+}

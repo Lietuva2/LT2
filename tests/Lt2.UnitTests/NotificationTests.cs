@@ -12,7 +12,7 @@ public sealed class NotificationTests
     private static SignInCodeTemplate Template()
     {
         var factory = new ResourceManagerStringLocalizerFactory(Options.Create(new LocalizationOptions()), NullLoggerFactory.Instance);
-        return new SignInCodeTemplate(new StringLocalizer<EmailTemplates>(factory));
+        return new SignInCodeTemplate(new StringLocalizer<EmailTemplates>(factory), Options.Create(new SiteOptions()));
     }
 
     [Fact]
@@ -43,7 +43,7 @@ public sealed class NotificationTests
     private static AccountNoticeTemplate NoticeTemplate()
     {
         var factory = new ResourceManagerStringLocalizerFactory(Options.Create(new LocalizationOptions()), NullLoggerFactory.Instance);
-        return new AccountNoticeTemplate(new StringLocalizer<EmailTemplates>(factory));
+        return new AccountNoticeTemplate(new StringLocalizer<EmailTemplates>(factory), Options.Create(new SiteOptions()));
     }
 
     [Theory]

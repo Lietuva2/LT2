@@ -13,12 +13,13 @@ namespace Lt2.Identity.Application.Account;
 /// <summary>
 /// Design 6.5: a person downloads everything they gave and deletes the account. Deletion removes, in one transaction,
 /// what the Appeals module holds of them (positions, marks, arguments, reports, flags; through <see cref="IAccountData"/>)
-/// and the account with everything that hangs on it (profile, consents, party support, sessions, codes, passkeys, roles)
+/// and the account with everything that hangs on it (profile, consents, party support, sessions, known browsers, codes,
+/// passkeys, roles)
 /// and the unsent emails to it.
 /// Counts fall; frozen summary snapshots keep their totals. Nothing is logged or audited with the address.
 /// </summary>
 internal sealed class AccountDataHandlers(
-    IdentityDb db, IEnumerable<IAccountData> modules, UserManager<User> users, SignInManager<User> signIn, IOutbox outbox, StaffAccess staff, TimeProvider clock)
+    IdentityDb db, IEnumerable<IAccountData> modules, UserManager<User> users, SignInManager<User> signIn, IOutbox outbox, StaffAccess staff, Politicians.PoliticianHandlers politicians, TimeProvider clock)
 {
     internal static readonly Error StaffPasskeyRequired = Error.Forbidden("account.staff-passkey-required");
 
@@ -70,6 +71,17 @@ internal sealed class AccountDataHandlers(
             ["feedback"] = (await db.Feedback.AsNoTracking().Where(f => f.UserId == userId).OrderBy(f => f.CreatedOn).ToListAsync(cancellationToken))
                 .Select(f => new { f.Kind, f.Text, f.PagePath, f.Browser, f.CreatedOn, f.Status, replies = JsonSerializer.Deserialize<JsonElement>(f.Replies) }),
             ["sessions"] = sessions,
+
+            // Design 8.20.2: the browsers known to the account; never the cookie or its hash.
+            ["knownBrowsers"] = await db.KnownDevices.AsNoTracking().Where(d => d.UserId == userId).OrderBy(d => d.FirstSeenAt)
+                .Select(d => new { browser = d.Label, firstSeenAt = d.FirstSeenAt, lastSeenAt = d.LastSeenAt }).ToListAsync(cancellationToken),
+
+            // Design 8.5: the account's links to an MP (as the MP or an office member) and the links and invitations it made;
+            // never a token.
+            ["politicianLinks"] = await db.PoliticianLinks.AsNoTracking().Where(l => l.UserId == userId).OrderBy(l => l.CreatedAt)
+                .Select(l => new { l.SeimasPersonId, l.Part, l.VerifiedBy, l.CreatedAt, l.EndedAt, l.EndReason }).ToListAsync(cancellationToken),
+            ["politicianTokens"] = await db.PoliticianTokens.AsNoTracking().Where(t => t.UserId == userId).OrderBy(t => t.CreatedAt)
+                .Select(t => new { t.Kind, t.SeimasPersonId, t.CreatedAt, t.ExpiresAt, t.UsedAt }).ToListAsync(cancellationToken),
         };
 
         // Each module's part: appeals (sides, arguments, reports, flags, organisations …) and follows (design 8.11.2), each the person's own.
@@ -128,7 +140,12 @@ internal sealed class AccountDataHandlers(
                 await outbox.ForgetAsync([address], transaction.GetDbTransaction(), cancellationToken);
             }
 
-            // The user row cascades to profile, consents, party support, sessions, codes, passkeys, roles, activations.
+            // Design 8.5.2: deleting the account ends its link to an MP, audited and told to the official address; the link
+            // and token rows go with the account.
+            await politicians.OnAccountDeletedAsync(userId, address, transaction.GetDbTransaction(), cancellationToken);
+
+            // The user row cascades to profile, consents, party support, sessions, known browsers, codes, passkeys, roles,
+            // activations.
             await db.Users.Where(u => u.Id == userId).ExecuteDeleteAsync(cancellationToken);
             await transaction.CommitAsync(cancellationToken);
         }

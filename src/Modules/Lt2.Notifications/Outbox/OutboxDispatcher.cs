@@ -16,6 +16,7 @@ internal sealed class OutboxDispatcher(
     IEnumerable<IEmailRenderer> renderers,
     IEmailTransport transport,
     IOptions<OutboxOptions> options,
+    MpMail.MailKeys keys,
     TimeProvider clock,
     ILogger<OutboxDispatcher> logger) : INotificationsDispatcher
 {
@@ -91,6 +92,75 @@ internal sealed class OutboxDispatcher(
             : error.GetType().Name;
     }
 
+    /// <summary>
+    /// A permanent refusal of the recipient by the receiving server (design 8.19.3): an SMTP 5xx answer to the recipient. A
+    /// temporary (4xx) answer, a refused sender or a lost connection is retried as for any email.
+    /// </summary>
+    internal static bool PermanentRefusal(Exception error) =>
+        error is MailKit.Net.Smtp.SmtpCommandException { ErrorCode: MailKit.Net.Smtp.SmtpErrorCode.RecipientNotAccepted } smtp
+        && (int)smtp.StatusCode is >= 500 and < 600;
+
+    /// <summary>The delivery row an MP email stands for, read from its payload; null for any other email.</summary>
+    private static (Guid RunId, string MpSlug, string Recipient)? DeliveryOf((Guid Id, string Kind, string Payload, int Attempts) row)
+    {
+        if (!MpMail.MpMailKinds.All.Contains(row.Kind))
+        {
+            return null;
+        }
+
+        using var payload = System.Text.Json.JsonDocument.Parse(row.Payload);
+        return payload.RootElement.TryGetProperty("delivery", out var d) && d.ValueKind == System.Text.Json.JsonValueKind.Object
+            ? (d.GetProperty("runId").GetGuid(), d.GetProperty("mpSlug").GetString()!, d.GetProperty("recipient").GetString()!)
+            : null;
+    }
+
+    private static async Task MarkDeliveryAsync(
+        NpgsqlConnection connection, NpgsqlTransaction transaction, (Guid Id, string Kind, string Payload, int Attempts) row, string status, CancellationToken cancellationToken)
+    {
+        if (DeliveryOf(row) is not { } delivery)
+        {
+            return;
+        }
+
+        await using var command = new NpgsqlCommand(
+            "UPDATE notify.digest_delivery SET status = @status WHERE run_id = @run AND mp_slug = @mp AND recipient = @recipient AND status = 'queued'",
+            connection,
+            transaction);
+        command.Parameters.AddWithValue("status", status);
+        command.Parameters.AddWithValue("run", delivery.RunId);
+        command.Parameters.AddWithValue("mp", delivery.MpSlug);
+        command.Parameters.AddWithValue("recipient", delivery.Recipient);
+        await command.ExecuteNonQueryAsync(cancellationToken);
+    }
+
+    /// <summary>The refused address on the suppression list (its keyed hash, reason <c>bounced</c>), the delivery bounced, the row gone.</summary>
+    private async Task SuppressAsync(NpgsqlConnection connection, NpgsqlTransaction transaction, (Guid Id, string Kind, string Payload, int Attempts) row, CancellationToken cancellationToken)
+    {
+        string to;
+        using (var payload = System.Text.Json.JsonDocument.Parse(row.Payload))
+        {
+            to = payload.RootElement.GetProperty("to").GetString() ?? "";
+        }
+
+        await using (var insert = new NpgsqlCommand(
+            """
+            INSERT INTO notify.suppression (id, address_hash, reason, created_at)
+            VALUES (@id, @hash, 'bounced', @now)
+            ON CONFLICT (address_hash) DO NOTHING
+            """,
+            connection,
+            transaction))
+        {
+            insert.Parameters.AddWithValue("id", Lt2.SharedKernel.Ids.New(clock));
+            insert.Parameters.AddWithValue("hash", keys.AddressHash(to));
+            insert.Parameters.AddWithValue("now", clock.GetUtcNow());
+            await insert.ExecuteNonQueryAsync(cancellationToken);
+        }
+
+        await MarkDeliveryAsync(connection, transaction, row, Digests.DeliveryStatuses.Bounced, cancellationToken);
+        await ExecuteAsync(connection, transaction, "DELETE FROM notify.outbox WHERE id = @id", row.Id, null, cancellationToken);
+    }
+
     private async Task SendAsync(
         NpgsqlConnection connection, NpgsqlTransaction transaction, IEmailConnection mail, (Guid Id, string Kind, string Payload, int Attempts) row, CancellationToken cancellationToken)
     {
@@ -104,6 +174,7 @@ internal sealed class OutboxDispatcher(
             using var payload = System.Text.Json.JsonDocument.Parse(row.Payload);
             await mail.SendAsync(renderer.Render(payload.RootElement), cancellationToken);
             await ExecuteAsync(connection, transaction, "DELETE FROM notify.outbox WHERE id = @id", row.Id, null, cancellationToken);
+            await MarkDeliveryAsync(connection, transaction, row, Digests.DeliveryStatuses.Sent, cancellationToken);
             logger.LogInformation("Outbox message {MessageId} of kind {Kind} sent", row.Id, row.Kind);
         }
 #pragma warning disable CA1031 // One failing message must not stop the others; the error is recorded on the row.
@@ -113,7 +184,21 @@ internal sealed class OutboxDispatcher(
             var attempts = row.Attempts + 1;
             var giveUp = attempts >= options.Value.MaxAttempts;
             var error = Describe(ex);
+            if (MpMail.MpMailKinds.All.Contains(row.Kind) && PermanentRefusal(ex))
+            {
+                // Design 8.19.3, 8.19.6: the receiving server refused this MP email for good. The address goes on the
+                // suppression list (as a keyed hash only) and the delivery is marked bounced; nothing is retried.
+                await SuppressAsync(connection, transaction, row, cancellationToken);
+                logger.LogWarning("Outbox message {MessageId} of kind {Kind} refused for good ({Error}); the address is suppressed", row.Id, row.Kind, error);
+                return;
+            }
+
             logger.LogWarning("Outbox message {MessageId} of kind {Kind} failed (attempt {Attempt}): {Error}", row.Id, row.Kind, attempts, error);
+            if (giveUp)
+            {
+                await MarkDeliveryAsync(connection, transaction, row, Digests.DeliveryStatuses.Failed, cancellationToken);
+            }
+
             await ExecuteAsync(
                 connection,
                 transaction,

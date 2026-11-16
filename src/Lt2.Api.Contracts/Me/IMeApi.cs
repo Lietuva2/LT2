@@ -9,6 +9,12 @@ public interface IMeApi
 
     Task<ApiResult> EndSessionAsync(Guid sessionId, CancellationToken cancellationToken = default);
 
+    /// <summary>The browsers known to the account (design 8.20.2), last seen first.</summary>
+    Task<ApiResult<IReadOnlyList<KnownBrowserResponse>>> GetKnownBrowsersAsync(CancellationToken cancellationToken = default);
+
+    /// <summary>"Pamiršti": the browser becomes a stranger to the account again (design 8.20.2).</summary>
+    Task<ApiResult> ForgetKnownBrowserAsync(Guid id, CancellationToken cancellationToken = default);
+
     /// <summary>Completes a pending registration (design 6.2).</summary>
     Task<ApiResult> CompleteRegistrationAsync(CompleteRegistrationRequest request, CancellationToken cancellationToken = default);
 
@@ -23,6 +29,9 @@ public interface IMeApi
 
     /// <summary>Gives the explicit consent to store positions (design 6.5).</summary>
     Task<ApiResult> GivePositionConsentAsync(PositionConsentRequest request, CancellationToken cancellationToken = default);
+
+    /// <summary>Accepts the terms of use in force (design 8.22.2): the one write an account that has not accepted them may make, besides signing out and deleting.</summary>
+    Task<ApiResult> AcceptTermsAsync(TermsAcceptanceRequest request, CancellationToken cancellationToken = default);
 
     /// <summary>Withdraws the consent; every position of the person is deleted (design 6.5).</summary>
     Task<ApiResult> WithdrawPositionConsentAsync(CancellationToken cancellationToken = default);

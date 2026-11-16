@@ -60,7 +60,7 @@ public sealed class RegisterTests(DatabaseFixture database) : ApiTest(database)
         using (var complete = await owner.SendAsync(
             HttpMethod.Put,
             ApiRoutes.Me.Registration,
-            new CompleteRegistrationRequest { DisplayName = "  Rūta M.  ", ConfirmsAdult = true }))
+            new CompleteRegistrationRequest { DisplayName = "  Rūta M.  ", ConfirmsAdult = true, AcceptsTerms = true }))
         {
             complete.StatusCode.ShouldBe(HttpStatusCode.NoContent, await complete.Content.ReadAsStringAsync());
         }
@@ -70,7 +70,7 @@ public sealed class RegisterTests(DatabaseFixture database) : ApiTest(database)
         me.DisplayName.ShouldBe("Rūta M.");
         me.Roles.ShouldBe(["member"]);
         me.VerificationLevel.ShouldBe("email");
-        (await ConsentsAsync(email)).ShouldBe(1);
+        (await ConsentsAsync(email)).ShouldBe(2, "the age declaration and the terms of use (design 8.22.2)");
     }
 
     [Fact]
@@ -109,7 +109,7 @@ public sealed class RegisterTests(DatabaseFixture database) : ApiTest(database)
         await first.CompleteRegistrationAsync();
 
         await second.SignInWithCodeAsync(secondEmail);
-        using (var refused = await second.SendAsync(HttpMethod.Put, ApiRoutes.Me.Registration, new CompleteRegistrationRequest { ConfirmsAdult = true }))
+        using (var refused = await second.SendAsync(HttpMethod.Put, ApiRoutes.Me.Registration, new CompleteRegistrationRequest { ConfirmsAdult = true, AcceptsTerms = true }))
         {
             await refused.ShouldBeProblemAsync(HttpStatusCode.BadRequest, "invitation.invalid"); // one message for every code that does not work (design 6.2)
             var problem = await refused.ProblemAsync();
@@ -122,7 +122,7 @@ public sealed class RegisterTests(DatabaseFixture database) : ApiTest(database)
         using (var another = await second.SendAsync(
             HttpMethod.Put,
             ApiRoutes.Me.Registration,
-            new CompleteRegistrationRequest { ConfirmsAdult = true, InvitationCode = TestData.Invitation }))
+            new CompleteRegistrationRequest { ConfirmsAdult = true, AcceptsTerms = true, InvitationCode = TestData.Invitation }))
         {
             another.StatusCode.ShouldBe(HttpStatusCode.NoContent, await another.Content.ReadAsStringAsync());
         }
@@ -214,7 +214,7 @@ public sealed class RegisterTests(DatabaseFixture database) : ApiTest(database)
         using var browser = NewBrowser();
         var email = await browser.RegisterAndSignInAsync(complete: false);
 
-        using var response = await browser.SendAsync(HttpMethod.Put, ApiRoutes.Me.Registration, new CompleteRegistrationRequest { DisplayName = "Rūta M." });
+        using var response = await browser.SendAsync(HttpMethod.Put, ApiRoutes.Me.Registration, new CompleteRegistrationRequest { DisplayName = "Rūta M.", AcceptsTerms = true });
 
         await response.ShouldBeProblemAsync(HttpStatusCode.BadRequest, "validation");
         var problem = await response.ProblemAsync();
@@ -229,7 +229,7 @@ public sealed class RegisterTests(DatabaseFixture database) : ApiTest(database)
         await browser.RegisterAndSignInAsync();
         var usesBefore = await UsesLeftAsync();
 
-        using var again = await browser.SendAsync(HttpMethod.Put, ApiRoutes.Me.Registration, new CompleteRegistrationRequest { ConfirmsAdult = true });
+        using var again = await browser.SendAsync(HttpMethod.Put, ApiRoutes.Me.Registration, new CompleteRegistrationRequest { ConfirmsAdult = true, AcceptsTerms = true });
 
         await again.ShouldBeProblemAsync(HttpStatusCode.Conflict, "registration.complete");
         (await UsesLeftAsync()).ShouldBe(usesBefore);
@@ -239,7 +239,7 @@ public sealed class RegisterTests(DatabaseFixture database) : ApiTest(database)
     public async Task Completion_needs_a_signed_in_person()
     {
         using var browser = NewBrowser();
-        using var response = await browser.SendAsync(HttpMethod.Put, ApiRoutes.Me.Registration, new CompleteRegistrationRequest { ConfirmsAdult = true });
+        using var response = await browser.SendAsync(HttpMethod.Put, ApiRoutes.Me.Registration, new CompleteRegistrationRequest { ConfirmsAdult = true, AcceptsTerms = true });
         response.StatusCode.ShouldBe(HttpStatusCode.Unauthorized);
     }
 

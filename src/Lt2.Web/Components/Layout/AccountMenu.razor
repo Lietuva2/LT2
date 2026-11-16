@@ -1,0 +1,21 @@
+@inject IStringLocalizer<PageText> T
+
+@* Design 8.21: the account item, "Paskyra", a disclosure that works without script: "Mano paskyra" and "Atsijungti". The HTML
+   is the same for every member (nothing about the person; the sign-out form's antiforgery token is the session's own): the
+   name and the links an account has are filled in by js/lt2-account.js from GET /api/v1/me when the item is opened, and
+   the links that do not apply stay hidden. The script also closes it on Escape, on a press outside and when focus leaves. *@
+<details class="account" id="account-menu" data-account-menu>
+    <summary class="account__toggle" id="account-toggle">@T["Nav.AccountItem"]</summary>
+    <div class="account__panel">
+        <p class="account__name" data-account-name hidden></p>
+        <ul class="account__links">
+            <li data-account-link="terms" hidden><a href="@Lt2.Api.Contracts.Me.TermsText.AcceptancePage">@T["Nav.AcceptTerms"]</a></li>
+            <li><a href="/sveiki" id="nav-account">@T["Nav.Account"]</a></li>
+            <li data-account-link="moderation" hidden><a href="/moderavimas">@T["Nav.Moderation"]</a></li>
+            <li data-account-link="settings" hidden><a href="/administravimas/nustatymai">@T["Nav.Settings"]</a></li>
+            <li data-account-link="invitations" hidden><a href="/administravimas/kvietimai">@T["Nav.Invitations"]</a></li>
+            <li data-account-link="mp" hidden><a href="/seimo-narys/projektai">@T["Nav.MpBills"]</a></li>
+            <li><SignOutForm /></li>
+        </ul>
+    </div>
+</details>

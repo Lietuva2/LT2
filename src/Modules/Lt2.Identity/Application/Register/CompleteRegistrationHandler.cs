@@ -8,8 +8,8 @@ using Microsoft.EntityFrameworkCore;
 namespace Lt2.Identity.Application.Register;
 
 /// <summary>
-/// Completes a pending registration once the address is proven (design 6.2). In one transaction: the display name and
-/// the declaration of being 18 or older are stored, the invitation use is counted, and the account becomes a member.
+/// Completes a pending registration once the address is proven (design 6.2). In one transaction: the display name,
+/// the declaration of being 18 or older and the accepted terms of use (design 8.22.2) are stored, the invitation use is counted, and the account becomes a member.
 /// If the invitation held has run out by now, the person is told so and may give another code.
 /// </summary>
 internal sealed class CompleteRegistrationHandler(
@@ -17,6 +17,8 @@ internal sealed class CompleteRegistrationHandler(
     UserManager<User> users,
     SignInManager<User> signIn,
     ISettings settings,
+    IMpDirectory mps,
+    SignIn.KnownBrowsers browsers,
     TimeProvider clock)
 {
     public async Task<Result<Unit>> HandleAsync(ClaimsPrincipal principal, RegistrationCompletion completion, CancellationToken cancellationToken)
@@ -24,6 +26,12 @@ internal sealed class CompleteRegistrationHandler(
         if (!completion.ConfirmsAdult)
         {
             return Error.Validation("adult.required", "confirmsAdult");
+        }
+
+        // Design 8.22.2: the account rests on the terms of use; checked here, not only by the form.
+        if (!completion.AcceptsTerms)
+        {
+            return Error.Validation("terms.not-accepted", "acceptsTerms");
         }
 
         // Checked here as well as by the form's validator (design 6.8): callers inside the server skip the validator.
@@ -75,7 +83,9 @@ internal sealed class CompleteRegistrationHandler(
 
             code = invitation.Code;
         }
-        else if (await settings.GetAsync(SettingKeys.RegistrationRequiresInvitation, cancellationToken))
+        else if (await settings.GetAsync(SettingKeys.RegistrationRequiresInvitation, cancellationToken)
+            && !await OfficialAddressGate.LetsThroughAsync(
+                settings, mps, (await users.FindByIdAsync(userId.ToString()))?.Email, cancellationToken))
         {
             return Error.Validation("invitation.required", "invitationCode");
         }
@@ -94,6 +104,7 @@ internal sealed class CompleteRegistrationHandler(
             TextVersion = ConsentKinds.AdultTextVersion,
             GivenAt = now,
         });
+        db.Consents.Add(Consents.TermsHandlers.Given(userId, clock));
         db.UserRoles.Add(new IdentityUserRole<Guid> { UserId = userId, RoleId = SeedRoles.MemberId });
         await db.SaveChangesAsync(cancellationToken);
 
@@ -109,6 +120,8 @@ internal sealed class CompleteRegistrationHandler(
             await signIn.RefreshSignInAsync(user);
         }
 
+        // Design 8.20.2: the browser that finished the registration is known to the account from now on.
+        await browsers.RememberAsync(userId, cancellationToken);
         return Result.Ok();
     }
 }

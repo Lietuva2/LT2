@@ -1,0 +1,150 @@
+@using Lt2.Api.Contracts.Appeals
+@using Lt2.Api.Contracts.Mps
+@using Lt2.Web.Client.Appeals
+@inherits InteractiveBase<AppealUi>
+@inject IMpResponseModerationApi Moderation
+
+@* MPs' responses for the moderators (design 8.5.5, as statements, 8.14.9): on the queue (Hidden = false) those flagged by
+   pre-screening and not yet seen, or reported, with "Palikti" and "Paslėpti" (a statement shown in the response's place and
+   sent to the MP); on the list of hidden items (Hidden = true) the hidden ones with "Atkurti" while the bill is open. A
+   response is public at once: the queue holds nothing back. Never who wrote it. *@
+@if (Items is { } items)
+{
+    @if (!Hidden)
+    {
+        <section class="stack" aria-labelledby="h-queue-responses" id="queue-responses">
+            <h2 id="h-queue-responses">@L["RespMod.Queue"]</h2>
+            @if (items.Queue.Count == 0)
+            {
+                <p class="small">@L["Mod.Empty"]</p>
+            }
+            @foreach (var r in items.Queue)
+            {
+                <article class="sheet stack stack--tight" id="queue-response-@r.Id" aria-label="@L["RespMod.Item"]" @key="r.Id">
+                    <div class="row">
+                        <a class="tag tag--ink num" href="/seimas/@Uri.EscapeDataString(r.Bill.Number)#atsakymai">@r.Bill.Number</a>
+                        <b>@r.Mp.FirstName @r.Mp.LastName</b>
+                        <span class="tag">@L["RespMod.Status." + r.Status]</span>
+                        @foreach (var flag in r.Flags)
+                        {
+                            <span class="tag tag--people">@L["Mod.Flag." + flag]</span>
+                        }
+                    </div>
+                    <p class="small">@L["MpResponse.Will." + r.Stance]</p>
+                    <p class="voice">@r.Text</p>
+                    <Reports Items="r.Reports" />
+                    @if (_done.TryGetValue(r.Id, out var done))
+                    {
+                        <p class="note note--quiet" role="status">@done</p>
+                    }
+                    else if (_open == r.Id)
+                    {
+                        <form class="sheet sheet--quiet stack stack--tight" @onsubmit="() => ActAsync(r.Id)" novalidate id="response-action-form-@r.Id" aria-labelledby="response-action-title-@r.Id">
+                            <h3 id="response-action-title-@r.Id">@L["RespMod.Action." + _action]</h3>
+                            <p class="small">@L["RespMod.Sentence." + _action]</p>
+                            <div class="field @ErrorClass("statement")">
+                                <label for="response-statement-@r.Id">@L[_action == "keep" ? "OrgMod.Note" : "OrgMod.Statement"]</label>
+                                <textarea class="textarea" id="response-statement-@r.Id" maxlength="@AppealLimits.StatementMaxLength" @bind="_statement" @bind:event="oninput" disabled="@Locked"
+                                          aria-invalid="@Invalid("statement")" aria-describedby="@DescribedBy("statement", $"response-statement-{r.Id}")"></textarea>
+                                <FieldError Errors="Errors" Field="statement" For="@($"response-statement-{r.Id}")" />
+                            </div>
+                            <div class="row">
+                                <button type="submit" class="btn" id="response-action-submit-@r.Id" disabled="@Locked">@L["RespMod.Action." + _action]</button>
+                                <button type="button" class="btn btn--plain" disabled="@Locked" @onclick="() => _open = null">@L["Cancel"]</button>
+                            </div>
+                        </form>
+                    }
+                    else
+                    {
+                        <div class="actions" role="group" aria-label="@L["Mod.Actions"]">
+                            <button type="button" class="btn" id="response-action-keep-@r.Id" disabled="@Locked" @onclick="@(() => Open(r.Id, "keep"))">@L["RespMod.Action.keep"]</button>
+                            <button type="button" class="btn btn--plain" id="response-action-hide-@r.Id" disabled="@Locked" @onclick="@(() => Open(r.Id, "hide"))">@L["RespMod.Action.hide"]</button>
+                        </div>
+                    }
+                </article>
+            }
+            <Messages Message="@Message" Info="@Info" />
+        </section>
+    }
+    else
+    {
+        <section class="stack" aria-labelledby="h-hidden-responses" id="hidden-responses">
+            <h2 id="h-hidden-responses">@L["RespMod.Hidden"]</h2>
+            @if (items.Hidden.Count == 0)
+            {
+                <p class="small">@L["Hidden.None"]</p>
+            }
+            @foreach (var r in items.Hidden)
+            {
+                <article class="sheet stack stack--tight" id="hidden-response-@r.Id" aria-label="@L["RespMod.Item"]" @key="r.Id">
+                    <div class="row">
+                        <span class="tag tag--ink num">@r.Bill.Number</span>
+                        <b>@r.Mp.FirstName @r.Mp.LastName</b>
+                        <span class="small">@L["MpResponse.Will." + r.Stance]</span>
+                    </div>
+                    <p class="voice">@r.Text</p>
+                    <p class="small num">@ModerationWords.Hidden(L, r.HiddenAt, r.HiddenBy)</p>
+                    @if (r.Statement is { } statement)
+                    {
+                        <p class="small">@L.Format("Hidden.Why", statement)</p>
+                    }
+                    @if (!r.Restorable)
+                    {
+                        <p class="note note--quiet">@L["RespMod.NotOpen"]</p>
+                    }
+                    <RestoreForm Id="r.Id" IdPrefix="response-restore" Sentence="@L["RespMod.Restore.Sentence"]" StatementLabel="@L["OrgMod.Statement"]"
+                                 Allowed="r.Restorable" Restore="request => Moderation.RestoreAsync(r.Id, request)" />
+                </article>
+            }
+        </section>
+    }
+}
+
+@code {
+    private Guid? _open;
+    private string _action = "keep";
+    private string _statement = "";
+    private readonly Dictionary<Guid, string> _done = [];
+
+    /// <summary>The list of hidden items rather than the queue.</summary>
+    [Parameter] public bool Hidden { get; set; }
+
+    private MpResponseModerationResponse? Items { get; set; }
+
+    /// <summary>Asked for only in the browser, as the organisations' part of the queue is.</summary>
+    protected override async Task OnInitializedAsync()
+    {
+        if (RendererInfo.IsInteractive)
+        {
+            Items = (await Moderation.GetAsync()).Value;
+        }
+    }
+
+    private void Open(Guid id, string action)
+    {
+        _open = id;
+        _action = action;
+        _statement = "";
+        ClearMessages();
+    }
+
+    private Task ActAsync(Guid id) => RunAsync(async () =>
+    {
+        if (_action == "hide" && string.IsNullOrWhiteSpace(_statement))
+        {
+            FieldFails("statement", L["OrgMod.StatementRequired"]);
+            return;
+        }
+
+        var result = _action == "hide"
+            ? await Moderation.HideAsync(id, new StatementRequest { Statement = _statement })
+            : await Moderation.KeepAsync(id, new ModerationRequest { Statement = string.IsNullOrWhiteSpace(_statement) ? null : _statement });
+        if (!Succeeded(result, "statement"))
+        {
+            return;
+        }
+
+        _done[id] = L["RespMod.Done." + _action];
+        _open = null;
+    });
+}

@@ -44,10 +44,13 @@ internal sealed class AppealsDb(DbContextOptions<AppealsDb> options) : DbContext
 
     public DbSet<OrganisationStatement> OrganisationStatements => Set<OrganisationStatement>();
 
+    public DbSet<MpResponse> MpResponses => Set<MpResponse>();
+
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         modelBuilder.HasDefaultSchema(AppealsModule.Schema);
         OnOrganisationsCreating(modelBuilder);
+        OnMpResponsesCreating(modelBuilder);
 
         modelBuilder.Entity<BillRecord>(e =>
         {
@@ -256,6 +259,29 @@ internal sealed class AppealsDb(DbContextOptions<AppealsDb> options) : DbContext
             e.ToTable(t => t.HasCheckConstraint("ck_organisation_statement_goal", "goal IS NULL OR (goal BETWEEN 1 AND 1000000 AND stance <> 'remarks')"));
         });
     }
+
+    /// <summary>MPs' responses on bills (design 5.3, 8.5.5): one per MP per bill; withheld from the read-only role.</summary>
+    private static void OnMpResponsesCreating(ModelBuilder modelBuilder) =>
+        modelBuilder.Entity<MpResponse>(e =>
+        {
+            e.ToTable("mp_response");
+            e.HasKey(r => r.Id);
+            e.Property(r => r.BillNumber).HasMaxLength(40);
+            e.Property(r => r.Stance).HasMaxLength(10);
+            e.Property(r => r.Text).HasMaxLength(ResponseRules.TextMaxLength);
+            e.Property(r => r.Status).HasMaxLength(20);
+            e.Property(r => r.HideStatement).HasMaxLength(1000);
+
+            // One per MP per bill, whatever its status: one written again after a withdrawal is the same response (design 8.5.5).
+            e.HasIndex(r => new { r.SeimasPersonId, r.BillNumber }).IsUnique().HasDatabaseName("ix_mp_response_one_per_bill");
+            e.HasIndex(r => r.BillNumber);
+            e.HasIndex(r => r.WrittenByUserId);
+
+            // The followers' daily email (design 8.20.1) reads one Vilnius day of announced stances.
+            e.HasIndex(r => r.AnnouncedAt);
+            e.ToTable(t => t.HasCheckConstraint("ck_mp_response_stance", "stance IN ('for', 'against', 'undecided')"));
+            e.ToTable(t => t.HasCheckConstraint("ck_mp_response_status", "status IN ('published', 'withdrawn', 'hidden')"));
+        });
 
     internal static DbContextOptions<AppealsDb> Options(string connectionString)
     {

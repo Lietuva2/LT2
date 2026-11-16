@@ -41,6 +41,7 @@
   <data name="passkey.not-added" xml:space="preserve"><value>Prieigos rakto patikrinti nepavyko. Prie šios paskyros jis nepridėtas, net jei naršyklė ar slaptažodžių tvarkyklė jį išsaugojo; galite bandyti dar kartą.</value></data>
   <data name="passkey.invalid" xml:space="preserve"><value>Prieigos rakto patikrinti nepavyko.</value></data>
   <data name="session.not-found" xml:space="preserve"><value>Tokios sesijos nėra.</value></data>
+  <data name="known-browser.not-found" xml:space="preserve"><value>Tokios žinomos naršyklės nėra.</value></data>
   <data name="setting.unknown" xml:space="preserve"><value>Tokio nustatymo nėra.</value></data>
   <data name="setting.invalid" xml:space="preserve"><value>Netinkama nustatymo reikšmė.</value></data>
   <data name="antiforgery.invalid" xml:space="preserve"><value>Užklausa atmesta saugumo sumetimais. Perkraukite puslapį ir bandykite dar kartą.</value></data>
@@ -57,6 +58,10 @@
 <data name="member.required" xml:space="preserve"><value>Pirmiausia baikite registraciją.</value></data>
 <data name="consent.required" xml:space="preserve"><value>Kad galėtume išsaugoti jūsų poziciją, reikia jūsų aiškaus sutikimo.</value></data>
 <data name="consent.outdated" xml:space="preserve"><value>Sutikimo tekstas pasikeitė. Perkraukite puslapį ir perskaitykite naująjį.</value></data>
+<data name="terms.required" xml:space="preserve"><value>Naudojimo taisyklės pasikeitė. Kol su jomis nesutiksite, galite tik skaityti, atsisiųsti savo duomenis, ištrinti paskyrą ir atsijungti.</value></data>
+<data name="terms.outdated" xml:space="preserve"><value>Naudojimo taisyklės pasikeitė. Perkraukite puslapį ir perskaitykite naująsias.</value></data>
+<data name="terms.not-accepted" xml:space="preserve"><value>Kad galėtumėte užsiregistruoti, sutikite su naudojimo taisyklėmis.</value></data>
+<data name="registration.pending" xml:space="preserve"><value>Pirmiausia baikite registraciją.</value></data>
 <data name="side.invalid" xml:space="preserve"><value>Pasirinkite: prašyti balsuoti už arba prieš.</value></data>
 <data name="position.required" xml:space="preserve"><value>Pirmiausia nurodykite, ko prašote: balsuoti už ar prieš.</value></data>
 <data name="reason.empty" xml:space="preserve"><value>Parašykite argumentą.</value></data>
@@ -141,4 +146,36 @@
 <data name="invitation.organisation-inactive" xml:space="preserve"><value>Kol organizacija užblokuota ar uždaryta, jos kvietimo kodo pakeisti negalima.</value></data>
 <data name="invitation.organisation-switched-off" xml:space="preserve"><value>Organizacijos kvietimo kodą išjungė administratorius, todėl naujo kol kas sukurti negalima.</value></data>
   <data name="account.staff-passkey-required" xml:space="preserve"><value>Darbuotojo paskyrą ištrinti galima tik prisijungus darbuotojo prieigos raktu. Atsijunkite, vėl prisijunkite tuo prieigos raktu ir tada ištrinkite paskyrą.</value></data>
+<data name="mp.not-official-address" xml:space="preserve"><value>Jūsų paskyros el. pašto adresas nėra šio Seimo nario oficialus adresas.</value></data>
+<data name="mp.link-invalid" xml:space="preserve"><value>Ši nuoroda netinka: ji jau panaudota, nebegalioja arba skirta kitai paskyrai. Paprašykite naujos.</value></data>
+<data name="mp.already-linked" xml:space="preserve"><value>Ši paskyra jau susieta su Seimo nariu.</value></data>
+<data name="mp.taken" xml:space="preserve"><value>Šio Seimo nario profilį jau tvarko kita paskyra. Jei tai klaida, parašykite Lietuva 2.0 komandai.</value></data>
+<data name="mp.link-limit" xml:space="preserve"><value>Šiandien jau išsiųstos trys nuorodos. Naudokite naujausią arba bandykite rytoj.</value></data>
+<data name="mp.not-linked" xml:space="preserve"><value>Ši paskyra nesusieta su Seimo nariu.</value></data>
+<data name="mp.not-mp" xml:space="preserve"><value>Tai gali tik Seimo nario paskyra.</value></data>
+<data name="mp.office-full" xml:space="preserve"><value>Biure jau yra penki nariai.</value></data>
+<data name="mp.office-member-not-found" xml:space="preserve"><value>Tokio biuro nario nėra.</value></data>
+<data name="mp.passkey-required" xml:space="preserve"><value>Prisijunkite prieigos raktu: prisijungus kodu galima tik skaityti.</value></data>
+<data name="mp.takes-no-part" xml:space="preserve"><value>Seimo nario paskyra nedalyvauja kaip dalyvis: Seimo narys atsako atsakymu.</value></data>
+  <data name="response.stance-invalid" xml:space="preserve"><value>Pasirinkite: balsuosite už, prieš ar dar neapsisprendėte.</value></data>
+  <data name="response.empty" xml:space="preserve"><value>Parašykite atsakymą.</value></data>
+  <data name="response.too-long" xml:space="preserve"><value>Atsakymas per ilgas: ne daugiau kaip 1 500 ženklų.</value></data>
+  <data name="response.bill-not-open" xml:space="preserve"><value>Dėl šio projekto atsakymo skelbti, keisti ar atsiimti nebegalima: Seimas jau balsavo arba dalyvavimą uždarė moderatoriai.</value></data>
+  <data name="response.hidden" xml:space="preserve"><value>Šį atsakymą paslėpė moderatoriai: jo pakeisti ar atsiimti negalima.</value></data>
+  <data name="response.not-found" xml:space="preserve"><value>Atsakymo nėra.</value></data>
+  <data name="response.exists" xml:space="preserve"><value>Atsakymas ką tik paskelbtas kitoje naršyklėje. Atnaujinkite puslapį.</value></data>
+  <data name="response.mandate-ended" xml:space="preserve"><value>Seimo nario įgaliojimai baigėsi: naujų atsakymų skelbti nebegalima.</value></data>
+  <data name="digest.not-waiting" xml:space="preserve"><value>Ši suvestinė jau nelaukia sprendimo: ją kas nors jau išsiuntė, atsisakė siųsti arba jos laikas baigėsi.</value></data>
+  <data name="digest.expired" xml:space="preserve"><value>Šios suvestinės laikas baigėsi: ji nebus siunčiama.</value></data>
+  <data name="digest.sending-off" xml:space="preserve"><value>Siuntimas Seimo nariams dabar išjungtas: suvestinė nesiunčiama.</value></data>
+  <data name="statement.too-short" xml:space="preserve"><value>Paaiškinimas per trumpas: bent 20 ženklų.</value></data>
+  <data name="mp-mail.not-found" xml:space="preserve"><value>Ši nuoroda neveikia. Naudokite nuorodą iš naujausio Lietuva 2.0 laiško.</value></data>
+  <data name="mp-mail.frequency-invalid" xml:space="preserve"><value>Pasirinkite, kaip dažnai siųsti suvestines.</value></data>
+  <data name="mp-mail.address-invalid" xml:space="preserve"><value>Įveskite vieną el. pašto adresą.</value></data>
+  <data name="mp-mail.no-address" xml:space="preserve"><value>Oficialiu Seimo nario adresu dabar laiškų siųsti negalime, todėl šio veiksmo atlikti nepavyko.</value></data>
+  <data name="mp-mail.not-caught" xml:space="preserve"><value>Šioje aplinkoje duomenys išgalvoti, o laiškai neperimami: Seimo nariams laiškų siųsti negalima.</value></data>
+  <data name="introduction.none" xml:space="preserve"><value>Pristatymo laiškas dar neparašytas.</value></data>
+  <data name="introduction.invalid" xml:space="preserve"><value>Užpildykite laiško temą, tekstą, pasirašančiojo vardą, pavardę ir pareigas.</value></data>
+  <data name="suppression.exists" xml:space="preserve"><value>Šis adresas jau yra sąraše.</value></data>
+  <data name="suppression.not-found" xml:space="preserve"><value>Tokio įrašo sąraše nėra.</value></data>
 </root>

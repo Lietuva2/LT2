@@ -14,6 +14,45 @@ internal sealed class DigestSource(
 {
     public const int ReasonsPerSide = 2;
 
+    public async Task<IReadOnlyList<MpStance>> PublishedResponsesAsync(IReadOnlyCollection<string> billNumbers, CancellationToken cancellationToken)
+    {
+        ArgumentNullException.ThrowIfNull(billNumbers);
+        if (billNumbers.Count == 0)
+        {
+            return [];
+        }
+
+        var numbers = billNumbers.ToList();
+        await using var db = await contexts.CreateDbContextAsync(cancellationToken);
+        return (await db.MpResponses.AsNoTracking()
+                .Where(r => numbers.Contains(r.BillNumber) && r.Status == ResponseStatuses.Published)
+                .Select(r => new { r.SeimasPersonId, r.BillNumber, r.Stance, r.PublishedAt, r.EditedAt })
+                .ToListAsync(cancellationToken))
+            .Select(r => new MpStance(r.SeimasPersonId, r.BillNumber, r.Stance, r.EditedAt ?? r.PublishedAt))
+            .ToList();
+    }
+
+    /// <summary>Sets <c>first_summarised_at</c> once on each record, in the sender's transaction (design 8.12.2, 8.19.1).</summary>
+    public async Task MarkSummarisedAsync(IReadOnlyCollection<Guid> recordIds, DateTimeOffset at, System.Data.Common.DbTransaction transaction, CancellationToken cancellationToken)
+    {
+        ArgumentNullException.ThrowIfNull(recordIds);
+        if (recordIds.Count == 0)
+        {
+            return;
+        }
+
+        if (transaction is not Npgsql.NpgsqlTransaction { Connection: { } connection } npgsql)
+        {
+            throw new ArgumentException("Marking records summarised needs a PostgreSQL transaction.", nameof(transaction));
+        }
+
+        await using var command = new Npgsql.NpgsqlCommand(
+            "UPDATE appeals.bill_record SET first_summarised_at = @at WHERE id = ANY(@ids) AND first_summarised_at IS NULL", connection, npgsql);
+        command.Parameters.AddWithValue("at", at.ToUniversalTime());
+        command.Parameters.AddWithValue("ids", recordIds.ToArray());
+        await command.ExecuteNonQueryAsync(cancellationToken);
+    }
+
     public async Task<IReadOnlyList<DigestCandidate>> CandidatesAsync(CancellationToken cancellationToken)
     {
         await using var db = await contexts.CreateDbContextAsync(cancellationToken);

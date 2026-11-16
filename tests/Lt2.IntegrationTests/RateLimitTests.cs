@@ -139,5 +139,46 @@ public sealed class RateLimitTests(DatabaseFixture database) : IAsyncDisposable
         using var _u = await other.SendAsync(HttpMethod.Delete, Lt2.Api.Contracts.Follows.FollowRoutes.BillOf(AppealSteps.TaxBill));
     }
 
+    /// <summary>
+    /// Design 8.19.7: an MP's link is limited per token and per client address, like the sign-in routes, and an unknown token
+    /// answers like a known one until the limit.
+    /// </summary>
+    [Fact]
+    public async Task An_mps_link_is_limited_per_token_and_per_client_address()
+    {
+        await using var factory = new MpMailLimitFactory(database);
+        using var browser = factory.NewBrowser();
+        var token = new string('A', 43);
+        for (var i = 0; i < 2; i++)
+        {
+            using var answer = await browser.Client.GetAsync(Lt2.Api.Contracts.Digests.MpMailRoutes.TokenOf(token));
+            answer.StatusCode.ShouldBe(HttpStatusCode.NotFound);
+        }
+
+        using (var limited = await browser.Client.GetAsync(Lt2.Api.Contracts.Digests.MpMailRoutes.PreferencesPageOf(token)))
+        {
+            limited.StatusCode.ShouldBe(HttpStatusCode.TooManyRequests, "the page shares its token's limit");
+        }
+
+        // Another token from the same address: within the address's limit of three (a request refused for its token is not counted), then refused.
+        using (var other = await browser.Client.GetAsync(Lt2.Api.Contracts.Digests.MpMailRoutes.TokenOf(new string('B', 43))))
+        {
+            other.StatusCode.ShouldBe(HttpStatusCode.NotFound);
+        }
+
+        using var byAddress = await browser.Client.GetAsync(Lt2.Api.Contracts.Digests.MpMailRoutes.TokenOf(new string('C', 43)));
+        await byAddress.ShouldBeProblemAsync(HttpStatusCode.TooManyRequests, "rate-limited");
+    }
+
+    private sealed class MpMailLimitFactory(DatabaseFixture database) : Lt2Factory(database)
+    {
+        protected override void ConfigureWebHost(Microsoft.AspNetCore.Hosting.IWebHostBuilder builder)
+        {
+            base.ConfigureWebHost(builder);
+            builder.UseSetting("RateLimits:MpMail:PermitLimit", "3");
+            builder.UseSetting("RateLimits:MpMailToken:PermitLimit", "2");
+        }
+    }
+
     public async ValueTask DisposeAsync() => await _factory.DisposeAsync();
 }

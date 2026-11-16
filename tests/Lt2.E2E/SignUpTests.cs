@@ -5,7 +5,7 @@ namespace Lt2.E2E;
 
 /// <summary>
 /// End to end against a running stack (docker compose): register with an invitation, receive the code in Mailpit,
-/// sign in, complete the registration (name and age, design 6.2) and see the hello page, at 1280 px and 390 px (design 10).
+/// sign in, complete the registration (name, age and the terms of use, design 6.2, 8.22.2) and see the hello page, at 1280 px and 390 px (design 10).
 ///
 /// Runs only when <c>LT2_E2E_BASE_URL</c> is set, for example:
 ///   LT2_E2E_BASE_URL=https://lt2.localhost:8443  LT2_E2E_MAILPIT_URL=http://localhost:8025
@@ -80,13 +80,22 @@ public sealed partial class SignUpTests
 
         // The address is proven; only now are the name and the age declaration asked, with nothing filled in.
         await page.WaitForURLAsync(new Regex("/prisijungti$"), new() { Timeout = E2ESteps.Slow });
-        await Assertions.Expect(page.GetByRole(AriaRole.Heading, new() { Name = "Dar du dalykai" })).ToBeVisibleAsync(new() { Timeout = E2ESteps.Slow });
+        await Assertions.Expect(page.GetByRole(AriaRole.Heading, new() { Name = "Dar keli dalykai" })).ToBeVisibleAsync(new() { Timeout = E2ESteps.Slow });
         await WaitForInteractivityAsync(page);
         var name = page.GetByLabel("Vardas, kurį matys kiti");
         await Assertions.Expect(name).ToHaveValueAsync("");
         await Assertions.Expect(page.GetByLabel("Man yra 18 metų arba daugiau")).Not.ToBeCheckedAsync();
+        var terms = page.GetByLabel("Sutinku su naudojimo taisyklėmis");
+        await Assertions.Expect(terms).Not.ToBeCheckedAsync();
+        await Assertions.Expect(page.Locator("#reg-terms-link")).ToHaveAttributeAsync("href", "/taisykles");
+        await Assertions.Expect(page.Locator("#reg-privacy-link")).ToHaveAttributeAsync("href", "/privatumas");
         await name.FillAsync("Rūta M.");
         await page.GetByLabel("Man yra 18 metų arba daugiau").CheckAsync();
+
+        // Design 8.22.2: without the terms box the registration does not finish.
+        await page.GetByRole(AriaRole.Button, new() { Name = "Baigti registraciją" }).ClickAsync();
+        await Assertions.Expect(page.Locator("#reg-terms-error")).ToHaveTextAsync("Kad galėtumėte užsiregistruoti, sutikite su naudojimo taisyklėmis.");
+        await terms.CheckAsync();
         await page.GetByRole(AriaRole.Button, new() { Name = "Baigti registraciją" }).ClickAsync();
 
         await page.WaitForURLAsync(new Regex("/sveiki$"), new() { Timeout = E2ESteps.Slow });

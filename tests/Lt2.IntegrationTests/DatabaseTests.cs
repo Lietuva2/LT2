@@ -178,7 +178,11 @@ public sealed class DatabaseTests(DatabaseFixture database)
     private ServiceProvider WorkerServices(CapturingTransport transport, int batchSize = 20, CollectingLogs? logs = null)
     {
         var configuration = new ConfigurationBuilder()
-            .AddInMemoryCollection(new Dictionary<string, string?> { ["Outbox:BatchSize"] = batchSize.ToString(System.Globalization.CultureInfo.InvariantCulture) })
+            .AddInMemoryCollection(new Dictionary<string, string?>
+            {
+                ["Outbox:BatchSize"] = batchSize.ToString(System.Globalization.CultureInfo.InvariantCulture),
+                ["Security:MailHashKey"] = "test-mail-hash-key",
+            })
             .Build();
         var services = new ServiceCollection();
         services.AddLogging(b =>

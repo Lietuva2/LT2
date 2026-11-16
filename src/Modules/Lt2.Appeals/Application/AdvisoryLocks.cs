@@ -32,6 +32,10 @@ internal static class AdvisoryLocks
     public static Task AiDraftsAsync(AppealsDb db, Guid moderatorUserId, CancellationToken ct) =>
         TakeAsync(db, "lt2.ai-draft:" + moderatorUserId.ToString("N"), ct);
 
+    /// <summary>One MP's response on one bill (design 8.5.5): the MP's account, the office members and a moderator change it one at a time.</summary>
+    public static Task MpResponseAsync(AppealsDb db, long seimasPersonId, string billNumber, CancellationToken ct) =>
+        TakeAsync(db, "lt2.mp-response:" + seimasPersonId.ToString(System.Globalization.CultureInfo.InvariantCulture) + ":" + AppealReads.NormaliseBillNumber(billNumber), ct);
+
     private static Task<int> TakeAsync(AppealsDb db, string key, CancellationToken ct) =>
         db.Database.ExecuteSqlRawAsync(Sql, [new NpgsqlParameter("key", key)], ct);
 }

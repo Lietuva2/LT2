@@ -390,9 +390,10 @@ public sealed class AppealPrivacyTests(DatabaseFixture database) : ApiTest(datab
         (await Database.ScalarAsync<long>("SELECT count(*) FROM appeals.daily_stat WHERE record_id = @a", ("a", record.Id))).ShouldBe(0);
 
         // Nothing else in the database holds an account next to a side or a stance. Only the person's own position, and the
-        // two kinds of text published under a chosen side on purpose (an argument with its author's name, an organisation's
-        // statement with its writer kept for moderators), have both; any other table with both, under any column names
-        // ending in user_id, is a defect.
+        // kinds of text published under a chosen side on purpose (an argument with its author's name, an organisation's
+        // statement with its writer kept for moderators, an MP's response with the account that wrote it on the MP's behalf,
+        // design 8.5.5: a public office holder's public answer, not a person's private side), have both; any other table with
+        // both, under any column names ending in user_id, is a defect.
         (await Database.ScalarAsync<string>(
             """
             SELECT coalesce(string_agg(DISTINCT s.table_schema || '.' || s.table_name || '.' || u.column_name, ', '), '')
@@ -400,7 +401,8 @@ public sealed class AppealPrivacyTests(DatabaseFixture database) : ApiTest(datab
             JOIN information_schema.columns u ON u.table_schema = s.table_schema AND u.table_name = s.table_name
             WHERE s.column_name IN ('side', 'stance') AND u.column_name LIKE '%user_id'
               AND s.table_schema || '.' || s.table_name || '.' || u.column_name NOT IN
-                  ('appeals.position.user_id', 'appeals.reason.author_user_id', 'appeals.organisation_statement.written_by_user_id')
+                  ('appeals.position.user_id', 'appeals.reason.author_user_id', 'appeals.organisation_statement.written_by_user_id',
+                   'appeals.mp_response.written_by_user_id')
             """)).ShouldBe("");
         (await Database.ScalarAsync<long>(
             "SELECT count(*) FROM appeals.revision WHERE changed_by_user_id = @u OR old_value IN ('for','against') OR new_value IN ('for','against')",

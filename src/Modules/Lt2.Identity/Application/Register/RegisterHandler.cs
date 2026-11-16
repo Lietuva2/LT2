@@ -23,6 +23,7 @@ internal sealed class RegisterHandler(
     UserManager<User> users,
     SignInCodeIssuer codes,
     ISettings settings,
+    IMpDirectory mps,
     TimeProvider clock)
 {
     public async Task<Result<Unit>> HandleAsync(Registration registration, CancellationToken cancellationToken)
@@ -56,7 +57,8 @@ internal sealed class RegisterHandler(
             // again when the registration is completed, so no row ever ties this address to the organisation.
             invitationCode = InvitationRules.HeldWhilePending(invitation.Kind, invitation.Code);
         }
-        else if (await settings.GetAsync(SettingKeys.RegistrationRequiresInvitation, cancellationToken))
+        else if (await settings.GetAsync(SettingKeys.RegistrationRequiresInvitation, cancellationToken)
+            && !await OfficialAddressGate.LetsThroughAsync(settings, mps, registration.Email, cancellationToken))
         {
             return Error.Validation("invitation.required", "invitationCode");
         }

@@ -45,7 +45,8 @@
 <data name="Feedback.Reply.Yours" xml:space="preserve"><value>Jūs rašėte: „{0}“</value></data>
 <data name="Feedback.Reply.Answer" xml:space="preserve"><value>Atsakymas: {0}</value></data>
 <data name="Feedback.Notice.Subject" xml:space="preserve"><value>Lietuva 2.0: nauji atsiliepimai ({0})</value></data>
-<data name="Feedback.Notice.Body" xml:space="preserve"><value>Naujų atsiliepimų: {0}. Juos rasite {1} (reikia darbuotojo prieigos rakto).</value></data><data name="Email.Statement" xml:space="preserve"><value>Moderatoriaus paaiškinimas: {0}</value></data>
+<data name="Feedback.Notice.Body" xml:space="preserve"><value>Naujų atsiliepimų: {0}. Juos rasite {1} (reikia darbuotojo prieigos rakto).</value></data><data name="Email.Privacy" xml:space="preserve"><value>Kaip tvarkome duomenis, rašoma privatumo pranešime: {0}</value></data>
+<data name="Email.Statement" xml:space="preserve"><value>Moderatoriaus paaiškinimas: {0}</value></data>
 <data name="Moderation.Rules" xml:space="preserve"><value>Šį laišką gavote, nes esate šio turinio autorius.</value></data>
 <data name="Digest.Subject" xml:space="preserve"><value>Lietuva 2.0 suvestinė Seimo nariams, {0}</value></data>
 <data name="Digest.Intro" xml:space="preserve"><value>projektų šioje suvestinėje: {0}. Dėl jų į Seimo narius kreipiasi Lietuva 2.0 naudotojai.</value></data>
@@ -119,4 +120,71 @@
 <data name="Follow.OrgLabel.none" xml:space="preserve"><value>nepatvirtinta</value></data>
 <data name="Follow.OrgLabel.domain" xml:space="preserve"><value>patvirtinta per el. pašto adresą @{0}</value></data>
 <data name="Follow.OrgLabel.moderator" xml:space="preserve"><value>patvirtino moderatorius</value></data>
+<data name="Follow.Responses.Subject" xml:space="preserve"><value>Lietuva 2.0: Seimo narių atsakymai dėl {0}</value></data>
+<data name="Follow.Responses.Body" xml:space="preserve"><value>{1} dėl jūsų sekamo projekto {0} atsakė:</value></data>
+<data name="Follow.Responses.Mp" xml:space="preserve"><value>– {0}: {1}</value></data>
+<data name="Follow.Responses.MpWithFaction" xml:space="preserve"><value>– {0} ({1}): {2}</value></data>
+<data name="Follow.Responses.Stance.for" xml:space="preserve"><value>balsuos už</value></data>
+<data name="Follow.Responses.Stance.against" xml:space="preserve"><value>balsuos prieš</value></data>
+<data name="Follow.Responses.Stance.undecided" xml:space="preserve"><value>dar neapsisprendė</value></data>
+<data name="Follow.Responses.Read" xml:space="preserve"><value>Atsakymus su paaiškinimais rasite projekto puslapyje: {0}</value></data>
+<data name="Notice.mp-linked.Subject" xml:space="preserve"><value>Lietuva 2.0: Seimo nario profilis perimtas</value></data>
+<data name="Notice.mp-linked.Body" xml:space="preserve"><value>ši paskyra dabar tvarko Seimo nario profilį Lietuva 2.0. Seimo narys: {1}. Profilyje rodoma „Profilį tvarko Seimo narys arba jo biuras“. Prie paskyros liko tik ką sukurtas prieigos raktas.</value></data>
+<data name="Notice.mp-given-up.Subject" xml:space="preserve"><value>Lietuva 2.0: Seimo nario profilio atsisakyta</value></data>
+<data name="Notice.mp-given-up.Body" xml:space="preserve"><value>ši paskyra nebetvarko Seimo nario profilio Lietuva 2.0. Seimo narys: {1}. Biuro narių prieiga baigėsi kartu.</value></data>
+<data name="Notice.mp-link-ended.Subject" xml:space="preserve"><value>Lietuva 2.0: Seimo nario profilio susiejimas nutrauktas</value></data>
+<data name="Notice.mp-link-ended.Body" xml:space="preserve"><value>administratorius nutraukė jūsų paskyros ir Seimo nario profilio susiejimą. Seimo narys: {1}. Biuro narių prieiga baigėsi kartu.</value></data>
+<data name="Notice.AdministratorStatement" xml:space="preserve"><value>Administratoriaus paaiškinimas: {0}</value></data>
+<data name="Notice.mp-office-added.Subject" xml:space="preserve"><value>Lietuva 2.0: prisijungė biuro narys</value></data>
+<data name="Notice.mp-office-added.Body" xml:space="preserve"><value>prie Seimo nario biuro Lietuva 2.0 prisijungė naujas narys. Seimo narys: {1}. Biuro narius matote paskyros puslapyje.</value></data>
+<data name="Notice.mp-office-removed.Subject" xml:space="preserve"><value>Lietuva 2.0: biuro narys pašalintas</value></data>
+<data name="Notice.mp-office-removed.Body" xml:space="preserve"><value>iš Seimo nario biuro Lietuva 2.0 pašalintas narys. Seimo narys: {1}.</value></data>
+<data name="Notice.mp-office-left.Subject" xml:space="preserve"><value>Lietuva 2.0: biuro narys išėjo</value></data>
+<data name="Notice.mp-office-left.Body" xml:space="preserve"><value>Seimo nario biuro narys Lietuva 2.0 išėjo iš biuro. Seimo narys: {1}.</value></data>
+<data name="Mp.Takeover.Subject" xml:space="preserve"><value>Lietuva 2.0: Seimo nario profilio perėmimas</value></data>
+<data name="Mp.Takeover.Intro" xml:space="preserve"><value>prašėte perimti Seimo nario profilį Lietuva 2.0. Seimo narys: {0}. Kad jį perimtumėte, atverkite šią nuorodą naršyklėje, kurioje esate prisijungę:</value></data>
+<data name="Mp.Takeover.Validity" xml:space="preserve"><value>Nuoroda galioja {0} val. ir tinka tik vieną kartą. Nauja nuoroda pakeičia ankstesnę.</value></data>
+<data name="Mp.Takeover.What" xml:space="preserve"><value>Atvėrę nuorodą sukursite prieigos raktą: tik juo ši paskyra galės kalbėti Seimo nario vardu.</value></data>
+<data name="Mp.Takeover.Ignore" xml:space="preserve"><value>Jei profilio perimti neprašėte, nieko daryti nereikia: be šios nuorodos profilis nebus perimtas.</value></data>
+  <data name="Mp.response-hidden.Subject" xml:space="preserve"><value>Lietuva 2.0: Seimo nario atsakymas paslėptas</value></data>
+  <data name="Mp.response-hidden.Body" xml:space="preserve"><value>moderatorius paslėpė Seimo nario atsakymą dėl projekto {1}. Seimo narys: {0}. Atsakymo vietoje rodoma „Atsakymas paslėptas moderatorių“ ir paaiškinimas. Projekto puslapis: {2}</value></data>
+  <data name="Mp.response-restored.Subject" xml:space="preserve"><value>Lietuva 2.0: Seimo nario atsakymas atkurtas</value></data>
+  <data name="Mp.response-restored.Body" xml:space="preserve"><value>moderatorius atkūrė Seimo nario atsakymą dėl projekto {1}: jis vėl rodomas. Seimo narys: {0}. Projekto puslapis: {2}</value></data>
+  <data name="Digest.StagePlanned" xml:space="preserve"><value>{0} · planuojama {1} d.</value></data>
+  <data name="Digest.CopyOf" xml:space="preserve"><value>Tai Seimo nario suvestinės kopija, siunčiama jo patvirtintu papildomu adresu. Seimo narys: {0}.</value></data>
+  <data name="Digest.CopySubject" xml:space="preserve"><value>Lietuva 2.0 suvestinės kopija, {0}</value></data>
+  <data name="Digest.Stance.for" xml:space="preserve"><value>balsuosiu už</value></data>
+  <data name="Digest.Stance.against" xml:space="preserve"><value>balsuosiu prieš</value></data>
+  <data name="Digest.Stance.undecided" xml:space="preserve"><value>dar neapsisprendžiau</value></data>
+  <data name="Digest.Response" xml:space="preserve"><value>  Jūsų atsakymas: {0} ({1}). Keisti arba papildyti: {2}</value></data>
+  <data name="Digest.ResponseCopy" xml:space="preserve"><value>  Seimo nario atsakymas: {0} ({1}).</value></data>
+  <data name="Digest.Answer" xml:space="preserve"><value>  Atsakyti vieną kartą visiems: {0}</value></data>
+  <data name="Digest.AllNumbers" xml:space="preserve"><value>  Visi skaičiai ir argumentai: {0}</value></data>
+  <data name="Digest.Preferences" xml:space="preserve"><value>Keisti suvestinių dažnumą arba jų atsisakyti: {0}</value></data>
+  <data name="Digest.Takeover" xml:space="preserve"><value>Prisijungę prie Lietuva 2.0 šiuo adresu galite perimti savo Seimo nario profilį ir atsakyti visiems iš karto: {0}</value></data>
+  <data name="Digest.CopyStop" xml:space="preserve"><value>Nebegauti kopijų: {0}</value></data>
+  <data name="Digest.Skipped.skipped-preference" xml:space="preserve"><value>(Šiam Seimo nariui ši suvestinė nesiunčiama: tokių suvestinių jis nepageidauja.)</value></data>
+  <data name="Digest.Skipped.suppressed" xml:space="preserve"><value>(Šiam Seimo nariui ši suvestinė nesiunčiama: jo adresas yra sąraše „Nesiunčiama“.)</value></data>
+  <data name="Digest.Skipped.introduced" xml:space="preserve"><value>(Šiam Seimo nariui vietoj šios suvestinės siunčiamas pristatymo laiškas: jo jis dar negavo.)</value></data>
+  <data name="Intro.Test" xml:space="preserve"><value>[Bandomoji kopija: Seimo nariams šis laiškas dar neišsiųstas. Asmeninės nuorodos jame pakeistos pavyzdžiu.]</value></data>
+  <data name="Intro.TestSubject" xml:space="preserve"><value>[Bandomoji kopija]</value></data>
+  <data name="MpMail.Frequency.default" xml:space="preserve"><value>Kas savaitę ir prieš balsavimus</value></data>
+  <data name="MpMail.Frequency.weekly" xml:space="preserve"><value>Tik kas savaitę</value></data>
+  <data name="MpMail.Frequency.before-vote" xml:space="preserve"><value>Tik prieš balsavimus</value></data>
+  <data name="MpMail.Frequency.stopped" xml:space="preserve"><value>Nesiųsti</value></data>
+  <data name="MpMail.Now" xml:space="preserve"><value>Dabar: {0}.</value></data>
+  <data name="MpMail.StoppedNote" xml:space="preserve"><value>Daugiau suvestinių nesiųsime, kol nustatymų nepakeisite.</value></data>
+  <data name="MpMail.NotYou" xml:space="preserve"><value>Jei to nedarėte, nustatymus galite pakeisti čia: {0} Jei manote, kad nuoroda pateko kitiems, tame puslapyje paspauskite „Atsiųsti naują nuorodą“.</value></data>
+  <data name="MpMail.changed.Subject" xml:space="preserve"><value>Lietuva 2.0: suvestinių nustatymai pakeisti</value></data>
+  <data name="MpMail.changed.Body" xml:space="preserve"><value>Seimo nario suvestinių nustatymai pakeisti. Seimo narys: {0}.</value></data>
+  <data name="MpMail.new-link.Subject" xml:space="preserve"><value>Lietuva 2.0: nauja suvestinių nustatymų nuoroda</value></data>
+  <data name="MpMail.new-link.Body" xml:space="preserve"><value>paprašyta naujos suvestinių nustatymų nuorodos. Seimo narys: {0}. Senoji nuoroda nebeveikia. Nauja nuoroda: {2}</value></data>
+  <data name="MpMail.extra-confirm.Subject" xml:space="preserve"><value>Lietuva 2.0: patvirtinkite papildomą gavėją</value></data>
+  <data name="MpMail.extra-confirm.Body" xml:space="preserve"><value>paprašyta suvestinių kopijas siųsti ir papildomu adresu: {1}. Seimo narys: {0}. Kad kopijos būtų siunčiamos, patvirtinkite: {2} Nuoroda galioja {3} val. ir tinka vieną kartą. Jei to neprašėte, nieko daryti nereikia: kopijos nebus siunčiamos.</value></data>
+  <data name="MpMail.extra-confirmed.Subject" xml:space="preserve"><value>Lietuva 2.0: papildomas gavėjas patvirtintas</value></data>
+  <data name="MpMail.extra-confirmed.Body" xml:space="preserve"><value>nuo šiol suvestinių kopijos siunčiamos ir papildomu adresu: {1}. Seimo narys: {0}.</value></data>
+  <data name="MpMail.extra-welcome.Subject" xml:space="preserve"><value>Lietuva 2.0: gausite Seimo nario suvestinių kopijas</value></data>
+  <data name="MpMail.extra-welcome.Body" xml:space="preserve"><value>Seimo narys patvirtino, kad šiuo adresu siųstume jo suvestinių kopijas. Seimo narys: {0}. Kiekvienoje kopijoje bus nuoroda „Nebegauti kopijų“; ja galite atsisakyti ir dabar: {2}</value></data>
+  <data name="MpMail.extra-removed.Subject" xml:space="preserve"><value>Lietuva 2.0: papildomas gavėjas pašalintas</value></data>
+  <data name="MpMail.extra-removed.Body" xml:space="preserve"><value>suvestinių kopijos papildomu adresu nebesiunčiamos: {1}. Seimo narys: {0}.</value></data>
 </root>

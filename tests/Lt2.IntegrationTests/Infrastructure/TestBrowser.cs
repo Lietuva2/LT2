@@ -64,7 +64,7 @@ public sealed class TestBrowser(HttpClient client, Lt2Factory factory) : IDispos
         using var response = await SendAsync(
             HttpMethod.Put,
             ApiRoutes.Me.Registration,
-            new CompleteRegistrationRequest { DisplayName = displayName, ConfirmsAdult = true });
+            new CompleteRegistrationRequest { DisplayName = displayName, ConfirmsAdult = true, AcceptsTerms = true });
         response.StatusCode.ShouldBe(HttpStatusCode.NoContent, await response.Content.ReadAsStringAsync());
     }
 

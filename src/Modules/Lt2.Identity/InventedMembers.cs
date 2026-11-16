@@ -11,7 +11,8 @@ public sealed record InventedMember(Guid Id, string Email, string? DisplayName, 
 
 /// <summary>
 /// Local demonstration data only (the migrator's <c>--demo-appeal</c>, which refuses unless the parliament data is the
-/// stand-in's): completed member accounts with the age declaration and the consent to store positions, written in bulk.
+/// stand-in's): completed member accounts with the age declaration, the consent to store positions and the terms of use in
+/// force (design 8.22.2), written in bulk.
 /// Every address must be on the reserved <c>.test</c> domain, so no real person can be among them.
 /// </summary>
 public static class InventedMembers
@@ -112,7 +113,7 @@ public static class InventedMembers
         {
             foreach (var m in fresh)
             {
-                foreach (var (kind, version) in new[] { (ConsentKinds.Adult, ConsentKinds.AdultTextVersion), (PositionConsent.Kind, PositionConsent.TextVersion) })
+                foreach (var (kind, version) in new[] { (ConsentKinds.Adult, ConsentKinds.AdultTextVersion), (PositionConsent.Kind, PositionConsent.TextVersion), (ConsentKinds.Terms, TermsOfUse.Version) })
                 {
                     await consents.StartRowAsync(cancellationToken);
                     await consents.WriteAsync(Guid.CreateVersion7(m.MemberSince), NpgsqlDbType.Uuid, cancellationToken);
@@ -128,5 +129,38 @@ public static class InventedMembers
 
         await transaction.CommitAsync(cancellationToken);
         return fresh.Count;
+    }
+
+    /// <summary>
+    /// Design 8.22.2: gives the terms of use in force to those of <paramref name="members"/> that exist as members and have not
+    /// accepted them, dated like their other consents, so demonstration accounts made before the terms (or before a new
+    /// version) stay consistent. Repeatable: running it again gives nothing twice. Returns how many accepted now.
+    /// </summary>
+    public static async Task<int> AcceptTermsAsync(string connectionString, IReadOnlyList<InventedMember> members, CancellationToken cancellationToken)
+    {
+        ArgumentNullException.ThrowIfNull(members);
+        if (members.Any(m => !m.Email.EndsWith("@" + Domain, StringComparison.Ordinal)))
+        {
+            throw new ArgumentException($"Invented members must have addresses on {Domain}.", nameof(members));
+        }
+
+        await using var connection = new NpgsqlConnection(connectionString);
+        await connection.OpenAsync(cancellationToken);
+        await using var insert = new NpgsqlCommand(
+            """
+            INSERT INTO identity.consent (id, user_id, kind, text_version, given_at)
+            SELECT x.id, x.user_id, @kind, @version, x.given_at
+            FROM unnest(@ids, @users, @given) AS x(id, user_id, given_at)
+            WHERE EXISTS (SELECT 1 FROM identity.profile p WHERE p.user_id = x.user_id AND p.registered_at IS NOT NULL)
+              AND NOT EXISTS (SELECT 1 FROM identity.consent c
+                              WHERE c.user_id = x.user_id AND c.kind = @kind AND c.text_version >= @version AND c.withdrawn_at IS NULL)
+            """,
+            connection);
+        insert.Parameters.AddWithValue("kind", ConsentKinds.Terms);
+        insert.Parameters.AddWithValue("version", TermsOfUse.Version);
+        insert.Parameters.AddWithValue("ids", members.Select(m => Guid.CreateVersion7(m.MemberSince)).ToArray());
+        insert.Parameters.AddWithValue("users", members.Select(m => m.Id).ToArray());
+        insert.Parameters.AddWithValue("given", NpgsqlDbType.Array | NpgsqlDbType.TimestampTz, members.Select(m => m.MemberSince).ToArray());
+        return await insert.ExecuteNonQueryAsync(cancellationToken);
     }
 }

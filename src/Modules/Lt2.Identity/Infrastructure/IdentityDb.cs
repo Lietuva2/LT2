@@ -30,11 +30,17 @@ internal sealed class IdentityDb(DbContextOptions<IdentityDb> options)
 
     public DbSet<SignInCode> SignInCodes => Set<SignInCode>();
 
+    public DbSet<KnownDevice> KnownDevices => Set<KnownDevice>();
+
     public DbSet<Session> Sessions => Set<Session>();
 
     public DbSet<RoleActivation> RoleActivations => Set<RoleActivation>();
 
     public DbSet<PartySupport> PartySupports => Set<PartySupport>();
+
+    public DbSet<PoliticianLink> PoliticianLinks => Set<PoliticianLink>();
+
+    public DbSet<PoliticianToken> PoliticianTokens => Set<PoliticianToken>();
 
     public DbSet<DataProtectionKey> DataProtectionKeys { get; set; } = null!;
 
@@ -138,6 +144,20 @@ internal sealed class IdentityDb(DbContextOptions<IdentityDb> options)
             b.Property(x => x.CodeHash).HasMaxLength(32);
             b.HasOne<User>().WithMany().HasForeignKey(x => x.UserId).OnDelete(DeleteBehavior.Cascade);
             b.HasIndex(x => new { x.UserId, x.CreatedAt });
+
+            // A forgotten browser's codes go with it: never left as codes any browser could use (design 8.20.2).
+            b.HasOne<KnownDevice>().WithMany().HasForeignKey(x => x.KnownDeviceId).OnDelete(DeleteBehavior.Cascade);
+        });
+
+        builder.Entity<KnownDevice>(b =>
+        {
+            b.ToTable("known_device");
+            b.HasKey(x => x.Id);
+            b.Property(x => x.IdentifierHash).HasMaxLength(32);
+            b.Property(x => x.Label).HasMaxLength(100);
+            b.HasOne<User>().WithMany().HasForeignKey(x => x.UserId).OnDelete(DeleteBehavior.Cascade);
+            b.HasIndex(x => new { x.UserId, x.IdentifierHash }).IsUnique();
+            b.HasIndex(x => x.LastSeenAt);
         });
 
         builder.Entity<Session>(b =>
@@ -169,6 +189,31 @@ internal sealed class IdentityDb(DbContextOptions<IdentityDb> options)
             b.Property(x => x.CodeHash).HasMaxLength(32);
             b.HasOne<User>().WithMany().HasForeignKey(x => x.UserId).OnDelete(DeleteBehavior.Cascade);
             b.HasIndex(x => new { x.UserId, x.Role });
+        });
+
+        // Design 8.5.2, 8.5.3: one open link per account, one open MP link per person; both go with the account.
+        builder.Entity<PoliticianLink>(b =>
+        {
+            b.ToTable("politician_link");
+            b.HasKey(x => x.Id);
+            b.Property(x => x.Part).HasMaxLength(10);
+            b.Property(x => x.VerifiedBy).HasMaxLength(20);
+            b.Property(x => x.EndReason).HasMaxLength(20);
+            b.HasOne<User>().WithMany().HasForeignKey(x => x.UserId).OnDelete(DeleteBehavior.Cascade);
+            b.HasIndex(x => x.UserId).IsUnique().HasFilter("ended_at IS NULL").HasDatabaseName("ix_politician_link_account_open");
+            b.HasIndex(x => x.SeimasPersonId).IsUnique().HasFilter("ended_at IS NULL AND part = 'mp'").HasDatabaseName("ix_politician_link_mp_open");
+            b.HasIndex(x => new { x.SeimasPersonId, x.Part });
+        });
+
+        builder.Entity<PoliticianToken>(b =>
+        {
+            b.ToTable("politician_token");
+            b.HasKey(x => x.Id);
+            b.Property(x => x.Kind).HasMaxLength(10);
+            b.Property(x => x.TokenHash).HasMaxLength(32);
+            b.HasIndex(x => x.TokenHash).IsUnique();
+            b.HasOne<User>().WithMany().HasForeignKey(x => x.UserId).OnDelete(DeleteBehavior.Cascade);
+            b.HasIndex(x => new { x.SeimasPersonId, x.Kind, x.CreatedAt });
         });
     }
 

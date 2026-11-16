@@ -35,10 +35,21 @@ internal sealed class FeedbackLimiter : IDisposable
 /// <summary>Server-side <see cref="IFeedbackApi"/>: the server-rendered form and the prerendered staff page call the module in-process.</summary>
 internal sealed class ServerFeedbackApi(IFeedback feedback, FeedbackLimiter limiter, IHttpContextAccessor accessor, IpHasher ipHasher, ErrorMapper errors) : IFeedbackApi
 {
-    public async Task<ApiResult> SendAsync(FeedbackRequest request, CancellationToken cancellationToken = default) =>
-        accessor.HttpContext?.User.UserId() is { } userId
-            ? errors.ToApiResult(await SendAsync(feedback, limiter, userId, request, cancellationToken))
-            : ApiResult.Fail(errors.ToProblem(Error.Unauthorized("auth.required")));
+    public async Task<ApiResult> SendAsync(FeedbackRequest request, CancellationToken cancellationToken = default)
+    {
+        if (accessor.HttpContext?.User is not { } user || user.UserId() is not { } userId)
+        {
+            return ApiResult.Fail(errors.ToProblem(Error.Unauthorized("auth.required")));
+        }
+
+        // Design 8.22.2: the server-rendered form does not pass through the API's TermsGate, so it asks the same question.
+        if (await Identity.TermsRequiredAsync(user, cancellationToken))
+        {
+            return ApiResult.Fail(errors.ToProblem(Error.Forbidden(TermsOfUse.RequiredCode)));
+        }
+
+        return errors.ToApiResult(await SendAsync(feedback, limiter, userId, request, cancellationToken));
+    }
 
     public async Task<ApiResult<IReadOnlyList<FeedbackItemResponse>>> ListAsync(string? kind = null, string? status = null, CancellationToken cancellationToken = default) =>
         await IsStaffAsync()

@@ -8,7 +8,8 @@
 #
 # Logs: no `log` directive, so no access log for the site. Not covered: a request that Caddy itself fails with a 5xx
 # (web stopped or restarting: 502) goes to that Caddy's error log with the client's address, user agent and full
-# address, an invitation code in it included. Only a global log filter drops those fields (as deploy/Caddyfile does
+# address, an invitation code or an MP's mail link token (design 8.19.4: /suvestines/nustatymai/…, /suvestines/kopijos/…,
+# /api/v1/mp-mail/…) in it included. Only a global log filter drops or replaces those (as deploy/Caddyfile does
 # for LT2's own Caddy); a handle_errors here would hide them too, but error routes apply to every site of that server
 # and the other sites' errors would then no longer be logged.
 lt2.example.org {

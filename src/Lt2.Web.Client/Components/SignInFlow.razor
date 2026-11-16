@@ -12,7 +12,7 @@
 @inject IJSRuntime JS
 
 @* The sign-in and registration steps (design 6.2, layout of design/ui/prisijungimas.html): an email code or a passkey,
-   registration with an invitation code, the code, then the display name and the age declaration. Used by the sign-in
+   registration with an invitation code, the code, then the display name, the age declaration and the terms of use (design 8.22.2). Used by the sign-in
    page and the front page; the controls stay disabled until WebAssembly runs, and without JavaScript the note says why. *@
 <div class="stack">
     <noscript><p class="note">@L["NoScript"]</p></noscript>
@@ -84,6 +84,17 @@
                     </label>
                     <FieldError Errors="Errors" Field="confirmsAdult" For="reg-age" />
                 </div>
+                @* Design 8.22.2: the one required box for the terms of use, beside the age; the privacy notice informs and
+                   has no box. Both open in a new tab, so what is typed here stays. *@
+                <div class="field @ErrorClass("acceptsTerms")">
+                    <label class="check" for="reg-terms">
+                        <input type="checkbox" id="reg-terms" @bind="_terms" disabled="@Locked"
+                               aria-invalid="@Invalid("acceptsTerms")" aria-describedby="@DescribedBy("acceptsTerms", "reg-terms")" />
+                        <span>@L["Terms.Check.Before"] <a href="/taisykles" target="_blank" rel="noopener" id="reg-terms-link">@L["Terms.Check.Link"]</a></span>
+                    </label>
+                    <FieldError Errors="Errors" Field="acceptsTerms" For="reg-terms" />
+                </div>
+                <p class="small" id="reg-privacy">@L["Privacy.Sentence.Before"] <a href="/privatumas" target="_blank" rel="noopener" id="reg-privacy-link">@L["Privacy.Sentence.Link"]</a>.</p>
                 @if (_askInvitation)
                 {
                     <div class="field @ErrorClass("invitationCode")">
@@ -136,14 +147,14 @@
 @code {
     private enum Step { SignIn, Register, Code, Complete }
 
-    private const string LandingKey = "lt2.tikslas";
+    private const string LandingKey = BrowserKeys.Landing;
 
     /// <summary>
     /// The invitation code typed at registration, kept in this tab's session storage until the registration is completed and
     /// sent again then (design 8.14.14, stage B): the server does not keep an organisation's code on a pending account, so
     /// nothing ties the address to the organisation. On another device the form asks for the code again.
     /// </summary>
-    private const string CodeKey = "lt2.kodas";
+    private const string CodeKey = BrowserKeys.InvitationCode;
 
     private Step _step = Step.SignIn;
     private bool _registered;
@@ -151,6 +162,7 @@
     private string? _invitation;
     private string? _displayName;
     private bool _adult;
+    private bool _terms;
     private bool _askInvitation;
     private string _code = "";
 
@@ -194,7 +206,7 @@
         Step.SignIn => ["email"],
         Step.Register => ["email", "invitationCode"],
         Step.Code => ["code"],
-        _ => ["displayName", "confirmsAdult", "invitationCode"],
+        _ => ["displayName", "confirmsAdult", "acceptsTerms", "invitationCode"],
     };
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
@@ -261,7 +273,7 @@
         {
             if (me.Value!.RegistrationComplete)
             {
-                Navigation.NavigateTo(LandingPath.Accept(Landing) ?? "/sveiki", forceLoad: true);
+                Navigation.NavigateTo(AfterSignIn(me.Value, LandingPath.Accept(Landing) ?? "/sveiki"), forceLoad: true);
                 return;
             }
 
@@ -269,6 +281,13 @@
             _step = Step.Complete;
         }
     }
+
+    /// <summary>
+    /// Design 8.22.2: a member who has not accepted the terms in force sees the acceptance screen first, which then goes on to
+    /// <paramref name="next"/>; everyone else goes to <paramref name="next"/> directly.
+    /// </summary>
+    private static string AfterSignIn(MeResponse? me, string next) =>
+        me is { RegistrationComplete: true, TermsRequired: true } ? TermsText.AcceptanceLink(next) : next;
 
     /// <summary>Where a member goes once signed in: the share link's page if one waits in this tab, otherwise the account.</summary>
     private async Task<string> NextPageAsync()
@@ -375,7 +394,7 @@
             {
                 // A new account still finishes its registration first (via /sveiki); the share link's page waits until then.
                 var me = await Me.GetAsync();
-                Navigation.NavigateTo(me.Value?.RegistrationComplete == true ? await NextPageAsync() : "/sveiki", forceLoad: true);
+                Navigation.NavigateTo(me.Value?.RegistrationComplete == true ? AfterSignIn(me.Value, await NextPageAsync()) : "/sveiki", forceLoad: true);
             }
         });
     }
@@ -388,6 +407,7 @@
         {
             DisplayName = string.IsNullOrWhiteSpace(_displayName) ? null : _displayName.Trim(),
             ConfirmsAdult = _adult,
+            AcceptsTerms = _terms,
             InvitationCode = _askInvitation && !string.IsNullOrWhiteSpace(_invitation) ? _invitation.Trim() : string.IsNullOrWhiteSpace(kept) ? null : kept.Trim(),
         };
         ClearMessages();
@@ -452,7 +472,7 @@
 
         if (Succeeded(await Auth.SignInWithPasskeyAsync(new PasskeyCredentialRequest { Credential = credential }), FieldsOnThisStep))
         {
-            Navigation.NavigateTo(await NextPageAsync(), forceLoad: true);
+            Navigation.NavigateTo(AfterSignIn((await Me.GetAsync()).Value, await NextPageAsync()), forceLoad: true);
         }
     });
 }

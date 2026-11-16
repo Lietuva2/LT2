@@ -10,6 +10,7 @@ public sealed class CompleteRegistrationRequestValidator : AbstractValidator<Com
     {
         RuleFor(x => x.DisplayName).MaximumLength(AuthRules.DisplayNameMaxLength).WithMessage(l["DisplayName.TooLong"]);
         RuleFor(x => x.ConfirmsAdult).Equal(true).WithMessage(l["Adult.Required"]);
+        RuleFor(x => x.AcceptsTerms).Equal(true).WithMessage(l["Terms.Required"]);
         RuleFor(x => x.InvitationCode).MaximumLength(AuthRules.InvitationCodeMaxLength).WithMessage(l["Invitation.TooLong"]);
     }
 }
@@ -29,6 +30,12 @@ public sealed class PositionConsentRequestValidator : AbstractValidator<Position
 {
     public PositionConsentRequestValidator(IStringLocalizer<ValidationMessages> l) =>
         RuleFor(x => x.TextVersion).NotEmpty().WithMessage(l["Consent.Required"]).MaximumLength(50).WithMessage(l["Consent.Required"]);
+}
+
+public sealed class TermsAcceptanceRequestValidator : AbstractValidator<TermsAcceptanceRequest>
+{
+    public TermsAcceptanceRequestValidator(IStringLocalizer<ValidationMessages> l) =>
+        RuleFor(x => x.TextVersion).NotEmpty().WithMessage(l["Terms.Version"]).MaximumLength(50).WithMessage(l["Terms.Version"]);
 }
 
 public sealed class PartySupportRequestValidator : AbstractValidator<PartySupportRequest>

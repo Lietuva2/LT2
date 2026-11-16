@@ -218,6 +218,12 @@ internal sealed class AppealsService(
             return Error.Forbidden("member.required");
         }
 
+        // Design 8.5.4: the MP's own account takes no side.
+        if (MpAccounts.Refusal(participant) is { } mpAccount)
+        {
+            return mpAccount;
+        }
+
         if (!participant.HasPositionConsent)
         {
             return Error.Conflict("consent.required");
@@ -331,9 +337,16 @@ internal sealed class AppealsService(
         await using var db = await contexts.CreateDbContextAsync(cancellationToken);
         await using var transaction = await db.Database.BeginTransactionAsync(cancellationToken);
         await AdvisoryLocks.PersonAsync(db, userId, cancellationToken);
-        if (await participants.FindAsync(userId, cancellationToken) is null)
+        var author = await participants.FindAsync(userId, cancellationToken);
+        if (author is null)
         {
             return Error.Forbidden("member.required");
+        }
+
+        // Design 8.5.4: the MP's own account writes no argument; the MP speaks through the response.
+        if (MpAccounts.Refusal(author) is { } mpAccount)
+        {
+            return mpAccount;
         }
 
         if (await RestrictedAsync(db, userId, cancellationToken) is { } restricted)
@@ -378,6 +391,13 @@ internal sealed class AppealsService(
         await using var db = await contexts.CreateDbContextAsync(cancellationToken);
         await using var transaction = await db.Database.BeginTransactionAsync(cancellationToken);
         await AdvisoryLocks.PersonAsync(db, userId, cancellationToken);
+
+        // Design 8.5.4: the MP's own account gives no "Man svarbu".
+        if (MpAccounts.Refusal(await participants.FindAsync(userId, cancellationToken)) is { } mpAccount)
+        {
+            return mpAccount;
+        }
+
         var reason = await db.Reasons.AsNoTracking().FirstOrDefaultAsync(r => r.Id == reasonId && r.Status == ReasonStatuses.Published, cancellationToken);
         var record = reason is null ? null : await db.BillRecords.AsNoTracking().FirstOrDefaultAsync(a => a.Id == reason.RecordId, cancellationToken);
         if (reason is null || record is null || record.Status != BillRecordStatuses.Open)
@@ -542,6 +562,15 @@ internal sealed class AppealsService(
                 break;
             case "statement":
                 if (!await db.OrganisationStatements.Shown(db.Organisations).AnyAsync(s => s.Id == request.TargetId, cancellationToken))
+                {
+                    return Error.NotFound("report.target-not-found");
+                }
+
+                recordId = null;
+                break;
+            case "response":
+                // Design 8.5.5: an MP's response that is shown (published, or withdrawn with its versions).
+                if (!await db.MpResponses.AnyAsync(r => r.Id == request.TargetId && (r.Status == ResponseStatuses.Published || r.Status == ResponseStatuses.Withdrawn), cancellationToken))
                 {
                     return Error.NotFound("report.target-not-found");
                 }

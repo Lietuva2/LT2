@@ -1,5 +1,6 @@
 using FluentValidation.Results;
 using Lt2.Api.Contracts;
+using Lt2.Api.Contracts.Me;
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Authorization;
 using Microsoft.Extensions.Localization;
@@ -20,6 +21,10 @@ public abstract class InteractiveBase<TText> : ComponentBase
 
     [CascadingParameter]
     private Task<AuthenticationState>? AuthState { get; set; }
+
+    /// <summary>For the one refusal that leads elsewhere: <c>terms.required</c> (design 8.22.2).</summary>
+    [Inject]
+    private NavigationManager TermsNavigation { get; set; } = default!;
 
     protected bool Busy { get; private set; }
 
@@ -86,6 +91,16 @@ public abstract class InteractiveBase<TText> : ComponentBase
     /// </summary>
     protected void Show(ApiProblem? problem, params string[] fields)
     {
+        // Design 8.22.2: a member who has not accepted the terms in force is shown the acceptance screen, which brings them
+        // back here, instead of each island failing its writes one by one. The message stays in case the browser stays.
+        if (problem?.Code == "terms.required")
+        {
+            Message = problem.Detail ?? L["Error.Generic"];
+            var here = "/" + TermsNavigation.ToBaseRelativePath(TermsNavigation.Uri);
+            TermsNavigation.NavigateTo(TermsText.AcceptanceLink(here), forceLoad: true);
+            return;
+        }
+
         if (problem?.Errors is { Count: > 0 } errors)
         {
             Errors = errors.Where(e => fields.Contains(e.Key, StringComparer.OrdinalIgnoreCase))

@@ -134,8 +134,9 @@ public sealed class AgendaWatchJob(IAgendaWatch watch, ILogger<AgendaWatchJob> l
 }
 
 /// <summary>
-/// Summaries in dry-run (design 8.4): every 15 minutes, makes the weekly or before-vote summary when it is due. Nothing
-/// is sent in M2a.
+/// Summaries (design 8.4, 8.19): every 15 minutes, expires the waiting summaries whose time passed and makes the weekly or
+/// before-vote summary when it is due: a dry run while sending is off, waiting for a moderator with <c>approval</c>, sent with
+/// <c>automatic</c>. The log line holds counts only, never an MP or an address.
 /// </summary>
 public sealed class DigestJob(IDigests digests, TimeProvider clock, ILogger<DigestJob> logger)
 {
@@ -145,7 +146,7 @@ public sealed class DigestJob(IDigests digests, TimeProvider clock, ILogger<Dige
         var made = await digests.RunDueAsync(clock.GetUtcNow(), cancellationToken);
         foreach (var run in made)
         {
-            logger.LogInformation("Summary {Kind} made in dry-run: {Items} bills, {Mps} MPs", run.Kind, run.Items.Count, run.MpCount);
+            logger.LogInformation("Summary {Kind} made ({Status}): {Items} bills, {Mps} MPs", run.Kind, run.Status, run.Items.Count, run.MpCount);
         }
     }
 }

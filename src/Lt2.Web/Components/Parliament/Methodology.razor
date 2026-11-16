@@ -15,7 +15,7 @@
 
 <div class="sheet stack stack--loose">
     @* Design 8.7: the steps of the visitor's introduction, here for a member's "Kaip tai veikia" on the front page. *@
-    <Lt2.Web.Components.Pages.HowItWorks Id="kaip-tai-veikia" IdPrefix="m-" />
+    <Lt2.Web.Components.Pages.HowItWorks Id="kaip-tai-veikia" IdPrefix="m-" Sending="@(_rules?.Sending ?? "off")" />
 
     <section class="stack" aria-labelledby="m-source" id="saltinis">
         <h2 id="m-source">@F.T["Method.Source"]</h2>
@@ -79,8 +79,11 @@
                 @* Design 8.15: who would receive a summary and what its public copy holds (were on the summaries page). *@
                 <dt id="kas-gautu">@A["Digests.Who"]</dt><dd>@A["Digests.WhoValue"]</dd>
                 <dt id="viesa-kopija">@A["Method.Digests.PublicCopy"]</dt><dd>@A["Method.Digests.PublicCopyValue"]</dd>
+                @* Design 8.19.1: whether summaries really go, as it holds now (Digest:Sending and its locks). *@
+                <dt id="siuntimas">@A["Method.Digests.Sending"]</dt><dd class="num" id="digest-sending">@A.Format("Method.Digests.Sending." + r.Sending, Display.Number(r.ApprovalHours))</dd>
+                <dt id="nustatymai">@A["Method.Digests.Preferences"]</dt><dd>@A["Method.Digests.PreferencesValue"]</dd>
             </dl>
-            <p>@A["Method.Digests.NotSent"] <a href="/suvestines">@A["Digests.Title"]</a> · <a href="/moderavimo-taisykles">@A["Rules.Title"]</a></p>
+            <p>@(r.Sending == "off" ? A["Method.Digests.NotSent"] : "") <a href="/suvestines">@A["Digests.Title"]</a> · <a href="@Lt2.Api.Contracts.Digests.DigestRoutes.IntroductionPage">@A["Intro.Title"]</a> · <a href="/moderavimo-taisykles">@A["Rules.Title"]</a></p>
         </section>
     }
 

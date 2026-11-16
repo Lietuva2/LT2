@@ -10,6 +10,8 @@
   <data name="Invitation.TooLong" xml:space="preserve"><value>Kvietimo kodas per ilgas.</value></data>
   <data name="DisplayName.TooLong" xml:space="preserve"><value>Vardas per ilgas: ne daugiau kaip 60 ženklų.</value></data>
   <data name="Adult.Required" xml:space="preserve"><value>Registruotis gali tik 18 metų ir vyresni asmenys.</value></data>
+  <data name="Terms.Required" xml:space="preserve"><value>Kad galėtumėte užsiregistruoti, sutikite su naudojimo taisyklėmis.</value></data>
+  <data name="Terms.Version" xml:space="preserve"><value>Naudojimo taisyklės pasikeitė. Perkraukite puslapį ir perskaitykite naujas.</value></data>
   <data name="Code.Required" xml:space="preserve"><value>Įveskite kodą iš laiško.</value></data>
   <data name="Code.Format" xml:space="preserve"><value>Kodą sudaro šeši skaitmenys.</value></data>
   <data name="Passkey.Required" xml:space="preserve"><value>Nepavyko gauti prieigos rakto duomenų.</value></data>
@@ -53,4 +55,14 @@
 <data name="Confirm.Code" xml:space="preserve"><value>Įveskite kodą iš laiško.</value></data>
   <data name="MyBills.Count" xml:space="preserve"><value>Nurodykite nuo 1 iki 30 projektų numerių.</value></data>
   <data name="MyBills.Number" xml:space="preserve"><value>Projekto numeris netinka.</value></data>
+  <data name="MpLink.Required" xml:space="preserve"><value>Nuorodos kodo nėra: atverkite visą nuorodą iš laiško.</value></data>
+  <data name="MpResponse.Stance" xml:space="preserve"><value>Pasirinkite: balsuosite už, prieš ar dar neapsisprendėte.</value></data>
+  <data name="MpResponse.Required" xml:space="preserve"><value>Parašykite atsakymą.</value></data>
+  <data name="MpResponse.TooLong" xml:space="preserve"><value>Atsakymas per ilgas: ne daugiau kaip 1 500 ženklų.</value></data>
+  <data name="Digest.CancelTooShort" xml:space="preserve"><value>Paaiškinimas per trumpas: bent 20 ženklų.</value></data>
+  <data name="MpMail.Frequency" xml:space="preserve"><value>Pasirinkite, kaip dažnai siųsti suvestines.</value></data>
+  <data name="MpMail.Address" xml:space="preserve"><value>Įveskite vieną el. pašto adresą (ne daugiau kaip 254 ženklai).</value></data>
+  <data name="Introduction.Subject" xml:space="preserve"><value>Laiško tema – nuo 1 iki 200 ženklų.</value></data>
+  <data name="Introduction.Text" xml:space="preserve"><value>Laiško tekstas – nuo 1 iki 10 000 ženklų.</value></data>
+  <data name="Introduction.Signer" xml:space="preserve"><value>Nurodykite pasirašančiojo vardą, pavardę ir pareigas (ne daugiau kaip 200 ženklų).</value></data>
 </root>

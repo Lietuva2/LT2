@@ -1,11 +1,12 @@
 using System.Globalization;
 using Lt2.SharedKernel;
 using Microsoft.Extensions.Localization;
+using Microsoft.Extensions.Options;
 
 namespace Lt2.Notifications.Templates;
 
 /// <summary>The sign-in code email, in Lithuanian. The same text serves registration and sign-in, so it reveals nothing.</summary>
-internal sealed class SignInCodeTemplate(IStringLocalizer<EmailTemplates> l)
+internal sealed class SignInCodeTemplate(IStringLocalizer<EmailTemplates> l, IOptions<SiteOptions> site)
 {
     public EmailMessage Render(SignInCodeEmail model)
     {
@@ -20,6 +21,6 @@ internal sealed class SignInCodeTemplate(IStringLocalizer<EmailTemplates> l)
             l["SignInCode.Ignore"],
             l[EmailText.Signature],
         ];
-        return EmailLayout.Build(model.To, l.Format("SignInCode.Subject", model.Code), paragraphs, highlighted: 2);
+        return EmailLayout.Build(model.To, l.Format("SignInCode.Subject", model.Code), paragraphs, EmailLayout.Footer(l, site.Value.Address), highlighted: 2);
     }
 }

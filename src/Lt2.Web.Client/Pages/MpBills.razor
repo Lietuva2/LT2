@@ -1,0 +1,108 @@
+@page "/seimo-narys/projektai"
+@attribute [Authorize]
+@rendermode InteractiveWebAssembly
+@using Lt2.Api.Contracts.Mps
+@using Lt2.Web.Client.Appeals
+@inherits InteractiveBase<AppealUi>
+@inject IMpResponsesApi Responses
+
+@* "Projektai, dėl kurių į jus kreipiamasi" (design 8.5.7): for an account linked to an MP (the MP's or an office member's; a
+   code session may read it), reached from the account page. The summaries' list on a page, live: the open bills that
+   reached the threshold and are not held, in the summaries' order, each with its number, title, stage, "Planuojama …", both
+   sides' numbers, and the MP's own response or a link to answer on the bill's page. Nothing about other MPs. Asked for only
+   in the browser. *@
+<PageTitle>@L["MpBills.PageTitle"]</PageTitle>
+
+<div class="stack">
+    <ol class="crumbs">
+        <li><a href="/sveiki">@L["MpBills.Account"]</a></li>
+        <li>@L["MpBills.Title"]</li>
+    </ol>
+    <h1>@L["MpBills.Title"]</h1>
+    <NeedsScript />
+    <p class="lead">@L["MpBills.Lead"]</p>
+</div>
+
+@if (_refused)
+{
+    <p class="note" role="alert" id="mp-bills-refused">@L["MpBills.NotLinked"]</p>
+}
+else if (_bills is null)
+{
+    <p class="small">@L["Loading"]</p>
+}
+else
+{
+    <p class="small" id="mp-bills-for">@L.Format("MpBills.Mp", _bills.Mp.FirstName + " " + _bills.Mp.LastName)</p>
+    <section class="sheet stack" aria-labelledby="h-mp-bills" id="mp-bills">
+        <h2 id="h-mp-bills" class="visually-hidden">@L["MpBills.Title"]</h2>
+        @if (_bills.Items.Count == 0)
+        {
+            <p id="mp-bills-none">@L["MpBills.None"]</p>
+        }
+        else
+        {
+            <ul class="rows" id="mp-bills-list">
+                @foreach (var b in _bills.Items)
+                {
+                    <li id="mp-bill-@b.Number" @key="b.Number">
+                        <div class="rows__main">
+                            <span><a class="num" href="/seimas/@Uri.EscapeDataString(b.Number)">@b.Number</a> · @b.Title</span>
+                            @if (b.Planned is { } plan)
+                            {
+                                <span class="row small">
+                                    @if (plan.Stage is { } stage)
+                                    {
+                                        <span class="tag">@L["Mod.Stage." + stage]</span>
+                                    }
+                                    <span class="num">@L.Format("MpBills.Planned", Display.Day(plan.Date))</span>
+                                </span>
+                            }
+                            <span class="small num">
+                                <span class="choice choice--for">@L["MpBills.ForSide"]</span> @Display.Number(b.For) (@L.Format("MpBills.Older", Display.Number(b.ForOlderThan30Days)))
+                                · <span class="choice choice--against">@L["MpBills.AgainstSide"]</span> @Display.Number(b.Against) (@L.Format("MpBills.Older", Display.Number(b.AgainstOlderThan30Days)))
+                            </span>
+                        </div>
+                        <div class="rows__side">
+                            @if (b.Response is { Status: "published" } r)
+                            {
+                                <span class="small" id="mp-bill-response-@b.Number">@L.Format("MpBills.Answered", L["MpResponse.Will." + r.Stance])</span>
+                            }
+                            else if (b.Response is { Status: "hidden" })
+                            {
+                                <span class="small" id="mp-bill-response-@b.Number">@L["MpBills.Hidden"]</span>
+                            }
+                            else
+                            {
+                                @if (b.Response is { Status: "withdrawn" })
+                                {
+                                    <span class="small" id="mp-bill-response-@b.Number">@L["MpBills.Withdrawn"]</span>
+                                }
+                                <a class="btn btn--plain" href="/seimas/@Uri.EscapeDataString(b.Number)#atsakymai" id="mp-bill-answer-@b.Number">@L["MpBills.Answer"]</a>
+                            }
+                        </div>
+                    </li>
+                }
+            </ul>
+        }
+    </section>
+    <p class="note note--quiet" id="mp-bills-not-a-poll">@L["MpBills.NotAPoll"]</p>
+}
+
+@code {
+    private MpBillsResponse? _bills;
+    private bool _refused;
+
+    protected override async Task OnInitializedAsync()
+    {
+        // Only in the browser: the page the server renders holds nothing of the link.
+        if (!RendererInfo.IsInteractive)
+        {
+            return;
+        }
+
+        var result = await Responses.GetMyBillsAsync();
+        _refused = !result.IsSuccess;
+        _bills = result.Value;
+    }
+}

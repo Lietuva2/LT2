@@ -7,6 +7,8 @@
 <div class="sheet sheet--quiet stack stack--tight" role="group" aria-labelledby="@(IdPrefix)consent-title" id="@(IdPrefix)consent">
     <h3 id="@(IdPrefix)consent-title">@L["Consent.Title"]</h3>
     <p>@L["Consent.Text"]</p>
+    @* Design 8.22.3: the privacy notice, from the consent; a new tab keeps the row as it is. *@
+    <p class="small"><a href="/privatumas#pozicijos" target="_blank" rel="noopener" id="@(IdPrefix)consent-privacy">@L["Consent.PrivacyLink"]</a></p>
     <label class="check">
         <input type="checkbox" id="@(IdPrefix)consent-check" @bind="checkedBox" disabled="@Locked" />
         <span>@L["Consent.Check"]</span>

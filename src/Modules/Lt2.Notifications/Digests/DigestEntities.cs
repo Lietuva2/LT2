@@ -1,11 +1,14 @@
 namespace Lt2.Notifications.Digests;
 
-/// <summary><c>notify.digest_run</c> (design 5.4): one summary as made. In M2a every run is a dry run: nothing is sent.</summary>
+/// <summary>
+/// <c>notify.digest_run</c> (design 5.4, 8.19.7): one summary as made, or one sending of the introduction letter. Its status
+/// says what happened to it (<see cref="RunStatuses"/>); a dry run is made and published, never sent.
+/// </summary>
 internal sealed class DigestRun
 {
     public Guid Id { get; set; }
 
-    /// <summary><c>weekly</c>, <c>before-vote</c> or <c>urgent</c>.</summary>
+    /// <summary><c>weekly</c>, <c>before-vote</c>, <c>urgent</c> or <c>introduction</c> (design 8.19.5).</summary>
     public string Kind { get; set; } = "";
 
     /// <summary>The Vilnius day it was made; its public page is <c>/suvestines/{date}</c>.</summary>
@@ -16,14 +19,42 @@ internal sealed class DigestRun
 
     public DateTimeOffset CreatedAt { get; set; }
 
-    /// <summary><c>dry-run</c> in M2a.</summary>
-    public string Status { get; set; } = "dry-run";
+    /// <summary>See <see cref="RunStatuses"/>.</summary>
+    public string Status { get; set; } = RunStatuses.DryRun;
 
     /// <summary>For an urgent summary: the moderator who approved it.</summary>
     public Guid? ApprovedBy { get; set; }
 
-    /// <summary>MPs it would have gone to (within the ceiling).</summary>
+    /// <summary>MPs it would go to when it was made (within the ceiling, preferences and the suppression list then).</summary>
     public int MpCount { get; set; }
+
+    /// <summary>Design 8.19.2: who let it go or declined it (a moderator; the system for an expiry). Never public.</summary>
+    public Guid? DecidedBy { get; set; }
+
+    /// <summary>When it was let go, declined or expired.</summary>
+    public DateTimeOffset? DecidedAt { get; set; }
+
+    /// <summary>The moderator's statement when it was declined ("Nesiųsti"); public on its copy.</summary>
+    public string? Statement { get; set; }
+
+    /// <summary>How many MPs it was sent to (official recipients queued) when it was let go.</summary>
+    public int SentCount { get; set; }
+
+    /// <summary>For a waiting summary: when it expires unless a moderator decides (design 8.19.2).</summary>
+    public DateTimeOffset? ExpiresAt { get; set; }
+
+    /// <summary>For a run of kind <c>introduction</c>: the letter's version sent.</summary>
+    public int? LetterVersion { get; set; }
+}
+
+/// <summary>The statuses of a run (design 8.19.1).</summary>
+internal static class RunStatuses
+{
+    public const string DryRun = "dry-run";
+    public const string Waiting = "waiting";
+    public const string Sent = "sent";
+    public const string Cancelled = "cancelled";
+    public const string Expired = "expired";
 }
 
 /// <summary><c>notify.digest_item</c>: one record in a summary, frozen as it was (design 6.6, 8.7). No person in it.</summary>
@@ -62,8 +93,9 @@ internal sealed class DigestItem
 }
 
 /// <summary>
-/// <c>notify.digest_delivery</c>: per run and MP, what happened (here <c>dry-run</c> or <c>skipped-ceiling</c>) and the
-/// MP-specific numbers (the MP's party, groups of at least 20 only). Holds no address: M2a never sends.
+/// <c>notify.digest_delivery</c> (design 8.19.3): per run, MP and recipient (<c>official</c>, or <c>extra</c> for a confirmed
+/// extra recipient), what happened (<see cref="DeliveryStatuses"/>) and the MP-specific numbers (the MP's party, groups of at
+/// least 20 only). Holds no address: the address travels only in the outbox row, which is deleted when sent.
 /// </summary>
 internal sealed class DigestDelivery
 {
@@ -71,8 +103,157 @@ internal sealed class DigestDelivery
 
     public string MpSlug { get; set; } = "";
 
-    public string Status { get; set; } = "dry-run";
+    /// <summary><c>official</c> or <c>extra</c>.</summary>
+    public string Recipient { get; set; } = Recipients.Official;
+
+    /// <summary>The MP's Seimas person id (0 on rows made before sending was built).</summary>
+    public long SeimasPersonId { get; set; }
+
+    public string Status { get; set; } = DeliveryStatuses.DryRun;
 
     /// <summary>Per record of the run: the MP's party numbers, as JSON; empty when no group reached 20.</summary>
     public string PartyNumbers { get; set; } = "[]";
+}
+
+internal static class Recipients
+{
+    public const string Official = "official";
+    public const string Extra = "extra";
+}
+
+/// <summary>
+/// What happened to one delivery (design 8.19.3). <c>dry-run</c>, <c>waiting</c> and <c>not-sent</c> are the rows of runs
+/// that were never let go: made for the moderators' preview, one per MP.
+/// </summary>
+internal static class DeliveryStatuses
+{
+    public const string DryRun = "dry-run";
+    public const string Waiting = "waiting";
+    public const string NotSent = "not-sent";
+    public const string Queued = "queued";
+    public const string Sent = "sent";
+    public const string Failed = "failed";
+    public const string Bounced = "bounced";
+    public const string SkippedCeiling = "skipped-ceiling";
+    public const string SkippedPreference = "skipped-preference";
+    public const string Suppressed = "suppressed";
+    public const string Introduced = "introduced";
+
+    /// <summary>A delivery that went to the outbox (and may since have been sent, failed or bounced).</summary>
+    public static readonly IReadOnlyList<string> Went = [Queued, Sent, Failed, Bounced];
+}
+
+/// <summary>
+/// <c>notify.mp_email_pref</c> (design 8.19.4): per Seimas person, how often the MP wants summaries, the extra recipient and
+/// its confirmation. Never public; whether an MP stopped the summaries is shown to nobody but that MP.
+/// </summary>
+internal sealed class MpEmailPref
+{
+    public long SeimasPersonId { get; set; }
+
+    /// <summary>See <see cref="Frequencies"/>.</summary>
+    public string Frequency { get; set; } = Frequencies.Default;
+
+    /// <summary>The extra recipient's address as written; deleted when removed. Gets copies only once confirmed.</summary>
+    public string? ExtraAddress { get; set; }
+
+    /// <summary>When the official address confirmed the extra recipient; null while it waits.</summary>
+    public DateTimeOffset? ExtraConfirmedAt { get; set; }
+
+    /// <summary>Counts the preferences links made, so a new one ("Atsiųsti naują nuorodą") is a new token.</summary>
+    public int TokenGeneration { get; set; }
+
+    /// <summary>Counts the extra recipients confirmed, so each has its own "Nebegauti kopijų" link.</summary>
+    public int ExtraGeneration { get; set; }
+
+    public DateTimeOffset ChangedAt { get; set; }
+}
+
+/// <summary>The choices of the preferences page (design 8.19.4). An urgent summary counts as one before votes.</summary>
+internal static class Frequencies
+{
+    public const string Default = "default";
+    public const string Weekly = "weekly";
+    public const string BeforeVote = "before-vote";
+    public const string Stopped = "stopped";
+
+    public static readonly IReadOnlyList<string> All = [Default, Weekly, BeforeVote, Stopped];
+}
+
+/// <summary>
+/// <c>notify.mp_mail_token</c> (design 8.19.4): a hashed token per MP and kind. <c>preferences</c> opens the MP's page and
+/// the one-click stop and never expires; <c>extra-confirm</c> confirms an extra recipient (24 hours, one use);
+/// <c>extra-stop</c> is the copies' own "Nebegauti kopijų".
+/// </summary>
+internal sealed class MpMailToken
+{
+    public Guid Id { get; set; }
+
+    public long SeimasPersonId { get; set; }
+
+    public string Kind { get; set; } = TokenKinds.Preferences;
+
+    /// <summary>SHA-256 of the token, hex.</summary>
+    public string TokenHash { get; set; } = "";
+
+    public DateTimeOffset CreatedAt { get; set; }
+
+    public DateTimeOffset? ExpiresAt { get; set; }
+
+    public DateTimeOffset? UsedAt { get; set; }
+}
+
+internal static class TokenKinds
+{
+    public const string Preferences = "preferences";
+    public const string ExtraConfirm = "extra-confirm";
+    public const string ExtraStop = "extra-stop";
+}
+
+/// <summary>
+/// <c>notify.introduction_letter</c> (design 8.19.5): one version of the letter written and signed by a person. A version
+/// once sent is never changed: a changed text is a new version.
+/// </summary>
+internal sealed class IntroductionLetter
+{
+    public int Version { get; set; }
+
+    public string Subject { get; set; } = "";
+
+    /// <summary>Plain paragraphs, separated by an empty line.</summary>
+    public string Text { get; set; } = "";
+
+    public string SignerName { get; set; } = "";
+
+    public string SignerRole { get; set; } = "";
+
+    /// <summary>The administrator who wrote this version. Never public.</summary>
+    public Guid WrittenBy { get; set; }
+
+    public DateTimeOffset WrittenAt { get; set; }
+
+    /// <summary>When this version was first sent to MPs; null while it is a draft.</summary>
+    public DateTimeOffset? SentAt { get; set; }
+}
+
+/// <summary>
+/// <c>notify.suppression</c> (design 8.19.6): an address MP mail never goes to again, as a keyed hash; never the address.
+/// </summary>
+internal sealed class Suppression
+{
+    public Guid Id { get; set; }
+
+    /// <summary>HMAC-SHA-256 of the address in lower case under the mail key, hex.</summary>
+    public string AddressHash { get; set; } = "";
+
+    /// <summary><c>bounced</c>, <c>complaint</c> or <c>staff</c>.</summary>
+    public string Reason { get; set; } = "";
+
+    public DateTimeOffset CreatedAt { get; set; }
+
+    /// <summary>The administrator who added it by hand; null when it was added automatically.</summary>
+    public Guid? AddedBy { get; set; }
+
+    /// <summary>The administrator's statement; null when it was added automatically.</summary>
+    public string? Statement { get; set; }
 }

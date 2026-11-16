@@ -24,7 +24,7 @@ public sealed class ParliamentPageTests
         ("vote", "/seimas/balsavimai/99100002", "Gyventojų pajamų mokesčio įstatymo pataisa"),
         ("vote-consensus", "/seimas/balsavimai/99100003", "Vietinių rinkliavų įstatymo pataisa"),
         ("vote-note", "/seimas/balsavimai/99100004", "Atliekų tvarkymo įstatymo pataisa"),
-        ("methodology", "/metodika", "Kaip skaičiuojama"),
+        ("methodology", "/metodika", "Metodika"),
         ("not-found", "/nera-tokio-puslapio", "Puslapis nerastas"),
     ];
 
@@ -60,6 +60,33 @@ public sealed class ParliamentPageTests
         await using var session = await Session.StartAsync(390, 844, ColorScheme.Light, javaScript: false);
         var page = session.Page;
 
+        // Every request with its outcome and the page's load events, and a trace kept only on failure: this test once failed
+        // twice in full runs waiting for a page's "load" (2026-11-16); the next occurrence must say what was outstanding.
+        var network = Path.Combine("output", "pages", "nojs-network.txt");
+        File.WriteAllText(network, "");
+        void Note(string line) => File.AppendAllText(network, $"{DateTime.UtcNow:HH:mm:ss.fff} {line}{Environment.NewLine}");
+        page.Request += (_, r) => Note($"request {r.Method} {r.Url} ({r.ResourceType})");
+        page.RequestFinished += (_, r) => Note($"finished {r.Url}");
+        page.RequestFailed += (_, r) => Note($"failed {r.Url}: {r.Failure}");
+        page.Load += (_, _) => Note($"load {page.Url}");
+        page.DOMContentLoaded += (_, _) => Note($"domcontentloaded {page.Url}");
+        page.FrameNavigated += (_, f) => Note($"navigated {f.Url}");
+        await session.Context.Tracing.StartAsync(new() { Screenshots = true, Snapshots = true, Title = "no javascript" });
+        try
+        {
+            await WithoutJavaScriptAsync(page);
+        }
+        catch
+        {
+            await session.Context.Tracing.StopAsync(new() { Path = Path.Combine("output", "pages", $"nojs-trace-{Guid.NewGuid():N}.zip") });
+            throw;
+        }
+
+        await session.Context.Tracing.StopAsync();
+    }
+
+    private static async Task WithoutJavaScriptAsync(IPage page)
+    {
         foreach (var (name, path, heading) in Pages)
         {
             await page.GotoAsync(SignUpTests.BaseUrl + path);
@@ -111,7 +138,10 @@ public sealed class ParliamentPageTests
         var page = session.Page;
         await page.GotoAsync(SignUpTests.BaseUrl + "/seimo-nariai");
 
+        // Design 8.21: the switch is in the footer, for visitors too; nothing of it is in the header.
         var button = page.Locator("[data-theme-switch]");
+        await Assertions.Expect(page.Locator("footer [data-theme-switch]")).ToHaveCountAsync(1);
+        await Assertions.Expect(page.Locator("header [data-theme-switch]")).ToHaveCountAsync(0);
         await Assertions.Expect(button).ToHaveTextAsync("Tema: automatinė");
         await button.ClickAsync();
         await Assertions.Expect(button).ToHaveTextAsync("Tema: šviesi");
@@ -167,6 +197,8 @@ public sealed class ParliamentPageTests
         private IBrowserContext _context = default!;
 
         public IPage Page { get; private set; } = default!;
+
+        public IBrowserContext Context => _context;
 
         public List<string> ConsoleErrors { get; } = [];
 

@@ -72,6 +72,10 @@ internal static class WebHost
         services.AddHttpContextAccessor();
         services.AddScoped<IAuthApi, ServerAuthApi>();
         services.AddScoped<IMeApi, ServerMeApi>();
+        services.AddScoped<Lt2.Api.Contracts.Mps.IMpApi, ServerMpApi>();
+        services.AddScoped<MpResponseReads>();
+        services.AddScoped<Lt2.Api.Contracts.Mps.IMpResponsesApi, ServerMpResponsesApi>();
+        services.AddScoped<Lt2.Api.Contracts.Mps.IMpResponseModerationApi, ServerMpResponseModerationApi>();
         services.AddScoped<ParliamentReads>();
         services.AddScoped<IMetaApi, ServerMetaApi>();
         services.AddScoped<IParliamentApi, ServerParliamentApi>();
@@ -91,12 +95,21 @@ internal static class WebHost
         services.AddScoped<Lt2.Api.Contracts.Feedback.IFeedbackApi, ServerFeedbackApi>();
         services.AddScoped<IAdminApi, ServerAdminApi>();
         services.AddScoped<Lt2.Api.Contracts.Digests.IDigestsApi, ServerDigestsApi>();
+        services.AddScoped<MpMailHost>();
+        services.AddScoped<Lt2.Api.Contracts.Digests.IMpMailApi, ServerMpMailApi>();
+        services.AddScoped<Lt2.Api.Contracts.Digests.IMpSendingAdminApi, ServerMpSendingAdminApi>();
         services.AddScoped<Lt2.Web.Components.Parliament.Formats>();
         services.AddLt2ClientComponents();
     }
 
     public static void UseLt2Web(this WebApplication app)
     {
+        // Design 8.20.2: without the key of the known browsers' hashes no browser is known, and sign-in works as for a stranger.
+        if (string.IsNullOrWhiteSpace(app.Configuration["Security:DeviceHashKey"]))
+        {
+            app.Logger.LogWarning("Security:DeviceHashKey is not set (deploy/secrets/device_hash_key): no browser is known to an account");
+        }
+
         TrustedProxy.UseTrustedForwardedHeaders(app);
         app.UseLt2SecurityHeaders();
         if (!app.Environment.IsDevelopment())
@@ -114,6 +127,10 @@ internal static class WebHost
 
         // Routing after the status-code pages, so the re-executed "/nerasta" request is routed to its page.
         app.UseRouting();
+
+
+        // Design 8.19.4: the path of an MP's link holds its token; every log line keeps the path without it (Lt2.Hosting's
+        // SecretPaths, applied to all log events and to the traces).
         app.UseSerilogRequestLogging();
 
         var lithuanian = new CultureInfo("lt-LT");
@@ -126,6 +143,10 @@ internal static class WebHost
         });
 
         app.UseAuthentication();
+
+        // Design 8.22.2: a member who has not accepted the terms in force may write nothing but the exempt routes; before
+        // authorization, so the refusal is the same whatever else the route requires.
+        app.UseMiddleware<TermsGate>();
         app.UseAuthorization();
         app.UseRateLimiter();
         app.UseAntiforgery();

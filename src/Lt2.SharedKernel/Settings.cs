@@ -68,6 +68,14 @@ public static class SettingKeys
     public static readonly SettingKey<bool> RegistrationRequiresInvitation = new("Registration:RequireInvitation", true);
 
     /// <summary>
+    /// Design 8.5.1 <b>[the designer's proposal, awaiting the owner]</b>: while registration needs an invitation, an MP's
+    /// official address may register without one (the mailbox is the proof). Off by default: on a real server it is switched
+    /// on only together with the introduction letter (8.4); the local stack and the trial, whose MPs are invented and whose
+    /// email is caught, switch it on (the migrator's <c>--official-addresses-without-invitation</c>).
+    /// </summary>
+    public static readonly SettingKey<bool> RegistrationOfficialAddressesWithoutInvitation = new("Registration:OfficialAddressesWithoutInvitation", false);
+
+    /// <summary>
     /// Registrations one personal invitation code may bring (design 6.2); 0 = no limit, the default (decided by the owner
     /// on 2026-11-13). Team codes keep their own uses.
     /// </summary>
@@ -116,6 +124,19 @@ public static class SettingKeys
     public static readonly SettingKey<decimal> DigestNotableChange = new("Digest:NotableChange", 0.10m, v => v is > 0 and <= 1);
 
     /// <summary>
+    /// Design 8.19.1: whether summaries really go to MPs. <c>off</c> (the default: a dry run, nothing sent), <c>approval</c>
+    /// (a weekly or before-vote summary waits until a moderator lets it go) or <c>automatic</c> (sent when made). Whatever it
+    /// says, nothing goes before the introduction letter, nor where the data is invented and the mail is not caught.
+    /// </summary>
+    public static readonly SettingKey<string> DigestSending = new("Digest:Sending", "off", v => v is "off" or "approval" or "automatic");
+
+    /// <summary>
+    /// Design 8.19.2: a waiting summary expires so many hours after it was made, or when its sitting's day begins in
+    /// Vilnius, whichever comes first. Nothing is sent late.
+    /// </summary>
+    public static readonly SettingKey<int> DigestApprovalHours = new("Digest:ApprovalHours", 24, v => v is > 0 and <= 168);
+
+    /// <summary>
     /// Arguments one person may write on one bill (design 8.2); 0 = no limit, the default (decided by the owner on
     /// 2026-11-13: limits are switched on when the need shows).
     /// </summary>
@@ -143,6 +164,12 @@ public static class SettingKeys
     /// </summary>
     public static readonly SettingKey<int> OrganisationsPerAccount = new("Organisations:PerAccount", 3, v => v is > 0 and <= 100);
 
+    /// <summary>
+    /// Design 8.20.1: the Vilnius time ("HH:mm") on the morning after MPs answered on a followed bill when the day's email
+    /// "Seimo narių atsakymai" goes to the followers.
+    /// </summary>
+    public static readonly SettingKey<string> FollowsResponsesAt = new("Follows:ResponsesAt", "08:00", IsTime);
+
 
     /// <summary>Surge note: share of recent positions from new accounts (design 6.6).</summary>
     public static readonly SettingKey<decimal> SurgeMinimumShare = new("Surge:MinimumShare", 0.30m, v => v is > 0 and <= 1);
@@ -156,6 +183,7 @@ public static class SettingKeys
     public static readonly IReadOnlyList<ISettingKey> All =
     [
         RegistrationRequiresInvitation,
+        RegistrationOfficialAddressesWithoutInvitation,
         RegistrationPersonalCodeUses,
         RegistrationOrganisationCodeUses,
         FeedbackKeepMonths,
@@ -168,9 +196,12 @@ public static class SettingKeys
         DigestBeforeVote,
         DigestMaxPerWeek,
         DigestNotableChange,
+        DigestSending,
+        DigestApprovalHours,
         AppealsReasonsPerPerson,
         AppealsEndorsementsPerPerson,
         OrganisationsPerAccount,
+        FollowsResponsesAt,
         AiDraftModel,
         AiSummariesPerDay,
         SurgeMinimumShare,
@@ -178,8 +209,10 @@ public static class SettingKeys
         SurgeWindowHours,
     ];
 
-    private static bool IsTimeOrOff(string value) =>
-        value == "off" || TimeOnly.TryParseExact(value, "HH:mm", System.Globalization.CultureInfo.InvariantCulture, System.Globalization.DateTimeStyles.None, out _);
+    private static bool IsTimeOrOff(string value) => value == "off" || IsTime(value);
+
+    private static bool IsTime(string value) =>
+        TimeOnly.TryParseExact(value, "HH:mm", System.Globalization.CultureInfo.InvariantCulture, System.Globalization.DateTimeStyles.None, out _);
 
     public static ISettingKey? Find(string name) =>
         All.FirstOrDefault(k => string.Equals(k.Name, name, StringComparison.OrdinalIgnoreCase));

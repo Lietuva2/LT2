@@ -34,8 +34,11 @@ public static class AppealLimits
         _ => ReportGrounds,
     };
 
-    /// <summary>A bill's description (<c>record</c>), an argument, an organisation or an organisation's statement (design 8.14.14).</summary>
-    public static readonly IReadOnlyList<string> ReportTargets = ["record", "reason", "organisation", "statement"];
+    /// <summary>
+    /// A bill's description (<c>record</c>), an argument, an organisation or an organisation's statement (design 8.14.14), or an
+    /// MP's response (design 8.5.5).
+    /// </summary>
+    public static readonly IReadOnlyList<string> ReportTargets = ["record", "reason", "organisation", "statement", "response"];
 
     /// <summary>The longest official text's address a description may carry (<c>record.description_url</c>, design 8.13).</summary>
     public const int DescriptionUrlMaxLength = 500;

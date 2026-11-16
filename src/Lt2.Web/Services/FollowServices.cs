@@ -59,11 +59,11 @@ internal sealed class ServerFollowsApi(IFollows follows, IHttpContextAccessor ac
         }
 
         var n = await follows.NoticesAsync(id, cancellationToken);
-        return ApiResult<NoticeSettingsResponse>.Ok(new NoticeSettingsResponse(n.Planned, n.Voted, n.Statements));
+        return ApiResult<NoticeSettingsResponse>.Ok(new NoticeSettingsResponse(n.Planned, n.Voted, n.Statements, n.Responses));
     }
 
     public Task<ApiResult> SetNoticesAsync(NoticeSettingsRequest request, CancellationToken cancellationToken = default) =>
-        AsMemberAsync(id => follows.SetNoticesAsync(id, new NoticeSettings(request.Planned, request.Voted, request.Statements), cancellationToken));
+        AsMemberAsync(id => follows.SetNoticesAsync(id, new NoticeSettings(request.Planned, request.Voted, request.Statements, request.Responses), cancellationToken));
 
     private Guid? UserId => accessor.HttpContext?.User.UserId();
 

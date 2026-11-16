@@ -13,7 +13,7 @@ namespace Lt2.Web.Services;
 /// The parliament reads both the HTTP endpoints and the server-rendered pages use: the module's answers mapped to the
 /// API contracts, or <c>not-found</c>.
 /// </summary>
-internal sealed class ParliamentReads(IParliamentQueries queries, IPlannedAgenda agenda)
+internal sealed class ParliamentReads(IParliamentQueries queries, IPlannedAgenda agenda, IMpDirectory mps, Lt2.Identity.IPoliticians politicians)
 {
     public const string ImportSource = "seimas-open-data";
     private static readonly Error NotFound = Error.NotFound("not-found");
@@ -36,8 +36,15 @@ internal sealed class ParliamentReads(IParliamentQueries queries, IPlannedAgenda
                 p.Memberships.Select(m => new MembershipResponse(Map(m.Body), m.Role, m.From, m.To, m.Current)).ToList(),
                 p.Contacts.Select(c => new ContactResponse(c.Kind, c.Value)).ToList(),
                 p.Statistics is { } s ? new MpStatisticsResponse(s.VotesHeld, s.VotesTakenPart, s.Participation, s.VotesWithFactionPosition, s.VotedWithFaction, s.WithFaction, s.FreeVotes) : null,
-                p.RecentVotes.Select(Map).ToList())
+                p.RecentVotes.Select(Map).ToList(),
+                await ManagedSinceAsync(slug, ct))
             : NotFound;
+
+    /// <summary>Design 8.5.2: the one public trace of a link, composed from the Identity module (the host composes modules).</summary>
+    private async Task<DateTimeOffset?> ManagedSinceAsync(string slug, CancellationToken ct) =>
+        await mps.FindMpAsync(slug, ct) is { } mp && (await politicians.TakenOverAsync([mp.SeimasPersonId], ct)).TryGetValue(mp.SeimasPersonId, out var since)
+            ? since
+            : null;
 
     public async Task<Result<MpVotesResponse>> MpVotesAsync(string slug, string? cursor, CancellationToken ct) =>
         await queries.MpVotesAsync(slug, cursor, 50, ct) is { } page ? new MpVotesResponse(page.Items.Select(Map).ToList(), page.NextCursor) : NotFound;

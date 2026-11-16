@@ -1,0 +1,46 @@
+@page "/suvestines/nustatymai/patvirtinti/{Token}"
+@attribute [Microsoft.AspNetCore.RateLimiting.EnableRateLimiting(Lt2.Web.Security.RateLimitPolicies.MpMail)]
+@using Lt2.Api.Contracts.Digests
+@inject IMpMailApi Mail
+@inject IStringLocalizer<AppealText> T
+
+@* Design 8.19.4: the link sent to the official address to confirm an extra recipient (24 hours, one use). Opening the link
+   confirms nothing: a mail program or a scanner may open it; the person presses "Patvirtinti" (a form that posts back here,
+   without JavaScript). Not indexed, not stored, its token kept out of logs like the preferences page. *@
+<PageTitle>@T["MpMail.Confirm.Title"] · Lietuva 2.0</PageTitle>
+<HeadContent><meta name="robots" content="noindex, nofollow" /></HeadContent>
+
+<div class="stack">
+    <p class="label">Lietuva 2.0</p>
+    <h1>@T["MpMail.Confirm.Title"]</h1>
+    @if (_confirmed is { } choice)
+    {
+        <p class="note" role="status" id="mp-mail-confirmed">@T.Format("MpMail.Confirm.Done", choice.ExtraAddress ?? "", choice.FirstName + " " + choice.LastName)</p>
+    }
+    else if (_failed)
+    {
+        <p class="note" role="alert" id="mp-mail-confirm-failed">@T["MpMail.Confirm.Failed"]</p>
+    }
+    else
+    {
+        <p class="lead">@T["MpMail.Confirm.Lead"]</p>
+        <EditForm Model="_none" FormName="mp-mail-confirm" OnSubmit="ConfirmAsync" id="mp-mail-confirm-form">
+            <button type="submit" class="btn" id="mp-mail-confirm">@T["MpMail.Confirm.Button"]</button>
+        </EditForm>
+    }
+</div>
+
+@code {
+    private readonly object _none = new();
+    private MpMailChoiceResponse? _confirmed;
+    private bool _failed;
+
+    [Parameter] public string Token { get; set; } = "";
+
+    private async Task ConfirmAsync()
+    {
+        var result = await Mail.ConfirmExtraAsync(new MpMailTokenRequest { Token = Token });
+        _confirmed = result.Value;
+        _failed = !result.IsSuccess;
+    }
+}

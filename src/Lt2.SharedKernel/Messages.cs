@@ -25,12 +25,54 @@ public static class MessageKinds
     /// <summary>An organisation the person follows made a statement on a bill public (design 8.14.14, stage B).</summary>
     public const string FollowStatementEmail = "email.follow-statement";
 
+    /// <summary>MPs answered on a followed bill the day before (design 8.20.1): one email per bill per Vilnius day.</summary>
+    public const string FollowResponsesEmail = "email.follow-responses";
+
     /// <summary>A code that confirms an organisation by its email domain (design 8.14.14).</summary>
     public const string OrganisationCodeEmail = "email.organisation-code";
 
     /// <summary>What a moderator did with an organisation or its statement, to its representatives (design 8.14.14).</summary>
     public const string OrganisationNoticeEmail = "email.organisation-notice";
+
+    /// <summary>The link that finishes taking over an MP's profile, to the official address only (design 8.5.2).</summary>
+    public const string MpTakeoverLinkEmail = "email.mp-takeover-link";
+
+    /// <summary>A moderator hid or restored an MP's response, to the MP's account's own address (design 8.5.5).</summary>
+    public const string MpResponseNoticeEmail = "email.mp-response-notice";
 }
+
+/// <summary>
+/// Payload of <see cref="MessageKinds.MpResponseNoticeEmail"/> (design 8.5.5): what a moderator did with an MP's response on a
+/// bill and why, to the MP's account's own address (the official address when the profile was taken over). Never names who
+/// wrote the response.
+/// </summary>
+/// <param name="Notice">One of <see cref="MpResponseNotices"/>.</param>
+/// <param name="MpName">The MP's first and last name.</param>
+/// <param name="Path">The bill's page.</param>
+/// <param name="Statement">The moderator's statement of reasons.</param>
+/// <param name="Contact">The moderators' contact address, when configured.</param>
+public sealed record MpResponseNoticeEmail(
+    string To, string Notice, string MpName, string BillNumber, string BillTitle, string Path, string? Statement, string? Contact);
+
+/// <summary>The moderation outcomes an MP is told about (design 8.5.5).</summary>
+public static class MpResponseNotices
+{
+    public const string Hidden = "response-hidden";
+    public const string Restored = "response-restored";
+
+    public static readonly IReadOnlyList<string> All = [Hidden, Restored];
+}
+
+/// <summary>
+/// Payload of <see cref="MessageKinds.MpTakeoverLinkEmail"/> (design 8.5.2): the one-time link, sent only to the account's
+/// own address, which is the MP's official address. The token lives here, in the outbox row, until the email is sent, as
+/// a sign-in code does; the Identity module keeps only its hash.
+/// </summary>
+/// <param name="To">The official address (the account's own).</param>
+/// <param name="MpName">The MP's first and last name.</param>
+/// <param name="Path">The site path with the token after the <c>#</c>.</param>
+/// <param name="ValidHours">How long the link is good for.</param>
+public sealed record MpTakeoverLinkEmail(string To, string MpName, string Path, int ValidHours);
 
 /// <summary>
 /// Payload of <see cref="MessageKinds.OrganisationCodeEmail"/> (design 8.14.14): the code that confirms an organisation by
@@ -126,6 +168,24 @@ public sealed record FollowStatementEmail(
     string BillPath,
     string AccountPath);
 
+/// <summary>One MP's answer as the follow email lists it (design 8.20.1): the name, the faction if any, the stance; never the text.</summary>
+/// <param name="Stance"><c>for</c>, <c>against</c> or <c>undecided</c>.</param>
+public sealed record FollowedResponse(string Name, string? Faction, string Stance);
+
+/// <summary>
+/// Payload of <see cref="MessageKinds.FollowResponsesEmail"/> (design 8.20.1): the MPs whose responses on a followed bill became
+/// public, or changed stance, on <paramref name="Day"/> and are still public, each with name, faction and stance, and the link
+/// to the bill's part "Seimo narių atsakymai". Never an explanation's text, the person's side, a count or other people.
+/// </summary>
+public sealed record FollowResponsesEmail(
+    string To,
+    string BillNumber,
+    string BillTitle,
+    DateOnly Day,
+    IReadOnlyList<FollowedResponse> Responses,
+    string BillPath,
+    string AccountPath);
+
 /// <summary>
 /// Payload of <see cref="MessageKinds.WritingRestrictionEmail"/>: a moderator restricted the person from writing, or lifted
 /// that (design 8.3). Never carries a side or a position.
@@ -187,9 +247,14 @@ public sealed record SignInCodeEmail(string To, string Code, int ValidMinutes);
 /// <param name="Notice">One of <see cref="AccountNotices"/>.</param>
 /// <param name="Role">The staff role concerned, for role notices.</param>
 /// <param name="PasskeysRemoved">How many passkeys were removed, where that applies.</param>
-public sealed record AccountNoticeEmail(string To, string Notice, string? Role = null, int PasskeysRemoved = 0);
+/// <param name="MpName">For the notices about an MP's profile (design 8.5.2, 8.5.3): the MP's first and last name.</param>
+/// <param name="Statement">An administrator's statement of reasons, where one was given (ending a link, design 8.5.2).</param>
+public sealed record AccountNoticeEmail(string To, string Notice, string? Role = null, int PasskeysRemoved = 0, string? MpName = null, string? Statement = null);
 
-/// <summary>The account changes a person is told about by email (design 6.2).</summary>
+/// <summary>
+/// The account changes a person is told about by email (design 6.2), and what happens to an MP's profile, told to the
+/// official address (design 8.5.2, 8.5.3: the MP's account's own address). Never names an office member.
+/// </summary>
 public static class AccountNotices
 {
     public const string PasskeyAdded = "passkey-added";
@@ -197,7 +262,25 @@ public static class AccountNotices
     public const string RoleActivated = "role-activated";
     public const string AccountReset = "account-reset";
 
-    public static readonly IReadOnlyList<string> All = [PasskeyAdded, RoleGranted, RoleActivated, AccountReset];
+    /// <summary>The profile was taken over (or a lost passkey replaced) with the link and a new passkey.</summary>
+    public const string MpLinked = "mp-linked";
+
+    /// <summary>The MP's account gave the profile up, or was deleted.</summary>
+    public const string MpGivenUp = "mp-given-up";
+
+    /// <summary>An administrator ended the link, with a statement.</summary>
+    public const string MpLinkEnded = "mp-link-ended";
+
+    public const string MpOfficeAdded = "mp-office-added";
+
+    /// <summary>The MP's account removed an office member.</summary>
+    public const string MpOfficeRemoved = "mp-office-removed";
+
+    /// <summary>An office member left (or deleted their account).</summary>
+    public const string MpOfficeLeft = "mp-office-left";
+
+    public static readonly IReadOnlyList<string> All =
+        [PasskeyAdded, RoleGranted, RoleActivated, AccountReset, MpLinked, MpGivenUp, MpLinkEnded, MpOfficeAdded, MpOfficeRemoved, MpOfficeLeft];
 }
 
 /// <summary>Payload of <see cref="MessageKinds.FeedbackReplyEmail"/>: the team's reply to a member's feedback (design 8.10).</summary>

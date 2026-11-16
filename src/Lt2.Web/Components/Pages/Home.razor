@@ -37,7 +37,7 @@
                 <p class="small">@T["Home.HaveCode"] <a href="/prisijungti?registruotis=true" id="home-register">@T["Home.Register"]</a> · @T["Home.HaveAccount"] <a href="/prisijungti" id="home-sign-in-link">@T["Home.SignIn"]</a></p>
             </div>
         </div>
-        <HowItWorks />
+        <HowItWorks Sending="@_sending" />
     </NotAuthorized>
 </AuthorizeView>
 
@@ -77,11 +77,15 @@
 
 <p class="row" id="home-more"><a href="/projektai">@T["Home.AllAppeals"]</a> <a href="/suvestines">@T["Home.Digests"]</a> <a href="/seimo-nariai">@T["Nav.Mps"]</a></p>
 
-<AuthorizeView>
-    <Authorized>
-        <p class="note" id="home-trial-summaries">@T["Home.TrialSummaries"]</p>
-    </Authorized>
-</AuthorizeView>
+@if (_sending == "off")
+{
+    @* Design 8.15, 8.19.1: "nothing is sent" stays inline while it is true. *@
+    <AuthorizeView>
+        <Authorized>
+            <p class="note" id="home-trial-summaries">@T["Home.TrialSummaries"]</p>
+        </Authorized>
+    </AuthorizeView>
+}
 
 @code {
     /// <summary>At most eight coming planned items in all, kept in their days (design 8.11.1, 8.7).</summary>
@@ -96,10 +100,15 @@
     /// <summary>The threshold that holds now for a bill without its own (a runtime setting), for the hint under the timeline.</summary>
     private int? _threshold;
 
+    /// <summary>Sending as it is now (design 8.19.1); the trial note says nothing is sent only while that is so.</summary>
+    private string _sending = "off";
+
     protected override async Task OnInitializedAsync()
     {
         _agenda = await Agenda.ReadAsync(CancellationToken.None);
-        _threshold = (await Digests.GetRulesAsync()).Value?.ThresholdDefault;
+        var rules = (await Digests.GetRulesAsync()).Value;
+        _threshold = rules?.ThresholdDefault;
+        _sending = rules?.Sending ?? "off";
         var left = ComingShown;
         foreach (var day in _agenda.Days)
         {

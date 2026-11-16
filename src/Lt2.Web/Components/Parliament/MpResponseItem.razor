@@ -1,0 +1,106 @@
+@using Lt2.Api.Contracts.Mps
+@inject Formats F
+
+@* One MP's response (design 8.5.5, 8.5.6), the same on the bill's page and on the profile: on the bill's page the MP's name
+   (linking to the profile) and faction, on the profile the bill; always the one mark "Seimo narys arba jo biuras", never who
+   wrote it. Published: the stance, the text, the dates ("Keista" with its date) and, after the adoption vote, the MP's
+   ballot beside it as a second fact ("Atsakė: … Balsavo: …"), never compared. Withdrawn: "Atsakymas atsiimtas" with the date.
+   Hidden: "Atsakymas paslėptas moderatorių" and the moderator's statement. Earlier versions behind "Ankstesnės versijos". *@
+<article class="said said--mp" aria-label="@Label">
+    <p class="row statement__who">
+        @if (Mp is { } mp)
+        {
+            @if (mp.Slug.Length > 0)
+            {
+                <a class="statement__name" href="/p/@mp.Slug">@mp.FirstName @mp.LastName</a>
+            }
+            else
+            {
+                <b class="statement__name">@mp.FirstName @mp.LastName</b>
+            }
+            <span class="small">@(mp.Faction ?? F.T["Vote.NoFaction"])</span>
+        }
+        @if (Bill is { } bill)
+        {
+            <a class="tag tag--ink num" href="/seimas/@Uri.EscapeDataString(bill.Number)">@bill.Number</a>
+            <a class="statement__name" href="/seimas/@Uri.EscapeDataString(bill.Number)">@bill.Title</a>
+        }
+        <span class="tag">@F.T["Responses.Mark"]</span>
+    </p>
+    @switch (Response.Status)
+    {
+        case "hidden":
+            <p class="note note--quiet">@F.T["Responses.Hidden"]</p>
+            @if (Response.HiddenStatement is { } why)
+            {
+                <p class="small">@F.T.Format("Responses.HiddenWhy", why)</p>
+            }
+            break;
+        case "withdrawn":
+            <p class="row"><span class="tag">@F.T["Responses.Withdrawn"]</span> <span class="small num">@Display.Day(Response.WithdrawnAt ?? Response.PublishedAt)</span></p>
+            break;
+        default:
+            <p><span class="@StanceClass(Response.Stance)">@F.T["Responses.Stance." + Response.Stance]</span></p>
+            <div class="bubble bubble--mp voice">
+                @foreach (var paragraph in (Response.Text ?? "").Split('\n', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries))
+                {
+                    <p>@paragraph</p>
+                }
+            </div>
+            break;
+    }
+    <div class="said__by statement__meta">
+        @if (Response.Status != "hidden")
+        {
+            <span class="small num"><span class="nowrap">@F.T.Format("Responses.Published", Display.Day(Response.PublishedAt))</span>@if (Response.EditedAt is { } edited) {<text> · </text><span class="nowrap">@F.T.Format("Responses.Edited", Display.Day(edited))</span>}</span>
+        }
+        @ChildContent
+    </div>
+    @if (Response.Status == "published" && Response.Vote is { } vote)
+    {
+        @* Design 8.5.5: two facts side by side, without a word of judgement; nothing anywhere adds them up. *@
+        <p class="small" id="@(IdPrefix)vote">@F.T.Format("Responses.Answered", F.T["Responses.Will." + Response.Stance], F.T["Responses.Ballot." + vote.Ballot])
+            <a href="/seimas/balsavimai/@vote.VoteId">@F.T["Responses.VotePage"]</a></p>
+    }
+    @if (Response.Status != "hidden" && Response.Earlier.Count > 0)
+    {
+        <details class="more stack stack--tight">
+            <summary class="linkish small">@F.T.Format("Responses.Earlier", Display.Number(Response.Earlier.Count))</summary>
+            <ul class="stack stack--tight">
+                @foreach (var v in Response.Earlier)
+                {
+                    <li class="stack stack--tight">
+                        <p class="row small"><span class="@StanceClass(v.Stance)">@F.T["Responses.Stance." + v.Stance]</span>
+                            <span class="num">@(v.Withdrawn ? F.T.Format("Responses.VersionWithdrawn", Display.Day(v.WrittenAt), Display.Day(v.ReplacedAt)) : F.T.Format("Responses.VersionDates", Display.Day(v.WrittenAt), Display.Day(v.ReplacedAt)))</span></p>
+                        <p class="voice">@v.Text</p>
+                    </li>
+                }
+            </ul>
+        </details>
+    }
+</article>
+
+@code {
+    [Parameter, EditorRequired] public MpResponseResponse Response { get; set; } = default!;
+
+    /// <summary>On the bill's page: the MP who answered.</summary>
+    [Parameter] public MpResponderResponse? Mp { get; set; }
+
+    /// <summary>On the profile: the bill answered.</summary>
+    [Parameter] public Lt2.Api.Contracts.Appeals.BillRefResponse? Bill { get; set; }
+
+    /// <summary>The start of the item's own element ids, unique on the page.</summary>
+    [Parameter] public string IdPrefix { get; set; } = "";
+
+    /// <summary>The report control beside the dates (an island on the bill's page).</summary>
+    [Parameter] public RenderFragment? ChildContent { get; set; }
+
+    private string Label => Mp is { } mp ? $"{mp.FirstName} {mp.LastName}" : Bill?.Number ?? F.T["Responses.Mark"];
+
+    private static string StanceClass(string? stance) => stance switch
+    {
+        "for" => "choice choice--for",
+        "against" => "choice choice--against",
+        _ => "choice choice--remarks",
+    };
+}

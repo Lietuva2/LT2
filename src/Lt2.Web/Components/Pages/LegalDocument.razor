@@ -1,0 +1,56 @@
+@inject IStringLocalizer<LegalText> T
+
+@* Design 8.22: one of the two legal texts, server-rendered and readable without script: the title on the ground, the version
+   and the day it applies from, then its parts on one sheet (design 8.16), each a heading, paragraphs ({Prefix}.{Part}.{n}) and
+   facts ({Prefix}.{Part}.Fact{n}.Term / .Value) in their order, and whatever the page adds to a part (After). *@
+<PageTitle>@T[$"{Prefix}.PageTitle"]</PageTitle>
+
+<section class="stack" aria-labelledby="legal-title">
+    <p class="label">Lietuva 2.0</p>
+    <h1 id="legal-title">@T[$"{Prefix}.Title"]</h1>
+    <p class="lead">@T[$"{Prefix}.Lead"]</p>
+    <p class="small num" id="legal-version">@T.Format("Legal.InForce", Version, Version)</p>
+</section>
+
+<div class="sheet stack stack--loose legal" id="legal-text">
+    @foreach (var part in Parts)
+    {
+        <section class="stack stack--tight" aria-labelledby="h-@Anchor(part)" id="@Anchor(part)">
+            <h2 id="h-@Anchor(part)">@T[$"{Prefix}.{part}"]</h2>
+            @for (var i = 1; T[$"{Prefix}.{part}.{i}"] is { ResourceNotFound: false } line; i++)
+            {
+                <p>@line</p>
+            }
+            @if (T[$"{Prefix}.{part}.Fact1.Term"] is { ResourceNotFound: false })
+            {
+                <dl class="facts">
+                    @for (var i = 1; T[$"{Prefix}.{part}.Fact{i}.Term"] is { ResourceNotFound: false } term; i++)
+                    {
+                        <dt>@term</dt>
+                        <dd>@T[$"{Prefix}.{part}.Fact{i}.Value"]</dd>
+                    }
+                </dl>
+            }
+            @After?.Invoke(part)
+        </section>
+    }
+    <p class="fine" id="legal-draft">@T["Legal.Draft"]</p>
+</div>
+
+@code {
+    /// <summary><c>Terms</c> or <c>Privacy</c>: the resource keys' prefix.</summary>
+    [Parameter, EditorRequired] public string Prefix { get; set; } = "";
+
+    /// <summary>The parts in order: each a key under <see cref="Prefix"/> and, with <see cref="Anchors"/>, an id to link to.</summary>
+    [Parameter, EditorRequired] public IReadOnlyList<string> Parts { get; set; } = [];
+
+    /// <summary>The id of each part (Lithuanian, for links such as <c>/privatumas#slapukai</c>).</summary>
+    [Parameter, EditorRequired] public IReadOnlyDictionary<string, string> Anchors { get; set; } = new Dictionary<string, string>();
+
+    [Parameter, EditorRequired] public string Version { get; set; } = "";
+
+    /// <summary>What a page adds at the end of a part: links, the moderators' address, the storage table.</summary>
+    [Parameter] public RenderFragment<string>? After { get; set; }
+
+    private string Anchor(string part) => Anchors.TryGetValue(part, out var id) ? id : part.ToLowerInvariant();
+}

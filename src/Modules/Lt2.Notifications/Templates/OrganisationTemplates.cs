@@ -25,7 +25,7 @@ internal sealed class OrganisationTemplates(IStringLocalizer<EmailTemplates> l, 
             l["Organisation.Code.Ignore"],
             l[EmailText.Signature],
         ];
-        return EmailLayout.Build(model.To, l.Format("Organisation.Code.Subject", model.Code), paragraphs, highlighted: 2);
+        return EmailLayout.Build(model.To, l.Format("Organisation.Code.Subject", model.Code), paragraphs, EmailLayout.Footer(l, site.Value.Address), highlighted: 2);
     }
 
     public EmailMessage Render(OrganisationNoticeEmail model)
@@ -55,6 +55,6 @@ internal sealed class OrganisationTemplates(IStringLocalizer<EmailTemplates> l, 
 
         paragraphs.Add(l["Organisation.Why"]);
         paragraphs.Add(l[EmailText.Signature]);
-        return EmailLayout.Build(model.To, l.Format($"Organisation.{model.Notice}.Subject", model.OrganisationName), paragraphs);
+        return EmailLayout.Build(model.To, l.Format($"Organisation.{model.Notice}.Subject", model.OrganisationName), paragraphs, EmailLayout.Footer(l, site.Value.Address));
     }
 }

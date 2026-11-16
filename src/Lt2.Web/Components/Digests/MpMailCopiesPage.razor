@@ -1,0 +1,45 @@
+@page "/suvestines/kopijos/{Token}"
+@attribute [Microsoft.AspNetCore.RateLimiting.EnableRateLimiting(Lt2.Web.Security.RateLimitPolicies.MpMail)]
+@using Lt2.Api.Contracts.Digests
+@inject IMpMailApi Mail
+@inject IStringLocalizer<AppealText> T
+
+@* Design 8.19.4: "Nebegauti kopijų" from a copy sent to an MP's extra recipient. Opening the link changes nothing; the button
+   removes the extra address (a form that posts back here, without JavaScript), and the official address is told. *@
+<PageTitle>@T["MpMail.Copies.Title"] · Lietuva 2.0</PageTitle>
+<HeadContent><meta name="robots" content="noindex, nofollow" /></HeadContent>
+
+<div class="stack">
+    <p class="label">Lietuva 2.0</p>
+    <h1>@T["MpMail.Copies.Title"]</h1>
+    @if (_stopped)
+    {
+        <p class="note" role="status" id="mp-mail-copies-stopped">@T["MpMail.Copies.Done"]</p>
+    }
+    else if (_failed)
+    {
+        <p class="note" role="alert" id="mp-mail-copies-failed">@T["MpMail.Copies.Failed"]</p>
+    }
+    else
+    {
+        <p class="lead">@T["MpMail.Copies.Lead"]</p>
+        <EditForm Model="_none" FormName="mp-mail-copies" OnSubmit="StopAsync" id="mp-mail-copies-form">
+            <button type="submit" class="btn" id="mp-mail-copies-stop">@T["MpMail.Copies.Button"]</button>
+        </EditForm>
+    }
+</div>
+
+@code {
+    private readonly object _none = new();
+    private bool _stopped;
+    private bool _failed;
+
+    [Parameter] public string Token { get; set; } = "";
+
+    private async Task StopAsync()
+    {
+        var result = await Mail.StopCopiesAsync(new MpMailTokenRequest { Token = Token });
+        _stopped = result.IsSuccess;
+        _failed = !result.IsSuccess;
+    }
+}

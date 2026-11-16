@@ -21,6 +21,16 @@ internal static class IdentityLocks
     /// <summary>Sign-in codes for one account are counted and issued one request at a time.</summary>
     public static Task SignInCodesAsync(IdentityDb db, Guid userId, CancellationToken ct) => TakeAsync(db, "lt2.sign-in-code:" + userId.ToString("N"), ct);
 
+    /// <summary>One account's known browsers (design 8.20.2) are added and capped one request at a time.</summary>
+    public static Task KnownDevicesAsync(IdentityDb db, Guid userId, CancellationToken ct) => TakeAsync(db, "lt2.known-device:" + userId.ToString("N"), ct);
+
+    /// <summary>
+    /// One MP's links and tokens (design 8.5.2, 8.5.3) change one request at a time: three take-over links a day, one
+    /// account as the MP, five office members.
+    /// </summary>
+    public static Task MpAsync(IdentityDb db, long seimasPersonId, CancellationToken ct) =>
+        TakeAsync(db, "lt2.mp:" + seimasPersonId.ToString(System.Globalization.CultureInfo.InvariantCulture), ct);
+
     private static Task<int> TakeAsync(IdentityDb db, string key, CancellationToken ct) =>
         db.Database.ExecuteSqlRawAsync(Sql, [new NpgsqlParameter("key", key)], ct);
 }

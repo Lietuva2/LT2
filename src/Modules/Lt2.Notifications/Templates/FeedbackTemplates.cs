@@ -19,7 +19,8 @@ internal sealed class FeedbackTemplates(IStringLocalizer<EmailTemplates> l, IOpt
                 l.Format("Feedback.Reply.Yours", model.Excerpt),
                 l.Format("Feedback.Reply.Answer", model.Reply),
                 l[EmailText.Signature],
-            ]);
+            ],
+            EmailLayout.Footer(l, site.Value.Address));
     }
 
     public EmailMessage Notice(FeedbackNoticeEmail model)
@@ -28,6 +29,7 @@ internal sealed class FeedbackTemplates(IStringLocalizer<EmailTemplates> l, IOpt
         return EmailLayout.Build(
             model.To,
             l.Format("Feedback.Notice.Subject", model.Count),
-            [l.Format("Feedback.Notice.Body", model.Count, SiteLinks.Absolute(site.Value.Address, model.StaffPath))]);
+            [l.Format("Feedback.Notice.Body", model.Count, SiteLinks.Absolute(site.Value.Address, model.StaffPath))],
+            EmailLayout.Footer(l, site.Value.Address));
     }
 }

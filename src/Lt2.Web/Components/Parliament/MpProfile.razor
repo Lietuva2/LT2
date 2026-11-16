@@ -26,6 +26,11 @@
                 <h1>@p.Mp.FirstName @p.Mp.LastName</h1>
             </div>
         </div>
+        @if (p.ManagedSince is { } since)
+        {
+            @* Design 8.5.2: the one public trace of a take-over; a profile nobody took over says nothing about joining. *@
+            <p class="small" id="managed-by">@F.T["Mp.ManagedBy"] <span class="num">@F.T.Format("Mp.ManagedSince", Display.Day(since))</span></p>
+        }
         @* Design 8.11.2: "Sekti" an MP: how they vote on the bills one follows comes in the "voted" email. Private. *@
         <Lt2.Web.Client.Components.NeedsScript />
         <Lt2.Web.Client.Appeals.FollowButton Kind="mp" Key="@p.Mp.Slug" @rendermode="InteractiveWebAssembly" />
@@ -99,6 +104,9 @@
                     <p><a href="/p/@p.Mp.Slug/balsavimai">@F.T["Mp.AllVotes"]</a></p>
                 }
             </section>
+
+            @* Design 8.5.6: the MP's responses, after the votes; no part at all when there are none. *@
+            <MpAnswers Slug="@p.Mp.Slug" />
         </div>
 
         <aside class="stack">

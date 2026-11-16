@@ -1,0 +1,59 @@
+@page "/privatumas"
+@using Lt2.Web.Security
+@inject IStringLocalizer<LegalText> T
+
+@* Design 8.22.3: "Privatumo pranešimas", a static page. It informs; nobody accepts it. Its part "Slapukai ir naršyklės atmintis"
+   is built from BrowserStorage.Inventory, each row naming its cookie or key in data-storage, which the end-to-end storage test
+   reads: what the notice lists and what the browser holds cannot drift apart. *@
+<LegalDocument Prefix="Privacy" Parts="Parts" Anchors="Anchors" Version="@LegalVersions.Privacy">
+    <After Context="part">
+        @if (part == "Rights")
+        {
+            <p><a href="/sveiki#my-data" id="privacy-account-link">@T["Legal.ToAccount"]</a></p>
+        }
+        else if (part == "Storage")
+        {
+            <div class="table-wrap">
+                <table class="table" id="storage-inventory">
+                    <thead>
+                        <tr><th scope="col">@T["Storage.Name"]</th><th scope="col">@T["Storage.Where"]</th><th scope="col">@T["Storage.Purpose"]</th><th scope="col">@T["Storage.Lifetime"]</th></tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var (name, kind, text) in BrowserStorage.Inventory)
+                        {
+                            <tr data-storage="@name" data-storage-kind="@kind">
+                                <td data-label="@T["Storage.Name"]"><code>@name</code></td>
+                                <td data-label="@T["Storage.Where"]">@T["Storage.Kind." + kind]</td>
+                                <td data-label="@T["Storage.Purpose"]">@T[$"Storage.{text}.Purpose"]</td>
+                                <td data-label="@T["Storage.Lifetime"]">@T[$"Storage.{text}.Lifetime"]</td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        }
+        else if (part == "Changes")
+        {
+            <p><a href="/taisykles" id="privacy-terms-link">@T["Legal.ToTerms"]</a></p>
+        }
+    </After>
+</LegalDocument>
+
+@code {
+    private static readonly string[] Parts = ["Controller", "Data", "Basis", "Positions", "Mps", "Others", "Retention", "Rights", "Complaints", "Storage", "Changes"];
+
+    private static readonly Dictionary<string, string> Anchors = new()
+    {
+        ["Controller"] = "valdytojas",
+        ["Data"] = "duomenys",
+        ["Basis"] = "pagrindas",
+        ["Positions"] = "pozicijos",
+        ["Mps"] = "seimo-nariai",
+        ["Others"] = "gavejai",
+        ["Retention"] = "saugojimas",
+        ["Rights"] = "teises",
+        ["Complaints"] = "skundai",
+        ["Storage"] = "slapukai",
+        ["Changes"] = "pakeitimai",
+    };
+}

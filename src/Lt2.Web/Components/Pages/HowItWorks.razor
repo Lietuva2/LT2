@@ -8,7 +8,7 @@
     <ol class="intro-steps">
         @for (var step = 1; step <= 4; step++)
         {
-            <li><h3>@A[$"HowItWorks.{step}.Title"]</h3><p>@A[$"HowItWorks.{step}.Text"]</p></li>
+            <li><h3>@A[$"HowItWorks.{step}.Title"]</h3><p>@A[$"HowItWorks.{step}.Text"]@(step == 4 && Sending == "off" ? " " + A["HowItWorks.4.Trial"] : "")</p></li>
         }
     </ol>
     <p>@A["HowItWorks.Follow"] <a href="/metodika#privatumas">@A["HowItWorks.PrivacyLink"]</a></p>
@@ -20,4 +20,7 @@
 
     /// <summary>Keeps the heading's id unique where the page has other headings of its own.</summary>
     [Parameter] public string IdPrefix { get; set; } = "";
+
+    /// <summary>Sending as it is now (design 8.19.1): step 4 says that nothing is sent only while that is so.</summary>
+    [Parameter] public string Sending { get; set; } = "off";
 }

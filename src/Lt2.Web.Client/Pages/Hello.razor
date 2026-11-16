@@ -28,6 +28,15 @@ else
         </p>
     </section>
 
+    @if (Me.TermsRequired)
+    {
+        @* Design 8.22.2: a session older than the terms in force (signing in shows the acceptance screen itself). *@
+        <p class="note" id="terms-required">@L["Hello.TermsRequired"] <a href="@TermsText.AcceptanceLink("/sveiki")">@L["Hello.TermsLink"]</a></p>
+    }
+
+    @* Design 8.5.1 to 8.5.4: the offer to take over an MP's profile, or the link; filled in the browser only. *@
+    <MyMp />
+
     @if (Me.AwaitingActivation)
     {
         @* A granted staff role waits for the one-time code the administrator passed on (design 6.2). *@
@@ -82,6 +91,37 @@ else
             </ul>
         </section>
     </div>
+
+    @* Design 8.20.2: the browsers known to the account, beside the sessions; forgetting one makes it a stranger again. *@
+    <section class="sheet stack" aria-labelledby="known-browsers-title" id="zinomos-narsykles">
+        <h2 id="known-browsers-title">@L["KnownBrowsers.Title"]</h2>
+        <p>@L["KnownBrowsers.Text"]</p>
+        @if (KnownBrowsers is { Count: > 0 } known)
+        {
+            <ul class="rows" id="known-browsers">
+                @foreach (var browser in known)
+                {
+                    <li @key="browser.Id">
+                        <div class="rows__main">
+                            <b>@(browser.Device ?? L["Sessions.UnknownDevice"])</b>
+                            <span class="small num"><span class="nowrap">@L.Format("KnownBrowsers.FirstSeen", Display.Day(browser.FirstSeenAt))</span>, <span class="nowrap">@L.Format("Sessions.LastSeen", Display.DayTime(browser.LastSeenAt))</span></span>
+                        </div>
+                        <div class="rows__side">
+                            @if (browser.IsCurrent)
+                            {
+                                <span class="tag tag--people">@L["KnownBrowsers.Current"]</span>
+                            }
+                            <button type="button" class="btn btn--plain" disabled="@Locked" @onclick="() => ForgetBrowserAsync(browser.Id)">@L["KnownBrowsers.Forget"]</button>
+                        </div>
+                    </li>
+                }
+            </ul>
+        }
+        else
+        {
+            <p class="small" id="known-browsers-none">@L["KnownBrowsers.None"]</p>
+        }
+    </section>
 
     @if (Me.ActiveStaffRoles.Count > 0)
     {
@@ -187,6 +227,9 @@ else
     public List<SessionResponse>? Sessions { get; set; }
 
     [PersistentState]
+    public List<KnownBrowserResponse>? KnownBrowsers { get; set; }
+
+    [PersistentState]
     public PartySupportResponse? Party { get; set; }
 
     protected override async Task OnInitializedAsync()
@@ -211,6 +254,7 @@ else
         }
 
         Sessions ??= await LoadSessionsAsync();
+        KnownBrowsers ??= await LoadKnownBrowsersAsync();
         Party ??= (await MeApi.GetPartySupportAsync()).Value;
         _partyChoice = Party?.Party ?? "";
     }
@@ -239,6 +283,14 @@ else
         if (!await PasskeyBrowser.IsSupportedAsync())
         {
             Message = L["Passkey.Unsupported"];
+            return;
+        }
+
+        // Design 8.5.2, 8.5.3: a linked account changes its passkeys only in a passkey session; said before the browser
+        // makes a key the server would refuse. The server checks it again.
+        if ((await MeApi.GetAsync()).Value?.Mp is { MayWrite: false })
+        {
+            Message = L["Mp.PasskeyNeeded"];
             return;
         }
 
@@ -280,6 +332,22 @@ else
     {
         Succeeded(await MeApi.EndSessionAsync(id));
         Sessions = await LoadSessionsAsync();
+    });
+
+    private async Task<List<KnownBrowserResponse>> LoadKnownBrowsersAsync()
+    {
+        var browsers = await MeApi.GetKnownBrowsersAsync();
+        return browsers.IsSuccess ? browsers.Value!.ToList() : [];
+    }
+
+    private Task ForgetBrowserAsync(Guid id) => RunAsync(async () =>
+    {
+        if (Succeeded(await MeApi.ForgetKnownBrowserAsync(id)))
+        {
+            Info = L["KnownBrowsers.Forgotten"];
+        }
+
+        KnownBrowsers = await LoadKnownBrowsersAsync();
     });
 
     private Task WithdrawConsentAsync() => RunAsync(async () =>

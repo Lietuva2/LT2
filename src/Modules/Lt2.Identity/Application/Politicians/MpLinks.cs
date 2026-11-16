@@ -1,0 +1,40 @@
+using Lt2.Identity.Domain;
+using Lt2.Identity.Infrastructure;
+using Lt2.SharedKernel;
+using Microsoft.EntityFrameworkCore;
+
+namespace Lt2.Identity.Application.Politicians;
+
+/// <summary>
+/// <see cref="IMpLinks"/> (design 8.5.5): the address of the account linked as the MP, for a moderator's notice about the MP's
+/// response; the same address step one's notices go to; and, for the follow email about MPs' responses (design 8.20.1), which
+/// MP an account speaks for, so the MP's own account and office are not told about their own MP's responses. Nothing else
+/// of a link leaves the module.
+/// </summary>
+internal sealed class MpLinks(IdentityDb db) : IMpLinks
+{
+    public async Task<string?> MpAccountAddressAsync(long seimasPersonId, CancellationToken cancellationToken) =>
+        await (from l in PoliticianAccess.OpenLinks(db).AsNoTracking()
+               join u in db.Users.AsNoTracking() on l.UserId equals u.Id
+               where l.SeimasPersonId == seimasPersonId && l.Part == PoliticianParts.Mp
+               select u.Email)
+            .FirstOrDefaultAsync(cancellationToken);
+
+    public async Task<IReadOnlyDictionary<Guid, long>> SpeaksForAsync(IReadOnlyCollection<Guid> userIds, CancellationToken cancellationToken)
+    {
+        if (userIds.Count == 0)
+        {
+            return new Dictionary<Guid, long>();
+        }
+
+        var ids = userIds.ToList();
+
+        // One MP per account (design 8.5.3: an office member of at most one MP; the MP's own account is one MP's).
+        return (await PoliticianAccess.OpenLinks(db).AsNoTracking()
+                .Where(l => ids.Contains(l.UserId))
+                .Select(l => new { l.UserId, l.SeimasPersonId })
+                .ToListAsync(cancellationToken))
+            .GroupBy(l => l.UserId)
+            .ToDictionary(g => g.Key, g => g.First().SeimasPersonId);
+    }
+}

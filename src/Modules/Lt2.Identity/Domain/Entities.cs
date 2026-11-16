@@ -214,6 +214,9 @@ internal static class ConsentKinds
 
     /// <summary>Version of the registration text the confirmation was given against.</summary>
     public const string AdultTextVersion = "2026-11-12";
+
+    /// <summary>The terms of use accepted (design 8.22.2), with their version: <see cref="Lt2.SharedKernel.TermsOfUse"/>.</summary>
+    public const string Terms = Lt2.SharedKernel.TermsOfUse.Kind;
 }
 
 /// <summary><c>identity.sign_in_code</c>: an emailed one-time code, stored only as a hash.</summary>
@@ -233,6 +236,34 @@ internal sealed class SignInCode
 
     /// <summary>Set when the code was used, or replaced by a newer one.</summary>
     public DateTimeOffset? ConsumedAt { get; set; }
+
+    /// <summary>
+    /// The known browser that asked for it (design 6.2, 8.20.2): such a code is accepted only from that browser and counts
+    /// only against that browser's allowance. Null for a code any browser may use, counted against the address's shared limits.
+    /// </summary>
+    public Guid? KnownDeviceId { get; set; }
+}
+
+/// <summary>
+/// <c>identity.known_device</c> (design 6.2, 8.20.2): a browser that has signed in to the account. Holds the keyed hash of the
+/// random identifier in its <c>__Host-lt2.device</c> cookie, never the identifier. Gives no access by itself: it only chooses
+/// which code allowance and which code apply. Forgetting the row makes the browser a stranger again.
+/// </summary>
+internal sealed class KnownDevice
+{
+    public Guid Id { get; set; }
+
+    public Guid UserId { get; set; }
+
+    /// <summary>HMAC-SHA-256 of the cookie's identifier under <c>Security:DeviceHashKey</c>.</summary>
+    public byte[] IdentifierHash { get; set; } = [];
+
+    /// <summary>Browser and system as the sessions list says them ("Firefox, Windows"); null when unknown.</summary>
+    public string? Label { get; set; }
+
+    public DateTimeOffset FirstSeenAt { get; set; }
+
+    public DateTimeOffset LastSeenAt { get; set; }
 }
 
 /// <summary><c>identity.session</c>: one signed-in browser. The cookie holds only the id (design 6.2: "my sessions").</summary>
@@ -262,6 +293,82 @@ internal sealed class Session
 
     /// <summary>When the session's passkey was last used (sign-in or confirmation), for the ten-minute rule.</summary>
     public DateTimeOffset? PasskeyConfirmedAt { get; set; }
+}
+
+/// <summary>
+/// <c>identity.politician_link</c> (design 5.2, 8.5.2, 8.5.3): an account that speaks for an MP, as the MP or as an office
+/// member, tied to the Seimas's person number so it survives a change of the official address. One open link per account;
+/// one open MP link per person. An ended link stays with when and why it ended; it goes with the account. Who is linked is
+/// never public: the profile shows only that the MP's part is taken (<see cref="CreatedAt"/>).
+/// </summary>
+internal sealed class PoliticianLink
+{
+    public Guid Id { get; set; }
+
+    public Guid UserId { get; set; }
+
+    /// <summary>The Seimas's person number (<c>asmens_id</c>).</summary>
+    public long SeimasPersonId { get; set; }
+
+    /// <summary><see cref="PoliticianParts.Mp"/> or <see cref="PoliticianParts.Office"/>.</summary>
+    public string Part { get; set; } = "";
+
+    /// <summary>How it was verified: <c>takeover-link</c> (the official mailbox and a new passkey) or <c>office-invitation</c>.</summary>
+    public string VerifiedBy { get; set; } = "";
+
+    public DateTimeOffset CreatedAt { get; set; }
+
+    /// <summary>For an office member: the MP's account that made the invitation.</summary>
+    public Guid? AddedByUserId { get; set; }
+
+    public DateTimeOffset? EndedAt { get; set; }
+
+    /// <summary>Who ended it: the account itself, the MP's account (an office member removed) or an administrator.</summary>
+    public Guid? EndedByUserId { get; set; }
+
+    /// <summary><c>given-up</c>, <c>left</c>, <c>removed</c>, <c>administrator</c>, <c>mp-ended</c> or <c>account-deleted</c>.</summary>
+    public string? EndReason { get; set; }
+}
+
+internal static class PoliticianParts
+{
+    /// <summary>The MP's own account (design 8.5.2): one per person.</summary>
+    public const string Mp = "mp";
+
+    /// <summary>An office member (design 8.5.3): at most five per MP.</summary>
+    public const string Office = "office";
+}
+
+/// <summary>
+/// <c>identity.politician_token</c> (design 5.2): the one-time token of a take-over link (24 hours, sent to the official
+/// address) or of an office member's invitation (7 days, shown once to the MP's account). Only its hash is stored.
+/// </summary>
+internal sealed class PoliticianToken
+{
+    public Guid Id { get; set; }
+
+    /// <summary><see cref="PoliticianTokenKinds.Takeover"/> or <see cref="PoliticianTokenKinds.Office"/>.</summary>
+    public string Kind { get; set; } = "";
+
+    public long SeimasPersonId { get; set; }
+
+    /// <summary>A take-over link: the account it was sent for; an invitation: the MP's account that made it.</summary>
+    public Guid UserId { get; set; }
+
+    public byte[] TokenHash { get; set; } = [];
+
+    public DateTimeOffset CreatedAt { get; set; }
+
+    public DateTimeOffset ExpiresAt { get; set; }
+
+    /// <summary>Used, or replaced by a newer take-over link.</summary>
+    public DateTimeOffset? UsedAt { get; set; }
+}
+
+internal static class PoliticianTokenKinds
+{
+    public const string Takeover = "takeover";
+    public const string Office = "office";
 }
 
 /// <summary>

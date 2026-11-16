@@ -53,6 +53,7 @@ public sealed class DigestTests(DatabaseFixture database) : ApiTest(database)
             await PlanAsync("XVP-0618", monday.AddDays(3));
 
             var outboxBefore = await Database.ScalarAsync<long>("SELECT count(*) FROM notify.outbox");
+            var since = await Database.ScalarAsync<DateTime>("SELECT clock_timestamp()");
             (await RunDueAsync(At(monday, 6, 30))).ShouldBeEmpty("before 07:00");
             var made = await RunDueAsync(At(monday, 7, 15));
             var weekly = made.Single();
@@ -100,8 +101,10 @@ public sealed class DigestTests(DatabaseFixture database) : ApiTest(database)
                 "SELECT count(*) FROM information_schema.columns WHERE table_schema = 'notify' AND table_name LIKE 'digest%' AND (column_name LIKE '%user%' OR column_name LIKE '%email%' OR column_name LIKE '%address%')"))
                 .ShouldBe(0, "a summary table has no column for a person or an address");
 
-            // Nothing was sent: no outbox row was written, and no MP address is anywhere in the outbox.
-            (await Database.ScalarAsync<long>("SELECT count(*) FROM notify.outbox WHERE payload::text ILIKE '%@lrs.lt%' OR kind LIKE '%digest%'")).ShouldBe(0);
+            // Nothing was sent: no summary is in the outbox, and the run wrote nothing to an MP address. (Since design 8.5 an
+            // MP's own linked account gets its notices at the official address, so other tests leave such rows behind.)
+            (await Database.ScalarAsync<long>(
+                "SELECT count(*) FROM notify.outbox WHERE kind LIKE '%digest%' OR (payload::text ILIKE '%@lrs.lt%' AND created_at >= @since)", ("since", since))).ShouldBe(0);
 
             // A moderator reads what an MP would read; the public cannot.
             var mps = await moderator.GetJsonAsync<List<DigestMpResponse>>(DigestRoutes.MpsOf(weekly.Id));

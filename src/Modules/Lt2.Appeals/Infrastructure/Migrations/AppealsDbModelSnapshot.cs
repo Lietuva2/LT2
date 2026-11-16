@@ -347,6 +347,103 @@ namespace Lt2.Appeals.Infrastructure.Migrations
                     b.ToTable("moderation_action", "appeals");
                 });
 
+            modelBuilder.Entity("Lt2.Appeals.Domain.MpResponse", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<DateTimeOffset>("AnnouncedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("announced_at");
+
+                    b.Property<string>("BillNumber")
+                        .IsRequired()
+                        .HasMaxLength(40)
+                        .HasColumnType("character varying(40)")
+                        .HasColumnName("bill_number");
+
+                    b.Property<DateTimeOffset?>("EditedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("edited_at");
+
+                    b.Property<DateTimeOffset?>("HiddenAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("hidden_at");
+
+                    b.Property<string>("HideStatement")
+                        .HasMaxLength(1000)
+                        .HasColumnType("character varying(1000)")
+                        .HasColumnName("hide_statement");
+
+                    b.Property<DateTimeOffset>("PublishedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("published_at");
+
+                    b.PrimitiveCollection<string[]>("ScreeningFlags")
+                        .IsRequired()
+                        .HasColumnType("text[]")
+                        .HasColumnName("screening_flags");
+
+                    b.Property<DateTimeOffset?>("SeenAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("seen_at");
+
+                    b.Property<long>("SeimasPersonId")
+                        .HasColumnType("bigint")
+                        .HasColumnName("seimas_person_id");
+
+                    b.Property<string>("Stance")
+                        .IsRequired()
+                        .HasMaxLength(10)
+                        .HasColumnType("character varying(10)")
+                        .HasColumnName("stance");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)")
+                        .HasColumnName("status");
+
+                    b.Property<string>("Text")
+                        .IsRequired()
+                        .HasMaxLength(1500)
+                        .HasColumnType("character varying(1500)")
+                        .HasColumnName("text");
+
+                    b.Property<DateTimeOffset?>("WithdrawnAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("withdrawn_at");
+
+                    b.Property<Guid?>("WrittenByUserId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("written_by_user_id");
+
+                    b.HasKey("Id")
+                        .HasName("pk_mp_response");
+
+                    b.HasIndex("AnnouncedAt")
+                        .HasDatabaseName("ix_mp_response_announced_at");
+
+                    b.HasIndex("BillNumber")
+                        .HasDatabaseName("ix_mp_response_bill_number");
+
+                    b.HasIndex("WrittenByUserId")
+                        .HasDatabaseName("ix_mp_response_written_by_user_id");
+
+                    b.HasIndex("SeimasPersonId", "BillNumber")
+                        .IsUnique()
+                        .HasDatabaseName("ix_mp_response_one_per_bill");
+
+                    b.ToTable("mp_response", "appeals", t =>
+                        {
+                            t.HasCheckConstraint("ck_mp_response_stance", "stance IN ('for', 'against', 'undecided')");
+
+                            t.HasCheckConstraint("ck_mp_response_status", "status IN ('published', 'withdrawn', 'hidden')");
+                        });
+                });
+
             modelBuilder.Entity("Lt2.Appeals.Domain.Organisation", b =>
                 {
                     b.Property<Guid>("Id")

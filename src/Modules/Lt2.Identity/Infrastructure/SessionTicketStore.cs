@@ -82,8 +82,32 @@ internal sealed class SessionTicketStore(
         var expires = ticket.Properties.ExpiresUtc ?? now + DefaultLifetime;
         await using var scope = scopes.CreateAsyncScope();
         var db = scope.ServiceProvider.GetRequiredService<IdentityDb>();
+
+        // A sign-in in a browser that is already signed in renews its session (the cookie handler keeps the key): the row
+        // then takes the new ticket's account, method and passkey, so a code session that signs in again with a passkey (the
+        // take-over of an MP's profile, design 8.5.2) becomes a passkey session. A passkey counts as just used only when it
+        // changed; a sliding renewal with the same ticket leaves the ten-minute rule's time alone.
+        var userId = ticket.Principal.UserId();
+        var passkey = ticket.Principal.FindFirstValue(PasskeyClaim) is { Length: > 0 } encoded
+            ? Microsoft.AspNetCore.WebUtilities.WebEncoders.Base64UrlDecode(encoded)
+            : null;
+        var method = ticket.Principal.FindFirstValue(AuthenticationMethods.ClaimType) ?? "";
+        var row = await db.Sessions.AsNoTracking().Where(s => s.Id == id).Select(s => new { s.UserId, s.PasskeyId, s.PasskeyConfirmedAt }).FirstOrDefaultAsync(cancellationToken);
+        if (row is null)
+        {
+            return;
+        }
+
+        var samePasskey = passkey is null ? row.PasskeyId is null : row.PasskeyId is { } held && held.AsSpan().SequenceEqual(passkey);
+        var confirmed = passkey is null ? null : samePasskey ? row.PasskeyConfirmedAt : now;
         await db.Sessions.Where(s => s.Id == id).ExecuteUpdateAsync(
-            s => s.SetProperty(x => x.Ticket, bytes).SetProperty(x => x.ExpiresAt, expires).SetProperty(x => x.LastSeenAt, now),
+            s => s.SetProperty(x => x.Ticket, bytes)
+                .SetProperty(x => x.ExpiresAt, expires)
+                .SetProperty(x => x.LastSeenAt, now)
+                .SetProperty(x => x.UserId, userId ?? row.UserId)
+                .SetProperty(x => x.Method, method)
+                .SetProperty(x => x.PasskeyId, passkey)
+                .SetProperty(x => x.PasskeyConfirmedAt, confirmed),
             cancellationToken);
     }
 

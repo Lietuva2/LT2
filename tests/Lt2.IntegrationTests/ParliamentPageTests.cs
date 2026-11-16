@@ -155,12 +155,18 @@ public sealed partial class ParliamentPageTests(DatabaseFixture database) : ApiT
         html.ShouldContain("2026 m. balandžio 15 d.");
     }
 
+    /// <summary>
+    /// Design 7.1, 8.5.2: no ranking or score on a profile, and a profile nobody took over says nothing about joining. Ona
+    /// Jonaitienė's profile is never taken over by any test, so it keeps guarding the profile nobody took over; the line of a
+    /// taken-over profile ("Profilį tvarko Seimo narys arba jo biuras") is checked in <c>MpLinkTests</c>.
+    /// </summary>
     [Fact]
     public async Task Nothing_on_a_profile_ranks_scores_or_mentions_joining()
     {
         var html = (await OkAsync("/p/ona-jonaitiene")).ToLowerInvariant();
+        html.ShouldContain("ona jonaitienė", customMessage: "the swept page is the profile");
 
-        foreach (var word in new[] { "reiting", "vieta tarp", "balas", "prisijungęs prie lietuva", "neprisijung", "išlaid" })
+        foreach (var word in new[] { "reiting", "vieta tarp", "balas", "prisijungęs prie lietuva", "neprisijung", "išlaid", "profilį tvarko", "managed-by" })
         {
             html.ShouldNotContain(word, customMessage: word);
         }

@@ -55,10 +55,14 @@ internal sealed class AccountData(IDbContextFactory<AppealsDb> contexts, IPositi
                              orderby s.PublishedAt
                              select new { organisation = o.Name, bill = s.BillNumber, stance = s.Stance, text = s.Text, link = s.Link, goal = s.Goal, status = s.Status, publishedAt = s.PublishedAt, editedAt = s.EditedAt })
             .ToListAsync(cancellationToken);
+        // Design 8.5.5: the MPs' responses this account wrote or last changed (as the MP's account or an office member).
+        var responses = await db.MpResponses.AsNoTracking().Where(r => r.WrittenByUserId == userId).OrderBy(r => r.PublishedAt)
+            .Select(r => new { bill = r.BillNumber, stance = r.Stance, text = r.Text, status = r.Status, publishedAt = r.PublishedAt, editedAt = r.EditedAt, withdrawnAt = r.WithdrawnAt })
+            .ToListAsync(cancellationToken);
         return new
         {
             appealsOpened = appeals, positions = myPositions, reasons, endorsements, reports, dateFlags = flags, writingRestrictions = restrictions,
-            aiDraftRequests = drafts, organisationRoles = roles, organisationStatements = written,
+            aiDraftRequests = drafts, organisationRoles = roles, organisationStatements = written, mpResponses = responses,
         };
     }
 
@@ -96,6 +100,9 @@ internal sealed class AccountData(IDbContextFactory<AppealsDb> contexts, IPositi
             "UPDATE appeals.organisation_statement SET written_by_user_id = NULL WHERE written_by_user_id = @user",
             "UPDATE appeals.organisation_invite SET created_by_user_id = NULL WHERE created_by_user_id = @user",
             "UPDATE appeals.organisation_code SET requested_by_user_id = NULL WHERE requested_by_user_id = @user",
+
+            // Design 8.5.5: the MP's public answers stay, without the account's number.
+            "UPDATE appeals.mp_response SET written_by_user_id = NULL WHERE written_by_user_id = @user",
         })
         {
 #pragma warning disable CA2100 // Constant SQL.

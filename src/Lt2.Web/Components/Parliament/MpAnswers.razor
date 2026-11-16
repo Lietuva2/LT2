@@ -1,0 +1,49 @@
+@using Lt2.Api.Contracts.Mps
+@using Lt2.Web.Client.Mps
+@inject IMpResponsesApi Responses
+@inject Formats F
+
+@* "Atsakymai" on the MP's profile (design 8.5.6), after the votes, its own sheet: the bills answered, the most recently
+   written first, each with the stance, the text and, after the adoption vote, the MP's ballot beside it; the first 10 and
+   "Rodyti daugiau" by the page's address. A list of answers, never a score: nothing counts answers against ballots (7.1).
+   A profile without responses has no such part, so it says nothing about whether anyone joined (8.5.2). *@
+@if (_view is { Items.Count: > 0 } view)
+{
+    <section class="sheet stack" id="atsakymai" aria-labelledby="h-answers">
+        <h2 id="h-answers">@F.T["Responses.ProfileTitle"]</h2>
+        <ol class="stack" id="answers-list">
+            @for (var i = 0; i < _shown; i++)
+            {
+                var item = view.Items[i];
+                <li id="@ResponsePaging.ItemId(i + 1)">
+                    <MpResponseItem Response="item.Response" Bill="item.Bill" IdPrefix="@($"atsakymas-{i + 1}-")" />
+                </li>
+            }
+        </ol>
+        @if (view.Items.Count > MpResponseLimits.First)
+        {
+            <div class="row">
+                <p class="small num" role="status" id="answers-shown">@F.T.Format("Responses.Shown", Display.Number(_shown), Display.Number(view.Items.Count))</p>
+                @if (ResponsePaging.More(_shown, view.Items.Count) is { } more)
+                {
+                    <a class="btn btn--plain" id="answers-more" href="@ResponsePaging.Address("/p/" + Slug, more, ResponsePaging.ItemId(_shown + 1))">@F.T["Responses.More"]</a>
+                }
+            </div>
+        }
+    </section>
+}
+
+@code {
+    private MpAnswersResponse? _view;
+    private int _shown;
+
+    [Parameter, EditorRequired] public string Slug { get; set; } = "";
+
+    [SupplyParameterFromQuery(Name = MpResponseLimits.ShowParameter)] public string? Show { get; set; }
+
+    protected override async Task OnParametersSetAsync()
+    {
+        _view = (await Responses.GetOfMpAsync(Slug)).Value;
+        _shown = _view is null ? 0 : Math.Min(ResponsePaging.Shown(Show, _view.Items.Count), _view.Items.Count);
+    }
+}

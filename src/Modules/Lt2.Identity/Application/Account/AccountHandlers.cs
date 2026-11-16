@@ -10,7 +10,7 @@ using Microsoft.EntityFrameworkCore.Storage;
 namespace Lt2.Identity.Application.Account;
 
 /// <summary>The signed-in person's account and sessions.</summary>
-internal sealed class AccountHandlers(IdentityDb db, UserManager<User> users, StaffAccess staff, TimeProvider clock)
+internal sealed class AccountHandlers(IdentityDb db, UserManager<User> users, StaffAccess staff, Politicians.PoliticianHandlers politicians, TimeProvider clock)
 {
     public async Task<Result<AccountSummary>> GetAsync(ClaimsPrincipal principal, CancellationToken cancellationToken)
     {
@@ -29,6 +29,9 @@ internal sealed class AccountHandlers(IdentityDb db, UserManager<User> users, St
         var awaitingActivation = await db.RoleActivations.AnyAsync(
             a => a.UserId == user.Id && a.UsedAt == null && a.ExpiresAt > now,
             cancellationToken);
+
+        // Design 8.5.1, 8.5.4: the offer to take over a profile, or the link, only in the account's own answer.
+        var (offer, link) = profile.IsPending ? (null, null) : await politicians.MineAsync(principal, user, cancellationToken);
         return new AccountSummary(
             user.Id,
             user.Email!,
@@ -41,7 +44,10 @@ internal sealed class AccountHandlers(IdentityDb db, UserManager<User> users, St
             session.ActiveRoles,
             awaitingActivation,
             await CurrentPositionConsent.Of(db.Consents, user.Id).AnyAsync(cancellationToken),
-            state?.AccountHasActiveStaffRole == true);
+            state?.AccountHasActiveStaffRole == true,
+            offer,
+            link,
+            !profile.IsPending && await Consents.TermsHandlers.RequiredAsync(db, user.Id, cancellationToken));
     }
 
     public async Task<IReadOnlyList<SessionSummary>> SessionsAsync(ClaimsPrincipal principal, CancellationToken cancellationToken)
@@ -79,8 +85,8 @@ internal sealed class AccountHandlers(IdentityDb db, UserManager<User> users, St
 }
 
 /// <summary>
-/// Housekeeping: old sign-in codes, expired sessions, and accounts still pending after the configured number of days
-/// (design 6.2), so an address typed by a stranger is not kept, nor any unsent email to it (design 6.8).
+/// Housekeeping: old sign-in codes, expired sessions, known browsers not seen for a year (design 8.20.2), and accounts
+/// still pending after the configured number of days (design 6.2), so an address typed by a stranger is not kept, nor any unsent email to it (design 6.8).
 /// </summary>
 internal sealed class MaintenanceHandler(IdentityDb db, IOutbox outbox, ISettings settings, TimeProvider clock) : IIdentityMaintenance
 {
@@ -90,6 +96,10 @@ internal sealed class MaintenanceHandler(IdentityDb db, IOutbox outbox, ISetting
         var codeCutoff = now - TimeSpan.FromDays(1);
         var codes = await db.SignInCodes.Where(c => c.CreatedAt < codeCutoff).ExecuteDeleteAsync(cancellationToken);
         var sessions = await db.Sessions.Where(s => s.ExpiresAt < now).ExecuteDeleteAsync(cancellationToken);
+
+        // Design 8.20.2: a browser not seen for a year is a stranger again; its codes go with it.
+        var staleBefore = KnownBrowserRules.StaleBefore(now);
+        var browsers = await db.KnownDevices.Where(d => d.LastSeenAt < staleBefore).ExecuteDeleteAsync(cancellationToken);
 
         var pendingCutoff = now - TimeSpan.FromDays(await settings.GetAsync(SettingKeys.PendingAccountDays, cancellationToken));
         var expired = db.Users.Where(u => db.Profiles.Any(p => p.UserId == u.Id && p.RegisteredAt == null && p.CreatedAt < pendingCutoff));
@@ -109,6 +119,6 @@ internal sealed class MaintenanceHandler(IdentityDb db, IOutbox outbox, ISetting
         // Feedback is kept for the setting's months (design 8.10).
         var feedback = await Feedback.FeedbackHandlers.DeleteOldAsync(
             db, FeedbackRules.KeepFrom(VilniusTime.Today(clock), await settings.GetAsync(SettingKeys.FeedbackKeepMonths, cancellationToken)), cancellationToken);
-        return codes + sessions + pending + feedback;
+        return codes + sessions + browsers + pending + feedback;
     }
 }

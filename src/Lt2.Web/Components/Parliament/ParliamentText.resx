@@ -8,7 +8,7 @@
   <data name="Source.Licence" xml:space="preserve"><value>CC BY 4.0</value></data>
   <data name="Source.Updated" xml:space="preserve"><value>atnaujinta {0}</value></data>
   <data name="Source.NotYet" xml:space="preserve"><value>dar neimportuota</value></data>
-  <data name="Source.How" xml:space="preserve"><value>Kaip tai skaičiuojama</value></data>
+  <data name="Source.How" xml:space="preserve"><value>Metodika</value></data>
   <data name="NoData" xml:space="preserve"><value>Duomenų nėra</value></data>
   <data name="Date.Format" xml:space="preserve"><value>{0} m. {1} {2} d.</value></data>
   <data name="Time.Format" xml:space="preserve"><value>{0} {1}</value></data>
@@ -132,7 +132,7 @@
   <data name="Ballots.None" xml:space="preserve"><value>Nerasta nė vieno Seimo nario.</value></data>
   <data name="Ballots.Shown" xml:space="preserve"><value>Rodoma {0} iš {1}</value></data>
   <data name="Ballots.More" xml:space="preserve"><value>Rodyti daugiau</value></data>
-  <data name="Method.Title" xml:space="preserve"><value>Kaip skaičiuojama</value></data>
+  <data name="Method.Title" xml:space="preserve"><value>Metodika</value></data>
   <data name="Method.Lead" xml:space="preserve"><value>Čia aprašyta, iš kur imami duomenys, kaip skaičiuojami Seimo narių rodikliai ir kaip veikia dalyvavimas dėl projektų: suvestinės, argumentai, aprašymai ir organizacijos.</value></data>
   <data name="Method.Source" xml:space="preserve"><value>Iš kur duomenys</value></data>
   <data name="Method.Source.1" xml:space="preserve"><value>Visi Seimo narių, frakcijų, komitetų, posėdžių ir balsavimų duomenys imami iš Lietuvos Respublikos Seimo atvirųjų duomenų (apps.lrs.lt/sip). Juos galima naudoti pagal licenciją CC BY 4.0.</value></data>
@@ -174,4 +174,34 @@
   <data name="Votes.None" xml:space="preserve"><value>Nerasta nė vieno balsavimo.</value></data>
   <data name="Votes.Older" xml:space="preserve"><value>Senesni balsavimai →</value></data>
   <data name="Votes.Year" xml:space="preserve"><value>{0} m.</value></data>
+<data name="Mp.ManagedBy" xml:space="preserve"><value>Profilį tvarko Seimo narys arba jo biuras</value></data>
+<data name="Mp.ManagedSince" xml:space="preserve"><value>nuo {0}</value></data>
+  <data name="Responses.Title" xml:space="preserve"><value>Seimo narių atsakymai</value></data>
+  <data name="Responses.ProfileTitle" xml:space="preserve"><value>Atsakymai</value></data>
+  <data name="Responses.None" xml:space="preserve"><value>Dar nė vienas Seimo narys neatsakė</value></data>
+  <data name="Responses.Counts" xml:space="preserve"><value>Atsakė Seimo narių: {0}. Balsuos už: {1} · prieš: {2} · dar neapsisprendė: {3}.</value></data>
+  <data name="Responses.Mark" xml:space="preserve"><value>Seimo narys arba jo biuras</value></data>
+  <data name="Responses.Stance.for" xml:space="preserve"><value>Balsuos už</value></data>
+  <data name="Responses.Stance.against" xml:space="preserve"><value>Balsuos prieš</value></data>
+  <data name="Responses.Stance.undecided" xml:space="preserve"><value>Dar neapsisprendė</value></data>
+  <data name="Responses.Will.for" xml:space="preserve"><value>balsuos už</value></data>
+  <data name="Responses.Will.against" xml:space="preserve"><value>balsuos prieš</value></data>
+  <data name="Responses.Will.undecided" xml:space="preserve"><value>dar neapsisprendė</value></data>
+  <data name="Responses.Ballot.for" xml:space="preserve"><value>už</value></data>
+  <data name="Responses.Ballot.against" xml:space="preserve"><value>prieš</value></data>
+  <data name="Responses.Ballot.abstain" xml:space="preserve"><value>susilaikė</value></data>
+  <data name="Responses.Ballot.did-not-vote" xml:space="preserve"><value>nebalsavo</value></data>
+  <data name="Responses.Ballot.consensus" xml:space="preserve"><value>projektas priimtas bendru sutarimu, Seimo narių balsų nėra</value></data>
+  <data name="Responses.Answered" xml:space="preserve"><value>Atsakė: {0}. Balsavo: {1}.</value></data>
+  <data name="Responses.VotePage" xml:space="preserve"><value>Balsavimas</value></data>
+  <data name="Responses.Published" xml:space="preserve"><value>Paskelbta {0}</value></data>
+  <data name="Responses.Edited" xml:space="preserve"><value>Keista {0}</value></data>
+  <data name="Responses.Withdrawn" xml:space="preserve"><value>Atsakymas atsiimtas</value></data>
+  <data name="Responses.Hidden" xml:space="preserve"><value>Atsakymas paslėptas moderatorių.</value></data>
+  <data name="Responses.HiddenWhy" xml:space="preserve"><value>Moderatorių paaiškinimas: {0}</value></data>
+  <data name="Responses.Earlier" xml:space="preserve"><value>Ankstesnės versijos ({0})</value></data>
+  <data name="Responses.VersionDates" xml:space="preserve"><value>parašyta {0}, pakeista {1}</value></data>
+  <data name="Responses.VersionWithdrawn" xml:space="preserve"><value>parašyta {0}, atsiimta {1}</value></data>
+  <data name="Responses.Shown" xml:space="preserve"><value>Rodoma {0} iš {1}</value></data>
+  <data name="Responses.More" xml:space="preserve"><value>Rodyti daugiau</value></data>
 </root>

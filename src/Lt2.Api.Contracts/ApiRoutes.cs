@@ -27,7 +27,14 @@ public static class ApiRoutes
         public const string PasskeyConfirmation = Root + "/passkey-confirmation";
         public const string Sessions = Root + "/sessions";
         public const string Session = Root + "/sessions/{id:guid}";
+
+        /// <summary>The browsers known to the account (design 8.20.2) and forgetting one.</summary>
+        public const string KnownBrowsers = Root + "/known-browsers";
+        public const string KnownBrowser = Root + "/known-browsers/{id:guid}";
         public const string PositionConsent = Root + "/consents/positions";
+
+        /// <summary>Accepting the terms of use in force (design 8.22.2).</summary>
+        public const string Terms = Root + "/consents/terms";
         public const string PartySupport = Root + "/party-support";
         public const string Export = Root + "/export";
         public const string Invitation = Root + "/invitation";
@@ -37,6 +44,8 @@ public static class ApiRoutes
         public const string Bills = Root + "/bills";
 
         public static string SessionById(Guid id) => $"{Sessions}/{id}";
+
+        public static string KnownBrowserById(Guid id) => $"{KnownBrowsers}/{id}";
     }
 
     public static class Admin

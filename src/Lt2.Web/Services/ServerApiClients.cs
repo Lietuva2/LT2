@@ -47,8 +47,12 @@ internal sealed class ServerAuthApi(IIdentityModule identity, IHttpContextAccess
 
 internal sealed class ServerMeApi(IIdentityModule identity, IMpDirectory mps, IHttpContextAccessor accessor, IpHasher ipHasher, ErrorMapper errors, IInvitations invitations, IConfiguration configuration) : IMeApi
 {
+    /// <summary>
+    /// The account as a page rendered on the server sees it: without the MP offer or link (design 8.5.4: nothing about it is
+    /// in the page the server renders). The island that shows them asks <c>GET /me</c> from the browser.
+    /// </summary>
     public async Task<ApiResult<MeResponse>> GetAsync(CancellationToken cancellationToken = default) =>
-        errors.ToApiResult(await identity.GetAccountAsync(User, cancellationToken), Mapping.ToResponse);
+        errors.ToApiResult(await identity.GetAccountAsync(User, cancellationToken), account => Mapping.ToResponse(account) with { MpOffer = null, Mp = null });
 
     public async Task<ApiResult<IReadOnlyList<SessionResponse>>> GetSessionsAsync(CancellationToken cancellationToken = default)
     {
@@ -58,6 +62,12 @@ internal sealed class ServerMeApi(IIdentityModule identity, IMpDirectory mps, IH
 
     public async Task<ApiResult> EndSessionAsync(Guid sessionId, CancellationToken cancellationToken = default) =>
         errors.ToApiResult(await identity.EndSessionAsync(User, sessionId, cancellationToken));
+
+    public async Task<ApiResult<IReadOnlyList<KnownBrowserResponse>>> GetKnownBrowsersAsync(CancellationToken cancellationToken = default) =>
+        errors.ToApiResult(await identity.GetKnownBrowsersAsync(User, cancellationToken), Mapping.ToKnownBrowsers);
+
+    public async Task<ApiResult> ForgetKnownBrowserAsync(Guid id, CancellationToken cancellationToken = default) =>
+        errors.ToApiResult(await identity.ForgetKnownBrowserAsync(User, id, cancellationToken));
 
     public async Task<ApiResult> CompleteRegistrationAsync(CompleteRegistrationRequest request, CancellationToken cancellationToken = default) =>
         errors.ToApiResult(await identity.CompleteRegistrationAsync(User, Mapping.ToCompletion(request), cancellationToken));
@@ -70,6 +80,9 @@ internal sealed class ServerMeApi(IIdentityModule identity, IMpDirectory mps, IH
 
     public async Task<ApiResult> GivePositionConsentAsync(PositionConsentRequest request, CancellationToken cancellationToken = default) =>
         errors.ToApiResult(await identity.GivePositionConsentAsync(User, request.TextVersion, cancellationToken));
+
+    public async Task<ApiResult> AcceptTermsAsync(TermsAcceptanceRequest request, CancellationToken cancellationToken = default) =>
+        errors.ToApiResult(await identity.AcceptTermsAsync(User, request.TextVersion, cancellationToken));
 
     public async Task<ApiResult> WithdrawPositionConsentAsync(CancellationToken cancellationToken = default) =>
         errors.ToApiResult(await identity.WithdrawPositionConsentAsync(User, cancellationToken));
@@ -115,7 +128,7 @@ internal static class Mapping
         new(request.Email, request.InvitationCode);
 
     public static RegistrationCompletion ToCompletion(CompleteRegistrationRequest request) =>
-        new(request.DisplayName, request.ConfirmsAdult, request.InvitationCode);
+        new(request.DisplayName, request.ConfirmsAdult, request.InvitationCode, request.AcceptsTerms);
 
     public static MeResponse ToResponse(AccountSummary account) => new()
     {
@@ -131,6 +144,9 @@ internal static class Mapping
         AwaitingActivation = account.AwaitingActivation,
         HasPositionConsent = account.HasPositionConsent,
         StaffAccount = account.StaffAccount,
+        MpOffer = account.MpOffer is { } offer ? MpMapping.Map(offer) : null,
+        Mp = account.Mp is { } link ? MpMapping.Map(link) : null,
+        TermsRequired = account.TermsRequired,
     };
 
     public static SessionResponse ToResponse(SessionSummary session) => new()
@@ -142,6 +158,9 @@ internal static class Mapping
         Method = session.Method,
         IsCurrent = session.IsCurrent,
     };
+
+    public static IReadOnlyList<KnownBrowserResponse> ToKnownBrowsers(IReadOnlyList<KnownBrowserSummary> browsers) =>
+        browsers.Select(b => new KnownBrowserResponse(b.Id, b.Label, b.FirstSeenAt, b.LastSeenAt, b.IsCurrent)).ToList();
 
     public static ApiResult ToApiResult(this ErrorMapper errors, Result<Unit> result) =>
         result.IsSuccess ? ApiResult.Ok() : ApiResult.Fail(errors.ToProblem(result.Error!));

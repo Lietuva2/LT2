@@ -22,8 +22,15 @@
         </ol>
         <p class="label">@T["Digests.Label"]</p>
         <h1>@(Date is null ? T["Digests.Title"] : T.Format("Digests.Of", F.Date(runs[0].RunDate)))</h1>
+        @if (Date is null)
+        {
+            <ProjectTabs Current="ProjectTab.Digests" />
+        }
         <p class="lead">@T["Digests.Lead"]</p>
-        <p class="note" id="dry-run">@T["Digests.DryRun"]</p>
+        @if (_rules?.Sending is null or "off")
+        {
+            <p class="note" id="dry-run">@T["Digests.DryRun"]</p>
+        }
     </div>
 
     <div class="cols">
@@ -32,9 +39,13 @@
             {
                 <section class="stack" aria-labelledby="h-@run.Id" id="run-@run.Id">
                     <h2 id="h-@run.Id">@T["Digests.Kind." + run.Kind] · @F.Date(run.RunDate)</h2>
+                    @* Design 8.19.2: what happened to it, in one line under the date; never which MPs. *@
+                    <p class="small num" id="run-status-@run.Id">@StatusLine(run)</p>
+                    @if (run.Status == "cancelled" && run.Statement is { } statement)
+                    {
+                        <p class="small" id="run-statement-@run.Id">@T.Format("Digests.Statement", statement)</p>
+                    }
                     <div class="row">
-                        <span class="tag tag--ink">@T["Digests.Status." + run.Status]</span>
-                        <span class="tag num">@T.Format("Digests.Mps", Display.Number(run.MpCount))</span>
                         <span class="tag num">@T.Format("Digests.Items", Display.Number(run.Items.Count))</span>
                         @if (Date is null)
                         {
@@ -101,6 +112,7 @@
         <aside class="stack">
             @* Design 8.15: who would receive a summary, when and what goes in are on the methodology page. *@
             <p><a href="/metodika#suvestiniu-taisykles" id="digest-how">@T["Digests.HowLink"]</a></p>
+            <p><a href="@DigestRoutes.IntroductionPage" id="digest-introduction">@T["Digests.IntroductionLink"]</a></p>
             @if (Date is null && runs.Count > 1)
             {
                 <section class="stack stack--tight" aria-labelledby="h-earlier">
@@ -122,18 +134,35 @@ else
     <PageTitle>@T["Digests.Title"] · Lietuva 2.0</PageTitle>
     <div class="stack">
         <h1>@T["Digests.Title"]</h1>
+        @if (Date is null)
+        {
+            <ProjectTabs Current="ProjectTab.Digests" />
+        }
         <p class="lead" id="no-digests">@T["Digests.None"]</p>
+        <p><a href="@DigestRoutes.IntroductionPage" id="digest-introduction">@T["Digests.IntroductionLink"]</a></p>
         <p class="note note--quiet">@T["NotAPoll"]</p>
     </div>
 }
 
 @code {
     private IReadOnlyList<DigestRunResponse>? _runs;
+    private DigestRulesResponse? _rules;
 
     [Parameter] public string? Date { get; set; }
 
+    /// <summary>The public copy's one line (design 8.19.2): a dry run, waiting, sent to how many and when, declined or expired.</summary>
+    private string StatusLine(DigestRunResponse run) => run.Status switch
+    {
+        "waiting" => T["Digests.Line.waiting"],
+        "sent" => T.Format("Digests.Line.sent", Display.Number(run.SentCount), run.DecidedAt is { } at ? Display.DayTime(at) : ""),
+        "cancelled" => T["Digests.Line.cancelled"],
+        "expired" => T["Digests.Line.expired"],
+        _ => T["Digests.Line.dry-run"],
+    };
+
     protected override async Task OnParametersSetAsync()
     {
+        _rules ??= (await Digests.GetRulesAsync()).Value;
         if (Date is null)
         {
             _runs = (await Digests.GetDigestsAsync()).Value;

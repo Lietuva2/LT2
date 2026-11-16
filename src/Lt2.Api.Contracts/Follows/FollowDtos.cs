@@ -25,9 +25,9 @@ public sealed record MyFollowsResponse(IReadOnlyList<FollowedBillResponse> Bills
 
 /// <summary>
 /// Which follow emails are on: a followed bill is planned; the Seimas voted on it (design 8.11.2); a followed organisation
-/// made a statement public (design 8.14.14).
+/// made a statement public (design 8.14.14); MPs answered on a followed bill (design 8.20.1).
 /// </summary>
-public sealed record NoticeSettingsResponse(bool Planned, bool Voted, bool Statements = true);
+public sealed record NoticeSettingsResponse(bool Planned, bool Voted, bool Statements = true, bool Responses = true);
 
 public sealed record NoticeSettingsRequest
 {
@@ -36,6 +36,8 @@ public sealed record NoticeSettingsRequest
     public bool Voted { get; init; } = true;
 
     public bool Statements { get; init; } = true;
+
+    public bool Responses { get; init; } = true;
 }
 
 public static class FollowRoutes
