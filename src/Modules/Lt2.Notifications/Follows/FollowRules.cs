@@ -61,6 +61,19 @@ internal static class FollowRules
     public static bool IsStatementRecipient(DateTimeOffset followedAt, DateTimeOffset firstSeen, DateTimeOffset firstPublicAt) =>
         IsRecipient(followedAt, firstSeen, firstPublicAt);
 
+    /// <summary>
+    /// A followed member's argument (design 8.25.5) that became public more than three days before the job first saw it is
+    /// recorded and never sent, as an organisation's statement (the window of 8.11.2).
+    /// </summary>
+    public static bool MemberArgumentIsSendable(DateTimeOffset publishedAt, DateTimeOffset firstSeen) => firstSeen - publishedAt <= VoteSendWindow;
+
+    /// <summary>
+    /// A followed member's argument goes to those who followed the member before it became public and before the job first saw
+    /// it (design 8.25.5: nobody hears of a text from before they followed), never to its author.
+    /// </summary>
+    public static bool IsMemberArgumentRecipient(Guid follower, Guid author, DateTimeOffset followedAt, DateTimeOffset firstSeen, DateTimeOffset publishedAt) =>
+        follower != author && IsRecipient(followedAt, firstSeen, publishedAt);
+
     /// <summary>The key of a bill's "Seimo narių atsakymai" event (design 8.20.1): the Vilnius day the MPs answered.</summary>
     public static string ResponsesKey(DateOnly day) => PlannedKey(day);
 

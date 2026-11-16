@@ -215,4 +215,21 @@
   <data name="Parts.Taking" xml:space="preserve"><value>Dalyvavimas</value></data>
   <data name="Parts.Security" xml:space="preserve"><value>Saugumas ir duomenys</value></data>
   <data name="Staff.KeyText" xml:space="preserve"><value>Tai darbuotojo paskyra, bet šioje sesijoje prisijungėte ne darbuotojo prieigos raktu, todėl darbuotojo darbai neveikia.</value></data>
+  <data name="Account.PageTitle" xml:space="preserve"><value>{0} · Lietuva 2.0</value></data>
+  <data name="PublicProfile.Title" xml:space="preserve"><value>Viešas profilis ir „Apie mane“</value></data>
+  <data name="PublicProfile.IsPublic" xml:space="preserve"><value>Jūsų viešas profilis įjungtas:</value></data>
+  <data name="PublicProfile.IsOff" xml:space="preserve"><value>Viešas profilis išjungtas: jūsų puslapio nėra, o prie argumentų rodomas tik vardas.</value></data>
+  <data name="PublicProfile.AboutHidden" xml:space="preserve"><value>Moderatorius paslėpė jūsų tekstą „Apie mane“: jis niekur nerodomas, kol neparašysite naujo.</value></data>
+  <data name="PublicProfile.AboutHiddenWhy" xml:space="preserve"><value>Paaiškinimas: {0}</value></data>
+  <data name="PublicProfile.AboutLabel" xml:space="preserve"><value>Apie mane</value></data>
+  <data name="PublicProfile.AboutHint" xml:space="preserve"><value>Rodoma tik viešame profilyje. Galima nuoroda (https://) ir jūsų pačių kontaktai – jie bus vieši ir juos ras paieškos sistemos. Asmens kodo rašyti negalima. {0} iš {1} ženklų.</value></data>
+  <data name="PublicProfile.AboutHintNoLimit" xml:space="preserve"><value>Rodoma tik viešame profilyje. Galima nuoroda (https://) ir jūsų pačių kontaktai – jie bus vieši ir juos ras paieškos sistemos. Asmens kodo rašyti negalima.</value></data>
+  <data name="PublicProfile.Switch" xml:space="preserve"><value>Viešas profilis</value></data>
+  <data name="PublicProfile.Consent" xml:space="preserve"><value>Jūsų profilio puslapyje bus jūsų vardas, „Apie mane“ ir viskas, ką viešai parašėte (argumentai), surinkta į vieną vietą su nuorodomis; prie visų jūsų argumentų bus nuoroda į jį. Puslapį gali rodyti paieškos sistemos. Kiti nariai galės jus sekti ir gaus laišką, kai paskelbsite argumentą; puslapyje bus rodomas sekėjų skaičius, bet ne tai, kas jus seka (to nesužinosite ir jūs). Išjungus profilį, puslapis dingsta iš karto, bet paieškos sistemų kopijos išnyksta tik joms vėl apsilankius. Išsaugodami įjungtą profilį sutinkate su tuo.</value></data>
+  <data name="PublicProfile.NameNeeded" xml:space="preserve"><value>Viešam profiliui reikia vardo: pirmiau įrašykite jį aukščiau.</value></data>
+  <data name="PublicProfile.OffText" xml:space="preserve"><value>Išsaugojus profilis išsijungs iš karto: puslapis ir nuorodos prie argumentų dings, visi jus sekantys nebesekys. Jo adresas daugiau niekada nebus naudojamas.</value></data>
+  <data name="PublicProfile.Save" xml:space="preserve"><value>Išsaugoti</value></data>
+  <data name="PublicProfile.Saved" xml:space="preserve"><value>Išsaugota.</value></data>
+  <data name="PublicProfile.SavedOn" xml:space="preserve"><value>Viešas profilis įjungtas.</value></data>
+  <data name="PublicProfile.SavedOff" xml:space="preserve"><value>Viešas profilis išjungtas, jo adresas panaikintas.</value></data>
 </root>

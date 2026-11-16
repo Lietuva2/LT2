@@ -65,4 +65,5 @@
   <data name="Introduction.Subject" xml:space="preserve"><value>Laiško tema – nuo 1 iki 200 ženklų.</value></data>
   <data name="Introduction.Text" xml:space="preserve"><value>Laiško tekstas – nuo 1 iki 10 000 ženklų.</value></data>
   <data name="Introduction.Signer" xml:space="preserve"><value>Nurodykite pasirašančiojo vardą, pavardę ir pareigas (ne daugiau kaip 200 ženklų).</value></data>
+  <data name="About.TooLong" xml:space="preserve"><value>Tekstas „Apie mane“ per ilgas: ne daugiau kaip {0} ženklų.</value></data>
 </root>

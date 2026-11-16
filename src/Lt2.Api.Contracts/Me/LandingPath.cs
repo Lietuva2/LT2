@@ -52,6 +52,10 @@ public static partial class LandingPath
         return "/" + relative.Split('?', '#')[0].TrimStart('/');
     }
 
-    [GeneratedRegex(@"^/seimas/[A-Za-z0-9_\-]+(/[A-Za-z0-9_\-]+)*$", RegexOptions.CultureInvariant)]
+    /// <summary>
+    /// A bill's page and the pages under <c>/seimas/</c>; the account screens (design 8.21: a visitor sent to sign in from one
+    /// comes back to it); a member's public page (design 8.25.2: its "Sekti" for a visitor).
+    /// </summary>
+    [GeneratedRegex(@"^(/seimas/[A-Za-z0-9_\-]+(/[A-Za-z0-9_\-]+)*|/sveiki(/[a-z]+)?|/nariai/[A-Za-z0-9]{10})$", RegexOptions.CultureInvariant)]
     private static partial Regex Shape();
 }

@@ -9,6 +9,9 @@ public enum ErrorKind
     Forbidden,
     Unauthorized,
     TooManyRequests,
+
+    /// <summary>Removed on purpose and not coming back (410): a retired public profile, design 8.25.1.</summary>
+    Gone,
 }
 
 /// <summary>A failure with a stable machine-readable code and a localisation key for the message.</summary>
@@ -25,6 +28,8 @@ public sealed record Error(ErrorKind Kind, string Code, string? Field = null)
     public static Error Conflict(string code) => new(ErrorKind.Conflict, code);
     public static Error Forbidden(string code) => new(ErrorKind.Forbidden, code);
     public static Error Unauthorized(string code) => new(ErrorKind.Unauthorized, code);
+
+    public static Error Gone(string code) => new(ErrorKind.Gone, code);
 }
 
 public readonly record struct Unit

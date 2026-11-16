@@ -27,6 +27,8 @@ public static class ContractsServiceCollectionExtensions
         services.AddScoped<IValidator<Me.PositionConsentRequest>, Me.PositionConsentRequestValidator>();
         services.AddScoped<IValidator<Me.TermsAcceptanceRequest>, Me.TermsAcceptanceRequestValidator>();
         services.AddScoped<IValidator<Me.PartySupportRequest>, Me.PartySupportRequestValidator>();
+        services.AddScoped<IValidator<Me.ProfileRequest>, Me.ProfileRequestValidator>();
+        services.AddScoped<IValidator<Me.MemberReportRequest>, Me.MemberReportRequestValidator>();
         services.AddScoped<IValidator<Appeals.PositionRequest>, Appeals.PositionRequestValidator>();
         services.AddScoped<IValidator<Appeals.ReasonRequest>, Appeals.ReasonRequestValidator>();
         services.AddScoped<IValidator<Appeals.ReportRequest>, Appeals.ReportRequestValidator>();

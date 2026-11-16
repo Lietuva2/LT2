@@ -223,6 +223,12 @@ internal sealed class Reason
     public string[] ScreeningFlags { get; set; } = [];
 
     public DateTimeOffset CreatedAt { get; set; }
+
+    /// <summary>
+    /// When it first became public (design 8.25.5: written unflagged, or published by a moderator); null while it never was.
+    /// A restore keeps it.
+    /// </summary>
+    public DateTimeOffset? FirstPublicAt { get; set; }
 }
 
 internal static class ReasonStatuses

@@ -226,6 +226,7 @@ internal sealed class ModerationService(
             // Its "Man svarbu" marks were deleted by the hide and do not come back (design 8.3).
             reason.Status = ReasonStatuses.Published;
             reason.SeenAt = now;
+            reason.FirstPublicAt ??= now;
             return Task.FromResult<Result<string?>>(ModerationNotices.ReasonRestored);
         }, cancellationToken);
 
@@ -439,6 +440,7 @@ internal sealed class ModerationService(
             var wasPending = reason.Status == ReasonStatuses.Pending;
             reason.Status = ReasonStatuses.Published;
             reason.SeenAt = now;
+            reason.FirstPublicAt ??= now;
             return Task.FromResult<Result<string?>>(wasPending ? ModerationNotices.ReasonPublished : null);
         }, cancellationToken);
 

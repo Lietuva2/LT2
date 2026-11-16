@@ -113,6 +113,25 @@ internal sealed class FollowTemplates(IStringLocalizer<EmailTemplates> l, IOptio
         return Message(model.To, Format("Follow.Responses.Subject", model.BillNumber), paragraphs);
     }
 
+    /// <summary>
+    /// A member the person follows published an argument (design 8.25.5): the member's display name, the bill and the link to
+    /// the argument and to the member's page. Never the argument's text, its side, the person's side or any count.
+    /// </summary>
+    public EmailMessage Member(FollowMemberEmail model)
+    {
+        ArgumentNullException.ThrowIfNull(model);
+        var paragraphs = new List<string>
+        {
+            l[EmailText.Greeting],
+            Format("Follow.Member.Body", model.MemberName, $"{model.BillNumber} · {model.BillTitle}"),
+            Format("Follow.Member.Read", Link(model.ArgumentPath)),
+            Format("Follow.Member.Profile", Link(model.ProfilePath)),
+            Format("Follow.Member.Footer", Link(model.AccountPath)),
+            l[EmailText.Signature],
+        };
+        return Message(model.To, Format("Follow.Member.Subject", model.MemberName, model.BillNumber), paragraphs);
+    }
+
     private static string Day(DateOnly day) => day.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture);
 
     private static string Number(int? value) => value?.ToString(CultureInfo.InvariantCulture) ?? "–";

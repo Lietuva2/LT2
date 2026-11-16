@@ -3787,9 +3787,9 @@ PUT    /api/v1/members/{id}/follow             DELETE /api/v1/members/{id}/follo
 #### 8.25.7 Stage
 
 **[Decided by the owner on 2026-11-16: built now, before comments ("Yes, i missed public profiles too, implement
-those"); it replaces the designer's proposal of its own milestone after comments.]** Comments, when built, carry the
-profile link beside their names from the start. The lawyer reads the profile with the other texts once, before going
-live (8.22).
+those"); it replaces the designer's proposal of its own milestone after comments.]** The parts that concern comments
+(the name beside a comment, comments on the page, "Sutinku") are connected once comments exist. The lawyer reads the
+profile with the other texts once, before going live (8.22).
 
 #### 8.25.9 The party shown publicly [the designer's proposal, awaiting the owner; not built]
 
@@ -4228,7 +4228,7 @@ No dates, in line with the rule that release dates are not promised. Each milest
 | **M2b Sending** | Introduction letter, MP preferences, real summaries, profile take-over, MP responses, participant notifications, known devices for sign-in (6.2). | Section 8.9, the impact assessment, the legal check and the penetration test are done. |
 | **Follower counts** [owner, 2026-11-16; built 2026-11-16 with M2d] | How many follow a bill, an MP, an organisation and a member, on the thing's own page, with the hint and the methodology's part on following; the privacy notice's line (8.11.2, section 12's legal row). | Section 8.11.7's last point. |
 | **M2d Profiles** [owner, 2026-11-16: built now, before comments] | The account area as four screens (8.21); public profiles by the member's choice, "Apie mane", the name's card, following a member with their consent (8.25), arguments only until comments exist. | Section 8.25.8 (comments' parts with M2c) and the lawyer's reading of the profile. |
-| **M2c Comments** [proposed 2026-11-16] | "Aptarimas" under arguments, organisations' statements and MPs' responses, in one piece for the three kinds, with "Sutinku", a switch per kind, reports, moderation on the bill's page and the argument author's notice (8.23), with the email rhythm (8.24). Names carry the profile link of 8.25.4 for members with a public profile. | Sections 8.23.13, 8.24. |
+| **M2c Comments** [proposed 2026-11-16] | "Aptarimas" under arguments, organisations' statements and MPs' responses, in one piece for the three kinds, with "Sutinku", a switch per kind, reports, moderation on the bill's page and the argument author's notice (8.23), with the email rhythm (8.24). Names are plain text. | Sections 8.23.13, 8.24. |
 | **M3** | Stage 3 design: voting, delegation, AI summaries. Following, with its shown numbers, is delegation's predecessor (owner, 2026-11-16): the numbers show whom people choose to hear from, the ground delegation would stand on; a follow never becomes a delegation by itself (1.1, proposed). | Separate document. |
 
 Splitting M2 means the risky step (emailing every MP) happens only after the whole flow has been watched working.

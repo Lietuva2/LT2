@@ -110,7 +110,14 @@ public sealed record ThresholdResponse(int Value, string SetBy, string? Note, in
 
 public sealed record BillRefResponse(string Number, string Title);
 
-public sealed record ReasonResponse(Guid Id, string Side, string Text, string? AuthorName, int Endorsements, string Status, DateTimeOffset CreatedAt);
+/// <summary>
+/// An argument. <c>AuthorProfileId</c> is the public profile id of an author who switched "Viešas profilis" on (design 8.25.4):
+/// the name links to <c>/nariai/{id}</c>; null for everyone else.
+/// </summary>
+public sealed record ReasonResponse(Guid Id, string Side, string Text, string? AuthorName, int Endorsements, string Status, DateTimeOffset CreatedAt, string? AuthorProfileId = null);
+
+/// <summary>The card beside a public profile's name (design 8.25.4): once per person in a bill's answer; no follower number.</summary>
+public sealed record AuthorCardResponse(string ProfileId, string Name, string? About);
 
 /// <summary>
 /// A bill as people take part on it (design 8.12.1). <c>Id</c> is the bill's record, null while it has none (nobody took
@@ -135,7 +142,8 @@ public sealed record BillRecordResponse(
     PlannedDateResponse? Planned = null,
     string? HiddenStatement = null,
     string? DescriptionUrl = null,
-    DateTimeOffset? DescriptionAt = null);
+    DateTimeOffset? DescriptionAt = null,
+    IReadOnlyList<AuthorCardResponse>? Cards = null);
 
 /// <summary>The bill's planned date on the Seimas agenda (design 8.4): shown as "Planuojama …", never a countdown.</summary>
 public sealed record PlannedDateResponse(DateOnly Date, string? Stage, string? SourceUrl, bool SetByModerator);

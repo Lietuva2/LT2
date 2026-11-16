@@ -19,12 +19,13 @@ internal static class FollowMapping
                 b.LastStageResult is { } v ? new FollowedVoteResponse(v.VoteId, v.Stage, v.HeldAt, v.IsConsensus, v.For, v.Against, v.Abstain) : null)).ToList(),
             mine.Mps.Select(m => new FollowedMpResponse(m.Slug, m.FirstName, m.LastName)).ToList(),
             mine.Organisations.Select(o => new FollowedOrganisationResponse(
-                o.Slug, o.Name, new Lt2.Api.Contracts.Organisations.OrganisationLabelResponse(o.ConfirmedBy, o.ConfirmedDomain), o.Status)).ToList());
+                o.Slug, o.Name, new Lt2.Api.Contracts.Organisations.OrganisationLabelResponse(o.ConfirmedBy, o.ConfirmedDomain), o.Status)).ToList(),
+            (mine.Members ?? []).Select(m => new FollowedMemberResponse(m.ProfileId, m.DisplayName)).ToList());
     }
 }
 
 /// <summary>Server-side <see cref="IFollowsApi"/> for prerendered islands, as the signed-in person of the request.</summary>
-internal sealed class ServerFollowsApi(IFollows follows, IHttpContextAccessor accessor, ErrorMapper errors) : IFollowsApi
+internal sealed class ServerFollowsApi(IFollows follows, IFollowerCounts followers, IHttpContextAccessor accessor, ErrorMapper errors) : IFollowsApi
 {
     private static readonly Error SignInRequired = Error.Unauthorized("auth.required");
 
@@ -51,6 +52,15 @@ internal sealed class ServerFollowsApi(IFollows follows, IHttpContextAccessor ac
     public Task<ApiResult> UnfollowOrganisationAsync(string slug, CancellationToken cancellationToken = default) =>
         AsMemberAsync(id => follows.UnfollowOrganisationAsync(id, slug, cancellationToken));
 
+    public Task<ApiResult> FollowMemberAsync(string profileId, CancellationToken cancellationToken = default) =>
+        AsMemberAsync(id => follows.FollowMemberAsync(id, profileId, cancellationToken));
+
+    public Task<ApiResult> UnfollowMemberAsync(string profileId, CancellationToken cancellationToken = default) =>
+        AsMemberAsync(id => follows.UnfollowMemberAsync(id, profileId, cancellationToken));
+
+    public async Task<ApiResult<Lt2.Api.Contracts.Me.FollowersResponse>> GetBillFollowersAsync(string number, CancellationToken cancellationToken = default) =>
+        ApiResult<Lt2.Api.Contracts.Me.FollowersResponse>.Ok(new(await followers.BillAsync(number, cancellationToken)));
+
     public async Task<ApiResult<NoticeSettingsResponse>> GetNoticesAsync(CancellationToken cancellationToken = default)
     {
         if (UserId is not { } id)
@@ -59,11 +69,11 @@ internal sealed class ServerFollowsApi(IFollows follows, IHttpContextAccessor ac
         }
 
         var n = await follows.NoticesAsync(id, cancellationToken);
-        return ApiResult<NoticeSettingsResponse>.Ok(new NoticeSettingsResponse(n.Planned, n.Voted, n.Statements, n.Responses));
+        return ApiResult<NoticeSettingsResponse>.Ok(new NoticeSettingsResponse(n.Planned, n.Voted, n.Statements, n.Responses, n.Members));
     }
 
     public Task<ApiResult> SetNoticesAsync(NoticeSettingsRequest request, CancellationToken cancellationToken = default) =>
-        AsMemberAsync(id => follows.SetNoticesAsync(id, new NoticeSettings(request.Planned, request.Voted, request.Statements, request.Responses), cancellationToken));
+        AsMemberAsync(id => follows.SetNoticesAsync(id, new NoticeSettings(request.Planned, request.Voted, request.Statements, request.Responses, request.Members), cancellationToken));
 
     private Guid? UserId => accessor.HttpContext?.User.UserId();
 

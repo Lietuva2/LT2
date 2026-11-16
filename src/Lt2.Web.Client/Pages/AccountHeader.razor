@@ -1,0 +1,31 @@
+@inject IStringLocalizer<UiText> L
+
+@* The head of every account screen (design 8.21): the greeting, the row of screens and, for a session older than the terms in
+   force (design 8.22.2), the note with the link; it concerns the whole account, so it stands on every screen. *@
+<PageTitle>@L.Format("Account.PageTitle", L[Title])</PageTitle>
+<section class="stack" aria-labelledby="hello-title">
+    <p class="label">Lietuva 2.0</p>
+    <h1 id="hello-title">@L.Format("Hello.Greeting", Me.DisplayName ?? Me.Email)</h1>
+    <NeedsScript />
+    <AccountTabs Current="@Current" />
+</section>
+
+@if (Me.TermsRequired)
+{
+    <p class="note" id="terms-required">@L["Hello.TermsRequired"] <a href="@TermsText.AcceptanceLink(Current)">@L["Hello.TermsLink"]</a></p>
+}
+
+@code {
+    [Parameter, EditorRequired] public MeResponse Me { get; set; } = default!;
+
+    /// <summary>The screen: one of <see cref="AccountScreens.All"/>.</summary>
+    [Parameter, EditorRequired] public string Current { get; set; } = AccountScreens.Profile;
+
+    private string Title => Current switch
+    {
+        AccountScreens.Follows => "Parts.Follows",
+        AccountScreens.Taking => "Parts.Taking",
+        AccountScreens.Security => "Parts.Security",
+        _ => "Parts.Profile",
+    };
+}

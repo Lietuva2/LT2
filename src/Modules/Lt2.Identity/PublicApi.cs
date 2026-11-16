@@ -345,6 +345,64 @@ public interface IOrganisationInvitations
     Task<Result<OrganisationInvitation>> ReplaceAsync(Guid organisationId, bool active, CancellationToken cancellationToken);
 }
 
+/// <summary>
+/// The person's own profile state for the "Profilis" screen (design 8.25): "Apie mane", whether a moderator hid it (with the
+/// statement), the public id while "Viešas profilis" is on, the consent text's version in force, and <c>Texts:MaxLength</c>.
+/// </summary>
+public sealed record MyProfileState(
+    string? About, bool AboutHidden, string? AboutHiddenStatement, string? ProfileId, DateTimeOffset? PublicSince, string ConsentVersion, int TextMaxLength);
+
+/// <summary>What the "Profilis" form sends: the text, the switch and, to switch on, the consent's version the form showed.</summary>
+public sealed record ProfileChange(string? About, bool Public, string? ConsentVersion);
+
+/// <summary>A report of a profile as the moderators see it: never who reported.</summary>
+public sealed record ProfileReportInfo(Guid Id, string Ground, string? Text, DateTimeOffset CreatedAt);
+
+/// <summary>
+/// A profile for the moderators (design 8.25.6): reported, or with "Apie mane" hidden. <paramref name="Id"/> is an opaque key
+/// for the moderators' actions; no address, side, follow or party.
+/// </summary>
+public sealed record ProfileModerationItem(
+    Guid Id, string? ProfileId, string? DisplayName, string? About, DateTimeOffset? HiddenAt, string? HiddenStatement, bool Restorable, IReadOnlyList<ProfileReportInfo> Reports);
+
+/// <summary>Public profiles: the person's own form (design 8.25), reports and moderation (design 8.25.6).</summary>
+public interface IMemberProfiles
+{
+    Task<Result<MyProfileState>> MineAsync(ClaimsPrincipal user, CancellationToken cancellationToken);
+
+    /// <summary>
+    /// Saves "Apie mane" and the switch: <c>about.too-long</c>, <c>about.personal-code</c>, <c>writing.restricted</c> (a changed
+    /// text), <c>profile.consent-outdated</c>, <c>profile.name-required</c>, <c>mp.takes-no-part</c> (switching on).
+    /// </summary>
+    Task<Result<MyProfileState>> ChangeAsync(ClaimsPrincipal user, ProfileChange change, string? ipHash, CancellationToken cancellationToken);
+
+    /// <summary>
+    /// A member reports a public profile: <c>member.not-found</c> for an id that is not public, <c>report.ground</c>,
+    /// <c>report.too-long</c>, <c>member.required</c>; reporting again while one is open changes nothing.
+    /// </summary>
+    Task<Result<Unit>> ReportAsync(Guid reporterUserId, string profileId, string ground, string? text, CancellationToken cancellationToken);
+
+    /// <summary>Profiles with open reports, then hidden texts, for the moderators.</summary>
+    Task<IReadOnlyList<ProfileModerationItem>> QueueAsync(CancellationToken cancellationToken);
+
+    /// <summary>Hides "Apie mane" with a statement emailed to the person; its open reports close; audited without the text.</summary>
+    Task<Result<Unit>> HideAboutAsync(Guid id, string statement, StaffActor moderator, string? contact, CancellationToken cancellationToken);
+
+    /// <summary>"Palikti": the open reports close and nothing changes; audited.</summary>
+    Task<Result<Unit>> KeepAsync(Guid id, string? statement, StaffActor moderator, CancellationToken cancellationToken);
+
+    /// <summary>Brings a hidden text back while the person has not written another; emailed; audited.</summary>
+    Task<Result<Unit>> RestoreAboutAsync(Guid id, string statement, StaffActor moderator, string? contact, CancellationToken cancellationToken);
+}
+
+/// <summary>The report grounds of a profile (design 8.25.6): the general ones and "Apsimeta kitu asmeniu ar pareigūnu".</summary>
+public static class ProfileReportGrounds
+{
+    public static readonly IReadOnlyList<string> All = ["impersonation", "illegal", "personal-data", "insult", "spam", "other"];
+
+    public const int TextMaxLength = 1000;
+}
+
 /// <summary>What a member sends (design 8.10). <c>MayReply</c> decides whether the item is linked to the account at all.</summary>
 public sealed record NewFeedback(string Text, string? Kind, string? PagePath, string? Browser, bool MayReply);
 

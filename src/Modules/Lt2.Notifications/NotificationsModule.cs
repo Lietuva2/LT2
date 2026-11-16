@@ -47,6 +47,10 @@ public static class NotificationsModule
         services.AddScoped<IDigests, Digests.DigestService>();
         services.AddScoped<IFollows, Follows.FollowService>();
         services.AddScoped<IAccountData, Follows.FollowAccountData>();
+
+        // Design 8.25, 8.11.2: following a member ends with their public profile; how many follow a thing is a number only.
+        services.AddSingleton<IMemberFollowEnd, Follows.MemberFollowEnd>();
+        services.AddScoped<IFollowerCounts, Follows.FollowerCounts>();
         services.AddSingleton<IModuleDatabase, NotificationsModuleDatabase>();
         return services;
     }
@@ -81,6 +85,8 @@ public static class NotificationsModule
         services.AddEmail<FollowVotedEmail, FollowTemplates>(MessageKinds.FollowVotedEmail, t => t.Voted);
         services.AddEmail<FollowStatementEmail, FollowTemplates>(MessageKinds.FollowStatementEmail, t => t.Statement);
         services.AddEmail<FollowResponsesEmail, FollowTemplates>(MessageKinds.FollowResponsesEmail, t => t.Responses);
+        services.AddEmail<FollowMemberEmail, FollowTemplates>(MessageKinds.FollowMemberEmail, t => t.Member);
+        services.AddEmail<ProfileNoticeEmail, AccountNoticeTemplate>(MessageKinds.ProfileNoticeEmail, t => t.Profile);
         services.AddEmail<MpTakeoverLinkEmail, MpTemplates>(MessageKinds.MpTakeoverLinkEmail, t => t.Render);
         services.AddEmail<MpResponseNoticeEmail, MpTemplates>(MessageKinds.MpResponseNoticeEmail, t => t.Response);
         services.AddEmail<MpMail.MpDigestEmail, MpMailTemplates>(MpMail.MpMailKinds.Digest, t => t.Digest);

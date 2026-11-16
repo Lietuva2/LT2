@@ -127,6 +127,14 @@ public sealed class LandingPathTests
     [InlineData("/seimas/XVP-0412")]
     public void A_path_on_this_site_under_seimas_is_accepted(string path) => LandingPath.Accept(path).ShouldBe(path);
 
+    /// <summary>Design 8.21, 8.25.2: an account screen (a visitor sent to sign in comes back to it) and a member's public page.</summary>
+    [Theory]
+    [InlineData("/sveiki")]
+    [InlineData("/sveiki/sekimas")]
+    [InlineData("/sveiki/saugumas")]
+    [InlineData("/nariai/abcdefgh23")]
+    public void An_account_screen_and_a_members_page_are_accepted(string path) => LandingPath.Accept(path).ShouldBe(path);
+
     [Theory]
     [InlineData(null)]
     [InlineData("")]
@@ -136,7 +144,10 @@ public sealed class LandingPathTests
     [InlineData("\\seimas\\XVP-0412")]
     [InlineData("/seimas//piktas.example")]
     [InlineData("/seimas/../sveiki")]
-    [InlineData("/sveiki")]
+    [InlineData("/sveiki/sekimas/kita")]
+    [InlineData("/sveiki/Sekimas")]
+    [InlineData("/nariai/trumpas")]
+    [InlineData("/nariai/abcdefgh23/x")]
     [InlineData("/administravimas/nustatymai")]
     [InlineData("seimas/XVP-0412")]
     [InlineData("/seimas/XVP-0412?x=1")]

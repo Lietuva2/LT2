@@ -868,6 +868,10 @@ namespace Lt2.Appeals.Infrastructure.Migrations
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("created_at");
 
+                    b.Property<DateTimeOffset?>("FirstPublicAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("first_public_at");
+
                     b.Property<Guid?>("MergedIntoId")
                         .HasColumnType("uuid")
                         .HasColumnName("merged_into_id");

@@ -1,0 +1,14 @@
+@inject IStringLocalizer<Lt2.Web.Client.Appeals.AppealUi> L
+
+@* Design 8.11.2 (owner, 2026-11-16): how many members follow the thing, one plain line on its own page only, never in a list
+   row, a card or beside a text; nothing with none, and the hint "Kas yra sekėjai?" beside it (the last three are the
+   designer's proposals awaiting the owner). Server-rendered, the same for everyone; never who follows. *@
+@if (Count > 0)
+{
+    <p class="small followers" id="followers"><span class="num" id="followers-count">@L.Format("Followers.Line", Display.Number(Count))</span> <Hint Id="followers-hint" Text="@L["Followers.Hint"]" Answer="@L["Followers.Answer"]" More="/metodika#sekimas" /></p>
+}
+
+@code {
+    /// <summary>How many follow; 0 shows nothing.</summary>
+    [Parameter, EditorRequired] public int Count { get; set; }
+}

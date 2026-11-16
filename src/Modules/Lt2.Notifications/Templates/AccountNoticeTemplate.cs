@@ -36,4 +36,32 @@ internal sealed class AccountNoticeTemplate(IStringLocalizer<EmailTemplates> l, 
         paragraphs.Add(l[EmailText.Signature]);
         return EmailLayout.Build(model.To, l[$"Notice.{model.Notice}.Subject"], paragraphs, EmailLayout.Footer(l, site.Value.Address));
     }
+
+    /// <summary>
+    /// A moderator hid or restored the person's "Apie mane" (design 8.25.6), with the statement and where to object; never the
+    /// text and never who reported.
+    /// </summary>
+    public EmailMessage Profile(ProfileNoticeEmail model)
+    {
+        ArgumentNullException.ThrowIfNull(model);
+        if (!ProfileNotices.All.Contains(model.Notice))
+        {
+            throw new InvalidOperationException($"Unknown profile notice '{model.Notice}'.");
+        }
+
+        var paragraphs = new List<string> { l[EmailText.Greeting], l[$"Profile.{model.Notice}.Body"] };
+        if (!string.IsNullOrWhiteSpace(model.Statement))
+        {
+            paragraphs.Add(l.Format("Profile.Statement", model.Statement));
+        }
+
+        paragraphs.Add(l.Format("Profile.Link", SiteLinks.Absolute(site.Value.Address, model.Path)));
+        if (!string.IsNullOrWhiteSpace(model.Contact))
+        {
+            paragraphs.Add(l.Format("Profile.Contact", model.Contact));
+        }
+
+        paragraphs.Add(l[EmailText.Signature]);
+        return EmailLayout.Build(model.To, l[$"Profile.{model.Notice}.Subject"], paragraphs, EmailLayout.Footer(l, site.Value.Address));
+    }
 }

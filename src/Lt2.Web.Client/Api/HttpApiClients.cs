@@ -257,6 +257,15 @@ internal sealed class HttpFollowsApi(ApiHttp http) : Lt2.Api.Contracts.Follows.I
     public Task<ApiResult> UnfollowOrganisationAsync(string slug, CancellationToken cancellationToken = default) =>
         http.SendAsync(HttpMethod.Delete, Lt2.Api.Contracts.Follows.FollowRoutes.OrganisationOf(slug), null, cancellationToken);
 
+    public Task<ApiResult> FollowMemberAsync(string profileId, CancellationToken cancellationToken = default) =>
+        http.SendAsync(HttpMethod.Put, Lt2.Api.Contracts.Me.ProfileRoutes.FollowOf(profileId), null, cancellationToken);
+
+    public Task<ApiResult> UnfollowMemberAsync(string profileId, CancellationToken cancellationToken = default) =>
+        http.SendAsync(HttpMethod.Delete, Lt2.Api.Contracts.Me.ProfileRoutes.FollowOf(profileId), null, cancellationToken);
+
+    public Task<ApiResult<Lt2.Api.Contracts.Me.FollowersResponse>> GetBillFollowersAsync(string number, CancellationToken cancellationToken = default) =>
+        http.SendAsync<Lt2.Api.Contracts.Me.FollowersResponse>(HttpMethod.Get, Lt2.Api.Contracts.Follows.FollowRoutes.BillFollowersOf(number), null, cancellationToken);
+
     public Task<ApiResult<Lt2.Api.Contracts.Follows.NoticeSettingsResponse>> GetNoticesAsync(CancellationToken cancellationToken = default) =>
         http.SendAsync<Lt2.Api.Contracts.Follows.NoticeSettingsResponse>(HttpMethod.Get, Lt2.Api.Contracts.Follows.FollowRoutes.Notices, null, cancellationToken);
 

@@ -22,6 +22,9 @@ internal static class FollowKinds
     public const string Bill = "bill";
     public const string Mp = "mp";
     public const string Organisation = "organisation";
+
+    /// <summary>A member with a public profile (design 8.25.5); key: the public profile id. Ended when it is switched off.</summary>
+    public const string Member = "member";
 }
 
 /// <summary><c>notify.notice_setting</c>: which follow emails a person gets; no row means all on (design 8.11.2, 8.14.14, 8.20.1).</summary>
@@ -38,6 +41,9 @@ internal sealed class NoticeSetting
 
     /// <summary>MPs answered on a bill the person follows (design 8.20.1, "Seimo narių atsakymai").</summary>
     public bool Responses { get; set; } = true;
+
+    /// <summary>A member the person follows published an argument (design 8.25.5, "Kai sekamas narys paskelbia").</summary>
+    public bool Members { get; set; } = true;
 
     public DateTimeOffset ChangedAt { get; set; }
 }
@@ -74,6 +80,9 @@ internal static class BillEventKinds
 
     /// <summary>MPs answered on the bill on one Vilnius day (design 8.20.1; key: the day). No person and no text.</summary>
     public const string Response = "response";
+
+    /// <summary>A followed member published an argument on the bill (design 8.25.5; key: the argument id). No person, no text.</summary>
+    public const string Member = "member";
 }
 
 internal static class BillEventOutcomes
