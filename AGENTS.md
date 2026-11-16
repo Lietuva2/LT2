@@ -120,6 +120,9 @@ src/Modules/               Lt2.Identity, Lt2.Notifications, Lt2.Audit, Lt2.Parli
                            participant through MpAccounts.Refusal (SharedKernel) wherever a participant is checked.
                            Identity also owns known browsers (Application/SignIn/KnownBrowsers.cs, design 8.20.2: the
                            __Host-lt2.device cookie, identity.known_device, the code allowance they choose).
+src/Modules/Lt2.Usage      the site's own usage statistics (design 8.27): UsageRules and Sketch (HyperLogLog) pure,
+                           UsageCounter in the web host's memory, written every minute; the host feeds it from
+                           Services/UsageServices.cs; the screen /administravimas/lankomumas (UsageAdmin)
 src/Lt2.Worker             Hangfire server: outbox dispatch loop, the parliament import, the agenda watcher (lrs.lt
                            pages; off unless Agenda:BaseAddress is set), the daily aggregates and closing of the bills' records, summaries
                            (every 15 minutes: waiting ones expire, due ones are made: a dry run, waiting or sent by
@@ -277,7 +280,7 @@ code review.
   (`Security:DeviceHashKey`, the secret `device_hash_key`). Every state-changing
   call needs the antiforgery header and passes the Origin check, except the one-click stop of an MP's emails (design 8.19.4),
   which mail programs send. CORS stays off.
-- **Nothing non-essential in the browser (design 8.22.1), so no cookie banner.** No analytics, no third-party script, font or
+- **Nothing non-essential in the browser (design 8.22.1), so no cookie banner.** No third-party analytics, no third-party script, font or
   embed, no advertising or measurement cookie. What the site keeps is one list, `Security/BrowserStorage.Inventory` (the
   session, the passkey step, the request-forgery and the known-browser cookies; `lt2-theme` in local storage once a theme is
   chosen; `lt2.tikslas` and `lt2.kodas` in session storage, `Lt2.Web.Client/BrowserKeys`). The privacy notice's
@@ -287,6 +290,11 @@ code review.
   stored.
 - No secrets in the repository or in images. No real personal data in tests or fixtures.
 - No tracking pixels or click tracking in any email.
+- **Usage statistics (design 8.27)** are counted on the server only: a visitor is the network and the user agent hashed
+  with a random salt of the day, month and year into a sketch; a signed-in session counts its account. A page counts
+  under its route (a token never), staff and MP pages stay out of the list. `usage.sketch` holds the salts and sketches
+  only while their period lasts (a candidate can be tested against them until then, 8.27.2), only `lt2_app` reaches it,
+  and it is withheld from `lt2_readonly`. Nothing is added to the browser for it.
 - Outbound requests go only to the allowlisted hosts, and follow no redirect to another host.
 - Codes and tokens are not sent in addresses: a link the site makes carries its secret after the `#` (`/prisijungti#kodas=…`,
   a representative's `/organizacijos/kvietimas#…`, an MP's take-over link `/seimo-narys/perimti#…`, an office member's

@@ -21,6 +21,7 @@ COPY src/Modules/Lt2.Audit/Lt2.Audit.csproj src/Modules/Lt2.Audit/
 COPY src/Modules/Lt2.Identity/Lt2.Identity.csproj src/Modules/Lt2.Identity/
 COPY src/Modules/Lt2.Notifications/Lt2.Notifications.csproj src/Modules/Lt2.Notifications/
 COPY src/Modules/Lt2.Parliament/Lt2.Parliament.csproj src/Modules/Lt2.Parliament/
+COPY src/Modules/Lt2.Usage/Lt2.Usage.csproj src/Modules/Lt2.Usage/
 RUN dotnet restore src/Lt2.Web/Lt2.Web.csproj \
  && dotnet restore src/Lt2.Worker/Lt2.Worker.csproj \
  && dotnet restore src/Lt2.Migrator/Lt2.Migrator.csproj
