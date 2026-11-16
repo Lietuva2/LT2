@@ -184,6 +184,7 @@
   <data name="Tabs.Agenda" xml:space="preserve"><value>Darbotvarkė</value></data>
   <data name="Tabs.Bills" xml:space="preserve"><value>Projektai</value></data>
   <data name="Tabs.Digests" xml:space="preserve"><value>Suvestinės</value></data>
+  <data name="Tabs.Analytics" xml:space="preserve"><value>Analitika</value></data>
   <data name="Terms.Check.Before" xml:space="preserve"><value>Sutinku su</value></data>
   <data name="Terms.Check.Link" xml:space="preserve"><value>naudojimo taisyklėmis</value></data>
   <data name="Privacy.Sentence.Before" xml:space="preserve"><value>Kaip tvarkome jūsų duomenis, rašoma</value></data>

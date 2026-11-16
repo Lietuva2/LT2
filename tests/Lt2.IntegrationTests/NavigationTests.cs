@@ -93,14 +93,15 @@ public sealed partial class NavigationTests(DatabaseFixture database) : ApiTest(
     [InlineData("/darbotvarke", "tab-darbotvarke")]
     [InlineData("/projektai", "tab-projektai")]
     [InlineData("/suvestines", "tab-suvestines")]
-    public async Task Each_of_the_three_pages_has_the_tab_row_with_its_own_tab_marked(string path, string tab)
+    [InlineData("/seimas/analitika", "tab-seimas-analitika")]
+    public async Task Each_of_the_four_pages_has_the_tab_row_with_its_own_tab_marked(string path, string tab)
     {
         using var visitor = NewBrowser();
         var html = await visitor.Client.GetStringAsync(path);
 
         var row = Regex.Match(html, "<nav class=\"row tabs project-tabs\".*?</nav>", RegexOptions.Singleline);
         row.Success.ShouldBeTrue();
-        Regex.Count(row.Value, "<a ").ShouldBe(3);
+        Regex.Count(row.Value, "<a ").ShouldBe(4);
         row.Value.ShouldNotContain("/seimas/balsavimai", customMessage: "the history of votes is no tab");
         Regex.Count(row.Value, "aria-current=\"page\"").ShouldBe(1);
         row.Value.ShouldContain($"id=\"{tab}\" aria-current=\"page\"");

@@ -62,7 +62,7 @@ internal static class Codes
     };
 }
 
-internal sealed class ParliamentQueries(IDbContextFactory<ParliamentDb> contexts, IParliamentDataNotice notice, IMemoryCache cache, TimeProvider clock) : IParliamentQueries
+internal sealed partial class ParliamentQueries(IDbContextFactory<ParliamentDb> contexts, IParliamentDataNotice notice, IMemoryCache cache, TimeProvider clock) : IParliamentQueries
 {
     private static readonly CultureInfo Lithuanian = CultureInfo.GetCultureInfo("lt-LT");
     private static readonly StringComparer ByLithuanian = StringComparer.Create(Lithuanian, ignoreCase: true);

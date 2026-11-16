@@ -135,7 +135,50 @@ public interface IParliamentQueries
 
     /// <summary>When the lrs.lt agenda page was last read successfully, and its address (design 8.11.1).</summary>
     Task<AgendaReadInfo> AgendaReadAsync(CancellationToken cancellationToken);
+
+    /// <summary>
+    /// Design 8.26.1: the numbers of the bills on the agenda of a sitting of the current term held from <paramref name="from"/>
+    /// to <paramref name="to"/> (Vilnius days, inclusive).
+    /// </summary>
+    Task<IReadOnlyList<string>> BillsDiscussedAsync(DateOnly from, DateOnly to, CancellationToken cancellationToken);
+
+    /// <summary>The given votes with their totals, by id; unknown ids are missing.</summary>
+    Task<IReadOnlyDictionary<long, VoteSummary>> VotesAsync(IReadOnlyCollection<long> ids, CancellationToken cancellationToken);
+
+    /// <summary>
+    /// Design 8.26.3: every faction of the current term with a recorded vote held in the period, its unity and the votes
+    /// where it split most, in order of its seats today, then by name.
+    /// </summary>
+    Task<IReadOnlyList<FactionUnityInfo>> FactionUnityAsync(DateOnly from, DateOnly to, CancellationToken cancellationToken);
+
+    /// <summary>
+    /// Design 8.26.4: every MP's ballot and every faction's position at the given votes, with the MPs as the list shows them
+    /// (today's faction, or the last one for a former MP). Public data about a public office.
+    /// </summary>
+    Task<VoteBallotsInfo> BallotsAtAsync(IReadOnlyCollection<long> voteIds, CancellationToken cancellationToken);
 }
+
+/// <summary>A faction's unity over a period (design 8.26.3); <paramref name="Share"/> null with no vote with a position.</summary>
+/// <param name="Seats">Its members today.</param>
+/// <param name="SmallSample">Fewer than 20 votes with a position.</param>
+public sealed record FactionUnityInfo(
+    BodyRef Faction, int Seats, int VotesWithPosition, int FreeVotes, decimal? Share, bool SmallSample, IReadOnlyList<FactionSplitVote> MostSplit);
+
+/// <summary>A vote where a faction split: its position (<c>free</c> included) and its members' counts.</summary>
+public sealed record FactionSplitVote(VoteRef Vote, string AgendaItemTitle, string Position, int For, int Against, int Abstain);
+
+/// <summary>One MP's ballot at a vote: <c>for</c>, <c>against</c>, <c>abstain</c> or <c>did-not-vote</c>.</summary>
+public sealed record VoteBallot(long VoteId, string MpSlug, string Choice);
+
+/// <summary>One faction's position at a vote (design 7.3): <c>for</c>, <c>against</c>, <c>abstain</c>, <c>free</c> or <c>nobody-voted</c>.</summary>
+public sealed record VoteFactionPosition(long VoteId, BodyRef Faction, string Position);
+
+/// <summary>The ballots and faction positions at some votes, with every MP named in them and every faction's seats today.</summary>
+public sealed record VoteBallotsInfo(
+    IReadOnlyList<VoteBallot> Ballots,
+    IReadOnlyList<VoteFactionPosition> FactionPositions,
+    IReadOnlyDictionary<string, MpSummary> Mps,
+    IReadOnlyDictionary<string, int> Seats);
 
 /// <summary>The last successful read of the upcoming agenda; both null when it was never read.</summary>
 public sealed record AgendaReadInfo(DateTimeOffset? ReadAt, string? SourceUrl);

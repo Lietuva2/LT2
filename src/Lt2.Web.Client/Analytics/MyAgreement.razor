@@ -1,0 +1,139 @@
+@using System.Globalization
+@using Lt2.Api.Contracts.Analytics
+@inherits InteractiveBase<AnalyticsUi>
+@inject IAnalyticsApi Api
+
+@* "Kas balsuoja taip kaip jūs" (design 8.26.4): the caller's own sides on closed bills against the factions' positions and
+   the MPs' public ballots, asked only in the browser and only for the caller, so nothing of it is in the page's HTML and
+   nobody else sees it. Factions first, then MPs; those with 20 common votes or more by their share, the rest by name with
+   "maža imtis" (owner, 2026-11-16). No controls: the list of every MP opens with the browser's own disclosure. *@
+@if (_visitor)
+{
+    <p id="mine-sign-in"><a href="@LandingPath.SignInLink(Path)">@L["Mine.SignIn"]</a> @L["Mine.SignInWhy"]</p>
+}
+else if (_data is { } d)
+{
+    <div class="stack" id="mine">
+        @if (d.Bills == 0)
+        {
+            <p id="mine-none">@L["Mine.None"] <a href="/projektai">@L["Mine.NoneLink"]</a></p>
+        }
+        else
+        {
+            <p class="small num" id="mine-basis">
+                @L.Format("Mine.Basis", Display.Number(d.Bills))
+                @if (d.Consensus > 0)
+                {
+                    @(" ")@L.Format("Mine.Consensus", Display.Number(d.Consensus))
+                }
+            </p>
+            @if (d.Factions.Count == 0 && d.Mps.Count == 0)
+            {
+                <p id="mine-no-ballots">@L["Mine.NoBallots"]</p>
+            }
+            @if (d.Factions.Count > 0)
+            {
+                <h3>@L["Mine.Factions"]</h3>
+                <ul class="agreement" id="mine-factions">
+                    @foreach (var row in d.Factions)
+                    {
+                        <li @key="row.Slug" id="@($"mine-faction-{row.Slug}")">
+                            @Row(row, "/frakcijos/" + Uri.EscapeDataString(row.Slug), row.Seats is { } seats ? L.Format("Mine.Seats", Display.Number(seats)) : null)
+                        </li>
+                    }
+                </ul>
+            }
+            @if (d.Mps.Count > 0)
+            {
+                <h3>@L["Mine.Mps"]</h3>
+                <ul class="agreement" id="mine-mps">
+                    @foreach (var row in d.Mps.Take(FirstMps))
+                    {
+                        <li @key="row.Slug" id="@($"mine-mp-{row.Slug}")">@MpRow(row)</li>
+                    }
+                </ul>
+                @if (d.Mps.Count > FirstMps)
+                {
+                    <details class="more stack stack--tight" id="mine-all-mps">
+                        <summary class="linkish small">@L.Format("Mine.AllMps", Display.Number(d.Mps.Count))</summary>
+                        <ul class="agreement">
+                            @foreach (var row in d.Mps.Skip(FirstMps))
+                            {
+                                <li @key="row.Slug" id="@($"mine-mp-{row.Slug}")">@MpRow(row)</li>
+                            }
+                        </ul>
+                    </details>
+                }
+            }
+        }
+    </div>
+}
+else if (Message is not null)
+{
+    <Messages Message="@Message" />
+}
+
+@code {
+    /// <summary>The analytics page, where a visitor comes back after signing in.</summary>
+    public const string Path = "/seimas/analitika";
+
+    /// <summary>How many MPs show before "Rodyti visus Seimo narius".</summary>
+    public const int FirstMps = 10;
+
+    private bool _visitor;
+    private MyAgreementResponse? _data;
+
+    protected override async Task OnInitializedAsync()
+    {
+        // Only in the browser: while the server prerenders, the part is empty (design 8.26.4).
+        if (!RendererInfo.IsInteractive)
+        {
+            return;
+        }
+
+        if (!await IsSignedInAsync())
+        {
+            _visitor = true;
+            return;
+        }
+
+        var answer = await Api.GetMyAgreementAsync();
+        if (answer.Value is { } value)
+        {
+            _data = value;
+        }
+        else
+        {
+            Message = L["Mine.Failed"];
+        }
+    }
+
+    private RenderFragment MpRow(AgreementRowResponse row) =>
+        Row(row, "/p/" + Uri.EscapeDataString(row.Slug), row.Former ? L["Mine.Former"] : row.Faction);
+
+    private RenderFragment Row(AgreementRowResponse row, string href, string? detail) =>
+        @<div class="agreement__row">
+            <span class="agreement__name"><a href="@href">@row.Name</a>@if (detail is not null)
+                {
+                    <small>@detail</small>
+                }</span>
+            @if (row.Share is { } share)
+            {
+                <svg class="meter" viewBox="0 0 1000 10" preserveAspectRatio="none" aria-hidden="true">
+                    <rect class="meter__fill" x="0" y="0" width="@((1000 * share).ToString("0.#", CultureInfo.InvariantCulture))" height="10" />
+                </svg>
+                <b class="num">@Display.Percent(share)</b>
+            }
+            <span class="small num">
+                @L.Format("Mine.Matched", Display.Number(row.Matched), Display.Number(row.Common))
+                @if (row.Share is null)
+                {
+                    @(" ")<span class="tag">@L["Mine.SmallSample"]</span>
+                }
+                @if (row.Free > 0)
+                {
+                    @(" · ")@L.Format("Mine.Free", Display.Number(row.Free))
+                }
+            </span>
+        </div>;
+}
