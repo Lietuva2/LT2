@@ -81,6 +81,20 @@ public sealed class HostTests(DatabaseFixture database) : ApiTest(database)
         response.Headers.Location!.ToString().ShouldStartWith("https://lt2.test/prisijungti");
     }
 
+    /// <summary>Design 8.21: a visitor sent to sign in from an account screen comes back to it (the page after the "#").</summary>
+    [Theory]
+    [InlineData("/sveiki", "%2Fsveiki")]
+    [InlineData("/sveiki/sekimas", "%2Fsveiki%2Fsekimas")]
+    [InlineData("/sveiki/dalyvavimas", "%2Fsveiki%2Fdalyvavimas")]
+    [InlineData("/sveiki/saugumas", "%2Fsveiki%2Fsaugumas")]
+    public async Task A_visitor_sent_to_sign_in_from_an_account_screen_comes_back_to_it(string screen, string escaped)
+    {
+        using var browser = NewBrowser();
+        using var response = await browser.Client.GetAsync(screen);
+        response.StatusCode.ShouldBe(HttpStatusCode.Redirect);
+        response.Headers.Location!.ToString().ShouldBe("https://lt2.test/prisijungti#tikslas=" + escaped);
+    }
+
     [Fact]
     public async Task The_signed_in_page_greets_the_person_when_prerendered_in_process()
     {
@@ -95,7 +109,7 @@ public sealed class HostTests(DatabaseFixture database) : ApiTest(database)
     {
         var (member, _) = await Factory.MemberAsync();
         using var _m = member;
-        foreach (var path in new[] { "/darbotvarke", "/sveiki" })
+        foreach (var path in new[] { "/darbotvarke", "/sveiki", "/sveiki/sekimas", "/sveiki/dalyvavimas", "/sveiki/saugumas" })
         {
             using var page = await member.Client.GetAsync(path);
             page.StatusCode.ShouldBe(HttpStatusCode.OK, path);

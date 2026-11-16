@@ -189,13 +189,14 @@ public sealed class MenuTests : E2ETest
         await page.Locator("#nav-account").ClickAsync();
         await page.WaitForURLAsync(new Regex("/sveiki$"), new() { Timeout = E2ESteps.Slow });
 
-        // The row of the account page's parts stays on the page: the pages carry <base href="/">, so a bare "#part" led to
-        // the front page. Pressing a part's link lands on it on /sveiki.
+        // Design 8.21 (owner, 2026-11-16): the account is four screens; the row under the title leads from one to another and
+        // marks the screen it stands on.
         var follows = page.Locator("#account-parts").GetByRole(AriaRole.Link, new() { Name = "Sekimas ir laiškai", Exact = true });
         await Assertions.Expect(follows).ToBeVisibleAsync(new() { Timeout = E2ESteps.Slow });
         await follows.ClickAsync();
-        await page.WaitForURLAsync(new Regex("/sveiki#sekimas-ir-laiskai$"), new() { Timeout = E2ESteps.Slow });
-        await Assertions.Expect(page.Locator("#sekimas-title")).ToBeInViewportAsync();
+        await page.WaitForURLAsync(new Regex("/sveiki/sekimas$"), new() { Timeout = E2ESteps.Slow });
+        await Assertions.Expect(page.Locator("#sekimas-title")).ToBeVisibleAsync();
+        await Assertions.Expect(page.Locator("#part-follows")).ToHaveAttributeAsync("aria-current", "page");
         await Assertions.Expect(page.Locator("#account-parts")).ToBeVisibleAsync();
         member.ConsoleErrors.ShouldBeEmpty();
     }

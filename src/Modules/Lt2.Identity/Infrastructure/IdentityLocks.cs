@@ -31,6 +31,12 @@ internal static class IdentityLocks
     public static Task MpAsync(IdentityDb db, long seimasPersonId, CancellationToken ct) =>
         TakeAsync(db, "lt2.mp:" + seimasPersonId.ToString(System.Globalization.CultureInfo.InvariantCulture), ct);
 
+    /// <summary>
+    /// One account's profile (design 8.25): "Viešas profilis", "Apie mane" and the display name change one request at a time,
+    /// so a name cannot be emptied while the profile is being switched on.
+    /// </summary>
+    public static Task ProfileAsync(IdentityDb db, Guid userId, CancellationToken ct) => TakeAsync(db, "lt2.profile:" + userId.ToString("N"), ct);
+
     private static Task<int> TakeAsync(IdentityDb db, string key, CancellationToken ct) =>
         db.Database.ExecuteSqlRawAsync(Sql, [new NpgsqlParameter("key", key)], ct);
 }

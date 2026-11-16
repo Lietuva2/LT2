@@ -77,6 +77,7 @@ public static class DatabaseRoles
         "audit.event",
         "identity.consent", "identity.data_protection_key", "identity.feedback", "identity.invitation", "identity.invitation_daily",
         "identity.known_device",
+        "identity.profile_report", "identity.retired_profile_id",
         "identity.party_support", "identity.politician_link", "identity.politician_token", "identity.profile", "identity.role",
         "identity.role_activation", "identity.role_claim",
         "identity.session", "identity.sign_in_code", "identity.user", "identity.user_claim", "identity.user_login",

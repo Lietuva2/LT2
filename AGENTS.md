@@ -15,6 +15,7 @@ product code. What is being built, in order:
 | **M2a Appeals without sending** | People take a side on a Seimas bill and give reasons; summaries for MPs are generated as previews only. |
 | **M2a+ Reasons to come** | The agenda page (`/darbotvarke`) and the front page built on it, following bills and MPs with emails, the AI draft of a description (Claude API, off until configured), the share line (design 8.11). Its asking for an appeal and appeals opened by moderators were replaced by M2a++. |
 | **M2a++ One object** | Every active bill open at once, one page per bill, no proposals, requests or approval; lists and agenda on participation; moderation after the fact (design 8.12). Then descriptions with their labels and the AI summary job (8.13). |
+| **M2d Profiles** | (Owner, 2026-11-16: before comments.) The account area as four screens; public profiles by the member's choice, "Apie mane", the name's card, following a member, follower numbers on every followed thing's own page (design 8.21, 8.25, 8.11.2). The public party is a designer's proposal (8.25.9), not built. |
 | **M2b Sending** | Real summary emails to MPs, MP preferences, profile take-over, MP responses. Built first (owner, 2026-11-15): the link of design 8.5.1–8.5.4 (recognised at once, the take-over, the office), then the response (8.5.5–8.5.7). Then (2026-11-16) sending itself, design 8.19: `Digest:Sending`, approval, the real email, preferences without an account, the introduction letter, the suppression list; off by default. Then (2026-11-16) design 8.20: the followers' email about MPs' answers and known browsers for sign-in. |
 | **Stage 3** | Voting with delegation, AI summaries, analytics. Not designed yet; do not build towards it beyond what the design says. |
 
@@ -230,7 +231,7 @@ pre-merge run found.
   `ErrorClass`/`Invalid`/`DescribedBy` with `<FieldError For="input-id">` for field errors. A text with placeholders is
   `L.Format(key, …)`; numbers and dates are `Display` (`Number`, `Day`, `DayTime`, `Today(TimeProvider)`), on the
   server pages too; the moderators' contact address is `Configuration.ModeratorContact()`. A link to a part of the
-  same page carries the page's path (`/sveiki#profilis`, never a bare `#profilis`): the pages carry `<base href="/">`, so
+  same page carries the page's path (`/metodika#sekimas`, never a bare `#sekimas`): the pages carry `<base href="/">`, so
   a bare fragment leads to the front page; `NavigationTests` (integration) walks the served pages and fails on one. A link to copy is
   `<CopyLink>`; "Atkurti" is `<RestoreForm>`; a queued argument is `<QueueReasonItem>`, a queued statement
   `<StatementQueueItem>`; the positions consent before a first side is `<PositionConsentForm>`; the bill page's islands
@@ -345,11 +346,41 @@ Appeals through `IWritingRestrictions`), as often as the member likes (owner, 20
 against a runaway script), audited without the names, no earlier names kept. Names are read live everywhere, so a
 change shows beside older arguments too.
 
-**The account page (`/sveiki`, design 8.21)** is four parts on the ground, reached from the `#account-parts` row of plain
-links: "Profilis" (`#profilis`), "Sekimas ir laiškai" (`#sekimas-ir-laiskai`), "Dalyvavimas" (`#dalyvavimas`, with the staff
-part: the staff links, or for a staff account not in a staff session the link to its staff passkey) and "Saugumas ir
-duomenys" (`#saugumas-ir-duomenys`); sheets inside them have `h3` headings. Keep the anchors emails link to (`#sekami`,
-`#zinomos-narsykles`, `#my-data`, `#my-invitation`).
+**The account screens (design 8.21; the owner, 2026-11-16: "split into several forms", replacing the one page in four
+parts).** Four screens, each its own page with its own forms, joined by `<AccountTabs>` (`Lt2.Web.Client/Components`, the
+`#account-parts` row of plain links, the current one `aria-current`, no script), with the same title and the terms note:
+"Profilis" `/sveiki` (level and roles, the display name `MyDisplayName`, "Apie mane" and "Viešas profilis" `MyProfile`, party
+support `MyPartySupport`), "Sekimas ir laiškai" `/sveiki/sekimas` (`FollowList`, `#sekami`), "Dalyvavimas" `/sveiki/dalyvavimas`
+(`MyMp`, `MyOrganisations`, `MyInvitationCode` `#my-invitation`, the staff part), "Saugumas ir duomenys" `/sveiki/saugumas`
+(passkeys, sessions, known browsers `#zinomos-narsykles`, the positions consent, export and deletion `#my-data`, signing out).
+The addresses are `AccountScreens` (`Lt2.Api.Contracts/Me`): links in emails, legal texts and pages are built from it, never
+written by hand. A visitor sent to sign in from one comes back to it (`LandingPath` accepts `/sveiki…`). Every screen is
+`no-store` and carries `<NeedsScript />`; `IslandsBeforeStartTests` walks all four.
+
+**Public profiles (design 8.25; the owner, 2026-11-16: "implement those", before comments).**
+- Only by the member's switch "Viešas profilis" on "Profilis" (`PUT /me/profile`), which is the consent `public-profile`
+  (`PublicProfileConsent.Version`, SharedKernel; the form's text in `UiText` under that version): the page `/nariai/{id}`
+  (a random ten-character id, `ProfileRules.NewId`), indexed, followable, with "Sekėjai: n". Switching off withdraws the
+  consent and, in one transaction, retires the id (`identity.retired_profile_id`: it answers 410 for ever, never reused),
+  ends every follow of it (`IMemberFollowEnd`, Notifications) and removes the link beside every text. An id never issued
+  answers 404. Switching on again makes a new id. A display name is needed while public (`profile.name-required`).
+- "Apie mane" (`about`): plain text up to `Texts:MaxLength`, written while off too and shown only with the profile;
+  `https://` links shown with their host, `rel="nofollow ugc noopener noreferrer"`; own contacts allowed; a personal code
+  refused (`ProfileRules.CheckAbout`, `about.personal-code`); a writing restriction blocks changing it (an existing text
+  stays). Reported on the page (`POST /members/{id}/report`, `identity.profile_report`); a moderator hides it with a statement
+  emailed to the person, keeps it or restores it (`/moderation/profiles…`, `ProfileModerationView`); a hidden text shows
+  nowhere until the person writes another.
+- The page (`Lt2.Web/Components/Members/MemberPage`, composed by the host from Identity, Notifications and Appeals) shows the
+  name, "Apie mane", the follower number and the member's published arguments on bills whose record is not hidden, newest
+  first, 10 and "Rodyti daugiau" by `?rodyti=` (no script). Never sides, "Man svarbu", follows, party, invitations,
+  organisations, anything written as an organisation or MP, counts of the person's texts, or who follows.
+- Beside an argument, the name of a member with a public profile is a link with a card (`RecordReasons`, `js/lt2-cards.js`,
+  one `<template>` per profile id from `BillRecordResponse.Cards`); `ReasonResponse.AuthorProfileId` is null for everyone else, and no public answer carries
+  an account id. The MP's own account cannot switch a profile on (`mp.takes-no-part`).
+- Following a member (`follow` kind `member`, key the profile id; `PUT|DELETE /members/{id}/follow`; `member.not-found` for
+  anything not public): a line by email when the member publishes an argument (bill number, title, link, never the text),
+  the switch `members` ("Kai sekamas narys paskelbia"). Exported and deleted with the account; the profile, the text, the
+  consent and the reports a person made are in the export.
 
 **MP profiles.** Compiled automatically from Seimas open data for every MP, joined or not. Two statistics:
 participation (share of recorded votes in which the MP voted for, against or abstained) and voted with the faction
@@ -495,11 +526,17 @@ page's "Balsuota".
   "Projektai" (`/projektai`; `/kreipimaisi` redirects there) lists active bills, sorted by activity (participants
   plus published arguments; the default), participants, arguments or planned date (owner, 2026-11-14), with a search
   and "Planuojami artimiausiu metu".
-- Following a bill or an MP is private: shown to nobody, no follower count, never combined with sides or invitations
-  (the person's own `/me/bills` gives them both), in the export, deleted with the account; there is no limit on how much a
-  person follows (owner, 2026-11-15: `Follows:MaxPerAccount` and `follow.limit` are gone). Emails (planned, voted; each
-  switchable on the account page) go once per event to those who followed before it; nothing older than three days,
-  nothing about the person's side, the bill's counts or other people.
+- Following a bill, an MP, an organisation or a member is private: who follows is shown to nobody (the followed party and
+  staff included), never combined with sides or invitations (the person's own `/me/bills` gives them both), in the export,
+  deleted with the account; there is no limit on how much a person follows (owner, 2026-11-15: `Follows:MaxPerAccount` and
+  `follow.limit` are gone). Emails (planned, voted; each switchable on the account page) go once per event to those who
+  followed before it; nothing older than three days, nothing about the person's side, the bill's counts or other people.
+- **Follower numbers (design 8.11.2, owner 2026-11-16, built with the profiles).** "Sekėjai: n", exact from 1, is shown only
+  on the thing's own page: the bill's page beside "Sekti" (`GET /bills/{number}/followers`), the MP's profile and the
+  organisation's profile (`followers` in their answers) and a member's page; never in list rows, a member's card or beside
+  texts, never sorted, ranked or added up, nothing at zero (`FollowerLine`, with the hint "Kas yra sekėjai?" to
+  `/metodika#sekimas`). Counted from `notify.follow` when the answer is made, through `IFollowerCounts` (SharedKernel,
+  Notifications): a number only. The last three points are the designer's proposals awaiting the owner.
 - "Seimo narių atsakymai" (design 8.20.1, the fourth switch `responses`): one email per followed bill per Vilnius day, the
   morning after, from `Follows:ResponsesAt` (08:00, a runtime setting under "Laiškai sekantiems"): the MPs whose response
   became public or changed stance that day (`appeals.mp_response.announced_at`, `ResponseRules.Announces`; a changed

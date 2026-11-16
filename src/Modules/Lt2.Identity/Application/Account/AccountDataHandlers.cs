@@ -19,7 +19,7 @@ namespace Lt2.Identity.Application.Account;
 /// Counts fall; frozen summary snapshots keep their totals. Nothing is logged or audited with the address.
 /// </summary>
 internal sealed class AccountDataHandlers(
-    IdentityDb db, IEnumerable<IAccountData> modules, UserManager<User> users, SignInManager<User> signIn, IOutbox outbox, StaffAccess staff, Politicians.PoliticianHandlers politicians, TimeProvider clock)
+    IdentityDb db, IEnumerable<IAccountData> modules, UserManager<User> users, SignInManager<User> signIn, IOutbox outbox, StaffAccess staff, Politicians.PoliticianHandlers politicians, Profiles.ProfileHandlers profiles, TimeProvider clock)
 {
     internal static readonly Error StaffPasskeyRequired = Error.Forbidden("account.staff-passkey-required");
 
@@ -65,6 +65,19 @@ internal sealed class AccountDataHandlers(
                 passkeys,
             },
             ["consents"] = consents,
+
+            // Design 8.25: "Apie mane", whether the profile is public and since when; the reports of profiles the person made.
+            // Never who follows them.
+            ["profile"] = new
+            {
+                about = profile.About,
+                aboutChangedAt = profile.AboutChangedAt,
+                aboutHiddenAt = profile.AboutHiddenAt,
+                publicProfileId = profile.PublicProfileId,
+                publicSince = profile.PublicSince,
+            },
+            ["profileReports"] = await db.ProfileReports.AsNoTracking().Where(r => r.ReporterUserId == userId).OrderBy(r => r.CreatedAt)
+                .Select(r => new { ground = r.Ground, text = r.Text, createdAt = r.CreatedAt, status = r.Status }).ToListAsync(cancellationToken),
             ["partySupport"] = party,
 
             // Only the feedback linked to the account (design 8.10); unlinked items lead to nobody.
@@ -143,6 +156,12 @@ internal sealed class AccountDataHandlers(
             // Design 8.5.2: deleting the account ends its link to an MP, audited and told to the official address; the link
             // and token rows go with the account.
             await politicians.OnAccountDeletedAsync(userId, address, transaction.GetDbTransaction(), cancellationToken);
+
+            // Design 8.25.1: a public profile's id is retired for good (410) and every follow of it ends.
+            if (await db.Profiles.FirstOrDefaultAsync(p => p.UserId == userId, cancellationToken) is { PublicProfileId: not null } profile)
+            {
+                await profiles.SwitchOffAsync(profile, now, transaction.GetDbTransaction(), cancellationToken);
+            }
 
             // The user row cascades to profile, consents, party support, sessions, known browsers, codes, passkeys, roles,
             // activations.

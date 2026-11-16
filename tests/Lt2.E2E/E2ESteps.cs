@@ -121,6 +121,22 @@ internal static class E2ESteps
     /// share link): the address, the emailed code, then the name, the age and the terms of use (design 6.2, 8.22.2). The invitation code is typed
     /// only when <paramref name="invitation"/> is given (a link fills it in). Leaves the page where the site lands it.
     /// </summary>
+    /// <summary>
+    /// Signs out with the account's own "Atsijungti" (design 8.21: on the screen "Saugumas ir duomenys", /sveiki/saugumas), opened
+    /// first when the browser is elsewhere; waits for the island to start.
+    /// </summary>
+    public static async Task SignOutOnAccountAsync(IPage page)
+    {
+        if (!page.Url.Contains("/sveiki/saugumas", StringComparison.Ordinal))
+        {
+            await page.GotoAsync(Base + "/sveiki/saugumas");
+        }
+
+        var signOut = page.Locator("#account-sign-out");
+        await Assertions.Expect(signOut).ToBeEnabledAsync(new() { Timeout = Slow });
+        await signOut.ClickAsync();
+    }
+
     public static async Task RegisterHereAsync(IPage page, string email, string displayName, string? invitation = null)
     {
         await SignUpTests.WaitForInteractivityAsync(page);

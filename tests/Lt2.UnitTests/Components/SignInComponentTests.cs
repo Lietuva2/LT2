@@ -23,6 +23,7 @@ public sealed class SignInComponentTests : BunitContext
     private readonly FakeAuthApi _auth = new();
     private readonly FakeMeApi _me = new();
     private readonly BunitAuthorizationContext _authorization;
+    private readonly ApiFake _profiles;
 
     public SignInComponentTests()
     {
@@ -43,6 +44,12 @@ public sealed class SignInComponentTests : BunitContext
 
         // Design 8.19.4: and nothing of the summaries' choice, which only a linked account in a passkey session reads.
         Services.AddSingleton(System.Reflection.DispatchProxy.Create<Lt2.Api.Contracts.Digests.IMpMailApi, ApiFake>());
+
+        // Design 8.25: the "Profilis" screen's "Apie mane" and "Viešas profilis": a member without a public profile.
+        var profiles = System.Reflection.DispatchProxy.Create<IProfilesApi, ApiFake>();
+        _profiles = (ApiFake)(object)profiles;
+        _profiles.On("GetMineAsync", ApiResult<MyProfileResponse>.Ok(new MyProfileResponse(null, false, null, null, null, ProfileLimits.ConsentVersion, 2000)));
+        Services.AddSingleton(profiles);
         _authorization = AddAuthorization();
         JSInterop.Mode = JSRuntimeMode.Loose;
         SetRendererInfo(new RendererInfo("WebAssembly", isInteractive: true));
@@ -174,7 +181,7 @@ public sealed class SignInComponentTests : BunitContext
             new SessionResponse { Id = Guid.NewGuid(), Method = "otp", IsCurrent = false },
         ];
         SignedIn(FakeMeApi.Member);
-        var page = Render<Hello>();
+        var page = Render<AccountSecurity>();
         page.WaitForElement("#hello-title").TextContent.ShouldBe("Sveiki, Rūta M.!");
         page.FindAll(".note[role]").ShouldBeEmpty();
         page.Markup.ShouldNotContain("_message");
@@ -304,10 +311,10 @@ public sealed class SignInComponentTests : BunitContext
     public void The_hello_page_has_a_place_for_the_activation_code_only_while_a_role_waits_for_it()
     {
         SignedIn(FakeMeApi.Member);
-        Render<Hello>().FindAll("#activation-code").ShouldBeEmpty();
+        Render<AccountTaking>().FindAll("#activation-code").ShouldBeEmpty();
 
         SignedIn(FakeMeApi.Member with { Roles = ["administrator", "member"], AwaitingActivation = true });
-        var page = Render<Hello>();
+        var page = Render<AccountTaking>();
         page.Find("#activation-title").TextContent.ShouldBe(Text("Activation.Title"));
         page.Find("#activation-code").Input(" 7kq2-m9xd-4trb-hc0p ");
         page.Find("section[aria-labelledby=activation-title] form").Submit();
@@ -320,18 +327,18 @@ public sealed class SignInComponentTests : BunitContext
     public void A_staff_member_sees_how_to_delete_the_account_in_a_code_session_and_what_stays_in_the_staff_session()
     {
         SignedIn(FakeMeApi.Member with { Roles = ["member", "moderator"], StaffAccount = true });
-        var codeSession = Render<Hello>();
+        var codeSession = Render<AccountSecurity>();
         codeSession.Find("#delete-staff-passkey span").TextContent.ShouldBe(Text("Data.DeleteStaffNeedsPasskey"));
 
         // Design 6.2 (owner, 2026-11-16): the way to a staff session without signing out, coming back to the account page.
         var staffKey = codeSession.Find("#delete-staff-key");
         staffKey.TextContent.ShouldBe(Text("Data.StaffKeyLink"));
-        staffKey.GetAttribute("href").ShouldBe("/prisijungti/raktas#grizti=%2Fsveiki");
+        staffKey.GetAttribute("href").ShouldBe("/prisijungti/raktas#grizti=%2Fsveiki%2Fsaugumas");
         codeSession.FindAll("#delete-account").ShouldBeEmpty();
         codeSession.FindAll("#export").ShouldNotBeEmpty("the export is unchanged");
 
         SignedIn(FakeMeApi.Member with { Roles = ["member", "moderator"], StaffAccount = true, ActiveStaffRoles = ["moderator"] });
-        var staffSession = Render<Hello>();
+        var staffSession = Render<AccountSecurity>();
         staffSession.FindAll("#delete-staff-passkey").ShouldBeEmpty();
         staffSession.Find("#delete-account").Click();
         staffSession.Find("#delete-staff-kept").TextContent.ShouldContain(Text("Data.DeleteStaffKept"));
@@ -341,38 +348,90 @@ public sealed class SignInComponentTests : BunitContext
         staffSession.Find("#delete-staff-more-panel a").GetAttribute("href").ShouldBe("/metodika#istrynimas");
 
         SignedIn(FakeMeApi.Member);
-        var member = Render<Hello>();
+        var member = Render<AccountSecurity>();
         member.Find("#delete-account").Click();
         member.FindAll("#delete-staff-kept").ShouldBeEmpty("an ordinary account is unchanged");
         member.FindAll("#delete-confirm").ShouldNotBeEmpty();
     }
 
-    /// <summary>Design 8.21 (owner, 2026-11-16): the account page in four parts, reached from a row of plain links under the title.</summary>
+    /// <summary>
+    /// Design 8.21 (owner, 2026-11-16: "split into several forms"): four account screens, each its own page, joined by one row of
+    /// plain links with the current screen marked; each holds its own forms and the anchors emails and texts link to.
+    /// </summary>
     [Fact]
-    public void The_account_page_is_in_four_parts_reached_from_the_row_of_links_and_keeps_its_anchors()
+    public void The_account_is_four_screens_joined_by_one_row_of_links_each_with_its_own_forms_and_anchors()
     {
         SignedIn(FakeMeApi.Member);
+        var screens = new (Func<IRenderedComponent<IComponent>> Render, string Path, string Part, string[] Holds, string[] NotHere)[]
+        {
+            (() => Render<Hello>(), "/sveiki", "profilis", ["#vardas", "#viesas-profilis", "#about-text", "#profile-public-switch"], ["#sekami", "#my-data", "#my-invitation"]),
+            (() => Render<AccountFollows>(), "/sveiki/sekimas", "sekimas-ir-laiskai", ["#sekami"], ["#vardas", "#my-data", "#my-invitation"]),
+            (() => Render<AccountTaking>(), "/sveiki/dalyvavimas", "dalyvavimas", ["#my-invitation", "#my-organisations"], ["#vardas", "#sekami", "#my-data"]),
+            (() => Render<AccountSecurity>(), "/sveiki/saugumas", "saugumas-ir-duomenys", ["#zinomos-narsykles", "#my-data", "#export"], ["#vardas", "#sekami", "#my-invitation"]),
+        };
+
+        foreach (var (render, path, part, holds, notHere) in screens)
+        {
+            var page = render();
+            page.FindAll("#account-parts a").Select(a => a.GetAttribute("href"))
+                .ShouldBe(["/sveiki", "/sveiki/sekimas", "/sveiki/dalyvavimas", "/sveiki/saugumas"], path);
+            page.FindAll("#account-parts a").Select(a => a.TextContent)
+                .ShouldBe([Text("Parts.Profile"), Text("Parts.Follows"), Text("Parts.Taking"), Text("Parts.Security")]);
+            page.FindAll("#account-parts a[aria-current=page]").ShouldHaveSingleItem(path).GetAttribute("href").ShouldBe(path);
+            page.Find("#hello-title").TextContent.ShouldBe("Sveiki, Rūta M.!");
+            page.Find($"#{part} > h2").TextContent.ShouldNotBeNullOrWhiteSpace(part);
+            page.FindAll("noscript").ShouldNotBeEmpty($"{path} carries <NeedsScript />");
+            foreach (var id in holds)
+            {
+                page.Find($"#{part} {id}").ShouldNotBeNull($"{path} holds {id}");
+            }
+
+            foreach (var id in notHere)
+            {
+                page.FindAll(id).ShouldBeEmpty($"{id} is on another screen than {path}");
+            }
+
+            page.FindAll(".sheet .sheet").ShouldBeEmpty("design 8.16: a sheet is never inside a sheet");
+        }
+    }
+
+    /// <summary>Design 8.21: the screens' addresses and the anchors emails and legal texts link to are one list.</summary>
+    [Fact]
+    public void The_anchors_emails_and_texts_link_to_live_on_their_screens()
+    {
+        AccountScreens.FollowsList.ShouldBe("/sveiki/sekimas#sekami");
+        AccountScreens.KnownBrowsers.ShouldBe("/sveiki/saugumas#zinomos-narsykles");
+        AccountScreens.MyData.ShouldBe("/sveiki/saugumas#my-data");
+        AccountScreens.MyInvitation.ShouldBe("/sveiki/dalyvavimas#my-invitation");
+        Lt2.SharedKernel.AccountScreens.All.ShouldBe(AccountScreens.All, "the browser's copy and the modules' are one file");
+    }
+
+    /// <summary>
+    /// Design 8.25.1: "Viešas profilis" says everything the consent covers before it is saved on, sends the version of the
+    /// text it showed, and a member without a name is told one is needed.
+    /// </summary>
+    [Fact]
+    public void The_public_profile_switch_says_what_it_covers_before_the_consent_is_sent()
+    {
+        SignedIn(FakeMeApi.Member with { DisplayName = null });
+        var fake = _profiles;
+        fake.On("SaveAsync", ApiResult<MyProfileResponse>.Ok(new MyProfileResponse("Mokytoja iš Kauno. https://pavyzdys.test/ruta", false, null, "abcdefgh23", DateTimeOffset.UnixEpoch, ProfileLimits.ConsentVersion, 2000)));
         var page = Render<Hello>();
 
-        // The pages carry <base href="/">, so a bare "#profilis" would lead to the front page: each link carries the page's path.
-        page.FindAll("#account-parts a").Select(a => a.GetAttribute("href"))
-            .ShouldBe(["/sveiki#profilis", "/sveiki#sekimas-ir-laiskai", "/sveiki#dalyvavimas", "/sveiki#saugumas-ir-duomenys"]);
-        page.FindAll("#account-parts a").Select(a => a.TextContent)
-            .ShouldBe([Text("Parts.Profile"), Text("Parts.Follows"), Text("Parts.Taking"), Text("Parts.Security")]);
-        foreach (var part in new[] { "profilis", "sekimas-ir-laiskai", "dalyvavimas", "saugumas-ir-duomenys" })
-        {
-            page.Find($"#{part} > h2").TextContent.ShouldNotBeNullOrWhiteSpace(part);
-            page.Find($"#{part} .sheet").ShouldNotBeNull($"{part} has something to show, so its heading never stands empty");
-        }
+        page.FindAll("#profile-consent-text").ShouldBeEmpty("nothing is said before the switch is chosen");
+        page.Find("#profile-public-switch").Change(true);
+        page.Find("#profile-consent-text").TextContent.ShouldBe(Text("PublicProfile.Consent"));
+        page.Find("#profile-name-needed").TextContent.ShouldBe(Text("PublicProfile.NameNeeded"));
 
-        // The anchors emails, hints and tests link to stay, each in its part.
-        page.Find("#profilis #vardas").ShouldNotBeNull();
-        page.Find("#sekimas-ir-laiskai #sekami").ShouldNotBeNull();
-        page.Find("#dalyvavimas #my-invitation").ShouldNotBeNull();
-        page.Find("#dalyvavimas #my-organisations").ShouldNotBeNull();
-        page.Find("#saugumas-ir-duomenys #zinomos-narsykles").ShouldNotBeNull();
-        page.Find("#saugumas-ir-duomenys #my-data").ShouldNotBeNull();
-        page.FindAll(".sheet .sheet").ShouldBeEmpty("design 8.16: a sheet is never inside a sheet");
+        page.Find("#about-text").Input("Mokytoja iš Kauno. https://pavyzdys.test/ruta");
+        page.Find("#viesas-profilis form").Submit();
+
+        page.WaitForAssertion(() => fake.Calls.ShouldContain("SaveAsync"));
+        var sent = (ProfileRequest)fake.Arguments[fake.Calls.IndexOf("SaveAsync")][0]!;
+        sent.Public.ShouldBeTrue();
+        sent.ConsentVersion.ShouldBe(ProfileLimits.ConsentVersion);
+        sent.About.ShouldBe("Mokytoja iš Kauno. https://pavyzdys.test/ruta");
+        page.WaitForAssertion(() => page.Find("#profile-link").GetAttribute("href").ShouldBe("/nariai/abcdefgh23"));
     }
 
     /// <summary>Design 6.2 (owner, 2026-11-16): where the staff links stand, a code session on a staff account gets its staff passkey.</summary>
@@ -380,19 +439,19 @@ public sealed class SignInComponentTests : BunitContext
     public void A_staff_account_in_a_code_session_is_offered_its_staff_passkey_where_the_staff_links_stand()
     {
         SignedIn(FakeMeApi.Member with { Roles = ["member", "moderator"], StaffAccount = true });
-        var codeSession = Render<Hello>();
+        var codeSession = Render<AccountTaking>();
         codeSession.Find("#dalyvavimas #staff-key-note span").TextContent.ShouldBe(Text("Staff.KeyText"));
-        codeSession.Find("#staff-key-link").GetAttribute("href").ShouldBe("/prisijungti/raktas#grizti=%2Fsveiki");
+        codeSession.Find("#staff-key-link").GetAttribute("href").ShouldBe("/prisijungti/raktas#grizti=%2Fsveiki%2Fdalyvavimas");
         codeSession.FindAll("#staff-links").ShouldBeEmpty();
-        codeSession.FindAll("#delete-staff-key").ShouldNotBeEmpty("the one beside the deletion note stays");
+        Render<AccountSecurity>().FindAll("#delete-staff-key").ShouldNotBeEmpty("the one beside the deletion note stays, on its own screen");
 
         SignedIn(FakeMeApi.Member with { Roles = ["member", "moderator"], StaffAccount = true, ActiveStaffRoles = ["moderator"] });
-        var staffSession = Render<Hello>();
+        var staffSession = Render<AccountTaking>();
         staffSession.Find("#dalyvavimas #staff-links").ShouldNotBeNull();
         staffSession.FindAll("#staff-key-note").ShouldBeEmpty();
 
         SignedIn(FakeMeApi.Member);
-        var member = Render<Hello>();
+        var member = Render<AccountTaking>();
         member.FindAll("#staff-key-note").ShouldBeEmpty();
         member.FindAll("#staff-links").ShouldBeEmpty();
     }
@@ -454,7 +513,7 @@ public sealed class SignInComponentTests : BunitContext
             Code = "role-activation.invalid",
             Errors = new Dictionary<string, string[]> { ["code"] = [invalid] },
         }));
-        var page = Render<Hello>();
+        var page = Render<AccountTaking>();
 
         page.Find("#activation-code").Input("AAAA-BBBB-CCCC-DDDD");
         page.Find("section[aria-labelledby=activation-title] form").Submit();
@@ -501,7 +560,7 @@ public sealed class SignInComponentTests : BunitContext
         const string failed = "Įvyko klaida";
         SignedIn(FakeMeApi.Member);
         _auth.SignOut = () => Task.FromResult(ApiResult.Fail(new ApiProblem { Status = 502, Code = "http.502", Detail = failed }));
-        var page = Render<Hello>();
+        var page = Render<AccountSecurity>();
 
         page.FindAll("button").Single(b => b.TextContent == Text("SignOut")).Click();
 
@@ -565,6 +624,13 @@ public sealed class SignInComponentTests : BunitContext
         public Task<ApiResult> FollowOrganisationAsync(string slug, CancellationToken cancellationToken = default) => Task.FromResult(ApiResult.Ok());
 
         public Task<ApiResult> UnfollowOrganisationAsync(string slug, CancellationToken cancellationToken = default) => Task.FromResult(ApiResult.Ok());
+
+        public Task<ApiResult> FollowMemberAsync(string profileId, CancellationToken cancellationToken = default) => Task.FromResult(ApiResult.Ok());
+
+        public Task<ApiResult> UnfollowMemberAsync(string profileId, CancellationToken cancellationToken = default) => Task.FromResult(ApiResult.Ok());
+
+        public Task<ApiResult<Lt2.Api.Contracts.Me.FollowersResponse>> GetBillFollowersAsync(string number, CancellationToken cancellationToken = default) =>
+            Task.FromResult(ApiResult<Lt2.Api.Contracts.Me.FollowersResponse>.Ok(new(0)));
 
         public Task<ApiResult<Lt2.Api.Contracts.Follows.NoticeSettingsResponse>> GetNoticesAsync(CancellationToken cancellationToken = default) =>
             Task.FromResult(ApiResult<Lt2.Api.Contracts.Follows.NoticeSettingsResponse>.Ok(new(true, true)));

@@ -904,3 +904,17 @@ body { padding-block-end: 4.5rem; }
 
 /* Design 8.27: "Lankomumas". A long path or host wraps, so the number beside it stays on a phone's screen. */
 .usage-name { overflow-wrap: anywhere; }
+
+/* Design 8.25.4: the card beside a public profile's name (js/lt2-cards.js), the hint's look; placed by the script. */
+.card-pop {
+  inset: auto; margin: 0; inline-size: max-content; max-inline-size: min(22rem, 100vw - 1rem);
+  padding: var(--sp-3) var(--sp-4); background: var(--sheet); color: var(--ink); border: 1px solid var(--rule);
+  box-shadow: 0 0.5rem 1.5rem rgb(0 0 0 / 0.2); font-size: var(--fs-1); line-height: 1.45; overflow-wrap: break-word;
+}
+.card-pop:popover-open { display: flex; flex-direction: column; gap: var(--sp-2); }
+.card-pop p { margin: 0; }
+a.said__name { color: inherit; font-weight: 700; }
+
+/* Design 8.25.2: a member's argument on their page, and the follower line (design 8.11.2). */
+.member-text { display: flex; flex-direction: column; gap: var(--sp-2); }
+.followers { display: inline-flex; gap: var(--sp-2); align-items: baseline; }

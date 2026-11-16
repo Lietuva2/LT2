@@ -557,7 +557,7 @@ public sealed class MpLinkTests(DatabaseFixture database) : ApiTest(database)
             using (var document = JsonDocument.Parse(json))
             {
                 document.RootElement.EnumerateObject().Select(p => p.Name).ShouldBe(
-                    ["mp", "term", "mandate", "memberships", "contacts", "statistics", "recentVotes", "managedSince"], ignoreOrder: true);
+                    ["mp", "term", "mandate", "memberships", "contacts", "statistics", "recentVotes", "managedSince", "followers"], ignoreOrder: true);
                 document.RootElement.GetProperty("managedSince").ValueKind.ShouldBe(JsonValueKind.String, "the swept answer holds the mark");
             }
 

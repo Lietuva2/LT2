@@ -39,7 +39,36 @@ public static class MessageKinds
 
     /// <summary>A moderator hid or restored an MP's response, to the MP's account's own address (design 8.5.5).</summary>
     public const string MpResponseNoticeEmail = "email.mp-response-notice";
+
+    /// <summary>A moderator hid or restored a member's "Apie mane" (design 8.25.6), to the member's own address.</summary>
+    public const string ProfileNoticeEmail = "email.profile-notice";
+
+    /// <summary>A member the person follows published an argument (design 8.25.5).</summary>
+    public const string FollowMemberEmail = "email.follow-member";
 }
+
+/// <summary>
+/// Payload of <see cref="MessageKinds.ProfileNoticeEmail"/> (design 8.25.6): what a moderator did with the person's "Apie mane"
+/// and why. Never the text and never who reported.
+/// </summary>
+/// <param name="Notice">One of <see cref="ProfileNotices"/>.</param>
+/// <param name="Path">The "Profilis" screen.</param>
+public sealed record ProfileNoticeEmail(string To, string Notice, string? Statement, string? Contact, string Path);
+
+/// <summary>The moderation outcomes a member is told about for "Apie mane" (design 8.25.6).</summary>
+public static class ProfileNotices
+{
+    public const string AboutHidden = "about-hidden";
+    public const string AboutRestored = "about-restored";
+
+    public static readonly IReadOnlyList<string> All = [AboutHidden, AboutRestored];
+}
+
+/// <summary>
+/// Payload of <see cref="MessageKinds.FollowMemberEmail"/> (design 8.25.5): a member the person follows published an argument.
+/// The member's display name, the bill and the link; never the argument's text, its side, or any count.
+/// </summary>
+public sealed record FollowMemberEmail(string To, string MemberName, string BillNumber, string BillTitle, string ArgumentPath, string ProfilePath, string AccountPath);
 
 /// <summary>
 /// Payload of <see cref="MessageKinds.MpResponseNoticeEmail"/> (design 8.5.5): what a moderator did with an MP's response on a

@@ -1,9 +1,12 @@
 @using Lt2.Api.Contracts.Appeals
+@using Lt2.Api.Contracts.Me
 @inherits InteractiveBase<AppealUi>
 @inject IAppealsApi Appeals
+@inject IProfilesApi Profiles
 
 @* A report (design 8.3, Digital Services Act notice and action) on a bill's description or an argument. A description may
-   also be reported as inaccurate (design 8.13: "Pranešti apie klaidą"). *@
+   also be reported as inaccurate (design 8.13: "Pranešti apie klaidą"); a member's public profile (TargetKind "profile",
+   design 8.25.6) goes to its own route by the profile id, with "Apsimeta kitu asmeniu ar pareigūnu" first. *@
 @if (_sent)
 {
     <p class="note note--quiet" role="status">@L["Report.Sent"]</p>
@@ -13,12 +16,12 @@ else
     <form class="sheet sheet--quiet stack stack--tight" @onsubmit="SendAsync" novalidate aria-label="@L["Report.Title"]">
         <fieldset class="stack stack--tight">
             <legend class="label">@L["Report.Ground"]</legend>
-            @foreach (var ground in AppealLimits.ReportGroundsFor(TargetKind))
+            @foreach (var ground in TargetKind == "profile" ? ProfileLimits.ReportGrounds : AppealLimits.ReportGroundsFor(TargetKind))
             {
                 <label class="check">
                     <input type="radio" name="@($"ground-{TargetId:N}")" value="@ground" checked="@(_ground == ground)"
                            @onchange="() => _ground = ground" disabled="@Locked" />
-                    <span>@L["Report.Ground." + ground]</span>
+                    <span>@L[(TargetKind == "profile" && ground == "impersonation" ? "Report.Ground.person-impersonation" : "Report.Ground." + ground)]</span>
                 </label>
             }
         </fieldset>
@@ -44,11 +47,16 @@ else
 
     [Parameter, EditorRequired] public Guid TargetId { get; set; }
 
+    /// <summary>For TargetKind <c>profile</c>: the public profile id (TargetId is then any fixed id, for the form's element ids).</summary>
+    [Parameter] public string? ProfileId { get; set; }
+
     [Parameter] public EventCallback OnClose { get; set; }
 
     private Task SendAsync() => RunAsync(async () =>
     {
-        var result = await Appeals.ReportAsync(new ReportRequest { TargetKind = TargetKind, TargetId = TargetId, Ground = _ground!, Text = _text });
+        var result = TargetKind == "profile"
+            ? await Profiles.ReportAsync(ProfileId!, new MemberReportRequest { Ground = _ground!, Text = _text })
+            : await Appeals.ReportAsync(new ReportRequest { TargetKind = TargetKind, TargetId = TargetId, Ground = _ground!, Text = _text });
         if (!result.IsSuccess)
         {
             Show(result.Problem);

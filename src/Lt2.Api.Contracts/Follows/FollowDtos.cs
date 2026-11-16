@@ -3,8 +3,9 @@ using Lt2.Api.Contracts.Organisations;
 
 namespace Lt2.Api.Contracts.Follows;
 
-// Design 8.11.2: following bills and MPs; design 8.14.14 (stage B): following organisations. Only the caller's own follows
-// ever leave the server: no follower count, no list of who follows anything, never combined with sides or invitations.
+// Design 8.11.2: following bills and MPs; design 8.14.14 (stage B): following organisations; design 8.25.5: following members.
+// Only the caller's own follows leave the server, never combined with sides or invitations; how many follow a thing is a
+// public number (design 8.11.2, owner 2026-11-16), never who.
 
 /// <summary>The latest stage result of a followed bill.</summary>
 public sealed record FollowedVoteResponse(long VoteId, string? Stage, DateTimeOffset HeldAt, bool IsConsensus, int? For, int? Against, int? Abstain);
@@ -21,13 +22,20 @@ public sealed record FollowedOrganisationResponse(string Slug, string Name, Orga
 /// <summary>
 /// The caller's own follows (design 8.8 <c>GET /me/follows</c>); never cached. There is no limit on how many (design 8.11.2).
 /// </summary>
-public sealed record MyFollowsResponse(IReadOnlyList<FollowedBillResponse> Bills, IReadOnlyList<FollowedMpResponse> Mps, IReadOnlyList<FollowedOrganisationResponse> Organisations);
+public sealed record MyFollowsResponse(
+    IReadOnlyList<FollowedBillResponse> Bills,
+    IReadOnlyList<FollowedMpResponse> Mps,
+    IReadOnlyList<FollowedOrganisationResponse> Organisations,
+    IReadOnlyList<FollowedMemberResponse>? Members = null);
+
+/// <summary>A member with a public profile the caller follows (design 8.25.5).</summary>
+public sealed record FollowedMemberResponse(string ProfileId, string DisplayName);
 
 /// <summary>
 /// Which follow emails are on: a followed bill is planned; the Seimas voted on it (design 8.11.2); a followed organisation
 /// made a statement public (design 8.14.14); MPs answered on a followed bill (design 8.20.1).
 /// </summary>
-public sealed record NoticeSettingsResponse(bool Planned, bool Voted, bool Statements = true, bool Responses = true);
+public sealed record NoticeSettingsResponse(bool Planned, bool Voted, bool Statements = true, bool Responses = true, bool Members = true);
 
 public sealed record NoticeSettingsRequest
 {
@@ -38,6 +46,9 @@ public sealed record NoticeSettingsRequest
     public bool Statements { get; init; } = true;
 
     public bool Responses { get; init; } = true;
+
+    /// <summary>A followed member published an argument (design 8.25.5).</summary>
+    public bool Members { get; init; } = true;
 }
 
 public static class FollowRoutes
@@ -47,6 +58,11 @@ public static class FollowRoutes
     public const string Bill = ApiRoutes.Prefix + "/bills/{number}/follow";
     public const string Mp = ApiRoutes.Prefix + "/mps/{slug}/follow";
     public const string Organisation = ApiRoutes.Prefix + "/organisations/{slug}/follow";
+
+    /// <summary>How many follow a bill (design 8.11.2): a public number, apart from the bill's record and its sides.</summary>
+    public const string BillFollowers = ApiRoutes.Prefix + "/bills/{number}/followers";
+
+    public static string BillFollowersOf(string number) => $"{ApiRoutes.Prefix}/bills/{Uri.EscapeDataString(number)}/followers";
 
     public static string BillOf(string number) => $"{ApiRoutes.Prefix}/bills/{Uri.EscapeDataString(number)}/follow";
 
@@ -71,6 +87,14 @@ public interface IFollowsApi
     Task<ApiResult> FollowOrganisationAsync(string slug, CancellationToken cancellationToken = default);
 
     Task<ApiResult> UnfollowOrganisationAsync(string slug, CancellationToken cancellationToken = default);
+
+    /// <summary>Design 8.25.5: <c>member.not-found</c> for a profile that is not public.</summary>
+    Task<ApiResult> FollowMemberAsync(string profileId, CancellationToken cancellationToken = default);
+
+    Task<ApiResult> UnfollowMemberAsync(string profileId, CancellationToken cancellationToken = default);
+
+    /// <summary>How many follow a bill (public; design 8.11.2).</summary>
+    Task<ApiResult<Me.FollowersResponse>> GetBillFollowersAsync(string number, CancellationToken cancellationToken = default);
 
     Task<ApiResult<NoticeSettingsResponse>> GetNoticesAsync(CancellationToken cancellationToken = default);
 

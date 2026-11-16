@@ -25,7 +25,7 @@
         <button type="button" class="btn" id="terms-accept-button" disabled="@Locked" @onclick="AcceptAsync">@L["TermsAccept.Accept"]</button>
         <button type="button" class="btn btn--plain" id="terms-sign-out" disabled="@Locked" @onclick="SignOutAsync">@L["SignOut"]</button>
     </div>
-    <p class="small" id="terms-accept-leave">@L["TermsAccept.Leave.Before"] <a href="/sveiki#my-data">@L["TermsAccept.Leave.Link"]</a></p>
+    <p class="small" id="terms-accept-leave">@L["TermsAccept.Leave.Before"] <a href="@AccountScreens.MyData">@L["TermsAccept.Leave.Link"]</a></p>
     <Messages Message="@Message" Info="@Info" />
 </section>
 

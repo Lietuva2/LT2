@@ -35,10 +35,17 @@ internal sealed class DisplayNameHandlers(IdentityDb db, IWritingRestrictions re
         }
 
         await using var transaction = await db.Database.BeginTransactionAsync(cancellationToken);
+        await IdentityLocks.ProfileAsync(db, userId, cancellationToken);
         var profile = await db.Profiles.FirstOrDefaultAsync(p => p.UserId == userId, cancellationToken);
         if (profile is null)
         {
             return Error.Unauthorized("auth.required");
+        }
+
+        // Design 8.25.6 (the designer's proposal): a public profile shows a name, so it cannot be emptied while public.
+        if (ProfileRules.CheckNameWhilePublic(profile.PublicProfileId is not null, typed) is { } nameRequired)
+        {
+            return Error.Validation(nameRequired, "displayName");
         }
 
         // A pending account gives its name with the rest of its registration (design 6.2).

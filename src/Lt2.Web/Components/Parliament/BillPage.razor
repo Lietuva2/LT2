@@ -9,6 +9,7 @@
 @inject IMetaApi Meta
 @inject IAppealsApi Appeals
 @inject IDigestsApi Digests
+@inject Lt2.Api.Contracts.Follows.IFollowsApi Follows
 @inject Formats F
 @inject NavigationManager Navigation
 @inject IConfiguration Configuration
@@ -70,6 +71,8 @@
         }
         <Lt2.Web.Client.Components.NeedsScript />
         <FollowButton Kind="bill" Key="@b.Number" @rendermode="InteractiveWebAssembly" />
+        @* Design 8.11.2 (owner, 2026-11-16): how many follow the bill, beside "Sekti" and apart from the sides' figures. *@
+        <Lt2.Web.Client.Components.FollowerLine Count="_followers" />
     </div>
 
     @if (_record is { Status: "rejected" } hidden)
@@ -316,6 +319,7 @@
     private static readonly string[] Stages = ["presentation", "consideration", "adoption"];
     private BillResponse? _bill;
     private BillRecordResponse? _record;
+    private int _followers;
     private DateTimeOffset? _updatedAt;
     private VoteResponse? _closingVote;
     private IReadOnlyList<RecordDigestResponse> _digests = [];
@@ -341,6 +345,7 @@
         }
 
         _updatedAt = (await Meta.GetImportsAsync()).Value?.Sources.FirstOrDefault()?.LastSuccessAt;
+        _followers = (await Follows.GetBillFollowersAsync(_bill.Number)).Value?.Followers ?? 0;
 
         // The empty open state for an active bill nobody took part in; nothing for a finished one (the bill only).
         _record = (await Appeals.GetRecordAsync(_bill.Number)).Value;

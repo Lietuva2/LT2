@@ -281,6 +281,7 @@ public sealed partial class NavigationTests(DatabaseFixture database) : ApiTest(
 
         // The sweep must be able to fail: it read the account page as the member, with its row of parts.
         visited["member"].ShouldContain("/sveiki");
+        visited["member"].ShouldContain("/sveiki/saugumas", "the account screens are walked too");
         (await member.Client.GetStringAsync("/sveiki")).ShouldContain("id=\"account-parts\"");
         visited["visitor"].ShouldContain("/");
         visited["moderator"].ShouldContain("/moderavimas");

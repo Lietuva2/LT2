@@ -20,7 +20,7 @@ internal static class RecordQueries
 /// aggregates read from <c>appeals.position</c>; no read here returns who took which side.
 /// </summary>
 internal sealed class AppealReads(
-    IParticipants participants, IBillCatalogue bills, ISettings settings, IAiAssistant assistant, IBillTextSource texts, TimeProvider clock)
+    IParticipants participants, IPublicProfiles profiles, IBillCatalogue bills, ISettings settings, IAiAssistant assistant, IBillTextSource texts, TimeProvider clock)
 {
     public async Task<int> MinimumAsync(CancellationToken ct) => await settings.GetAsync(SettingKeys.DigestThresholdMinimum, ct);
 
@@ -122,6 +122,13 @@ internal sealed class AppealReads(
         return ids.Count == 0 ? new Dictionary<Guid, string?>() : await participants.DisplayNamesAsync(ids, ct);
     }
 
+    /// <summary>The public profiles among the given authors (design 8.25.4): the link and the card beside their names.</summary>
+    public async Task<IReadOnlyDictionary<Guid, PublicProfileFacts>> ProfilesAsync(IEnumerable<Guid> userIds, CancellationToken ct)
+    {
+        var ids = userIds.Distinct().ToList();
+        return ids.Count == 0 ? new Dictionary<Guid, PublicProfileFacts>() : await profiles.ForAccountsAsync(ids, ct);
+    }
+
     public async Task<BillFacts> BillAsync(string number, CancellationToken ct) =>
         await bills.FindAsync(number, ct) ?? new BillFacts(number, number);
 
@@ -136,8 +143,10 @@ internal sealed class AppealReads(
             .Select(g => new { g.Key, Count = g.Count() })
             .ToDictionaryAsync(x => x.Key, x => x.Count, ct);
 
-    public static ReasonInfo ToInfo(Reason r, IReadOnlyDictionary<Guid, string?> names, IReadOnlyDictionary<Guid, int> endorsements) =>
-        new(r.Id, r.Side, r.Text, names.GetValueOrDefault(r.AuthorUserId), endorsements.GetValueOrDefault(r.Id), r.Status, r.CreatedAt);
+    public static ReasonInfo ToInfo(
+        Reason r, IReadOnlyDictionary<Guid, string?> names, IReadOnlyDictionary<Guid, int> endorsements, IReadOnlyDictionary<Guid, PublicProfileFacts>? profiles = null) =>
+        new(r.Id, r.Side, r.Text, names.GetValueOrDefault(r.AuthorUserId), endorsements.GetValueOrDefault(r.Id), r.Status, r.CreatedAt,
+            profiles?.GetValueOrDefault(r.AuthorUserId)?.ProfileId);
 
     /// <summary>The bill's record (open, closed or hidden), at most one (design 8.12.1); null while the bill has none.</summary>
     public static Task<BillRecord?> FindRecordAsync(AppealsDb db, string billNumber, bool tracking, CancellationToken ct)

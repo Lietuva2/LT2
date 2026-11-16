@@ -395,6 +395,7 @@ internal sealed class AppealsService(
             ScreeningFlags = [.. flags],
             CreatedAt = clock.GetUtcNow(),
         };
+        reason.FirstPublicAt = reason.Status == ReasonStatuses.Published ? reason.CreatedAt : null;
         db.Reasons.Add(reason);
         await db.SaveChangesAsync(cancellationToken);
         await transaction.CommitAsync(cancellationToken);
@@ -752,10 +753,11 @@ internal sealed class AppealsService(
         // An initiator's name only beside a description they wrote, before 2026-11-14 (design 8.12.4).
         var author = record.DescriptionSource == DescriptionSources.Initiator && record.InitiatorUserId is { } initiator ? initiator : (Guid?)null;
         var names = await reads.NamesAsync(reasons.Select(r => r.AuthorUserId).Concat(author is { } a ? [a] : []), ct);
+        var profiles = await reads.ProfilesAsync(reasons.Select(r => r.AuthorUserId), ct);
         var ordered = reasons
             .OrderByDescending(r => endorsements.GetValueOrDefault(r.Id))
             .ThenBy(r => r.CreatedAt)
-            .Select(r => AppealReads.ToInfo(r, names, endorsements))
+            .Select(r => AppealReads.ToInfo(r, names, endorsements, profiles))
             .ToList();
         return new BillRecordInfo(
             record.Id,
@@ -773,7 +775,8 @@ internal sealed class AppealsService(
             record.ClosingVoteId,
             record.ClosedAt,
             record.Status == BillRecordStatuses.Closed ? null : (await agenda.ForBillsAsync([record.BillNumber], ct)).GetValueOrDefault(record.BillNumber),
-            null);
+            null,
+            profiles.Values.OrderBy(p => p.ProfileId, StringComparer.Ordinal).Select(p => new AuthorCard(p.ProfileId, p.DisplayName, p.About)).ToList());
     }
 
     public async Task<IReadOnlyDictionary<string, BillRecordState>> BillStatesAsync(IReadOnlyCollection<string> billNumbers, CancellationToken cancellationToken)

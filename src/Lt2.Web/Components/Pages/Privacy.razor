@@ -9,7 +9,7 @@
     <After Context="part">
         @if (part == "Rights")
         {
-            <p><a href="/sveiki#my-data" id="privacy-account-link">@T["Legal.ToAccount"]</a></p>
+            <p><a href="@Lt2.SharedKernel.AccountScreens.MyData" id="privacy-account-link">@T["Legal.ToAccount"]</a></p>
         }
         else if (part == "Storage")
         {

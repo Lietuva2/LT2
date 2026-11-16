@@ -22,6 +22,7 @@ internal sealed class ErrorMapper(IStringLocalizer<ProblemText> l)
             ErrorKind.Forbidden => StatusCodes.Status403Forbidden,
             ErrorKind.Unauthorized => StatusCodes.Status401Unauthorized,
             ErrorKind.TooManyRequests => StatusCodes.Status429TooManyRequests,
+            ErrorKind.Gone => StatusCodes.Status410Gone,
             _ => StatusCodes.Status400BadRequest,
         };
     }

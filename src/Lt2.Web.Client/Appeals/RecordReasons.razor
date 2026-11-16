@@ -1,4 +1,5 @@
 @using Lt2.Api.Contracts.Appeals
+@using Lt2.Api.Contracts.Me
 @inherits InteractiveBase<AppealUi>
 @inject IAppealsApi Appeals
 @inject MyBillState State
@@ -16,6 +17,11 @@
     <h2 id="h-why">@L["Reasons.Title"]</h2>
     @if (Record is { } record)
     {
+        @* Design 8.25.4: each public profile's card once on the page, for js/lt2-cards.js; no follower number in it. *@
+        @foreach (var card in record.Cards ?? [])
+        {
+            <template id="card-@card.ProfileId" @key="card.ProfileId"><p><b>@card.Name</b></p>@if (card.About is { } about) {<p class="small">@TextExcerpt.Of(about, CardShown).Shown</p>}<p class="small"><a href="@ProfileRoutes.Page(card.ProfileId)">@L["Card.Open"]</a></p></template>
+        }
         <div class="pair pair--reasons">
             @foreach (var side in AppealLimits.Sides)
             {
@@ -33,7 +39,15 @@
                             @* The name, then the actions as one group that never wraps item by item (owner, 2026-11-13): when
                                the two do not fit side by side, the name takes its own line above. *@
                             <div class="said__by">
-                                <b class="said__name">@(reason.AuthorName ?? L["Reasons.Anonymous"])</b>
+                                @if (reason.AuthorProfileId is { } profileId)
+                                {
+                                    @* Design 8.25.4: a member with a public profile: the name leads to their page, with a card. *@
+                                    <a class="said__name" href="@ProfileRoutes.Page(profileId)" data-card="card-@profileId">@(reason.AuthorName ?? L["Reasons.Anonymous"])</a>
+                                }
+                                else
+                                {
+                                    <b class="said__name">@(reason.AuthorName ?? L["Reasons.Anonymous"])</b>
+                                }
                                 <span class="said__actions" id="said-actions-@reason.Id">
                                     @if (_signedIn)
                                     {
@@ -170,6 +184,9 @@
 
 @code {
     private const int Shown = 2;
+
+    /// <summary>About this many characters of "Apie mane" in a card (design 8.25.4: "the first lines").</summary>
+    private const int CardShown = 200;
     private bool _signedIn;
     private bool _showAll;
     private bool _writing;

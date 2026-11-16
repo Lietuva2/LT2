@@ -105,7 +105,8 @@ public sealed record ProfileStatementResponse(BillRefResponse Bill, StatementRes
 
 /// <summary>
 /// The public profile <c>/o/{slug}</c>. A blocked organisation carries <c>BlockStatement</c> and no statements; a closed one
-/// <c>ClosedAt</c> and no statements. <c>WebsiteHost</c> is shown with the website.
+/// <c>ClosedAt</c> and no statements. <c>WebsiteHost</c> is shown with the website. <c>Followers</c>: how many members follow
+/// it (design 8.11.2), a number only.
 /// </summary>
 public sealed record OrganisationProfileResponse(
     Guid Id,
@@ -122,7 +123,8 @@ public sealed record OrganisationProfileResponse(
     DateTimeOffset RegisteredAt,
     DateTimeOffset? ClosedAt,
     IReadOnlyList<ProfileChangeResponse> History,
-    IReadOnlyList<ProfileStatementResponse> Statements);
+    IReadOnlyList<ProfileStatementResponse> Statements,
+    int Followers = 0);
 
 public sealed record BillStatementResponse(Guid OrganisationId, string Slug, string Name, OrganisationLabelResponse Label, StatementResponse Statement);
 

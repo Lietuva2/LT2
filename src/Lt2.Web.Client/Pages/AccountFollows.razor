@@ -1,0 +1,24 @@
+@page "/sveiki/sekimas"
+@attribute [Authorize]
+@rendermode InteractiveWebAssembly
+@inherits AccountScreenBase
+
+@* "Sekimas ir laiškai" (design 8.21): what the person follows and which follow emails they get (design 8.11.2, 8.14.14,
+   8.20.1, 8.25.5). Every follow email links to #sekami here. *@
+@if (Me is null)
+{
+    <p class="small">@L["Loading"]</p>
+}
+else
+{
+    <AccountHeader Me="Me" Current="@AccountScreens.Follows" />
+
+    <section class="stack" aria-labelledby="sekimas-title" id="sekimas-ir-laiskai">
+        <h2 id="sekimas-title">@L["Parts.Follows"]</h2>
+        <FollowList />
+    </section>
+}
+
+@code {
+    protected override async Task OnInitializedAsync() => await LoadMeAsync();
+}

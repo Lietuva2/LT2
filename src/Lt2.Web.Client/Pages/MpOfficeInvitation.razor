@@ -24,7 +24,7 @@
     else if (Joined is { } joined)
     {
         <p class="note note--quiet" role="status" id="office-joined">
-            @L.Format("Mp.OfficeOf", joined.FirstName + " " + joined.LastName) <a href="/sveiki">@L["MpOffice.ToAccount"]</a>
+            @L.Format("Mp.OfficeOf", joined.FirstName + " " + joined.LastName) <a href="@AccountScreens.Taking">@L["MpOffice.ToAccount"]</a>
         </p>
     }
     else

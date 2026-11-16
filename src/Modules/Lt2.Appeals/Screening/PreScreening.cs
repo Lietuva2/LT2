@@ -55,52 +55,10 @@ internal sealed partial class RuleBasedPreScreening : IPreScreening
         return flags;
     }
 
-    /// <summary>
-    /// A Lithuanian personal code (asmens kodas): 11 digits, the first 1–6 (century and sex), a valid birth date, and the
-    /// official check digit.
-    /// </summary>
-    public static bool ContainsPersonalCode(string text) =>
-        ElevenDigits().Matches(text).Any(m => IsPersonalCode(m.Value));
+    /// <summary>A Lithuanian personal code (<see cref="Lt2.SharedKernel.PersonalCodes"/>, the one definition).</summary>
+    public static bool ContainsPersonalCode(string text) => Lt2.SharedKernel.PersonalCodes.Contains(text);
 
-    public static bool IsPersonalCode(string digits)
-    {
-        if (digits.Length != 11 || !digits.All(char.IsAsciiDigit) || digits[0] is < '1' or > '6')
-        {
-            return false;
-        }
-
-        var d = digits.Select(c => c - '0').ToArray();
-        var month = d[3] * 10 + d[4];
-        var day = d[5] * 10 + d[6];
-        if (month is < 1 or > 12 || day is < 1 or > 31)
-        {
-            return false;
-        }
-
-        var sum = 0;
-        for (var i = 0; i < 10; i++)
-        {
-            sum += d[i] * (i % 9 + 1);
-        }
-
-        var check = sum % 11;
-        if (check == 10)
-        {
-            sum = 0;
-            for (var i = 0; i < 10; i++)
-            {
-                sum += d[i] * ((i + 2) % 9 + 1);
-            }
-
-            check = sum % 11;
-            if (check == 10)
-            {
-                check = 0;
-            }
-        }
-
-        return check == d[10];
-    }
+    public static bool IsPersonalCode(string digits) => Lt2.SharedKernel.PersonalCodes.Is(digits);
 
     private static int DigitCount(string value) => value.Count(char.IsAsciiDigit);
 
@@ -110,9 +68,6 @@ internal sealed partial class RuleBasedPreScreening : IPreScreening
     // A run of digits with the separators people put in phone numbers, optionally with a leading +.
     [GeneratedRegex(@"(?<![\p{N}])\+?\d[\d\s().-]{6,16}\d(?![\p{N}])", RegexOptions.CultureInvariant)]
     private static partial Regex PhonePattern();
-
-    [GeneratedRegex(@"(?<!\d)\d{11}(?!\d)", RegexOptions.CultureInvariant)]
-    private static partial Regex ElevenDigits();
 
     [GeneratedRegex(@"(https?://|www\.)\S+|\b[\p{L}\p{N}-]+\.(lt|com|eu|org|net|info|io|de|ru|lv|ee|pl|uk|me|tv|co|app)\b(/\S*)?", RegexOptions.CultureInvariant | RegexOptions.IgnoreCase)]
     private static partial Regex LinkPattern();

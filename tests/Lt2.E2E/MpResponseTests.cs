@@ -56,6 +56,7 @@ public sealed partial class MpResponseTests(AdministratorFixture administrator) 
             await page.GotoAsync(Base + "/prisijungti?registruotis=true");
             await E2ESteps.RegisterHereAsync(page, Official, Name);
             await page.WaitForURLAsync(new Regex("/sveiki$"), new() { Timeout = E2ESteps.Slow });
+            await page.GotoAsync(Base + "/sveiki/dalyvavimas");
             var claim = page.Locator("#mp-claim");
             await Assertions.Expect(claim).ToBeEnabledAsync(new() { Timeout = E2ESteps.Slow });
             await claim.ClickAsync();
@@ -66,6 +67,7 @@ public sealed partial class MpResponseTests(AdministratorFixture administrator) 
             await Assertions.Expect(submit).ToBeEnabledAsync(new() { Timeout = E2ESteps.Slow });
             await submit.ClickAsync();
             await page.WaitForURLAsync(new Regex("/sveiki$"), new() { Timeout = E2ESteps.Slow });
+            await page.GotoAsync(Base + "/sveiki/dalyvavimas");
             await Assertions.Expect(page.Locator("#mp-link")).ToContainTextAsync($"Tvarkote Seimo nario profilį: {Name}.", new() { Timeout = E2ESteps.Slow });
 
             // 2. The page of design 8.5.7, reached from the account page.

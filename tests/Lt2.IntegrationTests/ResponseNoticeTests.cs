@@ -130,7 +130,7 @@ public sealed class ResponseNoticeTests(DatabaseFixture database) : ApiTest(data
             var email = emails.ShouldHaveSingleItem();
             email.EnumerateObject().Select(p => p.Name).ShouldBe(["to", "billNumber", "billTitle", "day", "responses", "billPath", "accountPath"], ignoreOrder: true);
             (email.GetProperty("billNumber").GetString(), email.GetProperty("day").GetString(), email.GetProperty("billPath").GetString(), email.GetProperty("accountPath").GetString())
-                .ShouldBe((Bill, Yesterday.ToString("yyyy-MM-dd", System.Globalization.CultureInfo.InvariantCulture), "/seimas/" + Bill + "#atsakymai", "/sveiki#sekami"));
+                .ShouldBe((Bill, Yesterday.ToString("yyyy-MM-dd", System.Globalization.CultureInfo.InvariantCulture), "/seimas/" + Bill + "#atsakymai", "/sveiki/sekimas#sekami"));
             Listed(email).ShouldBe([(MpSteps.Azuolaitis.Name, "for"), (MpSteps.Pusinskiene.Name, "against")]);
             foreach (var item in email.GetProperty("responses").EnumerateArray())
             {

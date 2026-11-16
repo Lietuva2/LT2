@@ -24,26 +24,39 @@ public sealed class ReasonsToComePrivacyTests(DatabaseFixture database) : ApiTes
         AppealRoutes.Appeals,
     ];
 
+    /// <summary>
+    /// Design 8.11.2 (owner, 2026-11-16): following changes no public answer but the one number of how many follow, on the
+    /// followed thing's own answer (the MP's <c>followers</c>, the bill's own <c>/followers</c>); nothing names the follower.
+    /// </summary>
     [Fact]
-    public async Task Following_changes_no_public_answer_there_is_no_follower_count()
+    public async Task Following_changes_no_public_answer_but_the_number_of_followers()
     {
         await Database.FreeBillAsync(AppealSteps.SecondBill);
         using var visitor = NewBrowser();
         var before = new Dictionary<string, string>();
         foreach (var route in PublicAnswers)
         {
-            before[route] = await visitor.Client.GetStringAsync(route);
+            before[route] = Followerless(await visitor.Client.GetStringAsync(route));
         }
 
-        var (member, _) = await Factory.MemberAsync();
+        var billFollowers = (await visitor.GetJsonAsync<Lt2.Api.Contracts.Me.FollowersResponse>(FollowRoutes.BillFollowersOf(AppealSteps.SecondBill))).Followers;
+        var (member, _) = await Factory.MemberAsync("Sekanti Pavyzdytė");
         using var _m = member;
         await member.FollowBillAsync(AppealSteps.SecondBill);
         await member.FollowMpAsync(ReasonsToComeSteps.Petraitis);
         foreach (var route in PublicAnswers)
         {
-            (await visitor.Client.GetStringAsync(route)).ShouldBe(before[route], route);
+            var after = await visitor.Client.GetStringAsync(route);
+            Followerless(after).ShouldBe(before[route], route);
+            after.ShouldNotContain("Sekanti Pavyzdytė");
         }
+
+        (await visitor.GetJsonAsync<Lt2.Api.Contracts.Me.FollowersResponse>(FollowRoutes.BillFollowersOf(AppealSteps.SecondBill))).Followers.ShouldBe(billFollowers + 1);
+        await member.SendAsync(HttpMethod.Delete, FollowRoutes.MpOf(ReasonsToComeSteps.Petraitis));
     }
+
+    /// <summary>The answer without its "followers" number, the one thing following may change.</summary>
+    private static string Followerless(string json) => System.Text.RegularExpressions.Regex.Replace(json, "\"followers\":\\d+", "\"followers\":_");
 
     [Fact]
     public async Task Nobody_sees_another_persons_follows_or_requests()

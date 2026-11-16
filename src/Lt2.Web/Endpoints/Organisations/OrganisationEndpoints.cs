@@ -48,11 +48,12 @@ internal static class OrganisationEndpoints
     private static async Task<IResult> ListAsync(HttpContext http, string? q, IOrganisations organisations, ErrorMapper errors, CancellationToken cancellationToken) =>
         PublicJson.From(http, errors, Result<OrganisationListResponse>.Success(OrganisationMapping.Map(await organisations.ListAsync(q, cancellationToken))), maxAgeSeconds: 0);
 
-    private static async Task<IResult> ProfileAsync(HttpContext http, string slug, IOrganisations organisations, ErrorMapper errors, CancellationToken cancellationToken)
+    private static async Task<IResult> ProfileAsync(
+        HttpContext http, string slug, IOrganisations organisations, IFollowerCounts followers, ErrorMapper errors, CancellationToken cancellationToken)
     {
         var result = await organisations.ProfileAsync(slug, cancellationToken);
         return result.IsSuccess
-            ? PublicJson.From(http, errors, Result<OrganisationProfileResponse>.Success(OrganisationMapping.Map(result.Value)), maxAgeSeconds: 0)
+            ? PublicJson.From(http, errors, Result<OrganisationProfileResponse>.Success(await OrganisationMapping.MapAsync(result.Value!, followers, cancellationToken)), maxAgeSeconds: 0)
             : errors.ToResult(result.Error!);
     }
 

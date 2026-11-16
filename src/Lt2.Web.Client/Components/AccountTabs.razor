@@ -1,0 +1,24 @@
+@inject IStringLocalizer<UiText> T
+
+@* Design 8.21 (the owner, 2026-11-16: "split into several forms"): the four account screens as a row of plain links under the
+   title, the current one marked, styled like the tabs of "Projektai"; on the ground (design 8.16), no script, so it works
+   before the island starts. Each screen reaches the other three. *@
+<nav class="row tabs project-tabs" aria-label="@T["Parts.Label"]" id="account-parts">
+    @foreach (var (path, key, id) in Screens)
+    {
+        <a href="@path" id="@id" aria-current="@(path == Current ? "page" : null)">@T[key]</a>
+    }
+</nav>
+
+@code {
+    private static readonly (string Path, string Key, string Id)[] Screens =
+    [
+        (AccountScreens.Profile, "Parts.Profile", "part-profile"),
+        (AccountScreens.Follows, "Parts.Follows", "part-follows"),
+        (AccountScreens.Taking, "Parts.Taking", "part-taking"),
+        (AccountScreens.Security, "Parts.Security", "part-security"),
+    ];
+
+    /// <summary>The screen the row stands on: one of <see cref="AccountScreens.All"/>.</summary>
+    [Parameter, EditorRequired] public string Current { get; set; } = AccountScreens.Profile;
+}

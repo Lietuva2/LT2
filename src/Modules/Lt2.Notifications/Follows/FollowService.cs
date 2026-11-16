@@ -25,13 +25,15 @@ internal sealed class FollowService(
     IOrganisationDirectory organisations,
     IMpResponseFeed responses,
     IMpLinks links,
+    IPublicProfiles profiles,
+    IMemberTexts memberTexts,
     ISettings settings,
     IOutbox outbox,
     TimeProvider clock,
     ILogger<FollowService> logger) : IFollows
 {
     /// <summary>The account page, where every follow email links (design 8.11.2: no token link in this round).</summary>
-    public const string AccountPath = "/sveiki#sekami";
+    public const string AccountPath = AccountScreens.FollowsList;
 
     /// <summary>How far back the job looks for stage votes; older ones could only be recorded and skipped.</summary>
     private static readonly TimeSpan VoteLookBack = TimeSpan.FromDays(7);
@@ -53,6 +55,16 @@ internal sealed class FollowService(
         var people = ids.Count == 0 ? new Dictionary<long, MpFacts>() : await mps.MpsAsync(ids, cancellationToken);
         var organisationIds = OrganisationIds(follows);
         var known = await organisations.FindManyAsync(organisationIds, cancellationToken);
+        var memberIds = follows.Where(f => f.Kind == FollowKinds.Member).Select(f => f.Key).ToList();
+        var members = new List<FollowedMember>();
+        foreach (var id in memberIds)
+        {
+            if ((await profiles.FindAsync(id, cancellationToken)).Profile is { } profile)
+            {
+                members.Add(new FollowedMember(profile.ProfileId, profile.DisplayName));
+            }
+        }
+
         return new MyFollows(
             numbers.Select(n => new FollowedBill(
                     facts.GetValueOrDefault(n) ?? new BillFacts(n, n),
@@ -60,7 +72,8 @@ internal sealed class FollowService(
                     votes.GetValueOrDefault(n)))
                 .ToList(),
             ids.Select(id => people.GetValueOrDefault(id)).OfType<MpFacts>().ToList(),
-            organisationIds.Select(id => known.GetValueOrDefault(id)).OfType<OrganisationFacts>().ToList());
+            organisationIds.Select(id => known.GetValueOrDefault(id)).OfType<OrganisationFacts>().ToList(),
+            members);
     }
 
     public async Task<IReadOnlySet<string>> FollowedBillNumbersAsync(Guid userId, CancellationToken cancellationToken)
@@ -95,7 +108,7 @@ internal sealed class FollowService(
     {
         await using var db = await contexts.CreateDbContextAsync(cancellationToken);
         var row = await db.NoticeSettings.AsNoTracking().FirstOrDefaultAsync(n => n.UserId == userId, cancellationToken);
-        return new NoticeSettings(row?.Planned ?? true, row?.Voted ?? true, row?.Statements ?? true, row?.Responses ?? true);
+        return new NoticeSettings(row?.Planned ?? true, row?.Voted ?? true, row?.Statements ?? true, row?.Responses ?? true, row?.Members ?? true);
     }
 
     public async Task<Result<Unit>> SetNoticesAsync(Guid userId, NoticeSettings settings, CancellationToken cancellationToken)
@@ -117,6 +130,7 @@ internal sealed class FollowService(
         row.Voted = settings.Voted;
         row.Statements = settings.Statements;
         row.Responses = settings.Responses;
+        row.Members = settings.Members;
         row.ChangedAt = clock.GetUtcNow();
         await db.SaveChangesAsync(cancellationToken);
         return Result.Ok();
@@ -137,13 +151,28 @@ internal sealed class FollowService(
         return organisation is null ? Result.Ok() : await RemoveAsync(userId, FollowKinds.Organisation, FollowRules.IdKey(organisation.Id), cancellationToken);
     }
 
+    public async Task<Result<Unit>> FollowMemberAsync(Guid userId, string profileId, CancellationToken cancellationToken)
+    {
+        // Only a profile that is public now can be followed (design 8.25.5), and not one's own: the same answer as an unknown id.
+        var (state, profile) = await profiles.FindAsync(profileId, cancellationToken);
+        return state != ProfileIdState.Public || profile is null || profile.UserId == userId
+            ? Error.NotFound("member.not-found")
+            : await AddAsync(userId, FollowKinds.Member, profile.ProfileId, cancellationToken);
+    }
+
+    public async Task<Result<Unit>> UnfollowMemberAsync(Guid userId, string profileId, CancellationToken cancellationToken) =>
+        await RemoveAsync(userId, FollowKinds.Member, profileId, cancellationToken);
+
     public async Task<FollowRunOutcome> RunAsync(DateTimeOffset now, CancellationToken cancellationToken)
     {
         var bills = await RunBillsAsync(now, cancellationToken);
         var statements = await RunStatementsAsync(now, cancellationToken);
         var answers = await RunResponsesAsync(now, cancellationToken);
+        var members = await RunMembersAsync(now, cancellationToken);
         var outcome = new FollowRunOutcome(
-            bills.Recorded + statements.Recorded + answers.Recorded, bills.Sent + statements.Sent + answers.Sent, bills.Emails + statements.Emails + answers.Emails);
+            bills.Recorded + statements.Recorded + answers.Recorded + members.Recorded,
+            bills.Sent + statements.Sent + answers.Sent + members.Sent,
+            bills.Emails + statements.Emails + answers.Emails + members.Emails);
         logger.LogInformation("Follow job: {Recorded} events recorded, {Sent} sent, {Emails} emails", outcome.Recorded, outcome.Sent, outcome.Emails);
         return outcome;
     }
@@ -462,6 +491,93 @@ internal sealed class FollowService(
         return new FollowRunOutcome(fresh.Count, fresh.Count, emails);
     }
 
+    /// <summary>
+    /// Arguments of followed members (design 8.25.5): each recorded once, under its bill (kind <c>member</c>, key the argument's
+    /// id; no person, no text), when the job first sees it public; one email per follower who followed before it became public
+    /// and before the job saw it; nothing older than three days when first seen; nothing when by sending time the argument is no
+    /// longer public or the member's profile is switched off.
+    /// </summary>
+    private async Task<FollowRunOutcome> RunMembersAsync(DateTimeOffset now, CancellationToken cancellationToken)
+    {
+        await using var db = await contexts.CreateDbContextAsync(cancellationToken);
+        var memberFollows = await db.Follows.AsNoTracking().Where(f => f.Kind == FollowKinds.Member).ToListAsync(cancellationToken);
+        var waitingAlready = await db.BillEvents.AsNoTracking().AnyAsync(e => e.Kind == BillEventKinds.Member && e.Outcome == BillEventOutcomes.Waiting, cancellationToken);
+        if (memberFollows.Count == 0 && !waitingAlready)
+        {
+            return new FollowRunOutcome(0, 0, 0);
+        }
+
+        var followersOf = memberFollows.ToLookup(f => f.Key, StringComparer.Ordinal);
+        var shownProfiles = new Dictionary<string, PublicProfileFacts>(StringComparer.Ordinal);
+        foreach (var key in followersOf.Select(g => g.Key))
+        {
+            if ((await profiles.FindAsync(key, cancellationToken)).Profile is { } profile)
+            {
+                shownProfiles[key] = profile;
+            }
+        }
+
+        var byAuthor = shownProfiles.Values.ToDictionary(p => p.UserId);
+        var published = await memberTexts.PublishedSinceAsync(byAuthor.Keys.ToList(), now - StatementLookBack, cancellationToken);
+        var publishedByKey = published.ToDictionary(a => FollowRules.IdKey(a.ReasonId), StringComparer.Ordinal);
+        var keys = publishedByKey.Keys.ToList();
+        await using var transaction = await db.Database.BeginTransactionAsync(cancellationToken);
+        var events = await db.BillEvents
+            .Where(e => e.Kind == BillEventKinds.Member && (keys.Contains(e.Key) || e.Outcome == BillEventOutcomes.Waiting))
+            .ToListAsync(cancellationToken);
+
+        var recorded = 0;
+        foreach (var (key, argument) in publishedByKey)
+        {
+            if (!events.Any(e => e.Key == key))
+            {
+                events.Add(Record(db, argument.BillNumber, BillEventKinds.Member, key, now, FollowRules.MemberArgumentIsSendable(argument.PublishedAt, now)));
+                recorded++;
+            }
+        }
+
+        await db.SaveChangesAsync(cancellationToken);
+
+        var sent = 0;
+        var emails = 0;
+        var waiting = events.Where(e => e.Outcome == BillEventOutcomes.Waiting).OrderBy(e => e.FirstSeen).ToList();
+        var facts = waiting.Count == 0 ? new Dictionary<string, BillFacts>() : await bills.FindManyAsync(waiting.Select(e => e.BillNumber).Distinct().ToList(), cancellationToken);
+        foreach (var e in waiting)
+        {
+            if (publishedByKey.GetValueOrDefault(e.Key) is not { } argument
+                || byAuthor.GetValueOrDefault(argument.AuthorUserId) is not { } author
+                || !await memberTexts.IsPublicAsync(argument.ReasonId, cancellationToken))
+            {
+                // No longer public, or the profile switched off meanwhile: never sent rather than sent late.
+                e.Outcome = BillEventOutcomes.Skipped;
+                continue;
+            }
+
+            var bill = facts.GetValueOrDefault(e.BillNumber) ?? new BillFacts(e.BillNumber, e.BillNumber);
+            emails += await SendAsync(
+                db,
+                followersOf[author.ProfileId].Where(f => FollowRules.IsMemberArgumentRecipient(f.UserId, author.UserId, f.CreatedAt, e.FirstSeen, argument.PublishedAt)),
+                n => n.Members,
+                (person, _) => OutboxMessage.Create(MessageKinds.FollowMemberEmail, new FollowMemberEmail(
+                    person.Email,
+                    author.DisplayName,
+                    bill.Number,
+                    bill.Title,
+                    "/seimas/" + Uri.EscapeDataString(bill.Number) + "#reason-" + argument.ReasonId.ToString("D"),
+                    "/nariai/" + author.ProfileId,
+                    AccountPath)),
+                transaction,
+                cancellationToken);
+            e.Outcome = BillEventOutcomes.Sent;
+            e.SentAt = now;
+            sent++;
+        }
+
+        await db.SaveChangesAsync(cancellationToken);
+        await transaction.CommitAsync(cancellationToken);
+        return new FollowRunOutcome(recorded, sent, emails);
+    }
+
     /// <summary>The answers as the email lists them: by stance ("už", "prieš", "neapsisprendė"), then by last name, as on the bill's page.</summary>
     private static List<FollowedResponse> Listed(
         IEnumerable<PublicResponseFacts> told, IReadOnlyDictionary<long, MpFacts> mpsOf, IReadOnlyDictionary<long, string> factions) =>
@@ -553,7 +669,7 @@ internal sealed class FollowAccountData(IDbContextFactory<NotificationsDb> conte
         var follows = await db.Follows.AsNoTracking().Where(f => f.UserId == userId).OrderBy(f => f.CreatedAt)
             .Select(f => new { kind = f.Kind, key = f.Key, followedAt = f.CreatedAt }).ToListAsync(cancellationToken);
         var notices = await db.NoticeSettings.AsNoTracking().Where(n => n.UserId == userId)
-            .Select(n => new { planned = n.Planned, voted = n.Voted, statements = n.Statements, responses = n.Responses, changedAt = n.ChangedAt }).FirstOrDefaultAsync(cancellationToken);
+            .Select(n => new { planned = n.Planned, voted = n.Voted, statements = n.Statements, responses = n.Responses, members = n.Members, changedAt = n.ChangedAt }).FirstOrDefaultAsync(cancellationToken);
         return new { follows, emails = notices };
     }
 

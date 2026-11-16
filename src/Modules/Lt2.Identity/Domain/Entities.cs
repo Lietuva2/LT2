@@ -59,6 +59,59 @@ internal sealed class Profile
     /// role works only in a session signed in with this passkey. Cleared by a reset.
     /// </summary>
     public byte[]? StaffPasskeyId { get; set; }
+
+    /// <summary>"Apie mane" (design 8.25.3): plain text, shown only on the public profile; null when there is none.</summary>
+    public string? About { get; set; }
+
+    public DateTimeOffset? AboutChangedAt { get; set; }
+
+    /// <summary>A moderator hid the text (design 8.25.6): shown nowhere until the person writes another.</summary>
+    public DateTimeOffset? AboutHiddenAt { get; set; }
+
+    /// <summary>The moderator's statement with the hide, for the moderators' list; emailed to the person.</summary>
+    public string? AboutHiddenStatement { get; set; }
+
+    /// <summary>The id of <c>/nariai/{id}</c> while the public profile is on (design 8.25.1); null while it is off.</summary>
+    public string? PublicProfileId { get; set; }
+
+    public DateTimeOffset? PublicSince { get; set; }
+}
+
+/// <summary>
+/// <c>identity.retired_profile_id</c> (design 8.25.1): an id of a profile switched off or of a deleted account. It is never
+/// issued again and its address answers 410. No account is kept with it.
+/// </summary>
+internal sealed class RetiredProfileId
+{
+    public string Id { get; set; } = "";
+
+    public DateTimeOffset RetiredAt { get; set; }
+}
+
+/// <summary>
+/// <c>identity.profile_report</c> (design 8.25.6): a member reported a public profile ("Apie mane" or impersonation). Kept by
+/// Identity, which owns the profile; open until a moderator acts on the profile. Goes with either account.
+/// </summary>
+internal sealed class ProfileReport
+{
+    public Guid Id { get; set; }
+
+    /// <summary>The account whose profile was reported.</summary>
+    public Guid TargetUserId { get; set; }
+
+    public Guid ReporterUserId { get; set; }
+
+    /// <summary>One of the general report grounds or <c>impersonation</c>.</summary>
+    public string Ground { get; set; } = "";
+
+    public string? Text { get; set; }
+
+    /// <summary><c>open</c>, then <c>closed</c> when a moderator acts on the profile.</summary>
+    public string Status { get; set; } = "open";
+
+    public DateTimeOffset CreatedAt { get; set; }
+
+    public DateTimeOffset? ClosedAt { get; set; }
 }
 
 /// <summary>

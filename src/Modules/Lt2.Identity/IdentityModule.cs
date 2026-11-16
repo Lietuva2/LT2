@@ -133,6 +133,12 @@ public static class IdentityModule
         services.AddSingleton<IParticipants, ParticipantDirectory>();
         services.AddSingleton<IPartySupporters, PartySupporterDirectory>();
         services.AddSingleton<IOrganisationCodeSwitch, Application.Invitations.OrganisationCodeSwitch>();
+
+        // Design 8.25: public profiles (the host composes Notifications' IMemberFollowEnd and Appeals' IWritingRestrictions).
+        services.AddScoped<Application.Profiles.ProfileHandlers>();
+        services.AddScoped<Application.Profiles.ProfileModerationHandlers>();
+        services.AddScoped<IMemberProfiles, Application.Profiles.MemberProfiles>();
+        Microsoft.Extensions.DependencyInjection.Extensions.ServiceCollectionDescriptorExtensions.TryAddSingleton<IPublicProfiles, Application.Profiles.PublicProfileDirectory>(services);
         services.AddScoped<IIdentityModule, IdentityModuleFacade>();
         services.AddScoped<IIdentityMaintenance, MaintenanceHandler>();
         services.AddSingleton<IModuleDatabase, IdentityModuleDatabase>();
@@ -156,6 +162,9 @@ public static class IdentityModule
     {
         services.AddSingleton<IParticipants, ParticipantDirectory>();
         services.AddSingleton<IPartySupporters, PartySupporterDirectory>();
+
+        // Design 8.25: who has a public profile, for the follow emails and the names beside arguments in any host.
+        Microsoft.Extensions.DependencyInjection.Extensions.ServiceCollectionDescriptorExtensions.TryAddSingleton<IPublicProfiles, Application.Profiles.PublicProfileDirectory>(services);
 
         // An organisation's codes follow it when Appeals work in another host closes one (design 8.14.14, stage B).
         services.AddSingleton<IOrganisationCodeSwitch, Application.Invitations.OrganisationCodeSwitch>();
@@ -205,7 +214,13 @@ public static class IdentityModule
             return Task.CompletedTask;
         }
 
-        context.Response.Redirect(context.RedirectUri);
+        // A page that needs a signed-in member (the account screens, design 8.21) sends a visitor to sign in with the page to
+        // come back to after the '#' (design 6.8, 8.11.5: "tikslas"), which the sign-in page accepts only for its own list of
+        // pages; anything else signs in to the account. The page's address is never put in a query.
+        var request = context.Request;
+        context.Response.Redirect(apiStatus == StatusCodes.Status401Unauthorized
+            ? $"{request.Scheme}://{request.Host}{request.PathBase}{SignInPath}#tikslas={Uri.EscapeDataString(request.PathBase + request.Path)}"
+            : context.RedirectUri);
         return Task.CompletedTask;
     }
 }

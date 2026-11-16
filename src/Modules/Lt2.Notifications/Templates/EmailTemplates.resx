@@ -188,4 +188,16 @@
   <data name="MpMail.extra-welcome.Body" xml:space="preserve"><value>Seimo narys patvirtino, kad šiuo adresu siųstume jo suvestinių kopijas. Seimo narys: {0}. Kiekvienoje kopijoje bus nuoroda „Nebegauti kopijų“; ja galite atsisakyti ir dabar: {2}</value></data>
   <data name="MpMail.extra-removed.Subject" xml:space="preserve"><value>Lietuva 2.0: papildomas gavėjas pašalintas</value></data>
   <data name="MpMail.extra-removed.Body" xml:space="preserve"><value>suvestinių kopijos papildomu adresu nebesiunčiamos: {1}. Seimo narys: {0}.</value></data>
+  <data name="Follow.Member.Subject" xml:space="preserve"><value>Lietuva 2.0: {0} paskelbė argumentą dėl {1}</value></data>
+  <data name="Follow.Member.Body" xml:space="preserve"><value>jūsų sekamas narys {0} paskelbė argumentą dėl projekto {1}.</value></data>
+  <data name="Follow.Member.Read" xml:space="preserve"><value>Argumentą ir kitus abiejų pusių argumentus rasite projekto puslapyje: {0}</value></data>
+  <data name="Follow.Member.Profile" xml:space="preserve"><value>Visi nario argumentai – jo profilyje: {0}</value></data>
+  <data name="Follow.Member.Footer" xml:space="preserve"><value>Šį laišką gavote, nes sekate šį narį Lietuva 2.0. Ką sekate ir kokius laiškus gaunate, galite pakeisti savo paskyroje: {0}</value></data>
+  <data name="Profile.about-hidden.Subject" xml:space="preserve"><value>Lietuva 2.0: jūsų „Apie mane“ paslėptas</value></data>
+  <data name="Profile.about-hidden.Body" xml:space="preserve"><value>moderatorius paslėpė jūsų profilio tekstą „Apie mane“. Jis niekur nerodomas, kol neparašysite naujo.</value></data>
+  <data name="Profile.about-restored.Subject" xml:space="preserve"><value>Lietuva 2.0: jūsų „Apie mane“ vėl rodomas</value></data>
+  <data name="Profile.about-restored.Body" xml:space="preserve"><value>moderatorius atkūrė jūsų profilio tekstą „Apie mane“: jis vėl rodomas jūsų viešame profilyje.</value></data>
+  <data name="Profile.Statement" xml:space="preserve"><value>Moderatoriaus paaiškinimas: {0}</value></data>
+  <data name="Profile.Link" xml:space="preserve"><value>Tekstą galite pakeisti savo paskyroje: {0}</value></data>
+  <data name="Profile.Contact" xml:space="preserve"><value>Jei nesutinkate, parašykite moderatoriams: {0}</value></data>
 </root>

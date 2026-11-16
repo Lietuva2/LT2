@@ -20,7 +20,7 @@ public sealed class InvitationFlowTests : E2ETest
         await using var member = await PasskeyBrowser.StartAsync("native", 1280, 800);
         var a = member.Page;
         await PasskeyTests.RegisterAsync(a, "Kviečianti Narė");
-        await a.GotoAsync($"{Base}/sveiki");
+        await a.GotoAsync($"{Base}/sveiki/dalyvavimas");
         var link = a.Locator("#invite-link");
         await Assertions.Expect(link).ToBeVisibleAsync(new() { Timeout = 30_000 });
         await Assertions.Expect(a.Locator("#invite-count")).ToHaveTextAsync("Su jūsų kodu užsiregistravo: 0.");
@@ -62,7 +62,7 @@ public sealed class InvitationFlowTests : E2ETest
         await using var context = await browser.NewContextAsync(new() { JavaScriptEnabled = false, IgnoreHTTPSErrors = true, Locale = "lt-LT" });
         await context.AddCookiesAsync(cookies.Select(c => new Cookie { Name = c.Name, Value = c.Value, Domain = c.Domain, Path = c.Path, Secure = c.Secure, HttpOnly = c.HttpOnly, SameSite = c.SameSite, Expires = c.Expires }));
         var page = await context.NewPageAsync();
-        await page.GotoAsync($"{Base}/sveiki");
+        await page.GotoAsync($"{Base}/sveiki/dalyvavimas");
         await Assertions.Expect(page.Locator("#invite-code")).ToHaveTextAsync(new Regex("^[2-9A-HJKMNP-TV-Z]{4}-[2-9A-HJKMNP-TV-Z]{4}$"));
         await Assertions.Expect(page.Locator("#invite-count")).ToHaveTextAsync("Su jūsų kodu užsiregistravo: 0.");
     }
