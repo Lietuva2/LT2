@@ -229,7 +229,9 @@ pre-merge run found.
   become the message), `Succeeded`/`Show` for an answer, `Valid` for the shared validator, `IsSignedInAsync`, and
   `ErrorClass`/`Invalid`/`DescribedBy` with `<FieldError For="input-id">` for field errors. A text with placeholders is
   `L.Format(key, …)`; numbers and dates are `Display` (`Number`, `Day`, `DayTime`, `Today(TimeProvider)`), on the
-  server pages too; the moderators' contact address is `Configuration.ModeratorContact()`. A link to copy is
+  server pages too; the moderators' contact address is `Configuration.ModeratorContact()`. A link to a part of the
+  same page carries the page's path (`/sveiki#profilis`, never a bare `#profilis`): the pages carry `<base href="/">`, so
+  a bare fragment leads to the front page; `NavigationTests` (integration) walks the served pages and fails on one. A link to copy is
   `<CopyLink>`; "Atkurti" is `<RestoreForm>`; a queued argument is `<QueueReasonItem>`, a queued statement
   `<StatementQueueItem>`; the positions consent before a first side is `<PositionConsentForm>`; the bill page's islands
   share the caller's answers through `MyBillState`, the front page's through `MyAgendaState` (its `Changed` event tells

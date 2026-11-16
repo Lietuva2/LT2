@@ -195,6 +195,119 @@ public sealed partial class NavigationTests(DatabaseFixture database) : ApiTest(
         ]);
     }
 
+    [GeneratedRegex("<(a|form)\\b[^>]*?\\b(href|action)=\"([^\"]*)\"", RegexOptions.IgnoreCase)]
+    private static partial Regex LinkOrForm();
+
+    /// <summary>
+    /// Every page carries <c>&lt;base href="/"&gt;</c>, so a link whose address is only a fragment ("#part") resolves against
+    /// the site's root and leads to the front page, not to a part of the page it is on (the account page's row of parts did).
+    /// A link to a part of the same page carries the page's path ("/sveiki#profilis"). This walks the pages as the server
+    /// renders them, as a visitor, a member, a moderator and an administrator: every routed page without parameters, then the
+    /// site's own links found on them (a few of each kind), and fails on any <c>&lt;a href&gt;</c> or
+    /// <c>&lt;form action&gt;</c> that starts with "#". SVG references (<c>&lt;use href&gt;</c>) are no navigation and are
+    /// not looked at.
+    /// </summary>
+    [Fact]
+    public async Task No_served_page_has_a_link_whose_address_is_only_a_fragment()
+    {
+        using var visitor = NewBrowser();
+        var (member, _) = await Factory.MemberAsync();
+        using var _m = member;
+        var moderator = await ModeratorAsync();
+        var administrator = await AdministratorAsync();
+
+        var seeds = new[] { typeof(Lt2.Web.Client.Pages.Hello).Assembly, typeof(Lt2.Web.Security.BrowserStorage).Assembly }
+            .SelectMany(a => a.GetTypes())
+            .SelectMany(t => t.GetCustomAttributes(typeof(Microsoft.AspNetCore.Components.RouteAttribute), false))
+            .Select(r => ((Microsoft.AspNetCore.Components.RouteAttribute)r).Template)
+            .Where(t => !t.Contains('{', StringComparison.Ordinal))
+            .Select(t => "/" + t.TrimStart('/'))
+            .Distinct()
+            .Order(StringComparer.Ordinal)
+            .ToList();
+        seeds.ShouldContain("/sveiki");
+
+        var offenders = new List<string>();
+        var visited = new Dictionary<string, HashSet<string>>();
+        foreach (var (who, browser) in new[] { ("visitor", visitor), ("member", member), ("moderator", moderator.Browser), ("administrator", administrator.Browser) })
+        {
+            var seen = new HashSet<string>(StringComparer.Ordinal);
+            var perKind = new Dictionary<string, int>(StringComparer.Ordinal);
+            var queue = new Queue<string>(seeds);
+            seen.UnionWith(seeds);
+            var read = new HashSet<string>(StringComparer.Ordinal);
+            while (queue.Count > 0 && read.Count < 250)
+            {
+                var path = queue.Dequeue();
+                using var response = await browser.Client.GetAsync(path);
+                if (response.Headers.Location is { } location && Internal(location.OriginalString) is { } target && seen.Add(target))
+                {
+                    queue.Enqueue(target);
+                }
+
+                if (response.StatusCode != HttpStatusCode.OK || response.Content.Headers.ContentType?.MediaType != "text/html")
+                {
+                    continue;
+                }
+
+                read.Add(path);
+                var html = await response.Content.ReadAsStringAsync();
+                foreach (Match link in LinkOrForm().Matches(html))
+                {
+                    var address = WebUtility.HtmlDecode(link.Groups[3].Value);
+                    if (address.StartsWith('#'))
+                    {
+                        offenders.Add($"{who} {path}: <{link.Groups[1].Value} {link.Groups[2].Value}=\"{address}\">");
+                        continue;
+                    }
+
+                    // Follow a few of each kind of the site's own pages (a bill, an MP, a vote …), not every one of them.
+                    if (Internal(address) is { } next && !seen.Contains(next))
+                    {
+                        var kind = Kind(next);
+                        var count = perKind.GetValueOrDefault(kind);
+                        if (count < 3)
+                        {
+                            perKind[kind] = count + 1;
+                            seen.Add(next);
+                            queue.Enqueue(next);
+                        }
+                    }
+                }
+            }
+
+            visited[who] = read;
+        }
+
+        // The sweep must be able to fail: it read the account page as the member, with its row of parts.
+        visited["member"].ShouldContain("/sveiki");
+        (await member.Client.GetStringAsync("/sveiki")).ShouldContain("id=\"account-parts\"");
+        visited["visitor"].ShouldContain("/");
+        visited["moderator"].ShouldContain("/moderavimas");
+        offenders.ShouldBeEmpty($"pages read: {string.Join(", ", visited.Select(v => v.Key + " " + v.Value.Count))}");
+
+        static string? Internal(string address)
+        {
+            if (!address.StartsWith('/') || address.StartsWith("//", StringComparison.Ordinal))
+            {
+                return null;
+            }
+
+            var path = address.Split('#')[0];
+            var bare = path.Split('?')[0];
+            return bare.StartsWith("/api/", StringComparison.Ordinal) || bare.StartsWith("/_", StringComparison.Ordinal)
+                || bare.Split('/')[^1].Contains('.', StringComparison.Ordinal)
+                ? null
+                : path;
+        }
+
+        static string Kind(string path)
+        {
+            var segments = path.Split('?')[0].Split('/', StringSplitOptions.RemoveEmptyEntries);
+            return (segments.Length > 0 ? segments[0] : "") + "/" + segments.Length;
+        }
+    }
+
     [Fact]
     public void The_inventory_names_the_cookies_the_code_configures()
     {

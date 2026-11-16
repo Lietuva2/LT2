@@ -354,8 +354,9 @@ public sealed class SignInComponentTests : BunitContext
         SignedIn(FakeMeApi.Member);
         var page = Render<Hello>();
 
+        // The pages carry <base href="/">, so a bare "#profilis" would lead to the front page: each link carries the page's path.
         page.FindAll("#account-parts a").Select(a => a.GetAttribute("href"))
-            .ShouldBe(["#profilis", "#sekimas-ir-laiskai", "#dalyvavimas", "#saugumas-ir-duomenys"]);
+            .ShouldBe(["/sveiki#profilis", "/sveiki#sekimas-ir-laiskai", "/sveiki#dalyvavimas", "/sveiki#saugumas-ir-duomenys"]);
         page.FindAll("#account-parts a").Select(a => a.TextContent)
             .ShouldBe([Text("Parts.Profile"), Text("Parts.Follows"), Text("Parts.Taking"), Text("Parts.Security")]);
         foreach (var part in new[] { "profilis", "sekimas-ir-laiskai", "dalyvavimas", "saugumas-ir-duomenys" })
