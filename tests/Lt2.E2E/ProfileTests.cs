@@ -60,6 +60,14 @@ public sealed partial class ProfileTests : E2ETest
         await name.HoverAsync();
         await Assertions.Expect(other.Locator("#lt2-card")).ToContainTextAsync("Mokytoja iš Kauno", new() { Timeout = 5_000 });
         await E2ESteps.ShootBothAsync(other, Shots, "card");
+
+        // After the island has started too (it re-renders the card's template): the card still holds the name (browser look,
+        // 2026-11-16: it was empty once the island ran).
+        await Assertions.Expect(other.Locator("#add-reason")).ToBeEnabledAsync(new() { Timeout = E2ESteps.Slow });
+        await other.Mouse.MoveAsync(0, 0);
+        await other.Keyboard.PressAsync("Escape");
+        await name.HoverAsync();
+        await Assertions.Expect(other.Locator("#lt2-card")).ToContainTextAsync("Profilio Autorė", new() { Timeout = 5_000 });
         await name.ClickAsync();
         await other.WaitForURLAsync(new Regex(Regex.Escape(address) + "$"), new() { Timeout = E2ESteps.Slow });
         var follow = other.Locator("#follow-toggle-member");

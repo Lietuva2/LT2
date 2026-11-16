@@ -10,7 +10,8 @@ namespace Lt2.Api.Contracts.Me;
 public static class TermsExemptions
 {
     /// <summary>
-    /// Accepting, signing out and deleting the account (design 8.22.2), and the MP's mail links (design 8.19.4), which act for
+    /// Accepting, signing out and deleting the account (design 8.22.2), withdrawing what the member consented to (switching the
+    /// public profile off, the positions and party support consents; owner, 2026-11-17), and the MP's mail links (design 8.19.4), which act for
     /// whoever holds the link's token, not for the account signed in, and are used by people without an account. Method and
     /// route template exactly as mapped.
     /// </summary>
@@ -19,6 +20,11 @@ public static class TermsExemptions
         ("PUT", ApiRoutes.Me.Terms),
         ("POST", ApiRoutes.Auth.SignOut),
         ("DELETE", ApiRoutes.Me.Root),
+
+        // Withdrawals (owner, 2026-11-17): switching the public profile off, the positions consent, the party support consent.
+        ("DELETE", ProfileRoutes.MinePublic),
+        ("DELETE", ApiRoutes.Me.PositionConsent),
+        ("DELETE", ApiRoutes.Me.PartySupport),
         ("PUT", MpMailRoutes.Token),
         ("POST", MpMailRoutes.Renew),
         ("PUT", MpMailRoutes.Extra),

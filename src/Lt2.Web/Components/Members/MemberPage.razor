@@ -32,7 +32,6 @@ else if (_profile is { } p)
         <div class="stack stack--loose">
             <section class="sheet stack" aria-labelledby="member-name" id="member">
                 <h1 id="member-name">@p.DisplayName</h1>
-                <Lt2.Web.Client.Components.FollowerLine Count="p.Followers" />
                 @if (p.About is { } about)
                 {
                     <div class="stack stack--tight" id="member-about">
@@ -43,7 +42,7 @@ else if (_profile is { } p)
                     </div>
                 }
                 <Lt2.Web.Client.Components.NeedsScript />
-                <FollowButton Kind="member" Key="@p.ProfileId" @rendermode="InteractiveWebAssembly" />
+                <FollowButton Kind="member" Key="@p.ProfileId" Followers="p.Followers" @rendermode="InteractiveWebAssembly" />
                 <ReportMember ProfileId="@p.ProfileId" Contact="@Contact" @rendermode="InteractiveWebAssembly" />
             </section>
 

@@ -71,11 +71,12 @@ internal sealed class ProfileHandlers(
         var actor = new Actor(userId, Roles.Member, ipHash);
         var dbTransaction = transaction.GetDbTransaction();
 
-        // "Apie mane": the text is for others to read, so a writing restriction blocks changing it (design 8.25.3); an
-        // existing text stays. A new text replaces a hidden one and shows at once (design 8.25.6).
+        // "Apie mane": the text is for others to read, so a writing restriction blocks writing or changing it (design 8.25.3);
+        // clearing it is erasure, not writing, and stays open (owner, 2026-11-17). A new text replaces a hidden one and shows at
+        // once (design 8.25.6).
         if (ProfileRules.IsAboutChange(profile.About, change.About))
         {
-            if (await restrictions.IsRestrictedAsync(userId, cancellationToken))
+            if (ProfileRules.About(change.About) is not null && await restrictions.IsRestrictedAsync(userId, cancellationToken))
             {
                 return Error.Forbidden("writing.restricted");
             }
@@ -121,6 +122,36 @@ internal sealed class ProfileHandlers(
         }
 
         await db.SaveChangesAsync(cancellationToken);
+        await transaction.CommitAsync(cancellationToken);
+        return await StateAsync(profile, cancellationToken);
+    }
+
+    /// <summary>
+    /// "Viešas profilis" off and nothing else (design 8.25.1, owner 2026-11-17): the route a member behind on the terms and a
+    /// restricted member may use too. Changes nothing when the profile is off already.
+    /// </summary>
+    public async Task<Result<MyProfileState>> SwitchOffOwnAsync(ClaimsPrincipal principal, string? ipHash, CancellationToken cancellationToken)
+    {
+        if (principal.UserId() is not { } userId)
+        {
+            return Error.Unauthorized("auth.required");
+        }
+
+        await using var transaction = await db.Database.BeginTransactionAsync(cancellationToken);
+        await IdentityLocks.ProfileAsync(db, userId, cancellationToken);
+        if (await db.Profiles.FirstOrDefaultAsync(p => p.UserId == userId, cancellationToken) is not { IsPending: false } profile)
+        {
+            return Error.Unauthorized("auth.required");
+        }
+
+        if (profile.PublicProfileId is not null)
+        {
+            var now = clock.GetUtcNow();
+            await SwitchOffAsync(profile, now, transaction.GetDbTransaction(), cancellationToken);
+            await events.RecordAsync(transaction.GetDbTransaction(), "profile.public-off", userId, new Actor(userId, Roles.Member, ipHash), null, null, cancellationToken);
+            await db.SaveChangesAsync(cancellationToken);
+        }
+
         await transaction.CommitAsync(cancellationToken);
         return await StateAsync(profile, cancellationToken);
     }

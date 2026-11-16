@@ -53,7 +53,13 @@
     var template = document.getElementById(link.getAttribute('data-card'));
     if (!(template instanceof HTMLTemplateElement)) return;
     ensurePanel();
-    panel.replaceChildren(template.content.cloneNode(true));
+    // Server-rendered, the card is the template's content; once an island has re-rendered it, Blazor writes the children as
+    // the template element's own child nodes (the content stays empty). Either way they are never in the accessible tree
+    // (a template is not rendered); the open card is the one copy that is.
+    var source = template.content.childNodes.length > 0 ? template.content : template;
+    var copy = document.createDocumentFragment();
+    source.childNodes.forEach(function (node) { copy.appendChild(node.cloneNode(true)); });
+    panel.replaceChildren(copy);
     current = link;
     link.setAttribute('aria-describedby', panel.id);
     if (!panel.matches(':popover-open')) panel.showPopover();

@@ -42,7 +42,7 @@ internal sealed partial class RuleBasedPreScreening : IPreScreening
         {
             flags.Add(ScreeningFlags.PersonalCode);
         }
-        else if (PhonePattern().Matches(text).Any(m => DigitCount(m.Value) is >= 8 and <= 12))
+        else if (ContainsPhoneNumber(text))
         {
             flags.Add(ScreeningFlags.Phone);
         }
@@ -60,14 +60,32 @@ internal sealed partial class RuleBasedPreScreening : IPreScreening
 
     public static bool IsPersonalCode(string digits) => Lt2.SharedKernel.PersonalCodes.Is(digits);
 
-    private static int DigitCount(string value) => value.Count(char.IsAsciiDigit);
+    /// <summary>
+    /// A Lithuanian phone number (owner, 2026-11-17): the 8-digit national number, which starts with 3–9 (a mobile 6xx xxxxx,
+    /// Vilnius 5 xxx xxxx, another area's 2-digit code and 6 digits, the 7xx and 8xx services), written internationally after
+    /// <c>+370</c> or <c>00370</c>, nationally after the trunk prefix <c>0</c> in use since 2025, or after the old prefix
+    /// <c>8</c> people still write; spaces, hyphens and brackets may stand between the digits. Nothing else: not a date, a
+    /// year span, a sum, a law's or a document's number, a percentage, nor digits inside an <c>https://</c> or <c>http://</c>
+    /// link.
+    /// </summary>
+    public static bool ContainsPhoneNumber(string text)
+    {
+        ArgumentNullException.ThrowIfNull(text);
+        return PhonePattern().IsMatch(LinkAddress().Replace(text, " "));
+    }
 
     [GeneratedRegex(@"[\p{L}\p{N}._%+-]+@[\p{L}\p{N}.-]+\.\p{L}{2,}", RegexOptions.CultureInvariant)]
     private static partial Regex EmailPattern();
 
-    // A run of digits with the separators people put in phone numbers, optionally with a leading +.
-    [GeneratedRegex(@"(?<![\p{N}])\+?\d[\d\s().-]{6,16}\d(?![\p{N}])", RegexOptions.CultureInvariant)]
+    // +370 / 00370, or the trunk prefix 0 or 8, then the national number's eight digits (the first 3–9); not inside a longer
+    // run of digits on either side (a sum such as "25 000 000" or "1 234 567" starts after a digit).
+    [GeneratedRegex(
+        @"(?<![\p{N}][\s\-.,/]?)(?<![\p{L}])(?:(?:\+|00)\s*370|\(?[08])[\s\-()]*[3-9](?:[\s\-()]*\d){7}(?![\s\-.,/]?\d)",
+        RegexOptions.CultureInvariant)]
     private static partial Regex PhonePattern();
+
+    [GeneratedRegex(@"https?://\S+", RegexOptions.CultureInvariant | RegexOptions.IgnoreCase)]
+    private static partial Regex LinkAddress();
 
     [GeneratedRegex(@"(https?://|www\.)\S+|\b[\p{L}\p{N}-]+\.(lt|com|eu|org|net|info|io|de|ru|lv|ee|pl|uk|me|tv|co|app)\b(/\S*)?", RegexOptions.CultureInvariant | RegexOptions.IgnoreCase)]
     private static partial Regex LinkPattern();

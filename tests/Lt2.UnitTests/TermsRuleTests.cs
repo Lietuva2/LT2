@@ -86,10 +86,13 @@ public sealed class TermsRuleTests
 public sealed class TermsExemptionTests
 {
     [Fact]
-    public void Only_accepting_signing_out_deleting_and_the_mps_mail_links_are_exempt() =>
+    public void Only_accepting_signing_out_deleting_withdrawals_and_the_mps_mail_links_are_exempt() =>
         TermsExemptions.Routes.Select(r => $"{r.Method} {r.Route}").Order(StringComparer.Ordinal).ShouldBe(
         [
             "DELETE /api/v1/me",
+            "DELETE /api/v1/me/consents/positions",
+            "DELETE /api/v1/me/party-support",
+            "DELETE /api/v1/me/profile/public",
             "DELETE /api/v1/mp-mail/{token}/extra",
             "POST /api/v1/auth/sign-out",
             "POST /api/v1/mp-mail/extra/confirm",

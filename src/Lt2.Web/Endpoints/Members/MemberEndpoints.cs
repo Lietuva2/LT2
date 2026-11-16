@@ -33,6 +33,11 @@ internal static class MemberEndpoints
             .WithValidation<ProfileRequest>().RequireRateLimiting(RateLimitPolicies.WriteReason)
             .Produces<MyProfileResponse>().ProducesProblem(StatusCodes.Status400BadRequest).ProducesProblem(StatusCodes.Status409Conflict);
 
+        api.MapDelete(ApiEndpoints.Relative(ProfileRoutes.MinePublic), async (ClaimsPrincipal user, HttpContext context, IpHasher ip, IMemberProfiles profiles, ErrorMapper errors, CancellationToken ct) =>
+                Ok(await profiles.SwitchOffAsync(user, ip.Hash(context), ct), ProfileMapping.Map, errors))
+            .WithName("SwitchMyProfileOff").WithTags("Me").RequireAuthorization(Policies.Member)
+            .Produces<MyProfileResponse>();
+
         api.MapGet(ApiEndpoints.Relative(ProfileRoutes.Member), async (string id, HttpContext http, MemberReads reads, ErrorMapper errors, CancellationToken ct) =>
                 NoCache(http, Ok(await reads.MemberAsync(id, ct), x => x, errors)))
             .WithName("GetMember").WithTags("Members").AllowAnonymous()

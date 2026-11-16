@@ -85,6 +85,9 @@ public static class ProfileLimits
 public static class ProfileRoutes
 {
     public const string Mine = ApiRoutes.Prefix + "/me/profile";
+
+    /// <summary><c>DELETE</c>: "Viešas profilis" off, nothing else changed (design 8.25.1; open behind the terms, 8.22.2).</summary>
+    public const string MinePublic = Mine + "/public";
     public const string Member = ApiRoutes.Prefix + "/members/{id}";
     public const string Texts = ApiRoutes.Prefix + "/members/{id}/texts";
     public const string Follow = ApiRoutes.Prefix + "/members/{id}/follow";

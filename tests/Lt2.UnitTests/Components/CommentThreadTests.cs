@@ -68,6 +68,7 @@ public sealed class CommentThreadTests : BunitContext
         markup.ShouldNotContain("href=\"http://kitas.pavyzdys.test\"");
         thread.Find($"#{CommentLimits.ElementId(PersonComment)}-agreed").TextContent.ShouldBe("Sutinka: Tomas, Lietuva 2.0 naudotojas ir dar 1");
         thread.Find($"#{CommentLimits.ElementId(OrganisationComment)} .tag").TextContent.ShouldBe("Organizacija");
+        thread.Find($"#{CommentLimits.ElementId(OrganisationComment)} .comment__label").TextContent.ShouldBe("Nepatvirtinta", "the organisation's label beside its name (design 8.23.2)");
         thread.Find($"#{CommentLimits.ElementId(MpComment)} a.comment__name").GetAttribute("href").ShouldBe("/p/jonas-petraitis");
         thread.Find($"#{CommentLimits.ElementId(MpComment)} .tag").TextContent.ShouldBe("Seimo narys arba jo biuras");
         thread.FindAll("button[id$='-agree'], button[id$='-delete']").ShouldBeEmpty("no member's controls for a visitor");

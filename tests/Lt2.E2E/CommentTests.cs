@@ -39,6 +39,10 @@ public sealed partial class CommentTests(AppealFlowTests.ModeratorFixture modera
             comment = await WriteAsync(writer.Page, reason, "Argumentui trūksta skaičių: kiek tai kainuotų? (E2E)");
             await E2ESteps.ShootBothAsync(writer.Page, Shots, "reason-written", writer.Page.Locator($"#aptarimas-{reason:N}"));
 
+        // At 1280 an open "Aptarimas" reads in the page's width, not in a side's column (browser look of 2026-11-16).
+        var box = await writer.Page.Locator($"#aptarimas-{reason:N}").BoundingBoxAsync();
+        box.ShouldNotBeNull().Width.ShouldBeGreaterThan(600f, "the sides stand one above the other while a discussion is open");
+
             await AgreeAsync(reader.Page, reason, comment);
             await E2ESteps.NoSidewaysScrollAsync(reader.Page, "the bill's page with a comment at 390 px");
             var (reported, reportBody) = await E2ESteps.ApiAsync(reader.Page, "POST", "/api/v1/reports", new { targetKind = "comment", targetId = comment, ground = "other", text = "Bandymas (E2E)." });

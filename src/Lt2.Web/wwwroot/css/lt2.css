@@ -705,6 +705,10 @@ body { padding-block-end: 4.5rem; }
 .said__actions:has(.report-visitor[open]) { flex-wrap: wrap; white-space: normal; }
 @media (max-width: 64rem) { .pair--reasons { grid-template-columns: minmax(0, 1fr); } }
 
+/* Design 8.23.6: an open "Aptarimas" needs the page's width, not a side's column: while one is open the two sides stand one
+   above the other, as on a phone, and the discussion reads in full width under its argument. */
+.pair--reasons:has(details.comments[open]) { grid-template-columns: minmax(0, 1fr); }
+
 /* The agenda (design 8.11.1): a bill's number tag inside a row keeps the tag's light-on-dark text, not the row link's ink. */
 .rows__main a.tag--ink { color: var(--sheet); font-weight: 600; }
 /* The share line (design 8.11.5): a long invitation link wraps instead of widening the page. */
@@ -916,7 +920,11 @@ body { padding-block-end: 4.5rem; }
 a.said__name { color: inherit; font-weight: 700; }
 
 /* Design 8.25.2: a member's argument on their page, and the follower line (design 8.11.2). */
-.member-text { display: flex; flex-direction: column; gap: var(--sp-2); }
+.rows > li.member-text { display: flex; flex-direction: column; gap: var(--sp-2); }
+
+/* "Sekti" / "Nebesekti" is an action, not a state to underline like a chosen tab (browser look, 2026-11-16): one rule for
+   every page that has it (a bill, an MP, an organisation, a member). */
+.follow .btn[aria-pressed="true"] { box-shadow: none; }
 .followers { display: inline-flex; gap: var(--sp-2); align-items: baseline; }
 /* Design 8.23.6: "Aptarimas" lies on its target's sheet, below it and set in; the list is not a sheet, the writing box a quiet one. */
 .comments { margin-left: var(--sp-5); }

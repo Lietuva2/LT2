@@ -377,6 +377,9 @@ public interface IMemberProfiles
     /// </summary>
     Task<Result<MyProfileState>> ChangeAsync(ClaimsPrincipal user, ProfileChange change, string? ipHash, CancellationToken cancellationToken);
 
+    /// <summary>"Viešas profilis" off and nothing else (design 8.25.1): open behind the terms (8.22.2) and under a writing restriction.</summary>
+    Task<Result<MyProfileState>> SwitchOffAsync(ClaimsPrincipal user, string? ipHash, CancellationToken cancellationToken);
+
     /// <summary>
     /// A member reports a public profile: <c>member.not-found</c> for an id that is not public, <c>report.ground</c>,
     /// <c>report.too-long</c>, <c>member.required</c>; reporting again while one is open changes nothing.

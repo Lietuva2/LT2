@@ -197,7 +197,7 @@
   <data name="TermsAccept.Accept" xml:space="preserve"><value>Sutinku</value></data>
   <data name="TermsAccept.Leave.Before" xml:space="preserve"><value>Kol nesutinkate, galite skaityti, atsisiųsti savo duomenis ir ištrinti paskyrą:</value></data>
   <data name="TermsAccept.Leave.Link" xml:space="preserve"><value>Jūsų duomenys</value></data>
-  <data name="Hello.TermsRequired" xml:space="preserve"><value>Kol nesutikote su naudojimo taisyklėmis, galite tik skaityti, atsisiųsti savo duomenis ir ištrinti paskyrą.</value></data>
+  <data name="Hello.TermsRequired" xml:space="preserve"><value>Kol nesutikote su naudojimo taisyklėmis, galite tik skaityti, atsisiųsti savo duomenis, atšaukti duotus sutikimus (ir išjungti viešą profilį) ir ištrinti paskyrą.</value></data>
   <data name="Hello.TermsLink" xml:space="preserve"><value>Peržiūrėti ir sutikti</value></data>
   <data name="StaffKey.PageTitle" xml:space="preserve"><value>Darbuotojo prieigos raktas · Lietuva 2.0</value></data>
   <data name="StaffKey.Title" xml:space="preserve"><value>Prisijungti darbuotojo prieigos raktu</value></data>

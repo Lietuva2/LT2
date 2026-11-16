@@ -93,6 +93,9 @@ internal sealed class MemberProfiles(ProfileHandlers own, ProfileModerationHandl
 {
     public Task<Result<MyProfileState>> MineAsync(ClaimsPrincipal user, CancellationToken cancellationToken) => own.MineAsync(user, cancellationToken);
 
+    public Task<Result<MyProfileState>> SwitchOffAsync(ClaimsPrincipal user, string? ipHash, CancellationToken cancellationToken) =>
+        own.SwitchOffOwnAsync(user, ipHash, cancellationToken);
+
     public Task<Result<MyProfileState>> ChangeAsync(ClaimsPrincipal user, ProfileChange change, string? ipHash, CancellationToken cancellationToken) =>
         own.ChangeAsync(user, change, ipHash, cancellationToken);
 

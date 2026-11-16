@@ -304,6 +304,11 @@
                     <b class="comment__name">@a.Name</b>
                 }
                 <span class="tag">@L["Comments.Mark.Organisation"]</span>
+                @if (a.Label is { } label)
+                {
+                    @* Design 8.23.2: the organisation's label (8.14.3) beside its name. *@
+                    <span class="small comment__label">@Lt2.Web.Client.Organisations.OrganisationWords.LabelText(L, label)</span>
+                }
                 break;
             case "mp":
                 if (a.Mp is { Slug.Length: > 0 } mp)
