@@ -11,7 +11,7 @@ namespace Lt2.E2E;
 /// <c>clientExtensionResults</c> or throws: ASP.NET Core Identity requires that property, so the page must not rely on
 /// <c>toJSON()</c>.
 /// </summary>
-public sealed partial class PasskeyTests
+public sealed partial class PasskeyTests : E2ETest
 {
     /// <summary>How <c>navigator.credentials</c> behaves in the browser.</summary>
     public static TheoryData<string> Browsers() => new("native", "password-manager-without-extension-results", "password-manager-toJSON-throws");
@@ -149,6 +149,7 @@ public sealed partial class PasskeyTests
         await SignUpTests.WaitForInteractivityAsync(page);
         await page.GetByRole(AriaRole.Button, new() { Name = "Prisijungti prieigos raktu" }).ClickAsync();
         await page.WaitForURLAsync(new Regex("/sveiki$"));
+        await TestAccounts.SessionOfAsync(page.Context);
     }
 
     internal static async Task<JsonElement> MeAsync(IPage page) =>
@@ -268,6 +269,10 @@ internal sealed class PasskeyBrowser : IAsyncDisposable
 
     public async ValueTask DisposeAsync()
     {
+        // The session the browser ends with, for deleting its account after the test (TestAccounts), and its last screen,
+        // kept if the test failed.
+        await TestAccounts.SessionOfAsync(Page.Context);
+        await E2ETest.KeepScreenAsync(Page);
         await _browser.DisposeAsync();
         _playwright.Dispose();
     }

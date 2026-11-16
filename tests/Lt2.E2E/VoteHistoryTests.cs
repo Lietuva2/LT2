@@ -9,7 +9,7 @@ namespace Lt2.E2E;
 /// the search and "Iki" are a plain GET form that works with JavaScript off; nothing scrolls sideways at 390 px. Paging and
 /// the 300 cap need more votes than the stand-in has: the integration tests seed their own.
 /// </summary>
-public sealed partial class VoteHistoryTests
+public sealed partial class VoteHistoryTests : E2ETest
 {
     private static string Base => SignUpTests.BaseUrl!.TrimEnd('/');
 

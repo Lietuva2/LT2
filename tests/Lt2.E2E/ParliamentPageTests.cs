@@ -9,7 +9,7 @@ namespace Lt2.E2E;
 ///
 /// Runs only when <c>LT2_E2E_BASE_URL</c> is set (see <see cref="SignUpTests"/>).
 /// </summary>
-public sealed class ParliamentPageTests
+public sealed class ParliamentPageTests : E2ETest
 {
     private static readonly (string Name, string Path, string Heading)[] Pages =
     [
@@ -85,6 +85,13 @@ public sealed class ParliamentPageTests
         await session.Context.Tracing.StopAsync();
     }
 
+    /// <summary>
+    /// The page is at an address matching <paramref name="pattern"/>, polled. With scripts off, <c>WaitForURLAsync</c> once waited
+    /// its 30 s for a "load" that had fired 35 ms after the click (2026-11-16, the network log above); the checks after this wait
+    /// for the page's content themselves.
+    /// </summary>
+    private static Task AtAsync(IPage page, string pattern) =>
+        Assertions.Expect(page).ToHaveURLAsync(new System.Text.RegularExpressions.Regex(pattern), new() { Timeout = E2ESteps.Slow });
     private static async Task WithoutJavaScriptAsync(IPage page)
     {
         foreach (var (name, path, heading) in Pages)
@@ -99,7 +106,7 @@ public sealed class ParliamentPageTests
         await page.GotoAsync(SignUpTests.BaseUrl + "/seimo-nariai");
         await page.GetByLabel("Frakcija").SelectOptionAsync(new SelectOptionValue { Label = "Pilietinės sąjungos frakcija" });
         await page.GetByRole(AriaRole.Button, new() { Name = "Rodyti" }).ClickAsync();
-        await page.WaitForURLAsync("**/seimo-nariai?*frakcija=pilietines-sajungos-frakcija*");
+        await AtAsync(page, @"/seimo-nariai\?.*frakcija=pilietines-sajungos-frakcija");
         await Assertions.Expect(page.GetByRole(AriaRole.Status)).ToHaveTextAsync("Rasta: 3");
         await Assertions.Expect(page.GetByRole(AriaRole.Link, new() { Name = "Ona Jonaitienė" })).ToBeVisibleAsync();
 
@@ -113,18 +120,18 @@ public sealed class ParliamentPageTests
         var ballotSearch = page.Locator("#ballot-search");
         await ballotSearch.GetByLabel("Vardas ar pavardė").FillAsync("azuol");
         await ballotSearch.GetByRole(AriaRole.Button, new() { Name = "Rodyti", Exact = true }).ClickAsync();
-        await page.WaitForURLAsync("**/seimas/balsavimai/99100002?q=azuol*#balsai");
+        await AtAsync(page, @"/seimas/balsavimai/99100002\?q=azuol[^#]*#balsai$");
         await Assertions.Expect(page.Locator("#ballot-rows > li")).ToHaveCountAsync(1);
         await Assertions.Expect(page.Locator("#ballot-rows")).ToContainTextAsync("Marius Ąžuolaitis");
         await page.Locator("#ballot-clear").ClickAsync();
-        await page.WaitForURLAsync("**/seimas/balsavimai/99100002#balsai");
+        await AtAsync(page, @"/seimas/balsavimai/99100002#balsai$");
         await page.Locator("#ballots-pries").ClickAsync();
-        await page.WaitForURLAsync("**/seimas/balsavimai/99100002?balsas=pries#balsai");
+        await AtAsync(page, @"/seimas/balsavimai/99100002\?balsas=pries#balsai$");
         await Assertions.Expect(page.Locator("#ballot-rows > li")).ToHaveCountAsync(6);
         await Assertions.Expect(page.Locator("#ballots-shown")).ToHaveTextAsync("Rodoma 6 iš 6");
         await ballotSearch.GetByLabel("Frakcija").SelectOptionAsync(new SelectOptionValue { Label = "Pilietinės sąjungos frakcija" });
         await ballotSearch.GetByRole(AriaRole.Button, new() { Name = "Rodyti", Exact = true }).ClickAsync();
-        await page.WaitForURLAsync("**/seimas/balsavimai/99100002?*frakcija=pilietines-sajungos-frakcija*#balsai");
+        await AtAsync(page, @"/seimas/balsavimai/99100002\?[^#]*frakcija=pilietines-sajungos-frakcija[^#]*#balsai$");
         await Assertions.Expect(page.Locator("#ballot-rows > li")).ToHaveCountAsync(3);
         await Assertions.Expect(page.Locator("#ballots-pries")).ToHaveAttributeAsync("aria-current", "true");
         await Assertions.Expect(page.Locator("#ballots-shown")).ToHaveTextAsync("Rodoma 3 iš 3");
@@ -229,6 +236,7 @@ public sealed class ParliamentPageTests
 
         public async ValueTask DisposeAsync()
         {
+            await E2ETest.KeepScreenAsync(Page);
             await _context.DisposeAsync();
             await _browser.DisposeAsync();
             _playwright.Dispose();

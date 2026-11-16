@@ -10,7 +10,7 @@ namespace Lt2.E2E;
 /// notice as pages (screenshots at 1280 and 390 px to <c>output/terms</c>); and nothing kept in the browser outside the
 /// inventory the privacy notice lists (8.22.1), for a visitor and for a member.
 /// </summary>
-public sealed class TermsTests
+public sealed class TermsTests : E2ETest
 {
     private static string Shots => Path.Combine("output", "terms");
 

@@ -8,7 +8,7 @@ namespace Lt2.E2E;
 /// 390 and 1280 px in both themes, for a visitor and a member; the three tabs of "Projektai" reaching each other; the account
 /// item with the keyboard, its name and links filled in the browser only. Screenshots go to <c>output/menu</c>.
 /// </summary>
-public sealed class MenuTests
+public sealed class MenuTests : E2ETest
 {
     private static readonly int[] Widths = [360, 390, 1280];
 

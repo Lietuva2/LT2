@@ -7,7 +7,7 @@ namespace Lt2.E2E;
 /// Design 8.11.7, 8.12 against the running stack: the agenda reads without JavaScript on a phone, a member finds a bill
 /// open at once and follows it, and the share link lands a new member on the bill while a link off the site is ignored.
 /// </summary>
-public sealed partial class ReasonsToComeTests
+public sealed partial class ReasonsToComeTests : E2ETest
 {
     private static string Base => SignUpTests.BaseUrl!.TrimEnd('/');
 

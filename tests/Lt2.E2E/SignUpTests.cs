@@ -9,12 +9,14 @@ namespace Lt2.E2E;
 ///
 /// Runs only when <c>LT2_E2E_BASE_URL</c> is set, for example:
 ///   LT2_E2E_BASE_URL=https://lt2.localhost:8443  LT2_E2E_MAILPIT_URL=http://localhost:8025
-///   LT2_E2E_INVITATION=BANDYMAS-2026  LT2_E2E_BROWSER_CHANNEL=msedge (optional; default: Playwright's Chromium)
+///   LT2_E2E_BROWSER_CHANNEL=msedge (optional; default: Playwright's Chromium)
+///   LT2_E2E_INVITATION (optional): an existing invitation; without it the run makes its own (<see cref="E2ERun"/>)
 /// </summary>
-public sealed partial class SignUpTests
+public sealed partial class SignUpTests : E2ETest
 {
     internal static readonly string? BaseUrl = Environment.GetEnvironmentVariable("LT2_E2E_BASE_URL");
-   internal static readonly string Invitation = Environment.GetEnvironmentVariable("LT2_E2E_INVITATION") ?? "BANDYMAS-2026";
+    /// <summary>The run's invitation (<see cref="E2ERun"/>): its own, or <c>LT2_E2E_INVITATION</c>.</summary>
+    internal static string Invitation => E2ERun.Invitation;
     internal static readonly string? Channel = Environment.GetEnvironmentVariable("LT2_E2E_BROWSER_CHANNEL");
 
     [Theory]
@@ -68,6 +70,7 @@ public sealed partial class SignUpTests
         await Assertions.Expect(page.GetByText("Jei gavote kelis laiškus, tinka tik naujausias kodas.")).ToBeVisibleAsync();
         await ExpectNoNoteAsync(page);
         var code = await Mailpit.CodeAsync(email);
+        await TestAccounts.RegisteredAsync(email, context);
 
         // A wrong code first: the refusal is shown in Lithuanian under the field, and no stray note appears.
         await codeField.FillAsync(code == "000000" ? "111111" : "000000");
@@ -99,6 +102,7 @@ public sealed partial class SignUpTests
         await page.GetByRole(AriaRole.Button, new() { Name = "Baigti registraciją" }).ClickAsync();
 
         await page.WaitForURLAsync(new Regex("/sveiki$"), new() { Timeout = E2ESteps.Slow });
+        await TestAccounts.SessionOfAsync(context);
         await Assertions.Expect(page.GetByRole(AriaRole.Heading, new() { Level = 1 })).ToHaveTextAsync("Sveiki, Rūta M.!");
         await Assertions.Expect(page.GetByText("El. paštas patvirtintas")).ToBeVisibleAsync();
         await Assertions.Expect(page.GetByText("Ši sesija")).ToBeVisibleAsync();

@@ -12,7 +12,7 @@ namespace Lt2.E2E;
 /// back. Screenshots at 1280 and 390 px go to <c>LT2_E2E_ORG_SHOTS</c> (or <c>output/organisations/shots</c>). Everything
 /// the run makes carries <see cref="Marker"/>; the local clean-up script removes it.
 /// </summary>
-public sealed class OrganisationFlowTests(AppealFlowTests.ModeratorFixture moderator) : IClassFixture<AppealFlowTests.ModeratorFixture>
+public sealed class OrganisationFlowTests(AppealFlowTests.ModeratorFixture moderator) : E2ETest, IClassFixture<AppealFlowTests.ModeratorFixture>
 {
     /// <summary>In every organisation name an end-to-end run makes, so the clean-up script finds them.</summary>
     internal const string Marker = "(E2E)";

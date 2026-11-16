@@ -7,7 +7,7 @@ using Microsoft.Extensions.DependencyInjection;
 namespace Lt2.IntegrationTests.Infrastructure;
 
 /// <summary>The real web application over the test database, reached at <c>https://lt2.test</c>.</summary>
-public class Lt2Factory(DatabaseFixture database, int codeRequestLimit = 1000, int registrationLimit = 1000) : WebApplicationFactory<Lt2.Web.Components.App>
+public class Lt2Factory(DatabaseFixture database, int codeRequestLimit = 100_000, int registrationLimit = 100_000) : WebApplicationFactory<Lt2.Web.Components.App>
 {
     public const string Origin = "https://lt2.test";
 
@@ -28,11 +28,14 @@ public class Lt2Factory(DatabaseFixture database, int codeRequestLimit = 1000, i
         // No test calls a real AI provider, whatever the environment of the machine says (AGENTS.md); tests that need one put a fake in.
         builder.UseSetting("Ai:Provider", "");
         builder.UseSetting("Ai:ApiKey", "");
+        // The per-address limits are out of reach for the factory a whole run shares from one address: a limit the run could
+        // reach would make a test pass or fail by how many requests the tests before it made. RateLimitTests checks them low on
+        // factories of its own.
         builder.UseSetting("RateLimits:CodeRequest:PermitLimit", codeRequestLimit.ToString(System.Globalization.CultureInfo.InvariantCulture));
         builder.UseSetting("RateLimits:CodeRequest:WindowSeconds", "600");
         builder.UseSetting("RateLimits:Registration:PermitLimit", registrationLimit.ToString(System.Globalization.CultureInfo.InvariantCulture));
         builder.UseSetting("RateLimits:Registration:WindowSeconds", "600");
-        builder.UseSetting("RateLimits:SignIn:PermitLimit", "1000");
+        builder.UseSetting("RateLimits:SignIn:PermitLimit", "100000");
         builder.UseSetting("RateLimits:SignIn:WindowSeconds", "600");
 
         // Design 8.19: the key of MP mail's hashes and links, and the MP link's limits high enough for a whole run from one

@@ -119,7 +119,9 @@ src/Lt2.Migrator           creates the database roles, applies migrations and gr
 tests/Lt2.UnitTests        rules and validators, plus bUnit tests of components (Components/)
 tests/Lt2.IntegrationTests API over HTTP against a real PostgreSQL (Testcontainers)
 tests/Lt2.ArchitectureTests module boundaries, static assets
-tests/Lt2.E2E              Playwright and stack checks against a running compose stack; skipped without one
+tests/Lt2.E2E              Playwright and stack checks against a running compose stack; skipped without one; E2ERun (the run's
+                           invitation), E2ETest (every class's base: deletes what a test made), leftovers.sql
+tests/Shared/TestOrder.cs  the order tests run in, from LT2_TEST_ORDER (compiled into every test project)
 tests/Lt2.Parliament.ImportTests  Seimas client, parsers, register of assumptions (Seimas/ASSUMPTIONS.md), import against
                            the stand-in and PostgreSQL; live contract suite only with LT2_SEIMAS_LIVE=1
 deploy/                    Dockerfile (restore layer first; .dockerignore at the root), compose.yaml, Caddyfile, .env (local defaults), init-secrets.py (optional target
@@ -128,6 +130,8 @@ deploy/                    Dockerfile (restore layer first; .dockerignore at the
                            the Mailpit viewer on its own hostname behind Mailpit's password file (design 9.2,
                            README.md; LT2_PROXY_HOST names that Caddy, the only sender whose forwarding headers count);
                            LT2_SECRETS_DIR and LT2_IMAGE_TAG move secrets and tag images
+tools/run_tests.py          runs a test project in a chosen order (or each class alone), keeps the TRX report and the order,
+                            and for end-to-end runs prints what tests could leave on the stack before and after
 tools/Lt2.SeimasStandIn     local and test only: stand-in for the Seimas open data and the lrs.lt agenda page (/darbotvarke),
                            invented answers; never shipped. Recent/ (container only, never in tests) adds a sitting and
                            a stage vote dated two days before today, so the local agenda has recent votes
@@ -137,12 +141,14 @@ tools/Lt2.SeimasStandIn     local and test only: stand-in for the Seimas open da
 dotnet build                                          # warnings are errors
 dotnet test                                           # unit, architecture, integration (needs Docker)
 dotnet test --project tests/Lt2.UnitTests             # one project (Microsoft.Testing.Platform)
+python tools/run_tests.py e2e --order random          # a project in another order: default, forward, reverse, random[:SEED]
 python deploy/init-secrets.py                         # once, and again when a secret is added: missing ones in deploy/secrets/
 docker compose -f deploy/compose.yaml up --build      # full stack: https://lt2.localhost:8443, Mailpit :8025
 ```
 
 If Windows has reserved port 8080, set `LT2_HTTP_PORT=8090` for every compose command. End-to-end tests run only with
-`LT2_E2E_BASE_URL` set; `README.md` lists their variables and the invitation to use.
+`LT2_E2E_BASE_URL` set (`tools/run_tests.py e2e` sets the local stack's addresses); `README.md` lists their variables. A run
+needs nothing else: no clean-up before or after, no invitation to top up, no restart of the web container.
 
 ## Running commands
 
@@ -619,20 +625,51 @@ rules are about them.
 - **A check that something is absent must be able to fail.** Assert the status of every set-up step and of every read a
   privacy sweep makes; compare an answer's exact set of fields rather than searching a payload that holds random ids for a
   short string; prove the swept answer held what it is about.
+- **Every test is independent (owner, 2026-11-16).** It passes alone, with its class alone and in any order of the
+  suite; it relies on nothing an earlier test left and leaves nothing a later one could trip on. Run the suites in another
+  order to check: `LT2_TEST_ORDER` = `forward`, `reverse`, `random` or `random:SEED` (`tests/Shared/TestOrder.cs`, compiled
+  into every test project; xUnit's own order is stable per build and folder, and its `--seed` does not change it), most
+  simply through `python tools/run_tests.py unit|architecture|integration|e2e --order reverse` (also `--each-class`, every
+  class alone in its own process on the stack as the others left it; `--repeat N`; `--class NAME`). The script keeps every
+  failure's full message (TRX report), the order the classes ran in and, for end-to-end runs, what tests could leave on the
+  stack before and after the run (`tests/Lt2.E2E/leftovers.sql`): the two must read the same.
 - **Shared data:** the integration tests share one database and run one at a time; a test frees the bill it uses
   (`FreeBillAsync`) and keeps to its own summary weeks (`MondayInWeeks`). A test that sends MP mail starts and ends with
   `ResetMpMailAsync` and puts `Digest:Sending` back: the letter, the MPs' choices, the links and the suppression list are
-  shared by the run. The end-to-end classes share one stack and run one
-  at a time; a test that hides or changes a demonstration bill restores it in a `finally`, and every name a run gives an
-  organisation carries "(E2E)". `MpSendingTests` (E2E) deletes everything of MP mail it made (runs, deliveries, choices,
-  links, suppression rows, letters) and puts the settings back, since the shared clean-up scripts do not know those tables.
+  shared by the run. A shared staff member (`ModeratorAsync()`, `AdministratorAsync()`) comes with a fresh passkey
+  confirmation, so a setting can be saved whatever ran before. An MP's official address is shared by every test that uses
+  the MP: a test reads only the notices sent after it started (`MpNoticesAsync(address, before)`). The shared factory's
+  per-address request limits are out of reach (`Lt2Factory`), so no test depends on how many requests came before it.
+- **End-to-end tests clean up after themselves; nothing outside the repository prepares or repairs the stack.** The
+  classes share one stack and run one at a time. Every class derives from `E2ETest`: after each test, passed or failed,
+  the accounts it registered through the shared steps (`E2ESteps.RegisterHereAsync`, `PasskeyTests.RegisterAsync`) are
+  deleted through the product (`DELETE /api/v1/me`, from the session the browser ended with, else by a code sign-in;
+  `TestAccounts`), and first what the product keeps on purpose and a test must not leave: moderators' actions and reports on
+  their arguments, the organisations they registered (`E2EData`). A staff fixture forgets its moderators' actions and deletes
+  its account from its staff passkey session when the class is over. The run makes its own invitation through the migrator
+  and deletes it at the end (`E2ERun`, an assembly fixture; `LT2_E2E_INVITATION` names an existing code instead, for a
+  stack whose migrator cannot be run), and waits for the web host before the first test. A test that changes a
+  demonstration bill brings it to a known state before and puts it back in a `finally` (`E2EData.RestoreDescriptionAsync`;
+  a summary it made, `DeleteSummaryAsync`); something the product keeps unlinked from the account (feedback without a reply
+  address) carries a marker and is removed by it. Every name a run gives an organisation carries "(E2E)" and every
+  description "(E2E bandymas)". `MpSendingTests` deletes everything of MP mail it made (runs, deliveries, choices, links,
+  suppression rows, letters). When a test fails, the last screen of every browser it used and of the class's staff pages
+  is kept in `output/failures/` beside the test assembly.
+- **Settings in end-to-end tests** are changed and put back through the settings screen
+  (`AdministratorFixture.ChangeSettingAsync`, `RestoreSettingAsync` in a `finally`), never by SQL: the site drops its cached
+  copy (30 s) only for a change made through it, so a SQL change leaves the next test to the cache's timing. The worker
+  keeps its own copy for 30 s either way; a test that needs the worker to see a value waits for the result (an email),
+  longer than that.
+- **Days are Vilnius calendar days.** "Yesterday" in a test is noon of the Vilnius day before, never `now - 24 hours` (two
+  days back on the morning after the clocks go forward); a job that decides by the day is run at a time the test chose
+  from the day it started on, not at the real time.
 - **Known browsers (design 8.20.2).** A `TestBrowser` that completed a registration or signed in to a member is known to that
   account (the test factory sets `Security:DeviceHashKey`): its later code requests use the known browser's allowance and
   codes, not the shared ones. A test about the shared limits asks from a new browser (`NewBrowser()`, `CodeSessionAsync`).
 - **The "Seimo narių atsakymai" email (design 8.20.1)** goes the morning after: a test sets `Follows:ResponsesAt` to 00:00
   (and back), moves the bill's `announced_at` to yesterday and runs the job at the real time (`ResponseNoticeTests`); the
-  end-to-end step in `MpResponseTests` does the same through SQL and removes the bill's `bill_event` rows of kind `response`
-  and the setting, which the shared clean-up scripts do not know.
+  end-to-end step in `MpResponseTests` moves the response by SQL, sets the setting through the settings screen and puts it
+  back, and removes the bill's `bill_event` rows of kind `response`.
 - **Waits:** no fixed sleeps. In end-to-end tests a step after a navigation or a sign-in waits up to `E2ESteps.Slow`
   (60 s); Playwright's default of 5 s failed when an integration run shared the machine.
 ## Seimas open data

@@ -14,8 +14,9 @@ namespace Lt2.IntegrationTests;
 /// before the answers became public; not to those who switched it off or followed later; nothing about their own MP to the MP's
 /// account and office; hidden and withdrawn answers left out and an empty day sends nothing; a changed explanation with the same
 /// stance is no event. Each test makes its own stand-in MPs' accounts and removes them, their responses and the bill's events.
-/// The job is run at the real time with <c>Follows:ResponsesAt</c> at 00:00 and the responses moved to yesterday, so the test
-/// does not depend on the hour it runs at.
+/// The job is run at 01:00 of the Vilnius day the test started on, with <c>Follows:ResponsesAt</c> at 00:00 and the responses moved
+/// to noon of the day before, so the test depends neither on the hour it runs at, nor on a clock change (a Vilnius day has 23 or
+/// 25 hours twice a year), nor on midnight passing while it runs.
 /// </summary>
 public sealed class ResponseNoticeTests(DatabaseFixture database) : ApiTest(database)
 {
@@ -24,17 +25,25 @@ public sealed class ResponseNoticeTests(DatabaseFixture database) : ApiTest(data
     private const string Setting = "Follows:ResponsesAt";
     private const string Explanation = "Šio paaiškinimo laiške būti neturi: pataisa mažina naštą šeimoms.";
 
-    private static DateOnly Yesterday => ReasonsToComeSteps.VilniusToday().AddDays(-1);
+    /// <summary>The Vilnius day the test started on: the job runs early that day, whatever the time is when it runs.</summary>
+    private readonly DateOnly _today = ReasonsToComeSteps.VilniusToday();
+
+    private DateOnly Yesterday => _today.AddDays(-1);
 
     private async Task<FollowRunOutcome> RunJobAsync()
     {
         await using var scope = Factory.Services.CreateAsyncScope();
-        return await scope.ServiceProvider.GetRequiredService<IFollows>().RunAsync(DateTimeOffset.UtcNow, TestContext.Current.CancellationToken);
+        return await scope.ServiceProvider.GetRequiredService<IFollows>().RunAsync(VilniusTime.StartOf(_today).AddHours(1), TestContext.Current.CancellationToken);
     }
 
-    /// <summary>The bill's responses became public yesterday, as if the MPs had answered then.</summary>
+    /// <summary>
+    /// The bill's responses became public yesterday at noon (Vilnius), as if the MPs had answered then; their order is kept.
+    /// Twenty-four hours back would be two days back on the Monday morning after the clocks go forward.
+    /// </summary>
     private Task AnsweredYesterdayAsync() =>
-        Database.ExecuteAsync("UPDATE appeals.mp_response SET announced_at = announced_at - interval '1 day' WHERE bill_number = @b", ("b", Bill));
+        Database.ExecuteAsync(
+            "UPDATE appeals.mp_response SET announced_at = @noon + (announced_at - (SELECT min(announced_at) FROM appeals.mp_response WHERE bill_number = @b)) WHERE bill_number = @b",
+            ("b", Bill), ("noon", VilniusTime.StartOf(Yesterday).AddHours(12).ToUniversalTime()));
 
     /// <summary>A member who followed the bill two days ago.</summary>
     private async Task<(TestBrowser Browser, string Email)> FollowerAsync(string name)

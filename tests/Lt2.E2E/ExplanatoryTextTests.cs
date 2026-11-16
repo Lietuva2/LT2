@@ -7,7 +7,7 @@ namespace Lt2.E2E;
 /// first field and the rest behind "Kaip tai veikia", which opens with JavaScript switched off too; every link to a part of
 /// the methodology page lands on a part that exists.
 /// </summary>
-public sealed class ExplanatoryTextTests
+public sealed class ExplanatoryTextTests : E2ETest
 {
     private static string Base => SignUpTests.BaseUrl!.TrimEnd('/');
 

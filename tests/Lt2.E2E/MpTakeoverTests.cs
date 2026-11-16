@@ -10,9 +10,9 @@ namespace Lt2.E2E;
 /// the offer, takes the profile over with the link read from Mailpit and a passkey made by the virtual authenticator, sees
 /// the line on the profile and adds an office member by a one-time link. Screenshots at 1280 and 390 px go to
 /// <c>output/mp/shots</c>. The MP's account is deleted at the end, whatever happened (which ends the link); the office
-/// member is an ordinary <c>@pavyzdys.test</c> account that <c>output/cleanup-e2e.ps1</c> removes.
+/// member is an ordinary <c>@pavyzdys.test</c> account, deleted when the test is over (<see cref="E2ETest"/>).
 /// </summary>
-public sealed partial class MpTakeoverTests
+public sealed partial class MpTakeoverTests : E2ETest
 {
     /// <summary>An invented MP of the stand-in's open data; this address exists only there and in Mailpit.</summary>
     private const string Official = "pavyzdys.gintare.sermuksnyte@lrs.lt";

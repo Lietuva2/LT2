@@ -7,7 +7,7 @@ namespace Lt2.E2E;
 /// opens it and its link can be tabbed to, Escape closes it and gives the focus back, a press keeps it open until a press
 /// elsewhere, it stays inside a 390 px screen, and with JavaScript off a press still opens it.
 /// </summary>
-public sealed class HintTests
+public sealed class HintTests : E2ETest
 {
     private const string Bill = "/seimas/XVP-0412";
 
@@ -158,6 +158,7 @@ public sealed class HintTests
 
         public async ValueTask DisposeAsync()
         {
+            await E2ETest.KeepScreenAsync(Page);
             await browser.DisposeAsync();
             playwright.Dispose();
         }

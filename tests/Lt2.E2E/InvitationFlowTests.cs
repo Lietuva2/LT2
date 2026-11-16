@@ -8,7 +8,7 @@ namespace Lt2.E2E;
 /// once the invited person completes registration, the member's count rises. The account page shows the code without
 /// JavaScript.
 /// </summary>
-public sealed class InvitationFlowTests
+public sealed class InvitationFlowTests : E2ETest
 {
     private static string Base => SignUpTests.BaseUrl!.TrimEnd('/');
 

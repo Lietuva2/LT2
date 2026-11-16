@@ -15,11 +15,10 @@ namespace Lt2.E2E;
 /// The scheduled job cannot be made due from here, so the waiting summary is written as the job writes one (a run and its
 /// frozen item, from the bill's live numbers); everything after it (letting it go, the recipients, the email) is the
 /// application's. The class removes what it made: rows of MP mail made since it started (runs, deliveries, choices, links,
-/// suppression rows, letters), and puts <c>Digest:Sending</c> back as it was, because the shared clean-up scripts do not know
-/// these tables.
+/// suppression rows, letters), and puts <c>Digest:Sending</c> back as it was through the settings screen.
 /// </summary>
 public sealed partial class MpSendingTests(AppealFlowTests.ModeratorFixture moderator, AdministratorFixture administrator)
-    : IClassFixture<AppealFlowTests.ModeratorFixture>, IClassFixture<AdministratorFixture>
+    : E2ETest, IClassFixture<AppealFlowTests.ModeratorFixture>, IClassFixture<AdministratorFixture>
 {
     private const string Official = "pavyzdys.rasa.ievaite@lrs.lt";
     private const string Name = "Rasa Ievaitė";
@@ -34,13 +33,14 @@ public sealed partial class MpSendingTests(AppealFlowTests.ModeratorFixture mode
     {
         Assert.SkipWhen(string.IsNullOrEmpty(SignUpTests.BaseUrl), "LT2_E2E_BASE_URL is not set; start the stack and set it to run end-to-end tests.");
         var started = (await SqlAsync("select to_char(clock_timestamp() at time zone 'UTC', 'YYYY-MM-DD HH24:MI:SS.US')")).Trim();
-        var sendingBefore = (await SqlAsync("select coalesce((select value::text from config.setting where key = 'Digest:Sending'), '')")).Trim();
+
         var lettersBefore = int.Parse((await SqlAsync("select count(*) from notify.introduction_letter where sent_at is not null")).Trim(), CultureInfo.InvariantCulture);
         var marker = DateTime.UtcNow.ToString("HHmmss", CultureInfo.InvariantCulture);
         var subject = $"Lietuva 2.0 – kas tai ir ko tikėtis (E2E {marker})";
         var extra = $"padejeja.{Guid.NewGuid():N}@pavyzdys.test";
         var admin = await administrator.PageAsync();
         var mod = await moderator.PageAsync();
+        AdministratorFixture.SettingBefore? sendingBefore = null;
         try
         {
             // 1. The letter: written, previewed, a test copy to the administrator's own address, then sent to the MPs.
@@ -74,12 +74,7 @@ public sealed partial class MpSendingTests(AppealFlowTests.ModeratorFixture mode
             await E2ESteps.ShootBothAsync(admin, Shots, "introduction-public");
 
             // 2. Sending with approval, on the settings screen (a fresh passkey confirmation, which the virtual authenticator gives).
-            await admin.GotoAsync(Base + "/administravimas/nustatymai");
-            var sending = admin.Locator("#setting-Digest-Sending");
-            await Assertions.Expect(sending).ToBeEnabledAsync(new() { Timeout = E2ESteps.Slow });
-            await sending.FillAsync("approval");
-            await sending.DispatchEventAsync("change");
-            await admin.Locator("#row-setting-Digest-Sending button").ClickAsync();
+            sendingBefore = await administrator.ChangeSettingAsync("Digest:Sending", "approval");
             await Assertions.Expect(admin.GetByText("Išsaugota: Siuntimas Seimo nariams", new() { Exact = false })).ToBeVisibleAsync(new() { Timeout = E2ESteps.Slow });
             await E2ESteps.ShootBothAsync(admin, Shots, "settings", admin.Locator("#group-summaries"));
 
@@ -220,9 +215,28 @@ public sealed partial class MpSendingTests(AppealFlowTests.ModeratorFixture mode
         }
         finally
         {
-            // Whatever happened: the rows of MP mail made since the start, and the setting as it was. Never throws.
+            // Whatever happened: the setting as it was, through the settings screen (the site drops its cached copy at once),
+            // and the rows of MP mail made since the start.
             try
             {
+                if (sendingBefore is not null)
+                {
+                    await administrator.RestoreSettingAsync(sendingBefore);
+                }
+            }
+            finally
+            {
+                await ForgetMpMailAsync(started, extra);
+            }
+        }
+    }
+
+    /// <summary>The rows of MP mail made since <paramref name="started"/>, and the extra recipient's emails. Never throws.</summary>
+    private static async Task ForgetMpMailAsync(string started, string extra)
+    {
+            try
+            {
+                await Mailpit.DeleteToAsync(extra);
                 await SqlAsync(
                     $"""
                     delete from notify.digest_run where created_at >= '{started}'::timestamp at time zone 'UTC' and (kind = 'introduction' or status <> 'dry-run');
@@ -231,14 +245,12 @@ public sealed partial class MpSendingTests(AppealFlowTests.ModeratorFixture mode
                     delete from notify.suppression where created_at >= '{started}'::timestamp at time zone 'UTC';
                     delete from notify.introduction_letter where written_at >= '{started}'::timestamp at time zone 'UTC';
                     delete from notify.outbox where kind like 'email.mp-%' and created_at >= '{started}'::timestamp at time zone 'UTC';
-                    {(sendingBefore.Length == 0 ? "delete from config.setting where key = 'Digest:Sending';" : $"update config.setting set value = '{sendingBefore}'::jsonb where key = 'Digest:Sending';")}
                     """);
             }
-            catch (Exception ex) when (ex is Shouldly.ShouldAssertException or InvalidOperationException or System.ComponentModel.Win32Exception)
+            catch (Exception ex) when (ex is Shouldly.ShouldAssertException or InvalidOperationException or System.ComponentModel.Win32Exception or HttpRequestException)
             {
                 Console.Error.WriteLine($"Clean-up of MP mail failed: {ex.Message}");
             }
-        }
     }
 
     private static string Header(System.Text.Json.JsonElement headers, string name) =>

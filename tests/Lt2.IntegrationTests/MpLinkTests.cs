@@ -176,6 +176,7 @@ public sealed class MpLinkTests(DatabaseFixture database) : ApiTest(database)
     {
         const string Bill = AppealSteps.ThirdBill;
         await Database.FreeBillAsync(Bill);
+        var noticesBefore = (await Database.MpNoticesAsync(MpSteps.Gluosnis.Address)).Count;
         using var mp = await Factory.OfficialMemberAsync(MpSteps.Gluosnis);
         var slug = (await Database.SlugAsync(MpSteps.Gluosnis))!;
         using var old = new SoftwareAuthenticator();
@@ -224,7 +225,7 @@ public sealed class MpLinkTests(DatabaseFixture database) : ApiTest(database)
             page.ShouldContain("Profilį tvarko Seimo narys arba jo biuras");
             page.ShouldContain(Lt2.Web.Client.Display.Day(DateTimeOffset.UtcNow));
             (await visitor.GetJsonAsync<Lt2.Api.Contracts.Parliament.MpProfileResponse>($"/api/v1/mps/{slug}")).ManagedSince.ShouldNotBeNull();
-            (await Database.MpNoticesAsync(MpSteps.Gluosnis.Address)).ShouldBe(["mp-linked"]);
+            (await Database.MpNoticesAsync(MpSteps.Gluosnis.Address, noticesBefore)).ShouldBe(["mp-linked"]);
             (await Database.ScalarAsync<long>("SELECT count(*) FROM audit.event WHERE action = 'mp.linked' AND target = (SELECT id::text FROM identity.\"user\" WHERE email = @e)", ("e", MpSteps.Gluosnis.Address)))
                 .ShouldBe(1);
         }
@@ -414,6 +415,7 @@ public sealed class MpLinkTests(DatabaseFixture database) : ApiTest(database)
     {
         const string Bill = AppealSteps.ThirdBill;
         await Database.FreeBillAsync(Bill);
+        var noticesBefore = (await Database.MpNoticesAsync(MpSteps.Berzinyte.Address)).Count;
         using var mp = await Factory.MpAccountAsync(MpSteps.Berzinyte);
         var (member, memberKey, memberEmail) = await Factory.PasskeyMemberAsync("Biuro Narė");
         var (second, secondKey, _) = await Factory.PasskeyMemberAsync("Antra Biuro Narė");
@@ -474,7 +476,7 @@ public sealed class MpLinkTests(DatabaseFixture database) : ApiTest(database)
             (await mp.Browser.GetJsonAsync<MpOfficeResponse>(MpRoutes.Office)).Members.ShouldBeEmpty();
 
             // All of it told to the official address, without names.
-            (await Database.MpNoticesAsync(MpSteps.Berzinyte.Address)).ShouldBe(["mp-linked", "mp-office-added", "mp-office-added", "mp-office-left", "mp-office-removed"]);
+            (await Database.MpNoticesAsync(MpSteps.Berzinyte.Address, noticesBefore)).ShouldBe(["mp-linked", "mp-office-added", "mp-office-added", "mp-office-left", "mp-office-removed"]);
         }
         finally
         {
@@ -487,6 +489,7 @@ public sealed class MpLinkTests(DatabaseFixture database) : ApiTest(database)
     public async Task Giving_the_profile_up_and_an_administrators_end_take_the_mark_off_at_once_and_end_the_office()
     {
         var administrator = await AdministratorAsync();
+        var noticesBefore = (await Database.MpNoticesAsync(MpSteps.Klevinskas.Address)).Count;
         using var mp = await Factory.MpAccountAsync(MpSteps.Klevinskas);
         var (member, memberKey, _) = await Factory.PasskeyMemberAsync("Biuro Narys");
         using var _m = member;
@@ -519,7 +522,7 @@ public sealed class MpLinkTests(DatabaseFixture database) : ApiTest(database)
             (await mp.Browser.SendAsync(HttpMethod.Delete, MpRoutes.Mine)).StatusCode.ShouldBe(HttpStatusCode.NoContent);
             WebUtility.HtmlDecode(await visitor.Client.GetStringAsync($"/p/{mp.Slug}")).ShouldNotContain("Profilį tvarko");
             (await mp.Browser.MeAsync()).MpOffer!.Slug.ShouldBe(mp.Slug, "offered again");
-            (await Database.MpNoticesAsync(mp.Email)).ShouldBe(["mp-linked", "mp-office-added", "mp-link-ended", "mp-linked", "mp-given-up"]);
+            (await Database.MpNoticesAsync(mp.Email, noticesBefore)).ShouldBe(["mp-linked", "mp-office-added", "mp-link-ended", "mp-linked", "mp-given-up"]);
         }
         finally
         {

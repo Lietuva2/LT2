@@ -152,18 +152,17 @@ Then, with the stack up, set these environment variables in your shell and run t
 |---|---|
 | `LT2_E2E_BASE_URL` | `https://lt2.localhost:8443` |
 | `LT2_E2E_MAILPIT_URL` | `http://localhost:8025` (the default) |
-| `LT2_E2E_INVITATION` | `BANDYMAS-2026` (the default) |
+| `LT2_E2E_INVITATION` | optional: an existing invitation code; without it the run makes its own through the migrator and deletes it at the end |
 | `LT2_E2E_BROWSER_CHANNEL` | optional: `msedge` to use an installed Edge instead of Playwright's Chromium |
 | `LT2_E2E_HTTP_URL` | optional: `http://lt2.localhost:8080`, to check the redirect to HTTPS |
-| `LT2_E2E_COMPOSE_FILE` | optional: the compose file whose Caddy logs are checked (default `deploy/compose.yaml`) |
+| `LT2_E2E_COMPOSE_FILE` | optional: the compose file the tests run `docker compose` against (default `deploy/compose.yaml`) |
 
-Every run registers new accounts (seven at present), and each completed registration uses one invitation. On a stack
-you keep, give the tests their own invitation so they do not use up `BANDYMAS-2026`, then set
-`LT2_E2E_INVITATION=E2E-BANDYMAS`:
+`python tools/run_tests.py e2e` sets the local stack's addresses (any variable already set wins), builds, runs and prints
+every failure's message; `--order reverse` or `--order random` runs the classes and tests in another order,
+`--each-class` every class alone, `--repeat 2` twice in a row.
 
-```bash
-docker compose -f deploy/compose.yaml run --rm --no-deps migrator --seed-invitation E2E-BANDYMAS:1000
-```
+Every run registers new accounts with an invitation of its own (`E2ERun`: made by the migrator, deleted at the end), so
+it never uses up `BANDYMAS-2026`.
 
 `PasskeyTests` add, use and activate passkeys in the browser with Chromium's virtual WebAuthn authenticator (also with
 `navigator.credentials` wrapped the way password managers do it); the staff test runs `docker compose run` for the
@@ -175,17 +174,17 @@ dotnet test --project tests/Lt2.E2E
 ```
 
 The classes run one after another (`tests/Lt2.E2E/xunit.runner.json`): they share one stack and its demonstration
-bills, and some hide, restore or count them. A whole run takes about 13 minutes; do not run it while the
+bills, and some hide, restore or count them. A whole run takes about 20 minutes; do not run it while the
 integration suite runs on the same machine. The local `.env` runs the follow job every minute (`LT2_FOLLOWS_CRON`), so
 the follow email `OrganisationInvitationFlowTests` waits for arrives within about a minute; production leaves the
 variable unset (every 15 minutes).
 
-Each test takes back what it can through the API (sides, arguments, restrictions, its organisations are closed), in a
-`finally` where a failure would otherwise leave a bill hidden. What it cannot take back (accounts, feedback, closed
-organisations, descriptions it wrote) stays on the stack; the tests are written to pass on top of it. To remove it,
-keeping the demonstration data, run `output/cleanup-e2e.ps1` beside the worktree (outside the repository): it runs
-`cleanup-hidden.sql` and `cleanup-e2e.sql` (every account on `@pavyzdys.test` except the demonstration members
-`demo.*`, with what they made) and then the migrator's `--demo-appeal`.
+Each test cleans up after itself, passed or failed (`E2ETest`): the accounts it registered are deleted through the
+product, and what the product keeps on purpose (moderators' actions, closed organisations, unlinked feedback, a
+description it wrote on a demonstration bill, a summary it made) is removed by SQL in the same step or in the test's
+`finally`. The run needs no clean-up before or after and can be repeated at once; `tools/run_tests.py` prints
+`tests/Lt2.E2E/leftovers.sql` before and after a run, and the two should read the same. When a test fails, the last
+screens of its browsers are in `tests/Lt2.E2E/bin/Debug/net10.0/output/failures/`.
 
 ## Configuration and secrets
 
