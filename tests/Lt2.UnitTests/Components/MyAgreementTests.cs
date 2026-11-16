@@ -10,7 +10,7 @@ using Microsoft.Extensions.DependencyInjection;
 namespace Lt2.UnitTests.Components;
 
 /// <summary>
-/// Design 8.26.4: "Kas balsuoja taip kaip jūs" is filled only in the browser and only for the caller: nothing is asked or
+/// Design 8.26.4: "Kas Seime balsuoja taip, kaip prašote jūs" is filled only in the browser and only for the caller: nothing is asked or
 /// shown while the server prerenders, a visitor gets the sign-in link back to the page, and a member's rows show a share
 /// only from 20 common votes, "maža imtis" below.
 /// </summary>
@@ -44,6 +44,18 @@ public sealed class MyAgreementTests : BunitContext
     }
 
     [Fact]
+    public void While_the_server_prerenders_a_visitor_already_gets_the_sign_in_link_so_it_works_without_javascript()
+    {
+        AddAuthorization();
+        SetRendererInfo(new RendererInfo("Server", isInteractive: false));
+
+        var part = Render<MyAgreement>();
+
+        part.Find("#mine-sign-in a").GetAttribute("href").ShouldBe("/prisijungti#tikslas=%2Fseimas%2Fanalitika");
+        _api.Calls.ShouldBeEmpty();
+    }
+
+    [Fact]
     public void A_visitor_gets_the_sign_in_link_back_to_the_page_and_nothing_is_asked()
     {
         AddAuthorization();
@@ -69,12 +81,12 @@ public sealed class MyAgreementTests : BunitContext
         part.Find("#mine-basis").TextContent.ShouldContain("21");
         var ona = part.Find("#mine-mp-ona-jonaitiene");
         ona.TextContent.ShouldContain(Display.Percent(0.9m)!);
-        ona.TextContent.ShouldContain("sutapo 18 iš 20");
+        ona.TextContent.ShouldContain("sutapo 18 iš 20");
         ona.QuerySelector("svg.meter").ShouldNotBeNull();
         var jonas = part.Find("#mine-mp-jonas-petraitis");
-        jonas.TextContent.ShouldContain("sutapo 3 iš 4");
+        jonas.TextContent.ShouldContain("sutapo 3 iš 4");
         jonas.TextContent.ShouldContain("maža imtis");
-        jonas.TextContent.ShouldContain("buvęs Seimo narys");
+        jonas.TextContent.ShouldContain("mandatas baigėsi");
         jonas.QuerySelector("svg.meter").ShouldBeNull("no bar under twenty");
         part.Find("#mine-faction-reformu-partijos-frakcija").TextContent.ShouldContain(Display.Percent(0.75m)!);
     }

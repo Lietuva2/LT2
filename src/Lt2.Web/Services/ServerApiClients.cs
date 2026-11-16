@@ -11,7 +11,7 @@ namespace Lt2.Web.Services;
 /// The server-side implementation of the typed clients (design 3.1): when a component is rendered on the server it calls
 /// the same module operations the HTTP endpoints call, in-process.
 /// </summary>
-internal sealed class ServerAuthApi(IIdentityModule identity, IHttpContextAccessor accessor, IpHasher ipHasher, ErrorMapper errors) : IAuthApi
+internal sealed class ServerAuthApi(IIdentityModule identity, IHttpContextAccessor accessor, IpHasher ipHasher, ErrorMapper errors, AnalyticsCopies analytics) : IAuthApi
 {
     public async Task<ApiResult> RegisterAsync(RegisterRequest request, CancellationToken cancellationToken = default) =>
         errors.ToApiResult(await identity.RegisterAsync(Mapping.ToRegistration(request), cancellationToken));
@@ -24,6 +24,12 @@ internal sealed class ServerAuthApi(IIdentityModule identity, IHttpContextAccess
 
     public async Task<ApiResult> SignOutAsync(CancellationToken cancellationToken = default)
     {
+        // The member's kept analytics comparison ends with the session (design 8.26.6).
+        if (accessor.HttpContext?.User.UserId() is { } id)
+        {
+            analytics.Forget(id);
+        }
+
         await identity.SignOutAsync();
         return ApiResult.Ok();
     }
@@ -45,7 +51,7 @@ internal sealed class ServerAuthApi(IIdentityModule identity, IHttpContextAccess
         accessor.HttpContext?.User ?? new System.Security.Claims.ClaimsPrincipal();
 }
 
-internal sealed class ServerMeApi(IIdentityModule identity, IMpDirectory mps, IHttpContextAccessor accessor, IpHasher ipHasher, ErrorMapper errors, IInvitations invitations, IConfiguration configuration) : IMeApi
+internal sealed class ServerMeApi(IIdentityModule identity, IMpDirectory mps, IHttpContextAccessor accessor, IpHasher ipHasher, ErrorMapper errors, IInvitations invitations, IConfiguration configuration, AnalyticsCopies analytics) : IMeApi
 {
     /// <summary>
     /// The account as a page rendered on the server sees it: without the MP offer or link (design 8.5.4: nothing about it is
@@ -90,8 +96,11 @@ internal sealed class ServerMeApi(IIdentityModule identity, IMpDirectory mps, IH
     public async Task<ApiResult> AcceptTermsAsync(TermsAcceptanceRequest request, CancellationToken cancellationToken = default) =>
         errors.ToApiResult(await identity.AcceptTermsAsync(User, request.TextVersion, cancellationToken));
 
-    public async Task<ApiResult> WithdrawPositionConsentAsync(CancellationToken cancellationToken = default) =>
-        errors.ToApiResult(await identity.WithdrawPositionConsentAsync(User, cancellationToken));
+    public async Task<ApiResult> WithdrawPositionConsentAsync(CancellationToken cancellationToken = default)
+    {
+        ForgetAnalytics();
+        return errors.ToApiResult(await identity.WithdrawPositionConsentAsync(User, cancellationToken));
+    }
 
     public async Task<ApiResult<PartySupportResponse>> GetPartySupportAsync(CancellationToken cancellationToken = default)
     {
@@ -99,8 +108,20 @@ internal sealed class ServerMeApi(IIdentityModule identity, IMpDirectory mps, IH
         return errors.ToApiResult(await identity.GetPartySupportAsync(User, cancellationToken), party => new PartySupportResponse(party, choices));
     }
 
-    public async Task<ApiResult> DeleteAccountAsync(CancellationToken cancellationToken = default) =>
-        errors.ToApiResult(await identity.DeleteAccountAsync(User, cancellationToken));
+    public async Task<ApiResult> DeleteAccountAsync(CancellationToken cancellationToken = default)
+    {
+        ForgetAnalytics();
+        return errors.ToApiResult(await identity.DeleteAccountAsync(User, cancellationToken));
+    }
+
+    /// <summary>The member's kept analytics comparison goes with their sides and their account (design 8.26.6).</summary>
+    private void ForgetAnalytics()
+    {
+        if (User.UserId() is { } id)
+        {
+            analytics.Forget(id);
+        }
+    }
 
     public Task<ApiResult<MyInvitationResponse>> GetInvitationAsync(CancellationToken cancellationToken = default) =>
         InvitationAsync(id => invitations.MineAsync(id, cancellationToken));

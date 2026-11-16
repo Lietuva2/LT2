@@ -12,8 +12,14 @@ internal static class SignOutEndpoint
             .WithTags("Auth")
             .Produces(StatusCodes.Status204NoContent);
 
-    private static async Task<NoContent> HandleAsync(IIdentityModule identity)
+    private static async Task<NoContent> HandleAsync(IIdentityModule identity, HttpContext http, Lt2.Web.Services.AnalyticsCopies analytics)
     {
+        // The member's kept analytics comparison ends with the session (design 8.26.6).
+        if (Lt2.SharedKernel.ClaimsPrincipalExtensions.UserId(http.User) is { } id)
+        {
+            analytics.Forget(id);
+        }
+
         await identity.SignOutAsync();
         return TypedResults.NoContent();
     }

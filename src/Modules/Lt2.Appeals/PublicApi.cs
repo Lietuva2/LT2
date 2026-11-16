@@ -269,6 +269,12 @@ public interface IAppealsModule
     /// The person's own, never anyone else's; read per request and never stored elsewhere.
     /// </summary>
     Task<IReadOnlyList<MyClosedSide>> MyClosedSidesAsync(Guid userId, CancellationToken cancellationToken);
+
+    /// <summary>
+    /// Design 8.26.6: a short text that changes whenever the set of closed records changes (one closes, is hidden or
+    /// restored), so a kept copy of the analytics is made again. No person in it.
+    /// </summary>
+    Task<string> ClosedRecordsVersionAsync(CancellationToken cancellationToken);
 }
 
 /// <summary>A closed record as the analytics page compares it (design 8.26.2): the vote that closed it and its frozen counts.</summary>

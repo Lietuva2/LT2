@@ -92,6 +92,26 @@ public static class ParliamentMaintenance
     public static Task<string?> BillAddressAsync(string connectionString, string number, CancellationToken cancellationToken) =>
         BillColumnAsync(connectionString, "SELECT e_seimas_url FROM parliament.bill WHERE number = @n", number, cancellationToken);
 
+    /// <summary>
+    /// The bill's adoption-stage vote (the vote that closes its record, design 8.1) and when it was held, or null (local
+    /// demonstration data only, design 8.26.5).
+    /// </summary>
+    public static async Task<(long VoteId, DateTimeOffset HeldAt)?> FinalVoteAsync(string connectionString, string number, CancellationToken cancellationToken)
+    {
+        await using var connection = new NpgsqlConnection(connectionString);
+        await connection.OpenAsync(cancellationToken);
+        await using var command = new NpgsqlCommand(
+            """
+            SELECT v.id, v.held_at FROM parliament.vote v JOIN parliament.bill b ON b.id = v.bill_id
+            WHERE b.number = @n AND v.kind = 'StageResult' AND v.stage = 'Adoption'
+            ORDER BY v.held_at DESC LIMIT 1
+            """,
+            connection);
+        command.Parameters.AddWithValue("n", number);
+        await using var reader = await command.ExecuteReaderAsync(cancellationToken);
+        return await reader.ReadAsync(cancellationToken) ? (reader.GetInt64(0), reader.GetFieldValue<DateTimeOffset>(1)) : null;
+    }
+
     private static async Task<string?> BillColumnAsync(string connectionString, string sql, string number, CancellationToken cancellationToken)
     {
         await using var connection = new NpgsqlConnection(connectionString);

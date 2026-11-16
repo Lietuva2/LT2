@@ -1,6 +1,7 @@
 using System.Security.Claims;
 using Lt2.Api.Contracts;
 using Lt2.Identity;
+using Lt2.SharedKernel;
 using Lt2.Web.Services;
 
 namespace Lt2.Web.Endpoints.Me;
@@ -18,8 +19,14 @@ internal static class DeleteAccountEndpoint
             .RequireAuthorization()
             .Produces(StatusCodes.Status204NoContent);
 
-    private static async Task<IResult> HandleAsync(ClaimsPrincipal user, IIdentityModule identity, ErrorMapper errors, CancellationToken cancellationToken)
+    private static async Task<IResult> HandleAsync(ClaimsPrincipal user, IIdentityModule identity, ErrorMapper errors, Lt2.Web.Services.AnalyticsCopies analytics, CancellationToken cancellationToken)
     {
+        // The member's kept analytics comparison goes with their sides and their account (design 8.26.6).
+        if (user.UserId() is { } id)
+        {
+            analytics.Forget(id);
+        }
+
         var result = await identity.DeleteAccountAsync(user, cancellationToken);
         return result.IsSuccess ? TypedResults.NoContent() : errors.ToResult(result.Error!);
     }

@@ -6,18 +6,18 @@
   <resheader name="writer"><value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value></resheader>
   <data name="Mine.SignIn" xml:space="preserve"><value>Prisijunkite</value></data>
   <data name="Mine.SignInWhy" xml:space="preserve"><value>ir pamatysite, kaip jūsų pozicijos sutampa su Seimo narių balsavimais.</value></data>
-  <data name="Mine.Basis" xml:space="preserve"><value>Baigtų projektų, dėl kurių pasirinkote poziciją: {0}.</value></data>
-  <data name="Mine.Consensus" xml:space="preserve"><value>Iš jų priimta bendru sutarimu, be Seimo narių balsų: {0}.</value></data>
+  <data name="Mine.Basis" xml:space="preserve"><value>Projektų, dėl kurių pasirinkote poziciją ir Seimas balsavo galutinai: {0}.</value></data>
+  <data name="Mine.Consensus" xml:space="preserve"><value>Iš jų pritarta bendru sutarimu, be Seimo narių balsų: {0}.</value></data>
   <data name="Mine.None" xml:space="preserve"><value>Dar nepasirinkote pozicijos dėl projekto, dėl kurio Seimas jau balsavo galutinai.</value></data>
   <data name="Mine.NoneLink" xml:space="preserve"><value>Projektai</value></data>
-  <data name="Mine.NoBallots" xml:space="preserve"><value>Šie projektai priimti bendru sutarimu, todėl palyginti nėra su kuo.</value></data>
+  <data name="Mine.NoBallots" xml:space="preserve"><value>Šiems projektams pritarta bendru sutarimu, todėl Seimo narių balsų palyginti nėra.</value></data>
   <data name="Mine.Factions" xml:space="preserve"><value>Frakcijos</value></data>
   <data name="Mine.Mps" xml:space="preserve"><value>Seimo nariai</value></data>
   <data name="Mine.AllMps" xml:space="preserve"><value>Rodyti visus Seimo narius ({0})</value></data>
-  <data name="Mine.Matched" xml:space="preserve"><value>sutapo {0} iš {1}</value></data>
+  <data name="Mine.Matched" xml:space="preserve"><value>sutapo {0} iš {1}</value></data>
   <data name="Mine.Free" xml:space="preserve"><value>laisvų balsavimų: {0}</value></data>
   <data name="Mine.Seats" xml:space="preserve"><value>narių: {0}</value></data>
-  <data name="Mine.Former" xml:space="preserve"><value>buvęs Seimo narys</value></data>
+  <data name="Mine.Former" xml:space="preserve"><value>mandatas baigėsi</value></data>
   <data name="Mine.SmallSample" xml:space="preserve"><value>maža imtis</value></data>
   <data name="Mine.Failed" xml:space="preserve"><value>Palyginimo įkelti nepavyko. Bandykite dar kartą vėliau.</value></data>
 </root>

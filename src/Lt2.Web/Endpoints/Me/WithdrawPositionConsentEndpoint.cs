@@ -2,6 +2,7 @@ using System.Security.Claims;
 using Lt2.Api.Contracts;
 using Lt2.Api.Contracts.Me;
 using Lt2.Identity;
+using Lt2.SharedKernel;
 using Lt2.Web.Security;
 using Lt2.Web.Services;
 
@@ -21,8 +22,15 @@ internal static class WithdrawPositionConsentEndpoint
         ClaimsPrincipal user,
         IIdentityModule identity,
         ErrorMapper errors,
+        Lt2.Web.Services.AnalyticsCopies analytics,
         CancellationToken cancellationToken)
     {
+        // The member's kept analytics comparison goes with their sides and their account (design 8.26.6).
+        if (user.UserId() is { } id)
+        {
+            analytics.Forget(id);
+        }
+
         var result = await identity.WithdrawPositionConsentAsync(user, cancellationToken);
         return result.IsSuccess ? TypedResults.NoContent() : errors.ToResult(result.Error!);
     }

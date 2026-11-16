@@ -104,10 +104,16 @@ internal sealed partial class ParliamentQueries
                              join p in db.People on b.PersonId equals p.Id
                              where ids.Contains(b.VoteId)
                              select new { b.VoteId, p.Id, p.Slug, b.Choice }).ToListAsync(cancellationToken);
-        var positions = await (from fp in db.FactionPositions.AsNoTracking()
-                               join body in db.Bodies on fp.FactionId equals body.Id
-                               where ids.Contains(fp.VoteId) && body.Kind == BodyKind.Faction
-                               select new { fp.VoteId, body, fp.Position }).ToListAsync(cancellationToken);
+        // Two labels resolving to one faction in a vote are one position, from their sum (FactionUnityRule.PerVote).
+        var positions = (await (from fp in db.FactionPositions.AsNoTracking()
+                                join v in db.Votes on fp.VoteId equals v.Id
+                                join body in db.Bodies on fp.FactionId equals body.Id
+                                where ids.Contains(fp.VoteId) && body.Kind == BodyKind.Faction
+                                select new { fp.VoteId, v.HeldAt, body, fp.Position, fp.For, fp.Against, fp.Abstain }).ToListAsync(cancellationToken))
+            .GroupBy(p => p.body.Id)
+            .SelectMany(g => FactionUnityRule.PerVote(g.Select(p => new FactionVoteTally(p.VoteId, p.HeldAt, p.Position, p.For, p.Against, p.Abstain)))
+                .Select(t => new { t.VoteId, g.First().body, t.Position }))
+            .ToList();
         var summaries = await SummariesAsync(db, term.Id, cancellationToken);
         var mps = ballots.Select(b => b.Id).Distinct()
             .Where(summaries.ContainsKey)

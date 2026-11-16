@@ -43,7 +43,7 @@ public static class DemoAppeal
     /// What happened, for the console. <c>AiDescription</c>: <c>created</c>, <c>already there</c> or <c>left as it is</c>.
     /// <c>Organisations</c>: how many of the invented organisations on <see cref="Bill"/> were created (design 8.14.14).
     /// </summary>
-    public sealed record Outcome(string Status, int AccountsCreated, string AiDescription, int Organisations = 0, int TermsAccepted = 0);
+    public sealed record Outcome(string Status, int AccountsCreated, string AiDescription, int Organisations = 0, int TermsAccepted = 0, string ClosedBill = "left as it is");
 
     public static async Task<Outcome> RunAsync(IConfiguration configuration, string connectionString, TimeProvider clock, CancellationToken cancellationToken)
     {
@@ -91,6 +91,11 @@ public static class DemoAppeal
         await InventedMembers.CreateAsync(connectionString, OrganisationMembers(now), cancellationToken);
         termsAccepted += await InventedMembers.AcceptTermsAsync(connectionString, OrganisationMembers(now), cancellationToken);
         var organisationsCreated = await InventedOrganisations.SeedAsync(connectionString, organisations, now, cancellationToken);
+
+        // Design 8.26.5: a bill the Seimas voted on finally, with invented positions, so the analytics page's comparison can be seen.
+        var (closedBill, closedCreated, closedTerms) = await SeedClosedBillAsync(connectionString, cancellationToken);
+        created += closedCreated;
+        termsAccepted += closedTerms;
         return new Outcome(
             outcome == InventedRecordOutcome.Created ? "created" : "already there",
             created,
@@ -101,7 +106,8 @@ public static class DemoAppeal
                 _ => "left as it is",
             },
             organisationsCreated,
-            termsAccepted);
+            termsAccepted,
+            closedBill);
     }
 
     /// <summary>The invented organisations' representatives: accounts of their own, never given a side.</summary>
@@ -215,5 +221,84 @@ public static class DemoAppeal
 
         var opened = now.AddDays(-75);
         return (members, new InventedRecordSpec(Bill, Description, opened, positions, reasons));
+    }
+
+    /// <summary>
+    /// Design 8.26.5: the stand-in's local overlay holds <see cref="ClosedBill"/> with an adoption vote nine days ago (with
+    /// per-MP ballots); this gives it a record with invented positions taken before the vote and closes it as the closing job
+    /// would, so the dot plot, its table and a member's comparison can be seen on the local stack. Positions only: the
+    /// example numbers of <see cref="Bill"/> stay as they are.
+    /// </summary>
+    public const string ClosedBill = "XVP-0707";
+    public const int ClosedFor = 1240;
+    public const int ClosedForOlder = 1100;
+    public const int ClosedAgainst = 860;
+    public const int ClosedAgainstOlder = 760;
+
+    public const string ClosedDescription =
+        "Viešųjų pirkimų sutartys ir jų pakeitimai būtų skelbiami per tris darbo dienas nuo pasirašymo, o mažos vertės pirkimų riba pakelta iki 15 000 eurų.";
+
+    /// <summary>Seeds and closes <see cref="ClosedBill"/>; "not imported yet" while the stand-in's vote is not in the data.</summary>
+    private static async Task<(string Status, int Created, int TermsAccepted)> SeedClosedBillAsync(string connectionString, CancellationToken cancellationToken)
+    {
+        if (await ParliamentMaintenance.FinalVoteAsync(connectionString, ClosedBill, cancellationToken) is not { } vote)
+        {
+            return ("not imported yet", 0, 0);
+        }
+
+        var (members, record) = BuildClosed(vote.HeldAt);
+        var created = await InventedMembers.CreateAsync(connectionString, members, cancellationToken);
+        var terms = await InventedMembers.AcceptTermsAsync(connectionString, members, cancellationToken);
+        var seeded = await InventedRecord.SeedAsync(connectionString, record, cancellationToken);
+        if (seeded == InventedRecordOutcome.BillTaken)
+        {
+            return ("left as it is", created, terms);
+        }
+
+        var closed = await InventedRecord.CloseAsync(connectionString, ClosedBill, vote.VoteId, vote.HeldAt.AddHours(1), cancellationToken);
+        return (closed ? "created and closed" : "already there", created, terms);
+    }
+
+    /// <summary>The invented people and the record of <see cref="ClosedBill"/>, the same on every run (fixed seed and identifiers).</summary>
+    public static (IReadOnlyList<InventedMember> Members, InventedRecordSpec Record) BuildClosed(DateTimeOffset votedAt)
+    {
+        var random = new Random(707);
+        var members = new List<InventedMember>();
+        var positions = new List<InventedPosition>();
+        var opened = votedAt.AddDays(-50);
+
+        Guid Id(int n) => new($"0193b000-0707-7000-8000-{n:D12}");
+
+        void Add(int n, string side, bool older, string? name = null)
+        {
+            var since = older ? votedAt.AddDays(-random.Next(31, 420)) : votedAt.AddDays(-random.Next(1, 29)).AddMinutes(-random.Next(0, 1440));
+            members.Add(new InventedMember(Id(n), $"demo.closed.{n:D5}@{InventedMembers.Domain}", name, since));
+            var earliest = since > opened ? since : opened;
+            var latest = votedAt.AddHours(-2);
+            var taken = earliest + TimeSpan.FromMinutes(random.NextDouble() * Math.Max(1, (latest - earliest).TotalMinutes));
+            positions.Add(new InventedPosition(Id(n), side, since, taken));
+        }
+
+        Add(1, "for", true, "Saulius K.");
+        Add(2, "against", true, "Ieva D.");
+        var n = 3;
+        for (var i = 1; i < ClosedFor; i++)
+        {
+            Add(n++, "for", i < ClosedForOlder);
+        }
+
+        for (var i = 1; i < ClosedAgainst; i++)
+        {
+            Add(n++, "against", i < ClosedAgainstOlder);
+        }
+
+        var forIds = positions.Where(p => p.Side == "for").Select(p => p.UserId).ToList();
+        var againstIds = positions.Where(p => p.Side == "against").Select(p => p.UserId).ToList();
+        var reasons = new List<InventedReason>
+        {
+            new(Id(1), "for", "Greitai paskelbtos sutartys leidžia laiku pastebėti neįprastus pakeitimus.", forIds.Take(410).ToList()),
+            new(Id(2), "against", "Pakelta mažos vertės pirkimų riba sumažintų konkurenciją mažuose pirkimuose.", againstIds.Take(290).ToList()),
+        };
+        return (members, new InventedRecordSpec(ClosedBill, ClosedDescription, opened, positions, reasons));
     }
 }

@@ -103,7 +103,9 @@ public sealed class DemoAppealTests(DatabaseFixture database) : ApiTest(database
         first.Organisations.ShouldBe(3);
 
         var again = await DemoAppeal.RunAsync(Configuration(true), Database.MigratorConnectionString, TimeProvider.System, CancellationToken.None);
-        again.ShouldBe(new DemoAppeal.Outcome("already there", 0, "already there", 0));
+        // The closed demonstration bill (design 8.26.5) is only in the stand-in's local overlay, which tests never load.
+        first.ClosedBill.ShouldBe("not imported yet");
+        again.ShouldBe(new DemoAppeal.Outcome("already there", 0, "already there", 0, ClosedBill: "not imported yet"));
 
         using var stranger = NewBrowser();
 

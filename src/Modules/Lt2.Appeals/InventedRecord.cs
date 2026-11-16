@@ -252,4 +252,30 @@ public static class InventedRecord
         await transaction.CommitAsync(cancellationToken);
         return InventedRecordOutcome.Created;
     }
+
+    /// <summary>
+    /// Closes the bill's open demonstration record as the closing job would (design 8.1, 8.26.5): the counts are frozen from
+    /// its positions (older than 30 days at <paramref name="at"/>) and the closing vote is kept. Returns whether it closed;
+    /// an already closed record, or none, is left as it is.
+    /// </summary>
+    public static async Task<bool> CloseAsync(string connectionString, string billNumber, long closingVoteId, DateTimeOffset at, CancellationToken cancellationToken)
+    {
+        await using var connection = new NpgsqlConnection(connectionString);
+        await connection.OpenAsync(cancellationToken);
+        await using var close = new NpgsqlCommand(
+            """
+            UPDATE appeals.bill_record r SET status = 'closed', closed_at = @at, changed_at = @at, closing_vote_id = @vote,
+              closed_for = (SELECT count(*) FROM appeals.position p WHERE p.record_id = r.id AND p.side = 'for'),
+              closed_for_older_than30days = (SELECT count(*) FROM appeals.position p WHERE p.record_id = r.id AND p.side = 'for' AND p.member_since < @established),
+              closed_against = (SELECT count(*) FROM appeals.position p WHERE p.record_id = r.id AND p.side = 'against'),
+              closed_against_older_than30days = (SELECT count(*) FROM appeals.position p WHERE p.record_id = r.id AND p.side = 'against' AND p.member_since < @established)
+            WHERE r.bill_number = @b AND r.status = 'open'
+            """,
+            connection);
+        close.Parameters.AddWithValue("at", at);
+        close.Parameters.AddWithValue("vote", closingVoteId);
+        close.Parameters.AddWithValue("established", CountRules.EstablishedBefore(at));
+        close.Parameters.AddWithValue("b", billNumber);
+        return await close.ExecuteNonQueryAsync(cancellationToken) > 0;
+    }
 }
