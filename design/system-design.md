@@ -3508,7 +3508,8 @@ built towards in M2b.
 **[The owner's direction, 2026-11-16: MPs already choose how often summaries come (8.19.4); every member should likewise
 choose between an email about each thing that concerns them and a gathered one, and how often. Decided by the owner the
 same day: "Iš karto" means within minutes and is the default; the weekly choice also sends what is due before a vote.
-The rest of the shape was proposed 2026-11-16 and not objected to. Not built.]**
+The rest of the shape was proposed 2026-11-16 and not objected to. Being built (2026-11-16) for the four follow emails
+that exist; comments (8.23.9) and followed members (8.25) join it when they are built.]**
 
 - **One choice on the account page,** in its part "Sekimas ir laiškai" (8.21), beside the existing switches (8.11.2, 8.14.14, 8.20.1, 8.23.9, 8.25), "Kaip
   dažnai siųsti laiškus":
@@ -3561,6 +3562,46 @@ The rest of the shape was proposed 2026-11-16 and not objected to. Not built.]**
   rest of the day except a lone "planned" whose sitting comes first, and still gets a sign-in code at once; a weekly reader
   gets Monday's email and the same lone "planned" emails; no event is sent twice when the choice changes between two
   emails; a kind switched off is in no email.
+- **What the building filled in [the designer's proposals of 2026-11-16, awaiting the owner; section 12 lists them to
+  answer one by one].**
+  - *The hour.* The daily and the weekly email go at the first run of the follow job from `Follows:ResponsesAt` on (08:00,
+    so at 08:07 with the production schedule). The daily one holds what the job first saw before that day's 08:00 and no
+    daily email has held; an event first seen at 08:07 waits for the next morning. The weekly one is the same from
+    Monday's 08:00, every Monday, whether or not the Seimas sits that week; the day is fixed, not a setting.
+  - *What "comes before the next gathered email" means.* A "planned" date on or before the Vilnius day of the person's
+    next gathered email, counted from when the job first saw the date: the email of the sitting's own morning is too late
+    to act on. For the daily choice that is a sitting today or tomorrow; for the weekly one, any sitting up to and
+    including the next Monday. It is decided once, when the date is first seen, and holds for any followed bill, with or
+    without a side. If the date moves again within that window, the new date is sent early too (the limit of one "planned"
+    email per bill per day stays a rule of "Iš karto").
+  - *One email per person per run, whatever its parts.* Everything a run holds for a person goes in one email: the
+    run's events under "Iš karto", the daily or the weekly email, and an early "planned" line; the early line is alone
+    only when the run holds nothing else for the person. An email with one thing is the email that thing always had (its
+    own subject and text, 8.11.2, 8.14.14, 8.20.1); with more, it is the gathered email: subject "Lietuva 2.0: naujienos
+    apie tai, ką sekate" ("dienos naujienos" in the daily one, "savaitės naujienos" in the weekly one), a part per kind in
+    the switches' order, each line with its day and its link, and at the end the link to the switches and the choice.
+  - *A change of the choice.* An event belongs to the choice the person had when the job first saw it, and comes in that
+    choice's email, also after the choice has changed: what was waiting for Monday still comes on Monday after a switch to
+    "Iš karto", and what comes after the switch comes at once. A second change before that email drops what was waiting
+    under the first choice, unless the first was "Iš karto" (it had gone already). So no event is sent twice; at worst one
+    is not sent, after two changes in a few days. The alternative, everything waiting moved into the first email of the new
+    choice, needs a per-person mark of what was carried over.
+  - *MPs' answers.* Recorded per answer (the bill, the MP, the moment the stance became public), not per bill and day: an
+    answer the job first sees more than three days after it became public is recorded and never sent, as a vote. Under
+    "Iš karto" the answers of a run are one part, listed per bill. `Follows:ResponsesAt` no longer holds them back to the
+    next morning (8.20.1, owner 2026-11-16). A morning missed because the worker was down is sent at the next run, late,
+    rather than never (8.20.1 said a day whose next day passed without a run is not sent later).
+  - *Auditing the choice.* A change is audited as `notices.frequency-changed` with the account as actor, the hashed address
+    of the request and no details (neither the old nor the new choice). The switches stay unaudited as they are.
+- [changed while building (2026-11-16): `notice_setting` holds, besides `frequency`, when the choice was made
+  (`frequency_since`) and the choice before it with its own start (`previous_frequency`, `previous_since`), which the rule
+  of a change above needs; nothing else about the person. `bill_event` keeps `outcome` and `sent_at` as the marks of the
+  runs' emails and gains `daily_at`, `weekly_at` and `early_at`. `GET /me/notices` gains `frequency`; the choice is read and
+  changed at `GET|PUT /me/notices/frequency` (`{ "frequency": "immediate" | "daily" | "weekly" }`, error
+  `notices.frequency-invalid`), its own route, so saving the switches and saving the choice never overwrite each other. It
+  shares the per-account limit `RateLimits:Participation`. A new kind of member email joins the rhythm by declaring itself
+  (`IMemberNoticeKind` in the Notifications module, and its part of the gathered email, `AddNoticePart`); the follow job is
+  not edited for it. The look-back for votes and statements is 14 days, so a weekly email can still read what it reports.]
 
 ### 8.25 A member's public profile, and following a member
 
@@ -4143,7 +4184,8 @@ No dates, in line with the rule that release dates are not promised. Each milest
 | **M2a org. Organisations on the site** | Organisations registered by members, confirmed by email domain or by a moderator, their statements and goals on bills, moderation after the fact (8.14.14 stage A); then invitation links and following (stage B). Not in summaries to MPs. | Sections 8.14.13 and 8.14.14. |
 | **M2b Sending** | Introduction letter, MP preferences, real summaries, profile take-over, MP responses, participant notifications, known devices for sign-in (6.2). | Section 8.9, the impact assessment, the legal check and the penetration test are done. |
 | **Follower counts** [owner, 2026-11-16; designed, not built] | How many follow a bill, an MP and an organisation, on the thing's own page, with the hint and the methodology's part on following; the privacy notice's line (8.11.2, section 12's legal row). Built after the branch of 2026-11-16 is verified. A member's number comes with M2d. | Section 8.11.7's last point. |
-| **M2c Comments** [proposed 2026-11-16] | "Aptarimas" under arguments, organisations' statements and MPs' responses, in one piece for the three kinds, with "Sutinku", a switch per kind, reports, moderation on the bill's page and the argument author's notice (8.23), with the email rhythm (8.24). Names are plain text. | Sections 8.23.13, 8.24. |
+| **Email rhythm** [owner, 2026-11-16; being built on `claude/email-rhythm`] | The member's choice of how often follow emails come, "Iš karto", "Kartą per dieną" or "Kartą per savaitę ir artėjant balsavimui", for the four follow emails that exist (planned, voted, organisations' statements, MPs' answers), with one email per person per run of the follow job and a way for later kinds to join (8.24). | Section 8.24's "Done when", for the kinds built. |
+| **M2c Comments** [proposed 2026-11-16] | "Aptarimas" under arguments, organisations' statements and MPs' responses, in one piece for the three kinds, with "Sutinku", a switch per kind, reports, moderation on the bill's page and the argument author's notice (8.23), which goes in the email rhythm (8.24). Names are plain text. | Sections 8.23.13, 8.24. |
 | **M2d Profiles** [proposed 2026-11-16] | Public profiles by the member's choice, "Apie mane", the name's card, following a member with their consent (8.25). | Section 8.25.8 and the lawyer's reading of the profile. |
 | **M3** | Stage 3 design: voting, delegation, AI summaries. Following, with its shown numbers, is delegation's predecessor (owner, 2026-11-16): the numbers show whom people choose to hear from, the ground delegation would stand on; a follow never becomes a delegation by itself (1.1, proposed). | Separate document. |
 
@@ -4365,6 +4407,33 @@ Built, awaiting the owner's word:
 
 - Changing the display name (6.2): a writing restriction blocks it (or leaves it alone); audited without the names; no
   earlier names kept.
+
+**Proposed by the designer while building the email rhythm (8.24), 2026-11-16, awaiting the owner**
+
+Each is built as written; "no" names what changes.
+
+1. The daily and weekly emails go at the first run of the follow job from `Follows:ResponsesAt` (08:00, so 08:07), the
+   setting relabelled "Rytinių laiškų laikas". If no: a setting of its own for each, or another hour.
+2. The weekly email goes every Monday, whether or not the Seimas sits that week, and the day is fixed. If no: only in
+   sitting weeks, or a setting for the day.
+3. A gathered email holds what the job first saw before that morning's hour; an event seen at 08:07 waits a day. If no:
+   the cut is the run itself (the 08:07 run's own events go in that morning's email).
+4. "Cannot wait" means a planned date on or before the day of the person's next gathered email, decided when the date is
+   first seen. If no: only a date strictly before that day (the email on the morning of the sitting is taken as in time).
+5. A planned date that moves again within that window is sent early again; the one-a-day limit stays for "Iš karto" only.
+   If no: at most one early email per bill per day, the later move waiting for the gathered email.
+6. One email per person per run, an early "planned" line included when the run holds anything else for the person. If no:
+   an early line is always an email of its own, so such a run can send two.
+7. An email with one thing keeps that thing's own email; two or more make the gathered email with a part per kind and the
+   subjects "Lietuva 2.0: naujienos apie tai, ką sekate" (daily: "dienos naujienos", weekly: "savaitės naujienos"). If no:
+   every email of a run or a day is the gathered one, also with one thing in it.
+8. After a change of the choice, what was waiting keeps its place and comes in the email it was waiting for; a second
+   change before that email drops what waited under the first choice. If no: what waits moves into the new choice's
+   first email, with a per-person mark of the carry-over.
+9. MPs' answers are recorded per answer, with the three-day rule of votes, and are told within a run under "Iš karto";
+   a missed morning is sent late at the next run rather than never. If no: the record per bill and day stays, and only
+   the timing changes.
+10. Changing the choice is audited without the choice itself. If no: not audited, like the switches.
 
 **Decisions needed before the stage that uses them**
 
