@@ -217,8 +217,9 @@ public static class IdentityModule
         // A page that needs a signed-in member (the account screens, design 8.21) sends a visitor to sign in with the page to
         // come back to after the '#' (design 6.8, 8.11.5: "tikslas"), which the sign-in page accepts only for its own list of
         // pages; anything else signs in to the account. The page's address is never put in a query.
+        var request = context.Request;
         context.Response.Redirect(apiStatus == StatusCodes.Status401Unauthorized
-            ? SignInPath + "#tikslas=" + Uri.EscapeDataString(context.Request.PathBase + context.Request.Path)
+            ? $"{request.Scheme}://{request.Host}{request.PathBase}{SignInPath}#tikslas={Uri.EscapeDataString(request.PathBase + request.Path)}"
             : context.RedirectUri);
         return Task.CompletedTask;
     }

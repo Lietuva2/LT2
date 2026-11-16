@@ -45,7 +45,7 @@ public abstract class StaffFixture(string role, string displayName) : IAsyncLife
         {
             var email = _email = await TestAccounts.ForFixtureAsync(role, () => PasskeyTests.RegisterAsync(page, displayName));
             await PasskeyTests.AddPasskeyAsync(page);
-            await page.Locator("main").GetByRole(AriaRole.Button, new() { Name = "Atsijungti" }).ClickAsync();
+            await E2ESteps.SignOutOnAccountAsync(page);
             await page.WaitForURLAsync(new Regex("/$"));
             await PasskeyTests.SignInWithPasskeyAsync(page);
             var output = await Compose.RunAsync("run", "--rm", "--no-deps", "migrator", "--grant-role", role, email);

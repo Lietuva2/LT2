@@ -374,8 +374,8 @@ written by hand. A visitor sent to sign in from one comes back to it (`LandingPa
   name, "Apie mane", the follower number and the member's published arguments on bills whose record is not hidden, newest
   first, 10 and "Rodyti daugiau" by `?rodyti=` (no script). Never sides, "Man svarbu", follows, party, invitations,
   organisations, anything written as an organisation or MP, counts of the person's texts, or who follows.
-- Beside an argument, the name of a member with a public profile is a link with a card (`AuthorName`, `js/lt2-cards.js`,
-  one `<template>` per profile id); `ReasonResponse.AuthorProfileId` is null for everyone else, and no public answer carries
+- Beside an argument, the name of a member with a public profile is a link with a card (`RecordReasons`, `js/lt2-cards.js`,
+  one `<template>` per profile id from `BillRecordResponse.Cards`); `ReasonResponse.AuthorProfileId` is null for everyone else, and no public answer carries
   an account id. The MP's own account cannot switch a profile on (`mp.takes-no-part`).
 - Following a member (`follow` kind `member`, key the profile id; `PUT|DELETE /members/{id}/follow`; `member.not-found` for
   anything not public): a line by email when the member publishes an argument (bill number, title, link, never the text),

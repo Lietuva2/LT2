@@ -90,7 +90,7 @@ public sealed class OrganisationInvitationFlowTests(AdministratorFixture adminis
             await Assertions.Expect(follow).ToHaveTextAsync("Nebesekti");
 
             // The account page lists it with the three switches.
-            await m.GotoAsync($"{Base}/sveiki#sekami");
+            await m.GotoAsync($"{Base}/sveiki/sekimas#sekami");
             await Assertions.Expect(m.Locator("#follows-organisations")).ToContainTextAsync(name, new() { Timeout = E2ESteps.Slow });
             await Assertions.Expect(m.Locator("#notice-statements")).ToBeCheckedAsync();
             await Assertions.Expect(m.Locator("#notice-planned")).ToBeCheckedAsync();

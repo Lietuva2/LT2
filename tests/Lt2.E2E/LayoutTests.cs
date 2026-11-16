@@ -35,6 +35,22 @@ public sealed class LayoutTests(LayoutTests.ModeratorFixture moderator) : E2ETes
         await using var member = await PasskeyBrowser.StartAsync("native", 1280, 800);
         await PasskeyTests.RegisterAsync(member.Page, "Rodoma Narė");
         await ShootAllAsync(member.Page, "member", checkMenu: true);
+
+        // Design 8.21: the four account screens, and the member's own public page (design 8.25), at 390 px.
+        var page = member.Page;
+        var (status, body) = await E2ESteps.ApiAsync(page, "PUT", "/api/v1/me/profile", new { about = "Rodoma narė, bandymas (E2E bandymas).", @public = true, consentVersion = "2026-11-16" });
+        status.ShouldBe(200, body);
+        var profileId = System.Text.Json.JsonDocument.Parse(body).RootElement.GetProperty("profileId").GetString()!;
+        await page.SetViewportSizeAsync(390, 900);
+        Directory.CreateDirectory(Shots);
+        foreach (var path in new[] { "/sveiki", "/sveiki/sekimas", "/sveiki/dalyvavimas", "/sveiki/saugumas", "/nariai/" + profileId })
+        {
+            await page.GotoAsync(Base + path);
+            await page.WaitForLoadStateAsync(LoadState.NetworkIdle);
+            await E2ESteps.NoSidewaysScrollAsync(page, path);
+            await page.ScreenshotAsync(new() { Path = Path.Combine(Shots, "member-" + path.Trim('/').Replace('/', '-') + "-390.png"), FullPage = true });
+        }
+
         member.ConsoleErrors.ShouldBeEmpty();
     }
 

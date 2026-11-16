@@ -90,7 +90,7 @@ public sealed class OrganisationFollowTests(DatabaseFixture database) : ApiTest(
         var profile = WebUtility.HtmlDecode(await member.Client.GetStringAsync("/o/" + created.Slug));
         profile.ShouldContain("id=\"follow-organisation\"");
         await FollowAsync(member, created.Slug);
-        var account = WebUtility.HtmlDecode(await member.Client.GetStringAsync("/sveiki"));
+        var account = WebUtility.HtmlDecode(await member.Client.GetStringAsync("/sveiki/sekimas"));
         account.ShouldContain("id=\"follows-organisations\"");
         account.ShouldContain(created.Slug);
         account.ShouldContain("id=\"notice-statements\"");
@@ -114,7 +114,7 @@ public sealed class OrganisationFollowTests(DatabaseFixture database) : ApiTest(
             root.GetProperty("billNumber").GetString().ShouldBe(AppealSteps.SecondBill);
             root.GetProperty("stance").GetString().ShouldBe("against");
             root.GetProperty("billPath").GetString().ShouldBe("/seimas/" + AppealSteps.SecondBill);
-            root.GetProperty("accountPath").GetString().ShouldBe("/sveiki#sekami");
+            root.GetProperty("accountPath").GetString().ShouldBe("/sveiki/sekimas#sekami");
             root.GetProperty("confirmedBy").ValueKind.ShouldBe(JsonValueKind.Null);
 
             // Exactly these fields: no text, no goal, no count, no side, nobody else. (A substring check failed by chance:
@@ -237,7 +237,7 @@ public sealed class OrganisationFollowTests(DatabaseFixture database) : ApiTest(
     }
 
     [Fact]
-    public async Task Nobody_sees_who_follows_an_organisation_and_there_is_no_follower_count_for_anyone()
+    public async Task Nobody_sees_who_follows_an_organisation_only_how_many_follow_it()
     {
         var moderator = (await ModeratorAsync()).Browser;
         var (rep, repEmail) = await Factory.MemberAsync("Organizacijos Atstovė");
@@ -259,11 +259,15 @@ public sealed class OrganisationFollowTests(DatabaseFixture database) : ApiTest(
         await FollowAsync(follower, created.Slug);
         var followerId = (await Database.UserIdAsync(followerEmail)).ToString();
 
-        // Public answers and the organisation's own answers are the same with and without the follower: no count anywhere.
+        // Public answers and the organisation's own answers are the same with and without the follower, but the profile's one
+        // number of how many follow it (design 8.11.2, owner 2026-11-16).
         foreach (var route in routes.Take(2))
         {
-            (await visitor.Client.GetStringAsync(route)).ShouldBe(before[route], route);
+            var after = await visitor.Client.GetStringAsync(route);
+            after.Replace("\"followers\":1", "\"followers\":0", StringComparison.Ordinal).ShouldBe(before[route], route);
         }
+
+        (await visitor.GetJsonAsync<OrganisationProfileResponse>(OrganisationRoutes.Of(created.Slug))).Followers.ShouldBe(1);
 
         (await rep.Client.GetStringAsync(OrganisationRoutes.ManagementOf(created.Slug))).ShouldBe(managementBefore);
         (await rep.Client.GetStringAsync(OrganisationRoutes.InvitationOf(created.Slug))).ShouldBe(invitationBefore);
@@ -275,7 +279,7 @@ public sealed class OrganisationFollowTests(DatabaseFixture database) : ApiTest(
             page.ShouldNotContain("Slapta Sekėja");
             page.ShouldNotContain(followerId, Case.Insensitive);
             page.ShouldNotContain("Nebesekti");
-            page.ShouldNotContain("sekėj", Case.Insensitive);
+            page.ShouldContain("Sekėjai: 1", Case.Sensitive, "how many follow is shown, and nothing more");
         }
 
         // Another member's follow answer is empty; the representative's too.

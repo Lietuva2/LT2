@@ -34,7 +34,7 @@ public sealed partial class PasskeyTests : E2ETest
         await Assertions.Expect(page.Locator(".note[role=alert]")).ToHaveTextAsync("Prieigos rakto naudojimas atšauktas arba nepavyko.");
         await Assertions.Expect(page.GetByText("Sukurta prieigos raktų: 1")).ToBeVisibleAsync();
 
-        await page.Locator("main").GetByRole(AriaRole.Button, new() { Name = "Atsijungti" }).ClickAsync();
+        await E2ESteps.SignOutOnAccountAsync(page);
         await page.WaitForURLAsync(new Regex("/$"));
         await SignInWithPasskeyAsync(page);
 
@@ -99,7 +99,7 @@ public sealed partial class PasskeyTests : E2ETest
         var page = session.Page;
         var email = await RegisterAsync(page);
         await AddPasskeyAsync(page);
-        await page.Locator("main").GetByRole(AriaRole.Button, new() { Name = "Atsijungti" }).ClickAsync();
+        await E2ESteps.SignOutOnAccountAsync(page);
         await page.WaitForURLAsync(new Regex("/$"));
         await SignInWithPasskeyAsync(page);
         (await MeAsync(page)).GetProperty("activeStaffRoles").GetArrayLength().ShouldBe(0);
@@ -130,7 +130,10 @@ public sealed partial class PasskeyTests : E2ETest
         await page.GotoAsync(E2ESteps.Base + "/prisijungti?registruotis=true");
         await E2ESteps.RegisterHereAsync(page, email, displayName, SignUpTests.Invitation);
         await page.WaitForURLAsync(new Regex("/sveiki$"), new() { Timeout = E2ESteps.Slow });
-        await Assertions.Expect(page.GetByText("prisijungta kodu")).ToBeVisibleAsync();
+
+        // Design 8.21: the sessions, passkeys and known browsers are on "Saugumas ir duomenys"; the browser stays there.
+        await page.GotoAsync(E2ESteps.Base + "/sveiki/saugumas");
+        await Assertions.Expect(page.GetByText("prisijungta kodu")).ToBeVisibleAsync(new() { Timeout = E2ESteps.Slow });
         return email;
     }
 

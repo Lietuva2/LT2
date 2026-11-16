@@ -208,6 +208,10 @@ public sealed class AppealPrivacyTests(DatabaseFixture database) : ApiTest(datab
             var (initiator, _) = await Factory.MemberAsync("Iniciatorė Bet Kuri");
             using var _i = initiator;
             await Database.PrepareBillAsync(initiator, moderator.Browser, AppealSteps.ThirdBill, side: null);
+
+            // A first side follows the bill (design 8.11.2) and the bill's page shows how many follow it: each round starts
+            // with none, so two sides make two follows whoever took them.
+            await Database.ExecuteAsync("DELETE FROM notify.follow WHERE kind = 'bill' AND key = @k", ("k", AppealSteps.ThirdBill));
             if (initiatorSide is not null)
             {
                 (await initiator.TakeSideAsync(AppealSteps.ThirdBill, initiatorSide)).StatusCode.ShouldBe(HttpStatusCode.NoContent);

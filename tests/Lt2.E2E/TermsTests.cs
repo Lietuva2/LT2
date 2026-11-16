@@ -21,7 +21,7 @@ public sealed class TermsTests : E2ETest
         await using var member = await PasskeyBrowser.StartAsync("native", 390, 844);
         var page = member.Page;
         var email = await PasskeyTests.RegisterAsync(page, "Senesnė Narė");
-        await page.Locator("main").GetByRole(AriaRole.Button, new() { Name = "Atsijungti" }).ClickAsync();
+        await E2ESteps.SignOutOnAccountAsync(page);
         await page.WaitForURLAsync(new Regex("/$"), new() { Timeout = E2ESteps.Slow });
 
         // The account accepted an earlier version, as every account will after the terms change.
@@ -56,7 +56,7 @@ public sealed class TermsTests : E2ETest
         JsonDocument.Parse(refusedBody).RootElement.GetProperty("code").GetString().ShouldBe("terms.required");
 
         // The account page says so too, with the way to the screen, the export and deleting.
-        await page.GotoAsync(E2ESteps.Base + "/sveiki");
+        await page.GotoAsync(E2ESteps.Base + "/sveiki/saugumas");
         await Assertions.Expect(page.Locator("#terms-required")).ToBeVisibleAsync(new() { Timeout = E2ESteps.Slow });
         await Assertions.Expect(page.Locator("#export")).ToBeVisibleAsync();
 
@@ -194,7 +194,7 @@ public sealed class TermsTests : E2ETest
             (await page.EvaluateAsync<string?>("() => sessionStorage.getItem('lt2.tikslas')")).ShouldBe("/seimas/XVP-0412", "the check sees what the site stores");
             await E2ESteps.RegisterHereAsync(page, E2ESteps.NewEmail(), "Atminties Narė", SignUpTests.Invitation);
             await page.WaitForURLAsync(new Regex("/seimas/XVP-0412$"), new() { Timeout = E2ESteps.Slow });
-            foreach (var path in paths.Append("/sveiki"))
+            foreach (var path in paths.Concat(["/sveiki", "/sveiki/sekimas", "/sveiki/dalyvavimas", "/sveiki/saugumas"]))
             {
                 await page.GotoAsync(E2ESteps.Base + path);
                 await page.WaitForLoadStateAsync(LoadState.NetworkIdle);
