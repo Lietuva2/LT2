@@ -6,7 +6,7 @@ using Microsoft.Extensions.DependencyInjection;
 namespace Lt2.UnitTests.Components;
 
 /// <summary>
-/// Design 8.21: "Projektai" is one menu item with four tabs; the item is current on the four pages and everything under them,
+/// Design 8.21: "Projektai" is one menu item with three tabs; the item is current on the three pages and everything under them,
 /// and the tab row under the heading marks the page it stands on and reaches the other three.
 /// </summary>
 public sealed class MenuTests : BunitContext
@@ -19,15 +19,14 @@ public sealed class MenuTests : BunitContext
     [Theory]
     [InlineData(ProjectTab.Agenda, "tab-darbotvarke")]
     [InlineData(ProjectTab.Bills, "tab-projektai")]
-    [InlineData(ProjectTab.Votes, "tab-seimas-balsavimai")]
     [InlineData(ProjectTab.Digests, "tab-suvestines")]
-    public void The_tab_row_marks_the_page_it_stands_on_and_links_the_other_three(ProjectTab current, string currentId)
+    public void The_tab_row_marks_the_page_it_stands_on_and_links_the_other_two(ProjectTab current, string currentId)
     {
         var tabs = Render<ProjectTabs>(p => p.Add(c => c.Current, current));
 
         var links = tabs.FindAll("#project-tabs a");
-        links.Select(a => a.GetAttribute("href")).ShouldBe(["/darbotvarke", "/projektai", "/seimas/balsavimai", "/suvestines"]);
-        links.Select(a => a.TextContent).ShouldBe(["Darbotvarkė", "Visi projektai", "Balsavimai", "Suvestinės"]);
+        links.Select(a => a.GetAttribute("href")).ShouldBe(["/darbotvarke", "/projektai", "/suvestines"]);
+        links.Select(a => a.TextContent).ShouldBe(["Darbotvarkė", "Projektai", "Suvestinės"]);
         tabs.FindAll("#project-tabs a[aria-current]").ShouldHaveSingleItem().Id.ShouldBe(currentId);
         tabs.Find($"#{currentId}").GetAttribute("aria-current").ShouldBe("page");
         tabs.Find("#project-tabs").GetAttribute("aria-label").ShouldBe("Projektai");
@@ -36,13 +35,13 @@ public sealed class MenuTests : BunitContext
     [Theory]
     [InlineData("/darbotvarke", ProjectTab.Agenda)]
     [InlineData("projektai?rikiuoti=dalyviai", ProjectTab.Bills)]
-    [InlineData("/seimas/balsavimai", ProjectTab.Votes)]
     [InlineData("/suvestines/", ProjectTab.Digests)]
     public void Each_tab_is_its_own_page(string path, ProjectTab tab) =>
         MenuSections.TabOf(path).ShouldBe(tab);
 
     [Theory]
     [InlineData("/seimas/XVP-0412")]
+    [InlineData("/seimas/balsavimai")]
     [InlineData("/seimas/balsavimai/123")]
     [InlineData("/suvestines/2026-11-16")]
     [InlineData("/")]

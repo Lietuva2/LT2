@@ -1,7 +1,7 @@
 @inject IStringLocalizer<UiText> T
 
-@* Design 8.21: the four tabs of "Projektai" as a row of plain links under the page's heading on the four pages, the current
-   one marked; on the ground (design 8.16), no script. Each tab reaches the other three. *@
+@* Design 8.21: the three tabs of "Projektai" as a row of plain links under the page's heading on the three pages, the current
+   one marked; on the ground (design 8.16), no script. Each tab reaches the other two. *@
 <nav class="row tabs project-tabs" aria-label="@T["Tabs.Label"]" id="project-tabs">
     @foreach (var (tab, path, key) in MenuSections.Tabs)
     {

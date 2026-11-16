@@ -261,8 +261,9 @@ code review.
 
 **Navigation (design 8.21, built 2026-11-16).** The menu is the logo, "Projektai", "Seimo nariai", and "Prisijungti" or the
 account item "Paskyra"; one line from 360 px (`MenuTests`, E2E). "Projektai" opens `/darbotvarke` and is current (`aria-current`)
-on its four tabs and everything under them (`MenuSections`); the four tabs ("Darbotvarkė", "Visi projektai", "Balsavimai",
-"Suvestinės") are `<ProjectTabs>` under the heading of `/darbotvarke`, `/projektai`, `/seimas/balsavimai`, `/suvestines`. The
+on its three tabs and everything under them (`MenuSections`); the three tabs ("Darbotvarkė", "Projektai", "Suvestinės")
+are `<ProjectTabs>` under the heading of `/darbotvarke`, `/projektai`, `/suvestines`. The history of votes is no tab (the
+owner, 2026-11-16): the agenda's voted list links to it and it leads back by a breadcrumb (`#to-agenda`). The
 account item (`Layout/AccountMenu`) is a `<details>` with "Mano paskyra" and "Atsijungti" (the server-rendered sign-out form);
 `js/lt2-account.js` fills the name and the account's links (staff screens, an MP's projects, accepting changed terms) from
 `GET /me` when it opens and closes it on Escape, a press outside and focus leaving. **No served page holds a member's name or
@@ -563,6 +564,10 @@ that would leave the page only to explain a term is a hint instead. In a list, o
 line), never one per row. An island never opens a hint from code; a hint is phrasing content and may stand in a paragraph.
 
 - The interface is in **Lithuanian**. New copy is read by a native speaker before it is shown externally.
+- **Nothing is worded as new or changed (the owner, 2026-11-16).** Nobody has seen the site yet and everything launches
+  at once: what is built during development is not a change for any reader. No text says "dabar", "nuo šiol", "nauja",
+  "pasikeitė" or "atnaujinta" about the product, its rules or its pages; write each thing as how it normally is. A text
+  about something that really differs from what a person saw before (a moved planned date, a changed answer) is fine.
 - Neutral-to-positive towards politicians: connection and explanation, not control. Prefer "skirtumas" over
   "atotrūkis"; neutral chips, not warning colours, for differences.
 - Numbers are a signal from self-selected "Lietuva 2.0 naudotojai", never "the public", "voters" or a referendum. Every
@@ -604,7 +609,7 @@ rules are about them.
   integration `TermsTests` sends every mapped write as such an account and expects `terms.required`; put a route on
   `TermsExemptions.Routes` only when the design says the write must work before acceptance.
 - **Navigation in end-to-end tests (design 8.21).** "Mano paskyra" and "Atsijungti" are inside the account item: open it with
-  `#account-toggle` first; the four tabs are `#project-tabs`; the theme switch is in the footer. The account page's own
+  `#account-toggle` first; the three tabs are `#project-tabs`; the theme switch is in the footer. The account page's own
   "Atsijungti" (`main`) is unchanged.
 - **Staff:** `ModeratorAsync()` / `AdministratorAsync()` of `ApiTest` give the run's shared staff members. Only a test about
   the staff account itself (passkeys, sessions, a reset, a per-moderator limit) makes its own with `StaffMembers.ActiveAsync`.

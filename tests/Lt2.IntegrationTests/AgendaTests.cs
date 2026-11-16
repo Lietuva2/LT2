@@ -180,7 +180,7 @@ public sealed partial class AgendaTests(DatabaseFixture database) : ApiTest(data
     [Fact]
     public async Task The_first_menu_item_Projektai_opens_the_agenda()
     {
-        // Design 8.21: "Projektai" is first and opens /darbotvarke, the first of its four tabs.
+        // Design 8.21: "Projektai" is first and opens /darbotvarke, the first of its three tabs.
         using var visitor = NewBrowser();
         var html = await visitor.Client.GetStringAsync("/seimo-nariai");
         var nav = html[html.IndexOf("top__nav", StringComparison.Ordinal)..];

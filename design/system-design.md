@@ -2783,11 +2783,13 @@ lines on a phone.
 
 - **The menu:** the logo, "Projektai", "Seimo nariai", and "Prisijungti" for a visitor or the account item for a
   member. It fits one line at 360 px.
-- **"Projektai" is one item with four tabs:** "Darbotvarkė" (`/darbotvarke`), "Visi projektai" (`/projektai`),
-  "Balsavimai" (`/seimas/balsavimai`, 8.18, which had no entry) and "Suvestinės" (`/suvestines`). The item opens the
+- **"Projektai" is one item with three tabs:** "Darbotvarkė" (`/darbotvarke`), "Projektai" (`/projektai`; named "Visi projektai" until the owner shortened it on 2026-11-16) and
+  "Suvestinės" (`/suvestines`). **[Changed by the owner on 2026-11-16, on the built result: "Balsavimai" was a fourth
+  tab; the link under the agenda's voted list (8.18) is enough, and the row is shorter on a phone. The history of votes
+  keeps its address, has no tab row, and leads back to the agenda by a breadcrumb.]** The item opens the
   agenda **[designer's proposal: what is coming is the most useful first view]**. The tabs are a row of plain links
-  under the page's heading on these four pages, the current one marked; no script. Addresses do not change. The menu
-  item is marked current on the four pages and on everything under them (a bill, a vote, a summary).
+  under the page's heading on these three pages, the current one marked; no script. Addresses do not change. The menu
+  item is marked current on the three pages and on everything under them (the history of votes, a bill, a vote, a summary).
 - **The account item** reads "Paskyra" **[designer's proposal: not the person's name, so the page's HTML stays the same
   for every member]**. It is a disclosure that works without script, holding "Mano paskyra" and "Atsijungti". With
   script, the opened item also shows the person's name at the top and the links their account has: "Moderavimas",
@@ -2801,7 +2803,7 @@ lines on a phone.
   - "Apie": "Metodika", "Moderavimo taisyklės", "Naudojimo taisyklės", "Privatumas" (8.22);
   - "Dalyvauti": "Organizacijos", "Atsiliepimai".
 - **The theme switch** moves to the footer, so a visitor has it too. It works as before and is absent without script.
-- **Done when:** the menu is one line at 360, 390 and 1280 px; each of the four tabs is reachable from the other three
+- **Done when:** the menu is one line at 360, 390 and 1280 px; each of the three tabs is reachable from the other two
   and marked; every page that was in the old menu is one press from the menu or the footer; the account item works
   with and without script and with the keyboard; no served page holds a member's name or role links.
 - [changed while building (2026-11-16): "Seimo nariai" is marked current on the list and on everything under it as well (a
@@ -2840,7 +2842,10 @@ and the reading of the law go to the lawyer with the consent texts (12).]**
 - **There is no box for the privacy notice:** it informs, it is not something to agree to. The account rests on the
   terms; only positions rest on consent, which stays its own separate step before the first side (6.5).
 - **When the terms change, and for accounts older than this:** after sign-in the member sees one screen, "Naudojimo
-  taisyklės", with a short paragraph on what changed, the link, "Sutinku" and "Atsijungti". Until then the account
+  taisyklės", with a short paragraph on what the terms cover, the link, "Sutinku" and "Atsijungti". **[The owner on
+  2026-11-16: nobody has seen the site yet and everything launches at once, so the screen and the refusals do not say
+  the terms are new or have changed; only when terms already published to people really change does the paragraph
+  say what changed.]** Until then the account
   reads everything and its writes are refused with `terms.required`, except accepting, signing out, the export and
   deleting the account.
   [changed while building (2026-11-16): the screen is `/taisykles/sutikimas` and also says, in one line with the link, that

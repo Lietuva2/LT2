@@ -11,7 +11,7 @@
   <data name="DisplayName.TooLong" xml:space="preserve"><value>Vardas per ilgas: ne daugiau kaip 60 ženklų.</value></data>
   <data name="Adult.Required" xml:space="preserve"><value>Registruotis gali tik 18 metų ir vyresni asmenys.</value></data>
   <data name="Terms.Required" xml:space="preserve"><value>Kad galėtumėte užsiregistruoti, sutikite su naudojimo taisyklėmis.</value></data>
-  <data name="Terms.Version" xml:space="preserve"><value>Naudojimo taisyklės pasikeitė. Perkraukite puslapį ir perskaitykite naujas.</value></data>
+  <data name="Terms.Version" xml:space="preserve"><value>Rodoma ne ta naudojimo taisyklių versija. Perkraukite puslapį ir perskaitykite galiojančias.</value></data>
   <data name="Code.Required" xml:space="preserve"><value>Įveskite kodą iš laiško.</value></data>
   <data name="Code.Format" xml:space="preserve"><value>Kodą sudaro šeši skaitmenys.</value></data>
   <data name="Passkey.Required" xml:space="preserve"><value>Nepavyko gauti prieigos rakto duomenų.</value></data>

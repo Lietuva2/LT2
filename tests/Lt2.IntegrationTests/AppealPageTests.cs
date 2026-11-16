@@ -273,11 +273,11 @@ public sealed partial class AppealPageTests(DatabaseFixture database) : ApiTest(
         status.ShouldBe(HttpStatusCode.OK);
 
         // Design 8.12.5 (decided 2026-11-14): the menu item, the heading and the title are "Projektai". Design 8.21: the menu
-        // item opens the agenda and is current here; this page is the tab "Visi projektai".
+        // item opens the agenda and is current here; this page is the tab "Projektai".
         html.ShouldContain("<title>Projektai · Lietuva 2.0</title>");
         html.ShouldContain("<h1>Projektai</h1>");
         html.ShouldContain("<a href=\"/darbotvarke\" id=\"nav-projects\" aria-current=\"true\">Projektai</a>", customMessage: "the menu item");
-        html.ShouldContain("<a href=\"/projektai\" id=\"tab-projektai\" aria-current=\"page\">Visi projektai</a>", customMessage: "the tab");
+        html.ShouldContain("<a href=\"/projektai\" id=\"tab-projektai\" aria-current=\"page\">Projektai</a>", customMessage: "the tab");
         html.ShouldNotContain("Kreipimaisi");
         html.ShouldContain("href=\"/seimas/XVP-0618\"");
         html.ShouldContain("href=\"/seimas/XVP-0533\"", customMessage: "every active bill is listed, also one nobody took part in");

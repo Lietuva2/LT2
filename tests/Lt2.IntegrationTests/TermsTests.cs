@@ -122,7 +122,7 @@ public sealed partial class TermsTests(DatabaseFixture database) : ApiTest(datab
         {
             await consent.ShouldBeProblemAsync(HttpStatusCode.Forbidden, TermsOfUse.RequiredCode);
             (await consent.ProblemAsync()).GetProperty("detail").GetString()
-                .ShouldBe("Naudojimo taisyklės pasikeitė. Kol su jomis nesutiksite, galite tik skaityti, atsisiųsti savo duomenis, ištrinti paskyrą ir atsijungti.");
+                .ShouldBe("Kol nesutikote su naudojimo taisyklėmis, galite tik skaityti, atsisiųsti savo duomenis, ištrinti paskyrą ir atsijungti.");
         }
 
         using (var side = await member.TakeSideAsync(AppealSteps.ThirdBill, "for"))
