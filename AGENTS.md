@@ -332,8 +332,10 @@ text gets a new, later version: every member is asked again. A member whose acce
 (`TermsOfUse.NeedsAcceptance`; `GET /me` says `termsRequired`) is sent to `/taisykles/sutikimas` after signing in and by
 any island refused with `terms.required` (`InteractiveBase`); until they accept, reads work and every API write is refused in
 one place, `Security/TermsGate` (before authorization, so a new write route is covered by default; `TermsTests` sweeps every
-mapped write), except `TermsExemptions.Routes` (accepting, signing out, deleting the account, the MP mail token routes). The
-export is a read. The server-rendered feedback form asks the same question. Pending accounts accept with their registration;
+mapped write), except `TermsExemptions.Routes` (accepting, signing out, deleting the account, the MP mail token routes, and
+(owner, 2026-11-17) withdrawing a consent: `DELETE /me/profile/public`, `DELETE /me/consents/positions`,
+`DELETE /me/party-support`; giving one again stays refused). The export is a read. The version stays 2026-11-17 until the
+launch although the text changed while building (owner, 2026-11-17): nobody accepted an earlier one. The server-rendered feedback form asks the same question. Pending accounts accept with their registration;
 the invented demonstration members get the consent like their others (`--demo-appeal`, repeatable).
 
 **Accounts.** Registration is by email only, by invitation during the closed trial, with a self-declared age of 18 or
@@ -373,8 +375,9 @@ written by hand. A visitor sent to sign in from one comes back to it (`LandingPa
   answers 404. Switching on again makes a new id. A display name is needed while public (`profile.name-required`).
 - "Apie mane" (`about`): plain text up to `Texts:MaxLength`, written while off too and shown only with the profile;
   `https://` links shown with their host, `rel="nofollow ugc noopener noreferrer"`; own contacts allowed; a personal code
-  refused (`ProfileRules.CheckAbout`, `about.personal-code`); a writing restriction blocks changing it (an existing text
-  stays). Reported on the page (`POST /members/{id}/report`, `identity.profile_report`); a moderator hides it with a statement
+  refused (`ProfileRules.CheckAbout`, `about.personal-code`); a writing restriction blocks writing or changing it (an existing
+  text stays); clearing it and switching off stay open (owner, 2026-11-17). "Viešas profilis" off alone is
+  `DELETE /me/profile/public` (`ProfileHandlers.SwitchOffOwnAsync`); taking over an MP's profile switches it off too. Reported on the page (`POST /members/{id}/report`, `identity.profile_report`); a moderator hides it with a statement
   emailed to the person, keeps it or restores it (`/moderation/profiles…`, `ProfileModerationView`); a hidden text shows
   nowhere until the person writes another.
 - The page (`Lt2.Web/Components/Members/MemberPage`, composed by the host from Identity, Notifications and Appeals) shows the
@@ -545,7 +548,7 @@ page's "Balsuota".
 - **Follower numbers (design 8.11.2, owner 2026-11-16, built with the profiles).** "Sekėjai: n", exact from 1, is shown only
   on the thing's own page: the bill's page beside "Sekti" (`GET /bills/{number}/followers`), the MP's profile and the
   organisation's profile (`followers` in their answers) and a member's page; never in list rows, a member's card or beside
-  texts, never sorted, ranked or added up, nothing at zero (`FollowerLine`, with the hint "Kas yra sekėjai?" to
+  texts, never sorted, ranked or added up, nothing at zero (`FollowerLine`, inside `FollowButton` (`Followers`) so the person's own "Sekti" moves it at once, with the hint "Kas yra sekėjai?" to
   `/metodika#sekimas`). Counted from `notify.follow` when the answer is made, through `IFollowerCounts` (SharedKernel,
   Notifications): a number only. The last three points are the designer's proposals awaiting the owner.
 - "Seimo narių atsakymai" (design 8.20.1, the fourth switch `responses`), in the person's rhythm (design 8.24): one part per
@@ -561,7 +564,11 @@ page's "Balsuota".
   `#laisku-daznis` after the switches; audited `notices.frequency-changed` without the choice). One place decides and sends:
   `Rhythm/NoticeDelivery` (Notifications) makes, each run, the run's emails, the "planned" dates that cannot wait, the daily
   email from `Follows:ResponsesAt` ("Rytinių laiškų laikas", 08:00) and Monday's, and gathers everything for one person into
-  one email per run (`GatheredNoticesEmail`; one thing alone keeps its own email). The rules are `RhythmRules` (pure). An
+  one email per run (`GatheredNoticesEmail`; one thing alone keeps its own email). The rules are `RhythmRules` (pure); going
+  back to the choice just left within 15 minutes undoes the change (`RhythmRules.UndoWindow`). A daily or weekly email is made
+  once per period (`notify.rhythm_pass`). `bill_event` rows older than 30 days go with the daily outbox clean-up
+  (`IFollows.PurgeEventsAsync`, `FollowRules.EventRetention`; the designer's proposal). Comments are read up to two minutes
+  before the run (`FollowRules.CommentsWindow`). An
   event belongs to the choice the person had when the job first saw it. A member email kind joins by declaring itself: an
   `IMemberNoticeKind` (record, then take per pass and mark its events) and its part (`AddNoticePart`). The kinds: planned,
   voted, statements, MPs' answers, followed members (`MemberNotices`, switch `members`) and comments under one's arguments
@@ -681,12 +688,16 @@ account only when the member allows a reply, otherwise nothing leads back; staff
 statement and a response, one level, oldest first, public at once, never counted or sent to MPs. The voice is the server's:
 a representative under its organisation's own statement writes as the organisation, the MP's account or office under that
 MP's own response as the MP (passkey session, mandate not ended), everyone else as a person; the MP's account comments
-nowhere else. Pre-screening refuses an email address, a phone number or a personal code (`comment.screened`); an `https://`
+nowhere else. Pre-screening refuses an email address, a phone number or a personal code (`comment.screened`); the phone rule
+(`PreScreening.ContainsPhoneNumber`, every screened text) matches only Lithuanian numbers: `+370`/`00370`, the trunk `0`
+or the old `8`, then eight digits starting 3–9 (owner, 2026-11-17), never a date, year span, sum, law number or a link's digits; an `https://`
 address is a link (`CommentLinks`, `rel="nofollow ugc noopener noreferrer"`). `Comments:OnReasons|OnStatements|OnResponses`
 (off: no new comments, the written ones readable), `Comments:PerPersonPerTarget` (0), `RateLimits:WriteComment` (20 an hour).
 "Sutinku" is public with names, needs no positions consent, is not blocked by a writing restriction, and the first one asks
-inline. The discussion follows its target (`CommentCascade`): withdrawn or merged goes, hidden hides, a closed bill is
-read-only. The thread is `Lt2.Web.Client/Comments/CommentThread` (inside the arguments' and statements' islands, its own island
+inline. The discussion follows its target (`CommentCascade`): withdrawn or merged goes (the merge confirmation says how
+many), hidden hides, a closed bill or a target no longer writable is read-only (`comment.read-only`; a hidden comment cannot
+be deleted, `comment.hidden`). Member controls render only once the island runs, so the served HTML is the same for every
+member and visitor. While an "Aptarimas" is open under an argument the sides stand in one column. The thread is `Lt2.Web.Client/Comments/CommentThread` (inside the arguments' and statements' islands, its own island
 under responses), the caller's answer `CommentState` (browser only), reports target `comment`, moderators' list
 `CommentModerationView`/`CommentQueueItem`, actions also on the bill's page. The author's notice is one kind of the rhythm,
 `CommentNotices` (Notifications; outbox kind `email.comment-notice` alone, its own part of the gathered email; switch

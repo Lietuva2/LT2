@@ -100,7 +100,8 @@ internal sealed class FollowTemplates(IStringLocalizer<EmailTemplates> l, IOptio
     }
 
     /// <summary>
-    /// MPs answered on a bill the person follows (design 8.20.1): one email per bill per day, the morning after. Each MP's
+    /// MPs answered on a bill the person follows (design 8.20.1): in the person's rhythm (design 8.24), one part per bill
+    /// with every answer not told yet (at once, the morning from Follows:ResponsesAt, or Monday). Each MP's
     /// name (nominative), faction and stance, and the link to the bill's part "Seimo narių atsakymai". Never an explanation's
     /// text, the person's side, a count or anyone else.
     /// </summary>
