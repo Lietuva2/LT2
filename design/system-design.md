@@ -681,7 +681,8 @@ Other official sources, used as **links first** and imported only where a stage 
 | Chief Official Ethics Commission (VTEK) | Declarations of private interests | Link only. |
 
 Deliberately not shown: parliamentary expenses and anything else that grades the MP's work, and no ranking or comparison
-of MPs by any number. The concept's tone is connection and explanation, and the profile shows what the MP did. The one
+of MPs by any number (one exception, owner 2026-11-16: a member's own "Kas balsuoja taip kaip jūs", seen by that member
+only, 8.26.4). The concept's tone is connection and explanation, and the profile shows what the MP did. The one
 number on it that is not about the MP's work is how many members follow the MP (8.11.2, owner 2026-11-16; designed, not
 built): it says how many chose to hear about the MP, not what the MP did or how well, and, as the designer proposes, it
 stands only on the profile, orders no list and is never added up per faction or party.
@@ -2981,7 +2982,8 @@ lines on a phone.
 - **"Projektai" is one item with three tabs:** "Darbotvarkė" (`/darbotvarke`), "Projektai" (`/projektai`; named "Visi projektai" until the owner shortened it on 2026-11-16) and
   "Suvestinės" (`/suvestines`). **[Changed by the owner on 2026-11-16, on the built result: "Balsavimai" was a fourth
   tab; the link under the agenda's voted list (8.18) is enough, and the row is shorter on a phone. The history of votes
-  keeps its address, has no tab row, and leads back to the agenda by a breadcrumb.]** The item opens the
+  keeps its address, has no tab row, and leads back to the agenda by a breadcrumb.]** **[Owner, 2026-11-16: a fourth
+  tab, "Analitika" (`/seimas/analitika`, 8.26), after "Suvestinės".]** The item opens the
   agenda **[designer's proposal: what is coming is the most useful first view]**. The tabs are a row of plain links
   under the page's heading on these three pages, the current one marked; no script. Addresses do not change. The menu
   item is marked current on the three pages and on everything under them (the history of votes, a bill, a vote, a summary).
@@ -3732,6 +3734,127 @@ with comments.
   refused; a restricted account cannot change it; a reported text is hidden with a statement and shows nowhere until
   replaced.
 - The export holds the profile, the text, the consent and the follows the person made; deletion removes them all.
+
+### 8.26 Analytics: where the Seimas and the members agree (`/seimas/analitika`)
+
+**[Decided by the owner on 2026-11-16: "build it all as proposed".]** The concept's analytics chapter (`#analytics` of
+the concept page), without delegation and without what has no data yet. Earlier that day the owner allowed the count of
+MPs who took over their profile ("46 iš 141") and factions compared side by side. On 2026-11-16 the owner also decided
+the four questions of the proposal: the member's own comparison lists MPs in order of agreement (an exception to 7.3, for
+that member's eyes only); the Seimas's majority is the majority of those who voted, a consensus counting as "for"; the
+page is a fourth tab, "Analitika", under "Projektai" (8.21); and one fixed sample of 20 applies everywhere, not a setting.
+
+#### 8.26.1 What the page shows
+
+Public, server-rendered, the same for everyone and nothing about the caller, apart from one island. Two filters in one GET
+form on the ground (8.16), with no script: the period (`metai`: the whole current term, the default, or one calendar year
+of it, Vilnius days) and the accounts counted (`paskyros=senesnes`: only accounts older than 30 days, from the counts every
+record keeps for them). The lead says once that the numbers are from self-selected Lietuva 2.0 users and are not a
+representative poll; the same line stands beside the comparison of sides (8.2, `AGENTS.md`).
+
+1. **Four figures.**
+   - *Projects members took part in*: of the bills in the catalogue that were on the agenda of a sitting held in the
+     period (the catalogue holds only bills discussed at a sitting; registered bills are not imported), those whose
+     shown counts have at least one side. Said "iš N projektų, svarstytų Seime", never "registered".
+   - *Positions taken*: the sum of both sides over the same bills, as their pages show them (frozen once closed, live
+     before; a hidden record counts nothing). With the filter, only the older accounts' counts.
+   - *Majorities agreed*: of the closed bills of the period that can be compared (8.26.2), those where the members'
+     majority and the Seimas's majority chose the same; "x iš N", with a percentage only when N is 20 or more, otherwise
+     "maža imtis". Nothing when N is 0.
+   - *MPs who took over their profile*: sitting MPs whose profile is taken over (8.5.2), of all sitting MPs, today. The
+     period does not apply.
+2. **The comparison of sides** ("Balsų „už“ dalis: Seimas ir Lietuva 2.0 naudotojai"): a dot plot drawn by the server
+   (SVG, a `<title>` per dot for the exact numbers, no script), one row per comparable closed bill of the period, the
+   latest 10 by their closing vote, with the line at 50 %, and "Rodyti lentelę" (`details.more`) with every closed bill
+   of the period that has at least one side: the bill, the Seimas's share "for", the members' share "for" (or their counts
+   and "maža imtis" under 20), and the majority of those who voted in the Seimas ("už" or "ne").
+3. **Faction unity** ("Frakcijų vieningumas"): per faction of the current term with a recorded vote in the period, the
+   share of its members' ballots that chose the faction's position, over the votes where it had one (the two-thirds rule
+   of 7.3), the number of those votes and the number of free votes; "maža imtis" under 20 votes with a position. The
+   factions stand in order of their seats today, then by name: side by side, not ranked. Under each bar a
+   `details.more` lists the three votes where the faction split most (8.26.3), each linking to the vote's page.
+4. **"Kas balsuoja taip kaip jūs"**: the member's own comparison (8.26.4), an island filled in the browser.
+
+#### 8.26.2 The rules of the comparison (pure functions, `AnalyticsRules` in SharedKernel)
+
+- **A closed bill of the period**: a closed record (8.1; hidden ones are left out) whose closing vote was held in the
+  period.
+- **The Seimas's share "for"**: for ÷ (for + against + abstain) at the closing vote. A vote adopted by consensus has no
+  numbers: it is shown as "bendru sutarimu", has no dot, and counts as a majority "for". A vote whose per-MP results are
+  not read yet is not compared.
+- **The Seimas's majority** is the majority of those who voted: "for" when the votes for are more than half of for,
+  against and abstain together; otherwise not "for". Open data gives no "adopted" or "rejected", and the legal rule counts
+  the MPs registered at the sitting, which is not stored; the page says "balsavusiųjų dauguma", never "priimta".
+- **The members' share "for"**: for ÷ (for + against) of the counts chosen by the filter. Their majority is the larger
+  side; a tie has none and the bill is not compared.
+- **The sample**: a bill is compared (a dot, a share, a place in "Majorities agreed") only when the members' counts chosen
+  by the filter add up to 20 or more. Under 20 the table gives the counts ("2 už, 1 prieš") with "maža imtis" and no
+  share. One number, 20, for every sample on the page (`AnalyticsRules.SmallSample`); it is not a setting.
+
+#### 8.26.3 Faction unity (pure functions in Parliament, `FactionUnityRule`)
+
+From the faction positions the import keeps per vote (5.1 `faction_position`), over recorded votes held in the period
+(consensus votes have none): the share is the sum, over the votes where the faction had a position, of the members who
+chose it, divided by the sum of the members who voted in those votes (pooled, so a large vote weighs more than a small
+one). Free votes are counted beside it, never in it. A vote's split is the share of the faction's largest option among
+its members who voted; the three lowest are where it split most (free votes included, at least two members voting, the
+newest first on a tie). The mixed group is no faction and is not shown.
+
+#### 8.26.4 "Kas balsuoja taip kaip jūs"
+
+- **For the caller only** (`GET /api/v1/me/analytics/agreement`): read per request from the caller's own sides on closed
+  records and the MPs' public ballots at those records' closing votes; never stored, cached or logged, and never
+  prerendered: the server-rendered page holds only the part's heading and one line; a visitor's island offers the
+  sign-in link back to the page (`LandingPath.SignInLink`).
+- **An MP matches** on a bill when the MP's ballot at the closing vote is the caller's side; an abstention does not
+  match; an MP who did not vote, or a vote by consensus, is not in the sample. **A faction matches** when its position
+  (two thirds) is the caller's side; a free vote is not in its sample. Every MP with a ballot at those votes is listed,
+  with the faction of today (or the last one) and "buvęs Seimo narys" for a former MP.
+- **Order (owner, 2026-11-16):** factions, then MPs; within each, those with 20 common votes or more by the share of
+  agreement, highest first (then by name); then those with fewer, by name, with "sutapo 3 iš 4 · maža imtis" and no bar.
+  Nobody with no common vote is listed. The heading line says on how many closed bills the caller took a side, and how
+  many of them the Seimas adopted by consensus (no ballots).
+- It is a comparison for the member, not a judgement of MPs: the line under the heading says so and that nobody else sees
+  it.
+
+#### 8.26.5 What it shows in the trial
+
+The trial has invented data and few members. Faction unity and the take-over count are full. A comparison of sides needs
+closed bills with 20 positions: until there are, the plot says in one line that no closed bill has 20 positions yet,
+the table still lists the closed bills with their counts and "maža imtis", and "Majorities agreed" shows nothing. The
+member's own comparison then shows fractions with "maža imtis", or, without a side on any closed bill, one line and the
+link to `/projektai`.
+
+#### 8.26.6 API
+
+```
+GET /api/v1/analytics?year=2026&accounts=older   public, cacheable, nothing about the caller
+GET /api/v1/me/analytics/agreement                 the caller's own comparison; no-store, as every signed-in answer
+```
+
+`year` is a calendar year of the current term (anything else is the whole term); `accounts=older` counts only accounts
+older than 30 days. The public answer carries the four figures, the comparable and listed bills with their numbers, and
+the factions with their three most split votes.
+
+#### 8.26.7 Not built, and why
+
+- **The topic filter (*sritis*)**: bills carry no subject area, in the data or the design.
+- **Party supporters against their faction**: party numbers are not frozen when a record closes, so they would mix today's
+  supporters with old sides; a member supports one party, chosen from the nominating parties, not several; and parties do
+  not map to factions. It needs its own design (an aggregate made when the record closes, groups of at least 20).
+- **"Faction members voted on LT2 as their faction"**: an MP's own account takes no side (8.5.4).
+- **The delegated share**: stage 3.
+- **Bills rejected or withdrawn before the adoption stage**: 8.1 says such a record closes too, but the code closes a
+  record only at the adoption-stage vote, so those bills are not compared. Recorded here; not changed by this section.
+
+#### 8.26.8 Done when
+
+- `/seimas/analitika` is the fourth tab under "Projektai", works without script, and the filters change every figure they
+  apply to.
+- Every number follows 8.26.2–8.26.4 in a unit test whose name reads as the rule; consensus votes have no share; under 20
+  a sample shows counts and "maža imtis".
+- The public answer is the same for a visitor and a member; the caller's comparison answers only the caller, holds
+  nothing of another person, and a visitor gets 401.
 
 ## 9. Hosting and operations
 

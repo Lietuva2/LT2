@@ -5,7 +5,7 @@ namespace Lt2.E2E;
 
 /// <summary>
 /// Design 8.21 against the stack: the menu (logo, "Projektai", "Seimo nariai", "Prisijungti" or "Paskyra") on one line at 360,
-/// 390 and 1280 px in both themes, for a visitor and a member; the three tabs of "Projektai" reaching each other; the account
+/// 390 and 1280 px in both themes, for a visitor and a member; the four tabs of "Projektai" reaching each other; the account
 /// item with the keyboard, its name and links filled in the browser only. Screenshots go to <c>output/menu</c>.
 /// </summary>
 public sealed class MenuTests : E2ETest
@@ -85,7 +85,7 @@ public sealed class MenuTests : E2ETest
     }
 
     [Fact]
-    public async Task Each_of_the_three_tabs_reaches_the_other_two_and_marks_its_page()
+    public async Task Each_of_the_four_tabs_reaches_the_other_three_and_marks_its_page()
     {
         Assert.SkipWhen(string.IsNullOrEmpty(SignUpTests.BaseUrl), "LT2_E2E_BASE_URL is not set; start the stack and set it to run end-to-end tests.");
         await using var visitor = await PasskeyBrowser.StartAsync("native", 390, 844);
@@ -95,6 +95,7 @@ public sealed class MenuTests : E2ETest
             ("/darbotvarke", "Darbotvarkė", "tab-darbotvarke"),
             ("/projektai", "Projektai", "tab-projektai"),
             ("/suvestines", "Suvestinės", "tab-suvestines"),
+            ("/seimas/analitika", "Analitika", "tab-seimas-analitika"),
         ];
 
         // From the menu item to the agenda, then from every tab to every other by its link.

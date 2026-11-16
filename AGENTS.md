@@ -298,8 +298,8 @@ code review.
 
 **Navigation (design 8.21, built 2026-11-16).** The menu is the logo, "Projektai", "Seimo nariai", and "Prisijungti" or the
 account item "Paskyra"; one line from 360 px (`MenuTests`, E2E). "Projektai" opens `/darbotvarke` and is current (`aria-current`)
-on its three tabs and everything under them (`MenuSections`); the three tabs ("Darbotvarkė", "Projektai", "Suvestinės")
-are `<ProjectTabs>` under the heading of `/darbotvarke`, `/projektai`, `/suvestines`. The history of votes is no tab (the
+on its four tabs and everything under them (`MenuSections`); the four tabs ("Darbotvarkė", "Projektai", "Suvestinės",
+"Analitika") are `<ProjectTabs>` under the heading of `/darbotvarke`, `/projektai`, `/suvestines`, `/seimas/analitika`. The history of votes is no tab (the
 owner, 2026-11-16): the agenda's voted list links to it and it leads back by a breadcrumb (`#to-agenda`). The
 account item (`Layout/AccountMenu`) is a `<details>` with "Mano paskyra" and "Atsijungti" (the server-rendered sign-out form);
 `js/lt2-account.js` fills the name and the account's links (staff screens, an MP's projects, accepting changed terms; for a
@@ -516,6 +516,13 @@ page's "Balsuota".
   that started from a draft says "Sukurta DI · taisė žmonės" for its whole life. The worker is configured the same way
   for the summary job (compose passes `Ai__Provider` and the key to both). Pre-screening of users' texts stays
   rule-based. Tests never call the real API.
+**Analytics (design 8.26, owner 2026-11-16).** `/seimas/analitika` (`Components/Analytics/AnalyticsPage`), public and
+server-rendered from `GET /api/v1/analytics` (composed in `Lt2.Web/Services/AnalyticsServices.cs`): the four figures, the
+Seimas's share "for" beside the members' frozen counts on closed bills, faction unity (`FactionUnityRule` in Parliament).
+"Kas balsuoja taip kaip jūs" is the island `MyAgreement` from `GET /api/v1/me/analytics/agreement`: the caller's own sides
+against the MPs' ballots, never stored or prerendered, the only place MPs are ordered by a number. Every rule is
+`AnalyticsRules` (SharedKernel); one sample of 20 (`AnalyticsRules.SmallSample`, not a setting) below which no share is
+shown, only counts and "maža imtis"; the Seimas's majority is that of those who voted, a consensus counting as "for".
 **Organisations (design 8.14, stage A of 8.14.14; built 2026-11-14).**
 - A voice on a bill, not control. A signed-in member registers an organisation (`/organizacijos/nauja`; at most
   `Organisations:PerAccount`, 3, not counting closed ones), shown at once with nobody approving it, and is its first
@@ -673,7 +680,7 @@ rules are about them.
   integration `TermsTests` sends every mapped write as such an account and expects `terms.required`; put a route on
   `TermsExemptions.Routes` only when the design says the write must work before acceptance.
 - **Navigation in end-to-end tests (design 8.21).** "Mano paskyra" and "Atsijungti" are inside the account item: open it with
-  `#account-toggle` first; the three tabs are `#project-tabs`; the theme switch is in the footer. The account page's own
+  `#account-toggle` first; the four tabs are `#project-tabs`; the theme switch is in the footer. The account page's own
   "Atsijungti" (`main`) is unchanged.
 - **Staff:** `ModeratorAsync()` / `AdministratorAsync()` of `ApiTest` give the run's shared staff members. Only a test about
   the staff account itself (passkeys, sessions, a reset, a per-moderator limit) makes its own with `StaffMembers.ActiveAsync`.

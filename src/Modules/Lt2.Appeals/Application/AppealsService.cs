@@ -823,6 +823,28 @@ internal sealed class AppealsService(
             .ToDictionaryAsync(x => x.BillNumber, x => x.Side, StringComparer.Ordinal, cancellationToken);
     }
 
+    public async Task<IReadOnlyList<ClosedRecordFacts>> ClosedRecordsAsync(CancellationToken cancellationToken)
+    {
+        await using var db = await contexts.CreateDbContextAsync(cancellationToken);
+        var closed = await db.BillRecords.AsNoTracking().Records()
+            .Where(r => r.Status == BillRecordStatuses.Closed && r.ClosingVoteId != null && r.ClosedAt != null)
+            .OrderByDescending(r => r.ClosedAt).ThenBy(r => r.BillNumber)
+            .ToListAsync(cancellationToken);
+        var counts = await reads.ShownCountsAsync(db, closed, cancellationToken);
+        return closed.Select(r => new ClosedRecordFacts(r.BillNumber, r.ClosingVoteId!.Value, r.ClosedAt!.Value, counts[r.Id])).ToList();
+    }
+
+    public async Task<IReadOnlyList<MyClosedSide>> MyClosedSidesAsync(Guid userId, CancellationToken cancellationToken)
+    {
+        await using var db = await contexts.CreateDbContextAsync(cancellationToken);
+        return await (from p in db.Positions.AsNoTracking()
+                      join r in db.BillRecords.AsNoTracking().Records() on p.RecordId equals r.Id
+                      where p.UserId == userId && r.Status == BillRecordStatuses.Closed && r.ClosingVoteId != null
+                      orderby r.BillNumber
+                      select new MyClosedSide(r.BillNumber, r.ClosingVoteId!.Value, p.Side))
+            .ToListAsync(cancellationToken);
+    }
+
     internal static Revision Revise(string kind, Guid id, string field, string? oldValue, string? newValue, Guid? by, DateTimeOffset at) => new()
     {
         Id = Guid.CreateVersion7(at),
