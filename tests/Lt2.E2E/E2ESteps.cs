@@ -122,14 +122,14 @@ internal static class E2ESteps
     /// only when <paramref name="invitation"/> is given (a link fills it in). Leaves the page where the site lands it.
     /// </summary>
     /// <summary>
-    /// Signs out with the account's own "Atsijungti" (design 8.21: on the screen "Saugumas ir duomenys", /sveiki/saugumas), opened
+    /// Signs out with the account's own "Atsijungti" (design 8.21: on the screen "Saugumas ir duomenys", /paskyra/saugumas), opened
     /// first when the browser is elsewhere; waits for the island to start.
     /// </summary>
     public static async Task SignOutOnAccountAsync(IPage page)
     {
-        if (!page.Url.Contains("/sveiki/saugumas", StringComparison.Ordinal))
+        if (!page.Url.Contains("/paskyra/saugumas", StringComparison.Ordinal))
         {
-            await page.GotoAsync(Base + "/sveiki/saugumas");
+            await page.GotoAsync(Base + "/paskyra/saugumas");
         }
 
         var signOut = page.Locator("#account-sign-out");

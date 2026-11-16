@@ -48,9 +48,9 @@ public sealed class ProfileTests(DatabaseFixture database) : ApiTest(database)
 
         using var visitor = NewBrowser();
         var page = await visitor.GetJsonAsync<MemberProfileResponse>(ProfileRoutes.MemberOf(id));
-        page.ShouldBe(new MemberProfileResponse(id, "Rūta Mockutė", "Mokytoja iš Kauno. https://pavyzdys.test/ruta", 0));
+        page.ShouldBe(new MemberProfileResponse(id, "Rūta Mockutė", "Mokytoja iš Kauno. https://pavyzdys.test/ruta", 0, $"/nariai/ruta-mockute-{id}"));
 
-        using var html = await visitor.Client.GetAsync(ProfileRoutes.Page(id), TestContext.Current.CancellationToken);
+        using var html = await visitor.Client.GetAsync(ProfileRoutes.Page(id, "Rūta Mockutė"), TestContext.Current.CancellationToken);
         html.StatusCode.ShouldBe(HttpStatusCode.OK);
         html.Headers.Contains("X-Robots-Tag").ShouldBeFalse("a public profile is indexed (design 8.25.2)");
         html.Headers.CacheControl?.NoCache.ShouldBe(true);
@@ -73,7 +73,7 @@ public sealed class ProfileTests(DatabaseFixture database) : ApiTest(database)
             await never.ShouldBeProblemAsync(HttpStatusCode.NotFound, "member.not-found");
         }
 
-        using (var neverPage = await visitor.Client.GetAsync(ProfileRoutes.Page(unknown), TestContext.Current.CancellationToken))
+        using (var neverPage = await visitor.Client.GetAsync(ProfileRoutes.Page(unknown, null), TestContext.Current.CancellationToken))
         {
             neverPage.StatusCode.ShouldBe(HttpStatusCode.NotFound);
             neverPage.Headers.GetValues("X-Robots-Tag").ShouldContain("noindex");
@@ -89,7 +89,7 @@ public sealed class ProfileTests(DatabaseFixture database) : ApiTest(database)
             await gone.ShouldBeProblemAsync(HttpStatusCode.Gone, "member.gone");
         }
 
-        using (var gonePage = await visitor.Client.GetAsync(ProfileRoutes.Page(first), TestContext.Current.CancellationToken))
+        using (var gonePage = await visitor.Client.GetAsync(ProfileRoutes.Page(first, null), TestContext.Current.CancellationToken))
         {
             gonePage.StatusCode.ShouldBe(HttpStatusCode.Gone);
             gonePage.Headers.GetValues("X-Robots-Tag").ShouldContain("noindex");
@@ -190,14 +190,14 @@ public sealed class ProfileTests(DatabaseFixture database) : ApiTest(database)
         using var answer = await visitor.Client.GetAsync(ProfileRoutes.MemberOf(id), TestContext.Current.CancellationToken);
         using (var json = JsonDocument.Parse(await answer.Content.ReadAsStringAsync(TestContext.Current.CancellationToken)))
         {
-            json.RootElement.EnumerateObject().Select(p => p.Name).Order().ShouldBe(["about", "displayName", "followers", "profileId"]);
+            json.RootElement.EnumerateObject().Select(p => p.Name).Order().ShouldBe(["about", "address", "displayName", "followers", "profileId"]);
         }
 
         var texts = await visitor.GetJsonAsync<MemberTextsResponse>(ProfileRoutes.TextsOf(id, 10));
         texts.Items.ShouldHaveSingleItem().Bill.Number.ShouldBe(AppealSteps.TaxBill);
         texts.Items[0].Side.ShouldBe("for");
 
-        var page = WebUtility.HtmlDecode(await visitor.Client.GetStringAsync(ProfileRoutes.Page(id), TestContext.Current.CancellationToken));
+        var page = WebUtility.HtmlDecode(await visitor.Client.GetStringAsync(ProfileRoutes.Page(id, "Ona Privatumaitė"), TestContext.Current.CancellationToken));
         page.ShouldContain(AppealSteps.ForReason[..40], Case.Sensitive, "the swept page holds what it is about");
         foreach (var never in new[] { email, party, code, AppealSteps.SecondBill, "Man svarbu" })
         {
@@ -225,8 +225,8 @@ public sealed class ProfileTests(DatabaseFixture database) : ApiTest(database)
         first.Items.Count.ShouldBe(10);
         first.More.ShouldBeTrue();
         first.Items[0].Text.ShouldContain("numeris 11");
-        var page = WebUtility.HtmlDecode(await visitor.Client.GetStringAsync(ProfileRoutes.Page(id), TestContext.Current.CancellationToken));
-        page.ShouldContain($"href=\"/nariai/{id}?rodyti=20#argumentai\"");
+        var page = WebUtility.HtmlDecode(await visitor.Client.GetStringAsync(ProfileRoutes.Page(id, "Rūta Mockutė"), TestContext.Current.CancellationToken));
+        page.ShouldContain($"href=\"/nariai/ruta-mockute-{id}?rodyti=20#argumentai\"");
         (await visitor.GetJsonAsync<MemberTextsResponse>(ProfileRoutes.TextsOf(id, 20))).Items.Count.ShouldBe(11);
 
         // A waiting (flagged) argument and a withdrawn one are not listed.
@@ -305,7 +305,7 @@ public sealed class ProfileTests(DatabaseFixture database) : ApiTest(database)
         (await visitor.GetJsonAsync<MemberProfileResponse>(ProfileRoutes.MemberOf(id))).Followers.ShouldBe(2);
         (await follower.GetJsonAsync<MyFollowsResponse>(FollowRoutes.Mine)).Members.ShouldNotBeNull().ShouldHaveSingleItem()
             .ShouldBe(new FollowedMemberResponse(id, "Sekama Narė"));
-        var page = WebUtility.HtmlDecode(await visitor.Client.GetStringAsync(ProfileRoutes.Page(id), TestContext.Current.CancellationToken));
+        var page = WebUtility.HtmlDecode(await visitor.Client.GetStringAsync(ProfileRoutes.Page(id, "Sekama Narė"), TestContext.Current.CancellationToken));
         page.ShouldContain("Sekėjai: 2");
 
         // The followed member's own answers and export name no follower.
@@ -349,7 +349,7 @@ public sealed class ProfileTests(DatabaseFixture database) : ApiTest(database)
             root.EnumerateObject().Select(p => p.Name).Order()
                 .ShouldBe(["accountPath", "billNumber", "billTitle", "memberName", "profilePath", "textPath", "to", "what"]);
             root.GetProperty("memberName").GetString().ShouldBe("Autorė Pavyzdytė");
-            root.GetProperty("profilePath").GetString().ShouldBe("/nariai/" + id);
+            root.GetProperty("profilePath").GetString().ShouldBe("/nariai/autore-pavyzdyte-" + id);
             root.GetProperty("accountPath").GetString().ShouldBe(AccountScreens.FollowsList);
             root.GetRawText().ShouldNotContain("Slaptas");
         }

@@ -9,9 +9,9 @@
     <h3 id="profile-title">@L["PublicProfile.Title"]</h3>
     @if (Mine is { } mine)
     {
-        @if (mine.ProfileId is { } id)
+        @if (mine.Address is { } address)
         {
-            <p class="note note--quiet" id="profile-public">@L["PublicProfile.IsPublic"] <a href="@ProfileRoutes.Page(id)" id="profile-link">@ProfileRoutes.Page(id)</a></p>
+            <p class="note note--quiet" id="profile-public">@L["PublicProfile.IsPublic"] <a href="@address" id="profile-link">@address</a></p>
         }
         else
         {

@@ -86,7 +86,7 @@ public sealed class CommentThreadTests : BunitContext
         var thread = RenderThread();
 
         var name = thread.Find($"#{CommentLimits.ElementId(PersonComment)} a.comment__name");
-        name.GetAttribute("href").ShouldBe("/nariai/" + RutaProfile);
+        name.GetAttribute("href").ShouldBe("/nariai/ruta-mockute-" + RutaProfile);
         var card = name.GetAttribute("data-card")!;
         thread.FindAll($"template#{card}").ShouldHaveSingleItem("one card per person in the thread");
         thread.Markup.ShouldContain("Mokytoja iš Kauno.", Case.Sensitive, "the card's text is in the page");

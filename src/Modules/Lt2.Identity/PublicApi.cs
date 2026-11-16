@@ -350,7 +350,8 @@ public interface IOrganisationInvitations
 /// statement), the public id while "Viešas profilis" is on, the consent text's version in force, and <c>Texts:MaxLength</c>.
 /// </summary>
 public sealed record MyProfileState(
-    string? About, bool AboutHidden, string? AboutHiddenStatement, string? ProfileId, DateTimeOffset? PublicSince, string ConsentVersion, int TextMaxLength);
+    string? About, bool AboutHidden, string? AboutHiddenStatement, string? ProfileId, DateTimeOffset? PublicSince, string ConsentVersion, int TextMaxLength,
+    string? Address = null);
 
 /// <summary>What the "Profilis" form sends: the text, the switch and, to switch on, the consent's version the form showed.</summary>
 public sealed record ProfileChange(string? About, bool Public, string? ConsentVersion);

@@ -13,16 +13,16 @@ namespace Lt2.SharedKernel;
 public static class AccountScreens
 {
     /// <summary>"Profilis": the display name, "Apie mane", "Viešas profilis", party support.</summary>
-    public const string Profile = "/sveiki";
+    public const string Profile = "/paskyra";
 
     /// <summary>"Sekimas ir laiškai": what the person follows and the email switches.</summary>
-    public const string Follows = "/sveiki/sekimas";
+    public const string Follows = "/paskyra/sekimas";
 
     /// <summary>"Dalyvavimas": the MP part, organisations, the invitation code, the staff part.</summary>
-    public const string Taking = "/sveiki/dalyvavimas";
+    public const string Taking = "/paskyra/dalyvavimas";
 
     /// <summary>"Saugumas ir duomenys": passkeys, sessions, known browsers, the positions consent, export and deletion.</summary>
-    public const string Security = "/sveiki/saugumas";
+    public const string Security = "/paskyra/saugumas";
 
     /// <summary>The follows and their switches; every follow email links here (design 8.11.2).</summary>
     public const string FollowsList = Follows + "#sekami";

@@ -46,7 +46,7 @@ public sealed class TermsRuleTests
     public void The_acceptance_screen_goes_back_only_to_a_path_on_this_site()
     {
         TermsText.Back("/seimas/XVP-0412").ShouldBe("/seimas/XVP-0412");
-        TermsText.Back("/sveiki?x=1").ShouldBe("/sveiki?x=1");
+        TermsText.Back("/paskyra?x=1").ShouldBe("/paskyra?x=1");
         TermsText.Back("https://kitas.pavyzdys.test/").ShouldBeNull();
         TermsText.Back("//kitas.pavyzdys.test").ShouldBeNull();
         TermsText.Back("/\\kitas.pavyzdys.test").ShouldBeNull();

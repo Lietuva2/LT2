@@ -101,12 +101,12 @@ public sealed partial class SignUpTests : E2ETest
         await terms.CheckAsync();
         await page.GetByRole(AriaRole.Button, new() { Name = "Baigti registraciją" }).ClickAsync();
 
-        await page.WaitForURLAsync(new Regex("/sveiki$"), new() { Timeout = E2ESteps.Slow });
+        await page.WaitForURLAsync(new Regex("/paskyra$"), new() { Timeout = E2ESteps.Slow });
         await TestAccounts.SessionOfAsync(context);
         await Assertions.Expect(page.GetByRole(AriaRole.Heading, new() { Level = 1 })).ToHaveTextAsync("Sveiki, Rūta M.!");
         await Assertions.Expect(page.GetByText("El. paštas patvirtintas")).ToBeVisibleAsync();
         await Assertions.Expect(page.Locator("#display-name-save")).ToBeEnabledAsync(new() { Timeout = 60_000 });
-        await page.GotoAsync(E2ESteps.Base + "/sveiki/saugumas");
+        await page.GotoAsync(E2ESteps.Base + "/paskyra/saugumas");
         await Assertions.Expect(page.GetByText("Ši sesija")).ToBeVisibleAsync(new() { Timeout = E2ESteps.Slow });
         await Assertions.Expect(page.Locator("#account-sign-out")).ToBeEnabledAsync(new() { Timeout = 60_000 });
         await ExpectNoNoteAsync(page);

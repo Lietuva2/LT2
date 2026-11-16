@@ -23,7 +23,7 @@ public sealed class EmailRhythmTests : E2ETest
         await PasskeyTests.RegisterAsync(page, "Laiškų Skaitytoja");
 
         // Design 8.21, 8.24: on the follows screen, its own sheet after the switches.
-        await page.GotoAsync($"{Base}/sveiki/sekimas#laisku-daznis");
+        await page.GotoAsync($"{Base}/paskyra/sekimas#laisku-daznis");
         var immediate = page.Locator("#rhythm-immediate");
         var daily = page.Locator("#rhythm-daily");
         await Assertions.Expect(immediate).ToBeCheckedAsync(new() { Timeout = E2ESteps.Slow });

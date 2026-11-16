@@ -107,7 +107,7 @@ public sealed class DatabaseTests(DatabaseFixture database)
                 await provider.GetRequiredService<IOutbox>().EnqueueAsync(
                     OutboxMessage.Create(
                         MessageKinds.FollowPlannedEmail,
-                        new FollowPlannedEmail(follower, "XVP-0412", "Gyventojų pajamų mokesčio įstatymo pataisa", null, new DateOnly(2026, 12, 1), "/seimas/XVP-0412", "/sveiki"),
+                        new FollowPlannedEmail(follower, "XVP-0412", "Gyventojų pajamų mokesčio įstatymo pataisa", null, new DateOnly(2026, 12, 1), "/seimas/XVP-0412", "/paskyra"),
                         DateTimeOffset.UtcNow.AddHours(-1)),
                     transaction);
             }

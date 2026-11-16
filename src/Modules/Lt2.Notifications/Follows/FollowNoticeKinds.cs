@@ -623,7 +623,7 @@ internal sealed class MemberNotices(
                     due.Add(new DueNotice(f.UserId, e.FirstSeen, to => OutboxMessage.Create(MessageKinds.FollowMemberEmail, new FollowMemberEmail(
                         to, author.DisplayName, bill.Number, bill.Title,
                         FollowEvents.BillPath(bill.Number) + "#" + FollowRules.TextAnchor(argument.Kind, argument.Id),
-                        "/nariai/" + author.ProfileId,
+                        MemberAddress.Page(author.ProfileId, author.DisplayName),
                         NoticeDelivery.AccountPath,
                         argument.Kind))));
                 }

@@ -53,7 +53,7 @@ public sealed class MpLinkTests(DatabaseFixture database) : ApiTest(database)
             (await visitor.GetJsonAsync<Lt2.Api.Contracts.Parliament.MpProfileResponse>($"/api/v1/mps/{slug}")).ManagedSince.ShouldBeNull();
 
             // The offer is only in the account's own answer from the browser, never in the page the server renders.
-            var hello = WebUtility.HtmlDecode(await mp.Client.GetStringAsync("/sveiki"));
+            var hello = WebUtility.HtmlDecode(await mp.Client.GetStringAsync("/paskyra"));
             hello.ShouldContain("Laima Uosytė", customMessage: "the account page was rendered for this account (its display name)");
             hello.ShouldNotContain("oficialiu adresu");
             var state = MpSteps.StateOf(hello);
@@ -570,7 +570,7 @@ public sealed class MpLinkTests(DatabaseFixture database) : ApiTest(database)
             }
 
             // The account's own page as the server renders it holds nothing of the link (design 8.5.4).
-            var hello = WebUtility.HtmlDecode(await mp.Browser.Client.GetStringAsync("/sveiki"));
+            var hello = WebUtility.HtmlDecode(await mp.Browser.Client.GetStringAsync("/paskyra"));
             hello.ShouldContain("Vytautas Klevinskas", customMessage: "the account page was rendered for this account");
             hello.ShouldNotContain("Tvarkote");
             hello.ShouldNotContain("Slaptas Biuro Narys");

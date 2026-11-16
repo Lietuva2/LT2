@@ -40,10 +40,10 @@ public sealed class LayoutTests(LayoutTests.ModeratorFixture moderator) : E2ETes
         var page = member.Page;
         var (status, body) = await E2ESteps.ApiAsync(page, "PUT", "/api/v1/me/profile", new { about = "Rodoma narė, bandymas (E2E bandymas).", @public = true, consentVersion = "2026-11-16" });
         status.ShouldBe(200, body);
-        var profileId = System.Text.Json.JsonDocument.Parse(body).RootElement.GetProperty("profileId").GetString()!;
+        var profileId = System.Text.Json.JsonDocument.Parse(body).RootElement.GetProperty("address").GetString()!;
         await page.SetViewportSizeAsync(390, 900);
         Directory.CreateDirectory(Shots);
-        foreach (var path in new[] { "/sveiki", "/sveiki/sekimas", "/sveiki/dalyvavimas", "/sveiki/saugumas", "/nariai/" + profileId })
+        foreach (var path in new[] { "/paskyra", "/paskyra/sekimas", "/paskyra/dalyvavimas", "/paskyra/saugumas", profileId })
         {
             await page.GotoAsync(Base + path);
             await page.WaitForLoadStateAsync(LoadState.NetworkIdle);

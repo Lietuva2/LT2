@@ -287,7 +287,7 @@ public sealed class KnownBrowserTests(DatabaseFixture database) : ApiTest(databa
         client.DefaultRequestHeaders.Add("Cookie", DeviceCookie + "=" + value);
         (await client.GetAsync(ApiRoutes.Me.Root)).StatusCode.ShouldBe(HttpStatusCode.Unauthorized);
         (await client.GetAsync(ApiRoutes.Me.KnownBrowsers)).StatusCode.ShouldBe(HttpStatusCode.Unauthorized);
-        (await client.GetAsync("/sveiki")).StatusCode.ShouldBe(HttpStatusCode.Redirect);
+        (await client.GetAsync("/paskyra")).StatusCode.ShouldBe(HttpStatusCode.Redirect);
 
         // Signing out keeps it; signing in again renews it, as the same browser.
         using (var signedOut = await browser.PostAsync(ApiRoutes.Auth.SignOut))

@@ -189,10 +189,10 @@ public sealed class CommentRuleTests
         var email = template.Comments(new CommentNoticeEmail(
             "ruta.mockute@pavyzdys.test",
             [new CommentedArgumentLine("XVP-0412", "Gyventojų pajamų mokesčio įstatymo pataisa", $"/seimas/XVP-0412#reason-{Target}")],
-            "/sveiki#sekami"));
+            "/paskyra#sekami"));
         email.Subject.ShouldBe("Lietuva 2.0: nauji komentarai po jūsų argumentu");
         email.TextBody.ShouldContain($"XVP-0412 · Gyventojų pajamų mokesčio įstatymo pataisa: https://lt2.test/seimas/XVP-0412#reason-{Target}");
-        email.TextBody.ShouldContain("https://lt2.test/sveiki#sekami");
+        email.TextBody.ShouldContain("https://lt2.test/paskyra#sekami");
     }
 
     [Fact]

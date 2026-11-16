@@ -11,7 +11,7 @@ public sealed class SiteLinksTests
 {
     [Theory]
     [InlineData("https://lt2.pavyzdys.test", "/seimas/XVP-0412", "https://lt2.pavyzdys.test/seimas/XVP-0412")]
-    [InlineData("https://lt2.pavyzdys.test/", "/sveiki#sekami", "https://lt2.pavyzdys.test/sveiki#sekami")]
+    [InlineData("https://lt2.pavyzdys.test/", "/paskyra#sekami", "https://lt2.pavyzdys.test/paskyra#sekami")]
     [InlineData("https://lt2.pavyzdys.test:443", "/suvestines/2026-11-16", "https://lt2.pavyzdys.test/suvestines/2026-11-16")]
     [InlineData("https://lt2.localhost:8443", "/seimas/balsavimai/1", "https://lt2.localhost:8443/seimas/balsavimai/1")]
     [InlineData(" https://Lt2.Pavyzdys.TEST ", "/", "https://lt2.pavyzdys.test/")]
@@ -62,12 +62,12 @@ public sealed class SiteLinksTests
         var templates = new FollowTemplates(localizer, Options.Create(new SiteOptions { Address = "https://lt2.pavyzdys.test" }));
 
         var planned = templates.Planned(new FollowPlannedEmail(
-            "ruta@pavyzdys.test", "XVP-0412", "Gyventojų pajamų mokesčio įstatymo pataisa", "adoption", new DateOnly(2026, 11, 19), "/seimas/XVP-0412", "/sveiki#sekami"));
+            "ruta@pavyzdys.test", "XVP-0412", "Gyventojų pajamų mokesčio įstatymo pataisa", "adoption", new DateOnly(2026, 11, 19), "/seimas/XVP-0412", "/paskyra#sekami"));
         planned.TextBody.ShouldContain("Projektas: https://lt2.pavyzdys.test/seimas/XVP-0412");
-        planned.TextBody.ShouldContain("https://lt2.pavyzdys.test/sveiki#sekami");
+        planned.TextBody.ShouldContain("https://lt2.pavyzdys.test/paskyra#sekami");
 
         var voted = templates.Voted(new FollowVotedEmail(
-            "ruta@pavyzdys.test", "XVP-0412", "Pataisa", "adoption", new DateOnly(2026, 5, 19), false, 74, 44, 10, null, "/seimas/balsavimai/99100006", [], "/sveiki#sekami"));
+            "ruta@pavyzdys.test", "XVP-0412", "Pataisa", "adoption", new DateOnly(2026, 5, 19), false, 74, 44, 10, null, "/seimas/balsavimai/99100006", [], "/paskyra#sekami"));
         voted.TextBody.ShouldContain("https://lt2.pavyzdys.test/seimas/balsavimai/99100006");
     }
 }

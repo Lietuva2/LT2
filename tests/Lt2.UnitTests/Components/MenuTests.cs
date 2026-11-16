@@ -71,7 +71,7 @@ public sealed class MenuTests : BunitContext
     [InlineData("/")]
     [InlineData("/metodika")]
     [InlineData("/organizacijos")]
-    [InlineData("/sveiki")]
+    [InlineData("/paskyra")]
     [InlineData("/suvestines/nustatymai/abcdefghijklmnopqrstuvwxyz")]
     [InlineData("/suvestines/kopijos/abcdefghijklmnopqrstuvwxyz")]
     [InlineData("/seimasx")]

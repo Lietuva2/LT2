@@ -273,7 +273,7 @@
         {
             if (me.Value!.RegistrationComplete)
             {
-                Navigation.NavigateTo(AfterSignIn(me.Value, LandingPath.Accept(Landing) ?? "/sveiki"), forceLoad: true);
+                Navigation.NavigateTo(AfterSignIn(me.Value, LandingPath.Accept(Landing) ?? "/paskyra"), forceLoad: true);
                 return;
             }
 
@@ -294,7 +294,7 @@
     {
         var stored = await StorageAsync("sessionStorage.getItem", LandingKey);
         await StorageAsync("sessionStorage.removeItem", LandingKey);
-        return LandingPath.Accept(stored) ?? LandingPath.Accept(Landing) ?? "/sveiki";
+        return LandingPath.Accept(stored) ?? LandingPath.Accept(Landing) ?? "/paskyra";
     }
 
     /// <summary>Session storage may be blocked (private windows, settings): then the share link simply lands on the account.</summary>
@@ -392,9 +392,9 @@
         {
             if (Succeeded(await Auth.SignInAsync(request), FieldsOnThisStep))
             {
-                // A new account still finishes its registration first (via /sveiki); the share link's page waits until then.
+                // A new account still finishes its registration first (via /paskyra); the share link's page waits until then.
                 var me = await Me.GetAsync();
-                Navigation.NavigateTo(me.Value?.RegistrationComplete == true ? AfterSignIn(me.Value, await NextPageAsync()) : "/sveiki", forceLoad: true);
+                Navigation.NavigateTo(me.Value?.RegistrationComplete == true ? AfterSignIn(me.Value, await NextPageAsync()) : "/paskyra", forceLoad: true);
             }
         });
     }

@@ -333,7 +333,7 @@ public sealed partial class VoteHistoryTests(DatabaseFixture database) : ApiTest
         var theirs = WebUtility.HtmlDecode(await visitor.Client.GetStringAsync("/seimas/balsavimai"));
         var list = List(theirs);
         list.ShouldContain($"href=\"/seimas/{AppealSteps.TaxBill}\"", customMessage: "the list holds the bill the member took a side on");
-        mine.ShouldContain("href=\"/sveiki\"", customMessage: "the member's page is the signed-in one");
+        mine.ShouldContain("href=\"/paskyra\"", customMessage: "the member's page is the signed-in one");
         List(mine).ShouldBe(list);
     }
 

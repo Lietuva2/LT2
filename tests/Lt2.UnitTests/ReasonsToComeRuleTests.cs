@@ -129,10 +129,11 @@ public sealed class LandingPathTests
 
     /// <summary>Design 8.21, 8.25.2: an account screen (a visitor sent to sign in comes back to it) and a member's public page.</summary>
     [Theory]
-    [InlineData("/sveiki")]
-    [InlineData("/sveiki/sekimas")]
-    [InlineData("/sveiki/saugumas")]
+    [InlineData("/paskyra")]
+    [InlineData("/paskyra/sekimas")]
+    [InlineData("/paskyra/saugumas")]
     [InlineData("/nariai/abcdefgh23")]
+    [InlineData("/nariai/ruta-mockute-abcdefgh23")]
     public void An_account_screen_and_a_members_page_are_accepted(string path) => LandingPath.Accept(path).ShouldBe(path);
 
     [Theory]
@@ -143,10 +144,12 @@ public sealed class LandingPathTests
     [InlineData("/\\piktas.example")]
     [InlineData("\\seimas\\XVP-0412")]
     [InlineData("/seimas//piktas.example")]
-    [InlineData("/seimas/../sveiki")]
-    [InlineData("/sveiki/sekimas/kita")]
-    [InlineData("/sveiki/Sekimas")]
+    [InlineData("/seimas/../paskyra")]
+    [InlineData("/paskyra/sekimas/kita")]
+    [InlineData("/paskyra/Sekimas")]
     [InlineData("/nariai/trumpas")]
+    [InlineData("/sveiki")]
+    [InlineData("/nariai/Ruta-abcdefgh23")]
     [InlineData("/nariai/abcdefgh23/x")]
     [InlineData("/administravimas/nustatymai")]
     [InlineData("seimas/XVP-0412")]

@@ -135,7 +135,7 @@ public sealed class UsageRuleTests
     [InlineData("/suvestines/2026-11-16", true)]
     [InlineData("/organizacijos", true)]
     [InlineData("/seimas/XVP-0412", true)]
-    [InlineData("/sveiki", true)]
+    [InlineData("/paskyra", true)]
     public void Staff_mp_and_link_pages_are_left_out_of_the_list_so_nobodys_activity_shows(string path, bool listed) =>
         UsageRules.IsListed(path).ShouldBe(listed);
 

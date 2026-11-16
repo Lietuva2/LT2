@@ -62,7 +62,7 @@ public sealed class MenuSignOutTests : E2ETest
         await Assertions.Expect(nav.GetByRole(AriaRole.Button, new() { Name = "Atsijungti" })).ToHaveCountAsync(0);
 
         // The session is gone on the server too: the account page asks to sign in.
-        await page.GotoAsync($"{Base}/sveiki");
+        await page.GotoAsync($"{Base}/paskyra");
         await Assertions.Expect(page).ToHaveURLAsync(new Regex("/prisijungti"));
     }
 

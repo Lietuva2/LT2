@@ -111,8 +111,8 @@ public sealed partial class CommentTests(AppealFlowTests.ModeratorFixture modera
             // Step one's take-over, as MpResponseTests does it: the official address, the link from Mailpit, the passkey.
             await page.GotoAsync(Base + "/prisijungti?registruotis=true");
             await E2ESteps.RegisterHereAsync(page, Official, MpName);
-            await page.WaitForURLAsync(new Regex("/sveiki$"), new() { Timeout = E2ESteps.Slow });
-            await page.GotoAsync(Base + "/sveiki/dalyvavimas");
+            await page.WaitForURLAsync(new Regex("/paskyra$"), new() { Timeout = E2ESteps.Slow });
+            await page.GotoAsync(Base + "/paskyra/dalyvavimas");
             var claim = page.Locator("#mp-claim");
             await Assertions.Expect(claim).ToBeEnabledAsync(new() { Timeout = E2ESteps.Slow });
             await claim.ClickAsync();
@@ -121,7 +121,7 @@ public sealed partial class CommentTests(AppealFlowTests.ModeratorFixture modera
             var submit = page.Locator("#takeover-submit");
             await Assertions.Expect(submit).ToBeEnabledAsync(new() { Timeout = E2ESteps.Slow });
             await submit.ClickAsync();
-            await page.WaitForURLAsync(new Regex("/sveiki$"), new() { Timeout = E2ESteps.Slow });
+            await page.WaitForURLAsync(new Regex("/paskyra$"), new() { Timeout = E2ESteps.Slow });
 
             var (responded, respondedBody) = await E2ESteps.ApiAsync(page, "PUT", $"/api/v1/bills/{ResponseBill}/responses/mine", new { stance = "for", text = "Balsuosiu už (E2E)." });
             responded.ShouldBe(200, respondedBody);

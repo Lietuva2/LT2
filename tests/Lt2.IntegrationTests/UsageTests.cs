@@ -230,7 +230,7 @@ public sealed class UsageTests(DatabaseFixture database) : ApiTest(database)
             using var member = Open(site, "curl/8.4.0");
             await member.RegisterAndSignInAsync();
             await GetAsync(member, "/metodika");
-            await GetAsync(member, "/sveiki");
+            await GetAsync(member, "/paskyra");
             site.Counter.Online().ShouldBe(new UsageOnline(0, 1));
             await site.Counter.FlushAsync(CancellationToken.None);
 

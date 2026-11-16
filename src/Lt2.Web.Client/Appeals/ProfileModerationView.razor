@@ -22,7 +22,7 @@
                 <div class="row">
                     @if (p.ProfileId is { } id)
                     {
-                        <a href="@ProfileRoutes.Page(id)"><b>@(p.DisplayName ?? L["Reasons.Anonymous"])</b></a>
+                        <a href="@ProfileRoutes.Page(id, p.DisplayName)"><b>@(p.DisplayName ?? L["Reasons.Anonymous"])</b></a>
                     }
                     else
                     {

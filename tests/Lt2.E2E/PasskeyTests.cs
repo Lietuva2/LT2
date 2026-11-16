@@ -129,10 +129,10 @@ public sealed partial class PasskeyTests : E2ETest
         var email = E2ESteps.NewEmail();
         await page.GotoAsync(E2ESteps.Base + "/prisijungti?registruotis=true");
         await E2ESteps.RegisterHereAsync(page, email, displayName, SignUpTests.Invitation);
-        await page.WaitForURLAsync(new Regex("/sveiki$"), new() { Timeout = E2ESteps.Slow });
+        await page.WaitForURLAsync(new Regex("/paskyra$"), new() { Timeout = E2ESteps.Slow });
 
         // Design 8.21: the sessions, passkeys and known browsers are on "Saugumas ir duomenys"; the browser stays there.
-        await page.GotoAsync(E2ESteps.Base + "/sveiki/saugumas");
+        await page.GotoAsync(E2ESteps.Base + "/paskyra/saugumas");
         await Assertions.Expect(page.GetByText("prisijungta kodu")).ToBeVisibleAsync(new() { Timeout = E2ESteps.Slow });
         return email;
     }
@@ -151,7 +151,7 @@ public sealed partial class PasskeyTests : E2ETest
         await page.GotoAsync(SignUpTests.BaseUrl!.TrimEnd('/') + "/prisijungti");
         await SignUpTests.WaitForInteractivityAsync(page);
         await page.GetByRole(AriaRole.Button, new() { Name = "Prisijungti prieigos raktu" }).ClickAsync();
-        await page.WaitForURLAsync(new Regex("/sveiki$"));
+        await page.WaitForURLAsync(new Regex("/paskyra$"));
         await TestAccounts.SessionOfAsync(page.Context);
     }
 

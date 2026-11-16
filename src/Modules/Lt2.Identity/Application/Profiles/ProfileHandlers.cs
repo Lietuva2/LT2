@@ -168,5 +168,6 @@ internal sealed class ProfileHandlers(
             profile.PublicProfileId,
             profile.PublicSince,
             PublicProfileConsent.TextVersion,
-            await settings.GetAsync(SettingKeys.TextsMaxLength, cancellationToken));
+            await settings.GetAsync(SettingKeys.TextsMaxLength, cancellationToken),
+            profile.PublicProfileId is { } id ? MemberAddress.Page(id, profile.DisplayName) : null);
 }

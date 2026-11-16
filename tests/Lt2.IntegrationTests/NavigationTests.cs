@@ -128,7 +128,7 @@ public sealed partial class NavigationTests(DatabaseFixture database) : ApiTest(
         var pages = new List<(string Where, string Html)>
         {
             ("public", await visitor.Client.GetStringAsync("/")),
-            ("member", await member.Client.GetStringAsync("/sveiki")),
+            ("member", await member.Client.GetStringAsync("/paskyra")),
             ("account item", await member.Client.GetStringAsync("/projektai")),
         };
 
@@ -201,7 +201,7 @@ public sealed partial class NavigationTests(DatabaseFixture database) : ApiTest(
     /// <summary>
     /// Every page carries <c>&lt;base href="/"&gt;</c>, so a link whose address is only a fragment ("#part") resolves against
     /// the site's root and leads to the front page, not to a part of the page it is on (the account page's row of parts did).
-    /// A link to a part of the same page carries the page's path ("/sveiki#profilis"). This walks the pages as the server
+    /// A link to a part of the same page carries the page's path ("/paskyra#profilis"). This walks the pages as the server
     /// renders them, as a visitor, a member, a moderator and an administrator: every routed page without parameters, then the
     /// site's own links found on them (a few of each kind), and fails on any <c>&lt;a href&gt;</c> or
     /// <c>&lt;form action&gt;</c> that starts with "#". SVG references (<c>&lt;use href&gt;</c>) are no navigation and are
@@ -225,7 +225,7 @@ public sealed partial class NavigationTests(DatabaseFixture database) : ApiTest(
             .Distinct()
             .Order(StringComparer.Ordinal)
             .ToList();
-        seeds.ShouldContain("/sveiki");
+        seeds.ShouldContain("/paskyra");
 
         var offenders = new List<string>();
         var visited = new Dictionary<string, HashSet<string>>();
@@ -280,9 +280,9 @@ public sealed partial class NavigationTests(DatabaseFixture database) : ApiTest(
         }
 
         // The sweep must be able to fail: it read the account page as the member, with its row of parts.
-        visited["member"].ShouldContain("/sveiki");
-        visited["member"].ShouldContain("/sveiki/saugumas", "the account screens are walked too");
-        (await member.Client.GetStringAsync("/sveiki")).ShouldContain("id=\"account-parts\"");
+        visited["member"].ShouldContain("/paskyra");
+        visited["member"].ShouldContain("/paskyra/saugumas", "the account screens are walked too");
+        (await member.Client.GetStringAsync("/paskyra")).ShouldContain("id=\"account-parts\"");
         visited["visitor"].ShouldContain("/");
         visited["moderator"].ShouldContain("/moderavimas");
         offenders.ShouldBeEmpty($"pages read: {string.Join(", ", visited.Select(v => v.Key + " " + v.Value.Count))}");

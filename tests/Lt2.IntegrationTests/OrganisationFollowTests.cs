@@ -90,7 +90,7 @@ public sealed class OrganisationFollowTests(DatabaseFixture database) : ApiTest(
         var profile = WebUtility.HtmlDecode(await member.Client.GetStringAsync("/o/" + created.Slug));
         profile.ShouldContain("id=\"follow-organisation\"");
         await FollowAsync(member, created.Slug);
-        var account = WebUtility.HtmlDecode(await member.Client.GetStringAsync("/sveiki/sekimas"));
+        var account = WebUtility.HtmlDecode(await member.Client.GetStringAsync("/paskyra/sekimas"));
         account.ShouldContain("id=\"follows-organisations\"");
         account.ShouldContain(created.Slug);
         account.ShouldContain("id=\"notice-statements\"");
@@ -114,7 +114,7 @@ public sealed class OrganisationFollowTests(DatabaseFixture database) : ApiTest(
             root.GetProperty("billNumber").GetString().ShouldBe(AppealSteps.SecondBill);
             root.GetProperty("stance").GetString().ShouldBe("against");
             root.GetProperty("billPath").GetString().ShouldBe("/seimas/" + AppealSteps.SecondBill);
-            root.GetProperty("accountPath").GetString().ShouldBe("/sveiki/sekimas#sekami");
+            root.GetProperty("accountPath").GetString().ShouldBe("/paskyra/sekimas#sekami");
             root.GetProperty("confirmedBy").ValueKind.ShouldBe(JsonValueKind.Null);
 
             // Exactly these fields: no text, no goal, no count, no side, nobody else. (A substring check failed by chance:

@@ -27,7 +27,7 @@ public sealed partial class ProfileTests : E2ETest
         await PasskeyTests.RegisterAsync(page, "Profilio Autorė");
 
         // 1. "Profilis": the text, the switch, what the consent covers before it is given.
-        await page.GotoAsync(Base + "/sveiki");
+        await page.GotoAsync(Base + "/paskyra");
         var about = page.Locator("#about-text");
         await Assertions.Expect(about).ToBeEnabledAsync(new() { Timeout = E2ESteps.Slow });
         await about.FillAsync("Mokytoja iš Kauno (E2E bandymas). https://pavyzdys.test/apie");
@@ -38,7 +38,7 @@ public sealed partial class ProfileTests : E2ETest
         var link = page.Locator("#profile-link");
         await Assertions.Expect(link).ToBeVisibleAsync(new() { Timeout = E2ESteps.Slow });
         var address = (await link.GetAttributeAsync("href"))!;
-        address.ShouldMatch("^/nariai/[a-z2-9]{10}$");
+        address.ShouldMatch("^/nariai/profilio-autore-[a-z2-9]{10}$");
 
         // 2. An argument; the page lists it under the name, with "Apie mane" and its link.
         var (written, body) = await E2ESteps.ApiAsync(page, "POST", "/api/v1/bills/XVP-0618/record/reasons",
@@ -70,7 +70,7 @@ public sealed partial class ProfileTests : E2ETest
         await Assertions.Expect(other.Locator("#followers-count")).ToHaveTextAsync("Sekėjai: 1");
 
         // 4. Switched off: the follow ends, and the old address answers 410.
-        await page.GotoAsync(Base + "/sveiki");
+        await page.GotoAsync(Base + "/paskyra");
         var publicSwitch = page.Locator("#profile-public-switch");
         await Assertions.Expect(publicSwitch).ToBeEnabledAsync(new() { Timeout = E2ESteps.Slow });
         await publicSwitch.UncheckAsync();

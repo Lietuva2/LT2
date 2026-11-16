@@ -12,7 +12,8 @@ namespace Lt2.Api.Contracts.Me;
 /// "Viešas profilis" is on, the consent text's version in force and <c>Texts:MaxLength</c> (0 = no limit but the ceiling).
 /// </summary>
 public sealed record MyProfileResponse(
-    string? About, bool AboutHidden, string? AboutHiddenStatement, string? ProfileId, DateTimeOffset? PublicSince, string ConsentVersion, int TextMaxLength);
+    string? About, bool AboutHidden, string? AboutHiddenStatement, string? ProfileId, DateTimeOffset? PublicSince, string ConsentVersion, int TextMaxLength,
+    string? Address = null);
 
 /// <summary>
 /// "Apie mane" and the switch. Switching on sends <c>ConsentVersion</c>, the version of the text the form showed; switching
@@ -28,7 +29,7 @@ public sealed record ProfileRequest
 }
 
 /// <summary>A member's public page (design 8.25.2): the display name, "Apie mane" and the number of followers.</summary>
-public sealed record MemberProfileResponse(string ProfileId, string DisplayName, string? About, int Followers);
+public sealed record MemberProfileResponse(string ProfileId, string DisplayName, string? About, int Followers, string Address);
 
 /// <summary>
 /// A published text on a member's page (design 8.25.2): <c>Kind</c> <c>argument</c> with the <c>Side</c> it was written for,
@@ -93,8 +94,11 @@ public static class ProfileRoutes
     public const string Keep = ApiRoutes.Prefix + "/moderation/profiles/{id}/keep";
     public const string Restore = ApiRoutes.Prefix + "/moderation/profiles/{id}/restore";
 
-    /// <summary>The public page of a member's profile.</summary>
-    public static string Page(string id) => "/nariai/" + Uri.EscapeDataString(id);
+    /// <summary>
+    /// The public page of a member's profile (design 8.25.2, owner 2026-11-16): <c>/nariai/{name-slug}-{id}</c> from the id and
+    /// the current display name (<see cref="MemberAddress"/>); any other name part redirects to it.
+    /// </summary>
+    public static string Page(string id, string? displayName) => MemberAddress.Page(id, displayName);
 
     public static string MemberOf(string id) => $"{ApiRoutes.Prefix}/members/{Uri.EscapeDataString(id)}";
 

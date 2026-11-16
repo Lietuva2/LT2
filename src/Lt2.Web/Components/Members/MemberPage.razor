@@ -93,6 +93,8 @@ else if (_profile is { } p)
     private MemberTextsResponse? _texts;
     private bool _gone;
 
+    /// <summary>The address's last segment, <c>{name-slug}-{id}</c> (owner, 2026-11-16); a segment that is not the profile's current
+    /// one was redirected before this page (MemberAddresses), so here it only gives the id.</summary>
     [Parameter] public string Id { get; set; } = "";
 
     /// <summary>How many arguments the address asks for (<c>?rodyti=</c>), 10 at first.</summary>
@@ -102,17 +104,17 @@ else if (_profile is { } p)
 
     private string? Contact => Configuration.ModeratorContact();
 
-    private string MoreLink => $"{ProfileRoutes.Page(Id)}?rodyti={ProfileLimits.Shown(Shown) + ProfileLimits.Page}#argumentai";
+    private string MoreLink => $"{_profile?.Address}?rodyti={ProfileLimits.Shown(Shown) + ProfileLimits.Page}#argumentai";
 
     protected override async Task OnInitializedAsync()
     {
         // Asked again each time: a profile switched off must be gone at once (design 8.25.1).
         HttpContext?.Response.Headers.CacheControl = "no-cache";
-        var profile = await Profiles.GetMemberAsync(Id);
+        var profile = await Profiles.GetMemberAsync(Lt2.Api.Contracts.MemberAddress.IdOf(Id));
         if (profile.IsSuccess)
         {
             _profile = profile.Value;
-            _texts = (await Profiles.GetTextsAsync(Id, ProfileLimits.Shown(Shown))).Value;
+            _texts = (await Profiles.GetTextsAsync(_profile!.ProfileId, ProfileLimits.Shown(Shown))).Value;
             return;
         }
 

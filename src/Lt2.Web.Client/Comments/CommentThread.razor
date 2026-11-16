@@ -24,7 +24,7 @@
         @* Design 8.25.4: the card of each public profile among this thread's names, once per thread, for js/lt2-cards.js. *@
         @foreach (var card in thread.Cards ?? [])
         {
-            <template id="@CardId(card.ProfileId)" @key="card.ProfileId"><p><b>@card.Name</b></p>@if (card.About is { } about) {<p class="small">@TextExcerpt.Of(about, CardShown).Shown</p>}<p class="small"><a href="@ProfileRoutes.Page(card.ProfileId)">@L["Card.Open"]</a></p></template>
+            <template id="@CardId(card.ProfileId)" @key="card.ProfileId"><p><b>@card.Name</b></p>@if (card.About is { } about) {<p class="small">@TextExcerpt.Of(about, CardShown).Shown</p>}<p class="small"><a href="@ProfileRoutes.Page(card.ProfileId, card.Name)">@L["Card.Open"]</a></p></template>
         }
         @if (thread.Items.Count > 0)
         {
@@ -269,7 +269,7 @@
     {
         if (a.ProfileId is { } profileId)
         {
-            <a href="@ProfileRoutes.Page(profileId)" data-card="@CardId(profileId)">@PersonName(a.Name)</a>
+            <a href="@ProfileRoutes.Page(profileId, a.Name)" data-card="@CardId(profileId)">@PersonName(a.Name)</a>
         }
         else
         {
@@ -314,7 +314,7 @@
                 if (a.ProfileId is { } profileId)
                 {
                     @* Design 8.25.4: a member with a public profile: the name leads to their page, with a card. *@
-                    <a class="comment__name" href="@ProfileRoutes.Page(profileId)" data-card="@CardId(profileId)">@PersonName(a.Name)</a>
+                    <a class="comment__name" href="@ProfileRoutes.Page(profileId, a.Name)" data-card="@CardId(profileId)">@PersonName(a.Name)</a>
                 }
                 else
                 {

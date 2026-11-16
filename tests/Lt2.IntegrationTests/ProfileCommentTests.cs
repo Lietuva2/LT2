@@ -89,7 +89,7 @@ public sealed class ProfileCommentTests(DatabaseFixture database) : ApiTest(data
             var texts = await visitor.GetJsonAsync<MemberTextsResponse>(ProfileRoutes.TextsOf(profileId, 10));
             var listed = texts.Items.ShouldHaveSingleItem();
             (listed.Id, listed.Kind, listed.On, listed.Side).ShouldBe((comment, MemberTextKinds.Comment, "reason", (string?)null));
-            var page = WebUtility.HtmlDecode(await visitor.Client.GetStringAsync(ProfileRoutes.Page(profileId), TestContext.Current.CancellationToken));
+            var page = WebUtility.HtmlDecode(await visitor.Client.GetStringAsync(ProfileRoutes.Page(profileId, "Komentuojanti Autorė"), TestContext.Current.CancellationToken));
             page.ShouldContain($"/seimas/{Bill}#{CommentLimits.ElementId(comment)}");
             page.ShouldContain("komentaras po argumentu");
             (await visitor.GetJsonAsync<MemberTextsResponse>(ProfileRoutes.TextsOf(representativeProfile, 10))).Items.ShouldBeEmpty("a comment in an organisation's name is not the person's");

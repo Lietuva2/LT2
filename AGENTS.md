@@ -342,27 +342,32 @@ asked after the code, never before. One account per normalised address. Each acc
 verification is a later decision. Every member has one personal invitation code (replaceable; uses unlimited unless
 `Registration:PersonalCodeUses` is set) and sees only how many registered with it; administrators see numbers per day,
 code and level, never who invited whom, and can switch codes off. Invitations are never combined with sides.
-A member changes the display name on `/sveiki` (`PUT /me/display-name`, `DisplayNameHandlers`; the designer's proposal
+A member changes the display name on `/paskyra` (`PUT /me/display-name`, `DisplayNameHandlers`; the designer's proposal
 awaiting the owner): the registration's rule (60 characters, empty allowed), refused under a writing restriction (asked of
 Appeals through `IWritingRestrictions`), as often as the member likes (owner, 2026-11-16; `RateLimits:Participation` guards
 against a runaway script), audited without the names, no earlier names kept. Names are read live everywhere, so a
 change shows beside older arguments too.
 
 **The account screens (design 8.21; the owner, 2026-11-16: "split into several forms", replacing the one page in four
-parts).** Four screens, each its own page with its own forms, joined by `<AccountTabs>` (`Lt2.Web.Client/Components`, the
+parts; under `/paskyra`, the owner, 2026-11-16: "the url sveiki reads strange, change it"; `/sveiki` is gone, no redirect).** Four screens, each its own page with its own forms, joined by `<AccountTabs>` (`Lt2.Web.Client/Components`, the
 `#account-parts` row of plain links, the current one `aria-current`, no script), with the same title and the terms note:
-"Profilis" `/sveiki` (level and roles, the display name `MyDisplayName`, "Apie mane" and "Viešas profilis" `MyProfile`, party
-support `MyPartySupport`), "Sekimas ir laiškai" `/sveiki/sekimas` (`FollowList`, `#sekami`; `EmailRhythm`, `#laisku-daznis`), "Dalyvavimas" `/sveiki/dalyvavimas`
-(`MyMp`, `MyOrganisations`, `MyInvitationCode` `#my-invitation`, the staff part), "Saugumas ir duomenys" `/sveiki/saugumas`
+"Profilis" `/paskyra` (level and roles, the display name `MyDisplayName`, "Apie mane" and "Viešas profilis" `MyProfile`, party
+support `MyPartySupport`), "Sekimas ir laiškai" `/paskyra/sekimas` (`FollowList`, `#sekami`; `EmailRhythm`, `#laisku-daznis`), "Dalyvavimas" `/paskyra/dalyvavimas`
+(`MyMp`, `MyOrganisations`, `MyInvitationCode` `#my-invitation`, the staff part), "Saugumas ir duomenys" `/paskyra/saugumas`
 (passkeys, sessions, known browsers `#zinomos-narsykles`, the positions consent, export and deletion `#my-data`, signing out).
 The addresses are `AccountScreens` (`Lt2.SharedKernel/AccountScreens.cs`, also compiled into Lt2.Web.Client): links in emails, legal texts and pages are built from it, never
-written by hand. A visitor sent to sign in from one comes back to it (`LandingPath` accepts `/sveiki…`). Every screen is
+written by hand. A visitor sent to sign in from one comes back to it (`LandingPath` accepts `/paskyra…`). Every screen is
 `no-store` and carries `<NeedsScript />`; `IslandsBeforeStartTests` walks all four.
 
 **Public profiles (design 8.25; the owner, 2026-11-16: "implement those", before comments).**
 - Only by the member's switch "Viešas profilis" on "Profilis" (`PUT /me/profile`), which is the consent `public-profile`
-  (`PublicProfileConsent.Version`, SharedKernel; the form's text in `UiText` under that version): the page `/nariai/{id}`
-  (a random ten-character id, `ProfileRules.NewId`), indexed, followable, with "Sekėjai: n". Switching off withdraws the
+  (`PublicProfileConsent.Version`, SharedKernel; the form's text in `UiText` under that version): the page `/nariai/{name-slug}-{id}`
+  (a random ten-character id, `ProfileRules.NewId`; the name part from the current display name by `AddressSlugs.Of`,
+  the one slug function MPs' `/p/{slug}` use too; owner, 2026-11-16), indexed, followable, with "Sekėjai: n". The id
+  decides: any other name part (a renamed member, the id alone) answers 301 to the current address
+  (`Components/Members/MemberAddresses`, before the page); a retired id 410 and an unknown one 404 whatever the name part.
+  Every link is `ProfileRoutes.Page(id, name)` (`MemberAddress.Page` in the modules), and the profile's answers carry
+  `address`. Switching off withdraws the
   consent and, in one transaction, retires the id (`identity.retired_profile_id`: it answers 410 for ever, never reused),
   ends every follow of it (`IMemberFollowEnd`, Notifications) and removes the link beside every text. An id never issued
   answers 404. Switching on again makes a new id. A display name is needed while public (`profile.name-required`).
@@ -405,7 +410,7 @@ page's "Balsuota".
 - The official address: an "El. p." contact of open data on `lrs.lt` (not a sub-domain), compared ignoring case, of an MP
   whose mandate has not ended; listed for two or more such MPs, it belongs to nobody (`OfficialAddresses` in Parliament,
   also used for the summaries' recipients). An account whose own address is one gets the offer in its own `GET /me`
-  (`mpOffer`), shown on `/sveiki` by `MyMp` in the browser only; the page the server renders holds nothing of it
+  (`mpOffer`), shown on `/paskyra` by `MyMp` in the browser only; the page the server renders holds nothing of it
   (`ServerMeApi` leaves `mpOffer` and `mp` out). Nothing is linked or public before the take-over.
 - `Registration:OfficialAddressesWithoutInvitation` (off by default, the designer's proposal awaiting the owner): both
   invitation gates ask `OfficialAddressGate`. The local `.env` switches it on through the migrator.
@@ -552,7 +557,7 @@ page's "Balsuota".
   answer (key: `FollowRules.ResponseKey`, the person number and the moment), with the three-day rule of votes.
 - **How often emails come (design 8.24, the designer's proposals in section 12 await the owner).** A member chooses "Iš karto"
   (the default), "Kartą per dieną" or "Kartą per savaitę ir artėjant balsavimui" (`notice_setting.frequency`,
-  `GET|PUT /me/notices/frequency`, the island `EmailRhythm` on the follows screen `/sveiki/sekimas`, its own sheet
+  `GET|PUT /me/notices/frequency`, the island `EmailRhythm` on the follows screen `/paskyra/sekimas`, its own sheet
   `#laisku-daznis` after the switches; audited `notices.frequency-changed` without the choice). One place decides and sends:
   `Rhythm/NoticeDelivery` (Notifications) makes, each run, the run's emails, the "planned" dates that cannot wait, the daily
   email from `Follows:ResponsesAt` ("Rytinių laiškų laikas", 08:00) and Monday's, and gathers everything for one person into
@@ -659,7 +664,7 @@ shown, only counts and "maža imtis"; the Seimas's majority is that of those who
   routes and pages are limited per address and per token (`RateLimits:MpMail`, `RateLimits:MpMailToken`) and answer the same for
   an unknown and a wrong token. Every change is confirmed to the official address. An extra recipient is confirmed from the
   official address (a page with a button, 24 hours, one use) and each copy has its own "Nebegauti kopijų" page. A linked account
-  changes the same choice under "Seimo narys" on `/sveiki` (`MyMp`, `GET|PUT /me/mp/mail`, passkey session).
+  changes the same choice under "Seimo narys" on `/paskyra` (`MyMp`, `GET|PUT /me/mp/mail`, passkey session).
 - The introduction letter (`/administravimas/pristatymas`; public `/suvestines/pristatymas`): written and signed by a person,
   a test copy to the administrator's own address, sent with a fresh passkey confirmation to MPs who have had none; a changed
   text is a new version. An MP who had none gets it in place of a summary (`introduced`).

@@ -338,7 +338,7 @@ public sealed class SignInComponentTests : BunitContext
         // Design 6.2 (owner, 2026-11-16): the way to a staff session without signing out, coming back to the account page.
         var staffKey = codeSession.Find("#delete-staff-key");
         staffKey.TextContent.ShouldBe(Text("Data.StaffKeyLink"));
-        staffKey.GetAttribute("href").ShouldBe("/prisijungti/raktas#grizti=%2Fsveiki%2Fsaugumas");
+        staffKey.GetAttribute("href").ShouldBe("/prisijungti/raktas#grizti=%2Fpaskyra%2Fsaugumas");
         codeSession.FindAll("#delete-account").ShouldBeEmpty();
         codeSession.FindAll("#export").ShouldNotBeEmpty("the export is unchanged");
 
@@ -369,17 +369,17 @@ public sealed class SignInComponentTests : BunitContext
         SignedIn(FakeMeApi.Member);
         var screens = new (Func<IRenderedComponent<IComponent>> Render, string Path, string Part, string[] Holds, string[] NotHere)[]
         {
-            (() => Render<Hello>(), "/sveiki", "profilis", ["#vardas", "#viesas-profilis", "#about-text", "#profile-public-switch"], ["#sekami", "#laisku-daznis", "#my-data", "#my-invitation"]),
-            (() => Render<AccountFollows>(), "/sveiki/sekimas", "sekimas-ir-laiskai", ["#sekami", "#follow-notices", "#laisku-daznis", "#rhythm-choices"], ["#vardas", "#my-data", "#my-invitation"]),
-            (() => Render<AccountTaking>(), "/sveiki/dalyvavimas", "dalyvavimas", ["#my-invitation", "#my-organisations"], ["#vardas", "#sekami", "#laisku-daznis", "#my-data"]),
-            (() => Render<AccountSecurity>(), "/sveiki/saugumas", "saugumas-ir-duomenys", ["#zinomos-narsykles", "#my-data", "#export"], ["#vardas", "#sekami", "#laisku-daznis", "#my-invitation"]),
+            (() => Render<Hello>(), "/paskyra", "profilis", ["#vardas", "#viesas-profilis", "#about-text", "#profile-public-switch"], ["#sekami", "#laisku-daznis", "#my-data", "#my-invitation"]),
+            (() => Render<AccountFollows>(), "/paskyra/sekimas", "sekimas-ir-laiskai", ["#sekami", "#follow-notices", "#laisku-daznis", "#rhythm-choices"], ["#vardas", "#my-data", "#my-invitation"]),
+            (() => Render<AccountTaking>(), "/paskyra/dalyvavimas", "dalyvavimas", ["#my-invitation", "#my-organisations"], ["#vardas", "#sekami", "#laisku-daznis", "#my-data"]),
+            (() => Render<AccountSecurity>(), "/paskyra/saugumas", "saugumas-ir-duomenys", ["#zinomos-narsykles", "#my-data", "#export"], ["#vardas", "#sekami", "#laisku-daznis", "#my-invitation"]),
         };
 
         foreach (var (render, path, part, holds, notHere) in screens)
         {
             var page = render();
             page.FindAll("#account-parts a").Select(a => a.GetAttribute("href"))
-                .ShouldBe(["/sveiki", "/sveiki/sekimas", "/sveiki/dalyvavimas", "/sveiki/saugumas"], path);
+                .ShouldBe(["/paskyra", "/paskyra/sekimas", "/paskyra/dalyvavimas", "/paskyra/saugumas"], path);
             page.FindAll("#account-parts a").Select(a => a.TextContent)
                 .ShouldBe([Text("Parts.Profile"), Text("Parts.Follows"), Text("Parts.Taking"), Text("Parts.Security")]);
             page.FindAll("#account-parts a[aria-current=page]").ShouldHaveSingleItem(path).GetAttribute("href").ShouldBe(path);
@@ -404,10 +404,10 @@ public sealed class SignInComponentTests : BunitContext
     [Fact]
     public void The_anchors_emails_and_texts_link_to_live_on_their_screens()
     {
-        AccountScreens.FollowsList.ShouldBe("/sveiki/sekimas#sekami");
-        AccountScreens.KnownBrowsers.ShouldBe("/sveiki/saugumas#zinomos-narsykles");
-        AccountScreens.MyData.ShouldBe("/sveiki/saugumas#my-data");
-        AccountScreens.MyInvitation.ShouldBe("/sveiki/dalyvavimas#my-invitation");
+        AccountScreens.FollowsList.ShouldBe("/paskyra/sekimas#sekami");
+        AccountScreens.KnownBrowsers.ShouldBe("/paskyra/saugumas#zinomos-narsykles");
+        AccountScreens.MyData.ShouldBe("/paskyra/saugumas#my-data");
+        AccountScreens.MyInvitation.ShouldBe("/paskyra/dalyvavimas#my-invitation");
         Lt2.SharedKernel.AccountScreens.All.ShouldBe(AccountScreens.All, "the browser's copy and the modules' are one file");
     }
 
@@ -420,7 +420,7 @@ public sealed class SignInComponentTests : BunitContext
     {
         SignedIn(FakeMeApi.Member with { DisplayName = null });
         var fake = _profiles;
-        fake.On("SaveAsync", ApiResult<MyProfileResponse>.Ok(new MyProfileResponse("Mokytoja iš Kauno. https://pavyzdys.test/ruta", false, null, "abcdefgh23", DateTimeOffset.UnixEpoch, ProfileLimits.ConsentVersion, 2000)));
+        fake.On("SaveAsync", ApiResult<MyProfileResponse>.Ok(new MyProfileResponse("Mokytoja iš Kauno. https://pavyzdys.test/ruta", false, null, "abcdefgh23", DateTimeOffset.UnixEpoch, ProfileLimits.ConsentVersion, 2000, Address: "/nariai/ruta-mockute-abcdefgh23")));
         var page = Render<Hello>();
 
         page.FindAll("#profile-consent-text").ShouldBeEmpty("nothing is said before the switch is chosen");
@@ -436,7 +436,7 @@ public sealed class SignInComponentTests : BunitContext
         sent.Public.ShouldBeTrue();
         sent.ConsentVersion.ShouldBe(ProfileLimits.ConsentVersion);
         sent.About.ShouldBe("Mokytoja iš Kauno. https://pavyzdys.test/ruta");
-        page.WaitForAssertion(() => page.Find("#profile-link").GetAttribute("href").ShouldBe("/nariai/abcdefgh23"));
+        page.WaitForAssertion(() => page.Find("#profile-link").GetAttribute("href").ShouldBe("/nariai/ruta-mockute-abcdefgh23"));
     }
 
     /// <summary>Design 6.2 (owner, 2026-11-16): where the staff links stand, a code session on a staff account gets its staff passkey.</summary>
@@ -446,7 +446,7 @@ public sealed class SignInComponentTests : BunitContext
         SignedIn(FakeMeApi.Member with { Roles = ["member", "moderator"], StaffAccount = true });
         var codeSession = Render<AccountTaking>();
         codeSession.Find("#dalyvavimas #staff-key-note span").TextContent.ShouldBe(Text("Staff.KeyText"));
-        codeSession.Find("#staff-key-link").GetAttribute("href").ShouldBe("/prisijungti/raktas#grizti=%2Fsveiki%2Fdalyvavimas");
+        codeSession.Find("#staff-key-link").GetAttribute("href").ShouldBe("/prisijungti/raktas#grizti=%2Fpaskyra%2Fdalyvavimas");
         codeSession.FindAll("#staff-links").ShouldBeEmpty();
         Render<AccountSecurity>().FindAll("#delete-staff-key").ShouldNotBeEmpty("the one beside the deletion note stays, on its own screen");
 

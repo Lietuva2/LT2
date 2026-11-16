@@ -21,7 +21,8 @@ internal sealed class MemberReads(IPublicProfiles profiles, IFollowerCounts foll
         return state switch
         {
             ProfileIdState.Public when profile is not null =>
-                new MemberProfileResponse(profile.ProfileId, profile.DisplayName, profile.About, await followers.MemberAsync(profile.ProfileId, ct)),
+                new MemberProfileResponse(
+                    profile.ProfileId, profile.DisplayName, profile.About, await followers.MemberAsync(profile.ProfileId, ct), ProfileRoutes.Page(profile.ProfileId, profile.DisplayName)),
             ProfileIdState.Retired => Error.Gone("member.gone"),
             _ => Error.NotFound("member.not-found"),
         };
@@ -46,7 +47,7 @@ internal sealed class MemberReads(IPublicProfiles profiles, IFollowerCounts foll
 internal static class ProfileMapping
 {
     public static MyProfileResponse Map(MyProfileState s) =>
-        new(s.About, s.AboutHidden, s.AboutHiddenStatement, s.ProfileId, s.PublicSince, s.ConsentVersion, s.TextMaxLength);
+        new(s.About, s.AboutHidden, s.AboutHiddenStatement, s.ProfileId, s.PublicSince, s.ConsentVersion, s.TextMaxLength, s.Address);
 
     public static ProfileChange ToModule(ProfileRequest r) => new(r.About, r.Public, r.ConsentVersion);
 

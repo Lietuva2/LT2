@@ -23,7 +23,7 @@
         @* Design 8.25.4: each public profile's card once on the page, for js/lt2-cards.js; no follower number in it. *@
         @foreach (var card in record.Cards ?? [])
         {
-            <template id="card-@card.ProfileId" @key="card.ProfileId"><p><b>@card.Name</b></p>@if (card.About is { } about) {<p class="small">@TextExcerpt.Of(about, CardShown).Shown</p>}<p class="small"><a href="@ProfileRoutes.Page(card.ProfileId)">@L["Card.Open"]</a></p></template>
+            <template id="card-@card.ProfileId" @key="card.ProfileId"><p><b>@card.Name</b></p>@if (card.About is { } about) {<p class="small">@TextExcerpt.Of(about, CardShown).Shown</p>}<p class="small"><a href="@ProfileRoutes.Page(card.ProfileId, card.Name)">@L["Card.Open"]</a></p></template>
         }
         <div class="pair pair--reasons">
             @foreach (var side in AppealLimits.Sides)
@@ -45,7 +45,7 @@
                                 @if (reason.AuthorProfileId is { } profileId)
                                 {
                                     @* Design 8.25.4: a member with a public profile: the name leads to their page, with a card. *@
-                                    <a class="said__name" href="@ProfileRoutes.Page(profileId)" data-card="card-@profileId">@(reason.AuthorName ?? L["Reasons.Anonymous"])</a>
+                                    <a class="said__name" href="@ProfileRoutes.Page(profileId, reason.AuthorName)" data-card="card-@profileId">@(reason.AuthorName ?? L["Reasons.Anonymous"])</a>
                                 }
                                 else
                                 {

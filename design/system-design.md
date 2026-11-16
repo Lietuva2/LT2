@@ -1046,7 +1046,7 @@ M2b; the owner asked for M2b to be built now. Built in two steps: the link (8.5.
   one MP belongs to nobody. The Parliament module answers "whose official address is this" through an interface of the
   shared kernel; no address leaves it otherwise.
 - **An account whose proven address is an MP's official address is told so at once:** right after registration is
-  completed, and on the account page (`/sveiki`) every time until the profile is taken over: that this is the official
+  completed, and on the account page (`/paskyra`) every time until the profile is taken over: that this is the official
   address of that MP, by name, with one button, "Perimti profilį". (Every text that carries an MP's name is worded so
   the name stands in the nominative, after a colon or on its own: names are not declined by the software.) Nothing is linked and nothing is public
   before the take-over is finished: registering does not by itself put a mark on anyone's profile.
@@ -1548,7 +1548,7 @@ A visitor sees a link to sign in instead.
   - "Jūsų projektai" (8.7) still lists bills the member follows or has a side on, so a person who unfollowed keeps
     seeing the bill they have a side on, without "Sekate".
 - **The account page** lists the followed bills (planned date or last stage result) and MPs, with "Nebesekti", and the
-  two switches. Each email ends with a link there (`/sveiki/sekimas#sekami` since the account screens of 8.21); there is
+  two switches. Each email ends with a link there (`/paskyra/sekimas#sekami` since the account screens of 8.21); there is
   no token link in this round.
   Links in these and all other emails are full addresses built from `Site:Address` (5.6) [decided by the owner on
   2026-11-14].
@@ -1682,11 +1682,11 @@ MPs stand on.
   line appears once]
 - The link is the personal invitation link (6.2) with the page to land on:
   `/prisijungti?kodas=…&tikslas=/seimas/XVP-0412`. After registering or signing in, the person lands on that page
-  instead of `/sveiki`.
+  instead of `/paskyra`.
 - `tikslas` is accepted only as a path on this site under `/seimas/` (one leading slash, no scheme, host or
   backslash); anything else is ignored. [changed while building (2026-11-16, the account screens and public profiles):
-  also `/sveiki` and the account screens under it (a visitor sent to sign in from one comes back to it) and a member's
-  page `/nariai/{id}` (its "Sekti" for a visitor); never a query or a fragment.] It stays in the browser through the sign-in steps and is never stored on the
+  also `/paskyra` and the account screens under it (a visitor sent to sign in from one comes back to it) and a member's
+  page `/nariai/{name-slug}-{id}` (its "Sekti" for a visitor); never a query or a fragment.] It stays in the browser through the sign-in steps and is never stored on the
   server, so nothing ties an invitation to a bill. The link is the same whichever side the sharer took, and nothing
   about a side is in it (6.2: invitations are never combined with sides).
 - A member whose code is switched off or used up sees the line without a link.
@@ -2312,7 +2312,7 @@ Still for the owner, on the built result: the details marked "designer's choice"
   restrict them, as with an argument (8.3). At most ten per organisation. A representative can remove another or leave;
   the last one cannot leave and can only **close** the organisation: its statements on open bills are withdrawn, those
   on closed bills stay as they were, and the profile says it is closed. Deleting the account of the last representative
-  closes it the same way. The account page (`/sveiki`) lists "Mano organizacijos"; the export has the person's
+  closes it the same way. The account page (`/paskyra`) lists "Mano organizacijos"; the export has the person's
   representative roles and the statements they wrote; `written by` is emptied when the account goes.
 - **Statements.** On an active bill whose record is not hidden or closed, a representative publishes the organisation's
   one statement from the "Organizacijų pozicijos" section of the bill's page: stance (`for`, `against`, `remarks`), text
@@ -3016,27 +3016,29 @@ lines on a phone.
   6.2 that makes the session a staff session, which then goes back to the page the item was opened on.
 - **The account area is four screens, not one long page [owner, 2026-11-16: "the menu could not just scroll, but it would
   be split into several forms? Starting with name, about me and probably a party"]**. Each part of the earlier page (four
-  parts on `/sveiki`, reached by in-page links, owner earlier the same day) is its own screen with its own forms; the row
+  parts on `/paskyra`, reached by in-page links, owner earlier the same day) is its own screen with its own forms; the row
   under the title becomes navigation between the screens: plain links, the current one marked (`aria-current`), styled
   like the tabs of "Projektai", no script, wrapping on a phone (one component, `AccountTabs`, as `ProjectTabs` is for the
   four tabs of "Projektai"). Every screen has the same title ("Sveiki, …") and row; a visitor who opens one is sent to sign
-  in and comes back to the same screen. The addresses and what each holds:
-  - **"Profilis" (`/sveiki`)**, the first screen: what others may see of the person and what they say of themself. The
+  in and comes back to the same screen. **The account's addresses are under `/paskyra` [owner, 2026-11-16: "the url sveiki
+  reads strange, change it"]:** `/sveiki` and the screens under it are gone with no redirect (nothing is launched); the
+  greeting "Sveiki, …" stays as text. The addresses and what each holds:
+  - **"Profilis" (`/paskyra`)**, the first screen: what others may see of the person and what they say of themself. The
     level and roles, the display name (6.2), "Apie mane" and the switch "Viešas profilis" with the link to the public page
     while it is on (8.25), party support (5.2; whether it may also be shown publicly is the designer's proposal of
     8.25.9, not built).
-  - **"Sekimas ir laiškai" (`/sveiki/sekimas`)**: what the person follows and the email switches (`#sekami`), then how often the emails come (`#laisku-daznis`, 8.24).
-  - **"Dalyvavimas" (`/sveiki/dalyvavimas`)**: the MP part (8.5), organisations, the invitation code (`#my-invitation`),
+  - **"Sekimas ir laiškai" (`/paskyra/sekimas`)**: what the person follows and the email switches (`#sekami`), then how often the emails come (`#laisku-daznis`, 8.24).
+  - **"Dalyvavimas" (`/paskyra/dalyvavimas`)**: the MP part (8.5), organisations, the invitation code (`#my-invitation`),
     and the staff part (the role's activation; the staff links in a staff session, or in their place the link to the staff
     passkey of 6.2 with one sentence, which comes back to this screen).
-  - **"Saugumas ir duomenys" (`/sveiki/saugumas`)**: passkeys, sessions, known browsers (`#zinomos-narsykles`), the
+  - **"Saugumas ir duomenys" (`/paskyra/saugumas`)**: passkeys, sessions, known browsers (`#zinomos-narsykles`), the
     positions consent (moved here from "Profilis": it is a consent about stored data, withdrawn with what it covers, 6.5),
     the export and deleting the account (`#my-data`), signing out.
 
   The note about the terms of use (8.22.2) stands under the row on every screen: it concerns the whole account. The
-  anchors emails and hints link to stay on their sheets, now on their screen's address: `/sveiki/sekimas#sekami` (every
-  follow email, 8.11.2, 8.20.1), `/sveiki/saugumas#zinomos-narsykles` (the known browsers' notice, 8.20.2),
-  `/sveiki/saugumas#my-data` (the privacy notice, the terms' acceptance screen), `/sveiki/dalyvavimas#my-invitation`. No
+  anchors emails and hints link to stay on their sheets, now on their screen's address: `/paskyra/sekimas#sekami` (every
+  follow email, 8.11.2, 8.20.1), `/paskyra/saugumas#zinomos-narsykles` (the known browsers' notice, 8.20.2),
+  `/paskyra/saugumas#my-data` (the privacy notice, the terms' acceptance screen), `/paskyra/dalyvavimas#my-invitation`. No
   old address keeps working (nothing is launched). Each screen is answered `no-store`, as every page to a signed-in session
   (6.8), and an island on it is disabled until it starts, with `<NeedsScript />`.
   [The owner's earlier decision of the same day, four parts on one page, is replaced by this one.]
@@ -3561,7 +3563,7 @@ same day: "Iš karto" means within minutes and is the default; the weekly choice
 The rest of the shape was proposed 2026-11-16 and not objected to. Built 2026-11-16 for the four follow emails, then
 for comments under one's arguments (8.23.9) and followed members (8.25.5), which joined it as kinds of their own.]**
 
-- **One choice on the account page,** on its screen "Sekimas ir laiškai" (`/sveiki/sekimas`, 8.21; its own sheet
+- **One choice on the account page,** on its screen "Sekimas ir laiškai" (`/paskyra/sekimas`, 8.21; its own sheet
   `#laisku-daznis` after the switches), beside the switches (8.11.2, 8.14.14, 8.20.1, 8.23.9, 8.25), "Kaip
   dažnai siųsti laiškus":
   - **"Iš karto" [owner, 2026-11-16: within minutes; the default].** The follow job (`FollowJob` in the worker) runs four
@@ -3717,8 +3719,16 @@ page is indexed and the person can be followed.
 
 #### 8.25.2 The address and the page
 
-- **`/nariai/{id}`**, a random short id (ten letters and digits), never the name: no squatting on names, no impersonation
-  by address, and a changed display name keeps the page.
+- **`/nariai/{name-slug}-{id}` [owner, 2026-11-16: the address carries the name for search engines; the owner suggested the
+  name alone, the id was kept for the reasons below and the owner did not object]**, for example
+  `/nariai/jonas-petraitis-7k3qm2x9ab`. The id (a random ten-character id of letters and digits, never the name) decides
+  which profile it is: no squatting on names, no impersonation by address, two members with one name never share an address,
+  and a changed display name keeps the page. The name part is made from the current display name as MPs' `/p/{slug}` are
+  (one function, `AddressSlugs.Of`: Lithuanian letters to plain Latin, lower case, other characters a hyphen); a name with
+  nothing to make it of gives the id alone. Any other name part (a changed name, a typo, the id alone) answers **301** to
+  the current address, the query kept; a retired id still answers 410 and an unknown one 404, whatever the name part. Every
+  link to a profile is made by `ProfileRoutes.Page` (in emails `MemberAddress.Page`), and the profile's answers carry it
+  (`address`). There is no sitemap and no canonical link on the site to update.
 - **Indexed [owner, 2026-11-16].** No `noindex` and no `X-Robots-Tag` on these pages: being found by name is part of
   what the person chose. (The trial deployment's own `X-Robots-Tag: noindex, nofollow` for the whole site, 9.2, still
   applies there.)
@@ -3900,7 +3910,7 @@ If the answer is no, the party stays private on "Profilis" as it is now and noth
 - A member without a public profile has no page, no link beside their name and no card; nothing public carries an id for
   them.
 - A member who switches the profile on, after the form's text, has the consent `public-profile` stored with its version
-  and gets `/nariai/{id}` with their name, "Apie mane", the follower number and their published arguments and comments,
+  and gets `/nariai/{name-slug}-{id}` with their name, "Apie mane", the follower number and their published arguments and comments,
   newest first, paged without script, with no `noindex`; none of the things 8.25.2 never shows appear on it.
 - Hover and keyboard focus on the name open the card; the link works without script; the card's text is in the page once
   per person; the card carries no follower number.
@@ -4434,7 +4444,7 @@ Built on 2026-11-16:
   (8.7, 8.16).
 - A staff account's session becomes a staff session without signing out, by its staff passkey on `/prisijungti/raktas`
   (6.2, 8.21).
-- The account page `/sveiki` is in four parts: "Profilis", "Sekimas ir laiškai", "Dalyvavimas", "Saugumas ir duomenys"
+- The account page `/paskyra` is in four parts: "Profilis", "Sekimas ir laiškai", "Dalyvavimas", "Saugumas ir duomenys"
   (8.21). [Replaced later the same day, below: four screens.]
 - A member may change their display name, with no limit on how often; the account keeps no time of
   the change (6.2).
@@ -4491,9 +4501,14 @@ Decided for comments, the email rhythm and public profiles (8.23-8.25; all three
   of bills, MPs and organisations are built with them (8.11.2). The designer's proposals of 8.25 and 8.11.2 are built as
   proposed and still await the owner (below and in the table).
 - "The menu could not just scroll, but it would be split into several forms? Starting with name, about me and probably a
-  party": the account area is four screens, `/sveiki` ("Profilis": the name, "Apie mane", "Viešas profilis", party
-  support), `/sveiki/sekimas`, `/sveiki/dalyvavimas`, `/sveiki/saugumas`, with the row of parts as navigation between them
+  party": the account area is four screens, `/paskyra` ("Profilis": the name, "Apie mane", "Viešas profilis", party
+  support), `/paskyra/sekimas`, `/paskyra/dalyvavimas`, `/paskyra/saugumas`, with the row of parts as navigation between them
   (8.21). Whether the party may be shown publicly is the designer's proposal of 8.25.9, not built.
+- "The url sveiki reads strange, change it": the account's screens are `/paskyra`, `/paskyra/sekimas`,
+  `/paskyra/dalyvavimas`, `/paskyra/saugumas`; `/sveiki` goes with no redirect (8.21).
+- A member's public address carries the name: `/nariai/{name-slug}-{id}`, the id deciding, any other name part
+  redirecting permanently to the current address (8.25.2). The owner suggested the name alone; the id stays (names are
+  neither unique nor stable), and the owner did not object.
 
 **Decided by the owner on 2026-11-16: the analytics page (8.26)**
 

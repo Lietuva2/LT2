@@ -157,7 +157,7 @@ public sealed class ExplanatoryTextTests : E2ETest
             await page.Locator("details#register-more > summary").ClickAsync();
             await page.ScreenshotAsync(new() { Path = Path.Combine(shots, $"registration-open-{width}.png"), FullPage = true });
             await ShootAsync(page, "/seimas/XVP-0412", $"bill-XVP-0412-member-with-side-{width}.png");
-            await ShootAsync(page, "/sveiki", $"account-{width}.png");
+            await ShootAsync(page, "/paskyra", $"account-{width}.png");
             await ShootAsync(page, "/suvestines", $"summaries-{width}.png");
             await ShootAsync(page, "/o/pavyzdine-mokesciu-aiskumo-asociacija", $"organisation-profile-{width}.png");
             await page.Locator("#label-meaning").ClickAsync();
