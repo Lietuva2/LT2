@@ -112,6 +112,7 @@ public sealed partial class CommentTests(AppealFlowTests.ModeratorFixture modera
             await page.GotoAsync(Base + "/prisijungti?registruotis=true");
             await E2ESteps.RegisterHereAsync(page, Official, MpName);
             await page.WaitForURLAsync(new Regex("/sveiki$"), new() { Timeout = E2ESteps.Slow });
+            await page.GotoAsync(Base + "/sveiki/dalyvavimas");
             var claim = page.Locator("#mp-claim");
             await Assertions.Expect(claim).ToBeEnabledAsync(new() { Timeout = E2ESteps.Slow });
             await claim.ClickAsync();
