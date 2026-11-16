@@ -62,6 +62,7 @@
 <data name="Digest.NoReasons.against" xml:space="preserve"><value>  Argumentų prieš dar nėra.</value></data>
 <data name="Digest.NotAPoll" xml:space="preserve"><value>Tai nėra reprezentatyvi apklausa: skaičiai rodo savanoriškai dalyvaujančių Lietuva 2.0 naudotojų nuomonę.</value></data>
 <data name="Digest.PublicCopy" xml:space="preserve"><value>Ta pati suvestinė viešai: {0}</value></data>
+<data name="Digest.WholeReason" xml:space="preserve"><value>Visas argumentas: {0}</value></data>
 <data name="Digest.Skipped" xml:space="preserve"><value>(Šiam Seimo nariui ši suvestinė nebūtų siunčiama: viršytas savaitės laiškų skaičius.)</value></data>
 <data name="Stage.presentation" xml:space="preserve"><value>pateikimas</value></data>
 <data name="Stage.consideration" xml:space="preserve"><value>svarstymas</value></data>

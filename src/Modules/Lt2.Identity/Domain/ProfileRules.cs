@@ -12,4 +12,8 @@ internal static class ProfileRules
     /// <summary><c>display-name.too-long</c>, or null when the name may be stored.</summary>
     public static string? CheckDisplayName(string? typed) =>
         DisplayName(typed) is { Length: > DisplayNameMaxLength } ? "display-name.too-long" : null;
+
+    /// <summary>Only a different name is a change (design 6.2): the same name again (or empty again) changes and audits nothing.</summary>
+    public static bool IsChange(string? current, string? typed) =>
+        !string.Equals(DisplayName(current), DisplayName(typed), StringComparison.Ordinal);
 }

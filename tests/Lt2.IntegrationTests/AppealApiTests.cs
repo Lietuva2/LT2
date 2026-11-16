@@ -18,7 +18,7 @@ public sealed class AppealApiTests(DatabaseFixture database) : ApiTest(database)
     {
         using var stranger = NewBrowser();
         var rules = await stranger.GetJsonAsync<AppealRulesResponse>(AppealRoutes.Rules);
-        rules.ShouldBe(new AppealRulesResponse(100, 50, 500, 0, 0, 1500), "no limit per person by default");
+        rules.ShouldBe(new AppealRulesResponse(100, 50, 2000, 0, 0, 1500), "no limit per person by default; texts up to the Texts:MaxLength default");
     }
 
     [Fact]
@@ -311,7 +311,8 @@ public sealed class AppealApiTests(DatabaseFixture database) : ApiTest(database)
             third.StatusCode.ShouldBe(HttpStatusCode.Created, "no limit per person by default");
         }
 
-        using (var tooLong = await member.WriteReasonAsync(AppealSteps.ThirdBill, "for", new string('a', 501)))
+        // Over the technical ceiling the shared validator refuses it (design 8.2; the length setting: ReasonLengthTests).
+        using (var tooLong = await member.WriteReasonAsync(AppealSteps.ThirdBill, "for", new string('a', MemberTextLimits.Ceiling + 1)))
         {
             await tooLong.ShouldBeProblemAsync(HttpStatusCode.BadRequest, "validation");
         }

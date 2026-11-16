@@ -1,0 +1,105 @@
+@page "/prisijungti/raktas"
+@attribute [Authorize]
+@rendermode InteractiveWebAssembly
+@inherits InteractiveBase<UiText>
+@inject IAuthApi Auth
+@inject IMeApi Me
+@inject NavigationManager Navigation
+@inject Passkeys PasskeyBrowser
+@inject IJSRuntime JS
+
+@* Design 6.2, 8.21 (owner, 2026-11-16): a staff account signed in by code (or with another passkey) becomes a staff session
+   with its staff passkey, without signing out; the server gives the session a new key. Reached from the account item and
+   the account page, with the page to go back to after the "#" (StaffSessionPage). The page as served is the same for every
+   member; in the browser, a session that already is a staff session goes on, and an account without a staff role goes to
+   its account page. *@
+<PageTitle>@L["StaffKey.PageTitle"]</PageTitle>
+
+<div class="stack">
+    <p class="label">Lietuva 2.0</p>
+    <h1 id="staff-key-title">@L["StaffKey.Title"]</h1>
+    <NeedsScript />
+</div>
+
+<section class="sheet sheet--cut stack" aria-labelledby="staff-key-title">
+    <p id="staff-key-text">@L["StaffKey.Text"]</p>
+    <p><button type="button" class="btn" id="staff-key" disabled="@(Locked || !_ready)" @onclick="SignInAsync">@L["StaffKey.Submit"]</button></p>
+    <Messages Message="@Message" Info="@Info" />
+</section>
+
+@code {
+    private string? _back;
+    private bool _ready;
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (!firstRender || !RendererInfo.IsInteractive)
+        {
+            return;
+        }
+
+        _back = StaffSessionPage.Back(InvitationLink.FromFragment(await BrowserAddressAsync(), StaffSessionPage.BackParameter));
+        var me = await Me.GetAsync();
+        if (!me.IsSuccess)
+        {
+            Navigation.NavigateTo(InvitationLink.Page, forceLoad: true);
+            return;
+        }
+
+        if (me.Value!.ActiveStaffRoles.Count > 0)
+        {
+            // Already a staff session: nothing to do here.
+            Navigation.NavigateTo(_back ?? "/sveiki", forceLoad: true);
+            return;
+        }
+
+        if (!me.Value.StaffAccount)
+        {
+            Navigation.NavigateTo("/sveiki", forceLoad: true);
+            return;
+        }
+
+        _ready = true;
+        StateHasChanged();
+    }
+
+    private Task SignInAsync() => RunAsync(async () =>
+    {
+        if (!await PasskeyBrowser.IsSupportedAsync())
+        {
+            Message = L["Passkey.Unsupported"];
+            return;
+        }
+
+        var options = await Auth.GetPasskeyRequestOptionsAsync();
+        if (!Succeeded(options))
+        {
+            return;
+        }
+
+        var credential = await PasskeyBrowser.GetAsync(options.Value!);
+        if (credential is null)
+        {
+            Message = L["Passkey.Cancelled"];
+            return;
+        }
+
+        if (Succeeded(await Me.StartStaffSessionAsync(new PasskeyCredentialRequest { Credential = credential })))
+        {
+            Navigation.NavigateTo(_back ?? "/sveiki", forceLoad: true);
+        }
+    });
+
+    /// <summary>The address the browser shows, with its "#" part; the navigation manager's when the browser cannot be asked.</summary>
+    private async Task<string> BrowserAddressAsync()
+    {
+        try
+        {
+            return await JS.InvokeAsync<string?>("location.toString") ?? Navigation.Uri;
+        }
+        catch (JSException)
+        {
+            return Navigation.Uri;
+        }
+    }
+}

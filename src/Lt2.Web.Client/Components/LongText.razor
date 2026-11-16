@@ -1,0 +1,69 @@
+@inject IStringLocalizer<UiText> T
+
+@* A member's text in its bubble (design 8.2, owner 2026-11-16): an argument, an organisation's statement, an MP's response.
+   A long one shows its beginning (TextExcerpt: about 300 characters for an argument, 1 500 for a statement or a response)
+   and the rest behind "Rodyti daugiau", the browser's own <details class="more"> (design 8.15), so it opens and closes
+   without JavaScript, on server-rendered pages and in an island before it starts; nothing here sets "open". The summary
+   stays in the page and focusable: closed it reads "Rodyti daugiau" under the beginning; opened, the "…" steps aside, the
+   rest follows the beginning and the summary, now "Rodyti mažiau", is drawn after it (flex order, lt2.css). Both texts
+   come from the resources; the one not in force is display: none, so assistive technology does not read it either. With
+   an id, js/lt2-disclosures.js gives the island's replacement the state the person chose. Paragraphs (line breaks in the
+   text) are kept when asked. The moderators' queue and preview show texts whole and do not use this. *@
+@if (TextExcerpt.Of(Text, Shown, Margin) is { Rest: { } rest } excerpt)
+{
+    var start = Lines(excerpt.Shown);
+    var more = Lines(rest);
+    <div class="@BubbleClass long-text">
+        @for (var i = 0; i < start.Count; i++)
+        {
+            <p>@start[i]@if (i == start.Count - 1) {<span class="long-text__cut" aria-hidden="true">…</span>}</p>
+        }
+        <details class="more stack stack--tight long-text__more" id="@Id">
+            <summary class="linkish small"><span class="long-text__closed">@T["Text.ShowMore"]</span><span class="long-text__opened">@T["Text.ShowLess"]</span></summary>
+            @foreach (var line in more)
+            {
+                <p>@line</p>
+            }
+        </details>
+    </div>
+}
+else if (Paragraphs)
+{
+    <div class="@BubbleClass">
+        @foreach (var line in Lines(Text))
+        {
+            <p>@line</p>
+        }
+    </div>
+}
+else
+{
+    <p class="@BubbleClass">@Text</p>
+}
+
+@code {
+    /// <summary>The text as stored (plain text, encoded on output).</summary>
+    [Parameter, EditorRequired] public string Text { get; set; } = "";
+
+    /// <summary>The bubble's classes, for example <c>bubble bubble--people voice</c>.</summary>
+    [Parameter, EditorRequired] public string BubbleClass { get; set; } = "";
+
+    /// <summary>About how many characters are shown at first (<see cref="TextExcerpt.ArgumentShown"/> by default).</summary>
+    [Parameter] public int Shown { get; set; } = TextExcerpt.ArgumentShown;
+
+    /// <summary>A text at most this much longer than <see cref="Shown"/> is shown whole.</summary>
+    [Parameter] public int Margin { get; set; } = TextExcerpt.ArgumentMargin;
+
+    /// <summary>Each line of the text its own paragraph (statements and responses); an argument is one paragraph.</summary>
+    [Parameter] public bool Paragraphs { get; set; }
+
+    /// <summary>
+    /// The disclosure's id, unique on the page (a text shown twice takes a different prefix), so an opened one stays open
+    /// when an island replaces the prerendered markup; none is needed on a page without an island.
+    /// </summary>
+    [Parameter] public string? Id { get; set; }
+
+    private List<string> Lines(string text) => Paragraphs
+        ? text.Split('\n', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries).ToList()
+        : [text];
+}

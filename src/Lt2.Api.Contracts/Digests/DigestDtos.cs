@@ -141,6 +141,14 @@ public static class DigestRoutes
     /// <summary>The element id of one bill's item on a summary page.</summary>
     public static string ItemAnchor(Guid runId, string number) => $"item-{runId:N}-{Uri.EscapeDataString(number)}";
 
+    /// <summary>
+    /// The element id of one argument on a summary page: the run, the bill, the side and its place on that side (1, 2 …),
+    /// as the snapshot holds them (design 8.19.3, owner 2026-11-16). The MPs' email links "Visas argumentas" here; the
+    /// Notifications module writes the same (<c>MpMailPaths.ReasonOnPublicCopy</c>, pinned by a unit test).
+    /// </summary>
+    public static string ReasonAnchor(Guid runId, string number, string side, int place) =>
+        $"reason-{runId:N}-{Uri.EscapeDataString(number)}-{side}-{place.ToString(System.Globalization.CultureInfo.InvariantCulture)}";
+
     public static string MpsOf(Guid id) => $"{ApiRoutes.Prefix}/moderation/digests/{id}/mps";
 
     public static string PreviewOf(Guid id, string slug) => $"{MpsOf(id)}/{Uri.EscapeDataString(slug)}";

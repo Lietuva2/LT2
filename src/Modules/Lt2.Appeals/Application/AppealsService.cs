@@ -296,9 +296,9 @@ internal sealed class AppealsService(
 
     public async Task<Result<IReadOnlyList<ReasonInfo>>> FindSimilarAsync(string billNumber, NewReason request, CancellationToken cancellationToken)
     {
-        if (FirstBroken(AppealRules.CheckSide(request.Side), AppealRules.CheckReasonText(request.Text)) is { } broken)
+        if (await ReasonTextErrorAsync(request, cancellationToken) is { } broken)
         {
-            return RuleErrors.Of(broken);
+            return broken;
         }
 
         await using var db = await contexts.CreateDbContextAsync(cancellationToken);
@@ -324,11 +324,26 @@ internal sealed class AppealsService(
         return Result<IReadOnlyList<ReasonInfo>>.Success(similar.Select(r => AppealReads.ToInfo(r, names, endorsements)).ToList());
     }
 
+    /// <summary>
+    /// The side and the text of an argument against the rules, with the length the setting allows now (design 8.2, 6.8:
+    /// checked here for every caller); a too-long text's error names that number.
+    /// </summary>
+    private async Task<Error?> ReasonTextErrorAsync(NewReason request, CancellationToken cancellationToken)
+    {
+        var maxLength = await settings.GetAsync(SettingKeys.TextsMaxLength, cancellationToken);
+        return FirstBroken(AppealRules.CheckSide(request.Side), AppealRules.CheckReasonText(request.Text, maxLength)) switch
+        {
+            null => null,
+            "reason.too-long" => RuleErrors.Of("reason.too-long") with { Numbers = [MemberTextLength.Allowed(maxLength)] },
+            var broken => RuleErrors.Of(broken),
+        };
+    }
+
     public async Task<Result<ReasonCreated>> WriteReasonAsync(string billNumber, Guid userId, NewReason request, CancellationToken cancellationToken)
     {
-        if (FirstBroken(AppealRules.CheckSide(request.Side), AppealRules.CheckReasonText(request.Text)) is { } broken)
+        if (await ReasonTextErrorAsync(request, cancellationToken) is { } broken)
         {
-            return RuleErrors.Of(broken);
+            return broken;
         }
 
         var text = AppealRules.NormaliseText(request.Text);

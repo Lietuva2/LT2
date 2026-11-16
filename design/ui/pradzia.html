@@ -1,5 +1,5 @@
 <!doctype html>
-<!-- Design 8.7: the front page as the owner chose it on 2026-11-15 (variant A, the lankytojas's view). The member's panel "Jūsų projektai" comes from variant C (output/start-page/c-member.html, not kept here). The dashed magenta frames and their label exist only in this mockup: they mark what the site fills in the browser from the member's own answers. Since 2026-11-15 a coming bill's row offers "Prašau balsuoti" with "už" and "prieš" (8.7, "Taking a side in the row"), the agenda is on a sheet and "Organizacijos" on the ground (8.16). The stylesheet is the site's own; the rules in the <style> block below are the ones the site has in lt2.css (.home-head, .intro-steps, .tl-*), named a-* here. -->
+<!-- Design 8.7: the front page as the owner chose it on 2026-11-15 (variant A, the lankytojas's view). The member's panel "Jūsų projektai" comes from variant C (output/start-page/c-member.html, not kept here). The dashed magenta frames and their label exist only in this mockup: they mark what the site fills in the browser from the member's own answers. Since 2026-11-15 a coming bill's row offers "Prašau balsuoti" with "už" and "prieš" (8.7, "Taking a side in the row"), the agenda is on a sheet (8.16). Since 2026-11-16 (owner) there is no "Organizacijos" block and no paragraph on following, and the trial note goes under the logo and title with the invented-data notice's edges. The stylesheet is the site's own; the rules in the <style> block below are the ones the site has in lt2.css (.home-head, .intro-steps, .tl-*), named a-* here. -->
 <html lang="lt"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="color-scheme" content="light dark">
 <title>A · Savaitė Seime · lankytojas</title>
@@ -28,14 +28,15 @@
 .intro-steps h3 { font-size: var(--fs-3); }
 .intro-steps p { margin: 0; }
 @media (max-width: 64rem) { .intro-steps { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
-@media (max-width: 36rem) { .intro-steps { grid-template-columns: minmax(0, 1fr); gap: var(--sp-4); }
+@media (max-width: 36rem) { .a-head { grid-template-columns: 5.25rem minmax(0, 1fr); gap: var(--sp-4); } .intro-steps { grid-template-columns: minmax(0, 1fr); gap: var(--sp-4); }
   .intro-steps > li { display: grid; grid-template-columns: 2.5rem minmax(0, 1fr); gap: var(--sp-1) var(--sp-3); }
   .intro-steps > li::before { grid-row: span 2; } .intro-steps h3 { align-self: center; } }
 
-.a-head { display: grid; grid-template-columns: 7rem minmax(0, 1fr) auto; gap: var(--sp-5); align-items: center; }
+.a-head { display: grid; grid-template-columns: 9rem minmax(0, 1fr); gap: var(--sp-4) var(--sp-5); align-items: center; margin-block: calc(var(--sp-4) - var(--sp-5)) calc(var(--sp-4) - var(--sp-7)); }
 .a-head lt2-logo-spin { width: 100%; }
 .a-head h1 { font-size: var(--fs-5); }
 .a-head .lead { margin: 0; }
+.a-head__signin { grid-column: 1 / -1; gap: var(--sp-2); }
 .a-how { border-top: 4px solid var(--brand-deep); padding-top: var(--sp-5); }
 .a-day { display: grid; grid-template-columns: 9rem minmax(0, 1fr); gap: var(--sp-5); align-items: start; }
 .a-date { position: sticky; top: var(--sp-4); display: flex; flex-direction: column; gap: var(--sp-1); }
@@ -55,8 +56,7 @@
 .a-mine > a b { font-weight: 700; }
 .a-mine > a:hover b { text-decoration: underline; }
 @media (max-width: 54rem) {
-  .a-head { grid-template-columns: 4.5rem minmax(0, 1fr); }
-  .a-head__signin { grid-column: 1 / -1; }
+  .a-head { grid-template-columns: 6.5rem minmax(0, 1fr); }
   .a-day { grid-template-columns: minmax(0, 1fr); gap: var(--sp-3); }
   .a-date { position: static; flex-direction: row; flex-wrap: wrap; align-items: baseline; gap: var(--sp-2); }
   .a-date b { font-size: var(--fs-4); }
@@ -97,9 +97,7 @@
     <li><h3>Paaiškinate kodėl</h3><p>Parašykite argumentą arba pažymėkite „Man svarbu“ prie kitų. Argumentai vieši ir rodomi su autoriaus vardu, bet neparodo, ko autorius prašo.</p></li>
     <li><h3>Seimo nariai sužino</h3><p>Kai dalyvių skaičius pasiekia ribą, projektas patenka į suvestinę Seimo nariams: abi pusės ir svarbiausi argumentai. Kol vyksta bandymas, suvestinės sudaromos, bet Seimo nariams nesiunčiamos.</p></li>
   </ol>
-  <p>Projektus ir Seimo narius galite sekti: laišku pranešime, kai projektas bus įtrauktas į darbotvarkę ir kai Seimas dėl jo balsuos,
-  o po balsavimo matysite, kaip balsavo kiekvienas Seimo narys. Ką sekate, mato tik jūs.
-  <a href="#">Kas matoma viešai, o kas ne →</a></p>
+  <p><a href="#">Kas matoma viešai, o kas ne →</a></p>
 </section>
 
 <section class="sheet stack" aria-labelledby="h-a-coming">
@@ -112,12 +110,6 @@
   <p class="note note--quiet" id="not-a-poll">Tai nėra reprezentatyvi apklausa: skaičiai rodo savanoriškai dalyvaujančių Lietuva 2.0 naudotojų nuomonę.</p>
 </section>
 
-<section class="stack stack--tight" aria-labelledby="h-a-orgs">
-  <h2 id="h-a-orgs">Organizacijos</h2>
-  <p>Asociacijos, bendruomenės, įmonės ir kitos organizacijos skelbia savo pozicijas dėl projektų – kiekviena savo vardu.
-  Jų pozicijos rodomos atskirai ir neskaičiuojamos tarp dalyvių.</p>
-  <p class="row"><a href="#">Visos organizacijos →</a> <a href="#">Registruoti organizaciją →</a></p>
-</section>
 <p class="row"><a href="#">Visi projektai</a> <a href="#">Suvestinės Seimo nariams</a> <a href="#">Seimo nariai</a></p>
 </main>
 <footer class="page foot"><p>Lietuva 2.0 · uždaras bandymas</p></footer>

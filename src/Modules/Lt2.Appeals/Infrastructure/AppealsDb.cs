@@ -86,7 +86,8 @@ internal sealed class AppealsDb(DbContextOptions<AppealsDb> options) : DbContext
             e.ToTable("reason");
             e.HasKey(r => r.Id);
             e.Property(r => r.Side).HasMaxLength(10);
-            e.Property(r => r.Text).HasMaxLength(AppealRules.ReasonMaxLength);
+            // Design 8.2 (owner, 2026-11-16): the length is a setting, checked where an argument is written; the column holds any.
+            e.Property(r => r.Text).HasColumnType("text");
             e.Property(r => r.Status).HasMaxLength(20);
             e.HasIndex(r => new { r.RecordId, r.Status });
             e.HasIndex(r => new { r.RecordId, r.AuthorUserId });
@@ -243,7 +244,7 @@ internal sealed class AppealsDb(DbContextOptions<AppealsDb> options) : DbContext
             e.HasKey(s => s.Id);
             e.Property(s => s.BillNumber).HasMaxLength(40);
             e.Property(s => s.Stance).HasMaxLength(10);
-            e.Property(s => s.Text).HasMaxLength(OrganisationRules.StatementMaxLength);
+            e.Property(s => s.Text).HasColumnType("text"); // Texts:MaxLength (owner, 2026-11-16), checked where it is written
             e.Property(s => s.Link).HasMaxLength(OrganisationRules.LinkMaxLength);
             e.Property(s => s.Status).HasMaxLength(20);
 
@@ -268,7 +269,7 @@ internal sealed class AppealsDb(DbContextOptions<AppealsDb> options) : DbContext
             e.HasKey(r => r.Id);
             e.Property(r => r.BillNumber).HasMaxLength(40);
             e.Property(r => r.Stance).HasMaxLength(10);
-            e.Property(r => r.Text).HasMaxLength(ResponseRules.TextMaxLength);
+            e.Property(r => r.Text).HasColumnType("text"); // Texts:MaxLength (owner, 2026-11-16), checked where it is written
             e.Property(r => r.Status).HasMaxLength(20);
             e.Property(r => r.HideStatement).HasMaxLength(1000);
 

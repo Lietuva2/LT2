@@ -4,7 +4,9 @@
 @inject MyBillState State
 
 @* Design 8.4: participants can say the planned date is wrong or the bill is voted sooner, with a link to the source; a
-   moderator makes the change. Shown only to members who have a side on the bill. *@
+   moderator makes the change. Shown only to members who have a side on the bill, directly under the planned date on the
+   bill's page (8.12.1), which lies on the ground: the form that opens is therefore a sheet of its own (8.16), not a quiet
+   one. *@
 @if (Mine is { Side: not null })
 {
     <details class="more stack stack--tight" id="date-flag">
@@ -19,7 +21,7 @@
         }
         else
         {
-            <form class="stack stack--tight" @onsubmit="SendAsync" novalidate>
+            <form class="sheet stack stack--tight" @onsubmit="SendAsync" novalidate>
                 <fieldset class="stack stack--tight">
                     <legend class="label">@L["Flag.Kind"]</legend>
                     @foreach (var kind in Kinds)

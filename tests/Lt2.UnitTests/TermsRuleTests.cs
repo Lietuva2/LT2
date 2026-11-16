@@ -55,6 +55,22 @@ public sealed class TermsRuleTests
         TermsText.Back(TermsText.AcceptancePage).ShouldBeNull("never back to itself");
     }
 
+    /// <summary>Design 6.2, 8.21: the staff passkey page goes back the same way, after the "#", never to itself.</summary>
+    [Fact]
+    public void The_staff_passkey_page_goes_back_only_to_a_path_on_this_site_other_than_itself()
+    {
+        StaffSessionPage.Link("/moderavimas").ShouldBe("/prisijungti/raktas#grizti=%2Fmoderavimas");
+        StaffSessionPage.Link("/projektai?rikiuoti=dalyviai").ShouldBe("/prisijungti/raktas#grizti=%2Fprojektai%3Frikiuoti%3Ddalyviai");
+        StaffSessionPage.Back("/seimas/XVP-0412").ShouldBe("/seimas/XVP-0412");
+        StaffSessionPage.Back("https://kitas.pavyzdys.test/").ShouldBeNull();
+        StaffSessionPage.Back("//kitas.pavyzdys.test").ShouldBeNull();
+        StaffSessionPage.Back("/\\kitas.pavyzdys.test").ShouldBeNull();
+        StaffSessionPage.Back(StaffSessionPage.Path).ShouldBeNull("never back to itself");
+        StaffSessionPage.Link("https://kitas.pavyzdys.test/").ShouldBe(StaffSessionPage.Path);
+        StaffSessionPage.Back(InvitationLink.FromFragment(StaffSessionPage.Link("/moderavimas/paslepti"), StaffSessionPage.BackParameter))
+            .ShouldBe("/moderavimas/paslepti", "what the link carries, the page reads back");
+    }
+
     [Fact]
     public void The_acceptance_link_carries_the_page_to_go_back_to()
     {

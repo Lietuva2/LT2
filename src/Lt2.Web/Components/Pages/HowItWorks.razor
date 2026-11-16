@@ -1,6 +1,6 @@
 @inject IStringLocalizer<Lt2.Web.Components.Appeals.AppealText> A
 
-@* "Kaip tai veikia" (design 8.7): four numbered steps and one paragraph on following and on what stays private. The same
+@* "Kaip tai veikia" (design 8.7): four numbered steps and the link to what stays private. The same
    texts on the visitor's front page and at the top of the methodology page (/metodika#kaip-tai-veikia), where a member's
    "Kaip tai veikia" link leads. The one place where the short-texts rule of 8.15 does not apply. *@
 <section class="stack home-how" aria-labelledby="@($"{IdPrefix}how-title")" id="@Id">
@@ -11,7 +11,7 @@
             <li><h3>@A[$"HowItWorks.{step}.Title"]</h3><p>@A[$"HowItWorks.{step}.Text"]@(step == 4 && Sending == "off" ? " " + A["HowItWorks.4.Trial"] : "")</p></li>
         }
     </ol>
-    <p>@A["HowItWorks.Follow"] <a href="/metodika#privatumas">@A["HowItWorks.PrivacyLink"]</a></p>
+    <p><a href="/metodika#privatumas">@A["HowItWorks.PrivacyLink"]</a></p>
 </section>
 
 @code {

@@ -25,6 +25,7 @@ internal sealed class MpResponsesService(
     IMpLinks links,
     IMpDirectory mps,
     IOutbox outbox,
+    ISettings settings,
     TimeProvider clock) : IMpResponses, IMpResponseModeration
 {
     private const string Kind = "response";
@@ -120,9 +121,11 @@ internal sealed class MpResponsesService(
     public async Task<Result<ResponseSaved>> SaveAsync(string billNumber, long seimasPersonId, Guid writerUserId, NewResponse request, CancellationToken cancellationToken)
     {
         ArgumentNullException.ThrowIfNull(request);
-        if (ResponseRules.CheckResponse(request.Stance, request.Text) is { } broken)
+        // Design 5.6, 6.8 (owner, 2026-11-16): the length is the members' texts setting, checked here for every caller.
+        var maxLength = await settings.GetAsync(SettingKeys.TextsMaxLength, cancellationToken);
+        if (ResponseRules.CheckResponse(request.Stance, request.Text, maxLength) is { } broken)
         {
-            return Errors(broken);
+            return broken == "response.too-long" ? Errors(broken) with { Numbers = [MemberTextLength.Allowed(maxLength)] } : Errors(broken);
         }
 
         var text = AppealRules.NormaliseText(request.Text);

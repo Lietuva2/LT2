@@ -41,9 +41,10 @@ public sealed class SideSwitchTests : BunitContext
         SetRendererInfo(new RendererInfo("WebAssembly", isInteractive: true));
     }
 
-    private IRenderedComponent<RecordReasons> OpenWritingBox(string? ownSide)
+    private IRenderedComponent<RecordReasons> OpenWritingBox(string? ownSide, int reasonMaxLength = 2000)
     {
         _api.On("GetMineAsync", ApiResult<MyBillRecordResponse>.Ok(new MyBillRecordResponse(ownSide, [], null, [], null, true)));
+        _api.On("GetRulesAsync", ApiResult<AppealRulesResponse>.Ok(new AppealRulesResponse(100, 100, reasonMaxLength, 0, 0, 1500)));
         var reasons = Render<RecordReasons>(p => p.Add(c => c.Number, Bill));
         reasons.Find("#add-reason").Click();
         return reasons;
@@ -74,6 +75,23 @@ public sealed class SideSwitchTests : BunitContext
         box.FindAll("#reason-side input:checked").ShouldBeEmpty();
         box.Find("#reason-side-for").HasAttribute("checked").ShouldBeFalse();
         box.Find("#reason-side-against").HasAttribute("checked").ShouldBeFalse();
+    }
+
+    [Fact]
+    public void The_text_field_and_its_counter_follow_the_length_setting()
+    {
+        var box = OpenWritingBox("for", reasonMaxLength: 2000);
+        box.Find("#reason-text").GetAttribute("maxlength").ShouldBe("2000");
+        box.Find("#reason-hint").TextContent.ShouldContain("0 iš 2 000 ženklų");
+    }
+
+    [Fact]
+    public void With_no_length_limit_there_is_no_counter_and_only_the_ceiling_bounds_the_field()
+    {
+        var box = OpenWritingBox("for", reasonMaxLength: 0);
+        box.Find("#reason-text").GetAttribute("maxlength").ShouldBe(MemberTextLimits.Ceiling.ToString(System.Globalization.CultureInfo.InvariantCulture));
+        box.Find("#reason-hint").TextContent.ShouldNotContain("ženklų");
+        box.Find("#reason-hint").TextContent.ShouldContain("viešas su jūsų vardu", Case.Sensitive, "what becomes public stays inline");
     }
 
     [Fact]

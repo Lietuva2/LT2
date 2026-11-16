@@ -63,7 +63,7 @@ public sealed record MeResponse
 /// <summary>The version of the terms of use the client shows and accepts (design 8.22.2); the server accepts this one only.</summary>
 public static class TermsText
 {
-    public const string Version = "2026-11-16";
+    public const string Version = "2026-11-17";
 
     /// <summary>The acceptance screen (design 8.22.2) and its parameter: the page to go back to afterwards.</summary>
     public const string AcceptancePage = "/taisykles/sutikimas";
@@ -104,6 +104,14 @@ public static class PositionConsentText
 public sealed record PositionConsentRequest
 {
     public string TextVersion { get; init; } = "";
+}
+
+/// <summary>
+/// A new display name (design 6.2): shown beside what the person writes in public; at most 60 characters; empty removes it.
+/// </summary>
+public sealed record DisplayNameRequest
+{
+    public string? DisplayName { get; init; }
 }
 
 /// <summary>The one-time code an administrator passed on, used in a passkey session (design 6.2).</summary>

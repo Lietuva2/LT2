@@ -60,6 +60,39 @@ public sealed class MpMailTemplateTests
     }
 
     [Fact]
+    public void A_long_argument_is_shortened_like_the_page_with_a_link_to_the_whole_one_on_the_public_copy()
+    {
+        var run = Guid.Parse("0193a1b2-0000-7000-8000-0000000000aa");
+        var longText = string.Concat(Enumerable.Repeat("Pajamų mokestis turi būti teisingas visiems dirbantiems. ", 30)).Trim();
+        var plain = Bill("XVP-0412");
+        var bill = plain with
+        {
+            Item = plain.Item with { Reasons = [new DigestReason("for", "Trumpas argumentas.", 12), new DigestReason("for", longText, 1310)] },
+        };
+        var model = Email() with { Bills = [bill], RunId = run };
+        var text = Templates().Digest(model).TextBody;
+
+        var shown = TextExcerpt.Of(longText, TextExcerpt.ArgumentShown, TextExcerpt.ArgumentMargin).Shown;
+        text.ShouldContain("· " + shown + "… (1 310)");
+        text.ShouldNotContain(longText, Case.Sensitive, "the email carries the beginning only");
+        var anchor = Lt2.Api.Contracts.Digests.DigestRoutes.ReasonAnchor(run, "XVP-0412", "for", 2);
+        text.ShouldContain("Visas argumentas: https://lt2.test/suvestines/2026-11-16#" + anchor);
+        text.ShouldContain("· Trumpas argumentas. (12)");
+        text.Split('\n').Count(l => l.Contains("Visas argumentas", StringComparison.Ordinal)).ShouldBe(1, "only a cut argument gets the link");
+
+        // The moderators' preview is the same text (design 8.19.2).
+        string.Join("\n\n", Templates().Text(model).Paragraphs).ShouldContain("Visas argumentas: https://lt2.test/suvestines/2026-11-16#" + anchor);
+    }
+
+    [Fact]
+    public void The_email_links_an_argument_at_the_same_place_the_public_copy_gives_it()
+    {
+        var run = Guid.NewGuid();
+        MpMailPaths.ReasonOnPublicCopy(Monday, run, "XIVP-1234(2)", "against", 1)
+            .ShouldBe(MpMailPaths.PublicCopy(Monday) + "#" + Lt2.Api.Contracts.Digests.DigestRoutes.ReasonAnchor(run, "XIVP-1234(2)", "against", 1));
+    }
+
+    [Fact]
     public void Without_a_response_the_mp_gets_the_link_to_answer_once_for_everyone()
     {
         var text = Templates().Digest(Email()).TextBody;

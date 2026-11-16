@@ -52,12 +52,72 @@ public sealed class LayoutTests(LayoutTests.ModeratorFixture moderator) : E2ETes
         await Assertions.Expect(page.Locator("[data-account-link=moderation]")).ToBeVisibleAsync();
         await Assertions.Expect(page.Locator("[data-account-link=settings]")).ToBeHiddenAsync();
         await Assertions.Expect(page.Locator("[data-account-link=invitations]")).ToBeHiddenAsync();
+        await Assertions.Expect(page.Locator("[data-account-link=staff-key]")).ToBeHiddenAsync();
         await Assertions.Expect(page.Locator("[data-account-name]")).ToHaveTextAsync("Moderatorius L.");
         Directory.CreateDirectory(Shots);
         await page.ScreenshotAsync(new() { Path = Path.Combine(Shots, "account-moderator-1280.png") });
         await page.Keyboard.PressAsync("Escape");
         await page.GotoAsync($"{Base}/seimas/XVP-0533");
         await Assertions.Expect(page.Locator("#moderation-panel")).ToBeVisibleAsync(new() { Timeout = 60_000 });
+    }
+
+    /// <summary>
+    /// A column squeezed narrower than its words (2026-11-16: an MP's "Pareigos Seime" printed "Frakc / ijos / seniū / nas")
+    /// scrolls nothing sideways: <c>.sheet</c> and many texts have <c>overflow-wrap: break-word</c>, so the browser breaks
+    /// the word instead of overflowing, and the checks above pass. This one measures the words themselves: a word that
+    /// lies on more than one line was broken inside. Hyphens, dashes and slashes are break points, not part of a word;
+    /// a token with "@", ":", "." or "_" inside, or longer than 24 letters, is an address or a code that may wrap.
+    /// </summary>
+    [Fact]
+    public async Task For_a_visitor_no_word_is_broken_inside_at_any_tested_width()
+    {
+        Assert.SkipWhen(string.IsNullOrEmpty(SignUpTests.BaseUrl), "LT2_E2E_BASE_URL is not set; start the stack and set it to run end-to-end tests.");
+        using var playwright = await Playwright.CreateAsync();
+        await using var browser = await playwright.Chromium.LaunchAsync(new() { Channel = SignUpTests.Channel, Headless = true });
+        await using var context = await browser.NewContextAsync(new() { IgnoreHTTPSErrors = true, Locale = "lt-LT" });
+        var page = await context.NewPageAsync();
+        string[] paths = [.. Pages, "/p/jonas-petraitis", "/p/tadas-alksninis", "/seimo-nariai", "/metodika", "/seimas/balsavimai/99100002"];
+        var broken = new List<string>();
+        foreach (var width in new[] { 1280, 1100, 1024, 768, 390, 360 })
+        {
+            await page.SetViewportSizeAsync(width, 900);
+            foreach (var path in paths)
+            {
+                await page.GotoAsync(Base + path);
+                await page.WaitForLoadStateAsync(LoadState.NetworkIdle);
+                var words = await page.EvaluateAsync<string[]>(
+                    """
+                    () => {
+                      const found = [];
+                      const walker = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT);
+                      for (let node = walker.nextNode(); node; node = walker.nextNode()) {
+                        // Text nobody sees (a closed <details> such as the feedback balloon, a closed popover) is laid
+                        // out a letter to a line; it is not on the screen, so it is not measured.
+                        if (!node.parentElement.checkVisibility({ visibilityProperty: true, opacityProperty: true })) continue;
+                        const text = node.textContent;
+                        for (const m of text.matchAll(/[^\s\-‐-―\/­​]+/g)) {
+                          const word = m[0];
+                          if (word.length < 2 || word.length > 24 || /[@:._#=]./.test(word)) continue;
+                          const range = document.createRange();
+                          range.setStart(node, m.index);
+                          range.setEnd(node, m.index + word.length);
+                          const rects = [...range.getClientRects()].filter(r => r.width > 0 && r.height > 0);
+                          if (rects.length < 2) continue;
+                          const tops = rects.map(r => r.top);
+                          if (Math.max(...tops) - Math.min(...tops) > rects[0].height / 2) {
+                            const el = node.parentElement;
+                            found.push(`"${word}" in <${el.tagName.toLowerCase()}${el.id ? '#' + el.id : ''}${el.className ? '.' + String(el.className).trim().split(/\s+/).join('.') : ''}>`);
+                          }
+                        }
+                      }
+                      return found;
+                    }
+                    """);
+                broken.AddRange(words.Select(w => $"{path} at {width} px: {w}"));
+            }
+        }
+
+        broken.ShouldBeEmpty("a word broken inside means its column is narrower than the word");
     }
 
     private static async Task ShootAllAsync(IPage page, string who, bool checkMenu)

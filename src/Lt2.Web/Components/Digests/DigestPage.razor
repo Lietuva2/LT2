@@ -93,10 +93,13 @@
                                         {
                                             <p class="small">@T["Digests.NoReasons"]</p>
                                         }
-                                        @foreach (var reason in item.Reasons.Where(r => r.Side == side))
+                                        @foreach (var (reason, n) in item.Reasons.Where(r => r.Side == side).Select((r, i) => (r, i + 1)))
                                         {
-                                            <div class="said">
-                                                <p class="bubble bubble--people voice">@reason.Text</p>
+                                            var anchor = DigestRoutes.ReasonAnchor(run.Id, item.BillNumber, side, n);
+                                            @* Design 8.2, 8.19.3 (owner, 2026-11-16): a long argument shows its beginning and "Rodyti daugiau";
+                                               the MPs' email shows the same beginning and links here, "Visas argumentas", by this anchor. *@
+                                            <div class="said" id="@anchor">
+                                                <Lt2.Web.Client.Components.LongText Text="@reason.Text" BubbleClass="bubble bubble--people voice" Id="@(anchor + "-more")" />
                                                 <div class="said__by"><span class="num">@T.Format("Digests.Endorsed", Display.Number(reason.Endorsements))</span></div>
                                             </div>
                                         }

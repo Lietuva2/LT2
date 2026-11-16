@@ -587,7 +587,8 @@ internal sealed class DigestService(
             preferencesPath,
             unsubscribePath,
             copyStopPath,
-            delivery);
+            delivery,
+            info.Id);
 
     /// <summary>A waiting run whose time passed: nothing is sent late (design 8.19.2).</summary>
     private async Task ExpireAsync(NotificationsDb db, DigestRun run, DateTimeOffset now, CancellationToken ct)

@@ -321,7 +321,12 @@ public sealed class SignInComponentTests : BunitContext
     {
         SignedIn(FakeMeApi.Member with { Roles = ["member", "moderator"], StaffAccount = true });
         var codeSession = Render<Hello>();
-        codeSession.Find("#delete-staff-passkey").TextContent.ShouldBe(Text("Data.DeleteStaffNeedsPasskey"));
+        codeSession.Find("#delete-staff-passkey span").TextContent.ShouldBe(Text("Data.DeleteStaffNeedsPasskey"));
+
+        // Design 6.2 (owner, 2026-11-16): the way to a staff session without signing out, coming back to the account page.
+        var staffKey = codeSession.Find("#delete-staff-key");
+        staffKey.TextContent.ShouldBe(Text("Data.StaffKeyLink"));
+        staffKey.GetAttribute("href").ShouldBe("/prisijungti/raktas#grizti=%2Fsveiki");
         codeSession.FindAll("#delete-account").ShouldBeEmpty();
         codeSession.FindAll("#export").ShouldNotBeEmpty("the export is unchanged");
 
@@ -340,6 +345,101 @@ public sealed class SignInComponentTests : BunitContext
         member.Find("#delete-account").Click();
         member.FindAll("#delete-staff-kept").ShouldBeEmpty("an ordinary account is unchanged");
         member.FindAll("#delete-confirm").ShouldNotBeEmpty();
+    }
+
+    /// <summary>Design 8.21 (owner, 2026-11-16): the account page in four parts, reached from a row of plain links under the title.</summary>
+    [Fact]
+    public void The_account_page_is_in_four_parts_reached_from_the_row_of_links_and_keeps_its_anchors()
+    {
+        SignedIn(FakeMeApi.Member);
+        var page = Render<Hello>();
+
+        page.FindAll("#account-parts a").Select(a => a.GetAttribute("href"))
+            .ShouldBe(["#profilis", "#sekimas-ir-laiskai", "#dalyvavimas", "#saugumas-ir-duomenys"]);
+        page.FindAll("#account-parts a").Select(a => a.TextContent)
+            .ShouldBe([Text("Parts.Profile"), Text("Parts.Follows"), Text("Parts.Taking"), Text("Parts.Security")]);
+        foreach (var part in new[] { "profilis", "sekimas-ir-laiskai", "dalyvavimas", "saugumas-ir-duomenys" })
+        {
+            page.Find($"#{part} > h2").TextContent.ShouldNotBeNullOrWhiteSpace(part);
+            page.Find($"#{part} .sheet").ShouldNotBeNull($"{part} has something to show, so its heading never stands empty");
+        }
+
+        // The anchors emails, hints and tests link to stay, each in its part.
+        page.Find("#profilis #vardas").ShouldNotBeNull();
+        page.Find("#sekimas-ir-laiskai #sekami").ShouldNotBeNull();
+        page.Find("#dalyvavimas #my-invitation").ShouldNotBeNull();
+        page.Find("#dalyvavimas #my-organisations").ShouldNotBeNull();
+        page.Find("#saugumas-ir-duomenys #zinomos-narsykles").ShouldNotBeNull();
+        page.Find("#saugumas-ir-duomenys #my-data").ShouldNotBeNull();
+        page.FindAll(".sheet .sheet").ShouldBeEmpty("design 8.16: a sheet is never inside a sheet");
+    }
+
+    /// <summary>Design 6.2 (owner, 2026-11-16): where the staff links stand, a code session on a staff account gets its staff passkey.</summary>
+    [Fact]
+    public void A_staff_account_in_a_code_session_is_offered_its_staff_passkey_where_the_staff_links_stand()
+    {
+        SignedIn(FakeMeApi.Member with { Roles = ["member", "moderator"], StaffAccount = true });
+        var codeSession = Render<Hello>();
+        codeSession.Find("#dalyvavimas #staff-key-note span").TextContent.ShouldBe(Text("Staff.KeyText"));
+        codeSession.Find("#staff-key-link").GetAttribute("href").ShouldBe("/prisijungti/raktas#grizti=%2Fsveiki");
+        codeSession.FindAll("#staff-links").ShouldBeEmpty();
+        codeSession.FindAll("#delete-staff-key").ShouldNotBeEmpty("the one beside the deletion note stays");
+
+        SignedIn(FakeMeApi.Member with { Roles = ["member", "moderator"], StaffAccount = true, ActiveStaffRoles = ["moderator"] });
+        var staffSession = Render<Hello>();
+        staffSession.Find("#dalyvavimas #staff-links").ShouldNotBeNull();
+        staffSession.FindAll("#staff-key-note").ShouldBeEmpty();
+
+        SignedIn(FakeMeApi.Member);
+        var member = Render<Hello>();
+        member.FindAll("#staff-key-note").ShouldBeEmpty();
+        member.FindAll("#staff-links").ShouldBeEmpty();
+    }
+
+    /// <summary>Design 6.2: the display name is changed on the account page; the greeting follows.</summary>
+    [Fact]
+    public void A_member_changes_the_display_name_and_the_greeting_follows()
+    {
+        SignedIn(FakeMeApi.Member);
+        var page = Render<Hello>();
+        page.Find("#display-name").GetAttribute("value").ShouldBe("Rūta M.");
+        page.Find("#display-name-hint").TextContent.ShouldBe(Text("Name.Hint"));
+
+        page.Find("#display-name").Input("  Rūta Mockutė ");
+        page.Find("#vardas form").Submit();
+
+        page.WaitForAssertion(() => _me.NameChanges.ShouldHaveSingleItem().DisplayName.ShouldBe("Rūta Mockutė"));
+        page.WaitForAssertion(() => page.Find("#hello-title").TextContent.ShouldContain("Rūta Mockutė"));
+        page.Find("#vardas").TextContent.ShouldContain(Text("Name.Saved"));
+    }
+
+    [Fact]
+    public void A_name_longer_than_60_characters_is_refused_under_the_field_before_sending()
+    {
+        SignedIn(FakeMeApi.Member);
+        var page = Render<Hello>();
+
+        page.Find("#display-name").Input(new string('a', 61));
+        page.Find("#vardas form").Submit();
+
+        page.Find("#vardas .field--error").ShouldNotBeNull();
+        page.Find("#display-name").GetAttribute("aria-invalid").ShouldBe("true");
+        _me.NameChanges.ShouldBeEmpty();
+    }
+
+    [Fact]
+    public void The_servers_refusal_of_a_name_change_is_said_beside_the_form()
+    {
+        const string restricted = "Moderatorius apribojo jūsų galimybę rašyti, todėl šiuo metu to padaryti negalite.";
+        SignedIn(FakeMeApi.Member);
+        _me.ChangeName = _ => ApiResult.Fail(new ApiProblem { Status = 403, Code = "writing.restricted", Detail = restricted });
+        var page = Render<Hello>();
+
+        page.Find("#display-name").Input("Rūta Mockutė");
+        page.Find("#vardas form").Submit();
+
+        page.WaitForAssertion(() => page.Find("#vardas .note[role=alert]").TextContent.ShouldBe(restricted));
+        page.Find("#hello-title").TextContent.ShouldContain("Rūta M.");
     }
 
     [Fact]
@@ -523,6 +623,18 @@ public sealed class SignInComponentTests : BunitContext
         public Func<RoleActivationRequest, Task<ApiResult>> Activate { get; set; } = _ => Task.FromResult(ApiResult.Ok());
 
         public Task<ApiResult> ConfirmPasskeyAsync(PasskeyCredentialRequest request, CancellationToken cancellationToken = default) => Task.FromResult(ApiResult.Ok());
+
+        public List<DisplayNameRequest> NameChanges { get; } = [];
+
+        public Func<DisplayNameRequest, ApiResult> ChangeName { get; set; } = _ => ApiResult.Ok();
+
+        public Task<ApiResult> ChangeDisplayNameAsync(DisplayNameRequest request, CancellationToken cancellationToken = default)
+        {
+            NameChanges.Add(request);
+            return Task.FromResult(ChangeName(request));
+        }
+
+        public Task<ApiResult> StartStaffSessionAsync(PasskeyCredentialRequest request, CancellationToken cancellationToken = default) => Task.FromResult(ApiResult.Ok());
 
         public Task<ApiResult> ActivateRoleAsync(RoleActivationRequest request, CancellationToken cancellationToken = default)
         {

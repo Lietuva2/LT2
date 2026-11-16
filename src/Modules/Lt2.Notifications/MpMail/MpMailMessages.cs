@@ -36,6 +36,10 @@ internal sealed record MpDigestBill(DigestItemInfo Item, DeliveryParty? Party, M
 /// <param name="PreferencesPath">The MP's page (official only).</param>
 /// <param name="UnsubscribePath">The one-click stop (official only), for <c>List-Unsubscribe</c>.</param>
 /// <param name="CopyStopPath">The extra recipient's own stop page (copies only).</param>
+/// <param name="RunId">
+/// The summary's run, for the "Visas argumentas" links to the public copy (design 8.19.3, owner 2026-11-16); null in a
+/// payload written before it was added, whose shortened arguments then link to the public copy's page.
+/// </param>
 internal sealed record MpDigestEmail(
     string To,
     string Recipient,
@@ -47,7 +51,8 @@ internal sealed record MpDigestEmail(
     string? PreferencesPath,
     string? UnsubscribePath,
     string? CopyStopPath,
-    DeliveryRef? Delivery);
+    DeliveryRef? Delivery,
+    Guid? RunId = null);
 
 /// <summary>
 /// Payload of <see cref="MpMailKinds.Introduction"/> (design 8.19.5): the letter as a person wrote and signed it, with what the
@@ -110,6 +115,15 @@ internal static class MpMailPaths
     public static string StopCopies(string token) => "/suvestines/kopijos/" + token;
 
     public static string PublicCopy(DateOnly day) => "/suvestines/" + day.ToString("yyyy-MM-dd", System.Globalization.CultureInfo.InvariantCulture);
+
+    /// <summary>
+    /// One argument on the summary's public copy (design 8.19.3, owner 2026-11-16): the page of the run's day at the
+    /// argument's element id, the same as <c>DigestRoutes.ReasonAnchor</c> in the contracts (pinned by a unit test). The
+    /// public copy shows the snapshot, so the text there is the one the email cut.
+    /// </summary>
+    public static string ReasonOnPublicCopy(DateOnly day, Guid runId, string number, string side, int place) =>
+        PublicCopy(day) + "#reason-" + runId.ToString("N") + "-" + Uri.EscapeDataString(number) + "-" + side + "-"
+        + place.ToString(System.Globalization.CultureInfo.InvariantCulture);
 
     public const string Introduction = "/suvestines/pristatymas";
 

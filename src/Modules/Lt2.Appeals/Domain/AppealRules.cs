@@ -19,9 +19,6 @@ internal static class Sides
 /// </summary>
 internal static class AppealRules
 {
-    /// <summary>An argument is plain text of at most this many characters.</summary>
-    public const int ReasonMaxLength = 500;
-
     /// <summary>A per-person limit set to this means no limit (settings Appeals:ReasonsPerPerson, Appeals:EndorsementsPerPerson).</summary>
     public const int NoLimit = 0;
 
@@ -37,8 +34,11 @@ internal static class AppealRules
     /// <summary>A side is "for" or "against"; nothing else is a side.</summary>
     public static string? CheckSide(string? side) => Sides.IsSide(side) ? null : "side.invalid";
 
-    /// <summary>An argument is plain text, not blank, at most 500 characters once trimmed.</summary>
-    public static string? CheckReasonText(string? text)
+    /// <summary>
+    /// An argument is plain text, not blank, and once normalised no longer than <see cref="TooLong"/> allows with the
+    /// setting <c>Texts:MaxLength</c> (design 5.6, 8.2, owner 2026-11-16).
+    /// </summary>
+    public static string? CheckReasonText(string? text, int maxLength)
     {
         var trimmed = NormaliseText(text);
         if (trimmed.Length == 0)
@@ -46,8 +46,15 @@ internal static class AppealRules
             return "reason.empty";
         }
 
-        return trimmed.Length > ReasonMaxLength ? "reason.too-long" : null;
+        return TooLong(trimmed, maxLength) ? "reason.too-long" : null;
     }
+
+    /// <summary>
+    /// The one length rule of members' texts (arguments, organisations' statements, MPs' responses): longer than the
+    /// setting <c>Texts:MaxLength</c> allows, 0 meaning no limit but the technical ceiling, which holds whatever the setting
+    /// says (<see cref="MemberTextLength"/>). Applied to the normalised text.
+    /// </summary>
+    public static bool TooLong(string normalised, int maxLength) => normalised.Length > MemberTextLength.Allowed(maxLength);
 
     /// <summary>The neutral description is plain text, not blank, at most <see cref="DescriptionMaxLength"/> characters.</summary>
     public static string? CheckDescription(string? text)

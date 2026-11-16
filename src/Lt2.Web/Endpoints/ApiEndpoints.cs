@@ -34,8 +34,10 @@ internal static class ApiEndpoints
 
         GetMeEndpoint.Map(api);
         CompleteRegistrationEndpoint.Map(api);
+        ChangeDisplayNameEndpoint.Map(api);
         ActivateRoleEndpoint.Map(api);
         ConfirmPasskeyEndpoint.Map(api);
+        StartStaffSessionEndpoint.Map(api);
         GetSessionsEndpoint.Map(api);
         EndSessionEndpoint.Map(api);
         KnownBrowserEndpoints.Map(api);

@@ -16,7 +16,7 @@
             <span class="tag tag--people">@L["Mod.Flag." + flag]</span>
         }
     </div>
-    <StatementView Statement="Statement" Name="@Item.OrganisationName" Slug="@Item.Slug" Label="Item.Label" IdPrefix="mod-" />
+    <StatementView Statement="Statement" Name="@Item.OrganisationName" Slug="@Item.Slug" Label="Item.Label" IdPrefix="mod-" Whole="true" />
     <Reports Items="Item.Reports" />
     <OrgModerationActions Id="Item.Id" Kind="statement" Status="@Item.Status" BillFinished="Item.BillFinished" OnDone="OnDone" />
 </article>

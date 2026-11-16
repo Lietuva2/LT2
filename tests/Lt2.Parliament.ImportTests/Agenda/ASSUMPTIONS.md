@@ -17,6 +17,6 @@ and leaves the planned dates and the moderators' corrections as they were.
 | A2 | A bill is named by its registration number, `[XVI]+P-` and digits, optionally with a version suffix "(2)", for example XVP-0412 or XIVP-1234(2). | assumed | the open data uses such numbers (`AGENTS.md`); not seen on the agenda page |
 | A3 | The stage is a word of the row: pateikimas, svarstymas or priėmimas, in any grammatical form; a row without one has no stage. | assumed | none |
 | A4 | Each agenda item is a table row (`tr`), a list item (`li`) or a heading; text of one row belongs to one item. | assumed | none |
-| A5 | A link to `e-seimas.lrs.lt` inside the row is the item's source; otherwise the page address is. | assumed | none |
+| A5 | A link to `e-seimas.lrs.lt` inside the row is the item's source (the bill's document, linked for a bill the open data does not know yet); otherwise the page address is. Where the date itself is published is the agenda page (A7): the bill's page links that address, kept with each snapshot, not this link (design 8.4, 2026-11-16). | assumed | none |
 | A6 | The page is UTF-8 encoded. | assumed | none |
 | A7 | The page lists the upcoming sittings at one address, configured as `Agenda:BaseAddress` + `Agenda:ListPath` (default `darbotvarke`); the real address is not known yet. | assumed | none |

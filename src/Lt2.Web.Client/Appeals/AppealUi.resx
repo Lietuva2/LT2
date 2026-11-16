@@ -37,7 +37,7 @@
 <data name="Reasons.ChooseSide" xml:space="preserve"><value>Pasirinkite, ar argumentas už, ar prieš.</value></data>
 <data name="Reasons.Label" xml:space="preserve"><value>Tekstas</value></data>
 <data name="Reasons.Hint" xml:space="preserve"><value>Paprastas tekstas, {0} iš {1} ženklų. Argumentas bus viešas su jūsų vardu ir pasirinkta puse.</value></data>
-<data name="Reasons.Submit" xml:space="preserve"><value>Paskelbti</value></data>
+<data name="Reasons.HintNoLimit" xml:space="preserve"><value>Paprastas tekstas. Argumentas bus viešas su jūsų vardu ir pasirinkta puse.</value></data><data name="Reasons.Submit" xml:space="preserve"><value>Paskelbti</value></data>
 <data name="Reasons.PublishAnyway" xml:space="preserve"><value>Vis tiek paskelbti savo</value></data>
 <data name="Reasons.SimilarTitle" xml:space="preserve"><value>Panašūs argumentai jau yra</value></data>
   <data name="Reasons.SimilarText" xml:space="preserve"><value>Gal jūsų mintį kas nors jau parašė? Galite pažymėti „Man svarbu“ arba vis tiek paskelbti savo.</value></data>
@@ -348,6 +348,10 @@
 <data name="Admin.Setting.Appeals:ReasonsPerPerson" xml:space="preserve"><value>Argumentų vienam žmogui dėl projekto</value></data>
   <data name="Admin.Help.Appeals:ReasonsPerPerson" xml:space="preserve"><value>Kiek argumentų vienas žmogus gali parašyti dėl vieno projekto; 0 – neribojama. Įjunkite ribą, jei kas nors užtvindo projekto puslapį argumentais; jau parašyti nepašalinami.</value></data>
 <data name="Admin.Unit.Appeals:ReasonsPerPerson" xml:space="preserve"><value>argumentai (0 – neribojama)</value></data>
+<data name="Admin.Group.texts" xml:space="preserve"><value>Narių tekstai</value></data>
+<data name="Admin.Setting.Texts:MaxLength" xml:space="preserve"><value>Tekstų ilgis</value></data>
+<data name="Admin.Help.Texts:MaxLength" xml:space="preserve"><value>Kiek daugiausia ženklų gali turėti tekstas, kurį žmonės rašo kitiems skaityti: argumentas, organizacijos pozicija, Seimo nario atsakymas; 0 – neribojama (techninė riba – 20 000). Projekto aprašymui, paaiškinimams, pranešimams ir vardams galioja jų pačių ribos. Sumažinus jau parašyti tekstai nesutrumpinami ir nepašalinami.</value></data>
+<data name="Admin.Unit.Texts:MaxLength" xml:space="preserve"><value>ženklai (0 – neribojama)</value></data>
 <data name="Admin.Setting.Appeals:EndorsementsPerPerson" xml:space="preserve"><value>„Man svarbu“ žymų vienam žmogui dėl projekto</value></data>
 <data name="Admin.Help.Appeals:EndorsementsPerPerson" xml:space="preserve"><value>Kiek argumentų vienas žmogus gali pažymėti „Man svarbu“ dėl vieno projekto; 0 – neribojama. Jau padėtos žymos nepašalinamos.</value></data>
 <data name="Admin.Unit.Appeals:EndorsementsPerPerson" xml:space="preserve"><value>žymos (0 – neribojama)</value></data>
@@ -475,6 +479,7 @@
 <data name="Org.Form.Stance" xml:space="preserve"><value>Ko organizacija prašo Seimo narių</value></data>
 <data name="Org.Form.Text" xml:space="preserve"><value>Pozicija</value></data>
 <data name="Org.Form.TextHint" xml:space="preserve"><value>{0} / {1} ženklų</value></data>
+<data name="Text.CountOnly" xml:space="preserve"><value>{0} ženklų</value></data>
 <data name="Org.Form.Link" xml:space="preserve"><value>Nuoroda į visą poziciją (nebūtina)</value></data>
   <data name="Org.Form.LinkHint" xml:space="preserve"><value>Adresas, prasidedantis https://.</value></data>
 <data name="Org.Form.Goal" xml:space="preserve"><value>Tikslas: kiek dalyvių siekiate (nebūtina)</value></data>

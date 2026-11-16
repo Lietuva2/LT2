@@ -15,6 +15,13 @@ public sealed class CompleteRegistrationRequestValidator : AbstractValidator<Com
     }
 }
 
+/// <summary>The same rule as at registration (design 6.2).</summary>
+public sealed class DisplayNameRequestValidator : AbstractValidator<DisplayNameRequest>
+{
+    public DisplayNameRequestValidator(IStringLocalizer<ValidationMessages> l) =>
+        RuleFor(x => x.DisplayName).MaximumLength(AuthRules.DisplayNameMaxLength).WithMessage(l["DisplayName.TooLong"]);
+}
+
 public sealed class RoleActivationRequestValidator : AbstractValidator<RoleActivationRequest>
 {
     public RoleActivationRequestValidator(IStringLocalizer<ValidationMessages> l)

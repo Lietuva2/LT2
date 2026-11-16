@@ -15,6 +15,7 @@
   <data name="Nav.Moderation" xml:space="preserve"><value>Moderavimas</value></data>
   <data name="Nav.Settings" xml:space="preserve"><value>Nustatymai</value></data>
   <data name="Nav.Invitations" xml:space="preserve"><value>Kvietimai</value></data>
+  <data name="Nav.StaffKey" xml:space="preserve"><value>Prisijungti darbuotojo prieigos raktu</value></data>
   <data name="Nav.MpBills" xml:space="preserve"><value>Projektai, dėl kurių į jus kreipiamasi</value></data>
   <data name="Footer.Label" xml:space="preserve"><value>Apie svetainę</value></data>
   <data name="Footer.About" xml:space="preserve"><value>Apie</value></data>
@@ -73,9 +74,5 @@
   <data name="Home.TrialSummaries" xml:space="preserve"><value>Vyksta uždaras bandymas: suvestinės sudaromos, bet Seimo nariams nesiunčiamos.</value></data>
   <data name="Agenda.Planned" xml:space="preserve"><value>Planuojama</value></data>
   <data name="Agenda.Voted" xml:space="preserve"><value>Balsuota</value></data>
-  <data name="Home.Organisations" xml:space="preserve"><value>Organizacijos</value></data>
-  <data name="Home.OrganisationsText" xml:space="preserve"><value>Asociacijos, bendruomenės, įmonės ir kitos organizacijos skelbia savo pozicijas dėl projektų – kiekviena savo vardu. Jų pozicijos rodomos atskirai ir neskaičiuojamos tarp dalyvių.</value></data>
-  <data name="Home.OrganisationsList" xml:space="preserve"><value>Visos organizacijos →</value></data>
-  <data name="Home.OrganisationsRegister" xml:space="preserve"><value>Registruoti organizaciją →</value></data>
   <data name="Agenda.Older" xml:space="preserve"><value>Ankstesni balsavimai →</value></data>
 </root>

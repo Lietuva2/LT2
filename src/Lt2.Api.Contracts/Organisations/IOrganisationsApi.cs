@@ -188,7 +188,7 @@ public sealed class OrganisationStatementRequestValidator : AbstractValidator<Or
         RuleFor(x => x.Stance).Must(s => OrganisationLimits.Stances.Contains(s)).WithMessage(l["OrgStatement.Stance"]);
         RuleFor(x => x.Text).Cascade(CascadeMode.Stop)
             .Must(t => !string.IsNullOrWhiteSpace(t)).WithMessage(l["OrgStatement.Required"])
-            .Must(t => t.Trim().Length <= OrganisationLimits.StatementMaxLength).WithMessage(l["OrgStatement.TooLong"]);
+            .Must(t => t.Trim().Length <= MemberTextLimits.Ceiling).WithMessage(l["OrgStatement.TooLong", MemberTextLimits.Number(MemberTextLimits.Ceiling)]); // the setting Texts:MaxLength: where it is written
         RuleFor(x => x.Link).Must(link => UserLink.IsEmptyOrAcceptable(link, OrganisationLimits.LinkMaxLength)).WithMessage(l["OrgStatement.Link"]);
         RuleFor(x => x.Goal).Must((x, goal) => goal is null || (OrganisationLimits.GoalStances.Contains(x.Stance) && goal is >= 1 and <= OrganisationLimits.GoalMax))
             .WithMessage(l["OrgStatement.Goal"]);

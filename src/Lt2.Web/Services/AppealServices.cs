@@ -39,7 +39,7 @@ internal static class AppealMapping
         new(m.Side, m.Endorsed, m.EndorsementsLeft, m.MyReasons.Select(Map).ToList(), m.ReasonsLeft, m.HasPositionConsent);
 
     public static AppealRulesResponse Map(AppealRulesInfo r) =>
-        new(r.ThresholdDefault, r.ThresholdMinimum, r.ReasonMaxLength, r.ReasonsPerPerson, r.EndorsementsPerPerson, r.DescriptionMaxLength, r.AiSummaries);
+        new(r.ThresholdDefault, r.ThresholdMinimum, r.TextMaxLength, r.ReasonsPerPerson, r.EndorsementsPerPerson, r.DescriptionMaxLength, r.AiSummaries);
 
     public static QueueReportResponse Map(QueueReport r) => new(r.Id, r.Ground, r.Text, r.CreatedAt);
 

@@ -195,20 +195,37 @@ public sealed class DigestTests(DatabaseFixture database) : ApiTest(database)
                 (await moderator.PostAsync(AppealRoutes.With(AppealRoutes.PublishReason, id), new ModerationRequest())).StatusCode.ShouldBe(HttpStatusCode.NoContent);
             }
 
+            // Design 8.19.3 (owner, 2026-11-16): a long argument is shortened in the email and its preview, with a link to it
+            // on the public copy, which holds the whole snapshot text.
+            var longReason = string.Concat(Enumerable.Repeat("Ilgas argumentas apie vietines rinkliavas. ", 25)).Trim();
+            using (var written = await participant.WriteReasonAsync(AppealSteps.SecondBill, "for", longReason))
+            {
+                var id = (await written.ReadAsync<ReasonCreatedResponse>()).Id;
+                (await moderator.PostAsync(AppealRoutes.With(AppealRoutes.PublishReason, id), new ModerationRequest())).StatusCode.ShouldBe(HttpStatusCode.NoContent);
+            }
+
             await PlanAsync("XVP-0618", monday.AddDays(3));
             await PlanAsync("XVP-0533", monday.AddDays(3), "consideration");
             var weekly = (await RunDueAsync(At(monday, 7, 5))).Single();
             weekly.Items.Single(i => i.BillNumber == "XVP-0618").Reasons.ShouldBeEmpty();
-            weekly.Items.Single(i => i.BillNumber == "XVP-0533").Reasons.Select(r => r.Side).ShouldBe(["for"]);
+            weekly.Items.Single(i => i.BillNumber == "XVP-0533").Reasons.Select(r => r.Side).ShouldBe(["for", "for"]);
+            weekly.Items.Single(i => i.BillNumber == "XVP-0533").Reasons.ShouldContain(r => r.Text == longReason, "the snapshot keeps the whole text");
 
             var mps = await moderator.GetJsonAsync<List<DigestMpResponse>>(DigestRoutes.MpsOf(weekly.Id));
             var text = (await moderator.GetJsonAsync<DigestPreviewResponse>(DigestRoutes.PreviewOf(weekly.Id, mps[0].Slug))).Text;
             Regex(text, "Argumentų už dar nėra.").ShouldBe(1, "XVP-0618 has none for");
             Regex(text, "Argumentų prieš dar nėra.").ShouldBe(2, "neither record has one against");
             text.ShouldContain("Vienintelis argumentas už.");
+            text.ShouldNotContain(longReason, Case.Sensitive, "the email and its preview carry the beginning only");
+            var place = weekly.Items.Single(i => i.BillNumber == "XVP-0533").Reasons.Where(r => r.Side == "for").Select((r, i) => (r, i)).Single(x => x.r.Text == longReason).i + 1;
+            var anchor = DigestRoutes.ReasonAnchor(weekly.Id, "XVP-0533", "for", place);
+            text.ShouldContain("Visas argumentas: ");
+            text.ShouldContain("/suvestines/" + monday.ToString("yyyy-MM-dd", System.Globalization.CultureInfo.InvariantCulture) + "#" + anchor);
 
             using var stranger = NewBrowser();
             var html = WebUtility.HtmlDecode(await stranger.Client.GetStringAsync("/suvestines/" + monday.ToString("yyyy-MM-dd", System.Globalization.CultureInfo.InvariantCulture)));
+            html.ShouldContain("id=\"" + anchor + "\"", Case.Sensitive, "the link lands on the argument on the public copy");
+            html.ShouldContain("Rodyti daugiau");
             Regex(html, "Argumentų dar nėra.").ShouldBe(3, "XVP-0618 on both sides, XVP-0533 against");
         }
         finally

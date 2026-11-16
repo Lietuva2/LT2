@@ -14,6 +14,14 @@
   <ItemGroup>
     <ProjectReference Include="..\Lt2.Api.Contracts\Lt2.Api.Contracts.csproj" />
   </ItemGroup>
+  <PropertyGroup>
+    <DefineConstants>$(DefineConstants);LT2_CLIENT</DefineConstants>
+  </PropertyGroup>
+  <ItemGroup>
+    <!-- One definition of how a member's text is cut (design 8.2, owner 2026-11-16), shared with the MPs' email: the file
+         lives in SharedKernel, which the browser may not reference, and compiles here in the namespace Lt2.Web.Client. -->
+    <Compile Include="..\Lt2.SharedKernel\TextExcerpt.cs" Link="Texts\TextExcerpt.cs" />
+  </ItemGroup>
   <ItemGroup>
     <!-- The API clients (de)serialise the contract types by reflection. Publishing trims unused members, which removed
          their constructors and broke every call from the browser; keep the whole (small) contracts assembly. -->

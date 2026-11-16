@@ -50,6 +50,9 @@ internal sealed class HttpMeApi(ApiHttp http) : IMeApi
     public Task<ApiResult> ForgetKnownBrowserAsync(Guid id, CancellationToken cancellationToken = default) =>
         http.SendAsync(HttpMethod.Delete, ApiRoutes.Me.KnownBrowserById(id), null, cancellationToken);
 
+    public Task<ApiResult> ChangeDisplayNameAsync(DisplayNameRequest request, CancellationToken cancellationToken = default) =>
+        http.SendAsync(HttpMethod.Put, ApiRoutes.Me.DisplayName, request, cancellationToken);
+
     public Task<ApiResult> CompleteRegistrationAsync(CompleteRegistrationRequest request, CancellationToken cancellationToken = default) =>
         http.SendAsync(HttpMethod.Put, ApiRoutes.Me.Registration, request, cancellationToken);
 
@@ -58,6 +61,9 @@ internal sealed class HttpMeApi(ApiHttp http) : IMeApi
 
     public Task<ApiResult> ConfirmPasskeyAsync(PasskeyCredentialRequest request, CancellationToken cancellationToken = default) =>
         http.SendAsync(HttpMethod.Post, ApiRoutes.Me.PasskeyConfirmation, request, cancellationToken);
+
+    public Task<ApiResult> StartStaffSessionAsync(PasskeyCredentialRequest request, CancellationToken cancellationToken = default) =>
+        http.SendAsync(HttpMethod.Post, ApiRoutes.Me.StaffSession, request, cancellationToken);
 
     public Task<ApiResult> GivePositionConsentAsync(PositionConsentRequest request, CancellationToken cancellationToken = default) =>
         http.SendAsync(HttpMethod.Put, ApiRoutes.Me.PositionConsent, request, cancellationToken);

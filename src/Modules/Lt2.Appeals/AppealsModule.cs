@@ -27,6 +27,9 @@ public static class AppealsModule
         services.AddSingleton<IModuleDatabase, AppealsModuleDatabase>();
         services.TryAddSingleton(TimeProvider.System);
         services.AddSingleton<IPositionErasure, PositionErasure>();
+
+        // Design 6.2: Identity asks whether a writing restriction holds before a display name changes.
+        services.AddSingleton<IWritingRestrictions, WritingRestrictions>();
         services.AddSingleton<IPreScreening, RuleBasedPreScreening>();
 
         // Design 8.11.4: the "not configured" assistant unless AddAiAssistant registered the Claude one first.

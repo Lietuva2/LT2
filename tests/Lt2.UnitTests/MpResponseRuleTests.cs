@@ -13,13 +13,13 @@ public sealed class MpResponseRuleTests
     [InlineData(null, "Tekstas.", "response.stance-invalid")]
     [InlineData("against", "   ", "response.empty")]
     public void A_response_has_one_of_three_stances_and_a_text(string? stance, string text, string? expected) =>
-        ResponseRules.CheckResponse(stance, text).ShouldBe(expected);
+        ResponseRules.CheckResponse(stance, text, maxLength: 2000).ShouldBe(expected);
 
     [Fact]
-    public void A_response_is_at_most_1500_characters()
+    public void A_response_is_as_long_as_the_members_texts_setting_allows()
     {
-        ResponseRules.CheckResponse("for", new string('a', 1500)).ShouldBeNull();
-        ResponseRules.CheckResponse("for", new string('a', 1501)).ShouldBe("response.too-long");
+        ResponseRules.CheckResponse("for", new string('a', 2000), maxLength: 2000).ShouldBeNull();
+        ResponseRules.CheckResponse("for", new string('a', 2001), maxLength: 2000).ShouldBe("response.too-long");
     }
 
     [Theory]

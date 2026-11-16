@@ -20,6 +20,24 @@ product code. What is being built, in order:
 
 Build one stage at a time. Do not start a later stage's features because they look close.
 
+## Nothing is launched yet
+
+**There is no production and there are no users (the owner, 2026-11-16).** Everything that runs, the local stack and
+`test.lietuva2.lt` alike, is a test version with invented data. Until the owner says otherwise and removes this section:
+
+- **No data is worth keeping.** A database may be emptied or recreated; a migration may rewrite or drop anything and
+  needs no backfill, no careful "down", no step that preserves existing rows.
+- **No existing members to protect or carry along.** Do not weigh a decision by what it does to people who registered,
+  wrote or agreed to something "before": nobody did. No grandfathering, no asking anyone again, no notice of a change,
+  no transition period.
+- **No backward compatibility.** Old addresses, old links in old emails, old field names in the API and old stored
+  values need not keep working; change the thing and its tests.
+- **Do not argue from launch-time costs.** "Members would have to accept again", "followers would lose…", "this breaks
+  links people saved" are not reasons here. Say what the rule should be at launch and build that.
+
+What this does not loosen: the design's rules are the rules of the product as it will launch (privacy, security, wording,
+tests), so they are built and tested as written; and nothing is pushed or published without the owner asking.
+
 ## The design is the source of truth
 
 `design/system-design.md` is the agreed design: architecture, data model, security, every product rule and its reason.
@@ -71,14 +89,15 @@ src/Lt2.Hosting            what the web host and the worker set up the same way:
 src/Lt2.Web.Client         Blazor WebAssembly components and HTTP implementations of the API clients; the interface's
                            shared pieces: Components/InteractiveBase<TText>, Display (numbers and dates, Vilnius),
                            StringLocalizerExtensions (Format), CopyLink, FieldError, Messages, SplitBar, Hint (the short answer in place, js/lt2-hints.js),
-                           ProjectTabs and MenuSections (design 8.21), BrowserKeys (the storage keys, design 8.22.1)
+                           ProjectTabs and MenuSections (design 8.21), BrowserKeys (the storage keys, design 8.22.1),
+                           LongText (a long member's text with "Rodyti daugiau")
 src/Lt2.Api.Contracts      DTOs, routes, client interfaces, validators (shared by server, client and tests)
 src/Lt2.SharedKernel       Result type, identifiers (UUID v7), outbox, audit and settings interfaces, connection
                            strings and the one EF Core set-up (Persistence/: UseLt2Npgsql), VilniusTime (the
                            Europe/Vilnius zone and its days), the signed-in account (ClaimsPrincipal.UserId()), the
                            staff actor (StaffActor) and staff statements (StaffStatements), the outbound allowlist
                            (Http/: hosts from Outbound:AllowedHosts plus AddOutboundHost; redirects followed only within
-                           it); no clock of its own (TimeProvider is used)
+                           it), TextExcerpt (also compiled into Lt2.Web.Client); no clock of its own (TimeProvider is used)
 src/Modules/               Lt2.Identity, Lt2.Notifications, Lt2.Audit, Lt2.Parliament (Seimas open-data client,
                            import, statistics); Lt2.Appeals (bills' records, positions, arguments, endorsements,
                            reports, moderation, rule-based pre-screening, flags, summaries content, descriptions written
@@ -92,7 +111,8 @@ src/Modules/               Lt2.Identity, Lt2.Notifications, Lt2.Audit, Lt2.Parli
                            IPlannedAgenda, IMpDirectory, IMpMailAddresses (the one way an official address leaves
                            Parliament, for sending), IDigestSource, IPartySupporters, IAccountData (one per module),
                            IPositionErasure, IOutbox, IAuditLog, ISettings, IAiAssistant, IBillTextSource,
-                           IOrganisationDirectory, IOrganisationCodeSwitch, IMpLinks, IMpResponseFeed). The host
+                           IOrganisationDirectory, IOrganisationCodeSwitch, IMpLinks, IMpResponseFeed,
+                           IWritingRestrictions). The host
                            composes the agenda (GET /api/v1/agenda) and /me/follows from the modules' interfaces.
                            Identity also owns MPs' links (Application/Politicians: politician_link, politician_token,
                            design 8.5); "whose official address is this" is IMpDirectory.OfficialAddressOwnerAsync
@@ -149,6 +169,13 @@ docker compose -f deploy/compose.yaml up --build      # full stack: https://lt2.
 If Windows has reserved port 8080, set `LT2_HTTP_PORT=8090` for every compose command. End-to-end tests run only with
 `LT2_E2E_BASE_URL` set (`tools/run_tests.py e2e` sets the local stack's addresses); `README.md` lists their variables. A run
 needs nothing else: no clean-up before or after, no invitation to top up, no restart of the web container.
+
+**The end-to-end suite runs only before a merge into master (the owner, 2026-11-16).** It is the last check on finished
+work, run once on the branch about to be merged; when several branches are being worked on at the same time, once on
+all of it together at the end. It is not run while building, after each change, or by an agent checking its own step.
+During work: build, the unit, architecture and integration tests, and a look at the changed page (a screenshot or the
+Browser pane) where the change is visible. One end-to-end class may be run alone to check the fix of a failure the
+pre-merge run found.
 
 ## Running commands
 
@@ -228,6 +255,10 @@ code review.
   by the take-over link. Responses never reveal whether an email is registered. Changing roles, resetting an account and saving
   a runtime setting need a fresh passkey confirmation (`FreshConfirmation`, the last ten minutes); a staff account is
   deleted only from its staff passkey session; what a staff member did keeps their account id after deletion (design 6.9).
+  A code session on a staff account becomes a staff session without signing out (owner, 2026-11-16): `/prisijungti/raktas`,
+  `POST /me/staff-session` (`StaffHandlers.StartStaffSessionAsync`), the signed-in account's own staff passkey only
+  (anything else `passkey.staff-required`, nothing changed), a new session key (`Infrastructure/SessionRotation`: the old
+  row is deleted, never renewed), a fresh confirmation, audited as `staff.session-started` without an email.
 - **Sign-in codes (design 6.2, 8.20.2).** Browsers the account does not know share five codes an hour and ten a day per
   address (`SignIn:CodesPerHour`, `SignIn:CodesPerDay`); a browser known to the account (it signed in to it, or finished the
   registration there) has its own five an hour and ten a day, the same two settings counted separately
@@ -271,9 +302,10 @@ on its three tabs and everything under them (`MenuSections`); the three tabs ("D
 are `<ProjectTabs>` under the heading of `/darbotvarke`, `/projektai`, `/suvestines`. The history of votes is no tab (the
 owner, 2026-11-16): the agenda's voted list links to it and it leads back by a breadcrumb (`#to-agenda`). The
 account item (`Layout/AccountMenu`) is a `<details>` with "Mano paskyra" and "Atsijungti" (the server-rendered sign-out form);
-`js/lt2-account.js` fills the name and the account's links (staff screens, an MP's projects, accepting changed terms) from
-`GET /me` when it opens and closes it on Escape, a press outside and focus leaving. **No served page holds a member's name or
-role links**: the header is the same for every member apart from the antiforgery token (`NavigationTests`). The footer, on
+`js/lt2-account.js` fills the name and the account's links (staff screens, an MP's projects, accepting changed terms; for a
+staff account whose session is not a staff session, "Prisijungti darbuotojo prieigos raktu" to `StaffSessionPage` with the
+page to come back to after the `#`) from `GET /me` when it opens and closes it on Escape, a press outside and focus
+leaving. **No served page holds a member's name or role links**: the header is the same for every member apart from the antiforgery token (`NavigationTests`). The footer, on
 every page (token pages from emails included), holds "Apie" (Metodika, Moderavimo taisyklės, Naudojimo taisyklės,
 Privatumas), "Dalyvauti" (Organizacijos, Atsiliepimai), the theme switch and the trial line. `/metodika` is called "Metodika".
 
@@ -295,6 +327,17 @@ asked after the code, never before. One account per normalised address. Each acc
 verification is a later decision. Every member has one personal invitation code (replaceable; uses unlimited unless
 `Registration:PersonalCodeUses` is set) and sees only how many registered with it; administrators see numbers per day,
 code and level, never who invited whom, and can switch codes off. Invitations are never combined with sides.
+A member changes the display name on `/sveiki` (`PUT /me/display-name`, `DisplayNameHandlers`; the designer's proposal
+awaiting the owner): the registration's rule (60 characters, empty allowed), refused under a writing restriction (asked of
+Appeals through `IWritingRestrictions`), as often as the member likes (owner, 2026-11-16; `RateLimits:Participation` guards
+against a runaway script), audited without the names, no earlier names kept. Names are read live everywhere, so a
+change shows beside older arguments too.
+
+**The account page (`/sveiki`, design 8.21)** is four parts on the ground, reached from the `#account-parts` row of plain
+links: "Profilis" (`#profilis`), "Sekimas ir laiškai" (`#sekimas-ir-laiskai`), "Dalyvavimas" (`#dalyvavimas`, with the staff
+part: the staff links, or for a staff account not in a staff session the link to its staff passkey) and "Saugumas ir
+duomenys" (`#saugumas-ir-duomenys`); sheets inside them have `h3` headings. Keep the anchors emails link to (`#sekami`,
+`#zinomos-narsykles`, `#my-data`, `#my-invitation`).
 
 **MP profiles.** Compiled automatically from Seimas open data for every MP, joined or not. Two statistics:
 participation (share of recorded votes in which the MP voted for, against or abstained) and voted with the faction
@@ -371,10 +414,20 @@ page's "Balsuota".
   error codes `record.*`, the stored kind `record`. "Appeal" in the singular names no object in the code; the module,
   its schema `appeals`, the `Appeals:` settings and the word *kreipimasis* stay.
 - One position per person per bill, private, changeable until the bill closes at the final Seimas vote.
-- Reasons: plain text up to 500 characters, public with the author's display name, for either side, whatever the
+- Reasons: plain text, public with the author's display name, for either side, whatever the
   author's own (no side needed; the writing box preselects the author's side if any). Nothing public may tell whether
   a reason is on its author's side. The author can withdraw their own reason while the bill is open. Writing a reason
   needs no positions consent: it is the author's own deliberate publication, public with name and chosen side.
+- **One length for members' texts (owner, 2026-11-16):** `Texts:MaxLength` (characters, 2 000; 0 = no limit) for
+  arguments, organisations' statements and MPs' responses (and comments and "Apie mane" when built), checked where each
+  is written (`AppealRules.CheckReasonText`, `OrganisationRules.CheckStatement`, `ResponseRules.CheckResponse`, all through
+  `AppealRules.TooLong`; the refusal names the number); the one technical ceiling, 20 000 (`MemberTextLength.Ceiling` =
+  `SettingKeys.MemberTextCeiling` = `MemberTextLimits.Ceiling` in the contracts), holds whatever the setting says and is all
+  the shared validators check. The columns are `text`. A lower number later shortens nothing. The forms read the number
+  from `AppealRulesResponse.TextMaxLength`. A bill's description, moderators' statements, reports, feedback, names and
+  links keep their own limits. A long text shows its beginning and "Rodyti daugiau", opened "Rodyti mažiau" under the
+  rest (`TextExcerpt`, one file in SharedKernel compiled also into Lt2.Web.Client; `Components/LongText`): an argument
+  about 300 characters, a statement or a response about 1 500; the moderators' queue keeps texts whole.
 - "Man svarbu" endorses a reason on your own side.
 - Reasons and marks per person per bill are settings (`Appeals:ReasonsPerPerson`, `Appeals:EndorsementsPerPerson`);
   0 = no limit, the default. A limit switched on later removes nothing and counts only shown or waiting reasons.
@@ -413,8 +466,10 @@ page's "Balsuota".
   timeline of sitting days: a visitor first gets "Kaip tai veikia" (the same texts as `/metodika#kaip-tai-veikia`) and
   links to register or sign in, never a form; a member gets "Jūsų projektai" and their marks in the rows, islands filled
   in the browser from `GET /me/bills` (one request, never prerendered; it also says whether the caller gave the positions
-  consent), so the HTML is the same for every member. The timeline is on a `.sheet`, "Organizacijos" on the ground
-  (design 8.16); "Kas yra riba?" is one hint beside the note under the timeline, as on `/darbotvarke`. A coming bill with an open record offers "Prašau balsuoti" with "už" and "prieš" in its row (owner,
+  consent), so the HTML is the same for every member. The timeline is on a `.sheet` (design 8.16); the page has no
+  "Organizacijos" block and the introduction no paragraph on following (owner, 2026-11-16: the footer links to
+  organisations, the account page registers one, "Sekti" says what it sends); the visitor's trial note sits under the
+  logo and title with the invented-data notice's edges. "Kas yra riba?" is one hint beside the note under the timeline, as on `/darbotvarke`. A coming bill with an open record offers "Prašau balsuoti" with "už" and "prieš" in its row (owner,
   2026-11-15): a visitor's are `LandingPath.SignInLink` links to the bill's page; a member's side column is one island
   (`MyAgendaSide`, disabled before it starts) that takes, changes ("Atsiimti" withdraws) the side with the bill page's
   request, asks the first-time consent across the row with the shared `<PositionConsentForm>` (also in `SidePicker`), then
@@ -445,8 +500,8 @@ page's "Balsuota".
   side, then `IFollows.FollowBillAsync`), on the bill's page and in a front-page row alike. The side is never refused or
   undone because the follow failed. Changing a side adds nothing, withdrawing it keeps the follow, "Nebesekti" keeps the
   side; sides from before were not backfilled. The follow row holds nothing about the side.
-- Taking, changing or withdrawing a side, following and unfollowing (bills, MPs, organisations) and "Man svarbu" share
-  one per-account request limit, `RateLimits:Participation` (60 a minute): a guard against a runaway script, not a rule.
+- Taking, changing or withdrawing a side, following and unfollowing (bills, MPs, organisations), "Man svarbu" and changing
+  the display name share one per-account request limit, `RateLimits:Participation` (60 a minute): a guard against a runaway script, not a rule.
 - Links in emails: a message carries the site path, and the template makes it a full address with
   `SiteLinks.Absolute` from `Site:Address` (design 5.6). That is deployment configuration, never a runtime setting.
 - The share line: the personal invitation link with `tikslas` beside the code after the `#` (a path under `/seimas/`, anything else ignored), landing
@@ -471,7 +526,7 @@ page's "Balsuota".
 - Representatives come only by a one-time link (seven days, at most ten); they see each other's display names and
   nobody else does, staff included, except a moderator restricting a statement's writer. Nothing ties a
   representative's own side to the organisation. The last one cannot leave, only close it; deleting that account closes it.
-- One statement per organisation per bill (`for`, `against`, `remarks`; up to 1 500 characters; an https link; with a
+- One statement per organisation per bill (`for`, `against`, `remarks`; as long as `Texts:MaxLength` allows, owner 2026-11-16; an https link; with a
   side an optional goal "Siekiame {N} dalyvių · dabar {n}"), in "Organizacijų pozicijos" after the arguments. Never
   counted: counts, thresholds, lists, statistics and summaries are the same with and without them (the agenda and the
   front page name them beside a bill, never with a number), and nothing about organisations goes to MPs yet. Edits keep public versions; frozen when the bill closes; none on a
@@ -496,7 +551,10 @@ page's "Balsuota".
 - Weekly on Monday morning in sitting weeks, and the working day before a sitting with a relevant bill. At most two a
   week per MP.
 - Always both sides, always with the count for accounts older than 30 days, with the most endorsed reasons a moderator
-  has seen, without their authors' names (email, public copy and snapshot alike).
+  has seen, without their authors' names (email, public copy and snapshot alike). A reason longer than about 300
+  characters is shortened in the email (and its preview) by `TextExcerpt`, with "Visas argumentas: {link}" to it on the
+  public copy (`MpMailPaths.ReasonOnPublicCopy` = `DigestRoutes.ReasonAnchor`); the snapshot keeps the whole text (owner,
+  2026-11-16). The email prints no other member-written text (the MP's own response as stance and date only).
 - The weekly one holds appeals on that week's agenda, or never summarised, or whose participants changed by at least
   the `Digest:NotableChange` share (default 10 %) since the last summary that held them.
 - Every summary has a public copy with the same numbers. Whether an MP stopped the summaries is never shown publicly.
@@ -537,8 +595,8 @@ page's "Balsuota".
 account only when the member allows a reply, otherwise nothing leads back; staff reply through the outbox; not public.
 
 **Moderation.** Anything that reaches MPs has passed a person. Every action is audited and an argument's author gets the reason.
-A report button is on every bill's description and reason. A moderator can restrict an account from writing (reasons and
-date flags), until a date or until lifted, with a statement emailed to the person; it never touches sides,
+A report button is on every bill's description and reason. A moderator can restrict an account from writing (reasons,
+date flags, statements, responses and, as proposed, changing the display name), until a date or until lifted, with a statement emailed to the person; it never touches sides,
 marks, counts or sign-in, is never shown to anyone else, and goes with the account (no address hash is kept).
 
 ## Wording and tone

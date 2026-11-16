@@ -712,9 +712,14 @@ internal sealed class OrganisationsService(
 
     public async Task<Result<StatementSaved>> SaveStatementAsync(string billNumber, string slug, Guid userId, NewStatement request, CancellationToken cancellationToken)
     {
-        if (OrganisationRules.CheckStatement(request.Stance, request.Text, request.Link, request.Goal) is { } broken)
+        // Design 5.6, 6.8 (owner, 2026-11-16): the length is the members' texts setting, checked here for every caller; a
+        // too-long text's refusal names the number that holds.
+        var maxLength = await settings.GetAsync(SettingKeys.TextsMaxLength, cancellationToken);
+        if (OrganisationRules.CheckStatement(request.Stance, request.Text, request.Link, request.Goal, maxLength) is { } broken)
         {
-            return OrganisationErrors.Of(broken);
+            return broken == "statement.too-long"
+                ? OrganisationErrors.Of(broken) with { Numbers = [MemberTextLength.Allowed(maxLength)] }
+                : OrganisationErrors.Of(broken);
         }
 
         var text = AppealRules.NormaliseText(request.Text);

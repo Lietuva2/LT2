@@ -46,8 +46,6 @@ public static class MpResponseRoutes
 /// <summary>The response's limits, the same numbers the server enforces (design 8.5.5), and the lists' paging (8.5.6).</summary>
 public static class MpResponseLimits
 {
-    public const int TextMaxLength = 1500;
-
     public static readonly IReadOnlyList<string> Stances = ["for", "against", "undecided"];
 
     /// <summary>The responses a list shows first, on the bill's page and on the profile.</summary>
@@ -145,7 +143,7 @@ public sealed class MpResponseRequestValidator : AbstractValidator<MpResponseReq
         RuleFor(x => x.Stance).Must(s => MpResponseLimits.Stances.Contains(s)).WithMessage(l["MpResponse.Stance"]);
         RuleFor(x => x.Text).Cascade(CascadeMode.Stop)
             .Must(t => !string.IsNullOrWhiteSpace(t)).WithMessage(l["MpResponse.Required"])
-            .Must(t => t.Trim().Length <= MpResponseLimits.TextMaxLength).WithMessage(l["MpResponse.TooLong"]);
+            .Must(t => t.Trim().Length <= MemberTextLimits.Ceiling).WithMessage(l["MpResponse.TooLong", MemberTextLimits.Number(MemberTextLimits.Ceiling)]); // the setting Texts:MaxLength: where it is written
     }
 }
 

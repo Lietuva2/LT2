@@ -19,22 +19,67 @@ public sealed class AppealRuleTests
     public void Abstaining_or_anything_else_is_not_a_side(string? side) => AppealRules.CheckSide(side).ShouldBe("side.invalid");
 
     [Fact]
-    public void An_argument_may_be_up_to_500_characters()
+    public void An_argument_may_be_as_long_as_the_setting_says()
     {
-        AppealRules.CheckReasonText(new string('a', 500)).ShouldBeNull();
-        AppealRules.CheckReasonText(new string('a', 501)).ShouldBe("reason.too-long");
+        AppealRules.CheckReasonText(new string('a', 2000), maxLength: 2000).ShouldBeNull();
+        AppealRules.CheckReasonText(new string('a', 2001), maxLength: 2000).ShouldBe("reason.too-long");
+        AppealRules.CheckReasonText(new string('a', 501), maxLength: 500).ShouldBe("reason.too-long");
     }
 
     [Fact]
-    public void Surrounding_white_space_does_not_count_towards_the_500_characters() =>
-        AppealRules.CheckReasonText("  \n" + new string('ą', 500) + "\n  ").ShouldBeNull();
+    public void The_length_of_members_texts_is_one_setting_of_2000_characters_by_default()
+    {
+        SettingKeys.TextsMaxLength.Name.ShouldBe("Texts:MaxLength");
+        SettingKeys.TextsMaxLength.Default.ShouldBe(2000, "the owner's decision of 2026-11-16");
+        SettingKeys.All.ShouldContain(SettingKeys.TextsMaxLength);
+    }
+
+    [Fact]
+    public void With_the_setting_at_0_only_the_technical_ceiling_limits_an_argument()
+    {
+        AppealRules.CheckReasonText(new string('a', SettingKeys.MemberTextCeiling), maxLength: 0).ShouldBeNull();
+        AppealRules.CheckReasonText(new string('a', SettingKeys.MemberTextCeiling + 1), maxLength: 0).ShouldBe("reason.too-long");
+        MemberTextLength.Allowed(0).ShouldBe(SettingKeys.MemberTextCeiling);
+    }
+
+    [Fact]
+    public void The_technical_ceiling_holds_whatever_the_setting_says()
+    {
+        SettingKeys.MemberTextCeiling.ShouldBe(20_000);
+        MemberTextLength.Allowed(50_000).ShouldBe(SettingKeys.MemberTextCeiling);
+        AppealRules.CheckReasonText(new string('a', SettingKeys.MemberTextCeiling + 1), maxLength: 50_000).ShouldBe("reason.too-long");
+    }
+
+    [Fact]
+    public void An_organisations_statement_and_an_MPs_response_follow_the_same_length_setting()
+    {
+        OrganisationRules.CheckStatement("for", new string('a', 2000), null, null, maxLength: 2000).ShouldBeNull();
+        OrganisationRules.CheckStatement("for", new string('a', 2001), null, null, maxLength: 2000).ShouldBe("statement.too-long");
+        OrganisationRules.CheckStatement("for", new string('a', 5000), null, null, maxLength: 0).ShouldBeNull("0 = no limit but the ceiling");
+        ResponseRules.CheckResponse("for", new string('a', 2000), maxLength: 2000).ShouldBeNull();
+        ResponseRules.CheckResponse("for", new string('a', 2001), maxLength: 2000).ShouldBe("response.too-long");
+        ResponseRules.CheckResponse("for", new string('a', SettingKeys.MemberTextCeiling + 1), maxLength: 0).ShouldBe("response.too-long");
+    }
+
+    [Theory]
+    [InlineData(0, true)]
+    [InlineData(2000, true)]
+    [InlineData(20_000, true)]
+    [InlineData(20_001, false)]
+    [InlineData(-1, false)]
+    public void The_setting_accepts_0_or_a_length_up_to_the_ceiling(int value, bool valid) =>
+        SettingKeys.TextsMaxLength.IsValid(System.Text.Json.JsonSerializer.SerializeToElement(value)).ShouldBe(valid);
+
+    [Fact]
+    public void Surrounding_white_space_does_not_count_towards_the_length() =>
+        AppealRules.CheckReasonText("  \n" + new string('ą', 500) + "\n  ", maxLength: 500).ShouldBeNull();
 
     [Theory]
     [InlineData("")]
     [InlineData("   ")]
     [InlineData("\n\t")]
     [InlineData(null)]
-    public void A_blank_argument_is_not_an_argument(string? text) => AppealRules.CheckReasonText(text).ShouldBe("reason.empty");
+    public void A_blank_argument_is_not_an_argument(string? text) => AppealRules.CheckReasonText(text, maxLength: 2000).ShouldBe("reason.empty");
 
     [Fact]
     public void An_argument_is_kept_as_plain_text_with_line_breaks_but_without_control_characters() =>

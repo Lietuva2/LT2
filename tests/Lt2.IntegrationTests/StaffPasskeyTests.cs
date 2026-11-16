@@ -6,6 +6,8 @@ using Lt2.Api.Contracts.Auth;
 using Lt2.Api.Contracts.Me;
 using Lt2.IntegrationTests.Infrastructure;
 using Lt2.Migrator;
+using Microsoft.AspNetCore.Mvc.Testing;
+using Microsoft.AspNetCore.Mvc.Testing.Handlers;
 using Microsoft.Extensions.Configuration;
 using Serilog;
 
@@ -390,6 +392,146 @@ public sealed class StaffPasskeyTests(DatabaseFixture database) : ApiTest(databa
         using var session = NewBrowser();
         (await session.SignInWithPasskeyAsync(key)).StatusCode.ShouldBe(HttpStatusCode.NoContent);
         (await session.ActivateRoleAsync(code)).StatusCode.ShouldBe(HttpStatusCode.NoContent, "the printed code works");
+    }
+
+    /// <summary>
+    /// Design 6.2 (owner, 2026-11-16): a code session on a staff account becomes a staff session with the staff passkey,
+    /// without signing out. The session gets a new key: the old row is gone, the old cookie leads nowhere, and the browser has
+    /// one session, not two. It counts as a fresh confirmation, is audited and sends no email.
+    /// </summary>
+    [Fact]
+    public async Task A_code_session_on_a_staff_account_becomes_a_staff_session_with_the_staff_passkey_under_a_new_key()
+    {
+        using var admin = await StaffMembers.ActiveAsync(Factory, Database, "administrator");
+        var (browser, cookies) = BrowserWithCookies();
+        using var mailbox = browser;
+        await SignInFromMailboxAsync(mailbox, admin.Email);
+        var oldCookie = cookies.GetCookies(new Uri(Lt2Factory.Origin))[Lt2.Identity.IdentityModule.SessionCookieName]?.Value;
+        oldCookie.ShouldNotBeNullOrEmpty();
+        var sessionsBefore = (await mailbox.Client.GetFromJsonAsync<List<SessionResponse>>(ApiRoutes.Me.Sessions))!;
+        var before = sessionsBefore.Single(s => s.IsCurrent);
+        before.Method.ShouldBe("otp");
+        (await mailbox.Client.GetAsync(ApiRoutes.Admin.Settings)).StatusCode.ShouldBe(HttpStatusCode.Forbidden);
+        var noticesBefore = await NoticesAsync(admin.Email);
+
+        using (var started = await mailbox.StartStaffSessionAsync(admin.Authenticator))
+        {
+            started.StatusCode.ShouldBe(HttpStatusCode.NoContent, await started.Content.ReadAsStringAsync());
+        }
+
+        var me = await MeAsync(mailbox);
+        me.Email.ShouldBe(admin.Email);
+        me.ActiveStaffRoles.ShouldBe(["administrator"]);
+        (await mailbox.Client.GetAsync(ApiRoutes.Admin.Settings)).StatusCode.ShouldBe(HttpStatusCode.OK, "a staff-only answer works now");
+
+        var sessionsAfter = (await mailbox.Client.GetFromJsonAsync<List<SessionResponse>>(ApiRoutes.Me.Sessions))!;
+        sessionsAfter.Count.ShouldBe(sessionsBefore.Count, "one session for this browser, not two");
+        sessionsAfter.ShouldNotContain(s => s.Id == before.Id);
+        var after = sessionsAfter.Single(s => s.IsCurrent);
+        after.Id.ShouldNotBe(before.Id, "a new session key on the change of privilege");
+        after.Method.ShouldBe("pop");
+        (await Database.ScalarAsync<long>("SELECT count(*) FROM identity.session WHERE id = @id", ("id", before.Id))).ShouldBe(0);
+        var newCookie = cookies.GetCookies(new Uri(Lt2Factory.Origin))[Lt2.Identity.IdentityModule.SessionCookieName]?.Value;
+        newCookie.ShouldNotBeNullOrEmpty();
+        newCookie.ShouldNotBe(oldCookie);
+
+        // The old cookie, sent by whoever might hold it, is a visitor's.
+        using (var stale = Factory.CreateClient(new WebApplicationFactoryClientOptions { BaseAddress = new Uri(Lt2Factory.Origin), HandleCookies = false, AllowAutoRedirect = false }))
+        {
+            using var request = new HttpRequestMessage(HttpMethod.Get, ApiRoutes.Me.Root);
+            request.Headers.Add("Cookie", $"{Lt2.Identity.IdentityModule.SessionCookieName}={oldCookie}");
+            using var response = await stale.SendAsync(request);
+            response.StatusCode.ShouldBe(HttpStatusCode.Unauthorized);
+        }
+
+        // Audited, with no email of its own; and the passkey counts as just confirmed (adding a passkey needs that).
+        (await AuditCountAsync(admin.Email, "staff.session-started")).ShouldBe(1);
+        (await Database.ScalarAsync<long>(
+            "SELECT count(*) FROM audit.event WHERE action = 'staff.session-started' AND (details::text LIKE '%@%' OR target LIKE '%@%')"))
+            .ShouldBe(0, "no addresses in the audit log");
+        (await NoticesAsync(admin.Email)).ShouldBe(noticesBefore);
+        using var extra = new SoftwareAuthenticator();
+        using (var added = await mailbox.AddPasskeyAsync(extra))
+        {
+            added.StatusCode.ShouldBe(HttpStatusCode.NoContent, await added.Content.ReadAsStringAsync());
+        }
+    }
+
+    [Fact]
+    public async Task Another_accounts_passkey_is_refused_and_the_session_stays_as_it_was()
+    {
+        using var admin = await StaffMembers.ActiveAsync(Factory, Database, "administrator");
+        using var other = await StaffMembers.ActiveAsync(Factory, Database, "moderator");
+        using var mailbox = NewBrowser();
+        await SignInFromMailboxAsync(mailbox, admin.Email);
+        var before = (await mailbox.Client.GetFromJsonAsync<List<SessionResponse>>(ApiRoutes.Me.Sessions))!.Single(s => s.IsCurrent);
+
+        using (var refused = await mailbox.StartStaffSessionAsync(other.Authenticator))
+        {
+            await refused.ShouldBeProblemAsync(HttpStatusCode.Forbidden, "passkey.staff-required");
+        }
+
+        var me = await MeAsync(mailbox);
+        me.Email.ShouldBe(admin.Email, "still the same account");
+        me.ActiveStaffRoles.ShouldBeEmpty();
+        var after = (await mailbox.Client.GetFromJsonAsync<List<SessionResponse>>(ApiRoutes.Me.Sessions))!.Single(s => s.IsCurrent);
+        after.Id.ShouldBe(before.Id);
+        after.Method.ShouldBe("otp");
+        (await mailbox.Client.GetAsync(ApiRoutes.Admin.Settings)).StatusCode.ShouldBe(HttpStatusCode.Forbidden);
+        (await AuditCountAsync(admin.Email, "staff.session-started")).ShouldBe(0);
+        (await AuditCountAsync(other.Email, "staff.session-started")).ShouldBe(0);
+    }
+
+    [Fact]
+    public async Task A_passkey_of_the_staff_account_that_is_not_its_staff_passkey_is_refused_and_the_staff_passkey_works_from_it()
+    {
+        using var admin = await StaffMembers.ActiveAsync(Factory, Database, "administrator");
+        using var extra = new SoftwareAuthenticator();
+        (await admin.Browser.ConfirmPasskeyAsync(admin.Authenticator)).StatusCode.ShouldBe(HttpStatusCode.NoContent);
+        using (var added = await admin.Browser.AddPasskeyAsync(extra))
+        {
+            added.StatusCode.ShouldBe(HttpStatusCode.NoContent, await added.Content.ReadAsStringAsync());
+        }
+
+        using (var mailbox = NewBrowser())
+        {
+            await SignInFromMailboxAsync(mailbox, admin.Email);
+            await (await mailbox.StartStaffSessionAsync(extra)).ShouldBeProblemAsync(HttpStatusCode.Forbidden, "passkey.staff-required");
+            (await MeAsync(mailbox)).ActiveStaffRoles.ShouldBeEmpty();
+        }
+
+        // A session signed in with that other passkey is not a staff session either; the staff passkey makes it one.
+        using var otherKey = NewBrowser();
+        (await otherKey.SignInWithPasskeyAsync(extra)).StatusCode.ShouldBe(HttpStatusCode.NoContent);
+        (await MeAsync(otherKey)).ActiveStaffRoles.ShouldBeEmpty();
+        (await otherKey.StartStaffSessionAsync(admin.Authenticator)).StatusCode.ShouldBe(HttpStatusCode.NoContent);
+        (await MeAsync(otherKey)).ActiveStaffRoles.ShouldBe(["administrator"]);
+    }
+
+    [Fact]
+    public async Task A_member_without_a_staff_role_and_a_visitor_are_refused()
+    {
+        using var member = NewBrowser();
+        var email = await member.RegisterAndSignInAsync();
+        using var key = new SoftwareAuthenticator();
+        (await member.AddPasskeyAsync(key)).StatusCode.ShouldBe(HttpStatusCode.NoContent);
+
+        await (await member.StartStaffSessionAsync(key)).ShouldBeProblemAsync(HttpStatusCode.Forbidden, "passkey.staff-required");
+        (await MeAsync(member)).ActiveStaffRoles.ShouldBeEmpty();
+        (await AuditCountAsync(email, "staff.session-started")).ShouldBe(0);
+
+        using var visitor = NewBrowser();
+        using var anonymous = await visitor.StartStaffSessionAsync(key);
+        anonymous.StatusCode.ShouldBe(HttpStatusCode.Unauthorized);
+    }
+
+    /// <summary>A browser whose cookies the test can read (the old session cookie, for the key's change).</summary>
+    private (TestBrowser Browser, CookieContainer Cookies) BrowserWithCookies()
+    {
+        var cookies = new CookieContainer();
+        var client = Factory.CreateDefaultClient(new Uri(Lt2Factory.Origin), new CookieContainerHandler(cookies));
+        client.DefaultRequestHeaders.Add("Origin", Lt2Factory.Origin);
+        return (new TestBrowser(client, Factory), cookies);
     }
 
     private static async Task<MeResponse> MeAsync(TestBrowser browser) =>

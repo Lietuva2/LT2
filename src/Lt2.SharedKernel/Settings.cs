@@ -142,6 +142,22 @@ public static class SettingKeys
     /// </summary>
     public static readonly SettingKey<int> AppealsReasonsPerPerson = new("Appeals:ReasonsPerPerson", 0, v => v is >= 0 and <= 100);
 
+    /// <summary>
+    /// The longest text, in characters, of what members write for others to read (design 5.6, 8.2, owner 2026-11-16): an
+    /// argument, an organisation's statement, an MP's response (and comments and "Apie mane" when they are built). Texts a
+    /// person reviews anyway (a bill's description by a moderator) and short fields keep their own limits. 0 = no limit but
+    /// <see cref="MemberTextCeiling"/>. A lower number later shortens and removes nothing already written.
+    /// </summary>
+    public static readonly SettingKey<int> TextsMaxLength = new("Texts:MaxLength", 2000, v => v is >= 0 and <= MemberTextCeiling);
+
+    /// <summary>
+    /// The one technical ceiling on a member's text (<see cref="TextsMaxLength"/>), whatever the setting says: a guard
+    /// against a runaway request or script, not a rule of the product. The HTTP validators check only this; the setting is
+    /// checked where each text is written (design 6.8). <c>MemberTextLimits.Ceiling</c> in the contracts is the same
+    /// number (a unit test).
+    /// </summary>
+    public const int MemberTextCeiling = MemberTextLength.Ceiling;
+
     /// <summary>"Man svarbu" marks one person may give on one bill (design 8.2); 0 = no limit, the default.</summary>
     public static readonly SettingKey<int> AppealsEndorsementsPerPerson = new("Appeals:EndorsementsPerPerson", 0, v => v is >= 0 and <= 100);
 
@@ -199,6 +215,7 @@ public static class SettingKeys
         DigestSending,
         DigestApprovalHours,
         AppealsReasonsPerPerson,
+        TextsMaxLength,
         AppealsEndorsementsPerPerson,
         OrganisationsPerAccount,
         FollowsResponsesAt,

@@ -6,7 +6,7 @@
    the followed MPs and organisations, "Nebesekti", and the four email switches (the fourth, MPs' responses, design 8.20.1). The person's own data only; every follow
    email links here. *@
 <section class="sheet stack" aria-labelledby="follows-title" id="sekami">
-    <h2 id="follows-title">@L["Follows.Title"]</h2>
+    <h3 id="follows-title">@L["Follows.Title"]</h3>
     <p>@L["Follows.Lead"]</p>
     @if (Mine is { } mine)
     {
@@ -16,7 +16,7 @@
         }
         @if (mine.Bills.Count > 0)
         {
-            <h3>@L["Follows.Bills"]</h3>
+            <h4>@L["Follows.Bills"]</h4>
             <ul class="rows" id="follows-bills">
                 @foreach (var b in mine.Bills)
                 {
@@ -48,7 +48,7 @@
         }
         @if (mine.Mps.Count > 0)
         {
-            <h3>@L["Follows.Mps"]</h3>
+            <h4>@L["Follows.Mps"]</h4>
             <ul class="rows" id="follows-mps">
                 @foreach (var m in mine.Mps)
                 {
@@ -63,7 +63,7 @@
         }
         @if (mine.Organisations.Count > 0)
         {
-            <h3>@L["Follows.Organisations"]</h3>
+            <h4>@L["Follows.Organisations"]</h4>
             <ul class="rows" id="follows-organisations">
                 @foreach (var o in mine.Organisations)
                 {

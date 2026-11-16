@@ -19,7 +19,6 @@ public static class OrganisationLimits
     public const int LegalCodeMaxLength = 9;
     public const int DescriptionMaxLength = 500;
     public const int WebsiteMaxLength = 200;
-    public const int StatementMaxLength = 1500;
     public const int LinkMaxLength = 500;
     public const int GoalMax = 1_000_000;
     public const int RepresentativesMax = 10;

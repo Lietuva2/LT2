@@ -14,6 +14,9 @@
             <li data-account-link="moderation" hidden><a href="/moderavimas">@T["Nav.Moderation"]</a></li>
             <li data-account-link="settings" hidden><a href="/administravimas/nustatymai">@T["Nav.Settings"]</a></li>
             <li data-account-link="invitations" hidden><a href="/administravimas/kvietimai">@T["Nav.Invitations"]</a></li>
+            @* Design 6.2, 8.21: in place of the staff links when a staff account's session is not a staff session; the script
+               adds the page to come back to. *@
+            <li data-account-link="staff-key" hidden><a href="@Lt2.Api.Contracts.Me.StaffSessionPage.Path" id="nav-staff-key">@T["Nav.StaffKey"]</a></li>
             <li data-account-link="mp" hidden><a href="/seimo-narys/projektai">@T["Nav.MpBills"]</a></li>
             <li><SignOutForm /></li>
         </ul>
