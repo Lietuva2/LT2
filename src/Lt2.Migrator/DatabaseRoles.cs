@@ -45,6 +45,7 @@ public static class DatabaseRoles
     [
         "appeals.ai_draft_request", "appeals.bill_record", "appeals.daily_stat", "appeals.flag", "appeals.moderation_action",
         "appeals.reason", "appeals.report", "appeals.revision", "appeals.summary_attempt",
+        "appeals.comment_agreement", // design 8.23.10: public under the name, tells no side, as an argument
         "config.setting",
         "parliament.agenda_item", "parliament.agenda_snapshot", "parliament.ballot", "parliament.bill", "parliament.body",
         "parliament.contact", "parliament.faction_position", "parliament.fetch_state", "parliament.import_run", "parliament.mandate",
@@ -74,6 +75,7 @@ public static class DatabaseRoles
         "appeals.endorsement", "appeals.position", "appeals.writing_restriction",
         "appeals.organisation", "appeals.organisation_code", "appeals.organisation_invite", "appeals.organisation_representative",
         "appeals.organisation_statement", "appeals.mp_response",
+        "appeals.comment", // design 8.23.11: holds the account behind an organisation's or an MP's comment
         "audit.event",
         "identity.consent", "identity.data_protection_key", "identity.feedback", "identity.invitation", "identity.invitation_daily",
         "identity.known_device",

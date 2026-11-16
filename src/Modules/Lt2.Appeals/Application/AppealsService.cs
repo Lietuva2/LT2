@@ -500,6 +500,9 @@ internal sealed class AppealsService(
         await db.Endorsements.Where(e => e.ReasonId == reasonId).ExecuteDeleteAsync(cancellationToken);
         await db.Reasons.Where(r => r.MergedIntoId == reasonId).ExecuteUpdateAsync(s => s.SetProperty(r => r.MergedIntoId, (Guid?)null), cancellationToken);
         await ModerationRecorder.CloseReportsAsync(db, reasonId, now, cancellationToken);
+
+        // Design 8.23.7: its discussion goes with it, as its "Man svarbu" marks do.
+        await CommentCascade.DeleteForTargetsAsync(db, CommentKinds.Reason, [reasonId], now, cancellationToken);
         db.Reasons.Remove(reason);
         await db.SaveChangesAsync(cancellationToken);
         await audit.WriteAsync(
@@ -577,6 +580,15 @@ internal sealed class AppealsService(
                 break;
             case "statement":
                 if (!await db.OrganisationStatements.Shown(db.Organisations).AnyAsync(s => s.Id == request.TargetId, cancellationToken))
+                {
+                    return Error.NotFound("report.target-not-found");
+                }
+
+                recordId = null;
+                break;
+            case "comment":
+                // Design 8.23.8: a comment that is shown (published; its target's state is the moderators' to see).
+                if (!await db.Comments.AnyAsync(c => c.Id == request.TargetId && c.Status == CommentStatuses.Published, cancellationToken))
                 {
                     return Error.NotFound("report.target-not-found");
                 }
@@ -752,10 +764,11 @@ internal sealed class AppealsService(
         // An initiator's name only beside a description they wrote, before 2026-11-14 (design 8.12.4).
         var author = record.DescriptionSource == DescriptionSources.Initiator && record.InitiatorUserId is { } initiator ? initiator : (Guid?)null;
         var names = await reads.NamesAsync(reasons.Select(r => r.AuthorUserId).Concat(author is { } a ? [a] : []), ct);
+        var comments = await CommentCascade.CountsAsync(db, CommentKinds.Reason, reasons.Select(r => r.Id).ToList(), ct);
         var ordered = reasons
             .OrderByDescending(r => endorsements.GetValueOrDefault(r.Id))
             .ThenBy(r => r.CreatedAt)
-            .Select(r => AppealReads.ToInfo(r, names, endorsements))
+            .Select(r => AppealReads.ToInfo(r, names, endorsements) with { Comments = comments.GetValueOrDefault(r.Id) })
             .ToList();
         return new BillRecordInfo(
             record.Id,

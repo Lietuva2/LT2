@@ -20,7 +20,7 @@ internal static class AppealMapping
 
     public static BillRefResponse Map(BillFacts b) => new(b.Number, b.Title);
 
-    public static ReasonResponse Map(ReasonInfo r) => new(r.Id, r.Side, r.Text, r.AuthorName, r.Endorsements, r.Status, r.CreatedAt);
+    public static ReasonResponse Map(ReasonInfo r) => new(r.Id, r.Side, r.Text, r.AuthorName, r.Endorsements, r.Status, r.CreatedAt) { Comments = r.Comments };
 
     public static BillRecordResponse Map(BillRecordInfo a) => new(
         a.Id, Map(a.Bill), a.Status, a.Description, a.DescriptionSource, a.DescriptionAuthor, Map(a.Counts), Map(a.Threshold),

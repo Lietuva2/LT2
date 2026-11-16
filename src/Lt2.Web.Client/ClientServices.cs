@@ -27,6 +27,8 @@ public static class ClientServices
         services.AddScoped<Lt2.Api.Contracts.Mps.IMpApi, HttpMpApi>();
         services.AddScoped<Lt2.Api.Contracts.Mps.IMpResponsesApi, HttpMpResponsesApi>();
         services.AddScoped<Lt2.Api.Contracts.Mps.IMpResponseModerationApi, HttpMpResponseModerationApi>();
+        services.AddScoped<Lt2.Api.Contracts.Comments.ICommentsApi, HttpCommentsApi>();
+        services.AddScoped<Lt2.Api.Contracts.Comments.ICommentModerationApi, HttpCommentModerationApi>();
         services.AddScoped<IMyBillsApi, HttpMyBillsApi>();
         services.AddScoped<Lt2.Api.Contracts.Analytics.IAnalyticsApi, HttpAnalyticsApi>();
         services.AddScoped<Lt2.Api.Contracts.Appeals.IAppealsApi, HttpAppealsApi>();
@@ -51,6 +53,7 @@ public static class ClientServices
         services.AddScoped<Passkeys>();
         services.AddScoped<Appeals.MyBillState>();
         services.AddScoped<Agenda.MyAgendaState>();
+        services.AddScoped<Comments.CommentState>();
         services.TryAddSingleton(TimeProvider.System);
         return services;
     }

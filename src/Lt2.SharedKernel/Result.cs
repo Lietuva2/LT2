@@ -20,6 +20,12 @@ public sealed record Error(ErrorKind Kind, string Code, string? Field = null)
     /// </summary>
     public IReadOnlyList<int> Numbers { get; init; } = Array.Empty<int>();
 
+    /// <summary>
+    /// The message's key when it says more than the code (design 8.23.3: a refused comment's message names what was found);
+    /// null for the code's own message.
+    /// </summary>
+    public string? MessageKey { get; init; }
+
     public static Error Validation(string code, string? field = null) => new(ErrorKind.Validation, code, field);
     public static Error NotFound(string code) => new(ErrorKind.NotFound, code);
     public static Error Conflict(string code) => new(ErrorKind.Conflict, code);

@@ -34,9 +34,9 @@ public static class AppealLimits
 
     /// <summary>
     /// A bill's description (<c>record</c>), an argument, an organisation or an organisation's statement (design 8.14.14), or an
-    /// MP's response (design 8.5.5).
+    /// MP's response (design 8.5.5), or a comment (design 8.23.8).
     /// </summary>
-    public static readonly IReadOnlyList<string> ReportTargets = ["record", "reason", "organisation", "statement", "response"];
+    public static readonly IReadOnlyList<string> ReportTargets = ["record", "reason", "organisation", "statement", "response", "comment"];
 
     /// <summary>The longest official text's address a description may carry (<c>record.description_url</c>, design 8.13).</summary>
     public const int DescriptionUrlMaxLength = 500;
@@ -110,7 +110,11 @@ public sealed record ThresholdResponse(int Value, string SetBy, string? Note, in
 
 public sealed record BillRefResponse(string Number, string Title);
 
-public sealed record ReasonResponse(Guid Id, string Side, string Text, string? AuthorName, int Endorsements, string Status, DateTimeOffset CreatedAt);
+public sealed record ReasonResponse(Guid Id, string Side, string Text, string? AuthorName, int Endorsements, string Status, DateTimeOffset CreatedAt)
+{
+    /// <summary>How many comments the argument shows ("Aptarimas (n)", design 8.23.6, 8.23.14); never counted anywhere else.</summary>
+    public int Comments { get; init; }
+}
 
 /// <summary>
 /// A bill as people take part on it (design 8.12.1). <c>Id</c> is the bill's record, null while it has none (nobody took

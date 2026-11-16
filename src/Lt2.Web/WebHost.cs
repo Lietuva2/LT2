@@ -79,6 +79,9 @@ internal static class WebHost
         services.AddScoped<MpResponseReads>();
         services.AddScoped<Lt2.Api.Contracts.Mps.IMpResponsesApi, ServerMpResponsesApi>();
         services.AddScoped<Lt2.Api.Contracts.Mps.IMpResponseModerationApi, ServerMpResponseModerationApi>();
+        services.AddScoped<CommentReads>();
+        services.AddScoped<Lt2.Api.Contracts.Comments.ICommentsApi, ServerCommentsApi>();
+        services.AddScoped<Lt2.Api.Contracts.Comments.ICommentModerationApi, ServerCommentModerationApi>();
         services.AddScoped<ParliamentReads>();
         services.AddScoped<IMetaApi, ServerMetaApi>();
         services.AddScoped<IParliamentApi, ServerParliamentApi>();

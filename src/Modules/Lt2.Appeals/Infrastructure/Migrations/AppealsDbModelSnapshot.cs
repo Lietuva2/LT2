@@ -174,6 +174,114 @@ namespace Lt2.Appeals.Infrastructure.Migrations
                         });
                 });
 
+            modelBuilder.Entity("Lt2.Appeals.Domain.Comment", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<Guid?>("AuthorUserId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("author_user_id");
+
+                    b.Property<string>("BillNumber")
+                        .IsRequired()
+                        .HasMaxLength(40)
+                        .HasColumnType("character varying(40)")
+                        .HasColumnName("bill_number");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("created_at");
+
+                    b.Property<DateTimeOffset?>("HiddenAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("hidden_at");
+
+                    b.Property<Guid?>("OrganisationId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("organisation_id");
+
+                    b.Property<long?>("SeimasPersonId")
+                        .HasColumnType("bigint")
+                        .HasColumnName("seimas_person_id");
+
+                    b.Property<string>("SpeaksAs")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)")
+                        .HasColumnName("speaks_as");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)")
+                        .HasColumnName("status");
+
+                    b.Property<Guid>("TargetId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("target_id");
+
+                    b.Property<string>("TargetKind")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)")
+                        .HasColumnName("target_kind");
+
+                    b.Property<string>("Text")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("text");
+
+                    b.HasKey("Id")
+                        .HasName("pk_comment");
+
+                    b.HasIndex("AuthorUserId")
+                        .HasDatabaseName("ix_comment_author_user_id");
+
+                    b.HasIndex("BillNumber")
+                        .HasDatabaseName("ix_comment_bill_number");
+
+                    b.HasIndex("CreatedAt")
+                        .HasDatabaseName("ix_comment_created_at");
+
+                    b.HasIndex("TargetKind", "TargetId", "CreatedAt")
+                        .HasDatabaseName("ix_comment_target_kind_target_id_created_at");
+
+                    b.ToTable("comment", "appeals", t =>
+                        {
+                            t.HasCheckConstraint("ck_comment_status", "status IN ('published', 'hidden')");
+
+                            t.HasCheckConstraint("ck_comment_target_kind", "target_kind IN ('reason', 'statement', 'response')");
+
+                            t.HasCheckConstraint("ck_comment_voice", "(speaks_as = 'person' AND organisation_id IS NULL AND seimas_person_id IS NULL) OR (speaks_as = 'organisation' AND organisation_id IS NOT NULL AND target_kind = 'statement') OR (speaks_as = 'mp' AND seimas_person_id IS NOT NULL AND target_kind = 'response')");
+                        });
+                });
+
+            modelBuilder.Entity("Lt2.Appeals.Domain.CommentAgreement", b =>
+                {
+                    b.Property<Guid>("CommentId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("comment_id");
+
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("user_id");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("created_at");
+
+                    b.HasKey("CommentId", "UserId")
+                        .HasName("pk_comment_agreement");
+
+                    b.HasIndex("UserId")
+                        .HasDatabaseName("ix_comment_agreement_user_id");
+
+                    b.ToTable("comment_agreement", "appeals");
+                });
+
             modelBuilder.Entity("Lt2.Appeals.Domain.DailyStat", b =>
                 {
                     b.Property<Guid>("RecordId")
@@ -1115,6 +1223,16 @@ namespace Lt2.Appeals.Infrastructure.Migrations
                         .HasDatabaseName("ix_writing_restriction_user_id");
 
                     b.ToTable("writing_restriction", "appeals");
+                });
+
+            modelBuilder.Entity("Lt2.Appeals.Domain.CommentAgreement", b =>
+                {
+                    b.HasOne("Lt2.Appeals.Domain.Comment", null)
+                        .WithMany()
+                        .HasForeignKey("CommentId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
+                        .HasConstraintName("fk_comment_agreement_comment_comment_id");
                 });
 
             modelBuilder.Entity("Lt2.Appeals.Domain.DailyStat", b =>

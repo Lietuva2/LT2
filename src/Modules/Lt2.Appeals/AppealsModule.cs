@@ -60,6 +60,12 @@ public static class AppealsModule
         // Design 8.20.1: the responses the followers' daily email tells about (Notifications reads them through this).
         services.AddScoped<IMpResponseFeed, MpResponseFeed>();
 
+        // Design 8.23: comments under arguments, statements and responses, their moderation, and the author's notice feed.
+        services.AddScoped<CommentsService>();
+        services.AddScoped<IComments>(sp => sp.GetRequiredService<CommentsService>());
+        services.AddScoped<ICommentModeration>(sp => sp.GetRequiredService<CommentsService>());
+        services.AddScoped<ICommentFeed>(sp => sp.GetRequiredService<CommentsService>());
+
         // Design 8.14.14 (stage B): following organisations reads them through this; the codes are Identity's (IOrganisationCodeSwitch).
         services.AddScoped<IOrganisationDirectory, OrganisationDirectory>();
         services.AddScoped<IAppealsMaintenance, AppealsMaintenance>();

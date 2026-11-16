@@ -33,7 +33,11 @@ public sealed record SideCounts(int For, int ForOlderThan30Days, int Against, in
 public sealed record ThresholdInfo(int Value, string SetBy, string? Note, int Participants, bool Reached, bool EnteredSummaries);
 
 /// <summary>A public argument. <paramref name="AuthorName"/> is <c>null</c> when the author gave no display name.</summary>
-public sealed record ReasonInfo(Guid Id, string Side, string Text, string? AuthorName, int Endorsements, string Status, DateTimeOffset CreatedAt);
+public sealed record ReasonInfo(Guid Id, string Side, string Text, string? AuthorName, int Endorsements, string Status, DateTimeOffset CreatedAt)
+{
+    /// <summary>How many comments it shows (design 8.23.6); set only in the bill's public answer.</summary>
+    public int Comments { get; init; }
+}
 
 /// <summary>
 /// A bill as people take part on it (design 8.12.1), the same for everyone. <paramref name="Id"/> is null while the bill

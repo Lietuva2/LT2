@@ -135,6 +135,7 @@ internal static class ApiEndpoints
         Mps.TakeOverProfileEndpoint.Map(api);
         Mps.MyMpEndpoints.Map(api);
         Mps.MpResponseEndpoints.Map(api);
+        Comments.CommentEndpoints.Map(api);
         EndMpLinkEndpoint.Map(api);
     }
 
