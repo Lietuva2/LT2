@@ -3933,7 +3933,7 @@ the stored salts and sketches allow.]**
   period ends (a year's sketch lasts up to twelve months). The sketch row is rewritten every minute, so two copies of the
   database, or the WAL archive planned in section 9, show which registers changed in which minute. "Nothing links one
   period to another" and "nothing can be tested" hold once the period has ended, for a copy taken after it.
-  [Open for the owner, section 12: keep the members' year sketch as it is, or drop the yearly distinct count for members.]
+  [Decided by the owner on 2026-11-16: the members' year sketch is kept, with what it allows said in the privacy notice.]
 - **Now on the site:** distinct visitors and accounts with a page in the last five minutes, held in memory only, under a
   salt of the process that is never stored. The referring sites already counted today are held the same way.
 - The finished counts (`usage.total`, `usage.page`, `usage.referrer`) are kept: they hold nothing about anyone, and they
@@ -4243,7 +4243,8 @@ Built on 2026-11-16:
   before going live, not per change (8.22).
 - The site counts its own use: visitors by IP address and browser, members by account, now, by day, month and year,
   with pages and referring sites; no cookie, no script, no third party, no banner; salts kept until the period ends;
-  approximate numbers are enough (8.27).
+  approximate numbers are enough (8.27). Members are counted by year as well, though the year's sketch lets anyone
+  holding the whole database list the accounts active that year until it ends (8.27.2).
 
 Designed, not built (8.23-8.25):
 
@@ -4319,7 +4320,6 @@ Built, awaiting the owner's word:
 | Email provider | An EU-owned service (for example Brevo or Scaleway) or Amazon SES in an EU region. Compare deliverability to `lrs.lt`, price, processor terms. | M0 |
 | How accounts are verified once registration is open | **Stay with email** and label numbers as email-confirmed accounts; or add **phone verification** (an EU provider such as Infobip or Sinch, or a Lithuanian bulk-SMS service; paid per message; Lithuanian numbers only would exclude people abroad); or wait for the EU Digital Identity Wallet. The public pages promise one account per confirmed phone number, so staying with email also means rewording them. | Before M2b |
 | CDN and DDoS protection | Bunny (EU) or Cloudflare. | Before M2b |
-| Members in the yearly usage count | The members' year sketch (8.27.2) lets anyone holding a copy of the database list, almost exactly, the accounts active this year, deleted ones included, until the year ends. Keep it (the yearly distinct count of members), or drop the yearly count for members (days and months stay; a year's members are then not counted). [Open for the owner; built as kept.] | Before going live |
 | Legal reading of the usage statistics | The lawyer gives the legal basis of the site's own counting (8.27: IP address and browser hashed with a salt kept until the day, month or year ends; counts only; `Privacy.Basis.Fact2.Value` is "[bus įrašyta]") and says whether e-privacy Art. 5(3) applies to it. The EDPB's Guidelines 2/2023 bring tracking by IP address under 5(3) when the address goes to a third party for tracking across sites; ours is first-party, on one site, and keeps nothing beyond the period. If 5(3) applies after all, the counting stops or asks consent; it never becomes a banner by default. | Before going live |
 | Legal reading of the consent texts | A lawyer reads the positions consent texts together with the rule that writing a reason needs no consent (8.2): a reason is the author's own deliberate publication, public with name and chosen side, and withdrawable. **[Owner, 2026-11-16: until going live we keep the terms, the privacy notice and the consent texts correct as drafts as the site changes; the lawyer reads them all once, before going live, not per change.]** When comments, "Sutinku" and the public profile are built, these keys change with them (a new terms version, 8.22.2): the terms (`LegalText.resx`: `Terms.Purpose.2`, `Terms.Publish.2`, `Terms.Publish.5`, `Terms.Moderation.1`, `Terms.Moderation.2`, `Terms.Leave.1`) and the privacy notice (`Privacy.Data.Fact2.Value`, `Privacy.Data.Fact5.Value`, `Privacy.Rights.Fact5.Value`) name what a member publishes or allows: comments, "Sutinku" under the name, the public profile with "Apie mane", being followed; the positions consent texts (`UiText.resx` `PositionConsent.Text`, `LegalText.resx` `Privacy.Positions.3`, which name "Man svarbu") and the methodology's "Kas matoma viešai, o kas ne" (`AppealText.resx` `Method.Privacy` and its part) say in one sentence that "Man svarbu" stays private (it tells the side) while "Sutinku" on a comment is public under the name and tied to no side (8.23.10); a new consent text, the "Viešas profilis" form's (kind `public-profile`), with its own version, saying that the page
 is indexed, that others may follow and that the number of followers is shown (8.25.1); the privacy notice says a
