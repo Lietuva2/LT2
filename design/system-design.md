@@ -3002,7 +3002,7 @@ lines on a phone.
 - **The account item** reads "Paskyra" **[designer's proposal: not the person's name, so the page's HTML stays the same
   for every member]**. It is a disclosure that works without script, holding "Mano paskyra" and "Atsijungti". With
   script, the opened item also shows the person's name at the top and the links their account has: "Moderavimas",
-  "Nustatymai" and "Kvietimai" for staff, "Projektai, dėl kurių į jus kreipiamasi" for an MP's account. These come from
+  "Nustatymai", "Kvietimai" and "Lankomumas" (8.27) for staff, "Projektai, dėl kurių į jus kreipiamasi" for an MP's account. These come from
   `GET /me` in the browser; nothing about the person is in the page as served. It closes on Escape, on a press outside
   and when focus leaves it. **[Owner, 2026-11-16]** A staff account whose session cannot act as staff (`staffAccount`
   with no `activeStaffRoles`) gets "Prisijungti darbuotojo prieigos raktu" in the place of the staff links: the page of
@@ -3033,8 +3033,8 @@ lines on a phone.
   with and without script and with the keyboard; no served page holds a member's name or role links.
 - [changed while building (2026-11-16): "Seimo nariai" is marked current on the list and on everything under it as well (a
   profile and its votes, a faction, a committee). The account item's "Projektai, dėl kurių į jus kreipiamasi" is shown to an
-  office member too, as to the MP's account (the page serves both, 8.5.7); "Nustatymai" and "Kvietimai" only to an active
-  administrator and "Moderavimas" to any active staff role, since those screens refuse the others. Without a display name the
+  office member too, as to the MP's account (the page serves both, 8.5.7); "Nustatymai", "Kvietimai" and "Lankomumas" only to an
+  active administrator and "Moderavimas" to any active staff role, since those screens refuse the others. Without a display name the
   item shows the account's own address at the top. The tab row stands on the summaries' list, not on a date's page, which is
   under it. Under 32rem the logo stands without the words "Lietuva 2.0" (read by screen readers), so the line fits 360 px.]
 
