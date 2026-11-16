@@ -323,6 +323,34 @@ public sealed class UsageTests(DatabaseFixture database) : ApiTest(database)
         }
     }
 
+    /// <summary>
+    /// Design 8.26 meets 8.27: the analytics page counts as a public page under its own route (not as a bill's
+    /// <c>/seimas/{Number}</c>), without its filters; the member's own comparison is an API read and no visit.
+    /// </summary>
+    [Fact]
+    public async Task The_analytics_page_counts_under_its_own_route_and_the_members_own_comparison_is_no_visit()
+    {
+        var day = new DateOnly(2103, 9, 14);
+        try
+        {
+            await using var site = await SiteAsync(Noon(day));
+            using var visitor = Open(site);
+            await GetAsync(visitor, "/seimas/analitika");
+            using var member = Open(site);
+            await member.RegisterAndSignInAsync();
+            await GetAsync(member, "/seimas/analitika?metai=2026&paskyros=senesnes");
+            await GetAsync(member, Lt2.Api.Contracts.Analytics.AnalyticsRoutes.MyAgreement);
+            await site.Counter.FlushAsync(CancellationToken.None);
+
+            (await PagesAsync(day)).ShouldBe(new Dictionary<string, int> { ["/seimas/analitika"] = 2 });
+            (await TotalAsync(UsageRules.Day, day)).ShouldBe(new Total(1, 1, 1, 1, 0));
+        }
+        finally
+        {
+            await ForgetYearAsync(2103);
+        }
+    }
+
     [Fact]
     public async Task A_referring_site_is_its_host_counted_once_per_visitor_and_day_and_never_its_address()
     {
