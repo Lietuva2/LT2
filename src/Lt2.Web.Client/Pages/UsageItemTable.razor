@@ -1,0 +1,32 @@
+@using Lt2.Api.Contracts.Admin
+@inject IStringLocalizer<AppealUi> L
+
+@* Design 8.27: the most viewed paths, or the referring sites, of the chosen range, with their page views. *@
+@if (Items.Count == 0)
+{
+    <p class="small" id="@(Id)-none">@Empty</p>
+}
+else
+{
+    <div class="table-wrap">
+        <table class="table" id="@Id">
+            <thead><tr><th scope="col">@First</th><th scope="col" class="num">@L["Usage.Views"]</th></tr></thead>
+            <tbody>
+                @foreach (var item in Items)
+                {
+                    <tr @key="item.Name"><td><code>@item.Name</code></td><td class="num">@Display.Number(item.Views)</td></tr>
+                }
+            </tbody>
+        </table>
+    </div>
+}
+
+@code {
+    [Parameter, EditorRequired] public IReadOnlyList<UsageItemResponse> Items { get; set; } = [];
+
+    [Parameter, EditorRequired] public string Id { get; set; } = "";
+
+    [Parameter, EditorRequired] public string First { get; set; } = "";
+
+    [Parameter, EditorRequired] public string Empty { get; set; } = "";
+}

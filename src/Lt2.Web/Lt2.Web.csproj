@@ -18,6 +18,7 @@
     <ProjectReference Include="..\Modules\Lt2.Appeals\Lt2.Appeals.csproj" />
     <ProjectReference Include="..\Modules\Lt2.Notifications\Lt2.Notifications.csproj" />
     <ProjectReference Include="..\Modules\Lt2.Audit\Lt2.Audit.csproj" />
+    <ProjectReference Include="..\Modules\Lt2.Usage\Lt2.Usage.csproj" />
   </ItemGroup>
   <ItemGroup>
     <InternalsVisibleTo Include="Lt2.IntegrationTests" />

@@ -10,7 +10,7 @@ namespace Lt2.IntegrationTests;
 /// </summary>
 public sealed class DatabaseRoleTests(DatabaseFixture database)
 {
-    private static readonly string[] AllSchemas = ["identity", "notify", "audit", "config", "parliament", "appeals", "public", DatabaseRoles.HangfireSchema];
+    private static readonly string[] AllSchemas = ["identity", "notify", "audit", "config", "parliament", "appeals", "usage", "public", DatabaseRoles.HangfireSchema];
 
     public static TheoryData<string> RunningRoles() => new(DatabaseRoles.App, DatabaseRoles.Worker, DatabaseRoles.Readonly);
 

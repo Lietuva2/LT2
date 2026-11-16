@@ -1,6 +1,7 @@
 using System.Globalization;
 using Lt2.Appeals;
 using Lt2.Audit;
+using Lt2.Usage;
 using Lt2.Identity;
 using Lt2.Notifications;
 using Lt2.Parliament;
@@ -207,6 +208,7 @@ public static class MigrationRunner
         services.AddAuditModule();
         services.AddParliamentModule();
         services.AddAppealsModule();
+        services.AddUsageModule();
         using var provider = services.BuildServiceProvider();
         return provider.GetServices<IModuleDatabase>().ToList();
     }

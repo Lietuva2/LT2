@@ -33,6 +33,7 @@ public static class ClientServices
         services.AddScoped<Lt2.Api.Contracts.Follows.IFollowsApi, HttpFollowsApi>();
         services.AddScoped<Lt2.Api.Contracts.Feedback.IFeedbackApi, HttpFeedbackApi>();
         services.AddScoped<Lt2.Api.Contracts.Appeals.IAdminApi, HttpAdminApi>();
+        services.AddScoped<Lt2.Api.Contracts.Admin.IUsageApi, HttpUsageApi>();
         services.AddScoped<Lt2.Api.Contracts.Digests.IDigestsApi, HttpDigestsApi>();
         services.AddScoped<Lt2.Api.Contracts.Digests.IMpMailApi, HttpMpMailApi>();
         services.AddScoped<Lt2.Api.Contracts.Digests.IMpSendingAdminApi, HttpMpSendingAdminApi>();

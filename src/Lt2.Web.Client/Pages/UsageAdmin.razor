@@ -1,0 +1,116 @@
+@page "/administravimas/lankomumas"
+@attribute [Authorize]
+@rendermode InteractiveWebAssembly
+@using Lt2.Api.Contracts.Admin
+@inherits InteractiveBase<AppealUi>
+@inject IUsageApi Usage
+
+@* Design 8.27: "Lankomumas", the site's own usage statistics for administrators in a staff-passkey session. Numbers only:
+   visitors and members now, by day, month and year, page views, the most viewed paths and the referring sites of a chosen
+   range. Nothing about a person: the counting keeps none. *@
+<PageTitle>@L["Usage.PageTitle"]</PageTitle>
+
+<div class="stack">
+    <ol class="crumbs">
+        <li><a href="/administravimas/nustatymai">@L["Admin.Title"]</a></li>
+        <li>@L["Usage.Title"]</li>
+    </ol>
+    <h1>@L["Usage.Title"]</h1>
+    <NeedsScript />
+    <p class="lead">@L["Usage.Lead"]</p>
+    <details class="more stack stack--tight" id="usage-about">
+        <summary class="linkish small">@L["Usage.About"]</summary>
+        <p class="small">@L["Usage.About.1"]</p>
+        <p class="small">@L["Usage.About.2"]</p>
+        <p class="small">@L["Usage.About.3"]</p>
+    </details>
+</div>
+
+<Messages Message="@Message" Info="@Info" />
+
+@if (_refused)
+{
+    <p class="note" role="alert">@L["Admin.Refused"]</p>
+}
+else if (Report is not { } report)
+{
+    <p class="small">@L["Loading"]</p>
+}
+else
+{
+    <section class="sheet stack" aria-labelledby="usage-h-online">
+        <h2 id="usage-h-online">@L["Usage.Online"]</h2>
+        <p class="num" id="usage-online">@L.Format("Usage.OnlineCounts", Display.Number(report.OnlineVisitors), Display.Number(report.OnlineMembers))</p>
+        <p class="small">@L["Usage.OnlineNote"]</p>
+    </section>
+
+    <section class="sheet stack" aria-labelledby="usage-h-days">
+        <h2 id="usage-h-days">@L.Format("Usage.Days", Display.Day(report.Days[0].Starts), Display.Day(report.Days[^1].Starts))</h2>
+        <h3 class="small">@L["Usage.Visitors"]</h3>
+        <DayBars Days="@report.Days.Select(d => (d.Starts, d.Visitors)).ToList()" Label="@L["Usage.VisitorsChart"]" />
+        <h3 class="small">@L["Usage.Members"]</h3>
+        <DayBars Days="@report.Days.Select(d => (d.Starts, d.Members)).ToList()" Label="@L["Usage.MembersChart"]" />
+        <details class="more stack stack--tight">
+            <summary class="linkish small">@L["Usage.Table"]</summary>
+            <UsagePeriodTable Rows="@report.Days.AsEnumerable().Reverse().ToList()" Id="usage-days" First="@L["Usage.Day"]" Name="@(d => Display.Day(d))" />
+        </details>
+    </section>
+
+    <section class="sheet stack" aria-labelledby="usage-h-months">
+        <h2 id="usage-h-months">@L["Usage.Months"]</h2>
+        <UsagePeriodTable Rows="@report.Months.AsEnumerable().Reverse().ToList()" Id="usage-months" First="@L["Usage.Month"]" Name="@(d => Display.Month(d))" />
+    </section>
+
+    <section class="sheet stack" aria-labelledby="usage-h-years">
+        <h2 id="usage-h-years">@L["Usage.Years"]</h2>
+        <UsagePeriodTable Rows="@report.Years.AsEnumerable().Reverse().ToList()" Id="usage-years" First="@L["Usage.Year"]" Name="@(d => d.Year.ToString(System.Globalization.CultureInfo.InvariantCulture))" />
+    </section>
+
+    <h2 id="usage-h-range">@L["Usage.Range"]</h2>
+    <p class="row small" id="usage-range">
+        @foreach (var range in UsageRoutes.Ranges)
+        {
+            <button type="button" class="btn btn--plain" id="usage-range-@range" aria-pressed="@(report.RangeDays == range ? "true" : "false")"
+                    disabled="@Locked" @onclick="() => RangeAsync(range)">@L["Usage.Range." + range]</button>
+        }
+    </p>
+
+    <section class="sheet stack" aria-labelledby="usage-h-pages">
+        <h3 id="usage-h-pages">@L["Usage.Pages"]</h3>
+        <UsageItemTable Items="report.Pages" Id="usage-pages" First="@L["Usage.Path"]" Empty="@L["Usage.NoPages"]" />
+    </section>
+
+    <section class="sheet stack" aria-labelledby="usage-h-referrers">
+        <h3 id="usage-h-referrers">@L["Usage.Referrers"]</h3>
+        <UsageItemTable Items="report.Referrers" Id="usage-referrers" First="@L["Usage.Host"]" Empty="@L["Usage.NoReferrers"]" />
+    </section>
+}
+
+@code {
+    private bool _refused;
+
+    [PersistentState] public UsageResponse? Report { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        if (Report is null)
+        {
+            var report = await Usage.GetAsync();
+            _refused = report.Problem?.Status is 401 or 403;
+            Report = report.Value;
+            if (!report.IsSuccess && !_refused)
+            {
+                Show(report.Problem);
+            }
+        }
+    }
+
+    private Task RangeAsync(int days) => RunAsync(async () =>
+    {
+        var report = await Usage.GetAsync(days);
+        if (Succeeded(report))
+        {
+            Report = report.Value;
+        }
+    });
+}

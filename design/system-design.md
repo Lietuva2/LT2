@@ -348,6 +348,14 @@ pending account is kept), which says so. Each setting shows a plain Lithuanian l
 when to change it, its unit, the default, and the key in small type. The minimum threshold's 50 is a placeholder until
 the owner sets a number, and the screen says so.
 
+### 5.7 `usage`
+
+The site's own usage statistics (8.27). `sketch`: per period (`day`, `month`, `year`, by its first Vilnius day) and
+audience (`visitor`, `member`), the random salt and the HyperLogLog registers of a period under way; deleted when the
+period ends; withheld from `lt2_readonly`. `total`: per period, distinct visitors and members (approximate) and page
+views of visitors, members and robots. `page`: views per Vilnius day and path. `referrer`: views per Vilnius day and
+referring host. Nothing in it names or links a person.
+
 Database roles: `lt2_migrator` owns the schemas and runs migrations; `lt2_app` has data access only; `lt2_worker` the same
 plus the Hangfire schema; `lt2_readonly` for ad-hoc analysis has no access to `identity` or `appeals.position`. [changed
 while building (8.14.14): nor to the five organisation tables, which hold an account beside an organisation.]
@@ -540,6 +548,8 @@ No screen and no API returns another person's position. Group numbers are publis
 - **Encryption.** Disk encryption on the VPS volume, TLS to the database inside the Docker network, encrypted backups.
   ASP.NET Core data-protection keys are stored in PostgreSQL, wrapped with a key supplied as a secret.
 - **Logs** carry request ids, never emails or sides; IPs are hashed with a rotating key and kept 30 days.
+- **Usage statistics** (8.27) keep counts only: a visitor's address and browser are hashed with a random salt of the day,
+  month and year straight into an aggregate sketch, and the salt is deleted when the period ends.
 - **Secrets** live outside the repository and outside images: encrypted with SOPS and age in a private operations
   repository, mounted as files at deploy, rotated on a schedule and after any staff change.
 - **Before launch:** a data protection impact assessment (required for large-scale processing of special-category data), a
@@ -3032,8 +3042,10 @@ privacy notice correct as drafts as the site changes; the lawyer reads them once
 
 #### 8.22.1 No banner, as a rule of the design
 
-- **Nothing that is not strictly necessary is stored in the browser.** No analytics, no third-party scripts, fonts or
-  embeds, no advertising or measurement cookies. Consent under the e-privacy rules is needed only for storage that is
+- **Nothing that is not strictly necessary is stored in the browser.** No third-party analytics, no third-party scripts,
+  fonts or embeds, no advertising or measurement cookie or storage key. [changed 2026-11-16 (8.27): the site counts its
+  own use on its own server, in aggregate, from the requests it answers anyway; that stores and reads nothing in the
+  browser, so the inventory below is unchanged.] Consent under the e-privacy rules is needed only for storage that is
   not strictly necessary for the service the person asked for, so the site shows no cookie banner. Adding anything that
   would need one is a design change, not a build detail.
 - If such a thing were ever added, its consent would be asked separately and could be refused without losing the
@@ -3072,7 +3084,11 @@ privacy notice correct as drafts as the site changes; the lawyer reads them once
 - **"Privatumo pranešimas"** at `/privatumas`: who is responsible, what is kept and why (the address, sides as
   special-category data under consent, what a person publishes, follows, sessions and known browsers, hashed addresses
   in logs for 30 days), who else processes it, how long, the person's rights and how to use them on the account page
-  (export, deletion, withdrawing consent), where to complain. A draft for the lawyer, versioned like the terms.
+  (export, deletion, withdrawing consent), where to complain. [changed 2026-11-16 (8.27): also the usage statistics:
+  "Lankomumo skaičiai" among the data (address and browser hashed with a salt of the day, month and year, deleted when
+  the period ends; only counts kept), its retention and its legal basis ("[bus įrašyta]" for the lawyer); the
+  "Slapukai ir naršyklės atmintis" paragraph says no analytics *of other companies* and that the site counts on its
+  server. Version 2026-11-18.] A draft for the lawyer, versioned like the terms.
 - Its part **"Slapukai ir naršyklės atmintis"** lists the inventory of 8.22.1 with what each is for and how long it
   lasts.
 - Linked from the footer, the registration form, the consent before the first side, and every email's footer.
@@ -3733,6 +3749,85 @@ with comments.
   replaced.
 - The export holds the profile, the text, the consent and the follows the person made; deletion removes them all.
 
+### 8.27 Usage statistics: the team's own counting
+
+**[Decided by the owner on 2026-11-16 and built the same day: the team sees how many people use the site without Google
+Analytics or anything like it. No cookie, no script, nothing sent to anyone; counted on the server by IP address and
+browser; approximate numbers are enough. The salt of a period is kept in the database until the period ends; the
+year is counted as well as the day and the month.]**
+
+#### 8.27.1 What is counted
+
+- **A page view:** a `GET` of a page (not `/api`, the framework's files, health checks or the API description) answered
+  200 with HTML, and not a prefetch (`Sec-Purpose` or `Purpose`). Redirects, "not found", errors, `HEAD` and `POST`
+  are no visit. Static files never reach the counting (routing answers them first).
+- **Who:** a request in a signed-in session counts the **account** (a member); any other request counts the
+  **visitor**. A member is never also a visitor for the same request.
+- **A visitor** is the network and the browser: the IP address (the one `ReverseProxy:Address` lets through, 6.8),
+  IPv6 by its first 64 bits only, and the `User-Agent`. Nothing else the browser sends is used: more would be
+  fingerprinting.
+- **Robots:** an empty user agent, one that does not start with `Mozilla/`, or one naming a robot or a tool (bot, crawl,
+  spider, curl, python, headless …) is counted only as one number of robots' page views a day, in no other number and
+  in no list of pages.
+
+#### 8.27.2 How a visitor is counted without being kept
+
+- Each day, month and year has its own **random salt** (32 bytes, never made from a date or a key), one for visitors and
+  one for members. A visitor's hash is HMAC-SHA256 of the network and the user agent with the salt; a member's, of the
+  account's id. The hash goes at once into a **HyperLogLog sketch** of the period (2^14 registers, 16 KB, about 0.8 %
+  standard error, close to exact below some 40 000) and into the in-memory list of who is on the site now. No hash, no
+  address, no user agent and no account is written anywhere.
+- The salts and sketches of the periods under way are in `usage.sketch` (withheld from `lt2_readonly`). Every minute the
+  web host merges what it counted into them and writes the estimates into `usage.total`; at start it takes the stored
+  salts, so a restart or a deploy counts nobody twice. **When a period ends, its count is written and its salt and sketch
+  are deleted**: from then on nothing can link a visit to anything, and nothing links one period to another.
+- The cost the owner accepted for exact counts across restarts: while a period lasts, someone holding the whole database
+  who guesses a person's exact address and browser string could test whether that browser was counted. For members this
+  adds nothing (sessions record when and in which browser they were active).
+- **Now on the site:** distinct visitor hashes and accounts with a page in the last five minutes, held in memory only.
+- **Pages:** views per Vilnius day per path, with a link's token replaced (`SecretPaths`, 8.19.4) and never the query;
+  at most 2 000 paths a day, the rest counted together as "(kiti)". **Referring sites:** the host only (lower case,
+  without `www.`), never the path or the query, and nothing for the site's own pages; at most 500 a day, the rest as
+  "(kitos)". No per-person trail of pages exists anywhere.
+- The finished counts (`usage.total`, `usage.page`, `usage.referrer`) are kept: they hold nothing about anyone, and they
+  are readable by `lt2_readonly`.
+
+#### 8.27.3 What the numbers cannot tell
+
+Said on the screen in a `details.more`:
+
+- many people behind one address (an office, a mobile carrier, the Seimas itself) with the same browser count once;
+  modern Chrome reports little about the system, so identical office computers look alike;
+- one person on two networks, in two browsers, or after a browser update counts twice;
+- a member counts as a visitor before signing in;
+- robots that pretend to be browsers count as visitors;
+- visitors and members are approximate (about 1 %); page views are exact.
+
+#### 8.27.4 The screen
+
+"Lankomumas" at `/administravimas/lankomumas`, for administrators in a staff-passkey session (the account item's
+"Lankomumas"), from `GET /api/v1/admin/usage?days=` (1, 7 or 30). Read, it first writes what is
+counted so far. It shows: who is on the site now (visitors, members); the last 30 days as bars for visitors and for
+members with a table (visitors, members, pages, robots); the last 12 months; every year; the most viewed pages and the
+referring sites of the chosen range. Nothing on it is about a person.
+
+#### 8.27.5 Built as
+
+The module `Lt2.Usage` (schema `usage`): `UsageRules` and `Sketch` (pure, unit-tested), `UsageCounter` (in memory, a
+singleton of the web host) and its minute's flush under an advisory lock, `UsageReports`. The host hands it every
+answered `GET` after authentication (`Lt2.Web/Services/UsageServices.cs`). The worker does not count.
+
+#### 8.27.6 Done when
+
+- A visitor's pages count once a day, month and year and every page counts as a view; two browsers behind one address
+  count as two; a signed-in member counts as the account and not as a visitor.
+- Robots, the API, errors, redirects, `HEAD` and prefetches are no visit; robots' pages are a number of their own.
+- A link's token and the query never reach a stored path; a referring site is its host only.
+- A restarted web host counts a visitor it already counted that day once.
+- An ended period keeps its count and loses its salt and sketch; the periods under way keep theirs.
+- Only an administrator in a staff session reads the numbers; the answer's fields are numbers, days, paths and hosts only.
+- The browser keeps nothing new (8.22.1's inventory unchanged; the storage tests pass).
+
 ## 9. Hosting and operations
 
 ### 9.1 Layout
@@ -3991,6 +4086,9 @@ Built on 2026-11-16:
   the change (6.2).
 - The terms and the privacy notice are kept correct as drafts by us as the site changes, and the lawyer reads them once,
   before going live, not per change (8.22).
+- The site counts its own use: visitors by IP address and browser, members by account, now, by day, month and year,
+  with pages and referring sites; no cookie, no script, no third party, no banner; salts kept until the period ends;
+  approximate numbers are enough (8.27).
 
 Designed, not built (8.23-8.25):
 
@@ -4066,6 +4164,7 @@ Built, awaiting the owner's word:
 | Email provider | An EU-owned service (for example Brevo or Scaleway) or Amazon SES in an EU region. Compare deliverability to `lrs.lt`, price, processor terms. | M0 |
 | How accounts are verified once registration is open | **Stay with email** and label numbers as email-confirmed accounts; or add **phone verification** (an EU provider such as Infobip or Sinch, or a Lithuanian bulk-SMS service; paid per message; Lithuanian numbers only would exclude people abroad); or wait for the EU Digital Identity Wallet. The public pages promise one account per confirmed phone number, so staying with email also means rewording them. | Before M2b |
 | CDN and DDoS protection | Bunny (EU) or Cloudflare. | Before M2b |
+| Legal reading of the usage statistics | The lawyer gives the legal basis of the site's own counting (8.27: IP address and browser hashed with a salt kept until the day, month or year ends; counts only; `Privacy.Basis.Fact2.Value` is "[bus įrašyta]") and says whether e-privacy Art. 5(3) applies to it. The EDPB's Guidelines 2/2023 bring tracking by IP address under 5(3) when the address goes to a third party for tracking across sites; ours is first-party, on one site, and keeps nothing beyond the period. If 5(3) applies after all, the counting stops or asks consent; it never becomes a banner by default. | Before going live |
 | Legal reading of the consent texts | A lawyer reads the positions consent texts together with the rule that writing a reason needs no consent (8.2): a reason is the author's own deliberate publication, public with name and chosen side, and withdrawable. **[Owner, 2026-11-16: until going live we keep the terms, the privacy notice and the consent texts correct as drafts as the site changes; the lawyer reads them all once, before going live, not per change.]** When comments, "Sutinku" and the public profile are built, these keys change with them (a new terms version, 8.22.2): the terms (`LegalText.resx`: `Terms.Purpose.2`, `Terms.Publish.2`, `Terms.Publish.5`, `Terms.Moderation.1`, `Terms.Moderation.2`, `Terms.Leave.1`) and the privacy notice (`Privacy.Data.Fact2.Value`, `Privacy.Data.Fact5.Value`, `Privacy.Rights.Fact5.Value`) name what a member publishes or allows: comments, "Sutinku" under the name, the public profile with "Apie mane", being followed; the positions consent texts (`UiText.resx` `PositionConsent.Text`, `LegalText.resx` `Privacy.Positions.3`, which name "Man svarbu") and the methodology's "Kas matoma viešai, o kas ne" (`AppealText.resx` `Method.Privacy` and its part) say in one sentence that "Man svarbu" stays private (it tells the side) while "Sutinku" on a comment is public under the name and tied to no side (8.23.10); a new consent text, the "Viešas profilis" form's (kind `public-profile`), with its own version, saying that the page
 is indexed, that others may follow and that the number of followers is shown (8.25.1); the privacy notice says a
 search engine's copy outlives switching the profile off. When follower numbers are built (8.11.2), the privacy notice says that how many follow a bill, an MP, an organisation or a member is public and who follows is not: `Privacy.Data.Fact6.Value` (today "Ką sekate, mato tik jūs") gains that each follow is counted in a public number naming nobody; to check with it: `Terms.Purpose.2` (following as what an account is for), `Terms.Leave.1` (deleting the account lowers the shared numbers, the follower numbers among them) and `Privacy.Rights.Fact5.Value` (unfollowing); a change to a `Terms.*` text is a new terms version (8.22.2). The methodology's `AppealText.resx` `Method.Privacy.1` and `Method.Privacy.Follow` (`/metodika#sekimas`) say what the number is and is not. Questions for the reading: comments carry no side and need no consent, as reasons (8.23.1); a public "Sutinku" is opinion data the person makes public themself (whether GDPR Art. 9(2)(e) is the ground, and whether the inline sentence suffices); a public profile gathers one person's published opinions in one place, by their choice (8.25), and "Apie mane" can state a political opinion or membership. | Once, before going live |
