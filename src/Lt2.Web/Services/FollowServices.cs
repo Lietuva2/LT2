@@ -59,7 +59,7 @@ internal sealed class ServerFollowsApi(IFollows follows, IHttpContextAccessor ac
         }
 
         var n = await follows.NoticesAsync(id, cancellationToken);
-        return ApiResult<NoticeSettingsResponse>.Ok(new NoticeSettingsResponse(n.Planned, n.Voted, n.Statements, n.Responses));
+        return ApiResult<NoticeSettingsResponse>.Ok(new NoticeSettingsResponse(n.Planned, n.Voted, n.Statements, n.Responses, await follows.FrequencyAsync(id, cancellationToken)));
     }
 
     public Task<ApiResult> SetNoticesAsync(NoticeSettingsRequest request, CancellationToken cancellationToken = default) =>
@@ -69,4 +69,24 @@ internal sealed class ServerFollowsApi(IFollows follows, IHttpContextAccessor ac
 
     private async Task<ApiResult> AsMemberAsync(Func<Guid, Task<Result<Unit>>> action) =>
         UserId is { } id ? errors.ToApiResult(await action(id)) : ApiResult.Fail(errors.ToProblem(SignInRequired));
+}
+
+/// <summary>Server-side <see cref="INoticeFrequencyApi"/> (design 8.24) for prerendered islands, as the signed-in person of the request.</summary>
+internal sealed class ServerNoticeFrequencyApi(IFollows follows, IHttpContextAccessor accessor, ErrorMapper errors, Lt2.Web.Security.IpHasher ipHasher) : INoticeFrequencyApi
+{
+    public async Task<ApiResult<NoticeFrequencyResponse>> GetAsync(CancellationToken cancellationToken = default) =>
+        accessor.HttpContext?.User.UserId() is { } id
+            ? ApiResult<NoticeFrequencyResponse>.Ok(new NoticeFrequencyResponse(await follows.FrequencyAsync(id, cancellationToken)))
+            : ApiResult<NoticeFrequencyResponse>.Fail(errors.ToProblem(Error.Unauthorized("auth.required")));
+
+    public async Task<ApiResult> SetAsync(NoticeFrequencyRequest request, CancellationToken cancellationToken = default)
+    {
+        ArgumentNullException.ThrowIfNull(request);
+        if (accessor.HttpContext is not { } context || context.User.UserId() is not { } id)
+        {
+            return ApiResult.Fail(errors.ToProblem(Error.Unauthorized("auth.required")));
+        }
+
+        return errors.ToApiResult(await follows.SetFrequencyAsync(id, request.Frequency ?? "", ipHasher.Hash(context), cancellationToken));
+    }
 }

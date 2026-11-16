@@ -178,4 +178,5 @@
   <data name="introduction.invalid" xml:space="preserve"><value>Užpildykite laiško temą, tekstą, pasirašančiojo vardą, pavardę ir pareigas.</value></data>
   <data name="suppression.exists" xml:space="preserve"><value>Šis adresas jau yra sąraše.</value></data>
   <data name="suppression.not-found" xml:space="preserve"><value>Tokio įrašo sąraše nėra.</value></data>
+  <data name="notices.frequency-invalid" xml:space="preserve"><value>Pasirinkite, kaip dažnai siųsti laiškus: iš karto, kartą per dieną arba kartą per savaitę.</value></data>
 </root>

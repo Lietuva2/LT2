@@ -33,6 +33,11 @@ public sealed class SignInComponentTests : BunitContext
         Services.AddSingleton<IMeApi>(_me);
         Services.AddSingleton<Lt2.Api.Contracts.Follows.IFollowsApi>(new NoFollowsApi());
 
+        // Design 8.24: how often emails come, beside the switches: the default.
+        var frequency = System.Reflection.DispatchProxy.Create<Lt2.Api.Contracts.Follows.INoticeFrequencyApi, ApiFake>();
+        ((ApiFake)(object)frequency).On("GetAsync", ApiResult<Lt2.Api.Contracts.Follows.NoticeFrequencyResponse>.Ok(new("immediate")));
+        Services.AddSingleton(frequency);
+
         // "Mano organizacijos" on the account page (design 8.14.14): none.
         var organisations = System.Reflection.DispatchProxy.Create<Lt2.Api.Contracts.Organisations.IOrganisationsApi, ApiFake>();
         ((ApiFake)(object)organisations).On("GetMineAsync", Lt2.Api.Contracts.ApiResult<IReadOnlyList<Lt2.Api.Contracts.Organisations.MyOrganisationResponse>>.Ok([]));

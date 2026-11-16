@@ -723,8 +723,8 @@
   <data name="Admin.Help.Digest:ApprovalHours" xml:space="preserve"><value>Nepatvirtinta suvestinė nebesiunčiama praėjus tiek valandų nuo jos sudarymo arba prasidėjus posėdžio dienai, kas anksčiau.</value></data>
   <data name="Admin.Unit.Digest:ApprovalHours" xml:space="preserve"><value>val.</value></data>
   <data name="Admin.Group.follows" xml:space="preserve"><value>Laiškai sekantiems</value></data>
-  <data name="Admin.Setting.Follows:ResponsesAt" xml:space="preserve"><value>Laiško apie Seimo narių atsakymus laikas</value></data>
-  <data name="Admin.Help.Follows:ResponsesAt" xml:space="preserve"><value>Kurią valandą (Vilniaus laiku) kitą rytą sekantiems projektą siunčiamas laiškas apie vakar paskelbtus Seimo narių atsakymus.</value></data>
+  <data name="Admin.Setting.Follows:ResponsesAt" xml:space="preserve"><value>Rytinių laiškų laikas</value></data>
+  <data name="Admin.Help.Follows:ResponsesAt" xml:space="preserve"><value>Kurią valandą (Vilniaus laiku) siunčiami laiškai tiems, kurie pasirinko gauti laiškus kartą per dieną, ir pirmadienio laiškai tiems, kurie pasirinko kartą per savaitę.</value></data>
   <data name="Admin.Unit.Follows:ResponsesAt" xml:space="preserve"><value>HH:mm</value></data>
   <data name="DigMod.PageTitle" xml:space="preserve"><value>Suvestinės · Moderavimas · Lietuva 2.0</value></data>
   <data name="DigMod.Title" xml:space="preserve"><value>Suvestinės</value></data>
@@ -851,4 +851,14 @@
   <data name="Usage.Refused" xml:space="preserve"><value>Šį puslapį gali matyti tik administratorius, prisijungęs darbuotojo prieigos raktu.</value></data>
   <data name="Usage.ChartMost" xml:space="preserve"><value>Daugiausia per dieną: {0} ({1}).</value></data>
   <data name="Usage.Referred" xml:space="preserve"><value>Atėjo lankytojų</value></data>
+  <data name="Rhythm.Title" xml:space="preserve"><value>Kaip dažnai siųsti laiškus</value></data>
+  <data name="Rhythm.Lead" xml:space="preserve"><value>Pagal šį pasirinkimą ateina visi laiškai apie tai, ką sekate. Prisijungimo kodai ir pranešimai apie jūsų paskyrą ar tekstus visada siunčiami iš karto.</value></data>
+  <data name="Rhythm.Legend" xml:space="preserve"><value>Laiškai apie tai, ką sekate</value></data>
+  <data name="Rhythm.immediate" xml:space="preserve"><value>Iš karto</value></data>
+  <data name="Rhythm.immediate.Hint" xml:space="preserve"><value>Per kelias minutes; kas nutiko per tą laiką, ateina viename laiške.</value></data>
+  <data name="Rhythm.daily" xml:space="preserve"><value>Kartą per dieną</value></data>
+  <data name="Rhythm.daily.Hint" xml:space="preserve"><value>Vienas laiškas rytą. Jei sekamas projektas planuojamas svarstyti anksčiau, nei ateis kitas laiškas, apie tai parašome iš karto.</value></data>
+  <data name="Rhythm.weekly" xml:space="preserve"><value>Kartą per savaitę ir artėjant balsavimui</value></data>
+  <data name="Rhythm.weekly.Hint" xml:space="preserve"><value>Vienas laiškas pirmadienio rytą. Jei sekamas projektas planuojamas svarstyti anksčiau, nei ateis kitas laiškas, apie tai parašome iš karto.</value></data>
+  <data name="Rhythm.Saved" xml:space="preserve"><value>Išsaugota.</value></data>
 </root>

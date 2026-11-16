@@ -118,9 +118,10 @@ public sealed class OrganisationFollowTests(DatabaseFixture database) : ApiTest(
             root.GetProperty("confirmedBy").ValueKind.ShouldBe(JsonValueKind.Null);
 
             // Exactly these fields: no text, no goal, no count, no side, nobody else. (A substring check failed by chance:
-            // the address and the organisation's name carry random hex digits, which can hold "50".)
+            // the address and the organisation's name carry random hex digits, which can hold "50".) The day it became public is
+            // shown in a gathered email (design 8.24).
             root.EnumerateObject().Select(p => p.Name).ShouldBe(
-                ["to", "organisationName", "confirmedBy", "confirmedDomain", "billNumber", "billTitle", "stance", "billPath", "accountPath"], ignoreOrder: true);
+                ["to", "organisationName", "confirmedBy", "confirmedDomain", "billNumber", "billTitle", "stance", "billPath", "accountPath", "day"], ignoreOrder: true);
             root.GetProperty("to").GetString().ShouldBe(email);
             root.GetProperty("organisationName").GetString().ShouldBe((await rep.ProfileAsync(org.Slug)).Name);
         }

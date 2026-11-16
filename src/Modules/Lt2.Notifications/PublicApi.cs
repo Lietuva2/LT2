@@ -283,6 +283,15 @@ public interface IFollows
 
     Task<Lt2.SharedKernel.Result<Lt2.SharedKernel.Unit>> SetNoticesAsync(Guid userId, NoticeSettings settings, CancellationToken cancellationToken);
 
+    /// <summary>How often the person's emails come (design 8.24): <c>immediate</c> (also with no choice made), <c>daily</c> or <c>weekly</c>.</summary>
+    Task<string> FrequencyAsync(Guid userId, CancellationToken cancellationToken);
+
+    /// <summary>
+    /// Changes how often the person's emails come (design 8.24): <c>notices.frequency-invalid</c>, <c>member.required</c>.
+    /// Audited without the choice; <paramref name="ipHash"/> is the request's hashed address.
+    /// </summary>
+    Task<Lt2.SharedKernel.Result<Lt2.SharedKernel.Unit>> SetFrequencyAsync(Guid userId, string frequency, string? ipHash, CancellationToken cancellationToken);
+
     /// <summary>
     /// The worker job (every 15 minutes): records new planned dates and stage votes of followed bills, and statements of
     /// followed organisations that became public, and emails the followers by the rules of design 8.11.2 and 8.14.14,

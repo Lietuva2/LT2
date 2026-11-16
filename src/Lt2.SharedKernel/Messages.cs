@@ -25,8 +25,14 @@ public static class MessageKinds
     /// <summary>An organisation the person follows made a statement on a bill public (design 8.14.14, stage B).</summary>
     public const string FollowStatementEmail = "email.follow-statement";
 
-    /// <summary>MPs answered on a followed bill the day before (design 8.20.1): one email per bill per Vilnius day.</summary>
+    /// <summary>MPs answered on a followed bill (design 8.20.1): one part per bill, in the person's rhythm (design 8.24).</summary>
     public const string FollowResponsesEmail = "email.follow-responses";
+
+    /// <summary>
+    /// Several things for one member in one email (design 8.24): a run's events under "Iš karto", the daily or the weekly
+    /// email. Each item is the payload of the email it would be alone, rendered as a line of its kind's part.
+    /// </summary>
+    public const string GatheredNoticesEmail = "email.gathered-notices";
 
     /// <summary>A code that confirms an organisation by its email domain (design 8.14.14).</summary>
     public const string OrganisationCodeEmail = "email.organisation-code";
@@ -157,6 +163,7 @@ public sealed record FollowVotedEmail(
 /// <param name="ConfirmedBy"><c>domain</c>, <c>moderator</c> or null ("Nepatvirtinta").</param>
 /// <param name="ConfirmedDomain">With <c>domain</c>: the domain shown as "@domenas".</param>
 /// <param name="Stance"><c>for</c>, <c>against</c> or <c>remarks</c>.</param>
+/// <param name="Day">The Vilnius day it became public, shown in a gathered email (design 8.24).</param>
 public sealed record FollowStatementEmail(
     string To,
     string OrganisationName,
@@ -166,7 +173,8 @@ public sealed record FollowStatementEmail(
     string BillTitle,
     string Stance,
     string BillPath,
-    string AccountPath);
+    string AccountPath,
+    DateOnly? Day = null);
 
 /// <summary>One MP's answer as the follow email lists it (design 8.20.1): the name, the faction if any, the stance; never the text.</summary>
 /// <param name="Stance"><c>for</c>, <c>against</c> or <c>undecided</c>.</param>
@@ -185,6 +193,20 @@ public sealed record FollowResponsesEmail(
     IReadOnlyList<FollowedResponse> Responses,
     string BillPath,
     string AccountPath);
+
+/// <summary>
+/// Payload of <see cref="MessageKinds.GatheredNoticesEmail"/> (design 8.24): what one member is told in one email. Each
+/// notice is the payload of the email it would be alone (its <see cref="GatheredNotice.Kind"/> says which), so a gathered
+/// email holds nothing a single one would not: nothing about the person's side, a bill's counts or other people.
+/// </summary>
+/// <param name="To">The member's address.</param>
+/// <param name="Rhythm"><c>immediate</c>, <c>daily</c> or <c>weekly</c>: which email it is.</param>
+/// <param name="Notices">The things told, in the order they were found; the email orders them by part.</param>
+/// <param name="AccountPath">The switches and the choice on the account page.</param>
+public sealed record GatheredNoticesEmail(string To, string Rhythm, IReadOnlyList<GatheredNotice> Notices, string AccountPath);
+
+/// <summary>One thing in a gathered email: the kind of the email it would be alone, and that email's payload.</summary>
+public sealed record GatheredNotice(string Kind, System.Text.Json.JsonElement Payload);
 
 /// <summary>
 /// Payload of <see cref="MessageKinds.WritingRestrictionEmail"/>: a moderator restricted the person from writing, or lifted

@@ -25,9 +25,10 @@ public sealed record MyFollowsResponse(IReadOnlyList<FollowedBillResponse> Bills
 
 /// <summary>
 /// Which follow emails are on: a followed bill is planned; the Seimas voted on it (design 8.11.2); a followed organisation
-/// made a statement public (design 8.14.14); MPs answered on a followed bill (design 8.20.1).
+/// made a statement public (design 8.14.14); MPs answered on a followed bill (design 8.20.1); and how often they come
+/// (<see cref="NoticeFrequencies"/>, design 8.24; changed at <see cref="NoticeFrequencyRoutes.Mine"/>).
 /// </summary>
-public sealed record NoticeSettingsResponse(bool Planned, bool Voted, bool Statements = true, bool Responses = true);
+public sealed record NoticeSettingsResponse(bool Planned, bool Voted, bool Statements = true, bool Responses = true, string Frequency = NoticeFrequencies.Immediate);
 
 public sealed record NoticeSettingsRequest
 {

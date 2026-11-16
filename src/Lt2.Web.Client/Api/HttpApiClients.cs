@@ -264,6 +264,16 @@ internal sealed class HttpFollowsApi(ApiHttp http) : Lt2.Api.Contracts.Follows.I
         http.SendAsync(HttpMethod.Put, Lt2.Api.Contracts.Follows.FollowRoutes.Notices, request, cancellationToken);
 }
 
+/// <summary>Design 8.24: how often the caller's emails come.</summary>
+internal sealed class HttpNoticeFrequencyApi(ApiHttp http) : Lt2.Api.Contracts.Follows.INoticeFrequencyApi
+{
+    public Task<ApiResult<Lt2.Api.Contracts.Follows.NoticeFrequencyResponse>> GetAsync(CancellationToken cancellationToken = default) =>
+        http.SendAsync<Lt2.Api.Contracts.Follows.NoticeFrequencyResponse>(HttpMethod.Get, Lt2.Api.Contracts.Follows.NoticeFrequencyRoutes.Mine, null, cancellationToken);
+
+    public Task<ApiResult> SetAsync(Lt2.Api.Contracts.Follows.NoticeFrequencyRequest request, CancellationToken cancellationToken = default) =>
+        http.SendAsync(HttpMethod.Put, Lt2.Api.Contracts.Follows.NoticeFrequencyRoutes.Mine, request, cancellationToken);
+}
+
 
 internal sealed class HttpFeedbackApi(ApiHttp http) : Lt2.Api.Contracts.Feedback.IFeedbackApi
 {

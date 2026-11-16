@@ -188,4 +188,20 @@
   <data name="MpMail.extra-welcome.Body" xml:space="preserve"><value>Seimo narys patvirtino, kad šiuo adresu siųstume jo suvestinių kopijas. Seimo narys: {0}. Kiekvienoje kopijoje bus nuoroda „Nebegauti kopijų“; ja galite atsisakyti ir dabar: {2}</value></data>
   <data name="MpMail.extra-removed.Subject" xml:space="preserve"><value>Lietuva 2.0: papildomas gavėjas pašalintas</value></data>
   <data name="MpMail.extra-removed.Body" xml:space="preserve"><value>suvestinių kopijos papildomu adresu nebesiunčiamos: {1}. Seimo narys: {0}.</value></data>
+  <data name="Gathered.Subject.immediate" xml:space="preserve"><value>Lietuva 2.0: naujienos apie tai, ką sekate</value></data>
+  <data name="Gathered.Subject.daily" xml:space="preserve"><value>Lietuva 2.0: dienos naujienos apie tai, ką sekate</value></data>
+  <data name="Gathered.Subject.weekly" xml:space="preserve"><value>Lietuva 2.0: savaitės naujienos apie tai, ką sekate</value></data>
+  <data name="Gathered.Intro.immediate" xml:space="preserve"><value>štai kas nutiko dėl to, ką sekate Lietuva 2.0:</value></data>
+  <data name="Gathered.Intro.daily" xml:space="preserve"><value>štai kas nutiko nuo ankstesnio dienos laiško dėl to, ką sekate Lietuva 2.0:</value></data>
+  <data name="Gathered.Intro.weekly" xml:space="preserve"><value>štai kas nutiko nuo ankstesnio savaitės laiško dėl to, ką sekate Lietuva 2.0:</value></data>
+  <data name="Gathered.Footer" xml:space="preserve"><value>Šį laišką gavote, nes sekate šiuos projektus ar organizacijas Lietuva 2.0. Kokius laiškus gaunate ir kaip dažnai, galite pakeisti savo paskyroje: {0}</value></data>
+  <data name="Gathered.Planned.Title" xml:space="preserve"><value>Planuojama Seime:</value></data>
+  <data name="Gathered.Planned.Line" xml:space="preserve"><value>– {0}. Planuojama {1}. {2}</value></data>
+  <data name="Gathered.Planned.DateStage" xml:space="preserve"><value>{0} ({1})</value></data>
+  <data name="Gathered.Voted.Title" xml:space="preserve"><value>Seimas balsavo:</value></data>
+  <data name="Gathered.Voted.Line" xml:space="preserve"><value>– {0} {1}. {2} {3}</value></data>
+  <data name="Gathered.Statement.Title" xml:space="preserve"><value>Organizacijų pozicijos:</value></data>
+  <data name="Gathered.Statement.Line" xml:space="preserve"><value>– {0} „{1}“ ({2}) dėl {3}: {4}. {5}</value></data>
+  <data name="Gathered.Responses.Title" xml:space="preserve"><value>Seimo narių atsakymai:</value></data>
+  <data name="Gathered.Responses.Line" xml:space="preserve"><value>– {0} {1}: {2}</value></data>
 </root>

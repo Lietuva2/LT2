@@ -54,7 +54,7 @@ internal static class FollowEndpoints
     private static async Task<IResult> NoticesAsync(ClaimsPrincipal user, IFollows follows, CancellationToken ct)
     {
         var n = await follows.NoticesAsync(user.UserId()!.Value, ct);
-        return TypedResults.Ok(new NoticeSettingsResponse(n.Planned, n.Voted, n.Statements, n.Responses));
+        return TypedResults.Ok(new NoticeSettingsResponse(n.Planned, n.Voted, n.Statements, n.Responses, await follows.FrequencyAsync(user.UserId()!.Value, ct)));
     }
 
     private static async Task<IResult> RunAsync(ClaimsPrincipal user, ErrorMapper errors, Func<Guid, Task<Result<Unit>>> action)
