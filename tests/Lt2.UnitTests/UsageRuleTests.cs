@@ -5,12 +5,15 @@ using Lt2.Usage.Counting;
 namespace Lt2.UnitTests;
 
 /// <summary>
-/// Design 8.27: the site's own usage statistics. Only pages answered 200 count; robots apart; a visitor is the network and
-/// the browser, hashed with a salt of the period; a period's salt goes when it ends; the numbers are approximate.
+/// Design 8.27: the site's own usage statistics. Only pages answered 200 count; robots apart; a page counts under its route;
+/// staff and MP pages stay out of the list; a visitor is the network and the browser, hashed with a salt of the period; a
+/// period's salt goes when it ends; the numbers are approximate.
 /// </summary>
 public sealed class UsageRuleTests
 {
     private const string Chrome = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36";
+
+    private static readonly Dictionary<string, string?> NoValues = [];
 
     [Theory]
     [InlineData("GET", "/seimas/XVP-0412", 200, "text/html; charset=utf-8", false, true)]
@@ -18,6 +21,8 @@ public sealed class UsageRuleTests
     [InlineData("POST", "/atsiliepimai", 200, "text/html", false, false)]
     [InlineData("HEAD", "/", 200, "text/html", false, false)]
     [InlineData("GET", "/nerasta", 404, "text/html", false, false)]
+    [InlineData("GET", "/nerasta", 200, "text/html", false, false)]
+    [InlineData("GET", "/klaida", 200, "text/html", false, false)]
     [InlineData("GET", "/kreipimaisi", 301, null, false, false)]
     [InlineData("GET", "/klaida", 500, "text/html", false, false)]
     [InlineData("GET", "/api/v1/agenda", 200, "application/json", false, false)]
@@ -44,14 +49,21 @@ public sealed class UsageRuleTests
     [InlineData("", true)]
     [InlineData("curl/8.4.0", true)]
     [InlineData("python-requests/2.31", true)]
+    [InlineData("WhatsApp/2.23.20", true)]
     [InlineData("Mozilla/5.0 (compatible; Googlebot/2.1; +http://www.google.com/bot.html)", true)]
-    [InlineData("Mozilla/5.0 (compatible; bingbot/2.0)", true)]
-    [InlineData("facebookexternalhit/1.1", true)]
+    [InlineData("Mozilla/5.0 (compatible; bingbot/2.0; +http://www.bing.com/bingbot.htm)", true)]
+    [InlineData("Mozilla/5.0 (compatible; Discordbot/2.0; +https://discordapp.com)", true)]
+    [InlineData("Mozilla/5.0 (compatible) Slackbot-LinkExpanding 1.0", true)]
+    [InlineData("Mozilla/5.0 (compatible; TelegramBot (like TwitterBot))", true)]
+    [InlineData("Mozilla/5.0 (compatible; SomeTool; +https://irankis.test/apie)", true)]
+    [InlineData("Mozilla/5.0 facebookexternalhit/1.1", true)]
     [InlineData("Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/120.0 Safari/537.36", true)]
     [InlineData(Chrome, false)]
     [InlineData("Mozilla/5.0 (iPhone; CPU iPhone OS 18_1 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/18.1 Mobile/15E148 Safari/604.1", false)]
     [InlineData("Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:133.0) Gecko/20100101 Firefox/133.0", false)]
-    public void A_robot_is_one_that_says_so_or_is_no_browser_at_all(string? userAgent, bool crawler) =>
+    [InlineData("Mozilla/5.0 (Linux; Android 12; Cubot Note 30 Build/SP1A.210812.016) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0 Mobile Safari/537.36", false)]
+    [InlineData("Mozilla/5.0 (Linux; Android 11; CUBOT_X30) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0 Mobile Safari/537.36", false)]
+    public void A_robot_is_one_that_says_so_or_is_no_browser_at_all_and_a_phone_whose_make_holds_the_letters_is_none(string? userAgent, bool crawler) =>
         UsageRules.IsCrawler(userAgent).ShouldBe(crawler);
 
     [Fact]
@@ -69,31 +81,85 @@ public sealed class UsageRuleTests
     [Theory]
     [InlineData("/", "/")]
     [InlineData("", "/")]
-    [InlineData(null, "/")]
-    [InlineData("/seimas/XVP-0412/", "/seimas/XVP-0412")]
-    [InlineData("/suvestines/nustatymai/***", "/suvestines/nustatymai/***")]
-    public void A_path_is_counted_without_its_trailing_slash(string? path, string counted) =>
-        UsageRules.PathOf(path).ShouldBe(counted);
+    [InlineData("/metodika", "/metodika")]
+    [InlineData("/METODIKA", "/metodika")]
+    [InlineData("/darbotvarke/", "/darbotvarke")]
+    public void A_page_without_parameters_counts_under_its_route_in_small_letters(string template, string counted) =>
+        UsageRules.CountedPath(template, NoValues).ShouldBe(counted);
 
-    [Fact]
-    public void Too_long_a_path_is_counted_with_the_others()
+    [Theory]
+    [InlineData("/seimas/{Number}", "Number", "xvp-0412", "/seimas/XVP-0412")]
+    [InlineData("/seimas/{Number}/istorija", "Number", "XVP-0412", "/seimas/XVP-0412/istorija")]
+    [InlineData("/p/{Slug}", "slug", "Jonas-Petraitis", "/p/jonas-petraitis")]
+    [InlineData("/o/{Slug}", "Slug", "bendrija", "/o/bendrija")]
+    [InlineData("/seimas/balsavimai/{Id:long}", "Id", "12345", "/seimas/balsavimai/12345")]
+    [InlineData("/suvestines/{Date}", "Date", "2026-11-16", "/suvestines/2026-11-16")]
+    public void A_public_objects_page_keeps_its_value_written_one_way(string template, string name, string value, string counted) =>
+        UsageRules.CountedPath(template, new Dictionary<string, string?>(StringComparer.OrdinalIgnoreCase) { [name] = value }).ShouldBe(counted);
+
+    [Theory]
+    [InlineData("/suvestines/nustatymai/{Token}", "Token", "AbCdEf0123456789xyz")]
+    [InlineData("/suvestines/kopijos/{Token}", "Token", "AbCdEf0123456789xyz")]
+    [InlineData("/kazkas/{Code?}", "Code", "slaptas")]
+    [InlineData("/failai/{*Rest}", "Rest", "a/b/c")]
+    public void Any_other_parameter_a_links_token_first_never_reaches_a_counted_path(string template, string name, string value)
     {
-        UsageRules.PathOf("/" + new string('a', UsageRules.MaxPathLength)).ShouldBe(UsageRules.OtherPaths);
-        UsageRules.PathOf("/" + new string('a', UsageRules.MaxPathLength - 1)).Length.ShouldBe(UsageRules.MaxPathLength);
+        var counted = UsageRules.CountedPath(template, new Dictionary<string, string?> { [name] = value });
+        counted.ShouldEndWith("/" + UsageRules.Hidden);
+        counted.ShouldNotContain(value);
     }
 
     [Theory]
-    [InlineData("https://www.facebook.com/some/post?id=1", "facebook.com")]
+    [InlineData("<script>")]
+    [InlineData("tarpas yra")]
+    [InlineData("eilute\nkita")]
+    [InlineData("labai-ilgas-labai-ilgas-labai-ilgas-labai-ilgas-labai-ilgas-labai-ilgas")]
+    [InlineData("")]
+    [InlineData(null)]
+    public void A_public_parameter_that_is_no_plain_short_name_is_hidden_too(string? value) =>
+        UsageRules.CountedPath("/o/{Slug}", new Dictionary<string, string?> { ["Slug"] = value }).ShouldBe("/o/" + UsageRules.Hidden);
+
+    [Fact]
+    public void A_page_without_a_route_is_counted_with_the_others() =>
+        UsageRules.CountedPath(null, NoValues).ShouldBe(UsageRules.OtherPaths);
+
+    [Theory]
+    [InlineData("/administravimas/lankomumas", false)]
+    [InlineData("/moderavimas", false)]
+    [InlineData("/moderavimas/paslepti", false)]
+    [InlineData("/seimo-narys/projektai", false)]
+    [InlineData("/suvestines/nustatymai/***", false)]
+    [InlineData("/suvestines/kopijos/***", false)]
+    [InlineData("/organizacijos/kvietimas", false)]
+    [InlineData("/prisijungti/raktas", false)]
+    [InlineData("/suvestines/2026-11-16", true)]
+    [InlineData("/organizacijos", true)]
+    [InlineData("/seimas/XVP-0412", true)]
+    [InlineData("/sveiki", true)]
+    public void Staff_mp_and_link_pages_are_left_out_of_the_list_so_nobodys_activity_shows(string path, bool listed) =>
+        UsageRules.IsListed(path).ShouldBe(listed);
+
+    [Theory]
+    [InlineData("https://www.naujienos.test/some/post?id=1", "naujienos.test")]
     [InlineData("https://news.example.test/a", "news.example.test")]
     [InlineData("http://EXAMPLE.test./", "example.test")]
+    [InlineData("https://forumas.test:8443/tema", "forumas.test")]
+    [InlineData("https://žinios.test/", "xn--inios-tib.test")]
     [InlineData("https://lt2.test/seimas", null)]
     [InlineData("https://www.lt2.test/seimas", null)]
     [InlineData("android-app://com.google.android.gm/", null)]
     [InlineData("not an address", null)]
     [InlineData("", null)]
     [InlineData(null, null)]
-    public void A_referring_site_is_only_another_sites_host_without_www_never_its_path(string? referrer, string? host) =>
+    public void A_referring_site_is_only_another_sites_host_without_www_or_port_never_its_path(string? referrer, string? host) =>
         UsageRules.ReferrerHost(referrer, "lt2.test").ShouldBe(host);
+
+    [Fact]
+    public void A_referring_host_longer_than_a_host_can_be_is_not_counted()
+    {
+        var label = new string('a', 60);
+        UsageRules.ReferrerHost($"https://{label}.{label}.{label}.{label}.{label}.test/", "lt2.test").ShouldBeNull();
+    }
 
     [Fact]
     public void A_day_belongs_to_its_month_and_its_year()
@@ -125,6 +191,27 @@ public sealed class UsageRuleTests
         UsageRules.IsOnline(now.AddMinutes(-5).AddSeconds(-1), now).ShouldBeFalse();
     }
 
+    [Fact]
+    public void A_day_keeps_its_pages_until_the_cap_most_viewed_first_and_counts_the_rest_together()
+    {
+        var batch = new Dictionary<string, int> { ["/a"] = 1, ["/b"] = 5, ["/c"] = 3, ["/stored"] = 2 };
+        var placed = UsageCounter.Capped(batch, ["/stored", "/old"], storedCount: 2, cap: 4, other: "(kiti)").ToList();
+
+        placed.ShouldBe(
+        [
+            ("/b", 5, true),
+            ("/stored", 2, false),
+            ("(kiti)", 4, true),
+        ], "room for one new page beside the place kept for the rest: the most viewed; the others counted together");
+    }
+
+    [Fact]
+    public void The_rest_add_to_a_stored_rest_and_a_full_day_takes_no_new_page()
+    {
+        var placed = UsageCounter.Capped(new Dictionary<string, int> { ["/new"] = 1, ["(kiti)"] = 2 }, ["(kiti)"], storedCount: 4, cap: 4, other: "(kiti)").ToList();
+        placed.ShouldBe([("(kiti)", 3, false)]);
+    }
+
     [Theory]
     [InlineData(1)]
     [InlineData(37)]
@@ -138,7 +225,7 @@ public sealed class UsageRuleTests
         var sketch = new Sketch();
         for (var i = 0; i < distinct; i++)
         {
-            var hash = Sketch.Hash(salt, Sketch.VisitorData([10, 0, (byte)(i >> 8), (byte)i], "Mozilla/5.0 " + i));
+            var hash = Sketch.Hash(salt, Sketch.VisitorData([203, 0, 113, (byte)i], "Mozilla/5.0 " + i));
             sketch.Add(hash);
             sketch.Add(hash);
         }
@@ -163,7 +250,7 @@ public sealed class UsageRuleTests
     [Fact]
     public void Two_browsers_behind_one_address_count_as_two_and_one_browser_on_two_networks_as_two()
     {
-        var salt = Sketch.NewSalt();
+        var salt = Enumerable.Range(1, 32).Select(i => (byte)(i * 5)).ToArray();
         var sketch = new Sketch();
         sketch.Add(Sketch.Hash(salt, Sketch.VisitorData([192, 0, 2, 10], Chrome)));
         sketch.Add(Sketch.Hash(salt, Sketch.VisitorData([192, 0, 2, 10], "Mozilla/5.0 (iPhone)")));
@@ -191,7 +278,7 @@ public sealed class UsageRuleTests
     [Fact]
     public void Merging_two_sketches_of_a_period_counts_their_union_once()
     {
-        var salt = Sketch.NewSalt();
+        var salt = Enumerable.Range(1, 32).Select(i => (byte)(i * 3)).ToArray();
         var first = new Sketch();
         var second = new Sketch();
         for (var i = 0; i < 300; i++)

@@ -898,3 +898,6 @@ body { padding-block-end: 4.5rem; }
   #storage-inventory td { display: block; padding: var(--sp-1) 0; border: 0; }
   #storage-inventory td::before { content: attr(data-label) ": "; font-weight: 600; color: var(--ink-2); }
 }
+
+/* Design 8.27: "Lankomumas". A long path or host wraps, so the number beside it stays on a phone's screen. */
+.usage-name { overflow-wrap: anywhere; }

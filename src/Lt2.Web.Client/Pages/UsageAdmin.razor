@@ -23,6 +23,7 @@
         <p class="small">@L["Usage.About.1"]</p>
         <p class="small">@L["Usage.About.2"]</p>
         <p class="small">@L["Usage.About.3"]</p>
+        <p class="small">@L["Usage.About.4"]</p>
     </details>
 </div>
 
@@ -30,7 +31,7 @@
 
 @if (_refused)
 {
-    <p class="note" role="alert">@L["Admin.Refused"]</p>
+    <p class="note" role="alert" id="usage-refused">@L["Usage.Refused"]</p>
 }
 else if (Report is not { } report)
 {
@@ -48,8 +49,10 @@ else
         <h2 id="usage-h-days">@L.Format("Usage.Days", Display.Day(report.Days[0].Starts), Display.Day(report.Days[^1].Starts))</h2>
         <h3 class="small">@L["Usage.Visitors"]</h3>
         <DayBars Days="@report.Days.Select(d => (d.Starts, d.Visitors)).ToList()" Label="@L["Usage.VisitorsChart"]" />
+        <p class="small num" id="usage-visitors-most">@Most(report.Days, d => d.Visitors)</p>
         <h3 class="small">@L["Usage.Members"]</h3>
         <DayBars Days="@report.Days.Select(d => (d.Starts, d.Members)).ToList()" Label="@L["Usage.MembersChart"]" />
+        <p class="small num" id="usage-members-most">@Most(report.Days, d => d.Members)</p>
         <details class="more stack stack--tight">
             <summary class="linkish small">@L["Usage.Table"]</summary>
             <UsagePeriodTable Rows="@report.Days.AsEnumerable().Reverse().ToList()" Id="usage-days" First="@L["Usage.Day"]" Name="@(d => Display.Day(d))" />
@@ -77,12 +80,12 @@ else
 
     <section class="sheet stack" aria-labelledby="usage-h-pages">
         <h3 id="usage-h-pages">@L["Usage.Pages"]</h3>
-        <UsageItemTable Items="report.Pages" Id="usage-pages" First="@L["Usage.Path"]" Empty="@L["Usage.NoPages"]" />
+        <UsageItemTable Items="report.Pages" Id="usage-pages" First="@L["Usage.Path"]" Second="@L["Usage.Views"]" Empty="@L["Usage.NoPages"]" />
     </section>
 
     <section class="sheet stack" aria-labelledby="usage-h-referrers">
         <h3 id="usage-h-referrers">@L["Usage.Referrers"]</h3>
-        <UsageItemTable Items="report.Referrers" Id="usage-referrers" First="@L["Usage.Host"]" Empty="@L["Usage.NoReferrers"]" />
+        <UsageItemTable Items="report.Referrers" Id="usage-referrers" First="@L["Usage.Host"]" Second="@L["Usage.Referred"]" Empty="@L["Usage.NoReferrers"]" />
     </section>
 }
 
@@ -103,6 +106,13 @@ else
                 Show(report.Problem);
             }
         }
+    }
+
+    /// <summary>The scale of a chart: its highest day, with the date; the first such day when several share it.</summary>
+    private string Most(IReadOnlyList<UsagePeriodResponse> days, Func<UsagePeriodResponse, int> value)
+    {
+        var top = days.OrderByDescending(value).ThenBy(d => d.Starts).First();
+        return L.Format("Usage.ChartMost", Display.Number(value(top)), Display.Day(top.Starts));
     }
 
     private Task RangeAsync(int days) => RunAsync(async () =>

@@ -1,5 +1,4 @@
 @page "/organizacijos/kvietimas"
-@page "/organizacijos/kvietimas/{Token}"
 @attribute [Authorize]
 @rendermode InteractiveWebAssembly
 @using Lt2.Api.Contracts.Organisations
@@ -9,8 +8,7 @@
 
 @* A representative's one-time link (design 8.14.14): a signed-in member who opens it and agrees becomes a representative.
    The link works once, within seven days; nobody is looked up by email. Design 6.8: the token is after the "#", read in the
-   browser and sent in request bodies, so the page rendered on the server knows nothing of it. An old link with the token
-   in the path still works. *@
+   browser and sent in request bodies, so the page rendered on the server knows nothing of it. *@
 <PageTitle>@L["Org.Invite.PageTitle"]</PageTitle>
 
 <div class="stack">
@@ -51,9 +49,6 @@
     private bool _read;
     private string? _token;
 
-    /// <summary>The token of an old link, in the path; a link made now has it after the "#".</summary>
-    [Parameter] public string? Token { get; set; }
-
     private InviteResponse? Invite { get; set; }
 
     protected override async Task OnInitializedAsync()
@@ -63,7 +58,7 @@
             return;
         }
 
-        _token = string.IsNullOrWhiteSpace(Token) ? InvitationLink.Fragment(Navigation.Uri) : Token.Trim();
+        _token = InvitationLink.Fragment(Navigation.Uri);
         Invite = _token is null ? null : (await Organisations.GetInviteAsync(_token)).Value;
         _read = true;
     }

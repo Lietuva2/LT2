@@ -47,6 +47,28 @@ public sealed class DatabaseRoleTests(DatabaseFixture database)
         }
     }
 
+    [Fact]
+    public async Task Only_the_application_reads_and_writes_the_usage_statistics_and_the_read_only_role_reads_their_counts_only()
+    {
+        // Design 8.27: the web host counts; the worker has no business with the periods' salts.
+        await using (var app = await OpenAsync(DatabaseRoles.App))
+        await using (var read = new NpgsqlCommand("SELECT count(*) FROM usage.sketch", app))
+        {
+            (await read.ExecuteScalarAsync()).ShouldNotBeNull();
+        }
+
+        await using var worker = await OpenAsync(DatabaseRoles.Worker);
+        foreach (var table in await TablesInAsync("usage"))
+        {
+            await ShouldBeRefusedAsync(worker, $"SELECT count(*) FROM {table}", table);
+        }
+
+        await using var readonlyRole = await OpenAsync(DatabaseRoles.Readonly);
+        await ShouldBeRefusedAsync(readonlyRole, "SELECT count(*) FROM usage.sketch", "usage.sketch");
+        await using var counts = new NpgsqlCommand("SELECT count(*) FROM usage.total", readonlyRole);
+        (await counts.ExecuteScalarAsync()).ShouldNotBeNull();
+    }
+
     [Theory]
     [InlineData("identity")]
     [InlineData("notify")]

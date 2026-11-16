@@ -9,12 +9,17 @@ namespace Lt2.Usage.Counting;
 
 /// <summary>
 /// Design 8.27: the counter in memory. A page view adds the visitor's (or the account's) keyed hash to the sketches of its
-/// day, month and year, one view to the day, the path and the referring site, and marks the hash as seen for "now on the
-/// site". Nothing else is kept: not the address, not the user agent, not the account, not which pages one person saw.
+/// day, month and year, one view to the day and to the page, a referring site once per visitor and day, and marks the
+/// visitor as seen for "now on the site" (under a salt of this process, never stored). The address, the user agent and
+/// the account are not kept.
+/// <para>
 /// Every minute <see cref="FlushAsync"/> merges the sketches into <c>usage.sketch</c>, writes the counts into
 /// <c>usage.total</c>, <c>usage.page</c> and <c>usage.referrer</c>, and deletes the salt and the sketch of every period
-/// that has ended (its count written first). One web host counts; should two run at once, an advisory lock keeps their
-/// writes apart and the second adopts the first one's salts.
+/// that has ended (its count written first). Visitors and members go into the sketches only once the stored salts have been
+/// read (the first flush that reaches the database): before that, page views are counted and distinct visitors are not,
+/// so a start with the database away counts nobody twice. One web host counts; should two run at once, an advisory lock
+/// keeps their writes apart and each adopts the stored salts.
+/// </para>
 /// </summary>
 [System.Diagnostics.CodeAnalysis.SuppressMessage(
     "Reliability", "CA1001", Justification = "The semaphore never makes a wait handle, so it holds nothing to free; disposing it would race the last flush at shutdown.")]
@@ -25,7 +30,13 @@ internal sealed class UsageCounter(IServiceScopeFactory scopes, TimeProvider clo
     private readonly Lock _gate = new();
     private readonly SemaphoreSlim _flushing = new(1, 1);
     private readonly Dictionary<Key, byte[]> _salts = [];
+
+    /// <summary>"Now on the site" and the referring sites already counted today, both under <see cref="_processSalt"/>.</summary>
     private readonly Dictionary<(string Audience, ulong Hash), DateTimeOffset> _online = [];
+    private readonly Dictionary<ulong, HashSet<string>> _referred = [];
+    private readonly byte[] _processSalt = Sketch.NewSalt();
+    private DateOnly _referredDay;
+    private bool _ready;
     private Pending _pending = new();
 
     private readonly record struct Key(string Period, DateOnly Starts, string Audience);
@@ -43,9 +54,21 @@ internal sealed class UsageCounter(IServiceScopeFactory scopes, TimeProvider clo
 
         public Dictionary<DateOnly, Views> Views { get; } = [];
 
-        public Dictionary<(DateOnly Day, string Path), int> Pages { get; } = [];
+        public Dictionary<DateOnly, Dictionary<string, int>> Pages { get; } = [];
 
-        public Dictionary<(DateOnly Day, string Host), int> Hosts { get; } = [];
+        public Dictionary<DateOnly, Dictionary<string, int>> Hosts { get; } = [];
+    }
+
+    /// <summary>Whether the stored salts have been read, so distinct visitors and members are counted.</summary>
+    internal bool Ready
+    {
+        get
+        {
+            lock (_gate)
+            {
+                return _ready;
+            }
+        }
     }
 
     public void Count(PageView view)
@@ -72,12 +95,24 @@ internal sealed class UsageCounter(IServiceScopeFactory scopes, TimeProvider clo
         var network = member ? null : UsageRules.Network(view.Address);
         byte[]? data = member ? Sketch.MemberData(view.AccountId!.Value) : network is null ? null : Sketch.VisitorData(network, view.UserAgent!);
         var audience = member ? UsageRules.Member : UsageRules.Visitor;
-        var path = UsageRules.PathOf(view.Path);
+        var path = UsageRules.CountedPath(view.Template, view.RouteValues);
         var host = UsageRules.ReferrerHost(view.Referrer, view.OwnHost);
 
         lock (_gate)
         {
-            if (data is not null)
+            if (_referredDay != day)
+            {
+                _referred.Clear();
+                _referredDay = day;
+            }
+
+            ulong? local = data is null ? null : Sketch.Hash(_processSalt, data);
+            if (local is { } seen)
+            {
+                _online[(audience, seen)] = now;
+            }
+
+            if (data is not null && _ready)
             {
                 foreach (var (period, starts) in UsageRules.PeriodsOf(day))
                 {
@@ -92,12 +127,7 @@ internal sealed class UsageCounter(IServiceScopeFactory scopes, TimeProvider clo
                         sketch = _pending.Sketches[key] = new Sketch();
                     }
 
-                    var hash = Sketch.Hash(salt, data);
-                    sketch.Add(hash);
-                    if (period == UsageRules.Day)
-                    {
-                        _online[(audience, hash)] = now;
-                    }
+                    sketch.Add(Sketch.Hash(salt, data));
                 }
             }
 
@@ -111,12 +141,39 @@ internal sealed class UsageCounter(IServiceScopeFactory scopes, TimeProvider clo
                 views.Visitor++;
             }
 
-            _pending.Pages[(day, path)] = _pending.Pages.GetValueOrDefault((day, path)) + 1;
-            if (host is not null)
+            if (UsageRules.IsListed(path))
             {
-                _pending.Hosts[(day, host)] = _pending.Hosts.GetValueOrDefault((day, host)) + 1;
+                Add(_pending.Pages, day, path, UsageRules.PathsPerDay, UsageRules.OtherPaths, 1);
+            }
+
+            if (host is not null && local is { } referredBy && FirstReferral(referredBy, host))
+            {
+                Add(_pending.Hosts, day, host, UsageRules.HostsPerDay, UsageRules.OtherHosts, 1);
             }
         }
+    }
+
+    /// <summary>A visitor's first referral from <paramref name="host"/> today, and at most <see cref="UsageRules.HostsPerVisitor"/> hosts.</summary>
+    private bool FirstReferral(ulong visitor, string host)
+    {
+        if (!_referred.TryGetValue(visitor, out var hosts))
+        {
+            hosts = _referred[visitor] = new HashSet<string>(StringComparer.Ordinal);
+        }
+
+        return hosts.Count < UsageRules.HostsPerVisitor && hosts.Add(host);
+    }
+
+    /// <summary>Adds to a day's counts by name, at most <paramref name="cap"/> names in memory; the rest go under <paramref name="other"/>.</summary>
+    private static void Add(Dictionary<DateOnly, Dictionary<string, int>> counts, DateOnly day, string name, int cap, string other, int views)
+    {
+        if (!counts.TryGetValue(day, out var names))
+        {
+            names = counts[day] = new Dictionary<string, int>(StringComparer.Ordinal);
+        }
+
+        var key = names.ContainsKey(name) || names.Count < cap - 1 ? name : other;
+        names[key] = names.GetValueOrDefault(key) + views;
     }
 
     public UsageOnline Online()
@@ -206,20 +263,11 @@ internal sealed class UsageCounter(IServiceScopeFactory scopes, TimeProvider clo
                 continue;
             }
 
-            // Counted with another salt before this host adopted the stored one (at start, or beside another instance): merged
-            // all the same, so such a visitor may count twice that period, never not at all.
+            // Counted with this host's own salt while another instance had stored one first (two web hosts at a period's
+            // start): merged all the same, so such a visitor may count twice that period, never not at all.
             var merged = Sketch.From(row.Registers);
             merged.Merge(sketch);
             row.Registers = merged.ToBytes();
-        }
-
-        // Counting goes on with the stored salts (another instance's, or this one's before a restart).
-        lock (_gate)
-        {
-            foreach (var row in rows.Where(r => !UsageRules.HasEnded(r.Period, r.Starts, today)))
-            {
-                _salts[new Key(row.Period, row.Starts, row.Audience)] = row.Salt;
-            }
         }
 
         var totals = new Dictionary<(string Period, DateOnly Starts), TotalRow>();
@@ -278,18 +326,45 @@ internal sealed class UsageCounter(IServiceScopeFactory scopes, TimeProvider clo
             }
         }
 
-        await AddCappedAsync(
-            taken.Pages, UsageRules.PathsPerDay, UsageRules.OtherPaths,
-            (day, ct) => db.Pages.CountAsync(p => p.Day == day, ct),
-            async (day, name, ct) => await db.Pages.FindAsync([day, name], ct) is { } row ? (Action<int>)(v => row.Views += v) : null,
-            (day, name, views) => db.Pages.Add(new PageRow { Day = day, Path = name, Views = views }),
-            cancellationToken);
-        await AddCappedAsync(
-            taken.Hosts, UsageRules.HostsPerDay, UsageRules.OtherHosts,
-            (day, ct) => db.Referrers.CountAsync(r => r.Day == day, ct),
-            async (day, name, ct) => await db.Referrers.FindAsync([day, name], ct) is { } row ? (Action<int>)(v => row.Views += v) : null,
-            (day, name, views) => db.Referrers.Add(new ReferrerRow { Day = day, Host = name, Views = views }),
-            cancellationToken);
+        foreach (var (day, names) in taken.Pages)
+        {
+            var keys = names.Keys.Append(UsageRules.OtherPaths).ToList();
+            var stored = await db.Pages.Where(p => p.Day == day && keys.Contains(p.Path)).ToDictionaryAsync(p => p.Path, cancellationToken);
+            var count = await db.Pages.CountAsync(p => p.Day == day, cancellationToken);
+            foreach (var (name, views, added) in Capped(names, stored.Keys, count, UsageRules.PathsPerDay, UsageRules.OtherPaths))
+            {
+                if (added)
+                {
+                    var row = new PageRow { Day = day, Path = name, Views = views };
+                    db.Pages.Add(row);
+                    stored[name] = row;
+                }
+                else
+                {
+                    stored[name].Views += views;
+                }
+            }
+        }
+
+        foreach (var (day, names) in taken.Hosts)
+        {
+            var keys = names.Keys.Append(UsageRules.OtherHosts).ToList();
+            var stored = await db.Referrers.Where(r => r.Day == day && keys.Contains(r.Host)).ToDictionaryAsync(r => r.Host, cancellationToken);
+            var count = await db.Referrers.CountAsync(r => r.Day == day, cancellationToken);
+            foreach (var (name, views, added) in Capped(names, stored.Keys, count, UsageRules.HostsPerDay, UsageRules.OtherHosts))
+            {
+                if (added)
+                {
+                    var row = new ReferrerRow { Day = day, Host = name, Views = views };
+                    db.Referrers.Add(row);
+                    stored[name] = row;
+                }
+                else
+                {
+                    stored[name].Views += views;
+                }
+            }
+        }
 
         // A period that is over: its count is written above, so its salt and sketch go. Nothing links anyone after this.
         var ended = rows.Where(r => UsageRules.HasEnded(r.Period, r.Starts, today)).ToList();
@@ -299,53 +374,57 @@ internal sealed class UsageCounter(IServiceScopeFactory scopes, TimeProvider clo
 
         lock (_gate)
         {
-            foreach (var row in ended)
+            // Counting goes on with the stored salts (another instance's, or this one's before a restart); an ended period's
+            // salt is forgotten here too, also one that never reached the database.
+            foreach (var row in rows.Where(r => !UsageRules.HasEnded(r.Period, r.Starts, today)))
             {
-                _salts.Remove(new Key(row.Period, row.Starts, row.Audience));
+                _salts[new Key(row.Period, row.Starts, row.Audience)] = row.Salt;
             }
+
+            foreach (var key in _salts.Keys.Where(k => UsageRules.HasEnded(k.Period, k.Starts, today)).ToList())
+            {
+                _salts.Remove(key);
+            }
+
+            _ready = true;
         }
     }
 
-    /// <summary>Adds per-day counts by name, keeping at most <paramref name="cap"/> names a day and counting the rest under <paramref name="other"/>.</summary>
-    private static async Task AddCappedAsync(
-        Dictionary<(DateOnly Day, string Name), int> counts,
-        int cap,
-        string other,
-        Func<DateOnly, CancellationToken, Task<int>> countOfDay,
-        Func<DateOnly, string, CancellationToken, Task<Action<int>?>> existing,
-        Action<DateOnly, string, int> add,
-        CancellationToken cancellationToken)
+    /// <summary>
+    /// Where each name's views go: a name already stored adds to its row; a new one gets a row while the day has fewer than
+    /// <paramref name="cap"/> - 1, the most viewed first; the rest add to <paramref name="other"/> (one place kept for it).
+    /// </summary>
+    internal static IEnumerable<(string Name, int Views, bool Added)> Capped(
+        IReadOnlyDictionary<string, int> names, IEnumerable<string> stored, int storedCount, int cap, string other)
     {
-        var names = new Dictionary<DateOnly, int>();
-        foreach (var ((day, name), views) in counts.OrderByDescending(c => c.Value))
+        var known = new HashSet<string>(stored, StringComparer.Ordinal);
+        var rest = 0;
+        foreach (var (name, views) in names.OrderByDescending(n => n.Value).ThenBy(n => n.Key, StringComparer.Ordinal))
         {
-            if (await existing(day, name, cancellationToken) is { } increase)
+            if (name == other)
             {
-                increase(views);
-                continue;
+                rest += views;
             }
-
-            if (!names.TryGetValue(day, out var known))
+            else if (known.Contains(name))
             {
-                known = await countOfDay(day, cancellationToken);
+                yield return (name, views, false);
             }
-
-            // One place is kept for the rest.
-            if (known < cap - 1)
+            else if (storedCount < cap - 1)
             {
-                add(day, name, views);
-                names[day] = known + 1;
-            }
-            else if (await existing(day, other, cancellationToken) is { } rest)
-            {
-                rest(views);
-                names[day] = known;
+                known.Add(name);
+                storedCount++;
+                yield return (name, views, true);
             }
             else
             {
-                add(day, other, views);
-                names[day] = known + 1;
+                rest += views;
             }
+        }
+
+        if (rest > 0)
+        {
+            var added = !known.Contains(other);
+            yield return (other, rest, added);
         }
     }
 
@@ -392,14 +471,20 @@ internal sealed class UsageCounter(IServiceScopeFactory scopes, TimeProvider clo
             into.Crawler += views.Crawler;
         }
 
-        foreach (var (key, views) in taken.Pages)
+        foreach (var (day, names) in taken.Pages)
         {
-            _pending.Pages[key] = _pending.Pages.GetValueOrDefault(key) + views;
+            foreach (var (name, views) in names)
+            {
+                Add(_pending.Pages, day, name, UsageRules.PathsPerDay, UsageRules.OtherPaths, views);
+            }
         }
 
-        foreach (var (key, views) in taken.Hosts)
+        foreach (var (day, names) in taken.Hosts)
         {
-            _pending.Hosts[key] = _pending.Hosts.GetValueOrDefault(key) + views;
+            foreach (var (name, views) in names)
+            {
+                Add(_pending.Hosts, day, name, UsageRules.HostsPerDay, UsageRules.OtherHosts, views);
+            }
         }
     }
 }
@@ -411,7 +496,8 @@ internal sealed class UsageFlushService(UsageCounter counter, ILogger<UsageFlush
 
     public override async Task StartAsync(CancellationToken cancellationToken)
     {
-        // Before the server takes requests, so counting starts with the stored salts of the periods under way.
+        // Before the server takes requests, so counting starts with the stored salts of the periods under way. Should the
+        // database be away, page views are counted and distinct visitors wait until a flush reaches it (UsageCounter).
         try
         {
             await counter.FlushAsync(cancellationToken);

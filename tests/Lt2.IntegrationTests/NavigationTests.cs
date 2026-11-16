@@ -159,9 +159,9 @@ public sealed partial class NavigationTests(DatabaseFixture database) : ApiTest(
     }
 
     [Theory]
-    [InlineData("/taisykles", "Naudojimo taisyklės", "id=\"kaip-iseiti\"", Lt2.Web.Components.Pages.LegalVersions.Terms)]
-    [InlineData("/privatumas", "Privatumo pranešimas", "id=\"slapukai\"", Lt2.Web.Components.Pages.LegalVersions.Privacy)]
-    public async Task The_terms_and_the_privacy_notice_are_static_pages_with_a_version(string path, string title, string part, string version)
+    [InlineData("/taisykles", "Naudojimo taisyklės", "id=\"kaip-iseiti\"")]
+    [InlineData("/privatumas", "Privatumo pranešimas", "id=\"slapukai\"")]
+    public async Task The_terms_and_the_privacy_notice_are_static_pages_with_a_version(string path, string title, string part)
     {
         using var visitor = NewBrowser();
         using var response = await visitor.Client.GetAsync(path);
@@ -170,7 +170,7 @@ public sealed partial class NavigationTests(DatabaseFixture database) : ApiTest(
 
         html.ShouldContain($"<title>{title} · Lietuva 2.0</title>");
         html.ShouldContain($">{title}</h1>");
-        html.ShouldContain($"Versija {version}, galioja nuo {version}.");
+        html.ShouldContain("Versija 2026-11-17, galioja nuo 2026-11-17.");
         html.ShouldContain(part);
         html.ShouldContain("[bus įrašyta]", customMessage: "what the owner has not given yet is marked, not invented");
     }

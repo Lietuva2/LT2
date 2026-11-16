@@ -55,13 +55,15 @@ public sealed class UsagePageTests : BunitContext
         var today = page.Find("#usage-days tbody tr").TextContent;
         today.ShouldContain("2026-11-16");
         today.ShouldContain("42");
-        today.ShouldContain("120", customMessage: "pages are visitors' and members' together");
+        today.ShouldContain("120", customMessage: "views are visitors' and members' together");
         page.Find("#usage-months tbody tr").TextContent.ShouldContain("2026-11");
         page.Find("#usage-years tbody tr").TextContent.ShouldContain("2026");
         page.Find("#usage-pages").TextContent.ShouldContain("/seimas/XVP-0412");
         page.Find("#usage-referrers").TextContent.ShouldContain("naujienos.test");
         page.Find("#usage-range-7").GetAttribute("aria-pressed").ShouldBe("true");
         page.FindAll("svg.daybars").Count.ShouldBe(2, "visitors and members");
+        page.Find("#usage-visitors-most").TextContent.ShouldBe(L.Format("Usage.ChartMost", "42", "2026-11-16"), "the chart's scale");
+        page.Find("#usage-referrers thead").TextContent.ShouldContain(L["Usage.Referred"].Value, customMessage: "referring sites count visitors, not views");
     }
 
     [Fact]
@@ -84,7 +86,7 @@ public sealed class UsagePageTests : BunitContext
         Usage.On("GetAsync", ApiResult<UsageResponse>.Fail(new ApiProblem { Status = 403, Code = "forbidden" }));
         var page = Render<UsageAdmin>();
 
-        page.Markup.ShouldContain(L["Admin.Refused"].Value);
+        page.Find("#usage-refused").TextContent.ShouldBe(L["Usage.Refused"].Value);
         page.FindAll("#usage-online").ShouldBeEmpty();
     }
 }

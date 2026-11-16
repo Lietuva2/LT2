@@ -289,9 +289,10 @@ code review.
 - No secrets in the repository or in images. No real personal data in tests or fixtures.
 - No tracking pixels or click tracking in any email.
 - **Usage statistics (design 8.27)** are counted on the server only: a visitor is the network and the user agent hashed
-  with a random salt of the day, month and year into a sketch; a signed-in session counts its account. No hash, address
-  or per-person trail is stored; `usage.sketch` holds the salts only while their period lasts and is withheld from
-  `lt2_readonly`. Nothing is added to the browser for it.
+  with a random salt of the day, month and year into a sketch; a signed-in session counts its account. A page counts
+  under its route (a token never), staff and MP pages stay out of the list. `usage.sketch` holds the salts and sketches
+  only while their period lasts (a candidate can be tested against them until then, 8.27.2), only `lt2_app` reaches it,
+  and it is withheld from `lt2_readonly`. Nothing is added to the browser for it.
 - Outbound requests go only to the allowlisted hosts, and follow no redirect to another host.
 - Codes and tokens are not sent in addresses: a link the site makes carries its secret after the `#` (`/prisijungti#kodas=…`,
   a representative's `/organizacijos/kvietimas#…`, an MP's take-over link `/seimo-narys/perimti#…`, an office member's

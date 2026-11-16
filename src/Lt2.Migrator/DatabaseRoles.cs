@@ -20,7 +20,13 @@ public static class DatabaseRoles
     public const string HangfireSchema = "hangfire";
 
     /// <summary>Schemas where the application and worker read and write.</summary>
-    public static readonly string[] DataSchemas = ["identity", "notify", "config", "parliament", "appeals", "usage"];
+    public static readonly string[] DataSchemas = ["identity", "notify", "config", "parliament", "appeals"];
+
+    /// <summary>
+    /// Schemas only the application reads and writes: the usage statistics (design 8.27), counted by the web host alone; the
+    /// worker has no business with their salts.
+    /// </summary>
+    public static readonly string[] AppOnlySchemas = ["usage"];
 
     /// <summary>
     /// Every schema the application's databases hold. Each of their tables is on <see cref="ReadableTables"/> or
@@ -163,6 +169,24 @@ public static class DatabaseRoles
                     GRANT SELECT, INSERT, UPDATE, DELETE ON TABLES TO {App}, {Worker};
                 ALTER DEFAULT PRIVILEGES FOR ROLE {Migrator} IN SCHEMA {s}
                     GRANT USAGE, SELECT ON SEQUENCES TO {App}, {Worker};
+                """,
+                cancellationToken);
+        }
+
+        foreach (var schema in AppOnlySchemas)
+        {
+            var s = Identifier(schema);
+            await ExecuteAsync(
+                migrator,
+                $"""
+                GRANT USAGE ON SCHEMA {s} TO {App};
+                GRANT SELECT, INSERT, UPDATE, DELETE ON ALL TABLES IN SCHEMA {s} TO {App};
+                ALTER DEFAULT PRIVILEGES FOR ROLE {Migrator} IN SCHEMA {s}
+                    GRANT SELECT, INSERT, UPDATE, DELETE ON TABLES TO {App};
+                REVOKE ALL ON ALL TABLES IN SCHEMA {s} FROM {Worker};
+                REVOKE ALL ON SCHEMA {s} FROM {Worker};
+                ALTER DEFAULT PRIVILEGES FOR ROLE {Migrator} IN SCHEMA {s}
+                    REVOKE ALL ON TABLES FROM {Worker};
                 """,
                 cancellationToken);
         }

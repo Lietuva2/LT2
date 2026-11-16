@@ -18,7 +18,7 @@
             @foreach (var row in Rows)
             {
                 <tr @key="row.Starts">
-                    <td>@Name(row.Starts)</td>
+                    <td class="nowrap">@Name(row.Starts)</td>
                     <td>@Display.Number(row.Visitors)</td>
                     <td>@Display.Number(row.Members)</td>
                     <td>@Display.Number(row.VisitorViews + row.MemberViews)</td>

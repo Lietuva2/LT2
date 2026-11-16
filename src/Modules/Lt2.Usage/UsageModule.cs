@@ -41,13 +41,17 @@ public static class UsageModule
 /// One finished request as the web host saw it. The module decides whether it is a page view (<see cref="IUsageCounter.Count"/>);
 /// the address and the user agent are hashed at once and not kept.
 /// </summary>
-/// <param name="Path">The path with a link's token already replaced (the host's <c>SecretPaths</c>); never the query.</param>
+/// <param name="Path">The path asked for, only to tell a page from the API and the like; it is never stored.</param>
+/// <param name="Template">The route of the page that answered (<c>/seimas/{Number}</c>), null without one; a page is counted under it.</param>
+/// <param name="RouteValues">The route's values; only a public object's (a bill's number, an address) are kept in the counted path.</param>
 /// <param name="AccountId">The account of a signed-in session, else null.</param>
 /// <param name="Referrer">The <c>Referer</c> header as sent; only its host is counted.</param>
 /// <param name="OwnHost">This site's host, so moving between its own pages is no referral.</param>
 public sealed record PageView(
     string Method,
     string Path,
+    string? Template,
+    IReadOnlyDictionary<string, string?> RouteValues,
     int Status,
     string? ContentType,
     bool Prefetch,

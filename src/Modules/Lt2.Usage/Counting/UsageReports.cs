@@ -12,26 +12,35 @@ internal sealed class UsageReports(UsageDb db, IUsageCounter counter, TimeProvid
     public const int TopPages = 30;
     public const int TopReferrers = 20;
 
+    /// <summary>The ranges of the pages and referring sites (1, 7 or 30 days); any other asks for the default.</summary>
+    public static readonly int[] Ranges = [1, 7, 30];
+
+    public const int DefaultRange = 7;
+
     public async Task<UsageReport> ReportAsync(int days, CancellationToken cancellationToken)
     {
         await counter.FlushAsync(cancellationToken);
         var today = VilniusTime.Today(clock);
-        var range = Math.Clamp(days, 1, 90);
+        var range = Ranges.Contains(days) ? days : DefaultRange;
 
-        var firstDay = today.AddDays(-(Days - 1));
+        // The lists begin at the first day counted (no rows of zeros from before counting began) and at most 30 days and
+        // 12 months back; today, this month and this year are always there.
+        var counted = await db.Totals.AsNoTracking().Where(t => t.Period == UsageRules.Day && t.Starts <= today)
+            .Select(t => (DateOnly?)t.Starts).MinAsync(cancellationToken) ?? today;
         var thisMonth = new DateOnly(today.Year, today.Month, 1);
-        var firstMonth = thisMonth.AddMonths(-(Months - 1));
+        var firstDay = Max(today.AddDays(-(Days - 1)), counted);
+        var firstMonth = Max(thisMonth.AddMonths(-(Months - 1)), new DateOnly(counted.Year, counted.Month, 1));
+        var firstYear = new DateOnly(counted.Year, 1, 1);
+        var thisYear = new DateOnly(today.Year, 1, 1);
         var totals = await db.Totals.AsNoTracking()
-            .Where(t => (t.Period == UsageRules.Day && t.Starts >= firstDay)
-                || (t.Period == UsageRules.Month && t.Starts >= firstMonth)
-                || t.Period == UsageRules.Year)
+            .Where(t => (t.Period == UsageRules.Day && t.Starts >= firstDay && t.Starts <= today)
+                || (t.Period == UsageRules.Month && t.Starts >= firstMonth && t.Starts <= thisMonth)
+                || (t.Period == UsageRules.Year && t.Starts >= firstYear && t.Starts <= thisYear))
             .ToListAsync(cancellationToken);
 
-        var dayList = Enumerable.Range(0, Days).Select(i => Of(totals, UsageRules.Day, firstDay.AddDays(i))).ToList();
-        var monthList = Enumerable.Range(0, Months).Select(i => Of(totals, UsageRules.Month, firstMonth.AddMonths(i))).ToList();
-        var years = totals.Where(t => t.Period == UsageRules.Year).Select(t => t.Starts)
-            .Append(new DateOnly(today.Year, 1, 1)).Distinct().Order()
-            .Select(y => Of(totals, UsageRules.Year, y)).ToList();
+        var dayList = Enumerable.Range(0, today.DayNumber - firstDay.DayNumber + 1).Select(i => Of(totals, UsageRules.Day, firstDay.AddDays(i))).ToList();
+        var monthList = Enumerable.Range(0, MonthsBetween(firstMonth, thisMonth) + 1).Select(i => Of(totals, UsageRules.Month, firstMonth.AddMonths(i))).ToList();
+        var years = Enumerable.Range(firstYear.Year, today.Year - firstYear.Year + 1).Select(y => Of(totals, UsageRules.Year, new DateOnly(y, 1, 1))).ToList();
 
         var from = today.AddDays(-(range - 1));
         var pages = (await db.Pages.AsNoTracking()
@@ -53,6 +62,10 @@ internal sealed class UsageReports(UsageDb db, IUsageCounter counter, TimeProvid
 
         return new UsageReport(counter.Online(), dayList, monthList, years, range, pages, referrers);
     }
+
+    private static DateOnly Max(DateOnly a, DateOnly b) => a > b ? a : b;
+
+    private static int MonthsBetween(DateOnly from, DateOnly to) => (to.Year - from.Year) * 12 + to.Month - from.Month;
 
     private static UsageTotal Of(List<TotalRow> totals, string period, DateOnly starts) =>
         totals.FirstOrDefault(t => t.Period == period && t.Starts == starts) is { } t

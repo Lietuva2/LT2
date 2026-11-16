@@ -6,9 +6,9 @@ namespace Lt2.Api.Contracts.Admin;
 /// </summary>
 /// <param name="OnlineVisitors">Distinct visitors without a signed-in session with a page in the last five minutes.</param>
 /// <param name="OnlineMembers">Distinct accounts with a page in the last five minutes.</param>
-/// <param name="Days">The last 30 Vilnius days, oldest first, today included.</param>
-/// <param name="Months">The last 12 months, oldest first, this month included.</param>
-/// <param name="Years">Every year counted, oldest first, this year included.</param>
+/// <param name="Days">Vilnius days from the first counted, at most the last 30, oldest first, today included.</param>
+/// <param name="Months">Months from the first counted, at most the last 12, oldest first, this month included.</param>
+/// <param name="Years">Every year from the first counted, oldest first, this year included.</param>
 /// <param name="RangeDays">The days <see cref="Pages"/> and <see cref="Referrers"/> cover, today included.</param>
 public sealed record UsageResponse(
     int OnlineVisitors,
@@ -31,7 +31,7 @@ public static class UsageRoutes
 {
     public const string Page = "/administravimas/lankomumas";
 
-    /// <summary>The ranges the screen offers for pages and referring sites.</summary>
+    /// <summary>The ranges for pages and referring sites; any other value reads as <see cref="DefaultRange"/>.</summary>
     public static readonly int[] Ranges = [1, 7, 30];
 
     public const int DefaultRange = 7;
