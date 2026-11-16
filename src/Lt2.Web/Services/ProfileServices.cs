@@ -65,15 +65,39 @@ internal sealed class ServerProfilesApi(IMemberProfiles profiles, MemberReads re
 
     private HttpContext? Http => accessor.HttpContext;
 
-    public async Task<ApiResult<MyProfileResponse>> GetMineAsync(CancellationToken cancellationToken = default) =>
-        Http is { } http
-            ? errors.ToApiResult(await profiles.MineAsync(http.User, cancellationToken), ProfileMapping.Map)
-            : ApiResult<MyProfileResponse>.Fail(errors.ToProblem(SignInRequired));
+    /// <summary>
+    /// The person's own profile, read once per request: islands prerendered side by side on one page ask for it at the same
+    /// time ("Sekti" and "Pranešti apie profilį" on a member's page, design 8.25.6), and the request has one Identity context,
+    /// which cannot run two reads at once (browser look, 2026-11-17: the page answered 500 to a signed-in member).
+    /// </summary>
+    public Task<ApiResult<MyProfileResponse>> GetMineAsync(CancellationToken cancellationToken = default)
+    {
+        if (Http is not { } http)
+        {
+            return Task.FromResult(ApiResult<MyProfileResponse>.Fail(errors.ToProblem(SignInRequired)));
+        }
 
-    public async Task<ApiResult<MyProfileResponse>> SaveAsync(ProfileRequest request, CancellationToken cancellationToken = default) =>
-        Http is { } http
-            ? errors.ToApiResult(await profiles.ChangeAsync(http.User, ProfileMapping.ToModule(request), ipHasher.Hash(http), cancellationToken), ProfileMapping.Map)
-            : ApiResult<MyProfileResponse>.Fail(errors.ToProblem(SignInRequired));
+        if (http.Items[typeof(ServerProfilesApi)] is not Task<ApiResult<MyProfileResponse>> mine)
+        {
+            http.Items[typeof(ServerProfilesApi)] = mine = ReadMineAsync(http, cancellationToken);
+        }
+
+        return mine;
+    }
+
+    private async Task<ApiResult<MyProfileResponse>> ReadMineAsync(HttpContext http, CancellationToken cancellationToken) =>
+        errors.ToApiResult(await profiles.MineAsync(http.User, cancellationToken), ProfileMapping.Map);
+
+    public async Task<ApiResult<MyProfileResponse>> SaveAsync(ProfileRequest request, CancellationToken cancellationToken = default)
+    {
+        if (Http is not { } http)
+        {
+            return ApiResult<MyProfileResponse>.Fail(errors.ToProblem(SignInRequired));
+        }
+
+        http.Items.Remove(typeof(ServerProfilesApi));
+        return errors.ToApiResult(await profiles.ChangeAsync(http.User, ProfileMapping.ToModule(request), ipHasher.Hash(http), cancellationToken), ProfileMapping.Map);
+    }
 
     public async Task<ApiResult<MemberProfileResponse>> GetMemberAsync(string id, CancellationToken cancellationToken = default) =>
         errors.ToApiResult(await reads.MemberAsync(id, cancellationToken), x => x);

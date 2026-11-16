@@ -61,6 +61,39 @@ public sealed class ProfileTests(DatabaseFixture database) : ApiTest(database)
     }
 
     [Fact]
+    public async Task The_page_renders_for_signed_in_members_too_and_offers_no_report_on_the_members_own_page()
+    {
+        // Browser look, 2026-11-17: "Sekti" and "Pranešti apie profilį" prerendered side by side read the person's own profile
+        // at the same time, and the page answered 500 to a signed-in member now and then. Several loads make the race show.
+        var (owner, _, id) = await Factory.PublicMemberAsync("Puslapio Savininkė");
+        var (reader, _) = await Factory.MemberAsync("Puslapio Skaitytoja");
+        using var _o = owner;
+        using var _r = reader;
+        var path = ProfileRoutes.Page(id, "Puslapio Savininkė");
+
+        for (var i = 0; i < 10; i++)
+        {
+            foreach (var (who, client) in new[] { ("another member", reader), ("the member", owner) })
+            {
+                using var html = await client.Client.GetAsync(path, TestContext.Current.CancellationToken);
+                html.StatusCode.ShouldBe(HttpStatusCode.OK, $"{who}, load {i + 1}");
+                var markup = WebUtility.HtmlDecode(await html.Content.ReadAsStringAsync(TestContext.Current.CancellationToken));
+                markup.ShouldContain("<h1 id=\"member-name\">Puslapio Savininkė</h1>");
+                if (client == owner)
+                {
+                    markup.ShouldNotContain("Pranešti apie profilį", Case.Sensitive, "nothing to report on one's own page");
+                    markup.ShouldContain("id=\"follow-own-link\"");
+                }
+                else
+                {
+                    markup.ShouldContain("Pranešti apie profilį");
+                    markup.ShouldContain("id=\"follow-toggle-member\"");
+                }
+            }
+        }
+    }
+
+    [Fact]
     public async Task A_profile_switched_off_answers_410_for_ever_and_a_new_one_gets_a_new_address_while_an_id_never_issued_is_404()
     {
         var (member, email, first) = await Factory.PublicMemberAsync();
