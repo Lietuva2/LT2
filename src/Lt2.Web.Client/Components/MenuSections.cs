@@ -1,15 +1,16 @@
 namespace Lt2.Web.Client.Components;
 
 /// <summary>
-/// Design 8.21: which menu item a page belongs to, and which of the three tabs under "Projektai" it is. The menu item
-/// "Projektai" opens <c>/darbotvarke</c> and is current on the three pages and on everything under them (the history of votes, a bill and its
+/// Design 8.21: which menu item a page belongs to, and which of the four tabs under "Projektai" it is. The menu item
+/// "Projektai" opens <c>/darbotvarke</c> and is current on the four pages and on everything under them (the history of votes, a bill and its
 /// history, a vote, a summary's date page, the introduction letter's public page); "Seimo nariai" on the list, a profile and
 /// its votes, a faction and a committee. Paths are site paths with or without the leading <c>/</c>, query and fragment ignored.
 /// </summary>
 public static class MenuSections
 {
     /// <summary>
-    /// The three tabs, in their order: the address and the resource key of each. The history of votes is no tab (the owner,
+    /// The four tabs, in their order: the address and the resource key of each (the fourth, "Analitika", owner 2026-11-16,
+    /// design 8.26). The history of votes is no tab (the owner,
     /// 2026-11-16): it is reached by the link under the agenda's voted list and leads back by a breadcrumb.
     /// </summary>
     public static readonly IReadOnlyList<(ProjectTab Tab, string Path, string Key)> Tabs =
@@ -17,6 +18,7 @@ public static class MenuSections
         (ProjectTab.Agenda, "/darbotvarke", "Tabs.Agenda"),
         (ProjectTab.Bills, "/projektai", "Tabs.Bills"),
         (ProjectTab.Digests, "/suvestines", "Tabs.Digests"),
+        (ProjectTab.Analytics, "/seimas/analitika", "Tabs.Analytics"),
     ];
 
     /// <summary>Where the menu item "Projektai" leads (design 8.21, the designer's proposal: what is coming first).</summary>
@@ -65,10 +67,11 @@ public static class MenuSections
     }
 }
 
-/// <summary>The three tabs under "Projektai" (design 8.21).</summary>
+/// <summary>The four tabs under "Projektai" (design 8.21, 8.26).</summary>
 public enum ProjectTab
 {
     Agenda,
     Bills,
     Digests,
+    Analytics,
 }

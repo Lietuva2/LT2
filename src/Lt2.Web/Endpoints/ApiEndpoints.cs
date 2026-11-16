@@ -123,6 +123,8 @@ internal static class ApiEndpoints
         Agenda.GetAgendaEndpoint.Map(api);
         FollowEndpoints.Map(api);
         MyBillsEndpoint.Map(api);
+        Analytics.GetAnalyticsEndpoint.Map(api);
+        Analytics.GetMyAgreementEndpoint.Map(api);
 
         Organisations.OrganisationEndpoints.Map(api);
         Organisations.OrganisationRepresentativeEndpoints.Map(api);

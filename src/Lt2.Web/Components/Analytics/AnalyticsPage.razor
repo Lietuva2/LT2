@@ -1,0 +1,298 @@
+@page "/seimas/analitika"
+@using System.Globalization
+@using Lt2.Api.Contracts.Analytics
+@using Lt2.Api.Contracts.Meta
+@using Lt2.Web.Client.Analytics
+@inject IAnalyticsApi Api
+@inject IMetaApi Meta
+@inject IStringLocalizer<AnalyticsText> T
+@inject Formats F
+
+@* Design 8.26: the analytics page, the fourth tab under "Projektai". Public, server-rendered, the same for everyone and
+   readable without JavaScript: the filters are one GET form on the ground (8.16), the plot is SVG drawn here with a
+   <title> per dot and the table one click away. Nothing about the caller, apart from the island at the end, which asks for
+   the caller's own comparison only in the browser (8.26.4). *@
+<PageTitle>@T["Title"] · Lietuva 2.0</PageTitle>
+
+<div class="stack">
+    <h1>@T["Title"]</h1>
+    <ProjectTabs Current="ProjectTab.Analytics" />
+    <p class="lead">@T["Lead"]</p>
+    <form class="filters" method="get" action="@Path" id="analytics-filters">
+        <div class="field">
+            <label for="analytics-metai">@T["Filter.Period"]</label>
+            <select class="input" id="analytics-metai" name="metai">
+                <option value="" selected="@(_data?.Year is null)">@TermLabel</option>
+                @foreach (var year in _data?.Years ?? [])
+                {
+                    <option value="@year.ToString(CultureInfo.InvariantCulture)" selected="@(_data?.Year == year)">@T.Format("Filter.Year", year.ToString(CultureInfo.InvariantCulture))</option>
+                }
+            </select>
+        </div>
+        <div class="field">
+            <label for="analytics-paskyros">@T["Filter.Accounts"]</label>
+            <select class="input" id="analytics-paskyros" name="paskyros">
+                <option value="" selected="@(!Older)">@T["Filter.AllAccounts"]</option>
+                <option value="@OlderValue" selected="@Older">@T["Filter.OlderAccounts"]</option>
+            </select>
+        </div>
+        <div class="row">
+            <button class="btn" type="submit">@T["Filter.Show"]</button>
+        </div>
+    </form>
+</div>
+
+@if (_data is { } d)
+{
+    var figures = d.Figures;
+    <section class="sheet stack" aria-labelledby="h-figures" id="analytics-figures">
+        <h2 id="h-figures" class="visually-hidden">@T["Figures.Title"]</h2>
+        <div class="analytics-figures">
+            <div class="figure figure--m" id="figure-taken-part">
+                <span class="label">@T["Figures.TakenPart"]</span>
+                <span class="figure__num">@Display.Number(figures.BillsTakenPart)</span>
+                <span class="small num">@T.Format("Figures.TakenPartOf", Display.Number(figures.BillsDiscussed))</span>
+            </div>
+            <div class="figure figure--m" id="figure-positions">
+                <span class="label">@T["Figures.Positions"]</span>
+                <span class="figure__num">@Display.Number(figures.Positions)</span>
+                <span class="small">@T["Figures.PositionsSub"]</span>
+            </div>
+            <div class="figure figure--m" id="figure-agreed">
+                <span class="label">@T["Figures.Agreed"]</span>
+                @if (figures.Compared == 0)
+                {
+                    <span class="small" id="figure-agreed-none">@T["Figures.AgreedNone"]</span>
+                }
+                else
+                {
+                    @if (Display.Percent(figures.AgreedShare) is { } share)
+                    {
+                        <span class="figure__num">@share</span>
+                    }
+                    <span class="small num">
+                        @T.Format("Figures.AgreedOf", Display.Number(figures.Agreed), Display.Number(figures.Compared))
+                        @if (figures.AgreedShare is null)
+                        {
+                            @(" · ")<span class="tag" id="figure-agreed-small">@T["SmallSample"]</span>
+                        }
+                    </span>
+                }
+            </div>
+            <div class="figure figure--m" id="figure-mps">
+                <span class="label">@T["Figures.Mps"]</span>
+                <span class="figure__num">@Display.Number(figures.MpsTakenOver)</span>
+                <span class="small num">@T.Format("Figures.MpsOf", Display.Number(figures.MpsSitting))</span>
+            </div>
+        </div>
+        <p class="small" id="analytics-not-a-poll">
+            @T["NotAPoll"]@(" ")
+            <Lt2.Web.Client.Components.Hint Id="hint-small-sample" Text="@T["SmallSample"]" Answer="@T.Format("SmallSample.Answer", Display.Number(d.SmallSample))" />
+        </p>
+    </section>
+
+    var dots = d.Bills.Where(b => b.Dot).ToList();
+    <section class="sheet stack" aria-labelledby="h-compare" id="palyginimas">
+        <h2 id="h-compare">@T["Compare.Title"]</h2>
+        @if (dots.Count == 0)
+        {
+            <p id="compare-none">@T.Format("Compare.None", Display.Number(d.SmallSample))</p>
+        }
+        else
+        {
+            <p class="small row">
+                <span class="key key--seimas">@T["Compare.Seimas"]</span>
+                <span class="key key--members">@T["Compare.Members"]</span>
+                <span>@T["Compare.Half"] @T.Format("Compare.Latest", Display.Number(d.SmallSample))</span>
+            </p>
+            <svg class="dotplot" viewBox="0 0 @PlotWidth @PlotHeight(dots.Count)" role="img" aria-label="@T["Compare.Aria"]" id="compare-plot">
+                @foreach (var tick in Ticks)
+                {
+                    <line class="@(tick == 50 ? "dotplot__half" : "dotplot__axis")" x1="@X(tick)" x2="@X(tick)" y1="@Px(PlotTop - 8)" y2="@Px(PlotTop + RowHeight * dots.Count - 12)" />
+                    @SvgText("dotplot__tick", X(tick), Px(PlotTop + RowHeight * dots.Count + 6), "middle", tick.ToString(CultureInfo.InvariantCulture) + " %")
+                }
+                @for (var i = 0; i < dots.Count; i++)
+                {
+                    var bill = dots[i];
+                    var y = PlotTop + RowHeight * i;
+                    var seimas = (decimal)bill.SeimasShareFor!;
+                    var members = (decimal)bill.MembersShareFor!;
+                    <g id="@($"dot-{bill.Number}")">
+                        @SvgText("dotplot__label", "0", Px(y + 4), "start", bill.Number)
+                        <line class="dotplot__gap" x1="@X(seimas * 100)" x2="@X(members * 100)" y1="@Px(y)" y2="@Px(y)" />
+                        <circle class="dotplot__seimas" cx="@X(seimas * 100)" cy="@Px(y)" r="6"><title>@T.Format("Compare.DotSeimas", bill.Title, Display.Percent(seimas))</title></circle>
+                        <circle class="dotplot__members" cx="@X(members * 100)" cy="@Px(y)" r="6"><title>@T.Format("Compare.DotMembers", bill.Title, Display.Percent(members), Display.Number(bill.MembersFor + bill.MembersAgainst))</title></circle>
+                    </g>
+                }
+            </svg>
+        }
+        @if (d.Bills.Count == 0)
+        {
+            <p class="small" id="compare-empty">@T["Compare.Empty"]</p>
+        }
+        else
+        {
+            <details class="more stack stack--tight" id="compare-table">
+                <summary class="linkish small">@T["Compare.Table"]</summary>
+                <div class="table-wrap">
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th scope="col">@T["Compare.Bill"]</th>
+                                <th scope="col">@T["Compare.SeimasFor"]</th>
+                                <th scope="col">@T["Compare.MembersFor"]</th>
+                                <th scope="col">@T["Compare.Majority"]</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var bill in d.Bills)
+                            {
+                                <tr id="@($"row-{bill.Number}")" @key="bill.Number">
+                                    <td><a href="/seimas/@Uri.EscapeDataString(bill.Number)" class="num">@bill.Number</a> @bill.Title <span class="small num">@Display.Day(bill.VotedAt)</span></td>
+                                    <td class="num"><a href="/seimas/balsavimai/@bill.VoteId">@SeimasShare(bill)</a></td>
+                                    <td class="num">
+                                        @if (Display.Percent(bill.MembersShareFor) is { } share)
+                                        {
+                                            @share
+                                        }
+                                        else
+                                        {
+                                            @T.Format("Compare.Counts", Display.Number(bill.MembersFor), Display.Number(bill.MembersAgainst))@(" ")<span class="tag">@T["SmallSample"]</span>
+                                        }
+                                    </td>
+                                    <td>@Majority(bill)</td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+                <p class="small">
+                    <Lt2.Web.Client.Components.Hint Id="hint-majority" Text="@T["Majority.Hint"]" Answer="@T["Majority.Answer"]" />
+                </p>
+            </details>
+        }
+        <p class="small">@T["NotAPoll"]</p>
+    </section>
+
+    <section class="sheet stack" aria-labelledby="h-unity" id="frakciju-vieningumas">
+        <h2 id="h-unity">@T["Unity.Title"]</h2>
+        <p class="small">
+            @T["Unity.Lead"]@(" ")
+            <Lt2.Web.Client.Components.Hint Id="hint-faction-position" Text="@T["Unity.Hint"]" Answer="@T["Unity.Answer"]" More="/metodika#kaip-frakcija" />
+        </p>
+        @if (d.Factions.Count == 0)
+        {
+            <p id="unity-none">@T["Unity.None"]</p>
+        }
+        else
+        {
+            <ul class="unity">
+                @foreach (var faction in d.Factions)
+                {
+                    <li class="stack stack--tight" id="@($"unity-{faction.Slug}")" @key="faction.Slug">
+                        <div class="row unity__head">
+                            <a href="/frakcijos/@Uri.EscapeDataString(faction.Slug)">@faction.Name</a>
+                            <span class="small num">@T.Format("Unity.Seats", Display.Number(faction.Seats))</span>
+                            @if (Display.Percent(faction.Share) is { } share)
+                            {
+                                <b class="num unity__share">@share</b>
+                            }
+                            @if (faction.SmallSample)
+                            {
+                                <span class="tag">@T["SmallSample"]</span>
+                            }
+                        </div>
+                        @if (faction.Share is { } value)
+                        {
+                            <svg class="meter" viewBox="0 0 1000 10" preserveAspectRatio="none" aria-hidden="true">
+                                <rect class="meter__fill" x="0" y="0" width="@Px(1000 * value)" height="10" />
+                            </svg>
+                        }
+                        else
+                        {
+                            <span class="small">@T["Unity.NoShare"]</span>
+                        }
+                        <span class="small num">@T.Format("Unity.Votes", Display.Number(faction.VotesWithPosition), Display.Number(faction.FreeVotes))</span>
+                        @if (faction.MostSplit.Count > 0)
+                        {
+                            <details class="more stack stack--tight" id="@($"split-{faction.Slug}")">
+                                <summary class="linkish small">@T["Unity.Split"]</summary>
+                                <ul class="stack stack--tight">
+                                    @foreach (var vote in faction.MostSplit)
+                                    {
+                                        <li class="small">
+                                            <a href="/seimas/balsavimai/@vote.VoteId">@(vote.BillNumber is { } number ? number + " " : "")@vote.Title</a>
+                                            <span class="num">@Display.Day(vote.HeldAt)@(vote.Stage is { } stage ? " · " + F.Stage(stage) : "")</span>
+                                            <span class="num">· @F.Position(vote.Position) · @F.Counts(vote.For, vote.Against, vote.Abstain)</span>
+                                        </li>
+                                    }
+                                </ul>
+                            </details>
+                        }
+                    </li>
+                }
+            </ul>
+        }
+    </section>
+}
+
+<section class="sheet stack" aria-labelledby="h-mine" id="kas-balsuoja-kaip-jus">
+    <h2 id="h-mine">@T["Mine.Title"]</h2>
+    <p class="small">@T["Mine.Lead"]</p>
+    <MyAgreement @rendermode="InteractiveWebAssembly" />
+</section>
+
+<SourceLine UpdatedAt="@_updatedAt" />
+
+@code {
+    /// <summary>The page's address.</summary>
+    public const string Path = "/seimas/analitika";
+
+    /// <summary>The value of <c>paskyros</c> that counts only accounts older than 30 days (design 8.26.1).</summary>
+    public const string OlderValue = "senesnes";
+
+    private const int PlotWidth = 600;
+    private const int PlotLeft = 130;
+    private const int PlotRight = 585;
+    private const int PlotTop = 18;
+    private const int RowHeight = 34;
+    private static readonly int[] Ticks = [0, 25, 50, 75, 100];
+
+    private AnalyticsResponse? _data;
+    private DateTimeOffset? _updatedAt;
+
+    [SupplyParameterFromQuery(Name = "metai")] public string? Year { get; set; }
+
+    [SupplyParameterFromQuery(Name = "paskyros")] public string? Accounts { get; set; }
+
+    private bool Older => string.Equals(Accounts, OlderValue, StringComparison.Ordinal);
+
+    private string TermLabel => string.IsNullOrEmpty(_data?.TermName) ? T["Filter.Term"] : T.Format("Filter.TermNamed", _data.TermName);
+
+    protected override async Task OnParametersSetAsync()
+    {
+        int? year = int.TryParse(Year, NumberStyles.None, CultureInfo.InvariantCulture, out var y) ? y : null;
+        _data = (await Api.GetAsync(year, Older)).Value;
+        _updatedAt = (await Meta.GetImportsAsync()).Value?.Sources.FirstOrDefault()?.LastSuccessAt;
+    }
+
+    private static string X(decimal percent) => Px(PlotLeft + (PlotRight - PlotLeft) * percent / 100);
+
+    private static string Px(decimal value) => value.ToString("0.#", CultureInfo.InvariantCulture);
+
+    private static int PlotHeight(int rows) => PlotTop + RowHeight * rows + 12;
+
+    /// <summary>An SVG <c>text</c> element (Razor reads a literal one inside a loop as its own tag); the content is encoded.</summary>
+    private static MarkupString SvgText(string cssClass, string x, string y, string anchor, string content) =>
+        new($"<text class=\"{cssClass}\" x=\"{x}\" y=\"{y}\" text-anchor=\"{anchor}\">{System.Net.WebUtility.HtmlEncode(content)}</text>");
+
+    private string SeimasShare(BillComparisonResponse bill) =>
+        bill.IsConsensus ? T["Compare.Consensus"] : Display.Percent(bill.SeimasShareFor) ?? T["Compare.NoResult"];
+
+    private string Majority(BillComparisonResponse bill) => bill.SeimasMajorityFor switch
+    {
+        true => T["Compare.MajorityFor"],
+        false => T["Compare.MajorityNotFor"],
+        null => T["Compare.NoResult"],
+    };
+}

@@ -257,7 +257,25 @@ public interface IAppealsModule
     /// never anyone else's. A bill whose record the moderators hid is left out, as its page shows no taking part.
     /// </summary>
     Task<IReadOnlyDictionary<string, string>> MySidesAsync(Guid userId, IReadOnlyCollection<string> billNumbers, CancellationToken cancellationToken);
+
+    /// <summary>
+    /// Design 8.26.2: every closed record (hidden ones are left out) with its closing vote and its frozen counts, the latest
+    /// closed first. Aggregates only.
+    /// </summary>
+    Task<IReadOnlyList<ClosedRecordFacts>> ClosedRecordsAsync(CancellationToken cancellationToken);
+
+    /// <summary>
+    /// Design 8.26.4: the caller's own side on every closed record (hidden ones are left out), with the record's closing vote.
+    /// The person's own, never anyone else's; read per request and never stored elsewhere.
+    /// </summary>
+    Task<IReadOnlyList<MyClosedSide>> MyClosedSidesAsync(Guid userId, CancellationToken cancellationToken);
 }
+
+/// <summary>A closed record as the analytics page compares it (design 8.26.2): the vote that closed it and its frozen counts.</summary>
+public sealed record ClosedRecordFacts(string BillNumber, long ClosingVoteId, DateTimeOffset ClosedAt, SideCounts Counts);
+
+/// <summary>The caller's own side (<c>for</c> or <c>against</c>) on a closed record, and the vote that closed it (design 8.26.4).</summary>
+public sealed record MyClosedSide(string BillNumber, long ClosingVoteId, string Side);
 
 /// <summary>Moderation after the fact (design 8.12.3). Every action is audited; an argument's author is told why.</summary>
 public interface IAppealsModeration

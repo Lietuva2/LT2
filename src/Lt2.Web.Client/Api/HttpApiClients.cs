@@ -284,6 +284,15 @@ internal sealed class HttpFeedbackApi(ApiHttp http) : Lt2.Api.Contracts.Feedback
         http.SendAsync(HttpMethod.Post, Lt2.Api.Contracts.Feedback.FeedbackRoutes.ReplyOf(id), request, cancellationToken);
 }
 
+internal sealed class HttpAnalyticsApi(ApiHttp http) : Lt2.Api.Contracts.Analytics.IAnalyticsApi
+{
+    public Task<ApiResult<Lt2.Api.Contracts.Analytics.AnalyticsResponse>> GetAsync(int? year, bool olderAccounts, CancellationToken cancellationToken = default) =>
+        http.SendAsync<Lt2.Api.Contracts.Analytics.AnalyticsResponse>(HttpMethod.Get, Lt2.Api.Contracts.Analytics.AnalyticsRoutes.Of(year, olderAccounts), null, cancellationToken);
+
+    public Task<ApiResult<Lt2.Api.Contracts.Analytics.MyAgreementResponse>> GetMyAgreementAsync(CancellationToken cancellationToken = default) =>
+        http.SendAsync<Lt2.Api.Contracts.Analytics.MyAgreementResponse>(HttpMethod.Get, Lt2.Api.Contracts.Analytics.AnalyticsRoutes.MyAgreement, null, cancellationToken);
+}
+
 internal sealed class HttpMyBillsApi(ApiHttp http) : IMyBillsApi
 {
     public Task<ApiResult<MyBillsResponse>> GetAsync(MyBillsQuery query, CancellationToken cancellationToken = default)
