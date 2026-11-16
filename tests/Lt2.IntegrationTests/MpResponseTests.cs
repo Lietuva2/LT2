@@ -27,7 +27,7 @@ public sealed class MpResponseTests(DatabaseFixture database) : ApiTest(database
     /// <summary>A vote on <see cref="Bill"/> to copy an adoption vote from (its sitting and agenda item).</summary>
     private const long BillVote = 99100102;
 
-    private static readonly string[] ResponseFields = ["id", "status", "stance", "text", "publishedAt", "editedAt", "withdrawnAt", "hiddenStatement", "earlier", "vote"];
+    private static readonly string[] ResponseFields = ["id", "status", "stance", "text", "publishedAt", "editedAt", "withdrawnAt", "hiddenStatement", "earlier", "vote", "comments"];
 
     [Fact]
     public async Task A_response_is_public_at_once_with_its_mark_and_keeps_every_public_version_when_changed_withdrawn_and_written_again()

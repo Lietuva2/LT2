@@ -23,6 +23,7 @@ public sealed class SideSwitchTests : BunitContext
     {
         Services.AddLocalization();
         Services.AddLt2ClientComponents();
+        CommentFakes.Add(Services);
         var api = DispatchProxy.Create<IAppealsApi, ApiFake>();
         _api = (ApiFake)(object)api;
         var record = new BillRecordResponse(

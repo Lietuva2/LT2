@@ -22,6 +22,13 @@ internal static class FollowRules
     /// <summary>The key of an organisation's follow, and of a statement's event: the id in the Appeals module.</summary>
     public static string IdKey(Guid id) => id.ToString("D", CultureInfo.InvariantCulture);
 
+    /// <summary>
+    /// The key of a comments notice's record (design 8.23.14, no person): the argument's id (its first 80 bits, as 20 hexadecimal
+    /// digits) and the run's moment in milliseconds, within the 40 characters the key has.
+    /// </summary>
+    public static string CommentKey(Guid reasonId, DateTimeOffset run) =>
+        reasonId.ToString("N", CultureInfo.InvariantCulture)[..20] + ":" + run.ToUnixTimeMilliseconds().ToString(CultureInfo.InvariantCulture);
+
     /// <summary>How far back the comments notice's first run looks (design 8.23.14): the last hour.</summary>
     public static readonly TimeSpan CommentsFirstLookBack = TimeSpan.FromHours(1);
 

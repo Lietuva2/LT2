@@ -499,14 +499,13 @@ internal sealed class FollowService(
             return none;
         }
 
-        var key = now.UtcDateTime.ToString("O", CultureInfo.InvariantCulture);
         foreach (var argument in commented)
         {
             db.BillEvents.Add(new BillEvent
             {
                 BillNumber = argument.BillNumber,
                 Kind = BillEventKinds.Comment,
-                Key = FollowRules.IdKey(argument.ReasonId) + ":" + key,
+                Key = FollowRules.CommentKey(argument.ReasonId, now),
                 FirstSeen = now,
                 SentAt = now,
                 Outcome = BillEventOutcomes.Sent,

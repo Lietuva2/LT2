@@ -26,6 +26,7 @@ public sealed class RecordReasonsTests : BunitContext
         Services.AddLocalization();
         Services.AddLt2Validators();
         Services.AddLt2ClientComponents();
+        CommentFakes.Add(Services);
         var appeals = DispatchProxy.Create<IAppealsApi, ApiFake>();
         _appeals = (ApiFake)(object)appeals;
         var moderation = DispatchProxy.Create<IModerationApi, ApiFake>();

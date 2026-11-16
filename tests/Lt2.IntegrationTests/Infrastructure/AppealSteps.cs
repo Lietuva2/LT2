@@ -30,6 +30,13 @@ public static class AppealSteps
     /// </summary>
     public static async Task FreeBillAsync(this DatabaseFixture database, string number)
     {
+        // Comments on the bill (design 8.23) refer to it by number: they go with their "Sutinku" and the reports on them.
+        await database.ExecuteAsync(
+            """
+            DELETE FROM appeals.report WHERE target_kind = 'comment' AND target_id IN (SELECT id FROM appeals.comment WHERE bill_number = @n);
+            DELETE FROM appeals.comment WHERE bill_number = @n;
+            """,
+            ("n", number));
         await database.ExecuteAsync(
             """
             DELETE FROM appeals.report WHERE target_kind = 'response' AND target_id IN (SELECT id FROM appeals.mp_response WHERE bill_number = @n);
