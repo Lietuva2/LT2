@@ -117,11 +117,6 @@ internal static class E2ESteps
     public static string Base => SignUpTests.BaseUrl!.TrimEnd('/');
 
     /// <summary>
-    /// The registration form already open on <paramref name="page"/> (any start: the sign-in page, an invitation link, a
-    /// share link): the address, the emailed code, then the name, the age and the terms of use (design 6.2, 8.22.2). The invitation code is typed
-    /// only when <paramref name="invitation"/> is given (a link fills it in). Leaves the page where the site lands it.
-    /// </summary>
-    /// <summary>
     /// Signs out with the account's own "Atsijungti" (design 8.21: on the screen "Saugumas ir duomenys", /paskyra/saugumas), opened
     /// first when the browser is elsewhere; waits for the island to start.
     /// </summary>
@@ -137,6 +132,11 @@ internal static class E2ESteps
         await signOut.ClickAsync();
     }
 
+    /// <summary>
+    /// The registration form already open on <paramref name="page"/> (any start: the sign-in page, an invitation link, a
+    /// share link): the address, the emailed code, then the name, the age and the terms of use (design 6.2, 8.22.2). The invitation code is typed
+    /// only when <paramref name="invitation"/> is given (a link fills it in). Leaves the page where the site lands it.
+    /// </summary>
     public static async Task RegisterHereAsync(IPage page, string email, string displayName, string? invitation = null)
     {
         await SignUpTests.WaitForInteractivityAsync(page);
