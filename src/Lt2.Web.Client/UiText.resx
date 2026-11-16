@@ -116,13 +116,15 @@
   <data name="Data.DeleteWarning" xml:space="preserve"><value>Paskyra bus ištrinta visam laikui kartu su jūsų pozicijomis, „Man svarbu“ žymomis, argumentais ir pranešimais. Bendri skaičiai sumažės, o jau sudarytose suvestinėse liks tokie, kokie buvo. To atšaukti negalima.</value></data>
 <data name="Data.DeleteConfirm" xml:space="preserve"><value>Taip, ištrinti paskyrą</value></data>
 <data name="Data.DeleteCancel" xml:space="preserve"><value>Ne, palikti</value></data>
-<data name="Data.DeleteStaffNeedsPasskey" xml:space="preserve"><value>Tai darbuotojo paskyra: ją ištrinti galima tik prisijungus darbuotojo prieigos raktu. Atsijunkite ir prisijunkite tuo prieigos raktu.</value></data>
+<data name="Data.DeleteStaffNeedsPasskey" xml:space="preserve"><value>Tai darbuotojo paskyra: ją ištrinti galima tik prisijungus darbuotojo prieigos raktu.</value></data>
 <data name="Data.DeleteStaffKept" xml:space="preserve"><value>Tai, ką darėte kaip moderatorius ar administratorius, liks užrašyta su paskyros numeriu, bet be jūsų vardo ir adreso.</value></data>
 <data name="Data.DeleteStaffMore" xml:space="preserve"><value>Kas saugoma ir kas ištrinama</value></data>
 <data name="Split.Aria" xml:space="preserve"><value>{0} už, {1} prieš, {2} susilaikė</value></data>
 <data name="Data.DeleteStaffMoreAnswer" xml:space="preserve"><value>Lieka darbuotojų veiksmai – paslėpti ar paskelbti argumentai, jų paaiškinimai, rašymo apribojimai, organizacijų patvirtinimai, – kad būtų aišku, kas ką padarė. Visa kita, ką pateikėte paskyroje, ištrinama.</value></data>
 <data name="Hint.Opens" xml:space="preserve"><value>Atveria trumpą paaiškinimą</value></data>
-<data name="Hint.More" xml:space="preserve"><value>Plačiau</value></data><data name="Mp.Title" xml:space="preserve"><value>Seimo nario profilis</value></data>
+<data name="Hint.More" xml:space="preserve"><value>Plačiau</value></data>
+<data name="Text.ShowMore" xml:space="preserve"><value>Rodyti daugiau</value></data>
+<data name="Text.ShowLess" xml:space="preserve"><value>Rodyti mažiau</value></data><data name="Mp.Title" xml:space="preserve"><value>Seimo nario profilis</value></data>
 <data name="Mp.Offer" xml:space="preserve"><value>Prisijungėte oficialiu Seimo nario adresu. Seimo narys: {0}.</value></data>
 <data name="Mp.Claim" xml:space="preserve"><value>Perimti profilį</value></data>
 <data name="Mp.LinkSent" xml:space="preserve"><value>Nuorodą išsiuntėme jūsų adresu. Atverkite ją šioje naršyklėje per 24 valandas.</value></data>
@@ -196,4 +198,20 @@
   <data name="TermsAccept.Leave.Link" xml:space="preserve"><value>Jūsų duomenys</value></data>
   <data name="Hello.TermsRequired" xml:space="preserve"><value>Kol nesutikote su naudojimo taisyklėmis, galite tik skaityti, atsisiųsti savo duomenis ir ištrinti paskyrą.</value></data>
   <data name="Hello.TermsLink" xml:space="preserve"><value>Peržiūrėti ir sutikti</value></data>
+  <data name="StaffKey.PageTitle" xml:space="preserve"><value>Darbuotojo prieigos raktas · Lietuva 2.0</value></data>
+  <data name="StaffKey.Title" xml:space="preserve"><value>Prisijungti darbuotojo prieigos raktu</value></data>
+  <data name="StaffKey.Text" xml:space="preserve"><value>Šioje sesijoje prisijungėte ne darbuotojo prieigos raktu, todėl darbuotojo darbai joje neveikia. Patvirtinkite darbuotojo prieigos raktu – atsijungti nereikia.</value></data>
+  <data name="StaffKey.Submit" xml:space="preserve"><value>Patvirtinti prieigos raktu</value></data>
+  <data name="Data.StaffKeyLink" xml:space="preserve"><value>Prisijungti darbuotojo prieigos raktu</value></data>
+  <data name="Name.Title" xml:space="preserve"><value>Vardas</value></data>
+  <data name="Name.Hint" xml:space="preserve"><value>Šis vardas viešai rodomas prie jūsų argumentų, taip pat ir anksčiau parašytų. Ne daugiau kaip 60 ženklų. Palikus tuščią, rodoma „Lietuva 2.0 naudotojas“.</value></data>
+  <data name="Name.Save" xml:space="preserve"><value>Išsaugoti vardą</value></data>
+  <data name="Name.Saved" xml:space="preserve"><value>Vardas išsaugotas.</value></data>
+  <data name="Name.Removed" xml:space="preserve"><value>Vardo neliko: prie jūsų argumentų rodoma „Lietuva 2.0 naudotojas“.</value></data>
+  <data name="Parts.Label" xml:space="preserve"><value>Paskyros dalys</value></data>
+  <data name="Parts.Profile" xml:space="preserve"><value>Profilis</value></data>
+  <data name="Parts.Follows" xml:space="preserve"><value>Sekimas ir laiškai</value></data>
+  <data name="Parts.Taking" xml:space="preserve"><value>Dalyvavimas</value></data>
+  <data name="Parts.Security" xml:space="preserve"><value>Saugumas ir duomenys</value></data>
+  <data name="Staff.KeyText" xml:space="preserve"><value>Tai darbuotojo paskyra, bet šioje sesijoje prisijungėte ne darbuotojo prieigos raktu, todėl darbuotojo darbai neveikia.</value></data>
 </root>

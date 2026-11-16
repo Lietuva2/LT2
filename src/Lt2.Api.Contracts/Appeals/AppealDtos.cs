@@ -10,8 +10,6 @@ namespace Lt2.Api.Contracts.Appeals;
 /// <summary>The limits of taking part, the same numbers the server enforces (design 8.2, <c>AGENTS.md</c>).</summary>
 public static class AppealLimits
 {
-    public const int ReasonMaxLength = 500;
-
     public const int DescriptionMaxLength = 1500;
     public const int StatementMaxLength = 1000;
     public const int ReportTextMaxLength = 1000;
@@ -174,11 +172,13 @@ public sealed record MyBillRecordResponse(
 
 /// <summary>
 /// The numbers the forms show (design 8.2, 8.12.2). <c>ReasonsPerPerson</c> and <c>EndorsementsPerPerson</c> are the
-/// settings' current limits per person per bill; 0 means no limit. In <see cref="MyBillRecordResponse"/> a <c>null</c>
+/// settings' current limits per person per bill; 0 means no limit. <c>TextMaxLength</c> is the setting
+/// <c>Texts:MaxLength</c>, the longest text of an argument, an organisation's statement or an MP's response, in characters;
+/// 0 means no limit but <see cref="MemberTextLimits.Ceiling"/>. In <see cref="MyBillRecordResponse"/> a <c>null</c>
 /// "left" means no limit. <c>AiSummaries</c>: the summary job can make descriptions (design 8.13: a provider configured,
 /// official texts readable, <c>Ai:SummariesPerDay</c> not 0); while false nothing promises one.
 /// </summary>
-public sealed record AppealRulesResponse(int ThresholdDefault, int ThresholdMinimum, int ReasonMaxLength, int ReasonsPerPerson, int EndorsementsPerPerson, int DescriptionMaxLength, bool AiSummaries = false);
+public sealed record AppealRulesResponse(int ThresholdDefault, int ThresholdMinimum, int TextMaxLength, int ReasonsPerPerson, int EndorsementsPerPerson, int DescriptionMaxLength, bool AiSummaries = false);
 
 public sealed record ReasonCreatedResponse(Guid Id, string Status);
 

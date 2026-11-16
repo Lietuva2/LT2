@@ -11,7 +11,7 @@
 @if (Offer is { } offer)
 {
     <section class="sheet stack" aria-labelledby="mp-title" id="mp-offer">
-        <h2 id="mp-title">@L["Mp.Title"]</h2>
+        <h3 id="mp-title">@L["Mp.Title"]</h3>
         <p>@L.Format("Mp.Offer", offer.FirstName + " " + offer.LastName)</p>
         @if (_sent)
         {
@@ -27,7 +27,7 @@
 else if (Link is { } link)
 {
     <section class="sheet stack" aria-labelledby="mp-title" id="mp-link">
-        <h2 id="mp-title">@L["Mp.Title"]</h2>
+        <h3 id="mp-title">@L["Mp.Title"]</h3>
         <p>
             @L.Format(link.Part == "mp" ? "Mp.Managing" : "Mp.OfficeOf", link.FirstName + " " + link.LastName)
             <a href="/p/@link.Slug">@L["Mp.ToProfile"]</a>
@@ -42,7 +42,7 @@ else if (Link is { } link)
         @if (link.Part == "mp" && Office is { } office)
         {
             <div class="stack stack--tight" id="mp-office">
-                <h3>@L["Mp.Office.Title"]</h3>
+                <h4>@L["Mp.Office.Title"]</h4>
                 <p class="small">@L["Mp.Office.Lead"]</p>
                 @if (office.Members.Count == 0)
                 {
@@ -78,7 +78,7 @@ else if (Link is { } link)
 
         @* Design 8.19.4: the same choice of summaries as the MP's emailed link, here without the link, in a passkey session. *@
         <div class="stack stack--tight" id="mp-mail">
-            <h3>@L["Mp.Mail.Title"]</h3>
+            <h4>@L["Mp.Mail.Title"]</h4>
             @if (!link.MayWrite)
             {
                 <p class="small" id="mp-mail-passkey">@L["Mp.Mail.PasskeyNeeded"]</p>

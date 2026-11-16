@@ -14,7 +14,7 @@ public static class TermsOfUse
     /// host's resources (<c>Components/Pages/LegalText.resx</c>); a changed text gets a new, later version, and every member is
     /// asked again. The browser sends it back when accepting (<c>Lt2.Api.Contracts.Me.TermsText.Version</c>, the same value).
     /// </summary>
-    public const string Version = "2026-11-16";
+    public const string Version = "2026-11-17";
 
     /// <summary>The error code of a write refused until the member accepts.</summary>
     public const string RequiredCode = "terms.required";

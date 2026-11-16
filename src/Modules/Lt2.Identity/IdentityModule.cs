@@ -110,6 +110,9 @@ public static class IdentityModule
         services.AddScoped<CodeSignInHandler>();
         services.AddScoped<PasskeyHandlers>();
         services.AddScoped<AccountHandlers>();
+
+        // Design 6.2: needs IWritingRestrictions (Appeals) from the host.
+        services.AddScoped<DisplayNameHandlers>();
         services.AddScoped<StaffAccess>();
         services.AddScoped<AccountEvents>();
         services.AddScoped<StaffHandlers>();
@@ -220,8 +223,12 @@ internal sealed class IdentityModuleFacade(
     PartySupportHandlers parties,
     AccountDataHandlers data,
     KnownBrowsers browsers,
-    SignInManager<User> signIn) : IIdentityModule
+    SignInManager<User> signIn,
+    DisplayNameHandlers names) : IIdentityModule
 {
+    public Task<Result<Unit>> ChangeDisplayNameAsync(ClaimsPrincipal user, string? displayName, string? ipHash, CancellationToken cancellationToken) =>
+        names.ChangeAsync(user, displayName, ipHash, cancellationToken);
+
     public Task<Result<Unit>> RegisterAsync(Registration registration, CancellationToken cancellationToken) =>
         register.HandleAsync(registration, cancellationToken);
 
@@ -244,6 +251,9 @@ internal sealed class IdentityModuleFacade(
 
     public Task<Result<Unit>> ConfirmPasskeyAsync(ClaimsPrincipal user, string credentialJson, CancellationToken cancellationToken) =>
         staff.ConfirmPasskeyAsync(user, credentialJson, cancellationToken);
+
+    public Task<Result<Unit>> StartStaffSessionAsync(ClaimsPrincipal user, string credentialJson, string? ipHash, CancellationToken cancellationToken) =>
+        staff.StartStaffSessionAsync(user, credentialJson, ipHash, cancellationToken);
 
     public Task<Result<Unit>> ActivateRoleAsync(ClaimsPrincipal user, string code, string? ipHash, CancellationToken cancellationToken) =>
         staff.ActivateAsync(user, code, ipHash, cancellationToken);

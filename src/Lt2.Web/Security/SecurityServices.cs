@@ -43,8 +43,8 @@ internal static class RateLimitPolicies
     public const string OwnRead = "own-read";
 
     /// <summary>
-    /// Taking, changing or withdrawing a side, following and unfollowing (bills, MPs, organisations) and "Man svarbu" (mark
-    /// and unmark), one shared limit per account (design 8.11.2): a guard against a runaway script, not a product rule.
+    /// Taking, changing or withdrawing a side, following and unfollowing (bills, MPs, organisations), "Man svarbu" (mark
+    /// and unmark) and changing the display name (design 6.2), one shared limit per account (design 8.11.2): a guard against a runaway script, not a product rule.
     /// </summary>
     public const string Participation = "participation";
 

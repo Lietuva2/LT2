@@ -25,6 +25,15 @@ public sealed class PlannedDateTests(DatabaseFixture database) : ApiTest(databas
             VALUES (gen_random_uuid(), 'XVP-0618', @d, 'adoption', 'https://e-seimas.lrs.lt/pavyzdys', 'agenda', now(), now())
             """,
             ("d", date));
+
+        // The agenda page the date was read from (the watcher keeps one snapshot per read); removed again below.
+        var snapshot = Guid.NewGuid();
+        await Database.ExecuteAsync(
+            """
+            INSERT INTO parliament.agenda_snapshot (id, url, sha256, body, synthetic, fetched_at, failure, rows)
+            VALUES (@id, 'https://www.lrs.lt/pavyzdys/darbotvarke', '', '\x'::bytea, true, now() + interval '1 day', NULL, 1)
+            """,
+            ("id", snapshot));
         try
         {
             using var stranger = NewBrowser();
@@ -35,6 +44,19 @@ public sealed class PlannedDateTests(DatabaseFixture database) : ApiTest(databas
                 html.ShouldContain("Planuojama ");
                 html.ShouldContain(">Priėmimas</span>");
                 System.Text.RegularExpressions.Regex.IsMatch(html, @"(?i)\b(liko|po)\s+\d+\s*(d\.|dien|val)").ShouldBeFalse("never a countdown");
+
+                // Design 8.4, 8.15 (owner, 2026-11-16): where the date comes from, beside it; the agenda page it is published
+                // on, never the bill's e-seimas document; the planned stage in "Stadijos Seime", the side column's first sheet.
+                var hint = AppealPageTests.HintOf(html, "planned-from");
+                hint.Trigger.ShouldBe("Iš kur ši data?");
+                hint.Answer.ShouldBe("Tai Seimo posėdžio data iš darbotvarkės projekto, kurį lrs.lt skelbia maždaug 10–12 dienų į priekį. Tokios datos dažnai keičiasi.");
+                hint.More.ShouldBe("/metodika#planuojamos-datos");
+                html.ShouldContain("<a href=\"https://www.lrs.lt/pavyzdys/darbotvarke\" rel=\"external\" id=\"planned-agenda\">Darbotvarkė lrs.lt</a>");
+                html.ShouldNotContain("href=\"https://e-seimas.lrs.lt/pavyzdys\"", Case.Sensitive, "the row's document link shows no date");
+                html.IndexOf("<aside", StringComparison.Ordinal).ShouldBeLessThan(html.IndexOf("id=\"stages\"", StringComparison.Ordinal));
+                html.IndexOf("id=\"stages\"", StringComparison.Ordinal).ShouldBeLessThan(html.IndexOf("id=\"digests\"", StringComparison.Ordinal));
+                System.Text.RegularExpressions.Regex.IsMatch(html, "id=\"stage-adoption\">\\s*<span class=\"label\">Priėmimas</span>\\s*<span class=\"small num\" id=\"stage-planned\">Planuojama ")
+                    .ShouldBeTrue("the planned stage shows the date");
             }
 
             // Under its threshold with the bill on the agenda: a moderator looks at it (design 8.3).
@@ -87,6 +109,7 @@ public sealed class PlannedDateTests(DatabaseFixture database) : ApiTest(databas
         finally
         {
             await Database.ExecuteAsync("DELETE FROM parliament.planned_item WHERE bill_number = 'XVP-0618'");
+            await Database.ExecuteAsync("DELETE FROM parliament.agenda_snapshot WHERE id = @id", ("id", snapshot));
         }
     }
 }

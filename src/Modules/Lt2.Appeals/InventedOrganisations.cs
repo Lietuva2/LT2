@@ -32,7 +32,7 @@ public static class InventedOrganisations
         foreach (var spec in specs)
         {
             n++;
-            if (OrganisationRules.CheckStatement(spec.Statement.Stance, spec.Statement.Text, spec.Statement.Link, spec.Statement.Goal) is not null
+            if (OrganisationRules.CheckStatement(spec.Statement.Stance, spec.Statement.Text, spec.Statement.Link, spec.Statement.Goal, Lt2.SharedKernel.SettingKeys.TextsMaxLength.Default) is not null
                 || OrganisationRules.CheckName(spec.Name) is not null)
             {
                 throw new ArgumentException($"Invented organisation {spec.Slug} breaks a rule.", nameof(specs));

@@ -25,6 +25,11 @@ public static class ApiRoutes
         public const string Registration = Root + "/registration";
         public const string RoleActivation = Root + "/role-activation";
         public const string PasskeyConfirmation = Root + "/passkey-confirmation";
+
+        /// <summary>A code session on a staff account becomes a staff session with the staff passkey (design 6.2).</summary>
+        public const string StaffSession = Root + "/staff-session";
+        /// <summary>Changing the display name (design 6.2).</summary>
+        public const string DisplayName = Root + "/display-name";
         public const string Sessions = Root + "/sessions";
         public const string Session = Root + "/sessions/{id:guid}";
 

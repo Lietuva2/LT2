@@ -17,7 +17,13 @@ public sealed class AppealContractTests
     [Fact]
     public void The_client_and_the_server_use_the_same_limits()
     {
-        AppealLimits.ReasonMaxLength.ShouldBe(AppealRules.ReasonMaxLength);
+        Lt2.Api.Contracts.MemberTextLimits.Ceiling.ShouldBe(SettingKeys.MemberTextCeiling);
+        Lt2.Api.Contracts.MemberTextLimits.Ceiling.ShouldBe(MemberTextLength.Ceiling);
+        foreach (var setting in new[] { 0, 1, 2000, 20_000, 50_000 })
+        {
+            Lt2.Api.Contracts.MemberTextLimits.Allowed(setting).ShouldBe(MemberTextLength.Allowed(setting));
+            Lt2.Web.Client.MemberTextLength.Allowed(setting).ShouldBe(MemberTextLength.Allowed(setting), "the browser's copy is the same file");
+        }
 
         AppealLimits.DescriptionMaxLength.ShouldBe(AppealRules.DescriptionMaxLength);
         AppealLimits.Sides.ShouldBe(Sides.All);
@@ -50,7 +56,24 @@ public sealed class AppealContractTests
     }
 
     [Fact]
-    public void An_argument_over_500_characters_is_refused_in_the_browser_too() =>
-        new ReasonRequestValidator(L).Validate(new ReasonRequest { Side = "for", Text = new string('a', 501) })
-            .Errors.Single().ErrorMessage.ShouldBe("Argumentas per ilgas: ne daugiau kaip 500 ženklų.");
+    public void The_browser_refuses_a_statement_or_a_response_only_over_the_technical_ceiling()
+    {
+        var statements = new Lt2.Api.Contracts.Organisations.OrganisationStatementRequestValidator(L);
+        statements.Validate(new Lt2.Api.Contracts.Organisations.OrganisationStatementRequest { Stance = "for", Text = new string('a', 1501) }).IsValid.ShouldBeTrue("the setting is checked where it is written");
+        statements.Validate(new Lt2.Api.Contracts.Organisations.OrganisationStatementRequest { Stance = "for", Text = new string('a', 20_001) })
+            .Errors.Single().ErrorMessage.ShouldBe("Pozicija per ilga: ne daugiau kaip 20 000 ženklų.");
+        var responses = new Lt2.Api.Contracts.Mps.MpResponseRequestValidator(L);
+        responses.Validate(new Lt2.Api.Contracts.Mps.MpResponseRequest { Stance = "for", Text = new string('a', 1501) }).IsValid.ShouldBeTrue("the setting is checked where it is written");
+        responses.Validate(new Lt2.Api.Contracts.Mps.MpResponseRequest { Stance = "for", Text = new string('a', 20_001) })
+            .Errors.Single().ErrorMessage.ShouldBe("Atsakymas per ilgas: ne daugiau kaip 20 000 ženklų.");
+    }
+
+    [Fact]
+    public void The_browser_refuses_only_an_argument_over_the_technical_ceiling()
+    {
+        var validator = new ReasonRequestValidator(L);
+        validator.Validate(new ReasonRequest { Side = "for", Text = new string('a', 2001) }).IsValid.ShouldBeTrue("the setting is checked where the argument is written");
+        validator.Validate(new ReasonRequest { Side = "for", Text = new string('a', Lt2.Api.Contracts.MemberTextLimits.Ceiling + 1) })
+            .Errors.Single().ErrorMessage.ShouldBe("Argumentas per ilgas: ne daugiau kaip 20 000 ženklų.");
+    }
 }

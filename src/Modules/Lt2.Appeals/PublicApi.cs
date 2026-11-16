@@ -123,7 +123,7 @@ public sealed record MyBillRecord(
 /// limit, the default). <paramref name="AiSummaries"/>: the summary job can make descriptions (design 8.13: a provider is
 /// configured, official texts can be read and <c>Ai:SummariesPerDay</c> is not 0); while false nothing promises one.
 /// </summary>
-public sealed record AppealRulesInfo(int ThresholdDefault, int ThresholdMinimum, int ReasonMaxLength, int ReasonsPerPerson, int EndorsementsPerPerson, int DescriptionMaxLength, bool AiSummaries);
+public sealed record AppealRulesInfo(int ThresholdDefault, int ThresholdMinimum, int TextMaxLength, int ReasonsPerPerson, int EndorsementsPerPerson, int DescriptionMaxLength, bool AiSummaries);
 
 public sealed record NewReason(string Side, string Text);
 

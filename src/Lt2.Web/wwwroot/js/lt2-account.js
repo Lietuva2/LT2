@@ -1,6 +1,6 @@
 // The account item in the menu (design 8.21). It is a <details> disclosure, so "Mano paskyra" and "Atsijungti" open without
 // this script. With it: when the person opens the item, the name and the links their account has (the acceptance of changed
-// terms, staff screens, an MP's projects) are read from GET /api/v1/me and shown; the page as served holds nothing about the
+// terms, staff screens or the staff passkey, an MP's projects) are read from GET /api/v1/me and shown; the page as served holds nothing about the
 // person. It closes on Escape (focus back to "Paskyra"), on a press outside it and when focus leaves it. Nothing is stored.
 // Listeners sit on the document, so it keeps working when Blazor's enhanced navigation replaces the header.
 (() => {
@@ -35,6 +35,15 @@
       show(details, "settings", administrator);
       show(details, "invitations", administrator);
       show(details, "mp", me.mp !== null && me.mp !== undefined);
+
+      // Design 6.2, 8.21: a staff account whose session cannot act as staff (signed in by code, or with another passkey) is
+      // offered its staff passkey instead, coming back to this page afterwards (StaffSessionPage: "grizti" after the "#").
+      const staffKey = me.staffAccount === true && staff.length === 0;
+      show(details, "staff-key", staffKey);
+      const keyLink = details.querySelector('[data-account-link="staff-key"] a');
+      if (staffKey && keyLink) {
+        keyLink.href = "/prisijungti/raktas#grizti=" + encodeURIComponent(location.pathname + location.search);
+      }
     } catch (e) {
       /* Offline or refused: the item keeps "Mano paskyra" and "Atsijungti". */
     }

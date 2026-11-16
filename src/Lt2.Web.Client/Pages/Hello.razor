@@ -7,6 +7,10 @@
 @inject NavigationManager Navigation
 @inject Passkeys PasskeyBrowser
 
+@* The account page in four parts (design 8.21, owner 2026-11-16), each with its heading on the ground and reached from the
+   row of plain links under the title (no script): "Profilis", "Sekimas ir laiškai", "Dalyvavimas", "Saugumas ir duomenys".
+   Every part always has something to show, so no heading stands empty; the ids that emails, hints and tests link to
+   (#sekami, #zinomos-narsykles, #my-data, #my-invitation, …) stay on their sheets. *@
 <PageTitle>@L["Hello.PageTitle"]</PageTitle>
 
 @if (Me is null)
@@ -19,197 +23,229 @@ else
         <p class="label">Lietuva 2.0</p>
         <h1 id="hello-title">@L.Format("Hello.Greeting", Me.DisplayName ?? Me.Email)</h1>
         <NeedsScript />
-        <p class="row">
+        <nav class="row tabs project-tabs" aria-label="@L["Parts.Label"]" id="account-parts">
+            <a href="#profilis">@L["Parts.Profile"]</a>
+            <a href="#sekimas-ir-laiskai">@L["Parts.Follows"]</a>
+            <a href="#dalyvavimas">@L["Parts.Taking"]</a>
+            <a href="#saugumas-ir-duomenys">@L["Parts.Security"]</a>
+        </nav>
+    </section>
+
+    @if (Me.TermsRequired)
+    {
+        @* Design 8.22.2: a session older than the terms in force (signing in shows the acceptance screen itself). It concerns
+           the whole account, so it stands above the parts. *@
+        <p class="note" id="terms-required">@L["Hello.TermsRequired"] <a href="@TermsText.AcceptanceLink("/sveiki")">@L["Hello.TermsLink"]</a></p>
+    }
+
+    <section class="stack" aria-labelledby="profilis-title" id="profilis">
+        <h2 id="profilis-title">@L["Parts.Profile"]</h2>
+        <p class="row" id="account-level">
             <span class="tag @(Me.VerificationLevel == "email" ? "tag--people" : "")">@L["Level." + Me.VerificationLevel]</span>
             @foreach (var role in Me.Roles)
             {
                 <span class="tag tag--brand">@L["Role." + role]</span>
             }
         </p>
-    </section>
 
-    @if (Me.TermsRequired)
-    {
-        @* Design 8.22.2: a session older than the terms in force (signing in shows the acceptance screen itself). *@
-        <p class="note" id="terms-required">@L["Hello.TermsRequired"] <a href="@TermsText.AcceptanceLink("/sveiki")">@L["Hello.TermsLink"]</a></p>
-    }
+        @* Design 6.2: the display name, changed here. *@
+        <MyDisplayName Name="@Me.DisplayName" Changed="NameChanged" />
 
-    @* Design 8.5.1 to 8.5.4: the offer to take over an MP's profile, or the link; filled in the browser only. *@
-    <MyMp />
-
-    @if (Me.AwaitingActivation)
-    {
-        @* A granted staff role waits for the one-time code the administrator passed on (design 6.2). *@
-        <section class="sheet sheet--cut stack" aria-labelledby="activation-title">
-            <h2 id="activation-title">@L["Activation.Title"]</h2>
-            <p>@L["Activation.Text"]</p>
-            <form class="stack" @onsubmit="ActivateAsync" novalidate>
+        @if (Party is { } party)
+        {
+            @* Private and optional (design 5.2): used only for group numbers of at least 20 in summaries to MPs. *@
+            <section class="sheet stack" aria-labelledby="party-title" id="party-support">
+                <h3 id="party-title">@L["Party.Title"]</h3>
+                <p>@L["Party.Text"]</p>
                 <div class="field">
-                    <label for="activation-code">@L["Activation.Label"]</label>
-                    <input class="input num" id="activation-code" autocomplete="off" autocapitalize="characters" spellcheck="false"
-                           @bind="_activationCode" @bind:event="oninput" disabled="@Locked" />
+                    <label for="party-choice">@L["Party.Label"]</label>
+                    <select class="input" id="party-choice" @bind="_partyChoice" disabled="@Locked">
+                        <option value="">@L["Party.None"]</option>
+                        @foreach (var choice in party.Choices)
+                        {
+                            <option value="@choice">@choice</option>
+                        }
+                    </select>
                 </div>
-                <button class="btn" type="submit" disabled="@Locked">@L["Activation.Submit"]</button>
-            </form>
-        </section>
-    }
-
-    <div class="pair">
-        <section class="sheet sheet--cut stack" aria-labelledby="passkeys-title">
-            <h2 id="passkeys-title">@L["Passkeys.Title"]</h2>
-            <p>@L["Passkeys.Text"]</p>
-            <p class="small num">@L.Format("Passkeys.Count", Display.Number(Me.PasskeyCount))</p>
-            <button type="button" class="btn" disabled="@Locked" @onclick="AddPasskeyAsync">@L["Passkeys.Add"]</button>
-        </section>
-
-        <section class="sheet stack" aria-labelledby="sessions-title">
-            <h2 id="sessions-title">@L["Sessions.Title"]</h2>
-            <p>@L["Sessions.Text"]</p>
-            <ul class="rows">
-                @foreach (var session in Sessions ?? [])
+                @if (!string.IsNullOrEmpty(_partyChoice) && _partyChoice != party.Party)
                 {
-                    <li @key="session.Id">
-                        <div class="rows__main">
-                            <b>@(session.Device ?? L["Sessions.UnknownDevice"])</b>
-                            <span class="small">
-                                @L["Sessions.Method." + (string.IsNullOrEmpty(session.Method) ? "unknown" : session.Method)] ·
-                                <span class="num">@L.Format("Sessions.LastSeen", Display.DayTime(session.LastSeenAt))</span>
-                            </span>
-                        </div>
-                        <div class="rows__side">
-                            @if (session.IsCurrent)
-                            {
-                                <span class="tag tag--people">@L["Sessions.Current"]</span>
-                            }
-                            else
-                            {
-                                <button type="button" class="btn btn--plain" disabled="@Locked" @onclick="() => EndSessionAsync(session.Id)">@L["Sessions.End"]</button>
-                            }
-                        </div>
-                    </li>
+                    <label class="check">
+                        <input type="checkbox" id="party-consent" @bind="_partyConsent" disabled="@Locked" />
+                        <span>@L["Party.Consent"]</span>
+                    </label>
                 }
-            </ul>
-        </section>
-    </div>
-
-    @* Design 8.20.2: the browsers known to the account, beside the sessions; forgetting one makes it a stranger again. *@
-    <section class="sheet stack" aria-labelledby="known-browsers-title" id="zinomos-narsykles">
-        <h2 id="known-browsers-title">@L["KnownBrowsers.Title"]</h2>
-        <p>@L["KnownBrowsers.Text"]</p>
-        @if (KnownBrowsers is { Count: > 0 } known)
-        {
-            <ul class="rows" id="known-browsers">
-                @foreach (var browser in known)
-                {
-                    <li @key="browser.Id">
-                        <div class="rows__main">
-                            <b>@(browser.Device ?? L["Sessions.UnknownDevice"])</b>
-                            <span class="small num"><span class="nowrap">@L.Format("KnownBrowsers.FirstSeen", Display.Day(browser.FirstSeenAt))</span>, <span class="nowrap">@L.Format("Sessions.LastSeen", Display.DayTime(browser.LastSeenAt))</span></span>
-                        </div>
-                        <div class="rows__side">
-                            @if (browser.IsCurrent)
-                            {
-                                <span class="tag tag--people">@L["KnownBrowsers.Current"]</span>
-                            }
-                            <button type="button" class="btn btn--plain" disabled="@Locked" @onclick="() => ForgetBrowserAsync(browser.Id)">@L["KnownBrowsers.Forget"]</button>
-                        </div>
-                    </li>
-                }
-            </ul>
+                <p><button type="button" class="btn btn--plain" disabled="@(Locked || (!string.IsNullOrEmpty(_partyChoice) && _partyChoice != party.Party && !_partyConsent))" @onclick="SavePartyAsync">@L["Party.Save"]</button></p>
+            </section>
         }
-        else
+
+        @if (Me.HasPositionConsent)
         {
-            <p class="small" id="known-browsers-none">@L["KnownBrowsers.None"]</p>
+            @* Withdrawing the consent deletes every position (design 6.5). *@
+            <section class="sheet stack" aria-labelledby="consent-title">
+                <h3 id="consent-title">@L["PositionConsent.Title"]</h3>
+                <p>@L["PositionConsent.Text"]</p>
+                <p><button type="button" class="btn btn--plain" id="withdraw-consent" disabled="@Locked" @onclick="WithdrawConsentAsync">@L["PositionConsent.Withdraw"]</button></p>
+            </section>
         }
     </section>
 
-    @if (Me.ActiveStaffRoles.Count > 0)
-    {
-        <nav class="row" aria-label="@L["Staff.Nav"]">
-            <a class="btn btn--plain" href="/moderavimas">@L["Staff.Moderation"]</a>
-            @if (Me.ActiveStaffRoles.Contains("administrator"))
-            {
-                <a class="btn btn--plain" href="/administravimas/nustatymai">@L["Staff.Settings"]</a>
-            }
-        </nav>
-    }
+    <section class="stack" aria-labelledby="sekimas-title" id="sekimas-ir-laiskai">
+        <h2 id="sekimas-title">@L["Parts.Follows"]</h2>
 
-    @if (Party is { } party)
-    {
-        @* Private and optional (design 5.2): used only for group numbers of at least 20 in summaries to MPs. *@
-        <section class="sheet stack" aria-labelledby="party-title" id="party-support">
-            <h2 id="party-title">@L["Party.Title"]</h2>
-            <p>@L["Party.Text"]</p>
-            <div class="field">
-                <label for="party-choice">@L["Party.Label"]</label>
-                <select class="input" id="party-choice" @bind="_partyChoice" disabled="@Locked">
-                    <option value="">@L["Party.None"]</option>
-                    @foreach (var choice in party.Choices)
+        @* Design 8.11.2: what the person follows and which follow emails they get. *@
+        <FollowList />
+    </section>
+
+    <section class="stack" aria-labelledby="dalyvavimas-title" id="dalyvavimas">
+        <h2 id="dalyvavimas-title">@L["Parts.Taking"]</h2>
+
+        @* Design 8.5.1 to 8.5.4: the offer to take over an MP's profile, or the link; filled in the browser only. *@
+        <MyMp />
+
+        @* Design 8.14.14: the organisations the person represents. *@
+        <MyOrganisations />
+
+        <MyInvitationCode />
+
+        @if (Me.AwaitingActivation)
+        {
+            @* A granted staff role waits for the one-time code the administrator passed on (design 6.2). *@
+            <section class="sheet sheet--cut stack" aria-labelledby="activation-title">
+                <h3 id="activation-title">@L["Activation.Title"]</h3>
+                <p>@L["Activation.Text"]</p>
+                <form class="stack" @onsubmit="ActivateAsync" novalidate>
+                    <div class="field">
+                        <label for="activation-code">@L["Activation.Label"]</label>
+                        <input class="input num" id="activation-code" autocomplete="off" autocapitalize="characters" spellcheck="false"
+                               @bind="_activationCode" @bind:event="oninput" disabled="@Locked" />
+                    </div>
+                    <button class="btn" type="submit" disabled="@Locked">@L["Activation.Submit"]</button>
+                </form>
+            </section>
+        }
+
+        @if (Me.ActiveStaffRoles.Count > 0)
+        {
+            <nav class="row" aria-label="@L["Staff.Nav"]" id="staff-links">
+                <a class="btn btn--plain" href="/moderavimas">@L["Staff.Moderation"]</a>
+                @if (Me.ActiveStaffRoles.Contains("administrator"))
+                {
+                    <a class="btn btn--plain" href="/administravimas/nustatymai">@L["Staff.Settings"]</a>
+                }
+            </nav>
+        }
+        else if (Me.StaffAccount)
+        {
+            @* Design 6.2 (owner, 2026-11-16): in the place of the staff links, the way to a staff session without signing out. *@
+            <p class="note note--quiet" id="staff-key-note"><span>@L["Staff.KeyText"]</span>@(" ")<a href="@StaffSessionPage.Link("/sveiki")" id="staff-key-link">@L["Data.StaffKeyLink"]</a></p>
+        }
+    </section>
+
+    <section class="stack" aria-labelledby="saugumas-title" id="saugumas-ir-duomenys">
+        <h2 id="saugumas-title">@L["Parts.Security"]</h2>
+
+        <div class="pair">
+            <section class="sheet sheet--cut stack" aria-labelledby="passkeys-title">
+                <h3 id="passkeys-title">@L["Passkeys.Title"]</h3>
+                <p>@L["Passkeys.Text"]</p>
+                <p class="small num">@L.Format("Passkeys.Count", Display.Number(Me.PasskeyCount))</p>
+                <button type="button" class="btn" disabled="@Locked" @onclick="AddPasskeyAsync">@L["Passkeys.Add"]</button>
+            </section>
+
+            <section class="sheet stack" aria-labelledby="sessions-title">
+                <h3 id="sessions-title">@L["Sessions.Title"]</h3>
+                <p>@L["Sessions.Text"]</p>
+                <ul class="rows">
+                    @foreach (var session in Sessions ?? [])
                     {
-                        <option value="@choice">@choice</option>
+                        <li @key="session.Id">
+                            <div class="rows__main">
+                                <b>@(session.Device ?? L["Sessions.UnknownDevice"])</b>
+                                <span class="small">
+                                    @L["Sessions.Method." + (string.IsNullOrEmpty(session.Method) ? "unknown" : session.Method)] ·
+                                    <span class="num">@L.Format("Sessions.LastSeen", Display.DayTime(session.LastSeenAt))</span>
+                                </span>
+                            </div>
+                            <div class="rows__side">
+                                @if (session.IsCurrent)
+                                {
+                                    <span class="tag tag--people">@L["Sessions.Current"]</span>
+                                }
+                                else
+                                {
+                                    <button type="button" class="btn btn--plain" disabled="@Locked" @onclick="() => EndSessionAsync(session.Id)">@L["Sessions.End"]</button>
+                                }
+                            </div>
+                        </li>
                     }
-                </select>
-            </div>
-            @if (!string.IsNullOrEmpty(_partyChoice) && _partyChoice != party.Party)
+                </ul>
+            </section>
+        </div>
+
+        @* Design 8.20.2: the browsers known to the account, beside the sessions; forgetting one makes it a stranger again. *@
+        <section class="sheet stack" aria-labelledby="known-browsers-title" id="zinomos-narsykles">
+            <h3 id="known-browsers-title">@L["KnownBrowsers.Title"]</h3>
+            <p>@L["KnownBrowsers.Text"]</p>
+            @if (KnownBrowsers is { Count: > 0 } known)
             {
-                <label class="check">
-                    <input type="checkbox" id="party-consent" @bind="_partyConsent" disabled="@Locked" />
-                    <span>@L["Party.Consent"]</span>
-                </label>
+                <ul class="rows" id="known-browsers">
+                    @foreach (var browser in known)
+                    {
+                        <li @key="browser.Id">
+                            <div class="rows__main">
+                                <b>@(browser.Device ?? L["Sessions.UnknownDevice"])</b>
+                                <span class="small num"><span class="nowrap">@L.Format("KnownBrowsers.FirstSeen", Display.Day(browser.FirstSeenAt))</span>, <span class="nowrap">@L.Format("Sessions.LastSeen", Display.DayTime(browser.LastSeenAt))</span></span>
+                            </div>
+                            <div class="rows__side">
+                                @if (browser.IsCurrent)
+                                {
+                                    <span class="tag tag--people">@L["KnownBrowsers.Current"]</span>
+                                }
+                                <button type="button" class="btn btn--plain" disabled="@Locked" @onclick="() => ForgetBrowserAsync(browser.Id)">@L["KnownBrowsers.Forget"]</button>
+                            </div>
+                        </li>
+                    }
+                </ul>
             }
-            <p><button type="button" class="btn btn--plain" disabled="@(Locked || (!string.IsNullOrEmpty(_partyChoice) && _partyChoice != party.Party && !_partyConsent))" @onclick="SavePartyAsync">@L["Party.Save"]</button></p>
-        </section>
-    }
-
-    @if (Me.HasPositionConsent)
-    {
-        @* Withdrawing the consent deletes every position (design 6.5). *@
-        <section class="sheet stack" aria-labelledby="consent-title">
-            <h2 id="consent-title">@L["PositionConsent.Title"]</h2>
-            <p>@L["PositionConsent.Text"]</p>
-            <p><button type="button" class="btn btn--plain" id="withdraw-consent" disabled="@Locked" @onclick="WithdrawConsentAsync">@L["PositionConsent.Withdraw"]</button></p>
-        </section>
-    }
-
-    @* Design 8.11.2: what the person follows and which follow emails they get. *@
-    <FollowList />
-
-    @* Design 8.14.14: the organisations the person represents. *@
-    <MyOrganisations />
-
-    <MyInvitationCode />
-
-    @* Design 6.5: everything the person gave, and deleting the account. What deleting removes is said in the confirmation
-       it opens, the step before anything is deleted (design 8.15: what cannot be undone stays where the person acts). *@
-    <section class="sheet stack" aria-labelledby="data-title" id="my-data">
-        <h2 id="data-title">@L["Data.Title"]</h2>
-        <p>@L["Data.Text"]</p>
-        <p><a class="btn btn--plain" href="/api/v1/me/export" download id="export">@L["Data.Export"]</a></p>
-        @if (Me.StaffAccount && Me.ActiveStaffRoles.Count == 0)
-        {
-            @* Design 6.9: a staff account is deleted only from a session signed in with its staff passkey. *@
-            <p class="note note--quiet" id="delete-staff-passkey">@L["Data.DeleteStaffNeedsPasskey"]</p>
-        }
-        else if (_confirmDelete)
-        {
-            <p class="note" role="alert">@L["Data.DeleteWarning"]</p>
-            @if (Me.StaffAccount)
+            else
             {
-                @* Design 6.9: what one did as staff outlives the account; said where it cannot be undone (design 8.15). *@
-                <p class="note" id="delete-staff-kept">@L["Data.DeleteStaffKept"]@(" ")<Hint Id="delete-staff-more" Text="@L["Data.DeleteStaffMore"]" Answer="@L["Data.DeleteStaffMoreAnswer"]" More="/metodika#istrynimas" /></p>
+                <p class="small" id="known-browsers-none">@L["KnownBrowsers.None"]</p>
             }
-            <div class="row">
-                <button type="button" class="btn btn--against" id="delete-confirm" disabled="@Locked" @onclick="DeleteAccountAsync">@L["Data.DeleteConfirm"]</button>
-                <button type="button" class="btn btn--plain" disabled="@Locked" @onclick="() => _confirmDelete = false">@L["Data.DeleteCancel"]</button>
-            </div>
-        }
-        else
-        {
-            <p><button type="button" class="btn btn--plain" id="delete-account" disabled="@Locked" @onclick="() => _confirmDelete = true">@L["Data.Delete"]</button></p>
-        }
+        </section>
+
+        @* Design 6.5: everything the person gave, and deleting the account. What deleting removes is said in the confirmation
+           it opens, the step before anything is deleted (design 8.15: what cannot be undone stays where the person acts). *@
+        <section class="sheet stack" aria-labelledby="data-title" id="my-data">
+            <h3 id="data-title">@L["Data.Title"]</h3>
+            <p>@L["Data.Text"]</p>
+            <p><a class="btn btn--plain" href="/api/v1/me/export" download id="export">@L["Data.Export"]</a></p>
+            @if (Me.StaffAccount && Me.ActiveStaffRoles.Count == 0)
+            {
+                @* Design 6.9: a staff account is deleted only from a session signed in with its staff passkey; design 6.2: this
+                   session becomes one without signing out, on the staff passkey page, which comes back here. *@
+                <p class="note note--quiet" id="delete-staff-passkey"><span>@L["Data.DeleteStaffNeedsPasskey"]</span>@(" ")<a href="@StaffSessionPage.Link("/sveiki")" id="delete-staff-key">@L["Data.StaffKeyLink"]</a></p>
+            }
+            else if (_confirmDelete)
+            {
+                <p class="note" role="alert">@L["Data.DeleteWarning"]</p>
+                @if (Me.StaffAccount)
+                {
+                    @* Design 6.9: what one did as staff outlives the account; said where it cannot be undone (design 8.15). *@
+                    <p class="note" id="delete-staff-kept">@L["Data.DeleteStaffKept"]@(" ")<Hint Id="delete-staff-more" Text="@L["Data.DeleteStaffMore"]" Answer="@L["Data.DeleteStaffMoreAnswer"]" More="/metodika#istrynimas" /></p>
+                }
+                <div class="row">
+                    <button type="button" class="btn btn--against" id="delete-confirm" disabled="@Locked" @onclick="DeleteAccountAsync">@L["Data.DeleteConfirm"]</button>
+                    <button type="button" class="btn btn--plain" disabled="@Locked" @onclick="() => _confirmDelete = false">@L["Data.DeleteCancel"]</button>
+                </div>
+            }
+            else
+            {
+                <p><button type="button" class="btn btn--plain" id="delete-account" disabled="@Locked" @onclick="() => _confirmDelete = true">@L["Data.Delete"]</button></p>
+            }
+        </section>
+
+        <p><button type="button" class="btn btn--plain" disabled="@Locked" @onclick="SignOutAsync">@L["SignOut"]</button></p>
     </section>
-
-    <p><button type="button" class="btn btn--plain" disabled="@Locked" @onclick="SignOutAsync">@L["SignOut"]</button></p>
 }
 
 <Messages Message="@Message" Info="@Info" />
@@ -258,6 +294,9 @@ else
         Party ??= (await MeApi.GetPartySupportAsync()).Value;
         _partyChoice = Party?.Party ?? "";
     }
+
+    /// <summary>The greeting follows a changed display name (the email when it was removed).</summary>
+    private void NameChanged(string? name) => Me = Me! with { DisplayName = name };
 
     private Task SavePartyAsync() => RunAsync(async () =>
     {

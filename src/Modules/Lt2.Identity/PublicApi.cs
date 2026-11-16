@@ -194,6 +194,13 @@ public interface IIdentityModule
     Task<Result<Unit>> ConfirmPasskeyAsync(ClaimsPrincipal user, string credentialJson, CancellationToken cancellationToken);
 
     /// <summary>
+    /// Design 6.2: the signed-in account's code session becomes a staff session by an assertion with the account's own staff
+    /// passkey, under a new session key (the old session ends); refused with <c>passkey.staff-required</c> for any other
+    /// passkey or an account without an activated staff role, changing nothing. Audited; no email.
+    /// </summary>
+    Task<Result<Unit>> StartStaffSessionAsync(ClaimsPrincipal user, string credentialJson, string? ipHash, CancellationToken cancellationToken);
+
+    /// <summary>
     /// Uses a role activation code in the current passkey session: that passkey becomes the staff passkey and every
     /// other passkey on the account is removed.
     /// </summary>
@@ -207,6 +214,13 @@ public interface IIdentityModule
     Task<Result<Unit>> SignInWithPasskeyAsync(string credentialJson, CancellationToken cancellationToken);
 
     Task<Result<AccountSummary>> GetAccountAsync(ClaimsPrincipal user, CancellationToken cancellationToken);
+
+    /// <summary>
+    /// Changes the member's display name (design 6.2): at most 60 characters, empty allowed; <c>writing.restricted</c> while a
+    /// writing restriction holds; no limit on how often; the same name again changes nothing.
+    /// Audited without the names.
+    /// </summary>
+    Task<Result<Unit>> ChangeDisplayNameAsync(ClaimsPrincipal user, string? displayName, string? ipHash, CancellationToken cancellationToken);
 
     Task<IReadOnlyList<SessionSummary>> GetSessionsAsync(ClaimsPrincipal user, CancellationToken cancellationToken);
 

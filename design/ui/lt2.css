@@ -359,9 +359,16 @@ a.tag:hover { text-decoration: underline; text-decoration-thickness: 1.5px; }
 
 /* ---------- Facts, rows, stages ---------- */
 
-.facts { display: grid; grid-template-columns: minmax(7rem, max-content) minmax(0, 1fr); gap: var(--sp-2) var(--sp-5); }
+/* Two columns while both fit: the term at least 7rem, each column at least its longest word, so a value is never broken
+   inside a word (with minmax(0, 1fr) a long term took the row and squeezed the value to a sliver). In a narrow box
+   (under 22rem, such as a sheet beside the main column) each value goes under its term. */
+.facts { display: grid; grid-template-columns: minmax(7rem, max-content) minmax(min-content, auto); gap: var(--sp-2) var(--sp-5); container-type: inline-size; }
 .facts dt { color: var(--ink-2); }
 .facts dd { font-weight: 600; }
+@container (max-width: 22rem) {
+  .facts > dt, .facts > dd { grid-column: 1 / -1; }
+  .facts > dd { margin-bottom: var(--sp-2); }
+}
 
 .rows > li {
   display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: var(--sp-2) var(--sp-5);

@@ -94,6 +94,15 @@ public interface IPositionErasure
 }
 
 /// <summary>
+/// Whether a moderator's writing restriction (design 8.3) holds for a person now, for the modules that write text others see
+/// outside Appeals (design 6.2: changing the display name). Implemented by the Appeals module, which keeps the restrictions.
+/// </summary>
+public interface IWritingRestrictions
+{
+    Task<bool> IsRestrictedAsync(Guid userId, CancellationToken cancellationToken);
+}
+
+/// <summary>
 /// What one module holds of one person (design 6.5): exported on request, erased with the account. Implemented by Appeals
 /// (positions, marks, arguments, appeals opened before 2026-11-14, reports, flags, draft requests) and by Notifications (follows and
 /// the follow-email switches, design 8.11.2). The export holds only the person's own data.

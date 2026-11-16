@@ -156,6 +156,7 @@ public sealed class MenuTests : E2ETest
         await Assertions.Expect(page.Locator("[data-account-link=moderation]")).ToBeHiddenAsync();
         await Assertions.Expect(page.Locator("[data-account-link=mp]")).ToBeHiddenAsync();
         await Assertions.Expect(page.Locator("[data-account-link=terms]")).ToBeHiddenAsync();
+        await Assertions.Expect(page.Locator("[data-account-link=staff-key]")).ToBeHiddenAsync();
         Directory.CreateDirectory(Shots);
         await page.ScreenshotAsync(new() { Path = Path.Combine(Shots, "account-open-390.png") });
         await page.Keyboard.PressAsync("Tab");

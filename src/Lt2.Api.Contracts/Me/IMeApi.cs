@@ -15,6 +15,11 @@ public interface IMeApi
     /// <summary>"Pamiršti": the browser becomes a stranger to the account again (design 8.20.2).</summary>
     Task<ApiResult> ForgetKnownBrowserAsync(Guid id, CancellationToken cancellationToken = default);
 
+    /// <summary>
+    /// Changes the display name (design 6.2), as often as the member likes; <c>writing.restricted</c> while a restriction holds.
+    /// </summary>
+    Task<ApiResult> ChangeDisplayNameAsync(DisplayNameRequest request, CancellationToken cancellationToken = default);
+
     /// <summary>Completes a pending registration (design 6.2).</summary>
     Task<ApiResult> CompleteRegistrationAsync(CompleteRegistrationRequest request, CancellationToken cancellationToken = default);
 
@@ -26,6 +31,13 @@ public interface IMeApi
     /// setting); the assertion answers <see cref="Auth.IAuthApi.GetPasskeyRequestOptionsAsync"/>.
     /// </summary>
     Task<ApiResult> ConfirmPasskeyAsync(Auth.PasskeyCredentialRequest request, CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Design 6.2: this code session on a staff account becomes a staff session with the account's staff passkey, under a new
+    /// session key; the assertion answers <see cref="Auth.IAuthApi.GetPasskeyRequestOptionsAsync"/>. Any other passkey is
+    /// refused with <c>passkey.staff-required</c>.
+    /// </summary>
+    Task<ApiResult> StartStaffSessionAsync(Auth.PasskeyCredentialRequest request, CancellationToken cancellationToken = default);
 
     /// <summary>Gives the explicit consent to store positions (design 6.5).</summary>
     Task<ApiResult> GivePositionConsentAsync(PositionConsentRequest request, CancellationToken cancellationToken = default);

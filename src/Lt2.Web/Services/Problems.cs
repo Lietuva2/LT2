@@ -29,7 +29,10 @@ internal sealed class ErrorMapper(IStringLocalizer<ProblemText> l)
     public ApiProblem ToProblem(Error error)
     {
         var status = StatusOf(error);
-        var detail = l[error.Code].Value;
+        // A rule whose number is a setting says the number that holds now (for example the length of an argument).
+        var detail = error.Numbers.Count > 0
+            ? l[error.Code, error.Numbers.Select(n => (object)Lt2.Web.Client.Display.Number(n)).ToArray()].Value
+            : l[error.Code].Value;
         return new ApiProblem
         {
             Status = status,

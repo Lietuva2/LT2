@@ -28,9 +28,9 @@ public sealed partial class AppealPageTests(DatabaseFixture database) : ApiTest(
         }
 
         // A person's side is a "pozicija", never "balsavimas" (the Seimas's own votes are linked, and may be; on the bill's
-        // page they are listed from the stages on).
-        var people = MainOf(html);
-        var seimas = people.IndexOf("aria-labelledby=\"h-stages\"", StringComparison.Ordinal);
+        // page they are listed in the stages, in the side column since 2026-11-16, and in the votes at the bottom).
+        var people = Regex.Replace(MainOf(html), "<section[^>]*aria-labelledby=\"h-stages\".*?</section>", "", RegexOptions.Singleline);
+        var seimas = people.IndexOf("aria-labelledby=\"h-votes\"", StringComparison.Ordinal);
         people = seimas < 0 ? people : people[..seimas];
         Regex.IsMatch(Regex.Replace(people, "<a [^>]*>[^<]*</a>|href=\"[^\"]*\"", ""), "balsavim", RegexOptions.IgnoreCase).ShouldBeFalse();
     }

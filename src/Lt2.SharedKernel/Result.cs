@@ -14,6 +14,12 @@ public enum ErrorKind
 /// <summary>A failure with a stable machine-readable code and a localisation key for the message.</summary>
 public sealed record Error(ErrorKind Kind, string Code, string? Field = null)
 {
+    /// <summary>
+    /// Whole numbers the message names, in order (<c>{0}</c>, <c>{1}</c> of the text), for a rule whose number is a setting:
+    /// the text then says the number that holds, not a figure written into it. Empty for most errors.
+    /// </summary>
+    public IReadOnlyList<int> Numbers { get; init; } = Array.Empty<int>();
+
     public static Error Validation(string code, string? field = null) => new(ErrorKind.Validation, code, field);
     public static Error NotFound(string code) => new(ErrorKind.NotFound, code);
     public static Error Conflict(string code) => new(ErrorKind.Conflict, code);

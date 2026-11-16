@@ -26,12 +26,22 @@
     {
         <p><span class="@OrganisationWords.StanceClass(Statement.Stance)">@L["Org.Stance." + Statement.Stance]</span></p>
     }
-    <div class="bubble bubble--org voice">
-        @foreach (var paragraph in Statement.Text.Split('\n', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries))
-        {
-            <p>@paragraph</p>
-        }
-    </div>
+    @if (Whole)
+    {
+        <div class="bubble bubble--org voice">
+            @foreach (var paragraph in Statement.Text.Split('\n', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries))
+            {
+                <p>@paragraph</p>
+            }
+        </div>
+    }
+    else
+    {
+        @* Design 8.14.3 (owner, 2026-11-16): a statement longer than about 1 500 characters shows its beginning and "Rodyti
+           daugiau"; a moderator's screen shows it whole. *@
+        <LongText Text="@Statement.Text" BubbleClass="bubble bubble--org voice" Paragraphs="true"
+                  Shown="TextExcerpt.StatementShown" Margin="TextExcerpt.StatementMargin" Id="@($"{IdPrefix}statement-more-{Statement.Id}")" />
+    }
     <div class="said__by statement__meta">
         @if (Statement.Link is { } link)
         {
@@ -60,6 +70,9 @@
 
     /// <summary>The start of the element ids (<c>mod-</c> in the moderators' panel, so the public list's ids stay unique).</summary>
     [Parameter] public string IdPrefix { get; set; } = "";
+
+    /// <summary>The whole text, never cut: the moderators' queue and panels (design 8.14.9).</summary>
+    [Parameter] public bool Whole { get; set; }
 
     /// <summary>The actions beside the statement (report, a representative's controls).</summary>
     [Parameter] public RenderFragment? ChildContent { get; set; }

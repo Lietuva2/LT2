@@ -84,10 +84,11 @@ internal static class ResponseStatuses
 /// </summary>
 internal static class ResponseRules
 {
-    public const int TextMaxLength = 1500;
-
-    /// <summary>The response's stance and text: null when they may be published, otherwise the error's code.</summary>
-    public static string? CheckResponse(string? stance, string? text)
+    /// <summary>
+    /// The response's stance and text: null when they may be published, otherwise the error's code. The text is not blank
+    /// and no longer than the setting <c>Texts:MaxLength</c> allows (<paramref name="maxLength"/>; owner, 2026-11-16).
+    /// </summary>
+    public static string? CheckResponse(string? stance, string? text, int maxLength)
     {
         if (stance is null || !ResponseStances.All.Contains(stance))
         {
@@ -95,7 +96,7 @@ internal static class ResponseRules
         }
 
         var normalised = AppealRules.NormaliseText(text);
-        return normalised.Length == 0 ? "response.empty" : normalised.Length > TextMaxLength ? "response.too-long" : null;
+        return normalised.Length == 0 ? "response.empty" : AppealRules.TooLong(normalised, maxLength) ? "response.too-long" : null;
     }
 
     /// <summary>

@@ -69,6 +69,9 @@ internal sealed class ServerMeApi(IIdentityModule identity, IMpDirectory mps, IH
     public async Task<ApiResult> ForgetKnownBrowserAsync(Guid id, CancellationToken cancellationToken = default) =>
         errors.ToApiResult(await identity.ForgetKnownBrowserAsync(User, id, cancellationToken));
 
+    public async Task<ApiResult> ChangeDisplayNameAsync(DisplayNameRequest request, CancellationToken cancellationToken = default) =>
+        errors.ToApiResult(await identity.ChangeDisplayNameAsync(User, request.DisplayName, IpHash, cancellationToken));
+
     public async Task<ApiResult> CompleteRegistrationAsync(CompleteRegistrationRequest request, CancellationToken cancellationToken = default) =>
         errors.ToApiResult(await identity.CompleteRegistrationAsync(User, Mapping.ToCompletion(request), cancellationToken));
 
@@ -77,6 +80,9 @@ internal sealed class ServerMeApi(IIdentityModule identity, IMpDirectory mps, IH
 
     public async Task<ApiResult> ConfirmPasskeyAsync(PasskeyCredentialRequest request, CancellationToken cancellationToken = default) =>
         errors.ToApiResult(await identity.ConfirmPasskeyAsync(User, request.Credential, cancellationToken));
+
+    public async Task<ApiResult> StartStaffSessionAsync(PasskeyCredentialRequest request, CancellationToken cancellationToken = default) =>
+        errors.ToApiResult(await identity.StartStaffSessionAsync(User, request.Credential, IpHash, cancellationToken));
 
     public async Task<ApiResult> GivePositionConsentAsync(PositionConsentRequest request, CancellationToken cancellationToken = default) =>
         errors.ToApiResult(await identity.GivePositionConsentAsync(User, request.TextVersion, cancellationToken));

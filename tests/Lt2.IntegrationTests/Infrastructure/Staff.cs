@@ -49,6 +49,18 @@ public static class StaffSteps
         return body;
     }
 
+    /// <summary>
+    /// Design 6.2: this browser's session becomes a staff session with the authenticator's passkey, without signing out;
+    /// returns the response.
+    /// </summary>
+    public static async Task<HttpResponseMessage> StartStaffSessionAsync(this TestBrowser browser, SoftwareAuthenticator authenticator)
+    {
+        using var request = await browser.PostAsync(ApiRoutes.Auth.PasskeyRequestOptions);
+        return await browser.PostAsync(
+            ApiRoutes.Me.StaffSession,
+            new PasskeyCredentialRequest { Credential = authenticator.Get(await OptionsAsync(request)) });
+    }
+
     public static Task<HttpResponseMessage> ActivateRoleAsync(this TestBrowser browser, string code) =>
         browser.PostAsync(ApiRoutes.Me.RoleActivation, new RoleActivationRequest { Code = code });
 

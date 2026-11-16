@@ -98,14 +98,14 @@ internal sealed class MpMailTemplates(IStringLocalizer<EmailTemplates> l, IOptio
         paragraphs.Add(l.Format("Digest.Intro", model.Bills.Count));
         foreach (var bill in model.Bills)
         {
-            paragraphs.Add(Bill(bill, copy));
+            paragraphs.Add(Bill(bill, copy, model));
         }
 
         paragraphs.AddRange(Closing(copy ? null : model.PreferencesPath, copy ? model.CopyStopPath : null, model.PublicCopyPath));
         return (l.Format(copy ? "Digest.CopySubject" : "Digest.Subject", day), paragraphs);
     }
 
-    private string Bill(MpDigestBill bill, bool copy)
+    private string Bill(MpDigestBill bill, bool copy, MpDigestEmail model)
     {
         var lt = CultureInfo.GetCultureInfo("lt-LT");
         var item = bill.Item;
@@ -149,9 +149,9 @@ internal sealed class MpMailTemplates(IStringLocalizer<EmailTemplates> l, IOptio
             if (reasons.Count > 0)
             {
                 text.Append('\n').Append(l["Digest.Reasons." + side]);
-                foreach (var r in reasons)
+                for (var i = 0; i < reasons.Count; i++)
                 {
-                    text.Append('\n').Append(CultureInfo.InvariantCulture, $"  · {r.Text} ({N(r.Endorsements)})");
+                    text.Append('\n').Append(Reason(reasons[i], ReasonLink(model, item.BillNumber, side, i + 1)));
                 }
             }
             else
@@ -176,6 +176,25 @@ internal sealed class MpMailTemplates(IStringLocalizer<EmailTemplates> l, IOptio
         text.Append('\n').Append(l.Format("Digest.AllNumbers", billLink));
         return text.ToString();
     }
+
+    /// <summary>
+    /// One argument in the email (design 8.19.3, owner 2026-11-16): its beginning by the same rule as the page
+    /// (<see cref="TextExcerpt"/>, about 300 characters) with "…" and the "Man svarbu" count, and when it was cut a plain
+    /// line "Visas argumentas: {link}" to it on the summary's public copy, which shows the snapshot's whole text. The
+    /// snapshot itself keeps the whole text; the moderators' preview is this same text.
+    /// </summary>
+    private string Reason(DigestReason reason, string link)
+    {
+        var excerpt = TextExcerpt.Of(reason.Text, TextExcerpt.ArgumentShown, TextExcerpt.ArgumentMargin);
+        return excerpt.Rest is null
+            ? string.Create(CultureInfo.InvariantCulture, $"  · {reason.Text} ({N(reason.Endorsements)})")
+            : string.Create(CultureInfo.InvariantCulture, $"  · {excerpt.Shown}… ({N(reason.Endorsements)})") + "\n    " + l.Format("Digest.WholeReason", link);
+    }
+
+    /// <summary>The argument on the public copy: at its own place when the run is known, else the copy's page.</summary>
+    private string ReasonLink(MpDigestEmail model, string number, string side, int place) => Link(model.RunId is { } run
+        ? MpMailPaths.ReasonOnPublicCopy(model.RunDate, run, number, side, place)
+        : model.PublicCopyPath);
 
     /// <summary>
     /// What ends every MP email (design 8.19.3, 8.19.5): what the numbers are and are not and the public copy (summaries only),

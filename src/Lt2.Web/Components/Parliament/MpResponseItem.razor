@@ -41,12 +41,10 @@
             break;
         default:
             <p><span class="@StanceClass(Response.Stance)">@F.T["Responses.Stance." + Response.Stance]</span></p>
-            <div class="bubble bubble--mp voice">
-                @foreach (var paragraph in (Response.Text ?? "").Split('\n', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries))
-                {
-                    <p>@paragraph</p>
-                }
-            </div>
+            @* Design 8.5.6 (owner, 2026-11-16): a response longer than about 1 500 characters shows its beginning and "Rodyti
+               daugiau" (no script); the moderators' queue shows it whole (ResponseModerationView). *@
+            <Lt2.Web.Client.Components.LongText Text="@(Response.Text ?? "")" BubbleClass="bubble bubble--mp voice" Paragraphs="true"
+                Shown="Lt2.Web.Client.TextExcerpt.StatementShown" Margin="Lt2.Web.Client.TextExcerpt.StatementMargin" Id="@($"{IdPrefix}response-more")" />
             break;
     }
     <div class="said__by statement__meta">

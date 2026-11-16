@@ -43,9 +43,15 @@ public sealed partial class StartPageTests : E2ETest
         await Assertions.Expect(page.Locator("#h-home-coming")).ToBeVisibleAsync();
         await Assertions.Expect(page.Locator("#not-a-poll")).ToBeVisibleAsync();
 
-        // Design 8.16: the agenda is on a sheet, "Organizacijos" on the ground.
+        // Design 8.16: the agenda is on a sheet. Design 8.7 (owner, 2026-11-16): no block about organisations.
         await Assertions.Expect(page.Locator("#home-coming")).ToHaveClassAsync(new Regex(@"\bsheet\b"));
-        await Assertions.Expect(page.Locator("#home-organisations")).Not.ToHaveClassAsync(new Regex(@"\bsheet\b"));
+        await Assertions.Expect(page.Locator("main a[href='/organizacijos/nauja']")).ToHaveCountAsync(0);
+
+        // Design 8.7 (owner, 2026-11-16): the trial note has the same left and right edges as the invented-data notice.
+        var invented = (await page.Locator("#invented-data").BoundingBoxAsync())!;
+        var trial = (await page.Locator("#home-sign-in .note").BoundingBoxAsync())!;
+        Math.Abs(trial.X - invented.X).ShouldBeLessThanOrEqualTo(1, "the two notes start at the same place");
+        Math.Abs(trial.X + trial.Width - (invented.X + invented.Width)).ShouldBeLessThanOrEqualTo(1, "the two notes end at the same place");
         await E2ESteps.NoSidewaysScrollAsync(page, $"/ at {width}");
         if (width == 1280)
         {
@@ -347,7 +353,6 @@ public sealed partial class StartPageTests : E2ETest
         await Assertions.Expect(page.Locator(".intro-steps > li")).ToHaveCountAsync(4);
         await Assertions.Expect(page.Locator("#home-coming .tl-item").First).ToBeVisibleAsync();
         await Assertions.Expect(page.Locator("#home-coming .tl-item a.btn").First).ToBeVisibleAsync();
-        await Assertions.Expect(page.Locator("#home-organisations")).ToBeVisibleAsync();
         await Assertions.Expect(page.Locator("#not-a-poll")).ToBeVisibleAsync();
     }
 

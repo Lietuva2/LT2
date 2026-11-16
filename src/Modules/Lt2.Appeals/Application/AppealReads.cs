@@ -33,7 +33,7 @@ internal sealed class AppealReads(
         return new AppealRulesInfo(
             ThresholdRules.Offered(threshold.Default, threshold.Minimum),
             threshold.Minimum,
-            AppealRules.ReasonMaxLength,
+            await settings.GetAsync(SettingKeys.TextsMaxLength, ct),
             await settings.GetAsync(SettingKeys.AppealsReasonsPerPerson, ct),
             await settings.GetAsync(SettingKeys.AppealsEndorsementsPerPerson, ct),
             AppealRules.DescriptionMaxLength,

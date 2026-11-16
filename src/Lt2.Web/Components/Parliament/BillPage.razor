@@ -18,7 +18,7 @@
 @inject Microsoft.AspNetCore.Authorization.IAuthorizationService Authorization
 
 @* The bill and the record are one page (design 8.12.1), server-rendered and readable without JavaScript: number, title,
-   stage and "Planuojama …"; what the bill is about (8.13) with its label; both sides with the counts for accounts older
+   stage and "Planuojama …" (a participant's "Data neteisinga?" under it); what the bill is about (8.13) with its label; both sides with the counts for accounts older
    than 30 days, the threshold and the share line; the arguments; the summaries that held the bill (8.7); the Seimas votes.
    Every active bill is open at once: before anyone has taken part the same controls show zero counts and one line saying
    so. A finished bill nobody took part in shows the bill only; one whose record a moderator hid says that taking part is
@@ -42,6 +42,16 @@
                     <span class="tag">@F.Stage(plannedStage)</span>
                 }
                 <span class="tag" id="planned">@A.Format("Bill.Planned", F.Date(plan.Date))</span>
+                @* Design 8.4, 8.15 (owner, 2026-11-16): where the date comes from, beside it: one hint, and the agenda page it
+                   was read from (only an https address; the local stand-in's is not). A moderator's date says so instead. *@
+                <span class="small" id="planned-source">
+                    <Lt2.Web.Client.Components.Hint Id="planned-from" Text="@A["Planned.Hint"]"
+                        Answer="@(plan.SetByModerator ? A["Planned.Answer.moderator"] : A["Planned.Answer.agenda"])" More="/metodika#planuojamos-datos" />
+                    @if (!plan.SetByModerator && b.PlannedAgendaUrl is { } agendaPage && agendaPage.StartsWith("https://", StringComparison.Ordinal))
+                    {
+                        @(" · ")<a href="@agendaPage" rel="external" id="planned-agenda">@A["Planned.AgendaLink"]</a>
+                    }
+                </span>
             }
             else if (LastStage(b) is { } done)
             {
@@ -52,6 +62,12 @@
                 <span class="tag" id="appeal-status">@A["Status.closed"]</span>
             }
         </p>
+        @if (b.Planned is not null && _record is { Status: "open" })
+        {
+            @* Design 8.4, 8.12.1 (owner, 2026-11-16): "Data neteisinga?" sits directly under the planned date it reports, for
+               participants only, and only while a date is shown. *@
+            <DateFlagForm Number="@b.Number" @rendermode="InteractiveWebAssembly" />
+        }
         <Lt2.Web.Client.Components.NeedsScript />
         <FollowButton Kind="bill" Key="@b.Number" @rendermode="InteractiveWebAssembly" />
     </div>
@@ -221,6 +237,10 @@
             </div>
 
             <aside class="stack">
+                @* Design 8.12.1 (owner, 2026-11-16): the stages are the side column's first sheet, the same for everyone; the
+                   moderators' panels follow, then the summaries. *@
+                @StagesSheet(b, inAside: true)
+
                 @if (_moderator)
                 {
                     <RecordModerationPanel Number="@b.Number" ESeimasUrl="@b.ESeimasUrl" @rendermode="InteractiveWebAssembly" />
@@ -254,11 +274,6 @@
                     <p class="fine">@(_sending == "off" ? A["Digests.DryRun"] + " " : "")<a href="/suvestines">@A["Digests.OnAppeal.All"]</a></p>
                 </section>
 
-                @if (a.Status == "open")
-                {
-                    <DateFlagForm Number="@b.Number" @rendermode="InteractiveWebAssembly" />
-                }
-
                 <p class="note note--quiet" id="not-a-poll">@A["NotAPoll"]</p>
             </aside>
         </div>
@@ -269,44 +284,11 @@
         <BillResponses Number="@b.Number" HideWhenEmpty="true" />
     }
 
-    <section class="sheet stack" aria-labelledby="h-stages">
-        <h2 id="h-stages">@F.T["Bill.Stages"]</h2>
-        <ol class="stages">
-            @foreach (var stage in Stages)
-            {
-                var result = b.Votes.LastOrDefault(v => v.Vote.Kind == "stage-result" && v.Vote.Stage == stage);
-                <li class="stage @(result is null ? "stage--next" : "")">
-                    <span class="label">@F.Stage(stage)</span>
-                    @if (result is null)
-                    {
-                        <span class="small">@F.T["Bill.NotYet"]</span>
-                    }
-                    else if (result.Vote.IsConsensus)
-                    {
-                        <a href="/seimas/balsavimai/@result.Vote.Id">@F.T["Consensus.Tag"]</a>
-                        <span class="small num">@F.Date(result.Vote.HeldAt)</span>
-                    }
-                    else
-                    {
-                        <b class="num"><a href="/seimas/balsavimai/@result.Vote.Id">@Display.Number(result.Totals.For) : @Display.Number(result.Totals.Against)</a></b>
-                        <span class="small num">@F.Date(result.Vote.HeldAt)</span>
-                    }
-                </li>
-            }
-        </ol>
-        @if (b.Planned is { SetByModerator: true })
-        {
-            <p class="fine">@A["Planned.ByModerator"]</p>
-        }
-        else if (b.Planned?.SourceUrl is { } plannedSource)
-        {
-            <p class="fine"><a href="@plannedSource" rel="external">@A["Planned.Source"]</a></p>
-        }
-        @if (b.ESeimasUrl is { } documents)
-        {
-            <p class="fine"><a href="@documents" rel="external">@F.T["Bill.ESeimas"]</a></p>
-        }
-    </section>
+    @if (_record is null or { Status: "rejected" })
+    {
+        @* No side column (a hidden record, or a finished bill nobody took part in): the stages stand full-width here. *@
+        @StagesSheet(b, inAside: false)
+    }
 
     <section class="sheet stack" aria-labelledby="h-votes">
         <h2 id="h-votes">@F.T["Bill.Votes"]</h2>
@@ -377,6 +359,70 @@
         {
             _closingVote = (await Api.GetVoteAsync(voteId)).Value;
         }
+    }
+
+    /// <summary>
+    /// "Stadijos Seime" (design 8.12.1): each stage's result from the open data, or "dar nebalsuota"; the stage a planned
+    /// date is for shows "Planuojama {date}" instead (the date's own source is beside it in the header). One sheet: in the
+    /// side column (a heading of the column's level) or, without one, full-width.
+    /// </summary>
+    private RenderFragment StagesSheet(BillResponse b, bool inAside) =>
+        @<section class="sheet stack @(inAside ? "stack--tight" : "")" aria-labelledby="h-stages" id="stages">
+            @if (inAside)
+            {
+                <h3 id="h-stages">@F.T["Bill.Stages"]</h3>
+            }
+            else
+            {
+                <h2 id="h-stages">@F.T["Bill.Stages"]</h2>
+            }
+            <ol class="stages">
+                @foreach (var stage in Stages)
+                {
+                    var result = b.Votes.LastOrDefault(v => v.Vote.Kind == "stage-result" && v.Vote.Stage == stage);
+                    <li class="stage @(result is null ? "stage--next" : "")" id="stage-@stage">
+                        <span class="label">@F.Stage(stage)</span>
+                        @if (result is null && PlannedStage(b) == stage && b.Planned is { } plan)
+                        {
+                            <span class="small num" id="stage-planned">@A.Format("Bill.Planned", F.Date(plan.Date))</span>
+                        }
+                        else if (result is null)
+                        {
+                            <span class="small">@F.T["Bill.NotYet"]</span>
+                        }
+                        else if (result.Vote.IsConsensus)
+                        {
+                            <a href="/seimas/balsavimai/@result.Vote.Id">@F.T["Consensus.Tag"]</a>
+                            <span class="small num">@F.Date(result.Vote.HeldAt)</span>
+                        }
+                        else
+                        {
+                            <b class="num"><a href="/seimas/balsavimai/@result.Vote.Id">@Display.Number(result.Totals.For) : @Display.Number(result.Totals.Against)</a></b>
+                            <span class="small num">@F.Date(result.Vote.HeldAt)</span>
+                        }
+                    </li>
+                }
+            </ol>
+            @if (b.ESeimasUrl is { } documents)
+            {
+                <p class="fine"><a href="@documents" rel="external">@F.T["Bill.ESeimas"]</a></p>
+            }
+        </section>;
+
+    /// <summary>
+    /// The stage a planned date is for: the one the agenda or the moderator names, else the first stage not voted on yet;
+    /// none when that stage already has a result.
+    /// </summary>
+    private static string? PlannedStage(BillResponse b)
+    {
+        if (b.Planned is null)
+        {
+            return null;
+        }
+
+        var voted = b.Votes.Where(v => v.Vote.Kind == "stage-result").Select(v => v.Vote.Stage).ToHashSet();
+        var stage = b.Planned.Stage ?? Stages.FirstOrDefault(s => !voted.Contains(s));
+        return stage is not null && !voted.Contains(stage) ? stage : null;
     }
 
     /// <summary>The latest stage the Seimas voted on, shown when nothing is planned.</summary>

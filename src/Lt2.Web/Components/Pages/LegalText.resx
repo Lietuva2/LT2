@@ -32,7 +32,7 @@
   <data name="Terms.Who.4" xml:space="preserve"><value>Nekurkite paskyrų kitų žmonių vardu ir nesinaudokite keliomis paskyromis: skaičiai turi rodyti, kiek skirtingų žmonių prašo to paties.</value></data>
   <data name="Terms.Publish" xml:space="preserve"><value>Ką galima skelbti</value></data>
   <data name="Terms.Publish.1" xml:space="preserve"><value>Ko prašote dėl projekto, niekam nerodome: viešai skelbiami tik bendri skaičiai.</value></data>
-  <data name="Terms.Publish.2" xml:space="preserve"><value>Argumentai, organizacijų pozicijos ir Seimo narių atsakymai yra vieši: rodomi su autoriaus vardu arba organizacijos pavadinimu ir pasirinkta puse. Rašomas tik paprastas tekstas; argumentas – iki 500 ženklų.</value></data>
+  <data name="Terms.Publish.2" xml:space="preserve"><value>Argumentai, organizacijų pozicijos ir Seimo narių atsakymai yra vieši: rodomi su autoriaus vardu arba organizacijos pavadinimu ir pasirinkta puse. Rašomas tik paprastas tekstas; kiek ženklų jis gali turėti, rašoma metodikos puslapyje. Ilgas tekstas rodomas sutrumpintas, su nuoroda „Rodyti daugiau“.</value></data>
   <data name="Terms.Publish.3" xml:space="preserve"><value>Neskelbkite kitų žmonių asmens duomenų (adresų, telefono numerių, asmens kodų), įžeidimų, neapykantos kurstymo, reklamos, to paties teksto daug kartų ir nieko, kas pažeidžia įstatymus. Neapsimeskite kitu žmogumi ar organizacija.</value></data>
   <data name="Terms.Publish.4" xml:space="preserve"><value>Nenaudokite programų, kurios už jus spaudžia mygtukus ar rašo tekstus.</value></data>
   <data name="Terms.Publish.5" xml:space="preserve"><value>Už tai, ką paskelbiate, atsakote jūs. Savo argumentą galite atsiimti, kol dėl projekto dar galima dalyvauti.</value></data>
@@ -41,11 +41,11 @@
   <data name="Terms.Moderation.2" xml:space="preserve"><value>Moderatorius gali paslėpti argumentą ar organizacijos poziciją, pataisyti projekto aprašymą, o piktnaudžiaujančiam – apriboti galimybę rašyti. Kiekvienas veiksmas užrašomas su paaiškinimu; kai jis susijęs su jūsų tekstu ar paskyra, paaiškinimą gaunate el. paštu.</value></data>
   <data name="Terms.Moderation.3" xml:space="preserve"><value>Jei nesutinkate su moderatoriaus sprendimu, parašykite moderatoriams laiške nurodytu adresu. Kaip dirba moderatoriai, rašoma moderavimo taisyklėse.</value></data>
   <data name="Terms.Summaries" xml:space="preserve"><value>Suvestinės Seimo nariams</value></data>
-  <data name="Terms.Summaries.1" xml:space="preserve"><value>Iš to, ko prašo dalyviai, sudaromos suvestinės Seimo nariams: abiejų pusių skaičiai, kiek iš jų paskyrų senesnės nei 30 dienų, ir moderatoriaus peržiūrėti argumentai, kuriuos daugiausia žmonių pažymėjo „Man svarbu“. Argumentų autorių vardų suvestinėse nėra.</value></data>
+  <data name="Terms.Summaries.1" xml:space="preserve"><value>Iš to, ko prašo dalyviai, sudaromos suvestinės Seimo nariams: abiejų pusių skaičiai, kiek iš jų paskyrų senesnės nei 30 dienų, ir moderatoriaus peržiūrėti argumentai, kuriuos daugiausia žmonių pažymėjo „Man svarbu“. Argumentų autorių vardų suvestinėse nėra. Ilgas argumentas laiške Seimo nariui sutrumpinamas, o nuoroda veda į visą jo tekstą viešoje suvestinės kopijoje.</value></data>
   <data name="Terms.Summaries.2" xml:space="preserve"><value>Kiekviena suvestinė turi viešą kopiją su tais pačiais skaičiais. Skaičiai rodo, ko prašo Lietuva 2.0 naudotojai, o ne visa visuomenė: tai nėra reprezentatyvi apklausa.</value></data>
   <data name="Terms.Summaries.3" xml:space="preserve"><value>Ar suvestinės šiuo metu siunčiamos Seimo nariams, rašoma metodikos puslapyje.</value></data>
   <data name="Terms.Leave" xml:space="preserve"><value>Kaip išeiti</value></data>
-  <data name="Terms.Leave.1" xml:space="preserve"><value>Paskyrą galite ištrinti bet kada paskyros puslapio dalyje „Jūsų duomenys“. Ištrinamos jūsų pozicijos, „Man svarbu“ žymos, argumentai, pranešimai ir sekimai; bendri skaičiai sumažėja, o jau sudarytose suvestinėse lieka tokie, kokie buvo.</value></data>
+  <data name="Terms.Leave.1" xml:space="preserve"><value>Paskyrą galite ištrinti bet kada paskyros puslapio dalyje „Saugumas ir duomenys“ („Jūsų duomenys“). Ištrinamos jūsų pozicijos, „Man svarbu“ žymos, argumentai, pranešimai ir sekimai; bendri skaičiai sumažėja, o jau sudarytose suvestinėse lieka tokie, kokie buvo.</value></data>
   <data name="Terms.Leave.2" xml:space="preserve"><value>Prieš ištrindami galite atsisiųsti viską, ką pateikėte.</value></data>
   <data name="Terms.Changes" xml:space="preserve"><value>Kai taisyklės keičiasi</value></data>
   <data name="Terms.Changes.1" xml:space="preserve"><value>Pakeistos taisyklės gauna naują versiją ir datą. Prisijungę pamatysite, kas pasikeitė, ir būsite paprašyti sutikti. Kol nesutinkate, galite skaityti, atsisiųsti savo duomenis, ištrinti paskyrą ir atsijungti, bet negalite nieko rašyti ar keisti.</value></data>
@@ -71,7 +71,7 @@
   <data name="Privacy.Data.Fact1.Term" xml:space="preserve"><value>El. pašto adresas</value></data>
   <data name="Privacy.Data.Fact1.Value" xml:space="preserve"><value>Kad galėtumėte prisijungti (juo siunčiame vienkartinius kodus), kad vienas adresas turėtų vieną paskyrą ir kad galėtume parašyti apie jūsų paskyrą, moderatorių sprendimus ir tai, ką sekate. Niekam nerodomas.</value></data>
   <data name="Privacy.Data.Fact2.Term" xml:space="preserve"><value>Vardas, kurį matys kiti</value></data>
-  <data name="Privacy.Data.Fact2.Value" xml:space="preserve"><value>Nebūtinas. Rodomas prie jūsų argumentų ir kitų viešų tekstų.</value></data>
+  <data name="Privacy.Data.Fact2.Value" xml:space="preserve"><value>Nebūtinas. Rodomas prie jūsų argumentų ir kitų viešų tekstų. Galite jį bet kada pakeisti paskyros puslapyje; pakeistas vardas rodomas ir prie anksčiau parašytų tekstų.</value></data>
   <data name="Privacy.Data.Fact3.Term" xml:space="preserve"><value>Registracija</value></data>
   <data name="Privacy.Data.Fact3.Value" xml:space="preserve"><value>Amžiaus patvirtinimas, sutikimas su naudojimo taisyklėmis ir jų versija, registracijos data, kvietimo kodas, kuriuo užsiregistravote, ir jo lygis. Kodo savininkas mato tik, kiek žmonių juo užsiregistravo – ne kas ir ne kada.</value></data>
   <data name="Privacy.Data.Fact4.Term" xml:space="preserve"><value>Ko prašote dėl projektų</value></data>
@@ -142,8 +142,10 @@
   <data name="Privacy.Rights.Fact4.Value" xml:space="preserve"><value>„Jūsų sesijos“ ir „Žinomos naršyklės“: nutraukti sesiją ar pamiršti naršyklę.</value></data>
   <data name="Privacy.Rights.Fact5.Term" xml:space="preserve"><value>Sekimai ir laiškai</value></data>
   <data name="Privacy.Rights.Fact5.Value" xml:space="preserve"><value>„Ką sekate“: nebesekti ir išjungti laiškus.</value></data>
-  <data name="Privacy.Rights.Fact6.Term" xml:space="preserve"><value>Kiti prašymai</value></data>
-  <data name="Privacy.Rights.Fact6.Value" xml:space="preserve"><value>[bus įrašyta]</value><comment>PLACEHOLDER (owner): where to send other requests (rectification, restriction, objection) and how long an answer takes; the same address as "Klausimai dėl duomenų" if that is the intent.</comment></data>
+  <data name="Privacy.Rights.Fact6.Term" xml:space="preserve"><value>Vardas</value></data>
+  <data name="Privacy.Rights.Fact6.Value" xml:space="preserve"><value>„Profilis“ → „Vardas“: pakeisti ar ištrinti vardą, kurį mato kiti.</value></data>
+  <data name="Privacy.Rights.Fact7.Term" xml:space="preserve"><value>Kiti prašymai</value></data>
+  <data name="Privacy.Rights.Fact7.Value" xml:space="preserve"><value>[bus įrašyta]</value><comment>PLACEHOLDER (owner): where to send other requests (rectification, restriction, objection) and how long an answer takes; the same address as "Klausimai dėl duomenų" if that is the intent.</comment></data>
   <data name="Privacy.Complaints" xml:space="preserve"><value>Kur skųstis</value></data>
   <data name="Privacy.Complaints.1" xml:space="preserve"><value>Jei manote, kad jūsų duomenys tvarkomi neteisėtai, galite pateikti skundą Valstybinei duomenų apsaugos inspekcijai.</value></data>
   <data name="Privacy.Complaints.Fact1.Term" xml:space="preserve"><value>Inspekcijos kontaktai</value></data>

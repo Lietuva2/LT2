@@ -365,9 +365,16 @@ a.tag:hover { text-decoration: underline; text-decoration-thickness: 1.5px; }
 
 /* ---------- Facts, rows, stages ---------- */
 
-.facts { display: grid; grid-template-columns: minmax(7rem, max-content) minmax(0, 1fr); gap: var(--sp-2) var(--sp-5); }
+/* Two columns while both fit: the term at least 7rem, each column at least its longest word, so a value is never broken
+   inside a word (with minmax(0, 1fr) a long term took the row and squeezed the value to a sliver). In a narrow box
+   (under 22rem, such as a sheet beside the main column) each value goes under its term. */
+.facts { display: grid; grid-template-columns: minmax(7rem, max-content) minmax(min-content, auto); gap: var(--sp-2) var(--sp-5); container-type: inline-size; }
 .facts dt { color: var(--ink-2); }
 .facts dd { font-weight: 600; }
+@container (max-width: 22rem) {
+  .facts > dt, .facts > dd { grid-column: 1 / -1; }
+  .facts > dd { margin-bottom: var(--sp-2); }
+}
 
 .rows > li {
   display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: var(--sp-2) var(--sp-5);
@@ -555,6 +562,20 @@ legend { padding: 0; font-weight: 600; }
 .more.stack--tight > :not(summary) + :not(summary) { margin-top: var(--sp-3); }
 .report-visitor > summary { display: inline; }
 .report-visitor[open] > p { margin-top: var(--sp-2); }
+/* A long member's text (design 8.2, owner 2026-11-16, LongText.razor): the beginning, "…" and "Rodyti daugiau" under it.
+   Opened, the "…" steps aside, the rest follows the beginning, and the summary stays (focusable, its expanded state
+   announced) but reads "Rodyti mažiau" and is drawn after the rest: the <details> is a flex column (.stack), and
+   `order` moves the summary's box below the content box. It is the disclosure's only focusable element, and the next one
+   in the page ("Man svarbu" under the bubble) also comes after it on screen, so the focus order still follows the eye.
+   The text not in force is display: none, which also hides it from assistive technology. */
+.long-text > .long-text__more { margin-top: var(--sp-2); }
+.long-text__more > summary { font-family: var(--font-text); }
+.long-text__more[open] { margin-top: 0; }
+.long-text__more[open] > summary { order: 1; }
+.long-text__more > summary > .long-text__opened,
+.long-text__more[open] > summary > .long-text__closed { display: none; }
+.long-text__more[open] > summary > .long-text__opened { display: inline; }
+.long-text:has(.long-text__more[open]) .long-text__cut { display: none; }
 
 /* A hint (design 8.15): the short answer without leaving the page. The trigger is a button with a dotted underline, so it
    does not read as a link that leaves the page. The panel is the browser's popover: without script it stands in the
@@ -674,12 +695,21 @@ body { padding-block-end: 4.5rem; }
 
 /* ---------- The front page (design 8.7, reworked 2026-11-15; mockup design/ui/pradzia.html) ---------- */
 
-/* The visitor's head: the turning logo, the name and one line, the trial note with the links to register or sign in. */
-.home-head { display: grid; grid-template-columns: 7rem minmax(0, 1fr) auto; gap: var(--sp-5); align-items: center; }
+/* The visitor's head: the turning logo beside the name and one line, about as tall as they are; under both, across the
+   head, the trial note with the links to register or sign in. The note starts at the page's edge and is a line of text
+   wide (p's --measure), as the invented-data notice above the page is, so the two yellow notes share both edges at
+   every width (owner, 2026-11-16: side by side they had no edge in common). One step, --sp-4, apart above and below
+   (from the notice, between the rows, to the rule; the links under the note --sp-2): the page's own padding (--sp-5) and
+   the loose stack's gap (--sp-7) are taken back by the margins, so the agenda's heading stays on the first screen at
+   1280 x 900 (design 8.7). */
+.home-head {
+  display: grid; grid-template-columns: 9rem minmax(0, 1fr); gap: var(--sp-4) var(--sp-5); align-items: center;
+  margin-block: calc(var(--sp-4) - var(--sp-5)) calc(var(--sp-4) - var(--sp-7));
+}
 .home-head lt2-logo-spin { width: 100%; }
 .home-head h1, .home-h1-s { font-size: var(--fs-5); }
 .home-head .lead { margin: 0; }
-.home-head__signin { max-inline-size: 32rem; }
+.home-head__signin { grid-column: 1 / -1; gap: var(--sp-2); }
 
 /* "Kaip tai veikia": four numbered steps (also at the top of /metodika#kaip-tai-veikia). */
 .home-how { border-top: 4px solid var(--brand-deep); padding-top: var(--sp-5); }
@@ -745,8 +775,7 @@ body { padding-block-end: 4.5rem; }
 
 @media (max-width: 64rem) { .intro-steps { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
 @media (max-width: 54rem) {
-  .home-head { grid-template-columns: 4.5rem minmax(0, 1fr); }
-  .home-head__signin { grid-column: 1 / -1; max-inline-size: none; }
+  .home-head { grid-template-columns: 6.5rem minmax(0, 1fr); }
   .tl-day { grid-template-columns: minmax(0, 1fr); gap: var(--sp-3); }
   .tl-date { position: static; flex-direction: row; flex-wrap: wrap; align-items: baseline; gap: var(--sp-2); }
   .tl-date b { font-size: var(--fs-4); }
@@ -756,6 +785,7 @@ body { padding-block-end: 4.5rem; }
   .tl-ask { max-width: none; }
 }
 @media (max-width: 36rem) {
+  .home-head { grid-template-columns: 5.25rem minmax(0, 1fr); gap: var(--sp-4); }
   .intro-steps { grid-template-columns: minmax(0, 1fr); gap: var(--sp-4); }
   .intro-steps > li { display: grid; grid-template-columns: 2.5rem minmax(0, 1fr); gap: var(--sp-1) var(--sp-3); }
   .intro-steps > li::before { grid-row: span 2; }

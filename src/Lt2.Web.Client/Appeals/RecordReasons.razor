@@ -29,7 +29,7 @@
                     @foreach (var reason in _showAll ? all : all.Take(Shown))
                     {
                         <div class="said" id="reason-@reason.Id" @key="reason.Id">
-                            <p class="bubble bubble--people voice">@reason.Text</p>
+                            <LongText Text="@reason.Text" BubbleClass="bubble bubble--people voice" Id="@($"reason-more-{reason.Id}")" />
                             @* The name, then the actions as one group that never wraps item by item (owner, 2026-11-13): when
                                the two do not fit side by side, the name takes its own line above. *@
                             <div class="said__by">
@@ -82,7 +82,7 @@
         <div class="row">
             @if (CanWrite && !_writing)
             {
-                <button class="btn btn--plain" type="button" id="add-reason" disabled="@Locked" @onclick="StartWriting">@L["Reasons.Write"]</button>
+                <button class="btn btn--plain" type="button" id="add-reason" disabled="@Locked" @onclick="StartWritingAsync">@L["Reasons.Write"]</button>
             }
             @if (record.Reasons.GroupBy(r => r.Side).Any(g => g.Count() > Shown))
             {
@@ -130,9 +130,11 @@
                 </fieldset>
                 <div class="field @ErrorClass("text")">
                     <label for="reason-text">@L["Reasons.Label"]</label>
-                    <textarea class="textarea" id="reason-text" maxlength="@AppealLimits.ReasonMaxLength" aria-describedby="@DescribedBy("text", "reason-text", "reason-hint")"
+                    @* Design 8.2 (owner, 2026-11-16): the length is the setting Texts:MaxLength; with 0 (no limit) only the
+                       technical ceiling holds and no counter is shown. *@
+                    <textarea class="textarea" id="reason-text" maxlength="@MemberTextLimits.Allowed(_maxLength ?? 0)" aria-describedby="@DescribedBy("text", "reason-text", "reason-hint")"
                               aria-invalid="@Invalid("text")" @bind="_text" @bind:event="oninput" disabled="@Locked"></textarea>
-                    <p class="field__hint num" id="reason-hint">@L.Format("Reasons.Hint", Display.Number(_text.Length), Display.Number(AppealLimits.ReasonMaxLength))</p>
+                    <p class="field__hint num" id="reason-hint">@(_maxLength is > 0 and var max ? L.Format("Reasons.Hint", Display.Number(_text.Length), Display.Number(max)) : L["Reasons.HintNoLimit"].Value)</p>
                     <FieldError Errors="Errors" Field="text" For="reason-text" />
                 </div>
                 @if (_similar is { Count: > 0 } similar)
@@ -144,7 +146,7 @@
                         {
                             var endorsed = Mine.Endorsed.Contains(reason.Id);
                             <div class="said" @key="reason.Id">
-                                <p class="bubble bubble--people voice">@reason.Text</p>
+                                <LongText Text="@reason.Text" BubbleClass="bubble bubble--people voice" Id="@($"similar-more-{reason.Id}")" />
                                 <div class="said__by">
                                     <b>@(reason.AuthorName ?? L["Reasons.Anonymous"])</b>
                                     <button class="mark num" type="button" aria-pressed="@(endorsed ? "true" : "false")" disabled="@(Locked || !MayEndorse(reason, endorsed))"
@@ -176,6 +178,9 @@
     private Guid? _withdrawing;
     private IReadOnlyList<ReasonResponse>? _similar;
     private Guid? _reporting;
+
+    /// <summary>The setting Texts:MaxLength (0 = no limit), read when writing starts; null until then or if unread.</summary>
+    private int? _maxLength;
 
     /// <summary>The moderators' answer for this bill: null for everyone else (the server refuses it).</summary>
     private ModerationBillResponse? _moderation;
@@ -246,11 +251,13 @@
     /// The side is preselected to the person's own, read from their never-cached "mine" answer; with no side of their
     /// own nothing is preselected and they choose.
     /// </summary>
-    private void StartWriting()
+    private Task StartWritingAsync() => RunAsync(async () =>
     {
+        // The length an argument may have is a runtime setting (design 8.2): read once, when writing starts.
+        _maxLength ??= (await Appeals.GetRulesAsync()).Value?.TextMaxLength;
         _side = Mine?.Side;
         _writing = true;
-    }
+    });
 
     private void ChooseSide(string side)
     {

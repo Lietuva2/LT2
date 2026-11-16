@@ -75,7 +75,11 @@ internal sealed class ParliamentReads(IParliamentQueries queries, IPlannedAgenda
         }
 
         var planned = (await agenda.ForBillsAsync([b.Number], ct)).GetValueOrDefault(b.Number);
-        return new BillResponse(b.Number, b.Title, b.ESeimasUrl, b.Votes.Select(Map).ToList(), AppealMapping.Map(planned));
+
+        // Design 8.4 (owner, 2026-11-16): the page a date is published on is the agenda page the watcher reads (one address,
+        // assumption A7), kept with every snapshot; the row's own link is the bill's document (A5) and shows no date.
+        var agendaPage = planned is { SetByModerator: false } ? (await queries.AgendaReadAsync(ct)).SourceUrl : null;
+        return new BillResponse(b.Number, b.Title, b.ESeimasUrl, b.Votes.Select(Map).ToList(), AppealMapping.Map(planned), agendaPage);
     }
 
     /// <summary>A vote summary as the API writes it (the agenda's recent stage results use it too).</summary>

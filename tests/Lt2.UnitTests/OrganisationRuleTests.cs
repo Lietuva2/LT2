@@ -173,13 +173,13 @@ public sealed class OrganisationRuleTests
     [InlineData("for", "Tekstas", "javascript:alert(1)", null, "statement.link-invalid")]
     [InlineData("for", "Tekstas", "https://user@asociacija.test", null, "statement.link-invalid")]
     public void A_statement_has_a_stance_a_text_an_optional_https_link_and_a_goal_only_on_a_side(string stance, string text, string? link, int? goal, string? error) =>
-        OrganisationRules.CheckStatement(stance, text, link, goal).ShouldBe(error);
+        OrganisationRules.CheckStatement(stance, text, link, goal, maxLength: 2000).ShouldBe(error);
 
     [Fact]
-    public void A_statement_is_at_most_one_thousand_five_hundred_characters()
+    public void A_statement_is_as_long_as_the_members_texts_setting_allows()
     {
-        OrganisationRules.CheckStatement("for", new string('a', 1500), null, null).ShouldBeNull();
-        OrganisationRules.CheckStatement("for", new string('a', 1501), null, null).ShouldBe("statement.too-long");
+        OrganisationRules.CheckStatement("for", new string('a', 2000), null, null, maxLength: 2000).ShouldBeNull();
+        OrganisationRules.CheckStatement("for", new string('a', 2001), null, null, maxLength: 2000).ShouldBe("statement.too-long");
     }
 
     [Theory]

@@ -11,7 +11,9 @@ internal static class AppealValidation
     public static IRuleBuilderOptions<T, string> ReasonText<T>(this IRuleBuilderInitial<T, string> rule, IStringLocalizer l) =>
         rule.Cascade(CascadeMode.Stop)
             .Must(t => !string.IsNullOrWhiteSpace(t)).WithMessage(l["Reason.Required"])
-            .Must(t => t.Trim().Length <= AppealLimits.ReasonMaxLength).WithMessage(l["Reason.TooLong"]);
+            // Only the technical ceiling here; the setting Texts:MaxLength is checked where the argument is written
+            // (design 6.8, 8.2), and its refusal names the number that holds.
+            .Must(t => t.Trim().Length <= MemberTextLimits.Ceiling).WithMessage(l["Reason.TooLong", MemberTextLimits.Number(MemberTextLimits.Ceiling)]);
 
     public static IRuleBuilderOptions<T, string> Description<T>(this IRuleBuilderInitial<T, string> rule, IStringLocalizer l) =>
         rule.Cascade(CascadeMode.Stop)

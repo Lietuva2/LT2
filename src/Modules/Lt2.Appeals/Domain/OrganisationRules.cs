@@ -14,7 +14,6 @@ internal static partial class OrganisationRules
     public const int NameMaxLength = 120;
     public const int DescriptionMaxLength = 500;
     public const int WebsiteMaxLength = 200;
-    public const int StatementMaxLength = 1500;
     public const int LinkMaxLength = 500;
     public const int GoalMax = 1_000_000;
     public const int SlugMaxLength = 60;
@@ -267,11 +266,12 @@ internal static partial class OrganisationRules
     }
 
     /// <summary>
-    /// A statement (design 8.14.3, 8.14.14): a stance <c>for</c>, <c>against</c> or <c>remarks</c>; 1 to 1 500 characters of
-    /// plain text; an optional https link of at most 500 characters; with <c>for</c> or <c>against</c> an optional goal of 1
-    /// to 1 000 000 participants, and no goal with remarks.
+    /// A statement (design 8.14.3, 8.14.14): a stance <c>for</c>, <c>against</c> or <c>remarks</c>; plain text, not blank, no
+    /// longer than the setting <c>Texts:MaxLength</c> allows (<paramref name="maxLength"/>; owner, 2026-11-16); an optional
+    /// https link of at most 500 characters; with <c>for</c> or <c>against</c> an optional goal of 1 to 1 000 000
+    /// participants, and no goal with remarks.
     /// </summary>
-    public static string? CheckStatement(string? stance, string? text, string? link, int? goal)
+    public static string? CheckStatement(string? stance, string? text, string? link, int? goal, int maxLength)
     {
         if (stance is null || !Stances.All.Contains(stance))
         {
@@ -284,7 +284,7 @@ internal static partial class OrganisationRules
             return "statement.empty";
         }
 
-        if (normalised.Length > StatementMaxLength)
+        if (AppealRules.TooLong(normalised, maxLength))
         {
             return "statement.too-long";
         }

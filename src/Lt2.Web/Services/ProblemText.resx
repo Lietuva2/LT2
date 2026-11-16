@@ -65,7 +65,7 @@
 <data name="side.invalid" xml:space="preserve"><value>Pasirinkite: prašyti balsuoti už arba prieš.</value></data>
 <data name="position.required" xml:space="preserve"><value>Pirmiausia nurodykite, ko prašote: balsuoti už ar prieš.</value></data>
 <data name="reason.empty" xml:space="preserve"><value>Parašykite argumentą.</value></data>
-<data name="reason.too-long" xml:space="preserve"><value>Argumentas per ilgas: ne daugiau kaip 500 ženklų.</value></data>
+<data name="reason.too-long" xml:space="preserve"><value>Argumentas per ilgas: ne daugiau kaip {0} ženklų.</value></data>
 <data name="reason.limit" xml:space="preserve"><value>Dėl šio projekto jau parašėte tiek argumentų, kiek dabar leidžiama vienam žmogui.</value></data>
 <data name="reason.not-found" xml:space="preserve"><value>Tokio argumento nėra.</value></data><data name="writing.restricted" xml:space="preserve"><value>Moderatorius apribojo jūsų galimybę rašyti, todėl šiuo metu to padaryti negalite.</value></data>
 <data name="restriction.exists" xml:space="preserve"><value>Šiam žmogui apribojimas jau galioja. Norėdami pakeisti jo trukmę, pirma jį atšaukite.</value></data>
@@ -134,7 +134,7 @@
 <data name="confirm.code-invalid" xml:space="preserve"><value>Kodas neteisingas arba nebegalioja. Paprašykite naujo.</value></data>
 <data name="statement.stance-invalid" xml:space="preserve"><value>Pasirinkite, ko organizacija prašo: balsuoti už, prieš, ar teikia pastabų.</value></data>
 <data name="statement.empty" xml:space="preserve"><value>Parašykite organizacijos poziciją.</value></data>
-<data name="statement.too-long" xml:space="preserve"><value>Pozicija per ilga: ne daugiau kaip 1 500 ženklų.</value></data>
+<data name="statement.too-long" xml:space="preserve"><value>Pozicija per ilga: ne daugiau kaip {0} ženklų.</value></data>
 <data name="statement.link-invalid" xml:space="preserve"><value>Nurodykite nuorodą, prasidedančią https:// (ne daugiau kaip 500 ženklų).</value></data>
 <data name="statement.goal-invalid" xml:space="preserve"><value>Tikslas – nuo 1 iki 1 000 000 dalyvių.</value></data>
 <data name="statement.goal-with-remarks" xml:space="preserve"><value>Tikslą galima nurodyti tik prašant balsuoti už arba prieš.</value></data>
@@ -145,7 +145,7 @@
 <data name="statement.not-found" xml:space="preserve"><value>Tokios pozicijos nėra.</value></data>
 <data name="invitation.organisation-inactive" xml:space="preserve"><value>Kol organizacija užblokuota ar uždaryta, jos kvietimo kodo pakeisti negalima.</value></data>
 <data name="invitation.organisation-switched-off" xml:space="preserve"><value>Organizacijos kvietimo kodą išjungė administratorius, todėl naujo kol kas sukurti negalima.</value></data>
-  <data name="account.staff-passkey-required" xml:space="preserve"><value>Darbuotojo paskyrą ištrinti galima tik prisijungus darbuotojo prieigos raktu. Atsijunkite, vėl prisijunkite tuo prieigos raktu ir tada ištrinkite paskyrą.</value></data>
+  <data name="account.staff-passkey-required" xml:space="preserve"><value>Darbuotojo paskyrą ištrinti galima tik prisijungus darbuotojo prieigos raktu. Prisijunkite juo paskyros meniu („Prisijungti darbuotojo prieigos raktu“) ir tada ištrinkite paskyrą.</value></data>
 <data name="mp.not-official-address" xml:space="preserve"><value>Jūsų paskyros el. pašto adresas nėra šio Seimo nario oficialus adresas.</value></data>
 <data name="mp.link-invalid" xml:space="preserve"><value>Ši nuoroda netinka: ji jau panaudota, nebegalioja arba skirta kitai paskyrai. Paprašykite naujos.</value></data>
 <data name="mp.already-linked" xml:space="preserve"><value>Ši paskyra jau susieta su Seimo nariu.</value></data>
@@ -159,7 +159,7 @@
 <data name="mp.takes-no-part" xml:space="preserve"><value>Seimo nario paskyra nedalyvauja kaip dalyvis: Seimo narys atsako atsakymu.</value></data>
   <data name="response.stance-invalid" xml:space="preserve"><value>Pasirinkite: balsuosite už, prieš ar dar neapsisprendėte.</value></data>
   <data name="response.empty" xml:space="preserve"><value>Parašykite atsakymą.</value></data>
-  <data name="response.too-long" xml:space="preserve"><value>Atsakymas per ilgas: ne daugiau kaip 1 500 ženklų.</value></data>
+  <data name="response.too-long" xml:space="preserve"><value>Atsakymas per ilgas: ne daugiau kaip {0} ženklų.</value></data>
   <data name="response.bill-not-open" xml:space="preserve"><value>Dėl šio projekto atsakymo skelbti, keisti ar atsiimti nebegalima: Seimas jau balsavo arba dalyvavimą uždarė moderatoriai.</value></data>
   <data name="response.hidden" xml:space="preserve"><value>Šį atsakymą paslėpė moderatoriai: jo pakeisti ar atsiimti negalima.</value></data>
   <data name="response.not-found" xml:space="preserve"><value>Atsakymo nėra.</value></data>

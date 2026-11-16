@@ -151,9 +151,9 @@ public sealed class MpResponseTests(DatabaseFixture database) : ApiTest(database
             (await mp.Browser.GetJsonAsync<MyMpResponseResponse>(MpResponseRoutes.MineOf(Bill))).Refusal.ShouldBe("response.mandate-ended");
             await RestoreMandateAsync(mandate);
 
-            // Validation: one of the three stances and a text of at most 1 500 characters.
+            // Validation: one of the three stances; the text no longer than the members' texts setting allows (Texts:MaxLength, 2 000 by default; owner, 2026-11-16).
             await (await mp.Browser.RespondAsync(Bill, "abstain", "Tekstas.")).ShouldBeProblemAsync(HttpStatusCode.BadRequest, "validation");
-            await (await mp.Browser.RespondAsync(Bill, "for", new string('a', 1501))).ShouldBeProblemAsync(HttpStatusCode.BadRequest, "validation");
+            await (await mp.Browser.RespondAsync(Bill, "for", new string('a', 2001))).ShouldBeProblemAsync(HttpStatusCode.BadRequest, "response.too-long");
 
             // The link given up: refused at once; the response stays as published (design 8.5.2).
             (await mp.Browser.SendAsync(HttpMethod.Delete, MpRoutes.Mine)).StatusCode.ShouldBe(HttpStatusCode.NoContent);

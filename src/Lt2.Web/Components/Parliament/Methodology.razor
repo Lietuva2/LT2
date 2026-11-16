@@ -91,6 +91,9 @@
     <section class="stack" aria-labelledby="m-privacy" id="privatumas">
         <h2 id="m-privacy">@A["Method.Privacy"]</h2>
         <p>@A["Method.Privacy.1"]</p>
+        @* Design 8.11.2, 8.14.14, 8.20.1: what following sends, the four email switches on the account page (owner,
+           2026-11-16: said here, not in the front page's introduction). *@
+        <p id="sekimas">@A["Method.Privacy.Follow"]</p>
         @* Design 6.9: what deleting an account removes, and what a staff member's account leaves behind. *@
         <p id="istrynimas">@A["Method.Privacy.2"]</p>
     </section>
@@ -148,6 +151,8 @@
             <h2 id="m-limits">@A["Method.Limits"]</h2>
             <dl class="facts" id="person-limits">
                 <dt>@A["Method.Limits.Reasons"]</dt><dd class="num">@(l.ReasonsPerPerson == 0 ? A["Method.Limits.None"] : A.Format("Method.Limits.ReasonsValue", Display.Number(l.ReasonsPerPerson)))</dd>
+                @* Design 8.2 (owner, 2026-11-16): the length of members' texts (arguments, statements, responses) is the setting Texts:MaxLength, 0 = no limit. *@
+                <dt>@A["Method.Limits.Length"]</dt><dd class="num" id="text-length">@(l.TextMaxLength == 0 ? A["Method.Limits.None"] : A.Format("Method.Limits.LengthValue", Display.Number(l.TextMaxLength)))</dd>
                 <dt>@A["Method.Limits.Endorsements"]</dt><dd class="num">@(l.EndorsementsPerPerson == 0 ? A["Method.Limits.None"] : A.Format("Method.Limits.EndorsementsValue", Display.Number(l.EndorsementsPerPerson)))</dd>
             </dl>
             <p>@A["Method.Limits.Note"]</p>

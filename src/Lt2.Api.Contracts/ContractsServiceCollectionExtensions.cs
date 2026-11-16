@@ -20,6 +20,7 @@ public static class ContractsServiceCollectionExtensions
         services.AddScoped<IValidator<Me.CompleteRegistrationRequest>, Me.CompleteRegistrationRequestValidator>();
         services.AddScoped<IValidator<Me.MyBillsQuery>, Me.MyBillsQueryValidator>();
         services.AddScoped<IValidator<Me.RoleActivationRequest>, Me.RoleActivationRequestValidator>();
+        services.AddScoped<IValidator<Me.DisplayNameRequest>, Me.DisplayNameRequestValidator>();
         services.AddScoped<IValidator<GrantRoleRequest>, GrantRoleRequestValidator>();
         services.AddScoped<IValidator<ResetAccountRequest>, ResetAccountRequestValidator>();
         services.AddScoped<IValidator<UpdateSettingRequest>, UpdateSettingRequestValidator>();

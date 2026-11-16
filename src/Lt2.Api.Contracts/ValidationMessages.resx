@@ -24,7 +24,7 @@
 <data name="Feedback.Empty" xml:space="preserve"><value>Parašykite, ką norite pasakyti.</value></data>
 <data name="Feedback.TooLong" xml:space="preserve"><value>Per ilga žinutė: ne daugiau kaip 2 000 ženklų.</value></data>
 <data name="Feedback.Kind" xml:space="preserve"><value>Pasirinkite vieną iš pateiktų rūšių.</value></data>
-<data name="Reason.TooLong" xml:space="preserve"><value>Argumentas per ilgas: ne daugiau kaip 500 ženklų.</value></data>
+<data name="Reason.TooLong" xml:space="preserve"><value>Argumentas per ilgas: ne daugiau kaip {0} ženklų.</value></data>
 <data name="Description.Required" xml:space="preserve"><value>Trumpai ir neutraliai aprašykite, ką keičia projektas.</value></data>
 <data name="DescriptionUrl.Invalid" xml:space="preserve"><value>Nurodykite oficialaus teksto adresą lrs.lt svetainėje, prasidedantį https://, arba palikite laukelį tuščią.</value></data>
 <data name="Description.TooLong" xml:space="preserve"><value>Aprašymas per ilgas: ne daugiau kaip 1 500 ženklų.</value></data>
@@ -48,7 +48,7 @@
 <data name="Organisation.LegalCode" xml:space="preserve"><value>Juridinio asmens kodą sudaro nuo 7 iki 9 skaitmenų.</value></data>
 <data name="OrgStatement.Stance" xml:space="preserve"><value>Pasirinkite, ko organizacija prašo: balsuoti už, prieš, ar teikia pastabų.</value></data>
 <data name="OrgStatement.Required" xml:space="preserve"><value>Parašykite organizacijos poziciją.</value></data>
-<data name="OrgStatement.TooLong" xml:space="preserve"><value>Pozicija per ilga: ne daugiau kaip 1 500 ženklų.</value></data>
+<data name="OrgStatement.TooLong" xml:space="preserve"><value>Pozicija per ilga: ne daugiau kaip {0} ženklų.</value></data>
 <data name="OrgStatement.Link" xml:space="preserve"><value>Nurodykite nuorodą, prasidedančią https:// (ne daugiau kaip 500 ženklų).</value></data>
 <data name="OrgStatement.Goal" xml:space="preserve"><value>Tikslas – nuo 1 iki 1 000 000 dalyvių, ir tik kai organizacija prašo balsuoti už arba prieš.</value></data>
 <data name="Confirm.Address" xml:space="preserve"><value>Įveskite el. pašto adresą organizacijos svetainės domene.</value></data>
@@ -58,7 +58,7 @@
   <data name="MpLink.Required" xml:space="preserve"><value>Nuorodos kodo nėra: atverkite visą nuorodą iš laiško.</value></data>
   <data name="MpResponse.Stance" xml:space="preserve"><value>Pasirinkite: balsuosite už, prieš ar dar neapsisprendėte.</value></data>
   <data name="MpResponse.Required" xml:space="preserve"><value>Parašykite atsakymą.</value></data>
-  <data name="MpResponse.TooLong" xml:space="preserve"><value>Atsakymas per ilgas: ne daugiau kaip 1 500 ženklų.</value></data>
+  <data name="MpResponse.TooLong" xml:space="preserve"><value>Atsakymas per ilgas: ne daugiau kaip {0} ženklų.</value></data>
   <data name="Digest.CancelTooShort" xml:space="preserve"><value>Paaiškinimas per trumpas: bent 20 ženklų.</value></data>
   <data name="MpMail.Frequency" xml:space="preserve"><value>Pasirinkite, kaip dažnai siųsti suvestines.</value></data>
   <data name="MpMail.Address" xml:space="preserve"><value>Įveskite vieną el. pašto adresą (ne daugiau kaip 254 ženklai).</value></data>
