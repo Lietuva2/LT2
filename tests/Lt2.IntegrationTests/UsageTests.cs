@@ -260,6 +260,44 @@ public sealed class UsageTests(DatabaseFixture database) : ApiTest(database)
     }
 
     [Fact]
+    public async Task A_visitor_in_the_last_minute_of_a_day_nobody_else_visited_counts_for_that_day()
+    {
+        // A day long over, in a year no other test touches; the counter runs on a clock the test moves past midnight.
+        var day = new DateOnly(2019, 6, 15);
+        var starts = new[] { day, new DateOnly(2019, 6, 1), new DateOnly(2019, 1, 1) };
+        var clock = new ManualClock(VilniusTime.StartOf(day.AddDays(1)).AddSeconds(-30));
+        var counter = new UsageCounter(
+            Factory.Services.GetRequiredService<IServiceScopeFactory>(), clock,
+            Microsoft.Extensions.Logging.Abstractions.NullLogger<UsageCounter>.Instance);
+        try
+        {
+            counter.Count(new PageView("GET", "/metodika", 200, "text/html", false, Lt2Factory.ClientAddress, Browser(), null, null, "lt2.test"));
+            clock.Advance(TimeSpan.FromMinutes(1));
+            await counter.FlushAsync(CancellationToken.None);
+
+            (await Database.ScalarAsync<int>("SELECT visitors FROM usage.total WHERE period = 'day' AND starts = @d", ("d", day))).ShouldBe(1);
+            (await Database.ScalarAsync<int>("SELECT visitor_views FROM usage.total WHERE period = 'day' AND starts = @d", ("d", day))).ShouldBe(1);
+            (await Database.ScalarAsync<long>("SELECT count(*) FROM usage.sketch WHERE period = 'day' AND starts = @d", ("d", day)))
+                .ShouldBe(0, "no salt is stored for a day that is over");
+        }
+        finally
+        {
+            await Database.ExecuteAsync("DELETE FROM usage.sketch WHERE starts = ANY(@s)", ("s", starts));
+            await Database.ExecuteAsync("DELETE FROM usage.total WHERE starts = ANY(@s)", ("s", starts));
+            await Database.ExecuteAsync("DELETE FROM usage.page WHERE day = @d", ("d", day));
+        }
+    }
+
+    private sealed class ManualClock(DateTimeOffset start) : TimeProvider
+    {
+        private DateTimeOffset _now = start;
+
+        public override DateTimeOffset GetUtcNow() => _now;
+
+        public void Advance(TimeSpan by) => _now += by;
+    }
+
+    [Fact]
     public async Task Only_an_administrator_in_a_staff_session_reads_the_numbers_and_they_say_nothing_about_anyone()
     {
         using var stranger = Visitor();

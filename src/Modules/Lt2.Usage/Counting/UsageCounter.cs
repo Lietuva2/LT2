@@ -185,6 +185,7 @@ internal sealed class UsageCounter(IServiceScopeFactory scopes, TimeProvider clo
             salts = new Dictionary<Key, byte[]>(_salts);
         }
 
+        var late = new List<(Key Key, int Estimate)>();
         foreach (var (key, sketch) in taken.Sketches)
         {
             var row = rows.FirstOrDefault(r => r.Period == key.Period && r.Starts == key.Starts && r.Audience == key.Audience);
@@ -192,7 +193,10 @@ internal sealed class UsageCounter(IServiceScopeFactory scopes, TimeProvider clo
             {
                 if (UsageRules.HasEnded(key.Period, key.Starts, today))
                 {
-                    // Its count was written and its salt deleted already; what came this late is left out.
+                    // An ended period with no stored sketch: either all of it came in this minute (its first visitor just
+                    // before midnight), or its count is final and its salt gone. Its count becomes the larger of the two;
+                    // no salt is stored again.
+                    late.Add((key, sketch.Estimate()));
                     continue;
                 }
 
@@ -247,6 +251,19 @@ internal sealed class UsageCounter(IServiceScopeFactory scopes, TimeProvider clo
             else
             {
                 total.Visitors = estimate;
+            }
+        }
+
+        foreach (var (key, estimate) in late)
+        {
+            var total = await TotalAsync(key.Period, key.Starts);
+            if (key.Audience == UsageRules.Member)
+            {
+                total.Members = Math.Max(total.Members, estimate);
+            }
+            else
+            {
+                total.Visitors = Math.Max(total.Visitors, estimate);
             }
         }
 
