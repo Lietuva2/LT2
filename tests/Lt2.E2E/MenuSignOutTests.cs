@@ -7,7 +7,7 @@ namespace Lt2.E2E;
 /// "Atsijungti" in the menu (owner, 2026-11-13), since design 8.21 inside the account item "Paskyra" with "Mano paskyra", for a
 /// signed-in person at every width: the item opens and signing out works with JavaScript switched off.
 /// </summary>
-public sealed class MenuSignOutTests
+public sealed class MenuSignOutTests : E2ETest
 {
     private static string Base => SignUpTests.BaseUrl!.TrimEnd('/');
 

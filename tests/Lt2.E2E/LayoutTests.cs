@@ -8,7 +8,7 @@ namespace Lt2.E2E;
 /// at 390 px, for a visitor, a member and a moderator. Full-page screenshots of each go to <c>LT2_E2E_SHOTS</c> (or
 /// <c>output/one-object/shots</c>) for a person to look at.
 /// </summary>
-public sealed class LayoutTests(LayoutTests.ModeratorFixture moderator) : IClassFixture<LayoutTests.ModeratorFixture>
+public sealed class LayoutTests(LayoutTests.ModeratorFixture moderator) : E2ETest, IClassFixture<LayoutTests.ModeratorFixture>
 {
     private static readonly string[] Pages =
         ["/seimas/XVP-0412", "/seimas/XVP-0533", "/projektai", "/darbotvarke", "/", "/organizacijos", "/o/pavyzdine-mokesciu-aiskumo-asociacija"];

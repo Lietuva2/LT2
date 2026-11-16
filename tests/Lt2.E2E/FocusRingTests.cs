@@ -10,7 +10,7 @@ namespace Lt2.E2E;
 ///
 /// Runs only when <c>LT2_E2E_BASE_URL</c> is set (see <see cref="SignUpTests"/>). Uses no rate-limited endpoint.
 /// </summary>
-public sealed class FocusRingTests
+public sealed class FocusRingTests : E2ETest
 {
     [Fact]
     public async Task The_heading_focused_on_load_has_no_ring_and_a_tabbed_link_still_has_one()

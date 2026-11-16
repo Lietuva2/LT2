@@ -68,6 +68,31 @@ internal static partial class Mailpit
         return search.GetProperty("messages_count").GetInt32();
     }
 
+    /// <summary>
+    /// The code of a sign-in email to <paramref name="email"/> newer than the <paramref name="before"/> such emails there were,
+    /// waited for (45 s).
+    /// </summary>
+    public static async Task<string> NewCodeAsync(string email, int before)
+    {
+        var query = $"to:\"{email}\" subject:\"prisijungimo kodas\"";
+        var until = DateTime.UtcNow + TimeSpan.FromSeconds(45);
+        while (await CountAsync(query) <= before)
+        {
+            DateTime.UtcNow.ShouldBeLessThan(until, $"a new sign-in code for {email} arrives in Mailpit");
+            await Task.Delay(500);
+        }
+
+        return await CodeAsync(email);
+    }
+
+    /// <summary>Deletes every email to <paramref name="to"/> (a test's own address, after the test).</summary>
+    public static async Task DeleteToAsync(string to)
+    {
+        using var http = new HttpClient { BaseAddress = new Uri(Url) };
+        using var response = await http.DeleteAsync($"/api/v1/search?query={Uri.EscapeDataString($"to:\"{to}\"")}");
+        response.EnsureSuccessStatusCode();
+    }
+
     /// <summary>The six-digit code of the newest sign-in email to <paramref name="email"/>.</summary>
     public static async Task<string> CodeAsync(string email)
     {
@@ -107,6 +132,8 @@ internal static class E2ESteps
 
         await page.GetByRole(AriaRole.Button, new() { Name = "Registruotis", Exact = true }).ClickAsync();
         await page.GetByLabel("Šešių skaitmenų kodas").FillAsync(await Mailpit.CodeAsync(email));
+        // From here the account exists (pending until it is completed): the test deletes it when it is over (E2ETest).
+        await TestAccounts.RegisteredAsync(email, page.Context);
         await page.GetByRole(AriaRole.Button, new() { Name = "Prisijungti", Exact = true }).ClickAsync();
         await Assertions.Expect(page.GetByRole(AriaRole.Heading, new() { Name = "Dar keli dalykai" })).ToBeVisibleAsync(new() { Timeout = Slow });
         await SignUpTests.WaitForInteractivityAsync(page);
@@ -114,6 +141,8 @@ internal static class E2ESteps
         await page.GetByLabel("Man yra 18 metų arba daugiau").CheckAsync();
         await page.GetByLabel("Sutinku su naudojimo taisyklėmis").CheckAsync();
         await page.GetByRole(AriaRole.Button, new() { Name = "Baigti registraciją" }).ClickAsync();
+        await page.WaitForURLAsync(url => !new Uri(url).AbsolutePath.StartsWith("/prisijungti", StringComparison.Ordinal), new() { Timeout = Slow });
+        await TestAccounts.SessionOfAsync(page.Context);
     }
 
     /// <summary>
@@ -166,7 +195,7 @@ internal static class E2ESteps
     /// <summary>
     /// Clean-up in a <c>finally</c>: the representative closes the organisation, which takes its statements off every bill
     /// (design 8.14.14). It never throws, so it cannot hide the failure that brought the test here; what it leaves is
-    /// removed by <c>output/cleanup-e2e.ps1</c>.
+    /// removed when the test is over (<see cref="E2ETest"/>).
     /// </summary>
     public static async Task CloseOrganisationAsync(IPage representative, string slug)
     {

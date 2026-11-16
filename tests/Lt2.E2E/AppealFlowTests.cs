@@ -12,7 +12,7 @@ namespace Lt2.E2E;
 /// restores the bill. And the public bill page once with JavaScript off. Each test takes back what it did through the
 /// API (sides cleared, arguments withdrawn), so the bills stay as they were.
 /// </summary>
-public sealed class AppealFlowTests(AppealFlowTests.ModeratorFixture moderator) : IClassFixture<AppealFlowTests.ModeratorFixture>
+public sealed class AppealFlowTests(AppealFlowTests.ModeratorFixture moderator) : E2ETest, IClassFixture<AppealFlowTests.ModeratorFixture>
 {
     private static string Base => SignUpTests.BaseUrl!.TrimEnd('/');
 
@@ -197,6 +197,21 @@ public sealed class AppealFlowTests(AppealFlowTests.ModeratorFixture moderator) 
     {
         Assert.SkipWhen(string.IsNullOrEmpty(SignUpTests.BaseUrl), "LT2_E2E_BASE_URL is not set; start the stack and set it to run end-to-end tests.");
         const string Bill = "XVP-0618";
+        await E2EData.RestoreDescriptionAsync(Bill);
+        try
+        {
+            await ModerateOnThePageAsync();
+        }
+        finally
+        {
+            // The description written here goes, so the bill is as the demonstration data has it.
+            await E2EData.RestoreDescriptionAsync(Bill);
+        }
+    }
+
+    private async Task ModerateOnThePageAsync()
+    {
+        const string Bill = "XVP-0618";
         var run = DateTime.UtcNow.ToString("HHmmss", System.Globalization.CultureInfo.InvariantCulture);
         var mod = await moderator.PageAsync();
 
@@ -301,7 +316,21 @@ public sealed class AppealFlowTests(AppealFlowTests.ModeratorFixture moderator) 
     {
         Assert.SkipWhen(string.IsNullOrEmpty(SignUpTests.BaseUrl), "LT2_E2E_BASE_URL is not set; start the stack and set it to run end-to-end tests.");
         const string Bill = "XVP-0533";
-        await ResetDemonstrationSummaryAsync();
+        await E2EData.RestoreDescriptionAsync(Bill);
+        try
+        {
+            await ReportConfirmAndCorrectAsync();
+        }
+        finally
+        {
+            // The demonstration summary goes back to "nobody has read it" for the next test and for people using the stack.
+            await E2EData.RestoreDescriptionAsync(Bill);
+        }
+    }
+
+    private async Task ReportConfirmAndCorrectAsync()
+    {
+        const string Bill = "XVP-0533";
         var mod = await moderator.PageAsync();
 
         await using var reader = await PasskeyBrowser.StartAsync("native", 1280, 800);
@@ -357,12 +386,14 @@ public sealed class AppealFlowTests(AppealFlowTests.ModeratorFixture moderator) 
         await Assertions.Expect(reports).ToContainTextAsync("Aprašymas netikslus ar klaidingas");
         await Assertions.Expect(reports.Locator("li span.num").Last).ToHaveTextAsync(new System.Text.RegularExpressions.Regex(@"^\d{4}-\d{2}-\d{2} \d{2}:\d{2}$"));
         (await mod.ContentAsync()).ShouldNotContain("Klaidą Radusi Skaitytoja", customMessage: "who reported is never shown");
+        // The panel is an island: the screenshot waits until it has started (its actions are enabled), or it can catch
+        // the server-rendered section just as the island replaces it ("Node is either not visible").
+        var describe = panel.Locator("button[id^='action-describe-']");
+        await Assertions.Expect(describe).ToBeEnabledAsync(new() { Timeout = 60_000 });
         await panel.ScrollIntoViewIfNeededAsync();
         await panel.ScreenshotAsync(new() { Path = Shot("panel-description-report-1280.png") });
 
         // The form starts from the address the record has; a refused address is said at the field and nothing is saved.
-        var describe = panel.Locator("button[id^='action-describe-']");
-        await Assertions.Expect(describe).ToBeEnabledAsync(new() { Timeout = 60_000 });
         await describe.ClickAsync();
         var address = panel.Locator("input[id^='describe-url-']");
         await Assertions.Expect(address).ToHaveValueAsync(new System.Text.RegularExpressions.Regex("^https://e-seimas\\.lrs\\.lt/"));
@@ -396,35 +427,6 @@ public sealed class AppealFlowTests(AppealFlowTests.ModeratorFixture moderator) 
         await Assertions.Expect(r.Locator("#moderation-panel")).ToHaveCountAsync(0);
         await r.Locator("#about").ScreenshotAsync(new() { Path = Shot("visitor-after-save-1280.png") });
         reader.ConsoleErrors.ShouldBeEmpty();
-
-        // The demonstration summary goes back to "nobody has read it" for the next run and for people using the stack.
-        await ResetDemonstrationSummaryAsync();
-    }
-
-    /// <summary>
-    /// The product cannot make a summary unread again (a confirmation and a correction stand for the description's whole
-    /// life, design 8.13), so this test puts the local stack's demonstration summary on XVP-0533 back before it starts, the
-    /// way <c>output/cleanup-hidden.sql</c> does: a run's corrected text, its reports and confirmations go, and the migrator's
-    /// repeatable <c>--demo-appeal</c> writes the invented summary again. Local stack only (it needs the docker CLI).
-    /// </summary>
-    private static async Task ResetDemonstrationSummaryAsync()
-    {
-        const string Sql =
-            """
-            begin;
-            create temp table own as select id from appeals.bill_record where bill_number = 'XVP-0533';
-            delete from appeals.report where target_kind = 'record' and target_id in (select id from own);
-            delete from appeals.moderation_action where target_kind = 'record' and action = 'confirm' and target_id in (select id from own);
-            delete from appeals.revision where entity_kind = 'record' and field = 'description' and entity_id in (select id from own)
-              and (old_value like '%(E2E bandymas)%' or new_value like '%(E2E bandymas)%');
-            update appeals.bill_record set description = '', description_source = null, description_url = null, description_at = null
-             where id in (select id from own) and description like '%(E2E bandymas)%';
-            update appeals.bill_record set description_source = 'ai'
-             where id in (select id from own) and description like 'Projektas leistų savivaldybėms pačioms nustatyti%';
-            commit;
-            """;
-        await Compose.RunAsync("exec", "-T", "postgres", "sh", "-c", "psql -U \"$POSTGRES_USER\" -d lt2 -v ON_ERROR_STOP=1 -q -c \"$0\"", Sql);
-        await Compose.RunAsync("run", "--rm", "--no-deps", "migrator", "--demo-appeal");
     }
 
     /// <summary>The background colour of one half of the side switch.</summary>
@@ -490,21 +492,30 @@ public sealed class AppealFlowTests(AppealFlowTests.ModeratorFixture moderator) 
     {
         Assert.SkipWhen(string.IsNullOrEmpty(SignUpTests.BaseUrl), "LT2_E2E_BASE_URL is not set; start the stack and set it to run end-to-end tests.");
 
-        // A moderator approves one urgent summary for XVP-0412 (a dry run; once a week, so a later run finds it made).
+        // A moderator approves one urgent summary for XVP-0412 (a dry run). One a week per bill: a 409 means this week's is
+        // already there (made by people using the stack), and it is read instead; one this test made is deleted afterwards.
         var mod = await moderator.PageAsync();
-        var status = await mod.EvaluateAsync<int>(
-            """
-            async () => {
-              const token = (await (await fetch('/api/v1/auth/antiforgery')).json()).token;
-              const record = await (await fetch('/api/v1/bills/XVP-0412/record')).json();
-              const r = await fetch('/api/v1/moderation/records/' + record.id + '/urgent', {
-                method: 'POST', headers: { 'Content-Type': 'application/json', 'X-XSRF-TOKEN': token },
-                body: JSON.stringify({ statement: 'Demonstracinė suvestinė.' }) });
-              return r.status;
+        var (record, recordBody) = await E2ESteps.ApiAsync(mod, "GET", "/api/v1/bills/XVP-0412/record");
+        record.ShouldBe(200, recordBody);
+        var recordId = JsonDocument.Parse(recordBody).RootElement.GetProperty("id").GetString();
+        var (status, body) = await E2ESteps.ApiAsync(mod, "POST", $"/api/v1/moderation/records/{recordId}/urgent", new { statement = "Demonstracinė suvestinė." });
+        status.ShouldBeOneOf([201, 409], body);
+        var made = status == 201 ? JsonDocument.Parse(body).RootElement.GetProperty("id").GetString() : null;
+        try
+        {
+            await ReadSummaryWithoutJavaScriptAsync(width, height);
+        }
+        finally
+        {
+            if (made is not null)
+            {
+                await E2EData.DeleteSummaryAsync(Guid.Parse(made));
             }
-            """);
-        status.ShouldBeOneOf(201, 409);
+        }
+    }
 
+    private static async Task ReadSummaryWithoutJavaScriptAsync(int width, int height)
+    {
         using var playwright = await Playwright.CreateAsync();
         await using var browser = await playwright.Chromium.LaunchAsync(new() { Channel = SignUpTests.Channel, Headless = true });
         await using var context = await browser.NewContextAsync(new()

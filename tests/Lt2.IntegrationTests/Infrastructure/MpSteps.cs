@@ -150,8 +150,12 @@ public static class MpSteps
         return string.Join("\n", outer.RootElement.EnumerateObject().Select(p => System.Text.Encoding.UTF8.GetString(Convert.FromBase64String(p.Value.GetString()!))));
     }
 
-    /// <summary>The account notices about MPs in the outbox to <paramref name="to"/>, oldest first.</summary>
-    public static async Task<List<string>> MpNoticesAsync(this DatabaseFixture database, string to)
+    /// <summary>
+    /// The account notices about MPs in the outbox to <paramref name="to"/>, oldest first, without the first
+    /// <paramref name="after"/>. An official address is shared by every test that uses its MP, so a test counts the notices
+    /// before it starts (<c>(await Database.MpNoticesAsync(address)).Count</c>) and compares only those that came after.
+    /// </summary>
+    public static async Task<List<string>> MpNoticesAsync(this DatabaseFixture database, string to, int after = 0)
     {
         var notices = new List<string>();
         await using var connection = new Npgsql.NpgsqlConnection(database.AdminConnectionString);
@@ -167,6 +171,6 @@ public static class MpSteps
             notices.Add(reader.GetString(0));
         }
 
-        return notices;
+        return notices.Skip(after).ToList();
     }
 }

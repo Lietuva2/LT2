@@ -13,9 +13,9 @@ namespace Lt2.E2E;
 /// is set to 00:00 and the answer moved to yesterday, as if the morning after had come. Screenshots go to
 /// <c>output/mp/responses</c>. Whatever happened, the MP's and the follower's accounts are deleted (which ends the link), the
 /// response it made is removed from the database (no request removes a response: its history is public), and the setting and the
-/// bill's "response" events are put back, which the shared clean-up scripts do not know.
+/// bill's "response" events are put back.
 /// </summary>
-public sealed partial class MpResponseTests
+public sealed partial class MpResponseTests(AdministratorFixture administrator) : E2ETest, IClassFixture<AdministratorFixture>
 {
     /// <summary>An invented MP of the stand-in's open data; this address exists only there and in Mailpit.</summary>
     private const string Official = "pavyzdys.aurelija.kadagyte@lrs.lt";
@@ -42,7 +42,7 @@ public sealed partial class MpResponseTests
         await using var mp = await PasskeyBrowser.StartAsync("native", 1280, 900);
         await using var follower = await PasskeyBrowser.StartAsync("native", 1280, 900);
         var page = mp.Page;
-        var responsesAtBefore = (await SqlAsync("select coalesce((select value::text from config.setting where key = 'Follows:ResponsesAt'), '')")).Trim();
+        AdministratorFixture.SettingBefore? responsesAtBefore = null;
         string? followerEmail = null;
         try
         {
@@ -92,8 +92,9 @@ public sealed partial class MpResponseTests
             await E2ESteps.ShootBothAsync(page, Shots, "published", part);
 
             // 3b. The morning after (design 8.20.1): the follower's email, with the MP's name and stance and no explanation.
-            await SqlAsync($"update appeals.mp_response set announced_at = announced_at - interval '1 day' where seimas_person_id = {Person} and bill_number = '{Bill}'");
-            await SqlAsync("insert into config.setting (key, value, changed_at) values ('Follows:ResponsesAt', '\"00:00\"', now()) on conflict (key) do update set value = excluded.value");
+            // Noon of yesterday in Vilnius: 24 hours back is two days back on the Monday morning after the clocks go forward.
+            await SqlAsync($"update appeals.mp_response set announced_at = (((now() at time zone 'Europe/Vilnius')::date - 1) + time '12:00') at time zone 'Europe/Vilnius' where seimas_person_id = {Person} and bill_number = '{Bill}'");
+            responsesAtBefore = await administrator.ChangeSettingAsync("Follows:ResponsesAt", "00:00");
             var (subject, text) = await Mailpit.MessageAsync(followerEmail, $"Seimo narių atsakymai dėl {Bill}", TimeSpan.FromMinutes(3));
             subject.ShouldBe($"Lietuva 2.0: Seimo narių atsakymai dėl {Bill}");
             text.ShouldContain($"{Name}");
@@ -167,14 +168,15 @@ public sealed partial class MpResponseTests
                 Console.Error.WriteLine($"Clean-up: deleting the MP's account failed: {ex.Message}");
             }
 
+            if (responsesAtBefore is not null)
+            {
+                await administrator.RestoreSettingAsync(responsesAtBefore);
+            }
+
             try
             {
                 await RemoveAsync();
-                await SqlAsync(
-                    (responsesAtBefore.Length == 0
-                        ? "delete from config.setting where key = 'Follows:ResponsesAt';"
-                        : $"update config.setting set value = '{responsesAtBefore}'::jsonb where key = 'Follows:ResponsesAt';")
-                    + $" delete from notify.bill_event where bill_number = '{Bill}' and kind = 'response';");
+                await SqlAsync($"delete from notify.bill_event where bill_number = '{Bill}' and kind = 'response';");
             }
             catch (ShouldAssertException ex)
             {
@@ -238,6 +240,7 @@ public sealed partial class MpResponseTests
     {
         public async ValueTask DisposeAsync()
         {
+            await E2ETest.KeepScreenAsync(Page);
             await Browser.DisposeAsync();
             Playwright.Dispose();
         }

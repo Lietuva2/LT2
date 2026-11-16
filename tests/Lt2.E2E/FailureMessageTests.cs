@@ -8,7 +8,7 @@ namespace Lt2.E2E;
 /// hello page. The failing answers are produced at the browser's network layer (Playwright routes), byte for byte as the
 /// server and Caddy send them, so the real client parses them and the stack's per-IP limits are not used up.
 /// </summary>
-public sealed class FailureMessageTests
+public sealed class FailureMessageTests : E2ETest
 {
     private const string RateLimited = "Per daug bandymų. Palaukite ir bandykite vėliau.";
     private const string Generic = "Nepavyko. Bandykite dar kartą.";
@@ -111,6 +111,7 @@ public sealed class FailureMessageTests
     {
         public async ValueTask DisposeAsync()
         {
+            await E2ETest.KeepScreenAsync(Page);
             await Browser.DisposeAsync();
             Playwright.Dispose();
         }

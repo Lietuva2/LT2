@@ -9,9 +9,9 @@ namespace Lt2.E2E;
 /// browser gets no code (and is told nothing different), while the usual browser still gets one in Mailpit; that code is refused
 /// in the stranger's browser and signs the usual one in. "Pamiršti" removes it from the list. Screenshots of the account page's
 /// new part at 1280 and 390 px go to <c>output/known-browsers</c>. Whatever happened, the account is deleted (its known browsers
-/// and codes go with it); the shared clean-up scripts know the rest.
+/// and codes go with it).
 /// </summary>
-public sealed class KnownBrowserTests
+public sealed class KnownBrowserTests : E2ETest
 {
     private static string Shots => Path.Combine("output", "known-browsers");
 
@@ -100,7 +100,7 @@ public sealed class KnownBrowserTests
         finally
         {
             // Deleting the account takes its known browsers and codes with it; a run that failed signed out leaves the account
-            // to output/cleanup-e2e.ps1, which removes every test account. Never throws, so it cannot hide the failure.
+            // to E2ETest, which deletes it after a code sign-in. Never throws, so it cannot hide the failure.
             if (email is not null)
             {
                 try

@@ -136,10 +136,18 @@ public sealed class DescriptionSummaryTests(DatabaseFixture database) : ApiTest(
             "SELECT count(*) FROM audit.event WHERE action = 'description.summary.made' AND target = @t AND actor_user_id IS NULL AND actor_role = 'system' AND details->>'model' = 'claude-sonnet-5-5'",
             ("t", "bill:" + bill));
 
-    /// <summary>Pretends the job's tries happened <paramref name="days"/> days earlier (its daily number and waits move with them).</summary>
+    /// <summary>
+    /// Pretends the job's tries happened <paramref name="days"/> Vilnius days earlier (its daily number and waits move with
+    /// them): calendar days in Vilnius, not 24 hours, so a try at 23:30 on the night the clocks go back is on the day before.
+    /// </summary>
     private Task AgeAttemptsAsync(int days) =>
         Database.ExecuteAsync(
-            "UPDATE appeals.summary_attempt SET tried_at = tried_at - make_interval(days => @d), retry_after = retry_after - make_interval(days => @d)", ("d", days));
+            """
+            UPDATE appeals.summary_attempt
+               SET tried_at = ((tried_at AT TIME ZONE 'Europe/Vilnius') - make_interval(days => @d)) AT TIME ZONE 'Europe/Vilnius',
+                   retry_after = ((retry_after AT TIME ZONE 'Europe/Vilnius') - make_interval(days => @d)) AT TIME ZONE 'Europe/Vilnius'
+            """,
+            ("d", days));
 
     [Fact]
     public async Task Without_a_reader_or_a_provider_nothing_offers_or_promises_a_summary_and_every_other_path_works()

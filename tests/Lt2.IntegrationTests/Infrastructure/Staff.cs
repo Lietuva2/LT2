@@ -29,7 +29,7 @@ public static class StaffSteps
         using var request = await browser.PostAsync(ApiRoutes.Auth.PasskeyRequestOptions);
         return await browser.PostAsync(
             ApiRoutes.Auth.PasskeySignIn,
-            new PasskeyCredentialRequest { Credential = authenticator.Get(await request.Content.ReadAsStringAsync()) });
+            new PasskeyCredentialRequest { Credential = authenticator.Get(await OptionsAsync(request)) });
     }
 
     /// <summary>A fresh passkey confirmation in the current session; returns the response.</summary>
@@ -38,7 +38,15 @@ public static class StaffSteps
         using var request = await browser.PostAsync(ApiRoutes.Auth.PasskeyRequestOptions);
         return await browser.PostAsync(
             ApiRoutes.Me.PasskeyConfirmation,
-            new PasskeyCredentialRequest { Credential = authenticator.Get(await request.Content.ReadAsStringAsync()) });
+            new PasskeyCredentialRequest { Credential = authenticator.Get(await OptionsAsync(request)) });
+    }
+
+    /// <summary>The passkey options the server gave; a refusal fails with its status and body, not later in the authenticator.</summary>
+    private static async Task<string> OptionsAsync(HttpResponseMessage response)
+    {
+        var body = await response.Content.ReadAsStringAsync();
+        response.StatusCode.ShouldBe(HttpStatusCode.OK, $"passkey options: {body}");
+        return body;
     }
 
     public static Task<HttpResponseMessage> ActivateRoleAsync(this TestBrowser browser, string code) =>
@@ -97,6 +105,14 @@ public static class StaffMembers
             {
                 member = await ActiveAsync(factory, database, role) with { Shared = true };
                 Made[(factory, role)] = member;
+            }
+            else
+            {
+                // A fresh passkey confirmation for every test that takes the shared member: saving a setting needs one from
+                // the last ten minutes (design 6.9), and without this a test passed only when another test had confirmed
+                // shortly before it, which depended on the order and the speed of the run.
+                using var confirmed = await member.Browser.ConfirmPasskeyAsync(member.Authenticator);
+                confirmed.StatusCode.ShouldBe(HttpStatusCode.NoContent, await confirmed.Content.ReadAsStringAsync());
             }
 
             return member;

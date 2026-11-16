@@ -13,7 +13,7 @@ namespace Lt2.E2E;
 /// <c>LT2_E2E_ORGB_SHOTS</c> (or <c>output/organisations-b/shots</c>). Everything the run makes carries
 /// <see cref="OrganisationFlowTests.Marker"/>; the organisation is closed at the end, whatever happened.
 /// </summary>
-public sealed class OrganisationInvitationFlowTests(AdministratorFixture administrator) : IClassFixture<AdministratorFixture>
+public sealed class OrganisationInvitationFlowTests(AdministratorFixture administrator) : E2ETest, IClassFixture<AdministratorFixture>
 {
     private static string Base => E2ESteps.Base;
 

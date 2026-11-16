@@ -14,7 +14,7 @@ namespace Lt2.E2E;
 /// organisation names start at one place and the side buttons end where the bar ends ("The row lines up"). Screenshots for the owner go to
 /// LT2_E2E_START_SHOTS (default output/start-page/built).
 /// </summary>
-public sealed partial class StartPageTests
+public sealed partial class StartPageTests : E2ETest
 {
     private static string Base => E2ESteps.Base;
 

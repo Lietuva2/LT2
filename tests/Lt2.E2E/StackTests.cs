@@ -13,7 +13,7 @@ namespace Lt2.E2E;
 /// Runs only when <c>LT2_E2E_BASE_URL</c> is set. The log check reads <c>docker compose logs caddy</c>, so it needs the
 /// docker CLI and the compose file (<c>LT2_E2E_COMPOSE_FILE</c>, default <c>deploy/compose.yaml</c> in this repository).
 /// </summary>
-public sealed partial class StackTests
+public sealed partial class StackTests : E2ETest
 {
     private static readonly string? BaseUrl = Environment.GetEnvironmentVariable("LT2_E2E_BASE_URL");
 

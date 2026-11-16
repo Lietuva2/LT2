@@ -13,7 +13,7 @@ namespace Lt2.E2E;
 /// <c>disabled="@Locked"</c> fails here.
 /// </summary>
 public sealed partial class IslandsBeforeStartTests(AppealFlowTests.ModeratorFixture moderator, AdministratorFixture administrator)
-    : IClassFixture<AppealFlowTests.ModeratorFixture>, IClassFixture<AdministratorFixture>
+    : E2ETest, IClassFixture<AppealFlowTests.ModeratorFixture>, IClassFixture<AdministratorFixture>
 {
     private static string Base => SignUpTests.BaseUrl!.TrimEnd('/');
 

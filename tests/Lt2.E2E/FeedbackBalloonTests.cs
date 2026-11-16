@@ -7,7 +7,7 @@ namespace Lt2.E2E;
 /// readable width, inside the window, scrolling inside itself. Checked at 1280, 1024, 768 and 390 px, as a visitor and
 /// as a member, with and without JavaScript; plus a staff reply that arrives in Mailpit.
 /// </summary>
-public sealed class FeedbackBalloonTests(AppealFlowTests.ModeratorFixture moderator) : IClassFixture<AppealFlowTests.ModeratorFixture>
+public sealed class FeedbackBalloonTests(AppealFlowTests.ModeratorFixture moderator) : E2ETest, IClassFixture<AppealFlowTests.ModeratorFixture>
 {
     private static string Base => SignUpTests.BaseUrl!.TrimEnd('/');
 
@@ -189,6 +189,21 @@ public sealed class FeedbackBalloonTests(AppealFlowTests.ModeratorFixture modera
     public async Task A_member_sends_feedback_from_the_balloon_with_and_without_javascript(int width, int height)
     {
         Assert.SkipWhen(string.IsNullOrEmpty(SignUpTests.BaseUrl), "LT2_E2E_BASE_URL is not set; start the stack and set it to run end-to-end tests.");
+        // Feedback sent without allowing a reply is not linked to the account (design: nothing leads back), so it stays when
+        // the account is deleted; the test removes its own items, found by their marker.
+        var marker = Guid.NewGuid().ToString("N")[..8];
+        try
+        {
+            await SendAsAMemberAsync(width, height, marker);
+        }
+        finally
+        {
+            await E2ESteps.SqlAsync($"delete from identity.feedback where text like '%({marker})%'");
+        }
+    }
+
+    private static async Task SendAsAMemberAsync(int width, int height, string marker)
+    {
         await using var member = await PasskeyBrowser.StartAsync("native", width, height);
         var a = member.Page;
         await PasskeyTests.RegisterAsync(a, "Atsiliepianti Narė");
@@ -204,7 +219,7 @@ public sealed class FeedbackBalloonTests(AppealFlowTests.ModeratorFixture modera
         await Assertions.Expect(panel).ToContainTextAsync("/seimas/XVP-0412");
         await Assertions.Expect(panel).ToContainTextAsync("Nerašykite, kurią pusę pasirinkote");
         await PanelFitsAsync(a, $"member at {width}");
-        await panel.Locator("#fb-text-panel").FillAsync($"Bandomasis atsiliepimas ({width} px, su JavaScript).");
+        await panel.Locator("#fb-text-panel").FillAsync($"Bandomasis atsiliepimas ({width} px, su JavaScript) ({marker}).");
         await panel.Locator("#fb-browser-panel").UncheckAsync();
         await ShotsAsync(a, $"balloon-member-{width}");
         var send = panel.GetByRole(AriaRole.Button, new() { Name = "Siųsti" });
@@ -228,7 +243,7 @@ public sealed class FeedbackBalloonTests(AppealFlowTests.ModeratorFixture modera
         var plainPanel = page.Locator(".feedback__panel");
         await Assertions.Expect(plainPanel.GetByRole(AriaRole.Button, new() { Name = "Uždaryti" })).ToBeHiddenAsync();
         await PanelFitsAsync(page, $"member without JavaScript at {width}");
-        await page.Locator("#fb-text-panel").FillAsync($"Bandomasis atsiliepimas ({width} px, be JavaScript).");
+        await page.Locator("#fb-text-panel").FillAsync($"Bandomasis atsiliepimas ({width} px, be JavaScript) ({marker}).");
         var plainSend = plainPanel.GetByRole(AriaRole.Button, new() { Name = "Siųsti" });
         await ReachableAsync(page, plainSend, $"send without JavaScript at {width}");
         await plainSend.ClickAsync();
