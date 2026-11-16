@@ -83,7 +83,15 @@ public sealed class ProfileCommentTests(DatabaseFixture database) : ApiTest(data
 
             // The representative has a public profile too: their comment as the organisation is not theirs on their page.
             var representativeProfile = (await bill.Representative.SavedProfileAsync("Atstovas.", isPublic: true)).ProfileId.ShouldNotBeNull();
-            await bill.Representative.CommentOkAsync("statement", bill.StatementId, "Organizacijos vardu parašytas komentaras.");
+            var asOrganisation = await bill.Representative.CommentOkAsync("statement", bill.StatementId, "Organizacijos vardu parašytas komentaras.");
+            using (var thread = JsonDocument.Parse(await NewBrowser().Client.GetStringAsync(CommentRoutes.ThreadOf("statement", bill.StatementId), TestContext.Current.CancellationToken)))
+            {
+                var item = thread.RootElement.GetProperty("items").EnumerateArray().Single(i => i.GetProperty("id").GetGuid() == asOrganisation);
+                item.GetProperty("author").GetProperty("voice").GetString().ShouldBe("organisation", "the swept comment is the organisation's");
+                item.GetProperty("author").GetProperty("profileId").ValueKind.ShouldBe(JsonValueKind.Null, "an organisation's voice never leads to the person");
+                thread.RootElement.GetProperty("cards").GetArrayLength().ShouldBe(0, "no card of the representative");
+                thread.RootElement.GetRawText().ShouldNotContain(representativeProfile, Case.Sensitive);
+            }
 
             using var visitor = NewBrowser();
             var texts = await visitor.GetJsonAsync<MemberTextsResponse>(ProfileRoutes.TextsOf(profileId, 10));

@@ -41,6 +41,14 @@ public sealed class ProfileAddressTests(DatabaseFixture database) : ApiTest(data
         }
 
         (await GetAsync(visitor, $"/nariai/kitas-{id}?rodyti=20")).ShouldBe((HttpStatusCode.MovedPermanently, address + "?rodyti=20"), "the query is kept");
+        // Routing answers any case and a trailing slash: those are other addresses too, redirected to the one served.
+        foreach (var other in new[] { address.ToUpperInvariant(), "/NARIAI/" + address["/nariai/".Length..], address + "/", "/nariai/" + id.ToUpperInvariant() })
+        {
+            (await GetAsync(visitor, other)).ShouldBe((HttpStatusCode.MovedPermanently, address), other);
+        }
+
+        // A name ending in what looks like an id still leads by the last part (design 8.25.2: it may only read like another's).
+        (await GetAsync(visitor, $"/nariai/vardas-zxcvbnmk45-{id}")).ShouldBe((HttpStatusCode.MovedPermanently, address));
 
         // A changed display name changes the address; the old one leads to the new one.
         using (var renamed = await member.SendAsync(HttpMethod.Put, ApiRoutes.Me.DisplayName, new DisplayNameRequest { DisplayName = "Rūta Mockutė" }))

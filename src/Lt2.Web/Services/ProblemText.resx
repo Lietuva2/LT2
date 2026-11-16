@@ -180,7 +180,7 @@
   <data name="suppression.not-found" xml:space="preserve"><value>Tokio įrašo sąraše nėra.</value></data>
   <data name="Title.410" xml:space="preserve"><value>Nebėra</value></data>
   <data name="member.not-found" xml:space="preserve"><value>Tokio viešo profilio nėra.</value></data>
-  <data name="member.gone" xml:space="preserve"><value>Šio profilio nebėra: narys jį išjungė.</value></data>
+  <data name="member.gone" xml:space="preserve"><value>Šio profilio nebėra: narys jį išjungė arba ištrynė paskyrą.</value></data>
   <data name="about.too-long" xml:space="preserve"><value>Tekstas „Apie mane“ per ilgas: ne daugiau kaip {0} ženklų.</value></data>
   <data name="about.personal-code" xml:space="preserve"><value>Tekste „Apie mane“ yra asmens kodas. Jo skelbti negalima – ištrinkite jį.</value></data>
   <data name="profile.consent-outdated" xml:space="preserve"><value>Sutikimo tekstas pasikeitė. Perskaitykite jį ir įjunkite profilį dar kartą.</value></data>

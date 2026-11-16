@@ -863,7 +863,7 @@
   <data name="Follows.Email.members" xml:space="preserve"><value>Kai sekamas narys paskelbia argumentą ar komentarą</value></data>
   <data name="Member.Label" xml:space="preserve"><value>Lietuva 2.0 narys</value></data>
   <data name="Member.GoneTitle" xml:space="preserve"><value>Šio profilio nebėra</value></data>
-  <data name="Member.Gone" xml:space="preserve"><value>Narys išjungė savo viešą profilį. Šis adresas daugiau nenaudojamas.</value></data>
+  <data name="Member.Gone" xml:space="preserve"><value>Narys išjungė savo viešą profilį arba ištrynė paskyrą. Šis adresas daugiau nenaudojamas.</value></data>
   <data name="Member.Arguments" xml:space="preserve"><value>Argumentai ir komentarai</value></data>
   <data name="Member.NoArguments" xml:space="preserve"><value>Narys dar nepaskelbė argumentų ar komentarų.</value></data>
   <data name="Member.ArgumentFor.for" xml:space="preserve"><value>argumentas už</value></data>

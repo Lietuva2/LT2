@@ -144,9 +144,15 @@ internal sealed class FollowService(
     {
         // Only a profile that is public now can be followed (design 8.25.5), and not one's own: the same answer as an unknown id.
         var (state, profile) = await profiles.FindAsync(profileId, cancellationToken);
-        return state != ProfileIdState.Public || profile is null || profile.UserId == userId
-            ? Error.NotFound("member.not-found")
-            : await AddAsync(userId, FollowKinds.Member, profile.ProfileId, cancellationToken);
+        if (state != ProfileIdState.Public || profile is null || profile.UserId == userId)
+        {
+            return Error.NotFound("member.not-found");
+        }
+
+        // Checked again under the profile's follow lock, which switching it off takes too (MemberFollowEnd): a switch-off that
+        // committed meanwhile refuses the follow, and one still running ends it after this commits.
+        return await AddAsync(userId, FollowKinds.Member, profile.ProfileId, cancellationToken, MemberFollowLock.Key(profile.ProfileId), async () =>
+            (await profiles.FindAsync(profile.ProfileId, cancellationToken)).State == ProfileIdState.Public);
     }
 
     public async Task<Result<Unit>> UnfollowMemberAsync(Guid userId, string profileId, CancellationToken cancellationToken) =>
@@ -226,7 +232,7 @@ internal sealed class FollowService(
         follows.Where(f => f.Kind == FollowKinds.Organisation).Select(f => Guid.TryParse(f.Key, out var id) ? id : Guid.Empty).Where(id => id != Guid.Empty).Distinct().ToList();
 
     /// <summary>Adds a follow; following again changes nothing. There is no limit on how much a person follows (design 8.11.2).</summary>
-    private async Task<Result<Unit>> AddAsync(Guid userId, string kind, string key, CancellationToken ct)
+    private async Task<Result<Unit>> AddAsync(Guid userId, string kind, string key, CancellationToken ct, string? thingLock = null, Func<Task<bool>>? stillAllowed = null)
     {
         if (await participants.FindAsync(userId, ct) is null)
         {
@@ -239,6 +245,15 @@ internal sealed class FollowService(
         // Under the person's own lock, so two requests at once (a double press, a first side and "Sekti") make one follow
         // and never hit the primary key.
         await db.Database.ExecuteSqlRawAsync("SELECT pg_advisory_xact_lock(hashtextextended({0}, 0))", ["lt2.follows:" + userId.ToString("N")], ct);
+        if (thingLock is not null)
+        {
+            await db.Database.ExecuteSqlRawAsync("SELECT pg_advisory_xact_lock(hashtextextended({0}, 0))", [thingLock], ct);
+            if (stillAllowed is not null && !await stillAllowed())
+            {
+                return Error.NotFound(kind + ".not-found");
+            }
+        }
+
         if (await db.Follows.AnyAsync(f => f.UserId == userId && f.Kind == kind && f.Key == key, ct))
         {
             return Result.Ok();

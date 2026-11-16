@@ -361,7 +361,7 @@ written by hand. A visitor sent to sign in from one comes back to it (`LandingPa
 
 **Public profiles (design 8.25; the owner, 2026-11-16: "implement those", before comments).**
 - Only by the member's switch "Viešas profilis" on "Profilis" (`PUT /me/profile`), which is the consent `public-profile`
-  (`PublicProfileConsent.Version`, SharedKernel; the form's text in `UiText` under that version): the page `/nariai/{name-slug}-{id}`
+  (`PublicProfileConsent.TextVersion`, SharedKernel; the form's text in `UiText` under that version): the page `/nariai/{name-slug}-{id}`
   (a random ten-character id, `ProfileRules.NewId`; the name part from the current display name by `AddressSlugs.Of`,
   the one slug function MPs' `/p/{slug}` use too; owner, 2026-11-16), indexed, followable, with "Sekėjai: n". The id
   decides: any other name part (a renamed member, the id alone) answers 301 to the current address

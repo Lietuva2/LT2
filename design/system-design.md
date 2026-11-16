@@ -280,7 +280,7 @@ last block): a moderator who writes or corrects a description sets `description_
 adresas" (https on `lrs.lt` or under it, at most 500 characters), filled in advance with the current one; empty clears it.] `threshold` is null for the default of all bills, or a moderator's number for this bill (8.12.2). `first_summarised_at` is set by the first summary really sent to MPs, not by a dry run (8.4). `initiator_user_id` is set only on records from before 2026-11-14 and only names the author beside a description they wrote. [changed while building: `return_note` and the description's `screening_flags` were dropped with the proposals] |
 | `position` | (`record_id`, `user_id`) primary key, `side` (for or against), created and changed times | One row per person per bill. Becomes the direct LT2 vote in stage 3. |
 | `daily_stat` | `record_id`, date, counts per side, counts for accounts older than 30 days, share of new accounts | For the trend chart and surge detection. **No per-person history of opinion changes is stored.** |
-| `reason` | `id`, `record_id`, `side`, `author_user_id`, text (`text`, any length), status, `merged_into_id` | Status: pending, published, hidden, merged. `side` is the side the argument supports, chosen by its author, whatever the author's own position (8.2). How long a text may be is the members' texts setting `Texts:MaxLength` (5.6), checked where an argument is written; the column sets no limit (**owner, 2026-11-16**; migration `ReasonTextAnyLength`). |
+| `reason` | `id`, `record_id`, `side`, `author_user_id`, text (`text`, any length), status, `merged_into_id`, `first_public_at` (when it first became public: the follow line of 8.25.5 and the member's page read it; built 2026-11-16) | Status: pending, published, hidden, merged. `side` is the side the argument supports, chosen by its author, whatever the author's own position (8.2). How long a text may be is the members' texts setting `Texts:MaxLength` (5.6), checked where an argument is written; the column sets no limit (**owner, 2026-11-16**; migration `ReasonTextAnyLength`). |
 | `endorsement` | (`reason_id`, `user_id`) | "Man svarbu" on a reason; only on your own side; how many per bill is a setting, no limit by default (8.2). |
 | `mp_response` | bill number, the Seimas's person number, stance (for, against, undecided), text (`text`, any length; its length is the members' texts setting `Texts:MaxLength`, 5.6, checked where it is written; **owner, 2026-11-16**, migration `MemberTextsAnyLength`), status (published, hidden, withdrawn), published, edited and withdrawn times, `written_by_user_id` | One per MP per bill; versions are kept in `revision` and are public (8.5.5). Withheld from the read-only role. [changed while building: also `screening_flags` and `seen_at` (the queue), `hidden_at` and `hide_statement` (the statement shown in its place); the one-per-bill index holds whatever the status, so a response written again after a withdrawal is the same row; a version is kept as JSON in `revision` (`entity_kind` `response`, field `version`) with no person.] |
 | `report` | target, reporter, ground, status | Notice-and-action under the Digital Services Act. [proposed: the target `comment` (8.23). A member's public profile and its "Apie mane" are reported to Identity, which owns them: `identity.profile_report`, built 2026-11-16 (8.25.6)] |
@@ -3697,7 +3697,8 @@ page is indexed and the person can be followed.
 - **The switch is the consent, and covers everything [owner, 2026-11-16: "indexed and allowed to be followed
   automatically"].** Switching it on is recorded as a consent of the kind `public-profile`, with its text version, in
   `identity.consent`, as the terms (`terms`) and the positions consent (`positions`) are (5.2, 8.22.2); a changed text
-  gets a new version, and members with a profile are asked again. Before saving, the form says everything it covers
+  gets a new version, and members with a profile are asked again [not built: a profile switched on under an earlier
+  version stays on; the form asks only when it is switched on]. Before saving, the form says everything it covers
   (a draft for the native reader):
   "Jūsų profilio puslapyje bus jūsų vardas, „Apie mane“ ir viskas, ką viešai parašėte (argumentai ir komentarai),
   surinkta į vieną vietą su nuorodomis; prie visų jūsų argumentų ir komentarų bus nuoroda į jį. Puslapį gali rodyti
@@ -3726,7 +3727,10 @@ page is indexed and the person can be followed.
   and a changed display name keeps the page. The name part is made from the current display name as MPs' `/p/{slug}` are
   (one function, `AddressSlugs.Of`: Lithuanian letters to plain Latin, lower case, other characters a hyphen); a name with
   nothing to make it of gives the id alone. Any other name part (a changed name, a typo, the id alone) answers **301** to
-  the current address, the query kept; a retired id still answers 410 and an unknown one 404, whatever the name part. Every
+  the current address, the query kept; so does the same address in other letter case or with a trailing slash (routing would answer them). A
+  retired id still answers 410 and an unknown one 404, whatever the name part. A display name that ends in something
+  shaped like an id makes an address that may read like another member's; the last part decides, so it leads only to its
+  own profile. Every
   link to a profile is made by `ProfileRoutes.Page` (in emails `MemberAddress.Page`), and the profile's answers carry it
   (`address`). There is no sitemap and no canonical link on the site to update.
 - **Indexed [owner, 2026-11-16].** No `noindex` and no `X-Robots-Tag` on these pages: being found by name is part of
@@ -3744,7 +3748,8 @@ page is indexed and the person can be followed.
   statistic about the person's texts ("12 argumentų, 9 už"); any ranking; who follows them.
 - **On a sheet** (8.16): the name, the number and "Apie mane" on one, the list on another.
 - [changed while building: the page is server-rendered and readable without script, `Cache-Control: no-cache` for
-  everyone (a switched-off profile must not be served from a cache); a retired id answers 410 with one line ("Šio profilio
+  a visitor and `no-store` for a signed-in session, as every page answered to one (6.8), so a switched-off profile is never
+  served from a cache; a retired id answers 410 with one line ("Šio profilio
   nebėra"), an id never issued the site's 404 page; both carry `X-Robots-Tag: noindex` (there is nothing to index), a
   public page none. "Sekti" and "Pranešti" are islands; the member's own page shows them nothing to follow and links to
   "Profilis".]
@@ -3810,7 +3815,9 @@ page is indexed and the person can be followed.
   by then; the subject and the line name the member's display name, as their page does.]
 - **Risks, and what answers them.**
   - **One person watched and pressed.** The profile switch is theirs and ends every follow at once. Blocking one
-    particular follower is impossible without showing followers, which the design refuses; the form's help says so.
+    particular follower is impossible without showing followers, which the design refuses. [Not said in the form yet:
+    the designer's proposal is one sentence in the consent text ("Atskiro sekėjo užblokuoti negalima, nes niekas nemato,
+    kas seka."), added with the lawyer's reading of the texts (12).]
     Harassment in comments already has its answers: the report grounds, hiding, the writing restriction (8.3).
   - **The product drifting from "people tell MPs" towards a social network,** with a follower number on every thing
     that can be followed. The owner chose it (8.11.2); it is in the risk table (12). What stands against it: nothing is
@@ -3829,7 +3836,7 @@ page is indexed and the person can be followed.
   impersonation, hidden on report. The moderation rules say so.
 - **Data:** `identity.profile` gains `about`, `about_changed_at`, `about_hidden_at`, `public_profile_id` (null while off)
   and `public_since`; `identity.retired_profile_id` keeps retired ids with no account, so none is reused and each answers
-  410; the consent `public-profile` in `identity.consent`; `notify.follow` kind `member`; `notify.notice_setting.members`.
+  410; the consent `public-profile` in `identity.consent`; `notify.follow` kind `member`; `notify.notice_setting.members`; `appeals.reason.first_public_at` (when an argument first became public, 5.3), which the follow line and the page read.
   The follower number is counted from `notify.follow` when the page is made (the Notifications module gives it through
   the shared kernel, a number only). All in `identity` and `notify`, withheld from `lt2_readonly` as those schemas are.
   In the export (the text, whether the profile is public and since when, the consent, the follows the person made; not

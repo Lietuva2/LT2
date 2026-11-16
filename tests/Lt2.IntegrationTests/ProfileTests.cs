@@ -171,12 +171,28 @@ public sealed class ProfileTests(DatabaseFixture database) : ApiTest(database)
     {
         await Database.FreeBillAsync(AppealSteps.TaxBill);
         await Database.FreeBillAsync(AppealSteps.SecondBill);
+        await Database.FreeBillAsync(AppealSteps.ThirdBill);
         var (member, email, id) = await Factory.PublicMemberAsync("Ona Privatumaitė", "Apie mane tekstas.");
+        var (other, _) = await Factory.MemberAsync("Kitas Rašytojas");
         using var _ = member;
+        using var _o = other;
 
-        // What the member did that is not published: a side on another bill, a follow, a party, an invitation code.
+        // What the member did that is not published: a side on another bill, "Man svarbu" on someone else's argument there, a
+        // follow of a third bill, "Sutinku" on someone else's comment, a party, an invitation code.
         (await member.TakeSideAsync(AppealSteps.SecondBill, "against")).StatusCode.ShouldBe(HttpStatusCode.NoContent);
-        await member.FollowBillAsync(AppealSteps.TaxBill);
+        const string Endorsed = "Kito nario argumentas, kurį narė pažymėjo „Man svarbu“.";
+        using (var written = await other.WriteReasonAsync(AppealSteps.SecondBill, "against", Endorsed))
+        {
+            written.StatusCode.ShouldBe(HttpStatusCode.Created, await written.Content.ReadAsStringAsync());
+        }
+
+        var endorsedId = (await member.RecordAsync(AppealSteps.SecondBill)).Reasons.Single(r => r.Text == Endorsed).Id;
+        (await member.SendAsync(HttpMethod.Put, AppealRoutes.EndorsementOf(endorsedId))).StatusCode.ShouldBe(HttpStatusCode.NoContent);
+        (await member.RecordAsync(AppealSteps.SecondBill)).Reasons.Single(r => r.Id == endorsedId).Endorsements.ShouldBe(1, "the mark exists");
+        const string Agreed = "Kito nario komentaras, su kuriuo narė sutiko.";
+        var comment = await other.CommentOkAsync("reason", endorsedId, Agreed);
+        (await member.AgreeAsync(comment)).StatusCode.ShouldBe(HttpStatusCode.NoContent);
+        await member.FollowBillAsync(AppealSteps.ThirdBill);
         var party = (await member.GetJsonAsync<PartySupportResponse>(ApiRoutes.Me.PartySupport)).Choices[0];
         (await member.SendAsync(HttpMethod.Put, ApiRoutes.Me.PartySupport, new PartySupportRequest { Party = party, Consent = true })).StatusCode.ShouldBe(HttpStatusCode.NoContent);
         (await member.GetJsonAsync<PartySupportResponse>(ApiRoutes.Me.PartySupport)).Party.ShouldBe(party);
@@ -199,13 +215,15 @@ public sealed class ProfileTests(DatabaseFixture database) : ApiTest(database)
 
         var page = WebUtility.HtmlDecode(await visitor.Client.GetStringAsync(ProfileRoutes.Page(id, "Ona Privatumaitė"), TestContext.Current.CancellationToken));
         page.ShouldContain(AppealSteps.ForReason[..40], Case.Sensitive, "the swept page holds what it is about");
-        foreach (var never in new[] { email, party, code, AppealSteps.SecondBill, "Man svarbu" })
+        foreach (var never in new[] { email, party, code, AppealSteps.SecondBill, AppealSteps.ThirdBill, "Man svarbu", Endorsed, Agreed, "Sutinku", "Sutinka" })
         {
             page.ShouldNotContain(never, Case.Insensitive, never);
         }
 
+        (await visitor.GetJsonAsync<MemberTextsResponse>(ProfileRoutes.TextsOf(id, 10))).Items.ShouldHaveSingleItem("no other text of anyone's");
         await Database.FreeBillAsync(AppealSteps.TaxBill);
         await Database.FreeBillAsync(AppealSteps.SecondBill);
+        await Database.FreeBillAsync(AppealSteps.ThirdBill);
     }
 
     /// <summary>Design 8.25.2: only published arguments on bills whose record is not hidden; 10, then more by the address.</summary>

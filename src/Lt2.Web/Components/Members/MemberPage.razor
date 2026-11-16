@@ -110,7 +110,7 @@ else if (_profile is { } p)
     {
         // Asked again each time: a profile switched off must be gone at once (design 8.25.1).
         HttpContext?.Response.Headers.CacheControl = "no-cache";
-        var profile = await Profiles.GetMemberAsync(Lt2.Api.Contracts.MemberAddress.IdOf(Id));
+        var profile = await Profiles.GetMemberAsync(Lt2.Api.Contracts.MemberAddress.IdOf(Id).ToLowerInvariant());
         if (profile.IsSuccess)
         {
             _profile = profile.Value;
