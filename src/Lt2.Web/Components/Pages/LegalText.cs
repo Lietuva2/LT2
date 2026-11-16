@@ -13,5 +13,5 @@ public static class LegalVersions
     public const string Terms = Lt2.SharedKernel.TermsOfUse.Version;
 
     /// <summary>The privacy notice: informs, nobody accepts it (design 8.22.2), so a new version asks nothing of anyone.</summary>
-    public const string Privacy = "2026-11-18";
+    public const string Privacy = "2026-11-17";
 }
