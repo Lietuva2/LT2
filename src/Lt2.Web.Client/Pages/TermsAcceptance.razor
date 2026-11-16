@@ -1,0 +1,70 @@
+@page "/taisykles/sutikimas"
+@attribute [Authorize]
+@rendermode InteractiveWebAssembly
+@inherits InteractiveBase<UiText>
+@inject IMeApi MeApi
+@inject IAuthApi Auth
+@inject NavigationManager Navigation
+
+@* Design 8.22.2: the one screen a member sees after signing in while the terms of use in force are not accepted (an account
+   older than them, or the terms changed): what changed, the link, "Sutinku" and "Atsijungti". Until then the account reads,
+   exports and deletes; other writes are refused with terms.required (TermsGate), and an island that meets that refusal
+   comes here (InteractiveBase). Afterwards the person goes on to the page they were going to (grizti), or the account. *@
+<PageTitle>@L["TermsAccept.PageTitle"]</PageTitle>
+
+<div class="stack">
+    <p class="label">Lietuva 2.0</p>
+    <h1 id="terms-accept-title">@L["TermsAccept.Title"]</h1>
+    <NeedsScript />
+</div>
+
+<section class="sheet stack" aria-labelledby="terms-accept-title" id="terms-accept">
+    <p>@L["TermsAccept.Changed"]</p>
+    <p><a href="/taisykles" target="_blank" rel="noopener" id="terms-accept-read">@L["TermsAccept.Read"]</a> <span class="small num">@L.Format("TermsAccept.InForce", TermsText.Version)</span></p>
+    <div class="row">
+        <button type="button" class="btn" id="terms-accept-button" disabled="@Locked" @onclick="AcceptAsync">@L["TermsAccept.Accept"]</button>
+        <button type="button" class="btn btn--plain" id="terms-sign-out" disabled="@Locked" @onclick="SignOutAsync">@L["SignOut"]</button>
+    </div>
+    <p class="small" id="terms-accept-leave">@L["TermsAccept.Leave.Before"] <a href="/sveiki#my-data">@L["TermsAccept.Leave.Link"]</a></p>
+    <Messages Message="@Message" Info="@Info" />
+</section>
+
+@code {
+    /// <summary>The page to go on to afterwards; only a path on this site (<see cref="TermsText.Back"/>).</summary>
+    [SupplyParameterFromQuery(Name = TermsText.BackParameter)]
+    public string? Back { get; set; }
+
+    private string Next => TermsText.Back(Back) ?? "/sveiki";
+
+    protected override async Task OnInitializedAsync()
+    {
+        var me = await MeApi.GetAsync();
+        if (!me.IsSuccess || !me.Value!.RegistrationComplete)
+        {
+            // A visitor signs in, and a pending account finishes its registration, which accepts the terms with it.
+            Navigation.NavigateTo("/prisijungti", forceLoad: true);
+            return;
+        }
+
+        if (!me.Value.TermsRequired)
+        {
+            Navigation.NavigateTo(Next, forceLoad: true);
+        }
+    }
+
+    private Task AcceptAsync() => RunAsync(async () =>
+    {
+        if (Succeeded(await MeApi.AcceptTermsAsync(new TermsAcceptanceRequest { TextVersion = TermsText.Version })))
+        {
+            Navigation.NavigateTo(Next, forceLoad: true);
+        }
+    });
+
+    private Task SignOutAsync() => RunAsync(async () =>
+    {
+        if (Succeeded(await Auth.SignOutAsync()))
+        {
+            Navigation.NavigateTo("/", forceLoad: true);
+        }
+    });
+}

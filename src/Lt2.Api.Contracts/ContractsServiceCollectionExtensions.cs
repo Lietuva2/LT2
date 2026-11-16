@@ -24,6 +24,7 @@ public static class ContractsServiceCollectionExtensions
         services.AddScoped<IValidator<ResetAccountRequest>, ResetAccountRequestValidator>();
         services.AddScoped<IValidator<UpdateSettingRequest>, UpdateSettingRequestValidator>();
         services.AddScoped<IValidator<Me.PositionConsentRequest>, Me.PositionConsentRequestValidator>();
+        services.AddScoped<IValidator<Me.TermsAcceptanceRequest>, Me.TermsAcceptanceRequestValidator>();
         services.AddScoped<IValidator<Me.PartySupportRequest>, Me.PartySupportRequestValidator>();
         services.AddScoped<IValidator<Appeals.PositionRequest>, Appeals.PositionRequestValidator>();
         services.AddScoped<IValidator<Appeals.ReasonRequest>, Appeals.ReasonRequestValidator>();
@@ -44,6 +45,16 @@ public static class ContractsServiceCollectionExtensions
         services.AddScoped<IValidator<Organisations.OrganisationStatementRequest>, Organisations.OrganisationStatementRequestValidator>();
         services.AddScoped<IValidator<Organisations.ConfirmationCodeRequest>, Organisations.ConfirmationCodeRequestValidator>();
         services.AddScoped<IValidator<Organisations.ConfirmationRequest>, Organisations.ConfirmationRequestValidator>();
+        services.AddScoped<IValidator<Mps.MpTakeoverRequest>, Mps.MpTakeoverRequestValidator>();
+        services.AddScoped<IValidator<Mps.MpOfficeAcceptanceRequest>, Mps.MpOfficeAcceptanceRequestValidator>();
+        services.AddScoped<IValidator<Mps.MpResponseRequest>, Mps.MpResponseRequestValidator>();
+        services.AddScoped<IValidator<Digests.CancelDigestRequest>, Digests.CancelDigestRequestValidator>();
+        services.AddScoped<IValidator<Digests.MpMailFrequencyRequest>, Digests.MpMailFrequencyRequestValidator>();
+        services.AddScoped<IValidator<Digests.MpMailExtraRequest>, Digests.MpMailExtraRequestValidator>();
+        services.AddScoped<IValidator<Digests.MpMailTokenRequest>, Digests.MpMailTokenRequestValidator>();
+        services.AddScoped<IValidator<Digests.IntroductionRequest>, Digests.IntroductionRequestValidator>();
+        services.AddScoped<IValidator<Digests.SuppressRequest>, Digests.SuppressRequestValidator>();
+        services.AddScoped<IValidator<Digests.UnsuppressRequest>, Digests.UnsuppressRequestValidator>();
         return services;
     }
 }

@@ -23,21 +23,29 @@ public sealed class ContractRuleTests
     [Fact]
     public void Completing_a_registration_needs_the_eighteen_or_older_declaration()
     {
-        var result = new CompleteRegistrationRequestValidator(L).Validate(new CompleteRegistrationRequest { DisplayName = "Rūta M." });
+        var result = new CompleteRegistrationRequestValidator(L).Validate(new CompleteRegistrationRequest { DisplayName = "Rūta M.", AcceptsTerms = true });
         result.IsValid.ShouldBeFalse();
         result.Errors.Single().ErrorMessage.ShouldBe("Registruotis gali tik 18 metų ir vyresni asmenys.");
     }
 
     [Fact]
-    public void Completing_a_registration_with_the_declaration_and_no_name_passes() =>
+    public void Completing_a_registration_needs_the_terms_of_use_accepted()
+    {
+        var result = new CompleteRegistrationRequestValidator(L).Validate(new CompleteRegistrationRequest { ConfirmsAdult = true });
+        result.IsValid.ShouldBeFalse();
+        result.Errors.Single().ErrorMessage.ShouldBe("Kad galėtumėte užsiregistruoti, sutikite su naudojimo taisyklėmis.");
+    }
+
+    [Fact]
+    public void Completing_a_registration_with_the_declaration_the_terms_and_no_name_passes() =>
         new CompleteRegistrationRequestValidator(L)
-            .Validate(new CompleteRegistrationRequest { ConfirmsAdult = true })
+            .Validate(new CompleteRegistrationRequest { ConfirmsAdult = true, AcceptsTerms = true })
             .IsValid.ShouldBeTrue();
 
     [Fact]
     public void A_display_name_is_at_most_sixty_characters() =>
         new CompleteRegistrationRequestValidator(L)
-            .Validate(new CompleteRegistrationRequest { ConfirmsAdult = true, DisplayName = new string('a', 61) })
+            .Validate(new CompleteRegistrationRequest { ConfirmsAdult = true, AcceptsTerms = true, DisplayName = new string('a', 61) })
             .Errors.Single().ErrorMessage.ShouldBe("Vardas per ilgas: ne daugiau kaip 60 ženklų.");
 
     [Theory]

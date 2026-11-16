@@ -36,6 +36,10 @@ public sealed record MpVoteResponse(VoteLink Vote, string? Choice, FactionSplitR
 
 public sealed record MpVotesResponse(IReadOnlyList<MpVoteResponse> Items, string? NextCursor);
 
+/// <param name="ManagedSince">
+/// Design 8.5.2: since when the profile is taken over ("Profilį tvarko Seimo narys arba jo biuras"), the one public trace of
+/// a link; null for a profile nobody took over, which says nothing about joining. Never which account.
+/// </param>
 public sealed record MpProfileResponse(
     MpListItem Mp,
     TermResponse Term,
@@ -43,7 +47,8 @@ public sealed record MpProfileResponse(
     IReadOnlyList<MembershipResponse> Memberships,
     IReadOnlyList<ContactResponse> Contacts,
     MpStatisticsResponse? Statistics,
-    IReadOnlyList<MpVoteResponse> RecentVotes);
+    IReadOnlyList<MpVoteResponse> RecentVotes,
+    DateTimeOffset? ManagedSince = null);
 
 public sealed record BodyListItem(string Slug, string Name, string Kind, int Members);
 

@@ -71,8 +71,11 @@ docker compose -f deploy/compose.yaml run --rm --no-deps migrator --demo-appeal
 Planned dates come from the lrs.lt upcoming-agenda pages, not the open data. Locally the worker reads the stand-in's
 INVENTED page (`LT2_AGENDA_BASE_ADDRESS` in `deploy/.env`); production sets the real address and adds its host to the
 outbound allowlist; empty means off. The parser's assumptions are in `tests/Lt2.Parliament.ImportTests/Agenda/ASSUMPTIONS.md`;
-`LT2_LRS_LIVE=1` with `LT2_LRS_AGENDA_URL` runs the live check. Summaries to MPs are made in dry-run only (M2a): published
-at `/suvestines`, never sent. `LT2_MODERATION_CONTACT` is the address shown to visitors who want to report (a local
+`LT2_LRS_LIVE=1` with `LT2_LRS_AGENDA_URL` runs the live check. Summaries to MPs are published at `/suvestines` and are
+dry runs unless the runtime setting `Digest:Sending` says otherwise and an introduction letter has been sent (design
+8.19). Locally every email lands in Mailpit, so `deploy/.env` sets `LT2_MAIL_CAUGHT=true`: MP mail is locked wherever the
+data is invented (`LT2_DEMO_DATA`, or any synthetic parliament data) unless the mail is declared caught.
+`LT2_MODERATION_CONTACT` is the address shown to visitors who want to report (a local
 placeholder in `deploy/.env`). Feedback (design 8.10): `LT2_FEEDBACK_ISSUES_URL` (`Feedback:IssuesUrl`, the
 repository's GitHub issues, linked from the feedback panel; nothing shown when empty) and `LT2_FEEDBACK_TEAM_ADDRESS`
 (`Feedback:TeamAddress`, where the worker sends at most one notice a day of new feedback; none when empty).
@@ -196,6 +199,7 @@ separate secret. Nothing secret is committed; `deploy/secrets/README.md` lists e
 | `Database:MaxPoolSize`, `Database:HangfireMaxPoolSize`, `Database:ApplicationName` | The connection budget (design 9.5): web 25 per instance, worker 10, Hangfire 10, migrator 5, against PostgreSQL's `max_connections=150` in `deploy/compose.yaml`; 10 when unset. Change them only together with the budget test |
 | `DataProtection:KeyEncryptionKey` | Base64 32-byte key wrapping the data-protection keys stored in PostgreSQL; required outside development |
 | `Security:IpHashKey` | Key for hashing client IP addresses in the audit log |
+| `Security:DeviceHashKey` | Web: key of the known browsers' hashes (design 8.20.2), the secret `device_hash_key`; without it no browser is known and the host logs a warning at start |
 | `Email:Smtp:*` | SMTP host, port, security, user, password, from address (Mailpit locally; the provider is not chosen yet) |
 | `ReverseProxy:Address` | The proxy whose `X-Forwarded-For`/`-Proto` are believed (design 6.8): a host name resolved through Docker's DNS (again when the proxy's address changes) or an IP address; `caddy` in `compose.yaml`, `LT2_PROXY_HOST` with `compose.shared-proxy.yaml`; empty (the default) believes no forwarding header |
 | `RateLimits:*` | Per-IP limits for code requests, registration and sign-in attempts |
@@ -218,6 +222,21 @@ address), `LT2_HTTP_PORT=80`, `LT2_HTTPS_PORT=443`, `COMPOSE_PROFILES=` (no Mail
 `LT2_OUTBOUND_EXTRA_HOST` (the agenda page's host when `LT2_AGENDA_BASE_ADDRESS` is set, otherwise empty: then
 `apps.lrs.lt` is the only host the worker may call; a redirect to another host is refused too), and mount real secrets.
 
+MP mail (design 8.19) adds:
+
+| Variable | Meaning |
+|---|---|
+| `LT2_MAIL_CAUGHT` | `Email:Caught` for web and worker: `true` only where every email lands in a catcher (Mailpit). Default `false`. Where the data is invented (`LT2_DEMO_DATA`, or any synthetic parliament data) no MP mail is sent unless it is `true`. |
+| `LT2_MAIL_FROM_MP` | `Email:Mp:FromAddress`: the sender of MP mail, an address of the sending domain. |
+| `LT2_MP_SMTP_HOST`, `LT2_MP_SMTP_PORT`, `LT2_MP_SMTP_SECURITY`, `LT2_MP_SMTP_USERNAME` | `Email:Mp:Smtp`: MP mail's own SMTP account (port 587 and `StartTls` by default); with the host empty MP mail uses the common account (`LT2_SMTP_*`). Its password is the secret `mp_smtp_password`. |
+| `LT2_RATE_MP_MAIL` | Requests per client address to an MP's link pages and token routes in 15 minutes (default 60); only the local `.env` raises it. |
+
+and two secrets, `mail_hash_key` (web and worker: the suppression list's keyed hashes and the MPs' link tokens; changing
+it breaks every link already emailed and forgets the suppressed addresses) and `mp_smtp_password` (worker; empty while
+MP mail uses the common account). **On an existing deployment, run `init-secrets.py` again (with the same directory, as
+root on Linux) before using the new compose file:** it creates the two missing files and keeps the others; without them
+compose refuses to start.
+
 ### Behind a server's existing Caddy
 
 A server whose ports 80 and 443 already belong to another Compose project's Caddy (the trial on the owner's VPS, design
@@ -227,8 +246,13 @@ Forwarded client addresses are believed only from that Caddy, named by `LT2_PROX
 containers on the shared network. `deploy/shared-proxy.Caddyfile` is the site block to append to that Caddy's Caddyfile, with `lt2.example.org` replaced
 by the site's hostname: compression, the 1 MB request limit, no `Server` header, no access log and `X-Robots-Tag:
 noindex, nofollow`. A request that Caddy itself fails (a 502 while `web` restarts) still reaches that Caddy's error log
-with the client's address and full address; only that Caddy's global log options could drop them, and they belong to
-the other project. Real hostnames, addresses and paths live only on the server, never in this repository.
+with the client's address and full address, an invitation code or an MP's mail link token in it included; only that
+Caddy's global log options could drop them, and they belong to the other project. The application's own logs replace the
+link token. Real hostnames, addresses and paths live only on the server, never in this repository.
+
+On a server set up before MP mail (design 8.19), run `sudo python3 deploy/init-secrets.py $LT2_HOME/secrets` once more
+before the first deploy of the new compose file: it adds `mail_hash_key` and `mp_smtp_password` and keeps the rest. The same
+again on a server set up before known browsers (design 8.20.2): it adds `device_hash_key` (web).
 
 What survives a redeploy lives outside the application tree, here `$LT2_HOME` (for example a directory under `/srv`,
 owned by root):
@@ -262,6 +286,8 @@ LT2_SEIMAS_BASE_ADDRESS=http://seimas-standin:8080/sip/
 LT2_OUTBOUND_EXTRA_HOST=seimas-standin
 LT2_AGENDA_BASE_ADDRESS=http://seimas-standin:8080/
 LT2_DEMO_DATA=true
+LT2_MAIL_CAUGHT=true
+LT2_MAIL_FROM_MP=suvestines@lt2.example.org
 LT2_MODERATION_CONTACT=moderatoriai@lt2.example.org
 LT2_FEEDBACK_ISSUES_URL=https://github.com/Lietuva2/LT2/issues
 LT2_FEEDBACK_TEAM_ADDRESS=komanda@lt2.example.org

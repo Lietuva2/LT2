@@ -47,6 +47,33 @@ internal static class RateLimitPolicies
     /// and unmark), one shared limit per account (design 8.11.2): a guard against a runaway script, not a product rule.
     /// </summary>
     public const string Participation = "participation";
+
+    /// <summary>
+    /// The MP's link (design 8.19.4, 8.19.7): the token routes and pages, per client address, like the sign-in ones; each token
+    /// has its own limit too (<see cref="MpMailTokens"/>, the global limiter).
+    /// </summary>
+    public const string MpMail = "mp-mail";
+}
+
+/// <summary>
+/// Design 8.19.7: the token routes and pages of MP mail are limited per token as well as per client address. The token is read
+/// from the path (the API's <c>/api/v1/mp-mail/{token}</c> and the pages), and only its hash is kept as the partition's key.
+/// </summary>
+internal static class MpMailTokens
+{
+    private static readonly System.Text.RegularExpressions.Regex TokenInPath = new(
+        "^/(?:api/v1/mp-mail|suvestines/nustatymai(?:/patvirtinti)?|suvestines/kopijos)/(?<token>[A-Za-z0-9_-]{20,100})(?:/|$)",
+        System.Text.RegularExpressions.RegexOptions.CultureInvariant | System.Text.RegularExpressions.RegexOptions.IgnoreCase);
+
+    /// <summary>The partition of a request: the token's hash for a token route or page, none otherwise.</summary>
+    public static string? Partition(HttpContext context)
+    {
+        ArgumentNullException.ThrowIfNull(context);
+        var match = TokenInPath.Match(context.Request.Path.Value ?? "");
+        return match.Success
+            ? "mp-mail-token:" + Convert.ToHexStringLower(System.Security.Cryptography.SHA256.HashData(System.Text.Encoding.UTF8.GetBytes(match.Groups["token"].Value)))
+            : null;
+    }
 }
 
 internal sealed class RateLimitOptions
@@ -71,6 +98,12 @@ internal sealed class RateLimitOptions
     /// <summary>No person presses sides, follows and marks this often; a script that does is stopped.</summary>
     public FixedWindow Participation { get; set; } = new() { PermitLimit = 60, WindowSeconds = 60 };
 
+    /// <summary>The MP's link pages and routes per client address (design 8.19.7): enough for an office, not for guessing.</summary>
+    public FixedWindow MpMail { get; set; } = new() { PermitLimit = 60, WindowSeconds = 15 * 60 };
+
+    /// <summary>The same per token: a person using one link never comes near it.</summary>
+    public FixedWindow MpMailToken { get; set; } = new() { PermitLimit = 30, WindowSeconds = 15 * 60 };
+
     internal sealed class FixedWindow
     {
         public int PermitLimit { get; set; }
@@ -88,7 +121,7 @@ internal static class SecurityServices
         services.AddAntiforgery(options =>
         {
             options.HeaderName = ApiHeaders.Antiforgery;
-            options.Cookie.Name = "__Host-lt2.af";
+            options.Cookie.Name = BrowserStorage.AntiforgeryCookieName;
             options.Cookie.SecurePolicy = CookieSecurePolicy.Always;
             options.Cookie.SameSite = SameSiteMode.Strict;
             options.Cookie.HttpOnly = true;
@@ -140,6 +173,18 @@ internal static class SecurityServices
             options.AddPolicy(RateLimitPolicies.Report, context => PerAccount(context, Limits(context).Report));
             options.AddPolicy(RateLimitPolicies.OwnRead, context => PerAccount(context, Limits(context).OwnRead));
             options.AddPolicy(RateLimitPolicies.Participation, context => PerAccount(context, Limits(context).Participation));
+            options.AddPolicy(RateLimitPolicies.MpMail, context => PerIp(context, Limits(context).MpMail));
+
+            // Design 8.19.7: each MP link's token has its own limit too, wherever it is used.
+            options.GlobalLimiter = PartitionedRateLimiter.Create<HttpContext, string>(context =>
+                MpMailTokens.Partition(context) is { } token
+                    ? RateLimitPartition.GetFixedWindowLimiter(token, _ => new FixedWindowRateLimiterOptions
+                    {
+                        PermitLimit = Limits(context).MpMailToken.PermitLimit,
+                        Window = TimeSpan.FromSeconds(Limits(context).MpMailToken.WindowSeconds),
+                        QueueLimit = 0,
+                    })
+                    : RateLimitPartition.GetNoLimiter("none"));
         });
 
         return services;

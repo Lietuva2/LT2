@@ -1,0 +1,250 @@
+@page "/administravimas/pristatymas"
+@attribute [Authorize]
+@rendermode InteractiveWebAssembly
+@using Lt2.Api.Contracts.Digests
+@inherits InteractiveBase<AppealUi>
+@inject IMpSendingAdminApi Admin
+@inject IAuthApi Auth
+@inject IMeApi Me
+@inject Passkeys PasskeyBrowser
+
+@* Design 8.19.5: "Pristatymo laiškas". An administrator writes the letter (subject, plain paragraphs, the signer's name and
+   role), previews it, sends a test copy to their own address and then sends it to every sitting MP with an official address
+   who has had none: one press with the number of MPs in the confirmation and a fresh passkey confirmation. A version once sent
+   never changes: a changed text is a new version, which goes only to MPs who have had none. Audited by the server. *@
+<PageTitle>@L["Intro.PageTitle"]</PageTitle>
+
+<div class="stack">
+    <ol class="crumbs">
+        <li><a href="/administravimas/nustatymai">@L["Admin.Title"]</a></li>
+        <li>@L["Intro.Title"]</li>
+    </ol>
+    <h1>@L["Intro.Title"]</h1>
+    <NeedsScript />
+    <p class="lead">@L["Intro.Lead"]</p>
+    @if (State is { MailMayLeave: false })
+    {
+        <p class="note" id="intro-not-caught">@L["Intro.NotCaught"]</p>
+    }
+</div>
+
+<Messages Message="@Message" Info="@Info" />
+
+@if (_refused)
+{
+    <p class="note" role="alert">@L["Admin.Refused"]</p>
+}
+else if (State is null)
+{
+    <p class="small">@L["Loading"]</p>
+}
+else
+{
+    <section class="sheet stack" aria-labelledby="intro-h-letter">
+        <h2 id="intro-h-letter">@(State.Current is { } current ? L.Format("Intro.Version", Display.Number(current.Version)) : L["Intro.New"])</h2>
+        @if (State.Current is { SentAt: { } sentAt })
+        {
+            <p class="note note--quiet" id="intro-sent-note">@L.Format("Intro.SentNote", Display.Day(sentAt))</p>
+        }
+        <div class="field @ErrorClass("subject")">
+            <label for="intro-subject">@L["Intro.Subject"]</label>
+            <input class="input" id="intro-subject" maxlength="200" value="@_draft.Subject" @onchange="e => Set(nameof(IntroductionRequest.Subject), e)"
+                   disabled="@Locked" aria-invalid="@Invalid("subject")" aria-describedby="@DescribedBy("subject", "intro-subject")" />
+            <FieldError Errors="Errors" Field="subject" For="intro-subject" />
+        </div>
+        <div class="field @ErrorClass("text")">
+            <label for="intro-text">@L["Intro.Text"]</label>
+            <textarea class="textarea" id="intro-text" rows="12" maxlength="10000" disabled="@Locked"
+                      aria-invalid="@Invalid("text")" aria-describedby="@DescribedBy("text", "intro-text", "intro-text-hint")"
+                      value="@_draft.Text" @onchange="e => Set(nameof(IntroductionRequest.Text), e)"></textarea>
+            <p class="field__hint" id="intro-text-hint">@L["Intro.TextHint"]</p>
+            <FieldError Errors="Errors" Field="text" For="intro-text" />
+        </div>
+        <div class="field @ErrorClass("signerName")">
+            <label for="intro-signer">@L["Intro.Signer"]</label>
+            <input class="input" id="intro-signer" maxlength="200" value="@_draft.SignerName" @onchange="e => Set(nameof(IntroductionRequest.SignerName), e)"
+                   disabled="@Locked" aria-invalid="@Invalid("signerName")" aria-describedby="@DescribedBy("signerName", "intro-signer")" />
+            <FieldError Errors="Errors" Field="signerName" For="intro-signer" />
+        </div>
+        <div class="field @ErrorClass("signerRole")">
+            <label for="intro-role">@L["Intro.Role"]</label>
+            <input class="input" id="intro-role" maxlength="200" value="@_draft.SignerRole" @onchange="e => Set(nameof(IntroductionRequest.SignerRole), e)"
+                   disabled="@Locked" aria-invalid="@Invalid("signerRole")" aria-describedby="@DescribedBy("signerRole", "intro-role")" />
+            <FieldError Errors="Errors" Field="signerRole" For="intro-role" />
+        </div>
+        <p class="small">@L["Intro.Added"]</p>
+        <div class="row">
+            <button type="button" class="btn" id="intro-save" disabled="@Locked" @onclick="SaveAsync">@L["Intro.Save"]</button>
+            <button type="button" class="btn btn--plain" id="intro-test" disabled="@(Locked || State.Current is null || !State.MailMayLeave)" @onclick="TestAsync">@L["Intro.Test"]</button>
+        </div>
+
+        <details class="more stack stack--tight" id="intro-preview">
+            <summary class="linkish small">@L["Intro.Preview"]</summary>
+            <div class="sheet--quiet stack stack--tight">
+                <p><b>@_draft.Subject</b></p>
+                @foreach (var paragraph in Paragraphs(_draft.Text))
+                {
+                    <p>@paragraph</p>
+                }
+                <p>@_draft.SignerName<br />@_draft.SignerRole</p>
+                <p class="small">@L["Intro.PreviewAdded"]</p>
+            </div>
+        </details>
+    </section>
+
+    <section class="sheet stack" aria-labelledby="intro-h-send">
+        <h2 id="intro-h-send">@L["Intro.SendTitle"]</h2>
+        <p class="num" id="intro-would">@L.Format("Intro.WouldGoTo", Display.Number(State.WouldGoTo))</p>
+        @if (_confirm)
+        {
+            <div class="sheet--quiet stack stack--tight" id="intro-confirm">
+                <p role="alert">@L.Format("Intro.SendConfirm", Display.Number(State.WouldGoTo))</p>
+                <div class="row">
+                    <button type="button" class="btn" id="intro-send-confirm" disabled="@Locked" @onclick="SendAsync">@L["Intro.SendYes"]</button>
+                    <button type="button" class="btn btn--plain" disabled="@Locked" @onclick="() => _confirm = false">@L["DigMod.Back"]</button>
+                </div>
+            </div>
+        }
+        else
+        {
+            <p>
+                <button type="button" class="btn" id="intro-send" disabled="@(Locked || State.Current is null || State.WouldGoTo == 0 || !State.MailMayLeave)"
+                        @onclick="() => _confirm = true">@L["Intro.Send"]</button>
+            </p>
+        }
+        @if (State.Sent.Count > 0)
+        {
+            <ul class="rows" id="intro-versions">
+                @foreach (var version in State.Sent)
+                {
+                    <li><div class="rows__main"><span>@L.Format("Intro.Version", Display.Number(version.Version))</span><span class="small num">@(version.SentAt is { } at ? Display.Day(at) : "")</span></div></li>
+                }
+            </ul>
+        }
+        <p><a href="@DigestRoutes.IntroductionPage" id="intro-public">@L["Intro.Public"]</a></p>
+    </section>
+}
+
+@code {
+    private IntroductionRequest _draft = new();
+    private bool _confirm;
+    private bool _refused;
+
+    [PersistentState] public IntroductionResponse? State { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        if (State is null)
+        {
+            var state = await Admin.GetIntroductionAsync();
+            _refused = state.Problem?.Status is 401 or 403;
+            State = state.Value;
+            if (!state.IsSuccess && !_refused)
+            {
+                Show(state.Problem);
+            }
+        }
+
+        Fill();
+    }
+
+    private void Fill()
+    {
+        if (State?.Current is { } current)
+        {
+            _draft = new IntroductionRequest { Subject = current.Subject, Text = current.Text, SignerName = current.SignerName, SignerRole = current.SignerRole };
+        }
+    }
+
+    private async Task LoadAsync()
+    {
+        var state = await Admin.GetIntroductionAsync();
+        if (Succeeded(state))
+        {
+            State = state.Value;
+            Fill();
+        }
+    }
+
+    private Task SaveAsync() => RunAsync(async () =>
+    {
+        if (!Succeeded(await Admin.SaveIntroductionAsync(_draft), "subject", "text", "signerName", "signerRole"))
+        {
+            return;
+        }
+
+        await LoadAsync();
+        Info ??= L["Intro.Saved"];
+    });
+
+    private Task TestAsync() => RunAsync(async () =>
+    {
+        if (Succeeded(await Admin.SendIntroductionTestAsync()))
+        {
+            Info = L["Intro.TestSent"];
+        }
+    });
+
+    private Task SendAsync() => RunAsync(async () =>
+    {
+        var sent = await Admin.SendIntroductionAsync();
+        if (sent.Problem?.Code == "passkey.confirmation-required")
+        {
+            // Design 8.19.5: the staff passkey once more, then the same press again.
+            if (!await ConfirmPasskeyAsync())
+            {
+                return;
+            }
+
+            sent = await Admin.SendIntroductionAsync();
+        }
+
+        _confirm = false;
+        if (!Succeeded(sent))
+        {
+            return;
+        }
+
+        await LoadAsync();
+        Info ??= L.Format("Intro.SentTo", Display.Number(sent.Value!.Mps));
+    });
+
+    private async Task<bool> ConfirmPasskeyAsync()
+    {
+        if (!await PasskeyBrowser.IsSupportedAsync())
+        {
+            Message = L["Admin.Passkey.Unsupported"];
+            return false;
+        }
+
+        var options = await Auth.GetPasskeyRequestOptionsAsync();
+        if (!Succeeded(options))
+        {
+            return false;
+        }
+
+        var credential = await PasskeyBrowser.GetAsync(options.Value!);
+        if (credential is null)
+        {
+            Message = L["Admin.Passkey.Cancelled"];
+            return false;
+        }
+
+        return Succeeded(await Me.ConfirmPasskeyAsync(new PasskeyCredentialRequest { Credential = credential }));
+    }
+
+    private void Set(string field, ChangeEventArgs e)
+    {
+        var value = e.Value?.ToString() ?? "";
+        _draft = field switch
+        {
+            "Subject" => _draft with { Subject = value },
+            "Text" => _draft with { Text = value },
+            "SignerName" => _draft with { SignerName = value },
+            _ => _draft with { SignerRole = value },
+        };
+    }
+
+    private static string[] Paragraphs(string text) =>
+        (text ?? "").ReplaceLineEndings("\n").Split("\n\n", StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
+}

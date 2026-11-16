@@ -1,0 +1,78 @@
+@using Lt2.Api.Contracts.Mps
+@using Lt2.Web.Client.Mps
+@inject IMpResponsesApi Responses
+@inject Formats F
+@inject IConfiguration Configuration
+
+@* "Seimo narių atsakymai" on the bill's page (design 8.5.6), its own sheet after the organisations' positions: rendered by the
+   server and the same for everyone. One line says how many MPs answered and how they split, then the responses in the order
+   "už", "prieš", "neapsisprendė", each by last name (withdrawn and hidden ones after them); the first 10 and "Rodyti
+   daugiau" by the page's address (?atsakymai=), landing on the first new one, without JavaScript. The linked account's form
+   is an island filled in the browser only, so nothing in this part's HTML depends on who is looking. *@
+@if (_view is { } view && (!HideWhenEmpty || view.Items.Count > 0))
+{
+    <section class="sheet stack" id="atsakymai" aria-labelledby="h-responses">
+        <h2 id="h-responses">@F.T["Responses.Title"]</h2>
+        @if (view.Items.Count == 0)
+        {
+            <p id="responses-none">@F.T["Responses.None"]</p>
+        }
+        else
+        {
+            @if (view.Counts.Answered > 0)
+            {
+                <p class="small num" id="responses-counts">@F.T.Format("Responses.Counts", Display.Number(view.Counts.Answered), Display.Number(view.Counts.For), Display.Number(view.Counts.Against), Display.Number(view.Counts.Undecided))</p>
+            }
+            <ol class="stack" id="responses-list">
+                @for (var i = 0; i < _shown; i++)
+                {
+                    var item = view.Items[i];
+                    <li id="@ResponsePaging.ItemId(i + 1)">
+                        <MpResponseItem Response="item.Response" Mp="item.Mp" IdPrefix="@($"atsakymas-{i + 1}-")">
+                            @if (item.Response.Status is "published" or "withdrawn")
+                            {
+                                <Lt2.Web.Client.Mps.ReportResponse ResponseId="item.Response.Id" Contact="@Contact" @rendermode="InteractiveWebAssembly" />
+                            }
+                        </MpResponseItem>
+                    </li>
+                }
+            </ol>
+            @if (view.Items.Count > MpResponseLimits.First)
+            {
+                <div class="row">
+                    <p class="small num" role="status" id="responses-shown">@F.T.Format("Responses.Shown", Display.Number(_shown), Display.Number(view.Items.Count))</p>
+                    @if (ResponsePaging.More(_shown, view.Items.Count) is { } more)
+                    {
+                        <a class="btn btn--plain" id="responses-more" href="@ResponsePaging.Address(Path, more, ResponsePaging.ItemId(_shown + 1))">@F.T["Responses.More"]</a>
+                    }
+                </div>
+            }
+        }
+        @if (view.Open)
+        {
+            <Lt2.Web.Client.Mps.MyMpResponse Number="@Number" @rendermode="InteractiveWebAssembly" />
+        }
+    </section>
+}
+
+@code {
+    private BillMpResponsesResponse? _view;
+    private int _shown;
+
+    [Parameter, EditorRequired] public string Number { get; set; } = "";
+
+    /// <summary>A finished bill nobody took part in shows the bill only: the part appears there only when someone answered.</summary>
+    [Parameter] public bool HideWhenEmpty { get; set; }
+
+    [SupplyParameterFromQuery(Name = MpResponseLimits.ShowParameter)] public string? Show { get; set; }
+
+    private string Path => "/seimas/" + Uri.EscapeDataString(Number);
+
+    private string? Contact => Configuration.ModeratorContact();
+
+    protected override async Task OnParametersSetAsync()
+    {
+        _view = (await Responses.GetOnBillAsync(Number)).Value;
+        _shown = _view is null ? 0 : Math.Min(ResponsePaging.Shown(Show, _view.Items.Count), _view.Items.Count);
+    }
+}

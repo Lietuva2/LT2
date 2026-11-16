@@ -34,7 +34,16 @@ public static class NotificationsModule
         services.AddOptions<SiteOptions>().Bind(configuration.GetSection(SiteOptions.Section))
             .Validate(o => SiteLinks.IsValid(o.Address), "Site:Address must be empty or an https address of a host and nothing more, for example https://lietuva2.lt.")
             .ValidateOnStart();
-        services.AddSingleton<Digests.DigestText>();
+        // Design 8.19: real sending, the MPs' choices, the introduction letter and the suppression list. The preview and the
+        // email share one template; the keys and the deployment's locks are configuration (Security:MailHashKey, Demo:Allowed,
+        // Email:Caught).
+        services.AddSingleton<MpMailTemplates>();
+        services.AddSingleton(new MpMail.MailKeys(configuration));
+        services.AddScoped(sp => new MpMail.MailLocks(configuration, sp.GetRequiredService<IMpMailAddresses>()));
+        services.AddScoped<MpMail.MpSender>();
+        services.AddScoped<MpMail.MpMailService>();
+        services.AddScoped<IMpMail>(sp => sp.GetRequiredService<MpMail.MpMailService>());
+        services.AddScoped<IMpMailAdministration>(sp => sp.GetRequiredService<MpMail.MpMailService>());
         services.AddScoped<IDigests, Digests.DigestService>();
         services.AddScoped<IFollows, Follows.FollowService>();
         services.AddScoped<IAccountData, Follows.FollowAccountData>();
@@ -48,6 +57,7 @@ public static class NotificationsModule
         services.AddLocalization();
         services.AddOptions<SmtpOptions>().Bind(configuration.GetSection(SmtpOptions.Section)).ValidateOnStart();
         services.AddOptions<OutboxOptions>().Bind(configuration.GetSection(OutboxOptions.Section));
+        services.AddOptions<MpStreamOptions>().Bind(configuration.GetSection(MpStreamOptions.Section));
         services.AddSingleton<IEmailTransport, SmtpEmailTransport>();
         services.AddSingleton<SignInCodeTemplate>();
         services.AddSingleton<AccountNoticeTemplate>();
@@ -56,6 +66,7 @@ public static class NotificationsModule
         services.AddSingleton<FeedbackTemplates>();
         services.AddSingleton<OrganisationTemplates>();
         services.AddSingleton<FollowTemplates>();
+        services.AddSingleton<MpTemplates>();
 
         // Every outbox kind and the template that renders it.
         services.AddEmail<SignInCodeEmail, SignInCodeTemplate>(MessageKinds.SignInCodeEmail, t => t.Render);
@@ -69,6 +80,12 @@ public static class NotificationsModule
         services.AddEmail<FollowPlannedEmail, FollowTemplates>(MessageKinds.FollowPlannedEmail, t => t.Planned);
         services.AddEmail<FollowVotedEmail, FollowTemplates>(MessageKinds.FollowVotedEmail, t => t.Voted);
         services.AddEmail<FollowStatementEmail, FollowTemplates>(MessageKinds.FollowStatementEmail, t => t.Statement);
+        services.AddEmail<FollowResponsesEmail, FollowTemplates>(MessageKinds.FollowResponsesEmail, t => t.Responses);
+        services.AddEmail<MpTakeoverLinkEmail, MpTemplates>(MessageKinds.MpTakeoverLinkEmail, t => t.Render);
+        services.AddEmail<MpResponseNoticeEmail, MpTemplates>(MessageKinds.MpResponseNoticeEmail, t => t.Response);
+        services.AddEmail<MpMail.MpDigestEmail, MpMailTemplates>(MpMail.MpMailKinds.Digest, t => t.Digest);
+        services.AddEmail<MpMail.MpIntroductionEmail, MpMailTemplates>(MpMail.MpMailKinds.Introduction, t => t.Introduction);
+        services.AddEmail<MpMail.MpMailNoticeEmail, MpMailTemplates>(MpMail.MpMailKinds.Notice, t => t.Notice);
         services.AddSingleton<INotificationsDispatcher, OutboxDispatcher>();
         return services;
     }

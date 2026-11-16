@@ -5,25 +5,21 @@
 @inject IConfiguration Configuration
 @inject NavigationManager Navigation
 
+@* Design 8.21: the menu is the logo, "Projektai" (opens the agenda; current on its four tabs and everything under them),
+   "Seimo nariai", and "Prisijungti" or the account item; one line from 360 px up. What has no place there is in the footer. *@
 <header class="page top">
-    <a class="top__brand" href="/"><Logo />Lietuva 2.0</a>
+    <a class="top__brand" href="/"><Logo /><span class="top__name">Lietuva 2.0</span></a>
     <nav class="top__nav" aria-label="@T["Nav.Label"]">
-        <NavLink href="/darbotvarke" ActiveClass="">@T["Nav.Agenda"]</NavLink>
-        <NavLink href="/seimo-nariai" Match="NavLinkMatch.Prefix" ActiveClass="">@T["Nav.Mps"]</NavLink>
-        <NavLink href="/projektai" Match="NavLinkMatch.Prefix" ActiveClass="">@T["Nav.Appeals"]</NavLink>
-        <NavLink href="/suvestines" Match="NavLinkMatch.Prefix" ActiveClass="">@T["Nav.Digests"]</NavLink>
-        <NavLink href="/metodika" ActiveClass="">@T["Nav.Methodology"]</NavLink>
+        <a href="@MenuSections.ProjectsHome" id="nav-projects" aria-current="@Current(MenuSections.InProjects(Path), "darbotvarke")">@T["Nav.Appeals"]</a>
+        <a href="/seimo-nariai" id="nav-mps" aria-current="@Current(MenuSections.InMps(Path), "seimo-nariai")">@T["Nav.Mps"]</a>
         <AuthorizeView>
             <Authorized>
-                <a href="/sveiki">@T["Nav.Account"]</a>
-                <SignOutForm />
+                <AccountMenu />
             </Authorized>
             <NotAuthorized>
-                <a href="/prisijungti">@T["Nav.SignIn"]</a>
+                <a href="/prisijungti" id="nav-sign-in" aria-current="@Current(Path == "prisijungti", "prisijungti")">@T["Nav.SignIn"]</a>
             </NotAuthorized>
         </AuthorizeView>
-        @* The theme switch (lt2-theme.js): hidden until the script shows it; kept across enhanced navigation. *@
-        <button class="mark" type="button" id="theme-switch" data-theme-switch data-permanent hidden></button>
     </nav>
 </header>
 
@@ -41,7 +37,29 @@
     }
 </main>
 
-<footer class="page foot">
+@* Design 8.21, 8.22: on every page, the token pages opened from emails included; plain links, no script. *@
+<footer class="page foot stack">
+    <nav class="foot__groups" aria-label="@T["Footer.Label"]" id="footer-links">
+        <section class="foot__group" aria-labelledby="foot-about">
+            <h2 class="label" id="foot-about">@T["Footer.About"]</h2>
+            <ul>
+                <li><a href="/metodika" id="foot-methodology">@T["Footer.Methodology"]</a></li>
+                <li><a href="/moderavimo-taisykles" id="foot-moderation-rules">@T["Footer.ModerationRules"]</a></li>
+                <li><a href="/taisykles" id="foot-terms">@T["Footer.Terms"]</a></li>
+                <li><a href="/privatumas" id="foot-privacy">@T["Footer.Privacy"]</a></li>
+            </ul>
+        </section>
+        <section class="foot__group" aria-labelledby="foot-take-part">
+            <h2 class="label" id="foot-take-part">@T["Footer.TakePart"]</h2>
+            <ul>
+                <li><a href="/organizacijos" id="foot-organisations">@T["Footer.Organisations"]</a></li>
+                <li><a href="/atsiliepimai" id="foot-feedback">@T["Footer.Feedback"]</a></li>
+            </ul>
+        </section>
+    </nav>
+    @* The theme switch (lt2-theme.js): hidden until the script shows it, so absent without script; kept across enhanced
+       navigation. *@
+    <p><button class="mark" type="button" id="theme-switch" data-theme-switch data-permanent hidden></button></p>
     <p>@T["Footer.Line"]</p>
 </footer>
 
@@ -50,7 +68,13 @@
 @code {
     private bool _parliamentDataInvented;
 
-    private bool OnSignInPage => Navigation.ToBaseRelativePath(Navigation.Uri).Split('?', '#')[0] == "prisijungti";
+    /// <summary>The page's path without the leading <c>/</c>, query or fragment.</summary>
+    private string Path => Navigation.ToBaseRelativePath(Navigation.Uri).Split('?', '#')[0].TrimEnd('/');
+
+    private bool OnSignInPage => Path == "prisijungti";
+
+    /// <summary><c>page</c> on the item's own page, <c>true</c> on a page under it, nothing elsewhere.</summary>
+    private string? Current(bool inSection, string own) => !inSection ? null : Path == own ? "page" : "true";
 
     protected override async Task OnInitializedAsync() =>
         _parliamentDataInvented = (await Meta.GetImportsAsync()).Value?.ParliamentDataInvented == true;

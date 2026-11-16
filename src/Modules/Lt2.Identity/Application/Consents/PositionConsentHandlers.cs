@@ -68,7 +68,7 @@ internal sealed class PositionConsentHandlers(IdentityDb db, IPositionErasure er
 /// explicit consent (kind <c>party-support</c>), since a party preference is a political opinion too; removing it deletes
 /// the row and withdraws the consent.
 /// </summary>
-internal sealed class PartySupportHandlers(IdentityDb db, TimeProvider clock)
+internal sealed class PartySupportHandlers(IdentityDb db, IParticipants participants, TimeProvider clock)
 {
     public const string ConsentKind = "party-support";
     public const string ConsentVersion = "2026-11-13";
@@ -99,6 +99,12 @@ internal sealed class PartySupportHandlers(IdentityDb db, TimeProvider clock)
         if (party is not null && !consent)
         {
             return Error.Validation("party.consent-required", "consent");
+        }
+
+        // Design 8.5.4: the MP's own account declares no party support (removing one it gave before is allowed).
+        if (party is not null && MpAccounts.Refusal(await participants.FindAsync(userId, cancellationToken)) is { } refused)
+        {
+            return refused;
         }
 
         var now = clock.GetUtcNow();
@@ -148,7 +154,8 @@ internal sealed class ParticipantDirectory(NpgsqlDataSource dataSource) : IParti
 #pragma warning disable CA2100 // Constant SQL: the consent condition is a constant of this module.
         await using var command = dataSource.CreateCommand(
             $"""
-            SELECT p.user_id, p.display_name, u.email, p.registered_at, {CurrentPositionConsent.ExistsSql}
+            SELECT p.user_id, p.display_name, u.email, p.registered_at, {CurrentPositionConsent.ExistsSql},
+                   EXISTS (SELECT 1 FROM identity.politician_link l WHERE l.user_id = p.user_id AND l.part = 'mp' AND l.ended_at IS NULL)
             FROM identity.profile p JOIN identity."user" u ON u.id = p.user_id
             WHERE p.user_id = ANY(@ids) AND p.registered_at IS NOT NULL
             """);
@@ -164,7 +171,8 @@ internal sealed class ParticipantDirectory(NpgsqlDataSource dataSource) : IParti
                 reader.IsDBNull(1) ? null : reader.GetString(1),
                 reader.GetString(2),
                 reader.GetFieldValue<DateTimeOffset>(3),
-                reader.GetBoolean(4));
+                reader.GetBoolean(4),
+                reader.GetBoolean(5));
         }
 
         return result;

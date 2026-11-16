@@ -4,8 +4,8 @@ using Microsoft.Playwright;
 namespace Lt2.E2E;
 
 /// <summary>
-/// "Atsijungti" in the main menu (owner, 2026-11-13): beside "Mano paskyra" for a signed-in person, at every width, and
-/// it works with JavaScript switched off.
+/// "Atsijungti" in the menu (owner, 2026-11-13), since design 8.21 inside the account item "Paskyra" with "Mano paskyra", for a
+/// signed-in person at every width: the item opens and signing out works with JavaScript switched off.
 /// </summary>
 public sealed class MenuSignOutTests
 {
@@ -37,15 +37,24 @@ public sealed class MenuSignOutTests
         await page.GotoAsync($"{Base}/seimas/XVP-0412");
 
         var nav = page.Locator("nav.top__nav");
-        await Assertions.Expect(nav.GetByRole(AriaRole.Link, new() { Name = "Mano paskyra" })).ToBeVisibleAsync();
+        var item = page.Locator("#account-menu");
         var signOut = nav.GetByRole(AriaRole.Button, new() { Name = "Atsijungti" });
-        await Assertions.Expect(signOut).ToBeVisibleAsync();
         await Assertions.Expect(nav.GetByRole(AriaRole.Link, new() { Name = "Prisijungti" })).ToHaveCountAsync(0);
+        await Assertions.Expect(nav.GetByRole(AriaRole.Link, new() { Name = "Mano paskyra" })).ToBeHiddenAsync();
+        await Assertions.Expect(signOut).ToBeHiddenAsync();
+
+        // The browser's own disclosure: no script needed to open it.
+        await page.Locator("#account-toggle").ClickAsync();
+        await Assertions.Expect(item).ToHaveAttributeAsync("open", "");
+        await Assertions.Expect(nav.GetByRole(AriaRole.Link, new() { Name = "Mano paskyra" })).ToBeVisibleAsync();
+        await Assertions.Expect(signOut).ToBeVisibleAsync();
+        await Assertions.Expect(page.Locator("[data-account-name]")).ToBeHiddenAsync();
         var account = (await nav.GetByRole(AriaRole.Link, new() { Name = "Mano paskyra" }).BoundingBoxAsync())!;
         var button = (await signOut.BoundingBoxAsync())!;
         (button.X + button.Width).ShouldBeLessThanOrEqualTo(width, "inside the window");
-        Math.Abs(button.Y + (button.Height / 2) - (account.Y + (account.Height / 2))).ShouldBeLessThan(account.Height, "beside the account link");
-        await page.Locator("header").ScreenshotAsync(new() { Path = Shot($"menu-sign-out-{width}.png") });
+        account.X.ShouldBeGreaterThanOrEqualTo(0, "inside the window");
+        button.Y.ShouldBeGreaterThan(account.Y, "under the account link");
+        await page.ScreenshotAsync(new() { Path = Shot($"menu-sign-out-{width}.png") });
 
         await signOut.ClickAsync();
         await page.WaitForURLAsync(new Regex("/$"));

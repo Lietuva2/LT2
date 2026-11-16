@@ -42,6 +42,7 @@ internal sealed class CodeSignInHandler(
     IdentityDb db,
     UserManager<User> users,
     SignInManager<User> signIn,
+    KnownBrowsers browsers,
     TimeProvider clock)
 {
     internal static readonly Error InvalidCode = Error.Validation("auth.code-invalid", "code");
@@ -61,26 +62,27 @@ internal sealed class CodeSignInHandler(
         }
 
         var now = clock.GetUtcNow();
-        var current = await db.SignInCodes.AsNoTracking()
+
+        // Design 8.20.2: a browser tries the newest code any browser may use and, when it is known to the account, the newest
+        // code it asked for itself. A known browser's code is never tried from elsewhere, so guesses there cannot use it up.
+        var browser = await browsers.RecognisedAsync(profile.UserId, cancellationToken);
+        var open = await db.SignInCodes.AsNoTracking()
             .Where(c => c.UserId == profile.UserId && c.ConsumedAt == null)
-            .OrderByDescending(c => c.CreatedAt)
-            .FirstOrDefaultAsync(cancellationToken);
+            .ToListAsync(cancellationToken);
+        var tried = KnownBrowserRules.CodesToTry(open, browser);
+        var current = tried.FirstOrDefault(c => SignInCodeRules.Check(c, code, now) == CodeCheck.Valid);
         if (current is null)
         {
-            return InvalidCode;
-        }
-
-        switch (SignInCodeRules.Check(current, code, now))
-        {
-            case CodeCheck.Mismatch:
+            // A wrong code counts as an attempt against each code it was tried against.
+            var mismatched = tried.Where(c => SignInCodeRules.Check(c, code, now) == CodeCheck.Mismatch).Select(c => c.Id).ToList();
+            if (mismatched.Count > 0)
+            {
                 await db.SignInCodes
-                    .Where(c => c.Id == current.Id && c.FailedAttempts < SignInCodeRules.MaxAttempts)
+                    .Where(c => mismatched.Contains(c.Id) && c.FailedAttempts < SignInCodeRules.MaxAttempts)
                     .ExecuteUpdateAsync(s => s.SetProperty(c => c.FailedAttempts, c => c.FailedAttempts + 1), cancellationToken);
-                return InvalidCode;
-            case CodeCheck.Valid:
-                break;
-            default:
-                return InvalidCode;
+            }
+
+            return InvalidCode;
         }
 
         // Consume atomically: of two concurrent requests with the right code, only one signs in.
@@ -112,6 +114,9 @@ internal sealed class CodeSignInHandler(
             user,
             new AuthenticationProperties { IsPersistent = true },
             [new Claim(AuthenticationMethods.ClaimType, AuthenticationMethods.EmailCode)]);
+
+        // Design 8.20.2: a member's browser becomes known, or is renewed; a pending account's waits for its completion.
+        await browsers.RememberAsync(user.Id, cancellationToken);
         return Result.Ok();
     }
 }

@@ -29,7 +29,7 @@ public sealed class OrganisationInvitationTests(DatabaseFixture database) : ApiT
         var email = TestData.Email();
         var signInCode = await browser.RegisterAsync(email, code);
         await browser.SignInWithCodeAsync(email, signInCode);
-        using var completed = await browser.SendAsync(HttpMethod.Put, ApiRoutes.Me.Registration, new CompleteRegistrationRequest { DisplayName = name, ConfirmsAdult = true, InvitationCode = code });
+        using var completed = await browser.SendAsync(HttpMethod.Put, ApiRoutes.Me.Registration, new CompleteRegistrationRequest { DisplayName = name, ConfirmsAdult = true, AcceptsTerms = true, InvitationCode = code });
         completed.StatusCode.ShouldBe(HttpStatusCode.NoContent, await completed.Content.ReadAsStringAsync());
         return (browser, email);
     }
@@ -119,12 +119,12 @@ public sealed class OrganisationInvitationTests(DatabaseFixture database) : ApiT
 
         // Completing without the code (another device) asks for it again; with it, it counts.
         await newcomer.SignInWithCodeAsync(email, signInCode);
-        using (var without = await newcomer.SendAsync(HttpMethod.Put, ApiRoutes.Me.Registration, new CompleteRegistrationRequest { DisplayName = "Naujas Narys", ConfirmsAdult = true }))
+        using (var without = await newcomer.SendAsync(HttpMethod.Put, ApiRoutes.Me.Registration, new CompleteRegistrationRequest { DisplayName = "Naujas Narys", ConfirmsAdult = true, AcceptsTerms = true }))
         {
             await without.ShouldBeProblemAsync(HttpStatusCode.BadRequest, "invitation.required");
         }
 
-        using (var with = await newcomer.SendAsync(HttpMethod.Put, ApiRoutes.Me.Registration, new CompleteRegistrationRequest { DisplayName = "Naujas Narys", ConfirmsAdult = true, InvitationCode = code }))
+        using (var with = await newcomer.SendAsync(HttpMethod.Put, ApiRoutes.Me.Registration, new CompleteRegistrationRequest { DisplayName = "Naujas Narys", ConfirmsAdult = true, AcceptsTerms = true, InvitationCode = code }))
         {
             with.StatusCode.ShouldBe(HttpStatusCode.NoContent, await with.Content.ReadAsStringAsync());
         }

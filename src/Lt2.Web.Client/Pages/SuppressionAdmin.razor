@@ -1,0 +1,153 @@
+@page "/administravimas/nesiunciama"
+@attribute [Authorize]
+@rendermode InteractiveWebAssembly
+@using Lt2.Api.Contracts.Digests
+@inherits InteractiveBase<AppealUi>
+@inject IMpSendingAdminApi Admin
+
+@* Design 8.19.6: "Nesiunčiama". The sitting MPs whose official address is on the suppression list, with the reason and the
+   date, and how many other entries there are (never shown). An administrator adds an address (typed, stored only as a keyed
+   hash) or removes an entry, each with a statement; audited without the address. It covers MP mail only. *@
+<PageTitle>@L["Supp.PageTitle"]</PageTitle>
+
+<div class="stack">
+    <ol class="crumbs">
+        <li><a href="/administravimas/nustatymai">@L["Admin.Title"]</a></li>
+        <li>@L["Supp.Title"]</li>
+    </ol>
+    <h1>@L["Supp.Title"]</h1>
+    <NeedsScript />
+    <p class="lead">@L["Supp.Lead"]</p>
+</div>
+
+<Messages Message="@Message" Info="@Info" />
+
+@if (_refused)
+{
+    <p class="note" role="alert">@L["Admin.Refused"]</p>
+}
+else if (List is null)
+{
+    <p class="small">@L["Loading"]</p>
+}
+else
+{
+    <section class="sheet stack" aria-labelledby="supp-h-mps">
+        <h2 id="supp-h-mps">@L["Supp.Mps"]</h2>
+        @if (List.Mps.Count == 0)
+        {
+            <p class="small" id="supp-none">@L["Supp.None"]</p>
+        }
+        else
+        {
+            <ul class="rows" id="supp-list">
+                @foreach (var mp in List.Mps)
+                {
+                    <li class="stack stack--tight" id="supp-@mp.Id" @key="mp.Id">
+                        <div class="rows__main">
+                            <a href="/p/@mp.Slug"><b>@mp.FirstName @mp.LastName</b></a>
+                            <span class="small num">@L["Supp.Reason." + mp.Reason] · @Display.Day(mp.Since)</span>
+                        </div>
+                        <div class="row">
+                            <input class="input" id="supp-statement-@mp.Id" placeholder="@L["Supp.Statement"]" aria-label="@L["Supp.Statement"]"
+                                   value="@_statements.GetValueOrDefault(mp.Id)" @onchange="e => _statements[mp.Id] = e.Value?.ToString()" disabled="@Locked" />
+                            <button type="button" class="btn btn--plain" id="supp-remove-@mp.Id" disabled="@Locked" @onclick="() => RemoveAsync(mp.Id)">@L["Supp.Remove"]</button>
+                        </div>
+                    </li>
+                }
+            </ul>
+        }
+        <p class="small num" id="supp-others">@L.Format("Supp.Others", Display.Number(List.Others))</p>
+    </section>
+
+    <section class="sheet stack" aria-labelledby="supp-h-address">
+        <h2 id="supp-h-address">@L["Supp.ByAddress"]</h2>
+        <div class="field @ErrorClass("address")">
+            <label for="supp-address">@L["Supp.Address"]</label>
+            <input class="input" id="supp-address" type="email" maxlength="254" value="@_address" @onchange="e => _address = e.Value?.ToString()"
+                   disabled="@Locked" aria-invalid="@Invalid("address")" aria-describedby="@DescribedBy("address", "supp-address", "supp-address-hint")" />
+            <p class="field__hint" id="supp-address-hint">@L["Supp.AddressHint"]</p>
+            <FieldError Errors="Errors" Field="address" For="supp-address" />
+        </div>
+        <div class="field @ErrorClass("statement")">
+            <label for="supp-statement">@L["Supp.Statement"]</label>
+            <input class="input" id="supp-statement" maxlength="1000" value="@_statement" @onchange="e => _statement = e.Value?.ToString()"
+                   disabled="@Locked" aria-invalid="@Invalid("statement")" aria-describedby="@DescribedBy("statement", "supp-statement")" />
+            <FieldError Errors="Errors" Field="statement" For="supp-statement" />
+        </div>
+        <div class="row">
+            <button type="button" class="btn" id="supp-add" disabled="@Locked" @onclick="AddAsync">@L["Supp.Add"]</button>
+            <button type="button" class="btn btn--plain" id="supp-remove-address" disabled="@Locked" @onclick="RemoveAddressAsync">@L["Supp.RemoveAddress"]</button>
+        </div>
+    </section>
+}
+
+@code {
+    private readonly Dictionary<Guid, string?> _statements = [];
+    private string? _address;
+    private string? _statement;
+    private bool _refused;
+
+    [PersistentState] public SuppressionResponse? List { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        if (List is null)
+        {
+            var list = await Admin.GetSuppressionAsync();
+            _refused = list.Problem?.Status is 401 or 403;
+            List = list.Value;
+            if (!list.IsSuccess && !_refused)
+            {
+                Show(list.Problem);
+            }
+        }
+    }
+
+    private async Task LoadAsync()
+    {
+        var list = await Admin.GetSuppressionAsync();
+        if (Succeeded(list))
+        {
+            List = list.Value;
+        }
+    }
+
+    private Task AddAsync() => RunAsync(async () =>
+    {
+        if (!Succeeded(await Admin.SuppressAsync(new SuppressRequest { Address = _address ?? "", Statement = _statement ?? "" }), "address", "statement"))
+        {
+            return;
+        }
+
+        _address = null;
+        _statement = null;
+        await LoadAsync();
+        Info ??= L["Supp.Added"];
+    });
+
+    private Task RemoveAddressAsync() => RunAsync(async () =>
+    {
+        if (!Succeeded(await Admin.UnsuppressAsync(new UnsuppressRequest { Address = _address, Statement = _statement ?? "" }), "address", "statement"))
+        {
+            return;
+        }
+
+        _address = null;
+        _statement = null;
+        await LoadAsync();
+        Info ??= L["Supp.Removed"];
+    });
+
+    private Task RemoveAsync(Guid id) => RunAsync(async () =>
+    {
+        if (!Succeeded(await Admin.UnsuppressAsync(new UnsuppressRequest { EntryId = id, Statement = _statements.GetValueOrDefault(id) ?? "" })))
+        {
+            return;
+        }
+
+        _statements.Remove(id);
+        await LoadAsync();
+        Info ??= L["Supp.Removed"];
+    });
+}

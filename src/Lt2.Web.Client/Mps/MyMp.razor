@@ -1,0 +1,211 @@
+@inherits InteractiveBase<UiText>
+@inject IMeApi MeApi
+@inject IMpApi MpApi
+@inject Lt2.Api.Contracts.Digests.IMpMailApi MailApi
+
+@* Design 8.5.1 to 8.5.4 on the account page: the offer to take over an MP's profile ("Prisijungėte Seimo nario … oficialiu
+   adresu", "Perimti profilį") until it is taken over, then the link: which MP, the office (the MP's account only), giving
+   the profile up or leaving the office. Asked only once the island runs in the browser, never while the server prerenders,
+   so the page's HTML holds nothing about it (design 8.5.4). Speaking for the MP needs a passkey session: signed in by a code
+   the controls stay off and say so. *@
+@if (Offer is { } offer)
+{
+    <section class="sheet stack" aria-labelledby="mp-title" id="mp-offer">
+        <h2 id="mp-title">@L["Mp.Title"]</h2>
+        <p>@L.Format("Mp.Offer", offer.FirstName + " " + offer.LastName)</p>
+        @if (_sent)
+        {
+            <p class="note note--quiet" role="status" id="mp-link-sent">@L["Mp.LinkSent"]</p>
+        }
+        else
+        {
+            <p><button type="button" class="btn" id="mp-claim" disabled="@Locked" @onclick="() => ClaimAsync(offer.Slug)">@L["Mp.Claim"]</button></p>
+        }
+        <Messages Message="@Message" Info="@Info" />
+    </section>
+}
+else if (Link is { } link)
+{
+    <section class="sheet stack" aria-labelledby="mp-title" id="mp-link">
+        <h2 id="mp-title">@L["Mp.Title"]</h2>
+        <p>
+            @L.Format(link.Part == "mp" ? "Mp.Managing" : "Mp.OfficeOf", link.FirstName + " " + link.LastName)
+            <a href="/p/@link.Slug">@L["Mp.ToProfile"]</a>
+        </p>
+        @* Design 8.5.7: the bills in summaries now, with the MP's responses. *@
+        <p><a href="@Lt2.Api.Contracts.Mps.MpResponseRoutes.BillsPage" id="mp-bills-link">@L["Mp.Bills"]</a></p>
+        @if (!link.MayWrite)
+        {
+            <p class="note note--quiet" id="mp-passkey-needed">@L["Mp.PasskeyNeeded"]</p>
+        }
+
+        @if (link.Part == "mp" && Office is { } office)
+        {
+            <div class="stack stack--tight" id="mp-office">
+                <h3>@L["Mp.Office.Title"]</h3>
+                <p class="small">@L["Mp.Office.Lead"]</p>
+                @if (office.Members.Count == 0)
+                {
+                    <p class="small" id="mp-office-none">@L["Mp.Office.None"]</p>
+                }
+                else
+                {
+                    <ul class="rows" id="mp-office-members">
+                        @foreach (var member in office.Members)
+                        {
+                            <li @key="member.Id">
+                                <div class="rows__main"><b>@(member.DisplayName ?? L["Mp.Office.NoName"])</b> <span class="small num">@L.Format("Mp.Office.Since", Display.Day(member.Since))</span></div>
+                                <div class="rows__side">
+                                    <button type="button" class="btn btn--plain" disabled="@(Locked || !link.MayWrite)" @onclick="() => RemoveAsync(member.Id)">@L["Mp.Office.Remove"]</button>
+                                </div>
+                            </li>
+                        }
+                    </ul>
+                }
+                <p class="small num">@L.Format("Mp.Office.Count", Display.Number(office.Members.Count), Display.Number(office.Limit))</p>
+                @if (_invitation is { } invitation)
+                {
+                    <CopyLink Link="@invitation.Path" LinkId="mp-office-link" ButtonId="mp-office-copy">
+                        <p class="small">@L.Format("Mp.Office.LinkOnce", Display.DayTime(invitation.ExpiresAt))</p>
+                    </CopyLink>
+                }
+                else if (office.Members.Count < office.Limit)
+                {
+                    <p><button type="button" class="btn btn--plain" id="mp-office-invite" disabled="@(Locked || !link.MayWrite)" @onclick="InviteAsync">@L["Mp.Office.Invite"]</button></p>
+                }
+            </div>
+        }
+
+        @* Design 8.19.4: the same choice of summaries as the MP's emailed link, here without the link, in a passkey session. *@
+        <div class="stack stack--tight" id="mp-mail">
+            <h3>@L["Mp.Mail.Title"]</h3>
+            @if (!link.MayWrite)
+            {
+                <p class="small" id="mp-mail-passkey">@L["Mp.Mail.PasskeyNeeded"]</p>
+            }
+            else if (_frequency is not null)
+            {
+                <fieldset class="stack stack--tight" id="mp-mail-choice">
+                    <legend class="small">@L["Mp.Mail.Lead"]</legend>
+                    @foreach (var f in Lt2.Api.Contracts.Digests.MpMailFrequencies.All)
+                    {
+                        <label class="check">
+                            <input type="radio" name="mp-mail-frequency" id="mp-mail-@f" value="@f" checked="@(_frequency == f)" disabled="@Locked" @onchange="() => _frequency = f" />
+                            <span>@L["Mp.Mail.Frequency." + f]</span>
+                        </label>
+                    }
+                </fieldset>
+                <p><button type="button" class="btn btn--plain" id="mp-mail-save" disabled="@Locked" @onclick="SaveMailAsync">@L["Mp.Mail.Save"]</button></p>
+            }
+        </div>
+
+        @if (_confirmEnd)
+        {
+            <p class="note" role="alert">@L[link.Part == "mp" ? "Mp.GiveUpWarning" : "Mp.LeaveWarning"]</p>
+            <div class="row">
+                <button type="button" class="btn btn--against" id="mp-end-confirm" disabled="@(Locked || !link.MayWrite)" @onclick="EndAsync">@L[link.Part == "mp" ? "Mp.GiveUpConfirm" : "Mp.LeaveConfirm"]</button>
+                <button type="button" class="btn btn--plain" disabled="@Locked" @onclick="() => _confirmEnd = false">@L["Data.DeleteCancel"]</button>
+            </div>
+        }
+        else
+        {
+            <p class="row">
+                <button type="button" class="btn btn--plain" id="mp-end" disabled="@(Locked || !link.MayWrite)" @onclick="() => _confirmEnd = true">@L[link.Part == "mp" ? "Mp.GiveUp" : "Mp.Leave"]</button>
+                @if (link.Part == "mp")
+                {
+                    @* Design 8.5.2, step 4: a lost passkey is replaced by a new link to the official address. *@
+                    <button type="button" class="linkish small" id="mp-new-link" disabled="@Locked" @onclick="() => ClaimAsync(link.Slug)">@L["Mp.NewLink"]</button>
+                }
+            </p>
+        }
+        @if (_sent)
+        {
+            <p class="note note--quiet" role="status">@L["Mp.LinkSent"]</p>
+        }
+        <Messages Message="@Message" Info="@Info" />
+    </section>
+}
+
+@code {
+    private bool _sent;
+    private bool _confirmEnd;
+    private string? _frequency;
+    private MpOfficeInvitationResponse? _invitation;
+
+    private MpOfferResponse? Offer { get; set; }
+
+    private MpLinkResponse? Link { get; set; }
+
+    private MpOfficeResponse? Office { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        // Only in the browser: the server's prerendered HTML never holds the offer or the link.
+        if (RendererInfo.IsInteractive)
+        {
+            await LoadAsync();
+        }
+    }
+
+    private async Task LoadAsync()
+    {
+        var me = (await MeApi.GetAsync()).Value;
+        Offer = me?.MpOffer;
+        Link = me?.Mp;
+        Office = Link is { Part: "mp" } ? (await MpApi.GetOfficeAsync()).Value : null;
+        _frequency = Link is { MayWrite: true } ? (await MailApi.GetMineAsync()).Value?.Frequency : null;
+    }
+
+    private Task SaveMailAsync() => RunAsync(async () =>
+    {
+        var saved = await MailApi.SetMineAsync(new Lt2.Api.Contracts.Digests.MpMailFrequencyRequest { Frequency = _frequency ?? "" });
+        if (Succeeded(saved))
+        {
+            _frequency = saved.Value!.Frequency;
+            Info = L["Mp.Mail.Saved"];
+        }
+    });
+
+    private Task ClaimAsync(string slug) => RunAsync(async () =>
+    {
+        if (Succeeded(await MpApi.ClaimAsync(slug)))
+        {
+            _sent = true;
+        }
+    });
+
+    private Task InviteAsync() => RunAsync(async () =>
+    {
+        var made = await MpApi.InviteOfficeMemberAsync();
+        if (!made.IsSuccess)
+        {
+            Show(made.Problem);
+            return;
+        }
+
+        _invitation = made.Value;
+    });
+
+    private Task RemoveAsync(Guid id) => RunAsync(async () =>
+    {
+        if (Succeeded(await MpApi.RemoveOfficeMemberAsync(id)))
+        {
+            Info = L["Mp.Office.Removed"];
+            Office = (await MpApi.GetOfficeAsync()).Value;
+        }
+    });
+
+    private Task EndAsync() => RunAsync(async () =>
+    {
+        var part = Link?.Part;
+        if (!Succeeded(await MpApi.EndAsync()))
+        {
+            return;
+        }
+
+        _confirmEnd = false;
+        _invitation = null;
+        await LoadAsync();
+        Info = L[part == "mp" ? "Mp.GivenUp" : "Mp.Left"];
+    });
+}

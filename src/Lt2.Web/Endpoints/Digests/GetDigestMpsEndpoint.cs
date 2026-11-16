@@ -15,5 +15,5 @@ internal static class GetDigestMpsEndpoint
             .Produces<IReadOnlyList<DigestMpResponse>>();
 
     private static async Task<IResult> HandleAsync(Guid id, IDigests digests, CancellationToken ct) =>
-        TypedResults.Ok((await digests.MpsAsync(id, ct)).Select(m => new DigestMpResponse(m.MpSlug, m.Status)).ToList());
+        TypedResults.Ok((await digests.MpsAsync(id, ct)).Select(m => new DigestMpResponse(m.Slug, m.Status, m.FirstName, m.LastName)).ToList());
 }

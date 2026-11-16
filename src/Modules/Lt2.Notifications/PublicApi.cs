@@ -16,7 +16,13 @@ public interface INotificationsDispatcher
 }
 
 /// <summary>An email ready to send: plain text always, light HTML optionally.</summary>
-public sealed record EmailMessage(string To, string Subject, string TextBody, string? HtmlBody);
+/// <param name="Stream">
+/// <c>null</c> for the common stream; <c>mp</c> for MP mail (design 8.19.3), sent from <c>Email:Mp:FromAddress</c> and, when
+/// configured, over <c>Email:Mp:Smtp</c>, so trouble with it cannot block sign-in codes.
+/// </param>
+/// <param name="Headers">Extra headers, for example <c>List-Unsubscribe</c> and <c>List-Unsubscribe-Post</c>.</param>
+public sealed record EmailMessage(
+    string To, string Subject, string TextBody, string? HtmlBody, string? Stream = null, IReadOnlyDictionary<string, string>? Headers = null);
 
 /// <summary>Delivers email. SMTP today; the provider is chosen later (design section 12).</summary>
 public interface IEmailTransport
@@ -52,24 +58,64 @@ public sealed record DigestItemInfo(
     int? SurgeWindowHours,
     IReadOnlyList<Lt2.SharedKernel.DigestReason> Reasons);
 
-/// <summary>A summary run (design 8.7) as its public copy shows it: without MP-specific figures.</summary>
-/// <param name="Status"><c>dry-run</c> in M2a: made, read by people, never sent.</param>
-/// <param name="MpCount">How many MPs it would have gone to.</param>
+/// <summary>A summary run (design 8.7, 8.19.2) as its public copy shows it: without MP-specific figures and never which MPs.</summary>
+/// <param name="Status"><c>dry-run</c>, <c>waiting</c>, <c>sent</c>, <c>cancelled</c> or <c>expired</c> (design 8.19.1).</param>
+/// <param name="MpCount">How many MPs it would go to when it was made.</param>
+/// <param name="SentCount">How many MPs it was sent to (a sent run).</param>
+/// <param name="DecidedAt">When it was sent, declined or expired.</param>
+/// <param name="Statement">A declined run's statement, shown on its copy; never who declined it.</param>
+/// <param name="ExpiresAt">A waiting run's expiry.</param>
 public sealed record DigestRunInfo(
-    Guid Id, string Kind, DateOnly RunDate, DateOnly? SittingDate, DateTimeOffset CreatedAt, string Status, int MpCount, IReadOnlyList<DigestItemInfo> Items);
+    Guid Id,
+    string Kind,
+    DateOnly RunDate,
+    DateOnly? SittingDate,
+    DateTimeOffset CreatedAt,
+    string Status,
+    int MpCount,
+    IReadOnlyList<DigestItemInfo> Items,
+    int SentCount = 0,
+    DateTimeOffset? DecidedAt = null,
+    string? Statement = null,
+    DateTimeOffset? ExpiresAt = null);
 
 /// <summary>What one MP would read (design 8.9: a moderator can read any MP's summary before a real send).</summary>
 public sealed record DigestPreview(string Subject, string Text);
 
+/// <summary>
+/// Sending as it is now (design 8.19.1): <paramref name="Mode"/> <c>off</c>, <c>approval</c> or <c>automatic</c>;
+/// <paramref name="Setting"/> what <c>Digest:Sending</c> says; <paramref name="Lock"/> why it is off although the setting says
+/// otherwise (<c>no-introduction</c>, <c>not-caught</c>), or null.
+/// </summary>
+public sealed record DigestSending(string Mode, string Setting, string? Lock);
 
-/// <summary>Summaries to MPs in dry-run (design 8.4, 8.7, 8.9). Nothing here sends anything.</summary>
+/// <summary>Summaries to MPs (design 8.4, 8.7, 8.9, 8.19): made by the rules; sent only as design 8.19 says.</summary>
 public interface IDigests
 {
-    /// <summary>Makes the weekly and before-vote summaries that are due at <paramref name="now"/>; returns those made.</summary>
+    /// <summary>
+    /// Expires the waiting summaries whose time has passed, then makes the weekly and before-vote summaries that are due at
+    /// <paramref name="now"/>; returns those made.
+    /// </summary>
     Task<IReadOnlyList<DigestRunInfo>> RunDueAsync(DateTimeOffset now, CancellationToken cancellationToken);
 
-    /// <summary>One urgent summary for a record, approved by a moderator; may exceed the weekly ceiling by one.</summary>
+    /// <summary>One urgent summary for a record, approved by a moderator; may exceed the weekly ceiling by one; sent at once while sending is on.</summary>
     Task<Lt2.SharedKernel.Result<DigestRunInfo>> UrgentAsync(Guid recordId, string statement, StaffActor moderator, CancellationToken cancellationToken);
+
+    /// <summary>Sending as it is now, with its locks (design 8.19.1).</summary>
+    Task<DigestSending> SendingAsync(CancellationToken cancellationToken);
+
+    /// <summary>
+    /// "Siųsti" (design 8.19.2): lets a waiting summary go. Recipients are worked out now; under the summaries' lock, so two
+    /// moderators pressing at once send it once (<c>digest.not-waiting</c> for the second). <c>digest.expired</c>,
+    /// <c>digest.sending-off</c>, <c>digest.not-found</c>.
+    /// </summary>
+    Task<Lt2.SharedKernel.Result<DigestRunInfo>> SendAsync(Guid runId, StaffActor moderator, CancellationToken cancellationToken);
+
+    /// <summary>"Nesiųsti" (design 8.19.2): declines a waiting summary with a statement of at least 20 characters, shown on its copy.</summary>
+    Task<Lt2.SharedKernel.Result<DigestRunInfo>> CancelAsync(Guid runId, string statement, StaffActor moderator, CancellationToken cancellationToken);
+
+    /// <summary>Waiting summaries whose time has passed become expired (design 8.19.2); returns how many.</summary>
+    Task<int> ExpireDueAsync(DateTimeOffset now, CancellationToken cancellationToken);
 
     Task<IReadOnlyList<DigestRunInfo>> ListAsync(CancellationToken cancellationToken);
 
@@ -80,8 +126,109 @@ public interface IDigests
 
     Task<Lt2.SharedKernel.Result<DigestPreview>> PreviewAsync(Guid runId, string mpSlug, CancellationToken cancellationToken);
 
-    /// <summary>The MPs of a run and what would have happened for each (<c>dry-run</c> or <c>skipped-ceiling</c>); moderators only.</summary>
-    Task<IReadOnlyList<(string MpSlug, string Status)>> MpsAsync(Guid runId, CancellationToken cancellationToken);
+    /// <summary>
+    /// The MPs of a run and what happened, or would happen, for each MP's own address (design 8.19.3 statuses); staff only.
+    /// Never the address, and nothing about an extra recipient. By last name, the names in the nominative.
+    /// </summary>
+    Task<IReadOnlyList<DigestMpInfo>> MpsAsync(Guid runId, CancellationToken cancellationToken);
+}
+
+/// <summary>An MP of a run, by name, and what happened for the MP's own address (design 8.19.3); staff only.</summary>
+public sealed record DigestMpInfo(string Slug, string FirstName, string LastName, string Status);
+
+/// <summary>An MP's choice of summaries as the MP's own page shows it (design 8.19.4). Shown to nobody else.</summary>
+/// <param name="Frequency"><c>default</c>, <c>weekly</c>, <c>before-vote</c> or <c>stopped</c>.</param>
+/// <param name="ExtraAddress">The extra recipient as written, confirmed or waiting for the official address's confirmation.</param>
+public sealed record MpMailChoice(string Slug, string FirstName, string LastName, string Frequency, string? ExtraAddress, bool ExtraConfirmed);
+
+/// <summary>
+/// The MP's own summary preferences without an account (design 8.19.4): every call takes the link's token, answers the same
+/// (<c>mp-mail.not-found</c>) for an unknown and a wrong token, and confirms every change by email to the official address.
+/// Nothing here is logged with a token, an address or a choice.
+/// </summary>
+public interface IMpMail
+{
+    Task<Lt2.SharedKernel.Result<MpMailChoice>> GetAsync(string token, CancellationToken cancellationToken);
+
+    /// <summary>Sets the frequency; <c>mp-mail.frequency-invalid</c>.</summary>
+    Task<Lt2.SharedKernel.Result<MpMailChoice>> SetFrequencyAsync(string token, string frequency, CancellationToken cancellationToken);
+
+    /// <summary>The one-click stop (RFC 8058): "Nesiųsti", and nothing else.</summary>
+    Task<Lt2.SharedKernel.Result<Lt2.SharedKernel.Unit>> StopAsync(string token, CancellationToken cancellationToken);
+
+    /// <summary>"Atsiųsti naują nuorodą": the old token stops working and a new link goes to the official address.</summary>
+    Task<Lt2.SharedKernel.Result<Lt2.SharedKernel.Unit>> RenewAsync(string token, CancellationToken cancellationToken);
+
+    /// <summary>Asks for an extra recipient: a confirmation link (24 hours, one use) goes to the official address. <c>mp-mail.address-invalid</c>.</summary>
+    Task<Lt2.SharedKernel.Result<MpMailChoice>> AskExtraAsync(string token, string address, CancellationToken cancellationToken);
+
+    /// <summary>Removes the extra recipient; the address is deleted.</summary>
+    Task<Lt2.SharedKernel.Result<MpMailChoice>> RemoveExtraAsync(string token, CancellationToken cancellationToken);
+
+    /// <summary>The official address confirms the extra recipient (the link's token); copies go from the next summary.</summary>
+    Task<Lt2.SharedKernel.Result<MpMailChoice>> ConfirmExtraAsync(string confirmToken, CancellationToken cancellationToken);
+
+    /// <summary>"Nebegauti kopijų" from a copy: the extra address is removed.</summary>
+    Task<Lt2.SharedKernel.Result<Lt2.SharedKernel.Unit>> StopCopiesAsync(string stopToken, CancellationToken cancellationToken);
+
+    /// <summary>The same choice for a linked account (design 8.19.4), by the MP's person number; the host checked the link.</summary>
+    Task<Lt2.SharedKernel.Result<MpMailChoice>> ForPersonAsync(long seimasPersonId, CancellationToken cancellationToken);
+
+    /// <summary>Sets the frequency for a linked account in a passkey session; confirmed by email to the official address too.</summary>
+    Task<Lt2.SharedKernel.Result<MpMailChoice>> SetForPersonAsync(long seimasPersonId, string frequency, CancellationToken cancellationToken);
+}
+
+/// <summary>One version of the introduction letter (design 8.19.5).</summary>
+public sealed record IntroductionVersion(int Version, string Subject, string Text, string SignerName, string SignerRole, DateTimeOffset WrittenAt, DateTimeOffset? SentAt);
+
+/// <summary>
+/// The administrator's view of the introduction letter: the version being written or last sent, the versions already sent,
+/// how many sitting MPs would get it now (no letter yet, not suppressed, not stopped), and whether MP mail may leave here.
+/// </summary>
+public sealed record IntroductionState(IntroductionVersion? Current, IReadOnlyList<IntroductionVersion> Sent, int WouldGoTo, bool MailMayLeave);
+
+/// <summary>The letter as an administrator writes it: subject, plain paragraphs, the signer's name and role.</summary>
+public sealed record IntroductionDraft(string Subject, string Text, string SignerName, string SignerRole);
+
+/// <summary>A sitting MP whose official address is suppressed (design 8.19.6), with the entry's reason and date. Staff only.</summary>
+public sealed record SuppressedMp(Guid EntryId, string Slug, string FirstName, string LastName, string Reason, DateTimeOffset Since);
+
+/// <summary>The suppression list as the screen "Nesiunčiama" shows it: the sitting MPs on it, and how many other entries.</summary>
+public sealed record SuppressionView(IReadOnlyList<SuppressedMp> Mps, int Others);
+
+/// <summary>
+/// What administrators do with MP mail (design 8.19.5, 8.19.6): the introduction letter (write, test copy, send once per MP) and
+/// the suppression list. Each change is audited without an address.
+/// </summary>
+public interface IMpMailAdministration
+{
+    Task<IntroductionState> IntroductionAsync(CancellationToken cancellationToken);
+
+    /// <summary>
+    /// Saves the letter: a version never sent is changed in place; once a version has been sent, a changed text is a new version.
+    /// <c>introduction.invalid</c>.
+    /// </summary>
+    Task<Lt2.SharedKernel.Result<IntroductionVersion>> SaveIntroductionAsync(IntroductionDraft draft, StaffActor administrator, CancellationToken cancellationToken);
+
+    /// <summary>A test copy of the current version to the administrator's own address; <c>introduction.none</c>.</summary>
+    Task<Lt2.SharedKernel.Result<Lt2.SharedKernel.Unit>> SendIntroductionTestAsync(string ownAddress, StaffActor administrator, CancellationToken cancellationToken);
+
+    /// <summary>
+    /// Sends the current version to every sitting MP with an official address who has had none and is not suppressed; returns
+    /// how many. <c>introduction.none</c>, <c>mp-mail.not-caught</c> (invented data, mail not caught).
+    /// </summary>
+    Task<Lt2.SharedKernel.Result<int>> SendIntroductionAsync(StaffActor administrator, CancellationToken cancellationToken);
+
+    /// <summary>The versions sent, newest first, as the public page shows them (design 8.19.5).</summary>
+    Task<IReadOnlyList<IntroductionVersion>> SentIntroductionsAsync(CancellationToken cancellationToken);
+
+    Task<SuppressionView> SuppressionAsync(CancellationToken cancellationToken);
+
+    /// <summary>Adds an address by hand (stored only hashed), with a statement; <c>mp-mail.address-invalid</c>, <c>suppression.exists</c>.</summary>
+    Task<Lt2.SharedKernel.Result<Lt2.SharedKernel.Unit>> SuppressAsync(string address, string statement, StaffActor administrator, CancellationToken cancellationToken);
+
+    /// <summary>Removes an entry, by its id or by the address typed, with a statement; <c>suppression.not-found</c>.</summary>
+    Task<Lt2.SharedKernel.Result<Lt2.SharedKernel.Unit>> UnsuppressAsync(Guid? entryId, string? address, string statement, StaffActor administrator, CancellationToken cancellationToken);
 }
 
 /// <summary>A bill the person follows, with its planned date or its last stage result.</summary>
@@ -90,8 +237,11 @@ public sealed record FollowedBill(Lt2.SharedKernel.BillFacts Bill, Lt2.SharedKer
 /// <summary>The person's own follows (design 8.11.2, 8.14.14); there is no limit on how many.</summary>
 public sealed record MyFollows(IReadOnlyList<FollowedBill> Bills, IReadOnlyList<Lt2.SharedKernel.MpFacts> Mps, IReadOnlyList<Lt2.SharedKernel.OrganisationFacts> Organisations);
 
-/// <summary>Which follow emails are on: planned and voted bills (design 8.11.2), organisations' statements (design 8.14.14).</summary>
-public sealed record NoticeSettings(bool Planned, bool Voted, bool Statements = true);
+/// <summary>
+/// Which follow emails are on: planned and voted bills (design 8.11.2), organisations' statements (design 8.14.14), MPs' responses
+/// on followed bills (design 8.20.1).
+/// </summary>
+public sealed record NoticeSettings(bool Planned, bool Voted, bool Statements = true, bool Responses = true);
 
 /// <summary>What one run of the follow job did: events recorded, events sent, emails written to the outbox.</summary>
 public sealed record FollowRunOutcome(int Recorded, int Sent, int Emails);

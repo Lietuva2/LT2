@@ -1,0 +1,42 @@
+@page "/taisykles"
+@inject IStringLocalizer<LegalText> T
+@inject IConfiguration Configuration
+
+@* Design 8.22.2: "Naudojimo taisyklės", a static page. Members accept this version (TermsOfUse.Version) at registration and, after
+   a change, on /taisykles/sutikimas. *@
+<LegalDocument Prefix="Terms" Parts="Parts" Anchors="Anchors" Version="@LegalVersions.Terms">
+    <After Context="part">
+        @if (part == "Moderation")
+        {
+            <p><a href="/moderavimo-taisykles" id="terms-rules-link">@T["Legal.ToRules"]</a></p>
+            @if (Configuration.ModeratorContact() is { } contact)
+            {
+                <p>@T["Legal.ModeratorContact"] <a href="mailto:@contact">@contact</a></p>
+            }
+        }
+        else if (part == "Leave")
+        {
+            <p><a href="/sveiki#my-data" id="terms-account-link">@T["Legal.ToAccount"]</a></p>
+        }
+        else if (part == "Provider")
+        {
+            <p><a href="/privatumas" id="terms-privacy-link">@T["Legal.ToPrivacy"]</a></p>
+        }
+    </After>
+</LegalDocument>
+
+@code {
+    private static readonly string[] Parts = ["Purpose", "Who", "Publish", "Moderation", "Summaries", "Leave", "Changes", "Provider"];
+
+    private static readonly Dictionary<string, string> Anchors = new()
+    {
+        ["Purpose"] = "paskirtis",
+        ["Who"] = "kas-gali",
+        ["Publish"] = "ka-skelbti",
+        ["Moderation"] = "moderavimas",
+        ["Summaries"] = "suvestines",
+        ["Leave"] = "kaip-iseiti",
+        ["Changes"] = "pakeitimai",
+        ["Provider"] = "teikejas",
+    };
+}

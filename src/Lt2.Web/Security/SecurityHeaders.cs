@@ -57,8 +57,21 @@ internal static class SecurityHeaders
                     headers.CacheControl = "no-store";
                 }
 
+                // Design 8.19.4: an MP's link opens a page for that MP only: never indexed, never stored (no referrer is
+                // sent from any page, above).
+                if (IsMpLinkPage(context.Request.Path))
+                {
+                    headers["X-Robots-Tag"] = "noindex, nofollow";
+                    headers.CacheControl = "no-store";
+                }
+
                 return Task.CompletedTask;
             });
             return next(context);
         });
+
+    /// <summary>The pages an MP's link opens (design 8.19.4): the preferences, the extra recipient's confirmation and a copy's stop.</summary>
+    public static bool IsMpLinkPage(PathString path) =>
+        path.StartsWithSegments(Lt2.Api.Contracts.Digests.MpMailRoutes.PreferencesPage, StringComparison.OrdinalIgnoreCase)
+        || path.StartsWithSegments(Lt2.Api.Contracts.Digests.MpMailRoutes.CopiesPage, StringComparison.OrdinalIgnoreCase);
 }

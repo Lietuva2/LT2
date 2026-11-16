@@ -21,6 +21,9 @@ public class Lt2Factory(DatabaseFixture database, int codeRequestLimit = 1000, i
         builder.UseEnvironment("Testing");
         builder.UseSetting("ConnectionStrings:Lt2", Database.AppConnectionString);
         builder.UseSetting("Security:IpHashKey", "test-ip-hash-key");
+
+        // Design 8.20.2: the key of the known browsers' hashes, so a browser that signed in is known to the account.
+        builder.UseSetting("Security:DeviceHashKey", "test-device-hash-key");
         builder.UseSetting("Moderation:ContactAddress", "moderatoriai@lt2.test");
         // No test calls a real AI provider, whatever the environment of the machine says (AGENTS.md); tests that need one put a fake in.
         builder.UseSetting("Ai:Provider", "");
@@ -31,6 +34,16 @@ public class Lt2Factory(DatabaseFixture database, int codeRequestLimit = 1000, i
         builder.UseSetting("RateLimits:Registration:WindowSeconds", "600");
         builder.UseSetting("RateLimits:SignIn:PermitLimit", "1000");
         builder.UseSetting("RateLimits:SignIn:WindowSeconds", "600");
+
+        // Design 8.19: the key of MP mail's hashes and links, and the MP link's limits high enough for a whole run from one
+        // address (RateLimitTests checks them low on a factory of its own).
+        builder.UseSetting("Security:MailHashKey", "test-mail-hash-key");
+
+        // The test database's parliament is the stand-in's (synthetic), which locks MP mail (design 8.19.1) unless the mail is
+        // declared caught: nothing here reaches a mailbox. MpSendingTests checks the lock on factories of its own.
+        builder.UseSetting("Email:Caught", "true");
+        builder.UseSetting("RateLimits:MpMail:PermitLimit", "100000");
+        builder.UseSetting("RateLimits:MpMailToken:PermitLimit", "100000");
         builder.ConfigureServices(services => services.AddSingleton<IStartupFilter, ClientAddressStartupFilter>());
     }
 

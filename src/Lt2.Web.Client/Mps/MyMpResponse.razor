@@ -1,0 +1,147 @@
+@using Lt2.Api.Contracts.Mps
+@using Lt2.Web.Client.Appeals
+@inherits InteractiveBase<AppealUi>
+@inject IMpResponsesApi Responses
+@inject IMeApi Me
+@inject NavigationManager Navigation
+
+@* The linked account's form on a bill's page (design 8.5.6): stance and text, "Skelbti atsakymą", "Keisti", "Atsiimti".
+   Asked for only once the island runs in the browser and shown only to an account linked to an MP (the MP's or an office
+   member's), so the page's HTML is the same for everyone. Writing needs a passkey session and an MP whose mandate has not
+   ended, checked by the server on every request; signed in by a code the controls stay off and say so. *@
+@if (_mine is { } mine)
+{
+    <div class="sheet sheet--quiet stack stack--tight" id="mano-atsakymas" aria-labelledby="my-response-title">
+        <h3 id="my-response-title">@L["MpResponse.Title"]</h3>
+        <p class="small">@L.Format("MpResponse.For", mine.Mp.FirstName + " " + mine.Mp.LastName)</p>
+        <p class="small" id="my-response-public">@L["MpResponse.Public"]</p>
+        @if (mine.Refusal is { } refusal)
+        {
+            <p class="note note--quiet" id="my-response-refusal">@L["MpResponse.Refusal." + refusal]</p>
+        }
+
+        @if (mine.Response is { Status: "published" } && !_editing && mine.Open)
+        {
+            <p class="small" id="my-response-state">@L["MpResponse.IsPublished"]</p>
+            @if (_withdrawing)
+            {
+                <div class="row" role="group" aria-label="@L["MpResponse.Withdraw"]">
+                    <p class="small">@L["MpResponse.WithdrawConfirm"]</p>
+                    <button class="btn" type="button" id="my-response-withdraw-confirm" disabled="@(Locked || !mine.MayWrite)" @onclick="WithdrawAsync">@L["MpResponse.WithdrawYes"]</button>
+                    <button class="btn btn--plain" type="button" disabled="@Locked" @onclick="() => _withdrawing = false">@L["Cancel"]</button>
+                </div>
+            }
+            else
+            {
+                <div class="row">
+                    <button class="btn btn--plain" type="button" id="my-response-change" disabled="@(Locked || !mine.MayWrite)" @onclick="Start">@L["MpResponse.Change"]</button>
+                    <button class="linkish small" type="button" id="my-response-withdraw" disabled="@(Locked || !mine.MayWrite)" @onclick="() => _withdrawing = true">@L["MpResponse.Withdraw"]</button>
+                </div>
+            }
+        }
+        else if (mine.Response is not { Status: "hidden" } && (mine.Open || _editing))
+        {
+            @if (mine.Response is { Status: "withdrawn" })
+            {
+                <p class="small" id="my-response-state">@L["MpResponse.IsWithdrawn"]</p>
+            }
+            <form class="stack" @onsubmit="SaveAsync" novalidate id="my-response-form" aria-labelledby="my-response-title">
+                <fieldset class="field stack stack--tight @ErrorClass("stance")">
+                    <legend>@L["MpResponse.Stance"]</legend>
+                    @foreach (var stance in MpResponseLimits.Stances)
+                    {
+                        <label class="check">
+                            <input type="radio" name="my-response-stance" id="my-response-stance-@stance" value="@stance" checked="@(_stance == stance)"
+                                   @onchange="() => _stance = stance" disabled="@(Locked || !mine.MayWrite)" />
+                            <span>@L["MpResponse.Stance." + stance]</span>
+                        </label>
+                    }
+                    <FieldError Errors="Errors" Field="stance" For="my-response-stance" />
+                </fieldset>
+                <div class="field @ErrorClass("text")">
+                    <label for="my-response-text">@L["MpResponse.Text"]</label>
+                    <textarea class="textarea" id="my-response-text" rows="8" maxlength="@MpResponseLimits.TextMaxLength" aria-invalid="@Invalid("text")"
+                              aria-describedby="@DescribedBy("text", "my-response-text", "my-response-text-hint")"
+                              @bind="_text" @bind:event="oninput" disabled="@(Locked || !mine.MayWrite)"></textarea>
+                    <p class="field__hint num" id="my-response-text-hint">@L.Format("MpResponse.TextHint", Display.Number(_text.Length), Display.Number(MpResponseLimits.TextMaxLength))</p>
+                    <FieldError Errors="Errors" Field="text" For="my-response-text" />
+                </div>
+                <div class="row">
+                    <button type="submit" class="btn" id="my-response-submit" disabled="@(Locked || !mine.MayWrite || _stance is null || string.IsNullOrWhiteSpace(_text))">@L["MpResponse.Publish"]</button>
+                    @if (_editing)
+                    {
+                        <button type="button" class="btn btn--plain" disabled="@Locked" @onclick="() => _editing = false">@L["Cancel"]</button>
+                    }
+                </div>
+            </form>
+        }
+        <Messages Message="@Message" Info="@Info" />
+    </div>
+}
+
+@code {
+    private MyMpResponseResponse? _mine;
+    private bool _editing;
+    private bool _withdrawing;
+    private string? _stance;
+    private string _text = "";
+
+    [Parameter, EditorRequired] public string Number { get; set; } = "";
+
+    protected override async Task OnInitializedAsync()
+    {
+        // Only in the browser, and only for a linked account: the server's HTML never holds it.
+        // The account's own answer says whether it speaks for an MP; only then is the form asked for (no refused request,
+        // and no error in the console, for every other member).
+        if (RendererInfo.IsInteractive && await IsSignedInAsync() && (await Me.GetAsync()).Value?.Mp is not null)
+        {
+            await LoadAsync();
+        }
+    }
+
+    private async Task LoadAsync()
+    {
+        _mine = (await Responses.GetMineAsync(Number)).Value;
+        var last = _mine?.Response is { Status: "withdrawn" } withdrawn ? withdrawn.Earlier.FirstOrDefault() : null;
+        _stance = _mine?.Response?.Stance ?? last?.Stance;
+        _text = _mine?.Response?.Text ?? last?.Text ?? "";
+    }
+
+    private void Start()
+    {
+        _editing = true;
+        _withdrawing = false;
+        _stance = _mine?.Response?.Stance;
+        _text = _mine?.Response?.Text ?? "";
+        Errors = NoErrors();
+    }
+
+    private Task SaveAsync() => RunAsync(async () =>
+    {
+        var saved = await Responses.SaveAsync(Number, new MpResponseRequest { Stance = _stance ?? "", Text = _text });
+        if (!Succeeded(saved, "stance", "text"))
+        {
+            return;
+        }
+
+        _editing = false;
+        await LoadAsync();
+        Info = L["MpResponse.Published"];
+
+        // The public list is rendered by the server: the page's content is read again in place.
+        Navigation.Refresh();
+    });
+
+    private Task WithdrawAsync() => RunAsync(async () =>
+    {
+        if (!Succeeded(await Responses.WithdrawAsync(Number)))
+        {
+            return;
+        }
+
+        _withdrawing = false;
+        await LoadAsync();
+        Info = L["MpResponse.Withdrawn"];
+        Navigation.Refresh();
+    });
+}

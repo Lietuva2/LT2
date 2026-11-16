@@ -254,11 +254,12 @@ ASP.NET Core Identity tables (users, roles, claims, tokens, passkeys), plus:
 | `invitation_daily` | Per code and Vilnius day: registrations completed. For the administrators' chart; no per-person history. |
 | `feedback` | Kind (`bug`, `idea`, `unclear`, `other` or none), text (up to 2 000 characters), page path and browser (each only if the member left them in), status (`new`, `seen`, `done`), internal note, replies, the day it came, and the account **only if** the member ticked "Galite man atsakyti". An item without that tick has no account, a random id and only the day, so nothing leads back to its author. Kept 12 months (a setting); linked items go with the account (8.10). |
 | `sign_in_code` | Account, hashed code, expiry, failed attempts, used time, and the known device it was issued to (empty for a code any browser may use). |
-| `known_device` | Account, hashed identifier of the browser's cookie, first and last seen. Built before registration opens (M2b). |
+| `known_device` | Account, hashed identifier of the browser's cookie, first and last seen. Built before registration opens (M2b). [changed while building (8.20.2): also `label`, the browser and system as the sessions list says them ("Edge, Windows"), so the person can tell the rows apart; the hash is HMAC-SHA-256 under a key of its own, the secret `device_hash_key`.] |
 | `role_activation` | Account, role, hashed one-time code, who issued it, expiry, used time. Using it marks the passkey of that session as the staff passkey. |
 | `party_support` | `user_id`, `party_id`. Private and optional; used only for group statistics of at least 20 people. |
 | `consent` | Kind, text version, given and withdrawn times. Positions need explicit consent (GDPR Art. 9). |
-| `politician_link` | `user_id`, `person_id`, role (the MP, or an office member), how and when verified. |
+| `politician_link` | `user_id`, the Seimas's person number, part (the MP, or an office member), how and when verified, who added an office member, when and by whom it ended. One MP per account; one account as the MP per person (8.5.2, 8.5.3). |
+| `politician_token` | The hashed one-time token of a take-over link or of an office member's invitation, for which person, by whom, expiry, used time (8.5.2, 8.5.3). |
 
 ### 5.3 `appeals`
 
@@ -271,7 +272,7 @@ adresas" (https on `lrs.lt` or under it, at most 500 characters), filled in adva
 | `daily_stat` | `record_id`, date, counts per side, counts for accounts older than 30 days, share of new accounts | For the trend chart and surge detection. **No per-person history of opinion changes is stored.** |
 | `reason` | `id`, `record_id`, `side`, `author_user_id`, text (up to 500 characters), status, `merged_into_id` | Status: pending, published, hidden, merged. `side` is the side the argument supports, chosen by its author, whatever the author's own position (8.2). |
 | `endorsement` | (`reason_id`, `user_id`) | "Man svarbu" on a reason; only on your own side; how many per bill is a setting, no limit by default (8.2). |
-| `response` | `record_id`, `person_id`, stance, text, published and edited times, `written_by_user_id` | One per MP per bill; edits keep history. |
+| `mp_response` | bill number, the Seimas's person number, stance (for, against, undecided), text (up to 1 500 characters), status (published, hidden, withdrawn), published, edited and withdrawn times, `written_by_user_id` | One per MP per bill; versions are kept in `revision` and are public (8.5.5). Withheld from the read-only role. [changed while building: also `screening_flags` and `seen_at` (the queue), `hidden_at` and `hide_statement` (the statement shown in its place); the one-per-bill index holds whatever the status, so a response written again after a withdrawal is the same row; a version is kept as JSON in `revision` (`entity_kind` `response`, field `version`) with no person.] |
 | `report` | target, reporter, ground, status | Notice-and-action under the Digital Services Act. |
 | `moderation_action` | moderator, target, action, statement of reasons, time | The statement is sent to the author. |
 | `writing_restriction` | `id`, `user_id`, `ends_at` (null = until lifted), statement, set by and when, lifted by, when and why | A moderator's restriction on writing (8.3). Lives with the writing rules in this module; deleted with the account; never shown to anyone but the person and staff. |
@@ -295,9 +296,10 @@ adresas" (https on `lrs.lt` or under it, at most 500 characters), filled in adva
 | `digest_delivery` | Per run and MP: sent, skipped by preference, suppressed, bounced; the MP-specific numbers. |
 | `mp_email_pref` | Per MP: frequency (default, weekly only, before votes only, stopped), confirmed extra recipient. |
 | `suppression` | Hashed addresses that bounced or asked to stop. |
+| `mp_mail_token`, `introduction_letter` | The MP's link to the preferences page and the introduction letter's versions (8.19.4, 8.19.5, 8.19.7). The statuses of `digest_run` and `digest_delivery` for real sending are in 8.19.1 and 8.19.3. |
 | `email_message` | Template, subject, provider message id, status. Bodies of digests are reproducible from the snapshot; other bodies are not stored. |
 | `follow` | (`user_id`, `kind`, `key`) primary key, created time. `kind`: bill (key: the number) or mp (key: the Seimas person id). Private: shown to nobody but the person; exported and deleted with the account (8.11.2). [changed while building (8.14.14, stage B): or `organisation` (key: the organisation's id); `kind` up to 16 characters.] |
-| `notice_setting` | Per account: which follow emails are on (`planned`, `voted`); no row means both on. [changed while building (8.14.14, stage B): and `statements` (a followed organisation's statement became public); no row means all three on.] |
+| `notice_setting` | Per account: which follow emails are on (`planned`, `voted`); no row means both on. [changed while building (8.14.14, stage B): and `statements` (a followed organisation's statement became public); no row means all three on.] [changed while building (8.20.1): and `responses`; no row means all four on.] |
 | `bill_event` | (`bill_number`, `kind`, `key`) primary key, first seen, sent time, outcome. `kind`: planned (key: the date) or voted (key: the vote id). What followers are told about, recorded once (8.11.2). No person in it. [changed while building: an `outcome` column (`waiting`, `sent`, `skipped`, `superseded`) tells an event never to be sent from one waiting for the next day] [changed while building (8.14.14, stage B): `kind` `statement` (key: the statement's id) records, under its bill, that a followed organisation's statement became public; no person and no text in it] |
 
 ### 5.5 `audit`
@@ -360,10 +362,12 @@ while building (8.14.14): nor to the five organisation tables, which hold an acc
   anyone who knows an address, which would keep that person from signing in by code. So a browser that has signed in
   to an account keeps a one-year `__Host-` cookie with a random identifier (stored hashed, tied to that account; it
   gives no access by itself). Such a browser has its own five codes an hour. A code it asked for is accepted only
-  from it, so requests and wrong guesses from elsewhere cannot cancel or exhaust it. Codes asked for from any other
+  from it, so requests and wrong guesses from elsewhere cannot cancel or exhaust it. [changed while building (8.20.2): its own
+  five an hour and ten a day, the same two settings, counted separately.] Codes asked for from any other
   browser stay usable anywhere, as above. A stranger can then block sign-in only from browsers the person has never
-  used; the usual browser and a passkey keep working. Until this is built the lockout is an accepted risk of the
-  closed trial (section 12).
+  used; the usual browser and a passkey keep working. [changed while building (8.20.2, 2026-11-16): built as 8.20.2 says;
+  the lockout is no longer an accepted risk of the closed trial, except for a browser the person has never signed in with
+  (section 12).]
 - **Registration = email only at the start [decided 2026-11-12].** The concept says email and phone, but SMS
   verification is a paid service (charged per message, and a target for SMS-pumping fraud), so it waits until there is a
   budget and a need. Each account has a **verification level**: `email` now, `phone` or the EU Digital Identity Wallet
@@ -439,7 +443,7 @@ while building (8.14.14): nor to the five organisation tables, which hold an acc
   - Every grant, activation, reset and passkey change is audited, and the person is told by email.
 - **Politicians** (verified MP, office member) need a passkey as well. Their proof of identity is the official
   `@lrs.lt` mailbox, so the take-over link plays the part of the activation code: the passkey is created while using
-  the link, and later changes need that passkey or a new link. The details are designed with M2b.
+  the link, and later changes need that passkey or a new link. The details are in 8.5.2 to 8.5.4.
 - **Other members:** a passkey is a convenience. The mailbox is what proves who they are, and a code still signs them
   in. They are told by email when a passkey is added or removed.
 - No authenticator app: one way in to secure. It can be added if an MP's office cannot use passkeys.
@@ -938,25 +942,166 @@ the summary, and a link to change the frequency or stop. A sample is in appendix
 - Legal check before the first send: the summaries are citizens' appeals to office holders at their published official
   addresses, not marketing, but a lawyer should confirm this and the wording of the notice.
 
-**Preferences without an account.** The link in each email opens a page for that MP: default (weekly and before votes),
+**Preferences without an account [in full: 8.19.4].** The link in each email opens a page for that MP: default (weekly and before votes),
 weekly only, before votes only, or stopped; and an extra recipient such as an assistant, confirmed from the official
 address. The link's token allows only this page. Whether an MP has stopped the summaries is not shown publicly; the
 public copy says only how many MPs a summary was sent to.
 
 ### 8.5 MPs on the platform
 
-- **Taking over a profile.** The MP (or office) asks for a confirmation link, which is sent only to the official
-  `@lrs.lt` address from open data. Following it links the account to the person (`asmens_id`), as chapter 06 describes.
-  The MP can then add office members who write on the MP's behalf; each such text is marked "Seimo narys arba jo biuras"
-  as in the mockup.
-- **Response.** One per bill: a stance (will vote for, will vote against, undecided) and an explanation. It can be
-  edited until the vote; edits keep history. In stage 3 the stance becomes the MP's LT2 vote and the text its
-  explanation.
-- **"Appeals addressed to me".** The same list as the email, on a page.
-- An MP who has not joined loses nothing visible: the profile shows the appeals in progress and the line that the MP has
-  not joined LT2, without any count of unanswered appeals.
+**[Rewritten on 2026-11-15. The owner registered with a stand-in MP's official address on the trial and was an
+ordinary member: "he should be recognised at once". Until then this section was five bullets with the details left for
+M2b; the owner asked for M2b to be built now. Built in two steps: the link (8.5.1–8.5.4), then the response
+(8.5.5–8.5.7). Three points are the designer's proposals awaiting the owner's word and are marked so.]**
 
+#### 8.5.1 Recognised at once
+
+- **The official address** of an MP is the email contact from open data on the Seimas's own domain (`lrs.lt`), compared
+  ignoring case. Only an MP whose mandate has not ended has one for this purpose, and an address listed for more than
+  one MP belongs to nobody. The Parliament module answers "whose official address is this" through an interface of the
+  shared kernel; no address leaves it otherwise.
+- **An account whose proven address is an MP's official address is told so at once:** right after registration is
+  completed, and on the account page (`/sveiki`) every time until the profile is taken over: that this is the official
+  address of that MP, by name, with one button, "Perimti profilį". (Every text that carries an MP's name is worded so
+  the name stands in the nominative, after a colon or on its own: names are not declined by the software.) Nothing is linked and nothing is public
+  before the take-over is finished: registering does not by itself put a mark on anyone's profile.
+- **Registration without an invitation [the designer's proposal, awaiting the owner].** While registration needs an
+  invitation, an official address may register without one: the mailbox is the proof. It is a setting,
+  `Registration:OfficialAddressesWithoutInvitation`, **off by default**: without an invitation anyone can make the
+  site send a sign-in code to an MP's mailbox (within the limits of 6.2), so on a real server it is switched on only
+  together with the introduction letter (8.4). On the trial, where the MPs are invented and every email is caught, it
+  is on.
+
+#### 8.5.2 Taking over the profile
+
+**[Changes the designer's first answer to the owner, which was "one press, no second email".]** A sign-in code has six
+digits and can be guessed at a known address: about 2 % a year for one address under constant attack (6.2), which
+across 141 public addresses is a few accounts a year. That is accepted for a member's own account; it is not
+acceptable for publishing in an MP's name. So recognition is at once, but the take-over itself is finished through a
+link that cannot be guessed, and it binds a passkey, as 6.2 already decided.
+
+1. "Perimti profilį" sends a confirmation link to the official address, which is the account's own address: a long
+   random token, stored hashed, good for 24 hours and for one use; a new one replaces the old; at most three a day
+   per MP. The token is in the address's fragment, so it reaches no log.
+2. The link opens a page for the signed-in account (it asks to sign in first otherwise) that says what taking over
+   means: the profile will show that the MP or the office has joined; this account will speak for the MP and will no
+   longer take sides itself (8.5.4); a passkey is made now and will be the account's only one.
+3. "Sukurti prieigos raktą ir perimti" makes the passkey in the browser and, in one request, checks the token and
+   that the account's address is still that MP's official address, stores the passkey, removes the account's other
+   passkeys and their sessions, links the account to the person, and withdraws the account's own sides (8.5.4). The
+   session becomes a passkey session. It is audited and the official address gets a notice. [changed while building:
+   the sides withdrawn are those on bills whose record is not closed; a closed record's counts are frozen (6.9) and keep
+   its sides]
+4. **A lost passkey** is replaced the same way: a new link, a new passkey, the old ones removed. No administrator is
+   needed, and a code alone never changes an MP account's passkeys: on a linked account adding or removing a passkey
+   needs a passkey session or the link.
+
+- **The link is to the person,** by the Seimas's person number, so it survives a change of the official address. One
+  account per MP and one MP per account. When the mandate ends the link stays and the account can read, but nothing
+  new can be published (8.5.5).
+- **Ending it.** The MP's account can give the profile up ("Atsisakyti profilio"); an administrator can end a link
+  with a fresh passkey confirmation and a statement (misuse, a wrong link). Both are audited and told to the official
+  address. The responses stay as published (8.5.5). Deleting the account ends the link the same way.
+- **What the public sees:** on the MP's profile one line, "Profilį tvarko Seimo narys arba jo biuras", with the date.
+  A profile nobody took over says nothing about joining **[changes the old last bullet of this section: "the line that
+  the MP has not joined" would read as a reproach, and the profile pages have a test that forbids it]**, and there is
+  never a count of unanswered bills.
+
+#### 8.5.3 The office
+
+- The MP's account can add up to five **office members**, who write on the MP's behalf. It makes a one-time link
+  (stored hashed, 7 days, shown once, as an organisation's invitation to a representative is: 8.14) and passes it on
+  by its own means; a member who opens it in a passkey session and accepts becomes an office member of that MP. An
+  account is an office member of at most one MP, and the MP's own account of none.
+- The MP's account sees its office members by name and can remove any; an office member can leave. All of it is
+  audited and told to the official address. Who the office members are is never public.
+- An office member is otherwise an ordinary member with their own account, sides and follows. On their account, too,
+  a passkey can be added or removed only in a passkey session once they are an office member; an office member who
+  lost it is removed and added again.
+- **Every text is marked the same,** "Seimo narys arba jo biuras": a shared mailbox cannot tell who typed, and the
+  public is not told which account did.
+
+#### 8.5.4 What a linked account can do
+
+- **Speaking for the MP** (publishing, changing and withdrawing a response; adding and removing office members; giving
+  the profile up) needs a **passkey session**. Signed in by a code, the account can read everything of its own, and
+  the controls say "Prisijunkite prieigos raktu".
+- **The MP's own account takes no part as a participant [the designer's proposal, awaiting the owner]:** no side, no
+  argument, no "Man svarbu", no party-support declaration, and it does not represent an organisation. The MP speaks
+  through the response. Sides the account held are withdrawn at the take-over (the page says so beforehand) and the
+  counts go down. It can follow bills and MPs like anyone. Office members are not restricted.
+- It is not a role in the session: every request that speaks for an MP reads the link from the database, as the
+  staff checks do, so ending a link works at once.
+- The account's own answer (`GET /me`) says whether there is an offer to take over, and for a linked account which
+  MP, in which part (the MP or the office) and whether the session may write. Nothing about it is in any public
+  answer or in the page the server renders.
+
+#### 8.5.5 The response
+
+- **One per MP per bill:** a stance, "balsuosiu už", "balsuosiu prieš" or "dar neapsisprendžiau", and an explanation
+  of up to 1 500 characters. It is written on the bill's page by the MP's account or an office member in a passkey
+  session and is public at once, marked "Seimo narys arba jo biuras".
+- **Until the vote.** It can be written, changed and withdrawn while the bill is open (until the adoption vote, as a
+  side can be taken); then it is frozen. An MP whose mandate has ended publishes nothing new.
+- **Its history is public,** because it is a public office holder's public answer: a changed response says "Keista"
+  with the date and keeps its earlier versions behind "Ankstesnės versijos"; a withdrawn one stays as "Atsakymas
+  atsiimtas" with the date and its versions. Nothing is silently replaced.
+- **After the vote** the response stands beside how the MP voted on the adoption ("Atsakė: balsuos už. Balsavo:
+  prieš."), two facts side by side without a word of judgement. They are never added up: no share of "kept" answers,
+  no ranking, on any page (7.1's rule against scorecards).
+- **Moderation after the fact,** as for an organisation's statement (8.14.9): the same screening puts a flagged
+  response in the moderators' queue; a moderator can hide one that breaks the rules, with a statement that is shown in
+  its place ("Atsakymas paslėptas moderatorių" and the reason) and sent to the official address, and restore it while
+  the bill is open. Reports work as for statements. [changed while building: the statement goes to the MP's account's
+  own address (the official address when the profile was taken over), as the notices of 8.5.2 and 8.5.3 do, because no
+  address leaves the Parliament module (8.5.1); with no account linked as that MP no email goes, and the statement stays
+  public in the response's place. A flagged or reported response leaves the queue by "Palikti" (`keep`), as a published
+  statement does by "Pažymėti peržiūrėtu". A hidden response's text and versions are not shown. An account under a
+  moderator's writing restriction (8.3) cannot publish a response, as it cannot publish a statement.]
+- **Not counted among participants.** A response is not a side: it changes no count, no threshold and no summary's
+  numbers.
+- **Privacy and deletion.** No public answer says which account wrote a response, and the table is withheld from the
+  read-only role. Deleting an account that wrote responses leaves them, as the MP's public answers, without the
+  account's number; the account's export lists the responses it wrote. (To be read in the impact assessment.)
+
+#### 8.5.6 Where responses show
+
+- **The bill's page:** a part "Seimo narių atsakymai" after the organisations' positions, server-rendered and the
+  same for everyone: one line saying how many MPs answered and how they split, then the responses in the order "už",
+  "prieš", "neapsisprendė", within each by last name; each with the MP's name linking to the profile, the faction,
+  the mark, the text and the dates. The first 10, then "Rodyti daugiau" by the page's address, as on the ballot list
+  (8.17). No response: the part says "Dar nė vienas Seimo narys neatsakė" and nothing more. [changed while building:
+  withdrawn and hidden responses follow the three groups, by last name, and the counts line counts published ones only;
+  "Rodyti daugiau" adds 10 (`?atsakymai=`, landing on `#atsakymas-{n}`); a bill whose record a moderator hid shows no part
+  (the page shows the bill only, 8.12.3), and a finished bill nobody took part in shows the part only when someone
+  answered.]
+- **The MP's profile:** a part "Atsakymai" after the votes: the bills answered, newest first, each with the stance,
+  the text and, after the vote, the MP's ballot; the first 10 and "Rodyti daugiau".
+- **For the linked account,** on the bill's page, a small island with the form (stance, text; "Skelbti atsakymą",
+  "Keisti", "Atsiimti"), filled in the browser, so the page's HTML stays the same for everyone.
+
+#### 8.5.7 "Projektai, dėl kurių į jus kreipiamasi"
+
+A page for a linked account (the MP or an office member), reached from the account page: the bills that are in
+summaries now (they reached the threshold and are open), in the summary's order, each with its number, title, stage,
+"Planuojama …", both sides' numbers, and the MP's response or a link to answer. It is the summary email's list on a
+page, live. Nothing about other MPs is on it.
+
+#### 8.5.8 Done when
+
+An account registered with a stand-in MP's official address is told so at once and, with the setting on, needs no
+invitation; pressing "Perimti profilį" sends the link only to that address; the link with a new passkey links the
+account, removes its other passkeys, withdraws its sides and shows the mark on the profile; a guessed or reused
+token, another account's token and an address that is no longer official are refused; a lost passkey is replaced by
+a new link; an office member is added by a link, writes in a passkey session and can be removed; signed in by a code
+a linked account cannot publish; the MP's own account cannot take a side; a response is public at once with its mark,
+keeps its versions when changed and stays as withdrawn when withdrawn; after the adoption vote it is frozen and shows
+the ballot beside it; a moderator can hide and restore it with a public statement; no page, answer or log says which
+account wrote a response or who an MP's office members are; the profile of an MP who has not taken it over says
+nothing about joining; the pages work at 390 px, and the public parts without JavaScript.
 ### 8.6 What participants hear
+
+**[Finished in 8.20.1: what exists already, the email about MPs' answers, and what is left for later.]**
 
 By email, each kind switchable in settings:
 
@@ -1115,6 +1260,7 @@ POST   /api/v1/reports                                   on a reason, or on a bi
                                                          also give the ground "inaccurate", 8.13)
 GET    /api/v1/digests            GET /api/v1/digests/{date}
 GET    /api/v1/bills/{number}/record/digests             the summaries that held the bill, as frozen (8.7)
+                                  sending, MP preferences, the introduction letter, suppression: 8.19.7
 GET    /api/v1/agenda                                    coming planned items by day and last week's stage results, each
                                                          with the bill's public numbers (8.11.1, 8.12.5) and the
                                                          organisations with a public statement on it (8.7)
@@ -1139,8 +1285,19 @@ GET    /api/v1/moderation/feedback?kind=&status=   PUT /api/v1/moderation/feedba
 POST   /api/v1/moderation/feedback/{id}/reply      (linked items only; sent through the outbox)
 POST   /api/v1/admin/invitations/{id}/switch-off   POST /api/v1/admin/invitations/{id}/switch-on   (statement)
 
-POST   /api/v1/mps/{slug}/claim
-PUT    /api/v1/bills/{number}/record/responses/mine
+POST   /api/v1/mps/{slug}/claim                    (sends the take-over link to the official address, 8.5.2)
+POST   /api/v1/me/mp/takeover                      (the link's token and the new passkey)
+DELETE /api/v1/me/mp                               (give the profile up, or leave the office)
+GET    /api/v1/me/mp/office   POST /api/v1/me/mp/office/invitations   DELETE /api/v1/me/mp/office/{id}
+POST   /api/v1/me/mp/office/acceptance             (an office member's invitation)
+GET    /api/v1/me/mp/bills                         (8.5.7)
+GET    /api/v1/bills/{number}/responses            (public)        GET /api/v1/mps/{slug}/responses   (public)
+PUT    /api/v1/bills/{number}/responses/mine       DELETE /api/v1/bills/{number}/responses/mine
+POST   /api/v1/moderation/responses/{id}/hide      POST /api/v1/moderation/responses/{id}/restore
+GET    /api/v1/moderation/responses                POST /api/v1/moderation/responses/{id}/keep
+                                                   [changed while building: the queue's and the hidden list's part for
+                                                   responses, and "Palikti" (8.5.5)]
+POST   /api/v1/admin/mps/{slug}/link/end           (statement; fresh passkey confirmation)
 GET    /api/v1/mp-preferences/{token}     PUT /api/v1/mp-preferences/{token}
 
 GET    /api/v1/moderation/queue                          bills' records and reasons that need a look (8.12.3)
@@ -2349,6 +2506,370 @@ votes; "Iki" shows only that day's and earlier votes; with more than 30 votes th
 are shown; everything works with JavaScript off; a malformed address shows the default list; no sideways scroll at
 390 px.
 
+### 8.19 Sending the summaries (M2b)
+
+**[Designed on 2026-11-16 at the owner's request to build the whole of M2b. It adds to 8.4 and 8.7 and changes none of
+their rules. The points marked "designer's proposal" await the owner's word.]** Until now every summary was a dry run
+(8.4, 8.9). This section says how a summary really goes to MPs, who lets it go, how an MP changes or stops it without an
+account, which addresses are never written to again, and how the introduction letter is sent. Switching it on for real
+MPs stays a decision outside the code (11, M2b exit: the impact assessment, the lawyer's check, the penetration test, a
+sending domain and a provider).
+
+#### 8.19.1 Three states of sending
+
+- **One setting, `Digest:Sending`:** `off` (the default: a dry run, as before), `approval` (a summary waits until a
+  moderator lets it go) or `automatic` (sent when made). On the settings screen under "Suvestinės", changed by an
+  administrator with a fresh passkey confirmation like every setting, audited, and shown on the methodology page.
+- **Nothing goes before the introduction letter (8.19.5).** While no introduction letter has been sent, summaries stay
+  dry runs whatever the setting says, and the moderators' summaries screen says so.
+- **Invented data never reaches a real mailbox.** The data is invented when the deployment says so (`Demo:Allowed`) or
+  when the parliament data holds any synthetic stored response (`parliament.raw_document.synthetic`, whatever real rows
+  stand beside it), so the lock does not depend on a flag someone can forget; Parliament answers it through the shared
+  kernel. Where the data is invented, no MP mail (summaries, the introduction letter and its test copy, preference emails)
+  is sent unless the deployment declares that all its mail is caught (`Email:Caught`, deployment configuration, true in the compose
+  files that run Mailpit). Otherwise summaries stay dry runs and the screen says so. The stand-in MPs' addresses are on a
+  real domain, so this is a second lock beside the transport.
+- **A run's status:** `dry-run`; `waiting` (made, awaiting a moderator); `sent` (let go: its deliveries are queued);
+  `cancelled` (a moderator declined it, with a statement); `expired` (nobody decided in time).
+- **Which runs count.** For the weekly ceiling, "changed notably since the last summary", "covered by Monday's summary"
+  and "never yet in a summary": while sending is on, only `waiting` and `sent` runs count; while it is off, dry runs
+  count as before. So the first real summary is not thinned by earlier dry runs, and a cancelled or expired one frees its
+  place. A bill counts as really summarised (`first_summarised_at`, 8.12.2) when a run that holds it becomes `sent`.
+  [changed while building: the Appeals module sets it through `IDigestSource.MarkSummarisedAsync` in the sender's own
+  transaction, as `IPositionErasure` works across modules, rather than through an outbox event: the outbox carries only
+  emails. A cancelled or expired run still counts as "already made" for its week, so a declined weekly summary is not made
+  again the same week. An MP's delivery replaced by the letter (`introduced`) counts towards the ceiling.]
+
+#### 8.19.2 A moderator lets it go
+
+- With `approval`, the weekly and before-vote summaries are made on schedule as `waiting`: the snapshot is frozen then,
+  and nothing is queued. An urgent summary is already a moderator's decision (8.4) and is sent at once.
+- The moderators' summaries screen lists waiting ones first. Each shows the bills as frozen, how many MPs it would go
+  to, the text for any one MP (the existing preview), and two actions: "Siųsti" with the number of MPs in the button's
+  confirmation, and "Nesiųsti" with a statement of at least 20 characters.
+- Letting go needs a moderator's staff-passkey session (6.3). It is audited with the moderator; the public copy never
+  names the moderator.
+- **A waiting summary expires** 24 hours after it was made or when its sitting's day begins in Vilnius, whichever comes
+  first (`Digest:ApprovalHours`, 24). Nothing is sent late.
+- Recipients are worked out when it is let go, not when it was made: preferences, the suppression list and the ceiling
+  as they are at that moment.
+- **The public copy (8.7) says what happened**, in one line under the date: "Bandomoji suvestinė: niekam nesiųsta",
+  "Laukia moderatoriaus patvirtinimo", "Išsiųsta Seimo nariams: {n}" with the time, "Nesiųsta" with the moderator's
+  statement, or "Nesiųsta: nepatvirtinta laiku". Never which MPs.
+- [changed while building: there was no moderators' summaries screen to extend (only the preview endpoints), so it is a
+  new page, `/moderavimas/suvestines`, linked from the moderation queue. A waiting run keeps one delivery row per MP for the
+  preview and the count (`waiting`, or what would happen: `skipped-preference`, `suppressed` …); they are worked out again
+  when it is let go, and become `not-sent` when it is declined or expires. A weekly summary's "sitting" for the expiry is the
+  first planned date it holds from its day on. "Siųsti" also asks for the fresh passkey confirmation of 6.2 (within ten
+  minutes), as "approving a send" is listed there; "Nesiųsti" does not.]
+
+#### 8.19.3 What is sent, and to whom
+
+- **Recipients:** every sitting MP with an official address (8.4, 8.5.1: the same definition), except: over the weekly
+  ceiling; the MP's preference excludes this kind (8.19.4); the address is on the suppression list (8.19.6); the MP has
+  not had the introduction letter yet (8.19.5).
+- **One delivery row per run, MP and recipient** (`official`, or `extra` for a confirmed extra recipient): `queued`,
+  `sent`, `failed` (gave up after the retries), `bounced`, `skipped-ceiling`, `skipped-preference`, `suppressed`,
+  `introduced` (got the introduction letter instead). The row holds no address.
+- **The address** is read from open data when the delivery is queued and travels only in the outbox row, which is
+  deleted when sent. Parliament gives addresses out through one shared-kernel call made for sending only. No log line
+  holds an address (6.5).
+- **The text** is the dry run's (appendix A), now also as light HTML through `EmailLayout`, with a text part. Added for
+  the real send:
+  - per MP, the bill order of 8.4: bills where the MP's committee leads, then bills planned in the coming days, then by
+    participants. Where the import does not know a bill's lead committee, that group is empty and the rest holds;
+  - per bill, the MP's own response (8.5.5) when one is published: "Jūsų atsakymas: balsuosiu už" with its date;
+    otherwise one line with the link to the bill's page, where a linked account answers once for everyone;
+  - at the end: what the numbers are and are not, the public copy's link, the preferences link (8.19.4), and one
+    sentence on taking over the profile by signing in with this address (8.5.1).
+- Organisations stay out of summaries (8.14.11).
+- **Headers:** `List-Unsubscribe` with the one-click form (RFC 8058) and `List-Unsubscribe-Post`. No tracking pixel, no
+  rewritten links.
+- **A separate stream:** MP mail has its own sender address (`Email:Mp:FromAddress`) and may have its own SMTP account
+  (`Email:Mp:Smtp`, falling back to the common one), so trouble with it cannot block sign-in codes. Deployment
+  configuration, like the rest of `Email`.
+- The outbox retries as for any email. A permanent refusal by the receiving server marks the delivery `bounced` and
+  suppresses the address (8.19.6).
+- [changed while building: a permanent refusal is an SMTP 5xx answer to the recipient (`RecipientNotAccepted`); a refused
+  sender or a 4xx is retried. A copy to an extra recipient carries `List-Unsubscribe` with its own "Nebegauti kopijų" page
+  and no `List-Unsubscribe-Post`, so the MP's one-click stop stays the only write without the same-origin check. Lead
+  committees are not imported, so that group of the order is empty.]
+
+#### 8.19.4 Preferences without an account
+
+- Every email to an MP carries a link to **"Suvestinių nustatymai"**, `/suvestines/nustatymai/{token}`: one page for
+  that MP. It shows the MP's name and the choice: "Kas savaitę ir prieš balsavimus" (the default), "Tik kas savaitę",
+  "Tik prieš balsavimus", "Nesiųsti". An urgent summary counts as "prieš balsavimus".
+- **The token** is 32 random bytes, one per MP, stored hashed, made when the first email to that MP is queued. It does
+  not expire, so the link in an old email keeps working. It opens only this page and the one-click stop: no account, no
+  session, no other data. The page is not indexed and sends no referrer; request logs do not keep the path's token (as
+  for the organisations' invitation links).
+- **One-click stop:** the `List-Unsubscribe` address accepts a POST with the token and sets "Nesiųsti". It is the one
+  write that needs no same-origin check, because mail programs send it; it can do nothing else.
+- **Every change is confirmed by email to the official address**, with the new choice and the link, so a change made by
+  someone the email was forwarded to is seen and undone. "Nesiųsti" is confirmed once too, and after it nothing more is
+  sent to that MP except what the MP asks for from this page.
+- **A new link.** The page offers "Atsiųsti naują nuorodą": the old token stops working and a new link goes to the
+  official address. For an MP who suspects the link has travelled.
+- **An extra recipient** (an assistant): the page takes one address. A confirmation link goes to the official address
+  (24 hours, one use); only after it is opened do copies go to the extra address. Each copy says whose summary it is and
+  carries its own link "Nebegauti kopijų", which removes the extra address. The MP removes it on the page. The address
+  is stored as written, shown only on that MP's page, and deleted when removed.
+- **A linked account (8.5)** sees the same choice on its account page under "Seimo narys", in a passkey session, and
+  changes it there without the token.
+- Whether an MP stopped the summaries is never public (8.4). Staff see a delivery's status; nobody else does.
+- [changed while building: a link's token is derived (HMAC-SHA-256 under the mail key of 8.19.6, of the MP's person number
+  and the link's generation), so every email carries the same link while only its SHA-256 is stored; "Atsiųsti naują
+  nuorodą" moves to the next generation. A copy's "Nebegauti kopijų" is a third token kind, `extra-stop`, one per confirmed
+  extra address. The confirmation link opens `/suvestines/nustatymai/patvirtinti/{token}` and a copy's stop
+  `/suvestines/kopijos/{token}`: opening either changes nothing, a button does (a form, no script), because mail scanners open
+  links. These paths and the preferences page are kept out of logs by replacing the token (`Lt2.Hosting.SecretPaths` for the
+  application's logs and traces, a `regexp` filter in the Caddyfile). An unknown, replaced and wrong token all get the site's
+  "not found" page. A new link or an extra recipient is refused (`mp-mail.no-address`) while the official address is missing
+  or suppressed, since its email could reach nobody; a frequency change is then saved without a confirmation. The linked
+  account reads the choice only in a passkey session too. Saving the letter unchanged makes no new version.]
+
+#### 8.19.5 The introduction letter
+
+- **Written and signed by a person [decided, 8.4].** An administrator writes it on the screen "Pristatymo laiškas":
+  subject, text in plain paragraphs, the signer's name and role. The system adds below the signature what it adds to
+  every MP email: the preferences link and the sentence on taking over the profile.
+- The administrator previews it, sends a test copy to the administrator's own address, and then sends it to every
+  sitting MP with an official address not on the suppression list: one press with the number of MPs in the
+  confirmation and a fresh passkey confirmation. Audited. It is a run of kind `introduction`, with deliveries like any
+  other.
+- **Once per MP.** An MP who joins the Seimas later gets the current letter in place of the first summary that would
+  have gone to them (`introduced`), and summaries from the next one on.
+- A changed text is a new version; it goes only to MPs who have had none. Versions already sent stay stored.
+- **Public:** `/suvestines/pristatymas` shows the letter as sent, with its date and signer, and earlier versions. The
+  summaries' list links to it.
+
+#### 8.19.6 Addresses never written to again
+
+- `notify.suppression`: a keyed hash of the address, the reason (`bounced`, `complaint`, `staff`), the date. No
+  address.
+- **Added automatically** when a receiving server refuses an MP email for good (a permanent SMTP refusal). A
+  provider's reports of later bounces and complaints will add to the same list when a provider is chosen (12, "Email
+  provider"); until then that entry point is not built.
+- **By hand:** an administrator adds an address (typed, stored only hashed) or removes an entry, each with a statement,
+  audited. The screen "Nesiunčiama" lists the sitting MPs whose official address is suppressed, with reason and date,
+  and counts the other entries without showing them.
+- It covers MP mail only: summaries, the introduction letter, copies and preference emails. Sign-in codes are not
+  affected.
+- [changed while building: the key is handled as the IP hash's is (a secret file, HMAC-SHA-256), but it is its own secret,
+  `mail_hash_key` (`Security:MailHashKey`), because the IP key may be rotated (6.5) and a suppressed address must stay
+  suppressed. "Removing an entry" that is not a listed MP is done by typing its address.]
+
+#### 8.19.7 Data and API
+
+`notify`: `digest_run.status` takes the values of 8.19.1, with `decided_by`, `decided_at`, `statement`, `sent_count`;
+kind `introduction` with the letter's version. `digest_delivery`: key (run, MP, recipient), statuses of 8.19.3.
+`mp_email_pref`: per Seimas person: frequency, extra address, its confirmation, changed time. `mp_mail_token`: hashed
+token per MP and kind (`preferences`, `extra-confirm`), expiry for the second. `introduction_letter`: version, subject,
+text, signer, who wrote it, sent time. `suppression` as in 8.19.6. All withheld from the read-only role.
+
+```
+POST   /api/v1/moderation/digests/{id}/send        moderator, staff passkey, fresh passkey confirmation
+POST   /api/v1/moderation/digests/{id}/cancel      moderator, staff passkey; statement
+GET    /api/v1/mp-mail/{token}                     the MP's name and choice
+PUT    /api/v1/mp-mail/{token}                     frequency
+POST   /api/v1/mp-mail/{token}/stop                one-click (RFC 8058)
+POST   /api/v1/mp-mail/{token}/renew               a new link to the official address
+PUT    /api/v1/mp-mail/{token}/extra               ask for an extra recipient
+DELETE /api/v1/mp-mail/{token}/extra
+POST   /api/v1/mp-mail/extra/confirm               from the link sent to the official address
+POST   /api/v1/mp-mail/extra/stop                  from a copy
+GET|PUT /api/v1/me/mp/mail                         a linked account, passkey session
+GET|PUT /api/v1/admin/introduction                 administrator
+POST   /api/v1/admin/introduction/test             to the administrator's own address
+POST   /api/v1/admin/introduction/send             fresh passkey confirmation
+GET|POST|DELETE /api/v1/admin/suppression          administrator
+GET    /api/v1/digests/introduction                public
+```
+
+The token endpoints are limited per address and per token like the sign-in ones (6.4), and answer the same for an
+unknown and a wrong token.
+
+#### 8.19.8 Done when
+
+- With sending off, everything is as before: dry runs, nothing in the outbox for MPs.
+- With `approval`, a due summary waits; a moderator sends it and each MP's mailbox gets one email with both sides, the
+  MP's own response where there is one, and working links; cancelled and expired ones send nothing and free the ceiling.
+- No summary goes before the introduction letter; with invented data none goes unless the mail is declared caught.
+- An MP changes the frequency, stops by the page and by the mail program's one-click, renews the link, and adds and
+  removes an extra recipient confirmed from the official address; each is confirmed by email; the next summaries follow
+  the choice.
+- A permanently refused address gets no further MP mail; an administrator can add and remove entries.
+- The public copy says what happened to the summary and never which MPs received it; no page, API answer or log shows
+  an MP's choice or an address.
+- A simulated month of agenda changes (8.9) holds with preferences, suppression, the ceiling and approval in play.
+
+### 8.20 What participants hear about answers, and known browsers (M2b)
+
+**[Designed on 2026-11-16. It finishes 8.6 and builds the known devices decided in 6.2.]**
+
+#### 8.20.1 "Seimo narių atsakymai": the fourth email
+
+- Of the notices in 8.6, three exist already: what happened to a person's own argument (moderation notices), "planned"
+  and "voted" (the follow emails of 8.11.2, which a person with a side gets because taking a side follows the bill).
+  This adds **"MPs responded"**. "The bill was changed between stages" is left for later: it needs the bill's text
+  versions, which the import does not read yet (8.13).
+- **The event:** an MP's response (8.5.5) on a followed bill was published, or published again after a change of
+  stance. A changed explanation with the same stance is not an event; a withdrawal is not an event.
+- **One email per bill per Vilnius day,** sent the next morning at 08:00 Vilnius time (`Follows:ResponsesAt`), listing
+  the MPs whose responses became public or changed stance on that bill the day before: name, faction, the stance
+  ("balsuos už", "balsuos prieš", "dar neapsisprendė") and the link to the bill's part "Seimo narių atsakymai". Never
+  the explanation's text, as with organisations' statements.
+- A response hidden or withdrawn by the time of sending is left out; if none remain, no email goes.
+- **To whom:** members who followed the bill before the response became public, under the rules of 8.11.2 (one email
+  per event per person, nothing about the person's side or other people, never about something from before they
+  followed). The MP's own account and office members get none about their own MP's responses.
+- **The switch:** a fourth one on the account page, "Seimo narių atsakymai", on at first, kept in `notice_setting`
+  (`responses`). The email ends with the link to the switches, like the others.
+- Recorded in `bill_event` with kind `response` (key: the Vilnius day); no person and no text in it.
+- [changed while building (2026-11-16): `appeals.mp_response` keeps `announced_at`, when the stance now shown became public
+  (the first publication, or a later one with another stance than the response had, shown or withdrawn); the Appeals module
+  gives the published ones of a day through `IMpResponseFeed` (SharedKernel), leaving out responses on a bill whose record the
+  moderators hid. From `Follows:ResponsesAt` on, the follow job sends the day before; a day whose next day passed without a
+  run is not sent later. Each follower's list holds only the answers that became public after they followed, so two followers
+  of one bill may get different lists; the MP's own account and office members get the email without their own MP's line, and
+  none when nothing else remains (Identity says whom an account speaks for, `IMpLinks.SpeaksForAsync`). The faction is the one
+  the profile shows (`IMpDirectory.FactionsAsync`). An event is recorded only for a followed bill. The switch reads "Kai Seimo
+  nariai atsako dėl sekamo projekto", like the other three; the setting stands on the settings screen under "Laiškai
+  sekantiems".]
+
+#### 8.20.2 Known browsers
+
+- Built as decided in 6.2: a browser that has signed in to an account keeps a one-year cookie `__Host-lt2.device`
+  (`Secure`, `HttpOnly`, `SameSite=Lax`) with a random identifier. `identity.known_device` keeps its keyed hash, the
+  account, first and last seen. The cookie gives no access by itself.
+- A known browser has its own five codes an hour for that account, outside the limit shared by all other browsers. A
+  code it asked for is accepted only from it; wrong guesses from elsewhere do not count against it.
+- The cookie is set on a successful sign-in by code or passkey and at the end of registration, and renewed on later
+  sign-ins. Signing out keeps it: that is its purpose.
+- **The person sees and removes them.** The account page, beside the sessions, lists "Žinomos naršyklės" with first
+  and last seen and "Pamiršti"; forgetting one makes that browser a stranger again. At most 20 per account; the oldest
+  goes first. A row not seen for a year is deleted by the daily clean-up.
+- They are in the person's export and go with the account. The table is withheld from the read-only role.
+- The cookie is strictly necessary (it keeps a stranger from locking the person out), so it needs no consent; the
+  privacy notice lists it (8.22.3).
+- [changed while building (2026-11-16): a known browser has its own five an hour and ten a day, the same two settings
+  (`SignIn:CodesPerHour`, `SignIn:CodesPerDay`), counted separately for each known browser, so whoever holds the cookie (a
+  shared computer keeps it after signing out) gets no more tries a day than the shared limit allows. Rows are per
+  account and cookie, so one browser can be known to several accounts with one cookie. A code sign-in of a pending account
+  sets no cookie: the browser becomes known when the registration is completed. A known browser tries a typed code against
+  its own newest code and the newest code any browser may use; a wrong code counts as an attempt against each code it was
+  tried against, so the shared code keeps its five attempts. A request from a known browser replaces only its own earlier code;
+  one from elsewhere only the shared one. Forgetting a browser, the cap and the yearly clean-up delete its codes with it, so a
+  forgotten browser's code never becomes one any browser may use. The cap removes the browsers seen longest ago. The hash's key
+  is a secret of its own, `device_hash_key` (`Security:DeviceHashKey`, web only), not the IP key, which may be rotated (6.5);
+  without it no browser is known and the web host says so once at start. The list marks the browser asking as "Ši naršyklė".]
+
+#### 8.20.3 Done when
+
+- A member who follows a bill gets one email the morning after MPs answered on it, with every answer of that day and
+  no explanation text; a member who switched it off, or followed later, gets none; hidden and withdrawn answers are not
+  in it.
+- With the shared code limit of an address used up from another browser, the person's usual browser still gets a code
+  and signs in; a code asked for by a known browser is refused elsewhere.
+- A person sees their known browsers and forgets one; the export holds them and deletion removes them.
+
+### 8.21 The menu, the footer and the account item
+
+**[Asked for by the owner on 2026-11-16: "Darbotvarkė", "Projektai" and "Suvestinės" are basically the same thing and
+should be one item; "Kaip skaičiuojama" renamed and moved; the theme elsewhere; the account's links under one item. The
+two points marked "designer's proposal" await the owner's word.]** The menu had eight entries and wrapped onto three
+lines on a phone.
+
+- **The menu:** the logo, "Projektai", "Seimo nariai", and "Prisijungti" for a visitor or the account item for a
+  member. It fits one line at 360 px.
+- **"Projektai" is one item with four tabs:** "Darbotvarkė" (`/darbotvarke`), "Visi projektai" (`/projektai`),
+  "Balsavimai" (`/seimas/balsavimai`, 8.18, which had no entry) and "Suvestinės" (`/suvestines`). The item opens the
+  agenda **[designer's proposal: what is coming is the most useful first view]**. The tabs are a row of plain links
+  under the page's heading on these four pages, the current one marked; no script. Addresses do not change. The menu
+  item is marked current on the four pages and on everything under them (a bill, a vote, a summary).
+- **The account item** reads "Paskyra" **[designer's proposal: not the person's name, so the page's HTML stays the same
+  for every member]**. It is a disclosure that works without script, holding "Mano paskyra" and "Atsijungti". With
+  script, the opened item also shows the person's name at the top and the links their account has: "Moderavimas",
+  "Nustatymai" and "Kvietimai" for staff, "Projektai, dėl kurių į jus kreipiamasi" for an MP's account. These come from
+  `GET /me` in the browser; nothing about the person is in the page as served. It closes on Escape, on a press outside
+  and when focus leaves it.
+- **"Kaip skaičiuojama" becomes "Metodika"** and moves to the footer. The address `/metodika` stays; links and texts
+  that named the page are renamed. ("Kaip tai veikia" is the introduction on the front page and keeps that name.)
+- **The footer** holds what has no place in the menu, in two short groups, then the theme switch and the line about
+  the trial:
+  - "Apie": "Metodika", "Moderavimo taisyklės", "Naudojimo taisyklės", "Privatumas" (8.22);
+  - "Dalyvauti": "Organizacijos", "Atsiliepimai".
+- **The theme switch** moves to the footer, so a visitor has it too. It works as before and is absent without script.
+- **Done when:** the menu is one line at 360, 390 and 1280 px; each of the four tabs is reachable from the other three
+  and marked; every page that was in the old menu is one press from the menu or the footer; the account item works
+  with and without script and with the keyboard; no served page holds a member's name or role links.
+- [changed while building (2026-11-16): "Seimo nariai" is marked current on the list and on everything under it as well (a
+  profile and its votes, a faction, a committee). The account item's "Projektai, dėl kurių į jus kreipiamasi" is shown to an
+  office member too, as to the MP's account (the page serves both, 8.5.7); "Nustatymai" and "Kvietimai" only to an active
+  administrator and "Moderavimas" to any active staff role, since those screens refuse the others. Without a display name the
+  item shows the account's own address at the top. The tab row stands on the summaries' list, not on a date's page, which is
+  under it. Under 32rem the logo stands without the words "Lietuva 2.0" (read by screen readers), so the line fits 360 px.]
+
+### 8.22 Terms, the privacy notice, and what the browser stores
+
+**[Designed on 2026-11-16 after the owner asked whether a cookie banner and a user agreement step are needed. The texts
+and the reading of the law go to the lawyer with the consent texts (12).]**
+
+#### 8.22.1 No banner, as a rule of the design
+
+- **Nothing that is not strictly necessary is stored in the browser.** No analytics, no third-party scripts, fonts or
+  embeds, no advertising or measurement cookies. Consent under the e-privacy rules is needed only for storage that is
+  not strictly necessary for the service the person asked for, so the site shows no cookie banner. Adding anything that
+  would need one is a design change, not a build detail.
+- If such a thing were ever added, its consent would be asked separately and could be refused without losing the
+  site; it could not be folded into the terms (consent must be specific and free).
+- **The inventory is short and tested:** the session cookie, the cookie of the passkey step, the request-forgery
+  cookie, the known-browser cookie (8.20.2); in local storage the chosen theme, only once the person chooses one; in
+  session storage the sign-in form's state. An end-to-end test visits the site as a visitor and as a member and fails
+  when a cookie or storage key outside this list appears, so the notice cannot fall behind the code.
+
+#### 8.22.2 Terms of use
+
+- **"Naudojimo taisyklės"** at `/taisykles`: what the account is for, who may register, what may be published, how
+  moderation works and how to object (with the link to the moderation rules), that summaries go to MPs, how to leave.
+  A draft in the resource files for the lawyer; it carries a version (a date) and "Galioja nuo …".
+- **At registration** the form has one required box, "Sutinku su naudojimo taisyklėmis", with the link, beside the
+  existing confirmation of age, and one plain sentence: "Kaip tvarkome jūsų duomenis, rašoma privatumo pranešime." The
+  accepted version is stored as a consent of kind `terms` with its text version (5.2).
+- **There is no box for the privacy notice:** it informs, it is not something to agree to. The account rests on the
+  terms; only positions rest on consent, which stays its own separate step before the first side (6.5).
+- **When the terms change, and for accounts older than this:** after sign-in the member sees one screen, "Naudojimo
+  taisyklės", with a short paragraph on what changed, the link, "Sutinku" and "Atsijungti". Until then the account
+  reads everything and its writes are refused with `terms.required`, except accepting, signing out, the export and
+  deleting the account.
+  [changed while building (2026-11-16): the screen is `/taisykles/sutikimas` and also says, in one line with the link, that
+  until then the person can read, download their data and delete the account; it goes on to the page the person was going
+  to. An island refused with `terms.required` opens it, and the account page shows a note with the link for a session
+  older than the change. The MP's mail links (8.19.4) are exempt as well: they act for whoever holds the link's token, not
+  for the account signed in, and people without an account use them. A pending account accepts with its registration and
+  is never asked separately. Both texts end with one line saying they are drafts for the lawyer.]
+
+#### 8.22.3 The privacy notice
+
+- **"Privatumo pranešimas"** at `/privatumas`: who is responsible, what is kept and why (the address, sides as
+  special-category data under consent, what a person publishes, follows, sessions and known browsers, hashed addresses
+  in logs for 30 days), who else processes it, how long, the person's rights and how to use them on the account page
+  (export, deletion, withdrawing consent), where to complain. A draft for the lawyer, versioned like the terms.
+- Its part **"Slapukai ir naršyklės atmintis"** lists the inventory of 8.22.1 with what each is for and how long it
+  lasts.
+- Linked from the footer, the registration form, the consent before the first side, and every email's footer.
+- [changed while building (2026-11-16): the facts the design does not give (who is responsible and their contacts, the
+  email, server and backup providers, the inspectorate's contacts, where other requests go, the legal basis of the
+  technical logs) are marked "[bus įrašyta]" in the text for the owner and the lawyer to fill in.]
+
+#### 8.22.4 Done when
+
+- A new member cannot finish registering without accepting the terms, and the accepted version is stored; an older
+  account is asked once after sign-in and can read, export and delete before accepting.
+- Both pages are reachable from the footer on every page, without script.
+- The storage test passes with the inventory as listed, and fails when a new cookie is added in a test build.
+
 ## 9. Hosting and operations
 
 ### 9.1 Layout
@@ -2491,7 +3012,7 @@ Splitting M2 means the risky step (emailing every MP) happens only after the who
 - An account is pending until its address is proven; the display name and the age declaration are asked after the
   code, and the invitation use is counted then (6.2).
 - A sign-in code belongs to the address and can be typed into any browser. Ten codes a day per address from browsers
-  that have not signed in before; known devices are built before registration opens (6.2).
+  that have not signed in before; known devices are built before registration opens (6.2). [built: 8.20.2]
 - A staff role works only with a staff passkey, activated by a code the administrator passes on directly. No
   authenticator app (6.2).
 - "Balsavo kaip frakcija" counts only votes the MP took part in; an absence shows in the participation figure only, so
@@ -2600,7 +3121,7 @@ Splitting M2 means the risky step (emailing every MP) happens only after the who
 | A campaign registers many accounts to inflate one side. With email-only registration this costs nothing, so it is the main weakness of the numbers | Invitation-only trial, one account per normalised address, disposable domains refused, the 30-day count beside every number, surge note, moderator hold; phone verification stays available as an upgrade. The numbers stay a signal, and say so. |
 | The upcoming-agenda page changes layout or is late | Watcher alerts, moderator-entered dates, "Planuojama …" wording, no extra emails when dates move. |
 | Open-data service outages (seen today) | Raw responses stored, retries, pages show the last import time, imports resume. |
-| Someone who knows a person's address uses up its daily codes, so the person cannot sign in by code, or cannot finish registering | Accepted for the closed trial: addresses are not public, nothing leaks, and passkeys are not affected. Known devices (6.2) are built before registration opens. Keeping a new address from registering stays possible after that. |
+| Someone who knows a person's address uses up its daily codes, so the person cannot sign in by code, or cannot finish registering | [changed while building (2026-11-16): known browsers are built, 8.20.2: the person's usual browser keeps its own five codes an hour and ten a day, the same two settings counted separately, and a code only it can use, and a passkey is not affected.] What stays possible is keeping a person from signing in by code from a browser they have never signed in with, and keeping a new address from finishing its registration (a pending account has no known browser until it completes). Nothing leaks either way. |
 | A leak of positions | Minimised data, no position in logs or admin screens, encrypted backups, impact assessment, penetration test, incident runbook. |
 | Moderation load for a volunteer team | One record per bill and moderation after the fact (nothing waits for approval but flagged or reported arguments, 8.12.3), short plain-text reasons, no comments, AI pre-screening, hourly rate limits per account, and limits per person per bill ready to switch on (off at the start, 8.2). |
 | Running costs outlive enthusiasm (the old platform's fate) | One VPS, no paid infrastructure beyond email and backup storage. |

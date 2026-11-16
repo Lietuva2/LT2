@@ -1,0 +1,179 @@
+@page "/suvestines/nustatymai/{Token}"
+@attribute [Microsoft.AspNetCore.RateLimiting.EnableRateLimiting(Lt2.Web.Security.RateLimitPolicies.MpMail)]
+@using Lt2.Api.Contracts.Digests
+@inject IMpMailApi Mail
+@inject IStringLocalizer<AppealText> T
+@inject NavigationManager Navigation
+
+@* Design 8.19.4: "Suvestinių nustatymai", one page for one MP, opened by the link in every MP email; no account, no session.
+   Server-rendered forms that post back here, so it works without JavaScript. Not indexed, not stored, no referrer
+   (SecurityHeaders); request logs and traces keep its path without the token (Lt2.Hosting's SecretPaths). An unknown, renewed
+   and a wrong token look the same. *@
+<PageTitle>@T["MpMail.Title"] · Lietuva 2.0</PageTitle>
+<HeadContent><meta name="robots" content="noindex, nofollow" /></HeadContent>
+
+@if (_renewed)
+{
+    <div class="stack" id="mp-mail-renewed">
+        <p class="label">Lietuva 2.0</p>
+        <h1>@T["MpMail.Title"]</h1>
+        <p class="note" role="status">@T["MpMail.Renewed"]</p>
+    </div>
+}
+else if (_choice is not { } choice)
+{
+    <div class="stack" id="mp-mail-unknown">
+        <p class="label">Lietuva 2.0</p>
+        <h1>@T["MpMail.Title"]</h1>
+        <p class="lead">@T["MpMail.Unknown"]</p>
+    </div>
+}
+else
+{
+    <div class="stack">
+        <p class="label">Lietuva 2.0</p>
+        <h1>@T["MpMail.Title"]</h1>
+        <p class="lead" id="mp-mail-who">@T.Format("MpMail.Lead", choice.FirstName + " " + choice.LastName)</p>
+        @if (_info is { } info)
+        {
+            <p class="note note--quiet" role="status" id="mp-mail-info">@info</p>
+        }
+        @if (_error is { } error)
+        {
+            <p class="note" role="alert" id="mp-mail-error">@error</p>
+        }
+    </div>
+
+    <section class="sheet stack" aria-labelledby="h-mp-mail-frequency">
+        <h2 id="h-mp-mail-frequency">@T["MpMail.Frequency"]</h2>
+        <EditForm Model="Frequency" FormName="mp-mail-frequency" OnSubmit="SaveFrequencyAsync" class="stack stack--tight" id="mp-mail-frequency">
+            <InputRadioGroup @bind-Value="Frequency!.Value">
+                <div class="stack stack--tight">
+                    @foreach (var f in MpMailFrequencies.All)
+                    {
+                        <label class="check"><InputRadio Value="f" id="@("mp-mail-" + f)" /><span>@T["MpMail.Frequency." + f]</span></label>
+                    }
+                </div>
+            </InputRadioGroup>
+            <p class="small" id="mp-mail-urgent-note">@T["MpMail.UrgentNote"]</p>
+            <p><button type="submit" class="btn" id="mp-mail-save">@T["MpMail.Save"]</button></p>
+        </EditForm>
+    </section>
+
+    <section class="sheet stack" aria-labelledby="h-mp-mail-extra">
+        <h2 id="h-mp-mail-extra">@T["MpMail.Extra"]</h2>
+        <p class="small">@T["MpMail.ExtraLead"]</p>
+        @if (choice.ExtraAddress is { } extra)
+        {
+            <p id="mp-mail-extra">
+                <b>@extra</b> · <span id="mp-mail-extra-state">@(choice.ExtraConfirmed ? T["MpMail.ExtraConfirmed"] : T["MpMail.ExtraWaiting"])</span>
+            </p>
+            <EditForm Model="_none" FormName="mp-mail-remove-extra" OnSubmit="RemoveExtraAsync" id="mp-mail-remove-extra-form">
+                <button type="submit" class="btn btn--plain" id="mp-mail-extra-remove">@T["MpMail.ExtraRemove"]</button>
+            </EditForm>
+        }
+        else
+        {
+            <EditForm Model="Extra" FormName="mp-mail-extra" OnSubmit="AskExtraAsync" class="stack stack--tight" id="mp-mail-extra-form">
+                <div class="field">
+                    <label for="mp-mail-extra-address">@T["MpMail.ExtraAddress"]</label>
+                    <InputText id="mp-mail-extra-address" type="email" class="input" maxlength="254" autocomplete="email" @bind-Value="Extra!.Address" aria-describedby="mp-mail-extra-hint" />
+                    <p class="field__hint" id="mp-mail-extra-hint">@T["MpMail.ExtraHint"]</p>
+                </div>
+                <p><button type="submit" class="btn btn--plain" id="mp-mail-extra-ask">@T["MpMail.ExtraAsk"]</button></p>
+            </EditForm>
+        }
+    </section>
+
+    <section class="sheet stack" aria-labelledby="h-mp-mail-link">
+        <h2 id="h-mp-mail-link">@T["MpMail.Link"]</h2>
+        <p class="small">@T["MpMail.LinkLead"]</p>
+        <EditForm Model="_none" FormName="mp-mail-renew" OnSubmit="RenewAsync" id="mp-mail-renew-form">
+            <button type="submit" class="btn btn--plain" id="mp-mail-renew">@T["MpMail.Renew"]</button>
+        </EditForm>
+    </section>
+
+    <p class="note note--quiet" id="mp-mail-private">@T["MpMail.Private"]</p>
+}
+
+@code {
+    private readonly object _none = new();
+    private MpMailChoiceResponse? _choice;
+    private string? _info;
+    private string? _error;
+    private bool _renewed;
+
+    [Parameter] public string Token { get; set; } = "";
+
+    [CascadingParameter] private HttpContext? HttpContext { get; set; }
+
+    [SupplyParameterFromForm(FormName = "mp-mail-frequency")] public FrequencyModel? Frequency { get; set; }
+
+    [SupplyParameterFromForm(FormName = "mp-mail-extra")] public ExtraModel? Extra { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        var read = await Mail.GetAsync(Token);
+        _choice = read.Value;
+        Frequency ??= new FrequencyModel { Value = _choice?.Frequency ?? MpMailFrequencies.Default };
+        Extra ??= new ExtraModel();
+        if (_choice is null && HttpContext is { Request.Method: "GET" })
+        {
+            // The same answer for an unknown, a replaced and a wrong token: the site's "not found" page.
+            Navigation.NotFound();
+        }
+    }
+
+    private async Task SaveFrequencyAsync()
+    {
+        var saved = await Mail.SetFrequencyAsync(Token, new MpMailFrequencyRequest { Frequency = Frequency?.Value ?? "" });
+        Show(saved, T["MpMail.Saved"]);
+    }
+
+    private async Task AskExtraAsync()
+    {
+        var asked = await Mail.AskExtraAsync(Token, new MpMailExtraRequest { Address = Extra?.Address ?? "" });
+        Show(asked, T["MpMail.ExtraSent"]);
+        if (asked.IsSuccess)
+        {
+            Extra = new ExtraModel();
+        }
+    }
+
+    private async Task RemoveExtraAsync() => Show(await Mail.RemoveExtraAsync(Token), T["MpMail.ExtraRemoved"]);
+
+    private async Task RenewAsync()
+    {
+        var renewed = await Mail.RenewAsync(Token);
+        if (renewed.IsSuccess)
+        {
+            _renewed = true;
+            return;
+        }
+
+        _error = renewed.Problem?.Detail ?? T["MpMail.Unknown"];
+    }
+
+    private void Show(Lt2.Api.Contracts.ApiResult<MpMailChoiceResponse> result, string info)
+    {
+        if (result.IsSuccess)
+        {
+            _choice = result.Value;
+            Frequency = new FrequencyModel { Value = _choice!.Frequency };
+            _info = info;
+            return;
+        }
+
+        _error = result.Problem?.Errors?.Values.SelectMany(v => v).FirstOrDefault() ?? result.Problem?.Detail ?? T["MpMail.Unknown"];
+    }
+
+    public sealed class FrequencyModel
+    {
+        public string? Value { get; set; }
+    }
+
+    public sealed class ExtraModel
+    {
+        public string? Address { get; set; }
+    }
+}

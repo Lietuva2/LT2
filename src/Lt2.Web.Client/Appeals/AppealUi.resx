@@ -17,6 +17,7 @@
 <data name="Side.Withdraw" xml:space="preserve"><value>Atsiimti</value></data>
 <data name="Consent.Title" xml:space="preserve"><value>Prieš išsaugant jūsų poziciją</value></data>
 <data name="Consent.Text" xml:space="preserve"><value>Tai, ar prašote balsuoti už, ar prieš, yra jūsų politinė nuomonė – ypatingai saugomi asmens duomenys. Ją išsaugosime tik gavę jūsų aiškų sutikimą. Jūsų pozicijos niekam nerodome: viešai skelbiami tik bendri skaičiai. Sutikimą galite bet kada atšaukti savo paskyroje – tada visos jūsų pozicijos bus ištrintos.</value></data>
+<data name="Consent.PrivacyLink" xml:space="preserve"><value>Kaip saugome pozicijas – privatumo pranešime</value></data>
 <data name="Consent.Check" xml:space="preserve"><value>Sutinku, kad Lietuva 2.0 saugotų mano pozicijas dėl įstatymų projektų taip, kaip aprašyta.</value></data>
 <data name="Consent.Submit.for" xml:space="preserve"><value>Sutinku ir prašau balsuoti už</value></data>
 <data name="Consent.Submit.against" xml:space="preserve"><value>Sutinku ir prašau balsuoti prieš</value></data>
@@ -84,6 +85,60 @@
 <data name="Reasons.Left" xml:space="preserve"><value>Argumentų dar galite parašyti: {0}.</value></data>
 <data name="Reasons.NoneLeft" xml:space="preserve"><value>Šiam projektui daugiau argumentų parašyti nebegalite.</value></data>
 <data name="Report.Open" xml:space="preserve"><value>Pranešti</value></data>
+  <data name="MpResponse.Title" xml:space="preserve"><value>Atsakymas Seimo nario vardu</value></data>
+  <data name="MpResponse.For" xml:space="preserve"><value>Rašote Seimo nario vardu: {0}.</value></data>
+  <data name="MpResponse.Public" xml:space="preserve"><value>Atsakymas skelbiamas iš karto ir žymimas „Seimo narys arba jo biuras“. Pakeistas ar atsiimtas jis lieka matomas su ankstesnėmis versijomis.</value></data>
+  <data name="MpResponse.Refusal.mp.passkey-required" xml:space="preserve"><value>Prisijunkite prieigos raktu: prisijungus kodu galima tik skaityti.</value></data>
+  <data name="MpResponse.Refusal.response.mandate-ended" xml:space="preserve"><value>Seimo nario įgaliojimai baigėsi: naujų atsakymų skelbti nebegalima.</value></data>
+  <data name="MpResponse.Refusal.response.bill-not-open" xml:space="preserve"><value>Atsakymo skelbti ar keisti nebegalima: Seimas jau balsavo arba dalyvavimą uždarė moderatoriai.</value></data>
+  <data name="MpResponse.Refusal.response.hidden" xml:space="preserve"><value>Atsakymą paslėpė moderatoriai: jo pakeisti ar atsiimti negalima.</value></data>
+  <data name="MpResponse.IsPublished" xml:space="preserve"><value>Atsakymas paskelbtas: jis rodomas sąraše aukščiau.</value></data>
+  <data name="MpResponse.IsWithdrawn" xml:space="preserve"><value>Atsakymas atsiimtas. Parašius iš naujo, ankstesnės versijos liks matomos.</value></data>
+  <data name="MpResponse.Change" xml:space="preserve"><value>Keisti</value></data>
+  <data name="MpResponse.Withdraw" xml:space="preserve"><value>Atsiimti</value></data>
+  <data name="MpResponse.WithdrawConfirm" xml:space="preserve"><value>Atsakymas liks matomas kaip atsiimtas, su ankstesnėmis versijomis.</value></data>
+  <data name="MpResponse.WithdrawYes" xml:space="preserve"><value>Taip, atsiimti</value></data>
+  <data name="MpResponse.Stance" xml:space="preserve"><value>Kaip balsuosite?</value></data>
+  <data name="MpResponse.Stance.for" xml:space="preserve"><value>Balsuosiu už</value></data>
+  <data name="MpResponse.Stance.against" xml:space="preserve"><value>Balsuosiu prieš</value></data>
+  <data name="MpResponse.Stance.undecided" xml:space="preserve"><value>Dar neapsisprendžiau</value></data>
+  <data name="MpResponse.Will.for" xml:space="preserve"><value>balsuos už</value></data>
+  <data name="MpResponse.Will.against" xml:space="preserve"><value>balsuos prieš</value></data>
+  <data name="MpResponse.Will.undecided" xml:space="preserve"><value>dar neapsisprendė</value></data>
+  <data name="MpResponse.Text" xml:space="preserve"><value>Paaiškinimas</value></data>
+  <data name="MpResponse.TextHint" xml:space="preserve"><value>{0} iš {1} ženklų</value></data>
+  <data name="MpResponse.Publish" xml:space="preserve"><value>Skelbti atsakymą</value></data>
+  <data name="MpResponse.Published" xml:space="preserve"><value>Atsakymas paskelbtas.</value></data>
+  <data name="MpResponse.Withdrawn" xml:space="preserve"><value>Atsakymas atsiimtas.</value></data>
+  <data name="RespMod.Queue" xml:space="preserve"><value>Seimo narių atsakymai</value></data>
+  <data name="RespMod.Hidden" xml:space="preserve"><value>Paslėpti Seimo narių atsakymai</value></data>
+  <data name="RespMod.Item" xml:space="preserve"><value>Seimo nario atsakymas</value></data>
+  <data name="RespMod.Status.published" xml:space="preserve"><value>Paskelbtas</value></data>
+  <data name="RespMod.Status.withdrawn" xml:space="preserve"><value>Atsiimtas</value></data>
+  <data name="RespMod.Action.keep" xml:space="preserve"><value>Palikti</value></data>
+  <data name="RespMod.Action.hide" xml:space="preserve"><value>Paslėpti</value></data>
+  <data name="RespMod.Sentence.keep" xml:space="preserve"><value>Atsakymas lieka kaip yra ir išeina iš eilės.</value></data>
+  <data name="RespMod.Sentence.hide" xml:space="preserve"><value>Atsakymo vietoje bus rodoma „Atsakymas paslėptas moderatorių“ ir jūsų paaiškinimas; jis bus išsiųstas ir Seimo nariui.</value></data>
+  <data name="RespMod.Done.keep" xml:space="preserve"><value>Palikta.</value></data>
+  <data name="RespMod.Done.hide" xml:space="preserve"><value>Atsakymas paslėptas.</value></data>
+  <data name="RespMod.NotOpen" xml:space="preserve"><value>Seimas dėl šio projekto jau balsavo arba dalyvavimas uždarytas: atkurti negalima.</value></data>
+  <data name="RespMod.Restore.Sentence" xml:space="preserve"><value>Atsakymas vėl bus rodomas, o jūsų paaiškinimas bus išsiųstas Seimo nariui.</value></data>
+  <data name="MpBills.PageTitle" xml:space="preserve"><value>Projektai, dėl kurių į jus kreipiamasi · Lietuva 2.0</value></data>
+  <data name="MpBills.Title" xml:space="preserve"><value>Projektai, dėl kurių į jus kreipiamasi</value></data>
+  <data name="MpBills.Account" xml:space="preserve"><value>Paskyra</value></data>
+  <data name="MpBills.Lead" xml:space="preserve"><value>Projektai, kurie dabar patektų į suvestinę Seimo nariams: pasiekę ribą ir dar nebalsuoti galutinai, suvestinės tvarka.</value></data>
+  <data name="MpBills.NotLinked" xml:space="preserve"><value>Šis puslapis skirtas Seimo nario arba jo biuro paskyrai.</value></data>
+  <data name="MpBills.Mp" xml:space="preserve"><value>Seimo narys: {0}.</value></data>
+  <data name="MpBills.None" xml:space="preserve"><value>Dabar suvestinėse projektų nėra.</value></data>
+  <data name="MpBills.Planned" xml:space="preserve"><value>Planuojama {0}</value></data>
+  <data name="MpBills.ForSide" xml:space="preserve"><value>Už</value></data>
+  <data name="MpBills.AgainstSide" xml:space="preserve"><value>Prieš</value></data>
+  <data name="MpBills.Older" xml:space="preserve"><value>senesnių nei 30 d. paskyrų: {0}</value></data>
+  <data name="MpBills.Answered" xml:space="preserve"><value>Atsakyta: {0}</value></data>
+  <data name="MpBills.Hidden" xml:space="preserve"><value>Atsakymą paslėpė moderatoriai</value></data>
+  <data name="MpBills.Withdrawn" xml:space="preserve"><value>Atsakymas atsiimtas</value></data>
+  <data name="MpBills.Answer" xml:space="preserve"><value>Atsakyti</value></data>
+  <data name="MpBills.NotAPoll" xml:space="preserve"><value>Tai nėra reprezentatyvi apklausa: skaičiai rodo savanoriškai dalyvaujančių Lietuva 2.0 naudotojų nuomonę.</value></data>
 <data name="Report.AppealOpen" xml:space="preserve"><value>Pranešti apie klaidą</value></data>
 <data name="Report.Title" xml:space="preserve"><value>Pranešimas moderatoriams</value></data>
 <data name="Report.Ground" xml:space="preserve"><value>Kodėl pranešate?</value></data>
@@ -277,7 +332,7 @@
 <data name="Admin.Group.security" xml:space="preserve"><value>Saugumo ribos</value></data>
 <data name="Admin.Group.other" xml:space="preserve"><value>Kiti</value></data>
 <data name="Admin.GroupNote.security" xml:space="preserve"><value>Šias ribas keisti reikia retai: jos saugo nuo piktnaudžiavimo. Keiskite tik žinodami, kodėl.</value></data>
-<data name="Admin.GroupNote.summaries" xml:space="preserve"><value>Šiame etape suvestinės tik sudaromos bandymui ir Seimo nariams nesiunčiamos.</value></data>
+  <data name="Admin.GroupNote.summaries" xml:space="preserve"><value>Kol neišsiųstas pristatymo laiškas, suvestinės Seimo nariams nesiunčiamos, kad ir ką sakytų nustatymas „Siuntimas Seimo nariams“.</value></data>
 <data name="Admin.Setting.Registration:RequireInvitation" xml:space="preserve"><value>Registracija tik su kvietimu</value></data>
 <data name="Admin.Help.Registration:RequireInvitation" xml:space="preserve"><value>Kol vyksta uždaras bandymas, užsiregistruoti galima tik su kvietimo kodu. Išjunkite, kai registracija atveriama visiems.</value></data>
 <data name="Admin.Unit.Registration:RequireInvitation" xml:space="preserve"><value>taip / ne</value></data>
@@ -603,6 +658,7 @@
   <data name="Follow.Following.organisation" xml:space="preserve"><value>Sekate. To niekas kitas nemato.</value></data>
 <data name="Follows.Organisations" xml:space="preserve"><value>Organizacijos</value></data>
 <data name="Follows.Email.statements" xml:space="preserve"><value>Kai sekama organizacija paskelbia poziciją dėl projekto</value></data>
+<data name="Follows.Email.responses" xml:space="preserve"><value>Kai Seimo nariai atsako dėl sekamo projekto</value></data>
 <data name="Inv.Kind.organisation" xml:space="preserve"><value>organizacijos kodas</value></data>
 <data name="Inv.OrganisationOff.blocked" xml:space="preserve"><value>neveikia, kol organizacija užblokuota</value></data>
 <data name="Inv.OrganisationOff.closed" xml:space="preserve"><value>neveikia: organizacija uždaryta</value></data>
@@ -652,4 +708,105 @@
   <data name="Agenda.Ask.against" xml:space="preserve"><value>Prašau balsuoti prieš projektą {0}</value></data>
   <data name="Agenda.Withdraw" xml:space="preserve"><value>Atsiimti, ko prašote dėl projekto {0}</value></data>
   <data name="Agenda.Followed" xml:space="preserve"><value>Dabar sekate šį projektą.</value></data>
+<data name="Admin.Setting.Registration:OfficialAddressesWithoutInvitation" xml:space="preserve"><value>Seimo nariai be kvietimo</value></data>
+<data name="Admin.Help.Registration:OfficialAddressesWithoutInvitation" xml:space="preserve"><value>Kol registracija tik su kvietimu, Seimo nario oficialiu adresu galima registruotis ir be jo. Įjunkite tik kartu su prisistatymo laišku Seimo nariams.</value></data>
+<data name="Admin.Unit.Registration:OfficialAddressesWithoutInvitation" xml:space="preserve"><value>taip / ne</value></data>
+  <data name="Admin.Setting.Digest:Sending" xml:space="preserve"><value>Siuntimas Seimo nariams</value></data>
+  <data name="Admin.Help.Digest:Sending" xml:space="preserve"><value>off – bandymas, niekam nesiunčiama; approval – savaitinė ir prieš posėdį suvestinė laukia moderatoriaus patvirtinimo; automatic – siunčiama iš karto, kai sudaroma.</value></data>
+  <data name="Admin.Unit.Digest:Sending" xml:space="preserve"><value>off, approval arba automatic</value></data>
+  <data name="Admin.Setting.Digest:ApprovalHours" xml:space="preserve"><value>Kiek laukti patvirtinimo</value></data>
+  <data name="Admin.Help.Digest:ApprovalHours" xml:space="preserve"><value>Nepatvirtinta suvestinė nebesiunčiama praėjus tiek valandų nuo jos sudarymo arba prasidėjus posėdžio dienai, kas anksčiau.</value></data>
+  <data name="Admin.Unit.Digest:ApprovalHours" xml:space="preserve"><value>val.</value></data>
+  <data name="Admin.Group.follows" xml:space="preserve"><value>Laiškai sekantiems</value></data>
+  <data name="Admin.Setting.Follows:ResponsesAt" xml:space="preserve"><value>Laiško apie Seimo narių atsakymus laikas</value></data>
+  <data name="Admin.Help.Follows:ResponsesAt" xml:space="preserve"><value>Kurią valandą (Vilniaus laiku) kitą rytą sekantiems projektą siunčiamas laiškas apie vakar paskelbtus Seimo narių atsakymus.</value></data>
+  <data name="Admin.Unit.Follows:ResponsesAt" xml:space="preserve"><value>HH:mm</value></data>
+  <data name="DigMod.PageTitle" xml:space="preserve"><value>Suvestinės · Moderavimas · Lietuva 2.0</value></data>
+  <data name="DigMod.Title" xml:space="preserve"><value>Suvestinės</value></data>
+  <data name="DigMod.Lead" xml:space="preserve"><value>Sudarytos suvestinės: laukiančios patvirtinimo – pirmos.</value></data>
+  <data name="DigMod.Sending.off" xml:space="preserve"><value>Siuntimas išjungtas: suvestinės sudaromos bandymui ir Seimo nariams nesiunčiamos.</value></data>
+  <data name="DigMod.Sending.approval" xml:space="preserve"><value>Siuntimas su patvirtinimu: savaitinė ir prieš posėdį suvestinė laukia, kol moderatorius ją išsiųs arba atsisakys siųsti.</value></data>
+  <data name="DigMod.Sending.automatic" xml:space="preserve"><value>Siuntimas automatinis: suvestinė siunčiama, kai sudaroma.</value></data>
+  <data name="DigMod.Lock.no-introduction" xml:space="preserve"><value>Nustatymas leidžia siųsti, bet pristatymo laiškas dar neišsiųstas, todėl suvestinės lieka bandomosios.</value></data>
+  <data name="DigMod.Lock.not-caught" xml:space="preserve"><value>Nustatymas leidžia siųsti, bet duomenys išgalvoti, o laiškai neperimami, todėl suvestinės lieka bandomosios.</value></data>
+  <data name="DigMod.None" xml:space="preserve"><value>Suvestinių dar nėra.</value></data>
+  <data name="DigMod.Kind.weekly" xml:space="preserve"><value>Savaitinė suvestinė</value></data>
+  <data name="DigMod.Kind.before-vote" xml:space="preserve"><value>Suvestinė prieš posėdį</value></data>
+  <data name="DigMod.Kind.urgent" xml:space="preserve"><value>Skubi suvestinė</value></data>
+  <data name="DigMod.Line.dry-run" xml:space="preserve"><value>Bandomoji suvestinė: niekam nesiųsta · būtų gavę Seimo narių: {0}</value></data>
+  <data name="DigMod.Line.waiting" xml:space="preserve"><value>Laukia patvirtinimo · gautų Seimo narių: {0}</value></data>
+  <data name="DigMod.Line.sent" xml:space="preserve"><value>Išsiųsta Seimo nariams: {0} · {1}</value></data>
+  <data name="DigMod.Line.cancelled" xml:space="preserve"><value>Nesiųsta</value></data>
+  <data name="DigMod.Line.expired" xml:space="preserve"><value>Nesiųsta: nepatvirtinta laiku</value></data>
+  <data name="DigMod.Statement" xml:space="preserve"><value>Paaiškinimas: {0}</value></data>
+  <data name="DigMod.Sides" xml:space="preserve"><value>už {0} · prieš {1}</value></data>
+  <data name="DigMod.Preview" xml:space="preserve"><value>Ką gautų Seimo narys</value></data>
+  <data name="DigMod.PreviewMp" xml:space="preserve"><value>Seimo narys</value></data>
+  <data name="DigMod.PreviewChoose" xml:space="preserve"><value>Pasirinkite</value></data>
+  <data name="DigMod.PreviewShow" xml:space="preserve"><value>Rodyti</value></data>
+  <data name="DigMod.Delivery.dry-run" xml:space="preserve"><value>bandymas</value></data>
+  <data name="DigMod.Delivery.waiting" xml:space="preserve"><value>gautų</value></data>
+  <data name="DigMod.Delivery.queued" xml:space="preserve"><value>išsiųsta</value></data>
+  <data name="DigMod.Delivery.sent" xml:space="preserve"><value>išsiųsta</value></data>
+  <data name="DigMod.Delivery.failed" xml:space="preserve"><value>nepavyko išsiųsti</value></data>
+  <data name="DigMod.Delivery.bounced" xml:space="preserve"><value>adresas atmetė</value></data>
+  <data name="DigMod.Delivery.skipped-ceiling" xml:space="preserve"><value>viršytas savaitės skaičius</value></data>
+  <data name="DigMod.Delivery.skipped-preference" xml:space="preserve"><value>pagal Seimo nario pasirinkimą</value></data>
+  <data name="DigMod.Delivery.suppressed" xml:space="preserve"><value>adresas sąraše „Nesiunčiama“</value></data>
+  <data name="DigMod.Delivery.introduced" xml:space="preserve"><value>gavo pristatymo laišką</value></data>
+  <data name="DigMod.Delivery.not-sent" xml:space="preserve"><value>nesiųsta</value></data>
+  <data name="DigMod.Expires" xml:space="preserve"><value>Jei niekas nenuspręs, nebus siunčiama nuo {0}.</value></data>
+  <data name="DigMod.Send" xml:space="preserve"><value>Siųsti ({0} Seimo nariams)</value></data>
+  <data name="DigMod.SendConfirm" xml:space="preserve"><value>Siųsti šią suvestinę {0} Seimo nariams? Išsiųstos atšaukti nebus galima. Bus paprašyta dar kartą patvirtinti prieigos raktu.</value></data>
+  <data name="DigMod.SendYes" xml:space="preserve"><value>Taip, siųsti</value></data>
+  <data name="DigMod.Back" xml:space="preserve"><value>Atgal</value></data>
+  <data name="DigMod.CancelLabel" xml:space="preserve"><value>Kodėl nesiųsti (bus rodoma viešoje kopijoje)</value></data>
+  <data name="DigMod.CancelHint" xml:space="preserve"><value>Bent 20 ženklų. Jūsų vardas viešai nerodomas.</value></data>
+  <data name="DigMod.Cancel" xml:space="preserve"><value>Nesiųsti</value></data>
+  <data name="DigMod.Sent" xml:space="preserve"><value>Išsiųsta Seimo nariams: {0}.</value></data>
+  <data name="DigMod.Cancelled" xml:space="preserve"><value>Suvestinė nebus siunčiama.</value></data>
+  <data name="Intro.PageTitle" xml:space="preserve"><value>Pristatymo laiškas · Administravimas · Lietuva 2.0</value></data>
+  <data name="Intro.Title" xml:space="preserve"><value>Pristatymo laiškas</value></data>
+  <data name="Intro.Lead" xml:space="preserve"><value>Laiškas, kurį kiekvienas Seimo narys gauna prieš pirmąją suvestinę. Jį rašo ir pasirašo žmogus.</value></data>
+  <data name="Intro.NotCaught" xml:space="preserve"><value>Šioje aplinkoje duomenys išgalvoti, o laiškai neperimami, todėl Seimo nariams laiškų siųsti negalima.</value></data>
+  <data name="Intro.New" xml:space="preserve"><value>Naujas laiškas</value></data>
+  <data name="Intro.Version" xml:space="preserve"><value>{0} versija</value></data>
+  <data name="Intro.SentNote" xml:space="preserve"><value>Ši versija išsiųsta {0}. Pakeitus tekstą bus nauja versija: ji bus siunčiama tik tiems Seimo nariams, kurie laiško dar negavo.</value></data>
+  <data name="Intro.Subject" xml:space="preserve"><value>Tema</value></data>
+  <data name="Intro.Text" xml:space="preserve"><value>Tekstas</value></data>
+  <data name="Intro.TextHint" xml:space="preserve"><value>Paprastos pastraipos; pastraipas skirkite tuščia eilute. Iki 10 000 ženklų.</value></data>
+  <data name="Intro.Signer" xml:space="preserve"><value>Pasirašo (vardas, pavardė)</value></data>
+  <data name="Intro.Role" xml:space="preserve"><value>Pareigos</value></data>
+  <data name="Intro.Added" xml:space="preserve"><value>Po parašu sistema prideda tai, ką ir kiekviename laiške Seimo nariui: nuorodą į suvestinių nustatymus ir sakinį apie profilio perėmimą.</value></data>
+  <data name="Intro.Save" xml:space="preserve"><value>Išsaugoti</value></data>
+  <data name="Intro.Saved" xml:space="preserve"><value>Išsaugota.</value></data>
+  <data name="Intro.Test" xml:space="preserve"><value>Siųsti bandomąją kopiją sau</value></data>
+  <data name="Intro.TestSent" xml:space="preserve"><value>Bandomoji kopija išsiųsta jūsų adresu.</value></data>
+  <data name="Intro.Preview" xml:space="preserve"><value>Peržiūra</value></data>
+  <data name="Intro.PreviewAdded" xml:space="preserve"><value>(Čia sistema pridės asmeninę suvestinių nustatymų nuorodą ir sakinį apie profilio perėmimą.)</value></data>
+  <data name="Intro.SendTitle" xml:space="preserve"><value>Siuntimas</value></data>
+  <data name="Intro.WouldGoTo" xml:space="preserve"><value>Gautų Seimo narių: {0} (dar negavę laiško, adresas nėra sąraše „Nesiunčiama“).</value></data>
+  <data name="Intro.Send" xml:space="preserve"><value>Siųsti Seimo nariams</value></data>
+  <data name="Intro.SendConfirm" xml:space="preserve"><value>Siųsti laišką {0} Seimo nariams? Bus paprašyta dar kartą patvirtinti prieigos raktu.</value></data>
+  <data name="Intro.SendYes" xml:space="preserve"><value>Taip, siųsti</value></data>
+  <data name="Intro.SentTo" xml:space="preserve"><value>Laiškas išsiųstas Seimo nariams: {0}.</value></data>
+  <data name="Intro.Public" xml:space="preserve"><value>Viešas laiško puslapis →</value></data>
+  <data name="Supp.PageTitle" xml:space="preserve"><value>Nesiunčiama · Administravimas · Lietuva 2.0</value></data>
+  <data name="Supp.Title" xml:space="preserve"><value>Nesiunčiama</value></data>
+  <data name="Supp.Lead" xml:space="preserve"><value>Adresai, kuriais laiškai Seimo nariams nebesiunčiami. Saugomas tik užkoduotas adreso atspaudas, ne pats adresas.</value></data>
+  <data name="Supp.Mps" xml:space="preserve"><value>Seimo nariai</value></data>
+  <data name="Supp.None" xml:space="preserve"><value>Nė vieno dabartinio Seimo nario adreso sąraše nėra.</value></data>
+  <data name="Supp.Reason.bounced" xml:space="preserve"><value>pašto serveris atmetė</value></data>
+  <data name="Supp.Reason.complaint" xml:space="preserve"><value>skundas</value></data>
+  <data name="Supp.Reason.staff" xml:space="preserve"><value>įrašė administratorius</value></data>
+  <data name="Supp.Statement" xml:space="preserve"><value>Paaiškinimas</value></data>
+  <data name="Supp.Remove" xml:space="preserve"><value>Pašalinti iš sąrašo</value></data>
+  <data name="Supp.Others" xml:space="preserve"><value>Kitų įrašų: {0}</value></data>
+  <data name="Supp.ByAddress" xml:space="preserve"><value>Pagal adresą</value></data>
+  <data name="Supp.Address" xml:space="preserve"><value>El. pašto adresas</value></data>
+  <data name="Supp.AddressHint" xml:space="preserve"><value>Adresas nesaugomas: išsaugomas tik jo atspaudas.</value></data>
+  <data name="Supp.Add" xml:space="preserve"><value>Įrašyti į sąrašą</value></data>
+  <data name="Supp.RemoveAddress" xml:space="preserve"><value>Pašalinti šį adresą</value></data>
+  <data name="Supp.Added" xml:space="preserve"><value>Adresas įrašytas į sąrašą.</value></data>
+  <data name="Supp.Removed" xml:space="preserve"><value>Įrašas pašalintas.</value></data>
 </root>

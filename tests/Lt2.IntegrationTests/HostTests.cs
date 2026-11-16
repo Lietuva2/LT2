@@ -159,7 +159,12 @@ public sealed class HostTests(DatabaseFixture database) : ApiTest(database)
     {
         using var browser = NewBrowser();
         var document = await browser.Client.GetStringAsync("/openapi/v1.json");
-        foreach (var path in new[] { "/api/v1/auth/register", "/api/v1/auth/code", "/api/v1/auth/sign-in", "/api/v1/auth/sign-out", "/api/v1/me", "/api/v1/auth/passkeys" })
+        foreach (var path in new[]
+                 {
+                     "/api/v1/auth/register", "/api/v1/auth/code", "/api/v1/auth/sign-in", "/api/v1/auth/sign-out", "/api/v1/me", "/api/v1/auth/passkeys",
+                     "/api/v1/mps/{slug}/claim", "/api/v1/me/mp", "/api/v1/me/mp/takeover", "/api/v1/me/mp/office", "/api/v1/me/mp/office/invitations",
+                     "/api/v1/me/mp/office/{id}", "/api/v1/me/mp/office/acceptance", "/api/v1/admin/mps/{slug}/link/end",
+                 })
         {
             document.ShouldContain($"\"{path}\"");
         }

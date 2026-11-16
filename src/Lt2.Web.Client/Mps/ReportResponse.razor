@@ -1,0 +1,31 @@
+@using Lt2.Web.Client.Appeals
+@inherits InteractiveBase<AppealUi>
+
+@* "Pranešti" beside an MP's response (design 8.5.5: reports work as for statements): a member reports in the product, a
+   visitor is told how to. *@
+@if (_signedIn)
+{
+    <span class="stack stack--tight">
+        <button type="button" class="linkish small" id="report-response-@ResponseId.ToString("N")" disabled="@Locked" @onclick="() => _open = !_open">@L["Report.Open"]</button>
+        @if (_open)
+        {
+            <ReportForm TargetKind="response" TargetId="ResponseId" OnClose="() => _open = false" />
+        }
+    </span>
+}
+else
+{
+    <VisitorReport Contact="@Contact" />
+}
+
+@code {
+    private bool _signedIn;
+    private bool _open;
+
+    [Parameter, EditorRequired] public Guid ResponseId { get; set; }
+
+    [Parameter] public string? Contact { get; set; }
+
+    protected override async Task OnInitializedAsync() =>
+        _signedIn = await IsSignedInAsync();
+}

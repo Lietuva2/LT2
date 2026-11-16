@@ -6,8 +6,8 @@ namespace Lt2.Identity;
 /// <summary>Registration request as the module sees it; validated by the shared contracts first.</summary>
 public sealed record Registration(string Email, string? InvitationCode);
 
-/// <summary>What a person gives once their address is proven (design 6.2).</summary>
-public sealed record RegistrationCompletion(string? DisplayName, bool ConfirmsAdult, string? InvitationCode);
+/// <summary>What a person gives once their address is proven (design 6.2), with the terms of use accepted (design 8.22.2).</summary>
+public sealed record RegistrationCompletion(string? DisplayName, bool ConfirmsAdult, string? InvitationCode, bool AcceptsTerms);
 
 /// <summary>
 /// The signed-in person's own account. <paramref name="StaffAccount"/>: the account holds an activated staff role (whatever
@@ -25,7 +25,86 @@ public sealed record AccountSummary(
     IReadOnlyList<string> ActiveStaffRoles,
     bool AwaitingActivation,
     bool HasPositionConsent = false,
-    bool StaffAccount = false);
+    bool StaffAccount = false,
+    MpOffer? MpOffer = null,
+    MpLinkState? Mp = null,
+    bool TermsRequired = false);
+
+/// <summary>
+/// Design 8.5.1: the account's proven address is this MP's official address and the account is not linked yet; it is
+/// offered "Perimti profilį". Only the account's own answer says so.
+/// </summary>
+public sealed record MpOffer(string Slug, string FirstName, string LastName);
+
+/// <summary>
+/// Design 8.5.4: the MP the account is linked to, in which part (<c>mp</c> or <c>office</c>), and whether this session may
+/// speak for the MP (a passkey session).
+/// </summary>
+public sealed record MpLinkState(string Slug, string FirstName, string LastName, string Part, bool MayWrite);
+
+/// <summary>An office member as the MP's account sees them (design 8.5.3): the display name and since when. Nobody else does.</summary>
+public sealed record OfficeMember(Guid Id, string? DisplayName, DateTimeOffset Since);
+
+/// <summary>The MP's office: its members and how many it may have.</summary>
+public sealed record MpOffice(IReadOnlyList<OfficeMember> Members, int Limit);
+
+/// <summary>An office member's one-time invitation, shown once: the token and when it stops working.</summary>
+public sealed record OfficeInvitation(string Token, DateTimeOffset ExpiresAt);
+
+/// <summary>
+/// MPs on the platform (design 8.5.1 to 8.5.4): the take-over of a profile through a link to the official address and a new
+/// passkey, the office, giving the profile up, an administrator's end of a link. Every request that speaks for an MP reads
+/// the link and the session from the database. Who is linked to which MP and who the office members are is never public.
+/// </summary>
+public interface IPoliticians
+{
+    /// <summary>
+    /// "Perimti profilį": sends a take-over link to the account's own address when it is the official address of the MP
+    /// <paramref name="slug"/>; a new link replaces the old one; at most three a day per MP. Also replaces a lost passkey.
+    /// </summary>
+    Task<Result<Unit>> ClaimAsync(ClaimsPrincipal user, string slug, string? ipHash, CancellationToken cancellationToken);
+
+    /// <summary>
+    /// In one transaction: checks the link's token and that the address is still the MP's official address, stores the new
+    /// passkey, removes the account's other passkeys and their sessions, links the account and withdraws its sides; audited,
+    /// the official address told. The session then becomes a passkey session.
+    /// </summary>
+    Task<Result<MpLinkState>> TakeOverAsync(ClaimsPrincipal user, string token, string credentialJson, string? ipHash, CancellationToken cancellationToken);
+
+    /// <summary>The MP's account gives the profile up; an office member leaves. A passkey session.</summary>
+    Task<Result<Unit>> EndOwnAsync(ClaimsPrincipal user, string? ipHash, CancellationToken cancellationToken);
+
+    /// <summary>The office members, for the MP's account only.</summary>
+    Task<Result<MpOffice>> OfficeAsync(ClaimsPrincipal user, CancellationToken cancellationToken);
+
+    /// <summary>A one-time invitation for an office member (seven days), made by the MP's account in a passkey session.</summary>
+    Task<Result<OfficeInvitation>> InviteOfficeMemberAsync(ClaimsPrincipal user, string? ipHash, CancellationToken cancellationToken);
+
+    /// <summary>A member in a passkey session accepts an office invitation and becomes an office member of that MP.</summary>
+    Task<Result<MpLinkState>> AcceptOfficeInvitationAsync(ClaimsPrincipal user, string token, string? ipHash, CancellationToken cancellationToken);
+
+    /// <summary>The MP's account removes an office member, in a passkey session.</summary>
+    Task<Result<Unit>> RemoveOfficeMemberAsync(ClaimsPrincipal user, Guid memberId, string? ipHash, CancellationToken cancellationToken);
+
+    /// <summary>An administrator ends an MP's link with a statement (the caller checks the fresh confirmation).</summary>
+    Task<Result<Unit>> EndByAdministratorAsync(string slug, string statement, StaffActor administrator, CancellationToken cancellationToken);
+
+    /// <summary>The public trace (design 8.5.2): of the given MPs, those whose profile is taken over, and since when.</summary>
+    Task<IReadOnlyDictionary<long, DateTimeOffset>> TakenOverAsync(IReadOnlyCollection<long> seimasPersonIds, CancellationToken cancellationToken);
+
+    /// <summary>
+    /// Whom the signed-in account speaks for (design 8.5.4, 8.5.5), read from the database on every call: the MP's Seimas person
+    /// number, in which part, and whether this session may write (a passkey session). Null for an account without an open link.
+    /// </summary>
+    Task<MpSpeaker?> SpeakerAsync(ClaimsPrincipal user, CancellationToken cancellationToken);
+}
+
+/// <summary>
+/// The account speaking for an MP (design 8.5.4): who it is, for which MP (the Seimas person number), as the MP's own account
+/// (<c>mp</c>) or an office member (<c>office</c>), and whether this session may write. Only the host sees it; no public answer
+/// or log names the account.
+/// </summary>
+public sealed record MpSpeaker(Guid UserId, long SeimasPersonId, string Part, bool MayWrite);
 
 /// <summary>
 /// What the current session may do as staff (design 6.2): the staff roles that work in it (only when signed in with the
@@ -74,6 +153,12 @@ public sealed record SessionSummary(
     string? Device,
     string Method,
     bool IsCurrent);
+
+/// <summary>
+/// A browser known to the account (design 8.20.2): the browser and system it said when it last signed in, when it first and
+/// last signed in, and whether it is the browser asking. Never the cookie or its hash.
+/// </summary>
+public sealed record KnownBrowserSummary(Guid Id, string? Label, DateTimeOffset FirstSeenAt, DateTimeOffset LastSeenAt, bool IsCurrent);
 
 /// <summary>
 /// The Identity module's public interface. Operations that sign in or out act on the current HTTP context.
@@ -127,8 +212,26 @@ public interface IIdentityModule
 
     Task<Result<Unit>> EndSessionAsync(ClaimsPrincipal user, Guid sessionId, CancellationToken cancellationToken);
 
+    /// <summary>The signed-in person's known browsers (design 8.20.2), last seen first.</summary>
+    Task<Result<IReadOnlyList<KnownBrowserSummary>>> GetKnownBrowsersAsync(ClaimsPrincipal user, CancellationToken cancellationToken);
+
+    /// <summary>"Pamiršti": the browser becomes a stranger to the account again (design 8.20.2); <c>known-browser.not-found</c>.</summary>
+    Task<Result<Unit>> ForgetKnownBrowserAsync(ClaimsPrincipal user, Guid id, CancellationToken cancellationToken);
+
     /// <summary>Records the explicit consent to store positions against the text version in force (design 6.5).</summary>
     Task<Result<Unit>> GivePositionConsentAsync(ClaimsPrincipal user, string textVersion, CancellationToken cancellationToken);
+
+    /// <summary>
+    /// Accepts the terms of use (design 8.22.2) for a member, against the version in force only (<c>terms.version</c>
+    /// otherwise); accepting a version already accepted changes nothing.
+    /// </summary>
+    Task<Result<Unit>> AcceptTermsAsync(ClaimsPrincipal user, string textVersion, CancellationToken cancellationToken);
+
+    /// <summary>
+    /// Whether the signed-in account is a member who must accept the terms in force before writing (design 8.22.2), read from
+    /// the database: false for a visitor and for a pending account (which accepts them when completing its registration).
+    /// </summary>
+    Task<bool> TermsRequiredAsync(ClaimsPrincipal user, CancellationToken cancellationToken);
 
     /// <summary>Withdraws the consent and, in the same transaction, deletes every position of the person (design 6.5).</summary>
     Task<Result<Unit>> WithdrawPositionConsentAsync(ClaimsPrincipal user, CancellationToken cancellationToken);
@@ -153,8 +256,8 @@ public interface IIdentityModule
 public interface IIdentityMaintenance
 {
     /// <summary>
-    /// Deletes sign-in codes older than a day, expired sessions, and accounts still pending after the configured number
-    /// of days; returns how many rows went.
+    /// Deletes sign-in codes older than a day, expired sessions, known browsers not seen for a year (design 8.20.2), and
+    /// accounts still pending after the configured number of days; returns how many rows went.
     /// </summary>
     Task<int> PurgeExpiredAsync(CancellationToken cancellationToken);
 }

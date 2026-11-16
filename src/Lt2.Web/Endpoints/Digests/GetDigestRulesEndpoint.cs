@@ -14,6 +14,6 @@ internal static class GetDigestRulesEndpoint
             .AllowAnonymous()
             .Produces<DigestRulesResponse>();
 
-    private static async Task<IResult> HandleAsync(HttpContext http, ISettings settings, ErrorMapper errors, CancellationToken ct) =>
-        PublicJson.From(http, errors, Result<DigestRulesResponse>.Success(await ServerDigestsApi.RulesAsync(settings, ct)), maxAgeSeconds: 0);
+    private static async Task<IResult> HandleAsync(HttpContext http, ISettings settings, Lt2.Notifications.IDigests digests, ErrorMapper errors, CancellationToken ct) =>
+        PublicJson.From(http, errors, Result<DigestRulesResponse>.Success(await ServerDigestsApi.RulesAsync(settings, digests, ct)), maxAgeSeconds: 0);
 }

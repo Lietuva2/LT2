@@ -17,7 +17,7 @@
     <h1>@L["Mod.Title"]</h1>
     <NeedsScript />
     <p class="lead">@L["Mod.Lead"]</p>
-    <p class="row"><a href="/moderavimas" id="queue-refresh">@L["Mod.Refresh"]</a> <a href="/moderavimas/paslepti" id="hidden-link">@L["Mod.HiddenLink"]</a></p>
+    <p class="row"><a href="/moderavimas" id="queue-refresh">@L["Mod.Refresh"]</a> <a href="/moderavimas/paslepti" id="hidden-link">@L["Mod.HiddenLink"]</a> <a href="@Lt2.Api.Contracts.Digests.DigestRoutes.ModerationPage" id="digests-link">@L["DigMod.Title"]</a></p>
 </div>
 
 <Messages Message="@Message" Info="@Info" />
@@ -107,6 +107,9 @@ else
 
     @* Design 8.14.14: new and changed organisations, and statements that wait, are flagged, reported or not yet seen. *@
     <OrganisationQueueView />
+
+    @* Design 8.5.5: MPs' responses flagged by pre-screening or reported. *@
+    <Lt2.Web.Client.Mps.ResponseModerationView />
 
     <RestrictionList @ref="_restrictions" />
 }

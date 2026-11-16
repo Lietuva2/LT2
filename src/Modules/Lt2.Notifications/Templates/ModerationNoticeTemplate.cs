@@ -36,6 +36,6 @@ internal sealed class ModerationNoticeTemplate(IStringLocalizer<EmailTemplates> 
 
         paragraphs.Add(l["Moderation.Rules"]);
         paragraphs.Add(l[EmailText.Signature]);
-        return EmailLayout.Build(model.To, l.Format($"Moderation.{model.Notice}.Subject", model.BillNumber), paragraphs);
+        return EmailLayout.Build(model.To, l.Format($"Moderation.{model.Notice}.Subject", model.BillNumber), paragraphs, EmailLayout.Footer(l, site.Value.Address));
     }
 }

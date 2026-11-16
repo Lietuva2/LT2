@@ -22,7 +22,7 @@ namespace Lt2.Migrator;
 /// grant access;</item>
 /// <item>optional commands: <c>--seed-invitation CODE[:USES]</c>, <c>--grant-role ROLE EMAIL</c> (prints the one-time
 /// activation code on the console, never to a log sink), <c>--reset-parliament</c> (empties the parliament schema,
-/// refusing unless every import so far came from the Seimas stand-in), <c>--local-code-limits</c> (local stack only: the code limits per address raised to the settings' highest values, refusing unless <c>Demo:Allowed</c> is set), <c>--demo-appeal</c> (local demonstration data:
+/// refusing unless every import so far came from the Seimas stand-in), <c>--local-code-limits</c> (local stack only: the code limits per address raised to the settings' highest values, refusing unless <c>Demo:Allowed</c> is set), <c>--official-addresses-without-invitation</c> (a stack whose MPs are invented, refusing unless <c>Demo:Allowed</c> is set: design 8.5.1's setting switched on), <c>--demo-appeal</c> (local demonstration data:
 /// invented participants on XVP-0412, refusing unless <c>Demo:Allowed</c> is set and the parliament data is invented).</item>
 /// </list>
 /// </summary>
@@ -160,12 +160,16 @@ public static class MigrationRunner
                 case "--demo-appeal":
                     var demo = await DemoAppeal.RunAsync(configuration, connectionString, TimeProvider.System, cancellationToken);
                     Log.Information(
-                        "Demonstration record on {Bill}: {Status}; invented accounts created: {Created}; AI description on {AiBill}: {AiStatus}; invented organisations created: {Organisations}",
-                        DemoAppeal.Bill, demo.Status, demo.AccountsCreated, DemoAppeal.AiBill, demo.AiDescription, demo.Organisations);
+                        "Demonstration record on {Bill}: {Status}; invented accounts created: {Created}; AI description on {AiBill}: {AiStatus}; invented organisations created: {Organisations}; invented accounts that accepted the terms of use now: {Terms}",
+                        DemoAppeal.Bill, demo.Status, demo.AccountsCreated, DemoAppeal.AiBill, demo.AiDescription, demo.Organisations, demo.TermsAccepted);
                     break;
                 case "--local-code-limits":
                     var raised = await LocalCodeLimits.RunAsync(configuration, connectionString, cancellationToken);
                     Log.Information("Local sign-in code limits: {PerHour} an hour, {PerDay} a day ({Changed} settings changed)", LocalCodeLimits.PerHour, LocalCodeLimits.PerDay, raised);
+                    break;
+                case "--official-addresses-without-invitation":
+                    var switched = await LocalCodeLimits.OfficialAddressesWithoutInvitationAsync(configuration, connectionString, cancellationToken);
+                    Log.Information("Registration with an MP's official address without an invitation: on ({Changed} settings changed)", switched);
                     break;
                 default:
                     throw new ArgumentException($"Unknown or incomplete argument '{args[i]}'.", nameof(args));

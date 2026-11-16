@@ -38,7 +38,9 @@ internal static class ApiEndpoints
         ConfirmPasskeyEndpoint.Map(api);
         GetSessionsEndpoint.Map(api);
         EndSessionEndpoint.Map(api);
+        KnownBrowserEndpoints.Map(api);
         GivePositionConsentEndpoint.Map(api);
+        AcceptTermsEndpoint.Map(api);
         WithdrawPositionConsentEndpoint.Map(api);
         GetPartySupportEndpoint.Map(api);
         SetPartySupportEndpoint.Map(api);
@@ -106,6 +108,14 @@ internal static class ApiEndpoints
         GetRecordDigestsEndpoint.Map(api);
         GetDigestMpsEndpoint.Map(api);
         GetDigestPreviewEndpoint.Map(api);
+        DigestSendingEndpoints.Map(api);
+        MpMail.MpMailEndpoints.Map(api);
+        MpSendingAdminEndpoints.Map(api);
+
+        // Design 8.19.4: the one-click stop is the one write a mail program sends, without an Origin header or an antiforgery
+        // token, so it alone is mapped on the application, outside the group's filter (the group adds the filter to every
+        // other route, the other token routes included).
+        MpMail.OneClickStopEndpoint.Map(app);
 
         Agenda.GetAgendaEndpoint.Map(api);
         FollowEndpoints.Map(api);
@@ -115,6 +125,12 @@ internal static class ApiEndpoints
         Organisations.OrganisationRepresentativeEndpoints.Map(api);
         Organisations.StatementEndpoints.Map(api);
         Organisations.OrganisationModerationEndpoints.Map(api);
+
+        Mps.ClaimProfileEndpoint.Map(api);
+        Mps.TakeOverProfileEndpoint.Map(api);
+        Mps.MyMpEndpoints.Map(api);
+        Mps.MpResponseEndpoints.Map(api);
+        EndMpLinkEndpoint.Map(api);
     }
 
     /// <summary>A route from <see cref="ApiRoutes"/> relative to the <c>/api/v1</c> group.</summary>

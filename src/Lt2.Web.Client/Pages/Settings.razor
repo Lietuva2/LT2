@@ -48,6 +48,14 @@ else
             {
                 <p class="note note--quiet">@note</p>
             }
+            @if (group == "summaries")
+            {
+                @* Design 8.19.5, 8.19.6: the letter that must go first, and the addresses never written to again. *@
+                <p class="row small" id="summaries-links">
+                    <a href="@Lt2.Api.Contracts.Digests.MpSendingAdminRoutes.IntroductionPage" id="link-introduction">@L["Intro.Title"]</a>
+                    <a href="@Lt2.Api.Contracts.Digests.MpSendingAdminRoutes.SuppressionPage" id="link-suppression">@L["Supp.Title"]</a>
+                </p>
+            }
             <ul class="rows settings">
                 @foreach (var setting in keys)
                 {
@@ -90,11 +98,12 @@ else
     /// <summary>The groups in the order the screen shows them, each with its settings in order (design 5.6).</summary>
     private static readonly (string Group, string[] Keys)[] Layout =
     [
-        ("registration", ["Registration:RequireInvitation", "Registration:PersonalCodeUses", "Registration:OrganisationCodeUses"]),
+        ("registration", ["Registration:RequireInvitation", "Registration:OfficialAddressesWithoutInvitation", "Registration:PersonalCodeUses", "Registration:OrganisationCodeUses"]),
         ("appeals", ["Digest:ThresholdDefault", "Digest:ThresholdMinimum", "Appeals:ReasonsPerPerson", "Appeals:EndorsementsPerPerson"]),
         ("organisations", ["Organisations:PerAccount"]),
         ("ai", ["Ai:DraftModel", "Ai:SummariesPerDay"]),
-        ("summaries", ["Digest:Weekly", "Digest:BeforeVote", "Digest:MaxPerWeek", "Digest:NotableChange"]),
+        ("summaries", ["Digest:Sending", "Digest:ApprovalHours", "Digest:Weekly", "Digest:BeforeVote", "Digest:MaxPerWeek", "Digest:NotableChange"]),
+        ("follows", ["Follows:ResponsesAt"]),
         ("surge", ["Surge:MinimumShare", "Surge:MinimumAccounts", "Surge:WindowHours"]),
         ("feedback", ["Feedback:KeepMonths"]),
         ("security", ["SignIn:CodesPerHour", "SignIn:CodesPerDay", "Registration:PendingAccountDays"]),

@@ -26,31 +26,84 @@ internal sealed class SmtpOptions
 }
 
 /// <summary>
-/// Sends email over SMTP with MailKit. Locally this delivers to the Mailpit container. A batch shares one connection, made
-/// when its first message is sent and made again if the server dropped it.
+/// The MP stream (design 8.19.3): its own sender address (<c>Email:Mp:FromAddress</c>) and, when <c>Email:Mp:Smtp:Host</c> is
+/// set, its own SMTP account (<c>Email:Mp:Smtp</c>); otherwise the common account. Deployment configuration, like the rest of
+/// <c>Email</c>.
 /// </summary>
-internal sealed class SmtpEmailTransport(IOptions<SmtpOptions> options) : IEmailTransport
+internal sealed class MpStreamOptions
+{
+    public const string Section = "Email:Mp";
+
+    public string FromAddress { get; set; } = "suvestines@lt2.localhost";
+
+    public string FromName { get; set; } = "Lietuva 2.0";
+
+    public SmtpOptions? Smtp { get; set; }
+}
+
+/// <summary>
+/// Sends email over SMTP with MailKit. Locally this delivers to the Mailpit container. A batch shares one connection per
+/// stream, made when its first message is sent and made again if the server dropped it; MP mail goes on its own stream
+/// (design 8.19.3), so a refusal or an outage there does not stop sign-in codes on the common one.
+/// </summary>
+internal sealed class SmtpEmailTransport(IOptions<SmtpOptions> options, IOptions<MpStreamOptions> mp) : IEmailTransport
 {
     public async Task SendAsync(EmailMessage message, CancellationToken cancellationToken)
     {
-        await using var connection = new SmtpConnection(options.Value);
+        await using var connection = new StreamConnections(options.Value, mp.Value);
         await connection.SendAsync(message, cancellationToken);
     }
 
     public Task<IEmailConnection> ConnectAsync(CancellationToken cancellationToken) =>
-        Task.FromResult<IEmailConnection>(new SmtpConnection(options.Value));
+        Task.FromResult<IEmailConnection>(new StreamConnections(options.Value, mp.Value));
 
-    private sealed class SmtpConnection(SmtpOptions settings) : IEmailConnection
+    /// <summary>The common stream's connection and, for MP mail, its own: each made on first use.</summary>
+    private sealed class StreamConnections(SmtpOptions common, MpStreamOptions mp) : IEmailConnection
+    {
+        private SmtpConnection? _common;
+        private SmtpConnection? _mp;
+
+        public Task SendAsync(EmailMessage message, CancellationToken cancellationToken)
+        {
+            ArgumentNullException.ThrowIfNull(message);
+            if (message.Stream != MpMail.MpMailKinds.Stream)
+            {
+                return (_common ??= new SmtpConnection(common)).SendAsync(message, common.FromName, common.FromAddress, cancellationToken);
+            }
+
+            var account = string.IsNullOrWhiteSpace(mp.Smtp?.Host) ? common : mp.Smtp!;
+            return (_mp ??= new SmtpConnection(account)).SendAsync(message, mp.FromName, mp.FromAddress, cancellationToken);
+        }
+
+        public async ValueTask DisposeAsync()
+        {
+            if (_common is not null)
+            {
+                await _common.DisposeAsync();
+            }
+
+            if (_mp is not null)
+            {
+                await _mp.DisposeAsync();
+            }
+        }
+    }
+
+    private sealed class SmtpConnection(SmtpOptions settings) : IAsyncDisposable
     {
         private readonly SmtpClient _client = new();
 
-        public async Task SendAsync(EmailMessage message, CancellationToken cancellationToken)
+        public async Task SendAsync(EmailMessage message, string fromName, string fromAddress, CancellationToken cancellationToken)
         {
-            ArgumentNullException.ThrowIfNull(message);
             using var mime = new MimeMessage();
-            mime.From.Add(new MailboxAddress(settings.FromName, settings.FromAddress));
+            mime.From.Add(new MailboxAddress(fromName, fromAddress));
             mime.To.Add(MailboxAddress.Parse(message.To));
             mime.Subject = message.Subject;
+            foreach (var (name, value) in message.Headers ?? new Dictionary<string, string>())
+            {
+                mime.Headers.Add(name, value);
+            }
+
             mime.Body = new BodyBuilder { TextBody = message.TextBody, HtmlBody = message.HtmlBody }.ToMessageBody();
 
             if (!_client.IsConnected)

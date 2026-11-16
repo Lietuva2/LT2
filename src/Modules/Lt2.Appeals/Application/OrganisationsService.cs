@@ -168,9 +168,16 @@ internal sealed class OrganisationsService(
 
         // The person's lock: the limit per account holds under parallel requests.
         await AdvisoryLocks.PersonAsync(db, userId, cancellationToken);
-        if (await participants.FindAsync(userId, cancellationToken) is null)
+        var registrant = await participants.FindAsync(userId, cancellationToken);
+        if (registrant is null)
         {
             return Error.Forbidden("member.required");
+        }
+
+        // Design 8.5.4: the MP's own account does not represent an organisation.
+        if (MpAccounts.Refusal(registrant) is { } mpAccount)
+        {
+            return mpAccount;
         }
 
         var now = clock.GetUtcNow();
@@ -527,9 +534,16 @@ internal sealed class OrganisationsService(
             return Error.Conflict("invite.used");
         }
 
-        if (await participants.FindAsync(userId, cancellationToken) is null)
+        var member = await participants.FindAsync(userId, cancellationToken);
+        if (member is null)
         {
             return Error.Forbidden("member.required");
+        }
+
+        // Design 8.5.4: the MP's own account does not represent an organisation.
+        if (MpAccounts.Refusal(member) is { } mpAccount)
+        {
+            return mpAccount;
         }
 
         if (OrganisationRules.CheckActive(o.Status) is { } inactive)

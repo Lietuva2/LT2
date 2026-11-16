@@ -26,10 +26,17 @@ public static class AppealSteps
     /// <summary>
     /// Leaves the bill without a record, as if nobody had taken part: earlier tests' records on it are deleted with their
     /// sides, arguments and marks (the foreign keys cascade), and organisations' statements on it (design 8.14.14), which
-    /// refer to the bill by number, are deleted too.
+    /// refer to the bill by number, are deleted too, as are MPs' responses on it (design 8.5.5) with their versions and reports.
     /// </summary>
     public static async Task FreeBillAsync(this DatabaseFixture database, string number)
     {
+        await database.ExecuteAsync(
+            """
+            DELETE FROM appeals.report WHERE target_kind = 'response' AND target_id IN (SELECT id FROM appeals.mp_response WHERE bill_number = @n);
+            DELETE FROM appeals.revision WHERE entity_kind = 'response' AND entity_id IN (SELECT id FROM appeals.mp_response WHERE bill_number = @n);
+            DELETE FROM appeals.mp_response WHERE bill_number = @n;
+            """,
+            ("n", number));
         await database.ExecuteAsync("DELETE FROM appeals.organisation_statement WHERE bill_number = @n", ("n", number));
         await database.ExecuteAsync("DELETE FROM appeals.bill_record WHERE bill_number = @n", ("n", number));
     }

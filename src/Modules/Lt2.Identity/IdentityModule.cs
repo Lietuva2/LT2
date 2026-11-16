@@ -33,6 +33,12 @@ public static class IdentityModule
     /// <summary>Short-lived cookie holding the passkey challenge state.</summary>
     public const string PasskeyCookieName = "__Host-lt2.passkey";
 
+    /// <summary>
+    /// A known browser's cookie (design 6.2, 8.20.2): a random identifier for a year, renewed on every sign-in and kept on signing
+    /// out. It gives no access by itself; it only chooses which sign-in code allowance and which codes apply.
+    /// </summary>
+    public const string DeviceCookieName = "__Host-lt2.device";
+
     /// <summary>Where the server-rendered pages send people who need to sign in.</summary>
     public const string SignInPath = "/prisijungti";
 
@@ -94,6 +100,9 @@ public static class IdentityModule
                 .Configure<IOptions<KeyEncryptionOptions>>((o, key) => o.XmlEncryptor = new AesGcmXmlEncryptor(key));
         }
 
+        services.AddHttpContextAccessor();
+        services.AddSingleton<DeviceKeys>();
+        services.AddScoped<KnownBrowsers>();
         services.AddScoped<SignInCodeIssuer>();
         services.AddScoped<RegisterHandler>();
         services.AddScoped<CompleteRegistrationHandler>();
@@ -106,8 +115,15 @@ public static class IdentityModule
         services.AddScoped<StaffHandlers>();
         services.AddScoped<IIdentityAdministration, RoleAdministration>();
         services.AddScoped<PositionConsentHandlers>();
+        services.AddScoped<TermsHandlers>();
         services.AddScoped<PartySupportHandlers>();
         services.AddScoped<AccountDataHandlers>();
+
+        // Design 8.5: MPs on the platform (the web host composes Parliament's IMpDirectory and Appeals' IPositionErasure).
+        services.AddScoped<Application.Politicians.PoliticianAccess>();
+        services.AddScoped<Application.Politicians.PoliticianHandlers>();
+        services.AddScoped<IPoliticians>(sp => sp.GetRequiredService<Application.Politicians.PoliticianHandlers>());
+        Microsoft.Extensions.DependencyInjection.Extensions.ServiceCollectionDescriptorExtensions.TryAddScoped<IMpLinks, Application.Politicians.MpLinks>(services);
         services.AddScoped<IInvitations, Application.Invitations.InvitationHandlers>();
         services.AddScoped<IOrganisationInvitations, Application.Invitations.OrganisationInvitationHandlers>();
         services.AddScoped<IFeedback, Application.Feedback.FeedbackHandlers>();
@@ -140,6 +156,9 @@ public static class IdentityModule
 
         // An organisation's codes follow it when Appeals work in another host closes one (design 8.14.14, stage B).
         services.AddSingleton<IOrganisationCodeSwitch, Application.Invitations.OrganisationCodeSwitch>();
+
+        // Design 8.5.5: where a moderator's notice about an MP's response goes, for the Appeals module in any host.
+        Microsoft.Extensions.DependencyInjection.Extensions.ServiceCollectionDescriptorExtensions.TryAddScoped<IMpLinks, Application.Politicians.MpLinks>(services);
         return services;
     }
 
@@ -197,8 +216,10 @@ internal sealed class IdentityModuleFacade(
     AccountHandlers account,
     StaffHandlers staff,
     PositionConsentHandlers consents,
+    TermsHandlers terms,
     PartySupportHandlers parties,
     AccountDataHandlers data,
+    KnownBrowsers browsers,
     SignInManager<User> signIn) : IIdentityModule
 {
     public Task<Result<Unit>> RegisterAsync(Registration registration, CancellationToken cancellationToken) =>
@@ -245,11 +266,23 @@ internal sealed class IdentityModuleFacade(
     public Task<Result<Unit>> EndSessionAsync(ClaimsPrincipal user, Guid sessionId, CancellationToken cancellationToken) =>
         account.EndSessionAsync(user, sessionId, cancellationToken);
 
+    public async Task<Result<IReadOnlyList<KnownBrowserSummary>>> GetKnownBrowsersAsync(ClaimsPrincipal user, CancellationToken cancellationToken) =>
+        user.UserId() is { } id ? Result<IReadOnlyList<KnownBrowserSummary>>.Success(await browsers.ListAsync(id, cancellationToken)) : Error.Unauthorized("auth.required");
+
+    public async Task<Result<Unit>> ForgetKnownBrowserAsync(ClaimsPrincipal user, Guid id, CancellationToken cancellationToken) =>
+        user.UserId() is { } userId ? await browsers.ForgetAsync(userId, id, cancellationToken) : Error.Unauthorized("auth.required");
+
     public Task<Result<Unit>> GivePositionConsentAsync(ClaimsPrincipal user, string textVersion, CancellationToken cancellationToken) =>
         consents.GiveAsync(user, textVersion, cancellationToken);
 
     public Task<Result<Unit>> WithdrawPositionConsentAsync(ClaimsPrincipal user, CancellationToken cancellationToken) =>
         consents.WithdrawAsync(user, cancellationToken);
+
+    public Task<Result<Unit>> AcceptTermsAsync(ClaimsPrincipal user, string textVersion, CancellationToken cancellationToken) =>
+        terms.AcceptAsync(user, textVersion, cancellationToken);
+
+    public Task<bool> TermsRequiredAsync(ClaimsPrincipal user, CancellationToken cancellationToken) =>
+        terms.RequiredAsync(user, cancellationToken);
 
     public Task<Result<string?>> GetPartySupportAsync(ClaimsPrincipal user, CancellationToken cancellationToken) =>
         parties.GetAsync(user, cancellationToken);

@@ -75,6 +75,12 @@ services:
       RateLimits__CodeRequest__PermitLimit: ${LT2_RATE_CODE_REQUESTS:-10}
       RateLimits__Registration__PermitLimit: ${LT2_RATE_REGISTRATIONS:-20}
       RateLimits__SignIn__PermitLimit: ${LT2_RATE_SIGN_INS:-30}
+      # The MP's link (design 8.19.7): its pages and token routes per client address; only the local .env raises it.
+      RateLimits__MpMail__PermitLimit: ${LT2_RATE_MP_MAIL:-60}
+      # Design 8.19.1: where the data is invented (Demo:Allowed), MP mail goes only when the deployment declares all its mail
+      # caught (Email:Caught: true only where Mailpit takes every email, the local .env). Both false by default.
+      Demo__Allowed: ${LT2_DEMO_DATA:-false}
+      Email__Caught: ${LT2_MAIL_CAUGHT:-false}
       # The AI draft of an appeal's description (design 8.11.4): "claude" with a key in deploy/secrets/ai_api_key turns it
       # on; empty (the default) keeps it off and nothing offers a draft. Its host is then the only one the web may call.
       Ai__Provider: ${LT2_AI_PROVIDER:-}
@@ -88,6 +94,10 @@ services:
         target: DataProtection__KeyEncryptionKey
       - source: ip_hash_key
         target: Security__IpHashKey
+      - source: mail_hash_key
+        target: Security__MailHashKey
+      - source: device_hash_key
+        target: Security__DeviceHashKey
     depends_on:
       migrator:
         condition: service_completed_successfully
@@ -107,6 +117,16 @@ services:
       Email__Smtp__Security: ${LT2_SMTP_SECURITY:-None}
       Email__Smtp__UserName: ${LT2_SMTP_USERNAME:-}
       Email__Smtp__FromAddress: ${LT2_MAIL_FROM:-prisijungimas@lt2.localhost}
+      # MP mail's own stream (design 8.19.3): its sender address and, when LT2_MP_SMTP_HOST is set, its own SMTP account
+      # (password in secrets/mp_smtp_password); otherwise the common account above. Trouble there cannot block sign-in codes.
+      Email__Mp__FromAddress: ${LT2_MAIL_FROM_MP:-suvestines@lt2.localhost}
+      Email__Mp__Smtp__Host: ${LT2_MP_SMTP_HOST:-}
+      Email__Mp__Smtp__Port: ${LT2_MP_SMTP_PORT:-587}
+      Email__Mp__Smtp__Security: ${LT2_MP_SMTP_SECURITY:-StartTls}
+      Email__Mp__Smtp__UserName: ${LT2_MP_SMTP_USERNAME:-}
+      # Design 8.19.1, as for the web: invented data sends MP mail only where all mail is caught.
+      Demo__Allowed: ${LT2_DEMO_DATA:-false}
+      Email__Caught: ${LT2_MAIL_CAUGHT:-false}
       # The site's own address: links in the emails the worker sends start with it (design 5.6).
       Site__Address: https://${LT2_SITE_ADDRESS:-lt2.localhost}:${LT2_HTTPS_PORT:-8443}
       # The Seimas open data. Production keeps the default; only the local .env points the worker at the stand-in.
@@ -129,6 +149,10 @@ services:
         target: Database__Password
       - source: smtp_password
         target: Email__Smtp__Password
+      - source: mp_smtp_password
+        target: Email__Mp__Smtp__Password
+      - source: mail_hash_key
+        target: Security__MailHashKey
       - source: ai_api_key
         target: Ai__ApiKey
     depends_on:
@@ -250,5 +274,11 @@ secrets:
     file: ${LT2_SECRETS_DIR:-./secrets}/ip_hash_key
   smtp_password:
     file: ${LT2_SECRETS_DIR:-./secrets}/smtp_password
+  mp_smtp_password:
+    file: ${LT2_SECRETS_DIR:-./secrets}/mp_smtp_password
+  mail_hash_key:
+    file: ${LT2_SECRETS_DIR:-./secrets}/mail_hash_key
+  device_hash_key:
+    file: ${LT2_SECRETS_DIR:-./secrets}/device_hash_key
   ai_api_key:
     file: ${LT2_SECRETS_DIR:-./secrets}/ai_api_key

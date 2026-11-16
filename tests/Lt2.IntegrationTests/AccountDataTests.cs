@@ -38,7 +38,7 @@ public sealed class AccountDataTests(DatabaseFixture database) : ApiTest(databas
         var root = export.RootElement;
         root.GetProperty("account").GetProperty("email").GetString().ShouldBe(email);
         root.GetProperty("partySupport").GetProperty("party").GetString().ShouldBe("Reformų partija");
-        root.GetProperty("consents").EnumerateArray().Select(c => c.GetProperty("kind").GetString()).ShouldBe(["age-18-or-older", "positions", "party-support"], ignoreOrder: true);
+        root.GetProperty("consents").EnumerateArray().Select(c => c.GetProperty("kind").GetString()).ShouldBe(["age-18-or-older", "terms", "positions", "party-support"], ignoreOrder: true);
         var appeals = root.GetProperty("appeals");
         appeals.GetProperty("positions").EnumerateArray().Single().GetProperty("side").GetString().ShouldBe("against");
         appeals.GetProperty("reasons").EnumerateArray().Single().GetProperty("text").GetString().ShouldBe("Mano paties argumentas eksportui.");

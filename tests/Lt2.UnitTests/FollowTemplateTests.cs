@@ -75,6 +75,39 @@ public sealed class FollowTemplateTests
     }
 
     [Fact]
+    public void The_responses_email_lists_each_MP_with_faction_and_stance_links_to_the_answers_and_holds_no_explanation()
+    {
+        var templates = new FollowTemplates(
+            new StringLocalizer<EmailTemplates>(new ResourceManagerStringLocalizerFactory(Options.Create(new LocalizationOptions()), NullLoggerFactory.Instance)),
+            Options.Create(new SiteOptions { Address = "https://lt2.pavyzdys.test" }));
+        var email = templates.Responses(new FollowResponsesEmail(
+            "ruta@pavyzdys.test", "XVP-0412", "Gyventojų pajamų mokesčio įstatymo pataisa", new DateOnly(2026, 11, 16),
+            [
+                new FollowedResponse("Ona Jonaitienė", "Pilietinės sąjungos frakcija", "for"),
+                new FollowedResponse("Jonas Petraitis", null, "against"),
+            ],
+            "/seimas/XVP-0412#atsakymai", "/sveiki#sekami"));
+        email.Subject.ShouldBe("Lietuva 2.0: Seimo narių atsakymai dėl XVP-0412");
+        email.TextBody.ShouldContain("2026-11-16 dėl jūsų sekamo projekto XVP-0412 · Gyventojų pajamų mokesčio įstatymo pataisa atsakė:\n– Ona Jonaitienė");
+        email.TextBody.ShouldContain("– Ona Jonaitienė (Pilietinės sąjungos frakcija): balsuos už");
+        email.TextBody.ShouldContain("– Jonas Petraitis: balsuos prieš");
+        email.TextBody.ShouldContain("https://lt2.pavyzdys.test/seimas/XVP-0412#atsakymai");
+        email.TextBody.ShouldContain("https://lt2.pavyzdys.test/sveiki#sekami");
+        email.TextBody.ShouldNotContain("{", Case.Sensitive, "every placeholder is filled");
+        email.HtmlBody!.ShouldNotContain("<img", Case.Insensitive);
+    }
+
+    [Theory]
+    [InlineData("for", "balsuos už")]
+    [InlineData("against", "balsuos prieš")]
+    [InlineData("undecided", "dar neapsisprendė")]
+    public void Every_stance_of_an_answer_has_its_words_in_the_responses_email(string stance, string words) =>
+        Templates().Responses(new FollowResponsesEmail(
+                "r@pavyzdys.test", "XVP-0412", "Pataisa", new DateOnly(2026, 11, 16), [new FollowedResponse("Jonas Petraitis", "Reformų partijos frakcija", stance)],
+                "/seimas/XVP-0412#atsakymai", "/sveiki#sekami"))
+            .TextBody.ShouldContain("– Jonas Petraitis (Reformų partijos frakcija): " + words);
+
+    [Fact]
     public void A_consensus_vote_says_so_without_numbers() =>
         Templates().Voted(new FollowVotedEmail("r@pavyzdys.test", "XVP-0533", "Pataisa", "presentation", new DateOnly(2026, 3, 17), true, null, null, null, null, "/seimas/balsavimai/1", [], "/sveiki#sekami"))
             .TextBody.ShouldContain("bendru sutarimu");

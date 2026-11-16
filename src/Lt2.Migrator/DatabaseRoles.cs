@@ -52,7 +52,10 @@ public static class DatabaseRoles
     /// <item>moderators' writing restrictions on accounts (design 8.3), shown to nobody but the person and staff;</item>
     /// <item>organisations' tables, which hold an account beside an organisation (who represents, registered, wrote,
     /// was invited, asked for a code; design 8.14.14); their public content is in the public API;</item>
-    /// <item>every account table (<c>identity</c>), the outbox, follows and their emails (<c>notify</c>), the audit log;</item>
+    /// <item>MPs' responses (design 8.5.5), which hold the account that wrote one; their public content is in the public API;</item>
+    /// <item>every account table (<c>identity</c>, the known browsers of design 8.20.2 included), the outbox, follows and their emails (<c>notify</c>), the audit log;</item>
+    /// <item>MP mail (design 8.19.7): the MPs' choices and extra recipients, their links, the introduction letter's versions with
+    /// who wrote them, and the suppression list;</item>
     /// <item>the migrations' history, the migrator's business only.</item>
     /// </list>
     /// </summary>
@@ -60,14 +63,17 @@ public static class DatabaseRoles
     [
         "appeals.endorsement", "appeals.position", "appeals.writing_restriction",
         "appeals.organisation", "appeals.organisation_code", "appeals.organisation_invite", "appeals.organisation_representative",
-        "appeals.organisation_statement",
+        "appeals.organisation_statement", "appeals.mp_response",
         "audit.event",
         "identity.consent", "identity.data_protection_key", "identity.feedback", "identity.invitation", "identity.invitation_daily",
-        "identity.party_support", "identity.profile", "identity.role", "identity.role_activation", "identity.role_claim",
+        "identity.known_device",
+        "identity.party_support", "identity.politician_link", "identity.politician_token", "identity.profile", "identity.role",
+        "identity.role_activation", "identity.role_claim",
         "identity.session", "identity.sign_in_code", "identity.user", "identity.user_claim", "identity.user_login",
         "identity.user_passkey", "identity.user_role", "identity.user_token",
         "notify.bill_event", "notify.digest_delivery", "notify.digest_item", "notify.digest_run", "notify.follow",
         "notify.notice_setting", "notify.outbox",
+        "notify.introduction_letter", "notify.mp_email_pref", "notify.mp_mail_token", "notify.suppression",
         "appeals.__ef_migrations_history", "audit.__ef_migrations_history", "identity.__ef_migrations_history",
         "notify.__ef_migrations_history", "parliament.__ef_migrations_history",
     ];

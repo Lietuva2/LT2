@@ -24,7 +24,7 @@ internal static class FollowKinds
     public const string Organisation = "organisation";
 }
 
-/// <summary><c>notify.notice_setting</c>: which follow emails a person gets; no row means all on (design 8.11.2, 8.14.14).</summary>
+/// <summary><c>notify.notice_setting</c>: which follow emails a person gets; no row means all on (design 8.11.2, 8.14.14, 8.20.1).</summary>
 internal sealed class NoticeSetting
 {
     public Guid UserId { get; set; }
@@ -36,19 +36,23 @@ internal sealed class NoticeSetting
     /// <summary>An organisation the person follows made a statement public (design 8.14.14, stage B).</summary>
     public bool Statements { get; set; } = true;
 
+    /// <summary>MPs answered on a bill the person follows (design 8.20.1, "Seimo narių atsakymai").</summary>
+    public bool Responses { get; set; } = true;
+
     public DateTimeOffset ChangedAt { get; set; }
 }
 
 /// <summary>
 /// <c>notify.bill_event</c> (design 5.4, 8.11.2): what followers are told about, recorded once, when the job first sees it:
 /// a planned date (key: the date), a stage-result vote (key: the vote id), or an organisation's statement on the bill that
-/// became public (key: the statement's id, design 8.14.14 stage B). No person in it.
+/// became public (key: the statement's id, design 8.14.14 stage B), or MPs' responses of one Vilnius day (key: the day, design 8.20.1).
+/// No person in it.
 /// </summary>
 internal sealed class BillEvent
 {
     public string BillNumber { get; set; } = "";
 
-    /// <summary><see cref="BillEventKinds.Planned"/>, <see cref="BillEventKinds.Voted"/> or <see cref="BillEventKinds.Statement"/>.</summary>
+    /// <summary>One of <see cref="BillEventKinds"/>.</summary>
     public string Kind { get; set; } = "";
 
     public string Key { get; set; } = "";
@@ -67,6 +71,9 @@ internal static class BillEventKinds
     public const string Planned = "planned";
     public const string Voted = "voted";
     public const string Statement = "statement";
+
+    /// <summary>MPs answered on the bill on one Vilnius day (design 8.20.1; key: the day). No person and no text.</summary>
+    public const string Response = "response";
 }
 
 internal static class BillEventOutcomes

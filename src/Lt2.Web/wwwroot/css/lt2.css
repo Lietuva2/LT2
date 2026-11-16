@@ -761,3 +761,87 @@ body { padding-block-end: 4.5rem; }
   .intro-steps > li::before { grid-row: span 2; }
   .intro-steps h3 { align-self: center; }
 }
+/* Design 8.19.2: one MP's summary as text in the moderators' preview; it wraps inside the sheet at any width. */
+.preview { margin: 0; white-space: pre-wrap; overflow-wrap: anywhere; font-family: inherit; font-size: var(--fs-1, 0.9rem); }
+
+/* ---------- The menu, the account item, the footer and the tabs (design 8.21) ---------- */
+
+/* The menu stays on one line from 360 px: the brand, then "Projektai", "Seimo nariai" and "Prisijungti" or "Paskyra". Under
+   32rem the brand's name is read by screen readers only and the menu's type is the secondary size. These rules replace the
+   wrapping header above. */
+.top { flex-wrap: nowrap; gap: var(--sp-3); }
+.top__brand { flex: none; }
+.top__nav { flex-wrap: nowrap; align-items: center; justify-content: flex-end; column-gap: var(--sp-5); min-inline-size: 0; }
+.top__nav > a, .account__toggle { white-space: nowrap; }
+/* A page under a menu item (aria-current="true": a bill, a vote, a profile) is marked as its own page is. */
+.top__nav > a[aria-current] { border-bottom-color: var(--leaf); }
+@media (max-width: 54rem) {
+  .top__nav { column-gap: var(--sp-4); }
+}
+@media (max-width: 32rem) {
+  .top__name {
+    position: absolute; width: 1px; height: 1px; overflow: hidden;
+    clip-path: inset(50%); white-space: nowrap;
+  }
+  .top__nav { column-gap: var(--sp-3); font-size: var(--fs-1); }
+}
+
+/* "Paskyra": a disclosure (no script needed); its panel lies over the page under the item, at the right edge, at a readable
+   width and never wider than the window. js/lt2-account.js fills the name and the account's own links and closes it. */
+.account { position: relative; }
+.account__toggle {
+  display: inline-flex; align-items: center; gap: var(--sp-2);
+  padding-block: var(--sp-2); border-bottom: 4px solid transparent; cursor: pointer; list-style: none; font-weight: 600;
+}
+.account__toggle::-webkit-details-marker { display: none; }
+.account__toggle::marker { content: ""; }
+.account__toggle::after {
+  content: ""; inline-size: 0.45em; block-size: 0.45em; margin-block-start: -0.25em;
+  border: solid currentColor; border-width: 0 2px 2px 0; transform: rotate(45deg);
+}
+.account[open] > .account__toggle::after { margin-block-start: 0.2em; transform: rotate(-135deg); }
+.account__toggle:hover, .account[open] > .account__toggle { border-bottom-color: var(--slate); }
+.account__panel {
+  position: absolute; inset-inline-end: 0; inset-block-start: calc(100% + var(--sp-2)); z-index: 30;
+  display: flex; flex-direction: column; gap: var(--sp-2);
+  inline-size: max-content; min-inline-size: 13rem; max-inline-size: min(20rem, 100vw - 2rem);
+  padding: var(--sp-3) var(--sp-4); background: var(--sheet); color: var(--ink); border: 1px solid var(--rule);
+  box-shadow: 0 0.5rem 1.5rem rgb(0 0 0 / 0.2); font-size: var(--fs-1); white-space: normal;
+}
+.account__name { font-weight: 700; overflow-wrap: anywhere; padding-block-end: var(--sp-2); border-bottom: 1px solid var(--rule); }
+.account__links { display: flex; flex-direction: column; }
+.top__nav .account__links a, .account__links .top__signout button {
+  display: block; inline-size: 100%; padding: var(--sp-2) 0; border: 0; text-align: start;
+  color: var(--ink); text-decoration: none; font-weight: 600;
+}
+.top__nav .account__links a:hover, .account__links .top__signout button:hover { text-decoration: underline; border: 0; }
+.account__links .top__signout { display: block; }
+
+/* The footer: two short groups of links, then the theme switch and the line about the trial, on the ground. */
+.foot { display: flex; flex-direction: column; gap: var(--sp-5); }
+.foot__groups { display: flex; flex-wrap: wrap; gap: var(--sp-5) var(--sp-7); }
+.foot__group { display: flex; flex-direction: column; gap: var(--sp-2); }
+.foot__group ul { display: flex; flex-direction: column; gap: var(--sp-1); }
+.foot .mark { margin: 0; }
+
+/* The four tabs of "Projektai" under the page's heading: plain links on the ground, the current one underlined like the
+   menu's current item. */
+.project-tabs { gap: var(--sp-2) var(--sp-5); font-weight: 600; }
+.project-tabs a { color: var(--ink); text-decoration: none; padding-block: var(--sp-1); border-bottom: 4px solid transparent; }
+.project-tabs a:hover { border-bottom-color: var(--slate); }
+.project-tabs a[aria-current="page"] { border-bottom-color: var(--leaf); }
+@media (max-width: 36rem) {
+  .project-tabs { column-gap: var(--sp-3); font-size: var(--fs-1); }
+}
+
+/* The terms of use and the privacy notice (design 8.22): long descriptions in the facts lists read as running text; on a phone
+   the storage table becomes one block per row, each cell with its column's name. */
+.legal .facts dt { color: var(--ink); font-weight: 600; }
+.legal .facts dd { font-weight: 400; }
+.legal code { font-size: var(--fs-1); overflow-wrap: anywhere; }
+@media (max-width: 36rem) {
+  #storage-inventory thead { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); }
+  #storage-inventory tr { display: block; padding-block: var(--sp-3); border-top: 1px solid var(--rule); }
+  #storage-inventory td { display: block; padding: var(--sp-1) 0; border: 0; }
+  #storage-inventory td::before { content: attr(data-label) ": "; font-weight: 600; color: var(--ink-2); }
+}

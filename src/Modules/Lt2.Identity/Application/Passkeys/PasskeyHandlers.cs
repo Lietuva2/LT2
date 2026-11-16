@@ -23,7 +23,9 @@ internal sealed class PasskeyHandlers(
     UserManager<User> users,
     SignInManager<User> signIn,
     StaffAccess access,
+    Politicians.PoliticianAccess politicians,
     AccountEvents events,
+    SignIn.KnownBrowsers browsers,
     ILogger<PasskeyHandlers> logger)
 {
     internal static readonly Error InvalidPasskey = Error.Validation("passkey.invalid", "credential");
@@ -90,6 +92,15 @@ internal sealed class PasskeyHandlers(
         if (await CheckStaffRuleAsync(principal, cancellationToken) is { } refused)
         {
             return refused;
+        }
+
+        // Design 8.5.2, 8.5.3: on a linked account (the MP's or an office member's) a code alone never changes the passkeys;
+        // the take-over link is the other way, with its own request. The creation options above stay open to a code session:
+        // they change nothing, and the take-over page needs them.
+        var linked = await politicians.ForAsync(principal, cancellationToken);
+        if (linked is not null && !PoliticianRules.MayChangePasskeys(linked.Link is not null, linked.PasskeySession))
+        {
+            return Politicians.PoliticianAccess.PasskeyRequired;
         }
 
         PasskeyAttestationResult attestation;
@@ -164,6 +175,9 @@ internal sealed class PasskeyHandlers(
                 new Claim(AuthenticationMethods.ClaimType, AuthenticationMethods.Passkey),
                 new Claim(SessionTicketStore.PasskeyClaim, WebEncoders.Base64UrlEncode(assertion.Passkey.CredentialId)),
             ]);
+
+        // Design 8.20.2: the browser becomes known to the account, or is renewed.
+        await browsers.RememberAsync(assertion.User.Id, CancellationToken.None);
         return Result.Ok();
     }
 }

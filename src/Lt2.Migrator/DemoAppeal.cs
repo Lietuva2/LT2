@@ -43,7 +43,7 @@ public static class DemoAppeal
     /// What happened, for the console. <c>AiDescription</c>: <c>created</c>, <c>already there</c> or <c>left as it is</c>.
     /// <c>Organisations</c>: how many of the invented organisations on <see cref="Bill"/> were created (design 8.14.14).
     /// </summary>
-    public sealed record Outcome(string Status, int AccountsCreated, string AiDescription, int Organisations = 0);
+    public sealed record Outcome(string Status, int AccountsCreated, string AiDescription, int Organisations = 0, int TermsAccepted = 0);
 
     public static async Task<Outcome> RunAsync(IConfiguration configuration, string connectionString, TimeProvider clock, CancellationToken cancellationToken)
     {
@@ -71,6 +71,10 @@ public static class DemoAppeal
         var now = clock.GetUtcNow();
         var people = Build(now);
         var created = await InventedMembers.CreateAsync(connectionString, people.Members, cancellationToken);
+
+        // Design 8.22.2: accounts made by an earlier run, before the terms of use (or before their newest version), accept them
+        // now, so re-running this command brings an existing local database up to date.
+        var termsAccepted = await InventedMembers.AcceptTermsAsync(connectionString, people.Members, cancellationToken);
         var outcome = await InventedRecord.SeedAsync(connectionString, people.Record, cancellationToken);
         if (outcome == InventedRecordOutcome.BillTaken)
         {
@@ -85,6 +89,7 @@ public static class DemoAppeal
         // representatives are invented accounts of their own, with no side on any bill.
         var organisations = Organisations();
         await InventedMembers.CreateAsync(connectionString, OrganisationMembers(now), cancellationToken);
+        termsAccepted += await InventedMembers.AcceptTermsAsync(connectionString, OrganisationMembers(now), cancellationToken);
         var organisationsCreated = await InventedOrganisations.SeedAsync(connectionString, organisations, now, cancellationToken);
         return new Outcome(
             outcome == InventedRecordOutcome.Created ? "created" : "already there",
@@ -95,7 +100,8 @@ public static class DemoAppeal
                 InventedRecordOutcome.AlreadyThere => "already there",
                 _ => "left as it is",
             },
-            organisationsCreated);
+            organisationsCreated,
+            termsAccepted);
     }
 
     /// <summary>The invented organisations' representatives: accounts of their own, never given a side.</summary>

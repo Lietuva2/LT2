@@ -37,11 +37,50 @@ public interface IDigestSource
 
     /// <summary>Per record and party, the supporters on each side, with every group under 20 already withheld.</summary>
     Task<IReadOnlyDictionary<Guid, IReadOnlyList<PartyNumbers>>> PartyNumbersAsync(IReadOnlyCollection<Guid> recordIds, CancellationToken cancellationToken);
+
+    /// <summary>
+    /// The MPs' published responses on the given bills (design 8.5.5, 8.19.3: "Jūsų atsakymas …" in the summary): the stance
+    /// and when the text now shown was written. Withdrawn and hidden responses are not given. Never who wrote one.
+    /// </summary>
+    Task<IReadOnlyList<MpStance>> PublishedResponsesAsync(IReadOnlyCollection<string> billNumbers, CancellationToken cancellationToken);
+
+    /// <summary>
+    /// Design 8.12.2, 8.19.1: a summary that holds these records was really sent, so each counts as summarised from now on
+    /// (<c>first_summarised_at</c>, set once). Written in the caller's transaction, so it commits with the sending.
+    /// </summary>
+    Task MarkSummarisedAsync(IReadOnlyCollection<Guid> recordIds, DateTimeOffset at, System.Data.Common.DbTransaction transaction, CancellationToken cancellationToken);
 }
 
-/// <summary>A sitting MP a summary would go to. No address: M2a never sends, so none leaves the Parliament module.</summary>
-/// <param name="HasOfficialAddress">Open data lists an official address (design 8.4: every sitting MP with one).</param>
-public sealed record MpRecipient(string Slug, string FirstName, string LastName, string? Party, bool HasOfficialAddress);
+/// <summary>An MP's published response on a bill as a summary gives it (design 8.19.3): the stance and its date, no text, no writer.</summary>
+/// <param name="Stance"><c>for</c>, <c>against</c> or <c>undecided</c>.</param>
+public sealed record MpStance(long SeimasPersonId, string BillNumber, string Stance, DateTimeOffset WrittenAt);
+
+/// <summary>A sitting MP a summary would go to. No address: it leaves the Parliament module only through <see cref="IMpMailAddresses"/>.</summary>
+/// <param name="HasOfficialAddress">
+/// Open data lists an official address (design 8.4: every sitting MP with one), by the one definition of design 8.5.1.
+/// </param>
+public sealed record MpRecipient(string Slug, string FirstName, string LastName, string? Party, bool HasOfficialAddress, long SeimasPersonId = 0);
+
+/// <summary>
+/// Design 8.19.3: the one call that gives MPs' official addresses out of the Parliament module, made for sending MP mail only
+/// (summaries, the introduction letter, the preference emails) and for comparing with the suppression list. An address it
+/// gives travels only into an outbox row or a keyed hash; it is never logged, stored elsewhere or answered.
+/// </summary>
+public interface IMpMailAddresses
+{
+    /// <summary>
+    /// The official address (design 8.5.1, the one definition) of each given sitting MP who has one, by Seimas person id; an MP
+    /// without one, or whose mandate has ended, is missing.
+    /// </summary>
+    Task<IReadOnlyDictionary<long, string>> OfficialAddressesForSendingAsync(IReadOnlyCollection<long> seimasPersonIds, CancellationToken cancellationToken);
+
+    /// <summary>
+    /// Design 8.19.1: whether the parliament data holds anything invented: any stored response marked synthetic (the
+    /// stand-in's), whatever else is stored beside it. The stand-in MPs' addresses are on the real <c>lrs.lt</c> domain, so
+    /// MP mail is locked while this is true unless the deployment declares all its mail caught.
+    /// </summary>
+    Task<bool> HoldsInventedDataAsync(CancellationToken cancellationToken);
+}
 
 /// <summary>The MPs and the sitting days. Implemented by the Parliament module.</summary>
 public interface IMpDirectory
@@ -59,6 +98,19 @@ public interface IMpDirectory
 
     /// <summary>MPs by Seimas person id; unknown ids are missing.</summary>
     Task<IReadOnlyDictionary<long, MpFacts>> MpsAsync(IReadOnlyCollection<long> seimasPersonIds, CancellationToken cancellationToken);
+
+    /// <summary>
+    /// Each given MP's faction as profiles show it (design 8.20.1, the follow email about responses): today's for a sitting MP of
+    /// the current term, none in the mixed group; the last one for a former MP. MPs without a faction are missing.
+    /// </summary>
+    Task<IReadOnlyDictionary<long, string>> FactionsAsync(IReadOnlyCollection<long> seimasPersonIds, CancellationToken cancellationToken);
+
+    /// <summary>
+    /// "Whose official address is this" (design 8.5.1): the MP for whom open data lists <paramref name="email"/> as an email
+    /// contact on the Seimas's own domain, compared ignoring case, while the mandate has not ended; an address listed for
+    /// more than one such MP belongs to nobody. Null for every other address. No address leaves the module otherwise.
+    /// </summary>
+    Task<MpFacts?> OfficialAddressOwnerAsync(string email, CancellationToken cancellationToken);
 }
 
 /// <summary>

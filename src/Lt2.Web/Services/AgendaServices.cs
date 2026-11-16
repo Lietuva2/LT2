@@ -117,6 +117,9 @@ internal sealed class FrontPageFreshness(TimeProvider clock)
     /// <summary>A side was taken, changed or withdrawn: the copy no longer shows the counts.</summary>
     public void MarkStale() => Volatile.Write(ref _stale, 1);
 
+    /// <summary>Whether the copy is marked out of date (read by tests; the page asks <see cref="TakeRebuild"/>).</summary>
+    public bool IsStale => Volatile.Read(ref _stale) == 1;
+
     /// <summary>
     /// True when the copy is stale and old enough to be replaced; the flag is then cleared by this one caller, who
     /// rebuilds. A side marked meanwhile sets it again for the next copy.

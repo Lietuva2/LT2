@@ -11,7 +11,45 @@ namespace Lt2.SharedKernel;
 /// <param name="Email">The address on the account, for notices to the author (moderation, design 8.3).</param>
 /// <param name="MemberSince">When the registration was completed; the "accounts older than 30 days" count uses it.</param>
 /// <param name="HasPositionConsent">The explicit consent to store positions (design 6.5) is given and not withdrawn.</param>
-public sealed record ParticipantFacts(Guid UserId, string? DisplayName, string Email, DateTimeOffset MemberSince, bool HasPositionConsent);
+/// <param name="IsMpAccount">
+/// The account is an MP's own linked account (design 8.5.4: the MP's part of a <c>politician_link</c>, not an office
+/// member's), read from the database on every call, so ending a link works at once. See <see cref="MpAccounts"/>.
+/// </param>
+public sealed record ParticipantFacts(Guid UserId, string? DisplayName, string Email, DateTimeOffset MemberSince, bool HasPositionConsent, bool IsMpAccount = false);
+
+/// <summary>
+/// Design 8.5.4 <b>[the designer's proposal, awaiting the owner]</b>: the MP's own linked account takes no part as a
+/// participant (no side, no argument, no "Man svarbu", no party-support declaration, no organisation); the MP speaks through
+/// the response. Office members are not restricted. This is the one place the rule is said: every action that checks its
+/// participant refuses through <see cref="Refusal"/>, so the owner's decision changes it here.
+/// </summary>
+public static class MpAccounts
+{
+    public static readonly Error TakesNoPart = Error.Forbidden("mp.takes-no-part");
+
+    /// <summary><see cref="TakesNoPart"/> for an MP's own account; null for anyone else (an unknown account included).</summary>
+    public static Error? Refusal(ParticipantFacts? participant) => participant is { IsMpAccount: true } ? TakesNoPart : null;
+}
+
+/// <summary>
+/// Design 8.5.5: where a notice about an MP's response goes. Implemented by Identity, which owns the links; nothing else of
+/// a link leaves it (who the office members are, who wrote a response).
+/// </summary>
+public interface IMpLinks
+{
+    /// <summary>
+    /// The own address of the account linked as the MP <paramref name="seimasPersonId"/> (the official address when the profile
+    /// was taken over), or null when no account is linked as that MP now. Used only to write an outbox row; never logged.
+    /// </summary>
+    Task<string?> MpAccountAddressAsync(long seimasPersonId, CancellationToken cancellationToken);
+
+    /// <summary>
+    /// For each of <paramref name="userIds"/> linked now to an MP, as the MP's own account or an office member (design 8.5.2,
+    /// 8.5.3), that MP's Seimas person number; accounts without a link are missing. Used only to leave an MP's own responses out
+    /// of the follow email to the MP's account and office (design 8.20.1); never shown, logged or combined with anything else.
+    /// </summary>
+    Task<IReadOnlyDictionary<Guid, long>> SpeaksForAsync(IReadOnlyCollection<Guid> userIds, CancellationToken cancellationToken);
+}
 
 /// <summary>Facts about members, for the Appeals module. Implemented by Identity.</summary>
 public interface IParticipants
@@ -46,6 +84,13 @@ public interface IPositionErasure
 {
     /// <summary>Returns how many positions were deleted.</summary>
     Task<int> EraseAsync(Guid userId, DbTransaction transaction, CancellationToken cancellationToken);
+
+    /// <summary>
+    /// Withdraws the person's sides (with their "Man svarbu" marks) on every bill whose record is not closed, as sides
+    /// withdrawn by hand: the counts go down (design 8.5.2, the take-over). A closed record's counts are frozen and keep its
+    /// sides. Returns how many sides were withdrawn.
+    /// </summary>
+    Task<int> WithdrawOpenSidesAsync(Guid userId, DbTransaction transaction, CancellationToken cancellationToken);
 }
 
 /// <summary>

@@ -1,0 +1,92 @@
+@page "/seimo-narys/perimti"
+@rendermode InteractiveWebAssembly
+@using Lt2.Api.Contracts.Mps
+@inherits InteractiveBase<UiText>
+@inject IMpApi MpApi
+@inject IAuthApi Auth
+@inject NavigationManager Navigation
+@inject Passkeys PasskeyBrowser
+
+@* Design 8.5.2, steps 2 and 3: the take-over link opens this page for the signed-in account. It says what taking over means,
+   then "Sukurti prieigos raktą ir perimti" makes the passkey in the browser and sends it with the link's token in one
+   request. Design 6.8: the token is after the "#", read in the browser and sent in the request body, so the page rendered on
+   the server knows nothing of it and no log or referrer holds it. *@
+<PageTitle>@L["MpTakeover.PageTitle"]</PageTitle>
+
+<div class="stack">
+    <h1>@L["MpTakeover.Title"]</h1>
+    <NeedsScript />
+    @if (_read && _token is null)
+    {
+        <p class="note" role="alert" id="takeover-missing">@L["MpLink.Missing"]</p>
+    }
+    else if (_read && !_signedIn)
+    {
+        <p class="note" id="takeover-sign-in">@L["MpTakeover.SignInFirst"] <a href="/prisijungti">@L["MpLink.SignIn"]</a></p>
+    }
+    else
+    {
+        <section class="sheet stack" aria-labelledby="takeover-what" id="takeover">
+            <h2 id="takeover-what" class="visually-hidden">@L["MpTakeover.What"]</h2>
+            <p>@L["MpTakeover.Lead"]</p>
+            <ul class="stack stack--tight">
+                <li>@L["MpTakeover.Public"]</li>
+                <li>@L["MpTakeover.NoSides"]</li>
+                <li>@L["MpTakeover.OnlyPasskey"]</li>
+            </ul>
+            <p><button type="button" class="btn" id="takeover-submit" disabled="@(Locked || !_read)" @onclick="TakeOverAsync">@L["MpTakeover.Submit"]</button></p>
+        </section>
+    }
+    <Messages Message="@Message" Info="@Info" />
+</div>
+
+@code {
+    private bool _read;
+    private bool _signedIn;
+    private string? _token;
+
+    protected override async Task OnInitializedAsync()
+    {
+        // Nothing until the browser has read the token: the server cannot know it.
+        if (!RendererInfo.IsInteractive)
+        {
+            return;
+        }
+
+        _token = InvitationLink.Fragment(Navigation.Uri);
+        _signedIn = await IsSignedInAsync();
+        _read = true;
+    }
+
+    private Task TakeOverAsync() => RunAsync(async () =>
+    {
+        if (!await PasskeyBrowser.IsSupportedAsync())
+        {
+            Message = L["Passkey.Unsupported"];
+            return;
+        }
+
+        var options = await Auth.GetPasskeyCreationOptionsAsync();
+        if (!Succeeded(options))
+        {
+            return;
+        }
+
+        var credential = await PasskeyBrowser.CreateAsync(options.Value!);
+        if (credential is null)
+        {
+            Message = L["Passkey.Cancelled"];
+            return;
+        }
+
+        var taken = await MpApi.TakeOverAsync(new MpTakeoverRequest { Token = _token ?? "", Credential = credential });
+        if (!taken.IsSuccess)
+        {
+            Show(taken.Problem);
+            return;
+        }
+
+        // A new passkey session: the account page is loaded afresh with it.
+        Navigation.NavigateTo("/sveiki", forceLoad: true);
+    });
+}

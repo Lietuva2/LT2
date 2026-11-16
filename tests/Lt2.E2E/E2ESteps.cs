@@ -35,6 +35,39 @@ internal static partial class Mailpit
     /// <summary>The text of the newest email to <paramref name="to"/> whose subject has <paramref name="subject"/>.</summary>
     public static async Task<string> MailAsync(string to, string subject, TimeSpan? wait = null) => (await MessageAsync(to, subject, wait)).Text;
 
+    /// <summary>
+    /// The newest email matching a Mailpit <paramref name="query"/> (for example <c>subject:"…"</c>), waited for: its id,
+    /// subject, text and HTML parts and its headers (design 8.19.3: <c>List-Unsubscribe</c>).
+    /// </summary>
+    public static async Task<(string Id, string Subject, string Text, string Html, JsonElement Headers)> FullAsync(string query, TimeSpan? wait = null)
+    {
+        using var http = new HttpClient { BaseAddress = new Uri(Url) };
+        var until = DateTime.UtcNow + (wait ?? TimeSpan.FromSeconds(60));
+        while (true)
+        {
+            var search = await http.GetFromJsonAsync<JsonElement>($"/api/v1/search?query={Uri.EscapeDataString(query)}");
+            var messages = search.GetProperty("messages");
+            if (messages.GetArrayLength() > 0)
+            {
+                var id = messages[0].GetProperty("ID").GetString()!;
+                var message = await http.GetFromJsonAsync<JsonElement>($"/api/v1/message/{id}");
+                var headers = await http.GetFromJsonAsync<JsonElement>($"/api/v1/message/{id}/headers");
+                return (id, messages[0].GetProperty("Subject").GetString()!, message.GetProperty("Text").GetString()!, message.GetProperty("HTML").GetString() ?? "", headers);
+            }
+
+            DateTime.UtcNow.ShouldBeLessThan(until, $"an email matching {query} arrives in Mailpit");
+            await Task.Delay(500);
+        }
+    }
+
+    /// <summary>How many emails match a Mailpit <paramref name="query"/> now.</summary>
+    public static async Task<int> CountAsync(string query)
+    {
+        using var http = new HttpClient { BaseAddress = new Uri(Url) };
+        var search = await http.GetFromJsonAsync<JsonElement>($"/api/v1/search?query={Uri.EscapeDataString(query)}");
+        return search.GetProperty("messages_count").GetInt32();
+    }
+
     /// <summary>The six-digit code of the newest sign-in email to <paramref name="email"/>.</summary>
     public static async Task<string> CodeAsync(string email)
     {
@@ -60,7 +93,7 @@ internal static class E2ESteps
 
     /// <summary>
     /// The registration form already open on <paramref name="page"/> (any start: the sign-in page, an invitation link, a
-    /// share link): the address, the emailed code, then the name and the age (design 6.2). The invitation code is typed
+    /// share link): the address, the emailed code, then the name, the age and the terms of use (design 6.2, 8.22.2). The invitation code is typed
     /// only when <paramref name="invitation"/> is given (a link fills it in). Leaves the page where the site lands it.
     /// </summary>
     public static async Task RegisterHereAsync(IPage page, string email, string displayName, string? invitation = null)
@@ -75,12 +108,20 @@ internal static class E2ESteps
         await page.GetByRole(AriaRole.Button, new() { Name = "Registruotis", Exact = true }).ClickAsync();
         await page.GetByLabel("Šešių skaitmenų kodas").FillAsync(await Mailpit.CodeAsync(email));
         await page.GetByRole(AriaRole.Button, new() { Name = "Prisijungti", Exact = true }).ClickAsync();
-        await Assertions.Expect(page.GetByRole(AriaRole.Heading, new() { Name = "Dar du dalykai" })).ToBeVisibleAsync(new() { Timeout = Slow });
+        await Assertions.Expect(page.GetByRole(AriaRole.Heading, new() { Name = "Dar keli dalykai" })).ToBeVisibleAsync(new() { Timeout = Slow });
         await SignUpTests.WaitForInteractivityAsync(page);
         await page.GetByLabel("Vardas, kurį matys kiti").FillAsync(displayName);
         await page.GetByLabel("Man yra 18 metų arba daugiau").CheckAsync();
+        await page.GetByLabel("Sutinku su naudojimo taisyklėmis").CheckAsync();
         await page.GetByRole(AriaRole.Button, new() { Name = "Baigti registraciją" }).ClickAsync();
     }
+
+    /// <summary>
+    /// SQL against the stack's database (the compose project's <c>postgres</c> service), for set-ups the product offers no way to
+    /// make: an account older than the terms of use. Returns what psql printed (unaligned, tuples only).
+    /// </summary>
+    public static Task<string> SqlAsync(string sql) =>
+        Compose.RunAsync("exec", "-T", "postgres", "sh", "-c", "psql -U \"$POSTGRES_USER\" -d lt2 -v ON_ERROR_STOP=1 -q -At -c \"$0\"", sql);
 
     /// <summary>A unique invented address for one run.</summary>
     public static string NewEmail(string name = "ruta.mockute") => $"{name}.{Guid.NewGuid():N}@pavyzdys.test";

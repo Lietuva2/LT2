@@ -48,6 +48,15 @@ public static class AppealsModule
         services.AddScoped<IOrganisations, OrganisationsService>();
         services.AddScoped<IOrganisationModeration, OrganisationModerationService>();
 
+        // Design 8.5.5: MPs' responses, keyed by the Seimas person number; who may speak for an MP is the host's question to
+        // Identity. Needs IMpLinks (Identity) and IMpDirectory (Parliament) for the moderators' notices.
+        services.AddScoped<MpResponsesService>();
+        services.AddScoped<IMpResponses>(sp => sp.GetRequiredService<MpResponsesService>());
+        services.AddScoped<IMpResponseModeration>(sp => sp.GetRequiredService<MpResponsesService>());
+
+        // Design 8.20.1: the responses the followers' daily email tells about (Notifications reads them through this).
+        services.AddScoped<IMpResponseFeed, MpResponseFeed>();
+
         // Design 8.14.14 (stage B): following organisations reads them through this; the codes are Identity's (IOrganisationCodeSwitch).
         services.AddScoped<IOrganisationDirectory, OrganisationDirectory>();
         services.AddScoped<IAppealsMaintenance, AppealsMaintenance>();

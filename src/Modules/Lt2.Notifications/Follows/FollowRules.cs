@@ -60,4 +60,33 @@ internal static class FollowRules
     /// </summary>
     public static bool IsStatementRecipient(DateTimeOffset followedAt, DateTimeOffset firstSeen, DateTimeOffset firstPublicAt) =>
         IsRecipient(followedAt, firstSeen, firstPublicAt);
+
+    /// <summary>The key of a bill's "Seimo narių atsakymai" event (design 8.20.1): the Vilnius day the MPs answered.</summary>
+    public static string ResponsesKey(DateOnly day) => PlannedKey(day);
+
+    /// <summary>
+    /// Which Vilnius day's answers may be sent now (design 8.20.1): one email per bill per day, sent the next morning at
+    /// <paramref name="sendAt"/> (<c>Follows:ResponsesAt</c>, Vilnius time). From that time on it is yesterday; before it, none,
+    /// and a day whose next day has passed without a run is not sent later.
+    /// </summary>
+    public static DateOnly? ResponsesDayDue(DateTimeOffset now, TimeOnly sendAt)
+    {
+        var local = TimeZoneInfo.ConvertTime(now, VilniusTime.Zone);
+        return TimeOnly.FromDateTime(local.DateTime) >= sendAt ? DateOnly.FromDateTime(local.DateTime).AddDays(-1) : null;
+    }
+
+    /// <summary>The <c>Follows:ResponsesAt</c> setting as a time; an unreadable value falls back to the default, 08:00.</summary>
+    public static TimeOnly ResponsesAt(string setting) =>
+        TimeOnly.TryParseExact(setting, "HH:mm", CultureInfo.InvariantCulture, DateTimeStyles.None, out var at) ? at : new TimeOnly(8, 0);
+
+    /// <summary>
+    /// The answers one follower of a bill is told about (design 8.20.1): those whose stance became public after the person
+    /// followed the bill (never something from before they followed), leaving out the MP the person speaks for as the MP's own
+    /// account or an office member (design 8.20.1: none about their own MP's responses). Empty: no email for that person.
+    /// </summary>
+    public static IReadOnlyList<PublicResponseFacts> ResponsesFor(DateTimeOffset followedAt, long? speaksFor, IEnumerable<PublicResponseFacts> responses)
+    {
+        ArgumentNullException.ThrowIfNull(responses);
+        return responses.Where(r => followedAt < r.AnnouncedAt && r.SeimasPersonId != speaksFor).ToList();
+    }
 }

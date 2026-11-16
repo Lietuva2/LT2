@@ -55,7 +55,7 @@
   <data name="Activation.Done" xml:space="preserve"><value>Vaidmuo aktyvintas. Jis veikia, kai prisijungiate šiuo prieigos raktu.</value></data>
   <data name="Code.NewestOnly" xml:space="preserve"><value>Jei gavote kelis laiškus, tinka tik naujausias kodas.</value></data>
   <data name="Complete.Label" xml:space="preserve"><value>Po pirmo kodo</value></data>
-  <data name="Complete.Title" xml:space="preserve"><value>Dar du dalykai</value></data>
+  <data name="Complete.Title" xml:space="preserve"><value>Dar keli dalykai</value></data>
   <data name="Complete.Confirmed.Before" xml:space="preserve"><value>Adresas</value></data>
   <data name="Complete.Confirmed.After" xml:space="preserve"><value>patvirtintas.</value></data>
   <data name="Complete.Submit" xml:space="preserve"><value>Baigti registraciją</value></data>
@@ -87,6 +87,13 @@
   <data name="Sessions.Method.otp" xml:space="preserve"><value>prisijungta kodu</value></data>
   <data name="Sessions.Method.pop" xml:space="preserve"><value>prisijungta prieigos raktu</value></data>
   <data name="Sessions.Method.unknown" xml:space="preserve"><value>prisijungimo būdas nežinomas</value></data>
+  <data name="KnownBrowsers.Title" xml:space="preserve"><value>Žinomos naršyklės</value></data>
+  <data name="KnownBrowsers.Text" xml:space="preserve"><value>Naršyklės, kuriose prisijungėte. Jos gauna prisijungimo kodus atskirai nuo kitų, todėl svetimi negali jų užblokuoti. Pamiršta naršyklė vėl laikoma nepažįstama.</value></data>
+  <data name="KnownBrowsers.FirstSeen" xml:space="preserve"><value>pirmą kartą {0}</value></data>
+  <data name="KnownBrowsers.Current" xml:space="preserve"><value>Ši naršyklė</value></data>
+  <data name="KnownBrowsers.Forget" xml:space="preserve"><value>Pamiršti</value></data>
+  <data name="KnownBrowsers.None" xml:space="preserve"><value>Žinomų naršyklių nėra.</value></data>
+  <data name="KnownBrowsers.Forgotten" xml:space="preserve"><value>Naršyklė pamiršta.</value></data>
   <data name="SignOut" xml:space="preserve"><value>Atsijungti</value></data>
 <data name="Staff.Nav" xml:space="preserve"><value>Darbuotojo darbai</value></data>
 <data name="Staff.Moderation" xml:space="preserve"><value>Moderavimas</value></data>
@@ -115,4 +122,79 @@
 <data name="Split.Aria" xml:space="preserve"><value>{0} už, {1} prieš, {2} susilaikė</value></data>
 <data name="Data.DeleteStaffMoreAnswer" xml:space="preserve"><value>Lieka darbuotojų veiksmai – paslėpti ar paskelbti argumentai, jų paaiškinimai, rašymo apribojimai, organizacijų patvirtinimai, – kad būtų aišku, kas ką padarė. Visa kita, ką pateikėte paskyroje, ištrinama.</value></data>
 <data name="Hint.Opens" xml:space="preserve"><value>Atveria trumpą paaiškinimą</value></data>
-<data name="Hint.More" xml:space="preserve"><value>Plačiau</value></data></root>
+<data name="Hint.More" xml:space="preserve"><value>Plačiau</value></data><data name="Mp.Title" xml:space="preserve"><value>Seimo nario profilis</value></data>
+<data name="Mp.Offer" xml:space="preserve"><value>Prisijungėte oficialiu Seimo nario adresu. Seimo narys: {0}.</value></data>
+<data name="Mp.Claim" xml:space="preserve"><value>Perimti profilį</value></data>
+<data name="Mp.LinkSent" xml:space="preserve"><value>Nuorodą išsiuntėme jūsų adresu. Atverkite ją šioje naršyklėje per 24 valandas.</value></data>
+<data name="Mp.Managing" xml:space="preserve"><value>Tvarkote Seimo nario profilį: {0}.</value></data>
+<data name="Mp.OfficeOf" xml:space="preserve"><value>Esate Seimo nario biuro narys. Seimo narys: {0}.</value></data>
+<data name="Mp.ToProfile" xml:space="preserve"><value>Profilis</value></data>
+<data name="Mp.Bills" xml:space="preserve"><value>Projektai, dėl kurių į jus kreipiamasi</value></data>
+<data name="Mp.PasskeyNeeded" xml:space="preserve"><value>Prisijunkite prieigos raktu: prisijungus kodu galima tik skaityti.</value></data>
+<data name="Mp.Office.Title" xml:space="preserve"><value>Biuras</value></data>
+<data name="Mp.Office.Lead" xml:space="preserve"><value>Biuro nariai rašo Seimo nario vardu. Kas jie, niekam nerodoma.</value></data>
+<data name="Mp.Office.None" xml:space="preserve"><value>Biuro narių nėra.</value></data>
+<data name="Mp.Office.NoName" xml:space="preserve"><value>Be vardo</value></data>
+<data name="Mp.Office.Since" xml:space="preserve"><value>nuo {0}</value></data>
+<data name="Mp.Office.Count" xml:space="preserve"><value>Biuro narių: {0} iš {1}</value></data>
+<data name="Mp.Office.Invite" xml:space="preserve"><value>Pakviesti biuro narį</value></data>
+<data name="Mp.Office.LinkOnce" xml:space="preserve"><value>Nuoroda rodoma tik dabar: perduokite ją patys. Ji tinka vienam žmogui iki {0}.</value></data>
+<data name="Mp.Office.Remove" xml:space="preserve"><value>Pašalinti</value></data>
+<data name="Mp.Office.Removed" xml:space="preserve"><value>Biuro narys pašalintas.</value></data>
+<data name="Mp.GiveUp" xml:space="preserve"><value>Atsisakyti profilio</value></data>
+<data name="Mp.GiveUpWarning" xml:space="preserve"><value>Profilyje nebebus rodoma, kad jį tvarko Seimo narys, o biuro narių prieiga baigsis.</value></data>
+<data name="Mp.GiveUpConfirm" xml:space="preserve"><value>Taip, atsisakyti</value></data>
+<data name="Mp.GivenUp" xml:space="preserve"><value>Profilio atsisakėte.</value></data>
+<data name="Mp.Leave" xml:space="preserve"><value>Palikti biurą</value></data>
+<data name="Mp.LeaveWarning" xml:space="preserve"><value>Nebegalėsite rašyti Seimo nario vardu.</value></data>
+<data name="Mp.LeaveConfirm" xml:space="preserve"><value>Taip, palikti</value></data>
+<data name="Mp.Left" xml:space="preserve"><value>Biurą palikote.</value></data>
+<data name="Mp.NewLink" xml:space="preserve"><value>Pametėte prieigos raktą? Siųsti naują nuorodą</value></data>
+<data name="MpLink.Missing" xml:space="preserve"><value>Nuorodoje nėra kodo. Atverkite visą nuorodą iš laiško.</value></data>
+<data name="MpLink.SignIn" xml:space="preserve"><value>Prisijungti</value></data>
+<data name="MpTakeover.PageTitle" xml:space="preserve"><value>Seimo nario profilio perėmimas · Lietuva 2.0</value></data>
+<data name="MpTakeover.Title" xml:space="preserve"><value>Seimo nario profilio perėmimas</value></data>
+<data name="MpTakeover.What" xml:space="preserve"><value>Ką reiškia perimti profilį</value></data>
+<data name="MpTakeover.SignInFirst" xml:space="preserve"><value>Prisijunkite šioje naršyklėje tuo adresu, kuriuo gavote laišką, ir dar kartą atverkite nuorodą.</value></data>
+<data name="MpTakeover.Lead" xml:space="preserve"><value>Perėmus profilį:</value></data>
+<data name="MpTakeover.Public" xml:space="preserve"><value>Seimo nario profilyje bus rodoma „Profilį tvarko Seimo narys arba jo biuras“ ir data.</value></data>
+<data name="MpTakeover.NoSides" xml:space="preserve"><value>Ši paskyra kalbės Seimo nario vardu ir pati nebeužims pozicijų: jos pozicijos dabar bus atsiimtos.</value></data>
+<data name="MpTakeover.OnlyPasskey" xml:space="preserve"><value>Dabar sukursite prieigos raktą: jis bus vienintelis šios paskyros raktas, kiti bus pašalinti.</value></data>
+<data name="MpTakeover.Submit" xml:space="preserve"><value>Sukurti prieigos raktą ir perimti</value></data>
+<data name="MpOffice.PageTitle" xml:space="preserve"><value>Kvietimas į Seimo nario biurą · Lietuva 2.0</value></data>
+<data name="MpOffice.Title" xml:space="preserve"><value>Kvietimas į Seimo nario biurą</value></data>
+<data name="MpOffice.What" xml:space="preserve"><value>Ką reiškia būti biuro nariu</value></data>
+<data name="MpOffice.SignInFirst" xml:space="preserve"><value>Prisijunkite prieigos raktu ir dar kartą atverkite nuorodą.</value></data>
+<data name="MpOffice.Lead" xml:space="preserve"><value>Biuro narys rašo Seimo nario vardu. Tekstai žymimi „Seimo narys arba jo biuras“; kas juos parašė, viešai nerodoma.</value></data>
+<data name="MpOffice.PasskeyFirst" xml:space="preserve"><value>Priimti kvietimą galima tik prisijungus prieigos raktu.</value></data>
+<data name="MpOffice.Accept" xml:space="preserve"><value>Tapti biuro nariu</value></data>
+<data name="MpOffice.ToAccount" xml:space="preserve"><value>Į paskyrą</value></data>
+  <data name="Mp.Mail.Title" xml:space="preserve"><value>Suvestinės el. paštu</value></data>
+  <data name="Mp.Mail.Lead" xml:space="preserve"><value>Kaip dažnai Seimo narys gauna Lietuva 2.0 suvestines:</value></data>
+  <data name="Mp.Mail.PasskeyNeeded" xml:space="preserve"><value>Suvestinių dažnumą galima keisti prisijungus prieigos raktu.</value></data>
+  <data name="Mp.Mail.Frequency.default" xml:space="preserve"><value>Kas savaitę ir prieš balsavimus</value></data>
+  <data name="Mp.Mail.Frequency.weekly" xml:space="preserve"><value>Tik kas savaitę</value></data>
+  <data name="Mp.Mail.Frequency.before-vote" xml:space="preserve"><value>Tik prieš balsavimus</value></data>
+  <data name="Mp.Mail.Frequency.stopped" xml:space="preserve"><value>Nesiųsti</value></data>
+  <data name="Mp.Mail.Save" xml:space="preserve"><value>Išsaugoti</value></data>
+  <data name="Mp.Mail.Saved" xml:space="preserve"><value>Išsaugota. Patvirtinimas išsiųstas oficialiu adresu.</value></data>
+  <data name="Tabs.Label" xml:space="preserve"><value>Projektai</value></data>
+  <data name="Tabs.Agenda" xml:space="preserve"><value>Darbotvarkė</value></data>
+  <data name="Tabs.Bills" xml:space="preserve"><value>Visi projektai</value></data>
+  <data name="Tabs.Votes" xml:space="preserve"><value>Balsavimai</value></data>
+  <data name="Tabs.Digests" xml:space="preserve"><value>Suvestinės</value></data>
+  <data name="Terms.Check.Before" xml:space="preserve"><value>Sutinku su</value></data>
+  <data name="Terms.Check.Link" xml:space="preserve"><value>naudojimo taisyklėmis</value></data>
+  <data name="Privacy.Sentence.Before" xml:space="preserve"><value>Kaip tvarkome jūsų duomenis, rašoma</value></data>
+  <data name="Privacy.Sentence.Link" xml:space="preserve"><value>privatumo pranešime</value></data>
+  <data name="TermsAccept.PageTitle" xml:space="preserve"><value>Naudojimo taisyklės · Lietuva 2.0</value></data>
+  <data name="TermsAccept.Title" xml:space="preserve"><value>Naudojimo taisyklės</value></data>
+  <data name="TermsAccept.Changed" xml:space="preserve"><value>Lietuva 2.0 dabar turi naudojimo taisykles: kam skirta paskyra, ką galima skelbti, kaip veikia moderavimas ir kaip išeiti. Kad galėtumėte toliau dalyvauti, sutikite su jomis.</value><comment>Says what changed in the version in force (TermsOfUse.Version); rewrite it with every new version.</comment></data>
+  <data name="TermsAccept.Read" xml:space="preserve"><value>Perskaityti naudojimo taisykles</value></data>
+  <data name="TermsAccept.InForce" xml:space="preserve"><value>Galioja nuo {0}.</value></data>
+  <data name="TermsAccept.Accept" xml:space="preserve"><value>Sutinku</value></data>
+  <data name="TermsAccept.Leave.Before" xml:space="preserve"><value>Kol nesutinkate, galite skaityti, atsisiųsti savo duomenis ir ištrinti paskyrą:</value></data>
+  <data name="TermsAccept.Leave.Link" xml:space="preserve"><value>Jūsų duomenys</value></data>
+  <data name="Hello.TermsRequired" xml:space="preserve"><value>Naudojimo taisyklės pasikeitė. Kol su jomis nesutiksite, galite tik skaityti, atsisiųsti savo duomenis ir ištrinti paskyrą.</value></data>
+  <data name="Hello.TermsLink" xml:space="preserve"><value>Peržiūrėti ir sutikti</value></data>
+</root>

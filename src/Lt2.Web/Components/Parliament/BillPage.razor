@@ -215,6 +215,9 @@
 
                 @* Design 8.14.14: organisations' statements, after the arguments; never counted. *@
                 <OrganisationPositions Number="@b.Number" Contact="@Contact" @rendermode="InteractiveWebAssembly" />
+
+                @* Design 8.5.6: MPs' responses, after the organisations' positions; server-rendered, the same for everyone. *@
+                <BillResponses Number="@b.Number" />
             </div>
 
             <aside class="stack">
@@ -237,7 +240,7 @@
                             {
                                 <li>
                                     <div class="rows__main">
-                                        <span><a href="@DigestRoutes.PageAt(d.RunDate, d.RunId, d.Item.BillNumber)" class="num">@Display.Day(d.RunDate)</a> · <span class="small">@A["Digests.Kind." + d.Kind]</span></span>
+                                        <span><a href="@DigestRoutes.PageAt(d.RunDate, d.RunId, d.Item.BillNumber)" class="num">@Display.Day(d.RunDate)</a> · <span class="small">@A["Digests.Kind." + d.Kind]</span> · <span class="small" id="digest-status-@d.RunId">@A["Digests.Short." + d.Status]</span></span>
                                         <span class="small num">
                                             <span class="choice choice--for">@A["Digests.Side.for"]</span> @Display.Number(d.Item.For) (@Display.Number(d.Item.ForOlderThan30Days))
                                             · <span class="choice choice--against">@A["Digests.Side.against"]</span> @Display.Number(d.Item.Against) (@Display.Number(d.Item.AgainstOlderThan30Days))
@@ -248,7 +251,7 @@
                         </ul>
                         <p class="fine">@A["Digests.OnAppeal.Frozen"]</p>
                     }
-                    <p class="fine">@A["Digests.DryRun"]@(" ")<a href="/suvestines">@A["Digests.OnAppeal.All"]</a></p>
+                    <p class="fine">@(_sending == "off" ? A["Digests.DryRun"] + " " : "")<a href="/suvestines">@A["Digests.OnAppeal.All"]</a></p>
                 </section>
 
                 @if (a.Status == "open")
@@ -259,6 +262,11 @@
                 <p class="note note--quiet" id="not-a-poll">@A["NotAPoll"]</p>
             </aside>
         </div>
+    }
+    else if (_record is null)
+    {
+        @* A finished bill nobody took part in shows the bill only, and the MPs' responses written while it was open. *@
+        <BillResponses Number="@b.Number" HideWhenEmpty="true" />
     }
 
     <section class="sheet stack" aria-labelledby="h-stages">
@@ -330,6 +338,9 @@
     private VoteResponse? _closingVote;
     private IReadOnlyList<RecordDigestResponse> _digests = [];
 
+    /// <summary>Sending as it is now (design 8.19.1): the summaries part says nothing is sent only while that is so.</summary>
+    private string _sending = "off";
+
     /// <summary>A moderator or an administrator in a staff-passkey session: the arguments then carry the queue's actions.</summary>
     private bool _moderator;
 
@@ -354,6 +365,7 @@
         if (_record is { Id: not null, Status: "open" or "closed" })
         {
             _digests = (await Digests.GetRecordDigestsAsync(_bill.Number)).Value ?? [];
+            _sending = (await Digests.GetRulesAsync()).Value?.Sending ?? "off";
         }
 
         if (_record is { Status: "open" } && Http.HttpContext is { } http && http.User.Identity?.IsAuthenticated == true)

@@ -206,7 +206,67 @@
   <data name="HowItWorks.3.Title" xml:space="preserve"><value>Paaiškinate kodėl</value></data>
   <data name="HowItWorks.3.Text" xml:space="preserve"><value>Parašykite argumentą arba pažymėkite „Man svarbu“ prie kitų. Argumentai vieši ir rodomi su autoriaus vardu, bet neparodo, ko autorius prašo.</value></data>
   <data name="HowItWorks.4.Title" xml:space="preserve"><value>Seimo nariai sužino</value></data>
-  <data name="HowItWorks.4.Text" xml:space="preserve"><value>Kai dalyvių skaičius pasiekia ribą, projektas patenka į suvestinę Seimo nariams: abi pusės ir svarbiausi argumentai. Kol vyksta bandymas, suvestinės sudaromos, bet Seimo nariams nesiunčiamos.</value></data>
+  <data name="HowItWorks.4.Text" xml:space="preserve"><value>Kai dalyvių skaičius pasiekia ribą, projektas patenka į suvestinę Seimo nariams: abi pusės ir svarbiausi argumentai.</value></data>
   <data name="HowItWorks.Follow" xml:space="preserve"><value>Projektus ir Seimo narius galite sekti: laišku pranešime, kai projektas bus įtrauktas į darbotvarkę ir kai Seimas dėl jo balsuos, o po balsavimo matysite, kaip balsavo kiekvienas Seimo narys. Ką sekate, mato tik jūs.</value></data>
   <data name="HowItWorks.PrivacyLink" xml:space="preserve"><value>Kas matoma viešai, o kas ne →</value></data>
+  <data name="HowItWorks.4.Trial" xml:space="preserve"><value>Kol vyksta bandymas, suvestinės sudaromos, bet Seimo nariams nesiunčiamos.</value></data>
+  <data name="Digests.Line.dry-run" xml:space="preserve"><value>Bandomoji suvestinė: niekam nesiųsta</value></data>
+  <data name="Digests.Line.waiting" xml:space="preserve"><value>Laukia moderatoriaus patvirtinimo</value></data>
+  <data name="Digests.Line.sent" xml:space="preserve"><value>Išsiųsta Seimo nariams: {0} · {1}</value></data>
+  <data name="Digests.Line.cancelled" xml:space="preserve"><value>Nesiųsta</value></data>
+  <data name="Digests.Line.expired" xml:space="preserve"><value>Nesiųsta: nepatvirtinta laiku</value></data>
+  <data name="Digests.Statement" xml:space="preserve"><value>Moderatoriaus paaiškinimas: {0}</value></data>
+  <data name="Digests.IntroductionLink" xml:space="preserve"><value>Pristatymo laiškas Seimo nariams →</value></data>
+  <data name="Method.Digests.Sending" xml:space="preserve"><value>Siuntimas</value></data>
+  <data name="Method.Digests.Sending.off" xml:space="preserve"><value>suvestinės sudaromos ir skelbiamos viešai, bet Seimo nariams nesiunčiamos</value></data>
+  <data name="Method.Digests.Sending.approval" xml:space="preserve"><value>suvestinė siunčiama, kai ją patvirtina moderatorius; nepatvirtinta per {0} val. arba iki posėdžio dienos pradžios – nesiunčiama; skubi suvestinė siunčiama iš karto</value></data>
+  <data name="Method.Digests.Sending.automatic" xml:space="preserve"><value>suvestinė siunčiama iš karto, kai sudaroma</value></data>
+  <data name="Method.Digests.Preferences" xml:space="preserve"><value>Seimo nario pasirinkimas</value></data>
+  <data name="Method.Digests.PreferencesValue" xml:space="preserve"><value>kiekviename laiške yra nuoroda, kuria Seimo narys gali pasirinkti, kaip dažnai gauti suvestines, jų atsisakyti arba nurodyti papildomą gavėją; kas ką pasirinko, viešai nerodoma</value></data>
+  <data name="Intro.Title" xml:space="preserve"><value>Pristatymo laiškas</value></data>
+  <data name="Intro.Lead" xml:space="preserve"><value>Laiškas, kurį Seimo nariai gavo prieš pirmąją suvestinę. Jį parašė ir pasirašė žmogus.</value></data>
+  <data name="Intro.None" xml:space="preserve"><value>Pristatymo laiškas Seimo nariams dar neišsiųstas.</value></data>
+  <data name="Intro.Sent" xml:space="preserve"><value>Išsiųsta {0}</value></data>
+  <data name="Intro.Earlier" xml:space="preserve"><value>Ankstesnės versijos</value></data>
+  <data name="MpMail.Title" xml:space="preserve"><value>Suvestinių nustatymai</value></data>
+  <data name="MpMail.Lead" xml:space="preserve"><value>Seimo narys: {0}. Čia pasirenkate, kaip dažnai gauti Lietuva 2.0 suvestines.</value></data>
+  <data name="MpMail.Unknown" xml:space="preserve"><value>Ši nuoroda neveikia. Naudokite nuorodą iš naujausio Lietuva 2.0 laiško.</value></data>
+  <data name="MpMail.Frequency" xml:space="preserve"><value>Kaip dažnai siųsti</value></data>
+  <data name="MpMail.Frequency.default" xml:space="preserve"><value>Kas savaitę ir prieš balsavimus</value></data>
+  <data name="MpMail.Frequency.weekly" xml:space="preserve"><value>Tik kas savaitę</value></data>
+  <data name="MpMail.Frequency.before-vote" xml:space="preserve"><value>Tik prieš balsavimus</value></data>
+  <data name="MpMail.Frequency.stopped" xml:space="preserve"><value>Nesiųsti</value></data>
+  <data name="MpMail.UrgentNote" xml:space="preserve"><value>Skubi suvestinė laikoma suvestine prieš balsavimus.</value></data>
+  <data name="MpMail.Save" xml:space="preserve"><value>Išsaugoti</value></data>
+  <data name="MpMail.Saved" xml:space="preserve"><value>Išsaugota. Patvirtinimą išsiuntėme oficialiu adresu.</value></data>
+  <data name="MpMail.Extra" xml:space="preserve"><value>Papildomas gavėjas</value></data>
+  <data name="MpMail.ExtraLead" xml:space="preserve"><value>Suvestinių kopijas galima siųsti ir kitu adresu, pvz., padėjėjui. Kopijos siunčiamos tik tada, kai tai patvirtinama oficialiu adresu.</value></data>
+  <data name="MpMail.ExtraAddress" xml:space="preserve"><value>El. pašto adresas</value></data>
+  <data name="MpMail.ExtraHint" xml:space="preserve"><value>Patvirtinimo nuorodą išsiųsime oficialiu Seimo nario adresu; ji galioja 24 val.</value></data>
+  <data name="MpMail.ExtraAsk" xml:space="preserve"><value>Siųsti patvirtinimą</value></data>
+  <data name="MpMail.ExtraSent" xml:space="preserve"><value>Patvirtinimo nuorodą išsiuntėme oficialiu adresu.</value></data>
+  <data name="MpMail.ExtraConfirmed" xml:space="preserve"><value>patvirtintas</value></data>
+  <data name="MpMail.ExtraWaiting" xml:space="preserve"><value>laukia patvirtinimo oficialiu adresu</value></data>
+  <data name="MpMail.ExtraRemove" xml:space="preserve"><value>Pašalinti</value></data>
+  <data name="MpMail.ExtraRemoved" xml:space="preserve"><value>Papildomas gavėjas pašalintas.</value></data>
+  <data name="MpMail.Link" xml:space="preserve"><value>Nuoroda</value></data>
+  <data name="MpMail.LinkLead" xml:space="preserve"><value>Jei manote, kad ši nuoroda pateko kitiems, paprašykite naujos: ši nustos veikti, o nauja bus išsiųsta oficialiu adresu.</value></data>
+  <data name="MpMail.Renew" xml:space="preserve"><value>Atsiųsti naują nuorodą</value></data>
+  <data name="MpMail.Renewed" xml:space="preserve"><value>Nauja nuoroda išsiųsta oficialiu adresu. Ši nuoroda nebeveikia.</value></data>
+  <data name="MpMail.Private" xml:space="preserve"><value>Jūsų pasirinkimas viešai nerodomas. Papildomo gavėjo adresas rodomas tik šiame puslapyje.</value></data>
+  <data name="MpMail.Confirm.Title" xml:space="preserve"><value>Papildomo gavėjo patvirtinimas</value></data>
+  <data name="MpMail.Confirm.Lead" xml:space="preserve"><value>Patvirtinkite, kad suvestinių kopijos būtų siunčiamos ir papildomu adresu.</value></data>
+  <data name="MpMail.Confirm.Button" xml:space="preserve"><value>Patvirtinti</value></data>
+  <data name="MpMail.Confirm.Done" xml:space="preserve"><value>Patvirtinta: kopijos bus siunčiamos adresu {0}. Seimo narys: {1}.</value></data>
+  <data name="MpMail.Confirm.Failed" xml:space="preserve"><value>Ši nuoroda neveikia: ji nebegalioja, jau panaudota arba papildomas gavėjas pakeistas.</value></data>
+  <data name="MpMail.Copies.Title" xml:space="preserve"><value>Nebegauti kopijų</value></data>
+  <data name="MpMail.Copies.Lead" xml:space="preserve"><value>Šiuo adresu siunčiamos Seimo nario suvestinių kopijos. Paspaudę mygtuką jų nebegausite.</value></data>
+  <data name="MpMail.Copies.Button" xml:space="preserve"><value>Nebegauti kopijų</value></data>
+  <data name="MpMail.Copies.Done" xml:space="preserve"><value>Kopijos šiuo adresu nebebus siunčiamos. Seimo nariui apie tai pranešta.</value></data>
+  <data name="MpMail.Copies.Failed" xml:space="preserve"><value>Ši nuoroda neveikia: kopijos šiuo adresu jau nesiunčiamos.</value></data>
+  <data name="Digests.Short.dry-run" xml:space="preserve"><value>bandomoji</value></data>
+  <data name="Digests.Short.waiting" xml:space="preserve"><value>laukia patvirtinimo</value></data>
+  <data name="Digests.Short.sent" xml:space="preserve"><value>išsiųsta</value></data>
+  <data name="Digests.Short.cancelled" xml:space="preserve"><value>nesiųsta</value></data>
+  <data name="Digests.Short.expired" xml:space="preserve"><value>nesiųsta</value></data>
 </root>

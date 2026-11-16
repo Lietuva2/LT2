@@ -15,7 +15,7 @@ product code. What is being built, in order:
 | **M2a Appeals without sending** | People take a side on a Seimas bill and give reasons; summaries for MPs are generated as previews only. |
 | **M2a+ Reasons to come** | The agenda page (`/darbotvarke`) and the front page built on it, following bills and MPs with emails, the AI draft of a description (Claude API, off until configured), the share line (design 8.11). Its asking for an appeal and appeals opened by moderators were replaced by M2a++. |
 | **M2a++ One object** | Every active bill open at once, one page per bill, no proposals, requests or approval; lists and agenda on participation; moderation after the fact (design 8.12). Then descriptions with their labels and the AI summary job (8.13). |
-| **M2b Sending** | Real summary emails to MPs, MP preferences, profile take-over, MP responses. |
+| **M2b Sending** | Real summary emails to MPs, MP preferences, profile take-over, MP responses. Built first (owner, 2026-11-15): the link of design 8.5.1–8.5.4 (recognised at once, the take-over, the office), then the response (8.5.5–8.5.7). Then (2026-11-16) sending itself, design 8.19: `Digest:Sending`, approval, the real email, preferences without an account, the introduction letter, the suppression list; off by default. Then (2026-11-16) design 8.20: the followers' email about MPs' answers and known browsers for sign-in. |
 | **Stage 3** | Voting with delegation, AI summaries, analytics. Not designed yet; do not build towards it beyond what the design says. |
 
 Build one stage at a time. Do not start a later stage's features because they look close.
@@ -61,12 +61,17 @@ JavaScript framework.
 design/                    system-design.md, the agreed design; ui/ the interface prototype (tokens, sample pages)
 src/Lt2.Web                host: API endpoints in Endpoints/<Module>/ (one per file), Blazor server rendering,
                            auth, security middleware (forwarding headers believed only from ReverseProxy:Address,
-                           Security/TrustedProxy.cs; no-store on pages answered to a signed-in session)
+                           Security/TrustedProxy.cs; no-store on pages answered to a signed-in session; Security/TermsGate.cs,
+                           design 8.22.2; Security/BrowserStorage.cs, the inventory of 8.22.1), the layout (Components/Layout:
+                           the menu, AccountMenu with js/lt2-account.js, the footer) and the terms and privacy pages
+                           (Components/Pages/Terms, Privacy, LegalText.resx)
 src/Lt2.Hosting            what the web host and the worker set up the same way: Serilog and OpenTelemetry
-                           (Observability.AddLt2Observability); no module references it
+                           (Observability.AddLt2Observability), with SecretPaths replacing an MP link's token in every log
+                           line and trace; no module references it
 src/Lt2.Web.Client         Blazor WebAssembly components and HTTP implementations of the API clients; the interface's
                            shared pieces: Components/InteractiveBase<TText>, Display (numbers and dates, Vilnius),
-                           StringLocalizerExtensions (Format), CopyLink, FieldError, Messages, SplitBar, Hint (the short answer in place, js/lt2-hints.js)
+                           StringLocalizerExtensions (Format), CopyLink, FieldError, Messages, SplitBar, Hint (the short answer in place, js/lt2-hints.js),
+                           ProjectTabs and MenuSections (design 8.21), BrowserKeys (the storage keys, design 8.22.1)
 src/Lt2.Api.Contracts      DTOs, routes, client interfaces, validators (shared by server, client and tests)
 src/Lt2.SharedKernel       Result type, identifiers (UUID v7), outbox, audit and settings interfaces, connection
                            strings and the one EF Core set-up (Persistence/: UseLt2Npgsql), VilniusTime (the
@@ -79,22 +84,35 @@ src/Modules/               Lt2.Identity, Lt2.Notifications, Lt2.Audit, Lt2.Parli
                            reports, moderation, rule-based pre-screening, flags, summaries content, descriptions written
                            by moderators, the AI draft in Ai/ with its public prompt file, the AI summary job
                            (Application/DescriptionSummaries.cs), the "unavailable" IBillTextSource, and organisations
-                           with their statements on bills, design 8.14.14). Notifications
-                           also owns the summaries (Digests/) and following (Follows/: follows, email switches, bill
-                           events). Modules talk through interfaces in SharedKernel (IParticipants, IBillCatalogue,
-                           IPlannedAgenda, IMpDirectory, IDigestSource, IPartySupporters, IAccountData (one per module),
+                           with their statements on bills, design 8.14.14; MPs' responses, 8.5.5). Notifications
+                           also owns the summaries (Digests/: making, approval, sending, SendingRules), MP mail (MpMail/:
+                           the links' tokens, the MPs' choices, the introduction letter, the suppression list, MpSender)
+                           and following (Follows/: follows, email switches, bill
+                           events, the daily email about MPs' answers). Modules talk through interfaces in SharedKernel (IParticipants, IBillCatalogue,
+                           IPlannedAgenda, IMpDirectory, IMpMailAddresses (the one way an official address leaves
+                           Parliament, for sending), IDigestSource, IPartySupporters, IAccountData (one per module),
                            IPositionErasure, IOutbox, IAuditLog, ISettings, IAiAssistant, IBillTextSource,
-                           IOrganisationDirectory, IOrganisationCodeSwitch). The host
+                           IOrganisationDirectory, IOrganisationCodeSwitch, IMpLinks, IMpResponseFeed). The host
                            composes the agenda (GET /api/v1/agenda) and /me/follows from the modules' interfaces.
+                           Identity also owns MPs' links (Application/Politicians: politician_link, politician_token,
+                           design 8.5); "whose official address is this" is IMpDirectory.OfficialAddressOwnerAsync
+                           (Parliament's OfficialAddresses, the one definition), and the MP's own account is refused as a
+                           participant through MpAccounts.Refusal (SharedKernel) wherever a participant is checked.
+                           Identity also owns known browsers (Application/SignIn/KnownBrowsers.cs, design 8.20.2: the
+                           __Host-lt2.device cookie, identity.known_device, the code allowance they choose).
 src/Lt2.Worker             Hangfire server: outbox dispatch loop, the parliament import, the agenda watcher (lrs.lt
                            pages; off unless Agenda:BaseAddress is set), the daily aggregates and closing of the bills' records, summaries
-                           in dry-run (nothing is sent in M2a), the follow emails (every 15 minutes), the AI summaries
+                           (every 15 minutes: waiting ones expire, due ones are made: a dry run, waiting or sent by
+                           Digest:Sending), the follow emails (every 15 minutes; the one about MPs' answers once a day from Follows:ResponsesAt), the AI summaries
                            of bills (hourly; makes nothing until a text reader and a provider exist), a daily identity
-                           clean-up (with the unsent mail of purged registrations) and a daily outbox clean-up (failed
+                           clean-up (with the unsent mail of purged registrations and known browsers not seen for a year) and a daily outbox clean-up (failed
                            messages after 30 days); the dispatcher sends sign-in and confirmation codes first, a batch
-                           over one SMTP connection, and stores only an error's type and status code (design 6.8)
+                           over one SMTP connection per stream (MP mail on its own: Email:Mp), and stores only an error's
+                           type and status code (design 6.8); a 5xx refusal of an MP email suppresses the address
 src/Lt2.Migrator           creates the database roles, applies migrations and grants; also seeds invitations, grants
-                           the first staff role, empties invented parliament data and (local stack only) fills the
+                           the first staff role, empties invented parliament data, switches on registration with an MP's
+                           official address without an invitation (--official-addresses-without-invitation; only where
+                           Demo:Allowed, the local stack and the trial) and (local stack only) fills the
                            demonstration record on XVP-0412, three invented organisations with statements on it, and an
                            invented AI summary on XVP-0533 (--demo-appeal);
                            run once per deploy
@@ -119,7 +137,7 @@ tools/Lt2.SeimasStandIn     local and test only: stand-in for the Seimas open da
 dotnet build                                          # warnings are errors
 dotnet test                                           # unit, architecture, integration (needs Docker)
 dotnet test --project tests/Lt2.UnitTests             # one project (Microsoft.Testing.Platform)
-python deploy/init-secrets.py                         # once: local secrets in deploy/secrets/
+python deploy/init-secrets.py                         # once, and again when a secret is added: missing ones in deploy/secrets/
 docker compose -f deploy/compose.yaml up --build      # full stack: https://lt2.localhost:8443, Mailpit :8025
 ```
 
@@ -155,11 +173,13 @@ If Windows has reserved port 8080, set `LT2_HTTP_PORT=8090` for every compose co
   Vilnius days come from `VilniusTime` in SharedKernel (`Zone`, `DateOf`, `Today`, `StartOf`); do not look the zone up again.
 - The signed-in account is `principal.UserId()` (SharedKernel); a staff member acting is a `StaffActor`. A module's
   `DbContext` is configured with `UseLt2Npgsql` (SharedKernel/Persistence), nowhere by hand.
-- Limits that count rows (codes per address, one current invitation code, one urgent summary a week, follows per
-  account) are counted under a PostgreSQL advisory lock in the same transaction (design 6.8); Identity's are in
-  `IdentityLocks`, Appeals' in `AdvisoryLocks`.
+- Limits that count rows (codes per address and per known browser, known browsers per account, one current invitation
+  code, one urgent summary a week, follows per account) are counted under a PostgreSQL advisory lock in the same
+  transaction (design 6.8); Identity's are in `IdentityLocks`, Appeals' in `AdvisoryLocks`.
 - Every email is built by `EmailLayout` (Notifications/Templates) and rendered from its outbox kind by one
   `EmailRenderer<T>` registered in `NotificationsModule`; shared texts use the `Email.*` keys of `EmailTemplates.resx`.
+  `Build` and `BuildMp` take the footer (`EmailLayout.Footer(l, site.Value.Address)`: the privacy notice's full address,
+  design 8.22.3), so no email goes without it.
   Deleting an account or purging a pending one calls `IOutbox.ForgetAsync` in the same transaction.
 - Rules are checked where the data is written (design 6.8), not only by the HTTP validators: a module service enforces
   them for every caller. A moderator's statement goes through `StatementRules` in Appeals and `StaffStatements` elsewhere
@@ -197,27 +217,74 @@ code review.
 - Group numbers (for example supporters of a party) are shown only for groups of at least 20.
 - Sign-in has no passwords: an emailed one-time code or a passkey. A staff role works only in a session signed in
   with a staff passkey; a code session is a member session, whatever roles the account has. Politicians need a
-  passkey too. Responses never reveal whether an email is registered. Changing roles, resetting an account and saving
+  passkey too: speaking for an MP needs a passkey session, read from the database per request (the link is not a role in
+  the session), and on a linked account (the MP's or an office member's) a passkey is added only in a passkey session or
+  by the take-over link. Responses never reveal whether an email is registered. Changing roles, resetting an account and saving
   a runtime setting need a fresh passkey confirmation (`FreshConfirmation`, the last ten minutes); a staff account is
   deleted only from its staff passkey session; what a staff member did keeps their account id after deletion (design 6.9).
+- **Sign-in codes (design 6.2, 8.20.2).** Browsers the account does not know share five codes an hour and ten a day per
+  address (`SignIn:CodesPerHour`, `SignIn:CodesPerDay`); a browser known to the account (it signed in to it, or finished the
+  registration there) has its own five an hour and ten a day, the same two settings counted separately
+  (`KnownBrowserRules`), and a code it asked for (`sign_in_code.known_device_id`) is accepted only from it: requests and wrong guesses elsewhere neither use it up nor cancel
+  it. The rules are pure functions (`SignInCodeRules`, `KnownBrowserRules.CodesToTry`); the answers to a code request and a
+  wrong code are the same whether the address has an account and whether the browser is known. The account page lists
+  "Žinomos naršyklės" beside the sessions with "Pamiršti" (`GET|DELETE /me/known-browsers`), at most 20 per account, deleted
+  after a year unseen, exported and deleted with the account; `identity.known_device` is withheld from `lt2_readonly`.
 - The read-only database role reads only the tables on `DatabaseRoles.ReadableTables`; a new table goes on that list
   or on `DatabaseRoles.WithheldTables` in the same change (an architecture test fails otherwise).
-- Session cookie only (`__Host-`, Secure, HttpOnly, SameSite=Lax). No tokens in the browser. Every state-changing
-  call needs the antiforgery header and passes the Origin check. CORS stays off.
+- Session cookie only (`__Host-`, Secure, HttpOnly, SameSite=Lax). No tokens in the browser. The one other lasting cookie is a
+  known browser's `__Host-lt2.device` (design 8.20.2, the same attributes, a year): it never authenticates, lengthens a session
+  or skips a code; it only chooses which code allowance and which codes apply, and it is stored only as a keyed hash
+  (`Security:DeviceHashKey`, the secret `device_hash_key`). Every state-changing
+  call needs the antiforgery header and passes the Origin check, except the one-click stop of an MP's emails (design 8.19.4),
+  which mail programs send. CORS stays off.
+- **Nothing non-essential in the browser (design 8.22.1), so no cookie banner.** No analytics, no third-party script, font or
+  embed, no advertising or measurement cookie. What the site keeps is one list, `Security/BrowserStorage.Inventory` (the
+  session, the passkey step, the request-forgery and the known-browser cookies; `lt2-theme` in local storage once a theme is
+  chosen; `lt2.tikslas` and `lt2.kodas` in session storage, `Lt2.Web.Client/BrowserKeys`). The privacy notice's
+  "Slapukai ir naršyklės atmintis" is built from it (`data-storage` on each row); `TermsTests` (E2E) visits the site as a
+  visitor and as a member and fails on any cookie or storage key outside it, `BrowserStorageTests` (architecture) on any script
+  that starts using storage. A new cookie or key is a design change, not a build detail; the account item's open state is not
+  stored.
 - No secrets in the repository or in images. No real personal data in tests or fixtures.
 - No tracking pixels or click tracking in any email.
 - Outbound requests go only to the allowlisted hosts, and follow no redirect to another host.
 - Codes and tokens are not sent in addresses: a link the site makes carries its secret after the `#` (`/prisijungti#kodas=…`,
-  a representative's `/organizacijos/kvietimas#…`); the page reads it and sends it in a request body (design 6.8). Old
-  `?kodas=` links still work.
+  a representative's `/organizacijos/kvietimas#…`, an MP's take-over link `/seimo-narys/perimti#…`, an office member's
+  `/seimo-narys/biuras#…`); the page reads it and sends it in a request body (design 6.8). Old `?kodas=` links still work.
+  The MP's mail links are the exception the design names (8.19.4: the one-click stop needs its token in the address): their
+  paths are logged with the token replaced.
 - Forwarding headers count only from the proxy named in `ReverseProxy:Address`. A page answered to a signed-in session is
   `no-store`.
 
 ## Product rules to keep consistent
 
+**Navigation (design 8.21, built 2026-11-16).** The menu is the logo, "Projektai", "Seimo nariai", and "Prisijungti" or the
+account item "Paskyra"; one line from 360 px (`MenuTests`, E2E). "Projektai" opens `/darbotvarke` and is current (`aria-current`)
+on its four tabs and everything under them (`MenuSections`); the four tabs ("Darbotvarkė", "Visi projektai", "Balsavimai",
+"Suvestinės") are `<ProjectTabs>` under the heading of `/darbotvarke`, `/projektai`, `/seimas/balsavimai`, `/suvestines`. The
+account item (`Layout/AccountMenu`) is a `<details>` with "Mano paskyra" and "Atsijungti" (the server-rendered sign-out form);
+`js/lt2-account.js` fills the name and the account's links (staff screens, an MP's projects, accepting changed terms) from
+`GET /me` when it opens and closes it on Escape, a press outside and focus leaving. **No served page holds a member's name or
+role links**: the header is the same for every member apart from the antiforgery token (`NavigationTests`). The footer, on
+every page (token pages from emails included), holds "Apie" (Metodika, Moderavimo taisyklės, Naudojimo taisyklės,
+Privatumas), "Dalyvauti" (Organizacijos, Atsiliepimai), the theme switch and the trial line. `/metodika` is called "Metodika".
+
+**Terms of use (design 8.22.2).** `/taisykles` and `/privatumas` are static pages from `LegalText.resx` (drafts for the lawyer;
+"[bus įrašyta]" marks what the owner has not given). Registration has the required box "Sutinku su naudojimo taisyklėmis"
+(`CompleteRegistrationRequest.AcceptsTerms`, checked by the validator and again in `CompleteRegistrationHandler`); the accepted
+version is a consent of kind `terms` (`TermsOfUse.Version`, SharedKernel; the client's `TermsText.Version` is the same). A changed
+text gets a new, later version: every member is asked again. A member whose accepted version is missing or behind
+(`TermsOfUse.NeedsAcceptance`; `GET /me` says `termsRequired`) is sent to `/taisykles/sutikimas` after signing in and by
+any island refused with `terms.required` (`InteractiveBase`); until they accept, reads work and every API write is refused in
+one place, `Security/TermsGate` (before authorization, so a new write route is covered by default; `TermsTests` sweeps every
+mapped write), except `TermsExemptions.Routes` (accepting, signing out, deleting the account, the MP mail token routes). The
+export is a read. The server-rendered feedback form asks the same question. Pending accounts accept with their registration;
+the invented demonstration members get the consent like their others (`--demo-appeal`, repeatable).
+
 **Accounts.** Registration is by email only, by invitation during the closed trial, with a self-declared age of 18 or
-older. An account is pending until its address is proven; the display name and the age declaration are asked after the
-code, never before. One account per normalised address. Each account has a `verification_level` (`email` now); phone
+older. An account is pending until its address is proven; the display name, the age declaration and the terms of use are
+asked after the code, never before. One account per normalised address. Each account has a `verification_level` (`email` now); phone
 verification is a later decision. Every member has one personal invitation code (replaceable; uses unlimited unless
 `Registration:PersonalCodeUses` is set) and sees only how many registered with it; administrators see numbers per day,
 code and level, never who invited whom, and can switch codes off. Invitations are never combined with sides.
@@ -226,7 +293,7 @@ code and level, never who invited whom, and can switch codes off. Invitations ar
 participation (share of recorded votes in which the MP voted for, against or abstained) and voted with the faction
 (only votes where at least two thirds of the faction's voting members chose the same option; free votes are excluded
 and their count shown). No expenses, rankings or scorecards. An MP takes over a profile through a link sent only to the
-official `@lrs.lt` address from open data; the link is tied to the Seimas person id. Each MP's ballot on a vote is listed
+official `@lrs.lt` address from open data; the link is tied to the Seimas person id (details below). Each MP's ballot on a vote is listed
 in one place, the vote's page (`/seimas/balsavimai/{id}#balsai`, design 8.17: `VoteBallots`, filtered by `BallotList` in
 Lt2.Web.Client): a name search without case or diacritics, a faction dropdown (with "Be frakcijos"), the ballot, 20 rows
 then 40 more, its state in the address (`q`, `frakcija`, `balsas`, `rodyti`) with no script; a closed bill's page only
@@ -234,6 +301,56 @@ links to it. The history of votes (`/seimas/balsavimai`, design 8.18: `VoteHisto
 `VoteHistory` in Lt2.Web.Client, `GET /api/v1/votes` read and counted in the database a part at a time) groups votes by
 Vilnius day, 30 then 30 more up to 300, with no participants' numbers; its rows share `VotedItemMain` with the start
 page's "Balsuota".
+
+**MPs on the platform (design 8.5, built 2026-11-15: the link 8.5.1–8.5.4, then the response 8.5.5–8.5.7).**
+- The official address: an "El. p." contact of open data on `lrs.lt` (not a sub-domain), compared ignoring case, of an MP
+  whose mandate has not ended; listed for two or more such MPs, it belongs to nobody (`OfficialAddresses` in Parliament,
+  also used for the summaries' recipients). An account whose own address is one gets the offer in its own `GET /me`
+  (`mpOffer`), shown on `/sveiki` by `MyMp` in the browser only; the page the server renders holds nothing of it
+  (`ServerMeApi` leaves `mpOffer` and `mp` out). Nothing is linked or public before the take-over.
+- `Registration:OfficialAddressesWithoutInvitation` (off by default, the designer's proposal awaiting the owner): both
+  invitation gates ask `OfficialAddressGate`. The local `.env` switches it on through the migrator.
+- "Perimti profilį" (`POST /mps/{slug}/claim`) sends a 24-hour one-time link (token hashed, a new one replaces the old,
+  three a day per MP) to the account's own address. `POST /me/mp/takeover` (token and passkey) does everything in one
+  transaction: token and address checked, the passkey stored and the others removed with their sessions, the link made,
+  the account's sides on records not closed withdrawn (`IPositionErasure.WithdrawOpenSidesAsync`; the front page's copy
+  marked stale), audited, the official address told; the session becomes a passkey session (`SessionTicketStore.RenewAsync`
+  takes the new ticket's method and passkey). A lost passkey: the same again; the link stays.
+- One account per MP and one MP per account; an office member of at most one MP, five per MP, by a seven-day one-time
+  link accepted in a passkey session. Giving the profile up (`DELETE /me/mp`), an administrator's end
+  (`POST /admin/mps/{slug}/link/end`, statement, fresh confirmation; no screen yet) and deleting the account end the
+  link and the office with it. Every change is audited and told to the MP's account's own address (`AccountNotices.Mp*`),
+  never naming an office member.
+- The MP's own account takes no part (the designer's proposal awaiting the owner): no side, argument, "Man svarbu", party
+  support or organisation (`mp.takes-no-part`); it follows like anyone; office members are not restricted.
+- The only public trace: "Profilį tvarko Seimo narys arba jo biuras" with the date on the profile (`managedSince` of
+  `GET /mps/{slug}`). A profile nobody took over says nothing about joining. Who is linked and who the office members are
+  is in no public answer, page or log.
+- Texts carrying an MP's name put it in the nominative after a colon ("Tvarkote Seimo nario profilį: {0}.", "Seimo narys:
+  {0}."): names are not declined by the software.
+- **The response** (8.5.5): one per MP per bill (`appeals.mp_response`, keyed by the Seimas person number and the bill's
+  number, withheld from `lt2_readonly`; `written_by_user_id` is never public and is emptied with the account, which also
+  exports the responses it wrote). The host composes it (`Lt2.Web/Services/MpResponseServices.cs`): `IPoliticians.SpeakerAsync`
+  says whom the account speaks for and whether the session may write (read from the database per request), Parliament gives
+  names, factions and whether the mandate has ended, Appeals (`MpResponsesService`) stores it. Writing needs the MP's account
+  or an office member in a passkey session, an MP whose mandate has not ended, an open bill (until the adoption vote, as a
+  side) and no writing restriction; a response a moderator hid is the moderators' to restore (`response.hidden`). Public at
+  once; every change keeps the replaced text as a public version (`revision`, kind `response`, without a person); a withdrawn
+  one stays as "Atsakymas atsiimtas" with its versions; written again it is the same row. After the adoption vote the MP's
+  ballot at it is given beside it ("Atsakė: … Balsavo: …", `nebalsavo`, consensus said so); nothing adds answers and ballots
+  up anywhere. Never counted: no count, threshold, list, statistic or summary changes (`MpResponseTests`).
+- Moderation as for statements: flagged by pre-screening and not yet seen, or reported, it is in the queue
+  (`GET /moderation/responses`, `ResponseModerationView` on `/moderavimas` and `/moderavimas/paslepti`); "Palikti" (`keep`),
+  hide with a statement shown in its place and emailed to the MP's account's own address (`MpResponseNoticeEmail`, through
+  `IMpLinks`), restore while the bill is open. Report target `response`.
+- Where it shows (8.5.6): the bill's page part `BillResponses` (its own sheet after the organisations, server-rendered and the
+  same for everyone; the counts line; "už", "prieš", "neapsisprendė", by last name, then withdrawn and hidden ones) and the
+  profile's `MpAnswers` (newest first; no part without responses); both show 10 and "Rodyti daugiau" by `?atsakymai=` landing
+  on `#atsakymas-{n}` (`ResponsePaging`). Each item is `MpResponseItem` with the one mark "Seimo narys arba jo biuras". The
+  linked account's form is the island `MyMpResponse`, filled in the browser only; reports are `ReportResponse` islands.
+- `/seimo-narys/projektai` (8.5.7, `MpBills`, linked from `MyMp`; `GET /me/mp/bills`): the bills in summaries now in the
+  summaries' order (`Lt2.Notifications.DigestLists.InSummariesNow`), with the MP's own response or "Atsakyti"; a code session
+  may read it; nothing about other MPs.
 
 **Appeals (design 8.12, decided by the owner on 2026-11-14; replaces proposals, requests and initiators).**
 - The bill and the appeal are one object: the bill's page `/seimas/{number}`. Every active bill (in the catalogue, no
@@ -282,7 +399,7 @@ page's "Balsuota".
   `RecordRules.CheckRecordAction` / `CheckReasonAction`, and the bill's moderators' panel and the queue offer exactly them.
 
 **Reasons to come (design 8.11).**
-- The agenda (`/darbotvarke`, first in the menu) and the front page's "Artimiausiu metu Seime" come from one public,
+- The agenda (`/darbotvarke`, where the menu item "Projektai" leads) and the front page's "Artimiausiu metu Seime" come from one public,
   cacheable answer that holds nothing about the caller, and show both sides for every bill (a bill nobody took part in
   says so); the answer also names, per bill, the organisations with a public statement (as on the bill's page, never
   counted). The front page (design 8.7, reworked 2026-11-15; mockup `design/ui/pradzia.html`) is that agenda as a
@@ -309,6 +426,13 @@ page's "Balsuota".
   person follows (owner, 2026-11-15: `Follows:MaxPerAccount` and `follow.limit` are gone). Emails (planned, voted; each
   switchable on the account page) go once per event to those who followed before it; nothing older than three days,
   nothing about the person's side, the bill's counts or other people.
+- "Seimo narių atsakymai" (design 8.20.1, the fourth switch `responses`): one email per followed bill per Vilnius day, the
+  morning after, from `Follows:ResponsesAt` (08:00, a runtime setting under "Laiškai sekantiems"): the MPs whose response
+  became public or changed stance that day (`appeals.mp_response.announced_at`, `ResponseRules.Announces`; a changed
+  explanation with the same stance is no event) and are still public, with name, faction and stance and the link to
+  `#atsakymai`, never the explanation. Read through `IMpResponseFeed` (Appeals); each person is told only about answers from
+  after they followed (`FollowRules.ResponsesFor`), and the MP's own account and office members never about their own MP
+  (`IMpLinks.SpeaksForAsync`). Recorded in `bill_event` kind `response` (key: the day); a day with nothing left sends nothing.
 - Taking a side follows the bill (design 8.11.2, owner 2026-11-15): a member's first side on a bill (no side before)
   follows it in the same request, composed by the host (`Lt2.Web/Services/TakingSides`: the Appeals module saves the
   side, then `IFollows.FollowBillAsync`), on the bill's page and in a front-page row alike. The side is never refused or
@@ -370,6 +494,37 @@ page's "Balsuota".
   the `Digest:NotableChange` share (default 10 %) since the last summary that held them.
 - Every summary has a public copy with the same numbers. Whether an MP stopped the summaries is never shown publicly.
 - Timing is corrected by a moderator when people flag a wrong date: correct, hold, or approve one urgent summary.
+- **Sending (design 8.19, built 2026-11-16).** `Digest:Sending` `off` (default: dry runs, nothing for MPs in the outbox),
+  `approval` (a weekly or before-vote summary waits; an urgent one goes at once) or `automatic`. Two locks keep it off whatever
+  the setting says (`SendingRules.State`, `MailLocks`): no introduction letter sent yet, and invented data (`Demo:Allowed`, or any synthetic parliament data: `IMpMailAddresses.HoldsInventedDataAsync`) without
+  `Email:Caught` (deployment configuration; false in code and compose, true only in the local `.env`, where Mailpit catches
+  everything). Run statuses `dry-run`, `waiting`, `sent`, `cancelled`, `expired`; while sending is on only waiting and sent runs
+  count for the ceiling, "changed notably", "covered by Monday" and "never yet in a summary" (`SendingRules.Counts`). A sent run
+  marks its records summarised (`IDigestSource.MarkSummarisedAsync`, in the same transaction).
+- The moderators' screen `/moderavimas/suvestines` (`DigestModeration`): waiting first, the preview (MPs by name), "Siųsti" (a fresh passkey confirmation, the number of MPs
+  in the confirmation; under the summaries' lock, so two presses send once) and "Nesiųsti" (a statement of 20 characters or
+  more, public on the copy). A waiting run expires after `Digest:ApprovalHours` or when its sitting's day begins. Recipients are
+  worked out when it is let go (`SendingRules.DeliveryStatus`: suppressed, the MP's choice, the letter first, the ceiling); one
+  delivery row per run, MP and recipient, never an address. The public copy says what happened in one line, never which MPs.
+- The email (`MpMailTemplates`, through `EmailLayout.BuildMp`, the MP stream: `Email:Mp:FromAddress`, optional `Email:Mp:Smtp`)
+  holds both sides with the 30-day counts, the MP's own published response or the link to answer, the closing lines, and
+  `List-Unsubscribe` with `List-Unsubscribe-Post`. The address comes only from `IMpMailAddresses` and travels only in the outbox
+  row. The moderators' preview is the same text.
+- The MP's link (8.19.4): `/suvestines/nustatymai/{token}`, server-rendered forms (no script); the token is derived from the
+  person number and a generation under `Security:MailHashKey` and stored hashed; "Atsiųsti naują nuorodą" moves to the next
+  generation. The one-click stop `POST /api/v1/mp-mail/{token}/stop` is the only write mapped outside the API group's
+  same-origin and antiforgery filter (`OneClickStopEndpoint`); `MpMailTests` proves the other token routes still need it. Token
+  routes and pages are limited per address and per token (`RateLimits:MpMail`, `RateLimits:MpMailToken`) and answer the same for
+  an unknown and a wrong token. Every change is confirmed to the official address. An extra recipient is confirmed from the
+  official address (a page with a button, 24 hours, one use) and each copy has its own "Nebegauti kopijų" page. A linked account
+  changes the same choice under "Seimo narys" on `/sveiki` (`MyMp`, `GET|PUT /me/mp/mail`, passkey session).
+- The introduction letter (`/administravimas/pristatymas`; public `/suvestines/pristatymas`): written and signed by a person,
+  a test copy to the administrator's own address, sent with a fresh passkey confirmation to MPs who have had none; a changed
+  text is a new version. An MP who had none gets it in place of a summary (`introduced`).
+- The suppression list (`/administravimas/nesiunciama`): keyed hashes only, reasons `bounced` (a 5xx refusal, automatic),
+  `complaint`, `staff`; the screen lists the sitting MPs on it and counts the rest.
+- No address, token or MP's choice in any log line or audit detail: request paths with a link's token are logged as `***`
+  (`Lt2.Hosting.SecretPaths`, the Caddyfile's `regexp` filter).
 
 **Feedback.** A balloon on every page (and `/atsiliepimai`) lets members write to the team; an item is linked to the
 account only when the member allows a reply, otherwise nothing leads back; staff reply through the outbox; not public.
@@ -436,9 +591,21 @@ rules are about them.
 ## Writing tests
 
 - **Use the shared steps; add to them rather than copy.** Integration tests: `tests/Lt2.IntegrationTests/Infrastructure/`
-  (`AppealSteps`, `OrganisationSteps`, `ReasonsToComeSteps` with `VilniusToday` and `MondayInWeeks`, `SettingsSteps`,
-  `StaffMembers`, `LoggingFactory`). End-to-end tests: `tests/Lt2.E2E/E2ESteps.cs` (registration from any link,
-  `Mailpit`, screenshots, API calls from the page, closing a test's organisation).
+  (`AppealSteps`, `OrganisationSteps`, `MpSteps` and `MpResponseSteps` (take a profile over, office members, code sessions,
+  responses, an adoption vote, the responses part without its islands), `MpSendingSteps` (design 8.19: `ResetMpMailAsync`,
+  `IntroduceAsync`, settings after a fresh passkey confirmation, the MP mail in the outbox and its links' tokens),
+  `ReasonsToComeSteps` with `VilniusToday` and `MondayInWeeks`, `SettingsSteps`,
+  `StaffMembers`, `LoggingFactory`). End-to-end tests: `tests/Lt2.E2E/E2ESteps.cs` (registration from any link, ticking the
+  age and the terms of use, `Mailpit`, screenshots, API calls from the page, closing a test's organisation, `SqlAsync` against
+  the stack's database).
+- **Terms of use in tests (design 8.22.2).** Every member made through the shared steps accepts the terms (`TestBrowser`'s
+  completion sends `AcceptsTerms`); an account older than them is made by deleting its `terms` consent (integration
+  `TermsTests`) or setting an earlier `text_version` (E2E `TermsTests`). A new API write route needs nothing: the sweep in
+  integration `TermsTests` sends every mapped write as such an account and expects `terms.required`; put a route on
+  `TermsExemptions.Routes` only when the design says the write must work before acceptance.
+- **Navigation in end-to-end tests (design 8.21).** "Mano paskyra" and "Atsijungti" are inside the account item: open it with
+  `#account-toggle` first; the four tabs are `#project-tabs`; the theme switch is in the footer. The account page's own
+  "Atsijungti" (`main`) is unchanged.
 - **Staff:** `ModeratorAsync()` / `AdministratorAsync()` of `ApiTest` give the run's shared staff members. Only a test about
   the staff account itself (passkeys, sessions, a reset, a per-moderator limit) makes its own with `StaffMembers.ActiveAsync`.
 - **Settings:** change one through the application that reads it (each keeps a short cache) with `SetSettingAsync`, and
@@ -448,9 +615,19 @@ rules are about them.
   privacy sweep makes; compare an answer's exact set of fields rather than searching a payload that holds random ids for a
   short string; prove the swept answer held what it is about.
 - **Shared data:** the integration tests share one database and run one at a time; a test frees the bill it uses
-  (`FreeBillAsync`) and keeps to its own summary weeks (`MondayInWeeks`). The end-to-end classes share one stack and run one
+  (`FreeBillAsync`) and keeps to its own summary weeks (`MondayInWeeks`). A test that sends MP mail starts and ends with
+  `ResetMpMailAsync` and puts `Digest:Sending` back: the letter, the MPs' choices, the links and the suppression list are
+  shared by the run. The end-to-end classes share one stack and run one
   at a time; a test that hides or changes a demonstration bill restores it in a `finally`, and every name a run gives an
-  organisation carries "(E2E)".
+  organisation carries "(E2E)". `MpSendingTests` (E2E) deletes everything of MP mail it made (runs, deliveries, choices,
+  links, suppression rows, letters) and puts the settings back, since the shared clean-up scripts do not know those tables.
+- **Known browsers (design 8.20.2).** A `TestBrowser` that completed a registration or signed in to a member is known to that
+  account (the test factory sets `Security:DeviceHashKey`): its later code requests use the known browser's allowance and
+  codes, not the shared ones. A test about the shared limits asks from a new browser (`NewBrowser()`, `CodeSessionAsync`).
+- **The "Seimo narių atsakymai" email (design 8.20.1)** goes the morning after: a test sets `Follows:ResponsesAt` to 00:00
+  (and back), moves the bill's `announced_at` to yesterday and runs the job at the real time (`ResponseNoticeTests`); the
+  end-to-end step in `MpResponseTests` does the same through SQL and removes the bill's `bill_event` rows of kind `response`
+  and the setting, which the shared clean-up scripts do not know.
 - **Waits:** no fixed sleeps. In end-to-end tests a step after a navigation or a sign-in waits up to `E2ESteps.Slow`
   (60 s); Playwright's default of 5 s failed when an integration run shared the machine.
 ## Seimas open data

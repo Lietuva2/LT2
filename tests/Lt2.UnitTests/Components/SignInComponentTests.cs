@@ -37,6 +37,12 @@ public sealed class SignInComponentTests : BunitContext
         var organisations = System.Reflection.DispatchProxy.Create<Lt2.Api.Contracts.Organisations.IOrganisationsApi, ApiFake>();
         ((ApiFake)(object)organisations).On("GetMineAsync", Lt2.Api.Contracts.ApiResult<IReadOnlyList<Lt2.Api.Contracts.Organisations.MyOrganisationResponse>>.Ok([]));
         Services.AddSingleton(organisations);
+
+        // Design 8.5: the account page's MP part asks nothing of an account with neither offer nor link.
+        Services.AddSingleton(System.Reflection.DispatchProxy.Create<Lt2.Api.Contracts.Mps.IMpApi, ApiFake>());
+
+        // Design 8.19.4: and nothing of the summaries' choice, which only a linked account in a passkey session reads.
+        Services.AddSingleton(System.Reflection.DispatchProxy.Create<Lt2.Api.Contracts.Digests.IMpMailApi, ApiFake>());
         _authorization = AddAuthorization();
         JSInterop.Mode = JSRuntimeMode.Loose;
         SetRendererInfo(new RendererInfo("WebAssembly", isInteractive: true));
@@ -211,6 +217,13 @@ public sealed class SignInComponentTests : BunitContext
         page.Find("#form-title").TextContent.ShouldBe(Text("Complete.Title"));
         page.Find("#reg-name").GetAttribute("value").ShouldBeNullOrEmpty();
         page.Find("#reg-age").HasAttribute("checked").ShouldBeFalse();
+        page.Find("#reg-terms").HasAttribute("checked").ShouldBeFalse();
+
+        // Design 8.22.2: the terms box links the terms; beside it, one sentence links the privacy notice (no box for it).
+        page.Find("#reg-terms-link").GetAttribute("href").ShouldBe("/taisykles");
+        page.Find("#reg-privacy-link").GetAttribute("href").ShouldBe("/privatumas");
+        page.Find("#reg-privacy").TextContent.ShouldBe("Kaip tvarkome jūsų duomenis, rašoma privatumo pranešime.");
+        page.FindAll("input[type=checkbox]").Count.ShouldBe(2, "the age and the terms; the privacy notice has no box");
         page.FindAll("#complete-invite").ShouldBeEmpty("the invitation is asked again only if it ran out");
         page.Find("#reg-name-hint").TextContent
             .ShouldBe("Šį vardą kiti matys prie jūsų parašytų argumentų. Ar prašote balsuoti už, ar prieš – nemato niekas.");
@@ -218,18 +231,20 @@ public sealed class SignInComponentTests : BunitContext
     }
 
     [Fact]
-    public void Completion_sends_the_name_and_the_declaration()
+    public void Completion_sends_the_name_the_declaration_and_the_accepted_terms()
     {
         SignedIn(FakeMeApi.Pending);
         var page = Render<SignIn>();
 
         page.Find("#reg-name").Input("Rūta M.");
         page.Find("#reg-age").Change(true);
+        page.Find("#reg-terms").Change(true);
         page.Find("form").Submit();
 
         page.WaitForAssertion(() => _me.Completions.ShouldHaveSingleItem());
         _me.Completions[0].DisplayName.ShouldBe("Rūta M.");
         _me.Completions[0].ConfirmsAdult.ShouldBeTrue();
+        _me.Completions[0].AcceptsTerms.ShouldBeTrue();
         _me.Completions[0].InvitationCode.ShouldBeNull();
     }
 
@@ -242,6 +257,20 @@ public sealed class SignInComponentTests : BunitContext
         page.Find("form").Submit();
 
         page.Find("#reg-age-error").TextContent.ShouldBe("Registruotis gali tik 18 metų ir vyresni asmenys.");
+        _me.Completions.ShouldBeEmpty();
+    }
+
+    [Fact]
+    public void Completion_without_the_terms_is_stopped_in_the_browser()
+    {
+        SignedIn(FakeMeApi.Pending);
+        var page = Render<SignIn>();
+
+        page.Find("#reg-age").Change(true);
+        page.Find("form").Submit();
+
+        page.Find("#reg-terms-error").TextContent.ShouldBe("Kad galėtumėte užsiregistruoti, sutikite su naudojimo taisyklėmis.");
+        page.FindAll("#reg-age-error").ShouldBeEmpty();
         _me.Completions.ShouldBeEmpty();
     }
 
@@ -260,6 +289,7 @@ public sealed class SignInComponentTests : BunitContext
             : ApiResult.Ok());
         var page = Render<SignIn>();
         page.Find("#reg-age").Change(true);
+        page.Find("#reg-terms").Change(true);
         page.Find("form").Submit();
 
         page.WaitForElement("#complete-invite-error").TextContent.ShouldBe(usedUp);
@@ -503,6 +533,14 @@ public sealed class SignInComponentTests : BunitContext
         public Task<ApiResult> GivePositionConsentAsync(PositionConsentRequest request, CancellationToken cancellationToken = default) =>
             Task.FromResult(ApiResult.Ok());
 
+        public List<TermsAcceptanceRequest> Acceptances { get; } = [];
+
+        public Task<ApiResult> AcceptTermsAsync(TermsAcceptanceRequest request, CancellationToken cancellationToken = default)
+        {
+            Acceptances.Add(request);
+            return Task.FromResult(ApiResult.Ok());
+        }
+
         public Task<ApiResult> WithdrawPositionConsentAsync(CancellationToken cancellationToken = default) =>
             Task.FromResult(ApiResult.Ok());
 
@@ -523,5 +561,10 @@ public sealed class SignInComponentTests : BunitContext
             Task.FromResult(ApiResult<IReadOnlyList<SessionResponse>>.Ok(Sessions));
 
         public Task<ApiResult> EndSessionAsync(Guid sessionId, CancellationToken cancellationToken = default) => EndSession(sessionId);
+
+        public Task<ApiResult<IReadOnlyList<KnownBrowserResponse>>> GetKnownBrowsersAsync(CancellationToken cancellationToken = default) =>
+            Task.FromResult(ApiResult<IReadOnlyList<KnownBrowserResponse>>.Ok([]));
+
+        public Task<ApiResult> ForgetKnownBrowserAsync(Guid id, CancellationToken cancellationToken = default) => Task.FromResult(ApiResult.Ok());
     }
 }
