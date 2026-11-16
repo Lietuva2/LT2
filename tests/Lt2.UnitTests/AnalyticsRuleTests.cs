@@ -33,6 +33,13 @@ public sealed class BillComparisonRuleTests
         AnalyticsRules.SeimasMajorityFor(Vote(50, 50, 0)).ShouldBe(false);
 
     [Fact]
+    public void A_vote_nobody_voted_in_has_no_share_and_no_majority()
+    {
+        AnalyticsRules.SeimasShareFor(Vote(0, 0, 0)).ShouldBeNull();
+        AnalyticsRules.SeimasMajorityFor(Vote(0, 0, 0)).ShouldBeNull();
+    }
+
+    [Fact]
     public void A_vote_without_numbers_has_no_majority() =>
         AnalyticsRules.SeimasMajorityFor(new SeimasVoteNumbers(false, null, null, null)).ShouldBeNull();
 
@@ -199,22 +206,23 @@ public sealed class FactionUnityRuleTests
     [Fact]
     public void Unity_is_the_share_of_members_who_voted_that_chose_the_factions_position_pooled_over_votes()
     {
-        // 9 of 10 and 18 of 20 chose the position: 27 of 30.
-        var unity = FactionUnityRule.Compute([Tally(1, 9, 1, 0), Tally(2, 2, 18, 0)]);
+        // Ten votes where 9 of 10 chose the position and ten where 18 of 20 did: 270 of 300.
+        var unity = FactionUnityRule.Compute(
+            Enumerable.Range(1, 10).Select(i => Tally(i, 9, 1, 0)).Concat(Enumerable.Range(11, 10).Select(i => Tally(i, 2, 18, 0))));
 
-        unity.VotesWithPosition.ShouldBe(2);
-        unity.MembersWithPosition.ShouldBe(27);
-        unity.MembersVoted.ShouldBe(30);
+        unity.VotesWithPosition.ShouldBe(20);
+        unity.MembersWithPosition.ShouldBe(270);
+        unity.MembersVoted.ShouldBe(300);
         unity.Share.ShouldBe(0.9m);
     }
 
     [Fact]
     public void A_free_vote_is_counted_beside_the_share_and_never_in_it()
     {
-        var unity = FactionUnityRule.Compute([Tally(1, 10, 0, 0), Tally(2, 16, 14, 0)]);
+        var unity = FactionUnityRule.Compute(Enumerable.Range(1, 20).Select(i => Tally(i, 10, 0, 0)).Append(Tally(21, 16, 14, 0)));
 
         unity.FreeVotes.ShouldBe(1);
-        unity.VotesWithPosition.ShouldBe(1);
+        unity.VotesWithPosition.ShouldBe(20);
         unity.Share.ShouldBe(1m);
     }
 
@@ -223,10 +231,24 @@ public sealed class FactionUnityRuleTests
         FactionUnityRule.Compute([Tally(1, 5, 5, 0)]).Share.ShouldBeNull();
 
     [Fact]
-    public void Fewer_than_twenty_votes_with_a_position_is_a_small_sample()
+    public void Under_twenty_votes_with_a_position_there_is_no_share_only_the_counts_and_a_small_sample()
     {
-        FactionUnityRule.Compute(Enumerable.Range(1, 19).Select(i => Tally(i, 10, 0, 0))).SmallSample.ShouldBeTrue();
-        FactionUnityRule.Compute(Enumerable.Range(1, 20).Select(i => Tally(i, 10, 0, 0))).SmallSample.ShouldBeFalse();
+        var small = FactionUnityRule.Compute(Enumerable.Range(1, 19).Select(i => Tally(i, 9, 1, 0)));
+        (small.SmallSample, small.Share, small.VotesWithPosition, small.MembersWithPosition, small.MembersVoted).ShouldBe((true, (decimal?)null, 19, 171, 190));
+
+        var enough = FactionUnityRule.Compute(Enumerable.Range(1, 20).Select(i => Tally(i, 9, 1, 0)));
+        (enough.SmallSample, enough.Share).ShouldBe((false, (decimal?)0.9m));
+    }
+
+    [Fact]
+    public void Two_labels_of_one_faction_in_a_vote_are_one_tally_with_the_position_worked_out_from_their_sum()
+    {
+        // One label alone is "for" (6 of 7), the other "against" (5 of 7); added up (8 for, 6 against) no option reaches two thirds: a free vote.
+        var merged = FactionUnityRule.PerVote([Tally(1, 6, 1, 0), Tally(1, 2, 5, 0)]).ShouldHaveSingleItem();
+
+        (merged.For, merged.Against, merged.Position).ShouldBe((8, 6, FactionPosition.Free));
+        var unity = FactionUnityRule.Compute([Tally(1, 6, 1, 0), Tally(1, 2, 5, 0)]);
+        (unity.FreeVotes, unity.VotesWithPosition).ShouldBe((1, 0), "the vote counts once");
     }
 
     [Fact]
@@ -251,4 +273,28 @@ public sealed class FactionUnityRuleTests
     [Fact]
     public void On_an_equal_split_the_newest_vote_comes_first() =>
         FactionUnityRule.Compute([Tally(1, 5, 5, 0, daysLater: 0), Tally(2, 5, 5, 0, daysLater: 3)]).MostSplit.Select(t => t.VoteId).ShouldBe([2L, 1L]);
+}
+
+/// <summary>Design 8.26.1: a share beside the line at 50 % never reads as 50 % unless it is exactly half.</summary>
+public sealed class AnalyticsShareFormatTests
+{
+    [Fact]
+    public void A_share_is_written_as_a_whole_percent() =>
+        Lt2.Web.Client.Analytics.AnalyticsFormat.Share(0.712m).ShouldBe(Lt2.Web.Client.Display.Percent(0.712m));
+
+    [Fact]
+    public void Exactly_half_is_fifty_percent() =>
+        Lt2.Web.Client.Analytics.AnalyticsFormat.Share(0.5m).ShouldBe(Lt2.Web.Client.Display.Percent(0.5m));
+
+    [Fact]
+    public void A_majority_and_its_absence_near_half_never_look_the_same()
+    {
+        Lt2.Web.Client.Analytics.AnalyticsFormat.Share(0.5035m).ShouldBe("50,4 %");
+        Lt2.Web.Client.Analytics.AnalyticsFormat.Share(0.496m).ShouldBe("49,6 %");
+        Lt2.Web.Client.Analytics.AnalyticsFormat.Share(0.50004m).ShouldBe("50,004 %");
+    }
+
+    [Fact]
+    public void No_share_is_no_text() =>
+        Lt2.Web.Client.Analytics.AnalyticsFormat.Share(null).ShouldBeNull();
 }

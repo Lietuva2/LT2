@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- LT2-SYNTHETIC: invented by Lietuva 2.0 for the LOCAL stand-in only (tools/Lt2.SeimasStandIn/Recent). NOT a recorded
+     Seimas response. {{day:N}} is today plus N days (yyyy-MM-dd), so the local stack has a bill whose adoption vote was nine days ago (design 8.26). --><SeimoInformacija>
+  <SeimoPosėdis posėdžio_id="99001103" numeris="258" tipas="Rytinis" pradžia="{{day:-9}} 10:00" pabaiga="{{day:-9}} 12:40">
+    <DarbotvarkėsKlausimas darbotvarkės_klausimo_id="99010301" numeris="1" pavadinimas="Dėl posėdžio darbotvarkės" stadija="" laikas_nuo="10:00"/>
+    <DarbotvarkėsKlausimas darbotvarkės_klausimo_id="99010302" numeris="2" pavadinimas="Viešųjų pirkimų įstatymo pataisa" stadija="Priėmimas" laikas_nuo="10:20">
+      <Dokumentas registracijos_numeris="XVP-0707" nuoroda="https://e-seimas.lrs.lt/portal/legalAct/lt/TAP/SINTETINIS-XVP-0707"/>
+    </DarbotvarkėsKlausimas>
+  </SeimoPosėdis>
+</SeimoInformacija>

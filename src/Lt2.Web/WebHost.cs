@@ -89,6 +89,7 @@ internal static class WebHost
         services.AddScoped<MyBillsReads>();
         services.AddScoped<TakingSides>();
         services.AddScoped<Lt2.Api.Contracts.Me.IMyBillsApi, ServerMyBillsApi>();
+        services.AddSingleton<AnalyticsCopies>();
         services.AddScoped<AnalyticsReads>();
         services.AddScoped<MyAgreementReads>();
         services.AddScoped<Lt2.Api.Contracts.Analytics.IAnalyticsApi, ServerAnalyticsApi>();

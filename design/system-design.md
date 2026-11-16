@@ -2979,14 +2979,14 @@ lines on a phone.
 
 - **The menu:** the logo, "Projektai", "Seimo nariai", and "Prisijungti" for a visitor or the account item for a
   member. It fits one line at 360 px.
-- **"Projektai" is one item with three tabs:** "Darbotvarkė" (`/darbotvarke`), "Projektai" (`/projektai`; named "Visi projektai" until the owner shortened it on 2026-11-16) and
+- **"Projektai" is one item with four tabs:** "Darbotvarkė" (`/darbotvarke`), "Projektai" (`/projektai`; named "Visi projektai" until the owner shortened it on 2026-11-16) and
   "Suvestinės" (`/suvestines`). **[Changed by the owner on 2026-11-16, on the built result: "Balsavimai" was a fourth
   tab; the link under the agenda's voted list (8.18) is enough, and the row is shorter on a phone. The history of votes
   keeps its address, has no tab row, and leads back to the agenda by a breadcrumb.]** **[Owner, 2026-11-16: a fourth
   tab, "Analitika" (`/seimas/analitika`, 8.26), after "Suvestinės".]** The item opens the
   agenda **[designer's proposal: what is coming is the most useful first view]**. The tabs are a row of plain links
-  under the page's heading on these three pages, the current one marked; no script. Addresses do not change. The menu
-  item is marked current on the three pages and on everything under them (the history of votes, a bill, a vote, a summary).
+  under the page's heading on these four pages, the current one marked; no script. Addresses do not change. The menu
+  item is marked current on the four pages and on everything under them (the history of votes, a bill, a vote, a summary).
 - **The account item** reads "Paskyra" **[designer's proposal: not the person's name, so the page's HTML stays the same
   for every member]**. It is a disclosure that works without script, holding "Mano paskyra" and "Atsijungti". With
   script, the opened item also shows the person's name at the top and the links their account has: "Moderavimas",
@@ -3016,7 +3016,7 @@ lines on a phone.
   - "Apie": "Metodika", "Moderavimo taisyklės", "Naudojimo taisyklės", "Privatumas" (8.22);
   - "Dalyvauti": "Organizacijos", "Atsiliepimai".
 - **The theme switch** moves to the footer, so a visitor has it too. It works as before and is absent without script.
-- **Done when:** the menu is one line at 360, 390 and 1280 px; each of the three tabs is reachable from the other two
+- **Done when:** the menu is one line at 360, 390 and 1280 px; each of the four tabs is reachable from the other three
   and marked; every page that was in the old menu is one press from the menu or the footer; the account item works
   with and without script and with the keyboard; no served page holds a member's name or role links.
 - [changed while building (2026-11-16): "Seimo nariai" is marked current on the list and on everything under it as well (a
@@ -3747,10 +3747,12 @@ page is a fourth tab, "Analitika", under "Projektai" (8.21); and one fixed sampl
 #### 8.26.1 What the page shows
 
 Public, server-rendered, the same for everyone and nothing about the caller, apart from one island. Two filters in one GET
-form on the ground (8.16), with no script: the period (`metai`: the whole current term, the default, or one calendar year
-of it, Vilnius days) and the accounts counted (`paskyros=senesnes`: only accounts older than 30 days, from the counts every
-record keeps for them). The lead says once that the numbers are from self-selected Lietuva 2.0 users and are not a
-representative poll; the same line stands beside the comparison of sides (8.2, `AGENTS.md`).
+form on the ground (8.16), with no script: the period ("Laikotarpis", `metai`: the whole current term by its name, the
+default, or one calendar year of it, Vilnius days) and the accounts counted ("Skaičiuojamos paskyros", `paskyros=senesnes`:
+"Visos" or "Tik senesnės nei 30 d.", from the counts every record keeps for them). The lead says once that the numbers are
+from self-selected Lietuva 2.0 users and are not a representative poll; the established line ("Tai nėra reprezentatyvi
+apklausa: …") stands beside the figures and the comparison of sides (8.2, `AGENTS.md`). The figures say when they were
+counted ("Suskaičiuota …"): they are a kept copy, at most an hour old (8.26.6).
 
 1. **Four figures.**
    - *Projects members took part in*: of the bills in the catalogue that were on the agenda of a sitting held in the
@@ -3760,27 +3762,33 @@ representative poll; the same line stands beside the comparison of sides (8.2, `
      before; a hidden record counts nothing). With the filter, only the older accounts' counts.
    - *Majorities agreed*: of the closed bills of the period that can be compared (8.26.2), those where the members'
      majority and the Seimas's majority chose the same; "x iš N", with a percentage only when N is 20 or more, otherwise
-     "maža imtis". Nothing when N is 0.
+     "maža imtis". When N is 0, one line says there is no such bill yet.
    - *MPs who took over their profile*: sitting MPs whose profile is taken over (8.5.2), of all sitting MPs, today. The
      period does not apply.
-2. **The comparison of sides** ("Balsų „už“ dalis: Seimas ir Lietuva 2.0 naudotojai"): a dot plot drawn by the server
-   (SVG, a `<title>` per dot for the exact numbers, no script), one row per comparable closed bill of the period, the
-   latest 10 by their closing vote, with the line at 50 %, and "Rodyti lentelę" (`details.more`) with every closed bill
-   of the period that has at least one side: the bill, the Seimas's share "for", the members' share "for" (or their counts
-   and "maža imtis" under 20), and the majority of those who voted in the Seimas ("už" or "ne").
+2. **The comparison of sides** ("„Už“ dalis: Seimo balsavimas ir Lietuva 2.0 naudotojų pozicijos"; members' sides are
+   positions, never "balsai"): a dot plot drawn by the server (SVG, a `<title>` per dot for the exact numbers, no script),
+   one row per comparable closed bill of the period, at most the latest 10 by their closing vote (the line above it says
+   so), with the line at 50 %, and "Rodyti lentelę" (`details.more`) with every closed bill of the period that has at
+   least one side: the bill, the Seimas's share "for" (with the Seimas's own note on the result when it has one), the
+   members' share "for" (or their counts and "maža imtis" under 20), and the majority of those who voted in the Seimas
+   ("„už“" or "ne „už“"). A share that rounds to 50 % without being exactly half is written with as many decimals as it
+   takes not to read as 50 % ("50,4 %"), so a majority and its absence never look the same.
 3. **Faction unity** ("Frakcijų vieningumas"): per faction of the current term with a recorded vote in the period, the
    share of its members' ballots that chose the faction's position, over the votes where it had one (the two-thirds rule
-   of 7.3), the number of those votes and the number of free votes; "maža imtis" under 20 votes with a position. The
-   factions stand in order of their seats today, then by name: side by side, not ranked. Under each bar a
-   `details.more` lists the three votes where the faction split most (8.26.3), each linking to the vote's page.
+   of 7.3), the number of those votes and the number of free votes. Under 20 votes with a position there is no share
+   and no bar, only the counts and "maža imtis" (as everywhere on the page, 8.26.2; after the review of 2026-11-16). The
+   factions stand in order of their seats today, then by name: side by side, not ranked. Under each a `details.more`
+   lists the three votes where the faction split most (8.26.3), each linking to the vote's page.
 4. **"Kas balsuoja taip kaip jūs"**: the member's own comparison (8.26.4), an island filled in the browser.
+   [The reviewer's proposal, awaiting the owner: the heading "Kas Seime balsuoja taip, kaip prašote jūs" (a comma, and
+   members do not vote).]
 
 #### 8.26.2 The rules of the comparison (pure functions, `AnalyticsRules` in SharedKernel)
 
 - **A closed bill of the period**: a closed record (8.1; hidden ones are left out) whose closing vote was held in the
   period.
 - **The Seimas's share "for"**: for ÷ (for + against + abstain) at the closing vote. A vote adopted by consensus has no
-  numbers: it is shown as "bendru sutarimu", has no dot, and counts as a majority "for". A vote whose per-MP results are
+  numbers: it is shown as "pritarta bendru sutarimu", has no dot, and counts as a majority "for". A vote whose per-MP results are
   not read yet is not compared.
 - **The Seimas's majority** is the majority of those who voted: "for" when the votes for are more than half of for,
   against and abstain together; otherwise not "for". Open data gives no "adopted" or "rejected", and the legal rule counts
@@ -3798,20 +3806,26 @@ From the faction positions the import keeps per vote (5.1 `faction_position`), o
 chose it, divided by the sum of the members who voted in those votes (pooled, so a large vote weighs more than a small
 one). Free votes are counted beside it, never in it. A vote's split is the share of the faction's largest option among
 its members who voted; the three lowest are where it split most (free votes included, at least two members voting, the
-newest first on a tie). The mixed group is no faction and is not shown.
+newest first on a tie). The mixed group is no faction and is not shown. Two labels of the per-MP results that resolve
+to the same faction in one vote are one tally: their counts are added and the position worked out again from the sum,
+so no vote counts twice. Under 20 votes with a position the share is not given (8.26.1).
 
 #### 8.26.4 "Kas balsuoja taip kaip jūs"
 
-- **For the caller only** (`GET /api/v1/me/analytics/agreement`): read per request from the caller's own sides on closed
-  records and the MPs' public ballots at those records' closing votes; never stored, cached or logged, and never
-  prerendered: the server-rendered page holds only the part's heading and one line; a visitor's island offers the
-  sign-in link back to the page (`LandingPath.SignInLink`).
+- **For the caller only** (`GET /api/v1/me/analytics/agreement`): made from the caller's own sides on closed records
+  and the MPs' public ballots at those records' closing votes, the first time the member's page asks for it, and then
+  kept for the member in server memory (8.26.6; the owner, 2026-11-16: "built asynchronously the first time the page is
+  opened, and then saved for the whole session"). Never written to a table, the browser or a log, and never in a
+  server-rendered page: the server-side API client refuses it, and the page holds only the part's heading and one line.
+  A visitor gets the sign-in link back to the page (`LandingPath.SignInLink`) already in the server's HTML, so it works
+  without JavaScript; the page carries `<NeedsScript />` for a member without it.
 - **An MP matches** on a bill when the MP's ballot at the closing vote is the caller's side; an abstention does not
   match; an MP who did not vote, or a vote by consensus, is not in the sample. **A faction matches** when its position
   (two thirds) is the caller's side; a free vote is not in its sample. Every MP with a ballot at those votes is listed,
-  with the faction of today (or the last one) and "buvęs Seimo narys" for a former MP.
+  with the faction of today (or the last one) and "mandatas baigėsi" for an MP whose mandate ended.
 - **Order (owner, 2026-11-16):** factions, then MPs; within each, those with 20 common votes or more by the share of
   agreement, highest first (then by name); then those with fewer, by name, with "sutapo 3 iš 4 · maža imtis" and no bar.
+  MPs by name means as every list of MPs: last name, then first name.
   Nobody with no common vote is listed. The heading line says on how many closed bills the caller took a side, and how
   many of them the Seimas adopted by consensus (no ballots).
 - It is a comparison for the member, not a judgement of MPs: the line under the heading says so and that nobody else sees
@@ -3825,16 +3839,37 @@ the table still lists the closed bills with their counts and "maža imtis", and 
 member's own comparison then shows fractions with "maža imtis", or, without a side on any closed bill, one line and the
 link to `/projektai`.
 
-#### 8.26.6 API
+**Demonstration data (local stack only, after the review of 2026-11-16):** the stand-in's local overlay
+(`tools/Lt2.SeimasStandIn/Recent`) adds a sitting nine days ago with an adoption vote, with per-MP ballots, on an invented
+bill XVP-0707 "Viešųjų pirkimų įstatymo pataisa"; `--demo-appeal` gives it invented positions taken before the vote (1 240
+for, 1 100 of them older than 30 days; 860 against, 760) and two arguments, and closes its record as the closing job
+would, so the plot, the table and a member's comparison can be seen. The example numbers of XVP-0412 are unchanged.
+Tests never load the overlay.
+
+#### 8.26.6 API and kept copies
 
 ```
-GET /api/v1/analytics?year=2026&accounts=older   public, cacheable, nothing about the caller
+GET /api/v1/analytics?year=2026&accounts=older   public, with an ETag, nothing about the caller
 GET /api/v1/me/analytics/agreement                 the caller's own comparison; no-store, as every signed-in answer
 ```
 
 `year` is a calendar year of the current term (anything else is the whole term); `accounts=older` counts only accounts
-older than 30 days. The public answer carries the four figures, the comparable and listed bills with their numbers, and
-the factions with their three most split votes.
+older than 30 days. The public answer carries when it was counted, the four figures, the comparable and listed bills with
+their numbers, and the factions with their three most split votes.
+
+**Kept copies (the owner, 2026-11-16, section 12).** Both live in the web process's memory only (`AnalyticsCopies`):
+never a table, never the browser (8.22.1), never a cacheable HTTP answer.
+- *The public answer*: one copy for everybody per filter combination. Once it is an hour old it is still served as it
+  is while one refresh runs in the background, so no visitor waits except the first after a start or after the data
+  version changed. Its key holds that data version: the closed records (one closes, is hidden or restored) and the last
+  finished import, so those changes show at once; sides taken on open bills show within about an hour, and the page says
+  when its numbers were counted. Who refreshes is one method (`AnalyticsCopies.Refresh`); a periodic job could take it
+  over without changing anything else. **[Open, the owner's question of 2026-11-16: whether a periodic job should make
+  the copy instead of a visit; the measured cost is in the report of that day. Until decided: no job, no table.]**
+- *A member's comparison*: one copy per account, made the first time the member's page asks, kept while the member keeps
+  using it (12 hours without a request ends it), made again when the data version changes, and dropped at sign-out,
+  account deletion and withdrawal of the positions consent. At most 10 000 accounts are kept; the oldest go first. It
+  reveals the member's sides, so it is treated as a side: never logged, never in an answer to anyone else.
 
 #### 8.26.7 Not built, and why
 
@@ -3854,7 +3889,9 @@ the factions with their three most split votes.
 - Every number follows 8.26.2–8.26.4 in a unit test whose name reads as the rule; consensus votes have no share; under 20
   a sample shows counts and "maža imtis".
 - The public answer is the same for a visitor and a member; the caller's comparison answers only the caller, holds
-  nothing of another person, and a visitor gets 401.
+  nothing of another person, a visitor gets 401, and no server-rendered page holds any of it.
+- Faction unity shows no share under 20 votes with a position; the page is in the end-to-end lists of islands before
+  start, layout and explanatory text.
 
 ## 9. Hosting and operations
 
@@ -4154,6 +4191,22 @@ Designed, not built (8.23-8.25):
   now, after this branch is verified (11, "Follower counts"); the member's comes with 8.25. Two limits are the
   designer's proposals (below): counts, not rankings; and a follow never becomes a delegation by itself.
 
+**Decided by the owner on 2026-11-16: the analytics page (8.26)**
+
+- The page is built without delegation: the figures, the Seimas beside the members on closed bills, faction unity and
+  the member's own comparison; showing how many MPs took over their profile and setting factions side by side are
+  allowed (8.26.1).
+- "Kas balsuoja taip kaip jūs" lists MPs in order of agreement for the member who asks, seen by nobody else: the one
+  exception to "no ranking or comparison of MPs by any number" (7.3, 8.26.4).
+- The Seimas's majority is the majority of those who voted; a consensus counts as "for" (8.26.2).
+- The page is the fourth tab under "Projektai", "Analitika" (8.21).
+- One fixed sample of 20 for every number on the page, not a setting; below it, counts and "maža imtis" and no share
+  (8.26.2), faction unity included (after the review of 2026-11-16).
+- **Kept copies:** "I think we may cache this quite long, say per-session, with the personal sections like "who votes like
+  you" built asynchronously the first time the page is opened, and then saved for the whole session." Built as 8.26.6:
+  the public numbers kept for an hour (one copy for everyone per filter), the member's comparison made the first time
+  their page asks and kept in server memory for the member until they sign out or stop using it.
+
 **Proposed by the designer on 2026-11-16**
 
 Read by the owner without objection, so written as the rule (the alternative in brackets where there was one):
@@ -4223,6 +4276,8 @@ search engine's copy outlives switching the profile off. When follower numbers a
 | A followed member watched and pressed (8.25.5) | The profile switch is the consent to being followed and ends every follow at once; only the number of followers shows, nobody (the person included) is told who follows; harassment in comments answered by reports, hiding and the writing restriction. What stays: one particular follower cannot be blocked without showing followers. |
 | The product drifts from "people tell MPs" towards a social network (8.25, 8.11.2) | Chosen by the owner on 2026-11-16, with a number of followers on every thing that can be followed, members included. The number stands only on the thing's own page and nothing is ranked, sorted or listed by it (proposed, 8.11.2); who follows is invisible to all but the follower; summaries carry no follower number. What stays: a visible count invites collecting followers, which is what a social network rewards. |
 | MPs' follower numbers read as a popularity score or a scorecard (7.1, 8.11.2) | Before 2026-11-16 the rule was that no follower count is shown, so the question did not arise; the owner chose the numbers as delegation's predecessor. What now stands between a number and a scorecard: no ordering (no list sorted by it, no "most followed", no number in list rows), no comparison (no total per faction or party, nothing set beside another MP's number), and the note that these are self-selected users who asked for emails, not supporters and not a representative poll (all proposed, 8.11.2). What stays: anyone can open profiles one by one and build the table elsewhere; the site does not make it. |
+| A bill rejected or withdrawn before its adoption stage is never compared on the analytics page (8.26.7): 8.1 says its record closes then, but the code closes a record only at the adoption-stage vote, which such a bill never gets | Said in 8.26.7; the comparison covers bills with an adoption-stage vote. Closing on an earlier rejection needs the open data to say so (the bill's status, 5.1), which is not read yet. |
+| A member's comparison kept in server memory (8.26.6) reveals their sides to anyone who can read the web process's memory | Kept only in memory, never in a table, a log or the browser, bounded to 10 000 members and dropped after 12 idle hours, at sign-out, account deletion and withdrawal of the positions consent; the same exposure as the sides themselves in the database. |
 | Running costs outlive enthusiasm (the old platform's fate) | One VPS, no paid infrastructure beyond email and backup storage. |
 | Stage 2 ships before stage 3 and the public pages say otherwise | Update the pages when this order is agreed (below). |
 

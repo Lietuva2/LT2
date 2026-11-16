@@ -14,7 +14,10 @@ internal sealed record FactionVoteTally(long VoteId, DateTimeOffset HeldAt, Fact
 /// <param name="MembersVoted">Of those votes, the members who voted, added up.</param>
 /// <param name="MembersWithPosition">Of those, the members who chose the faction's position, added up.</param>
 /// <param name="FreeVotes">Votes where no option reached two thirds; never in the share.</param>
-/// <param name="Share">Pooled: <paramref name="MembersWithPosition"/> ÷ <paramref name="MembersVoted"/>; null with no vote with a position.</param>
+/// <param name="Share">
+/// Pooled: <paramref name="MembersWithPosition"/> ÷ <paramref name="MembersVoted"/>; null under 20 votes with a position
+/// (<see cref="AnalyticsRules.SmallSample"/>: then only the counts and "maža imtis" are shown, design 8.26.2).
+/// </param>
 /// <param name="SmallSample">Fewer than <see cref="AnalyticsRules.SmallSample"/> votes with a position: "maža imtis".</param>
 /// <param name="MostSplit">The three votes where the faction split most, most split first.</param>
 internal sealed record FactionUnity(
@@ -24,7 +27,7 @@ internal sealed record FactionUnity(
 /// Design 8.26.3: faction unity, from the faction positions of the two-thirds rule (<see cref="FactionRule"/>). The share
 /// is pooled over the votes with a position, so a vote with many members voting weighs more; free votes are counted
 /// beside it. A vote's split is the share of the faction's largest option among those who voted; the lowest three are
-/// where it split most.
+/// where it split most. Under 20 votes with a position there is no share, only the counts.
 /// </summary>
 internal static class FactionUnityRule
 {
@@ -51,10 +54,26 @@ internal static class FactionUnityRule
         };
     }
 
+    /// <summary>
+    /// One tally per vote: two labels of the per-MP results that resolve to the same faction in one vote are added up and
+    /// the faction's position is worked out again from the sum (the two-thirds rule), so no vote counts twice.
+    /// </summary>
+    public static IReadOnlyList<FactionVoteTally> PerVote(IEnumerable<FactionVoteTally> tallies)
+    {
+        ArgumentNullException.ThrowIfNull(tallies);
+        return tallies.GroupBy(t => t.VoteId)
+            .Select(g => g.Count() == 1
+                ? g.First()
+                : new FactionVoteTally(
+                    g.Key, g.First().HeldAt, FactionRule.PositionOf(g.Sum(t => t.For), g.Sum(t => t.Against), g.Sum(t => t.Abstain)),
+                    g.Sum(t => t.For), g.Sum(t => t.Against), g.Sum(t => t.Abstain)))
+            .ToList();
+    }
+
     public static FactionUnity Compute(IEnumerable<FactionVoteTally> votes)
     {
         ArgumentNullException.ThrowIfNull(votes);
-        var list = votes.ToList();
+        var list = PerVote(votes);
         var withPosition = list.Where(v => v.Position is FactionPosition.For or FactionPosition.Against or FactionPosition.Abstain).ToList();
         var voted = withPosition.Sum(v => v.Voted);
         var chose = withPosition.Sum(WithPosition);
@@ -70,7 +89,7 @@ internal static class FactionUnityRule
             voted,
             chose,
             list.Count(v => v.Position == FactionPosition.Free),
-            voted == 0 ? null : (decimal)chose / voted,
+            voted == 0 || !AnalyticsRules.IsEnough(withPosition.Count) ? null : (decimal)chose / voted,
             !AnalyticsRules.IsEnough(withPosition.Count),
             mostSplit);
     }

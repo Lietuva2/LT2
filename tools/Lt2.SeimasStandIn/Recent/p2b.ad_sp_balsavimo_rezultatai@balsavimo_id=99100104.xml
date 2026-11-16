@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- LT2-SYNTHETIC: invented by Lietuva 2.0 for the LOCAL stand-in only (tools/Lt2.SeimasStandIn/Recent). NOT a recorded
+     Seimas response. {{day:N}} is today plus N days (yyyy-MM-dd), so the local stack has a bill whose adoption vote was nine days ago (design 8.26). --><SeimoInformacija>
+  <BendriBalsavimoRezultatai balsavimo_id="99100104" balsavimo_laikas="{{day:-9}} 10:34:05" viso="141" balsavo="112" už="58" prieš="41" susilaikė="13" komentaras=""/>
+  <IndividualusBalsavimoRezultatas asmens_id="99000001" vardas="Jonas" pavardė="Petraitis" frakcija="RPF" kaip_balsavo="Už"/>
+  <IndividualusBalsavimoRezultatas asmens_id="99000002" vardas="Marius" pavardė="Ąžuolaitis" frakcija="RPF" kaip_balsavo="Už"/>
+  <IndividualusBalsavimoRezultatas asmens_id="99000003" vardas="Eglė" pavardė="Beržinytė" frakcija="RPF" kaip_balsavo="Už"/>
+  <IndividualusBalsavimoRezultatas asmens_id="99000004" vardas="Vytautas" pavardė="Klevinskas" frakcija="RPF" kaip_balsavo="Susilaikė"/>
+  <IndividualusBalsavimoRezultatas asmens_id="99000005" vardas="Ona" pavardė="Jonaitienė" frakcija="PSF" kaip_balsavo="Prieš"/>
+  <IndividualusBalsavimoRezultatas asmens_id="99000006" vardas="Laima" pavardė="Uosytė" frakcija="PSF" kaip_balsavo="Prieš"/>
+  <IndividualusBalsavimoRezultatas asmens_id="99000007" vardas="Darius" pavardė="Liepaitis" frakcija="RAF" kaip_balsavo="Už"/>
+  <IndividualusBalsavimoRezultatas asmens_id="99000008" vardas="Asta" pavardė="Pušinskienė" frakcija="PSF" kaip_balsavo="Prieš"/>
+  <IndividualusBalsavimoRezultatas asmens_id="99000009" vardas="Kęstutis" pavardė="Gluosnis" frakcija="RAF" kaip_balsavo="Už"/>
+  <IndividualusBalsavimoRezultatas asmens_id="99000010" vardas="Indrė" pavardė="Eglaitė" frakcija="RAF" kaip_balsavo="Prieš"/>
+  <IndividualusBalsavimoRezultatas asmens_id="99000012" vardas="Gintarė" pavardė="Šermukšnytė" frakcija="RAF" kaip_balsavo="Už"/>
+  <IndividualusBalsavimoRezultatas asmens_id="99000013" vardas="Aurelija" pavardė="Kadagytė" frakcija="RAF" kaip_balsavo=""/>
+  <IndividualusBalsavimoRezultatas asmens_id="99000014" vardas="Rasa" pavardė="Ievaitė" frakcija="MG" kaip_balsavo="Už"/>
+</SeimoInformacija>

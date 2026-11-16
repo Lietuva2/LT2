@@ -85,15 +85,16 @@ else if (Message is not null)
 
     protected override async Task OnInitializedAsync()
     {
-        // Only in the browser: while the server prerenders, the part is empty (design 8.26.4).
-        if (!RendererInfo.IsInteractive)
-        {
-            return;
-        }
-
+        // A visitor gets the sign-in link already in the server's HTML, so it works without JavaScript too. A member's
+        // comparison is asked only in the browser: while the server prerenders, the part is empty (design 8.26.4).
         if (!await IsSignedInAsync())
         {
             _visitor = true;
+            return;
+        }
+
+        if (!RendererInfo.IsInteractive)
+        {
             return;
         }
 

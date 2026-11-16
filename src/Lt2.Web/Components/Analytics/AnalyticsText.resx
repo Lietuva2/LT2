@@ -8,56 +8,56 @@
   <data name="Lead" xml:space="preserve"><value>Seimo balsavimai ir Lietuva 2.0 naudotojų pozicijos greta: kur pasirinkimai sutampa ir kur skiriasi. Naudotojai dalyvauja savo noru, todėl tai nėra reprezentatyvi visuomenės apklausa.</value></data>
   <data name="Filter.Period" xml:space="preserve"><value>Laikotarpis</value></data>
   <data name="Filter.Term" xml:space="preserve"><value>Visa kadencija</value></data>
-  <data name="Filter.TermNamed" xml:space="preserve"><value>Visa kadencija ({0})</value></data>
   <data name="Filter.Year" xml:space="preserve"><value>{0} m.</value></data>
-  <data name="Filter.Accounts" xml:space="preserve"><value>Naudotojai</value></data>
-  <data name="Filter.AllAccounts" xml:space="preserve"><value>Visi Lietuva 2.0 naudotojai</value></data>
-  <data name="Filter.OlderAccounts" xml:space="preserve"><value>Paskyros senesnės nei 30 d.</value></data>
+  <data name="Filter.Accounts" xml:space="preserve"><value>Skaičiuojamos paskyros</value></data>
+  <data name="Filter.AllAccounts" xml:space="preserve"><value>Visos</value></data>
+  <data name="Filter.OlderAccounts" xml:space="preserve"><value>Tik senesnės nei 30 d.</value></data>
   <data name="Filter.Show" xml:space="preserve"><value>Rodyti</value></data>
   <data name="Figures.Title" xml:space="preserve"><value>Svarbiausi skaičiai</value></data>
   <data name="Figures.TakenPart" xml:space="preserve"><value>Projektai, dėl kurių pasirinkta pozicija</value></data>
   <data name="Figures.TakenPartOf" xml:space="preserve"><value>Seime svarstyta projektų: {0}</value></data>
-  <data name="Figures.Positions" xml:space="preserve"><value>Pozicijos platformoje</value></data>
+  <data name="Figures.Positions" xml:space="preserve"><value>Pasirinktos pozicijos</value></data>
   <data name="Figures.PositionsSub" xml:space="preserve"><value>„už“ ir „prieš“ kartu</value></data>
-  <data name="Figures.Agreed" xml:space="preserve"><value>Seimo ir naudotojų dauguma sutapo</value></data>
-  <data name="Figures.AgreedOf" xml:space="preserve"><value>sutapo {0} iš {1} palygintų baigtų projektų</value></data>
-  <data name="Figures.AgreedNone" xml:space="preserve"><value>Dar nėra baigto projekto, kurį būtų galima palyginti.</value></data>
+  <data name="Figures.Agreed" xml:space="preserve"><value>Seimo ir naudotojų daugumos pasirinko tą patį</value></data>
+  <data name="Figures.AgreedOf" xml:space="preserve"><value>sutapo {0} iš {1} palygintų projektų, dėl kurių Seimas balsavo galutinai</value></data>
+  <data name="Figures.AgreedNone" xml:space="preserve"><value>Dar nėra projekto, dėl kurio Seimas balsavo galutinai ir kurį būtų galima palyginti.</value></data>
   <data name="Figures.Mps" xml:space="preserve"><value>Seimo nariai, perėmę profilį</value></data>
   <data name="Figures.MpsOf" xml:space="preserve"><value>Dabartinių Seimo narių: {0}</value></data>
-  <data name="NotAPoll" xml:space="preserve"><value>Pozicijos – savo noru dalyvaujančių Lietuva 2.0 naudotojų, ne reprezentatyvi apklausa.</value></data>
+  <data name="CountedAt" xml:space="preserve"><value>Suskaičiuota {0}; skaičiai atnaujinami kas valandą.</value></data>
   <data name="SmallSample" xml:space="preserve"><value>maža imtis</value></data>
   <data name="SmallSample.Answer" xml:space="preserve"><value>Kai skaičiuojama mažiau nei {0} pozicijų ar balsavimų, dalis procentais nerodoma – tik patys skaičiai.</value></data>
-  <data name="Compare.Title" xml:space="preserve"><value>Balsų „už“ dalis: Seimas ir Lietuva 2.0 naudotojai</value></data>
+  <data name="Compare.Title" xml:space="preserve"><value>„Už“ dalis: Seimo balsavimas ir Lietuva 2.0 naudotojų pozicijos</value></data>
   <data name="Compare.Seimas" xml:space="preserve"><value>Seimas</value></data>
   <data name="Compare.Members" xml:space="preserve"><value>Lietuva 2.0 naudotojai</value></data>
-  <data name="Compare.Half" xml:space="preserve"><value>Linija ties 50 % – dauguma.</value></data>
-  <data name="Compare.Aria" xml:space="preserve"><value>Taškinis grafikas: balsų „už“ dalis Seime ir tarp Lietuva 2.0 naudotojų pagal projektus. Tikslūs skaičiai – lentelėje.</value></data>
+  <data name="Compare.Half" xml:space="preserve"><value>Linija ties 50 % – daugumos riba.</value></data>
+  <data name="Compare.Aria" xml:space="preserve"><value>Taškinis grafikas: „už“ dalis Seimo balsavime ir tarp Lietuva 2.0 naudotojų pozicijų pagal projektus. Tikslūs skaičiai – lentelėje.</value></data>
   <data name="Compare.DotSeimas" xml:space="preserve"><value>{0}: Seime už – {1}</value></data>
-  <data name="Compare.DotMembers" xml:space="preserve"><value>{0}: Lietuva 2.0 naudotojų už – {1} (pozicijų: {2})</value></data>
-  <data name="Compare.None" xml:space="preserve"><value>Dar nėra baigto projekto, dėl kurio poziciją pasirinko bent {0} naudotojų.</value></data>
-  <data name="Compare.Latest" xml:space="preserve"><value>Naujausi baigti projektai, dėl kurių pozicijų yra bent {0}.</value></data>
+  <data name="Compare.DotMembers" xml:space="preserve"><value>{0}: Lietuva 2.0 naudotojų pozicijų „už“ – {1} (pozicijų: {2})</value></data>
+  <data name="Compare.None" xml:space="preserve"><value>Dar nėra projekto, dėl kurio Seimas balsavo galutinai ir poziciją pasirinko bent {0} naudotojų.</value></data>
+  <data name="Compare.Latest" xml:space="preserve"><value>Rodoma iki {1} naujausių projektų, dėl kurių Seimas balsavo galutinai ir pozicijų yra bent {0}.</value></data>
   <data name="Compare.Table" xml:space="preserve"><value>Rodyti lentelę</value></data>
   <data name="Compare.Bill" xml:space="preserve"><value>Projektas</value></data>
   <data name="Compare.SeimasFor" xml:space="preserve"><value>Seime už</value></data>
-  <data name="Compare.MembersFor" xml:space="preserve"><value>Naudotojų už</value></data>
+  <data name="Compare.MembersFor" xml:space="preserve"><value>Naudotojų pozicijų „už“</value></data>
   <data name="Compare.Majority" xml:space="preserve"><value>Balsavusiųjų dauguma Seime</value></data>
-  <data name="Compare.Consensus" xml:space="preserve"><value>bendru sutarimu</value></data>
-  <data name="Compare.Counts" xml:space="preserve"><value>{0} už, {1} prieš</value></data>
-  <data name="Compare.MajorityFor" xml:space="preserve"><value>už</value></data>
-  <data name="Compare.MajorityNotFor" xml:space="preserve"><value>ne už</value></data>
+  <data name="Compare.Consensus" xml:space="preserve"><value>pritarta bendru sutarimu</value></data>
+  <data name="Compare.Counts" xml:space="preserve"><value>{0} už, {1} prieš</value></data>
+  <data name="Compare.MajorityFor" xml:space="preserve"><value>„už“</value></data>
+  <data name="Compare.MajorityNotFor" xml:space="preserve"><value>ne „už“</value></data>
   <data name="Compare.NoResult" xml:space="preserve"><value>rezultato nėra</value></data>
-  <data name="Compare.Empty" xml:space="preserve"><value>Per šį laikotarpį baigtų projektų su naudotojų pozicijomis nėra.</value></data>
+  <data name="Compare.Empty" xml:space="preserve"><value>Per šį laikotarpį Seimas galutinai nebalsavo nė dėl vieno projekto, dėl kurio naudotojai pasirinko poziciją.</value></data>
   <data name="Majority.Hint" xml:space="preserve"><value>Kas yra balsavusiųjų dauguma?</value></data>
-  <data name="Majority.Answer" xml:space="preserve"><value>Seime už balsavo daugiau nei pusė tų, kurie balsavo „už“, „prieš“ arba „susilaikė“. Tai nėra oficialus Seimo sprendimas, kuris skaičiuojamas nuo posėdyje užsiregistravusių Seimo narių. Bendru sutarimu priimtas projektas laikomas daugumos „už“. Naudotojų dauguma – didesnė iš dviejų pusių.</value></data>
+  <data name="Majority.Answer" xml:space="preserve"><value>Balsavusiųjų dauguma – kai „už“ balsavo daugiau nei pusė tų, kurie balsavo „už“, „prieš“ arba susilaikė. Tai nėra oficialus Seimo sprendimas: jis skaičiuojamas nuo posėdyje užsiregistravusių Seimo narių. Kai pritarta bendru sutarimu, laikoma, kad dauguma balsavo „už“. Naudotojų dauguma – didesnė iš dviejų pusių.</value></data>
   <data name="Unity.Title" xml:space="preserve"><value>Frakcijų vieningumas</value></data>
-  <data name="Unity.Lead" xml:space="preserve"><value>Kokia dalis balsavusių frakcijos narių pasirinko frakcijos poziciją. Frakcijos išdėstytos pagal narių skaičių.</value></data>
+  <data name="Unity.Lead" xml:space="preserve"><value>Dalis balsavusių frakcijos narių, pasirinkusių frakcijos poziciją. Frakcijos išdėstytos pagal narių skaičių.</value></data>
   <data name="Unity.Hint" xml:space="preserve"><value>Kas yra frakcijos pozicija?</value></data>
   <data name="Unity.Answer" xml:space="preserve"><value>Variantas, kurį pasirinko bent du trečdaliai balsavusių frakcijos narių. Jei nė vienas variantas jų nesurinko, frakcija balsavo laisvai – toks balsavimas į dalį neįskaičiuojamas ir rodomas atskirai.</value></data>
   <data name="Unity.Seats" xml:space="preserve"><value>narių: {0}</value></data>
   <data name="Unity.Votes" xml:space="preserve"><value>balsavimų su frakcijos pozicija: {0} · laisvų: {1}</value></data>
+  <data name="Unity.Counts" xml:space="preserve"><value>{0} už · {1} prieš · {2} susilaikė</value></data>
   <data name="Unity.Split" xml:space="preserve"><value>Kur nuomonės skyrėsi labiausiai</value></data>
   <data name="Unity.None" xml:space="preserve"><value>Per šį laikotarpį frakcijų balsavimų nėra.</value></data>
-  <data name="Unity.NoShare" xml:space="preserve"><value>Balsavimų su frakcijos pozicija nėra.</value></data>
+  <data name="Unity.NoPosition" xml:space="preserve"><value>Balsavimų su frakcijos pozicija nėra.</value></data>
   <data name="Mine.Title" xml:space="preserve"><value>Kas balsuoja taip kaip jūs</value></data>
-  <data name="Mine.Lead" xml:space="preserve"><value>Jūsų pozicijos dėl projektų, dėl kurių Seimas jau balsavo galutinai, palygintos su viešais frakcijų ir Seimo narių balsavimais. Tai palyginimas jums, ne Seimo narių vertinimas; jį matote tik jūs.</value></data>
+  <data name="Mine.Lead" xml:space="preserve"><value>Jūsų pozicijos dėl projektų, dėl kurių Seimas jau balsavo galutinai, palygintos su viešais frakcijų ir Seimo narių balsavimais. Tai palyginimas jūsų žiniai, ne Seimo narių vertinimas; jį matote tik jūs.</value></data>
 </root>
