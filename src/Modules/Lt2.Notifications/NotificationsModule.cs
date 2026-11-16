@@ -54,6 +54,7 @@ public static class NotificationsModule
         services.AddScoped<Rhythm.IMemberNoticeKind, Follows.StatementNotices>();
         services.AddScoped<Rhythm.IMemberNoticeKind, Follows.ResponseNotices>();
         services.AddScoped<Rhythm.IMemberNoticeKind, Follows.MemberNotices>();
+        services.AddScoped<Rhythm.IMemberNoticeKind, Follows.CommentNotices>();
         services.AddScoped<IAccountData, Follows.FollowAccountData>();
 
         // Design 8.25, 8.11.2: following a member ends with their public profile; how many follow a thing is a number only.
@@ -104,6 +105,8 @@ public static class NotificationsModule
         services.AddNoticePart<FollowStatementEmail, FollowTemplates>(MessageKinds.FollowStatementEmail, 30, t => t.StatementPart);
         services.AddNoticePart<FollowResponsesEmail, FollowTemplates>(MessageKinds.FollowResponsesEmail, 40, t => t.ResponsesPart);
         services.AddNoticePart<FollowMemberEmail, FollowTemplates>(MessageKinds.FollowMemberEmail, 50, t => t.MemberPart);
+        services.AddNoticePart<CommentNoticeEmail, FollowTemplates>(MessageKinds.CommentNoticeEmail, 60, t => t.CommentsPart);
+        services.AddEmail<CommentNoticeEmail, FollowTemplates>(MessageKinds.CommentNoticeEmail, t => t.Comments);
         services.AddEmail<MpTakeoverLinkEmail, MpTemplates>(MessageKinds.MpTakeoverLinkEmail, t => t.Render);
         services.AddEmail<MpResponseNoticeEmail, MpTemplates>(MessageKinds.MpResponseNoticeEmail, t => t.Response);
         services.AddEmail<MpMail.MpDigestEmail, MpMailTemplates>(MpMail.MpMailKinds.Digest, t => t.Digest);
@@ -121,7 +124,7 @@ public static class NotificationsModule
     /// <summary>
     /// A kind's part of the gathered email (design 8.24): <paramref name="kind"/> is the outbox kind of the email the thing is
     /// alone, <paramref name="order"/> its place among the parts (the switches' order: 10 planned, 20 voted, 30 statements,
-    /// 40 answers, 50 followed members), and <paramref name="part"/> writes the part (heading and lines) from the things of that kind.
+    /// 40 answers, 50 followed members, 60 comments under one's own arguments), and <paramref name="part"/> writes the part (heading and lines) from the things of that kind.
     /// </summary>
     internal static IServiceCollection AddNoticePart<TModel, TTemplate>(
         this IServiceCollection services, string kind, int order, Func<TTemplate, Func<IReadOnlyList<TModel>, string>> part)

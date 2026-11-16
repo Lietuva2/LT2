@@ -34,9 +34,9 @@ public static class AppealLimits
 
     /// <summary>
     /// A bill's description (<c>record</c>), an argument, an organisation or an organisation's statement (design 8.14.14), or an
-    /// MP's response (design 8.5.5).
+    /// MP's response (design 8.5.5), or a comment (design 8.23.8).
     /// </summary>
-    public static readonly IReadOnlyList<string> ReportTargets = ["record", "reason", "organisation", "statement", "response"];
+    public static readonly IReadOnlyList<string> ReportTargets = ["record", "reason", "organisation", "statement", "response", "comment"];
 
     /// <summary>The longest official text's address a description may carry (<c>record.description_url</c>, design 8.13).</summary>
     public const int DescriptionUrlMaxLength = 500;
@@ -114,7 +114,11 @@ public sealed record BillRefResponse(string Number, string Title);
 /// An argument. <c>AuthorProfileId</c> is the public profile id of an author who switched "Viešas profilis" on (design 8.25.4):
 /// the name links to <c>/nariai/{id}</c>; null for everyone else.
 /// </summary>
-public sealed record ReasonResponse(Guid Id, string Side, string Text, string? AuthorName, int Endorsements, string Status, DateTimeOffset CreatedAt, string? AuthorProfileId = null);
+public sealed record ReasonResponse(Guid Id, string Side, string Text, string? AuthorName, int Endorsements, string Status, DateTimeOffset CreatedAt, string? AuthorProfileId = null)
+{
+    /// <summary>How many comments the argument shows ("Aptarimas (n)", design 8.23.6, 8.23.14); never counted anywhere else.</summary>
+    public int Comments { get; init; }
+}
 
 /// <summary>The card beside a public profile's name (design 8.25.4): once per person in a bill's answer; no follower number.</summary>
 public sealed record AuthorCardResponse(string ProfileId, string Name, string? About);

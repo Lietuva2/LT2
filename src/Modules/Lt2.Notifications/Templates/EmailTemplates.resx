@@ -206,7 +206,7 @@
   <data name="Gathered.Intro.immediate" xml:space="preserve"><value>štai kas nutiko dėl to, ką sekate Lietuva 2.0:</value></data>
   <data name="Gathered.Intro.daily" xml:space="preserve"><value>štai kas nutiko nuo ankstesnio dienos laiško dėl to, ką sekate Lietuva 2.0:</value></data>
   <data name="Gathered.Intro.weekly" xml:space="preserve"><value>štai kas nutiko nuo ankstesnio savaitės laiško dėl to, ką sekate Lietuva 2.0:</value></data>
-  <data name="Gathered.Footer" xml:space="preserve"><value>Šį laišką gavote, nes sekate projektus, organizacijas ar narius Lietuva 2.0. Kokius laiškus gaunate ir kaip dažnai, galite pakeisti savo paskyroje: {0}</value></data>
+  <data name="Gathered.Footer" xml:space="preserve"><value>Šį laišką gavote, nes Lietuva 2.0 sekate projektus, organizacijas ar narius arba rašote argumentus. Kokius laiškus gaunate ir kaip dažnai, galite pakeisti savo paskyroje: {0}</value></data>
   <data name="Gathered.Planned.Title" xml:space="preserve"><value>Planuojama Seime:</value></data>
   <data name="Gathered.Planned.Line" xml:space="preserve"><value>– {0}. Planuojama {1}. {2}</value></data>
   <data name="Gathered.Planned.DateStage" xml:space="preserve"><value>{0} ({1})</value></data>
@@ -218,4 +218,23 @@
   <data name="Gathered.Responses.Line" xml:space="preserve"><value>– {0} {1}: {2}</value></data>
   <data name="Gathered.Member.Title" xml:space="preserve"><value>Sekamų narių argumentai:</value></data>
   <data name="Gathered.Member.Line" xml:space="preserve"><value>– {0} paskelbė argumentą dėl {1}. {2}</value></data>
+  <data name="Gathered.Comments.Title" xml:space="preserve"><value>Nauji komentarai po jūsų argumentais:</value></data>
+  <data name="Moderation.comment-hidden.Subject" xml:space="preserve"><value>Lietuva 2.0: jūsų komentaras paslėptas</value></data>
+  <data name="Moderation.comment-hidden.Body" xml:space="preserve"><value>moderatorius paslėpė jūsų komentarą dėl projekto {0}. Projekto puslapis: {1}</value></data>
+  <data name="Moderation.comment-restored.Subject" xml:space="preserve"><value>Lietuva 2.0: jūsų komentaras atkurtas</value></data>
+  <data name="Moderation.comment-restored.Body" xml:space="preserve"><value>moderatorius atkūrė jūsų anksčiau paslėptą komentarą dėl projekto {0}. „Sutinku“, buvę prie jo, paslepiant buvo ištrinti ir neatkuriami. Projekto puslapis: {1}</value></data>
+  <data name="Moderation.CommentExcerpt" xml:space="preserve"><value>Komentaras: „{0}“</value></data>
+  <data name="Organisation.comment-hidden.Subject" xml:space="preserve"><value>Lietuva 2.0: organizacijos „{0}“ komentaras paslėptas</value></data>
+  <data name="Organisation.comment-hidden.Body" xml:space="preserve"><value>moderatorius paslėpė organizacijos „{0}“ vardu parašytą komentarą dėl projekto {1}. Projekto puslapis: {2}</value></data>
+  <data name="Organisation.comment-restored.Subject" xml:space="preserve"><value>Lietuva 2.0: organizacijos „{0}“ komentaras atkurtas</value></data>
+  <data name="Organisation.comment-restored.Body" xml:space="preserve"><value>moderatorius atkūrė organizacijos „{0}“ vardu parašytą komentarą dėl projekto {1}. Projekto puslapis: {2}</value></data>
+  <data name="Mp.comment-hidden.Subject" xml:space="preserve"><value>Lietuva 2.0: Seimo nario komentaras paslėptas</value></data>
+  <data name="Mp.comment-hidden.Body" xml:space="preserve"><value>moderatorius paslėpė Seimo nario vardu parašytą komentarą dėl projekto {1}. Seimo narys: {0}. Projekto puslapis: {2}</value></data>
+  <data name="Mp.comment-restored.Subject" xml:space="preserve"><value>Lietuva 2.0: Seimo nario komentaras atkurtas</value></data>
+  <data name="Mp.comment-restored.Body" xml:space="preserve"><value>moderatorius atkūrė Seimo nario vardu parašytą komentarą dėl projekto {1}. Seimo narys: {0}. Projekto puslapis: {2}</value></data>
+  <data name="Comments.Notice.Subject" xml:space="preserve"><value>Lietuva 2.0: nauji komentarai po jūsų argumentu</value></data>
+  <data name="Comments.Notice.Body.One" xml:space="preserve"><value>po jūsų argumentu atsirado naujų komentarų:</value></data>
+  <data name="Comments.Notice.Body.Many" xml:space="preserve"><value>po jūsų argumentais atsirado naujų komentarų:</value></data>
+  <data name="Comments.Notice.Line" xml:space="preserve"><value>{0}: {1}</value></data>
+  <data name="Comments.Notice.Footer" xml:space="preserve"><value>Šį laišką gavote, nes esate šių argumentų autorius. Šiuos laiškus galite išjungti savo paskyroje: {0}</value></data>
 </root>

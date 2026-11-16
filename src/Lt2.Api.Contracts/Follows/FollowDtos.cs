@@ -34,11 +34,17 @@ public sealed record FollowedMemberResponse(string ProfileId, string DisplayName
 /// <summary>
 /// Which follow emails are on: a followed bill is planned; the Seimas voted on it (design 8.11.2); a followed organisation
 /// made a statement public (design 8.14.14); MPs answered on a followed bill (design 8.20.1); a followed member published an
-/// argument (design 8.25.5); and how often they come (<see cref="NoticeFrequencies"/>, design 8.24; changed at
-/// <see cref="NoticeFrequencyRoutes.Mine"/>).
+/// argument (design 8.25.5); someone commented under the person's own argument (design 8.23.9); and how often they come
+/// (<see cref="NoticeFrequencies"/>, design 8.24; changed at <see cref="NoticeFrequencyRoutes.Mine"/>).
 /// </summary>
 public sealed record NoticeSettingsResponse(
-    bool Planned, bool Voted, bool Statements = true, bool Responses = true, bool Members = true, string Frequency = NoticeFrequencies.Immediate);
+    bool Planned,
+    bool Voted,
+    bool Statements = true,
+    bool Responses = true,
+    bool Members = true,
+    bool Comments = true,
+    string Frequency = NoticeFrequencies.Immediate);
 
 public sealed record NoticeSettingsRequest
 {
@@ -52,6 +58,9 @@ public sealed record NoticeSettingsRequest
 
     /// <summary>A followed member published an argument (design 8.25.5).</summary>
     public bool Members { get; init; } = true;
+
+    /// <summary>"Kai mano argumentą pakomentuoja" (design 8.23.9).</summary>
+    public bool Comments { get; init; } = true;
 }
 
 public static class FollowRoutes

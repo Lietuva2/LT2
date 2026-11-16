@@ -20,7 +20,7 @@ internal static class AppealMapping
 
     public static BillRefResponse Map(BillFacts b) => new(b.Number, b.Title);
 
-    public static ReasonResponse Map(ReasonInfo r) => new(r.Id, r.Side, r.Text, r.AuthorName, r.Endorsements, r.Status, r.CreatedAt, r.AuthorProfileId);
+    public static ReasonResponse Map(ReasonInfo r) => new(r.Id, r.Side, r.Text, r.AuthorName, r.Endorsements, r.Status, r.CreatedAt, r.AuthorProfileId) { Comments = r.Comments };
 
     public static BillRecordResponse Map(BillRecordInfo a) => new(
         a.Id, Map(a.Bill), a.Status, a.Description, a.DescriptionSource, a.DescriptionAuthor, Map(a.Counts), Map(a.Threshold),
@@ -303,8 +303,24 @@ internal static class ServerStaff
             return false;
         }
 
-        var authorization = http.RequestServices.GetRequiredService<Microsoft.AspNetCore.Authorization.IAuthorizationService>();
-        return (await authorization.AuthorizeAsync(http.User, http, policy)).Succeeded;
+        // The staff check reads the request's one Identity context; components prerendered side by side on one page (the
+        // moderators' lists) ask at the same time, so the checks of one request take turns.
+        if (http.Items[typeof(ServerStaff)] is not SemaphoreSlim turns)
+        {
+            http.Items[typeof(ServerStaff)] = turns = new SemaphoreSlim(1, 1);
+            http.Response.RegisterForDispose(turns);
+        }
+
+        await turns.WaitAsync(http.RequestAborted);
+        try
+        {
+            var authorization = http.RequestServices.GetRequiredService<Microsoft.AspNetCore.Authorization.IAuthorizationService>();
+            return (await authorization.AuthorizeAsync(http.User, http, policy)).Succeeded;
+        }
+        finally
+        {
+            turns.Release();
+        }
     }
 
     /// <summary>A moderator's action, refused unless the request passes <see cref="Policies.Moderator"/>.</summary>

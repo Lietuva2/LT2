@@ -1,0 +1,168 @@
+using FluentValidation;
+using Lt2.Api.Contracts.Appeals;
+using Lt2.Api.Contracts.Mps;
+using Lt2.Api.Contracts.Organisations;
+using Microsoft.Extensions.Localization;
+
+namespace Lt2.Api.Contracts.Comments;
+
+// Design 8.23: comments ("Aptarimas") under arguments, organisations' statements and MPs' responses. Codes: kind reason |
+// statement | response; voice person | organisation | mp; status published | hidden. No answer carries an account's id, and
+// nothing ties a comment or a "Sutinku" to a side. The caller's own answer (MyCommentsResponse) is never cached and read in
+// the browser only.
+
+/// <summary>The routes of design 8.23.11.</summary>
+public static class CommentRoutes
+{
+    /// <summary><c>GET</c> (public) the shown comments of a target; <c>POST</c> a member writes one.</summary>
+    public const string Thread = ApiRoutes.Prefix + "/comments/{kind}/{targetId:guid}";
+
+    /// <summary><c>DELETE</c>: whoever may delete it, while the bill is open.</summary>
+    public const string One = ApiRoutes.Prefix + "/comments/{id:guid}";
+
+    /// <summary><c>PUT</c> "Sutinku", <c>DELETE</c> takes it back.</summary>
+    public const string Agreement = One + "/agreement";
+
+    /// <summary><c>GET</c> the caller's own answer about the comments on a bill (never cached).</summary>
+    public const string Mine = ApiRoutes.Prefix + "/bills/{number}/comments/mine";
+
+    /// <summary><c>GET</c>, moderators: reported comments and hidden ones.</summary>
+    public const string Moderation = ApiRoutes.Prefix + "/moderation/comments";
+
+    public const string Hide = Moderation + "/{id:guid}/hide";
+    public const string Restore = Moderation + "/{id:guid}/restore";
+    public const string Keep = Moderation + "/{id:guid}/keep";
+    public const string Writer = Moderation + "/{id:guid}/writer";
+    public const string RestrictWriter = Moderation + "/{id:guid}/restrict-writer";
+
+    /// <summary><c>GET</c>, moderators: the bill page's answer.</summary>
+    public const string OnBill = ApiRoutes.Prefix + "/moderation/bills/{number}/comments";
+
+    public static string ThreadOf(string kind, Guid targetId, int? shown = null) =>
+        $"{ApiRoutes.Prefix}/comments/{Uri.EscapeDataString(kind)}/{targetId}" + (shown is { } n ? "?shown=" + n.ToString(System.Globalization.CultureInfo.InvariantCulture) : "");
+
+    public static string OneOf(Guid id) => $"{ApiRoutes.Prefix}/comments/{id}";
+
+    public static string AgreementOf(Guid id) => OneOf(id) + "/agreement";
+
+    public static string MineOf(string number) => $"{ApiRoutes.Prefix}/bills/{Uri.EscapeDataString(number)}/comments/mine";
+
+    public static string OnBillOf(string number) => $"{ApiRoutes.Prefix}/moderation/bills/{Uri.EscapeDataString(number)}/comments";
+
+    public static string With(string route, Guid id) => route.Replace("{id:guid}", id.ToString(), StringComparison.Ordinal);
+}
+
+/// <summary>The comments' fixed numbers (design 8.23.6) and their page parameter (8.23.14).</summary>
+public static class CommentLimits
+{
+    public static readonly IReadOnlyList<string> Kinds = ["reason", "statement", "response"];
+
+    /// <summary>The comments a thread shows first.</summary>
+    public const int First = 10;
+
+    /// <summary>The comments "Rodyti daugiau komentarų" adds.</summary>
+    public const int Step = 10;
+
+    /// <summary>The page's address parameter: the target's id (32 hexadecimal digits), a hyphen, how many to show.</summary>
+    public const string ShowParameter = "komentarai";
+
+    /// <summary>The element id of a comment: its stable anchor (design 8.23.6).</summary>
+    public static string ElementId(Guid id) => "komentaras-" + id.ToString("N");
+}
+
+/// <summary>
+/// The name a comment is shown under (design 8.23.2). <c>person</c>: <see cref="Name"/> is the display name, or null
+/// ("Lietuva 2.0 naudotojas"); <c>organisation</c>: the organisation's name, profile and label; <c>mp</c>: the MP. Never
+/// the person behind an organisation's or an MP's comment.
+/// </summary>
+public sealed record CommentAuthorResponse(string Voice, string? Name, string? OrganisationSlug, OrganisationLabelResponse? Label, MpResponderResponse? Mp);
+
+/// <summary>A shown comment: its name, time, text and who agreed (display names, oldest first; null for one without a name).</summary>
+public sealed record CommentResponse(Guid Id, CommentAuthorResponse Author, string Text, DateTimeOffset CreatedAt, IReadOnlyList<string?> AgreedBy);
+
+/// <summary>
+/// The shown comments of one target, oldest first: <see cref="Count"/> in all, the first ones in <see cref="Items"/>.
+/// <c>Open</c>: a member may write here now; <c>BillOpen</c>: "Sutinku" and deleting still work.
+/// </summary>
+public sealed record CommentThreadResponse(string Kind, Guid TargetId, string BillNumber, int Count, bool Open, bool BillOpen, IReadOnlyList<CommentResponse> Items);
+
+/// <summary>The caller's voice under one target where it is not a person's (<c>organisation</c>, <c>mp</c>), or why not (a code).</summary>
+public sealed record CommentTargetVoiceResponse(string Kind, Guid TargetId, string? Voice, string? Refusal);
+
+/// <summary>
+/// The caller's own answer about a bill's comments (design 8.23.6, never cached): what they may delete, what they wrote, what
+/// they agreed with, whether they ever agreed (the first "Sutinku" asks), their voices, a writing restriction, whether the
+/// account is an MP's own, and the ceiling per text (0 = none) with how many shown comments they have under each target.
+/// </summary>
+public sealed record MyCommentsResponse(
+    bool AgreedBefore,
+    bool Restricted,
+    bool MpAccount,
+    IReadOnlyList<Guid> Deletable,
+    IReadOnlyList<Guid> Written,
+    IReadOnlyList<Guid> Agreed,
+    IReadOnlyList<CommentTargetVoiceResponse> Voices,
+    int PerTargetLimit,
+    IReadOnlyDictionary<Guid, int> WrittenPerTarget);
+
+public sealed record CommentRequest
+{
+    public string Text { get; init; } = "";
+}
+
+public sealed record CommentCreatedResponse(Guid Id);
+
+/// <summary>What a comment is about, for the moderators: the target's text and its name, and whether it is shown.</summary>
+public sealed record CommentContextResponse(string Kind, Guid TargetId, string? Text, string? AuthorName, string? OrganisationName, MpResponderResponse? Mp, bool Shown);
+
+/// <summary>A comment as a moderator sees it (design 8.23.8). Never who reported it.</summary>
+public sealed record QueueCommentResponse(
+    Guid Id, BillRefResponse Bill, CommentAuthorResponse Author, string Text, DateTimeOffset CreatedAt, string Status, IReadOnlyList<QueueReportResponse> Reports,
+    CommentContextResponse Target, DateTimeOffset? HiddenAt, string? HiddenBy, string? HideStatement);
+
+public sealed record CommentModerationResponse(IReadOnlyList<QueueCommentResponse> Reported, IReadOnlyList<QueueCommentResponse> Hidden);
+
+public sealed class CommentRequestValidator : AbstractValidator<CommentRequest>
+{
+    public CommentRequestValidator(IStringLocalizer<ValidationMessages> l)
+    {
+        RuleFor(x => x.Text).Cascade(CascadeMode.Stop)
+            .Must(t => !string.IsNullOrWhiteSpace(t)).WithMessage(l["Comment.Required"])
+            .Must(t => t.Trim().Length <= MemberTextLimits.Ceiling).WithMessage(l["Comment.TooLong", MemberTextLimits.Number(MemberTextLimits.Ceiling)]); // the setting Texts:MaxLength: where it is written
+    }
+}
+
+/// <summary>Design 8.23: reading and writing comments, and "Sutinku".</summary>
+public interface ICommentsApi
+{
+    /// <summary>Public: a target's shown comments, the first <paramref name="shown"/> (at least 10).</summary>
+    Task<ApiResult<CommentThreadResponse>> GetThreadAsync(string kind, Guid targetId, int? shown = null, CancellationToken cancellationToken = default);
+
+    Task<ApiResult<MyCommentsResponse>> GetMineAsync(string number, CancellationToken cancellationToken = default);
+
+    Task<ApiResult<CommentCreatedResponse>> WriteAsync(string kind, Guid targetId, CommentRequest request, CancellationToken cancellationToken = default);
+
+    Task<ApiResult> DeleteAsync(Guid id, CancellationToken cancellationToken = default);
+
+    Task<ApiResult> AgreeAsync(Guid id, CancellationToken cancellationToken = default);
+
+    Task<ApiResult> RemoveAgreementAsync(Guid id, CancellationToken cancellationToken = default);
+}
+
+/// <summary>Moderators: reported and hidden comments, the bill page's answer, and the actions (design 8.23.8).</summary>
+public interface ICommentModerationApi
+{
+    Task<ApiResult<CommentModerationResponse>> GetAsync(CancellationToken cancellationToken = default);
+
+    Task<ApiResult<IReadOnlyList<QueueCommentResponse>>> GetOnBillAsync(string number, CancellationToken cancellationToken = default);
+
+    Task<ApiResult> HideAsync(Guid id, StatementRequest request, CancellationToken cancellationToken = default);
+
+    Task<ApiResult> RestoreAsync(Guid id, StatementRequest request, CancellationToken cancellationToken = default);
+
+    Task<ApiResult> KeepAsync(Guid id, ModerationRequest request, CancellationToken cancellationToken = default);
+
+    Task<ApiResult<AuthorViewResponse>> GetWriterAsync(Guid id, CancellationToken cancellationToken = default);
+
+    Task<ApiResult<RestrictionCreatedResponse>> RestrictWriterAsync(Guid id, RestrictionRequest request, CancellationToken cancellationToken = default);
+}

@@ -103,7 +103,12 @@ else
 
     @* Design 8.5.5: hidden MPs' responses, restored while the bill is open. *@
     <Lt2.Web.Client.Mps.ResponseModerationView Hidden="true" />
-        <Lt2.Web.Client.Appeals.ProfileModerationView Hidden="true" />
+
+    @* Design 8.25.6: hidden "Apie mane" texts, with "Atkurti". *@
+    <Lt2.Web.Client.Appeals.ProfileModerationView Hidden="true" />
+
+    @* Design 8.23.8: hidden comments, with "Atkurti" (on a closed bill too, 6.9). *@
+    <Lt2.Web.Client.Comments.CommentModerationView Hidden="true" />
 }
 
 @code {

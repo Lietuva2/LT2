@@ -31,7 +31,11 @@ public sealed record ResponseView(
     DateTimeOffset? WithdrawnAt,
     string? HideStatement,
     IReadOnlyList<ResponseVersion> Earlier,
-    ResponseVote? Vote);
+    ResponseVote? Vote)
+{
+    /// <summary>How many comments it shows on the bill's page (design 8.23.6); set only in the bill's answer.</summary>
+    public int Comments { get; init; }
+}
 
 /// <summary>The responses on one bill. <c>Open</c>: they can still be written; <c>TakingPartClosed</c>: a moderator hid the bill's record.</summary>
 public sealed record BillResponses(string BillNumber, bool Open, bool TakingPartClosed, IReadOnlyList<ResponseView> Items);

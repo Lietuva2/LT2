@@ -44,7 +44,7 @@ internal static class FollowEndpoints
         api.MapGet(ApiEndpoints.Relative(FollowRoutes.Notices), NoticesAsync)
             .WithName("GetNotices").WithTags("Me").RequireAuthorization(Policies.Member).Produces<NoticeSettingsResponse>();
         api.MapPut(ApiEndpoints.Relative(FollowRoutes.Notices), (NoticeSettingsRequest request, ClaimsPrincipal user, IFollows f, ErrorMapper e, CancellationToken ct) =>
-                RunAsync(user, e, id => f.SetNoticesAsync(id, new NoticeSettings(request.Planned, request.Voted, request.Statements, request.Responses, request.Members), ct)))
+                RunAsync(user, e, id => f.SetNoticesAsync(id, new NoticeSettings(request.Planned, request.Voted, request.Statements, request.Responses, request.Members, request.Comments), ct)))
             .WithName("SetNotices").WithTags("Me").RequireAuthorization(Policies.Member).Produces(StatusCodes.Status204NoContent);
     }
 
@@ -54,7 +54,7 @@ internal static class FollowEndpoints
     private static async Task<IResult> NoticesAsync(ClaimsPrincipal user, IFollows follows, CancellationToken ct)
     {
         var n = await follows.NoticesAsync(user.UserId()!.Value, ct);
-        return TypedResults.Ok(new NoticeSettingsResponse(n.Planned, n.Voted, n.Statements, n.Responses, n.Members, await follows.FrequencyAsync(user.UserId()!.Value, ct)));
+        return TypedResults.Ok(new NoticeSettingsResponse(n.Planned, n.Voted, n.Statements, n.Responses, n.Members, n.Comments, await follows.FrequencyAsync(user.UserId()!.Value, ct)));
     }
 
     private static async Task<IResult> RunAsync(ClaimsPrincipal user, ErrorMapper errors, Func<Guid, Task<Result<Unit>>> action)

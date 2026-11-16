@@ -70,7 +70,7 @@ public sealed class TermsTests : E2ETest
         await page.WaitForURLAsync(new Regex("/seimas/XVP-0412$"), new() { Timeout = E2ESteps.Slow });
         (await E2ESteps.SqlAsync(
             $"select string_agg(text_version, ',' order by text_version) from identity.consent where kind = 'terms' and user_id = (select id from identity.\"user\" where email = '{email}')"))
-            .Trim().ShouldBe("2026-01-01,2026-11-17");
+            .Trim().ShouldBe("2026-01-01,2026-11-18");
         var (me, after) = await E2ESteps.ApiAsync(page, "GET", "/api/v1/me");
         me.ShouldBe(200);
         JsonDocument.Parse(after).RootElement.GetProperty("termsRequired").GetBoolean().ShouldBeFalse();
@@ -95,7 +95,7 @@ public sealed class TermsTests : E2ETest
         await page.Locator("footer").GetByRole(AriaRole.Link, new() { Name = "Naudojimo taisyklės" }).ClickAsync();
         await page.WaitForURLAsync(new Regex("/taisykles$"));
         await Assertions.Expect(page.GetByRole(AriaRole.Heading, new() { Level = 1 })).ToHaveTextAsync("Naudojimo taisyklės");
-        await Assertions.Expect(page.Locator("#legal-version")).ToHaveTextAsync("Versija 2026-11-17, galioja nuo 2026-11-17.");
+        await Assertions.Expect(page.Locator("#legal-version")).ToHaveTextAsync("Versija 2026-11-18, galioja nuo 2026-11-18.");
         await E2ESteps.ShootBothAsync(page, Shots, "terms");
 
         await page.Locator("footer").GetByRole(AriaRole.Link, new() { Name = "Privatumas" }).ClickAsync();

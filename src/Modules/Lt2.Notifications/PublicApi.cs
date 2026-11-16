@@ -246,9 +246,10 @@ public sealed record FollowedMember(string ProfileId, string DisplayName);
 
 /// <summary>
 /// Which follow emails are on: planned and voted bills (design 8.11.2), organisations' statements (design 8.14.14), MPs' responses
-/// on followed bills (design 8.20.1).
+/// on followed bills (design 8.20.1), followed members' arguments (design 8.25.5), comments under the person's own arguments
+/// (design 8.23.9).
 /// </summary>
-public sealed record NoticeSettings(bool Planned, bool Voted, bool Statements = true, bool Responses = true, bool Members = true);
+public sealed record NoticeSettings(bool Planned, bool Voted, bool Statements = true, bool Responses = true, bool Members = true, bool Comments = true);
 
 /// <summary>What one run of the follow job did: events recorded, events sent, emails written to the outbox.</summary>
 public sealed record FollowRunOutcome(int Recorded, int Sent, int Emails);

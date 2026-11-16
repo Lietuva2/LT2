@@ -492,6 +492,10 @@ namespace Lt2.Notifications.Infrastructure.Migrations
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("changed_at");
 
+                    b.Property<bool>("Comments")
+                        .HasColumnType("boolean")
+                        .HasColumnName("comments");
+
                     b.Property<string>("Frequency")
                         .IsRequired()
                         .ValueGeneratedOnAdd()

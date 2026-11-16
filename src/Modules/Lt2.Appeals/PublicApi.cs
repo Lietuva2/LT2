@@ -37,7 +37,11 @@ public sealed record ThresholdInfo(int Value, string SetBy, string? Note, int Pa
 /// <paramref name="AuthorProfileId"/> is the public profile id of an author whose profile is public (design 8.25.4), null for
 /// everyone else.
 /// </summary>
-public sealed record ReasonInfo(Guid Id, string Side, string Text, string? AuthorName, int Endorsements, string Status, DateTimeOffset CreatedAt, string? AuthorProfileId = null);
+public sealed record ReasonInfo(Guid Id, string Side, string Text, string? AuthorName, int Endorsements, string Status, DateTimeOffset CreatedAt, string? AuthorProfileId = null)
+{
+    /// <summary>How many comments it shows (design 8.23.6); set only in the bill's public answer.</summary>
+    public int Comments { get; init; }
+}
 
 /// <summary>The card beside the name of a member with a public profile (design 8.25.4): once per person per bill's answer.</summary>
 public sealed record AuthorCard(string ProfileId, string Name, string? About);

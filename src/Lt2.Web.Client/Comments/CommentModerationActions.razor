@@ -1,0 +1,107 @@
+@using Lt2.Api.Contracts.Appeals
+@using Lt2.Api.Contracts.Comments
+@inherits InteractiveBase<AppealUi>
+@inject ICommentModerationApi Moderation
+
+@* A moderator's actions on one comment (design 8.23.8), each its own control with one sentence on what it does: on a shown
+   comment "Paslėpti" (a statement, sent to the author), "Palikti" when it has open reports (an optional note; nobody is told)
+   and "Riboti autoriaus rašymą" (the writer is reached through the comment); on a hidden one "Atkurti" (a statement, told as a
+   hide is). The same component in the list (CommentQueueItem) and on the bill's page; IdPrefix keeps the ids apart. *@
+<div class="stack stack--tight" id="comment-actions-@Key">
+    @if (!_finished)
+    {
+        @if (_open is null)
+        {
+            <div class="actions" role="group" aria-label="@L["Mod.Actions"]">
+                @foreach (var action in Offered)
+                {
+                    <button type="button" class="@(action == Offered[0] ? "btn" : "btn btn--plain")" id="comment-action-@action-@Key" disabled="@Locked" @onclick="() => Open(action)">@L["Comments.Mod.Action." + action]</button>
+                }
+            </div>
+        }
+        else if (_open == "restrict")
+        {
+            <RestrictAuthor Id="Id" Comment="true" IdPrefix="@($"{IdPrefix}c-")" OnCancel="() => _open = null" OnDone="RestrictedAsync" />
+        }
+        else
+        {
+            <form class="sheet sheet--quiet stack stack--tight" @onsubmit="SubmitAsync" novalidate aria-labelledby="comment-action-title-@Key" id="comment-action-form-@Key">
+                <h4 id="comment-action-title-@Key">@L["Comments.Mod.Action." + _open]</h4>
+                <p class="small">@L["Comments.Mod.Sentence." + _open]</p>
+                <div class="field @ErrorClass("statement")">
+                    <label for="comment-statement-@Key">@(_open == "keep" ? L["Mod.Note.Optional"] : L["Mod.Statement.Required"])</label>
+                    <textarea class="textarea" id="comment-statement-@Key" maxlength="@AppealLimits.StatementMaxLength" @bind="_statement" @bind:event="oninput" disabled="@Locked"
+                              aria-invalid="@Invalid("statement")" aria-describedby="@DescribedBy("statement", $"comment-statement-{Key}")"></textarea>
+                    <FieldError Errors="Errors" Field="statement" For="@($"comment-statement-{Key}")" />
+                </div>
+                <div class="row">
+                    <button type="submit" class="btn" id="comment-action-submit-@Key" disabled="@Locked">@L["Comments.Mod.Action." + _open]</button>
+                    <button type="button" class="btn btn--plain" disabled="@Locked" @onclick="() => _open = null">@L["Cancel"]</button>
+                </div>
+            </form>
+        }
+    }
+    <Messages Message="@Message" Info="@(Info ?? _done)" />
+</div>
+
+@code {
+    private string? _open;
+    private string? _done;
+    private bool _finished;
+    private string _statement = "";
+
+    [Parameter, EditorRequired] public Guid Id { get; set; }
+
+    /// <summary><c>published</c> or <c>hidden</c>.</summary>
+    [Parameter, EditorRequired] public string Status { get; set; } = "";
+
+    /// <summary>The comment has open reports, so "Palikti" means something.</summary>
+    [Parameter] public bool Reported { get; set; }
+
+    [Parameter] public string IdPrefix { get; set; } = "";
+
+    /// <summary>After an action, with its confirmation: the page or the list reloads.</summary>
+    [Parameter] public EventCallback<string> OnDone { get; set; }
+
+    private string Key => IdPrefix + Id.ToString("N");
+
+    private IReadOnlyList<string> Offered => Status == "hidden"
+        ? ["restore", "restrict"]
+        : [.. (Reported ? new[] { "keep" } : []), "hide", "restrict"];
+
+    private void Open(string action)
+    {
+        _open = action;
+        _statement = "";
+        _done = null;
+        Errors = NoErrors();
+    }
+
+    private async Task RestrictedAsync()
+    {
+        _open = null;
+        _done = L["Restrict.Done"];
+        await OnDone.InvokeAsync(_done);
+    }
+
+    private Task SubmitAsync() => RunAsync(async () =>
+    {
+        var action = _open!;
+        var statement = new StatementRequest { Statement = _statement };
+        var result = action switch
+        {
+            "hide" => await Moderation.HideAsync(Id, statement),
+            "restore" => await Moderation.RestoreAsync(Id, statement),
+            _ => await Moderation.KeepAsync(Id, new ModerationRequest { Statement = string.IsNullOrWhiteSpace(_statement) ? null : _statement }),
+        };
+        if (!Succeeded(result, "statement"))
+        {
+            return;
+        }
+
+        _open = null;
+        _finished = true;
+        _done = L["Comments.Mod.Done." + action];
+        await OnDone.InvokeAsync(_done);
+    });
+}

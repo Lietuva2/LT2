@@ -51,7 +51,22 @@ public static class MessageKinds
 
     /// <summary>A member the person follows published an argument (design 8.25.5).</summary>
     public const string FollowMemberEmail = "email.follow-member";
+
+    /// <summary>
+    /// New comments under the person's arguments (design 8.23.9), in the person's email rhythm (design 8.24): one notice per
+    /// argument, made by <c>CommentNotices</c> (Notifications), alone or a part of the gathered email.
+    /// </summary>
+    public const string CommentNoticeEmail = "email.comment-notice";
 }
+
+/// <summary>One argument of the person's that got a comment (design 8.23.9): the bill and the link to the argument; never the comment.</summary>
+public sealed record CommentedArgumentLine(string BillNumber, string BillTitle, string Path);
+
+/// <summary>
+/// Payload of <see cref="MessageKinds.CommentNoticeEmail"/> (design 8.23.9): "there are new comments under your argument", one
+/// line per argument. Never a comment's text, its writer, how many, or anything about "Sutinku".
+/// </summary>
+public sealed record CommentNoticeEmail(string To, IReadOnlyList<CommentedArgumentLine> Arguments, string AccountPath);
 
 /// <summary>
 /// Payload of <see cref="MessageKinds.ProfileNoticeEmail"/> (design 8.25.6): what a moderator did with the person's "Apie mane"
@@ -95,7 +110,11 @@ public static class MpResponseNotices
     public const string Hidden = "response-hidden";
     public const string Restored = "response-restored";
 
-    public static readonly IReadOnlyList<string> All = [Hidden, Restored];
+    /// <summary>A comment in the MP's name was hidden or restored (design 8.23.8).</summary>
+    public const string CommentHidden = "comment-hidden";
+    public const string CommentRestored = "comment-restored";
+
+    public static readonly IReadOnlyList<string> All = [Hidden, Restored, CommentHidden, CommentRestored];
 }
 
 /// <summary>
@@ -150,8 +169,12 @@ public static class OrganisationNotices
     public const string StatementHidden = "statement-hidden";
     public const string StatementRestored = "statement-restored";
 
+    /// <summary>A comment in the organisation's name was hidden or restored (design 8.23.8).</summary>
+    public const string CommentHidden = "comment-hidden";
+    public const string CommentRestored = "comment-restored";
+
     public static readonly IReadOnlyList<string> All =
-        [Blocked, Unblocked, Kept, Confirmed, ConfirmationWithdrawn, StatementPublished, StatementKept, StatementHidden, StatementRestored];
+        [Blocked, Unblocked, Kept, Confirmed, ConfirmationWithdrawn, StatementPublished, StatementKept, StatementHidden, StatementRestored, CommentHidden, CommentRestored];
 }
 
 
@@ -268,7 +291,8 @@ public static class WritingRestrictionNotices
 /// <param name="Statement">The moderator's statement of reasons; may be empty when something was published.</param>
 /// <param name="Excerpt">For an argument: the beginning of its text, so the author knows which one.</param>
 /// <param name="Path">The site path of the bill's page the notice points to, for example <c>/seimas/XVP-0412</c>.</param>
-public sealed record ModerationNoticeEmail(string To, string Notice, string BillNumber, string BillTitle, string? Statement, string? Excerpt = null, string? Path = null);
+/// <param name="Contact">For a comment (design 8.23.8): the moderators' contact address, when configured.</param>
+public sealed record ModerationNoticeEmail(string To, string Notice, string BillNumber, string BillTitle, string? Statement, string? Excerpt = null, string? Path = null, string? Contact = null);
 
 /// <summary>
 /// The moderation outcomes an argument's author is told about (design 8.3, 8.6). A bill's record has no author since
@@ -281,7 +305,11 @@ public static class ModerationNotices
     public const string ReasonMerged = "reason-merged";
     public const string ReasonRestored = "reason-restored";
 
-    public static readonly IReadOnlyList<string> All = [ReasonPublished, ReasonHidden, ReasonMerged, ReasonRestored];
+    /// <summary>A person's own comment was hidden or restored (design 8.23.8).</summary>
+    public const string CommentHidden = "comment-hidden";
+    public const string CommentRestored = "comment-restored";
+
+    public static readonly IReadOnlyList<string> All = [ReasonPublished, ReasonHidden, ReasonMerged, ReasonRestored, CommentHidden, CommentRestored];
 }
 
 /// <summary>Payload of <see cref="MessageKinds.SignInCodeEmail"/>.</summary>

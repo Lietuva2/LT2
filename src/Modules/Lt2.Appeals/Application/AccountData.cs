@@ -59,10 +59,22 @@ internal sealed class AccountData(IDbContextFactory<AppealsDb> contexts, IPositi
         var responses = await db.MpResponses.AsNoTracking().Where(r => r.WrittenByUserId == userId).OrderBy(r => r.PublishedAt)
             .Select(r => new { bill = r.BillNumber, stance = r.Stance, text = r.Text, status = r.Status, publishedAt = r.PublishedAt, editedAt = r.EditedAt, withdrawnAt = r.WithdrawnAt })
             .ToListAsync(cancellationToken);
+
+        // Design 8.23.11: the comments this account wrote (its own, and those in an organisation's or an MP's name), and its
+        // "Sutinku" marks: which comment on which bill and when, not the comment's words, which are another person's.
+        var comments = await db.Comments.AsNoTracking().Where(c => c.AuthorUserId == userId).OrderBy(c => c.CreatedAt)
+            .Select(c => new { bill = c.BillNumber, on = c.TargetKind, target = c.TargetId, voice = c.SpeaksAs, text = c.Text, status = c.Status, writtenAt = c.CreatedAt })
+            .ToListAsync(cancellationToken);
+        var agreements = await (from a in db.CommentAgreements.AsNoTracking()
+                                join c in db.Comments.AsNoTracking() on a.CommentId equals c.Id
+                                where a.UserId == userId
+                                orderby a.CreatedAt
+                                select new { bill = c.BillNumber, comment = c.Id, agreedAt = a.CreatedAt })
+            .ToListAsync(cancellationToken);
         return new
         {
             appealsOpened = appeals, positions = myPositions, reasons, endorsements, reports, dateFlags = flags, writingRestrictions = restrictions,
-            aiDraftRequests = drafts, organisationRoles = roles, organisationStatements = written, mpResponses = responses,
+            aiDraftRequests = drafts, organisationRoles = roles, organisationStatements = written, mpResponses = responses, comments, commentAgreements = agreements,
         };
     }
 
@@ -77,6 +89,15 @@ internal sealed class AccountData(IDbContextFactory<AppealsDb> contexts, IPositi
         await EraseOrganisationRolesAsync(userId, npgsql, cancellationToken);
         foreach (var sql in new[]
         {
+            // Design 8.23.7, 8.23.11: the discussions under the person's arguments go with them, the person's own comments go
+            // (each with its "Sutinku"), and the person's "Sutinku" marks go; comments in an organisation's or an MP's name stay
+            // without the account. Open reports on what goes are closed.
+            "UPDATE appeals.report SET status = 'closed', closed_at = @now WHERE status = 'open' AND target_id IN (SELECT id FROM appeals.comment WHERE (speaks_as = 'person' AND author_user_id = @user) OR (target_kind = 'reason' AND target_id IN (SELECT id FROM appeals.reason WHERE author_user_id = @user)))",
+            "DELETE FROM appeals.comment WHERE target_kind = 'reason' AND target_id IN (SELECT id FROM appeals.reason WHERE author_user_id = @user)",
+            "DELETE FROM appeals.comment WHERE speaks_as = 'person' AND author_user_id = @user",
+            "UPDATE appeals.comment SET author_user_id = NULL WHERE author_user_id = @user",
+            "DELETE FROM appeals.comment_agreement WHERE user_id = @user",
+
             // The person's arguments go; open reports on them are closed, as when an argument is withdrawn.
             "UPDATE appeals.report SET status = 'closed', closed_at = @now WHERE status = 'open' AND target_id IN (SELECT id FROM appeals.reason WHERE author_user_id = @user)",
             "DELETE FROM appeals.endorsement WHERE reason_id IN (SELECT id FROM appeals.reason WHERE author_user_id = @user)",

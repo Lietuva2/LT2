@@ -664,6 +664,22 @@ shown, only counts and "maža imtis"; the Seimas's majority is that of those who
 **Feedback.** A balloon on every page (and `/atsiliepimai`) lets members write to the team; an item is linked to the
 account only when the member allows a reply, otherwise nothing leads back; staff reply through the outbox; not public.
 
+**Comments, "Aptarimas" (design 8.23, built 2026-11-16).** One service in Appeals (`CommentsService`, `CommentRules`; tables
+`appeals.comment`, withheld from `lt2_readonly`, and `appeals.comment_agreement`, readable) for comments under an argument, a
+statement and a response, one level, oldest first, public at once, never counted or sent to MPs. The voice is the server's:
+a representative under its organisation's own statement writes as the organisation, the MP's account or office under that
+MP's own response as the MP (passkey session, mandate not ended), everyone else as a person; the MP's account comments
+nowhere else. Pre-screening refuses an email address, a phone number or a personal code (`comment.screened`); an `https://`
+address is a link (`CommentLinks`, `rel="nofollow ugc noopener noreferrer"`). `Comments:OnReasons|OnStatements|OnResponses`
+(off: no new comments, the written ones readable), `Comments:PerPersonPerTarget` (0), `RateLimits:WriteComment` (20 an hour).
+"Sutinku" is public with names, needs no positions consent, is not blocked by a writing restriction, and the first one asks
+inline. The discussion follows its target (`CommentCascade`): withdrawn or merged goes, hidden hides, a closed bill is
+read-only. The thread is `Lt2.Web.Client/Comments/CommentThread` (inside the arguments' and statements' islands, its own island
+under responses), the caller's answer `CommentState` (browser only), reports target `comment`, moderators' list
+`CommentModerationView`/`CommentQueueItem`, actions also on the bill's page. The author's notice is queued only in
+`FollowService.RunCommentsAsync` (outbox kind `email.comment-notice`, switch `comments`). Names are plain text until public
+profiles exist (8.25).
+
 **Moderation.** Anything that reaches MPs has passed a person. Every action is audited and an argument's author gets the reason.
 A report button is on every bill's description and reason. A moderator can restrict an account from writing (reasons,
 date flags, statements, responses and, as proposed, changing the display name), until a date or until lifted, with a statement emailed to the person; it never touches sides,
@@ -731,7 +747,7 @@ rules are about them.
 
 - **Use the shared steps; add to them rather than copy.** Integration tests: `tests/Lt2.IntegrationTests/Infrastructure/`
   (`AppealSteps`, `OrganisationSteps`, `MpSteps` and `MpResponseSteps` (take a profile over, office members, code sessions,
-  responses, an adoption vote, the responses part without its islands), `MpSendingSteps` (design 8.19: `ResetMpMailAsync`,
+  responses, an adoption vote, the responses part without its islands), `CommentSteps` (design 8.23: comments, "Sutinku", a bill with an argument and a statement to comment on), `MpSendingSteps` (design 8.19: `ResetMpMailAsync`,
   `IntroduceAsync`, settings after a fresh passkey confirmation, the MP mail in the outbox and its links' tokens),
   `ReasonsToComeSteps` with `VilniusToday` and `MondayInWeeks`, `SettingsSteps`,
   `StaffMembers`, `LoggingFactory`). End-to-end tests: `tests/Lt2.E2E/E2ESteps.cs` (registration from any link, ticking the

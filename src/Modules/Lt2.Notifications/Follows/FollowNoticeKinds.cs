@@ -650,3 +650,98 @@ internal sealed class MemberNotices(
         return shown;
     }
 }
+
+/// <summary>
+/// New comments under a member's own arguments (design 8.23.9; kind <c>comment</c>, one record per argument per run that found
+/// some, key: <see cref="FollowRules.CommentKey"/>): the bill and the link to the argument, never a comment's text, its writer,
+/// how many or "Sutinku". Each run reads the comments written since the run before that found some (design 8.23.14). The
+/// author is not a follower: the argument's own author is told, by the switch <c>comments</c>, in their rhythm (design 8.24).
+/// An argument whose comments in that window are all deleted or hidden by the time the email is made, or that is no longer
+/// shown, is left out.
+/// </summary>
+internal sealed class CommentNotices(IDbContextFactory<NotificationsDb> contexts, IBillCatalogue bills, ICommentFeed comments) : IMemberNoticeKind
+{
+    public async Task<int> RecordAsync(DateTimeOffset now, CancellationToken cancellationToken)
+    {
+        await using var db = await contexts.CreateDbContextAsync(cancellationToken);
+        await using var transaction = await db.Database.BeginTransactionAsync(cancellationToken);
+
+        // Under one lock, so two runs at once read one window and record it once.
+        await db.Database.ExecuteSqlRawAsync("SELECT pg_advisory_xact_lock(hashtextextended({0}, 0))", ["lt2.follows.comments"], cancellationToken);
+        var last = await db.BillEvents.AsNoTracking().Where(e => e.Kind == BillEventKinds.Comment).MaxAsync(e => (DateTimeOffset?)e.FirstSeen, cancellationToken);
+        var since = FollowRules.CommentsSince(last, now);
+        if (since >= now)
+        {
+            return 0;
+        }
+
+        var commented = await comments.CommentedArgumentsAsync(since, now, cancellationToken);
+        foreach (var argument in commented)
+        {
+            FollowEvents.Record(db, argument.BillNumber, BillEventKinds.Comment, FollowRules.CommentKey(argument.ReasonId, now), now, sendable: true);
+        }
+
+        await db.SaveChangesAsync(cancellationToken);
+        await transaction.CommitAsync(cancellationToken);
+        return commented.Count;
+    }
+
+    public async Task<IReadOnlyList<DueNotice>> TakeAsync(NoticePass pass, CancellationToken cancellationToken)
+    {
+        ArgumentNullException.ThrowIfNull(pass);
+        if (pass.Which == Pass.Early)
+        {
+            return [];
+        }
+
+        var events = await FollowEvents.PendingAsync(pass, BillEventKinds.Comment, cancellationToken);
+        if (events.Count == 0)
+        {
+            return [];
+        }
+
+        // Each run's window again, read now: what is still shown, and whose argument it is (the record holds no person).
+        // A window never reaches further back than three days (FollowRules.CommentsSince), so older records only say "not the first run".
+        var runs = events.Select(e => e.FirstSeen).Distinct().Order().ToList();
+        var horizon = runs[0] - FollowRules.VoteSendWindow;
+        var lastRun = runs[^1];
+        var earlier = await pass.Db.BillEvents.AsNoTracking()
+            .Where(e => e.Kind == BillEventKinds.Comment && e.FirstSeen >= horizon && e.FirstSeen < lastRun)
+            .Select(e => e.FirstSeen)
+            .Distinct()
+            .ToListAsync(cancellationToken);
+        var older = await pass.Db.BillEvents.AsNoTracking().AnyAsync(e => e.Kind == BillEventKinds.Comment && e.FirstSeen < horizon, cancellationToken);
+        var still = new Dictionary<(string Number, string Key), CommentedArgument>();
+        foreach (var run in runs)
+        {
+            var before = earlier.Where(t => t < run).Select(t => (DateTimeOffset?)t).DefaultIfEmpty(older ? horizon : null).Max();
+            foreach (var argument in await comments.CommentedArgumentsAsync(FollowRules.CommentsSince(before, run), run, cancellationToken))
+            {
+                still[(argument.BillNumber, FollowRules.CommentKey(argument.ReasonId, run))] = argument;
+            }
+        }
+
+        var facts = await bills.FindManyAsync(events.Select(e => e.BillNumber).Distinct().ToList(), cancellationToken);
+        var due = new List<DueNotice>();
+        foreach (var e in events)
+        {
+            if (still.GetValueOrDefault((e.BillNumber, e.Key)) is not { } argument)
+            {
+                FollowEvents.Dropped(e, pass);
+                continue;
+            }
+
+            if (pass.Tells(argument.AuthorUserId, e.FirstSeen, n => n.Comments))
+            {
+                var bill = facts.GetValueOrDefault(e.BillNumber) ?? new BillFacts(e.BillNumber, e.BillNumber);
+                var line = new CommentedArgumentLine(bill.Number, bill.Title, FollowEvents.BillPath(bill.Number) + "#reason-" + argument.ReasonId.ToString("D"));
+                due.Add(new DueNotice(argument.AuthorUserId, e.FirstSeen, to => OutboxMessage.Create(MessageKinds.CommentNoticeEmail, new CommentNoticeEmail(
+                    to, [line], NoticeDelivery.AccountPath))));
+            }
+
+            FollowEvents.Taken(e, pass);
+        }
+
+        return due;
+    }
+}

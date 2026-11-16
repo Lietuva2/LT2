@@ -331,7 +331,8 @@ public sealed class AppealPrivacyTests(DatabaseFixture database) : ApiTest(datab
         }
         while (depth > 0);
 
-        var block = WebUtility.HtmlDecode(html[start..at]).Replace(id.ToString(), "ID", StringComparison.OrdinalIgnoreCase);
+        var block = WebUtility.HtmlDecode(html[start..at]).Replace(id.ToString(), "ID", StringComparison.OrdinalIgnoreCase)
+            .Replace(id.ToString("N"), "ID", StringComparison.OrdinalIgnoreCase); // the argument's "Aptarimas" (design 8.23.6) carries it too
         foreach (var text in texts)
         {
             block = block.Replace(text, "TEXT", StringComparison.Ordinal);

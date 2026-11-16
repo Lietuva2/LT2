@@ -14,7 +14,7 @@ internal static class OrganisationMapping
 {
     public static OrganisationLabelResponse Map(OrganisationLabel l) => new(l.ConfirmedBy, l.Domain);
 
-    public static StatementResponse Map(StatementInfo s) => new(s.Id, s.Stance, s.Text, s.Link, s.LinkHost, s.Goal, s.Progress, s.PublishedAt, s.EditedAt, s.Status);
+    public static StatementResponse Map(StatementInfo s) => new(s.Id, s.Stance, s.Text, s.Link, s.LinkHost, s.Goal, s.Progress, s.PublishedAt, s.EditedAt, s.Status) { Comments = s.Comments };
 
     public static OrganisationListResponse Map(OrganisationListPage p) =>
         new(p.Items.Select(i => new OrganisationSummaryResponse(i.Slug, i.Name, Map(i.Label), i.Status)).ToList(), p.Total);

@@ -31,3 +31,25 @@ public class ApiFake : DispatchProxy
             : throw new NotSupportedException($"{targetMethod.DeclaringType?.Name}.{targetMethod.Name} was not expected here.");
     }
 }
+
+
+/// <summary>
+/// The comments' API clients (design 8.23) answering an empty thread, an empty own answer and an empty moderators' answer, for
+/// component tests of the islands that show threads.
+/// </summary>
+public static class CommentFakes
+{
+    public static (ApiFake Comments, ApiFake Moderation) Add(Microsoft.Extensions.DependencyInjection.IServiceCollection services)
+    {
+        var comments = DispatchProxy.Create<Lt2.Api.Contracts.Comments.ICommentsApi, ApiFake>();
+        var moderation = DispatchProxy.Create<Lt2.Api.Contracts.Comments.ICommentModerationApi, ApiFake>();
+        var c = (ApiFake)(object)comments;
+        var m = (ApiFake)(object)moderation;
+        c.On("GetThreadAsync", ApiResult<Lt2.Api.Contracts.Comments.CommentThreadResponse>.Ok(new("reason", Guid.Empty, "XVP-0412", 0, true, true, [])));
+        c.On("GetMineAsync", ApiResult<Lt2.Api.Contracts.Comments.MyCommentsResponse>.Ok(new(false, false, false, [], [], [], [], 0, new Dictionary<Guid, int>())));
+        m.On("GetOnBillAsync", ApiResult<IReadOnlyList<Lt2.Api.Contracts.Comments.QueueCommentResponse>>.Ok([]));
+        Microsoft.Extensions.DependencyInjection.ServiceCollectionServiceExtensions.AddSingleton(services, comments);
+        Microsoft.Extensions.DependencyInjection.ServiceCollectionServiceExtensions.AddSingleton(services, moderation);
+        return (c, m);
+    }
+}

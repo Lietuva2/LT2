@@ -233,10 +233,10 @@
                 <RecordReasons Number="@b.Number" Contact="@Contact" Moderator="_moderator" @rendermode="InteractiveWebAssembly" />
 
                 @* Design 8.14.14: organisations' statements, after the arguments; never counted. *@
-                <OrganisationPositions Number="@b.Number" Contact="@Contact" @rendermode="InteractiveWebAssembly" />
+                <OrganisationPositions Number="@b.Number" Contact="@Contact" Moderator="_moderator" @rendermode="InteractiveWebAssembly" />
 
                 @* Design 8.5.6: MPs' responses, after the organisations' positions; server-rendered, the same for everyone. *@
-                <BillResponses Number="@b.Number" />
+                <BillResponses Number="@b.Number" Moderator="_moderator" />
             </div>
 
             <aside class="stack">

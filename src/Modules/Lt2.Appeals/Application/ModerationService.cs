@@ -484,6 +484,9 @@ internal sealed class ModerationService(
                 [reasonId, intoReasonId],
                 cancellationToken);
             await db.Endorsements.Where(e => e.ReasonId == reasonId).ExecuteDeleteAsync(cancellationToken);
+
+            // Design 8.23.7: its comments remarked on a text no longer shown, so they go (not moved under the other).
+            await CommentCascade.DeleteForTargetsAsync(db, CommentKinds.Reason, [reasonId], now, cancellationToken);
             reason.Status = ReasonStatuses.Merged;
             reason.MergedIntoId = intoReasonId;
             reason.SeenAt = now;

@@ -120,10 +120,11 @@ internal sealed class OrganisationsService(
                           select new { s, o })
             .ToListAsync(cancellationToken);
         var counts = (await reads.CountsAsync(db, [bill.Bill.Number], cancellationToken))[bill.Bill.Number];
+        var comments = await CommentCascade.CountsAsync(db, CommentKinds.Statement, rows.Select(r => r.s.Id).ToList(), cancellationToken);
         return new BillStatements(
             bill.Bill.Number,
             bill.Open,
-            rows.Select(r => new BillStatement(r.o.Id, r.o.Slug, r.o.Name, OrganisationReads.Label(r.o), OrganisationReads.Info(r.s, counts))).ToList());
+            rows.Select(r => new BillStatement(r.o.Id, r.o.Slug, r.o.Name, OrganisationReads.Label(r.o), OrganisationReads.Info(r.s, counts) with { Comments = comments.GetValueOrDefault(r.s.Id) })).ToList());
     }
 
     public async Task<IReadOnlyDictionary<string, IReadOnlyList<BillOrganisation>>> ShownOnBillsAsync(IReadOnlyCollection<string> billNumbers, CancellationToken cancellationToken)
@@ -661,11 +662,15 @@ internal sealed class OrganisationsService(
             .Where(s => s.OrganisationId == o.Id && StatementStatuses.Holding.Contains(s.Status))
             .ToListAsync(ct);
         var billsOf = await reads.BillsAsync(db, statements.Select(s => s.BillNumber).ToList(), ct);
-        foreach (var s in statements.Where(s => billsOf.GetValueOrDefault(AppealReads.NormaliseBillNumber(s.BillNumber))?.Open == true))
+        var withdrawn = statements.Where(s => billsOf.GetValueOrDefault(AppealReads.NormaliseBillNumber(s.BillNumber))?.Open == true).ToList();
+        foreach (var s in withdrawn)
         {
             s.Status = StatementStatuses.Withdrawn;
             s.WithdrawnAt = now;
         }
+
+        // Design 8.23.7: a withdrawn statement is shown nowhere and never comes back, so its discussion goes with it.
+        await CommentCascade.DeleteForTargetsAsync(db, CommentKinds.Statement, withdrawn.Select(s => s.Id).ToList(), now, ct);
 
         await db.OrganisationCodes.Where(c => c.OrganisationId == o.Id && c.ConsumedAt == null).ExecuteUpdateAsync(s => s.SetProperty(c => c.ConsumedAt, now), ct);
         await db.OrganisationInvites.Where(i => i.OrganisationId == o.Id && i.UsedAt == null && i.ExpiresAt > now).ExecuteUpdateAsync(s => s.SetProperty(i => i.ExpiresAt, now), ct);
@@ -856,6 +861,7 @@ internal sealed class OrganisationsService(
         statement.Status = StatementStatuses.Withdrawn;
         statement.WithdrawnAt = now;
         await ModerationRecorder.CloseReportsAsync(db, statement.Id, now, cancellationToken);
+        await CommentCascade.DeleteForTargetsAsync(db, CommentKinds.Statement, [statement.Id], now, cancellationToken);
         await db.SaveChangesAsync(cancellationToken);
         await transaction.CommitAsync(cancellationToken);
         return Result.Ok();

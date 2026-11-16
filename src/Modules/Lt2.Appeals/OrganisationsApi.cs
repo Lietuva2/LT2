@@ -39,7 +39,11 @@ public sealed record StatementVersion(DateTimeOffset ReplacedAt, string Stance, 
 /// the participants on the organisation's side as the bill's page counts them, with a goal (design 8.14.5).
 /// </summary>
 public sealed record StatementInfo(
-    Guid Id, string Stance, string Text, string? Link, string? LinkHost, int? Goal, int? Progress, DateTimeOffset PublishedAt, DateTimeOffset? EditedAt, string Status);
+    Guid Id, string Stance, string Text, string? Link, string? LinkHost, int? Goal, int? Progress, DateTimeOffset PublishedAt, DateTimeOffset? EditedAt, string Status)
+{
+    /// <summary>How many comments it shows on the bill's page (design 8.23.6); set only in the bill's answer.</summary>
+    public int Comments { get; init; }
+}
 
 /// <summary>A statement on the profile, by bill, with its earlier versions (oldest first).</summary>
 public sealed record ProfileStatement(BillFacts Bill, StatementInfo Statement, bool BillOpen, IReadOnlyList<StatementVersion> Earlier);

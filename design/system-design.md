@@ -3134,7 +3134,8 @@ privacy notice correct as drafts as the site changes; the lawyer reads them once
 **[Asked for by the owner on 2026-11-16, answering an earlier proposal of the same day; the owner decided more points on
 the drafts the same day. Three kinds of marks below: "owner, 2026-11-16" for what the owner decided; "proposed
 2026-11-16, not objected to" for what a proposal said and the owner read and let stand, written as the rule; "the
-designer's proposal, awaiting the owner" for the few points left (section 12 lists them). Not built.]**
+designer's proposal, awaiting the owner" for the few points left (section 12 lists them). Being built since 2026-11-16
+(M2c, 11); what building it needed that this section did not say is in 8.23.14.]**
 
 Decided by the owner on 2026-11-16: members may comment in public under three things on a bill's page (an argument, an
 organisation's statement, an MP's response); one implementation for all three, built together, MPs' responses included
@@ -3522,6 +3523,33 @@ built towards in M2b.
   person's comments and marks and deletion removes them; `comment` is withheld from the read-only role and
   `comment_agreement` readable.
 - The bill's page with 10 comments under every rendered target stays at 390 px without horizontal scroll.
+
+#### 8.23.14 Filled in while building (2026-11-16)
+
+**[The designer's proposals, awaiting the owner; section 12 lists them.]** Points the sections above leave open, which the
+build needed decided one way; each is the smallest choice that keeps the rules above.
+
+1. **The paging parameter** of 8.23.6 is `komentarai`, its value the target's id (32 hexadecimal digits) and how many to
+   show, joined by a hyphen (`?komentarai=0193…a1-20`); one target per address, the rest of the page as it was. Landing on
+   `#komentaras-{id}` of the first new comment, with that "Aptarimas" rendered open.
+2. **The count on the public answers** (8.23.11) is a field `comments` on each argument, statement and response (the number
+   of shown comments), so "Aptarimas (n)" shows for targets whose thread is not rendered (arguments revealed by "show all").
+3. **An MP whose mandate has ended** writes no comment as the MP, as no response (8.5.2): `response.mandate-ended`. The MP's
+   own account of a former MP still takes no part elsewhere (8.5.4).
+4. **The notice of 8.23.9 without the rhythm of 8.24** (built separately): the follow job, at every run, tells each argument's
+   author about the arguments of theirs that got a comment since the run before, one email per person per run, as "Iš karto"
+   would. What was told is recorded in `notify.bill_event`, kind `comment`, one row per argument told (key: the argument's id
+   and the run's moment; no person); the next run reads comments written since the latest such moment (the first run, the
+   last hour). Its outbox kind is `email.comment-notice`; the queuing is one method (`FollowService.RunCommentsAsync`), so the
+   rhythm can take it over.
+5. **A comment's moderation notices** reuse the existing kinds: to a person `email.moderation-notice` (notices
+   `comment-hidden`, `comment-restored`, with the moderators' contact address), to an organisation's representatives
+   `email.organisation-notice` (`comment-hidden`, `comment-restored`), to the MP's account `email.mp-response-notice`
+   (`comment-hidden`, `comment-restored`). "Palikti" tells nobody (8.23.8).
+6. **Moderating a comment whose target is not shown** (hidden, waiting, a hidden record): hide, restore and "Palikti" work on
+   the comment itself whatever its target's state; the comment shows again only when both are shown.
+7. **The "Moderavimas" panel** on the bill's page lists the bill's reported comments with a link to each (`#komentaras-{id}`);
+   the actions are on the comment.
 
 ### 8.24 How often a member's emails come
 
@@ -4270,7 +4298,7 @@ No dates, in line with the rule that release dates are not promised. Each milest
 | **Follower counts** [owner, 2026-11-16; built 2026-11-16 with M2d] | How many follow a bill, an MP, an organisation and a member, on the thing's own page, with the hint and the methodology's part on following; the privacy notice's line (8.11.2, section 12's legal row). | Section 8.11.7's last point. |
 | **Email rhythm** [owner, 2026-11-16; built 2026-11-16] | The member's choice of how often follow emails come, "Iš karto", "Kartą per dieną" or "Kartą per savaitę ir artėjant balsavimui", for the follow emails (planned, voted, organisations' statements, MPs' answers, followed members), with one email per person per run of the follow job and a way for later kinds to join (8.24). | Section 8.24's "Done when", for the kinds built. |
 | **M2d Profiles** [owner, 2026-11-16: built now, before comments] | The account area as four screens (8.21); public profiles by the member's choice, "Apie mane", the name's card, following a member with their consent (8.25), arguments only until comments exist. | Section 8.25.8 (comments' parts with M2c) and the lawyer's reading of the profile. |
-| **M2c Comments** [proposed 2026-11-16] | "Aptarimas" under arguments, organisations' statements and MPs' responses, in one piece for the three kinds, with "Sutinku", a switch per kind, reports, moderation on the bill's page and the argument author's notice (8.23), with the email rhythm (8.24). Names are plain text. | Sections 8.23.13, 8.24. |
+| **M2c Comments** [owner, 2026-11-16: built 2026-11-16, after M2d] | "Aptarimas" under arguments, organisations' statements and MPs' responses, in one piece for the three kinds, with "Sutinku", a switch per kind, reports, moderation on the bill's page and the argument author's notice (8.23), in the email rhythm (8.24); a member's name beside a comment links to their public profile (8.25). | Sections 8.23.13, 8.24. |
 | **M3** | Stage 3 design: voting, delegation, AI summaries. Following, with its shown numbers, is delegation's predecessor (owner, 2026-11-16): the numbers show whom people choose to hear from, the ground delegation would stand on; a follow never becomes a delegation by itself (1.1, proposed). | Separate document. |
 
 Splitting M2 means the risky step (emailing every MP) happens only after the whole flow has been watched working.
@@ -4502,6 +4530,11 @@ Built, awaiting the owner's word:
 
 - Changing the display name (6.2): a writing restriction blocks it (or leaves it alone); audited without the names; no
   earlier names kept.
+- Comments, filled in while building (8.23.14): the paging parameter `komentarai`; a `comments` count on each argument,
+  statement and response in the public answers; no comment as the MP once the mandate has ended; the argument author's notice
+  at every run of the follow job, recorded per argument without a person, until the email rhythm (8.24) takes it over; the
+  moderation notices on the existing kinds; moderating a comment whatever its target's state; the "Moderavimas" panel listing
+  the bill's reported comments.
 
 **Proposed by the designer while building the email rhythm (8.24), 2026-11-16, awaiting the owner**
 

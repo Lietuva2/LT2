@@ -57,6 +57,9 @@ internal sealed class NoticeSetting
     /// <summary>When <see cref="PreviousFrequency"/> was chosen; null: it held from the start.</summary>
     public DateTimeOffset? PreviousSince { get; set; }
 
+    /// <summary>Someone commented under the person's own argument (design 8.23.9, "Kai mano argumentą pakomentuoja").</summary>
+    public bool Comments { get; set; } = true;
+
     public DateTimeOffset ChangedAt { get; set; }
 }
 
@@ -104,6 +107,12 @@ internal static class BillEventKinds
 
     /// <summary>A followed member published an argument on the bill (design 8.25.5; key: the argument id). No person, no text.</summary>
     public const string Member = "member";
+
+    /// <summary>
+    /// An argument on the bill got comments and its author was told (design 8.23.9, 8.23.14; key: the argument's id and the run's
+    /// moment). No person and no text; the latest one's <see cref="BillEvent.FirstSeen"/> is where the next run starts reading.
+    /// </summary>
+    public const string Comment = "comment";
 }
 
 internal static class BillEventOutcomes

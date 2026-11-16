@@ -18,7 +18,7 @@ internal static class MpResponseMapping
     public static MpResponseResponse Map(ResponseView v) => new(
         v.Id, v.Status, v.Stance, v.Text, v.PublishedAt, v.EditedAt, v.WithdrawnAt, v.HideStatement,
         v.Earlier.Select(e => new MpResponseVersionResponse(e.Stance, e.Text, e.WrittenAt, e.ReplacedAt, e.Withdrawn)).ToList(),
-        v.Vote is { } vote ? new MpResponseVoteResponse(vote.VoteId, vote.HeldAt, vote.Ballot) : null);
+        v.Vote is { } vote ? new MpResponseVoteResponse(vote.VoteId, vote.HeldAt, vote.Ballot) : null) { Comments = v.Comments };
 
     public static NewResponse ToModule(MpResponseRequest r) => new(r.Stance, r.Text);
 }

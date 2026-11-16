@@ -106,6 +106,8 @@
             <label class="check"><input type="checkbox" id="notice-statements" checked="@notices.Statements" disabled="@Locked" @onchange="e => SetAsync(notices with { Statements = e.Value is true })" /><span>@L["Follows.Email.statements"]</span></label>
             <label class="check"><input type="checkbox" id="notice-responses" checked="@notices.Responses" disabled="@Locked" @onchange="e => SetAsync(notices with { Responses = e.Value is true })" /><span>@L["Follows.Email.responses"]</span></label>
             <label class="check"><input type="checkbox" id="notice-members" checked="@notices.Members" disabled="@Locked" @onchange="e => SetAsync(notices with { Members = e.Value is true })" /><span>@L["Follows.Email.members"]</span></label>
+            @* Design 8.23.9: the last switch, about the person's own arguments rather than what they follow. *@
+            <label class="check"><input type="checkbox" id="notice-comments" checked="@notices.Comments" disabled="@Locked" @onchange="e => SetAsync(notices with { Comments = e.Value is true })" /><span>@L["Follows.Email.comments"]</span></label>
         </fieldset>
     }
     <Messages Message="@Message" Info="@Info" />
@@ -167,6 +169,7 @@
         var result = await Follows.SetNoticesAsync(new NoticeSettingsRequest
         {
             Planned = wanted.Planned, Voted = wanted.Voted, Statements = wanted.Statements, Responses = wanted.Responses, Members = wanted.Members,
+            Comments = wanted.Comments,
         });
         if (!result.IsSuccess)
         {

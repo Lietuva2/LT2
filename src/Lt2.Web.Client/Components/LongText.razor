@@ -16,13 +16,13 @@
     <div class="@BubbleClass long-text">
         @for (var i = 0; i < start.Count; i++)
         {
-            <p>@start[i]@if (i == start.Count - 1) {<span class="long-text__cut" aria-hidden="true">…</span>}</p>
+            <p>@Line(start[i])@if (i == start.Count - 1) {<span class="long-text__cut" aria-hidden="true">…</span>}</p>
         }
         <details class="more stack stack--tight long-text__more" id="@Id">
             <summary class="linkish small"><span class="long-text__closed">@T["Text.ShowMore"]</span><span class="long-text__opened">@T["Text.ShowLess"]</span></summary>
             @foreach (var line in more)
             {
-                <p>@line</p>
+                <p>@Line(line)</p>
             }
         </details>
     </div>
@@ -32,13 +32,13 @@ else if (Paragraphs)
     <div class="@BubbleClass">
         @foreach (var line in Lines(Text))
         {
-            <p>@line</p>
+            <p>@Line(line)</p>
         }
     </div>
 }
 else
 {
-    <p class="@BubbleClass">@Text</p>
+    <p class="@BubbleClass">@Line(Text)</p>
 }
 
 @code {
@@ -62,6 +62,38 @@ else
     /// when an island replaces the prerendered markup; none is needed on a page without an island.
     /// </summary>
     [Parameter] public string? Id { get; set; }
+
+    /// <summary>
+    /// A comment's <c>https://</c> addresses become links (design 8.23.3): the address shown as typed (shortened after its host),
+    /// <c>rel="nofollow ugc noopener noreferrer"</c>, a new tab. Everything else stays text, encoded on output.
+    /// </summary>
+    [Parameter] public bool Links { get; set; }
+
+    private RenderFragment Line(string text) => __builder =>
+    {
+        if (!Links)
+        {
+            __builder.AddContent(0, text);
+            return;
+        }
+
+        foreach (var part in Lt2.Web.Client.Comments.CommentLinks.Split(text))
+        {
+            if (part.Href is { } href)
+            {
+                __builder.OpenElement(1, "a");
+                __builder.AddAttribute(2, "href", href);
+                __builder.AddAttribute(3, "rel", Lt2.Web.Client.Comments.CommentLinks.Rel);
+                __builder.AddAttribute(4, "target", "_blank");
+                __builder.AddContent(5, part.Shown);
+                __builder.CloseElement();
+            }
+            else
+            {
+                __builder.AddContent(6, part.Text);
+            }
+        }
+    };
 
     private List<string> Lines(string text) => Paragraphs
         ? text.Split('\n', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries).ToList()

@@ -63,6 +63,12 @@ public static class AppealsModule
         // Design 8.25: a member's published arguments, for their public page and the follow emails about them.
         services.AddScoped<IMemberTexts, MemberTexts>();
 
+        // Design 8.23: comments under arguments, statements and responses, their moderation, and the author's notice feed.
+        services.AddScoped<CommentsService>();
+        services.AddScoped<IComments>(sp => sp.GetRequiredService<CommentsService>());
+        services.AddScoped<ICommentModeration>(sp => sp.GetRequiredService<CommentsService>());
+        services.AddScoped<ICommentFeed>(sp => sp.GetRequiredService<CommentsService>());
+
         // Design 8.14.14 (stage B): following organisations reads them through this; the codes are Identity's (IOrganisationCodeSwitch).
         services.AddScoped<IOrganisationDirectory, OrganisationDirectory>();
         services.AddScoped<IAppealsMaintenance, AppealsMaintenance>();

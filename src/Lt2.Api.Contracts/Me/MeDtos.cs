@@ -63,7 +63,7 @@ public sealed record MeResponse
 /// <summary>The version of the terms of use the client shows and accepts (design 8.22.2); the server accepts this one only.</summary>
 public static class TermsText
 {
-    public const string Version = "2026-11-17";
+    public const string Version = "2026-11-18";
 
     /// <summary>The acceptance screen (design 8.22.2) and its parameter: the page to go back to afterwards.</summary>
     public const string AcceptancePage = "/taisykles/sutikimas";
