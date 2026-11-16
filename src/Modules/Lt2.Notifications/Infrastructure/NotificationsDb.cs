@@ -126,6 +126,10 @@ internal sealed class NotificationsDb(DbContextOptions<NotificationsDb> options)
         {
             b.ToTable("notice_setting");
             b.HasKey(x => x.UserId);
+
+            // Design 8.24: how often the emails come; a row made before the choice existed is "Iš karto".
+            b.Property(x => x.Frequency).HasMaxLength(16).HasDefaultValue(Rhythm.Frequencies.Immediate);
+            b.Property(x => x.PreviousFrequency).HasMaxLength(16);
         });
         modelBuilder.Entity<Lt2.Notifications.Follows.BillEvent>(b =>
         {

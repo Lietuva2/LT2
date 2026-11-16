@@ -34,6 +34,11 @@ public sealed class SignInComponentTests : BunitContext
         Services.AddSingleton<IMeApi>(_me);
         Services.AddSingleton<Lt2.Api.Contracts.Follows.IFollowsApi>(new NoFollowsApi());
 
+        // Design 8.24: how often emails come, beside the switches: the default.
+        var frequency = System.Reflection.DispatchProxy.Create<Lt2.Api.Contracts.Follows.INoticeFrequencyApi, ApiFake>();
+        ((ApiFake)(object)frequency).On("GetAsync", ApiResult<Lt2.Api.Contracts.Follows.NoticeFrequencyResponse>.Ok(new("immediate")));
+        Services.AddSingleton(frequency);
+
         // "Mano organizacijos" on the account page (design 8.14.14): none.
         var organisations = System.Reflection.DispatchProxy.Create<Lt2.Api.Contracts.Organisations.IOrganisationsApi, ApiFake>();
         ((ApiFake)(object)organisations).On("GetMineAsync", Lt2.Api.Contracts.ApiResult<IReadOnlyList<Lt2.Api.Contracts.Organisations.MyOrganisationResponse>>.Ok([]));
@@ -364,10 +369,10 @@ public sealed class SignInComponentTests : BunitContext
         SignedIn(FakeMeApi.Member);
         var screens = new (Func<IRenderedComponent<IComponent>> Render, string Path, string Part, string[] Holds, string[] NotHere)[]
         {
-            (() => Render<Hello>(), "/sveiki", "profilis", ["#vardas", "#viesas-profilis", "#about-text", "#profile-public-switch"], ["#sekami", "#my-data", "#my-invitation"]),
-            (() => Render<AccountFollows>(), "/sveiki/sekimas", "sekimas-ir-laiskai", ["#sekami"], ["#vardas", "#my-data", "#my-invitation"]),
-            (() => Render<AccountTaking>(), "/sveiki/dalyvavimas", "dalyvavimas", ["#my-invitation", "#my-organisations"], ["#vardas", "#sekami", "#my-data"]),
-            (() => Render<AccountSecurity>(), "/sveiki/saugumas", "saugumas-ir-duomenys", ["#zinomos-narsykles", "#my-data", "#export"], ["#vardas", "#sekami", "#my-invitation"]),
+            (() => Render<Hello>(), "/sveiki", "profilis", ["#vardas", "#viesas-profilis", "#about-text", "#profile-public-switch"], ["#sekami", "#laisku-daznis", "#my-data", "#my-invitation"]),
+            (() => Render<AccountFollows>(), "/sveiki/sekimas", "sekimas-ir-laiskai", ["#sekami", "#follow-notices", "#laisku-daznis", "#rhythm-choices"], ["#vardas", "#my-data", "#my-invitation"]),
+            (() => Render<AccountTaking>(), "/sveiki/dalyvavimas", "dalyvavimas", ["#my-invitation", "#my-organisations"], ["#vardas", "#sekami", "#laisku-daznis", "#my-data"]),
+            (() => Render<AccountSecurity>(), "/sveiki/saugumas", "saugumas-ir-duomenys", ["#zinomos-narsykles", "#my-data", "#export"], ["#vardas", "#sekami", "#laisku-daznis", "#my-invitation"]),
         };
 
         foreach (var (render, path, part, holds, notHere) in screens)

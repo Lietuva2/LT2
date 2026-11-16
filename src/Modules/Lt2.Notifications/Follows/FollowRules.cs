@@ -9,6 +9,11 @@ internal static class FollowRules
     /// <summary>A vote held more than this long before the job first saw it is recorded and never sent.</summary>
     public static readonly TimeSpan VoteSendWindow = TimeSpan.FromDays(3);
 
+    /// <summary>
+    /// How far back the job reads votes, statements and answers: past the three days an event may be old when first seen and
+    /// the week it may wait for a weekly email (design 8.24), so the email can still read what it reports.
+    /// </summary>
+    public static readonly TimeSpan EventLookBack = TimeSpan.FromDays(14);
 
     public static string PlannedKey(DateOnly date) => date.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture);
 
@@ -74,21 +79,28 @@ internal static class FollowRules
     public static bool IsMemberArgumentRecipient(Guid follower, Guid author, DateTimeOffset followedAt, DateTimeOffset firstSeen, DateTimeOffset publishedAt) =>
         follower != author && IsRecipient(followedAt, firstSeen, publishedAt);
 
-    /// <summary>The key of a bill's "Seimo narių atsakymai" event (design 8.20.1): the Vilnius day the MPs answered.</summary>
-    public static string ResponsesKey(DateOnly day) => PlannedKey(day);
-
     /// <summary>
-    /// Which Vilnius day's answers may be sent now (design 8.20.1): one email per bill per day, sent the next morning at
-    /// <paramref name="sendAt"/> (<c>Follows:ResponsesAt</c>, Vilnius time). From that time on it is yesterday; before it, none,
-    /// and a day whose next day has passed without a run is not sent later.
+    /// The key of an MP's answer as an event (design 8.20.1, 8.24): the Seimas person number and the moment the stance now shown
+    /// became public, so a stance changed again is a new event and a changed explanation is none.
     /// </summary>
-    public static DateOnly? ResponsesDayDue(DateTimeOffset now, TimeOnly sendAt)
+    public static string ResponseKey(long seimasPersonId, DateTimeOffset announcedAt) =>
+        seimasPersonId.ToString(CultureInfo.InvariantCulture) + "@" + announcedAt.UtcTicks.ToString(CultureInfo.InvariantCulture);
+
+    /// <summary>The person number and the moment of <see cref="ResponseKey"/>.</summary>
+    public static (long SeimasPersonId, DateTimeOffset AnnouncedAt) ResponseOf(string key)
     {
-        var local = TimeZoneInfo.ConvertTime(now, VilniusTime.Zone);
-        return TimeOnly.FromDateTime(local.DateTime) >= sendAt ? DateOnly.FromDateTime(local.DateTime).AddDays(-1) : null;
+        ArgumentNullException.ThrowIfNull(key);
+        var at = key.IndexOf('@', StringComparison.Ordinal);
+        return (long.Parse(key[..at], CultureInfo.InvariantCulture), new DateTimeOffset(long.Parse(key[(at + 1)..], CultureInfo.InvariantCulture), TimeSpan.Zero));
     }
 
-    /// <summary>The <c>Follows:ResponsesAt</c> setting as a time; an unreadable value falls back to the default, 08:00.</summary>
+    /// <summary>
+    /// An answer the job first sees more than three days after its stance became public is recorded and never sent, as a vote
+    /// (design 8.24: the three-day rule is about when the job first sees an event).
+    /// </summary>
+    public static bool ResponseIsSendable(DateTimeOffset announcedAt, DateTimeOffset firstSeen) => firstSeen - announcedAt <= VoteSendWindow;
+
+    /// <summary>The <c>Follows:ResponsesAt</c> setting as a time, the hour of the daily and weekly emails (design 8.24); an unreadable value falls back to the default, 08:00.</summary>
     public static TimeOnly ResponsesAt(string setting) =>
         TimeOnly.TryParseExact(setting, "HH:mm", CultureInfo.InvariantCulture, DateTimeStyles.None, out var at) ? at : new TimeOnly(8, 0);
 

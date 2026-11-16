@@ -108,7 +108,7 @@ src/Modules/               Lt2.Identity, Lt2.Notifications, Lt2.Audit, Lt2.Parli
                            also owns the summaries (Digests/: making, approval, sending, SendingRules), MP mail (MpMail/:
                            the links' tokens, the MPs' choices, the introduction letter, the suppression list, MpSender)
                            and following (Follows/: follows, email switches, bill
-                           events, the daily email about MPs' answers). Modules talk through interfaces in SharedKernel (IParticipants, IBillCatalogue,
+                           events, the follow kinds; Rhythm/: how often a member's emails come, design 8.24). Modules talk through interfaces in SharedKernel (IParticipants, IBillCatalogue,
                            IPlannedAgenda, IMpDirectory, IMpMailAddresses (the one way an official address leaves
                            Parliament, for sending), IDigestSource, IPartySupporters, IAccountData (one per module),
                            IPositionErasure, IOutbox, IAuditLog, ISettings, IAiAssistant, IBillTextSource,
@@ -127,7 +127,7 @@ src/Modules/Lt2.Usage      the site's own usage statistics (design 8.27): UsageR
 src/Lt2.Worker             Hangfire server: outbox dispatch loop, the parliament import, the agenda watcher (lrs.lt
                            pages; off unless Agenda:BaseAddress is set), the daily aggregates and closing of the bills' records, summaries
                            (every 15 minutes: waiting ones expire, due ones are made: a dry run, waiting or sent by
-                           Digest:Sending), the follow emails (every 15 minutes; the one about MPs' answers once a day from Follows:ResponsesAt), the AI summaries
+                           Digest:Sending), the follow emails (every 15 minutes, in each member's rhythm: at once, the morning from Follows:ResponsesAt, or Monday), the AI summaries
                            of bills (hourly; makes nothing until a text reader and a provider exist), a daily identity
                            clean-up (with the unsent mail of purged registrations and known browsers not seen for a year) and a daily outbox clean-up (failed
                            messages after 30 days); the dispatcher sends sign-in and confirmation codes first, a batch
@@ -537,13 +537,24 @@ page's "Balsuota".
   texts, never sorted, ranked or added up, nothing at zero (`FollowerLine`, with the hint "Kas yra sekėjai?" to
   `/metodika#sekimas`). Counted from `notify.follow` when the answer is made, through `IFollowerCounts` (SharedKernel,
   Notifications): a number only. The last three points are the designer's proposals awaiting the owner.
-- "Seimo narių atsakymai" (design 8.20.1, the fourth switch `responses`): one email per followed bill per Vilnius day, the
-  morning after, from `Follows:ResponsesAt` (08:00, a runtime setting under "Laiškai sekantiems"): the MPs whose response
-  became public or changed stance that day (`appeals.mp_response.announced_at`, `ResponseRules.Announces`; a changed
-  explanation with the same stance is no event) and are still public, with name, faction and stance and the link to
-  `#atsakymai`, never the explanation. Read through `IMpResponseFeed` (Appeals); each person is told only about answers from
-  after they followed (`FollowRules.ResponsesFor`), and the MP's own account and office members never about their own MP
-  (`IMpLinks.SpeaksForAsync`). Recorded in `bill_event` kind `response` (key: the day); a day with nothing left sends nothing.
+- "Seimo narių atsakymai" (design 8.20.1, the fourth switch `responses`), in the person's rhythm (design 8.24): one part per
+  followed bill listing the MPs whose response became public or changed stance (`appeals.mp_response.announced_at`,
+  `ResponseRules.Announces`; a changed explanation with the same stance is no event) and are still public, with name,
+  faction and stance and the link to `#atsakymai`, never the explanation. Read through `IMpResponseFeed` (Appeals); each
+  person is told only about answers from after they followed (`FollowRules.ResponsesFor`), and the MP's own account and
+  office members never about their own MP (`IMpLinks.SpeaksForAsync`). Recorded in `bill_event` kind `response`, one per
+  answer (key: `FollowRules.ResponseKey`, the person number and the moment), with the three-day rule of votes.
+- **How often emails come (design 8.24, the designer's proposals in section 12 await the owner).** A member chooses "Iš karto"
+  (the default), "Kartą per dieną" or "Kartą per savaitę ir artėjant balsavimui" (`notice_setting.frequency`,
+  `GET|PUT /me/notices/frequency`, the island `EmailRhythm` on the follows screen `/sveiki/sekimas`, its own sheet
+  `#laisku-daznis` after the switches; audited `notices.frequency-changed` without the choice). One place decides and sends:
+  `Rhythm/NoticeDelivery` (Notifications) makes, each run, the run's emails, the "planned" dates that cannot wait, the daily
+  email from `Follows:ResponsesAt` ("Rytinių laiškų laikas", 08:00) and Monday's, and gathers everything for one person into
+  one email per run (`GatheredNoticesEmail`; one thing alone keeps its own email). The rules are `RhythmRules` (pure). An
+  event belongs to the choice the person had when the job first saw it. A member email kind joins by declaring itself: an
+  `IMemberNoticeKind` (record, then take per pass and mark its events) and its part (`AddNoticePart`). The kinds: planned,
+  voted, statements, MPs' answers and followed members (`MemberNotices`, switch `members`); codes, account and moderation
+  notices, feedback and MP mail never go through it.
 - Taking a side follows the bill (design 8.11.2, owner 2026-11-15): a member's first side on a bill (no side before)
   follows it in the same request, composed by the host (`Lt2.Web/Services/TakingSides`: the Appeals module saves the
   side, then `IFollows.FollowBillAsync`), on the bill's page and in a front-page row alike. The side is never refused or
@@ -783,10 +794,13 @@ rules are about them.
 - **Known browsers (design 8.20.2).** A `TestBrowser` that completed a registration or signed in to a member is known to that
   account (the test factory sets `Security:DeviceHashKey`): its later code requests use the known browser's allowance and
   codes, not the shared ones. A test about the shared limits asks from a new browser (`NewBrowser()`, `CodeSessionAsync`).
-- **The "Seimo narių atsakymai" email (design 8.20.1)** goes the morning after: a test sets `Follows:ResponsesAt` to 00:00
-  (and back), moves the bill's `announced_at` to yesterday and runs the job at the real time (`ResponseNoticeTests`); the
-  end-to-end step in `MpResponseTests` moves the response by SQL, sets the setting through the settings screen and puts it
-  back, and removes the bill's `bill_event` rows of kind `response`.
+- **The "Seimo narių atsakymai" email (design 8.20.1)** comes at the follow job's next run under "Iš karto" (design 8.24):
+  `ResponseNoticeTests` moves the bill's `announced_at` to yesterday and runs the job at 01:00 of the day it started on; the
+  end-to-end step in `MpResponseTests` waits for the next run and removes the bill's `bill_event` rows of kind `response`.
+- **The email rhythm (design 8.24):** a test reads what a person was told with `NoticesAsync`/`EmailsAsync` (alone or inside a
+  gathered email) or `InboxAsync` (`ReasonsToComeSteps`), runs the job at times it chose in a week of its own
+  (`EmailRhythmTests`, `MondayInWeeks(21)`), and moves a choice's moment by SQL (`frequency_since`) when it must come after
+  events the test placed in that week.
 - **Waits:** no fixed sleeps. In end-to-end tests a step after a navigation or a sign-in waits up to `E2ESteps.Slow`
   (60 s); Playwright's default of 5 s failed when an integration run shared the machine.
 ## Seimas open data

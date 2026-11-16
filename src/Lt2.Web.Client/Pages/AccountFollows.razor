@@ -4,7 +4,7 @@
 @inherits AccountScreenBase
 
 @* "Sekimas ir laiškai" (design 8.21): what the person follows and which follow emails they get (design 8.11.2, 8.14.14,
-   8.20.1, 8.25.5). Every follow email links to #sekami here. *@
+   8.20.1, 8.25.5) and how often they come (design 8.24). Every follow email links to #sekami here. *@
 @if (Me is null)
 {
     <p class="small">@L["Loading"]</p>
@@ -16,6 +16,9 @@ else
     <section class="stack" aria-labelledby="sekimas-title" id="sekimas-ir-laiskai">
         <h2 id="sekimas-title">@L["Parts.Follows"]</h2>
         <FollowList />
+
+        @* Design 8.24: how often the emails come, its own sheet beside the switches (#laisku-daznis). *@
+        <EmailRhythm />
     </section>
 }
 

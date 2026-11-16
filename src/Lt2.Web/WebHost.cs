@@ -89,6 +89,7 @@ internal static class WebHost
         services.AddScoped<AgendaReads>();
         services.AddScoped<Lt2.Api.Contracts.Agenda.IAgendaApi, ServerAgendaApi>();
         services.AddScoped<Lt2.Api.Contracts.Follows.IFollowsApi, ServerFollowsApi>();
+        services.AddScoped<Lt2.Api.Contracts.Follows.INoticeFrequencyApi, ServerNoticeFrequencyApi>();
 
         // Design 8.25: public profiles, the page composed from Identity, Notifications and Appeals.
         services.AddScoped<MemberReads>();

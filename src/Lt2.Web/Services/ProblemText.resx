@@ -185,4 +185,5 @@
   <data name="about.personal-code" xml:space="preserve"><value>Tekste „Apie mane“ yra asmens kodas. Jo skelbti negalima – ištrinkite jį.</value></data>
   <data name="profile.consent-outdated" xml:space="preserve"><value>Sutikimo tekstas pasikeitė. Perskaitykite jį ir įjunkite profilį dar kartą.</value></data>
   <data name="profile.name-required" xml:space="preserve"><value>Viešam profiliui reikia vardo. Įrašykite vardą ir tada įjunkite profilį.</value></data>
+  <data name="notices.frequency-invalid" xml:space="preserve"><value>Pasirinkite, kaip dažnai siųsti laiškus: iš karto, kartą per dieną arba kartą per savaitę.</value></data>
 </root>
