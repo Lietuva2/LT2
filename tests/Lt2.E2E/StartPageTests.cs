@@ -236,7 +236,8 @@ public sealed partial class StartPageTests : E2ETest
                 await Assertions.Expect(page.Locator("#home-title")).ToHaveTextAsync("Sveiki sugrįžę");
                 await Assertions.Expect(page.Locator("#home-head")).ToHaveCountAsync(0);
                 await Assertions.Expect(page.Locator(".intro-steps")).ToHaveCountAsync(0);
-                await Assertions.Expect(page.Locator("#home-how-link")).ToHaveAttributeAsync("href", "/metodika#kaip-tai-veikia");
+                // Owner, 2026-11-17: no "Kaip tai veikia" and "Mano paskyra" links in the member's head; both are reachable elsewhere.
+                await Assertions.Expect(page.Locator("#home-welcome a")).ToHaveCountAsync(0);
 
                 var mine = page.Locator($"#my-agenda-{number}");
                 await Assertions.Expect(mine).ToBeVisibleAsync(new() { Timeout = E2ESteps.Slow });

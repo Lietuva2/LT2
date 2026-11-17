@@ -1450,10 +1450,10 @@ and the "not a representative poll" notice. It uses only the public answers behi
   to `/organizacijos`, and a member registers one from "Mano organizacijos" on the account page. In the timeline they
   are named beside a bill, ordered as on the bill's page (for, against, remarks; within each, in the order published),
   never by size, and never counted.
-- **A signed-in member** sees no introduction: "Sveiki sugrįžę" with links to "Kaip tai veikia" and the account; then
-  "Jūsų projektai", a panel of the bills they follow or took a side on that are on the agenda or were voted on in
-  the last week, each with its planned date, their own side or "Dar nenurodėte, ko prašote", the last vote's result,
-  and the share link when they have taken a side; then the same timeline, where their bills carry "Sekate" and their
+- **A signed-in member** sees no introduction: "Sveiki sugrįžę" alone (owner, 2026-11-17: no links to "Kaip tai
+  veikia" and the account, which the footer and the menu reach); then "Jūsų projektai", a panel of the bills they
+  follow or took a side on that are on the agenda or were voted on in the last week, each with its planned date, their
+  own side or "Dar nenurodėte, ko prašote", the last vote's result, and the share link when they have taken a side; then the same timeline, where their bills carry "Sekate" and their
   own side, and on a bill where they took a side the pressed button shows it, with "Atsiimti" and a link "Argumentai
   ir pozicijos" to the bill's page. The trial note about
   summaries stays at the foot.
