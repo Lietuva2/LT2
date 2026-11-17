@@ -71,8 +71,11 @@ internal sealed class CompleteRegistrationHandler(
         {
             // Design 8.5.3 (owner, 2026-11-17): an MP office member's invitation in place of an invitation code, checked again
             // now; it is used up only when it is accepted on the office page.
+            // Where no invitation is needed, one that no longer works changes nothing.
             office = await OfficeInvitationGate.CheckAsync(db, completion.OfficeInvitation, now, cancellationToken);
-            if (office is null)
+            if (office is null
+                && await settings.GetAsync(SettingKeys.RegistrationRequiresInvitation, cancellationToken)
+                && !await OfficialAddressGate.LetsThroughAsync(settings, mps, (await users.FindByIdAsync(userId.ToString()))?.Email, cancellationToken))
             {
                 return Error.Validation("invitation.invalid", "invitationCode");
             }

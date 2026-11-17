@@ -57,19 +57,20 @@ internal sealed class RegisterHandler(
             // again when the registration is completed, so no row ever ties this address to the organisation.
             invitationCode = InvitationRules.HeldWhilePending(invitation.Kind, invitation.Code);
         }
-        else if (!string.IsNullOrWhiteSpace(registration.OfficeInvitation))
+        else if (await settings.GetAsync(SettingKeys.RegistrationRequiresInvitation, cancellationToken)
+            && !await OfficialAddressGate.LetsThroughAsync(settings, mps, registration.Email, cancellationToken))
         {
             // Design 8.5.3 (owner, 2026-11-17): an MP office member's invitation in place of an invitation code. Not kept on the
             // pending account: the office page sends it again when the registration is completed.
+            if (string.IsNullOrWhiteSpace(registration.OfficeInvitation))
+            {
+                return Error.Validation("invitation.required", "invitationCode");
+            }
+
             if (await OfficeInvitationGate.CheckAsync(db, registration.OfficeInvitation, now, cancellationToken) is null)
             {
                 return Error.Validation("invitation.invalid", "invitationCode");
             }
-        }
-        else if (await settings.GetAsync(SettingKeys.RegistrationRequiresInvitation, cancellationToken)
-            && !await OfficialAddressGate.LetsThroughAsync(settings, mps, registration.Email, cancellationToken))
-        {
-            return Error.Validation("invitation.required", "invitationCode");
         }
 
         await using var transaction = await db.Database.BeginTransactionAsync(cancellationToken);
