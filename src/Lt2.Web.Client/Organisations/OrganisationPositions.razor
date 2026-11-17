@@ -103,16 +103,19 @@
                             <form class="stack" @onsubmit="() => SaveAsync(org.Slug)" novalidate id="statement-form-@org.Slug" aria-labelledby="statement-form-title-@org.Slug">
                                 <h3 id="statement-form-title-@org.Slug">@L.Format("Org.Form.Title", org.Name)</h3>
                                 <p class="small">@L["Org.Form.Lead"]</p>
-                                <fieldset class="field stack stack--tight @ErrorClass("stance")">
+                                @* The joined buttons of a stance (owner, 2026-11-17; design 8.16): "Pastabos" neutral. *@
+                                <fieldset class="switch-field field stack stack--tight @ErrorClass("stance")">
                                     <legend>@L["Org.Form.Stance"]</legend>
-                                    @foreach (var stance in OrganisationLimits.Stances)
-                                    {
-                                        <label class="check">
-                                            <input type="radio" name="stance-@org.Slug" id="stance-@stance-@org.Slug" value="@stance" checked="@(_stance == stance)"
-                                                   @onchange="() => _stance = stance" disabled="@Locked" />
-                                            <span>@L["Org.Stance." + stance]</span>
-                                        </label>
-                                    }
+                                    <div class="switch switch--stack" id="stance-@org.Slug">
+                                        @foreach (var stance in OrganisationLimits.Stances)
+                                        {
+                                            <label class="switch__half switch__half--@(stance == "remarks" ? "neutral" : stance)">
+                                                <input class="switch__input" type="radio" name="stance-@org.Slug" id="stance-@stance-@org.Slug" value="@stance" checked="@(_stance == stance)"
+                                                       @onchange="() => _stance = stance" disabled="@Locked" aria-invalid="@Invalid("stance")" />
+                                                <span>@L["Org.Stance." + stance]</span>
+                                            </label>
+                                        }
+                                    </div>
                                     <FieldError Errors="Errors" Field="stance" For="@($"stance-{org.Slug}")" />
                                 </fieldset>
                                 <div class="field @ErrorClass("text")">

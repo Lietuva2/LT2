@@ -95,7 +95,10 @@ src/Lt2.Web.Client         Blazor WebAssembly components and HTTP implementation
                            StringLocalizerExtensions (Format), CopyLink, FieldError, Messages, SplitBar, Hint (the short answer in place, js/lt2-hints.js),
                            ProjectTabs and MenuSections (design 8.21), MoreMenu and Icon (the action row, design 8.16.1,
                            js/lt2-menus.js), BrowserKeys (the storage keys, design 8.22.1),
-                           LongText (a long member's text with "Rodyti daugiau"), PasskeyStep ("Patvirtinti prieigos raktu" in
+                           LongText (a long member's text with "Rodyti daugiau"), the joined-button choice (CSS `.switch`
+                           over real radios, `.switch__half--for|against|neutral|plain`, `.switch-field` + `.switch--stack`
+                           for three options: a bill's sides and a statement's stance only; other choices stay radios and
+                           consents plain checkboxes, design 8.16), PasskeyStep ("Patvirtinti prieigos raktu" in
                            place, design 6.2) and MyAccountState (the browser's one GET /me: whether the caller is an MP's
                            own account, design 8.5.4)
 src/Lt2.Api.Contracts      DTOs, routes, client interfaces, validators (shared by server, client and tests)

@@ -309,6 +309,8 @@
 <data name="Flag.Kind" xml:space="preserve"><value>Kas negerai?</value></data>
 <data name="Flag.date-wrong" xml:space="preserve"><value>Nurodyta data neteisinga</value></data>
 <data name="Flag.sooner" xml:space="preserve"><value>Seimas balsuos anksčiau</value></data>
+<data name="Flag.Switch.date-wrong" xml:space="preserve"><value>Data neteisinga</value></data>
+<data name="Flag.Switch.sooner" xml:space="preserve"><value>Balsuos anksčiau</value></data>
 <data name="Flag.Link" xml:space="preserve"><value>Nuoroda, kur matyti tikroji data</value></data>
 <data name="Flag.Date" xml:space="preserve"><value>Tikroji data (jei žinote)</value></data>
 <data name="Mod.FlagDate" xml:space="preserve"><value>Tikroji data: {0}</value></data>

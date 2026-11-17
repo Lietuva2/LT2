@@ -2816,6 +2816,15 @@ nothing said which is for what, and the start page had its main content on the g
   writing box is a quiet sheet inside it.
 - **Dark theme:** the quiet sheet's colour lies between the ground and the sheet, as in the light theme, so it steps
   back there too (until now it was the lightest of the three).
+- **Choices [decided by the owner on 2026-11-17, from the designer's samples: "Let's change those for arguments, but keep
+  the frequences in settings as is, a normal radio"].** A choice between a bill's sides, or a statement's stance, is the
+  joined-button control (`.switch` over real radio inputs, so it works without script, by keyboard and with the page's
+  focus ring, and stays disabled while the island is locked): the side of an argument, an MP's response's stance ("už" in
+  the side's green, "prieš" in its red, "Dar neapsisprendžiau" neutral, the second ink), an organisation's statement
+  ("Pastabos" neutral) and the date flag ("Data neteisinga", "Balsuos anksčiau"). Three options stand one under another
+  where their fieldset is narrower than 34rem (`.switch-field`, `.switch--stack`). Every other choice stays a radio (how
+  often the MP's summaries and the member's emails come, the feedback's kind), and consents and settings stay plain
+  checkboxes (every consent box, the email switches, "Viešas profilis", report grounds, the merge target).
 
 **Done when:** every page of the site (public, a member's, an organisation's, the moderators' and the staff's) has been
 looked at in the light theme against the test, with the result listed page by page; no quiet sheet stands on the

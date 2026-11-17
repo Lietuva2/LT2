@@ -14,11 +14,18 @@
 @if (Shown)
 {
     <div class="stack stack--tight" id="@(IdPrefix)passkey-step">
-        @if (!Staff)
+        @if (Staff)
         {
-            <p class="note note--quiet" id="@(IdPrefix)passkey-step-text">@L["PasskeyStep.Text"]</p>
+            <p><button type="button" class="btn" id="@(IdPrefix)passkey-step-confirm" disabled="@Locked" @onclick="ConfirmAsync">@L["PasskeyStep.Confirm"]</button></p>
         }
-        <p><button type="button" class="btn" id="@(IdPrefix)passkey-step-confirm" disabled="@Locked" @onclick="ConfirmAsync">@L["PasskeyStep.Confirm"]</button></p>
+        else
+        {
+            @* The sentence and its action on one line where they fit (.note--act). *@
+            <div class="note note--quiet note--act">
+                <p id="@(IdPrefix)passkey-step-text">@L["PasskeyStep.Text"]</p>
+                <button type="button" class="btn" id="@(IdPrefix)passkey-step-confirm" disabled="@Locked" @onclick="ConfirmAsync">@L["PasskeyStep.Confirm"]</button>
+            </div>
+        }
         <Messages Message="@Message" Info="@Info" />
     </div>
 }

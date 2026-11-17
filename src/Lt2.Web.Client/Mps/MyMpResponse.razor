@@ -70,16 +70,20 @@ else if (_mine is not null)
                 <p class="small" id="my-response-state">@L["MpResponse.IsWithdrawn"]</p>
             }
             <form class="stack" @onsubmit="SaveAsync" novalidate id="my-response-form" aria-labelledby="my-response-title">
-                <fieldset class="field stack stack--tight @ErrorClass("stance")">
+                @* The joined buttons of a stance (owner, 2026-11-17; design 8.16) over real radio inputs: "už" in the side's
+                   green, "prieš" in its red, "Dar neapsisprendžiau" neutral; one under another in a narrow form. *@
+                <fieldset class="switch-field field stack stack--tight @ErrorClass("stance")">
                     <legend>@L["MpResponse.Stance"]</legend>
-                    @foreach (var stance in MpResponseLimits.Stances)
-                    {
-                        <label class="check">
-                            <input type="radio" name="my-response-stance" id="my-response-stance-@stance" value="@stance" checked="@(_stance == stance)"
-                                   @onchange="() => _stance = stance" disabled="@(Locked || !mine.MayWrite)" />
-                            <span>@L["MpResponse.Stance." + stance]</span>
-                        </label>
-                    }
+                    <div class="switch switch--stack" id="my-response-stance">
+                        @foreach (var stance in MpResponseLimits.Stances)
+                        {
+                            <label class="switch__half switch__half--@(stance == "undecided" ? "neutral" : stance)">
+                                <input class="switch__input" type="radio" name="my-response-stance" id="my-response-stance-@stance" value="@stance" checked="@(_stance == stance)"
+                                       @onchange="() => _stance = stance" disabled="@(Locked || !mine.MayWrite)" aria-invalid="@Invalid("stance")" />
+                                <span>@L["MpResponse.Stance." + stance]</span>
+                            </label>
+                        }
+                    </div>
                     <FieldError Errors="Errors" Field="stance" For="my-response-stance" />
                 </fieldset>
                 <div class="field @ErrorClass("text")">
