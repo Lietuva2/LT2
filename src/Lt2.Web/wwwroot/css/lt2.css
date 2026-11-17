@@ -971,6 +971,32 @@ body { padding-block-end: 4.5rem; }
 /* Design 8.27: "Lankomumas". A long path or host wraps, so the number beside it stays on a phone's screen. */
 .usage-name { overflow-wrap: anywhere; }
 
+/* Numbers per day as bars (DayBars: "Lankomumas", the invitations' screen; owner, 2026-11-17): a fixed height and at most a
+   readable width, one column a day; the day and number show at once above a column on hover or keyboard focus, anchored to
+   the side of the chart the column is on so it never leaves the screen; some days are named under the axis. */
+.daybars { margin: 0; padding-block: 2rem 1.5rem; max-inline-size: 48rem; }
+.daybars__days {
+  list-style: none; margin: 0; padding: 0; display: grid; grid-auto-flow: column; grid-auto-columns: minmax(0, 1fr);
+  column-gap: 1px; block-size: 10rem; border-bottom: 1px solid var(--ink-2);
+}
+.daybars__day { position: relative; block-size: 100%; outline-offset: 1px; }
+.daybars__bar { display: block; inline-size: 100%; block-size: 100%; }
+.daybars__bar rect { fill: var(--leaf); }
+.daybars__day:hover .daybars__bar rect, .daybars__day:focus-visible .daybars__bar rect { fill: var(--action); }
+.daybars__day:hover, .daybars__day:focus-visible { background: var(--rule); }
+.daybars__value {
+  display: none; position: absolute; inset-block-end: calc(100% + var(--sp-1)); inset-inline-start: 0; z-index: 5;
+  padding: var(--sp-1) var(--sp-2); background: var(--ink); color: var(--sheet); font-size: var(--fs-0); white-space: nowrap;
+}
+.daybars__day--end .daybars__value { inset-inline-start: auto; inset-inline-end: 0; }
+.daybars__day:hover .daybars__value, .daybars__day:focus-visible .daybars__value, .daybars__day:focus .daybars__value { display: block; }
+.daybars__label {
+  position: absolute; inset-block-start: calc(100% + var(--sp-1)); inset-inline-start: 50%; transform: translateX(-50%);
+  font-size: var(--fs-0); color: var(--ink-2); white-space: nowrap;
+}
+.daybars__label--first { inset-inline-start: 0; transform: none; }
+.daybars__label--last { inset-inline-start: auto; inset-inline-end: 0; transform: none; }
+
 /* Design 8.25.4: the card beside a public profile's name (js/lt2-cards.js), the hint's look; placed by the script. */
 .card-pop {
   inset: auto; margin: 0; inline-size: max-content; max-inline-size: min(22rem, 100vw - 1rem);

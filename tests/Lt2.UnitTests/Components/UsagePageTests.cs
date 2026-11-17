@@ -61,7 +61,20 @@ public sealed class UsagePageTests : BunitContext
         page.Find("#usage-pages").TextContent.ShouldContain("/seimas/XVP-0412");
         page.Find("#usage-referrers").TextContent.ShouldContain("naujienos.test");
         page.Find("#usage-range-7").GetAttribute("aria-pressed").ShouldBe("true");
-        page.FindAll("svg.daybars").Count.ShouldBe(2, "visitors and members");
+        page.FindAll("figure.daybars").Count.ShouldBe(2, "visitors and members");
+
+        // Owner, 2026-11-17: one focusable column a day, its day and number as a label shown on hover and focus and as the
+        // bar's title; the last day named under the axis, then every seventh before it.
+        var chart = page.FindAll("figure.daybars")[0];
+        var days = chart.QuerySelectorAll("li.daybars__day");
+        days.Length.ShouldBe(30);
+        days.ShouldAllBe(d => d.GetAttribute("tabindex") == "0");
+        days[^1].GetAttribute("aria-label").ShouldBe("2026-11-16: 42");
+        days[^1].QuerySelector(".daybars__value")!.TextContent.ShouldBe("2026-11-16: 42");
+        days[^1].QuerySelector("title")!.TextContent.ShouldBe("2026-11-16: 42");
+        days[^1].QuerySelector("rect")!.GetAttribute("height").ShouldBe("100");
+        days[0].QuerySelector("rect")!.GetAttribute("height").ShouldBe("0");
+        chart.QuerySelectorAll(".daybars__label").Select(l => l.TextContent).ShouldBe(["10-19", "10-26", "11-02", "11-09", "11-16"]);
         page.Find("#usage-visitors-most").TextContent.ShouldBe(L.Format("Usage.ChartMost", "42", "2026-11-16"), "the chart's scale");
         page.Find("#usage-referrers thead").TextContent.ShouldContain(L["Usage.Referred"].Value, customMessage: "referring sites count visitors, not views");
     }

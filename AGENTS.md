@@ -89,7 +89,8 @@ src/Lt2.Web                host: API endpoints in Endpoints/<Module>/ (one per f
 src/Lt2.Hosting            what the web host and the worker set up the same way: Serilog and OpenTelemetry
                            (Observability.AddLt2Observability), with SecretPaths replacing an MP link's token in every log
                            line and trace; no module references it
-src/Lt2.Web.Client         Blazor WebAssembly components and HTTP implementations of the API clients; the interface's
+src/Lt2.Web.Client         Blazor WebAssembly components and HTTP implementations of the API clients (logging at Warning
+                           and above only, owner 2026-11-17: no console line per request); the interface's
                            shared pieces: Components/InteractiveBase<TText>, Display (numbers and dates, Vilnius),
                            StringLocalizerExtensions (Format), CopyLink, FieldError, Messages, SplitBar, Hint (the short answer in place, js/lt2-hints.js),
                            ProjectTabs and MenuSections (design 8.21), MoreMenu and Icon (the action row, design 8.16.1,
@@ -127,7 +128,8 @@ src/Modules/               Lt2.Identity, Lt2.Notifications, Lt2.Audit, Lt2.Parli
                            __Host-lt2.device cookie, identity.known_device, the code allowance they choose).
 src/Modules/Lt2.Usage      the site's own usage statistics (design 8.27): UsageRules and Sketch (HyperLogLog) pure,
                            UsageCounter in the web host's memory, written every minute; the host feeds it from
-                           Services/UsageServices.cs; the screen /administravimas/lankomumas (UsageAdmin)
+                           Services/UsageServices.cs; the screen /administravimas/lankomumas (UsageAdmin; its day bars are
+                           DayBars, own CSS size, a label per column on hover and focus, no chart library)
 src/Lt2.Worker             Hangfire server: outbox dispatch loop, the parliament import, the agenda watcher (lrs.lt
                            pages; off unless Agenda:BaseAddress is set), the daily aggregates and closing of the bills' records, summaries
                            (every 15 minutes: waiting ones expire, due ones are made: a dry run, waiting or sent by
@@ -720,7 +722,9 @@ a representative under its organisation's own statement writes as the organisati
 MP's own response as the MP (passkey session, mandate not ended), everyone else as a person; the MP's account comments
 nowhere else. Pre-screening refuses an email address, a phone number or a personal code (`comment.screened`); the phone rule
 (`PreScreening.ContainsPhoneNumber`, every screened text) matches only Lithuanian numbers: `+370`/`00370`, the trunk `0`
-or the old `8`, then eight digits starting 3–9 (owner, 2026-11-17), never a date, year span, sum, law number or a link's digits; an `https://`
+or the old `8`, then eight digits starting 3–9 (owner, 2026-11-17), and (owner, 2026-11-17) a mobile without a prefix, eight
+digits starting with 6 alone or grouped `612 34567`, `6123 4567`, `6 1234 567` (a landline without a prefix stays unflagged),
+never a date, year span, sum, law number or a link's digits; an `https://`
 address is a link (`CommentLinks`, `rel="nofollow ugc noopener noreferrer"`). `Comments:OnReasons|OnStatements|OnResponses`
 (off: no new comments, the written ones readable), `Comments:PerPersonPerTarget` (0), `RateLimits:WriteComment` (20 an hour).
 "Sutinku" is public with names, needs no positions consent, is not blocked by a writing restriction, and the first one asks

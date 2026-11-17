@@ -171,7 +171,9 @@ static server-rendered HTML with proper Open Graph tags and no WebAssembly downl
 only to `/api/v1`. Until such an island has started, everything in it is disabled (fields, choices and buttons alike):
 what was typed would be emptied when the island takes over, and a form sent natively would reload the page. Without
 JavaScript the island never starts, and the page says so in one note. An end-to-end test loads every page with islands
-with the WebAssembly runtime blocked and fails on any control left usable.
+with the WebAssembly runtime blocked and fails on any control left usable. **[Owner, 2026-11-17, after testing the trial:
+the browser's console listed every API request.]** The WebAssembly client logs warnings and errors only (its minimum level
+is Warning, in every environment), so the HTTP client factory's line per request stays out of the console.
 
 How "full API from the start" holds with server rendering: every component depends on a typed client interface from
 `Lt2.Api.Contracts` (`IParliamentApi`, `IAppealsApi`, …). In the browser the implementation is an `HttpClient` call; on the
@@ -3335,7 +3337,13 @@ replies and "Sutinku" carries no text to moderate (8.23.1, 8.23.10), and each ki
     (`06xx xxxxx`, `05 xxx xxxx`), or after the old prefix `8` people still write (`86xx xxxxx`, `8 5 xxx xxxx`), with
     spaces, hyphens and brackets between the digits. A date (`2026-11-20`), a year span (`2024-2028`), a sum (`25 000 000`),
     a law's or a document's number, a percentage and digits inside a link are no phone number. For every text it screens
-    (`RuleBasedPreScreening.ContainsPhoneNumber`, unit tests named as the rule).
+    (`RuleBasedPreScreening.ContainsPhoneNumber`, unit tests named as the rule). **[Owner, 2026-11-17, after testing the
+    trial: mobiles written without a prefix were missed.]** It also matches a mobile number without any prefix: eight
+    digits starting with 6, standing alone, written together (`61234567`) or grouped as people write them (`612 34567`,
+    `6123 4567`, `6 1234 567`, with a space or a hyphen), with the same guards: not part of a longer number, not after a
+    letter (`XIV-61234567`) or `Nr.`, not a sum (a thousands grouping such as `60 000 000` is none of those shapes, and a
+    currency or percent sign beside it rules it out), not inside a link. A landline without a prefix (`5 212 3456`) stays
+    unflagged: too many sums and numbers look like one.
   - **Insults and spam are not caught by rules.** Nothing refuses or flags them before they are shown; reports are the
     only way they reach a moderator. This is the accepted risk of comments without moderation beforehand. AI
     pre-screening stays an open decision (12).
@@ -4336,6 +4344,11 @@ else reads as 7, the screen's first view), which first writes what is counted so
 (visitors, members, views, robots' views); the months; the years; the most viewed pages and the referring sites of the
 chosen range. The lists begin at the first counted day, at most 30 days and 12 months back. Nothing on it is about a
 person.
+**[Owner, 2026-11-17, after testing the trial: the bars had no size of their own and stretched over the screen.]** The
+bars (here and on the invitations' screen, one component) have our own size: 10rem high, at most 48rem wide, one column a
+day; under the axis the last day and every seventh before it are named (`MM-dd`); each column takes keyboard focus and
+shows its day and number at once on hover or focus, a label drawn by CSS (no script), as well as the bar's own title. No
+chart library (no component library, no third-party script).
 
 #### 8.27.5 Built as
 

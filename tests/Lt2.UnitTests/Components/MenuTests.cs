@@ -97,7 +97,7 @@ public sealed class MenuTests : BunitContext
     [Theory]
     [InlineData("/statistika", true)]
     [InlineData("/statistika/?metai=2026", true)]
-    [InlineData("/statistika", false)]
+    [InlineData("/seimas/analitika", false)]
     [InlineData("/darbotvarke", false)]
     public void Statistika_is_current_on_the_statistics_page(string path, bool current) =>
         MenuSections.InStatistics(path).ShouldBe(current);
