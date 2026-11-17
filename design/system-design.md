@@ -1076,6 +1076,15 @@ M2b; the owner asked for M2b to be built now. Built in two steps: the link (8.5.
   address of that MP, by name, with one button, "Perimti profilį". (Every text that carries an MP's name is worded so
   the name stands in the nominative, after a colon or on its own: names are not declined by the software.) Nothing is linked and nothing is public
   before the take-over is finished: registering does not by itself put a mark on anyone's profile.
+- **[Owner, 2026-11-17, after testing the trial.] Shown on "Profilis" and on every page.** "Profilis" (`/paskyra`, 8.21) has
+  one line about it: before the take-over "Seimo narys: {name}." with "Perimti profilį", a link to the offer on
+  "Dalyvavimas" (`/paskyra/dalyvavimas#mp-offer`); after it, "Tvarkote Seimo nario profilį: {name}." (an office member:
+  "Esate Seimo nario biuro narys. Seimo narys: {name}.") with "Profilis" and "Tvarkyti" (the MP part on "Dalyvavimas"). And
+  every page carries, under the header, the notice "Prisijungėte oficialiu Seimo nario adresu. Seimo narys: {name}." with
+  "Perimti profilį" to the same place, while the offer stands; not on the take-over page and not on "Dalyvavimas", which
+  holds the offer itself; gone once the profile is taken over. Both come only from the account's own `GET /me` in the
+  browser: the served page is the same for every member (the notice's markup is there, hidden, without a name), and a
+  member's page reads `GET /me` once per page load for it (kept in the page's memory, nothing stored in the browser).
 - **Registration without an invitation [the designer's proposal, awaiting the owner].** While registration needs an
   invitation, an official address may register without one: the mailbox is the proof. It is a setting,
   `Registration:OfficialAddressesWithoutInvitation`, **off by default**: without an invitation anyone can make the
@@ -3109,8 +3118,17 @@ lines on a phone.
   - "Apie": "Metodika", "Moderavimo taisyklės", "Naudojimo taisyklės", "Privatumas" (8.22);
   - "Dalyvauti": "Organizacijos", "Atsiliepimai".
 - **The theme switch** moves to the footer, so a visitor has it too. It works as before and is absent without script.
-- **Done when:** the menu is one line at 360, 390 and 1280 px; each of the four tabs is reachable from the other three
-  and marked; every page that was in the old menu is one press from the menu or the footer; the account item works
+- **[Owner, 2026-11-17, after testing the trial: "build them as recommended".] "Projektai" opens a dropdown, and
+  "Statistika" is a menu item.** The menu is the logo, "Projektai", "Seimo nariai", "Statistika" (the analytics page of
+  8.26, moved out of the tabs and renamed) and "Prisijungti" or the account item. "Projektai" is no longer a link to the
+  agenda: it is a disclosure built like the account item (works without script; closes on Escape, a press outside and
+  focus leaving, the same small script), holding its three tabs, "Darbotvarkė", "Projektai", "Suvestinės"; the current page
+  is marked in it, and the item itself is marked current on the three pages and everything under them, as before. The tab
+  row stays under the three pages' headings. The menu still fits one line from 360 px; under 32rem the logo stands without
+  its words, as before [changed while building: see the line below for what else the narrow widths needed].
+- **Done when:** the menu is one line at 360, 390 and 1280 px; each of the three tabs is reachable from the other two
+  and marked (the fourth, "Analitika", became "Statistika" in the menu, owner 2026-11-17); every page that was in the old
+  menu is one press from the menu or the footer; the account item works
   with and without script and with the keyboard; no served page holds a member's name or role links.
 - [changed while building (2026-11-16): "Seimo nariai" is marked current on the list and on everything under it as well (a
   profile and its votes, a faction, a committee). The account item's "Projektai, dėl kurių į jus kreipiamasi" is shown to an
@@ -4061,7 +4079,7 @@ declares none (8.5.4). The rule:
   replaced.
 - The export holds the profile, the text, the consent and the follows the person made; deletion removes them all.
 
-### 8.26 Analytics: where the Seimas and the members agree (`/seimas/analitika`)
+### 8.26 Analytics: where the Seimas and the members agree ("Statistika", `/statistika`)
 
 **[Decided by the owner on 2026-11-16: "build it all as proposed".]** The concept's analytics chapter (`#analytics` of
 the concept page), without delegation and without what has no data yet. Earlier that day the owner allowed the count of
@@ -4069,6 +4087,9 @@ MPs who took over their profile ("46 iš 141") and factions compared side by sid
 the four questions of the proposal: the member's own comparison lists MPs in order of agreement (an exception to 7.3, for
 that member's eyes only); the Seimas's majority is the majority of those who voted, a consensus counting as "for"; the
 page is a fourth tab, "Analitika", under "Projektai" (8.21); and one fixed sample of 20 applies everywhere, not a setting.
+**[Owner, 2026-11-17, after testing the trial: the page moves to the main menu as "Statistika" (8.21); its title and name
+are "Statistika", its address `/statistika` (no redirect from `/seimas/analitika`: nothing is launched). It is no longer a
+tab of "Projektai" and has no tab row. Wherever this section says "the analytics page" it means this page.]**
 
 #### 8.26.1 What the page shows
 
@@ -4210,7 +4231,7 @@ never a table, never the browser (8.22.1), never a cacheable HTTP answer.
 
 #### 8.26.8 Done when
 
-- `/seimas/analitika` is the fourth tab under "Projektai", works without script, and the filters change every figure they
+- `/statistika` ("Statistika" in the menu; the fourth tab `/seimas/analitika` until the owner moved it on 2026-11-17) works without script, and the filters change every figure they
   apply to.
 - Every number follows 8.26.2–8.26.4 in a unit test whose name reads as the rule; consensus votes have no share; under 20
   a sample shows counts and "maža imtis".
@@ -4684,7 +4705,7 @@ Decided for comments, the email rhythm and public profiles (8.23-8.25; all three
   exception to "no ranking or comparison of MPs by any number" (7.3, 8.26.4). Its heading, renamed after the review: "Kas
   Seime balsuoja taip, kaip prašote jūs" (members do not vote).
 - The Seimas's majority is the majority of those who voted; a consensus counts as "for" (8.26.2).
-- The page is the fourth tab under "Projektai", "Analitika" (8.21).
+- The page is the fourth tab under "Projektai", "Analitika" (8.21). [Owner, 2026-11-17: "Statistika" in the main menu, `/statistika`.]
 - One fixed sample of 20 for every number on the page, not a setting; below it, counts and "maža imtis" and no share
   (8.26.2), faction unity included (after the review of 2026-11-16).
 - **Kept copies:** "I think we may cache this quite long, say per-session, with the personal sections like "who votes like

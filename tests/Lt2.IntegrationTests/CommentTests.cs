@@ -488,7 +488,7 @@ public sealed class CommentTests(DatabaseFixture database) : ApiTest(database)
             {
                 AppealRoutes.Appeals, AppealRoutes.AppealsList(null, false, false, null, "participants"),
                 AppealRoutes.AppealsList(null, false, false, null, "arguments"), AppealRoutes.AppealsList(null, false, false, null, "activity"), AgendaRoutes.Agenda,
-                "/", "/darbotvarke", "/projektai", "/seimas/analitika",
+                "/", "/darbotvarke", "/projektai", "/statistika",
             };
             var before = new Dictionary<string, string>();
             foreach (var route in routes)

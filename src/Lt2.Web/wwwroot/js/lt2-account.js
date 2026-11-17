@@ -1,10 +1,20 @@
-// The account item in the menu (design 8.21). It is a <details> disclosure, so "Mano paskyra" and "Atsijungti" open without
-// this script. With it: when the person opens the item, the name and the links their account has (the acceptance of changed
-// terms, staff screens or the staff passkey, an MP's projects) are read from GET /api/v1/me and shown; the page as served holds nothing about the
-// person. It closes on Escape (focus back to "Paskyra"), on a press outside it and when focus leaves it. Nothing is stored.
+// The menu's two disclosures (design 8.21): the account item and "Projektai" (owner, 2026-11-17: a dropdown with its three
+// tabs). Both are <details>, so they open without this script. With it: when the person opens the account item, the name and
+// the links their account has (the acceptance of changed terms, staff screens or the staff passkey, an MP's projects) are
+// read from GET /api/v1/me and shown; the page as served holds nothing about the person. Each closes on Escape (focus back to
+// its toggle), on a press outside it and when focus leaves it.
+// Design 8.5.1 (owner, 2026-11-17): on a member's page the account's own GET /api/v1/me is read once per page load and, when
+// it offers to take over an MP's profile (mpOffer), the hidden notice under the header is shown with the MP's name; the answer
+// is kept in this page's memory only and applied again after Blazor's enhanced navigation. Nothing is stored.
 // Listeners sit on the document, so it keeps working when Blazor's enhanced navigation replaces the header.
 (() => {
-  const MENU = "details[data-account-menu]";
+  const ACCOUNT = "details[data-account-menu]";
+  const MENU = "details[data-account-menu], details[data-nav-menu]";
+
+  const readMe = async () => {
+    const response = await fetch("/api/v1/me", { credentials: "same-origin", cache: "no-store", headers: { Accept: "application/json" } });
+    return response.ok ? response.json() : null;
+  };
 
   const close = (details, focusToggle) => {
     details.open = false;
@@ -18,9 +28,8 @@
 
   const fill = async (details) => {
     try {
-      const response = await fetch("/api/v1/me", { credentials: "same-origin", cache: "no-store", headers: { Accept: "application/json" } });
-      if (!response.ok || !details.isConnected) return;
-      const me = await response.json();
+      const me = await readMe();
+      if (!me || !details.isConnected) return;
       const name = details.querySelector("[data-account-name]");
       const text = me.displayName || me.email;
       if (name && text) {
@@ -50,20 +59,53 @@
     }
   };
 
+  // The MP's name of the account's offer, once read; undefined until then, null when there is none.
+  let offer;
+
+  const applyOffer = () => {
+    const notice = document.querySelector("[data-mp-offer-notice]");
+    if (!notice) return;
+    const skip = (notice.getAttribute("data-skip") || "").split(" ");
+    const text = notice.querySelector("[data-mp-offer-text]");
+    const on = typeof offer === "string" && !skip.includes(location.pathname.replace(/\/$/, "")) && text !== null;
+    if (on) text.textContent = (text.getAttribute("data-format") || "").replace("{0}", offer);
+    notice.hidden = !on;
+  };
+
+  const readOffer = async () => {
+    // Only on a member's page: the notice is served to signed-in sessions only, so a visitor's browser asks nothing.
+    if (!document.querySelector("[data-mp-offer-notice]")) return;
+    try {
+      const me = await readMe();
+      const mp = me?.mpOffer;
+      offer = mp ? `${mp.firstName} ${mp.lastName}` : null;
+    } catch (e) {
+      offer = null;
+    }
+    applyOffer();
+  };
+
+  readOffer();
+  if (window.Blazor && typeof window.Blazor.addEventListener === "function") {
+    window.Blazor.addEventListener("enhancedload", () => (offer === undefined ? readOffer() : applyOffer()));
+  }
+
   // "toggle" does not bubble: listen in the capture phase.
   document.addEventListener("toggle", (event) => {
     const details = event.target;
-    if (details instanceof HTMLDetailsElement && details.matches(MENU) && details.open) fill(details);
+    if (details instanceof HTMLDetailsElement && details.matches(ACCOUNT) && details.open) fill(details);
   }, true);
 
   document.addEventListener("keydown", (event) => {
     if (event.key !== "Escape") return;
-    for (const details of document.querySelectorAll(`${MENU}[open]`)) close(details, details.contains(document.activeElement));
+    for (const details of document.querySelectorAll(MENU)) {
+      if (details.open) close(details, details.contains(document.activeElement));
+    }
   });
 
   document.addEventListener("pointerdown", (event) => {
-    for (const details of document.querySelectorAll(`${MENU}[open]`)) {
-      if (!(event.target instanceof Node) || !details.contains(event.target)) close(details, false);
+    for (const details of document.querySelectorAll(MENU)) {
+      if (details.open && (!(event.target instanceof Node) || !details.contains(event.target))) close(details, false);
     }
   });
 

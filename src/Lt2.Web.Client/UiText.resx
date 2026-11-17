@@ -136,6 +136,8 @@
 <data name="Mp.Managing" xml:space="preserve"><value>Tvarkote Seimo nario profilį: {0}.</value></data>
 <data name="Mp.OfficeOf" xml:space="preserve"><value>Esate Seimo nario biuro narys. Seimo narys: {0}.</value></data>
 <data name="Mp.ToProfile" xml:space="preserve"><value>Profilis</value></data>
+  <data name="MpLine.Offer" xml:space="preserve"><value>Seimo narys: {0}.</value></data>
+  <data name="MpLine.Manage" xml:space="preserve"><value>Tvarkyti</value></data>
 <data name="Mp.Bills" xml:space="preserve"><value>Projektai, dėl kurių į jus kreipiamasi</value></data>
 <data name="Mp.PasskeyNeeded" xml:space="preserve"><value>Prisijunkite prieigos raktu: prisijungus kodu galima tik skaityti.</value></data>
 <data name="Mp.Office.Title" xml:space="preserve"><value>Biuras</value></data>
@@ -189,7 +191,6 @@
   <data name="Tabs.Agenda" xml:space="preserve"><value>Darbotvarkė</value></data>
   <data name="Tabs.Bills" xml:space="preserve"><value>Projektai</value></data>
   <data name="Tabs.Digests" xml:space="preserve"><value>Suvestinės</value></data>
-  <data name="Tabs.Analytics" xml:space="preserve"><value>Analitika</value></data>
   <data name="Terms.Check.Before" xml:space="preserve"><value>Sutinku su</value></data>
   <data name="Terms.Check.Link" xml:space="preserve"><value>naudojimo taisyklėmis</value></data>
   <data name="Privacy.Sentence.Before" xml:space="preserve"><value>Kaip tvarkome jūsų duomenis, rašoma</value></data>

@@ -70,9 +70,10 @@ public sealed class AnalyticsTests(DatabaseFixture database) : ApiTest(database)
             // Only accounts older than 30 days: both members are new, so the bill has no positions to compare.
             (await visitor.GetJsonAsync<AnalyticsResponse>(AnalyticsRoutes.Of(null, true))).Bills.ShouldNotContain(b => b.Number == Bill);
 
-            // The page: the fourth tab, the row in the table with its counts and "maža imtis", no share for the members.
-            var html = WebUtility.HtmlDecode(await visitor.Client.GetStringAsync("/seimas/analitika"));
-            html.ShouldContain("id=\"tab-seimas-analitika\" aria-current=\"page\"");
+            // The page: "Statistika" in the menu, the row in the table with its counts and "maža imtis", no share for the members.
+            var html = WebUtility.HtmlDecode(await visitor.Client.GetStringAsync("/statistika"));
+            html.ShouldContain("id=\"nav-statistics\" aria-current=\"page\"");
+            html.ShouldNotContain("id=\"project-tabs\"", customMessage: "owner, 2026-11-17: a menu item of its own, no tab row");
             var tableRow = Regex.Match(html, $"<tr id=\"row-{Bill}\".*?</tr>", RegexOptions.Singleline).Value;
             tableRow.ShouldContain("1 už, 1 prieš");
             tableRow.ShouldContain("maža imtis");
@@ -152,7 +153,7 @@ public sealed class AnalyticsTests(DatabaseFixture database) : ApiTest(database)
             }
 
             unity.Select(f => f.Seats).ShouldBeInOrder(SortDirection.Descending, "by seats, not by unity");
-            var page = WebUtility.HtmlDecode(await visitor.Client.GetStringAsync("/seimas/analitika"));
+            var page = WebUtility.HtmlDecode(await visitor.Client.GetStringAsync("/statistika"));
             foreach (var faction in unity.Where(f => f.Share is null))
             {
                 Regex.Match(page, $"<li[^>]*id=\"unity-{faction.Slug}\".*?</li>", RegexOptions.Singleline).Value.ShouldNotContain("<svg class=\"meter\"", customMessage: faction.Slug);
@@ -198,7 +199,7 @@ public sealed class AnalyticsTests(DatabaseFixture database) : ApiTest(database)
             var older = (await visitor.GetJsonAsync<AnalyticsResponse>(AnalyticsRoutes.Of(null, true))).Bills.Single(b => b.Number == Bill);
             (older.MembersFor, older.MembersAgainst, older.Compared).ShouldBe((19, 5, true));
 
-            (await visitor.Client.GetStringAsync("/seimas/analitika")).ShouldContain($"id=\"dot-{Bill}\"");
+            (await visitor.Client.GetStringAsync("/statistika")).ShouldContain($"id=\"dot-{Bill}\"");
         }
         finally
         {
@@ -264,7 +265,7 @@ public sealed class AnalyticsTests(DatabaseFixture database) : ApiTest(database)
             using var response = await member.Client.GetAsync(AnalyticsRoutes.MyAgreement);
             response.Headers.CacheControl?.NoStore.ShouldBe(true);
             mine.Mps.ShouldNotBeEmpty("the answer the page is checked against holds rows");
-            var page = await member.Client.GetStringAsync("/seimas/analitika");
+            var page = await member.Client.GetStringAsync("/statistika");
             page.ShouldContain("id=\"kas-balsuoja-kaip-jus\"");
             foreach (var marker in new[] { "mine-mp-", "mine-faction-", "mine-basis", "id=\"mine\"", "mine-sign-in" })
             {
@@ -277,7 +278,7 @@ public sealed class AnalyticsTests(DatabaseFixture database) : ApiTest(database)
             }
 
             // A visitor gets the sign-in link in the server's HTML, so it works without JavaScript.
-            (await visitor.Client.GetStringAsync("/seimas/analitika")).ShouldContain("id=\"mine-sign-in\"");
+            (await visitor.Client.GetStringAsync("/statistika")).ShouldContain("id=\"mine-sign-in\"");
 
             // The answer has exactly these fields: no other person, no address, no side but the caller's own counts.
             using var document = JsonDocument.Parse(await response.Content.ReadAsStringAsync());
@@ -364,7 +365,7 @@ public sealed class AnalyticsTests(DatabaseFixture database) : ApiTest(database)
             using var visitor = NewBrowser();
             var row = (await visitor.GetJsonAsync<AnalyticsResponse>(AnalyticsRoutes.Analytics)).Bills.Single(b => b.Number == Bill);
             (row.IsConsensus, row.SeimasShareFor, row.SeimasMajorityFor, row.Dot).ShouldBe((true, null, true, false));
-            WebUtility.HtmlDecode(await visitor.Client.GetStringAsync("/seimas/analitika")).ShouldContain("pritarta bendru sutarimu");
+            WebUtility.HtmlDecode(await visitor.Client.GetStringAsync("/statistika")).ShouldContain("pritarta bendru sutarimu");
 
             var mine = await member.GetJsonAsync<MyAgreementResponse>(AnalyticsRoutes.MyAgreement);
             (mine.Bills, mine.Consensus, mine.Mps.Count, mine.Factions.Count).ShouldBe((1, 1, 0, 0));

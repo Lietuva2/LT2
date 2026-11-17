@@ -1,4 +1,4 @@
-@page "/seimas/analitika"
+@page "/statistika"
 @using System.Globalization
 @using Lt2.Api.Contracts.Analytics
 @using Lt2.Api.Contracts.Meta
@@ -9,8 +9,8 @@
 @inject IStringLocalizer<Lt2.Web.Components.Appeals.AppealText> A
 @inject Formats F
 
-@* Design 8.26: the analytics page, the fourth tab under "Projektai". Public, server-rendered, the same for everyone and
-   readable without JavaScript: the filters are one GET form on the ground (8.16), the plot is SVG drawn here with a
+@* Design 8.26: the statistics page, "Statistika" in the main menu (owner, 2026-11-17; it was "Analitika", the fourth tab under
+   "Projektai", at /seimas/analitika). Public, server-rendered, the same for everyone and readable without JavaScript: the filters are one GET form on the ground (8.16), the plot is SVG drawn here with a
    <title> per dot and the table one click away. The numbers are a kept copy, at most an hour old (8.26.6), and the page
    says when they were counted. Nothing about the caller, apart from the island at the end, which a visitor sees as the
    sign-in link and a member's browser fills with the member's own comparison (8.26.4). *@
@@ -18,7 +18,6 @@
 
 <div class="stack">
     <h1>@T["Title"]</h1>
-    <ProjectTabs Current="ProjectTab.Analytics" />
     <NeedsScript />
     <p class="lead">@T["Lead"]</p>
     <form class="filters" method="get" action="@Path" id="analytics-filters">
@@ -258,7 +257,7 @@
 
 @code {
     /// <summary>The page's address.</summary>
-    public const string Path = "/seimas/analitika";
+    public const string Path = MenuSections.Statistics;
 
     /// <summary>The value of <c>paskyros</c> that counts only accounts older than 30 days (design 8.26.1).</summary>
     public const string OlderValue = "senesnes";

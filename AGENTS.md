@@ -322,10 +322,11 @@ code review.
 
 ## Product rules to keep consistent
 
-**Navigation (design 8.21, built 2026-11-16).** The menu is the logo, "Projektai", "Seimo nariai", and "Prisijungti" or the
-account item "Paskyra"; one line from 360 px (`MenuTests`, E2E). "Projektai" opens `/darbotvarke` and is current (`aria-current`)
-on its four tabs and everything under them (`MenuSections`); the four tabs ("Darbotvarkė", "Projektai", "Suvestinės",
-"Analitika") are `<ProjectTabs>` under the heading of `/darbotvarke`, `/projektai`, `/suvestines`, `/seimas/analitika`. The history of votes is no tab (the
+**Navigation (design 8.21, built 2026-11-16; owner, 2026-11-17).** The menu is the logo, "Projektai", "Seimo nariai", "Statistika"
+(`/statistika`, design 8.26) and "Prisijungti" or the account item "Paskyra"; one line from 360 px (`MenuTests`, E2E). "Projektai" is
+a `<details>` dropdown (`#projects-menu`, closed by `js/lt2-account.js` like the account item) holding its three tabs and is current
+(`aria-current` on its summary) on them and everything under them (`MenuSections`); the three tabs ("Darbotvarkė", "Projektai",
+"Suvestinės") are also `<ProjectTabs>` under the heading of `/darbotvarke`, `/projektai`, `/suvestines`. The history of votes is no tab (the
 owner, 2026-11-16): the agenda's voted list links to it and it leads back by a breadcrumb (`#to-agenda`). The
 account item (`Layout/AccountMenu`) is a `<details>` with "Mano paskyra" and "Atsijungti" (the server-rendered sign-out form);
 `js/lt2-account.js` fills the name and the account's links (staff screens, an MP's projects, accepting changed terms; for a
@@ -433,8 +434,10 @@ page's "Balsuota".
 - The official address: an "El. p." contact of open data on `lrs.lt` (not a sub-domain), compared ignoring case, of an MP
   whose mandate has not ended; listed for two or more such MPs, it belongs to nobody (`OfficialAddresses` in Parliament,
   also used for the summaries' recipients). An account whose own address is one gets the offer in its own `GET /me`
-  (`mpOffer`), shown on `/paskyra` by `MyMp` in the browser only; the page the server renders holds nothing of it
-  (`ServerMeApi` leaves `mpOffer` and `mp` out). Nothing is linked or public before the take-over.
+  (`mpOffer`), shown on `/paskyra/dalyvavimas` by `MyMp`, as one line on "Profilis" by `MyMpLine` and (owner, 2026-11-17) as the
+  notice `#mp-offer-notice` under the header of every page but the take-over page and "Dalyvavimas" (`MainLayout`, hidden markup
+  the same for every member, shown by `js/lt2-account.js` from one `GET /me` per page load), in the browser only; the page the
+  server renders holds nothing of it (`ServerMeApi` leaves `mpOffer` and `mp` out). Nothing is linked or public before the take-over.
 - `Registration:OfficialAddressesWithoutInvitation` (off by default, the designer's proposal awaiting the owner): both
   invitation gates ask `OfficialAddressGate`. The local `.env` switches it on through the migrator.
 - "Perimti profilį" (`POST /mps/{slug}/claim`) sends a 24-hour one-time link (token hashed, a new one replaces the old,
@@ -619,7 +622,7 @@ page's "Balsuota".
   that started from a draft says "Sukurta DI · taisė žmonės" for its whole life. The worker is configured the same way
   for the summary job (compose passes `Ai__Provider` and the key to both). Pre-screening of users' texts stays
   rule-based. Tests never call the real API.
-**Analytics (design 8.26, owner 2026-11-16).** `/seimas/analitika` (`Components/Analytics/AnalyticsPage`), public and
+**Analytics (design 8.26, owner 2026-11-16).** "Statistika", `/statistika` (`MenuSections.Statistics`; owner 2026-11-17: in the main menu, no tab row) (`Components/Analytics/AnalyticsPage`), public and
 server-rendered from `GET /api/v1/analytics` (composed in `Lt2.Web/Services/AnalyticsServices.cs`): the four figures, the
 Seimas's share "for" beside the members' frozen counts on closed bills, faction unity (`FactionUnityRule` in Parliament).
 "Kas Seime balsuoja taip, kaip prašote jūs" is the island `MyAgreement` from `GET /api/v1/me/analytics/agreement`: the caller's own sides

@@ -1,0 +1,35 @@
+@inherits InteractiveBase<UiText>
+@inject IMeApi MeApi
+
+@* Design 8.5.1, 8.5.4 on "Profilis" (owner, 2026-11-17): one line for an account whose address is an MP's official address,
+   "Seimo narys: …" with the way to take the profile over until it is taken over, then which profile it manages, with links.
+   Read from the account's own GET /me only once the island runs in the browser, never while the server prerenders, so the
+   page's HTML holds nothing of it (ServerMeApi leaves mpOffer and mp out). The actions themselves are on "Dalyvavimas". *@
+@if (_offer is { } offer)
+{
+    <p id="profile-mp">@L.Format("MpLine.Offer", offer.FirstName + " " + offer.LastName) <a href="@AccountScreens.MpOffer" id="profile-mp-claim">@L["Mp.Claim"]</a></p>
+}
+else if (_link is { } link)
+{
+    <p id="profile-mp">
+        @L.Format(link.Part == "mp" ? "Mp.Managing" : "Mp.OfficeOf", link.FirstName + " " + link.LastName)
+        <a href="/p/@link.Slug" id="profile-mp-profile">@L["Mp.ToProfile"]</a> · <a href="@AccountScreens.MpLink" id="profile-mp-manage">@L["MpLine.Manage"]</a>
+    </p>
+}
+
+@code {
+    private MpOfferResponse? _offer;
+    private MpLinkResponse? _link;
+
+    protected override async Task OnInitializedAsync()
+    {
+        if (!RendererInfo.IsInteractive)
+        {
+            return;
+        }
+
+        var me = (await MeApi.GetAsync()).Value;
+        _offer = me?.MpOffer;
+        _link = me?.Mp;
+    }
+}

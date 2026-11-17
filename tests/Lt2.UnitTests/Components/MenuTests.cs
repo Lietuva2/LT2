@@ -6,8 +6,9 @@ using Microsoft.Extensions.DependencyInjection;
 namespace Lt2.UnitTests.Components;
 
 /// <summary>
-/// Design 8.21, 8.26: "Projektai" is one menu item with four tabs; the item is current on the four pages and everything under them,
-/// and the tab row under the heading marks the page it stands on and reaches the other three.
+/// Design 8.21, 8.26: "Projektai" is one menu item with three tabs (owner, 2026-11-17: "Statistika" is a menu item of its own);
+/// the item is current on the three pages and everything under them, and the tab row under the heading marks the page it
+/// stands on and reaches the other two.
 /// </summary>
 public sealed class MenuTests : BunitContext
 {
@@ -20,14 +21,13 @@ public sealed class MenuTests : BunitContext
     [InlineData(ProjectTab.Agenda, "tab-darbotvarke")]
     [InlineData(ProjectTab.Bills, "tab-projektai")]
     [InlineData(ProjectTab.Digests, "tab-suvestines")]
-    [InlineData(ProjectTab.Analytics, "tab-seimas-analitika")]
-    public void The_tab_row_marks_the_page_it_stands_on_and_links_the_other_three(ProjectTab current, string currentId)
+    public void The_tab_row_marks_the_page_it_stands_on_and_links_the_other_two(ProjectTab current, string currentId)
     {
         var tabs = Render<ProjectTabs>(p => p.Add(c => c.Current, current));
 
         var links = tabs.FindAll("#project-tabs a");
-        links.Select(a => a.GetAttribute("href")).ShouldBe(["/darbotvarke", "/projektai", "/suvestines", "/seimas/analitika"]);
-        links.Select(a => a.TextContent).ShouldBe(["Darbotvarkė", "Projektai", "Suvestinės", "Analitika"]);
+        links.Select(a => a.GetAttribute("href")).ShouldBe(["/darbotvarke", "/projektai", "/suvestines"]);
+        links.Select(a => a.TextContent).ShouldBe(["Darbotvarkė", "Projektai", "Suvestinės"]);
         tabs.FindAll("#project-tabs a[aria-current]").ShouldHaveSingleItem().Id.ShouldBe(currentId);
         tabs.Find($"#{currentId}").GetAttribute("aria-current").ShouldBe("page");
         tabs.Find("#project-tabs").GetAttribute("aria-label").ShouldBe("Projektai");
@@ -37,7 +37,6 @@ public sealed class MenuTests : BunitContext
     [InlineData("/darbotvarke", ProjectTab.Agenda)]
     [InlineData("projektai?rikiuoti=dalyviai", ProjectTab.Bills)]
     [InlineData("/suvestines/", ProjectTab.Digests)]
-    [InlineData("/seimas/analitika?metai=2026", ProjectTab.Analytics)]
     public void Each_tab_is_its_own_page(string path, ProjectTab tab) =>
         MenuSections.TabOf(path).ShouldBe(tab);
 
@@ -46,6 +45,7 @@ public sealed class MenuTests : BunitContext
     [InlineData("/seimas/balsavimai")]
     [InlineData("/seimas/balsavimai/123")]
     [InlineData("/suvestines/2026-11-16")]
+    [InlineData("/statistika")]
     [InlineData("/")]
     public void A_page_under_a_tab_is_no_tab_itself(string path) =>
         MenuSections.TabOf(path).ShouldBeNull();
@@ -61,7 +61,7 @@ public sealed class MenuTests : BunitContext
     [InlineData("/suvestines")]
     [InlineData("/suvestines/2026-11-16")]
     [InlineData("/suvestines/pristatymas")]
-    public void Projektai_is_current_on_the_four_pages_and_everything_under_them(string path)
+    public void Projektai_is_current_on_the_three_pages_and_everything_under_them(string path)
     {
         MenuSections.InProjects(path).ShouldBeTrue();
         MenuSections.InMps(path).ShouldBeFalse();
@@ -75,6 +75,7 @@ public sealed class MenuTests : BunitContext
     [InlineData("/suvestines/nustatymai/abcdefghijklmnopqrstuvwxyz")]
     [InlineData("/suvestines/kopijos/abcdefghijklmnopqrstuvwxyz")]
     [InlineData("/seimasx")]
+    [InlineData("/statistika")]
     public void Projektai_is_not_current_elsewhere(string path) =>
         MenuSections.InProjects(path).ShouldBeFalse();
 
@@ -90,6 +91,14 @@ public sealed class MenuTests : BunitContext
         MenuSections.InMps(path).ShouldBe(current);
 
     [Fact]
-    public void The_menu_item_opens_the_agenda() =>
+    public void The_first_tab_is_the_agenda() =>
         MenuSections.ProjectsHome.ShouldBe("/darbotvarke");
+
+    [Theory]
+    [InlineData("/statistika", true)]
+    [InlineData("/statistika/?metai=2026", true)]
+    [InlineData("/statistika", false)]
+    [InlineData("/darbotvarke", false)]
+    public void Statistika_is_current_on_the_statistics_page(string path, bool current) =>
+        MenuSections.InStatistics(path).ShouldBe(current);
 }

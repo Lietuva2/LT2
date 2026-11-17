@@ -877,15 +877,15 @@ body { padding-block-end: 4.5rem; }
 
 /* ---------- The menu, the account item, the footer and the tabs (design 8.21) ---------- */
 
-/* The menu stays on one line from 360 px: the brand, then "Projektai", "Seimo nariai" and "Prisijungti" or "Paskyra". Under
-   32rem the brand's name is read by screen readers only and the menu's type is the secondary size. These rules replace the
-   wrapping header above. */
+/* The menu stays on one line from 360 px: the brand, then "Projektai", "Seimo nariai", "Statistika" and "Prisijungti" or
+   "Paskyra". Under 32rem the brand's name is read by screen readers only and the menu's type is the secondary size. These
+   rules replace the wrapping header above. */
 .top { flex-wrap: nowrap; gap: var(--sp-3); }
 .top__brand { flex: none; }
 .top__nav { flex-wrap: nowrap; align-items: center; justify-content: flex-end; column-gap: var(--sp-5); min-inline-size: 0; }
-.top__nav > a, .account__toggle { white-space: nowrap; }
+.top__nav > a, .account__toggle, .drop__toggle { white-space: nowrap; }
 /* A page under a menu item (aria-current="true": a bill, a vote, a profile) is marked as its own page is. */
-.top__nav > a[aria-current] { border-bottom-color: var(--leaf); }
+.top__nav > a[aria-current], .drop__toggle[aria-current] { border-bottom-color: var(--leaf); }
 @media (max-width: 54rem) {
   .top__nav { column-gap: var(--sp-4); }
 }
@@ -897,21 +897,32 @@ body { padding-block-end: 4.5rem; }
   .top__nav { column-gap: var(--sp-3); font-size: var(--fs-1); }
 }
 
-/* "Paskyra": a disclosure (no script needed); its panel lies over the page under the item, at the right edge, at a readable
-   width and never wider than the window. js/lt2-account.js fills the name and the account's own links and closes it. */
-.account { position: relative; }
-.account__toggle {
+/* "Paskyra" and "Projektai": disclosures (no script needed); the panel lies over the page under the item ("Paskyra" at its
+   right edge, "Projektai" at its left), at a readable width and never wider than the window. js/lt2-account.js fills the
+   account's name and own links and closes both. */
+.account, .drop { position: relative; }
+.account__toggle, .drop__toggle {
   display: inline-flex; align-items: center; gap: var(--sp-2);
   padding-block: var(--sp-2); border-bottom: 4px solid transparent; cursor: pointer; list-style: none; font-weight: 600;
 }
-.account__toggle::-webkit-details-marker { display: none; }
-.account__toggle::marker { content: ""; }
-.account__toggle::after {
+.account__toggle::-webkit-details-marker, .drop__toggle::-webkit-details-marker { display: none; }
+.account__toggle::marker, .drop__toggle::marker { content: ""; }
+.account__toggle::after, .drop__toggle::after {
   content: ""; inline-size: 0.45em; block-size: 0.45em; margin-block-start: -0.25em;
   border: solid currentColor; border-width: 0 2px 2px 0; transform: rotate(45deg);
 }
-.account[open] > .account__toggle::after { margin-block-start: 0.2em; transform: rotate(-135deg); }
-.account__toggle:hover, .account[open] > .account__toggle { border-bottom-color: var(--slate); }
+.account[open] > .account__toggle::after, .drop[open] > .drop__toggle::after { margin-block-start: 0.2em; transform: rotate(-135deg); }
+.account__toggle:hover, .account[open] > .account__toggle, .drop__toggle:hover, .drop[open] > .drop__toggle { border-bottom-color: var(--slate); }
+.drop__panel {
+  position: absolute; inset-inline-start: 0; inset-block-start: calc(100% + var(--sp-2)); z-index: 30;
+  inline-size: max-content; min-inline-size: 12rem; max-inline-size: min(20rem, 100vw - 2rem);
+  padding: var(--sp-2) var(--sp-4); background: var(--sheet); color: var(--ink); border: 1px solid var(--rule);
+  box-shadow: 0 0.5rem 1.5rem rgb(0 0 0 / 0.2); font-size: var(--fs-1); white-space: normal;
+}
+.drop__links { display: flex; flex-direction: column; list-style: none; margin: 0; padding: 0; }
+.top__nav .drop__links a { display: block; padding: var(--sp-2) 0; color: var(--ink); text-decoration: none; font-weight: 600; border-bottom: 0; }
+.top__nav .drop__links a:hover { text-decoration: underline; }
+.top__nav .drop__links a[aria-current="page"] { text-decoration: underline; text-decoration-color: var(--leaf); text-decoration-thickness: 3px; text-underline-offset: 0.3em; }
 .account__panel {
   position: absolute; inset-inline-end: 0; inset-block-start: calc(100% + var(--sp-2)); z-index: 30;
   display: flex; flex-direction: column; gap: var(--sp-2);

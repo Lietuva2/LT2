@@ -1,17 +1,32 @@
 @inherits LayoutComponentBase
 @inject IStringLocalizer<PageText> T
+@inject IStringLocalizer<Lt2.Web.Client.UiText> U
 @inject Lt2.Api.Contracts.Meta.IMetaApi Meta
 @inject IStringLocalizer<Lt2.Web.Components.Feedback.FeedbackText> F
 @inject IConfiguration Configuration
 @inject NavigationManager Navigation
 
-@* Design 8.21: the menu is the logo, "Projektai" (opens the agenda; current on its three tabs and everything under them),
-   "Seimo nariai", and "Prisijungti" or the account item; one line from 360 px up. What has no place there is in the footer. *@
+@* Design 8.21: the menu is the logo, "Projektai" (a dropdown with its three tabs; current on them and everything under
+   them; owner, 2026-11-17), "Seimo nariai", "Statistika" (design 8.26, owner 2026-11-17), and "Prisijungti" or the account
+   item; one line from 360 px up. What has no place there is in the footer. *@
 <header class="page top">
     <a class="top__brand" href="/"><Logo /><span class="top__name">Lietuva 2.0</span></a>
     <nav class="top__nav" aria-label="@T["Nav.Label"]">
-        <a href="@MenuSections.ProjectsHome" id="nav-projects" aria-current="@Current(MenuSections.InProjects(Path), "darbotvarke")">@T["Nav.Appeals"]</a>
+        @* Like the account item: a disclosure that opens without script; js/lt2-account.js closes it on Escape, a press
+           outside and focus leaving. *@
+        <details class="drop" id="projects-menu" data-nav-menu>
+            <summary class="drop__toggle" id="nav-projects" aria-current="@(MenuSections.InProjects(Path) ? "true" : null)">@T["Nav.Appeals"]</summary>
+            <div class="drop__panel drop__panel--start">
+                <ul class="drop__links">
+                    @foreach (var (_, path, key) in MenuSections.Tabs)
+                    {
+                        <li><a href="@path" id="@("nav-tab-" + path.TrimStart('/'))" aria-current="@("/" + Path == path ? "page" : null)">@U[key]</a></li>
+                    }
+                </ul>
+            </div>
+        </details>
         <a href="/seimo-nariai" id="nav-mps" aria-current="@Current(MenuSections.InMps(Path), "seimo-nariai")">@T["Nav.Mps"]</a>
+        <a href="@MenuSections.Statistics" id="nav-statistics" aria-current="@(MenuSections.InStatistics(Path) ? "page" : null)">@T["Nav.Statistics"]</a>
         <AuthorizeView>
             <Authorized>
                 <AccountMenu />
@@ -27,6 +42,18 @@
 {
     <div class="page"><p class="note" role="note" id="invented-data">@T["Notice.InventedParliament"]</p></div>
 }
+
+<AuthorizeView>
+    <Authorized>
+        @* Design 8.5.1 (owner, 2026-11-17): an account whose address is an MP's official address, profile not taken over, is
+           told on every page, with the way to take it over. The served markup is the same for every member and hidden;
+           js/lt2-account.js reads the account's own GET /api/v1/me once per page load and shows it, with the MP's name, only
+           when the answer has mpOffer, never on the take-over page nor on the screen that holds the offer itself. *@
+        <div class="page" id="mp-offer-notice" data-mp-offer-notice data-skip="@($"{Lt2.Api.Contracts.Mps.MpRoutes.TakeoverPage} {Lt2.SharedKernel.AccountScreens.Taking}")" hidden>
+            <p class="note" role="note"><span data-mp-offer-text data-format="@T["Notice.MpOffer"]"></span>@(" ")<a href="@Lt2.SharedKernel.AccountScreens.MpOffer" id="mp-offer-notice-link">@T["Notice.MpOfferLink"]</a></p>
+        </div>
+    </Authorized>
+</AuthorizeView>
 
 <main class="page stack stack--loose">
     @Body
