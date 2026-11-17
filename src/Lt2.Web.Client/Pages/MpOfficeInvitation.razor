@@ -36,7 +36,7 @@
         {
             @* Not signed in, or a registration still to finish: the steps are here and come back to this page. *@
             <p class="note" id="office-sign-in">@L["MpOffice.SignInHere"]</p>
-            <SignInFlow ReturnTo="@_here" />
+            <div class="office-sign-in"><SignInFlow ReturnTo="@_here" /></div>
         }
         else
         {
