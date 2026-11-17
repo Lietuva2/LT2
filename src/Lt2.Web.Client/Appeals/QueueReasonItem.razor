@@ -9,7 +9,7 @@
     <div class="row">
         @if (!Panel)
         {
-            <span class="tag tag--ink num">@Reason.Bill.Number</span>
+            <a class="tag tag--ink num" href="@Lt2.Api.Contracts.Comments.BillTextLinks.ToReason(Reason.Bill.Number, Reason.Id)" title="@Reason.Bill.Title">@Reason.Bill.Number</a>
         }
         <span class="choice choice--@Reason.Side">@L["Reasons." + Reason.Side]</span>
         <span class="tag">@L[ModerationWords.StatusKey(Reason.Status, Reason.Seen)]</span>
