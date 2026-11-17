@@ -200,7 +200,8 @@ public sealed partial class CommentTests(AppealFlowTests.ModeratorFixture modera
         await Assertions.Expect(moderate).ToBeEnabledAsync(new() { Timeout = E2ESteps.Slow });
         await mod.Locator($"#komentaras-{comment:N}-more-actions").ClickAsync();
         await moderate.ClickAsync();
-        await mod.Locator($"#comment-action-hide-page-{comment:N}").ClickAsync();
+        // Design 8.3 (owner, 2026-11-17): "Paslėpti" is in the moderator's "Kiti veiksmai".
+        await E2ESteps.ChooseAsync(mod.Locator($"#comment-action-hide-page-{comment:N}"));
         await mod.Locator($"#comment-statement-page-{comment:N}").FillAsync("Bandymas: komentaras paslepiamas (E2E).");
         await mod.Locator($"#comment-action-submit-page-{comment:N}").ClickAsync();
         await Assertions.Expect(mod.Locator($"#komentaras-{comment:N}")).ToHaveCountAsync(0, new() { Timeout = E2ESteps.Slow });

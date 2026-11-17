@@ -14,7 +14,7 @@
 <section class="sheet sheet--quiet stack" aria-labelledby="restrict-title-@Key" id="restrict-@Key">
     @if (_view is { } view)
     {
-        <h4 id="restrict-title-@Key">@L.Format("Restrict.Title", view.DisplayName ?? L["Reasons.Anonymous"])</h4>
+        <ActionHeading Id="@($"restrict-title-{Key}")">@L.Format("Restrict.Title", view.DisplayName ?? L["Reasons.Anonymous"])</ActionHeading>
 
         <p class="label num">@L.Format("Restrict.Reasons", Display.Number(view.Reasons.Count))</p>
         <ul class="rows">

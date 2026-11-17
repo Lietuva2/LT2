@@ -52,7 +52,7 @@
                 else if (_open == p.Id)
                 {
                     <form class="sheet sheet--quiet stack stack--tight" @onsubmit="() => ActAsync(p.Id)" novalidate id="profile-action-form-@p.Id" aria-labelledby="profile-action-title-@p.Id">
-                        <h3 id="profile-action-title-@p.Id">@L["ProfileMod.Action." + _action]</h3>
+                        <ActionHeading Id="@($"profile-action-title-{p.Id}")" Level="3">@L["ProfileMod.Action." + _action]</ActionHeading>
                         <p class="small">@L["ProfileMod.Sentence." + _action]</p>
                         <div class="field @ErrorClass("statement")">
                             <label for="profile-statement-@p.Id">@L[_action == "keep" ? "Mod.Note.Reporters" : "OrgMod.Statement"]</label>
@@ -72,20 +72,7 @@
                 }
                 else
                 {
-                    <div class="actions" role="group" aria-label="@L["Mod.Actions"]">
-                        @if (Hidden)
-                        {
-                            <button type="button" class="btn" id="profile-action-restore-@p.Id" disabled="@(Locked || !p.Restorable)" @onclick="@(() => Open(p.Id, "restore"))">@L["ProfileMod.Action.restore"]</button>
-                        }
-                        else
-                        {
-                            <button type="button" class="btn" id="profile-action-keep-@p.Id" disabled="@Locked" @onclick="@(() => Open(p.Id, "keep"))">@L["ProfileMod.Action.keep"]</button>
-                            @if (p.About is not null && p.HiddenAt is null)
-                            {
-                                <button type="button" class="btn btn--plain" id="profile-action-hide-@p.Id" disabled="@Locked" @onclick="@(() => Open(p.Id, "hide"))">@L["ProfileMod.Action.hide"]</button>
-                            }
-                        }
-                    </div>
+                    <ModerationMenu Id="@($"profile-more-{p.Id}")" Primary="@(Hidden ? "restore" : "keep")" Choices="Choices(p)" Locked="Locked" OnChoose="action => Open(p.Id, action)" />
                 }
             </article>
         }
@@ -113,6 +100,15 @@
             Items = (await Profiles.GetModerationAsync()).Value;
         }
     }
+
+    /// <summary>
+    /// The shared menu (design 8.3, owner 2026-11-17): on the queue "Palikti" filled and "Paslėpti „Apie mane“" set apart while
+    /// there is a shown text; on the hidden list "Atkurti" alone, disabled once the person wrote another text.
+    /// </summary>
+    private IReadOnlyList<ModerationChoice> Choices(ProfileModerationResponse p) => Hidden
+        ? [new("restore", $"profile-action-restore-{p.Id}", L["ProfileMod.Action.restore"], Disabled: !p.Restorable)]
+        : [new("keep", $"profile-action-keep-{p.Id}", L["ProfileMod.Action.keep"]),
+            .. (p.About is not null && p.HiddenAt is null ? new ModerationChoice[] { new("hide", $"profile-action-hide-{p.Id}", L["ProfileMod.Action.hide"], Apart: true) } : [])];
 
     private void Open(Guid id, string action)
     {

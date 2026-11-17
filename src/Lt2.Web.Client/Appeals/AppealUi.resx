@@ -179,6 +179,10 @@
 <data name="Mod.Title" xml:space="preserve"><value>Moderavimas</value></data>
   <data name="Mod.Lead" xml:space="preserve"><value>Projektai ir argumentai, kuriems reikia jūsų sprendimo. Kiekvienas veiksmas registruojamas; argumento autorius gauna jūsų paaiškinimą.</value></data>
 <data name="Mod.Actions" xml:space="preserve"><value>Veiksmai</value></data>
+<data name="Mod.More" xml:space="preserve"><value>Kiti veiksmai</value></data>
+<data name="Mod.Group.description" xml:space="preserve"><value>Aprašymas</value></data>
+<data name="Mod.Group.seimas" xml:space="preserve"><value>Seime</value></data>
+<data name="Mod.Group.digests" xml:space="preserve"><value>Suvestinės</value></data>
 <data name="Mod.Note.Optional" xml:space="preserve"><value>Pastaba autoriui (nebūtina)</value></data>
 <data name="Mod.Note.Reporters" xml:space="preserve"><value>Paaiškinimas pranešusiems (nebūtinas)</value></data>
 <data name="Mod.Note.Reporters.Hint" xml:space="preserve"><value>Jį gaus pranešimą pateikę nariai el. paštu.</value></data>

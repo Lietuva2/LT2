@@ -239,9 +239,8 @@ public sealed class AppealFlowTests(AppealFlowTests.ModeratorFixture moderator) 
 
         // Write (or correct) the description: shown at once with its label.
         var description = $"Projektas keičia atliekų tvarkymo rinkliavos nustatymą ({run}). {Marker}";
-        var describe = panel.Locator("button[id^='action-describe-']");
-        await Assertions.Expect(describe).ToBeEnabledAsync(new() { Timeout = 60_000 });
-        await describe.ClickAsync();
+        // Design 8.3 (owner, 2026-11-17): "Rašyti aprašymą" is in the panel's "Kiti veiksmai".
+        await E2ESteps.ChooseAsync(panel.Locator("button[id^='action-describe-']"));
         await panel.Locator("textarea[id^='describe-']:not([id^='describe-source'])").FillAsync(description);
         await panel.Locator("textarea[id^='statement-']").FillAsync("Projektas darbotvarkėje, aprašymo dar nebuvo.");
         await panel.Locator("button[id^='action-submit-']").ClickAsync();
@@ -267,7 +266,9 @@ public sealed class AppealFlowTests(AppealFlowTests.ModeratorFixture moderator) 
         await open.ClickAsync();
         var moderate = shown.Locator(".moderate");
         await Assertions.Expect(moderate).ToBeVisibleAsync(new() { Timeout = 10_000 });
-        await Assertions.Expect(moderate.Locator("button[id^='action-']")).ToHaveTextAsync(["Palikti", "Paslėpti", "Riboti autoriaus rašymą"], new() { Timeout = 10_000 });
+        // Design 8.3 (owner, 2026-11-17): "Palikti" filled, the rest in "Kiti veiksmai", "Paslėpti" last.
+        await Assertions.Expect(moderate.Locator("button[id^='action-']")).ToHaveTextAsync(["Palikti", "Riboti autoriaus rašymą", "Paslėpti"], new() { Timeout = 10_000 });
+        await Assertions.Expect(moderate.Locator("button.btn[id^='action-keep-']")).ToBeVisibleAsync();
         await moderate.ScreenshotAsync(new() { Path = Shot("moderate-argument-1280.png") });
         await ActAsync(moderate, "hide", "Bandymas: argumentas paslepiamas puslapyje.");
         await Assertions.Expect(mod.Locator("#reasons-for .said").Filter(new() { HasText = shownText })).ToHaveCountAsync(0, new() { Timeout = 30_000 });
@@ -366,7 +367,9 @@ public sealed class AppealFlowTests(AppealFlowTests.ModeratorFixture moderator) 
         await Assertions.Expect(item).ToContainTextAsync("Sukurta DI · žmonių neperžiūrėta", new() { Timeout = 60_000 });
         await Assertions.Expect(item).ToContainTextAsync("Aprašymas netikslus ar klaidingas");
         await Assertions.Expect(item).ToContainTextAsync(run);
-        await Assertions.Expect(item.Locator("[role=group] button").Nth(1)).ToHaveTextAsync("Patvirtinti aprašymą", new() { Timeout = 60_000 });
+        // Design 8.3 (owner, 2026-11-17): reported, so "Palikti" is the filled button; "Patvirtinti aprašymą" heads "Aprašymas" in "Kiti veiksmai".
+        await Assertions.Expect(item.Locator("button.btn[id^='action-keep-']")).ToHaveTextAsync("Palikti", new() { Timeout = 60_000 });
+        await Assertions.Expect(item.Locator(".menu__group").First.Locator("button.menu__item").First).ToHaveTextAsync("Patvirtinti aprašymą");
         await E2ESteps.NoSidewaysScrollAsync(mod);
         await ActAsync(item, "confirm");
         await Assertions.Expect(item.GetByText("Atlikta: aprašymas patvirtintas.")).ToBeVisibleAsync(new() { Timeout = 30_000 });
@@ -402,7 +405,7 @@ public sealed class AppealFlowTests(AppealFlowTests.ModeratorFixture moderator) 
         await panel.ScreenshotAsync(new() { Path = Shot("panel-description-report-1280.png") });
 
         // The form starts from the address the record has; a refused address is said at the field and nothing is saved.
-        await describe.ClickAsync();
+        await E2ESteps.ChooseAsync(describe);
         var address = panel.Locator("input[id^='describe-url-']");
         await Assertions.Expect(address).ToHaveValueAsync(new System.Text.RegularExpressions.Regex("^https://e-seimas\\.lrs\\.lt/"));
         var corrected = $"Projektas leistų savivaldybėms nustatyti vietinių rinkliavų dydį pagal sąnaudas; taikoma nuo 2027 metų ({run}). {Marker}";
@@ -578,9 +581,7 @@ public sealed class AppealFlowTests(AppealFlowTests.ModeratorFixture moderator) 
         var item = mod.Locator("article").Filter(new() { Has = mod.Locator(".said > p.bubble", new() { HasTextString = Text }) });
         await Assertions.Expect(item).ToBeVisibleAsync(new() { Timeout = 60_000 });
         // "Riboti autoriaus rašymą" is one of the item's actions (design 8.3); the length is the two-part switch.
-        var open = item.Locator("button[id^='action-restrict-']");
-        await Assertions.Expect(open).ToBeEnabledAsync(new() { Timeout = 60_000 });
-        await open.ClickAsync();
+        await E2ESteps.ChooseAsync(item.Locator("button[id^='action-restrict-']"));
         await Assertions.Expect(item.GetByText("Riboti rašymą: Ribojama Autorė")).ToBeVisibleAsync();
         await Assertions.Expect(item.Locator("button[id^='action-hide-']")).ToHaveCountAsync(0, new() { Timeout = 5_000 });
         await Assertions.Expect(item.Locator("input[id^='restrict-until-']")).ToHaveAttributeAsync("type", "text");
@@ -727,12 +728,10 @@ public sealed class AppealFlowTests(AppealFlowTests.ModeratorFixture moderator) 
     /// </summary>
     internal const string Marker = "(E2E bandymas)";
 
-    /// <summary>An item's action: its button opens only its own fields; then its submit button.</summary>
+    /// <summary>An item's action, the filled button or one in "Kiti veiksmai": it opens only its own fields; then its submit button.</summary>
     private static async Task ActAsync(ILocator item, string action, string? statement = null)
     {
-        var open = item.Locator($"button[id^='action-{action}-']").First;
-        await Assertions.Expect(open).ToBeEnabledAsync(new() { Timeout = 60_000 });
-        await open.ClickAsync();
+        await E2ESteps.ChooseAsync(item.Locator($"button[id^='action-{action}-']").First);
         await Assertions.Expect(item.Locator("p[id^='action-sentence-']").First).ToBeVisibleAsync();
         if (statement is not null)
         {

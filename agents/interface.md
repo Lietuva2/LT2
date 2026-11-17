@@ -18,7 +18,14 @@ Read before changing a page, a component or an island. The rules behind it are d
   ("Man svarbu", `CommentThread`'s "Aptarimas" summary, "Sutinku" as `.act__item`) and `<MoreMenu>` ("⋯", the browser's
   popover, placed by `js/lt2-menus.js`) whose `button.menu__item`s close it (`popovertargetaction="hide"`) and open their form
   below the row as `div.act__panel`; `CommentThread` renders `details.discuss` (summary only) plus `.discuss__panel`, which
-  the row lays below itself. Icons are `<Icon>` (inline SVG, currentColor). A link to copy is
+  the row lays below itself. **A moderator's actions on an item (design 8.3, "The screen", owner 2026-11-17)** are always
+  `<ModerationMenu>` (`Lt2.Web.Client/Appeals`): the host passes its offered actions in order as `ModerationChoice`s (element
+  id `…action-{action}-{id}`, the label, a `Group` heading for a bill's record, `Apart` for hiding or blocking) and the
+  `Primary` one (none when nothing stands out); it renders the filled button and "Kiti veiksmai" (`button.menu__trigger`,
+  the same popover as "⋯", never disabled; items disabled until the island runs; `data-action` on every button for tests),
+  and the chosen action's form opens in place of the row with its title as `<ActionHeading>`, which takes the focus.
+  `ModerationActions`, `CommentModerationActions`, `OrgModerationActions`, `ResponseModerationView` and
+  `ProfileModerationView` use it; E2E tests choose an action with `E2ESteps.ChooseAsync`. Icons are `<Icon>` (inline SVG, currentColor). A link to copy is
   `<CopyLink>`; "Atkurti" is `<RestoreForm>`; a queued argument is `<QueueReasonItem>`, a queued statement
   `<StatementQueueItem>`; the positions consent before a first side is `<PositionConsentForm>`; the bill page's islands
   share the caller's answers through `MyBillState`, the front page's through `MyAgendaState` (its `Changed` event tells

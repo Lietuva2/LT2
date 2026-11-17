@@ -73,9 +73,9 @@ public sealed partial class IslandsBeforeStartTests(AppealFlowTests.ModeratorFix
                   for (const el of document.querySelectorAll('[data-lt2-island]:is(input, textarea, select, button)')) {
                     if (el.type === 'hidden' || el.matches(':disabled')) continue;
                     // A button that only shows a popover (the action row's "⋯", design 8.16.1; a hint's trigger, design 8.15, as
-                    // the one beside "Sekti" since 2026-11-17) works without script, as a <details> summary does; the menu's
-                    // own items must be disabled like any other control.
-                    if (el.matches('button.act__more[popovertarget]:not([popovertargetaction]), button.hint__trigger[popovertarget]:not([popovertargetaction])')) continue;
+                    // the one beside "Sekti" since 2026-11-17; a moderator's "Kiti veiksmai", design 8.3) works without script, as a
+                    // <details> summary does; the menu's own items must be disabled like any other control.
+                    if (el.matches('button:is(.act__more, .hint__trigger, .menu__trigger)[popovertarget]:not([popovertargetaction])')) continue;
                     enabled.push(el.tagName.toLowerCase() + (el.id ? '#' + el.id : '') + ' "' + (el.textContent || el.getAttribute('aria-label') || el.name || '').trim().slice(0, 40) + '"');
                   }
                   const notes = [...document.querySelectorAll('noscript')].filter(n => n.textContent.includes('JavaScript')).length;

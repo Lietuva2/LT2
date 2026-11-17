@@ -3,7 +3,8 @@
 @inherits InteractiveBase<AppealUi>
 @inject ICommentModerationApi Moderation
 
-@* A moderator's actions on one comment (design 8.23.8), each its own control with one sentence on what it does: on a shown
+@* A moderator's actions on one comment (design 8.23.8), in the shared ModerationMenu (design 8.3, owner 2026-11-17), each
+   opening its own form with one sentence on what it does: on a shown
    comment "Paslėpti" (a statement, sent to the author), "Palikti" when it has open reports (an optional note; nobody is told)
    and "Riboti autoriaus rašymą" (the writer is reached through the comment); on a hidden one "Atkurti" (a statement, told as a
    hide is). The same component in the list (CommentQueueItem) and on the bill's page; IdPrefix keeps the ids apart. *@
@@ -12,12 +13,7 @@
     {
         @if (_open is null)
         {
-            <div class="actions" role="group" aria-label="@L["Mod.Actions"]">
-                @foreach (var action in Offered)
-                {
-                    <button type="button" class="@(action == Offered[0] ? "btn" : "btn btn--plain")" id="comment-action-@action-@Key" disabled="@Locked" @onclick="() => Open(action)">@L["Comments.Mod.Action." + action]</button>
-                }
-            </div>
+            <ModerationMenu Id="@($"comment-more-{Key}")" Choices="Choices" Primary="@Primary" Locked="Locked" OnChoose="Open" />
         }
         else if (_open == "restrict")
         {
@@ -26,7 +22,7 @@
         else
         {
             <form class="sheet sheet--quiet stack stack--tight" @onsubmit="SubmitAsync" novalidate aria-labelledby="comment-action-title-@Key" id="comment-action-form-@Key">
-                <h4 id="comment-action-title-@Key">@L["Comments.Mod.Action." + _open]</h4>
+                <ActionHeading Id="@($"comment-action-title-{Key}")">@L["Comments.Mod.Action." + _open]</ActionHeading>
                 <p class="small">@L["Comments.Mod.Sentence." + _open]</p>
                 <div class="field @ErrorClass("statement")">
                     <label for="comment-statement-@Key">@(_open == "keep" ? L["Mod.Note.Reporters"] : L["Mod.Statement.Required"])</label>
@@ -69,9 +65,16 @@
 
     private string Key => IdPrefix + Id.ToString("N");
 
+    /// <summary>In the order shown: the main one first, hiding set apart at the end (owner, 2026-11-17).</summary>
     private IReadOnlyList<string> Offered => Status == "hidden"
         ? ["restore", "restrict"]
-        : [.. (Reported ? new[] { "keep" } : []), "hide", "restrict"];
+        : [.. (Reported ? new[] { "keep" } : []), "restrict", "hide"];
+
+    /// <summary>The filled button: "Atkurti" on a hidden comment, "Palikti" on a reported one; otherwise none.</summary>
+    private string? Primary => Offered[0] is "keep" or "restore" ? Offered[0] : null;
+
+    private IReadOnlyList<ModerationChoice> Choices =>
+        [.. Offered.Select(a => new ModerationChoice(a, $"comment-action-{a}-{Key}", L["Comments.Mod.Action." + a], Apart: a == "hide"))];
 
     private void Open(string action)
     {

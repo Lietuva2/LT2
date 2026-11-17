@@ -5,8 +5,8 @@
 @inject IMpResponseModerationApi Moderation
 
 @* MPs' responses for the moderators (design 8.5.5, as statements, 8.14.9): on the queue (Hidden = false) those flagged by
-   pre-screening and not yet seen, or reported, with "Palikti" and "Paslėpti" (a statement shown in the response's place and
-   sent to the MP); on the list of hidden items (Hidden = true) the hidden ones with "Atkurti" while the bill is open. A
+   pre-screening and not yet seen, or reported, with "Palikti" and, in the shared ModerationMenu (design 8.3, owner
+   2026-11-17), "Paslėpti" (a statement shown in the response's place and sent to the MP); on the list of hidden items (Hidden = true) the hidden ones with "Atkurti" while the bill is open. A
    response is public at once: the queue holds nothing back. Never who wrote it. *@
 @if (Items is { } items)
 {
@@ -40,7 +40,7 @@
                     else if (_open == r.Id)
                     {
                         <form class="sheet sheet--quiet stack stack--tight" @onsubmit="() => ActAsync(r.Id)" novalidate id="response-action-form-@r.Id" aria-labelledby="response-action-title-@r.Id">
-                            <h3 id="response-action-title-@r.Id">@L["RespMod.Action." + _action]</h3>
+                            <ActionHeading Id="@($"response-action-title-{r.Id}")" Level="3">@L["RespMod.Action." + _action]</ActionHeading>
                             <p class="small">@L["RespMod.Sentence." + _action]</p>
                             <div class="field @ErrorClass("statement")">
                                 <label for="response-statement-@r.Id">@L[_action == "keep" ? "Mod.Note.Reporters" : "OrgMod.Statement"]</label>
@@ -60,10 +60,8 @@
                     }
                     else
                     {
-                        <div class="actions" role="group" aria-label="@L["Mod.Actions"]">
-                            <button type="button" class="btn" id="response-action-keep-@r.Id" disabled="@Locked" @onclick="@(() => Open(r.Id, "keep"))">@L["RespMod.Action.keep"]</button>
-                            <button type="button" class="btn btn--plain" id="response-action-hide-@r.Id" disabled="@Locked" @onclick="@(() => Open(r.Id, "hide"))">@L["RespMod.Action.hide"]</button>
-                        </div>
+                        <ModerationMenu Id="@($"response-more-{r.Id}")" Primary="keep" Locked="Locked" OnChoose="action => Open(r.Id, action)"
+                                        Choices="Choices(r.Id)" />
                     }
                 </article>
             }
@@ -123,6 +121,10 @@
             Items = (await Moderation.GetAsync()).Value;
         }
     }
+
+    /// <summary>"Palikti" the filled button, "Paslėpti" set apart in the menu (owner, 2026-11-17).</summary>
+    private IReadOnlyList<ModerationChoice> Choices(Guid id) =>
+        [new("keep", $"response-action-keep-{id}", L["RespMod.Action.keep"]), new("hide", $"response-action-hide-{id}", L["RespMod.Action.hide"], Apart: true)];
 
     private void Open(Guid id, string action)
     {
