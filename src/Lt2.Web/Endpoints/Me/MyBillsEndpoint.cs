@@ -16,7 +16,8 @@ namespace Lt2.Web.Endpoints.Me;
 /// </summary>
 internal static class MyBillsEndpoint
 {
-    public static void Map(IEndpointRouteBuilder api) =>
+    public static void Map(IEndpointRouteBuilder api)
+    {
         api.MapGet(ApiEndpoints.Relative(ApiRoutes.Me.Bills), HandleAsync)
             .WithName("GetMyBills")
             .WithTags("Me")
@@ -24,6 +25,17 @@ internal static class MyBillsEndpoint
             .RequireRateLimiting(RateLimitPolicies.OwnRead)
             .Produces<MyBillsResponse>()
             .ProducesValidationProblem();
+
+        // Design 8.11.8: a member opened a bill's page. A write (antiforgery and the terms gate like every one), sent once per page
+        // from the browser; under the own-answers limit, as it is the page's own answer about the person.
+        api.MapPost(ApiEndpoints.Relative(ApiRoutes.Me.BillSeen), async (string number, ClaimsPrincipal user, MyBillsReads reads, CancellationToken ct) =>
+                TypedResults.Ok(await reads.SeenAsync(user.UserId()!.Value, number, ct)))
+            .WithName("SeenBill")
+            .WithTags("Me")
+            .RequireAuthorization(Policies.Member)
+            .RequireRateLimiting(RateLimitPolicies.OwnRead)
+            .Produces<BillSeenResponse>();
+    }
 
     private static async Task<IResult> HandleAsync(
         string? numbers, ClaimsPrincipal user, IValidator<MyBillsQuery> validator, MyBillsReads reads, ErrorMapper errors, CancellationToken ct)

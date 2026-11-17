@@ -475,6 +475,10 @@ namespace Lt2.Notifications.Infrastructure.Migrations
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("created_at");
 
+                    b.Property<DateTimeOffset>("LastSeenAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("last_seen_at");
+
                     b.HasKey("UserId", "Kind", "Key")
                         .HasName("pk_follow");
 

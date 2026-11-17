@@ -31,7 +31,8 @@ else if (_view is { Items.Count: > 0 } view)
             {
                 var item = view.Items[i];
                 <li id="@ResponsePaging.ItemId(i + 1)">
-                    <MpResponseItem Response="item.Response" Mp="item.Mp" IdPrefix="@($"atsakymas-{i + 1}-")">
+                    <MpResponseItem Response="item.Response" Mp="item.Mp" IdPrefix="@($"atsakymas-{i + 1}-")"
+                                    Mark="@(item.Response.Status == "published" ? Mark(item.Response.Id) : null)">
                         @if (_threads.GetValueOrDefault(item.Response.Id) is { } thread)
                         {
                             @* Design 8.23.6: "Aptarimas" under a shown response (a withdrawn one read-only), an island of its own here. *@
@@ -66,6 +67,12 @@ else if (_view is { Items.Count: > 0 } view)
 }
 
 @code {
+    /// <summary>
+    /// Design 8.11.8: "Nauja" beside a response the reader has not seen, and its place under "Rodyti tik naujus", from the
+    /// browser only (an island), so this part stays the same for everyone.
+    /// </summary>
+    private RenderFragment Mark(Guid id) => @<Lt2.Web.Client.Appeals.NewMark Number="@Number" Id="id" MarksOut="true" @rendermode="InteractiveWebAssembly" />;
+
     private BillMpResponsesResponse? _view;
     private int _shown;
 

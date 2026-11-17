@@ -15,6 +15,12 @@ internal sealed class Follow
     public string Key { get; set; } = "";
 
     public DateTimeOffset CreatedAt { get; set; }
+
+    /// <summary>
+    /// A followed bill only (design 8.11.8): when the person last opened the bill's page, from the follow's own moment; what was
+    /// written after it is new to them. Nothing about any other page; goes with the follow.
+    /// </summary>
+    public DateTimeOffset LastSeenAt { get; set; }
 }
 
 internal static class FollowKinds

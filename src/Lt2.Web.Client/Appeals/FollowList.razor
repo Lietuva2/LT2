@@ -39,6 +39,11 @@
                                     @L["Follows.NothingYet"]
                                 }
                             </span>
+                            @if (b.New is { } news)
+                            {
+                                @* Design 8.11.8: what was written since the member last opened the bill's page. *@
+                                <span class="small num" id="follows-new-@b.Number">@NewsLine.Of(L, news)</span>
+                            }
                         </div>
                         <div class="rows__side">
                             <button type="button" class="btn btn--plain" disabled="@Locked" @onclick="() => UnfollowBillAsync(b.Number)">@L["Follow.Unfollow"]</button>

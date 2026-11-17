@@ -1,0 +1,45 @@
+@using Microsoft.Extensions.Localization
+@implements IDisposable
+@inject MyBillState State
+@inject IStringLocalizer<AppealUi> L
+
+@* "Nauja" beside a text written since the person last opened the bill's page (design 8.11.8): an argument, a statement, an MP's
+   response or a comment, never the person's own (the server decides). Inside an island it renders with it; under the
+   server-rendered responses it is an island of its own. There, while "Rodyti tik naujus" is on and the response neither is new
+   nor has new comments, it also leaves an empty marker the stylesheet hides the response's item by (`.new-out`; `.new-keep`
+   for one that stands, so a part with none standing goes whole), as the server part cannot be filtered from the browser otherwise. Nothing while the server prerenders. *@
+@if (State.IsNew(Number, Id))
+{
+    <span class="tag tag--brand tag--new" id="new-@Id">@L["News.Tag"]</span>
+}
+@if (MarksOut && State.OnlyNew(Number))
+{
+    <span class="@(State.Keeps(Number, Id) ? "new-keep" : "new-out")" hidden></span>
+}
+
+@code {
+    [Parameter, EditorRequired] public string Number { get; set; } = "";
+
+    [Parameter, EditorRequired] public Guid Id { get; set; }
+
+    /// <summary>On a server-rendered item: say when the item stands out of "Rodyti tik naujus".</summary>
+    [Parameter] public bool MarksOut { get; set; }
+
+    protected override void OnInitialized()
+    {
+        if (RendererInfo.IsInteractive)
+        {
+            State.NewsChanged += OnNewsChanged;
+        }
+    }
+
+    public void Dispose() => State.NewsChanged -= OnNewsChanged;
+
+    private void OnNewsChanged(string number)
+    {
+        if (string.Equals(number, Number, StringComparison.OrdinalIgnoreCase))
+        {
+            _ = InvokeAsync(StateHasChanged);
+        }
+    }
+}

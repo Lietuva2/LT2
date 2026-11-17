@@ -987,4 +987,18 @@
   <data name="Threshold.Aria" xml:space="preserve"><value>{0} dalyvių iš {1}</value></data>
   <data name="Sides.Nobody" xml:space="preserve"><value>Dėl šio projekto dar niekas nenurodė, ko prašo Seimo narių.</value></data>
   <data name="Surge.Note" xml:space="preserve"><value>Per paskutines {0} valandas {1} % pozicijų pateikė paskyros, sukurtos per tą patį laiką. Skaičius „senesnės nei 30 d.“ jų neapima.</value></data>
+  <data name="News.Tag" xml:space="preserve"><value>Nauja</value></data>
+  <data name="News.OnlyNew" xml:space="preserve"><value>Rodyti tik naujus</value></data>
+  <data name="News.Reasons.One" xml:space="preserve"><value>{0} naujas argumentas</value></data>
+  <data name="News.Reasons.Few" xml:space="preserve"><value>{0} nauji argumentai</value></data>
+  <data name="News.Reasons.Many" xml:space="preserve"><value>{0} naujų argumentų</value></data>
+  <data name="News.Comments.One" xml:space="preserve"><value>{0} naujas komentaras</value></data>
+  <data name="News.Comments.Few" xml:space="preserve"><value>{0} nauji komentarai</value></data>
+  <data name="News.Comments.Many" xml:space="preserve"><value>{0} naujų komentarų</value></data>
+  <data name="News.Statements.One" xml:space="preserve"><value>{0} nauja organizacijos pozicija</value></data>
+  <data name="News.Statements.Few" xml:space="preserve"><value>{0} naujos organizacijų pozicijos</value></data>
+  <data name="News.Statements.Many" xml:space="preserve"><value>{0} naujų organizacijų pozicijų</value></data>
+  <data name="News.Responses.One" xml:space="preserve"><value>{0} naujas atsakymas</value></data>
+  <data name="News.Responses.Few" xml:space="preserve"><value>{0} nauji atsakymai</value></data>
+  <data name="News.Responses.Many" xml:space="preserve"><value>{0} naujų atsakymų</value></data>
 </root>

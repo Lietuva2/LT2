@@ -327,6 +327,9 @@ internal sealed class HttpMyBillsApi(ApiHttp http) : IMyBillsApi
         ArgumentNullException.ThrowIfNull(query);
         return http.SendAsync<MyBillsResponse>(HttpMethod.Get, ApiRoutes.Me.Bills + "?" + query.ToQueryString(), null, cancellationToken);
     }
+
+    public Task<ApiResult<BillSeenResponse>> SeenAsync(string number, CancellationToken cancellationToken = default) =>
+        http.SendAsync<BillSeenResponse>(HttpMethod.Post, ApiRoutes.Me.BillSeenOf(number), null, cancellationToken);
 }
 
 /// <summary>The browser's <see cref="IUsageApi"/> (design 8.27).</summary>

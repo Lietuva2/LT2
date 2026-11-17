@@ -71,6 +71,64 @@ public sealed class MyBillState(IAppealsApi appeals, IModerationApi moderation)
         records.Remove(number);
     }
 
+    private readonly Dictionary<string, NewTexts> news = new(StringComparer.OrdinalIgnoreCase);
+    private readonly HashSet<string> onlyNew = new(StringComparer.OrdinalIgnoreCase);
+
+    /// <summary>
+    /// What is new on the bill to the person (design 8.11.8) changed, or "Rodyti tik naujus" was switched: every island of the
+    /// page showing that bill renders its marks and its filter again. The bill's number.
+    /// </summary>
+    public event Action<string>? NewsChanged;
+
+    /// <summary>
+    /// The texts written on the bill since the person last opened its page (design 8.11.8), as the visit's own write answered
+    /// (<c>WhatsNew</c> sends it once per page, in the browser only); null before that, for a visitor and on a bill not followed.
+    /// </summary>
+    public NewTexts? News(string number) => news.GetValueOrDefault(number);
+
+    /// <summary>The moment the person last opened the bill's page before this visit; what is newer is marked "Nauja".</summary>
+    public DateTimeOffset? NewSince(string number) => News(number)?.Since;
+
+    /// <summary>"Rodyti tik naujus" is on for the bill: only on the page being read, never stored (design 8.22.1).</summary>
+    public bool OnlyNew(string number) => onlyNew.Contains(number) && News(number) is { Any: true };
+
+    /// <summary>Whether a text (an argument, a statement, a response) stands while "Rodyti tik naujus" is as it is.</summary>
+    public bool Keeps(string number, Guid id) => !OnlyNew(number) || News(number)!.Keeps(id);
+
+    /// <summary>Whether a text is new to the person (a "Nauja" mark beside it).</summary>
+    public bool IsNew(string number, Guid id) => News(number)?.IsNew(id) == true;
+
+    /// <summary>Keeps the visit's answer (null: nothing, or forget an earlier visit's) and tells the page's islands.</summary>
+    public void SetNews(string number, NewTexts? answer)
+    {
+        if (answer is null)
+        {
+            news.Remove(number);
+            onlyNew.Remove(number);
+        }
+        else
+        {
+            news[number] = answer;
+        }
+
+        NewsChanged?.Invoke(number);
+    }
+
+    /// <summary>"Rodyti tik naujus" switched on or off by the person.</summary>
+    public void ShowOnlyNew(string number, bool on)
+    {
+        if (on)
+        {
+            onlyNew.Add(number);
+        }
+        else
+        {
+            onlyNew.Remove(number);
+        }
+
+        NewsChanged?.Invoke(number);
+    }
+
     private static Task<T?> Cached<T>(Dictionary<string, Task<T?>> cache, string key, Func<Task<T?>> fetch)
         where T : class
     {

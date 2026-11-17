@@ -33,7 +33,7 @@ public static class OrganisationWords
     /// The genitive after a number (Lithuanian): singular after a number ending in 1 but not 11 ("21 dalyvio"), plural
     /// otherwise ("1 000 dalyvių", "11 dalyvių"). The goal line uses it: "Siekiame {N} dalyvių".
     /// </summary>
-    public static bool GenitiveSingular(int n) => Math.Abs(n) % 10 == 1 && Math.Abs(n) % 100 != 11;
+    public static bool GenitiveSingular(int n) => NumberForms.Of(n) == NumberForm.One;
 
     public static string GoalKey(int goal) => GenitiveSingular(goal) ? "Org.Goal.One" : "Org.Goal.Many";
 

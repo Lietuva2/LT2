@@ -258,7 +258,8 @@ pre-merge run found.
   share the caller's answers through `MyBillState`, the front page's through `MyAgendaState` (its `Changed` event tells
   the others after a member's action). **An action never reloads the page (owner, 2026-11-17):** on a bill's page the island
   that acted calls `MyBillState.Announce` (`byModerator` for a moderator's action) and the others read their part again
-  (`Changed`); the counts, the threshold's progress and the share line are islands on `LiveRecordBase` (`SideFigures`,
+  (`Changed`); what is new to the reader (design 8.11.8) is `MyBillState.News`/`NewSince`, set once per page by `WhatsNew`,
+  with "Rodyti tik naujus" as `OnlyNew`/`Keeps` and `NewsChanged` telling the islands; the counts, the threshold's progress and the share line are islands on `LiveRecordBase` (`SideFigures`,
   `ThresholdProgress`, `ShareLine`) that take the bill's live answer; where the server's part of a page changes (a moderator's
   action, an organisation's profile, an MP's response) the island calls `Navigation.Refresh()`, which reads the page again in
   place and gives the islands new parameters (`FollowButton` takes its count from them again). A full load
@@ -679,6 +680,17 @@ page's "Balsuota".
   side, then `IFollows.FollowBillAsync`), on the bill's page and in a front-page row alike. The side is never refused or
   undone because the follow failed. Changing a side adds nothing, withdrawing it keeps the follow, "Nebesekti" keeps the
   side; sides from before were not backfilled. The follow row holds nothing about the side.
+- **What is new since the last visit (design 8.11.8, owner 2026-11-17).** A bill's follow keeps `last_seen_at` (from the
+  follow's own time; goes with the follow and the account, in the export; nothing for bills not followed or any other
+  page). The bill page's island `WhatsNew` (above the texts, nothing in the served HTML) sends one write once interactive,
+  `POST /me/bills/{number}/seen` (`MyBillsReads.SeenAsync`, `own-read` limit): on a followed bill it keeps now
+  (`FollowRules.Seen`) and answers the moment before with the new texts by id, on another bill nothing. What is new is
+  Appeals' `NewsRules` through `IBillNews` (SharedKernel): shown texts made public or changed after the moment, never hidden
+  ones, never the member's own (their organisations' and their MP's included). `NewMark` shows "Nauja" (inside the islands,
+  and as its own island on each server-rendered response); "Rodyti tik naujus" (a plain checkbox) leaves only new texts and
+  those with new comments, their discussions open, the responses hidden by the stylesheet from `NewMark`'s `.new-out`
+  marker. "Jūsų projektai" and the follow list show the counts (`BillNewsCountsResponse`, `NewsLine` with `NumberForms`:
+  "3 nauji argumentai · 5 nauji komentarai"), one read per list.
 - Taking, changing or withdrawing a side, following and unfollowing (bills, MPs, organisations), "Man svarbu" and changing
   the display name share one per-account request limit, `RateLimits:Participation` (60 a minute): a guard against a runaway script, not a rule.
 - Links in emails: a message carries the site path, and the template makes it a full address with

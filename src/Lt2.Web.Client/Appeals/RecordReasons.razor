@@ -32,14 +32,15 @@
         <div class="pair pair--reasons">
             @foreach (var side in AppealLimits.Sides)
             {
-                var all = record.Reasons.Where(r => r.Side == side).ToList();
+                // Design 8.11.8: under "Rodyti tik naujus" only new arguments and those whose discussion has new comments, all of them.
+                var all = record.Reasons.Where(r => r.Side == side && State.Keeps(Number, r.Id)).ToList();
                 <div class="stack" id="reasons-@side">
                     <h3><span class="choice choice--@side">@L["Reasons." + side]</span></h3>
-                    @if (all.Count == 0)
+                    @if (all.Count == 0 && !OnlyNew)
                     {
                         <p class="small">@L["Reasons.None"]</p>
                     }
-                    @foreach (var reason in _showAll ? all : all.Take(Shown))
+                    @foreach (var reason in _showAll || OnlyNew ? all : all.Take(Shown))
                     {
                         <div class="said @(LinkedReason == reason.Id ? "said--linked" : null)" id="@BillTextLinks.ReasonElement(reason.Id)" @key="reason.Id">
                             @* The name first, then the text, then the action row (owner, 2026-11-17: as statements, responses and
@@ -56,6 +57,7 @@
                                 {
                                     <b class="said__name">@(reason.AuthorName ?? L["Reasons.Anonymous"])</b>
                                 }
+                                <NewMark Number="@Number" Id="reason.Id" />
                             </div>
                             <LongText Text="@reason.Text" BubbleClass="bubble bubble--people voice" Id="@($"reason-more-{reason.Id}")" />
                             <div class="act" id="said-actions-@reason.Id">
@@ -131,7 +133,7 @@
             {
                 <button class="btn btn--plain" type="button" id="add-reason" disabled="@Locked" @onclick="StartWritingAsync">@L["Reasons.Write"]</button>
             }
-            @if (record.Reasons.GroupBy(r => r.Side).Any(g => g.Count() > Shown))
+            @if (!OnlyNew && record.Reasons.GroupBy(r => r.Side).Any(g => g.Count() > Shown))
             {
                 <button class="linkish" type="button" disabled="@Locked" @onclick="() => _showAll = !_showAll">
                     @(_showAll ? L["Reasons.Fewer"] : L.Format("Reasons.All", Display.Number(record.Reasons.Count)))
@@ -340,10 +342,27 @@
         if (RendererInfo.IsInteractive)
         {
             State.Changed += OnChanged;
+            State.NewsChanged += OnNewsChanged;
         }
     }
 
-    public void Dispose() => State.Changed -= OnChanged;
+    public void Dispose()
+    {
+        State.Changed -= OnChanged;
+        State.NewsChanged -= OnNewsChanged;
+    }
+
+    /// <summary>"Rodyti tik naujus" is on (design 8.11.8): the page being read only, never stored.</summary>
+    private bool OnlyNew => State.OnlyNew(Number);
+
+    /// <summary>What is new arrived, or "Rodyti tik naujus" was switched (design 8.11.8): the arguments are drawn again.</summary>
+    private void OnNewsChanged(string number)
+    {
+        if (string.Equals(number, Number, StringComparison.OrdinalIgnoreCase))
+        {
+            _ = InvokeAsync(StateHasChanged);
+        }
+    }
 
     /// <summary>
     /// A change elsewhere on the page (a side taken, changed or withdrawn, which drops the marks of the old side; a moderator's
