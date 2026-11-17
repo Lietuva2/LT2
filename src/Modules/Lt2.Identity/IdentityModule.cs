@@ -136,6 +136,7 @@ public static class IdentityModule
         services.AddScoped<IFeedback, Application.Feedback.FeedbackHandlers>();
         services.AddSingleton<IParticipants, ParticipantDirectory>();
         services.AddSingleton<IPartySupporters, PartySupporterDirectory>();
+        Microsoft.Extensions.DependencyInjection.Extensions.ServiceCollectionDescriptorExtensions.TryAddSingleton<IStaffAddresses, StaffAddressDirectory>(services);
         services.AddSingleton<IOrganisationCodeSwitch, Application.Invitations.OrganisationCodeSwitch>();
 
         // Design 8.25: public profiles (the host composes Notifications' IMemberFollowEnd and Appeals' IWritingRestrictions).
@@ -166,6 +167,9 @@ public static class IdentityModule
     {
         services.AddSingleton<IParticipants, ParticipantDirectory>();
         services.AddSingleton<IPartySupporters, PartySupporterDirectory>();
+
+        // Design 8.19.2: the moderators told when a summary is prepared, for the worker's summaries.
+        Microsoft.Extensions.DependencyInjection.Extensions.ServiceCollectionDescriptorExtensions.TryAddSingleton<IStaffAddresses, StaffAddressDirectory>(services);
 
         // Design 8.25: who has a public profile, for the follow emails and the names beside arguments in any host.
         Microsoft.Extensions.DependencyInjection.Extensions.ServiceCollectionDescriptorExtensions.TryAddSingleton<IPublicProfiles, Application.Profiles.PublicProfileDirectory>(services);

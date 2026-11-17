@@ -71,6 +71,8 @@
                 <dt>@A["Method.Digests.Weekly"]</dt><dd class="num">@(r.Weekly == "off" ? A["Method.Digests.Off"] : A.Format("Method.Digests.WeeklyValue", r.Weekly))</dd>
                 <dt>@A["Method.Digests.Notable"]</dt><dd class="num">@A.Format("Method.Digests.NotableValue", Display.Number((int)Math.Round(r.NotableChange * 100)))</dd>
                 <dt>@A["Method.Digests.BeforeVote"]</dt><dd class="num">@(r.BeforeVote == "off" ? A["Method.Digests.Off"] : A.Format("Method.Digests.BeforeVoteValue", r.BeforeVote))</dd>
+                @* Design 8.19.2 (owner, 2026-11-17): prepared Digest:ReviewHours earlier for review; the numbers are as at sending. *@
+                <dt id="perziura">@A["Method.Digests.Review"]</dt><dd class="num" id="digest-review">@A.Format("Method.Digests.ReviewValue", Display.Number(r.ReviewHours))</dd>
                 <dt>@A["Method.Digests.Ceiling"]</dt><dd class="num">@A.Format("Method.Digests.CeilingValue", Display.Number(r.MaxPerWeek))</dd>
                 <dt>@A["Method.Digests.Counts"]</dt><dd class="num">@A.Format("Method.Digests.CountsValue", Display.Number(r.OlderThanDays))</dd>
                 <dt>@A["Method.Digests.Reasons"]</dt><dd class="num">@A.Format("Method.Digests.ReasonsValue", Display.Number(r.ReasonsPerSide))</dd>
@@ -81,7 +83,7 @@
                 <dt id="kas-gautu">@A["Digests.Who"]</dt><dd>@A["Digests.WhoValue"]</dd>
                 <dt id="viesa-kopija">@A["Method.Digests.PublicCopy"]</dt><dd>@A["Method.Digests.PublicCopyValue"]</dd>
                 @* Design 8.19.1: whether summaries really go, as it holds now (Digest:Sending and its locks). *@
-                <dt id="siuntimas">@A["Method.Digests.Sending"]</dt><dd class="num" id="digest-sending">@A.Format("Method.Digests.Sending." + r.Sending, Display.Number(r.ApprovalHours))</dd>
+                <dt id="siuntimas">@A["Method.Digests.Sending"]</dt><dd class="num" id="digest-sending">@A["Method.Digests.Sending." + r.Sending]</dd>
                 <dt id="nustatymai">@A["Method.Digests.Preferences"]</dt><dd>@A["Method.Digests.PreferencesValue"]</dd>
             </dl>
             <p>@(r.Sending == "off" ? A["Method.Digests.NotSent"] : "") <a href="/suvestines">@A["Digests.Title"]</a> · <a href="@Lt2.Api.Contracts.Digests.DigestRoutes.IntroductionPage">@A["Intro.Title"]</a> · <a href="/moderavimo-taisykles">@A["Rules.Title"]</a></p>

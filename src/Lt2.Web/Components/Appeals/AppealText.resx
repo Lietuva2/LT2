@@ -70,14 +70,14 @@
 <data name="Method.Digests.Notable" xml:space="preserve"><value>Kas patenka į savaitinę suvestinę</value></data>
 <data name="Method.Digests.NotableValue" xml:space="preserve"><value>projektai, kurie yra tos savaitės darbotvarkėje; kiti – jei dar nebuvo nė vienoje suvestinėje arba jei dalyvių nuo paskutinės juos įtraukusios suvestinės pasikeitė bent {0} %</value></data>
 <data name="Method.Digests.BeforeVote" xml:space="preserve"><value>Suvestinė prieš posėdį</value></data>
-<data name="Method.Digests.BeforeVoteValue" xml:space="preserve"><value>{0} darbo dieną prieš posėdį, kai darbotvarkėje yra ribą pasiekęs projektas</value></data>
+  <data name="Method.Digests.BeforeVoteValue" xml:space="preserve"><value>darbo dieną prieš posėdį, {0}, kai darbotvarkėje yra ribą pasiekęs projektas</value></data>
 <data name="Method.Digests.Off" xml:space="preserve"><value>išjungta</value></data>
 <data name="Method.Digests.Ceiling" xml:space="preserve"><value>Daugiausia per savaitę</value></data>
 <data name="Method.Digests.CeilingValue" xml:space="preserve"><value>{0} suvestinės vienam Seimo nariui; skubi suvestinė gali šį skaičių viršyti vienu</value></data>
 <data name="Method.Digests.Counts" xml:space="preserve"><value>Skaičiai</value></data>
 <data name="Method.Digests.CountsValue" xml:space="preserve"><value>visada abi pusės kartu, prie kiekvienos – kiek paskyrų senesnės nei {0} d.</value></data>
 <data name="Method.Digests.Reasons" xml:space="preserve"><value>Argumentai</value></data>
-<data name="Method.Digests.ReasonsValue" xml:space="preserve"><value>po {0} labiausiai „Man svarbu“ pažymėtus argumentus už ir {0} – prieš, kuriuos peržiūrėjo moderatorius</value></data>
+  <data name="Method.Digests.ReasonsValue" xml:space="preserve"><value>po {0} labiausiai „Man svarbu“ pažymėtus paskelbtus argumentus už ir {0} – prieš, išrinktus, kai suvestinė paruošiama</value></data>
 <data name="Method.Digests.Surge" xml:space="preserve"><value>Šuolio pastaba</value></data>
 <data name="Method.Digests.SurgeValue" xml:space="preserve"><value>kai bent {0} % per paskutines {1} valandas pateiktų pozicijų pateikė per tą laiką sukurtos paskyros ir jų yra bent {2}</value></data>
 <data name="Method.Digests.Groups" xml:space="preserve"><value>Grupių skaičiai</value></data>
@@ -109,7 +109,7 @@
 <data name="Rules.Title" xml:space="preserve"><value>Moderavimo taisyklės</value></data>
 <data name="Rules.Lead" xml:space="preserve"><value>Viskas, kas pasiektų Seimo narius, pirma praeina pro žmogų. Čia aprašyta, ką ir kaip daro moderatoriai.</value></data>
 <data name="Rules.What" xml:space="preserve"><value>Ką moderatoriai peržiūri</value></data>
-<data name="Rules.What.1" xml:space="preserve"><value>Argumentus, kuriuos automatinė patikra pažymėjo, viską, apie ką pranešė naudotojai, ir projektus, kuriems reikia žmogaus sprendimo. Niekas nelaukia patvirtinimo, kad būtų galima dalyvauti: argumentai skelbiami iš karto, o moderatorius juos peržiūri vėliau; į suvestines patenka tik peržiūrėti argumentai.</value></data>
+  <data name="Rules.What.1" xml:space="preserve"><value>Argumentus, kuriuos automatinė patikra pažymėjo, viską, apie ką pranešė naudotojai, ir projektus, kuriems reikia žmogaus sprendimo. Niekas nelaukia patvirtinimo, kad būtų galima dalyvauti: argumentai skelbiami iš karto, o moderatorius juos peržiūri vėliau. Kiekviena suvestinė Seimo nariams paruošiama iš anksto, ir moderatoriai ją peržiūri, kol ji neišėjo: gali paslėpti argumentą, sulaikyti projekto siuntimą arba suvestinės nesiųsti.</value></data>
 <data name="Rules.What.2" xml:space="preserve"><value>Automatinė patikra kol kas ieško tik el. pašto adresų, telefono numerių, asmens kodų ir nuorodų. Ji nieko nesprendžia – tik parodo moderatoriui, kur pažiūrėti.</value></data>
 <data name="Rules.Appeals" xml:space="preserve"><value>Projektai</value></data>
   <data name="Rules.Appeals.1" xml:space="preserve"><value>Dalyvauti galima dėl kiekvieno Seimo svarstomo projekto iš karto: nieko nereikia pasiūlyti ar patvirtinti. Projekto aprašymą parašo moderatorius arba, iš oficialaus projekto teksto, dirbtinis intelektas; prie aprašymo visada nurodyta, kaip jis sukurtas, ir apie klaidą galima pranešti. Jei reikia, moderatorius gali uždaryti dalyvavimą dėl projekto; jo paaiškinimas rodomas projekto puslapyje, o pozicijos ir argumentai išsaugomi nematomi ir grįžta, jei dalyvavimas atkuriamas.</value></data>
@@ -208,16 +208,13 @@
   <data name="HowItWorks.PrivacyLink" xml:space="preserve"><value>Kas matoma viešai, o kas ne →</value></data>
   <data name="HowItWorks.4.Trial" xml:space="preserve"><value>Kol vyksta bandymas, suvestinės sudaromos, bet Seimo nariams nesiunčiamos.</value></data>
   <data name="Digests.Line.dry-run" xml:space="preserve"><value>Bandomoji suvestinė: niekam nesiųsta</value></data>
-  <data name="Digests.Line.waiting" xml:space="preserve"><value>Laukia moderatoriaus patvirtinimo</value></data>
   <data name="Digests.Line.sent" xml:space="preserve"><value>Išsiųsta Seimo nariams: {0} · {1}</value></data>
   <data name="Digests.Line.cancelled" xml:space="preserve"><value>Nesiųsta</value></data>
-  <data name="Digests.Line.expired" xml:space="preserve"><value>Nesiųsta: nepatvirtinta laiku</value></data>
   <data name="Digests.Statement" xml:space="preserve"><value>Moderatoriaus paaiškinimas: {0}</value></data>
   <data name="Digests.IntroductionLink" xml:space="preserve"><value>Pristatymo laiškas Seimo nariams →</value></data>
   <data name="Method.Digests.Sending" xml:space="preserve"><value>Siuntimas</value></data>
   <data name="Method.Digests.Sending.off" xml:space="preserve"><value>suvestinės sudaromos ir skelbiamos viešai, bet Seimo nariams nesiunčiamos</value></data>
-  <data name="Method.Digests.Sending.approval" xml:space="preserve"><value>suvestinė siunčiama, kai ją patvirtina moderatorius; nepatvirtinta per {0} val. arba iki posėdžio dienos pradžios – nesiunčiama; skubi suvestinė siunčiama iš karto</value></data>
-  <data name="Method.Digests.Sending.automatic" xml:space="preserve"><value>suvestinė siunčiama iš karto, kai sudaroma</value></data>
+  <data name="Method.Digests.Sending.automatic" xml:space="preserve"><value>paruošta suvestinė siunčiama Seimo nariams nustatytu laiku</value></data>
   <data name="Method.Digests.Preferences" xml:space="preserve"><value>Seimo nario pasirinkimas</value></data>
   <data name="Method.Digests.PreferencesValue" xml:space="preserve"><value>kiekviename laiške yra nuoroda, kuria Seimo narys gali pasirinkti, kaip dažnai gauti suvestines, jų atsisakyti arba nurodyti papildomą gavėją; kas ką pasirinko, viešai nerodoma</value></data>
   <data name="Intro.Title" xml:space="preserve"><value>Pristatymo laiškas</value></data>
@@ -262,13 +259,13 @@
   <data name="MpMail.Copies.Done" xml:space="preserve"><value>Kopijos šiuo adresu nebebus siunčiamos. Seimo nariui apie tai pranešta.</value></data>
   <data name="MpMail.Copies.Failed" xml:space="preserve"><value>Ši nuoroda neveikia: kopijos šiuo adresu jau nesiunčiamos.</value></data>
   <data name="Digests.Short.dry-run" xml:space="preserve"><value>bandomoji</value></data>
-  <data name="Digests.Short.waiting" xml:space="preserve"><value>laukia patvirtinimo</value></data>
   <data name="Digests.Short.sent" xml:space="preserve"><value>išsiųsta</value></data>
   <data name="Digests.Short.cancelled" xml:space="preserve"><value>nesiųsta</value></data>
-  <data name="Digests.Short.expired" xml:space="preserve"><value>nesiųsta</value></data>
   <data name="Rules.Comments" xml:space="preserve"><value>Komentarai</value></data>
   <data name="Rules.Comments.1" xml:space="preserve"><value>Komentarai po argumentais, organizacijų pozicijomis ir Seimo narių atsakymais iš anksto netikrinami: jie paskelbiami iš karto. Komentaro, kuriame yra el. pašto adresas, telefono numeris ar asmens kodas, paskelbti nepavyks – jį reikia pataisyti. Nuorodos leidžiamos.</value></data>
   <data name="Rules.Comments.2" xml:space="preserve"><value>Apie bet kurį komentarą galima pranešti mygtuku „Pranešti“. Tada moderatorius komentarą palieka arba paslepia; paslėptas komentaras dingsta iš puslapio kartu su „Sutinku“ prie jo, o jo autorius el. paštu gauna paaiškinimą. Piktnaudžiaujančiam moderatorius gali apriboti galimybę rašyti.</value></data>
   <data name="Method.Comments" xml:space="preserve"><value>Aptarimas ir „Sutinku“</value></data>
   <data name="Method.Comments.1" xml:space="preserve"><value>Po argumentu, organizacijos pozicija ar Seimo nario atsakymu galima parašyti komentarą – jis viešas, su jūsų vardu (organizacijos atstovas po savo organizacijos pozicija rašo organizacijos vardu, Seimo narys ar jo biuras po savo atsakymu – Seimo nario vardu). „Sutinku“ prie komentaro taip pat viešas: prie komentaro matomas jūsų vardas. Priešingai, „Man svarbu“ prie argumento lieka privatus, nes jį galima žymėti tik savo pusės argumentams ir jis išduotų jūsų pusę; komentaras ir „Sutinku“ jūsų pusės neparodo. Komentarai ir „Sutinku“ neįskaičiuojami į jokius skaičius ir nesiunčiami Seimo nariams.</value></data>
+  <data name="Method.Digests.Review" xml:space="preserve"><value>Peržiūra</value></data>
+  <data name="Method.Digests.ReviewValue" xml:space="preserve"><value>kiekviena suvestinė paruošiama {0} val. anksčiau; kol ji neišėjo, moderatoriai gali paslėpti argumentą (jo vietą užima kitas tos pusės argumentas), sulaikyti projekto siuntimą arba suvestinės nesiųsti. Skaičiai – tokie, kokie yra išsiunčiant.</value></data>
 </root>

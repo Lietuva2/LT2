@@ -18,7 +18,7 @@ product code. What is being built, in order:
 | **M2d Profiles** | (Owner, 2026-11-16: before comments.) The account area as four screens; public profiles by the member's choice, "Apie mane", the name's card, following a member, follower numbers on every followed thing's own page (design 8.21, 8.25, 8.11.2); the supported party on the public page by its own box and consent (8.25.9, owner 2026-11-17). |
 | **Email rhythm** | (Owner, 2026-11-16.) How often a member's emails come, one delivery for every member email kind, the gathered email (design 8.24). |
 | **M2c Comments** | (Owner, 2026-11-16: after M2d.) "Aptarimas" under arguments, statements and responses, "Sutinku", moderation, the argument author's notice in the rhythm; names link to public profiles (design 8.23, 8.25). |
-| **M2b Sending** | Real summary emails to MPs, MP preferences, profile take-over, MP responses. Built first (owner, 2026-11-15): the link of design 8.5.1–8.5.4 (recognised at once, the take-over, the office), then the response (8.5.5–8.5.7). Then (2026-11-16) sending itself, design 8.19: `Digest:Sending`, approval, the real email, preferences without an account, the introduction letter, the suppression list; off by default. Then (2026-11-16) design 8.20: the followers' email about MPs' answers and known browsers for sign-in. |
+| **M2b Sending** | Real summary emails to MPs, MP preferences, profile take-over, MP responses. Built first (owner, 2026-11-15): the link of design 8.5.1–8.5.4 (recognised at once, the take-over, the office), then the response (8.5.5–8.5.7). Then (2026-11-16) sending itself, design 8.19: `Digest:Sending`, review a day ahead (owner, 2026-11-17: no approval needed), the real email, preferences without an account, the introduction letter, the suppression list; off by default. Then (2026-11-16) design 8.20: the followers' email about MPs' answers and known browsers for sign-in. |
 | **Stage 3** | Voting with delegation, AI summaries, analytics. Not designed yet; do not build towards it beyond what the design says. |
 
 Build one stage at a time. Do not start a later stage's features because they look close.
@@ -115,7 +115,7 @@ src/Modules/               Lt2.Identity, Lt2.Notifications, Lt2.Audit, Lt2.Parli
                            by moderators, the AI draft in Ai/ with its public prompt file, the AI summary job
                            (Application/DescriptionSummaries.cs), the "unavailable" IBillTextSource, and organisations
                            with their statements on bills, design 8.14.14; MPs' responses, 8.5.5). Notifications
-                           also owns the summaries (Digests/: making, approval, sending, SendingRules), MP mail (MpMail/:
+                           also owns the summaries (Digests/: preparing, review, sending, ChoiceRules, SendingRules), MP mail (MpMail/:
                            the links' tokens, the MPs' choices, the introduction letter, the suppression list, MpSender)
                            and following (Follows/: follows, email switches, bill
                            events, the follow kinds; Rhythm/: how often a member's emails come, design 8.24). Modules talk through interfaces in SharedKernel (IParticipants, IBillCatalogue,
@@ -123,7 +123,7 @@ src/Modules/               Lt2.Identity, Lt2.Notifications, Lt2.Audit, Lt2.Parli
                            Parliament, for sending), IDigestSource, IPartySupporters, IAccountData (one per module),
                            IPositionErasure, IOutbox, IAuditLog, ISettings, IAiAssistant, IBillTextSource,
                            IOrganisationDirectory, IOrganisationCodeSwitch, IMpLinks, IMpResponseFeed,
-                           IWritingRestrictions). The host
+                           IWritingRestrictions, IStaffAddresses). The host
                            composes the agenda (GET /api/v1/agenda) and /me/follows from the modules' interfaces.
                            Identity also owns MPs' links (Application/Politicians: politician_link, politician_token,
                            design 8.5); "whose official address is this" is IMpDirectory.OfficialAddressOwnerAsync
@@ -137,8 +137,8 @@ src/Modules/Lt2.Usage      the site's own usage statistics (design 8.27): UsageR
                            DayBars, own CSS size, a label per column on hover and focus, no chart library)
 src/Lt2.Worker             Hangfire server: outbox dispatch loop, the parliament import, the agenda watcher (lrs.lt
                            pages; off unless Agenda:BaseAddress is set), the daily aggregates and closing of the bills' records, summaries
-                           (every 15 minutes: waiting ones expire, due ones are made: a dry run, waiting or sent by
-                           Digest:Sending), the follow emails (every 15 minutes, in each member's rhythm: at once, the morning from Follows:ResponsesAt, or Monday), the AI summaries
+                           (every 15 minutes: prepared Digest:ReviewHours before their time, moderators emailed, then
+                           gone at their time: a dry run or sent by Digest:Sending), the follow emails (every 15 minutes, in each member's rhythm: at once, the morning from Follows:ResponsesAt, or Monday), the AI summaries
                            of bills (hourly; makes nothing until a text reader and a provider exist), a daily identity
                            clean-up (with the unsent mail of purged registrations and known browsers not seen for a year) and a daily outbox clean-up (failed
                            messages after 30 days); the dispatcher sends sign-in and confirmation codes first, a batch
@@ -739,9 +739,22 @@ shown, only counts and "maža imtis"; the Seimas's majority is that of those who
 - Go to every sitting MP with an official address, joined or not. Nobody chooses recipients.
 - Weekly on Monday morning in sitting weeks, and the working day before a sitting with a relevant bill. At most two a
   week per MP.
-- Always both sides, always with the count for accounts older than 30 days, with the most endorsed reasons a moderator
-  has seen, without their authors' names (email, public copy and snapshot alike). A reason longer than about 300
-  characters is shortened in the email (and its preview) by `TextExcerpt`, with "Visas argumentas: {link}" to it on the
+- **Reviewed a day ahead, not approved (design 8.19.2, owner 2026-11-17).** A weekly or before-vote summary is prepared
+  `Digest:ReviewHours` (24) before its time on the Vilnius clock (Monday 07:00 on Sunday 07:00; `DigestRules.PreparedAt`,
+  `PreparationDue`): its bills (eligible, not held) and per bill and side its two most endorsed published arguments, seen by a
+  moderator or not, are fixed then (`ChoiceRules.Choose`, stored in `notify.digest_choice`); every moderator and administrator
+  is emailed (`email.digest-review`, `DigestReviewTemplate`, addresses from `IStaffAddresses`, Identity). Hiding an argument
+  (the normal action) brings the next of its side in from the same pool (`ChoiceRules.Replace`, marked "Įtrauktas vietoj
+  paslėpto"); the list is not sorted again when it goes. At its time (`GoAsync`) every number is read then, a held or no
+  longer open bill drops out (none left: `dropped`), and the snapshot and public copy are made. "Patvirtinti"
+  (`POST /moderation/digests/{id}/approve`, staff passkey, no fresh confirmation) only marks it reviewed (`approved_at`); it
+  still goes at its time. "Nesiųsti" declines it (`cancelled`). If nobody acts it goes as prepared. A staff account (by its
+  role) sees the box `#digest-review-notice` on every page while one is prepared and neither approved nor declined:
+  `MainLayout` holds the same hidden markup for everyone, `js/lt2-account.js` fills it from `GET /me`'s `digestReview` (staff
+  accounts only; `ServerMeApi` leaves it out), as the MP offer notice.
+- Always both sides, always with the count for accounts older than 30 days, with the most endorsed published reasons,
+  without their authors' names (email, public copy and snapshot alike). A reason longer than about 300
+  characters is shortened in the email by `TextExcerpt`, with "Visas argumentas: {link}" to it on the
   public copy (`MpMailPaths.ReasonOnPublicCopy` = `DigestRoutes.ReasonAnchor`); the snapshot keeps the whole text (owner,
   2026-11-16). The email prints no other member-written text (the MP's own response as stance and date only).
 - The weekly one holds appeals on that week's agenda, or never summarised, or whose participants changed by at least
@@ -750,22 +763,24 @@ shown, only counts and "maža imtis"; the Seimas's majority is that of those who
   A bill's page links to it as `/suvestines/{day}?projektas={number}` (`DigestRoutes.PageAt`; owner, 2026-11-17): the summaries
   holding the bill first, its item first, no fragment; a day with one summary has one title, its kind and date.
 - Timing is corrected by a moderator when people flag a wrong date: correct, hold, or approve one urgent summary.
-- **Sending (design 8.19, built 2026-11-16).** `Digest:Sending` `off` (default: dry runs, nothing for MPs in the outbox),
-  `approval` (a weekly or before-vote summary waits; an urgent one goes at once) or `automatic`. Two locks keep it off whatever
+- **Sending (design 8.19, built 2026-11-16; owner 2026-11-17).** `Digest:Sending` `off` (default: prepared and reviewed the
+  same way, then dry runs, nothing for MPs in the outbox) or `automatic` (sent at its time; an urgent one at once). Two locks keep it off whatever
   the setting says (`SendingRules.State`, `MailLocks`): no introduction letter sent yet, and invented data (`Demo:Allowed`, or any synthetic parliament data: `IMpMailAddresses.HoldsInventedDataAsync`) without
   `Email:Caught` (deployment configuration; false in code and compose, true only in the local `.env`, where Mailpit catches
-  everything). Run statuses `dry-run`, `waiting`, `sent`, `cancelled`, `expired`; while sending is on only waiting and sent runs
-  count for the ceiling, "changed notably", "covered by Monday" and "never yet in a summary" (`SendingRules.Counts`). A sent run
-  marks its records summarised (`IDigestSource.MarkSummarisedAsync`, in the same transaction).
-- The moderators' screen `/moderavimas/suvestines` (`DigestModeration`): waiting first, the preview (MPs by name), "Siųsti" (a fresh passkey confirmation, the number of MPs
-  in the confirmation; under the summaries' lock, so two presses send once) and "Nesiųsti" (a statement of 20 characters or
-  more, public on the copy). A waiting run expires after `Digest:ApprovalHours` or when its sitting's day begins. Recipients are
-  worked out when it is let go (`SendingRules.DeliveryStatus`: suppressed, the MP's choice, the letter first, the ceiling); one
-  delivery row per run, MP and recipient, never an address. The public copy says what happened in one line, never which MPs.
+  everything). Run statuses `prepared`, `dry-run`, `sent`, `cancelled`, `dropped`; a prepared run always counts, and while
+  sending is on sent runs (off: dry runs too), for the ceiling, "changed notably", "covered by Monday" and "never yet in a
+  summary" (`SendingRules.Counts`). A sent run marks its records summarised (`IDigestSource.MarkSummarisedAsync`, in the same transaction).
+- The moderators' screen `/moderavimas/suvestines` (`DigestModeration`): prepared first, each summary's common text once
+  (bills with their numbers now, the chosen arguments with "Paslėpti", each bill's "Sulaikyti siuntimą"), how many MPs, what
+  happened; one line that party numbers, the MP's own response and the personal links differ per MP; no per-MP preview.
+  "Patvirtinti" and "Nesiųsti" (a statement of 20 characters or more, public on the copy) under the summaries' lock, so two
+  presses act once. Recipients are worked out when it goes (`SendingRules.DeliveryStatus`: suppressed, the MP's choice, the
+  letter first, the ceiling); one delivery row per run, MP and recipient, never an address. The public copy says what
+  happened in one line, never which MPs; a prepared or dropped run has none.
 - The email (`MpMailTemplates`, through `EmailLayout.BuildMp`, the MP stream: `Email:Mp:FromAddress`, optional `Email:Mp:Smtp`)
   holds both sides with the 30-day counts, the MP's own published response or the link to answer, the closing lines, and
   `List-Unsubscribe` with `List-Unsubscribe-Post`. The address comes only from `IMpMailAddresses` and travels only in the outbox
-  row. The moderators' preview is the same text.
+  row.
 - The MP's link (8.19.4): `/suvestines/nustatymai/{token}`, server-rendered forms (no script); the token is derived from the
   person number and a generation under `Security:MailHashKey` and stored hashed; "Atsiųsti naują nuorodą" moves to the next
   generation. The one-click stop `POST /api/v1/mp-mail/{token}/stop` is the only write mapped outside the API group's

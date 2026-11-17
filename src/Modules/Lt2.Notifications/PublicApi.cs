@@ -44,7 +44,7 @@ public interface IEmailConnection : IAsyncDisposable
     Task SendAsync(EmailMessage message, CancellationToken cancellationToken);
 }
 
-/// <summary>One record as frozen in a summary. No person: counts, the surge note and arguments without authors.</summary>
+/// <summary>One record as frozen in a summary when it went. No person: counts, the surge note and arguments without authors.</summary>
 public sealed record DigestItemInfo(
     string BillNumber,
     string BillTitle,
@@ -58,13 +58,18 @@ public sealed record DigestItemInfo(
     int? SurgeWindowHours,
     IReadOnlyList<Lt2.SharedKernel.DigestReason> Reasons);
 
-/// <summary>A summary run (design 8.7, 8.19.2) as its public copy shows it: without MP-specific figures and never which MPs.</summary>
-/// <param name="Status"><c>dry-run</c>, <c>waiting</c>, <c>sent</c>, <c>cancelled</c> or <c>expired</c> (design 8.19.1).</param>
-/// <param name="MpCount">How many MPs it would go to when it was made.</param>
+/// <summary>A summary run (design 8.7, 8.19) as its public copy shows it: without MP-specific figures and never which MPs.</summary>
+/// <param name="Status">
+/// <c>prepared</c>, <c>dry-run</c>, <c>sent</c>, <c>cancelled</c> or <c>dropped</c> (design 8.19.1); dry runs, sent and cancelled
+/// ones are public.
+/// </param>
+/// <param name="CreatedAt">When it was prepared.</param>
+/// <param name="MpCount">How many MPs it went to, or would have as a dry run.</param>
 /// <param name="SentCount">How many MPs it was sent to (a sent run).</param>
-/// <param name="DecidedAt">When it was sent, declined or expired.</param>
+/// <param name="SentAt">When it went.</param>
+/// <param name="DueAt">When it goes (a prepared run) or was due.</param>
 /// <param name="Statement">A declined run's statement, shown on its copy; never who declined it.</param>
-/// <param name="ExpiresAt">A waiting run's expiry.</param>
+/// <param name="ApprovedAt">When a moderator approved it ("Patvirtinti"); never who.</param>
 public sealed record DigestRunInfo(
     Guid Id,
     string Kind,
@@ -75,66 +80,123 @@ public sealed record DigestRunInfo(
     int MpCount,
     IReadOnlyList<DigestItemInfo> Items,
     int SentCount = 0,
-    DateTimeOffset? DecidedAt = null,
+    DateTimeOffset? SentAt = null,
+    DateTimeOffset? DueAt = null,
     string? Statement = null,
-    DateTimeOffset? ExpiresAt = null);
-
-/// <summary>What one MP would read (design 8.9: a moderator can read any MP's summary before a real send).</summary>
-public sealed record DigestPreview(string Subject, string Text);
+    DateTimeOffset? ApprovedAt = null);
 
 /// <summary>
-/// Sending as it is now (design 8.19.1): <paramref name="Mode"/> <c>off</c>, <c>approval</c> or <c>automatic</c>;
-/// <paramref name="Setting"/> what <c>Digest:Sending</c> says; <paramref name="Lock"/> why it is off although the setting says
-/// otherwise (<c>no-introduction</c>, <c>not-caught</c>), or null.
+/// Sending as it is now (design 8.19.1): <paramref name="Mode"/> <c>off</c> or <c>automatic</c>; <paramref name="Setting"/> what
+/// <c>Digest:Sending</c> says; <paramref name="Lock"/> why it is off although the setting says otherwise (<c>no-introduction</c>,
+/// <c>not-caught</c>), or null.
 /// </summary>
 public sealed record DigestSending(string Mode, string Setting, string? Lock);
 
-/// <summary>Summaries to MPs (design 8.4, 8.7, 8.9, 8.19): made by the rules; sent only as design 8.19 says.</summary>
+/// <summary>
+/// An argument of a summary on the moderators' screen (design 8.19.2): its id while the summary is prepared (for "Paslėpti"),
+/// null in one gone; <paramref name="Replacement"/>: it came in for a hidden one ("Įtrauktas vietoj paslėpto").
+/// </summary>
+public sealed record DigestReviewReason(Guid? Id, string Side, string Text, int Endorsements, bool Replacement);
+
+/// <summary>
+/// A bill of a summary on the moderators' screen: for a prepared one its numbers now, whether a moderator holds it
+/// (<paramref name="Held"/>: it drops out unless released) and whether it is no longer open (<paramref name="Gone"/>: it drops out).
+/// </summary>
+public sealed record DigestReviewItem(
+    Guid RecordId,
+    string BillNumber,
+    string BillTitle,
+    string? Stage,
+    DateOnly? PlannedDate,
+    int For,
+    int ForOlderThan30Days,
+    int Against,
+    int AgainstOlderThan30Days,
+    int? SurgeSharePercent,
+    int? SurgeWindowHours,
+    bool Held,
+    bool Gone,
+    IReadOnlyList<DigestReviewReason> Reasons);
+
+/// <summary>
+/// A summary as the moderators' screen shows it (design 8.19.2, owner 2026-11-17): the common text once, as MPs read it. A
+/// prepared one with its numbers now and <paramref name="MpCount"/> the MPs it would go to now; a gone one as it went.
+/// </summary>
+public sealed record DigestReview(
+    Guid Id,
+    string Kind,
+    DateOnly RunDate,
+    DateOnly? SittingDate,
+    DateTimeOffset PreparedAt,
+    DateTimeOffset? DueAt,
+    string Status,
+    int MpCount,
+    int SentCount,
+    DateTimeOffset? SentAt,
+    DateTimeOffset? ApprovedAt,
+    string? Statement,
+    IReadOnlyList<DigestReviewItem> Items);
+
+/// <summary>
+/// The prepared summary nobody has approved or declined yet that goes first, for the staff notice on every page (design 8.19.2):
+/// when it goes, how many bills and arguments.
+/// </summary>
+public sealed record DigestPending(DateTimeOffset DueAt, int Bills, int Reasons);
+
+/// <summary>
+/// Summaries to MPs (design 8.4, 8.7, 8.9, 8.19): prepared for review by the rules, and gone at their time as design 8.19 says;
+/// nobody approves them (owner, 2026-11-17).
+/// </summary>
 public interface IDigests
 {
     /// <summary>
-    /// Expires the waiting summaries whose time has passed, then makes the weekly and before-vote summaries that are due at
-    /// <paramref name="now"/>; returns those made.
+    /// Prepares the weekly and before-vote summaries whose preparation time has come at <paramref name="now"/> (telling the
+    /// moderators), then lets go every prepared one whose time has come; returns those prepared or gone, as they are now.
     /// </summary>
     Task<IReadOnlyList<DigestRunInfo>> RunDueAsync(DateTimeOffset now, CancellationToken cancellationToken);
 
-    /// <summary>One urgent summary for a record, approved by a moderator; may exceed the weekly ceiling by one; sent at once while sending is on.</summary>
+    /// <summary>
+    /// One urgent summary for a record, approved by a moderator (that is its review): it goes at once, sent while sending is on;
+    /// may exceed the weekly ceiling by one.
+    /// </summary>
     Task<Lt2.SharedKernel.Result<DigestRunInfo>> UrgentAsync(Guid recordId, string statement, StaffActor moderator, CancellationToken cancellationToken);
 
     /// <summary>Sending as it is now, with its locks (design 8.19.1).</summary>
     Task<DigestSending> SendingAsync(CancellationToken cancellationToken);
 
     /// <summary>
-    /// "Siųsti" (design 8.19.2): lets a waiting summary go. Recipients are worked out now; under the summaries' lock, so two
-    /// moderators pressing at once send it once (<c>digest.not-waiting</c> for the second). <c>digest.expired</c>,
-    /// <c>digest.sending-off</c>, <c>digest.not-found</c>.
+    /// "Patvirtinti" (design 8.19.2, owner 2026-11-17): a moderator marks a prepared summary reviewed. It still goes at its own
+    /// time; nothing is sent earlier, and hiding arguments and holding bills stay possible until then. Audited.
+    /// <c>digest.not-found</c>, <c>digest.not-prepared</c> (gone, declined or approved already).
     /// </summary>
-    Task<Lt2.SharedKernel.Result<DigestRunInfo>> SendAsync(Guid runId, StaffActor moderator, CancellationToken cancellationToken);
+    Task<Lt2.SharedKernel.Result<DigestRunInfo>> ApproveAsync(Guid runId, StaffActor moderator, CancellationToken cancellationToken);
 
-    /// <summary>"Nesiųsti" (design 8.19.2): declines a waiting summary with a statement of at least 20 characters, shown on its copy.</summary>
+    /// <summary>
+    /// "Nesiųsti" (design 8.19.2): declines a prepared summary with a statement of at least 20 characters, public on its copy,
+    /// which holds the bills and arguments as they were then. <c>digest.not-found</c>, <c>digest.not-prepared</c>.
+    /// </summary>
     Task<Lt2.SharedKernel.Result<DigestRunInfo>> CancelAsync(Guid runId, string statement, StaffActor moderator, CancellationToken cancellationToken);
 
-    /// <summary>Waiting summaries whose time has passed become expired (design 8.19.2); returns how many.</summary>
-    Task<int> ExpireDueAsync(DateTimeOffset now, CancellationToken cancellationToken);
-
+    /// <summary>The public summaries (dry runs, sent and declined ones), newest first.</summary>
     Task<IReadOnlyList<DigestRunInfo>> ListAsync(CancellationToken cancellationToken);
 
     Task<IReadOnlyList<DigestRunInfo>> OnDateAsync(DateOnly date, CancellationToken cancellationToken);
 
-    /// <summary>The summaries that held one record, newest first; each run carries only that record's frozen item.</summary>
+    /// <summary>The public summaries that held one record, newest first; each run carries only that record's frozen item.</summary>
     Task<IReadOnlyList<DigestRunInfo>> ForRecordAsync(Guid recordId, CancellationToken cancellationToken);
 
-    Task<Lt2.SharedKernel.Result<DigestPreview>> PreviewAsync(Guid runId, string mpSlug, CancellationToken cancellationToken);
+    /// <summary>
+    /// The moderators' summaries screen (design 8.19.2): the prepared summaries first, soonest first, each with its numbers now and
+    /// its chosen arguments (an argument hidden since is replaced here and stays replaced), then the latest gone ones.
+    /// </summary>
+    Task<IReadOnlyList<DigestReview>> ReviewAsync(CancellationToken cancellationToken);
 
     /// <summary>
-    /// The MPs of a run and what happened, or would happen, for each MP's own address (design 8.19.3 statuses); staff only.
-    /// Never the address, and nothing about an extra recipient. By last name, the names in the nominative.
+    /// The prepared summary that goes first among those nobody approved or declined, or null; read for staff accounts on every
+    /// page (design 8.19.2).
     /// </summary>
-    Task<IReadOnlyList<DigestMpInfo>> MpsAsync(Guid runId, CancellationToken cancellationToken);
+    Task<DigestPending?> PendingAsync(CancellationToken cancellationToken);
 }
-
-/// <summary>An MP of a run, by name, and what happened for the MP's own address (design 8.19.3); staff only.</summary>
-public sealed record DigestMpInfo(string Slug, string FirstName, string LastName, string Status);
 
 /// <summary>An MP's choice of summaries as the MP's own page shows it (design 8.19.4). Shown to nobody else.</summary>
 /// <param name="Frequency"><c>default</c>, <c>weekly</c>, <c>before-vote</c> or <c>stopped</c>.</param>

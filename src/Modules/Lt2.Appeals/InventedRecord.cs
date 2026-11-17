@@ -220,8 +220,8 @@ public static class InventedRecord
             var reasonId = Guid.CreateVersion7(reasonAt);
             await using (var reason = new NpgsqlCommand(
                 """
-                INSERT INTO appeals.reason (id, record_id, side, author_user_id, text, status, seen_at, screening_flags, created_at)
-                VALUES (@id, @record, @side, @author, @text, 'published', @at, '{}', @at)
+                INSERT INTO appeals.reason (id, record_id, side, author_user_id, text, status, seen_at, screening_flags, created_at, first_public_at)
+                VALUES (@id, @record, @side, @author, @text, 'published', @at, '{}', @at, @at)
                 """,
                 connection,
                 transaction))

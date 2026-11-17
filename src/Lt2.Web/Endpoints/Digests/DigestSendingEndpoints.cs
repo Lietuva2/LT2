@@ -8,10 +8,10 @@ using Lt2.Web.Services;
 namespace Lt2.Web.Endpoints.Digests;
 
 /// <summary>
-/// Design 8.19.2, 8.19.5: <c>GET /api/v1/moderation/digests</c> (the moderators' summaries screen), <c>POST …/{id}/send</c>
-/// ("Siųsti") and <c>POST …/{id}/cancel</c> ("Nesiųsti", with a statement), each needing a moderator's staff-passkey session and
-/// audited with the moderator, whom no public answer names; and <c>GET /api/v1/digests/introduction</c>, the introduction
-/// letter as sent (public).
+/// Design 8.19.2, 8.19.5: <c>GET /api/v1/moderation/digests</c> (the moderators' summaries screen), <c>POST …/{id}/approve</c>
+/// ("Patvirtinti": reviewed, it still goes at its time; owner 2026-11-17) and <c>POST …/{id}/cancel</c> ("Nesiųsti", with a
+/// statement), each needing a moderator's staff-passkey session and audited with the moderator, whom no public answer names;
+/// and <c>GET /api/v1/digests/introduction</c>, the introduction letter as sent (public).
 /// </summary>
 internal static class DigestSendingEndpoints
 {
@@ -21,8 +21,8 @@ internal static class DigestSendingEndpoints
             .WithName("GetModerationDigests").WithTags("Moderation").RequireAuthorization(Policies.Moderator)
             .Produces<DigestModerationResponse>();
 
-        api.MapPost(ApiEndpoints.Relative(DigestRoutes.Send), SendAsync)
-            .WithName("SendDigest").WithTags("Moderation").RequireAuthorization(Policies.Moderator)
+        api.MapPost(ApiEndpoints.Relative(DigestRoutes.Approve), ApproveAsync)
+            .WithName("ApproveDigest").WithTags("Moderation").RequireAuthorization(Policies.Moderator)
             .Produces<DigestRunResponse>().ProducesProblem(StatusCodes.Status404NotFound).ProducesProblem(StatusCodes.Status409Conflict);
 
         api.MapPost(ApiEndpoints.Relative(DigestRoutes.Cancel), CancelAsync)
@@ -38,16 +38,10 @@ internal static class DigestSendingEndpoints
     private static async Task<IResult> ListAsync(IDigests digests, CancellationToken ct) =>
         TypedResults.Ok(await DigestMapping.ModerationAsync(digests, ct));
 
-    private static async Task<IResult> SendAsync(
-        Guid id, HttpContext context, IDigests digests, Lt2.Identity.IIdentityModule identity, ErrorMapper errors, CancellationToken ct)
+    private static async Task<IResult> ApproveAsync(Guid id, HttpContext context, IDigests digests, ErrorMapper errors, CancellationToken ct)
     {
-        // Design 6.2, 8.19.2: approving a send asks for the passkey again (the last ten minutes); declining does not.
-        if (await Admin.FreshConfirmation.RequireAsync(identity, context.User, errors, ct) is { } refused)
-        {
-            return refused;
-        }
-
-        var result = await digests.SendAsync(id, await ModeratorEndpoint.ModeratorAsync(context), ct);
+        // It sends nothing (owner, 2026-11-17), so a staff-passkey session is enough: no fresh confirmation.
+        var result = await digests.ApproveAsync(id, await ModeratorEndpoint.ModeratorAsync(context), ct);
         return result.IsSuccess ? TypedResults.Ok(DigestMapping.Map(result.Value)) : errors.ToResult(result.Error!);
     }
 

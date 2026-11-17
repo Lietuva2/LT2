@@ -180,13 +180,11 @@ else
     private IEnumerable<DigestItemResponse> ItemsOf(DigestRunResponse run) =>
         Date is not null && Holds(run) ? run.Items.OrderBy(i => string.Equals(i.BillNumber, Bill, StringComparison.OrdinalIgnoreCase) ? 0 : 1) : run.Items;
 
-    /// <summary>The public copy's one line (design 8.19.2): a dry run, waiting, sent to how many and when, declined or expired.</summary>
+    /// <summary>The public copy's one line (design 8.19.2): a dry run, sent to how many and when, or declined.</summary>
     private string StatusLine(DigestRunResponse run) => run.Status switch
     {
-        "waiting" => T["Digests.Line.waiting"],
-        "sent" => T.Format("Digests.Line.sent", Display.Number(run.SentCount), run.DecidedAt is { } at ? Display.DayTime(at) : ""),
+        "sent" => T.Format("Digests.Line.sent", Display.Number(run.SentCount), run.SentAt is { } at ? Display.DayTime(at) : ""),
         "cancelled" => T["Digests.Line.cancelled"],
-        "expired" => T["Digests.Line.expired"],
         _ => T["Digests.Line.dry-run"],
     };
 

@@ -118,12 +118,12 @@ public sealed class OrganisationCountTests(DatabaseFixture database) : ApiTest(d
             html.ShouldContain(AppealSteps.ThirdBill);
             html.ShouldNotContain(Marker, Case.Insensitive);
             html.ShouldNotContain(name, Case.Insensitive);
-            var mps = await moderator.Browser.GetJsonAsync<List<DigestMpResponse>>(DigestRoutes.MpsOf(weekly.Id));
-            var preview = await moderator.Browser.GetJsonAsync<DigestPreviewResponse>(DigestRoutes.PreviewOf(weekly.Id, mps[0].Slug));
-            preview.Text.ShouldContain(AppealSteps.ThirdBill);
-            preview.Text.ShouldNotContain(Marker, Case.Insensitive);
-            preview.Text.ShouldNotContain(name, Case.Insensitive);
-            preview.Text.ShouldNotContain("organizacij", Case.Insensitive);
+            var screen = System.Text.Json.JsonSerializer.Serialize(
+                (await moderator.Browser.GetJsonAsync<DigestModerationResponse>(DigestRoutes.Moderation)).Runs.Single(r => r.Id == weekly.Id));
+            screen.ShouldContain(AppealSteps.ThirdBill);
+            screen.ShouldNotContain(Marker, Case.Insensitive);
+            screen.ShouldNotContain(name, Case.Insensitive);
+            screen.ShouldNotContain("organizacij", Case.Insensitive);
         }
         finally
         {

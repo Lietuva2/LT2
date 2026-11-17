@@ -291,6 +291,35 @@ internal sealed class ParticipantDirectory(NpgsqlDataSource dataSource) : IParti
     }
 }
 
+/// <summary>
+/// <see cref="IStaffAddresses"/> for the notice of a prepared summary (design 8.19.2): the accounts with an activated moderator
+/// or administrator role and a staff passkey, as <c>StaffAccess</c> reads them. Plain SQL, a connection per call.
+/// </summary>
+internal sealed class StaffAddressDirectory(NpgsqlDataSource dataSource) : IStaffAddresses
+{
+    public async Task<IReadOnlyList<string>> ModeratorAddressesAsync(CancellationToken cancellationToken)
+    {
+        await using var command = dataSource.CreateCommand(
+            """
+            SELECT DISTINCT u.email FROM identity."user" u
+            JOIN identity.profile p ON p.user_id = u.id AND p.staff_passkey_id IS NOT NULL
+            JOIN identity.user_role ur ON ur.user_id = u.id
+            JOIN identity.role r ON r.id = ur.role_id AND r.name = ANY(@roles)
+            WHERE u.email IS NOT NULL
+              AND EXISTS (SELECT 1 FROM identity.role_activation a WHERE a.user_id = u.id AND a.role = r.name AND a.used_at IS NOT NULL)
+            """);
+        command.Parameters.AddWithValue("roles", new[] { Roles.Moderator, Roles.Administrator });
+        var result = new List<string>();
+        await using var reader = await command.ExecuteReaderAsync(cancellationToken);
+        while (await reader.ReadAsync(cancellationToken))
+        {
+            result.Add(reader.GetString(0));
+        }
+
+        return result;
+    }
+}
+
 /// <summary><see cref="IPartySupporters"/> for the Appeals module's group numbers. Plain SQL, a connection per call.</summary>
 internal sealed class PartySupporterDirectory(NpgsqlDataSource dataSource) : IPartySupporters
 {

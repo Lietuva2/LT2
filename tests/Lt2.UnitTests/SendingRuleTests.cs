@@ -15,8 +15,8 @@ public sealed class SendingRuleTests
     public void Sending_is_off_by_the_setting_and_otherwise_what_the_setting_says_once_the_letter_went()
     {
         SendingRules.State("off", introductionSent: true, inventedData: false, mailCaught: false).ShouldBe(new SendingState("off", "off", null));
-        SendingRules.State("approval", true, false, false).ShouldBe(new SendingState("approval", "approval", null));
         SendingRules.State("automatic", true, false, false).ShouldBe(new SendingState("automatic", "automatic", null));
+        SendingRules.State("approval", true, false, false).Mode.ShouldBe("off", "owner, 2026-11-17: there is no approval mode");
         SendingRules.State("nonsense", true, false, false).Mode.ShouldBe("off");
     }
 
@@ -32,8 +32,8 @@ public sealed class SendingRuleTests
     [Fact]
     public void Invented_data_reaches_no_mailbox_unless_the_deployment_declares_its_mail_caught()
     {
-        SendingRules.State("approval", introductionSent: true, inventedData: true, mailCaught: false).ShouldBe(new SendingState("off", "approval", SendingRules.NotCaught));
-        SendingRules.State("approval", true, inventedData: true, mailCaught: true).Mode.ShouldBe("approval");
+        SendingRules.State("automatic", introductionSent: true, inventedData: true, mailCaught: false).ShouldBe(new SendingState("off", "automatic", SendingRules.NotCaught));
+        SendingRules.State("automatic", true, inventedData: true, mailCaught: true).Mode.ShouldBe("automatic");
         SendingRules.MailMayLeave(inventedData: true, mailCaught: false).ShouldBeFalse("the introduction letter is held too");
         SendingRules.MailMayLeave(inventedData: false, mailCaught: false).ShouldBeTrue("real data: the transport decides");
     }
@@ -72,28 +72,23 @@ public sealed class SendingRuleTests
     }
 
     [Theory]
-    [InlineData("weekly", "off", "dry-run")]
-    [InlineData("urgent", "off", "dry-run")]
-    [InlineData("weekly", "approval", "waiting")]
-    [InlineData("before-vote", "approval", "waiting")]
-    [InlineData("urgent", "approval", "sent")]
-    [InlineData("weekly", "automatic", "sent")]
-    [InlineData("before-vote", "automatic", "sent")]
-    public void A_summary_is_a_dry_run_while_sending_is_off_waits_with_approval_and_an_urgent_one_goes_at_once(string kind, string mode, string status) =>
-        SendingRules.NewRunStatus(kind, mode).ShouldBe(status);
+    [InlineData("off", "dry-run")]
+    [InlineData("automatic", "sent")]
+    public void A_prepared_summary_goes_as_a_dry_run_while_sending_is_off_and_is_sent_otherwise(string mode, string status) =>
+        SendingRules.GoneStatus(mode).ShouldBe(status);
 
     [Theory]
-    [InlineData("waiting", true, true)]
+    [InlineData("prepared", true, true)]
     [InlineData("sent", true, true)]
     [InlineData("dry-run", true, false)]
     [InlineData("cancelled", true, false)]
-    [InlineData("expired", true, false)]
+    [InlineData("dropped", true, false)]
+    [InlineData("prepared", false, true)]
     [InlineData("dry-run", false, true)]
-    [InlineData("waiting", false, true)]
     [InlineData("sent", false, true)]
     [InlineData("cancelled", false, false)]
-    [InlineData("expired", false, false)]
-    public void While_sending_is_on_only_waiting_and_sent_runs_count_and_a_declined_or_expired_one_never_does(string status, bool sendingOn, bool counts) =>
+    [InlineData("dropped", false, false)]
+    public void A_prepared_and_a_sent_run_count_and_a_declined_or_dropped_one_never_does(string status, bool sendingOn, bool counts) =>
         SendingRules.Counts(status, sendingOn).ShouldBe(counts);
 
     [Fact]
@@ -102,36 +97,16 @@ public sealed class SendingRuleTests
         SendingRules.CountsForCeiling("sent", "sent", sendingOn: true).ShouldBeTrue();
         SendingRules.CountsForCeiling("sent", "queued", true).ShouldBeTrue();
         SendingRules.CountsForCeiling("sent", "introduced", true).ShouldBeTrue("the letter in its place is an email that week");
-        SendingRules.CountsForCeiling("waiting", "waiting", true).ShouldBeTrue("a waiting summary holds its place");
         SendingRules.CountsForCeiling("sent", "skipped-preference", true).ShouldBeFalse();
         SendingRules.CountsForCeiling("sent", "suppressed", true).ShouldBeFalse();
         SendingRules.CountsForCeiling("sent", "skipped-ceiling", true).ShouldBeFalse();
-        SendingRules.CountsForCeiling("cancelled", "not-sent", true).ShouldBeFalse();
         SendingRules.CountsForCeiling("dry-run", "dry-run", sendingOn: true).ShouldBeFalse("earlier dry runs do not thin the first real summary");
         SendingRules.CountsForCeiling("dry-run", "dry-run", sendingOn: false).ShouldBeTrue("as before while sending is off");
     }
 
     [Fact]
-    public void A_waiting_summary_expires_after_the_set_hours_or_when_its_sitting_day_begins_whichever_is_first()
-    {
-        // Monday 07:00 in Vilnius; a sitting on Tuesday begins at Tuesday 00:00, before 24 hours have passed.
-        var tuesday = new DateOnly(2026, 11, 17);
-        SendingRules.ExpiresAt(Monday0700, 24, tuesday).ShouldBe(VilniusTime.StartOf(tuesday));
-        SendingRules.ExpiresAt(Monday0700, 24, tuesday.AddDays(2)).ShouldBe(Monday0700.AddHours(24));
-        SendingRules.ExpiresAt(Monday0700, 6, null).ShouldBe(Monday0700.AddHours(6));
-        SendingRules.Expired(Monday0700.AddHours(6), Monday0700.AddHours(6)).ShouldBeTrue("nothing is sent late");
-        SendingRules.Expired(Monday0700.AddHours(6).AddSeconds(-1), Monday0700.AddHours(6)).ShouldBeFalse();
-        SendingRules.Expired(Monday0700, null).ShouldBeFalse();
-    }
-
-    [Fact]
-    public void A_weekly_summarys_sitting_is_the_first_planned_date_it_holds_from_its_day_on()
-    {
-        var monday = new DateOnly(2026, 11, 16);
-        SendingRules.SittingOf(null, monday, [monday.AddDays(3), null, monday.AddDays(1), monday.AddDays(-2)]).ShouldBe(monday.AddDays(1));
-        SendingRules.SittingOf(monday.AddDays(2), monday, [monday.AddDays(1)]).ShouldBe(monday.AddDays(2), "a before-vote summary's own sitting");
-        SendingRules.SittingOf(null, monday, [null]).ShouldBeNull();
-    }
+    public void Mondays_summary_at_seven_vilnius_time_is_five_utc_in_winter() =>
+        DigestRules.At(new DateOnly(2026, 11, 16), new TimeOnly(7, 0)).ShouldBe(Monday0700);
 
     [Theory]
     [InlineData("default", "weekly", true)]

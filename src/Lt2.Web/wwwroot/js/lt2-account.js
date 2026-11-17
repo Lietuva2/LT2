@@ -5,7 +5,8 @@
 // its toggle), on a press outside it and when focus leaves it.
 // Design 8.5.1 (owner, 2026-11-17): on a member's page the account's own GET /api/v1/me is read once per page load and, when
 // it offers to take over an MP's profile (mpOffer), the hidden notice under the header is shown with the MP's name; the answer
-// is kept in this page's memory only and applied again after Blazor's enhanced navigation. Nothing is stored.
+// is kept in this page's memory only and applied again after Blazor's enhanced navigation. Nothing is stored. The same answer
+// shows a staff account the box of a prepared summary to MPs (digestReview, design 8.19.2).
 // Listeners sit on the document, so it keeps working when Blazor's enhanced navigation replaces the header.
 (() => {
   const ACCOUNT = "details[data-account-menu]";
@@ -72,22 +73,59 @@
     notice.hidden = !on;
   };
 
-  const readOffer = async () => {
-    // Only on a member's page: the notice is served to signed-in sessions only, so a visitor's browser asks nothing.
+  // Design 8.19.2 (owner, 2026-11-17): the prepared summary to MPs for a staff account (digestReview), once read; null when none.
+  let review;
+
+  // "yyyy-MM-dd HH:mm" in Vilnius time, as the site writes dates in numbers.
+  const vilnius = (iso) => {
+    const parts = {};
+    for (const p of new Intl.DateTimeFormat("en-GB", {
+      timeZone: "Europe/Vilnius", year: "numeric", month: "2-digit", day: "2-digit", hour: "2-digit", minute: "2-digit", hourCycle: "h23",
+    }).formatToParts(new Date(iso))) parts[p.type] = p.value;
+    return `${parts.year}-${parts.month}-${parts.day} ${parts.hour}:${parts.minute}`;
+  };
+
+  // A Lithuanian count with its noun: forms "one|few|many", each with {0} for the number.
+  const counted = (n, forms) => {
+    const [one, few, many] = (forms || "{0}|{0}|{0}").split("|");
+    const units = n % 10, tens = n % 100;
+    return ((tens >= 11 && tens <= 19) || units === 0 ? many : units === 1 ? one : few).replace("{0}", String(n));
+  };
+
+  const applyReview = () => {
+    const notice = document.querySelector("[data-digest-review-notice]");
+    if (!notice) return;
+    const text = notice.querySelector("[data-digest-review-text]");
+    const skip = (notice.getAttribute("data-skip") || "").split(" ");
+    const on = review && text !== null && !skip.includes(location.pathname.replace(/\/$/, ""));
+    if (on) {
+      text.textContent = (text.getAttribute("data-format") || "")
+        .replace("{0}", vilnius(review.dueAt))
+        .replace("{1}", counted(review.bills, text.getAttribute("data-bills")))
+        .replace("{2}", counted(review.reasons, text.getAttribute("data-reasons")));
+    }
+    notice.hidden = !on;
+  };
+
+  const readNotices = async () => {
+    // Only on a member's page: the notices are served to signed-in sessions only, so a visitor's browser asks nothing.
     if (!document.querySelector("[data-mp-offer-notice]")) return;
     try {
       const me = await readMe();
       const mp = me?.mpOffer;
       offer = mp ? `${mp.firstName} ${mp.lastName}` : null;
+      review = me?.digestReview ?? null;
     } catch (e) {
       offer = null;
+      review = null;
     }
     applyOffer();
+    applyReview();
   };
 
-  readOffer();
+  readNotices();
   if (window.Blazor && typeof window.Blazor.addEventListener === "function") {
-    window.Blazor.addEventListener("enhancedload", () => (offer === undefined ? readOffer() : applyOffer()));
+    window.Blazor.addEventListener("enhancedload", () => (offer === undefined ? readNotices() : (applyOffer(), applyReview())));
   }
 
   // "toggle" does not bubble: listen in the capture phase.

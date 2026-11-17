@@ -79,4 +79,8 @@
   <data name="Agenda.Planned" xml:space="preserve"><value>Planuojama</value></data>
   <data name="Agenda.Voted" xml:space="preserve"><value>Balsuota</value></data>
   <data name="Agenda.Older" xml:space="preserve"><value>Ankstesni balsavimai →</value></data>
+  <data name="Notice.DigestReview" xml:space="preserve"><value>Suvestinė Seimo nariams išeis {0}: {1}, {2}.</value></data>
+  <data name="Notice.DigestReview.Bills" xml:space="preserve"><value>{0} projektas|{0} projektai|{0} projektų</value></data>
+  <data name="Notice.DigestReview.Reasons" xml:space="preserve"><value>{0} argumentas|{0} argumentai|{0} argumentų</value></data>
+  <data name="Notice.DigestReviewLink" xml:space="preserve"><value>Peržiūrėti</value></data>
 </root>

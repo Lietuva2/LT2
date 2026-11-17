@@ -208,14 +208,4 @@ public sealed class MpMailTemplateTests
         text.ShouldContain("Daugiau suvestinių nesiųsime");
         text.ShouldContain("Atsiųsti naują nuorodą");
     }
-
-    [Fact]
-    public void The_moderators_preview_says_why_an_mp_would_not_get_it()
-    {
-        var templates = Templates();
-        templates.SkippedNote("queued").ShouldBeNull();
-        templates.SkippedNote("waiting").ShouldBeNull();
-        templates.SkippedNote("skipped-ceiling")!.ShouldContain("viršytas savaitės");
-        templates.SkippedNote("introduced")!.ShouldContain("pristatymo laiškas");
-    }
 }

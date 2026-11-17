@@ -17,6 +17,8 @@ internal sealed class NotificationsDb(DbContextOptions<NotificationsDb> options)
 
     public DbSet<Digests.DigestDelivery> DigestDeliveries => Set<Digests.DigestDelivery>();
 
+    public DbSet<Digests.DigestChoice> DigestChoices => Set<Digests.DigestChoice>();
+
     public DbSet<Digests.MpEmailPref> MpEmailPrefs => Set<Digests.MpEmailPref>();
 
     public DbSet<Digests.MpMailToken> MpMailTokens => Set<Digests.MpMailToken>();
@@ -53,7 +55,17 @@ internal sealed class NotificationsDb(DbContextOptions<NotificationsDb> options)
             b.Property(x => x.Status).HasMaxLength(20);
             b.Property(x => x.Statement).HasMaxLength(StaffStatements.MaxLength);
             b.HasIndex(x => x.RunDate);
-            b.HasIndex(x => x.Status).HasFilter("status = 'waiting'");
+            b.HasIndex(x => x.DueAt).HasFilter("status = 'prepared'");
+        });
+
+        // Design 8.19.2 (owner, 2026-11-17): the arguments chosen for a prepared summary, kept apart from hides.
+        modelBuilder.Entity<Digests.DigestChoice>(b =>
+        {
+            b.ToTable("digest_choice");
+            b.HasKey(x => new { x.RunId, x.ReasonId });
+            b.Property(x => x.Side).HasMaxLength(16);
+            b.HasIndex(x => new { x.RunId, x.RecordId });
+            b.HasOne<Digests.DigestRun>().WithMany().HasForeignKey(x => x.RunId).OnDelete(DeleteBehavior.Cascade);
         });
         modelBuilder.Entity<Digests.DigestItem>(b =>
         {

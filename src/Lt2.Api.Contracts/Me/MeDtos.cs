@@ -64,6 +64,13 @@ public sealed record MeResponse
     /// them when completing its registration.
     /// </summary>
     public bool TermsRequired { get; init; }
+
+    /// <summary>
+    /// Design 8.19.2 (owner, 2026-11-17): for an account holding a staff role (<see cref="StaffAccount"/>, whatever this session
+    /// is), the prepared summary to MPs nobody approved or declined yet that goes first; null otherwise and when there is none.
+    /// Only in the answer to the browser, like <see cref="MpOffer"/>: the page the server renders holds nothing about it.
+    /// </summary>
+    public Digests.DigestReviewNoticeResponse? DigestReview { get; init; }
 }
 
 /// <summary>The version of the terms of use the client shows and accepts (design 8.22.2); the server accepts this one only.</summary>

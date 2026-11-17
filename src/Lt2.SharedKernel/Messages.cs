@@ -60,6 +60,33 @@ public static class MessageKinds
     /// argument, made by <c>CommentNotices</c> (Notifications), alone or a part of the gathered email.
     /// </summary>
     public const string CommentNoticeEmail = "email.comment-notice";
+
+    /// <summary>
+    /// A summary to MPs was prepared and goes at its time unless a moderator acts (design 8.19.2, owner 2026-11-17): one to every
+    /// moderator and administrator account.
+    /// </summary>
+    public const string DigestReviewEmail = "email.digest-review";
+}
+
+/// <summary>
+/// Payload of <see cref="MessageKinds.DigestReviewEmail"/> (design 8.19.2): when the prepared summary goes, how many bills and
+/// arguments it holds, and the moderators' summaries screen. Never an argument's text or anything about an MP.
+/// </summary>
+/// <param name="Kind"><c>weekly</c> or <c>before-vote</c>.</param>
+public sealed record DigestReviewEmail(string To, string Kind, DateTimeOffset DueAt, int Bills, int Reasons, string Path);
+
+/// <summary>
+/// A count with its noun in Lithuanian: <paramref name="one"/> after 1, 21, 31 … (not 11), <paramref name="few"/> after 2–9,
+/// 22–29 … (not 12–19), <paramref name="many"/> after 0, 10–20, 30 … ("1 projektas", "3 projektai", "12 projektų").
+/// </summary>
+public static class LithuanianCounts
+{
+    public static string Pick(int n, string one, string few, string many)
+    {
+        var tens = Math.Abs(n) % 100;
+        var units = Math.Abs(n) % 10;
+        return tens is >= 11 and <= 19 || units == 0 ? many : units == 1 ? one : few;
+    }
 }
 
 /// <summary>One argument of the person's that got a comment (design 8.23.9): the bill and the link to the argument; never the comment.</summary>

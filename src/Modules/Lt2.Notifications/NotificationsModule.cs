@@ -80,6 +80,7 @@ public static class NotificationsModule
         services.AddSingleton<OrganisationTemplates>();
         services.AddSingleton<FollowTemplates>();
         services.AddSingleton<MpTemplates>();
+        services.AddSingleton<DigestReviewTemplate>();
 
         // Every outbox kind and the template that renders it.
         services.AddEmail<SignInCodeEmail, SignInCodeTemplate>(MessageKinds.SignInCodeEmail, t => t.Render);
@@ -88,6 +89,7 @@ public static class NotificationsModule
         services.AddEmail<WritingRestrictionEmail, WritingRestrictionTemplate>(MessageKinds.WritingRestrictionEmail, t => t.Render);
         services.AddEmail<FeedbackReplyEmail, FeedbackTemplates>(MessageKinds.FeedbackReplyEmail, t => t.Reply);
         services.AddEmail<FeedbackNoticeEmail, FeedbackTemplates>(MessageKinds.FeedbackNoticeEmail, t => t.Notice);
+        services.AddEmail<DigestReviewEmail, DigestReviewTemplate>(MessageKinds.DigestReviewEmail, t => t.Render);
         services.AddEmail<OrganisationCodeEmail, OrganisationTemplates>(MessageKinds.OrganisationCodeEmail, t => t.Render);
         services.AddEmail<OrganisationNoticeEmail, OrganisationTemplates>(MessageKinds.OrganisationNoticeEmail, t => t.Render);
         services.AddEmail<FollowPlannedEmail, FollowTemplates>(MessageKinds.FollowPlannedEmail, t => t.Planned);

@@ -319,8 +319,8 @@ internal sealed class MpMailService(
             CreatedAt = now,
             Status = RunStatuses.Sent,
             LetterVersion = letter.Version,
-            DecidedBy = administrator.UserId,
-            DecidedAt = now,
+            DueAt = now,
+            SentAt = now,
             MpCount = queued,
             SentCount = queued,
         };

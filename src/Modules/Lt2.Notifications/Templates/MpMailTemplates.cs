@@ -13,7 +13,7 @@ namespace Lt2.Notifications.Templates;
 /// and the emails that confirm a change of the MP's choices. Both sides always, with the 30-day counts; the MP's own response
 /// or the link to answer; at the end what the numbers are and are not, the public copy, the preferences link and the sentence on
 /// taking over the profile. Links are full addresses of the site (<see cref="SiteLinks.Absolute"/>); nothing is tracked. The
-/// moderators' preview is the same text (<see cref="Text"/>).
+/// moderators' summaries screen shows the part common to every MP (design 8.19.2, owner 2026-11-17).
 /// </summary>
 internal sealed class MpMailTemplates(IStringLocalizer<EmailTemplates> l, IOptions<SiteOptions> site)
 {
@@ -74,16 +74,7 @@ internal sealed class MpMailTemplates(IStringLocalizer<EmailTemplates> l, IOptio
         return EmailLayout.BuildMp(model.To, l[$"MpMail.{model.Notice}.Subject"], paragraphs, EmailLayout.Footer(l, site.Value.Address), null);
     }
 
-    /// <summary>For the moderators' preview: why this MP's own address does not get this summary, or null when it does.</summary>
-    public string? SkippedNote(string deliveryStatus) => deliveryStatus switch
-    {
-        DeliveryStatuses.DryRun or DeliveryStatuses.Waiting or DeliveryStatuses.Queued or DeliveryStatuses.Sent => null,
-        DeliveryStatuses.SkippedCeiling => l["Digest.Skipped"].Value,
-        _ when l["Digest.Skipped." + deliveryStatus] is { ResourceNotFound: false } note => note.Value,
-        _ => null,
-    };
-
-    /// <summary>The subject and paragraphs of one MP's summary: the email's text part, and the moderators' preview.</summary>
+    /// <summary>The subject and paragraphs of one MP's summary: the email's text part.</summary>
     public (string Subject, IReadOnlyList<string> Paragraphs) Text(MpDigestEmail model)
     {
         ArgumentNullException.ThrowIfNull(model);
@@ -156,7 +147,7 @@ internal sealed class MpMailTemplates(IStringLocalizer<EmailTemplates> l, IOptio
             }
             else
             {
-                // A side may have no argument a moderator has seen yet.
+                // A side may have no published argument (design 8.1: records open without arguments).
                 text.Append('\n').Append(l["Digest.NoReasons." + side]);
             }
         }
@@ -181,7 +172,7 @@ internal sealed class MpMailTemplates(IStringLocalizer<EmailTemplates> l, IOptio
     /// One argument in the email (design 8.19.3, owner 2026-11-16): its beginning by the same rule as the page
     /// (<see cref="TextExcerpt"/>, about 300 characters) with "…" and the "Man svarbu" count, and when it was cut a plain
     /// line "Visas argumentas: {link}" to it on the summary's public copy, which shows the snapshot's whole text. The
-    /// snapshot itself keeps the whole text; the moderators' preview is this same text.
+    /// snapshot itself keeps the whole text.
     /// </summary>
     private string Reason(DigestReason reason, string link)
     {

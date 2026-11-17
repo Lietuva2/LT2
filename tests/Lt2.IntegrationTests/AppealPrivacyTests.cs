@@ -360,7 +360,7 @@ public sealed class AppealPrivacyTests(DatabaseFixture database) : ApiTest(datab
             "/api/v1/moderation/reasons/{id}/merge", "/api/v1/me/consents/positions", "/api/v1/bills/{number}/record/flags",
             "/api/v1/bills/{number}/record/history", "/api/v1/moderation/records/{id}/planned", "/api/v1/moderation/records/{id}/hold",
             "/api/v1/moderation/records/{id}/release", "/api/v1/moderation/records/{id}/urgent", "/api/v1/digests", "/api/v1/digests/{date}",
-            "/api/v1/digests/rules", "/api/v1/moderation/digests/{id}/mps", "/api/v1/moderation/digests/{id}/mps/{slug}", "/api/v1/me/party-support",
+            "/api/v1/digests/rules", "/api/v1/moderation/digests", "/api/v1/moderation/digests/{id}/approve", "/api/v1/me/party-support",
             "/api/v1/me/export", "/api/v1/me",
         })
         {
