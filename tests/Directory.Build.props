@@ -12,7 +12,7 @@
     <PackageReference Include="Shouldly" />
   </ItemGroup>
   <ItemGroup>
-    <!-- The order the tests run in, chosen by LT2_TEST_ORDER (AGENTS.md, "Writing tests"). -->
+    <!-- The order the tests run in, chosen by LT2_TEST_ORDER (agents/testing.md). -->
     <Compile Include="$(MSBuildThisFileDirectory)Shared/TestOrder.cs" Link="Shared/TestOrder.cs" />
   </ItemGroup>
   <ItemGroup>

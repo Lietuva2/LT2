@@ -1,6 +1,6 @@
 -- What end-to-end tests could leave on the local stack, counted (tools/run_tests.py prints it before and after a run;
--- every line should read the same). A test that leaves something here has not cleaned up after itself (AGENTS.md,
--- "Writing tests"). Demonstration data and the accounts people use by hand are counted only where a test changes them.
+-- every line should read the same). A test that leaves something here has not cleaned up after itself (agents/testing.md).
+-- Demonstration data and the accounts people use by hand are counted only where a test changes them.
 select 'test accounts (@pavyzdys.test, not demo.*) ' || count(*) from identity."user" where lower(email) like '%@pavyzdys.test' and lower(email) not like 'demo.%';
 select 'stand-in MPs'' accounts (@lrs.lt) ' || count(*) from identity."user" where lower(email) like '%@lrs.lt';
 select 'run invitations (E2E-RUN-*) ' || count(*) from identity.invitation where code like 'E2E-RUN-%';
