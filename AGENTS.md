@@ -812,7 +812,7 @@ rules are about them.
   the accounts it registered through the shared steps (`E2ESteps.RegisterHereAsync`, `PasskeyTests.RegisterAsync`) are
   deleted through the product (`DELETE /api/v1/me`, from the session the browser ended with, else by a code sign-in;
   `TestAccounts`), and first what the product keeps on purpose and a test must not leave: moderators' actions and reports on
-  their arguments, the organisations they registered (`E2EData`). A staff fixture forgets its moderators' actions and deletes
+  their arguments, the organisations they registered (`E2EData`); then what the product made because of the test and keeps with nothing left on it: a bill's record opened during the test, and the follow job's planned, voted and answer records about bills nobody follows any more (`E2EData.ForgetSinceAsync`; its comment records stay, being where its next window starts, and `leftovers.sql` does not count them). A staff fixture forgets its moderators' actions and deletes
   its account from its staff passkey session when the class is over. The run makes its own invitation through the migrator
   and deletes it at the end (`E2ERun`, an assembly fixture; `LT2_E2E_INVITATION` names an existing code instead, for a
   stack whose migrator cannot be run), and waits for the web host before the first test. A test that changes a
