@@ -113,7 +113,11 @@ public sealed class OfficeCopyTests(DatabaseFixture database) : ApiTest(database
             await admin.ResetFreshAsync("Digest:Sending");
             await admin.ResetFreshAsync("Digest:ThresholdMinimum");
             await Database.ExecuteAsync("DELETE FROM parliament.planned_item WHERE bill_number = 'XVP-0618'");
-            await Database.ExecuteAsync("DELETE FROM notify.outbox WHERE lower(payload->>'to') = lower(@a)", ("a", officeEmail));
+            // Deleting the MP's account tells the official address the profile was given up (design 8.5.2, the account's last
+            // email): left in the outbox, it would be one more email to an address the MP mail tests share.
+            await Database.ExecuteAsync(
+                "DELETE FROM notify.outbox WHERE lower(payload->>'to') = ANY(@a)",
+                ("a", new[] { officeEmail.ToLowerInvariant(), MpSteps.Uosyte.Address.ToLowerInvariant() }));
             await Database.ResetMpMailAsync();
             await Database.FreeBillAsync(AppealSteps.ThirdBill);
         }
