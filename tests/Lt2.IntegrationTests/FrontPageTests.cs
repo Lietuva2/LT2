@@ -133,7 +133,8 @@ public sealed partial class FrontPageTests(DatabaseFixture database) : ApiTest(d
         document.RootElement.GetProperty("hasPositionConsent").GetBoolean().ShouldBeTrue("the caller's own consent, once on the answer");
         foreach (var row in document.RootElement.GetProperty("bills").EnumerateArray())
         {
-            row.EnumerateObject().Select(p => p.Name).ShouldBe(["number", "side", "following"]);
+            // Design 8.11.8: "new", what was written on a followed bill since the caller last opened it (null when nothing).
+            row.EnumerateObject().Select(p => p.Name).ShouldBe(["number", "side", "following", "new"]);
         }
 
         // Design 8.7: whether the caller gave the positions consent, so a row of the front page knows whether to ask.

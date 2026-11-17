@@ -306,7 +306,7 @@
                 // On a page of its own the page itself goes on; the flow is shown only before that.
                 if (ReturnTo is null)
                 {
-                    Navigation.NavigateTo(AfterSignIn(me.Value, LandingPath.Accept(Landing) ?? "/paskyra"), forceLoad: true);
+                    Navigation.NavigateTo(AfterSignIn(me.Value, LandingPath.Accept(Landing) ?? "/"), forceLoad: true);
                 }
 
                 return;
@@ -339,15 +339,19 @@
         Navigation.NavigateTo(next, forceLoad: true);
     }
 
-    /// <summary>Where a member goes once signed in: the share link's page if one waits in this tab, otherwise the account.</summary>
-    private async Task<string> NextPageAsync()
+    /// <summary>
+    /// Where a member goes once signed in: the share link's page if one waits in this tab, otherwise <paramref name="otherwise"/>:
+    /// the front page (owner, 2026-11-17: "the start page shouldn't be the profile, for no one"), or "Profilis" right after a
+    /// registration is completed (owner, 2026-11-17: "on the profile could also land a new user after registration").
+    /// </summary>
+    private async Task<string> NextPageAsync(string otherwise = "/")
     {
         var stored = await StorageAsync("sessionStorage.getItem", LandingKey);
         await StorageAsync("sessionStorage.removeItem", LandingKey);
-        return LandingPath.Accept(stored) ?? LandingPath.Accept(Landing) ?? "/paskyra";
+        return LandingPath.Accept(stored) ?? LandingPath.Accept(Landing) ?? otherwise;
     }
 
-    /// <summary>Session storage may be blocked (private windows, settings): then the share link simply lands on the account.</summary>
+    /// <summary>Session storage may be blocked (private windows, settings): then the share link simply lands on the front page.</summary>
     private async Task<string?> StorageAsync(string function, params object[] arguments)
     {
         try
@@ -474,7 +478,8 @@
             if (Succeeded(await Me.CompleteRegistrationAsync(request), FieldsOnThisStep))
             {
                 await StorageAsync("sessionStorage.removeItem", CodeKey);
-                await GoAsync(ReturnTo ?? await NextPageAsync());
+                // Owner, 2026-11-17: a registration just completed lands on "Profilis" when there is no page to return to.
+                await GoAsync(ReturnTo ?? await NextPageAsync(AccountScreens.Profile));
                 return;
             }
 
@@ -535,7 +540,7 @@
     /// Goes to <paramref name="next"/>; when the sign-in ended another account's session in this browser (design 6.2, owner
     /// 2026-11-17), it says so first, with the new account's display name, and goes on when asked.
     /// </summary>
-    private Task ContinueAsync() => RunAsync(() => GoAsync(_next ?? ReturnTo ?? "/paskyra"));
+    private Task ContinueAsync() => RunAsync(() => GoAsync(_next ?? ReturnTo ?? "/"));
 
     private async Task GoOnAsync(SignInResponse answer, MeResponse? me, string next)
     {

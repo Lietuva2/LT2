@@ -231,8 +231,11 @@ public interface IMpMailAdministration
     Task<Lt2.SharedKernel.Result<Lt2.SharedKernel.Unit>> UnsuppressAsync(Guid? entryId, string? address, string statement, StaffActor administrator, CancellationToken cancellationToken);
 }
 
-/// <summary>A bill the person follows, with its planned date or its last stage result.</summary>
-public sealed record FollowedBill(Lt2.SharedKernel.BillFacts Bill, Lt2.SharedKernel.PlannedDate? Planned, Lt2.SharedKernel.StageVoteFacts? LastStageResult);
+/// <summary>
+/// A bill the person follows, with its planned date or its last stage result, and when the person last opened its page (design
+/// 8.11.8: from the follow's own moment).
+/// </summary>
+public sealed record FollowedBill(Lt2.SharedKernel.BillFacts Bill, Lt2.SharedKernel.PlannedDate? Planned, Lt2.SharedKernel.StageVoteFacts? LastStageResult, DateTimeOffset LastSeenAt);
 
 /// <summary>The person's own follows (design 8.11.2, 8.14.14); there is no limit on how many.</summary>
 public sealed record MyFollows(
@@ -262,8 +265,17 @@ public interface IFollows
 {
     Task<MyFollows> MineAsync(Guid userId, CancellationToken cancellationToken);
 
-    /// <summary>The numbers of the bills the person follows, in one read (design 8.7, the front page); their own only.</summary>
-    Task<IReadOnlySet<string>> FollowedBillNumbersAsync(Guid userId, CancellationToken cancellationToken);
+    /// <summary>
+    /// The bills the person follows, in one read (design 8.7, the front page), each with when the person last opened its page
+    /// (design 8.11.8); their own only.
+    /// </summary>
+    Task<IReadOnlyDictionary<string, DateTimeOffset>> FollowedBillsAsync(Guid userId, CancellationToken cancellationToken);
+
+    /// <summary>
+    /// The person opened a bill's page (design 8.11.8): on a bill they follow, keeps now as the moment of their last visit and
+    /// answers the one before (at first the follow's own moment); on a bill they do not follow, stores nothing and answers null.
+    /// </summary>
+    Task<DateTimeOffset?> SeenBillAsync(Guid userId, string number, CancellationToken cancellationToken);
 
     /// <summary>
     /// Follows a bill: <c>bill.not-found</c>, <c>member.required</c>; following again changes nothing. Also used by the host

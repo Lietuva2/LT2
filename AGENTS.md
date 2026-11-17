@@ -258,7 +258,8 @@ pre-merge run found.
   share the caller's answers through `MyBillState`, the front page's through `MyAgendaState` (its `Changed` event tells
   the others after a member's action). **An action never reloads the page (owner, 2026-11-17):** on a bill's page the island
   that acted calls `MyBillState.Announce` (`byModerator` for a moderator's action) and the others read their part again
-  (`Changed`); the counts, the threshold's progress and the share line are islands on `LiveRecordBase` (`SideFigures`,
+  (`Changed`); what is new to the reader (design 8.11.8) is `MyBillState.News`/`NewSince`, set once per page by `WhatsNew`,
+  with "Rodyti tik naujus" as `OnlyNew`/`Keeps` and `NewsChanged` telling the islands; the counts, the threshold's progress and the share line are islands on `LiveRecordBase` (`SideFigures`,
   `ThresholdProgress`, `ShareLine`) that take the bill's live answer; where the server's part of a page changes (a moderator's
   action, an organisation's profile, an MP's response) the island calls `Navigation.Refresh()`, which reads the page again in
   place and gives the islands new parameters (`FollowButton` takes its count from them again). A full load
@@ -411,7 +412,9 @@ support `MyPartySupport`), "Sekimas ir laiškai" `/paskyra/sekimas` (`FollowList
 (`MyMp`, `MyOrganisations`, `MyInvitationCode` `#my-invitation`, the staff part), "Saugumas ir duomenys" `/paskyra/saugumas`
 (passkeys, sessions, known browsers `#zinomos-narsykles`, the positions consent, export and deletion `#my-data`, signing out).
 The addresses are `AccountScreens` (`Lt2.SharedKernel/AccountScreens.cs`, also compiled into Lt2.Web.Client): links in emails, legal texts and pages are built from it, never
-written by hand. A visitor sent to sign in from one comes back to it (`LandingPath` accepts `/paskyra…`). Every screen is
+written by hand. A visitor sent to sign in from one comes back to it (`LandingPath` accepts `/paskyra…`). Without a page to
+return to, signing in, a staff session and accepting the terms land on the front page `/` (owner, 2026-11-17); a
+registration just completed lands on "Profilis", the MP's take-over on "Dalyvavimas". Every screen is
 `no-store` and carries `<NeedsScript />`; `IslandsBeforeStartTests` walks all four.
 
 **Public profiles (design 8.25; the owner, 2026-11-16: "implement those", before comments).**
@@ -537,8 +540,11 @@ page's "Balsuota".
   linked account's form is the island `MyMpResponse`, filled in the browser only (on an open bill nobody answered yet it
   stands alone with `Section`, bringing the part's sheet and heading for a linked account); reports are `ReportResponse` islands.
 - `/seimo-narys/projektai` (8.5.7, `MpBills`, linked from `MyMp`; `GET /me/mp/bills`): the bills in summaries now in the
-  summaries' order (`Lt2.Notifications.DigestLists.InSummariesNow`), with the MP's own response or "Atsakyti"; a code session
-  may read it; nothing about other MPs.
+  summaries' order (`Lt2.Notifications.DigestLists.InSummariesNow`), with the MP's own response or "Atsakyti"; then (owner,
+  2026-11-17) every other bill the MP answered, any state, newest first, without the counts ("Dabar suvestinėje nėra",
+  "Atsakyti" only while open); a code session may read it; nothing about other MPs. A first response follows the bill for
+  the account that wrote it (`MpResponseReads.SaveAsync`, as `TakingSides` for a first side; never refused or undone by the
+  follow; editing or withdrawing adds nothing).
 
 **Appeals (design 8.12, decided by the owner on 2026-11-14; replaces proposals, requests and initiators).**
 - The bill and the appeal are one object: the bill's page `/seimas/{number}`. Every active bill (in the catalogue, no
@@ -572,7 +578,9 @@ page's "Balsuota".
   after the person's own action (`StableOrder`, the order by marks returns on the next read) and gives the pressed button
   the focus back without scrolling. It is a toggle whose button stays neutral, only the heart (`Icon` `heart`, `.icon__fill`)
   filling in the brand's green while marked (owner, 2026-11-17); a visitor's is a `LandingPath.SignInLink` back to the bill
-  of the same look.
+  of the same look. One hint beside the arguments' heading, "Kas yra „Man svarbu“?" (`Reasons.EndorseWhat`, owner
+  2026-11-17), says when it can be marked (a side first, one's own side, not one's own argument), "Plačiau" to
+  `/metodika#argumentai`; the same served markup for everyone, gone for the MP's own account once the island runs.
 - **The bill's page (design 8.12.1, owner 2026-11-17).** The header: "Projektai / Įstatymo projektas XVP-0412" (no label
   line), the title, one `.follow-line` (the stage tags, "Planuojama …", then `FollowButton`). Beside the side column: what
   it is about, the sides, a closed bill's result; the side column: "Stadijos Seime" with `DateFlagForm` under the stages, the
@@ -615,7 +623,8 @@ page's "Balsuota".
   says so); the answer also names, per bill, the organisations with a public statement (as on the bill's page, never
   counted). The front page (design 8.7, reworked 2026-11-15; mockup `design/ui/pradzia.html`) is that agenda as a
   timeline of sitting days: a visitor first gets "Kaip tai veikia" (the same texts as `/metodika#kaip-tai-veikia`) and
-  links to register or sign in, never a form; a member gets "Jūsų projektai" and their marks in the rows, islands filled
+  links to register or sign in, never a form; a member gets "Jūsų projektai" (the bills they follow, and only those: owner,
+  2026-11-17, "followed only"; a side alone shows in its row) and their marks in the rows, islands filled
   in the browser from `GET /me/bills` (one request, never prerendered; it also says whether the caller gave the positions
   consent), so the HTML is the same for every member. The timeline is on a `.sheet` (design 8.16); the page has no
   "Organizacijos" block and the introduction no paragraph on following (owner, 2026-11-16: the footer links to
@@ -691,6 +700,17 @@ page's "Balsuota".
   side, then `IFollows.FollowBillAsync`), on the bill's page and in a front-page row alike. The side is never refused or
   undone because the follow failed. Changing a side adds nothing, withdrawing it keeps the follow, "Nebesekti" keeps the
   side; sides from before were not backfilled. The follow row holds nothing about the side.
+- **What is new since the last visit (design 8.11.8, owner 2026-11-17).** A bill's follow keeps `last_seen_at` (from the
+  follow's own time; goes with the follow and the account, in the export; nothing for bills not followed or any other
+  page). The bill page's island `WhatsNew` (above the texts, nothing in the served HTML) sends one write once interactive,
+  `POST /me/bills/{number}/seen` (`MyBillsReads.SeenAsync`, `own-read` limit): on a followed bill it keeps now
+  (`FollowRules.Seen`) and answers the moment before with the new texts by id, on another bill nothing. What is new is
+  Appeals' `NewsRules` through `IBillNews` (SharedKernel): shown texts made public or changed after the moment, never hidden
+  ones, never the member's own (their organisations' and their MP's included). `NewMark` shows "Nauja" (inside the islands,
+  and as its own island on each server-rendered response); "Rodyti tik naujus" (a plain checkbox) leaves only new texts and
+  those with new comments, their discussions open, the responses hidden by the stylesheet from `NewMark`'s `.new-out`
+  marker. "Jūsų projektai" and the follow list show the counts (`BillNewsCountsResponse`, `NewsLine` with `NumberForms`:
+  "3 nauji argumentai · 5 nauji komentarai"), one read per list.
 - Taking, changing or withdrawing a side, following and unfollowing (bills, MPs, organisations), "Man svarbu" and changing
   the display name share one per-account request limit, `RateLimits:Participation` (60 a minute): a guard against a runaway script, not a rule.
 - Links in emails: a message carries the site path, and the template makes it a full address with

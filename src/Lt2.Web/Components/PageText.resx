@@ -74,7 +74,6 @@
   <data name="Home.Register" xml:space="preserve"><value>Registruokitės</value></data>
   <data name="Home.HaveAccount" xml:space="preserve"><value>Jau turite paskyrą?</value></data>
   <data name="Home.SignIn" xml:space="preserve"><value>Prisijunkite</value></data>
-  <data name="Home.HowLink" xml:space="preserve"><value>Kaip tai veikia</value></data>
   <data name="Home.TrialSummaries" xml:space="preserve"><value>Vyksta uždaras bandymas: suvestinės sudaromos, bet Seimo nariams nesiunčiamos.</value></data>
   <data name="Agenda.Planned" xml:space="preserve"><value>Planuojama</value></data>
   <data name="Agenda.Voted" xml:space="preserve"><value>Balsuota</value></data>

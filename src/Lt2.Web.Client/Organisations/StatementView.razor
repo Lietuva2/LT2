@@ -20,6 +20,7 @@
             {
                 <OrgLabel Label="Label" />
             }
+            @Mark
         </p>
     }
     @if (ShowStance)
@@ -72,6 +73,9 @@
     [Parameter] public OrganisationLabelResponse? Label { get; set; }
 
     [Parameter] public bool ShowStance { get; set; } = true;
+
+    /// <summary>On the bill's page: "Nauja" beside a statement the reader has not seen (design 8.11.8).</summary>
+    [Parameter] public RenderFragment? Mark { get; set; }
 
     /// <summary>The start of the element ids (<c>mod-</c> in the moderators' panel, so the public list's ids stay unique).</summary>
     [Parameter] public string IdPrefix { get; set; } = "";

@@ -154,7 +154,7 @@ public sealed partial class PasskeyTests : E2ETest
         await page.GotoAsync(SignUpTests.BaseUrl!.TrimEnd('/') + "/prisijungti");
         await SignUpTests.WaitForInteractivityAsync(page);
         await page.GetByRole(AriaRole.Button, new() { Name = "Prisijungti prieigos raktu" }).ClickAsync();
-        await page.WaitForURLAsync(new Regex("/paskyra$"));
+        await page.WaitForURLAsync(new Regex(@"^https?://[^/]+/$"));
         await TestAccounts.SessionOfAsync(page.Context);
     }
 

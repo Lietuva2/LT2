@@ -26,6 +26,7 @@
             <a class="statement__name" href="/seimas/@Uri.EscapeDataString(bill.Number)">@bill.Title</a>
         }
         <span class="tag">@F.T["Responses.Mark"]</span>
+        @Mark
     </p>
     @switch (Response.Status)
     {
@@ -90,6 +91,9 @@
 
     /// <summary>On the profile: the bill answered.</summary>
     [Parameter] public Lt2.Api.Contracts.Appeals.BillRefResponse? Bill { get; set; }
+
+    /// <summary>On the bill's page: "Nauja" beside a response the reader has not seen (design 8.11.8), an island.</summary>
+    [Parameter] public RenderFragment? Mark { get; set; }
 
     /// <summary>The start of the item's own element ids, unique on the page.</summary>
     [Parameter] public string IdPrefix { get; set; } = "";

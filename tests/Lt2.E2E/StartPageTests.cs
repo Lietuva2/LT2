@@ -168,6 +168,17 @@ public sealed partial class StartPageTests : E2ETest
             await Assertions.Expect(page.Locator($"#home-action-{place}")).ToHaveAttributeAsync("href", "/seimas/" + number);
             await Assertions.Expect(row.Locator("[role=status]")).ToContainTextAsync("Dabar sekate šį projektą.");
 
+            // Owner, 2026-11-17 ("followed only"): unfollowed, the bill leaves "Jūsų projektai"; the side stays in its row.
+            var (unfollowed, unfollowedBody) = await E2ESteps.ApiAsync(page, "DELETE", $"/api/v1/bills/{number}/follow");
+            unfollowed.ShouldBe(204, unfollowedBody);
+            await page.ReloadAsync();
+            await Assertions.Expect(row.Locator(".mine .choice--for")).ToBeVisibleAsync(new() { Timeout = E2ESteps.Slow });
+            await Assertions.Expect(page.Locator($"#my-agenda-{number}")).ToHaveCountAsync(0);
+            var (refollowed, refollowedBody) = await E2ESteps.ApiAsync(page, "PUT", $"/api/v1/bills/{number}/follow");
+            refollowed.ShouldBe(204, refollowedBody);
+            await page.ReloadAsync();
+            await Assertions.Expect(page.Locator($"#my-agenda-{number}")).ToBeVisibleAsync(new() { Timeout = E2ESteps.Slow });
+
             // Reloaded, the row shows the count they are part of (design 8.7, "Cached"): the side marked the page's copy
             // out of date; within the copy's first two seconds the island reads the live numbers instead. The server's
             // own page shows it too once the copy may be replaced.
@@ -236,7 +247,8 @@ public sealed partial class StartPageTests : E2ETest
                 await Assertions.Expect(page.Locator("#home-title")).ToHaveTextAsync("Sveiki sugrįžę");
                 await Assertions.Expect(page.Locator("#home-head")).ToHaveCountAsync(0);
                 await Assertions.Expect(page.Locator(".intro-steps")).ToHaveCountAsync(0);
-                await Assertions.Expect(page.Locator("#home-how-link")).ToHaveAttributeAsync("href", "/metodika#kaip-tai-veikia");
+                // Owner, 2026-11-17: no "Kaip tai veikia" and "Mano paskyra" links in the member's head; both are reachable elsewhere.
+                await Assertions.Expect(page.Locator("#home-welcome a")).ToHaveCountAsync(0);
 
                 var mine = page.Locator($"#my-agenda-{number}");
                 await Assertions.Expect(mine).ToBeVisibleAsync(new() { Timeout = E2ESteps.Slow });

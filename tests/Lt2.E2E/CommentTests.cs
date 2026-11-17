@@ -129,7 +129,7 @@ public sealed partial class CommentTests(AppealFlowTests.ModeratorFixture modera
             var submit = page.Locator("#takeover-submit");
             await Assertions.Expect(submit).ToBeEnabledAsync(new() { Timeout = E2ESteps.Slow });
             await submit.ClickAsync();
-            await page.WaitForURLAsync(new Regex("/paskyra$"), new() { Timeout = E2ESteps.Slow });
+            await page.WaitForURLAsync(new Regex("/paskyra/dalyvavimas$"), new() { Timeout = E2ESteps.Slow });
 
             var (responded, respondedBody) = await E2ESteps.ApiAsync(page, "PUT", $"/api/v1/bills/{ResponseBill}/responses/mine", new { stance = "for", text = "Balsuosiu už (E2E)." });
             responded.ShouldBe(200, respondedBody);

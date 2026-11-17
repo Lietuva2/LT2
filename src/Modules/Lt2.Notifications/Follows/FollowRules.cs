@@ -21,6 +21,12 @@ internal static class FollowRules
     /// </summary>
     public static readonly TimeSpan EventRetention = TimeSpan.FromDays(30);
 
+    /// <summary>
+    /// A visit to a followed bill's page (design 8.11.8): the moment kept is now, never earlier than the one kept (two pages opened
+    /// at once, or a clock behind), so what was new once never becomes new again.
+    /// </summary>
+    public static DateTimeOffset Seen(DateTimeOffset previous, DateTimeOffset now) => now > previous ? now : previous;
+
     public static string PlannedKey(DateOnly date) => date.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture);
 
     public static DateOnly PlannedDateOf(string key) => DateOnly.ParseExact(key, "yyyy-MM-dd", CultureInfo.InvariantCulture);

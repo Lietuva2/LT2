@@ -20,7 +20,7 @@
    by the page's address and the writing box. The list is the same for every reader: what the caller may delete, wrote and
    agreed with comes from the never-cached answer (CommentState), read in the browser only. Inside an island (the arguments,
    the statements) this renders with it; on the server-rendered responses part it is an island of its own. *@
-<details class="discuss" id="aptarimas-@Key" open="@Open" @ontoggle="ToggledAsync">
+<details class="discuss" id="aptarimas-@Key" open="@(Open || ShowsNew)" @ontoggle="ToggledAsync">
     <summary class="act__item discuss__toggle" id="aptarimas-summary-@Key" aria-controls="aptarimas-panel-@Key"><Icon Name="chat" /><span class="discuss__word">@L["Comments.Title"]</span>@if (ShownCount > 0) {@(" ")<span class="num">(@Display.Number(ShownCount))</span>}</summary>
 </details>
 <div class="discuss__panel comments stack stack--tight" id="aptarimas-panel-@Key">
@@ -44,6 +44,7 @@
                         <p class="row comment__who" id="@CommentPaging.PositionAnchor(TargetId, position)">
                             @Name(c.Author)
                             <span class="small num">@Display.DayTime(c.CreatedAt)</span>
+                            <NewMark Number="@Number" Id="c.Id" />
                         </p>
                         <LongText Text="@c.Text" BubbleClass="bubble bubble--people voice comment__text" Links="true" Id="@($"{id}-more")" />
                         @if (c.AgreedBy.Count > 0)
@@ -209,6 +210,10 @@
         // runs in the browser.
         _signedIn = RendererInfo.IsInteractive && await IsSignedInAsync();
         State.Changed += OnChanged;
+        if (RendererInfo.IsInteractive)
+        {
+            BillState.NewsChanged += OnNewsChanged;
+        }
 
         // The caller's own answer and the moderators' one only in the browser: the server-rendered list is the same for all.
         if (_signedIn && RendererInfo.IsInteractive)
@@ -226,7 +231,53 @@
         }
     }
 
-    public void Dispose() => State.Changed -= OnChanged;
+    public void Dispose()
+    {
+        State.Changed -= OnChanged;
+        BillState.NewsChanged -= OnNewsChanged;
+    }
+
+    /// <summary>
+    /// "Rodyti tik naujus" is on and this discussion holds a comment new to the reader (design 8.11.8): it is rendered open, as a
+    /// linked comment's is, by the person's own switch.
+    /// </summary>
+    private bool ShowsNew => BillState.OnlyNew(Number) && BillState.News(Number)?.HasNewComments(TargetId) == true;
+
+    /// <summary>
+    /// What is new arrived, or "Rodyti tik naujus" was switched: the marks are drawn again, and a discussion opened by the switch
+    /// reads its comments through the last new one (new comments come last, and may stand beyond the first ten).
+    /// </summary>
+    private void OnNewsChanged(string number)
+    {
+        if (!string.Equals(number, Number, StringComparison.OrdinalIgnoreCase))
+        {
+            return;
+        }
+
+        _ = InvokeAsync(async () =>
+        {
+            var wanted = ShowsNew ? BillState.News(Number)?.CommentsByTarget.GetValueOrDefault(TargetId) : null;
+            var missing = wanted is not null && (_thread is not { } shown || wanted.Any(id => shown.Items.All(i => i.Id != id)));
+            if (missing && !_loading)
+            {
+                _loading = true;
+                StateHasChanged();
+                try
+                {
+                    var all = Math.Max(_thread?.Count ?? Count, Asked ?? 0);
+                    _thread = (await Comments.GetThreadAsync(Kind, TargetId, all > 0 ? all : null)).Value ?? _thread;
+                }
+                catch (HttpRequestException)
+                {
+                    // The discussion shows what it has.
+                }
+
+                _loading = false;
+            }
+
+            StateHasChanged();
+        });
+    }
 
     private void OnChanged(string number)
     {

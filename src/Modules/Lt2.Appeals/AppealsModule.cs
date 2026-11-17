@@ -63,6 +63,9 @@ public static class AppealsModule
         // Design 8.25: a member's published arguments, for their public page and the follow emails about them.
         services.AddScoped<IMemberTexts, MemberTexts>();
 
+        // Design 8.11.8: what is new to a member on the bills they follow, since the moments Notifications keeps on the follows.
+        services.AddScoped<IBillNews, BillNewsReads>();
+
         // Design 8.23: comments under arguments, statements and responses, their moderation, and the author's notice feed.
         services.AddScoped<CommentsService>();
         services.AddScoped<IComments>(sp => sp.GetRequiredService<CommentsService>());

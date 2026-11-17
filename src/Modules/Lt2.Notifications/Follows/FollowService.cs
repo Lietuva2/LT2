@@ -49,21 +49,45 @@ internal sealed class FollowService(
         var members = memberIds.Select(id => shownMembers.GetValueOrDefault(id)).OfType<PublicProfileFacts>().Select(p => new FollowedMember(p.ProfileId, p.DisplayName)).ToList();
 
         return new MyFollows(
-            numbers.Select(n => new FollowedBill(
-                    facts.GetValueOrDefault(n) ?? new BillFacts(n, n),
-                    planned.GetValueOrDefault(n),
-                    votes.GetValueOrDefault(n)))
+            follows.Where(f => f.Kind == FollowKinds.Bill).Select(f => new FollowedBill(
+                    facts.GetValueOrDefault(f.Key) ?? new BillFacts(f.Key, f.Key),
+                    planned.GetValueOrDefault(f.Key),
+                    votes.GetValueOrDefault(f.Key),
+                    f.LastSeenAt))
                 .ToList(),
             ids.Select(id => people.GetValueOrDefault(id)).OfType<MpFacts>().ToList(),
             organisationIds.Select(id => known.GetValueOrDefault(id)).OfType<OrganisationFacts>().ToList(),
             members);
     }
 
-    public async Task<IReadOnlySet<string>> FollowedBillNumbersAsync(Guid userId, CancellationToken cancellationToken)
+    public async Task<IReadOnlyDictionary<string, DateTimeOffset>> FollowedBillsAsync(Guid userId, CancellationToken cancellationToken)
     {
         await using var db = await contexts.CreateDbContextAsync(cancellationToken);
-        var numbers = await db.Follows.AsNoTracking().Where(f => f.UserId == userId && f.Kind == FollowKinds.Bill).Select(f => f.Key).ToListAsync(cancellationToken);
-        return numbers.ToHashSet(StringComparer.Ordinal);
+        var rows = await db.Follows.AsNoTracking().Where(f => f.UserId == userId && f.Kind == FollowKinds.Bill)
+            .Select(f => new { f.Key, f.LastSeenAt }).ToListAsync(cancellationToken);
+        return rows.ToDictionary(r => r.Key, r => r.LastSeenAt, StringComparer.Ordinal);
+    }
+
+    public async Task<DateTimeOffset?> SeenBillAsync(Guid userId, string number, CancellationToken cancellationToken)
+    {
+        var key = number.Trim().ToUpperInvariant();
+        await using var db = await contexts.CreateDbContextAsync(cancellationToken);
+        await using var transaction = await db.Database.BeginTransactionAsync(cancellationToken);
+
+        // The row locked, so two pages opened at once both answer a moment and the later one is kept.
+        var follow = await db.Follows
+            .FromSqlRaw("SELECT * FROM notify.follow WHERE user_id = {0} AND kind = {1} AND key = {2} FOR UPDATE", userId, FollowKinds.Bill, key)
+            .FirstOrDefaultAsync(cancellationToken);
+        if (follow is null)
+        {
+            return null;
+        }
+
+        var previous = follow.LastSeenAt;
+        follow.LastSeenAt = FollowRules.Seen(previous, clock.GetUtcNow());
+        await db.SaveChangesAsync(cancellationToken);
+        await transaction.CommitAsync(cancellationToken);
+        return previous;
     }
 
     public async Task<Result<Unit>> FollowBillAsync(Guid userId, string number, CancellationToken cancellationToken)
@@ -305,7 +329,8 @@ internal sealed class FollowService(
             return Result.Ok();
         }
 
-        db.Follows.Add(new Follow { UserId = userId, Kind = kind, Key = key, CreatedAt = clock.GetUtcNow() });
+        var now = clock.GetUtcNow();
+        db.Follows.Add(new Follow { UserId = userId, Kind = kind, Key = key, CreatedAt = now, LastSeenAt = now });
         await db.SaveChangesAsync(ct);
         await transaction.CommitAsync(ct);
         return Result.Ok();
@@ -327,7 +352,8 @@ internal sealed class FollowAccountData(IDbContextFactory<NotificationsDb> conte
     {
         await using var db = await contexts.CreateDbContextAsync(cancellationToken);
         var follows = await db.Follows.AsNoTracking().Where(f => f.UserId == userId).OrderBy(f => f.CreatedAt)
-            .Select(f => new { kind = f.Kind, key = f.Key, followedAt = f.CreatedAt }).ToListAsync(cancellationToken);
+            .Select(f => new { kind = f.Kind, key = f.Key, followedAt = f.CreatedAt, lastSeenAt = f.Kind == FollowKinds.Bill ? f.LastSeenAt : (DateTimeOffset?)null })
+            .ToListAsync(cancellationToken);
         var notices = await db.NoticeSettings.AsNoTracking().Where(n => n.UserId == userId)
             .Select(n => new { planned = n.Planned, voted = n.Voted, statements = n.Statements, responses = n.Responses, members = n.Members, comments = n.Comments, frequency = n.Frequency, frequencySince = n.FrequencySince, previousFrequency = n.PreviousFrequency, previousSince = n.PreviousSince, changedAt = n.ChangedAt }).FirstOrDefaultAsync(cancellationToken);
         return new { follows, emails = notices };

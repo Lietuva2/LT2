@@ -6,8 +6,36 @@ namespace Lt2.Api.Contracts.Me;
 // Design 8.7 (the front page): the caller's own side and follow for the bills a page shows, in one never-cached answer.
 // It holds nothing about anyone else, and nothing but the bills asked about.
 
-/// <summary>One bill the caller asked about: their own side (<c>for</c>, <c>against</c>, or none) and whether they follow it.</summary>
-public sealed record MyBillResponse(string Number, string? Side, bool Following);
+/// <summary>
+/// One bill the caller asked about: their own side (<c>for</c>, <c>against</c>, or none) and whether they follow it; on a followed
+/// bill, what was written there since they last opened its page (design 8.11.8), null when nothing.
+/// </summary>
+public sealed record MyBillResponse(string Number, string? Side, bool Following, BillNewsCountsResponse? New = null);
+
+/// <summary>
+/// How many texts on a followed bill are new to the caller (design 8.11.8): arguments, comments, organisations' statements and
+/// MPs' responses made public or changed since they last opened its page; never their own.
+/// </summary>
+public sealed record BillNewsCountsResponse(int Reasons, int Comments, int Statements, int Responses);
+
+/// <summary>A comment new to the caller (design 8.11.8) and the text it stands under (<c>reason</c>, <c>statement</c>, <c>response</c>).</summary>
+public sealed record NewCommentResponse(Guid Id, string TargetKind, Guid TargetId);
+
+/// <summary>
+/// <c>POST /api/v1/me/bills/{number}/seen</c> (design 8.11.8): the caller opened the bill's page. On a bill they follow the moment
+/// is kept and <c>Since</c> is the one before it, with the texts written after it by id (never their own); on a bill they do not
+/// follow nothing is kept, <c>Following</c> is false and the lists are empty.
+/// </summary>
+public sealed record BillSeenResponse(
+    bool Following,
+    DateTimeOffset? Since,
+    IReadOnlyList<Guid> Reasons,
+    IReadOnlyList<NewCommentResponse> Comments,
+    IReadOnlyList<Guid> Statements,
+    IReadOnlyList<Guid> Responses)
+{
+    public static readonly BillSeenResponse NotFollowing = new(false, null, [], [], [], []);
+}
 
 /// <summary>
 /// <c>GET /api/v1/me/bills?numbers=…</c>: one row for each asked bill the caller has a side on or follows, in the order
@@ -56,4 +84,7 @@ public sealed class MyBillsQueryValidator : AbstractValidator<MyBillsQuery>
 public interface IMyBillsApi
 {
     Task<ApiResult<MyBillsResponse>> GetAsync(MyBillsQuery query, CancellationToken cancellationToken = default);
+
+    /// <summary>The caller opened the bill's page (design 8.11.8): sent once per page, only from the browser.</summary>
+    Task<ApiResult<BillSeenResponse>> SeenAsync(string number, CancellationToken cancellationToken = default);
 }

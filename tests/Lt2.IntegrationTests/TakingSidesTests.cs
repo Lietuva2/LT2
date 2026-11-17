@@ -39,10 +39,10 @@ public sealed class TakingSidesTests(DatabaseFixture database) : ApiTest(databas
         var mine = await member.GetJsonAsync<MyBillsResponse>(ApiRoutes.Me.Bills + "?" + new MyBillsQuery { Numbers = [Bill] }.ToQueryString());
         mine.Bills.ShouldBe([new MyBillResponse(Bill, "for", true)]);
 
-        // The follow row holds nothing about the side: exactly these columns.
+        // The follow row holds nothing about the side: exactly these columns (design 8.11.8: when the page was last opened).
         var columns = await Database.ScalarAsync<string>(
             "SELECT string_agg(column_name, ',' ORDER BY column_name) FROM information_schema.columns WHERE table_schema = 'notify' AND table_name = 'follow'");
-        columns.ShouldBe("created_at,key,kind,user_id");
+        columns.ShouldBe("created_at,key,kind,last_seen_at,user_id");
     }
 
     [Fact]
@@ -153,7 +153,9 @@ public sealed class TakingSidesTests(DatabaseFixture database) : ApiTest(databas
 
         public Task<MyFollows> MineAsync(Guid userId, CancellationToken cancellationToken) => throw Broken();
 
-        public Task<IReadOnlySet<string>> FollowedBillNumbersAsync(Guid userId, CancellationToken cancellationToken) => throw Broken();
+        public Task<IReadOnlyDictionary<string, DateTimeOffset>> FollowedBillsAsync(Guid userId, CancellationToken cancellationToken) => throw Broken();
+
+        public Task<DateTimeOffset?> SeenBillAsync(Guid userId, string number, CancellationToken cancellationToken) => throw Broken();
 
         public Task<Result<Unit>> FollowBillAsync(Guid userId, string number, CancellationToken cancellationToken) => throw Broken();
 

@@ -25,28 +25,28 @@
             <div class="pair pair--reasons">
                 @foreach (var stance in Sides)
                 {
-                    var items = statements.Items.Where(i => i.Statement.Stance == stance).ToList();
+                    var items = Standing(statements).Where(i => i.Statement.Stance == stance).ToList();
                     <div class="stack" id="organisations-@stance">
                         <h3><span class="choice choice--@stance">@L["Org.Stance." + stance]</span></h3>
-                        @if (items.Count == 0)
+                        @if (items.Count == 0 && !OnlyNew)
                         {
                             <p class="small">@L["Org.Section.None"]</p>
                         }
                         @foreach (var item in items)
                         {
-                            <StatementView @key="item.Statement.Id" Statement="item.Statement" Name="@item.Name" Slug="@item.Slug" Label="item.Label" ShowStance="false" Actions="@Actions(item.Statement)" />
+                            <StatementView @key="item.Statement.Id" Statement="item.Statement" Name="@item.Name" Slug="@item.Slug" Label="item.Label" ShowStance="false" Actions="@Actions(item.Statement)" Mark="@Mark(item.Statement.Id)" />
                         }
                     </div>
                 }
             </div>
-            var remarks = statements.Items.Where(i => i.Statement.Stance == "remarks").ToList();
+            var remarks = Standing(statements).Where(i => i.Statement.Stance == "remarks").ToList();
             @if (remarks.Count > 0)
             {
                 <div class="stack" id="organisations-remarks">
                     <h3><span class="choice choice--remarks">@L["Org.Stance.remarks"]</span></h3>
                     @foreach (var item in remarks)
                     {
-                        <StatementView @key="item.Statement.Id" Statement="item.Statement" Name="@item.Name" Slug="@item.Slug" Label="item.Label" ShowStance="false" Actions="@Actions(item.Statement)" />
+                        <StatementView @key="item.Statement.Id" Statement="item.Statement" Name="@item.Name" Slug="@item.Slug" Label="item.Label" ShowStance="false" Actions="@Actions(item.Statement)" Mark="@Mark(item.Statement.Id)" />
                     }
                 </div>
             }
@@ -56,7 +56,7 @@
             }
         }
 
-        @if (_signedIn && Mine is { } mine)
+        @if (_signedIn && !OnlyNew && Mine is { } mine)
         {
             @if (mine.Count == 0)
             {
@@ -166,7 +166,19 @@
     /// The part shows when an organisation has a statement shown on the bill, or the caller represents one (their way to
     /// publish, change or withdraw its statement is here); otherwise nothing (owner, 2026-11-17).
     /// </summary>
-    private bool Shown => Statements is { Items.Count: > 0 } || (_signedIn && Mine is { Count: > 0 });
+    private bool Shown => OnlyNew
+        ? Statements is { } s && Standing(s).Any()
+        : Statements is { Items.Count: > 0 } || (_signedIn && Mine is { Count: > 0 });
+
+    /// <summary>"Rodyti tik naujus" is on (design 8.11.8): only new statements and those whose discussion has new comments stand.</summary>
+    private bool OnlyNew => BillState.OnlyNew(Number);
+
+    private IEnumerable<BillStatementResponse> Standing(BillStatementsResponse statements) =>
+        statements.Items.Where(i => BillState.Keeps(Number, i.Statement.Id));
+
+    /// <summary>"Nauja" beside a statement written or changed since the reader's last visit (design 8.11.8).</summary>
+    private RenderFragment Mark(Guid id) => @<Lt2.Web.Client.Appeals.NewMark Number="@Number" Id="id" />;
+
     private bool _signedIn;
     private Guid? _reporting;
     private string? _editing;
@@ -214,10 +226,24 @@
         if (RendererInfo.IsInteractive)
         {
             BillState.Changed += OnChanged;
+            BillState.NewsChanged += OnNewsChanged;
         }
     }
 
-    public void Dispose() => BillState.Changed -= OnChanged;
+    public void Dispose()
+    {
+        BillState.Changed -= OnChanged;
+        BillState.NewsChanged -= OnNewsChanged;
+    }
+
+    /// <summary>What is new arrived, or "Rodyti tik naujus" was switched (design 8.11.8): the list is drawn again.</summary>
+    private void OnNewsChanged(string number)
+    {
+        if (string.Equals(number, Number, StringComparison.OrdinalIgnoreCase))
+        {
+            _ = InvokeAsync(StateHasChanged);
+        }
+    }
 
     /// <summary>A shown statement with a goal carries the count of its side, which a side taken on the page moves.</summary>
     private bool ShowsProgress => Statements?.Items.Any(i => i.Statement.Progress is not null) == true;

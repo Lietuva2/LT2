@@ -30,7 +30,8 @@ internal static class MpResponseMapping
 /// or log here names the account that wrote a response.
 /// </summary>
 internal sealed class MpResponseReads(
-    IMpResponses responses, IMpResponseModeration moderation, IPoliticians politicians, IMpDirectory mps, IParliamentQueries queries, IDigestSource digests)
+    IMpResponses responses, IMpResponseModeration moderation, IPoliticians politicians, IMpDirectory mps, IParliamentQueries queries, IDigestSource digests,
+    IPlannedAgenda agenda, IFollows follows, ILogger<MpResponseReads> logger)
 {
     public static readonly Error NotLinked = Error.NotFound("mp.not-linked");
     public static readonly Error MandateEnded = Error.Conflict("response.mandate-ended");
@@ -98,8 +99,30 @@ internal sealed class MpResponseReads(
             return writer.Error!;
         }
 
-        var saved = await responses.SaveAsync(number, writer.Value!.SeimasPersonId, writer.Value.UserId, MpResponseMapping.ToModule(request), ct);
-        return saved.IsSuccess ? new MpResponseSavedResponse(saved.Value!.Id, saved.Value.Status) : saved.Error!;
+        // Owner, 2026-11-17: a first response follows the bill for the account that wrote it, as a first side does (design
+        // 8.11.2): the response is saved first and is never refused or undone because the follow failed; editing, withdrawing
+        // and writing again after a withdrawal follow nothing, and "Nebesekti" keeps the response.
+        var first = (await responses.OwnAsync(number, writer.Value!.SeimasPersonId, ct)).Value?.Response is null;
+        var saved = await responses.SaveAsync(number, writer.Value.SeimasPersonId, writer.Value.UserId, MpResponseMapping.ToModule(request), ct);
+        if (!saved.IsSuccess)
+        {
+            return saved.Error!;
+        }
+
+        if (first && saved.Value!.Status == "published")
+        {
+            try
+            {
+                await follows.FollowBillAsync(writer.Value.UserId, number, ct);
+            }
+            catch (Exception ex) when (ex is not OperationCanceledException)
+            {
+                // The response is saved; only the kind of failure is logged, never who or which bill.
+                logger.LogWarning("Following a bill after a first response failed: {Failure}", ex.GetType().Name);
+            }
+        }
+
+        return new MpResponseSavedResponse(saved.Value!.Id, saved.Value.Status);
     }
 
     public async Task<Result<Unit>> WithdrawAsync(ClaimsPrincipal user, string number, CancellationToken ct)
@@ -110,7 +133,9 @@ internal sealed class MpResponseReads(
 
     /// <summary>
     /// Design 8.5.7: the summaries' list on a page, live: the open bills that reached the threshold and are not held, in the
-    /// summaries' order, with the MP's own response. A code session may read it. Nothing about other MPs.
+    /// summaries' order, with the MP's own response; then (owner, 2026-11-17: "I don't see the project in my projects list even
+    /// though I've written my response") every other bill this MP has a response on, in any state the MP's own view shows,
+    /// newest change first, without the summaries' counts. A code session may read it. Nothing about other MPs.
     /// </summary>
     public async Task<Result<MpBillsResponse>> MyBillsAsync(ClaimsPrincipal user, CancellationToken ct)
     {
@@ -121,11 +146,18 @@ internal sealed class MpResponseReads(
 
         var listed = DigestLists.InSummariesNow(await digests.CandidatesAsync(ct));
         var own = await responses.OnBillsAsync(speaker.SeimasPersonId, listed.Select(c => c.BillNumber).ToList(), ct);
+        var inSummaries = listed.Select(c => c.BillNumber).ToHashSet(StringComparer.Ordinal);
+        var answered = (await responses.OfPersonAsync(speaker.SeimasPersonId, ct)).Where(a => !inSummaries.Contains(a.Bill.Number)).ToList();
+        var planned = answered.Count == 0 ? new Dictionary<string, PlannedDate>() : await agenda.ForBillsAsync(answered.Select(a => a.Bill.Number).ToList(), ct);
         return new MpBillsResponse(
             link,
             listed.Select(c => new MpBillResponse(
-                c.BillNumber, c.BillTitle, AppealMapping.Map(c.Planned), c.For, c.ForOlderThan30Days, c.Against, c.AgainstOlderThan30Days,
-                own.TryGetValue(c.BillNumber, out var r) ? MpResponseMapping.Map(r) : null)).ToList());
+                    c.BillNumber, c.BillTitle, AppealMapping.Map(c.Planned), c.For, c.ForOlderThan30Days, c.Against, c.AgainstOlderThan30Days,
+                    own.TryGetValue(c.BillNumber, out var r) ? MpResponseMapping.Map(r) : null))
+                .Concat(answered.Select(a => new MpBillResponse(
+                    a.Bill.Number, a.Bill.Title, a.BillOpen ? AppealMapping.Map(planned.GetValueOrDefault(a.Bill.Number)) : null, null, null, null, null,
+                    MpResponseMapping.Map(a.Response), a.BillOpen)))
+                .ToList());
     }
 
     public async Task<MpResponseModerationResponse> ModerationAsync(CancellationToken ct)

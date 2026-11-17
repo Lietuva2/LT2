@@ -58,6 +58,11 @@ public static class ApiRoutes
         /// <summary>The caller's own side and follow for the bills asked about (design 8.7).</summary>
         public const string Bills = Root + "/bills";
 
+        /// <summary>The caller opened a bill's page (design 8.11.8): the moment kept on their follow, and what is new since the one before.</summary>
+        public const string BillSeen = Root + "/bills/{number}/seen";
+
+        public static string BillSeenOf(string number) => $"{Root}/bills/{Uri.EscapeDataString(number)}/seen";
+
         public static string SessionById(Guid id) => $"{Sessions}/{id}";
 
         public static string KnownBrowserById(Guid id) => $"{KnownBrowsers}/{id}";

@@ -104,6 +104,7 @@ public sealed partial class SignUpTests : E2ETest
 
         await page.WaitForURLAsync(new Regex("/paskyra$"), new() { Timeout = E2ESteps.Slow });
         await TestAccounts.SessionOfAsync(context);
+
         await Assertions.Expect(page.GetByRole(AriaRole.Heading, new() { Level = 1 })).ToHaveTextAsync("Sveiki, Rūta M.!");
         await Assertions.Expect(page.GetByText("El. paštas patvirtintas")).ToBeVisibleAsync();
         await Assertions.Expect(page.Locator("#display-name-save")).ToBeEnabledAsync(new() { Timeout = 60_000 });

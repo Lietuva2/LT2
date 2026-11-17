@@ -312,7 +312,7 @@ adresas" (https on `lrs.lt` or under it, at most 500 characters), filled in adva
 | `suppression` | Hashed addresses that bounced or asked to stop. |
 | `mp_mail_token`, `introduction_letter` | The MP's link to the preferences page and the introduction letter's versions (8.19.4, 8.19.5, 8.19.7). The statuses of `digest_run` and `digest_delivery` for real sending are in 8.19.1 and 8.19.3. |
 | `email_message` | Template, subject, provider message id, status. Bodies of digests are reproducible from the snapshot; other bodies are not stored. |
-| `follow` | (`user_id`, `kind`, `key`) primary key, created time. `kind`: bill (key: the number) or mp (key: the Seimas person id). Who follows is shown to nobody but the person; exported and deleted with the account (8.11.2). How many follow each thing is public: a number counted from this table when an answer is made, nothing per follower (8.11.2, owner 2026-11-16; built 2026-11-16). [changed while building (8.14.14, stage B): or `organisation` (key: the organisation's id); `kind` up to 16 characters.] [built 2026-11-16 (8.25.5): or `member` (key: the public profile id), only while that member's profile is public; ended when it is switched off.] |
+| `follow` | (`user_id`, `kind`, `key`) primary key, created time. `kind`: bill (key: the number) or mp (key: the Seimas person id). Who follows is shown to nobody but the person; exported and deleted with the account (8.11.2). How many follow each thing is public: a number counted from this table when an answer is made, nothing per follower (8.11.2, owner 2026-11-16; built 2026-11-16). [changed while building (8.14.14, stage B): or `organisation` (key: the organisation's id); `kind` up to 16 characters.] [built 2026-11-16 (8.25.5): or `member` (key: the public profile id), only while that member's profile is public; ended when it is switched off.] [built 2026-11-17 (8.11.8): `last_seen_at`, a bill's follow only: when the person last opened the bill's page, from the follow's own time.] |
 | `notice_setting` | Per account: which follow emails are on (`planned`, `voted`); no row means both on. [changed while building (8.14.14, stage B): and `statements` (a followed organisation's statement became public); no row means all three on.] [changed while building (8.20.1): and `responses`; no row means all four on.] [built 2026-11-16 (8.23.9): and `comments`, an argument's author told of new comments under it; no row means on.] [built 2026-11-16 (8.24): and `frequency` (`immediate`, `daily`, `weekly`), the member's email rhythm, with `frequency_since`, `previous_frequency` and `previous_since`; no row means `immediate`.] [built 2026-11-16 (8.25.5): and `members`, a followed member published something; no row means all on.] |
 | `bill_event` | (`bill_number`, `kind`, `key`) primary key, first seen, sent time, outcome. `kind`: planned (key: the date) or voted (key: the vote id). What followers are told about, recorded once (8.11.2). No person in it. [changed while building: an `outcome` column (`waiting`, `sent`, `skipped`, `superseded`) tells an event never to be sent from one waiting for the next day] [changed while building (8.14.14, stage B): `kind` `statement` (key: the statement's id) records, under its bill, that a followed organisation's statement became public; no person and no text in it] [built 2026-11-16 (8.24): `daily_at`, `weekly_at`, `early_at`, the marks of the gathered emails beside `outcome` and `sent_at` (the runs' emails); `kind` `response` per MP's answer (key: the person number and when the stance became public)] [built 2026-11-16 (8.25.5): `kind` `member` (key: the text's id) records, under its bill, that a followed member's argument or own-voice comment became public; no person and no text in it] [built 2026-11-16 (8.23.9, 8.23.14): `kind` `comment` (key: the argument's id and the run's moment) records that a run found comments under an argument; no person] [built 2026-11-16 (8.24): an index on (`kind`, `first_seen`); rows older than 30 days are deleted by the daily housekeeping, a planned date only once past (the designer's proposal, 12)] [built 2026-11-16 (8.24): `notify.rhythm_pass` (`pass`, `period`, `made_at`) says the daily email of a day or the weekly of a week was made; no person] |
 | `member_mail_token` | [built 2026-11-17 (8.24.1)] Per account: the stop link's SHA-256 (unique), its generation and when it was made; the token itself is derived under the mail key and never stored. Deleted with the account; not exported; withheld from `lt2_readonly`. |
@@ -1318,6 +1318,15 @@ summaries now (they reached the threshold and are open), in the summary's order,
 "Planuojama …", both sides' numbers, and the MP's response or a link to answer. It is the summary email's list on a
 page, live. Nothing about other MPs is on it.
 
+**[Decided by the owner on 2026-11-17: "I don't see the project in my projects list even though I've written my response
+as a MP or office."]** After the summaries' bills the page lists every other bill this MP has a response on, in any
+state the MP's own view shows (published, withdrawn, hidden by the moderators), newest change first, once each: its
+number, title and "Planuojama …" while it is open, "Dabar suvestinėje nėra" in place of the numbers, and the response,
+with "Atsakyti" only while the bill is open. And a first response follows the bill for the account that wrote it
+(the MP's or an office member's), as a first side does (8.11.2): the response is saved first and is never refused or
+undone because the follow failed; editing it, withdrawing it or writing it again after a withdrawal follows nothing,
+and "Nebesekti" keeps the response. So an answered bill is also in the account's "Jūsų projektai" and follow list.
+
 #### 8.5.8 Done when
 
 An account registered with a stand-in MP's official address is told so at once and, with the setting on, needs no
@@ -1454,10 +1463,11 @@ and the "not a representative poll" notice. It uses only the public answers behi
   to `/organizacijos`, and a member registers one from "Mano organizacijos" on the account page. In the timeline they
   are named beside a bill, ordered as on the bill's page (for, against, remarks; within each, in the order published),
   never by size, and never counted.
-- **A signed-in member** sees no introduction: "Sveiki sugrįžę" with links to "Kaip tai veikia" and the account; then
-  "Jūsų projektai", a panel of the bills they follow or took a side on that are on the agenda or were voted on in
-  the last week, each with its planned date, their own side or "Dar nenurodėte, ko prašote", the last vote's result,
-  and the share link when they have taken a side; then the same timeline, where their bills carry "Sekate" and their
+- **A signed-in member** sees no introduction: "Sveiki sugrįžę" alone (owner, 2026-11-17: no links to "Kaip tai
+  veikia" and the account, which the footer and the menu reach); then "Jūsų projektai", a panel of the bills they
+  follow [decided by the owner on 2026-11-17: "followed only"; until then also a bill with a side alone; the side still
+  shows in the bill's own row and on its page] that are on the agenda or were voted on in the last week, each with its planned date, their
+  own side or "Dar nenurodėte, ko prašote", the last vote's result, and the share link when they have taken a side; then the same timeline, where their bills carry "Sekate" and their
   own side, and on a bill where they took a side the pressed button shows it, with "Atsiimti" and a link "Argumentai
   ir pozicijos" to the bill's page. The trial note about
   summaries stays at the foot.
@@ -1701,8 +1711,11 @@ A visitor sees a link to sign in instead.
     never about an event from before. This delivers, for a person with a side, the "planned" and "voted" notices of
     8.6 without a second mechanism.
   - Sides taken before this was built are left as they are: no follow is made for them afterwards.
-  - "Jūsų projektai" (8.7) still lists bills the member follows or has a side on, so a person who unfollowed keeps
-    seeing the bill they have a side on, without "Sekate".
+  - [Decided by the owner on 2026-11-17.] An MP's first response follows the bill the same way for the account that
+    wrote it (8.5.7): the MP's account and office members take no side, so this is how an answered bill becomes theirs.
+  - "Jūsų projektai" (8.7) lists the bills the member follows, and only those [decided by the owner on 2026-11-17:
+    "followed only"; until then a bill with a side alone stayed there without "Sekate"]: "Nebesekti" takes the bill off
+    the list, and its side stays, shown in the bill's own row of the timeline and on its page.
 - **The account page** lists the followed bills (planned date or last stage result) and MPs, with "Nebesekti", and the
   two switches. Each email ends with a link there (`/paskyra/sekimas#sekami` since the account screens of 8.21); there is
   no token link in this round.
@@ -1855,7 +1868,12 @@ MPs stand on.
   line appears once]
 - The link is the personal invitation link (6.2) with the page to land on:
   `/prisijungti?kodas=…&tikslas=/seimas/XVP-0412`. After registering or signing in, the person lands on that page
-  instead of `/paskyra`.
+  instead of the front page. [Decided by the owner on 2026-11-17: "the start page … shouldn't be his profile. For no one
+  actually". Signing in, registering, starting a staff session and accepting the terms land on the front page `/` when
+  there is no page to return to (`tikslas`, a page's own return, the staff page's `#grizti=`); the MP's take-over lands on
+  "Dalyvavimas" (`/paskyra/dalyvavimas`, 8.21), where the MP's part is. The same day ("on the profile could also land a new
+  user after registration"): a registration just completed (the name, age and terms step) without a page to return to
+  lands on "Profilis" (`/paskyra`). Until then every one of them landed on `/paskyra`.]
 - `tikslas` is accepted only as a path on this site under `/seimas/` (one leading slash, no scheme, host or
   backslash); anything else is ignored. [changed while building (2026-11-16, the account screens and public profiles):
   also `/paskyra` and the account screens under it (a visitor sent to sign in from one comes back to it) and a member's
@@ -1892,6 +1910,45 @@ MPs stand on.
   carries the number and no list is sorted by it; `lt2_readonly` still reads no follow.
 - With no AI provider configured, nothing in the product mentions a draft, and every other path works.
 - The share link lands a new member on the bill's page, and a `tikslas` pointing off the site is ignored.
+
+#### 8.11.8 What is new since the last visit
+
+**[Decided by the owner on 2026-11-17: "what's new" for a member, on the bills they follow. Built the same day; the choices
+the owner did not make are the designer's proposals in section 12.]**
+
+- **What is kept.** On a member's follow of a bill (`notify.follow`, kind `bill`) one moment, `last_seen_at`: when they last
+  opened that bill's page, starting from the follow's own time. Nothing for bills not followed, nothing about any other page,
+  never combined with sides. It goes with the follow (unfollowing removes it; following again starts from the new follow's
+  time), is in the export and is deleted with the account; `follow` stays withheld from `lt2_readonly`. The privacy notice
+  says it under "„Man svarbu" žymos ir sekimai".
+- **A visit.** Once the bill's page runs in the browser, a signed-in member's island (`WhatsNew`) sends one write,
+  `POST /api/v1/me/bills/{number}/seen`: on a followed bill the server keeps now (never earlier than the moment kept,
+  `FollowRules.Seen`) and answers the moment before and the texts written after it, by id; on a bill not followed it keeps
+  nothing and answers nothing. Never a GET, never while the server prerenders, nothing in the served HTML; antiforgery and
+  the terms gate as for every write; under the per-account limit of a page's own answers (`RateLimits` `own-read`). The
+  answer is shared by the page's islands (`MyBillState.News`, `NewSince`).
+- **What is new** (`NewsRules`, Appeals, through `IBillNews` in the shared kernel; the host composes it with the moments from
+  Notifications): a text the bill's page shows that was made public, or changed, after the moment: a published argument (made
+  public: `first_public_at`), an organisation's statement shown on the page (made public or edited), a published MP's
+  response (published or edited), a published comment under a shown text. Never one on a bill whose record is hidden, never a
+  hidden one, and never the member's own: what they wrote, the statements and comments of an organisation they represent, the
+  responses and comments of the MP they speak for.
+- **"Nauja".** A small tag beside each new argument, comment, statement and response (`NewMark`). The responses' part is
+  server-rendered and the same for everyone, so each response carries a small island of its own for its tag; the other parts
+  are islands and render it themselves.
+- **"Rodyti tik naujus".** When anything is new, a plain checkbox on the ground above the texts (8.16: a filter, not a choice
+  between sides). On: only the new texts and those whose discussion has new comments stand (an argument beyond the first two
+  of its side included), and those discussions are rendered open with their comments through the last new one, as a link to
+  a comment opens its discussion (8.23.6). Off: everything again, as before. Kept only on the page being read (no browser
+  storage, 8.22.1), and no reload. The server-rendered responses are hidden by the stylesheet from a marker their island
+  leaves (`.new-out`), and the part goes when none stands.
+- **The lists.** In "Jūsų projektai" on the front page (`GET /me/bills`) and in the follow list on "Sekimas ir laiškai"
+  (`GET /me/follows`) a followed bill with something new says what, for example "3 nauji argumentai · 5 nauji komentarai",
+  then organisations' statements and responses when any, each in its Lithuanian number form (1 naujas argumentas, 2–9 nauji
+  argumentai, 10 and 11–19 naujų argumentų; "nauja organizacijos pozicija", "naujas atsakymas"). Counted in one read per
+  list, whatever its length.
+- **Wording.** "Nauja", "Rodyti tik naujus" and the counts are about texts that really are new to that person, which the
+  rule against wording the product as new (`AGENTS.md`) allows.
 
 ### 8.12 One object: every bill is open, nobody starts an appeal
 
@@ -2861,7 +2918,11 @@ complicated": "Can we design a whole non breaking line for commands, or icons, o
   expanded state for assistive technology and names the panel it controls.
 - **Words with small icons:** a heart beside "Man svarbu", a check in a circle beside "Sutinku", a speech bubble beside
   "Aptarimas", three dots for "⋯", drawn inline in the text's colour; no icon library and nothing fetched. "Man svarbu"
-  always keeps its words (a term the icon alone would not say). **The word "Aptarimas" shows at desktop widths, closed
+  always keeps its words (a term the icon alone would not say). [Decided by the owner on 2026-11-17: "by the arguments there should be an
+  explanation".] One hint beside the arguments' heading, "Kas yra „Man svarbu“?" (8.15), says when it can be marked: after
+  saying what one asks for, only arguments of one's own side, not one's own; "Plačiau" to `/metodika#argumentai`. The same
+  for everyone the server serves (a disabled button's title is shown by few browsers); the MP's own account, which gets no
+  "Man svarbu" (8.5.4), loses it once the island runs. **The word "Aptarimas" shows at desktop widths, closed
   and open alike [decided by the owner on 2026-11-17, settling the open choice]:** the arguments run at the page's full
   width below the bill's top part (8.12.1), so a side's column is wide enough; only where the row is narrower than about
   20rem (a 360 px phone) is the word kept for screen readers alone, with the bubble and the count shown.
@@ -5095,7 +5156,7 @@ Each is built as written; "no" names what changes.
 13. The follow job's records are kept 30 days (past the 14-day look-back, a weekly email's week and the three-day rule),
    a planned date only until it is past; the daily housekeeping deletes older ones. If no: another number of days.
 
-**Proposed by the designer while building the stop link of members' emails (8.24.1), 2026-11-17, awaiting the owner**
+**Proposed by the designer while building the stop link of members' emails (8.24.1), 2026-11-17; accepted by the owner on 2026-11-17**
 
 Built as written; "no" names what changes.
 
@@ -5110,6 +5171,30 @@ Built as written; "no" names what changes.
 4. The texts: the email line "Nebegauti šių laiškų"; the page "Nebegauti laiškų", "Paspaudę mygtuką nebegausite laiškų
    apie tai, ką sekate.", the button "Nebegauti laiškų", and after it "Laiškų apie tai, ką sekate, nebesiųsime. Vėl
    įjungti juos galite savo paskyroje." A native speaker reads them before they are shown externally.
+
+**Decided by the owner on 2026-11-17: what is new on followed bills (8.11.8); the designer's choices (the owner accepted 2, 3, 4, 6, 7 and 8 on 2026-11-17; 1, 5 and 9 await the owner)**
+
+Each is built as written; "no" names what changes.
+
+1. A visit is the page's island running in the browser; a page read without script keeps nothing. If no: a server-side
+   record on GET, which the owner ruled out.
+2. A statement or a response edited after the visit is new again; an argument restored by a moderator, or a response
+   withdrawn, is not. If no: only a first publication counts.
+3. The member's own texts include their organisations' statements and comments (written by a co-representative too) and
+   those of the MP they speak for (the MP's account and the office). If no: only what the account itself wrote.
+4. The counts stand only in "Jūsų projektai" and the follow list, not in the agenda's or `/projektai`'s rows. If no: also
+   there, for followed bills.
+5. A bill's count goes away only when its page is opened, not when the list is seen.
+6. Under "Rodyti tik naujus" a side column with nothing new is left empty, the representatives' own forms for their
+   organisation's statement step aside, and the responses' part goes when none stands. If no: the parts stay with a line
+   "Naujų nėra".
+7. Only the responses shown on the page (the first ten, or as many as asked) are marked; one beyond them is counted in the
+   lists but needs "Rodyti daugiau".
+8. Each part of the count carries its own "nauj-": "3 nauji argumentai · 5 nauji komentarai" (the owner's example read "3
+   nauji argumentai · 5 komentarai"); statements read "organizacijos pozicija" (not "pozicija", which is a member's side),
+   responses "atsakymas". If no: the adjective once, or other nouns.
+9. The visit's write shares the limit of a page's own answers (`own-read`) rather than `Participation`, so reading pages
+   never uses up the allowance for taking sides.
 
 **Decisions needed before the stage that uses them**
 

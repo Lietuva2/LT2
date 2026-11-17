@@ -149,6 +149,23 @@ public sealed class MyAgendaTests : BunitContext
         ((MyBillsQuery)_bills.Arguments[0][0]!).Numbers.ShouldBe(Numbers);
     }
 
+    /// <summary>
+    /// Owner, 2026-11-17 ("followed only"): a side alone puts no bill in "Jūsų projektai"; the row's own island still shows the
+    /// side, from the same answer.
+    /// </summary>
+    [Fact]
+    public void The_panel_lists_only_followed_bills_and_a_side_alone_stays_in_its_row()
+    {
+        SetRendererInfo(new RendererInfo("WebAssembly", isInteractive: true));
+        _bills.On("GetAsync", Answer(consent: true, new MyBillResponse(Followed, null, true), new MyBillResponse(Sided, "for", false)));
+
+        var panel = Render<MyAgendaPanel>(p => p.Add(c => c.Bills, Bills).Add(c => c.Numbers, Numbers));
+
+        panel.FindAll("#my-agenda li").Select(li => li.Id).ShouldBe(["my-agenda-XVP-0533"]);
+        var mark = Mark(Sided, "2026-11-19-XVP-0412");
+        mark.Find(".choice--for").TextContent.ShouldBe(Text("Mine.Side.for"));
+    }
+
     [Fact]
     public void The_islands_share_the_one_request_and_the_pressed_button_shows_the_members_side()
     {

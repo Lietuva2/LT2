@@ -48,8 +48,8 @@ internal static class FollowEndpoints
             .WithName("SetNotices").WithTags("Me").RequireAuthorization(Policies.Member).Produces(StatusCodes.Status204NoContent);
     }
 
-    private static async Task<IResult> MineAsync(ClaimsPrincipal user, IFollows follows, CancellationToken ct) =>
-        TypedResults.Ok(await FollowMapping.MineAsync(follows, user.UserId()!.Value, ct));
+    private static async Task<IResult> MineAsync(ClaimsPrincipal user, IFollows follows, IBillNews news, CancellationToken ct) =>
+        TypedResults.Ok(await FollowMapping.MineAsync(follows, news, user.UserId()!.Value, ct));
 
     private static async Task<IResult> NoticesAsync(ClaimsPrincipal user, IFollows follows, CancellationToken ct)
     {

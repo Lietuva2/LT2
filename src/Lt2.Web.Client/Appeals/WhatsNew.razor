@@ -1,0 +1,49 @@
+@using Lt2.Api.Contracts.Me
+@inherits InteractiveBase<AppealUi>
+@inject IMyBillsApi MyBills
+@inject MyBillState State
+
+@* What is new since the last visit (design 8.11.8), on the ground above the bill's texts (design 8.16): once the island runs in
+   the browser and the person is signed in, it tells the server the page was opened (one write per page; the server keeps the
+   moment only on a bill the person follows) and hands the answer to the page's other islands through MyBillState, which mark
+   what is new with "Nauja". When anything is new it offers "Rodyti tik naujus", a plain checkbox (a filter, not a choice
+   between sides): only the new texts and those whose discussion has new comments stand, those discussions open. Kept only on
+   the page being read. Nothing of it is in the served HTML. *@
+@if (_news is { Any: true })
+{
+    <div class="row only-new" id="only-new-row">
+        <label class="check" for="only-new"><input type="checkbox" id="only-new" checked="@State.OnlyNew(Number)" disabled="@Locked" @onchange="Toggle" /><span>@L["News.OnlyNew"]</span></label>
+    </div>
+}
+
+@code {
+    private NewTexts? _news;
+
+    [Parameter, EditorRequired] public string Number { get; set; } = "";
+
+    protected override async Task OnInitializedAsync()
+    {
+        // Never while the server prerenders, and never for a visitor: the served page is the same for everyone.
+        if (!RendererInfo.IsInteractive || !await IsSignedInAsync())
+        {
+            return;
+        }
+
+        // A page opened again in the same browser forgets the earlier visit's answer before asking.
+        State.SetNews(Number, null);
+        try
+        {
+            var seen = await MyBills.SeenAsync(Number);
+            _news = seen.Value is { Following: true } answer ? new NewTexts(answer) : null;
+        }
+        catch (HttpRequestException)
+        {
+            // Nothing is marked; the page reads as for anyone.
+            _news = null;
+        }
+
+        State.SetNews(Number, _news);
+    }
+
+    private void Toggle(ChangeEventArgs e) => State.ShowOnlyNew(Number, e.Value is true);
+}

@@ -256,6 +256,8 @@
            opened "Aptarimas" stays in its own column. MPs' responses first (design 8.5.6; server-rendered, the same for
            everyone), then organisations' statements (8.14.14; never counted), each only when there is something to show, then
            the members' arguments, always (they hold "Parašyti argumentą"). *@
+        @* Design 8.11.8: what is new since the reader's last visit, on the ground above the texts; empty in the served HTML. *@
+        <WhatsNew Number="@b.Number" @rendermode="InteractiveWebAssembly" />
         <BillResponses Number="@b.Number" Moderator="_moderator" Linked="_linked" />
         <OrganisationPositions Number="@b.Number" Contact="@Contact" Moderator="_moderator" Linked="_linked" @rendermode="InteractiveWebAssembly" />
         <RecordReasons Number="@b.Number" Contact="@Contact" Moderator="_moderator" Linked="_linked" LinkedReason="_linkedReason" @rendermode="InteractiveWebAssembly" />
@@ -263,6 +265,7 @@
     else if (_record is null)
     {
         @* A finished bill nobody took part in shows the bill only, and the MPs' responses written while it was open. *@
+        <WhatsNew Number="@b.Number" @rendermode="InteractiveWebAssembly" />
         <BillResponses Number="@b.Number" Linked="_linked" />
     }
 
