@@ -3,7 +3,8 @@
 @inject MyAgendaState State
 
 @* "Jūsų projektai" at the top of the front page for a member (design 8.7, from variant C): the bills on the agenda or voted
-   in the last week that the member follows or took a side on, each with its planned date, their own side or "Dar
+   in the last week that the member follows (owner, 2026-11-17: "followed only"; a side alone puts no bill here, it shows in
+   the bill's own row), each with its planned date, their own side or "Dar
    nenurodėte, ko prašote", the last vote's result, and the share link when they have taken a side. The public facts come
    from the page (the same for every member); the member's own come from their own answers, asked only in the browser, so
    nothing shows until they have loaded and nothing of them is in the page's HTML. When the member takes, changes or
@@ -31,10 +32,6 @@
                         </span>
                         <a class="my-agenda__title" href="@BillPath(bill.Number)">@bill.Title</a>
                         <span class="small">
-                            @if (mine.Following)
-                            {
-                                @L["Mine.Following"]@(" · ")
-                            }
                             @if (mine.Side is { } side)
                             {
                                 @L["Mine.Side"]@(" ")<span class="choice choice--@side">@L["Mine.Side." + side]</span>
@@ -112,7 +109,7 @@ else if (Message is not null)
 
         Message = null;
         var mine = answer.Bills;
-        _rows = Bills.Where(b => mine.ContainsKey(b.Number)).Select(b => (b, mine[b.Number])).ToList();
+        _rows = Bills.Where(b => mine.TryGetValue(b.Number, out var own) && own.Following).Select(b => (b, mine[b.Number])).ToList();
         if (_shareLink is null && _rows.Any(r => r.Mine.Side is not null) && await State.InvitationAsync() is { Usable: true } invitation)
         {
             _shareLink = invitation.Link;

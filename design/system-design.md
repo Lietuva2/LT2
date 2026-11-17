@@ -1452,7 +1452,8 @@ and the "not a representative poll" notice. It uses only the public answers behi
   never by size, and never counted.
 - **A signed-in member** sees no introduction: "Sveiki sugrįžę" alone (owner, 2026-11-17: no links to "Kaip tai
   veikia" and the account, which the footer and the menu reach); then "Jūsų projektai", a panel of the bills they
-  follow or took a side on that are on the agenda or were voted on in the last week, each with its planned date, their
+  follow [decided by the owner on 2026-11-17: "followed only"; until then also a bill with a side alone; the side still
+  shows in the bill's own row and on its page] that are on the agenda or were voted on in the last week, each with its planned date, their
   own side or "Dar nenurodėte, ko prašote", the last vote's result, and the share link when they have taken a side; then the same timeline, where their bills carry "Sekate" and their
   own side, and on a bill where they took a side the pressed button shows it, with "Atsiimti" and a link "Argumentai
   ir pozicijos" to the bill's page. The trial note about
@@ -1697,8 +1698,9 @@ A visitor sees a link to sign in instead.
     never about an event from before. This delivers, for a person with a side, the "planned" and "voted" notices of
     8.6 without a second mechanism.
   - Sides taken before this was built are left as they are: no follow is made for them afterwards.
-  - "Jūsų projektai" (8.7) still lists bills the member follows or has a side on, so a person who unfollowed keeps
-    seeing the bill they have a side on, without "Sekate".
+  - "Jūsų projektai" (8.7) lists the bills the member follows, and only those [decided by the owner on 2026-11-17:
+    "followed only"; until then a bill with a side alone stayed there without "Sekate"]: "Nebesekti" takes the bill off
+    the list, and its side stays, shown in the bill's own row of the timeline and on its page.
 - **The account page** lists the followed bills (planned date or last stage result) and MPs, with "Nebesekti", and the
   two switches. Each email ends with a link there (`/paskyra/sekimas#sekami` since the account screens of 8.21); there is
   no token link in this round.

@@ -715,7 +715,7 @@
   <data name="Mine.Planned" xml:space="preserve"><value>Planuojama {0}</value></data>
   <data name="Mine.LastVote" xml:space="preserve"><value>Paskutinis balsavimas: {0}</value></data>
   <data name="Mine.Share" xml:space="preserve"><value>Pakvieskite kitus savo kvietimo nuoroda:</value></data>
-  <data name="Mine.None" xml:space="preserve"><value>Šiuo metu darbotvarkėje nėra projektų, kuriuos sekate ar dėl kurių nurodėte, ko prašote.</value></data>
+  <data name="Mine.None" xml:space="preserve"><value>Šiuo metu darbotvarkėje nėra projektų, kuriuos sekate.</value></data>
   <data name="Mine.All" xml:space="preserve"><value>Visi sekami projektai ir Seimo nariai →</value></data>
   <data name="Agenda.Nobody" xml:space="preserve"><value>Dar niekas nenurodė, ko prašo</value></data>
   <data name="Agenda.For" xml:space="preserve"><value>už</value></data>

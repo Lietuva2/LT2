@@ -615,7 +615,8 @@ page's "Balsuota".
   says so); the answer also names, per bill, the organisations with a public statement (as on the bill's page, never
   counted). The front page (design 8.7, reworked 2026-11-15; mockup `design/ui/pradzia.html`) is that agenda as a
   timeline of sitting days: a visitor first gets "Kaip tai veikia" (the same texts as `/metodika#kaip-tai-veikia`) and
-  links to register or sign in, never a form; a member gets "Jūsų projektai" and their marks in the rows, islands filled
+  links to register or sign in, never a form; a member gets "Jūsų projektai" (the bills they follow, and only those: owner,
+  2026-11-17, "followed only"; a side alone shows in its row) and their marks in the rows, islands filled
   in the browser from `GET /me/bills` (one request, never prerendered; it also says whether the caller gave the positions
   consent), so the HTML is the same for every member. The timeline is on a `.sheet` (design 8.16); the page has no
   "Organizacijos" block and the introduction no paragraph on following (owner, 2026-11-16: the footer links to
