@@ -26,14 +26,13 @@
         <MyAgendaPanel Bills="_panel" Numbers="_numbers" @rendermode="InteractiveWebAssembly" />
     </Authorized>
     <NotAuthorized>
-        @* The trial note and its links go under the logo and the title, across the head, so the note has the same edges
-           as the invented-data notice above the page (both from the page's edge, as wide as a line of text). *@
+        @* Owner, 2026-11-17: the headline is what the site does (the header already names it), and under it the trial note
+           with its links, in a column a line of text wide, so the note has the same edges as the invented-data notice above
+           the page; the turning logo stands in the space to the right of that column, across both rows. On a phone the small
+           logo stands beside the headline and the note goes under both. *@
         <div class="home-head" id="home-head">
             <lt2-logo-spin period="14"></lt2-logo-spin>
-            <div class="stack stack--tight">
-                <h1 id="home-title">Lietuva 2.0</h1>
-                <p class="lead">@T["Home.Lead"]</p>
-            </div>
+            <h1 id="home-title">@T["Home.Lead"]</h1>
             <div class="stack stack--tight home-head__signin" id="home-sign-in">
                 <p class="note">@T["Home.Trial"]</p>
                 <p class="small">@T["Home.HaveCode"] <a href="/prisijungti?registruotis=true" id="home-register">@T["Home.Register"]</a> · @T["Home.HaveAccount"] <a href="/prisijungti" id="home-sign-in-link">@T["Home.SignIn"]</a></p>

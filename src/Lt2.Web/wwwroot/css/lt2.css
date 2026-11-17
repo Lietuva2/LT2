@@ -788,9 +788,18 @@ body { padding-block-end: 4.5rem; }
   margin-block: calc(var(--sp-4) - var(--sp-5)) calc(var(--sp-4) - var(--sp-7));
 }
 .home-head lt2-logo-spin { width: 100%; }
-.home-head h1, .home-h1-s { font-size: var(--fs-5); }
-.home-head .lead { margin: 0; }
+.home-h1-s { font-size: var(--fs-5); }
 .home-head__signin { grid-column: 1 / -1; gap: var(--sp-2); }
+/* Owner, 2026-11-17: the headline is the lead sentence at the type scale's step nearest 2rem; from 54rem the headline and
+   the note are one column a line of text wide and the logo (about 15rem) is centred in the space to its right, across both
+   rows. */
+.home-head h1 { font-size: var(--fs-4); line-height: 1.15; max-width: var(--measure); }
+@media (min-width: 54.0625rem) {
+  .home-head { grid-template-columns: minmax(0, var(--measure)) minmax(0, 1fr); grid-template-areas: "title logo" "signin logo"; }
+  .home-head h1 { grid-area: title; }
+  .home-head__signin { grid-area: signin; }
+  .home-head lt2-logo-spin { grid-area: logo; width: min(15rem, 100%); justify-self: center; align-self: center; }
+}
 
 /* "Kaip tai veikia": four numbered steps (also at the top of /metodika#kaip-tai-veikia). */
 .home-how { border-top: 4px solid var(--brand-deep); padding-top: var(--sp-5); }
@@ -867,6 +876,7 @@ body { padding-block-end: 4.5rem; }
 }
 @media (max-width: 36rem) {
   .home-head { grid-template-columns: 5.25rem minmax(0, 1fr); gap: var(--sp-4); }
+  .home-head h1 { font-size: var(--fs-3); line-height: 1.25; }
   .intro-steps { grid-template-columns: minmax(0, 1fr); gap: var(--sp-4); }
   .intro-steps > li { display: grid; grid-template-columns: 2.5rem minmax(0, 1fr); gap: var(--sp-1) var(--sp-3); }
   .intro-steps > li::before { grid-row: span 2; }

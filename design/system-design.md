@@ -1307,6 +1307,14 @@ and the "not a representative poll" notice. It uses only the public answers behi
     The trial note starts at the page's edge and is as wide as a line of text, as the invented-data notice above the
     page is, so the two yellow notes share both edges at every width. (Before, the trial note stood in a third column
     beside the title, and the two notes had no edge in common.)
+  - **The headline says what the site does [decided by the owner on 2026-11-17, from mock-ups; it replaces the logo
+    beside the title above].** The header already names the site, so the page's heading is no longer "Lietuva 2.0" but
+    the lead sentence, "Matykite, ką Seimas svarstys artimiausiomis dienomis, ir pasakykite Seimo nariams, ko prašote.",
+    at the type scale's step nearest 2rem (`--fs-4`), and there is no separate lead paragraph; the page's title stays
+    "Lietuva 2.0". From 54rem the headline and, under it, the trial note with its links are one column a line of text
+    wide (so the note keeps both edges of the invented-data notice), and the turning logo, about 15rem wide, stands
+    centred in the free space to the right, across both rows. On a phone the small logo stays beside the headline (set
+    smaller, `--fs-3`) and the note goes under both. The agenda's heading still shows on the first screen at 1280 × 900.
   - **No paragraph on following [decided by the owner on 2026-11-16].** The paragraph "Projektus ir Seimo narius
     galite sekti: …" was removed from the introduction (here and at the top of `/metodika`, which shows the same
     steps): it is among the first texts a visitor reads and is not worth the place. What following is and sends (bills,
