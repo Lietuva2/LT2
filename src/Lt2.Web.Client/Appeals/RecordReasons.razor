@@ -22,6 +22,13 @@
    once the island runs it gets neither "Man svarbu" (the number stays, as a visitor reads it) nor writing an argument. *@
 <section class="sheet stack" aria-labelledby="h-why" id="reasons">
     <h2 id="h-why">@L["Reasons.Title"]</h2>
+    @* Owner, 2026-11-17: one hint beside the arguments (design 8.15: one beside the list, never per row) says when "Man svarbu"
+       can be marked, since many browsers show no title on a disabled button. The same markup for everyone the server serves;
+       the MP's own account, which gets no "Man svarbu", loses it once the island runs (design 8.5.4). *@
+    @if (!_mpAccount)
+    {
+        <p class="small" id="reasons-endorse-what"><Hint Id="endorse-what" Text="@L["Reasons.EndorseWhat"]" Answer="@L["Reasons.EndorseAnswer"]" More="/metodika#argumentai" /></p>
+    }
     @if (Record is { } record)
     {
         @* Design 8.25.4: each public profile's card once on the page, for js/lt2-cards.js; no follower number in it. *@

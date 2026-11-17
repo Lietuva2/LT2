@@ -572,7 +572,9 @@ page's "Balsuota".
   after the person's own action (`StableOrder`, the order by marks returns on the next read) and gives the pressed button
   the focus back without scrolling. It is a toggle whose button stays neutral, only the heart (`Icon` `heart`, `.icon__fill`)
   filling in the brand's green while marked (owner, 2026-11-17); a visitor's is a `LandingPath.SignInLink` back to the bill
-  of the same look.
+  of the same look. One hint beside the arguments' heading, "Kas yra „Man svarbu“?" (`Reasons.EndorseWhat`, owner
+  2026-11-17), says when it can be marked (a side first, one's own side, not one's own argument), "Plačiau" to
+  `/metodika#argumentai`; the same served markup for everyone, gone for the MP's own account once the island runs.
 - **The bill's page (design 8.12.1, owner 2026-11-17).** The header: "Projektai / Įstatymo projektas XVP-0412" (no label
   line), the title, one `.follow-line` (the stage tags, "Planuojama …", then `FollowButton`). Beside the side column: what
   it is about, the sides, a closed bill's result; the side column: "Stadijos Seime" with `DateFlagForm` under the stages, the

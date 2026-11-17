@@ -2903,7 +2903,11 @@ complicated": "Can we design a whole non breaking line for commands, or icons, o
   expanded state for assistive technology and names the panel it controls.
 - **Words with small icons:** a heart beside "Man svarbu", a check in a circle beside "Sutinku", a speech bubble beside
   "Aptarimas", three dots for "⋯", drawn inline in the text's colour; no icon library and nothing fetched. "Man svarbu"
-  always keeps its words (a term the icon alone would not say). **The word "Aptarimas" shows at desktop widths, closed
+  always keeps its words (a term the icon alone would not say). [Decided by the owner on 2026-11-17: "by the arguments there should be an
+  explanation".] One hint beside the arguments' heading, "Kas yra „Man svarbu“?" (8.15), says when it can be marked: after
+  saying what one asks for, only arguments of one's own side, not one's own; "Plačiau" to `/metodika#argumentai`. The same
+  for everyone the server serves (a disabled button's title is shown by few browsers); the MP's own account, which gets no
+  "Man svarbu" (8.5.4), loses it once the island runs. **The word "Aptarimas" shows at desktop widths, closed
   and open alike [decided by the owner on 2026-11-17, settling the open choice]:** the arguments run at the page's full
   width below the bill's top part (8.12.1), so a side's column is wide enough; only where the row is narrower than about
   20rem (a 360 px phone) is the word kept for screen readers alone, with the bubble and the count shown.

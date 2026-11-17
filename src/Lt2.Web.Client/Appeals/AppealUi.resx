@@ -1001,4 +1001,6 @@
   <data name="News.Responses.One" xml:space="preserve"><value>{0} naujas atsakymas</value></data>
   <data name="News.Responses.Few" xml:space="preserve"><value>{0} nauji atsakymai</value></data>
   <data name="News.Responses.Many" xml:space="preserve"><value>{0} naujų atsakymų</value></data>
+  <data name="Reasons.EndorseWhat" xml:space="preserve"><value>Kas yra „Man svarbu“?</value></data>
+  <data name="Reasons.EndorseAnswer" xml:space="preserve"><value>Pažymėkite argumentus, kurie jums svarbiausi. Žymėti galima nurodžius, ko prašote (už ar prieš), ir tik savo pusės argumentus, ne savo parašytus. Daugiausia pažymėti argumentai patenka į suvestines Seimo nariams.</value></data>
 </root>

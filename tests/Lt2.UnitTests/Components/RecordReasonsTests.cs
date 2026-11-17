@@ -94,6 +94,29 @@ public sealed class RecordReasonsTests : BunitContext
         reasons.FindAll("#add-reason").ShouldBeEmpty();
         reasons.FindAll("#reasons-note").ShouldBeEmpty();
         reasons.FindAll($"#report-{First}").ShouldNotBeEmpty("reporting stays");
+        reasons.FindAll("#endorse-what").ShouldBeEmpty("no \"Man svarbu\", so nothing to explain");
+    }
+
+    /// <summary>
+    /// Owner, 2026-11-17: one hint beside the arguments says when "Man svarbu" can be marked (a side first, one's own side, not
+    /// one's own argument), with "Plačiau" to the methodology's part on arguments; the same served markup for everyone.
+    /// </summary>
+    [Fact]
+    public void One_hint_beside_the_arguments_says_when_man_svarbu_can_be_marked_the_same_for_everyone_served()
+    {
+        SetRendererInfo(new RendererInfo("Static", isInteractive: false));
+        var served = Render<RecordReasons>(p => p.Add(c => c.Number, Bill));
+
+        served.FindAll(".hint").Count.ShouldBe(1, "one hint beside the list, never one per argument");
+        served.Find("#endorse-what").TextContent.ShouldBe("Kas yra „Man svarbu“?");
+        var answer = served.Find("#endorse-what-panel .hint__answer").TextContent;
+        answer.ShouldContain("nurodžius, ko prašote");
+        answer.ShouldContain("tik savo pusės argumentus, ne savo parašytus");
+        served.Find("#endorse-what-panel .hint__more").GetAttribute("href").ShouldBe("/metodika#argumentai");
+        served.Find("#h-why + #reasons-endorse-what").ShouldNotBeNull("beside the heading");
+
+        SetRendererInfo(new RendererInfo("WebAssembly", isInteractive: true));
+        Render<RecordReasons>(p => p.Add(c => c.Number, Bill)).FindAll("#endorse-what").Count.ShouldBe(1, "a member keeps it once the island runs");
     }
 
     [Fact]
