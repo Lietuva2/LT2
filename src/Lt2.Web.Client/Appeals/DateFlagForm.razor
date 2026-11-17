@@ -3,10 +3,11 @@
 @inject IAppealsApi Appeals
 @inject MyBillState State
 
-@* Design 8.4: participants can say the planned date is wrong or the bill is voted sooner, with a link to the source; a
-   moderator makes the change. Shown only to members who have a side on the bill, directly under the planned date on the
-   bill's page (8.12.1), which lies on the ground: the form that opens is therefore a sheet of its own (8.16), not a quiet
-   one. *@
+@* Design 8.4: participants can say the planned date is wrong or the bill is voted sooner, with a link to the source and,
+   when they know it, the right date (owner, 2026-11-17: a text field yyyy-MM-dd, never the browser's date control); a
+   moderator makes the change. Shown only to members who have a side on the bill, in the side column's "Stadijos Seime"
+   right under the stages and their planned date (owner, 2026-11-17), so the form that opens lies inside that sheet and is
+   a quiet one (8.16). *@
 @if (Mine is { Side: not null })
 {
     <details class="more stack stack--tight" id="date-flag">
@@ -21,7 +22,7 @@
         }
         else
         {
-            <form class="sheet stack stack--tight" @onsubmit="SendAsync" novalidate>
+            <form class="sheet sheet--quiet stack stack--tight" @onsubmit="SendAsync" novalidate>
                 <fieldset class="stack stack--tight">
                     <legend class="label">@L["Flag.Kind"]</legend>
                     @foreach (var kind in Kinds)
@@ -32,6 +33,13 @@
                         </label>
                     }
                 </fieldset>
+                <div class="field @ErrorClass("date")">
+                    <label for="flag-date">@L["Flag.Date"]</label>
+                    <p class="field__hint" id="flag-date-hint">@L.Format("Date.Hint", Display.DateExample)</p>
+                    <input class="input num" id="flag-date" type="text" inputmode="numeric" autocomplete="off" pattern="@Display.DatePattern" placeholder="@Display.DateExample"
+                           aria-describedby="@DescribedBy("date", "flag-date", "flag-date-hint")" aria-invalid="@Invalid("date")" @bind="_date" disabled="@Locked" />
+                    <FieldError Errors="Errors" Field="date" For="flag-date" />
+                </div>
                 <div class="field @ErrorClass("link")">
                     <label for="flag-link">@L["Flag.Link"]</label>
                     <input class="input" id="flag-link" type="url" maxlength="@AppealLimits.FlagLinkMaxLength" @bind="_link" disabled="@Locked"
@@ -54,6 +62,9 @@
     private string? _kind;
     private string _link = "";
     private string? _note;
+
+    /// <summary>The right date as typed, <c>yyyy-MM-dd</c>; empty when the person does not know it.</summary>
+    private string? _date;
     private bool _sent;
 
     [Parameter, EditorRequired] public string Number { get; set; } = "";
@@ -74,7 +85,19 @@
 
     private Task SendAsync() => RunAsync(async () =>
     {
-        if (Succeeded(await Appeals.FlagDateAsync(Number, new FlagRequest { Kind = _kind!, Link = _link.Trim(), Note = _note }), "link"))
+        DateOnly? date = null;
+        if (!string.IsNullOrWhiteSpace(_date))
+        {
+            if (!Display.TryReadDate(_date, out var day))
+            {
+                FieldFails("date", L.Format("Date.Invalid", Display.DateExample));
+                return;
+            }
+
+            date = day;
+        }
+
+        if (Succeeded(await Appeals.FlagDateAsync(Number, new FlagRequest { Kind = _kind!, Link = _link.Trim(), Note = _note, Date = date }), "link", "date"))
         {
             _sent = true;
         }

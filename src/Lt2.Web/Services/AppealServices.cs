@@ -55,7 +55,7 @@ internal static class AppealMapping
     public static ModerationQueueResponse Map(ModerationItems q) => new(
         q.Records.Select(a => new QueueRecordResponse(
             a.Id, Map(a.Bill), a.Description, a.DescriptionSource, a.Threshold, a.Reports.Select(Map).ToList(), Map(a.Surge), Map(a.Planned),
-            a.DateFlags.Select(f => new QueueFlagResponse(f.Id, f.Kind, f.Link, f.Note, f.CreatedAt)).ToList(),
+            a.DateFlags.Select(f => new QueueFlagResponse(f.Id, f.Kind, f.Link, f.Note, f.CreatedAt, f.Date)).ToList(),
             a.UnderThresholdOnAgenda, a.Held, a.Participants, a.DescriptionUrl, a.Status)).ToList(),
         q.Reasons.Select(Map).ToList());
 
@@ -155,7 +155,7 @@ internal sealed class ServerAppealsApi(IAppealsModule appeals, TakingSides sides
         await AsMemberAsync(id => appeals.ReportAsync(id, AppealMapping.ToModule(request), cancellationToken));
 
     public async Task<ApiResult> FlagDateAsync(string number, FlagRequest request, CancellationToken cancellationToken = default) =>
-        await AsMemberAsync(id => appeals.FlagDateAsync(number, id, new NewFlag(request.Kind, request.Link, request.Note), cancellationToken));
+        await AsMemberAsync(id => appeals.FlagDateAsync(number, id, new NewFlag(request.Kind, request.Link, request.Note, request.Date), cancellationToken));
 
     private Guid? UserId => accessor.HttpContext?.User.UserId();
 

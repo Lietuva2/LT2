@@ -1001,8 +1001,11 @@ something relevant is planned for Thursday, one on Wednesday.
 10–12 days ahead and changes often; items are also added on the day. So:
 
 - any participant (someone with a side on the bill) can flag "the date is wrong" or "this is being voted sooner", with a link to the
-  source; the control ("Data neteisinga?") sits directly under the planned date on the bill's page and is offered only
-  while the page shows a planned date **[decided by the owner on 2026-11-16]** (8.12.1);
+  source and, optionally, the date they say is right ("Tikroji data (jei žinote)", a text field `yyyy-MM-dd`, stored with
+  the flag and shown to the moderators in the queue) **[owner, 2026-11-17]**; the control ("Data neteisinga?") is offered
+  only while the page shows a planned date **[decided by the owner on 2026-11-16]** and sits in the side column's
+  "Stadijos Seime", under the stages and their planned date **[owner, 2026-11-17; it was under "Planuojama …" at the top]**
+  (8.12.1);
 - **where the date comes from is said beside it [decided by the owner on 2026-11-16]:** on the bill's page one hint
   "Iš kur ši data?" next to "Planuojama …" (8.15: the draft agenda of Seimas sittings published on lrs.lt about 10–12
   days ahead, such dates often move; "Plačiau" to `/metodika#planuojamos-datos`), or, for a moderator's date, that a

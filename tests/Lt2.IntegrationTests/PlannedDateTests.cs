@@ -79,10 +79,21 @@ public sealed class PlannedDateTests(DatabaseFixture database) : ApiTest(databas
                 await badLink.ShouldBeProblemAsync(HttpStatusCode.BadRequest, "validation");
             }
 
-            (await initiator.PostAsync(AppealRoutes.FlagsOf(AppealSteps.ThirdBill), flag)).StatusCode.ShouldBe(HttpStatusCode.NoContent);
+            // Owner, 2026-11-17: "Tikroji data (jei žinote)" is a date or nothing; anything else is refused and stores nothing.
+            const string NotADate = """{"kind":"sooner","link":"https://www.lrs.lt/pavyzdys","date":"2026-13-45"}""";
+            using (var badDate = await initiator.PostAsync(AppealRoutes.FlagsOf(AppealSteps.ThirdBill), NotADate))
+            {
+                badDate.StatusCode.ShouldBe(HttpStatusCode.BadRequest);
+            }
+
+            (await Database.ScalarAsync<long>("SELECT count(*) FROM appeals.flag WHERE record_id = @a", ("a", record.Id))).ShouldBe(0);
+
+            var rightDate = date.AddDays(-2);
+            (await initiator.PostAsync(AppealRoutes.FlagsOf(AppealSteps.ThirdBill), flag with { Date = rightDate })).StatusCode.ShouldBe(HttpStatusCode.NoContent);
             var flags = (await moderator.Browser.GetJsonAsync<ModerationQueueResponse>(AppealRoutes.ModerationQueue)).Records.Single(a => a.Id == record.Id).DateFlags!;
             flags.Single().Kind.ShouldBe("sooner");
             flags.Single().Link.ShouldBe("https://www.lrs.lt/pavyzdys");
+            flags.Single().Date.ShouldBe(rightDate, "the date the participant says is right reaches the moderators with the flag");
 
             var corrected = date.AddDays(-3);
             using (var set = await moderator.Browser.SendAsync(HttpMethod.Put, AppealRoutes.With(AppealRoutes.RecordPlanned, record.Id), new ModeratorPlannedRequest

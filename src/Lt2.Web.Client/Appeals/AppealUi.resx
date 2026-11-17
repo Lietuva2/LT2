@@ -307,6 +307,8 @@
 <data name="Flag.date-wrong" xml:space="preserve"><value>Nurodyta data neteisinga</value></data>
 <data name="Flag.sooner" xml:space="preserve"><value>Seimas balsuos anksčiau</value></data>
 <data name="Flag.Link" xml:space="preserve"><value>Nuoroda, kur matyti tikroji data</value></data>
+<data name="Flag.Date" xml:space="preserve"><value>Tikroji data (jei žinote)</value></data>
+<data name="Mod.FlagDate" xml:space="preserve"><value>Tikroji data: {0}</value></data>
 <data name="Flag.Submit" xml:space="preserve"><value>Pranešti moderatoriams</value></data>
 <data name="Flag.Sent" xml:space="preserve"><value>Ačiū. Moderatorius patikrins ir, jei reikia, pataisys datą.</value></data>
 <data name="Mod.Planned" xml:space="preserve"><value>Planuojama: {0}{1}</value></data>
