@@ -31,22 +31,25 @@
             @* Design 8.5.2: the one public trace of a take-over; a profile nobody took over says nothing about joining. *@
             <p class="small" id="managed-by">@F.T["Mp.ManagedBy"] <span class="num">@F.T.Format("Mp.ManagedSince", Display.Day(since))</span></p>
         }
-        @* Design 8.11.2: "Sekti" an MP: how they vote on the bills one follows comes in the "voted" email. Private. *@
         <Lt2.Web.Client.Components.NeedsScript />
-        @* Design 8.11.2: with how many follow the MP (the hint: not support, not a poll), kept current by the button. *@
-        <Lt2.Web.Client.Appeals.FollowButton Kind="mp" Key="@p.Mp.Slug" Followers="p.Followers" @rendermode="InteractiveWebAssembly" />
-        <div class="row">
-            @foreach (var m in p.Memberships.Where(m => m.Current && m.Body.Kind is "faction" or "committee" or "group"))
-            {
-                @if (m.Body.Kind == "group")
+        @* Owner, 2026-11-17: one compact line under the name, as on a bill's page: the MP's tags, then "Sekti" (design 8.11.2:
+           how they vote on the bills one follows comes in the "voted" email; private) and how many follow, kept current by
+           the button. *@
+        <div class="row follow-line">
+            <p class="row">
+                @foreach (var m in p.Memberships.Where(m => m.Current && m.Body.Kind is "faction" or "committee" or "group"))
                 {
-                    <span class="tag">@m.Body.Name</span>
+                    @if (m.Body.Kind == "group")
+                    {
+                        <span class="tag">@m.Body.Name</span>
+                    }
+                    else
+                    {
+                        <a class="tag @(m.Body.Kind == "faction" ? "tag--ink" : "")" href="/@(m.Body.Kind == "faction" ? "frakcijos" : "komitetai")/@m.Body.Slug">@m.Body.Name</a>
+                    }
                 }
-                else
-                {
-                    <a class="tag @(m.Body.Kind == "faction" ? "tag--ink" : "")" href="/@(m.Body.Kind == "faction" ? "frakcijos" : "komitetai")/@m.Body.Slug">@m.Body.Name</a>
-                }
-            }
+            </p>
+            <Lt2.Web.Client.Appeals.FollowButton Kind="mp" Key="@p.Mp.Slug" Followers="p.Followers" @rendermode="InteractiveWebAssembly" />
         </div>
     </div>
 

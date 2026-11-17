@@ -708,15 +708,19 @@ body { padding-block-end: 4.5rem; }
    its summary; its panel follows it in the markup and shows only while it is open. A browser without :popover-open or
    anchor placement still opens the "⋯" menu, in the middle of the screen. */
 /* The name and the row stand on the bubble's own left edge (an MP's response, mirrored, on its right edge), so a side's
-   narrow column at 1280 px and a 360 px phone keep the whole row on one line. The row is a size container: where it is
-   narrower than about 20rem (a phone of 360 px, a side's column on a wide screen) "Aptarimas" keeps its icon and count and
-   its word stays only for screen readers; "Man svarbu" always keeps its words (a term the icon alone would not say). */
+   narrow column and a 360 px phone keep the whole row on one line. The row is a size container: where it is narrower than
+   about 20rem (a phone under about 390 px; a side's column at desktop widths is wider since the owner's decision of
+   2026-11-17, so the word always shows there, closed and open alike) "Aptarimas" keeps its icon and count and its word
+   stays only for screen readers; "Man svarbu" always keeps its words (a term the icon alone would not say). */
 .act { display: flex; flex-wrap: wrap; align-items: center; gap: var(--sp-1); container-type: inline-size; }
 .said--mp .act { justify-content: flex-end; }
 .act > * { order: 0; }
 .act > .act__more { order: 1; }
-.act > .act__panel, .act > .discuss__panel { order: 2; flex: 1 0 100%; min-width: 0; }
-.act > .act__panel { margin-top: var(--sp-2); }
+/* Owner, 2026-11-17: a chosen action ("Pranešti", "Atsiimti", "Moderuoti", a confirmation) opens directly under the row, above
+   an open discussion, so the form stands where the person pressed. */
+.act > .act__panel, .act > .discuss__panel { flex: 1 0 100%; min-width: 0; }
+.act > .act__panel { order: 2; margin-top: var(--sp-2); }
+.act > .discuss__panel { order: 3; }
 .act__item {
   display: inline-flex; align-items: center; gap: var(--sp-1); min-height: 2.75rem; padding: 0 var(--sp-2);
   white-space: nowrap; font: 600 var(--fs-1)/1 var(--font-text); color: var(--ink);
@@ -756,9 +760,17 @@ body { padding-block-end: 4.5rem; }
 .menu > .report-visitor { padding: var(--sp-2) var(--sp-4); }
 .menu > .report-visitor > summary { display: flex; align-items: center; min-height: 2.75rem; font-weight: 600; }
 
-/* Design 8.23.6: an open "Aptarimas" needs the page's width, not a side's column: while one is open the two sides stand one
-   above the other, as on a phone, and the discussion reads in full width under its argument. */
-.pair--reasons:has(details.discuss[open]) { grid-template-columns: minmax(0, 1fr); }
+/* Owner, 2026-11-17: an open "Aptarimas" stays in its own side's column, under its argument; nothing else on the page moves
+   (the arguments run at the page's full width below the bill's top part, so a side's column has room for it). */
+
+/* "Man svarbu" and "Sutinku" in the action row (owner, 2026-11-17): a toggle whose button stays neutral; only its icon fills
+   in the brand's green while marked, so the count stays readable. A visitor's "Man svarbu" is a sign-in link of the same
+   look. */
+.act .mark[aria-pressed="true"] { background: var(--slate-tint); color: var(--ink); }
+.act .mark[aria-pressed="true"] .icon__fill { fill: var(--brand); stroke: var(--brand); }
+.act .mark[aria-pressed="true"] .icon__on-fill { stroke: #ffffff; }
+a.mark { color: var(--ink); text-decoration: none; }
+a.mark:hover { text-decoration: underline; text-underline-offset: 3px; }
 
 /* The agenda (design 8.11.1): a bill's number tag inside a row keeps the tag's light-on-dark text, not the row link's ink. */
 .rows__main a.tag--ink { color: var(--sheet); font-weight: 600; }
@@ -974,9 +986,14 @@ a.said__name { color: inherit; font-weight: 700; }
 .rows > li.member-text { display: flex; flex-direction: column; gap: var(--sp-2); }
 
 /* "Sekti" / "Nebesekti" is an action, not a state to underline like a chosen tab (browser look, 2026-11-16): one rule for
-   every page that has it (a bill, an MP, an organisation, a member). */
-.follow .btn[aria-pressed="true"] { box-shadow: none; }
+   every page that has it (a bill, an MP, an organisation, a member). Pressed, it keeps the plain button's outline, so in the
+   compact line (2026-11-17) "Nebesekti" still reads as a button. */
+.follow .btn[aria-pressed="true"] { box-shadow: inset 0 0 0 2px var(--ink); }
 .followers { display: inline-flex; gap: var(--sp-2); align-items: baseline; }
+/* Owner, 2026-11-17: one compact line under a followed thing's title: its tags, "Sekti", "Sekėjai: n" and the hint. */
+.follow-line { gap: var(--sp-2) var(--sp-5); }
+.follow { gap: var(--sp-2) var(--sp-3); }
+.follow .btn { min-height: 2.75rem; padding: 0 var(--sp-4); font-size: var(--fs-1); }
 /* Design 8.23.6: "Aptarimas" lies on its target's sheet, below it and set in; the list is not a sheet, the writing box a quiet one. */
 .comments__list { list-style: none; padding: 0; margin: 0; }
 .comment { padding-left: var(--sp-3); border-left: 2px solid var(--rule); }
@@ -985,6 +1002,11 @@ a.said__name { color: inherit; font-weight: 700; }
 .comment__text a { overflow-wrap: anywhere; }
 .comment .act { padding-left: 0; }
 .comment__agreed { margin: 0; }
+/* "Sutinka: A, B ir dar 5" (owner, 2026-11-17): "ir dar 5" is the summary of a <details> that holds only it; the full list is
+   the panel after it, shown only while it is open, on its own line (as "Aptarimas" does, design 8.16.1). */
+.agreed { display: flex; flex-wrap: wrap; align-items: baseline; column-gap: 0.3em; }
+.agreed__all { flex: 1 0 100%; margin: var(--sp-1) 0 0; }
+.agreed > details:not([open]) + .agreed__all { display: none; }
 /* Design 8.23.6: the comment or argument a link leads to (?komentaras=, ?argumentas=), marked by the server, no script; it
    stops below the sticky header when the browser scrolls to it. */
 .comment--linked { border-left-color: var(--brand); background: var(--brand-tint); padding: var(--sp-2) var(--sp-2) var(--sp-2) var(--sp-3); }

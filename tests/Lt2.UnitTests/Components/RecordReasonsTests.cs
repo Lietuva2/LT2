@@ -1,5 +1,6 @@
 using System.Reflection;
 using Bunit;
+using Bunit.TestDoubles;
 using Lt2.Api.Contracts;
 using Lt2.Api.Contracts.Appeals;
 using Lt2.Web.Client;
@@ -21,6 +22,8 @@ public sealed class RecordReasonsTests : BunitContext
 
     private readonly ApiFake _appeals;
 
+    private readonly BunitAuthorizationContext _auth;
+
     public RecordReasonsTests()
     {
         Services.AddLocalization();
@@ -33,7 +36,8 @@ public sealed class RecordReasonsTests : BunitContext
         Services.AddSingleton(appeals);
         Services.AddSingleton(moderation);
         Services.AddSingleton(DispatchProxy.Create<Lt2.Api.Contracts.Me.IProfilesApi, ApiFake>());
-        AddAuthorization().SetAuthorized("moderatorius@pavyzdys.test");
+        _auth = AddAuthorization();
+        _auth.SetAuthorized("moderatorius@pavyzdys.test");
         SetRendererInfo(new RendererInfo("WebAssembly", isInteractive: true));
 
         _appeals.On("GetRecordAsync", ApiResult<BillRecordResponse>.Ok(BillRecord(Reason(First, 3), Reason(Second, 2))));
@@ -130,6 +134,25 @@ public sealed class RecordReasonsTests : BunitContext
         own.HasAttribute("disabled").ShouldBeTrue();
         own.GetAttribute("title").ShouldBe("Savo argumento „Man svarbu“ žymėti negalima.");
         reasons.Find($"#mark-{First}").HasAttribute("disabled").ShouldBeFalse("someone else's argument of one's own side");
+    }
+
+    /// <summary>
+    /// Owner, 2026-11-17: the author's name stands above the argument's text, as above a statement, a response and a comment;
+    /// a visitor's "Man svarbu" is a sign-in link back to the bill with the same look, not a grey label that looks like a button.
+    /// </summary>
+    [Fact]
+    public void The_name_comes_first_and_a_visitors_man_svarbu_leads_to_sign_in_and_back_to_the_bill()
+    {
+        _auth.SetNotAuthorized();
+        var reasons = Render<RecordReasons>(p => p.Add(c => c.Number, Bill));
+
+        var said = reasons.Find($"#reason-{First}");
+        said.Children.Select(e => e.ClassName?.Split(' ')[0]).Take(2).ShouldBe(["said__by", "bubble"], "the name, then the text");
+        var mark = reasons.Find($"#mark-{First}");
+        mark.TagName.ShouldBe("A");
+        mark.ClassList.ShouldContain("mark");
+        mark.GetAttribute("href").ShouldBe("/prisijungti#tikslas=" + Uri.EscapeDataString("/seimas/" + Bill));
+        mark.TextContent.Trim().ShouldBe("Man svarbu · 3");
     }
 
     [Fact]

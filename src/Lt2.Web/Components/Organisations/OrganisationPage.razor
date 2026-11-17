@@ -22,28 +22,31 @@
         </ol>
         <p class="label">@L["Org.Profile.Label"]</p>
         <h1 id="organisation-name">@p.Name</h1>
-        <p class="row" id="organisation-tags">
-            <OrgLabel Label="p.Label" />
-            @if (p.DeclaredLobbyist)
-            {
-                <span class="tag" id="lobbyist">@L["Org.Profile.LobbyistTag"]</span>
-            }
-            @if (p.Status != "active")
-            {
-                <span class="tag tag--ink" id="organisation-state">@L["Org.State." + p.Status]</span>
-            }
-        </p>
         <Lt2.Web.Client.Components.NeedsScript />
-        @* Design 8.14.14, stage B: "Sekti" an active organisation: an email when it makes a statement public. Who follows is
-           private, the organisation included; how many is the line below (design 8.11.2). *@
-        @if (p.Status == "active")
-        {
-            <FollowButton Kind="organisation" Key="@p.Slug" Followers="p.Followers" @rendermode="InteractiveWebAssembly" />
-        }
-        else
-        {
-            <Lt2.Web.Client.Components.FollowerLine Count="p.Followers" />
-        }
+        @* Owner, 2026-11-17: one compact line under the name, as on a bill's page: the tags, then "Sekti" an active
+           organisation (design 8.14.14, stage B: an email when it makes a statement public; who follows is private, the
+           organisation included) and how many follow (design 8.11.2). *@
+        <div class="row follow-line">
+            <p class="row" id="organisation-tags">
+                <OrgLabel Label="p.Label" />
+                @if (p.DeclaredLobbyist)
+                {
+                    <span class="tag" id="lobbyist">@L["Org.Profile.LobbyistTag"]</span>
+                }
+                @if (p.Status != "active")
+                {
+                    <span class="tag tag--ink" id="organisation-state">@L["Org.State." + p.Status]</span>
+                }
+            </p>
+            @if (p.Status == "active")
+            {
+                <FollowButton Kind="organisation" Key="@p.Slug" Followers="p.Followers" @rendermode="InteractiveWebAssembly" />
+            }
+            else
+            {
+                <Lt2.Web.Client.Components.FollowerLine Count="p.Followers" />
+            }
+        </div>
     </div>
 
     @if (p.Status == "blocked")

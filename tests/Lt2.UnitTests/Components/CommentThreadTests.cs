@@ -70,7 +70,13 @@ public sealed class CommentThreadTests : BunitContext
         var markup = thread.Markup;
         markup.ShouldContain("<a href=\"https://pavyzdys.test/tyrimas\" rel=\"nofollow ugc noopener noreferrer\" target=\"_blank\">https://pavyzdys.test/tyrimas</a>");
         markup.ShouldNotContain("href=\"http://kitas.pavyzdys.test\"");
-        thread.Find($"#{CommentLimits.ElementId(PersonComment)}-agreed").TextContent.ShouldBe("Sutinka: Tomas, Lietuva 2.0 naudotojas ir dar 1");
+        // Owner, 2026-11-17: "Sutinka: A, B ir dar 1", where "ir dar 1" opens the full list (no "Visi sutinkantys" of its own).
+        var agreed = thread.Find($"#{CommentLimits.ElementId(PersonComment)}-agreed");
+        agreed.Children[0].TextContent.ShouldBe("Sutinka: Tomas, Lietuva 2.0 naudotojas");
+        thread.Find($"#{CommentLimits.ElementId(PersonComment)}-all-agreed > summary").TextContent.ShouldBe("ir dar 1");
+        thread.Find($"#{CommentLimits.ElementId(PersonComment)}-all-agreed").ChildElementCount.ShouldBe(1, "the <details> holds only its summary");
+        thread.Find($"#{CommentLimits.ElementId(PersonComment)}-all-agreed + .agreed__all").TextContent.Split(", ").Length.ShouldBe(3, "the full list, all three");
+        markup.ShouldNotContain("Visi sutinkantys");
         thread.Find($"#{CommentLimits.ElementId(OrganisationComment)} .tag").TextContent.ShouldBe("Organizacija");
         thread.Find($"#{CommentLimits.ElementId(OrganisationComment)} .comment__label").TextContent.ShouldBe("Nepatvirtinta", "the organisation's label beside its name (design 8.23.2)");
         thread.Find($"#{CommentLimits.ElementId(MpComment)} a.comment__name").GetAttribute("href").ShouldBe("/p/jonas-petraitis");
@@ -97,7 +103,7 @@ public sealed class CommentThreadTests : BunitContext
         thread.Markup.ShouldContain("Mokytoja iš Kauno.", Case.Sensitive, "the card's text is in the page");
         thread.Find($"#{CommentLimits.ElementId(MpComment)}-agreed a").GetAttribute("data-card").ShouldBe(card, "the same card beside a \"Sutinku\"");
         thread.Find($"#{CommentLimits.ElementId(PersonComment)}-agreed").QuerySelectorAll("a").ShouldBeEmpty("Tomas and an unnamed member have no profile");
-        thread.FindAll($"#{CommentLimits.ElementId(PersonComment)}-all-agreed a").ShouldBeEmpty();
+        thread.FindAll($"#{CommentLimits.ElementId(PersonComment)}-all-agreed-list a").ShouldBeEmpty();
         thread.Find($"#{CommentLimits.ElementId(OrganisationComment)} .comment__name").GetAttribute("href").ShouldBe("/o/pavyzdine-asociacija");
         thread.FindAll("a[href^=\"/nariai/\"]").Count.ShouldBe(2, "the person's own comment and their \"Sutinku\"");
     }
@@ -115,6 +121,26 @@ public sealed class CommentThreadTests : BunitContext
         thread.Find($"#{CommentLimits.ElementId(OrganisationComment)}-agree").Click();
         thread.Find($"#{CommentLimits.ElementId(OrganisationComment)}-confirm").TextContent.ShouldContain("Jūsų vardas bus matomas prie šio komentaro.");
         _comments.Calls.ShouldNotContain("AgreeAsync", "nothing is sent before the confirmation");
+    }
+
+    /// <summary>
+    /// Owner, 2026-11-17: "Sutinku" is a toggle like "Man svarbu": the same words in both states, its own icon (filled by the
+    /// stylesheet while pressed), the state in aria-pressed; no "Atsiimti „Sutinku“".
+    /// </summary>
+    [Fact]
+    public void Sutinku_keeps_its_words_when_agreed_and_says_the_state_by_aria_pressed()
+    {
+        AddAuthorization().SetAuthorized("ruta.mockute@pavyzdys.test");
+        SetRendererInfo(new RendererInfo("WebAssembly", isInteractive: true));
+        _comments.On("GetMineAsync", ApiResult<MyCommentsResponse>.Ok(new(true, false, false, [], [], [OrganisationComment], [], 0, new Dictionary<Guid, int>())));
+        var thread = RenderThread();
+
+        var agreed = thread.Find($"#{CommentLimits.ElementId(OrganisationComment)}-agree");
+        var other = thread.Find($"#{CommentLimits.ElementId(MpComment)}-agree");
+        (agreed.TextContent.Trim(), agreed.GetAttribute("aria-pressed")).ShouldBe(("Sutinku", "true"));
+        (other.TextContent.Trim(), other.GetAttribute("aria-pressed")).ShouldBe(("Sutinku", "false"));
+        agreed.QuerySelector("svg.icon .icon__fill").ShouldNotBeNull();
+        thread.Markup.ShouldNotContain("Atsiimti „Sutinku“");
     }
 
     [Fact]

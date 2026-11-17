@@ -32,6 +32,9 @@ else if (_profile is { } p)
         <div class="stack stack--loose">
             <section class="sheet stack" aria-labelledby="member-name" id="member">
                 <h1 id="member-name">@p.DisplayName</h1>
+                <Lt2.Web.Client.Components.NeedsScript />
+                @* Owner, 2026-11-17: "Sekti" and how many follow in one compact line under the name, as on every followed page. *@
+                <FollowButton Kind="member" Key="@p.ProfileId" Followers="p.Followers" @rendermode="InteractiveWebAssembly" />
                 @if (p.Party is { } party)
                 {
                     @* Design 8.25.9: only while the member ticked "Rodyti viešame profilyje"; the name after a colon, never declined. *@
@@ -46,8 +49,6 @@ else if (_profile is { } p)
                         }
                     </div>
                 }
-                <Lt2.Web.Client.Components.NeedsScript />
-                <FollowButton Kind="member" Key="@p.ProfileId" Followers="p.Followers" @rendermode="InteractiveWebAssembly" />
                 <ReportMember ProfileId="@p.ProfileId" Contact="@Contact" @rendermode="InteractiveWebAssembly" />
             </section>
 

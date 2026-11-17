@@ -39,10 +39,10 @@
                     @foreach (var reason in _showAll ? all : all.Take(Shown))
                     {
                         <div class="said @(LinkedReason == reason.Id ? "said--linked" : null)" id="@BillTextLinks.ReasonElement(reason.Id)" @key="reason.Id">
-                            <LongText Text="@reason.Text" BubbleClass="bubble bubble--people voice" Id="@($"reason-more-{reason.Id}")" />
-                            @* Line 1: the name (design 8.16.1). Line 2: the action row, one line that never wraps: "Man svarbu · n",
-                               "Aptarimas (n)" and "⋯" with the rarer actions; a chosen action and the discussion open below the
-                               whole row, at its width. *@
+                            @* The name first, then the text, then the action row (owner, 2026-11-17: as statements, responses and
+                               comments read). The row is one line that never wraps (design 8.16.1): "Man svarbu · n",
+                               "Aptarimas (n)" and "⋯" with the rarer actions; a chosen action opens directly under the row, an
+                               open discussion below that, both at the row's width. *@
                             <div class="said__by">
                                 @if (reason.AuthorProfileId is { } profileId)
                                 {
@@ -54,6 +54,7 @@
                                     <b class="said__name">@(reason.AuthorName ?? L["Reasons.Anonymous"])</b>
                                 }
                             </div>
+                            <LongText Text="@reason.Text" BubbleClass="bubble bubble--people voice" Id="@($"reason-more-{reason.Id}")" />
                             <div class="act" id="said-actions-@reason.Id">
                                 @if (_signedIn)
                                 {
@@ -64,7 +65,9 @@
                                 }
                                 else
                                 {
-                                    <span class="mark act__item num"><Icon Name="heart" /><span>@L.Format("Reasons.Endorse", Display.Number(reason.Endorsements))</span></span>
+                                    @* A visitor: a sign-in link that comes back to the bill, of the same look (owner, 2026-11-17), as the
+                                       side buttons and "Sekti" are (design 6.9). *@
+                                    <a class="mark act__item num" id="mark-@reason.Id" href="@LandingPath.SignInLink(BillPath)"><Icon Name="heart" /><span>@L.Format("Reasons.Endorse", Display.Number(reason.Endorsements))</span></a>
                                 }
                                 @* Design 8.23.6: "Aptarimas" under the argument; prerendered with the island for the arguments shown
                                    first, read when first opened for those revealed by "show all". *@
@@ -285,6 +288,9 @@
     [Parameter] public Guid? LinkedReason { get; set; }
 
     private string PagePath => CommentPaging.PagePath(Number, ResponsesShown);
+
+    /// <summary>The bill's page, where signing in from "Man svarbu" comes back to.</summary>
+    private string BillPath => "/seimas/" + Uri.EscapeDataString(Number);
 
     /// <summary>How many comments of an argument the page shows open: "Rodyti daugiau komentarų" or a link to one; null: closed.</summary>
     private int? AskedFor(Guid reasonId) => CommentPaging.Asked(CommentsShown, reasonId, Linked);

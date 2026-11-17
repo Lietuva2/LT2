@@ -470,11 +470,13 @@ page's "Balsuota".
   (`GET /moderation/responses`, `ResponseModerationView` on `/moderavimas` and `/moderavimas/paslepti`); "Palikti" (`keep`),
   hide with a statement shown in its place and emailed to the MP's account's own address (`MpResponseNoticeEmail`, through
   `IMpLinks`), restore while the bill is open. Report target `response`.
-- Where it shows (8.5.6): the bill's page part `BillResponses` (its own sheet after the organisations, server-rendered and the
+- Where it shows (8.5.6): the bill's page part `BillResponses` (its own sheet, the first of the texts at the page's full width
+  before the organisations and the arguments, and only when an MP answered (owner, 2026-11-17); server-rendered and the
   same for everyone; the counts line; "už", "prieš", "neapsisprendė", by last name, then withdrawn and hidden ones) and the
   profile's `MpAnswers` (newest first; no part without responses); both show 10 and "Rodyti daugiau" by `?atsakymai=` landing
   on `#atsakymas-{n}` (`ResponsePaging`). Each item is `MpResponseItem` with the one mark "Seimo narys arba jo biuras". The
-  linked account's form is the island `MyMpResponse`, filled in the browser only; reports are `ReportResponse` islands.
+  linked account's form is the island `MyMpResponse`, filled in the browser only (on an open bill nobody answered yet it
+  stands alone with `Section`, bringing the part's sheet and heading for a linked account); reports are `ReportResponse` islands.
 - `/seimo-narys/projektai` (8.5.7, `MpBills`, linked from `MyMp`; `GET /me/mp/bills`): the bills in summaries now in the
   summaries' order (`Lt2.Notifications.DigestLists.InSummariesNow`), with the MP's own response or "Atsakyti"; a code session
   may read it; nothing about other MPs.
@@ -509,7 +511,16 @@ page's "Balsuota".
   `endorsement.own-reason`; the island disables it on one's own argument from the never-cached answer; a merge drops a mark
   that would land on its giver's own argument). A mark moves nothing on the page: `RecordReasons` keeps the shown order
   after the person's own action (`StableOrder`, the order by marks returns on the next read) and gives the pressed button
-  the focus back without scrolling.
+  the focus back without scrolling. It is a toggle whose button stays neutral, only the heart (`Icon` `heart`, `.icon__fill`)
+  filling in the brand's green while marked (owner, 2026-11-17); a visitor's is a `LandingPath.SignInLink` back to the bill
+  of the same look.
+- **The bill's page (design 8.12.1, owner 2026-11-17).** The header: "Projektai / Įstatymo projektas XVP-0412" (no label
+  line), the title, one `.follow-line` (the stage tags, "Planuojama …", then `FollowButton`). Beside the side column: what
+  it is about, the sides, a closed bill's result; the side column: "Stadijos Seime" with `DateFlagForm` under the stages, the
+  moderators' panels, the summaries. Then at the page's full width: `BillResponses`, `OrganisationPositions` (each only
+  when there is something to show) and `RecordReasons` (always). An argument reads name, text, action row; "Aptarimas"
+  opens in its side's column (no stacking of the sides); a chosen action of "⋯" opens under the row, above an open
+  discussion (`.act > .act__panel` before `.discuss__panel` by `order`).
 - Reasons and marks per person per bill are settings (`Appeals:ReasonsPerPerson`, `Appeals:EndorsementsPerPerson`);
   0 = no limit, the default. A limit switched on later removes nothing and counts only shown or waiting reasons.
 - **Threshold:** one for all bills, `Digest:ThresholdDefault`, never below `Digest:ThresholdMinimum`; a moderator may set
@@ -572,9 +583,13 @@ page's "Balsuota".
 - **Follower numbers (design 8.11.2, owner 2026-11-16, built with the profiles).** "Sekėjai: n", exact from 1, is shown only
   on the thing's own page: the bill's page beside "Sekti" (`GET /bills/{number}/followers`), the MP's profile and the
   organisation's profile (`followers` in their answers) and a member's page; never in list rows, a member's card or beside
-  texts, never sorted, ranked or added up, nothing at zero (`FollowerLine`, inside `FollowButton` (`Followers`) so the person's own "Sekti" moves it at once, with the hint "Kas yra sekėjai?" to
-  `/metodika#sekimas`). Counted from `notify.follow` when the answer is made, through `IFollowerCounts` (SharedKernel,
+  texts, never sorted, ranked or added up, nothing at zero (`FollowerLine`, inside `FollowButton` (`Followers`) so the person's own "Sekti" moves it at once). Counted from `notify.follow` when the answer is made, through `IFollowerCounts` (SharedKernel,
   Notifications): a number only. The last three points are the designer's proposals awaiting the owner.
+- **One compact follow line (owner, 2026-11-17)** under the title of a bill, an MP, an organisation and a member: the page's
+  tags in a `.follow-line` row, then `FollowButton`: "Sekti" (a visitor's a sign-in link back), "Sekėjai: n", and one hint
+  "Kas yra sekimas?" (`Follow.Hint`) whose answer is the kind's `Follow.What.*` (a visitor's `Follow.SignIn.*`) and
+  `Follow.Private` (nobody sees who follows; what the number is), "Plačiau" to `/metodika#sekimas`. `FollowerLine` keeps its
+  own "Kas yra sekėjai?" only where it stands without the button (`WithHint`: a closed organisation, the member's own page).
 - "Seimo narių atsakymai" (design 8.20.1, the fourth switch `responses`), in the person's rhythm (design 8.24): one part per
   followed bill listing the MPs whose response became public or changed stance (`appeals.mp_response.announced_at`,
   `ResponseRules.Announces`; a changed explanation with the same stance is no event) and are still public, with name,
@@ -640,7 +655,8 @@ shown, only counts and "maža imtis"; the Seimas's majority is that of those who
   nobody else does, staff included, except a moderator restricting a statement's writer. Nothing ties a
   representative's own side to the organisation. The last one cannot leave, only close it; deleting that account closes it.
 - One statement per organisation per bill (`for`, `against`, `remarks`; as long as `Texts:MaxLength` allows, owner 2026-11-16; an https link; with a
-  side an optional goal "Siekiame {N} dalyvių · dabar {n}"), in "Organizacijų pozicijos" after the arguments. Never
+  side an optional goal "Siekiame {N} dalyvių · dabar {n}"), in "Organizacijų pozicijos" after the MPs' responses and before
+  the arguments, shown only with a statement or for a representative (owner, 2026-11-17: `OrganisationPositions.Shown`). Never
   counted: counts, thresholds, lists, statistics and summaries are the same with and without them (the agenda and the
   front page name them beside a bill, never with a number), and nothing about organisations goes to MPs yet. Edits keep public versions; frozen when the bill closes; none on a
   hidden record.
@@ -718,10 +734,11 @@ or the old `8`, then eight digits starting 3–9 (owner, 2026-11-17), never a da
 address is a link (`CommentLinks`, `rel="nofollow ugc noopener noreferrer"`). `Comments:OnReasons|OnStatements|OnResponses`
 (off: no new comments, the written ones readable), `Comments:PerPersonPerTarget` (0), `RateLimits:WriteComment` (20 an hour).
 "Sutinku" is public with names, needs no positions consent, is not blocked by a writing restriction, and the first one asks
-inline. The discussion follows its target (`CommentCascade`): withdrawn or merged goes (the merge confirmation says how
+inline; it is a toggle like "Man svarbu", the word the same in both states and its icon (`Icon` `agree`) filled while agreed;
+the names read "Sutinka: A, B ir dar 5", "ir dar 5" a `details.more` opening the full list (owner, 2026-11-17). The discussion follows its target (`CommentCascade`): withdrawn or merged goes (the merge confirmation says how
 many), hidden hides, a closed bill or a target no longer writable is read-only (`comment.read-only`; a hidden comment cannot
 be deleted, `comment.hidden`). Member controls render only once the island runs, so the served HTML is the same for every
-member and visitor. While an "Aptarimas" is open under an argument the sides stand in one column. The thread is `Lt2.Web.Client/Comments/CommentThread` (inside the arguments' and statements' islands, its own island
+member and visitor. An open "Aptarimas" stays in its side's column (owner, 2026-11-17). The thread is `Lt2.Web.Client/Comments/CommentThread` (inside the arguments' and statements' islands, its own island
 under responses), the caller's answer `CommentState` (browser only), reports target `comment`, moderators' list
 `CommentModerationView`/`CommentQueueItem`, actions also on the bill's page. The author's notice is one kind of the rhythm,
 `CommentNotices` (Notifications; each line links to the first new comment it reports with `BillTextLinks.ToComment`;
@@ -754,7 +771,9 @@ a moderator's statement). **The one collapsing pattern** is the browser's own
 `<details class="more stack stack--tight"><summary class="linkish small">…</summary>…</details>`: no script, so it
 opens on server-rendered pages and in an island before it starts; an island never sets `open` from code (`js/lt2-disclosures.js`,
 loaded on every page, gives a disclosure the person opened before the island started the same state once the island
-has replaced the markup); the summary
+has replaced the markup; it remembers for the page being read only and forgets when the path changes, and `js/lt2-return.js`
+keeps the reader's place on Back and Forward while enhanced navigation patches the page in, in memory only; owner,
+2026-11-17); the summary
 names what opens ("Kaip tai veikia"; a bare "Plačiau" only when it is the only one on the screen).
 **New screens follow the rule from the start.** `design/text-audit-2026-11-15.md` is the screen-by-screen record.
 

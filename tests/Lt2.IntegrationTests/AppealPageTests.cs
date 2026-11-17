@@ -137,6 +137,20 @@ public sealed partial class AppealPageTests(DatabaseFixture database) : ApiTest(
         // Visitors get links to sign in instead of buttons: they work without JavaScript.
         html.ShouldContain("<a class=\"btn btn--for btn--wide\" href=\"/prisijungti#tikslas=%2Fseimas%2FXVP-0618\">Prašau balsuoti už</a>");
         html.ShouldNotContain("Jūs prašote balsuoti");
+
+        // Owner, 2026-11-17: the kind and the number in the way back and no label line; "Sekti" with one hint in the line under
+        // the title; a visitor's "Man svarbu" a sign-in link back to the bill; the texts at the full width after the side
+        // column, and no part for responses or statements when there is none.
+        html.ShouldContain("<li>Įstatymo projektas <span class=\"num\">XVP-0618</span></li>");
+        html.ShouldNotContain("<p class=\"label num\">");
+        var follow = HintOf(html, "follow-what-bill");
+        follow.Trigger.ShouldBe("Kas yra sekimas?");
+        follow.Answer.ShouldStartWith("Prisijungę gausite laišką, kai projektas bus įtrauktas į darbotvarkę");
+        Regex.Count(html, "Prisijungę gausite laišką").ShouldBe(1, "the sentence beside \"Sekti\" is only in its hint");
+        Regex.IsMatch(html, "<a class=\"mark act__item num\" id=\"mark-[0-9a-f-]+\" href=\"/prisijungti#tikslas=%2Fseimas%2FXVP-0618\">").ShouldBeTrue("a visitor's \"Man svarbu\" signs in and comes back");
+        html.ShouldNotContain("id=\"atsakymai\"", Case.Sensitive, "nobody answered: no part");
+        html.ShouldNotContain("id=\"organisations\"", Case.Sensitive, "no statement: no section");
+        html.IndexOf("</aside>", StringComparison.Ordinal).ShouldBeLessThan(html.IndexOf("id=\"reasons\"", StringComparison.Ordinal), "the arguments follow the side column");
     }
 
     [Fact]
