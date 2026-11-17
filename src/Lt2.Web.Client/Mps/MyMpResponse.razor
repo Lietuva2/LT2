@@ -89,10 +89,10 @@ else if (_mine is not null)
                 <div class="field @ErrorClass("text")">
                     <label for="my-response-text">@L["MpResponse.Text"]</label>
                     <textarea class="textarea" id="my-response-text" rows="8" maxlength="@MemberTextLimits.Allowed(_maxLength ?? 0)" aria-invalid="@Invalid("text")"
-                              aria-describedby="@DescribedBy("text", "my-response-text", "my-response-text-hint")"
+                              aria-describedby="@DescribedBy("text", "my-response-text", "my-response-text-hint", "my-response-layout")"
                               @bind="_text" @bind:event="oninput" disabled="@(Locked || !mine.MayWrite)"></textarea>
                     <p class="field__hint num" id="my-response-text-hint">@(_maxLength is > 0 and var max ? L.Format("MpResponse.TextHint", Display.Number(_text.Length), Display.Number(max)) : L.Format("Text.CountOnly", Display.Number(_text.Length)))</p>
-                    <FieldError Errors="Errors" Field="text" For="my-response-text" />
+                    <TextLayoutHint Id="my-response-layout" />
                 </div>
                 <div class="row">
                     <button type="submit" class="btn" id="my-response-submit" disabled="@(Locked || !mine.MayWrite || _stance is null || string.IsNullOrWhiteSpace(_text))">@L["MpResponse.Publish"]</button>

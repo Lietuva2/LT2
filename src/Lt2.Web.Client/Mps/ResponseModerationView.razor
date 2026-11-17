@@ -31,7 +31,7 @@
                         }
                     </div>
                     <p class="small">@L["MpResponse.Will." + r.Stance]</p>
-                    <p class="voice">@r.Text</p>
+                    <TypedText Text="@r.Text" Class="voice typed" />
                     <Reports Items="r.Reports" />
                     @if (_done.TryGetValue(r.Id, out var done))
                     {
@@ -82,7 +82,7 @@
                         <b>@r.Mp.FirstName @r.Mp.LastName</b>
                         <span class="small">@L["MpResponse.Will." + r.Stance]</span>
                     </div>
-                    <p class="voice">@r.Text</p>
+                    <TypedText Text="@r.Text" Class="voice typed" />
                     <p class="small num">@ModerationWords.Hidden(L, r.HiddenAt, r.HiddenBy)</p>
                     @if (r.Statement is { } statement)
                     {

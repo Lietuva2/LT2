@@ -31,10 +31,10 @@
             <div class="field @ErrorClass("about")">
                 <label for="about-text">@L["PublicProfile.AboutLabel"]</label>
                 <textarea class="textarea" id="about-text" maxlength="@MemberTextLimits.Allowed(mine.TextMaxLength)"
-                          aria-invalid="@Invalid("about")" aria-describedby="@DescribedBy("about", "about-text", "about-hint")"
+                          aria-invalid="@Invalid("about")" aria-describedby="@DescribedBy("about", "about-text", "about-hint", "about-layout")"
                           @bind="_about" @bind:event="oninput" disabled="@Locked"></textarea>
                 <p class="field__hint num" id="about-hint">@(mine.TextMaxLength > 0 ? L.Format("PublicProfile.AboutHint", Display.Number(_about?.Length ?? 0), Display.Number(mine.TextMaxLength)) : L["PublicProfile.AboutHintNoLimit"].Value)</p>
-                <FieldError Errors="Errors" Field="about" For="about-text" />
+                <TextLayoutHint Id="about-layout" />
             </div>
 
             <label class="check">

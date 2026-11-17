@@ -42,7 +42,7 @@
                     <b>@s.OrganisationName</b>
                     <span class="@OrganisationWords.StanceClass(s.Stance)">@L["Org.Stance." + s.Stance]</span>
                 </div>
-                <p class="voice">@s.Text</p>
+                <TypedText Text="@s.Text" Class="voice typed" />
                 <p class="small num">@ModerationWords.Hidden(L, s.HiddenAt, s.HiddenBy)</p>
                 @if (s.Statement is { } statement)
                 {

@@ -95,10 +95,8 @@
                     <h2 id="h-what">@A["What.Heading"]</h2>
                     @if (a.Description.Length > 0)
                     {
-                        @foreach (var paragraph in a.Description.Split('\n', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries))
-                        {
-                            <p>@paragraph</p>
-                        }
+                        @* Design 8.2, "A text's layout": paragraphs and lists. *@
+                        <Lt2.Web.Client.Components.TypedText Text="@a.Description" />
                         @* Design 8.13: always beside it the label, the day it was made, the official text it was made from
                            when known, its history, and "Pranešti apie klaidą". *@
                         <p class="fine" id="description-source">

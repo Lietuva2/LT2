@@ -603,6 +603,14 @@ legend { padding: 0; font-weight: 600; }
 .long-text__more[open] > summary > .long-text__closed { display: none; }
 .long-text__more[open] > summary > .long-text__opened { display: inline; }
 .long-text:has(.long-text__more[open]) .long-text__cut { display: none; }
+/* A typed text's lists (design 8.2, "A text's layout"): TypedText, numbers as typed (li value). */
+.typed-list { list-style: disc; padding-inline-start: 1.4em; max-width: var(--measure); }
+.typed-list--numbered { list-style: decimal; }
+.typed-list > li + li { margin-top: var(--sp-1); }
+.typed-list > .typed-list__continued { list-style: none; }
+.bubble > :is(p, .typed-list) + :is(p, .typed-list), .long-text__more > .typed-list { margin-block: var(--sp-2) 0; }
+.bubble > .typed-list:first-child { margin-top: 0; }
+.typed > * + * { margin-top: var(--sp-2); }
 
 /* A hint (design 8.15): the short answer without leaving the page. The trigger is a button with a dotted underline, so it
    does not read as a link that leaves the page. The panel is the browser's popover: without script it stands in the

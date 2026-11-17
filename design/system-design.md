@@ -562,7 +562,8 @@ summary) are published only for groups of at least the runtime setting `Digest:P
 - Rate limits at two layers: Caddy per IP, and ASP.NET Core policies per account and per IP for code requests, registration,
   writing reasons and reports, and (proposed, 8.23.4) writing comments under their own policy.
 - All input validated by the shared validators on the server; user text is stored as plain text and encoded on output,
-  no HTML or Markdown from users in stage 2.
+  no HTML or Markdown from users in stage 2. Paragraphs, `https://` links and lists are read from the plain text by fixed
+  rules (8.2, "A text's layout"), each piece encoded; nothing a person types is parsed as markup.
 - Outbound requests go only to a fixed allowlist of hosts (Seimas, email, AI, storage). The AI host (`api.anthropic.com`,
   8.11.4) is on the web host's list only while the provider is configured, and on the worker's (the summary job, 8.13)
   on the same condition.
@@ -869,6 +870,41 @@ correction makes it a moderator's text (8.12.3).
   (`TextExcerpt`, one source file compiled into SharedKernel and the browser's assembly), one component shows
   (`LongText`). The moderators' queue and panels show every text whole; the email to MPs shortens reasons the same way,
   with a link, and the moderators' preview of a summary is that same email text (8.19.3).
+- **A text's layout: paragraphs, links and lists, no formatting [decided by the owner on 2026-11-17].** People type plain
+  text; there is no Markdown, no formatting toolbar and no editor library. Why: the texts are short (8.2's
+  `Texts:MaxLength`); several of them go out by email, whose plain part would show raw markup; office staff paste from
+  Word, where stray `*` or `_` would turn into accidental formatting; rendering markup from users widens what an
+  attacker can try (6.4); and bold or headings beside the other side's arguments make one side look louder than the
+  other. What a person needs is read from the plain text by fixed rules:
+  - **Paragraphs:** a line break starts a new paragraph; empty lines between them add nothing. [Built 2026-11-17: before,
+    statements, responses, "Apie mane" and the description kept their lines, while an argument and a comment were one
+    paragraph and the introduction letter split only at an empty line; all now follow this rule.]
+  - **Links are unchanged by this rule:** an address starting with `https://` is a link in a comment (8.23.3) and in
+    "Apie mane" (8.25.3), and stays text in an argument, a statement, a response, the description and the letter. Whether
+    those texts should show links too is a separate question (8.23.3 keeps a link in an argument a reason to wait for a
+    moderator).
+  - **Lists:** two or more lines in a row that begin with "- ", "– ", "• " or "* " are a bulleted list; two or more
+    that begin with a number and ". " or ") " ("1. ", "2) ") are a numbered list, the numbers shown as typed (never
+    renumbered). The marker is removed, the rest of the line is the item. One such line alone stays a paragraph, so a
+    sentence that begins with a dash is not made a one-item list. One level only: indentation is ignored and no list
+    sits inside another. A line that does not begin with a marker ends the list.
+  - Nothing else: no bold, italics, headings, quotes or tables; `*žodis*` stays as typed.
+  - **Where it holds:** every text a person types and the site shows as paragraphs: arguments, organisations' statements,
+    MPs' responses, comments, "Apie mane", the bill's description and the introduction letter (8.19.5), on their pages,
+    the summaries' public copy and the moderators' screens. One pure function splits a text into paragraphs and lists
+    (`TextLayout`, one source file compiled into SharedKernel and the browser's assembly, as `TextExcerpt` is), one
+    component shows it (`TypedText`; `LongText` lays out the whole text and then cuts it). Lists in a short preview line
+    (a member's page's list of texts, a name's card, the history of a description's edits) stay one line.
+  - **What it does not change:** the text is stored exactly as typed; the length, the counters, pre-screening and
+    `TextExcerpt` work on that stored text (a list's markers count as characters). A shortened text shows its beginning
+    with the same layout, so a list cut by "Rodyti daugiau" stays a list on both sides, the numbers as typed. The
+    moderators' screens show the same layout. In email only the introduction letter is laid out: its plain part stays as
+    typed, its HTML part shows the paragraphs and lists. An argument quoted in a summary's email keeps its lines as typed
+    in both parts (it stands inside the email's own list of arguments).
+  - **The writing box** says it in one line under the field (`TextLayoutHint`), a field's hint needed to fill it (8.15),
+    under the argument, comment, statement, response, "Apie mane", description and letter boxes **[the designer's
+    proposal, built 2026-11-17, awaiting the owner and a native speaker]:** "Sąrašą rašykite eilutėmis, pradėtomis „-“
+    arba „1.“." The letter's own hint says "Kiekviena eilutė – atskira pastraipa. Iki 10 000 ženklų."
 - **No limit per person by default [decided 2026-11-13].** How many reasons a person may write on a bill, and how many
   "Man svarbu" marks they may give on a bill, are two runtime settings for all bills (`Appeals:ReasonsPerPerson`,
   `Appeals:EndorsementsPerPerson`); 0 means no limit, and both start at 0. Nobody knows yet whether people will write
@@ -3094,7 +3130,8 @@ sending domain and a provider).
 #### 8.19.5 The introduction letter
 
 - **Written and signed by a person [decided, 8.4].** An administrator writes it on the screen "Pristatymo laiškas":
-  subject, text in plain paragraphs, the signer's name and role. The system adds below the signature what it adds to
+  subject, text in plain paragraphs (with lists, as every typed text: 8.2, "A text's layout"), the signer's name and
+  role. The system adds below the signature what it adds to
   every MP email: the preferences link and the sentence on taking over the profile.
 - The administrator previews it, sends a test copy to the administrator's own address, and then sends it to every
   sitting MP with an official address not on the suppression list: one press with the number of MPs in the
@@ -3488,7 +3525,8 @@ replies and "Sutinku" carries no text to moderate (8.23.1, 8.23.10), and each ki
   `Texts:MaxLength` (2 000 by default, 0 = no limit, with a technical ceiling that always holds), the same for
   arguments, organisations' statements and MPs' responses (set out where those texts are described, 8.2). Normalised as
   an argument's (`AppealRules.NormaliseText`) and encoded on output. A long comment shows its first part (about 300
-  characters) and "Rodyti daugiau", as a long argument does.
+  characters) and "Rodyti daugiau", as a long argument does. Paragraphs and lists as in every typed text (8.2, "A
+  text's layout").
 - **No editing.** A comment cannot be changed, so there is no history to keep and nothing silently replaced.
 - **Deleting one's own** while the bill is open (until its final vote): deleted for good with its "Sutinku", its open
   reports closed, the deletion audited without the text, as an argument's withdrawal (8.2). A comment in an

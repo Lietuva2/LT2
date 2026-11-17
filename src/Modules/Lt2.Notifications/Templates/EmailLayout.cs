@@ -90,11 +90,15 @@ internal static class EmailLayout
     /// its own SMTP account), with its headers (<c>List-Unsubscribe</c>), and with the site's addresses written in it as plain
     /// links in the HTML part. The links are the addresses themselves: nothing is rewritten or tracked.
     /// </summary>
-    public static EmailMessage BuildMp(string to, string subject, IReadOnlyList<string> paragraphs, string footer, IReadOnlyDictionary<string, string>? headers)
+    /// <param name="typed">
+    /// The index of the one paragraph a person typed (the introduction letter's text, design 8.19.5): its HTML shows the text's
+    /// paragraphs and lists (<see cref="TextLayout"/>, design 8.2); its plain part stays as typed.
+    /// </param>
+    public static EmailMessage BuildMp(string to, string subject, IReadOnlyList<string> paragraphs, string footer, IReadOnlyDictionary<string, string>? headers, int? typed = null)
     {
         ArgumentNullException.ThrowIfNull(paragraphs);
         var text = string.Join("\n\n", paragraphs) + "\n\n" + footer + "\n";
-        var html = string.Concat(paragraphs.Select(p => $"<p>{Links.Replace(Encode(p), m => $"<a href=\"{m.Value}\">{m.Value}</a>")}</p>"));
+        var html = string.Concat(paragraphs.Select((p, i) => i == typed ? TypedHtml(p) : $"<p>{Linked(Encode(p))}</p>"));
         return new EmailMessage(
             to,
             subject,
@@ -103,6 +107,19 @@ internal static class EmailLayout
             MpMail.MpMailKinds.Stream,
             headers);
     }
+
+    /// <summary>
+    /// A typed text as HTML (design 8.2, "A text's layout"): a <c>&lt;p&gt;</c> per line, a <c>&lt;ul&gt;</c> or an
+    /// <c>&lt;ol&gt;</c> (the numbers as typed) for a list, every piece encoded and its addresses plain links.
+    /// </summary>
+    internal static string TypedHtml(string typed) => string.Concat(TextLayout.Of(typed).Select(block => block.Kind switch
+    {
+        TextBlockKind.Bullets => "<ul>" + string.Concat(block.Items.Select(i => $"<li>{Linked(Encode(i.Text))}</li>")) + "</ul>",
+        TextBlockKind.Numbered => "<ol>" + string.Concat(block.Items.Select(i => $"<li value=\"{i.Number?.ToString(CultureInfo.InvariantCulture)}\">{Linked(Encode(i.Text))}</li>")) + "</ol>",
+        _ => $"<p>{Linked(Encode(block.Items[0].Text))}</p>",
+    }));
+
+    private static string Linked(string encoded) => Links.Replace(encoded, m => $"<a href=\"{m.Value}\">{m.Value}</a>");
 
     private static readonly System.Text.RegularExpressions.Regex Links =
         new(@"https://[^\s<>""]+[^\s<>"".,;:)]", System.Text.RegularExpressions.RegexOptions.CultureInvariant);

@@ -19,7 +19,7 @@
         }
         <span class="small num">@Display.DayTime(Item.CreatedAt)</span>
     </div>
-    <p class="voice">@Item.Text</p>
+    <TypedText Text="@Item.Text" Class="voice typed" />
     <Reports Items="Item.Reports" />
     @if (Item.HiddenAt is { } hiddenAt)
     {

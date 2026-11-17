@@ -173,6 +173,20 @@ public sealed class MpMailTemplateTests
     }
 
     [Fact]
+    public void The_letters_lists_are_lists_in_the_html_part_and_stay_as_typed_in_the_plain_part()
+    {
+        // Design 8.2, "A text's layout" (owner, 2026-11-17).
+        const string Letter = "Ką rasite:\n- projektų puslapius\n- argumentus <b>abiem</b> pusėms\nKaip tai veikia:\n1. Žmonės renkasi pusę.\n2. Suvestinę gaunate jūs.";
+        var email = Templates().Introduction(new MpIntroductionEmail(
+            Official, 1, "Tema", Letter, "Rūta Mockutė", "VšĮ LT2.0 vadovė", MpMailPaths.Preferences(Token), MpMailPaths.OneClick(Token), Test: false, null));
+
+        email.TextBody.ShouldStartWith(Letter + "\n\nRūta Mockutė");
+        email.HtmlBody!.ShouldContain("<p>Ką rasite:</p><ul><li>projektų puslapius</li><li>argumentus &lt;b&gt;abiem&lt;/b&gt; pusėms</li></ul>"
+            + "<p>Kaip tai veikia:</p><ol><li value=\"1\">Žmonės renkasi pusę.</li><li value=\"2\">Suvestinę gaunate jūs.</li></ol>");
+        email.HtmlBody!.ShouldNotContain("<b>abiem</b>", Case.Sensitive, "nothing typed becomes markup");
+    }
+
+    [Fact]
     public void A_test_copy_of_the_letter_says_so_and_carries_no_personal_link()
     {
         var email = Templates().Introduction(new MpIntroductionEmail(

@@ -56,10 +56,10 @@ else
         <div class="field @ErrorClass("text")">
             <label for="intro-text">@L["Intro.Text"]</label>
             <textarea class="textarea" id="intro-text" rows="12" maxlength="10000" disabled="@Locked"
-                      aria-invalid="@Invalid("text")" aria-describedby="@DescribedBy("text", "intro-text", "intro-text-hint")"
+                      aria-invalid="@Invalid("text")" aria-describedby="@DescribedBy("text", "intro-text", "intro-text-hint", "intro-text-layout")"
                       value="@_draft.Text" @onchange="e => Set(nameof(IntroductionRequest.Text), e)"></textarea>
             <p class="field__hint" id="intro-text-hint">@L["Intro.TextHint"]</p>
-            <FieldError Errors="Errors" Field="text" For="intro-text" />
+            <TextLayoutHint Id="intro-text-layout" />
         </div>
         <div class="field @ErrorClass("signerName")">
             <label for="intro-signer">@L["Intro.Signer"]</label>
@@ -83,10 +83,7 @@ else
             <summary class="linkish small">@L["Intro.Preview"]</summary>
             <div class="sheet--quiet stack stack--tight">
                 <p><b>@_draft.Subject</b></p>
-                @foreach (var paragraph in Paragraphs(_draft.Text))
-                {
-                    <p>@paragraph</p>
-                }
+                <Lt2.Web.Client.Components.TypedText Text="@_draft.Text" />
                 <p>@_draft.SignerName<br />@_draft.SignerRole</p>
                 <p class="small">@L["Intro.PreviewAdded"]</p>
             </div>
@@ -245,7 +242,4 @@ else
             _ => _draft with { SignerRole = value },
         };
     }
-
-    private static string[] Paragraphs(string text) =>
-        (text ?? "").ReplaceLineEndings("\n").Split("\n\n", StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
 }
