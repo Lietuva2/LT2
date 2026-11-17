@@ -402,7 +402,7 @@ public sealed class ProfileTests(DatabaseFixture database) : ApiTest(database)
                 .ShouldBe(["accountPath", "billNumber", "billTitle", "day", "memberName", "profilePath", "stopToken", "textPath", "to", "what"]);
             root.GetProperty("memberName").GetString().ShouldBe("Autorė Pavyzdytė");
             root.GetProperty("profilePath").GetString().ShouldBe("/nariai/autore-pavyzdyte-" + id);
-            root.GetProperty("accountPath").GetString().ShouldBe(AccountScreens.FollowsList);
+            root.GetProperty("accountPath").GetString().ShouldBe(AccountScreens.EmailRhythm);
             root.GetRawText().ShouldNotContain("Slaptas");
         }
 

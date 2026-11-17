@@ -33,12 +33,52 @@ internal static class EmailLayout
 
     /// <summary>
     /// A member's email (design 5.6): paragraphs as plain text and as light HTML. In the HTML part (owner, 2026-11-17: "make it a
-    /// normal link with the text and url under it") a line that ends "text: https://…" shows that text, from its last sentence,
-    /// as the link, with the address printed in small type under it; any other address of the site in a line is a plain link.
+    /// normal link"; the address printed under it dropped the same day as noise, the bold green kept) a line that ends
+    /// "text: https://…" shows that text, from its last sentence, as a bold green link, and nothing more; any other address of
+    /// the site in a line is a plain link.
     /// The links are the addresses themselves: nothing is rewritten or tracked (AGENTS.md). The plain part is unchanged.
     /// </summary>
     public static EmailMessage Build(
-        string to, string subject, IReadOnlyList<string> paragraphs, string footer, int? highlighted = null, IReadOnlyDictionary<string, string>? headers = null)
+        string to, string subject, IReadOnlyList<string> paragraphs, string footer, int? highlighted = null, IReadOnlyDictionary<string, string>? headers = null) =>
+        Compose(to, subject, paragraphs, footer, LinkedHtml(footer, footer: true), highlighted, headers);
+
+    /// <summary>
+    /// An email of the member's rhythm (design 8.24, 8.24.1; owner, 2026-11-17): a member's email whose footer, in small grey type
+    /// under the rule, says why it came (<paramref name="reason"/>, one sentence without a link), then "Keisti periodiškumą arba
+    /// atsisakyti laiškų", "Keisti periodiškumą" a link to the choice of how often (<paramref name="rhythmPath"/>) and "atsisakyti
+    /// laiškų" a link to the stop page (<c>/laiskai/nebegauti/{token}</c>, the page, never the API), then the privacy line. The
+    /// plain part, which holds no links, gives the addresses: "Keisti periodiškumą: https://… · Atsisakyti laiškų: https://…".
+    /// With the stop link's headers (<see cref="StopHeaders"/>). Without a token (a test), the choice's link alone and no headers.
+    /// </summary>
+    public static EmailMessage BuildNotice(
+        IStringLocalizer l, string? siteAddress, string to, string subject, IReadOnlyList<string> paragraphs, string reason, string rhythmPath, string? stopToken)
+    {
+        ArgumentNullException.ThrowIfNull(l);
+        var privacy = Footer(l, siteAddress);
+        var rhythm = SiteLinks.Absolute(siteAddress, rhythmPath);
+        var stop = stopToken is null ? null : SiteLinks.Absolute(siteAddress, MemberMailLinks.Page(stopToken));
+        var links = stop is null
+            ? LinkLine(l[EmailText.ChangeRhythm], rhythm)
+            : l.Format(EmailText.NoticeLinksText, rhythm, stop);
+        var linksHtml = stop is null
+            ? Anchor(rhythm, l[EmailText.ChangeRhythm], FooterLinkStyle)
+            : string.Format(
+                CultureInfo.InvariantCulture,
+                WebUtility.HtmlEncode(l[EmailText.NoticeLinks]),
+                Anchor(rhythm, l[EmailText.ChangeRhythm], FooterLinkStyle),
+                Anchor(stop, l[EmailText.StopNotices], FooterLinkStyle));
+        return Compose(
+            to,
+            subject,
+            paragraphs,
+            reason + "\n" + links + "\n" + privacy,
+            Encode(reason) + "<br>" + linksHtml + "<br>" + LinkedHtml(privacy, footer: true),
+            null,
+            StopHeaders(siteAddress, stopToken));
+    }
+
+    private static EmailMessage Compose(
+        string to, string subject, IReadOnlyList<string> paragraphs, string footer, string footerHtml, int? highlighted, IReadOnlyDictionary<string, string>? headers)
     {
         ArgumentNullException.ThrowIfNull(paragraphs);
         var text = string.Join("\n\n", paragraphs) + "\n\n" + footer + "\n";
@@ -49,20 +89,8 @@ internal static class EmailLayout
             to,
             subject,
             text,
-            $"<!doctype html><html lang=\"lt\"><body style=\"font-family:system-ui,sans-serif;color:#1e293b\">{html}{MemberFooterHtml(footer)}</body></html>",
+            $"<!doctype html><html lang=\"lt\"><body style=\"font-family:system-ui,sans-serif;color:#1e293b\">{html}{MemberFooterHtml(footerHtml)}</body></html>",
             Headers: headers);
-    }
-
-    /// <summary>
-    /// The line under "…galite pakeisti savo paskyroje" of every email in the member's rhythm (design 8.24.1): "Nebegauti šių
-    /// laiškų: {the page}", the page without sign-in whose button turns every email switch off. Without a token, the line alone.
-    /// </summary>
-    public static string WithStopLine(IStringLocalizer l, string? siteAddress, string line, string? stopToken)
-    {
-        ArgumentNullException.ThrowIfNull(l);
-        return stopToken is null
-            ? line
-            : line + "\n" + LinkLine(l[EmailText.StopNotices], SiteLinks.Absolute(siteAddress, MemberMailLinks.Page(stopToken)));
     }
 
     /// <summary>
@@ -78,28 +106,44 @@ internal static class EmailLayout
                 [MpMailTemplates.ListUnsubscribePost] = "List-Unsubscribe=One-Click",
             };
 
-    /// <summary>A paragraph's HTML, each of its lines through <see cref="LinkLineHtml"/>.</summary>
-    internal static string LinkedHtml(string paragraph) =>
-        string.Join("<br>", paragraph.ReplaceLineEndings("\n").Split('\n').Select(LinkLineHtml));
+    /// <summary>
+    /// A paragraph's HTML, each of its lines through <see cref="LinkLineHtml"/>. In the footer (<paramref name="footer"/>) its
+    /// links take the footer's small grey type, as every link there does; only the body's are bold green.
+    /// </summary>
+    internal static string LinkedHtml(string paragraph, bool footer = false) =>
+        string.Join("<br>", paragraph.ReplaceLineEndings("\n").Split('\n').Select(line => LinkLineHtml(line, footer)));
 
     /// <summary>
     /// One line of a member's email as HTML: "…sentence. Link text: https://…" becomes the earlier sentences as text, then the
-    /// link text as a link to the address, then the address in small grey type under it; any other line keeps its text with its
-    /// addresses as plain links.
+    /// link text as a bold link in the site's green (owner, 2026-11-17: "I had no problems with those green links"), without the
+    /// address printed under it (owner, 2026-11-17: it was noise); any other line keeps its text with its addresses as plain links.
+    /// In the footer (<paramref name="footer"/>) every link is the footer's grey, underlined (<see cref="FooterLinkStyle"/>).
     /// </summary>
-    internal static string LinkLineHtml(string line)
+    internal static string LinkLineHtml(string line, bool footer = false)
     {
         var match = LinkAtEnd.Match(line);
         if (!match.Success)
         {
-            return Links.Replace(Encode(line), m => $"<a href=\"{m.Value}\">{m.Value}</a>");
+            return footer
+                ? Links.Replace(Encode(line), m => $"<a href=\"{m.Value}\" style=\"{FooterLinkStyle}\">{m.Value}</a>")
+                : Links.Replace(Encode(line), m => $"<a href=\"{m.Value}\">{m.Value}</a>");
         }
 
-        var url = WebUtility.HtmlEncode(match.Groups["url"].Value);
-        return Encode(match.Groups["lead"].Value)
-            + $"<a href=\"{url}\" style=\"font-weight:600;color:#1f6b3a\">{Encode(match.Groups["label"].Value.Trim())}</a>"
-            + $"<br><span style=\"font-size:13px;color:#64748b;word-break:break-all\">{url}</span>";
+        return Encode(match.Groups["lead"].Value) + Anchor(match.Groups["url"].Value, match.Groups["label"].Value.Trim(), footer ? FooterLinkStyle : ActionLinkStyle);
     }
+
+    /// <summary>The look of a "text: url" line's link in a member's email: bold, in the site's green.</summary>
+    private const string ActionLinkStyle = "font-weight:600;color:#1f6b3a";
+
+    /// <summary>
+    /// The look of every link in a member's email footer ("Keisti periodiškumą", "atsisakyti laiškų", the privacy notice): the
+    /// footer's grey, underlined, so it is grey in every mail program rather than the program's own link colour.
+    /// </summary>
+    private const string FooterLinkStyle = "color:#64748b;text-decoration:underline";
+
+    /// <summary>A link: the address itself (nothing rewritten or tracked) around the encoded text, with its look when given.</summary>
+    private static string Anchor(string url, string text, string? style = null) =>
+        $"<a href=\"{WebUtility.HtmlEncode(url)}\"{(style is null ? "" : $" style=\"{style}\"")}>{Encode(text)}</a>";
 
     /// <summary>
     /// A line ending "text: https://…": <c>lead</c> is the line's earlier sentences (and a list's dash), <c>label</c> the last
@@ -108,9 +152,9 @@ internal static class EmailLayout
     private static readonly System.Text.RegularExpressions.Regex LinkAtEnd =
         new(@"^(?<lead>(?:.*[.!?]\s+)?(?:[–-]\s+)?)(?<label>\S[^\n]*?):\s+(?<url>https://[^\s<>""]+[^\s<>"".,;:)])\s*$", System.Text.RegularExpressions.RegexOptions.CultureInvariant);
 
-    /// <summary>The member's footer in small grey type under a rule, its link as every other line's.</summary>
-    private static string MemberFooterHtml(string footer) =>
-        $"<p style=\"margin-top:24px;padding-top:8px;border-top:1px solid #cbd5e1;font-size:13px;color:#64748b\">{LinkedHtml(footer)}</p>";
+    /// <summary>The member's footer, already HTML, in small grey type under a rule.</summary>
+    private static string MemberFooterHtml(string footerHtml) =>
+        $"<p style=\"margin-top:24px;padding-top:8px;border-top:1px solid #cbd5e1;font-size:13px;color:#64748b\">{footerHtml}</p>";
 
     /// <summary>
     /// An email to an MP or for an MP (design 8.19.3): the same shape, on the MP stream (its own sender and, when configured,
@@ -151,9 +195,12 @@ internal static class EmailLayout
     private static readonly System.Text.RegularExpressions.Regex Links =
         new(@"https://[^\s<>""]+[^\s<>"".,;:)]", System.Text.RegularExpressions.RegexOptions.CultureInvariant);
 
-    /// <summary>The footer in small grey type under a rule, its address a plain link (nothing rewritten or tracked).</summary>
+    /// <summary>
+    /// The footer in small grey type under a rule, its address a link in the footer's grey (<see cref="FooterLinkStyle"/>, as in
+    /// a member's footer; nothing rewritten or tracked).
+    /// </summary>
     private static string FooterHtml(string footer) =>
-        $"<p style=\"margin-top:24px;padding-top:8px;border-top:1px solid #cbd5e1;font-size:13px;color:#64748b\">{Links.Replace(Encode(footer), m => $"<a href=\"{m.Value}\">{m.Value}</a>")}</p>";
+        $"<p style=\"margin-top:24px;padding-top:8px;border-top:1px solid #cbd5e1;font-size:13px;color:#64748b\">{Links.Replace(Encode(footer), m => $"<a href=\"{m.Value}\" style=\"{FooterLinkStyle}\">{m.Value}</a>")}</p>";
 
     private static string Encode(string paragraph) =>
         WebUtility.HtmlEncode(paragraph.ReplaceLineEndings("\n")).Replace("\n", "<br>", StringComparison.Ordinal);
@@ -169,8 +216,17 @@ internal static class EmailText
     public const string Statement = "Email.Statement";
     public const string Privacy = "Email.Privacy";
 
-    /// <summary>"Nebegauti šių laiškų": the stop link's label in every email of the member's rhythm (design 8.24.1).</summary>
-    public const string StopNotices = "Email.StopNotices";
+    /// <summary>"Keisti periodiškumą": the footer's link to the choice of how often, in every email of the member's rhythm (design 8.24.1).</summary>
+    public const string ChangeRhythm = "Email.Notices.Rhythm";
+
+    /// <summary>"atsisakyti laiškų": the footer's link to the stop page, in every email of the member's rhythm (design 8.24.1).</summary>
+    public const string StopNotices = "Email.Notices.Stop";
+
+    /// <summary>"{0} arba {1}": the footer's line of the two links in the HTML part.</summary>
+    public const string NoticeLinks = "Email.Notices.Links";
+
+    /// <summary>"Keisti periodiškumą: {0} · Atsisakyti laiškų: {1}": the same line in the plain part, with the addresses.</summary>
+    public const string NoticeLinksText = "Email.Notices.LinksText";
 
     /// <summary>The way without an email's link (owner, 2026-11-17): the page to open and the code to type there.</summary>
     public const string WithoutLink = "Email.WithoutLink";

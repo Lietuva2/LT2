@@ -95,7 +95,7 @@ public sealed class RhythmKindsTests(DatabaseFixture database) : ApiTest(databas
             var (kind, gathered) = (await MailAsync(email)).ShouldHaveSingleItem("one morning email");
             kind.ShouldBe(MessageKinds.GatheredNoticesEmail);
             gathered.GetProperty("rhythm").GetString().ShouldBe("daily");
-            gathered.GetProperty("accountPath").GetString().ShouldBe(AccountScreens.FollowsList);
+            gathered.GetProperty("accountPath").GetString().ShouldBe(AccountScreens.EmailRhythm);
             var notices = gathered.GetProperty("notices").EnumerateArray().ToList();
             notices.Select(n => n.GetProperty("kind").GetString()).Order(StringComparer.Ordinal)
                 .ShouldBe([MessageKinds.CommentNoticeEmail, MessageKinds.FollowMemberEmail]);

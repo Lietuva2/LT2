@@ -352,7 +352,7 @@ Built, awaiting the owner's word:
 
 Built as written; "no" names what changes.
 
-1. One press of "Nebegauti šių laiškų" (or a mail program's "Unsubscribe") turns every email switch off, whichever email it
+1. One press of "Nebegauti šių laiškų" (the footer's "atsisakyti laiškų" since 2026-11-17; or a mail program's "Unsubscribe") turns every email switch off, whichever email it
    came from: planned, voted, statements, MPs' answers, followed members, comments. The follows, the follower numbers and
    the choice of how often stay; switches turned on again on `/paskyra/sekimas` undo it. If no: the press turns off only
    the kinds the email in hand held (a gathered email: all of its parts), with a token per account and kind.
@@ -360,9 +360,19 @@ Built as written; "no" names what changes.
    saying the emails stopped, with the link to turn them on again (a confirmation into the list just left).
 3. The page names nobody and answers the same for any token, valid or not; the link does not expire and has no "new link"
    (generation 0 for every account). If no: an expiry, or a way to replace the link from the account page.
-4. The texts: the email line "Nebegauti šių laiškų"; the page "Nebegauti laiškų", "Paspaudę mygtuką nebegausite laiškų
+4. The texts: the email line "Nebegauti šių laiškų" [replaced by the owner on 2026-11-17: the footer's "atsisakyti
+   laiškų", below]; the page "Nebegauti laiškų", "Paspaudę mygtuką nebegausite laiškų
    apie tai, ką sekate.", the button "Nebegauti laiškų", and after it "Laiškų apie tai, ką sekate, nebesiųsime. Vėl
    įjungti juos galite savo paskyroje." A native speaker reads them before they are shown externally.
+
+**Decided by the owner on 2026-11-17: the footer of members' notice emails and plain links (8.24.1, 8.11.2)**
+
+- Every email of the rhythm ends with its reason (one sentence, no link), "Keisti periodiškumą arba atsisakyti laiškų"
+  (the first part to `/paskyra/sekimas#laisku-daznis`, the second to the stop page) and the privacy line, in the footer;
+  the body's line "…galite pakeisti savo paskyroje: …" and the line "Nebegauti šių laiškų: …" are gone. The plain part reads
+  "Keisti periodiškumą: https://… · Atsisakyti laiškų: https://…". The `List-Unsubscribe` headers are unchanged.
+- In the HTML part of a member's email a line "text: https://…" is the text as a link, bold in the site's green as before; the
+  address is no longer printed under it. Every link in the footer (the privacy notice's included, and the MP footer's) is the footer's grey and underlined.
 
 **Decided by the owner on 2026-11-17: what is new on followed bills (8.11.8); the designer's choices (the owner accepted 2, 3, 4, 6, 7 and 8 on 2026-11-17; 1, 5 and 9 await the owner)**
 

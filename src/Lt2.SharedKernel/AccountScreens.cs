@@ -27,6 +27,12 @@ public static class AccountScreens
     /// <summary>The follows and their switches; every follow email links here (design 8.11.2).</summary>
     public const string FollowsList = Follows + "#sekami";
 
+    /// <summary>
+    /// How often the emails come (design 8.24): "Keisti periodiškumą" in the footer of every email of the member's rhythm links
+    /// here (design 8.24.1, owner 2026-11-17).
+    /// </summary>
+    public const string EmailRhythm = Follows + "#laisku-daznis";
+
     /// <summary>The known browsers (design 8.20.2).</summary>
     public const string KnownBrowsers = Security + "#zinomos-narsykles";
 

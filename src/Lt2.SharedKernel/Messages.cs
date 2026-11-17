@@ -303,7 +303,10 @@ public sealed record FollowResponsesEmail(
 /// <param name="To">The member's address.</param>
 /// <param name="Rhythm"><c>immediate</c>, <c>daily</c> or <c>weekly</c>: which email it is.</param>
 /// <param name="Notices">The things told, in the order they were found; the email orders them by part.</param>
-/// <param name="AccountPath">The switches and the choice on the account page.</param>
+/// <param name="AccountPath">
+/// The choice of how often on the follows screen, linked as "Keisti periodiškumą" from the footer (design 8.24.1), as on every
+/// email of the rhythm.
+/// </param>
 /// <param name="StopToken">
 /// The account's stop link token (design 8.24.1), as on every email of the rhythm (each of their payloads has the same field):
 /// it lives here, in the outbox row, until the email is sent, as an MP link's token does; Notifications keeps only its hash.

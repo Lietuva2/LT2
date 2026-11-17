@@ -86,12 +86,13 @@ public sealed partial class MemberStopLinkTests(DatabaseFixture database) : ApiT
             (await Database.ScalarAsync<string>("SELECT token_hash FROM notify.member_mail_token WHERE user_id = @u", ("u", await UserIdAsync(email))))
                 .ShouldBe(MailKeys.TokenHash(token), "only the hash is kept");
 
-            // The email itself: the one-click stop in its headers, the page in a line under the account line.
+            // The email itself: the one-click stop in its headers, the page in the footer (owner, 2026-11-17).
             var message = Render("email.follow-planned", told.RootElement);
             message.Headers.ShouldNotBeNull();
             message.Headers!["List-Unsubscribe"].ShouldBe($"<{Site}/api/v1/notices/{token}/stop>");
             message.Headers["List-Unsubscribe-Post"].ShouldBe("List-Unsubscribe=One-Click");
-            message.TextBody.ShouldContain($"savo paskyroje: {Site}/paskyra/sekimas#sekami\nNebegauti šių laiškų: {Site}/laiskai/nebegauti/{token}");
+            message.TextBody.ShouldContain($"Šį laišką gavote, nes sekate šį projektą Lietuva 2.0.\nKeisti periodiškumą: {Site}/paskyra/sekimas#laisku-daznis · Atsisakyti laiškų: {Site}/laiskai/nebegauti/{token}\n");
+            message.HtmlBody.ShouldNotBeNull().ShouldContain($"<a href=\"{Site}/laiskai/nebegauti/{token}\" style=\"color:#64748b;text-decoration:underline\">atsisakyti laiškų</a>");
 
             (await member.GetJsonAsync<NoticeSettingsResponse>(FollowRoutes.Notices)).ShouldBe(AllOn);
             using var mailProgram = MailProgram();
@@ -150,7 +151,7 @@ public sealed partial class MemberStopLinkTests(DatabaseFixture database) : ApiT
             token.ShouldBe(Keys.MemberStopToken(await UserIdAsync(email), 0));
             var message = Render("email.gathered-notices", gathered.Payload);
             message.Headers!["List-Unsubscribe"].ShouldBe($"<{Site}/api/v1/notices/{token}/stop>");
-            message.TextBody.ShouldContain($"Nebegauti šių laiškų: {Site}/laiskai/nebegauti/{token}");
+            message.TextBody.ShouldContain($"Šį laišką gavote pagal savo laiškų pasirinkimus Lietuva 2.0.\nKeisti periodiškumą: {Site}/paskyra/sekimas#laisku-daznis · Atsisakyti laiškų: {Site}/laiskai/nebegauti/{token}\n");
         }
         finally
         {

@@ -29,9 +29,8 @@ internal sealed class FollowTemplates(IStringLocalizer<EmailTemplates> l, IOptio
         paragraphs.Add(Format("Follow.Planned.Date", day));
         paragraphs.Add(l["Follow.Planned.Moves"]);
         paragraphs.Add(Format("Follow.BillLink", Link(model.BillPath)));
-        paragraphs.Add(Stop(Format("Follow.Footer", Link(model.AccountPath)), model.StopToken));
         paragraphs.Add(l[EmailText.Signature]);
-        return Message(model.To, Format("Follow.Planned.Subject", model.BillNumber, day), paragraphs, model.StopToken);
+        return Message(model.To, Format("Follow.Planned.Subject", model.BillNumber, day), paragraphs, l["Follow.Reason"], model.AccountPath, model.StopToken);
     }
 
     public EmailMessage Voted(FollowVotedEmail model)
@@ -61,9 +60,8 @@ internal sealed class FollowTemplates(IStringLocalizer<EmailTemplates> l, IOptio
         }
 
         paragraphs.Add(Format("Follow.VoteLink", Link(model.VotePath)));
-        paragraphs.Add(Stop(Format("Follow.Footer", Link(model.AccountPath)), model.StopToken));
         paragraphs.Add(l[EmailText.Signature]);
-        return Message(model.To, Format("Follow.Voted.Subject", model.BillNumber), paragraphs, model.StopToken);
+        return Message(model.To, Format("Follow.Voted.Subject", model.BillNumber), paragraphs, l["Follow.Reason"], model.AccountPath, model.StopToken);
     }
 
     /// <summary>
@@ -93,10 +91,9 @@ internal sealed class FollowTemplates(IStringLocalizer<EmailTemplates> l, IOptio
         paragraphs.AddRange(
         [
             Format("Follow.Statement.Read", Link(model.BillPath)),
-            Stop(Format("Follow.Statement.Footer", Link(model.AccountPath)), model.StopToken),
             l[EmailText.Signature],
         ]);
-        return Message(model.To, Format("Follow.Statement.Subject", model.OrganisationName, model.BillNumber), paragraphs, model.StopToken);
+        return Message(model.To, Format("Follow.Statement.Subject", model.OrganisationName, model.BillNumber), paragraphs, l["Follow.Statement.Reason"], model.AccountPath, model.StopToken);
     }
 
     /// <summary>
@@ -116,10 +113,9 @@ internal sealed class FollowTemplates(IStringLocalizer<EmailTemplates> l, IOptio
             l[EmailText.Greeting],
             Format("Follow.Responses.Body", $"{model.BillNumber} · {model.BillTitle}", Day(model.Day)) + "\n" + string.Join("\n", lines),
             Format("Follow.Responses.Read", Link(model.BillPath)),
-            Stop(Format("Follow.Footer", Link(model.AccountPath)), model.StopToken),
             l[EmailText.Signature],
         };
-        return Message(model.To, Format("Follow.Responses.Subject", model.BillNumber), paragraphs, model.StopToken);
+        return Message(model.To, Format("Follow.Responses.Subject", model.BillNumber), paragraphs, l["Follow.Reason"], model.AccountPath, model.StopToken);
     }
 
     /// <summary>
@@ -143,10 +139,9 @@ internal sealed class FollowTemplates(IStringLocalizer<EmailTemplates> l, IOptio
         [
             Format("Follow.Member.Read." + What(model.What), Link(model.TextPath)),
             Format("Follow.Member.Profile", Link(model.ProfilePath)),
-            Stop(Format("Follow.Member.Footer", Link(model.AccountPath)), model.StopToken),
             l[EmailText.Signature],
         ]);
-        return Message(model.To, Format("Follow.Member.Subject." + What(model.What), model.MemberName, model.BillNumber), paragraphs, model.StopToken);
+        return Message(model.To, Format("Follow.Member.Subject." + What(model.What), model.MemberName, model.BillNumber), paragraphs, l["Follow.Member.Reason"], model.AccountPath, model.StopToken);
     }
 
     /// <summary>The "planned" part of a gathered email (design 8.24): a line per bill with the date current when the email was made.</summary>
@@ -245,6 +240,7 @@ internal sealed class FollowTemplates(IStringLocalizer<EmailTemplates> l, IOptio
         _ => l["Follow.OrgLabel.none"],
     };
 
+    /// <summary>
     /// New comments under the person's own arguments (design 8.23.9): one line per argument (the bill and the link to the
     /// argument). Never a comment's text, its writer, how many, or anything about "Sutinku".
     /// </summary>
@@ -256,10 +252,9 @@ internal sealed class FollowTemplates(IStringLocalizer<EmailTemplates> l, IOptio
         {
             l[EmailText.Greeting],
             l[model.Arguments.Count == 1 ? "Comments.Notice.Body.One" : "Comments.Notice.Body.Many"] + "\n" + string.Join("\n", lines),
-            Stop(Format(model.Arguments.Count == 1 ? "Comments.Notice.Footer.One" : "Comments.Notice.Footer.Many", Link(model.AccountPath)), model.StopToken),
             l[EmailText.Signature],
         };
-        return Message(model.To, l["Comments.Notice.Subject"], paragraphs, model.StopToken);
+        return Message(model.To, l["Comments.Notice.Subject"], paragraphs, l[model.Arguments.Count == 1 ? "Comments.Notice.Reason.One" : "Comments.Notice.Reason.Many"], model.AccountPath, model.StopToken);
     }
 
     private string CommentLine(CommentedArgumentLine a) =>
@@ -273,10 +268,10 @@ internal sealed class FollowTemplates(IStringLocalizer<EmailTemplates> l, IOptio
 
     private string Format(string key, params object?[] values) => l.Format(key, values);
 
-    /// <summary>The account footer line with the stop link under it (design 8.24.1).</summary>
-    private string Stop(string line, string? stopToken) => EmailLayout.WithStopLine(l, site.Value.Address, line, stopToken);
-
-    /// <summary>A member's email with the stop link's headers (design 8.24.1).</summary>
-    private EmailMessage Message(string to, string subject, IReadOnlyList<string> paragraphs, string? stopToken) =>
-        EmailLayout.Build(to, subject, paragraphs, EmailLayout.Footer(l, site.Value.Address), headers: EmailLayout.StopHeaders(site.Value.Address, stopToken));
+    /// <summary>
+    /// An email of the rhythm (design 8.24.1, owner 2026-11-17): the footer says <paramref name="reason"/>, links "Keisti
+    /// periodiškumą" to <paramref name="accountPath"/> and "atsisakyti laiškų" to the stop page, and the headers carry the stop.
+    /// </summary>
+    private EmailMessage Message(string to, string subject, IReadOnlyList<string> paragraphs, string reason, string accountPath, string? stopToken) =>
+        EmailLayout.BuildNotice(l, site.Value.Address, to, subject, paragraphs, reason, accountPath, stopToken);
 }
