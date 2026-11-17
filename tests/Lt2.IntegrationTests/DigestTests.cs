@@ -100,7 +100,7 @@ public sealed class DigestTests(DatabaseFixture database) : ApiTest(database)
             // one title, the summary's kind and date (the day has one summary), so nothing is scrolled away.
             DigestRoutes.PageAt(monday, weekly.Id, "XVP-0618").ShouldBe($"/suvestines/{date}?projektas=XVP-0618");
             var linked = WebUtility.HtmlDecode(await stranger.Client.GetStringAsync(DigestRoutes.PageAt(monday, weekly.Id, "XVP-0618")));
-            System.Text.RegularExpressions.Regex.Match(linked, "<h1 id=\"h-[^\"]+\">Savaitinė suvestinė · 20\\d\\d m\\. [^<]+ d\\.</h1>").Success.ShouldBeTrue("one title: the kind and the date");
+            System.Text.RegularExpressions.Regex.IsMatch(linked, "<h1 id=\"h-[^\"]+\">Savaitinė suvestinė · 20\\d\\d m\\. [^<]+ d\\.</h1>").ShouldBeTrue("one title: the kind and the date");
             linked.ShouldNotContain($"<h2 id=\"h-{weekly.Id}\"", customMessage: "no second heading for the day's only summary");
             System.Text.RegularExpressions.Regex.Match(linked, "<section class=\"sheet stack\" aria-label=\"([^\"]+)\"").Groups[1].Value
                 .ShouldBe("XVP-0618", "the linked bill's item comes first");

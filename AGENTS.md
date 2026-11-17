@@ -565,8 +565,9 @@ page's "Balsuota".
   (`FrontPageFreshness`, marked by `TakingSides` for every API client): the first request once the copy is 2 s old reads
   the agenda again; other changes wait for the minute. The agenda page, the bill's page and the API stay live.
   "Projektai" (`/projektai`; `/kreipimaisi` redirects there) lists active bills, sorted by activity (participants
-  plus published arguments; the default), participants, arguments or planned date (owner, 2026-11-14), with a search
-  and "Planuojami artimiausiu metu".
+  plus published arguments; the default) or planned date (owner, 2026-11-17: the page offers these two; another `rikiuoti`
+  falls back to the default; the API's `sort` keeps its four values), with a search and the link "Planuojami per 14 dienų"
+  (applies at once, keeps the search; `aria-current` while on); each row has "už … (…) · prieš … (…)" beside its bar.
 - Following a bill, an MP, an organisation or a member is private: who follows is shown to nobody (the followed party and
   staff included), never combined with sides or invitations (the person's own `/me/bills` gives them both), in the export,
   deleted with the account; there is no limit on how much a person follows (owner, 2026-11-15: `Follows:MaxPerAccount` and

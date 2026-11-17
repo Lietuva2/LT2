@@ -1939,6 +1939,13 @@ the team, so no notice is owed.
   then by number; by planned date, bills without one come last. The parameter is `sort` = `activity`, `participants`,
   `arguments` or `planned` in the API and `rikiuoti` = `aktyvumas`, `dalyviai`, `argumentai`, `data` on the page; the
   closed tab keeps its own order.]
+  **[Owner, 2026-11-17, after testing the trial, reversing the four orders of 2026-11-14: the page offers two,] "pagal
+  aktyvumą" (the default) and "pagal planuojamą datą"; an old `rikiuoti=dalyviai` or `argumentai` falls back to the
+  default (nothing is launched). The API's `sort` keeps its four values [the designer's choice: the API stays complete and
+  its tests stand; only the page offers fewer]. The filter is renamed "Planuojami per 14 dienų" (what it always meant) and
+  is a link that applies at once, without script, keeping the search and the order, marked while on; no checkbox waiting
+  for "Rodyti". Each row shows the sides' numbers, "už 6 800 (…) · prieš 4 281 (…)" with the counts for accounts older than
+  30 days in brackets as the agenda's rows have them, beside its bar instead of in the text line.
 - **The agenda (8.11.1)** shows both sides for every bill; a bill nobody took part in says so and links to its page.
   "Kreipimosi prašo N" is gone.
 - **The front page (8.7, 8.11.1)** keeps "Artimiausiu metu Seime"; the cards below are the six bills with the most
