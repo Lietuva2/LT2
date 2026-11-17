@@ -142,15 +142,17 @@ internal static class RecordRules
 /// <summary>
 /// The orders of <c>/projektai</c> and the front page's cards (design 8.12.5, decided 2026-11-14). Activity is the bill's
 /// participants on both sides together plus its published arguments, a plain sum. Activity, participants and arguments
-/// put the most first; the planned date the soonest first. Ties go by activity, then by planned date (soonest first,
-/// bills without one last), then by number, so bills with nothing come last, by planned date.
+/// put the most first; the planned date the soonest first; the last activity (owner, 2026-11-17) the latest first, bills
+/// without any last. Ties go by activity, then by planned date (soonest first, bills without one last), then by number, so
+/// bills with nothing come last, by planned date.
 /// </summary>
 internal static class BillListRules
 {
     public static int Activity(int participants, int arguments) => participants + arguments;
 
     public static IReadOnlyList<T> Order<T>(
-        IEnumerable<T> items, string sort, Func<T, int> participants, Func<T, int> arguments, Func<T, DateOnly?> planned, Func<T, string> number)
+        IEnumerable<T> items, string sort, Func<T, int> participants, Func<T, int> arguments, Func<T, DateOnly?> planned, Func<T, string> number,
+        Func<T, DateTimeOffset?>? lastActivity = null)
     {
         int ActivityOf(T i) => Activity(participants(i), arguments(i));
         var first = sort switch
@@ -158,6 +160,7 @@ internal static class BillListRules
             BillSorts.Participants => items.OrderByDescending(participants),
             BillSorts.Arguments => items.OrderByDescending(arguments),
             BillSorts.Planned => items.OrderBy(i => planned(i) ?? DateOnly.MaxValue),
+            BillSorts.Latest => items.OrderByDescending(i => lastActivity?.Invoke(i) ?? DateTimeOffset.MinValue),
             _ => items.OrderByDescending(ActivityOf),
         };
         return first

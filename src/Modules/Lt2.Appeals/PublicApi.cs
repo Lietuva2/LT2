@@ -92,9 +92,11 @@ public sealed record SurgeInfo(int SharePercent, int WindowHours, int RecentPosi
 
 /// <summary>
 /// A bill in <c>/projektai</c> (design 8.12.5); <paramref name="Id"/> null while it has no record. <paramref name="Arguments"/>
-/// is how many published arguments it has.
+/// is how many published arguments it has; <paramref name="LastActivityAt"/> its last activity (owner, 2026-11-17), null while
+/// there was none.
 /// </summary>
-public sealed record BillListItem(Guid? Id, BillFacts Bill, string Status, SideCounts Counts, ThresholdInfo Threshold, PlannedDate? Planned, int Arguments);
+public sealed record BillListItem(
+    Guid? Id, BillFacts Bill, string Status, SideCounts Counts, ThresholdInfo Threshold, PlannedDate? Planned, int Arguments, DateTimeOffset? LastActivityAt = null);
 
 public sealed record BillListPage(IReadOnlyList<BillListItem> Items, int Total, string? NextCursor);
 
@@ -104,7 +106,7 @@ public sealed record BillListPage(IReadOnlyList<BillListItem> Items, int Total, 
 /// </summary>
 public sealed record BillListQuery(string? Search = null, bool PlannedOnly = false, bool Closed = false, string? Cursor = null, string? Sort = null);
 
-/// <summary>The orders of <c>/projektai</c> (design 8.12.5, decided 2026-11-14).</summary>
+/// <summary>The orders of <c>/projektai</c> (design 8.12.5, decided 2026-11-14; <see cref="Latest"/> owner, 2026-11-17).</summary>
 public static class BillSorts
 {
     public const string Activity = "activity";
@@ -112,7 +114,10 @@ public static class BillSorts
     public const string Arguments = "arguments";
     public const string Planned = "planned";
 
-    public static readonly IReadOnlyList<string> All = [Activity, Participants, Arguments, Planned];
+    /// <summary>"Naujausia veikla": the latest activity first, bills without any last.</summary>
+    public const string Latest = "latest";
+
+    public static readonly IReadOnlyList<string> All = [Activity, Participants, Arguments, Planned, Latest];
 
     /// <summary>An unknown or missing sort is activity, the default.</summary>
     public static string Of(string? sort) => sort is not null && All.Contains(sort) ? sort : Activity;

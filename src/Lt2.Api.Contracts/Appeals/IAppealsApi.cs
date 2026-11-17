@@ -9,7 +9,7 @@ public interface IAppealsApi
 
     /// <summary>
     /// <c>/projektai</c> (design 8.12.5): active bills in the order <paramref name="sort"/> (<c>activity</c> by default,
-    /// <c>participants</c>, <c>arguments</c>, <c>planned</c>); a search by number or title; only those planned soon; or, with
+    /// <c>participants</c>, <c>arguments</c>, <c>planned</c>, <c>latest</c>); a search by number or title; only those planned soon; or, with
     /// <paramref name="closed"/>, the closed ones.
     /// </summary>
     Task<ApiResult<BillListResponse>> GetAppealsAsync(string? search = null, bool planned = false, bool closed = false, string? cursor = null, string? sort = null, CancellationToken cancellationToken = default);

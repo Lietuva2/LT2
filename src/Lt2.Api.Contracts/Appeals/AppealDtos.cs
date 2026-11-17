@@ -173,9 +173,12 @@ public sealed record SurgeResponse(int SharePercent, int WindowHours);
 
 /// <summary>
 /// A bill in <c>/projektai</c> (design 8.12.5); <c>Id</c> null while it has no record; <c>Arguments</c> its published
-/// arguments.
+/// arguments; <c>LastActivityAt</c> its last activity (owner, 2026-11-17: a side, an argument, a comment, an organisation's
+/// statement or an MP's response), null while there was none. A time per bill, never who.
 /// </summary>
-public sealed record BillListItemResponse(Guid? Id, BillRefResponse Bill, string Status, SideCountsResponse Counts, ThresholdResponse Threshold, PlannedDateResponse? Planned, int Arguments);
+public sealed record BillListItemResponse(
+    Guid? Id, BillRefResponse Bill, string Status, SideCountsResponse Counts, ThresholdResponse Threshold, PlannedDateResponse? Planned, int Arguments,
+    DateTimeOffset? LastActivityAt = null);
 
 public sealed record BillListResponse(IReadOnlyList<BillListItemResponse> Items, int Total, string? NextCursor);
 

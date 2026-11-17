@@ -32,7 +32,7 @@ internal static class AppealMapping
     public static SurgeResponse? Map(SurgeInfo? s) => s is null ? null : new(s.SharePercent, s.WindowHours);
 
     public static BillListResponse Map(BillListPage p) => new(
-        p.Items.Select(i => new BillListItemResponse(i.Id, Map(i.Bill), i.Status, Map(i.Counts), Map(i.Threshold), Map(i.Planned), i.Arguments)).ToList(),
+        p.Items.Select(i => new BillListItemResponse(i.Id, Map(i.Bill), i.Status, Map(i.Counts), Map(i.Threshold), Map(i.Planned), i.Arguments, i.LastActivityAt)).ToList(),
         p.Total,
         p.NextCursor);
 

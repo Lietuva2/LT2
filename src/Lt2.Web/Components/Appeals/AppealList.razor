@@ -6,8 +6,8 @@
 @inject Formats F
 
 @* The bills people can take part on (design 8.12.5, GET /appeals), server-rendered and readable without JavaScript: every
-   active bill, by activity (participants plus published arguments) unless sorted by planned date (owner, 2026-11-17: those
-   two orders only). The search is a plain form; the order, the filter "Planuojami per 14 dienų" (a link that applies at
+   active bill, by activity (participants plus published arguments) unless sorted by planned date or by the latest activity
+   (owner, 2026-11-17: those three orders; in the last each row says "Paskutinė veikla …"). The search is a plain form; the order, the filter "Planuojami per 14 dienų" (a link that applies at
    once, keeping the search), the closed tab and paging are plain links. Each row shows its participants and arguments, and
    the sides' numbers beside its bar. *@
 <PageTitle>@T["List.Title"] · Lietuva 2.0</PageTitle>
@@ -119,6 +119,11 @@
                             {
                                 <span class="small">@T.Format("Planned", F.T["Month." + plan.Date.Month], plan.Date.Day)</span>
                             }
+                            @if (Sort == "naujausia" && item.LastActivityAt is { } last)
+                            {
+                                @* Owner, 2026-11-17: in this order each row says when the bill last saw activity. *@
+                                <span class="small num" id="last-@item.Bill.Number">@T.Format("List.LastActivity", Display.DayTime(last))</span>
+                            }
                         </div>
                         <div class="rows__side">
                             @if (item.Counts.For + item.Counts.Against > 0)
@@ -160,14 +165,14 @@
     [SupplyParameterFromQuery(Name = "rikiuoti")] public string? SortParameter { get; set; }
 
     /// <summary>
-    /// The orders on the page (design 8.12.5; owner, 2026-11-17: activity and planned date only), in Lithuanian in the address;
-    /// the first is the default, and any other value (an old <c>dalyviai</c> or <c>argumentai</c>) falls back to it.
+    /// The orders on the page (design 8.12.5; owner, 2026-11-17: activity, planned date and the latest activity), in Lithuanian
+    /// in the address; the first is the default, and any other value (an old <c>dalyviai</c> or <c>argumentai</c>) falls back to it.
     /// </summary>
-    private static readonly string[] SortNames = ["aktyvumas", "data"];
+    private static readonly string[] SortNames = ["aktyvumas", "data", "naujausia"];
 
     private static readonly Dictionary<string, string> ApiSorts = new()
     {
-        ["aktyvumas"] = "activity", ["data"] = "planned",
+        ["aktyvumas"] = "activity", ["data"] = "planned", ["naujausia"] = "latest",
     };
 
     private string Sort => SortParameter is { } s && ApiSorts.ContainsKey(s) ? s : "aktyvumas";

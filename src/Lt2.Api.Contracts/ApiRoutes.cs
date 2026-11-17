@@ -197,7 +197,7 @@ public static class AppealRoutes
     /// <summary>
     /// <c>GET /appeals</c> (design 8.12.5): <c>q</c> searches number and title, <c>planned=true</c> keeps those planned soon,
     /// <c>tab=closed</c> lists the closed ones, <c>sort</c> is <c>activity</c> (the default), <c>participants</c>,
-    /// <c>arguments</c> or <c>planned</c>.
+    /// <c>arguments</c>, <c>planned</c> or <c>latest</c> (the last activity first; owner, 2026-11-17).
     /// </summary>
     public static string AppealsList(string? search, bool planned, bool closed, string? cursor, string? sort = null)
     {

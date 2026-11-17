@@ -2091,6 +2091,14 @@ the team, so no notice is owed.
   is a link that applies at once, without script, keeping the search and the order, marked while on; no checkbox waiting
   for "Rodyti". Each row shows the sides' numbers, "už 6 800 (…) · prieš 4 281 (…)" with the counts for accounts older than
   30 days in brackets as the agenda's rows have them, beside its bar instead of in the text line.
+  **[Owner, 2026-11-17: a third order,] "pagal naujausią veiklą"** (`rikiuoti=naujausia`, the API's `sort=latest`): the
+  bill's last activity first. Last activity is the latest of: a side taken, changed or withdrawn; an argument published; a
+  comment written; an organisation's statement made public or changed; an MP's response made public or changed. It is one
+  time per bill, kept on its record (`appeals.bill_record.last_activity_at`) and written in the same transaction as each of
+  those (Appeals, `RecordActivity`); nothing about who acted is kept. Bills without any come last (then the usual ties). In
+  that order each row shows "Paskutinė veikla {yyyy-MM-dd HH:mm}". [the designer's choices: the link reads "pagal naujausią
+  veiklą" like its two neighbours; taking the same side again is no activity; an argument restored by a moderator is not
+  "published" again; a statement or response on a bill without a record marks nothing, since nothing is created for it.]
 - **The agenda (8.11.1)** shows both sides for every bill; a bill nobody took part in says so and links to its page.
   "Kreipimosi prašo N" is gone.
 - **The front page (8.7, 8.11.1)** keeps "Artimiausiu metu Seime"; the cards below are the six bills with the most
@@ -5068,6 +5076,13 @@ Built, awaiting the owner's word:
   projektai", "12 projektų") rather than the fixed "{n} projektų".
 - `Digest:ReviewHours` takes 1 to 72 hours; the statements line of a future organisations part (8.14.9) follows the same
   rule as arguments (public when prepared).
+
+**Decided by the owner on 2026-11-17: `/projektai` by the latest activity (8.12.5)**
+
+- A third order, "Naujausia veikla", by one time per bill: the last side, argument, comment, organisation's statement or
+  MP's response; bills without any last; each row then shows "Paskutinė veikla …". Nothing per person is kept. The
+  designer's choices (8.12.5): the link reads "pagal naujausią veiklą"; the same side again, a restored argument and a
+  statement or response on a bill without a record are no activity.
 
 **Proposed by the designer while building the email rhythm (8.24), 2026-11-16, awaiting the owner**
 

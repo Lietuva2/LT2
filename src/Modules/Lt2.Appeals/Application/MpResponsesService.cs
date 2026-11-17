@@ -201,6 +201,9 @@ internal sealed class MpResponsesService(
         try
         {
             await db.SaveChangesAsync(cancellationToken);
+
+            // Design 8.12.5: a response made public or changed is the bill's activity.
+            await RecordActivity.TouchBillAsync(db, bill.Bill.Number, now, cancellationToken);
         }
         catch (DbUpdateException ex) when (ex.InnerException is Npgsql.PostgresException { SqlState: Npgsql.PostgresErrorCodes.UniqueViolation })
         {

@@ -145,6 +145,17 @@ public sealed class BillListRuleTests
     public void Activity_is_participants_plus_published_arguments() => BillListRules.Activity(participants: 10, arguments: 3).ShouldBe(13);
 
     [Fact]
+    public void By_the_latest_activity_the_last_touched_comes_first_and_bills_without_any_last()
+    {
+        var at = new DateTimeOffset(2026, 11, 17, 10, 0, 0, TimeSpan.Zero);
+        var last = new Dictionary<string, DateTimeOffset?> { ["A"] = at, ["B"] = at.AddMinutes(5), ["C"] = null, ["D"] = at.AddDays(-1) };
+        Bill[] bills = [new("A", 50, 0, null), new("B", 1, 0, null), new("C", 99, 9, Soon), new("D", 3, 0, null)];
+        BillListRules.Order(bills, BillSorts.Latest, b => b.Participants, b => b.Arguments, b => b.Planned, b => b.Number, b => last[b.Number])
+            .Select(b => b.Number).ShouldBe(["B", "A", "D", "C"], "owner, 2026-11-17: the latest first, none last whatever its activity");
+        BillSorts.Of("latest").ShouldBe(BillSorts.Latest);
+    }
+
+    [Fact]
     public void By_activity_the_most_active_comes_first_and_activity_is_the_default()
     {
         Bill[] bills = [new("A", 5, 0, null), new("B", 3, 4, null), new("C", 6, 0, null)];
