@@ -1,0 +1,104 @@
+@inherits InteractiveBase<UiText>
+@inject IAuthApi Auth
+@inject IMeApi MeApi
+@inject Passkeys PasskeyBrowser
+@inject NavigationManager Navigation
+
+@* Owner, 2026-11-17: where an action needs a passkey session and this one was signed in by a code (or, for staff, not with
+   the staff passkey), the way forward is in place: "Patvirtinti prieigos raktu" asks the browser for one of the account's own
+   passkeys and makes this session a passkey session under a new key (POST /me/passkey-session; for staff the staff passkey,
+   POST /me/staff-session), without signing out or leaving the page. Another account's passkey is refused and changes nothing.
+   Then the island reads its state again (Confirmed), or the page is loaded again. The button waits for the island; the page
+   carries <NeedsScript />. For staff the sentence is the page's own refusal, and the button shows only for an account with an
+   activated staff role in a session that is not a staff session. *@
+@if (Shown)
+{
+    <div class="stack stack--tight" id="@(IdPrefix)passkey-step">
+        @if (!Staff)
+        {
+            <p class="note note--quiet" id="@(IdPrefix)passkey-step-text">@L["PasskeyStep.Text"]</p>
+        }
+        <p><button type="button" class="btn" id="@(IdPrefix)passkey-step-confirm" disabled="@Locked" @onclick="ConfirmAsync">@L["PasskeyStep.Confirm"]</button></p>
+        <Messages Message="@Message" Info="@Info" />
+    </div>
+}
+
+@code {
+    private bool _staffAccount;
+
+    /// <summary>The staff passkey, for a staff session; otherwise any passkey of the account.</summary>
+    [Parameter]
+    public bool Staff { get; set; }
+
+    /// <summary>
+    /// The account's own answer when the caller has it (for <see cref="Staff"/>: whether the button is shown at all); without
+    /// it a staff step reads <c>GET /me</c> once in the browser.
+    /// </summary>
+    [Parameter]
+    public MeResponse? Account { get; set; }
+
+    /// <summary>Prefix of the element ids, for a step shown more than once on a page.</summary>
+    [Parameter]
+    public string? IdPrefix { get; set; }
+
+    /// <summary>What the island does once the session is a passkey session; without it the page is loaded again.</summary>
+    [Parameter]
+    public EventCallback Confirmed { get; set; }
+
+    private bool Shown => !Staff || _staffAccount;
+
+    protected override async Task OnParametersSetAsync()
+    {
+        if (!Staff)
+        {
+            return;
+        }
+
+        if (Account is { } known)
+        {
+            _staffAccount = IsStaffCodeSession(known);
+        }
+        else if (RendererInfo.IsInteractive && !_staffAccount && await IsSignedInAsync())
+        {
+            _staffAccount = (await MeApi.GetAsync()).Value is { } me && IsStaffCodeSession(me);
+        }
+    }
+
+    private static bool IsStaffCodeSession(MeResponse me) => me.StaffAccount && me.ActiveStaffRoles.Count == 0;
+
+    private Task ConfirmAsync() => RunAsync(async () =>
+    {
+        if (!await PasskeyBrowser.IsSupportedAsync())
+        {
+            Message = L["Passkey.Unsupported"];
+            return;
+        }
+
+        var options = await Auth.GetPasskeyRequestOptionsAsync();
+        if (!Succeeded(options))
+        {
+            return;
+        }
+
+        var credential = await PasskeyBrowser.GetAsync(options.Value!);
+        if (credential is null)
+        {
+            Message = L["Passkey.Cancelled"];
+            return;
+        }
+
+        var request = new PasskeyCredentialRequest { Credential = credential };
+        if (!Succeeded(Staff ? await MeApi.StartStaffSessionAsync(request) : await MeApi.StartPasskeySessionAsync(request)))
+        {
+            return;
+        }
+
+        if (Confirmed.HasDelegate)
+        {
+            await Confirmed.InvokeAsync();
+            return;
+        }
+
+        Navigation.Refresh(forceReload: true);
+    });
+}

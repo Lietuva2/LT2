@@ -28,6 +28,10 @@ public static class ApiRoutes
 
         /// <summary>A code session on a staff account becomes a staff session with the staff passkey (design 6.2).</summary>
         public const string StaffSession = Root + "/staff-session";
+
+        /// <summary>The session becomes a passkey session with one of the account's own passkeys, in place (owner, 2026-11-17).</summary>
+        public const string PasskeySession = Root + "/passkey-session";
+
         /// <summary>Changing the display name (design 6.2).</summary>
         public const string DisplayName = Root + "/display-name";
         public const string Sessions = Root + "/sessions";

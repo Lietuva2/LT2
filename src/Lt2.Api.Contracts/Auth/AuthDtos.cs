@@ -29,6 +29,12 @@ public sealed record SignInRequest
     public string Code { get; init; } = "";
 }
 
+/// <summary>
+/// A sign-in's answer (design 6.2, owner 2026-11-17): <see cref="AccountChanged"/> when the browser was signed in to another
+/// account, whose session ended with this sign-in; the page then says so.
+/// </summary>
+public sealed record SignInResponse(bool AccountChanged);
+
 /// <summary>The output of the browser's <c>PublicKeyCredential.toJSON()</c>, passed through as a string.</summary>
 public sealed record PasskeyCredentialRequest
 {

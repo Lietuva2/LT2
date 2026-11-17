@@ -19,8 +19,11 @@ internal sealed class ServerAuthApi(IIdentityModule identity, IHttpContextAccess
     public async Task<ApiResult> RequestCodeAsync(RequestCodeRequest request, CancellationToken cancellationToken = default) =>
         errors.ToApiResult(await identity.RequestSignInCodeAsync(request.Email, cancellationToken));
 
-    public async Task<ApiResult> SignInAsync(SignInRequest request, CancellationToken cancellationToken = default) =>
-        errors.ToApiResult(await identity.SignInWithCodeAsync(request.Email, request.Code, cancellationToken));
+    public async Task<ApiResult<SignInResponse>> SignInAsync(SignInRequest request, CancellationToken cancellationToken = default)
+    {
+        var before = accessor.HttpContext?.User.UserId();
+        return errors.ToApiResult(await identity.SignInWithCodeAsync(request.Email, request.Code, cancellationToken), outcome => Answer(outcome, before));
+    }
 
     public async Task<ApiResult> SignOutAsync(CancellationToken cancellationToken = default)
     {
@@ -44,8 +47,22 @@ internal sealed class ServerAuthApi(IIdentityModule identity, IHttpContextAccess
     public async Task<ApiResult<string>> GetPasskeyRequestOptionsAsync(CancellationToken cancellationToken = default) =>
         errors.ToApiResult(await identity.GetPasskeyRequestOptionsAsync(cancellationToken), x => x);
 
-    public async Task<ApiResult> SignInWithPasskeyAsync(PasskeyCredentialRequest request, CancellationToken cancellationToken = default) =>
-        errors.ToApiResult(await identity.SignInWithPasskeyAsync(request.Credential, cancellationToken));
+    public async Task<ApiResult<SignInResponse>> SignInWithPasskeyAsync(PasskeyCredentialRequest request, CancellationToken cancellationToken = default)
+    {
+        var before = accessor.HttpContext?.User.UserId();
+        return errors.ToApiResult(await identity.SignInWithPasskeyAsync(request.Credential, cancellationToken), outcome => Answer(outcome, before));
+    }
+
+    /// <summary>As the endpoints answer: the other account's session ended, and its kept analytics comparison with it (design 8.26.6).</summary>
+    private SignInResponse Answer(SignInOutcome outcome, Guid? before)
+    {
+        if (outcome.AccountChanged && before is { } previous)
+        {
+            analytics.Forget(previous);
+        }
+
+        return new SignInResponse(outcome.AccountChanged);
+    }
 
     private System.Security.Claims.ClaimsPrincipal User =>
         accessor.HttpContext?.User ?? new System.Security.Claims.ClaimsPrincipal();
@@ -89,6 +106,9 @@ internal sealed class ServerMeApi(IIdentityModule identity, IMpDirectory mps, IH
 
     public async Task<ApiResult> StartStaffSessionAsync(PasskeyCredentialRequest request, CancellationToken cancellationToken = default) =>
         errors.ToApiResult(await identity.StartStaffSessionAsync(User, request.Credential, IpHash, cancellationToken));
+
+    public async Task<ApiResult> StartPasskeySessionAsync(PasskeyCredentialRequest request, CancellationToken cancellationToken = default) =>
+        errors.ToApiResult(await identity.StartPasskeySessionAsync(User, request.Credential, IpHash, cancellationToken));
 
     public async Task<ApiResult> GivePositionConsentAsync(PositionConsentRequest request, CancellationToken cancellationToken = default) =>
         errors.ToApiResult(await identity.GivePositionConsentAsync(User, request.TextVersion, cancellationToken));

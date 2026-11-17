@@ -335,10 +335,8 @@ public sealed class SignInComponentTests : BunitContext
         var codeSession = Render<AccountSecurity>();
         codeSession.Find("#delete-staff-passkey span").TextContent.ShouldBe(Text("Data.DeleteStaffNeedsPasskey"));
 
-        // Design 6.2 (owner, 2026-11-16): the way to a staff session without signing out, coming back to the account page.
-        var staffKey = codeSession.Find("#delete-staff-key");
-        staffKey.TextContent.ShouldBe(Text("Data.StaffKeyLink"));
-        staffKey.GetAttribute("href").ShouldBe("/prisijungti/raktas#grizti=%2Fpaskyra%2Fsaugumas");
+        // Design 6.2 (owner, 2026-11-17): the way to a staff session without signing out, in place.
+        codeSession.Find("#delete-staff-passkey-step-confirm").TextContent.ShouldBe(Text("PasskeyStep.Confirm"));
         codeSession.FindAll("#delete-account").ShouldBeEmpty();
         codeSession.FindAll("#export").ShouldNotBeEmpty("the export is unchanged");
 
@@ -490,16 +488,19 @@ public sealed class SignInComponentTests : BunitContext
         }
     }
 
-    /// <summary>Design 6.2 (owner, 2026-11-16): where the staff links stand, a code session on a staff account gets its staff passkey.</summary>
+    /// <summary>
+    /// Design 6.2 (owner, 2026-11-16, 2026-11-17): where the staff links stand, a code session on a staff account gets its staff
+    /// passkey, in place.
+    /// </summary>
     [Fact]
     public void A_staff_account_in_a_code_session_is_offered_its_staff_passkey_where_the_staff_links_stand()
     {
         SignedIn(FakeMeApi.Member with { Roles = ["member", "moderator"], StaffAccount = true });
         var codeSession = Render<AccountTaking>();
         codeSession.Find("#dalyvavimas #staff-key-note span").TextContent.ShouldBe(Text("Staff.KeyText"));
-        codeSession.Find("#staff-key-link").GetAttribute("href").ShouldBe("/prisijungti/raktas#grizti=%2Fpaskyra%2Fdalyvavimas");
+        codeSession.Find("#staff-key-passkey-step-confirm").TextContent.ShouldBe(Text("PasskeyStep.Confirm"));
         codeSession.FindAll("#staff-links").ShouldBeEmpty();
-        Render<AccountSecurity>().FindAll("#delete-staff-key").ShouldNotBeEmpty("the one beside the deletion note stays, on its own screen");
+        Render<AccountSecurity>().FindAll("#delete-staff-passkey-step-confirm").ShouldNotBeEmpty("the one beside the deletion note stays, on its own screen");
 
         SignedIn(FakeMeApi.Member with { Roles = ["member", "moderator"], StaffAccount = true, ActiveStaffRoles = ["moderator"] });
         var staffSession = Render<AccountTaking>();
@@ -584,7 +585,7 @@ public sealed class SignInComponentTests : BunitContext
         var module = JSInterop.SetupModule("./js/passkeys.js");
         module.Setup<bool>("isSupported").SetResult(true);
         module.Setup<string>("get", _ => true).SetResult("{\"id\":\"x\"}");
-        _auth.PasskeySignIn = () => Task.FromResult(ApiResult.Fail(new ApiProblem
+        _auth.PasskeySignIn = () => Task.FromResult(ApiResult<SignInResponse>.Fail(new ApiProblem
         {
             Status = 400,
             Code = "passkey.invalid",
@@ -596,6 +597,50 @@ public sealed class SignInComponentTests : BunitContext
         page.FindAll("button").Single(b => b.TextContent == Text("SignIn.Passkey")).Click();
 
         page.WaitForElement(".note[role=alert]").TextContent.ShouldBe(invalid);
+    }
+
+    /// <summary>
+    /// Design 6.2 (owner, 2026-11-17): a sign-in in a browser signed in to another account ends that session; the page says so,
+    /// with the new account's name after a colon, and goes on only when asked.
+    /// </summary>
+    [Fact]
+    public void A_passkey_sign_in_that_ended_another_accounts_session_says_so_with_the_name_before_going_on()
+    {
+        var module = JSInterop.SetupModule("./js/passkeys.js");
+        module.Setup<bool>("isSupported").SetResult(true);
+        module.Setup<string>("get", _ => true).SetResult("{\"id\":\"x\"}");
+        _auth.PasskeySignIn = () =>
+        {
+            _me.Account = FakeMeApi.Member with { DisplayName = "Rūta Mockutė" };
+            return Task.FromResult(ApiResult<SignInResponse>.Ok(new SignInResponse(true)));
+        };
+        var navigation = Services.GetRequiredService<BunitNavigationManager>();
+        var page = Render<SignIn>();
+
+        page.FindAll("button").Single(b => b.TextContent == Text("SignIn.Passkey")).Click();
+
+        page.WaitForAssertion(() => page.Find("#other-account-note").TextContent.ShouldBe("Prisijungėte kaip kitas narys: Rūta Mockutė."));
+        navigation.History.ShouldBeEmpty("nothing goes on before the person has read it");
+        page.Find("#other-account-continue").TextContent.ShouldBe(Text("SignIn.Continue"));
+        page.Find("#other-account-continue").Click();
+        page.WaitForAssertion(() => navigation.Uri.ShouldEndWith("/paskyra"));
+    }
+
+    [Fact]
+    public void A_code_sign_in_that_ended_another_accounts_session_says_so_without_a_name_when_there_is_none()
+    {
+        _auth.CodeSignIn = () =>
+        {
+            _me.Account = FakeMeApi.Member with { DisplayName = null };
+            return Task.FromResult(ApiResult<SignInResponse>.Ok(new SignInResponse(true)));
+        };
+        var page = Render<SignIn>();
+        page.Find("#email").Input(Email);
+        page.Find("form").Submit();
+        page.WaitForElement("#code").Input("123456");
+        page.Find("form").Submit();
+
+        page.WaitForAssertion(() => page.Find("#other-account-note").TextContent.ShouldBe(Text("SignIn.OtherAccount")));
     }
 
     [Fact]
@@ -641,8 +686,11 @@ public sealed class SignInComponentTests : BunitContext
         public Task<ApiResult> RequestCodeAsync(RequestCodeRequest request, CancellationToken cancellationToken = default) =>
             RequestCode(request);
 
-        public Task<ApiResult> SignInAsync(SignInRequest request, CancellationToken cancellationToken = default) =>
-            Task.FromResult(ApiResult.Ok());
+        /// <summary>The code sign-in's answer: by default the browser held no other account.</summary>
+        public Func<Task<ApiResult<SignInResponse>>> CodeSignIn { get; set; } = () => Task.FromResult(ApiResult<SignInResponse>.Ok(new SignInResponse(false)));
+
+        public Task<ApiResult<SignInResponse>> SignInAsync(SignInRequest request, CancellationToken cancellationToken = default) =>
+            CodeSignIn();
 
         public Func<Task<ApiResult>> SignOut { get; set; } = () => Task.FromResult(ApiResult.Ok());
 
@@ -657,9 +705,9 @@ public sealed class SignInComponentTests : BunitContext
         public Task<ApiResult<string>> GetPasskeyRequestOptionsAsync(CancellationToken cancellationToken = default) =>
             Task.FromResult(ApiResult<string>.Ok("{}"));
 
-        public Func<Task<ApiResult>> PasskeySignIn { get; set; } = () => Task.FromResult(ApiResult.Ok());
+        public Func<Task<ApiResult<SignInResponse>>> PasskeySignIn { get; set; } = () => Task.FromResult(ApiResult<SignInResponse>.Ok(new SignInResponse(false)));
 
-        public Task<ApiResult> SignInWithPasskeyAsync(PasskeyCredentialRequest request, CancellationToken cancellationToken = default) =>
+        public Task<ApiResult<SignInResponse>> SignInWithPasskeyAsync(PasskeyCredentialRequest request, CancellationToken cancellationToken = default) =>
             PasskeySignIn();
     }
 
@@ -758,6 +806,8 @@ public sealed class SignInComponentTests : BunitContext
         }
 
         public Task<ApiResult> StartStaffSessionAsync(PasskeyCredentialRequest request, CancellationToken cancellationToken = default) => Task.FromResult(ApiResult.Ok());
+
+        public Task<ApiResult> StartPasskeySessionAsync(PasskeyCredentialRequest request, CancellationToken cancellationToken = default) => Task.FromResult(ApiResult.Ok());
 
         public Task<ApiResult> ActivateRoleAsync(RoleActivationRequest request, CancellationToken cancellationToken = default)
         {

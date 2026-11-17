@@ -7,7 +7,8 @@ public interface IAuthApi
 
     Task<ApiResult> RequestCodeAsync(RequestCodeRequest request, CancellationToken cancellationToken = default);
 
-    Task<ApiResult> SignInAsync(SignInRequest request, CancellationToken cancellationToken = default);
+    /// <summary>Signs in with the emailed code; the answer says whether the browser was signed in to another account (design 6.2).</summary>
+    Task<ApiResult<SignInResponse>> SignInAsync(SignInRequest request, CancellationToken cancellationToken = default);
 
     Task<ApiResult> SignOutAsync(CancellationToken cancellationToken = default);
 
@@ -19,5 +20,6 @@ public interface IAuthApi
     /// <summary>WebAuthn request options as JSON, for <c>PublicKeyCredential.parseRequestOptionsFromJSON</c>.</summary>
     Task<ApiResult<string>> GetPasskeyRequestOptionsAsync(CancellationToken cancellationToken = default);
 
-    Task<ApiResult> SignInWithPasskeyAsync(PasskeyCredentialRequest request, CancellationToken cancellationToken = default);
+    /// <summary>Signs in with a passkey; the answer says whether the browser was signed in to another account (design 6.2).</summary>
+    Task<ApiResult<SignInResponse>> SignInWithPasskeyAsync(PasskeyCredentialRequest request, CancellationToken cancellationToken = default);
 }

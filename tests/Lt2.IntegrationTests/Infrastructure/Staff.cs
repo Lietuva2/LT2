@@ -61,6 +61,18 @@ public static class StaffSteps
             new PasskeyCredentialRequest { Credential = authenticator.Get(await OptionsAsync(request)) });
     }
 
+    /// <summary>
+    /// Owner, 2026-11-17: this browser's session becomes a passkey session with the authenticator's passkey, in place (a staff
+    /// session with the staff passkey); returns the response.
+    /// </summary>
+    public static async Task<HttpResponseMessage> PasskeySessionAsync(this TestBrowser browser, SoftwareAuthenticator authenticator)
+    {
+        using var request = await browser.PostAsync(ApiRoutes.Auth.PasskeyRequestOptions);
+        return await browser.PostAsync(
+            ApiRoutes.Me.PasskeySession,
+            new PasskeyCredentialRequest { Credential = authenticator.Get(await OptionsAsync(request)) });
+    }
+
     public static Task<HttpResponseMessage> ActivateRoleAsync(this TestBrowser browser, string code) =>
         browser.PostAsync(ApiRoutes.Me.RoleActivation, new RoleActivationRequest { Code = code });
 
@@ -154,7 +166,7 @@ public static class StaffMembers
         var browser = factory.NewBrowser();
         using (var signIn = await browser.SignInWithPasskeyAsync(authenticator))
         {
-            signIn.StatusCode.ShouldBe(HttpStatusCode.NoContent, await signIn.Content.ReadAsStringAsync());
+            signIn.StatusCode.ShouldBe(HttpStatusCode.OK, await signIn.Content.ReadAsStringAsync());
         }
 
         using (var activation = await browser.ActivateRoleAsync(code))

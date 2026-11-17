@@ -29,6 +29,9 @@ internal sealed class StaffHandlers(
     internal static readonly Error PasskeySessionRequired = Error.Forbidden("role-activation.passkey-required");
     internal static readonly Error StaffPasskeyRequired = Error.Forbidden("passkey.staff-required");
 
+    /// <summary>A passkey of another account offered to make this account's session a passkey session (owner, 2026-11-17).</summary>
+    internal static readonly Error OtherAccountsPasskey = Error.Forbidden("passkey.other-account");
+
     public async Task<Result<Unit>> ActivateAsync(ClaimsPrincipal principal, string code, string? ipHash, CancellationToken cancellationToken)
     {
         var state = await access.ForAsync(principal, cancellationToken);
@@ -155,7 +158,22 @@ internal sealed class StaffHandlers(
     /// all refused with <see cref="StaffPasskeyRequired"/> and change nothing. On success the session ends and a new one is
     /// signed in with a new key (<see cref="SessionRotation"/>), as a passkey session just confirmed; audited, no email.
     /// </summary>
-    public async Task<Result<Unit>> StartStaffSessionAsync(ClaimsPrincipal principal, string credentialJson, string? ipHash, CancellationToken cancellationToken)
+    public Task<Result<Unit>> StartStaffSessionAsync(ClaimsPrincipal principal, string credentialJson, string? ipHash, CancellationToken cancellationToken) =>
+        StartAsync(principal, credentialJson, ipHash, staffOnly: true, cancellationToken);
+
+    /// <summary>
+    /// Owner, 2026-11-17 ("Patvirtinti prieigos raktu" in place): the signed-in account's session becomes a passkey session by an
+    /// assertion with any of the account's own passkeys, as signing in with it would, but without leaving the page; with the
+    /// staff passkey of an account with an activated staff role it is a staff session too. Another account's passkey is
+    /// refused with <see cref="OtherAccountsPasskey"/> and changes nothing (the browser stays signed in to its own account); an
+    /// assertion that fails, with <c>passkey.invalid</c>. On success as <see cref="StartStaffSessionAsync"/>: a new key, the
+    /// passkey just confirmed, audited (<c>passkey.session-started</c>, or <c>staff.session-started</c> for the staff passkey),
+    /// no email.
+    /// </summary>
+    public Task<Result<Unit>> StartPasskeySessionAsync(ClaimsPrincipal principal, string credentialJson, string? ipHash, CancellationToken cancellationToken) =>
+        StartAsync(principal, credentialJson, ipHash, staffOnly: false, cancellationToken);
+
+    private async Task<Result<Unit>> StartAsync(ClaimsPrincipal principal, string credentialJson, string? ipHash, bool staffOnly, CancellationToken cancellationToken)
     {
         var state = await access.ForAsync(principal, cancellationToken);
         if (state?.Profile is null || state.Session is null)
@@ -163,7 +181,8 @@ internal sealed class StaffHandlers(
             return Error.Unauthorized("auth.required");
         }
 
-        if (!state.AccountHasActiveStaffRole || state.Profile.StaffPasskeyId is not { } staffPasskey)
+        var staffPasskey = state.AccountHasActiveStaffRole ? state.Profile.StaffPasskeyId : null;
+        if (staffOnly && staffPasskey is null)
         {
             return StaffPasskeyRequired;
         }
@@ -175,17 +194,21 @@ internal sealed class StaffHandlers(
         }
         catch (InvalidOperationException ex)
         {
-            logger.LogInformation(ex, "Staff session without a pending challenge");
+            logger.LogInformation(ex, "Passkey session without a pending challenge");
             return Lt2.Identity.Application.Passkeys.PasskeyHandlers.InvalidPasskey;
         }
 
-        if (!assertion.Succeeded
-            || assertion.User.Id != state.UserId
-            || !assertion.Passkey.CredentialId.AsSpan().SequenceEqual(staffPasskey)
-            || !await signIn.CanSignInAsync(assertion.User))
+        var isStaffPasskey = assertion.Succeeded && staffPasskey is not null && assertion.Passkey.CredentialId.AsSpan().SequenceEqual(staffPasskey);
+        if (!assertion.Succeeded || !await signIn.CanSignInAsync(assertion.User))
         {
-            logger.LogInformation("Staff session refused: {Reason}", assertion.Failure?.Message ?? "not this account's staff passkey");
-            return StaffPasskeyRequired;
+            logger.LogInformation("Passkey session refused: {Reason}", assertion.Failure?.Message ?? "the account cannot sign in");
+            return staffOnly ? StaffPasskeyRequired : Lt2.Identity.Application.Passkeys.PasskeyHandlers.InvalidPasskey;
+        }
+
+        if (assertion.User.Id != state.UserId || (staffOnly && !isStaffPasskey))
+        {
+            logger.LogInformation("Passkey session refused: {Reason}", assertion.User.Id != state.UserId ? "another account's passkey" : "not this account's staff passkey");
+            return staffOnly ? StaffPasskeyRequired : OtherAccountsPasskey;
         }
 
         // The new signature counter must be stored, or the assertion does not count (as at sign-in).
@@ -194,30 +217,30 @@ internal sealed class StaffHandlers(
             return Lt2.Identity.Application.Passkeys.PasskeyHandlers.InvalidPasskey;
         }
 
-        var role = state.AccountActiveRoles.Contains(Roles.Administrator) ? Roles.Administrator : state.AccountActiveRoles[0];
+        var used = assertion.Passkey.CredentialId;
+        var role = isStaffPasskey ? (state.AccountActiveRoles.Contains(Roles.Administrator) ? Roles.Administrator : state.AccountActiveRoles[0]) : Roles.Member;
         await using (var transaction = await db.Database.BeginTransactionAsync(cancellationToken))
         {
             await events.RecordAsync(
                 transaction.GetDbTransaction(),
-                "staff.session-started",
+                isStaffPasskey ? "staff.session-started" : "passkey.session-started",
                 state.UserId,
                 new Actor(state.UserId, role, ipHash),
-                new { roles = state.AccountActiveRoles, credential = WebEncoders.Base64UrlEncode(staffPasskey)[..12] },
+                isStaffPasskey
+                    ? (object)new { roles = state.AccountActiveRoles, credential = WebEncoders.Base64UrlEncode(used)[..12] }
+                    : new { credential = WebEncoders.Base64UrlEncode(used)[..12] },
                 null,
                 cancellationToken);
             await transaction.CommitAsync(cancellationToken);
         }
 
-        // A new session key on the change of privilege: the code session's row is deleted and a passkey session stored, whose
-        // passkey counts as just confirmed (SessionTicketStore.StoreAsync). The sessions list shows one session for this browser.
-        var signedIn = await signIn.CreateUserPrincipalAsync(assertion.User);
-        signedIn.Identities.First().AddClaim(new Claim(AuthenticationMethods.ClaimType, AuthenticationMethods.Passkey));
-        signedIn.Identities.First().AddClaim(new Claim(SessionTicketStore.PasskeyClaim, WebEncoders.Base64UrlEncode(staffPasskey)));
-        await SessionRotation.SignInWithNewKeyAsync(signIn.Context, signedIn, new AuthenticationProperties { IsPersistent = true });
+        // A new session key on the change of privilege: the current row is deleted and a passkey session stored, whose passkey
+        // counts as just confirmed (SessionTicketStore.StoreAsync). The sessions list shows one session for this browser.
+        await SessionSignIn.SignInAsync(signIn, assertion.User, AuthenticationMethods.Passkey, used);
 
         // Design 8.20.2: the browser stays known to the account, renewed as at every sign-in.
         await browsers.RememberAsync(state.UserId, CancellationToken.None);
-        logger.LogInformation("Staff session started for account {UserId}", state.UserId);
+        logger.LogInformation("Passkey session started for account {UserId}; staff: {Staff}", state.UserId, isStaffPasskey);
         return Result.Ok();
     }
 

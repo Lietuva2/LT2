@@ -25,6 +25,11 @@ else
                 <p>@L["Passkeys.Text"]</p>
                 <p class="small num">@L.Format("Passkeys.Count", Display.Number(Me.PasskeyCount))</p>
                 <button type="button" class="btn" disabled="@Locked" @onclick="AddPasskeyAsync">@L["Passkeys.Add"]</button>
+                @if (_passkeySessionNeeded)
+                {
+                    @* Design 8.5.2, 8.5.3: a linked account adds a passkey only in a passkey session; owner, 2026-11-17: made here. *@
+                    <PasskeyStep IdPrefix="add-" />
+                }
             </section>
 
             <section class="sheet stack" aria-labelledby="sessions-title">
@@ -107,8 +112,9 @@ else
             @if (Me.StaffAccount && Me.ActiveStaffRoles.Count == 0)
             {
                 @* Design 6.9: a staff account is deleted only from a session signed in with its staff passkey; design 6.2: this
-                   session becomes one without signing out, on the staff passkey page, which comes back here. *@
-                <p class="note note--quiet" id="delete-staff-passkey"><span>@L["Data.DeleteStaffNeedsPasskey"]</span>@(" ")<a href="@StaffSessionPage.Link(AccountScreens.Security)" id="delete-staff-key">@L["Data.StaffKeyLink"]</a></p>
+                   session becomes one without signing out, here (owner, 2026-11-17). *@
+                <p class="note note--quiet" id="delete-staff-passkey"><span>@L["Data.DeleteStaffNeedsPasskey"]</span></p>
+                <PasskeyStep Staff="true" Account="Me" IdPrefix="delete-staff-" />
             }
             else if (_confirmDelete)
             {
@@ -137,6 +143,7 @@ else
 
 @code {
     private bool _confirmDelete;
+    private bool _passkeySessionNeeded;
 
     [PersistentState]
     public List<SessionResponse>? Sessions { get; set; }
@@ -173,7 +180,7 @@ else
         // makes a key the server would refuse. The server checks it again.
         if ((await MeApi.GetAsync()).Value?.Mp is { MayWrite: false })
         {
-            Message = L["Mp.PasskeyNeeded"];
+            _passkeySessionNeeded = true;
             return;
         }
 

@@ -379,6 +379,13 @@
         }
 
         var voice = _mine?.Voices.FirstOrDefault(v => v.Kind == Kind && v.TargetId == TargetId);
+        if (voice?.Refusal is "mp.passkey-required")
+        {
+            @* Owner, 2026-11-17: the MP's voice needs a passkey session; it is made here, and the box opens. *@
+            <PasskeyStep IdPrefix="@($"comments-{Key}-")" Confirmed="() => ReloadCoreAsync(all: false)" />
+            return;
+        }
+
         if (voice?.Refusal is { } refusal)
         {
             <p class="note note--quiet" id="comments-refusal-@Key">@L.OrElse("Comments.Refusal." + refusal, L["Comments.Refusal.mp.passkey-required"].Value)</p>

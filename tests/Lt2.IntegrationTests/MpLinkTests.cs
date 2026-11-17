@@ -202,7 +202,7 @@ public sealed class MpLinkTests(DatabaseFixture database) : ApiTest(database)
         {
             // Before: a passkey of its own, a session signed in with it, and a side on an open bill.
             (await mp.AddPasskeyAsync(old)).StatusCode.ShouldBe(HttpStatusCode.NoContent);
-            (await oldSession.SignInWithPasskeyAsync(old)).StatusCode.ShouldBe(HttpStatusCode.NoContent);
+            (await oldSession.SignInWithPasskeyAsync(old)).StatusCode.ShouldBe(HttpStatusCode.OK);
             (await mp.TakeSideAsync(Bill, "for")).StatusCode.ShouldBe(HttpStatusCode.NoContent);
             var before = (await mp.RecordAsync(Bill)).Counts.For;
             Factory.Services.GetRequiredService<FrontPageFreshness>().Built();
