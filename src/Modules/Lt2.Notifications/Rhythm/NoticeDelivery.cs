@@ -1,5 +1,6 @@
 using Lt2.Notifications.Follows;
 using Lt2.Notifications.Infrastructure;
+using Lt2.Notifications.MpMail;
 using Lt2.SharedKernel;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Storage;
@@ -20,7 +21,9 @@ internal sealed class NoticeDelivery(
     IEnumerable<IMemberNoticeKind> kinds,
     IParticipants participants,
     ISettings settings,
-    IOutbox outbox)
+    IOutbox outbox,
+    MailKeys keys,
+    TimeProvider clock)
 {
     /// <summary>The follows screen's switches and choice, where every follow email links (design 8.11.2, 8.21).</summary>
     public const string AccountPath = AccountScreens.FollowsList;
@@ -79,16 +82,17 @@ internal sealed class NoticeDelivery(
             await db.SaveChangesAsync(cancellationToken);
         }
 
-        var emails = await WriteAsync(due, transaction, cancellationToken);
+        var emails = await WriteAsync(db, due, transaction, cancellationToken);
         await transaction.CommitAsync(cancellationToken);
         return new DeliveryOutcome(due.Count, emails);
     }
 
     /// <summary>
     /// One email per person per run (design 8.24): one thing alone is the email it always was; more make the gathered email.
-    /// Only members get anything (an account deleted or pending meanwhile gets nothing).
+    /// Only members get anything (an account deleted or pending meanwhile gets nothing). Every email carries the account's stop
+    /// link (design 8.24.1): its token is derived, and its hash is stored with the first email the account is written.
     /// </summary>
-    private async Task<int> WriteAsync(List<(Pass Pass, DueNotice Notice)> due, IDbContextTransaction transaction, CancellationToken ct)
+    private async Task<int> WriteAsync(NotificationsDb db, List<(Pass Pass, DueNotice Notice)> due, IDbContextTransaction transaction, CancellationToken ct)
     {
         if (due.Count == 0)
         {
@@ -97,6 +101,7 @@ internal sealed class NoticeDelivery(
 
         var people = due.Select(d => d.Notice.UserId).Distinct().ToList();
         var members = await participants.FindManyAsync(people, ct);
+        var linked = (await db.MemberMailTokens.Where(t => people.Contains(t.UserId)).Select(t => t.UserId).ToListAsync(ct)).ToHashSet();
         var written = 0;
         foreach (var person in due.GroupBy(d => d.Notice.UserId))
         {
@@ -105,16 +110,30 @@ internal sealed class NoticeDelivery(
                 continue;
             }
 
-            var messages = person.Select(d => d.Notice.Write(member.Email)).ToList();
+            var address = new NoticeAddress(member.Email, StopToken(db, person.Key, linked));
+            var messages = person.Select(d => d.Notice.Write(address)).ToList();
             var message = messages.Count == 1
                 ? messages[0]
                 : OutboxMessage.Create(MessageKinds.GatheredNoticesEmail, new GatheredNoticesEmail(
-                    member.Email, RhythmOf(person.Select(d => d.Pass)), messages.Select(m => new GatheredNotice(m.Kind, m.Payload)).ToList(), AccountPath));
+                    member.Email, RhythmOf(person.Select(d => d.Pass)), messages.Select(m => new GatheredNotice(m.Kind, m.Payload)).ToList(), AccountPath, address.StopToken));
             await outbox.EnqueueAsync(message, transaction.GetDbTransaction(), ct);
             written++;
         }
 
+        await db.SaveChangesAsync(ct);
         return written;
+    }
+
+    /// <summary>The account's stop link token (generation 0); its hash is added to the run's context when the account has none.</summary>
+    private string StopToken(NotificationsDb db, Guid userId, HashSet<Guid> linked)
+    {
+        var token = keys.MemberStopToken(userId, 0);
+        if (linked.Add(userId))
+        {
+            db.MemberMailTokens.Add(new MemberMailToken { UserId = userId, TokenHash = MailKeys.TokenHash(token), Generation = 0, CreatedAt = clock.GetUtcNow() });
+        }
+
+        return token;
     }
 
     /// <summary>Which email a gathered one is, for its subject: the weekly or the daily one when it is one of them.</summary>

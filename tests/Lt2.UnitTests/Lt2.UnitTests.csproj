@@ -4,6 +4,7 @@
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\..\src\Lt2.SharedKernel\Lt2.SharedKernel.csproj" />
+    <ProjectReference Include="..\..\src\Lt2.Hosting\Lt2.Hosting.csproj" />
     <ProjectReference Include="..\..\src\Lt2.Api.Contracts\Lt2.Api.Contracts.csproj" />
     <ProjectReference Include="..\..\src\Lt2.Web.Client\Lt2.Web.Client.csproj" />
     <ProjectReference Include="..\..\src\Modules\Lt2.Identity\Lt2.Identity.csproj" />

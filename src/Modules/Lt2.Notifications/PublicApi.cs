@@ -309,6 +309,13 @@ public interface IFollows
     Task<Lt2.SharedKernel.Result<Lt2.SharedKernel.Unit>> SetFrequencyAsync(Guid userId, string frequency, string? ipHash, CancellationToken cancellationToken);
 
     /// <summary>
+    /// The stop link of every email in the member's rhythm (design 8.24.1): for the account whose token it is, every email switch
+    /// is turned off (the follows stay), audited as <c>notices.stopped-by-link</c> without detail. Whoever holds the link may use
+    /// it, so it needs no session. An unknown or malformed token changes nothing, and nothing tells the caller which it was.
+    /// </summary>
+    Task StopByLinkAsync(string? token, string? ipHash, CancellationToken cancellationToken);
+
+    /// <summary>
     /// The worker job (every 15 minutes): records new planned dates and stage votes of followed bills, and statements of
     /// followed organisations that became public, and emails the followers by the rules of design 8.11.2 and 8.14.14,
     /// through the outbox.

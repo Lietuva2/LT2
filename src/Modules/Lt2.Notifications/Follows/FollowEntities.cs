@@ -64,6 +64,25 @@ internal sealed class NoticeSetting
 }
 
 /// <summary>
+/// <c>notify.member_mail_token</c> (design 8.24.1): the member's stop link, one per account. The token is derived from the account
+/// id and <see cref="Generation"/> under <c>Security:MailHashKey</c> (<c>MailKeys.MemberStopToken</c>), so every email carries the
+/// same link; this row keeps only its SHA-256, made when the first email of the rhythm is written. No expiry; deleted with the
+/// account; not in the export (a key, not the person's data); withheld from <c>lt2_readonly</c>.
+/// </summary>
+internal sealed class MemberMailToken
+{
+    public Guid UserId { get; set; }
+
+    /// <summary>The token's SHA-256, hex (<c>MailKeys.TokenHash</c>).</summary>
+    public string TokenHash { get; set; } = "";
+
+    /// <summary>The token's generation: 0; a later "new link" would move it on, and the old link would stop working.</summary>
+    public int Generation { get; set; }
+
+    public DateTimeOffset CreatedAt { get; set; }
+}
+
+/// <summary>
 /// <c>notify.bill_event</c> (design 5.4, 8.11.2): what followers are told about, recorded once, when the job first sees it:
 /// a planned date (key: the date), a stage-result vote (key: the vote id), or an organisation's statement on the bill that
 /// became public (key: the statement's id, design 8.14.14 stage B), or an MP's response whose stance became public (key: the person number and that moment, design 8.20.1, 8.24).

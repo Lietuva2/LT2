@@ -170,6 +170,36 @@ public sealed class RateLimitTests(DatabaseFixture database) : IAsyncDisposable
         await byAddress.ShouldBeProblemAsync(HttpStatusCode.TooManyRequests, "rate-limited");
     }
 
+    /// <summary>
+    /// Design 8.24.1: a member's stop link is limited as an MP's link is, per token and per client address, under the same
+    /// policies; an unknown token answers like a known one until the limit.
+    /// </summary>
+    [Fact]
+    public async Task A_members_stop_link_is_limited_per_token_and_per_client_address()
+    {
+        await using var factory = new MpMailLimitFactory(database);
+        using var browser = factory.NewBrowser();
+        var token = new string('A', 43);
+        for (var i = 0; i < 2; i++)
+        {
+            using var answer = await browser.Client.PostAsync(Lt2.Api.Contracts.Follows.NoticeStopRoutes.StopOf(token), null);
+            answer.StatusCode.ShouldBe(HttpStatusCode.NoContent);
+        }
+
+        using (var limited = await browser.Client.GetAsync(Lt2.Api.Contracts.Follows.NoticeStopRoutes.PageOf(token)))
+        {
+            limited.StatusCode.ShouldBe(HttpStatusCode.TooManyRequests, "the page shares its token's limit");
+        }
+
+        using (var other = await browser.Client.PostAsync(Lt2.Api.Contracts.Follows.NoticeStopRoutes.StopOf(new string('B', 43)), null))
+        {
+            other.StatusCode.ShouldBe(HttpStatusCode.NoContent);
+        }
+
+        using var byAddress = await browser.Client.GetAsync(Lt2.Api.Contracts.Follows.NoticeStopRoutes.PageOf(new string('C', 43)));
+        byAddress.StatusCode.ShouldBe(HttpStatusCode.TooManyRequests);
+    }
+
     private sealed class MpMailLimitFactory(DatabaseFixture database) : Lt2Factory(database)
     {
         protected override void ConfigureWebHost(Microsoft.AspNetCore.Hosting.IWebHostBuilder builder)

@@ -58,8 +58,8 @@ internal static class SecurityHeaders
                 }
 
                 // Design 8.19.4: an MP's link opens a page for that MP only: never indexed, never stored (no referrer is
-                // sent from any page, above).
-                if (IsMpLinkPage(context.Request.Path))
+                // sent from any page, above). A member's stop link the same (design 8.24.1).
+                if (IsMpLinkPage(context.Request.Path) || IsStopLinkPage(context.Request.Path))
                 {
                     headers["X-Robots-Tag"] = "noindex, nofollow";
                     headers.CacheControl = "no-store";
@@ -74,4 +74,8 @@ internal static class SecurityHeaders
     public static bool IsMpLinkPage(PathString path) =>
         path.StartsWithSegments(Lt2.Api.Contracts.Digests.MpMailRoutes.PreferencesPage, StringComparison.OrdinalIgnoreCase)
         || path.StartsWithSegments(Lt2.Api.Contracts.Digests.MpMailRoutes.CopiesPage, StringComparison.OrdinalIgnoreCase);
+
+    /// <summary>The page a member's stop link opens (design 8.24.1).</summary>
+    public static bool IsStopLinkPage(PathString path) =>
+        path.StartsWithSegments(Lt2.Api.Contracts.Follows.NoticeStopRoutes.Page, StringComparison.OrdinalIgnoreCase);
 }

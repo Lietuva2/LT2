@@ -41,8 +41,14 @@ internal interface IMemberNoticeKind
 /// </summary>
 /// <param name="UserId">The member; never written anywhere with the event.</param>
 /// <param name="Seen">When the job first saw the event: it decides whose choice it belongs to.</param>
-/// <param name="Write">The email alone, for the member's address.</param>
-internal sealed record DueNotice(Guid UserId, DateTimeOffset Seen, Func<string, OutboxMessage> Write);
+/// <param name="Write">The email alone, for the member's address and stop link.</param>
+internal sealed record DueNotice(Guid UserId, DateTimeOffset Seen, Func<NoticeAddress, OutboxMessage> Write);
+
+/// <summary>
+/// Whom a notice is written for: the member's address and the account's stop link token (design 8.24.1), which every email of
+/// the rhythm carries in its payload's <c>StopToken</c>.
+/// </summary>
+internal sealed record NoticeAddress(string To, string StopToken);
 
 /// <summary>
 /// One pass of a run of the follow job, as a kind sees it: which emails are being made, the moment, the cut of a gathered

@@ -69,7 +69,7 @@ public sealed record CommentedArgumentLine(string BillNumber, string BillTitle, 
 /// Payload of <see cref="MessageKinds.CommentNoticeEmail"/> (design 8.23.9): "there are new comments under your argument", one
 /// line per argument. Never a comment's text, its writer, how many, or anything about "Sutinku".
 /// </summary>
-public sealed record CommentNoticeEmail(string To, IReadOnlyList<CommentedArgumentLine> Arguments, string AccountPath);
+public sealed record CommentNoticeEmail(string To, IReadOnlyList<CommentedArgumentLine> Arguments, string AccountPath, string? StopToken = null);
 
 /// <summary>
 /// Payload of <see cref="MessageKinds.ProfileNoticeEmail"/> (design 8.25.6): what a moderator did with the person's "Apie mane"
@@ -93,7 +93,7 @@ public static class ProfileNotices
 /// or a comment in their own voice (<paramref name="What"/>: <see cref="MemberTextKinds"/>). The member's display name, the
 /// bill and the link to the text on the bill's page; never the text, a side, or any count.
 /// </summary>
-public sealed record FollowMemberEmail(string To, string MemberName, string BillNumber, string BillTitle, string TextPath, string ProfilePath, string AccountPath, string What = MemberTextKinds.Argument, DateOnly? Day = null);
+public sealed record FollowMemberEmail(string To, string MemberName, string BillNumber, string BillTitle, string TextPath, string ProfilePath, string AccountPath, string What = MemberTextKinds.Argument, DateOnly? Day = null, string? StopToken = null);
 
 /// <summary>
 /// Payload of <see cref="MessageKinds.MpResponseNoticeEmail"/> (design 8.5.5): what a moderator did with an MP's response on a
@@ -202,7 +202,7 @@ public static class OrganisationNotices
 /// the person's side, the record's counts or other people.
 /// </summary>
 /// <param name="Stage"><c>presentation</c>, <c>consideration</c>, <c>adoption</c> or null.</param>
-public sealed record FollowPlannedEmail(string To, string BillNumber, string BillTitle, string? Stage, DateOnly Date, string BillPath, string AccountPath);
+public sealed record FollowPlannedEmail(string To, string BillNumber, string BillTitle, string? Stage, DateOnly Date, string BillPath, string AccountPath, string? StopToken = null);
 
 /// <summary>How one MP the person follows voted: <c>for</c>, <c>against</c>, <c>abstain</c>, <c>did-not-vote</c>, or null (no per-MP votes).</summary>
 public sealed record FollowedMpChoice(string Name, string? Choice);
@@ -224,7 +224,8 @@ public sealed record FollowVotedEmail(
     string? OfficialNote,
     string VotePath,
     IReadOnlyList<FollowedMpChoice> Mps,
-    string AccountPath);
+    string AccountPath,
+    string? StopToken = null);
 
 /// <summary>
 /// Payload of <see cref="MessageKinds.FollowStatementEmail"/> (design 8.14.14, stage B): an organisation the person follows
@@ -245,7 +246,8 @@ public sealed record FollowStatementEmail(
     string Stance,
     string BillPath,
     string AccountPath,
-    DateOnly? Day = null);
+    DateOnly? Day = null,
+    string? StopToken = null);
 
 /// <summary>One MP's answer as the follow email lists it (design 8.20.1): the name, the faction if any, the stance; never the text.</summary>
 /// <param name="Stance"><c>for</c>, <c>against</c> or <c>undecided</c>.</param>
@@ -263,7 +265,8 @@ public sealed record FollowResponsesEmail(
     DateOnly Day,
     IReadOnlyList<FollowedResponse> Responses,
     string BillPath,
-    string AccountPath);
+    string AccountPath,
+    string? StopToken = null);
 
 /// <summary>
 /// Payload of <see cref="MessageKinds.GatheredNoticesEmail"/> (design 8.24): what one member is told in one email. Each
@@ -274,7 +277,12 @@ public sealed record FollowResponsesEmail(
 /// <param name="Rhythm"><c>immediate</c>, <c>daily</c> or <c>weekly</c>: which email it is.</param>
 /// <param name="Notices">The things told, in the order they were found; the email orders them by part.</param>
 /// <param name="AccountPath">The switches and the choice on the account page.</param>
-public sealed record GatheredNoticesEmail(string To, string Rhythm, IReadOnlyList<GatheredNotice> Notices, string AccountPath);
+/// <param name="StopToken">
+/// The account's stop link token (design 8.24.1), as on every email of the rhythm (each of their payloads has the same field):
+/// it lives here, in the outbox row, until the email is sent, as an MP link's token does; Notifications keeps only its hash.
+/// Null only where no link is made (a test).
+/// </param>
+public sealed record GatheredNoticesEmail(string To, string Rhythm, IReadOnlyList<GatheredNotice> Notices, string AccountPath, string? StopToken = null);
 
 /// <summary>One thing in a gathered email: the kind of the email it would be alone, and that email's payload.</summary>
 public sealed record GatheredNotice(string Kind, System.Text.Json.JsonElement Payload);

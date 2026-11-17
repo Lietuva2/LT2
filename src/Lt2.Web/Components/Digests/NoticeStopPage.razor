@@ -1,0 +1,44 @@
+@page "/laiskai/nebegauti/{Token}"
+@attribute [Microsoft.AspNetCore.RateLimiting.EnableRateLimiting(Lt2.Web.Security.RateLimitPolicies.MpMail)]
+@using Lt2.Api.Contracts.Follows
+@inject INoticeStopApi Notices
+@inject IStringLocalizer<AppealText> T
+
+@* Design 8.24.1 (the designer's proposal of 2026-11-17): "Nebegauti šių laiškų" from an email of the member's rhythm. No account,
+   no session, no script: opening the link changes nothing (link scanners open it), the button posts back here and turns every
+   email switch of the token's account off; the follows stay. An unknown, a malformed and a valid token get the same page and the
+   same answer, and the page names nobody. Not indexed, not stored, no referrer (SecurityHeaders); logs keep its path without the
+   token (Lt2.Hosting's SecretPaths). *@
+<PageTitle>@T["NoticeStop.Title"] · Lietuva 2.0</PageTitle>
+<HeadContent><meta name="robots" content="noindex, nofollow" /></HeadContent>
+
+<div class="stack">
+    <p class="label">Lietuva 2.0</p>
+    <h1>@T["NoticeStop.Title"]</h1>
+    @if (_stopped)
+    {
+        <p class="note" role="status" id="notice-stop-done">
+            @T["NoticeStop.Done"] @T["NoticeStop.Again"] <a href="@Lt2.SharedKernel.AccountScreens.FollowsList" id="notice-stop-account">@T["NoticeStop.AccountLink"]</a>.
+        </p>
+    }
+    else
+    {
+        <p class="lead" id="notice-stop-lead">@T["NoticeStop.Lead"]</p>
+        <EditForm Model="_none" FormName="notice-stop" OnSubmit="StopAsync" id="notice-stop-form">
+            <button type="submit" class="btn" id="notice-stop-button">@T["NoticeStop.Button"]</button>
+        </EditForm>
+    }
+</div>
+
+@code {
+    private readonly object _none = new();
+    private bool _stopped;
+
+    [Parameter] public string Token { get; set; } = "";
+
+    private async Task StopAsync()
+    {
+        await Notices.StopAsync(Token);
+        _stopped = true;
+    }
+}

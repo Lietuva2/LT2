@@ -36,6 +36,7 @@ public static class ClientServices
         services.AddScoped<Lt2.Api.Contracts.Follows.IFollowsApi, HttpFollowsApi>();
         services.AddScoped<Lt2.Api.Contracts.Me.IProfilesApi, HttpProfilesApi>();
         services.AddScoped<Lt2.Api.Contracts.Follows.INoticeFrequencyApi, HttpNoticeFrequencyApi>();
+        services.AddScoped<Lt2.Api.Contracts.Follows.INoticeStopApi, HttpNoticeStopApi>();
         services.AddScoped<Lt2.Api.Contracts.Feedback.IFeedbackApi, HttpFeedbackApi>();
         services.AddScoped<Lt2.Api.Contracts.Appeals.IAdminApi, HttpAdminApi>();
         services.AddScoped<Lt2.Api.Contracts.Admin.IUsageApi, HttpUsageApi>();

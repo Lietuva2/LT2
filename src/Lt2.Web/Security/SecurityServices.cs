@@ -52,8 +52,8 @@ internal static class RateLimitPolicies
     public const string Participation = "participation";
 
     /// <summary>
-    /// The MP's link (design 8.19.4, 8.19.7): the token routes and pages, per client address, like the sign-in ones; each token
-    /// has its own limit too (<see cref="MpMailTokens"/>, the global limiter).
+    /// The MP's link (design 8.19.4, 8.19.7) and a member's stop link (design 8.24.1): the token routes and pages, per client
+    /// address, like the sign-in ones; each token has its own limit too (<see cref="MpMailTokens"/>, the global limiter).
     /// </summary>
     public const string MpMail = "mp-mail";
 
@@ -68,12 +68,14 @@ internal static class RateLimitPolicies
 
 /// <summary>
 /// Design 8.19.7: the token routes and pages of MP mail are limited per token as well as per client address. The token is read
-/// from the path (the API's <c>/api/v1/mp-mail/{token}</c> and the pages), and only its hash is kept as the partition's key.
+/// from the path (the API's <c>/api/v1/mp-mail/{token}</c> and the pages), and only its hash is kept as the partition's key. A
+/// member's stop link (design 8.24.1: <c>/api/v1/notices/{token}/stop</c>, <c>/laiskai/nebegauti/{token}</c>) is limited the
+/// same way, under the same policies.
 /// </summary>
 internal static class MpMailTokens
 {
     private static readonly System.Text.RegularExpressions.Regex TokenInPath = new(
-        "^/(?:api/v1/mp-mail|suvestines/nustatymai(?:/patvirtinti)?|suvestines/kopijos)/(?<token>[A-Za-z0-9_-]{20,100})(?:/|$)",
+        "^/(?:api/v1/mp-mail|suvestines/nustatymai(?:/patvirtinti)?|suvestines/kopijos|api/v1/notices|laiskai/nebegauti)/(?<token>[A-Za-z0-9_-]{20,100})(?:/|$)",
         System.Text.RegularExpressions.RegexOptions.CultureInvariant | System.Text.RegularExpressions.RegexOptions.IgnoreCase);
 
     /// <summary>The partition of a request: the token's hash for a token route or page, none otherwise.</summary>

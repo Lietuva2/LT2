@@ -122,6 +122,9 @@ internal static class ApiEndpoints
         // other route, the other token routes included).
         MpMail.OneClickStopEndpoint.Map(app);
 
+        // Design 8.24.1: a member's stop link, for the same reason the second such write.
+        Me.NoticeStopEndpoint.Map(app);
+
         Agenda.GetAgendaEndpoint.Map(api);
         FollowEndpoints.Map(api);
         Members.MemberEndpoints.Map(api);

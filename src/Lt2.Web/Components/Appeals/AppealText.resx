@@ -261,6 +261,12 @@
   <data name="MpMail.Copies.Button" xml:space="preserve"><value>Nebegauti kopijų</value></data>
   <data name="MpMail.Copies.Done" xml:space="preserve"><value>Kopijos šiuo adresu nebebus siunčiamos. Seimo nariui apie tai pranešta.</value></data>
   <data name="MpMail.Copies.Failed" xml:space="preserve"><value>Ši nuoroda neveikia: kopijos šiuo adresu jau nesiunčiamos.</value></data>
+  <data name="NoticeStop.Title" xml:space="preserve"><value>Nebegauti laiškų</value></data>
+  <data name="NoticeStop.Lead" xml:space="preserve"><value>Paspaudę mygtuką nebegausite laiškų apie tai, ką sekate.</value></data>
+  <data name="NoticeStop.Button" xml:space="preserve"><value>Nebegauti laiškų</value></data>
+  <data name="NoticeStop.Done" xml:space="preserve"><value>Laiškų apie tai, ką sekate, nebesiųsime.</value></data>
+  <data name="NoticeStop.Again" xml:space="preserve"><value>Vėl įjungti juos galite</value></data>
+  <data name="NoticeStop.AccountLink" xml:space="preserve"><value>savo paskyroje</value></data>
   <data name="Digests.Short.dry-run" xml:space="preserve"><value>bandomoji</value></data>
   <data name="Digests.Short.waiting" xml:space="preserve"><value>laukia patvirtinimo</value></data>
   <data name="Digests.Short.sent" xml:space="preserve"><value>išsiųsta</value></data>

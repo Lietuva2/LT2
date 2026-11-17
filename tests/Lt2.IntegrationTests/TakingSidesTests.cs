@@ -179,6 +179,8 @@ public sealed class TakingSidesTests(DatabaseFixture database) : ApiTest(databas
 
         public Task<Result<Unit>> SetFrequencyAsync(Guid userId, string frequency, string? ipHash, CancellationToken cancellationToken) => throw Broken();
 
+        public Task StopByLinkAsync(string? token, string? ipHash, CancellationToken cancellationToken) => throw Broken();
+
         public Task<FollowRunOutcome> RunAsync(DateTimeOffset now, CancellationToken cancellationToken) => throw Broken();
 
         public Task<int> PurgeEventsAsync(DateTimeOffset now, CancellationToken cancellationToken) => throw Broken();

@@ -41,11 +41,11 @@ internal static partial class UsageRules
 
     /// <summary>
     /// Pages left out of the list of pages (their views still count in the totals): staff screens, an MP's and an office's own
-    /// pages, an MP's mail links and a representative's invitation. At the trial's numbers their counts would tell when one
+    /// pages, an MP's mail links, a member's stop link (design 8.24.1) and a representative's invitation. At the trial's numbers their counts would tell when one
     /// moderator, administrator, MP or office member was active.
     /// </summary>
     private static readonly string[] Unlisted =
-        ["/administravimas", "/moderavimas", "/seimo-narys", "/suvestines/nustatymai", "/suvestines/kopijos", "/organizacijos/kvietimas", "/prisijungti/raktas"];
+        ["/administravimas", "/moderavimas", "/seimo-narys", "/suvestines/nustatymai", "/suvestines/kopijos", "/laiskai/nebegauti", "/organizacijos/kvietimas", "/prisijungti/raktas"];
 
     /// <summary>
     /// Route parameters that name a public object (a bill's number, an MP's, a faction's, a committee's or an organisation's

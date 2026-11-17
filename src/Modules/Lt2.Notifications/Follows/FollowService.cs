@@ -1,6 +1,7 @@
 using System.Data.Common;
 using System.Globalization;
 using Lt2.Notifications.Infrastructure;
+using Lt2.Notifications.MpMail;
 using Lt2.Notifications.Rhythm;
 using Lt2.SharedKernel;
 using Microsoft.EntityFrameworkCore;
@@ -208,6 +209,43 @@ internal sealed class FollowService(
         return Result.Ok();
     }
 
+    public async Task StopByLinkAsync(string? token, string? ipHash, CancellationToken cancellationToken)
+    {
+        if (!MailKeys.LooksLikeToken(token))
+        {
+            return;
+        }
+
+        var hash = MailKeys.TokenHash(token!);
+        await using var db = await contexts.CreateDbContextAsync(cancellationToken);
+        var userId = await db.MemberMailTokens.AsNoTracking().Where(t => t.TokenHash == hash).Select(t => (Guid?)t.UserId).FirstOrDefaultAsync(cancellationToken);
+        if (userId is not { } id || await participants.FindAsync(id, cancellationToken) is null)
+        {
+            return;
+        }
+
+        await using var transaction = await db.Database.BeginTransactionAsync(cancellationToken);
+        var row = await db.NoticeSettings.FirstOrDefaultAsync(n => n.UserId == id, cancellationToken);
+        if (row is { Planned: false, Voted: false, Statements: false, Responses: false, Members: false, Comments: false })
+        {
+            return;
+        }
+
+        if (row is null)
+        {
+            row = new NoticeSetting { UserId = id };
+            db.NoticeSettings.Add(row);
+        }
+
+        row.Planned = row.Voted = row.Statements = row.Responses = row.Members = row.Comments = false;
+        row.ChangedAt = clock.GetUtcNow();
+        await db.SaveChangesAsync(cancellationToken);
+
+        // Whoever holds the link acted, so the account is the subject, not the actor; no detail (design 8.24.1).
+        await audit.WriteAsync(new AuditEntry("notices.stopped-by-link", null, null, id.ToString(), null, ipHash), transaction.GetDbTransaction(), cancellationToken);
+        await transaction.CommitAsync(cancellationToken);
+    }
+
     /// <summary>
     /// The worker's job: every kind records what is new, then the delivery makes the run's emails in the people's rhythms
     /// (design 8.24): the follow job itself knows no kind.
@@ -302,7 +340,12 @@ internal sealed class FollowAccountData(IDbContextFactory<NotificationsDb> conte
             throw new ArgumentException("Erasing needs a PostgreSQL transaction.", nameof(transaction));
         }
 
-        foreach (var sql in new[] { "DELETE FROM notify.follow WHERE user_id = @user", "DELETE FROM notify.notice_setting WHERE user_id = @user" })
+        // The stop link (design 8.24.1) goes with the account; it is not exported, being a key and not the person's data.
+        foreach (var sql in new[]
+                 {
+                     "DELETE FROM notify.follow WHERE user_id = @user", "DELETE FROM notify.notice_setting WHERE user_id = @user",
+                     "DELETE FROM notify.member_mail_token WHERE user_id = @user",
+                 })
         {
 #pragma warning disable CA2100 // Constant SQL.
             await using var command = new NpgsqlCommand(sql, connection, npgsql);

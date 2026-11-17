@@ -11,8 +11,8 @@ public static class TermsExemptions
 {
     /// <summary>
     /// Accepting, signing out and deleting the account (design 8.22.2), withdrawing what the member consented to (switching the
-    /// public profile off, the positions and party support consents, the party shown on the profile; owner, 2026-11-17), and the MP's mail links (design 8.19.4), which act for
-    /// whoever holds the link's token, not for the account signed in, and are used by people without an account. Method and
+    /// public profile off, the positions and party support consents, the party shown on the profile; owner, 2026-11-17), and the MP's mail links (design 8.19.4) and a
+    /// member's stop link (design 8.24.1), which act for whoever holds the link's token, not for the account signed in, and are used by people without an account. Method and
     /// route template exactly as mapped.
     /// </summary>
     public static readonly IReadOnlyList<(string Method, string Route)> Routes =
@@ -34,6 +34,9 @@ public static class TermsExemptions
         ("POST", MpMailRoutes.ConfirmExtra),
         ("POST", MpMailRoutes.StopCopies),
         ("POST", MpMailRoutes.Stop),
+
+        // A member's stop link (design 8.24.1): it acts for the holder of the token, and stopping emails is never refused.
+        ("POST", Follows.NoticeStopRoutes.Stop),
     ];
 
     /// <summary>A request that changes something: anything but GET, HEAD and OPTIONS.</summary>
