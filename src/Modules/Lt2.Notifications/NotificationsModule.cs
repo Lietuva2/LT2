@@ -78,6 +78,7 @@ public static class NotificationsModule
         services.AddSingleton<SignInCodeTemplate>();
         services.AddSingleton<AccountNoticeTemplate>();
         services.AddSingleton<ModerationNoticeTemplate>();
+        services.AddSingleton<ReportDecidedTemplate>();
         services.AddSingleton<WritingRestrictionTemplate>();
         services.AddSingleton<FeedbackTemplates>();
         services.AddSingleton<OrganisationTemplates>();
@@ -89,6 +90,7 @@ public static class NotificationsModule
         services.AddEmail<SignInCodeEmail, SignInCodeTemplate>(MessageKinds.SignInCodeEmail, t => t.Render);
         services.AddEmail<AccountNoticeEmail, AccountNoticeTemplate>(MessageKinds.AccountNoticeEmail, t => t.Render);
         services.AddEmail<ModerationNoticeEmail, ModerationNoticeTemplate>(MessageKinds.ModerationNoticeEmail, t => t.Render);
+        services.AddEmail<ReportDecidedEmail, ReportDecidedTemplate>(MessageKinds.ReportDecidedEmail, t => t.Render);
         services.AddEmail<WritingRestrictionEmail, WritingRestrictionTemplate>(MessageKinds.WritingRestrictionEmail, t => t.Render);
         services.AddEmail<FeedbackReplyEmail, FeedbackTemplates>(MessageKinds.FeedbackReplyEmail, t => t.Reply);
         services.AddEmail<FeedbackNoticeEmail, FeedbackTemplates>(MessageKinds.FeedbackNoticeEmail, t => t.Notice);

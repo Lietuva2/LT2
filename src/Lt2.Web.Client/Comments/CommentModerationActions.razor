@@ -29,7 +29,11 @@
                 <h4 id="comment-action-title-@Key">@L["Comments.Mod.Action." + _open]</h4>
                 <p class="small">@L["Comments.Mod.Sentence." + _open]</p>
                 <div class="field @ErrorClass("statement")">
-                    <label for="comment-statement-@Key">@(_open == "keep" ? L["Mod.Note.Optional"] : L["Mod.Statement.Required"])</label>
+                    <label for="comment-statement-@Key">@(_open == "keep" ? L["Mod.Note.Reporters"] : L["Mod.Statement.Required"])</label>
+                    @if (_open == "keep")
+                    {
+                        <p class="field__hint">@L["Mod.Note.Reporters.Hint"]</p>
+                    }
                     <textarea class="textarea" id="comment-statement-@Key" maxlength="@AppealLimits.StatementMaxLength" @bind="_statement" @bind:event="oninput" disabled="@Locked"
                               aria-invalid="@Invalid("statement")" aria-describedby="@DescribedBy("statement", $"comment-statement-{Key}")"></textarea>
                     <FieldError Errors="Errors" Field="statement" For="@($"comment-statement-{Key}")" />

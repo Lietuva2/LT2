@@ -9,6 +9,9 @@ public static class MessageKinds
 
     public const string ModerationNoticeEmail = "email.moderation-notice";
 
+    /// <summary>The decision on a member's report, to the member who reported (owner, 2026-11-17; DSA art. 16(5)).</summary>
+    public const string ReportDecidedEmail = "email.report-decided";
+
     public const string WritingRestrictionEmail = "email.writing-restriction";
 
     public const string FeedbackReplyEmail = "email.feedback-reply";
@@ -347,6 +350,68 @@ public static class WritingRestrictionNotices
 /// <param name="Path">The site path of the bill's page the notice points to, for example <c>/seimas/XVP-0412</c>.</param>
 /// <param name="Contact">For a comment (design 8.23.8): the moderators' contact address, when configured.</param>
 public sealed record ModerationNoticeEmail(string To, string Notice, string BillNumber, string BillTitle, string? Statement, string? Excerpt = null, string? Path = null, string? Contact = null);
+
+/// <summary>
+/// The decision on a member's report (owner, 2026-11-17; Digital Services Act art. 16(5): the notifier is told the decision), one
+/// per member whose report on the target was open. Never the moderator, never other reporters, never more of the author than is
+/// public.
+/// </summary>
+/// <param name="To">The reporter's own address.</param>
+/// <param name="Target">The report's target kind: <c>reason</c>, <c>comment</c>, <c>statement</c>, <c>response</c>, <c>record</c> (a
+/// bill's description), <c>organisation</c> or <c>profile</c>.</param>
+/// <param name="Outcome">One of <see cref="ReportOutcomes"/>.</param>
+/// <param name="BillNumber">The bill the text is on, when it is on one.</param>
+/// <param name="BillTitle">The bill's official title.</param>
+/// <param name="Name">For an organisation or a profile: its public name.</param>
+/// <param name="Path">The site path where the text still stands; null when it is not shown any more.</param>
+/// <param name="Statement">The moderator's explanation: the statement given with a hiding, or the optional note with "Palikti".</param>
+public sealed record ReportDecidedEmail(string To, string Target, string Outcome, string? BillNumber, string? BillTitle, string? Name, string? Path, string? Statement);
+
+/// <summary>What became of a reported text (owner, 2026-11-17), for the reporter's email.</summary>
+public static class ReportOutcomes
+{
+    /// <summary>"Palikti": nothing against the rules was found (also publishing, confirming, restoring).</summary>
+    public const string Kept = "kept";
+    public const string Hidden = "hidden";
+
+    /// <summary>An organisation blocked.</summary>
+    public const string Blocked = "blocked";
+
+    /// <summary>An organisation's confirmation withdrawn.</summary>
+    public const string Unconfirmed = "unconfirmed";
+
+    /// <summary>An argument merged into a similar one.</summary>
+    public const string Merged = "merged";
+
+    /// <summary>A description corrected by a moderator.</summary>
+    public const string Corrected = "corrected";
+
+    /// <summary>A description removed by a moderator.</summary>
+    public const string Removed = "removed";
+
+    /// <summary>Its author withdrew or deleted it before a moderator decided.</summary>
+    public const string Withdrawn = "withdrawn";
+
+    /// <summary>A comment that went with the text it stood under (withdrawn or merged).</summary>
+    public const string Gone = "gone";
+
+    public static readonly IReadOnlyList<string> All = [Kept, Hidden, Blocked, Unconfirmed, Merged, Corrected, Removed, Withdrawn, Gone];
+
+    /// <summary>The outcome a moderator's action on a reported target means for its reporters.</summary>
+    public static string Of(string action) => action switch
+    {
+        "hide" => Hidden,
+        "block" => Blocked,
+        "unconfirm" => Unconfirmed,
+        "merge" => Merged,
+        "describe" => Corrected,
+        "undescribe" => Removed,
+        _ => Kept,
+    };
+
+    /// <summary>The text still stands where it was, so the email links to it.</summary>
+    public static bool StillShown(string outcome) => outcome is Kept or Corrected or Unconfirmed;
+}
 
 /// <summary>
 /// The moderation outcomes an argument's author is told about (design 8.3, 8.6). A bill's record has no author since

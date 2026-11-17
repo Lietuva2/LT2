@@ -21,6 +21,7 @@ internal sealed class CommentsService(
     AppealReads reads,
     ModerationService moderation,
     ModerationRecorder recorder,
+    ReportNotices notices,
     IParticipants participants,
     IPreScreening screening,
     IMpLinks links,
@@ -479,6 +480,8 @@ internal sealed class CommentsService(
         }
 
         var now = clock.GetUtcNow();
+        // Owner, 2026-11-17: whoever reported it is told it was deleted by its writer.
+        await notices.TellAsync(db, transaction, comment.Id, ReportOutcomes.Withdrawn, null, cancellationToken);
         await ModerationRecorder.CloseReportsAsync(db, comment.Id, now, cancellationToken);
         db.Comments.Remove(comment);
         await db.SaveChangesAsync(cancellationToken);

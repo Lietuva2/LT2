@@ -126,6 +126,11 @@
                     <label for="statement-@Key">@L[StatementLabel(_open)]</label>
                     <textarea class="textarea" id="statement-@Key" maxlength="@AppealLimits.StatementMaxLength" @bind="_statement" @bind:event="oninput" disabled="@Locked"
                               aria-invalid="@Invalid("statement")" aria-describedby="@DescribedBy("statement", $"statement-{Key}")"></textarea>
+                    @if (_open == "keep")
+                    {
+                        @* Owner, 2026-11-17: the note of "Palikti" goes to the members who reported, by email. *@
+                        <p class="field__hint" id="statement-hint-@Key">@L["Mod.Note.Reporters.Hint"]</p>
+                    }
                     <FieldError Errors="Errors" Field="statement" For="@($"statement-{Key}")" />
                 </div>
                 <div class="row">
@@ -273,7 +278,8 @@
     /// <summary>A note is optional when publishing or keeping, a statement required for everything else.</summary>
     private static string StatementLabel(string action) => action switch
     {
-        "publish" or "keep" => "Mod.Note.Optional",
+        "keep" => "Mod.Note.Reporters",
+        "publish" => "Mod.Note.Optional",
         "confirm" => "Mod.Note.Record",
         _ => "Mod.Statement.Required",
     };

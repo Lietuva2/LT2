@@ -17,6 +17,7 @@ internal sealed class ModerationService(
     AppealReads reads,
     BillRecords records,
     ModerationRecorder recorder,
+    ReportNotices notices,
     IParticipants participants,
     IAuditLog audit,
     IOutbox outbox,
@@ -656,6 +657,12 @@ internal sealed class ModerationService(
         }
 
         var now = clock.GetUtcNow();
+        if (action == "merge")
+        {
+            // Its comments go with it (design 8.23.7): their reporters are told (owner, 2026-11-17).
+            await notices.TellForCommentsUnderAsync(db, transaction, CommentKinds.Reason, [reasonId], ct);
+        }
+
         var outcome = await apply(db, reason, now);
         if (!outcome.IsSuccess)
         {

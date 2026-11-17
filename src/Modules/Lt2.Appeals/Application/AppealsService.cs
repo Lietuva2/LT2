@@ -25,6 +25,7 @@ internal sealed class AppealsService(
     ISettings settings,
     IAuditLog audit,
     IMpLinks links,
+    ReportNotices notices,
     TimeProvider clock) : IAppealsModule
 {
     private const int PageSize = 20;
@@ -672,6 +673,9 @@ internal sealed class AppealsService(
         var now = clock.GetUtcNow();
         await db.Endorsements.Where(e => e.ReasonId == reasonId).ExecuteDeleteAsync(cancellationToken);
         await db.Reasons.Where(r => r.MergedIntoId == reasonId).ExecuteUpdateAsync(s => s.SetProperty(r => r.MergedIntoId, (Guid?)null), cancellationToken);
+        // Owner, 2026-11-17: whoever reported it, or a comment under it, is told it was withdrawn or went with it.
+        await notices.TellAsync(db, transaction, reasonId, ReportOutcomes.Withdrawn, null, cancellationToken);
+        await notices.TellForCommentsUnderAsync(db, transaction, CommentKinds.Reason, [reasonId], cancellationToken);
         await ModerationRecorder.CloseReportsAsync(db, reasonId, now, cancellationToken);
 
         // Design 8.23.7: its discussion goes with it, as its "Man svarbu" marks do.

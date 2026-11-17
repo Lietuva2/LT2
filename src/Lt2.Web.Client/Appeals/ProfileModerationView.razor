@@ -55,7 +55,11 @@
                         <h3 id="profile-action-title-@p.Id">@L["ProfileMod.Action." + _action]</h3>
                         <p class="small">@L["ProfileMod.Sentence." + _action]</p>
                         <div class="field @ErrorClass("statement")">
-                            <label for="profile-statement-@p.Id">@L[_action == "keep" ? "OrgMod.Note" : "OrgMod.Statement"]</label>
+                            <label for="profile-statement-@p.Id">@L[_action == "keep" ? "Mod.Note.Reporters" : "OrgMod.Statement"]</label>
+                    @if (_action == "keep")
+                    {
+                        <p class="field__hint">@L["Mod.Note.Reporters.Hint"]</p>
+                    }
                             <textarea class="textarea" id="profile-statement-@p.Id" maxlength="@AppealLimits.StatementMaxLength" @bind="_statement" @bind:event="oninput" disabled="@Locked"
                                       aria-invalid="@Invalid("statement")" aria-describedby="@DescribedBy("statement", $"profile-statement-{p.Id}")"></textarea>
                             <FieldError Errors="Errors" Field="statement" For="@($"profile-statement-{p.Id}")" />

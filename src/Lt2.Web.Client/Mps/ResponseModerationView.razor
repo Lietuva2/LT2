@@ -43,7 +43,11 @@
                             <h3 id="response-action-title-@r.Id">@L["RespMod.Action." + _action]</h3>
                             <p class="small">@L["RespMod.Sentence." + _action]</p>
                             <div class="field @ErrorClass("statement")">
-                                <label for="response-statement-@r.Id">@L[_action == "keep" ? "OrgMod.Note" : "OrgMod.Statement"]</label>
+                                <label for="response-statement-@r.Id">@L[_action == "keep" ? "Mod.Note.Reporters" : "OrgMod.Statement"]</label>
+                                @if (_action == "keep")
+                                {
+                                    <p class="field__hint">@L["Mod.Note.Reporters.Hint"]</p>
+                                }
                                 <textarea class="textarea" id="response-statement-@r.Id" maxlength="@AppealLimits.StatementMaxLength" @bind="_statement" @bind:event="oninput" disabled="@Locked"
                                           aria-invalid="@Invalid("statement")" aria-describedby="@DescribedBy("statement", $"response-statement-{r.Id}")"></textarea>
                                 <FieldError Errors="Errors" Field="statement" For="@($"response-statement-{r.Id}")" />

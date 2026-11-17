@@ -28,7 +28,11 @@
                 <h4 id="org-action-title-@Id">@L["OrgMod.Action." + _open]</h4>
                 <p class="small" id="org-action-sentence-@Id">@L["OrgMod.Sentence." + _open]</p>
                 <div class="field @ErrorClass("statement")">
-                    <label for="org-statement-@Id">@L[Optional(_open) ? "OrgMod.Note" : _open == "confirm" ? "OrgMod.Checked" : "OrgMod.Statement"]</label>
+                    <label for="org-statement-@Id">@L[_open == "keep" ? "Mod.Note.Reporters" : Optional(_open) ? "OrgMod.Note" : _open == "confirm" ? "OrgMod.Checked" : "OrgMod.Statement"]</label>
+                    @if (_open == "keep")
+                    {
+                        <p class="field__hint">@L["Mod.Note.Reporters.Hint"]</p>
+                    }
                     <textarea class="textarea" id="org-statement-@Id" maxlength="@AppealLimits.StatementMaxLength" @bind="_statement" @bind:event="oninput" disabled="@Locked"
                               aria-invalid="@Invalid("statement")" aria-describedby="@DescribedBy("statement", $"org-statement-{Id}")"></textarea>
                     <FieldError Errors="Errors" Field="statement" For="@($"org-statement-{Id}")" />

@@ -160,9 +160,26 @@ internal sealed class ProfileModerationHandlers(IdentityDb db, IParticipants par
         }
 
         await db.SaveChangesAsync(cancellationToken);
+        var dbTransaction = transaction.GetDbTransaction();
+
+        // Owner, 2026-11-17 (DSA art. 16(5)): each member whose report was open is told the decision, with the explanation.
+        var reporters = await (from r in db.ProfileReports.AsNoTracking()
+                               join u in db.Users.AsNoTracking() on r.ReporterUserId equals u.Id
+                               where r.TargetUserId == id && r.Status == Open
+                               select u.Email).Distinct().ToListAsync(cancellationToken);
+        var outcome = action == "hidden" ? ReportOutcomes.Hidden : ReportOutcomes.Kept;
+        var path = ReportOutcomes.StillShown(outcome) && profile.PublicProfileId is { } profileId ? MemberAddress.Page(profileId, profile.DisplayName) : null;
+        foreach (var reporter in reporters.OfType<string>())
+        {
+            await outbox.EnqueueAsync(
+                OutboxMessage.Create(MessageKinds.ReportDecidedEmail, new ReportDecidedEmail(
+                    reporter, "profile", outcome, null, null, profile.DisplayName, path, string.IsNullOrWhiteSpace(statement) ? null : statement.Trim())),
+                dbTransaction,
+                cancellationToken);
+        }
+
         await db.ProfileReports.Where(r => r.TargetUserId == id && r.Status == Open)
             .ExecuteUpdateAsync(s => s.SetProperty(r => r.Status, "closed").SetProperty(r => r.ClosedAt, now), cancellationToken);
-        var dbTransaction = transaction.GetDbTransaction();
         await audit.WriteAsync(
             new AuditEntry(
                 "moderation.profile." + action,

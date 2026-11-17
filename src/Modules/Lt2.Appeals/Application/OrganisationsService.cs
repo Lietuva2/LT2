@@ -21,6 +21,7 @@ internal sealed class OrganisationsService(
     ISettings settings,
     IOutbox outbox,
     IOrganisationCodeSwitch codes,
+    ReportNotices notices,
     TimeProvider clock) : IOrganisations
 {
     private const int ListLimit = 500;
@@ -877,6 +878,9 @@ internal sealed class OrganisationsService(
         var now = clock.GetUtcNow();
         statement.Status = StatementStatuses.Withdrawn;
         statement.WithdrawnAt = now;
+        // Owner, 2026-11-17: whoever reported it, or a comment under it, is told it was withdrawn or went with it.
+        await notices.TellAsync(db, transaction, statement.Id, ReportOutcomes.Withdrawn, null, cancellationToken);
+        await notices.TellForCommentsUnderAsync(db, transaction, CommentKinds.Statement, [statement.Id], cancellationToken);
         await ModerationRecorder.CloseReportsAsync(db, statement.Id, now, cancellationToken);
         await CommentCascade.DeleteForTargetsAsync(db, CommentKinds.Statement, [statement.Id], now, cancellationToken);
         await db.SaveChangesAsync(cancellationToken);
