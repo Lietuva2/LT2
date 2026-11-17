@@ -39,6 +39,14 @@ public interface IMeApi
     /// </summary>
     Task<ApiResult> StartStaffSessionAsync(Auth.PasskeyCredentialRequest request, CancellationToken cancellationToken = default);
 
+    /// <summary>
+    /// Owner, 2026-11-17: this session becomes a passkey session with one of the account's own passkeys, in place (a staff
+    /// session too with the staff passkey), under a new session key; the assertion answers
+    /// <see cref="Auth.IAuthApi.GetPasskeyRequestOptionsAsync"/>. Another account's passkey is refused with
+    /// <c>passkey.other-account</c>.
+    /// </summary>
+    Task<ApiResult> StartPasskeySessionAsync(Auth.PasskeyCredentialRequest request, CancellationToken cancellationToken = default);
+
     /// <summary>Gives the explicit consent to store positions (design 6.5).</summary>
     Task<ApiResult> GivePositionConsentAsync(PositionConsentRequest request, CancellationToken cancellationToken = default);
 

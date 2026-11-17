@@ -80,35 +80,24 @@ internal sealed class SessionTicketStore(
         var now = clock.GetUtcNow();
         var bytes = Protect(ticket);
         var expires = ticket.Properties.ExpiresUtc ?? now + DefaultLifetime;
+        var userId = ticket.Principal.UserId() ?? throw new InvalidOperationException("The ticket has no user id.");
         await using var scope = scopes.CreateAsyncScope();
         var db = scope.ServiceProvider.GetRequiredService<IdentityDb>();
 
-        // A sign-in in a browser that is already signed in renews its session (the cookie handler keeps the key): the row
-        // then takes the new ticket's account, method and passkey, so a code session that signs in again with a passkey (the
-        // take-over of an MP's profile, design 8.5.2) becomes a passkey session. A passkey counts as just used only when it
-        // changed; a sliding renewal with the same ticket leaves the ten-minute rule's time alone.
-        var userId = ticket.Principal.UserId();
-        var passkey = ticket.Principal.FindFirstValue(PasskeyClaim) is { Length: > 0 } encoded
-            ? Microsoft.AspNetCore.WebUtilities.WebEncoders.Base64UrlDecode(encoded)
-            : null;
-        var method = ticket.Principal.FindFirstValue(AuthenticationMethods.ClaimType) ?? "";
-        var row = await db.Sessions.AsNoTracking().Where(s => s.Id == id).Select(s => new { s.UserId, s.PasskeyId, s.PasskeyConfirmedAt }).FirstOrDefaultAsync(cancellationToken);
-        if (row is null)
-        {
-            return;
-        }
-
-        var samePasskey = passkey is null ? row.PasskeyId is null : row.PasskeyId is { } held && held.AsSpan().SequenceEqual(passkey);
-        var confirmed = passkey is null ? null : samePasskey ? row.PasskeyConfirmedAt : now;
-        await db.Sessions.Where(s => s.Id == id).ExecuteUpdateAsync(
+        // A renewal keeps the session what it was signed in as: its account, the way of signing in and the passkey are the
+        // row's, set when it was stored. Every sign-in stores a new row under a new key (SessionSignIn), so a renewal is only
+        // the sliding expiry, the security stamp's refresh or the registration's completion re-issuing the same session; a
+        // principal rebuilt without this site's claims can no longer turn a passkey session into a code session.
+        var renewed = await db.Sessions.Where(s => s.Id == id && s.UserId == userId).ExecuteUpdateAsync(
             s => s.SetProperty(x => x.Ticket, bytes)
                 .SetProperty(x => x.ExpiresAt, expires)
-                .SetProperty(x => x.LastSeenAt, now)
-                .SetProperty(x => x.UserId, userId ?? row.UserId)
-                .SetProperty(x => x.Method, method)
-                .SetProperty(x => x.PasskeyId, passkey)
-                .SetProperty(x => x.PasskeyConfirmedAt, confirmed),
+                .SetProperty(x => x.LastSeenAt, now),
             cancellationToken);
+        if (renewed == 0 && await db.Sessions.AnyAsync(s => s.Id == id, cancellationToken))
+        {
+            // Never silently: a session of one account is not handed to another.
+            throw new InvalidOperationException("A session cannot be renewed for another account; a sign-in starts a new session.");
+        }
     }
 
     public Task<AuthenticationTicket?> RetrieveAsync(string key) => RetrieveAsync(key, null!, CancellationToken.None);

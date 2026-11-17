@@ -145,31 +145,12 @@
 
                 <section class="sheet sheet--cut stack" aria-labelledby="h-sides" id="sides">
                     <h2 id="h-sides">@A["Sides.Heading"]</h2>
-                    <div class="pair pair--keep">
-                        <div class="figure figure--for" id="count-for">
-                            <span class="label">@A["Sides.for"]</span>
-                            <span class="figure__num">@Display.Number(a.Counts.For)</span>
-                            <span class="small num">@A.Format("Sides.Older", Display.Number(a.Counts.ForOlderThan30Days))</span>
-                        </div>
-                        <div class="figure figure--against" id="count-against">
-                            <span class="label">@A["Sides.against"]</span>
-                            <span class="figure__num">@Display.Number(a.Counts.Against)</span>
-                            <span class="small num">@A.Format("Sides.Older", Display.Number(a.Counts.AgainstOlderThan30Days))</span>
-                        </div>
-                    </div>
-                    <SplitBar For="a.Counts.For" Against="a.Counts.Against" Abstain="0" />
-                    @if (a.Status == "open" && a.Counts.For + a.Counts.Against == 0)
-                    {
-                        <p class="small" id="nobody-yet">@A["Sides.Nobody"]</p>
-                    }
-                    @if (a.Status == "closed" && a.ClosedAt is { } closedAt)
-                    {
-                        <p class="small" id="frozen-note">@A.Format("Closed.Frozen", F.Date(closedAt))</p>
-                    }
-                    @if (a.Surge is { } surge)
-                    {
-                        <p class="note" id="surge-note">@A.Format("Surge.Note", Display.Number(surge.WindowHours), Display.Number(surge.SharePercent))</p>
-                    }
+                    @* The counts, the surge note and the threshold's progress are islands: a side taken on the page shows in
+                       them at once, without reloading the page (owner, 2026-11-17). A closed record's note, worded here,
+                       stands between the counts and the surge note. *@
+                    <SideFigures Number="@b.Number" Status="@a.Status" Counts="a.Counts" Surge="a.Surge"
+                                 Frozen="@(a.Status == "closed" && a.ClosedAt is { } closedAt ? A.Format("Closed.Frozen", F.Date(closedAt)) : null)"
+                                 @rendermode="InteractiveWebAssembly" />
                     @if (a.Status == "open")
                     {
                         <SidePicker Number="@b.Number" @rendermode="InteractiveWebAssembly" />
@@ -177,10 +158,7 @@
 
                     <div class="stack stack--tight" id="threshold">
                         <h3 id="h-reach">@A["Threshold.Heading"]</h3>
-                        <div class="ruler" role="img" aria-label="@A.Format("Threshold.Aria", Display.Number(a.Threshold.Participants), Display.Number(a.Threshold.Value))">
-                            <svg viewBox="0 0 1000 10" preserveAspectRatio="none" aria-hidden="true"><rect class="ruler__bar" x="0" y="0" height="10" width="@RulerWidth(a.Threshold)" /></svg>
-                        </div>
-                        <p class="num"><b>@Display.Number(a.Threshold.Participants)</b> @U.Format("Threshold.Progress", Display.Number(a.Threshold.Value))</p>
+                        <ThresholdProgress Number="@b.Number" Threshold="a.Threshold" @rendermode="InteractiveWebAssembly" />
                         @* Design 8.15: what the threshold is and what it does, in place (a hint), with the number that holds
                            now for this bill; the rest on the methodology page. A bill's own threshold stays said here with the
                            moderator's statement (design 8.12). *@
@@ -195,7 +173,7 @@
                         }
                         @if (a.Status == "open")
                         {
-                            <ShareLine Path="@($"/seimas/{Uri.EscapeDataString(b.Number)}")" ToGo="@ToGo(a.Threshold)" @rendermode="InteractiveWebAssembly" />
+                            <ShareLine Number="@b.Number" Path="@($"/seimas/{Uri.EscapeDataString(b.Number)}")" ToGo="@ToGo(a.Threshold)" @rendermode="InteractiveWebAssembly" />
                         }
                     </div>
                 </section>
@@ -472,7 +450,4 @@
     /// <summary>"Kas yra riba?": what the threshold is and does, then the number that holds now for this bill (design 8.15).</summary>
     private string ThresholdAnswer(ThresholdResponse t) =>
         A["Threshold.Meaning"] + " " + A.Format(t.SetBy == "moderator" ? "Threshold.NowOwn" : "Threshold.Now", Display.Number(t.Value));
-
-    private static string RulerWidth(ThresholdResponse t) =>
-        (t.Value <= 0 ? 1000 : Math.Min(1000.0, 1000.0 * t.Participants / t.Value)).ToString("0.#", System.Globalization.CultureInfo.InvariantCulture);
 }

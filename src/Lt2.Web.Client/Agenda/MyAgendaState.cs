@@ -11,9 +11,10 @@ public sealed record MyAgendaBill(string Number, string Title, string? Planned, 
 
 /// <summary>
 /// The member's own answer for the front page: their rows by bill number, and whether they have given the positions
-/// consent (design 6.5), so a row knows whether to ask for it before a first side.
+/// consent (design 6.5), so a row knows whether to ask for it before a first side; and whether the caller is an MP's own
+/// account (design 8.5.4, owner 2026-11-17), whose rows offer no sides.
 /// </summary>
-public sealed record MyAgendaAnswer(IReadOnlyDictionary<string, MyBillResponse> Bills, bool HasPositionConsent);
+public sealed record MyAgendaAnswer(IReadOnlyDictionary<string, MyBillResponse> Bills, bool HasPositionConsent, bool MpAccount = false);
 
 /// <summary>
 /// The member's own answers for the front page (design 8.7), asked once in the browser and shared by its islands (the panel
@@ -100,7 +101,7 @@ public sealed class MyAgendaState(IMyBillsApi bills, IMeApi me)
 
         var answer = await bills.GetAsync(new MyBillsQuery { Numbers = numbers.Take(MyBillsQuery.MaxNumbers).ToList() });
         return answer.Value is { } value
-            ? new MyAgendaAnswer(value.Bills.ToDictionary(b => b.Number, StringComparer.OrdinalIgnoreCase), value.HasPositionConsent)
+            ? new MyAgendaAnswer(value.Bills.ToDictionary(b => b.Number, StringComparer.OrdinalIgnoreCase), value.HasPositionConsent, value.MpAccount)
             : null;
     }
 

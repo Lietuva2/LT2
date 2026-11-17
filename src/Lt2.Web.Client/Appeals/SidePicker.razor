@@ -4,10 +4,12 @@
 @inject IMeApi MeApi
 @inject NavigationManager Navigation
 @inject MyBillState State
+@inject MyAccountState Account
 
 @* Taking a side (design 8.12.1): the two buttons under the counts, on any active bill, the first side creating the bill's
    record. A visitor gets links to sign in, which also work without JavaScript. The side shown is only ever the visitor's
-   own. The share line (8.11.5) follows right below, with the threshold. *@
+   own. The share line (8.11.5) follows right below, with the threshold. The MP's own account takes no side (design 8.5.4,
+   owner 2026-11-17): once the island runs it shows one line pointing to the MP's response instead. *@
 <div class="stack stack--tight" id="side-picker">
     @if (!_signedIn)
     {
@@ -16,6 +18,10 @@
             <a class="btn btn--against btn--wide" href="@SignInHref">@L["Side.against"]</a>
         </div>
         <p class="small">@L["Side.SignIn"]</p>
+    }
+    else if (_mpAccount)
+    {
+        <p class="small" id="side-mp-account">@L["Side.MpAccount"] <a href="@($"/seimas/{Uri.EscapeDataString(Number)}#atsakymai")">@L["Side.MpAccount.Respond"]</a></p>
     }
     else if (_consentFor is { } wanted)
     {
@@ -55,6 +61,7 @@
     private string SignInHref => LandingPath.SignInLink(LandingPath.PathOf(Navigation.Uri, Navigation.BaseUri));
 
     private bool _signedIn;
+    private bool _mpAccount;
     private string? _consentFor;
 
     [Parameter, EditorRequired] public string Number { get; set; } = "";
@@ -68,6 +75,8 @@
         {
             Mine = await State.MineAsync(Number);
         }
+
+        _mpAccount = _signedIn && await Account.IsMpAccountAsync(RendererInfo.IsInteractive);
     }
 
     private Task ChooseAsync(string side) => RunAsync(async () =>
@@ -115,9 +124,7 @@
             return;
         }
 
-        // The counts on the page are server-rendered: show them with the change. A first side also followed the bill
-        // (design 8.11.2), which the follow button reads afresh.
-        Navigation.NavigateTo(Navigation.Uri, forceLoad: true);
+        await ChangedAsync();
     }
 
     private Task ClearAsync() => RunAsync(async () =>
@@ -129,6 +136,17 @@
             return;
         }
 
-        Navigation.NavigateTo(Navigation.Uri, forceLoad: true);
+        await ChangedAsync();
     });
+
+    /// <summary>
+    /// Without reloading the page (owner, 2026-11-17): the other islands read their part again, the counts and the threshold
+    /// the bill's live numbers, the arguments the marks a changed side dropped, the follow button the follow a first side
+    /// made (design 8.11.2), the date flag whether there is a side; this one the person's own answer.
+    /// </summary>
+    private async Task ChangedAsync()
+    {
+        State.Announce(Number, this);
+        Mine = await State.MineAsync(Number) ?? Mine;
+    }
 }

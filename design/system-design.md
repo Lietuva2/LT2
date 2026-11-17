@@ -474,6 +474,24 @@ while building (8.14.14): nor to the five organisation tables, which hold an acc
   parliament elected by adults; the EU Digital Identity Wallet could later confirm it.
 - Session: `__Host-` cookie, `Secure`, `HttpOnly`, `SameSite=Lax`, sliding 30 days; a person can see and end their
   sessions. No tokens in the browser: the WASM client uses the same cookie (same origin).
+- **A session is what it was signed in as [owner, 2026-11-17].** Every sign-in (an emailed code, a passkey, the take-over of
+  an MP's profile, the office invitation's passkey, a code session becoming a passkey or staff session) starts a new session
+  under a new key; the browser's session before it, of the same account or another, ends as by signing out (its row is
+  deleted, its cookie leads nowhere). After that the session's account, its way of signing in and its passkey never change:
+  renewing it (the sliding expiry, the security stamp's check every 30 minutes, the registration's completion) keeps them,
+  so a passkey session stays a passkey session for its 30 days. A changed security stamp still ends the session.
+  - *Never a silent switch.* A sign-in in a browser signed in to another account says so: its answer carries
+    `accountChanged`, and the sign-in steps show "Prisijungėte kaip kitas narys: {vardas}." (the new account's display name
+    in the nominative after a colon; without a name "Prisijungėte kaip kitas narys.") with "Tęsti" before going on. The
+    other account's kept analytics comparison goes with its session (8.26.6). The take-over and the office invitation's
+    acceptance stay tied to the signed-in account; a passkey of another account is refused there as before.
+  - *A passkey session in place.* Where an action needs a passkey session (speaking for an MP, a linked account's passkey
+    change) and this one was signed in by a code, the island says "Šiam veiksmui reikia prisijungimo prieigos raktu." with
+    "Patvirtinti prieigos raktu" (`PasskeyStep`): an assertion with one of the signed-in account's own passkeys makes the
+    session a passkey session under a new key (`POST /api/v1/me/passkey-session`), counted as just confirmed, audited
+    (`passkey.session-started`, without the address), no email; then the island reads its state again. With the staff
+    passkey it is a staff session too (audited `staff.session-started`). A passkey of another account is refused with
+    `passkey.other-account` and changes nothing; the browser stays signed in to its own account.
 - **Staff** (moderator, administrator) **[decided 2026-11-12].** A staff role works only in a session signed in with a
   **staff passkey**. A session signed in by email code is an ordinary member session, whatever roles the account has,
   so getting into a staff member's mailbox is not enough.
@@ -486,8 +504,9 @@ while building (8.14.14): nor to the five organisation tables, which hold an acc
     politician) ask for the same fresh confirmation.
   - *A staff session without signing out* **[owner, 2026-11-16]**. A session on a staff account that is not a staff
     session (signed in by email code, or with another passkey) becomes one by an assertion with the account's staff
-    passkey on `/prisijungti/raktas` (`POST /api/v1/me/staff-session`), reached from the account item (8.21) and the
-    account page. Only the signed-in account's own staff passkey counts: another account's passkey, another passkey of
+    passkey on `/prisijungti/raktas` (`POST /api/v1/me/staff-session`), reached from the account item (8.21), or in place
+    by "Patvirtinti prieigos raktu" where a staff screen refuses and on the account page (owner, 2026-11-17: the same
+    `PasskeyStep` as above, with the staff passkey). Only the signed-in account's own staff passkey counts: another account's passkey, another passkey of
     the account, or an account without an activated staff role is refused with one answer and changes nothing. The
     session gets a new key: the old session ends and a passkey session takes its place, so the old cookie leads nowhere
     and the sessions list shows one session for the browser. It counts as a fresh confirmation. It is audited
@@ -923,7 +942,8 @@ except arguments that pre-screening flags or people report.
   staff-passkey session sees, on an open bill's page, a "Moderavimas" panel with the same actions as the queue offers for
   it in its state ("Palikti" only while a report or date flag is open), also on a bill nobody has taken part in. The state
   comes from a moderators-only answer (`GET /api/v1/moderation/bills/{number}`); nobody else sees the panel or anything
-  from that answer. After an action the page reloads to show the result.
+  from that answer. After an action the page shows the result without reloading (owner, 2026-11-17): the panel and the
+  page's other parts read again in place.
 - **The screen [decided 2026-11-13].** Each action is its own control. Choosing one opens only its own fields, with one
   sentence on what it does; one action is open at a time per item; only the actions that apply to the item's state are
   offered; the confirmation stays visible after the action closes. The fields: keep, an optional note; hide, a required
@@ -1215,12 +1235,23 @@ link that cannot be guessed, and it binds a passkey, as 6.2 already decided.
 
 - **Speaking for the MP** (publishing, changing and withdrawing a response; adding and removing office members; giving
   the profile up) needs a **passkey session**. Signed in by a code, the account can read everything of its own, and
-  the controls say "Prisijunkite prieigos raktu".
-- **The MP's own account takes no part as a participant [the designer's proposal, awaiting the owner]:** no side, no
+  the controls are off; in their place "Šiam veiksmui reikia prisijungimo prieigos raktu." with "Patvirtinti prieigos raktu"
+  makes the session a passkey session in place (owner, 2026-11-17; 6.2).
+- **The MP's own account takes no part as a participant [decided by the owner, 2026-11-17]:** no side, no
   argument, no "Man svarbu", no party-support declaration, and it does not represent an organisation, and it comments
   nowhere but under its own MP's response, as the MP (8.23.2, proposed: the one exception to this point). The MP speaks
   through the response. Sides the account held are withdrawn at the take-over (the page says so beforehand) and the
   counts go down. It can follow bills and MPs like anyone. Office members are not restricted.
+- **The forms are not shown to it [owner, 2026-11-17].** The server's refusal (`mp.takes-no-part`) stays as the safety net,
+  but the MP's own account is not offered what it would refuse: the side buttons on the bill's page (one line in their
+  place, "Seimo nario paskyra pozicijos neužima." with a link to the responses' part) and in the front page's rows (the
+  numbers stay), the positions consent, writing an argument, "Man svarbu" (the number stays, as text), "Sutinku" and the
+  comment box except under its own MP's response, the party and "Rodyti viešame profilyje" (a party given before the
+  take-over stays there to remove), "Viešas profilis", and registering an organisation (on `/organizacijos/nauja` one line,
+  "Seimo nario paskyra organizacijų neregistruoja."). The islands learn it in the browser only, from the account's own
+  answers (`GET /me`'s `mp.part`, read once per page and shared; `GET /me/bills`'s `mpAccount` for the front page): the
+  page the server renders is the same as for any member, and the forms go once the island runs. An office member sees
+  every form and acts in their own name; under their MP's response the comment voice stays the MP's.
 - It is not a role in the session: every request that speaks for an MP reads the link from the database, as the
   staff checks do, so ending a link works at once.
 - The account's own answer (`GET /me`) says whether there is an offer to take over, and for a linked account which
@@ -2786,6 +2817,15 @@ nothing said which is for what, and the start page had its main content on the g
   writing box is a quiet sheet inside it.
 - **Dark theme:** the quiet sheet's colour lies between the ground and the sheet, as in the light theme, so it steps
   back there too (until now it was the lightest of the three).
+- **Choices [decided by the owner on 2026-11-17, from the designer's samples: "Let's change those for arguments, but keep
+  the frequences in settings as is, a normal radio"].** A choice between a bill's sides, or a statement's stance, is the
+  joined-button control (`.switch` over real radio inputs, so it works without script, by keyboard and with the page's
+  focus ring, and stays disabled while the island is locked): the side of an argument, an MP's response's stance ("už" in
+  the side's green, "prieš" in its red, "Dar neapsisprendžiau" neutral, the second ink), an organisation's statement
+  ("Pastabos" neutral) and the date flag ("Data neteisinga", "Balsuos anksčiau"). Three options stand one under another
+  where their fieldset is narrower than 34rem (`.switch-field`, `.switch--stack`). Every other choice stays a radio (how
+  often the MP's summaries and the member's emails come, the feedback's kind), and consents and settings stay plain
+  checkboxes (every consent box, the email switches, "Viešas profilis", report grounds, the merge target).
 
 **Done when:** every page of the site (public, a member's, an organisation's, the moderators' and the staff's) has been
 looked at in the light theme against the test, with the result listed page by page; no quiet sheet stands on the
@@ -4943,6 +4983,19 @@ Built, awaiting the owner's word:
   on Back or Forward while the page is patched (scroll anchoring off until Blazor reports the load), the reader's own
   scrolling winning. Nothing is stored in the browser (8.22.1). Measured again: the place stays (252 of 4 142), the
   discussion stays closed.
+
+**Decided by the owner on 2026-11-17: passkey sessions and the MP's own account** (approved to build)
+
+- A passkey session stays one: the security stamp's check every 30 minutes no longer turns an MP's, an office member's or a
+  staff member's passkey session into a code session; a renewal never changes what a session was signed in as (6.2).
+- "Patvirtinti prieigos raktu" in place wherever an action needs a passkey session (speaking for an MP, a linked account's
+  passkey) or a staff session (the staff screens and the account page): any passkey of the signed-in account, the staff
+  passkey for staff; another account's passkey refused (6.2, 8.5.4).
+- A sign-in never silently switches the account: a sign-in in a browser signed in to another account ends that session and
+  the page says "Prisijungėte kaip kitas narys: {vardas}." (6.2).
+- The MP's own account takes no part (8.5.4: until then the designer's proposal), and the forms it would be refused are
+  not shown to it (8.5.4).
+- A bill's number and title are one link in the MP's list of bills and in the follow list, as on a member's page.
 
 **Proposed by the designer while building the email rhythm (8.24), 2026-11-16, awaiting the owner**
 

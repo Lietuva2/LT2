@@ -47,7 +47,7 @@ internal sealed class CodeSignInHandler(
 {
     internal static readonly Error InvalidCode = Error.Validation("auth.code-invalid", "code");
 
-    public async Task<Result<Unit>> HandleAsync(string email, string code, CancellationToken cancellationToken)
+    public async Task<Result<SignInOutcome>> HandleAsync(string email, string code, CancellationToken cancellationToken)
     {
         var normalized = EmailAddress.Normalize(email);
         if (normalized is null)
@@ -110,13 +110,11 @@ internal sealed class CodeSignInHandler(
             await db.SaveChangesAsync(cancellationToken);
         }
 
-        await signIn.SignInWithClaimsAsync(
-            user,
-            new AuthenticationProperties { IsPersistent = true },
-            [new Claim(AuthenticationMethods.ClaimType, AuthenticationMethods.EmailCode)]);
+        // A new session under a new key, whichever account the browser held before (design 6.2): never a silent switch.
+        var changed = await SessionSignIn.SignInAsync(signIn, user, AuthenticationMethods.EmailCode);
 
         // Design 8.20.2: a member's browser becomes known, or is renewed; a pending account's waits for its completion.
         await browsers.RememberAsync(user.Id, cancellationToken);
-        return Result.Ok();
+        return new SignInOutcome(changed);
     }
 }

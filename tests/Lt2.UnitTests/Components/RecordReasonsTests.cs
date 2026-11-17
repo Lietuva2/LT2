@@ -22,6 +22,8 @@ public sealed class RecordReasonsTests : BunitContext
 
     private readonly ApiFake _appeals;
 
+    private readonly ApiFake _me;
+
     private readonly BunitAuthorizationContext _auth;
 
     public RecordReasonsTests()
@@ -29,6 +31,7 @@ public sealed class RecordReasonsTests : BunitContext
         Services.AddLocalization();
         Services.AddLt2Validators();
         Services.AddLt2ClientComponents();
+        _me = MeFakes.Add(Services);
         CommentFakes.Add(Services);
         var appeals = DispatchProxy.Create<IAppealsApi, ApiFake>();
         _appeals = (ApiFake)(object)appeals;
@@ -71,6 +74,47 @@ public sealed class RecordReasonsTests : BunitContext
         reasons.Find($"#reason-{First} #statement-{First}").GetAttribute("value").ShouldBe("Įžeidimas.");
         reasons.FindAll($"#reason-{Second} form").ShouldBeEmpty("the hide form was opened on the first argument");
         JSInterop.Invocations.ShouldContain(i => i.Identifier.EndsWith("focus", StringComparison.Ordinal), "the pressed button gets the focus back");
+    }
+
+    /// <summary>
+    /// Design 8.5.4 (owner, 2026-11-17): the MP's own account takes no part. Once the island runs it gets no "Man svarbu" (the
+    /// number stays, as text) and no "Rašyti argumentą"; before that the HTML is the same as for any member.
+    /// </summary>
+    [Fact]
+    public void The_mps_own_account_gets_neither_man_svarbu_nor_writing_an_argument_once_the_island_runs()
+    {
+        _me.On("GetAsync", ApiResult<Lt2.Api.Contracts.Me.MeResponse>.Ok(MeFakes.MpAccount));
+        _appeals.On("GetMineAsync", ApiResult<MyBillRecordResponse>.Ok(new MyBillRecordResponse(null, [], null, [], null, false)));
+        var reasons = Render<RecordReasons>(p => p.Add(c => c.Number, Bill));
+
+        var mark = reasons.Find($"#mark-{First}");
+        mark.TagName.ShouldBe("SPAN");
+        mark.TextContent.ShouldContain("3");
+        reasons.FindAll("button.mark").ShouldBeEmpty();
+        reasons.FindAll("#add-reason").ShouldBeEmpty();
+        reasons.FindAll("#reasons-note").ShouldBeEmpty();
+        reasons.FindAll($"#report-{First}").ShouldNotBeEmpty("reporting stays");
+    }
+
+    [Fact]
+    public void An_office_member_takes_part_as_any_member()
+    {
+        _me.On("GetAsync", ApiResult<Lt2.Api.Contracts.Me.MeResponse>.Ok(MeFakes.Member with { Mp = MeFakes.MpAccount.Mp! with { Part = "office" } }));
+        var reasons = Render<RecordReasons>(p => p.Add(c => c.Number, Bill));
+
+        reasons.FindAll("#add-reason").ShouldNotBeEmpty("an office member writes in their own name");
+        reasons.Find($"#mark-{First}").TagName.ShouldBe("BUTTON");
+    }
+
+    [Fact]
+    public void Before_the_island_runs_the_mps_own_account_gets_the_same_html_as_any_member()
+    {
+        _me.On("GetAsync", ApiResult<Lt2.Api.Contracts.Me.MeResponse>.Ok(MeFakes.MpAccount));
+        SetRendererInfo(new RendererInfo("Static", isInteractive: false));
+        var reasons = Render<RecordReasons>(p => p.Add(c => c.Number, Bill));
+
+        reasons.Find($"#mark-{First}").TagName.ShouldBe("BUTTON");
+        _me.Calls.ShouldBeEmpty("the account's own answer is asked only in the browser");
     }
 
     [Fact]

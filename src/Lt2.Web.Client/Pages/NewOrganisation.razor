@@ -5,10 +5,12 @@
 @inherits InteractiveBase<AppealUi>
 @inject IAppealsApi Appeals
 @inject NavigationManager Navigation
+@inject MyAccountState Account
 
 @* Registering an organisation (design 8.14.14): a signed-in member, shown at once, with nobody approving it; the member
    becomes its first representative, and representatives are not public. A person under a writing restriction sees the
-   notice in place of the form. *@
+   notice in place of the form, and the MP's own account, which registers none (design 8.5.4, owner 2026-11-17), one line
+   once the island runs. *@
 <PageTitle>@L["Org.Register.PageTitle"]</PageTitle>
 
 <div class="stack">
@@ -32,7 +34,11 @@
     </details>
 </div>
 
-@if (Restriction is { Restricted: true } restriction)
+@if (_mpAccount)
+{
+    <p class="note note--quiet" id="register-mp-account">@L["Org.Register.MpAccount"]</p>
+}
+else if (Restriction is { Restricted: true } restriction)
 {
     <WritingRestricted Restriction="restriction" />
 }
@@ -46,7 +52,13 @@ else
 @code {
     [PersistentState] public MyRestrictionResponse? Restriction { get; set; }
 
-    protected override async Task OnInitializedAsync() => Restriction ??= (await Appeals.GetMyRestrictionAsync()).Value;
+    private bool _mpAccount;
+
+    protected override async Task OnInitializedAsync()
+    {
+        Restriction ??= (await Appeals.GetMyRestrictionAsync()).Value;
+        _mpAccount = await Account.IsMpAccountAsync(RendererInfo.IsInteractive);
+    }
 
     private void Registered(string slug) => Navigation.NavigateTo(OrganisationWords.ProfilePath(slug), forceLoad: true);
 }

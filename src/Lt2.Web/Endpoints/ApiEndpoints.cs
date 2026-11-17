@@ -38,6 +38,7 @@ internal static class ApiEndpoints
         ActivateRoleEndpoint.Map(api);
         ConfirmPasskeyEndpoint.Map(api);
         StartStaffSessionEndpoint.Map(api);
+        StartPasskeySessionEndpoint.Map(api);
         GetSessionsEndpoint.Map(api);
         EndSessionEndpoint.Map(api);
         KnownBrowserEndpoints.Map(api);

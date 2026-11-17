@@ -90,7 +90,7 @@ public sealed class OfficeInvitationTests(DatabaseFixture database) : ApiTest(da
             using (var elsewhere = NewBrowser())
             using (var signedIn = await elsewhere.SignInWithPasskeyAsync(key))
             {
-                signedIn.StatusCode.ShouldBe(HttpStatusCode.NoContent, await signedIn.Content.ReadAsStringAsync());
+                signedIn.StatusCode.ShouldBe(HttpStatusCode.OK, await signedIn.Content.ReadAsStringAsync());
             }
 
             (await NoticesToAsync(email, AccountNotices.PasskeyAdded)).ShouldBe(1);

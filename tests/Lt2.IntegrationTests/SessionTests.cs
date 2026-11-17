@@ -31,7 +31,7 @@ public sealed class SessionTests(DatabaseFixture database) : ApiTest(database)
         var code = await Factory.LatestCodeAsync(email);
         using (var signIn = await phone.PostAsync(ApiRoutes.Auth.SignIn, new SignInRequest { Email = email, Code = code! }))
         {
-            signIn.StatusCode.ShouldBe(HttpStatusCode.NoContent);
+            signIn.StatusCode.ShouldBe(HttpStatusCode.OK);
         }
 
         var sessions = await laptop.Client.GetFromJsonAsync<List<SessionResponse>>(ApiRoutes.Me.Sessions);

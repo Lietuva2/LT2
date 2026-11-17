@@ -123,7 +123,7 @@ public sealed class SignInCodeTests(DatabaseFixture database) : ApiTest(database
         }
 
         using var current = await browser.PostAsync(ApiRoutes.Auth.SignIn, new SignInRequest { Email = email, Code = second });
-        current.StatusCode.ShouldBe(HttpStatusCode.NoContent);
+        current.StatusCode.ShouldBe(HttpStatusCode.OK);
     }
 
     [Fact]
@@ -135,7 +135,7 @@ public sealed class SignInCodeTests(DatabaseFixture database) : ApiTest(database
 
         using var response = await browser.PostAsync(ApiRoutes.Auth.SignIn, new SignInRequest { Email = email, Code = code });
 
-        response.StatusCode.ShouldBe(HttpStatusCode.NoContent);
+        response.StatusCode.ShouldBe(HttpStatusCode.OK);
         var cookie = response.Headers.GetValues("Set-Cookie").Single(c => c.StartsWith("__Host-lt2=", StringComparison.Ordinal));
         cookie.ShouldContain("path=/", Case.Insensitive);
         cookie.ShouldContain("secure", Case.Insensitive);
@@ -158,7 +158,7 @@ public sealed class SignInCodeTests(DatabaseFixture database) : ApiTest(database
         var code = await browser.RegisterAsync(email);
         using (var first = await browser.PostAsync(ApiRoutes.Auth.SignIn, new SignInRequest { Email = email, Code = code }))
         {
-            first.StatusCode.ShouldBe(HttpStatusCode.NoContent);
+            first.StatusCode.ShouldBe(HttpStatusCode.OK);
         }
 
         using var other = NewBrowser();

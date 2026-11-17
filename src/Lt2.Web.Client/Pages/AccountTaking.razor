@@ -54,8 +54,10 @@ else
         }
         else if (Me.StaffAccount)
         {
-            @* Design 6.2 (owner, 2026-11-16): in the place of the staff links, the way to a staff session without signing out. *@
-            <p class="note note--quiet" id="staff-key-note"><span>@L["Staff.KeyText"]</span>@(" ")<a href="@StaffSessionPage.Link(AccountScreens.Taking)" id="staff-key-link">@L["Data.StaffKeyLink"]</a></p>
+            @* Design 6.2 (owner, 2026-11-16): in the place of the staff links, the way to a staff session without signing out, in
+               place (owner, 2026-11-17). *@
+            <p class="note note--quiet" id="staff-key-note"><span>@L["Staff.KeyText"]</span></p>
+            <PasskeyStep Staff="true" Account="Me" IdPrefix="staff-key-" />
         }
     </section>
 }

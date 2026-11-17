@@ -194,7 +194,7 @@ internal sealed class PoliticianHandlers(
                 .Where(p => p.UserId == user.Id && p.CredentialId != passkeyId)
                 .ExecuteDeleteAsync(cancellationToken);
 
-            // This session stays: the sign-in below renews it as the new passkey's session.
+            // This session is left to the sign-in below, which ends it and starts the new passkey's session under a new key.
             var current = Guid.TryParse(principal.FindFirstValue(SessionTicketStore.SessionIdClaim), out var sessionId) ? sessionId : Guid.Empty;
             var sessionsEnded = await db.Sessions
                 .Where(s => s.UserId == user.Id && s.Id != current && s.PasskeyId != null && s.PasskeyId != passkeyId)
@@ -239,14 +239,8 @@ internal sealed class PoliticianHandlers(
             await transaction.CommitAsync(cancellationToken);
         }
 
-        // The session becomes a passkey session (the old one ends with the new sign-in).
-        await signIn.SignInWithClaimsAsync(
-            user,
-            new AuthenticationProperties { IsPersistent = true },
-            [
-                new Claim(AuthenticationMethods.ClaimType, AuthenticationMethods.Passkey),
-                new Claim(SessionTicketStore.PasskeyClaim, WebEncoders.Base64UrlEncode(passkeyId)),
-            ]);
+        // The session becomes a passkey session under a new key (the old one ends with the new sign-in).
+        await SessionSignIn.SignInAsync(signIn, user, AuthenticationMethods.Passkey, passkeyId);
         return new MpLinkState(mp.Slug, mp.FirstName, mp.LastName, PoliticianParts.Mp, true);
     }
 
@@ -541,10 +535,7 @@ internal sealed class PoliticianHandlers(
         // the code session's row is deleted and a passkey session stored.
         if (sessionPasskey is not null)
         {
-            var signedIn = await signIn.CreateUserPrincipalAsync(user);
-            signedIn.Identities.First().AddClaim(new Claim(AuthenticationMethods.ClaimType, AuthenticationMethods.Passkey));
-            signedIn.Identities.First().AddClaim(new Claim(SessionTicketStore.PasskeyClaim, WebEncoders.Base64UrlEncode(sessionPasskey)));
-            await SessionRotation.SignInWithNewKeyAsync(signIn.Context, signedIn, new AuthenticationProperties { IsPersistent = true });
+            await SessionSignIn.SignInAsync(signIn, user, AuthenticationMethods.Passkey, sessionPasskey);
         }
 
         return mp is null

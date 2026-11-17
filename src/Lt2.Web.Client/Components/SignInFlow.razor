@@ -114,6 +114,15 @@
             </form>
             break;
 
+        case Step.OtherAccount:
+            @* Design 6.2 (owner, 2026-11-17): the browser was signed in to another account, whose session ended with this sign-in;
+               said before going on, never silently. *@
+            <div class="sheet sheet--cut stack" id="other-account">
+                <p class="note" role="status" id="other-account-note">@(_otherName is { Length: > 0 } name ? L.Format("SignIn.OtherAccountNamed", name) : L["SignIn.OtherAccount"])</p>
+                <p><button type="button" class="btn" id="other-account-continue" disabled="@Locked" @onclick="ContinueAsync">@L["SignIn.Continue"]</button></p>
+            </div>
+            break;
+
         default:
             <form class="sheet sheet--cut stack" action="@FormAction" @onsubmit="SignInAsync" novalidate aria-labelledby="form-title">
                 <h2 id="form-title">@L["Code.Title"]</h2>
@@ -148,7 +157,7 @@
 </div>
 
 @code {
-    private enum Step { SignIn, Register, Code, Complete }
+    private enum Step { SignIn, Register, Code, Complete, OtherAccount }
 
     private const string LandingKey = BrowserKeys.Landing;
 
@@ -168,6 +177,8 @@
     private bool _terms;
     private bool _askInvitation;
     private string _code = "";
+    private string? _otherName;
+    private string? _next;
 
     [SupplyParameterFromQuery(Name = "registruotis")]
     public bool? StartWithRegistration { get; set; }
@@ -430,11 +441,12 @@
         ClearMessages();
         return !Valid(SignInValidator.Validate(request)) ? Task.CompletedTask : RunAsync(async () =>
         {
-            if (Succeeded(await Auth.SignInAsync(request), FieldsOnThisStep))
+            var signedIn = await Auth.SignInAsync(request);
+            if (Succeeded(signedIn, FieldsOnThisStep))
             {
                 // A new account still finishes its registration first (via /paskyra); the share link's page waits until then.
                 var me = await Me.GetAsync();
-                await GoAsync(me.Value?.RegistrationComplete == true ? AfterSignIn(me.Value, ReturnTo ?? await NextPageAsync()) : ReturnTo ?? "/paskyra");
+                await GoOnAsync(signedIn.Value!, me.Value, me.Value?.RegistrationComplete == true ? AfterSignIn(me.Value, ReturnTo ?? await NextPageAsync()) : ReturnTo ?? "/paskyra");
             }
         });
     }
@@ -511,9 +523,30 @@
             return;
         }
 
-        if (Succeeded(await Auth.SignInWithPasskeyAsync(new PasskeyCredentialRequest { Credential = credential }), FieldsOnThisStep))
+        var signedIn = await Auth.SignInWithPasskeyAsync(new PasskeyCredentialRequest { Credential = credential });
+        if (Succeeded(signedIn, FieldsOnThisStep))
         {
-            await GoAsync(AfterSignIn((await Me.GetAsync()).Value, ReturnTo ?? await NextPageAsync()));
+            var me = (await Me.GetAsync()).Value;
+            await GoOnAsync(signedIn.Value!, me, AfterSignIn(me, ReturnTo ?? await NextPageAsync()));
         }
     });
+
+    /// <summary>
+    /// Goes to <paramref name="next"/>; when the sign-in ended another account's session in this browser (design 6.2, owner
+    /// 2026-11-17), it says so first, with the new account's display name, and goes on when asked.
+    /// </summary>
+    private Task ContinueAsync() => RunAsync(() => GoAsync(_next ?? ReturnTo ?? "/paskyra"));
+
+    private async Task GoOnAsync(SignInResponse answer, MeResponse? me, string next)
+    {
+        if (!answer.AccountChanged)
+        {
+            await GoAsync(next);
+            return;
+        }
+
+        _otherName = me?.DisplayName;
+        _next = next;
+        _step = Step.OtherAccount;
+    }
 }

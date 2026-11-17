@@ -56,6 +56,7 @@ public static class ClientServices
         services.AddScoped<Appeals.MyBillState>();
         services.AddScoped<Agenda.MyAgendaState>();
         services.AddScoped<Comments.CommentState>();
+        services.AddScoped<Components.MyAccountState>();
         services.TryAddSingleton(TimeProvider.System);
         return services;
     }

@@ -1,6 +1,7 @@
 using System.Reflection;
 using Bunit;
 using Lt2.Api.Contracts;
+using Lt2.Api.Contracts.Appeals;
 using Lt2.Api.Contracts.Follows;
 using Lt2.Api.Contracts.Me;
 using Lt2.Web.Client;
@@ -39,6 +40,7 @@ public sealed class FollowerLineTests : BunitContext
         ((ApiFake)(object)follows).On("UnfollowBillAsync", ApiResult.Ok());
         Services.AddSingleton(follows);
         Services.AddSingleton(DispatchProxy.Create<IProfilesApi, ApiFake>());
+        AddBillState();
         AddAuthorization().SetAuthorized("ruta.mockute@pavyzdys.test");
         SetRendererInfo(new RendererInfo("WebAssembly", isInteractive: true));
         JSInterop.Mode = JSRuntimeMode.Loose;
@@ -70,6 +72,7 @@ public sealed class FollowerLineTests : BunitContext
         var profiles = DispatchProxy.Create<IProfilesApi, ApiFake>();
         ((ApiFake)(object)profiles).On("GetMineAsync", ApiResult<MyProfileResponse>.Fail(new ApiProblem { Status = 404, Code = "profile.not-found" }));
         Services.AddSingleton(profiles);
+        AddBillState();
         AddAuthorization().SetAuthorized("ruta.mockute@pavyzdys.test");
         SetRendererInfo(new RendererInfo("WebAssembly", isInteractive: true));
 
@@ -81,5 +84,12 @@ public sealed class FollowerLineTests : BunitContext
             what + " Kas ką seka, niekas kitas nemato. „Sekėjai“ – tiek Lietuva 2.0 narių paprašė šių laiškų; tai ne palaikymas ir ne reprezentatyvi apklausa.");
         line.Find($"#follow-what-{kind}-panel a").GetAttribute("href").ShouldBe("/metodika#sekimas");
         line.FindAll("#followers-hint").ShouldBeEmpty("one hint on the line");
+    }
+
+    /// <summary>The bill page's shared state (a first side follows the bill, design 8.11.2), which the button listens to.</summary>
+    private void AddBillState()
+    {
+        Services.AddSingleton(DispatchProxy.Create<IAppealsApi, ApiFake>());
+        Services.AddSingleton(DispatchProxy.Create<IModerationApi, ApiFake>());
     }
 }

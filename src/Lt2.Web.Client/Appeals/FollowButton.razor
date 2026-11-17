@@ -1,5 +1,7 @@
 @inherits InteractiveBase<AppealUi>
+@implements IDisposable
 @inject NavigationManager Navigation
+@inject MyBillState BillState
 @inject Lt2.Api.Contracts.Follows.IFollowsApi Follows
 @inject IProfilesApi Profiles
 
@@ -63,7 +65,15 @@
 
     private int _followers;
 
-    protected override void OnParametersSet() => _followers = Math.Max(0, (Followers ?? 0) + _moved);
+    /// <summary>
+    /// New parameters are the page's count, made at the start or when the page is read again in place (after an action that
+    /// changes the server's part of it), which holds the person's own change already.
+    /// </summary>
+    protected override void OnParametersSet()
+    {
+        _moved = 0;
+        _followers = Math.Max(0, Followers ?? 0);
+    }
 
     /// <summary>The person's own change since the page was counted: +1 for a follow, -1 for an unfollow.</summary>
     private int _moved;
@@ -90,6 +100,42 @@
                 _ => mine.Bills.Any(b => string.Equals(b.Number, Key, StringComparison.OrdinalIgnoreCase)),
             };
         }
+
+        if (_signedIn && Kind == "bill" && RendererInfo.IsInteractive)
+        {
+            BillState.Changed += OnBillChanged;
+        }
+    }
+
+    public void Dispose() => BillState.Changed -= OnBillChanged;
+
+    /// <summary>A first side taken on the bill's page follows the bill (design 8.11.2): the button and the number show it.</summary>
+    private void OnBillChanged(BillChange change)
+    {
+        if (change.ByModerator || !change.Concerns(Key, this))
+        {
+            return;
+        }
+
+        _ = InvokeAsync(async () =>
+        {
+            try
+            {
+                if ((await Follows.GetMineAsync()).Value is { } mine
+                    && mine.Bills.Any(b => string.Equals(b.Number, Key, StringComparison.OrdinalIgnoreCase)) is var now
+                    && now != (Following == true))
+                {
+                    Following = now;
+                    _moved += now ? 1 : -1;
+                    _followers = Math.Max(0, (Followers ?? 0) + _moved);
+                    StateHasChanged();
+                }
+            }
+            catch (HttpRequestException)
+            {
+                // The button stays as it was.
+            }
+        });
     }
 
     private Task ToggleAsync() => RunAsync(async () =>

@@ -95,7 +95,12 @@ src/Lt2.Web.Client         Blazor WebAssembly components and HTTP implementation
                            StringLocalizerExtensions (Format), CopyLink, FieldError, Messages, SplitBar, Hint (the short answer in place, js/lt2-hints.js),
                            ProjectTabs and MenuSections (design 8.21), MoreMenu and Icon (the action row, design 8.16.1,
                            js/lt2-menus.js), BrowserKeys (the storage keys, design 8.22.1),
-                           LongText (a long member's text with "Rodyti daugiau")
+                           LongText (a long member's text with "Rodyti daugiau"), the joined-button choice (CSS `.switch`
+                           over real radios, `.switch__half--for|against|neutral|plain`, `.switch-field` + `.switch--stack`
+                           for three options: a bill's sides and a statement's stance only; other choices stay radios and
+                           consents plain checkboxes, design 8.16), PasskeyStep ("Patvirtinti prieigos raktu" in
+                           place, design 6.2) and MyAccountState (the browser's one GET /me: whether the caller is an MP's
+                           own account, design 8.5.4)
 src/Lt2.Api.Contracts      DTOs, routes, client interfaces, validators (shared by server, client and tests)
 src/Lt2.SharedKernel       Result type, identifiers (UUID v7), outbox, audit and settings interfaces, connection
                            strings and the one EF Core set-up (Persistence/: UseLt2Npgsql), VilniusTime (the
@@ -251,7 +256,14 @@ pre-merge run found.
   `<CopyLink>`; "Atkurti" is `<RestoreForm>`; a queued argument is `<QueueReasonItem>`, a queued statement
   `<StatementQueueItem>`; the positions consent before a first side is `<PositionConsentForm>`; the bill page's islands
   share the caller's answers through `MyBillState`, the front page's through `MyAgendaState` (its `Changed` event tells
-  the others after a member's action). A list whose items
+  the others after a member's action). **An action never reloads the page (owner, 2026-11-17):** on a bill's page the island
+  that acted calls `MyBillState.Announce` (`byModerator` for a moderator's action) and the others read their part again
+  (`Changed`); the counts, the threshold's progress and the share line are islands on `LiveRecordBase` (`SideFigures`,
+  `ThresholdProgress`, `ShareLine`) that take the bill's live answer; where the server's part of a page changes (a moderator's
+  action, an organisation's profile, an MP's response) the island calls `Navigation.Refresh()`, which reads the page again in
+  place and gives the islands new parameters (`FollowButton` takes its count from them again). A full load
+  (`forceLoad: true`) is only for a changed session (signing in or out, a passkey or staff session started in place by a
+  `<PasskeyStep>` without `Confirmed`, a take-over, the terms, deleting the account). A list whose items
   hold state or re-sort is keyed (`@key`), and an element id is unique on the page (a component shown twice takes an
   `IdPrefix`).
 - **Surfaces (design 8.16).** The ground carries what frames a page: title, lead, the way back, notices (`.note`), an
@@ -286,6 +298,20 @@ code review.
   `POST /me/staff-session` (`StaffHandlers.StartStaffSessionAsync`), the signed-in account's own staff passkey only
   (anything else `passkey.staff-required`, nothing changed), a new session key (`Infrastructure/SessionRotation`: the old
   row is deleted, never renewed), a fresh confirmation, audited as `staff.session-started` without an email.
+- **A session is what it was signed in as (design 6.2, owner 2026-11-17).** Every sign-in (code, passkey, the take-over, the
+  office acceptance's passkey, a passkey or staff session started in place) goes through `SessionSignIn.SignInAsync`
+  (Identity/Infrastructure): a new key by `SessionRotation`, the browser's session before it ended as by signing out; its
+  answer `SignInResponse.AccountChanged` says when that was another account (the endpoints then forget the other account's
+  analytics copy) and `SignInFlow` shows "Prisijungėte kaip kitas narys: {vardas}." with "Tęsti". `SessionTicketStore.RenewAsync`
+  only renews (ticket, expiry, last seen): it never changes a row's account (it throws), method or passkey. The security
+  stamp's refresh keeps the site's own claims (`SessionClaims`: `amr`, `lt2:passkey`, the session key) through
+  `SecurityStampValidatorOptions.OnRefreshingPrincipal`; a changed stamp still signs out (`SessionRefreshTests`, on a factory
+  that checks the stamp on every request). Where an action needs a passkey session and the session was signed in by a code,
+  the island shows `<PasskeyStep>` ("Šiam veiksmui reikia prisijungimo prieigos raktu.", "Patvirtinti prieigos raktu"):
+  `POST /me/passkey-session` (`StaffHandlers.StartPasskeySessionAsync`) with any passkey of the signed-in account (another
+  account's: `passkey.other-account`, nothing changed), audited `passkey.session-started` (`staff.session-started` with the
+  staff passkey); `Staff="true"` uses `/me/staff-session` and shows only to a staff account outside a staff session, under
+  every staff screen's refusal and on the account screens.
 - **Sign-in codes (design 6.2, 8.20.2).** Browsers the account does not know share five codes an hour and ten a day per
   address (`SignIn:CodesPerHour`, `SignIn:CodesPerDay`); a browser known to the account (it signed in to it, or finished the
   registration there) has its own five an hour and ten a day, the same two settings counted separately
@@ -457,8 +483,8 @@ page's "Balsuota".
   the code to type there. `POST /me/mp/takeover` (token and passkey) does everything in one
   transaction: token and address checked, the passkey stored and the others removed with their sessions, the link made,
   the account's sides on records not closed withdrawn (`IPositionErasure.WithdrawOpenSidesAsync`; the front page's copy
-  marked stale), audited, the official address told; the session becomes a passkey session (`SessionTicketStore.RenewAsync`
-  takes the new ticket's method and passkey). A lost passkey: the same again; the link stays.
+  marked stale), audited, the official address told; the session becomes a passkey session under a new key
+  (`SessionSignIn`). A lost passkey: the same again; the link stays.
 - One account per MP and one MP per account; an office member of at most one MP, five per MP, by a seven-day one-time
   link accepted in a passkey session. The MP's account may have the site email it (`MyMp`: an address typed, used only for the
   outbox row; `POST /me/mp/office/invitations` with `email`, `MpOfficeInvitationEmail`), or take the link and code; at most ten
@@ -472,8 +498,14 @@ page's "Balsuota".
   (`POST /admin/mps/{slug}/link/end`, statement, fresh confirmation; no screen yet) and deleting the account end the
   link and the office with it. Every change is audited and told to the MP's account's own address (`AccountNotices.Mp*`),
   never naming an office member.
-- The MP's own account takes no part (the designer's proposal awaiting the owner): no side, argument, "Man svarbu", party
-  support or organisation (`mp.takes-no-part`); it follows like anyone; office members are not restricted.
+- The MP's own account takes no part (decided by the owner, 2026-11-17): no side, argument, "Man svarbu", party
+  support or organisation (`mp.takes-no-part`, `MpAccounts` in SharedKernel); it follows like anyone; office members are not
+  restricted. Its forms are not shown to it (design 8.5.4): the islands ask `MyAccountState.IsMpAccountAsync` (the browser's
+  `GET /me`, `mp.part` = `mp`, never while prerendering, so the served HTML is the same for every member) and the front
+  page's rows `GET /me/bills`'s `mpAccount`; `SidePicker` shows one line to the responses instead, `RecordReasons` the
+  number without "Man svarbu" and no "Rašyti argumentą", `MyAgendaSide` the numbers only; `MyPartySupport` (unless a party
+  is still set), `MyProfile`, `MyOrganisations`'s "Registruoti" and `/organizacijos/nauja`'s form go; `CommentThread` already
+  hides by `MyComments.MpAccount`. The server's refusal stays the safety net.
 - The only public trace: "Profilį tvarko Seimo narys arba jo biuras" with the date on the profile (`managedSince` of
   `GET /mps/{slug}`). A profile nobody took over says nothing about joining. Who is linked and who the office members are
   is in no public answer, page or log.

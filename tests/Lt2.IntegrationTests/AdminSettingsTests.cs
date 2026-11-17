@@ -169,7 +169,7 @@ public sealed class AdminSettingsTests(DatabaseFixture database) : ApiTest(datab
         }
 
         using var signIn = await browser.PostAsync(ApiRoutes.Auth.SignIn, new SignInRequest { Email = email, Code = (await Factory.LatestCodeAsync(email))! });
-        signIn.StatusCode.ShouldBe(HttpStatusCode.NoContent);
+        signIn.StatusCode.ShouldBe(HttpStatusCode.OK);
     }
 
     private static class SharedKernelKeys

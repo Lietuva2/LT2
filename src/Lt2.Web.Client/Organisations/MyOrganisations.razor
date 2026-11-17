@@ -1,9 +1,11 @@
 @using Lt2.Api.Contracts.Organisations
 @inherits InteractiveBase<AppealUi>
 @inject IOrganisationsApi Organisations
+@inject MyAccountState Account
 
 @* "Mano organizacijos" on the account page (design 8.14.14): the organisations the person represents, each with its label
-   and state, and the way to register one. Only the person sees this. *@
+   and state, and the way to register one (not for the MP's own account once the island runs: design 8.5.4, owner
+   2026-11-17). Only the person sees this. *@
 <section class="sheet stack" aria-labelledby="my-organisations-title" id="my-organisations">
     <h3 id="my-organisations-title">@L["Org.MyList.Title"]</h3>
     @if (Items is { Count: > 0 } items)
@@ -31,11 +33,20 @@
     {
         <p class="small">@L["Org.MyList.None"]</p>
     }
-    <p class="row"><a class="btn btn--plain" href="/organizacijos/nauja" id="register-organisation">@L["Org.MyList.Register"]</a> <a href="/organizacijos">@L["Org.MyList.All"]</a></p>
+    <p class="row">@if (!_mpAccount)
+        {
+            <a class="btn btn--plain" href="/organizacijos/nauja" id="register-organisation">@L["Org.MyList.Register"]</a>
+        } <a href="/organizacijos">@L["Org.MyList.All"]</a></p>
 </section>
 
 @code {
     [PersistentState] public List<MyOrganisationResponse>? Items { get; set; }
 
-    protected override async Task OnInitializedAsync() => Items ??= (await Organisations.GetMineAsync()).Value?.ToList();
+    private bool _mpAccount;
+
+    protected override async Task OnInitializedAsync()
+    {
+        Items ??= (await Organisations.GetMineAsync()).Value?.ToList();
+        _mpAccount = await Account.IsMpAccountAsync(RendererInfo.IsInteractive);
+    }
 }

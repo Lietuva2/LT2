@@ -55,7 +55,7 @@ public sealed class TestBrowser(HttpClient client, Lt2Factory factory) : IDispos
     {
         code ??= await factory.LatestCodeAsync(email) ?? throw new InvalidOperationException("No code in the outbox.");
         using var response = await PostAsync(ApiRoutes.Auth.SignIn, new SignInRequest { Email = email, Code = code });
-        response.StatusCode.ShouldBe(HttpStatusCode.NoContent, await response.Content.ReadAsStringAsync());
+        response.StatusCode.ShouldBe(HttpStatusCode.OK, await response.Content.ReadAsStringAsync());
     }
 
     /// <summary>Completes the signed-in pending registration (design 6.2).</summary>

@@ -53,3 +53,31 @@ public static class CommentFakes
         return (c, m);
     }
 }
+/// <summary>
+/// The account's own answer (<c>GET /me</c>) as the browser reads it, for islands that ask it (MyAccountState: whether the caller
+/// is an MP's own account, design 8.5.4; PasskeyStep for staff): an ordinary member unless another account is given.
+/// </summary>
+public static class MeFakes
+{
+    public static readonly Lt2.Api.Contracts.Me.MeResponse Member = new()
+    {
+        Email = "narys@pavyzdys.test",
+        Roles = ["member"],
+        RegistrationComplete = true,
+    };
+
+    /// <summary>The MP's own linked account (design 8.5.4) in a passkey session.</summary>
+    public static readonly Lt2.Api.Contracts.Me.MeResponse MpAccount = Member with
+    {
+        Mp = new Lt2.Api.Contracts.Mps.MpLinkResponse("jonas-petraitis", "Jonas", "Petraitis", "mp", true),
+    };
+
+    public static ApiFake Add(Microsoft.Extensions.DependencyInjection.IServiceCollection services, Lt2.Api.Contracts.Me.MeResponse? account = null)
+    {
+        var me = DispatchProxy.Create<Lt2.Api.Contracts.Me.IMeApi, ApiFake>();
+        var fake = (ApiFake)(object)me;
+        fake.On("GetAsync", ApiResult<Lt2.Api.Contracts.Me.MeResponse>.Ok(account ?? Member));
+        Microsoft.Extensions.DependencyInjection.ServiceCollectionServiceExtensions.AddSingleton(services, me);
+        return fake;
+    }
+}

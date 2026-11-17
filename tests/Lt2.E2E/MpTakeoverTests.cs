@@ -73,7 +73,7 @@ public sealed partial class MpTakeoverTests : E2ETest
             await page.GotoAsync(Base + "/paskyra/dalyvavimas");
             var linked = page.Locator("#mp-link");
             await Assertions.Expect(linked).ToContainTextAsync($"Tvarkote Seimo nario profilį: {Name}.", new() { Timeout = E2ESteps.Slow });
-            await Assertions.Expect(page.Locator("#mp-passkey-needed")).ToHaveCountAsync(0);
+            await Assertions.Expect(page.Locator("#mp-passkey-step")).ToHaveCountAsync(0);
             await page.GotoAsync(Base + "/paskyra/saugumas");
             await Assertions.Expect(page.Locator(".rows li").Filter(new() { HasText = "Ši sesija" })).ToContainTextAsync("prisijungta prieigos raktu");
             await Assertions.Expect(page.GetByText("Sukurta prieigos raktų: 1")).ToBeVisibleAsync();

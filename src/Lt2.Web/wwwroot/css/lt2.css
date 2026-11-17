@@ -376,8 +376,9 @@ a.tag:hover { text-decoration: underline; text-decoration-thickness: 1.5px; }
   .facts > dd { margin-bottom: var(--sp-2); }
 }
 
+/* The side column takes at most half the row: a long official note beside a vote wraps instead of squeezing the title. */
 .rows > li {
-  display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: var(--sp-2) var(--sp-5);
+  display: grid; grid-template-columns: minmax(0, 1fr) fit-content(50%); gap: var(--sp-2) var(--sp-5);
   padding-block: var(--sp-4); border-top: 1px solid var(--rule);
 }
 .rows > li:last-child { border-bottom: 1px solid var(--rule); }
@@ -696,6 +697,30 @@ body { padding-block-end: 4.5rem; }
 .switch__half:has(.switch__input:focus-visible) { outline: 3px solid var(--focus); outline-offset: 2px; z-index: 1; }
 .switch__half:has(.switch__input:disabled) { opacity: 0.6; cursor: progress; }
 .switch__input:disabled { cursor: progress; }
+
+/* The joined buttons for a side or a stance (owner, 2026-11-17; design 8.16): a bill's sides, an MP's response's stance, an
+   organisation's statement's kind and the date flag. A half's words may wrap onto a second line in a narrow column. */
+.switch__half { padding-block: var(--sp-1); line-height: 1.25; }
+
+/* "Dar neapsisprendžiau" and "Pastabos": chosen, but no side, so neither side's colour: the second ink, high contrast in
+   both themes. */
+.switch__half--neutral:has(.switch__input:checked) { background: var(--ink-2); color: var(--sheet); }
+
+/* Three long options: where their fieldset is narrower than 34rem (a phone, a narrow column) the halves stand one under
+   another, full width, a 2px rule between them. The fieldset of a switch is the container it measures. */
+.switch-field { container-type: inline-size; }
+@container (max-width: 34rem) {
+  .switch--stack { display: grid; grid-auto-flow: row; grid-template-columns: minmax(0, 1fr); inline-size: 100%; }
+  .switch--stack .switch__half { justify-content: flex-start; text-align: start; }
+  .switch--stack .switch__half + .switch__half { border-inline-start: 0; border-block-start: 2px solid var(--ink); }
+}
+@media (forced-colors: active) {
+  .switch__half:has(.switch__input:checked) { outline: 3px solid Highlight; outline-offset: -5px; }
+}
+
+/* A notice with its action in place (the passkey step, owner 2026-11-17): the text and the button on one line where they fit. */
+.note--act { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: var(--sp-3) var(--sp-4); }
+.note--act > p { max-inline-size: none; }
 
 .said__name { overflow-wrap: anywhere; }
 @media (max-width: 64rem) { .pair--reasons { grid-template-columns: minmax(0, 1fr); } }

@@ -3,6 +3,7 @@
 @using Lt2.Api.Contracts.Digests
 @inject IDigestsApi Digests
 @inject IStringLocalizer<AppealText> T
+@inject IStringLocalizer<Lt2.Web.Client.Appeals.AppealUi> U
 @inject Formats F
 @inject NavigationManager Navigation
 
@@ -74,20 +75,20 @@
                             <h3><a href="/seimas/@Uri.EscapeDataString(item.BillNumber)">@item.BillTitle</a></h3>
                             <div class="pair pair--keep">
                                 <div class="figure figure--for figure--m">
-                                    <span class="label">@T["Sides.for"]</span>
+                                    <span class="label">@U["Sides.for"]</span>
                                     <span class="figure__num">@Display.Number(item.For)</span>
-                                    <span class="small num">@T.Format("Sides.Older", Display.Number(item.ForOlderThan30Days))</span>
+                                    <span class="small num">@U.Format("Sides.Older", Display.Number(item.ForOlderThan30Days))</span>
                                 </div>
                                 <div class="figure figure--against figure--m">
-                                    <span class="label">@T["Sides.against"]</span>
+                                    <span class="label">@U["Sides.against"]</span>
                                     <span class="figure__num">@Display.Number(item.Against)</span>
-                                    <span class="small num">@T.Format("Sides.Older", Display.Number(item.AgainstOlderThan30Days))</span>
+                                    <span class="small num">@U.Format("Sides.Older", Display.Number(item.AgainstOlderThan30Days))</span>
                                 </div>
                             </div>
                             <SplitBar For="item.For" Against="item.Against" Abstain="0" Small="true" />
                             @if (item.SurgeSharePercent is { } share)
                             {
-                                <p class="note">@T.Format("Surge.Note", Display.Number(item.SurgeWindowHours), Display.Number(share))</p>
+                                <p class="note">@U.Format("Surge.Note", Display.Number(item.SurgeWindowHours), Display.Number(share))</p>
                             }
                             <div class="pair">
                                 @foreach (var side in new[] { "for", "against" })
