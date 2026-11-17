@@ -416,7 +416,7 @@ page's "Balsuota".
   Graph, `twitter:card`) placed by each public server-rendered page with `Title`, `Description` (default `Home.Lead`),
   `Type` (`article` on a bill) and `Path` (default the requested path without its query); `og:url` and `og:image` only with
   `Site:Address` (`SiteLinks.Absolute`). Text rules and the image's name are `LinkPreviewText` (pure; `Excerpt` keeps whole
-  sentences up to 200 characters). The image is `wwwroot/img/link-preview.png` (1200×630, the logo and the name; made once
+  sentences up to 200 characters). The image is `wwwroot/img/link-preview.png` (1200×630, the logo with the name below it, inside the centred 630×630 square that phones crop to; made once
   in a headless browser from the logo SVG and Sofia Sans Extra Condensed). The texts are `Preview.*` in `PageText.resx`. A
   bill uses its description unless it is `ai`, never counts; a member's page only while public and never "Apie mane"; a
   blocked organisation none. `SecurityHeaders.IsPrivatePage` marks account, staff, sign-in, MP and one-time-link pages
