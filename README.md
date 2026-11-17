@@ -1,7 +1,7 @@
 # Lietuva 2.0
 
 Code for the Lietuva 2.0 (LT2) Seimas engagement platform. This branch (`master`) holds the product code. **The
-system design this code follows is [`design/system-design.md`](design/system-design.md)**; this is milestone M0
+system design this code follows is [`design/`](design/README.md)**; this is milestone M0
 "Foundation" from its section 11. Rules for changing the code are in `AGENTS.md`. The concept website stays on the
 `docs` branch.
 

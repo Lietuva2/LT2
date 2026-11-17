@@ -10,8 +10,8 @@ Sources of "seen", all from the September 2026 discovery work on the `docs` bran
 - **notes**: `discovery/design-notes.md`, section 3 "Seimas open data";
 - **fetch_vote**: `discovery/prototypes/seimas-vote-hemicycle/fetch_vote.py`, whose regular expressions matched live
   responses of `p2b.ad_sp_balsavimo_rezultatai` (vote `-60034`, 2026-09-15);
-- **design**: `design/system-design.md` section 7.1, endpoints marked ✔ (checked September 2026);
-- **AGENTS**: the "Seimas open data" section of `AGENTS.md`.
+- **design**: `design/07-mp-profiles.md` (section 7.1), endpoints marked ✔ (checked September 2026);
+- **AGENTS**: `agents/seimas-data.md`.
 
 How the tests use this file:
 

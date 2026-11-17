@@ -11,7 +11,7 @@ namespace Lt2.Tests;
 
 /// <summary>
 /// The order the tests of this assembly run in, chosen by the environment variable <c>LT2_TEST_ORDER</c>, so that a run can
-/// prove the tests do not depend on each other (AGENTS.md, "Writing tests"). xUnit v3's own orders are stable for one build
+/// prove the tests do not depend on each other (agents/testing.md). xUnit v3's own orders are stable for one build
 /// in one folder, and its <c>--seed</c> does not change them, so the orders are written here:
 /// <list type="bullet">
 /// <item><c>default</c> (or unset): xUnit's own order.</item>

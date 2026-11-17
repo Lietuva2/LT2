@@ -10,7 +10,7 @@ namespace Lt2.E2E;
 
 /// <summary>
 /// What one end-to-end run needs from the stack and gives back at its end, so that no outside script has to prepare or
-/// repair the stack (AGENTS.md, "Writing tests"):
+/// repair the stack (agents/testing.md):
 /// <list type="bullet">
 /// <item>The web host answers and has rendered its first pages before the first test (a host just started takes seconds
 /// longer for each first page).</item>
