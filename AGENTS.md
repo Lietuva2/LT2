@@ -95,7 +95,7 @@ src/Lt2.Web.Client         Blazor WebAssembly components and HTTP implementation
                            StringLocalizerExtensions (Format), CopyLink, FieldError, Messages, SplitBar, Hint (the short answer in place, js/lt2-hints.js),
                            ProjectTabs and MenuSections (design 8.21), MoreMenu and Icon (the action row, design 8.16.1,
                            js/lt2-menus.js), BrowserKeys (the storage keys, design 8.22.1),
-                           LongText (a long member's text with "Rodyti daugiau"), the joined-button choice (CSS `.switch`
+                           TypedText (a typed text's paragraphs and lists, design 8.2) and LongText (a long member's text with "Rodyti daugiau", laid out before it is cut), TextLayoutHint (the list hint under a writing box), the joined-button choice (CSS `.switch`
                            over real radios, `.switch__half--for|against|neutral|plain`, `.switch-field` + `.switch--stack`
                            for three options: a bill's sides and a statement's stance only; other choices stay radios and
                            consents plain checkboxes, design 8.16), PasskeyStep ("Patvirtinti prieigos raktu" in
@@ -107,7 +107,7 @@ src/Lt2.SharedKernel       Result type, identifiers (UUID v7), outbox, audit and
                            Europe/Vilnius zone and its days), the signed-in account (ClaimsPrincipal.UserId()), the
                            staff actor (StaffActor) and staff statements (StaffStatements), the outbound allowlist
                            (Http/: hosts from Outbound:AllowedHosts plus AddOutboundHost; redirects followed only within
-                           it), TextExcerpt (also compiled into Lt2.Web.Client), BillTextLinks (every link to a comment or an
+                           it), TextExcerpt and TextLayout (also compiled into Lt2.Web.Client), BillTextLinks (every link to a comment or an
                            argument, also compiled into Lt2.Api.Contracts); no clock of its own (TimeProvider is used)
 src/Modules/               Lt2.Identity, Lt2.Notifications, Lt2.Audit, Lt2.Parliament (Seimas open-data client,
                            import, statistics); Lt2.Appeals (bills' records, positions, arguments, endorsements,
@@ -239,7 +239,10 @@ pre-merge run found.
   them for every caller. A moderator's statement goes through `StatementRules` in Appeals and `StaffStatements` elsewhere
   (the same rule); a moderator's action endpoint runs through
   `ModeratorEndpoint.ActAsync` (`src/Lt2.Web/Endpoints/Moderation`).
-- User-facing text goes through `IStringLocalizer`. User input is plain text, encoded on output.
+- User-facing text goes through `IStringLocalizer`. User input is plain text, encoded on output; a typed text is shown through
+  `TypedText`/`LongText` (design 8.2, "A text's layout", owner 2026-11-17): each line a paragraph, two or more lines beginning
+  "- ", "– ", "• ", "* " or "1. "/"1) " a list (`TextLayout`), nothing else read from it, no Markdown; a new writing box for such a
+  text carries `<TextLayoutHint>`.
 - **One way to do each thing in the interface.** An interactive component inherits `InteractiveBase<TText>`
   (`Lt2.Web.Client/Components`; `TText` is its resource marker): `RunAsync` for every action (one at a time, failures
   become the message), `Succeeded`/`Show` for an answer, `Valid` for the shared validator, `IsSignedInAsync`, and

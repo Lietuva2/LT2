@@ -1,0 +1,131 @@
+@* A typed text's paragraphs and lists (design 8.2, "A text's layout", owner 2026-11-17), from TextLayout: each line a <p>, two or
+   more marked lines a <ul> or an <ol> with the numbers as typed. Without Class no wrapper of its own, so the caller's bubble or
+   block holds it; with Class a text of one paragraph is that <p class> and anything longer a <div class>. Every piece is text,
+   encoded on output; with Links a comment's https:// addresses become links (design 8.23.3), with LineTemplate the page's own
+   rule. The moderators' queue shows texts whole through this too, so they see what the page shows. *@
+@if (Class is null)
+{
+    @Content
+}
+else if (_blocks is [{ Kind: TextBlockKind.Paragraph } only])
+{
+    <p class="@Class">@Line(only.Items[0].Text)@if (Cut) {<span class="long-text__cut" aria-hidden="true">…</span>}</p>
+}
+else
+{
+    <div class="@Class">@Content</div>
+}
+
+@code {
+    /// <summary>The text as stored; laid out by <see cref="TextLayout.Of(string)"/>. Ignored when <see cref="Blocks"/> is given.</summary>
+    [Parameter] public string? Text { get; set; }
+
+    /// <summary>Blocks already laid out (a part of a long text, <see cref="LongText"/>).</summary>
+    [Parameter] public IReadOnlyList<TextBlock>? Blocks { get; set; }
+
+    /// <summary>The wrapper's classes: one paragraph is a <c>&lt;p class&gt;</c>, anything longer a <c>&lt;div class&gt;</c>.</summary>
+    [Parameter] public string? Class { get; set; }
+
+    /// <summary>A comment's <c>https://</c> addresses become links (design 8.23.3); everything else stays text.</summary>
+    [Parameter] public bool Links { get; set; }
+
+    /// <summary>How one line is shown, when the page has its own rule for links ("Apie mane", design 8.25.3); otherwise <see cref="Links"/>.</summary>
+    [Parameter] public RenderFragment<string>? LineTemplate { get; set; }
+
+    /// <summary>The text goes on behind "Rodyti daugiau": a "…" after the last line, hidden from assistive technology.</summary>
+    [Parameter] public bool Cut { get; set; }
+
+    private IReadOnlyList<TextBlock> _blocks = [];
+
+    protected override void OnParametersSet() => _blocks = Blocks ?? TextLayout.Of(Text ?? "");
+
+    private RenderFragment Content => __builder =>
+    {
+        for (var b = 0; b < _blocks.Count; b++)
+        {
+            var block = _blocks[b];
+            var lastBlock = b == _blocks.Count - 1;
+            if (block.Kind == TextBlockKind.Paragraph)
+            {
+                __builder.OpenElement(10, "p");
+                __builder.AddContent(11, Line(block.Items[0].Text));
+                if (Cut && lastBlock)
+                {
+                    __builder.AddContent(12, CutMark);
+                }
+
+                __builder.CloseElement();
+                continue;
+            }
+
+            var numbered = block.Kind == TextBlockKind.Numbered;
+            __builder.OpenElement(20, numbered ? "ol" : "ul");
+            __builder.AddAttribute(21, "class", numbered ? "typed-list typed-list--numbered" : "typed-list");
+            for (var i = 0; i < block.Items.Count; i++)
+            {
+                var item = block.Items[i];
+                __builder.OpenElement(22, "li");
+                if (numbered && item.Number is { } number)
+                {
+                    __builder.AddAttribute(23, "value", number);
+                }
+
+                if (item.Continues)
+                {
+                    __builder.AddAttribute(24, "class", "typed-list__continued");
+                }
+
+                __builder.AddContent(25, Line(item.Text));
+                if (Cut && lastBlock && i == block.Items.Count - 1)
+                {
+                    __builder.AddContent(26, CutMark);
+                }
+
+                __builder.CloseElement();
+            }
+
+            __builder.CloseElement();
+        }
+    };
+
+    private static readonly RenderFragment CutMark = __builder =>
+    {
+        __builder.OpenElement(0, "span");
+        __builder.AddAttribute(1, "class", "long-text__cut");
+        __builder.AddAttribute(2, "aria-hidden", "true");
+        __builder.AddContent(3, "…");
+        __builder.CloseElement();
+    };
+
+    private RenderFragment Line(string text) => __builder =>
+    {
+        if (LineTemplate is not null)
+        {
+            __builder.AddContent(0, LineTemplate(text));
+            return;
+        }
+
+        if (!Links)
+        {
+            __builder.AddContent(1, text);
+            return;
+        }
+
+        foreach (var part in Lt2.Web.Client.Comments.CommentLinks.Split(text))
+        {
+            if (part.Href is { } href)
+            {
+                __builder.OpenElement(2, "a");
+                __builder.AddAttribute(3, "href", href);
+                __builder.AddAttribute(4, "rel", Lt2.Web.Client.Comments.CommentLinks.Rel);
+                __builder.AddAttribute(5, "target", "_blank");
+                __builder.AddContent(6, part.Shown);
+                __builder.CloseElement();
+            }
+            else
+            {
+                __builder.AddContent(7, part.Text);
+            }
+        }
+    };
+}

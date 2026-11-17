@@ -473,9 +473,9 @@
             <div class="field @ErrorClass("text")">
                 <label for="comment-text-@Key">@L["Comments.Label"]</label>
                 <textarea class="textarea" id="comment-text-@Key" rows="4" maxlength="@MemberTextLimits.Allowed(_maxLength ?? 0)" aria-invalid="@Invalid("text")"
-                          aria-describedby="@DescribedBy("text", $"comment-text-{Key}", $"comment-hint-{Key}")" @bind="_text" @bind:event="oninput" disabled="@Locked"></textarea>
+                          aria-describedby="@DescribedBy("text", $"comment-text-{Key}", $"comment-hint-{Key}", $"comment-layout-{Key}")" @bind="_text" @bind:event="oninput" disabled="@Locked"></textarea>
                 <p class="field__hint num" id="comment-hint-@Key">@(_maxLength is > 0 and var max ? L.Format("Comments.Hint", Display.Number(_text.Length), Display.Number(max)) : L["Comments.HintNoLimit"].Value)</p>
-                <FieldError Errors="Errors" Field="text" For="@($"comment-text-{Key}")" />
+                <TextLayoutHint Id="@($"comment-layout-{Key}")" />
             </div>
             <div class="row">
                 <button type="submit" class="btn" id="comment-submit-@Key" disabled="@(Locked || string.IsNullOrWhiteSpace(_text))">@L["Comments.Submit"]</button>

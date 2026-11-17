@@ -1,0 +1,10 @@
+@inject IStringLocalizer<UiText> T
+
+@* Under every box where a text is typed that the site lays out (design 8.2, "A text's layout"): how to write a list. A field's
+   hint needed to fill it (design 8.15), so it stays inline; the field lists its id in aria-describedby. *@
+<p class="field__hint" id="@Id">@T["Text.LayoutHint"]</p>
+
+@code {
+    /// <summary>The hint's id, unique on the page; the field's <c>aria-describedby</c> names it.</summary>
+    [Parameter, EditorRequired] public string Id { get; set; } = "";
+}

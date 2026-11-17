@@ -36,10 +36,13 @@ internal sealed class MpMailTemplates(IStringLocalizer<EmailTemplates> l, IOptio
             paragraphs.Add(l["Intro.Test"]);
         }
 
-        paragraphs.AddRange(Paragraphs(model.Text));
+        // The letter as the administrator typed it (design 8.2, "A text's layout"): the plain part keeps it so, the HTML part
+        // shows its paragraphs and lists.
+        var typed = paragraphs.Count;
+        paragraphs.Add(model.Text.ReplaceLineEndings("\n").Trim());
         paragraphs.Add(model.SignerName.Trim() + "\n" + model.SignerRole.Trim());
         paragraphs.AddRange(Closing(model.PreferencesPath ?? (model.Test ? MpMailPaths.Preferences("…") : null), null));
-        return EmailLayout.BuildMp(model.To, (model.Test ? l["Intro.TestSubject"] + " " : "") + model.Subject.Trim(), paragraphs, EmailLayout.Footer(l, site.Value.Address), Headers(model.UnsubscribePath, null));
+        return EmailLayout.BuildMp(model.To, (model.Test ? l["Intro.TestSubject"] + " " : "") + model.Subject.Trim(), paragraphs, EmailLayout.Footer(l, site.Value.Address), Headers(model.UnsubscribePath, null), typed);
     }
 
     public EmailMessage Notice(MpMailNoticeEmail model)
@@ -234,9 +237,6 @@ internal sealed class MpMailTemplates(IStringLocalizer<EmailTemplates> l, IOptio
     }
 
     /// <summary>The letter's text as plain paragraphs: separated by an empty line, single line breaks kept.</summary>
-    private static string[] Paragraphs(string text) =>
-        text.ReplaceLineEndings("\n").Split("\n\n", StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
-
     private string Link(string path) => SiteLinks.Absolute(site.Value.Address, path);
 
     private static string Capital(string value) => value.Length == 0 ? value : char.ToUpper(value[0], CultureInfo.GetCultureInfo("lt-LT")) + value[1..];

@@ -40,7 +40,7 @@
     {
         @* Design 8.14.3 (owner, 2026-11-16): a statement longer than about 1 500 characters shows its beginning and "Rodyti
            daugiau"; a moderator's screen shows it whole. *@
-        <LongText Text="@Statement.Text" BubbleClass="bubble bubble--org voice" Paragraphs="true"
+        <LongText Text="@Statement.Text" BubbleClass="bubble bubble--org voice"
                   Shown="TextExcerpt.StatementShown" Margin="TextExcerpt.StatementMargin" Id="@($"{IdPrefix}statement-more-{Statement.Id}")" />
     }
     <div class="said__by statement__meta">

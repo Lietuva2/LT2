@@ -188,10 +188,10 @@
                     <label for="reason-text">@L["Reasons.Label"]</label>
                     @* Design 8.2 (owner, 2026-11-16): the length is the setting Texts:MaxLength; with 0 (no limit) only the
                        technical ceiling holds and no counter is shown. *@
-                    <textarea class="textarea" id="reason-text" maxlength="@MemberTextLimits.Allowed(_maxLength ?? 0)" aria-describedby="@DescribedBy("text", "reason-text", "reason-hint")"
+                    <textarea class="textarea" id="reason-text" maxlength="@MemberTextLimits.Allowed(_maxLength ?? 0)" aria-describedby="@DescribedBy("text", "reason-text", "reason-hint", "reason-layout")"
                               aria-invalid="@Invalid("text")" @bind="_text" @bind:event="oninput" disabled="@Locked"></textarea>
                     <p class="field__hint num" id="reason-hint">@(_maxLength is > 0 and var max ? L.Format("Reasons.Hint", Display.Number(_text.Length), Display.Number(max)) : L["Reasons.HintNoLimit"].Value)</p>
-                    <FieldError Errors="Errors" Field="text" For="reason-text" />
+                    <TextLayoutHint Id="reason-layout" />
                 </div>
                 @if (_similar is { Count: > 0 } similar)
                 {

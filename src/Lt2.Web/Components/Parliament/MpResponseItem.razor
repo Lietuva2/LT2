@@ -44,7 +44,7 @@
             <p><span class="@StanceClass(Response.Stance)">@F.T["Responses.Stance." + Response.Stance]</span></p>
             @* Design 8.5.6 (owner, 2026-11-16): a response longer than about 1 500 characters shows its beginning and "Rodyti
                daugiau" (no script); the moderators' queue shows it whole (ResponseModerationView). *@
-            <Lt2.Web.Client.Components.LongText Text="@(Response.Text ?? "")" BubbleClass="bubble bubble--mp voice" Paragraphs="true"
+            <Lt2.Web.Client.Components.LongText Text="@(Response.Text ?? "")" BubbleClass="bubble bubble--mp voice"
                 Shown="Lt2.Web.Client.TextExcerpt.StatementShown" Margin="Lt2.Web.Client.TextExcerpt.StatementMargin" Id="@($"{IdPrefix}response-more")" />
             break;
     }
@@ -75,7 +75,7 @@
                     <li class="stack stack--tight">
                         <p class="row small"><span class="@StanceClass(v.Stance)">@F.T["Responses.Stance." + v.Stance]</span>
                             <span class="num">@(v.Withdrawn ? F.T.Format("Responses.VersionWithdrawn", Display.Day(v.WrittenAt), Display.Day(v.ReplacedAt)) : F.T.Format("Responses.VersionDates", Display.Day(v.WrittenAt), Display.Day(v.ReplacedAt)))</span></p>
-                        <p class="voice">@v.Text</p>
+                        <Lt2.Web.Client.Components.TypedText Text="@v.Text" Class="voice typed" />
                     </li>
                 }
             </ul>

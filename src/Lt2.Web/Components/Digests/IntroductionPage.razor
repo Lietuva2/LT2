@@ -30,10 +30,7 @@
     <article class="sheet stack" aria-labelledby="intro-subject" id="intro-current">
         <p class="small num" id="intro-sent">@T.Format("Intro.Sent", current.SentAt is { } at ? Display.Day(at) : "")</p>
         <h2 id="intro-subject">@current.Subject</h2>
-        @foreach (var paragraph in Paragraphs(current.Text))
-        {
-            <p>@paragraph</p>
-        }
+        <Lt2.Web.Client.Components.TypedText Text="@current.Text" />
         <p id="intro-signer"><b>@current.SignerName</b><br />@current.SignerRole</p>
         @if (letters.Count > 1)
         {
@@ -44,10 +41,7 @@
                     <div class="sheet--quiet stack stack--tight" id="intro-version-@letter.Version">
                         <p class="small num">@T.Format("Intro.Sent", letter.SentAt is { } sentAt ? Display.Day(sentAt) : "")</p>
                         <h3>@letter.Subject</h3>
-                        @foreach (var paragraph in Paragraphs(letter.Text))
-                        {
-                            <p>@paragraph</p>
-                        }
+                        <Lt2.Web.Client.Components.TypedText Text="@letter.Text" />
                         <p><b>@letter.SignerName</b><br />@letter.SignerRole</p>
                     </div>
                 }
@@ -60,7 +54,4 @@
     private IReadOnlyList<IntroductionLetterResponse>? _letters;
 
     protected override async Task OnInitializedAsync() => _letters = (await Digests.GetIntroductionAsync()).Value;
-
-    private static string[] Paragraphs(string text) =>
-        text.ReplaceLineEndings("\n").Split("\n\n", StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
 }

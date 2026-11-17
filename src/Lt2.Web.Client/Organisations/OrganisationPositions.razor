@@ -123,10 +123,10 @@
                                 <div class="field @ErrorClass("text")">
                                     <label for="statement-text-@org.Slug">@L["Org.Form.Text"]</label>
                                     <textarea class="textarea" id="statement-text-@org.Slug" rows="8" maxlength="@MemberTextLimits.Allowed(_maxLength ?? 0)" aria-invalid="@Invalid("text")"
-                                              aria-describedby="@DescribedBy("text", $"statement-text-{org.Slug}", $"statement-text-hint-{org.Slug}")"
+                                              aria-describedby="@DescribedBy("text", $"statement-text-{org.Slug}", $"statement-text-hint-{org.Slug}", $"statement-layout-{org.Slug}")"
                                               @bind="_text" @bind:event="oninput" disabled="@Locked"></textarea>
                                     <p class="field__hint num" id="statement-text-hint-@org.Slug">@(_maxLength is > 0 and var max ? L.Format("Org.Form.TextHint", Display.Number(_text.Length), Display.Number(max)) : L.Format("Text.CountOnly", Display.Number(_text.Length)))</p>
-                                    <FieldError Errors="Errors" Field="text" For="@($"statement-text-{org.Slug}")" />
+                                    <TextLayoutHint Id="@($"statement-layout-{org.Slug}")" />
                                 </div>
                                 <div class="field @ErrorClass("link")">
                                     <label for="statement-link-@org.Slug">@L["Org.Form.Link"]</label>

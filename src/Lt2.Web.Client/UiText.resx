@@ -135,7 +135,8 @@
 <data name="Actions.More" xml:space="preserve"><value>Daugiau veiksmų</value></data>
 <data name="Hint.More" xml:space="preserve"><value>Plačiau</value></data>
 <data name="Text.ShowMore" xml:space="preserve"><value>Rodyti daugiau</value></data>
-<data name="Text.ShowLess" xml:space="preserve"><value>Rodyti mažiau</value></data><data name="Mp.Title" xml:space="preserve"><value>Seimo nario profilis</value></data>
+<data name="Text.ShowLess" xml:space="preserve"><value>Rodyti mažiau</value></data>
+<data name="Text.LayoutHint" xml:space="preserve"><value>Sąrašą rašykite eilutėmis, pradėtomis „-“ arba „1.“.</value></data><data name="Mp.Title" xml:space="preserve"><value>Seimo nario profilis</value></data>
 <data name="Mp.Offer" xml:space="preserve"><value>Prisijungėte oficialiu Seimo nario adresu. Seimo narys: {0}.</value></data>
 <data name="Mp.Claim" xml:space="preserve"><value>Perimti profilį</value></data>
 <data name="Mp.LinkSent" xml:space="preserve"><value>Nuorodą išsiuntėme jūsų adresu. Atverkite ją šioje naršyklėje per 24 valandas.</value></data>

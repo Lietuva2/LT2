@@ -768,7 +768,7 @@
   <data name="Intro.SentNote" xml:space="preserve"><value>Ši versija išsiųsta {0}. Pakeitus tekstą bus nauja versija: ji bus siunčiama tik tiems Seimo nariams, kurie laiško dar negavo.</value></data>
   <data name="Intro.Subject" xml:space="preserve"><value>Tema</value></data>
   <data name="Intro.Text" xml:space="preserve"><value>Tekstas</value></data>
-  <data name="Intro.TextHint" xml:space="preserve"><value>Paprastos pastraipos; pastraipas skirkite tuščia eilute. Iki 10 000 ženklų.</value></data>
+  <data name="Intro.TextHint" xml:space="preserve"><value>Kiekviena eilutė – atskira pastraipa. Iki 10 000 ženklų.</value></data>
   <data name="Intro.Signer" xml:space="preserve"><value>Pasirašo (vardas, pavardė)</value></data>
   <data name="Intro.Role" xml:space="preserve"><value>Pareigos</value></data>
   <data name="Intro.Added" xml:space="preserve"><value>Po parašu sistema prideda tai, ką ir kiekviename laiške Seimo nariui: nuorodą į suvestinių nustatymus ir sakinį apie profilio perėmimą.</value></data>

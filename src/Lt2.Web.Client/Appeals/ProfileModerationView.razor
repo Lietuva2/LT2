@@ -30,7 +30,7 @@
                         <span class="tag">@L["ProfileMod.Off"]</span>
                     }
                 </div>
-                <p class="voice">@(p.About ?? L["ProfileMod.NoAbout"])</p>
+                <TypedText Text="@(p.About ?? L["ProfileMod.NoAbout"])" Class="voice typed" />
                 @if (p.HiddenStatement is { } why)
                 {
                     <p class="small">@L.Format("Hidden.Why", why)</p>

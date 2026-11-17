@@ -83,7 +83,7 @@ else
                             <span class="tag" id="queue-ai-label-@record.Id">@L["Mod.Source.ai"]</span>
                         }
                     </p>
-                    <p class="voice">@record.Description</p>
+                    <TypedText Text="@record.Description" Class="voice typed" />
                 }
 
                 <Reports Items="record.Reports" Description="true" />

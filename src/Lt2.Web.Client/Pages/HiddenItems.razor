@@ -58,7 +58,7 @@ else
                 {
                     <details class="more stack stack--tight">
                         <summary class="linkish small">@L["Mod.Description"]</summary>
-                        <p class="voice">@record.Description</p>
+                        <TypedText Text="@record.Description" Class="voice typed" />
                     </details>
                 }
                 <RestoreForm Id="record.Id" IdPrefix="restore" Sentence="@L["Hidden.RestoreAppeal.Sentence." + (record.RestoresAs ?? "open")]"
@@ -81,7 +81,7 @@ else
                     <span class="choice choice--@reason.Side">@L["Reasons." + reason.Side]</span>
                 </div>
                 <div class="said">
-                    <p class="bubble bubble--people voice">@reason.Text</p>
+                    <TypedText Text="@reason.Text" Class="bubble bubble--people voice" />
                     <div class="said__by"><b>@(reason.AuthorName ?? L["Reasons.Anonymous"])</b></div>
                 </div>
                 <p class="small num">@ModerationWords.Hidden(L, reason.HiddenAt, reason.HiddenBy)</p>

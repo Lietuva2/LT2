@@ -60,7 +60,7 @@ public sealed class LongTextTests : BunitContext
     public void A_statement_or_a_response_up_to_1500_characters_and_its_margin_is_shown_whole_line_by_line()
     {
         var statement = string.Join('\n', Enumerable.Repeat(string.Concat(Enumerable.Repeat("Pozicijos sakinys. ", 20)).Trim(), 5)); // ~1 900
-        var text = Render<LongText>(p => p.Add(c => c.Text, statement).Add(c => c.BubbleClass, "bubble bubble--org voice").Add(c => c.Paragraphs, true)
+        var text = Render<LongText>(p => p.Add(c => c.Text, statement).Add(c => c.BubbleClass, "bubble bubble--org voice")
             .Add(c => c.Shown, TextExcerpt.StatementShown).Add(c => c.Margin, TextExcerpt.StatementMargin));
         text.FindAll("details").ShouldBeEmpty("not cut at 300 like an argument");
         text.FindAll("div.bubble--org > p").Count.ShouldBe(5);
@@ -70,11 +70,45 @@ public sealed class LongTextTests : BunitContext
     public void A_statement_longer_than_that_shows_about_1500_characters_and_the_rest_line_by_line()
     {
         var statement = string.Join('\n', Enumerable.Repeat(string.Concat(Enumerable.Repeat("Pozicijos sakinys. ", 20)).Trim(), 10)); // ~3 800
-        var text = Render<LongText>(p => p.Add(c => c.Text, statement).Add(c => c.BubbleClass, "bubble bubble--org voice").Add(c => c.Paragraphs, true)
+        var text = Render<LongText>(p => p.Add(c => c.Text, statement).Add(c => c.BubbleClass, "bubble bubble--org voice")
             .Add(c => c.Shown, TextExcerpt.StatementShown).Add(c => c.Margin, TextExcerpt.StatementMargin).Add(c => c.Id, "statement-more-1"));
         var shown = string.Join('\n', text.FindAll("div.bubble--org > p").Select(p => p.TextContent.TrimEnd('…')));
         shown.Length.ShouldBeLessThanOrEqualTo(TextExcerpt.StatementShown);
         shown.Length.ShouldBeGreaterThan(TextExcerpt.StatementShown - 40);
         text.FindAll("#statement-more-1 > p").Count.ShouldBeGreaterThan(1, "the rest keeps its lines");
+    }
+
+    [Fact]
+    public void An_arguments_lines_are_paragraphs_and_marked_lines_a_list()
+    {
+        // Design 8.2, "A text's layout" (owner, 2026-11-17).
+        var text = Render<LongText>(p => p.Add(c => c.Text, "Siūlome:\n- mažinti\n- <b>palikti</b>\nAčiū.").Add(c => c.BubbleClass, "bubble bubble--people voice"));
+        var bubble = text.Find("div.bubble.bubble--people");
+        bubble.Children.Select(e => e.TagName.ToLowerInvariant()).ShouldBe(["p", "ul", "p"]);
+        bubble.QuerySelectorAll("ul.typed-list > li").Select(li => li.TextContent).ShouldBe(["mažinti", "<b>palikti</b>"]);
+        bubble.QuerySelector("b").ShouldBeNull("nothing typed becomes markup");
+    }
+
+    [Fact]
+    public void A_numbered_list_keeps_its_numbers_and_stays_a_list_behind_Rodyti_daugiau()
+    {
+        var items = string.Join('\n', Enumerable.Range(3, 12).Select(n => $"{n}. Punktas su keliais žodžiais, kad tekstas būtų ilgesnis, numeris {n}."));
+        var text = Render<LongText>(p => p.Add(c => c.Text, items).Add(c => c.BubbleClass, "bubble bubble--people voice").Add(c => c.Id, "reason-more-2"));
+        var first = text.Find("div.bubble > ol.typed-list--numbered");
+        first.QuerySelector("li")!.GetAttribute("value").ShouldBe("3", "the numbers as typed");
+        first.QuerySelectorAll("li")[^1].QuerySelector(".long-text__cut").ShouldNotBeNull("the … after the last shown line");
+        var rest = text.Find("#reason-more-2 > ol.typed-list--numbered");
+        rest.QuerySelectorAll("li:not(.typed-list__continued)")[^1].GetAttribute("value").ShouldBe("14");
+    }
+
+    [Fact]
+    public void One_marked_line_alone_is_shown_as_typed() =>
+        Render<LongText>(p => p.Add(c => c.Text, "- tik viena").Add(c => c.BubbleClass, "bubble")).Find("p.bubble").TextContent.ShouldBe("- tik viena");
+
+    [Fact]
+    public void A_comments_link_inside_a_list_is_a_link()
+    {
+        var text = Render<LongText>(p => p.Add(c => c.Text, "Šaltiniai:\n- https://pavyzdys.test/a\n- lrs.lt").Add(c => c.BubbleClass, "bubble").Add(c => c.Links, true));
+        text.FindAll("li a").Select(a => a.GetAttribute("href")).ShouldBe(["https://pavyzdys.test/a"]);
     }
 }

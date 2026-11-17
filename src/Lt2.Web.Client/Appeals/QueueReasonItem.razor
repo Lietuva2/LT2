@@ -19,7 +19,7 @@
         }
     </div>
     <div class="said">
-        <p class="bubble bubble--people voice">@Reason.Text</p>
+        <TypedText Text="@Reason.Text" Class="bubble bubble--people voice" />
         <div class="said__by"><b>@(Reason.AuthorName ?? L["Reasons.Anonymous"])</b></div>
     </div>
     <Reports Items="Reason.Reports" />
