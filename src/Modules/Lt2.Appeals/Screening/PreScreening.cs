@@ -42,7 +42,7 @@ internal sealed partial class RuleBasedPreScreening : IPreScreening
         {
             flags.Add(ScreeningFlags.PersonalCode);
         }
-        else if (PhonePattern().Matches(text).Any(m => DigitCount(m.Value) is >= 8 and <= 12))
+        else if (ContainsPhoneNumber(text))
         {
             flags.Add(ScreeningFlags.Phone);
         }
@@ -55,64 +55,37 @@ internal sealed partial class RuleBasedPreScreening : IPreScreening
         return flags;
     }
 
+    /// <summary>A Lithuanian personal code (<see cref="Lt2.SharedKernel.PersonalCodes"/>, the one definition).</summary>
+    public static bool ContainsPersonalCode(string text) => Lt2.SharedKernel.PersonalCodes.Contains(text);
+
+    public static bool IsPersonalCode(string digits) => Lt2.SharedKernel.PersonalCodes.Is(digits);
+
     /// <summary>
-    /// A Lithuanian personal code (asmens kodas): 11 digits, the first 1–6 (century and sex), a valid birth date, and the
-    /// official check digit.
+    /// A Lithuanian phone number (owner, 2026-11-17): the 8-digit national number, which starts with 3–9 (a mobile 6xx xxxxx,
+    /// Vilnius 5 xxx xxxx, another area's 2-digit code and 6 digits, the 7xx and 8xx services), written internationally after
+    /// <c>+370</c> or <c>00370</c>, nationally after the trunk prefix <c>0</c> in use since 2025, or after the old prefix
+    /// <c>8</c> people still write; spaces, hyphens and brackets may stand between the digits. Nothing else: not a date, a
+    /// year span, a sum, a law's or a document's number, a percentage, nor digits inside an <c>https://</c> or <c>http://</c>
+    /// link.
     /// </summary>
-    public static bool ContainsPersonalCode(string text) =>
-        ElevenDigits().Matches(text).Any(m => IsPersonalCode(m.Value));
-
-    public static bool IsPersonalCode(string digits)
+    public static bool ContainsPhoneNumber(string text)
     {
-        if (digits.Length != 11 || !digits.All(char.IsAsciiDigit) || digits[0] is < '1' or > '6')
-        {
-            return false;
-        }
-
-        var d = digits.Select(c => c - '0').ToArray();
-        var month = d[3] * 10 + d[4];
-        var day = d[5] * 10 + d[6];
-        if (month is < 1 or > 12 || day is < 1 or > 31)
-        {
-            return false;
-        }
-
-        var sum = 0;
-        for (var i = 0; i < 10; i++)
-        {
-            sum += d[i] * (i % 9 + 1);
-        }
-
-        var check = sum % 11;
-        if (check == 10)
-        {
-            sum = 0;
-            for (var i = 0; i < 10; i++)
-            {
-                sum += d[i] * ((i + 2) % 9 + 1);
-            }
-
-            check = sum % 11;
-            if (check == 10)
-            {
-                check = 0;
-            }
-        }
-
-        return check == d[10];
+        ArgumentNullException.ThrowIfNull(text);
+        return PhonePattern().IsMatch(LinkAddress().Replace(text, " "));
     }
-
-    private static int DigitCount(string value) => value.Count(char.IsAsciiDigit);
 
     [GeneratedRegex(@"[\p{L}\p{N}._%+-]+@[\p{L}\p{N}.-]+\.\p{L}{2,}", RegexOptions.CultureInvariant)]
     private static partial Regex EmailPattern();
 
-    // A run of digits with the separators people put in phone numbers, optionally with a leading +.
-    [GeneratedRegex(@"(?<![\p{N}])\+?\d[\d\s().-]{6,16}\d(?![\p{N}])", RegexOptions.CultureInvariant)]
+    // +370 / 00370, or the trunk prefix 0 or 8, then the national number's eight digits (the first 3–9); not inside a longer
+    // run of digits on either side (a sum such as "25 000 000" or "1 234 567" starts after a digit).
+    [GeneratedRegex(
+        @"(?<![\p{N}][\s\-.,/]?)(?<![\p{L}])(?:(?:\+|00)\s*370|\(?[08])[\s\-()]*[3-9](?:[\s\-()]*\d){7}(?![\s\-.,/]?\d)",
+        RegexOptions.CultureInvariant)]
     private static partial Regex PhonePattern();
 
-    [GeneratedRegex(@"(?<!\d)\d{11}(?!\d)", RegexOptions.CultureInvariant)]
-    private static partial Regex ElevenDigits();
+    [GeneratedRegex(@"https?://\S+", RegexOptions.CultureInvariant | RegexOptions.IgnoreCase)]
+    private static partial Regex LinkAddress();
 
     [GeneratedRegex(@"(https?://|www\.)\S+|\b[\p{L}\p{N}-]+\.(lt|com|eu|org|net|info|io|de|ru|lv|ee|pl|uk|me|tv|co|app)\b(/\S*)?", RegexOptions.CultureInvariant | RegexOptions.IgnoreCase)]
     private static partial Regex LinkPattern();

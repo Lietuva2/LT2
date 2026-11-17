@@ -1,0 +1,59 @@
+@inherits InteractiveBase<UiText>
+@inject IMeApi MeApi
+
+@* Design 5.2: the party the person supports, private and optional, with its own explicit consent; used only for group
+   numbers of at least 20 in summaries to MPs. Whether it may also be shown on a public profile is the designer's proposal of
+   design 8.25.9, not built. *@
+@if (Party is { } party)
+{
+    <section class="sheet stack" aria-labelledby="party-title" id="party-support">
+        <h3 id="party-title">@L["Party.Title"]</h3>
+        <p>@L["Party.Text"]</p>
+        <div class="field">
+            <label for="party-choice">@L["Party.Label"]</label>
+            <select class="input" id="party-choice" @bind="_partyChoice" disabled="@Locked">
+                <option value="">@L["Party.None"]</option>
+                @foreach (var choice in party.Choices)
+                {
+                    <option value="@choice">@choice</option>
+                }
+            </select>
+        </div>
+        @if (!string.IsNullOrEmpty(_partyChoice) && _partyChoice != party.Party)
+        {
+            <label class="check">
+                <input type="checkbox" id="party-consent" @bind="_partyConsent" disabled="@Locked" />
+                <span>@L["Party.Consent"]</span>
+            </label>
+        }
+        <p><button type="button" class="btn btn--plain" id="party-save" disabled="@(Locked || (!string.IsNullOrEmpty(_partyChoice) && _partyChoice != party.Party && !_partyConsent))" @onclick="SaveAsync">@L["Party.Save"]</button></p>
+        <Messages Message="@Message" Info="@Info" />
+    </section>
+}
+
+@code {
+    private string _partyChoice = "";
+    private bool _partyConsent;
+
+    [PersistentState]
+    public PartySupportResponse? Party { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        Party ??= (await MeApi.GetPartySupportAsync()).Value;
+        _partyChoice = Party?.Party ?? "";
+    }
+
+    private Task SaveAsync() => RunAsync(async () =>
+    {
+        var party = string.IsNullOrEmpty(_partyChoice) ? null : _partyChoice;
+        if (!Succeeded(await MeApi.SetPartySupportAsync(new PartySupportRequest { Party = party, Consent = _partyConsent })))
+        {
+            return;
+        }
+
+        Info = L[party is null ? "Party.Removed" : "Party.Saved"];
+        _partyConsent = false;
+        Party = (await MeApi.GetPartySupportAsync()).Value;
+    });
+}

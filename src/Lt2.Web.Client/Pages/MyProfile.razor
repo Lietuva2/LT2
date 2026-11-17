@@ -1,0 +1,99 @@
+@inherits InteractiveBase<UiText>
+@inject IProfilesApi Profiles
+
+@* Design 8.25 on the "Profilis" screen: "Apie mane" and the switch "Viešas profilis", one form. The switch is the consent
+   (kind public-profile): before it is saved on, the form says everything it covers (design 8.25.1), inline, since a consent
+   and what it covers stay where the person acts (design 8.15). "Apie mane" can be written while the profile is off and is
+   shown nowhere then. The person's own answer only, filled from GET /me/profile. *@
+<section class="sheet stack" aria-labelledby="profile-title" id="viesas-profilis">
+    <h3 id="profile-title">@L["PublicProfile.Title"]</h3>
+    @if (Mine is { } mine)
+    {
+        @if (mine.Address is { } address)
+        {
+            <p class="note note--quiet" id="profile-public">@L["PublicProfile.IsPublic"] <a href="@address" id="profile-link">@address</a></p>
+        }
+        else
+        {
+            <p id="profile-off">@L["PublicProfile.IsOff"]</p>
+        }
+
+        @if (mine.AboutHidden)
+        {
+            <p class="note" id="about-hidden">@L["PublicProfile.AboutHidden"]@(mine.AboutHiddenStatement is { } why ? " " + L.Format("PublicProfile.AboutHiddenWhy", why) : "")</p>
+        }
+
+        <form class="stack" @onsubmit="SaveAsync" novalidate>
+            <div class="field @ErrorClass("about")">
+                <label for="about-text">@L["PublicProfile.AboutLabel"]</label>
+                <textarea class="textarea" id="about-text" maxlength="@MemberTextLimits.Allowed(mine.TextMaxLength)"
+                          aria-invalid="@Invalid("about")" aria-describedby="@DescribedBy("about", "about-text", "about-hint")"
+                          @bind="_about" @bind:event="oninput" disabled="@Locked"></textarea>
+                <p class="field__hint num" id="about-hint">@(mine.TextMaxLength > 0 ? L.Format("PublicProfile.AboutHint", Display.Number(_about?.Length ?? 0), Display.Number(mine.TextMaxLength)) : L["PublicProfile.AboutHintNoLimit"].Value)</p>
+                <FieldError Errors="Errors" Field="about" For="about-text" />
+            </div>
+
+            <label class="check">
+                <input type="checkbox" id="profile-public-switch" @bind="_public" disabled="@Locked" />
+                <span>@L["PublicProfile.Switch"]</span>
+            </label>
+            @if (_public && mine.ProfileId is null)
+            {
+                @* What the consent covers, said before it is given (design 8.25.1). *@
+                <p class="note" id="profile-consent-text">@L["PublicProfile.Consent"]</p>
+                @if (!HasName)
+                {
+                    <p class="small" id="profile-name-needed">@L["PublicProfile.NameNeeded"]</p>
+                }
+            }
+            else if (!_public && mine.ProfileId is not null)
+            {
+                <p class="note" id="profile-off-text">@L["PublicProfile.OffText"]</p>
+            }
+            <FieldError Errors="Errors" Field="public" For="profile-public-switch" />
+            <p><button class="btn btn--plain" type="submit" id="profile-save" disabled="@Locked">@L["PublicProfile.Save"]</button></p>
+            <Messages Message="@Message" Info="@Info" />
+        </form>
+    }
+</section>
+
+@code {
+    private string? _about;
+    private bool _public;
+
+    /// <summary>The account has a display name: a public profile needs one (design 8.25.6).</summary>
+    [Parameter] public bool HasName { get; set; }
+
+    [PersistentState] public MyProfileResponse? Mine { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        Mine ??= (await Profiles.GetMineAsync()).Value;
+        Take(Mine);
+    }
+
+    private void Take(MyProfileResponse? mine)
+    {
+        _about = mine?.About;
+        _public = mine?.ProfileId is not null;
+    }
+
+    private Task SaveAsync() => RunAsync(async () =>
+    {
+        var wasPublic = Mine?.ProfileId is not null;
+        var saved = await Profiles.SaveAsync(new ProfileRequest { About = _about, Public = _public, ConsentVersion = _public ? ProfileLimits.ConsentVersion : null });
+        if (!Succeeded(saved, "about", "public"))
+        {
+            return;
+        }
+
+        Mine = saved.Value;
+        Take(Mine);
+        Info = (wasPublic, Mine!.ProfileId is not null) switch
+        {
+            (false, true) => L["PublicProfile.SavedOn"],
+            (true, false) => L["PublicProfile.SavedOff"],
+            _ => L["PublicProfile.Saved"],
+        };
+    });
+}

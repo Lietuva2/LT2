@@ -13,7 +13,7 @@ namespace Lt2.Web.Services;
 /// The parliament reads both the HTTP endpoints and the server-rendered pages use: the module's answers mapped to the
 /// API contracts, or <c>not-found</c>.
 /// </summary>
-internal sealed class ParliamentReads(IParliamentQueries queries, IPlannedAgenda agenda, IMpDirectory mps, Lt2.Identity.IPoliticians politicians)
+internal sealed class ParliamentReads(IParliamentQueries queries, IPlannedAgenda agenda, IMpDirectory mps, Lt2.Identity.IPoliticians politicians, IFollowerCounts followers)
 {
     public const string ImportSource = "seimas-open-data";
     private static readonly Error NotFound = Error.NotFound("not-found");
@@ -37,8 +37,13 @@ internal sealed class ParliamentReads(IParliamentQueries queries, IPlannedAgenda
                 p.Contacts.Select(c => new ContactResponse(c.Kind, c.Value)).ToList(),
                 p.Statistics is { } s ? new MpStatisticsResponse(s.VotesHeld, s.VotesTakenPart, s.Participation, s.VotesWithFactionPosition, s.VotedWithFaction, s.WithFaction, s.FreeVotes) : null,
                 p.RecentVotes.Select(Map).ToList(),
-                await ManagedSinceAsync(slug, ct))
+                await ManagedSinceAsync(slug, ct),
+                await FollowersAsync(slug, ct))
             : NotFound;
+
+    /// <summary>Design 8.11.2: how many follow the MP, from Notifications; a number only.</summary>
+    private async Task<int> FollowersAsync(string slug, CancellationToken ct) =>
+        await mps.FindMpAsync(slug, ct) is { } mp ? await followers.MpAsync(mp.SeimasPersonId, ct) : 0;
 
     /// <summary>Design 8.5.2: the one public trace of a link, composed from the Identity module (the host composes modules).</summary>
     private async Task<DateTimeOffset?> ManagedSinceAsync(string slug, CancellationToken ct) =>

@@ -60,12 +60,39 @@ public sealed class PreScreeningTests
     public void An_email_address_is_flagged() =>
         RuleBasedPreScreening.Screen("Rašykite ruta.mockute@pavyzdys.test").ShouldContain(ScreeningFlags.Email);
 
+    /// <summary>The owner, 2026-11-17: a Lithuanian number, international, with the trunk 0 in use, or the old 8.</summary>
     [Theory]
     [InlineData("Skambinkite +370 612 34567")]
+    [InlineData("+37061234567")]
+    [InlineData("00370 612 34567")]
+    [InlineData("+370 (5) 212 3456")]
+    [InlineData("+370 37 123 456")]
+    [InlineData("Tel. 0612 34567")]
+    [InlineData("tel 061234567")]
+    [InlineData("Vilniuje 05 212 3456")]
+    [InlineData("(0 5) 212-3456")]
     [InlineData("Tel. 8 612 34567")]
     [InlineData("tel 861234567")]
-    public void A_phone_number_is_flagged(string text) =>
+    [InlineData("8 5 212 3456")]
+    [InlineData("(8 37) 123 456")]
+    public void A_lithuanian_phone_number_international_with_the_trunk_0_or_the_old_8_is_flagged(string text) =>
         RuleBasedPreScreening.Screen(text).ShouldContain(ScreeningFlags.Phone);
+
+    /// <summary>The owner, 2026-11-17: dates, year spans, sums, laws' and documents' numbers, percentages and link paths are no phone.</summary>
+    [Theory]
+    [InlineData("Įsigalioja 2026-11-20.")]
+    [InlineData("Kadencija 2024-2028")]
+    [InlineData("Kadencija 2024–2028")]
+    [InlineData("Skirta 25 000 000 eurų")]
+    [InlineData("Iš viso 1 234 567 gyventojų")]
+    [InlineData("Įstatymas Nr. XIV-1234")]
+    [InlineData("Sprendimas Nr. 12-345")]
+    [InlineData("Pritaria 86 % apklaustųjų")]
+    [InlineData("Žr. https://e-seimas.lrs.lt/portal/legalAct/lt/TAP/861234567")]
+    [InlineData("Lentelė 0,5 ir 85 000")]
+    [InlineData("Nr. 2026-861234")]
+    public void A_date_a_year_span_a_sum_a_document_number_a_percentage_or_a_link_path_is_no_phone_number(string text) =>
+        RuleBasedPreScreening.ContainsPhoneNumber(text).ShouldBeFalse(text);
 
     [Fact]
     public void A_valid_lithuanian_personal_code_is_flagged()

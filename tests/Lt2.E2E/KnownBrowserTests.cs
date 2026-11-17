@@ -50,7 +50,7 @@ public sealed class KnownBrowserTests : E2ETest
             await Assertions.Expect(part.Locator("#known-browsers li")).ToHaveCountAsync(1);
             await Assertions.Expect(part).ToContainTextAsync("Ši naršyklė");
             await E2ESteps.ShootBothAsync(page, Shots, "listed", part);
-            await page.Locator("main").GetByRole(AriaRole.Button, new() { Name = "Atsijungti" }).ClickAsync();
+            await E2ESteps.SignOutOnAccountAsync(page);
             await page.WaitForURLAsync(new Regex("/$"), new() { Timeout = E2ESteps.Slow });
 
             // 2. The address's shared limit used up for the day, by the highest daily number the settings allow.
@@ -83,7 +83,8 @@ public sealed class KnownBrowserTests : E2ETest
             await Assertions.Expect(stranger.Page.GetByRole(AriaRole.Alert).Filter(new() { HasText = "Kodas netinka arba nebegalioja. Paprašykite naujo." }))
                 .ToBeVisibleAsync(new() { Timeout = E2ESteps.Slow });
             await TypeCodeAsync(page, code);
-            await page.WaitForURLAsync(new Regex("/sveiki$"), new() { Timeout = E2ESteps.Slow });
+            await page.WaitForURLAsync(new Regex("/paskyra$"), new() { Timeout = E2ESteps.Slow });
+            await page.GotoAsync(E2ESteps.Base + "/paskyra/saugumas");
             await Assertions.Expect(part.Locator("#known-browsers li")).ToHaveCountAsync(1, new() { Timeout = E2ESteps.Slow });
             await Assertions.Expect(part).ToContainTextAsync("Ši naršyklė");
 

@@ -225,7 +225,8 @@
 <data name="Mod.Sentence.reason.publish" xml:space="preserve"><value>Argumentas bus rodomas projekto puslapyje ir galės patekti į suvestines. Pastabą, jei ją parašysite, gaus autorius.</value></data>
 <data name="Mod.Sentence.reason.keep" xml:space="preserve"><value>Argumentas liks rodomas ir bus pažymėtas kaip peržiūrėtas, todėl galės patekti į suvestines; pranešimai apie jį bus uždaryti.</value></data>
 <data name="Mod.Sentence.reason.hide" xml:space="preserve"><value>Argumentas bus paslėptas, o „Man svarbu“ žymos prie jo ištrintos. Jį galima atkurti, bet be žymų. Paaiškinimą gaus autorius.</value></data>
-<data name="Mod.Sentence.reason.merge" xml:space="preserve"><value>Argumentas bus sujungtas su pasirinktu panašiu: „Man svarbu“ žymos persikels prie jo, o šis nebebus rodomas. Paaiškinimą gaus autorius.</value></data>
+<data name="Mod.Sentence.reason.merge.Comments" xml:space="preserve"><value>Kartu bus ištrinti komentarai po juo: {0}.</value></data>
+  <data name="Mod.Sentence.reason.merge" xml:space="preserve"><value>Argumentas bus sujungtas su pasirinktu panašiu: „Man svarbu“ žymos persikels prie jo, o šis nebebus rodomas. Paaiškinimą gaus autorius.</value></data>
 <data name="Mod.Statement.Required" xml:space="preserve"><value>Paaiškinimas (privalomas)</value></data>
 <data name="Mod.MergeChoose" xml:space="preserve"><value>Pasirinkite argumentą, su kuriuo sujungti.</value></data>
 <data name="Mod.Done.publish" xml:space="preserve"><value>Atlikta: paskelbta.</value></data>
@@ -723,8 +724,8 @@
   <data name="Admin.Help.Digest:ApprovalHours" xml:space="preserve"><value>Nepatvirtinta suvestinė nebesiunčiama praėjus tiek valandų nuo jos sudarymo arba prasidėjus posėdžio dienai, kas anksčiau.</value></data>
   <data name="Admin.Unit.Digest:ApprovalHours" xml:space="preserve"><value>val.</value></data>
   <data name="Admin.Group.follows" xml:space="preserve"><value>Laiškai sekantiems</value></data>
-  <data name="Admin.Setting.Follows:ResponsesAt" xml:space="preserve"><value>Laiško apie Seimo narių atsakymus laikas</value></data>
-  <data name="Admin.Help.Follows:ResponsesAt" xml:space="preserve"><value>Kurią valandą (Vilniaus laiku) kitą rytą sekantiems projektą siunčiamas laiškas apie vakar paskelbtus Seimo narių atsakymus.</value></data>
+  <data name="Admin.Setting.Follows:ResponsesAt" xml:space="preserve"><value>Rytinių laiškų laikas</value></data>
+  <data name="Admin.Help.Follows:ResponsesAt" xml:space="preserve"><value>Kurią valandą (Vilniaus laiku) siunčiami laiškai tiems, kurie pasirinko gauti laiškus kartą per dieną, ir pirmadienio laiškai tiems, kurie pasirinko kartą per savaitę.</value></data>
   <data name="Admin.Unit.Follows:ResponsesAt" xml:space="preserve"><value>HH:mm</value></data>
   <data name="DigMod.PageTitle" xml:space="preserve"><value>Suvestinės · Moderavimas · Lietuva 2.0</value></data>
   <data name="DigMod.Title" xml:space="preserve"><value>Suvestinės</value></data>
@@ -851,4 +852,121 @@
   <data name="Usage.Refused" xml:space="preserve"><value>Šį puslapį gali matyti tik administratorius, prisijungęs darbuotojo prieigos raktu.</value></data>
   <data name="Usage.ChartMost" xml:space="preserve"><value>Daugiausia per dieną: {0} ({1}).</value></data>
   <data name="Usage.Referred" xml:space="preserve"><value>Atėjo lankytojų</value></data>
+  <data name="Followers.Line" xml:space="preserve"><value>Sekėjai: {0}</value></data>
+  <data name="Followers.Hint" xml:space="preserve"><value>Kas yra sekėjai?</value></data>
+  <data name="Followers.Answer" xml:space="preserve"><value>Tiek Lietuva 2.0 narių paprašė laiškų apie tai. Tai ne palaikymas ir ne reprezentatyvi apklausa; kas seka, nerodome niekam.</value></data>
+  <data name="Follow.What.member" xml:space="preserve"><value>Gausite laišką, kai narys paskelbs argumentą ar komentarą.</value></data>
+  <data name="Follow.Following.member" xml:space="preserve"><value>Sekate: gausite laišką, kai narys paskelbs argumentą ar komentarą.</value></data>
+  <data name="Follow.SignIn.member" xml:space="preserve"><value>Prisijungę gausite laišką, kai narys paskelbs argumentą ar komentarą.</value></data>
+  <data name="Follow.Own" xml:space="preserve"><value>Tai jūsų viešas profilis.</value></data>
+  <data name="Follow.OwnLink" xml:space="preserve"><value>Keisti profilį</value></data>
+  <data name="Follows.Members" xml:space="preserve"><value>Nariai</value></data>
+  <data name="Follows.Email.members" xml:space="preserve"><value>Kai sekamas narys paskelbia argumentą ar komentarą</value></data>
+  <data name="Member.Label" xml:space="preserve"><value>Lietuva 2.0 narys</value></data>
+  <data name="Member.GoneTitle" xml:space="preserve"><value>Šio profilio nebėra</value></data>
+  <data name="Member.Gone" xml:space="preserve"><value>Narys išjungė savo viešą profilį arba ištrynė paskyrą. Šis adresas daugiau nenaudojamas.</value></data>
+  <data name="Member.Arguments" xml:space="preserve"><value>Argumentai ir komentarai</value></data>
+  <data name="Member.NoArguments" xml:space="preserve"><value>Narys dar nepaskelbė argumentų ar komentarų.</value></data>
+  <data name="Member.ArgumentFor.for" xml:space="preserve"><value>argumentas už</value></data>
+  <data name="Member.ArgumentFor.against" xml:space="preserve"><value>argumentas prieš</value></data>
+  <data name="Member.CommentOn.reason" xml:space="preserve"><value>komentaras po argumentu</value></data>
+  <data name="Member.CommentOn.statement" xml:space="preserve"><value>komentaras po organizacijos pozicija</value></data>
+  <data name="Member.CommentOn.response" xml:space="preserve"><value>komentaras po Seimo nario atsakymu</value></data>
+  <data name="Member.ReadOnBill" xml:space="preserve"><value>Skaityti projekto puslapyje</value></data>
+  <data name="Member.More" xml:space="preserve"><value>Rodyti daugiau</value></data>
+  <data name="Member.Note" xml:space="preserve"><value>Šį puslapį narys įsijungė pats. Čia matyti tik tai, ką jis paskelbė viešai.</value></data>
+  <data name="Member.Report" xml:space="preserve"><value>Pranešti apie profilį</value></data>
+  <data name="Card.Open" xml:space="preserve"><value>Profilis</value></data>
+  <data name="Report.Ground.person-impersonation" xml:space="preserve"><value>Apsimeta kitu asmeniu ar pareigūnu</value></data>
+  <data name="ProfileMod.Queue" xml:space="preserve"><value>Narių profiliai</value></data>
+  <data name="ProfileMod.Hidden" xml:space="preserve"><value>Paslėpti „Apie mane“</value></data>
+  <data name="ProfileMod.Item" xml:space="preserve"><value>Nario profilis</value></data>
+  <data name="ProfileMod.Off" xml:space="preserve"><value>profilis išjungtas</value></data>
+  <data name="ProfileMod.NoAbout" xml:space="preserve"><value>(be „Apie mane“)</value></data>
+  <data name="ProfileMod.Action.keep" xml:space="preserve"><value>Palikti</value></data>
+  <data name="ProfileMod.Action.hide" xml:space="preserve"><value>Paslėpti „Apie mane“</value></data>
+  <data name="ProfileMod.Action.restore" xml:space="preserve"><value>Atkurti</value></data>
+  <data name="ProfileMod.Sentence.keep" xml:space="preserve"><value>Pranešimai užsidaro, profilis lieka toks, koks yra.</value></data>
+  <data name="ProfileMod.Sentence.hide" xml:space="preserve"><value>Tekstas „Apie mane“ niekur nerodomas, kol narys neparašys naujo. Paaiškinimą gaus narys el. paštu.</value></data>
+  <data name="ProfileMod.Sentence.restore" xml:space="preserve"><value>Tekstas vėl rodomas profilyje. Paaiškinimą gaus narys el. paštu.</value></data>
+  <data name="ProfileMod.Done.keep" xml:space="preserve"><value>Palikta.</value></data>
+  <data name="ProfileMod.Done.hide" xml:space="preserve"><value>„Apie mane“ paslėptas.</value></data>
+  <data name="ProfileMod.Done.restore" xml:space="preserve"><value>„Apie mane“ atkurtas.</value></data>
+  <data name="Rhythm.Title" xml:space="preserve"><value>Kaip dažnai siųsti laiškus</value></data>
+  <data name="Rhythm.Lead" xml:space="preserve"><value>Pagal šį pasirinkimą ateina visi laiškai apie tai, ką sekate. Prisijungimo kodai ir pranešimai apie jūsų paskyrą ar tekstus visada siunčiami iš karto.</value></data>
+  <data name="Rhythm.Legend" xml:space="preserve"><value>Laiškai apie tai, ką sekate</value></data>
+  <data name="Rhythm.immediate" xml:space="preserve"><value>Iš karto</value></data>
+  <data name="Rhythm.immediate.Hint" xml:space="preserve"><value>Per kelias minutes; kas nutiko per tą laiką, ateina viename laiške.</value></data>
+  <data name="Rhythm.daily" xml:space="preserve"><value>Kartą per dieną</value></data>
+  <data name="Rhythm.daily.Hint" xml:space="preserve"><value>Vienas laiškas rytą. Jei sekamas projektas planuojamas svarstyti anksčiau, nei ateis kitas laiškas, apie tai parašome iš karto.</value></data>
+  <data name="Rhythm.weekly" xml:space="preserve"><value>Kartą per savaitę ir artėjant balsavimui</value></data>
+  <data name="Rhythm.weekly.Hint" xml:space="preserve"><value>Vienas laiškas pirmadienio rytą. Jei sekamas projektas planuojamas svarstyti anksčiau, nei ateis kitas laiškas, apie tai parašome iš karto.</value></data>
+  <data name="Rhythm.Saved" xml:space="preserve"><value>Išsaugota.</value></data>
+  <data name="Comments.Title" xml:space="preserve"><value>Aptarimas</value></data>
+  <data name="Comments.Title.Count" xml:space="preserve"><value>Aptarimas ({0})</value></data>
+  <data name="Comments.None" xml:space="preserve"><value>Komentarų dar nėra.</value></data>
+  <data name="Comments.NoName" xml:space="preserve"><value>Lietuva 2.0 naudotojas</value></data>
+  <data name="Comments.Mark.Organisation" xml:space="preserve"><value>Organizacija</value></data>
+  <data name="Comments.Mark.Mp" xml:space="preserve"><value>Seimo narys arba jo biuras</value></data>
+  <data name="Comments.Agree" xml:space="preserve"><value>Sutinku</value></data>
+  <data name="Comments.Agree.Hint" xml:space="preserve"><value>Jūsų vardas bus matomas</value></data>
+  <data name="Comments.Agree.Undo" xml:space="preserve"><value>Atsiimti „Sutinku“</value></data>
+  <data name="Comments.Agree.Confirm" xml:space="preserve"><value>Jūsų vardas bus matomas prie šio komentaro.</value></data>
+  <data name="Comments.Agreed.One" xml:space="preserve"><value>Sutinka: {0}</value></data>
+  <data name="Comments.Agreed.Two" xml:space="preserve"><value>Sutinka: {0}, {1}</value></data>
+  <data name="Comments.Agreed.More" xml:space="preserve"><value>Sutinka: {0}, {1} ir dar {2}</value></data>
+  <data name="Comments.AgreedAll" xml:space="preserve"><value>Visi sutinkantys</value></data>
+  <data name="Comments.Delete" xml:space="preserve"><value>Ištrinti</value></data>
+  <data name="Comments.DeleteConfirm" xml:space="preserve"><value>Ištrinti komentarą visam laikui? Kartu dings ir „Sutinku“ prie jo.</value></data>
+  <data name="Comments.DeleteYes" xml:space="preserve"><value>Taip, ištrinti</value></data>
+  <data name="Comments.Deleted" xml:space="preserve"><value>Komentaras ištrintas.</value></data>
+  <data name="Comments.Shown" xml:space="preserve"><value>Rodoma {0} iš {1}.</value></data>
+  <data name="Comments.More" xml:space="preserve"><value>Rodyti daugiau komentarų</value></data>
+  <data name="Comments.Frozen" xml:space="preserve"><value>Seimas dėl projekto jau balsavo: aptarimas tik skaitomas.</value></data>
+  <data name="Comments.SignIn" xml:space="preserve"><value>Prisijunkite, kad galėtumėte komentuoti</value></data>
+  <data name="Comments.Refusal.mp.passkey-required" xml:space="preserve"><value>Seimo nario vardu komentuoti galima tik prisijungus prieigos raktu.</value></data>
+  <data name="Comments.Refusal.response.mandate-ended" xml:space="preserve"><value>Seimo nario įgaliojimai baigėsi: jo vardu naujų komentarų rašyti nebegalima.</value></data>
+  <data name="Comments.LimitReached" xml:space="preserve"><value>Po šiuo tekstu jau parašėte {0} komentarus – tiek, kiek leidžiama vienam žmogui.</value></data>
+  <data name="Comments.Write" xml:space="preserve"><value>Komentuoti</value></data>
+  <data name="Comments.Voice.person" xml:space="preserve"><value>Komentaras bus paskelbtas iš karto, viešai, su jūsų vardu.</value></data>
+  <data name="Comments.Voice.organisation" xml:space="preserve"><value>Komentaras bus paskelbtas iš karto, viešai, organizacijos vardu – ne jūsų.</value></data>
+  <data name="Comments.Voice.mp" xml:space="preserve"><value>Komentaras bus paskelbtas iš karto, viešai, Seimo nario vardu su žyma „Seimo narys arba jo biuras“.</value></data>
+  <data name="Comments.Label" xml:space="preserve"><value>Komentaras</value></data>
+  <data name="Comments.Hint" xml:space="preserve"><value>{0} iš {1} ženklų. Nuoroda, prasidedanti https://, bus rodoma kaip nuoroda.</value></data>
+  <data name="Comments.HintNoLimit" xml:space="preserve"><value>Nuoroda, prasidedanti https://, bus rodoma kaip nuoroda.</value></data>
+  <data name="Comments.Submit" xml:space="preserve"><value>Skelbti</value></data>
+  <data name="Comments.Published" xml:space="preserve"><value>Komentaras paskelbtas.</value></data>
+  <data name="Comments.Mod.Action.hide" xml:space="preserve"><value>Paslėpti</value></data>
+  <data name="Comments.Mod.Action.keep" xml:space="preserve"><value>Palikti</value></data>
+  <data name="Comments.Mod.Action.restore" xml:space="preserve"><value>Atkurti</value></data>
+  <data name="Comments.Mod.Action.restrict" xml:space="preserve"><value>Riboti autoriaus rašymą</value></data>
+  <data name="Comments.Mod.Sentence.hide" xml:space="preserve"><value>Komentaras dings iš puslapio, o „Sutinku“ prie jo bus ištrinti. Paaiškinimą gaus autorius.</value></data>
+  <data name="Comments.Mod.Sentence.keep" xml:space="preserve"><value>Komentaras liks rodomas, pranešimai apie jį bus uždaryti. Niekam apie tai nepranešama.</value></data>
+  <data name="Comments.Mod.Sentence.restore" xml:space="preserve"><value>Komentaras vėl bus rodomas (be ištrintų „Sutinku“). Paaiškinimą gaus autorius.</value></data>
+  <data name="Comments.Mod.Done.hide" xml:space="preserve"><value>Atlikta: komentaras paslėptas.</value></data>
+  <data name="Comments.Mod.Done.keep" xml:space="preserve"><value>Atlikta: palikta, pranešimai uždaryti.</value></data>
+  <data name="Comments.Mod.Done.restore" xml:space="preserve"><value>Atlikta: komentaras atkurtas.</value></data>
+  <data name="Comments.Queue.Title" xml:space="preserve"><value>Komentarai</value></data>
+  <data name="Comments.Queue.None" xml:space="preserve"><value>Pranešimų apie komentarus nėra.</value></data>
+  <data name="Comments.Queue.On.reason" xml:space="preserve"><value>Po argumentu</value></data>
+  <data name="Comments.Queue.On.statement" xml:space="preserve"><value>Po organizacijos pozicija</value></data>
+  <data name="Comments.Queue.On.response" xml:space="preserve"><value>Po Seimo nario atsakymu</value></data>
+  <data name="Comments.Queue.TargetHidden" xml:space="preserve"><value>Tekstas, po kuriuo parašytas komentaras, dabar nerodomas, todėl nerodomas ir komentaras.</value></data>
+  <data name="Comments.Queue.Hidden" xml:space="preserve"><value>Paslėpti komentarai</value></data>
+  <data name="Comments.Panel.Reported" xml:space="preserve"><value>Pranešta apie komentarus</value></data>
+  <data name="Restrict.Target.comment" xml:space="preserve"><value>komentaras</value></data>
+  <data name="Admin.Group.comments" xml:space="preserve"><value>Komentarai</value></data>
+  <data name="Admin.Setting.Comments:OnReasons" xml:space="preserve"><value>Komentarai po argumentais</value></data>
+  <data name="Admin.Help.Comments:OnReasons" xml:space="preserve"><value>Išjungus naujų komentarų po argumentais rašyti nebegalima; parašyti lieka matomi, „Sutinku“, pranešimai ir moderavimas veikia.</value></data>
+  <data name="Admin.Unit.Comments:OnReasons" xml:space="preserve"><value>taip / ne</value></data>
+  <data name="Admin.Setting.Comments:OnStatements" xml:space="preserve"><value>Komentarai po organizacijų pozicijomis</value></data>
+  <data name="Admin.Help.Comments:OnStatements" xml:space="preserve"><value>Išjungus naujų komentarų po organizacijų pozicijomis rašyti nebegalima; parašyti lieka matomi.</value></data>
+  <data name="Admin.Unit.Comments:OnStatements" xml:space="preserve"><value>taip / ne</value></data>
+  <data name="Admin.Setting.Comments:OnResponses" xml:space="preserve"><value>Komentarai po Seimo narių atsakymais</value></data>
+  <data name="Admin.Help.Comments:OnResponses" xml:space="preserve"><value>Išjungus naujų komentarų po Seimo narių atsakymais rašyti nebegalima; parašyti lieka matomi. Prieš prisijungiant tikriems Seimo nariams sprendžiama iš naujo.</value></data>
+  <data name="Admin.Unit.Comments:OnResponses" xml:space="preserve"><value>taip / ne</value></data>
+  <data name="Admin.Setting.Comments:PerPersonPerTarget" xml:space="preserve"><value>Komentarų vienam žmogui po vienu tekstu</value></data>
+  <data name="Admin.Help.Comments:PerPersonPerTarget" xml:space="preserve"><value>Kiek rodomų komentarų vienas žmogus gali turėti po vienu argumentu, pozicija ar atsakymu; 0 – neribojama. Įjungus jau parašyti nepašalinami.</value></data>
+  <data name="Admin.Unit.Comments:PerPersonPerTarget" xml:space="preserve"><value>komentarai (0 – neribojama)</value></data>
+  <data name="Follows.Email.comments" xml:space="preserve"><value>Kai mano argumentą pakomentuoja</value></data>
 </root>

@@ -9,13 +9,13 @@ namespace Lt2.E2E;
 /// page, publishes a response on a bill's page in the passkey session, sees it on the bill's page and on the profile as a
 /// visitor without JavaScript, changes it and sees the earlier version, and withdraws it; at 1280 and 390 px, the part also in
 /// the dark theme. A member who followed the bill gets the email "Seimo narių atsakymai" (design 8.20.1) in Mailpit, with the MP's
-/// name and stance and without the explanation: the worker's job runs every minute on the local stack, <c>Follows:ResponsesAt</c>
-/// is set to 00:00 and the answer moved to yesterday, as if the morning after had come. Screenshots go to
+/// name and stance and without the explanation: the worker's job runs every minute on the local stack, and under "Iš karto" (design
+/// 8.24) the answer is told at its next run. Screenshots go to
 /// <c>output/mp/responses</c>. Whatever happened, the MP's and the follower's accounts are deleted (which ends the link), the
-/// response it made is removed from the database (no request removes a response: its history is public), and the setting and the
-/// bill's "response" events are put back.
+/// response it made is removed from the database (no request removes a response: its history is public), and the bill's "response"
+/// events are removed.
 /// </summary>
-public sealed partial class MpResponseTests(AdministratorFixture administrator) : E2ETest, IClassFixture<AdministratorFixture>
+public sealed partial class MpResponseTests : E2ETest
 {
     /// <summary>An invented MP of the stand-in's open data; this address exists only there and in Mailpit.</summary>
     private const string Official = "pavyzdys.aurelija.kadagyte@lrs.lt";
@@ -42,7 +42,6 @@ public sealed partial class MpResponseTests(AdministratorFixture administrator) 
         await using var mp = await PasskeyBrowser.StartAsync("native", 1280, 900);
         await using var follower = await PasskeyBrowser.StartAsync("native", 1280, 900);
         var page = mp.Page;
-        AdministratorFixture.SettingBefore? responsesAtBefore = null;
         string? followerEmail = null;
         try
         {
@@ -55,7 +54,8 @@ public sealed partial class MpResponseTests(AdministratorFixture administrator) 
             // 1. Step one's take-over: registration with the official address, the link from the mailbox, the passkey.
             await page.GotoAsync(Base + "/prisijungti?registruotis=true");
             await E2ESteps.RegisterHereAsync(page, Official, Name);
-            await page.WaitForURLAsync(new Regex("/sveiki$"), new() { Timeout = E2ESteps.Slow });
+            await page.WaitForURLAsync(new Regex("/paskyra$"), new() { Timeout = E2ESteps.Slow });
+            await page.GotoAsync(Base + "/paskyra/dalyvavimas");
             var claim = page.Locator("#mp-claim");
             await Assertions.Expect(claim).ToBeEnabledAsync(new() { Timeout = E2ESteps.Slow });
             await claim.ClickAsync();
@@ -65,7 +65,8 @@ public sealed partial class MpResponseTests(AdministratorFixture administrator) 
             var submit = page.Locator("#takeover-submit");
             await Assertions.Expect(submit).ToBeEnabledAsync(new() { Timeout = E2ESteps.Slow });
             await submit.ClickAsync();
-            await page.WaitForURLAsync(new Regex("/sveiki$"), new() { Timeout = E2ESteps.Slow });
+            await page.WaitForURLAsync(new Regex("/paskyra$"), new() { Timeout = E2ESteps.Slow });
+            await page.GotoAsync(Base + "/paskyra/dalyvavimas");
             await Assertions.Expect(page.Locator("#mp-link")).ToContainTextAsync($"Tvarkote Seimo nario profilį: {Name}.", new() { Timeout = E2ESteps.Slow });
 
             // 2. The page of design 8.5.7, reached from the account page.
@@ -92,11 +93,11 @@ public sealed partial class MpResponseTests(AdministratorFixture administrator) 
             await E2ESteps.ShootBothAsync(page, Shots, "published", part);
 
             // 3b. The morning after (design 8.20.1): the follower's email, with the MP's name and stance and no explanation.
-            // Noon of yesterday in Vilnius: 24 hours back is two days back on the Monday morning after the clocks go forward.
-            await SqlAsync($"update appeals.mp_response set announced_at = (((now() at time zone 'Europe/Vilnius')::date - 1) + time '12:00') at time zone 'Europe/Vilnius' where seimas_person_id = {Person} and bill_number = '{Bill}'");
-            responsesAtBefore = await administrator.ChangeSettingAsync("Follows:ResponsesAt", "00:00");
-            var (subject, text) = await Mailpit.MessageAsync(followerEmail, $"Seimo narių atsakymai dėl {Bill}", TimeSpan.FromMinutes(3));
-            subject.ShouldBe($"Lietuva 2.0: Seimo narių atsakymai dėl {Bill}");
+            // Design 8.24: under "Iš karto" (the follower's default) the answer comes at the job's next run, without waiting for
+            // the morning, so nothing is moved and no setting changed. When the same run also tells the bill's planned date (the
+            // follow is new), both come in one gathered email (design 8.24), so the email is found by the MP's name.
+            var (_, subject, text, _, _) = await Mailpit.FullAsync($"to:\"{followerEmail}\" \"{Name}\"", TimeSpan.FromMinutes(3));
+            subject.ShouldBeOneOf($"Lietuva 2.0: Seimo narių atsakymai dėl {Bill}", "Lietuva 2.0: naujienos apie tai, ką sekate");
             text.ShouldContain($"{Name}");
             text.ShouldContain("balsuos už");
             text.ShouldContain($"/seimas/{Bill}#atsakymai");
@@ -166,11 +167,6 @@ public sealed partial class MpResponseTests(AdministratorFixture administrator) 
             catch (PlaywrightException ex)
             {
                 Console.Error.WriteLine($"Clean-up: deleting the MP's account failed: {ex.Message}");
-            }
-
-            if (responsesAtBefore is not null)
-            {
-                await administrator.RestoreSettingAsync(responsesAtBefore);
             }
 
             try

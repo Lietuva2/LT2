@@ -1,0 +1,45 @@
+@inherits InteractiveBase<AppealUi>
+@inject IProfilesApi Profiles
+
+@* "Pranešti" on a member's public page (design 8.25.6): anyone signed in may report it, with "Apsimeta kitu asmeniu ar
+   pareigūnu" first; a visitor is told to sign in or write to the moderators; nothing on the member's own page (browser
+   look, 2026-11-16). Reporters are shown to nobody. *@
+@if (Own == true)
+{
+}
+else if (_signedIn)
+{
+    @if (_open)
+    {
+        <ReportForm TargetKind="profile" TargetId="Guid.Empty" ProfileId="@ProfileId" OnClose="() => _open = false" />
+    }
+    else
+    {
+        <p><button class="linkish small" type="button" id="report-member" disabled="@Locked" @onclick="() => _open = true">@L["Member.Report"]</button></p>
+    }
+}
+else
+{
+    <VisitorReport Contact="@Contact" />
+}
+
+@code {
+    private bool _signedIn;
+    private bool _open;
+
+    [Parameter, EditorRequired] public string ProfileId { get; set; } = "";
+
+    [Parameter] public string? Contact { get; set; }
+
+    /// <summary>The member's own page: nothing to report (read once, carried to the browser).</summary>
+    [PersistentState] public bool? Own { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        _signedIn = await IsSignedInAsync();
+        if (_signedIn)
+        {
+            Own ??= (await Profiles.GetMineAsync()).Value?.ProfileId == ProfileId;
+        }
+    }
+}

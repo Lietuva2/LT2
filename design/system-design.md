@@ -259,7 +259,7 @@ ASP.NET Core Identity tables (users, roles, claims, tokens, passkeys), plus:
 
 | Table | Notes |
 |---|---|
-| `profile` | Display name, created date, normalised email (for the one-account-per-address rule), `verification_level` (`email` at the start; `phone` and the EU wallet can be added), invitation used. While the account is pending (6.2) it holds only the normalised address and the invitation code that was entered. [changed while building (8.14.14, stage B): never an organisation's code, which the browser keeps until completion; `invitation_level` holds the level of the code the registration was completed with, and for an organisation's code it is all that is kept: `invitation_id` and `invitation_code` stay empty.] [proposed (8.25): `about`, the optional public text "Apie mane" (up to `Texts:MaxLength`), with `about_changed_at` and `about_hidden_at`; `public_profile_id` (a random short id while the member's public profile is on, null otherwise) and `public_since`; retired ids kept in `retired_profile_id` without an account.] |
+| `profile` | Display name, created date, normalised email (for the one-account-per-address rule), `verification_level` (`email` at the start; `phone` and the EU wallet can be added), invitation used. While the account is pending (6.2) it holds only the normalised address and the invitation code that was entered. [changed while building (8.14.14, stage B): never an organisation's code, which the browser keeps until completion; `invitation_level` holds the level of the code the registration was completed with, and for an organisation's code it is all that is kept: `invitation_id` and `invitation_code` stay empty.] [built 2026-11-16 (8.25): `about`, the optional public text "Apie mane" (up to `Texts:MaxLength`), with `about_changed_at`, `about_hidden_at` and `about_hidden_statement`; `public_profile_id` (a random short id while the member's public profile is on, null otherwise) and `public_since`; retired ids kept in `retired_profile_id` without an account; reports of a profile in `profile_report` (8.25.6).] |
 | `invitation` | Code (and its look-up form without dashes or spaces), kind (`team` or `personal`), who issued it (for a personal code: its member), uses left and expiry (team codes), completed registrations (a counter that never drops), level, switched off (when, by an administrator), replaced (when). Registration is by invitation during the closed trial. A use is counted when the registration is completed (6.2), not when it is started. [changed while building (8.14.14, stage B): the kind `organisation`, one current code per organisation, with `organisation_id` (the Appeals module's id) and no account; `organisation_off` (`blocked` or `closed`) follows the organisation, separate from an administrator's switch-off.] |
 | `invitation_daily` | Per code and Vilnius day: registrations completed. For the administrators' chart; no per-person history. |
 | `feedback` | Kind (`bug`, `idea`, `unclear`, `other` or none), text (up to 2 000 characters), page path and browser (each only if the member left them in), status (`new`, `seen`, `done`), internal note, replies, the day it came, and the account **only if** the member ticked "Galite man atsakyti". An item without that tick has no account, a random id and only the day, so nothing leads back to its author. Kept 12 months (a setting); linked items go with the account (8.10). |
@@ -267,7 +267,7 @@ ASP.NET Core Identity tables (users, roles, claims, tokens, passkeys), plus:
 | `known_device` | Account, hashed identifier of the browser's cookie, first and last seen. Built before registration opens (M2b). [changed while building (8.20.2): also `label`, the browser and system as the sessions list says them ("Edge, Windows"), so the person can tell the rows apart; the hash is HMAC-SHA-256 under a key of its own, the secret `device_hash_key`.] |
 | `role_activation` | Account, role, hashed one-time code, who issued it, expiry, used time. Using it marks the passkey of that session as the staff passkey. |
 | `party_support` | `user_id`, `party_id`. Private and optional; used only for group statistics of at least 20 people. |
-| `consent` | Kind, text version, given and withdrawn times. Positions need explicit consent (GDPR Art. 9). [proposed (8.25.1): the kind `public-profile`, given by switching "Viešas profilis" on and withdrawn by switching it off; it covers the page, its indexing, being followed and the shown follower number] |
+| `consent` | Kind, text version, given and withdrawn times. Positions need explicit consent (GDPR Art. 9). [built 2026-11-16 (8.25.1): the kind `public-profile`, given by switching "Viešas profilis" on and withdrawn by switching it off; it covers the page, its indexing, being followed and the shown follower number] |
 | `politician_link` | `user_id`, the Seimas's person number, part (the MP, or an office member), how and when verified, who added an office member, when and by whom it ended. One MP per account; one account as the MP per person (8.5.2, 8.5.3). |
 | `politician_token` | The hashed one-time token of a take-over link or of an office member's invitation, for which person, by whom, expiry, used time (8.5.2, 8.5.3). |
 
@@ -280,12 +280,12 @@ last block): a moderator who writes or corrects a description sets `description_
 adresas" (https on `lrs.lt` or under it, at most 500 characters), filled in advance with the current one; empty clears it.] `threshold` is null for the default of all bills, or a moderator's number for this bill (8.12.2). `first_summarised_at` is set by the first summary really sent to MPs, not by a dry run (8.4). `initiator_user_id` is set only on records from before 2026-11-14 and only names the author beside a description they wrote. [changed while building: `return_note` and the description's `screening_flags` were dropped with the proposals] |
 | `position` | (`record_id`, `user_id`) primary key, `side` (for or against), created and changed times | One row per person per bill. Becomes the direct LT2 vote in stage 3. |
 | `daily_stat` | `record_id`, date, counts per side, counts for accounts older than 30 days, share of new accounts | For the trend chart and surge detection. **No per-person history of opinion changes is stored.** |
-| `reason` | `id`, `record_id`, `side`, `author_user_id`, text (`text`, any length), status, `merged_into_id` | Status: pending, published, hidden, merged. `side` is the side the argument supports, chosen by its author, whatever the author's own position (8.2). How long a text may be is the members' texts setting `Texts:MaxLength` (5.6), checked where an argument is written; the column sets no limit (**owner, 2026-11-16**; migration `ReasonTextAnyLength`). |
+| `reason` | `id`, `record_id`, `side`, `author_user_id`, text (`text`, any length), status, `merged_into_id`, `first_public_at` (when it first became public: the follow line of 8.25.5 and the member's page read it; built 2026-11-16) | Status: pending, published, hidden, merged. `side` is the side the argument supports, chosen by its author, whatever the author's own position (8.2). How long a text may be is the members' texts setting `Texts:MaxLength` (5.6), checked where an argument is written; the column sets no limit (**owner, 2026-11-16**; migration `ReasonTextAnyLength`). |
 | `endorsement` | (`reason_id`, `user_id`) | "Man svarbu" on a reason; only on your own side; how many per bill is a setting, no limit by default (8.2). |
 | `mp_response` | bill number, the Seimas's person number, stance (for, against, undecided), text (`text`, any length; its length is the members' texts setting `Texts:MaxLength`, 5.6, checked where it is written; **owner, 2026-11-16**, migration `MemberTextsAnyLength`), status (published, hidden, withdrawn), published, edited and withdrawn times, `written_by_user_id` | One per MP per bill; versions are kept in `revision` and are public (8.5.5). Withheld from the read-only role. [changed while building: also `screening_flags` and `seen_at` (the queue), `hidden_at` and `hide_statement` (the statement shown in its place); the one-per-bill index holds whatever the status, so a response written again after a withdrawal is the same row; a version is kept as JSON in `revision` (`entity_kind` `response`, field `version`) with no person.] |
-| `report` | target, reporter, ground, status | Notice-and-action under the Digital Services Act. [proposed: the targets `comment` (8.23) and `profile` (8.25, a member's public profile and its "Apie mane", by the profile id)] |
-| `comment` | `id`, `target_kind`, `target_id`, `bill_number`, `speaks_as` (person, organisation, mp) with the organisation or the MP, `author_user_id`, text (up to `Texts:MaxLength`), status (published, hidden), created and hidden times | [proposed, 8.23.11; not built] A remark in "Aptarimas" under an argument, a statement or a response: a member's, or an organisation's or MP's under its own text. No editing and no history; deleted for good when deleted or with its target (8.23.7); a person's own go with the account. Withheld from the read-only role. |
-| `comment_agreement` | (`comment_id`, `user_id`), created time | [proposed, 8.23.10; not built] "Sutinku" on a comment, public with the names of those who agreed (owner, 2026-11-16); tied to no side, so no positions consent. Deleted with the comment and the account. Readable by the read-only role, as `reason` is. |
+| `report` | target, reporter, ground, status | Notice-and-action under the Digital Services Act. [proposed: the target `comment` (8.23). A member's public profile and its "Apie mane" are reported to Identity, which owns them: `identity.profile_report`, built 2026-11-16 (8.25.6)] |
+| `comment` | `id`, `target_kind`, `target_id`, `bill_number`, `speaks_as` (person, organisation, mp) with the organisation or the MP, `author_user_id`, text (up to `Texts:MaxLength`), status (published, hidden), created and hidden times | [built 2026-11-16, 8.23.11] A remark in "Aptarimas" under an argument, a statement or a response: a member's, or an organisation's or MP's under its own text. No editing and no history; deleted for good when deleted or with its target (8.23.7); a person's own go with the account. Withheld from the read-only role. |
+| `comment_agreement` | (`comment_id`, `user_id`), created time | [built 2026-11-16, 8.23.10] "Sutinku" on a comment, public with the names of those who agreed (owner, 2026-11-16); tied to no side, so no positions consent. Deleted with the comment and the account. Readable by the read-only role, as `reason` is. |
 | `moderation_action` | moderator, target, action, statement of reasons, time | The statement is sent to the author. |
 | `writing_restriction` | `id`, `user_id`, `ends_at` (null = until lifted), statement, set by and when, lifted by, when and why | A moderator's restriction on writing (8.3). Lives with the writing rules in this module; deleted with the account; never shown to anyone but the person and staff. |
 | `revision` | entity, field, old and new value, who, when | Edit history for descriptions, reasons, responses. "Who" is empty for a summary the job made (8.13); a description a person ever wrote, corrected or removed is recognised by a row with a person, and the job never writes it again. |
@@ -310,9 +310,9 @@ adresas" (https on `lrs.lt` or under it, at most 500 characters), filled in adva
 | `suppression` | Hashed addresses that bounced or asked to stop. |
 | `mp_mail_token`, `introduction_letter` | The MP's link to the preferences page and the introduction letter's versions (8.19.4, 8.19.5, 8.19.7). The statuses of `digest_run` and `digest_delivery` for real sending are in 8.19.1 and 8.19.3. |
 | `email_message` | Template, subject, provider message id, status. Bodies of digests are reproducible from the snapshot; other bodies are not stored. |
-| `follow` | (`user_id`, `kind`, `key`) primary key, created time. `kind`: bill (key: the number) or mp (key: the Seimas person id). Who follows is shown to nobody but the person; exported and deleted with the account (8.11.2). How many follow each thing is public: a number counted from this table when an answer is made, nothing per follower (8.11.2, owner 2026-11-16; designed, not built). [changed while building (8.14.14, stage B): or `organisation` (key: the organisation's id); `kind` up to 16 characters.] [proposed (8.25.5): or `member` (key: the public profile id), only while that member's profile is public; ended when it is switched off.] |
-| `notice_setting` | Per account: which follow emails are on (`planned`, `voted`); no row means both on. [changed while building (8.14.14, stage B): and `statements` (a followed organisation's statement became public); no row means all three on.] [changed while building (8.20.1): and `responses`; no row means all four on.] [proposed (8.23.9): and `comments`, an argument's author told of new comments under it; no row means all five on.] [proposed (8.24): and `frequency` (`immediate`, `daily`, `weekly`), the member's email rhythm; no row means `immediate`.] [proposed (8.25.5): and `members`, a followed member published something.] |
-| `bill_event` | (`bill_number`, `kind`, `key`) primary key, first seen, sent time, outcome. `kind`: planned (key: the date) or voted (key: the vote id). What followers are told about, recorded once (8.11.2). No person in it. [changed while building: an `outcome` column (`waiting`, `sent`, `skipped`, `superseded`) tells an event never to be sent from one waiting for the next day] [changed while building (8.14.14, stage B): `kind` `statement` (key: the statement's id) records, under its bill, that a followed organisation's statement became public; no person and no text in it] |
+| `follow` | (`user_id`, `kind`, `key`) primary key, created time. `kind`: bill (key: the number) or mp (key: the Seimas person id). Who follows is shown to nobody but the person; exported and deleted with the account (8.11.2). How many follow each thing is public: a number counted from this table when an answer is made, nothing per follower (8.11.2, owner 2026-11-16; built 2026-11-16). [changed while building (8.14.14, stage B): or `organisation` (key: the organisation's id); `kind` up to 16 characters.] [built 2026-11-16 (8.25.5): or `member` (key: the public profile id), only while that member's profile is public; ended when it is switched off.] |
+| `notice_setting` | Per account: which follow emails are on (`planned`, `voted`); no row means both on. [changed while building (8.14.14, stage B): and `statements` (a followed organisation's statement became public); no row means all three on.] [changed while building (8.20.1): and `responses`; no row means all four on.] [built 2026-11-16 (8.23.9): and `comments`, an argument's author told of new comments under it; no row means on.] [built 2026-11-16 (8.24): and `frequency` (`immediate`, `daily`, `weekly`), the member's email rhythm, with `frequency_since`, `previous_frequency` and `previous_since`; no row means `immediate`.] [built 2026-11-16 (8.25.5): and `members`, a followed member published something; no row means all on.] |
+| `bill_event` | (`bill_number`, `kind`, `key`) primary key, first seen, sent time, outcome. `kind`: planned (key: the date) or voted (key: the vote id). What followers are told about, recorded once (8.11.2). No person in it. [changed while building: an `outcome` column (`waiting`, `sent`, `skipped`, `superseded`) tells an event never to be sent from one waiting for the next day] [changed while building (8.14.14, stage B): `kind` `statement` (key: the statement's id) records, under its bill, that a followed organisation's statement became public; no person and no text in it] [built 2026-11-16 (8.24): `daily_at`, `weekly_at`, `early_at`, the marks of the gathered emails beside `outcome` and `sent_at` (the runs' emails); `kind` `response` per MP's answer (key: the person number and when the stance became public)] [built 2026-11-16 (8.25.5): `kind` `member` (key: the text's id) records, under its bill, that a followed member's argument or own-voice comment became public; no person and no text in it] [built 2026-11-16 (8.23.9, 8.23.14): `kind` `comment` (key: the argument's id and the run's moment) records that a run found comments under an argument; no person] [built 2026-11-16 (8.24): an index on (`kind`, `first_seen`); rows older than 30 days are deleted by the daily housekeeping, a planned date only once past (the designer's proposal, 12)] [built 2026-11-16 (8.24): `notify.rhythm_pass` (`pass`, `period`, `made_at`) says the daily email of a day or the weekly of a week was made; no person] |
 
 ### 5.5 `audit`
 
@@ -332,7 +332,7 @@ description, or a statement's link and goal, which keep their own limits; on the
 "Narių tekstai"; the surge thresholds in 6.6,
 the code limits and the life of a pending account in 6.2, whether registration needs an invitation, uses per personal invitation code (`Registration:PersonalCodeUses`, 0 = no limit, the default), uses per organisation's invitation code (`Registration:OrganisationCodeUses`, 0 = no limit, the default; 8.14.14 stage B, on the settings screen under registration), how long feedback is kept (`Feedback:KeepMonths`, 12), how many organisations an account may
 register (`Organisations:PerAccount`, 3; closed ones do not count, 8.14.14; on the settings screen under
-"Organizacijos"), the Claude model of the description draft and of the AI summaries (`Ai:DraftModel`, `claude-sonnet-5-5`, 8.11.4, 8.13), how many AI summaries the job may ask for a day (`Ai:SummariesPerDay`, 30; 0 = off, 8.13), [proposed, 8.23.4 and 8.23.5] whether comments are on for arguments, statements and responses (`Comments:OnReasons`, `Comments:OnStatements`, `Comments:OnResponses`) and how many comments a person may write under one text (`Comments:PerPersonPerTarget`, 0 = no limit), on the settings screen under "Komentarai". Each
+"Organizacijos"), the Claude model of the description draft and of the AI summaries (`Ai:DraftModel`, `claude-sonnet-5-5`, 8.11.4, 8.13), how many AI summaries the job may ask for a day (`Ai:SummariesPerDay`, 30; 0 = off, 8.13), [built 2026-11-16, 8.23.4 and 8.23.5] whether comments are on for arguments, statements and responses (`Comments:OnReasons`, `Comments:OnStatements`, `Comments:OnResponses`) and how many comments a person may write under one text (`Comments:PerPersonPerTarget`, 0 = no limit), on the settings screen under "Komentarai". Each
 change is written to `audit`, and the current values of the rules that affect what MPs receive are shown on the public
 methodology page.
 
@@ -731,7 +731,7 @@ Matches the "unjoined MP" mockup in chapter 06, minus everything that needs voti
   any faction at the time of a vote, have no figure for those votes **[decided 2026-11-12]**.
 - Recent votes: bill, stage, date, the MP's choice, the faction's split, a link to the vote page.
 - The line "Profilis sudarytas automatiškai iš Seimo atvirųjų duomenų" with the time of the last import.
-- From stage 2: appeals in progress and the MP's responses; how many members follow the MP (8.11.2; designed, not built).
+- From stage 2: appeals in progress and the MP's responses; how many members follow the MP (8.11.2; built 2026-11-16).
 
 Also in stage 1: the list of MPs (search by name, filter by faction and committee), faction and committee pages, a vote
 page with the seat map (the hemicycle prototype, rendered as SVG on the server), a bill page with its stages and votes,
@@ -869,7 +869,7 @@ except arguments that pre-screening flags or people report.
   summary; and bills under their threshold whose bill has reached the agenda, only when they have at least one
   participant (8.12.2). Each note on an item says what happened and what the moderator can do (for example: the bill is
   on the Seimas agenda, planned for a date; it has n of its threshold's participants and so will not enter a summary;
-  the moderator may approve one urgent summary, or do nothing). [proposed, 8.23.8: comments with an open report; a
+  the moderator may approve one urgent summary, or do nothing). [built 2026-11-16, 8.23.8: comments with an open report; a
   comment is never in the queue otherwise]
 - Actions on a bill, each with a statement and audited: write or correct the description (on any active bill, 8.13),
   confirm an AI summary nobody has read (an optional note) or remove a description (8.13), set the bill's own threshold, correct the planned date or stage, hold or release sending, approve one urgent summary,
@@ -1046,7 +1046,7 @@ M2b; the owner asked for M2b to be built now. Built in two steps: the link (8.5.
   one MP belongs to nobody. The Parliament module answers "whose official address is this" through an interface of the
   shared kernel; no address leaves it otherwise.
 - **An account whose proven address is an MP's official address is told so at once:** right after registration is
-  completed, and on the account page (`/sveiki`) every time until the profile is taken over: that this is the official
+  completed, and on the account page (`/paskyra`) every time until the profile is taken over: that this is the official
   address of that MP, by name, with one button, "Perimti profilį". (Every text that carries an MP's name is worded so
   the name stands in the nominative, after a colon or on its own: names are not declined by the software.) Nothing is linked and nothing is public
   before the take-over is finished: registering does not by itself put a mark on anyone's profile.
@@ -1196,7 +1196,7 @@ nothing about joining; the pages work at 390 px, and the public parts without Ja
 By email, each kind switchable in settings:
 
 - your argument was published, hidden, merged or restored (with the reason);
-- [proposed, 8.23.9] your argument has new comments, with its own switch;
+- [built 2026-11-16, 8.23.9] your argument has new comments, with its own switch, in the person's rhythm (8.24);
 - [8.24, owner 2026-11-16] each member chooses whether these come within minutes (one email per run of the follow job),
   once a day, or once a week and when a vote approaches;
 - the bill entered the Seimas agenda ("Planuojama …");
@@ -1525,7 +1525,7 @@ A visitor sees a link to sign in instead.
   - at most one "planned" email per bill per Vilnius day: a date that moves again the same day is sent the next day,
     with the date current then;
   - one email per event per person, as built; nothing about the person's side, the appeal's counts or other people is
-    in it. [8.24, designed and not built: with "Iš karto" a person gets one email per run of the follow job, gathering
+    in it. [8.24, built 2026-11-16: with "Iš karto" a person gets one email per run of the follow job, gathering
     that run's events, and with the daily or weekly choice one gathered email; an event is still in one email only.]
   - [changed while building: 8.11.7 says nobody is told about an event from before they followed] a vote is sent only
     to those who followed the bill before the vote was held as well as before it was first seen (an import runs some
@@ -1548,7 +1548,8 @@ A visitor sees a link to sign in instead.
   - "Jūsų projektai" (8.7) still lists bills the member follows or has a side on, so a person who unfollowed keeps
     seeing the bill they have a side on, without "Sekate".
 - **The account page** lists the followed bills (planned date or last stage result) and MPs, with "Nebesekti", and the
-  two switches. Each email ends with a link there (`/sveiki#sekami`); there is no token link in this round.
+  two switches. Each email ends with a link there (`/paskyra/sekimas#sekami` since the account screens of 8.21); there is
+  no token link in this round.
   Links in these and all other emails are full addresses built from `Site:Address` (5.6) [decided by the owner on
   2026-11-14].
 - **Who follows is private.** Who follows what is shown to nobody: no page, API answer, email, admin screen or log says
@@ -1610,7 +1611,12 @@ A visitor sees a link to sign in instead.
   - **What is built.** Following bills, MPs and organisations is built (this section, 8.14.14 stage B), so their
     numbers can be built now, after the branch of 2026-11-16 is verified (section 11, "Follower counts"); the member's
     number comes with the public profile (8.25, M2d). The privacy notice and the methodology change with it (section 12,
-    the legal row).
+    the legal row). [built on 2026-11-16 with the public profile, the designer's proposals above as proposed: the number
+    on the bill's page beside "Sekti", on the MP's profile, the organisation's profile and the member's page, nothing
+    with none, with the hint "Kas yra sekėjai?" and `/metodika#sekimas`; the answers that carry it are
+    `GET /bills/{number}/followers` (a small public answer of its own, so the bill's record answer stays about sides),
+    `GET /mps/{slug}` (`followers`), `GET /organisations/{slug}` (`followers`) and `GET /members/{id}` (`followers`); the
+    count is `IFollowerCounts` (SharedKernel, Notifications).]
   - **Not a delegation.** A follow stays a request for emails; it never turns into a delegation by itself (1.1, the
     designer's proposal).
 - It lives in the Notifications module (user notification settings, section 2): tables `follow` and `bill_event` (5.4).
@@ -1676,9 +1682,11 @@ MPs stand on.
   line appears once]
 - The link is the personal invitation link (6.2) with the page to land on:
   `/prisijungti?kodas=…&tikslas=/seimas/XVP-0412`. After registering or signing in, the person lands on that page
-  instead of `/sveiki`.
+  instead of `/paskyra`.
 - `tikslas` is accepted only as a path on this site under `/seimas/` (one leading slash, no scheme, host or
-  backslash); anything else is ignored. It stays in the browser through the sign-in steps and is never stored on the
+  backslash); anything else is ignored. [changed while building (2026-11-16, the account screens and public profiles):
+  also `/paskyra` and the account screens under it (a visitor sent to sign in from one comes back to it) and a member's
+  page `/nariai/{name-slug}-{id}` (its "Sekti" for a visitor); never a query or a fragment.] It stays in the browser through the sign-in steps and is never stored on the
   server, so nothing ties an invitation to a bill. The link is the same whichever side the sharer took, and nothing
   about a side is in it (6.2: invitations are never combined with sides).
 - A member whose code is switched off or used up sees the line without a link.
@@ -1705,7 +1713,7 @@ MPs stand on.
 - [Superseded on 2026-11-14 by 8.12.6: asking for an appeal and moderators opening one went.] ~~A member asks for an
   appeal in one click; a moderator opens it; the member is emailed; the number asking is public and who asked is not.~~
 - No page, API answer, log line or email shows who follows what.
-- [Follower counts, designed 2026-11-16, not built] A bill's page, an MP's profile and an organisation's profile show how
+- [Follower counts, built 2026-11-16] A bill's page, an MP's profile and an organisation's profile show how
   many follow it, the same number for everyone; following and unfollowing move it by one; nobody, the followed party and
   staff included, can learn who follows; with the designer's proposals standing, nothing shows with none, no list row
   carries the number and no list is sorted by it; `lt2_readonly` still reads no follow.
@@ -1731,7 +1739,7 @@ bill's page. "Kreipimasis" stays the word for what people on a bill ask of MPs a
   bill is about (8.13) with its label; both sides with the counts for accounts older than 30 days, the threshold and
   the share line (8.11.5); arguments for and against; MPs' responses; the summaries that held the bill (8.7); the
   Seimas votes and documents as before. `/seimas/{number}/kreipimasis` and its history page redirect permanently to
-  the bill's page and to `/seimas/{number}/istorija`. [proposed, 8.23.6: comments under each argument, statement and
+  the bill's page and to `/seimas/{number}/istorija`. [built 2026-11-16, 8.23.6: comments under each argument, statement and
   response, inside that part; no part of their own]
 - **Before anyone has taken part** the page shows the same controls with zero counts and one line saying nobody has
   taken a side yet. The public answers for such a bill return this empty open state, not "not found".
@@ -2114,7 +2122,7 @@ Whoever wants in is in; limits come only if there turn out to be too many. Moder
   an empty side.
 - **Never mixed into the numbers.** A statement is not a position, is not counted among participants, and does not
   bring a bill closer to its threshold. Statements carry no "Man svarbu" and no count of their own, so there is no
-  second popularity number beside the users' counts. [proposed, 8.23: "Aptarimas (n)", members' comments under a
+  second popularity number beside the users' counts. [built 2026-11-16, 8.23: "Aptarimas (n)", members' comments under a
   statement, with the organisation's own comments there shown under its name; 8.23.1 says why the number of comments is
   not a popularity count]
 - An organisation writes no arguments (8.2) in its name. Its representative may write arguments as a person, like any
@@ -2153,7 +2161,7 @@ confirmed organisations that a moderator has not kept out of summaries (8.14.9).
   account to a code by its registration date; the owner judged this gap too small to change, and it stays.
 - **Following.** A member can follow an organisation (8.11.2) and is emailed when it publishes a statement. Who
   follows is private like every follow, from the organisation too. How many follow it is shown on its profile, as for
-  everything that can be followed (8.11.2, owner 2026-11-16; designed, not built), and not beside its statements on a
+  everything that can be followed (8.11.2, owner 2026-11-16; built 2026-11-16), and not beside its statements on a
   bill's page, which carry no number of their own (8.14.3).
 
 #### 8.14.7 What an organisation does not get
@@ -2304,7 +2312,7 @@ Still for the owner, on the built result: the details marked "designer's choice"
   restrict them, as with an argument (8.3). At most ten per organisation. A representative can remove another or leave;
   the last one cannot leave and can only **close** the organisation: its statements on open bills are withdrawn, those
   on closed bills stay as they were, and the profile says it is closed. Deleting the account of the last representative
-  closes it the same way. The account page (`/sveiki`) lists "Mano organizacijos"; the export has the person's
+  closes it the same way. The account page (`/paskyra`) lists "Mano organizacijos"; the export has the person's
   representative roles and the statements they wrote; `written by` is emptied when the account goes.
 - **Statements.** On an active bill whose record is not hidden or closed, a representative publishes the organisation's
   one statement from the "Organizacijų pozicijos" section of the bill's page: stance (`for`, `against`, `remarks`), text
@@ -2918,11 +2926,10 @@ unknown and a wrong token.
   versions, which the import does not read yet (8.13).
 - **The event:** an MP's response (8.5.5) on a followed bill was published, or published again after a change of
   stance. A changed explanation with the same stance is not an event; a withdrawal is not an event.
-- **One email per bill per Vilnius day,** sent the next morning at 08:00 Vilnius time (`Follows:ResponsesAt`), as built.
-  **To change to the person's email rhythm [owner, 2026-11-16; 8.24; designed, not built].** With "Iš karto" an answer is told at the
+- **In the person's email rhythm [owner, 2026-11-16; 8.24; built 2026-11-16, replacing the first build's one email per
+  bill per Vilnius day the next morning].** With "Iš karto" an answer is told at the
   follow job's next run, within about a quarter of an hour, in that run's one email to the person; with the daily or
-  weekly choice, in the gathered email. `Follows:ResponsesAt` (08:00) stays as a setting and becomes the hour of the
-  daily and weekly emails. **What stays:** the lines list the MPs whose responses became public or changed stance:
+  weekly choice, in the gathered email. `Follows:ResponsesAt` (08:00) is the hour of the daily and weekly emails. **What stays:** the lines list the MPs whose responses became public or changed stance:
   name, faction, the stance ("balsuos už", "balsuos prieš", "dar neapsisprendė") and the link to the bill's part "Seimo
   narių atsakymai". Never the explanation's text, as with organisations' statements. Who is told (below) does not
   change.
@@ -2932,13 +2939,13 @@ unknown and a wrong token.
   followed). The MP's own account and office members get none about their own MP's responses.
 - **The switch:** a fourth one on the account page, "Seimo narių atsakymai", on at first, kept in `notice_setting`
   (`responses`). The email ends with the link to the switches, like the others.
-- Recorded in `bill_event` with kind `response` (key: the Vilnius day); no person and no text in it. [8.24 (not built):
-  with the rhythm the record is per run, not per day, and carries the per-rhythm sending marks of 8.24.]
+- Recorded in `bill_event` with kind `response`, one per answer (key: `FollowRules.ResponseKey`, the Seimas person number and
+  the moment the stance now shown became public); no person and no text in it; with the per-rhythm marks of 8.24.
 - [changed while building (2026-11-16): `appeals.mp_response` keeps `announced_at`, when the stance now shown became public
   (the first publication, or a later one with another stance than the response had, shown or withdrawn); the Appeals module
   gives the published ones of a day through `IMpResponseFeed` (SharedKernel), leaving out responses on a bill whose record the
-  moderators hid. From `Follows:ResponsesAt` on, the follow job sends the day before; a day whose next day passed without a
-  run is not sent later. Each follower's list holds only the answers that became public after they followed, so two followers
+  moderators hid. The follow job tells an answer in the person's rhythm (8.24): "Iš karto" at the next run; an answer first seen
+  more than three days after it became public is recorded and not sent, as a vote; nothing is dropped for a missed run. Each follower's list holds only the answers that became public after they followed, so two followers
   of one bill may get different lists; the MP's own account and office members get the email without their own MP's line, and
   none when nothing else remains (Identity says whom an account speaks for, `IMpLinks.SpeaksForAsync`). The faction is the one
   the profile shows (`IMpDirectory.FactionsAsync`). An event is recorded only for a followed bill. The switch reads "Kai Seimo
@@ -2976,7 +2983,7 @@ unknown and a wrong token.
 
 - A member who follows a bill gets one email the morning after MPs answered on it, with every answer of that day and
   no explanation text; a member who switched it off, or followed later, gets none; hidden and withdrawn answers are not
-  in it. [With 8.24 (not built): the email comes in the person's rhythm, within minutes with "Iš karto", and the rest of
+  in it. [With 8.24, built 2026-11-16: the email comes in the person's rhythm, within minutes with "Iš karto"; the rest of
   this line holds.]
 - With the shared code limit of an address used up from another browser, the person's usual browser still gets a code
   and signs in; a code asked for by a known browser is refused elsewhere.
@@ -3007,20 +3014,34 @@ lines on a phone.
   and when focus leaves it. **[Owner, 2026-11-16]** A staff account whose session cannot act as staff (`staffAccount`
   with no `activeStaffRoles`) gets "Prisijungti darbuotojo prieigos raktu" in the place of the staff links: the page of
   6.2 that makes the session a staff session, which then goes back to the page the item was opened on.
-- **The account page (`/sveiki`) is in four parts [owner, 2026-11-16]**, each with its heading on the ground and reached
-  from a row of plain links under the title (styled like the tabs of "Projektai"; no script, so it works before the island
-  starts; it wraps on a phone):
-  - "Profilis" (`#profilis`): the level and roles, the display name (6.2), party support, the positions consent;
-  - "Sekimas ir laiškai" (`#sekimas-ir-laiskai`): what the person follows and the email switches (`#sekami`);
-  - "Dalyvavimas" (`#dalyvavimas`): the MP part (8.5), organisations, the invitation code, and the staff part (the role's
-    activation; the staff links in a staff session, or in their place the link to the staff passkey of 6.2 with one
-    sentence);
-  - "Saugumas ir duomenys" (`#saugumas-ir-duomenys`): passkeys, sessions, known browsers (`#zinomos-narsykles`), the export
-    and deleting the account (`#my-data`), signing out.
+- **The account area is four screens, not one long page [owner, 2026-11-16: "the menu could not just scroll, but it would
+  be split into several forms? Starting with name, about me and probably a party"]**. Each part of the earlier page (four
+  parts on `/paskyra`, reached by in-page links, owner earlier the same day) is its own screen with its own forms; the row
+  under the title becomes navigation between the screens: plain links, the current one marked (`aria-current`), styled
+  like the tabs of "Projektai", no script, wrapping on a phone (one component, `AccountTabs`, as `ProjectTabs` is for the
+  four tabs of "Projektai"). Every screen has the same title ("Sveiki, …") and row; a visitor who opens one is sent to sign
+  in and comes back to the same screen. **The account's addresses are under `/paskyra` [owner, 2026-11-16: "the url sveiki
+  reads strange, change it"]:** `/sveiki` and the screens under it are gone with no redirect (nothing is launched); the
+  greeting "Sveiki, …" stays as text. The addresses and what each holds:
+  - **"Profilis" (`/paskyra`)**, the first screen: what others may see of the person and what they say of themself. The
+    level and roles, the display name (6.2), "Apie mane" and the switch "Viešas profilis" with the link to the public page
+    while it is on (8.25), party support (5.2; whether it may also be shown publicly is the designer's proposal of
+    8.25.9, not built).
+  - **"Sekimas ir laiškai" (`/paskyra/sekimas`)**: what the person follows and the email switches (`#sekami`), then how often the emails come (`#laisku-daznis`, 8.24).
+  - **"Dalyvavimas" (`/paskyra/dalyvavimas`)**: the MP part (8.5), organisations, the invitation code (`#my-invitation`),
+    and the staff part (the role's activation; the staff links in a staff session, or in their place the link to the staff
+    passkey of 6.2 with one sentence, which comes back to this screen).
+  - **"Saugumas ir duomenys" (`/paskyra/saugumas`)**: passkeys, sessions, known browsers (`#zinomos-narsykles`), the
+    positions consent (moved here from "Profilis": it is a consent about stored data, withdrawn with what it covers, 6.5),
+    the export and deleting the account (`#my-data`), signing out.
 
-  The note about the terms of use (8.22.2) stands above the parts: it concerns the whole account. Every part always has a
-  sheet (the name, the follows, the invitation code, the sessions), so no heading stands empty. The anchors emails and
-  hints link to stay on their sheets.
+  The note about the terms of use (8.22.2) stands under the row on every screen: it concerns the whole account. The
+  anchors emails and hints link to stay on their sheets, now on their screen's address: `/paskyra/sekimas#sekami` (every
+  follow email, 8.11.2, 8.20.1), `/paskyra/saugumas#zinomos-narsykles` (the known browsers' notice, 8.20.2),
+  `/paskyra/saugumas#my-data` (the privacy notice, the terms' acceptance screen), `/paskyra/dalyvavimas#my-invitation`. No
+  old address keeps working (nothing is launched). Each screen is answered `no-store`, as every page to a signed-in session
+  (6.8), and an island on it is disabled until it starts, with `<NeedsScript />`.
+  [The owner's earlier decision of the same day, four parts on one page, is replaced by this one.]
 - **"Kaip skaičiuojama" becomes "Metodika"** and moves to the footer. The address `/metodika` stays; links and texts
   that named the page are renamed. ("Kaip tai veikia" is the introduction on the front page and keeps that name.)
 - **The footer** holds what has no place in the menu, in two short groups, then the theme switch and the line about
@@ -3075,7 +3096,14 @@ privacy notice correct as drafts as the site changes; the lawyer reads them once
   the terms are new or have changed; only when terms already published to people really change does the paragraph
   say what changed.]** Until then the account
   reads everything and its writes are refused with `terms.required`, except accepting, signing out, the export and
-  deleting the account.
+  deleting the account, and **[owner, 2026-11-17] withdrawing what it consented to**: switching the public profile off
+  (`DELETE /me/profile/public`, which changes nothing else; the form's `PUT /me/profile` stays refused), withdrawing the
+  positions consent (`DELETE /me/consents/positions`) and the party support consent (`DELETE /me/party-support`).
+  `TermsExemptions.Routes` lists exactly these; giving a consent again stays refused.
+- **The version while nothing is launched [owner, 2026-11-17].** The terms stay at version 2026-11-17 although their text
+  changed with comments, the public profile and the email rhythm: nothing is launched, nobody accepted an earlier text, so
+  there is nobody to ask again. "A changed text gets a later version, and every member is asked again" applies from the
+  launch. Do not raise the version before then.
   [changed while building (2026-11-16): the screen is `/taisykles/sutikimas` and also says, in one line with the link, that
   until then the person can read, download their data and delete the account; it goes on to the page the person was going
   to. An island refused with `terms.required` opens it, and the account page shows a note with the link for a session
@@ -3114,7 +3142,9 @@ privacy notice correct as drafts as the site changes; the lawyer reads them once
 **[Asked for by the owner on 2026-11-16, answering an earlier proposal of the same day; the owner decided more points on
 the drafts the same day. Three kinds of marks below: "owner, 2026-11-16" for what the owner decided; "proposed
 2026-11-16, not objected to" for what a proposal said and the owner read and let stand, written as the rule; "the
-designer's proposal, awaiting the owner" for the few points left (section 12 lists them). Not built.]**
+designer's proposal, awaiting the owner" for the few points left (section 12 lists them). Built 2026-11-16 (M2c, 11), after
+public profiles (8.25) and with the email rhythm (8.24); what building it needed that this section did not say is in
+8.23.14.]**
 
 Decided by the owner on 2026-11-16: members may comment in public under three things on a bill's page (an argument, an
 organisation's statement, an MP's response); one implementation for all three, built together, MPs' responses included
@@ -3209,10 +3239,13 @@ replies and "Sutinku" carries no text to moderate (8.23.1, 8.23.10), and each ki
   names what was found ("Komentare yra telefono numeris. Pašalinkite jį ir siųskite dar kartą."; error
   `comment.screened` with the flags). That keeps personal data off the page without anyone reading it, and keeps
   comments out of the list.
-  - **Honest text is refused sometimes.** The phone rule also matches some runs of digits, for example a span of years
-    written with a hyphen ("2024-2028"). The message says exactly what to remove. **[The designer's proposal, awaiting
-    the owner:]** correct the rule when comments are built (a run that reads as two years is not a phone number), with
-    unit tests, for every text it screens.
+  - **The phone rule [owner, 2026-11-17: "lithuanian number is now 06.., not 86.."]:** it matches only Lithuanian
+    numbers: the 8-digit national number (first digit 3–9: a mobile 6xx xxxxx, Vilnius 5 xxx xxxx, another area's two-digit
+    code and six digits, the 7xx and 8xx services) after `+370` or `00370`, after the trunk prefix `0` in use since 2025
+    (`06xx xxxxx`, `05 xxx xxxx`), or after the old prefix `8` people still write (`86xx xxxxx`, `8 5 xxx xxxx`), with
+    spaces, hyphens and brackets between the digits. A date (`2026-11-20`), a year span (`2024-2028`), a sum (`25 000 000`),
+    a law's or a document's number, a percentage and digits inside a link are no phone number. For every text it screens
+    (`RuleBasedPreScreening.ContainsPhoneNumber`, unit tests named as the rule).
   - **Insults and spam are not caught by rules.** Nothing refuses or flags them before they are shown; reports are the
     only way they reach a moderator. This is the accepted risk of comments without moderation beforehand. AI
     pre-screening stays an open decision (12).
@@ -3298,6 +3331,9 @@ replies and "Sutinku" carries no text to moderate (8.23.1, 8.23.10), and each ki
   bill carry only each target's count.
 - **Surfaces (8.16).** The comments lie on the sheet that holds their target, below it and set in; the list is not a
   sheet (that would be a sheet in a sheet). The writing box opens inside it as a quiet sheet, as a report form does.
+- **Width [browser look, 2026-11-16].** While an "Aptarimas" under an argument is open, the two sides' columns stand one
+  above the other, as on a phone, so the discussion reads in the page's width under its argument instead of in a side's
+  narrow column; closed again, the sides stand side by side. Statements and responses are full width already.
 - **A target that changes keeps its comments.** A statement or response changed later keeps them; each comment carries
   its time and the target says "Keista" with its date, so a reader sees a comment was written before the change. A
   response withdrawn and written again is the same row (8.5.5) and keeps them.
@@ -3371,7 +3407,8 @@ reported comment is in the moderators' list; a moderator can hide it with a stat
   sending, do not count; nothing left, nothing sent. The Appeals module gives the commented arguments with their authors
   since a moment through a shared-kernel feed, as `IMpResponseFeed` does; what was told is recorded per run with no
   person in the record (8.24).
-- **The switch:** a fifth on the account page, "Kai mano argumentą pakomentuoja", on unless turned off;
+- **The switch:** on the follows screen (8.21), the last of the switches, after "Kai sekamas narys paskelbia" (8.25.5):
+  "Kai mano argumentą pakomentuoja", on unless turned off;
   `notice_setting` grows a column `comments` (5.4), and existing rows start on.
 - **Organisations and MPs: no email [proposed 2026-11-16, not objected to].** Representatives see the page and follow
   their organisation's statements there; the MP mail stream has its own ceilings and rules (8.19), and a notice of
@@ -3466,8 +3503,7 @@ member who has a public profile (8.25). The terms gate covers the new writes by 
 
 After M2b, as its own milestone (11, "M2c Comments"), built in one piece for the three kinds [owner, 2026-11-16]: one
 table and one for "Sutinku", one service in the Appeals module, one list component and one writing island under all
-three targets, one list item, one notice. Names are plain text until public profiles exist (8.25). Nothing of it is
-built towards in M2b.
+three targets, one list item, one notice. A name links to the person's public profile when they have one (8.25.4).
 
 #### 8.23.13 Done when
 
@@ -3503,14 +3539,47 @@ built towards in M2b.
   `comment_agreement` readable.
 - The bill's page with 10 comments under every rendered target stays at 390 px without horizontal scroll.
 
+#### 8.23.14 Filled in while building (2026-11-16)
+
+**[The designer's proposals, awaiting the owner; section 12 lists them.]** Points the sections above leave open, which the
+build needed decided one way; each is the smallest choice that keeps the rules above.
+
+1. **The paging parameter** of 8.23.6 is `komentarai`, its value the target's id (32 hexadecimal digits) and how many to
+   show, joined by a hyphen (`?komentarai=0193…a1-20`); one target per address, the rest of the page as it was. Landing on
+   `#komentaras-{id}` of the first new comment, with that "Aptarimas" rendered open.
+2. **The count on the public answers** (8.23.11) is a field `comments` on each argument, statement and response (the number
+   of shown comments), so "Aptarimas (n)" shows for targets whose thread is not rendered (arguments revealed by "show all").
+3. **An MP whose mandate has ended** writes no comment as the MP, as no response (8.5.2): `response.mandate-ended`. The MP's
+   own account of a former MP still takes no part elsewhere (8.5.4).
+4. **The notice of 8.23.9 in the rhythm of 8.24:** one kind of the follow job, `CommentNotices` (an `IMemberNoticeKind`,
+   Notifications). Each run records, under the bill, one `notify.bill_event` of kind `comment` per argument that got a
+   comment from someone else in its window: from where the run before that recorded any stopped (the first run, the last
+   hour; never more than three days back) to two minutes before the run (`FollowRules.CommentsWindow`), so a comment
+   committed just after a run's read is read by the next one; an email holds one line per argument, with the day of the
+   latest comments, however many runs found some; key: the argument's id and the run's moment; no person. Whoever's choice serves the pass takes it: "Iš karto"
+   in that run's email, the daily or weekly choice in the gathered one, where it is its own part ("Nauji komentarai po jūsų
+   argumentais"), one line per argument. When the email is made the window is read again, so an argument whose comments
+   are all deleted or hidden by then, or that is no longer shown, is left out. One thing alone is the email
+   `email.comment-notice`.
+5. **A comment's moderation notices** reuse the existing kinds: to a person `email.moderation-notice` (notices
+   `comment-hidden`, `comment-restored`, with the moderators' contact address), to an organisation's representatives
+   `email.organisation-notice` (`comment-hidden`, `comment-restored`), to the MP's account `email.mp-response-notice`
+   (`comment-hidden`, `comment-restored`). "Palikti" tells nobody (8.23.8).
+6. **Moderating a comment whose target is not shown** (hidden, waiting, a hidden record): hide, restore and "Palikti" work on
+   the comment itself whatever its target's state; the comment shows again only when both are shown.
+7. **The "Moderavimas" panel** on the bill's page lists the bill's reported comments with a link to each (`#komentaras-{id}`);
+   the actions are on the comment.
+
 ### 8.24 How often a member's emails come
 
 **[The owner's direction, 2026-11-16: MPs already choose how often summaries come (8.19.4); every member should likewise
 choose between an email about each thing that concerns them and a gathered one, and how often. Decided by the owner the
 same day: "Iš karto" means within minutes and is the default; the weekly choice also sends what is due before a vote.
-The rest of the shape was proposed 2026-11-16 and not objected to. Not built.]**
+The rest of the shape was proposed 2026-11-16 and not objected to. Built 2026-11-16 for the four follow emails, then
+for comments under one's arguments (8.23.9) and followed members (8.25.5), which joined it as kinds of their own.]**
 
-- **One choice on the account page,** in its part "Sekimas ir laiškai" (8.21), beside the existing switches (8.11.2, 8.14.14, 8.20.1, 8.23.9, 8.25), "Kaip
+- **One choice on the account page,** on its screen "Sekimas ir laiškai" (`/paskyra/sekimas`, 8.21; its own sheet
+  `#laisku-daznis` after the switches), beside the switches (8.11.2, 8.14.14, 8.20.1, 8.23.9, 8.25), "Kaip
   dažnai siųsti laiškus":
   - **"Iš karto" [owner, 2026-11-16: within minutes; the default].** The follow job (`FollowJob` in the worker) runs four
     times an hour, at 7, 22, 37 and 52 minutes past (`Jobs.FollowsCron`; the local stack sets `Jobs:FollowsCron` to every
@@ -3561,6 +3630,48 @@ The rest of the shape was proposed 2026-11-16 and not objected to. Not built.]**
   rest of the day except a lone "planned" whose sitting comes first, and still gets a sign-in code at once; a weekly reader
   gets Monday's email and the same lone "planned" emails; no event is sent twice when the choice changes between two
   emails; a kind switched off is in no email.
+- **What the building filled in [the designer's proposals of 2026-11-16, awaiting the owner; section 12 lists them to
+  answer one by one].**
+  - *The hour.* The daily and the weekly email go at the first run of the follow job from `Follows:ResponsesAt` on (08:00,
+    so at 08:07 with the production schedule). The daily one holds what the job first saw before that day's 08:00 and no
+    daily email has held; an event first seen at 08:07 waits for the next morning. The weekly one is the same from
+    Monday's 08:00, every Monday, whether or not the Seimas sits that week; the day is fixed, not a setting.
+  - *What "comes before the next gathered email" means.* A "planned" date on or before the Vilnius day of the person's
+    next gathered email, counted from when the job first saw the date: the email of the sitting's own morning is too late
+    to act on. For the daily choice that is a sitting today or tomorrow; for the weekly one, any sitting up to and
+    including the next Monday. It is decided once, when the date is first seen, and holds for any followed bill, with or
+    without a side. If the date moves again within that window, the new date is sent early too (the limit of one "planned"
+    email per bill per day stays a rule of "Iš karto").
+  - *One email per person per run, whatever its parts.* Everything a run holds for a person goes in one email: the
+    run's events under "Iš karto", the daily or the weekly email, and an early "planned" line; the early line is alone
+    only when the run holds nothing else for the person. An email with one thing is the email that thing always had (its
+    own subject and text, 8.11.2, 8.14.14, 8.20.1); with more, it is the gathered email: subject "Lietuva 2.0: naujienos
+    apie tai, ką sekate" ("dienos naujienos" in the daily one, "savaitės naujienos" in the weekly one), a part per kind in
+    the switches' order, each line with its day and its link, and at the end the link to the switches and the choice.
+  - *A change of the choice.* An event belongs to the choice the person had when the job first saw it, and comes in that
+    choice's email, also after the choice has changed: what was waiting for Monday still comes on Monday after a switch to
+    "Iš karto", and what comes after the switch comes at once. A second change before that email drops what was waiting
+    under the first choice, unless the first was "Iš karto" (it had gone already). So no event is sent twice; at worst one
+    is not sent, after two changes in a few days. The alternative, everything waiting moved into the first email of the new
+    choice, needs a per-person mark of what was carried over.
+  - *MPs' answers.* Recorded per answer (the bill, the MP, the moment the stance became public), not per bill and day: an
+    answer the job first sees more than three days after it became public is recorded and never sent, as a vote. Under
+    "Iš karto" the answers of a run are one part, listed per bill. `Follows:ResponsesAt` no longer holds them back to the
+    next morning (8.20.1, owner 2026-11-16). A morning missed because the worker was down is sent at the next run, late,
+    rather than never (the first build of 8.20.1 dropped a day whose next day passed without a run; no longer).
+  - *Auditing the choice.* A change is audited as `notices.frequency-changed` with the account as actor, the hashed address
+    of the request and no details (neither the old nor the new choice). The switches stay unaudited as they are.
+- [changed while building (2026-11-16): `notice_setting` holds, besides `frequency`, when the choice was made
+  (`frequency_since`) and the choice before it with its own start (`previous_frequency`, `previous_since`), which the rule
+  of a change above needs; nothing else about the person. `bill_event` keeps `outcome` and `sent_at` as the marks of the
+  runs' emails and gains `daily_at`, `weekly_at` and `early_at`. `GET /me/notices` gains `frequency`; the choice is read and
+  changed at `GET|PUT /me/notices/frequency` (`{ "frequency": "immediate" | "daily" | "weekly" }`, error
+  `notices.frequency-invalid`), its own route, so saving the switches and saving the choice never overwrite each other. It
+  shares the per-account limit `RateLimits:Participation`. A new kind of member email joins the rhythm by declaring itself
+  (`IMemberNoticeKind` in the Notifications module, and its part of the gathered email, `AddNoticePart`); the follow job is
+  not edited for it. The kinds, in their parts' order: planned, voted, organisations' statements, MPs' answers, followed
+  members' texts (8.25.5) and comments under one's arguments (8.23.9, 8.23.14). The look-back for votes, statements and
+  members' texts is 14 days, so a weekly email can still read what it reports.]
 
 ### 8.25 A member's public profile, and following a member
 
@@ -3571,8 +3682,15 @@ pressing it goes to the person's page), and members may follow ordinary persons,
 only with their explicit consent; and last: "A public profile would get indexed and allowed to be followed
 automatically. Also let's show the number of followers, why not?" So one switch, "Viešas profilis", is that consent.
 Points marked "proposed 2026-11-16, not objected to" stand as the rule; "the designer's proposal, awaiting the owner"
-marks the rest. Not built. Changing the display name is designed in the account design (6.2), with no limit on how
+marks the rest. Changing the display name is designed in the account design (6.2), with no limit on how
 often (owner, 2026-11-16).]**
+
+**[The owner, later on 2026-11-16: "Yes, i missed public profiles too, implement those." Public profiles are built now,
+ahead of comments (section 11: M2d before M2c; the designer's proposal "M2d after comments" is gone). Built as this
+section says, the designer's proposals as proposed and still awaiting the owner. Comments (8.23) and the email rhythm
+(8.24), built the same day after it, are connected: "the member's texts" are their arguments and the comments they wrote
+in their own voice, and following a member sends a line for either, in the follower's rhythm. Where the build had to
+choose, the text says "[changed while building]".]**
 
 **What this reverses.** Until now nothing public gathered one person's texts: no public answer carried an account's id
 (8.23.11), and display names, the only thing beside a text, are neither unique nor stable. 6.1 names who took which side
@@ -3594,7 +3712,8 @@ page is indexed and the person can be followed.
 - **The switch is the consent, and covers everything [owner, 2026-11-16: "indexed and allowed to be followed
   automatically"].** Switching it on is recorded as a consent of the kind `public-profile`, with its text version, in
   `identity.consent`, as the terms (`terms`) and the positions consent (`positions`) are (5.2, 8.22.2); a changed text
-  gets a new version, and members with a profile are asked again. Before saving, the form says everything it covers
+  gets a new version, and members with a profile are asked again [not built: a profile switched on under an earlier
+  version stays on; the form asks only when it is switched on]. Before saving, the form says everything it covers
   (a draft for the native reader):
   "Jūsų profilio puslapyje bus jūsų vardas, „Apie mane“ ir viskas, ką viešai parašėte (argumentai ir komentarai),
   surinkta į vieną vietą su nuorodomis; prie visų jūsų argumentų ir komentarų bus nuoroda į jį. Puslapį gali rodyti
@@ -3616,8 +3735,19 @@ page is indexed and the person can be followed.
 
 #### 8.25.2 The address and the page
 
-- **`/nariai/{id}`**, a random short id (ten letters and digits), never the name: no squatting on names, no impersonation
-  by address, and a changed display name keeps the page.
+- **`/nariai/{name-slug}-{id}` [owner, 2026-11-16: the address carries the name for search engines; the owner suggested the
+  name alone, the id was kept for the reasons below and the owner did not object]**, for example
+  `/nariai/jonas-petraitis-7k3qm2x9ab`. The id (a random ten-character id of letters and digits, never the name) decides
+  which profile it is: no squatting on names, no impersonation by address, two members with one name never share an address,
+  and a changed display name keeps the page. The name part is made from the current display name as MPs' `/p/{slug}` are
+  (one function, `AddressSlugs.Of`: Lithuanian letters to plain Latin, lower case, other characters a hyphen); a name with
+  nothing to make it of gives the id alone. Any other name part (a changed name, a typo, the id alone) answers **301** to
+  the current address, the query kept; so does the same address in other letter case or with a trailing slash (routing would answer them). A
+  retired id still answers 410 and an unknown one 404, whatever the name part. A display name that ends in something
+  shaped like an id makes an address that may read like another member's; the last part decides, so it leads only to its
+  own profile. Every
+  link to a profile is made by `ProfileRoutes.Page` (in emails `MemberAddress.Page`), and the profile's answers carry it
+  (`address`). There is no sitemap and no canonical link on the site to update.
 - **Indexed [owner, 2026-11-16].** No `noindex` and no `X-Robots-Tag` on these pages: being found by name is part of
   what the person chose. (The trial deployment's own `X-Robots-Tag: noindex, nofollow` for the whole site, 9.2, still
   applies there.)
@@ -3632,6 +3762,12 @@ page is indexed and the person can be followed.
   an organisation or an MP; hidden, waiting or withdrawn texts, and texts on a bill whose record is hidden; any count or
   statistic about the person's texts ("12 argumentų, 9 už"); any ranking; who follows them.
 - **On a sheet** (8.16): the name, the number and "Apie mane" on one, the list on another.
+- [changed while building: the page is server-rendered and readable without script, `Cache-Control: no-cache` for
+  a visitor and `no-store` for a signed-in session, as every page answered to one (6.8), so a switched-off profile is never
+  served from a cache; a retired id answers 410 with one line ("Šio profilio
+  nebėra"), an id never issued the site's 404 page; both carry `X-Robots-Tag: noindex` (there is nothing to index), a
+  public page none. "Sekti" and "Pranešti" are islands; the member's own page shows them nothing to follow and links to
+  "Profilis".]
 
 #### 8.25.3 "Apie mane"
 
@@ -3646,8 +3782,9 @@ page is indexed and the person can be followed.
   it is the one identifier that is never safe for the person to give out (with a name it is enough to pose as the person
   in many official and commercial dealings, and it cannot be changed). With the page indexed, a published address or
   phone number also reaches search engines; the "Apie mane" field says so in its hint.
-- **A writing restriction** (8.3) blocks changing it [proposed 2026-11-16, not objected to]: the text is for others to
-  read. An existing text stays.
+- **A writing restriction** (8.3) blocks writing or changing it [proposed 2026-11-16, not objected to]: the text is for
+  others to read. An existing text stays. **Clearing it and switching the profile off stay open [owner, 2026-11-17]:**
+  removal is erasure, not writing.
 
 #### 8.25.4 The name beside a text
 
@@ -3659,6 +3796,12 @@ page is indexed and the person can be followed.
 - **For a member without one** the name is plain text, as today, and nothing beside it leads anywhere.
 - Never beside a comment written as an organisation or an MP (8.23.2), and never in summaries (which carry no names,
   8.4) or emails.
+- [changed while building: the card is the hint pattern of 8.15 (`js/lt2-cards.js`, listeners on the document as
+  `lt2-hints.js`): a `<template>` per profile id inside the arguments' sheet, the name a link with `data-card`; without
+  script the link alone. Beside a comment and a "Sutinku" name the same, from the thread's answer (`profileId` beside each
+  name, `cards` once per person in the thread; the template's id carries the thread, so two threads on one page never share
+  an id: the card's text is therefore once per thread, not once per page). Organisations' statements and MPs' responses,
+  and comments in their name, name no person, so they get nothing. The moderators' queue keeps the plain name.]
 
 #### 8.25.5 Following a member
 
@@ -3677,13 +3820,20 @@ page is indexed and the person can be followed.
   "on the page only" also means **[the designer's proposal, awaiting the owner]** not in the card and not beside the
   person's texts (the alternative, beside every text, would put a popularity number next to each argument, the second
   number beside what people wrote that 8.14.3 refuses for statements).
-- **What it sends,** by the follower's rhythm (8.24) and its own switch on the account page, "Kai sekamas narys
-  paskelbia" (`notice_setting.members`, the sixth): that the followed member published an argument or a comment in
+- **What it sends [the designer's proposal, awaiting the owner (12): built as proposed],** by the follower's rhythm (8.24)
+  and its own switch on the follows screen, "Kai sekamas narys paskelbia argumentą ar komentarą" (`notice_setting.members`): that the followed member published an argument or a comment in
   their own voice, with the bill's number and title and the link, never the text. An argument that waited for a
   moderator counts when it is published; a text hidden or withdrawn before sending is left out.
+  [changed while building: recorded once per text in `bill_event` (kind `member`, key the argument's or the comment's
+  id, under its bill; no person in it; `MemberNotices` in Notifications, its own part of the gathered email; the payload
+  says which, `what`, and links `#reason-{id}` or `#komentaras-{id}`), told by the follow job to those who followed before
+  it was published and before the job saw it, nothing older than three days, nothing when the profile is no longer public
+  by then; the subject and the line name the member's display name, as their page does.]
 - **Risks, and what answers them.**
   - **One person watched and pressed.** The profile switch is theirs and ends every follow at once. Blocking one
-    particular follower is impossible without showing followers, which the design refuses; the form's help says so.
+    particular follower is impossible without showing followers, which the design refuses. [Not said in the form yet:
+    the designer's proposal is one sentence in the consent text ("Atskiro sekėjo užblokuoti negalima, nes niekas nemato,
+    kas seka."), added with the lawyer's reading of the texts (12).]
     Harassment in comments already has its answers: the report grounds, hiding, the writing restriction (8.3).
   - **The product drifting from "people tell MPs" towards a social network,** with a follower number on every thing
     that can be followed. The owner chose it (8.11.2); it is in the risk table (12). What stands against it: nothing is
@@ -3702,7 +3852,7 @@ page is indexed and the person can be followed.
   impersonation, hidden on report. The moderation rules say so.
 - **Data:** `identity.profile` gains `about`, `about_changed_at`, `about_hidden_at`, `public_profile_id` (null while off)
   and `public_since`; `identity.retired_profile_id` keeps retired ids with no account, so none is reused and each answers
-  410; the consent `public-profile` in `identity.consent`; `notify.follow` kind `member`; `notify.notice_setting.members`.
+  410; the consent `public-profile` in `identity.consent`; `notify.follow` kind `member`; `notify.notice_setting.members`; `appeals.reason.first_public_at` (when an argument first became public, 5.3), which the follow line and the page read.
   The follower number is counted from `notify.follow` when the page is made (the Notifications module gives it through
   the shared kernel, a number only). All in `identity` and `notify`, withheld from `lt2_readonly` as those schemas are.
   In the export (the text, whether the profile is public and since when, the consent, the follows the person made; not
@@ -3721,6 +3871,23 @@ PUT    /api/v1/members/{id}/follow             DELETE /api/v1/members/{id}/follo
 
   Public answers about arguments, comments and "Sutinku" carry, beside a name, the profile id of a member with a public
   profile and nothing for anyone else.
+
+  [changed while building (2026-11-16):
+  - `GET /api/v1/me/profile` is the person's own state for the "Profilis" screen ("Apie mane", whether it is hidden by a
+    moderator, the profile id while public, the consent text's version in force). `PUT /me/profile` takes `about`,
+    `public` and, to switch on, `consentVersion` (the version the form showed; `profile.consent-outdated` for another, as the
+    positions consent does); switching on needs a display name (`profile.name-required`: a page needs a name to show); the
+    MP's own account is refused (`mp.takes-no-part`, 8.5.4); office members are not.
+  - Reports of a profile are kept by Identity, which owns the profile: `identity.profile_report` (target account, ground,
+    optional text, reporter, open or closed), `POST /api/v1/members/{id}/report`; one open report per reporter and
+    profile. The moderators' answer `GET /moderation/profiles` lists reported profiles and hidden texts (the text and the
+    reports, never an address, a side or a follow); `POST /moderation/profiles/{id}/hide` (statement, emailed),
+    `…/keep` ("Palikti", the reports close) and `…/restore` (while not replaced), each audited as
+    `moderation.profile.hidden|kept|restored` without the text. The view is `ProfileModerationView` on `/moderavimas` and
+    `/moderavimas/paslepti`.
+  - "Apie mane" is screened where it is written (`ProfileRules.CheckAbout`): plain text, `Texts:MaxLength`, refused only for
+    a personal code (`about.personal-code`); `https://` links and the person's own contacts pass.
+  - Audited: `profile.public-on`, `profile.public-off`, `profile.about-changed`, never the text.]
 - **Terms and privacy:** both name the public profile, "Apie mane", being followed and the shown follower number as what
   the member chooses with one switch, and that search engines may keep a copy after it is switched off; the
   methodology's "Kas matoma viešai, o kas ne" adds them; a new terms version when built (8.22.2). The keys are listed in
@@ -3729,16 +3896,44 @@ PUT    /api/v1/members/{id}/follow             DELETE /api/v1/members/{id}/follo
 
 #### 8.25.7 Stage
 
-**[The designer's proposal, awaiting the owner:]** its own milestone after comments (11, "M2d Profiles"): comments ship
-with plain names, and the profile needs the lawyer's reading more than anything else here. The alternative is building it
-with comments.
+**[Decided by the owner on 2026-11-16: built now, before comments ("Yes, i missed public profiles too, implement
+those"); it replaces the designer's proposal of its own milestone after comments.]** The parts that concern comments
+(the name beside a comment and a "Sutinku", comments on the page, the follow line for a comment) were connected when
+comments were built, the same day. The lawyer reads the
+profile with the other texts once, before going live (8.22).
+
+#### 8.25.9 The party shown publicly [the designer's proposal, awaiting the owner; not built]
+
+The owner asked whether the "Profilis" screen could hold a party "which you could select to show publicly" ("probably").
+What exists: `identity.party_support` (5.2), one party per person from the parties that nominated sitting MPs, set on
+"Profilis" with its own explicit consent (kind `party-support`, because a party preference is a political opinion);
+private; read only through `IPartySupporters` for the summaries' group numbers of at least 20 (6.3); the MP's own account
+declares none (8.5.4). The proposal:
+
+- **Which party:** the one the member already marked as supported, not a free field. One fact, one place: a free field
+  would let a person publish one party and support another, and it is what "Apie mane" is already for ("Partijos X narys"
+  is allowed there, 8.25.6).
+- **Off unless switched on, with its own consent:** a box "Rodyti viešame profilyje" under the party, with one sentence
+  that it becomes public on the page; recorded as its own consent (kind `party-public`, versioned). Never implied by
+  "Viešas profilis": that switch covers the name, "Apie mane", the texts and being followed, not an opinion the person
+  kept private until now. Shown only while both the profile is public and the box is on.
+- **Gone at once:** unticking the box, removing the party or switching the profile off withdraws `party-public` and the
+  page stops showing it; switching the profile on again does not bring it back by itself.
+- **The MP's own account** supports no party and shows none; its office members are ordinary members here.
+- **"At least 20":** unchanged. That rule is about counts of a group's sides; one person showing their own party is their
+  own publication, like an argument. The summaries' group numbers still count everyone with a party, shown or not.
+- **What else can be inferred:** with the party shown beside a person's arguments (on their page), a reader can set the
+  person's stated party beside the sides their arguments were written for; nothing more than the person published. No
+  count of people per party is shown anywhere (the profile list does not exist and nothing is listed by party).
+
+If the answer is no, the party stays private on "Profilis" as it is now and nothing else changes.
 
 #### 8.25.8 Done when
 
 - A member without a public profile has no page, no link beside their name and no card; nothing public carries an id for
   them.
 - A member who switches the profile on, after the form's text, has the consent `public-profile` stored with its version
-  and gets `/nariai/{id}` with their name, "Apie mane", the follower number and their published arguments and comments,
+  and gets `/nariai/{name-slug}-{id}` with their name, "Apie mane", the follower number and their published arguments and comments,
   newest first, paged without script, with no `noindex`; none of the things 8.25.2 never shows appear on it.
 - Hover and keyboard focus on the name open the card; the link works without script; the card's text is in the page once
   per person; the card carries no follower number.
@@ -4142,9 +4337,10 @@ No dates, in line with the rule that release dates are not promised. Each milest
 | **M2a++ One object** | Every active bill open without proposals or approval; one page per bill; the lists and the agenda on participation; moderation after the fact (8.12). Then descriptions with their labels, the summary job and the text-source interface without a reader (8.13). | Sections 8.12.6 and 8.13. A member can act on any bill the day they register. |
 | **M2a org. Organisations on the site** | Organisations registered by members, confirmed by email domain or by a moderator, their statements and goals on bills, moderation after the fact (8.14.14 stage A); then invitation links and following (stage B). Not in summaries to MPs. | Sections 8.14.13 and 8.14.14. |
 | **M2b Sending** | Introduction letter, MP preferences, real summaries, profile take-over, MP responses, participant notifications, known devices for sign-in (6.2). | Section 8.9, the impact assessment, the legal check and the penetration test are done. |
-| **Follower counts** [owner, 2026-11-16; designed, not built] | How many follow a bill, an MP and an organisation, on the thing's own page, with the hint and the methodology's part on following; the privacy notice's line (8.11.2, section 12's legal row). Built after the branch of 2026-11-16 is verified. A member's number comes with M2d. | Section 8.11.7's last point. |
-| **M2c Comments** [proposed 2026-11-16] | "Aptarimas" under arguments, organisations' statements and MPs' responses, in one piece for the three kinds, with "Sutinku", a switch per kind, reports, moderation on the bill's page and the argument author's notice (8.23), with the email rhythm (8.24). Names are plain text. | Sections 8.23.13, 8.24. |
-| **M2d Profiles** [proposed 2026-11-16] | Public profiles by the member's choice, "Apie mane", the name's card, following a member with their consent (8.25). | Section 8.25.8 and the lawyer's reading of the profile. |
+| **Follower counts** [owner, 2026-11-16; built 2026-11-16 with M2d] | How many follow a bill, an MP, an organisation and a member, on the thing's own page, with the hint and the methodology's part on following; the privacy notice's line (8.11.2, section 12's legal row). | Section 8.11.7's last point. |
+| **Email rhythm** [owner, 2026-11-16; built 2026-11-16] | The member's choice of how often follow emails come, "Iš karto", "Kartą per dieną" or "Kartą per savaitę ir artėjant balsavimui", for the follow emails (planned, voted, organisations' statements, MPs' answers, followed members' texts) and the notice of comments under one's arguments, with one email per person per run of the follow job and a way for later kinds to join (8.24). | Section 8.24's "Done when", for the kinds built. |
+| **M2d Profiles** [owner, 2026-11-16: built now, before comments] | The account area as four screens (8.21); public profiles by the member's choice, "Apie mane", the name's card, following a member with their consent (8.25); its comments' parts connected with M2c the same day. | Section 8.25.8 and the lawyer's reading of the profile. |
+| **M2c Comments** [owner, 2026-11-16: built 2026-11-16, after M2d] | "Aptarimas" under arguments, organisations' statements and MPs' responses, in one piece for the three kinds, with "Sutinku", a switch per kind, reports, moderation on the bill's page and the argument author's notice (8.23), in the email rhythm (8.24); a member's name beside a comment links to their public profile (8.25). | Sections 8.23.13, 8.24. |
 | **M3** | Stage 3 design: voting, delegation, AI summaries. Following, with its shown numbers, is delegation's predecessor (owner, 2026-11-16): the numbers show whom people choose to hear from, the ground delegation would stand on; a follow never becomes a delegation by itself (1.1, proposed). | Separate document. |
 
 Splitting M2 means the risky step (emailing every MP) happens only after the whole flow has been watched working.
@@ -4259,7 +4455,7 @@ Built on 2026-11-16:
 
 - One length for every text members write for others to read: the runtime setting `Texts:MaxLength` (2 000, 0 = no
   limit, a technical ceiling of 20 000) for arguments, organisations' statements and MPs' responses, checked where each
-  is written (5.6, 8.2), and for comments and "Apie mane" when they are built, except texts a moderator reviews anyway;
+  is written (5.6, 8.2), and for comments and "Apie mane", except texts a moderator reviews anyway;
   long ones are shown with "Rodyti daugiau" (8.2: an argument beyond about 300 characters, a statement or a response
   beyond about 1 500).
 - Reasons in the email to MPs are shortened like the page, with a link "Visas argumentas" to the reason on the public
@@ -4271,8 +4467,8 @@ Built on 2026-11-16:
   (8.7, 8.16).
 - A staff account's session becomes a staff session without signing out, by its staff passkey on `/prisijungti/raktas`
   (6.2, 8.21).
-- The account page `/sveiki` is in four parts: "Profilis", "Sekimas ir laiškai", "Dalyvavimas", "Saugumas ir duomenys"
-  (8.21).
+- The account page `/paskyra` is in four parts: "Profilis", "Sekimas ir laiškai", "Dalyvavimas", "Saugumas ir duomenys"
+  (8.21). [Replaced later the same day, below: four screens.]
 - A member may change their display name, with no limit on how often; the account keeps no time of
   the change (6.2).
 - The terms and the privacy notice are kept correct as drafts by us as the site changes, and the lawyer reads them once,
@@ -4282,7 +4478,7 @@ Built on 2026-11-16:
   approximate numbers are enough (8.27). Members are counted by year as well, though the year's sketch lets anyone
   holding the whole database list the accounts active that year until it ends (8.27.2).
 
-Designed, not built (8.23-8.25):
+Decided for comments, the email rhythm and public profiles (8.23-8.25; all three built 2026-11-16):
 
 - **Comments (8.23; replaces "comments dropped" of 1.3).** Members comment in public under an argument, an
   organisation's statement and an MP's response: one implementation for the three kinds, built together, MPs'
@@ -4317,9 +4513,25 @@ Designed, not built (8.23-8.25):
   private from everyone, the followed party and staff included, with no list of followers and nothing about one
   follower in any answer, log or admin screen; follows stay out of any combination with sides and invitations. It
   replaces the rule that no follower count is shown, and with it the member's number as its one exception. Following is
-  written down as the predecessor of delegation (1.1, 11). The numbers of bills, MPs and organisations can be built
-  now, after this branch is verified (11, "Follower counts"); the member's comes with 8.25. Two limits are the
+  written down as the predecessor of delegation (1.1, 11). The numbers of bills, MPs, organisations and members
+  were built with the public profiles, 2026-11-16 (11, "Follower counts"). Two limits are the
   designer's proposals (below): counts, not rankings; and a follow never becomes a delegation by itself.
+
+**Decided by the owner later on 2026-11-16: public profiles now, and the account as screens**
+
+- "Yes, i missed public profiles too, implement those": public profiles (8.25) are built now, before comments (M2d
+  before M2c, section 11); this replaces the designer's proposal "its own milestone after comments". The follower numbers
+  of bills, MPs and organisations are built with them (8.11.2). The designer's proposals of 8.25 and 8.11.2 are built as
+  proposed and still await the owner (below and in the table).
+- "The menu could not just scroll, but it would be split into several forms? Starting with name, about me and probably a
+  party": the account area is four screens, `/paskyra` ("Profilis": the name, "Apie mane", "Viešas profilis", party
+  support), `/paskyra/sekimas`, `/paskyra/dalyvavimas`, `/paskyra/saugumas`, with the row of parts as navigation between them
+  (8.21). Whether the party may be shown publicly is the designer's proposal of 8.25.9, not built.
+- "The url sveiki reads strange, change it": the account's screens are `/paskyra`, `/paskyra/sekimas`,
+  `/paskyra/dalyvavimas`, `/paskyra/saugumas`; `/sveiki` goes with no redirect (8.21).
+- A member's public address carries the name: `/nariai/{name-slug}-{id}`, the id deciding, any other name part
+  redirecting permanently to the current address (8.25.2). The owner suggested the name alone; the id stays (names are
+  neither unique nor stable), and the owner did not object.
 
 **Decided by the owner on 2026-11-16: the analytics page (8.26)**
 
@@ -4365,6 +4577,57 @@ Built, awaiting the owner's word:
 
 - Changing the display name (6.2): a writing restriction blocks it (or leaves it alone); audited without the names; no
   earlier names kept.
+- Comments, filled in while building (8.23.14): the paging parameter `komentarai`; a `comments` count on each argument,
+  statement and response in the public answers; no comment as the MP once the mandate has ended; the argument author's notice
+  recorded per argument and run without a person, told in the email rhythm (8.24) as a kind of its own; the
+  moderation notices on the existing kinds; moderating a comment whatever its target's state; the "Moderavimas" panel listing
+  the bill's reported comments.
+
+**Decided by the owner on 2026-11-17** ("All good, but lithuanian number is now 06.., not 86..")
+
+- Withdrawing a consent works behind changed terms: switching the public profile off and withdrawing the positions and
+  the party support consents (8.22.2); nothing else is exempt.
+- A restricted member may clear "Apie mane" and switch the profile off; writing or changing the text stays refused (8.25.3).
+- The phone rule matches only Lithuanian numbers, with the trunk prefix `0` in use and the old `8` (8.23.3).
+- The terms stay at version 2026-11-17 until the launch although their text changed (8.22.2).
+
+**Proposed by the designer while building the email rhythm (8.24), 2026-11-16, awaiting the owner**
+
+Each is built as written; "no" names what changes.
+
+1. The daily and weekly emails go at the first run of the follow job from `Follows:ResponsesAt` (08:00, so 08:07), the
+   setting relabelled "Rytinių laiškų laikas". If no: a setting of its own for each, or another hour.
+2. The weekly email goes every Monday, whether or not the Seimas sits that week, and the day is fixed. If no: only in
+   sitting weeks, or a setting for the day.
+3. A gathered email holds what the job first saw before that morning's hour; an event seen at 08:07 waits a day. If no:
+   the cut is the run itself (the 08:07 run's own events go in that morning's email).
+4. "Cannot wait" means a planned date on or before the day of the person's next gathered email, decided when the date is
+   first seen. If no: only a date strictly before that day (the email on the morning of the sitting is taken as in time).
+5. A planned date that moves again within that window is sent early again; the one-a-day limit stays for "Iš karto" only.
+   If no: at most one early email per bill per day, the later move waiting for the gathered email.
+6. One email per person per run, an early "planned" line included when the run holds anything else for the person. If no:
+   an early line is always an email of its own, so such a run can send two.
+7. An email with one thing keeps that thing's own email; two or more make the gathered email with a part per kind and the
+   subjects "Lietuva 2.0: naujienos apie tai, ką sekate" (daily: "dienos naujienos", weekly: "savaitės naujienos"). If no:
+   every email of a run or a day is the gathered one, also with one thing in it.
+8. After a change of the choice, what was waiting keeps its place and comes in the email it was waiting for. Going back
+   within 15 minutes to the choice just left undoes the change (a corrected mis-click loses nothing, also an item waiting
+   under "Iš karto"). What can still be lost: after two changes to two other choices before the first choice's email,
+   what waited under the first; after an undo, what waited under the choice before the undone one's predecessor (only one
+   earlier choice is kept); and an item a gathered pass took for other people during a mis-click that is then undone. If no:
+   what waits moves into the new choice's first email, with a per-person mark of the carry-over.
+9. MPs' answers are recorded per answer, with the three-day rule of votes, and are told within a run under "Iš karto";
+   a missed morning is sent late at the next run rather than never. If no: the record per bill and day stays, and only
+   the timing changes.
+10. Changing the choice is audited without the choice itself. If no: not audited, like the switches.
+11. At most one daily email a Vilnius day and one weekly email a week: a period's email is made once (`notify.rhythm_pass`),
+   so moving `Follows:ResponsesAt` later the same day sends nothing more that day; a missed period is made at the next run.
+   If no: the email follows the hour as it is at each run.
+12. A switch is read when each email is made: a "planned" date that could not wait and was not sent early because its switch
+   was off at that run is not told in the gathered email either, though the switch is on again by then. If no: the early
+   pass marks the date per person, which the record (no person in it) cannot do.
+13. The follow job's records are kept 30 days (past the 14-day look-back, a weekly email's week and the three-day rule),
+   a planned date only until it is past; the daily housekeeping deletes older ones. If no: another number of days.
 
 **Decisions needed before the stage that uses them**
 
@@ -4376,21 +4639,25 @@ Built, awaiting the owner's word:
 | Legal reading of the usage statistics | The lawyer gives the legal basis of the site's own counting (8.27: IP address and browser hashed with a salt kept until the day, month or year ends; counts only; `Privacy.Basis.Fact2.Value` is "[bus įrašyta]") and says whether e-privacy Art. 5(3) applies to it. The EDPB's Guidelines 2/2023 bring tracking by IP address under 5(3) when the address goes to a third party for tracking across sites; ours is first-party, on one site, and keeps nothing beyond the period. If 5(3) applies after all, the counting stops or asks consent; it never becomes a banner by default. | Before going live |
 | Legal reading of the consent texts | A lawyer reads the positions consent texts together with the rule that writing a reason needs no consent (8.2): a reason is the author's own deliberate publication, public with name and chosen side, and withdrawable. **[Owner, 2026-11-16: until going live we keep the terms, the privacy notice and the consent texts correct as drafts as the site changes; the lawyer reads them all once, before going live, not per change.]** When comments, "Sutinku" and the public profile are built, these keys change with them (a new terms version, 8.22.2): the terms (`LegalText.resx`: `Terms.Purpose.2`, `Terms.Publish.2`, `Terms.Publish.5`, `Terms.Moderation.1`, `Terms.Moderation.2`, `Terms.Leave.1`) and the privacy notice (`Privacy.Data.Fact2.Value`, `Privacy.Data.Fact5.Value`, `Privacy.Rights.Fact5.Value`) name what a member publishes or allows: comments, "Sutinku" under the name, the public profile with "Apie mane", being followed; the positions consent texts (`UiText.resx` `PositionConsent.Text`, `LegalText.resx` `Privacy.Positions.3`, which name "Man svarbu") and the methodology's "Kas matoma viešai, o kas ne" (`AppealText.resx` `Method.Privacy` and its part) say in one sentence that "Man svarbu" stays private (it tells the side) while "Sutinku" on a comment is public under the name and tied to no side (8.23.10); a new consent text, the "Viešas profilis" form's (kind `public-profile`), with its own version, saying that the page
 is indexed, that others may follow and that the number of followers is shown (8.25.1); the privacy notice says a
-search engine's copy outlives switching the profile off. When follower numbers are built (8.11.2), the privacy notice says that how many follow a bill, an MP, an organisation or a member is public and who follows is not: `Privacy.Data.Fact6.Value` (today "Ką sekate, mato tik jūs") gains that each follow is counted in a public number naming nobody; to check with it: `Terms.Purpose.2` (following as what an account is for), `Terms.Leave.1` (deleting the account lowers the shared numbers, the follower numbers among them) and `Privacy.Rights.Fact5.Value` (unfollowing); a change to a `Terms.*` text is a new terms version (8.22.2). The methodology's `AppealText.resx` `Method.Privacy.1` and `Method.Privacy.Follow` (`/metodika#sekimas`) say what the number is and is not. Questions for the reading: comments carry no side and need no consent, as reasons (8.23.1); a public "Sutinku" is opinion data the person makes public themself (whether GDPR Art. 9(2)(e) is the ground, and whether the inline sentence suffices); a public profile gathers one person's published opinions in one place, by their choice (8.25), and "Apie mane" can state a political opinion or membership. | Once, before going live |
+search engine's copy outlives switching the profile off. With follower numbers built (8.11.2), the privacy notice says that how many follow a bill, an MP, an organisation or a member is public and who follows is not: `Privacy.Data.Fact6.Value` says each follow is counted in a public number naming nobody; to check with it: `Terms.Purpose.2` (following as what an account is for), `Terms.Leave.1` (deleting the account lowers the shared numbers, the follower numbers among them) and `Privacy.Rights.Fact5.Value` (unfollowing); a change to a `Terms.*` text is a new terms version (8.22.2). The methodology's `AppealText.resx` `Method.Privacy.1` and `Method.Privacy.Follow` (`/metodika#sekimas`) say what the number is and is not. Questions for the reading: comments carry no side and need no consent, as reasons (8.23.1); a public "Sutinku" is opinion data the person makes public themself (whether GDPR Art. 9(2)(e) is the ground, and whether the inline sentence suffices); a public profile gathers one person's published opinions in one place, by their choice (8.25), and "Apie mane" can state a political opinion or membership. | Once, before going live |
 | AI provider for pre-screening | The description draft is decided (2026-11-13, in the confirmed list above). AI pre-screening of users' texts would need an EU-region route chosen first: the first-party Claude API has no EU-only processing. Until then pre-screening stays rule-based. | Before any AI pre-screening |
 | Telemetry backend | Hosted free tier with EU storage, or self-hosted. | M0 |
 | MP photos | Use the Seimas photos if their terms allow, otherwise initials. | M1 |
 | Lithuanian terms for the new objects | Proposal: *kreipimasis*, *prašo balsuoti už / prieš*, *argumentas* (chosen by the owner on 2026-11-12 in place of *priežastis*), *suvestinė*, *atsakymas*; for comments (8.23.1, proposed 2026-11-16) *aptarimas* (the part under a text) and *komentaras* (one item), never *atsakymas*. | M2a; the comment terms before M2c |
 | Comments under MPs' responses once real MPs are on the site (8.23.5) | Keep `Comments:OnResponses` on, as during the trial (the owner's decision of 2026-11-16 for the trial); or switch it off when going live. Decided with what the trial showed and after the talks with MPs' offices. | Before real MPs are on the site (with the introduction letter, 8.19.5) |
-| Comments: the phone rule and links in arguments (8.23.3) | **Proposed:** correct the phone rule so a span of years is not a phone number, for every text; arguments keep waiting for a moderator when they hold a link, because they can reach MPs. Or: leave the rule as it is; or let links in arguments through as in comments. | Before M2c |
+| Comments: the phone rule and links in arguments (8.23.3) | **The phone rule: decided by the owner, 2026-11-17 (8.23.3: Lithuanian shapes only).** For the links: arguments keep waiting for a moderator when they hold a link, because they can reach MPs. Or: leave the rule as it is; or let links in arguments through as in comments. | Before M2c |
 | Follower numbers: counts, not rankings (8.11.2, 8.25.5) | **Proposed:** the number only on the thing's own page (the bill's page, the MP's, the organisation's, the member's profile), not in list rows (the agenda, the front page, `/projektai`, the MPs' list, `/organizacijos`) nor, for a member, in the card or beside the person's texts; nothing sorted, ranked or added up by it and no "most followed" list, until delegation is designed (a table of MPs ordered by it is a league table, 7.1). Or: a sort by followers on `/projektai` (bills only, the first candidate) and/or on the MPs' list, and the number in list rows. | Before follower counts are built |
 | Follower numbers: zero and the wording (8.11.2) | **Proposed:** nothing shown with none (or "Sekėjai: 0"); a hint beside the number on every page that shows it, at least on the MP's profile, saying these are self-selected Lietuva 2.0 users who asked for emails, not support and not a representative poll, with the methodology's part on following saying it at length (or the methodology only). | Before follower counts are built |
 | A follow and a future delegation (1.1) | **Proposed:** a follow never becomes a delegation by itself; delegation is its own explicit act, and follows that exist then are not converted (people follow those they disagree with, to watch them). No alternative recommended: a constraint on stage 3's design. | Stage 3 design |
-| Public profile: the "Sutinku" a person gave (8.25.2) | **Proposed:** not listed on the profile. Or: listed. | Before M2d |
+| Public profile: the "Sutinku" a person gave (8.25.2) | **Proposed (built so):** not listed on the profile. Or: listed. | Before M2d |
 | "Apie mane" only with a public profile (8.25.1) | **Proposed:** yes, one switch and one explanation. Or: "Apie mane" shown (in a card) also for members without a page. | Before M2d |
 | "Apie mane": a personal code (8.25.3) | **Proposed:** refused, as everywhere. Or: allowed like the person's own contacts. | Before M2d |
-| Following a member: what it sends (8.25.5) | **Proposed:** a line when the member publishes an argument or a comment in their own voice, never the text, by the follower's rhythm, with its own switch. Or: arguments only. | Before M2d |
-| Public profiles: stage (8.25.7) | **Proposed:** its own milestone after comments, "M2d Profiles". Or: built with comments in M2c. | Before M2c |
+| Following a member: what it sends (8.25.5) | **Proposed (built so):** a line when the member publishes an argument or a comment in their own voice, never the text, by the follower's rhythm, with its own switch. Or: arguments only. | Before M2d |
+| Public profile: the party shown (8.25.9) | **Proposed:** the supported party already on "Profilis" (not a free field), shown on the public page only with its own box and consent (`party-public`), never by "Viešas profilis" alone; withdrawn at once with the box, the party or the profile; nothing for the MP's account; the "at least 20" rule unchanged. Or: no; the party stays private. | Before it is built |
+| Public profile: a display name to switch it on (8.25.6) | **Proposed (built so):** "Viešas profilis" needs a display name, and the name cannot be emptied while the profile is public (`profile.name-required`). Or: a page without a name, titled "Narys". | Before going live |
+| Public profile: no cache, 410 and 404 marked `noindex` (8.25.2) | **Proposed (built so):** the page is `no-cache` for everyone so switching off is at once; the 410 and 404 answers carry `X-Robots-Tag: noindex`. Or: ordinary caching. | Before going live |
+| A comment in an organisation's name when its last representative's account is deleted (8.23.7, 8.14.14) | Open, found while connecting comments and profiles: 8.23.7 says a comment written in an organisation's name stays when its writer's account is deleted (as statements do), but deleting the last representative's account closes the organisation (8.14.14), which withdraws its statements, and a withdrawn statement takes its comments with it (8.23.7). The code does both as written; since an organisation comments only under its own statement (8.23.2), the comments of the last representative go with the statements when the account is deleted, and the rule "stays" holds only while another representative remains. Either: keep it so (the closing decides); or keep a closed organisation's statements and their comments; or move the comment's rule to "stays unless its organisation is closed". | Before going live |
+| Public profile: the party shown (8.25.9) – not built | Still only the designer's proposal of 8.25.9 (the row above); nothing of it is built: the party stays private on "Profilis". | Before going live |
 
 **Risks**
 

@@ -167,10 +167,20 @@ public sealed class TakingSidesTests(DatabaseFixture database) : ApiTest(databas
 
         public Task<Result<Unit>> UnfollowOrganisationAsync(Guid userId, string slug, CancellationToken cancellationToken) => throw Broken();
 
+        public Task<Result<Unit>> FollowMemberAsync(Guid userId, string profileId, CancellationToken cancellationToken) => throw Broken();
+
+        public Task<Result<Unit>> UnfollowMemberAsync(Guid userId, string profileId, CancellationToken cancellationToken) => throw Broken();
+
         public Task<NoticeSettings> NoticesAsync(Guid userId, CancellationToken cancellationToken) => throw Broken();
 
         public Task<Result<Unit>> SetNoticesAsync(Guid userId, NoticeSettings settings, CancellationToken cancellationToken) => throw Broken();
 
+        public Task<string> FrequencyAsync(Guid userId, CancellationToken cancellationToken) => throw Broken();
+
+        public Task<Result<Unit>> SetFrequencyAsync(Guid userId, string frequency, string? ipHash, CancellationToken cancellationToken) => throw Broken();
+
         public Task<FollowRunOutcome> RunAsync(DateTimeOffset now, CancellationToken cancellationToken) => throw Broken();
+
+        public Task<int> PurgeEventsAsync(DateTimeOffset now, CancellationToken cancellationToken) => throw Broken();
     }
 }

@@ -78,7 +78,7 @@ public sealed class FollowTests(DatabaseFixture database) : ApiTest(database)
                 payload.RootElement.GetProperty("billNumber").GetString().ShouldBe(AppealSteps.SecondBill);
                 payload.RootElement.GetProperty("date").GetString().ShouldBe(date.ToString("yyyy-MM-dd", System.Globalization.CultureInfo.InvariantCulture));
                 payload.RootElement.GetProperty("stage").GetString().ShouldBe("adoption");
-                payload.RootElement.GetProperty("accountPath").GetString().ShouldBe("/sveiki#sekami");
+                payload.RootElement.GetProperty("accountPath").GetString().ShouldBe("/paskyra/sekimas#sekami");
             }
 
             // Recorded once: a second run sends nothing more.
@@ -211,7 +211,7 @@ public sealed class FollowTests(DatabaseFixture database) : ApiTest(database)
         var (member, _) = await Factory.MemberAsync();
         using var _m = member;
         await member.FollowBillAsync(AppealSteps.ThirdBill);
-        var account = WebUtility.HtmlDecode(await member.Client.GetStringAsync("/sveiki"));
+        var account = WebUtility.HtmlDecode(await member.Client.GetStringAsync("/paskyra/sekimas"));
         account.ShouldContain("id=\"sekami\"");
         account.ShouldContain(AppealSteps.ThirdBill);
         account.ShouldContain("Kai Seimas balsuoja dėl sekamo projekto");

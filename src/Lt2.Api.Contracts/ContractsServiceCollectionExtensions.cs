@@ -27,6 +27,8 @@ public static class ContractsServiceCollectionExtensions
         services.AddScoped<IValidator<Me.PositionConsentRequest>, Me.PositionConsentRequestValidator>();
         services.AddScoped<IValidator<Me.TermsAcceptanceRequest>, Me.TermsAcceptanceRequestValidator>();
         services.AddScoped<IValidator<Me.PartySupportRequest>, Me.PartySupportRequestValidator>();
+        services.AddScoped<IValidator<Me.ProfileRequest>, Me.ProfileRequestValidator>();
+        services.AddScoped<IValidator<Me.MemberReportRequest>, Me.MemberReportRequestValidator>();
         services.AddScoped<IValidator<Appeals.PositionRequest>, Appeals.PositionRequestValidator>();
         services.AddScoped<IValidator<Appeals.ReasonRequest>, Appeals.ReasonRequestValidator>();
         services.AddScoped<IValidator<Appeals.ReportRequest>, Appeals.ReportRequestValidator>();
@@ -49,6 +51,7 @@ public static class ContractsServiceCollectionExtensions
         services.AddScoped<IValidator<Mps.MpTakeoverRequest>, Mps.MpTakeoverRequestValidator>();
         services.AddScoped<IValidator<Mps.MpOfficeAcceptanceRequest>, Mps.MpOfficeAcceptanceRequestValidator>();
         services.AddScoped<IValidator<Mps.MpResponseRequest>, Mps.MpResponseRequestValidator>();
+        services.AddScoped<IValidator<Comments.CommentRequest>, Comments.CommentRequestValidator>();
         services.AddScoped<IValidator<Digests.CancelDigestRequest>, Digests.CancelDigestRequestValidator>();
         services.AddScoped<IValidator<Digests.MpMailFrequencyRequest>, Digests.MpMailFrequencyRequestValidator>();
         services.AddScoped<IValidator<Digests.MpMailExtraRequest>, Digests.MpMailExtraRequestValidator>();

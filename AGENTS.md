@@ -15,6 +15,9 @@ product code. What is being built, in order:
 | **M2a Appeals without sending** | People take a side on a Seimas bill and give reasons; summaries for MPs are generated as previews only. |
 | **M2a+ Reasons to come** | The agenda page (`/darbotvarke`) and the front page built on it, following bills and MPs with emails, the AI draft of a description (Claude API, off until configured), the share line (design 8.11). Its asking for an appeal and appeals opened by moderators were replaced by M2a++. |
 | **M2a++ One object** | Every active bill open at once, one page per bill, no proposals, requests or approval; lists and agenda on participation; moderation after the fact (design 8.12). Then descriptions with their labels and the AI summary job (8.13). |
+| **M2d Profiles** | (Owner, 2026-11-16: before comments.) The account area as four screens; public profiles by the member's choice, "Apie mane", the name's card, following a member, follower numbers on every followed thing's own page (design 8.21, 8.25, 8.11.2). The public party is a designer's proposal (8.25.9), not built. |
+| **Email rhythm** | (Owner, 2026-11-16.) How often a member's emails come, one delivery for every member email kind, the gathered email (design 8.24). |
+| **M2c Comments** | (Owner, 2026-11-16: after M2d.) "Aptarimas" under arguments, statements and responses, "Sutinku", moderation, the argument author's notice in the rhythm; names link to public profiles (design 8.23, 8.25). |
 | **M2b Sending** | Real summary emails to MPs, MP preferences, profile take-over, MP responses. Built first (owner, 2026-11-15): the link of design 8.5.1–8.5.4 (recognised at once, the take-over, the office), then the response (8.5.5–8.5.7). Then (2026-11-16) sending itself, design 8.19: `Digest:Sending`, approval, the real email, preferences without an account, the introduction letter, the suppression list; off by default. Then (2026-11-16) design 8.20: the followers' email about MPs' answers and known browsers for sign-in. |
 | **Stage 3** | Voting with delegation, AI summaries, analytics. Not designed yet; do not build towards it beyond what the design says. |
 
@@ -107,7 +110,7 @@ src/Modules/               Lt2.Identity, Lt2.Notifications, Lt2.Audit, Lt2.Parli
                            also owns the summaries (Digests/: making, approval, sending, SendingRules), MP mail (MpMail/:
                            the links' tokens, the MPs' choices, the introduction letter, the suppression list, MpSender)
                            and following (Follows/: follows, email switches, bill
-                           events, the daily email about MPs' answers). Modules talk through interfaces in SharedKernel (IParticipants, IBillCatalogue,
+                           events, the follow kinds; Rhythm/: how often a member's emails come, design 8.24). Modules talk through interfaces in SharedKernel (IParticipants, IBillCatalogue,
                            IPlannedAgenda, IMpDirectory, IMpMailAddresses (the one way an official address leaves
                            Parliament, for sending), IDigestSource, IPartySupporters, IAccountData (one per module),
                            IPositionErasure, IOutbox, IAuditLog, ISettings, IAiAssistant, IBillTextSource,
@@ -126,7 +129,7 @@ src/Modules/Lt2.Usage      the site's own usage statistics (design 8.27): UsageR
 src/Lt2.Worker             Hangfire server: outbox dispatch loop, the parliament import, the agenda watcher (lrs.lt
                            pages; off unless Agenda:BaseAddress is set), the daily aggregates and closing of the bills' records, summaries
                            (every 15 minutes: waiting ones expire, due ones are made: a dry run, waiting or sent by
-                           Digest:Sending), the follow emails (every 15 minutes; the one about MPs' answers once a day from Follows:ResponsesAt), the AI summaries
+                           Digest:Sending), the follow emails (every 15 minutes, in each member's rhythm: at once, the morning from Follows:ResponsesAt, or Monday), the AI summaries
                            of bills (hourly; makes nothing until a text reader and a provider exist), a daily identity
                            clean-up (with the unsent mail of purged registrations and known browsers not seen for a year) and a daily outbox clean-up (failed
                            messages after 30 days); the dispatcher sends sign-in and confirmation codes first, a batch
@@ -229,7 +232,9 @@ pre-merge run found.
   become the message), `Succeeded`/`Show` for an answer, `Valid` for the shared validator, `IsSignedInAsync`, and
   `ErrorClass`/`Invalid`/`DescribedBy` with `<FieldError For="input-id">` for field errors. A text with placeholders is
   `L.Format(key, …)`; numbers and dates are `Display` (`Number`, `Day`, `DayTime`, `Today(TimeProvider)`), on the
-  server pages too; the moderators' contact address is `Configuration.ModeratorContact()`. A link to copy is
+  server pages too; the moderators' contact address is `Configuration.ModeratorContact()`. A link to a part of the
+  same page carries the page's path (`/metodika#sekimas`, never a bare `#sekimas`): the pages carry `<base href="/">`, so
+  a bare fragment leads to the front page; `NavigationTests` (integration) walks the served pages and fails on one. A link to copy is
   `<CopyLink>`; "Atkurti" is `<RestoreForm>`; a queued argument is `<QueueReasonItem>`, a queued statement
   `<StatementQueueItem>`; the positions consent before a first side is `<PositionConsentForm>`; the bill page's islands
   share the caller's answers through `MyBillState`, the front page's through `MyAgendaState` (its `Changed` event tells
@@ -327,8 +332,10 @@ text gets a new, later version: every member is asked again. A member whose acce
 (`TermsOfUse.NeedsAcceptance`; `GET /me` says `termsRequired`) is sent to `/taisykles/sutikimas` after signing in and by
 any island refused with `terms.required` (`InteractiveBase`); until they accept, reads work and every API write is refused in
 one place, `Security/TermsGate` (before authorization, so a new write route is covered by default; `TermsTests` sweeps every
-mapped write), except `TermsExemptions.Routes` (accepting, signing out, deleting the account, the MP mail token routes). The
-export is a read. The server-rendered feedback form asks the same question. Pending accounts accept with their registration;
+mapped write), except `TermsExemptions.Routes` (accepting, signing out, deleting the account, the MP mail token routes, and
+(owner, 2026-11-17) withdrawing a consent: `DELETE /me/profile/public`, `DELETE /me/consents/positions`,
+`DELETE /me/party-support`; giving one again stays refused). The export is a read. The version stays 2026-11-17 until the
+launch although the text changed while building (owner, 2026-11-17): nobody accepted an earlier one. The server-rendered feedback form asks the same question. Pending accounts accept with their registration;
 the invented demonstration members get the consent like their others (`--demo-appeal`, repeatable).
 
 **Accounts.** Registration is by email only, by invitation during the closed trial, with a self-declared age of 18 or
@@ -337,17 +344,57 @@ asked after the code, never before. One account per normalised address. Each acc
 verification is a later decision. Every member has one personal invitation code (replaceable; uses unlimited unless
 `Registration:PersonalCodeUses` is set) and sees only how many registered with it; administrators see numbers per day,
 code and level, never who invited whom, and can switch codes off. Invitations are never combined with sides.
-A member changes the display name on `/sveiki` (`PUT /me/display-name`, `DisplayNameHandlers`; the designer's proposal
+A member changes the display name on `/paskyra` (`PUT /me/display-name`, `DisplayNameHandlers`; the designer's proposal
 awaiting the owner): the registration's rule (60 characters, empty allowed), refused under a writing restriction (asked of
 Appeals through `IWritingRestrictions`), as often as the member likes (owner, 2026-11-16; `RateLimits:Participation` guards
 against a runaway script), audited without the names, no earlier names kept. Names are read live everywhere, so a
 change shows beside older arguments too.
 
-**The account page (`/sveiki`, design 8.21)** is four parts on the ground, reached from the `#account-parts` row of plain
-links: "Profilis" (`#profilis`), "Sekimas ir laiškai" (`#sekimas-ir-laiskai`), "Dalyvavimas" (`#dalyvavimas`, with the staff
-part: the staff links, or for a staff account not in a staff session the link to its staff passkey) and "Saugumas ir
-duomenys" (`#saugumas-ir-duomenys`); sheets inside them have `h3` headings. Keep the anchors emails link to (`#sekami`,
-`#zinomos-narsykles`, `#my-data`, `#my-invitation`).
+**The account screens (design 8.21; the owner, 2026-11-16: "split into several forms", replacing the one page in four
+parts; under `/paskyra`, the owner, 2026-11-16: "the url sveiki reads strange, change it"; `/sveiki` is gone, no redirect).** Four screens, each its own page with its own forms, joined by `<AccountTabs>` (`Lt2.Web.Client/Components`, the
+`#account-parts` row of plain links, the current one `aria-current`, no script), with the same title and the terms note:
+"Profilis" `/paskyra` (level and roles, the display name `MyDisplayName`, "Apie mane" and "Viešas profilis" `MyProfile`, party
+support `MyPartySupport`), "Sekimas ir laiškai" `/paskyra/sekimas` (`FollowList`, `#sekami`; `EmailRhythm`, `#laisku-daznis`), "Dalyvavimas" `/paskyra/dalyvavimas`
+(`MyMp`, `MyOrganisations`, `MyInvitationCode` `#my-invitation`, the staff part), "Saugumas ir duomenys" `/paskyra/saugumas`
+(passkeys, sessions, known browsers `#zinomos-narsykles`, the positions consent, export and deletion `#my-data`, signing out).
+The addresses are `AccountScreens` (`Lt2.SharedKernel/AccountScreens.cs`, also compiled into Lt2.Web.Client): links in emails, legal texts and pages are built from it, never
+written by hand. A visitor sent to sign in from one comes back to it (`LandingPath` accepts `/paskyra…`). Every screen is
+`no-store` and carries `<NeedsScript />`; `IslandsBeforeStartTests` walks all four.
+
+**Public profiles (design 8.25; the owner, 2026-11-16: "implement those", before comments).**
+- Only by the member's switch "Viešas profilis" on "Profilis" (`PUT /me/profile`), which is the consent `public-profile`
+  (`PublicProfileConsent.TextVersion`, SharedKernel; the form's text in `UiText` under that version): the page `/nariai/{name-slug}-{id}`
+  (a random ten-character id, `ProfileRules.NewId`; the name part from the current display name by `AddressSlugs.Of`,
+  the one slug function MPs' `/p/{slug}` use too; owner, 2026-11-16), indexed, followable, with "Sekėjai: n". The id
+  decides: any other name part (a renamed member, the id alone) answers 301 to the current address
+  (`Components/Members/MemberAddresses`, before the page); a retired id 410 and an unknown one 404 whatever the name part.
+  Every link is `ProfileRoutes.Page(id, name)` (`MemberAddress.Page` in the modules), and the profile's answers carry
+  `address`. Switching off withdraws the
+  consent and, in one transaction, retires the id (`identity.retired_profile_id`: it answers 410 for ever, never reused),
+  ends every follow of it (`IMemberFollowEnd`, Notifications) and removes the link beside every text. An id never issued
+  answers 404. Switching on again makes a new id. A display name is needed while public (`profile.name-required`).
+- "Apie mane" (`about`): plain text up to `Texts:MaxLength`, written while off too and shown only with the profile;
+  `https://` links shown with their host, `rel="nofollow ugc noopener noreferrer"`; own contacts allowed; a personal code
+  refused (`ProfileRules.CheckAbout`, `about.personal-code`); a writing restriction blocks writing or changing it (an existing
+  text stays); clearing it and switching off stay open (owner, 2026-11-17). "Viešas profilis" off alone is
+  `DELETE /me/profile/public` (`ProfileHandlers.SwitchOffOwnAsync`); taking over an MP's profile switches it off too. Reported on the page (`POST /members/{id}/report`, `identity.profile_report`); a moderator hides it with a statement
+  emailed to the person, keeps it or restores it (`/moderation/profiles…`, `ProfileModerationView`); a hidden text shows
+  nowhere until the person writes another.
+- The page (`Lt2.Web/Components/Members/MemberPage`, composed by the host from Identity, Notifications and Appeals) shows the
+  name, "Apie mane", the follower number and the member's texts (`IMemberTexts`, Appeals): published arguments and the
+  comments they wrote in their own voice that the bill's page shows, on bills whose record is not hidden, newest first, 10 and "Rodyti daugiau" by `?rodyti=` (no script). Never sides, "Man svarbu", follows, party, invitations,
+  organisations, anything written as an organisation or MP, "Sutinku" (the designer's proposal), counts of the person's
+  texts, or who follows.
+- Beside an argument, a comment and a "Sutinku" name, the name of a member with a public profile is a link with a card
+  (`js/lt2-cards.js`; `RecordReasons` with one `<template>` per profile id from `BillRecordResponse.Cards`, `CommentThread`
+  with one per person and thread from `CommentThreadResponse.Cards`); `ReasonResponse.AuthorProfileId`,
+  `CommentAuthorResponse.ProfileId` and `CommentAgreerResponse.ProfileId` are null for everyone else (and for an
+  organisation's or MP's voice), and no public answer carries an account id. The moderators' queue keeps the plain name. The MP's own account cannot switch a profile on (`mp.takes-no-part`).
+- Following a member (`follow` kind `member`, key the profile id; `PUT|DELETE /members/{id}/follow`; `member.not-found` for
+  anything not public): a line by email when the member publishes an argument or an own-voice comment (bill number, title,
+  link, never the text; the designer's proposal), in the follower's rhythm (`MemberNotices`), the switch `members` ("Kai
+  sekamas narys paskelbia argumentą ar komentarą"). Exported and deleted with the account; the profile, the text, the
+  consent and the reports a person made are in the export.
 
 **MP profiles.** Compiled automatically from Seimas open data for every MP, joined or not. Two statistics:
 participation (share of recorded votes in which the MP voted for, against or abstained) and voted with the faction
@@ -366,7 +413,7 @@ page's "Balsuota".
 - The official address: an "El. p." contact of open data on `lrs.lt` (not a sub-domain), compared ignoring case, of an MP
   whose mandate has not ended; listed for two or more such MPs, it belongs to nobody (`OfficialAddresses` in Parliament,
   also used for the summaries' recipients). An account whose own address is one gets the offer in its own `GET /me`
-  (`mpOffer`), shown on `/sveiki` by `MyMp` in the browser only; the page the server renders holds nothing of it
+  (`mpOffer`), shown on `/paskyra` by `MyMp` in the browser only; the page the server renders holds nothing of it
   (`ServerMeApi` leaves `mpOffer` and `mp` out). Nothing is linked or public before the take-over.
 - `Registration:OfficialAddressesWithoutInvitation` (off by default, the designer's proposal awaiting the owner): both
   invitation gates ask `OfficialAddressGate`. The local `.env` switches it on through the migrator.
@@ -429,7 +476,7 @@ page's "Balsuota".
   a reason is on its author's side. The author can withdraw their own reason while the bill is open. Writing a reason
   needs no positions consent: it is the author's own deliberate publication, public with name and chosen side.
 - **One length for members' texts (owner, 2026-11-16):** `Texts:MaxLength` (characters, 2 000; 0 = no limit) for
-  arguments, organisations' statements and MPs' responses (and comments and "Apie mane" when built), checked where each
+  arguments, organisations' statements and MPs' responses (and comments and "Apie mane"), checked where each
   is written (`AppealRules.CheckReasonText`, `OrganisationRules.CheckStatement`, `ResponseRules.CheckResponse`, all through
   `AppealRules.TooLong`; the refusal names the number); the one technical ceiling, 20 000 (`MemberTextLength.Ceiling` =
   `SettingKeys.MemberTextCeiling` = `MemberTextLimits.Ceiling` in the contracts), holds whatever the setting says and is all
@@ -493,18 +540,40 @@ page's "Balsuota".
   "Projektai" (`/projektai`; `/kreipimaisi` redirects there) lists active bills, sorted by activity (participants
   plus published arguments; the default), participants, arguments or planned date (owner, 2026-11-14), with a search
   and "Planuojami artimiausiu metu".
-- Following a bill or an MP is private: shown to nobody, no follower count, never combined with sides or invitations
-  (the person's own `/me/bills` gives them both), in the export, deleted with the account; there is no limit on how much a
-  person follows (owner, 2026-11-15: `Follows:MaxPerAccount` and `follow.limit` are gone). Emails (planned, voted; each
-  switchable on the account page) go once per event to those who followed before it; nothing older than three days,
-  nothing about the person's side, the bill's counts or other people.
-- "Seimo narių atsakymai" (design 8.20.1, the fourth switch `responses`): one email per followed bill per Vilnius day, the
-  morning after, from `Follows:ResponsesAt` (08:00, a runtime setting under "Laiškai sekantiems"): the MPs whose response
-  became public or changed stance that day (`appeals.mp_response.announced_at`, `ResponseRules.Announces`; a changed
-  explanation with the same stance is no event) and are still public, with name, faction and stance and the link to
-  `#atsakymai`, never the explanation. Read through `IMpResponseFeed` (Appeals); each person is told only about answers from
-  after they followed (`FollowRules.ResponsesFor`), and the MP's own account and office members never about their own MP
-  (`IMpLinks.SpeaksForAsync`). Recorded in `bill_event` kind `response` (key: the day); a day with nothing left sends nothing.
+- Following a bill, an MP, an organisation or a member is private: who follows is shown to nobody (the followed party and
+  staff included), never combined with sides or invitations (the person's own `/me/bills` gives them both), in the export,
+  deleted with the account; there is no limit on how much a person follows (owner, 2026-11-15: `Follows:MaxPerAccount` and
+  `follow.limit` are gone). Emails (planned, voted; each switchable on the account page) go once per event to those who
+  followed before it; nothing older than three days, nothing about the person's side, the bill's counts or other people.
+- **Follower numbers (design 8.11.2, owner 2026-11-16, built with the profiles).** "Sekėjai: n", exact from 1, is shown only
+  on the thing's own page: the bill's page beside "Sekti" (`GET /bills/{number}/followers`), the MP's profile and the
+  organisation's profile (`followers` in their answers) and a member's page; never in list rows, a member's card or beside
+  texts, never sorted, ranked or added up, nothing at zero (`FollowerLine`, inside `FollowButton` (`Followers`) so the person's own "Sekti" moves it at once, with the hint "Kas yra sekėjai?" to
+  `/metodika#sekimas`). Counted from `notify.follow` when the answer is made, through `IFollowerCounts` (SharedKernel,
+  Notifications): a number only. The last three points are the designer's proposals awaiting the owner.
+- "Seimo narių atsakymai" (design 8.20.1, the fourth switch `responses`), in the person's rhythm (design 8.24): one part per
+  followed bill listing the MPs whose response became public or changed stance (`appeals.mp_response.announced_at`,
+  `ResponseRules.Announces`; a changed explanation with the same stance is no event) and are still public, with name,
+  faction and stance and the link to `#atsakymai`, never the explanation. Read through `IMpResponseFeed` (Appeals); each
+  person is told only about answers from after they followed (`FollowRules.ResponsesFor`), and the MP's own account and
+  office members never about their own MP (`IMpLinks.SpeaksForAsync`). Recorded in `bill_event` kind `response`, one per
+  answer (key: `FollowRules.ResponseKey`, the person number and the moment), with the three-day rule of votes.
+- **How often emails come (design 8.24, the designer's proposals in section 12 await the owner).** A member chooses "Iš karto"
+  (the default), "Kartą per dieną" or "Kartą per savaitę ir artėjant balsavimui" (`notice_setting.frequency`,
+  `GET|PUT /me/notices/frequency`, the island `EmailRhythm` on the follows screen `/paskyra/sekimas`, its own sheet
+  `#laisku-daznis` after the switches; audited `notices.frequency-changed` without the choice). One place decides and sends:
+  `Rhythm/NoticeDelivery` (Notifications) makes, each run, the run's emails, the "planned" dates that cannot wait, the daily
+  email from `Follows:ResponsesAt` ("Rytinių laiškų laikas", 08:00) and Monday's, and gathers everything for one person into
+  one email per run (`GatheredNoticesEmail`; one thing alone keeps its own email). The rules are `RhythmRules` (pure); going
+  back to the choice just left within 15 minutes undoes the change (`RhythmRules.UndoWindow`). A daily or weekly email is made
+  once per period (`notify.rhythm_pass`). `bill_event` rows older than 30 days go with the daily outbox clean-up
+  (`IFollows.PurgeEventsAsync`, `FollowRules.EventRetention`; the designer's proposal). Comments are read up to two minutes
+  before the run (`FollowRules.CommentsWindow`). An
+  event belongs to the choice the person had when the job first saw it. A member email kind joins by declaring itself: an
+  `IMemberNoticeKind` (record, then take per pass and mark its events) and its part (`AddNoticePart`). The kinds: planned,
+  voted, statements, MPs' answers, followed members (`MemberNotices`, switch `members`) and comments under one's arguments
+  (`CommentNotices`, switch `comments`); codes, account and moderation
+  notices, feedback and MP mail never go through it.
 - Taking a side follows the bill (design 8.11.2, owner 2026-11-15): a member's first side on a bill (no side before)
   follows it in the same request, composed by the host (`Lt2.Web/Services/TakingSides`: the Appeals module saves the
   side, then `IFollows.FollowBillAsync`), on the bill's page and in a front-page row alike. The side is never refused or
@@ -602,7 +671,7 @@ shown, only counts and "maža imtis"; the Seimas's majority is that of those who
   routes and pages are limited per address and per token (`RateLimits:MpMail`, `RateLimits:MpMailToken`) and answer the same for
   an unknown and a wrong token. Every change is confirmed to the official address. An extra recipient is confirmed from the
   official address (a page with a button, 24 hours, one use) and each copy has its own "Nebegauti kopijų" page. A linked account
-  changes the same choice under "Seimo narys" on `/sveiki` (`MyMp`, `GET|PUT /me/mp/mail`, passkey session).
+  changes the same choice under "Seimo narys" on `/paskyra` (`MyMp`, `GET|PUT /me/mp/mail`, passkey session).
 - The introduction letter (`/administravimas/pristatymas`; public `/suvestines/pristatymas`): written and signed by a person,
   a test copy to the administrator's own address, sent with a fresh passkey confirmation to MPs who have had none; a changed
   text is a new version. An MP who had none gets it in place of a summary (`introduced`).
@@ -613,6 +682,26 @@ shown, only counts and "maža imtis"; the Seimas's majority is that of those who
 
 **Feedback.** A balloon on every page (and `/atsiliepimai`) lets members write to the team; an item is linked to the
 account only when the member allows a reply, otherwise nothing leads back; staff reply through the outbox; not public.
+
+**Comments, "Aptarimas" (design 8.23, built 2026-11-16).** One service in Appeals (`CommentsService`, `CommentRules`; tables
+`appeals.comment`, withheld from `lt2_readonly`, and `appeals.comment_agreement`, readable) for comments under an argument, a
+statement and a response, one level, oldest first, public at once, never counted or sent to MPs. The voice is the server's:
+a representative under its organisation's own statement writes as the organisation, the MP's account or office under that
+MP's own response as the MP (passkey session, mandate not ended), everyone else as a person; the MP's account comments
+nowhere else. Pre-screening refuses an email address, a phone number or a personal code (`comment.screened`); the phone rule
+(`PreScreening.ContainsPhoneNumber`, every screened text) matches only Lithuanian numbers: `+370`/`00370`, the trunk `0`
+or the old `8`, then eight digits starting 3–9 (owner, 2026-11-17), never a date, year span, sum, law number or a link's digits; an `https://`
+address is a link (`CommentLinks`, `rel="nofollow ugc noopener noreferrer"`). `Comments:OnReasons|OnStatements|OnResponses`
+(off: no new comments, the written ones readable), `Comments:PerPersonPerTarget` (0), `RateLimits:WriteComment` (20 an hour).
+"Sutinku" is public with names, needs no positions consent, is not blocked by a writing restriction, and the first one asks
+inline. The discussion follows its target (`CommentCascade`): withdrawn or merged goes (the merge confirmation says how
+many), hidden hides, a closed bill or a target no longer writable is read-only (`comment.read-only`; a hidden comment cannot
+be deleted, `comment.hidden`). Member controls render only once the island runs, so the served HTML is the same for every
+member and visitor. While an "Aptarimas" is open under an argument the sides stand in one column. The thread is `Lt2.Web.Client/Comments/CommentThread` (inside the arguments' and statements' islands, its own island
+under responses), the caller's answer `CommentState` (browser only), reports target `comment`, moderators' list
+`CommentModerationView`/`CommentQueueItem`, actions also on the bill's page. The author's notice is one kind of the rhythm,
+`CommentNotices` (Notifications; outbox kind `email.comment-notice` alone, its own part of the gathered email; switch
+`comments`, the last on the follows screen). A person's name links to their public profile when they have one (8.25.4).
 
 **Moderation.** Anything that reaches MPs has passed a person. Every action is audited and an argument's author gets the reason.
 A report button is on every bill's description and reason. A moderator can restrict an account from writing (reasons,
@@ -681,7 +770,7 @@ rules are about them.
 
 - **Use the shared steps; add to them rather than copy.** Integration tests: `tests/Lt2.IntegrationTests/Infrastructure/`
   (`AppealSteps`, `OrganisationSteps`, `MpSteps` and `MpResponseSteps` (take a profile over, office members, code sessions,
-  responses, an adoption vote, the responses part without its islands), `MpSendingSteps` (design 8.19: `ResetMpMailAsync`,
+  responses, an adoption vote, the responses part without its islands), `CommentSteps` (design 8.23: comments, "Sutinku", a bill with an argument and a statement to comment on), `MpSendingSteps` (design 8.19: `ResetMpMailAsync`,
   `IntroduceAsync`, settings after a fresh passkey confirmation, the MP mail in the outbox and its links' tokens),
   `ReasonsToComeSteps` with `VilniusToday` and `MondayInWeeks`, `SettingsSteps`,
   `StaffMembers`, `LoggingFactory`). End-to-end tests: `tests/Lt2.E2E/E2ESteps.cs` (registration from any link, ticking the
@@ -723,7 +812,7 @@ rules are about them.
   the accounts it registered through the shared steps (`E2ESteps.RegisterHereAsync`, `PasskeyTests.RegisterAsync`) are
   deleted through the product (`DELETE /api/v1/me`, from the session the browser ended with, else by a code sign-in;
   `TestAccounts`), and first what the product keeps on purpose and a test must not leave: moderators' actions and reports on
-  their arguments, the organisations they registered (`E2EData`). A staff fixture forgets its moderators' actions and deletes
+  their arguments, the organisations they registered (`E2EData`); then what the product made because of the test and keeps with nothing left on it: a bill's record opened during the test, and the follow job's planned, voted and answer records about bills nobody follows any more (`E2EData.ForgetSinceAsync`; its comment records stay, being where its next window starts, and `leftovers.sql` does not count them). A staff fixture forgets its moderators' actions and deletes
   its account from its staff passkey session when the class is over. The run makes its own invitation through the migrator
   and deletes it at the end (`E2ERun`, an assembly fixture; `LT2_E2E_INVITATION` names an existing code instead, for a
   stack whose migrator cannot be run), and waits for the web host before the first test. A test that changes a
@@ -744,10 +833,13 @@ rules are about them.
 - **Known browsers (design 8.20.2).** A `TestBrowser` that completed a registration or signed in to a member is known to that
   account (the test factory sets `Security:DeviceHashKey`): its later code requests use the known browser's allowance and
   codes, not the shared ones. A test about the shared limits asks from a new browser (`NewBrowser()`, `CodeSessionAsync`).
-- **The "Seimo narių atsakymai" email (design 8.20.1)** goes the morning after: a test sets `Follows:ResponsesAt` to 00:00
-  (and back), moves the bill's `announced_at` to yesterday and runs the job at the real time (`ResponseNoticeTests`); the
-  end-to-end step in `MpResponseTests` moves the response by SQL, sets the setting through the settings screen and puts it
-  back, and removes the bill's `bill_event` rows of kind `response`.
+- **The "Seimo narių atsakymai" email (design 8.20.1)** comes at the follow job's next run under "Iš karto" (design 8.24):
+  `ResponseNoticeTests` moves the bill's `announced_at` to yesterday and runs the job at 01:00 of the day it started on; the
+  end-to-end step in `MpResponseTests` waits for the next run and removes the bill's `bill_event` rows of kind `response`.
+- **The email rhythm (design 8.24):** a test reads what a person was told with `NoticesAsync`/`EmailsAsync` (alone or inside a
+  gathered email) or `InboxAsync` (`ReasonsToComeSteps`), runs the job at times it chose in a week of its own
+  (`EmailRhythmTests`, `MondayInWeeks(21)`), and moves a choice's moment by SQL (`frequency_since`) when it must come after
+  events the test placed in that week.
 - **Waits:** no fixed sleeps. In end-to-end tests a step after a navigation or a sign-in waits up to `E2ESteps.Slow`
   (60 s); Playwright's default of 5 s failed when an integration run shared the machine.
 ## Seimas open data

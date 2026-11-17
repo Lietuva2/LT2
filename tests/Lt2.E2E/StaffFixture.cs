@@ -14,6 +14,9 @@ public abstract class StaffFixture(string role, string displayName) : IAsyncLife
     private PasskeyBrowser? _browser;
     private string? _email;
 
+    /// <summary>When the class started: records its moderator's actions alone kept are forgotten after it (E2EData.ForgetSinceAsync).</summary>
+    private readonly DateTimeOffset _started = DateTimeOffset.UtcNow.AddSeconds(-1);
+
     public async Task<IPage> PageAsync()
     {
         if (_browser is not null)
@@ -45,13 +48,14 @@ public abstract class StaffFixture(string role, string displayName) : IAsyncLife
         {
             var email = _email = await TestAccounts.ForFixtureAsync(role, () => PasskeyTests.RegisterAsync(page, displayName));
             await PasskeyTests.AddPasskeyAsync(page);
-            await page.Locator("main").GetByRole(AriaRole.Button, new() { Name = "Atsijungti" }).ClickAsync();
+            await E2ESteps.SignOutOnAccountAsync(page);
             await page.WaitForURLAsync(new Regex("/$"));
             await PasskeyTests.SignInWithPasskeyAsync(page);
             var output = await Compose.RunAsync("run", "--rm", "--no-deps", "migrator", "--grant-role", role, email);
             var code = PasskeyTests.ActivationCode().Match(output).Value;
             code.ShouldNotBeNullOrEmpty("the migrator prints the activation code");
-            await page.ReloadAsync();
+            // Design 8.21: a granted role is activated on "Dalyvavimas".
+            await page.GotoAsync(E2ESteps.Base + "/paskyra/dalyvavimas");
             await SignUpTests.WaitForInteractivityAsync(page);
             await page.GetByLabel("Aktyvinimo kodas").FillAsync(code);
             await page.GetByRole(AriaRole.Button, new() { Name = "Aktyvinti" }).ClickAsync();
@@ -87,6 +91,7 @@ public abstract class StaffFixture(string role, string displayName) : IAsyncLife
                 var (status, body) = await E2ESteps.ApiAsync(_browser.Page, "DELETE", "/api/v1/me");
                 status.ShouldBe(204, $"the {role} fixture deletes its account: {body}");
                 await Mailpit.DeleteToAsync(_email);
+                await E2EData.ForgetSinceAsync(_started);
             }
         }
         finally

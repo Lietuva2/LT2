@@ -36,6 +36,17 @@ internal static class AdvisoryLocks
     public static Task MpResponseAsync(AppealsDb db, long seimasPersonId, string billNumber, CancellationToken ct) =>
         TakeAsync(db, "lt2.mp-response:" + seimasPersonId.ToString(System.Globalization.CultureInfo.InvariantCulture) + ":" + AppealReads.NormaliseBillNumber(billNumber), ct);
 
+    /// <summary>
+    /// One account's comments under one text (design 8.23.4): the ceiling per person per text holds under concurrent requests.
+    /// No bill lock: a comment changes nothing on the bill's record.
+    /// </summary>
+    public static Task CommentsAsync(AppealsDb db, Guid userId, Guid targetId, CancellationToken ct) =>
+        TakeAsync(db, "lt2.comments:" + userId.ToString("N") + ":" + targetId.ToString("N"), ct);
+
+    /// <summary>One comment: deleting, hiding, restoring and agreeing with it happen one at a time.</summary>
+    public static Task CommentAsync(AppealsDb db, Guid commentId, CancellationToken ct) =>
+        TakeAsync(db, "lt2.comment:" + commentId.ToString("N"), ct);
+
     private static Task<int> TakeAsync(AppealsDb db, string key, CancellationToken ct) =>
         db.Database.ExecuteSqlRawAsync(Sql, [new NpgsqlParameter("key", key)], ct);
 }

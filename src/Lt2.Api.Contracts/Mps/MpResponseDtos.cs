@@ -78,7 +78,11 @@ public sealed record MpResponseResponse(
     DateTimeOffset? WithdrawnAt,
     string? HiddenStatement,
     IReadOnlyList<MpResponseVersionResponse> Earlier,
-    MpResponseVoteResponse? Vote);
+    MpResponseVoteResponse? Vote)
+{
+    /// <summary>How many comments the response shows on the bill's page ("Aptarimas (n)", design 8.23.6, 8.23.14).</summary>
+    public int Comments { get; init; }
+}
 
 /// <summary>The MP who answered: public facts from open data. The faction is the current one, null without one.</summary>
 public sealed record MpResponderResponse(string Slug, string FirstName, string LastName, string? Faction);

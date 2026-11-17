@@ -33,7 +33,8 @@
         }
         @* Design 8.11.2: "Sekti" an MP: how they vote on the bills one follows comes in the "voted" email. Private. *@
         <Lt2.Web.Client.Components.NeedsScript />
-        <Lt2.Web.Client.Appeals.FollowButton Kind="mp" Key="@p.Mp.Slug" @rendermode="InteractiveWebAssembly" />
+        @* Design 8.11.2: with how many follow the MP (the hint: not support, not a poll), kept current by the button. *@
+        <Lt2.Web.Client.Appeals.FollowButton Kind="mp" Key="@p.Mp.Slug" Followers="p.Followers" @rendermode="InteractiveWebAssembly" />
         <div class="row">
             @foreach (var m in p.Memberships.Where(m => m.Current && m.Body.Kind is "faction" or "committee" or "group"))
             {

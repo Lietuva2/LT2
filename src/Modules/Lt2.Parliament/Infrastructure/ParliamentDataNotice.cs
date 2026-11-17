@@ -11,7 +11,8 @@ namespace Lt2.Parliament.Infrastructure;
 /// </summary>
 internal sealed class ParliamentDataNotice(IDbContextFactory<ParliamentDb> contexts, IMemoryCache cache) : IParliamentDataNotice
 {
-    private const string CacheKey = "parliament:synthetic";
+    /// <summary>The cached answer's key (a test forgets it to ask the database again).</summary>
+    internal const string CacheKey = "parliament:synthetic";
 
     public async Task<bool> IsParliamentDataInventedAsync(CancellationToken cancellationToken) =>
         await cache.GetOrCreateAsync(CacheKey, async entry =>

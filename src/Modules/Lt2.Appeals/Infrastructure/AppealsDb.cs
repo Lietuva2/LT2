@@ -46,11 +46,16 @@ internal sealed class AppealsDb(DbContextOptions<AppealsDb> options) : DbContext
 
     public DbSet<MpResponse> MpResponses => Set<MpResponse>();
 
+    public DbSet<Comment> Comments => Set<Comment>();
+
+    public DbSet<CommentAgreement> CommentAgreements => Set<CommentAgreement>();
+
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         modelBuilder.HasDefaultSchema(AppealsModule.Schema);
         OnOrganisationsCreating(modelBuilder);
         OnMpResponsesCreating(modelBuilder);
+        OnCommentsCreating(modelBuilder);
 
         modelBuilder.Entity<BillRecord>(e =>
         {
@@ -283,6 +288,40 @@ internal sealed class AppealsDb(DbContextOptions<AppealsDb> options) : DbContext
             e.ToTable(t => t.HasCheckConstraint("ck_mp_response_stance", "stance IN ('for', 'against', 'undecided')"));
             e.ToTable(t => t.HasCheckConstraint("ck_mp_response_status", "status IN ('published', 'withdrawn', 'hidden')"));
         });
+
+    /// <summary>Comments and their "Sutinku" (design 8.23.11): <c>comment</c> withheld from the read-only role, <c>comment_agreement</c> readable.</summary>
+    private static void OnCommentsCreating(ModelBuilder modelBuilder)
+    {
+        modelBuilder.Entity<Comment>(e =>
+        {
+            e.ToTable("comment");
+            e.HasKey(c => c.Id);
+            e.Property(c => c.TargetKind).HasMaxLength(20);
+            e.Property(c => c.BillNumber).HasMaxLength(40);
+            e.Property(c => c.SpeaksAs).HasMaxLength(20);
+            e.Property(c => c.Text).HasColumnType("text"); // Texts:MaxLength (owner, 2026-11-16), checked where it is written
+            e.Property(c => c.Status).HasMaxLength(20);
+            e.HasIndex(c => new { c.TargetKind, c.TargetId, c.CreatedAt });
+            e.HasIndex(c => c.BillNumber);
+            e.HasIndex(c => c.AuthorUserId);
+
+            // The author's notice (design 8.23.9) reads the comments written since the follow job's last run.
+            e.HasIndex(c => c.CreatedAt);
+            e.ToTable(t => t.HasCheckConstraint("ck_comment_target_kind", "target_kind IN ('reason', 'statement', 'response')"));
+            e.ToTable(t => t.HasCheckConstraint("ck_comment_status", "status IN ('published', 'hidden')"));
+            e.ToTable(t => t.HasCheckConstraint(
+                "ck_comment_voice",
+                "(speaks_as = 'person' AND organisation_id IS NULL AND seimas_person_id IS NULL) OR (speaks_as = 'organisation' AND organisation_id IS NOT NULL AND target_kind = 'statement') OR (speaks_as = 'mp' AND seimas_person_id IS NOT NULL AND target_kind = 'response')"));
+        });
+
+        modelBuilder.Entity<CommentAgreement>(e =>
+        {
+            e.ToTable("comment_agreement");
+            e.HasKey(a => new { a.CommentId, a.UserId });
+            e.HasIndex(a => a.UserId);
+            e.HasOne<Comment>().WithMany().HasForeignKey(a => a.CommentId).OnDelete(DeleteBehavior.Cascade);
+        });
+    }
 
     internal static DbContextOptions<AppealsDb> Options(string connectionString)
     {

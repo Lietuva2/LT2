@@ -1,0 +1,143 @@
+@using Lt2.Api.Contracts.Appeals
+@using Lt2.Api.Contracts.Me
+@inherits InteractiveBase<AppealUi>
+@inject IProfilesApi Profiles
+
+@* Members' public profiles for the moderators (design 8.25.6): on the queue (Hidden = false) the reported ones, with "Palikti"
+   and "Paslėpti „Apie mane“" (a statement emailed to the person; the text is then shown nowhere until they write another);
+   on the list of hidden items (Hidden = true) the hidden texts with "Atkurti" while not replaced. Never who reported, and
+   nothing private of the member: no address, side, follow or party. Asked for only in the browser. *@
+@if (Items is { } items)
+{
+    var shown = items.Where(i => Hidden ? i.HiddenAt is not null : i.Reports.Count > 0).ToList();
+    <section class="stack" aria-labelledby="@TitleId" id="@(Hidden ? "hidden-profiles" : "queue-profiles")">
+        <h2 id="@TitleId">@L[Hidden ? "ProfileMod.Hidden" : "ProfileMod.Queue"]</h2>
+        @if (shown.Count == 0)
+        {
+            <p class="small">@L[Hidden ? "Hidden.None" : "Mod.Empty"]</p>
+        }
+        @foreach (var p in shown)
+        {
+            <article class="sheet stack stack--tight" id="@(Hidden ? "hidden" : "queue")-profile-@p.Id" aria-label="@L["ProfileMod.Item"]" @key="p.Id">
+                <div class="row">
+                    @if (p.ProfileId is { } id)
+                    {
+                        <a href="@ProfileRoutes.Page(id, p.DisplayName)"><b>@(p.DisplayName ?? L["Reasons.Anonymous"])</b></a>
+                    }
+                    else
+                    {
+                        <b>@(p.DisplayName ?? L["Reasons.Anonymous"])</b>
+                        <span class="tag">@L["ProfileMod.Off"]</span>
+                    }
+                </div>
+                <p class="voice">@(p.About ?? L["ProfileMod.NoAbout"])</p>
+                @if (p.HiddenStatement is { } why)
+                {
+                    <p class="small">@L.Format("Hidden.Why", why)</p>
+                }
+                @if (!Hidden)
+                {
+                    <ul class="rows">
+                        @foreach (var r in p.Reports)
+                        {
+                            <li><div class="rows__main"><span class="small num">@Display.DayTime(r.CreatedAt) · @L[r.Ground == "impersonation" ? "Report.Ground.person-impersonation" : "Report.Ground." + r.Ground]</span>@if (r.Text is { } t) {<span class="small">@t</span>}</div></li>
+                        }
+                    </ul>
+                }
+
+                @if (_done.TryGetValue(p.Id, out var done))
+                {
+                    <p class="note note--quiet" role="status">@done</p>
+                }
+                else if (_open == p.Id)
+                {
+                    <form class="sheet sheet--quiet stack stack--tight" @onsubmit="() => ActAsync(p.Id)" novalidate id="profile-action-form-@p.Id" aria-labelledby="profile-action-title-@p.Id">
+                        <h3 id="profile-action-title-@p.Id">@L["ProfileMod.Action." + _action]</h3>
+                        <p class="small">@L["ProfileMod.Sentence." + _action]</p>
+                        <div class="field @ErrorClass("statement")">
+                            <label for="profile-statement-@p.Id">@L[_action == "keep" ? "OrgMod.Note" : "OrgMod.Statement"]</label>
+                            <textarea class="textarea" id="profile-statement-@p.Id" maxlength="@AppealLimits.StatementMaxLength" @bind="_statement" @bind:event="oninput" disabled="@Locked"
+                                      aria-invalid="@Invalid("statement")" aria-describedby="@DescribedBy("statement", $"profile-statement-{p.Id}")"></textarea>
+                            <FieldError Errors="Errors" Field="statement" For="@($"profile-statement-{p.Id}")" />
+                        </div>
+                        <div class="row">
+                            <button type="submit" class="btn" id="profile-action-submit-@p.Id" disabled="@Locked">@L["ProfileMod.Action." + _action]</button>
+                            <button type="button" class="btn btn--plain" disabled="@Locked" @onclick="() => _open = null">@L["Cancel"]</button>
+                        </div>
+                    </form>
+                }
+                else
+                {
+                    <div class="actions" role="group" aria-label="@L["Mod.Actions"]">
+                        @if (Hidden)
+                        {
+                            <button type="button" class="btn" id="profile-action-restore-@p.Id" disabled="@(Locked || !p.Restorable)" @onclick="@(() => Open(p.Id, "restore"))">@L["ProfileMod.Action.restore"]</button>
+                        }
+                        else
+                        {
+                            <button type="button" class="btn" id="profile-action-keep-@p.Id" disabled="@Locked" @onclick="@(() => Open(p.Id, "keep"))">@L["ProfileMod.Action.keep"]</button>
+                            @if (p.About is not null && p.HiddenAt is null)
+                            {
+                                <button type="button" class="btn btn--plain" id="profile-action-hide-@p.Id" disabled="@Locked" @onclick="@(() => Open(p.Id, "hide"))">@L["ProfileMod.Action.hide"]</button>
+                            }
+                        }
+                    </div>
+                }
+            </article>
+        }
+        <Messages Message="@Message" Info="@Info" />
+    </section>
+}
+
+@code {
+    private Guid? _open;
+    private string _action = "keep";
+    private string _statement = "";
+    private readonly Dictionary<Guid, string> _done = [];
+
+    /// <summary>The list of hidden items rather than the queue.</summary>
+    [Parameter] public bool Hidden { get; set; }
+
+    private IReadOnlyList<ProfileModerationResponse>? Items { get; set; }
+
+    private string TitleId => Hidden ? "h-hidden-profiles" : "h-queue-profiles";
+
+    protected override async Task OnInitializedAsync()
+    {
+        if (RendererInfo.IsInteractive)
+        {
+            Items = (await Profiles.GetModerationAsync()).Value;
+        }
+    }
+
+    private void Open(Guid id, string action)
+    {
+        _open = id;
+        _action = action;
+        _statement = "";
+        ClearMessages();
+    }
+
+    private Task ActAsync(Guid id) => RunAsync(async () =>
+    {
+        if (_action != "keep" && string.IsNullOrWhiteSpace(_statement))
+        {
+            FieldFails("statement", L["OrgMod.StatementRequired"]);
+            return;
+        }
+
+        var result = _action switch
+        {
+            "hide" => await Profiles.HideAsync(id, new StatementRequest { Statement = _statement }),
+            "restore" => await Profiles.RestoreAsync(id, new StatementRequest { Statement = _statement }),
+            _ => await Profiles.KeepAsync(id, new ModerationRequest { Statement = string.IsNullOrWhiteSpace(_statement) ? null : _statement }),
+        };
+        if (!Succeeded(result, "statement"))
+        {
+            return;
+        }
+
+        _done[id] = L["ProfileMod.Done." + _action];
+        _open = null;
+    });
+}

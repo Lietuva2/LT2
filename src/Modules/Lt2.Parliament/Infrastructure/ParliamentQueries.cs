@@ -64,6 +64,9 @@ internal static class Codes
 
 internal sealed partial class ParliamentQueries(IDbContextFactory<ParliamentDb> contexts, IParliamentDataNotice notice, IMemoryCache cache, TimeProvider clock) : IParliamentQueries
 {
+    /// <summary>The import state's cached key, kept a minute (a test forgets it to ask the database again).</summary>
+    internal const string ImportsCacheKey = "parliament:imports";
+
     private static readonly CultureInfo Lithuanian = CultureInfo.GetCultureInfo("lt-LT");
     private static readonly StringComparer ByLithuanian = StringComparer.Create(Lithuanian, ignoreCase: true);
 
@@ -324,7 +327,7 @@ internal sealed partial class ParliamentQueries(IDbContextFactory<ParliamentDb> 
     }
 
     public async Task<ImportsInfo> ImportsAsync(CancellationToken cancellationToken) =>
-        (await cache.GetOrCreateAsync("parliament:imports", async entry =>
+        (await cache.GetOrCreateAsync(ImportsCacheKey, async entry =>
         {
             entry.AbsoluteExpirationRelativeToNow = TimeSpan.FromMinutes(1);
             await using var db = await contexts.CreateDbContextAsync(cancellationToken);

@@ -36,6 +36,44 @@ internal static class E2EData
     }
 
     /// <summary>
+    /// After the test's accounts are deleted: what the product made on its own because of the test since
+    /// <paramref name="since"/>, and keeps although nothing hangs from it any more.
+    /// <list type="bullet">
+    /// <item>A bill's record created when the test first took part (design 8.12: created when first needed, never removed by
+    /// the product), when nothing is left on it: no side, argument, flag, statement, response, comment, description, report,
+    /// moderator's action or history.</item>
+    /// <item>The follow job's records (<c>notify.bill_event</c>) of a planned date, a vote or an MP's answer made during the test
+    /// about a bill nobody follows any more: nobody is left to tell, so the job does not make them again. Its comment records
+    /// stay: they are also where its next window starts (design 8.23.14), so removing one would make it read comments again
+    /// (leftovers.sql does not count them).</item>
+    /// </list>
+    /// Records and events from before the test, or still followed by someone else (the demonstration members), stay.
+    /// </summary>
+    public static async Task ForgetSinceAsync(DateTimeOffset since)
+    {
+        var at = since.UtcDateTime.ToString("yyyy-MM-dd HH:mm:ss.ffffff", System.Globalization.CultureInfo.InvariantCulture) + "+00";
+        await E2ESteps.SqlAsync(
+            $"""
+            begin;
+            delete from appeals.bill_record r
+             where r.opened_at >= '{at}' and r.description = '' and r.description_source is null
+               and not exists (select 1 from appeals."position" p where p.record_id = r.id)
+               and not exists (select 1 from appeals.reason x where x.record_id = r.id)
+               and not exists (select 1 from appeals.flag x where x.record_id = r.id)
+               and not exists (select 1 from appeals.report x where x.record_id = r.id or x.target_id = r.id)
+               and not exists (select 1 from appeals.moderation_action x where x.target_id = r.id)
+               and not exists (select 1 from appeals.revision x where x.entity_id = r.id)
+               and not exists (select 1 from appeals.organisation_statement x where x.bill_number = r.bill_number)
+               and not exists (select 1 from appeals.mp_response x where x.bill_number = r.bill_number)
+               and not exists (select 1 from appeals.comment x where x.bill_number = r.bill_number);
+            delete from notify.bill_event e
+             where e.first_seen >= '{at}' and e.kind in ('planned', 'voted', 'response')
+               and not exists (select 1 from notify.follow f where f.kind = 'bill' and f.key = e.bill_number);
+            commit;
+            """);
+    }
+
+    /// <summary>
     /// Organisations a test registered (closed by then, or closed with their last representative's account), with their
     /// statements, codes, links and representatives (the foreign keys cascade) and the reports, moderators' actions,
     /// histories, follows and follow events on them, as the old clean-up scripts outside the repository removed "(E2E)" organisations.

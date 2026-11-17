@@ -235,13 +235,21 @@ public interface IMpMailAdministration
 public sealed record FollowedBill(Lt2.SharedKernel.BillFacts Bill, Lt2.SharedKernel.PlannedDate? Planned, Lt2.SharedKernel.StageVoteFacts? LastStageResult);
 
 /// <summary>The person's own follows (design 8.11.2, 8.14.14); there is no limit on how many.</summary>
-public sealed record MyFollows(IReadOnlyList<FollowedBill> Bills, IReadOnlyList<Lt2.SharedKernel.MpFacts> Mps, IReadOnlyList<Lt2.SharedKernel.OrganisationFacts> Organisations);
+public sealed record MyFollows(
+    IReadOnlyList<FollowedBill> Bills,
+    IReadOnlyList<Lt2.SharedKernel.MpFacts> Mps,
+    IReadOnlyList<Lt2.SharedKernel.OrganisationFacts> Organisations,
+    IReadOnlyList<FollowedMember>? Members = null);
+
+/// <summary>A member with a public profile the person follows (design 8.25.5): the public id and the display name.</summary>
+public sealed record FollowedMember(string ProfileId, string DisplayName);
 
 /// <summary>
 /// Which follow emails are on: planned and voted bills (design 8.11.2), organisations' statements (design 8.14.14), MPs' responses
-/// on followed bills (design 8.20.1).
+/// on followed bills (design 8.20.1), followed members' arguments (design 8.25.5), comments under the person's own arguments
+/// (design 8.23.9).
 /// </summary>
-public sealed record NoticeSettings(bool Planned, bool Voted, bool Statements = true, bool Responses = true);
+public sealed record NoticeSettings(bool Planned, bool Voted, bool Statements = true, bool Responses = true, bool Members = true, bool Comments = true);
 
 /// <summary>What one run of the follow job did: events recorded, events sent, emails written to the outbox.</summary>
 public sealed record FollowRunOutcome(int Recorded, int Sent, int Emails);
@@ -279,9 +287,26 @@ public interface IFollows
 
     Task<Lt2.SharedKernel.Result<Lt2.SharedKernel.Unit>> UnfollowOrganisationAsync(Guid userId, string slug, CancellationToken cancellationToken);
 
+    /// <summary>
+    /// Follows a member's public profile by its id (design 8.25.5): <c>member.not-found</c> for an id that is not public now
+    /// (the same answer whether it never existed, was switched off or is the person's own), <c>member.required</c>.
+    /// </summary>
+    Task<Lt2.SharedKernel.Result<Lt2.SharedKernel.Unit>> FollowMemberAsync(Guid userId, string profileId, CancellationToken cancellationToken);
+
+    Task<Lt2.SharedKernel.Result<Lt2.SharedKernel.Unit>> UnfollowMemberAsync(Guid userId, string profileId, CancellationToken cancellationToken);
+
     Task<NoticeSettings> NoticesAsync(Guid userId, CancellationToken cancellationToken);
 
     Task<Lt2.SharedKernel.Result<Lt2.SharedKernel.Unit>> SetNoticesAsync(Guid userId, NoticeSettings settings, CancellationToken cancellationToken);
+
+    /// <summary>How often the person's emails come (design 8.24): <c>immediate</c> (also with no choice made), <c>daily</c> or <c>weekly</c>.</summary>
+    Task<string> FrequencyAsync(Guid userId, CancellationToken cancellationToken);
+
+    /// <summary>
+    /// Changes how often the person's emails come (design 8.24): <c>notices.frequency-invalid</c>, <c>member.required</c>.
+    /// Audited without the choice; <paramref name="ipHash"/> is the request's hashed address.
+    /// </summary>
+    Task<Lt2.SharedKernel.Result<Lt2.SharedKernel.Unit>> SetFrequencyAsync(Guid userId, string frequency, string? ipHash, CancellationToken cancellationToken);
 
     /// <summary>
     /// The worker job (every 15 minutes): records new planned dates and stage votes of followed bills, and statements of
@@ -289,4 +314,12 @@ public interface IFollows
     /// through the outbox.
     /// </summary>
     Task<FollowRunOutcome> RunAsync(DateTimeOffset now, CancellationToken cancellationToken);
+
+    /// <summary>
+    /// Daily housekeeping (design 8.24, the designer's proposal in section 12): deletes the follow job's records that no pass
+    /// can still need: events first seen more than <c>FollowRules.EventRetention</c> ago (a planned date only once it is past,
+    /// so a date still current is never recorded and told again), and the made daily and weekly passes as old. Returns the rows
+    /// deleted.
+    /// </summary>
+    Task<int> PurgeEventsAsync(DateTimeOffset now, CancellationToken cancellationToken);
 }

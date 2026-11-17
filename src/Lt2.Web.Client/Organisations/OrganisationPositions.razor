@@ -1,5 +1,8 @@
 @using Lt2.Api.Contracts.Organisations
+@using Lt2.Api.Contracts.Comments
+@using Lt2.Web.Client.Comments
 @inherits InteractiveBase<AppealUi>
+@inject ICommentsApi CommentsApi
 @inject IOrganisationsApi Organisations
 @inject IAppealsApi Appeals
 
@@ -32,6 +35,7 @@
                         {
                             <ReportForm TargetKind="statement" TargetId="item.Statement.Id" OnClose="() => _reporting = null" />
                         }
+                        @Thread(item.Statement)
                     }
                 </div>
             }
@@ -50,6 +54,7 @@
                     {
                         <ReportForm TargetKind="statement" TargetId="item.Statement.Id" OnClose="() => _reporting = null" />
                     }
+                    @Thread(item.Statement)
                 }
             </div>
         }
@@ -176,6 +181,18 @@
 
     [PersistentState] public BillStatementsResponse? Statements { get; set; }
 
+    /// <summary>The comments under each statement (design 8.23.6), read with the statements and carried to the browser.</summary>
+    [PersistentState] public Dictionary<Guid, CommentThreadResponse>? Threads { get; set; }
+
+    /// <summary>The server found a moderator in a staff-passkey session (the comments' "Moderuoti", design 8.23.8).</summary>
+    [Parameter] public bool Moderator { get; set; }
+
+    /// <summary>"Rodyti daugiau komentarų" (design 8.23.14).</summary>
+    [SupplyParameterFromQuery(Name = CommentLimits.ShowParameter)] public string? CommentsShown { get; set; }
+
+    /// <summary>The responses' page parameter (design 8.5.6), kept in the links this part builds.</summary>
+    [SupplyParameterFromQuery(Name = Lt2.Api.Contracts.Mps.MpResponseLimits.ShowParameter)] public string? ResponsesShown { get; set; }
+
     /// <summary>The organisations the caller represents and their statements here: the caller's own, never-cached answer.</summary>
     [PersistentState] public List<MyBillOrganisationResponse>? Mine { get; set; }
 
@@ -183,10 +200,32 @@
     {
         _signedIn = await IsSignedInAsync();
         Statements ??= (await Organisations.GetOnBillAsync(Number)).Value;
+        Threads ??= await ThreadsAsync();
         if (_signedIn && Mine is null)
         {
             Mine = (await Organisations.GetMineOnBillAsync(Number)).Value?.ToList();
         }
+    }
+
+    /// <summary>"Aptarimas" under one statement (design 8.23.6).</summary>
+    private RenderFragment Thread(StatementResponse statement) => __builder =>
+    {
+        <CommentThread Kind="statement" TargetId="statement.Id" Number="@Number" Thread="@Threads?.GetValueOrDefault(statement.Id)" Count="statement.Comments"
+                       Open="@(CommentPaging.Asked(CommentsShown, statement.Id) is not null)" Asked="@CommentPaging.Asked(CommentsShown, statement.Id)" PagePath="@CommentPaging.PagePath(Number, ResponsesShown)" Contact="@Contact" Moderator="Moderator" />
+    };
+
+    private async Task<Dictionary<Guid, CommentThreadResponse>> ThreadsAsync()
+    {
+        var threads = new Dictionary<Guid, CommentThreadResponse>();
+        foreach (var item in Statements?.Items ?? [])
+        {
+            if ((await CommentsApi.GetThreadAsync("statement", item.Statement.Id, CommentPaging.Asked(CommentsShown, item.Statement.Id))).Value is { } thread)
+            {
+                threads[item.Statement.Id] = thread;
+            }
+        }
+
+        return threads;
     }
 
     private RenderFragment Report(Guid id) => __builder =>

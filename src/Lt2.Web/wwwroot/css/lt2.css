@@ -705,6 +705,10 @@ body { padding-block-end: 4.5rem; }
 .said__actions:has(.report-visitor[open]) { flex-wrap: wrap; white-space: normal; }
 @media (max-width: 64rem) { .pair--reasons { grid-template-columns: minmax(0, 1fr); } }
 
+/* Design 8.23.6: an open "Aptarimas" needs the page's width, not a side's column: while one is open the two sides stand one
+   above the other, as on a phone, and the discussion reads in full width under its argument. */
+.pair--reasons:has(details.comments[open]) { grid-template-columns: minmax(0, 1fr); }
+
 /* The agenda (design 8.11.1): a bill's number tag inside a row keeps the tag's light-on-dark text, not the row link's ink. */
 .rows__main a.tag--ink { color: var(--sheet); font-weight: 600; }
 /* The share line (design 8.11.5): a long invitation link wraps instead of widening the page. */
@@ -904,3 +908,30 @@ body { padding-block-end: 4.5rem; }
 
 /* Design 8.27: "Lankomumas". A long path or host wraps, so the number beside it stays on a phone's screen. */
 .usage-name { overflow-wrap: anywhere; }
+
+/* Design 8.25.4: the card beside a public profile's name (js/lt2-cards.js), the hint's look; placed by the script. */
+.card-pop {
+  inset: auto; margin: 0; inline-size: max-content; max-inline-size: min(22rem, 100vw - 1rem);
+  padding: var(--sp-3) var(--sp-4); background: var(--sheet); color: var(--ink); border: 1px solid var(--rule);
+  box-shadow: 0 0.5rem 1.5rem rgb(0 0 0 / 0.2); font-size: var(--fs-1); line-height: 1.45; overflow-wrap: break-word;
+}
+.card-pop:popover-open { display: flex; flex-direction: column; gap: var(--sp-2); }
+.card-pop p { margin: 0; }
+a.said__name { color: inherit; font-weight: 700; }
+
+/* Design 8.25.2: a member's argument on their page, and the follower line (design 8.11.2). */
+.rows > li.member-text { display: flex; flex-direction: column; gap: var(--sp-2); }
+
+/* "Sekti" / "Nebesekti" is an action, not a state to underline like a chosen tab (browser look, 2026-11-16): one rule for
+   every page that has it (a bill, an MP, an organisation, a member). */
+.follow .btn[aria-pressed="true"] { box-shadow: none; }
+.followers { display: inline-flex; gap: var(--sp-2); align-items: baseline; }
+/* Design 8.23.6: "Aptarimas" lies on its target's sheet, below it and set in; the list is not a sheet, the writing box a quiet one. */
+.comments { margin-left: var(--sp-5); }
+.comments__list { list-style: none; padding: 0; margin: 0; }
+.comment { padding-left: var(--sp-3); border-left: 2px solid var(--rule); }
+.comment__who { gap: var(--sp-2) var(--sp-3); font-size: var(--fs-1); color: var(--ink-2); }
+.comment__name { overflow-wrap: anywhere; color: var(--ink); }
+.comment__text a { overflow-wrap: anywhere; }
+.comment__meta { padding-left: 0; }
+@media (max-width: 30rem) { .comments { margin-left: var(--sp-2); } }

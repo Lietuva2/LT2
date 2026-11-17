@@ -17,7 +17,8 @@ select 'MP responses ' || count(*) from appeals.mp_response;
 select 'records ' || string_agg(bill_number || ' ' || status || ' ' || coalesce(description_source, '-') || case when description like '%(E2E bandymas)%' then ' (E2E text)' else '' end, ', ' order by bill_number) from appeals.bill_record;
 select 'feedback ' || count(*) from identity.feedback;
 select 'follows ' || count(*) from notify.follow;
-select 'bill events ' || count(*) from notify.bill_event;
+-- Without the follow job's comment records (kind comment): it makes them from every comment it reads, those written before the run
+-- too, and they are where its next window starts (design 8.23.14), so no test may remove one (E2EData.ForgetSinceAsync). 'bill events (not comments) ' || count(*) from notify.bill_event where kind <> 'comment';
 select 'summaries ' || count(*) || ' (' || coalesce(string_agg(distinct status, ','), '') || ')' from notify.digest_run;
 select 'MP mail: letters ' || (select count(*) from notify.introduction_letter) || ', choices ' || (select count(*) from notify.mp_email_pref)
     || ', tokens ' || (select count(*) from notify.mp_mail_token) || ', suppressed ' || (select count(*) from notify.suppression);

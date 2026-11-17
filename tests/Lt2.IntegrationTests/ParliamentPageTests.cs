@@ -1,6 +1,7 @@
 using System.Net;
 using System.Text.RegularExpressions;
 using Lt2.IntegrationTests.Infrastructure;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace Lt2.IntegrationTests;
 
@@ -45,7 +46,6 @@ public sealed partial class ParliamentPageTests(DatabaseFixture database) : ApiT
         InlineScript().Matches(html).ShouldBeEmpty();
         html.ShouldContain("Seimo narių ir balsavimų duomenys čia išgalvoti");
     }
-
     [Fact]
     public async Task The_mp_list_shows_sitting_and_former_mps_and_filters_with_a_plain_get_form()
     {
@@ -288,6 +288,26 @@ public sealed partial class ParliamentPageTests(DatabaseFixture database) : ApiT
         html.ShouldContain("Seimo narių ir balsavimų duomenys čia išgalvoti");
     }
 
+    /// <summary>
+    /// The notice depends on the import state, cached for a minute. A "not found" page is a re-executed request, which Blazor
+    /// renders in one pass without waiting for asynchronous work, so with the state not cached (the first request after the
+    /// start, or a minute after the last) the notice went missing. The state forgotten before each request reproduces that
+    /// whatever ran before.
+    /// </summary>
+    [Fact]
+    public async Task The_not_found_page_has_the_notice_also_when_the_import_state_is_not_cached()
+    {
+        var cache = Factory.Services.GetRequiredService<Microsoft.Extensions.Caching.Memory.IMemoryCache>();
+        foreach (var path in new[] { "/nera-tokio-puslapio", "/p/nera-tokio", "/seimas/XVP-9999" })
+        {
+            cache.Remove(Lt2.Parliament.Infrastructure.ParliamentQueries.ImportsCacheKey);
+            cache.Remove(Lt2.Parliament.Infrastructure.ParliamentDataNotice.CacheKey);
+            var (status, html) = await PageAsync(path);
+            status.ShouldBe(HttpStatusCode.NotFound, path);
+            html.ShouldContain("Puslapis nerastas", Case.Sensitive, path);
+            html.ShouldContain("Seimo narių ir balsavimų duomenys čia išgalvoti", Case.Sensitive, path);
+        }
+    }
     [Fact]
     public async Task The_theme_switch_script_loads_in_the_head_from_our_origin_and_its_button_is_hidden_until_it_runs()
     {

@@ -26,12 +26,17 @@ internal sealed class ModerationNoticeTemplate(IStringLocalizer<EmailTemplates> 
         };
         if (!string.IsNullOrWhiteSpace(model.Excerpt))
         {
-            paragraphs.Add(l.Format("Moderation.Excerpt", model.Excerpt));
+            paragraphs.Add(l.Format(model.Notice.StartsWith("comment-", StringComparison.Ordinal) ? "Moderation.CommentExcerpt" : "Moderation.Excerpt", model.Excerpt));
         }
 
         if (!string.IsNullOrWhiteSpace(model.Statement))
         {
             paragraphs.Add(l.Format(EmailText.Statement, model.Statement));
+        }
+
+        if (!string.IsNullOrWhiteSpace(model.Contact))
+        {
+            paragraphs.Add(l.Format(EmailText.Contact, model.Contact));
         }
 
         paragraphs.Add(l["Moderation.Rules"]);

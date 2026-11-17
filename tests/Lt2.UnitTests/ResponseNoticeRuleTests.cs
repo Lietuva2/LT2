@@ -5,8 +5,8 @@ using Lt2.SharedKernel;
 namespace Lt2.UnitTests;
 
 /// <summary>
-/// Design 8.20.1, "Seimo narių atsakymai": what is an event, when the day's email goes, one email per bill per day, and who is
-/// told about which answers.
+/// Design 8.20.1, "Seimo narių atsakymai": what is an event, how an answer is recorded (design 8.24: per answer, with the
+/// three-day rule), and who is told about which answers.
 /// </summary>
 public sealed class ResponseNoticeRuleTests
 {
@@ -29,20 +29,20 @@ public sealed class ResponseNoticeRuleTests
     public void A_changed_explanation_with_the_same_stance_is_no_event() => ResponseRules.Announces("undecided", "undecided").ShouldBeFalse();
 
     [Fact]
-    public void The_day_before_is_due_from_the_morning_time_on_and_nothing_before_it()
+    public void An_answer_is_keyed_by_the_MP_and_the_moment_its_stance_became_public()
     {
-        var eight = new TimeOnly(8, 0);
-        FollowRules.ResponsesDayDue(Vilnius(17, 7, 59), eight).ShouldBeNull();
-        FollowRules.ResponsesDayDue(Vilnius(17, 8, 0), eight).ShouldBe(new DateOnly(2026, 11, 16));
-        FollowRules.ResponsesDayDue(Vilnius(17, 23, 59), eight).ShouldBe(new DateOnly(2026, 11, 16));
+        var at = Vilnius(16, 10);
+        FollowRules.ResponseOf(FollowRules.ResponseKey(Petraitis, at)).ShouldBe((Petraitis, at));
+        FollowRules.ResponseKey(Petraitis, at).Length.ShouldBeLessThanOrEqualTo(40, "bill_event.key holds 40 characters");
+        FollowRules.ResponseKey(Petraitis, at.AddMinutes(1)).ShouldNotBe(FollowRules.ResponseKey(Petraitis, at), "a stance changed again is another event");
+        FollowRules.ResponseKey(Jonaitiene, at).ShouldNotBe(FollowRules.ResponseKey(Petraitis, at));
     }
 
     [Fact]
-    public void The_morning_time_is_a_Vilnius_time_whatever_the_server_zone()
+    public void An_answer_first_seen_more_than_three_days_after_it_became_public_is_never_sent()
     {
-        // 06:30 UTC is 08:30 in Vilnius in November.
-        FollowRules.ResponsesDayDue(new DateTimeOffset(2026, 11, 17, 6, 30, 0, TimeSpan.Zero), new TimeOnly(8, 0)).ShouldBe(new DateOnly(2026, 11, 16));
-        FollowRules.ResponsesDayDue(new DateTimeOffset(2026, 11, 17, 5, 30, 0, TimeSpan.Zero), new TimeOnly(8, 0)).ShouldBeNull();
+        FollowRules.ResponseIsSendable(Vilnius(13, 10), Vilnius(16, 10)).ShouldBeTrue();
+        FollowRules.ResponseIsSendable(Vilnius(13, 10), Vilnius(16, 10, 1)).ShouldBeFalse();
     }
 
     [Fact]
@@ -53,13 +53,6 @@ public sealed class ResponseNoticeRuleTests
         FollowRules.ResponsesAt("09:30").ShouldBe(new TimeOnly(9, 30));
         FollowRules.ResponsesAt("off").ShouldBe(new TimeOnly(8, 0));
         SettingKeys.FollowsResponsesAt.IsValid(System.Text.Json.JsonSerializer.SerializeToElement("off")).ShouldBeFalse("there is no off: the switch is the person's");
-    }
-
-    [Fact]
-    public void One_email_per_bill_per_day_the_event_is_keyed_by_the_day()
-    {
-        FollowRules.ResponsesKey(new DateOnly(2026, 11, 16)).ShouldBe("2026-11-16");
-        FollowRules.ResponsesKey(new DateOnly(2026, 11, 17)).ShouldNotBe(FollowRules.ResponsesKey(new DateOnly(2026, 11, 16)));
     }
 
     [Fact]

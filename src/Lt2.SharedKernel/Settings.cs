@@ -187,6 +187,21 @@ public static class SettingKeys
     public static readonly SettingKey<string> FollowsResponsesAt = new("Follows:ResponsesAt", "08:00", IsTime);
 
 
+    /// <summary>Design 8.23.5 (owner, 2026-11-16): comments under arguments take new ones; off keeps the written ones readable.</summary>
+    public static readonly SettingKey<bool> CommentsOnReasons = new("Comments:OnReasons", true);
+
+    /// <summary>Design 8.23.5: comments under organisations' statements take new ones.</summary>
+    public static readonly SettingKey<bool> CommentsOnStatements = new("Comments:OnStatements", true);
+
+    /// <summary>Design 8.23.5: comments under MPs' responses take new ones (on during the trial; decided again before real MPs, 12).</summary>
+    public static readonly SettingKey<bool> CommentsOnResponses = new("Comments:OnResponses", true);
+
+    /// <summary>
+    /// Design 8.23.4: shown comments one person may have under one text; 0 = no limit, the default. Switched on later it removes
+    /// nothing.
+    /// </summary>
+    public static readonly SettingKey<int> CommentsPerPersonPerTarget = new("Comments:PerPersonPerTarget", 0, v => v is >= 0 and <= 1000);
+
     /// <summary>Surge note: share of recent positions from new accounts (design 6.6).</summary>
     public static readonly SettingKey<decimal> SurgeMinimumShare = new("Surge:MinimumShare", 0.30m, v => v is > 0 and <= 1);
 
@@ -219,6 +234,10 @@ public static class SettingKeys
         AppealsEndorsementsPerPerson,
         OrganisationsPerAccount,
         FollowsResponsesAt,
+        CommentsOnReasons,
+        CommentsOnStatements,
+        CommentsOnResponses,
+        CommentsPerPersonPerTarget,
         AiDraftModel,
         AiSummariesPerDay,
         SurgeMinimumShare,

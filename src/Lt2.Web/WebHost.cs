@@ -16,6 +16,8 @@ using Lt2.Usage;
 using Lt2.SharedKernel.Persistence;
 using Lt2.Web.Client;
 using Lt2.Web.Components;
+using Lt2.Web.Components.Layout;
+using Lt2.Web.Components.Members;
 using Lt2.Web.Endpoints;
 using Lt2.Web.Security;
 using Lt2.Web.Services;
@@ -79,6 +81,9 @@ internal static class WebHost
         services.AddScoped<MpResponseReads>();
         services.AddScoped<Lt2.Api.Contracts.Mps.IMpResponsesApi, ServerMpResponsesApi>();
         services.AddScoped<Lt2.Api.Contracts.Mps.IMpResponseModerationApi, ServerMpResponseModerationApi>();
+        services.AddScoped<CommentReads>();
+        services.AddScoped<Lt2.Api.Contracts.Comments.ICommentsApi, ServerCommentsApi>();
+        services.AddScoped<Lt2.Api.Contracts.Comments.ICommentModerationApi, ServerCommentModerationApi>();
         services.AddScoped<ParliamentReads>();
         services.AddScoped<IMetaApi, ServerMetaApi>();
         services.AddScoped<IParliamentApi, ServerParliamentApi>();
@@ -89,6 +94,11 @@ internal static class WebHost
         services.AddScoped<AgendaReads>();
         services.AddScoped<Lt2.Api.Contracts.Agenda.IAgendaApi, ServerAgendaApi>();
         services.AddScoped<Lt2.Api.Contracts.Follows.IFollowsApi, ServerFollowsApi>();
+        services.AddScoped<Lt2.Api.Contracts.Follows.INoticeFrequencyApi, ServerNoticeFrequencyApi>();
+
+        // Design 8.25: public profiles, the page composed from Identity, Notifications and Appeals.
+        services.AddScoped<MemberReads>();
+        services.AddScoped<Lt2.Api.Contracts.Me.IProfilesApi, ServerProfilesApi>();
         services.AddScoped<MyBillsReads>();
         services.AddScoped<TakingSides>();
         services.AddScoped<Lt2.Api.Contracts.Me.IMyBillsApi, ServerMyBillsApi>();
@@ -136,6 +146,12 @@ internal static class WebHost
         // Routing after the status-code pages, so the re-executed "/nerasta" request is routed to its page.
         app.UseRouting();
 
+        // The layout's invented-data notice, read before a page renders: an error or a re-executed status page renders in one
+        // pass and cannot wait for it (Components/Layout/InventedDataNotice).
+        app.UseInventedDataNotice();
+
+        // Design 8.25.2 (owner, 2026-11-16): a member's page answers only at its current address; any other name part redirects.
+        app.UseMemberAddresses();
 
         // Design 8.19.4: the path of an MP's link holds its token; every log line keeps the path without it (Lt2.Hosting's
         // SecretPaths, applied to all log events and to the traces).

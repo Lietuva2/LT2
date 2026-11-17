@@ -34,11 +34,15 @@
             }
         </p>
         <Lt2.Web.Client.Components.NeedsScript />
-        @* Design 8.14.14, stage B: "Sekti" an active organisation: an email when it makes a statement public. Private: no
-           follower count, for anyone, the organisation included. *@
+        @* Design 8.14.14, stage B: "Sekti" an active organisation: an email when it makes a statement public. Who follows is
+           private, the organisation included; how many is the line below (design 8.11.2). *@
         @if (p.Status == "active")
         {
-            <FollowButton Kind="organisation" Key="@p.Slug" @rendermode="InteractiveWebAssembly" />
+            <FollowButton Kind="organisation" Key="@p.Slug" Followers="p.Followers" @rendermode="InteractiveWebAssembly" />
+        }
+        else
+        {
+            <Lt2.Web.Client.Components.FollowerLine Count="p.Followers" />
         }
     </div>
 

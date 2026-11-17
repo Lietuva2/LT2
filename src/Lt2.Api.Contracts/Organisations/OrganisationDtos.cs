@@ -99,13 +99,18 @@ public sealed record StatementVersionResponse(DateTimeOffset ReplacedAt, string 
 /// the bill's page counts them, with a goal ("Siekiame {N} dalyvių · dabar {n}"). Never who wrote it.
 /// </summary>
 public sealed record StatementResponse(
-    Guid Id, string Stance, string Text, string? Link, string? LinkHost, int? Goal, int? Progress, DateTimeOffset PublishedAt, DateTimeOffset? EditedAt, string Status);
+    Guid Id, string Stance, string Text, string? Link, string? LinkHost, int? Goal, int? Progress, DateTimeOffset PublishedAt, DateTimeOffset? EditedAt, string Status)
+{
+    /// <summary>How many comments the statement shows on the bill's page ("Aptarimas (n)", design 8.23.6, 8.23.14).</summary>
+    public int Comments { get; init; }
+}
 
 public sealed record ProfileStatementResponse(BillRefResponse Bill, StatementResponse Statement, bool BillOpen, IReadOnlyList<StatementVersionResponse> Earlier);
 
 /// <summary>
 /// The public profile <c>/o/{slug}</c>. A blocked organisation carries <c>BlockStatement</c> and no statements; a closed one
-/// <c>ClosedAt</c> and no statements. <c>WebsiteHost</c> is shown with the website.
+/// <c>ClosedAt</c> and no statements. <c>WebsiteHost</c> is shown with the website. <c>Followers</c>: how many members follow
+/// it (design 8.11.2), a number only.
 /// </summary>
 public sealed record OrganisationProfileResponse(
     Guid Id,
@@ -122,7 +127,8 @@ public sealed record OrganisationProfileResponse(
     DateTimeOffset RegisteredAt,
     DateTimeOffset? ClosedAt,
     IReadOnlyList<ProfileChangeResponse> History,
-    IReadOnlyList<ProfileStatementResponse> Statements);
+    IReadOnlyList<ProfileStatementResponse> Statements,
+    int Followers = 0);
 
 public sealed record BillStatementResponse(Guid OrganisationId, string Slug, string Name, OrganisationLabelResponse Label, StatementResponse Statement);
 

@@ -27,7 +27,7 @@ link on the registration form), delete 6, new link or summary text 2. Inline exp
 |---|---|---|
 | Bill page, member with a side on an open bill | 11 | 8 + „Kas yra riba?“ (≈ 950 → ≈ 550 characters) |
 | Organisation profile, representative | 11 | 8 |
-| Account `/sveiki` | 9 | 8 (≈ 1 200 → ≈ 750 characters) |
+| Account `/paskyra` | 9 | 8 (≈ 1 200 → ≈ 750 characters) |
 | Summaries `/suvestines` | 8 | 3 + one link |
 | Organisation registration | 7 | 1 + „Kaip tai veikia“ (+ the website format hint) |
 | Front page, visitor | 7 | 7 (one shortened); signed in 6 → 5 |
@@ -299,7 +299,7 @@ characters.
 
 ---
 
-## 6. Account `/sveiki`
+## 6. Account `/paskyra`
 
 `src/Lt2.Web.Client/Pages/Hello.razor` with `Appeals/FollowList.razor`, `Organisations/MyOrganisations.razor`,
 `Pages/MyInvitationCode.razor`. Nine explanatory paragraphs, one per section plus the lead.

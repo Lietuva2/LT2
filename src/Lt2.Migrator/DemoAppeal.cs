@@ -92,6 +92,10 @@ public static class DemoAppeal
         termsAccepted += await InventedMembers.AcceptTermsAsync(connectionString, OrganisationMembers(now), cancellationToken);
         var organisationsCreated = await InventedOrganisations.SeedAsync(connectionString, organisations, now, cancellationToken);
 
+        // Design 8.23: invented comments and "Sutinku" under the first argument and the first statement, by the organisations'
+        // invented representatives as persons, so "Aptarimas" and its controls can be seen and walked before the islands start.
+        await SeedCommentsAsync(connectionString, now, cancellationToken);
+
         // Design 8.26.5: a bill the Seimas voted on finally, with invented positions, so the analytics page's comparison can be seen.
         var (closedBill, closedCreated, closedTerms) = await SeedClosedBillAsync(connectionString, cancellationToken);
         created += closedCreated;
@@ -110,6 +114,62 @@ public static class DemoAppeal
             closedBill);
     }
 
+    /// <summary>Two comments under the bill's first published argument and one under its first statement, with "Sutinku"; repeatable.</summary>
+    private static async Task SeedCommentsAsync(string connectionString, DateTimeOffset now, CancellationToken cancellationToken)
+    {
+        await using var connection = new Npgsql.NpgsqlConnection(connectionString);
+        await connection.OpenAsync(cancellationToken);
+        await using (var command = new Npgsql.NpgsqlCommand(
+            """
+            WITH reason AS (
+                SELECT r.id FROM appeals.reason r JOIN appeals.bill_record a ON a.id = r.record_id
+                WHERE a.bill_number = @bill AND r.status = 'published' ORDER BY r.created_at, r.id LIMIT 1),
+            statement AS (
+                SELECT s.id FROM appeals.organisation_statement s WHERE s.bill_number = @bill AND s.status = 'published' ORDER BY s.id LIMIT 1)
+            INSERT INTO appeals.comment (id, target_kind, target_id, bill_number, speaks_as, author_user_id, text, status, created_at)
+            SELECT c.id, c.kind, c.target, @bill, 'person', c.author, c.text, 'published', c.at
+            FROM (
+                SELECT @c1 AS id, 'reason' AS kind, (SELECT id FROM reason) AS target, @m1 AS author,
+                       'Ar skaičiuota, kiek tai kainuotų savivaldybėms? Būtų gerai matyti šaltinį.' AS text, @t1 AS at
+                UNION ALL SELECT @c2, 'reason', (SELECT id FROM reason), @m2, 'Šaltinis: https://pavyzdys.test/tyrimas (išgalvotas).', @t2
+                UNION ALL SELECT @c3, 'statement', (SELECT id FROM statement), @m3, 'Ar asociacija skaičiavo poveikį mažoms įmonėms?', @t3
+            ) c
+            WHERE c.target IS NOT NULL
+            ON CONFLICT (id) DO NOTHING
+            """,
+            connection))
+        {
+            command.Parameters.AddWithValue("bill", Bill);
+            command.Parameters.AddWithValue("c1", Comment(1));
+            command.Parameters.AddWithValue("c2", Comment(2));
+            command.Parameters.AddWithValue("c3", Comment(3));
+            command.Parameters.AddWithValue("m1", OrganisationMember(1));
+            command.Parameters.AddWithValue("m2", OrganisationMember(2));
+            command.Parameters.AddWithValue("m3", OrganisationMember(3));
+            command.Parameters.AddWithValue("t1", now.AddDays(-3));
+            command.Parameters.AddWithValue("t2", now.AddDays(-2));
+            command.Parameters.AddWithValue("t3", now.AddDays(-1));
+            await command.ExecuteNonQueryAsync(cancellationToken);
+        }
+
+        await using var agreements = new Npgsql.NpgsqlCommand(
+            """
+            INSERT INTO appeals.comment_agreement (comment_id, user_id, created_at)
+            SELECT c.comment, c.person, @at FROM (VALUES (@c1, @m2), (@c1, @m3), (@c2, @m1)) AS c(comment, person)
+            WHERE EXISTS (SELECT 1 FROM appeals.comment WHERE id = c.comment)
+            ON CONFLICT DO NOTHING
+            """,
+            connection);
+        agreements.Parameters.AddWithValue("c1", Comment(1));
+        agreements.Parameters.AddWithValue("c2", Comment(2));
+        agreements.Parameters.AddWithValue("m1", OrganisationMember(1));
+        agreements.Parameters.AddWithValue("m2", OrganisationMember(2));
+        agreements.Parameters.AddWithValue("m3", OrganisationMember(3));
+        agreements.Parameters.AddWithValue("at", now.AddHours(-12));
+        await agreements.ExecuteNonQueryAsync(cancellationToken);
+
+        static Guid Comment(int n) => new($"0193b000-0412-7000-a000-{n:D12}");
+    }
     /// <summary>The invented organisations' representatives: accounts of their own, never given a side.</summary>
     public static IReadOnlyList<InventedMember> OrganisationMembers(DateTimeOffset now) =>
     [

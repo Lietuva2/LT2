@@ -1,0 +1,53 @@
+using System.Reflection;
+using Bunit;
+using Lt2.Api.Contracts;
+using Lt2.Api.Contracts.Follows;
+using Lt2.Api.Contracts.Me;
+using Lt2.Web.Client;
+using Lt2.Web.Client.Appeals;
+using Microsoft.AspNetCore.Components;
+using Lt2.Web.Client.Components;
+using Microsoft.Extensions.DependencyInjection;
+
+namespace Lt2.UnitTests.Components;
+
+/// <summary>Design 8.11.2: "Sekėjai: n" on a thing's own page; nothing with none; the hint beside it.</summary>
+public sealed class FollowerLineTests : BunitContext
+{
+    public FollowerLineTests() => Services.AddLocalization();
+
+    [Fact]
+    public void Nothing_is_shown_with_no_followers() => Render<FollowerLine>(p => p.Add(c => c.Count, 0)).Markup.Trim().ShouldBeEmpty();
+
+    [Fact]
+    public void The_number_is_exact_from_one_with_the_hint_to_the_methodology()
+    {
+        var line = Render<FollowerLine>(p => p.Add(c => c.Count, 1));
+        line.Find("#followers-count").TextContent.ShouldBe("Sekėjai: 1");
+        line.Find("#followers-hint").TextContent.ShouldBe("Kas yra sekėjai?");
+        line.Find("#followers-hint-panel a").GetAttribute("href").ShouldBe("/metodika#sekimas");
+    }
+
+    /// <summary>The browser look of 2026-11-16: "Sekti" moves the number at once, without a reload.</summary>
+    [Fact]
+    public void The_number_beside_the_follow_button_moves_with_the_persons_own_follow()
+    {
+        Services.AddLt2ClientComponents();
+        var follows = DispatchProxy.Create<IFollowsApi, ApiFake>();
+        ((ApiFake)(object)follows).On("GetMineAsync", ApiResult<MyFollowsResponse>.Ok(new MyFollowsResponse([], [], [])));
+        ((ApiFake)(object)follows).On("FollowBillAsync", ApiResult.Ok());
+        ((ApiFake)(object)follows).On("UnfollowBillAsync", ApiResult.Ok());
+        Services.AddSingleton(follows);
+        Services.AddSingleton(DispatchProxy.Create<IProfilesApi, ApiFake>());
+        AddAuthorization().SetAuthorized("ruta.mockute@pavyzdys.test");
+        SetRendererInfo(new RendererInfo("WebAssembly", isInteractive: true));
+        JSInterop.Mode = JSRuntimeMode.Loose;
+
+        var button = Render<FollowButton>(p => p.Add(c => c.Kind, "bill").Add(c => c.Key, "XVP-0412").Add(c => c.Followers, 2));
+        button.Find("#followers-count").TextContent.ShouldBe("Sekėjai: 2");
+        button.Find("#follow-toggle-bill").Click();
+        button.WaitForAssertion(() => button.Find("#followers-count").TextContent.ShouldBe("Sekėjai: 3"));
+        button.Find("#follow-toggle-bill").Click();
+        button.WaitForAssertion(() => button.Find("#followers-count").TextContent.ShouldBe("Sekėjai: 2"));
+    }
+}

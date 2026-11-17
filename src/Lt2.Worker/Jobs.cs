@@ -62,13 +62,18 @@ public sealed class IdentityPurgeJob(IIdentityMaintenance maintenance, ILogger<I
     }
 }
 
-/// <summary>Daily housekeeping of the outbox (design 6.8): messages that gave up more than 30 days ago are deleted.</summary>
-public sealed class OutboxPurgeJob(INotificationsDispatcher dispatcher, ILogger<OutboxPurgeJob> logger)
+/// <summary>
+/// Daily housekeeping of the outbox (design 6.8): messages that gave up more than 30 days ago are deleted; and of the follow
+/// job's records (design 8.24): those no pass can still need.
+/// </summary>
+public sealed class OutboxPurgeJob(INotificationsDispatcher dispatcher, IFollows follows, TimeProvider clock, ILogger<OutboxPurgeJob> logger)
 {
     public async Task RunAsync(CancellationToken cancellationToken)
     {
         var removed = await dispatcher.PurgeFailedAsync(cancellationToken);
         logger.LogInformation("Outbox housekeeping removed {Rows} failed messages", removed);
+        var events = await follows.PurgeEventsAsync(clock.GetUtcNow(), cancellationToken);
+        logger.LogInformation("Follow housekeeping removed {Rows} old records", events);
     }
 }
 

@@ -1,16 +1,17 @@
 @using Lt2.Api.Contracts.Follows
+@using Lt2.Api.Contracts.Me
 @inherits InteractiveBase<AppealUi>
 @inject IFollowsApi Follows
 
 @* The account page's follows (design 8.11.2, 8.14.14): the followed bills with their planned date or last stage result,
-   the followed MPs and organisations, "Nebesekti", and the four email switches (the fourth, MPs' responses, design 8.20.1). The person's own data only; every follow
+   the followed MPs and organisations, "Nebesekti", and the email switches (MPs' responses, design 8.20.1; followed members, 8.25.5; comments under one's arguments, 8.23.9). The person's own data only; every follow
    email links here. *@
 <section class="sheet stack" aria-labelledby="follows-title" id="sekami">
     <h3 id="follows-title">@L["Follows.Title"]</h3>
     <p>@L["Follows.Lead"]</p>
     @if (Mine is { } mine)
     {
-        @if (mine.Bills.Count == 0 && mine.Mps.Count == 0 && mine.Organisations.Count == 0)
+        @if (mine.Bills.Count == 0 && mine.Mps.Count == 0 && mine.Organisations.Count == 0 && (mine.Members ?? []).Count == 0)
         {
             <p class="small" id="follows-none">@L["Follows.None"] <a href="/darbotvarke">@L["Follows.ToAgenda"]</a></p>
         }
@@ -79,15 +80,34 @@
                 }
             </ul>
         }
+        @if (mine.Members is { Count: > 0 } members)
+        {
+            @* Design 8.25.5: members with a public profile; one switched off is gone from this list, without a reason. *@
+            <h4>@L["Follows.Members"]</h4>
+            <ul class="rows" id="follows-members">
+                @foreach (var m in members)
+                {
+                    <li @key="m.ProfileId">
+                        <div class="rows__main"><a href="@ProfileRoutes.Page(m.ProfileId, m.DisplayName)">@m.DisplayName</a></div>
+                        <div class="rows__side">
+                            <button type="button" class="btn btn--plain" disabled="@Locked" @onclick="() => UnfollowMemberAsync(m.ProfileId)">@L["Follow.Unfollow"]</button>
+                        </div>
+                    </li>
+                }
+            </ul>
+        }
     }
     @if (Notices is { } notices)
     {
         <fieldset class="stack stack--tight" id="follow-notices" @key="_noticesShown">
             <legend class="label">@L["Follows.Emails"]</legend>
-            <label class="check"><input type="checkbox" id="notice-planned" checked="@notices.Planned" disabled="@Locked" @onchange="e => SetAsync(e.Value is true, notices.Voted, notices.Statements, notices.Responses)" /><span>@L["Follows.Email.planned"]</span></label>
-            <label class="check"><input type="checkbox" id="notice-voted" checked="@notices.Voted" disabled="@Locked" @onchange="e => SetAsync(notices.Planned, e.Value is true, notices.Statements, notices.Responses)" /><span>@L["Follows.Email.voted"]</span></label>
-            <label class="check"><input type="checkbox" id="notice-statements" checked="@notices.Statements" disabled="@Locked" @onchange="e => SetAsync(notices.Planned, notices.Voted, e.Value is true, notices.Responses)" /><span>@L["Follows.Email.statements"]</span></label>
-            <label class="check"><input type="checkbox" id="notice-responses" checked="@notices.Responses" disabled="@Locked" @onchange="e => SetAsync(notices.Planned, notices.Voted, notices.Statements, e.Value is true)" /><span>@L["Follows.Email.responses"]</span></label>
+            <label class="check"><input type="checkbox" id="notice-planned" checked="@notices.Planned" disabled="@Locked" @onchange="e => SetAsync(notices with { Planned = e.Value is true })" /><span>@L["Follows.Email.planned"]</span></label>
+            <label class="check"><input type="checkbox" id="notice-voted" checked="@notices.Voted" disabled="@Locked" @onchange="e => SetAsync(notices with { Voted = e.Value is true })" /><span>@L["Follows.Email.voted"]</span></label>
+            <label class="check"><input type="checkbox" id="notice-statements" checked="@notices.Statements" disabled="@Locked" @onchange="e => SetAsync(notices with { Statements = e.Value is true })" /><span>@L["Follows.Email.statements"]</span></label>
+            <label class="check"><input type="checkbox" id="notice-responses" checked="@notices.Responses" disabled="@Locked" @onchange="e => SetAsync(notices with { Responses = e.Value is true })" /><span>@L["Follows.Email.responses"]</span></label>
+            <label class="check"><input type="checkbox" id="notice-members" checked="@notices.Members" disabled="@Locked" @onchange="e => SetAsync(notices with { Members = e.Value is true })" /><span>@L["Follows.Email.members"]</span></label>
+            @* Design 8.23.9: the last switch, about the person's own arguments rather than what they follow. *@
+            <label class="check"><input type="checkbox" id="notice-comments" checked="@notices.Comments" disabled="@Locked" @onchange="e => SetAsync(notices with { Comments = e.Value is true })" /><span>@L["Follows.Email.comments"]</span></label>
         </fieldset>
     }
     <Messages Message="@Message" Info="@Info" />
@@ -138,9 +158,19 @@
     });
 
 
-    private Task SetAsync(bool planned, bool voted, bool statements, bool responses) => RunAsync(async () =>
+    private Task UnfollowMemberAsync(string profileId) => RunAsync(async () =>
     {
-        var result = await Follows.SetNoticesAsync(new NoticeSettingsRequest { Planned = planned, Voted = voted, Statements = statements, Responses = responses });
+        var result = await Follows.UnfollowMemberAsync(profileId);
+        await AfterAsync(result);
+    });
+
+    private Task SetAsync(NoticeSettingsResponse wanted) => RunAsync(async () =>
+    {
+        var result = await Follows.SetNoticesAsync(new NoticeSettingsRequest
+        {
+            Planned = wanted.Planned, Voted = wanted.Voted, Statements = wanted.Statements, Responses = wanted.Responses, Members = wanted.Members,
+            Comments = wanted.Comments,
+        });
         if (!result.IsSuccess)
         {
             // The box the person clicked shows the saved state again: rebuilt, since the values themselves did not change.
@@ -149,7 +179,7 @@
             return;
         }
 
-        Notices = new NoticeSettingsResponse(planned, voted, statements, responses);
+        Notices = wanted;
         Info = L["Follows.Saved"];
     });
 }

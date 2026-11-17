@@ -14,10 +14,14 @@ internal static class OrganisationMapping
 {
     public static OrganisationLabelResponse Map(OrganisationLabel l) => new(l.ConfirmedBy, l.Domain);
 
-    public static StatementResponse Map(StatementInfo s) => new(s.Id, s.Stance, s.Text, s.Link, s.LinkHost, s.Goal, s.Progress, s.PublishedAt, s.EditedAt, s.Status);
+    public static StatementResponse Map(StatementInfo s) => new(s.Id, s.Stance, s.Text, s.Link, s.LinkHost, s.Goal, s.Progress, s.PublishedAt, s.EditedAt, s.Status) { Comments = s.Comments };
 
     public static OrganisationListResponse Map(OrganisationListPage p) =>
         new(p.Items.Select(i => new OrganisationSummaryResponse(i.Slug, i.Name, Map(i.Label), i.Status)).ToList(), p.Total);
+
+    /// <summary>The profile with how many follow the organisation (design 8.11.2): a number only.</summary>
+    public static async Task<OrganisationProfileResponse> MapAsync(OrganisationProfile p, IFollowerCounts followers, CancellationToken ct) =>
+        Map(p) with { Followers = await followers.OrganisationAsync(p.Id, ct) };
 
     public static OrganisationProfileResponse Map(OrganisationProfile p) => new(
         p.Id, p.Slug, p.Name, p.Description, p.Website, p.Website is { } website ? UserLink.Host(website) : null, p.LegalCode, p.DeclaredLobbyist, Map(p.Label),
@@ -107,7 +111,7 @@ internal static class OrganisationInvitationMapping
 /// module in-process, as the signed-in person of the current request.
 /// </summary>
 internal sealed class ServerOrganisationsApi(
-    IOrganisations organisations, IOrganisationInvitations codes, IConfiguration configuration, IHttpContextAccessor accessor, ErrorMapper errors) : IOrganisationsApi
+    IOrganisations organisations, IOrganisationInvitations codes, IFollowerCounts followers, IConfiguration configuration, IHttpContextAccessor accessor, ErrorMapper errors) : IOrganisationsApi
 {
     public Task<ApiResult<OrganisationInvitationResponse>> GetInvitationAsync(string slug, CancellationToken cancellationToken = default) =>
         InvitationAsync(slug, replace: false, cancellationToken);
@@ -128,7 +132,9 @@ internal sealed class ServerOrganisationsApi(
         ApiResult<OrganisationListResponse>.Ok(OrganisationMapping.Map(await organisations.ListAsync(search, cancellationToken)));
 
     public async Task<ApiResult<OrganisationProfileResponse>> GetProfileAsync(string slug, CancellationToken cancellationToken = default) =>
-        errors.ToApiResult(await organisations.ProfileAsync(slug, cancellationToken), OrganisationMapping.Map);
+        await organisations.ProfileAsync(slug, cancellationToken) is var found && found.IsSuccess
+            ? ApiResult<OrganisationProfileResponse>.Ok(await OrganisationMapping.MapAsync(found.Value!, followers, cancellationToken))
+            : errors.ToApiResult(found, OrganisationMapping.Map);
 
     public async Task<ApiResult<BillStatementsResponse>> GetOnBillAsync(string number, CancellationToken cancellationToken = default) =>
         errors.ToApiResult(await organisations.OnBillAsync(number, cancellationToken), OrganisationMapping.Map);

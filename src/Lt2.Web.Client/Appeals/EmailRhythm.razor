@@ -1,0 +1,48 @@
+@using Lt2.Api.Contracts.Follows
+@inherits InteractiveBase<AppealUi>
+@inject INoticeFrequencyApi Frequencies
+
+@* Design 8.24: how often the person's emails come, beside the email switches in "Sekimas ir laiškai". One choice, saved when
+   it is picked; the person's own only. Disabled until the island is interactive. *@
+<section class="sheet stack" aria-labelledby="rhythm-title" id="laisku-daznis">
+    <h3 id="rhythm-title">@L["Rhythm.Title"]</h3>
+    <p>@L["Rhythm.Lead"]</p>
+    @if (Current is { } current)
+    {
+        <fieldset class="stack stack--tight" id="rhythm-choices" @key="_shown">
+            <legend class="label">@L["Rhythm.Legend"]</legend>
+            @foreach (var choice in NoticeFrequencies.All)
+            {
+                <label class="check">
+                    <input type="radio" name="rhythm" id="rhythm-@choice" value="@choice" checked="@(current.Frequency == choice)" disabled="@Locked"
+                           aria-describedby="rhythm-@choice-hint" @onchange="() => SetAsync(choice)" />
+                    <span>@L["Rhythm." + choice]<br /><span class="small" id="rhythm-@choice-hint">@L["Rhythm." + choice + ".Hint"]</span></span>
+                </label>
+            }
+        </fieldset>
+    }
+    <Messages Message="@Message" Info="@Info" />
+</section>
+
+@code {
+    private int _shown;
+
+    [PersistentState] public NoticeFrequencyResponse? Current { get; set; }
+
+    protected override async Task OnInitializedAsync() => Current ??= (await Frequencies.GetAsync()).Value;
+
+    private Task SetAsync(string frequency) => RunAsync(async () =>
+    {
+        var result = await Frequencies.SetAsync(new NoticeFrequencyRequest { Frequency = frequency });
+        if (!result.IsSuccess)
+        {
+            // The choice the person pressed shows the saved one again: rebuilt, since the value itself did not change.
+            _shown++;
+            Show(result.Problem);
+            return;
+        }
+
+        Current = new NoticeFrequencyResponse(frequency);
+        Info = L["Rhythm.Saved"];
+    });
+}

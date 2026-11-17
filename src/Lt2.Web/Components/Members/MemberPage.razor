@@ -1,0 +1,131 @@
+@page "/nariai/{Id}"
+@using Lt2.Api.Contracts.Me
+@using Lt2.Web.Client.Appeals
+@inject IProfilesApi Profiles
+@inject IStringLocalizer<Lt2.Web.Client.Appeals.AppealUi> L
+@inject NavigationManager Navigation
+@inject IConfiguration Configuration
+
+@* A member's public page (design 8.25.2), by the member's own choice ("Viešas profilis"), server-rendered and readable
+   without script: the name, "Apie mane", the number of followers, "Sekti" and "Pranešti", and the member's published
+   arguments and own-voice comments, newest first, 10 and "Rodyti daugiau" by the page's address (?rodyti=). Indexed: no
+   noindex. Never the person's sides, "Man svarbu", "Sutinku", follows, party, invitations, organisations, counts of their
+   texts or who follows them. A retired id
+   answers 410 with one line, an id never issued the site's 404; both are marked noindex. Asked again each time (no-cache),
+   so a profile switched off is gone at once. *@
+@if (_gone)
+{
+    <PageTitle>@L["Member.GoneTitle"] · Lietuva 2.0</PageTitle>
+    <section class="stack" id="member-gone">
+        <h1>@L["Member.GoneTitle"]</h1>
+        <p>@L["Member.Gone"]</p>
+    </section>
+}
+else if (_profile is { } p)
+{
+    <PageTitle>@p.DisplayName · Lietuva 2.0</PageTitle>
+    <div class="stack">
+        <p class="label">@L["Member.Label"]</p>
+    </div>
+
+    <div class="cols">
+        <div class="stack stack--loose">
+            <section class="sheet stack" aria-labelledby="member-name" id="member">
+                <h1 id="member-name">@p.DisplayName</h1>
+                @if (p.About is { } about)
+                {
+                    <div class="stack stack--tight" id="member-about">
+                        @foreach (var paragraph in about.Split('\n', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries))
+                        {
+                            <p>@foreach (var part in Lt2.Web.Client.UserText.Parts(paragraph)) { @if (part.Link is { } link) {<a href="@link" rel="nofollow ugc noopener noreferrer" target="_blank">@part.Text</a>} else {@part.Text} }</p>
+                        }
+                    </div>
+                }
+                <Lt2.Web.Client.Components.NeedsScript />
+                <FollowButton Kind="member" Key="@p.ProfileId" Followers="p.Followers" @rendermode="InteractiveWebAssembly" />
+                <ReportMember ProfileId="@p.ProfileId" Contact="@Contact" @rendermode="InteractiveWebAssembly" />
+            </section>
+
+            <section class="sheet stack" aria-labelledby="h-arguments" id="argumentai">
+                <h2 id="h-arguments">@L["Member.Arguments"]</h2>
+                @if (_texts is not { Items.Count: > 0 } texts)
+                {
+                    <p class="small" id="member-no-arguments">@L["Member.NoArguments"]</p>
+                }
+                else
+                {
+                    <ol class="rows" id="member-arguments">
+                        @foreach (var a in texts.Items)
+                        {
+                            var comment = a.Kind == Lt2.SharedKernel.MemberTextKinds.Comment;
+                            <li class="member-text" id="@((comment ? "member-comment-" : "member-argument-") + a.Id)" @key="a.Id">
+                                <span class="small"><a href="/seimas/@Uri.EscapeDataString(a.Bill.Number)"><span class="num">@a.Bill.Number</span> · @a.Bill.Title</a></span>
+                                @if (comment)
+                                {
+                                    @* Design 8.25.2, 8.23.6: a comment in the member's own voice, with what it stands under; no side. *@
+                                    <span class="small">@L["Member.CommentOn." + a.On] · <span class="num">@Display.Day(a.PublishedAt)</span></span>
+                                }
+                                else
+                                {
+                                    <span class="small"><span class="choice choice--@a.Side">@L["Member.ArgumentFor." + a.Side]</span> · <span class="num">@Display.Day(a.PublishedAt)</span></span>
+                                }
+                                <span class="voice">@Lt2.Web.Client.TextExcerpt.Of(a.Text).Shown@(Lt2.Web.Client.TextExcerpt.Of(a.Text).Rest is null ? "" : " …")</span>
+                                <a class="small" href="/seimas/@Uri.EscapeDataString(a.Bill.Number)#@(comment ? Lt2.Api.Contracts.Comments.CommentLimits.ElementId(a.Id) : "reason-" + a.Id)">@L["Member.ReadOnBill"]</a>
+                            </li>
+                        }
+                    </ol>
+                    @if (texts.More)
+                    {
+                        <p><a href="@MoreLink" id="member-more">@L["Member.More"]</a></p>
+                    }
+                }
+            </section>
+        </div>
+        <aside class="stack">
+            <p class="note note--quiet">@L["Member.Note"]</p>
+        </aside>
+    </div>
+}
+
+@code {
+    private MemberProfileResponse? _profile;
+    private MemberTextsResponse? _texts;
+    private bool _gone;
+
+    /// <summary>The address's last segment, <c>{name-slug}-{id}</c> (owner, 2026-11-16); a segment that is not the profile's current
+    /// one was redirected before this page (MemberAddresses), so here it only gives the id.</summary>
+    [Parameter] public string Id { get; set; } = "";
+
+    /// <summary>How many arguments the address asks for (<c>?rodyti=</c>), 10 at first.</summary>
+    [SupplyParameterFromQuery(Name = "rodyti")] public int? Shown { get; set; }
+
+    [CascadingParameter] public HttpContext? HttpContext { get; set; }
+
+    private string? Contact => Configuration.ModeratorContact();
+
+    private string MoreLink => $"{_profile?.Address}?rodyti={ProfileLimits.Shown(Shown) + ProfileLimits.Page}#argumentai";
+
+    protected override async Task OnInitializedAsync()
+    {
+        // Asked again each time: a profile switched off must be gone at once (design 8.25.1).
+        HttpContext?.Response.Headers.CacheControl = "no-cache";
+        var profile = await Profiles.GetMemberAsync(Lt2.Api.Contracts.MemberAddress.IdOf(Id).ToLowerInvariant());
+        if (profile.IsSuccess)
+        {
+            _profile = profile.Value;
+            _texts = (await Profiles.GetTextsAsync(_profile!.ProfileId, ProfileLimits.Shown(Shown))).Value;
+            return;
+        }
+
+        // Nothing to index on a page that is not there (design 8.25.1: a retired address tells search engines to drop it).
+        HttpContext?.Response.Headers["X-Robots-Tag"] = "noindex";
+        if (profile.Problem?.Status == StatusCodes.Status410Gone)
+        {
+            _gone = true;
+            HttpContext?.Response.StatusCode = StatusCodes.Status410Gone;
+            return;
+        }
+
+        Navigation.NotFound();
+    }
+}

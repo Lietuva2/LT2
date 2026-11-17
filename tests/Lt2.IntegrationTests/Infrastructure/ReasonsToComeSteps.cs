@@ -41,6 +41,12 @@ public static class ReasonsToComeSteps
         database.ExecuteAsync("UPDATE parliament.vote SET held_at = @h WHERE id = @v", ("h", heldAt), ("v", voteId));
 
     /// <summary>Forgets the follow events of a bill, so a test sees its own events as new.</summary>
+    /// <summary>
+    /// Forgets which daily and weekly emails were made (design 8.24: one a day, one a week). The runs of one test at chosen
+    /// moments make a period's pass, which another test choosing the same moment must not find made.
+    /// </summary>
+    public static Task ForgetRhythmPassesAsync(this DatabaseFixture database) => database.ExecuteAsync("DELETE FROM notify.rhythm_pass");
+
     public static Task ForgetEventsAsync(this DatabaseFixture database, string bill) =>
         database.ExecuteAsync("DELETE FROM notify.bill_event WHERE bill_number = @b", ("b", bill));
 
@@ -62,12 +68,46 @@ public static class ReasonsToComeSteps
         followed.StatusCode.ShouldBe(HttpStatusCode.NoContent, await followed.Content.ReadAsStringAsync());
     }
 
-    public static Task<long> EmailsAsync(this DatabaseFixture database, string kind, string to) =>
-        database.ScalarAsync<long>("SELECT count(*) FROM notify.outbox WHERE kind = @k AND payload->>'to' = @to", ("k", kind), ("to", to));
+    /// <summary>
+    /// The things of one kind told to an address, in order, as a JSON array of their payloads: each email of that kind, and each
+    /// item of that kind in a gathered email (design 8.24), so a test is not tripped by what else a run held for the person.
+    /// </summary>
+    public static async Task<string> NoticesAsync(this DatabaseFixture database, string kind, string to) =>
+        (await database.ScalarAsync<string>(
+            """
+            SELECT coalesce(json_agg(p ORDER BY created_at, id, n), '[]'::json)::text FROM (
+                SELECT payload AS p, created_at, id, 0 AS n FROM notify.outbox WHERE kind = @k AND payload->>'to' = @to
+                UNION ALL
+                SELECT item.value->'payload', o.created_at, o.id, item.ordinality
+                FROM notify.outbox o, jsonb_array_elements(o.payload->'notices') WITH ORDINALITY AS item
+                WHERE o.kind = 'email.gathered-notices' AND o.payload->>'to' = @to AND item.value->>'kind' = @k) told
+            """,
+            ("k", kind), ("to", to)))!;
 
-    public static Task<string?> LatestEmailAsync(this DatabaseFixture database, string kind, string to) =>
-        database.ScalarAsync<string>(
-            "SELECT payload::text FROM notify.outbox WHERE kind = @k AND payload->>'to' = @to ORDER BY created_at DESC, id DESC LIMIT 1", ("k", kind), ("to", to));
+    /// <summary>How many things of one kind were told to an address, alone or in a gathered email (design 8.24).</summary>
+    public static async Task<long> EmailsAsync(this DatabaseFixture database, string kind, string to)
+    {
+        using var told = System.Text.Json.JsonDocument.Parse(await database.NoticesAsync(kind, to));
+        return told.RootElement.GetArrayLength();
+    }
+
+    /// <summary>The latest thing of one kind told to an address, alone or in a gathered email, or null.</summary>
+    public static async Task<string?> LatestEmailAsync(this DatabaseFixture database, string kind, string to)
+    {
+        using var told = System.Text.Json.JsonDocument.Parse(await database.NoticesAsync(kind, to));
+        var length = told.RootElement.GetArrayLength();
+        return length == 0 ? null : told.RootElement[length - 1].GetRawText();
+    }
+
+    /// <summary>The emails written to an address, of any kind, as (kind, payload) in order: what the person's inbox would hold.</summary>
+    public static async Task<List<(string Kind, System.Text.Json.JsonElement Payload)>> InboxAsync(this DatabaseFixture database, string to)
+    {
+        var rows = await database.ScalarAsync<string>(
+            "SELECT coalesce(json_agg(json_build_object('kind', kind, 'payload', payload) ORDER BY created_at, id), '[]'::json)::text FROM notify.outbox WHERE payload->>'to' = @to",
+            ("to", to));
+        using var document = System.Text.Json.JsonDocument.Parse(rows!);
+        return document.RootElement.EnumerateArray().Select(r => (r.GetProperty("kind").GetString()!, r.GetProperty("payload").Clone())).ToList();
+    }
 
     /// <summary>Today in Vilnius, the day planned dates are compared with.</summary>
     public static DateOnly VilniusToday() => Lt2.SharedKernel.VilniusTime.DateOf(DateTimeOffset.UtcNow);

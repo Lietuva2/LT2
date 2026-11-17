@@ -122,6 +122,8 @@ internal static class ApiEndpoints
 
         Agenda.GetAgendaEndpoint.Map(api);
         FollowEndpoints.Map(api);
+        Members.MemberEndpoints.Map(api);
+        NoticeFrequencyEndpoint.Map(api);
         MyBillsEndpoint.Map(api);
         Analytics.GetAnalyticsEndpoint.Map(api);
         Analytics.GetMyAgreementEndpoint.Map(api);
@@ -135,6 +137,7 @@ internal static class ApiEndpoints
         Mps.TakeOverProfileEndpoint.Map(api);
         Mps.MyMpEndpoints.Map(api);
         Mps.MpResponseEndpoints.Map(api);
+        Comments.CommentEndpoints.Map(api);
         EndMpLinkEndpoint.Map(api);
     }
 

@@ -27,6 +27,7 @@ internal sealed class PoliticianHandlers(
     AccountEvents events,
     IMpDirectory mps,
     IPositionErasure positions,
+    Profiles.ProfileHandlers profiles,
     IOutbox outbox,
     TimeProvider clock,
     ILogger<PoliticianHandlers> logger) : IPoliticians
@@ -195,12 +196,22 @@ internal sealed class PoliticianHandlers(
 
             // The MP's own account takes no part (design 8.5.4): its sides go, and the counts with them.
             var sides = await positions.WithdrawOpenSidesAsync(user.Id, transaction.GetDbTransaction(), cancellationToken);
+
+            // Nor a public profile (design 8.25.1, 8.5.4: the MP's own account cannot switch one on): one already on goes off as
+            // switching it off does, the consent withdrawn, the id retired, every follow of it ended.
+            var profileOff = false;
+            if (await db.Profiles.FirstOrDefaultAsync(p => p.UserId == user.Id, cancellationToken) is { PublicProfileId: not null } publicProfile)
+            {
+                await profiles.SwitchOffAsync(publicProfile, now, transaction.GetDbTransaction(), cancellationToken);
+                profileOff = true;
+            }
+
             await events.RecordAsync(
                 transaction.GetDbTransaction(),
                 existing ? "mp.passkey-replaced" : "mp.linked",
                 user.Id,
                 new Actor(user.Id, Roles.Member, ipHash),
-                new { mp = mp.SeimasPersonId, credential = WebEncoders.Base64UrlEncode(passkeyId)[..12], passkeysRemoved = removed, sessionsEnded, sidesWithdrawn = sides },
+                new { mp = mp.SeimasPersonId, credential = WebEncoders.Base64UrlEncode(passkeyId)[..12], passkeysRemoved = removed, sessionsEnded, sidesWithdrawn = sides, profileSwitchedOff = profileOff },
                 new AccountNoticeEmail(user.Email!, AccountNotices.MpLinked, PasskeysRemoved: removed, MpName: Name(mp)),
                 cancellationToken);
             await transaction.CommitAsync(cancellationToken);

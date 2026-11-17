@@ -26,7 +26,7 @@ public sealed partial class SignOutMenuTests(DatabaseFixture database) : ApiTest
     [Theory]
     [InlineData("/metodika")]
     [InlineData("/seimas/XVP-0412")]
-    [InlineData("/sveiki")]
+    [InlineData("/paskyra")]
     public async Task A_signed_in_person_signs_out_from_the_menu_on_any_page_without_javascript(string path)
     {
         var (member, _) = await Factory.MemberAsync();

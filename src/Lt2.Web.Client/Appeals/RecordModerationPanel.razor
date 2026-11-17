@@ -1,6 +1,7 @@
 @using Lt2.Api.Contracts.Appeals
 @inherits InteractiveBase<AppealUi>
 @inject MyBillState Mine
+@inject Lt2.Api.Contracts.Comments.ICommentModerationApi CommentModeration
 @inject NavigationManager Navigation
 
 @* "Moderavimas" on the bill's page (design 8.12.3), rendered only when the server found a moderator or an administrator
@@ -31,6 +32,19 @@
                 <QueueReasonItem @key="reason.Id" Reason="reason" Panel="true" OnDone="Reload" OnRestricted="() => Reload(string.Empty)" />
             }
         }
+
+        @* Design 8.23.8, 8.23.14: the bill's reported comments, each a link to it; the actions are on the comment. *@
+        @if (Comments?.Where(c => c.Reports.Count > 0).ToList() is { Count: > 0 } reported)
+        {
+            <h4 id="moderation-panel-comments">@L["Comments.Panel.Reported"]</h4>
+            <ul class="stack stack--tight" id="moderation-panel-comment-list">
+                @foreach (var c in reported)
+                {
+                    <li @key="c.Id"><a href="/seimas/@Uri.EscapeDataString(Number)#@Lt2.Api.Contracts.Comments.CommentLimits.ElementId(c.Id)">@(c.Text.Length > 80 ? c.Text[..80] + "…" : c.Text)</a>
+                        <span class="small num">(@Display.Number(c.Reports.Count))</span></li>
+                }
+            </ul>
+        }
     </section>
 }
 
@@ -44,6 +58,9 @@
 
     /// <summary>Set once the server has asked, so the browser does not ask again.</summary>
     [PersistentState] public bool? Asked { get; set; }
+
+    /// <summary>The bill's comments as the moderators see them (design 8.23.8): read with the panel, on the server.</summary>
+    [PersistentState] public List<Lt2.Api.Contracts.Comments.QueueCommentResponse>? Comments { get; set; }
 
     protected override async Task OnInitializedAsync()
     {
@@ -62,6 +79,7 @@
         if (await IsSignedInAsync())
         {
             State = await Mine.ModerationAsync(Number);
+            Comments = State is null ? null : (await CommentModeration.GetOnBillAsync(Number)).Value?.ToList();
         }
     }
 

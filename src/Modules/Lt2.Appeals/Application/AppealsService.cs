@@ -395,6 +395,7 @@ internal sealed class AppealsService(
             ScreeningFlags = [.. flags],
             CreatedAt = clock.GetUtcNow(),
         };
+        reason.FirstPublicAt = reason.Status == ReasonStatuses.Published ? reason.CreatedAt : null;
         db.Reasons.Add(reason);
         await db.SaveChangesAsync(cancellationToken);
         await transaction.CommitAsync(cancellationToken);
@@ -500,6 +501,9 @@ internal sealed class AppealsService(
         await db.Endorsements.Where(e => e.ReasonId == reasonId).ExecuteDeleteAsync(cancellationToken);
         await db.Reasons.Where(r => r.MergedIntoId == reasonId).ExecuteUpdateAsync(s => s.SetProperty(r => r.MergedIntoId, (Guid?)null), cancellationToken);
         await ModerationRecorder.CloseReportsAsync(db, reasonId, now, cancellationToken);
+
+        // Design 8.23.7: its discussion goes with it, as its "Man svarbu" marks do.
+        await CommentCascade.DeleteForTargetsAsync(db, CommentKinds.Reason, [reasonId], now, cancellationToken);
         db.Reasons.Remove(reason);
         await db.SaveChangesAsync(cancellationToken);
         await audit.WriteAsync(
@@ -577,6 +581,15 @@ internal sealed class AppealsService(
                 break;
             case "statement":
                 if (!await db.OrganisationStatements.Shown(db.Organisations).AnyAsync(s => s.Id == request.TargetId, cancellationToken))
+                {
+                    return Error.NotFound("report.target-not-found");
+                }
+
+                recordId = null;
+                break;
+            case "comment":
+                // Design 8.23.8: a comment that is shown (published, its target shown, its bill's record not hidden).
+                if (!await CommentsService.IsShownAsync(db, request.TargetId, cancellationToken))
                 {
                     return Error.NotFound("report.target-not-found");
                 }
@@ -752,10 +765,12 @@ internal sealed class AppealsService(
         // An initiator's name only beside a description they wrote, before 2026-11-14 (design 8.12.4).
         var author = record.DescriptionSource == DescriptionSources.Initiator && record.InitiatorUserId is { } initiator ? initiator : (Guid?)null;
         var names = await reads.NamesAsync(reasons.Select(r => r.AuthorUserId).Concat(author is { } a ? [a] : []), ct);
+        var profiles = await reads.ProfilesAsync(reasons.Select(r => r.AuthorUserId), ct);
+        var comments = await CommentCascade.CountsAsync(db, CommentKinds.Reason, reasons.Select(r => r.Id).ToList(), ct);
         var ordered = reasons
             .OrderByDescending(r => endorsements.GetValueOrDefault(r.Id))
             .ThenBy(r => r.CreatedAt)
-            .Select(r => AppealReads.ToInfo(r, names, endorsements))
+            .Select(r => AppealReads.ToInfo(r, names, endorsements, profiles) with { Comments = comments.GetValueOrDefault(r.Id) })
             .ToList();
         return new BillRecordInfo(
             record.Id,
@@ -773,7 +788,8 @@ internal sealed class AppealsService(
             record.ClosingVoteId,
             record.ClosedAt,
             record.Status == BillRecordStatuses.Closed ? null : (await agenda.ForBillsAsync([record.BillNumber], ct)).GetValueOrDefault(record.BillNumber),
-            null);
+            null,
+            profiles.Values.OrderBy(p => p.ProfileId, StringComparer.Ordinal).Select(p => new AuthorCard(p.ProfileId, p.DisplayName, p.About)).ToList());
     }
 
     public async Task<IReadOnlyDictionary<string, BillRecordState>> BillStatesAsync(IReadOnlyCollection<string> billNumbers, CancellationToken cancellationToken)

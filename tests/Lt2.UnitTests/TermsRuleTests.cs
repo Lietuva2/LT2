@@ -46,7 +46,7 @@ public sealed class TermsRuleTests
     public void The_acceptance_screen_goes_back_only_to_a_path_on_this_site()
     {
         TermsText.Back("/seimas/XVP-0412").ShouldBe("/seimas/XVP-0412");
-        TermsText.Back("/sveiki?x=1").ShouldBe("/sveiki?x=1");
+        TermsText.Back("/paskyra?x=1").ShouldBe("/paskyra?x=1");
         TermsText.Back("https://kitas.pavyzdys.test/").ShouldBeNull();
         TermsText.Back("//kitas.pavyzdys.test").ShouldBeNull();
         TermsText.Back("/\\kitas.pavyzdys.test").ShouldBeNull();
@@ -86,10 +86,13 @@ public sealed class TermsRuleTests
 public sealed class TermsExemptionTests
 {
     [Fact]
-    public void Only_accepting_signing_out_deleting_and_the_mps_mail_links_are_exempt() =>
+    public void Only_accepting_signing_out_deleting_withdrawals_and_the_mps_mail_links_are_exempt() =>
         TermsExemptions.Routes.Select(r => $"{r.Method} {r.Route}").Order(StringComparer.Ordinal).ShouldBe(
         [
             "DELETE /api/v1/me",
+            "DELETE /api/v1/me/consents/positions",
+            "DELETE /api/v1/me/party-support",
+            "DELETE /api/v1/me/profile/public",
             "DELETE /api/v1/mp-mail/{token}/extra",
             "POST /api/v1/auth/sign-out",
             "POST /api/v1/mp-mail/extra/confirm",

@@ -14,13 +14,26 @@ namespace Lt2.Web.Endpoints.Me;
 /// </summary>
 internal static class SetPartySupportEndpoint
 {
-    public static void Map(IEndpointRouteBuilder api) =>
+    public static void Map(IEndpointRouteBuilder api)
+    {
         api.MapPut(ApiEndpoints.Relative(ApiRoutes.Me.PartySupport), HandleAsync)
             .WithName("SetPartySupport")
             .WithTags("Me")
             .RequireAuthorization(Policies.Member)
             .WithValidation<PartySupportRequest>()
             .Produces(StatusCodes.Status204NoContent);
+
+        // Withdrawing the consent (and with it the party) and nothing else: open behind the terms (design 8.22.2, owner 2026-11-17).
+        api.MapDelete(ApiEndpoints.Relative(ApiRoutes.Me.PartySupport), async (ClaimsPrincipal user, IIdentityModule identity, IMpDirectory mps, ErrorMapper errors, CancellationToken ct) =>
+            {
+                var result = await identity.SetPartySupportAsync(user, null, false, await mps.PartiesAsync(ct), ct);
+                return result.IsSuccess ? Results.NoContent() : errors.ToResult(result.Error!);
+            })
+            .WithName("WithdrawPartySupport")
+            .WithTags("Me")
+            .RequireAuthorization(Policies.Member)
+            .Produces(StatusCodes.Status204NoContent);
+    }
 
     private static async Task<IResult> HandleAsync(
         PartySupportRequest request, ClaimsPrincipal user, IIdentityModule identity, IMpDirectory mps, ErrorMapper errors, CancellationToken cancellationToken)

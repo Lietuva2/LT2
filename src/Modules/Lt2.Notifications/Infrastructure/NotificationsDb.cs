@@ -31,6 +31,9 @@ internal sealed class NotificationsDb(DbContextOptions<NotificationsDb> options)
 
     public DbSet<Lt2.Notifications.Follows.BillEvent> BillEvents => Set<Lt2.Notifications.Follows.BillEvent>();
 
+    /// <summary>The daily and weekly emails made, one row per period (design 8.24): never two for one day or one week.</summary>
+    public DbSet<Rhythm.RhythmPassMade> RhythmPasses => Set<Rhythm.RhythmPassMade>();
+
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         modelBuilder.HasDefaultSchema(NotificationsModule.Schema);
@@ -126,6 +129,10 @@ internal sealed class NotificationsDb(DbContextOptions<NotificationsDb> options)
         {
             b.ToTable("notice_setting");
             b.HasKey(x => x.UserId);
+
+            // Design 8.24: how often the emails come; a row made before the choice existed is "Iš karto".
+            b.Property(x => x.Frequency).HasMaxLength(16).HasDefaultValue(Rhythm.Frequencies.Immediate);
+            b.Property(x => x.PreviousFrequency).HasMaxLength(16);
         });
         modelBuilder.Entity<Lt2.Notifications.Follows.BillEvent>(b =>
         {
@@ -136,6 +143,15 @@ internal sealed class NotificationsDb(DbContextOptions<NotificationsDb> options)
             b.Property(x => x.Key).HasMaxLength(40);
             b.Property(x => x.Outcome).HasMaxLength(20);
             b.HasIndex(x => x.Outcome).HasFilter("outcome = 'waiting'");
+
+            // Each pass reads one kind's events by when they were first seen, and the comments' notice the latest of its kind.
+            b.HasIndex(x => new { x.Kind, x.FirstSeen });
+        });
+        modelBuilder.Entity<Rhythm.RhythmPassMade>(b =>
+        {
+            b.ToTable("rhythm_pass");
+            b.HasKey(x => new { x.Pass, x.Period });
+            b.Property(x => x.Pass).HasMaxLength(10);
         });
     }
 }

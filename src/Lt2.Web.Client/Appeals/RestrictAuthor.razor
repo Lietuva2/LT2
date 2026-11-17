@@ -2,6 +2,7 @@
 @inherits InteractiveBase<AppealUi>
 @inject IModerationApi ModerationApi
 @inject Lt2.Api.Contracts.Organisations.IOrganisationModerationApi OrganisationModeration
+@inject Lt2.Api.Contracts.Comments.ICommentModerationApi CommentModeration
 @inject TimeProvider Clock
 
 @* Design 8.3: a moderator restricts the author of an argument from writing, chosen among the argument's actions in the
@@ -109,6 +110,9 @@
     /// <summary><see cref="Id"/> is an organisation's statement (design 8.14.14).</summary>
     [Parameter] public bool Statement { get; set; }
 
+    /// <summary><see cref="Id"/> is a comment (design 8.23.8): its writer, as for a statement, never an address, a side or a mark.</summary>
+    [Parameter] public bool Comment { get; set; }
+
     /// <summary>The start of the element ids (the action list's own prefix).</summary>
     [Parameter] public string IdPrefix { get; set; } = "";
 
@@ -129,7 +133,7 @@
 
     private Task LoadAsync() => RunAsync(async () =>
     {
-        var view = Statement ? await OrganisationModeration.GetWriterAsync(Id) : await ModerationApi.GetAuthorOfReasonAsync(Id);
+        var view = Comment ? await CommentModeration.GetWriterAsync(Id) : Statement ? await OrganisationModeration.GetWriterAsync(Id) : await ModerationApi.GetAuthorOfReasonAsync(Id);
         if (!Succeeded(view))
         {
             return;
@@ -154,7 +158,10 @@
         }
 
         var request = new RestrictionRequest { Until = until, Statement = _statement };
-        if (!Succeeded(Statement ? await OrganisationModeration.RestrictWriterAsync(Id, request) : await ModerationApi.RestrictAuthorOfReasonAsync(Id, request), "statement", "until"))
+        var restricted = Comment ? await CommentModeration.RestrictWriterAsync(Id, request)
+            : Statement ? await OrganisationModeration.RestrictWriterAsync(Id, request)
+            : await ModerationApi.RestrictAuthorOfReasonAsync(Id, request);
+        if (!Succeeded(restricted, "statement", "until"))
         {
             return;
         }

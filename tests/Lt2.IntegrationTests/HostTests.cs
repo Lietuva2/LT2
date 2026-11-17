@@ -76,9 +76,23 @@ public sealed class HostTests(DatabaseFixture database) : ApiTest(database)
     public async Task The_signed_in_page_sends_strangers_to_sign_in()
     {
         using var browser = NewBrowser();
-        using var response = await browser.Client.GetAsync("/sveiki");
+        using var response = await browser.Client.GetAsync("/paskyra");
         response.StatusCode.ShouldBe(HttpStatusCode.Redirect);
         response.Headers.Location!.ToString().ShouldStartWith("https://lt2.test/prisijungti");
+    }
+
+    /// <summary>Design 8.21: a visitor sent to sign in from an account screen comes back to it (the page after the "#").</summary>
+    [Theory]
+    [InlineData("/paskyra", "%2Fpaskyra")]
+    [InlineData("/paskyra/sekimas", "%2Fpaskyra%2Fsekimas")]
+    [InlineData("/paskyra/dalyvavimas", "%2Fpaskyra%2Fdalyvavimas")]
+    [InlineData("/paskyra/saugumas", "%2Fpaskyra%2Fsaugumas")]
+    public async Task A_visitor_sent_to_sign_in_from_an_account_screen_comes_back_to_it(string screen, string escaped)
+    {
+        using var browser = NewBrowser();
+        using var response = await browser.Client.GetAsync(screen);
+        response.StatusCode.ShouldBe(HttpStatusCode.Redirect);
+        response.Headers.Location!.ToString().ShouldBe("https://lt2.test/prisijungti#tikslas=" + escaped);
     }
 
     [Fact]
@@ -86,7 +100,7 @@ public sealed class HostTests(DatabaseFixture database) : ApiTest(database)
     {
         using var browser = NewBrowser();
         var email = await browser.RegisterAndSignInAsync();
-        var html = await browser.Client.GetStringAsync("/sveiki");
+        var html = await browser.Client.GetStringAsync("/paskyra");
         html.ShouldContain($"Sveiki, {email}!");
     }
 
@@ -95,7 +109,7 @@ public sealed class HostTests(DatabaseFixture database) : ApiTest(database)
     {
         var (member, _) = await Factory.MemberAsync();
         using var _m = member;
-        foreach (var path in new[] { "/darbotvarke", "/sveiki" })
+        foreach (var path in new[] { "/darbotvarke", "/paskyra", "/paskyra/sekimas", "/paskyra/dalyvavimas", "/paskyra/saugumas" })
         {
             using var page = await member.Client.GetAsync(path);
             page.StatusCode.ShouldBe(HttpStatusCode.OK, path);

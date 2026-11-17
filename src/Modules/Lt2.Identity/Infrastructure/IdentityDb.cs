@@ -42,6 +42,10 @@ internal sealed class IdentityDb(DbContextOptions<IdentityDb> options)
 
     public DbSet<PoliticianToken> PoliticianTokens => Set<PoliticianToken>();
 
+    public DbSet<RetiredProfileId> RetiredProfileIds => Set<RetiredProfileId>();
+
+    public DbSet<ProfileReport> ProfileReports => Set<ProfileReport>();
+
     public DbSet<DataProtectionKey> DataProtectionKeys { get; set; } = null!;
 
     protected override void OnModelCreating(ModelBuilder builder)
@@ -75,6 +79,32 @@ internal sealed class IdentityDb(DbContextOptions<IdentityDb> options)
             b.Property(x => x.StaffPasskeyId).HasMaxLength(1024);
             b.Ignore(x => x.IsPending);
             b.HasIndex(x => x.CreatedAt).HasFilter("registered_at IS NULL").HasDatabaseName("ix_profile_pending_created_at");
+
+            // Design 8.25: "Apie mane" is any length (Texts:MaxLength is checked where it is written); one id per public profile.
+            b.Property(x => x.About).HasColumnType("text");
+            b.Property(x => x.AboutHiddenStatement).HasMaxLength(2000);
+            b.Property(x => x.PublicProfileId).HasMaxLength(10);
+            b.HasIndex(x => x.PublicProfileId).IsUnique().HasFilter("public_profile_id IS NOT NULL");
+        });
+
+        builder.Entity<RetiredProfileId>(b =>
+        {
+            b.ToTable("retired_profile_id");
+            b.HasKey(x => x.Id);
+            b.Property(x => x.Id).HasMaxLength(10);
+        });
+
+        builder.Entity<ProfileReport>(b =>
+        {
+            b.ToTable("profile_report");
+            b.HasKey(x => x.Id);
+            b.Property(x => x.Ground).HasMaxLength(32);
+            b.Property(x => x.Text).HasMaxLength(1000);
+            b.Property(x => x.Status).HasMaxLength(8);
+            b.HasOne<User>().WithMany().HasForeignKey(x => x.TargetUserId).OnDelete(DeleteBehavior.Cascade);
+            b.HasOne<User>().WithMany().HasForeignKey(x => x.ReporterUserId).OnDelete(DeleteBehavior.Cascade);
+            b.HasIndex(x => new { x.TargetUserId, x.Status });
+            b.HasIndex(x => new { x.ReporterUserId, x.TargetUserId }).IsUnique().HasFilter("status = 'open'");
         });
 
         builder.Entity<Invitation>(b =>

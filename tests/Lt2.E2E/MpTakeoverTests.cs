@@ -35,9 +35,10 @@ public sealed partial class MpTakeoverTests : E2ETest
             // 1. Registration without an invitation: the official address is the proof.
             await page.GotoAsync(Base + "/prisijungti?registruotis=true");
             await E2ESteps.RegisterHereAsync(page, Official, Name);
-            await page.WaitForURLAsync(new Regex("/sveiki$"), new() { Timeout = E2ESteps.Slow });
+            await page.WaitForURLAsync(new Regex("/paskyra$"), new() { Timeout = E2ESteps.Slow });
+            await page.GotoAsync(Base + "/paskyra/dalyvavimas");
 
-            // 2. Told so at once, with one button.
+            // 2. Told so at once, with one button (design 8.21: the MP part is on "Dalyvavimas").
             var offer = page.Locator("#mp-offer");
             await Assertions.Expect(offer).ToContainTextAsync($"Prisijungėte oficialiu Seimo nario adresu. Seimo narys: {Name}.", new() { Timeout = E2ESteps.Slow });
             await E2ESteps.ShootBothAsync(page, Shots, "offer", offer);
@@ -66,12 +67,14 @@ public sealed partial class MpTakeoverTests : E2ETest
             var submit = page.Locator("#takeover-submit");
             await Assertions.Expect(submit).ToBeEnabledAsync(new() { Timeout = E2ESteps.Slow });
             await submit.ClickAsync();
-            await page.WaitForURLAsync(new Regex("/sveiki$"), new() { Timeout = E2ESteps.Slow });
+            await page.WaitForURLAsync(new Regex("/paskyra$"), new() { Timeout = E2ESteps.Slow });
 
             // 4. Linked, in a passkey session, with one passkey.
+            await page.GotoAsync(Base + "/paskyra/dalyvavimas");
             var linked = page.Locator("#mp-link");
             await Assertions.Expect(linked).ToContainTextAsync($"Tvarkote Seimo nario profilį: {Name}.", new() { Timeout = E2ESteps.Slow });
             await Assertions.Expect(page.Locator("#mp-passkey-needed")).ToHaveCountAsync(0);
+            await page.GotoAsync(Base + "/paskyra/saugumas");
             await Assertions.Expect(page.Locator(".rows li").Filter(new() { HasText = "Ši sesija" })).ToContainTextAsync("prisijungta prieigos raktu");
             await Assertions.Expect(page.GetByText("Sukurta prieigos raktų: 1")).ToBeVisibleAsync();
 
@@ -94,7 +97,7 @@ public sealed partial class MpTakeoverTests : E2ETest
             await E2ESteps.ShootBothAsync(page, Shots, "profile");
 
             // 6. An office member: a one-time link, opened by a member in a passkey session.
-            await page.GotoAsync(Base + "/sveiki");
+            await page.GotoAsync(Base + "/paskyra/dalyvavimas");
             var invite = page.Locator("#mp-office-invite");
             await Assertions.Expect(invite).ToBeEnabledAsync(new() { Timeout = E2ESteps.Slow });
             await invite.ClickAsync();
@@ -108,7 +111,7 @@ public sealed partial class MpTakeoverTests : E2ETest
                 var m = member.Page;
                 await PasskeyTests.RegisterAsync(m, "Biuro Narė (E2E)");
                 await PasskeyTests.AddPasskeyAsync(m);
-                await m.Locator("main").GetByRole(AriaRole.Button, new() { Name = "Atsijungti" }).ClickAsync();
+                await E2ESteps.SignOutOnAccountAsync(m);
                 await m.WaitForURLAsync(new Regex("/$"));
                 await PasskeyTests.SignInWithPasskeyAsync(m);
                 await m.GotoAsync(Base + officeLink);

@@ -1,0 +1,490 @@
+@using Lt2.Api.Contracts.Appeals
+@using Lt2.Api.Contracts.Comments
+@using Lt2.Api.Contracts.Me
+@using Lt2.Web.Client.Appeals
+@inherits InteractiveBase<AppealUi>
+@implements IDisposable
+@inject ICommentsApi Comments
+@inject CommentState State
+@inject MyBillState BillState
+@inject IAppealsApi Appeals
+
+@* "Aptarimas (n)" under one argument, statement or response (design 8.23.6): the browser's own <details class="more">, so it
+   opens and reads with JavaScript off. Inside, the shown comments oldest first, each with its name (a person's display name; an
+   organisation's name with "Organizacija"; an MP's name with "Seimo narys arba jo biuras"), its time, its text (an https
+   address as a link, nothing fetched from it), who agreed ("Sutinka: …"), "Pranešti" and, for whoever may, "Ištrinti"; then
+   "Rodyti daugiau komentarų" by the page's address and the writing box. The list is the same for every reader: what the
+   caller may delete, wrote and agreed with comes from the never-cached answer (CommentState), read in the browser only. Inside
+   an island (the arguments, the statements) this renders with it; on the server-rendered responses part it is an island of its
+   own. Lies on its target's sheet, set in (design 8.16); the writing box opens as a quiet sheet. *@
+<details class="more stack stack--tight comments" id="aptarimas-@Key" open="@Open" @ontoggle="ToggledAsync">
+    <summary class="linkish small" id="aptarimas-summary-@Key">@(ShownCount > 0 ? L.Format("Comments.Title.Count", Display.Number(ShownCount)) : L["Comments.Title"])</summary>
+    @if (_thread is { } thread)
+    {
+        @* Design 8.25.4: the card of each public profile among this thread's names, once per thread, for js/lt2-cards.js. *@
+        @foreach (var card in thread.Cards ?? [])
+        {
+            <template id="@CardId(card.ProfileId)" @key="card.ProfileId"><p><b>@card.Name</b></p>@if (card.About is { } about) {<p class="small">@TextExcerpt.Of(about, CardShown).Shown</p>}<p class="small"><a href="@ProfileRoutes.Page(card.ProfileId, card.Name)">@L["Card.Open"]</a></p></template>
+        }
+        @if (thread.Items.Count > 0)
+        {
+            <ol class="stack stack--tight comments__list" id="comments-@Key">
+                @for (var position = 1; position <= thread.Items.Count; position++)
+                {
+                    var c = thread.Items[position - 1];
+                    var id = CommentLimits.ElementId(c.Id);
+                    <li class="comment stack stack--tight" id="@id" @key="c.Id">
+                        <p class="row comment__who" id="@CommentPaging.PositionAnchor(TargetId, position)">
+                            @Name(c.Author)
+                            <span class="small num">@Display.DayTime(c.CreatedAt)</span>
+                        </p>
+                        <LongText Text="@c.Text" BubbleClass="bubble bubble--people voice comment__text" Links="true" Id="@($"{id}-more")" />
+                        <div class="said__by comment__meta">
+                            <span class="small comment__agreed" id="@id-agreed">@Agreed(c)</span>
+                            <span class="said__actions">
+                                @if (_signedIn)
+                                {
+                                    @if (MayAgree(c, out var agreed))
+                                    {
+                                        <button class="mark" type="button" id="@id-agree" aria-pressed="@(agreed ? "true" : "false")" disabled="@Locked"
+                                                title="@(agreed ? null : L["Comments.Agree.Hint"].Value)" @onclick="() => AgreeAsync(c.Id, agreed)">@(agreed ? L["Comments.Agree.Undo"] : L["Comments.Agree"])</button>
+                                    }
+                                    <button class="linkish small" type="button" id="@id-report" disabled="@Locked" @onclick="() => _reporting = _reporting == c.Id ? null : c.Id">@L["Report.Open"]</button>
+                                    @if (_mine?.Deletable.Contains(c.Id) == true && thread.BillOpen)
+                                    {
+                                        <button class="linkish small" type="button" id="@id-delete" disabled="@Locked" @onclick="() => _deleting = _deleting == c.Id ? null : c.Id">@L["Comments.Delete"]</button>
+                                    }
+                                }
+                                else
+                                {
+                                    <VisitorReport Contact="@Contact" />
+                                }
+                            </span>
+                        </div>
+                        @if (c.AgreedBy.Count > 2)
+                        {
+                            <details class="more stack stack--tight" id="@id-all-agreed">
+                                <summary class="linkish small">@L["Comments.AgreedAll"]</summary>
+                                <p class="small">@for (var i = 0; i < c.AgreedBy.Count; i++) { @(i > 0 ? ", " : "")@Person(c.AgreedBy[i]) }</p>
+                            </details>
+                        }
+                        @if (_confirming == c.Id)
+                        {
+                            @* Design 8.23.10, 8.15: what becomes public and under whose name is said inline, before the first "Sutinku". *@
+                            <div class="row note note--quiet" role="group" aria-label="@L["Comments.Agree"]" id="@id-confirm">
+                                <p class="small">@L["Comments.Agree.Confirm"]</p>
+                                <button class="btn" type="button" id="@id-confirm-yes" disabled="@Locked" @onclick="() => AgreeConfirmedAsync(c.Id)">@L["Comments.Agree"]</button>
+                                <button class="btn btn--plain" type="button" disabled="@Locked" @onclick="() => _confirming = null">@L["Cancel"]</button>
+                            </div>
+                        }
+                        @if (_deleting == c.Id)
+                        {
+                            <div class="row" role="group" aria-label="@L["Comments.Delete"]">
+                                <p class="small">@L["Comments.DeleteConfirm"]</p>
+                                <button class="btn" type="button" id="@id-delete-yes" disabled="@Locked" @onclick="() => DeleteAsync(c.Id)">@L["Comments.DeleteYes"]</button>
+                                <button class="btn btn--plain" type="button" disabled="@Locked" @onclick="() => _deleting = null">@L["Cancel"]</button>
+                            </div>
+                        }
+                        @if (_reporting == c.Id)
+                        {
+                            <ReportForm TargetKind="comment" TargetId="c.Id" OnClose="() => _reporting = null" />
+                        }
+                        @if (Moderated(c.Id) is { } moderated)
+                        {
+                            <details class="more moderate" id="@id-moderate">
+                                <summary class="linkish small">@L["ModReason.Open"]</summary>
+                                <CommentModerationActions Id="c.Id" Status="@moderated.Status" Reported="moderated.Reports.Count > 0" IdPrefix="page-" OnDone="ReloadAsync" />
+                            </details>
+                        }
+                    </li>
+                }
+            </ol>
+        }
+        else
+        {
+            <p class="small" id="comments-none-@Key">@L["Comments.None"]</p>
+        }
+        @if (thread.Count > thread.Items.Count && CommentPaging.More(thread.Items.Count, thread.Count) is { } more)
+        {
+            <div class="row">
+                <p class="small num" role="status">@L.Format("Comments.Shown", Display.Number(thread.Items.Count), Display.Number(thread.Count))</p>
+                <a class="btn btn--plain" id="comments-more-@Key" href="@CommentPaging.Address(PagePath, TargetId, more, CommentPaging.PositionAnchor(TargetId, thread.Items.Count + 1))">@L["Comments.More"]</a>
+            </div>
+        }
+        @if (!thread.BillOpen)
+        {
+            <p class="fine" id="comments-frozen-@Key">@L["Comments.Frozen"]</p>
+        }
+        else if (thread.Open)
+        {
+            @Box(thread)
+        }
+    }
+    else if (_loading)
+    {
+        <p class="small">@L["Loading"]</p>
+    }
+    <Messages Message="@Message" Info="@Info" />
+</details>
+
+@code {
+    private bool _signedIn;
+    private bool _loading;
+    private bool _writing;
+    private string _text = "";
+    private int? _maxLength;
+    private Guid? _reporting;
+    private Guid? _deleting;
+    private Guid? _confirming;
+    private CommentThreadResponse? _thread;
+    private MyCommentsResponse? _mine;
+    private MyRestrictionResponse? _restriction;
+    private IReadOnlyList<QueueCommentResponse>? _moderation;
+
+    /// <summary><c>reason</c>, <c>statement</c> or <c>response</c>.</summary>
+    [Parameter, EditorRequired] public string Kind { get; set; } = "";
+
+    [Parameter, EditorRequired] public Guid TargetId { get; set; }
+
+    /// <summary>The bill's number, for the caller's own answer.</summary>
+    [Parameter, EditorRequired] public string Number { get; set; } = "";
+
+    /// <summary>The comments as the server read them; null for a target whose comments are read when "Aptarimas" first opens.</summary>
+    [Parameter] public CommentThreadResponse? Thread { get; set; }
+
+    /// <summary>How many comments the target shows, for the summary before the comments are read.</summary>
+    [Parameter] public int Count { get; set; }
+
+    /// <summary>Rendered open: the page's address asked for more of this target's comments (design 8.23.6).</summary>
+    [Parameter] public bool Open { get; set; }
+
+    /// <summary>How many comments the page's address asks for (design 8.23.14); a thread read on first opening reads as many.</summary>
+    [Parameter] public int? Asked { get; set; }
+
+    /// <summary>The page's path (with its other parameters), for "Rodyti daugiau komentarų" and the sign-in link.</summary>
+    [Parameter, EditorRequired] public string PagePath { get; set; } = "";
+
+    [Parameter] public string? Contact { get; set; }
+
+    /// <summary>The server found a moderator in a staff-passkey session; the server still refuses everyone else.</summary>
+    [Parameter] public bool Moderator { get; set; }
+
+    private string Key => TargetId.ToString("N");
+
+    /// <summary>"Aptarimas (n)": the shown comments, from the thread once it is read.</summary>
+    private int ShownCount => _thread?.Count ?? Count;
+
+    protected override async Task OnInitializedAsync()
+    {
+        _thread = Thread;
+        // The list the server renders is the same for everyone (design 8.23.6): a member's own controls come once the island
+        // runs in the browser.
+        _signedIn = RendererInfo.IsInteractive && await IsSignedInAsync();
+        State.Changed += OnChanged;
+
+        // The caller's own answer and the moderators' one only in the browser: the server-rendered list is the same for all.
+        if (_signedIn && RendererInfo.IsInteractive)
+        {
+            _mine = await State.MineAsync(Number);
+            if (_mine is { Restricted: true })
+            {
+                _restriction = await BillState.RestrictionAsync();
+            }
+
+            if (Moderator)
+            {
+                _moderation = await State.ModerationAsync(Number);
+            }
+        }
+    }
+
+    public void Dispose() => State.Changed -= OnChanged;
+
+    private void OnChanged(string number)
+    {
+        if (!string.Equals(number, Number, StringComparison.OrdinalIgnoreCase) || !RendererInfo.IsInteractive)
+        {
+            return;
+        }
+
+        _ = InvokeAsync(async () =>
+        {
+            _mine = await State.MineAsync(Number);
+            StateHasChanged();
+        });
+    }
+
+    /// <summary>
+    /// A target whose comments were not rendered (an argument revealed by "show all") reads them when the person first opens its
+    /// "Aptarimas" (design 8.23.6); the island never opens one from code.
+    /// </summary>
+    private async Task ToggledAsync()
+    {
+        if (_thread is not null || _loading || !RendererInfo.IsInteractive)
+        {
+            return;
+        }
+
+        _loading = true;
+        await RunAsync(async () => _thread = (await Comments.GetThreadAsync(Kind, TargetId, Asked)).Value);
+        _loading = false;
+    }
+
+    private QueueCommentResponse? Moderated(Guid id) => _moderation?.FirstOrDefault(q => q.Id == id);
+
+    private string PersonName(string? name) => name ?? L["Comments.NoName"].Value;
+
+    /// <summary>About this many characters of "Apie mane" in a card (design 8.25.4: "the first lines"), as beside arguments.</summary>
+    private const int CardShown = 200;
+
+    /// <summary>A card's template id: per thread, so two threads on one page never share an id.</summary>
+    private string CardId(string profileId) => $"card-{Key}-{profileId}";
+
+    /// <summary>
+    /// "Sutinka: Rūta Mockutė, Tomas ir dar 3" (design 8.23.10): the first two names, then how many more; a name of a member
+    /// with a public profile is a link to it with its card (design 8.25.4).
+    /// </summary>
+    private RenderFragment Agreed(CommentResponse c) => __builder =>
+    {
+        var words = c.AgreedBy.Count switch
+        {
+            0 => "",
+            1 => L.Format("Comments.Agreed.One", "\u0001"),
+            2 => L.Format("Comments.Agreed.Two", "\u0001", "\u0002"),
+            _ => L.Format("Comments.Agreed.More", "\u0001", "\u0002", Display.Number(c.AgreedBy.Count - 2)),
+        };
+        foreach (var piece in System.Text.RegularExpressions.Regex.Split(words, "([\u0001\u0002])"))
+        {
+            switch (piece)
+            {
+                case "\u0001":
+                    @Person(c.AgreedBy[0])
+                    break;
+                case "\u0002":
+                    @Person(c.AgreedBy[1])
+                    break;
+                default:
+                    @piece
+                    break;
+            }
+        }
+    };
+
+    /// <summary>One who agreed: a link with its card for a member with a public profile, the plain name otherwise.</summary>
+    private RenderFragment Person(CommentAgreerResponse a) => __builder =>
+    {
+        if (a.ProfileId is { } profileId)
+        {
+            <a href="@ProfileRoutes.Page(profileId, a.Name)" data-card="@CardId(profileId)">@PersonName(a.Name)</a>
+        }
+        else
+        {
+            @PersonName(a.Name)
+        }
+    };
+
+    /// <summary>"Sutinku" for a member, not on one's own comment, not for an MP's own account, only while the bill is open.</summary>
+    private bool MayAgree(CommentResponse c, out bool agreed)
+    {
+        agreed = _mine?.Agreed.Contains(c.Id) == true;
+        return _thread is { BillOpen: true } && _mine is { MpAccount: false } mine && !mine.Written.Contains(c.Id);
+    }
+
+    private RenderFragment Name(CommentAuthorResponse a) => __builder =>
+    {
+        switch (a.Voice)
+        {
+            case "organisation":
+                if (a.OrganisationSlug is { } slug)
+                {
+                    <a class="comment__name" href="@Lt2.Web.Client.Organisations.OrganisationWords.ProfilePath(slug)">@a.Name</a>
+                }
+                else
+                {
+                    <b class="comment__name">@a.Name</b>
+                }
+                <span class="tag">@L["Comments.Mark.Organisation"]</span>
+                @if (a.Label is { } label)
+                {
+                    @* Design 8.23.2: the organisation's label (8.14.3) beside its name. *@
+                    <span class="small comment__label">@Lt2.Web.Client.Organisations.OrganisationWords.LabelText(L, label)</span>
+                }
+                break;
+            case "mp":
+                if (a.Mp is { Slug.Length: > 0 } mp)
+                {
+                    <a class="comment__name" href="/p/@mp.Slug">@mp.FirstName @mp.LastName</a>
+                }
+                else
+                {
+                    <b class="comment__name">@(a.Mp is { } m ? $"{m.FirstName} {m.LastName}".Trim() : "")</b>
+                }
+                <span class="tag">@L["Comments.Mark.Mp"]</span>
+                break;
+            default:
+                if (a.ProfileId is { } profileId)
+                {
+                    @* Design 8.25.4: a member with a public profile: the name leads to their page, with a card. *@
+                    <a class="comment__name" href="@ProfileRoutes.Page(profileId, a.Name)" data-card="@CardId(profileId)">@PersonName(a.Name)</a>
+                }
+                else
+                {
+                    <b class="comment__name">@PersonName(a.Name)</b>
+                }
+
+                break;
+        }
+    };
+
+    /// <summary>The writing box (design 8.23.2, 8.23.6), or what stands in its place.</summary>
+    private RenderFragment Box(CommentThreadResponse thread) => __builder =>
+    {
+        if (!_signedIn)
+        {
+            <p class="small" id="comments-sign-in-@Key"><a href="@LandingPath.SignInLink(PathOnly)">@L["Comments.SignIn"]</a></p>
+            return;
+        }
+
+        if (_restriction is { Restricted: true } restriction)
+        {
+            <WritingRestricted Restriction="restriction" />
+            return;
+        }
+
+        var voice = _mine?.Voices.FirstOrDefault(v => v.Kind == Kind && v.TargetId == TargetId);
+        if (voice?.Refusal is { } refusal)
+        {
+            <p class="note note--quiet" id="comments-refusal-@Key">@L.OrElse("Comments.Refusal." + refusal, L["Comments.Refusal.mp.passkey-required"].Value)</p>
+            return;
+        }
+
+        if (_mine is { MpAccount: true } && voice is null)
+        {
+            // Design 8.5.4: the MP's own account comments only under its own response.
+            return;
+        }
+
+        if (_mine is { PerTargetLimit: > 0 } limited && limited.WrittenPerTarget.GetValueOrDefault(TargetId) >= limited.PerTargetLimit)
+        {
+            <p class="small" id="comments-limit-@Key">@L.Format("Comments.LimitReached", Display.Number(limited.PerTargetLimit))</p>
+            return;
+        }
+
+        if (!_writing)
+        {
+            <p><button class="btn btn--plain" type="button" id="comments-write-@Key" disabled="@Locked" @onclick="StartAsync">@L["Comments.Write"]</button></p>
+            return;
+        }
+
+        <form class="sheet sheet--quiet stack stack--tight" @onsubmit="SubmitAsync" novalidate aria-labelledby="comment-form-title-@Key" id="comment-form-@Key">
+            <h4 id="comment-form-title-@Key">@L["Comments.Write"]</h4>
+            @* What becomes public and under whose name (design 8.15, 8.23.2): said above the box, decided by the server. *@
+            <p class="small" id="comment-voice-@Key">@(voice?.Voice switch
+            {
+                "organisation" => L["Comments.Voice.organisation"],
+                "mp" => L["Comments.Voice.mp"],
+                _ => L["Comments.Voice.person"],
+            })</p>
+            <div class="field @ErrorClass("text")">
+                <label for="comment-text-@Key">@L["Comments.Label"]</label>
+                <textarea class="textarea" id="comment-text-@Key" rows="4" maxlength="@MemberTextLimits.Allowed(_maxLength ?? 0)" aria-invalid="@Invalid("text")"
+                          aria-describedby="@DescribedBy("text", $"comment-text-{Key}", $"comment-hint-{Key}")" @bind="_text" @bind:event="oninput" disabled="@Locked"></textarea>
+                <p class="field__hint num" id="comment-hint-@Key">@(_maxLength is > 0 and var max ? L.Format("Comments.Hint", Display.Number(_text.Length), Display.Number(max)) : L["Comments.HintNoLimit"].Value)</p>
+                <FieldError Errors="Errors" Field="text" For="@($"comment-text-{Key}")" />
+            </div>
+            <div class="row">
+                <button type="submit" class="btn" id="comment-submit-@Key" disabled="@(Locked || string.IsNullOrWhiteSpace(_text))">@L["Comments.Submit"]</button>
+                <button type="button" class="btn btn--plain" disabled="@Locked" @onclick="Cancel">@L["Cancel"]</button>
+            </div>
+        </form>
+    };
+
+    /// <summary>The page's path without its query, for the sign-in link (which carries only a bill's path, design 6.9).</summary>
+    private string PathOnly => PagePath.Split('?', '#')[0];
+
+    private Task StartAsync() => RunAsync(async () =>
+    {
+        // The length a comment may have is the members' texts setting (design 8.23.3): read once, when writing starts.
+        _maxLength ??= (await Appeals.GetRulesAsync()).Value?.TextMaxLength;
+        _writing = true;
+    });
+
+    private void Cancel()
+    {
+        _writing = false;
+        _text = "";
+        Errors = NoErrors();
+    }
+
+    private Task SubmitAsync() => RunAsync(async () =>
+    {
+        var written = await Comments.WriteAsync(Kind, TargetId, new CommentRequest { Text = _text });
+        if (!Succeeded(written, "text"))
+        {
+            return;
+        }
+
+        Cancel();
+        Info = L["Comments.Published"];
+        await ReloadCoreAsync(all: true);
+    });
+
+    private Task AgreeAsync(Guid id, bool agreed)
+    {
+        // The first "Sutinku" anywhere asks first that the name will be visible (design 8.23.10).
+        if (!agreed && _mine is { AgreedBefore: false })
+        {
+            _confirming = id;
+            return Task.CompletedTask;
+        }
+
+        return RunAsync(async () =>
+        {
+            if (Succeeded(agreed ? await Comments.RemoveAgreementAsync(id) : await Comments.AgreeAsync(id)))
+            {
+                await ReloadCoreAsync(all: false);
+            }
+        });
+    }
+
+    private Task AgreeConfirmedAsync(Guid id) => RunAsync(async () =>
+    {
+        if (Succeeded(await Comments.AgreeAsync(id)))
+        {
+            _confirming = null;
+            await ReloadCoreAsync(all: false);
+        }
+    });
+
+    private Task DeleteAsync(Guid id) => RunAsync(async () =>
+    {
+        if (!Succeeded(await Comments.DeleteAsync(id)))
+        {
+            return;
+        }
+
+        _deleting = null;
+        Info = L["Comments.Deleted"];
+        await ReloadCoreAsync(all: false);
+    });
+
+    /// <summary>After a moderator's action: the thread and the answers again.</summary>
+    private Task ReloadAsync(string? done) => ReloadCoreAsync(all: false);
+
+    /// <summary>Reads the thread and the caller's answer again, keeping as many comments shown (all, after writing one).</summary>
+    private async Task ReloadCoreAsync(bool all)
+    {
+        var shown = all ? (_thread?.Count ?? 0) + 1 : _thread?.Items.Count;
+        State.Forget(Number);
+        _thread = (await Comments.GetThreadAsync(Kind, TargetId, shown is > 0 ? shown : null)).Value ?? _thread;
+        if (_signedIn)
+        {
+            _mine = await State.MineAsync(Number);
+        }
+
+        if (Moderator)
+        {
+            _moderation = await State.ModerationAsync(Number);
+        }
+    }
+}

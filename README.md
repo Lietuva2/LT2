@@ -81,7 +81,7 @@ repository's GitHub issues, linked from the feedback panel; nothing shown when e
 (`Feedback:TeamAddress`, where the worker sends at most one notice a day of new feedback; none when empty).
 
 Register with any address and the invitation code, open the sign-in email in Mailpit, enter the six-digit code, and the
-"Sveiki" page appears. From there you can add a passkey and see or end your sessions.
+account page (`/paskyra`) appears. From there you can add a passkey and see or end your sessions.
 
 `deploy/.env` raises, for this machine only, the per-address request limits (`LT2_RATE_*`) and, through the migrator's
 `--local-code-limits`, the sign-in code limits per hour and per day (to the highest values the settings allow), so hand
@@ -96,7 +96,7 @@ signed in with the account's staff passkey (design 6.2), so the command prints a
 docker compose -f deploy/compose.yaml run --rm migrator --grant-role administrator ruta.mockute@pavyzdys.test
 ```
 
-The person then adds a passkey on the "Sveiki" page, signs in with it, and enters the activation code there: that
+The person then adds a passkey on the account page ("Saugumas ir duomenys", `/paskyra/saugumas`), signs in with it, and enters the activation code on "Dalyvavimas" (`/paskyra/dalyvavimas`): that
 passkey becomes the staff passkey and any other passkey on the account is removed. Use `run --rm` so the container, and
 the console output it keeps, is removed afterwards. Later grants and resets go through `POST /api/v1/admin/roles` and
 `POST /api/v1/admin/accounts/reset`, which need a passkey confirmation from the last ten minutes

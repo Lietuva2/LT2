@@ -48,11 +48,12 @@ internal sealed class MpResponsesService(
         var rows = await db.MpResponses.AsNoTracking().Where(r => r.BillNumber == bill.Bill.Number).ToListAsync(cancellationToken);
         var versions = await VersionsAsync(db, rows, cancellationToken);
         var votes = await VotesAsync(bill, rows.Select(r => r.SeimasPersonId).ToList(), cancellationToken);
+        var comments = await CommentCascade.CountsAsync(db, CommentKinds.Response, rows.Select(r => r.Id).ToList(), cancellationToken);
         return new BillResponses(
             bill.Bill.Number,
             bill.Open,
             false,
-            rows.Select(r => View(r, versions.GetValueOrDefault(r.Id) ?? [], votes.GetValueOrDefault(r.SeimasPersonId))).ToList());
+            rows.Select(r => View(r, versions.GetValueOrDefault(r.Id) ?? [], votes.GetValueOrDefault(r.SeimasPersonId)) with { Comments = comments.GetValueOrDefault(r.Id) }).ToList());
     }
 
     public async Task<IReadOnlyList<PersonResponse>> OfPersonAsync(long seimasPersonId, CancellationToken cancellationToken)

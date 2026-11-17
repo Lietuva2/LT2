@@ -108,7 +108,7 @@ public sealed class StaffSignInPageTests : BunitContext
         Navigation.NavigateTo(StaffSessionPage.Link("/moderavimas"));
         Render<StaffSignIn>();
 
-        Navigation.Uri.ShouldEndWith("/sveiki");
+        Navigation.Uri.ShouldEndWith("/paskyra");
     }
 
     [Fact]
@@ -118,7 +118,7 @@ public sealed class StaffSignInPageTests : BunitContext
         Navigation.NavigateTo(StaffSessionPage.Path + "#grizti=https%3A%2F%2Fkitas.pavyzdys.test%2F");
         Render<StaffSignIn>();
 
-        Navigation.Uri.ShouldEndWith("/sveiki");
+        Navigation.Uri.ShouldEndWith("/paskyra");
     }
 
     [Fact]

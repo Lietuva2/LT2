@@ -43,7 +43,7 @@ public sealed class AppealPrivacyTests(DatabaseFixture database) : ApiTest(datab
             AppealRoutes.ModerationQueue, ApiRoutes.Admin.Settings, ApiRoutes.Me.Root, ApiRoutes.Me.Sessions,
             AppealRoutes.HistoryOf(AppealSteps.ThirdBill), Lt2.Api.Contracts.Digests.DigestRoutes.Digests, Lt2.Api.Contracts.Digests.DigestRoutes.Rules,
             ApiRoutes.Me.PartySupport, ApiRoutes.Me.Export, "/projektai", "/seimas/XVP-0618", "/suvestines", "/moderavimas",
-            ApiRoutes.Me.Invitation, ApiRoutes.Admin.Invitations, "/sveiki", "/administravimas/kvietimai",
+            ApiRoutes.Me.Invitation, ApiRoutes.Admin.Invitations, "/paskyra", "/administravimas/kvietimai",
             Lt2.Api.Contracts.Feedback.FeedbackRoutes.Staff, "/atsiliepimai", "/moderavimas/atsiliepimai",
         };
 
@@ -208,6 +208,10 @@ public sealed class AppealPrivacyTests(DatabaseFixture database) : ApiTest(datab
             var (initiator, _) = await Factory.MemberAsync("Iniciatorė Bet Kuri");
             using var _i = initiator;
             await Database.PrepareBillAsync(initiator, moderator.Browser, AppealSteps.ThirdBill, side: null);
+
+            // A first side follows the bill (design 8.11.2) and the bill's page shows how many follow it: each round starts
+            // with none, so two sides make two follows whoever took them.
+            await Database.ExecuteAsync("DELETE FROM notify.follow WHERE kind = 'bill' AND key = @k", ("k", AppealSteps.ThirdBill));
             if (initiatorSide is not null)
             {
                 (await initiator.TakeSideAsync(AppealSteps.ThirdBill, initiatorSide)).StatusCode.ShouldBe(HttpStatusCode.NoContent);
@@ -327,7 +331,8 @@ public sealed class AppealPrivacyTests(DatabaseFixture database) : ApiTest(datab
         }
         while (depth > 0);
 
-        var block = WebUtility.HtmlDecode(html[start..at]).Replace(id.ToString(), "ID", StringComparison.OrdinalIgnoreCase);
+        var block = WebUtility.HtmlDecode(html[start..at]).Replace(id.ToString(), "ID", StringComparison.OrdinalIgnoreCase)
+            .Replace(id.ToString("N"), "ID", StringComparison.OrdinalIgnoreCase); // the argument's "Aptarimas" (design 8.23.6) carries it too
         foreach (var text in texts)
         {
             block = block.Replace(text, "TEXT", StringComparison.Ordinal);

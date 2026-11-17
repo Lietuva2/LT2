@@ -106,6 +106,7 @@ internal sealed class ModerationService(
         var names = await reads.NamesAsync(allReasons.Select(r => r.AuthorUserId), ct);
         var endorsements = await AppealReads.EndorsementCountsAsync(db, allReasons.Select(r => r.Id).Distinct().ToList(), ct);
         var billFacts = await reads.BillsAsync(recordOf.Values.Select(a => a.BillNumber).Distinct().ToList(), ct);
+        var comments = await CommentCascade.CountsAsync(db, CommentKinds.Reason, reasons.Select(r => r.Id).ToList(), ct);
         return reasons.Select(r => new QueueReason(
             r.Id,
             r.RecordId,
@@ -127,7 +128,7 @@ internal sealed class ModerationService(
                     .Select(c => AppealReads.ToInfo(c, names, endorsements))
                     .ToList(),
             r.CreatedAt,
-            recordOf[r.RecordId].Status)).ToList();
+            recordOf[r.RecordId].Status) { Comments = comments.GetValueOrDefault(r.Id) }).ToList();
     }
 
     public Task<Result<Unit>> KeepRecordAsync(Guid recordId, string? statement, StaffActor moderator, CancellationToken cancellationToken) =>
@@ -226,6 +227,7 @@ internal sealed class ModerationService(
             // Its "Man svarbu" marks were deleted by the hide and do not come back (design 8.3).
             reason.Status = ReasonStatuses.Published;
             reason.SeenAt = now;
+            reason.FirstPublicAt ??= now;
             return Task.FromResult<Result<string?>>(ModerationNotices.ReasonRestored);
         }, cancellationToken);
 
@@ -439,6 +441,7 @@ internal sealed class ModerationService(
             var wasPending = reason.Status == ReasonStatuses.Pending;
             reason.Status = ReasonStatuses.Published;
             reason.SeenAt = now;
+            reason.FirstPublicAt ??= now;
             return Task.FromResult<Result<string?>>(wasPending ? ModerationNotices.ReasonPublished : null);
         }, cancellationToken);
 
@@ -482,6 +485,9 @@ internal sealed class ModerationService(
                 [reasonId, intoReasonId],
                 cancellationToken);
             await db.Endorsements.Where(e => e.ReasonId == reasonId).ExecuteDeleteAsync(cancellationToken);
+
+            // Design 8.23.7: its comments remarked on a text no longer shown, so they go (not moved under the other).
+            await CommentCascade.DeleteForTargetsAsync(db, CommentKinds.Reason, [reasonId], now, cancellationToken);
             reason.Status = ReasonStatuses.Merged;
             reason.MergedIntoId = intoReasonId;
             reason.SeenAt = now;

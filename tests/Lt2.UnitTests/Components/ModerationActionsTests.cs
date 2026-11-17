@@ -236,6 +236,21 @@ public sealed class ModerationActionsTests : BunitContext
         offered.ShouldNotContain("keep");
     }
 
+    /// <summary>Design 8.23.7: the merge's confirmation says how many comments go with the merged argument.</summary>
+    [Fact]
+    public void The_merge_confirmation_says_how_many_comments_go_with_the_argument()
+    {
+        var actions = Render<ModerationActions>(p => p
+            .Add(c => c.Id, Item).Add(c => c.Kind, "reason").Add(c => c.Status, "published").Add(c => c.Comments, 3)
+            .Add(c => c.MergeCandidates, [new ReasonResponse(Guid.NewGuid(), "for", "Panašus argumentas", "Rūta Mockutė", 1, "published", DateTimeOffset.UnixEpoch)]));
+        actions.Find($"#action-merge-{Item}").Click();
+        actions.Find($"#action-sentence-{Item}").TextContent.ShouldContain("Kartu bus ištrinti komentarai po juo: 3.");
+
+        var none = Render("reason", "published", candidates: 1);
+        none.Find($"#action-merge-{Item}").Click();
+        none.Find($"#action-sentence-{Item}").TextContent.ShouldBe(Text("Mod.Sentence.reason.merge"), "nothing about comments when there are none");
+    }
+
     [Fact]
     public void A_reason_offers_merge_only_when_there_is_something_to_merge_into()
     {

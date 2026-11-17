@@ -1,0 +1,68 @@
+@using Lt2.Api.Contracts.Comments
+@using Lt2.Web.Client.Appeals
+@inject IStringLocalizer<AppealUi> L
+
+@* One comment for the moderators (design 8.23.8): its name and time, the text whole, the reports' grounds and texts (never who
+   reported), and for context the text it stands under with its own name and the bill; then the actions. On the list it is a
+   sheet of its own; inside a sheet (Panel) it drops its own (design 8.16). *@
+<article class="@(Panel ? "stack stack--tight" : "sheet stack stack--tight")" id="queue-comment-@Item.Id.ToString("N")" aria-label="@L["Comments.Label"]">
+    <div class="row">
+        <a class="tag tag--ink num" href="/seimas/@Uri.EscapeDataString(Item.Bill.Number)#@CommentLimits.ElementId(Item.Id)">@Item.Bill.Number</a>
+        <b>@AuthorName(Item.Author)</b>
+        @if (Item.Author.Voice == "organisation")
+        {
+            <span class="tag">@L["Comments.Mark.Organisation"]</span>
+        }
+        else if (Item.Author.Voice == "mp")
+        {
+            <span class="tag">@L["Comments.Mark.Mp"]</span>
+        }
+        <span class="small num">@Display.DayTime(Item.CreatedAt)</span>
+    </div>
+    <p class="voice">@Item.Text</p>
+    <Reports Items="Item.Reports" />
+    @if (Item.HiddenAt is { } hiddenAt)
+    {
+        <p class="small num">@L.Format("Hidden.When", Display.Day(hiddenAt), Item.HiddenBy ?? L["Hidden.Moderator"])</p>
+        @if (Item.HideStatement is { } why)
+        {
+            <p class="small">@L.Format("Hidden.Why", why)</p>
+        }
+    }
+    <details class="more stack stack--tight">
+        <summary class="linkish small">@L["Comments.Queue.On." + Item.Target.Kind]@(TargetName is { } name ? ": " + name : "")</summary>
+        @if (Item.Target.Text is { } text)
+        {
+            <p class="voice small">@text</p>
+        }
+        @if (!Item.Target.Shown)
+        {
+            <p class="small">@L["Comments.Queue.TargetHidden"]</p>
+        }
+    </details>
+    <CommentModerationActions Id="Item.Id" Status="@Item.Status" Reported="Item.Reports.Count > 0" IdPrefix="@IdPrefix" OnDone="OnDone" />
+</article>
+
+@code {
+    [Parameter, EditorRequired] public QueueCommentResponse Item { get; set; } = default!;
+
+    /// <summary>Inside a sheet: no sheet of its own (design 8.16).</summary>
+    [Parameter] public bool Panel { get; set; }
+
+    [Parameter] public string IdPrefix { get; set; } = "queue-";
+
+    [Parameter] public EventCallback<string> OnDone { get; set; }
+
+    private string AuthorName(CommentAuthorResponse a) => a.Voice switch
+    {
+        "mp" => a.Mp is { } mp ? $"{mp.FirstName} {mp.LastName}".Trim() : "",
+        _ => a.Name ?? L["Comments.NoName"],
+    };
+
+    private string? TargetName => Item.Target.Kind switch
+    {
+        "statement" => Item.Target.OrganisationName,
+        "response" => Item.Target.Mp is { } mp ? $"{mp.FirstName} {mp.LastName}".Trim() : null,
+        _ => Item.Target.AuthorName,
+    };
+}

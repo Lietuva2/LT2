@@ -1,0 +1,38 @@
+@using Lt2.Api.Contracts.Comments
+@using Lt2.Web.Client.Appeals
+@inherits InteractiveBase<AppealUi>
+@inject ICommentModerationApi Moderation
+
+@* Comments for the moderators (design 8.23.8): on the moderators' list (Hidden = false) the reported ones, each its own item;
+   on the list of hidden items (Hidden = true) the hidden ones with "Atkurti". A comment is never listed unless reported. *@
+@if (Items is { } items)
+{
+    var list = Hidden ? items.Hidden : items.Reported;
+    <section class="stack" aria-labelledby="h-comments-@(Hidden ? "hidden" : "queue")" id="@(Hidden ? "hidden-comments" : "queue-comments")">
+        <h2 id="h-comments-@(Hidden ? "hidden" : "queue")">@(Hidden ? L["Comments.Queue.Hidden"] : L["Comments.Queue.Title"])</h2>
+        @if (list.Count == 0)
+        {
+            <p class="small">@(Hidden ? L["Hidden.None"] : L["Comments.Queue.None"])</p>
+        }
+        @foreach (var item in list)
+        {
+            <CommentQueueItem @key="item.Id" Item="item" IdPrefix="@(Hidden ? "hidden-" : "queue-")" />
+        }
+    </section>
+}
+<Messages Message="@Message" Info="@Info" />
+
+@code {
+    [Parameter] public bool Hidden { get; set; }
+
+    [PersistentState] public CommentModerationResponse? Items { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        if (Items is null)
+        {
+            var result = await Moderation.GetAsync();
+            Items = result.Value;
+        }
+    }
+}

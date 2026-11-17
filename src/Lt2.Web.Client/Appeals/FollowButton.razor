@@ -1,11 +1,19 @@
 @inherits InteractiveBase<AppealUi>
 @inject NavigationManager Navigation
 @inject Lt2.Api.Contracts.Follows.IFollowsApi Follows
+@inject IProfilesApi Profiles
 
-@* "Sekti" / "Nebesekti" a bill, an MP (design 8.11.2) or an organisation (design 8.14.14, stage B). Private: who follows what is shown to nobody, and there is no
-   follower count. A visitor gets a link to sign in instead. *@
+@* "Sekti" / "Nebesekti" a bill, an MP (design 8.11.2), an organisation (design 8.14.14, stage B) or a member with a public
+   profile (design 8.25.5). Private: who follows what is shown to nobody. The number of followers (FollowerLine, design 8.11.2)
+   stands under it when the page gives it, and moves with the person's own "Sekti" at once (browser look, 2026-11-16). A
+   visitor gets a link to sign in instead; the member on their own page a link to "Profilis". *@
 <div class="row follow" id="follow-@Kind">
-    @if (!_signedIn)
+    @if (_own)
+    {
+        <span class="small">@L["Follow.Own"]</span>
+        <a href="@AccountScreens.Profile" id="follow-own-link">@L["Follow.OwnLink"]</a>
+    }
+    else if (!_signedIn)
     {
         <a class="btn btn--plain" href="@SignInHref">@L["Follow.Follow"]</a>
         <span class="small">@L["Follow.SignIn." + Kind]</span>
@@ -18,30 +26,55 @@
     }
     <Messages Message="@Message" Info="@Info" />
 </div>
+@if (Followers is not null)
+{
+    <Lt2.Web.Client.Components.FollowerLine Count="_followers" />
+}
 
 @code {
     /// <summary>The sign-in page that brings the visitor back to this page when it is a bill's (design 6.9).</summary>
     private string SignInHref => LandingPath.SignInLink(LandingPath.PathOf(Navigation.Uri, Navigation.BaseUri));
 
     private bool _signedIn;
+    private bool _own;
 
-    /// <summary><c>bill</c>, <c>mp</c> or <c>organisation</c>.</summary>
+    /// <summary><c>bill</c>, <c>mp</c>, <c>organisation</c> or <c>member</c>.</summary>
     [Parameter, EditorRequired] public string Kind { get; set; } = "bill";
 
-    /// <summary>The bill's number, or the MP's or the organisation's profile slug.</summary>
+    /// <summary>The bill's number, the MP's or the organisation's profile slug, or a member's public profile id.</summary>
     [Parameter, EditorRequired] public string Key { get; set; } = "";
 
     [PersistentState] public bool? Following { get; set; }
 
+    /// <summary>How many follow, as the page counted it; null: the page shows no number here.</summary>
+    [Parameter] public int? Followers { get; set; }
+
+    private int _followers;
+
+    protected override void OnParametersSet() => _followers = Math.Max(0, (Followers ?? 0) + _moved);
+
+    /// <summary>The person's own change since the page was counted: +1 for a follow, -1 for an unfollow.</summary>
+    private int _moved;
+
+    /// <summary>A member's own page: nothing to follow (design 8.25.5).</summary>
+    [PersistentState] public bool? Own { get; set; }
+
     protected override async Task OnInitializedAsync()
     {
         _signedIn = await IsSignedInAsync();
-        if (_signedIn && Following is null && (await Follows.GetMineAsync()).Value is { } mine)
+        if (_signedIn && Kind == "member")
+        {
+            Own ??= (await Profiles.GetMineAsync()).Value?.ProfileId == Key;
+            _own = Own == true;
+        }
+
+        if (_signedIn && !_own && Following is null && (await Follows.GetMineAsync()).Value is { } mine)
         {
             Following = Kind switch
             {
                 "mp" => mine.Mps.Any(m => m.Slug == Key),
                 "organisation" => mine.Organisations.Any(o => o.Slug == Key),
+                "member" => (mine.Members ?? []).Any(m => m.ProfileId == Key),
                 _ => mine.Bills.Any(b => string.Equals(b.Number, Key, StringComparison.OrdinalIgnoreCase)),
             };
         }
@@ -56,6 +89,8 @@
             ("mp", false) => await Follows.UnfollowMpAsync(Key),
             ("organisation", true) => await Follows.FollowOrganisationAsync(Key),
             ("organisation", false) => await Follows.UnfollowOrganisationAsync(Key),
+            ("member", true) => await Follows.FollowMemberAsync(Key),
+            ("member", false) => await Follows.UnfollowMemberAsync(Key),
             (_, true) => await Follows.FollowBillAsync(Key),
             _ => await Follows.UnfollowBillAsync(Key),
         };
@@ -66,5 +101,7 @@
         }
 
         Following = follow;
+        _moved += follow ? 1 : -1;
+        _followers = Math.Max(0, (Followers ?? 0) + _moved);
     });
 }

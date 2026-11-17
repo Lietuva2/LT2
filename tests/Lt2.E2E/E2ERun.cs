@@ -367,6 +367,9 @@ public abstract class E2ETest : IAsyncLifetime
 
     private readonly string _id = Guid.NewGuid().ToString("N");
 
+    /// <summary>When the test started (a second early): what the product made on its own since then is forgotten after it.</summary>
+    private readonly DateTimeOffset _started = DateTimeOffset.UtcNow.AddSeconds(-1);
+
     /// <summary>The test running now (the tests of this project run one at a time, xunit.runner.json).</summary>
     internal static string CurrentTest => _current ?? "outside a test";
 
@@ -446,6 +449,15 @@ public abstract class E2ETest : IAsyncLifetime
             {
                 problems.Add($"deleting the test's organisations: {ex.Message}");
             }
+        }
+
+        try
+        {
+            await E2EData.ForgetSinceAsync(_started);
+        }
+        catch (Exception ex) when (ex is ShouldAssertException or InvalidOperationException)
+        {
+            problems.Add($"forgetting the records the test left: {ex.Message}");
         }
 
         problems.ShouldBeEmpty("what the test made is deleted after it");

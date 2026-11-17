@@ -1,0 +1,250 @@
+@page "/paskyra/saugumas"
+@attribute [Authorize]
+@rendermode InteractiveWebAssembly
+@inherits AccountScreenBase
+@inject IAuthApi Auth
+@inject Passkeys PasskeyBrowser
+
+@* "Saugumas ir duomenys" (design 8.21): passkeys, sessions, known browsers (design 8.20.2, #zinomos-narsykles), the positions
+   consent (design 6.5: a consent about stored data, withdrawn with what it covers), the export and deleting the account
+   (#my-data), signing out. *@
+@if (Me is null)
+{
+    <p class="small">@L["Loading"]</p>
+}
+else
+{
+    <AccountHeader Me="Me" Current="@AccountScreens.Security" />
+
+    <section class="stack" aria-labelledby="saugumas-title" id="saugumas-ir-duomenys">
+        <h2 id="saugumas-title">@L["Parts.Security"]</h2>
+
+        <div class="pair">
+            <section class="sheet sheet--cut stack" aria-labelledby="passkeys-title">
+                <h3 id="passkeys-title">@L["Passkeys.Title"]</h3>
+                <p>@L["Passkeys.Text"]</p>
+                <p class="small num">@L.Format("Passkeys.Count", Display.Number(Me.PasskeyCount))</p>
+                <button type="button" class="btn" disabled="@Locked" @onclick="AddPasskeyAsync">@L["Passkeys.Add"]</button>
+            </section>
+
+            <section class="sheet stack" aria-labelledby="sessions-title">
+                <h3 id="sessions-title">@L["Sessions.Title"]</h3>
+                <p>@L["Sessions.Text"]</p>
+                <ul class="rows">
+                    @foreach (var session in Sessions ?? [])
+                    {
+                        <li @key="session.Id">
+                            <div class="rows__main">
+                                <b>@(session.Device ?? L["Sessions.UnknownDevice"])</b>
+                                <span class="small">
+                                    @L["Sessions.Method." + (string.IsNullOrEmpty(session.Method) ? "unknown" : session.Method)] ·
+                                    <span class="num">@L.Format("Sessions.LastSeen", Display.DayTime(session.LastSeenAt))</span>
+                                </span>
+                            </div>
+                            <div class="rows__side">
+                                @if (session.IsCurrent)
+                                {
+                                    <span class="tag tag--people">@L["Sessions.Current"]</span>
+                                }
+                                else
+                                {
+                                    <button type="button" class="btn btn--plain" disabled="@Locked" @onclick="() => EndSessionAsync(session.Id)">@L["Sessions.End"]</button>
+                                }
+                            </div>
+                        </li>
+                    }
+                </ul>
+            </section>
+        </div>
+
+        @* Design 8.20.2: the browsers known to the account, beside the sessions; forgetting one makes it a stranger again. *@
+        <section class="sheet stack" aria-labelledby="known-browsers-title" id="zinomos-narsykles">
+            <h3 id="known-browsers-title">@L["KnownBrowsers.Title"]</h3>
+            <p>@L["KnownBrowsers.Text"]</p>
+            @if (KnownBrowsers is { Count: > 0 } known)
+            {
+                <ul class="rows" id="known-browsers">
+                    @foreach (var browser in known)
+                    {
+                        <li @key="browser.Id">
+                            <div class="rows__main">
+                                <b>@(browser.Device ?? L["Sessions.UnknownDevice"])</b>
+                                <span class="small num"><span class="nowrap">@L.Format("KnownBrowsers.FirstSeen", Display.Day(browser.FirstSeenAt))</span>, <span class="nowrap">@L.Format("Sessions.LastSeen", Display.DayTime(browser.LastSeenAt))</span></span>
+                            </div>
+                            <div class="rows__side">
+                                @if (browser.IsCurrent)
+                                {
+                                    <span class="tag tag--people">@L["KnownBrowsers.Current"]</span>
+                                }
+                                <button type="button" class="btn btn--plain" disabled="@Locked" @onclick="() => ForgetBrowserAsync(browser.Id)">@L["KnownBrowsers.Forget"]</button>
+                            </div>
+                        </li>
+                    }
+                </ul>
+            }
+            else
+            {
+                <p class="small" id="known-browsers-none">@L["KnownBrowsers.None"]</p>
+            }
+        </section>
+
+        @if (Me.HasPositionConsent)
+        {
+            @* Withdrawing the consent deletes every position (design 6.5). *@
+            <section class="sheet stack" aria-labelledby="consent-title" id="positions-consent">
+                <h3 id="consent-title">@L["PositionConsent.Title"]</h3>
+                <p>@L["PositionConsent.Text"]</p>
+                <p><button type="button" class="btn btn--plain" id="withdraw-consent" disabled="@Locked" @onclick="WithdrawConsentAsync">@L["PositionConsent.Withdraw"]</button></p>
+            </section>
+        }
+
+        @* Design 6.5: everything the person gave, and deleting the account. What deleting removes is said in the confirmation
+           it opens, the step before anything is deleted (design 8.15: what cannot be undone stays where the person acts). *@
+        <section class="sheet stack" aria-labelledby="data-title" id="my-data">
+            <h3 id="data-title">@L["Data.Title"]</h3>
+            <p>@L["Data.Text"]</p>
+            <p><a class="btn btn--plain" href="/api/v1/me/export" download id="export">@L["Data.Export"]</a></p>
+            @if (Me.StaffAccount && Me.ActiveStaffRoles.Count == 0)
+            {
+                @* Design 6.9: a staff account is deleted only from a session signed in with its staff passkey; design 6.2: this
+                   session becomes one without signing out, on the staff passkey page, which comes back here. *@
+                <p class="note note--quiet" id="delete-staff-passkey"><span>@L["Data.DeleteStaffNeedsPasskey"]</span>@(" ")<a href="@StaffSessionPage.Link(AccountScreens.Security)" id="delete-staff-key">@L["Data.StaffKeyLink"]</a></p>
+            }
+            else if (_confirmDelete)
+            {
+                <p class="note" role="alert">@L["Data.DeleteWarning"]</p>
+                @if (Me.StaffAccount)
+                {
+                    @* Design 6.9: what one did as staff outlives the account; said where it cannot be undone (design 8.15). *@
+                    <p class="note" id="delete-staff-kept">@L["Data.DeleteStaffKept"]@(" ")<Hint Id="delete-staff-more" Text="@L["Data.DeleteStaffMore"]" Answer="@L["Data.DeleteStaffMoreAnswer"]" More="/metodika#istrynimas" /></p>
+                }
+                <div class="row">
+                    <button type="button" class="btn btn--against" id="delete-confirm" disabled="@Locked" @onclick="DeleteAccountAsync">@L["Data.DeleteConfirm"]</button>
+                    <button type="button" class="btn btn--plain" disabled="@Locked" @onclick="() => _confirmDelete = false">@L["Data.DeleteCancel"]</button>
+                </div>
+            }
+            else
+            {
+                <p><button type="button" class="btn btn--plain" id="delete-account" disabled="@Locked" @onclick="() => _confirmDelete = true">@L["Data.Delete"]</button></p>
+            }
+        </section>
+
+        <p><button type="button" class="btn btn--plain" id="account-sign-out" disabled="@Locked" @onclick="SignOutAsync">@L["SignOut"]</button></p>
+    </section>
+}
+
+<Messages Message="@Message" Info="@Info" />
+
+@code {
+    private bool _confirmDelete;
+
+    [PersistentState]
+    public List<SessionResponse>? Sessions { get; set; }
+
+    [PersistentState]
+    public List<KnownBrowserResponse>? KnownBrowsers { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        if (!await LoadMeAsync())
+        {
+            return;
+        }
+
+        Sessions ??= await LoadSessionsAsync();
+        KnownBrowsers ??= await LoadKnownBrowsersAsync();
+    }
+
+    private async Task<List<SessionResponse>> LoadSessionsAsync()
+    {
+        var sessions = await MeApi.GetSessionsAsync();
+        return sessions.IsSuccess ? sessions.Value!.ToList() : [];
+    }
+
+    private Task AddPasskeyAsync() => RunAsync(async () =>
+    {
+        if (!await PasskeyBrowser.IsSupportedAsync())
+        {
+            Message = L["Passkey.Unsupported"];
+            return;
+        }
+
+        // Design 8.5.2, 8.5.3: a linked account changes its passkeys only in a passkey session; said before the browser
+        // makes a key the server would refuse. The server checks it again.
+        if ((await MeApi.GetAsync()).Value?.Mp is { MayWrite: false })
+        {
+            Message = L["Mp.PasskeyNeeded"];
+            return;
+        }
+
+        var options = await Auth.GetPasskeyCreationOptionsAsync();
+        if (!Succeeded(options))
+        {
+            return;
+        }
+
+        var credential = await PasskeyBrowser.CreateAsync(options.Value!);
+        if (credential is null)
+        {
+            Message = L["Passkey.Cancelled"];
+            return;
+        }
+
+        if (!Succeeded(await Auth.AddPasskeyAsync(new PasskeyCredentialRequest { Credential = credential })))
+        {
+            return;
+        }
+
+        Info = L["Passkeys.Added"];
+        await ReloadMeAsync();
+    });
+
+    private Task EndSessionAsync(Guid id) => RunAsync(async () =>
+    {
+        Succeeded(await MeApi.EndSessionAsync(id));
+        Sessions = await LoadSessionsAsync();
+    });
+
+    private async Task<List<KnownBrowserResponse>> LoadKnownBrowsersAsync()
+    {
+        var browsers = await MeApi.GetKnownBrowsersAsync();
+        return browsers.IsSuccess ? browsers.Value!.ToList() : [];
+    }
+
+    private Task ForgetBrowserAsync(Guid id) => RunAsync(async () =>
+    {
+        if (Succeeded(await MeApi.ForgetKnownBrowserAsync(id)))
+        {
+            Info = L["KnownBrowsers.Forgotten"];
+        }
+
+        KnownBrowsers = await LoadKnownBrowsersAsync();
+    });
+
+    private Task WithdrawConsentAsync() => RunAsync(async () =>
+    {
+        if (!Succeeded(await MeApi.WithdrawPositionConsentAsync()))
+        {
+            return;
+        }
+
+        Info = L["PositionConsent.Withdrawn"];
+        await ReloadMeAsync();
+    });
+
+    private Task DeleteAccountAsync() => RunAsync(async () =>
+    {
+        if (Succeeded(await MeApi.DeleteAccountAsync()))
+        {
+            Navigation.NavigateTo("/", forceLoad: true);
+        }
+    });
+
+    private Task SignOutAsync() => RunAsync(async () =>
+    {
+        if (Succeeded(await Auth.SignOutAsync()))
+        {
+            Navigation.NavigateTo("/", forceLoad: true);
+        }
+    });
+}

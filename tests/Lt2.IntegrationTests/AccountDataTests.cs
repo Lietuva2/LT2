@@ -244,7 +244,7 @@ public sealed class AccountDataTests(DatabaseFixture database) : ApiTest(databas
         (await person.SendAsync(HttpMethod.Put, FollowRoutes.OrganisationOf(followed.Slug))).StatusCode.ShouldBe(HttpStatusCode.NoContent);
         (await person.SendAsync(HttpMethod.Put, FollowRoutes.Notices, new NoticeSettingsRequest { Planned = true, Voted = false, Statements = true })).StatusCode.ShouldBe(HttpStatusCode.NoContent);
         (await person.SendAsync(HttpMethod.Put, ApiRoutes.Me.PartySupport, new PartySupportRequest { Party = "Reformų partija", Consent = true })).StatusCode.ShouldBe(HttpStatusCode.NoContent);
-        (await person.PostAsync(FeedbackRoutes.Send, new FeedbackRequest { Text = "Atsiliepimas, į kurį galima atsakyti.", PagePath = "/sveiki", MayReply = true })).StatusCode.ShouldBe(HttpStatusCode.NoContent);
+        (await person.PostAsync(FeedbackRoutes.Send, new FeedbackRequest { Text = "Atsiliepimas, į kurį galima atsakyti.", PagePath = "/paskyra", MayReply = true })).StatusCode.ShouldBe(HttpStatusCode.NoContent);
         var own = await person.RegisterOrganisationAsync();
         await person.PublishStatementAsync(AppealSteps.SecondBill, own.Slug, "remarks", "Organizacijos pastabos, kurių rašytojas išnyks.");
 

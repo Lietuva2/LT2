@@ -99,7 +99,7 @@
 <data name="Staff.Moderation" xml:space="preserve"><value>Moderavimas</value></data>
 <data name="Staff.Settings" xml:space="preserve"><value>Nustatymai</value></data>
 <data name="PositionConsent.Title" xml:space="preserve"><value>Sutikimas saugoti pozicijas</value></data>
-<data name="PositionConsent.Text" xml:space="preserve"><value>Esate sutikę, kad saugotume jūsų pozicijas dėl įstatymų projektų. Atšaukus sutikimą, visos jūsų pozicijos ir „Man svarbu“ žymos bus ištrintos, o bendri skaičiai sumažės. Jūsų parašyti argumentai liks.</value></data>
+<data name="PositionConsent.Text" xml:space="preserve"><value>Esate sutikę, kad saugotume jūsų pozicijas dėl įstatymų projektų. Atšaukus sutikimą, visos jūsų pozicijos ir „Man svarbu“ žymos bus ištrintos, o bendri skaičiai sumažės. Jūsų parašyti argumentai ir komentarai liks. „Man svarbu“ privatus, o „Sutinku“ prie komentaro viešas su jūsų vardu ir jūsų pusės neparodo.</value></data>
 <data name="PositionConsent.Withdraw" xml:space="preserve"><value>Atšaukti sutikimą ir ištrinti pozicijas</value></data>
 <data name="PositionConsent.Withdrawn" xml:space="preserve"><value>Sutikimas atšauktas, jūsų pozicijos ištrintos.</value></data><data name="Party.Title" xml:space="preserve"><value>Kurią partiją palaikote</value></data>
 <data name="Party.Text" xml:space="preserve"><value>Nebūtina. Jūsų pasirinkimo niekam nerodome. Seimo nariui jo suvestinėje parodytume tik bendrą skaičių, kiek palaikančių jo partiją prašo balsuoti už ar prieš, ir tik tada, kai jų yra bent 20.</value></data>
@@ -197,7 +197,7 @@
   <data name="TermsAccept.Accept" xml:space="preserve"><value>Sutinku</value></data>
   <data name="TermsAccept.Leave.Before" xml:space="preserve"><value>Kol nesutinkate, galite skaityti, atsisiųsti savo duomenis ir ištrinti paskyrą:</value></data>
   <data name="TermsAccept.Leave.Link" xml:space="preserve"><value>Jūsų duomenys</value></data>
-  <data name="Hello.TermsRequired" xml:space="preserve"><value>Kol nesutikote su naudojimo taisyklėmis, galite tik skaityti, atsisiųsti savo duomenis ir ištrinti paskyrą.</value></data>
+  <data name="Hello.TermsRequired" xml:space="preserve"><value>Kol nesutikote su naudojimo taisyklėmis, galite tik skaityti, atsisiųsti savo duomenis, atšaukti duotus sutikimus (ir išjungti viešą profilį) ir ištrinti paskyrą.</value></data>
   <data name="Hello.TermsLink" xml:space="preserve"><value>Peržiūrėti ir sutikti</value></data>
   <data name="StaffKey.PageTitle" xml:space="preserve"><value>Darbuotojo prieigos raktas · Lietuva 2.0</value></data>
   <data name="StaffKey.Title" xml:space="preserve"><value>Prisijungti darbuotojo prieigos raktu</value></data>
@@ -215,4 +215,21 @@
   <data name="Parts.Taking" xml:space="preserve"><value>Dalyvavimas</value></data>
   <data name="Parts.Security" xml:space="preserve"><value>Saugumas ir duomenys</value></data>
   <data name="Staff.KeyText" xml:space="preserve"><value>Tai darbuotojo paskyra, bet šioje sesijoje prisijungėte ne darbuotojo prieigos raktu, todėl darbuotojo darbai neveikia.</value></data>
+  <data name="Account.PageTitle" xml:space="preserve"><value>{0} · Lietuva 2.0</value></data>
+  <data name="PublicProfile.Title" xml:space="preserve"><value>Viešas profilis ir „Apie mane“</value></data>
+  <data name="PublicProfile.IsPublic" xml:space="preserve"><value>Jūsų viešas profilis įjungtas:</value></data>
+  <data name="PublicProfile.IsOff" xml:space="preserve"><value>Viešas profilis išjungtas: jūsų puslapio nėra, o prie argumentų, komentarų ir „Sutinku“ rodomas tik vardas.</value></data>
+  <data name="PublicProfile.AboutHidden" xml:space="preserve"><value>Moderatorius paslėpė jūsų tekstą „Apie mane“: jis niekur nerodomas, kol neparašysite naujo.</value></data>
+  <data name="PublicProfile.AboutHiddenWhy" xml:space="preserve"><value>Paaiškinimas: {0}</value></data>
+  <data name="PublicProfile.AboutLabel" xml:space="preserve"><value>Apie mane</value></data>
+  <data name="PublicProfile.AboutHint" xml:space="preserve"><value>Rodoma tik viešame profilyje. Galima nuoroda (https://) ir jūsų pačių kontaktai – jie bus vieši ir juos ras paieškos sistemos. Asmens kodo rašyti negalima. {0} iš {1} ženklų.</value></data>
+  <data name="PublicProfile.AboutHintNoLimit" xml:space="preserve"><value>Rodoma tik viešame profilyje. Galima nuoroda (https://) ir jūsų pačių kontaktai – jie bus vieši ir juos ras paieškos sistemos. Asmens kodo rašyti negalima.</value></data>
+  <data name="PublicProfile.Switch" xml:space="preserve"><value>Viešas profilis</value></data>
+  <data name="PublicProfile.Consent" xml:space="preserve"><value>Jūsų profilio puslapyje bus jūsų vardas, „Apie mane“ ir viskas, ką viešai parašėte (argumentai ir komentarai), surinkta į vieną vietą su nuorodomis; prie visų jūsų argumentų, komentarų ir „Sutinku“ bus nuoroda į jį. Puslapį gali rodyti paieškos sistemos. Kiti nariai galės jus sekti ir gaus laišką, kai paskelbsite argumentą ar komentarą; puslapyje bus rodomas sekėjų skaičius, bet ne tai, kas jus seka (to nesužinosite ir jūs). Išjungus profilį, puslapis dingsta iš karto, bet paieškos sistemų kopijos išnyksta tik joms vėl apsilankius. Išsaugodami įjungtą profilį sutinkate su tuo.</value></data>
+  <data name="PublicProfile.NameNeeded" xml:space="preserve"><value>Viešam profiliui reikia vardo: pirmiau įrašykite jį aukščiau.</value></data>
+  <data name="PublicProfile.OffText" xml:space="preserve"><value>Išsaugojus profilis išsijungs iš karto: puslapis ir nuorodos prie argumentų, komentarų ir „Sutinku“ dings, visi jus sekantys nebesekys. Jo adresas daugiau niekada nebus naudojamas.</value></data>
+  <data name="PublicProfile.Save" xml:space="preserve"><value>Išsaugoti</value></data>
+  <data name="PublicProfile.Saved" xml:space="preserve"><value>Išsaugota.</value></data>
+  <data name="PublicProfile.SavedOn" xml:space="preserve"><value>Viešas profilis įjungtas.</value></data>
+  <data name="PublicProfile.SavedOff" xml:space="preserve"><value>Viešas profilis išjungtas, jo adresas panaikintas.</value></data>
 </root>

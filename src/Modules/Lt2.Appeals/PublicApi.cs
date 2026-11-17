@@ -32,8 +32,19 @@ public sealed record SideCounts(int For, int ForOlderThan30Days, int Against, in
 /// <param name="EnteredSummaries">The bill has entered a summary sent to MPs.</param>
 public sealed record ThresholdInfo(int Value, string SetBy, string? Note, int Participants, bool Reached, bool EnteredSummaries);
 
-/// <summary>A public argument. <paramref name="AuthorName"/> is <c>null</c> when the author gave no display name.</summary>
-public sealed record ReasonInfo(Guid Id, string Side, string Text, string? AuthorName, int Endorsements, string Status, DateTimeOffset CreatedAt);
+/// <summary>
+/// A public argument. <paramref name="AuthorName"/> is <c>null</c> when the author gave no display name;
+/// <paramref name="AuthorProfileId"/> is the public profile id of an author whose profile is public (design 8.25.4), null for
+/// everyone else.
+/// </summary>
+public sealed record ReasonInfo(Guid Id, string Side, string Text, string? AuthorName, int Endorsements, string Status, DateTimeOffset CreatedAt, string? AuthorProfileId = null)
+{
+    /// <summary>How many comments it shows (design 8.23.6); set only in the bill's public answer.</summary>
+    public int Comments { get; init; }
+}
+
+/// <summary>The card beside the name of a member with a public profile (design 8.25.4): once per person per bill's answer.</summary>
+public sealed record AuthorCard(string ProfileId, string Name, string? About);
 
 /// <summary>
 /// A bill as people take part on it (design 8.12.1), the same for everyone. <paramref name="Id"/> is null while the bill
@@ -62,7 +73,8 @@ public sealed record BillRecordInfo(
     long? ClosingVoteId,
     DateTimeOffset? ClosedAt,
     PlannedDate? Planned,
-    string? HiddenStatement);
+    string? HiddenStatement,
+    IReadOnlyList<AuthorCard>? Cards = null);
 
 /// <summary>
 /// A bill as the agenda shows it (design 8.12.5): its record's public numbers, or zeros for an active bill nobody took
@@ -185,7 +197,11 @@ public sealed record QueueReason(
     IReadOnlyList<QueueReport> Reports,
     IReadOnlyList<ReasonInfo> MergeCandidates,
     DateTimeOffset CreatedAt,
-    string RecordStatus = "open");
+    string RecordStatus = "open")
+{
+    /// <summary>How many comments go with it when it is merged (design 8.23.7: the confirmation says so).</summary>
+    public int Comments { get; init; }
+}
 
 /// <summary>The moderators' queue (design 8.12.3): bills' records that need a look, and arguments.</summary>
 public sealed record ModerationItems(IReadOnlyList<QueueRecord> Records, IReadOnlyList<QueueReason> Reasons);

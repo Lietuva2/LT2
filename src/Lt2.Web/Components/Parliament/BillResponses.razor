@@ -1,6 +1,9 @@
 @using Lt2.Api.Contracts.Mps
+@using Lt2.Api.Contracts.Comments
 @using Lt2.Web.Client.Mps
+@using Lt2.Web.Client.Comments
 @inject IMpResponsesApi Responses
+@inject ICommentsApi Comments
 @inject Formats F
 @inject IConfiguration Configuration
 
@@ -34,6 +37,13 @@
                                 <Lt2.Web.Client.Mps.ReportResponse ResponseId="item.Response.Id" Contact="@Contact" @rendermode="InteractiveWebAssembly" />
                             }
                         </MpResponseItem>
+                        @if (_threads.GetValueOrDefault(item.Response.Id) is { } thread)
+                        {
+                            @* Design 8.23.6: "Aptarimas" under a shown response (a withdrawn one read-only), an island of its own here. *@
+                            <CommentThread Kind="response" TargetId="item.Response.Id" Number="@Number" Thread="thread" Count="thread.Count"
+                                           Open="@(CommentPaging.Asked(CommentsShown, item.Response.Id) is not null)" Asked="@CommentPaging.Asked(CommentsShown, item.Response.Id)" PagePath="@PagePath" Contact="@Contact" Moderator="Moderator"
+                                           @rendermode="InteractiveWebAssembly" />
+                        }
                     </li>
                 }
             </ol>
@@ -66,6 +76,17 @@
 
     [SupplyParameterFromQuery(Name = MpResponseLimits.ShowParameter)] public string? Show { get; set; }
 
+    /// <summary>"Rodyti daugiau komentarų" (design 8.23.14).</summary>
+    [SupplyParameterFromQuery(Name = CommentLimits.ShowParameter)] public string? CommentsShown { get; set; }
+
+    /// <summary>The server found a moderator in a staff-passkey session (the comments' "Moderuoti", design 8.23.8).</summary>
+    [Parameter] public bool Moderator { get; set; }
+
+    private Dictionary<Guid, CommentThreadResponse> _threads = [];
+
+    /// <summary>The page with the responses' paging kept, for the comments' own "Rodyti daugiau komentarų".</summary>
+    private string PagePath => Path + (string.IsNullOrEmpty(Show) ? "" : "?" + MpResponseLimits.ShowParameter + "=" + Uri.EscapeDataString(Show));
+
     private string Path => "/seimas/" + Uri.EscapeDataString(Number);
 
     private string? Contact => Configuration.ModeratorContact();
@@ -74,5 +95,16 @@
     {
         _view = (await Responses.GetOnBillAsync(Number)).Value;
         _shown = _view is null ? 0 : Math.Min(ResponsePaging.Shown(Show, _view.Items.Count), _view.Items.Count);
+
+        // Design 8.23.6: the comments of the responses on this page only, each the first ten or as many as asked.
+        _threads = [];
+        foreach (var item in _view?.Items.Take(_shown) ?? [])
+        {
+            if (item.Response.Status is "published" or "withdrawn"
+                && (await Comments.GetThreadAsync("response", item.Response.Id, CommentPaging.Asked(CommentsShown, item.Response.Id))).Value is { } thread)
+            {
+                _threads[item.Response.Id] = thread;
+            }
+        }
     }
 }

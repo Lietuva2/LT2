@@ -10,19 +10,19 @@ using Microsoft.Extensions.DependencyInjection;
 namespace Lt2.IntegrationTests;
 
 /// <summary>
-/// Design 8.20.1, "Seimo narių atsakymai": one email per bill per day, the morning after, to the members who followed the bill
-/// before the answers became public; not to those who switched it off or followed later; nothing about their own MP to the MP's
-/// account and office; hidden and withdrawn answers left out and an empty day sends nothing; a changed explanation with the same
-/// stance is no event. Each test makes its own stand-in MPs' accounts and removes them, their responses and the bill's events.
-/// The job is run at 01:00 of the Vilnius day the test started on, with <c>Follows:ResponsesAt</c> at 00:00 and the responses moved
-/// to noon of the day before, so the test depends neither on the hour it runs at, nor on a clock change (a Vilnius day has 23 or
-/// 25 hours twice a year), nor on midnight passing while it runs.
+/// Design 8.20.1, "Seimo narių atsakymai", in the rhythm of design 8.24: under "Iš karto" (the default) the job's next run tells
+/// the members who followed the bill before the answers became public, in one part per bill; not those who switched it off or
+/// followed later; nothing about their own MP to the MP's account and office; hidden and withdrawn answers left out and nothing
+/// left sends nothing; a changed explanation with the same stance is no event. Each test makes its own stand-in MPs' accounts and
+/// removes them, their responses and the bill's events. The job is run at 01:00 of the Vilnius day the test started on, with the
+/// responses moved to noon of the day before, so the test depends neither on the hour it runs at, nor on a clock change (a
+/// Vilnius day has 23 or 25 hours twice a year), nor on midnight passing while it runs.
+/// [Changed with design 8.24: the email no longer waits for <c>Follows:ResponsesAt</c>, and an answer is recorded per answer.]
 /// </summary>
 public sealed class ResponseNoticeTests(DatabaseFixture database) : ApiTest(database)
 {
     private const string Bill = AppealSteps.ThirdBill;
     private const string Kind = MessageKinds.FollowResponsesEmail;
-    private const string Setting = "Follows:ResponsesAt";
     private const string Explanation = "Šio paaiškinimo laiške būti neturi: pataisa mažina naštą šeimoms.";
 
     /// <summary>The Vilnius day the test started on: the job runs early that day, whatever the time is when it runs.</summary>
@@ -56,9 +56,8 @@ public sealed class ResponseNoticeTests(DatabaseFixture database) : ApiTest(data
 
     private async Task<List<JsonElement>> EmailsToAsync(string to)
     {
-        var rows = await Database.ScalarAsync<string>(
-            "SELECT coalesce(json_agg(payload ORDER BY created_at, id), '[]'::json)::text FROM notify.outbox WHERE kind = @k AND payload->>'to' = @to", ("k", Kind), ("to", to));
-        using var document = JsonDocument.Parse(rows!);
+        // Alone or as a part of a gathered email (design 8.24), whatever else the run held for the person.
+        using var document = JsonDocument.Parse(await Database.NoticesAsync(Kind, to));
         return document.RootElement.EnumerateArray().Select(r => r.Clone()).ToList();
     }
 
@@ -84,10 +83,9 @@ public sealed class ResponseNoticeTests(DatabaseFixture database) : ApiTest(data
     }
 
     [Fact]
-    public async Task Followers_get_one_email_per_bill_per_day_with_every_answer_and_none_of_the_explanations_and_nobody_else_does()
+    public async Task Followers_get_the_answers_at_the_next_run_with_every_answer_and_none_of_the_explanations_and_nobody_else_does()
     {
         await StartAsync();
-        var administrator = await AdministratorAsync();
         using var one = await Factory.MpAccountAsync(MpSteps.Azuolaitis);
         using var two = await Factory.MpAccountAsync(MpSteps.Pusinskiene);
         var (office, officeKey, officeEmail) = await Factory.OfficeMemberAsync(one, "Biuro Narė");
@@ -95,7 +93,6 @@ public sealed class ResponseNoticeTests(DatabaseFixture database) : ApiTest(data
         using var _ok = officeKey;
         try
         {
-            await administrator.SetFreshAsync(Setting, "00:00");
             var (reader, readerEmail) = await FollowerAsync("Sekėja Pavyzdytė");
             using var _r = reader;
             var (silent, silentEmail) = await FollowerAsync("Išjungusi Pavyzdytė");
@@ -130,7 +127,7 @@ public sealed class ResponseNoticeTests(DatabaseFixture database) : ApiTest(data
             var email = emails.ShouldHaveSingleItem();
             email.EnumerateObject().Select(p => p.Name).ShouldBe(["to", "billNumber", "billTitle", "day", "responses", "billPath", "accountPath"], ignoreOrder: true);
             (email.GetProperty("billNumber").GetString(), email.GetProperty("day").GetString(), email.GetProperty("billPath").GetString(), email.GetProperty("accountPath").GetString())
-                .ShouldBe((Bill, Yesterday.ToString("yyyy-MM-dd", System.Globalization.CultureInfo.InvariantCulture), "/seimas/" + Bill + "#atsakymai", "/sveiki#sekami"));
+                .ShouldBe((Bill, Yesterday.ToString("yyyy-MM-dd", System.Globalization.CultureInfo.InvariantCulture), "/seimas/" + Bill + "#atsakymai", "/paskyra/sekimas#sekami"));
             Listed(email).ShouldBe([(MpSteps.Azuolaitis.Name, "for"), (MpSteps.Pusinskiene.Name, "against")]);
             foreach (var item in email.GetProperty("responses").EnumerateArray())
             {
@@ -154,19 +151,26 @@ public sealed class ResponseNoticeTests(DatabaseFixture database) : ApiTest(data
             Listed((await EmailsToAsync(officeEmail)).ShouldHaveSingleItem()).ShouldBe([(MpSteps.Pusinskiene.Name, "against")]);
             (await EmailsToAsync(two.Email)).ShouldBeEmpty("the other MP's account does not follow the bill");
 
-            // Recorded once, under the bill, keyed by the day, with no person in it; a second run sends nothing more.
+            // Recorded once per answer, under the bill, keyed by the MP and the moment, with no member in it; a second run sends nothing more.
             var recorded = await Database.ScalarAsync<string>(
-                "SELECT row_to_json(e)::text FROM notify.bill_event e WHERE bill_number = @b AND kind = 'response'", ("b", Bill));
+                "SELECT json_agg(e)::text FROM notify.bill_event e WHERE bill_number = @b AND kind = 'response'", ("b", Bill));
             recorded.ShouldNotBeNull();
-            recorded.ShouldContain(Yesterday.ToString("yyyy-MM-dd", System.Globalization.CultureInfo.InvariantCulture));
-            recorded.ShouldContain("\"outcome\":\"sent\"");
+            using (var rows = JsonDocument.Parse(recorded))
+            {
+                rows.RootElement.GetArrayLength().ShouldBe(2);
+                foreach (var row in rows.RootElement.EnumerateArray())
+                {
+                    row.GetProperty("outcome").GetString().ShouldBe("sent");
+                    row.GetProperty("key").GetString()!.ShouldContain("@");
+                }
+            }
+
             recorded.ShouldNotContain((await Database.UserIdAsync(readerEmail)).ToString());
             await RunJobAsync();
-            (await EmailsToAsync(readerEmail)).Count.ShouldBe(1, "one email per bill per day");
+            (await EmailsToAsync(readerEmail)).Count.ShouldBe(1, "an answer is told once");
         }
         finally
         {
-            await administrator.ResetFreshAsync(Setting);
             await office.DeleteAccountAsync();
             await EndAsync(one, two);
         }
@@ -214,13 +218,11 @@ public sealed class ResponseNoticeTests(DatabaseFixture database) : ApiTest(data
     public async Task Hidden_and_withdrawn_answers_are_left_out_and_a_day_with_none_left_sends_nothing()
     {
         await StartAsync();
-        var administrator = await AdministratorAsync();
         var moderator = await ModeratorAsync();
         using var one = await Factory.MpAccountAsync(MpSteps.Azuolaitis);
         using var two = await Factory.MpAccountAsync(MpSteps.Pusinskiene);
         try
         {
-            await administrator.SetFreshAsync(Setting, "00:00");
             var (reader, readerEmail) = await FollowerAsync("Sekėja Pavyzdytė");
             using var _r = reader;
             var hidden = await one.Browser.RespondOkAsync(Bill, "for", "Bus paslėptas.");
@@ -250,7 +252,6 @@ public sealed class ResponseNoticeTests(DatabaseFixture database) : ApiTest(data
         }
         finally
         {
-            await administrator.ResetFreshAsync(Setting);
             await EndAsync(one, two);
         }
     }

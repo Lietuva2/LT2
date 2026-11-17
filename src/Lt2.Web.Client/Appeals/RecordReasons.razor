@@ -1,5 +1,9 @@
 @using Lt2.Api.Contracts.Appeals
+@using Lt2.Api.Contracts.Me
+@using Lt2.Api.Contracts.Comments
+@using Lt2.Web.Client.Comments
 @inherits InteractiveBase<AppealUi>
+@inject ICommentsApi CommentsApi
 @inject IAppealsApi Appeals
 @inject MyBillState State
 @inject NavigationManager Navigation
@@ -16,6 +20,11 @@
     <h2 id="h-why">@L["Reasons.Title"]</h2>
     @if (Record is { } record)
     {
+        @* Design 8.25.4: each public profile's card once on the page, for js/lt2-cards.js; no follower number in it. *@
+        @foreach (var card in record.Cards ?? [])
+        {
+            <template id="card-@card.ProfileId" @key="card.ProfileId"><p><b>@card.Name</b></p>@if (card.About is { } about) {<p class="small">@TextExcerpt.Of(about, CardShown).Shown</p>}<p class="small"><a href="@ProfileRoutes.Page(card.ProfileId, card.Name)">@L["Card.Open"]</a></p></template>
+        }
         <div class="pair pair--reasons">
             @foreach (var side in AppealLimits.Sides)
             {
@@ -33,7 +42,15 @@
                             @* The name, then the actions as one group that never wraps item by item (owner, 2026-11-13): when
                                the two do not fit side by side, the name takes its own line above. *@
                             <div class="said__by">
-                                <b class="said__name">@(reason.AuthorName ?? L["Reasons.Anonymous"])</b>
+                                @if (reason.AuthorProfileId is { } profileId)
+                                {
+                                    @* Design 8.25.4: a member with a public profile: the name leads to their page, with a card. *@
+                                    <a class="said__name" href="@ProfileRoutes.Page(profileId, reason.AuthorName)" data-card="card-@profileId">@(reason.AuthorName ?? L["Reasons.Anonymous"])</a>
+                                }
+                                else
+                                {
+                                    <b class="said__name">@(reason.AuthorName ?? L["Reasons.Anonymous"])</b>
+                                }
                                 <span class="said__actions" id="said-actions-@reason.Id">
                                     @if (_signedIn)
                                     {
@@ -63,9 +80,13 @@
                             {
                                 <details class="more moderate" id="moderate-@reason.Id">
                                     <summary class="linkish small">@L["ModReason.Open"]</summary>
-                                    <ModerationActions Id="reason.Id" Kind="reason" Status="@moderated.Status" RecordStatus="@moderated.RecordStatus" MergeCandidates="moderated.MergeCandidates" OnDone="Reload" OnRestricted="ReloadPage" />
+                                    <ModerationActions Id="reason.Id" Kind="reason" Status="@moderated.Status" RecordStatus="@moderated.RecordStatus" MergeCandidates="moderated.MergeCandidates" Comments="moderated.Comments" OnDone="Reload" OnRestricted="ReloadPage" />
                                 </details>
                             }
+                            @* Design 8.23.6: "Aptarimas" under the argument, on its sheet; prerendered with the island for the
+                               arguments shown first, read when first opened for those revealed by "show all". *@
+                            <CommentThread Kind="reason" TargetId="reason.Id" Number="@Number" Thread="@Threads?.GetValueOrDefault(reason.Id)" Count="reason.Comments"
+                                           Open="@(CommentPaging.Asked(CommentsShown, reason.Id) is not null)" Asked="@CommentPaging.Asked(CommentsShown, reason.Id)" PagePath="@PagePath" Contact="@Contact" Moderator="Moderator" />
                             @if (_withdrawing == reason.Id)
                             {
                                 <div class="row" role="group" aria-label="@L["Reasons.Withdraw"]">
@@ -170,6 +191,9 @@
 
 @code {
     private const int Shown = 2;
+
+    /// <summary>About this many characters of "Apie mane" in a card (design 8.25.4: "the first lines").</summary>
+    private const int CardShown = 200;
     private bool _signedIn;
     private bool _showAll;
     private bool _writing;
@@ -198,6 +222,17 @@
 
     [PersistentState] public BillRecordResponse? Record { get; set; }
 
+    /// <summary>The comments under the arguments shown first (design 8.23.6), read with the record and carried to the browser.</summary>
+    [PersistentState] public Dictionary<Guid, CommentThreadResponse>? Threads { get; set; }
+
+    /// <summary>"Rodyti daugiau komentarų": which target's comments the address asks for, and how many (design 8.23.14).</summary>
+    [SupplyParameterFromQuery(Name = CommentLimits.ShowParameter)] public string? CommentsShown { get; set; }
+
+    /// <summary>The responses' page parameter (design 8.5.6), kept in the links this part builds.</summary>
+    [SupplyParameterFromQuery(Name = Lt2.Api.Contracts.Mps.MpResponseLimits.ShowParameter)] public string? ResponsesShown { get; set; }
+
+    private string PagePath => CommentPaging.PagePath(Number, ResponsesShown);
+
     [PersistentState] public MyBillRecordResponse? Mine { get; set; }
 
     /// <summary>The person's own writing restriction (design 8.3): the writing box gives way to the notice.</summary>
@@ -211,6 +246,10 @@
     {
         _signedIn = await IsSignedInAsync();
         Record ??= (await Appeals.GetRecordAsync(Number)).Value;
+        Threads ??= await ThreadsAsync();
+
+        // "Rodyti daugiau komentarų" under an argument the page shows only after "show all": shown already (design 8.23.6).
+        _showAll = Record?.Reasons is { } reasons && reasons.Any(r => CommentPaging.Asked(CommentsShown, r.Id) is not null && !FirstShown(reasons).Contains(r.Id));
         if (_signedIn)
         {
             Mine ??= await State.MineAsync(Number);
@@ -225,6 +264,33 @@
             _moderation = await State.ModerationAsync(Number);
         }
     }
+
+    /// <summary>
+    /// The comments of the arguments the page shows before "show all" (two per side, design 8.12.1, 8.23.6), each the first ten
+    /// or as many as the address asks for. Others are read when their "Aptarimas" is first opened.
+    /// </summary>
+    private async Task<Dictionary<Guid, CommentThreadResponse>> ThreadsAsync()
+    {
+        var threads = new Dictionary<Guid, CommentThreadResponse>();
+        if (Record is not { Status: "open" or "closed" } record)
+        {
+            return threads;
+        }
+
+        foreach (var reason in record.Reasons.Where(r => FirstShown(record.Reasons).Contains(r.Id) || CommentPaging.Asked(CommentsShown, r.Id) is not null))
+        {
+            if ((await CommentsApi.GetThreadAsync("reason", reason.Id, CommentPaging.Asked(CommentsShown, reason.Id))).Value is { } thread)
+            {
+                threads[reason.Id] = thread;
+            }
+        }
+
+        return threads;
+    }
+
+    /// <summary>The arguments shown before "show all": the first two of each side (design 8.12.1).</summary>
+    private static HashSet<Guid> FirstShown(IReadOnlyList<ReasonResponse> reasons) =>
+        AppealLimits.Sides.SelectMany(side => reasons.Where(r => r.Side == side).Take(Shown)).Select(r => r.Id).ToHashSet();
 
     private QueueReasonResponse? Moderated(Guid reasonId) => _moderation?.Reasons.FirstOrDefault(r => r.Id == reasonId);
 
@@ -337,6 +403,7 @@
     {
         State.Forget(Number);
         Record = (await Appeals.GetRecordAsync(Number)).Value ?? Record;
+        Threads = await ThreadsAsync();
         Mine = await State.MineAsync(Number) ?? Mine;
     }
 }

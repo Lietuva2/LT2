@@ -49,13 +49,13 @@
         if (me.Value!.ActiveStaffRoles.Count > 0)
         {
             // Already a staff session: nothing to do here.
-            Navigation.NavigateTo(_back ?? "/sveiki", forceLoad: true);
+            Navigation.NavigateTo(_back ?? "/paskyra", forceLoad: true);
             return;
         }
 
         if (!me.Value.StaffAccount)
         {
-            Navigation.NavigateTo("/sveiki", forceLoad: true);
+            Navigation.NavigateTo("/paskyra", forceLoad: true);
             return;
         }
 
@@ -86,7 +86,7 @@
 
         if (Succeeded(await Me.StartStaffSessionAsync(new PasskeyCredentialRequest { Credential = credential })))
         {
-            Navigation.NavigateTo(_back ?? "/sveiki", forceLoad: true);
+            Navigation.NavigateTo(_back ?? "/paskyra", forceLoad: true);
         }
     });
 

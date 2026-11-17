@@ -117,6 +117,22 @@ internal static class E2ESteps
     public static string Base => SignUpTests.BaseUrl!.TrimEnd('/');
 
     /// <summary>
+    /// Signs out with the account's own "Atsijungti" (design 8.21: on the screen "Saugumas ir duomenys", /paskyra/saugumas), opened
+    /// first when the browser is elsewhere; waits for the island to start.
+    /// </summary>
+    public static async Task SignOutOnAccountAsync(IPage page)
+    {
+        if (!page.Url.Contains("/paskyra/saugumas", StringComparison.Ordinal))
+        {
+            await page.GotoAsync(Base + "/paskyra/saugumas");
+        }
+
+        var signOut = page.Locator("#account-sign-out");
+        await Assertions.Expect(signOut).ToBeEnabledAsync(new() { Timeout = Slow });
+        await signOut.ClickAsync();
+    }
+
+    /// <summary>
     /// The registration form already open on <paramref name="page"/> (any start: the sign-in page, an invitation link, a
     /// share link): the address, the emailed code, then the name, the age and the terms of use (design 6.2, 8.22.2). The invitation code is typed
     /// only when <paramref name="invitation"/> is given (a link fills it in). Leaves the page where the site lands it.

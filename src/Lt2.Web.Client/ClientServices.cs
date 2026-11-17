@@ -27,11 +27,15 @@ public static class ClientServices
         services.AddScoped<Lt2.Api.Contracts.Mps.IMpApi, HttpMpApi>();
         services.AddScoped<Lt2.Api.Contracts.Mps.IMpResponsesApi, HttpMpResponsesApi>();
         services.AddScoped<Lt2.Api.Contracts.Mps.IMpResponseModerationApi, HttpMpResponseModerationApi>();
+        services.AddScoped<Lt2.Api.Contracts.Comments.ICommentsApi, HttpCommentsApi>();
+        services.AddScoped<Lt2.Api.Contracts.Comments.ICommentModerationApi, HttpCommentModerationApi>();
         services.AddScoped<IMyBillsApi, HttpMyBillsApi>();
         services.AddScoped<Lt2.Api.Contracts.Analytics.IAnalyticsApi, HttpAnalyticsApi>();
         services.AddScoped<Lt2.Api.Contracts.Appeals.IAppealsApi, HttpAppealsApi>();
         services.AddScoped<Lt2.Api.Contracts.Appeals.IModerationApi, HttpModerationApi>();
         services.AddScoped<Lt2.Api.Contracts.Follows.IFollowsApi, HttpFollowsApi>();
+        services.AddScoped<Lt2.Api.Contracts.Me.IProfilesApi, HttpProfilesApi>();
+        services.AddScoped<Lt2.Api.Contracts.Follows.INoticeFrequencyApi, HttpNoticeFrequencyApi>();
         services.AddScoped<Lt2.Api.Contracts.Feedback.IFeedbackApi, HttpFeedbackApi>();
         services.AddScoped<Lt2.Api.Contracts.Appeals.IAdminApi, HttpAdminApi>();
         services.AddScoped<Lt2.Api.Contracts.Admin.IUsageApi, HttpUsageApi>();
@@ -51,6 +55,7 @@ public static class ClientServices
         services.AddScoped<Passkeys>();
         services.AddScoped<Appeals.MyBillState>();
         services.AddScoped<Agenda.MyAgendaState>();
+        services.AddScoped<Comments.CommentState>();
         services.TryAddSingleton(TimeProvider.System);
         return services;
     }

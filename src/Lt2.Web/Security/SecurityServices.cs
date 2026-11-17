@@ -36,6 +36,9 @@ internal static class RateLimitPolicies
     /// <summary>Writing arguments, per account (design 6.4).</summary>
     public const string WriteReason = "appeal-reason";
 
+    /// <summary>Writing and deleting comments, per account (design 8.23.4): their own allowance, apart from arguments'.</summary>
+    public const string WriteComment = "comment-write";
+
     /// <summary>Reports, per account (design 6.4).</summary>
     public const string Report = "appeal-report";
 
@@ -89,6 +92,9 @@ internal sealed class RateLimitOptions
     public FixedWindow RegisterOrganisation { get; set; } = new() { PermitLimit = 5, WindowSeconds = 60 * 60 };
 
     public FixedWindow WriteReason { get; set; } = new() { PermitLimit = 20, WindowSeconds = 60 * 60 };
+
+    /// <summary>Design 8.23.4: 20 an hour, writing and deleting together.</summary>
+    public FixedWindow WriteComment { get; set; } = new() { PermitLimit = 20, WindowSeconds = 60 * 60 };
 
     public FixedWindow Report { get; set; } = new() { PermitLimit = 20, WindowSeconds = 60 * 60 };
 
@@ -170,6 +176,7 @@ internal static class SecurityServices
             options.AddPolicy(RateLimitPolicies.SignIn, context => PerIp(context, Limits(context).SignIn));
             options.AddPolicy(RateLimitPolicies.RegisterOrganisation, context => PerAccount(context, Limits(context).RegisterOrganisation));
             options.AddPolicy(RateLimitPolicies.WriteReason, context => PerAccount(context, Limits(context).WriteReason));
+            options.AddPolicy(RateLimitPolicies.WriteComment, context => PerAccount(context, Limits(context).WriteComment));
             options.AddPolicy(RateLimitPolicies.Report, context => PerAccount(context, Limits(context).Report));
             options.AddPolicy(RateLimitPolicies.OwnRead, context => PerAccount(context, Limits(context).OwnRead));
             options.AddPolicy(RateLimitPolicies.Participation, context => PerAccount(context, Limits(context).Participation));
