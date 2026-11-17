@@ -40,7 +40,7 @@ internal static class EmailLayout
     /// </summary>
     public static EmailMessage Build(
         string to, string subject, IReadOnlyList<string> paragraphs, string footer, int? highlighted = null, IReadOnlyDictionary<string, string>? headers = null) =>
-        Compose(to, subject, paragraphs, footer, LinkedHtml(footer), highlighted, headers);
+        Compose(to, subject, paragraphs, footer, LinkedHtml(footer, footer: true), highlighted, headers);
 
     /// <summary>
     /// An email of the member's rhythm (design 8.24, 8.24.1; owner, 2026-11-17): a member's email whose footer, in small grey type
@@ -68,7 +68,7 @@ internal static class EmailLayout
             subject,
             paragraphs,
             reason + "\n" + links + "\n" + privacy,
-            Encode(reason) + "<br>" + linksHtml + "<br>" + LinkedHtml(privacy),
+            Encode(reason) + "<br>" + linksHtml + "<br>" + LinkedHtml(privacy, footer: true),
             null,
             StopHeaders(siteAddress, stopToken));
     }
@@ -102,16 +102,20 @@ internal static class EmailLayout
                 [MpMailTemplates.ListUnsubscribePost] = "List-Unsubscribe=One-Click",
             };
 
-    /// <summary>A paragraph's HTML, each of its lines through <see cref="LinkLineHtml"/>.</summary>
-    internal static string LinkedHtml(string paragraph) =>
-        string.Join("<br>", paragraph.ReplaceLineEndings("\n").Split('\n').Select(LinkLineHtml));
+    /// <summary>
+    /// A paragraph's HTML, each of its lines through <see cref="LinkLineHtml"/>. In the footer (<paramref name="footer"/>) its
+    /// links take the footer's small grey type, as every link there does; only the body's are bold green.
+    /// </summary>
+    internal static string LinkedHtml(string paragraph, bool footer = false) =>
+        string.Join("<br>", paragraph.ReplaceLineEndings("\n").Split('\n').Select(line => LinkLineHtml(line, footer)));
 
     /// <summary>
     /// One line of a member's email as HTML: "…sentence. Link text: https://…" becomes the earlier sentences as text, then the
     /// link text as a bold link in the site's green (owner, 2026-11-17: "I had no problems with those green links"), without the
     /// address printed under it (owner, 2026-11-17: it was noise); any other line keeps its text with its addresses as plain links.
+    /// In the footer (<paramref name="footer"/>) the link has no look of its own: it stays in the footer's small grey type.
     /// </summary>
-    internal static string LinkLineHtml(string line)
+    internal static string LinkLineHtml(string line, bool footer = false)
     {
         var match = LinkAtEnd.Match(line);
         if (!match.Success)
@@ -119,7 +123,7 @@ internal static class EmailLayout
             return Links.Replace(Encode(line), m => $"<a href=\"{m.Value}\">{m.Value}</a>");
         }
 
-        return Encode(match.Groups["lead"].Value) + Anchor(match.Groups["url"].Value, match.Groups["label"].Value.Trim(), ActionLinkStyle);
+        return Encode(match.Groups["lead"].Value) + Anchor(match.Groups["url"].Value, match.Groups["label"].Value.Trim(), footer ? null : ActionLinkStyle);
     }
 
     /// <summary>The look of a "text: url" line's link in a member's email: bold, in the site's green.</summary>
@@ -127,7 +131,8 @@ internal static class EmailLayout
 
     /// <summary>
     /// A link: the address itself (nothing rewritten or tracked) around the encoded text. Without a style it takes the look
-    /// around it: the footer's "Keisti periodiškumą" and "atsisakyti laiškų" stay in its small grey type.
+    /// around it: every link of the footer ("Keisti periodiškumą", "atsisakyti laiškų", the privacy notice) stays in its small
+    /// grey type.
     /// </summary>
     private static string Anchor(string url, string text, string? style = null) =>
         $"<a href=\"{WebUtility.HtmlEncode(url)}\"{(style is null ? "" : $" style=\"{style}\"")}>{Encode(text)}</a>";

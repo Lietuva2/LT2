@@ -111,7 +111,7 @@ public sealed class MemberStopLinkTests
             footer.ShouldBe(
                 FooterStart + System.Net.WebUtility.HtmlEncode(Reasons[i])
                 + $"<br><a href=\"{System.Net.WebUtility.HtmlEncode(Site + Account)}\">Keisti periodiškumą</a> arba <a href=\"{Site}/laiskai/nebegauti/{Token}\">atsisakyti laiškų</a>"
-                + $"<br><a href=\"{Site}/privatumas\" style=\"font-weight:600;color:#1f6b3a\">Kaip tvarkome duomenis, rašoma privatumo pranešime</a></p></body></html>",
+                + $"<br><a href=\"{Site}/privatumas\">Kaip tvarkome duomenis, rašoma privatumo pranešime</a></p></body></html>",
                 email.Subject);
             html[..footerAt].ShouldNotContain("laiskai/nebegauti", Case.Sensitive, "only the footer links the stop page");
             html[..footerAt].ShouldNotContain("Keisti periodiškumą", Case.Sensitive);
