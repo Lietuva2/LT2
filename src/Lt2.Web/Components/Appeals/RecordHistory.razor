@@ -9,6 +9,7 @@
 @if (_record is { } a)
 {
     <PageTitle>@a.Bill.Number · @T["History.Title"] · Lietuva 2.0</PageTitle>
+    <LinkPreview Title="@($"{a.Bill.Number} · {T["History.Title"]}")" />
     <div class="stack">
         <ol class="crumbs">
             <li><a href="/projektai">@T["Nav.Appeals"]</a></li>

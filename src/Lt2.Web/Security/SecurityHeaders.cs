@@ -65,6 +65,20 @@ internal static class SecurityHeaders
                     headers.CacheControl = "no-store";
                 }
 
+                // Design 8.22.5: the pages of one's own account, staff, signing in and the pages a one-time link opens are no
+                // page to find or to preview: never indexed (they carry no link preview either).
+                if (IsPrivatePage(context.Request.Path))
+                {
+                    headers["X-Robots-Tag"] = "noindex, nofollow";
+                }
+
+                // Design 8.22.5: the link preview's image is fetched by other sites (a preview shown by a messenger or a
+                // social network), which the same-origin policy above would refuse it to.
+                if (context.Request.Path.StartsWithSegments("/img", StringComparison.OrdinalIgnoreCase))
+                {
+                    headers["Cross-Origin-Resource-Policy"] = "cross-origin";
+                }
+
                 return Task.CompletedTask;
             });
             return next(context);
@@ -74,6 +88,20 @@ internal static class SecurityHeaders
     public static bool IsMpLinkPage(PathString path) =>
         path.StartsWithSegments(Lt2.Api.Contracts.Digests.MpMailRoutes.PreferencesPage, StringComparison.OrdinalIgnoreCase)
         || path.StartsWithSegments(Lt2.Api.Contracts.Digests.MpMailRoutes.CopiesPage, StringComparison.OrdinalIgnoreCase);
+
+    /// <summary>
+    /// The pages that are never indexed (design 8.22.5): the account screens, staff screens, signing in and accepting the terms,
+    /// an MP's own pages and the pages a one-time link opens (an MP's take-over, an office member's and a representative's
+    /// invitation), and registering an organisation.
+    /// </summary>
+    public static bool IsPrivatePage(PathString path) =>
+        PrivatePages.Any(p => path.StartsWithSegments(p, StringComparison.OrdinalIgnoreCase));
+
+    private static readonly string[] PrivatePages =
+    [
+        "/paskyra", "/moderavimas", "/administravimas", "/prisijungti", "/taisykles/sutikimas", "/seimo-narys",
+        "/organizacijos/kvietimas", "/organizacijos/nauja",
+    ];
 
     /// <summary>The page a member's stop link opens (design 8.24.1).</summary>
     public static bool IsStopLinkPage(PathString path) =>

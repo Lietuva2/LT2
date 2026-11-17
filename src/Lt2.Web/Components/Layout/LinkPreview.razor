@@ -1,0 +1,53 @@
+@using Microsoft.Extensions.Options
+@inject IOptions<Lt2.SharedKernel.SiteOptions> Site
+@inject NavigationManager Navigation
+@inject IStringLocalizer<PageText> T
+
+@* Link previews (design 8.22.5, owner 2026-11-17): what a link to a public page shows where it is shared (Facebook, messengers,
+   X, LinkedIn), as Open Graph and Twitter card meta tags in the page's head, plus the plain description. A public,
+   server-rendered page puts this component in itself; a page without it (behind sign-in, staff, a token page) gives none.
+   Meta tags only: no script, pixel or SDK of anyone. The page's address and the image are absolute from Site:Address
+   (design 5.6), never from the request's host, and the address is the page's own path: no query, no fragment, no token.
+   Without Site:Address (a development machine) the two are left out, as a relative address is no preview's address. *@
+<HeadContent>
+    <meta name="description" content="@Text" />
+    <meta property="og:site_name" content="Lietuva 2.0" />
+    <meta property="og:locale" content="lt_LT" />
+    <meta property="og:type" content="@Type" />
+    <meta property="og:title" content="@Title" />
+    <meta property="og:description" content="@Text" />
+    @if (Absolute(PagePath) is { } address && Absolute(ImagePath) is { } image)
+    {
+        <meta property="og:url" content="@address" />
+        <meta property="og:image" content="@image" />
+        <meta property="og:image:type" content="image/png" />
+        <meta property="og:image:width" content="@LinkPreviewText.ImageWidth" />
+        <meta property="og:image:height" content="@LinkPreviewText.ImageHeight" />
+        <meta property="og:image:alt" content="@T["Preview.ImageAlt"]" />
+    }
+    <meta name="twitter:card" content="summary_large_image" />
+</HeadContent>
+
+@code {
+    /// <summary>The preview's title, without the site's name (that is <c>og:site_name</c>).</summary>
+    [Parameter, EditorRequired] public string Title { get; set; } = "";
+
+    /// <summary>One or two sentences; the site's lead sentence when none is given.</summary>
+    [Parameter] public string? Description { get; set; }
+
+    /// <summary><c>website</c>, or <c>article</c> for a bill's page.</summary>
+    [Parameter] public string Type { get; set; } = "website";
+
+    /// <summary>The page's own path (for example a member's current address); the requested path without its query otherwise.</summary>
+    [Parameter] public string? Path { get; set; }
+
+    private string Text => LinkPreviewText.Excerpt(string.IsNullOrWhiteSpace(Description) ? T["Home.Lead"] : Description);
+
+    private string PagePath => LinkPreviewText.PagePath(Path ?? "/" + Navigation.ToBaseRelativePath(Navigation.Uri));
+
+    /// <summary>The image's address as the static assets serve it (with its fingerprint, so a changed image is a new address).</summary>
+    private string ImagePath => "/" + Assets[LinkPreviewText.Image].TrimStart('/');
+
+    private string? Absolute(string path) =>
+        Lt2.SharedKernel.SiteLinks.Absolute(Site.Value.Address, path) is { } absolute && absolute.StartsWith("https://", StringComparison.Ordinal) ? absolute : null;
+}

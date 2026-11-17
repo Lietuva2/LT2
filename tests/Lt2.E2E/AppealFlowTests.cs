@@ -130,7 +130,7 @@ public sealed class AppealFlowTests(AppealFlowTests.ModeratorFixture moderator) 
         await Assertions.Expect(b.Locator("#follow-toggle-bill")).ToHaveTextAsync("Nebesekti", new() { Timeout = 60_000 });
         await Assertions.Expect(b.Locator("#follow-toggle-bill")).ToHaveAttributeAsync("aria-pressed", "true");
         await Assertions.Expect(b.Locator("#share-line")).ToBeVisibleAsync(new() { Timeout = 30_000 });
-        (await b.Locator("#share-link").GetAttributeAsync("href"))!.ShouldContain("tikslas=%2Fseimas%2F" + bill, Case.Sensitive, "the share link lands on the bill's page");
+        (await b.Locator("#share-link").GetAttributeAsync("href"))!.ShouldStartWith("/seimas/" + bill + "#kodas=", Case.Sensitive, "the share link is the bill's own address (design 8.11.5)");
 
         // 4. ... and cannot mark their own argument "Man svarbu" (owner, 2026-11-17); "Atsiimti" is in its "⋯" (design 8.16.1).
         await Assertions.Expect(mine.Locator("button.mark")).ToBeDisabledAsync();

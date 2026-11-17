@@ -2,16 +2,17 @@ namespace Lt2.Api.Contracts.Me;
 
 /// <summary>
 /// The registration link with an invitation code (design 6.2). Design 6.8: the code is after the <c>#</c>
-/// (<c>/prisijungti#kodas=…</c>, with <c>&amp;tikslas=…</c> beside it for a share link), so the browser never sends it
-/// and no proxy or application log can hold it. The page reads it in the browser and sends it to the API in a request
-/// body. A link in the old form (<c>/prisijungti?kodas=…</c>) still works.
+/// (<c>/prisijungti#kodas=…</c>), so the browser never sends it and no proxy or application log can hold it. A share line's
+/// link carries it the same way after a bill's address (<see cref="LandingPath.ShareLink"/>). In the browser
+/// <c>js/lt2-invitation.js</c> takes it from any page's address into session storage (design 8.22.1, <c>lt2.kodas</c>) and the
+/// registration form sends it to the API in a request body.
 /// </summary>
 public static class InvitationLink
 {
     /// <summary>The registration page.</summary>
     public const string Page = "/prisijungti";
 
-    /// <summary>The parameter that holds the code, after the <c>#</c> (or, in an old link, in the query).</summary>
+    /// <summary>The parameter that holds the code, after the <c>#</c>.</summary>
     public const string CodeParameter = "kodas";
 
     /// <summary>The registration form with the code filled in (a relative link; the page shows it in full).</summary>

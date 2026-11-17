@@ -50,8 +50,7 @@ public sealed class OrganisationInvitationFlowTests(AdministratorFixture adminis
             await copy.ClickAsync();
             await Assertions.Expect(r.Locator("#org-code-bill-XVP-0412").GetByText("Nukopijuota.")).ToBeVisibleAsync();
             var link = await r.EvaluateAsync<string>("() => navigator.clipboard.readText()");
-            link.ShouldStartWith(Base + "/prisijungti#kodas=");
-            link.ShouldEndWith("&tikslas=%2Fseimas%2FXVP-0412");
+            link.ShouldStartWith(Base + "/seimas/XVP-0412#kodas=", customMessage: "design 8.11.5: the bill's own address, the code after the #");
             (await billLink.TextContentAsync()).ShouldBe(link);
 
             // Nothing of the code in the page's HTML as the server sent it, the representative's own included.
@@ -66,6 +65,9 @@ public sealed class OrganisationInvitationFlowTests(AdministratorFixture adminis
             {
                 var n = newcomer.Page;
                 await n.GotoAsync(link);
+                // The bill's page: its visitor's side button signs in, with the code from the link filled in (design 8.11.5).
+                await n.Locator("a.btn--for").First.ClickAsync();
+                await Assertions.Expect(n.GetByLabel("Kvietimo kodas")).ToHaveValueAsync(Uri.UnescapeDataString(code), new() { Timeout = E2ESteps.Slow });
                 await E2ESteps.RegisterHereAsync(n, E2ESteps.NewEmail("per.organizacija"), "Atėjusi Per Nuorodą");
                 await n.WaitForURLAsync(new Regex("/seimas/XVP-0412$"), new() { Timeout = E2ESteps.Slow });
                 newcomer.ConsoleErrors.ShouldBeEmpty();

@@ -57,7 +57,8 @@ code review.
 - **Nothing non-essential in the browser (design 8.22.1), so no cookie banner.** No third-party analytics, no third-party script, font or
   embed, no advertising or measurement cookie. What the site keeps is one list, `Security/BrowserStorage.Inventory` (the
   session, the passkey step, the request-forgery and the known-browser cookies; `lt2-theme` in local storage once a theme is
-  chosen; `lt2.tikslas` and `lt2.kodas` in session storage, `Lt2.Web.Client/BrowserKeys`). The privacy notice's
+  chosen; `lt2.tikslas` and `lt2.kodas` in session storage, `Lt2.Web.Client/BrowserKeys`; `lt2.kodas` is written by
+  `SignInFlow` and by `js/lt2-invitation.js`, which takes a link's `#kodas=` on any page, design 8.11.5). The privacy notice's
   "Slapukai ir naršyklės atmintis" is built from it (`data-storage` on each row); `TermsTests` (E2E) visits the site as a
   visitor and as a member and fails on any cookie or storage key outside it, `BrowserStorageTests` (architecture) on any script
   that starts using storage. A new cookie or key is a design change, not a build detail; the account item's open state is not
@@ -71,8 +72,10 @@ code review.
   and it is withheld from `lt2_readonly`. Nothing is added to the browser for it.
 - Outbound requests go only to the allowlisted hosts, and follow no redirect to another host.
 - Codes and tokens are not sent in addresses: a link the site makes carries its secret after the `#` (`/prisijungti#kodas=…`,
-  a representative's `/organizacijos/kvietimas#…`, an MP's take-over link `/seimo-narys/perimti#…`, an office member's
-  `/seimo-narys/biuras#…`); the page reads it and sends it in a request body (design 6.8). Old `?kodas=` links still work.
+  a share line's `/seimas/{number}#kodas=…`, a representative's `/organizacijos/kvietimas#…`, an MP's take-over link
+  `/seimo-narys/perimti#…`, an office member's `/seimo-narys/biuras#…`); the page reads it and sends it in a request body
+  (design 6.8). The old `?kodas=` form is not read any more (owner, 2026-11-17: no old links). A link preview's `og:url` is the
+  page's path alone, never a query or a fragment (design 8.22.5).
   The secret of those last three links is a typeable one-time code (owner, 2026-11-17: `OneTimeCode` in SharedKernel, also
   compiled into Lt2.Web.Client: twelve characters of the invitation alphabet in three groups, stored only as `OneTimeCode.Hash`
   of its one form, one use, the link's lifetime): the email gives it under the link with the page to open, a representative sees
@@ -82,6 +85,8 @@ code review.
   Two exceptions the design names carry their token in the path, because the one-click stop a mail program sends needs it in
   the address: the MP's mail links (8.19.4) and a member's stop link (8.24.1, `/laiskai/nebegauti/{token}` and
   `POST /api/v1/notices/{token}/stop`). Their paths are logged with the token replaced (`Lt2.Hosting.SecretPaths`, the
-  Caddyfile's filter), and their pages are `noindex` and `no-store` (`SecurityHeaders`).
+  Caddyfile's filter), and their pages are `noindex` and `no-store` (`SecurityHeaders`). The account, staff, sign-in, MP
+  and one-time-link pages are `noindex, nofollow` too (`SecurityHeaders.IsPrivatePage`, design 8.22.5) and carry no link
+  preview.
 - Forwarding headers count only from the proxy named in `ReverseProxy:Address`. A page answered to a signed-in session is
   `no-store`.

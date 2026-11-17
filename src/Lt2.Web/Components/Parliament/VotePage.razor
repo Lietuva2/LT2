@@ -12,6 +12,7 @@
     var totals = v.Summary.Totals;
     var (heading, wording) = Heading(vote.Bill?.Title ?? v.AgendaItemTitle, vote.Wording);
     <PageTitle>@F.T["Vote.Label"] · @heading · Lietuva 2.0</PageTitle>
+    <LinkPreview Title="@($"{F.T["Vote.Label"]} · {heading}")" />
 
     <div class="stack">
         @* Design 8.18: up to the history of votes, then the vote's bill. *@

@@ -50,11 +50,11 @@
                             @* Design 8.11.8: what was written on a followed bill since the member last opened its page. *@
                             <a class="small num" href="@BillPath(bill.Number)" id="my-agenda-new-@bill.Number">@NewsLine.Of(L, news)</a>
                         }
-                        @if (mine.Side is not null && _shareLink is { } link)
+                        @if (mine.Side is not null && _shareCode is { } shareCode)
                         {
                             <div class="stack stack--tight">
                                 <span class="small">@L["Mine.Share"]</span>
-                                <CopyLink Link="@LandingPath.ShareLink(link, BillPath(bill.Number))" ButtonId="@($"my-agenda-share-{bill.Number}")" />
+                                <CopyLink Link="@LandingPath.ShareLink(shareCode, BillPath(bill.Number))" ButtonId="@($"my-agenda-share-{bill.Number}")" />
                             </div>
                         }
                     </li>
@@ -75,7 +75,8 @@ else if (Message is not null)
 
 @code {
     private List<(MyAgendaBill Bill, MyBillResponse Mine)>? _rows;
-    private string? _shareLink;
+    /// <summary>The member's invitation code while it lets a registration through (design 8.11.5: the share link is the bill's address with it after the "#").</summary>
+    private string? _shareCode;
 
     /// <summary>The public bills of the page's agenda and the last week's votes, in the order the panel lists them.</summary>
     [Parameter, EditorRequired] public IReadOnlyList<MyAgendaBill> Bills { get; set; } = [];
@@ -110,9 +111,9 @@ else if (Message is not null)
         Message = null;
         var mine = answer.Bills;
         _rows = Bills.Where(b => mine.TryGetValue(b.Number, out var own) && own.Following).Select(b => (b, mine[b.Number])).ToList();
-        if (_shareLink is null && _rows.Any(r => r.Mine.Side is not null) && await State.InvitationAsync() is { Usable: true } invitation)
+        if (_shareCode is null && _rows.Any(r => r.Mine.Side is not null) && await State.InvitationAsync() is { Usable: true } invitation)
         {
-            _shareLink = invitation.Link;
+            _shareCode = invitation.Code;
         }
     }
 

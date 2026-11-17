@@ -82,4 +82,18 @@
   <data name="Notice.DigestReview.Bills" xml:space="preserve"><value>{0} projektas|{0} projektai|{0} projektų</value></data>
   <data name="Notice.DigestReview.Reasons" xml:space="preserve"><value>{0} argumentas|{0} argumentai|{0} argumentų</value></data>
   <data name="Notice.DigestReviewLink" xml:space="preserve"><value>Peržiūrėti</value></data>
+<!-- Link previews (design 8.22.5): proposals for a native read. -->
+  <data name="Preview.ImageAlt" xml:space="preserve"><value>Lietuva 2.0 ženklas ir pavadinimas</value></data>
+  <data name="Preview.Bill.Open" xml:space="preserve"><value>{0}. Seimo projektas. Lietuva 2.0 naudotojai prašo balsuoti už ar prieš ir pateikia argumentus.</value></data>
+  <data name="Preview.Bill.Closed" xml:space="preserve"><value>{0}. Seimo projektas. Lietuva 2.0 naudotojai prašė balsuoti už ar prieš ir pateikė argumentus.</value></data>
+  <data name="Preview.Bill.Other" xml:space="preserve"><value>{0}. Seimo projektas: stadijos ir balsavimai Seime.</value></data>
+  <data name="Preview.Mp" xml:space="preserve"><value>{0}. Balsavimai, komitetai ir kontaktai iš Seimo atvirų duomenų.</value></data>
+  <data name="Preview.Mp.Faction" xml:space="preserve"><value>{0}. Frakcija: {1}. Balsavimai, komitetai ir kontaktai iš Seimo atvirų duomenų.</value></data>
+  <data name="Preview.Organisation" xml:space="preserve"><value>Organizacijos pozicijos dėl Seimo projektų Lietuva 2.0.</value></data>
+  <data name="Preview.Member" xml:space="preserve"><value>Lietuva 2.0 nario viešas profilis: argumentai ir komentarai apie Seimo projektus.</value></data>
+  <data name="Preview.Digest" xml:space="preserve"><value>Viešoji suvestinės Seimo nariams kopija: abi pusės ir argumentai, kuriuos peržiūrėjo moderatoriai.</value></data>
+  <data name="Preview.Agenda" xml:space="preserve"><value>Ką Seimas planuoja svarstyti artimiausiomis dienomis ir ko prašo Lietuva 2.0 naudotojai.</value></data>
+  <data name="Preview.Projects" xml:space="preserve"><value>Seimo projektai, dėl kurių Lietuva 2.0 naudotojai prašo balsuoti už ar prieš ir pateikia argumentus.</value></data>
+  <data name="Preview.Statistics" xml:space="preserve"><value>Kaip balsavo Seimas ir ko prašė Lietuva 2.0 naudotojai uždarytuose projektuose; frakcijų vieningumas.</value></data>
+  <data name="Preview.Methodology" xml:space="preserve"><value>Kaip veikia Lietuva 2.0: pozicijos, argumentai, riba, suvestinės Seimo nariams ir kaip skaičiuojami skaičiai.</value></data>
 </root>

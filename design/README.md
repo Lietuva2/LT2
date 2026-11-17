@@ -49,7 +49,7 @@ that starts with it. Read the files a change touches, not the whole design.
 | [08.19-sending.md](08.19-sending.md) | Sending the summaries: reviewed a day ahead, the email and office copies, MP's link, introduction letter, suppression |
 | [08.20-answers-and-known-browsers.md](08.20-answers-and-known-browsers.md) | The followers' email about MPs' answers; known browsers |
 | [08.21-navigation.md](08.21-navigation.md) | The menu, the footer, the account item and account screens |
-| [08.22-terms-and-storage.md](08.22-terms-and-storage.md) | Terms of use, the privacy notice, what the browser stores |
+| [08.22-terms-and-storage.md](08.22-terms-and-storage.md) | Terms of use, the privacy notice, what the browser stores, link previews (Open Graph) |
 | [08.23-comments.md](08.23-comments.md) | Comments ("Aptarimas") and "Sutinku" |
 | [08.24-email-rhythm.md](08.24-email-rhythm.md) | How often a member's emails come; the stop link; the gathered email |
 | [08.25-public-profiles.md](08.25-public-profiles.md) | Public profiles, "Apie mane", following a member, the party on the profile |

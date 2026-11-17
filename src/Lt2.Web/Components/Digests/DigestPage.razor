@@ -6,6 +6,7 @@
 @inject IStringLocalizer<Lt2.Web.Client.Appeals.AppealUi> U
 @inject Formats F
 @inject NavigationManager Navigation
+@inject IStringLocalizer<Lt2.Web.Components.PageText> P
 
 @* The public record of the summaries (design 8.7, design/ui/suvestines.html): the frozen numbers and arguments, both
    sides, the 30-day counts and the surge note, without MP-specific figures and without any person. In M2a every summary
@@ -13,6 +14,8 @@
 @if (_runs is { Count: > 0 } runs)
 {
     <PageTitle>@(Single is { } one ? RunTitle(one) : T["Digests.Title"] + " " + (Date ?? "")) · Lietuva 2.0</PageTitle>
+    @* Design 8.22.5: the summaries' public copy; never the numbers in the preview. *@
+    <LinkPreview Title="@(Single is { } shared ? RunTitle(shared) : (T["Digests.Title"] + " " + (Date ?? "")).Trim())" Description="@P["Preview.Digest"]" />
     <div class="stack">
         <ol class="crumbs">
             <li><a href="/suvestines">@T["Digests.Title"]</a></li>
@@ -141,6 +144,7 @@
 else
 {
     <PageTitle>@T["Digests.Title"] · Lietuva 2.0</PageTitle>
+    <LinkPreview Title="@T["Digests.Title"]" Description="@P["Preview.Digest"]" />
     <div class="stack">
         <h1>@T["Digests.Title"]</h1>
         @if (Date is null)

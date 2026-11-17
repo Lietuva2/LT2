@@ -3,6 +3,7 @@
 @using Lt2.Api.Contracts.Analytics
 @using Lt2.Api.Contracts.Meta
 @using Lt2.Web.Client.Analytics
+@inject IStringLocalizer<Lt2.Web.Components.PageText> P
 @inject IAnalyticsApi Api
 @inject IMetaApi Meta
 @inject IStringLocalizer<AnalyticsText> T
@@ -15,6 +16,7 @@
    says when they were counted. Nothing about the caller, apart from the island at the end, which a visitor sees as the
    sign-in link and a member's browser fills with the member's own comparison (8.26.4). *@
 <PageTitle>@T["Title"] · Lietuva 2.0</PageTitle>
+<LinkPreview Title="@T["Title"]" Description="@P["Preview.Statistics"]" />
 
 <div class="stack">
     <h1>@T["Title"]</h1>

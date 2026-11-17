@@ -60,16 +60,17 @@ public sealed partial class ReasonsToComeTests : E2ETest
     }
 
     /// <summary>
-    /// Design 6.8: a link made now carries the code and the landing after the "#" (the browser never sends that part); a
-    /// link in the old form, with them in the query, still works. Either way a landing off the site is ignored.
+    /// Design 6.8, 8.11.5: a share line's link is the bill's own page with the code after the "#" (the browser never sends that
+    /// part); the page takes the code into the tab and out of the address bar, and a sign-in link on the page opens the
+    /// registration with it filled in and comes back to the bill. A sign-in link's page to come back to off the site is ignored.
     /// </summary>
     [Fact]
     public async Task The_share_link_lands_a_new_member_on_the_bill_and_a_link_off_the_site_is_ignored()
     {
         Assert.SkipWhen(string.IsNullOrEmpty(SignUpTests.BaseUrl), "LT2_E2E_BASE_URL is not set; start the stack and set it to run end-to-end tests.");
         var code = Uri.EscapeDataString(SignUpTests.Invitation);
+        (await RegisterThroughAsync($"/seimas/XVP-0412#kodas={code}", fromBill: true)).ShouldEndWith("/seimas/XVP-0412");
         (await RegisterThroughAsync($"/prisijungti#kodas={code}&tikslas=%2Fseimas%2FXVP-0412")).ShouldEndWith("/seimas/XVP-0412");
-        (await RegisterThroughAsync($"/prisijungti?kodas={code}&tikslas=%2Fseimas%2FXVP-0412")).ShouldEndWith("/seimas/XVP-0412", customMessage: "the old form still works");
         (await RegisterThroughAsync($"/prisijungti#kodas={code}&tikslas=https%3A%2F%2Fpiktas.example%2Fseimas%2FXVP-0412")).ShouldBe("/paskyra");
     }
 
@@ -129,11 +130,20 @@ public sealed partial class ReasonsToComeTests : E2ETest
     }
 
     /// <summary>Registers a new member from an invitation link (a path with its query or "#" part); returns where they land.</summary>
-    private static async Task<string> RegisterThroughAsync(string link)
+    private static async Task<string> RegisterThroughAsync(string link, bool fromBill = false)
     {
         await using var newcomer = await PasskeyBrowser.StartAsync("native");
         var page = newcomer.Page;
         await page.GotoAsync(Base + link);
+        if (fromBill)
+        {
+            // The code left the address bar at once and waits in the tab; the visitor's side button signs in and comes back.
+            await page.WaitForFunctionAsync("() => location.hash === ''", null, new() { Timeout = E2ESteps.Slow });
+            (await page.EvaluateAsync<string?>("() => sessionStorage.getItem('lt2.kodas')")).ShouldBe(SignUpTests.Invitation);
+            await page.Locator("a.btn--for").First.ClickAsync();
+            await page.WaitForURLAsync(new Regex("/prisijungti"), new() { Timeout = E2ESteps.Slow });
+        }
+
         await Assertions.Expect(page.GetByLabel("Kvietimo kodas")).ToHaveValueAsync(SignUpTests.Invitation, new() { Timeout = E2ESteps.Slow });
         await E2ESteps.RegisterHereAsync(page, E2ESteps.NewEmail("naujas.narys"), "Pakviesta Narė");
         await page.WaitForURLAsync(Landed(), new() { Timeout = E2ESteps.Slow });

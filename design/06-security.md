@@ -117,11 +117,12 @@ changes what a person can do on the site; the questions that do are in section 1
 - **Redirects stay inside the allowlist.** An outbound request does not follow a redirect to a host that is not on
   the allowlist (6.4).
 - **Codes and tokens are not sent in addresses.** A link the site makes carries its secret after the `#`: the
-  invitation code of a registration link (`/prisijungti#kodas=…`, with `tikslas` beside it) and the token of a
-  representative's invitation. The browser never sends that part, so no proxy and no application log can hold it,
-  on a shared server included (9.2). The page reads it in the browser and passes it to the API in a request body,
-  never in a path or a query. A link in the old form (`?kodas=…`) still works, and the proxy's filter that drops
-  `kodas` from the logged address stays for those (6.2). Two exceptions carry their token in the path, because the
+  invitation code of a registration link (`/prisijungti#kodas=…`) and of a share line's link (`/seimas/XVP-0412#kodas=…`,
+  8.11.5), the page to come back to of a sign-in link (`#tikslas=…`), and the token of a representative's invitation.
+  The browser never sends that part, so no proxy and no application log can hold it, on a shared server included (9.2).
+  The page reads it in the browser and passes it to the API in a request body, never in a path or a query. [Owner,
+  2026-11-17: "we don't need old links to work": the old form with the code in the query (`?kodas=…`) no longer opens the
+  form filled in; the proxy's filter that drops `kodas` from the logged address stays as a safety net (6.2).] Two exceptions carry their token in the path, because the
   one-click stop of RFC 8058 that mail programs send has nowhere else to put it: an MP's mail links (8.19.4) and, since
   2026-11-17, a member's stop link in every email of the rhythm (8.24.1). Logs and the proxy keep their paths with the
   token replaced.

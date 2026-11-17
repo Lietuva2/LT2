@@ -5,6 +5,7 @@
 @inject IStringLocalizer<Lt2.Web.Client.Appeals.AppealUi> L
 @inject NavigationManager Navigation
 @inject IConfiguration Configuration
+@inject IStringLocalizer<Lt2.Web.Components.PageText> P
 
 @* A member's public page (design 8.25.2), by the member's own choice ("Viešas profilis"), server-rendered and readable
    without script: the name, "Apie mane", the number of followers, "Sekti" and "Pranešti", and the member's published
@@ -24,6 +25,9 @@
 else if (_profile is { } p)
 {
     <PageTitle>@p.DisplayName · Lietuva 2.0</PageTitle>
+    @* Design 8.22.5: only while the profile is public (a retired or unknown id gives none); the name and one generic line,
+       never "Apie mane" or anything else the member wrote. *@
+    <LinkPreview Title="@p.DisplayName" Description="@P["Preview.Member"]" Path="@p.Address" />
     <div class="stack">
         <p class="label">@L["Member.Label"]</p>
     </div>

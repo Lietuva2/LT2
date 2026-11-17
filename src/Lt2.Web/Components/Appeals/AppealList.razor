@@ -1,5 +1,6 @@
 @page "/projektai"
 @using Lt2.Api.Contracts.Appeals
+@inject IStringLocalizer<Lt2.Web.Components.PageText> P
 @inject IAppealsApi Appeals
 @inject Lt2.Api.Contracts.Digests.IDigestsApi Digests
 @inject IStringLocalizer<AppealText> T
@@ -11,6 +12,7 @@
    once, keeping the search), the closed tab and paging are plain links. Each row shows its participants and arguments, and
    the sides' numbers beside its bar. *@
 <PageTitle>@T["List.Title"] · Lietuva 2.0</PageTitle>
+<LinkPreview Title="@T["List.Title"]" Description="@P["Preview.Projects"]" />
 
 <div class="stack">
     <p class="label">Lietuva 2.0</p>
