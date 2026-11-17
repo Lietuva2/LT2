@@ -1,21 +1,24 @@
+@using Lt2.Api.Contracts.Appeals
 @using Lt2.Web.Client.Appeals
 @inherits InteractiveBase<AppealUi>
 
-@* "Pranešti" beside an MP's response (design 8.5.5: reports work as for statements): a member reports in the product, a
-   visitor is told how to. *@
-@if (_signedIn)
+@* "⋯" under an MP's response (design 8.16.1; reports as for statements, 8.5.5): "Pranešti" in the menu; a member's report
+   form opens below the action row, a visitor is told how to report. An island of its own in the server-rendered part: its
+   trigger, menu and form are direct children of the row. *@
+<MoreMenu Id="@MenuId">
+    @if (_signedIn)
+    {
+        <button type="button" class="menu__item" id="report-response-@ResponseId.ToString("N")" disabled="@Locked" popovertarget="@MoreMenu.MenuOf(MenuId)" popovertargetaction="hide"
+                @onclick="() => _open = !_open">@L["Report.Open"]</button>
+    }
+    else
+    {
+        <VisitorReport Contact="@Contact" />
+    }
+</MoreMenu>
+@if (_open)
 {
-    <span class="stack stack--tight">
-        <button type="button" class="linkish small" id="report-response-@ResponseId.ToString("N")" disabled="@Locked" @onclick="() => _open = !_open">@L["Report.Open"]</button>
-        @if (_open)
-        {
-            <ReportForm TargetKind="response" TargetId="ResponseId" OnClose="() => _open = false" />
-        }
-    </span>
-}
-else
-{
-    <VisitorReport Contact="@Contact" />
+    <div class="act__panel"><ReportForm TargetKind="response" TargetId="ResponseId" OnClose="() => _open = false" /></div>
 }
 
 @code {
@@ -25,6 +28,8 @@ else
     [Parameter, EditorRequired] public Guid ResponseId { get; set; }
 
     [Parameter] public string? Contact { get; set; }
+
+    private string MenuId => "more-response-" + ResponseId.ToString("N");
 
     protected override async Task OnInitializedAsync() =>
         _signedIn = await IsSignedInAsync();

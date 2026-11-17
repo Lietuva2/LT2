@@ -33,6 +33,14 @@ internal sealed class CommentReads(IComments comments, ICommentModeration modera
             t.Cards.Select(c => new AuthorCardResponse(c.ProfileId, c.Name, c.About)).ToList());
     }
 
+    public async Task<Result<CommentPlaceResponse>> PlaceAsync(Guid commentId, CancellationToken ct)
+    {
+        var place = await comments.PlaceAsync(commentId, ct);
+        return place.IsSuccess
+            ? new CommentPlaceResponse(place.Value!.CommentId, place.Value.Kind, place.Value.TargetId, place.Value.BillNumber, place.Value.Position)
+            : place.Error!;
+    }
+
     public async Task<Result<MyCommentsResponse>> MineAsync(ClaimsPrincipal user, string number, CancellationToken ct)
     {
         if (user.UserId() is not { } id)
@@ -136,6 +144,9 @@ internal sealed class ServerCommentsApi(CommentReads reads, IComments comments, 
 {
     public async Task<ApiResult<CommentThreadResponse>> GetThreadAsync(string kind, Guid targetId, int? shown = null, CancellationToken cancellationToken = default) =>
         errors.ToApiResult(await reads.ThreadAsync(kind, targetId, shown, cancellationToken), r => r);
+
+    public async Task<ApiResult<CommentPlaceResponse>> GetPlaceAsync(Guid commentId, CancellationToken cancellationToken = default) =>
+        errors.ToApiResult(await reads.PlaceAsync(commentId, cancellationToken), r => r);
 
     public async Task<ApiResult<MyCommentsResponse>> GetMineAsync(string number, CancellationToken cancellationToken = default) =>
         errors.ToApiResult(await reads.MineAsync(User, number, cancellationToken), r => r);

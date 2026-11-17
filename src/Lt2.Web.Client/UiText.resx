@@ -102,13 +102,16 @@
 <data name="PositionConsent.Text" xml:space="preserve"><value>Esate sutikę, kad saugotume jūsų pozicijas dėl įstatymų projektų. Atšaukus sutikimą, visos jūsų pozicijos ir „Man svarbu“ žymos bus ištrintos, o bendri skaičiai sumažės. Jūsų parašyti argumentai ir komentarai liks. „Man svarbu“ privatus, o „Sutinku“ prie komentaro viešas su jūsų vardu ir jūsų pusės neparodo.</value></data>
 <data name="PositionConsent.Withdraw" xml:space="preserve"><value>Atšaukti sutikimą ir ištrinti pozicijas</value></data>
 <data name="PositionConsent.Withdrawn" xml:space="preserve"><value>Sutikimas atšauktas, jūsų pozicijos ištrintos.</value></data><data name="Party.Title" xml:space="preserve"><value>Kurią partiją palaikote</value></data>
-<data name="Party.Text" xml:space="preserve"><value>Nebūtina. Jūsų pasirinkimo niekam nerodome. Seimo nariui jo suvestinėje parodytume tik bendrą skaičių, kiek palaikančių jo partiją prašo balsuoti už ar prieš, ir tik tada, kai jų yra bent 20.</value></data>
+<data name="Party.Text" xml:space="preserve"><value>Nebūtina. Jūsų pasirinkimo niekam nerodome, nebent pažymėsite „Rodyti viešame profilyje“. Seimo nariui jo suvestinėje parodytume tik bendrą skaičių, kiek palaikančių jo partiją prašo balsuoti už ar prieš, ir tik tada, kai jų yra bent 20.</value></data>
 <data name="Party.Label" xml:space="preserve"><value>Partija</value></data>
 <data name="Party.None" xml:space="preserve"><value>Nenurodyti</value></data>
 <data name="Party.Consent" xml:space="preserve"><value>Sutinku, kad Lietuva 2.0 saugotų mano nurodytą partiją taip, kaip aprašyta. Galiu ją bet kada pašalinti.</value></data>
 <data name="Party.Save" xml:space="preserve"><value>Išsaugoti</value></data>
 <data name="Party.Saved" xml:space="preserve"><value>Išsaugota.</value></data>
 <data name="Party.Removed" xml:space="preserve"><value>Partija pašalinta.</value></data>
+<data name="Party.Public" xml:space="preserve"><value>Rodyti viešame profilyje</value></data>
+<data name="Party.PublicText" xml:space="preserve"><value>Partiją matys visi, kas atvers jūsų viešo profilio puslapį, ją gali rodyti ir paieškos sistemos; nuėmus žymę, pašalinus ar pakeitus partiją arba išjungus profilį, ji iš karto nebebus rodoma.</value></data>
+<data name="Party.PublicNeedsProfile" xml:space="preserve"><value>Partiją rodyti viešame profilyje galima tik jį įjungus.</value></data>
 <data name="Data.Title" xml:space="preserve"><value>Jūsų duomenys</value></data>
   <data name="Data.Text" xml:space="preserve"><value>Galite atsisiųsti viską, ką mums pateikėte, arba ištrinti paskyrą.</value></data>
 <data name="Data.Export" xml:space="preserve"><value>Atsisiųsti mano duomenis</value></data>
@@ -122,6 +125,7 @@
 <data name="Split.Aria" xml:space="preserve"><value>{0} už, {1} prieš, {2} susilaikė</value></data>
 <data name="Data.DeleteStaffMoreAnswer" xml:space="preserve"><value>Lieka darbuotojų veiksmai – paslėpti ar paskelbti argumentai, jų paaiškinimai, rašymo apribojimai, organizacijų patvirtinimai, – kad būtų aišku, kas ką padarė. Visa kita, ką pateikėte paskyroje, ištrinama.</value></data>
 <data name="Hint.Opens" xml:space="preserve"><value>Atveria trumpą paaiškinimą</value></data>
+<data name="Actions.More" xml:space="preserve"><value>Daugiau veiksmų</value></data>
 <data name="Hint.More" xml:space="preserve"><value>Plačiau</value></data>
 <data name="Text.ShowMore" xml:space="preserve"><value>Rodyti daugiau</value></data>
 <data name="Text.ShowLess" xml:space="preserve"><value>Rodyti mažiau</value></data><data name="Mp.Title" xml:space="preserve"><value>Seimo nario profilis</value></data>

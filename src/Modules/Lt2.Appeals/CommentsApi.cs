@@ -58,6 +58,9 @@ public sealed record MyComments(
 
 public sealed record CommentCreated(Guid Id);
 
+/// <summary>A shown comment's place (design 8.23.6): its target's kind and id, its bill, and its position among the target's shown comments (1-based).</summary>
+public sealed record CommentPlace(Guid CommentId, string Kind, Guid TargetId, string BillNumber, int Position);
+
 /// <summary>What a reported or hidden comment is about, for the moderators (design 8.23.8): the target's text and its own name.</summary>
 public sealed record CommentContext(string Kind, Guid TargetId, string? Text, string? AuthorName, string? OrganisationName, long? SeimasPersonId, bool Shown);
 
@@ -77,6 +80,13 @@ public interface IComments
 {
     /// <summary>The shown comments of a target, the first <paramref name="shown"/> (at least 10); not found when the target is not shown.</summary>
     Task<Result<CommentThread>> ThreadAsync(string kind, Guid targetId, int? shown, CancellationToken cancellationToken);
+
+    /// <summary>
+    /// Where a shown comment stands, for a link to it (design 8.23.6): its target, its bill and its place among the target's
+    /// shown comments, oldest first (1-based). <c>comment.not-found</c> for a hidden, deleted, merged-away or unknown comment and
+    /// for one whose target or bill's record is not shown: the same answer, so nothing tells a hidden comment from none.
+    /// </summary>
+    Task<Result<CommentPlace>> PlaceAsync(Guid commentId, CancellationToken cancellationToken);
 
     /// <summary>How many comments each target shows, for the public answers (design 8.23.11); a target without any is missing.</summary>
     Task<IReadOnlyDictionary<Guid, int>> CountsAsync(string kind, IReadOnlyCollection<Guid> targetIds, CancellationToken cancellationToken);

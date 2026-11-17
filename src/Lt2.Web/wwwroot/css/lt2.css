@@ -262,8 +262,8 @@ lt2-logo-spin {
 }
 .bubble--mp a { color: #ffffff; }
 .said { display: flex; flex-direction: column; gap: var(--sp-2); }
-.said__by { display: flex; flex-wrap: wrap; align-items: center; gap: var(--sp-2) var(--sp-3); font-size: var(--fs-1); color: var(--ink-2); padding-left: var(--sp-5); }
-.said--mp .said__by { justify-content: flex-end; padding: 0 var(--sp-5) 0 0; }
+.said__by { display: flex; flex-wrap: wrap; align-items: center; gap: var(--sp-2) var(--sp-3); font-size: var(--fs-1); color: var(--ink-2); }
+.said--mp .said__by { justify-content: flex-end; }
 .said__by b { color: var(--ink); }
 
 /* ---------- Buttons ---------- */
@@ -697,17 +697,68 @@ body { padding-block-end: 4.5rem; }
 .switch__half:has(.switch__input:disabled) { opacity: 0.6; cursor: progress; }
 .switch__input:disabled { cursor: progress; }
 
-/* Under an argument (owner, 2026-11-13): "Man svarbu", "Pranešti" and "Atsiimti" stay together on one line; when the
-   author's name and the group do not fit side by side, the name takes its own line above. The two columns of
-   arguments become one where a column would be too narrow for the group. A visitor's opened report note wraps. */
 .said__name { overflow-wrap: anywhere; }
-.said__actions { display: inline-flex; flex-wrap: nowrap; align-items: center; gap: var(--sp-3); white-space: nowrap; }
-.said__actions:has(.report-visitor[open]) { flex-wrap: wrap; white-space: normal; }
 @media (max-width: 64rem) { .pair--reasons { grid-template-columns: minmax(0, 1fr); } }
+
+/* The action row (design 8.16.1, the designer's proposal of 2026-11-17), the same under every argument, statement, MP's
+   response and comment: line 1 the name (.said__by), line 2 this row. Its items ("Man svarbu · n", "Aptarimas (n)",
+   "Sutinku", "⋯") share one height of 44 px and one baseline and never wrap into a second line; what opens from it (the
+   discussion, a report form, a confirmation, the moderators' actions) is a later flex item of the full width, placed below
+   the whole row by `order`, so the row keeps one left edge with everything under it. The discussion's <details> holds only
+   its summary; its panel follows it in the markup and shows only while it is open. A browser without :popover-open or
+   anchor placement still opens the "⋯" menu, in the middle of the screen. */
+/* The name and the row stand on the bubble's own left edge (an MP's response, mirrored, on its right edge), so a side's
+   narrow column at 1280 px and a 360 px phone keep the whole row on one line. The row is a size container: where it is
+   narrower than about 20rem (a phone of 360 px, a side's column on a wide screen) "Aptarimas" keeps its icon and count and
+   its word stays only for screen readers; "Man svarbu" always keeps its words (a term the icon alone would not say). */
+.act { display: flex; flex-wrap: wrap; align-items: center; gap: var(--sp-1); container-type: inline-size; }
+.said--mp .act { justify-content: flex-end; }
+.act > * { order: 0; }
+.act > .act__more { order: 1; }
+.act > .act__panel, .act > .discuss__panel { order: 2; flex: 1 0 100%; min-width: 0; }
+.act > .act__panel { margin-top: var(--sp-2); }
+.act__item {
+  display: inline-flex; align-items: center; gap: var(--sp-1); min-height: 2.75rem; padding: 0 var(--sp-2);
+  white-space: nowrap; font: 600 var(--fs-1)/1 var(--font-text); color: var(--ink);
+}
+.act__item .icon { flex: none; }
+.act .mark { min-height: 2.75rem; padding: 0 0.375rem; }
+.act__more { justify-content: center; inline-size: 2.5rem; padding: 0; border: 0; background: none; cursor: pointer; color: var(--ink-2); }
+@container (max-width: 20rem) {
+  .discuss__word { position: absolute; inline-size: 1px; block-size: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+}
+.act__more:hover { color: var(--ink); background: var(--slate-tint); }
+/* The <details> is an ordinary flex item holding only its summary: no display: contents, which browsers treat differently
+   on <details>. */
+.discuss { flex: none; }
+.discuss > summary { display: inline-flex; padding: 0 var(--sp-1); }
+.discuss > summary { list-style: none; cursor: pointer; color: var(--link); }
+.discuss > summary::-webkit-details-marker { display: none; }
+.discuss > summary::marker { content: ""; }
+.discuss > summary:hover { text-decoration: underline; text-underline-offset: 3px; }
+.discuss[open] > summary { color: var(--ink); }
+.discuss:not([open]) + .discuss__panel { display: none; }
+.discuss__panel { margin-top: var(--sp-2); }
+/* The "⋯" menu: the hint's look; placed beside "⋯" by js/lt2-menus.js. */
+.menu {
+  inline-size: max-content; min-inline-size: 12rem; max-inline-size: min(22rem, 100vw - 1rem);
+  margin: auto; padding: var(--sp-1) 0; background: var(--sheet); color: var(--ink); border: 1px solid var(--rule);
+  box-shadow: 0 0.5rem 1.5rem rgb(0 0 0 / 0.2); font-size: var(--fs-1); line-height: 1.45;
+}
+.menu:popover-open { display: flex; flex-direction: column; }
+.menu--placed { inset: auto; margin: 0; }
+.menu__item {
+  display: flex; align-items: center; min-height: 2.75rem; padding: 0 var(--sp-4); border: 0; background: none;
+  font: 600 var(--fs-1)/1.2 var(--font-text); color: var(--ink); text-align: start; cursor: pointer;
+}
+.menu__item:hover:not(:disabled) { background: var(--slate-tint); }
+.menu__item:disabled { opacity: 0.6; cursor: not-allowed; }
+.menu > .report-visitor { padding: var(--sp-2) var(--sp-4); }
+.menu > .report-visitor > summary { display: flex; align-items: center; min-height: 2.75rem; font-weight: 600; }
 
 /* Design 8.23.6: an open "Aptarimas" needs the page's width, not a side's column: while one is open the two sides stand one
    above the other, as on a phone, and the discussion reads in full width under its argument. */
-.pair--reasons:has(details.comments[open]) { grid-template-columns: minmax(0, 1fr); }
+.pair--reasons:has(details.discuss[open]) { grid-template-columns: minmax(0, 1fr); }
 
 /* The agenda (design 8.11.1): a bill's number tag inside a row keeps the tag's light-on-dark text, not the row link's ink. */
 .rows__main a.tag--ink { color: var(--sheet); font-weight: 600; }
@@ -927,11 +978,15 @@ a.said__name { color: inherit; font-weight: 700; }
 .follow .btn[aria-pressed="true"] { box-shadow: none; }
 .followers { display: inline-flex; gap: var(--sp-2); align-items: baseline; }
 /* Design 8.23.6: "Aptarimas" lies on its target's sheet, below it and set in; the list is not a sheet, the writing box a quiet one. */
-.comments { margin-left: var(--sp-5); }
 .comments__list { list-style: none; padding: 0; margin: 0; }
 .comment { padding-left: var(--sp-3); border-left: 2px solid var(--rule); }
 .comment__who { gap: var(--sp-2) var(--sp-3); font-size: var(--fs-1); color: var(--ink-2); }
 .comment__name { overflow-wrap: anywhere; color: var(--ink); }
 .comment__text a { overflow-wrap: anywhere; }
-.comment__meta { padding-left: 0; }
-@media (max-width: 30rem) { .comments { margin-left: var(--sp-2); } }
+.comment .act { padding-left: 0; }
+.comment__agreed { margin: 0; }
+/* Design 8.23.6: the comment or argument a link leads to (?komentaras=, ?argumentas=), marked by the server, no script; it
+   stops below the sticky header when the browser scrolls to it. */
+.comment--linked { border-left-color: var(--brand); background: var(--brand-tint); padding: var(--sp-2) var(--sp-2) var(--sp-2) var(--sp-3); }
+.said--linked { outline: 2px solid var(--brand); outline-offset: var(--sp-2); }
+.comment--linked, .said--linked { scroll-margin-top: var(--sp-6); }

@@ -64,6 +64,9 @@
     /// <summary>The account has a display name: a public profile needs one (design 8.25.6).</summary>
     [Parameter] public bool HasName { get; set; }
 
+    /// <summary>"Viešas profilis" was switched on or off: the party's box on the same screen depends on it (design 8.25.9).</summary>
+    [Parameter] public EventCallback PublicChanged { get; set; }
+
     [PersistentState] public MyProfileResponse? Mine { get; set; }
 
     protected override async Task OnInitializedAsync()
@@ -89,6 +92,11 @@
 
         Mine = saved.Value;
         Take(Mine);
+        if (wasPublic != (Mine!.ProfileId is not null))
+        {
+            await PublicChanged.InvokeAsync();
+        }
+
         Info = (wasPublic, Mine!.ProfileId is not null) switch
         {
             (false, true) => L["PublicProfile.SavedOn"],

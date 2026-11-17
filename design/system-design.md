@@ -266,7 +266,7 @@ ASP.NET Core Identity tables (users, roles, claims, tokens, passkeys), plus:
 | `sign_in_code` | Account, hashed code, expiry, failed attempts, used time, and the known device it was issued to (empty for a code any browser may use). |
 | `known_device` | Account, hashed identifier of the browser's cookie, first and last seen. Built before registration opens (M2b). [changed while building (8.20.2): also `label`, the browser and system as the sessions list says them ("Edge, Windows"), so the person can tell the rows apart; the hash is HMAC-SHA-256 under a key of its own, the secret `device_hash_key`.] |
 | `role_activation` | Account, role, hashed one-time code, who issued it, expiry, used time. Using it marks the passkey of that session as the staff passkey. |
-| `party_support` | `user_id`, `party_id`. Private and optional; used only for group statistics of at least 20 people. |
+| `party_support` | `user_id`, `party_id`. Private and optional; used only for group statistics of at least 20 people, and shown on the person's public profile only by their own box and consent `party-public` (8.25.9, owner 2026-11-17). |
 | `consent` | Kind, text version, given and withdrawn times. Positions need explicit consent (GDPR Art. 9). [built 2026-11-16 (8.25.1): the kind `public-profile`, given by switching "Viešas profilis" on and withdrawn by switching it off; it covers the page, its indexing, being followed and the shown follower number] |
 | `politician_link` | `user_id`, the Seimas's person number, part (the MP, or an office member), how and when verified, who added an office member, when and by whom it ended. One MP per account; one account as the MP per person (8.5.2, 8.5.3). |
 | `politician_token` | The hashed one-time token of a take-over link or of an office member's invitation, for which person, by whom, expiry, used time (8.5.2, 8.5.3). |
@@ -281,7 +281,7 @@ adresas" (https on `lrs.lt` or under it, at most 500 characters), filled in adva
 | `position` | (`record_id`, `user_id`) primary key, `side` (for or against), created and changed times | One row per person per bill. Becomes the direct LT2 vote in stage 3. |
 | `daily_stat` | `record_id`, date, counts per side, counts for accounts older than 30 days, share of new accounts | For the trend chart and surge detection. **No per-person history of opinion changes is stored.** |
 | `reason` | `id`, `record_id`, `side`, `author_user_id`, text (`text`, any length), status, `merged_into_id`, `first_public_at` (when it first became public: the follow line of 8.25.5 and the member's page read it; built 2026-11-16) | Status: pending, published, hidden, merged. `side` is the side the argument supports, chosen by its author, whatever the author's own position (8.2). How long a text may be is the members' texts setting `Texts:MaxLength` (5.6), checked where an argument is written; the column sets no limit (**owner, 2026-11-16**; migration `ReasonTextAnyLength`). |
-| `endorsement` | (`reason_id`, `user_id`) | "Man svarbu" on a reason; only on your own side; how many per bill is a setting, no limit by default (8.2). |
+| `endorsement` | (`reason_id`, `user_id`) | "Man svarbu" on a reason; only on your own side, never on a reason you wrote (owner, 2026-11-17); how many per bill is a setting, no limit by default (8.2). |
 | `mp_response` | bill number, the Seimas's person number, stance (for, against, undecided), text (`text`, any length; its length is the members' texts setting `Texts:MaxLength`, 5.6, checked where it is written; **owner, 2026-11-16**, migration `MemberTextsAnyLength`), status (published, hidden, withdrawn), published, edited and withdrawn times, `written_by_user_id` | One per MP per bill; versions are kept in `revision` and are public (8.5.5). Withheld from the read-only role. [changed while building: also `screening_flags` and `seen_at` (the queue), `hidden_at` and `hide_statement` (the statement shown in its place); the one-per-bill index holds whatever the status, so a response written again after a withdrawal is the same row; a version is kept as JSON in `revision` (`entity_kind` `response`, field `version`) with no person.] |
 | `report` | target, reporter, ground, status | Notice-and-action under the Digital Services Act. [proposed: the target `comment` (8.23). A member's public profile and its "Apie mane" are reported to Identity, which owns them: `identity.profile_report`, built 2026-11-16 (8.25.6)] |
 | `comment` | `id`, `target_kind`, `target_id`, `bill_number`, `speaks_as` (person, organisation, mp) with the organisation or the MP, `author_user_id`, text (up to `Texts:MaxLength`), status (published, hidden), created and hidden times | [built 2026-11-16, 8.23.11] A remark in "Aptarimas" under an argument, a statement or a response: a member's, or an organisation's or MP's under its own text. No editing and no history; deleted for good when deleted or with its target (8.23.7); a person's own go with the account. Withheld from the read-only role. |
@@ -847,6 +847,17 @@ correction makes it a moderator's text (8.12.3).
 - "Man svarbu" stays on one's own side only, within the setting above; a person without a side cannot mark. Changing or
   clearing a side drops the marks, never the person's reasons; withdrawing the consent deletes positions and marks,
   not reasons.
+- **Never on one's own argument [decided by the owner on 2026-11-17: "I can now 'Man svarbu' on my own argument", a
+  hole].** The marks choose which arguments are sent to MPs (8.4), so an author does not mark their own: refused where
+  the mark is written (`endorsement.own-reason`, "Savo argumento „Man svarbu“ žymėti negalima."), and the button beside
+  one's own argument is disabled with that sentence as its hint, known from the person's never-cached answer (the served
+  page stays the same for everyone). When a moderator merges an argument into another (8.3), a mark that would move onto
+  its giver's own argument is dropped; the others move as before. "Sutinku" already had the same rule (8.23.10: not on a
+  comment one wrote).
+- **A mark moves nothing on the page [owner, 2026-11-17: "the view is scrolled away after clicking 'Man svarbu'"].**
+  The arguments are ordered by their marks when the page is read; after the person's own action (a mark, its removal, a
+  new or withdrawn argument) the island shows the new numbers in place and keeps the shown order, a new argument last,
+  and the pressed button gets the focus back without scrolling. The order by marks returns when the page is read again.
 - Pages, summaries and emails head reasons as "argumentai už / prieš" (reasons to vote for or against), never as the
   reasons of the people on that side.
 - Published numbers: both sides, always together, always with the count for accounts older than 30 days. Group numbers
@@ -2624,6 +2635,39 @@ nothing said which is for what, and the start page had its main content on the g
 looked at in the light theme against the test, with the result listed page by page; no quiet sheet stands on the
 ground; no sheet is inside a sheet.
 
+#### 8.16.1 The action row under a text [the designer's proposal, 2026-11-17, awaiting the owner; built]
+
+The owner, from a phone (~390 px), 2026-11-17: under an argument the name stood on its own line, "Man svarbu · 0" and
+"Pranešti" on the next, "Aptarimas" on a third and further left than the rest, and for a moderator "even more
+complicated": "Can we design a whole non breaking line for commands, or icons, or something to make it nice?"
+
+- **One row under every member's text, the same everywhere:** arguments, organisations' statements, MPs' responses and
+  comments. Line 1: the author's name (a link with its card for a public profile, 8.25.4), for a comment its time; for a
+  statement and a response the line with the dates as before. Line 2: one row that never wraps, from 360 px up and in a
+  side's column on a wide screen: "Man svarbu · n" (arguments only; a toggle as before, filled when marked),
+  "Aptarimas (n)" (8.23.6), "Sutinku" (comments only, 8.23.10) and "⋯" at the end. Every item is 44 px tall and they
+  share one baseline; the name and the row stand on the text's own left edge (an MP's response, drawn mirrored, on its
+  right edge), so nothing under a text is indented differently.
+- **"⋯" ("Daugiau veiksmų") holds the rarer actions:** "Pranešti", the author's own "Atsiimti" (an argument) or
+  "Ištrinti" (a comment), and for a moderator in a staff-passkey session "Moderuoti", which opens the moderator's actions
+  for that text (keep, hide, merge, restrict…) below the row. It is the browser's own popover, as a hint is (8.15): it
+  opens without JavaScript (then in the middle of the screen), a press elsewhere or Escape closes it and the focus stays on
+  or goes back to "⋯"; a small script places it beside "⋯". A chosen action closes the menu and its form opens below the
+  whole row as a quiet sheet (8.16), as report forms did. A visitor's "Pranešti" note works without script; a member's
+  items stay disabled until the island runs; the trigger itself is never disabled (it only shows the menu).
+- **"Aptarimas" opens below the row at its full width:** the `<details>` holds only its summary, which stands in the row;
+  the discussion is the panel right after it, shown only while the `<details>` is open, and laid below the whole row by
+  the row's own layout (no `display: contents` on `<details>`, which browsers treat differently). The summary keeps its
+  expanded state for assistive technology and names the panel it controls.
+- **Words with small icons:** a heart beside "Man svarbu", a speech bubble beside "Aptarimas", three dots for "⋯", drawn
+  inline in the text's colour; no icon library and nothing fetched. "Man svarbu" always keeps its words (a term the icon
+  alone would not say). Where the row is narrower than about 20rem (a 360 px phone, a side's column at 1 280 px) the
+  word "Aptarimas" is kept only for screen readers and the row shows the bubble and the count; at 390 px and wider the
+  word shows. [Open for the owner: keep the word at any width and let the two sides stand one above the other on wide
+  screens instead.]
+- **The served page is the same for every member and visitor** as before: what is the caller's own (their "Atsiimti",
+  "Ištrinti", "Sutinku", a moderator's "Moderuoti") comes from the island in the browser.
+
 ### 8.17 The list of MPs' ballots on a vote
 
 **[Decided by the owner on 2026-11-15: the list of up to 141 MPs must be searchable and shown a part at a time, "possibly
@@ -3025,8 +3069,8 @@ lines on a phone.
   greeting "Sveiki, …" stays as text. The addresses and what each holds:
   - **"Profilis" (`/paskyra`)**, the first screen: what others may see of the person and what they say of themself. The
     level and roles, the display name (6.2), "Apie mane" and the switch "Viešas profilis" with the link to the public page
-    while it is on (8.25), party support (5.2; whether it may also be shown publicly is the designer's proposal of
-    8.25.9, not built).
+    while it is on (8.25), party support (5.2), with the box "Rodyti viešame profilyje" while the profile is public
+    (8.25.9, owner 2026-11-17).
   - **"Sekimas ir laiškai" (`/paskyra/sekimas`)**: what the person follows and the email switches (`#sekami`), then how often the emails come (`#laisku-daznis`, 8.24).
   - **"Dalyvavimas" (`/paskyra/dalyvavimas`)**: the MP part (8.5), organisations, the invitation code (`#my-invitation`),
     and the staff part (the role's activation; the staff links in a staff session, or in their place the link to the staff
@@ -3310,7 +3354,9 @@ replies and "Sutinku" carries no text to moderate (8.23.1, 8.23.10), and each ki
   oldest first, each with its name (the author's display name, a link with its card when they have a public profile,
   8.25; or the organisation's name and mark; or the MP's name and "Seimo narys arba jo biuras"), the time
   (`Display.DayTime`), the text, "Sutinku" with who agreed (8.23.10), "Pranešti" and, for whoever may delete it,
-  "Ištrinti"; then the writing box. A comment's element id is `komentaras-{id}`.
+  "Ištrinti"; then the writing box. A comment's element id is `komentaras-{id}`. [2026-11-17, the designer's proposal:
+  the summary stands in the text's action row and the discussion opens below the row; "Pranešti", "Ištrinti" and a
+  moderator's "Moderuoti" are in each comment's "⋯" (8.16.1).]
 - **Server-rendered and the same for everyone.** The list is part of the target's part as the server renders it (the
   arguments' and statements' islands prerender it; the responses' part is server-rendered), so it opens and reads with
   JavaScript off. Which comments the caller may delete and which they agreed with come from a never-cached answer, read
@@ -3322,6 +3368,25 @@ replies and "Sutinku" carries no text to moderate (8.23.1, 8.23.10), and each ki
   parameter naming the target and how many to show), landing on the first new comment with that target's "Aptarimas"
   rendered open, as `ResponsePaging` does for responses (8.5.6). It works without script. (Named apart from a long
   comment's "Rodyti daugiau", 8.23.3.)
+- **A link to one comment lands on it [the designer's proposal, 2026-11-17, awaiting the owner; built].** Found in a
+  browser look: a link to `#komentaras-{id}` alone led to a comment inside a closed "Aptarimas", and often to one not
+  rendered at all (beyond the first ten, or under an argument behind "show all"). Every link the site makes to a comment
+  (the member's page, 8.25.2; the follow emails, 8.25.5; the moderators' list and panel, 8.23.8) carries one address
+  parameter, `?komentaras={comment id}`, and keeps the fragment `#komentaras-{id}`, so the browser scrolls there without
+  script. The server resolves it when it renders the page (`GET /api/v1/comments/{id}/place`, public: the target, the bill
+  and the comment's place among the target's shown comments): the target is rendered even where it would wait behind
+  "show all" (an argument beyond the first two of its side) or "Rodyti daugiau" (a response beyond the first ten); its
+  "Aptarimas" is rendered open (`open` set by the server, as the paging does; the islands get the same state as a
+  parameter and never set it from code); the thread shows everything from the first comment through the linked one,
+  rounded up to the next step of ten (the 25th shows 30; `BillTextLinks.ShownThrough`), then the usual "Rodyti daugiau
+  komentarų"; the linked comment is marked (`comment--linked`, from the design tokens). A comment that is hidden, deleted,
+  merged away, unknown, on another bill, or under a target no longer shown has no place: the page renders as usual, and
+  the answer is the same 404 (`comment.not-found`) for all of them, so nothing tells a hidden comment from none. Every
+  such link is made by one helper (`BillTextLinks.ToComment`, in the contracts and the shared kernel), never by hand.
+  **An argument the same way:** `?argumentas={reason id}` with `#reason-{id}` (`BillTextLinks.ToReason`) shows that
+  argument even beyond the first two of its side and marks it (`said--linked`); it opens no discussion. The follow
+  email about a followed member's argument uses it; the notice of comments under one's own argument links to the first
+  new comment it reports (8.23.9).
 - **What bounds the page's weight.** Comments are rendered only under the targets the server renders: the arguments the
   page shows before "show all" (two per side, 8.12.1), the statements, and the responses of the current page of ten;
   under each, at most the first ten comments. At the default cap that is up to about 20 KB of comment text per target,
@@ -3399,7 +3464,9 @@ reported comment is in the moderators' list; a moderator can hide it with a stat
 
 - **An argument's author [proposed 2026-11-16, not objected to; when it goes is the owner's rhythm, 8.24].** A notice of
   its own kind, not a follow email (follow emails say nothing about other people, 8.11.2): "there are new comments under
-  your argument", the bill's number and title and the link to the argument on the bill's page. Never a comment's text,
+  your argument", the bill's number and title and the link into that discussion on the bill's page [2026-11-17, the
+  designer's proposal: the link of 8.23.6 to the first new comment the email reports, so the argument shows, its
+  "Aptarimas" opens and that comment is marked; one no longer shown by then leaves the page as usual]. Never a comment's text,
   its writer, how many, or anything about "Sutinku". It goes in the person's rhythm (8.24): with "Iš karto" at the next
   run of the follow job, in that run's one email to the person, naming each of their arguments that got a comment since
   the last run; with the daily or weekly choice, in the gathered email. One busy argument therefore makes at most one
@@ -3560,15 +3627,19 @@ build needed decided one way; each is the smallest choice that keeps the rules a
    in that run's email, the daily or weekly choice in the gathered one, where it is its own part ("Nauji komentarai po jūsų
    argumentais"), one line per argument. When the email is made the window is read again, so an argument whose comments
    are all deleted or hidden by then, or that is no longer shown, is left out. One thing alone is the email
-   `email.comment-notice`.
+   `email.comment-notice`. [2026-11-17, the designer's proposal: each line links to the first new comment it reports,
+   the earliest still shown in its windows when the email is made (`BillTextLinks.ToComment`, 8.23.6); no other rule.]
 5. **A comment's moderation notices** reuse the existing kinds: to a person `email.moderation-notice` (notices
    `comment-hidden`, `comment-restored`, with the moderators' contact address), to an organisation's representatives
    `email.organisation-notice` (`comment-hidden`, `comment-restored`), to the MP's account `email.mp-response-notice`
    (`comment-hidden`, `comment-restored`). "Palikti" tells nobody (8.23.8).
 6. **Moderating a comment whose target is not shown** (hidden, waiting, a hidden record): hide, restore and "Palikti" work on
    the comment itself whatever its target's state; the comment shows again only when both are shown.
-7. **The "Moderavimas" panel** on the bill's page lists the bill's reported comments with a link to each (`#komentaras-{id}`);
-   the actions are on the comment.
+7. **The "Moderavimas" panel** on the bill's page lists the bill's reported comments with a link to each
+   (`?komentaras={id}#komentaras-{id}`, 8.23.6, 2026-11-17); the actions are on the comment.
+8. **A link to a comment or an argument (2026-11-17)** carries `?komentaras=` or `?argumentas=` (8.23.6): the page shows
+   the target, opens its "Aptarimas" through the linked comment rounded up to the next ten, and marks it; a comment not
+   shown changes nothing on the page.
 
 ### 8.24 How often a member's emails come
 
@@ -3758,7 +3829,7 @@ page is indexed and the person can be followed.
   by the page's address, without script, as the responses are (8.5.6).
 - **What it never shows:** the person's own sides; "Man svarbu"; the "Sutinku" they gave [the designer's proposal: each is
   visible beside its comment, but a list of everything a person agreed with is a profile of opinions nobody asked to
-  publish as a list]; what they follow; party support; invitations; organisations they represent; anything written as
+  publish as a list]; what they follow; party support, unless the person ticks it to be shown (8.25.9); invitations; organisations they represent; anything written as
   an organisation or an MP; hidden, waiting or withdrawn texts, and texts on a bill whose record is hidden; any count or
   statistic about the person's texts ("12 argumentų, 9 už"); any ranking; who follows them.
 - **On a sheet** (8.16): the name, the number and "Apie mane" on one, the list on another.
@@ -3826,7 +3897,7 @@ page is indexed and the person can be followed.
   moderator counts when it is published; a text hidden or withdrawn before sending is left out.
   [changed while building: recorded once per text in `bill_event` (kind `member`, key the argument's or the comment's
   id, under its bill; no person in it; `MemberNotices` in Notifications, its own part of the gathered email; the payload
-  says which, `what`, and links `#reason-{id}` or `#komentaras-{id}`), told by the follow job to those who followed before
+  says which, `what`, and links to it as 8.23.6 says: `?argumentas=…#reason-{id}` or `?komentaras=…#komentaras-{id}`), told by the follow job to those who followed before
   it was published and before the job saw it, nothing older than three days, nothing when the profile is no longer public
   by then; the subject and the line name the member's display name, as their page does.]
 - **Risks, and what answers them.**
@@ -3902,13 +3973,15 @@ those"); it replaces the designer's proposal of its own milestone after comments
 comments were built, the same day. The lawyer reads the
 profile with the other texts once, before going live (8.22).
 
-#### 8.25.9 The party shown publicly [the designer's proposal, awaiting the owner; not built]
+#### 8.25.9 The party shown publicly
+
+**[Decided by the owner on 2026-11-17: "Add party to public profile." The designer's proposal below is built as written.]**
 
 The owner asked whether the "Profilis" screen could hold a party "which you could select to show publicly" ("probably").
 What exists: `identity.party_support` (5.2), one party per person from the parties that nominated sitting MPs, set on
 "Profilis" with its own explicit consent (kind `party-support`, because a party preference is a political opinion);
 private; read only through `IPartySupporters` for the summaries' group numbers of at least 20 (6.3); the MP's own account
-declares none (8.5.4). The proposal:
+declares none (8.5.4). The rule:
 
 - **Which party:** the one the member already marked as supported, not a free field. One fact, one place: a free field
   would let a person publish one party and support another, and it is what "Apie mane" is already for ("Partijos X narys"
@@ -3926,7 +3999,27 @@ declares none (8.5.4). The proposal:
   person's stated party beside the sides their arguments were written for; nothing more than the person published. No
   count of people per party is shown anywhere (the profile list does not exist and nothing is listed by party).
 
-If the answer is no, the party stays private on "Profilis" as it is now and nothing else changes.
+[changed while building (2026-11-17):
+- **Where it stands:** on the profile's own page only, one line under the name, "Palaikoma partija: {party}" (the name after
+  a colon, never declined); never in the card beside a text (8.25.4), beside an argument or comment, in the texts' answer or
+  in any list.
+- **The box is offered only while the profile is public** and a party is chosen; with the profile off the party's part says
+  in one line that it can be shown once the profile is on ("Partiją rodyti viešame profilyje galima tik jį įjungus."). The
+  box's sentence, said before the consent is given and versioned with it (`2026-11-17`): "Partiją matys visi, kas atvers
+  jūsų viešo profilio puslapį, ją gali rodyti ir paieškos sistemos; nuėmus žymę, pašalinus ar pakeitus partiją arba
+  išjungus profilį, ji iš karto nebebus rodoma."
+- **Changing the party withdraws it too [the designer's reading of "removing the party"]:** the consent covered the party
+  it was given for, so a different party is shown only after the box is ticked again (the form re-sends it when the box is
+  still ticked beside the new choice, so the person sees what is published).
+- **API:** `GET /api/v1/me/party-support` adds `public`, `profilePublic` and `consentVersion`; `PUT
+  /api/v1/me/party-support/public` (`consentVersion`) gives `party-public` (`party.consent-outdated`, `party.none`,
+  `party.profile-off`, `mp.takes-no-part`); `DELETE` the same address withdraws it and is open behind the terms (8.22.2,
+  `TermsExemptions`). `GET /api/v1/members/{id}` carries `party`, null unless shown. The page reads it through
+  `IPublicProfiles.ShownPartyAsync`, which answers only for a public profile with the consent in force.
+- **Data:** no new table: the consent row in `identity.consent` (kind `party-public`) is the box; withdrawn rows stay as
+  the other consents do. In the export (`partySupport.shownOnPublicProfile` and the consent among the consents); gone
+  with the account. Audited `party.public-on` and `party.public-off` with why (`box`, `party`, `profile`), never the
+  party.]
 
 #### 8.25.8 Done when
 
@@ -4526,12 +4619,22 @@ Decided for comments, the email rhythm and public profiles (8.23-8.25; all three
 - "The menu could not just scroll, but it would be split into several forms? Starting with name, about me and probably a
   party": the account area is four screens, `/paskyra` ("Profilis": the name, "Apie mane", "Viešas profilis", party
   support), `/paskyra/sekimas`, `/paskyra/dalyvavimas`, `/paskyra/saugumas`, with the row of parts as navigation between them
-  (8.21). Whether the party may be shown publicly is the designer's proposal of 8.25.9, not built.
+  (8.21). The party shown publicly was then the designer's proposal of 8.25.9; the owner decided it on 2026-11-17 (below).
 - "The url sveiki reads strange, change it": the account's screens are `/paskyra`, `/paskyra/sekimas`,
   `/paskyra/dalyvavimas`, `/paskyra/saugumas`; `/sveiki` goes with no redirect (8.21).
 - A member's public address carries the name: `/nariai/{name-slug}-{id}`, the id deciding, any other name part
   redirecting permanently to the current address (8.25.2). The owner suggested the name alone; the id stays (names are
   neither unique nor stable), and the owner did not object.
+
+**Decided by the owner on 2026-11-17: the party on the public profile**
+
+- "Add party to public profile": 8.25.9 as proposed: the supported party, by its own box "Rodyti viešame profilyje" and
+  consent `party-public`, only while the profile is public; withdrawn at once with the box, the party or the profile and not
+  given back by switching the profile on again; nothing for the MP's account; the "at least 20" rule unchanged.
+- "I can now 'Man svarbu' on my own argument": an argument's author cannot mark it (8.2); a merge drops a mark that would
+  land on its giver's own argument.
+- "The view is scrolled away after clicking 'Man svarbu'": a mark moves nothing on the page until it is read again, and the
+  pressed button keeps the focus (8.2).
 
 **Decided by the owner on 2026-11-16: the analytics page (8.26)**
 
@@ -4653,11 +4756,13 @@ search engine's copy outlives switching the profile off. With follower numbers b
 | "Apie mane" only with a public profile (8.25.1) | **Proposed:** yes, one switch and one explanation. Or: "Apie mane" shown (in a card) also for members without a page. | Before M2d |
 | "Apie mane": a personal code (8.25.3) | **Proposed:** refused, as everywhere. Or: allowed like the person's own contacts. | Before M2d |
 | Following a member: what it sends (8.25.5) | **Proposed (built so):** a line when the member publishes an argument or a comment in their own voice, never the text, by the follower's rhythm, with its own switch. Or: arguments only. | Before M2d |
-| Public profile: the party shown (8.25.9) | **Proposed:** the supported party already on "Profilis" (not a free field), shown on the public page only with its own box and consent (`party-public`), never by "Viešas profilis" alone; withdrawn at once with the box, the party or the profile; nothing for the MP's account; the "at least 20" rule unchanged. Or: no; the party stays private. | Before it is built |
+| Public profile: the party shown (8.25.9) | **Decided by the owner, 2026-11-17 ("Add party to public profile"), built:** the supported party already on "Profilis" (not a free field), shown on the public page only with its own box and consent (`party-public`), never by "Viešas profilis" alone; withdrawn at once with the box, the party or the profile; nothing for the MP's account; the "at least 20" rule unchanged. Still the designer's reading: changing the party withdraws it as removing does. | Done |
 | Public profile: a display name to switch it on (8.25.6) | **Proposed (built so):** "Viešas profilis" needs a display name, and the name cannot be emptied while the profile is public (`profile.name-required`). Or: a page without a name, titled "Narys". | Before going live |
 | Public profile: no cache, 410 and 404 marked `noindex` (8.25.2) | **Proposed (built so):** the page is `no-cache` for everyone so switching off is at once; the 410 and 404 answers carry `X-Robots-Tag: noindex`. Or: ordinary caching. | Before going live |
 | A comment in an organisation's name when its last representative's account is deleted (8.23.7, 8.14.14) | Open, found while connecting comments and profiles: 8.23.7 says a comment written in an organisation's name stays when its writer's account is deleted (as statements do), but deleting the last representative's account closes the organisation (8.14.14), which withdraws its statements, and a withdrawn statement takes its comments with it (8.23.7). The code does both as written; since an organisation comments only under its own statement (8.23.2), the comments of the last representative go with the statements when the account is deleted, and the rule "stays" holds only while another representative remains. Either: keep it so (the closing decides); or keep a closed organisation's statements and their comments; or move the comment's rule to "stays unless its organisation is closed". | Before going live |
-| Public profile: the party shown (8.25.9) – not built | Still only the designer's proposal of 8.25.9 (the row above); nothing of it is built: the party stays private on "Profilis". | Before going live |
+| The action row under a text (8.16.1) | **Proposed (built so, 2026-11-17):** one row under every argument, statement, MP's response and comment, never wrapping from 360 px: "Man svarbu · n", "Aptarimas (n)", "Sutinku", then "⋯" (the browser's popover) with "Pranešti", one's own "Atsiimti"/"Ištrinti" and a moderator's "Moderuoti"; forms and the discussion open below the row; small inline icons beside the words; the word "Aptarimas" only for screen readers where the row is narrower than about 20rem (360 px phones, a side's column at 1 280 px). Or: keep that word at every width and put the sides one above the other on wide screens; or icons alone. | Before going live |
+| A link to a comment or an argument (8.23.6, 8.23.14 point 8) | **Proposed (built so, 2026-11-17):** `?komentaras={id}` / `?argumentas={id}` with the element's own fragment, resolved by the server: the target shown even behind "show all" or the responses' paging, its "Aptarimas" open through the linked comment rounded up to the next ten, the linked one marked; a comment not shown changes nothing (one 404 for hidden and unknown). Or: the fragment alone with a script that opens the thread (no help without script, and none for a comment not rendered). | Before going live |
+| Public profile: the party shown (8.25.9) – the texts | Built 2026-11-17 (the row above). The box's sentence (`UiText` `Party.PublicText`, version 2026-11-17), the page's line ("Palaikoma partija: …"), `Party.Text`, and the privacy notice's `Privacy.Data.Fact7.Value`, `Privacy.Data.Fact12.Value`, `Privacy.Rights.Fact3.Value`, the terms' `Terms.Publish.6` and the methodology's `Method.Privacy.Follow` go to the native reader and the lawyer's one reading with the others. | Before going live |
 
 **Risks**
 

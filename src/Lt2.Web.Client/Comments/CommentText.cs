@@ -91,6 +91,22 @@ public static class CommentPaging
         return n;
     }
 
+    /// <summary>
+    /// How many comments of <paramref name="targetId"/> to show, from the page's address: "Rodyti daugiau komentarų"
+    /// (<c>?komentarai=</c>) and a link to one comment (<c>?komentaras=</c>, resolved by the server into
+    /// <paramref name="linked"/>: through the linked one, rounded up to the next 10, design 8.23.6), the more of the two; null
+    /// when neither names this target, and the thread then stays closed.
+    /// </summary>
+    public static int? Asked(string? value, Guid targetId, CommentPlaceResponse? linked)
+    {
+        var paged = Asked(value, targetId);
+        var through = linked is { } l && l.TargetId == targetId ? BillTextLinks.ShownThrough(l.Position) : (int?)null;
+        return paged is null ? through : through is null ? paged : Math.Max(paged.Value, through.Value);
+    }
+
+    /// <summary>The linked comment when it stands under <paramref name="targetId"/>: the thread marks it.</summary>
+    public static Guid? Marked(Guid targetId, CommentPlaceResponse? linked) => linked is { } l && l.TargetId == targetId ? l.CommentId : null;
+
     /// <summary>How many to show for a total: at least the first 10, at most all, in steps the address asked for.</summary>
     public static int Shown(int? asked, int total) => Math.Min(Math.Max(asked ?? CommentLimits.First, CommentLimits.First), total);
 

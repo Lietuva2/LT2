@@ -250,8 +250,20 @@ public interface IIdentityModule
     /// <summary>Withdraws the consent and, in the same transaction, deletes every position of the person (design 6.5).</summary>
     Task<Result<Unit>> WithdrawPositionConsentAsync(ClaimsPrincipal user, CancellationToken cancellationToken);
 
-    /// <summary>The party the person said they support, if any (design 5.2; private, optional).</summary>
-    Task<Result<string?>> GetPartySupportAsync(ClaimsPrincipal user, CancellationToken cancellationToken);
+    /// <summary>
+    /// The party the person said they support, if any (design 5.2; private, optional), whether it is shown on their public
+    /// profile and whether the profile is public (design 8.25.9).
+    /// </summary>
+    Task<Result<PartySupportState>> GetPartySupportAsync(ClaimsPrincipal user, CancellationToken cancellationToken);
+
+    /// <summary>
+    /// "Rodyti viešame profilyje" (design 8.25.9): the consent <c>party-public</c> against the version the form showed;
+    /// <c>party.consent-outdated</c>, <c>party.none</c>, <c>party.profile-off</c>, <c>mp.takes-no-part</c>. Audited without the party.
+    /// </summary>
+    Task<Result<Unit>> ShowPartyAsync(ClaimsPrincipal user, string? textVersion, string? ipHash, CancellationToken cancellationToken);
+
+    /// <summary>The party no longer shown: <c>party-public</c> withdrawn at once (open behind the terms, design 8.22.2).</summary>
+    Task<Result<Unit>> HidePartyAsync(ClaimsPrincipal user, string? ipHash, CancellationToken cancellationToken);
 
     /// <summary>
     /// Sets the party (one of <paramref name="allowed"/>) with the explicit consent it needs (<paramref name="consent"/>;
@@ -265,6 +277,12 @@ public interface IIdentityModule
     /// <summary>Deletes the account and everything the person gave (design 6.5), and signs out.</summary>
     Task<Result<Unit>> DeleteAccountAsync(ClaimsPrincipal user, CancellationToken cancellationToken);
 }
+
+/// <summary>
+/// The person's own party (design 5.2) and its public showing (design 8.25.9): <paramref name="Public"/> while the profile is
+/// public and <c>party-public</c> is in force; <paramref name="ConsentVersion"/> is the box's text in force.
+/// </summary>
+public sealed record PartySupportState(string? Party, bool Public, bool ProfilePublic, string ConsentVersion);
 
 /// <summary>Housekeeping run by the worker.</summary>
 public interface IIdentityMaintenance

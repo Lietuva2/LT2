@@ -54,6 +54,11 @@
         <span class="small num">@Published</span>
         @ChildContent
     </div>
+    @if (Actions is not null)
+    {
+        @* The action row (design 8.16.1): "Aptarimas (n)" and "⋯" on the bill's page, as under every text. *@
+        <div class="act" id="@(IdPrefix)statement-actions-@Statement.Id">@Actions</div>
+    }
 </article>
 
 @code {
@@ -74,8 +79,11 @@
     /// <summary>The whole text, never cut: the moderators' queue and panels (design 8.14.9).</summary>
     [Parameter] public bool Whole { get; set; }
 
-    /// <summary>The actions beside the statement (report, a representative's controls).</summary>
+    /// <summary>What stands beside the dates (on the moderators' screens, their controls).</summary>
     [Parameter] public RenderFragment? ChildContent { get; set; }
+
+    /// <summary>The action row under the statement (design 8.16.1): the discussion and "⋯"; none where it has none.</summary>
+    [Parameter] public RenderFragment? Actions { get; set; }
 
     /// <summary>"Siekiame {N} dalyvių · dabar {n}"; without the count (a moderator's screen) only the goal.</summary>
     private string Goal(int goal) => Statement.Progress is { } now

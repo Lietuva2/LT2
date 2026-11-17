@@ -59,6 +59,27 @@ internal sealed class CommentsService(
         return new CommentThread(kind, targetId, bill.Bill.Number, rows.Count, bill.Open && on && target.Writable, bill.Open && target.Writable, views, cards);
     }
 
+    public async Task<Result<CommentPlace>> PlaceAsync(Guid commentId, CancellationToken cancellationToken)
+    {
+        var notFound = Error.NotFound("comment.not-found");
+        await using var db = await contexts.CreateDbContextAsync(cancellationToken);
+        if (await db.Comments.AsNoTracking().FirstOrDefaultAsync(c => c.Id == commentId, cancellationToken) is not { Status: CommentStatuses.Published } comment
+            || await TargetAsync(db, comment.TargetKind, comment.TargetId, cancellationToken) is not { } target
+            || await bills.BillAsync(db, target.BillNumber, cancellationToken) is not { } bill
+            || !CommentRules.IsShown(comment.Status, target.Shown, bill.Hidden))
+        {
+            return notFound;
+        }
+
+        // Its place among the target's shown comments, oldest first, ordered by the database exactly as the thread is.
+        var order = await db.Comments.AsNoTracking()
+            .Where(c => c.TargetKind == comment.TargetKind && c.TargetId == comment.TargetId && c.Status == CommentStatuses.Published)
+            .OrderBy(c => c.CreatedAt).ThenBy(c => c.Id)
+            .Select(c => c.Id)
+            .ToListAsync(cancellationToken);
+        return new CommentPlace(comment.Id, comment.TargetKind, comment.TargetId, bill.Bill.Number, order.IndexOf(comment.Id) + 1);
+    }
+
     public async Task<IReadOnlyDictionary<Guid, int>> CountsAsync(string kind, IReadOnlyCollection<Guid> targetIds, CancellationToken cancellationToken)
     {
         await using var db = await contexts.CreateDbContextAsync(cancellationToken);
@@ -448,9 +469,9 @@ internal sealed class CommentsService(
                           where c.TargetKind == CommentKinds.Reason && c.Status == CommentStatuses.Published && c.CreatedAt >= since && c.CreatedAt < until
                               && r.Status == ReasonStatuses.Published && (b.Status == BillRecordStatuses.Open || b.Status == BillRecordStatuses.Closed)
                               && (c.AuthorUserId == null || c.AuthorUserId != r.AuthorUserId)
-                          select new { r.AuthorUserId, ReasonId = r.Id, b.BillNumber, c.CreatedAt })
+                          select new { r.AuthorUserId, ReasonId = r.Id, b.BillNumber, c.CreatedAt, CommentId = c.Id })
             .ToListAsync(cancellationToken);
-        return rows.Select(r => new CommentedArgumentAt(r.AuthorUserId, r.ReasonId, r.BillNumber, r.CreatedAt)).ToList();
+        return rows.Select(r => new CommentedArgumentAt(r.AuthorUserId, r.ReasonId, r.BillNumber, r.CreatedAt, r.CommentId)).ToList();
     }
 
     /// <summary>A comment that is published with its target shown, and its bill (not hidden); null otherwise.</summary>

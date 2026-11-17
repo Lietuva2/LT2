@@ -61,7 +61,11 @@ public sealed class CommentThreadTests : BunitContext
         SetRendererInfo(new RendererInfo("Static", isInteractive: false));
         var thread = RenderThread();
 
-        thread.Find("details.more.comments summary").TextContent.ShouldBe("Aptarimas (3)");
+        // Design 8.16.1: the <details> holds only its summary, which stands in the action row; the discussion is the panel after it.
+        thread.Find("details.discuss > summary").TextContent.ShouldBe("Aptarimas (3)");
+        thread.Find("details.discuss").ChildElementCount.ShouldBe(1);
+        thread.Find("details.discuss + .discuss__panel").Id.ShouldBe($"aptarimas-panel-{Target:N}");
+        thread.FindAll("li.comment .act .act__more[popovertarget]").Count.ShouldBe(3, "every comment's own row ends in \"⋯\"");
         thread.FindAll("li.comment").Select(li => li.Id).ShouldBe([CommentLimits.ElementId(PersonComment), CommentLimits.ElementId(OrganisationComment), CommentLimits.ElementId(MpComment)]);
         var markup = thread.Markup;
         markup.ShouldContain("<a href=\"https://pavyzdys.test/tyrimas\" rel=\"nofollow ugc noopener noreferrer\" target=\"_blank\">https://pavyzdys.test/tyrimas</a>");

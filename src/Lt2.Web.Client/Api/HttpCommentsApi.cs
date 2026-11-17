@@ -10,6 +10,9 @@ internal sealed class HttpCommentsApi(ApiHttp http) : ICommentsApi
     public Task<ApiResult<CommentThreadResponse>> GetThreadAsync(string kind, Guid targetId, int? shown = null, CancellationToken cancellationToken = default) =>
         http.SendAsync<CommentThreadResponse>(HttpMethod.Get, CommentRoutes.ThreadOf(kind, targetId, shown), null, cancellationToken);
 
+    public Task<ApiResult<CommentPlaceResponse>> GetPlaceAsync(Guid commentId, CancellationToken cancellationToken = default) =>
+        http.SendAsync<CommentPlaceResponse>(HttpMethod.Get, CommentRoutes.PlaceOf(commentId), null, cancellationToken);
+
     public Task<ApiResult<MyCommentsResponse>> GetMineAsync(string number, CancellationToken cancellationToken = default) =>
         http.SendAsync<MyCommentsResponse>(HttpMethod.Get, CommentRoutes.MineOf(number), null, cancellationToken);
 

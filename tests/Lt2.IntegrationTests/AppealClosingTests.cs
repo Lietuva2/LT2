@@ -147,7 +147,10 @@ public sealed class AppealClosingTests(DatabaseFixture database) : ApiTest(datab
         using var _o = other;
         (await other.TakeSideAsync(AppealSteps.ThirdBill, "for")).StatusCode.ShouldBe(HttpStatusCode.NoContent);
         var hidden = await (await other.WriteReasonAsync(AppealSteps.ThirdBill, "for", "Pajamų mokesčio tarifai turi būti progresiniai.")).ReadAsync<ReasonCreatedResponse>();
-        (await other.SendAsync(HttpMethod.Put, AppealRoutes.EndorsementOf(hidden.Id))).StatusCode.ShouldBe(HttpStatusCode.NoContent);
+        var (marker, _) = await Factory.MemberAsync("Žyminti Narė");
+        using var _k = marker;
+        (await marker.TakeSideAsync(AppealSteps.ThirdBill, "for")).StatusCode.ShouldBe(HttpStatusCode.NoContent);
+        (await marker.SendAsync(HttpMethod.Put, AppealRoutes.EndorsementOf(hidden.Id))).StatusCode.ShouldBe(HttpStatusCode.NoContent);
 
         await AddFinalVoteAsync();
         try

@@ -32,18 +32,19 @@
                     var item = view.Items[i];
                     <li id="@ResponsePaging.ItemId(i + 1)">
                         <MpResponseItem Response="item.Response" Mp="item.Mp" IdPrefix="@($"atsakymas-{i + 1}-")">
+                            @if (_threads.GetValueOrDefault(item.Response.Id) is { } thread)
+                            {
+                                @* Design 8.23.6: "Aptarimas" under a shown response (a withdrawn one read-only), an island of its own here. *@
+                                <CommentThread Kind="response" TargetId="item.Response.Id" Number="@Number" Thread="thread" Count="thread.Count"
+                                               Open="@(CommentPaging.Asked(CommentsShown, item.Response.Id, Linked) is not null)" Asked="@CommentPaging.Asked(CommentsShown, item.Response.Id, Linked)"
+                                               Marked="@CommentPaging.Marked(item.Response.Id, Linked)" PagePath="@PagePath" Contact="@Contact" Moderator="Moderator"
+                                               @rendermode="InteractiveWebAssembly" />
+                            }
                             @if (item.Response.Status is "published" or "withdrawn")
                             {
                                 <Lt2.Web.Client.Mps.ReportResponse ResponseId="item.Response.Id" Contact="@Contact" @rendermode="InteractiveWebAssembly" />
                             }
                         </MpResponseItem>
-                        @if (_threads.GetValueOrDefault(item.Response.Id) is { } thread)
-                        {
-                            @* Design 8.23.6: "Aptarimas" under a shown response (a withdrawn one read-only), an island of its own here. *@
-                            <CommentThread Kind="response" TargetId="item.Response.Id" Number="@Number" Thread="thread" Count="thread.Count"
-                                           Open="@(CommentPaging.Asked(CommentsShown, item.Response.Id) is not null)" Asked="@CommentPaging.Asked(CommentsShown, item.Response.Id)" PagePath="@PagePath" Contact="@Contact" Moderator="Moderator"
-                                           @rendermode="InteractiveWebAssembly" />
-                        }
                     </li>
                 }
             </ol>
@@ -82,6 +83,9 @@
     /// <summary>The server found a moderator in a staff-passkey session (the comments' "Moderuoti", design 8.23.8).</summary>
     [Parameter] public bool Moderator { get; set; }
 
+    /// <summary>A link to one comment (<c>?komentaras=</c>, design 8.23.6), resolved by the page: its response shown, its thread open through it.</summary>
+    [Parameter] public CommentPlaceResponse? Linked { get; set; }
+
     private Dictionary<Guid, CommentThreadResponse> _threads = [];
 
     /// <summary>The page with the responses' paging kept, for the comments' own "Rodyti daugiau komentarų".</summary>
@@ -96,12 +100,19 @@
         _view = (await Responses.GetOnBillAsync(Number)).Value;
         _shown = _view is null ? 0 : Math.Min(ResponsePaging.Shown(Show, _view.Items.Count), _view.Items.Count);
 
+        // A link to a comment under a response beyond the first ten shows the responses through it (design 8.23.6).
+        if (_view is not null && Linked is { Kind: "response" } linked
+            && _view.Items.ToList().FindIndex(i => i.Response.Id == linked.TargetId) is var at and >= 0)
+        {
+            _shown = Math.Max(_shown, at + 1);
+        }
+
         // Design 8.23.6: the comments of the responses on this page only, each the first ten or as many as asked.
         _threads = [];
         foreach (var item in _view?.Items.Take(_shown) ?? [])
         {
             if (item.Response.Status is "published" or "withdrawn"
-                && (await Comments.GetThreadAsync("response", item.Response.Id, CommentPaging.Asked(CommentsShown, item.Response.Id))).Value is { } thread)
+                && (await Comments.GetThreadAsync("response", item.Response.Id, CommentPaging.Asked(CommentsShown, item.Response.Id, Linked))).Value is { } thread)
             {
                 _threads[item.Response.Id] = thread;
             }

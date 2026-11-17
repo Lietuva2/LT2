@@ -2,8 +2,9 @@
 @inject IMeApi MeApi
 
 @* Design 5.2: the party the person supports, private and optional, with its own explicit consent; used only for group
-   numbers of at least 20 in summaries to MPs. Whether it may also be shown on a public profile is the designer's proposal of
-   design 8.25.9, not built. *@
+   numbers of at least 20 in summaries to MPs. Design 8.25.9 (owner, 2026-11-17): while the profile is public, the box
+   "Rodyti viešame profilyje" shows it on the public page, with its own consent (party-public) said inline before it is given;
+   removing or changing the party, unticking the box or switching the profile off stops showing it at once. *@
 @if (Party is { } party)
 {
     <section class="sheet stack" aria-labelledby="party-title" id="party-support">
@@ -26,6 +27,25 @@
                 <span>@L["Party.Consent"]</span>
             </label>
         }
+        @if (!string.IsNullOrEmpty(_partyChoice))
+        {
+            @if (party.ProfilePublic)
+            {
+                <label class="check">
+                    <input type="checkbox" id="party-public" @bind="_show" disabled="@Locked" />
+                    <span>@L["Party.Public"]</span>
+                </label>
+                @if (_show && !(party.Public && _partyChoice == party.Party))
+                {
+                    @* What the consent covers, said before it is given (design 8.25.9, 8.15). *@
+                    <p class="note" id="party-public-text">@L["Party.PublicText"]</p>
+                }
+            }
+            else
+            {
+                <p class="small" id="party-public-needs-profile">@L["Party.PublicNeedsProfile"]</p>
+            }
+        }
         <p><button type="button" class="btn btn--plain" id="party-save" disabled="@(Locked || (!string.IsNullOrEmpty(_partyChoice) && _partyChoice != party.Party && !_partyConsent))" @onclick="SaveAsync">@L["Party.Save"]</button></p>
         <Messages Message="@Message" Info="@Info" />
     </section>
@@ -34,6 +54,7 @@
 @code {
     private string _partyChoice = "";
     private bool _partyConsent;
+    private bool _show;
 
     [PersistentState]
     public PartySupportResponse? Party { get; set; }
@@ -41,19 +62,49 @@
     protected override async Task OnInitializedAsync()
     {
         Party ??= (await MeApi.GetPartySupportAsync()).Value;
+        Take();
+    }
+
+    /// <summary>Reads the state again: "Viešas profilis" was switched on or off on the same screen (switching off stops showing the party).</summary>
+    public Task ReloadAsync() => RunAsync(async () =>
+    {
+        Party = (await MeApi.GetPartySupportAsync()).Value;
+        Take();
+    });
+
+    private void Take()
+    {
         _partyChoice = Party?.Party ?? "";
+        _show = Party?.Public ?? false;
     }
 
     private Task SaveAsync() => RunAsync(async () =>
     {
         var party = string.IsNullOrEmpty(_partyChoice) ? null : _partyChoice;
-        if (!Succeeded(await MeApi.SetPartySupportAsync(new PartySupportRequest { Party = party, Consent = _partyConsent })))
+        var was = Party!;
+        if (party != was.Party)
         {
-            return;
+            // A removed or changed party stops being shown on the server (design 8.25.9); the box below gives it again.
+            if (!Succeeded(await MeApi.SetPartySupportAsync(new PartySupportRequest { Party = party, Consent = _partyConsent })))
+            {
+                return;
+            }
+        }
+
+        var shownBefore = was.Public && party == was.Party;
+        var show = party is not null && was.ProfilePublic && _show;
+        if (show != shownBefore)
+        {
+            if (!Succeeded(await MeApi.SetPartyPublicAsync(show)))
+            {
+                Party = (await MeApi.GetPartySupportAsync()).Value;
+                return;
+            }
         }
 
         Info = L[party is null ? "Party.Removed" : "Party.Saved"];
         _partyConsent = false;
         Party = (await MeApi.GetPartySupportAsync()).Value;
+        Take();
     });
 }

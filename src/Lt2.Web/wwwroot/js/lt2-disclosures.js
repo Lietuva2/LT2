@@ -1,5 +1,6 @@
 /*
- * Design 8.15: a re-render must not close what the person opened. A <details class="more"> works without script, so a
+ * Design 8.15: a re-render must not close what the person opened. A <details class="more"> (and an action row's "Aptarimas",
+ * <details class="discuss">, design 8.16.1) works without script, so a
  * person may open one on the prerendered page before its island has started; when WebAssembly starts, Blazor replaces the
  * prerendered markup and the new <details> comes up closed. This remembers which disclosures the person opened or closed
  * (by id, or by position among the page's disclosures when one has no id) and gives the replacement the same state.
@@ -9,9 +10,10 @@
   'use strict';
 
   var opened = new Set();
+  var SELECTOR = 'details.more, details.discuss';
 
   function all() {
-    return document.querySelectorAll('details.more');
+    return document.querySelectorAll(SELECTOR);
   }
 
   function keyOf(details) {
@@ -24,13 +26,13 @@
   // "toggle" does not bubble: listen while it travels down.
   document.addEventListener('toggle', function (event) {
     var details = event.target;
-    if (!(details instanceof HTMLDetailsElement) || !details.classList.contains('more')) return;
+    if (!(details instanceof HTMLDetailsElement) || !details.matches(SELECTOR)) return;
     if (details.open) opened.add(keyOf(details));
     else opened.delete(keyOf(details));
   }, true);
 
   function hasDisclosure(node) {
-    return node.nodeType === 1 && (node.matches('details.more') || node.querySelector('details.more') !== null);
+    return node.nodeType === 1 && (node.matches(SELECTOR) || node.querySelector(SELECTOR) !== null);
   }
 
   // A disclosure taken out of the page while open counts as opened, whether or not its "toggle" was seen: the event is
@@ -38,7 +40,7 @@
   // one with an id can be recognised once it is out of the page.
   function rememberRemoved(node) {
     if (node.nodeType !== 1) return;
-    var list = node.matches('details.more') ? [node] : node.querySelectorAll('details.more');
+    var list = node.matches(SELECTOR) ? [node] : node.querySelectorAll(SELECTOR);
     for (var i = 0; i < list.length; i++) {
       if (list[i].open && list[i].id) opened.add(window.location.pathname + '|id:' + list[i].id);
     }

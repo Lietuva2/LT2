@@ -37,13 +37,13 @@ public sealed partial class CommentTests(AppealFlowTests.ModeratorFixture modera
             await PasskeyTests.RegisterAsync(reader.Page, "Sutinkantis Narys");
             var reason = await FirstReasonAsync(writer.Page);
             comment = await WriteAsync(writer.Page, reason, "Argumentui trūksta skaičių: kiek tai kainuotų? (E2E)");
-            await E2ESteps.ShootBothAsync(writer.Page, Shots, "reason-written", writer.Page.Locator($"#aptarimas-{reason:N}"));
+            await E2ESteps.ShootBothAsync(writer.Page, Shots, "reason-written", writer.Page.Locator($"#aptarimas-panel-{reason:N}"));
 
             // At 1280 an open "Aptarimas" reads in the arguments' full width, not in a side's column (browser look of 2026-11-16;
             // the sheet's own width at 1280 is about 580 px, so the measure is the share of the arguments' area, not a number).
-            var box = await writer.Page.Locator($"#aptarimas-{reason:N}").BoundingBoxAsync();
+            var box = await writer.Page.Locator($"#aptarimas-panel-{reason:N}").BoundingBoxAsync();
             // The arguments' pair is the one holding this discussion (the organisations' statements use the same layout).
-            var pair = await writer.Page.Locator(".pair--reasons").Filter(new() { Has = writer.Page.Locator($"#aptarimas-{reason:N}") }).BoundingBoxAsync();
+            var pair = await writer.Page.Locator(".pair--reasons").Filter(new() { Has = writer.Page.Locator($"#aptarimas-panel-{reason:N}") }).BoundingBoxAsync();
             box.ShouldNotBeNull().Width.ShouldBeGreaterThan(pair.ShouldNotBeNull().Width * 0.75f, "the sides stand one above the other while a discussion is open");
 
             await AgreeAsync(reader.Page, reason, comment);
@@ -85,7 +85,7 @@ public sealed partial class CommentTests(AppealFlowTests.ModeratorFixture modera
 
             ids.Add(await WriteAsync(member.Page, statement, "Kokių pastabų turi draugija? (E2E)"));
             ids.Add(await WriteAsync(r, statement, "Pastabos dėl pereinamojo laikotarpio. (E2E)", expectVoice: "organizacijos vardu"));
-            var thread = r.Locator($"#aptarimas-{statement:N}");
+            var thread = r.Locator($"#aptarimas-panel-{statement:N}");
             await Assertions.Expect(thread.Locator($"#komentaras-{ids[1]:N} .tag")).ToHaveTextAsync("Organizacija");
             await Assertions.Expect(thread.Locator($"#komentaras-{ids[0]:N}")).ToContainTextAsync("Klausiantis Narys");
             (await thread.InnerTextAsync()).ShouldNotContain("Atstovaujanti Narė", Case.Sensitive, "a representative's name is never public");
@@ -136,11 +136,11 @@ public sealed partial class CommentTests(AppealFlowTests.ModeratorFixture modera
 
             var question = await WriteAsync(member.Page, response, "Kada bus balsavimas? (E2E)", bill: ResponseBill);
             var answer = await WriteAsync(page, response, "Planuojama kitą savaitę. (E2E)", expectVoice: "Seimo nario vardu", bill: ResponseBill);
-            var thread = page.Locator($"#aptarimas-{response:N}");
+            var thread = page.Locator($"#aptarimas-panel-{response:N}");
             await Assertions.Expect(thread.Locator($"#komentaras-{answer:N}")).ToContainTextAsync(MpName);
             await Assertions.Expect(thread.Locator($"#komentaras-{answer:N}")).ToContainTextAsync("Seimo narys arba jo biuras");
             await AgreeAsync(member.Page, response, answer, ResponseBill);
-            await E2ESteps.ShootBothAsync(member.Page, Shots, "response", member.Page.Locator($"#aptarimas-{response:N}"));
+            await E2ESteps.ShootBothAsync(member.Page, Shots, "response", member.Page.Locator($"#aptarimas-panel-{response:N}"));
             _ = question;
         }
         finally
@@ -161,8 +161,8 @@ public sealed partial class CommentTests(AppealFlowTests.ModeratorFixture modera
     private static async Task<Guid> WriteAsync(IPage page, Guid target, string text, string expectVoice = "su jūsų vardu", string bill = Bill)
     {
         await page.GotoAsync($"{Base}/seimas/{bill}");
-        var thread = page.Locator($"#aptarimas-{target:N}");
-        await thread.Locator("summary").First.ClickAsync();
+        var thread = page.Locator($"#aptarimas-panel-{target:N}");
+        await page.Locator($"#aptarimas-summary-{target:N}").ClickAsync();
         var write = page.Locator($"#comments-write-{target:N}");
         await Assertions.Expect(write).ToBeEnabledAsync(new() { Timeout = E2ESteps.Slow });
         await write.ClickAsync();
@@ -178,7 +178,7 @@ public sealed partial class CommentTests(AppealFlowTests.ModeratorFixture modera
     private static async Task AgreeAsync(IPage page, Guid target, Guid comment, string bill = Bill)
     {
         await page.GotoAsync($"{Base}/seimas/{bill}");
-        await page.Locator($"#aptarimas-{target:N} summary").First.ClickAsync();
+        await page.Locator($"#aptarimas-summary-{target:N}").ClickAsync();
         var agree = page.Locator($"#komentaras-{comment:N}-agree");
         await Assertions.Expect(agree).ToBeEnabledAsync(new() { Timeout = E2ESteps.Slow });
         await agree.ClickAsync();
@@ -192,10 +192,13 @@ public sealed partial class CommentTests(AppealFlowTests.ModeratorFixture modera
     {
         var mod = await moderator.PageAsync();
         await mod.GotoAsync($"{Base}/seimas/{Bill}");
-        await mod.Locator($"#komentaras-{comment:N}").Locator("xpath=ancestor::details[contains(@class,'comments')]").Locator("summary").First.ClickAsync();
+        // Design 8.16.1: the discussion opens from its summary in the argument's action row; "Moderuoti" is in the comment's "⋯".
+        await mod.Locator($"#komentaras-{comment:N}").Locator("xpath=ancestor::div[contains(@class,'discuss__panel')]/preceding-sibling::details[1]/summary").ClickAsync();
+        // "Moderuoti" comes with the moderators' answer once the island runs; open "⋯" only then.
         var moderate = mod.Locator($"#komentaras-{comment:N}-moderate");
-        await Assertions.Expect(moderate).ToBeVisibleAsync(new() { Timeout = E2ESteps.Slow });
-        await moderate.Locator("summary").ClickAsync();
+        await Assertions.Expect(moderate).ToBeEnabledAsync(new() { Timeout = E2ESteps.Slow });
+        await mod.Locator($"#komentaras-{comment:N}-more-actions").ClickAsync();
+        await moderate.ClickAsync();
         await mod.Locator($"#comment-action-hide-page-{comment:N}").ClickAsync();
         await mod.Locator($"#comment-statement-page-{comment:N}").FillAsync("Bandymas: komentaras paslepiamas (E2E).");
         await mod.Locator($"#comment-action-submit-page-{comment:N}").ClickAsync();

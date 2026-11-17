@@ -29,15 +29,21 @@ else
         <MyDisplayName Name="@Me.DisplayName" Changed="NameChanged" />
 
         @* Design 8.25: "Apie mane" and the switch "Viešas profilis", the consent to a public page. *@
-        <MyProfile HasName="@(Me.DisplayName is not null)" />
+        <MyProfile HasName="@(Me.DisplayName is not null)" PublicChanged="PublicChangedAsync" />
 
-        <MyPartySupport />
+        @* Design 5.2 and 8.25.9: the party, private unless shown on the public profile by its own box. *@
+        <MyPartySupport @ref="_party" />
     </section>
 }
 
 <Messages Message="@Message" Info="@Info" />
 
 @code {
+    private MyPartySupport? _party;
+
+    /// <summary>The party's box is offered only while the profile is public, and switching it off stops showing the party.</summary>
+    private Task PublicChangedAsync() => _party?.ReloadAsync() ?? Task.CompletedTask;
+
     protected override async Task OnInitializedAsync() => await LoadMeAsync();
 
     /// <summary>The greeting follows a changed display name (the email when it was removed).</summary>

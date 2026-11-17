@@ -80,6 +80,11 @@ internal sealed class HttpMeApi(ApiHttp http) : IMeApi
     public Task<ApiResult> SetPartySupportAsync(PartySupportRequest request, CancellationToken cancellationToken = default) =>
         http.SendAsync(HttpMethod.Put, ApiRoutes.Me.PartySupport, request, cancellationToken);
 
+    public Task<ApiResult> SetPartyPublicAsync(bool show, CancellationToken cancellationToken = default) =>
+        show
+            ? http.SendAsync(HttpMethod.Put, ApiRoutes.Me.PartyPublic, new PartyPublicRequest { ConsentVersion = PartyPublicLimits.ConsentVersion }, cancellationToken)
+            : http.SendAsync(HttpMethod.Delete, ApiRoutes.Me.PartyPublic, null, cancellationToken);
+
     public Task<ApiResult> DeleteAccountAsync(CancellationToken cancellationToken = default) =>
         http.SendAsync(HttpMethod.Delete, ApiRoutes.Me.Root, null, cancellationToken);
 

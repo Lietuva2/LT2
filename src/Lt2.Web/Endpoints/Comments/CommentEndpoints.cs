@@ -26,6 +26,12 @@ internal static class CommentEndpoints
             .WithName("GetComments").WithTags("Comments").AllowAnonymous()
             .Produces<CommentThreadResponse>().Produces(StatusCodes.Status304NotModified).ProducesProblem(StatusCodes.Status404NotFound);
 
+        // Where a shown comment stands, for a link to it (design 8.23.6): public, the same 404 for a hidden and an unknown one.
+        api.MapGet(ApiEndpoints.Relative(CommentRoutes.Place), async (HttpContext http, Guid id, CommentReads reads, ErrorMapper errors, CancellationToken ct) =>
+                PublicJson.From(http, errors, await reads.PlaceAsync(id, ct), maxAgeSeconds: 0))
+            .WithName("GetCommentPlace").WithTags("Comments").AllowAnonymous()
+            .Produces<CommentPlaceResponse>().Produces(StatusCodes.Status304NotModified).ProducesProblem(StatusCodes.Status404NotFound);
+
         api.MapPost(ApiEndpoints.Relative(CommentRoutes.Thread), async (string kind, Guid targetId, CommentRequest request, ClaimsPrincipal user, CommentReads reads, ErrorMapper errors, CancellationToken ct) =>
             {
                 var result = await reads.WriteAsync(user, kind, targetId, request, ct);

@@ -52,6 +52,9 @@ public interface IMeApi
 
     Task<ApiResult> SetPartySupportAsync(PartySupportRequest request, CancellationToken cancellationToken = default);
 
+    /// <summary>"Rodyti viešame profilyje" (design 8.25.9): <c>show</c> gives the consent <c>party-public</c>, otherwise it is withdrawn.</summary>
+    Task<ApiResult> SetPartyPublicAsync(bool show, CancellationToken cancellationToken = default);
+
     /// <summary>Deletes the account and everything the person gave (design 6.5).</summary>
     Task<ApiResult> DeleteAccountAsync(CancellationToken cancellationToken = default);
 

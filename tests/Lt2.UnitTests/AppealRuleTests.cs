@@ -105,7 +105,7 @@ public sealed class AppealRuleTests
     {
         AppealRules.CheckNewReason(Sides.For, 5, limit: 2).ShouldBe("reason.limit");
         AppealRules.Left(5, 2).ShouldBe(0, "nothing negative, nothing taken away");
-        AppealRules.CheckEndorsement(Sides.For, Sides.For, 7, limit: 3).ShouldBe("endorsement.limit");
+        AppealRules.CheckEndorsement(ownReason: false, Sides.For, Sides.For, 7, limit: 3).ShouldBe("endorsement.limit");
     }
 
     [Fact]
@@ -142,25 +142,35 @@ public sealed class AppealRuleTests
     [Fact]
     public void Man_svarbu_still_needs_the_persons_own_side_even_though_arguments_do_not()
     {
-        AppealRules.CheckEndorsement(null, Sides.For, 0, limit: 0).ShouldBe("position.required");
-        AppealRules.CheckEndorsement(Sides.Against, Sides.For, 0, limit: 0).ShouldBe("endorsement.other-side");
+        AppealRules.CheckEndorsement(ownReason: false, null, Sides.For, 0, limit: 0).ShouldBe("position.required");
+        AppealRules.CheckEndorsement(ownReason: false, Sides.Against, Sides.For, 0, limit: 0).ShouldBe("endorsement.other-side");
     }
 
     [Fact]
     public void Man_svarbu_is_only_for_arguments_of_ones_own_side()
     {
-        AppealRules.CheckEndorsement(Sides.For, Sides.For, 0, limit: 0).ShouldBeNull();
-        AppealRules.CheckEndorsement(Sides.For, Sides.Against, 0, limit: 0).ShouldBe("endorsement.other-side");
-        AppealRules.CheckEndorsement(null, Sides.Against, 0, limit: 0).ShouldBe("position.required");
+        AppealRules.CheckEndorsement(ownReason: false, Sides.For, Sides.For, 0, limit: 0).ShouldBeNull();
+        AppealRules.CheckEndorsement(ownReason: false, Sides.For, Sides.Against, 0, limit: 0).ShouldBe("endorsement.other-side");
+        AppealRules.CheckEndorsement(ownReason: false, null, Sides.Against, 0, limit: 0).ShouldBe("position.required");
+    }
+
+    /// <summary>Owner, 2026-11-17: the marks choose the arguments sent to MPs, so an author never marks their own, whatever else holds.</summary>
+    [Fact]
+    public void Man_svarbu_is_never_on_ones_own_argument()
+    {
+        AppealRules.CheckEndorsement(ownReason: true, Sides.For, Sides.For, 0, limit: 0).ShouldBe("endorsement.own-reason");
+        AppealRules.CheckEndorsement(ownReason: true, Sides.For, Sides.For, 5, limit: 3).ShouldBe("endorsement.own-reason", "before the limit");
+        AppealRules.CheckEndorsement(ownReason: true, null, Sides.For, 0, limit: 0).ShouldBe("position.required", "a side first, as for any mark");
+        AppealRules.CheckEndorsement(ownReason: false, Sides.For, Sides.For, 0, limit: 0).ShouldBeNull("someone else's argument of one's own side");
     }
 
     [Fact]
     public void There_is_no_limit_on_man_svarbu_marks_when_the_setting_is_0_and_the_set_limit_otherwise()
     {
-        AppealRules.CheckEndorsement(Sides.Against, Sides.Against, 40, limit: 0).ShouldBeNull();
+        AppealRules.CheckEndorsement(ownReason: false, Sides.Against, Sides.Against, 40, limit: 0).ShouldBeNull();
         SettingKeys.AppealsEndorsementsPerPerson.Default.ShouldBe(0);
-        AppealRules.CheckEndorsement(Sides.Against, Sides.Against, 2, limit: 3).ShouldBeNull();
-        AppealRules.CheckEndorsement(Sides.Against, Sides.Against, 3, limit: 3).ShouldBe("endorsement.limit");
+        AppealRules.CheckEndorsement(ownReason: false, Sides.Against, Sides.Against, 2, limit: 3).ShouldBeNull();
+        AppealRules.CheckEndorsement(ownReason: false, Sides.Against, Sides.Against, 3, limit: 3).ShouldBe("endorsement.limit");
     }
     [Fact]
     public void Changing_sides_drops_the_man_svarbu_marks_of_the_old_side()

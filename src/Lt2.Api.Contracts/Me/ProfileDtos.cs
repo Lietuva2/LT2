@@ -28,14 +28,17 @@ public sealed record ProfileRequest
     public string? ConsentVersion { get; init; }
 }
 
-/// <summary>A member's public page (design 8.25.2): the display name, "Apie mane" and the number of followers.</summary>
-public sealed record MemberProfileResponse(string ProfileId, string DisplayName, string? About, int Followers, string Address);
+/// <summary>
+/// A member's public page (design 8.25.2): the display name, "Apie mane" and the number of followers; <c>Party</c> only while
+/// the member ticked "Rodyti viešame profilyje" (design 8.25.9), null otherwise.
+/// </summary>
+public sealed record MemberProfileResponse(string ProfileId, string DisplayName, string? About, int Followers, string Address, string? Party = null);
 
 /// <summary>
 /// A published text on a member's page (design 8.25.2): <c>Kind</c> <c>argument</c> with the <c>Side</c> it was written for,
 /// or <c>comment</c> (in the member's own voice) with <c>On</c>, the kind of text it stands under (<c>reason</c>,
-/// <c>statement</c>, <c>response</c>); its bill, when it became public, its text. The link is the bill's page with
-/// <c>#reason-{id}</c> or <c>#komentaras-{id}</c>.
+/// <c>statement</c>, <c>response</c>); its bill, when it became public, its text. The link is
+/// <c>BillTextLinks.ToReason</c> or <c>BillTextLinks.ToComment</c>, which land on it (design 8.23.6).
 /// </summary>
 public sealed record MemberTextResponse(Guid Id, string Kind, BillRefResponse Bill, string? Side, string? On, string Text, DateTimeOffset PublishedAt);
 

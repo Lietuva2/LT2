@@ -1,0 +1,23 @@
+@inject IStringLocalizer<UiText> T
+
+@* The "⋯" at the end of an action row (design 8.16.1, the designer's proposal of 2026-11-17): the rarer actions on a text
+   ("Pranešti", the author's own "Atsiimti" or "Ištrinti", a moderator's "Moderuoti"). The browser's own popover, as a hint
+   is: a press opens it without JavaScript (then in the middle of the screen, the browser's default place), a press elsewhere
+   or Escape closes it and the focus stays on or goes back to "⋯"; js/lt2-menus.js places it beside "⋯". An item that opens a
+   form closes the menu itself (popovertargetaction="hide") and the form opens below the row as a quiet sheet. The trigger is
+   never disabled: a visitor's "Pranešti" note works without script; a member's items are disabled until the island runs. *@
+<button type="button" class="act__item act__more" id="@Id" popovertarget="@MenuId" aria-label="@T["Actions.More"]" title="@T["Actions.More"]"><Icon Name="dots" /></button>
+<div class="menu" id="@MenuId" popover="auto" aria-label="@T["Actions.More"]">@ChildContent</div>
+
+@code {
+    /// <summary>The trigger's id, unique on the page; the menu is <c>{Id}-menu</c>, which items close with <see cref="MenuId"/>.</summary>
+    [Parameter, EditorRequired] public string Id { get; set; } = "";
+
+    /// <summary>The items: <c>button.menu__item</c> with <c>popovertarget</c> set to the menu and <c>popovertargetaction="hide"</c>.</summary>
+    [Parameter] public RenderFragment? ChildContent { get; set; }
+
+    private string MenuId => Id + "-menu";
+
+    /// <summary>The menu's id for a trigger id, for the items that close it.</summary>
+    public static string MenuOf(string id) => id + "-menu";
+}

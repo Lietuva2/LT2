@@ -102,8 +102,11 @@ internal static class AppealRules
     public static string? CheckNewReason(string reasonSide, int reasonsCounted, int limit) =>
         CheckSide(reasonSide) ?? (MayAdd(reasonsCounted, limit) ? null : "reason.limit");
 
-    /// <summary>"Man svarbu" only on an argument of the person's own side, within the setting's limit, if one is set.</summary>
-    public static string? CheckEndorsement(string? endorsersSide, string reasonSide, int endorsementsAlreadyOnBill, int limit)
+    /// <summary>
+    /// "Man svarbu" only on someone else's argument (owner, 2026-11-17: the marks choose the arguments sent to MPs, so an
+    /// author does not vote for their own), of the person's own side, within the setting's limit, if one is set.
+    /// </summary>
+    public static string? CheckEndorsement(bool ownReason, string? endorsersSide, string reasonSide, int endorsementsAlreadyOnBill, int limit)
     {
         if (endorsersSide is null)
         {
@@ -113,6 +116,11 @@ internal static class AppealRules
         if (endorsersSide != reasonSide)
         {
             return "endorsement.other-side";
+        }
+
+        if (ownReason)
+        {
+            return "endorsement.own-reason";
         }
 
         return MayAdd(endorsementsAlreadyOnBill, limit) ? null : "endorsement.limit";
@@ -243,7 +251,7 @@ internal static class RuleErrors
 {
     public static Error Of(string code) => code switch
     {
-        "position.required" or "reason.limit" or "endorsement.other-side" or "endorsement.limit"
+        "position.required" or "reason.limit" or "endorsement.other-side" or "endorsement.limit" or "endorsement.own-reason"
             or "record.not-open" or "moderation.wrong-state" or "draft.not-configured" => Error.Conflict(code),
         "draft.too-many" => new Error(ErrorKind.TooManyRequests, code),
         "statement.required" or "staff-statement.too-long" => Error.Validation(code, "statement"),

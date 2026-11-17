@@ -15,7 +15,7 @@ product code. What is being built, in order:
 | **M2a Appeals without sending** | People take a side on a Seimas bill and give reasons; summaries for MPs are generated as previews only. |
 | **M2a+ Reasons to come** | The agenda page (`/darbotvarke`) and the front page built on it, following bills and MPs with emails, the AI draft of a description (Claude API, off until configured), the share line (design 8.11). Its asking for an appeal and appeals opened by moderators were replaced by M2a++. |
 | **M2a++ One object** | Every active bill open at once, one page per bill, no proposals, requests or approval; lists and agenda on participation; moderation after the fact (design 8.12). Then descriptions with their labels and the AI summary job (8.13). |
-| **M2d Profiles** | (Owner, 2026-11-16: before comments.) The account area as four screens; public profiles by the member's choice, "Apie mane", the name's card, following a member, follower numbers on every followed thing's own page (design 8.21, 8.25, 8.11.2). The public party is a designer's proposal (8.25.9), not built. |
+| **M2d Profiles** | (Owner, 2026-11-16: before comments.) The account area as four screens; public profiles by the member's choice, "Apie mane", the name's card, following a member, follower numbers on every followed thing's own page (design 8.21, 8.25, 8.11.2); the supported party on the public page by its own box and consent (8.25.9, owner 2026-11-17). |
 | **Email rhythm** | (Owner, 2026-11-16.) How often a member's emails come, one delivery for every member email kind, the gathered email (design 8.24). |
 | **M2c Comments** | (Owner, 2026-11-16: after M2d.) "Aptarimas" under arguments, statements and responses, "Sutinku", moderation, the argument author's notice in the rhythm; names link to public profiles (design 8.23, 8.25). |
 | **M2b Sending** | Real summary emails to MPs, MP preferences, profile take-over, MP responses. Built first (owner, 2026-11-15): the link of design 8.5.1–8.5.4 (recognised at once, the take-over, the office), then the response (8.5.5–8.5.7). Then (2026-11-16) sending itself, design 8.19: `Digest:Sending`, approval, the real email, preferences without an account, the introduction letter, the suppression list; off by default. Then (2026-11-16) design 8.20: the followers' email about MPs' answers and known browsers for sign-in. |
@@ -92,7 +92,8 @@ src/Lt2.Hosting            what the web host and the worker set up the same way:
 src/Lt2.Web.Client         Blazor WebAssembly components and HTTP implementations of the API clients; the interface's
                            shared pieces: Components/InteractiveBase<TText>, Display (numbers and dates, Vilnius),
                            StringLocalizerExtensions (Format), CopyLink, FieldError, Messages, SplitBar, Hint (the short answer in place, js/lt2-hints.js),
-                           ProjectTabs and MenuSections (design 8.21), BrowserKeys (the storage keys, design 8.22.1),
+                           ProjectTabs and MenuSections (design 8.21), MoreMenu and Icon (the action row, design 8.16.1,
+                           js/lt2-menus.js), BrowserKeys (the storage keys, design 8.22.1),
                            LongText (a long member's text with "Rodyti daugiau")
 src/Lt2.Api.Contracts      DTOs, routes, client interfaces, validators (shared by server, client and tests)
 src/Lt2.SharedKernel       Result type, identifiers (UUID v7), outbox, audit and settings interfaces, connection
@@ -100,7 +101,8 @@ src/Lt2.SharedKernel       Result type, identifiers (UUID v7), outbox, audit and
                            Europe/Vilnius zone and its days), the signed-in account (ClaimsPrincipal.UserId()), the
                            staff actor (StaffActor) and staff statements (StaffStatements), the outbound allowlist
                            (Http/: hosts from Outbound:AllowedHosts plus AddOutboundHost; redirects followed only within
-                           it), TextExcerpt (also compiled into Lt2.Web.Client); no clock of its own (TimeProvider is used)
+                           it), TextExcerpt (also compiled into Lt2.Web.Client), BillTextLinks (every link to a comment or an
+                           argument, also compiled into Lt2.Api.Contracts); no clock of its own (TimeProvider is used)
 src/Modules/               Lt2.Identity, Lt2.Notifications, Lt2.Audit, Lt2.Parliament (Seimas open-data client,
                            import, statistics); Lt2.Appeals (bills' records, positions, arguments, endorsements,
                            reports, moderation, rule-based pre-screening, flags, summaries content, descriptions written
@@ -234,7 +236,12 @@ pre-merge run found.
   `L.Format(key, …)`; numbers and dates are `Display` (`Number`, `Day`, `DayTime`, `Today(TimeProvider)`), on the
   server pages too; the moderators' contact address is `Configuration.ModeratorContact()`. A link to a part of the
   same page carries the page's path (`/metodika#sekimas`, never a bare `#sekimas`): the pages carry `<base href="/">`, so
-  a bare fragment leads to the front page; `NavigationTests` (integration) walks the served pages and fails on one. A link to copy is
+  a bare fragment leads to the front page; `NavigationTests` (integration) walks the served pages and fails on one. Under every member's text (argument, statement, MP's response, comment) the
+  actions are one action row (design 8.16.1, the designer's proposal of 2026-11-17): `<div class="act">` holding the toggles
+  ("Man svarbu", `CommentThread`'s "Aptarimas" summary, "Sutinku" as `.act__item`) and `<MoreMenu>` ("⋯", the browser's
+  popover, placed by `js/lt2-menus.js`) whose `button.menu__item`s close it (`popovertargetaction="hide"`) and open their form
+  below the row as `div.act__panel`; `CommentThread` renders `details.discuss` (summary only) plus `.discuss__panel`, which
+  the row lays below itself. Icons are `<Icon>` (inline SVG, currentColor). A link to copy is
   `<CopyLink>`; "Atkurti" is `<RestoreForm>`; a queued argument is `<QueueReasonItem>`, a queued statement
   `<StatementQueueItem>`; the positions consent before a first side is `<PositionConsentForm>`; the bill page's islands
   share the caller's answers through `MyBillState`, the front page's through `MyAgendaState` (its `Changed` event tells
@@ -382,9 +389,18 @@ written by hand. A visitor sent to sign in from one comes back to it (`LandingPa
   nowhere until the person writes another.
 - The page (`Lt2.Web/Components/Members/MemberPage`, composed by the host from Identity, Notifications and Appeals) shows the
   name, "Apie mane", the follower number and the member's texts (`IMemberTexts`, Appeals): published arguments and the
-  comments they wrote in their own voice that the bill's page shows, on bills whose record is not hidden, newest first, 10 and "Rodyti daugiau" by `?rodyti=` (no script). Never sides, "Man svarbu", follows, party, invitations,
+  comments they wrote in their own voice that the bill's page shows, on bills whose record is not hidden, newest first, 10 and "Rodyti daugiau" by `?rodyti=` (no script). Never sides, "Man svarbu", follows, invitations,
   organisations, anything written as an organisation or MP, "Sutinku" (the designer's proposal), counts of the person's
   texts, or who follows.
+- **The party on the page (design 8.25.9, owner 2026-11-17).** The party already on "Profilis" (`identity.party_support`,
+  `MyPartySupport`), never a free field, shown as "Palaikoma partija: …" on `/nariai/…` only while the profile is public and
+  the box "Rodyti viešame profilyje" is on: its own versioned consent `party-public` (`PartyPublicConsent`, SharedKernel; the
+  form's `PartyPublicLimits.ConsentVersion`), `PUT|DELETE /me/party-support/public` (`PartySupportHandlers.ShowAsync|HideAsync`;
+  the DELETE is on `TermsExemptions.Routes`), read for the page only through `IPublicProfiles.ShownPartyAsync`
+  (`MemberProfileResponse.Party`, null otherwise). Unticking, removing or changing the party and switching the profile off
+  (`ProfileHandlers.SwitchOffAsync`, also on deletion and take-over) withdraw it at once; switching on again does not bring it
+  back. Never in the card, beside a text or in any list; nothing for the MP's own account (`mp.takes-no-part`); the "at least
+  20" rule and `IPartySupporters` unchanged. Audited `party.public-on|off` without the party; in the export.
 - Beside an argument, a comment and a "Sutinku" name, the name of a member with a public profile is a link with a card
   (`js/lt2-cards.js`; `RecordReasons` with one `<template>` per profile id from `BillRecordResponse.Cards`, `CommentThread`
   with one per person and thread from `CommentThreadResponse.Cards`); `ReasonResponse.AuthorProfileId`,
@@ -485,7 +501,11 @@ page's "Balsuota".
   links keep their own limits. A long text shows its beginning and "Rodyti daugiau", opened "Rodyti mažiau" under the
   rest (`TextExcerpt`, one file in SharedKernel compiled also into Lt2.Web.Client; `Components/LongText`): an argument
   about 300 characters, a statement or a response about 1 500; the moderators' queue keeps texts whole.
-- "Man svarbu" endorses a reason on your own side.
+- "Man svarbu" endorses a reason on your own side, never one you wrote (owner, 2026-11-17: `AppealRules.CheckEndorsement`,
+  `endorsement.own-reason`; the island disables it on one's own argument from the never-cached answer; a merge drops a mark
+  that would land on its giver's own argument). A mark moves nothing on the page: `RecordReasons` keeps the shown order
+  after the person's own action (`StableOrder`, the order by marks returns on the next read) and gives the pressed button
+  the focus back without scrolling.
 - Reasons and marks per person per bill are settings (`Appeals:ReasonsPerPerson`, `Appeals:EndorsementsPerPerson`);
   0 = no limit, the default. A limit switched on later removes nothing and counts only shown or waiting reasons.
 - **Threshold:** one for all bills, `Digest:ThresholdDefault`, never below `Digest:ThresholdMinimum`; a moderator may set
@@ -700,8 +720,17 @@ be deleted, `comment.hidden`). Member controls render only once the island runs,
 member and visitor. While an "Aptarimas" is open under an argument the sides stand in one column. The thread is `Lt2.Web.Client/Comments/CommentThread` (inside the arguments' and statements' islands, its own island
 under responses), the caller's answer `CommentState` (browser only), reports target `comment`, moderators' list
 `CommentModerationView`/`CommentQueueItem`, actions also on the bill's page. The author's notice is one kind of the rhythm,
-`CommentNotices` (Notifications; outbox kind `email.comment-notice` alone, its own part of the gathered email; switch
+`CommentNotices` (Notifications; each line links to the first new comment it reports with `BillTextLinks.ToComment`;
+outbox kind `email.comment-notice` alone, its own part of the gathered email; switch
 `comments`, the last on the follows screen). A person's name links to their public profile when they have one (8.25.4).
+A link to a comment or an argument (design 8.23.6, the designer's proposal of 2026-11-17) is made only by `BillTextLinks`
+(`ToComment`, `ToReason`; one file in SharedKernel compiled also into the contracts): `?komentaras={id}#komentaras-{id}` or
+`?argumentas={id}#reason-{id}`. `BillPage` resolves the comment once (`GET /comments/{id}/place`, public, one 404
+`comment.not-found` for hidden and unknown) and hands `Linked` to `RecordReasons`, `OrganisationPositions` and
+`BillResponses` as a parameter (so an island starts in the same state): the target is shown even behind "show all" or the
+responses' paging, its "Aptarimas" open through the linked one rounded up to the next ten (`BillTextLinks.ShownThrough`,
+`CommentPaging.Asked(…, linked)`), the comment marked `comment--linked` (an argument `said--linked`); anything not shown
+changes nothing.
 
 **Moderation.** Anything that reaches MPs has passed a person. Every action is audited and an argument's author gets the reason.
 A report button is on every bill's description and reason. A moderator can restrict an account from writing (reasons,

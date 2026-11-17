@@ -14,8 +14,9 @@
    nothing in an argument's markup depends on its author's side. A moderator or an administrator in a staff-passkey session
    also gets the queue's actions on each argument, behind "Moderuoti" (design 8.12.3, decided 2026-11-14): what they need
    comes from the moderators' own answer, asked for only once the island runs in the browser (the panel beside it hands
-   over its own, MyBillState), and for anyone else the server refuses it, so nothing of it renders. Each argument is keyed by its id: "Man svarbu" re-sorts the list, and an
-   open form must stay with its own argument. *@
+   over its own, MyBillState), and for anyone else the server refuses it, so nothing of it renders. Each argument is keyed by its id, and after the person's own action the
+   shown order is kept (owner, 2026-11-17: a mark moves nothing on the page), so an open form stays with its own argument
+   and the pressed button keeps its place and its focus. *@
 <section class="sheet stack" aria-labelledby="h-why" id="reasons">
     <h2 id="h-why">@L["Reasons.Title"]</h2>
     @if (Record is { } record)
@@ -37,10 +38,11 @@
                     }
                     @foreach (var reason in _showAll ? all : all.Take(Shown))
                     {
-                        <div class="said" id="reason-@reason.Id" @key="reason.Id">
+                        <div class="said @(LinkedReason == reason.Id ? "said--linked" : null)" id="@BillTextLinks.ReasonElement(reason.Id)" @key="reason.Id">
                             <LongText Text="@reason.Text" BubbleClass="bubble bubble--people voice" Id="@($"reason-more-{reason.Id}")" />
-                            @* The name, then the actions as one group that never wraps item by item (owner, 2026-11-13): when
-                               the two do not fit side by side, the name takes its own line above. *@
+                            @* Line 1: the name (design 8.16.1). Line 2: the action row, one line that never wraps: "Man svarbu · n",
+                               "Aptarimas (n)" and "⋯" with the rarer actions; a chosen action and the discussion open below the
+                               whole row, at its width. *@
                             <div class="said__by">
                                 @if (reason.AuthorProfileId is { } profileId)
                                 {
@@ -51,50 +53,64 @@
                                 {
                                     <b class="said__name">@(reason.AuthorName ?? L["Reasons.Anonymous"])</b>
                                 }
-                                <span class="said__actions" id="said-actions-@reason.Id">
+                            </div>
+                            <div class="act" id="said-actions-@reason.Id">
+                                @if (_signedIn)
+                                {
+                                    var endorsed = Mine?.Endorsed.Contains(reason.Id) == true;
+                                    <button class="mark act__item num" type="button" id="mark-@reason.Id" aria-pressed="@(endorsed ? "true" : "false")"
+                                            disabled="@(Locked || !MayEndorse(reason, endorsed))" title="@EndorseHint(reason, endorsed)" @ref="_marks[reason.Id]"
+                                            @onclick="() => ToggleEndorsementAsync(reason.Id, endorsed)"><Icon Name="heart" /><span>@L.Format("Reasons.Endorse", Display.Number(reason.Endorsements))</span></button>
+                                }
+                                else
+                                {
+                                    <span class="mark act__item num"><Icon Name="heart" /><span>@L.Format("Reasons.Endorse", Display.Number(reason.Endorsements))</span></span>
+                                }
+                                @* Design 8.23.6: "Aptarimas" under the argument; prerendered with the island for the arguments shown
+                                   first, read when first opened for those revealed by "show all". *@
+                                <CommentThread Kind="reason" TargetId="reason.Id" Number="@Number" Thread="@Threads?.GetValueOrDefault(reason.Id)" Count="reason.Comments"
+                                               Open="@(AskedFor(reason.Id) is not null)" Asked="@AskedFor(reason.Id)" Marked="@CommentPaging.Marked(reason.Id, Linked)" PagePath="@PagePath" Contact="@Contact" Moderator="Moderator" />
+                                <MoreMenu Id="@($"more-reason-{reason.Id}")">
                                     @if (_signedIn)
                                     {
-                                        var endorsed = Mine?.Endorsed.Contains(reason.Id) == true;
-                                        <button class="mark num" type="button" aria-pressed="@(endorsed ? "true" : "false")"
-                                                disabled="@(Locked || !MayEndorse(reason, endorsed))" title="@EndorseHint(reason, endorsed)"
-                                                @onclick="() => ToggleEndorsementAsync(reason.Id, endorsed)">@L.Format("Reasons.Endorse", Display.Number(reason.Endorsements))</button>
-                                        <button class="linkish small" type="button" disabled="@Locked" @onclick="() => _reporting = _reporting == reason.Id ? null : reason.Id">@L["Report.Open"]</button>
+                                        var menu = MoreMenu.MenuOf($"more-reason-{reason.Id}");
+                                        <button class="menu__item" type="button" id="report-@reason.Id" disabled="@Locked" popovertarget="@menu" popovertargetaction="hide"
+                                                @onclick="() => _reporting = _reporting == reason.Id ? null : reason.Id">@L["Report.Open"]</button>
                                         @if (IsMine(reason) && record.Status == "open")
                                         {
-                                            <button class="linkish small" type="button" id="withdraw-@reason.Id" disabled="@Locked"
+                                            <button class="menu__item" type="button" id="withdraw-@reason.Id" disabled="@Locked" popovertarget="@menu" popovertargetaction="hide"
                                                     @onclick="() => _withdrawing = _withdrawing == reason.Id ? null : reason.Id">@L["Reasons.Withdraw"]</button>
+                                        }
+                                        @if (Moderated(reason.Id) is not null)
+                                        {
+                                            <button class="menu__item" type="button" id="moderate-@reason.Id" disabled="@Locked" popovertarget="@menu" popovertargetaction="hide"
+                                                    @onclick="() => _moderating = _moderating == reason.Id ? null : reason.Id">@L["ModReason.Open"]</button>
                                         }
                                     }
                                     else
                                     {
-                                        <span class="mark num">@L.Format("Reasons.Endorse", Display.Number(reason.Endorsements))</span>
                                         <VisitorReport Contact="@Contact" />
                                     }
-                                </span>
+                                </MoreMenu>
+                                @if (_reporting == reason.Id)
+                                {
+                                    <div class="act__panel"><ReportForm TargetKind="reason" TargetId="reason.Id" OnClose="() => _reporting = null" /></div>
+                                }
+                                @if (_withdrawing == reason.Id)
+                                {
+                                    <div class="act__panel row sheet sheet--quiet" role="group" aria-label="@L["Reasons.Withdraw"]">
+                                        <p class="small">@L["Reasons.WithdrawConfirm"]</p>
+                                        <button class="btn" type="button" id="withdraw-confirm" disabled="@Locked" @onclick="() => WithdrawAsync(reason.Id)">@L["Reasons.WithdrawYes"]</button>
+                                        <button class="btn btn--plain" type="button" disabled="@Locked" @onclick="() => _withdrawing = null">@L["Cancel"]</button>
+                                    </div>
+                                }
+                                @if (_moderating == reason.Id && Moderated(reason.Id) is { } moderated)
+                                {
+                                    <div class="act__panel sheet sheet--quiet moderate" id="moderation-@reason.Id">
+                                        <ModerationActions Id="reason.Id" Kind="reason" Status="@moderated.Status" RecordStatus="@moderated.RecordStatus" MergeCandidates="moderated.MergeCandidates" Comments="moderated.Comments" OnDone="Reload" OnRestricted="ReloadPage" />
+                                    </div>
+                                }
                             </div>
-                            @if (_reporting == reason.Id)
-                            {
-                                <ReportForm TargetKind="reason" TargetId="reason.Id" OnClose="() => _reporting = null" />
-                            }
-                            @if (Moderated(reason.Id) is { } moderated)
-                            {
-                                <details class="more moderate" id="moderate-@reason.Id">
-                                    <summary class="linkish small">@L["ModReason.Open"]</summary>
-                                    <ModerationActions Id="reason.Id" Kind="reason" Status="@moderated.Status" RecordStatus="@moderated.RecordStatus" MergeCandidates="moderated.MergeCandidates" Comments="moderated.Comments" OnDone="Reload" OnRestricted="ReloadPage" />
-                                </details>
-                            }
-                            @* Design 8.23.6: "Aptarimas" under the argument, on its sheet; prerendered with the island for the
-                               arguments shown first, read when first opened for those revealed by "show all". *@
-                            <CommentThread Kind="reason" TargetId="reason.Id" Number="@Number" Thread="@Threads?.GetValueOrDefault(reason.Id)" Count="reason.Comments"
-                                           Open="@(CommentPaging.Asked(CommentsShown, reason.Id) is not null)" Asked="@CommentPaging.Asked(CommentsShown, reason.Id)" PagePath="@PagePath" Contact="@Contact" Moderator="Moderator" />
-                            @if (_withdrawing == reason.Id)
-                            {
-                                <div class="row" role="group" aria-label="@L["Reasons.Withdraw"]">
-                                    <p class="small">@L["Reasons.WithdrawConfirm"]</p>
-                                    <button class="btn" type="button" id="withdraw-confirm" disabled="@Locked" @onclick="() => WithdrawAsync(reason.Id)">@L["Reasons.WithdrawYes"]</button>
-                                    <button class="btn btn--plain" type="button" disabled="@Locked" @onclick="() => _withdrawing = null">@L["Cancel"]</button>
-                                </div>
-                            }
                         </div>
                     }
                 </div>
@@ -203,6 +219,33 @@
     private IReadOnlyList<ReasonResponse>? _similar;
     private Guid? _reporting;
 
+    /// <summary>The argument whose moderator's actions are open below its row ("⋯" → "Moderuoti", design 8.12.3).</summary>
+    private Guid? _moderating;
+
+    /// <summary>Each shown argument's "Man svarbu" button, to give the focus back after pressing it.</summary>
+    private readonly Dictionary<Guid, ElementReference> _marks = [];
+
+    /// <summary>The argument whose "Man svarbu" was just pressed; its button gets the focus back once enabled again.</summary>
+    private Guid? _refocus;
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        await base.OnAfterRenderAsync(firstRender);
+        if (_refocus is { } id && !Busy && _marks.TryGetValue(id, out var button))
+        {
+            _refocus = null;
+            try
+            {
+                // Without scrolling: the argument stays where it stood (owner, 2026-11-17).
+                await button.FocusAsync(preventScroll: true);
+            }
+            catch (Microsoft.JSInterop.JSException)
+            {
+                // The button is gone (the argument was withdrawn meanwhile): nothing to focus.
+            }
+        }
+    }
+
     /// <summary>The setting Texts:MaxLength (0 = no limit), read when writing starts; null until then or if unread.</summary>
     private int? _maxLength;
 
@@ -231,7 +274,20 @@
     /// <summary>The responses' page parameter (design 8.5.6), kept in the links this part builds.</summary>
     [SupplyParameterFromQuery(Name = Lt2.Api.Contracts.Mps.MpResponseLimits.ShowParameter)] public string? ResponsesShown { get; set; }
 
+    /// <summary>
+    /// A link to one comment (<c>?komentaras=</c>), resolved by the page on the server (design 8.23.6): the argument it stands
+    /// under is shown and its "Aptarimas" rendered open through the linked comment, marked. A parameter, so the island gets the
+    /// same state in the browser and does not close the thread when it starts. Null when the address names none, or one not shown.
+    /// </summary>
+    [Parameter] public CommentPlaceResponse? Linked { get; set; }
+
+    /// <summary>A link to one argument (<c>?argumentas=</c>, design 8.12.1): shown even beyond the first two of its side, marked.</summary>
+    [Parameter] public Guid? LinkedReason { get; set; }
+
     private string PagePath => CommentPaging.PagePath(Number, ResponsesShown);
+
+    /// <summary>How many comments of an argument the page shows open: "Rodyti daugiau komentarų" or a link to one; null: closed.</summary>
+    private int? AskedFor(Guid reasonId) => CommentPaging.Asked(CommentsShown, reasonId, Linked);
 
     [PersistentState] public MyBillRecordResponse? Mine { get; set; }
 
@@ -248,8 +304,10 @@
         Record ??= (await Appeals.GetRecordAsync(Number)).Value;
         Threads ??= await ThreadsAsync();
 
-        // "Rodyti daugiau komentarų" under an argument the page shows only after "show all": shown already (design 8.23.6).
-        _showAll = Record?.Reasons is { } reasons && reasons.Any(r => CommentPaging.Asked(CommentsShown, r.Id) is not null && !FirstShown(reasons).Contains(r.Id));
+        // "Rodyti daugiau komentarų" or a link to a comment under an argument the page shows only after "show all", or a link to
+        // such an argument: shown already (design 8.23.6, 8.12.1).
+        _showAll = Record?.Reasons is { } reasons
+            && reasons.Any(r => (AskedFor(r.Id) is not null || r.Id == LinkedReason) && !FirstShown(reasons).Contains(r.Id));
         if (_signedIn)
         {
             Mine ??= await State.MineAsync(Number);
@@ -277,15 +335,27 @@
             return threads;
         }
 
-        foreach (var reason in record.Reasons.Where(r => FirstShown(record.Reasons).Contains(r.Id) || CommentPaging.Asked(CommentsShown, r.Id) is not null))
+        foreach (var reason in record.Reasons.Where(r => FirstShown(record.Reasons).Contains(r.Id) || AskedFor(r.Id) is not null))
         {
-            if ((await CommentsApi.GetThreadAsync("reason", reason.Id, CommentPaging.Asked(CommentsShown, reason.Id))).Value is { } thread)
+            if ((await CommentsApi.GetThreadAsync("reason", reason.Id, AskedFor(reason.Id))).Value is { } thread)
             {
                 threads[reason.Id] = thread;
             }
         }
 
         return threads;
+    }
+
+    /// <summary>The fresh record with its arguments in the order they stand on the page; arguments not shown before come last, in the answer's order.</summary>
+    public static BillRecordResponse? StableOrder(BillRecordResponse? fresh, BillRecordResponse? shown)
+    {
+        if (fresh is null || shown is null)
+        {
+            return fresh;
+        }
+
+        var at = shown.Reasons.Select((r, i) => (r.Id, i)).ToDictionary(x => x.Id, x => x.i);
+        return fresh with { Reasons = fresh.Reasons.OrderBy(r => at.TryGetValue(r.Id, out var i) ? i : int.MaxValue).ToList() };
     }
 
     /// <summary>The arguments shown before "show all": the first two of each side (design 8.12.1).</summary>
@@ -332,17 +402,24 @@
         Errors = NoErrors();
     }
 
+    /// <summary>
+    /// "Man svarbu" on someone else's argument of one's own side, within the limit (design 8.2); never on one's own (owner,
+    /// 2026-11-17), known from the never-cached "mine" answer, so the served HTML stays the same for everyone.
+    /// </summary>
     private bool MayEndorse(ReasonResponse reason, bool endorsed) =>
-        Record?.Status == "open" && Mine is { } mine && (endorsed || (mine.Side == reason.Side && mine.EndorsementsLeft is null or > 0));
+        Record?.Status == "open" && Mine is { } mine && (endorsed || (!IsMine(reason) && mine.Side == reason.Side && mine.EndorsementsLeft is null or > 0));
 
     private string? EndorseHint(ReasonResponse reason, bool endorsed) =>
         MayEndorse(reason, endorsed) ? null
+            : IsMine(reason) ? L["Reasons.OwnReason"].Value
             : Mine?.Side is null ? L["Reasons.NeedSide"].Value
             : Mine.Side != reason.Side ? L["Reasons.OwnSideOnly"].Value
             : L["Reasons.NoEndorsementsLeft"].Value;
 
     private Task ToggleEndorsementAsync(Guid reasonId, bool endorsed) => RunAsync(async () =>
     {
+        // The button is disabled while the action runs, which takes the focus from it: it gets it back once it is enabled.
+        _refocus = reasonId;
         if (!Succeeded(endorsed ? await Appeals.RemoveEndorsementAsync(reasonId) : await Appeals.EndorseAsync(reasonId)))
         {
             return;
@@ -399,10 +476,16 @@
         Errors = NoErrors();
     }
 
+    /// <summary>
+    /// Reads the record again after the person's own action and keeps the arguments where they stand (owner, 2026-11-17: "the
+    /// view is scrolled away after clicking 'Man svarbu'"): the answer is ordered by the marks, so a mark could move the argument
+    /// the person just pressed, or push it behind "show all", and the browser lost both the place and the focus. The new numbers
+    /// show in place; a new argument comes last; the order by marks returns when the page is read again.
+    /// </summary>
     private async Task ReloadAsync()
     {
         State.Forget(Number);
-        Record = (await Appeals.GetRecordAsync(Number)).Value ?? Record;
+        Record = StableOrder((await Appeals.GetRecordAsync(Number)).Value, Record) ?? Record;
         Threads = await ThreadsAsync();
         Mine = await State.MineAsync(Number) ?? Mine;
     }

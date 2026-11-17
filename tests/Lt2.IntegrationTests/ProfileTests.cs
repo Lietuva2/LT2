@@ -239,7 +239,8 @@ public sealed class ProfileTests(DatabaseFixture database) : ApiTest(database)
         using var answer = await visitor.Client.GetAsync(ProfileRoutes.MemberOf(id), TestContext.Current.CancellationToken);
         using (var json = JsonDocument.Parse(await answer.Content.ReadAsStringAsync(TestContext.Current.CancellationToken)))
         {
-            json.RootElement.EnumerateObject().Select(p => p.Name).Order().ShouldBe(["about", "address", "displayName", "followers", "profileId"]);
+            json.RootElement.EnumerateObject().Select(p => p.Name).Order().ShouldBe(["about", "address", "displayName", "followers", "party", "profileId"]);
+            json.RootElement.GetProperty("party").ValueKind.ShouldBe(JsonValueKind.Null, "the party only with its own box (design 8.25.9)");
         }
 
         var texts = await visitor.GetJsonAsync<MemberTextsResponse>(ProfileRoutes.TextsOf(id, 10));

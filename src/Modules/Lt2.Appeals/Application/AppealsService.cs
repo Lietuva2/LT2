@@ -434,7 +434,7 @@ internal sealed class AppealsService(
         var side = await db.Positions.Where(p => p.RecordId == record.Id && p.UserId == userId).Select(p => p.Side).FirstOrDefaultAsync(cancellationToken);
         var already = await db.Endorsements.CountAsync(e => e.RecordId == record.Id && e.UserId == userId, cancellationToken);
         var limit = await settings.GetAsync(SettingKeys.AppealsEndorsementsPerPerson, cancellationToken);
-        if (AppealRules.CheckEndorsement(side, reason.Side, already, limit) is { } refused)
+        if (AppealRules.CheckEndorsement(reason.AuthorUserId == userId, side, reason.Side, already, limit) is { } refused)
         {
             return RuleErrors.Of(refused);
         }
