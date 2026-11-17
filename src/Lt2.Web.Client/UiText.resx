@@ -18,6 +18,7 @@
   <data name="SignIn.PasskeyHint" xml:space="preserve"><value>Piršto atspaudu, veidu ar įrenginio PIN kodu – be kodo el. paštu.</value></data>
   <data name="SignIn.NoAccount" xml:space="preserve"><value>Neturite paskyros?</value></data>
   <data name="SignIn.ToRegister" xml:space="preserve"><value>Registruokitės su kvietimo kodu.</value></data>
+  <data name="SignIn.ToRegisterByOffice" xml:space="preserve"><value>Užsiregistruokite: kvietimas į biurą tinka ir registracijai.</value></data>
   <data name="Register.Label" xml:space="preserve"><value>Registracija</value></data>
   <data name="Register.Title" xml:space="preserve"><value>Nauja paskyra</value></data>
   <data name="MyInvitation.Title" xml:space="preserve"><value>Jūsų kvietimo kodas</value></data>
