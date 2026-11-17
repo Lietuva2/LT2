@@ -38,7 +38,7 @@ public sealed class InvitationFlowTests : E2ETest
         await Assertions.Expect(b.GetByLabel("Kvietimo kodas")).ToHaveValueAsync(code);
         await Assertions.Expect(b.GetByText("Kodą davęs žmogus matys tik skaičių, ne jus.")).ToBeVisibleAsync();
         await E2ESteps.RegisterHereAsync(b, email, "Pakviesta Asmenybė");
-        await b.WaitForURLAsync(new Regex(@"^https?://[^/]+/$"), new() { Timeout = E2ESteps.Slow });
+        await b.WaitForURLAsync(new Regex("/paskyra$"), new() { Timeout = E2ESteps.Slow });
 
         // The inviter's count rises; nothing names the invited person.
         await a.ReloadAsync();

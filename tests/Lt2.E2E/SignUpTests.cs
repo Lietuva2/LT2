@@ -102,11 +102,9 @@ public sealed partial class SignUpTests : E2ETest
         await terms.CheckAsync();
         await page.GetByRole(AriaRole.Button, new() { Name = "Baigti registraciją" }).ClickAsync();
 
-        await page.WaitForURLAsync(new Regex(@"^https?://[^/]+/$"), new() { Timeout = E2ESteps.Slow });
+        await page.WaitForURLAsync(new Regex("/paskyra$"), new() { Timeout = E2ESteps.Slow });
         await TestAccounts.SessionOfAsync(context);
 
-        // Owner, 2026-11-17: registering lands on the front page; the account is one step away.
-        await page.GotoAsync(E2ESteps.Base + "/paskyra");
         await Assertions.Expect(page.GetByRole(AriaRole.Heading, new() { Level = 1 })).ToHaveTextAsync("Sveiki, Rūta M.!");
         await Assertions.Expect(page.GetByText("El. paštas patvirtintas")).ToBeVisibleAsync();
         await Assertions.Expect(page.Locator("#display-name-save")).ToBeEnabledAsync(new() { Timeout = 60_000 });

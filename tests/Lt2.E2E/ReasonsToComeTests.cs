@@ -70,7 +70,7 @@ public sealed partial class ReasonsToComeTests : E2ETest
         var code = Uri.EscapeDataString(SignUpTests.Invitation);
         (await RegisterThroughAsync($"/prisijungti#kodas={code}&tikslas=%2Fseimas%2FXVP-0412")).ShouldEndWith("/seimas/XVP-0412");
         (await RegisterThroughAsync($"/prisijungti?kodas={code}&tikslas=%2Fseimas%2FXVP-0412")).ShouldEndWith("/seimas/XVP-0412", customMessage: "the old form still works");
-        (await RegisterThroughAsync($"/prisijungti#kodas={code}&tikslas=https%3A%2F%2Fpiktas.example%2Fseimas%2FXVP-0412")).ShouldBe("/");
+        (await RegisterThroughAsync($"/prisijungti#kodas={code}&tikslas=https%3A%2F%2Fpiktas.example%2Fseimas%2FXVP-0412")).ShouldBe("/paskyra");
     }
 
     /// <summary>
@@ -140,6 +140,6 @@ public sealed partial class ReasonsToComeTests : E2ETest
         return new Uri(page.Url).AbsolutePath;
     }
 
-    [GeneratedRegex("^https?://[^/]+(/|/seimas/XVP-0412)$")]
+    [GeneratedRegex("(/paskyra|/seimas/XVP-0412)$")]
     private static partial Regex Landed();
 }

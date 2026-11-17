@@ -340,14 +340,15 @@
     }
 
     /// <summary>
-    /// Where a member goes once signed in: the share link's page if one waits in this tab, otherwise the front page (owner,
-    /// 2026-11-17: "the start page shouldn't be the profile, for no one").
+    /// Where a member goes once signed in: the share link's page if one waits in this tab, otherwise <paramref name="otherwise"/>:
+    /// the front page (owner, 2026-11-17: "the start page shouldn't be the profile, for no one"), or "Profilis" right after a
+    /// registration is completed (owner, 2026-11-17: "on the profile could also land a new user after registration").
     /// </summary>
-    private async Task<string> NextPageAsync()
+    private async Task<string> NextPageAsync(string otherwise = "/")
     {
         var stored = await StorageAsync("sessionStorage.getItem", LandingKey);
         await StorageAsync("sessionStorage.removeItem", LandingKey);
-        return LandingPath.Accept(stored) ?? LandingPath.Accept(Landing) ?? "/";
+        return LandingPath.Accept(stored) ?? LandingPath.Accept(Landing) ?? otherwise;
     }
 
     /// <summary>Session storage may be blocked (private windows, settings): then the share link simply lands on the front page.</summary>
@@ -477,7 +478,8 @@
             if (Succeeded(await Me.CompleteRegistrationAsync(request), FieldsOnThisStep))
             {
                 await StorageAsync("sessionStorage.removeItem", CodeKey);
-                await GoAsync(ReturnTo ?? await NextPageAsync());
+                // Owner, 2026-11-17: a registration just completed lands on "Profilis" when there is no page to return to.
+                await GoAsync(ReturnTo ?? await NextPageAsync(AccountScreens.Profile));
                 return;
             }
 

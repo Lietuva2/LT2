@@ -1853,9 +1853,10 @@ MPs stand on.
   `/prisijungti?kodas=…&tikslas=/seimas/XVP-0412`. After registering or signing in, the person lands on that page
   instead of the front page. [Decided by the owner on 2026-11-17: "the start page … shouldn't be his profile. For no one
   actually". Signing in, registering, starting a staff session and accepting the terms land on the front page `/` when
-  there is no page to return to (`tikslas`, a page's own return, the staff page's `#grizti=`), never on "Profilis"; the
-  MP's take-over lands on "Dalyvavimas" (`/paskyra/dalyvavimas`, 8.21), where the MP's part is. Until then they landed on
-  `/paskyra`.]
+  there is no page to return to (`tikslas`, a page's own return, the staff page's `#grizti=`); the MP's take-over lands on
+  "Dalyvavimas" (`/paskyra/dalyvavimas`, 8.21), where the MP's part is. The same day ("on the profile could also land a new
+  user after registration"): a registration just completed (the name, age and terms step) without a page to return to
+  lands on "Profilis" (`/paskyra`). Until then every one of them landed on `/paskyra`.]
 - `tikslas` is accepted only as a path on this site under `/seimas/` (one leading slash, no scheme, host or
   backslash); anything else is ignored. [changed while building (2026-11-16, the account screens and public profiles):
   also `/paskyra` and the account screens under it (a visitor sent to sign in from one comes back to it) and a member's

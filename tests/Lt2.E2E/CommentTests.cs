@@ -119,7 +119,7 @@ public sealed partial class CommentTests(AppealFlowTests.ModeratorFixture modera
             // Step one's take-over, as MpResponseTests does it: the official address, the link from Mailpit, the passkey.
             await page.GotoAsync(Base + "/prisijungti?registruotis=true");
             await E2ESteps.RegisterHereAsync(page, Official, MpName);
-            await page.WaitForURLAsync(new Regex(@"^https?://[^/]+/$"), new() { Timeout = E2ESteps.Slow });
+            await page.WaitForURLAsync(new Regex("/paskyra$"), new() { Timeout = E2ESteps.Slow });
             await page.GotoAsync(Base + "/paskyra/dalyvavimas");
             var claim = page.Locator("#mp-claim");
             await Assertions.Expect(claim).ToBeEnabledAsync(new() { Timeout = E2ESteps.Slow });

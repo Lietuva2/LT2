@@ -410,8 +410,8 @@ support `MyPartySupport`), "Sekimas ir laiškai" `/paskyra/sekimas` (`FollowList
 (passkeys, sessions, known browsers `#zinomos-narsykles`, the positions consent, export and deletion `#my-data`, signing out).
 The addresses are `AccountScreens` (`Lt2.SharedKernel/AccountScreens.cs`, also compiled into Lt2.Web.Client): links in emails, legal texts and pages are built from it, never
 written by hand. A visitor sent to sign in from one comes back to it (`LandingPath` accepts `/paskyra…`). Without a page to
-return to, signing in, registering, a staff session and accepting the terms land on the front page `/`, never "Profilis"
-(owner, 2026-11-17); the MP's take-over lands on "Dalyvavimas". Every screen is
+return to, signing in, a staff session and accepting the terms land on the front page `/` (owner, 2026-11-17); a
+registration just completed lands on "Profilis", the MP's take-over on "Dalyvavimas". Every screen is
 `no-store` and carries `<NeedsScript />`; `IslandsBeforeStartTests` walks all four.
 
 **Public profiles (design 8.25; the owner, 2026-11-16: "implement those", before comments).**
