@@ -10,7 +10,8 @@ using Microsoft.EntityFrameworkCore.Storage;
 namespace Lt2.Identity.Application.Account;
 
 /// <summary>The signed-in person's account and sessions.</summary>
-internal sealed class AccountHandlers(IdentityDb db, UserManager<User> users, StaffAccess staff, Politicians.PoliticianHandlers politicians, TimeProvider clock)
+internal sealed class AccountHandlers(
+    IdentityDb db, UserManager<User> users, StaffAccess staff, Politicians.PoliticianHandlers politicians, Politicians.PoliticianAccess sessions, TimeProvider clock)
 {
     public async Task<Result<AccountSummary>> GetAsync(ClaimsPrincipal principal, CancellationToken cancellationToken)
     {
@@ -47,7 +48,8 @@ internal sealed class AccountHandlers(IdentityDb db, UserManager<User> users, St
             state?.AccountHasActiveStaffRole == true,
             offer,
             link,
-            !profile.IsPending && await Consents.TermsHandlers.RequiredAsync(db, user.Id, cancellationToken));
+            !profile.IsPending && await Consents.TermsHandlers.RequiredAsync(db, user.Id, cancellationToken),
+            (await sessions.ForAsync(principal, cancellationToken))?.PasskeySession == true);
     }
 
     public async Task<IReadOnlyList<SessionSummary>> SessionsAsync(ClaimsPrincipal principal, CancellationToken cancellationToken)

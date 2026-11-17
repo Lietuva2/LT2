@@ -170,6 +170,14 @@
     public bool? StartWithRegistration { get; set; }
 
     /// <summary>
+    /// The page this flow stands on when it is not the sign-in page (owner, 2026-11-17: an MP office member's invitation, design
+    /// 8.5.3), whose own secret is after its "#": the flow then leaves the address alone (it reads no code or landing page from
+    /// it and removes nothing), and after each step it reloads that page, so the secret stays in the address and in no storage.
+    /// </summary>
+    [Parameter]
+    public string? ReturnTo { get; set; }
+
+    /// <summary>
     /// A member's invitation link in the old form (<c>?kodas=…</c>, design 6.2): opens the registration form with the code
     /// filled in. Links made now carry the code after the <c>#</c> (design 6.8), read in <see cref="OnAfterRenderAsync"/>.
     /// </summary>
@@ -211,7 +219,7 @@
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
-        if (!firstRender || !RendererInfo.IsInteractive)
+        if (!firstRender || !RendererInfo.IsInteractive || ReturnTo is not null)
         {
             return;
         }
@@ -273,7 +281,12 @@
         {
             if (me.Value!.RegistrationComplete)
             {
-                Navigation.NavigateTo(AfterSignIn(me.Value, LandingPath.Accept(Landing) ?? "/paskyra"), forceLoad: true);
+                // On a page of its own the page itself goes on; the flow is shown only before that.
+                if (ReturnTo is null)
+                {
+                    Navigation.NavigateTo(AfterSignIn(me.Value, LandingPath.Accept(Landing) ?? "/paskyra"), forceLoad: true);
+                }
+
                 return;
             }
 
@@ -287,7 +300,22 @@
     /// <paramref name="next"/>; everyone else goes to <paramref name="next"/> directly.
     /// </summary>
     private static string AfterSignIn(MeResponse? me, string next) =>
-        me is { RegistrationComplete: true, TermsRequired: true } ? TermsText.AcceptanceLink(next) : next;
+        me is { RegistrationComplete: true, TermsRequired: true } ? TermsText.AcceptanceLink(next.Split('#')[0]) : next;
+
+    /// <summary>
+    /// Goes to <paramref name="next"/> with a full load; on the page of <see cref="ReturnTo"/> it reloads that page instead, as a
+    /// navigation to the same address with only its "#" part would not load anything.
+    /// </summary>
+    private async Task GoAsync(string next)
+    {
+        if (ReturnTo is not null && string.Equals(next, ReturnTo, StringComparison.Ordinal))
+        {
+            await JS.InvokeVoidAsync("location.reload");
+            return;
+        }
+
+        Navigation.NavigateTo(next, forceLoad: true);
+    }
 
     /// <summary>Where a member goes once signed in: the share link's page if one waits in this tab, otherwise the account.</summary>
     private async Task<string> NextPageAsync()
@@ -394,7 +422,7 @@
             {
                 // A new account still finishes its registration first (via /paskyra); the share link's page waits until then.
                 var me = await Me.GetAsync();
-                Navigation.NavigateTo(me.Value?.RegistrationComplete == true ? AfterSignIn(me.Value, await NextPageAsync()) : "/paskyra", forceLoad: true);
+                await GoAsync(me.Value?.RegistrationComplete == true ? AfterSignIn(me.Value, ReturnTo ?? await NextPageAsync()) : ReturnTo ?? "/paskyra");
             }
         });
     }
@@ -421,7 +449,7 @@
             if (Succeeded(await Me.CompleteRegistrationAsync(request), FieldsOnThisStep))
             {
                 await StorageAsync("sessionStorage.removeItem", CodeKey);
-                Navigation.NavigateTo(await NextPageAsync(), forceLoad: true);
+                await GoAsync(ReturnTo ?? await NextPageAsync());
                 return;
             }
 
@@ -472,7 +500,7 @@
 
         if (Succeeded(await Auth.SignInWithPasskeyAsync(new PasskeyCredentialRequest { Credential = credential }), FieldsOnThisStep))
         {
-            Navigation.NavigateTo(AfterSignIn((await Me.GetAsync()).Value, await NextPageAsync()), forceLoad: true);
+            await GoAsync(AfterSignIn((await Me.GetAsync()).Value, ReturnTo ?? await NextPageAsync()));
         }
     });
 }

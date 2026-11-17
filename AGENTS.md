@@ -449,7 +449,11 @@ page's "Balsuota".
   marked stale), audited, the official address told; the session becomes a passkey session (`SessionTicketStore.RenewAsync`
   takes the new ticket's method and passkey). A lost passkey: the same again; the link stays.
 - One account per MP and one MP per account; an office member of at most one MP, five per MP, by a seven-day one-time
-  link accepted in a passkey session. Giving the profile up (`DELETE /me/mp`), an administrator's end
+  link accepted in a passkey session. Owner, 2026-11-17: the link's page `/seimo-narys/biuras#…` (`MpOfficeInvitation`) does
+  everything: `<SignInFlow ReturnTo=…>` signs in or registers there and reloads the page with its `#` intact; a code session
+  sends `NewPasskey` (made now) or `Passkey` (an assertion) with the token in `POST /me/mp/office/acceptance`, checked before
+  anything is stored, and the session becomes a passkey session under a new key (`SessionRotation`); `GET /me` says
+  `passkeySession`. Giving the profile up (`DELETE /me/mp`), an administrator's end
   (`POST /admin/mps/{slug}/link/end`, statement, fresh confirmation; no screen yet) and deleting the account end the
   link and the office with it. Every change is audited and told to the MP's account's own address (`AccountNotices.Mp*`),
   never naming an office member.

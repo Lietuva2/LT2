@@ -1142,6 +1142,32 @@ link that cannot be guessed, and it binds a passkey, as 6.2 already decided.
   lost it is removed and added again.
 - **Every text is marked the same,** "Seimo narys arba jo biuras": a shared mailbox cannot tell who typed, and the
   public is not told which account did.
+- **Everything on the invitation's one page [owner, 2026-11-17, after trying the link: signed out, the form showed, then
+  sign-in, registration, back to the link, refused for want of a passkey; "it should at least have a way to add the
+  passkey right in that same form … possibly the same button could also ask for the passkey"].** The page
+  `/seimo-narys/biuras#…` does it all, the token staying after the `#` throughout (never in a query, a log or the browser's
+  storage):
+  1. **Not signed in** (or a registration not finished): the sign-in and registration steps are on the page itself (the
+     code by email, then the name, the age and the terms of use), and each step reloads this same page, token and all.
+  2. **Signed in by code, no passkey on the account:** one button, "Pridėti prieigos raktą ir priimti". It makes a passkey
+     in the browser and sends it with the token in one request, which stores it and accepts in one transaction.
+  3. **Signed in by code, with a passkey:** "Prisijungti prieigos raktu ir priimti" (an assertion with one of the
+     account's passkeys, in the same request), and beside it "Šiame įrenginyje rakto nėra? Pridėti prieigos raktą ir
+     priimti" for a device without it.
+  4. **A passkey session:** "Priimti".
+
+  After 2 or 3 the session becomes a passkey session under a new session key (the code session's row is deleted, as when
+  a code session becomes a staff session, 6.2). The rules are unchanged: one office per person and none for the MP's own
+  account, five per MP, the invitation working only while its maker is the MP's account, audited, the MP's account told,
+  nobody named publicly. **Why a passkey may be added here by code:** the rule that a linked account changes its passkeys
+  only in a passkey session (8.5.2, above) is about linked accounts, and the invitee is not linked until the request
+  succeeds; any member may add a passkey in a code session from the account page, then sign in with it and accept, so the
+  one request allows nothing those steps did not. The checks come first: a wrong or used token, or an account already
+  linked (the MP's own account by code included), is refused before anything is stored, so a linked account never gets a
+  passkey by code; another account's passkey proves nothing; an account with an active staff role adds a passkey only in
+  its staff session (6.2), as everywhere. A passkey added this way is told to the account like any other. [Open, for the
+  owner: during the closed trial a person without an account still needs an invitation code to register; the office
+  invitation is not one.]
 
 #### 8.5.4 What a linked account can do
 

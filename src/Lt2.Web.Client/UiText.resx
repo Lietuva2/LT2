@@ -173,10 +173,14 @@
 <data name="MpOffice.PageTitle" xml:space="preserve"><value>Kvietimas į Seimo nario biurą · Lietuva 2.0</value></data>
 <data name="MpOffice.Title" xml:space="preserve"><value>Kvietimas į Seimo nario biurą</value></data>
 <data name="MpOffice.What" xml:space="preserve"><value>Ką reiškia būti biuro nariu</value></data>
-<data name="MpOffice.SignInFirst" xml:space="preserve"><value>Prisijunkite prieigos raktu ir dar kartą atverkite nuorodą.</value></data>
 <data name="MpOffice.Lead" xml:space="preserve"><value>Biuro narys rašo Seimo nario vardu. Tekstai žymimi „Seimo narys arba jo biuras“; kas juos parašė, viešai nerodoma.</value></data>
-<data name="MpOffice.PasskeyFirst" xml:space="preserve"><value>Priimti kvietimą galima tik prisijungus prieigos raktu.</value></data>
-<data name="MpOffice.Accept" xml:space="preserve"><value>Tapti biuro nariu</value></data>
+<data name="MpOffice.Accept" xml:space="preserve"><value>Priimti</value></data>
+  <data name="MpOffice.SignInHere" xml:space="preserve"><value>Prisijunkite arba užsiregistruokite čia pat: po to grįšite į šį puslapį ir galėsite priimti kvietimą.</value></data>
+  <data name="MpOffice.PasskeyHint" xml:space="preserve"><value>Biuro nariui reikia prieigos rakto. Prisijunkite juo – kvietimas bus priimtas iš karto.</value></data>
+  <data name="MpOffice.NewPasskeyHint" xml:space="preserve"><value>Biuro nariui reikia prieigos rakto. Jis bus sukurtas šiame įrenginyje, o kvietimas priimtas iš karto.</value></data>
+  <data name="MpOffice.SignInAndAccept" xml:space="preserve"><value>Prisijungti prieigos raktu ir priimti</value></data>
+  <data name="MpOffice.NoKeyHere" xml:space="preserve"><value>Šiame įrenginyje rakto nėra?</value></data>
+  <data name="MpOffice.AddAndAccept" xml:space="preserve"><value>Pridėti prieigos raktą ir priimti</value></data>
 <data name="MpOffice.ToAccount" xml:space="preserve"><value>Į paskyrą</value></data>
   <data name="Mp.Mail.Title" xml:space="preserve"><value>Suvestinės el. paštu</value></data>
   <data name="Mp.Mail.Lead" xml:space="preserve"><value>Kaip dažnai Seimo narys gauna Lietuva 2.0 suvestines:</value></data>

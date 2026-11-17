@@ -74,9 +74,9 @@ public sealed partial class NavigationTests(DatabaseFixture database) : ApiTest(
         // Owner, 2026-11-17: "Projektai" is a dropdown of its three tabs, a disclosure that opens without script.
         var agenda = HeaderOf(await visitor.Client.GetStringAsync("/darbotvarke"));
         agenda.ShouldContain("<summary class=\"drop__toggle\" id=\"nav-projects\" aria-current=\"true\">Projektai</summary>");
-        agenda.ShouldContain("<a href=\"/darbotvarke\" id=\"nav-tab-darbotvarke\" aria-current=\"page\">Darbotvarkė</a>");
+        WebUtility.HtmlDecode(agenda).ShouldContain("<a href=\"/darbotvarke\" id=\"nav-tab-darbotvarke\" aria-current=\"page\">Darbotvarkė</a>");
         agenda.ShouldContain("<a href=\"/projektai\" id=\"nav-tab-projektai\">Projektai</a>");
-        agenda.ShouldContain("<a href=\"/suvestines\" id=\"nav-tab-suvestines\">Suvestinės</a>");
+        WebUtility.HtmlDecode(agenda).ShouldContain("<a href=\"/suvestines\" id=\"nav-tab-suvestines\">Suvestinės</a>");
         agenda.ShouldContain("<a href=\"/seimo-nariai\" id=\"nav-mps\">Seimo nariai</a>");
         agenda.ShouldContain("<a href=\"/statistika\" id=\"nav-statistics\">Statistika</a>");
         agenda.ShouldContain("<a href=\"/prisijungti\" id=\"nav-sign-in\">Prisijungti</a>");

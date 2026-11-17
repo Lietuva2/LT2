@@ -96,7 +96,8 @@ public abstract class InteractiveBase<TText> : ComponentBase
         if (problem?.Code == "terms.required")
         {
             Message = problem.Detail ?? L["Error.Generic"];
-            var here = "/" + TermsNavigation.ToBaseRelativePath(TermsNavigation.Uri);
+            // Without the "#" part: a page's secret there (a token, design 6.8) must not go into the acceptance link's query.
+            var here = "/" + TermsNavigation.ToBaseRelativePath(TermsNavigation.Uri).Split('#')[0];
             TermsNavigation.NavigateTo(TermsText.AcceptanceLink(here), forceLoad: true);
             return;
         }

@@ -24,6 +24,7 @@ internal sealed class PoliticianHandlers(
     UserManager<User> users,
     SignInManager<User> signIn,
     PoliticianAccess access,
+    StaffAccess staff,
     AccountEvents events,
     IMpDirectory mps,
     IPositionErasure positions,
@@ -46,6 +47,22 @@ internal sealed class PoliticianHandlers(
     internal static readonly Error MemberNotFound = Error.NotFound("mp.office-member-not-found");
     private static readonly Error MemberRequired = Error.Forbidden("member.required");
     private const string PasskeyName = "Seimo nario prieigos raktas";
+
+    /// <summary>The name of a passkey made while accepting an office invitation (owner, 2026-11-17).</summary>
+    private const string OfficePasskeyName = "Prieigos raktas";
+
+    /// <summary>How an office invitation's acceptance shows a passkey (design 8.5.3, owner 2026-11-17).</summary>
+    private enum OfficeProof
+    {
+        /// <summary>The session is a passkey session already.</summary>
+        Session,
+
+        /// <summary>A passkey made now for the account, stored with the acceptance.</summary>
+        NewPasskey,
+
+        /// <summary>An assertion with one of the account's passkeys.</summary>
+        Passkey,
+    }
 
     public async Task<Result<Unit>> ClaimAsync(ClaimsPrincipal principal, string slug, string? ipHash, CancellationToken cancellationToken)
     {
@@ -331,16 +348,24 @@ internal sealed class PoliticianHandlers(
         return new OfficeInvitation(token, invitation.ExpiresAt);
     }
 
-    public async Task<Result<MpLinkState>> AcceptOfficeInvitationAsync(ClaimsPrincipal principal, string token, string? ipHash, CancellationToken cancellationToken)
+    public async Task<Result<MpLinkState>> AcceptOfficeInvitationAsync(
+        ClaimsPrincipal principal, string token, string? newPasskey, string? passkey, string? ipHash, CancellationToken cancellationToken)
     {
-        if (await MemberAsync(principal, cancellationToken) is null)
+        if (await MemberAsync(principal, cancellationToken) is not { } user)
         {
             return MemberRequired;
         }
 
-        // A member accepts in a passkey session (design 8.5.3): their passkeys then change only in one.
+        // A member accepts in a passkey session (design 8.5.3): their passkeys then change only in one. Owner, 2026-11-17: a
+        // code session brings the passkey in this request, a new one or one the account has, and becomes a passkey session.
         var state = await access.ForAsync(principal, cancellationToken);
-        if (state is null || !state.PasskeySession)
+        if (state is null)
+        {
+            return MemberRequired;
+        }
+
+        var proof = !string.IsNullOrEmpty(newPasskey) ? OfficeProof.NewPasskey : !string.IsNullOrEmpty(passkey) ? OfficeProof.Passkey : OfficeProof.Session;
+        if (proof == OfficeProof.Session && !state.PasskeySession)
         {
             return PoliticianAccess.PasskeyRequired;
         }
@@ -351,6 +376,68 @@ internal sealed class PoliticianHandlers(
         if (PoliticianRules.Check(found, PoliticianTokenKinds.Office, state.UserId, now) != PoliticianTokenCheck.Valid)
         {
             return LinkInvalid;
+        }
+
+        // Nothing is attested or stored for an account that cannot become an office member anyway.
+        if (state.Link is not null)
+        {
+            return AlreadyLinked;
+        }
+
+        PasskeyAttestationResult? attestation = null;
+        byte[]? sessionPasskey = null;
+        if (proof == OfficeProof.NewPasskey)
+        {
+            // The staff rule of 6.2: an account with an active staff role adds a passkey only in its staff session.
+            if ((await staff.ForAsync(principal, cancellationToken))?.AccountHasActiveStaffRole == true)
+            {
+                return StaffHandlers.StaffPasskeyRequired;
+            }
+
+            try
+            {
+                attestation = await signIn.PerformPasskeyAttestationAsync(newPasskey!);
+            }
+            catch (InvalidOperationException ex)
+            {
+                logger.LogInformation(ex, "Office passkey attestation without a pending challenge");
+                return PasskeyHandlers.NotAdded;
+            }
+
+            if (!attestation.Succeeded || attestation.UserEntity.Id != user.Id.ToString())
+            {
+                logger.LogInformation("Office passkey attestation failed: {Reason}", attestation.Failure?.Message);
+                return PasskeyHandlers.NotAdded;
+            }
+
+            sessionPasskey = attestation.Passkey.CredentialId;
+        }
+        else if (proof == OfficeProof.Passkey)
+        {
+            PasskeyAssertionResult<User> assertion;
+            try
+            {
+                assertion = await signIn.PerformPasskeyAssertionAsync(passkey!);
+            }
+            catch (InvalidOperationException ex)
+            {
+                logger.LogInformation(ex, "Office passkey assertion without a pending challenge");
+                return PasskeyHandlers.InvalidPasskey;
+            }
+
+            if (!assertion.Succeeded || assertion.User.Id != user.Id || !await signIn.CanSignInAsync(assertion.User))
+            {
+                logger.LogInformation("Office passkey assertion refused: {Reason}", assertion.Failure?.Message ?? "not this account's passkey");
+                return PasskeyHandlers.InvalidPasskey;
+            }
+
+            // The new signature counter must be stored, or the assertion does not count (as at sign-in).
+            if (!(await users.AddOrUpdatePasskeyAsync(assertion.User, assertion.Passkey)).Succeeded)
+            {
+                return PasskeyHandlers.InvalidPasskey;
+            }
+
+            sessionPasskey = assertion.Passkey.CredentialId;
         }
 
         var person = found!.SeimasPersonId;
@@ -384,6 +471,22 @@ internal sealed class PoliticianHandlers(
             return LinkInvalid;
         }
 
+        // A passkey made now is stored in the same transaction, before the link: on an account not yet linked a code session
+        // may add one (8.5.3), and the account is told as for any added passkey.
+        if (attestation?.Passkey is { } added)
+        {
+            added.Name = OfficePasskeyName;
+            if (!(await users.AddOrUpdatePasskeyAsync(user, added)).Succeeded)
+            {
+                return PasskeyHandlers.NotAdded;
+            }
+
+            await events.RecordAsync(
+                transaction.GetDbTransaction(), "passkey.added", user.Id, new Actor(user.Id, Roles.Member, ipHash),
+                new { credential = WebEncoders.Base64UrlEncode(added.CredentialId)[..12], officeInvitation = true },
+                new AccountNoticeEmail(user.Email!, AccountNotices.PasskeyAdded), cancellationToken);
+        }
+
         db.PoliticianLinks.Add(new PoliticianLink
         {
             Id = Ids.New(clock),
@@ -400,6 +503,17 @@ internal sealed class PoliticianHandlers(
             transaction.GetDbTransaction(), "mp.office-added", state.UserId, new Actor(state.UserId, Roles.Member, ipHash), new { mp = person },
             await MpNoticeAsync(person, AccountNotices.MpOfficeAdded, name, null, cancellationToken), cancellationToken);
         await transaction.CommitAsync(cancellationToken);
+
+        // A code session that brought its passkey becomes a passkey session under a new key (as a staff session does, 6.2):
+        // the code session's row is deleted and a passkey session stored.
+        if (sessionPasskey is not null)
+        {
+            var signedIn = await signIn.CreateUserPrincipalAsync(user);
+            signedIn.Identities.First().AddClaim(new Claim(AuthenticationMethods.ClaimType, AuthenticationMethods.Passkey));
+            signedIn.Identities.First().AddClaim(new Claim(SessionTicketStore.PasskeyClaim, WebEncoders.Base64UrlEncode(sessionPasskey)));
+            await SessionRotation.SignInWithNewKeyAsync(signIn.Context, signedIn, new AuthenticationProperties { IsPersistent = true });
+        }
+
         return mp is null
             ? new MpLinkState("", "", "", PoliticianParts.Office, true)
             : new MpLinkState(mp.Slug, mp.FirstName, mp.LastName, PoliticianParts.Office, true);
