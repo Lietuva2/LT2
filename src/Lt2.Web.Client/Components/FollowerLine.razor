@@ -1,14 +1,19 @@
 @inject IStringLocalizer<Lt2.Web.Client.Appeals.AppealUi> L
 
-@* Design 8.11.2 (owner, 2026-11-16): how many members follow the thing, one plain line on its own page only, never in a list
-   row, a card or beside a text; nothing with none, and the hint "Kas yra sekėjai?" beside it (the last three are the
-   designer's proposals awaiting the owner). Server-rendered, the same for everyone; never who follows. *@
+@* Design 8.11.2 (owner, 2026-11-16): how many members follow the thing, one plain "Sekėjai: n" on its own page only, never in
+   a list row, a card or beside a text; nothing with none (the last two are the designer's proposals awaiting the owner).
+   Server-rendered, the same for everyone; never who follows. Beside "Sekti" (owner, 2026-11-17: one compact line) the
+   button's hint "Kas yra sekimas?" says what the number is; where it stands without the button (a closed organisation, the
+   member's own page) it keeps its own hint, "Kas yra sekėjai?". *@
 @if (Count > 0)
 {
-    <p class="small followers" id="followers"><span class="num" id="followers-count">@L.Format("Followers.Line", Display.Number(Count))</span> <Hint Id="followers-hint" Text="@L["Followers.Hint"]" Answer="@L["Followers.Answer"]" More="/metodika#sekimas" /></p>
+    <p class="small followers" id="followers"><span class="num" id="followers-count">@L.Format("Followers.Line", Display.Number(Count))</span>@if (WithHint) {@(" ")<Hint Id="followers-hint" Text="@L["Followers.Hint"]" Answer="@L["Followers.Answer"]" More="/metodika#sekimas" />}</p>
 }
 
 @code {
     /// <summary>How many follow; 0 shows nothing.</summary>
     [Parameter, EditorRequired] public int Count { get; set; }
+
+    /// <summary>Its own hint "Kas yra sekėjai?"; off beside "Sekti", whose hint says it.</summary>
+    [Parameter] public bool WithHint { get; set; } = true;
 }

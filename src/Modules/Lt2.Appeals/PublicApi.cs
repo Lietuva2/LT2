@@ -178,10 +178,14 @@ public sealed record ModerationBillState(
     Guid? Id, string BillNumber, string Status, string Description, string? DescriptionSource, int Threshold, string ThresholdSetBy, bool Held,
     PlannedDate? Planned, bool HasOpenItems, IReadOnlyList<QueueReason> Reasons, string? DescriptionUrl, IReadOnlyList<QueueReport> DescriptionReports);
 
-/// <summary>A participant's flag about the planned date (design 8.4). Who flagged is not shown.</summary>
-public sealed record QueueFlag(Guid Id, string Kind, string Link, string? Note, DateTimeOffset CreatedAt);
+/// <summary>
+/// A participant's flag about the planned date (design 8.4), with the date they say is right when they gave one (owner,
+/// 2026-11-17). Who flagged is not shown.
+/// </summary>
+public sealed record QueueFlag(Guid Id, string Kind, string Link, string? Note, DateTimeOffset CreatedAt, DateOnly? Date = null);
 
-public sealed record NewFlag(string Kind, string Link, string? Note);
+/// <summary>A flag as sent: the kind, the link to the source, an optional note and the optional right date.</summary>
+public sealed record NewFlag(string Kind, string Link, string? Note, DateOnly? Date = null);
 
 /// <summary>An argument for a moderator: flagged, reported, or not yet seen.</summary>
 public sealed record QueueReason(

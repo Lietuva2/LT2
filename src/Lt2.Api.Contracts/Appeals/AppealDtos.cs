@@ -160,6 +160,12 @@ public sealed record FlagRequest
     public string Link { get; init; } = "";
 
     public string? Note { get; init; }
+
+    /// <summary>
+    /// The date the person says is right, when they know it ("Tikroji data (jei žinote)", owner, 2026-11-17): typed in the form
+    /// as <c>yyyy-MM-dd</c> text and sent as a date; shown to the moderators with the flag. Optional.
+    /// </summary>
+    public DateOnly? Date { get; init; }
 }
 
 /// <summary>The surge note (design 6.6): in the last hours, this share of positions came from accounts made in those hours.</summary>

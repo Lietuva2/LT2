@@ -382,6 +382,10 @@ namespace Lt2.Appeals.Infrastructure.Migrations
                         .HasColumnType("character varying(1000)")
                         .HasColumnName("note");
 
+                    b.Property<DateOnly?>("ProposedDate")
+                        .HasColumnType("date")
+                        .HasColumnName("proposed_date");
+
                     b.Property<Guid>("RecordId")
                         .HasColumnType("uuid")
                         .HasColumnName("record_id");

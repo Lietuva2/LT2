@@ -4,9 +4,13 @@
 @inject IProfilesApi Profiles
 
 @* "Sekti" / "Nebesekti" a bill, an MP (design 8.11.2), an organisation (design 8.14.14, stage B) or a member with a public
-   profile (design 8.25.5). Private: who follows what is shown to nobody. The number of followers (FollowerLine, design 8.11.2)
-   stands under it when the page gives it, and moves with the person's own "Sekti" at once (browser look, 2026-11-16). A
-   visitor gets a link to sign in instead; the member on their own page a link to "Profilis". *@
+   profile (design 8.25.5). Private: who follows what is shown to nobody. One compact line under the page's title (owner,
+   2026-11-17), the same on every page that has it: "Sekti", then the number of followers (FollowerLine, design 8.11.2) when
+   the page gives it, moving with the person's own "Sekti" at once (browser look, 2026-11-16), then one hint, "Kas yra
+   sekimas?", with what the emails are about for this kind, that nobody sees who follows and what the number is (design
+   8.15: the sentence that stood beside the button). A visitor gets a link to sign in that comes back here instead; the
+   member on their own page a link to "Profilis" and the number with its own hint. The page may put its own tags before it
+   in the same row (.follow-line). *@
 <div class="row follow" id="follow-@Kind">
     @if (_own)
     {
@@ -15,25 +19,33 @@
     }
     else if (!_signedIn)
     {
-        <a class="btn btn--plain" href="@SignInHref">@L["Follow.Follow"]</a>
-        <span class="small">@L["Follow.SignIn." + Kind]</span>
+        <a class="btn btn--plain" href="@SignInHref" id="follow-sign-in-@Kind">@L["Follow.Follow"]</a>
     }
     else
     {
         <button type="button" class="btn btn--plain" id="follow-toggle-@Kind" aria-pressed="@(Following == true ? "true" : "false")"
                 disabled="@(Locked || Following is null)" @onclick="ToggleAsync">@L[Following == true ? "Follow.Unfollow" : "Follow.Follow"]</button>
-        <span class="small">@L[(Following == true ? "Follow.Following." : "Follow.What.") + Kind]</span>
+    }
+    @if (Followers is not null)
+    {
+        <Lt2.Web.Client.Components.FollowerLine Count="_followers" WithHint="_own" />
+    }
+    @if (!_own)
+    {
+        <span class="small"><Lt2.Web.Client.Components.Hint Id="@($"follow-what-{Kind}")" Text="@L["Follow.Hint"]" Answer="@Answer" More="/metodika#sekimas" /></span>
     }
     <Messages Message="@Message" Info="@Info" />
 </div>
-@if (Followers is not null)
-{
-    <Lt2.Web.Client.Components.FollowerLine Count="_followers" />
-}
 
 @code {
     /// <summary>The sign-in page that brings the visitor back to this page when it is a bill's (design 6.9).</summary>
     private string SignInHref => LandingPath.SignInLink(LandingPath.PathOf(Navigation.Uri, Navigation.BaseUri));
+
+    /// <summary>
+    /// "Kas yra sekimas?": what the emails are about for this kind (a visitor's sentence says that signing in comes first),
+    /// then that nobody sees who follows and what the number is.
+    /// </summary>
+    private string Answer => L[(_signedIn ? "Follow.What." : "Follow.SignIn.") + Kind] + " " + L["Follow.Private"];
 
     private bool _signedIn;
     private bool _own;

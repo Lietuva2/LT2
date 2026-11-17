@@ -179,7 +179,6 @@
 <data name="Mp.ManagedSince" xml:space="preserve"><value>nuo {0}</value></data>
   <data name="Responses.Title" xml:space="preserve"><value>Seimo narių atsakymai</value></data>
   <data name="Responses.ProfileTitle" xml:space="preserve"><value>Atsakymai</value></data>
-  <data name="Responses.None" xml:space="preserve"><value>Dar nė vienas Seimo narys neatsakė</value></data>
   <data name="Responses.Counts" xml:space="preserve"><value>Atsakė Seimo narių: {0}. Balsuos už: {1} · prieš: {2} · dar neapsisprendė: {3}.</value></data>
   <data name="Responses.Mark" xml:space="preserve"><value>Seimo narys arba jo biuras</value></data>
   <data name="Responses.Stance.for" xml:space="preserve"><value>Balsuos už</value></data>

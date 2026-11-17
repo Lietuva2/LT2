@@ -24,7 +24,8 @@ public sealed record QueueRecordResponse(
     string? DescriptionUrl,
     string Status = "open");
 
-public sealed record QueueFlagResponse(Guid Id, string Kind, string Link, string? Note, DateTimeOffset CreatedAt);
+/// <summary>A participant's flag about the planned date (design 8.4), with the date they say is right when they gave one.</summary>
+public sealed record QueueFlagResponse(Guid Id, string Kind, string Link, string? Note, DateTimeOffset CreatedAt, DateOnly? Date = null);
 
 /// <summary>A moderator's planned date or stage for the record's bill (design 8.4), with the reason.</summary>
 public sealed record ModeratorPlannedRequest

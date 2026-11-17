@@ -80,7 +80,7 @@ internal sealed class ModerationService(
             ReportsOn(a.Id),
             surges.GetValueOrDefault(a.Id),
             planned.GetValueOrDefault(a.BillNumber),
-            openFlags.Where(f => f.RecordId == a.Id).Select(f => new QueueFlag(f.Id, f.Kind, f.Link, f.Note, f.CreatedAt)).ToList(),
+            openFlags.Where(f => f.RecordId == a.Id).Select(f => new QueueFlag(f.Id, f.Kind, f.Link, f.Note, f.CreatedAt, f.ProposedDate)).ToList(),
             underThresholdOnAgenda.Contains(a.Id),
             a.Sending == "held",
             counts[a.Id].Total,
