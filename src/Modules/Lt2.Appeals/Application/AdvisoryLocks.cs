@@ -6,7 +6,8 @@ namespace Lt2.Appeals.Application;
 
 /// <summary>
 /// The module's transaction advisory locks, each held until its transaction ends. When more than one is needed they are
-/// taken in this order: a person's, then a bill's or an organisation's.
+/// taken in this order: a person's (or one account's comments under one text), then an argument's, then a bill's or an
+/// organisation's.
 /// </summary>
 internal static class AdvisoryLocks
 {
@@ -43,7 +44,14 @@ internal static class AdvisoryLocks
     public static Task CommentsAsync(AppealsDb db, Guid userId, Guid targetId, CancellationToken ct) =>
         TakeAsync(db, "lt2.comments:" + userId.ToString("N") + ":" + targetId.ToString("N"), ct);
 
-    /// <summary>One comment: deleting, hiding, restoring and agreeing with it happen one at a time.</summary>
+    /// <summary>
+    /// One argument (design 8.2, owner 2026-11-17): its author's edit and a reaction to it ("Man svarbu", a comment under it) happen
+    /// one at a time, so an edit never lands after a reaction. Taken after the person's or the comments' lock, never before.
+    /// </summary>
+    public static Task ReasonAsync(AppealsDb db, Guid reasonId, CancellationToken ct) =>
+        TakeAsync(db, "lt2.reason:" + reasonId.ToString("N"), ct);
+
+    /// <summary>One comment: editing, deleting, hiding, restoring and agreeing with it happen one at a time.</summary>
     public static Task CommentAsync(AppealsDb db, Guid commentId, CancellationToken ct) =>
         TakeAsync(db, "lt2.comment:" + commentId.ToString("N"), ct);
 

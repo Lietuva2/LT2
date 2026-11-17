@@ -51,6 +51,40 @@ public sealed class CommentThreadTests : BunitContext
         new(MpComment, new CommentAuthorResponse("mp", null, null, null, new MpResponderResponse("jonas-petraitis", "Jonas", "Petraitis", null)), "Seimo nario pastaba.", DateTimeOffset.UnixEpoch.AddHours(2), [new("Rūta Mockutė", RutaProfile)]),
     ], [new AuthorCardResponse(RutaProfile, "Rūta Mockutė", "Mokytoja iš Kauno.")]);
 
+    /// <summary>
+    /// Owner, 2026-11-17: "Redaguoti" in "⋯" of one's own comment only while the caller's own answer says it may be edited (nobody
+    /// agreed), not shown at all otherwise; it opens the form below the row with the text, and saving reads the thread again in place.
+    /// </summary>
+    [Fact]
+    public void Redaguoti_is_in_the_more_menu_of_ones_own_editable_comment_only_and_saves_in_place()
+    {
+        AddAuthorization().SetAuthorized("ruta.mockute@pavyzdys.test");
+        SetRendererInfo(new RendererInfo("WebAssembly", isInteractive: true));
+        _comments.On("GetMineAsync", ApiResult<MyCommentsResponse>.Ok(new MyCommentsResponse(
+            true, false, false, [PersonComment, OrganisationComment], [PersonComment, OrganisationComment], [], [], 0, new Dictionary<Guid, int>()) { Editable = [PersonComment] }));
+        var thread = RenderThread();
+
+        var person = CommentLimits.ElementId(PersonComment);
+        thread.Find($"#{person}-more-actions-menu #{person}-edit").TextContent.ShouldBe("Redaguoti");
+        thread.FindAll($"#{CommentLimits.ElementId(OrganisationComment)}-edit").ShouldBeEmpty("someone agreed with it: not shown, not disabled");
+        thread.FindAll($"#{CommentLimits.ElementId(MpComment)}-edit").ShouldBeEmpty("not one's own");
+
+        thread.Find($"#{person}-edit").Click();
+        var form = thread.Find($"#{person}-actions > form.act__panel");
+        form.QuerySelector("h4")!.TextContent.ShouldBe("Redaguoti komentarą");
+        thread.Find($"#{person}-edit-text").GetAttribute("value").ShouldStartWith("Šaltinis:");
+        thread.Find($"#{person}-edit-save").TextContent.ShouldBe("Išsaugoti");
+
+        _comments.On("EditAsync", ApiResult.Ok());
+        thread.Find($"#{person}-edit-text").Input("Pataisytas komentaras.");
+        thread.Find($"#{person}-edit-form").Submit();
+        thread.WaitForAssertion(() => thread.Markup.ShouldContain("Komentaras išsaugotas."));
+        thread.FindAll($"#{person}-edit-form").ShouldBeEmpty();
+        var sent = _comments.Arguments[_comments.Calls.LastIndexOf("EditAsync")];
+        ((Guid)sent[0]!, ((CommentRequest)sent[1]!).Text).ShouldBe((PersonComment, "Pataisytas komentaras."));
+        _comments.Calls.Skip(_comments.Calls.LastIndexOf("EditAsync")).ShouldContain("GetThreadAsync", "the thread is read again in place");
+    }
+
     private IRenderedComponent<CommentThread> RenderThread() =>
         Render<CommentThread>(p => p.Add(c => c.Kind, "reason").Add(c => c.TargetId, Target).Add(c => c.Number, Bill).Add(c => c.Thread, Thread())
             .Add(c => c.Count, 3).Add(c => c.PagePath, "/seimas/" + Bill));

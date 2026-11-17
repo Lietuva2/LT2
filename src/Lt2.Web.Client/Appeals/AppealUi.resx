@@ -78,6 +78,15 @@
 <data name="Reasons.WithdrawConfirm" xml:space="preserve"><value>Argumentas bus ištrintas kartu su jo „Man svarbu“ žymomis. Jau sudarytose suvestinėse jo tekstas liks.</value></data>
 <data name="Reasons.WithdrawYes" xml:space="preserve"><value>Atsiimti argumentą</value></data>
 <data name="Reasons.Withdrawn" xml:space="preserve"><value>Argumentas atsiimtas.</value></data>
+<data name="Reasons.Edit" xml:space="preserve"><value>Redaguoti</value></data>
+<data name="Reasons.EditTitle" xml:space="preserve"><value>Redaguoti argumentą</value></data>
+<data name="Reasons.Save" xml:space="preserve"><value>Išsaugoti</value></data>
+<data name="Reasons.Edited" xml:space="preserve"><value>Argumentas išsaugotas.</value></data>
+<data name="Reasons.EditedPending" xml:space="preserve"><value>Pakeistą argumentą pirma peržiūrės moderatorius. Kai jis bus paskelbtas, gausite laišką.</value></data>
+<data name="Comments.Edit" xml:space="preserve"><value>Redaguoti</value></data>
+<data name="Comments.EditTitle" xml:space="preserve"><value>Redaguoti komentarą</value></data>
+<data name="Comments.Save" xml:space="preserve"><value>Išsaugoti</value></data>
+<data name="Comments.Edited" xml:space="preserve"><value>Komentaras išsaugotas.</value></data>
 <data name="Reasons.Published" xml:space="preserve"><value>Argumentas paskelbtas.</value></data>
 <data name="Reasons.Pending" xml:space="preserve"><value>Argumentą pirma peržiūrės moderatorius. Kai jis bus paskelbtas, gausite laišką.</value></data>
 <data name="Reasons.NeedSide" xml:space="preserve"><value>„Man svarbu“ žymėti gali tie, kurie nurodė, ko prašo.</value></data>

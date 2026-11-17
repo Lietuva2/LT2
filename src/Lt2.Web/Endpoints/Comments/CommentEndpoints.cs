@@ -11,7 +11,7 @@ namespace Lt2.Web.Endpoints.Comments;
 
 /// <summary>
 /// Comments (design 8.23.11): <c>GET|POST /api/v1/comments/{kind}/{targetId}</c> (reading is public; writing a member's, under
-/// <c>WriteComment</c>), <c>DELETE /api/v1/comments/{id}</c> (under <c>WriteComment</c> too, 8.23.4), <c>PUT|DELETE
+/// <c>WriteComment</c>), <c>PUT|DELETE /api/v1/comments/{id}</c> (editing and deleting, under <c>WriteComment</c> too, 8.23.4), <c>PUT|DELETE
 /// /api/v1/comments/{id}/agreement</c> ("Sutinku", the participation limit), <c>GET /api/v1/bills/{number}/comments/mine</c>
 /// (never cached), and the moderators' <c>GET /api/v1/moderation/comments</c>, <c>…/{id}/hide|restore|keep</c>,
 /// <c>…/{id}/writer</c>, <c>…/{id}/restrict-writer</c> and <c>GET /api/v1/moderation/bills/{number}/comments</c>. The terms
@@ -45,6 +45,13 @@ internal static class CommentEndpoints
         api.MapDelete(ApiEndpoints.Relative(CommentRoutes.One), async (Guid id, ClaimsPrincipal user, CommentReads reads, ErrorMapper errors, CancellationToken ct) =>
                 Done(await reads.DeleteAsync(user, id, ct), errors))
             .WithName("DeleteComment").WithTags("Comments").RequireAuthorization(Policies.Member).RequireRateLimiting(RateLimitPolicies.WriteComment)
+            .Produces(StatusCodes.Status204NoContent).ProducesProblem(StatusCodes.Status403Forbidden).ProducesProblem(StatusCodes.Status404NotFound).ProducesProblem(StatusCodes.Status409Conflict);
+
+        // The author edits it until someone says "Sutinku" (design 8.23.3, owner 2026-11-17), under WriteComment as writing is.
+        api.MapPut(ApiEndpoints.Relative(CommentRoutes.One), async (Guid id, CommentRequest request, ClaimsPrincipal user, CommentReads reads, ErrorMapper errors, CancellationToken ct) =>
+                Done(await reads.EditAsync(user, id, request, ct), errors))
+            .WithName("EditComment").WithTags("Comments").RequireAuthorization(Policies.Member)
+            .WithValidation<CommentRequest>().RequireRateLimiting(RateLimitPolicies.WriteComment)
             .Produces(StatusCodes.Status204NoContent).ProducesProblem(StatusCodes.Status403Forbidden).ProducesProblem(StatusCodes.Status404NotFound).ProducesProblem(StatusCodes.Status409Conflict);
 
         api.MapPut(ApiEndpoints.Relative(CommentRoutes.Agreement), async (Guid id, ClaimsPrincipal user, IComments comments, ErrorMapper errors, CancellationToken ct) =>

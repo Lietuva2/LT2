@@ -40,6 +40,7 @@
                     var id = CommentLimits.ElementId(c.Id);
                     var moderated = Moderated(c.Id);
                     var deletable = _signedIn && _mine?.Deletable.Contains(c.Id) == true && thread.BillOpen;
+                    var editable = MayEdit(thread, c.Id);
                     <li class="comment stack stack--tight @(Marked == c.Id ? "comment--linked" : null)" id="@id" @key="c.Id">
                         <p class="row comment__who" id="@CommentPaging.PositionAnchor(TargetId, position)">
                             @Name(c.Author)
@@ -75,6 +76,12 @@
                                 {
                                     <button class="menu__item" type="button" id="@id-report" disabled="@Locked" popovertarget="@MoreMenu.MenuOf($"{id}-more-actions")" popovertargetaction="hide"
                                             @onclick="() => _reporting = _reporting == c.Id ? null : c.Id">@L["Report.Open"]</button>
+                                    @if (editable)
+                                    {
+                                        @* Owner, 2026-11-17: only while nobody said "Sutinku", from the never-cached answer; not shown otherwise. *@
+                                        <button class="menu__item" type="button" id="@id-edit" disabled="@Locked" popovertarget="@MoreMenu.MenuOf($"{id}-more-actions")" popovertargetaction="hide"
+                                                @onclick="() => StartEditingAsync(c)">@L["Comments.Edit"]</button>
+                                    }
                                     @if (deletable)
                                     {
                                         <button class="menu__item" type="button" id="@id-delete" disabled="@Locked" popovertarget="@MoreMenu.MenuOf($"{id}-more-actions")" popovertargetaction="hide"
@@ -99,6 +106,22 @@
                                     <button class="btn" type="button" id="@id-confirm-yes" disabled="@Locked" @onclick="() => AgreeConfirmedAsync(c.Id)">@L["Comments.Agree"]</button>
                                     <button class="btn btn--plain" type="button" disabled="@Locked" @onclick="() => _confirming = null">@L["Cancel"]</button>
                                 </div>
+                            }
+                            @if (_editingComment == c.Id)
+                            {
+                                <form class="act__panel sheet sheet--quiet stack stack--tight" @onsubmit="() => SaveEditAsync(c.Id)" novalidate aria-labelledby="@id-edit-title" id="@id-edit-form">
+                                    <h4 id="@id-edit-title">@L["Comments.EditTitle"]</h4>
+                                    <div class="field @ErrorClass("text")">
+                                        <label for="@id-edit-text">@L["Comments.Label"]</label>
+                                        <textarea class="textarea" id="@id-edit-text" rows="4" maxlength="@MemberTextLimits.Allowed(_maxLength ?? 0)" aria-invalid="@Invalid("text")"
+                                                  aria-describedby="@DescribedBy("text", $"{id}-edit-text", $"{id}-edit-hint")" @bind="_editText" @bind:event="oninput" disabled="@Locked"></textarea>
+                                        <p class="field__hint num" id="@id-edit-hint">@(_maxLength is > 0 and var max ? L.Format("Comments.Hint", Display.Number(_editText.Length), Display.Number(max)) : L["Comments.HintNoLimit"].Value)</p>
+                                    </div>
+                                    <div class="row">
+                                        <button type="submit" class="btn" id="@id-edit-save" disabled="@(Locked || string.IsNullOrWhiteSpace(_editText))">@L["Comments.Save"]</button>
+                                        <button type="button" class="btn btn--plain" disabled="@Locked" @onclick="CancelEditing">@L["Cancel"]</button>
+                                    </div>
+                                </form>
                             }
                             @if (_deleting == c.Id)
                             {
@@ -512,6 +535,54 @@
         Cancel();
         Info = L["Comments.Published"];
         await ReloadCoreAsync(all: true);
+    });
+
+    /// <summary>The comment whose edit form is open below its row ("⋯" → "Redaguoti").</summary>
+    private Guid? _editingComment;
+    private string _editText = "";
+
+    /// <summary>
+    /// "Redaguoti" on one's own comment (design 8.23.3, owner 2026-11-17): only while the server says it may be edited (nobody said
+    /// "Sutinku", the voice it was written in, the bill and the discussion open), from the never-cached answer. Not shown otherwise.
+    /// </summary>
+    private bool MayEdit(CommentThreadResponse thread, Guid commentId) =>
+        _signedIn && thread.Open && _mine is { Restricted: false } mine && mine.Editable.Contains(commentId);
+
+    private Task StartEditingAsync(CommentResponse comment) => RunAsync(async () =>
+    {
+        _maxLength ??= (await Appeals.GetRulesAsync()).Value?.TextMaxLength;
+        _editingComment = comment.Id;
+        _editText = comment.Text;
+        _deleting = null;
+        _reporting = null;
+        Errors = NoErrors();
+    });
+
+    private void CancelEditing()
+    {
+        _editingComment = null;
+        _editText = "";
+        Errors = NoErrors();
+    }
+
+    private Task SaveEditAsync(Guid id) => RunAsync(async () =>
+    {
+        var saved = await Comments.EditAsync(id, new CommentRequest { Text = _editText });
+        if (!Succeeded(saved, "text"))
+        {
+            if (saved.Problem?.Code == "comment.reacted")
+            {
+                // Someone agreed meanwhile: the message says so, the form closes and "Redaguoti" goes.
+                _editingComment = null;
+                await ReloadCoreAsync(all: false);
+            }
+
+            return;
+        }
+
+        CancelEditing();
+        Info = L["Comments.Edited"];
+        await ReloadCoreAsync(all: false);
     });
 
     private Task AgreeAsync(Guid id, bool agreed)

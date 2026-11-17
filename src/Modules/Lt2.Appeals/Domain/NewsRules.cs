@@ -7,8 +7,8 @@ namespace Lt2.Appeals.Domain;
 internal static class NewsRules
 {
     /// <summary>
-    /// Whether a shown text is new to the member: made public (<paramref name="publicAt"/>) or changed (<paramref name="changedAt"/>,
-    /// an organisation's or an MP's edited text) strictly after <paramref name="since"/>, and not the member's own.
+    /// Whether a shown text is new to the member: made public (<paramref name="publicAt"/>) or changed (<paramref name="changedAt"/>:
+    /// an edited statement, response, argument or comment) strictly after <paramref name="since"/>, and not the member's own.
     /// </summary>
     public static bool IsNew(DateTimeOffset publicAt, DateTimeOffset? changedAt, DateTimeOffset since, bool own) =>
         !own && (publicAt > since || changedAt > since);

@@ -228,6 +228,15 @@ page's "Balsuota".
   author's own (no side needed; the writing box preselects the author's side if any). Nothing public may tell whether
   a reason is on its author's side. The author can withdraw their own reason while the bill is open. Writing a reason
   needs no positions consent: it is the author's own deliberate publication, public with name and chosen side.
+- **Editing until someone reacts (owner, 2026-11-17; design 8.2, 8.23.3).** The author edits a reason's text and side
+  (`PUT /reasons/{id}`, `AppealsService.EditReasonAsync`) or a comment's text (`PUT /comments/{id}`, `CommentsService.EditAsync`,
+  in the voice it was written in) while the bill is open and nobody reacted: `AppealRules.CheckEdit` (no "Man svarbu", no
+  comment under it, hidden ones included; `reason.reacted`), `CommentRules.CheckEdit` (no "Sutinku"; `comment.reacted`).
+  Checked under `AdvisoryLocks.ReasonAsync` (taken by "Man svarbu" and a comment under the reason too) or the comment's lock.
+  The rules of writing hold (length, pre-screening: a flagged reason waits again, `AppealRules.StatusAfterEdit`; a writing
+  restriction); every edit clears the reason's `seen_at`; `edited_at` makes it new again (8.11.8) and moves the last
+  activity; no earlier text kept; audited `reason.edited` / `comment.edited` without text. "Redaguoti" in "⋯" only for ids in
+  the caller's never-cached `MyBillRecordResponse.Editable` / `MyCommentsResponse.Editable`, never shown disabled.
 - **One length for members' texts (owner, 2026-11-16):** `Texts:MaxLength` (characters, 2 000; 0 = no limit) for
   arguments, organisations' statements and MPs' responses (and comments and "Apie mane"), checked where each
   is written (`AppealRules.CheckReasonText`, `OrganisationRules.CheckStatement`, `ResponseRules.CheckResponse`, all through
@@ -531,7 +540,7 @@ address is a link (`CommentLinks`, `rel="nofollow ugc noopener noreferrer"`). `C
 inline; it is a toggle like "Man svarbu", the word the same in both states and its icon (`Icon` `agree`) filled while agreed;
 the names read "Sutinka: A, B ir dar 5", "ir dar 5" a `details.more` opening the full list (owner, 2026-11-17). The discussion follows its target (`CommentCascade`): withdrawn or merged goes (the merge confirmation says how
 many), hidden hides, a closed bill or a target no longer writable is read-only (`comment.read-only`; a hidden comment cannot
-be deleted, `comment.hidden`). Member controls render only once the island runs, so the served HTML is the same for every
+be deleted or edited, `comment.hidden`). Member controls render only once the island runs, so the served HTML is the same for every
 member and visitor. An open "Aptarimas" stays in its side's column (owner, 2026-11-17). The thread is `Lt2.Web.Client/Comments/CommentThread` (inside the arguments' and statements' islands, its own island
 under responses), the caller's answer `CommentState` (browser only), reports target `comment`, moderators' list
 `CommentModerationView`/`CommentQueueItem`, actions also on the bill's page. The author's notice is one kind of the rhythm,

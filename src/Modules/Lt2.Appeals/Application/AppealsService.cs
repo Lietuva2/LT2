@@ -191,14 +191,40 @@ internal sealed class AppealsService(
             .OrderBy(r => r.CreatedAt)
             .ToListAsync(cancellationToken);
         var names = await reads.NamesAsync([userId], cancellationToken);
-        var endorsements = await AppealReads.EndorsementCountsAsync(db, mine.Select(r => r.Id).ToList(), cancellationToken);
+        var mineIds = mine.Select(r => r.Id).ToList();
+        var endorsements = await AppealReads.EndorsementCountsAsync(db, mineIds, cancellationToken);
         return new MyBillRecord(
             side,
             endorsed,
             AppealRules.Left(endorsed.Count, endorsementLimit),
             mine.Select(r => AppealReads.ToInfo(r, names, endorsements)).ToList(),
             AppealRules.Left(mine.Count(r => AppealRules.CountedReasonStatuses.Contains(r.Status)), reasonLimit),
-            facts?.HasPositionConsent == true);
+            facts?.HasPositionConsent == true)
+        {
+            Editable = await EditableAsync(db, record, userId, facts, mine, endorsements, cancellationToken),
+        };
+    }
+
+    /// <summary>
+    /// The person's own arguments they may edit now (design 8.2, owner 2026-11-17), by the rules the edit is checked by: the
+    /// record open, no writing restriction, and nobody reacted (comments counted whatever their state).
+    /// </summary>
+    private async Task<IReadOnlyList<Guid>> EditableAsync(
+        AppealsDb db, BillRecord record, Guid userId, ParticipantFacts? facts, List<Reason> mine, Dictionary<Guid, int> endorsements, CancellationToken ct)
+    {
+        if (mine.Count == 0 || facts is null || MpAccounts.Refusal(facts) is not null || await NotOpenAsync(record, ct) is not null
+            || await RestrictedAsync(db, userId, ct) is not null)
+        {
+            return [];
+        }
+
+        var ids = mine.Select(r => r.Id).ToList();
+        var comments = await db.Comments.AsNoTracking()
+            .Where(c => c.TargetKind == CommentKinds.Reason && ids.Contains(c.TargetId))
+            .GroupBy(c => c.TargetId).Select(g => new { g.Key, Count = g.Count() })
+            .ToDictionaryAsync(x => x.Key, x => x.Count, ct);
+        return mine.Where(r => AppealRules.CheckEdit(r.Status, isAuthor: true, endorsements.GetValueOrDefault(r.Id), comments.GetValueOrDefault(r.Id)) is null)
+            .Select(r => r.Id).ToList();
     }
 
     public async Task<Result<bool>> TakePositionAsync(string billNumber, Guid userId, string side, CancellationToken cancellationToken)
@@ -420,11 +446,101 @@ internal sealed class AppealsService(
         return new ReasonCreated(reason.Id, reason.Status);
     }
 
+    /// <summary>
+    /// The author edits their argument's text and side (design 8.2, owner 2026-11-17) while the record is open and nobody has
+    /// reacted to it (<see cref="AppealRules.CheckEdit"/>), checked under the argument's lock, which "Man svarbu" and a comment
+    /// under it take too. The new text keeps the rules of writing (the length, pre-screening: a flagged edit waits for a
+    /// moderator again); the moderator's "seen" goes, since nobody has seen these words; the similar arguments are not asked
+    /// again. No earlier text is kept; the audit says that an edit happened, never the text or the side.
+    /// </summary>
+    public async Task<Result<ReasonCreated>> EditReasonAsync(Guid reasonId, Guid userId, NewReason request, CancellationToken cancellationToken)
+    {
+        if (await ReasonTextErrorAsync(request, cancellationToken) is { } broken)
+        {
+            return broken;
+        }
+
+        var text = AppealRules.NormaliseText(request.Text);
+        var flags = await screening.ScreenAsync(text, cancellationToken);
+
+        await using var db = await contexts.CreateDbContextAsync(cancellationToken);
+        await using var transaction = await db.Database.BeginTransactionAsync(cancellationToken);
+        await AdvisoryLocks.PersonAsync(db, userId, cancellationToken);
+        await AdvisoryLocks.ReasonAsync(db, reasonId, cancellationToken);
+        var author = await participants.FindAsync(userId, cancellationToken);
+        if (author is null)
+        {
+            return Error.Forbidden("member.required");
+        }
+
+        if (MpAccounts.Refusal(author) is { } mpAccount)
+        {
+            return mpAccount;
+        }
+
+        var reason = await db.Reasons.FirstOrDefaultAsync(r => r.Id == reasonId, cancellationToken);
+        if (reason is null)
+        {
+            return RuleErrors.Of("reason.not-found");
+        }
+
+        // Whose and in what state first (the reactions are counted once the record is known to be open).
+        if (AppealRules.CheckEdit(reason.Status, reason.AuthorUserId == userId, endorsements: 0, comments: 0) is { } refused)
+        {
+            return RuleErrors.Of(refused);
+        }
+
+        if (await RestrictedAsync(db, userId, cancellationToken) is { } restricted)
+        {
+            return restricted;
+        }
+
+        var record = await db.BillRecords.AsNoTracking().FirstAsync(a => a.Id == reason.RecordId, cancellationToken);
+        if (await NotOpenAsync(record, cancellationToken) is { } notOpen)
+        {
+            return notOpen;
+        }
+
+        var endorsements = await db.Endorsements.CountAsync(e => e.ReasonId == reasonId, cancellationToken);
+        var comments = await db.Comments.CountAsync(c => c.TargetKind == CommentKinds.Reason && c.TargetId == reasonId, cancellationToken);
+        if (AppealRules.CheckEdit(reason.Status, isAuthor: true, endorsements, comments) is { } reacted)
+        {
+            return RuleErrors.Of(reacted);
+        }
+
+        var now = clock.GetUtcNow();
+        reason.Side = request.Side;
+        reason.Text = text;
+        reason.ScreeningFlags = [.. flags];
+        reason.Status = AppealRules.StatusAfterEdit(reason.Status, flags.Count > 0);
+        reason.SeenAt = null;
+        reason.EditedAt = now;
+        await db.SaveChangesAsync(cancellationToken);
+        if (reason.Status == ReasonStatuses.Published)
+        {
+            // Design 8.12.5: an argument changed in public is the bill's activity; one waiting for a moderator is not.
+            await RecordActivity.TouchAsync(db, record.Id, now, cancellationToken);
+        }
+
+        await audit.WriteAsync(
+            new AuditEntry(
+                "reason.edited", userId, "member", "reason:" + reasonId,
+                System.Text.Json.JsonSerializer.SerializeToElement(new { bill = record.BillNumber }, System.Text.Json.JsonSerializerOptions.Web),
+                null),
+            transaction.GetDbTransaction(),
+            cancellationToken);
+        await transaction.CommitAsync(cancellationToken);
+        return new ReasonCreated(reason.Id, reason.Status);
+    }
+
     public async Task<Result<Unit>> EndorseAsync(Guid reasonId, Guid userId, CancellationToken cancellationToken)
     {
         await using var db = await contexts.CreateDbContextAsync(cancellationToken);
         await using var transaction = await db.Database.BeginTransactionAsync(cancellationToken);
         await AdvisoryLocks.PersonAsync(db, userId, cancellationToken);
+
+        // Under the argument's lock, which its author's edit takes: a mark never crosses an edit (design 8.2).
+        await AdvisoryLocks.ReasonAsync(db, reasonId, cancellationToken);
 
         // Design 8.5.4: the MP's own account gives no "Man svarbu".
         if (MpAccounts.Refusal(await participants.FindAsync(userId, cancellationToken)) is { } mpAccount)

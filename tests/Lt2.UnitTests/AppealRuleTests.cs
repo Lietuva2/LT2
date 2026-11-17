@@ -393,6 +393,26 @@ public sealed class ClosingRuleTests
         ClosingRules.ShouldClose(BillRecordStatuses.Rejected, 99100009).ShouldBeFalse("a hidden record stays hidden");
     }
 
+    /// <summary>Owner, 2026-11-17: the author edits an argument until someone reacts, since the reactions were given to its exact words.</summary>
+    [Theory]
+    [InlineData("published", true, 0, 0, null)]
+    [InlineData("pending", true, 0, 0, null)]
+    [InlineData("published", true, 1, 0, "reason.reacted")]
+    [InlineData("published", true, 0, 1, "reason.reacted")]
+    [InlineData("published", false, 0, 0, "reason.edit-author-only")]
+    [InlineData("hidden", true, 0, 0, "reason.not-found")]
+    [InlineData("merged", true, 0, 0, "reason.not-found")]
+    public void An_author_edits_an_argument_until_someone_marks_it_or_comments_under_it(string status, bool author, int marks, int comments, string? expected) =>
+        AppealRules.CheckEdit(status, author, marks, comments).ShouldBe(expected);
+
+    [Fact]
+    public void An_edit_pre_screening_flags_waits_for_a_moderator_again_and_an_unflagged_one_keeps_its_status()
+    {
+        AppealRules.StatusAfterEdit(ReasonStatuses.Published, flagged: true).ShouldBe(ReasonStatuses.Pending);
+        AppealRules.StatusAfterEdit(ReasonStatuses.Published, flagged: false).ShouldBe(ReasonStatuses.Published);
+        AppealRules.StatusAfterEdit(ReasonStatuses.Pending, flagged: false).ShouldBe(ReasonStatuses.Pending, "the moderator who was to look still looks");
+    }
+
     [Fact]
     public void A_closed_record_shows_its_frozen_counts_whatever_happens_to_positions_later()
     {

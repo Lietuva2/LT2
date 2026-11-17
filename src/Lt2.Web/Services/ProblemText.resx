@@ -207,6 +207,11 @@
   <data name="comment.limit" xml:space="preserve"><value>Po šiuo tekstu jau parašėte {0} komentarus – tiek, kiek leidžiama vienam žmogui.</value></data>
   <data name="comment.not-found" xml:space="preserve"><value>Tokio komentaro nėra.</value></data>
   <data name="comment.author-only" xml:space="preserve"><value>Šį komentarą ištrinti gali tik jo autorius.</value></data>
+  <data name="comment.edit-author-only" xml:space="preserve"><value>Šį komentarą redaguoti gali tik jo autorius.</value></data>
+  <data name="comment.reacted" xml:space="preserve"><value>Šio komentaro redaguoti nebegalima: su juo jau sutiko kiti.</value></data>
+  <data name="comment.hidden.edit" xml:space="preserve"><value>Šį komentarą paslėpė moderatoriai, todėl redaguoti jo negalima.</value></data>
+  <data name="reason.edit-author-only" xml:space="preserve"><value>Redaguoti galite tik savo argumentą.</value></data>
+  <data name="reason.reacted" xml:space="preserve"><value>Šio argumento redaguoti nebegalima: į jį jau sureagavo kiti. Galite jį atsiimti.</value></data>
   <data name="agreement.own-comment" xml:space="preserve"><value>„Sutinku“ negalima pažymėti prie savo komentaro.</value></data>
   <data name="mp.not-office" xml:space="preserve"><value>Suvestinių kopijas gauna tik Seimo nario biuro nariai.</value></data>
 </root>

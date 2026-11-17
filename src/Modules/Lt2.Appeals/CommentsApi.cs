@@ -54,7 +54,11 @@ public sealed record MyComments(
     IReadOnlyList<Guid> Agreed,
     IReadOnlyList<CommentTargetVoice> Voices,
     int PerTargetLimit,
-    IReadOnlyDictionary<Guid, int> WrittenPerTarget);
+    IReadOnlyDictionary<Guid, int> WrittenPerTarget)
+{
+    /// <summary>The caller's own comments they may edit now (design 8.23.3, owner 2026-11-17: until someone says "Sutinku").</summary>
+    public IReadOnlyList<Guid> Editable { get; init; } = [];
+}
 
 public sealed record CommentCreated(Guid Id);
 
@@ -96,6 +100,12 @@ public interface IComments
     Task<Result<CommentCreated>> WriteAsync(Guid userId, string kind, Guid targetId, string text, CommentSpeaker? speaker, CancellationToken cancellationToken);
 
     Task<Result<Unit>> DeleteAsync(Guid userId, Guid commentId, CommentSpeaker? speaker, CancellationToken cancellationToken);
+
+    /// <summary>
+    /// The author edits their comment while nobody has said "Sutinku" (design 8.23.3, owner 2026-11-17), by the rules of writing
+    /// it: <c>comment.reacted</c> after a "Sutinku"; <c>comment.edit-author-only</c> for someone else's.
+    /// </summary>
+    Task<Result<Unit>> EditAsync(Guid userId, Guid commentId, string text, CommentSpeaker? speaker, CancellationToken cancellationToken);
 
     Task<Result<Unit>> AgreeAsync(Guid userId, Guid commentId, CancellationToken cancellationToken);
 

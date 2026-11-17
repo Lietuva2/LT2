@@ -156,6 +156,8 @@ public static class AppealRoutes
     public const string Reasons = Record + "/reasons";
     public const string SimilarReasons = Record + "/reasons/similar";
     public const string Endorsement = ApiRoutes.Prefix + "/reasons/{id:guid}/endorsement";
+
+    /// <summary><c>PUT</c>: the author edits it until someone reacts (design 8.2); <c>DELETE</c>: the author withdraws it.</summary>
     public const string Reason = ApiRoutes.Prefix + "/reasons/{id:guid}";
     public const string Reports = ApiRoutes.Prefix + "/reports";
     public const string Flags = Record + "/flags";

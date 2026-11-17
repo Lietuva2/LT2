@@ -38,6 +38,12 @@ internal sealed class Comment
     public DateTimeOffset CreatedAt { get; set; }
 
     public DateTimeOffset? HiddenAt { get; set; }
+
+    /// <summary>
+    /// When its author last edited it (design 8.23.3, owner 2026-11-17: only until someone agrees); null while never. No earlier
+    /// text is kept. An edit is new to readers again (design 8.11.8).
+    /// </summary>
+    public DateTimeOffset? EditedAt { get; set; }
 }
 
 /// <summary>

@@ -103,6 +103,16 @@ public sealed class CommentRuleTests
     public void Who_may_delete_a_comment_follows_its_voice(string voice, bool isAuthor, bool represents, bool speaksForTheMp, bool passkey, bool expected) =>
         CommentRules.MayDelete(voice, isAuthor, represents, speaksForTheMp, passkey).ShouldBe(expected);
 
+    /// <summary>Owner, 2026-11-17: the author edits a comment until someone says "Sutinku", which was given to its exact words.</summary>
+    [Fact]
+    public void An_author_edits_a_comment_until_someone_agrees_and_never_a_hidden_one()
+    {
+        CommentRules.CheckEdit(CommentStatuses.Published, isAuthor: true, agreements: 0).ShouldBeNull();
+        CommentRules.CheckEdit(CommentStatuses.Published, isAuthor: true, agreements: 1).ShouldBe("comment.reacted");
+        CommentRules.CheckEdit(CommentStatuses.Published, isAuthor: false, agreements: 0).ShouldBe("comment.edit-author-only");
+        CommentRules.CheckEdit(CommentStatuses.Hidden, isAuthor: true, agreements: 0).ShouldBe("comment.hidden");
+    }
+
     [Fact]
     public void Sutinku_is_for_any_member_but_the_mps_account_never_on_ones_own_comment_and_only_while_the_bill_is_open()
     {

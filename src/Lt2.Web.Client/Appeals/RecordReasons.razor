@@ -96,6 +96,12 @@
                                         var menu = MoreMenu.MenuOf($"more-reason-{reason.Id}");
                                         <button class="menu__item" type="button" id="report-@reason.Id" disabled="@Locked" popovertarget="@menu" popovertargetaction="hide"
                                                 @onclick="() => _reporting = _reporting == reason.Id ? null : reason.Id">@L["Report.Open"]</button>
+                                        @if (MayEdit(reason))
+                                        {
+                                            @* Owner, 2026-11-17: only while nobody reacted, from the never-cached "mine" answer; not shown otherwise. *@
+                                            <button class="menu__item" type="button" id="edit-@reason.Id" disabled="@Locked" popovertarget="@menu" popovertargetaction="hide"
+                                                    @onclick="() => StartEditingAsync(reason)">@L["Reasons.Edit"]</button>
+                                        }
                                         @if (IsMine(reason) && record.Status == "open")
                                         {
                                             <button class="menu__item" type="button" id="withdraw-@reason.Id" disabled="@Locked" popovertarget="@menu" popovertargetaction="hide"
@@ -115,6 +121,38 @@
                                 @if (_reporting == reason.Id)
                                 {
                                     <div class="act__panel"><ReportForm TargetKind="reason" TargetId="reason.Id" OnClose="() => _reporting = null" /></div>
+                                }
+                                @if (_editing == reason.Id)
+                                {
+                                    <form class="act__panel sheet sheet--quiet stack" @onsubmit="() => SaveEditAsync(reason.Id)" novalidate aria-labelledby="edit-title-@reason.Id" id="edit-reason-@reason.Id">
+                                        <h3 id="edit-title-@reason.Id">@L["Reasons.EditTitle"]</h3>
+                                        <fieldset class="field stack stack--tight @ErrorClass("side")">
+                                            <legend>@L["Reasons.SideLegend"]</legend>
+                                            <div class="switch" id="edit-side-@reason.Id">
+                                                @foreach (var half in AppealLimits.Sides)
+                                                {
+                                                    <label class="switch__half switch__half--@half">
+                                                        <input class="switch__input" type="radio" name="edit-side-@reason.Id" id="edit-side-@half-@reason.Id" value="@half" checked="@(_editSide == half)"
+                                                               @onchange="() => _editSide = half" disabled="@Locked" aria-invalid="@Invalid("side")" />
+                                                        <span>@L["Reasons.Switch." + half]</span>
+                                                    </label>
+                                                }
+                                            </div>
+                                            <FieldError Errors="Errors" Field="side" For="@($"edit-side-{reason.Id}")" />
+                                        </fieldset>
+                                        <div class="field @ErrorClass("text")">
+                                            <label for="edit-text-@reason.Id">@L["Reasons.Label"]</label>
+                                            <textarea class="textarea" id="edit-text-@reason.Id" maxlength="@MemberTextLimits.Allowed(_maxLength ?? 0)"
+                                                      aria-describedby="@DescribedBy("text", $"edit-text-{reason.Id}", $"edit-hint-{reason.Id}", $"edit-layout-{reason.Id}")"
+                                                      aria-invalid="@Invalid("text")" @bind="_editText" @bind:event="oninput" disabled="@Locked"></textarea>
+                                            <p class="field__hint num" id="edit-hint-@reason.Id">@(_maxLength is > 0 and var max ? L.Format("Reasons.Hint", Display.Number(_editText.Length), Display.Number(max)) : L["Reasons.HintNoLimit"].Value)</p>
+                                            <TextLayoutHint Id="@($"edit-layout-{reason.Id}")" />
+                                        </div>
+                                        <div class="row">
+                                            <button type="submit" class="btn" id="edit-save-@reason.Id" disabled="@(Locked || string.IsNullOrWhiteSpace(_editText))">@L["Reasons.Save"]</button>
+                                            <button type="button" class="btn btn--plain" disabled="@Locked" @onclick="CancelEditing">@L["Cancel"]</button>
+                                        </div>
+                                    </form>
                                 }
                                 @if (_withdrawing == reason.Id)
                                 {
@@ -496,6 +534,59 @@
 
     /// <summary>One's own argument, known only from the never-cached "mine" answer.</summary>
     private bool IsMine(ReasonResponse reason) => Mine?.MyReasons.Any(r => r.Id == reason.Id) == true;
+
+    /// <summary>The argument whose edit form is open below its row ("⋯" → "Redaguoti").</summary>
+    private Guid? _editing;
+    private string? _editSide;
+    private string _editText = "";
+
+    /// <summary>
+    /// "Redaguoti" on one's own argument (design 8.2, owner 2026-11-17): only while the server says it may be edited (nobody has
+    /// reacted, the record open, no writing restriction), from the never-cached "mine" answer, so the served HTML stays the same
+    /// for everyone. Not shown at all otherwise.
+    /// </summary>
+    private bool MayEdit(ReasonResponse reason) =>
+        !_mpAccount && Record?.Status == "open" && Restriction is not { Restricted: true } && Mine?.Editable.Contains(reason.Id) == true;
+
+    private Task StartEditingAsync(ReasonResponse reason) => RunAsync(async () =>
+    {
+        _maxLength ??= (await Appeals.GetRulesAsync()).Value?.TextMaxLength;
+        _editing = reason.Id;
+        _editSide = reason.Side;
+        _editText = reason.Text;
+        _withdrawing = null;
+        _reporting = null;
+        Errors = NoErrors();
+    });
+
+    private void CancelEditing()
+    {
+        _editing = null;
+        _editSide = null;
+        _editText = "";
+        Errors = NoErrors();
+    }
+
+    /// <summary>Saves the edit in place: the list is read again; a text pre-screening flags waits for a moderator (not shown).</summary>
+    private Task SaveEditAsync(Guid reasonId) => RunAsync(async () =>
+    {
+        var saved = await Appeals.EditReasonAsync(reasonId, new ReasonRequest { Side = _editSide ?? "", Text = _editText });
+        if (!Succeeded(saved, "side", "text"))
+        {
+            if (saved.Problem?.Code == "reason.reacted")
+            {
+                // Someone reacted meanwhile: the message says so, the form closes and "Redaguoti" goes.
+                _editing = null;
+                await ReloadAsync();
+            }
+
+            return;
+        }
+
+        CancelEditing();
+        Info = saved.Value!.Status == "pending" ? L["Reasons.EditedPending"] : L["Reasons.Edited"];
+        await ReloadAsync();
+    });
 
     private Task WithdrawAsync(Guid reasonId) => RunAsync(async () =>
     {

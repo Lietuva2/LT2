@@ -275,6 +275,46 @@ public sealed class RecordReasonsTests : BunitContext
         reasons.FindAll("#reasons-for .said").Select(s => s.Id).ShouldBe([$"reason-{First}", $"reason-{Second}"]);
     }
 
+    /// <summary>
+    /// Owner, 2026-11-17: "Redaguoti" in "⋯" of one's own argument only while the caller's own answer says it may be edited (nobody
+    /// reacted), not shown at all otherwise; it opens the form below the row with the side and the text, and saving reads the
+    /// arguments again in place.
+    /// </summary>
+    [Fact]
+    public void Redaguoti_is_in_the_more_menu_of_ones_own_editable_argument_only_and_saves_in_place()
+    {
+        JSInterop.Mode = JSRuntimeMode.Loose;
+        var third = Guid.Parse("0193a1b2-0000-7000-8000-00000000000f");
+        _appeals.On("GetRecordAsync", ApiResult<BillRecordResponse>.Ok(BillRecord(Reason(First, 3), Reason(Second, 0), Reason(third, 1))));
+        _appeals.On("GetMineAsync", ApiResult<MyBillRecordResponse>.Ok(
+            new MyBillRecordResponse("for", [], null, [Reason(Second, 0), Reason(third, 1)], null, true) { Editable = [Second] }));
+        _appeals.On("GetRulesAsync", ApiResult<AppealRulesResponse>.Ok(new AppealRulesResponse(100, 100, 2000, 0, 0, 1500)));
+        var reasons = Render<RecordReasons>(p => p.Add(c => c.Number, Bill));
+
+        reasons.Find($"#more-reason-{Second}-menu #edit-{Second}").TextContent.ShouldBe("Redaguoti");
+        reasons.FindAll($"#edit-{First}").ShouldBeEmpty("not one's own");
+        reasons.Find("#reasons > .row button.linkish").Click();
+        reasons.FindAll($"#edit-{third}").ShouldBeEmpty("someone reacted: not shown, not disabled");
+        reasons.FindAll($"#withdraw-{third}").ShouldNotBeEmpty("withdrawing stays");
+
+        reasons.Find($"#edit-{Second}").Click();
+        var form = reasons.Find($"#said-actions-{Second} > form.act__panel");
+        form.QuerySelector("h3")!.TextContent.ShouldBe("Redaguoti argumentą");
+        reasons.Find($"#edit-side-for-{Second}").HasAttribute("checked").ShouldBeTrue();
+        reasons.Find($"#edit-text-{Second}").GetAttribute("value").ShouldBe("Argumentas b");
+
+        _appeals.On("EditReasonAsync", ApiResult<ReasonCreatedResponse>.Ok(new ReasonCreatedResponse(Second, "published")));
+        reasons.Find($"#edit-side-against-{Second}").Change(true);
+        reasons.Find($"#edit-text-{Second}").Input("Pataisytas argumentas.");
+        reasons.Find($"#edit-reason-{Second}").Submit();
+        reasons.WaitForAssertion(() => reasons.Markup.ShouldContain("Argumentas išsaugotas."));
+        reasons.FindAll($"#edit-reason-{Second}").ShouldBeEmpty();
+        var sent = _appeals.Arguments[_appeals.Calls.LastIndexOf("EditReasonAsync")];
+        var request = (ReasonRequest)sent[1]!;
+        ((Guid)sent[0]!, request.Side, request.Text).ShouldBe((Second, "against", "Pataisytas argumentas."));
+        _appeals.Calls.Skip(_appeals.Calls.LastIndexOf("EditReasonAsync")).ShouldContain("GetRecordAsync", "read again in place");
+    }
+
     /// <summary>Opens the writing box, writes an argument for "už" and publishes it; the record is then read as <paramref name="after"/>.</summary>
     private IRenderedComponent<RecordReasons> WriteAnArgument(ReasonCreatedResponse created, BillRecordResponse after)
     {

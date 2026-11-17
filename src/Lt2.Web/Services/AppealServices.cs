@@ -37,7 +37,7 @@ internal static class AppealMapping
         p.NextCursor);
 
     public static MyBillRecordResponse Map(MyBillRecord m) =>
-        new(m.Side, m.Endorsed, m.EndorsementsLeft, m.MyReasons.Select(Map).ToList(), m.ReasonsLeft, m.HasPositionConsent);
+        new(m.Side, m.Endorsed, m.EndorsementsLeft, m.MyReasons.Select(Map).ToList(), m.ReasonsLeft, m.HasPositionConsent) { Editable = m.Editable };
 
     public static AppealRulesResponse Map(AppealRulesInfo r) =>
         new(r.ThresholdDefault, r.ThresholdMinimum, r.TextMaxLength, r.ReasonsPerPerson, r.EndorsementsPerPerson, r.DescriptionMaxLength, r.AiSummaries);
@@ -135,6 +135,11 @@ internal sealed class ServerAppealsApi(IAppealsModule appeals, TakingSides sides
     public async Task<ApiResult<ReasonCreatedResponse>> WriteReasonAsync(string number, ReasonRequest request, CancellationToken cancellationToken = default) =>
         UserId is { } id
             ? errors.ToApiResult(await appeals.WriteReasonAsync(number, id, AppealMapping.ToModule(request), cancellationToken), r => new ReasonCreatedResponse(r.Id, r.Status))
+            : ApiResult<ReasonCreatedResponse>.Fail(errors.ToProblem(SignInRequired));
+
+    public async Task<ApiResult<ReasonCreatedResponse>> EditReasonAsync(Guid reasonId, ReasonRequest request, CancellationToken cancellationToken = default) =>
+        UserId is { } id
+            ? errors.ToApiResult(await appeals.EditReasonAsync(reasonId, id, AppealMapping.ToModule(request), cancellationToken), r => new ReasonCreatedResponse(r.Id, r.Status))
             : ApiResult<ReasonCreatedResponse>.Fail(errors.ToProblem(SignInRequired));
 
     public async Task<ApiResult> EndorseAsync(Guid reasonId, CancellationToken cancellationToken = default) =>

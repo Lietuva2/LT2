@@ -2,6 +2,16 @@
 
 What the owner decided is in [12-decisions.md](12-decisions.md). Do not decide an open item in code.
 
+**Proposed by the designer while building editing until someone reacts (8.2, 8.23.3), 2026-11-17, awaiting the owner**
+
+- Every edit of a reason drops the moderator's "seen", flagged or not: only seen reasons go to MPs (8.3), and nobody has
+  seen the new words. The edited reason is listed in the queue as not yet seen. If no: only a flagged edit drops it.
+- An unflagged edit of a reason still waiting for a moderator keeps it waiting.
+- No public mark such as "Redaguota" beside an edited reason or comment: nobody had reacted to the earlier words. If no:
+  "Redaguota {data}" beside it.
+- Only the comment's own writer edits a comment in an organisation's or the MP's name (deleting it is open to every
+  representative, or to the MP's account and office); a comment kind switched off takes no edits, as it takes no new comments.
+
 **Proposed by the designer while building the review of summaries (8.19.2), 2026-11-17, awaiting the owner**
 
 - A summary with no bill left at its time is `dropped`: nothing goes, nothing is public, it counts as made for its week.
