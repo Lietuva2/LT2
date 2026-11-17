@@ -260,9 +260,10 @@ public sealed class AppealFlowTests(AppealFlowTests.ModeratorFixture moderator) 
         await ShowAllReasonsAsync(mod);
         var shown = mod.Locator("#reasons-for .said").Filter(new() { HasText = shownText });
         // Design 8.16.1: "Moderuoti" is in the argument's "⋯"; its actions open below the row.
-        await shown.Locator(".act__more").ClickAsync();
-        var open = mod.Locator(".menu:popover-open").GetByRole(AriaRole.Button, new() { Name = "Moderuoti", Exact = true });
+        // The item comes with the moderators' answer once the island runs; "⋯" opened before that would be replaced, closed.
+        var open = shown.Locator("button.menu__item[id^='moderate-']");
         await Assertions.Expect(open).ToBeEnabledAsync(new() { Timeout = 60_000 });
+        await shown.Locator(".act__more").ClickAsync();
         await open.ClickAsync();
         var moderate = shown.Locator(".moderate");
         await Assertions.Expect(moderate).ToBeVisibleAsync(new() { Timeout = 10_000 });

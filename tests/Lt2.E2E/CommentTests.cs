@@ -194,11 +194,10 @@ public sealed partial class CommentTests(AppealFlowTests.ModeratorFixture modera
         await mod.GotoAsync($"{Base}/seimas/{Bill}");
         // Design 8.16.1: the discussion opens from its summary in the argument's action row; "Moderuoti" is in the comment's "⋯".
         await mod.Locator($"#komentaras-{comment:N}").Locator("xpath=ancestor::div[contains(@class,'discuss__panel')]/preceding-sibling::details[1]/summary").ClickAsync();
-        var more = mod.Locator($"#komentaras-{comment:N}-more-actions");
-        await Assertions.Expect(more).ToBeVisibleAsync(new() { Timeout = E2ESteps.Slow });
-        await more.ClickAsync();
+        // "Moderuoti" comes with the moderators' answer once the island runs; open "⋯" only then.
         var moderate = mod.Locator($"#komentaras-{comment:N}-moderate");
         await Assertions.Expect(moderate).ToBeEnabledAsync(new() { Timeout = E2ESteps.Slow });
+        await mod.Locator($"#komentaras-{comment:N}-more-actions").ClickAsync();
         await moderate.ClickAsync();
         await mod.Locator($"#comment-action-hide-page-{comment:N}").ClickAsync();
         await mod.Locator($"#comment-statement-page-{comment:N}").FillAsync("Bandymas: komentaras paslepiamas (E2E).");
