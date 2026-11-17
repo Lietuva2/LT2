@@ -674,6 +674,8 @@ shown, only counts and "maža imtis"; the Seimas's majority is that of those who
 - The weekly one holds appeals on that week's agenda, or never summarised, or whose participants changed by at least
   the `Digest:NotableChange` share (default 10 %) since the last summary that held them.
 - Every summary has a public copy with the same numbers. Whether an MP stopped the summaries is never shown publicly.
+  A bill's page links to it as `/suvestines/{day}?projektas={number}` (`DigestRoutes.PageAt`; owner, 2026-11-17): the summaries
+  holding the bill first, its item first, no fragment; a day with one summary has one title, its kind and date.
 - Timing is corrected by a moderator when people flag a wrong date: correct, hold, or approve one urgent summary.
 - **Sending (design 8.19, built 2026-11-16).** `Digest:Sending` `off` (default: dry runs, nothing for MPs in the outbox),
   `approval` (a weekly or before-vote summary waits; an urgent one goes at once) or `automatic`. Two locks keep it off whatever

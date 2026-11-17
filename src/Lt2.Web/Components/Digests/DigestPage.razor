@@ -11,7 +11,7 @@
    is a dry run: made, published here, never sent. *@
 @if (_runs is { Count: > 0 } runs)
 {
-    <PageTitle>@T["Digests.Title"] @(Date ?? "") · Lietuva 2.0</PageTitle>
+    <PageTitle>@(Single is { } one ? RunTitle(one) : T["Digests.Title"] + " " + (Date ?? "")) · Lietuva 2.0</PageTitle>
     <div class="stack">
         <ol class="crumbs">
             <li><a href="/suvestines">@T["Digests.Title"]</a></li>
@@ -21,7 +21,9 @@
             }
         </ol>
         <p class="label">@T["Digests.Label"]</p>
-        <h1>@(Date is null ? T["Digests.Title"] : T.Format("Digests.Of", F.Date(runs[0].RunDate)))</h1>
+        @* Owner, 2026-11-17: a day with one summary has one title, its kind and date; a day with several keeps the day's title
+           and a heading per summary. *@
+        <h1 id="@(Single is { } single ? "h-" + single.Id : null)">@(Date is null ? T["Digests.Title"] : Single is { } only ? RunTitle(only) : T.Format("Digests.Of", F.Date(runs[0].RunDate)))</h1>
         @if (Date is null)
         {
             <ProjectTabs Current="ProjectTab.Digests" />
@@ -38,7 +40,10 @@
             @foreach (var run in Date is null ? runs.Take(1) : runs)
             {
                 <section class="stack" aria-labelledby="h-@run.Id" id="run-@run.Id">
-                    <h2 id="h-@run.Id">@T["Digests.Kind." + run.Kind] · @F.Date(run.RunDate)</h2>
+                    @if (Single is null)
+                    {
+                        <h2 id="h-@run.Id">@RunTitle(run)</h2>
+                    }
                     @* Design 8.19.2: what happened to it, in one line under the date; never which MPs. *@
                     <p class="small num" id="run-status-@run.Id">@StatusLine(run)</p>
                     @if (run.Status == "cancelled" && run.Statement is { } statement)
@@ -52,7 +57,7 @@
                             <a href="/suvestines/@Display.Day(run.RunDate)">@T["Digests.Open"]</a>
                         }
                     </div>
-                    @foreach (var item in run.Items)
+                    @foreach (var item in ItemsOf(run))
                     {
                         <section class="sheet stack" aria-label="@item.BillNumber" id="@DigestRoutes.ItemAnchor(run.Id, item.BillNumber)">
                             <div class="row">
@@ -155,6 +160,25 @@ else
 
     [Parameter] public string? Date { get; set; }
 
+    /// <summary>
+    /// A bill's number from its page's link (<see cref="DigestRoutes.PageAt"/>, owner 2026-11-17): on a date's page, the day's
+    /// summaries holding it come first and its item is first in each, so it stands under the title with nothing scrolled.
+    /// </summary>
+    [SupplyParameterFromQuery(Name = DigestRoutes.BillParameter)] public string? Bill { get; set; }
+
+    /// <summary>The day's only summary on a date's page, which then has one title; null on the list or a day with several.</summary>
+    private DigestRunResponse? Single => Date is not null && _runs is { Count: 1 } runs ? runs[0] : null;
+
+    /// <summary>"Savaitinė suvestinė · 2026 m. lapkričio 16 d."</summary>
+    private string RunTitle(DigestRunResponse run) => T["Digests.Kind." + run.Kind] + " · " + F.Date(run.RunDate);
+
+    private bool Holds(DigestRunResponse run) =>
+        Bill is { } number && run.Items.Any(i => string.Equals(i.BillNumber, number, StringComparison.OrdinalIgnoreCase));
+
+    /// <summary>The run's items, the linked bill's first (an ordered sort is stable: the rest keep their order).</summary>
+    private IEnumerable<DigestItemResponse> ItemsOf(DigestRunResponse run) =>
+        Date is not null && Holds(run) ? run.Items.OrderBy(i => string.Equals(i.BillNumber, Bill, StringComparison.OrdinalIgnoreCase) ? 0 : 1) : run.Items;
+
     /// <summary>The public copy's one line (design 8.19.2): a dry run, waiting, sent to how many and when, declined or expired.</summary>
     private string StatusLine(DigestRunResponse run) => run.Status switch
     {
@@ -184,6 +208,12 @@ else
         if (_runs is not { Count: > 0 })
         {
             Navigation.NotFound();
+            return;
+        }
+
+        if (Bill is not null)
+        {
+            _runs = _runs.OrderBy(r => Holds(r) ? 0 : 1).ToList();
         }
     }
 }

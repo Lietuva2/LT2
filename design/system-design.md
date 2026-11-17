@@ -1249,6 +1249,11 @@ can cite it, and MPs know that the numbers in their inbox are the numbers everyo
 it, newest first: the day, the kind, and both sides as frozen there with the counts for accounts older than 30 days, each
 linking to that bill's item on the summary's public page. Before the first it says the bill has not been in a summary
 yet. The summaries keep their own menu item and pages; each item there links back to the bill's page.
+**[Owner, 2026-11-17, after testing the trial: the link went to `#item-…` and scrolled the page's title away.]** The link
+is `/suvestines/{day}?projektas={number}`: the page opens at its top, the day's summaries that hold the bill come first and
+the bill's item is the first under each one's heading, so nothing is scrolled. The items keep their ids for other links.
+And a day with one summary has one title, its kind and date ("Savaitinė suvestinė · 2026 m. lapkričio 16 d."), in place
+of the day's title with the same words again as a heading; a day with several keeps the day's title and a heading for each.
 
 **The front page [decided 2026-11-13, layout "B" chosen from three mockups; superseded on 2026-11-15 by the reworked
 page below, kept here as history].** The front page (`/`), public and
