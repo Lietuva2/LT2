@@ -322,9 +322,24 @@ public sealed partial class StartPageTests : E2ETest
         (await E2ESteps.ApiAsync(first.Page, "PUT", $"/api/v1/bills/{number}/record/position", new { side = "for" })).Status.ShouldBe(204);
         try
         {
-            // Read within a few seconds of each other, so both come from the same minute of the front page's cache.
-            var firstHtml = System.Net.WebUtility.HtmlDecode(await (await first.Page.Context.APIRequest.GetAsync(Base + "/")).TextAsync());
-            var secondHtml = System.Net.WebUtility.HtmlDecode(await (await second.Page.Context.APIRequest.GetAsync(Base + "/")).TextAsync());
+            // Read one after the other. The side just taken marks the front page's kept copy out of date, and the copy is read
+            // again on the first request once it is 2 s old (design 8.7, FrontPageFreshness), or when its minute ends: a pair
+            // read across that moment holds two copies of the agenda (pre-merge run of 2026-11-17). So the pair is read again
+            // until both come from one copy; a difference between the members themselves would never go away and still fails.
+            string firstHtml, secondHtml;
+            var deadline = DateTime.UtcNow + TimeSpan.FromSeconds(30);
+            while (true)
+            {
+                firstHtml = System.Net.WebUtility.HtmlDecode(await (await first.Page.Context.APIRequest.GetAsync(Base + "/")).TextAsync());
+                secondHtml = System.Net.WebUtility.HtmlDecode(await (await second.Page.Context.APIRequest.GetAsync(Base + "/")).TextAsync());
+                if (Frameless(firstHtml) == Frameless(secondHtml) || DateTime.UtcNow > deadline)
+                {
+                    break;
+                }
+
+                await Task.Delay(TimeSpan.FromSeconds(1));
+            }
+
             firstHtml.ShouldContain("Sveiki sugrįžę", customMessage: "the members' version of the page");
             firstHtml.ShouldContain($"id=\"home-for-{(await row.GetAttributeAsync("id"))!["agenda-".Length..]}\"");
             Frameless(firstHtml).ShouldBe(Frameless(secondHtml), "the same page for every member, apart from the frame");
