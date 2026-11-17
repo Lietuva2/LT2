@@ -37,7 +37,8 @@ public sealed record TextLayoutParts(IReadOnlyList<TextBlock> Shown, IReadOnlyLi
 /// A typed text's layout (design 8.2, "A text's layout", owner 2026-11-17): people type plain text, and paragraphs and lists are
 /// read from it by fixed rules, never parsed as markup. Each line is a paragraph (empty lines add nothing). Two or more lines in
 /// a row beginning "- ", "– ", "• " or "* " are a bulleted list; two or more beginning with a number (one to three digits) and
-/// ". " or ") " are a numbered list, the numbers as typed. One such line alone stays a paragraph, marker and all. One level
+/// ". " or ") " are a numbered list, the numbers as typed. "-", "–", "•" and the number may also stand right before a word
+/// ("-pirma", "1.pirma"; owner, 2026-11-17). One such line alone stays a paragraph, marker and all. One level
 /// only. The text itself is never changed: what is stored, counted and screened is what was typed. A pure function, the same on
 /// the server, in the browser and in the email.
 /// </summary>
@@ -182,7 +183,8 @@ public static class TextLayout
     private static Line Classify(string text, int start, int stop, TextItem whole)
     {
         var c = text[start];
-        if (c is '-' or '–' or '•' or '*' && start + 1 < stop && char.IsWhiteSpace(text[start + 1]))
+        if (c is '-' or '–' or '•' or '*' && start + 1 < stop
+            && (char.IsWhiteSpace(text[start + 1]) || (c != '*' && StartsWords(text[start + 1]))))
         {
             var from = Skip(text, start + 1, stop);
             if (from < stop)
@@ -198,7 +200,7 @@ public static class TextLayout
         }
 
         if (digits is >= 1 and <= 3 && start + digits + 1 < stop && text[start + digits] is '.' or ')'
-            && char.IsWhiteSpace(text[start + digits + 1]))
+            && (char.IsWhiteSpace(text[start + digits + 1]) || StartsWords(text[start + digits + 1])))
         {
             var from = Skip(text, start + digits + 1, stop);
             if (from < stop)
@@ -210,6 +212,13 @@ public static class TextLayout
 
         return new Line(TextBlockKind.Paragraph, whole, whole);
     }
+
+    /// <summary>
+    /// A marker typed without a space (owner, 2026-11-17: "-pirma", "1.pirma") counts only when words follow it: a letter or an
+    /// opening quote or bracket. So "-5 %" keeps its minus, "1.5" and "10.30" stay numbers, "--" and "---" stay as typed. A
+    /// "*" always needs its space, so "*žodis*" stays a word between stars.
+    /// </summary>
+    private static bool StartsWords(char next) => char.IsLetter(next) || next is '„' or '"' or '\'' or '(' or '«' or '“';
 
     private static int Skip(string text, int at, int stop)
     {
