@@ -403,6 +403,7 @@ public sealed class SignInComponentTests : BunitContext
     public void The_anchors_emails_and_texts_link_to_live_on_their_screens()
     {
         AccountScreens.FollowsList.ShouldBe("/paskyra/sekimas#sekami");
+        AccountScreens.EmailRhythm.ShouldBe("/paskyra/sekimas#laisku-daznis", "the footer of every email of the rhythm (design 8.24.1)");
         AccountScreens.KnownBrowsers.ShouldBe("/paskyra/saugumas#zinomos-narsykles");
         AccountScreens.MyData.ShouldBe("/paskyra/saugumas#my-data");
         AccountScreens.MyInvitation.ShouldBe("/paskyra/dalyvavimas#my-invitation");

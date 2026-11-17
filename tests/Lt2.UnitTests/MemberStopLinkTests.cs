@@ -3,6 +3,7 @@ using Lt2.Api.Contracts.Follows;
 using Lt2.Hosting;
 using Lt2.Notifications;
 using Lt2.Notifications.MpMail;
+using Lt2.Notifications.Rhythm;
 using Lt2.Notifications.Templates;
 using Lt2.SharedKernel;
 using Lt2.Usage.Counting;
@@ -15,7 +16,7 @@ namespace Lt2.UnitTests;
 
 /// <summary>
 /// Design 8.24.1: every email of the member's rhythm carries the account's stop link, as the one-click stop of RFC 8058 in its
-/// headers and as a line "Nebegauti šių laiškų" under the account line, to the page; logs never keep the token.
+/// headers and as "atsisakyti laiškų" in the footer (owner, 2026-11-17), to the page; logs never keep the token.
 /// </summary>
 public sealed class MemberStopLinkTests
 {
@@ -24,7 +25,20 @@ public sealed class MemberStopLinkTests
     private const string To = "ruta@pavyzdys.test";
     private const string Bill = "XVP-0412";
     private const string Title = "Gyventojų pajamų mokesčio įstatymo pataisa";
-    private const string Account = "/paskyra/sekimas#sekami";
+    private const string Account = AccountScreens.EmailRhythm;
+    private const string FooterStart = "<p style=\"margin-top:24px;padding-top:8px;border-top:1px solid #cbd5e1;font-size:13px;color:#64748b\">";
+
+    /// <summary>Why each email of <see cref="EveryKind"/> came, in its order: the footer's first sentence.</summary>
+    private static readonly string[] Reasons =
+    [
+        "Šį laišką gavote, nes sekate šį projektą Lietuva 2.0.",
+        "Šį laišką gavote, nes sekate šį projektą Lietuva 2.0.",
+        "Šį laišką gavote, nes sekate šią organizaciją Lietuva 2.0.",
+        "Šį laišką gavote, nes sekate šį projektą Lietuva 2.0.",
+        "Šį laišką gavote, nes sekate šį narį Lietuva 2.0.",
+        "Šį laišką gavote, nes šis argumentas – jūsų.",
+        "Šį laišką gavote pagal savo laiškų pasirinkimus Lietuva 2.0.",
+    ];
 
     private static readonly IStringLocalizer<EmailTemplates> L =
         new StringLocalizer<EmailTemplates>(new ResourceManagerStringLocalizerFactory(Options.Create(new LocalizationOptions()), NullLoggerFactory.Instance));
@@ -68,36 +82,63 @@ public sealed class MemberStopLinkTests
         }
     }
 
+    /// <summary>
+    /// Owner, 2026-11-17: the footer, under the rule in small grey type, says why the email came (one sentence, no link), then
+    /// "Keisti periodiškumą arba atsisakyti laiškų" with the two links, then the privacy line; the body holds neither link.
+    /// </summary>
     [Fact]
-    public void Every_email_of_the_rhythm_has_the_stop_line_under_the_account_line_pointing_at_the_page_not_the_api()
+    public void Every_email_of_the_rhythm_ends_with_the_footer_linking_how_often_and_the_stop_page_not_the_api()
     {
-        foreach (var email in EveryKind(Token))
+        var emails = EveryKind(Token).ToList();
+        emails.Count.ShouldBe(Reasons.Length);
+        for (var i = 0; i < emails.Count; i++)
         {
-            var lines = email.TextBody.Split('\n');
-            var stop = Array.IndexOf(lines, "Nebegauti šių laiškų: " + Site + "/laiskai/nebegauti/" + Token);
-            stop.ShouldBeGreaterThan(0, email.Subject);
-            lines[stop - 1].ShouldEndWith("savo paskyroje: " + Site + Account, Case.Sensitive, email.Subject);
+            var email = emails[i];
+            var lines = email.TextBody.TrimEnd('\n').Split('\n');
+            lines[^3].ShouldBe(Reasons[i], email.Subject);
+            lines[^2].ShouldBe($"Keisti periodiškumą: {Site}{Account} · Atsisakyti laiškų: {Site}/laiskai/nebegauti/{Token}", email.Subject);
+            lines[^1].ShouldBe($"Kaip tvarkome duomenis, rašoma privatumo pranešime: {Site}/privatumas", email.Subject);
             email.TextBody.ShouldNotContain("/api/v1/notices/", Case.Sensitive, email.Subject);
+            email.TextBody.ShouldNotContain("Nebegauti šių laiškų", Case.Insensitive, "the old line is gone");
+            email.TextBody.ShouldNotContain("paskyroje", Case.Insensitive, "the old link clause is gone");
+            email.TextBody.IndexOf(Site + "/laiskai/nebegauti/", StringComparison.Ordinal)
+                .ShouldBe(email.TextBody.LastIndexOf(Site + "/laiskai/nebegauti/", StringComparison.Ordinal), "the stop page once, in the footer");
 
-            // The HTML part makes the line a link with its address under it, as every other action line (owner, 2026-11-17).
-            email.HtmlBody.ShouldNotBeNull();
-            email.HtmlBody!.ShouldContain($"<a href=\"{Site}/laiskai/nebegauti/{Token}\" style=\"font-weight:600;color:#1f6b3a\">Nebegauti šių laiškų</a>", Case.Sensitive, email.Subject);
+            var html = email.HtmlBody.ShouldNotBeNull();
+            var footerAt = html.IndexOf(FooterStart, StringComparison.Ordinal);
+            footerAt.ShouldBeGreaterThan(0, email.Subject);
+            var footer = html[footerAt..];
+            footer.ShouldBe(
+                FooterStart + System.Net.WebUtility.HtmlEncode(Reasons[i])
+                + $"<br><a href=\"{System.Net.WebUtility.HtmlEncode(Site + Account)}\">Keisti periodiškumą</a> arba <a href=\"{Site}/laiskai/nebegauti/{Token}\">atsisakyti laiškų</a>"
+                + $"<br><a href=\"{Site}/privatumas\">Kaip tvarkome duomenis, rašoma privatumo pranešime</a></p></body></html>",
+                email.Subject);
+            html[..footerAt].ShouldNotContain("laiskai/nebegauti", Case.Sensitive, "only the footer links the stop page");
+            html[..footerAt].ShouldNotContain("Keisti periodiškumą", Case.Sensitive);
         }
     }
 
     [Fact]
-    public void Without_a_token_the_email_is_as_it_was_with_neither_headers_nor_line()
+    public void Without_a_token_the_footer_links_only_how_often_and_there_are_no_headers()
     {
         var with = EveryKind(Token).ToList();
         var without = EveryKind(null).ToList();
         for (var i = 0; i < without.Count; i++)
         {
             without[i].Headers.ShouldBeNull(without[i].Subject);
-            without[i].TextBody.ShouldNotContain("Nebegauti", Case.Sensitive);
-            with[i].TextBody.Replace("\nNebegauti šių laiškų: " + Site + "/laiskai/nebegauti/" + Token, "", StringComparison.Ordinal)
-                .ShouldBe(without[i].TextBody, "the plain part gains the one line and nothing else");
+            without[i].TextBody.ShouldNotContain("laiskai/nebegauti", Case.Sensitive);
+            without[i].TextBody.ShouldContain($"\nKeisti periodiškumą: {Site}{Account}\n", Case.Sensitive, without[i].Subject);
+            without[i].HtmlBody.ShouldNotBeNull().ShouldContain($"<br><a href=\"{System.Net.WebUtility.HtmlEncode(Site + Account)}\">Keisti periodiškumą</a><br>");
+            without[i].HtmlBody!.ShouldNotContain("atsisakyti", Case.Insensitive);
+            with[i].TextBody.Replace($" · Atsisakyti laiškų: {Site}/laiskai/nebegauti/{Token}", "", StringComparison.Ordinal)
+                .ShouldBe(without[i].TextBody, "the token adds the stop link and nothing else");
         }
     }
+
+    /// <summary>The follows screen renders <c>#laisku-daznis</c> (the account screens' test in <c>SignInComponentTests</c>).</summary>
+    [Fact]
+    public void The_footers_link_to_how_often_is_the_follows_screens_part_on_the_choice() =>
+        NoticeDelivery.AccountPath.ShouldBe("/paskyra/sekimas#laisku-daznis");
 
     [Fact]
     public void The_modules_links_and_the_contracts_routes_name_the_same_addresses()

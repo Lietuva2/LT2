@@ -207,7 +207,7 @@ public sealed class OfficeInvitationTests(DatabaseFixture database) : ApiTest(da
             email.TextBody.ShouldContain("Seimo narys: Aurelija Kadagytė.");
             email.TextBody.ShouldContain($"Priimti kvietimą: https://lt2.test{MpRoutes.OfficeInvitationPage}#{sent.Code}");
             email.TextBody.ShouldContain($"atverkite https://lt2.test{MpRoutes.OfficeInvitationPage} ir įveskite šį kodą:\n\n{sent.Code}\n\n");
-            email.HtmlBody.ShouldNotBeNull().ShouldContain($"<a href=\"https://lt2.test{MpRoutes.OfficeInvitationPage}#{sent.Code}\" style=\"font-weight:600;color:#1f6b3a\">Priimti kvietimą</a><br><span");
+            email.HtmlBody.ShouldNotBeNull().ShouldContain($"<a href=\"https://lt2.test{MpRoutes.OfficeInvitationPage}#{sent.Code}\">Priimti kvietimą</a></p>");
             email.HtmlBody.ShouldContain($"{sent.Code}</p>");
 
             // The address is kept nowhere but the outbox row: not on the invitation, not in the audit.

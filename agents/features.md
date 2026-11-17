@@ -22,9 +22,11 @@ Read the part for the feature you change, after its design file ([design/README.
   `EmailRenderer<T>` registered in `NotificationsModule`; shared texts use the `Email.*` keys of `EmailTemplates.resx`.
   `Build` and `BuildMp` take the footer (`EmailLayout.Footer(l, site.Value.Address)`: the privacy notice's full address,
   design 8.22.3), so no email goes without it. In `Build`'s HTML part (owner, 2026-11-17) a line ending "text: https://…" is that
-  text (its last sentence) as a link with the address under it in small type, any other address a plain link
+  text (its last sentence) as a normal link, the address not printed (owner, 2026-11-17: noise), any other address a plain link
   (`EmailLayout.LinkedHtml`); a template writes an action line with `EmailLayout.LinkLine(label, url)`; the plain part is unchanged
-  and nothing is rewritten or tracked.
+  and nothing is rewritten or tracked. An email of the member's rhythm is built by `EmailLayout.BuildNotice` (design 8.24.1):
+  its footer holds the reason (`*.Reason` keys, no link), "Keisti periodiškumą arba atsisakyti laiškų" (`Email.Notices.*`;
+  plain part "Keisti periodiškumą: … · Atsisakyti laiškų: …") and the privacy line, with the stop headers.
   Deleting an account or purging a pending one calls `IOutbox.ForgetAsync` in the same transaction.
 
 
@@ -357,8 +359,9 @@ page's "Balsuota".
   notices, feedback and MP mail never go through it.
 - **The stop link (design 8.24.1, owner 2026-11-17; what one press stops is the designer's proposal awaiting the owner).**
   Every email of the rhythm carries `List-Unsubscribe` (`/api/v1/notices/{token}/stop`) with `List-Unsubscribe-Post`
-  (`EmailLayout.StopHeaders`) and, under the account line, "Nebegauti šių laiškų: …/laiskai/nebegauti/{token}"
-  (`EmailLayout.WithStopLine`); paths in `MemberMailLinks` (SharedKernel) and `NoticeStopRoutes` (contracts). The token is one
+  (`EmailLayout.StopHeaders`) and, in the footer (owner, 2026-11-17), "Keisti periodiškumą" to `AccountScreens.EmailRhythm`
+  (`/paskyra/sekimas#laisku-daznis`, the payloads' `AccountPath`) "arba atsisakyti laiškų" to `/laiskai/nebegauti/{token}`
+  (`EmailLayout.BuildNotice`); paths in `MemberMailLinks` (SharedKernel) and `NoticeStopRoutes` (contracts). The token is one
   per account, `MailKeys.MemberStopToken` (the mail key, account id, generation 0), its hash in `notify.member_mail_token`
   (withheld, deleted with the account, not exported), made by `NoticeDelivery` with the first email; the clear token travels
   in the payload's `StopToken` (`DueNotice.Write` takes a `NoticeAddress`). One press (`IFollows.StopByLinkAsync`) turns every

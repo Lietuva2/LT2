@@ -168,7 +168,7 @@ public sealed class EmailRhythmTests(DatabaseFixture database) : ApiTest(databas
             KindsIn(gathered).ShouldContain(MessageKinds.FollowVotedEmail);
             Items(gathered, MessageKinds.FollowPlannedEmail).Single(p => p.GetProperty("billNumber").GetString() == PlannedBill)
                 .GetProperty("date").GetString().ShouldBe(Day(Monday.AddDays(10)));
-            gathered.GetProperty("accountPath").GetString().ShouldBe("/paskyra/sekimas#sekami");
+            gathered.GetProperty("accountPath").GetString().ShouldBe("/paskyra/sekimas#laisku-daznis");
 
             await RunAtAsync(Seen.AddMinutes(15));
             await RunAtAsync(At(Monday.AddDays(2), 8, 7));

@@ -147,7 +147,7 @@
   <data name="Privacy.Rights.Fact4.Term" xml:space="preserve"><value>Prisijungimai</value></data>
   <data name="Privacy.Rights.Fact4.Value" xml:space="preserve"><value>„Jūsų sesijos“ ir „Žinomos naršyklės“: nutraukti sesiją ar pamiršti naršyklę.</value></data>
   <data name="Privacy.Rights.Fact5.Term" xml:space="preserve"><value>Sekimai ir laiškai</value></data>
-  <data name="Privacy.Rights.Fact5.Value" xml:space="preserve"><value>„Sekimas ir laiškai“: nebesekti, išjungti laiškus (taip pat apie komentarus po jūsų argumentais) ir pasirinkti, kaip dažnai jie ateina. Visus šiuos laiškus išjungia ir kiekvieno jų apačioje esanti nuoroda „Nebegauti šių laiškų“, be prisijungimo. Komentarą galite ištrinti, „Sutinku“ – atšaukti, kol dėl projekto dar galima dalyvauti.</value></data>
+  <data name="Privacy.Rights.Fact5.Value" xml:space="preserve"><value>„Sekimas ir laiškai“: nebesekti, išjungti laiškus (taip pat apie komentarus po jūsų argumentais) ir pasirinkti, kaip dažnai jie ateina. Visus šiuos laiškus išjungia ir kiekvieno jų apačioje esanti nuoroda „atsisakyti laiškų“, be prisijungimo. Komentarą galite ištrinti, „Sutinku“ – atšaukti, kol dėl projekto dar galima dalyvauti.</value></data>
   <data name="Privacy.Rights.Fact6.Term" xml:space="preserve"><value>Vardas</value></data>
   <data name="Privacy.Rights.Fact6.Value" xml:space="preserve"><value>„Profilis“ → „Vardas“: pakeisti ar ištrinti vardą, kurį mato kiti.</value></data>
   <data name="Privacy.Rights.Fact7.Term" xml:space="preserve"><value>Kiti prašymai</value></data>

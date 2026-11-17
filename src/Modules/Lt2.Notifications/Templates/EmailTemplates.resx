@@ -47,7 +47,10 @@
 <data name="Feedback.Notice.Subject" xml:space="preserve"><value>Lietuva 2.0: nauji atsiliepimai ({0})</value></data>
 <data name="Feedback.Notice.Body" xml:space="preserve"><value>Naujų atsiliepimų: {0}. Juos rasite {1} (reikia darbuotojo prieigos rakto).</value></data><data name="Email.Privacy" xml:space="preserve"><value>Kaip tvarkome duomenis, rašoma privatumo pranešime: {0}</value></data>
 <data name="Email.WithoutLink" xml:space="preserve"><value>Nenorite spausti nuorodos laiške? Naršyklėje patys atverkite {0} ir įveskite šį kodą:</value></data>
-  <data name="Email.StopNotices" xml:space="preserve"><value>Nebegauti šių laiškų</value></data>
+  <data name="Email.Notices.Rhythm" xml:space="preserve"><value>Keisti periodiškumą</value></data>
+  <data name="Email.Notices.Stop" xml:space="preserve"><value>atsisakyti laiškų</value></data>
+  <data name="Email.Notices.Links" xml:space="preserve"><value>{0} arba {1}</value></data>
+  <data name="Email.Notices.LinksText" xml:space="preserve"><value>Keisti periodiškumą: {0} · Atsisakyti laiškų: {1}</value></data>
   <data name="Email.Statement" xml:space="preserve"><value>Moderatoriaus paaiškinimas: {0}</value></data>
 <data name="Moderation.Rules" xml:space="preserve"><value>Šį laišką gavote, nes esate šio turinio autorius.</value></data>
 <data name="Digest.Subject" xml:space="preserve"><value>Lietuva 2.0 suvestinė Seimo nariams, {0}</value></data>
@@ -87,7 +90,7 @@
 <data name="Choice.did-not-vote" xml:space="preserve"><value>nebalsavo</value></data>
 <data name="Choice.none" xml:space="preserve"><value>balsavimo pagal asmenis nebuvo</value></data>
 <data name="Follow.VoteLink" xml:space="preserve"><value>Balsavimo rezultatai: {0}</value></data>
-<data name="Follow.Footer" xml:space="preserve"><value>Šį laišką gavote, nes sekate šį projektą Lietuva 2.0. Ką sekate ir kokius laiškus gaunate, galite pakeisti savo paskyroje: {0}</value></data>
+<data name="Follow.Reason" xml:space="preserve"><value>Šį laišką gavote, nes sekate šį projektą Lietuva 2.0.</value></data>
 <data name="Organisation.Code.Subject" xml:space="preserve"><value>Lietuva 2.0 organizacijos patvirtinimo kodas: {0}</value></data>
 <data name="Organisation.Code.Intro" xml:space="preserve"><value>kodas, kuriuo patvirtinsite, kad organizacija „{0}“ valdo domeną {1}:</value></data>
 <data name="Organisation.Code.What" xml:space="preserve"><value>Kodą įveskite organizacijos puslapyje Lietuva 2.0. Patvirtinus prie organizacijos bus rodoma „Patvirtinta per el. pašto adresą @{1}“. Šio el. pašto adreso nesaugome, išsaugomas tik domenas.</value></data>
@@ -115,7 +118,7 @@
 <data name="Follow.Statement.Body" xml:space="preserve"><value>jūsų sekama organizacija „{0}“ ({2}) paskelbė savo poziciją dėl projekto {1}.</value></data>
 <data name="Follow.Statement.Stance" xml:space="preserve"><value>Pozicija: {0}.</value></data>
 <data name="Follow.Statement.Read" xml:space="preserve"><value>Poziciją, kitų organizacijų pozicijas ir abiejų pusių argumentus rasite projekto puslapyje: {0}</value></data>
-<data name="Follow.Statement.Footer" xml:space="preserve"><value>Šį laišką gavote, nes sekate šią organizaciją Lietuva 2.0. Ką sekate ir kokius laiškus gaunate, galite pakeisti savo paskyroje: {0}</value></data>
+<data name="Follow.Statement.Reason" xml:space="preserve"><value>Šį laišką gavote, nes sekate šią organizaciją Lietuva 2.0.</value></data>
 <data name="Follow.Stance.for" xml:space="preserve"><value>prašo balsuoti už</value></data>
 <data name="Follow.Stance.against" xml:space="preserve"><value>prašo balsuoti prieš</value></data>
 <data name="Follow.Stance.remarks" xml:space="preserve"><value>pastabos, be prašymo balsuoti už ar prieš</value></data>
@@ -200,7 +203,7 @@
   <data name="Follow.Member.Read.argument" xml:space="preserve"><value>Argumentą ir kitus abiejų pusių argumentus rasite projekto puslapyje: {0}</value></data>
   <data name="Follow.Member.Read.comment" xml:space="preserve"><value>Komentarą ir visą aptarimą rasite projekto puslapyje: {0}</value></data>
   <data name="Follow.Member.Profile" xml:space="preserve"><value>Visi šio nario argumentai ir komentarai – profilyje: {0}</value></data>
-  <data name="Follow.Member.Footer" xml:space="preserve"><value>Šį laišką gavote, nes sekate šį narį Lietuva 2.0. Ką sekate ir kokius laiškus gaunate, galite pakeisti savo paskyroje: {0}</value></data>
+  <data name="Follow.Member.Reason" xml:space="preserve"><value>Šį laišką gavote, nes sekate šį narį Lietuva 2.0.</value></data>
   <data name="Profile.about-hidden.Subject" xml:space="preserve"><value>Lietuva 2.0: jūsų „Apie mane“ paslėptas</value></data>
   <data name="Profile.about-hidden.Body" xml:space="preserve"><value>moderatorius paslėpė jūsų profilio tekstą „Apie mane“. Jis niekur nerodomas, kol neparašysite naujo.</value></data>
   <data name="Profile.about-restored.Subject" xml:space="preserve"><value>Lietuva 2.0: jūsų „Apie mane“ vėl rodomas</value></data>
@@ -214,7 +217,7 @@
   <data name="Gathered.Intro.immediate" xml:space="preserve"><value>štai kas nutiko dėl to, ką sekate Lietuva 2.0:</value></data>
   <data name="Gathered.Intro.daily" xml:space="preserve"><value>štai kas nutiko nuo ankstesnio dienos laiško dėl to, ką sekate Lietuva 2.0:</value></data>
   <data name="Gathered.Intro.weekly" xml:space="preserve"><value>štai kas nutiko nuo ankstesnio savaitės laiško dėl to, ką sekate Lietuva 2.0:</value></data>
-  <data name="Gathered.Footer" xml:space="preserve"><value>Šį laišką gavote pagal savo laiškų pasirinkimus Lietuva 2.0. Kokius laiškus gaunate ir kaip dažnai, galite pakeisti savo paskyroje: {0}</value></data>
+  <data name="Gathered.Reason" xml:space="preserve"><value>Šį laišką gavote pagal savo laiškų pasirinkimus Lietuva 2.0.</value></data>
   <data name="Gathered.Planned.Title" xml:space="preserve"><value>Planuojama Seime:</value></data>
   <data name="Gathered.Planned.Line" xml:space="preserve"><value>– {0}. Planuojama {1}. {2}</value></data>
   <data name="Gathered.Planned.DateStage" xml:space="preserve"><value>{0} ({1})</value></data>
@@ -246,8 +249,8 @@
   <data name="Comments.Notice.Body.One" xml:space="preserve"><value>po jūsų argumentu atsirado naujų komentarų:</value></data>
   <data name="Comments.Notice.Body.Many" xml:space="preserve"><value>po jūsų argumentais atsirado naujų komentarų:</value></data>
   <data name="Comments.Notice.Line" xml:space="preserve"><value>{2} {0}: {1}</value></data>
-  <data name="Comments.Notice.Footer.One" xml:space="preserve"><value>Šį laišką gavote, nes šis argumentas – jūsų. Šiuos laiškus galite išjungti savo paskyroje: {0}</value></data>
-  <data name="Comments.Notice.Footer.Many" xml:space="preserve"><value>Šį laišką gavote, nes šie argumentai – jūsų. Šiuos laiškus galite išjungti savo paskyroje: {0}</value></data>
+  <data name="Comments.Notice.Reason.One" xml:space="preserve"><value>Šį laišką gavote, nes šis argumentas – jūsų.</value></data>
+  <data name="Comments.Notice.Reason.Many" xml:space="preserve"><value>Šį laišką gavote, nes šie argumentai – jūsų.</value></data>
   <data name="DigestReview.Subject" xml:space="preserve"><value>Suvestinė Seimo nariams išeis {0}</value></data>
   <data name="DigestReview.Kind.weekly" xml:space="preserve"><value>Savaitinė suvestinė</value></data>
   <data name="DigestReview.Kind.before-vote" xml:space="preserve"><value>Suvestinė prieš posėdį</value></data>

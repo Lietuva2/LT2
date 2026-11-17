@@ -25,8 +25,11 @@ internal sealed class NoticeDelivery(
     MailKeys keys,
     TimeProvider clock)
 {
-    /// <summary>The follows screen's switches and choice, where every follow email links (design 8.11.2, 8.21).</summary>
-    public const string AccountPath = AccountScreens.FollowsList;
+    /// <summary>
+    /// The follows screen's choice of how often, where "Keisti periodiškumą" in the footer of every email of the rhythm links
+    /// (design 8.24.1, owner 2026-11-17; the switches are on the same screen above it).
+    /// </summary>
+    public const string AccountPath = AccountScreens.EmailRhythm;
 
     public async Task<int> RecordAsync(DateTimeOffset now, CancellationToken cancellationToken)
     {

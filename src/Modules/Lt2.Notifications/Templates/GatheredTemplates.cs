@@ -34,7 +34,8 @@ internal sealed class NoticePart<TModel>(string kind, int order, Func<IReadOnlyL
 
 /// <summary>
 /// The gathered email (design 8.24): what one run, one morning or one week holds for a member, a part per kind in the switches'
-/// order, each line with its day and its link, ending with the link to the switches and the choice. It holds only what the
+/// order, each line with its day and its link; its footer links to the choice of how often and to the stop page, as every email
+/// of the rhythm (design 8.24.1, <see cref="EmailLayout.BuildNotice"/>). It holds only what the
 /// single emails would: nothing about the person's side, a bill's counts or other people. No tracking; full addresses from
 /// <c>Site:Address</c>.
 /// </summary>
@@ -54,9 +55,8 @@ internal sealed class GatheredTemplates(IStringLocalizer<EmailTemplates> l, IOpt
             paragraphs.Add(group.Part.Render(group.Items));
         }
 
-        paragraphs.Add(EmailLayout.WithStopLine(l, site.Value.Address, l.Format("Gathered.Footer", SiteLinks.Absolute(site.Value.Address, model.AccountPath)), model.StopToken));
         paragraphs.Add(l[EmailText.Signature]);
-        return EmailLayout.Build(
-            model.To, l["Gathered.Subject." + rhythm], paragraphs, EmailLayout.Footer(l, site.Value.Address), headers: EmailLayout.StopHeaders(site.Value.Address, model.StopToken));
+        return EmailLayout.BuildNotice(
+            l, site.Value.Address, model.To, l["Gathered.Subject." + rhythm], paragraphs, l["Gathered.Reason"], model.AccountPath, model.StopToken);
     }
 }

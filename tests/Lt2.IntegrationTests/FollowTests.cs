@@ -78,7 +78,7 @@ public sealed class FollowTests(DatabaseFixture database) : ApiTest(database)
                 payload.RootElement.GetProperty("billNumber").GetString().ShouldBe(AppealSteps.SecondBill);
                 payload.RootElement.GetProperty("date").GetString().ShouldBe(date.ToString("yyyy-MM-dd", System.Globalization.CultureInfo.InvariantCulture));
                 payload.RootElement.GetProperty("stage").GetString().ShouldBe("adoption");
-                payload.RootElement.GetProperty("accountPath").GetString().ShouldBe("/paskyra/sekimas#sekami");
+                payload.RootElement.GetProperty("accountPath").GetString().ShouldBe("/paskyra/sekimas#laisku-daznis");
             }
 
             // Recorded once: a second run sends nothing more.
