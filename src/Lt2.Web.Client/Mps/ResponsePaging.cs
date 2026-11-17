@@ -16,6 +16,12 @@ public static class ResponsePaging
             ? n
             : MpResponseLimits.First;
 
+    /// <summary>
+    /// The value of <c>atsakymai</c> that shows the item at <paramref name="position"/> (1-based), or null when the page shows it
+    /// already: a response just published that stands beyond the shown ones is shown through it (owner, 2026-11-17).
+    /// </summary>
+    public static int? ShowThrough(string? show, int total, int position) => position > Shown(show, total) && position <= total ? position : null;
+
     /// <summary>The next value of <c>atsakymai</c>, or null when every item is shown.</summary>
     public static int? More(int shown, int total) => shown < total ? Math.Min(shown + MpResponseLimits.Step, total) : null;
 

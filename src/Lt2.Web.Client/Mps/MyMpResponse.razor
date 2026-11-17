@@ -165,9 +165,35 @@ else if (_mine is not null)
         await LoadAsync();
         Info = L["MpResponse.Published"];
 
-        // The public list is rendered by the server: the page's content is read again in place.
-        Navigation.Refresh();
+        // The public list is rendered by the server: the page's content is read again in place. It shows the first ten
+        // (design 8.5.6), by stance and last name, so a response that stands beyond the shown ones is shown through it and
+        // brought into view (owner, 2026-11-17: what one publishes shows up).
+        if (await PositionBeyondShownAsync() is { } position)
+        {
+            Navigation.NavigateTo(ResponsePaging.Address(Path, position, ResponsePaging.ItemId(position)));
+        }
+        else
+        {
+            Navigation.Refresh();
+        }
     });
+
+    /// <summary>The responses' page parameter (design 8.5.6): how many the server's part shows now.</summary>
+    [SupplyParameterFromQuery(Name = MpResponseLimits.ShowParameter)] public string? ResponsesShown { get; set; }
+
+    private string Path => "/seimas/" + Uri.EscapeDataString(Number);
+
+    /// <summary>Where the MP's response stands in the public list when the page does not show it yet; null otherwise.</summary>
+    private async Task<int?> PositionBeyondShownAsync()
+    {
+        if (_mine?.Response is not { Status: "published" } own || (await Responses.GetOnBillAsync(Number)).Value is not { } view)
+        {
+            return null;
+        }
+
+        var index = view.Items.ToList().FindIndex(i => i.Response.Id == own.Id);
+        return index < 0 ? null : ResponsePaging.ShowThrough(ResponsesShown, view.Items.Count, index + 1);
+    }
 
     private Task WithdrawAsync() => RunAsync(async () =>
     {

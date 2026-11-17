@@ -234,6 +234,61 @@ public sealed class RecordReasonsTests : BunitContext
         reasons.Find($"#moderation-{First}").ClassList.ShouldContain("act__panel");
     }
 
+    /// <summary>
+    /// Owner, 2026-11-17: "when writing an argument with the argument list closed, it doesn't show up after posting". A published
+    /// argument has no "Man svarbu" yet and the answer lists it last, beyond the two shown; it stands first in its side's column on
+    /// top of the two already shown, marked and given the focus (which brings it into view), the list stays collapsed and its
+    /// count says every argument.
+    /// </summary>
+    [Fact]
+    public void A_published_argument_shows_first_in_its_side_and_the_list_stays_collapsed()
+    {
+        JSInterop.Mode = JSRuntimeMode.Loose;
+        var third = Guid.Parse("0193a1b2-0000-7000-8000-00000000000c");
+        var written = Guid.Parse("0193a1b2-0000-7000-8000-00000000000d");
+        _appeals.On("GetRecordAsync", ApiResult<BillRecordResponse>.Ok(BillRecord(Reason(First, 3), Reason(Second, 2), Reason(third, 1))));
+        var reasons = WriteAnArgument(new ReasonCreatedResponse(written, "published"),
+            BillRecord(Reason(First, 3), Reason(Second, 2), Reason(third, 1), Reason(written, 0)));
+
+        reasons.WaitForAssertion(() => reasons.FindAll("#reasons-for .said").Select(s => s.Id)
+            .ShouldBe([$"reason-{written}", $"reason-{First}", $"reason-{Second}"], "the new one first, the two shown stay"));
+        reasons.Markup.ShouldContain("Argumentas paskelbtas.");
+        var shown = reasons.Find($"#reason-{written}");
+        shown.ClassList.ShouldContain("said--linked");
+        shown.GetAttribute("tabindex").ShouldBe("-1");
+        reasons.FindAll($"#reason-{third}").ShouldBeEmpty("the list stays collapsed");
+        reasons.Find("#reasons > .row button.linkish").TextContent.Trim().ShouldBe("Visi argumentai: 4");
+        JSInterop.Invocations.ShouldContain(i => i.Identifier.EndsWith("focus", StringComparison.Ordinal), "brought into view");
+    }
+
+    /// <summary>A waiting argument (pre-screened, design 8.3) is not public: the person is told so and nothing of it is shown.</summary>
+    [Fact]
+    public void A_waiting_argument_is_not_shown()
+    {
+        JSInterop.Mode = JSRuntimeMode.Loose;
+        var waiting = Guid.Parse("0193a1b2-0000-7000-8000-00000000000e");
+        var reasons = WriteAnArgument(new ReasonCreatedResponse(waiting, "pending"), BillRecord(Reason(First, 3), Reason(Second, 2)));
+
+        reasons.WaitForAssertion(() => reasons.Markup.ShouldContain("Argumentą pirma peržiūrės moderatorius."));
+        reasons.FindAll($"#reason-{waiting}").ShouldBeEmpty();
+        reasons.FindAll(".said--linked").ShouldBeEmpty();
+        reasons.FindAll("#reasons-for .said").Select(s => s.Id).ShouldBe([$"reason-{First}", $"reason-{Second}"]);
+    }
+
+    /// <summary>Opens the writing box, writes an argument for "už" and publishes it; the record is then read as <paramref name="after"/>.</summary>
+    private IRenderedComponent<RecordReasons> WriteAnArgument(ReasonCreatedResponse created, BillRecordResponse after)
+    {
+        _appeals.On("GetRulesAsync", ApiResult<AppealRulesResponse>.Ok(new AppealRulesResponse(100, 100, 2000, 0, 0, 1500)));
+        _appeals.On("FindSimilarAsync", ApiResult<IReadOnlyList<ReasonResponse>>.Ok([]));
+        _appeals.On("WriteReasonAsync", ApiResult<ReasonCreatedResponse>.Ok(created));
+        var reasons = Render<RecordReasons>(p => p.Add(c => c.Number, Bill));
+        reasons.Find("#add-reason").Click();
+        reasons.Find("#reason-text").Input("Mokesčiai turi būti paprastesni.");
+        _appeals.On("GetRecordAsync", ApiResult<BillRecordResponse>.Ok(after));
+        reasons.Find("#write-reason").Submit();
+        return reasons;
+    }
+
     private static ReasonResponse Reason(Guid id, int marks) => new(id, "for", "Argumentas " + id.ToString()[^1], "Rūta Mockutė", marks, "published", DateTimeOffset.UnixEpoch);
 
     private static QueueReasonResponse Queued(Guid id) =>

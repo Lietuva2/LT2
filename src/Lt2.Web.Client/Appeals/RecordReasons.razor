@@ -47,9 +47,10 @@
                     {
                         <p class="small">@L["Reasons.None"]</p>
                     }
-                    @foreach (var reason in _showAll || OnlyNew ? all : all.Take(Shown))
+                    @foreach (var reason in _showAll || OnlyNew ? all : all.Take(ShownOf(all)))
                     {
-                        <div class="said @(LinkedReason == reason.Id ? "said--linked" : null)" id="@BillTextLinks.ReasonElement(reason.Id)" @key="reason.Id">
+                        <div class="said @(LinkedReason == reason.Id || _written == reason.Id ? "said--linked" : null)" id="@BillTextLinks.ReasonElement(reason.Id)" @key="reason.Id"
+                             tabindex="@(_written == reason.Id ? "-1" : null)" @ref="_said[reason.Id]">
                             @* The name first, then the text, then the action row (owner, 2026-11-17: as statements, responses and
                                comments read). The row is one line that never wraps (design 8.16.1): "Man svarbu · n",
                                "Aptarimas (n)" and "⋯" with the rarer actions; a chosen action opens directly under the row, an
@@ -140,7 +141,7 @@
             {
                 <button class="btn btn--plain" type="button" id="add-reason" disabled="@Locked" @onclick="StartWritingAsync">@L["Reasons.Write"]</button>
             }
-            @if (!OnlyNew && record.Reasons.GroupBy(r => r.Side).Any(g => g.Count() > Shown))
+            @if (!OnlyNew && record.Reasons.GroupBy(r => r.Side).Any(g => g.Count() > ShownOf(g.ToList())))
             {
                 <button class="linkish" type="button" disabled="@Locked" @onclick="() => _showAll = !_showAll">
                     @(_showAll ? L["Reasons.Fewer"] : L.Format("Reasons.All", Display.Number(record.Reasons.Count)))
@@ -248,9 +249,35 @@
     /// <summary>The argument whose "Man svarbu" was just pressed; its button gets the focus back once enabled again.</summary>
     private Guid? _refocus;
 
+    /// <summary>
+    /// The argument the person just published (owner, 2026-11-17: "it doesn't show up after posting"): shown first in its side's
+    /// column on top of the usual two, marked, until the page is read again. A waiting one is not public and is never set here.
+    /// </summary>
+    private Guid? _written;
+
+    /// <summary>The published argument is brought into view and given the focus once, after the render that shows it.</summary>
+    private bool _focusWritten;
+
+    /// <summary>Each shown argument, to bring the one just published into view.</summary>
+    private readonly Dictionary<Guid, ElementReference> _said = [];
+
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
         await base.OnAfterRenderAsync(firstRender);
+        if (_focusWritten && !Busy && _written is { } written && _said.TryGetValue(written, out var said))
+        {
+            _focusWritten = false;
+            try
+            {
+                // Focusing scrolls it into view, as a link to an argument does (design 8.12.1).
+                await said.FocusAsync();
+            }
+            catch (Microsoft.JSInterop.JSException)
+            {
+                // The argument is gone meanwhile: nothing to focus.
+            }
+        }
+
         if (_refocus is { } id && !Busy && _marks.TryGetValue(id, out var button))
         {
             _refocus = null;
@@ -431,9 +458,28 @@
         return fresh with { Reasons = fresh.Reasons.OrderBy(r => at.TryGetValue(r.Id, out var i) ? i : int.MaxValue).ToList() };
     }
 
-    /// <summary>The arguments shown before "show all": the first two of each side (design 8.12.1).</summary>
-    private static HashSet<Guid> FirstShown(IReadOnlyList<ReasonResponse> reasons) =>
-        AppealLimits.Sides.SelectMany(side => reasons.Where(r => r.Side == side).Take(Shown)).Select(r => r.Id).ToHashSet();
+    /// <summary>
+    /// The fresh record with the argument the person just published first, so it leads its side's column (owner, 2026-11-17);
+    /// unchanged without one, or when it is not in the answer (withdrawn, hidden).
+    /// </summary>
+    public static BillRecordResponse? WrittenFirst(BillRecordResponse? record, Guid? written) =>
+        record is null || written is not { } id || record.Reasons.All(r => r.Id != id)
+            ? record
+            : record with { Reasons = record.Reasons.OrderBy(r => r.Id == id ? 0 : 1).ToList() };
+
+    /// <summary>
+    /// How many of one side's arguments show before "show all": two (design 8.12.1), and the one the person just published on
+    /// top of them, so publishing pushes nothing behind "show all".
+    /// </summary>
+    private int ShownOf(IReadOnlyList<ReasonResponse> side) => Shown + (_written is { } id && side.Any(r => r.Id == id) ? 1 : 0);
+
+    /// <summary>The arguments shown before "show all": the first two of each side (design 8.12.1), and one just published.</summary>
+    private HashSet<Guid> FirstShown(IReadOnlyList<ReasonResponse> reasons) =>
+        AppealLimits.Sides.SelectMany(side =>
+        {
+            var ofSide = reasons.Where(r => r.Side == side).ToList();
+            return ofSide.Take(ShownOf(ofSide));
+        }).Select(r => r.Id).ToHashSet();
 
     private QueueReasonResponse? Moderated(Guid reasonId) => _moderation?.Reasons.FirstOrDefault(r => r.Id == reasonId);
 
@@ -543,7 +589,18 @@
         }
 
         CancelWriting();
-        Info = written.Value!.Status == "pending" ? L["Reasons.Pending"] : L["Reasons.Published"];
+        if (written.Value!.Status == "pending")
+        {
+            // Waiting for a moderator (design 8.3): not public, so nothing of it is shown.
+            Info = L["Reasons.Pending"];
+            await ReloadAsync();
+            return;
+        }
+
+        // Published: shown where the person sees it without opening the whole list, until the page is read again.
+        _written = written.Value.Id;
+        _focusWritten = true;
+        Info = L["Reasons.Published"];
         await ReloadAsync();
     });
 
@@ -560,7 +617,8 @@
     /// Reads the record again after the person's own action and keeps the arguments where they stand (owner, 2026-11-17: "the
     /// view is scrolled away after clicking 'Man svarbu'"): the answer is ordered by the marks, so a mark could move the argument
     /// the person just pressed, or push it behind "show all", and the browser lost both the place and the focus. The new numbers
-    /// show in place; a new argument comes last; the order by marks returns when the page is read again.
+    /// show in place; someone else's new argument comes last, the person's own just published first (WrittenFirst); the order by
+    /// marks returns when the page is read again.
     /// </summary>
     private async Task ReloadAsync()
     {
@@ -571,7 +629,7 @@
     /// <summary>The record, the person's own answer and, for a moderator, the moderators' one, as the shared state has them now.</summary>
     private async Task ReadAgainAsync(bool threads)
     {
-        Record = StableOrder(await State.RecordAsync(Number), Record) ?? Record;
+        Record = WrittenFirst(StableOrder(await State.RecordAsync(Number), Record), _written) ?? Record;
         if (threads)
         {
             Threads = await ThreadsAsync();
