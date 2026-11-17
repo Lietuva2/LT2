@@ -224,7 +224,10 @@ pre-merge run found.
 - Every email is built by `EmailLayout` (Notifications/Templates) and rendered from its outbox kind by one
   `EmailRenderer<T>` registered in `NotificationsModule`; shared texts use the `Email.*` keys of `EmailTemplates.resx`.
   `Build` and `BuildMp` take the footer (`EmailLayout.Footer(l, site.Value.Address)`: the privacy notice's full address,
-  design 8.22.3), so no email goes without it.
+  design 8.22.3), so no email goes without it. In `Build`'s HTML part (owner, 2026-11-17) a line ending "text: https://…" is that
+  text (its last sentence) as a link with the address under it in small type, any other address a plain link
+  (`EmailLayout.LinkedHtml`); a template writes an action line with `EmailLayout.LinkLine(label, url)`; the plain part is unchanged
+  and nothing is rewritten or tracked.
   Deleting an account or purging a pending one calls `IOutbox.ForgetAsync` in the same transaction.
 - Rules are checked where the data is written (design 6.8), not only by the HTTP validators: a module service enforces
   them for every caller. A moderator's statement goes through `StatementRules` in Appeals and `StaffStatements` elsewhere
@@ -317,6 +320,12 @@ code review.
 - Codes and tokens are not sent in addresses: a link the site makes carries its secret after the `#` (`/prisijungti#kodas=…`,
   a representative's `/organizacijos/kvietimas#…`, an MP's take-over link `/seimo-narys/perimti#…`, an office member's
   `/seimo-narys/biuras#…`); the page reads it and sends it in a request body (design 6.8). Old `?kodas=` links still work.
+  The secret of those last three links is a typeable one-time code (owner, 2026-11-17: `OneTimeCode` in SharedKernel, also
+  compiled into Lt2.Web.Client: twelve characters of the invitation alphabet in three groups, stored only as `OneTimeCode.Hash`
+  of its one form, one use, the link's lifetime): the email gives it under the link with the page to open, a representative sees
+  it beside the copied link, and the page opened without a `#` asks for it (`<CodeEntry>`, which puts it after the page's own `#`).
+  Every request presenting one is limited per client address (`RateLimitPolicies.OneTimeCode`, `RateLimits:OneTimeCode`); an
+  unknown, malformed, used or expired code gets the link's one answer.
   The MP's mail links are the exception the design names (8.19.4: the one-click stop needs its token in the address): their
   paths are logged with the token replaced.
 - Forwarding headers count only from the proxy named in `ReverseProxy:Address`. A page answered to a signed-in session is
@@ -352,8 +361,8 @@ mapped write), except `TermsExemptions.Routes` (accepting, signing out, deleting
 launch although the text changed while building (owner, 2026-11-17): nobody accepted an earlier one. The server-rendered feedback form asks the same question. Pending accounts accept with their registration;
 the invented demonstration members get the consent like their others (`--demo-appeal`, repeatable).
 
-**Accounts.** Registration is by email only, by invitation during the closed trial, with a self-declared age of 18 or
-older. An account is pending until its address is proven; the display name, the age declaration and the terms of use are
+**Accounts.** Registration is by email only, by invitation during the closed trial (an MP office member's invitation counts
+as one, owner 2026-11-17, design 8.5.3), with a self-declared age of 18 or older. An account is pending until its address is proven; the display name, the age declaration and the terms of use are
 asked after the code, never before. One account per normalised address. Each account has a `verification_level` (`email` now); phone
 verification is a later decision. Every member has one personal invitation code (replaceable; uses unlimited unless
 `Registration:PersonalCodeUses` is set) and sees only how many registered with it; administrators see numbers per day,
@@ -442,14 +451,19 @@ page's "Balsuota".
   server renders holds nothing of it (`ServerMeApi` leaves `mpOffer` and `mp` out). Nothing is linked or public before the take-over.
 - `Registration:OfficialAddressesWithoutInvitation` (off by default, the designer's proposal awaiting the owner): both
   invitation gates ask `OfficialAddressGate`. The local `.env` switches it on through the migrator.
-- "Perimti profilį" (`POST /mps/{slug}/claim`) sends a 24-hour one-time link (token hashed, a new one replaces the old,
-  three a day per MP) to the account's own address. `POST /me/mp/takeover` (token and passkey) does everything in one
+- "Perimti profilį" (`POST /mps/{slug}/claim`) sends a 24-hour one-time link (its secret a typeable one-time code, hashed, a
+  new one replaces the old, three a day per MP) to the account's own address; the email also gives `/seimo-narys/perimti` and
+  the code to type there. `POST /me/mp/takeover` (token and passkey) does everything in one
   transaction: token and address checked, the passkey stored and the others removed with their sessions, the link made,
   the account's sides on records not closed withdrawn (`IPositionErasure.WithdrawOpenSidesAsync`; the front page's copy
   marked stale), audited, the official address told; the session becomes a passkey session (`SessionTicketStore.RenewAsync`
   takes the new ticket's method and passkey). A lost passkey: the same again; the link stays.
 - One account per MP and one MP per account; an office member of at most one MP, five per MP, by a seven-day one-time
-  link accepted in a passkey session. Owner, 2026-11-17: the link's page `/seimo-narys/biuras#…` (`MpOfficeInvitation`) does
+  link accepted in a passkey session. The MP's account may have the site email it (`MyMp`: an address typed, used only for the
+  outbox row; `POST /me/mp/office/invitations` with `email`, `MpOfficeInvitationEmail`), or take the link and code; at most ten
+  invitations a day per MP (`mp.office-invitation-limit`). The invitation counts as the closed trial's invitation
+  (`OfficeInvitationGate`, Identity, in both registration gates; `RegisterRequest`/`CompleteRegistrationRequest.OfficeInvitation`;
+  the account keeps only a level, one below the MP's account). Owner, 2026-11-17: the link's page `/seimo-narys/biuras#…` (`MpOfficeInvitation`) does
   everything: `<SignInFlow ReturnTo=…>` signs in or registers there and reloads the page with its `#` intact; a code session
   sends `NewPasskey` (made now) or `Passkey` (an assertion) with the token in `POST /me/mp/office/acceptance`, checked before
   anything is stored, and the session becomes a passkey session under a new key (`SessionRotation`); `GET /me` says
@@ -648,7 +662,8 @@ shown, only counts and "maža imtis"; the Seimas's majority is that of those who
 - Labels: "Nepatvirtinta", "Patvirtinta per el. pašto adresą @domenas" (a code sent to an address on the website's host
   or a name under it; never a public mail service or shared platform; only the domain is kept), "Patvirtino
   moderatorius". After a moderator withdraws a confirmation only a moderator confirms that organisation.
-- Representatives come only by a one-time link (seven days, at most ten); they see each other's display names and
+- Representatives come only by a one-time link (seven days, at most ten; its code shown beside it and typed on
+  `/organizacijos/kvietimas`, owner 2026-11-17); they see each other's display names and
   nobody else does, staff included, except a moderator restricting a statement's writer. Nothing ties a
   representative's own side to the organisation. The last one cannot leave, only close it; deleting that account closes it.
 - One statement per organisation per bill (`for`, `against`, `remarks`; as long as `Texts:MaxLength` allows, owner 2026-11-16; an https link; with a

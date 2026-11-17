@@ -18,8 +18,8 @@ internal sealed class HttpMpApi(ApiHttp http) : IMpApi
     public Task<ApiResult<MpOfficeResponse>> GetOfficeAsync(CancellationToken cancellationToken = default) =>
         http.SendAsync<MpOfficeResponse>(HttpMethod.Get, MpRoutes.Office, null, cancellationToken);
 
-    public Task<ApiResult<MpOfficeInvitationResponse>> InviteOfficeMemberAsync(CancellationToken cancellationToken = default) =>
-        http.SendAsync<MpOfficeInvitationResponse>(HttpMethod.Post, MpRoutes.OfficeInvitations, new { }, cancellationToken);
+    public Task<ApiResult<MpOfficeInvitationResponse>> InviteOfficeMemberAsync(MpOfficeInvitationRequest request, CancellationToken cancellationToken = default) =>
+        http.SendAsync<MpOfficeInvitationResponse>(HttpMethod.Post, MpRoutes.OfficeInvitations, request, cancellationToken);
 
     public Task<ApiResult> RemoveOfficeMemberAsync(Guid memberId, CancellationToken cancellationToken = default) =>
         http.SendAsync(HttpMethod.Delete, MpRoutes.OfficeMemberOf(memberId), null, cancellationToken);

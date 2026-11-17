@@ -23,6 +23,7 @@
     <Compile Include="..\Lt2.SharedKernel\TextExcerpt.cs" Link="Texts\TextExcerpt.cs" />
     <!-- The account screens' addresses (design 8.21), shared with the links in emails in the same way. -->
     <Compile Include="..\Lt2.SharedKernel\AccountScreens.cs" Link="Texts\AccountScreens.cs" />
+    <Compile Include="..\Lt2.SharedKernel\OneTimeCode.cs" Link="Texts\OneTimeCode.cs" />
   </ItemGroup>
   <ItemGroup>
     <!-- The API clients (de)serialise the contract types by reflection. Publishing trims unused members, which removed

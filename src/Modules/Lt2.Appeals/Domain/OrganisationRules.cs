@@ -468,13 +468,12 @@ internal static class OrganisationCodeRules
     }
 }
 
-/// <summary>A representative's one-time link (design 8.14.14): a random token, only its hash stored.</summary>
+/// <summary>
+/// A representative's one-time link (design 8.14.14): its secret is a typeable one-time code (<c>OneTimeCode</c>, owner
+/// 2026-11-17), only its hash stored.
+/// </summary>
 internal static class InviteTokens
 {
-    public static string New() => Convert.ToBase64String(RandomNumberGenerator.GetBytes(24)).Replace('+', '-').Replace('/', '_').TrimEnd('=');
-
-    public static byte[] Hash(string token) => SHA256.HashData(Encoding.UTF8.GetBytes(token ?? ""));
-
     /// <summary>A link works once, within seven days.</summary>
     public static bool IsUsable(DateTimeOffset expiresAt, DateTimeOffset? usedAt, DateTimeOffset now) => usedAt is null && now < expiresAt;
 }

@@ -35,7 +35,7 @@ public static class MpRoutes
 
     public static string EndLinkOf(string slug) => $"{ApiRoutes.Prefix}/admin/mps/{Uri.EscapeDataString(slug)}/link/end";
 
-    public static string OfficeInvitationPath(string token) => OfficeInvitationPage + "#" + Uri.EscapeDataString(token);
+    public static string OfficeInvitationPath(string code) => OfficeInvitationPage + "#" + Uri.EscapeDataString(code);
 }
 
 /// <summary>
@@ -83,8 +83,29 @@ public sealed record MpOfficeMemberResponse(Guid Id, string? DisplayName, DateTi
 /// <summary>The MP's office: its members and how many it may have.</summary>
 public sealed record MpOfficeResponse(IReadOnlyList<MpOfficeMemberResponse> Members, int Limit);
 
-/// <summary>A new office invitation, shown once: the page's path with the token after the <c>#</c>, and when it stops working.</summary>
-public sealed record MpOfficeInvitationResponse(string Path, DateTimeOffset ExpiresAt);
+/// <summary>
+/// A new office invitation, shown once: the page's path with the code after the <c>#</c>, when it stops working, the code itself
+/// (typed on the page instead of following the link, design 8.5.3) and whether the site emailed it (owner, 2026-11-17).
+/// </summary>
+public sealed record MpOfficeInvitationResponse(string Path, DateTimeOffset ExpiresAt, string Code = "", bool Emailed = false);
+
+/// <summary>
+/// A new office invitation (design 8.5.3): with <see cref="Email"/> the site sends it there (owner, 2026-11-17); the address is
+/// used only to send it and kept nowhere else. Without it, the MP's account copies the link and passes it on itself.
+/// </summary>
+public sealed record MpOfficeInvitationRequest
+{
+    public string? Email { get; init; }
+}
+
+public sealed class MpOfficeInvitationRequestValidator : AbstractValidator<MpOfficeInvitationRequest>
+{
+    public MpOfficeInvitationRequestValidator(IStringLocalizer<ValidationMessages> l) =>
+        RuleFor(x => x.Email!).Cascade(CascadeMode.Stop)
+            .MaximumLength(Auth.AuthRules.EmailMaxLength).WithMessage(l["Email.TooLong"])
+            .EmailAddress().WithMessage(l["Email.Invalid"])
+            .When(x => !string.IsNullOrWhiteSpace(x.Email));
+}
 
 public sealed class MpTakeoverRequestValidator : AbstractValidator<MpTakeoverRequest>
 {
@@ -120,7 +141,7 @@ public interface IMpApi
 
     Task<ApiResult<MpOfficeResponse>> GetOfficeAsync(CancellationToken cancellationToken = default);
 
-    Task<ApiResult<MpOfficeInvitationResponse>> InviteOfficeMemberAsync(CancellationToken cancellationToken = default);
+    Task<ApiResult<MpOfficeInvitationResponse>> InviteOfficeMemberAsync(MpOfficeInvitationRequest request, CancellationToken cancellationToken = default);
 
     Task<ApiResult> RemoveOfficeMemberAsync(Guid memberId, CancellationToken cancellationToken = default);
 

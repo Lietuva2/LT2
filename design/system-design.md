@@ -403,7 +403,13 @@ while building (8.14.14): nor to the five organisation tables, which hold an acc
   later. A stronger check can then be added as an upgrade existing people complete, and counts can be reported by level.
 - Email alone lets one person create many accounts for nothing. What stands in for the phone:
   - the closed trial is **by invitation** (a code from the team or from a participant), so there is no open registration
-    while the flow is being proven;
+    while the flow is being proven; **[decided by the owner on 2026-11-17: "office link should count as invitation"]** a
+    valid MP office member's invitation (8.5.3) counts as one: a person who comes by it registers on the office page with
+    no invitation code; the server checks it at registration and again at completion (known, unused, unexpired, made by
+    the account that is still the MP's), registering does not use it up (accepting it does), and the account keeps only a
+    level, one below the MP's account, as an organisation's code leaves only its level (8.14.14). [The designer's choice:
+    such a registration is in no invitation code's count or daily series on the administrators' screen, there being no
+    code; it is not counted as "without a code" either, since it has a level.]
   - one account per **normalised address** (lower case, the `+tag` part removed, dots ignored where the provider ignores
     them), and addresses at disposable-mail domains are refused;
   - the bot check and per-IP limits on registration;
@@ -622,6 +628,22 @@ changes what a person can do on the site; the questions that do are in section 1
   on a shared server included (9.2). The page reads it in the browser and passes it to the API in a request body,
   never in a path or a query. A link in the old form (`?kodas=…`) still works, and the proxy's filter that drops
   `kodas` from the logged address stays for those (6.2).
+- **A way in without the link: a typeable one-time code [decided by the owner on 2026-11-17: "one should be able to go
+  on without using that url, as it's not safe to click links in email"; "Yes, add codes"].** Three one-time links carry
+  their secret as a code a person can type: an MP's take-over link (8.5.2), an office member's invitation (8.5.3) and an
+  organisation representative's invitation (8.14.14). The code is the link's one secret, not a second one: twelve
+  characters from the invitation codes' alphabet (no 0, 1, I, L, O, U), shown in three groups of four
+  (`ABCD-EFGH-JKMN`, 30¹² ≈ 2⁵⁹), typed in any case with or without spaces and dashes, stored only as a hash of its one
+  form, used once, and valid as long as the link (24 hours, seven days, seven days). It stands after the link's `#` and,
+  where the link is emailed, in the email under the link with the page to open ("Nenorite spausti nuorodos laiške?
+  Naršyklėje patys atverkite {page} ir įveskite šį kodą:"); where a representative copies the link, the code is shown
+  beside it. The page opened without a `#` asks for the code ("Kodas" or "Kvietimo kodas"), checks only its shape in the
+  browser, puts it after the `#` of its own address and goes on as from the link. An unknown, malformed, used or expired
+  code gets the one answer the link gets. **Attempts are limited per client address** (`RateLimits:OneTimeCode`, 30 in 15
+  minutes, on every request that presents such a code); **[the designer's choice] not per code:** a wrong code finds no
+  invitation, so there is nothing to count against, and the code's 59 bits with that limit put guessing out of reach (at
+  the limit, one address would need on the order of 10¹¹ years for an even chance against one code). One helper makes,
+  shapes and hashes every such code (`OneTimeCode`, SharedKernel, also compiled into the browser's assembly).
 - **Forwarded addresses are believed only from the proxy itself.** On a shared Docker network the proxy's
   neighbours are not the proxy: the application believes the forwarding headers only from the proxy's own address,
   named in its configuration, not from a whole network.
@@ -1117,6 +1139,10 @@ link that cannot be guessed, and it binds a passkey, as 6.2 already decided.
 4. **A lost passkey** is replaced the same way: a new link, a new passkey, the old ones removed. No administrator is
    needed, and a code alone never changes an MP account's passkeys: on a linked account adding or removing a passkey
    needs a passkey session or the link.
+5. **[Owner, 2026-11-17: "Yes, add codes".] The link's secret can be typed.** It is the typeable one-time code of 6.8
+   (24 hours, one use, a new one replaces the old): the email gives "Perimti profilį" as a link, then the page
+   `/seimo-narys/perimti` and the code to type there; opened without the link (signed in), the page asks for "Kodas" and
+   goes on to the passkey step as from the link. ("A code alone" in step 4 means a sign-in code; this code is the link.)
 
 - **The link is to the person,** by the Seimas's person number, so it survives a change of the official address. One
   account per MP and one MP per account. When the mandate ends the link stays and the account can read, but nothing
@@ -1165,9 +1191,22 @@ link that cannot be guessed, and it binds a passkey, as 6.2 already decided.
   one request allows nothing those steps did not. The checks come first: a wrong or used token, or an account already
   linked (the MP's own account by code included), is refused before anything is stored, so a linked account never gets a
   passkey by code; another account's passkey proves nothing; an account with an active staff role adds a passkey only in
-  its staff session (6.2), as everywhere. A passkey added this way is told to the account like any other. [Open, for the
-  owner: during the closed trial a person without an account still needs an invitation code to register; the office
-  invitation is not one.]
+  its staff session (6.2), as everywhere. A passkey added this way is told to the account like any other. [The office
+  invitation counts as the closed trial's invitation since the owner's decision below.]
+- **The site sends the invitation; it counts as an invitation; and it can be typed [decided by the owner on 2026-11-17:
+  "office link should count as invitation, we could probably embed the registration form without the invitation code
+  into that office form? … one should be able to go on without using that url"].**
+  - On "Dalyvavimas" the MP's account (in a passkey session) types the office member's address and presses "Siųsti
+    kvietimą": the site emails the invitation ("Kvietimas į Seimo nario biurą Lietuva 2.0": who invites, what an office
+    member does, "Priimti kvietimą" as a link, the page and the code to type instead, until when it works). The address is
+    used only to send it: it is in the outbox row until the email goes and nowhere else, not on the invitation and not in
+    the audit (which says only that it was emailed). "Gauti nuorodą ir kodą" still gives the link and the code for the MP's
+    account to pass on itself.
+  - The invitation's secret is the typeable one-time code of 6.8; the page opened without it asks for "Kvietimo kodas".
+  - A person without an account registers on the page itself with no invitation code: the invitation counts as the closed
+    trial's invitation (6.2).
+  - Limits as before (five members per MP, seven days, one use) and, against a runaway sender, at most ten invitations a
+    day per MP, copied or emailed (`PoliticianRules.OfficeInvitationsPerDay`; `mp.office-invitation-limit`).
 
 #### 8.5.4 What a linked account can do
 
@@ -1630,6 +1669,13 @@ A visitor sees a link to sign in instead.
   no token link in this round.
   Links in these and all other emails are full addresses built from `Site:Address` (5.6) [decided by the owner on
   2026-11-14].
+  **Links in a member's email are real links [decided by the owner on 2026-11-17: "the link … did not show as a link and was
+  ugly - can we make it a normal link with the text and url under it?"].** Every email to a member (codes, account and
+  moderation notices, the follow and gathered emails, the office invitation, the take-over link) keeps its plain-text part
+  as it is ("text: address") and, in its HTML part, shows a line that ends "text: https://…" as that text (its last
+  sentence) as a link, with the full address printed under it in small grey type; any other address in a line is a plain
+  link. One helper renders it (`EmailLayout`), and a template writes such a line with `EmailLayout.LinkLine`. The links are
+  the addresses themselves: nothing is rewritten, shortened or tracked. MPs' summary emails (8.19.3) keep their own shape.
 - **Who follows is private.** Who follows what is shown to nobody: no page, API answer, email, admin screen or log says
   it, to the followed party (an organisation's representatives, an MP's linked account and office, a member with a public
   profile) and to staff alike; there is no list of followers and no data about one follower in any answer. A follow
@@ -2565,7 +2611,10 @@ reading of them; each can be changed on the built result.]
   last representative's account closes it the same way, also when it is blocked.
 - **Representatives** are removed by the representative row's id, never an account id; a representative cannot remove
   themself (they leave). The one-time link is a random token whose hash only is stored; it works once, within seven
-  days, while the organisation is active and has fewer than ten representatives.
+  days, while the organisation is active and has fewer than ten representatives. **[Owner, 2026-11-17: "Yes, add
+  codes".]** Its secret is the typeable one-time code of 6.8: the representative who makes the link sees the code beside
+  it ("Be nuorodos: puslapyje {page} įvedamas šis kodas:") and may pass either on; `/organizacijos/kvietimas` opened
+  without the link asks for "Kvietimo kodas". The site still emails nothing here: the representative passes it on.
 - **Withdrawing a statement** keeps its row as `withdrawn`, shown nowhere, and a new statement may follow. A hidden
   statement cannot be changed or withdrawn by the organisation (`statement.hidden`): it is a moderator's to restore.
 - **No person in histories or the audit log.** The public histories (`revision`) carry no person, since the read-only

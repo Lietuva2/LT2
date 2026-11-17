@@ -2,6 +2,7 @@
 @inject IMeApi MeApi
 @inject IMpApi MpApi
 @inject Lt2.Api.Contracts.Digests.IMpMailApi MailApi
+@inject NavigationManager Navigation
 
 @* Design 8.5.1 to 8.5.4 on the account page: the offer to take over an MP's profile ("Prisijungėte Seimo nario … oficialiu
    adresu", "Perimti profilį") until it is taken over, then the link: which MP, the office (the MP's account only), giving
@@ -68,10 +69,27 @@ else if (Link is { } link)
                     <CopyLink Link="@invitation.Path" LinkId="mp-office-link" ButtonId="mp-office-copy">
                         <p class="small">@L.Format("Mp.Office.LinkOnce", Display.DayTime(invitation.ExpiresAt))</p>
                     </CopyLink>
+                    @* Owner, 2026-11-17: the way without the link, the same code typed on the invitation's page. *@
+                    <p class="small" id="mp-office-code-line">@L.Format("Mp.Office.CodeLine", Navigation.ToAbsoluteUri(Lt2.Api.Contracts.Mps.MpRoutes.OfficeInvitationPage).ToString())</p>
+                    <p class="code-big num" id="mp-office-code">@invitation.Code</p>
                 }
                 else if (office.Members.Count < office.Limit)
                 {
-                    <p><button type="button" class="btn btn--plain" id="mp-office-invite" disabled="@(Locked || !link.MayWrite)" @onclick="InviteAsync">@L["Mp.Office.Invite"]</button></p>
+                    @* Owner, 2026-11-17: the site sends the invitation to the address typed here (used only to send it, kept nowhere),
+                       or the MP's account takes the link and the code and passes them on itself. *@
+                    <form class="stack stack--tight" id="mp-office-send" @onsubmit="SendInvitationAsync" novalidate>
+                        <div class="field @ErrorClass("email")">
+                            <label for="mp-office-email">@L["Mp.Office.Email"]</label>
+                            <input class="input" id="mp-office-email" type="email" autocomplete="off" inputmode="email" @bind="_inviteEmail" @bind:event="oninput"
+                                   disabled="@(Locked || !link.MayWrite)" aria-invalid="@Invalid("email")" aria-describedby="@DescribedBy("email", "mp-office-email", "mp-office-email-hint")" />
+                            <p class="field__hint" id="mp-office-email-hint">@L["Mp.Office.EmailHint"]</p>
+                            <FieldError Errors="Errors" Field="email" For="mp-office-email" />
+                        </div>
+                        <p class="row">
+                            <button type="submit" class="btn btn--plain" id="mp-office-invite-send" disabled="@(Locked || !link.MayWrite)">@L["Mp.Office.Send"]</button>
+                            <button type="button" class="linkish small" id="mp-office-invite" disabled="@(Locked || !link.MayWrite)" @onclick="InviteAsync">@L["Mp.Office.Invite"]</button>
+                        </p>
+                    </form>
                 }
             </div>
         }
@@ -131,6 +149,7 @@ else if (Link is { } link)
     private bool _confirmEnd;
     private string? _frequency;
     private MpOfficeInvitationResponse? _invitation;
+    private string _inviteEmail = "";
 
     private MpOfferResponse? Offer { get; set; }
 
@@ -176,7 +195,7 @@ else if (Link is { } link)
 
     private Task InviteAsync() => RunAsync(async () =>
     {
-        var made = await MpApi.InviteOfficeMemberAsync();
+        var made = await MpApi.InviteOfficeMemberAsync(new Lt2.Api.Contracts.Mps.MpOfficeInvitationRequest());
         if (!made.IsSuccess)
         {
             Show(made.Problem);
@@ -185,6 +204,28 @@ else if (Link is { } link)
 
         _invitation = made.Value;
     });
+
+    /// <summary>The site sends the invitation (owner, 2026-11-17); the form stays for another one.</summary>
+    private Task SendInvitationAsync()
+    {
+        var request = new Lt2.Api.Contracts.Mps.MpOfficeInvitationRequest { Email = _inviteEmail.Trim() };
+        ClearMessages();
+        if (request.Email.Length == 0)
+        {
+            FieldFails("email", L["Mp.Office.EmailRequired"]);
+            return Task.CompletedTask;
+        }
+
+        return RunAsync(async () =>
+        {
+            var sent = await MpApi.InviteOfficeMemberAsync(request);
+            if (Succeeded(sent, "email"))
+            {
+                _inviteEmail = "";
+                Info = L.Format("Mp.Office.Sent", Display.DayTime(sent.Value!.ExpiresAt));
+            }
+        });
+    }
 
     private Task RemoveAsync(Guid id) => RunAsync(async () =>
     {

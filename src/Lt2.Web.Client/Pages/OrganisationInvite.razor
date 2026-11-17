@@ -8,7 +8,8 @@
 
 @* A representative's one-time link (design 8.14.14): a signed-in member who opens it and agrees becomes a representative.
    The link works once, within seven days; nobody is looked up by email. Design 6.8: the token is after the "#", read in the
-   browser and sent in request bodies, so the page rendered on the server knows nothing of it. *@
+   browser and sent in request bodies, so the page rendered on the server knows nothing of it. Opened without it, the page
+   asks for the same code, typed (owner, 2026-11-17: shown beside the link). *@
 <PageTitle>@L["Org.Invite.PageTitle"]</PageTitle>
 
 <div class="stack">
@@ -19,7 +20,13 @@
     <h1>@L["Org.Invite.Title"]</h1>
     <NeedsScript />
     @* Nothing until the browser has read the token: the server cannot know it. *@
-    @if (_read && Invite is null)
+    @if (_read && _token is null)
+    {
+        @* Owner, 2026-11-17: opened without the link's code, the page asks for the code shown beside the link. *@
+        <p id="invite-code-lead">@L["Org.Invite.CodeLead"]</p>
+        <CodeEntry Label="@L["Org.Invite.CodeLabel"]" Entered="CodeEnteredAsync" IdPrefix="invite-" />
+    }
+    else if (_read && Invite is null)
     {
         <p class="note" role="alert" id="invite-missing">@L["Org.Invite.Missing"]</p>
     }
@@ -61,6 +68,22 @@
         _token = InvitationLink.Fragment(Navigation.Uri);
         Invite = _token is null ? null : (await Organisations.GetInviteAsync(_token)).Value;
         _read = true;
+    }
+
+    private async Task CodeEnteredAsync(string code)
+    {
+        _token = code;
+        await RunAsync(async () =>
+        {
+            var found = await Organisations.GetInviteAsync(code);
+            Invite = found.Value;
+            if (!found.IsSuccess)
+            {
+                // The same answer for an unknown and a wrong code; the field stays for another try.
+                _token = null;
+                Show(found.Problem);
+            }
+        });
     }
 
     private Task AcceptAsync() => RunAsync(async () =>

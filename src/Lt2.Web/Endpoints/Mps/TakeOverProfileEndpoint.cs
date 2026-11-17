@@ -19,7 +19,7 @@ internal static class TakeOverProfileEndpoint
             .WithTags("Mps")
             .RequireAuthorization(Policies.Member)
             .WithValidation<MpTakeoverRequest>()
-            .RequireRateLimiting(RateLimitPolicies.SignIn)
+            .RequireRateLimiting(RateLimitPolicies.OneTimeCode)
             .Produces<MpLinkResponse>()
             .ProducesProblem(StatusCodes.Status409Conflict);
 

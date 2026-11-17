@@ -66,7 +66,18 @@ internal sealed class CompleteRegistrationHandler(
             : completion.InvitationCode;
 
         Invitation? invitation = null;
-        if (code is not null)
+        OfficeInvitationGate.Pass? office = null;
+        if (code is null && !string.IsNullOrWhiteSpace(completion.OfficeInvitation))
+        {
+            // Design 8.5.3 (owner, 2026-11-17): an MP office member's invitation in place of an invitation code, checked again
+            // now; it is used up only when it is accepted on the office page.
+            office = await OfficeInvitationGate.CheckAsync(db, completion.OfficeInvitation, now, cancellationToken);
+            if (office is null)
+            {
+                return Error.Validation("invitation.invalid", "invitationCode");
+            }
+        }
+        else if (code is not null)
         {
             // One answer for every code that does not work (design 6.2): unknown, switched off, replaced, expired, used up.
             var lookup = InvitationRules.Lookup(code);
@@ -92,8 +103,10 @@ internal sealed class CompleteRegistrationHandler(
 
         // An organisation's code is kept only as its level (design 8.14.14, stage B): nothing on the account names the code
         // or the organisation. Its counter and daily total rose above, as for any code.
-        (profile.InvitationId, profile.InvitationCode, profile.InvitationLevel) =
-            InvitationRules.KeptOnProfile(invitation?.Kind, invitation?.Id, code, invitation?.Level);
+        // An office invitation leaves only its level too (owner, 2026-11-17).
+        (profile.InvitationId, profile.InvitationCode, profile.InvitationLevel) = office is not null
+            ? (null, null, office.Level)
+            : InvitationRules.KeptOnProfile(invitation?.Kind, invitation?.Id, code, invitation?.Level);
         profile.DisplayName = ProfileRules.DisplayName(completion.DisplayName);
         profile.RegisteredAt = now;
         db.Consents.Add(new Consent
@@ -111,7 +124,7 @@ internal sealed class CompleteRegistrationHandler(
         // The new member's own invitation code, one level below them (design 6.2), under the member's code lock.
         await IdentityLocks.PersonalCodeAsync(db, userId, cancellationToken);
         await Invitations.InvitationHandlers.CreatePersonalAsync(
-            db, clock, userId, InvitationRules.PersonalCodeLevel(InvitationRules.MemberLevel(invitation?.Level)), cancellationToken);
+            db, clock, userId, InvitationRules.PersonalCodeLevel(InvitationRules.MemberLevel(profile.InvitationLevel)), cancellationToken);
         await transaction.CommitAsync(cancellationToken);
 
         // Re-issue the session so it carries the member role.

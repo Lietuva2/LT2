@@ -58,17 +58,11 @@ public sealed class MpLinkRuleTests
     public void An_mp_listing_the_same_address_twice_still_owns_it() =>
         OfficialAddresses.Owner([Email(4, "pavyzdys.ketvirtas@lrs.lt"), Email(4, "pavyzdys.ketvirtas@LRS.lt")], "pavyzdys.ketvirtas@lrs.lt").ShouldBe(4);
 
-    [Fact]
-    public void A_token_is_long_random_and_stored_only_as_its_hash()
-    {
-        var token = PoliticianRules.NewToken();
-        token.Length.ShouldBe(43);
-        token.ShouldMatch("^[A-Za-z0-9_-]+$");
-        PoliticianRules.NewToken().ShouldNotBe(token);
-        PoliticianRules.Hash(token).Length.ShouldBe(32);
-        PoliticianRules.Hash(token).ShouldBe(PoliticianRules.Hash(" " + token + " "));
-        PoliticianRules.Hash(token).ShouldNotBe(PoliticianRules.Hash(PoliticianRules.NewToken()));
-    }
+    [Theory]
+    [InlineData(9, true)]
+    [InlineData(10, false)]
+    public void An_mp_makes_at_most_ten_office_invitations_a_day(int made, bool more) =>
+        PoliticianRules.MayMakeOfficeInvitation(made).ShouldBe(more);
 
     private static PoliticianToken Takeover(Guid account, DateTimeOffset? usedAt = null) => new()
     {
