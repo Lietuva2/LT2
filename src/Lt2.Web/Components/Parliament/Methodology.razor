@@ -1,5 +1,6 @@
 @page "/metodika"
 @using Lt2.Api.Contracts.Meta
+@inject IStringLocalizer<Lt2.Web.Components.PageText> P
 @inject IMetaApi Meta
 @inject Lt2.Api.Contracts.Digests.IDigestsApi Digests
 @inject Lt2.Api.Contracts.Appeals.IAppealsApi Appeals
@@ -7,6 +8,7 @@
 @inject Formats F
 
 <PageTitle>@F.T["Method.Title"] · Lietuva 2.0</PageTitle>
+<LinkPreview Title="@F.T["Method.Title"]" Description="@P["Preview.Methodology"]" />
 
 <section class="stack" aria-labelledby="method-title">
     <h1 id="method-title">@F.T["Method.Title"]</h1>

@@ -10,13 +10,13 @@ namespace Lt2.IntegrationTests;
 /// <summary>
 /// Design 6.8, "Codes and tokens are not sent in addresses": the links the site makes carry the invitation code and the
 /// representative's token after the <c>#</c>, which a browser never sends; the page reads it and the API gets it in a
-/// request body. A link in the old form (<c>?kodas=…</c>) still registers. Neither secret reaches a request path, a query
+/// request body. A share line's link carries the code the same way after the bill's address. Neither secret reaches a request path, a query
 /// the server reads into a page, or a log line of the host.
 /// </summary>
 public sealed class InvitationLinkTests(DatabaseFixture database) : ApiTest(database)
 {
     [Fact]
-    public async Task The_new_and_the_old_registration_link_both_register_and_neither_code_reaches_a_page_or_a_log_line()
+    public async Task The_registration_link_and_a_share_link_both_register_and_neither_code_reaches_a_page_or_a_log_line()
     {
         var sink = new CollectingSink();
         await using var logged = new LoggingFactory(Database, sink);
@@ -41,15 +41,19 @@ public sealed class InvitationLinkTests(DatabaseFixture database) : ApiTest(data
             await visitor.CompleteRegistrationAsync("Nauja Narė");
         }
 
-        // The old link: still opens the form, and the page rendered on the server does not repeat the code from the query.
+        // A share line's link (design 8.11.5): the bill's own page, the code after the "#"; the server sees the page alone.
         using (var visitor = logged.NewBrowser())
         {
-            using var answer = await visitor.Client.GetAsync("/prisijungti?kodas=" + Uri.EscapeDataString(code));
+            var page = new Uri(new Uri(Lt2Factory.Origin), LandingPath.ShareLink(code, "/seimas/XVP-0412"));
+            using var answer = await visitor.Client.GetAsync(page);
             answer.StatusCode.ShouldBe(HttpStatusCode.OK);
+            answer.RequestMessage!.RequestUri!.PathAndQuery.ShouldBe("/seimas/XVP-0412");
             (await answer.Content.ReadAsStringAsync()).ShouldNotContain(code, Case.Insensitive);
+
+            var fromFragment = InvitationLink.FromFragment(page.ToString(), InvitationLink.CodeParameter).ShouldNotBeNull();
             var email = TestData.Email();
-            await visitor.SignInWithCodeAsync(email, await visitor.RegisterAsync(email, code));
-            await visitor.CompleteRegistrationAsync("Sena Nuoroda");
+            await visitor.SignInWithCodeAsync(email, await visitor.RegisterAsync(email, fromFragment));
+            await visitor.CompleteRegistrationAsync("Atėjusi Per Projektą");
         }
 
         (await inviter.GetJsonAsync<MyInvitationResponse>(ApiRoutes.Me.Invitation)).Completed.ShouldBe(2);

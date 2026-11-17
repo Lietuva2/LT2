@@ -9,6 +9,7 @@
 @if (_mp is { } p && _votes is { } votes)
 {
     <PageTitle>@F.T.Format("Mp.Votes.Title", $"{p.Mp.FirstName} {p.Mp.LastName}") · Lietuva 2.0</PageTitle>
+    <LinkPreview Title="@F.T.Format("Mp.Votes.Title", $"{p.Mp.FirstName} {p.Mp.LastName}")" />
     <div class="stack">
         <ol class="crumbs">
             <li><a href="/seimo-nariai">@F.T["Mps.Title"]</a></li>

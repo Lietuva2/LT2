@@ -7,8 +7,8 @@ namespace Lt2.ArchitectureTests;
 /// Design 8.22.1: nothing that is not strictly necessary is kept in the browser, and the privacy notice lists it all. The
 /// end-to-end storage test reads the browser; this one reads the code, so a script that starts storing something fails before
 /// any browser runs: only the theme's two scripts touch local storage (with <see cref="BrowserKeys.Theme"/>), only the sign-in
-/// form touches session storage (with <see cref="BrowserKeys.Landing"/> and <see cref="BrowserKeys.InvitationCode"/>), and no
-/// script writes a cookie.
+/// form (with <see cref="BrowserKeys.Landing"/> and <see cref="BrowserKeys.InvitationCode"/>) and the script that takes a link's
+/// invitation code (with <see cref="BrowserKeys.InvitationCode"/> alone) touch session storage, and no script writes a cookie.
 /// </summary>
 public sealed partial class BrowserStorageTests
 {
@@ -25,10 +25,23 @@ public sealed partial class BrowserStorageTests
                 && !f.FullName.Contains($"{Path.DirectorySeparatorChar}obj{Path.DirectorySeparatorChar}", StringComparison.Ordinal));
 
     [Fact]
-    public void Only_the_theme_scripts_and_the_sign_in_form_use_the_browsers_storage()
+    public void Only_the_theme_scripts_the_invitation_script_and_the_sign_in_form_use_the_browsers_storage()
     {
         var users = Sources().Where(f => Storage().IsMatch(StripComments(File.ReadAllText(f.FullName)))).Select(f => f.Name).Order(StringComparer.Ordinal).ToList();
-        users.ShouldBe(["SignInFlow.razor", "lt2-theme-blazor.js", "lt2-theme.js"]);
+        users.ShouldBe(["SignInFlow.razor", "lt2-invitation.js", "lt2-theme-blazor.js", "lt2-theme.js"]);
+    }
+
+    /// <summary>
+    /// Design 8.11.5: the script that takes a link's invitation code from after the <c>#</c> on any page keeps it under the key the
+    /// inventory lists for the invitation code, in session storage only, and nothing else.
+    /// </summary>
+    [Fact]
+    public void The_invitation_script_keeps_only_the_invitation_code_in_session_storage()
+    {
+        var script = StripComments(File.ReadAllText(Path.Combine(Root.FullName, "src", "Lt2.Web", "wwwroot", "js", "lt2-invitation.js")));
+        Regex.Matches(script, @"'(lt2[^']*)'").Select(m => m.Groups[1].Value).Distinct().ShouldBe([BrowserKeys.InvitationCode]);
+        Regex.Matches(script, @"\b(localStorage|sessionStorage|document\.cookie|indexedDB|caches\.open)\b").Select(m => m.Value).Distinct().ShouldBe(["sessionStorage"]);
+        Regex.Matches(script, @"sessionStorage\.(\w+)").Select(m => m.Groups[1].Value).Distinct().ShouldBe(["setItem"]);
     }
 
     [Fact]

@@ -6,6 +6,7 @@
 @inject IStringLocalizer<Lt2.Web.Client.Appeals.AppealUi> L
 @inject NavigationManager Navigation
 @inject IConfiguration Configuration
+@inject IStringLocalizer<Lt2.Web.Components.PageText> P
 
 @* An organisation's public profile (design 8.14.2, 8.14.14), server-rendered and readable without JavaScript: name, label,
    whether it declares itself a registered lobbyist, its website with the host visible (never fetched by the server), legal
@@ -15,6 +16,12 @@
 @if (_profile is { } p)
 {
     <PageTitle>@p.Name · Lietuva 2.0</PageTitle>
+    @if (p.Status != "blocked")
+    {
+        @* Design 8.22.5: the name and, for an active organisation, its own description; a blocked one gives no preview. *@
+        <LinkPreview Title="@p.Name" Path="@($"/o/{p.Slug}")"
+                     Description="@(p.Status == "active" && !string.IsNullOrWhiteSpace(p.Description) ? p.Description : P["Preview.Organisation"])" />
+    }
     <div class="stack">
         <ol class="crumbs">
             <li><a href="/organizacijos">@L["Org.List.Title"]</a></li>

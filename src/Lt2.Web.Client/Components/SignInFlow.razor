@@ -162,9 +162,11 @@
     private const string LandingKey = BrowserKeys.Landing;
 
     /// <summary>
-    /// The invitation code typed at registration, kept in this tab's session storage until the registration is completed and
-    /// sent again then (design 8.14.14, stage B): the server does not keep an organisation's code on a pending account, so
-    /// nothing ties the address to the organisation. On another device the form asks for the code again.
+    /// The invitation code, kept in this tab's session storage until the registration is completed and sent again then
+    /// (design 8.14.14, stage B): the server does not keep an organisation's code on a pending account, so nothing ties the
+    /// address to the organisation. A link's code (an invitation link or a share line's link, design 8.11.5) is put there by
+    /// <c>js/lt2-invitation.js</c> on whatever page the link opened; this form fills the registration in with it and forgets it
+    /// once the person is signed in to a finished account. On another device the form asks for the code again.
     /// </summary>
     private const string CodeKey = BrowserKeys.InvitationCode;
 
@@ -200,22 +202,14 @@
     public string? OfficeInvitation { get; set; }
 
     /// <summary>
-    /// A member's invitation link in the old form (<c>?kodas=…</c>, design 6.2): opens the registration form with the code
-    /// filled in. Links made now carry the code after the <c>#</c> (design 6.8), read in <see cref="OnAfterRenderAsync"/>.
+    /// The page to come back to (design 6.9, 8.11.5, <c>tikslas</c> after the <c>#</c>): checked by <see cref="LandingPath"/>,
+    /// kept in this tab's session storage through the sign-in steps (they reload the page), and never sent to the server.
     /// </summary>
-    [SupplyParameterFromQuery(Name = InvitationLink.CodeParameter)]
-    public string? InvitationFromLink { get; set; }
-
-    /// <summary>
-    /// The page a share link lands on (design 8.11.5, <c>tikslas</c>): checked by <see cref="LandingPath"/>, kept in this
-    /// tab's session storage through the sign-in steps (they reload the page), and never sent to the server.
-    /// </summary>
-    [SupplyParameterFromQuery(Name = LandingPath.Parameter)]
-    public string? Landing { get; set; }
+    private string? _landing;
 
     /// <summary>
     /// The forms' address: the page without its query. The page rendered on the server would otherwise repeat the address
-    /// it was asked for in each form, an old link's invitation code included (design 6.8).
+    /// it was asked for in each form, with whatever query it carried (design 6.8).
     /// </summary>
     private string FormAction => "/" + Navigation.ToBaseRelativePath(Navigation.Uri).Split('?', '#')[0];
 
@@ -246,16 +240,19 @@
             return;
         }
 
-        // Design 6.8: the code and the landing page of a link made now are after the "#", which only the browser sees.
-        // They are taken into the form and removed from the address bar, so the address can be copied without them.
+        // Design 6.8: the code and the page to come back to are after the "#", which only the browser sees. They are taken
+        // into the form and removed from the address bar, so the address can be copied without them. A link's code is
+        // usually already in session storage (js/lt2-invitation.js takes it on any page, a share line's link on the bill's
+        // page included, design 8.11.5); the "#" is read too in case that script did not run.
         // The address is asked from the browser itself: after a link followed inside the site, this component can render
         // before the navigation manager has heard of the new address, and its Uri would still be the page left behind.
         var address = await BrowserAddressAsync();
-        var code = InvitationLink.FromFragment(address, InvitationLink.CodeParameter);
-        var landing = LandingPath.Accept(InvitationLink.FromFragment(address, LandingPath.Parameter)) ?? LandingPath.Accept(Landing);
+        var code = InvitationLink.FromFragment(address, InvitationLink.CodeParameter)
+            ?? (await StorageAsync("sessionStorage.getItem", CodeKey) is { Length: > 0 } kept ? kept.Trim() : null);
+        var landing = LandingPath.Accept(InvitationLink.FromFragment(address, LandingPath.Parameter));
         if (landing is not null)
         {
-            Landing = landing;
+            _landing = landing;
             await StorageAsync("sessionStorage.setItem", LandingKey, landing);
         }
 
@@ -283,13 +280,6 @@
             _step = Step.Register;
         }
 
-        // An old link's code is in the query: taken only in the browser, so the page rendered on the server never holds it.
-        if (RendererInfo.IsInteractive && !string.IsNullOrWhiteSpace(InvitationFromLink))
-        {
-            _step = Step.Register;
-            _invitation ??= InvitationFromLink.Trim();
-        }
-
         // Someone signed in whose account is still pending finishes the registration here; a member goes on. Visitors
         // are not asked: /api/v1/me would answer 401, which the browser logs as an error on every visit.
         var state = await AuthenticationState.GetAuthenticationStateAsync();
@@ -306,7 +296,7 @@
                 // On a page of its own the page itself goes on; the flow is shown only before that.
                 if (ReturnTo is null)
                 {
-                    Navigation.NavigateTo(AfterSignIn(me.Value, LandingPath.Accept(Landing) ?? "/"), forceLoad: true);
+                    Navigation.NavigateTo(AfterSignIn(me.Value, "/"), forceLoad: true);
                 }
 
                 return;
@@ -348,7 +338,19 @@
     {
         var stored = await StorageAsync("sessionStorage.getItem", LandingKey);
         await StorageAsync("sessionStorage.removeItem", LandingKey);
-        return LandingPath.Accept(stored) ?? LandingPath.Accept(Landing) ?? otherwise;
+        return LandingPath.Accept(stored) ?? _landing ?? otherwise;
+    }
+
+    /// <summary>
+    /// A link's invitation code is for registering: once the person is signed in to a finished account it is not needed in this
+    /// tab any more (design 8.22.1), so a later visit to the sign-in page does not open the registration with it.
+    /// </summary>
+    private async Task ForgetCodeAsync(MeResponse? me)
+    {
+        if (me?.RegistrationComplete == true)
+        {
+            await StorageAsync("sessionStorage.removeItem", CodeKey);
+        }
     }
 
     /// <summary>Session storage may be blocked (private windows, settings): then the share link simply lands on the front page.</summary>
@@ -450,6 +452,7 @@
             {
                 // A new account still finishes its registration first (via /paskyra); the share link's page waits until then.
                 var me = await Me.GetAsync();
+                await ForgetCodeAsync(me.Value);
                 await GoOnAsync(signedIn.Value!, me.Value, me.Value?.RegistrationComplete == true ? AfterSignIn(me.Value, ReturnTo ?? await NextPageAsync()) : ReturnTo ?? "/paskyra");
             }
         });
@@ -532,6 +535,7 @@
         if (Succeeded(signedIn, FieldsOnThisStep))
         {
             var me = (await Me.GetAsync()).Value;
+            await ForgetCodeAsync(me);
             await GoOnAsync(signedIn.Value!, me, AfterSignIn(me, ReturnTo ?? await NextPageAsync()));
         }
     });

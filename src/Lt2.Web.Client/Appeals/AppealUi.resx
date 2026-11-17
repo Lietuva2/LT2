@@ -431,7 +431,7 @@
 <data name="Share.Reached" xml:space="preserve"><value>Riba pasiekta</value></data>
 <data name="Share.Copy" xml:space="preserve"><value>Kopijuoti nuorodą</value></data>
 <data name="Share.Copied" xml:space="preserve"><value>Nukopijuota.</value></data>
-<data name="Share.NoLink" xml:space="preserve"><value>Jūsų kvietimo kodas šiuo metu neveikia, todėl nuorodos parodyti negalime. Daugiau – paskyros puslapyje.</value></data>
+<data name="Share.NoLink" xml:space="preserve"><value>Jūsų kvietimo kodas šiuo metu neveikia, todėl nuoroda atveria projektą be jo. Daugiau – paskyros puslapyje.</value></data>
 <data name="Follow.Follow" xml:space="preserve"><value>Sekti</value></data>
 <data name="Follow.Unfollow" xml:space="preserve"><value>Nebesekti</value></data>
 <data name="Follow.Hint" xml:space="preserve"><value>Kas yra sekimas?</value></data>
@@ -690,7 +690,7 @@
 <data name="Org.Code.Title" xml:space="preserve"><value>Organizacijos kvietimo nuoroda</value></data>
   <data name="Org.Code.Lead" xml:space="preserve"><value>Dalinkitės ja su nariais ir rėmėjais: nuoroda atveria registraciją su organizacijos kvietimo kodu.</value></data>
 <data name="Org.Code.Count" xml:space="preserve"><value>Su organizacijos kodu užsiregistravo: {0}</value></data>
-  <data name="Org.Code.BillsLead" xml:space="preserve"><value>Tas pats kodas, bet po registracijos atveriamas projektas:</value></data>
+  <data name="Org.Code.BillsLead" xml:space="preserve"><value>Tas pats kodas, bet nuoroda atveria projekto puslapį:</value></data>
   <data name="Org.Code.Private" xml:space="preserve"><value>Matote tik skaičių: ne kas užsiregistravo, ne kada ir ne kurią pusę pasirinko.</value></data>
 <data name="Org.Code.OffWithOrganisation" xml:space="preserve"><value>Kol organizacija užblokuota, jos kvietimo kodas neveikia, todėl nuorodos parodyti negalime.</value></data>
 <data name="Org.Code.SwitchedOff" xml:space="preserve"><value>Organizacijos kvietimo kodą išjungė administratorius, todėl nuorodos parodyti negalime.</value></data>

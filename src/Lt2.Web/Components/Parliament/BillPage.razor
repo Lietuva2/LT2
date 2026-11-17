@@ -16,6 +16,7 @@
 @inject IConfiguration Configuration
 @inject IStringLocalizer<Lt2.Web.Components.Appeals.AppealText> A
 @inject IStringLocalizer<AppealUi> U
+@inject IStringLocalizer<Lt2.Web.Components.PageText> P
 @inject IHttpContextAccessor Http
 @inject Microsoft.AspNetCore.Authorization.IAuthorizationService Authorization
 
@@ -32,6 +33,7 @@
 @if (_bill is { } b)
 {
     <PageTitle>@b.Number · @b.Title · Lietuva 2.0</PageTitle>
+    <LinkPreview Title="@($"{b.Number} · {b.Title}")" Description="@PreviewText(b)" Type="article" Path="@($"/seimas/{Uri.EscapeDataString(b.Number)}")" />
     <div class="stack">
         @* Owner, 2026-11-17: the kind and the number in the way back, no label line of their own. *@
         <ol class="crumbs">
@@ -445,6 +447,16 @@
     /// <summary>The latest stage the Seimas voted on, shown when nothing is planned.</summary>
     private static string? LastStage(BillResponse bill) =>
         bill.Votes.LastOrDefault(v => v.Vote.Kind == "stage-result")?.Vote.Stage;
+
+    /// <summary>
+    /// The link preview's text (design 8.22.5): the description when a person wrote or checked it (an AI text nobody read goes
+    /// nowhere without its label), otherwise the title with one sentence of what the page is; never the counts, which need
+    /// "not a representative poll" beside them.
+    /// </summary>
+    private string PreviewText(BillResponse b) =>
+        _record is { Status: "open" or "closed" } r && r.Description.Length > 0 && r.DescriptionSource != "ai"
+            ? r.Description
+            : P.Format(_record?.Status switch { "open" => "Preview.Bill.Open", "closed" => "Preview.Bill.Closed", _ => "Preview.Bill.Other" }, b.Title);
 
     private static int ToGo(ThresholdResponse t) => Math.Max(0, t.Value - t.Participants);
 

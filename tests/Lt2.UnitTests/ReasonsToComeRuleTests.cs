@@ -159,15 +159,27 @@ public sealed class LandingPathTests
     [InlineData("/seimas/XVP 0412")]
     public void Anything_else_is_ignored(string? path) => LandingPath.Accept(path).ShouldBeNull();
 
+    /// <summary>Design 8.11.5 (owner, 2026-11-17): the share link is the bill's own address, so a link preview shows the bill.</summary>
     [Fact]
-    public void The_share_link_is_the_personal_invitation_link_with_the_page_to_land_on_both_after_the_hash() =>
-        LandingPath.ShareLink(InvitationLink.For("ABCD-EFGH"), "/seimas/XVP-0412")
-            .ShouldBe("/prisijungti#kodas=ABCD-EFGH&tikslas=%2Fseimas%2FXVP-0412");
+    public void The_share_link_is_the_bills_own_address_with_the_invitation_code_after_the_hash() =>
+        LandingPath.ShareLink("ABCD-EFGH", "/seimas/XVP-0412").ShouldBe("/seimas/XVP-0412#kodas=ABCD-EFGH");
+
+    [Theory]
+    [InlineData(null)]
+    [InlineData("")]
+    [InlineData("  ")]
+    public void Without_a_usable_code_the_share_link_is_the_plain_address(string? code) =>
+        LandingPath.ShareLink(code, "/seimas/XVP-0412").ShouldBe("/seimas/XVP-0412");
 
     [Fact]
-    public void An_old_invitation_link_with_the_code_in_the_query_still_gets_the_page_beside_it() =>
-        LandingPath.ShareLink("/prisijungti?kodas=ABCD-EFGH", "/seimas/XVP-0412")
-            .ShouldBe("/prisijungti?kodas=ABCD-EFGH&tikslas=%2Fseimas%2FXVP-0412");
+    public void The_code_in_a_share_link_is_escaped_and_never_in_the_path_or_a_query()
+    {
+        var link = LandingPath.ShareLink("AB&C D", "/seimas/XVP-0412");
+        link.ShouldBe("/seimas/XVP-0412#kodas=AB%26C%20D");
+        link.Split('#')[0].ShouldNotContain("AB");
+        link.ShouldNotContain("?");
+        InvitationLink.FromFragment("https://lt2.test" + link, InvitationLink.CodeParameter).ShouldBe("AB&C D");
+    }
 
     [Fact]
     public void The_code_and_the_page_are_read_back_from_after_the_hash_and_nothing_from_the_query()
@@ -180,9 +192,12 @@ public sealed class LandingPathTests
         InvitationLink.Fragment("https://lt2.test/organizacijos/kvietimas").ShouldBeNull();
     }
 
-    [Fact]
-    public void A_share_link_never_points_off_the_site() =>
-        Should.Throw<ArgumentException>(() => LandingPath.ShareLink("/prisijungti?kodas=ABCD-EFGH", "https://piktas.example/"));
+    [Theory]
+    [InlineData("https://piktas.example/")]
+    [InlineData("/administravimas")]
+    [InlineData("/seimas/XVP-0412?x=1")]
+    public void A_share_link_never_points_off_the_site_or_to_a_page_not_on_the_list(string path) =>
+        Should.Throw<ArgumentException>(() => LandingPath.ShareLink("ABCD-EFGH", path));
     /// <summary>Design 6.9 (owner, 2026-11-15): a sign-in link on a bill's page brings the person back to the bill.</summary>
     [Fact]
     public void A_sign_in_link_on_a_bills_page_carries_the_page_after_the_hash_and_only_a_page_under_seimas()

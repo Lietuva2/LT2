@@ -40,6 +40,11 @@ Read before changing a page, a component or an island. The rules behind it are d
   `<PasskeyStep>` without `Confirmed`, a take-over, the terms, deleting the account). A list whose items
   hold state or re-sort is keyed (`@key`), and an element id is unique on the page (a component shown twice takes an
   `IdPrefix`).
+- **A new public, server-rendered page puts `<LinkPreview Title="…" Description="…" />` beside its `<PageTitle>`** (design
+  8.22.5: the title without " · Lietuva 2.0", one or two sentences, never counts or a member's own text; `Path` when the page's
+  own address differs from the requested path). A page behind sign-in, a staff page or a token page puts none; such a path
+  goes on `SecurityHeaders.IsPrivatePage` so it is not indexed. Only one `<HeadContent>` shows per page: a page with the
+  preview has no other.
 - **Surfaces (design 8.16).** The ground carries what frames a page: title, lead, the way back, notices (`.note`), an
   introduction, a plain row of links. What a person comes to read or act on lies on a `.sheet`, one unit per sheet (a
   list, a table, a part of a bill's page, a form, a queue item); a sheet is never inside a sheet. A form or panel that

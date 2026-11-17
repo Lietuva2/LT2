@@ -3,10 +3,11 @@ using System.Text.RegularExpressions;
 namespace Lt2.Api.Contracts.Me;
 
 /// <summary>
-/// The page a share link lands on after registering or signing in (design 8.11.5): the parameter <c>tikslas</c> of the
-/// personal invitation link, after the <c>#</c> beside the code (design 6.8), or in the query of an old link. Accepted only as a path on this site under <c>/seimas/</c>: one leading slash, no scheme,
-/// host, backslash, dot segment, query or fragment; anything else is ignored. It stays in the browser and is never sent to
-/// the server, so nothing ties an invitation to a bill; the link is the same whichever side the sharer took.
+/// The page a person comes back to after signing in or registering (design 6.9, 8.11.5): the parameter <c>tikslas</c> after
+/// the <c>#</c> of a sign-in link (design 6.8). Accepted only as a path on this site from a short list: one leading slash, no
+/// scheme, host, backslash, dot segment, query or fragment; anything else is ignored. It stays in the browser and is never sent
+/// to the server. The share line's link (<see cref="ShareLink"/>) is the bill's own address with the invitation code after the
+/// <c>#</c>: nothing ties an invitation to a bill, and the link is the same whichever side the sharer took.
 /// </summary>
 public static partial class LandingPath
 {
@@ -26,13 +27,17 @@ public static partial class LandingPath
         return Shape().IsMatch(path) ? path : null;
     }
 
-    /// <summary>The personal invitation link (<see cref="InvitationLink.For"/>) that lands on <paramref name="path"/>.</summary>
-    public static string ShareLink(string invitationLink, string path)
+    /// <summary>
+    /// The share line's link (design 8.11.5, owner 2026-11-17): the page <paramref name="path"/> itself, so a link preview shows
+    /// the page, with the invitation <paramref name="code"/> after the <c>#</c> (<c>/seimas/XVP-0412#kodas=…</c>), which the
+    /// browser never sends; without a code (off or used up) the plain address.
+    /// </summary>
+    public static string ShareLink(string? code, string path)
     {
-        ArgumentNullException.ThrowIfNull(invitationLink);
-        var accepted = Accept(path) ?? throw new ArgumentException("Not a page a share link may land on.", nameof(path));
-        var separator = invitationLink.Contains('#', StringComparison.Ordinal) || invitationLink.Contains('?', StringComparison.Ordinal) ? "&" : "#";
-        return invitationLink + separator + Parameter + "=" + Uri.EscapeDataString(accepted);
+        var accepted = Accept(path) ?? throw new ArgumentException("Not a page a share link may lead to.", nameof(path));
+        return string.IsNullOrWhiteSpace(code)
+            ? accepted
+            : accepted + "#" + InvitationLink.CodeParameter + "=" + Uri.EscapeDataString(code.Trim());
     }
 
     /// <summary>

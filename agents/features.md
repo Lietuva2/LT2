@@ -402,11 +402,25 @@ page's "Balsuota".
   the display name share one per-account request limit, `RateLimits:Participation` (60 a minute): a guard against a runaway script, not a rule.
 - Links in emails: a message carries the site path, and the template makes it a full address with
   `SiteLinks.Absolute` from `Site:Address` (design 5.6). That is deployment configuration, never a runtime setting.
-- The share line: the personal invitation link with `tikslas` beside the code after the `#` (a path under `/seimas/`, anything else ignored), landing
-  on the bill's page, kept only in the browser (session storage) through the sign-in steps; the same link whichever
-  side; no link when the code is off or used up.
-- Sign-in links on a bill's page (side picker, follow, report; owner 2026-11-15) carry the page the same way
+- The share line (owner, 2026-11-17: "Facebook only shows the 'Prisijungti' page"): the bill's own address with the
+  member's code after the `#` (`LandingPath.ShareLink(code, path)`: `/seimas/XVP-0412#kodas=…`; the plain address when the
+  code is off or used up, with `Share.NoLink`); the same link whichever side. The front page's "Jūsų projektai" and an
+  organisation's per-bill links (`OrganisationBillLinkResponse.Link`, its own code) are made the same way.
+  `js/lt2-invitation.js` (every page, before blazor.web.js) moves a `#kodas=` into session storage `lt2.kodas` and out of the
+  address bar (`history.replaceState`, other `#` parameters kept); `SignInFlow` fills the registration in from it (or from
+  its own `#kodas=`) and forgets it after the registration or a sign-in to a finished account. The old query forms
+  (`?kodas=`, `?tikslas=`) are not read (owner: "we don't need old links to work").
+- Sign-in links on a bill's page (side picker, follow, report; owner 2026-11-15) carry the page to come back to
   (`LandingPath.SignInLink`: `/prisijungti#tikslas=...`), so signing in and registering both end on the bill.
+- **Link previews (design 8.22.5, owner 2026-11-17).** `Components/Layout/LinkPreview` (`<HeadContent>`: `description`, Open
+  Graph, `twitter:card`) placed by each public server-rendered page with `Title`, `Description` (default `Home.Lead`),
+  `Type` (`article` on a bill) and `Path` (default the requested path without its query); `og:url` and `og:image` only with
+  `Site:Address` (`SiteLinks.Absolute`). Text rules and the image's name are `LinkPreviewText` (pure; `Excerpt` keeps whole
+  sentences up to 200 characters). The image is `wwwroot/img/link-preview.png` (1200×630, the logo and the name; made once
+  in a headless browser from the logo SVG and Sofia Sans Extra Condensed). The texts are `Preview.*` in `PageText.resx`. A
+  bill uses its description unless it is `ai`, never counts; a member's page only while public and never "Apie mane"; a
+  blocked organisation none. `SecurityHeaders.IsPrivatePage` marks account, staff, sign-in, MP and one-time-link pages
+  `noindex, nofollow`; `/img` is `Cross-Origin-Resource-Policy: cross-origin`. Tests: `LinkPreviewTests` (integration).
 - The AI draft is only in a moderator's "write or correct the description" form, on any active bill, from pasted official
   text: the Claude API (owner, 2026-11-13), the model the setting `Ai:DraftModel`, on only with `Ai:Provider` = `claude`
   and a key in `deploy/secrets/ai_api_key`; otherwise nothing mentions a draft. The prompt is the public file

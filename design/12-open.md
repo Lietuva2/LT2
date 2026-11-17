@@ -2,6 +2,33 @@
 
 What the owner decided is in [12-decisions.md](12-decisions.md). Do not decide an open item in code.
 
+**Proposed by the designer while building the share link on the bill's address and link previews (8.11.5, 8.22.5),
+2026-11-17, awaiting the owner**
+
+Each is built as written; "no" names what changes. The Lithuanian texts are proposals for a native read.
+
+1. A link's code is taken on any page by a small script of the site's own (`js/lt2-invitation.js`, before Blazor starts),
+   into the existing session key `lt2.kodas`, and removed from the address bar; the sign-in page then opens the
+   registration with it. If no: only the bill's page takes it (an island, so only once WebAssembly runs).
+2. The kept code opens the sign-in page on the registration form, as the old share link did, and is forgotten once the
+   person signs in to a finished account. If no: the sign-in form first, the code filled in only when "Registruotis" is
+   pressed.
+3. A member whose code is off or used up shares the bill's plain address, with "Jūsų kvietimo kodas šiuo metu neveikia,
+   todėl nuoroda atveria projektą be jo." If no: no link, as before. The front page's "Jūsų projektai" still shows the
+   share link only with a usable code.
+4. The old query forms of links (`?kodas=…`, `?tikslas=…`) are no longer read (owner: "we don't need old links to work").
+5. A bill's preview uses the description only when a person wrote or checked it (not `ai`), and never the counts. If no:
+   the AI text too, with "(sukurta DI)" after it.
+6. A member's preview is the name and a generic line, never "Apie mane"; an organisation's is its own description while
+   active and none while blocked. If no: "Apie mane" as the text (it is public on the page by the member's choice).
+7. One image for every page, the logo and the name; no per-bill image with a title or numbers. If no: an image made per
+   bill (needs a renderer on the server).
+8. Pages of one's own account, staff, sign-in and one-time links are `noindex, nofollow` by a path list
+   (`SecurityHeaders.IsPrivatePage`); the image is served `Cross-Origin-Resource-Policy: cross-origin` so other sites may
+   show it.
+9. Without `Site:Address` (a development machine) `og:url` and `og:image` are left out rather than taken from the
+   request's host.
+
 **Proposed by the designer while building the reporter's email (8.3), 2026-11-17, awaiting the owner**
 
 - A text withdrawn or deleted by its own author while a report on it is open sends the reporter "Turinį atsiėmė pats

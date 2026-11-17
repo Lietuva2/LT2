@@ -53,7 +53,7 @@ public sealed class OrganisationInvitationTests(DatabaseFixture database) : ApiT
         (code.Completed, code.Usable, code.On, code.OffWithOrganisation, code.Contact).ShouldBe((0, true, true, false, (string?)null));
         var bill = code.Bills.Single();
         bill.Bill.Number.ShouldBe(AppealSteps.ThirdBill);
-        bill.Link.ShouldBe($"/prisijungti#kodas={code.Code}&tikslas=%2Fseimas%2F{AppealSteps.ThirdBill}");
+        bill.Link.ShouldBe($"/seimas/{AppealSteps.ThirdBill}#kodas={code.Code}", "design 8.11.5: the bill's own address, the code after the #");
 
         // One code per organisation: a second representative gets the same one, and asking again makes no new one.
         var invite = await (await rep.PostAsync(OrganisationRoutes.InvitesOf(created.Slug), new { })).ReadAsync<InviteCreatedResponse>();

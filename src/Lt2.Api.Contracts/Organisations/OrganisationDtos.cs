@@ -175,7 +175,7 @@ public sealed record InviteCreatedResponse(string Token, string Path, DateTimeOf
 public sealed record InviteResponse(string Slug, string Name, bool Usable, bool AlreadyRepresentative);
 
 /// <summary>A bill the organisation has a public statement on, with its own registration link (design 8.14.14, stage B).</summary>
-/// <param name="Link">The registration link with the organisation's code and <c>tikslas</c> set to the bill's page.</param>
+/// <param name="Link">The bill's page with the organisation's code after the <c>#</c> (design 8.11.5: <c>/seimas/{number}#kodas=…</c>).</param>
 public sealed record OrganisationBillLinkResponse(BillRefResponse Bill, string Link);
 
 /// <summary>

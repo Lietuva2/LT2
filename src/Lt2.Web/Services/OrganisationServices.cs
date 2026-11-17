@@ -100,7 +100,7 @@ internal static class OrganisationInvitationMapping
             ? []
             : a.Bills
                 .Where(b => LandingPath.Accept("/seimas/" + b.Number) is not null)
-                .Select(b => new OrganisationBillLinkResponse(AppealMapping.Map(b), LandingPath.ShareLink(link, "/seimas/" + b.Number)))
+                .Select(b => new OrganisationBillLinkResponse(AppealMapping.Map(b), LandingPath.ShareLink(c.Code, "/seimas/" + b.Number)))
                 .ToList();
         return new OrganisationInvitationResponse(c.Code, link, c.Completed, c.Usable, c.On, c.OffWithOrganisation, bills, c.On ? null : AppealMapping.Contact(configuration));
     }

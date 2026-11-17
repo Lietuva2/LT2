@@ -10,7 +10,9 @@ src/Lt2.Web                host: API endpoints in Endpoints/<Module>/ (one per f
                            auth, security middleware (forwarding headers believed only from ReverseProxy:Address,
                            Security/TrustedProxy.cs; no-store on pages answered to a signed-in session; Security/TermsGate.cs,
                            design 8.22.2; Security/BrowserStorage.cs, the inventory of 8.22.1), the layout (Components/Layout:
-                           the menu, AccountMenu with js/lt2-account.js, the footer) and the terms and privacy pages
+                           the menu, AccountMenu with js/lt2-account.js, the footer, LinkPreview and LinkPreviewText (Open
+                           Graph tags, design 8.22.5, image wwwroot/img/link-preview.png); js/lt2-invitation.js takes a
+                           link's #kodas= on any page, 8.11.5) and the terms and privacy pages
                            (Components/Pages/Terms, Privacy, LegalText.resx)
 src/Lt2.Hosting            what the web host and the worker set up the same way: Serilog and OpenTelemetry
                            (Observability.AddLt2Observability), with SecretPaths replacing an MP link's or a member's stop

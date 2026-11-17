@@ -6,10 +6,14 @@
 @inject Formats F
 @inject NavigationManager Navigation
 @inject TimeProvider Clock
+@inject IStringLocalizer<Lt2.Web.Components.PageText> P
 
 @if (_mp is { } p)
 {
     <PageTitle>@p.Mp.FirstName @p.Mp.LastName · Lietuva 2.0</PageTitle>
+    @* Design 8.22.5: the name, then what the MP is and the faction (a name after a colon, never declined). *@
+    <LinkPreview Title="@($"{p.Mp.FirstName} {p.Mp.LastName}")" Path="@($"/p/{p.Mp.Slug}")"
+                 Description="@(p.Mp.Faction is { } previewFaction ? P.Format("Preview.Mp.Faction", Label(p.Mp), previewFaction.Name) : P.Format("Preview.Mp", Label(p.Mp)))" />
 
     <div class="stack">
         <ol class="crumbs">
