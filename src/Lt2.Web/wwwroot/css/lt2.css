@@ -311,8 +311,15 @@ lt2-logo-spin {
 .input--code { font: 700 2rem/1 var(--font-display); letter-spacing: 0.35em; max-width: 14rem; }
 .field--error .input { border-color: var(--error); }
 .field__error { font-weight: 600; color: var(--error); }
-.check { display: flex; align-items: flex-start; gap: var(--sp-3); }
-.check input { width: 1.5rem; height: 1.5rem; margin: 0.1rem 0 0; accent-color: var(--action); flex: none; }
+/* A checkbox or a radio beside its text (owner, 2026-11-17: "the radios are so large, they don't line up"): one size for
+   both, centred on the first line of the text, so a one-line option lines up and a long consent keeps its box at the
+   first line. The input takes the label's font, so 1lh is the text's line; a browser without lh keeps the fixed margin. */
+.check { display: flex; align-items: flex-start; gap: var(--sp-2); }
+.check input {
+  inline-size: 1.125rem; block-size: 1.125rem; flex: none;
+  margin: 0.25rem 0 0; margin-block-start: calc((1lh - 1.125rem) / 2);
+  font: inherit; accent-color: var(--action);
+}
 
 /* ---------- Tags and choices ---------- */
 
@@ -576,6 +583,10 @@ body > .page { width: 100%; }
 /* Radio groups and report forms sit in fieldsets without the browser's frame. */
 fieldset { margin: 0; padding: 0; border: 0; min-width: 0; }
 legend { padding: 0; font-weight: 600; }
+/* A rendered <legend> is not a flex item of its fieldset (it stands outside the fieldset's content box), so a stack's gap
+   never reached it: the title sat on its first option with no space (owner, 2026-11-17). It takes the gap as its margin. */
+fieldset.stack > legend { margin-block-end: var(--sp-5); }
+fieldset.stack--tight > legend { margin-block-end: var(--sp-3); }
 .said__by .linkish { font-size: var(--fs-1); }
 /* A text one click away (design 8.15, owner 2026-11-15): the browser's own <details class="more">, a link-looking summary
    without the triangle, the opened text spaced like a stack. No script, so it opens on server-rendered pages and inside
