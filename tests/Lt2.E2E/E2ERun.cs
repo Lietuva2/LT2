@@ -14,6 +14,7 @@ namespace Lt2.E2E;
 /// <list type="bullet">
 /// <item>The web host answers and has rendered its first pages before the first test (a host just started takes seconds
 /// longer for each first page).</item>
+/// <item>The demonstration data (the migrator's <c>--demo-appeal</c>), written when a stack made afresh has none.</item>
 /// <item>An invitation of the run's own, made by the migrator (<c>--seed-invitation</c>), so registrations never use up a
 /// code people use by hand; it is deleted at the end, after every account registered with it (the profile refers to it).
 /// <c>LT2_E2E_INVITATION</c> names an existing code instead, for a stack whose migrator cannot be run from here.</item>
@@ -40,8 +41,8 @@ public sealed class E2ERun : IAsyncLifetime
             return;
         }
 
-        await WarmUpAsync();
         var given = Environment.GetEnvironmentVariable("LT2_E2E_INVITATION");
+        await WarmUpAsync(seed: string.IsNullOrWhiteSpace(given));
         if (!string.IsNullOrWhiteSpace(given))
         {
             _invitation = given;
@@ -82,10 +83,11 @@ public sealed class E2ERun : IAsyncLifetime
     }
 
     /// <summary>
-    /// Waits until the web host is ready and asks for the pages most tests open first, so the first test does not meet a
-    /// host that is still compiling its pages (up to two minutes after a restart).
+    /// Waits until the web host is ready, makes sure the demonstration data is there (<see cref="DemonstrationAsync"/>) and
+    /// asks for the pages most tests open first, so the first test does not meet a host that is still compiling its pages
+    /// (up to two minutes after a restart).
     /// </summary>
-    private static async Task WarmUpAsync()
+    private static async Task WarmUpAsync(bool seed)
     {
         using var http = new HttpClient(new HttpClientHandler { ServerCertificateCustomValidationCallback = (_, _, _, _) => true })
         {
@@ -115,9 +117,44 @@ public sealed class E2ERun : IAsyncLifetime
             await Task.Delay(500);
         }
 
+        await DemonstrationAsync(seed);
         foreach (var path in new[] { "/", "/darbotvarke", "/seimas/XVP-0412", "/seimo-nariai", "/prisijungti" })
         {
             (await http.GetAsync(path)).EnsureSuccessStatusCode();
+        }
+    }
+
+    /// <summary>
+    /// The demonstration data many tests read (the records of XVP-0412, XVP-0533 and XVP-0707, the invented organisations and
+    /// arguments: the migrator's <c>--demo-appeal</c>, README.md). A stack made afresh has none until it is written, and the
+    /// migrator refuses until the worker's first import from the stand-in is in, so this waits for that (up to three
+    /// minutes). A stack that has it is left alone: the command is not run again over records people may have used by hand.
+    /// Without <paramref name="seed"/> (<c>LT2_E2E_INVITATION</c>: a stack whose migrator cannot be run from here) a missing
+    /// demonstration only fails the run at once with what to do.
+    /// </summary>
+    private static async Task DemonstrationAsync(bool seed)
+    {
+        const string Count = "select count(*) from appeals.bill_record where bill_number in ('XVP-0412', 'XVP-0533', 'XVP-0707')";
+        if ((await E2ESteps.SqlAsync(Count)).Trim() == "3")
+        {
+            return;
+        }
+
+        seed.ShouldBeTrue("the stack holds the demonstration data: run the migrator with --demo-appeal (README.md)");
+        var until = DateTime.UtcNow + TimeSpan.FromMinutes(3);
+        while (true)
+        {
+            try
+            {
+                await Compose.RunAsync("run", "--rm", "--no-deps", "migrator", "--demo-appeal");
+                Console.Error.WriteLine("E2E run: the stack had no demonstration data; the migrator wrote it (--demo-appeal), so the leftovers read before this run lack it.");
+                return;
+            }
+            catch (ShouldAssertException ex) when (ex.Message.Contains("parliament data", StringComparison.Ordinal) && DateTime.UtcNow < until)
+            {
+                // The worker's first import from the stand-in is not in yet.
+                await Task.Delay(TimeSpan.FromSeconds(5));
+            }
         }
     }
 }

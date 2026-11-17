@@ -49,7 +49,9 @@ Read before writing or changing a test. The commands are in [AGENTS.md](../AGENT
   their arguments, the organisations they registered (`E2EData`); then what the product made because of the test and keeps with nothing left on it: a bill's record opened during the test, and the follow job's planned, voted and answer records about bills nobody follows any more (`E2EData.ForgetSinceAsync`; its comment records stay, being where its next window starts, and `leftovers.sql` does not count them). A staff fixture forgets its moderators' actions and deletes
   its account from its staff passkey session when the class is over. The run makes its own invitation through the migrator
   and deletes it at the end (`E2ERun`, an assembly fixture; `LT2_E2E_INVITATION` names an existing code instead, for a
-  stack whose migrator cannot be run), and waits for the web host before the first test. A test that changes a
+  stack whose migrator cannot be run), and waits for the web host before the first test; on a stack made afresh it writes
+  the demonstration data many tests read (`--demo-appeal`, once the worker's first import is in), which the leftovers read
+  before that run therefore lack. A test that changes a
   demonstration bill brings it to a known state before and puts it back in a `finally` (`E2EData.RestoreDescriptionAsync`;
   a summary it made, `DeleteSummaryAsync`); something the product keeps unlinked from the account (feedback without a reply
   address) carries a marker and is removed by it. Every name a run gives an organisation carries "(E2E)" and every
