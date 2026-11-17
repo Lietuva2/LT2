@@ -33,7 +33,7 @@
                 {
                     var c = thread.Items[position - 1];
                     var id = CommentLimits.ElementId(c.Id);
-                    <li class="comment stack stack--tight" id="@id" @key="c.Id">
+                    <li class="comment stack stack--tight @(Marked == c.Id ? "comment--linked" : null)" id="@id" @key="c.Id">
                         <p class="row comment__who" id="@CommentPaging.PositionAnchor(TargetId, position)">
                             @Name(c.Author)
                             <span class="small num">@Display.DayTime(c.CreatedAt)</span>
@@ -160,6 +160,9 @@
 
     /// <summary>How many comments the page's address asks for (design 8.23.14); a thread read on first opening reads as many.</summary>
     [Parameter] public int? Asked { get; set; }
+
+    /// <summary>The comment a link on the page's address leads to (design 8.23.6): marked, so the reader sees which one it is.</summary>
+    [Parameter] public Guid? Marked { get; set; }
 
     /// <summary>The page's path (with its other parameters), for "Rodyti daugiau komentarų" and the sign-in link.</summary>
     [Parameter, EditorRequired] public string PagePath { get; set; } = "";

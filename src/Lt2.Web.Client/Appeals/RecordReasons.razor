@@ -37,7 +37,7 @@
                     }
                     @foreach (var reason in _showAll ? all : all.Take(Shown))
                     {
-                        <div class="said" id="reason-@reason.Id" @key="reason.Id">
+                        <div class="said @(LinkedReason == reason.Id ? "said--linked" : null)" id="@BillTextLinks.ReasonElement(reason.Id)" @key="reason.Id">
                             <LongText Text="@reason.Text" BubbleClass="bubble bubble--people voice" Id="@($"reason-more-{reason.Id}")" />
                             @* The name, then the actions as one group that never wraps item by item (owner, 2026-11-13): when
                                the two do not fit side by side, the name takes its own line above. *@
@@ -86,7 +86,7 @@
                             @* Design 8.23.6: "Aptarimas" under the argument, on its sheet; prerendered with the island for the
                                arguments shown first, read when first opened for those revealed by "show all". *@
                             <CommentThread Kind="reason" TargetId="reason.Id" Number="@Number" Thread="@Threads?.GetValueOrDefault(reason.Id)" Count="reason.Comments"
-                                           Open="@(CommentPaging.Asked(CommentsShown, reason.Id) is not null)" Asked="@CommentPaging.Asked(CommentsShown, reason.Id)" PagePath="@PagePath" Contact="@Contact" Moderator="Moderator" />
+                                           Open="@(AskedFor(reason.Id) is not null)" Asked="@AskedFor(reason.Id)" Marked="@CommentPaging.Marked(reason.Id, Linked)" PagePath="@PagePath" Contact="@Contact" Moderator="Moderator" />
                             @if (_withdrawing == reason.Id)
                             {
                                 <div class="row" role="group" aria-label="@L["Reasons.Withdraw"]">
@@ -231,7 +231,20 @@
     /// <summary>The responses' page parameter (design 8.5.6), kept in the links this part builds.</summary>
     [SupplyParameterFromQuery(Name = Lt2.Api.Contracts.Mps.MpResponseLimits.ShowParameter)] public string? ResponsesShown { get; set; }
 
+    /// <summary>
+    /// A link to one comment (<c>?komentaras=</c>), resolved by the page on the server (design 8.23.6): the argument it stands
+    /// under is shown and its "Aptarimas" rendered open through the linked comment, marked. A parameter, so the island gets the
+    /// same state in the browser and does not close the thread when it starts. Null when the address names none, or one not shown.
+    /// </summary>
+    [Parameter] public CommentPlaceResponse? Linked { get; set; }
+
+    /// <summary>A link to one argument (<c>?argumentas=</c>, design 8.12.1): shown even beyond the first two of its side, marked.</summary>
+    [Parameter] public Guid? LinkedReason { get; set; }
+
     private string PagePath => CommentPaging.PagePath(Number, ResponsesShown);
+
+    /// <summary>How many comments of an argument the page shows open: "Rodyti daugiau komentarų" or a link to one; null: closed.</summary>
+    private int? AskedFor(Guid reasonId) => CommentPaging.Asked(CommentsShown, reasonId, Linked);
 
     [PersistentState] public MyBillRecordResponse? Mine { get; set; }
 
@@ -248,8 +261,10 @@
         Record ??= (await Appeals.GetRecordAsync(Number)).Value;
         Threads ??= await ThreadsAsync();
 
-        // "Rodyti daugiau komentarų" under an argument the page shows only after "show all": shown already (design 8.23.6).
-        _showAll = Record?.Reasons is { } reasons && reasons.Any(r => CommentPaging.Asked(CommentsShown, r.Id) is not null && !FirstShown(reasons).Contains(r.Id));
+        // "Rodyti daugiau komentarų" or a link to a comment under an argument the page shows only after "show all", or a link to
+        // such an argument: shown already (design 8.23.6, 8.12.1).
+        _showAll = Record?.Reasons is { } reasons
+            && reasons.Any(r => (AskedFor(r.Id) is not null || r.Id == LinkedReason) && !FirstShown(reasons).Contains(r.Id));
         if (_signedIn)
         {
             Mine ??= await State.MineAsync(Number);
@@ -277,9 +292,9 @@
             return threads;
         }
 
-        foreach (var reason in record.Reasons.Where(r => FirstShown(record.Reasons).Contains(r.Id) || CommentPaging.Asked(CommentsShown, r.Id) is not null))
+        foreach (var reason in record.Reasons.Where(r => FirstShown(record.Reasons).Contains(r.Id) || AskedFor(r.Id) is not null))
         {
-            if ((await CommentsApi.GetThreadAsync("reason", reason.Id, CommentPaging.Asked(CommentsShown, reason.Id))).Value is { } thread)
+            if ((await CommentsApi.GetThreadAsync("reason", reason.Id, AskedFor(reason.Id))).Value is { } thread)
             {
                 threads[reason.Id] = thread;
             }

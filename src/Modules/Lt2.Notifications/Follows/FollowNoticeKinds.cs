@@ -616,7 +616,7 @@ internal sealed class MemberNotices(
                 {
                     due.Add(new DueNotice(f.UserId, e.FirstSeen, to => OutboxMessage.Create(MessageKinds.FollowMemberEmail, new FollowMemberEmail(
                         to, author.DisplayName, bill.Number, bill.Title,
-                        FollowEvents.BillPath(bill.Number) + "#" + FollowRules.TextAnchor(argument.Kind, argument.Id),
+                        FollowRules.TextPath(bill.Number, argument.Kind, argument.Id),
                         MemberAddress.Page(author.ProfileId, author.DisplayName),
                         NoticeDelivery.AccountPath,
                         argument.Kind,
@@ -737,7 +737,7 @@ internal sealed class CommentNotices(IDbContextFactory<NotificationsDb> contexts
             }
 
             var bill = facts.GetValueOrDefault(argument.BillNumber) ?? new BillFacts(argument.BillNumber, argument.BillNumber);
-            var line = new CommentedArgumentLine(bill.Number, bill.Title, FollowEvents.BillPath(bill.Number) + "#reason-" + argument.ReasonId.ToString("D"), VilniusTime.DateOf(lastSeen));
+            var line = new CommentedArgumentLine(bill.Number, bill.Title, BillTextLinks.ToReason(bill.Number, argument.ReasonId), VilniusTime.DateOf(lastSeen));
             due.Add(new DueNotice(argument.AuthorUserId, firstSeen, to => OutboxMessage.Create(MessageKinds.CommentNoticeEmail, new CommentNoticeEmail(
                 to, [line], NoticeDelivery.AccountPath))));
         }

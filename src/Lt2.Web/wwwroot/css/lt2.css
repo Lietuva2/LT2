@@ -934,4 +934,9 @@ a.said__name { color: inherit; font-weight: 700; }
 .comment__name { overflow-wrap: anywhere; color: var(--ink); }
 .comment__text a { overflow-wrap: anywhere; }
 .comment__meta { padding-left: 0; }
+/* Design 8.23.6: the comment or argument a link leads to (?komentaras=, ?argumentas=), marked by the server, no script; it
+   stops below the sticky header when the browser scrolls to it. */
+.comment--linked { border-left-color: var(--brand); background: var(--brand-tint); padding: var(--sp-2) var(--sp-2) var(--sp-2) var(--sp-3); }
+.said--linked { outline: 2px solid var(--brand); outline-offset: var(--sp-2); }
+.comment--linked, .said--linked { scroll-margin-top: var(--sp-6); }
 @media (max-width: 30rem) { .comments { margin-left: var(--sp-2); } }

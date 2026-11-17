@@ -34,11 +34,11 @@ internal static class FollowRules
     public static string IdKey(Guid id) => id.ToString("D", CultureInfo.InvariantCulture);
 
     /// <summary>
-    /// The anchor of a member's text on the bill's page (design 8.25.5): <c>reason-{id}</c> for an argument,
-    /// <c>komentaras-{id}</c> for a comment (design 8.23.6).
+    /// The link to a member's text on the bill's page (design 8.25.5) that lands on it (8.23.6): an argument shown even beyond the
+    /// first two of its side, a comment with its "Aptarimas" open through it (<see cref="BillTextLinks"/>).
     /// </summary>
-    public static string TextAnchor(string kind, Guid id) =>
-        kind == MemberTextKinds.Comment ? "komentaras-" + id.ToString("N", CultureInfo.InvariantCulture) : "reason-" + id.ToString("D", CultureInfo.InvariantCulture);
+    public static string TextPath(string billNumber, string kind, Guid id) =>
+        kind == MemberTextKinds.Comment ? BillTextLinks.ToComment(billNumber, id) : BillTextLinks.ToReason(billNumber, id);
 
     /// <summary>
     /// The key of a comments notice's record (design 8.23.14, no person): the argument's id (its first 80 bits, as 20 hexadecimal

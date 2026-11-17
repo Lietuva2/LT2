@@ -37,8 +37,8 @@ public sealed record MemberProfileResponse(string ProfileId, string DisplayName,
 /// <summary>
 /// A published text on a member's page (design 8.25.2): <c>Kind</c> <c>argument</c> with the <c>Side</c> it was written for,
 /// or <c>comment</c> (in the member's own voice) with <c>On</c>, the kind of text it stands under (<c>reason</c>,
-/// <c>statement</c>, <c>response</c>); its bill, when it became public, its text. The link is the bill's page with
-/// <c>#reason-{id}</c> or <c>#komentaras-{id}</c>.
+/// <c>statement</c>, <c>response</c>); its bill, when it became public, its text. The link is
+/// <c>BillTextLinks.ToReason</c> or <c>BillTextLinks.ToComment</c>, which land on it (design 8.23.6).
 /// </summary>
 public sealed record MemberTextResponse(Guid Id, string Kind, BillRefResponse Bill, string? Side, string? On, string Text, DateTimeOffset PublishedAt);
 

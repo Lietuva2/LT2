@@ -3322,6 +3322,24 @@ replies and "Sutinku" carries no text to moderate (8.23.1, 8.23.10), and each ki
   parameter naming the target and how many to show), landing on the first new comment with that target's "Aptarimas"
   rendered open, as `ResponsePaging` does for responses (8.5.6). It works without script. (Named apart from a long
   comment's "Rodyti daugiau", 8.23.3.)
+- **A link to one comment lands on it [the designer's proposal, 2026-11-17, awaiting the owner; built].** Found in a
+  browser look: a link to `#komentaras-{id}` alone led to a comment inside a closed "Aptarimas", and often to one not
+  rendered at all (beyond the first ten, or under an argument behind "show all"). Every link the site makes to a comment
+  (the member's page, 8.25.2; the follow emails, 8.25.5; the moderators' list and panel, 8.23.8) carries one address
+  parameter, `?komentaras={comment id}`, and keeps the fragment `#komentaras-{id}`, so the browser scrolls there without
+  script. The server resolves it when it renders the page (`GET /api/v1/comments/{id}/place`, public: the target, the bill
+  and the comment's place among the target's shown comments): the target is rendered even where it would wait behind
+  "show all" (an argument beyond the first two of its side) or "Rodyti daugiau" (a response beyond the first ten); its
+  "Aptarimas" is rendered open (`open` set by the server, as the paging does; the islands get the same state as a
+  parameter and never set it from code); the thread shows everything from the first comment through the linked one,
+  rounded up to the next step of ten (the 25th shows 30; `BillTextLinks.ShownThrough`), then the usual "Rodyti daugiau
+  komentarų"; the linked comment is marked (`comment--linked`, from the design tokens). A comment that is hidden, deleted,
+  merged away, unknown, on another bill, or under a target no longer shown has no place: the page renders as usual, and
+  the answer is the same 404 (`comment.not-found`) for all of them, so nothing tells a hidden comment from none. Every
+  such link is made by one helper (`BillTextLinks.ToComment`, in the contracts and the shared kernel), never by hand.
+  **An argument the same way:** `?argumentas={reason id}` with `#reason-{id}` (`BillTextLinks.ToReason`) shows that
+  argument even beyond the first two of its side and marks it (`said--linked`); it opens no discussion. The links to an
+  argument in the follow emails (a followed member's argument, the comments under one's own) use it.
 - **What bounds the page's weight.** Comments are rendered only under the targets the server renders: the arguments the
   page shows before "show all" (two per side, 8.12.1), the statements, and the responses of the current page of ten;
   under each, at most the first ten comments. At the default cap that is up to about 20 KB of comment text per target,
@@ -3567,8 +3585,11 @@ build needed decided one way; each is the smallest choice that keeps the rules a
    (`comment-hidden`, `comment-restored`). "Palikti" tells nobody (8.23.8).
 6. **Moderating a comment whose target is not shown** (hidden, waiting, a hidden record): hide, restore and "Palikti" work on
    the comment itself whatever its target's state; the comment shows again only when both are shown.
-7. **The "Moderavimas" panel** on the bill's page lists the bill's reported comments with a link to each (`#komentaras-{id}`);
-   the actions are on the comment.
+7. **The "Moderavimas" panel** on the bill's page lists the bill's reported comments with a link to each
+   (`?komentaras={id}#komentaras-{id}`, 8.23.6, 2026-11-17); the actions are on the comment.
+8. **A link to a comment or an argument (2026-11-17)** carries `?komentaras=` or `?argumentas=` (8.23.6): the page shows
+   the target, opens its "Aptarimas" through the linked comment rounded up to the next ten, and marks it; a comment not
+   shown changes nothing on the page.
 
 ### 8.24 How often a member's emails come
 
@@ -3826,7 +3847,7 @@ page is indexed and the person can be followed.
   moderator counts when it is published; a text hidden or withdrawn before sending is left out.
   [changed while building: recorded once per text in `bill_event` (kind `member`, key the argument's or the comment's
   id, under its bill; no person in it; `MemberNotices` in Notifications, its own part of the gathered email; the payload
-  says which, `what`, and links `#reason-{id}` or `#komentaras-{id}`), told by the follow job to those who followed before
+  says which, `what`, and links to it as 8.23.6 says: `?argumentas=…#reason-{id}` or `?komentaras=…#komentaras-{id}`), told by the follow job to those who followed before
   it was published and before the job saw it, nothing older than three days, nothing when the profile is no longer public
   by then; the subject and the line name the member's display name, as their page does.]
 - **Risks, and what answers them.**
@@ -4685,6 +4706,7 @@ search engine's copy outlives switching the profile off. With follower numbers b
 | Public profile: a display name to switch it on (8.25.6) | **Proposed (built so):** "Viešas profilis" needs a display name, and the name cannot be emptied while the profile is public (`profile.name-required`). Or: a page without a name, titled "Narys". | Before going live |
 | Public profile: no cache, 410 and 404 marked `noindex` (8.25.2) | **Proposed (built so):** the page is `no-cache` for everyone so switching off is at once; the 410 and 404 answers carry `X-Robots-Tag: noindex`. Or: ordinary caching. | Before going live |
 | A comment in an organisation's name when its last representative's account is deleted (8.23.7, 8.14.14) | Open, found while connecting comments and profiles: 8.23.7 says a comment written in an organisation's name stays when its writer's account is deleted (as statements do), but deleting the last representative's account closes the organisation (8.14.14), which withdraws its statements, and a withdrawn statement takes its comments with it (8.23.7). The code does both as written; since an organisation comments only under its own statement (8.23.2), the comments of the last representative go with the statements when the account is deleted, and the rule "stays" holds only while another representative remains. Either: keep it so (the closing decides); or keep a closed organisation's statements and their comments; or move the comment's rule to "stays unless its organisation is closed". | Before going live |
+| A link to a comment or an argument (8.23.6, 8.23.14 point 8) | **Proposed (built so, 2026-11-17):** `?komentaras={id}` / `?argumentas={id}` with the element's own fragment, resolved by the server: the target shown even behind "show all" or the responses' paging, its "Aptarimas" open through the linked comment rounded up to the next ten, the linked one marked; a comment not shown changes nothing (one 404 for hidden and unknown). Or: the fragment alone with a script that opens the thread (no help without script, and none for a comment not rendered). | Before going live |
 | Public profile: the party shown (8.25.9) – the texts | Built 2026-11-17 (the row above). The box's sentence (`UiText` `Party.PublicText`, version 2026-11-17), the page's line ("Palaikoma partija: …"), `Party.Text`, and the privacy notice's `Privacy.Data.Fact7.Value`, `Privacy.Data.Fact12.Value`, `Privacy.Rights.Fact3.Value`, the terms' `Terms.Publish.6` and the methodology's `Method.Privacy.Follow` go to the native reader and the lawyer's one reading with the others. | Before going live |
 
 **Risks**

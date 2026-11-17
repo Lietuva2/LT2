@@ -23,6 +23,9 @@ public static class CommentRoutes
     /// <summary><c>PUT</c> "Sutinku", <c>DELETE</c> takes it back.</summary>
     public const string Agreement = One + "/agreement";
 
+    /// <summary><c>GET</c> (public): where a shown comment stands, for a link to it (design 8.23.6).</summary>
+    public const string Place = One + "/place";
+
     /// <summary><c>GET</c> the caller's own answer about the comments on a bill (never cached).</summary>
     public const string Mine = ApiRoutes.Prefix + "/bills/{number}/comments/mine";
 
@@ -42,6 +45,8 @@ public static class CommentRoutes
         $"{ApiRoutes.Prefix}/comments/{Uri.EscapeDataString(kind)}/{targetId}" + (shown is { } n ? "?shown=" + n.ToString(System.Globalization.CultureInfo.InvariantCulture) : "");
 
     public static string OneOf(Guid id) => $"{ApiRoutes.Prefix}/comments/{id}";
+
+    public static string PlaceOf(Guid id) => OneOf(id) + "/place";
 
     public static string AgreementOf(Guid id) => OneOf(id) + "/agreement";
 
@@ -66,9 +71,16 @@ public static class CommentLimits
     /// <summary>The page's address parameter: the target's id (32 hexadecimal digits), a hyphen, how many to show.</summary>
     public const string ShowParameter = "komentarai";
 
-    /// <summary>The element id of a comment: its stable anchor (design 8.23.6).</summary>
-    public static string ElementId(Guid id) => "komentaras-" + id.ToString("N");
+    /// <summary>The element id of a comment: its stable anchor (design 8.23.6). A link to it is <see cref="BillTextLinks.ToComment"/>.</summary>
+    public static string ElementId(Guid id) => BillTextLinks.CommentElement(id);
 }
+
+/// <summary>
+/// Where a shown comment stands (design 8.23.6), for the bill's page resolving <c>?komentaras=</c>: its target's kind and id, its
+/// bill, and its position among the target's shown comments, oldest first (1-based). A comment not shown has no place
+/// (<c>comment.not-found</c>, the same for hidden and unknown ones).
+/// </summary>
+public sealed record CommentPlaceResponse(Guid CommentId, string Kind, Guid TargetId, string BillNumber, int Position);
 
 /// <summary>
 /// The name a comment is shown under (design 8.23.2). <c>person</c>: <see cref="Name"/> is the display name, or null
@@ -143,6 +155,9 @@ public interface ICommentsApi
 {
     /// <summary>Public: a target's shown comments, the first <paramref name="shown"/> (at least 10).</summary>
     Task<ApiResult<CommentThreadResponse>> GetThreadAsync(string kind, Guid targetId, int? shown = null, CancellationToken cancellationToken = default);
+
+    /// <summary>Public: where a shown comment stands, for the page a link to it lands on (design 8.23.6); not found otherwise.</summary>
+    Task<ApiResult<CommentPlaceResponse>> GetPlaceAsync(Guid commentId, CancellationToken cancellationToken = default);
 
     Task<ApiResult<MyCommentsResponse>> GetMineAsync(string number, CancellationToken cancellationToken = default);
 

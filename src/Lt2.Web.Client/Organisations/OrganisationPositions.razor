@@ -190,6 +190,9 @@
     /// <summary>"Rodyti daugiau komentarų" (design 8.23.14).</summary>
     [SupplyParameterFromQuery(Name = CommentLimits.ShowParameter)] public string? CommentsShown { get; set; }
 
+    /// <summary>A link to one comment (<c>?komentaras=</c>, design 8.23.6), resolved by the page on the server: its thread open through it.</summary>
+    [Parameter] public CommentPlaceResponse? Linked { get; set; }
+
     /// <summary>The responses' page parameter (design 8.5.6), kept in the links this part builds.</summary>
     [SupplyParameterFromQuery(Name = Lt2.Api.Contracts.Mps.MpResponseLimits.ShowParameter)] public string? ResponsesShown { get; set; }
 
@@ -211,7 +214,8 @@
     private RenderFragment Thread(StatementResponse statement) => __builder =>
     {
         <CommentThread Kind="statement" TargetId="statement.Id" Number="@Number" Thread="@Threads?.GetValueOrDefault(statement.Id)" Count="statement.Comments"
-                       Open="@(CommentPaging.Asked(CommentsShown, statement.Id) is not null)" Asked="@CommentPaging.Asked(CommentsShown, statement.Id)" PagePath="@CommentPaging.PagePath(Number, ResponsesShown)" Contact="@Contact" Moderator="Moderator" />
+                       Open="@(CommentPaging.Asked(CommentsShown, statement.Id, Linked) is not null)" Asked="@CommentPaging.Asked(CommentsShown, statement.Id, Linked)"
+                       Marked="@CommentPaging.Marked(statement.Id, Linked)" PagePath="@CommentPaging.PagePath(Number, ResponsesShown)" Contact="@Contact" Moderator="Moderator" />
     };
 
     private async Task<Dictionary<Guid, CommentThreadResponse>> ThreadsAsync()
@@ -219,7 +223,7 @@
         var threads = new Dictionary<Guid, CommentThreadResponse>();
         foreach (var item in Statements?.Items ?? [])
         {
-            if ((await CommentsApi.GetThreadAsync("statement", item.Statement.Id, CommentPaging.Asked(CommentsShown, item.Statement.Id))).Value is { } thread)
+            if ((await CommentsApi.GetThreadAsync("statement", item.Statement.Id, CommentPaging.Asked(CommentsShown, item.Statement.Id, Linked))).Value is { } thread)
             {
                 threads[item.Statement.Id] = thread;
             }

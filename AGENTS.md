@@ -100,7 +100,8 @@ src/Lt2.SharedKernel       Result type, identifiers (UUID v7), outbox, audit and
                            Europe/Vilnius zone and its days), the signed-in account (ClaimsPrincipal.UserId()), the
                            staff actor (StaffActor) and staff statements (StaffStatements), the outbound allowlist
                            (Http/: hosts from Outbound:AllowedHosts plus AddOutboundHost; redirects followed only within
-                           it), TextExcerpt (also compiled into Lt2.Web.Client); no clock of its own (TimeProvider is used)
+                           it), TextExcerpt (also compiled into Lt2.Web.Client), BillTextLinks (every link to a comment or an
+                           argument, also compiled into Lt2.Api.Contracts); no clock of its own (TimeProvider is used)
 src/Modules/               Lt2.Identity, Lt2.Notifications, Lt2.Audit, Lt2.Parliament (Seimas open-data client,
                            import, statistics); Lt2.Appeals (bills' records, positions, arguments, endorsements,
                            reports, moderation, rule-based pre-screening, flags, summaries content, descriptions written
@@ -711,6 +712,14 @@ under responses), the caller's answer `CommentState` (browser only), reports tar
 `CommentModerationView`/`CommentQueueItem`, actions also on the bill's page. The author's notice is one kind of the rhythm,
 `CommentNotices` (Notifications; outbox kind `email.comment-notice` alone, its own part of the gathered email; switch
 `comments`, the last on the follows screen). A person's name links to their public profile when they have one (8.25.4).
+A link to a comment or an argument (design 8.23.6, the designer's proposal of 2026-11-17) is made only by `BillTextLinks`
+(`ToComment`, `ToReason`; one file in SharedKernel compiled also into the contracts): `?komentaras={id}#komentaras-{id}` or
+`?argumentas={id}#reason-{id}`. `BillPage` resolves the comment once (`GET /comments/{id}/place`, public, one 404
+`comment.not-found` for hidden and unknown) and hands `Linked` to `RecordReasons`, `OrganisationPositions` and
+`BillResponses` as a parameter (so an island starts in the same state): the target is shown even behind "show all" or the
+responses' paging, its "Aptarimas" open through the linked one rounded up to the next ten (`BillTextLinks.ShownThrough`,
+`CommentPaging.Asked(…, linked)`), the comment marked `comment--linked` (an argument `said--linked`); anything not shown
+changes nothing.
 
 **Moderation.** Anything that reaches MPs has passed a person. Every action is audited and an argument's author gets the reason.
 A report button is on every bill's description and reason. A moderator can restrict an account from writing (reasons,

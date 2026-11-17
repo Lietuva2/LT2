@@ -7,6 +7,8 @@
   <ItemGroup>
     <!-- One slug for every public address (MPs' /p/, members' /nariai/), also in Lt2.SharedKernel. -->
     <Compile Include="..\Lt2.SharedKernel\AddressSlugs.cs" Link="AddressSlugs.cs" />
+    <!-- Every link to a comment or an argument on a bill's page (design 8.23.6), also in Lt2.SharedKernel. -->
+    <Compile Include="..\Lt2.SharedKernel\BillTextLinks.cs" Link="Comments\BillTextLinks.cs" />
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="FluentValidation" />

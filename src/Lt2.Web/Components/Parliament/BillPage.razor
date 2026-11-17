@@ -9,6 +9,7 @@
 @inject IMetaApi Meta
 @inject IAppealsApi Appeals
 @inject IDigestsApi Digests
+@inject Lt2.Api.Contracts.Comments.ICommentsApi Comments
 @inject Lt2.Api.Contracts.Follows.IFollowsApi Follows
 @inject Formats F
 @inject NavigationManager Navigation
@@ -229,13 +230,13 @@
                     </section>
                 }
 
-                <RecordReasons Number="@b.Number" Contact="@Contact" Moderator="_moderator" @rendermode="InteractiveWebAssembly" />
+                <RecordReasons Number="@b.Number" Contact="@Contact" Moderator="_moderator" Linked="_linked" LinkedReason="_linkedReason" @rendermode="InteractiveWebAssembly" />
 
                 @* Design 8.14.14: organisations' statements, after the arguments; never counted. *@
-                <OrganisationPositions Number="@b.Number" Contact="@Contact" Moderator="_moderator" @rendermode="InteractiveWebAssembly" />
+                <OrganisationPositions Number="@b.Number" Contact="@Contact" Moderator="_moderator" Linked="_linked" @rendermode="InteractiveWebAssembly" />
 
                 @* Design 8.5.6: MPs' responses, after the organisations' positions; server-rendered, the same for everyone. *@
-                <BillResponses Number="@b.Number" Moderator="_moderator" />
+                <BillResponses Number="@b.Number" Moderator="_moderator" Linked="_linked" />
             </div>
 
             <aside class="stack">
@@ -283,7 +284,7 @@
     else if (_record is null)
     {
         @* A finished bill nobody took part in shows the bill only, and the MPs' responses written while it was open. *@
-        <BillResponses Number="@b.Number" HideWhenEmpty="true" />
+        <BillResponses Number="@b.Number" HideWhenEmpty="true" Linked="_linked" />
     }
 
     @if (_record is null or { Status: "rejected" })
@@ -331,6 +332,22 @@
 
     [Parameter] public string Number { get; set; } = "";
 
+    /// <summary>A link to one comment (design 8.23.6): <c>?komentaras={id}</c>, made by <c>BillTextLinks.ToComment</c>.</summary>
+    [SupplyParameterFromQuery(Name = Lt2.Api.Contracts.Comments.BillTextLinks.CommentParameter)] public string? LinkedComment { get; set; }
+
+    /// <summary>A link to one argument (design 8.12.1): <c>?argumentas={id}</c>, made by <c>BillTextLinks.ToReason</c>.</summary>
+    [SupplyParameterFromQuery(Name = Lt2.Api.Contracts.Comments.BillTextLinks.ReasonParameter)] public string? LinkedArgument { get; set; }
+
+    /// <summary>
+    /// The linked comment's place, resolved once here and handed to the parts (the islands get it as a parameter, so they start
+    /// in the same state): null for none, and for a comment not shown or on another bill, whatever the reason; the page then
+    /// renders as usual and says nothing about it.
+    /// </summary>
+    private Lt2.Api.Contracts.Comments.CommentPlaceResponse? _linked;
+
+    /// <summary>The linked argument, when the address names one (the arguments' island shows it only if it is shown).</summary>
+    private Guid? _linkedReason;
+
     /// <summary>Where visitors without a session may write to the moderators (configuration, not a promise in code).</summary>
     private string? Contact => Configuration.ModeratorContact();
 
@@ -363,6 +380,16 @@
         {
             _closingVote = (await Api.GetVoteAsync(voteId)).Value;
         }
+
+        // Design 8.23.6, 8.12.1: a link to a comment or an argument lands on it.
+        if (Lt2.Api.Contracts.Comments.BillTextLinks.Parse(LinkedComment) is { } commentId
+            && (await Comments.GetPlaceAsync(commentId)).Value is { } place
+            && string.Equals(place.BillNumber, _bill.Number, StringComparison.OrdinalIgnoreCase))
+        {
+            _linked = place;
+        }
+
+        _linkedReason = Lt2.Api.Contracts.Comments.BillTextLinks.Parse(LinkedArgument);
     }
 
     /// <summary>

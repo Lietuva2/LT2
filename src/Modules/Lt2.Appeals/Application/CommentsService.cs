@@ -59,6 +59,27 @@ internal sealed class CommentsService(
         return new CommentThread(kind, targetId, bill.Bill.Number, rows.Count, bill.Open && on && target.Writable, bill.Open && target.Writable, views, cards);
     }
 
+    public async Task<Result<CommentPlace>> PlaceAsync(Guid commentId, CancellationToken cancellationToken)
+    {
+        var notFound = Error.NotFound("comment.not-found");
+        await using var db = await contexts.CreateDbContextAsync(cancellationToken);
+        if (await db.Comments.AsNoTracking().FirstOrDefaultAsync(c => c.Id == commentId, cancellationToken) is not { Status: CommentStatuses.Published } comment
+            || await TargetAsync(db, comment.TargetKind, comment.TargetId, cancellationToken) is not { } target
+            || await bills.BillAsync(db, target.BillNumber, cancellationToken) is not { } bill
+            || !CommentRules.IsShown(comment.Status, target.Shown, bill.Hidden))
+        {
+            return notFound;
+        }
+
+        // Its place among the target's shown comments, oldest first, ordered by the database exactly as the thread is.
+        var order = await db.Comments.AsNoTracking()
+            .Where(c => c.TargetKind == comment.TargetKind && c.TargetId == comment.TargetId && c.Status == CommentStatuses.Published)
+            .OrderBy(c => c.CreatedAt).ThenBy(c => c.Id)
+            .Select(c => c.Id)
+            .ToListAsync(cancellationToken);
+        return new CommentPlace(comment.Id, comment.TargetKind, comment.TargetId, bill.Bill.Number, order.IndexOf(comment.Id) + 1);
+    }
+
     public async Task<IReadOnlyDictionary<Guid, int>> CountsAsync(string kind, IReadOnlyCollection<Guid> targetIds, CancellationToken cancellationToken)
     {
         await using var db = await contexts.CreateDbContextAsync(cancellationToken);

@@ -75,7 +75,8 @@ else if (_profile is { } p)
                                     <span class="small"><span class="choice choice--@a.Side">@L["Member.ArgumentFor." + a.Side]</span> · <span class="num">@Display.Day(a.PublishedAt)</span></span>
                                 }
                                 <span class="voice">@Lt2.Web.Client.TextExcerpt.Of(a.Text).Shown@(Lt2.Web.Client.TextExcerpt.Of(a.Text).Rest is null ? "" : " …")</span>
-                                <a class="small" href="/seimas/@Uri.EscapeDataString(a.Bill.Number)#@(comment ? Lt2.Api.Contracts.Comments.CommentLimits.ElementId(a.Id) : "reason-" + a.Id)">@L["Member.ReadOnBill"]</a>
+                                @* Design 8.23.6: a link that lands on the text, the comment's "Aptarimas" open through it. *@
+                                <a class="small" href="@(comment ? Lt2.Api.Contracts.Comments.BillTextLinks.ToComment(a.Bill.Number, a.Id) : Lt2.Api.Contracts.Comments.BillTextLinks.ToReason(a.Bill.Number, a.Id))">@L["Member.ReadOnBill"]</a>
                             </li>
                         }
                     </ol>

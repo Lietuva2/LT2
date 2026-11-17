@@ -7,7 +7,7 @@
    sheet of its own; inside a sheet (Panel) it drops its own (design 8.16). *@
 <article class="@(Panel ? "stack stack--tight" : "sheet stack stack--tight")" id="queue-comment-@Item.Id.ToString("N")" aria-label="@L["Comments.Label"]">
     <div class="row">
-        <a class="tag tag--ink num" href="/seimas/@Uri.EscapeDataString(Item.Bill.Number)#@CommentLimits.ElementId(Item.Id)">@Item.Bill.Number</a>
+        <a class="tag tag--ink num" href="@BillTextLinks.ToComment(Item.Bill.Number, Item.Id)">@Item.Bill.Number</a>
         <b>@AuthorName(Item.Author)</b>
         @if (Item.Author.Voice == "organisation")
         {

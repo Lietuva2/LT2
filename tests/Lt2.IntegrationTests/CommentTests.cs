@@ -543,7 +543,7 @@ public sealed class CommentTests(DatabaseFixture database) : ApiTest(database)
             var notice = (await Database.CommentNoticesAsync(bill.ArgumentAuthorEmail)).ShouldHaveSingleItem("two comments in one run make one email");
             var line = notice.GetProperty("arguments").EnumerateArray().ShouldHaveSingleItem();
             line.GetProperty("billNumber").GetString().ShouldBe(Bill);
-            line.GetProperty("path").GetString().ShouldBe($"/seimas/{Bill}#reason-{bill.ReasonId}");
+            line.GetProperty("path").GetString().ShouldBe(Lt2.Api.Contracts.Comments.BillTextLinks.ToReason(Bill, bill.ReasonId));
             notice.GetRawText().ShouldNotContain("Slaptas komentaro tekstas");
             notice.GetRawText().ShouldNotContain("Komentuojanti Kitam");
 

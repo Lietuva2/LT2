@@ -100,10 +100,10 @@ public sealed class RhythmKindsTests(DatabaseFixture database) : ApiTest(databas
             notices.Select(n => n.GetProperty("kind").GetString()).Order(StringComparer.Ordinal)
                 .ShouldBe([MessageKinds.CommentNoticeEmail, MessageKinds.FollowMemberEmail]);
             var member = notices.Single(n => n.GetProperty("kind").GetString() == MessageKinds.FollowMemberEmail).GetProperty("payload");
-            member.GetProperty("textPath").GetString().ShouldBe($"/seimas/{Bill}#reason-{followed:D}");
+            member.GetProperty("textPath").GetString().ShouldBe(Lt2.Api.Contracts.Comments.BillTextLinks.ToReason(Bill, followed));
             member.GetProperty("memberName").GetString().ShouldBe("Sekama Autorė");
             var comment = notices.Single(n => n.GetProperty("kind").GetString() == MessageKinds.CommentNoticeEmail).GetProperty("payload");
-            comment.GetProperty("arguments").EnumerateArray().ShouldHaveSingleItem().GetProperty("path").GetString().ShouldBe($"/seimas/{Bill}#reason-{own:D}");
+            comment.GetProperty("arguments").EnumerateArray().ShouldHaveSingleItem().GetProperty("path").GetString().ShouldBe(Lt2.Api.Contracts.Comments.BillTextLinks.ToReason(Bill, own));
             HoldsNoText(gathered);
 
             await RunAtAsync(morning.AddMinutes(15));
@@ -157,7 +157,7 @@ public sealed class RhythmKindsTests(DatabaseFixture database) : ApiTest(databas
             await RunAtAsync(morning);
             var (kind, alone) = (await MailAsync(email)).ShouldHaveSingleItem();
             kind.ShouldBe(MessageKinds.FollowMemberEmail, "one thing alone keeps its own email; the hidden comment is not told");
-            alone.GetProperty("textPath").GetString().ShouldBe($"/seimas/{Bill}#reason-{followed:D}");
+            alone.GetProperty("textPath").GetString().ShouldBe(Lt2.Api.Contracts.Comments.BillTextLinks.ToReason(Bill, followed));
             HoldsNoText(alone);
         }
         finally
@@ -211,7 +211,7 @@ public sealed class RhythmKindsTests(DatabaseFixture database) : ApiTest(databas
             var (kind, notice) = (await MailAsync(authorEmail)).ShouldHaveSingleItem();
             kind.ShouldBe(MessageKinds.CommentNoticeEmail, "one thing alone: the argument once");
             var line = notice.GetProperty("arguments").EnumerateArray().ShouldHaveSingleItem();
-            line.GetProperty("path").GetString().ShouldBe($"/seimas/{Bill}#reason-{own:D}");
+            line.GetProperty("path").GetString().ShouldBe(Lt2.Api.Contracts.Comments.BillTextLinks.ToReason(Bill, own));
             line.GetProperty("day").GetString().ShouldNotBeNullOrEmpty();
         }
         finally
