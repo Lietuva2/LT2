@@ -207,7 +207,7 @@ pre-merge run found.
   fields included, and the page carries `<NeedsScript />`. `tests/Lt2.E2E/IslandsBeforeStartTests.cs` walks the pages with the
   WebAssembly runtime blocked; add a new island page there.
 - **Counted rules are pure functions with unit tests** whose names read as the rule: statistics, thresholds, summary
-  eligibility, the "at least 20" rule.
+  eligibility, the party group rule (`GroupRules`).
 - **Runtime settings** live in `config.setting`. Every change is audited. Do not hard-code a number the design calls a
   setting.
 - **Imports are repeatable.** Store every Seimas response raw, parse separately, upsert by Seimas identifiers.
@@ -264,7 +264,11 @@ code review.
 - No endpoint, page, email, log line or admin screen reveals another person's position. Administrators included.
 - Do not store per-person history of changed positions. Trends come from daily aggregate counts.
 - Logs carry no emails and no positions. IPs are hashed.
-- Group numbers (for example supporters of a party) are shown only for groups of at least 20.
+- Group numbers (the supporters of the MP's party on a side, in a summary) are shown only for groups of at least the
+  runtime setting `Digest:PartyGroupMinimum` (owner, 2026-11-17: default 10; 0 = no floor, any group of one or more; an
+  empty group never), and only when the rest of that side is none or a group as large (`GroupRules`, Appeals). The value
+  is read when a summary is made; `/metodika` ("Grupių skaičiai", `#grupes`) and the party form state it as it holds now,
+  the privacy notice points there. It is not extended to organisations, follower numbers or the analytics page's sample.
 - Sign-in has no passwords: an emailed one-time code or a passkey. A staff role works only in a session signed in
   with a staff passkey; a code session is a member session, whatever roles the account has. Politicians need a
   passkey too: speaking for an MP needs a passkey session, read from the database per request (the link is not a role in
@@ -399,8 +403,8 @@ written by hand. A visitor sent to sign in from one comes back to it (`LandingPa
   the DELETE is on `TermsExemptions.Routes`), read for the page only through `IPublicProfiles.ShownPartyAsync`
   (`MemberProfileResponse.Party`, null otherwise). Unticking, removing or changing the party and switching the profile off
   (`ProfileHandlers.SwitchOffAsync`, also on deletion and take-over) withdraw it at once; switching on again does not bring it
-  back. Never in the card, beside a text or in any list; nothing for the MP's own account (`mp.takes-no-part`); the "at least
-  20" rule and `IPartySupporters` unchanged. Audited `party.public-on|off` without the party; in the export.
+  back. Never in the card, beside a text or in any list; nothing for the MP's own account (`mp.takes-no-part`); the party
+  group rule and `IPartySupporters` unchanged. Audited `party.public-on|off` without the party; in the export.
 - Beside an argument, a comment and a "Sutinku" name, the name of a member with a public profile is a link with a card
   (`js/lt2-cards.js`; `RecordReasons` with one `<template>` per profile id from `BillRecordResponse.Cards`, `CommentThread`
   with one per person and thread from `CommentThreadResponse.Cards`); `ReasonResponse.AuthorProfileId`,

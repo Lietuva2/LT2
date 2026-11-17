@@ -170,9 +170,10 @@ public sealed record KnownBrowserResponse(Guid Id, string? Device, DateTimeOffse
 /// <summary>
 /// The party the person said they support (private, optional), and the parties to choose from; whether it is shown on the
 /// public profile (<c>Public</c>, design 8.25.9), whether the profile is public, and the box's consent text version in force.
+/// <paramref name="GroupMinimum"/> is the setting <c>Digest:PartyGroupMinimum</c> (design 8.4), which the form's text states.
 /// </summary>
 public sealed record PartySupportResponse(
-    string? Party, IReadOnlyList<string> Choices, bool Public = false, bool ProfilePublic = false, string ConsentVersion = PartyPublicLimits.ConsentVersion);
+    string? Party, IReadOnlyList<string> Choices, int GroupMinimum, bool Public = false, bool ProfilePublic = false, string ConsentVersion = PartyPublicLimits.ConsentVersion);
 
 /// <summary>
 /// Sets the party, or with <c>null</c> removes it. Giving one needs <see cref="Consent"/>: a party preference is a

@@ -54,7 +54,9 @@ public sealed record DigestMpResponse(string Slug, string Status, string FirstNa
 /// The rules that decide what MPs receive, with their current values (design 8.4: shown on the methodology page).
 /// Times are Vilnius "HH:mm" or "off"; shares are fractions. <paramref name="Sending"/> is sending as it is now (design 8.19.1:
 /// <c>off</c>, <c>approval</c>, <c>automatic</c>), <paramref name="SendingSetting"/> what the setting says, and
-/// <paramref name="ApprovalHours"/> how long a summary waits for a moderator.
+/// <paramref name="ApprovalHours"/> how long a summary waits for a moderator. <paramref name="GroupMinimum"/> is the setting
+/// <c>Digest:PartyGroupMinimum</c> (design 8.4): the smallest party group on a side whose number is shown; 0 or 1 = any group
+/// of one or more.
 /// </summary>
 public sealed record DigestRulesResponse(
     int ThresholdDefault,

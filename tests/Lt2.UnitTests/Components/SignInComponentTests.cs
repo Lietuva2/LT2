@@ -447,7 +447,7 @@ public sealed class SignInComponentTests : BunitContext
     public void The_party_box_is_offered_only_with_a_public_profile_and_says_what_it_covers_before_it_is_sent()
     {
         SignedIn(FakeMeApi.Member);
-        _me.Party = new PartySupportResponse("Reformų partija", ["Reformų partija", "Pilietinė sąjunga"]);
+        _me.Party = new PartySupportResponse("Reformų partija", ["Reformų partija", "Pilietinė sąjunga"], Lt2.SharedKernel.SettingKeys.DigestPartyGroupMinimum.Default);
         var off = Render<Hello>();
         off.FindAll("#party-public").ShouldBeEmpty("nothing to show it on while the profile is off");
         off.Find("#party-public-needs-profile").TextContent.ShouldBe(Text("Party.PublicNeedsProfile"));
@@ -466,6 +466,28 @@ public sealed class SignInComponentTests : BunitContext
         page.Find("#party-save").Click();
         page.WaitForAssertion(() => _me.PartyPublicCalls.ShouldBe([true, false]));
         _me.Party.Public.ShouldBeFalse();
+    }
+
+    /// <summary>
+    /// Design 8.4 (owner, 2026-11-17): the party form says the smallest group a summary shows as the setting holds now, and
+    /// in words when there is no floor (0 or 1).
+    /// </summary>
+    [Fact]
+    public void The_party_form_states_the_group_minimum_as_it_holds_now_and_in_words_without_a_floor()
+    {
+        SignedIn(FakeMeApi.Member);
+        var minimum = Lt2.SharedKernel.SettingKeys.DigestPartyGroupMinimum.Default;
+        _me.Party = new PartySupportResponse(null, ["Reformų partija"], minimum);
+        Render<Hello>().Find("#party-text").TextContent.ShouldBe(Text("Party.Text").Replace("{0}", Display.Number(minimum), StringComparison.Ordinal));
+
+        _me.Party = _me.Party with { GroupMinimum = 1000 };
+        Render<Hello>().Find("#party-text").TextContent.ShouldContain("bent " + Display.Number(1000) + ".");
+
+        foreach (var none in new[] { 0, 1 })
+        {
+            _me.Party = _me.Party with { GroupMinimum = none };
+            Render<Hello>().Find("#party-text").TextContent.ShouldBe(Text("Party.TextAny"), none.ToString(System.Globalization.CultureInfo.InvariantCulture));
+        }
     }
 
     /// <summary>Design 6.2 (owner, 2026-11-16): where the staff links stand, a code session on a staff account gets its staff passkey.</summary>
@@ -758,7 +780,7 @@ public sealed class SignInComponentTests : BunitContext
             Task.FromResult(ApiResult.Ok());
 
         /// <summary>The party as the server holds it (design 5.2, 8.25.9); changing or removing it stops showing it, as the server does.</summary>
-        public PartySupportResponse Party { get; set; } = new(null, []);
+        public PartySupportResponse Party { get; set; } = new(null, [], Lt2.SharedKernel.SettingKeys.DigestPartyGroupMinimum.Default);
 
         public List<bool> PartyPublicCalls { get; } = [];
 

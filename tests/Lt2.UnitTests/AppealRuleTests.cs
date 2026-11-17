@@ -278,32 +278,62 @@ public sealed class CountRuleTests
         Should.Throw<ArgumentOutOfRangeException>(() => CountRules.Publish(forTotal, forOlder, againstTotal, againstOlder));
 }
 
-/// <summary>Design 6.3 and 8.2: group numbers only for groups of at least 20 people.</summary>
+/// <summary>
+/// Design 6.3, 8.2, 8.4 (owner, 2026-11-17): group numbers only for groups of at least the setting
+/// <c>Digest:PartyGroupMinimum</c>; 0 = no floor. The rule takes the minimum, so these tests read it from the setting's
+/// default and from numbers chosen around it.
+/// </summary>
 public sealed class GroupRuleTests
 {
+    private static readonly int Default = SettingKeys.DigestPartyGroupMinimum.Default;
+
     [Fact]
-    public void A_group_of_19_is_not_shown()
+    public void A_group_one_under_the_minimum_is_not_shown()
     {
-        GroupRules.MayPublish(19).ShouldBeFalse();
-        GroupRules.Publishable(19).ShouldBeNull();
-        GroupRules.Publishable(0).ShouldBeNull();
+        GroupRules.MayPublish(Default - 1, Default).ShouldBeFalse();
+        GroupRules.Publishable(Default - 1, Default).ShouldBeNull();
+        GroupRules.Publishable(19, minimum: 20).ShouldBeNull();
+    }
+
+    [Fact]
+    public void A_group_of_exactly_the_minimum_or_more_is_shown()
+    {
+        GroupRules.MayPublish(Default, Default).ShouldBeTrue();
+        GroupRules.Publishable(Default, Default).ShouldBe(Default);
+        GroupRules.Publishable(410, Default).ShouldBe(410);
+        GroupRules.Publishable(20, minimum: 20).ShouldBe(20);
+    }
+
+    [Theory]
+    [InlineData(0)]
+    [InlineData(1)]
+    public void With_a_minimum_of_0_or_1_a_group_of_one_is_shown(int minimum)
+    {
+        GroupRules.Publishable(1, minimum).ShouldBe(1);
+        GroupRules.PublishableBeside(groupSize: 1, total: 2, minimum).ShouldBe(1, "a rest of one is no smaller than the minimum");
+        GroupRules.PublishableBeside(groupSize: 1, total: 6800, minimum).ShouldBe(1);
+    }
+
+    [Theory]
+    [InlineData(0)]
+    [InlineData(1)]
+    [InlineData(20)]
+    public void An_empty_group_is_never_shown_whatever_the_minimum(int minimum)
+    {
+        GroupRules.MayPublish(0, minimum).ShouldBeFalse();
+        GroupRules.Publishable(0, minimum).ShouldBeNull();
+        GroupRules.PublishableBeside(groupSize: 0, total: 30, minimum).ShouldBeNull();
     }
 
     [Fact]
     public void A_group_beside_a_total_is_hidden_when_the_rest_could_be_worked_out_by_subtraction()
     {
-        GroupRules.PublishableBeside(groupSize: 410, total: 6800).ShouldBe(410);
-        GroupRules.PublishableBeside(groupSize: 25, total: 25).ShouldBe(25, "nothing else on that side");
-        GroupRules.PublishableBeside(groupSize: 25, total: 30).ShouldBeNull("the other 5 would show by subtraction");
-        GroupRules.PublishableBeside(groupSize: 19, total: 500).ShouldBeNull();
-    }
-
-    [Fact]
-    public void A_group_of_20_or_more_is_shown()
-    {
-        GroupRules.MayPublish(20).ShouldBeTrue();
-        GroupRules.Publishable(20).ShouldBe(20);
-        GroupRules.Publishable(410).ShouldBe(410);
+        GroupRules.PublishableBeside(groupSize: 410, total: 6800, Default).ShouldBe(410);
+        GroupRules.PublishableBeside(groupSize: Default + 5, total: Default + 5, Default).ShouldBe(Default + 5, "nothing else on that side");
+        GroupRules.PublishableBeside(groupSize: Default + 5, total: Default + 5 + Default - 1, Default).ShouldBeNull("the rest, one under the minimum, would show by subtraction");
+        GroupRules.PublishableBeside(groupSize: Default + 5, total: Default + 5 + Default, Default).ShouldBe(Default + 5, "the rest is a group as large as the minimum");
+        GroupRules.PublishableBeside(groupSize: Default - 1, total: 500, Default).ShouldBeNull();
+        GroupRules.PublishableBeside(groupSize: 25, total: 30, minimum: 20).ShouldBeNull("the other 5 would show by subtraction");
     }
 }
 

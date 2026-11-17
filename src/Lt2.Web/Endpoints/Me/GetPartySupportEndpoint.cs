@@ -10,7 +10,8 @@ namespace Lt2.Web.Endpoints.Me;
 
 /// <summary>
 /// <c>GET /api/v1/me/party-support</c>: the caller's own party (or none), the parties to choose from, and whether it is shown on
-/// the public profile (design 8.25.9).
+/// the public profile (design 8.25.9), with the smallest party group a summary shows (<c>Digest:PartyGroupMinimum</c>, 8.4),
+/// which the form's text states.
 /// </summary>
 internal static class GetPartySupportEndpoint
 {
@@ -21,11 +22,12 @@ internal static class GetPartySupportEndpoint
             .RequireAuthorization(Policies.Member)
             .Produces<PartySupportResponse>();
 
-    private static async Task<IResult> HandleAsync(ClaimsPrincipal user, IIdentityModule identity, IMpDirectory mps, ErrorMapper errors, CancellationToken cancellationToken)
+    private static async Task<IResult> HandleAsync(ClaimsPrincipal user, IIdentityModule identity, IMpDirectory mps, ISettings settings, ErrorMapper errors, CancellationToken cancellationToken)
     {
         var result = await identity.GetPartySupportAsync(user, cancellationToken);
         return result.IsSuccess
-            ? TypedResults.Ok(Mapping.ToResponse(result.Value!, await mps.PartiesAsync(cancellationToken)))
+            ? TypedResults.Ok(Mapping.ToResponse(
+                result.Value!, await mps.PartiesAsync(cancellationToken), await settings.GetAsync(SettingKeys.DigestPartyGroupMinimum, cancellationToken)))
             : errors.ToResult(result.Error!);
     }
 }

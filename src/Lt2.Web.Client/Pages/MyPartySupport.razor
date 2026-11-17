@@ -2,14 +2,15 @@
 @inject IMeApi MeApi
 
 @* Design 5.2: the party the person supports, private and optional, with its own explicit consent; used only for group
-   numbers of at least 20 in summaries to MPs. Design 8.25.9 (owner, 2026-11-17): while the profile is public, the box
+   numbers in summaries to MPs, from the setting Digest:PartyGroupMinimum (8.4; 0 and 1 both mean any group of one or
+   more, said in words), which the text states as it holds now. Design 8.25.9 (owner, 2026-11-17): while the profile is public, the box
    "Rodyti viešame profilyje" shows it on the public page, with its own consent (party-public) said inline before it is given;
    removing or changing the party, unticking the box or switching the profile off stops showing it at once. *@
 @if (Party is { } party)
 {
     <section class="sheet stack" aria-labelledby="party-title" id="party-support">
         <h3 id="party-title">@L["Party.Title"]</h3>
-        <p>@L["Party.Text"]</p>
+        <p id="party-text">@(party.GroupMinimum <= 1 ? L["Party.TextAny"] : L.Format("Party.Text", Display.Number(party.GroupMinimum)))</p>
         <div class="field">
             <label for="party-choice">@L["Party.Label"]</label>
             <select class="input" id="party-choice" @bind="_partyChoice" disabled="@Locked">

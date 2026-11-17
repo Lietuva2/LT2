@@ -66,7 +66,7 @@
 <data name="History.Before" xml:space="preserve"><value>Buvo</value></data>
 <data name="History.After" xml:space="preserve"><value>Tapo</value></data>
 <data name="Method.Digests" xml:space="preserve"><value>Kas patektų į suvestines Seimo nariams</value></data>
-<data name="Method.Digests.Lead" xml:space="preserve"><value>Šios taisyklės nusprendžia, apie kuriuos projektus Seimo nariai sužinotų. Skaičiai – dabartinės reikšmės: daugumą jų gali keisti administratorius, ir kiekvienas pakeitimas įrašomas, o paskyrų amžius, argumentų skaičius kiekvienai pusei ir mažiausia grupė nustatyti programoje.</value></data>
+<data name="Method.Digests.Lead" xml:space="preserve"><value>Šios taisyklės nusprendžia, apie kuriuos projektus Seimo nariai sužinotų. Skaičiai – dabartinės reikšmės: daugumą jų gali keisti administratorius, ir kiekvienas pakeitimas įrašomas, o paskyrų amžius ir argumentų skaičius kiekvienai pusei nustatyti programoje.</value></data>
 <data name="Method.Digests.Threshold" xml:space="preserve"><value>Riba</value></data>
 <data name="Method.Digests.ThresholdMeaning" xml:space="preserve"><value>dalyvių skaičius (abi pusės kartu), kurį pasiekęs projektas gali patekti į suvestines Seimo nariams.</value></data>
 <data name="Method.Digests.ThresholdValue" xml:space="preserve"><value>Dabar – {0}. Šį skaičių gali keisti administratorius, o moderatorius – nustatyti projektui kitą, ne mažesnį už mažiausią ribą (dabar – {1}).</value></data>
@@ -86,7 +86,8 @@
 <data name="Method.Digests.Surge" xml:space="preserve"><value>Šuolio pastaba</value></data>
 <data name="Method.Digests.SurgeValue" xml:space="preserve"><value>kai bent {0} % per paskutines {1} valandas pateiktų pozicijų pateikė per tą laiką sukurtos paskyros ir jų yra bent {2}</value></data>
 <data name="Method.Digests.Groups" xml:space="preserve"><value>Grupių skaičiai</value></data>
-<data name="Method.Digests.GroupsValue" xml:space="preserve"><value>pvz., palaikančių Seimo nario partiją, rodomi tik kai grupėje yra bent {0} žmonių</value></data>
+<data name="Method.Digests.GroupsValue" xml:space="preserve"><value>pvz., palaikančių Seimo nario partiją, rodomi tik kai grupėje žmonių yra bent {0}</value></data>
+<data name="Method.Digests.GroupsAny" xml:space="preserve"><value>pvz., palaikančių Seimo nario partiją, rodomi, kad ir kiek žmonių grupėje</value></data>
 <data name="Method.Digests.NotSent" xml:space="preserve"><value>Kol vyksta bandymas, suvestinės sudaromos ir skelbiamos viešai, bet Seimo nariams nesiunčiamos.</value></data>
 <data name="Method.Reasons" xml:space="preserve"><value>Argumentai</value></data>
 <data name="Method.Reasons.1" xml:space="preserve"><value>Argumentai yra vieši: kiekvienas rodomas su autoriaus vardu ir puse, kurią autorius pasirinko (už ar prieš). Argumentą galima parašyti bet kuriai pusei, nepriklausomai nuo to, ko prašote patys, ir net nenurodžius, ko prašote, todėl argumentas neparodo autoriaus pozicijos. Sutikimo saugoti poziciją tam nereikia, nes rašant argumentą jokia pozicija nesaugoma. Savo argumentą autorius gali atsiimti, kol dalyvauti dėl projekto galima.</value></data>

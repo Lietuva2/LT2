@@ -84,7 +84,7 @@ internal sealed class ServerDigestsApi(
             await settings.GetAsync(SettingKeys.SurgeMinimumShare, ct),
             await settings.GetAsync(SettingKeys.SurgeMinimumAccounts, ct),
             await settings.GetAsync(SettingKeys.SurgeWindowHours, ct),
-            GroupMinimum: 20,
+            GroupMinimum: await settings.GetAsync(SettingKeys.DigestPartyGroupMinimum, ct),
             OlderThanDays: 30,
             ReasonsPerSide: 2,
             Sending: sending.Mode,

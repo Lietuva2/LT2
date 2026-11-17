@@ -224,8 +224,8 @@ Conventions:
 
 - Inside a module everything is `internal` except the module interface, its DTOs and its events.
 - A feature is a folder with its endpoint contract, validator, handler and tests: a vertical slice, not layers by type.
-- Domain rules that people will argue about (the two-thirds faction rule, participation, digest eligibility, the ≥ 20
-  rule) are pure functions with unit tests whose names read as the rule.
+- Domain rules that people will argue about (the two-thirds faction rule, participation, digest eligibility, the party
+  group rule) are pure functions with unit tests whose names read as the rule.
 - Every user-facing string goes through `IStringLocalizer`; the only language at launch is Lithuanian.
 - Code lives on `master`, which is empty today, through pull requests with merge commits; `docs` keeps the website and
   `discovery/`. **[decided]**
@@ -266,7 +266,7 @@ ASP.NET Core Identity tables (users, roles, claims, tokens, passkeys), plus:
 | `sign_in_code` | Account, hashed code, expiry, failed attempts, used time, and the known device it was issued to (empty for a code any browser may use). |
 | `known_device` | Account, hashed identifier of the browser's cookie, first and last seen. Built before registration opens (M2b). [changed while building (8.20.2): also `label`, the browser and system as the sessions list says them ("Edge, Windows"), so the person can tell the rows apart; the hash is HMAC-SHA-256 under a key of its own, the secret `device_hash_key`.] |
 | `role_activation` | Account, role, hashed one-time code, who issued it, expiry, used time. Using it marks the passkey of that session as the staff passkey. |
-| `party_support` | `user_id`, `party_id`. Private and optional; used only for group statistics of at least 20 people, and shown on the person's public profile only by their own box and consent `party-public` (8.25.9, owner 2026-11-17). |
+| `party_support` | `user_id`, `party_id`. Private and optional; used only for the summaries' party group numbers, from the size `Digest:PartyGroupMinimum` (8.4; owner 2026-11-17, default 10, 0 = no floor), and shown on the person's public profile only by their own box and consent `party-public` (8.25.9, owner 2026-11-17). |
 | `consent` | Kind, text version, given and withdrawn times. Positions need explicit consent (GDPR Art. 9). [built 2026-11-16 (8.25.1): the kind `public-profile`, given by switching "Viešas profilis" on and withdrawn by switching it off; it covers the page, its indexing, being followed and the shown follower number] |
 | `politician_link` | `user_id`, the Seimas's person number, part (the MP, or an office member), how and when verified, who added an office member, when and by whom it ended. One MP per account; one account as the MP per person (8.5.2, 8.5.3). |
 | `politician_token` | The hashed one-time token of a take-over link or of an office member's invitation, for which person, by whom, expiry, used time (8.5.2, 8.5.3). |
@@ -322,7 +322,8 @@ adresas" (https on `lrs.lt` or under it, at most 500 characters), filled in adva
 
 `config.setting`: key, `jsonb` value, who changed it and when. Holds every number an administrator may need to tune
 without a deploy: the summary rules in 8.4 (the threshold of all bills, `Digest:ThresholdDefault`, read whenever it is used, and the minimum no threshold goes below, 8.12.2; the weekly and before-vote times, the ceiling
-per MP, and the share of change that counts as "changed notably", `Digest:NotableChange`), the reasons and "Man svarbu"
+per MP, the share of change that counts as "changed notably", `Digest:NotableChange`, and the smallest party group whose
+number a summary shows, `Digest:PartyGroupMinimum`, 10, 0 = no floor, **owner 2026-11-17**), the reasons and "Man svarbu"
 marks a person may give per bill in 8.2 (`Appeals:ReasonsPerPerson`, `Appeals:EndorsementsPerPerson`, 0 = no limit,
 the default), the longest text members write for others to read (`Texts:MaxLength`, characters, 2 000; 0 = no limit but
 the technical ceiling of 20 000; **owner, 2026-11-16**): arguments (8.2), organisations' statements (8.14.3) and MPs'
@@ -520,7 +521,9 @@ Policy-based, with resource handlers where ownership matters.
 | Moderator | Review appeals and reasons, merge, hide (reported comments too, 8.23.8, proposed), correct planned dates, hold a send, approve an urgent send, restrict an account from writing and lift that. |
 | Administrator | Roles, politician verification, configuration, import and digest dashboards; every moderator action, restricting an account from writing and lifting that included. Cannot read individual positions through any screen. |
 
-No screen and no API returns another person's position. Group numbers are published only for groups of at least 20.
+No screen and no API returns another person's position. Group numbers (the supporters of the MP's party on a side, in a
+summary) are published only for groups of at least the runtime setting `Digest:PartyGroupMinimum` (8.4; **owner,
+2026-11-17**: default 10, 0 = no floor; until then a fixed 20).
 
 ### 6.4 Web hardening
 
@@ -639,6 +642,11 @@ changes what a person can do on the site; the questions that do are in section 1
   [as built] Hiding the whole record of a closed bill was possible before this decision and stays possible.
 - **Party numbers (8.2).** They stay as built: each party's number is shown when that party has at least 20 people.
   That a smaller group can sometimes be worked out by subtraction is accepted.
+  **[Changed by the owner on 2026-11-17: the 20 is the runtime setting `Digest:PartyGroupMinimum`, default 10, 0 = no
+  floor (8.4, section 12).]** [as built since 2026-11-13, which "accepted" above does not obviously match; for the owner]
+  A side's party number is also withheld when the rest of that side is a non-empty group under the same minimum, so the
+  rest cannot be read by subtraction from the side's total shown beside it (`GroupRules.PublishableBeside`). With the
+  setting at 0 or 1 that check withholds nothing.
 - **A statement still waiting when the bill closes (8.14.14).** It can no longer be published: it was not public when
   the bill closed, and what is public then is frozen. The queue still shows it, with "Palikti" and hiding only.
 - **A moderator's or administrator's actions outlive the account (6.5).** When a staff member's account is deleted,
@@ -861,7 +869,8 @@ correction makes it a moderator's text (8.12.3).
 - Pages, summaries and emails head reasons as "argumentai už / prieš" (reasons to vote for or against), never as the
   reasons of the people on that side.
 - Published numbers: both sides, always together, always with the count for accounts older than 30 days. Group numbers
-  (for example supporters of a party) only when the group has at least 20 people.
+  (the supporters of the MP's party on a side) only when the group has at least `Digest:PartyGroupMinimum` people (8.4;
+  **owner, 2026-11-17**: a runtime setting, default 10, 0 = no floor); an empty group is never shown.
 - Wording follows `AGENTS.md`: numbers are "Lietuva 2.0 naudotojai", never "the public" or "voters"; differences are
   shown neutrally.
 - What the bill is about is one description per bill, written or corrected by a moderator with a statement (8.12.3,
@@ -959,6 +968,7 @@ and factions are treated on equal terms. MPs who have not joined LT2 are include
 | Changed notably | A bill never yet in a summary, or one whose participants (both sides together) rose or fell by at least 10 % since the last summary that held it **[decided 2026-11-13]** | `Digest:NotableChange` |
 | **Before-vote summary** | 12:00 on the working day before a sitting whose agenda has an eligible bill at a voting stage, unless that week's Monday summary already covered the same sitting. | `Digest:BeforeVote` |
 | Ceiling per MP | Two summaries a week | `Digest:MaxPerWeek` |
+| Party group numbers | Shown for a side when at least 10 of its participants said they support the MP's party (and the rest of the side is none or at least as many); 0 = no floor, any group of one or more **[owner, 2026-11-17]** | `Digest:PartyGroupMinimum` |
 | Re-sending after an item slips | Only in the next regular summary; never an extra email because a date moved | – |
 
 **The threshold [rewritten on 2026-11-14 for 8.12.2].** One number for all bills, `Digest:ThresholdDefault`, read when
@@ -1011,7 +1021,12 @@ the agenda in the coming days, then the rest by participation. For each bill:
 
 - number, official title, stage, "Planuojama …" (never a countdown);
 - how many ask to vote for and how many against, with the counts for accounts older than 30 days;
-- when at least 20 participants on a side said they support the MP's party: those numbers;
+- when at least `Digest:PartyGroupMinimum` participants on a side (10 by default; 0 = any number of one or more) said
+  they support the MP's party: those numbers **[owner, 2026-11-17: a setting, was a fixed 20]**. Taking part is private:
+  nobody can see who took a side at all, and no list ties a side to a person inside the system, so a small group number
+  reveals little from within the system. The rule is a pure function (`GroupRules`), the value is read when the summary
+  is made, and the moderators' preview, the email and the stored snapshot carry what it allowed then; the public copy
+  carries no party numbers;
 - the two most endorsed reasons per side, with their "Man svarbu" counts and without their authors' names **[decided
   2026-11-13]**: the same in the email, the public copy and the stored snapshot, so a summary holds no person. A
   reason longer than about 300 characters plus 100 is shortened in the email at a word boundary, as on the page, with
@@ -1596,7 +1611,8 @@ A visitor sees a link to sign in instead.
   - **Zero [the designer's proposal, awaiting the owner].** With no followers nothing is shown rather than "Sekėjai: 0",
     so a new profile, an MP nobody has followed yet or a quiet bill does not open with a verdict. Alternative: always
     show the line.
-  - **Exact from 1.** The "at least 20" rule (8.2, 6.3) is for group numbers that can reveal a side, such as a party's
+  - **Exact from 1.** The party group rule (`Digest:PartyGroupMinimum`, 8.2, 6.3, 8.4; a fixed 20 when this was
+    written) is for group numbers that can reveal a side, such as a party's
     supporters on one side of a bill. A follower number is about the followed thing, names nobody and tells no side,
     so that rule does not reach it. (This is the one place the argument is made; 8.25.5 refers here.)
   - **Beside a bill's participants.** Taking a first side follows the bill (above), but neither number bounds the
@@ -2182,9 +2198,9 @@ confirmed organisations that a moderator has not kept out of summaries (8.14.9).
 - The bill's description. It can report an error like anyone (8.13).
 - Any moderation right.
 - Any data about people: no list of members or supporters, no count of "its" members on either side, no group
-  numbers. The rule that group numbers need at least 20 people (8.2) is **not** extended to organisations: membership
-  of a union, a religious community or a political organisation is special-category data, and the site does not
-  collect it.
+  numbers. The rule that group numbers need a minimum group (8.2, `Digest:PartyGroupMinimum`) is **not** extended to
+  organisations: membership of a union, a religious community or a political organisation is special-category data,
+  and the site does not collect it.
 
 #### 8.14.8 Several organisations on one bill
 
@@ -3886,7 +3902,7 @@ page is indexed and the person can be followed.
 - **The number of followers is shown [owner, 2026-11-16: "let's show the number of followers, why not?"; later the
   same day for everything that can be followed, 8.11.2].** On the profile page, one plain line, "Sekėjai: 12"; the
   person sees the same number everyone does and nothing more. The rule for all four kinds is in 8.11.2: exact from 1
-  (the "at least 20" rule does not reach it, and for a member the more so, since the person chose to be followed), and,
+  (the party group rule does not reach it, and for a member the more so, since the person chose to be followed), and,
   as the designer's proposals, nothing with none, on the page only and nothing sorted or ranked by it. For a member
   "on the page only" also means **[the designer's proposal, awaiting the owner]** not in the card and not beside the
   person's texts (the alternative, beside every text, would put a popularity number next to each argument, the second
@@ -3980,7 +3996,8 @@ profile with the other texts once, before going live (8.22).
 The owner asked whether the "Profilis" screen could hold a party "which you could select to show publicly" ("probably").
 What exists: `identity.party_support` (5.2), one party per person from the parties that nominated sitting MPs, set on
 "Profilis" with its own explicit consent (kind `party-support`, because a party preference is a political opinion);
-private; read only through `IPartySupporters` for the summaries' group numbers of at least 20 (6.3); the MP's own account
+private; read only through `IPartySupporters` for the summaries' group numbers of at least `Digest:PartyGroupMinimum`
+(6.3, 8.4; 20 when this was written); the MP's own account
 declares none (8.5.4). The rule:
 
 - **Which party:** the one the member already marked as supported, not a free field. One fact, one place: a free field
@@ -3993,7 +4010,8 @@ declares none (8.5.4). The rule:
 - **Gone at once:** unticking the box, removing the party or switching the profile off withdraws `party-public` and the
   page stops showing it; switching the profile on again does not bring it back by itself.
 - **The MP's own account** supports no party and shows none; its office members are ordinary members here.
-- **"At least 20":** unchanged. That rule is about counts of a group's sides; one person showing their own party is their
+- **The party group rule ("at least 20" when this was written; since 2026-11-17 the setting `Digest:PartyGroupMinimum`,
+  8.4):** unchanged by the party shown. That rule is about counts of a group's sides; one person showing their own party is their
   own publication, like an argument. The summaries' group numbers still count everyone with a party, shown or not.
 - **What else can be inferred:** with the party shown beside a person's arguments (on their page), a reader can set the
   person's stated party beside the sides their arguments were written for; nothing more than the person published. No
@@ -4183,7 +4201,8 @@ never a table, never the browser (8.22.1), never a cacheable HTTP answer.
 - **The topic filter (*sritis*)**: bills carry no subject area, in the data or the design.
 - **Party supporters against their faction**: party numbers are not frozen when a record closes, so they would mix today's
   supporters with old sides; a member supports one party, chosen from the nominating parties, not several; and parties do
-  not map to factions. It needs its own design (an aggregate made when the record closes, groups of at least 20).
+  not map to factions. It needs its own design (an aggregate made when the record closes, and its own minimum group; whether
+  `Digest:PartyGroupMinimum` of the summaries applies is part of that design).
 - **"Faction members voted on LT2 as their faction"**: an MP's own account takes no side (8.5.4).
 - **The delegated share**: stage 3.
 - **Bills rejected or withdrawn before the adoption stage**: 8.1 says such a record closes too, but the code closes a
@@ -4630,11 +4649,31 @@ Decided for comments, the email rhythm and public profiles (8.23-8.25; all three
 
 - "Add party to public profile": 8.25.9 as proposed: the supported party, by its own box "Rodyti viešame profilyje" and
   consent `party-public`, only while the profile is public; withdrawn at once with the box, the party or the profile and not
-  given back by switching the profile on again; nothing for the MP's account; the "at least 20" rule unchanged.
+  given back by switching the profile on again; nothing for the MP's account; the "at least 20" rule unchanged (made a
+  setting later the same day, below).
 - "I can now 'Man svarbu' on my own argument": an argument's author cannot mark it (8.2); a merge drops a mark that would
   land on its giver's own argument.
 - "The view is scrolled away after clicking 'Man svarbu'": a mark moves nothing on the page until it is read again, and the
   pressed button keeps the focus (8.2).
+
+**Decided by the owner on 2026-11-17: party group numbers as a setting**
+
+- "Make that setting, with 0 also possible": the smallest group of a side's participants who support the MP's party for
+  that number to be shown in a summary is the runtime setting `Digest:PartyGroupMinimum` (5.6, 6.3, 8.2, 8.4), in place of
+  the fixed 20. The owner's reason: taking part is private, nobody can see who took a side at all, and no list ties a side
+  to a person inside the system, so a small group number reveals little from within the system. 0 = no floor: any group
+  of one or more is shown (an empty group never is, so 0 and 1 act the same). Default 10, the designer's recommendation,
+  to which the owner did not object. The lawyer's one reading before launch (the table below, "Legal reading of the
+  consent texts") may set the value. Audited and on the settings screen like every setting, from 0 to 1 000; shown on
+  `/metodika` ("Grupių skaičiai") as it holds now, and stated by the party form's text; the privacy notice points to the
+  methodology page rather than naming a number. A change applies to summaries made after it; one already made keeps its
+  numbers. The texts that say it (`UiText` `Party.Text` and `Party.TextAny`, `AppealText` `Method.Digests.GroupsValue`
+  and `Method.Digests.GroupsAny`, `LegalText` `Privacy.Data.Fact7.Value` and `Privacy.Positions.2`, the settings screen's
+  `Admin.*.Digest:PartyGroupMinimum`) go to the native reader and the lawyer with the others. [For the owner and the
+  lawyer: the party support consent (`party-support`, version 2026-11-13) is given against the form's text, which states
+  the value as it holds then; a later lower value changes what that consent described.]
+- Not changed by it: the analytics page's fixed sample of 20 (8.26), organisations (8.14: no group numbers at all), the
+  follower numbers (8.11.2: exact from 1), the "Nesiųsti" statement's 20 characters (8.19.2).
 
 **Decided by the owner on 2026-11-16: the analytics page (8.26)**
 
@@ -4756,7 +4795,7 @@ search engine's copy outlives switching the profile off. With follower numbers b
 | "Apie mane" only with a public profile (8.25.1) | **Proposed:** yes, one switch and one explanation. Or: "Apie mane" shown (in a card) also for members without a page. | Before M2d |
 | "Apie mane": a personal code (8.25.3) | **Proposed:** refused, as everywhere. Or: allowed like the person's own contacts. | Before M2d |
 | Following a member: what it sends (8.25.5) | **Proposed (built so):** a line when the member publishes an argument or a comment in their own voice, never the text, by the follower's rhythm, with its own switch. Or: arguments only. | Before M2d |
-| Public profile: the party shown (8.25.9) | **Decided by the owner, 2026-11-17 ("Add party to public profile"), built:** the supported party already on "Profilis" (not a free field), shown on the public page only with its own box and consent (`party-public`), never by "Viešas profilis" alone; withdrawn at once with the box, the party or the profile; nothing for the MP's account; the "at least 20" rule unchanged. Still the designer's reading: changing the party withdraws it as removing does. | Done |
+| Public profile: the party shown (8.25.9) | **Decided by the owner, 2026-11-17 ("Add party to public profile"), built:** the supported party already on "Profilis" (not a free field), shown on the public page only with its own box and consent (`party-public`), never by "Viešas profilis" alone; withdrawn at once with the box, the party or the profile; nothing for the MP's account; the "at least 20" rule unchanged (since made the setting `Digest:PartyGroupMinimum`, the owner's decision of the same day above). Still the designer's reading: changing the party withdraws it as removing does. | Done |
 | Public profile: a display name to switch it on (8.25.6) | **Proposed (built so):** "Viešas profilis" needs a display name, and the name cannot be emptied while the profile is public (`profile.name-required`). Or: a page without a name, titled "Narys". | Before going live |
 | Public profile: no cache, 410 and 404 marked `noindex` (8.25.2) | **Proposed (built so):** the page is `no-cache` for everyone so switching off is at once; the 410 and 404 answers carry `X-Robots-Tag: noindex`. Or: ordinary caching. | Before going live |
 | A comment in an organisation's name when its last representative's account is deleted (8.23.7, 8.14.14) | Open, found while connecting comments and profiles: 8.23.7 says a comment written in an organisation's name stays when its writer's account is deleted (as statements do), but deleting the last representative's account closes the organisation (8.14.14), which withdraws its statements, and a withdrawn statement takes its comments with it (8.23.7). The code does both as written; since an organisation comments only under its own statement (8.23.2), the comments of the last representative go with the statements when the account is deleted, and the rule "stays" holds only while another representative remains. Either: keep it so (the closing decides); or keep a closed organisation's statements and their comments; or move the comment's rule to "stays unless its organisation is closed". | Before going live |
