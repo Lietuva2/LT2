@@ -376,8 +376,9 @@ a.tag:hover { text-decoration: underline; text-decoration-thickness: 1.5px; }
   .facts > dd { margin-bottom: var(--sp-2); }
 }
 
+/* The side column takes at most half the row: a long official note beside a vote wraps instead of squeezing the title. */
 .rows > li {
-  display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: var(--sp-2) var(--sp-5);
+  display: grid; grid-template-columns: minmax(0, 1fr) fit-content(50%); gap: var(--sp-2) var(--sp-5);
   padding-block: var(--sp-4); border-top: 1px solid var(--rule);
 }
 .rows > li:last-child { border-bottom: 1px solid var(--rule); }

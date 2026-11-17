@@ -1,5 +1,6 @@
 @using Lt2.Api.Contracts.Appeals
 @inherits InteractiveBase<AppealUi>
+@implements IDisposable
 @inject MyBillState Mine
 @inject Lt2.Api.Contracts.Comments.ICommentModerationApi CommentModeration
 @inject NavigationManager Navigation
@@ -10,7 +11,8 @@
    flagged, with the queue's actions. On a closed record (after the final vote, design 6.9) only the actions the rules
    leave there: hide or restore an argument, correct or remove the description, "Palikti". The state comes from the moderators' own answer, asked for once while the server
    prerenders the moderator's page (shared with the arguments' "Moderuoti" through MyBillState) and not again in the
-   browser; for anyone else the server refuses it and nothing renders. After an action the page reloads, so it shows
+   browser; for anyone else the server refuses it and nothing renders. After an action the panel reads its answer again,
+   tells the page's other islands, and the server's part of the page is read again in place (no reload), so it all shows
    the result. *@
 @if (State is { Status: "open" or "closed" } state)
 {
@@ -72,6 +74,7 @@
                 Mine.Remember(Number, known);
             }
 
+            Listen();
             return;
         }
 
@@ -81,9 +84,54 @@
             State = await Mine.ModerationAsync(Number);
             Comments = State is null ? null : (await CommentModeration.GetOnBillAsync(Number)).Value?.ToList();
         }
+
+        Listen();
     }
 
-    private void Reload(string _) => Navigation.NavigateTo(Navigation.Uri, forceLoad: true);
+    public void Dispose() => Mine.Changed -= OnChanged;
+
+    /// <summary>In the browser, for a moderator: an action on an argument elsewhere on the page shows here too.</summary>
+    private void Listen()
+    {
+        if (RendererInfo.IsInteractive && State is not null)
+        {
+            Mine.Changed += OnChanged;
+        }
+    }
+
+    private void OnChanged(BillChange change)
+    {
+        if (!change.ByModerator || !change.Concerns(Number, this))
+        {
+            return;
+        }
+
+        _ = InvokeAsync(async () =>
+        {
+            try
+            {
+                await ReadAgainAsync();
+                StateHasChanged();
+            }
+            catch (HttpRequestException)
+            {
+                // The panel stays as it was; the next action reads again.
+            }
+        });
+    }
+
+    private async Task Reload(string _)
+    {
+        Mine.Announce(Number, this, byModerator: true);
+        await ReadAgainAsync();
+        Navigation.Refresh();
+    }
+
+    private async Task ReadAgainAsync()
+    {
+        State = await Mine.ModerationAsync(Number) ?? State;
+        Comments = (await CommentModeration.GetOnBillAsync(Number)).Value?.ToList() ?? Comments;
+    }
 
     /// <summary>Waits for a moderator, carries a pre-screening flag, or has an open report.</summary>
     private static bool NeedsLook(QueueReasonResponse reason) => reason.Status == "pending" || reason.Flags.Count > 0 || reason.Reports.Count > 0;

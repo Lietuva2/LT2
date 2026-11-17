@@ -3,6 +3,7 @@
 @using Lt2.Api.Contracts.Comments
 @using Lt2.Web.Client.Comments
 @inherits InteractiveBase<AppealUi>
+@implements IDisposable
 @inject ICommentsApi CommentsApi
 @inject IAppealsApi Appeals
 @inject MyBillState State
@@ -116,7 +117,7 @@
                                 @if (_moderating == reason.Id && Moderated(reason.Id) is { } moderated)
                                 {
                                     <div class="act__panel sheet sheet--quiet moderate" id="moderation-@reason.Id">
-                                        <ModerationActions Id="reason.Id" Kind="reason" Status="@moderated.Status" RecordStatus="@moderated.RecordStatus" MergeCandidates="moderated.MergeCandidates" Comments="moderated.Comments" OnDone="Reload" OnRestricted="ReloadPage" />
+                                        <ModerationActions Id="reason.Id" Kind="reason" Status="@moderated.Status" RecordStatus="@moderated.RecordStatus" MergeCandidates="moderated.MergeCandidates" Comments="moderated.Comments" OnDone="ModeratorActedAsync" OnRestricted="ModeratorActedAsync" />
                                     </div>
                                 }
                             </div>
@@ -335,6 +336,38 @@
         {
             _moderation = await State.ModerationAsync(Number);
         }
+
+        if (RendererInfo.IsInteractive)
+        {
+            State.Changed += OnChanged;
+        }
+    }
+
+    public void Dispose() => State.Changed -= OnChanged;
+
+    /// <summary>
+    /// A change elsewhere on the page (a side taken, changed or withdrawn, which drops the marks of the old side; a moderator's
+    /// action in the panel): the arguments, the person's own answer and the moderators' one are read again in place.
+    /// </summary>
+    private void OnChanged(BillChange change)
+    {
+        if (!change.Concerns(Number, this))
+        {
+            return;
+        }
+
+        _ = InvokeAsync(async () =>
+        {
+            try
+            {
+                await ReadAgainAsync(threads: false);
+                StateHasChanged();
+            }
+            catch (HttpRequestException)
+            {
+                // The arguments shown stay; the next change reads again.
+            }
+        });
     }
 
     /// <summary>
@@ -378,9 +411,16 @@
 
     private QueueReasonResponse? Moderated(Guid reasonId) => _moderation?.Reasons.FirstOrDefault(r => r.Id == reasonId);
 
-    private void Reload(string _) => ReloadPage();
-
-    private void ReloadPage() => Navigation.NavigateTo(Navigation.Uri, forceLoad: true);
+    /// <summary>
+    /// A moderator's action on an argument: the other islands are told (the moderators' panel lists the same arguments), these
+    /// arguments are read again, and the server's part of the page is read again in place, without reloading it.
+    /// </summary>
+    private async Task ModeratorActedAsync()
+    {
+        State.Announce(Number, this, byModerator: true);
+        await ReadAgainAsync(threads: true);
+        Navigation.Refresh();
+    }
 
     /// <summary>One's own argument, known only from the never-cached "mine" answer.</summary>
     private bool IsMine(ReasonResponse reason) => Mine?.MyReasons.Any(r => r.Id == reason.Id) == true;
@@ -499,8 +539,26 @@
     private async Task ReloadAsync()
     {
         State.Forget(Number);
-        Record = StableOrder((await Appeals.GetRecordAsync(Number)).Value, Record) ?? Record;
-        Threads = await ThreadsAsync();
-        Mine = await State.MineAsync(Number) ?? Mine;
+        await ReadAgainAsync(threads: true);
+    }
+
+    /// <summary>The record, the person's own answer and, for a moderator, the moderators' one, as the shared state has them now.</summary>
+    private async Task ReadAgainAsync(bool threads)
+    {
+        Record = StableOrder(await State.RecordAsync(Number), Record) ?? Record;
+        if (threads)
+        {
+            Threads = await ThreadsAsync();
+        }
+
+        if (_signedIn)
+        {
+            Mine = await State.MineAsync(Number) ?? Mine;
+        }
+
+        if (_moderation is not null)
+        {
+            _moderation = await State.ModerationAsync(Number) ?? _moderation;
+        }
     }
 }

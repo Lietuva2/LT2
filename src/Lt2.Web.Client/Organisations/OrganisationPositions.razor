@@ -2,8 +2,10 @@
 @using Lt2.Api.Contracts.Comments
 @using Lt2.Web.Client.Comments
 @inherits InteractiveBase<AppealUi>
+@implements IDisposable
 @inject ICommentsApi CommentsApi
 @inject IOrganisationsApi Organisations
+@inject Lt2.Web.Client.Appeals.MyBillState BillState
 @inject IAppealsApi Appeals
 
 @* "Organizacijų pozicijos" on the bill's page (design 8.14.3, 8.14.14), after the MPs' responses and before the arguments
@@ -208,6 +210,46 @@
         {
             Mine = (await Organisations.GetMineOnBillAsync(Number)).Value?.ToList();
         }
+
+        if (RendererInfo.IsInteractive)
+        {
+            BillState.Changed += OnChanged;
+        }
+    }
+
+    public void Dispose() => BillState.Changed -= OnChanged;
+
+    /// <summary>A shown statement with a goal carries the count of its side, which a side taken on the page moves.</summary>
+    private bool ShowsProgress => Statements?.Items.Any(i => i.Statement.Progress is not null) == true;
+
+    /// <summary>
+    /// A moderator's action on a statement in the panel, or a side taken, changed or withdrawn while a statement shows a goal
+    /// ("Siekiame {N} dalyvių · dabar {n}", n the participants on its side), shows here without reloading the page.
+    /// </summary>
+    private void OnChanged(Lt2.Web.Client.Appeals.BillChange change)
+    {
+        if (!change.Concerns(Number, this) || (!change.ByModerator && !ShowsProgress))
+        {
+            return;
+        }
+
+        _ = InvokeAsync(async () =>
+        {
+            try
+            {
+                Statements = (await Organisations.GetOnBillAsync(Number)).Value ?? Statements;
+                if (_signedIn)
+                {
+                    Mine = (await Organisations.GetMineOnBillAsync(Number)).Value?.ToList() ?? Mine;
+                }
+
+                StateHasChanged();
+            }
+            catch (HttpRequestException)
+            {
+                // The statements shown stay; the next change reads again.
+            }
+        });
     }
 
     /// <summary>

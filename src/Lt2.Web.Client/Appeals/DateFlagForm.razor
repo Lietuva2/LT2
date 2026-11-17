@@ -1,5 +1,6 @@
 @using Lt2.Api.Contracts.Appeals
 @inherits InteractiveBase<AppealUi>
+@implements IDisposable
 @inject IAppealsApi Appeals
 @inject MyBillState State
 
@@ -83,7 +84,35 @@
         {
             Mine ??= await State.MineAsync(Number);
             Restriction ??= await State.RestrictionAsync();
+            if (RendererInfo.IsInteractive)
+            {
+                State.Changed += OnChanged;
+            }
         }
+    }
+
+    public void Dispose() => State.Changed -= OnChanged;
+
+    /// <summary>A side taken or withdrawn on the page shows or hides the form without reloading it.</summary>
+    private void OnChanged(BillChange change)
+    {
+        if (change.ByModerator || !change.Concerns(Number, this))
+        {
+            return;
+        }
+
+        _ = InvokeAsync(async () =>
+        {
+            try
+            {
+                Mine = await State.MineAsync(Number) ?? Mine;
+                StateHasChanged();
+            }
+            catch (HttpRequestException)
+            {
+                // The form stays as it was.
+            }
+        });
     }
 
     private Task SendAsync() => RunAsync(async () =>

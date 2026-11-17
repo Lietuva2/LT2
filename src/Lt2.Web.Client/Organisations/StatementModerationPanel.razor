@@ -1,12 +1,15 @@
 @using Lt2.Api.Contracts.Organisations
 @inherits InteractiveBase<AppealUi>
+@implements IDisposable
 @inject IOrganisationModerationApi Moderation
 @inject NavigationManager Navigation
+@inject Lt2.Web.Client.Appeals.MyBillState BillState
 
 @* The organisations' part of the "Moderavimas" panel on the bill's page (design 8.14.14): the bill's statements that wait,
    are flagged or reported, with the queue's actions, and the other shown statements behind a fold. Rendered only when the
    server found a moderator in a staff-passkey session, and filled only from the moderators-only answer, asked for in the
-   browser; for anyone else the server refuses it. After an action the page reloads to show the result. *@
+   browser; for anyone else the server refuses it. After an action the panel reads its statements again, the organisations'
+   part of the page is told, and the server's part of the page is read again in place (no reload). *@
 @if (Items is { Count: > 0 } items)
 {
     <section class="sheet stack stack--tight" aria-labelledby="statement-panel-title" id="statement-panel">
@@ -45,10 +48,40 @@
         if (RendererInfo.IsInteractive)
         {
             Items = (await Moderation.GetOnBillAsync(Number)).Value?.ToList();
+            BillState.Changed += OnChanged;
         }
     }
 
-    private void Reload(string _) => Navigation.NavigateTo(Navigation.Uri, forceLoad: true);
+    public void Dispose() => BillState.Changed -= OnChanged;
+
+    /// <summary>A moderator's action elsewhere on the page (hiding the whole record, for one) shows here too.</summary>
+    private void OnChanged(Lt2.Web.Client.Appeals.BillChange change)
+    {
+        if (Items is null || !change.ByModerator || !change.Concerns(Number, this))
+        {
+            return;
+        }
+
+        _ = InvokeAsync(async () =>
+        {
+            try
+            {
+                Items = (await Moderation.GetOnBillAsync(Number)).Value?.ToList() ?? Items;
+                StateHasChanged();
+            }
+            catch (HttpRequestException)
+            {
+                // The panel stays as it was; the next action reads again.
+            }
+        });
+    }
+
+    private async Task Reload(string _)
+    {
+        BillState.Announce(Number, this, byModerator: true);
+        Items = (await Moderation.GetOnBillAsync(Number)).Value?.ToList() ?? Items;
+        Navigation.Refresh();
+    }
 
     /// <summary>Waits for a moderator, carries a pre-screening flag, has an open report, or nobody has looked yet.</summary>
     private static bool NeedsLook(QueueStatementResponse s) => s.Status == "pending" || s.Flags.Count > 0 || s.Reports.Count > 0 || !s.Seen;

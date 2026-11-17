@@ -256,7 +256,14 @@ pre-merge run found.
   `<CopyLink>`; "Atkurti" is `<RestoreForm>`; a queued argument is `<QueueReasonItem>`, a queued statement
   `<StatementQueueItem>`; the positions consent before a first side is `<PositionConsentForm>`; the bill page's islands
   share the caller's answers through `MyBillState`, the front page's through `MyAgendaState` (its `Changed` event tells
-  the others after a member's action). A list whose items
+  the others after a member's action). **An action never reloads the page (owner, 2026-11-17):** on a bill's page the island
+  that acted calls `MyBillState.Announce` (`byModerator` for a moderator's action) and the others read their part again
+  (`Changed`); the counts, the threshold's progress and the share line are islands on `LiveRecordBase` (`SideFigures`,
+  `ThresholdProgress`, `ShareLine`) that take the bill's live answer; where the server's part of a page changes (a moderator's
+  action, an organisation's profile, an MP's response) the island calls `Navigation.Refresh()`, which reads the page again in
+  place and gives the islands new parameters (`FollowButton` takes its count from them again). A full load
+  (`forceLoad: true`) is only for a changed session (signing in or out, a passkey or staff session started in place by a
+  `<PasskeyStep>` without `Confirmed`, a take-over, the terms, deleting the account). A list whose items
   hold state or re-sort is keyed (`@key`), and an element id is unique on the page (a component shown twice takes an
   `IdPrefix`).
 - **Surfaces (design 8.16).** The ground carries what frames a page: title, lead, the way back, notices (`.note`), an

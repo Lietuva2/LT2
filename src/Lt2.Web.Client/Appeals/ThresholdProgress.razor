@@ -1,0 +1,19 @@
+@using System.Globalization
+@using Lt2.Api.Contracts.Appeals
+@inherits LiveRecordBase
+
+@* How far the bill is from its threshold (design 8.12.1): the ruler and "n dalyvių · riba N". The server's numbers at first;
+   after a side is taken, changed or withdrawn on the page, the bill's live numbers, without reloading the page. *@
+<div class="ruler" role="img" aria-label="@L.Format("Threshold.Aria", Display.Number(Shown.Participants), Display.Number(Shown.Value))">
+    <svg viewBox="0 0 1000 10" preserveAspectRatio="none" aria-hidden="true"><rect class="ruler__bar" x="0" y="0" height="10" width="@RulerWidth(Shown)" /></svg>
+</div>
+<p class="num"><b>@Display.Number(Shown.Participants)</b> @L.Format("Threshold.Progress", Display.Number(Shown.Value))</p>
+
+@code {
+    [Parameter, EditorRequired] public ThresholdResponse Threshold { get; set; } = default!;
+
+    private ThresholdResponse Shown => Live?.Threshold ?? Threshold;
+
+    private static string RulerWidth(ThresholdResponse t) =>
+        (t.Value <= 0 ? 1000 : Math.Min(1000.0, 1000.0 * t.Participants / t.Value)).ToString("0.#", CultureInfo.InvariantCulture);
+}

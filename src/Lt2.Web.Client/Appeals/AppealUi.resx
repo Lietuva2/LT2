@@ -981,4 +981,10 @@
   <data name="Admin.Help.Comments:PerPersonPerTarget" xml:space="preserve"><value>Kiek rodomų komentarų vienas žmogus gali turėti po vienu argumentu, pozicija ar atsakymu; 0 – neribojama. Įjungus jau parašyti nepašalinami.</value></data>
   <data name="Admin.Unit.Comments:PerPersonPerTarget" xml:space="preserve"><value>komentarai (0 – neribojama)</value></data>
   <data name="Follows.Email.comments" xml:space="preserve"><value>Kai mano argumentą pakomentuoja</value></data>
+  <data name="Sides.for" xml:space="preserve"><value>Prašo balsuoti už</value></data>
+  <data name="Sides.against" xml:space="preserve"><value>Prašo balsuoti prieš</value></data>
+  <data name="Sides.Older" xml:space="preserve"><value>iš jų {0} – paskyros senesnės nei 30 d.</value></data>
+  <data name="Threshold.Aria" xml:space="preserve"><value>{0} dalyvių iš {1}</value></data>
+  <data name="Sides.Nobody" xml:space="preserve"><value>Dėl šio projekto dar niekas nenurodė, ko prašo Seimo narių.</value></data>
+  <data name="Surge.Note" xml:space="preserve"><value>Per paskutines {0} valandas {1} % pozicijų pateikė paskyros, sukurtos per tą patį laiką. Skaičius „senesnės nei 30 d.“ jų neapima.</value></data>
 </root>
