@@ -23,15 +23,18 @@
         else
         {
             <form class="sheet sheet--quiet stack stack--tight" @onsubmit="SendAsync" novalidate>
-                <fieldset class="stack stack--tight">
+                @* The joined buttons (owner, 2026-11-17; design 8.16) with short words, the side column being narrow. *@
+                <fieldset class="switch-field stack stack--tight">
                     <legend class="label">@L["Flag.Kind"]</legend>
-                    @foreach (var kind in Kinds)
-                    {
-                        <label class="check">
-                            <input type="radio" name="flag-kind" id="flag-@kind" checked="@(_kind == kind)" @onchange="() => _kind = kind" disabled="@Locked" />
-                            <span>@L["Flag." + kind]</span>
-                        </label>
-                    }
+                    <div class="switch" id="flag-kind">
+                        @foreach (var kind in Kinds)
+                        {
+                            <label class="switch__half switch__half--plain">
+                                <input class="switch__input" type="radio" name="flag-kind" id="flag-@kind" checked="@(_kind == kind)" @onchange="() => _kind = kind" disabled="@Locked" />
+                                <span>@L["Flag.Switch." + kind]</span>
+                            </label>
+                        }
+                    </div>
                 </fieldset>
                 <div class="field @ErrorClass("date")">
                     <label for="flag-date">@L["Flag.Date"]</label>

@@ -10,7 +10,7 @@ namespace Lt2.Web.Services;
 /// The caller's own side and follow for the bills a page shows (design 8.7), composed by the host from the Appeals module
 /// (the person's own sides, one read), the Notifications module (the bills they follow, one read) and the Identity module
 /// through <see cref="IParticipants"/> (whether they gave the positions consent, so the front page's rows know whether to
-/// ask for it). Nothing about anyone else; never cached anywhere (the answer is under <c>/api</c>, which says <c>no-store</c>).
+/// ask for it, and whether it is an MP's own account, which takes no side: design 8.5.4). Nothing about anyone else; never cached anywhere (the answer is under <c>/api</c>, which says <c>no-store</c>).
 /// </summary>
 internal sealed class MyBillsReads(IAppealsModule appeals, IFollows follows, IParticipants participants)
 {
@@ -18,7 +18,8 @@ internal sealed class MyBillsReads(IAppealsModule appeals, IFollows follows, IPa
     {
         var sides = await appeals.MySidesAsync(userId, numbers, ct);
         var followed = await follows.FollowedBillNumbersAsync(userId, ct);
-        var consent = (await participants.FindAsync(userId, ct))?.HasPositionConsent == true;
+        var facts = await participants.FindAsync(userId, ct);
+        var consent = facts?.HasPositionConsent == true;
         var rows = new List<MyBillResponse>();
         foreach (var number in numbers.Select(n => n.Trim().ToUpperInvariant()).Distinct(StringComparer.Ordinal))
         {
@@ -30,7 +31,7 @@ internal sealed class MyBillsReads(IAppealsModule appeals, IFollows follows, IPa
             }
         }
 
-        return new MyBillsResponse(rows, consent);
+        return new MyBillsResponse(rows, consent, facts?.IsMpAccount == true);
     }
 }
 

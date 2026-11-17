@@ -39,6 +39,7 @@
   <data name="auth.code-invalid" xml:space="preserve"><value>Kodas netinka arba nebegalioja. Paprašykite naujo.</value></data>
   <data name="auth.required" xml:space="preserve"><value>Reikia prisijungti.</value></data>
   <data name="passkey.not-added" xml:space="preserve"><value>Prieigos rakto patikrinti nepavyko. Prie šios paskyros jis nepridėtas, net jei naršyklė ar slaptažodžių tvarkyklė jį išsaugojo; galite bandyti dar kartą.</value></data>
+  <data name="passkey.other-account" xml:space="preserve"><value>Šis prieigos raktas – kitos paskyros. Pasirinkite šios paskyros prieigos raktą.</value></data>
   <data name="passkey.invalid" xml:space="preserve"><value>Prieigos rakto patikrinti nepavyko.</value></data>
   <data name="session.not-found" xml:space="preserve"><value>Tokios sesijos nėra.</value></data>
   <data name="known-browser.not-found" xml:space="preserve"><value>Tokios žinomos naršyklės nėra.</value></data>
@@ -159,7 +160,7 @@
 <data name="mp.not-mp" xml:space="preserve"><value>Tai gali tik Seimo nario paskyra.</value></data>
 <data name="mp.office-full" xml:space="preserve"><value>Biure jau yra penki nariai.</value></data>
 <data name="mp.office-member-not-found" xml:space="preserve"><value>Tokio biuro nario nėra.</value></data>
-<data name="mp.passkey-required" xml:space="preserve"><value>Prisijunkite prieigos raktu: prisijungus kodu galima tik skaityti.</value></data>
+<data name="mp.passkey-required" xml:space="preserve"><value>Šiam veiksmui reikia prisijungimo prieigos raktu.</value></data>
 <data name="mp.takes-no-part" xml:space="preserve"><value>Seimo nario paskyra nedalyvauja kaip dalyvis: Seimo narys atsako atsakymu.</value></data>
   <data name="response.stance-invalid" xml:space="preserve"><value>Pasirinkite: balsuosite už, prieš ar dar neapsisprendėte.</value></data>
   <data name="response.empty" xml:space="preserve"><value>Parašykite atsakymą.</value></data>

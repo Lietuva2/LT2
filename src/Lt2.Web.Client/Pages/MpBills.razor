@@ -47,7 +47,7 @@ else
                 {
                     <li id="mp-bill-@b.Number" @key="b.Number">
                         <div class="rows__main">
-                            <span><a class="num" href="/seimas/@Uri.EscapeDataString(b.Number)">@b.Number</a> · @b.Title</span>
+                            <a href="/seimas/@Uri.EscapeDataString(b.Number)"><span class="num">@b.Number</span> · @b.Title</a>
                             @if (b.Planned is { } plan)
                             {
                                 <span class="row small">

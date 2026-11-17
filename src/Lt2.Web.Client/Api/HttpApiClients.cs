@@ -14,8 +14,8 @@ internal sealed class HttpAuthApi(ApiHttp http) : IAuthApi
     public Task<ApiResult> RequestCodeAsync(RequestCodeRequest request, CancellationToken cancellationToken = default) =>
         http.SendAsync(HttpMethod.Post, ApiRoutes.Auth.Code, request, cancellationToken);
 
-    public Task<ApiResult> SignInAsync(SignInRequest request, CancellationToken cancellationToken = default) =>
-        http.SendAsync(HttpMethod.Post, ApiRoutes.Auth.SignIn, request, cancellationToken);
+    public Task<ApiResult<SignInResponse>> SignInAsync(SignInRequest request, CancellationToken cancellationToken = default) =>
+        http.SendAsync<SignInResponse>(HttpMethod.Post, ApiRoutes.Auth.SignIn, request, cancellationToken);
 
     public Task<ApiResult> SignOutAsync(CancellationToken cancellationToken = default) =>
         http.SendAsync(HttpMethod.Post, ApiRoutes.Auth.SignOut, null, cancellationToken);
@@ -29,8 +29,8 @@ internal sealed class HttpAuthApi(ApiHttp http) : IAuthApi
     public Task<ApiResult<string>> GetPasskeyRequestOptionsAsync(CancellationToken cancellationToken = default) =>
         http.SendForJsonTextAsync(HttpMethod.Post, ApiRoutes.Auth.PasskeyRequestOptions, cancellationToken);
 
-    public Task<ApiResult> SignInWithPasskeyAsync(PasskeyCredentialRequest request, CancellationToken cancellationToken = default) =>
-        http.SendAsync(HttpMethod.Post, ApiRoutes.Auth.PasskeySignIn, request, cancellationToken);
+    public Task<ApiResult<SignInResponse>> SignInWithPasskeyAsync(PasskeyCredentialRequest request, CancellationToken cancellationToken = default) =>
+        http.SendAsync<SignInResponse>(HttpMethod.Post, ApiRoutes.Auth.PasskeySignIn, request, cancellationToken);
 }
 
 internal sealed class HttpMeApi(ApiHttp http) : IMeApi
@@ -64,6 +64,9 @@ internal sealed class HttpMeApi(ApiHttp http) : IMeApi
 
     public Task<ApiResult> StartStaffSessionAsync(PasskeyCredentialRequest request, CancellationToken cancellationToken = default) =>
         http.SendAsync(HttpMethod.Post, ApiRoutes.Me.StaffSession, request, cancellationToken);
+
+    public Task<ApiResult> StartPasskeySessionAsync(PasskeyCredentialRequest request, CancellationToken cancellationToken = default) =>
+        http.SendAsync(HttpMethod.Post, ApiRoutes.Me.PasskeySession, request, cancellationToken);
 
     public Task<ApiResult> GivePositionConsentAsync(PositionConsentRequest request, CancellationToken cancellationToken = default) =>
         http.SendAsync(HttpMethod.Put, ApiRoutes.Me.PositionConsent, request, cancellationToken);

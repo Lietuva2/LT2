@@ -18,10 +18,11 @@ namespace Lt2.SharedKernel;
 public sealed record ParticipantFacts(Guid UserId, string? DisplayName, string Email, DateTimeOffset MemberSince, bool HasPositionConsent, bool IsMpAccount = false);
 
 /// <summary>
-/// Design 8.5.4 <b>[the designer's proposal, awaiting the owner]</b>: the MP's own linked account takes no part as a
+/// Design 8.5.4 <b>[decided by the owner, 2026-11-17]</b>: the MP's own linked account takes no part as a
 /// participant (no side, no argument, no "Man svarbu", no party-support declaration, no organisation); the MP speaks through
 /// the response. Office members are not restricted. This is the one place the rule is said: every action that checks its
-/// participant refuses through <see cref="Refusal"/>, so the owner's decision changes it here.
+/// participant refuses through <see cref="Refusal"/>. The islands do not show the forms it would refuse (design 8.5.4);
+/// this refusal stays as the safety net.
 /// </summary>
 public static class MpAccounts
 {

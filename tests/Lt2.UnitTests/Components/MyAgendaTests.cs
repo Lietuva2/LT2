@@ -103,6 +103,20 @@ public sealed class MyAgendaTests : BunitContext
         _appeals.Calls.ShouldBeEmpty();
     }
 
+    /// <summary>Design 8.5.4 (owner, 2026-11-17): the MP's own account takes no side; its rows keep the numbers only.</summary>
+    [Fact]
+    public void The_mps_own_account_gets_no_sides_in_the_rows()
+    {
+        SetRendererInfo(new RendererInfo("WebAssembly", isInteractive: true));
+        _bills.On("GetAsync", ApiResult<MyBillsResponse>.Ok(new MyBillsResponse([], false, MpAccount: true)));
+
+        var side = Side(Other, "2026-11-19-XVP-0618");
+
+        side.FindAll(".tl-ask").ShouldBeEmpty();
+        side.FindAll("button").ShouldBeEmpty();
+        side.Find("#home-nobody-2026-11-19-XVP-0618").TextContent.ShouldBe(Text("Agenda.Nobody"), "the numbers stay");
+    }
+
     [Fact]
     public void Each_side_button_names_the_whole_request_with_the_bills_number()
     {

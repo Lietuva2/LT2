@@ -18,7 +18,10 @@
   <data name="SignIn.PasskeyHint" xml:space="preserve"><value>Piršto atspaudu, veidu ar įrenginio PIN kodu – be kodo el. paštu.</value></data>
   <data name="SignIn.NoAccount" xml:space="preserve"><value>Neturite paskyros?</value></data>
   <data name="SignIn.ToRegister" xml:space="preserve"><value>Registruokitės su kvietimo kodu.</value></data>
-  <data name="SignIn.ToRegisterByOffice" xml:space="preserve"><value>Užsiregistruokite: kvietimas į biurą tinka ir registracijai.</value></data>
+  <data name="SignIn.OtherAccount" xml:space="preserve"><value>Prisijungėte kaip kitas narys.</value></data>
+<data name="SignIn.OtherAccountNamed" xml:space="preserve"><value>Prisijungėte kaip kitas narys: {0}.</value></data>
+<data name="SignIn.Continue" xml:space="preserve"><value>Tęsti</value></data>
+<data name="SignIn.ToRegisterByOffice" xml:space="preserve"><value>Užsiregistruokite: kvietimas į biurą tinka ir registracijai.</value></data>
   <data name="Register.Label" xml:space="preserve"><value>Registracija</value></data>
   <data name="Register.Title" xml:space="preserve"><value>Nauja paskyra</value></data>
   <data name="MyInvitation.Title" xml:space="preserve"><value>Jūsų kvietimo kodas</value></data>
@@ -63,7 +66,9 @@
   <data name="Complete.SignOut" xml:space="preserve"><value>Atsijungti</value></data>
   <data name="Code.Resent" xml:space="preserve"><value>Naujas kodas išsiųstas.</value></data>
   <data name="Passkey.Unsupported" xml:space="preserve"><value>Ši naršyklė nepalaiko prieigos raktų.</value></data>
-  <data name="Passkey.Cancelled" xml:space="preserve"><value>Prieigos rakto naudojimas atšauktas arba nepavyko.</value></data>
+  <data name="PasskeyStep.Text" xml:space="preserve"><value>Šiam veiksmui reikia prisijungimo prieigos raktu.</value></data>
+<data name="PasskeyStep.Confirm" xml:space="preserve"><value>Patvirtinti prieigos raktu</value></data>
+<data name="Passkey.Cancelled" xml:space="preserve"><value>Prieigos rakto naudojimas atšauktas arba nepavyko.</value></data>
   <data name="Error.Generic" xml:space="preserve"><value>Nepavyko. Bandykite dar kartą.</value></data>
   <data name="Error.Network" xml:space="preserve"><value>Nepavyko susisiekti su serveriu. Patikrinkite ryšį ir bandykite dar kartą.</value></data>
   <data name="Loading" xml:space="preserve"><value>Įkeliama…</value></data>
@@ -140,7 +145,6 @@
   <data name="MpLine.Offer" xml:space="preserve"><value>Seimo narys: {0}.</value></data>
   <data name="MpLine.Manage" xml:space="preserve"><value>Tvarkyti</value></data>
 <data name="Mp.Bills" xml:space="preserve"><value>Projektai, dėl kurių į jus kreipiamasi</value></data>
-<data name="Mp.PasskeyNeeded" xml:space="preserve"><value>Prisijunkite prieigos raktu: prisijungus kodu galima tik skaityti.</value></data>
 <data name="Mp.Office.Title" xml:space="preserve"><value>Biuras</value></data>
 <data name="Mp.Office.Lead" xml:space="preserve"><value>Biuro nariai rašo Seimo nario vardu. Kas jie, niekam nerodoma.</value></data>
 <data name="Mp.Office.None" xml:space="preserve"><value>Biuro narių nėra.</value></data>
@@ -198,7 +202,6 @@
 <data name="MpOffice.ToAccount" xml:space="preserve"><value>Į paskyrą</value></data>
   <data name="Mp.Mail.Title" xml:space="preserve"><value>Suvestinės el. paštu</value></data>
   <data name="Mp.Mail.Lead" xml:space="preserve"><value>Kaip dažnai Seimo narys gauna Lietuva 2.0 suvestines:</value></data>
-  <data name="Mp.Mail.PasskeyNeeded" xml:space="preserve"><value>Suvestinių dažnumą galima keisti prisijungus prieigos raktu.</value></data>
   <data name="Mp.Mail.Frequency.default" xml:space="preserve"><value>Kas savaitę ir prieš balsavimus</value></data>
   <data name="Mp.Mail.Frequency.weekly" xml:space="preserve"><value>Tik kas savaitę</value></data>
   <data name="Mp.Mail.Frequency.before-vote" xml:space="preserve"><value>Tik prieš balsavimus</value></data>
@@ -227,7 +230,6 @@
   <data name="StaffKey.Title" xml:space="preserve"><value>Prisijungti darbuotojo prieigos raktu</value></data>
   <data name="StaffKey.Text" xml:space="preserve"><value>Šioje sesijoje prisijungėte ne darbuotojo prieigos raktu, todėl darbuotojo darbai joje neveikia. Patvirtinkite darbuotojo prieigos raktu – atsijungti nereikia.</value></data>
   <data name="StaffKey.Submit" xml:space="preserve"><value>Patvirtinti prieigos raktu</value></data>
-  <data name="Data.StaffKeyLink" xml:space="preserve"><value>Prisijungti darbuotojo prieigos raktu</value></data>
   <data name="Name.Title" xml:space="preserve"><value>Vardas</value></data>
   <data name="Name.Hint" xml:space="preserve"><value>Šis vardas viešai rodomas prie jūsų argumentų, taip pat ir anksčiau parašytų. Ne daugiau kaip 60 ženklų. Palikus tuščią, rodoma „Lietuva 2.0 naudotojas“.</value></data>
   <data name="Name.Save" xml:space="preserve"><value>Išsaugoti vardą</value></data>

@@ -6,6 +6,7 @@
 @inject ICommentsApi CommentsApi
 @inject IAppealsApi Appeals
 @inject MyBillState State
+@inject MyAccountState Account
 @inject NavigationManager Navigation
 
 @* The arguments of both sides (design 8.1, 8.2, design/ui/kreipimasis.html "Kodėl"): "Man svarbu" on one's own side, a
@@ -16,7 +17,8 @@
    comes from the moderators' own answer, asked for only once the island runs in the browser (the panel beside it hands
    over its own, MyBillState), and for anyone else the server refuses it, so nothing of it renders. Each argument is keyed by its id, and after the person's own action the
    shown order is kept (owner, 2026-11-17: a mark moves nothing on the page), so an open form stays with its own argument
-   and the pressed button keeps its place and its focus. *@
+   and the pressed button keeps its place and its focus. The MP's own account takes no part (design 8.5.4, owner 2026-11-17):
+   once the island runs it gets neither "Man svarbu" (the number stays, as a visitor reads it) nor writing an argument. *@
 <section class="sheet stack" aria-labelledby="h-why" id="reasons">
     <h2 id="h-why">@L["Reasons.Title"]</h2>
     @if (Record is { } record)
@@ -56,7 +58,11 @@
                             </div>
                             <LongText Text="@reason.Text" BubbleClass="bubble bubble--people voice" Id="@($"reason-more-{reason.Id}")" />
                             <div class="act" id="said-actions-@reason.Id">
-                                @if (_signedIn)
+                                @if (_mpAccount)
+                                {
+                                    <span class="mark act__item num" id="mark-@reason.Id"><Icon Name="heart" /><span>@L.Format("Reasons.Endorse", Display.Number(reason.Endorsements))</span></span>
+                                }
+                                else if (_signedIn)
                                 {
                                     var endorsed = Mine?.Endorsed.Contains(reason.Id) == true;
                                     <button class="mark act__item num" type="button" id="mark-@reason.Id" aria-pressed="@(endorsed ? "true" : "false")"
@@ -136,7 +142,7 @@
             <WritingRestricted Restriction="restriction" />
         }
 
-        @if (_signedIn && Mine is { } mine)
+        @if (_signedIn && !_mpAccount && Mine is { } mine)
         {
             // Counters only while a limit is set (design 8.2: none by default, so usually nothing but the side note).
             var marks = mine.Side is null ? L["Reasons.NeedSide"].Value : mine.EndorsementsLeft is { } e ? L.Format("Reasons.EndorsementsLeft", Display.Number(e)) : null;
@@ -214,6 +220,7 @@
     /// <summary>About this many characters of "Apie mane" in a card (design 8.25.4: "the first lines").</summary>
     private const int CardShown = 200;
     private bool _signedIn;
+    private bool _mpAccount;
     private bool _showAll;
     private bool _writing;
     private string _text = "";
@@ -302,7 +309,7 @@
 
 
     /// <summary>An argument may be written for either side, with or without a side of one's own (design 8.2).</summary>
-    private bool CanWrite => _signedIn && Record?.Status == "open" && Restriction is not { Restricted: true } && Mine is { } mine && mine.ReasonsLeft is null or > 0;
+    private bool CanWrite => _signedIn && !_mpAccount && Record?.Status == "open" && Restriction is not { Restricted: true } && Mine is { } mine && mine.ReasonsLeft is null or > 0;
 
     protected override async Task OnInitializedAsync()
     {
@@ -318,6 +325,7 @@
         {
             Mine ??= await State.MineAsync(Number);
             Restriction ??= await State.RestrictionAsync();
+            _mpAccount = await Account.IsMpAccountAsync(RendererInfo.IsInteractive);
         }
 
         // Only for a moderator (the page says so; nobody else asks), and only in the browser: a "Moderuoti" opened before

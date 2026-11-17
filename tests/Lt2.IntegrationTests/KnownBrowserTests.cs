@@ -131,12 +131,12 @@ public sealed class KnownBrowserTests(DatabaseFixture database) : ApiTest(databa
 
         using (var signedIn = await SignInAsync(usual, email, code))
         {
-            signedIn.StatusCode.ShouldBe(HttpStatusCode.NoContent, await signedIn.Content.ReadAsStringAsync());
+            signedIn.StatusCode.ShouldBe(HttpStatusCode.OK, await signedIn.Content.ReadAsStringAsync());
         }
 
         // A code any browser may use still works anywhere, the known browser included (design 6.2).
         using var phone = NewBrowser();
-        (await SignInAsync(phone, email, strangers)).StatusCode.ShouldBe(HttpStatusCode.NoContent);
+        (await SignInAsync(phone, email, strangers)).StatusCode.ShouldBe(HttpStatusCode.OK);
     }
 
     [Fact]
@@ -259,7 +259,7 @@ public sealed class KnownBrowserTests(DatabaseFixture database) : ApiTest(databa
         // The pending account's sign-in proves the address but makes no known browser (design 8.20.2: at the end of registration).
         using (var signedIn = await SignInAsync(browser, email, code))
         {
-            signedIn.StatusCode.ShouldBe(HttpStatusCode.NoContent);
+            signedIn.StatusCode.ShouldBe(HttpStatusCode.OK);
             signedIn.Headers.GetValues("Set-Cookie").ShouldNotContain(c => c.StartsWith(DeviceCookie + "=", StringComparison.Ordinal));
         }
 
@@ -299,7 +299,7 @@ public sealed class KnownBrowserTests(DatabaseFixture database) : ApiTest(databa
         await RequestCodeAsync(browser, email);
         using (var again = await SignInAsync(browser, email, (await Factory.LatestCodeAsync(email))!))
         {
-            again.StatusCode.ShouldBe(HttpStatusCode.NoContent);
+            again.StatusCode.ShouldBe(HttpStatusCode.OK);
             again.Headers.GetValues("Set-Cookie").Single(c => c.StartsWith(DeviceCookie + "=", StringComparison.Ordinal)).ShouldStartWith(DeviceCookie + "=" + value + ";");
         }
 

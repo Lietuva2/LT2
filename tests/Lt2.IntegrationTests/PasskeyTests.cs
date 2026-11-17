@@ -48,7 +48,7 @@ public sealed class PasskeyTests(DatabaseFixture database) : ApiTest(database)
         var requestJson = await request.Content.ReadAsStringAsync();
         using (var signIn = await other.PostAsync(ApiRoutes.Auth.PasskeySignIn, new PasskeyCredentialRequest { Credential = authenticator.Get(requestJson) }))
         {
-            signIn.StatusCode.ShouldBe(HttpStatusCode.NoContent, await signIn.Content.ReadAsStringAsync());
+            signIn.StatusCode.ShouldBe(HttpStatusCode.OK, await signIn.Content.ReadAsStringAsync());
             signIn.Headers.GetValues("Set-Cookie").ShouldContain(c => c.StartsWith("__Host-lt2=", StringComparison.Ordinal));
         }
 

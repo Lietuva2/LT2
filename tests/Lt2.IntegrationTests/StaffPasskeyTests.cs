@@ -53,7 +53,7 @@ public sealed class StaffPasskeyTests(DatabaseFixture database) : ApiTest(databa
         }
 
         using var attackerSession = NewBrowser();
-        (await attackerSession.SignInWithPasskeyAsync(attackerKey)).StatusCode.ShouldBe(HttpStatusCode.NoContent);
+        (await attackerSession.SignInWithPasskeyAsync(attackerKey)).StatusCode.ShouldBe(HttpStatusCode.OK);
         using (var settings = await attackerSession.Client.GetAsync(ApiRoutes.Admin.Settings))
         {
             await settings.ShouldBeProblemAsync(HttpStatusCode.Forbidden, "forbidden");
@@ -68,7 +68,7 @@ public sealed class StaffPasskeyTests(DatabaseFixture database) : ApiTest(databa
         using var personKey = new SoftwareAuthenticator();
         (await person.AddPasskeyAsync(personKey)).StatusCode.ShouldBe(HttpStatusCode.NoContent);
         using var staff = NewBrowser();
-        (await staff.SignInWithPasskeyAsync(personKey)).StatusCode.ShouldBe(HttpStatusCode.NoContent);
+        (await staff.SignInWithPasskeyAsync(personKey)).StatusCode.ShouldBe(HttpStatusCode.OK);
         using (var activation = await staff.ActivateRoleAsync(code.ToLowerInvariant()))
         {
             activation.StatusCode.ShouldBe(HttpStatusCode.NoContent, await activation.Content.ReadAsStringAsync());
@@ -98,7 +98,7 @@ public sealed class StaffPasskeyTests(DatabaseFixture database) : ApiTest(databa
         (await person.AddPasskeyAsync(key)).StatusCode.ShouldBe(HttpStatusCode.NoContent);
         var code = await Database.GrantFromServerAsync(email, "moderator");
         using var session = NewBrowser();
-        (await session.SignInWithPasskeyAsync(key)).StatusCode.ShouldBe(HttpStatusCode.NoContent);
+        (await session.SignInWithPasskeyAsync(key)).StatusCode.ShouldBe(HttpStatusCode.OK);
 
         (await session.ActivateRoleAsync(code)).StatusCode.ShouldBe(HttpStatusCode.NoContent);
         using var second = await session.ActivateRoleAsync(code);
@@ -123,7 +123,7 @@ public sealed class StaffPasskeyTests(DatabaseFixture database) : ApiTest(databa
             ("e", email));
 
         using var session = NewBrowser();
-        (await session.SignInWithPasskeyAsync(key)).StatusCode.ShouldBe(HttpStatusCode.NoContent);
+        (await session.SignInWithPasskeyAsync(key)).StatusCode.ShouldBe(HttpStatusCode.OK);
         using var late = await session.ActivateRoleAsync(code);
 
         await late.ShouldBeProblemAsync(HttpStatusCode.BadRequest, "role-activation.invalid");
@@ -153,7 +153,7 @@ public sealed class StaffPasskeyTests(DatabaseFixture database) : ApiTest(databa
         var first = await Database.GrantFromServerAsync(email, "administrator");
         var second = await Database.GrantFromServerAsync(email, "administrator");
         using var session = NewBrowser();
-        (await session.SignInWithPasskeyAsync(key)).StatusCode.ShouldBe(HttpStatusCode.NoContent);
+        (await session.SignInWithPasskeyAsync(key)).StatusCode.ShouldBe(HttpStatusCode.OK);
 
         await (await session.ActivateRoleAsync(first)).ShouldBeProblemAsync(HttpStatusCode.BadRequest, "role-activation.invalid");
         (await session.ActivateRoleAsync(second)).StatusCode.ShouldBe(HttpStatusCode.NoContent);
@@ -189,7 +189,7 @@ public sealed class StaffPasskeyTests(DatabaseFixture database) : ApiTest(databa
 
         // The new passkey signs in, but it is not the staff passkey: a member session that cannot confirm either.
         using var other = NewBrowser();
-        (await other.SignInWithPasskeyAsync(extra)).StatusCode.ShouldBe(HttpStatusCode.NoContent);
+        (await other.SignInWithPasskeyAsync(extra)).StatusCode.ShouldBe(HttpStatusCode.OK);
         (await other.Client.GetAsync(ApiRoutes.Admin.Settings)).StatusCode.ShouldBe(HttpStatusCode.Forbidden);
         await (await other.ConfirmPasskeyAsync(extra)).ShouldBeProblemAsync(HttpStatusCode.Forbidden, "passkey.staff-required");
     }
@@ -314,7 +314,7 @@ public sealed class StaffPasskeyTests(DatabaseFixture database) : ApiTest(databa
         await SignInFromMailboxAsync(codeSession, target.Email);
         (await codeSession.AddPasskeyAsync(newKey)).StatusCode.ShouldBe(HttpStatusCode.NoContent);
         using var staff = NewBrowser();
-        (await staff.SignInWithPasskeyAsync(newKey)).StatusCode.ShouldBe(HttpStatusCode.NoContent);
+        (await staff.SignInWithPasskeyAsync(newKey)).StatusCode.ShouldBe(HttpStatusCode.OK);
         (await staff.ActivateRoleAsync(code)).StatusCode.ShouldBe(HttpStatusCode.NoContent);
         (await staff.Client.GetAsync(ApiRoutes.Admin.Settings)).StatusCode.ShouldBe(HttpStatusCode.OK);
     }
@@ -325,7 +325,7 @@ public sealed class StaffPasskeyTests(DatabaseFixture database) : ApiTest(databa
         using var admin = await StaffMembers.ActiveAsync(Factory, Database, "administrator");
         using var target = await StaffMembers.ActiveAsync(Factory, Database, "moderator");
         using var secondDevice = NewBrowser();
-        (await secondDevice.SignInWithPasskeyAsync(target.Authenticator)).StatusCode.ShouldBe(HttpStatusCode.NoContent);
+        (await secondDevice.SignInWithPasskeyAsync(target.Authenticator)).StatusCode.ShouldBe(HttpStatusCode.OK);
         using var codeSession = NewBrowser();
         await SignInFromMailboxAsync(codeSession, target.Email);
 
@@ -390,7 +390,7 @@ public sealed class StaffPasskeyTests(DatabaseFixture database) : ApiTest(databa
         using var key = new SoftwareAuthenticator();
         (await person.AddPasskeyAsync(key)).StatusCode.ShouldBe(HttpStatusCode.NoContent);
         using var session = NewBrowser();
-        (await session.SignInWithPasskeyAsync(key)).StatusCode.ShouldBe(HttpStatusCode.NoContent);
+        (await session.SignInWithPasskeyAsync(key)).StatusCode.ShouldBe(HttpStatusCode.OK);
         (await session.ActivateRoleAsync(code)).StatusCode.ShouldBe(HttpStatusCode.NoContent, "the printed code works");
     }
 
@@ -502,7 +502,7 @@ public sealed class StaffPasskeyTests(DatabaseFixture database) : ApiTest(databa
 
         // A session signed in with that other passkey is not a staff session either; the staff passkey makes it one.
         using var otherKey = NewBrowser();
-        (await otherKey.SignInWithPasskeyAsync(extra)).StatusCode.ShouldBe(HttpStatusCode.NoContent);
+        (await otherKey.SignInWithPasskeyAsync(extra)).StatusCode.ShouldBe(HttpStatusCode.OK);
         (await MeAsync(otherKey)).ActiveStaffRoles.ShouldBeEmpty();
         (await otherKey.StartStaffSessionAsync(admin.Authenticator)).StatusCode.ShouldBe(HttpStatusCode.NoContent);
         (await MeAsync(otherKey)).ActiveStaffRoles.ShouldBe(["administrator"]);

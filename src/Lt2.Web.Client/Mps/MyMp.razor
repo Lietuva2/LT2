@@ -8,7 +8,7 @@
    adresu", "Perimti profilį") until it is taken over, then the link: which MP, the office (the MP's account only), giving
    the profile up or leaving the office. Asked only once the island runs in the browser, never while the server prerenders,
    so the page's HTML holds nothing about it (design 8.5.4). Speaking for the MP needs a passkey session: signed in by a code
-   the controls stay off and say so. *@
+   the controls stay off and "Patvirtinti prieigos raktu" (PasskeyStep, owner 2026-11-17) makes the session one in place. *@
 @if (Offer is { } offer)
 {
     <section class="sheet stack" aria-labelledby="mp-title" id="mp-offer">
@@ -37,7 +37,8 @@ else if (Link is { } link)
         <p><a href="@Lt2.Api.Contracts.Mps.MpResponseRoutes.BillsPage" id="mp-bills-link">@L["Mp.Bills"]</a></p>
         @if (!link.MayWrite)
         {
-            <p class="note note--quiet" id="mp-passkey-needed">@L["Mp.PasskeyNeeded"]</p>
+            @* Owner, 2026-11-17: the way to a passkey session in place; the controls below open once it is one. *@
+            <PasskeyStep IdPrefix="mp-" Confirmed="LoadAsync" />
         }
 
         @if (link.Part == "mp" && Office is { } office)
@@ -94,15 +95,12 @@ else if (Link is { } link)
             </div>
         }
 
-        @* Design 8.19.4: the same choice of summaries as the MP's emailed link, here without the link, in a passkey session. *@
-        <div class="stack stack--tight" id="mp-mail">
-            <h4>@L["Mp.Mail.Title"]</h4>
-            @if (!link.MayWrite)
-            {
-                <p class="small" id="mp-mail-passkey">@L["Mp.Mail.PasskeyNeeded"]</p>
-            }
-            else if (_frequency is not null)
-            {
+        @* Design 8.19.4: the same choice of summaries as the MP's emailed link, here without the link, in a passkey session
+           (signed in by a code, the passkey step above comes first). *@
+        @if (link.MayWrite && _frequency is not null)
+        {
+            <div class="stack stack--tight" id="mp-mail">
+                <h4>@L["Mp.Mail.Title"]</h4>
                 <fieldset class="stack stack--tight" id="mp-mail-choice">
                     <legend class="small">@L["Mp.Mail.Lead"]</legend>
                     @foreach (var f in Lt2.Api.Contracts.Digests.MpMailFrequencies.All)
@@ -114,8 +112,8 @@ else if (Link is { } link)
                     }
                 </fieldset>
                 <p><button type="button" class="btn btn--plain" id="mp-mail-save" disabled="@Locked" @onclick="SaveMailAsync">@L["Mp.Mail.Save"]</button></p>
-            }
-        </div>
+            </div>
+        }
 
         @if (_confirmEnd)
         {

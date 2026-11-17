@@ -17,12 +17,16 @@ namespace Lt2.UnitTests.Components;
 /// </summary>
 public sealed class UsagePageTests : BunitContext
 {
+    private readonly ApiFake _me;
+
     private static readonly DateOnly Today = new(2026, 11, 16);
 
     public UsagePageTests()
     {
         Services.AddLocalization();
         Services.AddLt2ClientComponents();
+        _me = MeFakes.Add(Services);
+        Services.AddSingleton(DispatchProxy.Create<Lt2.Api.Contracts.Auth.IAuthApi, ApiFake>());
         var api = DispatchProxy.Create<IUsageApi, ApiFake>();
         Usage = (ApiFake)(object)api;
         Services.AddSingleton(api);
@@ -101,5 +105,19 @@ public sealed class UsagePageTests : BunitContext
 
         page.Find("#usage-refused").TextContent.ShouldBe(L["Usage.Refused"].Value);
         page.FindAll("#usage-online").ShouldBeEmpty();
+        page.FindAll("#passkey-step-confirm").ShouldBeEmpty("an account without a staff role is offered no staff passkey");
+    }
+
+    /// <summary>Owner, 2026-11-17: a staff account signed in by a code confirms its staff passkey in place, under the refusal.</summary>
+    [Fact]
+    public void A_staff_account_in_a_code_session_is_offered_its_staff_passkey_under_the_refusal()
+    {
+        _me.On("GetAsync", ApiResult<Lt2.Api.Contracts.Me.MeResponse>.Ok(MeFakes.Member with { Roles = ["member", "administrator"], StaffAccount = true }));
+        Usage.On("GetAsync", ApiResult<UsageResponse>.Fail(new ApiProblem { Status = 403, Code = "forbidden" }));
+        var page = Render<UsageAdmin>();
+
+        page.Find("#usage-refused").TextContent.ShouldBe(L["Usage.Refused"].Value);
+        page.WaitForAssertion(() => page.Find("#passkey-step-confirm").HasAttribute("disabled").ShouldBeFalse());
+        page.FindAll("#passkey-step-text").ShouldBeEmpty("for staff the page's refusal says why");
     }
 }

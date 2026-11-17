@@ -18,6 +18,7 @@ namespace Lt2.UnitTests.Components;
 public sealed class SidePickerTests : BunitContext
 {
     private readonly ApiFake _appeals;
+    private readonly ApiFake _me;
 
     public SidePickerTests()
     {
@@ -27,7 +28,7 @@ public sealed class SidePickerTests : BunitContext
         var appeals = DispatchProxy.Create<IAppealsApi, ApiFake>();
         _appeals = (ApiFake)(object)appeals;
         Services.AddSingleton(appeals);
-        Services.AddSingleton(DispatchProxy.Create<IMeApi, ApiFake>());
+        _me = MeFakes.Add(Services);
         Services.AddSingleton(DispatchProxy.Create<IMyBillsApi, ApiFake>());
         Services.AddSingleton(DispatchProxy.Create<IModerationApi, ApiFake>());
         AddAuthorization().SetAuthorized("member@pavyzdys.test");
@@ -60,5 +61,35 @@ public sealed class SidePickerTests : BunitContext
 
         picker.FindAll(".sides__check").ShouldBeEmpty();
         picker.FindAll(".sides button").Select(b => b.GetAttribute("aria-pressed")).ShouldBe(["false", "false"]);
+    }
+
+    /// <summary>
+    /// Design 8.5.4 (owner, 2026-11-17): the MP's own account takes no side. Once the island runs the buttons give way to one
+    /// line pointing to the MP's response; an office member keeps them.
+    /// </summary>
+    [Fact]
+    public void The_mps_own_account_gets_one_line_to_the_response_in_place_of_the_sides()
+    {
+        _appeals.On("GetMineAsync", Mine(null));
+        _me.On("GetAsync", ApiResult<MeResponse>.Ok(MeFakes.MpAccount));
+
+        var picker = Render<SidePicker>(p => p.Add(c => c.Number, "XVP-0412"));
+
+        picker.FindAll("#side-for").ShouldBeEmpty();
+        picker.FindAll("#side-against").ShouldBeEmpty();
+        var line = picker.Find("#side-mp-account");
+        line.QuerySelector("a")!.GetAttribute("href").ShouldBe("/seimas/XVP-0412#atsakymai");
+    }
+
+    [Fact]
+    public void An_office_member_takes_a_side_as_any_member()
+    {
+        _appeals.On("GetMineAsync", Mine(null));
+        _me.On("GetAsync", ApiResult<MeResponse>.Ok(MeFakes.Member with { Mp = MeFakes.MpAccount.Mp! with { Part = "office" } }));
+
+        var picker = Render<SidePicker>(p => p.Add(c => c.Number, "XVP-0412"));
+
+        picker.FindAll("#side-for").ShouldHaveSingleItem();
+        picker.FindAll("#side-mp-account").ShouldBeEmpty();
     }
 }

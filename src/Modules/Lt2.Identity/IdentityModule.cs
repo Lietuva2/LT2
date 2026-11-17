@@ -74,6 +74,10 @@ public static class IdentityModule
                 cookies.TwoFactorRememberMeCookie!.Configure(o => ConfigureCookie(o.Cookie, "__Host-lt2.remember"));
             });
 
+        // The security stamp is checked every 30 minutes and the principal rebuilt from the account; the session's own claims
+        // (how it was signed in, the passkey, its key) are carried over, or a passkey session would lose them (SessionClaims).
+        services.Configure<SecurityStampValidatorOptions>(o => o.OnRefreshingPrincipal = SessionClaims.KeepAsync);
+
         services.AddSingleton<SessionTicketStore>();
         services.AddOptions<CookieAuthenticationOptions>(IdentityConstants.ApplicationScheme)
             .Configure<SessionTicketStore>((options, store) => options.SessionStore = store);
@@ -253,7 +257,7 @@ internal sealed class IdentityModuleFacade(
     public Task<Result<Unit>> RequestSignInCodeAsync(string email, CancellationToken cancellationToken) =>
         requestCode.HandleAsync(email, cancellationToken);
 
-    public Task<Result<Unit>> SignInWithCodeAsync(string email, string code, CancellationToken cancellationToken) =>
+    public Task<Result<SignInOutcome>> SignInWithCodeAsync(string email, string code, CancellationToken cancellationToken) =>
         codeSignIn.HandleAsync(email, code, cancellationToken);
 
     public Task SignOutAsync() => signIn.SignOutAsync();
@@ -279,8 +283,11 @@ internal sealed class IdentityModuleFacade(
     public Task<Result<string>> GetPasskeyRequestOptionsAsync(CancellationToken cancellationToken) =>
         passkeys.RequestOptionsAsync();
 
-    public Task<Result<Unit>> SignInWithPasskeyAsync(string credentialJson, CancellationToken cancellationToken) =>
+    public Task<Result<SignInOutcome>> SignInWithPasskeyAsync(string credentialJson, CancellationToken cancellationToken) =>
         passkeys.SignInAsync(credentialJson);
+
+    public Task<Result<Unit>> StartPasskeySessionAsync(ClaimsPrincipal user, string credentialJson, string? ipHash, CancellationToken cancellationToken) =>
+        staff.StartPasskeySessionAsync(user, credentialJson, ipHash, cancellationToken);
 
     public Task<Result<AccountSummary>> GetAccountAsync(ClaimsPrincipal user, CancellationToken cancellationToken) =>
         account.GetAsync(user, cancellationToken);

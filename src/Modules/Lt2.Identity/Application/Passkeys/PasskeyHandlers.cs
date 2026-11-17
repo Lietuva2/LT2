@@ -142,7 +142,7 @@ internal sealed class PasskeyHandlers(
 
     public async Task<Result<string>> RequestOptionsAsync() => await signIn.MakePasskeyRequestOptionsAsync(user: null);
 
-    public async Task<Result<Unit>> SignInAsync(string credentialJson)
+    public async Task<Result<SignInOutcome>> SignInAsync(string credentialJson)
     {
         PasskeyAssertionResult<User> assertion;
         try
@@ -168,16 +168,11 @@ internal sealed class PasskeyHandlers(
             return InvalidPasskey;
         }
 
-        await signIn.SignInWithClaimsAsync(
-            assertion.User,
-            new AuthenticationProperties { IsPersistent = true },
-            [
-                new Claim(AuthenticationMethods.ClaimType, AuthenticationMethods.Passkey),
-                new Claim(SessionTicketStore.PasskeyClaim, WebEncoders.Base64UrlEncode(assertion.Passkey.CredentialId)),
-            ]);
+        // A new session under a new key, whichever account the browser held before (design 6.2): never a silent switch.
+        var changed = await SessionSignIn.SignInAsync(signIn, assertion.User, AuthenticationMethods.Passkey, assertion.Passkey.CredentialId);
 
         // Design 8.20.2: the browser becomes known to the account, or is renewed.
         await browsers.RememberAsync(assertion.User.Id, CancellationToken.None);
-        return Result.Ok();
+        return new SignInOutcome(changed);
     }
 }

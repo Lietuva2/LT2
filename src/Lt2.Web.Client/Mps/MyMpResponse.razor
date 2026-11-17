@@ -9,7 +9,8 @@
 @* The linked account's form on a bill's page (design 8.5.6): stance and text, "Skelbti atsakymą", "Keisti", "Atsiimti".
    Asked for only once the island runs in the browser and shown only to an account linked to an MP (the MP's or an office
    member's), so the page's HTML is the same for everyone. Writing needs a passkey session and an MP whose mandate has not
-   ended, checked by the server on every request; signed in by a code the controls stay off and say so. On a bill nobody has
+   ended, checked by the server on every request; signed in by a code the controls stay off and "Patvirtinti prieigos raktu"
+   (PasskeyStep) makes the session a passkey session in place. On a bill nobody has
    answered yet the part "Seimo narių atsakymai" is not shown (owner, 2026-11-17), so for a linked account this island
    brings the part's sheet with it (Section); for everyone else it renders nothing. *@
 @if (_mine is not null && Section)
@@ -33,7 +34,12 @@ else if (_mine is not null)
         <h3 id="my-response-title">@L["MpResponse.Title"]</h3>
         <p class="small">@L.Format("MpResponse.For", mine.Mp.FirstName + " " + mine.Mp.LastName)</p>
         <p class="small" id="my-response-public">@L["MpResponse.Public"]</p>
-        @if (mine.Refusal is { } refusal)
+        @if (mine.Refusal is "mp.passkey-required")
+        {
+            @* Owner, 2026-11-17: signed in by a code, the session becomes a passkey session here, and the form opens. *@
+            <PasskeyStep IdPrefix="my-response-" Confirmed="LoadAsync" />
+        }
+        else if (mine.Refusal is { } refusal)
         {
             <p class="note note--quiet" id="my-response-refusal">@L["MpResponse.Refusal." + refusal]</p>
         }
@@ -64,16 +70,20 @@ else if (_mine is not null)
                 <p class="small" id="my-response-state">@L["MpResponse.IsWithdrawn"]</p>
             }
             <form class="stack" @onsubmit="SaveAsync" novalidate id="my-response-form" aria-labelledby="my-response-title">
-                <fieldset class="field stack stack--tight @ErrorClass("stance")">
+                @* The joined buttons of a stance (owner, 2026-11-17; design 8.16) over real radio inputs: "už" in the side's
+                   green, "prieš" in its red, "Dar neapsisprendžiau" neutral; one under another in a narrow form. *@
+                <fieldset class="switch-field field stack stack--tight @ErrorClass("stance")">
                     <legend>@L["MpResponse.Stance"]</legend>
-                    @foreach (var stance in MpResponseLimits.Stances)
-                    {
-                        <label class="check">
-                            <input type="radio" name="my-response-stance" id="my-response-stance-@stance" value="@stance" checked="@(_stance == stance)"
-                                   @onchange="() => _stance = stance" disabled="@(Locked || !mine.MayWrite)" />
-                            <span>@L["MpResponse.Stance." + stance]</span>
-                        </label>
-                    }
+                    <div class="switch switch--stack" id="my-response-stance">
+                        @foreach (var stance in MpResponseLimits.Stances)
+                        {
+                            <label class="switch__half switch__half--@(stance == "undecided" ? "neutral" : stance)">
+                                <input class="switch__input" type="radio" name="my-response-stance" id="my-response-stance-@stance" value="@stance" checked="@(_stance == stance)"
+                                       @onchange="() => _stance = stance" disabled="@(Locked || !mine.MayWrite)" aria-invalid="@Invalid("stance")" />
+                                <span>@L["MpResponse.Stance." + stance]</span>
+                            </label>
+                        }
+                    </div>
                     <FieldError Errors="Errors" Field="stance" For="my-response-stance" />
                 </fieldset>
                 <div class="field @ErrorClass("text")">

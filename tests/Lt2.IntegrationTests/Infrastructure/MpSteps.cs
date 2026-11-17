@@ -120,7 +120,7 @@ public static class MpSteps
 
         var browser = factory.NewBrowser();
         using var signIn = await browser.SignInWithPasskeyAsync(authenticator);
-        signIn.StatusCode.ShouldBe(HttpStatusCode.NoContent, await signIn.Content.ReadAsStringAsync());
+        signIn.StatusCode.ShouldBe(HttpStatusCode.OK, await signIn.Content.ReadAsStringAsync());
         return (browser, authenticator, email);
     }
 

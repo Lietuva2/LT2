@@ -33,6 +33,12 @@ public sealed record AccountSummary(
     bool PasskeySession = false);
 
 /// <summary>
+/// A sign-in's outcome: <paramref name="AccountChanged"/> when the browser was signed in to another account, whose session
+/// ended with this sign-in.
+/// </summary>
+public sealed record SignInOutcome(bool AccountChanged);
+
+/// <summary>
 /// Design 8.5.1: the account's proven address is this MP's official address and the account is not linked yet; it is
 /// offered "Perimti profilį". Only the account's own answer says so.
 /// </summary>
@@ -191,7 +197,11 @@ public interface IIdentityModule
     /// <summary>Emails a sign-in code if the address belongs to an account; succeeds either way.</summary>
     Task<Result<Unit>> RequestSignInCodeAsync(string email, CancellationToken cancellationToken);
 
-    Task<Result<Unit>> SignInWithCodeAsync(string email, string code, CancellationToken cancellationToken);
+    /// <summary>
+    /// Signs in with the emailed code under a new session key. A browser signed in to another account ends that session, as
+    /// by signing out, and the outcome says so (<see cref="SignInOutcome.AccountChanged"/>).
+    /// </summary>
+    Task<Result<SignInOutcome>> SignInWithCodeAsync(string email, string code, CancellationToken cancellationToken);
 
     Task SignOutAsync();
 
@@ -224,7 +234,16 @@ public interface IIdentityModule
 
     Task<Result<string>> GetPasskeyRequestOptionsAsync(CancellationToken cancellationToken);
 
-    Task<Result<Unit>> SignInWithPasskeyAsync(string credentialJson, CancellationToken cancellationToken);
+    /// <summary>Signs in with a passkey under a new session key; as <see cref="SignInWithCodeAsync"/> for a browser signed in to another account.</summary>
+    Task<Result<SignInOutcome>> SignInWithPasskeyAsync(string credentialJson, CancellationToken cancellationToken);
+
+    /// <summary>
+    /// The signed-in account's session becomes a passkey session by an assertion with one of its own passkeys, under a new
+    /// session key (the old session ends); a staff session too when it is the account's staff passkey. Another account's
+    /// passkey is refused with <c>passkey.other-account</c>, an assertion that fails with <c>passkey.invalid</c>, changing
+    /// nothing. Audited; no email.
+    /// </summary>
+    Task<Result<Unit>> StartPasskeySessionAsync(ClaimsPrincipal user, string credentialJson, string? ipHash, CancellationToken cancellationToken);
 
     Task<Result<AccountSummary>> GetAccountAsync(ClaimsPrincipal user, CancellationToken cancellationToken);
 
