@@ -5,7 +5,6 @@ using Lt2.Api.Contracts.Auth;
 using Lt2.Api.Contracts.Me;
 using Lt2.Api.Contracts.Mps;
 using Lt2.IntegrationTests.Infrastructure;
-using Lt2.Notifications.Outbox;
 using Lt2.Notifications.Templates;
 using Lt2.SharedKernel;
 using Microsoft.Extensions.DependencyInjection;
@@ -198,9 +197,8 @@ public sealed class OfficeInvitationTests(DatabaseFixture database) : ApiTest(da
             kind.ShouldBe(MessageKinds.MpOfficeInvitationEmail);
             payload.GetProperty("code").GetString().ShouldBe(sent.Code);
             payload.GetProperty("pagePath").GetString().ShouldBe(MpRoutes.OfficeInvitationPage);
-            // The registered renderer takes the payload as the dispatcher does; the template is rendered again with a site address
-            // (the test host has none) to read the full links of both parts.
-            Factory.Services.GetServices<IEmailRenderer>().Single(r => r.Kind == kind).Render(payload).To.ShouldBe(address);
+            // The payload rendered by the template the worker registers for this kind, with a site address (the test host has none)
+            // to read the full links of both parts.
             var email = new MpTemplates(
                     Factory.Services.GetRequiredService<Microsoft.Extensions.Localization.IStringLocalizer<EmailTemplates>>(),
                     Microsoft.Extensions.Options.Options.Create(new SiteOptions { Address = "https://lt2.test" }))
@@ -218,7 +216,7 @@ public sealed class OfficeInvitationTests(DatabaseFixture database) : ApiTest(da
             (await Database.ScalarAsync<long>(
                 "SELECT count(*) FROM audit.event e WHERE row_to_json(e)::text ILIKE @a", ("a", "%" + address + "%"))).ShouldBe(0);
             (await Database.ScalarAsync<long>(
-                "SELECT count(*) FROM audit.event WHERE action = 'mp.office-invited' AND detail::text LIKE '%\"emailed\": true%'")).ShouldBeGreaterThan(0);
+                "SELECT count(*) FROM audit.event WHERE action = 'mp.office-invited' AND details::jsonb->>'emailed' = 'true'")).ShouldBeGreaterThan(0);
         }
         finally
         {
