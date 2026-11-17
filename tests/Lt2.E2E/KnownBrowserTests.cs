@@ -83,7 +83,7 @@ public sealed class KnownBrowserTests : E2ETest
             await Assertions.Expect(stranger.Page.GetByRole(AriaRole.Alert).Filter(new() { HasText = "Kodas netinka arba nebegalioja. Paprašykite naujo." }))
                 .ToBeVisibleAsync(new() { Timeout = E2ESteps.Slow });
             await TypeCodeAsync(page, code);
-            await page.WaitForURLAsync(new Regex("/paskyra$"), new() { Timeout = E2ESteps.Slow });
+            await page.WaitForURLAsync(new Regex(@"^https?://[^/]+/$"), new() { Timeout = E2ESteps.Slow });
             await page.GotoAsync(E2ESteps.Base + "/paskyra/saugumas");
             await Assertions.Expect(part.Locator("#known-browsers li")).ToHaveCountAsync(1, new() { Timeout = E2ESteps.Slow });
             await Assertions.Expect(part).ToContainTextAsync("Ši naršyklė");

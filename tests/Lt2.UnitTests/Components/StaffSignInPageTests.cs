@@ -102,13 +102,13 @@ public sealed class StaffSignInPageTests : BunitContext
     }
 
     [Fact]
-    public void An_account_without_a_staff_role_goes_to_its_account_page()
+    public void An_account_without_a_staff_role_goes_to_the_front_page()
     {
         Me.On("GetAsync", ApiResult<MeResponse>.Ok(CodeSession with { Roles = ["member"], StaffAccount = false }));
         Navigation.NavigateTo(StaffSessionPage.Link("/moderavimas"));
         Render<StaffSignIn>();
 
-        Navigation.Uri.ShouldEndWith("/paskyra");
+        new Uri(Navigation.Uri).AbsolutePath.ShouldBe("/");
     }
 
     [Fact]
@@ -118,7 +118,7 @@ public sealed class StaffSignInPageTests : BunitContext
         Navigation.NavigateTo(StaffSessionPage.Path + "#grizti=https%3A%2F%2Fkitas.pavyzdys.test%2F");
         Render<StaffSignIn>();
 
-        Navigation.Uri.ShouldEndWith("/paskyra");
+        new Uri(Navigation.Uri).AbsolutePath.ShouldBe("/");
     }
 
     [Fact]

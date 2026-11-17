@@ -623,7 +623,7 @@ public sealed class SignInComponentTests : BunitContext
         navigation.History.ShouldBeEmpty("nothing goes on before the person has read it");
         page.Find("#other-account-continue").TextContent.ShouldBe(Text("SignIn.Continue"));
         page.Find("#other-account-continue").Click();
-        page.WaitForAssertion(() => navigation.Uri.ShouldEndWith("/paskyra"));
+        page.WaitForAssertion(() => new Uri(navigation.Uri).AbsolutePath.ShouldBe("/"));
     }
 
     [Fact]

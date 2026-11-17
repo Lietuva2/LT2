@@ -1851,7 +1851,11 @@ MPs stand on.
   line appears once]
 - The link is the personal invitation link (6.2) with the page to land on:
   `/prisijungti?kodas=…&tikslas=/seimas/XVP-0412`. After registering or signing in, the person lands on that page
-  instead of `/paskyra`.
+  instead of the front page. [Decided by the owner on 2026-11-17: "the start page … shouldn't be his profile. For no one
+  actually". Signing in, registering, starting a staff session and accepting the terms land on the front page `/` when
+  there is no page to return to (`tikslas`, a page's own return, the staff page's `#grizti=`), never on "Profilis"; the
+  MP's take-over lands on "Dalyvavimas" (`/paskyra/dalyvavimas`, 8.21), where the MP's part is. Until then they landed on
+  `/paskyra`.]
 - `tikslas` is accepted only as a path on this site under `/seimas/` (one leading slash, no scheme, host or
   backslash); anything else is ignored. [changed while building (2026-11-16, the account screens and public profiles):
   also `/paskyra` and the account screens under it (a visitor sent to sign in from one comes back to it) and a member's

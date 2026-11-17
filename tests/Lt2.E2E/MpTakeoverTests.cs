@@ -35,7 +35,7 @@ public sealed partial class MpTakeoverTests : E2ETest
             // 1. Registration without an invitation: the official address is the proof.
             await page.GotoAsync(Base + "/prisijungti?registruotis=true");
             await E2ESteps.RegisterHereAsync(page, Official, Name);
-            await page.WaitForURLAsync(new Regex("/paskyra$"), new() { Timeout = E2ESteps.Slow });
+            await page.WaitForURLAsync(new Regex(@"^https?://[^/]+/$"), new() { Timeout = E2ESteps.Slow });
             await page.GotoAsync(Base + "/paskyra/dalyvavimas");
 
             // 2. Told so at once, with one button (design 8.21: the MP part is on "Dalyvavimas").
@@ -67,7 +67,7 @@ public sealed partial class MpTakeoverTests : E2ETest
             var submit = page.Locator("#takeover-submit");
             await Assertions.Expect(submit).ToBeEnabledAsync(new() { Timeout = E2ESteps.Slow });
             await submit.ClickAsync();
-            await page.WaitForURLAsync(new Regex("/paskyra$"), new() { Timeout = E2ESteps.Slow });
+            await page.WaitForURLAsync(new Regex("/paskyra/dalyvavimas$"), new() { Timeout = E2ESteps.Slow });
 
             // 4. Linked, in a passkey session, with one passkey.
             await page.GotoAsync(Base + "/paskyra/dalyvavimas");

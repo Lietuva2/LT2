@@ -34,7 +34,7 @@
     [SupplyParameterFromQuery(Name = TermsText.BackParameter)]
     public string? Back { get; set; }
 
-    private string Next => TermsText.Back(Back) ?? "/paskyra";
+    private string Next => TermsText.Back(Back) ?? "/";
 
     protected override async Task OnInitializedAsync()
     {
