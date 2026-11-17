@@ -185,9 +185,17 @@
         Management = (await Organisations.GetManagementAsync(Slug)).Value;
     }
 
-    private void Reload() => Navigation.NavigateTo(Navigation.Uri, forceLoad: true);
+    /// <summary>
+    /// After a change to the organisation: the caller's own answer is read again here, and the profile around it (the name,
+    /// the label, the status) is read again in place from the server, without reloading the page.
+    /// </summary>
+    private async Task ReloadAsync()
+    {
+        Management = (await Organisations.GetManagementAsync(Slug)).Value;
+        Navigation.Refresh();
+    }
 
-    private void Saved() => Reload();
+    private Task Saved() => ReloadAsync();
 
     private void ToggleLeave() => _confirming = _confirming == "leave" ? null : "leave";
 
@@ -211,7 +219,7 @@
             return;
         }
 
-        Reload();
+        await ReloadAsync();
     });
 
     private Task InviteAsync() => RunAsync(async () =>
@@ -243,6 +251,6 @@
             return;
         }
 
-        Reload();
+        await ReloadAsync();
     });
 }

@@ -115,9 +115,7 @@
             return;
         }
 
-        // The counts on the page are server-rendered: show them with the change. A first side also followed the bill
-        // (design 8.11.2), which the follow button reads afresh.
-        Navigation.NavigateTo(Navigation.Uri, forceLoad: true);
+        await ChangedAsync();
     }
 
     private Task ClearAsync() => RunAsync(async () =>
@@ -129,6 +127,17 @@
             return;
         }
 
-        Navigation.NavigateTo(Navigation.Uri, forceLoad: true);
+        await ChangedAsync();
     });
+
+    /// <summary>
+    /// Without reloading the page (owner, 2026-11-17): the other islands read their part again, the counts and the threshold
+    /// the bill's live numbers, the arguments the marks a changed side dropped, the follow button the follow a first side
+    /// made (design 8.11.2), the date flag whether there is a side; this one the person's own answer.
+    /// </summary>
+    private async Task ChangedAsync()
+    {
+        State.Announce(Number, this);
+        Mine = await State.MineAsync(Number) ?? Mine;
+    }
 }

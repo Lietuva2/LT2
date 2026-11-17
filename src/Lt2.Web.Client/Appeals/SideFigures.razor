@@ -1,0 +1,46 @@
+@using Lt2.Api.Contracts.Appeals
+@inherits LiveRecordBase
+
+@* The two sides' counts on the bill's page (design 8.12.1), each with the accounts older than 30 days, the bar, on an open
+   bill nobody took part in one line saying so, a closed record's note and the surge note (design 6.6). The server's numbers
+   at first; after a side is taken, changed or withdrawn on the page, the bill's live numbers, without reloading the page. *@
+<div class="pair pair--keep">
+    <div class="figure figure--for" id="count-for">
+        <span class="label">@L["Sides.for"]</span>
+        <span class="figure__num">@Display.Number(Shown.For)</span>
+        <span class="small num">@L.Format("Sides.Older", Display.Number(Shown.ForOlderThan30Days))</span>
+    </div>
+    <div class="figure figure--against" id="count-against">
+        <span class="label">@L["Sides.against"]</span>
+        <span class="figure__num">@Display.Number(Shown.Against)</span>
+        <span class="small num">@L.Format("Sides.Older", Display.Number(Shown.AgainstOlderThan30Days))</span>
+    </div>
+</div>
+<SplitBar For="Shown.For" Against="Shown.Against" Abstain="0" />
+@if ((Live?.Status ?? Status) == "open" && Shown.For + Shown.Against == 0)
+{
+    <p class="small" id="nobody-yet">@L["Sides.Nobody"]</p>
+}
+@if (Frozen is { } frozen)
+{
+    <p class="small" id="frozen-note">@frozen</p>
+}
+@if ((Live is null ? Surge : Live.Surge) is { } surge)
+{
+    <p class="note" id="surge-note">@L.Format("Surge.Note", Display.Number(surge.WindowHours), Display.Number(surge.SharePercent))</p>
+}
+
+@code {
+    /// <summary>The record's status as the page read it: <c>open</c> or <c>closed</c>.</summary>
+    [Parameter, EditorRequired] public string Status { get; set; } = "";
+
+    [Parameter, EditorRequired] public SideCountsResponse Counts { get; set; } = default!;
+
+    /// <summary>The surge note's numbers as the page read them (design 6.6); null: no note.</summary>
+    [Parameter] public SurgeResponse? Surge { get; set; }
+
+    /// <summary>A closed record's note, worded by the page (<c>Closed.Frozen</c>, with the date in words); null for an open one.</summary>
+    [Parameter] public string? Frozen { get; set; }
+
+    private SideCountsResponse Shown => Live?.Counts ?? Counts;
+}

@@ -1,7 +1,9 @@
 using System.Reflection;
 using Bunit;
+using Bunit.TestDoubles;
 using Lt2.Api.Contracts;
 using Lt2.Api.Contracts.Appeals;
+using Lt2.Api.Contracts.Follows;
 using Lt2.Api.Contracts.Me;
 using Lt2.Web.Client;
 using Lt2.Web.Client.Appeals;
@@ -18,6 +20,7 @@ namespace Lt2.UnitTests.Components;
 public sealed class SidePickerTests : BunitContext
 {
     private readonly ApiFake _appeals;
+    private readonly ApiFake _follows;
 
     public SidePickerTests()
     {
@@ -30,12 +33,56 @@ public sealed class SidePickerTests : BunitContext
         Services.AddSingleton(DispatchProxy.Create<IMeApi, ApiFake>());
         Services.AddSingleton(DispatchProxy.Create<IMyBillsApi, ApiFake>());
         Services.AddSingleton(DispatchProxy.Create<IModerationApi, ApiFake>());
+        var follows = DispatchProxy.Create<IFollowsApi, ApiFake>();
+        _follows = (ApiFake)(object)follows;
+        Services.AddSingleton(follows);
+        Services.AddSingleton(DispatchProxy.Create<IProfilesApi, ApiFake>());
         AddAuthorization().SetAuthorized("member@pavyzdys.test");
         JSInterop.Mode = JSRuntimeMode.Loose;
         SetRendererInfo(new RendererInfo("WebAssembly", isInteractive: true));
     }
 
+    private const string Bill = "XVP-0412";
+
     private static ApiResult<MyBillRecordResponse> Mine(string? side) => ApiResult<MyBillRecordResponse>.Ok(new MyBillRecordResponse(side, [], null, [], null, true));
+
+    private static ThresholdResponse Threshold(int participants) => new(100, "default", null, participants, false, false);
+
+    private static ApiResult<MyFollowsResponse> Follows(params string[] bills) =>
+        ApiResult<MyFollowsResponse>.Ok(new MyFollowsResponse([.. bills.Select(b => new FollowedBillResponse(b, "Gyventojų pajamų mokesčio įstatymo pataisa", null, null))], [], []));
+
+    /// <summary>
+    /// Owner, 2026-11-17: taking a side does not reload the page. The counts, the surge note (design 6.6), the threshold's
+    /// progress and the follow button (a first side follows the bill, design 8.11.2) read the bill's live answer in place.
+    /// </summary>
+    [Fact]
+    public void A_first_side_shows_in_the_counts_the_threshold_and_the_follow_button_without_reloading_the_page()
+    {
+        _appeals.OnEach("GetMineAsync", Mine(null), Mine("for"));
+        _appeals.On("TakePositionAsync", ApiResult.Ok());
+        _appeals.On("GetRecordAsync", ApiResult<BillRecordResponse>.Ok(new BillRecordResponse(
+            Guid.NewGuid(), new BillRefResponse(Bill, "Gyventojų pajamų mokesčio įstatymo pataisa"), "open", "", null, null,
+            new SideCountsResponse(1, 0, 0, 0), Threshold(1), [], Surge: new SurgeResponse(100, 24))));
+        _follows.OnEach("GetMineAsync", Follows(), Follows(Bill));
+
+        var figures = Render<SideFigures>(p => p.Add(c => c.Number, Bill).Add(c => c.Status, "open").Add(c => c.Counts, new SideCountsResponse(0, 0, 0, 0)));
+        var threshold = Render<ThresholdProgress>(p => p.Add(c => c.Number, Bill).Add(c => c.Threshold, Threshold(0)));
+        var follow = Render<FollowButton>(p => p.Add(c => c.Kind, "bill").Add(c => c.Key, Bill).Add(c => c.Followers, 2));
+        var picker = Render<SidePicker>(p => p.Add(c => c.Number, Bill));
+        figures.Find("#nobody-yet").ShouldNotBeNull();
+        figures.FindAll("#surge-note").ShouldBeEmpty();
+
+        picker.Find("#side-for").Click();
+
+        picker.WaitForAssertion(() => picker.Find("#side-for").GetAttribute("aria-pressed").ShouldBe("true"));
+        figures.WaitForAssertion(() => figures.Find("#count-for .figure__num").TextContent.ShouldBe("1"));
+        figures.FindAll("#nobody-yet").ShouldBeEmpty();
+        figures.Find("#surge-note").TextContent.ShouldStartWith("Per paskutines 24 valandas 100 %");
+        threshold.WaitForAssertion(() => threshold.Find("p.num b").TextContent.ShouldBe("1"));
+        follow.WaitForAssertion(() => follow.Find("#follow-toggle-bill").GetAttribute("aria-pressed").ShouldBe("true"));
+        follow.Find("#followers-count").TextContent.ShouldBe("Sekėjai: 3");
+        Services.GetRequiredService<BunitNavigationManager>().History.ShouldBeEmpty("the page is not reloaded");
+    }
 
     [Fact]
     public void The_chosen_side_has_a_decorative_check_mark_and_the_other_none()

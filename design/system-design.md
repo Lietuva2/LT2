@@ -923,7 +923,8 @@ except arguments that pre-screening flags or people report.
   staff-passkey session sees, on an open bill's page, a "Moderavimas" panel with the same actions as the queue offers for
   it in its state ("Palikti" only while a report or date flag is open), also on a bill nobody has taken part in. The state
   comes from a moderators-only answer (`GET /api/v1/moderation/bills/{number}`); nobody else sees the panel or anything
-  from that answer. After an action the page reloads to show the result.
+  from that answer. After an action the page shows the result without reloading (owner, 2026-11-17): the panel and the
+  page's other parts read again in place.
 - **The screen [decided 2026-11-13].** Each action is its own control. Choosing one opens only its own fields, with one
   sentence on what it does; one action is open at a time per item; only the actions that apply to the item's state are
   offered; the confirmation stays visible after the action closes. The fields: keep, an optional note; hide, a required
