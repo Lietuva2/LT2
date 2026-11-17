@@ -41,10 +41,22 @@ public sealed class TextLayoutTests
         Shape(TextLayout.Of("- a\n- b\n1. c\n2. d")).ShouldBe("ul:a;b | ol:1=c;2=d");
 
     [Theory]
-    [InlineData("-be tarpo\n-be tarpo")]
+    [InlineData("-mažinti\n-„palikti“", "ul:mažinti;„palikti“")]
+    [InlineData("–mažinti\n•palikti", "ul:mažinti;palikti")]
+    [InlineData("1.pirma\n2)antra", "ol:1=pirma;2=antra")]
+    [InlineData("- su tarpu\n-be tarpo", "ul:su tarpu;be tarpo")]
+    public void A_marker_right_before_a_word_counts_too(string text, string shape) =>
+        // Owner, 2026-11-17: people type "-pirma" as often as "- pirma", and the hint shows no space.
+        Shape(TextLayout.Of(text)).ShouldBe(shape);
+
+    [Theory]
+    [InlineData("-5 % mokesčio\n-3 % akcizo")]
+    [InlineData("--\n--")]
+    [InlineData("---\n---")]
     [InlineData("2026. metais\n2027. metais")]
     [InlineData("*žodis*\n*kitas*")]
     [InlineData("1.5 procento\n2.5 procento")]
+    [InlineData("10.30 val.\n12.00 val.")]
     public void Lines_that_only_look_like_a_list_stay_paragraphs(string text) =>
         TextLayout.Of(text).ShouldAllBe(b => b.Kind == TextBlockKind.Paragraph);
 
