@@ -13,7 +13,9 @@
    everything is done on this one page. A visitor signs in or registers here (the sign-in steps, which then reload this page);
    a member signed in by code gets one button that makes a passkey or uses one and accepts in the same request, after which
    the session is a passkey session; a passkey session gets "Priimti". Design 6.8: the token is after the "#", read in the
-   browser, never removed from the address, kept in no storage, and sent only in the request body. *@
+   browser, never removed from the address, kept in no storage, and sent only in the request body. Opened without it, the
+   page asks for the code (the same one-time code, typed; design 6.8, owner 2026-11-17), and a person without an account
+   registers here with the invitation in place of an invitation code. *@
 <PageTitle>@L["MpOffice.PageTitle"]</PageTitle>
 
 <div class="stack">
@@ -21,7 +23,9 @@
     <NeedsScript />
     @if (_read && _token is null)
     {
-        <p class="note" role="alert" id="office-missing">@L["MpLink.Missing"]</p>
+        @* Owner, 2026-11-17: opened without the link's code, the page asks for it (the email gives both). *@
+        <p id="office-code-lead">@L["MpOffice.CodeLead"]</p>
+        <CodeEntry Label="@L["MpOffice.CodeLabel"]" Entered="CodeEnteredAsync" IdPrefix="office-" />
     }
     else if (Joined is { } joined)
     {
@@ -36,7 +40,7 @@
         {
             @* Not signed in, or a registration still to finish: the steps are here and come back to this page. *@
             <p class="note" id="office-sign-in">@L["MpOffice.SignInHere"]</p>
-            <div class="office-sign-in"><SignInFlow ReturnTo="@_here" /></div>
+            <div class="office-sign-in"><SignInFlow ReturnTo="@_here" OfficeInvitation="@_token" /></div>
         }
         else
         {
@@ -85,7 +89,7 @@
         }
 
         var address = await BrowserAddressAsync();
-        _token = InvitationLink.Fragment(address);
+        _token = OneTimeCode.Normalize(InvitationLink.Fragment(address)) ?? InvitationLink.Fragment(address);
         _here = MpRoutes.OfficeInvitationPage + (address.Contains('#', StringComparison.Ordinal) ? address[address.IndexOf('#', StringComparison.Ordinal)..] : "");
         if (await IsSignedInAsync())
         {
@@ -94,6 +98,18 @@
         }
 
         _read = true;
+    }
+
+    /// <summary>A code typed on the page: it is now after the "#" of the address too, so the sign-in steps keep it.</summary>
+    private async Task CodeEnteredAsync(string code)
+    {
+        _token = code;
+        _here = MpRoutes.OfficeInvitationPage + "#" + code;
+        if (_me is null && await IsSignedInAsync())
+        {
+            var me = await MeApi.GetAsync();
+            _me = me.IsSuccess ? me.Value : null;
+        }
     }
 
     /// <summary>The address the browser shows, with its "#" part (the navigation manager's when the browser cannot be asked).</summary>

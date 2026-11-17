@@ -43,6 +43,9 @@ public static class MessageKinds
     /// <summary>The link that finishes taking over an MP's profile, to the official address only (design 8.5.2).</summary>
     public const string MpTakeoverLinkEmail = "email.mp-takeover-link";
 
+    /// <summary>An MP office member's invitation, sent by the site to the address the MP's account typed (design 8.5.3, owner 2026-11-17).</summary>
+    public const string MpOfficeInvitationEmail = "email.mp-office-invitation";
+
     /// <summary>A moderator hid or restored an MP's response, to the MP's account's own address (design 8.5.5).</summary>
     public const string MpResponseNoticeEmail = "email.mp-response-notice";
 
@@ -125,9 +128,24 @@ public static class MpResponseNotices
 /// </summary>
 /// <param name="To">The official address (the account's own).</param>
 /// <param name="MpName">The MP's first and last name.</param>
-/// <param name="Path">The site path with the token after the <c>#</c>.</param>
+/// <param name="Path">The site path with the code after the <c>#</c>.</param>
 /// <param name="ValidHours">How long the link is good for.</param>
-public sealed record MpTakeoverLinkEmail(string To, string MpName, string Path, int ValidHours);
+/// <param name="PagePath">The take-over page without the code, where the code can be typed instead (owner, 2026-11-17).</param>
+/// <param name="Code">The link's one-time code, <c>XXXX-XXXX-XXXX</c>.</param>
+public sealed record MpTakeoverLinkEmail(string To, string MpName, string Path, int ValidHours, string PagePath = "", string Code = "");
+
+/// <summary>
+/// Payload of <see cref="MessageKinds.MpOfficeInvitationEmail"/> (design 8.5.3, owner 2026-11-17): an invitation to an MP's
+/// office, to the address the MP's account typed. The address and the code live here, in the outbox row, until the email is
+/// sent, as a sign-in code does; the Identity module keeps only the code's hash and never the address.
+/// </summary>
+/// <param name="To">The address the MP's account typed.</param>
+/// <param name="MpName">The MP's first and last name.</param>
+/// <param name="Path">The invitation's page with the code after the <c>#</c>.</param>
+/// <param name="PagePath">The invitation's page without it, where the code can be typed instead.</param>
+/// <param name="Code">The code, <c>XXXX-XXXX-XXXX</c>.</param>
+/// <param name="ExpiresAt">When the invitation stops working.</param>
+public sealed record MpOfficeInvitationEmail(string To, string MpName, string Path, string PagePath, string Code, DateTimeOffset ExpiresAt);
 
 /// <summary>
 /// Payload of <see cref="MessageKinds.OrganisationCodeEmail"/> (design 8.14.14): the code that confirms an organisation by

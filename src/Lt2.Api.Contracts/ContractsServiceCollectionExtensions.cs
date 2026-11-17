@@ -50,6 +50,7 @@ public static class ContractsServiceCollectionExtensions
         services.AddScoped<IValidator<Organisations.ConfirmationRequest>, Organisations.ConfirmationRequestValidator>();
         services.AddScoped<IValidator<Mps.MpTakeoverRequest>, Mps.MpTakeoverRequestValidator>();
         services.AddScoped<IValidator<Mps.MpOfficeAcceptanceRequest>, Mps.MpOfficeAcceptanceRequestValidator>();
+        services.AddScoped<IValidator<Mps.MpOfficeInvitationRequest>, Mps.MpOfficeInvitationRequestValidator>();
         services.AddScoped<IValidator<Mps.MpResponseRequest>, Mps.MpResponseRequestValidator>();
         services.AddScoped<IValidator<Comments.CommentRequest>, Comments.CommentRequestValidator>();
         services.AddScoped<IValidator<Digests.CancelDigestRequest>, Digests.CancelDigestRequestValidator>();

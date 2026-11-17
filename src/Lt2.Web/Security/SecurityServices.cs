@@ -56,6 +56,14 @@ internal static class RateLimitPolicies
     /// has its own limit too (<see cref="MpMailTokens"/>, the global limiter).
     /// </summary>
     public const string MpMail = "mp-mail";
+
+    /// <summary>
+    /// Every request that presents a typeable one-time code (design 6.8, owner 2026-11-17: an office invitation, an MP's
+    /// take-over, an organisation representative's invitation, and a registration with an office invitation), per client
+    /// address. A wrong code finds no invitation, so there is none to count against: the code's 59 bits and this limit bound
+    /// the guessing.
+    /// </summary>
+    public const string OneTimeCode = "one-time-code";
 }
 
 /// <summary>
@@ -109,6 +117,9 @@ internal sealed class RateLimitOptions
 
     /// <summary>The same per token: a person using one link never comes near it.</summary>
     public FixedWindow MpMailToken { get; set; } = new() { PermitLimit = 30, WindowSeconds = 15 * 60 };
+
+    /// <summary>Requests presenting a one-time code, per client address (owner, 2026-11-17).</summary>
+    public FixedWindow OneTimeCode { get; set; } = new() { PermitLimit = 30, WindowSeconds = 15 * 60 };
 
     internal sealed class FixedWindow
     {
@@ -181,6 +192,7 @@ internal static class SecurityServices
             options.AddPolicy(RateLimitPolicies.OwnRead, context => PerAccount(context, Limits(context).OwnRead));
             options.AddPolicy(RateLimitPolicies.Participation, context => PerAccount(context, Limits(context).Participation));
             options.AddPolicy(RateLimitPolicies.MpMail, context => PerIp(context, Limits(context).MpMail));
+        options.AddPolicy(RateLimitPolicies.OneTimeCode, context => PerIp(context, Limits(context).OneTimeCode));
 
             // Design 8.19.7: each MP link's token has its own limit too, wherever it is used.
             options.GlobalLimiter = PartitionedRateLimiter.Create<HttpContext, string>(context =>

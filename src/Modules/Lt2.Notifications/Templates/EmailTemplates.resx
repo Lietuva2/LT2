@@ -46,7 +46,8 @@
 <data name="Feedback.Reply.Answer" xml:space="preserve"><value>Atsakymas: {0}</value></data>
 <data name="Feedback.Notice.Subject" xml:space="preserve"><value>Lietuva 2.0: nauji atsiliepimai ({0})</value></data>
 <data name="Feedback.Notice.Body" xml:space="preserve"><value>Naujų atsiliepimų: {0}. Juos rasite {1} (reikia darbuotojo prieigos rakto).</value></data><data name="Email.Privacy" xml:space="preserve"><value>Kaip tvarkome duomenis, rašoma privatumo pranešime: {0}</value></data>
-<data name="Email.Statement" xml:space="preserve"><value>Moderatoriaus paaiškinimas: {0}</value></data>
+<data name="Email.WithoutLink" xml:space="preserve"><value>Nenorite spausti nuorodos laiške? Naršyklėje patys atverkite {0} ir įveskite šį kodą:</value></data>
+  <data name="Email.Statement" xml:space="preserve"><value>Moderatoriaus paaiškinimas: {0}</value></data>
 <data name="Moderation.Rules" xml:space="preserve"><value>Šį laišką gavote, nes esate šio turinio autorius.</value></data>
 <data name="Digest.Subject" xml:space="preserve"><value>Lietuva 2.0 suvestinė Seimo nariams, {0}</value></data>
 <data name="Digest.Intro" xml:space="preserve"><value>projektų šioje suvestinėje: {0}. Dėl jų į Seimo narius kreipiasi Lietuva 2.0 naudotojai.</value></data>
@@ -147,6 +148,13 @@
 <data name="Mp.Takeover.Validity" xml:space="preserve"><value>Nuoroda galioja {0} val. ir tinka tik vieną kartą. Nauja nuoroda pakeičia ankstesnę.</value></data>
 <data name="Mp.Takeover.What" xml:space="preserve"><value>Atvėrę nuorodą sukursite prieigos raktą: tik juo ši paskyra galės kalbėti Seimo nario vardu.</value></data>
 <data name="Mp.Takeover.Ignore" xml:space="preserve"><value>Jei profilio perimti neprašėte, nieko daryti nereikia: be šios nuorodos profilis nebus perimtas.</value></data>
+  <data name="Mp.Takeover.Link" xml:space="preserve"><value>Perimti profilį</value></data>
+  <data name="Mp.Office.Subject" xml:space="preserve"><value>Kvietimas į Seimo nario biurą Lietuva 2.0</value></data>
+  <data name="Mp.Office.Intro" xml:space="preserve"><value>Seimo nario paskyra Lietuva 2.0 kviečia jus tapti biuro nariu. Seimo narys: {0}.</value></data>
+  <data name="Mp.Office.What" xml:space="preserve"><value>Biuro narys rašo Seimo nario vardu. Tekstai žymimi „Seimo narys arba jo biuras“; kas juos parašė, viešai nerodoma.</value></data>
+  <data name="Mp.Office.Accept" xml:space="preserve"><value>Priimti kvietimą</value></data>
+  <data name="Mp.Office.Validity" xml:space="preserve"><value>Kvietimas galioja iki {0} ir tinka vienam žmogui. Jei paskyros Lietuva 2.0 dar neturite, ją susikursite tame pačiame puslapyje – kito kvietimo nereikia.</value></data>
+  <data name="Mp.Office.Ignore" xml:space="preserve"><value>Jei šio kvietimo nelaukėte, nieko daryti nereikia.</value></data>
   <data name="Mp.response-hidden.Subject" xml:space="preserve"><value>Lietuva 2.0: Seimo nario atsakymas paslėptas</value></data>
   <data name="Mp.response-hidden.Body" xml:space="preserve"><value>moderatorius paslėpė Seimo nario atsakymą dėl projekto {1}. Seimo narys: {0}. Atsakymo vietoje rodoma „Atsakymas paslėptas moderatorių“ ir paaiškinimas. Projekto puslapis: {2}</value></data>
   <data name="Mp.response-restored.Subject" xml:space="preserve"><value>Lietuva 2.0: Seimo nario atsakymas atkurtas</value></data>

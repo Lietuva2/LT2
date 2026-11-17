@@ -75,6 +75,7 @@ services:
       RateLimits__CodeRequest__PermitLimit: ${LT2_RATE_CODE_REQUESTS:-10}
       RateLimits__Registration__PermitLimit: ${LT2_RATE_REGISTRATIONS:-20}
       RateLimits__SignIn__PermitLimit: ${LT2_RATE_SIGN_INS:-30}
+      RateLimits__OneTimeCode__PermitLimit: ${LT2_RATE_ONE_TIME_CODES:-30}
       # The MP's link (design 8.19.7): its pages and token routes per client address; only the local .env raises it.
       RateLimits__MpMail__PermitLimit: ${LT2_RATE_MP_MAIL:-60}
       # Design 8.19.1: where the data is invented (Demo:Allowed), MP mail goes only when the deployment declares all its mail

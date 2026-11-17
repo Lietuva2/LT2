@@ -18,6 +18,7 @@
   <data name="SignIn.PasskeyHint" xml:space="preserve"><value>Piršto atspaudu, veidu ar įrenginio PIN kodu – be kodo el. paštu.</value></data>
   <data name="SignIn.NoAccount" xml:space="preserve"><value>Neturite paskyros?</value></data>
   <data name="SignIn.ToRegister" xml:space="preserve"><value>Registruokitės su kvietimo kodu.</value></data>
+  <data name="SignIn.ToRegisterByOffice" xml:space="preserve"><value>Užsiregistruokite: kvietimas į biurą tinka ir registracijai.</value></data>
   <data name="Register.Label" xml:space="preserve"><value>Registracija</value></data>
   <data name="Register.Title" xml:space="preserve"><value>Nauja paskyra</value></data>
   <data name="MyInvitation.Title" xml:space="preserve"><value>Jūsų kvietimo kodas</value></data>
@@ -146,7 +147,13 @@
 <data name="Mp.Office.NoName" xml:space="preserve"><value>Be vardo</value></data>
 <data name="Mp.Office.Since" xml:space="preserve"><value>nuo {0}</value></data>
 <data name="Mp.Office.Count" xml:space="preserve"><value>Biuro narių: {0} iš {1}</value></data>
-<data name="Mp.Office.Invite" xml:space="preserve"><value>Pakviesti biuro narį</value></data>
+<data name="Mp.Office.Invite" xml:space="preserve"><value>Gauti nuorodą ir kodą</value></data>
+  <data name="Mp.Office.Email" xml:space="preserve"><value>Biuro nario el. pašto adresas</value></data>
+  <data name="Mp.Office.EmailHint" xml:space="preserve"><value>Šiuo adresu išsiųsime kvietimą; daugiau jo niekur nesaugome.</value></data>
+  <data name="Mp.Office.EmailRequired" xml:space="preserve"><value>Įrašykite el. pašto adresą.</value></data>
+  <data name="Mp.Office.Send" xml:space="preserve"><value>Siųsti kvietimą</value></data>
+  <data name="Mp.Office.Sent" xml:space="preserve"><value>Kvietimą išsiuntėme. Jis galioja iki {0}.</value></data>
+  <data name="Mp.Office.CodeLine" xml:space="preserve"><value>Be nuorodos: puslapyje {0} įvedamas šis kodas:</value></data>
 <data name="Mp.Office.LinkOnce" xml:space="preserve"><value>Nuoroda rodoma tik dabar: perduokite ją patys. Ji tinka vienam žmogui iki {0}.</value></data>
 <data name="Mp.Office.Remove" xml:space="preserve"><value>Pašalinti</value></data>
 <data name="Mp.Office.Removed" xml:space="preserve"><value>Biuro narys pašalintas.</value></data>
@@ -159,12 +166,11 @@
 <data name="Mp.LeaveConfirm" xml:space="preserve"><value>Taip, palikti</value></data>
 <data name="Mp.Left" xml:space="preserve"><value>Biurą palikote.</value></data>
 <data name="Mp.NewLink" xml:space="preserve"><value>Pametėte prieigos raktą? Siųsti naują nuorodą</value></data>
-<data name="MpLink.Missing" xml:space="preserve"><value>Nuorodoje nėra kodo. Atverkite visą nuorodą iš laiško.</value></data>
 <data name="MpLink.SignIn" xml:space="preserve"><value>Prisijungti</value></data>
 <data name="MpTakeover.PageTitle" xml:space="preserve"><value>Seimo nario profilio perėmimas · Lietuva 2.0</value></data>
 <data name="MpTakeover.Title" xml:space="preserve"><value>Seimo nario profilio perėmimas</value></data>
 <data name="MpTakeover.What" xml:space="preserve"><value>Ką reiškia perimti profilį</value></data>
-<data name="MpTakeover.SignInFirst" xml:space="preserve"><value>Prisijunkite šioje naršyklėje tuo adresu, kuriuo gavote laišką, ir dar kartą atverkite nuorodą.</value></data>
+<data name="MpTakeover.SignInFirst" xml:space="preserve"><value>Prisijunkite šioje naršyklėje tuo adresu, kuriuo gavote laišką, tada dar kartą atverkite nuorodą arba įveskite kodą iš laiško.</value></data>
 <data name="MpTakeover.Lead" xml:space="preserve"><value>Perėmus profilį:</value></data>
 <data name="MpTakeover.Public" xml:space="preserve"><value>Seimo nario profilyje bus rodoma „Profilį tvarko Seimo narys arba jo biuras“ ir data.</value></data>
 <data name="MpTakeover.NoSides" xml:space="preserve"><value>Ši paskyra kalbės Seimo nario vardu ir pati nebeužims pozicijų: jos pozicijos dabar bus atsiimtos.</value></data>
@@ -175,6 +181,14 @@
 <data name="MpOffice.What" xml:space="preserve"><value>Ką reiškia būti biuro nariu</value></data>
 <data name="MpOffice.Lead" xml:space="preserve"><value>Biuro narys rašo Seimo nario vardu. Tekstai žymimi „Seimo narys arba jo biuras“; kas juos parašė, viešai nerodoma.</value></data>
 <data name="MpOffice.Accept" xml:space="preserve"><value>Priimti</value></data>
+  <data name="MpOffice.CodeLead" xml:space="preserve"><value>Įveskite kvietimo kodą iš laiško ar žinutės, kurią gavote.</value></data>
+  <data name="MpOffice.CodeLabel" xml:space="preserve"><value>Kvietimo kodas</value></data>
+  <data name="MpTakeover.CodeLead" xml:space="preserve"><value>Įveskite kodą iš laiško, kurį gavote oficialiu Seimo nario adresu.</value></data>
+  <data name="MpTakeover.CodeLabel" xml:space="preserve"><value>Kodas</value></data>
+  <data name="OneTimeCode.Placeholder" xml:space="preserve"><value>ABCD-EFGH-JKMN</value></data>
+  <data name="OneTimeCode.Hint" xml:space="preserve"><value>12 raidžių ir skaitmenų; didžiosios ar mažosios raidės ir brūkšneliai nesvarbu.</value></data>
+  <data name="OneTimeCode.Go" xml:space="preserve"><value>Toliau</value></data>
+  <data name="OneTimeCode.Invalid" xml:space="preserve"><value>Kodą sudaro 12 raidžių ir skaitmenų, pvz. ABCD-EFGH-JKMN.</value></data>
   <data name="MpOffice.SignInHere" xml:space="preserve"><value>Prisijunkite arba užsiregistruokite čia pat: po to grįšite į šį puslapį ir galėsite priimti kvietimą.</value></data>
   <data name="MpOffice.PasskeyHint" xml:space="preserve"><value>Biuro nariui reikia prieigos rakto. Prisijunkite juo – kvietimas bus priimtas iš karto.</value></data>
   <data name="MpOffice.NewPasskeyHint" xml:space="preserve"><value>Biuro nariui reikia prieigos rakto. Jis bus sukurtas šiame įrenginyje, o kvietimas priimtas iš karto.</value></data>

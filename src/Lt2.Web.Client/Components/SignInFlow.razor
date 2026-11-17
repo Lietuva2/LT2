@@ -32,7 +32,7 @@
                 <button class="btn btn--wide" type="submit" disabled="@Locked">@L["SignIn.SendCode"]</button>
                 <button class="btn btn--plain btn--wide" type="button" disabled="@Locked" @onclick="SignInWithPasskeyAsync">@L["SignIn.Passkey"]</button>
                 <p class="small">@L["SignIn.PasskeyHint"]</p>
-                <p class="small">@L["SignIn.NoAccount"] <button type="button" class="linkish" disabled="@Locked" @onclick="() => Go(Step.Register)">@L["SignIn.ToRegister"]</button></p>
+                <p class="small">@L["SignIn.NoAccount"] <button type="button" class="linkish" disabled="@Locked" @onclick="() => Go(Step.Register)">@L[OfficeInvitation is null ? "SignIn.ToRegister" : "SignIn.ToRegisterByOffice"]</button></p>
                 <Messages Message="@Message" Info="@Info" />
             </form>
             break;
@@ -48,6 +48,8 @@
                            aria-invalid="@Invalid("email")" aria-describedby="@DescribedBy("email", "reg-email")" />
                     <FieldError Errors="Errors" Field="email" For="reg-email" />
                 </div>
+                @if (OfficeInvitation is null)
+                {
                 <div class="field @ErrorClass("invitationCode")">
                     <label for="reg-invite">@L["Invitation.Label"]</label>
                     <input class="input num" id="reg-invite" autocomplete="off" autocapitalize="characters"
@@ -56,6 +58,7 @@
                     <p class="field__hint" id="reg-invite-hint">@L["Invitation.Hint"]</p>
                     <FieldError Errors="Errors" Field="invitationCode" For="reg-invite" />
                 </div>
+                }
                 <button class="btn btn--wide" type="submit" disabled="@Locked">@L["Register.Submit"]</button>
                 <p class="fine">@L["Register.Fine"]</p>
                 <p class="small">@L["Register.HaveAccount"] <button type="button" class="linkish" disabled="@Locked" @onclick="() => Go(Step.SignIn)">@L["Register.ToSignIn"]</button></p>
@@ -176,6 +179,14 @@
     /// </summary>
     [Parameter]
     public string? ReturnTo { get; set; }
+
+    /// <summary>
+    /// An MP office member's invitation code (design 8.5.3; owner, 2026-11-17: "office link should count as invitation"): the
+    /// registration asks for no invitation code and sends this one instead, at registration and again at completion, where the
+    /// server checks it; nothing keeps it in the browser.
+    /// </summary>
+    [Parameter]
+    public string? OfficeInvitation { get; set; }
 
     /// <summary>
     /// A member's invitation link in the old form (<c>?kodas=…</c>, design 6.2): opens the registration form with the code
@@ -394,7 +405,8 @@
         var request = new RegisterRequest
         {
             Email = _email.Trim(),
-            InvitationCode = string.IsNullOrWhiteSpace(_invitation) ? null : _invitation.Trim(),
+            InvitationCode = OfficeInvitation is null && !string.IsNullOrWhiteSpace(_invitation) ? _invitation.Trim() : null,
+            OfficeInvitation = OfficeInvitation,
         };
         ClearMessages();
         return !Valid(RegisterValidator.Validate(request)) ? Task.CompletedTask : RunAsync(async () =>
@@ -437,6 +449,7 @@
             ConfirmsAdult = _adult,
             AcceptsTerms = _terms,
             InvitationCode = _askInvitation && !string.IsNullOrWhiteSpace(_invitation) ? _invitation.Trim() : string.IsNullOrWhiteSpace(kept) ? null : kept.Trim(),
+            OfficeInvitation = _askInvitation ? null : OfficeInvitation,
         };
         ClearMessages();
         if (!Valid(CompletionValidator.Validate(request)))

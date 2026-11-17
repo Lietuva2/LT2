@@ -46,6 +46,7 @@ public class Lt2Factory(DatabaseFixture database, int codeRequestLimit = 100_000
         // declared caught: nothing here reaches a mailbox. MpSendingTests checks the lock on factories of its own.
         builder.UseSetting("Email:Caught", "true");
         builder.UseSetting("RateLimits:MpMail:PermitLimit", "100000");
+        builder.UseSetting("RateLimits:OneTimeCode:PermitLimit", "100000");
         builder.UseSetting("RateLimits:MpMailToken:PermitLimit", "100000");
         builder.ConfigureServices(services => services.AddSingleton<IStartupFilter, ClientAddressStartupFilter>());
     }

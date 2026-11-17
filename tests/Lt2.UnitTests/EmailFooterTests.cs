@@ -22,7 +22,7 @@ public sealed class EmailFooterTests
             .Render(new SignInCodeEmail("ruta.mockute@pavyzdys.test", "482915", 10));
 
         email.TextBody.TrimEnd().ShouldEndWith(Footer);
-        email.HtmlBody.ShouldNotBeNull().ShouldContain("<a href=\"https://lt2.test/privatumas\">https://lt2.test/privatumas</a>");
+        email.HtmlBody.ShouldNotBeNull().ShouldContain("<a href=\"https://lt2.test/privatumas\" style=\"font-weight:600;color:#1f6b3a\">Kaip tvarkome duomenis, rašoma privatumo pranešime</a><br><span style=\"font-size:13px;color:#64748b;word-break:break-all\">https://lt2.test/privatumas</span>");
         email.HtmlBody!.IndexOf("privatumas", StringComparison.Ordinal).ShouldBeGreaterThan(email.HtmlBody.IndexOf("482915", StringComparison.Ordinal), "at the end");
     }
 

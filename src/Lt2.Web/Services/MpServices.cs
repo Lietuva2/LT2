@@ -16,7 +16,7 @@ internal static class MpMapping
         new(office.Members.Select(m => new MpOfficeMemberResponse(m.Id, m.DisplayName, m.Since)).ToList(), office.Limit);
 
     public static MpOfficeInvitationResponse Map(OfficeInvitation invitation) =>
-        new(MpRoutes.OfficeInvitationPath(invitation.Token), invitation.ExpiresAt);
+        new(MpRoutes.OfficeInvitationPath(invitation.Token), invitation.ExpiresAt, invitation.Token, invitation.Emailed);
 }
 
 /// <summary>
@@ -46,8 +46,11 @@ internal sealed class ServerMpApi(IPoliticians politicians, FrontPageFreshness f
     public async Task<ApiResult<MpOfficeResponse>> GetOfficeAsync(CancellationToken cancellationToken = default) =>
         errors.ToApiResult(await politicians.OfficeAsync(User, cancellationToken), MpMapping.Map);
 
-    public async Task<ApiResult<MpOfficeInvitationResponse>> InviteOfficeMemberAsync(CancellationToken cancellationToken = default) =>
-        errors.ToApiResult(await politicians.InviteOfficeMemberAsync(User, IpHash, cancellationToken), MpMapping.Map);
+    public async Task<ApiResult<MpOfficeInvitationResponse>> InviteOfficeMemberAsync(MpOfficeInvitationRequest request, CancellationToken cancellationToken = default)
+    {
+        ArgumentNullException.ThrowIfNull(request);
+        return errors.ToApiResult(await politicians.InviteOfficeMemberAsync(User, request.Email, IpHash, cancellationToken), MpMapping.Map);
+    }
 
     public async Task<ApiResult> RemoveOfficeMemberAsync(Guid memberId, CancellationToken cancellationToken = default) =>
         errors.ToApiResult(await politicians.RemoveOfficeMemberAsync(User, memberId, IpHash, cancellationToken));

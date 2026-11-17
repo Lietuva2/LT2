@@ -108,6 +108,7 @@ public static class NotificationsModule
         services.AddNoticePart<CommentNoticeEmail, FollowTemplates>(MessageKinds.CommentNoticeEmail, 60, t => t.CommentsPart);
         services.AddEmail<CommentNoticeEmail, FollowTemplates>(MessageKinds.CommentNoticeEmail, t => t.Comments);
         services.AddEmail<MpTakeoverLinkEmail, MpTemplates>(MessageKinds.MpTakeoverLinkEmail, t => t.Render);
+        services.AddEmail<MpOfficeInvitationEmail, MpTemplates>(MessageKinds.MpOfficeInvitationEmail, t => t.OfficeInvitation);
         services.AddEmail<MpResponseNoticeEmail, MpTemplates>(MessageKinds.MpResponseNoticeEmail, t => t.Response);
         services.AddEmail<MpMail.MpDigestEmail, MpMailTemplates>(MpMail.MpMailKinds.Digest, t => t.Digest);
         services.AddEmail<MpMail.MpIntroductionEmail, MpMailTemplates>(MpMail.MpMailKinds.Introduction, t => t.Introduction);

@@ -12,6 +12,7 @@ public sealed class CompleteRegistrationRequestValidator : AbstractValidator<Com
         RuleFor(x => x.ConfirmsAdult).Equal(true).WithMessage(l["Adult.Required"]);
         RuleFor(x => x.AcceptsTerms).Equal(true).WithMessage(l["Terms.Required"]);
         RuleFor(x => x.InvitationCode).MaximumLength(AuthRules.InvitationCodeMaxLength).WithMessage(l["Invitation.TooLong"]);
+        RuleFor(x => x.OfficeInvitation).MaximumLength(AuthRules.InvitationCodeMaxLength).WithMessage(l["Invitation.TooLong"]);
     }
 }
 

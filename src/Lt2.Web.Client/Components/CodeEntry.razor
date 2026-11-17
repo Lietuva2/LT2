@@ -1,0 +1,54 @@
+@inherits InteractiveBase<UiText>
+@inject IJSRuntime JS
+@inject NavigationManager Navigation
+
+@* Design 6.8 (owner, 2026-11-17): the way in without the email's link. A page whose link carries a one-time code after the "#"
+   (an office invitation, an MP's take-over, an organisation representative's invitation) asks for the code when it is opened
+   without one. The code is checked for its shape here and put after the "#" of the page's own address (never into the query,
+   so no request or log holds it), and the page goes on as if the link had been followed. Whether it is a valid code only the
+   server says, with the one answer for unknown and wrong codes. *@
+<form class="sheet stack" id="@(IdPrefix + "code-form")" @onsubmit="GoAsync" novalidate>
+    <div class="field @ErrorClass("code")">
+        <label for="@(IdPrefix + "code")">@Label</label>
+        <input class="input num" id="@(IdPrefix + "code")" autocomplete="one-time-code" autocapitalize="characters" spellcheck="false"
+               maxlength="@OneTimeCode.MaxTyped" placeholder="@L["OneTimeCode.Placeholder"]" @bind="_typed" @bind:event="oninput" disabled="@Locked"
+               aria-invalid="@Invalid("code")" aria-describedby="@DescribedBy("code", IdPrefix + "code", IdPrefix + "code-hint")" />
+        <p class="field__hint" id="@(IdPrefix + "code-hint")">@L["OneTimeCode.Hint"]</p>
+        <FieldError Errors="Errors" Field="code" For="@(IdPrefix + "code")" />
+    </div>
+    <p><button class="btn" type="submit" id="@(IdPrefix + "code-go")" disabled="@Locked">@L["OneTimeCode.Go"]</button></p>
+</form>
+
+@code {
+    private string _typed = "";
+
+    /// <summary>The field's label ("Kvietimo kodas", "Kodas").</summary>
+    [Parameter, EditorRequired] public string Label { get; set; } = "";
+
+    /// <summary>Given the code in its one form once it has the right shape.</summary>
+    [Parameter, EditorRequired] public EventCallback<string> Entered { get; set; }
+
+    [Parameter] public string IdPrefix { get; set; } = "";
+
+    private async Task GoAsync()
+    {
+        ClearMessages();
+        if (OneTimeCode.Normalize(_typed) is not { } code)
+        {
+            FieldFails("code", L["OneTimeCode.Invalid"]);
+            return;
+        }
+
+        try
+        {
+            var page = Navigation.Uri.Split('#')[0];
+            await JS.InvokeVoidAsync("history.replaceState", null, "", page + "#" + code);
+        }
+        catch (JSException)
+        {
+            // The address keeps no code; the page still goes on with it.
+        }
+
+        await Entered.InvokeAsync(code);
+    }
+}

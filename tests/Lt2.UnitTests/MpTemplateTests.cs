@@ -16,18 +16,44 @@ public sealed class MpTemplateTests
 
     private static AccountNoticeTemplate Notices() => new(Texts(), Options.Create(new SiteOptions { Address = "https://lt2.test" }));
 
+    private static MpTemplates Mp() => new(Texts(), Options.Create(new SiteOptions { Address = "https://lt2.test" }));
+
     [Fact]
-    public void The_takeover_link_is_a_full_address_with_its_token_after_the_hash()
+    public void The_takeover_link_is_a_full_address_with_its_code_after_the_hash_and_the_code_to_type_without_it()
     {
-        var email = new MpTemplates(Texts(), Options.Create(new SiteOptions { Address = "https://lt2.test" }))
-            .Render(new MpTakeoverLinkEmail(Official, "Ona Jonaitienė", "/seimo-narys/perimti#abcDEF_123-xyz", 24));
+        var email = Mp().Render(new MpTakeoverLinkEmail(Official, "Ona Jonaitienė", "/seimo-narys/perimti#ABCD-EFGH-JKMN", 24, "/seimo-narys/perimti", "ABCD-EFGH-JKMN"));
 
         email.To.ShouldBe(Official);
         email.Subject.ShouldBe("Lietuva 2.0: Seimo nario profilio perėmimas");
-        email.TextBody.ShouldContain("https://lt2.test/seimo-narys/perimti#abcDEF_123-xyz");
+        email.TextBody.ShouldContain("Perimti profilį: https://lt2.test/seimo-narys/perimti#ABCD-EFGH-JKMN");
         email.TextBody.ShouldContain("Seimo narys: Ona Jonaitienė.", Case.Sensitive, "design 8.5.1: the name in the nominative, after a colon");
         email.TextBody.ShouldContain("galioja 24 val.");
-        email.TextBody.ShouldNotContain("?");
+        email.TextBody.ShouldNotContain("perimti?", customMessage: "design 6.8: no secret in a query");
+
+        // Owner, 2026-11-17: the way without the link: the page to open and the code to type there.
+        email.TextBody.ShouldContain("Naršyklėje patys atverkite https://lt2.test/seimo-narys/perimti ir įveskite šį kodą:\n\nABCD-EFGH-JKMN\n\n");
+        email.HtmlBody!.ShouldContain("<a href=\"https://lt2.test/seimo-narys/perimti#ABCD-EFGH-JKMN\" style=\"font-weight:600;color:#1f6b3a\">Perimti profilį</a><br><span style=\"font-size:13px;color:#64748b;word-break:break-all\">https://lt2.test/seimo-narys/perimti#ABCD-EFGH-JKMN</span>");
+        email.HtmlBody!.ShouldContain("letter-spacing:4px\">ABCD-EFGH-JKMN</p>", customMessage: "the code shown large");
+    }
+
+    [Fact]
+    public void An_office_invitation_names_the_mp_links_the_page_and_gives_the_code_to_type()
+    {
+        var email = Mp().OfficeInvitation(new MpOfficeInvitationEmail(
+            "biuras@pavyzdys.test", "Ona Jonaitienė", "/seimo-narys/biuras#ABCD-EFGH-JKMN", "/seimo-narys/biuras", "ABCD-EFGH-JKMN",
+            new DateTimeOffset(2026, 11, 24, 10, 30, 0, TimeSpan.Zero)));
+
+        email.To.ShouldBe("biuras@pavyzdys.test");
+        email.Subject.ShouldBe("Kvietimas į Seimo nario biurą Lietuva 2.0");
+        email.TextBody.ShouldContain("Seimo narys: Ona Jonaitienė.");
+        email.TextBody.ShouldContain("Priimti kvietimą: https://lt2.test/seimo-narys/biuras#ABCD-EFGH-JKMN");
+        email.TextBody.ShouldContain("atverkite https://lt2.test/seimo-narys/biuras ir įveskite šį kodą:\n\nABCD-EFGH-JKMN\n\n");
+        email.TextBody.ShouldContain("galioja iki 2026-11-24 12:30", customMessage: "Vilnius time");
+        email.TextBody.ShouldContain("kito kvietimo nereikia", customMessage: "the office invitation counts as the invitation");
+        email.TextBody.ShouldContain("https://lt2.test/privatumas", customMessage: "design 8.22.3: every email has the footer");
+        email.HtmlBody!.ShouldContain("<a href=\"https://lt2.test/seimo-narys/biuras#ABCD-EFGH-JKMN\" style=\"font-weight:600;color:#1f6b3a\">Priimti kvietimą</a><br><span");
+        email.HtmlBody!.ShouldContain("<a href=\"https://lt2.test/seimo-narys/biuras\">https://lt2.test/seimo-narys/biuras</a>");
+        email.HtmlBody!.ShouldNotContain("<img", customMessage: "no tracking pixel");
     }
 
     [Theory]

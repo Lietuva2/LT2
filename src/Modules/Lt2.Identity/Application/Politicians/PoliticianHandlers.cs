@@ -36,6 +36,9 @@ internal sealed class PoliticianHandlers(
     /// <summary>The page the take-over link opens; the token follows the <c>#</c> (design 6.8).</summary>
     public const string TakeoverPage = "/seimo-narys/perimti";
 
+    /// <summary>The page an office invitation opens; the code follows the <c>#</c> (design 6.8), or is typed there (design 8.5.3).</summary>
+    public const string OfficeInvitationPage = "/seimo-narys/biuras";
+
     internal static readonly Error NotOfficial = Error.Forbidden("mp.not-official-address");
     internal static readonly Error LinkInvalid = Error.Validation("mp.link-invalid", "token");
     internal static readonly Error AlreadyLinked = Error.Conflict("mp.already-linked");
@@ -45,6 +48,7 @@ internal sealed class PoliticianHandlers(
     internal static readonly Error NotMp = Error.Forbidden("mp.not-mp");
     internal static readonly Error OfficeFull = Error.Conflict("mp.office-full");
     internal static readonly Error MemberNotFound = Error.NotFound("mp.office-member-not-found");
+    internal static readonly Error OfficeInvitationLimit = new(ErrorKind.TooManyRequests, "mp.office-invitation-limit");
     private static readonly Error MemberRequired = Error.Forbidden("member.required");
     private const string PasskeyName = "Seimo nario prieigos raktas";
 
@@ -98,14 +102,15 @@ internal sealed class PoliticianHandlers(
         await db.PoliticianTokens
             .Where(t => t.Kind == PoliticianTokenKinds.Takeover && t.SeimasPersonId == mp.SeimasPersonId && t.UsedAt == null)
             .ExecuteUpdateAsync(s => s.SetProperty(t => t.UsedAt, now), cancellationToken);
-        var token = PoliticianRules.NewToken();
+        // Owner, 2026-11-17: the link's secret is a typeable one-time code, also typed on the take-over page.
+        var token = OneTimeCode.New();
         db.PoliticianTokens.Add(new PoliticianToken
         {
             Id = Ids.New(clock),
             Kind = PoliticianTokenKinds.Takeover,
             SeimasPersonId = mp.SeimasPersonId,
             UserId = user.Id,
-            TokenHash = PoliticianRules.Hash(token),
+            TokenHash = OneTimeCode.Hash(token),
             CreatedAt = now,
             ExpiresAt = now + PoliticianRules.TakeoverLifetime,
         });
@@ -114,7 +119,7 @@ internal sealed class PoliticianHandlers(
         await outbox.EnqueueAsync(
             OutboxMessage.Create(
                 MessageKinds.MpTakeoverLinkEmail,
-                new MpTakeoverLinkEmail(user.Email!, Name(mp), TakeoverPage + "#" + token, (int)PoliticianRules.TakeoverLifetime.TotalHours)),
+                new MpTakeoverLinkEmail(user.Email!, Name(mp), TakeoverPage + "#" + token, (int)PoliticianRules.TakeoverLifetime.TotalHours, TakeoverPage, token)),
             transaction.GetDbTransaction(),
             cancellationToken);
         await transaction.CommitAsync(cancellationToken);
@@ -129,7 +134,7 @@ internal sealed class PoliticianHandlers(
         }
 
         var now = clock.GetUtcNow();
-        var hash = PoliticianRules.Hash(token);
+        var hash = OneTimeCode.Hash(token);
         var found = await db.PoliticianTokens.AsNoTracking().FirstOrDefaultAsync(t => t.TokenHash == hash, cancellationToken);
         if (PoliticianRules.Check(found, PoliticianTokenKinds.Takeover, user.Id, now) != PoliticianTokenCheck.Valid)
         {
@@ -314,11 +319,19 @@ internal sealed class PoliticianHandlers(
         return new MpOffice(members, PoliticianRules.OfficeMembersPerMp);
     }
 
-    public async Task<Result<OfficeInvitation>> InviteOfficeMemberAsync(ClaimsPrincipal principal, string? ipHash, CancellationToken cancellationToken)
+    public async Task<Result<OfficeInvitation>> InviteOfficeMemberAsync(ClaimsPrincipal principal, string? email, string? ipHash, CancellationToken cancellationToken)
     {
         if (await MpWriterAsync(principal, cancellationToken) is not { } state)
         {
             return await RefusalAsync(principal, cancellationToken);
+        }
+
+        // Owner, 2026-11-17: the site may send the invitation. The address is used only to send it: it goes into the outbox row
+        // and nowhere else (not on the invitation, not in the audit).
+        var to = string.IsNullOrWhiteSpace(email) ? null : email.Trim();
+        if (to is not null && EmailAddress.Normalize(to) is null)
+        {
+            return Error.Validation("email.invalid", "email");
         }
 
         var now = clock.GetUtcNow();
@@ -330,22 +343,42 @@ internal sealed class PoliticianHandlers(
             return OfficeFull;
         }
 
-        var token = PoliticianRules.NewToken();
+        var since = now - TimeSpan.FromDays(1);
+        var made = await db.PoliticianTokens.CountAsync(
+            t => t.Kind == PoliticianTokenKinds.Office && t.SeimasPersonId == person && t.CreatedAt > since, cancellationToken);
+        if (!PoliticianRules.MayMakeOfficeInvitation(made))
+        {
+            return OfficeInvitationLimit;
+        }
+
+        // Design 8.5.3 (owner, 2026-11-17): the invitation's one secret is a code that can be typed as well as followed.
+        var code = OneTimeCode.New();
         var invitation = new PoliticianToken
         {
             Id = Ids.New(clock),
             Kind = PoliticianTokenKinds.Office,
             SeimasPersonId = person,
             UserId = state.UserId,
-            TokenHash = PoliticianRules.Hash(token),
+            TokenHash = OneTimeCode.Hash(code),
             CreatedAt = now,
             ExpiresAt = now + PoliticianRules.OfficeInvitationLifetime,
         };
         db.PoliticianTokens.Add(invitation);
         await db.SaveChangesAsync(cancellationToken);
-        await events.RecordAsync(transaction.GetDbTransaction(), "mp.office-invited", state.UserId, new Actor(state.UserId, Roles.Member, ipHash), new { mp = person }, null, cancellationToken);
+        await events.RecordAsync(
+            transaction.GetDbTransaction(), "mp.office-invited", state.UserId, new Actor(state.UserId, Roles.Member, ipHash), new { mp = person, emailed = to is not null }, null, cancellationToken);
+        if (to is not null)
+        {
+            await outbox.EnqueueAsync(
+                OutboxMessage.Create(
+                    MessageKinds.MpOfficeInvitationEmail,
+                    new MpOfficeInvitationEmail(to, await FactsAsync(person, cancellationToken) ?? "", OfficeInvitationPage + "#" + code, OfficeInvitationPage, code, invitation.ExpiresAt)),
+                transaction.GetDbTransaction(),
+                cancellationToken);
+        }
+
         await transaction.CommitAsync(cancellationToken);
-        return new OfficeInvitation(token, invitation.ExpiresAt);
+        return new OfficeInvitation(code, invitation.ExpiresAt, to is not null);
     }
 
     public async Task<Result<MpLinkState>> AcceptOfficeInvitationAsync(
@@ -371,7 +404,7 @@ internal sealed class PoliticianHandlers(
         }
 
         var now = clock.GetUtcNow();
-        var hash = PoliticianRules.Hash(token);
+        var hash = OneTimeCode.Hash(token);
         var found = await db.PoliticianTokens.AsNoTracking().FirstOrDefaultAsync(t => t.TokenHash == hash, cancellationToken);
         if (PoliticianRules.Check(found, PoliticianTokenKinds.Office, state.UserId, now) != PoliticianTokenCheck.Valid)
         {
