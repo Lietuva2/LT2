@@ -776,8 +776,8 @@ body { padding-block-end: 4.5rem; }
 
 /* ---------- The front page (design 8.7, reworked 2026-11-15; mockup design/ui/pradzia.html) ---------- */
 
-/* The visitor's head: the turning logo beside the name and one line, about as tall as they are; under both, across the
-   head, the trial note with the links to register or sign in. The note starts at the page's edge and is a line of text
+/* The visitor's head (owner, 2026-11-17: see below for the columns from 54rem): the turning logo beside the headline; under
+   both, across the head, the trial note with the links to register or sign in. The note starts at the page's edge and is a line of text
    wide (p's --measure), as the invented-data notice above the page is, so the two yellow notes share both edges at
    every width (owner, 2026-11-16: side by side they had no edge in common). One step, --sp-4, apart above and below
    (from the notice, between the rows, to the rule; the links under the note --sp-2): the page's own padding (--sp-5) and
@@ -794,8 +794,15 @@ body { padding-block-end: 4.5rem; }
    the note are one column a line of text wide and the logo (about 15rem) is centred in the space to its right, across both
    rows. */
 .home-head h1 { font-size: var(--fs-4); line-height: 1.15; max-width: var(--measure); }
+/* The visitor's front page carries the invented-data notice as the head's first row (the layout leaves it out there), so the
+   logo is centred across the notice as well; without the notice the head has no such row and the logo centres on the rest. */
+.home-head > #invented-data { grid-column: 1 / -1; }
+/* With the notice in it the head starts where the notice did under the menu: the page's own top padding is taken back. */
+.home-head--notice { margin-block-start: calc(0px - var(--sp-5)); }
 @media (min-width: 54.0625rem) {
   .home-head { grid-template-columns: minmax(0, var(--measure)) minmax(0, 1fr); grid-template-areas: "title logo" "signin logo"; }
+  .home-head--notice { grid-template-areas: "notice logo" "title logo" "signin logo"; }
+  .home-head > #invented-data { grid-area: notice; }
   .home-head h1 { grid-area: title; }
   .home-head__signin { grid-area: signin; }
   .home-head lt2-logo-spin { grid-area: logo; width: min(15rem, 100%); justify-self: center; align-self: center; }
@@ -994,15 +1001,15 @@ body { padding-block-end: 4.5rem; }
 .usage-name { overflow-wrap: anywhere; }
 
 /* Numbers per day as bars (DayBars: "Lankomumas", the invitations' screen; owner, 2026-11-17): a fixed height and at most a
-   readable width, one column a day; the day and number show at once above a column on hover or keyboard focus, anchored to
+   readable width, one column a day at most 2.5rem wide (a few days stay narrow bars), the bar filling its column; the day and number show at once above a column on hover or keyboard focus, anchored to
    the side of the chart the column is on so it never leaves the screen; some days are named under the axis. */
 .daybars { margin: 0; padding-block: 2rem 1.5rem; max-inline-size: 48rem; }
 .daybars__days {
-  list-style: none; margin: 0; padding: 0; display: grid; grid-auto-flow: column; grid-auto-columns: minmax(0, 1fr);
+  list-style: none; margin: 0; padding: 0; display: grid; grid-auto-flow: column; grid-auto-columns: minmax(0, 2.5rem);
   column-gap: 1px; block-size: 10rem; border-bottom: 1px solid var(--ink-2);
 }
 .daybars__day { position: relative; block-size: 100%; outline-offset: 1px; }
-.daybars__bar { display: block; inline-size: 100%; block-size: 100%; }
+.daybars__bar { position: absolute; inset: 0; display: block; inline-size: 100%; block-size: 100%; }
 .daybars__bar rect { fill: var(--leaf); }
 .daybars__day:hover .daybars__bar rect, .daybars__day:focus-visible .daybars__bar rect { fill: var(--action); }
 .daybars__day:hover, .daybars__day:focus-visible { background: var(--rule); }

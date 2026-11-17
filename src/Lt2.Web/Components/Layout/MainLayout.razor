@@ -38,7 +38,7 @@
     </nav>
 </header>
 
-@if (_parliamentDataInvented)
+@if (_parliamentDataInvented && !NoticeInPage)
 {
     <div class="page"><p class="note" role="note" id="invented-data">@T["Notice.InventedParliament"]</p></div>
 }
@@ -99,6 +99,12 @@
     private string Path => Navigation.ToBaseRelativePath(Navigation.Uri).Split('?', '#')[0].TrimEnd('/');
 
     private bool OnSignInPage => Path == "prisijungti";
+
+    /// <summary>
+    /// The visitor's front page shows the invented-data notice inside its head, so the turning logo beside the head is centred
+    /// across the notice too (design 8.7, owner 2026-11-17); every other page has it here.
+    /// </summary>
+    private bool NoticeInPage => Path.Length == 0 && HttpContext?.User.Identity?.IsAuthenticated != true;
 
     /// <summary><c>page</c> on the item's own page, <c>true</c> on a page under it, nothing elsewhere.</summary>
     private string? Current(bool inSection, string own) => !inSection ? null : Path == own ? "page" : "true";

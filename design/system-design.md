@@ -1313,7 +1313,9 @@ and the "not a representative poll" notice. It uses only the public answers behi
     at the type scale's step nearest 2rem (`--fs-4`), and there is no separate lead paragraph; the page's title stays
     "Lietuva 2.0". From 54rem the headline and, under it, the trial note with its links are one column a line of text
     wide (so the note keeps both edges of the invented-data notice), and the turning logo, about 15rem wide, stands
-    centred in the free space to the right, across both rows. On a phone the small logo stays beside the headline (set
+    centred in the free space to the right, vertically in the whole space between the menu and the rule above "Kaip tai
+    veikia", the invented-data notice included: on this page the notice is the head's first row (the layout leaves it
+    out there), and where there is no notice the logo centres on the head alone. On a phone the small logo stays beside the headline (set
     smaller, `--fs-3`) and the note goes under both. The agenda's heading still shows on the first screen at 1280 × 900.
   - **No paragraph on following [decided by the owner on 2026-11-16].** The paragraph "Projektus ir Seimo narius
     galite sekti: …" was removed from the introduction (here and at the top of `/metodika`, which shows the same

@@ -560,7 +560,8 @@ page's "Balsuota".
   "Organizacijos" block and the introduction no paragraph on following (owner, 2026-11-16: the footer links to
   organisations, the account page registers one, "Sekti" says what it sends); the visitor's head (owner, 2026-11-17) is the
   headline (the lead sentence as `h1`; the title stays "Lietuva 2.0") and the trial note under it with the invented-data
-  notice's edges, the turning logo centred to their right from 54rem, beside the headline on a phone. "Kas yra riba?" is one hint beside the note under the timeline, as on `/darbotvarke`. A coming bill with an open record offers "Prašau balsuoti" with "už" and "prieš" in its row (owner,
+  notice's edges, the turning logo centred to their right from 54rem (across the invented-data notice too, which on this
+  page is the head's first row, not the layout's), beside the headline on a phone. "Kas yra riba?" is one hint beside the note under the timeline, as on `/darbotvarke`. A coming bill with an open record offers "Prašau balsuoti" with "už" and "prieš" in its row (owner,
   2026-11-15): a visitor's are `LandingPath.SignInLink` links to the bill's page; a member's side column is one island
   (`MyAgendaSide`, disabled before it starts) that takes, changes ("Atsiimti" withdraws) the side with the bill page's
   request, asks the first-time consent across the row with the shared `<PositionConsentForm>` (also in `SidePicker`), then
