@@ -1,12 +1,15 @@
 @inherits InteractiveBase<UiText>
 @inject IMeApi MeApi
+@inject MyAccountState Account
 
 @* Design 5.2: the party the person supports, private and optional, with its own explicit consent; used only for group
    numbers in summaries to MPs, from the setting Digest:PartyGroupMinimum (8.4; 0 and 1 both mean any group of one or
    more, said in words), which the text states as it holds now. Design 8.25.9 (owner, 2026-11-17): while the profile is public, the box
    "Rodyti viešame profilyje" shows it on the public page, with its own consent (party-public) said inline before it is given;
-   removing or changing the party, unticking the box or switching the profile off stops showing it at once. *@
-@if (Party is { } party)
+   removing or changing the party, unticking the box or switching the profile off stops showing it at once. The MP's own
+   account declares no party (design 8.5.4, owner 2026-11-17): once the island runs the part is gone, unless a party given
+   before the take-over is still there to remove. *@
+@if (Party is { } party && !(_mpAccount && party.Party is null))
 {
     <section class="sheet stack" aria-labelledby="party-title" id="party-support">
         <h3 id="party-title">@L["Party.Title"]</h3>
@@ -56,6 +59,7 @@
     private string _partyChoice = "";
     private bool _partyConsent;
     private bool _show;
+    private bool _mpAccount;
 
     [PersistentState]
     public PartySupportResponse? Party { get; set; }
@@ -64,6 +68,7 @@
     {
         Party ??= (await MeApi.GetPartySupportAsync()).Value;
         Take();
+        _mpAccount = await Account.IsMpAccountAsync(RendererInfo.IsInteractive);
     }
 
     /// <summary>Reads the state again: "Viešas profilis" was switched on or off on the same screen (switching off stops showing the party).</summary>

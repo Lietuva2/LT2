@@ -1,10 +1,14 @@
 @inherits InteractiveBase<UiText>
 @inject IProfilesApi Profiles
+@inject MyAccountState Account
 
 @* Design 8.25 on the "Profilis" screen: "Apie mane" and the switch "Viešas profilis", one form. The switch is the consent
    (kind public-profile): before it is saved on, the form says everything it covers (design 8.25.1), inline, since a consent
    and what it covers stay where the person acts (design 8.15). "Apie mane" can be written while the profile is off and is
-   shown nowhere then. The person's own answer only, filled from GET /me/profile. *@
+   shown nowhere then. The person's own answer only, filled from GET /me/profile. The MP's own account has no public profile
+   (design 8.5.4, 8.25.1; owner 2026-11-17): once the island runs the part is gone. *@
+@if (!_mpAccount)
+{
 <section class="sheet stack" aria-labelledby="profile-title" id="viesas-profilis">
     <h3 id="profile-title">@L["PublicProfile.Title"]</h3>
     @if (Mine is { } mine)
@@ -56,10 +60,12 @@
         </form>
     }
 </section>
+}
 
 @code {
     private string? _about;
     private bool _public;
+    private bool _mpAccount;
 
     /// <summary>The account has a display name: a public profile needs one (design 8.25.6).</summary>
     [Parameter] public bool HasName { get; set; }
@@ -73,6 +79,7 @@
     {
         Mine ??= (await Profiles.GetMineAsync()).Value;
         Take(Mine);
+        _mpAccount = await Account.IsMpAccountAsync(RendererInfo.IsInteractive);
     }
 
     private void Take(MyProfileResponse? mine)

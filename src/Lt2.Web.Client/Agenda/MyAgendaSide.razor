@@ -14,7 +14,8 @@
    the panel, which read the shared answer again (MyAgendaState.Changed). After the member's own action the row shows the
    bill's live numbers from its public answer, not the page's copy that may be a minute old; so does it once on start when
    that copy says nobody took part but the member's own answer has a side. A row of the last week's
-   votes (VoteId) offers no sides, only "Kaip balsavo Seimo nariai".
+   votes (VoteId) offers no sides, only "Kaip balsavo Seimo nariai"; nor does a row for an MP's own account (design 8.5.4,
+   known from the browser's answer), which keeps the numbers only.
 
    Rendered straight into the row (the side column and, while asked, the consent as the row's last part). While the server
    prerenders and before the island has started the numbers are the page's, "nobody yet" reads as for anyone and the
@@ -24,6 +25,10 @@
     @if (VoteId is { } vote)
     {
         <a class="btn btn--plain cta" href="/seimas/balsavimai/@vote">@L["Agenda.Action.Votes"]</a>
+    }
+    else if (_answer is { MpAccount: true })
+    {
+        @* Design 8.5.4 (owner, 2026-11-17): the MP's own account takes no side; the row keeps the numbers only. *@
     }
     else
     {

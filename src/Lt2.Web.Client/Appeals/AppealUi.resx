@@ -14,7 +14,9 @@
 <data name="Side.SignIn" xml:space="preserve"><value>Prisijunkite, kad galėtumėte nurodyti, ko prašote. Jūsų pasirinkimas nebus viešas.</value></data>
 <data name="Side.Yours.for" xml:space="preserve"><value>Jūs prašote balsuoti už. Tai matote tik jūs.</value></data>
 <data name="Side.Yours.against" xml:space="preserve"><value>Jūs prašote balsuoti prieš. Tai matote tik jūs.</value></data>
-<data name="Side.Withdraw" xml:space="preserve"><value>Atsiimti</value></data>
+<data name="Side.MpAccount" xml:space="preserve"><value>Seimo nario paskyra pozicijos neužima.</value></data>
+  <data name="Side.MpAccount.Respond" xml:space="preserve"><value>Seimo nario atsakymas</value></data>
+  <data name="Side.Withdraw" xml:space="preserve"><value>Atsiimti</value></data>
 <data name="Consent.Title" xml:space="preserve"><value>Prieš išsaugant jūsų poziciją</value></data>
 <data name="Consent.Text" xml:space="preserve"><value>Tai, ar prašote balsuoti už, ar prieš, yra jūsų politinė nuomonė – ypatingai saugomi asmens duomenys. Ją išsaugosime tik gavę jūsų aiškų sutikimą. Jūsų pozicijos niekam nerodome: viešai skelbiami tik bendri skaičiai. Sutikimą galite bet kada atšaukti savo paskyroje – tada visos jūsų pozicijos bus ištrintos.</value></data>
 <data name="Consent.PrivacyLink" xml:space="preserve"><value>Kaip saugome pozicijas – privatumo pranešime</value></data>
@@ -90,7 +92,7 @@
   <data name="MpResponse.Section" xml:space="preserve"><value>Seimo narių atsakymai</value></data>
   <data name="MpResponse.For" xml:space="preserve"><value>Rašote Seimo nario vardu: {0}.</value></data>
   <data name="MpResponse.Public" xml:space="preserve"><value>Atsakymas skelbiamas iš karto ir žymimas „Seimo narys arba jo biuras“. Pakeistas ar atsiimtas jis lieka matomas su ankstesnėmis versijomis.</value></data>
-  <data name="MpResponse.Refusal.mp.passkey-required" xml:space="preserve"><value>Prisijunkite prieigos raktu: prisijungus kodu galima tik skaityti.</value></data>
+  <data name="MpResponse.Refusal.mp.passkey-required" xml:space="preserve"><value>Šiam veiksmui reikia prisijungimo prieigos raktu.</value></data>
   <data name="MpResponse.Refusal.response.mandate-ended" xml:space="preserve"><value>Seimo nario įgaliojimai baigėsi: naujų atsakymų skelbti nebegalima.</value></data>
   <data name="MpResponse.Refusal.response.bill-not-open" xml:space="preserve"><value>Atsakymo skelbti ar keisti nebegalima: Seimas jau balsavo arba dalyvavimą uždarė moderatoriai.</value></data>
   <data name="MpResponse.Refusal.response.hidden" xml:space="preserve"><value>Atsakymą paslėpė moderatoriai: jo pakeisti ar atsiimti negalima.</value></data>
@@ -539,7 +541,8 @@
 <data name="Org.Field.LegalCode" xml:space="preserve"><value>Juridinio asmens kodas (nebūtina)</value></data>
 <data name="Org.Field.Lobbyist" xml:space="preserve"><value>Esame registruoti lobistai</value></data>
 <data name="Org.Register.PageTitle" xml:space="preserve"><value>Registruoti organizaciją · Lietuva 2.0</value></data>
-<data name="Org.Register.Title" xml:space="preserve"><value>Registruoti organizaciją</value></data>
+<data name="Org.Register.MpAccount" xml:space="preserve"><value>Seimo nario paskyra organizacijų neregistruoja.</value></data>
+  <data name="Org.Register.Title" xml:space="preserve"><value>Registruoti organizaciją</value></data>
   <data name="Org.Register.Lead" xml:space="preserve"><value>Užregistruota organizacija iš karto rodoma viešai ir savo vardu gali skelbti pozicijas dėl Seimo projektų.</value></data>
   <data name="Org.Register.Point1" xml:space="preserve"><value>Niekas jos iš anksto netvirtina; moderatoriai naujas organizacijas peržiūri vėliau.</value></data>
   <data name="Org.Register.Point2" xml:space="preserve"><value>Jūs tapsite pirmuoju jos atstovu. Atstovų vardai viešai nerodomi, o tai, ko prašote jūs pats, su organizacija nesiejama.</value></data>

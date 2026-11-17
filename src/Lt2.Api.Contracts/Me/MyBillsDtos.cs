@@ -13,8 +13,10 @@ public sealed record MyBillResponse(string Number, string? Side, bool Following)
 /// <c>GET /api/v1/me/bills?numbers=…</c>: one row for each asked bill the caller has a side on or follows, in the order
 /// asked; a bill with neither is left out. <c>HasPositionConsent</c>: the caller has given the positions consent (design
 /// 6.5), so a side taken in a row of the front page is saved at once; without it the row asks for the consent first.
+/// <c>MpAccount</c>: the caller is an MP's own linked account (design 8.5.4, owner 2026-11-17), which takes no side, so the
+/// rows offer none; an office member's is false. Asked only in the browser, so no served page holds it.
 /// </summary>
-public sealed record MyBillsResponse(IReadOnlyList<MyBillResponse> Bills, bool HasPositionConsent);
+public sealed record MyBillsResponse(IReadOnlyList<MyBillResponse> Bills, bool HasPositionConsent, bool MpAccount = false);
 
 /// <summary>The bills asked about in one request.</summary>
 public sealed record MyBillsQuery
