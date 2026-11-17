@@ -139,6 +139,12 @@ internal static class AppealRules
         : null;
 
     /// <summary>
+    /// Nobody reports their own text (owner, 2026-11-17): an argument or a comment they wrote, the statement of an organisation
+    /// they represent, the response of the MP they speak for, their own profile (Identity checks that one).
+    /// </summary>
+    public static string? CheckReport(bool ownText) => ownText ? "report.own" : null;
+
+    /// <summary>
     /// The status an argument has after its author's edit (design 8.2, 8.3): a text pre-screening flags waits for a moderator
     /// again; an unflagged one keeps its status (a waiting one still waits for the moderator who was to look at it).
     /// </summary>
@@ -270,7 +276,7 @@ internal static class RuleErrors
         "position.required" or "reason.limit" or "endorsement.other-side" or "endorsement.limit" or "endorsement.own-reason"
             or "record.not-open" or "moderation.wrong-state" or "draft.not-configured" or "reason.reacted" => Error.Conflict(code),
         "reason.not-found" => Error.NotFound(code),
-        "reason.edit-author-only" => Error.Forbidden(code),
+        "reason.edit-author-only" or "report.own" => Error.Forbidden(code),
         "draft.too-many" => new Error(ErrorKind.TooManyRequests, code),
         "statement.required" or "staff-statement.too-long" => Error.Validation(code, "statement"),
         "draft.source-required" or "draft.source-too-long" => Error.Validation(code, "sourceText"),

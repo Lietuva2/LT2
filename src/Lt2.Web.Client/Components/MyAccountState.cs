@@ -19,6 +19,13 @@ public sealed class MyAccountState(IMeApi me)
     public async Task<bool> IsMpAccountAsync(bool interactive) =>
         interactive && (await MeAsync())?.Mp is { Part: "mp" };
 
+    /// <summary>
+    /// The address part (<c>/p/{slug}</c>) of the MP the caller speaks for (the MP's own account or an office member), or null;
+    /// always null before the island runs (<paramref name="interactive"/> false) and for a visitor.
+    /// </summary>
+    public async Task<string?> SpeaksForAsync(bool interactive) =>
+        interactive ? (await MeAsync())?.Mp?.Slug : null;
+
     private Task<MeResponse?> MeAsync()
     {
         if (_me is null || _me.IsFaulted || (_me.IsCompletedSuccessfully && _me.Result is null))

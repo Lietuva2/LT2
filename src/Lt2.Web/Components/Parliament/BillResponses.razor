@@ -43,7 +43,7 @@ else if (_view is { Items.Count: > 0 } view)
                         }
                         @if (item.Response.Status is "published" or "withdrawn")
                         {
-                            <Lt2.Web.Client.Mps.ReportResponse ResponseId="item.Response.Id" Contact="@Contact" @rendermode="InteractiveWebAssembly" />
+                            <Lt2.Web.Client.Mps.ReportResponse ResponseId="item.Response.Id" MpSlug="@item.Mp.Slug" Contact="@Contact" Moderator="Moderator" @rendermode="InteractiveWebAssembly" />
                         }
                     </MpResponseItem>
                 </li>

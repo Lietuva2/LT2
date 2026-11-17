@@ -94,8 +94,11 @@
                                     @if (_signedIn)
                                     {
                                         var menu = MoreMenu.MenuOf($"more-reason-{reason.Id}");
-                                        <button class="menu__item" type="button" id="report-@reason.Id" disabled="@Locked" popovertarget="@menu" popovertargetaction="hide"
-                                                @onclick="() => _reporting = _reporting == reason.Id ? null : reason.Id">@L["Report.Open"]</button>
+                                        @if (MayReport(reason))
+                                        {
+                                            <button class="menu__item" type="button" id="report-@reason.Id" disabled="@Locked" popovertarget="@menu" popovertargetaction="hide"
+                                                    @onclick="() => _reporting = _reporting == reason.Id ? null : reason.Id">@L["Report.Open"]</button>
+                                        }
                                         @if (MayEdit(reason))
                                         {
                                             @* Owner, 2026-11-17: only while nobody reacted, from the never-cached "mine" answer; not shown otherwise. *@
@@ -534,6 +537,12 @@
 
     /// <summary>One's own argument, known only from the never-cached "mine" answer.</summary>
     private bool IsMine(ReasonResponse reason) => Mine?.MyReasons.Any(r => r.Id == reason.Id) == true;
+
+    /// <summary>
+    /// "Pranešti" (owner, 2026-11-17): never on one's own argument, and not for a moderator in a staff-passkey session, who gets
+    /// the moderators' actions instead. Decided once the island runs, so the served HTML is the same for every member.
+    /// </summary>
+    private bool MayReport(ReasonResponse reason) => !RendererInfo.IsInteractive || (!Moderator && !IsMine(reason));
 
     /// <summary>The argument whose edit form is open below its row ("⋯" → "Redaguoti").</summary>
     private Guid? _editing;

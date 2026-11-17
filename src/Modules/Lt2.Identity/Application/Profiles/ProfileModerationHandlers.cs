@@ -45,6 +45,12 @@ internal sealed class ProfileModerationHandlers(IdentityDb db, IParticipants par
             return Error.Forbidden("member.required");
         }
 
+        // Owner, 2026-11-17: nobody reports their own text, their own profile included.
+        if (targetUserId == reporterUserId)
+        {
+            return Error.Forbidden("report.own");
+        }
+
         if (await db.ProfileReports.AnyAsync(r => r.TargetUserId == targetUserId && r.ReporterUserId == reporterUserId && r.Status == Open, cancellationToken))
         {
             return Result.Ok();

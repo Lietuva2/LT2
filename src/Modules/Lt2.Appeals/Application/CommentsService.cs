@@ -142,6 +142,8 @@ internal sealed class CommentsService(
             written.Where(c => c.Status == CommentStatuses.Published).GroupBy(c => c.TargetId).ToDictionary(g => g.Key, g => g.Count()))
         {
             Editable = restricted || participant is null || !bill.Open ? [] : await EditableAsync(db, written, participant, represented, speaker, cancellationToken),
+            Own = onBill.Where(c => NewsRules.OwnComment(c.AuthorUserId, c.OrganisationId, c.SeimasPersonId, userId, represented.ToHashSet(), speaker?.SeimasPersonId))
+                .Select(c => c.Id).ToList(),
         };
     }
 

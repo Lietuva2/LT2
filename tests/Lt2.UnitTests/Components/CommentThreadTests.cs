@@ -85,6 +85,27 @@ public sealed class CommentThreadTests : BunitContext
         _comments.Calls.Skip(_comments.Calls.LastIndexOf("EditAsync")).ShouldContain("GetThreadAsync", "the thread is read again in place");
     }
 
+    /// <summary>
+    /// Owner, 2026-11-17: no "Pranešti" on one's own comment (in any voice, from the caller's own answer), and a moderator in a
+    /// staff-passkey session gets only the moderators' actions.
+    /// </summary>
+    [Fact]
+    public void Pranesti_is_not_on_ones_own_comment_nor_for_a_moderator_in_a_staff_session()
+    {
+        AddAuthorization().SetAuthorized("atstovas@pavyzdys.test");
+        SetRendererInfo(new RendererInfo("WebAssembly", isInteractive: true));
+        _comments.On("GetMineAsync", ApiResult<MyCommentsResponse>.Ok(new MyCommentsResponse(
+            true, false, false, [], [], [], [], 0, new Dictionary<Guid, int>()) { Own = [OrganisationComment] }));
+        var thread = RenderThread();
+        thread.FindAll($"#{CommentLimits.ElementId(OrganisationComment)}-report").ShouldBeEmpty("the organisation's own comment");
+        thread.FindAll($"#{CommentLimits.ElementId(PersonComment)}-report").ShouldNotBeEmpty();
+
+        _moderation.On("GetOnBillAsync", ApiResult<IReadOnlyList<QueueCommentResponse>>.Ok([]));
+        var moderated = Render<CommentThread>(p => p.Add(c => c.Kind, "reason").Add(c => c.TargetId, Target).Add(c => c.Number, Bill).Add(c => c.Thread, Thread())
+            .Add(c => c.Count, 3).Add(c => c.PagePath, "/seimas/" + Bill).Add(c => c.Moderator, true));
+        moderated.FindAll("[id$='-report']").ShouldBeEmpty();
+    }
+
     private IRenderedComponent<CommentThread> RenderThread() =>
         Render<CommentThread>(p => p.Add(c => c.Kind, "reason").Add(c => c.TargetId, Target).Add(c => c.Number, Bill).Add(c => c.Thread, Thread())
             .Add(c => c.Count, 3).Add(c => c.PagePath, "/seimas/" + Bill));

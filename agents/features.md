@@ -557,6 +557,9 @@ responses' paging, its "Aptarimas" open through the linked one rounded up to the
 changes nothing.
 
 **Moderation.** Anything that reaches MPs has passed a person. Every action is audited and an argument's author gets the reason.
-A report button is on every bill's description and reason. A moderator can restrict an account from writing (reasons,
+A report button is on every bill's description and reason, never on one's own text (owner, 2026-11-17: argument, comment in
+any voice, a represented organisation's statement, one's MP's response, one's profile; `AppealRules.CheckReport`,
+`report.own` where reports are written) and not for a moderator in a staff-passkey session, whose "⋯" holds only the
+moderators' actions (decided once the island runs). A moderator can restrict an account from writing (reasons,
 date flags, statements, responses and, as proposed, changing the display name), until a date or until lifted, with a statement emailed to the person; it never touches sides,
 marks, counts or sign-in, is never shown to anyone else, and goes with the account (no address hash is kept).

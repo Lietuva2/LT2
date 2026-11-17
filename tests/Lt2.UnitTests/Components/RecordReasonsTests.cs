@@ -169,9 +169,10 @@ public sealed class RecordReasonsTests : BunitContext
             more.GetAttribute("popovertarget").ShouldBe($"more-reason-{id}-menu");
             more.GetAttribute("aria-label").ShouldBe("Daugiau veiksmų");
             reasons.Find($"#more-reason-{id}-menu").GetAttribute("popover").ShouldBe("auto");
-            reasons.Find($"#report-{id}").GetAttribute("popovertargetaction").ShouldBe("hide");
         }
 
+        reasons.Find($"#report-{First}").GetAttribute("popovertargetaction").ShouldBe("hide");
+        reasons.FindAll($"#report-{Second}").ShouldBeEmpty("owner, 2026-11-17: no \"Pranešti\" on one's own argument");
         reasons.FindAll($"#withdraw-{First}").ShouldBeEmpty("not the author");
         reasons.Find($"#more-reason-{Second}-menu #withdraw-{Second}").TextContent.ShouldBe("Atsiimti");
         reasons.FindAll(".act__panel").ShouldBeEmpty();
@@ -220,6 +221,21 @@ public sealed class RecordReasonsTests : BunitContext
         mark.ClassList.ShouldContain("mark");
         mark.GetAttribute("href").ShouldBe("/prisijungti#tikslas=" + Uri.EscapeDataString("/seimas/" + Bill));
         mark.TextContent.Trim().ShouldBe("Man svarbu · 3");
+    }
+
+    /// <summary>
+    /// Owner, 2026-11-17: a moderator in a staff-passkey session gets only the moderators' actions in "⋯", no "Pranešti"; before
+    /// the island runs the served markup is the same as any member's.
+    /// </summary>
+    [Fact]
+    public void A_moderator_in_a_staff_session_sees_only_the_moderators_actions_in_the_more_menu()
+    {
+        var reasons = Render<RecordReasons>(p => p.Add(c => c.Number, Bill).Add(c => c.Moderator, true));
+        reasons.FindAll($"#moderate-{First}").ShouldNotBeEmpty();
+        reasons.FindAll("[id^='report-']").ShouldBeEmpty();
+
+        SetRendererInfo(new RendererInfo("Static", isInteractive: false));
+        Render<RecordReasons>(p => p.Add(c => c.Number, Bill).Add(c => c.Moderator, true)).FindAll($"#report-{First}").ShouldNotBeEmpty("the served HTML is a member's");
     }
 
     [Fact]

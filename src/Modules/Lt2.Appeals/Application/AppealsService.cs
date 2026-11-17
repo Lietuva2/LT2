@@ -24,6 +24,7 @@ internal sealed class AppealsService(
     IPlannedAgenda agenda,
     ISettings settings,
     IAuditLog audit,
+    IMpLinks links,
     TimeProvider clock) : IAppealsModule
 {
     private const int PageSize = 20;
@@ -661,6 +662,10 @@ internal sealed class AppealsService(
         return holding is null ? null : new MyRestriction(WritingRules.Until(holding.EndsAt), holding.Statement);
     }
 
+    /// <summary>The MP the account speaks for (the MP's own account or an office member), if any.</summary>
+    private async Task<long?> SpeaksForAsync(Guid userId, CancellationToken ct) =>
+        (await links.SpeaksForAsync([userId], ct)).TryGetValue(userId, out var person) ? person : null;
+
     /// <summary>
     /// A moderator's restriction on writing (design 8.3) blocks what the person writes for others to read: arguments and
     /// date flags. Never sides, marks, reports or anything about the account.
@@ -683,6 +688,12 @@ internal sealed class AppealsService(
 
         await using var db = await contexts.CreateDbContextAsync(cancellationToken);
         Guid? recordId;
+
+        // Owner, 2026-11-17: nobody reports their own text: an argument or a comment they wrote, the statement of an organisation
+        // they represent, the response of the MP they speak for, a comment in either voice. (An organisation is not a text.)
+        var own = false;
+        var represented = await db.OrganisationRepresentatives.AsNoTracking()
+            .Where(r => r.UserId == userId && r.EndedAt == null).Select(r => r.OrganisationId).ToListAsync(cancellationToken);
         switch (request.TargetKind)
         {
             case "record":
@@ -703,6 +714,7 @@ internal sealed class AppealsService(
                 }
 
                 recordId = reason.RecordId;
+                own = reason.AuthorUserId == userId;
                 break;
             case "organisation":
                 // Design 8.14.14: an organisation shown on the site; a blocked or closed one is shown nowhere.
@@ -714,12 +726,13 @@ internal sealed class AppealsService(
                 recordId = null;
                 break;
             case "statement":
-                if (!await db.OrganisationStatements.Shown(db.Organisations).AnyAsync(s => s.Id == request.TargetId, cancellationToken))
+                if (await db.OrganisationStatements.Shown(db.Organisations).FirstOrDefaultAsync(s => s.Id == request.TargetId, cancellationToken) is not { } statement)
                 {
                     return Error.NotFound("report.target-not-found");
                 }
 
                 recordId = null;
+                own = statement.WrittenByUserId == userId || represented.Contains(statement.OrganisationId);
                 break;
             case "comment":
                 // Design 8.23.8: a comment that is shown (published, its target shown, its bill's record not hidden).
@@ -729,15 +742,18 @@ internal sealed class AppealsService(
                 }
 
                 recordId = null;
+                var comment = await db.Comments.AsNoTracking().FirstAsync(c => c.Id == request.TargetId, cancellationToken);
+                own = NewsRules.OwnComment(comment.AuthorUserId, comment.OrganisationId, comment.SeimasPersonId, userId, represented.ToHashSet(), await SpeaksForAsync(userId, cancellationToken));
                 break;
             case "response":
                 // Design 8.5.5: an MP's response that is shown (published, or withdrawn with its versions).
-                if (!await db.MpResponses.AnyAsync(r => r.Id == request.TargetId && (r.Status == ResponseStatuses.Published || r.Status == ResponseStatuses.Withdrawn), cancellationToken))
+                if (await db.MpResponses.AsNoTracking().FirstOrDefaultAsync(r => r.Id == request.TargetId && (r.Status == ResponseStatuses.Published || r.Status == ResponseStatuses.Withdrawn), cancellationToken) is not { } response)
                 {
                     return Error.NotFound("report.target-not-found");
                 }
 
                 recordId = null;
+                own = NewsRules.OwnResponse(response.WrittenByUserId, response.SeimasPersonId, userId, await SpeaksForAsync(userId, cancellationToken));
                 break;
             default:
                 return Error.Validation("report.target", "targetKind");
@@ -746,6 +762,11 @@ internal sealed class AppealsService(
         if (await participants.FindAsync(userId, cancellationToken) is null)
         {
             return Error.Forbidden("member.required");
+        }
+
+        if (AppealRules.CheckReport(own) is { } ownText)
+        {
+            return RuleErrors.Of(ownText);
         }
 
         // One open report per person and target; reporting again changes nothing.

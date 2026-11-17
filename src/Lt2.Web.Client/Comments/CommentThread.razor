@@ -74,8 +74,11 @@
                             <MoreMenu Id="@($"{id}-more-actions")">
                                 @if (_signedIn)
                                 {
-                                    <button class="menu__item" type="button" id="@id-report" disabled="@Locked" popovertarget="@MoreMenu.MenuOf($"{id}-more-actions")" popovertargetaction="hide"
-                                            @onclick="() => _reporting = _reporting == c.Id ? null : c.Id">@L["Report.Open"]</button>
+                                    @if (MayReport(c.Id))
+                                    {
+                                        <button class="menu__item" type="button" id="@id-report" disabled="@Locked" popovertarget="@MoreMenu.MenuOf($"{id}-more-actions")" popovertargetaction="hide"
+                                                @onclick="() => _reporting = _reporting == c.Id ? null : c.Id">@L["Report.Open"]</button>
+                                    }
                                     @if (editable)
                                     {
                                         @* Owner, 2026-11-17: only while nobody said "Sutinku", from the never-cached answer; not shown otherwise. *@
@@ -536,6 +539,12 @@
         Info = L["Comments.Published"];
         await ReloadCoreAsync(all: true);
     });
+
+    /// <summary>
+    /// "Pranešti" (owner, 2026-11-17): never on one's own comment (in any voice: written, the organisation one represents, the MP
+    /// one speaks for), and not for a moderator in a staff-passkey session, who gets the moderators' actions instead.
+    /// </summary>
+    private bool MayReport(Guid commentId) => !Moderator && _mine?.Own.Contains(commentId) != true;
 
     /// <summary>The comment whose edit form is open below its row ("⋯" → "Redaguoti").</summary>
     private Guid? _editingComment;

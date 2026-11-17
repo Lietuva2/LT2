@@ -58,6 +58,12 @@ public sealed record MyComments(
 {
     /// <summary>The caller's own comments they may edit now (design 8.23.3, owner 2026-11-17: until someone says "Sutinku").</summary>
     public IReadOnlyList<Guid> Editable { get; init; } = [];
+
+    /// <summary>
+    /// The comments that are the caller's own in any voice (written by them, in the name of an organisation they represent or of
+    /// the MP they speak for): no "Pranešti" there (owner, 2026-11-17).
+    /// </summary>
+    public IReadOnlyList<Guid> Own { get; init; } = [];
 }
 
 public sealed record CommentCreated(Guid Id);

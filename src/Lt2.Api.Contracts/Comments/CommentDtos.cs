@@ -125,6 +125,9 @@ public sealed record MyCommentsResponse(
 {
     /// <summary>The caller's own comments they may edit now (design 8.23.3, owner 2026-11-17: until someone says "Sutinku").</summary>
     public IReadOnlyList<Guid> Editable { get; init; } = [];
+
+    /// <summary>The caller's own comments in any voice: no "Pranešti" there (owner, 2026-11-17).</summary>
+    public IReadOnlyList<Guid> Own { get; init; } = [];
 }
 
 public sealed record CommentRequest
