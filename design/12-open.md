@@ -2,6 +2,26 @@
 
 What the owner decided is in [12-decisions.md](12-decisions.md). Do not decide an open item in code.
 
+**Proposed by the designer while building the reporter's email (8.3), 2026-11-17, awaiting the owner**
+
+- A text withdrawn or deleted by its own author while a report on it is open sends the reporter "Turinį atsiėmė pats
+  autorius" (as the coordinator suggested); a comment that goes with the argument or statement it stood under sends "Jis
+  nebeskelbiamas: pašalintas kartu su tekstu, po kuriuo buvo parašytas." If no: nothing in those cases.
+- Publishing a waiting argument, confirming a description, restoring and "Palikti" all read "paliktas"; withdrawing an
+  organisation's confirmation reads "Atšaukėme jos patvirtinimą". The link is given only while the text stands (kept,
+  corrected, unconfirmed).
+- Reports closed when the reporter's or the author's account is deleted, or when an organisation closes, send nothing.
+
+**Proposed by the designer while building editing until someone reacts (8.2, 8.23.3), 2026-11-17, awaiting the owner**
+
+- Every edit of a reason drops the moderator's "seen", flagged or not: only seen reasons go to MPs (8.3), and nobody has
+  seen the new words. The edited reason is listed in the queue as not yet seen. If no: only a flagged edit drops it.
+- An unflagged edit of a reason still waiting for a moderator keeps it waiting.
+- No public mark such as "Redaguota" beside an edited reason or comment: nobody had reacted to the earlier words. If no:
+  "Redaguota {data}" beside it.
+- Only the comment's own writer edits a comment in an organisation's or the MP's name (deleting it is open to every
+  representative, or to the MP's account and office); a comment kind switched off takes no edits, as it takes no new comments.
+
 **Proposed by the designer while building the review of summaries (8.19.2), 2026-11-17, awaiting the owner**
 
 - A summary with no bill left at its time is `dropped`: nothing goes, nothing is public, it counts as made for its week.

@@ -11,7 +11,7 @@ using Microsoft.Extensions.Localization;
 namespace Lt2.UnitTests.Components;
 
 /// <summary>
-/// Design 8.3 (decided 2026-11-13), 8.12.3: each moderation action is its own control; choosing one opens only its own
+/// Design 8.3 (the main action and "Kiti veiksmai" since the owner's 2026-11-17, ModerationMenuTests), 8.12.3: choosing one opens only its own
 /// fields with one sentence; only the actions that apply to the item's state are offered; one is open at a time; the
 /// confirmation stays after the action closes. A bill's description is written by bill number on any active bill, and an
 /// action on a bill without a record creates the record first.
@@ -59,13 +59,32 @@ public sealed class ModerationActionsTests : BunitContext
     private static string Key(IRenderedComponent<ModerationActions> actions) => actions.Instance.Id?.ToString() ?? Bill;
 
     private static string[] Offered(IRenderedComponent<ModerationActions> actions) =>
-        actions.FindAll("[role=group] button").Select(b => b.Id!.Replace("action-", "", StringComparison.Ordinal).Replace("-" + Key(actions), "", StringComparison.Ordinal)).ToArray();
+        actions.FindAll("[data-action]").Select(b => b.GetAttribute("data-action")!).ToArray();
+
+    /// <summary>
+    /// Owner, 2026-11-17: "Palikti" on a published argument only when it does something: an open report, or not yet seen (it
+    /// then marks it seen); never on a seen one without a report, on an open or a closed record.
+    /// </summary>
+    [Theory]
+    [InlineData(false, false, "open", true)]
+    [InlineData(true, true, "open", true)]
+    [InlineData(true, false, "open", false)]
+    [InlineData(true, false, "closed", false)]
+    [InlineData(true, true, "closed", true)]
+    public void Palikti_on_a_published_argument_only_when_it_is_reported_or_not_yet_seen(bool seen, bool reported, string recordStatus, bool offered)
+    {
+        var actions = Render<ModerationActions>(p => p
+            .Add(c => c.Id, Item).Add(c => c.Kind, "reason").Add(c => c.Status, "published").Add(c => c.RecordStatus, recordStatus)
+            .Add(c => c.Seen, seen).Add(c => c.Reported, reported));
+        Offered(actions).Contains("keep").ShouldBe(offered);
+        Offered(actions).ShouldContain("hide");
+    }
 
     [Fact]
     public void An_open_bill_offers_the_description_the_timing_actions_and_keep_only_when_something_was_reported()
     {
-        Offered(Render("record", "open", openItems: true)).ShouldBe(["keep", "describe", "threshold", "planned", "hold", "urgent", "hide"]);
-        Offered(Render("record", "open")).ShouldBe(["describe", "threshold", "planned", "hold", "urgent", "hide"]);
+        Offered(Render("record", "open", openItems: true)).ShouldBe(["keep", "describe", "planned", "threshold", "hold", "urgent", "hide"]);
+        Offered(Render("record", "open")).ShouldBe(["describe", "planned", "threshold", "hold", "urgent", "hide"]);
     }
 
     [Fact]
@@ -154,9 +173,9 @@ public sealed class ModerationActionsTests : BunitContext
     public void An_AI_summary_nobody_has_read_can_be_confirmed_corrected_or_removed_and_any_description_removed()
     {
         Offered(Render("record", "open", openItems: true, description: "DI santrauka.", source: "ai"))
-            .ShouldBe(["keep", "confirm", "describe", "undescribe", "threshold", "planned", "hold", "urgent", "hide"]);
+            .ShouldBe(["keep", "confirm", "describe", "undescribe", "planned", "threshold", "hold", "urgent", "hide"]);
         Offered(Render("record", "open", description: "Moderatoriaus tekstas.", source: "moderator"))
-            .ShouldBe(["describe", "undescribe", "threshold", "planned", "hold", "urgent", "hide"]);
+            .ShouldBe(["describe", "undescribe", "planned", "threshold", "hold", "urgent", "hide"]);
         Offered(Render("record", "open", description: "Patvirtinta santrauka.", source: "ai-draft")).ShouldNotContain("confirm");
     }
 
@@ -187,7 +206,7 @@ public sealed class ModerationActionsTests : BunitContext
         actions.Find("form").Submit();
 
         _api.Calls.ShouldContain("RemoveDescriptionAsync");
-        Offered(actions).ShouldBe(["describe", "threshold", "planned", "hold", "urgent", "hide"]);
+        Offered(actions).ShouldBe(["describe", "planned", "threshold", "hold", "urgent", "hide"]);
         actions.Find($"#action-describe-{Item}").TextContent.ShouldBe(Text("Mod.Action.write"));
     }
 
@@ -254,8 +273,8 @@ public sealed class ModerationActionsTests : BunitContext
     [Fact]
     public void A_reason_offers_merge_only_when_there_is_something_to_merge_into()
     {
-        Offered(Render("reason", "pending")).ShouldBe(["publish", "hide", "restrict"]);
-        Offered(Render("reason", "published", candidates: 2)).ShouldBe(["keep", "hide", "merge", "restrict"]);
+        Offered(Render("reason", "pending")).ShouldBe(["publish", "restrict", "hide"]);
+        Offered(Render("reason", "published", candidates: 2)).ShouldBe(["keep", "merge", "restrict", "hide"]);
     }
 
     /// <summary>Design 6.9 (owner, 2026-11-15): after the final vote only the actions the rules leave are offered.</summary>

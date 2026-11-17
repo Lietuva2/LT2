@@ -17,7 +17,7 @@ public static class CommentRoutes
     /// <summary><c>GET</c> (public) the shown comments of a target; <c>POST</c> a member writes one.</summary>
     public const string Thread = ApiRoutes.Prefix + "/comments/{kind}/{targetId:guid}";
 
-    /// <summary><c>DELETE</c>: whoever may delete it, while the bill is open.</summary>
+    /// <summary><c>DELETE</c>: whoever may delete it, while the bill is open; <c>PUT</c>: its author edits it until someone agrees.</summary>
     public const string One = ApiRoutes.Prefix + "/comments/{id:guid}";
 
     /// <summary><c>PUT</c> "Sutinku", <c>DELETE</c> takes it back.</summary>
@@ -121,7 +121,20 @@ public sealed record MyCommentsResponse(
     IReadOnlyList<Guid> Agreed,
     IReadOnlyList<CommentTargetVoiceResponse> Voices,
     int PerTargetLimit,
-    IReadOnlyDictionary<Guid, int> WrittenPerTarget);
+    IReadOnlyDictionary<Guid, int> WrittenPerTarget)
+{
+    /// <summary>The caller's own comments they may edit now (design 8.23.3, owner 2026-11-17: until someone says "Sutinku").</summary>
+    public IReadOnlyList<Guid> Editable { get; init; } = [];
+
+    /// <summary>The caller's own comments in any voice: no "Pranešti" there (owner, 2026-11-17).</summary>
+    public IReadOnlyList<Guid> Own { get; init; } = [];
+
+    /// <summary>The caller's own comments a moderator hid, with the moderator's statement (owner, 2026-11-17). Never in a public answer.</summary>
+    public IReadOnlyList<MyHiddenCommentResponse> Hidden { get; init; } = [];
+}
+
+/// <summary>One's own hidden comment: under which target, its text and time, and the moderator's statement when there is one.</summary>
+public sealed record MyHiddenCommentResponse(Guid Id, string Kind, Guid TargetId, string Text, DateTimeOffset CreatedAt, string? Statement);
 
 public sealed record CommentRequest
 {
@@ -164,6 +177,9 @@ public interface ICommentsApi
     Task<ApiResult<CommentCreatedResponse>> WriteAsync(string kind, Guid targetId, CommentRequest request, CancellationToken cancellationToken = default);
 
     Task<ApiResult> DeleteAsync(Guid id, CancellationToken cancellationToken = default);
+
+    /// <summary>The author edits their comment while nobody has said "Sutinku" (design 8.23.3, owner 2026-11-17).</summary>
+    Task<ApiResult> EditAsync(Guid id, CommentRequest request, CancellationToken cancellationToken = default);
 
     Task<ApiResult> AgreeAsync(Guid id, CancellationToken cancellationToken = default);
 

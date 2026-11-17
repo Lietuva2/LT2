@@ -189,7 +189,17 @@ public sealed record MyBillRecordResponse(
     int? EndorsementsLeft,
     IReadOnlyList<ReasonResponse> MyReasons,
     int? ReasonsLeft,
-    bool HasPositionConsent);
+    bool HasPositionConsent)
+{
+    /// <summary>The caller's own arguments they may edit now (design 8.2, owner 2026-11-17: until someone reacts).</summary>
+    public IReadOnlyList<Guid> Editable { get; init; } = [];
+
+    /// <summary>
+    /// The moderator's statement beside each of the caller's own hidden arguments in <c>MyReasons</c> (owner, 2026-11-17: the
+    /// author sees them in place, greyed, with it). Never in any public answer.
+    /// </summary>
+    public IReadOnlyDictionary<Guid, string> HiddenStatements { get; init; } = new Dictionary<Guid, string>();
+}
 
 /// <summary>
 /// The numbers the forms show (design 8.2, 8.12.2). <c>ReasonsPerPerson</c> and <c>EndorsementsPerPerson</c> are the
@@ -199,8 +209,13 @@ public sealed record MyBillRecordResponse(
 /// "left" means no limit. <c>AiSummaries</c>: the summary job can make descriptions (design 8.13: a provider configured,
 /// official texts readable, <c>Ai:SummariesPerDay</c> not 0); while false nothing promises one.
 /// </summary>
-public sealed record AppealRulesResponse(int ThresholdDefault, int ThresholdMinimum, int TextMaxLength, int ReasonsPerPerson, int EndorsementsPerPerson, int DescriptionMaxLength, bool AiSummaries = false);
+public sealed record AppealRulesResponse(int ThresholdDefault, int ThresholdMinimum, int TextMaxLength, int ReasonsPerPerson, int EndorsementsPerPerson, int DescriptionMaxLength, bool AiSummaries = false)
+{
+    /// <summary>The setting <c>Appeals:MinReasonWords</c>: fewer words make an argument too short, which the form asks about (owner, 2026-11-17); 0 = off.</summary>
+    public int MinReasonWords { get; init; }
+}
 
+/// <summary>A written or edited argument: <c>pending</c> when pre-screening flagged it for a moderator, otherwise <c>published</c>.</summary>
 public sealed record ReasonCreatedResponse(Guid Id, string Status);
 
 /// <summary>

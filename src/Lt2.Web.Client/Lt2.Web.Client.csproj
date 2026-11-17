@@ -26,6 +26,8 @@
     <!-- The account screens' addresses (design 8.21), shared with the links in emails in the same way. -->
     <Compile Include="..\Lt2.SharedKernel\AccountScreens.cs" Link="Texts\AccountScreens.cs" />
     <Compile Include="..\Lt2.SharedKernel\OneTimeCode.cs" Link="Texts\OneTimeCode.cs" />
+    <!-- A too short argument (owner, 2026-11-17): the form asks with the same count pre-screening flags by. -->
+    <Compile Include="..\Lt2.SharedKernel\ReasonWords.cs" Link="Texts\ReasonWords.cs" />
   </ItemGroup>
   <ItemGroup>
     <!-- The API clients (de)serialise the contract types by reflection. Publishing trims unused members, which removed

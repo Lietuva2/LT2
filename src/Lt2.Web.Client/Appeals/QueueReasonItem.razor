@@ -24,7 +24,7 @@
     </div>
     <Reports Items="Reason.Reports" />
     <ModerationActions Id="Reason.Id" Kind="reason" Status="@Reason.Status" RecordStatus="@Reason.RecordStatus" MergeCandidates="Reason.MergeCandidates" Comments="Reason.Comments" IdPrefix="@(Panel ? "panel-" : "")"
-                       OnDone="OnDone" OnRestricted="OnRestricted" />
+                       Seen="Reason.Seen" Reported="Reason.Reports.Count > 0" OnDone="OnDone" OnRestricted="OnRestricted" />
 </article>
 
 @code {

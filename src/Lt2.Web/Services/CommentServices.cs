@@ -58,7 +58,11 @@ internal sealed class CommentReads(IComments comments, ICommentModeration modera
         return new MyCommentsResponse(
             m.AgreedBefore, m.Restricted, m.MpAccount, m.Deletable, m.Written, m.Agreed,
             m.Voices.Select(v => new CommentTargetVoiceResponse(v.Kind, v.TargetId, v.Voice, v.Refusal)).ToList(),
-            m.PerTargetLimit, m.WrittenPerTarget);
+            m.PerTargetLimit, m.WrittenPerTarget) {
+            Editable = m.Editable,
+            Own = m.Own,
+            Hidden = m.Hidden.Select(h => new MyHiddenCommentResponse(h.Id, h.Kind, h.TargetId, h.Text, h.CreatedAt, h.Statement)).ToList(),
+        };
     }
 
     public async Task<Result<CommentCreatedResponse>> WriteAsync(ClaimsPrincipal user, string kind, Guid targetId, CommentRequest request, CancellationToken ct)
@@ -74,6 +78,9 @@ internal sealed class CommentReads(IComments comments, ICommentModeration modera
 
     public async Task<Result<Unit>> DeleteAsync(ClaimsPrincipal user, Guid commentId, CancellationToken ct) =>
         user.UserId() is { } id ? await comments.DeleteAsync(id, commentId, await SpeakerAsync(user, ct), ct) : Error.Unauthorized("auth.required");
+
+    public async Task<Result<Unit>> EditAsync(ClaimsPrincipal user, Guid commentId, CommentRequest request, CancellationToken ct) =>
+        user.UserId() is { } id ? await comments.EditAsync(id, commentId, request.Text, await SpeakerAsync(user, ct), ct) : Error.Unauthorized("auth.required");
 
     public async Task<CommentModerationResponse> ModerationAsync(CancellationToken ct)
     {
@@ -156,6 +163,9 @@ internal sealed class ServerCommentsApi(CommentReads reads, IComments comments, 
 
     public async Task<ApiResult> DeleteAsync(Guid id, CancellationToken cancellationToken = default) =>
         errors.ToApiResult(await reads.DeleteAsync(User, id, cancellationToken));
+
+    public async Task<ApiResult> EditAsync(Guid id, CommentRequest request, CancellationToken cancellationToken = default) =>
+        errors.ToApiResult(await reads.EditAsync(User, id, request, cancellationToken));
 
     public async Task<ApiResult> AgreeAsync(Guid id, CancellationToken cancellationToken = default) =>
         User.UserId() is { } user ? errors.ToApiResult(await comments.AgreeAsync(user, id, cancellationToken)) : ApiResult.Fail(errors.ToProblem(Error.Unauthorized("auth.required")));

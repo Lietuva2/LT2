@@ -304,6 +304,16 @@ Built, awaiting the owner's word:
   scrolling winning. Nothing is stored in the browser (8.22.1). Measured again: the place stays (252 of 4 142), the
   discussion stays closed.
 
+**Decided by the owner on 2026-11-17: a moderator's actions as one button and a menu** ("this doesn't look good; a
+single button with the dropdown options maybe", of the bill's "Moderavimas" panel)
+
+- Replaces 8.3's "each action is its own control": one filled button for what the item needs most in its state, and
+  "Kiti veiksmai" opening the rest in the browser's popover; a bill's under "Aprašymas", "Seime" and "Suvestinės",
+  "Paslėpti" set apart at the end; the same on every moderation screen (8.3, "The screen"; 8.16.1). The designer's
+  choices: with both a report and an unread AI summary, "Palikti" stays the filled button (it also closes date flags) and
+  "Patvirtinti aprašymą" heads "Aprašymas"; with no filled button the trigger reads "Veiksmai"; a blocked organisation has
+  no filled button.
+
 **Decided by the owner on 2026-11-17: passkey sessions and the MP's own account** (approved to build)
 
 - A passkey session stays one: the security stamp's check every 30 minutes no longer turns an MP's, an office member's or a

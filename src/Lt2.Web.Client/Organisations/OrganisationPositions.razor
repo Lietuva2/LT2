@@ -73,6 +73,14 @@
                             <span class="@OrganisationWords.StanceClass(own.Stance)">@L["Org.Stance." + own.Stance]</span>
                             <span class="tag" id="my-statement-status-@org.Slug">@L["Org.Status." + own.Status]</span>
                         </p>
+                        @if (own.Status == "hidden" && RendererInfo.IsInteractive)
+                        {
+                            @* Owner, 2026-11-17: the representatives see their hidden statement, quiet, with the moderator's explanation. *@
+                            <div class="said said--hidden" id="my-statement-hidden-@org.Slug">
+                                <LongText Text="@own.Text" BubbleClass="bubble bubble--people voice" Id="@($"my-statement-hidden-more-{org.Slug}")" />
+                                <p class="small hidden-why">@(org.HiddenStatement is { } why ? L.Format("Reasons.HiddenBy", why) : L["Reasons.Hidden"].Value)</p>
+                            </div>
+                        }
                     }
                     @if (org.Refusal is { } refusal)
                     {
@@ -288,12 +296,12 @@
                        Open="@(CommentPaging.Asked(CommentsShown, statement.Id, Linked) is not null)" Asked="@CommentPaging.Asked(CommentsShown, statement.Id, Linked)"
                        Marked="@CommentPaging.Marked(statement.Id, Linked)" PagePath="@CommentPaging.PagePath(Number, ResponsesShown)" Contact="@Contact" Moderator="Moderator" />
         <MoreMenu Id="@($"more-statement-{statement.Id}")">
-            @if (_signedIn)
+            @if (_signedIn && MayReport(statement))
             {
                 <button class="menu__item" type="button" id="report-statement-@statement.Id" disabled="@Locked" popovertarget="@MoreMenu.MenuOf($"more-statement-{statement.Id}")" popovertargetaction="hide"
                         @onclick="() => _reporting = _reporting == statement.Id ? null : statement.Id">@L["Report.Open"]</button>
             }
-            else
+            else if (!_signedIn)
             {
                 <VisitorReport Contact="@Contact" />
             }
@@ -303,6 +311,13 @@
             <div class="act__panel"><ReportForm TargetKind="statement" TargetId="statement.Id" OnClose="() => _reporting = null" /></div>
         }
     };
+
+    /// <summary>
+    /// "Pranešti" (owner, 2026-11-17): never on the statement of an organisation the caller represents, and not for a moderator
+    /// in a staff-passkey session. Decided once the island runs, so the served HTML is the same for every member.
+    /// </summary>
+    private bool MayReport(StatementResponse statement) =>
+        !RendererInfo.IsInteractive || (!Moderator && Mine?.Any(o => o.Statement?.Id == statement.Id) != true);
 
     private async Task<Dictionary<Guid, CommentThreadResponse>> ThreadsAsync()
     {

@@ -20,10 +20,13 @@
             <circle cx="12" cy="12" r="2" fill="currentColor" />
             <circle cx="19" cy="12" r="2" fill="currentColor" />
             break;
+        case "down":
+            <path d="M6 9.5l6 6 6-6" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+            break;
     }
 </svg>
 
 @code {
-    /// <summary><c>heart</c> ("Man svarbu"), <c>agree</c> ("Sutinku"), <c>chat</c> ("Aptarimas"), <c>dots</c> (more actions).</summary>
+    /// <summary><c>heart</c> ("Man svarbu"), <c>agree</c> ("Sutinku"), <c>chat</c> ("Aptarimas"), <c>dots</c> (more actions), <c>down</c> (a moderator's "Kiti veiksmai").</summary>
     [Parameter, EditorRequired] public string Name { get; set; } = "";
 }

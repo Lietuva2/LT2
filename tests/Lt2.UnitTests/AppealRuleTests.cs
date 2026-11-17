@@ -393,6 +393,42 @@ public sealed class ClosingRuleTests
         ClosingRules.ShouldClose(BillRecordStatuses.Rejected, 99100009).ShouldBeFalse("a hidden record stays hidden");
     }
 
+    /// <summary>Owner, 2026-11-17: an argument with fewer words than the setting is too short; a word is a run of letters or digits.</summary>
+    [Theory]
+    [InlineData("Taip", 3, true)]
+    [InlineData("Taip!!! 👍", 3, true)]
+    [InlineData("Mažesni mokesčiai šeimoms", 3, false)]
+    [InlineData("32 % tarifas", 3, true)]
+    [InlineData("Tarifas – 32 %, ne 20 %", 3, false)]
+    [InlineData("Žodis", 0, false)]
+    [InlineData("", 1, true)]
+    public void An_argument_with_fewer_words_than_the_setting_is_too_short_and_0_switches_it_off(string text, int minWords, bool tooShort) =>
+        ReasonWords.TooShort(text, minWords).ShouldBe(tooShort);
+
+    [Fact]
+    public void Words_are_runs_of_letters_or_digits_with_lithuanian_letters_counted_whole() =>
+        ReasonWords.Count("Ūkininkų pajamos-mokesčiai, 2026 m.").ShouldBe(5);
+
+    /// <summary>Owner, 2026-11-17: the author edits an argument until someone reacts, since the reactions were given to its exact words.</summary>
+    [Theory]
+    [InlineData("published", true, 0, 0, null)]
+    [InlineData("pending", true, 0, 0, null)]
+    [InlineData("published", true, 1, 0, "reason.reacted")]
+    [InlineData("published", true, 0, 1, "reason.reacted")]
+    [InlineData("published", false, 0, 0, "reason.edit-author-only")]
+    [InlineData("hidden", true, 0, 0, "reason.not-found")]
+    [InlineData("merged", true, 0, 0, "reason.not-found")]
+    public void An_author_edits_an_argument_until_someone_marks_it_or_comments_under_it(string status, bool author, int marks, int comments, string? expected) =>
+        AppealRules.CheckEdit(status, author, marks, comments).ShouldBe(expected);
+
+    [Fact]
+    public void An_edit_pre_screening_flags_waits_for_a_moderator_again_and_an_unflagged_one_keeps_its_status()
+    {
+        AppealRules.StatusAfterEdit(ReasonStatuses.Published, flagged: true).ShouldBe(ReasonStatuses.Pending);
+        AppealRules.StatusAfterEdit(ReasonStatuses.Published, flagged: false).ShouldBe(ReasonStatuses.Published);
+        AppealRules.StatusAfterEdit(ReasonStatuses.Pending, flagged: false).ShouldBe(ReasonStatuses.Pending, "the moderator who was to look still looks");
+    }
+
     [Fact]
     public void A_closed_record_shows_its_frozen_counts_whatever_happens_to_positions_later()
     {

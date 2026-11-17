@@ -136,9 +136,8 @@ public sealed class OrganisationFlowTests(AppealFlowTests.ModeratorFixture moder
             await Assertions.Expect(queuedStatement).ToContainTextAsync("Apsimeta kita organizacija");
             await queued.ScrollIntoViewIfNeededAsync();
             await E2ESteps.ShootBothAsync(mod, Shots, "moderation-queue-organisations", mod.Locator("#queue-organisations"));
-            var block = queued.Locator("button[id^='org-action-block-']");
-            await Assertions.Expect(block).ToBeEnabledAsync(new() { Timeout = 60_000 });
-            await block.ClickAsync();
+            // Design 8.3 (owner, 2026-11-17): "Užblokuoti" is set apart at the end of "Kiti veiksmai".
+            await E2ESteps.ChooseAsync(queued.Locator("button[id^='org-action-block-']"));
             await queued.Locator("textarea[id^='org-statement-']").FillAsync("Bandymas: organizacija blokuojama (E2E bandymas).");
             await E2ESteps.ShootBothAsync(mod, Shots, "moderation-block-open", queued);
             await queued.Locator("button[id^='org-action-submit-']").ClickAsync();

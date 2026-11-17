@@ -169,9 +169,10 @@ public sealed class RecordReasonsTests : BunitContext
             more.GetAttribute("popovertarget").ShouldBe($"more-reason-{id}-menu");
             more.GetAttribute("aria-label").ShouldBe("Daugiau veiksmų");
             reasons.Find($"#more-reason-{id}-menu").GetAttribute("popover").ShouldBe("auto");
-            reasons.Find($"#report-{id}").GetAttribute("popovertargetaction").ShouldBe("hide");
         }
 
+        reasons.Find($"#report-{First}").GetAttribute("popovertargetaction").ShouldBe("hide");
+        reasons.FindAll($"#report-{Second}").ShouldBeEmpty("owner, 2026-11-17: no \"Pranešti\" on one's own argument");
         reasons.FindAll($"#withdraw-{First}").ShouldBeEmpty("not the author");
         reasons.Find($"#more-reason-{Second}-menu #withdraw-{Second}").TextContent.ShouldBe("Atsiimti");
         reasons.FindAll(".act__panel").ShouldBeEmpty();
@@ -222,6 +223,21 @@ public sealed class RecordReasonsTests : BunitContext
         mark.TextContent.Trim().ShouldBe("Man svarbu · 3");
     }
 
+    /// <summary>
+    /// Owner, 2026-11-17: a moderator in a staff-passkey session gets only the moderators' actions in "⋯", no "Pranešti"; before
+    /// the island runs the served markup is the same as any member's.
+    /// </summary>
+    [Fact]
+    public void A_moderator_in_a_staff_session_sees_only_the_moderators_actions_in_the_more_menu()
+    {
+        var reasons = Render<RecordReasons>(p => p.Add(c => c.Number, Bill).Add(c => c.Moderator, true));
+        reasons.FindAll($"#moderate-{First}").ShouldNotBeEmpty();
+        reasons.FindAll("[id^='report-']").ShouldBeEmpty();
+
+        SetRendererInfo(new RendererInfo("Static", isInteractive: false));
+        Render<RecordReasons>(p => p.Add(c => c.Number, Bill).Add(c => c.Moderator, true)).FindAll($"#report-{First}").ShouldNotBeEmpty("the served HTML is a member's");
+    }
+
     [Fact]
     public void The_actions_beside_an_argument_and_its_moderation_controls_have_different_ids()
     {
@@ -232,6 +248,154 @@ public sealed class RecordReasonsTests : BunitContext
         reasons.Find($"#said-actions-{First}").ClassList.ShouldContain("act");
         reasons.Find($"#moderate-{First}").ClassList.ShouldContain("menu__item");
         reasons.Find($"#moderation-{First}").ClassList.ShouldContain("act__panel");
+    }
+
+    /// <summary>
+    /// Owner, 2026-11-17: "when writing an argument with the argument list closed, it doesn't show up after posting". A published
+    /// argument has no "Man svarbu" yet and the answer lists it last, beyond the two shown; it stands first in its side's column on
+    /// top of the two already shown, marked and given the focus (which brings it into view), the list stays collapsed and its
+    /// count says every argument.
+    /// </summary>
+    [Fact]
+    public void A_published_argument_shows_first_in_its_side_and_the_list_stays_collapsed()
+    {
+        JSInterop.Mode = JSRuntimeMode.Loose;
+        var third = Guid.Parse("0193a1b2-0000-7000-8000-00000000000c");
+        var written = Guid.Parse("0193a1b2-0000-7000-8000-00000000000d");
+        _appeals.On("GetRecordAsync", ApiResult<BillRecordResponse>.Ok(BillRecord(Reason(First, 3), Reason(Second, 2), Reason(third, 1))));
+        var reasons = WriteAnArgument(new ReasonCreatedResponse(written, "published"),
+            BillRecord(Reason(First, 3), Reason(Second, 2), Reason(third, 1), Reason(written, 0)));
+
+        reasons.WaitForAssertion(() => reasons.FindAll("#reasons-for .said").Select(s => s.Id)
+            .ShouldBe([$"reason-{written}", $"reason-{First}", $"reason-{Second}"], "the new one first, the two shown stay"));
+        reasons.Markup.ShouldContain("Argumentas paskelbtas.");
+        var shown = reasons.Find($"#reason-{written}");
+        shown.ClassList.ShouldContain("said--linked");
+        shown.GetAttribute("tabindex").ShouldBe("-1");
+        reasons.FindAll($"#reason-{third}").ShouldBeEmpty("the list stays collapsed");
+        reasons.Find("#reasons > .row button.linkish").TextContent.Trim().ShouldBe("Visi argumentai: 4");
+        JSInterop.Invocations.ShouldContain(i => i.Identifier.EndsWith("focus", StringComparison.Ordinal), "brought into view");
+    }
+
+    /// <summary>A waiting argument (pre-screened, design 8.3) is not public: the person is told so and nothing of it is shown.</summary>
+    [Fact]
+    public void A_waiting_argument_is_not_shown()
+    {
+        JSInterop.Mode = JSRuntimeMode.Loose;
+        var waiting = Guid.Parse("0193a1b2-0000-7000-8000-00000000000e");
+        var reasons = WriteAnArgument(new ReasonCreatedResponse(waiting, "pending"), BillRecord(Reason(First, 3), Reason(Second, 2)));
+
+        reasons.WaitForAssertion(() => reasons.Markup.ShouldContain("Argumentą pirma peržiūrės moderatorius."));
+        reasons.FindAll($"#reason-{waiting}").ShouldBeEmpty();
+        reasons.FindAll(".said--linked").ShouldBeEmpty();
+        reasons.FindAll("#reasons-for .said").Select(s => s.Id).ShouldBe([$"reason-{First}", $"reason-{Second}"]);
+    }
+
+    /// <summary>
+    /// Owner, 2026-11-17: "Redaguoti" in "⋯" of one's own argument only while the caller's own answer says it may be edited (nobody
+    /// reacted), not shown at all otherwise; it opens the form below the row with the side and the text, and saving reads the
+    /// arguments again in place.
+    /// </summary>
+    [Fact]
+    public void Redaguoti_is_in_the_more_menu_of_ones_own_editable_argument_only_and_saves_in_place()
+    {
+        JSInterop.Mode = JSRuntimeMode.Loose;
+        var third = Guid.Parse("0193a1b2-0000-7000-8000-00000000000f");
+        _appeals.On("GetRecordAsync", ApiResult<BillRecordResponse>.Ok(BillRecord(Reason(First, 3), Reason(Second, 0), Reason(third, 1))));
+        _appeals.On("GetMineAsync", ApiResult<MyBillRecordResponse>.Ok(
+            new MyBillRecordResponse("for", [], null, [Reason(Second, 0), Reason(third, 1)], null, true) { Editable = [Second] }));
+        _appeals.On("GetRulesAsync", ApiResult<AppealRulesResponse>.Ok(new AppealRulesResponse(100, 100, 2000, 0, 0, 1500)));
+        var reasons = Render<RecordReasons>(p => p.Add(c => c.Number, Bill));
+
+        reasons.Find($"#more-reason-{Second}-menu #edit-{Second}").TextContent.ShouldBe("Redaguoti");
+        reasons.FindAll($"#edit-{First}").ShouldBeEmpty("not one's own");
+        reasons.Find("#reasons > .row button.linkish").Click();
+        reasons.FindAll($"#edit-{third}").ShouldBeEmpty("someone reacted: not shown, not disabled");
+        reasons.FindAll($"#withdraw-{third}").ShouldNotBeEmpty("withdrawing stays");
+
+        reasons.Find($"#edit-{Second}").Click();
+        var form = reasons.Find($"#said-actions-{Second} > form.act__panel");
+        form.QuerySelector("h3")!.TextContent.ShouldBe("Redaguoti argumentą");
+        reasons.Find($"#edit-side-for-{Second}").HasAttribute("checked").ShouldBeTrue();
+        reasons.Find($"#edit-text-{Second}").GetAttribute("value").ShouldBe("Argumentas b");
+
+        _appeals.On("EditReasonAsync", ApiResult<ReasonCreatedResponse>.Ok(new ReasonCreatedResponse(Second, "published")));
+        reasons.Find($"#edit-side-against-{Second}").Change(true);
+        reasons.Find($"#edit-text-{Second}").Input("Pataisytas argumentas.");
+        reasons.Find($"#edit-reason-{Second}").Submit();
+        reasons.WaitForAssertion(() => reasons.Markup.ShouldContain("Argumentas išsaugotas."));
+        reasons.FindAll($"#edit-reason-{Second}").ShouldBeEmpty();
+        var sent = _appeals.Arguments[_appeals.Calls.LastIndexOf("EditReasonAsync")];
+        var request = (ReasonRequest)sent[1]!;
+        ((Guid)sent[0]!, request.Side, request.Text).ShouldBe((Second, "against", "Pataisytas argumentas."));
+        _appeals.Calls.Skip(_appeals.Calls.LastIndexOf("EditReasonAsync")).ShouldContain("GetRecordAsync", "read again in place");
+    }
+
+    /// <summary>
+    /// Owner, 2026-11-17: a too short argument is asked about in place before it is published: "Papildyti" goes back to the text,
+    /// "Vis tiek skelbti" publishes it (the server flags it and it waits for a moderator).
+    /// </summary>
+    [Fact]
+    public void A_too_short_argument_is_asked_about_first_and_published_only_when_the_person_says_so()
+    {
+        JSInterop.Mode = JSRuntimeMode.Loose;
+        _appeals.On("GetRulesAsync", ApiResult<AppealRulesResponse>.Ok(new AppealRulesResponse(100, 100, 2000, 0, 0, 1500) { MinReasonWords = 3 }));
+        _appeals.On("FindSimilarAsync", ApiResult<IReadOnlyList<ReasonResponse>>.Ok([]));
+        _appeals.On("WriteReasonAsync", ApiResult<ReasonCreatedResponse>.Ok(new ReasonCreatedResponse(Guid.NewGuid(), "pending")));
+        var reasons = Render<RecordReasons>(p => p.Add(c => c.Number, Bill));
+        reasons.Find("#add-reason").Click();
+        reasons.Find("#reason-text").Input("Taip.");
+        reasons.Find("#write-reason").Submit();
+
+        reasons.Find("#too-short-text").TextContent.ShouldStartWith("Argumentas labai trumpas.");
+        _appeals.Calls.ShouldNotContain("WriteReasonAsync");
+        _appeals.Calls.ShouldNotContain("FindSimilarAsync");
+        reasons.Find("#too-short-more").Click();
+        reasons.FindAll("#too-short").ShouldBeEmpty("back to the text");
+
+        reasons.Find("#write-reason").Submit();
+        reasons.Find("#too-short-anyway").Click();
+        reasons.WaitForAssertion(() => reasons.Markup.ShouldContain("Argumentą pirma peržiūrės moderatorius."));
+        _appeals.Calls.ShouldContain("WriteReasonAsync");
+    }
+
+    /// <summary>
+    /// Owner, 2026-11-17: the author sees their own hidden argument in its side's column, quiet, with the moderator's explanation
+    /// and no actions, from their own answer once the island runs; the served HTML holds nothing of it.
+    /// </summary>
+    [Fact]
+    public void The_author_sees_their_hidden_argument_greyed_with_the_explanation_only_once_the_island_runs()
+    {
+        var hidden = Guid.Parse("0193a1b2-0000-7000-8000-0000000000aa");
+        _appeals.On("GetMineAsync", ApiResult<MyBillRecordResponse>.Ok(new MyBillRecordResponse(
+            "for", [], null, [new ReasonResponse(hidden, "against", "Paslėptas tekstas.", "Rūta Mockutė", 0, "hidden", DateTimeOffset.UnixEpoch)], null, true)
+        {
+            HiddenStatements = new Dictionary<Guid, string> { [hidden] = "Įžeidžiantis tonas." },
+        }));
+        var reasons = Render<RecordReasons>(p => p.Add(c => c.Number, Bill));
+
+        var item = reasons.Find($"#reasons-against #hidden-reason-{hidden}");
+        item.ClassList.ShouldContain("said--hidden");
+        item.TextContent.ShouldContain("Paslėptas tekstas.");
+        reasons.Find($"#hidden-reason-why-{hidden}").TextContent.ShouldContain("Paslėpė moderatorius: Įžeidžiantis tonas.");
+        item.QuerySelectorAll("button, .act").ShouldBeEmpty("no actions on a hidden argument");
+
+        SetRendererInfo(new RendererInfo("Static", isInteractive: false));
+        Render<RecordReasons>(p => p.Add(c => c.Number, Bill)).Markup.ShouldNotContain("Paslėptas tekstas.");
+    }
+
+    /// <summary>Opens the writing box, writes an argument for "už" and publishes it; the record is then read as <paramref name="after"/>.</summary>
+    private IRenderedComponent<RecordReasons> WriteAnArgument(ReasonCreatedResponse created, BillRecordResponse after)
+    {
+        _appeals.On("GetRulesAsync", ApiResult<AppealRulesResponse>.Ok(new AppealRulesResponse(100, 100, 2000, 0, 0, 1500)));
+        _appeals.On("FindSimilarAsync", ApiResult<IReadOnlyList<ReasonResponse>>.Ok([]));
+        _appeals.On("WriteReasonAsync", ApiResult<ReasonCreatedResponse>.Ok(created));
+        var reasons = Render<RecordReasons>(p => p.Add(c => c.Number, Bill));
+        reasons.Find("#add-reason").Click();
+        reasons.Find("#reason-text").Input("Mokesčiai turi būti paprastesni.");
+        _appeals.On("GetRecordAsync", ApiResult<BillRecordResponse>.Ok(after));
+        reasons.Find("#write-reason").Submit();
+        return reasons;
     }
 
     private static ReasonResponse Reason(Guid id, int marks) => new(id, "for", "Argumentas " + id.ToString()[^1], "Rūta Mockutė", marks, "published", DateTimeOffset.UnixEpoch);

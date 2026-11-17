@@ -69,7 +69,7 @@
   <data name="Privacy.Data" xml:space="preserve"><value>Ką saugome ir kodėl</value></data>
   <data name="Privacy.Data.1" xml:space="preserve"><value>Saugome tik tai, ko reikia, kad galėtumėte dalyvauti. Asmens kodo, telefono numerio ar dokumentų neprašome.</value></data>
   <data name="Privacy.Data.Fact1.Term" xml:space="preserve"><value>El. pašto adresas</value></data>
-  <data name="Privacy.Data.Fact1.Value" xml:space="preserve"><value>Kad galėtumėte prisijungti (juo siunčiame vienkartinius kodus), kad vienas adresas turėtų vieną paskyrą ir kad galėtume parašyti apie jūsų paskyrą, moderatorių sprendimus ir tai, ką sekate. Niekam nerodomas.</value></data>
+  <data name="Privacy.Data.Fact1.Value" xml:space="preserve"><value>Kad galėtumėte prisijungti (juo siunčiame vienkartinius kodus), kad vienas adresas turėtų vieną paskyrą ir kad galėtume parašyti apie jūsų paskyrą, moderatorių sprendimus (taip pat dėl turinio, apie kurį pranešėte) ir tai, ką sekate. Niekam nerodomas.</value></data>
   <data name="Privacy.Data.Fact2.Term" xml:space="preserve"><value>Vardas, kurį matys kiti</value></data>
   <data name="Privacy.Data.Fact2.Value" xml:space="preserve"><value>Nebūtinas. Rodomas prie jūsų argumentų, komentarų ir kitų viešų tekstų, taip pat prie komentarų, kuriems pažymėjote „Sutinku“. Galite jį bet kada pakeisti paskyros puslapyje; pakeistas vardas rodomas ir prie anksčiau parašytų tekstų.</value></data>
   <data name="Privacy.Data.Fact3.Term" xml:space="preserve"><value>Registracija</value></data>

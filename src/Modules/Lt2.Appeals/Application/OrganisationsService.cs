@@ -21,6 +21,7 @@ internal sealed class OrganisationsService(
     ISettings settings,
     IOutbox outbox,
     IOrganisationCodeSwitch codes,
+    ReportNotices notices,
     TimeProvider clock) : IOrganisations
 {
     private const int ListLimit = 500;
@@ -708,11 +709,16 @@ internal sealed class OrganisationsService(
             .ToListAsync(cancellationToken);
         var counts = (await reads.CountsAsync(db, [bill.Bill.Number], cancellationToken))[bill.Bill.Number];
         var restricted = await WritingRestrictionReads.IsRestrictedAsync(db, userId, clock.GetUtcNow(), cancellationToken);
+        var hideStatements = await AppealsService.HideStatementsAsync(
+            db, statements.Where(s => s.Status == StatementStatuses.Hidden).Select(s => s.Id).ToList(), cancellationToken);
         return organisations.Select(o =>
         {
             var statement = statements.FirstOrDefault(s => s.OrganisationId == o.Id);
             var refusal = OrganisationRules.CheckActive(o.Status) ?? (restricted ? "writing.restricted" : null) ?? OrganisationRules.CheckBillOpen(bill.Record?.Status, bill.Finished);
-            return new MyBillOrganisation(o.Id, o.Slug, o.Name, o.Status, OrganisationReads.Label(o), statement is null ? null : OrganisationReads.Info(statement, counts), refusal);
+            return new MyBillOrganisation(o.Id, o.Slug, o.Name, o.Status, OrganisationReads.Label(o), statement is null ? null : OrganisationReads.Info(statement, counts), refusal)
+            {
+                HiddenStatement = statement is { Status: StatementStatuses.Hidden } ? hideStatements.GetValueOrDefault(statement.Id) : null,
+            };
         }).ToList();
     }
 
@@ -872,6 +878,9 @@ internal sealed class OrganisationsService(
         var now = clock.GetUtcNow();
         statement.Status = StatementStatuses.Withdrawn;
         statement.WithdrawnAt = now;
+        // Owner, 2026-11-17: whoever reported it, or a comment under it, is told it was withdrawn or went with it.
+        await notices.TellAsync(db, transaction, statement.Id, ReportOutcomes.Withdrawn, null, cancellationToken);
+        await notices.TellForCommentsUnderAsync(db, transaction, CommentKinds.Statement, [statement.Id], cancellationToken);
         await ModerationRecorder.CloseReportsAsync(db, statement.Id, now, cancellationToken);
         await CommentCascade.DeleteForTargetsAsync(db, CommentKinds.Statement, [statement.Id], now, cancellationToken);
         await db.SaveChangesAsync(cancellationToken);

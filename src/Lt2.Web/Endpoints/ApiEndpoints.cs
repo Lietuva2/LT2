@@ -79,6 +79,7 @@ internal static class ApiEndpoints
         ClearPositionEndpoint.Map(api);
         FindSimilarReasonsEndpoint.Map(api);
         WriteReasonEndpoint.Map(api);
+        EditReasonEndpoint.Map(api);
         EndorseEndpoint.Map(api);
         RemoveEndorsementEndpoint.Map(api);
         WithdrawReasonEndpoint.Map(api);

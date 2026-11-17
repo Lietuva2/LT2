@@ -684,7 +684,8 @@ body { padding-block-end: 4.5rem; }
 @keyframes feedback-slide { from { transform: translateY(0.75rem); opacity: 0; } to { transform: none; opacity: 1; } }
 
 
-/* A queue item's actions (design 8.3): one control each, wrapping on a narrow screen; choosing one opens its fields. */
+/* A queue item's actions (design 8.3; owner, 2026-11-17): the main one filled and "Kiti veiksmai" beside it (ModerationMenu);
+   choosing one opens its fields. */
 .actions { display: flex; flex-wrap: wrap; gap: var(--sp-2) var(--sp-3); align-items: center; }
 
 /* The settings screen (design 5.6): the value field is short, its unit beside it. */
@@ -801,6 +802,17 @@ body { padding-block-end: 4.5rem; }
 }
 .menu__item:hover:not(:disabled) { background: var(--slate-tint); }
 .menu__item:disabled { opacity: 0.6; cursor: not-allowed; }
+/* A moderator's "Kiti veiksmai" (design 8.3, owner 2026-11-17; component ModerationMenu): the same popover, opened under its
+   trigger from the trigger's left edge; small headings over a bill's kinds of action, the ones set apart after a rule. */
+.menu__trigger .icon { flex: none; margin-inline-end: -0.25rem; }
+.menu__trigger:has(+ .menu:popover-open) { background: var(--ink); color: var(--sheet); }
+.menu__trigger:has(+ .menu:popover-open) .icon { transform: rotate(180deg); }
+.menu__group { display: flex; flex-direction: column; }
+.menu__group + .menu__group { margin-top: var(--sp-1); border-top: 1px solid var(--rule); }
+.menu__heading { margin: 0; padding: var(--sp-2) var(--sp-4) var(--sp-1); font: 700 var(--fs-0)/1.3 var(--font-text); letter-spacing: 0.08em; text-transform: uppercase; color: var(--ink-2); }
+.menu__rule { margin: var(--sp-1) 0; border: 0; border-top: 1px solid var(--rule); }
+.action-heading:focus { outline: none; }
+.action-heading:focus-visible { outline: 3px solid var(--focus); outline-offset: 2px; }
 .menu > .report-visitor { padding: var(--sp-2) var(--sp-4); }
 .menu > .report-visitor > summary { display: flex; align-items: center; min-height: 2.75rem; font-weight: 600; }
 
@@ -1122,6 +1134,11 @@ a.said__name { color: inherit; font-weight: 700; }
 .comment--linked { border-left-color: var(--brand); background: var(--brand-tint); padding: var(--sp-2) var(--sp-2) var(--sp-2) var(--sp-3); }
 .said--linked { outline: 2px solid var(--brand); outline-offset: var(--sp-2); }
 .comment--linked, .said--linked { scroll-margin-top: var(--sp-6); }
+/* Owner, 2026-11-17: the author's own hidden argument or comment, in its place for them only, quiet, with the moderator's
+   explanation under it; the island draws it from the author's own answer. */
+.said--hidden, .comment--hidden { opacity: 0.6; }
+.said--hidden .bubble, .comment--hidden .bubble { border-style: dashed; }
+.hidden-why { color: var(--ink-2); }
 /* Design 8.11.8: under "Rodyti tik naujus" a server-rendered response that is neither new nor has new comments leaves, and the
    responses' part with it when none stands (NewMark leaves the markers; the islands filter their own lists). */
 #responses-list > li:has(.new-out) { display: none; }

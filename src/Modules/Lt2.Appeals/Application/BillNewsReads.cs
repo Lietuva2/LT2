@@ -69,8 +69,8 @@ internal sealed class BillNewsReads(IDbContextFactory<AppealsDb> contexts, IMpLi
                 from r in db.Reasons.AsNoTracking()
                 join a in db.BillRecords.AsNoTracking() on r.RecordId equals a.Id
                 where r.Status == ReasonStatuses.Published && (a.Status == BillRecordStatuses.Open || a.Status == BillRecordStatuses.Closed)
-                      && numbers.Contains(a.BillNumber) && (r.FirstPublicAt ?? r.CreatedAt) > earliest
-                select new { r.Id, a.BillNumber, At = r.FirstPublicAt ?? r.CreatedAt, r.AuthorUserId })
+                      && numbers.Contains(a.BillNumber) && ((r.FirstPublicAt ?? r.CreatedAt) > earliest || r.EditedAt > earliest)
+                select new { r.Id, a.BillNumber, At = r.FirstPublicAt ?? r.CreatedAt, r.EditedAt, r.AuthorUserId })
             .ToListAsync(ct);
         var statements = await db.OrganisationStatements.AsNoTracking().Shown(db.Organisations)
             .Where(s => numbers.Contains(s.BillNumber) && ((s.FirstPublicAt ?? s.PublishedAt) > earliest || s.EditedAt > earliest))
@@ -81,8 +81,8 @@ internal sealed class BillNewsReads(IDbContextFactory<AppealsDb> contexts, IMpLi
             .Select(r => new { r.Id, r.BillNumber, r.PublishedAt, r.EditedAt, r.SeimasPersonId, r.WrittenByUserId })
             .ToListAsync(ct);
         var comments = await db.Comments.AsNoTracking()
-            .Where(c => c.Status == CommentStatuses.Published && numbers.Contains(c.BillNumber) && c.CreatedAt > earliest)
-            .Select(c => new { c.Id, c.BillNumber, c.CreatedAt, c.TargetKind, c.TargetId, c.AuthorUserId, c.OrganisationId, c.SeimasPersonId })
+            .Where(c => c.Status == CommentStatuses.Published && numbers.Contains(c.BillNumber) && (c.CreatedAt > earliest || c.EditedAt > earliest))
+            .Select(c => new { c.Id, c.BillNumber, c.CreatedAt, c.EditedAt, c.TargetKind, c.TargetId, c.AuthorUserId, c.OrganisationId, c.SeimasPersonId })
             .ToListAsync(ct);
         var shownTargets = await ShownTargetsAsync(db, comments.Select(c => (c.TargetKind, c.TargetId)).ToList(), ct);
 
@@ -90,7 +90,7 @@ internal sealed class BillNewsReads(IDbContextFactory<AppealsDb> contexts, IMpLi
             !hiddenBills.Contains(bill) && since.TryGetValue(bill, out var from) && NewsRules.IsNew(at, changed, from, own);
 
         var items = new List<Item>();
-        items.AddRange(reasons.Where(r => New(r.BillNumber, r.At, null, r.AuthorUserId == userId))
+        items.AddRange(reasons.Where(r => New(r.BillNumber, r.At, r.EditedAt, r.AuthorUserId == userId))
             .Select(r => new Item(CommentKinds.Reason, r.Id, r.BillNumber, null, null)));
         items.AddRange(statements.Where(s => New(s.BillNumber, s.At, s.EditedAt, NewsRules.OwnStatement(s.WrittenByUserId, s.OrganisationId, userId, represented)))
             .Select(s => new Item(CommentKinds.Statement, s.Id, s.BillNumber, null, null)));
@@ -98,7 +98,7 @@ internal sealed class BillNewsReads(IDbContextFactory<AppealsDb> contexts, IMpLi
             .Select(r => new Item(CommentKinds.Response, r.Id, r.BillNumber, null, null)));
         items.AddRange(comments
             .Where(c => shownTargets.Contains(c.TargetId)
-                        && New(c.BillNumber, c.CreatedAt, null, NewsRules.OwnComment(c.AuthorUserId, c.OrganisationId, c.SeimasPersonId, userId, represented, speaksFor)))
+                        && New(c.BillNumber, c.CreatedAt, c.EditedAt, NewsRules.OwnComment(c.AuthorUserId, c.OrganisationId, c.SeimasPersonId, userId, represented, speaksFor)))
             .OrderBy(c => c.CreatedAt).ThenBy(c => c.Id)
             .Select(c => new Item(Kinds.Comment, c.Id, c.BillNumber, c.TargetKind, c.TargetId)));
         return items;

@@ -22,6 +22,9 @@ internal sealed class HttpCommentsApi(ApiHttp http) : ICommentsApi
     public Task<ApiResult> DeleteAsync(Guid id, CancellationToken cancellationToken = default) =>
         http.SendAsync(HttpMethod.Delete, CommentRoutes.OneOf(id), null, cancellationToken);
 
+    public Task<ApiResult> EditAsync(Guid id, CommentRequest request, CancellationToken cancellationToken = default) =>
+        http.SendAsync(HttpMethod.Put, CommentRoutes.OneOf(id), request, cancellationToken);
+
     public Task<ApiResult> AgreeAsync(Guid id, CancellationToken cancellationToken = default) =>
         http.SendAsync(HttpMethod.Put, CommentRoutes.AgreementOf(id), null, cancellationToken);
 

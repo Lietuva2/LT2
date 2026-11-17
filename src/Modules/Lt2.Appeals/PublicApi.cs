@@ -133,14 +133,28 @@ public sealed record MyBillRecord(
     int? EndorsementsLeft,
     IReadOnlyList<ReasonInfo> MyReasons,
     int? ReasonsLeft,
-    bool HasPositionConsent);
+    bool HasPositionConsent)
+{
+    /// <summary>The person's own arguments they may edit now (design 8.2, owner 2026-11-17: until someone reacts).</summary>
+    public IReadOnlyList<Guid> Editable { get; init; } = [];
+
+    /// <summary>
+    /// The moderator's statement beside each of the person's own hidden arguments in <see cref="MyReasons"/> (owner, 2026-11-17:
+    /// the author sees their hidden argument in its place with it); only in this never-cached answer.
+    /// </summary>
+    public IReadOnlyDictionary<Guid, string> HiddenStatements { get; init; } = new Dictionary<Guid, string>();
+}
 
 /// <summary>
 /// The numbers the forms need (design 8.2, 8.12.2): the default threshold, the minimum, and the per-person limits (0 = no
 /// limit, the default). <paramref name="AiSummaries"/>: the summary job can make descriptions (design 8.13: a provider is
 /// configured, official texts can be read and <c>Ai:SummariesPerDay</c> is not 0); while false nothing promises one.
 /// </summary>
-public sealed record AppealRulesInfo(int ThresholdDefault, int ThresholdMinimum, int TextMaxLength, int ReasonsPerPerson, int EndorsementsPerPerson, int DescriptionMaxLength, bool AiSummaries);
+public sealed record AppealRulesInfo(int ThresholdDefault, int ThresholdMinimum, int TextMaxLength, int ReasonsPerPerson, int EndorsementsPerPerson, int DescriptionMaxLength, bool AiSummaries)
+{
+    /// <summary>The setting <c>Appeals:MinReasonWords</c>: fewer words make an argument too short (owner, 2026-11-17); 0 = off.</summary>
+    public int MinReasonWords { get; init; }
+}
 
 public sealed record NewReason(string Side, string Text);
 
@@ -258,6 +272,13 @@ public interface IAppealsModule
     Task<Result<IReadOnlyList<ReasonInfo>>> FindSimilarAsync(string billNumber, NewReason request, CancellationToken cancellationToken);
 
     Task<Result<ReasonCreated>> WriteReasonAsync(string billNumber, Guid userId, NewReason request, CancellationToken cancellationToken);
+
+    /// <summary>
+    /// The author edits their argument's text and side while the record is open and nobody has reacted (design 8.2, owner
+    /// 2026-11-17): <c>reason.reacted</c> after a "Man svarbu" or a comment; <c>reason.edit-author-only</c> for someone else's.
+    /// The status after the edit: <c>pending</c> when pre-screening flagged the new text.
+    /// </summary>
+    Task<Result<ReasonCreated>> EditReasonAsync(Guid reasonId, Guid userId, NewReason request, CancellationToken cancellationToken);
 
     Task<Result<Unit>> EndorseAsync(Guid reasonId, Guid userId, CancellationToken cancellationToken);
 

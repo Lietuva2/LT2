@@ -78,6 +78,26 @@
 <data name="Reasons.WithdrawConfirm" xml:space="preserve"><value>Argumentas bus ištrintas kartu su jo „Man svarbu“ žymomis. Jau sudarytose suvestinėse jo tekstas liks.</value></data>
 <data name="Reasons.WithdrawYes" xml:space="preserve"><value>Atsiimti argumentą</value></data>
 <data name="Reasons.Withdrawn" xml:space="preserve"><value>Argumentas atsiimtas.</value></data>
+<data name="Reasons.HiddenBy" xml:space="preserve"><value>Paslėpė moderatorius: {0}</value></data>
+<data name="Reasons.Hidden" xml:space="preserve"><value>Paslėpė moderatorius.</value></data>
+<data name="Reasons.HiddenOnlyYou" xml:space="preserve"><value>Jį matote tik jūs.</value></data>
+<data name="Comments.HiddenOnlyYou" xml:space="preserve"><value>Jį matote tik jūs.</value></data>
+<data name="Reasons.TooShort" xml:space="preserve"><value>Argumentas labai trumpas. Parašykite, kodėl prašote balsuoti už ar prieš – tokį argumentą kiti galės pažymėti „Man svarbu“.</value></data>
+<data name="Reasons.TooShort.More" xml:space="preserve"><value>Papildyti</value></data>
+<data name="Reasons.TooShort.Anyway" xml:space="preserve"><value>Vis tiek skelbti</value></data>
+<data name="Mod.Flag.too-short" xml:space="preserve"><value>Per trumpas</value></data>
+<data name="Admin.Setting.Appeals:MinReasonWords" xml:space="preserve"><value>Mažiausiai žodžių argumente</value></data>
+<data name="Admin.Help.Appeals:MinReasonWords" xml:space="preserve"><value>Trumpesnio argumento forma pirma paklausia, ar jį papildyti; paskelbtas vis tiek, jis pažymimas „Per trumpas“ ir laukia moderatoriaus. Žodis – raidžių ar skaitmenų seka. Komentarams netaikoma. 0 – netikrinama.</value></data>
+<data name="Admin.Unit.Appeals:MinReasonWords" xml:space="preserve"><value>žodžiai (0 – netikrinama)</value></data>
+<data name="Reasons.Edit" xml:space="preserve"><value>Redaguoti</value></data>
+<data name="Reasons.EditTitle" xml:space="preserve"><value>Redaguoti argumentą</value></data>
+<data name="Reasons.Save" xml:space="preserve"><value>Išsaugoti</value></data>
+<data name="Reasons.Edited" xml:space="preserve"><value>Argumentas išsaugotas.</value></data>
+<data name="Reasons.EditedPending" xml:space="preserve"><value>Pakeistą argumentą pirma peržiūrės moderatorius. Kai jis bus paskelbtas, gausite laišką.</value></data>
+<data name="Comments.Edit" xml:space="preserve"><value>Redaguoti</value></data>
+<data name="Comments.EditTitle" xml:space="preserve"><value>Redaguoti komentarą</value></data>
+<data name="Comments.Save" xml:space="preserve"><value>Išsaugoti</value></data>
+<data name="Comments.Edited" xml:space="preserve"><value>Komentaras išsaugotas.</value></data>
 <data name="Reasons.Published" xml:space="preserve"><value>Argumentas paskelbtas.</value></data>
 <data name="Reasons.Pending" xml:space="preserve"><value>Argumentą pirma peržiūrės moderatorius. Kai jis bus paskelbtas, gausite laišką.</value></data>
 <data name="Reasons.NeedSide" xml:space="preserve"><value>„Man svarbu“ žymėti gali tie, kurie nurodė, ko prašo.</value></data>
@@ -159,7 +179,13 @@
 <data name="Mod.Title" xml:space="preserve"><value>Moderavimas</value></data>
   <data name="Mod.Lead" xml:space="preserve"><value>Projektai ir argumentai, kuriems reikia jūsų sprendimo. Kiekvienas veiksmas registruojamas; argumento autorius gauna jūsų paaiškinimą.</value></data>
 <data name="Mod.Actions" xml:space="preserve"><value>Veiksmai</value></data>
+<data name="Mod.More" xml:space="preserve"><value>Kiti veiksmai</value></data>
+<data name="Mod.Group.description" xml:space="preserve"><value>Aprašymas</value></data>
+<data name="Mod.Group.seimas" xml:space="preserve"><value>Seime</value></data>
+<data name="Mod.Group.digests" xml:space="preserve"><value>Suvestinės</value></data>
 <data name="Mod.Note.Optional" xml:space="preserve"><value>Pastaba autoriui (nebūtina)</value></data>
+<data name="Mod.Note.Reporters" xml:space="preserve"><value>Paaiškinimas pranešusiems (nebūtinas)</value></data>
+<data name="Mod.Note.Reporters.Hint" xml:space="preserve"><value>Jį gaus pranešimą pateikę nariai el. paštu.</value></data>
 <data name="Mod.HiddenLink" xml:space="preserve"><value>Paslėpti projektai ir argumentai</value></data>
 <data name="Hidden.PageTitle" xml:space="preserve"><value>Paslėpta · Lietuva 2.0</value></data>
 <data name="Hidden.Title" xml:space="preserve"><value>Paslėpti projektai ir argumentai</value></data>

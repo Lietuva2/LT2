@@ -127,6 +127,30 @@ internal static class AppealRules
     }
 
     /// <summary>
+    /// Editing an argument (design 8.2, owner 2026-11-17): only a shown or waiting one (a hidden or merged one is not found, as
+    /// for withdrawing), only by its author, and only while nobody has reacted to it: no "Man svarbu" and no comment under it
+    /// (any, hidden ones included), since those were given to its exact words. The record being open and a writing restriction
+    /// are checked as for writing.
+    /// </summary>
+    public static string? CheckEdit(string status, bool isAuthor, int endorsements, int comments) =>
+        !CountedReasonStatuses.Contains(status) ? "reason.not-found"
+        : !isAuthor ? "reason.edit-author-only"
+        : endorsements > 0 || comments > 0 ? "reason.reacted"
+        : null;
+
+    /// <summary>
+    /// Nobody reports their own text (owner, 2026-11-17): an argument or a comment they wrote, the statement of an organisation
+    /// they represent, the response of the MP they speak for, their own profile (Identity checks that one).
+    /// </summary>
+    public static string? CheckReport(bool ownText) => ownText ? "report.own" : null;
+
+    /// <summary>
+    /// The status an argument has after its author's edit (design 8.2, 8.3): a text pre-screening flags waits for a moderator
+    /// again; an unflagged one keeps its status (a waiting one still waits for the moderator who was to look at it).
+    /// </summary>
+    public static string StatusAfterEdit(string status, bool flagged) => flagged ? ReasonStatuses.Pending : status;
+
+    /// <summary>
     /// Changing sides keeps one position per person per bill: the row is overwritten, and the "Man svarbu" marks on the
     /// old side's arguments go, since they are allowed only on one's own side. The person's own arguments stay.
     /// </summary>
@@ -250,7 +274,9 @@ internal static class RuleErrors
     public static Error Of(string code) => code switch
     {
         "position.required" or "reason.limit" or "endorsement.other-side" or "endorsement.limit" or "endorsement.own-reason"
-            or "record.not-open" or "moderation.wrong-state" or "draft.not-configured" => Error.Conflict(code),
+            or "record.not-open" or "moderation.wrong-state" or "draft.not-configured" or "reason.reacted" => Error.Conflict(code),
+        "reason.not-found" => Error.NotFound(code),
+        "reason.edit-author-only" or "report.own" => Error.Forbidden(code),
         "draft.too-many" => new Error(ErrorKind.TooManyRequests, code),
         "statement.required" or "staff-statement.too-long" => Error.Validation(code, "statement"),
         "draft.source-required" or "draft.source-too-long" => Error.Validation(code, "sourceText"),

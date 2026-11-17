@@ -264,4 +264,34 @@
   <data name="DigestReview.Reason.Few" xml:space="preserve"><value>{0} argumentai</value></data>
   <data name="DigestReview.Reason.Many" xml:space="preserve"><value>{0} argumentų</value></data>
   <data name="Digest.CopyOfOffice" xml:space="preserve"><value>Tai Seimo nario suvestinės kopija, siunčiama jums kaip jo biuro nariui. Seimo narys: {0}. Kaip dažnai gauti kopijas, pasirenkate savo paskyroje: {1}</value></data>
+  <data name="Report.Subject" xml:space="preserve"><value>Jūsų pranešimas išnagrinėtas</value></data>
+  <data name="Report.Body" xml:space="preserve"><value>išnagrinėjome jūsų pranešimą apie {0}.</value></data>
+  <data name="Report.About.reason" xml:space="preserve"><value>argumentą projekte {0} „{1}“</value></data>
+  <data name="Report.About.comment" xml:space="preserve"><value>komentarą projekte {0} „{1}“</value></data>
+  <data name="Report.About.statement" xml:space="preserve"><value>organizacijos poziciją projekte {0} „{1}“</value></data>
+  <data name="Report.About.response" xml:space="preserve"><value>Seimo nario atsakymą projekte {0} „{1}“</value></data>
+  <data name="Report.About.record" xml:space="preserve"><value>projekto {0} „{1}“ aprašymą</value></data>
+  <data name="Report.About.organisation" xml:space="preserve"><value>organizaciją „{0}“</value></data>
+  <data name="Report.About.profile" xml:space="preserve"><value>nario „{0}“ viešą profilį</value></data>
+  <data name="Report.Outcome.kept.m" xml:space="preserve"><value>Jį palikome, nes neradome taisyklių pažeidimo.</value></data>
+  <data name="Report.Outcome.kept.f" xml:space="preserve"><value>Ją palikome, nes neradome taisyklių pažeidimo.</value></data>
+  <data name="Report.Outcome.hidden.m" xml:space="preserve"><value>Jį paslėpėme.</value></data>
+  <data name="Report.Outcome.hidden.f" xml:space="preserve"><value>Ją paslėpėme.</value></data>
+  <data name="Report.Outcome.blocked.m" xml:space="preserve"><value>Jį užblokavome.</value></data>
+  <data name="Report.Outcome.blocked.f" xml:space="preserve"><value>Ją užblokavome.</value></data>
+  <data name="Report.Outcome.unconfirmed.m" xml:space="preserve"><value>Atšaukėme jo patvirtinimą.</value></data>
+  <data name="Report.Outcome.unconfirmed.f" xml:space="preserve"><value>Atšaukėme jos patvirtinimą.</value></data>
+  <data name="Report.Outcome.merged.m" xml:space="preserve"><value>Jį sujungėme su panašiu tos pačios pusės argumentu.</value></data>
+  <data name="Report.Outcome.merged.f" xml:space="preserve"><value>Ją sujungėme su panašiu tekstu.</value></data>
+  <data name="Report.Outcome.corrected.m" xml:space="preserve"><value>Jį pataisėme.</value></data>
+  <data name="Report.Outcome.corrected.f" xml:space="preserve"><value>Ją pataisėme.</value></data>
+  <data name="Report.Outcome.removed.m" xml:space="preserve"><value>Jį pašalinome.</value></data>
+  <data name="Report.Outcome.removed.f" xml:space="preserve"><value>Ją pašalinome.</value></data>
+  <data name="Report.Outcome.withdrawn.m" xml:space="preserve"><value>Turinį atsiėmė pats autorius, todėl jis nebeskelbiamas.</value></data>
+  <data name="Report.Outcome.withdrawn.f" xml:space="preserve"><value>Turinį atsiėmė pats autorius, todėl jis nebeskelbiamas.</value></data>
+  <data name="Report.Outcome.gone.m" xml:space="preserve"><value>Jis nebeskelbiamas: pašalintas kartu su tekstu, po kuriuo buvo parašytas.</value></data>
+  <data name="Report.Outcome.gone.f" xml:space="preserve"><value>Ji nebeskelbiama: pašalinta kartu su tekstu, po kuriuo buvo parašyta.</value></data>
+  <data name="Report.Where" xml:space="preserve"><value>Kur tai skelbiama</value></data>
+  <data name="Report.Rules" xml:space="preserve"><value>Moderavimo taisyklės</value></data>
+  <data name="Report.Why" xml:space="preserve"><value>Šį laišką gavote, nes apie šį turinį pranešėte moderatoriams.</value></data>
 </root>

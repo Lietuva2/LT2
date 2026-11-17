@@ -85,6 +85,18 @@ internal static class CommentRules
     };
 
     /// <summary>
+    /// Editing a comment (design 8.23.3, owner 2026-11-17): a hidden one is the moderators' (<c>comment.hidden</c>, as for
+    /// deleting); only its author edits it, in the voice it was written in (checked by the caller as for writing); and only while
+    /// nobody has said "Sutinku" to it, since that was given to its exact words. The bill open, the target open to comments, the
+    /// switch and a writing restriction are checked as for writing.
+    /// </summary>
+    public static string? CheckEdit(string status, bool isAuthor, int agreements) =>
+        status != CommentStatuses.Published ? "comment.hidden"
+        : !isAuthor ? "comment.edit-author-only"
+        : agreements > 0 ? "comment.reacted"
+        : null;
+
+    /// <summary>
     /// "Sutinku" (design 8.23.10): any member but the MP's own account, never on a comment the caller wrote (in any voice), only
     /// while the bill is open. Taking it back is refused only on a closed bill.
     /// </summary>

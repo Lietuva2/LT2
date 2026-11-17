@@ -20,7 +20,8 @@ src/Lt2.Web.Client         Blazor WebAssembly components and HTTP implementation
                            shared pieces: Components/InteractiveBase<TText>, Display (numbers and dates, Vilnius),
                            StringLocalizerExtensions (Format), CopyLink, FieldError, Messages, SplitBar, Hint (the short answer in place, js/lt2-hints.js),
                            ProjectTabs and MenuSections (design 8.21), MoreMenu and Icon (the action row, design 8.16.1,
-                           js/lt2-menus.js), BrowserKeys (the storage keys, design 8.22.1),
+                           js/lt2-menus.js), Appeals/ModerationMenu with ModerationChoice, and ActionHeading (a moderator's
+                           main action and "Kiti veiksmai", design 8.3), BrowserKeys (the storage keys, design 8.22.1),
                            TypedText (a typed text's paragraphs and lists, design 8.2) and LongText (a long member's text with "Rodyti daugiau", laid out before it is cut), TextLayoutHint (the list hint under a writing box), the joined-button choice (CSS `.switch`
                            over real radios, `.switch__half--for|against|neutral|plain`, `.switch-field` + `.switch--stack`
                            for three options: a bill's sides and a statement's stance only; other choices stay radios and

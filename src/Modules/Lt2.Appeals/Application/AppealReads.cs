@@ -37,7 +37,10 @@ internal sealed class AppealReads(
             await settings.GetAsync(SettingKeys.AppealsReasonsPerPerson, ct),
             await settings.GetAsync(SettingKeys.AppealsEndorsementsPerPerson, ct),
             AppealRules.DescriptionMaxLength,
-            assistant.IsConfigured && texts.CanRead && await settings.GetAsync(SettingKeys.AiSummariesPerDay, ct) > 0);
+            assistant.IsConfigured && texts.CanRead && await settings.GetAsync(SettingKeys.AiSummariesPerDay, ct) > 0)
+        {
+            MinReasonWords = await settings.GetAsync(SettingKeys.AppealsMinReasonWords, ct),
+        };
     }
 
     /// <summary>The live counts of each given record: both sides, each with the count for accounts older than 30 days.</summary>

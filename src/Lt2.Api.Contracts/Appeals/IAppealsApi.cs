@@ -35,6 +35,12 @@ public interface IAppealsApi
 
     Task<ApiResult> RemoveEndorsementAsync(Guid reasonId, CancellationToken cancellationToken = default);
 
+    /// <summary>
+    /// The author edits their argument's text and side while the record is open and nobody has reacted (design 8.2, owner
+    /// 2026-11-17); the status after it (<c>pending</c> when pre-screening flagged the new text).
+    /// </summary>
+    Task<ApiResult<ReasonCreatedResponse>> EditReasonAsync(Guid reasonId, ReasonRequest request, CancellationToken cancellationToken = default);
+
     /// <summary>The author withdraws their own argument while the record is open (design 8.2).</summary>
     Task<ApiResult> WithdrawReasonAsync(Guid reasonId, CancellationToken cancellationToken = default);
 

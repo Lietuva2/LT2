@@ -1,0 +1,98 @@
+@inject IStringLocalizer<AppealUi> L
+
+@* A moderator's actions on one item (design 8.3, "The screen"; owner, 2026-11-17), the same on every moderation screen: the
+   queue, the hidden items, the bill's "Moderavimas" panel and "Moderuoti" under a text. One filled button for what the item
+   needs most in its state (the host names it; none when nothing stands out), and beside it "Kiti veiksmai" ("Veiksmai" when
+   there is no main one) opening the rest: the browser's own popover, as the action row's "⋯" is (8.16.1), so the trigger
+   works before the island runs and stays enabled, while the items are disabled until then like any island control.
+   js/lt2-menus.js places the menu under its trigger. Items stand in the host's order, under small headings where the item
+   has several kinds (a bill's record), and the ones set apart ("Paslėpti") come last after a rule. Choosing an item closes
+   the menu (popovertargetaction="hide") and the host opens that action's form in place of this row. Every button carries
+   data-action, so a test reads what is offered in order. *@
+<div class="actions" role="group" aria-label="@L["Mod.Actions"]">
+    @if (Main is { } main)
+    {
+        <button type="button" class="btn" id="@main.ElementId" data-action="@main.Action" disabled="@(Locked || main.Disabled)" @onclick="() => OnChoose.InvokeAsync(main.Action)">@main.Label</button>
+    }
+    @if (Rest.Count > 0)
+    {
+        <button type="button" class="btn btn--plain menu__trigger" id="@Id" popovertarget="@MenuId">@TriggerText<Icon Name="down" /></button>
+        <div class="menu menu--start" id="@MenuId" popover="auto" aria-label="@TriggerText">
+            @{
+                var headed = Rest.Where(c => !c.Apart && c.Group is not null).Select(c => c.Group).Distinct().Count() > 1;
+                var index = 0;
+            }
+            @foreach (var part in Parts(Rest))
+            {
+                var first = index++ == 0;
+                @if (part[0].Apart && !first)
+                {
+                    <hr class="menu__rule" />
+                }
+                @if (headed && !part[0].Apart && part[0].Group is { } heading)
+                {
+                    var headingId = $"{MenuId}-group-{index}";
+                    <div class="menu__group" role="group" aria-labelledby="@headingId">
+                        <p class="menu__heading" id="@headingId">@heading</p>
+                        @foreach (var choice in part)
+                        {
+                            @Item(choice)
+                        }
+                    </div>
+                }
+                else
+                {
+                    @foreach (var choice in part)
+                    {
+                        @Item(choice)
+                    }
+                }
+            }
+        </div>
+    }
+</div>
+
+@code {
+    /// <summary>The trigger's id, unique on the page; the menu is <c>{Id}-menu</c>.</summary>
+    [Parameter, EditorRequired] public string Id { get; set; } = "";
+
+    /// <summary>Every action that applies to the item's state, in the order the menu shows them.</summary>
+    [Parameter, EditorRequired] public IReadOnlyList<ModerationChoice> Choices { get; set; } = [];
+
+    /// <summary>The action the item needs most in its state, shown as the one filled button; null for none.</summary>
+    [Parameter] public string? Primary { get; set; }
+
+    /// <summary>The host island has not started yet: every action is disabled (the trigger is not).</summary>
+    [Parameter] public bool Locked { get; set; }
+
+    [Parameter] public EventCallback<string> OnChoose { get; set; }
+
+    private ModerationChoice? Main => Primary is null ? null : Choices.FirstOrDefault(c => c.Action == Primary);
+
+    private List<ModerationChoice> Rest => [.. Choices.Where(c => c != Main && !c.Apart), .. Choices.Where(c => c != Main && c.Apart)];
+
+    private string MenuId => Id + "-menu";
+
+    private string TriggerText => L[Main is null ? "Mod.Actions" : "Mod.More"];
+
+    /// <summary>Runs of the menu's items under one heading; the items set apart make one run at the end.</summary>
+    private static List<List<ModerationChoice>> Parts(List<ModerationChoice> rest)
+    {
+        var parts = new List<List<ModerationChoice>>();
+        foreach (var choice in rest)
+        {
+            if (parts.Count == 0 || parts[^1][0].Apart != choice.Apart || (!choice.Apart && parts[^1][0].Group != choice.Group))
+            {
+                parts.Add([]);
+            }
+
+            parts[^1].Add(choice);
+        }
+
+        return parts;
+    }
+
+    private RenderFragment Item(ModerationChoice choice) =>
+        @<button type="button" class="menu__item" id="@choice.ElementId" data-action="@choice.Action" popovertarget="@MenuId" popovertargetaction="hide"
+                 disabled="@(Locked || choice.Disabled)" @onclick="() => OnChoose.InvokeAsync(choice.Action)">@choice.Label</button>;
+}

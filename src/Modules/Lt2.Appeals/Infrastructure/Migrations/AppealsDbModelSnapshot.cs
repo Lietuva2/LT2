@@ -199,6 +199,10 @@ namespace Lt2.Appeals.Infrastructure.Migrations
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("created_at");
 
+                    b.Property<DateTimeOffset?>("EditedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("edited_at");
+
                     b.Property<DateTimeOffset?>("HiddenAt")
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("hidden_at");
@@ -983,6 +987,10 @@ namespace Lt2.Appeals.Infrastructure.Migrations
                     b.Property<DateTimeOffset>("CreatedAt")
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("created_at");
+
+                    b.Property<DateTimeOffset?>("EditedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("edited_at");
 
                     b.Property<DateTimeOffset?>("FirstPublicAt")
                         .HasColumnType("timestamp with time zone")

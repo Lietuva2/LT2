@@ -21,6 +21,7 @@ internal sealed class CommentsService(
     AppealReads reads,
     ModerationService moderation,
     ModerationRecorder recorder,
+    ReportNotices notices,
     IParticipants participants,
     IPreScreening screening,
     IMpLinks links,
@@ -129,16 +130,87 @@ internal sealed class CommentsService(
         }
 
         var written = onBill.Where(c => c.AuthorUserId == userId).ToList();
+        var restricted = await WritingRestrictionReads.IsRestrictedAsync(db, userId, clock.GetUtcNow(), cancellationToken);
         return new MyComments(
             agreedBefore,
-            await WritingRestrictionReads.IsRestrictedAsync(db, userId, clock.GetUtcNow(), cancellationToken),
+            restricted,
             participant?.IsMpAccount == true,
             deletable,
             written.Select(c => c.Id).ToList(),
             agreed,
             voices,
             await settings.GetAsync(SettingKeys.CommentsPerPersonPerTarget, cancellationToken),
-            written.Where(c => c.Status == CommentStatuses.Published).GroupBy(c => c.TargetId).ToDictionary(g => g.Key, g => g.Count()));
+            written.Where(c => c.Status == CommentStatuses.Published).GroupBy(c => c.TargetId).ToDictionary(g => g.Key, g => g.Count()))
+        {
+            Editable = restricted || participant is null || !bill.Open ? [] : await EditableAsync(db, written, participant, represented, speaker, cancellationToken),
+            Own = onBill.Where(c => NewsRules.OwnComment(c.AuthorUserId, c.OrganisationId, c.SeimasPersonId, userId, represented.ToHashSet(), speaker?.SeimasPersonId))
+                .Select(c => c.Id).ToList(),
+            Hidden = await HiddenOfAsync(db, written, cancellationToken),
+        };
+    }
+
+    /// <summary>
+    /// The caller's own hidden comments with the moderator's statement (owner, 2026-11-17), for their own answer only. A comment
+    /// shown nowhere because its target or the bill's record was hidden is not one of them: it follows its target (8.23.7).
+    /// </summary>
+    private static async Task<IReadOnlyList<MyHiddenComment>> HiddenOfAsync(AppealsDb db, List<Comment> written, CancellationToken ct)
+    {
+        var hidden = written.Where(c => c.Status == CommentStatuses.Hidden).OrderBy(c => c.CreatedAt).ToList();
+        var statements = await AppealsService.HideStatementsAsync(db, hidden.Select(c => c.Id).ToList(), ct);
+        return hidden.Select(c => new MyHiddenComment(c.Id, c.TargetKind, c.TargetId, c.Text, c.CreatedAt, statements.GetValueOrDefault(c.Id))).ToList();
+    }
+
+    /// <summary>
+    /// The caller's own comments they may edit now (design 8.23.3, owner 2026-11-17), by the rules the edit is checked by: nobody
+    /// said "Sutinku", the target open to comments and its kind switched on, the same voice as when written.
+    /// </summary>
+    private async Task<IReadOnlyList<Guid>> EditableAsync(
+        AppealsDb db, List<Comment> written, ParticipantFacts participant, List<Guid> represented, CommentSpeaker? speaker, CancellationToken ct)
+    {
+        var candidates = written.Where(c => c.Status == CommentStatuses.Published).ToList();
+        if (candidates.Count == 0)
+        {
+            return [];
+        }
+
+        var ids = candidates.Select(c => c.Id).ToList();
+        var agreements = await db.CommentAgreements.AsNoTracking().Where(a => ids.Contains(a.CommentId))
+            .GroupBy(a => a.CommentId).Select(g => new { g.Key, Count = g.Count() })
+            .ToDictionaryAsync(x => x.Key, x => x.Count, ct);
+        var editable = new List<Guid>();
+        var targets = new Dictionary<Guid, TargetState?>();
+        var switches = new Dictionary<string, bool>(StringComparer.Ordinal);
+        foreach (var c in candidates)
+        {
+            if (CommentRules.CheckEdit(c.Status, isAuthor: true, agreements.GetValueOrDefault(c.Id)) is not null)
+            {
+                continue;
+            }
+
+            if (!targets.TryGetValue(c.TargetId, out var target))
+            {
+                targets[c.TargetId] = target = await TargetAsync(db, c.TargetKind, c.TargetId, ct);
+            }
+
+            if (!switches.TryGetValue(c.TargetKind, out var on))
+            {
+                switches[c.TargetKind] = on = await SwitchAsync(c.TargetKind, ct);
+            }
+
+            if (target is not { Shown: true, Writable: true } || !on)
+            {
+                continue;
+            }
+
+            var represents = target.OrganisationId is { } o && represented.Contains(o);
+            var (voice, refusal) = CommentRules.Voice(c.TargetKind, represents, target.SeimasPersonId, speaker?.SeimasPersonId, participant.IsMpAccount);
+            if (refusal is null && voice == c.SpeaksAs && (voice != CommentVoices.Mp || CommentRules.CheckMpVoice(speaker!.PasskeySession, speaker.Sitting) is null))
+            {
+                editable.Add(c.Id);
+            }
+        }
+
+        return editable;
     }
 
     public async Task<Result<CommentCreated>> WriteAsync(Guid userId, string kind, Guid targetId, string text, CommentSpeaker? speaker, CancellationToken cancellationToken)
@@ -148,22 +220,10 @@ internal sealed class CommentsService(
             return Error.NotFound("comment.target-not-found");
         }
 
-        // Design 5.6, 6.8 (owner, 2026-11-16): the length is the members' texts setting, checked here for every caller.
-        var maxLength = await settings.GetAsync(SettingKeys.TextsMaxLength, cancellationToken);
-        if (CommentRules.CheckText(text, maxLength) is { } broken)
+        var (normalised, textRefused) = await CheckTextAsync(text, cancellationToken);
+        if (textRefused is not null)
         {
-            return broken == "comment.too-long"
-                ? Error.Validation(broken, "text") with { Numbers = [MemberTextLength.Allowed(maxLength)] }
-                : Error.Validation(broken, "text");
-        }
-
-        var normalised = AppealRules.NormaliseText(text);
-
-        // Design 8.23.3 (owner, 2026-11-16): personal data refuses a comment, with a message naming what was found; a link does not.
-        var refused = CommentRules.RefusedBy(await screening.ScreenAsync(normalised, cancellationToken));
-        if (refused.Count > 0)
-        {
-            return Error.Validation("comment.screened", "text") with { MessageKey = "comment.screened." + (refused.Count == 1 ? refused[0] : "several") };
+            return textRefused;
         }
 
         await using var db = await contexts.CreateDbContextAsync(cancellationToken);
@@ -213,6 +273,13 @@ internal sealed class CommentsService(
 
         // Design 8.23.4: the ceiling per person per text, counted under the account's and the target's lock.
         await AdvisoryLocks.CommentsAsync(db, userId, targetId, cancellationToken);
+
+        // Under an argument's lock, which its author's edit takes: a comment and an edit never cross (design 8.2).
+        if (kind == CommentKinds.Reason)
+        {
+            await AdvisoryLocks.ReasonAsync(db, targetId, cancellationToken);
+        }
+
         var limit = await settings.GetAsync(SettingKeys.CommentsPerPersonPerTarget, cancellationToken);
         if (limit > 0)
         {
@@ -243,6 +310,137 @@ internal sealed class CommentsService(
         await RecordActivity.TouchBillAsync(db, comment.BillNumber, comment.CreatedAt, cancellationToken);
         await transaction.CommitAsync(cancellationToken);
         return new CommentCreated(comment.Id);
+    }
+
+    /// <summary>
+    /// A comment's text against the rules of writing it, checked here for every caller: the length is the members' texts setting
+    /// (design 5.6, 6.8, owner 2026-11-16), and personal data refuses it with a message naming what was found, a link does not
+    /// (8.23.3). The normalised text, or the refusal.
+    /// </summary>
+    private async Task<(string Text, Error? Refusal)> CheckTextAsync(string text, CancellationToken ct)
+    {
+        var maxLength = await settings.GetAsync(SettingKeys.TextsMaxLength, ct);
+        if (CommentRules.CheckText(text, maxLength) is { } broken)
+        {
+            return ("", broken == "comment.too-long"
+                ? Error.Validation(broken, "text") with { Numbers = [MemberTextLength.Allowed(maxLength)] }
+                : Error.Validation(broken, "text"));
+        }
+
+        var normalised = AppealRules.NormaliseText(text);
+        var refused = CommentRules.RefusedBy(await screening.ScreenAsync(normalised, ct));
+        return refused.Count > 0
+            ? ("", Error.Validation("comment.screened", "text") with { MessageKey = "comment.screened." + (refused.Count == 1 ? refused[0] : "several") })
+            : (normalised, null);
+    }
+
+    /// <summary>
+    /// The author edits their comment (design 8.23.3, owner 2026-11-17) while nobody has said "Sutinku" to it
+    /// (<see cref="CommentRules.CheckEdit"/>), under the comment's lock, which "Sutinku" takes too, and by the rules of writing
+    /// it: the bill open, the target open to comments, the kind switched on, no writing restriction, the same voice as when it was
+    /// written (a representative still of the organisation, the MP's account or office in a passkey session, the mandate not
+    /// ended), the length and pre-screening. No earlier text is kept; the audit says that an edit happened, never the text.
+    /// </summary>
+    public async Task<Result<Unit>> EditAsync(Guid userId, Guid commentId, string text, CommentSpeaker? speaker, CancellationToken cancellationToken)
+    {
+        var (normalised, textRefused) = await CheckTextAsync(text, cancellationToken);
+        if (textRefused is not null)
+        {
+            return textRefused;
+        }
+
+        await using var db = await contexts.CreateDbContextAsync(cancellationToken);
+        await using var transaction = await db.Database.BeginTransactionAsync(cancellationToken);
+        await AdvisoryLocks.CommentAsync(db, commentId, cancellationToken);
+        if (await participants.FindAsync(userId, cancellationToken) is not { } participant)
+        {
+            return Error.Forbidden("member.required");
+        }
+
+        if (await db.Comments.FirstOrDefaultAsync(c => c.Id == commentId, cancellationToken) is not { } comment)
+        {
+            return Error.NotFound("comment.not-found");
+        }
+
+        switch (CommentRules.CheckEdit(comment.Status, comment.AuthorUserId == userId, agreements: 0))
+        {
+            case "comment.hidden":
+                return Error.Conflict("comment.hidden") with { MessageKey = "comment.hidden.edit" };
+            case { } notAuthor:
+                return Error.Forbidden(notAuthor);
+        }
+
+        if (await WritingRestrictionReads.IsRestrictedAsync(db, userId, clock.GetUtcNow(), cancellationToken))
+        {
+            return Error.Forbidden("writing.restricted");
+        }
+
+        var bill = await bills.BillAsync(db, comment.BillNumber, cancellationToken);
+        if (CommentRules.CheckBillOpen(bill?.Record?.Status, bill?.Finished ?? true) is { } closed)
+        {
+            return Error.Conflict(closed);
+        }
+
+        if (await TargetAsync(db, comment.TargetKind, comment.TargetId, cancellationToken) is not { Shown: true, Writable: true } target)
+        {
+            return Error.Conflict("comment.read-only");
+        }
+
+        if (CommentRules.CheckSwitch(await SwitchAsync(comment.TargetKind, cancellationToken)) is { } off)
+        {
+            return Error.Conflict(off);
+        }
+
+        if (await VoiceRefusalAsync(db, comment, target, participant, speaker, cancellationToken) is { } voiceRefused)
+        {
+            return voiceRefused;
+        }
+
+        var agreements = await db.CommentAgreements.CountAsync(a => a.CommentId == commentId, cancellationToken);
+        if (CommentRules.CheckEdit(comment.Status, isAuthor: true, agreements) is { } reacted)
+        {
+            return Error.Conflict(reacted);
+        }
+
+        var now = clock.GetUtcNow();
+        comment.Text = normalised;
+        comment.EditedAt = now;
+        await db.SaveChangesAsync(cancellationToken);
+
+        // Design 8.12.5: a comment changed in public is the bill's activity.
+        await RecordActivity.TouchBillAsync(db, comment.BillNumber, now, cancellationToken);
+        await audit.WriteAsync(
+            new AuditEntry(
+                "comment.edited", userId, "member", "comment:" + commentId,
+                JsonSerializer.SerializeToElement(new { bill = comment.BillNumber, kind = comment.TargetKind, voice = comment.SpeaksAs }, JsonSerializerOptions.Web),
+                null),
+            transaction.GetDbTransaction(),
+            cancellationToken);
+        await transaction.CommitAsync(cancellationToken);
+        return Result.Ok();
+    }
+
+    /// <summary>
+    /// The author still writes in the comment's voice (design 8.23.2), as writing it under its target now would decide: otherwise
+    /// the refusal of writing (a former representative, an MP's account in a code session, a mandate ended).
+    /// </summary>
+    private static async Task<Error?> VoiceRefusalAsync(AppealsDb db, Comment comment, TargetState target, ParticipantFacts participant, CommentSpeaker? speaker, CancellationToken ct)
+    {
+        var represents = target.OrganisationId is { } organisation && await OrganisationReads.IsRepresentativeAsync(db, organisation, comment.AuthorUserId!.Value, ct);
+        var (voice, refusal) = CommentRules.Voice(comment.TargetKind, represents, target.SeimasPersonId, speaker?.SeimasPersonId, participant.IsMpAccount);
+        if (refusal is not null)
+        {
+            return Error.Forbidden(refusal);
+        }
+
+        if (voice != comment.SpeaksAs)
+        {
+            return Error.Forbidden("comment.edit-author-only");
+        }
+
+        return voice == CommentVoices.Mp && CommentRules.CheckMpVoice(speaker!.PasskeySession, speaker.Sitting) is { } mpRefusal
+            ? mpRefusal == "mp.passkey-required" ? Error.Forbidden(mpRefusal) : Error.Conflict(mpRefusal)
+            : null;
     }
 
     public async Task<Result<Unit>> DeleteAsync(Guid userId, Guid commentId, CommentSpeaker? speaker, CancellationToken cancellationToken)
@@ -282,6 +480,8 @@ internal sealed class CommentsService(
         }
 
         var now = clock.GetUtcNow();
+        // Owner, 2026-11-17: whoever reported it is told it was deleted by its writer.
+        await notices.TellAsync(db, transaction, comment.Id, ReportOutcomes.Withdrawn, null, cancellationToken);
         await ModerationRecorder.CloseReportsAsync(db, comment.Id, now, cancellationToken);
         db.Comments.Remove(comment);
         await db.SaveChangesAsync(cancellationToken);

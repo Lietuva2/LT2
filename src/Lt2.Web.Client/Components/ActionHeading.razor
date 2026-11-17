@@ -1,0 +1,30 @@
+@* The heading of an action's form that has just opened (design 8.3, "The screen"; owner, 2026-11-17): it takes the focus once,
+   when it first renders in the browser, so a keyboard or screen reader user who chose the action from a menu is in its form,
+   the action's name read out; Tab goes on to the first field. Rendered only while the form is open. *@
+@if (Level == 3)
+{
+    <h3 id="@Id" tabindex="-1" class="action-heading" @ref="_heading">@ChildContent</h3>
+}
+else
+{
+    <h4 id="@Id" tabindex="-1" class="action-heading" @ref="_heading">@ChildContent</h4>
+}
+
+@code {
+    private ElementReference _heading;
+
+    [Parameter, EditorRequired] public string Id { get; set; } = "";
+
+    /// <summary>3 or 4 (the default), as the surrounding page's outline needs.</summary>
+    [Parameter] public int Level { get; set; } = 4;
+
+    [Parameter] public RenderFragment? ChildContent { get; set; }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender && RendererInfo.IsInteractive)
+        {
+            await _heading.FocusAsync();
+        }
+    }
+}

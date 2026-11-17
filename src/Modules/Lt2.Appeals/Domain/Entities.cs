@@ -237,6 +237,12 @@ internal sealed class Reason
     /// A restore keeps it.
     /// </summary>
     public DateTimeOffset? FirstPublicAt { get; set; }
+
+    /// <summary>
+    /// When its author last edited it (design 8.2, owner 2026-11-17: only until someone reacts); null while never. No earlier
+    /// text is kept. An edit is new to readers again (design 8.11.8).
+    /// </summary>
+    public DateTimeOffset? EditedAt { get; set; }
 }
 
 internal static class ReasonStatuses

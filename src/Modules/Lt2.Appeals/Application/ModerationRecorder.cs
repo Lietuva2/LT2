@@ -14,7 +14,7 @@ namespace Lt2.Appeals.Application;
 /// details; never a side or a text written by a member), and, for an action that answers them (design 6.8), the closing of
 /// the open reports on the target.
 /// </summary>
-internal sealed class ModerationRecorder(IAuditLog audit, TimeProvider clock)
+internal sealed class ModerationRecorder(IAuditLog audit, ReportNotices notices, TimeProvider clock)
 {
     private static readonly JsonSerializerOptions Details = new(JsonSerializerOptions.Web) { DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull };
 
@@ -38,6 +38,8 @@ internal sealed class ModerationRecorder(IAuditLog audit, TimeProvider clock)
         });
         if (answersReports)
         {
+            // Owner, 2026-11-17: each member whose report was open is told the decision, with the explanation when there is one.
+            await notices.TellAsync(db, transaction, targetId, ReportOutcomes.Of(action), statement, ct);
             await CloseReportsAsync(db, targetId, now, ct);
         }
 

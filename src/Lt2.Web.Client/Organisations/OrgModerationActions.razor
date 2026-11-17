@@ -2,8 +2,8 @@
 @inherits InteractiveBase<AppealUi>
 @inject IOrganisationModerationApi Moderation
 
-@* The actions on an organisation or a statement (design 8.14.14), as on the queue's screen (8.3): each is its own control,
-   choosing one opens only its own field with one sentence on what it does, only the actions that apply to the item's state
+@* The actions on an organisation or a statement (design 8.14.14), as on the queue's screen (8.3): the shared
+   ModerationMenu (owner, 2026-11-17), choosing one opens only its own field with one sentence on what it does, only the actions that apply to the item's state
    are offered, one is open at a time, and the confirmation stays after the action closes. Each is recorded, audited and
    emailed to the organisation's representatives. On a statement, "Riboti rašymą" reaches its writer as for an argument. *@
 <div class="stack stack--tight" id="org-actions-@Id">
@@ -11,12 +11,7 @@
     {
         @if (_open is null)
         {
-            <div class="actions" role="group" aria-label="@L["Mod.Actions"]">
-                @foreach (var action in Offered)
-                {
-                    <button type="button" class="@(action == Offered[0] ? "btn" : "btn btn--plain")" id="org-action-@action-@Id" disabled="@Locked" @onclick="() => Open(action)">@L["OrgMod.Action." + action]</button>
-                }
-            </div>
+            <ModerationMenu Id="@($"org-more-{Id}")" Choices="Choices" Primary="@Primary" Locked="Locked" OnChoose="Open" />
         }
         else if (_open == "restrict")
         {
@@ -25,10 +20,14 @@
         else
         {
             <form class="sheet sheet--quiet stack stack--tight" @onsubmit="SubmitAsync" novalidate aria-labelledby="org-action-title-@Id" id="org-action-form-@Id">
-                <h4 id="org-action-title-@Id">@L["OrgMod.Action." + _open]</h4>
+                <ActionHeading Id="@($"org-action-title-{Id}")">@L["OrgMod.Action." + _open]</ActionHeading>
                 <p class="small" id="org-action-sentence-@Id">@L["OrgMod.Sentence." + _open]</p>
                 <div class="field @ErrorClass("statement")">
-                    <label for="org-statement-@Id">@L[Optional(_open) ? "OrgMod.Note" : _open == "confirm" ? "OrgMod.Checked" : "OrgMod.Statement"]</label>
+                    <label for="org-statement-@Id">@L[_open == "keep" ? "Mod.Note.Reporters" : Optional(_open) ? "OrgMod.Note" : _open == "confirm" ? "OrgMod.Checked" : "OrgMod.Statement"]</label>
+                    @if (_open == "keep")
+                    {
+                        <p class="field__hint">@L["Mod.Note.Reporters.Hint"]</p>
+                    }
                     <textarea class="textarea" id="org-statement-@Id" maxlength="@AppealLimits.StatementMaxLength" @bind="_statement" @bind:event="oninput" disabled="@Locked"
                               aria-invalid="@Invalid("statement")" aria-describedby="@DescribedBy("statement", $"org-statement-{Id}")"></textarea>
                     <FieldError Errors="Errors" Field="statement" For="@($"org-statement-{Id}")" />
@@ -75,10 +74,19 @@
         : Status switch
         {
             "pending" when BillFinished => ["leave", "hide"],
-            "pending" => ["publish", "hide", "restrict"],
-            "published" => ["seen", "hide", "restrict"],
+            "pending" => ["publish", "restrict", "hide"],
+            "published" => ["seen", "restrict", "hide"],
             _ => [],
         };
+
+    /// <summary>
+    /// The filled button (owner, 2026-11-17): "Palikti" on an organisation to look at, "Paskelbti" on a waiting statement,
+    /// "Palikti" on a seen or closed one; a blocked organisation has none. Blocking and hiding are set apart at the end.
+    /// </summary>
+    private string? Primary => Offered.FirstOrDefault() is { } first && first is "keep" or "publish" or "seen" or "leave" ? first : null;
+
+    private IReadOnlyList<ModerationChoice> Choices =>
+        [.. Offered.Select(a => new ModerationChoice(a, $"org-action-{a}-{Id}", L["OrgMod.Action." + a], Apart: a is "hide" or "block"))];
 
     private static bool Optional(string action) => action is "keep" or "publish" or "seen" or "leave";
 

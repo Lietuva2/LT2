@@ -103,4 +103,15 @@ public sealed class MpResponseRuleTests
         ResponsePaging.Address("/seimas/XVP-0412", 20, ResponsePaging.ItemId(11)).ShouldBe("/seimas/XVP-0412?atsakymai=20#atsakymas-11");
         ResponsePaging.Address("/p/jonas-petraitis", 10, "atsakymai").ShouldBe("/p/jonas-petraitis#atsakymai");
     }
+
+    /// <summary>Owner, 2026-11-17: a response just published that stands beyond the shown ones is shown through it.</summary>
+    [Theory]
+    [InlineData(null, 25, 7, null)]
+    [InlineData(null, 25, 10, null)]
+    [InlineData(null, 25, 17, 17)]
+    [InlineData("20", 25, 17, null)]
+    [InlineData("20", 25, 23, 23)]
+    [InlineData(null, 25, 26, null)]
+    public void A_response_just_published_beyond_the_shown_ones_is_shown_through_it(string? show, int total, int position, int? expected) =>
+        ResponsePaging.ShowThrough(show, total, position).ShouldBe(expected);
 }

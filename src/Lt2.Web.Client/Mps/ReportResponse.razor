@@ -1,17 +1,20 @@
 @using Lt2.Api.Contracts.Appeals
 @using Lt2.Web.Client.Appeals
 @inherits InteractiveBase<AppealUi>
+@inject MyAccountState Account
 
 @* "⋯" under an MP's response (design 8.16.1; reports as for statements, 8.5.5): "Pranešti" in the menu; a member's report
    form opens below the action row, a visitor is told how to report. An island of its own in the server-rendered part: its
-   trigger, menu and form are direct children of the row. *@
+   trigger, menu and form are direct children of the row. Owner, 2026-11-17: no "Pranešti" for the MP's own account or office
+   on that MP's response, nor for a moderator in a staff-passkey session (who acts in the moderators' panel); decided once the
+   island runs, so the served HTML is the same for everyone. *@
 <MoreMenu Id="@MenuId">
-    @if (_signedIn)
+    @if (_signedIn && MayReport)
     {
         <button type="button" class="menu__item" id="report-response-@ResponseId.ToString("N")" disabled="@Locked" popovertarget="@MoreMenu.MenuOf(MenuId)" popovertargetaction="hide"
                 @onclick="() => _open = !_open">@L["Report.Open"]</button>
     }
-    else
+    else if (!_signedIn)
     {
         <VisitorReport Contact="@Contact" />
     }
@@ -24,13 +27,30 @@
 @code {
     private bool _signedIn;
     private bool _open;
+    private string? _speaksFor;
 
     [Parameter, EditorRequired] public Guid ResponseId { get; set; }
 
+    /// <summary>The address part of the MP who gave the response, to leave out "Pranešti" for those who speak for that MP.</summary>
+    [Parameter] public string? MpSlug { get; set; }
+
     [Parameter] public string? Contact { get; set; }
+
+    /// <summary>The server found a moderator in a staff-passkey session: only the moderators' actions, no "Pranešti".</summary>
+    [Parameter] public bool Moderator { get; set; }
 
     private string MenuId => "more-response-" + ResponseId.ToString("N");
 
-    protected override async Task OnInitializedAsync() =>
+    /// <summary>Before the island runs the same for everyone; then not on the caller's own MP's response, nor for a moderator.</summary>
+    private bool MayReport =>
+        !RendererInfo.IsInteractive || (!Moderator && (_speaksFor is null || !string.Equals(_speaksFor, MpSlug, StringComparison.Ordinal)));
+
+    protected override async Task OnInitializedAsync()
+    {
         _signedIn = await IsSignedInAsync();
+        if (_signedIn)
+        {
+            _speaksFor = await Account.SpeaksForAsync(RendererInfo.IsInteractive);
+        }
+    }
 }

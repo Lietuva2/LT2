@@ -117,6 +117,22 @@ internal static class E2ESteps
     public static string Base => SignUpTests.BaseUrl!.TrimEnd('/');
 
     /// <summary>
+    /// A moderator's action (design 8.3, owner 2026-11-17): the filled button is pressed as it is; an action in "Kiti veiksmai"
+    /// is chosen after opening that menu (the browser's popover). Waits until the island has started (the action enabled).
+    /// </summary>
+    public static async Task ChooseAsync(ILocator action)
+    {
+        await Assertions.Expect(action).ToBeEnabledAsync(new() { Timeout = Slow });
+        if (!await action.IsVisibleAsync())
+        {
+            var menu = await action.EvaluateAsync<string>("e => e.closest('[popover]')?.id ?? ''");
+            await action.Page.Locator($"button.menu__trigger[popovertarget='{menu}']").ClickAsync();
+        }
+
+        await action.ClickAsync();
+    }
+
+    /// <summary>
     /// Signs out with the account's own "Atsijungti" (design 8.21: on the screen "Saugumas ir duomenys", /paskyra/saugumas), opened
     /// first when the browser is elsewhere; waits for the island to start.
     /// </summary>

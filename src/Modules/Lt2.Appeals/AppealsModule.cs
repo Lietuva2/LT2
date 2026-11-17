@@ -41,6 +41,7 @@ public static class AppealsModule
         services.AddScoped<IDescriptionSummaries, DescriptionSummaries>();
         services.AddScoped<AppealReads>();
         services.AddScoped<BillRecords>();
+        services.AddScoped<ReportNotices>();
         services.AddScoped<ModerationRecorder>();
         services.AddScoped<IAppealsModule, AppealsService>();
         services.AddScoped<ModerationService>();

@@ -54,7 +54,26 @@ public sealed record MyComments(
     IReadOnlyList<Guid> Agreed,
     IReadOnlyList<CommentTargetVoice> Voices,
     int PerTargetLimit,
-    IReadOnlyDictionary<Guid, int> WrittenPerTarget);
+    IReadOnlyDictionary<Guid, int> WrittenPerTarget)
+{
+    /// <summary>The caller's own comments they may edit now (design 8.23.3, owner 2026-11-17: until someone says "Sutinku").</summary>
+    public IReadOnlyList<Guid> Editable { get; init; } = [];
+
+    /// <summary>
+    /// The comments that are the caller's own in any voice (written by them, in the name of an organisation they represent or of
+    /// the MP they speak for): no "Pranešti" there (owner, 2026-11-17).
+    /// </summary>
+    public IReadOnlyList<Guid> Own { get; init; } = [];
+
+    /// <summary>
+    /// The caller's own comments a moderator hid, with the moderator's statement (owner, 2026-11-17: the author sees them in
+    /// place, greyed); only in this never-cached answer.
+    /// </summary>
+    public IReadOnlyList<MyHiddenComment> Hidden { get; init; } = [];
+}
+
+/// <summary>One's own hidden comment: under which target, its text and time, and the moderator's statement when there is one.</summary>
+public sealed record MyHiddenComment(Guid Id, string Kind, Guid TargetId, string Text, DateTimeOffset CreatedAt, string? Statement);
 
 public sealed record CommentCreated(Guid Id);
 
@@ -96,6 +115,12 @@ public interface IComments
     Task<Result<CommentCreated>> WriteAsync(Guid userId, string kind, Guid targetId, string text, CommentSpeaker? speaker, CancellationToken cancellationToken);
 
     Task<Result<Unit>> DeleteAsync(Guid userId, Guid commentId, CommentSpeaker? speaker, CancellationToken cancellationToken);
+
+    /// <summary>
+    /// The author edits their comment while nobody has said "Sutinku" (design 8.23.3, owner 2026-11-17), by the rules of writing
+    /// it: <c>comment.reacted</c> after a "Sutinku"; <c>comment.edit-author-only</c> for someone else's.
+    /// </summary>
+    Task<Result<Unit>> EditAsync(Guid userId, Guid commentId, string text, CommentSpeaker? speaker, CancellationToken cancellationToken);
 
     Task<Result<Unit>> AgreeAsync(Guid userId, Guid commentId, CancellationToken cancellationToken);
 
