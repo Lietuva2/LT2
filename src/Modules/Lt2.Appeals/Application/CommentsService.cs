@@ -144,7 +144,19 @@ internal sealed class CommentsService(
             Editable = restricted || participant is null || !bill.Open ? [] : await EditableAsync(db, written, participant, represented, speaker, cancellationToken),
             Own = onBill.Where(c => NewsRules.OwnComment(c.AuthorUserId, c.OrganisationId, c.SeimasPersonId, userId, represented.ToHashSet(), speaker?.SeimasPersonId))
                 .Select(c => c.Id).ToList(),
+            Hidden = await HiddenOfAsync(db, written, cancellationToken),
         };
+    }
+
+    /// <summary>
+    /// The caller's own hidden comments with the moderator's statement (owner, 2026-11-17), for their own answer only. A comment
+    /// shown nowhere because its target or the bill's record was hidden is not one of them: it follows its target (8.23.7).
+    /// </summary>
+    private static async Task<IReadOnlyList<MyHiddenComment>> HiddenOfAsync(AppealsDb db, List<Comment> written, CancellationToken ct)
+    {
+        var hidden = written.Where(c => c.Status == CommentStatuses.Hidden).OrderBy(c => c.CreatedAt).ToList();
+        var statements = await AppealsService.HideStatementsAsync(db, hidden.Select(c => c.Id).ToList(), ct);
+        return hidden.Select(c => new MyHiddenComment(c.Id, c.TargetKind, c.TargetId, c.Text, c.CreatedAt, statements.GetValueOrDefault(c.Id))).ToList();
     }
 
     /// <summary>

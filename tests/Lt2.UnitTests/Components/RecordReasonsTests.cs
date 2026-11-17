@@ -359,6 +359,31 @@ public sealed class RecordReasonsTests : BunitContext
         _appeals.Calls.ShouldContain("WriteReasonAsync");
     }
 
+    /// <summary>
+    /// Owner, 2026-11-17: the author sees their own hidden argument in its side's column, quiet, with the moderator's explanation
+    /// and no actions, from their own answer once the island runs; the served HTML holds nothing of it.
+    /// </summary>
+    [Fact]
+    public void The_author_sees_their_hidden_argument_greyed_with_the_explanation_only_once_the_island_runs()
+    {
+        var hidden = Guid.Parse("0193a1b2-0000-7000-8000-0000000000aa");
+        _appeals.On("GetMineAsync", ApiResult<MyBillRecordResponse>.Ok(new MyBillRecordResponse(
+            "for", [], null, [new ReasonResponse(hidden, "against", "Paslėptas tekstas.", "Rūta Mockutė", 0, "hidden", DateTimeOffset.UnixEpoch)], null, true)
+        {
+            HiddenStatements = new Dictionary<Guid, string> { [hidden] = "Įžeidžiantis tonas." },
+        }));
+        var reasons = Render<RecordReasons>(p => p.Add(c => c.Number, Bill));
+
+        var item = reasons.Find($"#reasons-against #hidden-reason-{hidden}");
+        item.ClassList.ShouldContain("said--hidden");
+        item.TextContent.ShouldContain("Paslėptas tekstas.");
+        reasons.Find($"#hidden-reason-why-{hidden}").TextContent.ShouldContain("Paslėpė moderatorius: Įžeidžiantis tonas.");
+        item.QuerySelectorAll("button, .act").ShouldBeEmpty("no actions on a hidden argument");
+
+        SetRendererInfo(new RendererInfo("Static", isInteractive: false));
+        Render<RecordReasons>(p => p.Add(c => c.Number, Bill)).Markup.ShouldNotContain("Paslėptas tekstas.");
+    }
+
     /// <summary>Opens the writing box, writes an argument for "už" and publishes it; the record is then read as <paramref name="after"/>.</summary>
     private IRenderedComponent<RecordReasons> WriteAnArgument(ReasonCreatedResponse created, BillRecordResponse after)
     {

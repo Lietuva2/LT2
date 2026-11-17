@@ -106,6 +106,27 @@ public sealed class CommentThreadTests : BunitContext
         moderated.FindAll("[id$='-report']").ShouldBeEmpty();
     }
 
+    /// <summary>Owner, 2026-11-17: the author sees their own hidden comment under its text, quiet, with the moderator's explanation.</summary>
+    [Fact]
+    public void The_author_sees_their_hidden_comment_greyed_with_the_explanation()
+    {
+        var hidden = Guid.Parse("0193a1b2-0000-7000-8000-0000000000bb");
+        AddAuthorization().SetAuthorized("ruta.mockute@pavyzdys.test");
+        SetRendererInfo(new RendererInfo("WebAssembly", isInteractive: true));
+        _comments.On("GetMineAsync", ApiResult<MyCommentsResponse>.Ok(new MyCommentsResponse(
+            true, false, false, [], [], [], [], 0, new Dictionary<Guid, int>())
+        {
+            Hidden = [new MyHiddenCommentResponse(hidden, "reason", Target, "Paslėptas komentaras.", DateTimeOffset.UnixEpoch, "Asmens duomenys.")],
+        }));
+        var thread = RenderThread();
+
+        var item = thread.Find($"#comments-hidden-{Target:N} > li");
+        item.ClassList.ShouldContain("comment--hidden");
+        item.TextContent.ShouldContain("Paslėptas komentaras.");
+        item.TextContent.ShouldContain("Paslėpė moderatorius: Asmens duomenys.");
+        item.QuerySelectorAll("button").ShouldBeEmpty();
+    }
+
     private IRenderedComponent<CommentThread> RenderThread() =>
         Render<CommentThread>(p => p.Add(c => c.Kind, "reason").Add(c => c.TargetId, Target).Add(c => c.Number, Bill).Add(c => c.Thread, Thread())
             .Add(c => c.Count, 3).Add(c => c.PagePath, "/seimas/" + Bill));

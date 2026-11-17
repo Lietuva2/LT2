@@ -137,6 +137,12 @@ public sealed record MyBillRecord(
 {
     /// <summary>The person's own arguments they may edit now (design 8.2, owner 2026-11-17: until someone reacts).</summary>
     public IReadOnlyList<Guid> Editable { get; init; } = [];
+
+    /// <summary>
+    /// The moderator's statement beside each of the person's own hidden arguments in <see cref="MyReasons"/> (owner, 2026-11-17:
+    /// the author sees their hidden argument in its place with it); only in this never-cached answer.
+    /// </summary>
+    public IReadOnlyDictionary<Guid, string> HiddenStatements { get; init; } = new Dictionary<Guid, string>();
 }
 
 /// <summary>

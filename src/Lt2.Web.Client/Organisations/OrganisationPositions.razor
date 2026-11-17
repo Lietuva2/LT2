@@ -73,6 +73,14 @@
                             <span class="@OrganisationWords.StanceClass(own.Stance)">@L["Org.Stance." + own.Stance]</span>
                             <span class="tag" id="my-statement-status-@org.Slug">@L["Org.Status." + own.Status]</span>
                         </p>
+                        @if (own.Status == "hidden" && RendererInfo.IsInteractive)
+                        {
+                            @* Owner, 2026-11-17: the representatives see their hidden statement, quiet, with the moderator's explanation. *@
+                            <div class="said said--hidden" id="my-statement-hidden-@org.Slug">
+                                <LongText Text="@own.Text" BubbleClass="bubble bubble--people voice" Id="@($"my-statement-hidden-more-{org.Slug}")" />
+                                <p class="small hidden-why">@(org.HiddenStatement is { } why ? L.Format("Reasons.HiddenBy", why) : L["Reasons.Hidden"].Value)</p>
+                            </div>
+                        }
                     }
                     @if (org.Refusal is { } refusal)
                     {

@@ -193,6 +193,12 @@ public sealed record MyBillRecordResponse(
 {
     /// <summary>The caller's own arguments they may edit now (design 8.2, owner 2026-11-17: until someone reacts).</summary>
     public IReadOnlyList<Guid> Editable { get; init; } = [];
+
+    /// <summary>
+    /// The moderator's statement beside each of the caller's own hidden arguments in <c>MyReasons</c> (owner, 2026-11-17: the
+    /// author sees them in place, greyed, with it). Never in any public answer.
+    /// </summary>
+    public IReadOnlyDictionary<Guid, string> HiddenStatements { get; init; } = new Dictionary<Guid, string>();
 }
 
 /// <summary>

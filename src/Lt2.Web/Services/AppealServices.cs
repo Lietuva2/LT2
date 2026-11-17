@@ -37,7 +37,7 @@ internal static class AppealMapping
         p.NextCursor);
 
     public static MyBillRecordResponse Map(MyBillRecord m) =>
-        new(m.Side, m.Endorsed, m.EndorsementsLeft, m.MyReasons.Select(Map).ToList(), m.ReasonsLeft, m.HasPositionConsent) { Editable = m.Editable };
+        new(m.Side, m.Endorsed, m.EndorsementsLeft, m.MyReasons.Select(Map).ToList(), m.ReasonsLeft, m.HasPositionConsent) { Editable = m.Editable, HiddenStatements = m.HiddenStatements };
 
     public static AppealRulesResponse Map(AppealRulesInfo r) =>
         new(r.ThresholdDefault, r.ThresholdMinimum, r.TextMaxLength, r.ReasonsPerPerson, r.EndorsementsPerPerson, r.DescriptionMaxLength, r.AiSummaries) { MinReasonWords = r.MinReasonWords };

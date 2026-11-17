@@ -109,7 +109,11 @@ public sealed record OrganisationManagement(
 /// One organisation the caller represents, on a bill: its statement there (any status but withdrawn) and, when it cannot
 /// publish now, why (<c>organisation.blocked</c>, <c>writing.restricted</c>, <c>statement.bill-not-open</c>).
 /// </summary>
-public sealed record MyBillOrganisation(Guid OrganisationId, string Slug, string Name, string Status, OrganisationLabel Label, StatementInfo? Statement, string? Refusal);
+public sealed record MyBillOrganisation(Guid OrganisationId, string Slug, string Name, string Status, OrganisationLabel Label, StatementInfo? Statement, string? Refusal)
+{
+    /// <summary>For a statement a moderator hid: the moderator's statement, for its representatives only (owner, 2026-11-17).</summary>
+    public string? HiddenStatement { get; init; }
+}
 
 public sealed record NewOrganisation(string Name, string? Description, string? Website, string? LegalCode, bool DeclaredLobbyist);
 

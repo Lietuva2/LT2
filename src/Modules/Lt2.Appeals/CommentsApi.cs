@@ -64,7 +64,16 @@ public sealed record MyComments(
     /// the MP they speak for): no "Pranešti" there (owner, 2026-11-17).
     /// </summary>
     public IReadOnlyList<Guid> Own { get; init; } = [];
+
+    /// <summary>
+    /// The caller's own comments a moderator hid, with the moderator's statement (owner, 2026-11-17: the author sees them in
+    /// place, greyed); only in this never-cached answer.
+    /// </summary>
+    public IReadOnlyList<MyHiddenComment> Hidden { get; init; } = [];
 }
+
+/// <summary>One's own hidden comment: under which target, its text and time, and the moderator's statement when there is one.</summary>
+public sealed record MyHiddenComment(Guid Id, string Kind, Guid TargetId, string Text, DateTimeOffset CreatedAt, string? Statement);
 
 public sealed record CommentCreated(Guid Id);
 

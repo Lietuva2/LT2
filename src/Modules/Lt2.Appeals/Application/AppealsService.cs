@@ -203,7 +203,29 @@ internal sealed class AppealsService(
             facts?.HasPositionConsent == true)
         {
             Editable = await EditableAsync(db, record, userId, facts, mine, endorsements, cancellationToken),
+            HiddenStatements = await HideStatementsAsync(db, mine.Where(r => r.Status == ReasonStatuses.Hidden).Select(r => r.Id).ToList(), cancellationToken),
         };
+    }
+
+    /// <summary>
+    /// The moderator's statement of the latest hiding of each given target (design 8.3: the one emailed to its author), for the
+    /// author's own answer only (owner, 2026-11-17: the author sees their hidden text with it). Never who hid it.
+    /// </summary>
+    internal static async Task<IReadOnlyDictionary<Guid, string>> HideStatementsAsync(AppealsDb db, List<Guid> targetIds, CancellationToken ct)
+    {
+        if (targetIds.Count == 0)
+        {
+            return new Dictionary<Guid, string>();
+        }
+
+        var hides = await db.ModerationActions.AsNoTracking()
+            .Where(m => targetIds.Contains(m.TargetId) && m.Action == "hide")
+            .Select(m => new { m.TargetId, m.Statement, m.CreatedAt })
+            .ToListAsync(ct);
+        return hides.GroupBy(h => h.TargetId)
+            .Select(g => g.OrderByDescending(h => h.CreatedAt).First())
+            .Where(h => !string.IsNullOrWhiteSpace(h.Statement))
+            .ToDictionary(h => h.TargetId, h => h.Statement!);
     }
 
     /// <summary>

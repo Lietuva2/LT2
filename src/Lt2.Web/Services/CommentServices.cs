@@ -58,7 +58,11 @@ internal sealed class CommentReads(IComments comments, ICommentModeration modera
         return new MyCommentsResponse(
             m.AgreedBefore, m.Restricted, m.MpAccount, m.Deletable, m.Written, m.Agreed,
             m.Voices.Select(v => new CommentTargetVoiceResponse(v.Kind, v.TargetId, v.Voice, v.Refusal)).ToList(),
-            m.PerTargetLimit, m.WrittenPerTarget) { Editable = m.Editable, Own = m.Own };
+            m.PerTargetLimit, m.WrittenPerTarget) {
+            Editable = m.Editable,
+            Own = m.Own,
+            Hidden = m.Hidden.Select(h => new MyHiddenCommentResponse(h.Id, h.Kind, h.TargetId, h.Text, h.CreatedAt, h.Statement)).ToList(),
+        };
     }
 
     public async Task<Result<CommentCreatedResponse>> WriteAsync(ClaimsPrincipal user, string kind, Guid targetId, CommentRequest request, CancellationToken ct)

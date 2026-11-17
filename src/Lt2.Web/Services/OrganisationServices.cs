@@ -45,7 +45,7 @@ internal static class OrganisationMapping
         m.Refusal);
 
     public static MyBillOrganisationResponse Map(MyBillOrganisation m) =>
-        new(m.OrganisationId, m.Slug, m.Name, m.Status, Map(m.Label), m.Statement is { } s ? Map(s) : null, m.Refusal);
+        new(m.OrganisationId, m.Slug, m.Name, m.Status, Map(m.Label), m.Statement is { } s ? Map(s) : null, m.Refusal) { HiddenStatement = m.HiddenStatement };
 
     public static NewOrganisation ToModule(OrganisationRequest r) => new(r.Name, r.Description, r.Website, r.LegalCode, r.DeclaredLobbyist);
 

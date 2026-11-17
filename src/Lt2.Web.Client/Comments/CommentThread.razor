@@ -153,6 +153,24 @@
         {
             <p class="small" id="comments-none-@Key">@L["Comments.None"]</p>
         }
+        @if (OwnHidden is { Count: > 0 } ownHidden)
+        {
+            @* Owner, 2026-11-17: the caller's own hidden comments under this text, for them only (the never-cached answer, once the
+               island runs), quiet, with the moderator's explanation; no actions (a hidden comment is the moderators'). *@
+            <ul class="stack stack--tight comments__hidden" id="comments-hidden-@Key">
+                @foreach (var h in ownHidden)
+                {
+                    <li class="comment comment--hidden stack stack--tight" id="hidden-@CommentLimits.ElementId(h.Id)" @key="h.Id">
+                        <p class="row comment__who"><span class="small num">@Display.DayTime(h.CreatedAt)</span></p>
+                        <LongText Text="@h.Text" BubbleClass="bubble bubble--people voice comment__text" Links="true" Id="@($"hidden-{CommentLimits.ElementId(h.Id)}-more")" />
+                        <p class="small hidden-why" id="hidden-@CommentLimits.ElementId(h.Id)-why">
+                            @(h.Statement is { } why ? L.Format("Reasons.HiddenBy", why) : L["Reasons.Hidden"].Value)
+                            @L["Comments.HiddenOnlyYou"]
+                        </p>
+                    </li>
+                }
+            </ul>
+        }
         @if (thread.Count > thread.Items.Count && CommentPaging.More(thread.Items.Count, thread.Count) is { } more)
         {
             <div class="row">
@@ -545,6 +563,10 @@
     /// one speaks for), and not for a moderator in a staff-passkey session, who gets the moderators' actions instead.
     /// </summary>
     private bool MayReport(Guid commentId) => !Moderator && _mine?.Own.Contains(commentId) != true;
+
+    /// <summary>The caller's own hidden comments under this text (owner, 2026-11-17); null before the island runs and for a visitor.</summary>
+    private List<MyHiddenCommentResponse>? OwnHidden =>
+        _signedIn && _mine is { } mine ? mine.Hidden.Where(h => h.Kind == Kind && h.TargetId == TargetId).ToList() : null;
 
     /// <summary>The comment whose edit form is open below its row ("⋯" → "Redaguoti").</summary>
     private Guid? _editingComment;

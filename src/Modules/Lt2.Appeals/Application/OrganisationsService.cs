@@ -708,11 +708,16 @@ internal sealed class OrganisationsService(
             .ToListAsync(cancellationToken);
         var counts = (await reads.CountsAsync(db, [bill.Bill.Number], cancellationToken))[bill.Bill.Number];
         var restricted = await WritingRestrictionReads.IsRestrictedAsync(db, userId, clock.GetUtcNow(), cancellationToken);
+        var hideStatements = await AppealsService.HideStatementsAsync(
+            db, statements.Where(s => s.Status == StatementStatuses.Hidden).Select(s => s.Id).ToList(), cancellationToken);
         return organisations.Select(o =>
         {
             var statement = statements.FirstOrDefault(s => s.OrganisationId == o.Id);
             var refusal = OrganisationRules.CheckActive(o.Status) ?? (restricted ? "writing.restricted" : null) ?? OrganisationRules.CheckBillOpen(bill.Record?.Status, bill.Finished);
-            return new MyBillOrganisation(o.Id, o.Slug, o.Name, o.Status, OrganisationReads.Label(o), statement is null ? null : OrganisationReads.Info(statement, counts), refusal);
+            return new MyBillOrganisation(o.Id, o.Slug, o.Name, o.Status, OrganisationReads.Label(o), statement is null ? null : OrganisationReads.Info(statement, counts), refusal)
+            {
+                HiddenStatement = statement is { Status: StatementStatuses.Hidden } ? hideStatements.GetValueOrDefault(statement.Id) : null,
+            };
         }).ToList();
     }
 

@@ -128,7 +128,13 @@ public sealed record MyCommentsResponse(
 
     /// <summary>The caller's own comments in any voice: no "Pranešti" there (owner, 2026-11-17).</summary>
     public IReadOnlyList<Guid> Own { get; init; } = [];
+
+    /// <summary>The caller's own comments a moderator hid, with the moderator's statement (owner, 2026-11-17). Never in a public answer.</summary>
+    public IReadOnlyList<MyHiddenCommentResponse> Hidden { get; init; } = [];
 }
+
+/// <summary>One's own hidden comment: under which target, its text and time, and the moderator's statement when there is one.</summary>
+public sealed record MyHiddenCommentResponse(Guid Id, string Kind, Guid TargetId, string Text, DateTimeOffset CreatedAt, string? Statement);
 
 public sealed record CommentRequest
 {

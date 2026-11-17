@@ -78,6 +78,10 @@
 <data name="Reasons.WithdrawConfirm" xml:space="preserve"><value>Argumentas bus ištrintas kartu su jo „Man svarbu“ žymomis. Jau sudarytose suvestinėse jo tekstas liks.</value></data>
 <data name="Reasons.WithdrawYes" xml:space="preserve"><value>Atsiimti argumentą</value></data>
 <data name="Reasons.Withdrawn" xml:space="preserve"><value>Argumentas atsiimtas.</value></data>
+<data name="Reasons.HiddenBy" xml:space="preserve"><value>Paslėpė moderatorius: {0}</value></data>
+<data name="Reasons.Hidden" xml:space="preserve"><value>Paslėpė moderatorius.</value></data>
+<data name="Reasons.HiddenOnlyYou" xml:space="preserve"><value>Jį matote tik jūs.</value></data>
+<data name="Comments.HiddenOnlyYou" xml:space="preserve"><value>Jį matote tik jūs.</value></data>
 <data name="Reasons.TooShort" xml:space="preserve"><value>Argumentas labai trumpas. Parašykite, kodėl prašote balsuoti už ar prieš – tokį argumentą kiti galės pažymėti „Man svarbu“.</value></data>
 <data name="Reasons.TooShort.More" xml:space="preserve"><value>Papildyti</value></data>
 <data name="Reasons.TooShort.Anyway" xml:space="preserve"><value>Vis tiek skelbti</value></data>

@@ -156,7 +156,11 @@ public sealed record OrganisationManagementResponse(
     string? Refusal);
 
 /// <summary>One organisation the caller represents on a bill: its statement there (if any) and why it cannot publish now.</summary>
-public sealed record MyBillOrganisationResponse(Guid OrganisationId, string Slug, string Name, string Status, OrganisationLabelResponse Label, StatementResponse? Statement, string? Refusal);
+public sealed record MyBillOrganisationResponse(Guid OrganisationId, string Slug, string Name, string Status, OrganisationLabelResponse Label, StatementResponse? Statement, string? Refusal)
+{
+    /// <summary>For a statement a moderator hid: the moderator's statement, in the representatives' own answer only (owner, 2026-11-17).</summary>
+    public string? HiddenStatement { get; init; }
+}
 
 public sealed record OrganisationCreatedResponse(Guid Id, string Slug);
 
