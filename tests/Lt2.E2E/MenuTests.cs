@@ -4,8 +4,9 @@ using Microsoft.Playwright;
 namespace Lt2.E2E;
 
 /// <summary>
-/// Design 8.21 against the stack: the menu (logo, "Projektai", "Seimo nariai", "Prisijungti" or "Paskyra") on one line at 360,
-/// 390 and 1280 px in both themes, for a visitor and a member; the four tabs of "Projektai" reaching each other; the account
+/// Design 8.21 against the stack: the menu (logo, "Projektai", "Seimo nariai", "Statistika", "Prisijungti" or "Paskyra") on one
+/// line at 360, 390 and 1280 px in both themes, for a visitor and a member; the three tabs of "Projektai" reaching each other,
+/// and its dropdown (owner, 2026-11-17); the account
 /// item with the keyboard, its name and links filled in the browser only. Screenshots go to <c>output/menu</c>.
 /// </summary>
 public sealed class MenuTests : E2ETest
@@ -22,9 +23,10 @@ public sealed class MenuTests : E2ETest
               const brand = document.querySelector('.top__brand').getBoundingClientRect();
               const items = [...document.querySelectorAll('.top__nav > *')].map(e => e.matches('details') ? e.querySelector('summary') : e)
                 .flatMap(e => [...e.getClientRects()]).filter(r => r.width > 0);
-              if (items.length !== 3) return 'expected three menu items, found ' + items.length;
+              if (items.length !== 4) return 'expected four menu items, found ' + items.length;
               const middles = [brand, ...items].map(r => Math.round(r.top + r.height / 2));
               if (Math.max(...middles) - Math.min(...middles) > 8) return 'not one line: ' + middles.join(',');
+              if (Math.min(...items.map(r => r.left)) < brand.right) return 'an item runs into the brand';
               const right = Math.max(...items.map(r => r.right));
               if (right > document.documentElement.clientWidth) return 'past the right edge: ' + right;
               return null;
@@ -67,9 +69,16 @@ public sealed class MenuTests : E2ETest
         await ShootMenuAsync(page, "visitor");
 
         var nav = page.Locator("nav.top__nav");
-        await Assertions.Expect(nav.GetByRole(AriaRole.Link)).ToHaveTextAsync(["Projektai", "Seimo nariai", "Prisijungti"]);
-        await Assertions.Expect(page.Locator("#nav-projects")).ToHaveAttributeAsync("href", "/darbotvarke");
+        await Assertions.Expect(page.Locator("#nav-projects")).ToHaveTextAsync("Projektai");
+        await Assertions.Expect(nav.Locator("> a")).ToHaveTextAsync(["Seimo nariai", "Statistika", "Prisijungti"]);
         await Assertions.Expect(page.Locator("#nav-projects")).ToHaveAttributeAsync("aria-current", "true", new() { Timeout = E2ESteps.Slow });
+
+        // Owner, 2026-11-17: "Projektai" opens a dropdown with its three tabs; Escape closes it.
+        await page.Locator("#nav-projects").ClickAsync();
+        await Assertions.Expect(page.Locator("#projects-menu")).ToHaveAttributeAsync("open", "");
+        await Assertions.Expect(page.Locator("#projects-menu .drop__links a")).ToHaveTextAsync(["Darbotvarkė", "Projektai", "Suvestinės"]);
+        await page.Keyboard.PressAsync("Escape");
+        await Assertions.Expect(page.Locator("#projects-menu")).Not.ToHaveAttributeAsync("open", "");
         visitor.ConsoleErrors.ShouldBeEmpty();
     }
 
@@ -85,7 +94,7 @@ public sealed class MenuTests : E2ETest
     }
 
     [Fact]
-    public async Task Each_of_the_four_tabs_reaches_the_other_three_and_marks_its_page()
+    public async Task Each_of_the_three_tabs_reaches_the_other_two_and_marks_its_page()
     {
         Assert.SkipWhen(string.IsNullOrEmpty(SignUpTests.BaseUrl), "LT2_E2E_BASE_URL is not set; start the stack and set it to run end-to-end tests.");
         await using var visitor = await PasskeyBrowser.StartAsync("native", 390, 844);
@@ -95,12 +104,12 @@ public sealed class MenuTests : E2ETest
             ("/darbotvarke", "Darbotvarkė", "tab-darbotvarke"),
             ("/projektai", "Projektai", "tab-projektai"),
             ("/suvestines", "Suvestinės", "tab-suvestines"),
-            ("/seimas/analitika", "Analitika", "tab-seimas-analitika"),
         ];
 
-        // From the menu item to the agenda, then from every tab to every other by its link.
+        // From the menu item's dropdown to the agenda, then from every tab to every other by its link.
         await page.GotoAsync(E2ESteps.Base + "/metodika");
         await page.Locator("#nav-projects").ClickAsync();
+        await page.Locator("#nav-tab-darbotvarke").ClickAsync();
         await page.WaitForURLAsync(new Regex("/darbotvarke$"), new() { Timeout = E2ESteps.Slow });
         foreach (var from in tabs)
         {
@@ -112,7 +121,7 @@ public sealed class MenuTests : E2ETest
                 await row.GetByRole(AriaRole.Link, new() { Name = to.Tab, Exact = true }).ClickAsync();
                 await page.WaitForURLAsync(new Regex(Regex.Escape(to.Path) + "$"), new() { Timeout = E2ESteps.Slow });
                 await Assertions.Expect(page.Locator($"#{to.Id}")).ToHaveAttributeAsync("aria-current", "page");
-                await Assertions.Expect(page.Locator("#nav-projects")).ToHaveAttributeAsync("aria-current", to.Path == "/darbotvarke" ? "page" : "true");
+                await Assertions.Expect(page.Locator("#nav-projects")).ToHaveAttributeAsync("aria-current", "true");
             }
         }
 

@@ -180,11 +180,12 @@ public sealed partial class AgendaTests(DatabaseFixture database) : ApiTest(data
     [Fact]
     public async Task The_first_menu_item_Projektai_opens_the_agenda()
     {
-        // Design 8.21: "Projektai" is first and opens /darbotvarke, the first of its three tabs.
+        // Design 8.21: "Projektai" is first; its dropdown's first tab is /darbotvarke (owner, 2026-11-17).
         using var visitor = NewBrowser();
         var html = await visitor.Client.GetStringAsync("/seimo-nariai");
         var nav = html[html.IndexOf("top__nav", StringComparison.Ordinal)..];
-        nav.IndexOf("<a href=\"/darbotvarke\" id=\"nav-projects\">Projektai</a>", StringComparison.Ordinal).ShouldBeGreaterThan(0);
+        nav.IndexOf("<summary class=\"drop__toggle\" id=\"nav-projects\">Projektai</summary>", StringComparison.Ordinal).ShouldBeGreaterThan(0);
+        nav.IndexOf("id=\"nav-projects\"", StringComparison.Ordinal).ShouldBeLessThan(nav.IndexOf("href=\"/darbotvarke\"", StringComparison.Ordinal));
         nav.IndexOf("href=\"/darbotvarke\"", StringComparison.Ordinal).ShouldBeLessThan(nav.IndexOf("href=\"/seimo-nariai\"", StringComparison.Ordinal));
     }
 

@@ -287,20 +287,33 @@ public sealed partial class AppealPageTests(DatabaseFixture database) : ApiTest(
         status.ShouldBe(HttpStatusCode.OK);
 
         // Design 8.12.5 (decided 2026-11-14): the menu item, the heading and the title are "Projektai". Design 8.21: the menu
-        // item opens the agenda and is current here; this page is the tab "Projektai".
+        // item's dropdown holds this page and is current here; this page is the tab "Projektai".
         html.ShouldContain("<title>Projektai · Lietuva 2.0</title>");
         html.ShouldContain("<h1>Projektai</h1>");
-        html.ShouldContain("<a href=\"/darbotvarke\" id=\"nav-projects\" aria-current=\"true\">Projektai</a>", customMessage: "the menu item");
+        html.ShouldContain("<summary class=\"drop__toggle\" id=\"nav-projects\" aria-current=\"true\">Projektai</summary>", customMessage: "the menu item");
         html.ShouldContain("<a href=\"/projektai\" id=\"tab-projektai\" aria-current=\"page\">Projektai</a>", customMessage: "the tab");
         html.ShouldNotContain("Kreipimaisi");
         html.ShouldContain("href=\"/seimas/XVP-0618\"");
         html.ShouldContain("href=\"/seimas/XVP-0533\"", customMessage: "every active bill is listed, also one nobody took part in");
         html.ShouldContain("dalyvių 1 · argumentų 1");
-        html.ShouldContain("už 1 (0) · prieš 0 (0)");
         html.ShouldContain("Skliaustuose – kiek iš jų paskyrų senesnės nei 30 d.", customMessage: "one legend under the list (design 8.15, annex P2)");
         html.IndexOf("id=\"bill-XVP-0618\"", StringComparison.Ordinal).ShouldBeLessThan(html.IndexOf("id=\"bill-XVP-0533\"", StringComparison.Ordinal), "most activity first");
+
+        // Owner, 2026-11-17: the sides' numbers stand beside the bar; two orders; the planned filter is a link.
+        var row = html[html.IndexOf("id=\"bill-XVP-0618\"", StringComparison.Ordinal)..];
+        row = row[..row.IndexOf("</li>", StringComparison.Ordinal)];
+        var side = row[row.IndexOf("rows__side", StringComparison.Ordinal)..];
+        side.ShouldContain("už 1 (0) · prieš 0 (0)");
+        side.IndexOf("už 1 (0)", StringComparison.Ordinal).ShouldBeLessThan(side.IndexOf("<svg", StringComparison.Ordinal), "the numbers, then the bar");
+        row[..row.IndexOf("rows__side", StringComparison.Ordinal)].ShouldNotContain("už 1 (0)", customMessage: "not in the text line");
         html.ShouldContain("<b aria-current=\"true\" id=\"sort-aktyvumas\">pagal aktyvumą</b>");
-        html.ShouldContain("href=\"/projektai?rikiuoti=argumentai\"");
+        html.ShouldContain("<a href=\"/projektai?rikiuoti=data\" id=\"sort-data\">pagal planuojamą datą</a>");
+        html.ShouldNotContain("rikiuoti=argumentai");
+        html.ShouldNotContain("rikiuoti=dalyviai");
+        html.ShouldContain("<a class=\"toggle-link\" href=\"/projektai?planuojami=taip\" id=\"planned\">Planuojami per 14 dienų</a>");
+        html.ShouldNotContain("id=\"planuojami\"", customMessage: "no checkbox applied by \"Rodyti\"");
+        var (_, oldSort) = await PageAsync(stranger, "/projektai?rikiuoti=argumentai");
+        oldSort.ShouldContain("<b aria-current=\"true\" id=\"sort-aktyvumas\">", customMessage: "an old order falls back to the default");
         html.ShouldNotContain("/kreipimaisi", customMessage: "the site links to /projektai directly, not through the redirect");
         ShouldSpeakOfUsersNotThePublic(html);
 
@@ -317,6 +330,11 @@ public sealed partial class AppealPageTests(DatabaseFixture database) : ApiTest(
             var (_, planned) = await PageAsync(stranger, "/projektai?planuojami=taip");
             planned.ShouldContain("id=\"bill-XVP-0533\"");
             planned.ShouldNotContain("id=\"bill-XVP-0618\"");
+
+            // The link turns the filter off and keeps the search and the order; the search keeps the filter.
+            var (_, searched) = await PageAsync(stranger, "/projektai?rikiuoti=data&q=rinkliav&planuojami=taip");
+            searched.ShouldContain("<a class=\"toggle-link\" href=\"/projektai?rikiuoti=data&q=rinkliav\" id=\"planned\" aria-current=\"true\">");
+            searched.ShouldContain("type=\"hidden\" name=\"planuojami\" value=\"taip\"");
             var (_, byDate) = await PageAsync(stranger, "/projektai?rikiuoti=data");
             byDate.IndexOf("id=\"bill-XVP-0533\"", StringComparison.Ordinal).ShouldBeLessThan(byDate.IndexOf("id=\"bill-XVP-0618\"", StringComparison.Ordinal), "the planned one first");
         }

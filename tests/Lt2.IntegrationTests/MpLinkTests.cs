@@ -60,12 +60,29 @@ public sealed class MpLinkTests(DatabaseFixture database) : ApiTest(database)
             state.ShouldContain("registrationComplete", customMessage: "the decoded state holds the account");
             state.ShouldNotContain("\"mpOffer\":{", Case.Insensitive);
             state.ShouldNotContain("laima-uosyte");
+
+            // Owner, 2026-11-17: the notice on every page is served hidden and without the name, the same for every member, and
+            // only to members; the browser fills it from GET /me.
+            var notice = NoticeOf(await mp.Client.GetStringAsync("/darbotvarke"));
+            notice.ShouldContain("hidden");
+            notice.ShouldContain("href=\"/paskyra/dalyvavimas#mp-offer\"");
+            WebUtility.HtmlDecode(notice).ShouldNotContain("Uosytė");
+            NoticeOf(await ordinary.Client.GetStringAsync("/darbotvarke")).ShouldBe(notice);
+            (await visitor.Client.GetStringAsync("/darbotvarke")).ShouldNotContain("mp-offer-notice");
         }
         finally
         {
             await mp.DeleteAccountAsync();
             await former.DeleteAccountAsync();
         }
+    }
+
+    /// <summary>The take-over notice's markup under the header (design 8.5.1, owner 2026-11-17).</summary>
+    private static string NoticeOf(string html)
+    {
+        var start = html.IndexOf("<div class=\"page\" id=\"mp-offer-notice\"", StringComparison.Ordinal);
+        start.ShouldBeGreaterThan(0, "a member's page carries the notice's markup");
+        return html[start..(html.IndexOf("</div>", start, StringComparison.Ordinal) + 6)];
     }
 
     [Fact]

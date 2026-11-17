@@ -183,6 +183,7 @@ internal static class Mapping
         MpOffer = account.MpOffer is { } offer ? MpMapping.Map(offer) : null,
         Mp = account.Mp is { } link ? MpMapping.Map(link) : null,
         TermsRequired = account.TermsRequired,
+        PasskeySession = account.PasskeySession,
     };
 
     public static SessionResponse ToResponse(SessionSummary session) => new()

@@ -60,10 +60,21 @@ public sealed record MpTakeoverRequest
     public string Credential { get; init; } = "";
 }
 
-/// <summary>An office member's one-time invitation token, read from the page's <c>#</c>.</summary>
+/// <summary>
+/// An office member's one-time invitation token, read from the page's <c>#</c> (design 8.5.3). Accepting needs a passkey
+/// session; a session signed in by code brings its passkey in the same request (owner, 2026-11-17): at most one of
+/// <see cref="NewPasskey"/> (a passkey made now for this account) and <see cref="Passkey"/> (one of the account's passkeys),
+/// after which the session becomes a passkey session.
+/// </summary>
 public sealed record MpOfficeAcceptanceRequest
 {
     public string Token { get; init; } = "";
+
+    /// <summary>The browser's <c>PublicKeyCredential.toJSON()</c> of a passkey made for this account (creation options first).</summary>
+    public string? NewPasskey { get; init; }
+
+    /// <summary>The browser's <c>PublicKeyCredential.toJSON()</c> of an assertion with one of the account's passkeys (request options first).</summary>
+    public string? Passkey { get; init; }
 }
 
 /// <summary>An office member as the MP's account sees them (design 8.5.3). Nobody else sees who they are.</summary>
@@ -86,8 +97,13 @@ public sealed class MpTakeoverRequestValidator : AbstractValidator<MpTakeoverReq
 
 public sealed class MpOfficeAcceptanceRequestValidator : AbstractValidator<MpOfficeAcceptanceRequest>
 {
-    public MpOfficeAcceptanceRequestValidator(IStringLocalizer<ValidationMessages> l) =>
+    public MpOfficeAcceptanceRequestValidator(IStringLocalizer<ValidationMessages> l)
+    {
         RuleFor(x => x.Token).Cascade(CascadeMode.Stop).NotEmpty().WithMessage(l["MpLink.Required"]).MaximumLength(100).WithMessage(l["MpLink.Required"]);
+        RuleFor(x => x.NewPasskey).MaximumLength(16_384).WithMessage(l["Passkey.Required"]);
+        RuleFor(x => x.Passkey).MaximumLength(16_384).WithMessage(l["Passkey.Required"])
+            .Must((request, passkey) => string.IsNullOrEmpty(passkey) || string.IsNullOrEmpty(request.NewPasskey)).WithMessage(l["Passkey.Required"]);
+    }
 }
 
 /// <summary>Design 8.5: what an account does as or for an MP. Only the account's own answers; nothing here is public.</summary>

@@ -7,6 +7,7 @@
 @inject Lt2.Web.Services.FrontPageAgenda Agenda
 @inject Lt2.Api.Contracts.Digests.IDigestsApi Digests
 @inject Formats F
+@inject Lt2.Api.Contracts.Meta.IMetaApi Meta
 
 @* The front page (design 8.7, reworked 2026-11-15: variant A, with the member's panel of variant C; the mockup is in
    design/ui/pradzia.html and pradzia-narys.html). The page is the agenda with what a person can do about it, built from the one public agenda
@@ -26,14 +27,19 @@
         <MyAgendaPanel Bills="_panel" Numbers="_numbers" @rendermode="InteractiveWebAssembly" />
     </Authorized>
     <NotAuthorized>
-        @* The trial note and its links go under the logo and the title, across the head, so the note has the same edges
-           as the invented-data notice above the page (both from the page's edge, as wide as a line of text). *@
-        <div class="home-head" id="home-head">
+        @* Owner, 2026-11-17: the headline is what the site does (the header already names it), and under it the trial note
+           with its links, in a column a line of text wide, so the note has the same edges as the invented-data notice above
+           the page; the turning logo stands in the space to the right of that column, across both rows. On a phone the small
+           logo stands beside the headline and the note goes under both. *@
+        <div class="home-head @(_invented ? "home-head--notice" : "")" id="home-head">
+            @if (_invented)
+            {
+                @* The layout leaves the invented-data notice to this head on the visitor's front page (owner, 2026-11-17), so the
+                   logo is centred between the menu and the rule above "Kaip tai veikia", the notice included. *@
+                <p class="note" role="note" id="invented-data">@T["Notice.InventedParliament"]</p>
+            }
             <lt2-logo-spin period="14"></lt2-logo-spin>
-            <div class="stack stack--tight">
-                <h1 id="home-title">Lietuva 2.0</h1>
-                <p class="lead">@T["Home.Lead"]</p>
-            </div>
+            <h1 id="home-title">@T["Home.Lead"]</h1>
             <div class="stack stack--tight home-head__signin" id="home-sign-in">
                 <p class="note">@T["Home.Trial"]</p>
                 <p class="small">@T["Home.HaveCode"] <a href="/prisijungti?registruotis=true" id="home-register">@T["Home.Register"]</a> · @T["Home.HaveAccount"] <a href="/prisijungti" id="home-sign-in-link">@T["Home.SignIn"]</a></p>
@@ -100,8 +106,14 @@
     /// <summary>Sending as it is now (design 8.19.1); the trial note says nothing is sent only while that is so.</summary>
     private string _sending = "off";
 
+    /// <summary>The parliament data is invented: the visitor's head carries the notice (the layout leaves it out here).</summary>
+    private bool _invented;
+
+    [CascadingParameter] public HttpContext? HttpContext { get; set; }
+
     protected override async Task OnInitializedAsync()
     {
+        _invented = Lt2.Web.Components.Layout.InventedDataNotice.Of(HttpContext) ?? (await Meta.GetImportsAsync()).Value?.ParliamentDataInvented == true;
         _agenda = await Agenda.ReadAsync(CancellationToken.None);
         var rules = (await Digests.GetRulesAsync()).Value;
         _threshold = rules?.ThresholdDefault;

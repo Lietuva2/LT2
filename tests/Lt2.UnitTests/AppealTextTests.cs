@@ -94,6 +94,42 @@ public sealed class PreScreeningTests
     public void A_date_a_year_span_a_sum_a_document_number_a_percentage_or_a_link_path_is_no_phone_number(string text) =>
         RuleBasedPreScreening.ContainsPhoneNumber(text).ShouldBeFalse(text);
 
+    /// <summary>The owner, 2026-11-17: a mobile number without a prefix, eight digits starting with 6, together or grouped as people write it.</summary>
+    [Theory]
+    [InlineData("Skambinkite 61234567")]
+    [InlineData("Skambinkite 612 34567")]
+    [InlineData("Skambinkite 6123 4567")]
+    [InlineData("Skambinkite 6 1234 567")]
+    [InlineData("tel.: 612-34567")]
+    [InlineData("Mano numeris (61234567), skambinkite vakare.")]
+    [InlineData("61234567")]
+    [InlineData("Rašykite arba skambinkite: 6123 4567.")]
+    public void A_mobile_number_without_a_prefix_is_flagged(string text) =>
+        RuleBasedPreScreening.Screen(text).ShouldContain(ScreeningFlags.Phone);
+
+    /// <summary>The owner, 2026-11-17: near misses of the mobile rule are no phone number, and a landline without a prefix is not flagged.</summary>
+    [Theory]
+    [InlineData("Skirta 60 000 000 eurų")]
+    [InlineData("Skirta 6 000 000 eurų")]
+    [InlineData("Iš viso 612 345 678 eurų")]
+    [InlineData("Suma 612 345 eurų")]
+    [InlineData("Kodas 612345678")]
+    [InlineData("Kodas 1612345678")]
+    [InlineData("Įstatymas Nr. XIV-61234567")]
+    [InlineData("Dokumentas Nr. 61234567")]
+    [InlineData("dokumentas nr.61234567")]
+    [InlineData("Kaina 61234567 €")]
+    [InlineData("Kaina €61234567")]
+    [InlineData("Pritaria 61234567 % visų")]
+    [InlineData("Žr. https://e-seimas.lrs.lt/portal/legalAct/lt/TAP/61234567")]
+    [InlineData("Vilniuje 5 212 3456")]
+    [InlineData("Kaune 37 123 456")]
+    [InlineData("Lentelė 6123,4567")]
+    [InlineData("Data 2026-11-20, 6123")]
+    [InlineData("A61234567")]
+    public void Near_misses_of_a_mobile_number_and_a_landline_without_a_prefix_are_no_phone_number(string text) =>
+        RuleBasedPreScreening.ContainsPhoneNumber(text).ShouldBeFalse(text);
+
     [Fact]
     public void A_valid_lithuanian_personal_code_is_flagged()
     {

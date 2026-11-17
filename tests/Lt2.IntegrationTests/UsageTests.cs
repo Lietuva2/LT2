@@ -335,14 +335,14 @@ public sealed class UsageTests(DatabaseFixture database) : ApiTest(database)
         {
             await using var site = await SiteAsync(Noon(day));
             using var visitor = Open(site);
-            await GetAsync(visitor, "/seimas/analitika");
+            await GetAsync(visitor, "/statistika");
             using var member = Open(site);
             await member.RegisterAndSignInAsync();
-            await GetAsync(member, "/seimas/analitika?metai=2026&paskyros=senesnes");
+            await GetAsync(member, "/statistika?metai=2026&paskyros=senesnes");
             await GetAsync(member, Lt2.Api.Contracts.Analytics.AnalyticsRoutes.MyAgreement);
             await site.Counter.FlushAsync(CancellationToken.None);
 
-            (await PagesAsync(day)).ShouldBe(new Dictionary<string, int> { ["/seimas/analitika"] = 2 });
+            (await PagesAsync(day)).ShouldBe(new Dictionary<string, int> { ["/statistika"] = 2 });
             (await TotalAsync(UsageRules.Day, day)).ShouldBe(new Total(1, 1, 1, 1, 0));
         }
         finally

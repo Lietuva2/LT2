@@ -1,28 +1,35 @@
 namespace Lt2.Web.Client.Components;
 
 /// <summary>
-/// Design 8.21: which menu item a page belongs to, and which of the four tabs under "Projektai" it is. The menu item
-/// "Projektai" opens <c>/darbotvarke</c> and is current on the four pages and on everything under them (the history of votes, a bill and its
-/// history, a vote, a summary's date page, the introduction letter's public page); "Seimo nariai" on the list, a profile and
-/// its votes, a faction and a committee. Paths are site paths with or without the leading <c>/</c>, query and fragment ignored.
+/// Design 8.21: which menu item a page belongs to, and which of the three tabs under "Projektai" it is. The menu item
+/// "Projektai" opens a dropdown with the three tabs (owner, 2026-11-17) and is current on the three pages and on everything
+/// under them (the history of votes, a bill and its history, a vote, a summary's date page, the introduction letter's public
+/// page); "Seimo nariai" on the list, a profile and its votes, a faction and a committee; "Statistika" on the statistics page
+/// (design 8.26; owner, 2026-11-17: in the main menu, no longer a fourth tab). Paths are site paths with or without the
+/// leading <c>/</c>, query and fragment ignored.
 /// </summary>
 public static class MenuSections
 {
     /// <summary>
-    /// The four tabs, in their order: the address and the resource key of each (the fourth, "Analitika", owner 2026-11-16,
-    /// design 8.26). The history of votes is no tab (the owner,
-    /// 2026-11-16): it is reached by the link under the agenda's voted list and leads back by a breadcrumb.
+    /// The three tabs, in their order: the address and the resource key of each. They are the dropdown of the menu item
+    /// "Projektai" and the row under the three pages' headings. The history of votes is no tab (the owner, 2026-11-16): it is
+    /// reached by the link under the agenda's voted list and leads back by a breadcrumb.
     /// </summary>
     public static readonly IReadOnlyList<(ProjectTab Tab, string Path, string Key)> Tabs =
     [
         (ProjectTab.Agenda, "/darbotvarke", "Tabs.Agenda"),
         (ProjectTab.Bills, "/projektai", "Tabs.Bills"),
         (ProjectTab.Digests, "/suvestines", "Tabs.Digests"),
-        (ProjectTab.Analytics, "/seimas/analitika", "Tabs.Analytics"),
     ];
 
-    /// <summary>Where the menu item "Projektai" leads (design 8.21, the designer's proposal: what is coming first).</summary>
+    /// <summary>The first of the tabs: what is coming (design 8.21, the designer's proposal: the most useful first view).</summary>
     public const string ProjectsHome = "/darbotvarke";
+
+    /// <summary>The statistics page, "Statistika" in the main menu (design 8.26; owner, 2026-11-17, was <c>/seimas/analitika</c>).</summary>
+    public const string Statistics = "/statistika";
+
+    /// <summary>The page is the statistics page.</summary>
+    public static bool InStatistics(string? path) => Normalise(path) == Statistics.TrimStart('/');
 
     /// <summary>The page is one of the three tabs, under one of them, or the history of votes.</summary>
     public static bool InProjects(string? path)
@@ -67,11 +74,10 @@ public static class MenuSections
     }
 }
 
-/// <summary>The four tabs under "Projektai" (design 8.21, 8.26).</summary>
+/// <summary>The three tabs under "Projektai" (design 8.21).</summary>
 public enum ProjectTab
 {
     Agenda,
     Bills,
     Digests,
-    Analytics,
 }

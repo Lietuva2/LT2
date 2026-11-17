@@ -28,7 +28,8 @@ public sealed record AccountSummary(
     bool StaffAccount = false,
     MpOffer? MpOffer = null,
     MpLinkState? Mp = null,
-    bool TermsRequired = false);
+    bool TermsRequired = false,
+    bool PasskeySession = false);
 
 /// <summary>
 /// Design 8.5.1: the account's proven address is this MP's official address and the account is not linked yet; it is
@@ -80,8 +81,13 @@ public interface IPoliticians
     /// <summary>A one-time invitation for an office member (seven days), made by the MP's account in a passkey session.</summary>
     Task<Result<OfficeInvitation>> InviteOfficeMemberAsync(ClaimsPrincipal user, string? ipHash, CancellationToken cancellationToken);
 
-    /// <summary>A member in a passkey session accepts an office invitation and becomes an office member of that MP.</summary>
-    Task<Result<MpLinkState>> AcceptOfficeInvitationAsync(ClaimsPrincipal user, string token, string? ipHash, CancellationToken cancellationToken);
+    /// <summary>
+    /// A member accepts an office invitation and becomes an office member of that MP (design 8.5.3): in a passkey session, or
+    /// (owner, 2026-11-17) in a code session with <paramref name="newPasskey"/> (a passkey made now, stored in the same
+    /// transaction) or <paramref name="passkey"/> (an assertion with one of the account's passkeys); the session then becomes
+    /// a passkey session under a new key.
+    /// </summary>
+    Task<Result<MpLinkState>> AcceptOfficeInvitationAsync(ClaimsPrincipal user, string token, string? newPasskey, string? passkey, string? ipHash, CancellationToken cancellationToken);
 
     /// <summary>The MP's account removes an office member, in a passkey session.</summary>
     Task<Result<Unit>> RemoveOfficeMemberAsync(ClaimsPrincipal user, Guid memberId, string? ipHash, CancellationToken cancellationToken);

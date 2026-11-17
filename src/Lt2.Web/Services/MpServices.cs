@@ -55,7 +55,7 @@ internal sealed class ServerMpApi(IPoliticians politicians, FrontPageFreshness f
     public async Task<ApiResult<MpLinkResponse>> AcceptOfficeInvitationAsync(MpOfficeAcceptanceRequest request, CancellationToken cancellationToken = default)
     {
         ArgumentNullException.ThrowIfNull(request);
-        return errors.ToApiResult(await politicians.AcceptOfficeInvitationAsync(User, request.Token, IpHash, cancellationToken), MpMapping.Map);
+        return errors.ToApiResult(await politicians.AcceptOfficeInvitationAsync(User, request.Token, request.NewPasskey, request.Passkey, IpHash, cancellationToken), MpMapping.Map);
     }
 
     private string? IpHash => accessor.HttpContext is { } context ? ipHasher.Hash(context) : null;

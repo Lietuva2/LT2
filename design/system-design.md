@@ -171,7 +171,9 @@ static server-rendered HTML with proper Open Graph tags and no WebAssembly downl
 only to `/api/v1`. Until such an island has started, everything in it is disabled (fields, choices and buttons alike):
 what was typed would be emptied when the island takes over, and a form sent natively would reload the page. Without
 JavaScript the island never starts, and the page says so in one note. An end-to-end test loads every page with islands
-with the WebAssembly runtime blocked and fails on any control left usable.
+with the WebAssembly runtime blocked and fails on any control left usable. **[Owner, 2026-11-17, after testing the trial:
+the browser's console listed every API request.]** The WebAssembly client logs warnings and errors only (its minimum level
+is Warning, in every environment), so the HTTP client factory's line per request stays out of the console.
 
 How "full API from the start" holds with server rendering: every component depends on a typed client interface from
 `Lt2.Api.Contracts` (`IParliamentApi`, `IAppealsApi`, …). In the browser the implementation is an `HttpClient` call; on the
@@ -1079,6 +1081,15 @@ M2b; the owner asked for M2b to be built now. Built in two steps: the link (8.5.
   address of that MP, by name, with one button, "Perimti profilį". (Every text that carries an MP's name is worded so
   the name stands in the nominative, after a colon or on its own: names are not declined by the software.) Nothing is linked and nothing is public
   before the take-over is finished: registering does not by itself put a mark on anyone's profile.
+- **[Owner, 2026-11-17, after testing the trial.] Shown on "Profilis" and on every page.** "Profilis" (`/paskyra`, 8.21) has
+  one line about it: before the take-over "Seimo narys: {name}." with "Perimti profilį", a link to the offer on
+  "Dalyvavimas" (`/paskyra/dalyvavimas#mp-offer`); after it, "Tvarkote Seimo nario profilį: {name}." (an office member:
+  "Esate Seimo nario biuro narys. Seimo narys: {name}.") with "Profilis" and "Tvarkyti" (the MP part on "Dalyvavimas"). And
+  every page carries, under the header, the notice "Prisijungėte oficialiu Seimo nario adresu. Seimo narys: {name}." with
+  "Perimti profilį" to the same place, while the offer stands; not on the take-over page and not on "Dalyvavimas", which
+  holds the offer itself; gone once the profile is taken over. Both come only from the account's own `GET /me` in the
+  browser: the served page is the same for every member (the notice's markup is there, hidden, without a name), and a
+  member's page reads `GET /me` once per page load for it (kept in the page's memory, nothing stored in the browser).
 - **Registration without an invitation [the designer's proposal, awaiting the owner].** While registration needs an
   invitation, an official address may register without one: the mailbox is the proof. It is a setting,
   `Registration:OfficialAddressesWithoutInvitation`, **off by default**: without an invitation anyone can make the
@@ -1134,6 +1145,32 @@ link that cannot be guessed, and it binds a passkey, as 6.2 already decided.
   lost it is removed and added again.
 - **Every text is marked the same,** "Seimo narys arba jo biuras": a shared mailbox cannot tell who typed, and the
   public is not told which account did.
+- **Everything on the invitation's one page [owner, 2026-11-17, after trying the link: signed out, the form showed, then
+  sign-in, registration, back to the link, refused for want of a passkey; "it should at least have a way to add the
+  passkey right in that same form … possibly the same button could also ask for the passkey"].** The page
+  `/seimo-narys/biuras#…` does it all, the token staying after the `#` throughout (never in a query, a log or the browser's
+  storage):
+  1. **Not signed in** (or a registration not finished): the sign-in and registration steps are on the page itself (the
+     code by email, then the name, the age and the terms of use), and each step reloads this same page, token and all.
+  2. **Signed in by code, no passkey on the account:** one button, "Pridėti prieigos raktą ir priimti". It makes a passkey
+     in the browser and sends it with the token in one request, which stores it and accepts in one transaction.
+  3. **Signed in by code, with a passkey:** "Prisijungti prieigos raktu ir priimti" (an assertion with one of the
+     account's passkeys, in the same request), and beside it "Šiame įrenginyje rakto nėra? Pridėti prieigos raktą ir
+     priimti" for a device without it.
+  4. **A passkey session:** "Priimti".
+
+  After 2 or 3 the session becomes a passkey session under a new session key (the code session's row is deleted, as when
+  a code session becomes a staff session, 6.2). The rules are unchanged: one office per person and none for the MP's own
+  account, five per MP, the invitation working only while its maker is the MP's account, audited, the MP's account told,
+  nobody named publicly. **Why a passkey may be added here by code:** the rule that a linked account changes its passkeys
+  only in a passkey session (8.5.2, above) is about linked accounts, and the invitee is not linked until the request
+  succeeds; any member may add a passkey in a code session from the account page, then sign in with it and accept, so the
+  one request allows nothing those steps did not. The checks come first: a wrong or used token, or an account already
+  linked (the MP's own account by code included), is refused before anything is stored, so a linked account never gets a
+  passkey by code; another account's passkey proves nothing; an account with an active staff role adds a passkey only in
+  its staff session (6.2), as everywhere. A passkey added this way is told to the account like any other. [Open, for the
+  owner: during the closed trial a person without an account still needs an invitation code to register; the office
+  invitation is not one.]
 
 #### 8.5.4 What a linked account can do
 
@@ -1244,6 +1281,11 @@ can cite it, and MPs know that the numbers in their inbox are the numbers everyo
 it, newest first: the day, the kind, and both sides as frozen there with the counts for accounts older than 30 days, each
 linking to that bill's item on the summary's public page. Before the first it says the bill has not been in a summary
 yet. The summaries keep their own menu item and pages; each item there links back to the bill's page.
+**[Owner, 2026-11-17, after testing the trial: the link went to `#item-…` and scrolled the page's title away.]** The link
+is `/suvestines/{day}?projektas={number}`: the page opens at its top, the day's summaries that hold the bill come first and
+the bill's item is the first under each one's heading, so nothing is scrolled. The items keep their ids for other links.
+And a day with one summary has one title, its kind and date ("Savaitinė suvestinė · 2026 m. lapkričio 16 d."), in place
+of the day's title with the same words again as a heading; a day with several keeps the day's title and a heading for each.
 
 **The front page [decided 2026-11-13, layout "B" chosen from three mockups; superseded on 2026-11-15 by the reworked
 page below, kept here as history].** The front page (`/`), public and
@@ -1269,6 +1311,16 @@ and the "not a representative poll" notice. It uses only the public answers behi
     The trial note starts at the page's edge and is as wide as a line of text, as the invented-data notice above the
     page is, so the two yellow notes share both edges at every width. (Before, the trial note stood in a third column
     beside the title, and the two notes had no edge in common.)
+  - **The headline says what the site does [decided by the owner on 2026-11-17, from mock-ups; it replaces the logo
+    beside the title above].** The header already names the site, so the page's heading is no longer "Lietuva 2.0" but
+    the lead sentence, "Matykite, ką Seimas svarstys artimiausiomis dienomis, ir pasakykite Seimo nariams, ko prašote.",
+    at the type scale's step nearest 2rem (`--fs-4`), and there is no separate lead paragraph; the page's title stays
+    "Lietuva 2.0". From 54rem the headline and, under it, the trial note with its links are one column a line of text
+    wide (so the note keeps both edges of the invented-data notice), and the turning logo, about 15rem wide, stands
+    centred in the free space to the right, vertically in the whole space between the menu and the rule above "Kaip tai
+    veikia", the invented-data notice included: on this page the notice is the head's first row (the layout leaves it
+    out there), and where there is no notice the logo centres on the head alone. On a phone the small logo stays beside the headline (set
+    smaller, `--fs-3`) and the note goes under both. The agenda's heading still shows on the first screen at 1280 × 900.
   - **No paragraph on following [decided by the owner on 2026-11-16].** The paragraph "Projektus ir Seimo narius
     galite sekti: …" was removed from the introduction (here and at the top of `/metodika`, which shows the same
     steps): it is among the first texts a visitor reads and is not worth the place. What following is and sends (bills,
@@ -1950,6 +2002,13 @@ the team, so no notice is owed.
   then by number; by planned date, bills without one come last. The parameter is `sort` = `activity`, `participants`,
   `arguments` or `planned` in the API and `rikiuoti` = `aktyvumas`, `dalyviai`, `argumentai`, `data` on the page; the
   closed tab keeps its own order.]
+  **[Owner, 2026-11-17, after testing the trial, reversing the four orders of 2026-11-14: the page offers two,] "pagal
+  aktyvumą" (the default) and "pagal planuojamą datą"; an old `rikiuoti=dalyviai` or `argumentai` falls back to the
+  default (nothing is launched). The API's `sort` keeps its four values [the designer's choice: the API stays complete and
+  its tests stand; only the page offers fewer]. The filter is renamed "Planuojami per 14 dienų" (what it always meant) and
+  is a link that applies at once, without script, keeping the search and the order, marked while on; no checkbox waiting
+  for "Rodyti". Each row shows the sides' numbers, "už 6 800 (…) · prieš 4 281 (…)" with the counts for accounts older than
+  30 days in brackets as the agenda's rows have them, beside its bar instead of in the text line.
 - **The agenda (8.11.1)** shows both sides for every bill; a bill nobody took part in says so and links to its page.
   "Kreipimosi prašo N" is gone.
 - **The front page (8.7, 8.11.1)** keeps "Artimiausiu metu Seime"; the cards below are the six bills with the most
@@ -3153,8 +3212,19 @@ lines on a phone.
   - "Apie": "Metodika", "Moderavimo taisyklės", "Naudojimo taisyklės", "Privatumas" (8.22);
   - "Dalyvauti": "Organizacijos", "Atsiliepimai".
 - **The theme switch** moves to the footer, so a visitor has it too. It works as before and is absent without script.
-- **Done when:** the menu is one line at 360, 390 and 1280 px; each of the four tabs is reachable from the other three
-  and marked; every page that was in the old menu is one press from the menu or the footer; the account item works
+- **[Owner, 2026-11-17, after testing the trial: "build them as recommended".] "Projektai" opens a dropdown, and
+  "Statistika" is a menu item.** The menu is the logo, "Projektai", "Seimo nariai", "Statistika" (the analytics page of
+  8.26, moved out of the tabs and renamed) and "Prisijungti" or the account item. "Projektai" is no longer a link to the
+  agenda: it is a disclosure built like the account item (works without script; closes on Escape, a press outside and
+  focus leaving, the same small script), holding its three tabs, "Darbotvarkė", "Projektai", "Suvestinės"; the current page
+  is marked in it, and the item itself is marked current on the three pages and everything under them, as before. The tab
+  row stays under the three pages' headings. The menu still fits one line from 360 px; under 32rem the logo stands without
+  its words, as before. [changed while building, measured on the stack: with four items the line did not fit under 26rem
+  (at 360 px "Projektai" ran into the mark); under 26rem the gaps close up, the mark is a little smaller (2.25rem) and the
+  arrows sit closer, and under 24rem the items take the smallest type size (13 px); the line then fits from 340 px.]
+- **Done when:** the menu is one line at 360, 390 and 1280 px; each of the three tabs is reachable from the other two
+  and marked (the fourth, "Analitika", became "Statistika" in the menu, owner 2026-11-17); every page that was in the old
+  menu is one press from the menu or the footer; the account item works
   with and without script and with the keyboard; no served page holds a member's name or role links.
 - [changed while building (2026-11-16): "Seimo nariai" is marked current on the list and on everything under it as well (a
   profile and its votes, a faction, a committee). The account item's "Projektai, dėl kurių į jus kreipiamasi" is shown to an
@@ -3349,7 +3419,13 @@ replies and "Sutinku" carries no text to moderate (8.23.1, 8.23.10), and each ki
     (`06xx xxxxx`, `05 xxx xxxx`), or after the old prefix `8` people still write (`86xx xxxxx`, `8 5 xxx xxxx`), with
     spaces, hyphens and brackets between the digits. A date (`2026-11-20`), a year span (`2024-2028`), a sum (`25 000 000`),
     a law's or a document's number, a percentage and digits inside a link are no phone number. For every text it screens
-    (`RuleBasedPreScreening.ContainsPhoneNumber`, unit tests named as the rule).
+    (`RuleBasedPreScreening.ContainsPhoneNumber`, unit tests named as the rule). **[Owner, 2026-11-17, after testing the
+    trial: mobiles written without a prefix were missed.]** It also matches a mobile number without any prefix: eight
+    digits starting with 6, standing alone, written together (`61234567`) or grouped as people write them (`612 34567`,
+    `6123 4567`, `6 1234 567`, with a space or a hyphen), with the same guards: not part of a longer number, not after a
+    letter (`XIV-61234567`) or `Nr.`, not a sum (a thousands grouping such as `60 000 000` is none of those shapes, and a
+    currency or percent sign beside it rules it out), not inside a link. A landline without a prefix (`5 212 3456`) stays
+    unflagged: too many sums and numbers look like one.
   - **Insults and spam are not caught by rules.** Nothing refuses or flags them before they are shown; reports are the
     only way they reach a moderator. This is the accepted risk of comments without moderation beforehand. AI
     pre-screening stays an open decision (12).
@@ -4111,7 +4187,7 @@ declares none (8.5.4). The rule:
   replaced.
 - The export holds the profile, the text, the consent and the follows the person made; deletion removes them all.
 
-### 8.26 Analytics: where the Seimas and the members agree (`/seimas/analitika`)
+### 8.26 Analytics: where the Seimas and the members agree ("Statistika", `/statistika`)
 
 **[Decided by the owner on 2026-11-16: "build it all as proposed".]** The concept's analytics chapter (`#analytics` of
 the concept page), without delegation and without what has no data yet. Earlier that day the owner allowed the count of
@@ -4119,6 +4195,9 @@ MPs who took over their profile ("46 iš 141") and factions compared side by sid
 the four questions of the proposal: the member's own comparison lists MPs in order of agreement (an exception to 7.3, for
 that member's eyes only); the Seimas's majority is the majority of those who voted, a consensus counting as "for"; the
 page is a fourth tab, "Analitika", under "Projektai" (8.21); and one fixed sample of 20 applies everywhere, not a setting.
+**[Owner, 2026-11-17, after testing the trial: the page moves to the main menu as "Statistika" (8.21); its title and name
+are "Statistika", its address `/statistika` (no redirect from `/seimas/analitika`: nothing is launched). It is no longer a
+tab of "Projektai" and has no tab row. Wherever this section says "the analytics page" it means this page.]**
 
 #### 8.26.1 What the page shows
 
@@ -4260,7 +4339,7 @@ never a table, never the browser (8.22.1), never a cacheable HTTP answer.
 
 #### 8.26.8 Done when
 
-- `/seimas/analitika` is the fourth tab under "Projektai", works without script, and the filters change every figure they
+- `/statistika` ("Statistika" in the menu; the fourth tab `/seimas/analitika` until the owner moved it on 2026-11-17) works without script, and the filters change every figure they
   apply to.
 - Every number follows 8.26.2–8.26.4 in a unit test whose name reads as the rule; consensus votes have no share; under 20
   a sample shows counts and "maža imtis".
@@ -4353,6 +4432,11 @@ else reads as 7, the screen's first view), which first writes what is counted so
 (visitors, members, views, robots' views); the months; the years; the most viewed pages and the referring sites of the
 chosen range. The lists begin at the first counted day, at most 30 days and 12 months back. Nothing on it is about a
 person.
+**[Owner, 2026-11-17, after testing the trial: the bars had no size of their own and stretched over the screen.]** The
+bars (here and on the invitations' screen, one component) have our own size: 10rem high, at most 48rem wide, one column a
+day; under the axis the last day and every seventh before it are named (`MM-dd`); each column takes keyboard focus and
+shows its day and number at once on hover or focus, a label drawn by CSS (no script), as well as the bar's own title. No
+chart library (no component library, no third-party script).
 
 #### 8.27.5 Built as
 
@@ -4734,7 +4818,7 @@ Decided for comments, the email rhythm and public profiles (8.23-8.25; all three
   exception to "no ranking or comparison of MPs by any number" (7.3, 8.26.4). Its heading, renamed after the review: "Kas
   Seime balsuoja taip, kaip prašote jūs" (members do not vote).
 - The Seimas's majority is the majority of those who voted; a consensus counts as "for" (8.26.2).
-- The page is the fourth tab under "Projektai", "Analitika" (8.21).
+- The page is the fourth tab under "Projektai", "Analitika" (8.21). [Owner, 2026-11-17: "Statistika" in the main menu, `/statistika`.]
 - One fixed sample of 20 for every number on the page, not a setting; below it, counts and "maža imtis" and no share
   (8.26.2), faction unity included (after the review of 2026-11-16).
 - **Kept copies:** "I think we may cache this quite long, say per-session, with the personal sections like "who votes like

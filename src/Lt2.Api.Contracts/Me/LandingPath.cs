@@ -54,8 +54,9 @@ public static partial class LandingPath
 
     /// <summary>
     /// A bill's page and the pages under <c>/seimas/</c>; the account screens (design 8.21: a visitor sent to sign in from one
-    /// comes back to it); a member's public page (design 8.25.2: its "Sekti" for a visitor).
+    /// comes back to it); a member's public page (design 8.25.2: its "Sekti" for a visitor); the statistics page (design 8.26.4:
+    /// a member's own comparison, owner 2026-11-17 at <c>/statistika</c>).
     /// </summary>
-    [GeneratedRegex(@"^(/seimas/[A-Za-z0-9_\-]+(/[A-Za-z0-9_\-]+)*|/paskyra(/[a-z]+)?|/nariai/([a-z0-9]+-)*[a-z0-9]{10})$", RegexOptions.CultureInvariant)]
+    [GeneratedRegex(@"^(/seimas/[A-Za-z0-9_\-]+(/[A-Za-z0-9_\-]+)*|/paskyra(/[a-z]+)?|/nariai/([a-z0-9]+-)*[a-z0-9]{10}|/statistika)$", RegexOptions.CultureInvariant)]
     private static partial Regex Shape();
 }

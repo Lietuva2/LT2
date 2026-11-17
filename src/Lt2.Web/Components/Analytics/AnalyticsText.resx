@@ -4,7 +4,7 @@
   <resheader name="version"><value>2.0</value></resheader>
   <resheader name="reader"><value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value></resheader>
   <resheader name="writer"><value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value></resheader>
-  <data name="Title" xml:space="preserve"><value>Analitika</value></data>
+  <data name="Title" xml:space="preserve"><value>Statistika</value></data>
   <data name="Lead" xml:space="preserve"><value>Seimo balsavimai ir Lietuva 2.0 naudotojų pozicijos greta: kur pasirinkimai sutampa ir kur skiriasi. Naudotojai dalyvauja savo noru, todėl tai nėra reprezentatyvi visuomenės apklausa.</value></data>
   <data name="Filter.Period" xml:space="preserve"><value>Laikotarpis</value></data>
   <data name="Filter.Term" xml:space="preserve"><value>Visa kadencija</value></data>

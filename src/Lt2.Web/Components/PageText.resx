@@ -6,6 +6,7 @@
   <resheader name="writer"><value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value></resheader>
   <data name="Nav.Label" xml:space="preserve"><value>Pagrindinis meniu</value></data>
   <data name="Nav.Mps" xml:space="preserve"><value>Seimo nariai</value></data>
+  <data name="Nav.Statistics" xml:space="preserve"><value>Statistika</value></data>
   <data name="Nav.Appeals" xml:space="preserve"><value>Projektai</value></data>
   <data name="Nav.SignIn" xml:space="preserve"><value>Prisijungti</value></data>
   <data name="Nav.Account" xml:space="preserve"><value>Mano paskyra</value></data>
@@ -28,6 +29,8 @@
   <data name="Footer.Organisations" xml:space="preserve"><value>Organizacijos</value></data>
   <data name="Footer.Feedback" xml:space="preserve"><value>Atsiliepimai</value></data>
   <data name="Notice.InventedParliament" xml:space="preserve"><value>Seimo narių ir balsavimų duomenys čia išgalvoti – tai tik bandymas.</value></data>
+  <data name="Notice.MpOffer" xml:space="preserve"><value>Prisijungėte oficialiu Seimo nario adresu. Seimo narys: {0}.</value></data>
+  <data name="Notice.MpOfferLink" xml:space="preserve"><value>Perimti profilį</value></data>
   <data name="Footer.Line" xml:space="preserve"><value>Lietuva 2.0 · uždaras bandymas</value></data>
   <data name="Home.Trial" xml:space="preserve"><value>Vyksta uždaras bandymas: registruotis galima tik su kvietimo kodu.</value></data>
   <data name="Home.Welcome" xml:space="preserve"><value>Sveiki sugrįžę</value></data>

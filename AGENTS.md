@@ -89,7 +89,8 @@ src/Lt2.Web                host: API endpoints in Endpoints/<Module>/ (one per f
 src/Lt2.Hosting            what the web host and the worker set up the same way: Serilog and OpenTelemetry
                            (Observability.AddLt2Observability), with SecretPaths replacing an MP link's token in every log
                            line and trace; no module references it
-src/Lt2.Web.Client         Blazor WebAssembly components and HTTP implementations of the API clients; the interface's
+src/Lt2.Web.Client         Blazor WebAssembly components and HTTP implementations of the API clients (logging at Warning
+                           and above only, owner 2026-11-17: no console line per request); the interface's
                            shared pieces: Components/InteractiveBase<TText>, Display (numbers and dates, Vilnius),
                            StringLocalizerExtensions (Format), CopyLink, FieldError, Messages, SplitBar, Hint (the short answer in place, js/lt2-hints.js),
                            ProjectTabs and MenuSections (design 8.21), MoreMenu and Icon (the action row, design 8.16.1,
@@ -127,7 +128,8 @@ src/Modules/               Lt2.Identity, Lt2.Notifications, Lt2.Audit, Lt2.Parli
                            __Host-lt2.device cookie, identity.known_device, the code allowance they choose).
 src/Modules/Lt2.Usage      the site's own usage statistics (design 8.27): UsageRules and Sketch (HyperLogLog) pure,
                            UsageCounter in the web host's memory, written every minute; the host feeds it from
-                           Services/UsageServices.cs; the screen /administravimas/lankomumas (UsageAdmin)
+                           Services/UsageServices.cs; the screen /administravimas/lankomumas (UsageAdmin; its day bars are
+                           DayBars, own CSS size, a label per column on hover and focus, no chart library)
 src/Lt2.Worker             Hangfire server: outbox dispatch loop, the parliament import, the agenda watcher (lrs.lt
                            pages; off unless Agenda:BaseAddress is set), the daily aggregates and closing of the bills' records, summaries
                            (every 15 minutes: waiting ones expire, due ones are made: a dry run, waiting or sent by
@@ -322,10 +324,11 @@ code review.
 
 ## Product rules to keep consistent
 
-**Navigation (design 8.21, built 2026-11-16).** The menu is the logo, "Projektai", "Seimo nariai", and "Prisijungti" or the
-account item "Paskyra"; one line from 360 px (`MenuTests`, E2E). "Projektai" opens `/darbotvarke` and is current (`aria-current`)
-on its four tabs and everything under them (`MenuSections`); the four tabs ("Darbotvarkė", "Projektai", "Suvestinės",
-"Analitika") are `<ProjectTabs>` under the heading of `/darbotvarke`, `/projektai`, `/suvestines`, `/seimas/analitika`. The history of votes is no tab (the
+**Navigation (design 8.21, built 2026-11-16; owner, 2026-11-17).** The menu is the logo, "Projektai", "Seimo nariai", "Statistika"
+(`/statistika`, design 8.26) and "Prisijungti" or the account item "Paskyra"; one line from 360 px (`MenuTests`, E2E). "Projektai" is
+a `<details>` dropdown (`#projects-menu`, closed by `js/lt2-account.js` like the account item) holding its three tabs and is current
+(`aria-current` on its summary) on them and everything under them (`MenuSections`); the three tabs ("Darbotvarkė", "Projektai",
+"Suvestinės") are also `<ProjectTabs>` under the heading of `/darbotvarke`, `/projektai`, `/suvestines`. The history of votes is no tab (the
 owner, 2026-11-16): the agenda's voted list links to it and it leads back by a breadcrumb (`#to-agenda`). The
 account item (`Layout/AccountMenu`) is a `<details>` with "Mano paskyra" and "Atsijungti" (the server-rendered sign-out form);
 `js/lt2-account.js` fills the name and the account's links (staff screens, an MP's projects, accepting changed terms; for a
@@ -433,8 +436,10 @@ page's "Balsuota".
 - The official address: an "El. p." contact of open data on `lrs.lt` (not a sub-domain), compared ignoring case, of an MP
   whose mandate has not ended; listed for two or more such MPs, it belongs to nobody (`OfficialAddresses` in Parliament,
   also used for the summaries' recipients). An account whose own address is one gets the offer in its own `GET /me`
-  (`mpOffer`), shown on `/paskyra` by `MyMp` in the browser only; the page the server renders holds nothing of it
-  (`ServerMeApi` leaves `mpOffer` and `mp` out). Nothing is linked or public before the take-over.
+  (`mpOffer`), shown on `/paskyra/dalyvavimas` by `MyMp`, as one line on "Profilis" by `MyMpLine` and (owner, 2026-11-17) as the
+  notice `#mp-offer-notice` under the header of every page but the take-over page and "Dalyvavimas" (`MainLayout`, hidden markup
+  the same for every member, shown by `js/lt2-account.js` from one `GET /me` per page load), in the browser only; the page the
+  server renders holds nothing of it (`ServerMeApi` leaves `mpOffer` and `mp` out). Nothing is linked or public before the take-over.
 - `Registration:OfficialAddressesWithoutInvitation` (off by default, the designer's proposal awaiting the owner): both
   invitation gates ask `OfficialAddressGate`. The local `.env` switches it on through the migrator.
 - "Perimti profilį" (`POST /mps/{slug}/claim`) sends a 24-hour one-time link (token hashed, a new one replaces the old,
@@ -444,7 +449,11 @@ page's "Balsuota".
   marked stale), audited, the official address told; the session becomes a passkey session (`SessionTicketStore.RenewAsync`
   takes the new ticket's method and passkey). A lost passkey: the same again; the link stays.
 - One account per MP and one MP per account; an office member of at most one MP, five per MP, by a seven-day one-time
-  link accepted in a passkey session. Giving the profile up (`DELETE /me/mp`), an administrator's end
+  link accepted in a passkey session. Owner, 2026-11-17: the link's page `/seimo-narys/biuras#…` (`MpOfficeInvitation`) does
+  everything: `<SignInFlow ReturnTo=…>` signs in or registers there and reloads the page with its `#` intact; a code session
+  sends `NewPasskey` (made now) or `Passkey` (an assertion) with the token in `POST /me/mp/office/acceptance`, checked before
+  anything is stored, and the session becomes a passkey session under a new key (`SessionRotation`); `GET /me` says
+  `passkeySession`. Giving the profile up (`DELETE /me/mp`), an administrator's end
   (`POST /admin/mps/{slug}/link/end`, statement, fresh confirmation; no screen yet) and deleting the account end the
   link and the office with it. Every change is audited and told to the MP's account's own address (`AccountNotices.Mp*`),
   never naming an office member.
@@ -560,8 +569,10 @@ page's "Balsuota".
   in the browser from `GET /me/bills` (one request, never prerendered; it also says whether the caller gave the positions
   consent), so the HTML is the same for every member. The timeline is on a `.sheet` (design 8.16); the page has no
   "Organizacijos" block and the introduction no paragraph on following (owner, 2026-11-16: the footer links to
-  organisations, the account page registers one, "Sekti" says what it sends); the visitor's trial note sits under the
-  logo and title with the invented-data notice's edges. "Kas yra riba?" is one hint beside the note under the timeline, as on `/darbotvarke`. A coming bill with an open record offers "Prašau balsuoti" with "už" and "prieš" in its row (owner,
+  organisations, the account page registers one, "Sekti" says what it sends); the visitor's head (owner, 2026-11-17) is the
+  headline (the lead sentence as `h1`; the title stays "Lietuva 2.0") and the trial note under it with the invented-data
+  notice's edges, the turning logo centred to their right from 54rem (across the invented-data notice too, which on this
+  page is the head's first row, not the layout's), beside the headline on a phone. "Kas yra riba?" is one hint beside the note under the timeline, as on `/darbotvarke`. A coming bill with an open record offers "Prašau balsuoti" with "už" and "prieš" in its row (owner,
   2026-11-15): a visitor's are `LandingPath.SignInLink` links to the bill's page; a member's side column is one island
   (`MyAgendaSide`, disabled before it starts) that takes, changes ("Atsiimti" withdraws) the side with the bill page's
   request, asks the first-time consent across the row with the shared `<PositionConsentForm>` (also in `SidePicker`), then
@@ -573,8 +584,9 @@ page's "Balsuota".
   (`FrontPageFreshness`, marked by `TakingSides` for every API client): the first request once the copy is 2 s old reads
   the agenda again; other changes wait for the minute. The agenda page, the bill's page and the API stay live.
   "Projektai" (`/projektai`; `/kreipimaisi` redirects there) lists active bills, sorted by activity (participants
-  plus published arguments; the default), participants, arguments or planned date (owner, 2026-11-14), with a search
-  and "Planuojami artimiausiu metu".
+  plus published arguments; the default) or planned date (owner, 2026-11-17: the page offers these two; another `rikiuoti`
+  falls back to the default; the API's `sort` keeps its four values), with a search and the link "Planuojami per 14 dienų"
+  (applies at once, keeps the search; `aria-current` while on); each row has "už … (…) · prieš … (…)" beside its bar.
 - Following a bill, an MP, an organisation or a member is private: who follows is shown to nobody (the followed party and
   staff included), never combined with sides or invitations (the person's own `/me/bills` gives them both), in the export,
   deleted with the account; there is no limit on how much a person follows (owner, 2026-11-15: `Follows:MaxPerAccount` and
@@ -634,7 +646,7 @@ page's "Balsuota".
   that started from a draft says "Sukurta DI · taisė žmonės" for its whole life. The worker is configured the same way
   for the summary job (compose passes `Ai__Provider` and the key to both). Pre-screening of users' texts stays
   rule-based. Tests never call the real API.
-**Analytics (design 8.26, owner 2026-11-16).** `/seimas/analitika` (`Components/Analytics/AnalyticsPage`), public and
+**Analytics (design 8.26, owner 2026-11-16).** "Statistika", `/statistika` (`MenuSections.Statistics`; owner 2026-11-17: in the main menu, no tab row) (`Components/Analytics/AnalyticsPage`), public and
 server-rendered from `GET /api/v1/analytics` (composed in `Lt2.Web/Services/AnalyticsServices.cs`): the four figures, the
 Seimas's share "for" beside the members' frozen counts on closed bills, faction unity (`FactionUnityRule` in Parliament).
 "Kas Seime balsuoja taip, kaip prašote jūs" is the island `MyAgreement` from `GET /api/v1/me/analytics/agreement`: the caller's own sides
@@ -687,6 +699,8 @@ shown, only counts and "maža imtis"; the Seimas's majority is that of those who
 - The weekly one holds appeals on that week's agenda, or never summarised, or whose participants changed by at least
   the `Digest:NotableChange` share (default 10 %) since the last summary that held them.
 - Every summary has a public copy with the same numbers. Whether an MP stopped the summaries is never shown publicly.
+  A bill's page links to it as `/suvestines/{day}?projektas={number}` (`DigestRoutes.PageAt`; owner, 2026-11-17): the summaries
+  holding the bill first, its item first, no fragment; a day with one summary has one title, its kind and date.
 - Timing is corrected by a moderator when people flag a wrong date: correct, hold, or approve one urgent summary.
 - **Sending (design 8.19, built 2026-11-16).** `Digest:Sending` `off` (default: dry runs, nothing for MPs in the outbox),
   `approval` (a weekly or before-vote summary waits; an urgent one goes at once) or `automatic`. Two locks keep it off whatever
@@ -730,7 +744,9 @@ a representative under its organisation's own statement writes as the organisati
 MP's own response as the MP (passkey session, mandate not ended), everyone else as a person; the MP's account comments
 nowhere else. Pre-screening refuses an email address, a phone number or a personal code (`comment.screened`); the phone rule
 (`PreScreening.ContainsPhoneNumber`, every screened text) matches only Lithuanian numbers: `+370`/`00370`, the trunk `0`
-or the old `8`, then eight digits starting 3–9 (owner, 2026-11-17), never a date, year span, sum, law number or a link's digits; an `https://`
+or the old `8`, then eight digits starting 3–9 (owner, 2026-11-17), and (owner, 2026-11-17) a mobile without a prefix, eight
+digits starting with 6 alone or grouped `612 34567`, `6123 4567`, `6 1234 567` (a landline without a prefix stays unflagged),
+never a date, year span, sum, law number or a link's digits; an `https://`
 address is a link (`CommentLinks`, `rel="nofollow ugc noopener noreferrer"`). `Comments:OnReasons|OnStatements|OnResponses`
 (off: no new comments, the written ones readable), `Comments:PerPersonPerTarget` (0), `RateLimits:WriteComment` (20 an hour).
 "Sutinku" is public with names, needs no positions consent, is not blocked by a writing restriction, and the first one asks

@@ -5,7 +5,8 @@
 
 @* "Profilis", the first account screen (design 8.21; the owner, 2026-11-16: "Starting with name, about me and probably a
    party"): what others may see of the person and what they say of themself. Its forms: the display name (design 6.2),
-   "Apie mane" with "Viešas profilis" (design 8.25), party support (design 5.2, private). The other screens are reached from
+   "Apie mane" with "Viešas profilis" (design 8.25), party support (design 5.2, private); for an MP's official address, one line
+   about the MP (design 8.5.1, owner 2026-11-17). The other screens are reached from
    the row under the title. *@
 @if (Me is null)
 {
@@ -24,6 +25,9 @@ else
                 <span class="tag tag--brand">@L["Role." + role]</span>
             }
         </p>
+
+        @* Design 8.5.1, 8.5.4 (owner, 2026-11-17): the MP whose official address this is, filled in the browser only. *@
+        <MyMpLine />
 
         @* Design 6.2: the display name, changed here. *@
         <MyDisplayName Name="@Me.DisplayName" Changed="NameChanged" />

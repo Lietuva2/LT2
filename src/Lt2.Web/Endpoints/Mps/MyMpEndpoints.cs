@@ -10,7 +10,8 @@ namespace Lt2.Web.Endpoints.Mps;
 /// <summary>
 /// The account's own link to an MP (design 8.5.3, 8.5.4, 8.8): <c>DELETE /api/v1/me/mp</c> (give the profile up, or leave
 /// the office), <c>GET /api/v1/me/mp/office</c> (the MP's account only), <c>POST …/office/invitations</c> (a one-time link,
-/// shown once), <c>DELETE …/office/{id}</c> and <c>POST …/office/acceptance</c> (the invited member, in a passkey session).
+/// shown once), <c>DELETE …/office/{id}</c> and <c>POST …/office/acceptance</c> (the invited member, in a passkey session or
+/// bringing a passkey in the same request, owner 2026-11-17).
 /// Speaking for the MP needs a passkey session, read from the database on every request.
 /// </summary>
 internal static class MyMpEndpoints
@@ -70,7 +71,7 @@ internal static class MyMpEndpoints
         ErrorMapper errors,
         CancellationToken cancellationToken)
     {
-        var result = await politicians.AcceptOfficeInvitationAsync(user, request.Token, ipHasher.Hash(context), cancellationToken);
+        var result = await politicians.AcceptOfficeInvitationAsync(user, request.Token, request.NewPasskey, request.Passkey, ipHasher.Hash(context), cancellationToken);
         return result.IsSuccess ? TypedResults.Ok(MpMapping.Map(result.Value)) : errors.ToResult(result.Error!);
     }
 

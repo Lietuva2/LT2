@@ -788,8 +788,8 @@ a.mark:hover { text-decoration: underline; text-underline-offset: 3px; }
 
 /* ---------- The front page (design 8.7, reworked 2026-11-15; mockup design/ui/pradzia.html) ---------- */
 
-/* The visitor's head: the turning logo beside the name and one line, about as tall as they are; under both, across the
-   head, the trial note with the links to register or sign in. The note starts at the page's edge and is a line of text
+/* The visitor's head (owner, 2026-11-17: see below for the columns from 54rem): the turning logo beside the headline; under
+   both, across the head, the trial note with the links to register or sign in. The note starts at the page's edge and is a line of text
    wide (p's --measure), as the invented-data notice above the page is, so the two yellow notes share both edges at
    every width (owner, 2026-11-16: side by side they had no edge in common). One step, --sp-4, apart above and below
    (from the notice, between the rows, to the rule; the links under the note --sp-2): the page's own padding (--sp-5) and
@@ -800,9 +800,25 @@ a.mark:hover { text-decoration: underline; text-underline-offset: 3px; }
   margin-block: calc(var(--sp-4) - var(--sp-5)) calc(var(--sp-4) - var(--sp-7));
 }
 .home-head lt2-logo-spin { width: 100%; }
-.home-head h1, .home-h1-s { font-size: var(--fs-5); }
-.home-head .lead { margin: 0; }
+.home-h1-s { font-size: var(--fs-5); }
 .home-head__signin { grid-column: 1 / -1; gap: var(--sp-2); }
+/* Owner, 2026-11-17: the headline is the lead sentence at the type scale's step nearest 2rem; from 54rem the headline and
+   the note are one column a line of text wide and the logo (about 15rem) is centred in the space to its right, across both
+   rows. */
+.home-head h1 { font-size: var(--fs-4); line-height: 1.15; max-width: var(--measure); }
+/* The visitor's front page carries the invented-data notice as the head's first row (the layout leaves it out there), so the
+   logo is centred across the notice as well; without the notice the head has no such row and the logo centres on the rest. */
+.home-head > #invented-data { grid-column: 1 / -1; }
+/* With the notice in it the head starts where the notice did under the menu: the page's own top padding is taken back. */
+.home-head--notice { margin-block-start: calc(0px - var(--sp-5)); }
+@media (min-width: 54.0625rem) {
+  .home-head { grid-template-columns: minmax(0, var(--measure)) minmax(0, 1fr); grid-template-areas: "title logo" "signin logo"; }
+  .home-head--notice { grid-template-areas: "notice logo" "title logo" "signin logo"; }
+  .home-head > #invented-data { grid-area: notice; }
+  .home-head h1 { grid-area: title; }
+  .home-head__signin { grid-area: signin; }
+  .home-head lt2-logo-spin { grid-area: logo; width: min(15rem, 100%); justify-self: center; align-self: center; }
+}
 
 /* "Kaip tai veikia": four numbered steps (also at the top of /metodika#kaip-tai-veikia). */
 .home-how { border-top: 4px solid var(--brand-deep); padding-top: var(--sp-5); }
@@ -879,6 +895,7 @@ a.mark:hover { text-decoration: underline; text-underline-offset: 3px; }
 }
 @media (max-width: 36rem) {
   .home-head { grid-template-columns: 5.25rem minmax(0, 1fr); gap: var(--sp-4); }
+  .home-head h1 { font-size: var(--fs-3); line-height: 1.25; }
   .intro-steps { grid-template-columns: minmax(0, 1fr); gap: var(--sp-4); }
   .intro-steps > li { display: grid; grid-template-columns: 2.5rem minmax(0, 1fr); gap: var(--sp-1) var(--sp-3); }
   .intro-steps > li::before { grid-row: span 2; }
@@ -889,15 +906,15 @@ a.mark:hover { text-decoration: underline; text-underline-offset: 3px; }
 
 /* ---------- The menu, the account item, the footer and the tabs (design 8.21) ---------- */
 
-/* The menu stays on one line from 360 px: the brand, then "Projektai", "Seimo nariai" and "Prisijungti" or "Paskyra". Under
-   32rem the brand's name is read by screen readers only and the menu's type is the secondary size. These rules replace the
-   wrapping header above. */
+/* The menu stays on one line from 360 px: the brand, then "Projektai", "Seimo nariai", "Statistika" and "Prisijungti" or
+   "Paskyra". Under 32rem the brand's name is read by screen readers only and the menu's type is the secondary size. These
+   rules replace the wrapping header above. */
 .top { flex-wrap: nowrap; gap: var(--sp-3); }
 .top__brand { flex: none; }
 .top__nav { flex-wrap: nowrap; align-items: center; justify-content: flex-end; column-gap: var(--sp-5); min-inline-size: 0; }
-.top__nav > a, .account__toggle { white-space: nowrap; }
+.top__nav > a, .account__toggle, .drop__toggle { white-space: nowrap; }
 /* A page under a menu item (aria-current="true": a bill, a vote, a profile) is marked as its own page is. */
-.top__nav > a[aria-current] { border-bottom-color: var(--leaf); }
+.top__nav > a[aria-current], .drop__toggle[aria-current] { border-bottom-color: var(--leaf); }
 @media (max-width: 54rem) {
   .top__nav { column-gap: var(--sp-4); }
 }
@@ -908,22 +925,45 @@ a.mark:hover { text-decoration: underline; text-underline-offset: 3px; }
   }
   .top__nav { column-gap: var(--sp-3); font-size: var(--fs-1); }
 }
+/* With "Statistika" (owner, 2026-11-17) the four items need more room on a phone, measured: under 26rem the gaps close up,
+   the mark is a little smaller and the arrows sit closer; under 24rem the items take the smallest type size. One line from
+   340 px. */
+@media (max-width: 26rem) {
+  .top { gap: var(--sp-2); }
+  .top__brand svg { width: 2.25rem; }
+  .top__nav { column-gap: var(--sp-2); }
+  .account__toggle, .drop__toggle { gap: var(--sp-1); }
+}
+@media (max-width: 24rem) {
+  .top__nav { font-size: var(--fs-0); }
+}
 
-/* "Paskyra": a disclosure (no script needed); its panel lies over the page under the item, at the right edge, at a readable
-   width and never wider than the window. js/lt2-account.js fills the name and the account's own links and closes it. */
-.account { position: relative; }
-.account__toggle {
+/* "Paskyra" and "Projektai": disclosures (no script needed); the panel lies over the page under the item ("Paskyra" at its
+   right edge, "Projektai" at its left), at a readable width and never wider than the window. js/lt2-account.js fills the
+   account's name and own links and closes both. */
+.account, .drop { position: relative; }
+.account__toggle, .drop__toggle {
   display: inline-flex; align-items: center; gap: var(--sp-2);
   padding-block: var(--sp-2); border-bottom: 4px solid transparent; cursor: pointer; list-style: none; font-weight: 600;
 }
-.account__toggle::-webkit-details-marker { display: none; }
-.account__toggle::marker { content: ""; }
-.account__toggle::after {
+.account__toggle::-webkit-details-marker, .drop__toggle::-webkit-details-marker { display: none; }
+.account__toggle::marker, .drop__toggle::marker { content: ""; }
+.account__toggle::after, .drop__toggle::after {
   content: ""; inline-size: 0.45em; block-size: 0.45em; margin-block-start: -0.25em;
   border: solid currentColor; border-width: 0 2px 2px 0; transform: rotate(45deg);
 }
-.account[open] > .account__toggle::after { margin-block-start: 0.2em; transform: rotate(-135deg); }
-.account__toggle:hover, .account[open] > .account__toggle { border-bottom-color: var(--slate); }
+.account[open] > .account__toggle::after, .drop[open] > .drop__toggle::after { margin-block-start: 0.2em; transform: rotate(-135deg); }
+.account__toggle:hover, .account[open] > .account__toggle, .drop__toggle:hover, .drop[open] > .drop__toggle { border-bottom-color: var(--slate); }
+.drop__panel {
+  position: absolute; inset-inline-start: 0; inset-block-start: calc(100% + var(--sp-2)); z-index: 30;
+  inline-size: max-content; min-inline-size: 12rem; max-inline-size: min(20rem, 100vw - 2rem);
+  padding: var(--sp-2) var(--sp-4); background: var(--sheet); color: var(--ink); border: 1px solid var(--rule);
+  box-shadow: 0 0.5rem 1.5rem rgb(0 0 0 / 0.2); font-size: var(--fs-1); white-space: normal;
+}
+.drop__links { display: flex; flex-direction: column; list-style: none; margin: 0; padding: 0; }
+.top__nav .drop__links a { display: block; padding: var(--sp-2) 0; color: var(--ink); text-decoration: none; font-weight: 600; border-bottom: 0; }
+.top__nav .drop__links a:hover { text-decoration: underline; }
+.top__nav .drop__links a[aria-current="page"] { text-decoration: underline; text-decoration-color: var(--leaf); text-decoration-thickness: 3px; text-underline-offset: 0.3em; }
 .account__panel {
   position: absolute; inset-inline-end: 0; inset-block-start: calc(100% + var(--sp-2)); z-index: 30;
   display: flex; flex-direction: column; gap: var(--sp-2);
@@ -972,6 +1012,32 @@ a.mark:hover { text-decoration: underline; text-underline-offset: 3px; }
 /* Design 8.27: "Lankomumas". A long path or host wraps, so the number beside it stays on a phone's screen. */
 .usage-name { overflow-wrap: anywhere; }
 
+/* Numbers per day as bars (DayBars: "Lankomumas", the invitations' screen; owner, 2026-11-17): a fixed height and at most a
+   readable width, one column a day at most 2.5rem wide (a few days stay narrow bars), the bar filling its column; the day and number show at once above a column on hover or keyboard focus, anchored to
+   the side of the chart the column is on so it never leaves the screen; some days are named under the axis. */
+.daybars { margin: 0; padding-block: 2rem 1.5rem; max-inline-size: 48rem; }
+.daybars__days {
+  list-style: none; margin: 0; padding: 0; display: grid; grid-auto-flow: column; grid-auto-columns: minmax(0, 2.5rem);
+  column-gap: 1px; block-size: 10rem; border-bottom: 1px solid var(--ink-2);
+}
+.daybars__day { position: relative; block-size: 100%; outline-offset: 1px; }
+.daybars__bar { position: absolute; inset: 0; display: block; inline-size: 100%; block-size: 100%; }
+.daybars__bar rect { fill: var(--leaf); }
+.daybars__day:hover .daybars__bar rect, .daybars__day:focus-visible .daybars__bar rect { fill: var(--action); }
+.daybars__day:hover, .daybars__day:focus-visible { background: var(--rule); }
+.daybars__value {
+  display: none; position: absolute; inset-block-end: calc(100% + var(--sp-1)); inset-inline-start: 0; z-index: 5;
+  padding: var(--sp-1) var(--sp-2); background: var(--ink); color: var(--sheet); font-size: var(--fs-0); white-space: nowrap;
+}
+.daybars__day--end .daybars__value { inset-inline-start: auto; inset-inline-end: 0; }
+.daybars__day:hover .daybars__value, .daybars__day:focus-visible .daybars__value, .daybars__day:focus .daybars__value { display: block; }
+.daybars__label {
+  position: absolute; inset-block-start: calc(100% + var(--sp-1)); inset-inline-start: 50%; transform: translateX(-50%);
+  font-size: var(--fs-0); color: var(--ink-2); white-space: nowrap;
+}
+.daybars__label--first { inset-inline-start: 0; transform: none; }
+.daybars__label--last { inset-inline-start: auto; inset-inline-end: 0; transform: none; }
+
 /* Design 8.25.4: the card beside a public profile's name (js/lt2-cards.js), the hint's look; placed by the script. */
 .card-pop {
   inset: auto; margin: 0; inline-size: max-content; max-inline-size: min(22rem, 100vw - 1rem);
@@ -1012,3 +1078,13 @@ a.said__name { color: inherit; font-weight: 700; }
 .comment--linked { border-left-color: var(--brand); background: var(--brand-tint); padding: var(--sp-2) var(--sp-2) var(--sp-2) var(--sp-3); }
 .said--linked { outline: 2px solid var(--brand); outline-offset: var(--sp-2); }
 .comment--linked, .said--linked { scroll-margin-top: var(--sp-6); }
+
+/* Design 8.12.5 (owner, 2026-11-17): a filter that is a link and applies at once, drawn as a box that is ticked while the
+   filter is on (aria-current="true"); no script. */
+.toggle-link { display: inline-flex; align-items: center; gap: var(--sp-2); color: var(--ink); font-weight: 600; }
+.toggle-link::before {
+  content: ""; flex: none; inline-size: 1.125rem; block-size: 1.125rem; border: 2px solid var(--ink-2); background: var(--sheet);
+}
+.toggle-link[aria-current]::before { background: var(--action); border-color: var(--action); box-shadow: inset 0 0 0 3px var(--sheet); }
+/* Design 8.5.3 (owner, 2026-11-17): the sign-in steps on the office invitation's page, as narrow as on the sign-in page. */
+.office-sign-in { max-inline-size: 30rem; }
