@@ -105,8 +105,13 @@ internal sealed class ServerMeApi(IIdentityModule identity, IMpDirectory mps, IH
     public async Task<ApiResult<PartySupportResponse>> GetPartySupportAsync(CancellationToken cancellationToken = default)
     {
         var choices = await mps.PartiesAsync(cancellationToken);
-        return errors.ToApiResult(await identity.GetPartySupportAsync(User, cancellationToken), party => new PartySupportResponse(party, choices));
+        return errors.ToApiResult(await identity.GetPartySupportAsync(User, cancellationToken), state => Mapping.ToResponse(state, choices));
     }
+
+    public async Task<ApiResult> SetPartyPublicAsync(bool show, CancellationToken cancellationToken = default) =>
+        errors.ToApiResult(show
+            ? await identity.ShowPartyAsync(User, PartyPublicLimits.ConsentVersion, IpHash, cancellationToken)
+            : await identity.HidePartyAsync(User, IpHash, cancellationToken));
 
     public async Task<ApiResult> DeleteAccountAsync(CancellationToken cancellationToken = default)
     {
@@ -156,6 +161,9 @@ internal static class Mapping
 
     public static RegistrationCompletion ToCompletion(CompleteRegistrationRequest request) =>
         new(request.DisplayName, request.ConfirmsAdult, request.InvitationCode, request.AcceptsTerms);
+
+    public static PartySupportResponse ToResponse(PartySupportState state, IReadOnlyList<string> choices) =>
+        new(state.Party, choices, state.Public, state.ProfilePublic, state.ConsentVersion);
 
     public static MeResponse ToResponse(AccountSummary account) => new()
     {

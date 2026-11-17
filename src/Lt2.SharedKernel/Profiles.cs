@@ -17,6 +17,19 @@ public static class PublicProfileConsent
     public const string TextVersion = "2026-11-16";
 }
 
+/// <summary>
+/// The consent to show the supported party on the public profile (design 8.25.9, owner 2026-11-17): its own box under the
+/// party on "Profilis", never implied by "Viešas profilis". Withdrawn by unticking the box, by removing or changing the party
+/// and by switching the profile off; switching the profile on again does not give it back.
+/// </summary>
+public static class PartyPublicConsent
+{
+    public const string Kind = "party-public";
+
+    /// <summary>The version of the box's text in force (the client's <c>UiText</c> under the same version).</summary>
+    public const string TextVersion = "2026-11-17";
+}
+
 /// <summary>A member's public profile as other modules see it (design 8.25): never the account's address or anything private.</summary>
 /// <param name="UserId">The account, for the module that asked; never in a public answer.</param>
 /// <param name="ProfileId">The public id of <c>/nariai/{id}</c>.</param>
@@ -43,6 +56,12 @@ public interface IPublicProfiles
 
     /// <summary>The profile behind an id, and whether the id is public, retired or unknown.</summary>
     Task<(ProfileIdState State, PublicProfileFacts? Profile)> FindAsync(string profileId, CancellationToken cancellationToken);
+
+    /// <summary>
+    /// The party the member supports, only while the profile is public and the member gave <see cref="PartyPublicConsent"/>
+    /// (design 8.25.9); null otherwise. For the profile's own page only: never beside a text or in the card.
+    /// </summary>
+    Task<string?> ShownPartyAsync(string profileId, CancellationToken cancellationToken);
 }
 
 /// <summary>

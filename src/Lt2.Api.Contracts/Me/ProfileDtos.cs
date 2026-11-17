@@ -28,8 +28,11 @@ public sealed record ProfileRequest
     public string? ConsentVersion { get; init; }
 }
 
-/// <summary>A member's public page (design 8.25.2): the display name, "Apie mane" and the number of followers.</summary>
-public sealed record MemberProfileResponse(string ProfileId, string DisplayName, string? About, int Followers, string Address);
+/// <summary>
+/// A member's public page (design 8.25.2): the display name, "Apie mane" and the number of followers; <c>Party</c> only while
+/// the member ticked "Rodyti viešame profilyje" (design 8.25.9), null otherwise.
+/// </summary>
+public sealed record MemberProfileResponse(string ProfileId, string DisplayName, string? About, int Followers, string Address, string? Party = null);
 
 /// <summary>
 /// A published text on a member's page (design 8.25.2): <c>Kind</c> <c>argument</c> with the <c>Side</c> it was written for,

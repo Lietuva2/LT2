@@ -9,7 +9,8 @@ using Lt2.Web.Security;
 namespace Lt2.Web.Services;
 
 /// <summary>
-/// A member's public page, composed by the host (design 8.25.6) from Identity (the name, "Apie mane", the profile id),
+/// A member's public page, composed by the host (design 8.25.6) from Identity (the name, "Apie mane", the profile id, the
+/// party only while the member chose to show it, 8.25.9),
 /// Notifications (the number of followers) and Appeals (the published arguments and comments). Nothing private of the member reaches it.
 /// </summary>
 internal sealed class MemberReads(IPublicProfiles profiles, IFollowerCounts followers, IMemberTexts texts)
@@ -22,7 +23,12 @@ internal sealed class MemberReads(IPublicProfiles profiles, IFollowerCounts foll
         {
             ProfileIdState.Public when profile is not null =>
                 new MemberProfileResponse(
-                    profile.ProfileId, profile.DisplayName, profile.About, await followers.MemberAsync(profile.ProfileId, ct), ProfileRoutes.Page(profile.ProfileId, profile.DisplayName)),
+                    profile.ProfileId,
+                    profile.DisplayName,
+                    profile.About,
+                    await followers.MemberAsync(profile.ProfileId, ct),
+                    ProfileRoutes.Page(profile.ProfileId, profile.DisplayName),
+                    await profiles.ShownPartyAsync(profile.ProfileId, ct)),
             ProfileIdState.Retired => Error.Gone("member.gone"),
             _ => Error.NotFound("member.not-found"),
         };

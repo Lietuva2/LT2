@@ -93,6 +93,9 @@
 <data name="digest.urgent-already" xml:space="preserve"><value>Šią savaitę skubi suvestinė šiam projektui jau patvirtinta.</value></data>
 <data name="party.unknown" xml:space="preserve"><value>Tokios partijos sąraše nėra.</value></data>
 <data name="party.consent-required" xml:space="preserve"><value>Kad galėtume išsaugoti, kurią partiją palaikote, reikia jūsų aiškaus sutikimo.</value></data>
+<data name="party.consent-outdated" xml:space="preserve"><value>Sutikimo tekstas pasikeitė. Perskaitykite jį ir pažymėkite dar kartą.</value></data>
+<data name="party.none" xml:space="preserve"><value>Pirmiausia išsaugokite, kurią partiją palaikote.</value></data>
+<data name="party.profile-off" xml:space="preserve"><value>Partiją rodyti galima tik įjungus viešą profilį.</value></data>
 <data name="display-name.too-long" xml:space="preserve"><value>Vardas per ilgas: ne daugiau kaip 60 ženklų.</value></data>
 <data name="statement.required" xml:space="preserve"><value>Parašykite paaiškinimą.</value></data>
 <data name="staff-statement.too-long" xml:space="preserve"><value>Paaiškinimas per ilgas: ne daugiau kaip 1 000 ženklų.</value></data>

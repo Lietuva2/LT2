@@ -41,6 +41,12 @@ public static class ApiRoutes
         /// <summary>Accepting the terms of use in force (design 8.22.2).</summary>
         public const string Terms = Root + "/consents/terms";
         public const string PartySupport = Root + "/party-support";
+
+        /// <summary>
+        /// <c>PUT</c>: the party shown on the public profile, with the consent <c>party-public</c>; <c>DELETE</c>: no longer shown
+        /// (design 8.25.9; open behind the terms, 8.22.2).
+        /// </summary>
+        public const string PartyPublic = Root + "/party-support/public";
         public const string Export = Root + "/export";
         public const string Invitation = Root + "/invitation";
         public const string ReplaceInvitation = Root + "/invitation/replace";

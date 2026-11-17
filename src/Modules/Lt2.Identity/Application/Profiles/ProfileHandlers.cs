@@ -20,6 +20,7 @@ internal sealed class ProfileHandlers(
     IMemberFollowEnd follows,
     ISettings settings,
     AccountEvents events,
+    Consents.PartySupportHandlers parties,
     TimeProvider clock)
 {
     public async Task<Result<MyProfileState>> MineAsync(ClaimsPrincipal principal, CancellationToken cancellationToken)
@@ -174,6 +175,9 @@ internal sealed class ProfileHandlers(
         await db.Consents
             .Where(c => c.UserId == profile.UserId && c.Kind == PublicProfileConsent.Kind && c.WithdrawnAt == null)
             .ExecuteUpdateAsync(s => s.SetProperty(c => c.WithdrawnAt, now), cancellationToken);
+
+        // Design 8.25.9: the party shown on the page goes with it, and switching on again does not bring it back.
+        await parties.WithdrawShownAsync(profile.UserId, "profile", new Actor(profile.UserId, Roles.Member, null), transaction, cancellationToken);
         await follows.EndAsync(id, transaction, cancellationToken);
     }
 

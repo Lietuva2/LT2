@@ -78,7 +78,14 @@ internal sealed class AccountDataHandlers(
             },
             ["profileReports"] = await db.ProfileReports.AsNoTracking().Where(r => r.ReporterUserId == userId).OrderBy(r => r.CreatedAt)
                 .Select(r => new { ground = r.Ground, text = r.Text, createdAt = r.CreatedAt, status = r.Status }).ToListAsync(cancellationToken),
-            ["partySupport"] = party,
+            // Design 8.25.9: whether the party is shown on the public profile (the consent party-public is among the consents).
+            ["partySupport"] = party is null ? null : new
+            {
+                party = party.Party,
+                givenAt = party.GivenAt,
+                shownOnPublicProfile = profile.PublicProfileId is not null
+                    && consents.Any(c => c.Kind == PartyPublicConsent.Kind && c.WithdrawnAt is null),
+            },
 
             // Only the feedback linked to the account (design 8.10); unlinked items lead to nobody.
             ["feedback"] = (await db.Feedback.AsNoTracking().Where(f => f.UserId == userId).OrderBy(f => f.CreatedOn).ToListAsync(cancellationToken))

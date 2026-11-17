@@ -167,16 +167,36 @@ public sealed record SessionResponse
 /// <param name="Device">A short, coarse description of the browser when it last signed in, as for sessions.</param>
 public sealed record KnownBrowserResponse(Guid Id, string? Device, DateTimeOffset FirstSeenAt, DateTimeOffset LastSeenAt, bool IsCurrent);
 
-/// <summary>The party the person said they support (private, optional), and the parties to choose from.</summary>
-public sealed record PartySupportResponse(string? Party, IReadOnlyList<string> Choices);
+/// <summary>
+/// The party the person said they support (private, optional), and the parties to choose from; whether it is shown on the
+/// public profile (<c>Public</c>, design 8.25.9), whether the profile is public, and the box's consent text version in force.
+/// </summary>
+public sealed record PartySupportResponse(
+    string? Party, IReadOnlyList<string> Choices, bool Public = false, bool ProfilePublic = false, string ConsentVersion = PartyPublicLimits.ConsentVersion);
 
 /// <summary>
 /// Sets the party, or with <c>null</c> removes it. Giving one needs <see cref="Consent"/>: a party preference is a
-/// political opinion; it is used only for group numbers of at least 20 and never shown.
+/// political opinion; it is used only for group numbers of at least 20 and shown nowhere unless the person ticks
+/// "Rodyti viešame profilyje" (<see cref="PartyPublicRequest"/>). Removing or changing it stops showing it.
 /// </summary>
 public sealed record PartySupportRequest
 {
     public string? Party { get; init; }
 
     public bool Consent { get; init; }
+}
+
+/// <summary>"Rodyti viešame profilyje" ticked (design 8.25.9): the version of the box's text the form showed.</summary>
+public sealed record PartyPublicRequest
+{
+    public string? ConsentVersion { get; init; }
+}
+
+public static class PartyPublicLimits
+{
+    /// <summary>
+    /// The version of the "Rodyti viešame profilyje" text the form shows (<c>UiText</c> <c>Party.PublicText</c>); the same as
+    /// <c>PartyPublicConsent.TextVersion</c> in SharedKernel (a unit test). A new wording gets a new version in both.
+    /// </summary>
+    public const string ConsentVersion = "2026-11-17";
 }

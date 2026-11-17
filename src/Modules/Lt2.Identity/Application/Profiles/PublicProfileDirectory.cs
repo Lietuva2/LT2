@@ -79,6 +79,25 @@ internal sealed class PublicProfileDirectory(NpgsqlDataSource dataSource) : IPub
         return (await retired.ExecuteScalarAsync(cancellationToken) is true ? ProfileIdState.Retired : ProfileIdState.Unknown, null);
     }
 
+    public async Task<string?> ShownPartyAsync(string profileId, CancellationToken cancellationToken)
+    {
+        if (!ProfileRules.IsWellFormedId(profileId))
+        {
+            return null;
+        }
+
+        // Design 8.25.9: the party already on "Profilis", shown only while the profile is public and the box's consent is in force.
+        await using var command = dataSource.CreateCommand(
+            """
+            SELECT s.party FROM identity.profile p JOIN identity.party_support s ON s.user_id = p.user_id
+            WHERE p.public_profile_id = @id AND p.display_name IS NOT NULL
+              AND EXISTS (SELECT 1 FROM identity.consent c WHERE c.user_id = p.user_id AND c.kind = @kind AND c.withdrawn_at IS NULL)
+            """);
+        command.Parameters.AddWithValue("id", profileId);
+        command.Parameters.AddWithValue("kind", PartyPublicConsent.Kind);
+        return await command.ExecuteScalarAsync(cancellationToken) as string;
+    }
+
     private static PublicProfileFacts Read(NpgsqlDataReader reader) =>
         new(
             reader.GetGuid(0),

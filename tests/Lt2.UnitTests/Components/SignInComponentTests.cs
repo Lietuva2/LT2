@@ -439,6 +439,35 @@ public sealed class SignInComponentTests : BunitContext
         page.WaitForAssertion(() => page.Find("#profile-link").GetAttribute("href").ShouldBe("/nariai/ruta-mockute-abcdefgh23"));
     }
 
+    /// <summary>
+    /// Design 8.25.9 (owner, 2026-11-17): "Rodyti viešame profilyje" is offered under a saved party only while the profile is
+    /// public, says what it covers before the consent is sent, and unticking it withdraws it.
+    /// </summary>
+    [Fact]
+    public void The_party_box_is_offered_only_with_a_public_profile_and_says_what_it_covers_before_it_is_sent()
+    {
+        SignedIn(FakeMeApi.Member);
+        _me.Party = new PartySupportResponse("Reformų partija", ["Reformų partija", "Pilietinė sąjunga"]);
+        var off = Render<Hello>();
+        off.FindAll("#party-public").ShouldBeEmpty("nothing to show it on while the profile is off");
+        off.Find("#party-public-needs-profile").TextContent.ShouldBe(Text("Party.PublicNeedsProfile"));
+
+        _me.Party = _me.Party with { ProfilePublic = true };
+        var page = Render<Hello>();
+        page.Find("#party-public").HasAttribute("checked").ShouldBeFalse("off unless ticked");
+        page.FindAll("#party-public-text").ShouldBeEmpty();
+        page.Find("#party-public").Change(true);
+        page.Find("#party-public-text").TextContent.ShouldBe(Text("Party.PublicText"));
+        page.Find("#party-save").Click();
+        page.WaitForAssertion(() => _me.PartyPublicCalls.ShouldBe([true]));
+        page.WaitForAssertion(() => page.FindAll("#party-public-text").ShouldBeEmpty("given: nothing more to say"));
+
+        page.Find("#party-public").Change(false);
+        page.Find("#party-save").Click();
+        page.WaitForAssertion(() => _me.PartyPublicCalls.ShouldBe([true, false]));
+        _me.Party.Public.ShouldBeFalse();
+    }
+
     /// <summary>Design 6.2 (owner, 2026-11-16): where the staff links stand, a code session on a staff account gets its staff passkey.</summary>
     [Fact]
     public void A_staff_account_in_a_code_session_is_offered_its_staff_passkey_where_the_staff_links_stand()
@@ -728,11 +757,26 @@ public sealed class SignInComponentTests : BunitContext
         public Task<ApiResult> WithdrawPositionConsentAsync(CancellationToken cancellationToken = default) =>
             Task.FromResult(ApiResult.Ok());
 
-        public Task<ApiResult<PartySupportResponse>> GetPartySupportAsync(CancellationToken cancellationToken = default) =>
-            Task.FromResult(ApiResult<PartySupportResponse>.Ok(new PartySupportResponse(null, [])));
+        /// <summary>The party as the server holds it (design 5.2, 8.25.9); changing or removing it stops showing it, as the server does.</summary>
+        public PartySupportResponse Party { get; set; } = new(null, []);
 
-        public Task<ApiResult> SetPartySupportAsync(PartySupportRequest request, CancellationToken cancellationToken = default) =>
-            Task.FromResult(ApiResult.Ok());
+        public List<bool> PartyPublicCalls { get; } = [];
+
+        public Task<ApiResult<PartySupportResponse>> GetPartySupportAsync(CancellationToken cancellationToken = default) =>
+            Task.FromResult(ApiResult<PartySupportResponse>.Ok(Party));
+
+        public Task<ApiResult> SetPartySupportAsync(PartySupportRequest request, CancellationToken cancellationToken = default)
+        {
+            Party = Party with { Party = request.Party, Public = Party.Public && request.Party == Party.Party };
+            return Task.FromResult(ApiResult.Ok());
+        }
+
+        public Task<ApiResult> SetPartyPublicAsync(bool show, CancellationToken cancellationToken = default)
+        {
+            PartyPublicCalls.Add(show);
+            Party = Party with { Public = show };
+            return Task.FromResult(ApiResult.Ok());
+        }
 
         public Task<ApiResult> DeleteAccountAsync(CancellationToken cancellationToken = default) => Task.FromResult(ApiResult.Ok());
 

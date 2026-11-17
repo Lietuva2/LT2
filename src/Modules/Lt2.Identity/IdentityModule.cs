@@ -309,8 +309,14 @@ internal sealed class IdentityModuleFacade(
     public Task<bool> TermsRequiredAsync(ClaimsPrincipal user, CancellationToken cancellationToken) =>
         terms.RequiredAsync(user, cancellationToken);
 
-    public Task<Result<string?>> GetPartySupportAsync(ClaimsPrincipal user, CancellationToken cancellationToken) =>
+    public Task<Result<PartySupportState>> GetPartySupportAsync(ClaimsPrincipal user, CancellationToken cancellationToken) =>
         parties.GetAsync(user, cancellationToken);
+
+    public Task<Result<Unit>> ShowPartyAsync(ClaimsPrincipal user, string? textVersion, string? ipHash, CancellationToken cancellationToken) =>
+        parties.ShowAsync(user, textVersion, ipHash, cancellationToken);
+
+    public Task<Result<Unit>> HidePartyAsync(ClaimsPrincipal user, string? ipHash, CancellationToken cancellationToken) =>
+        parties.HideAsync(user, ipHash, cancellationToken);
 
     public Task<Result<Unit>> SetPartySupportAsync(ClaimsPrincipal user, string? party, bool consent, IReadOnlyCollection<string> allowed, CancellationToken cancellationToken) =>
         parties.SetAsync(user, party, consent, allowed, cancellationToken);

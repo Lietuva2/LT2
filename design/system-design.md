@@ -266,7 +266,7 @@ ASP.NET Core Identity tables (users, roles, claims, tokens, passkeys), plus:
 | `sign_in_code` | Account, hashed code, expiry, failed attempts, used time, and the known device it was issued to (empty for a code any browser may use). |
 | `known_device` | Account, hashed identifier of the browser's cookie, first and last seen. Built before registration opens (M2b). [changed while building (8.20.2): also `label`, the browser and system as the sessions list says them ("Edge, Windows"), so the person can tell the rows apart; the hash is HMAC-SHA-256 under a key of its own, the secret `device_hash_key`.] |
 | `role_activation` | Account, role, hashed one-time code, who issued it, expiry, used time. Using it marks the passkey of that session as the staff passkey. |
-| `party_support` | `user_id`, `party_id`. Private and optional; used only for group statistics of at least 20 people. |
+| `party_support` | `user_id`, `party_id`. Private and optional; used only for group statistics of at least 20 people, and shown on the person's public profile only by their own box and consent `party-public` (8.25.9, owner 2026-11-17). |
 | `consent` | Kind, text version, given and withdrawn times. Positions need explicit consent (GDPR Art. 9). [built 2026-11-16 (8.25.1): the kind `public-profile`, given by switching "Viešas profilis" on and withdrawn by switching it off; it covers the page, its indexing, being followed and the shown follower number] |
 | `politician_link` | `user_id`, the Seimas's person number, part (the MP, or an office member), how and when verified, who added an office member, when and by whom it ended. One MP per account; one account as the MP per person (8.5.2, 8.5.3). |
 | `politician_token` | The hashed one-time token of a take-over link or of an office member's invitation, for which person, by whom, expiry, used time (8.5.2, 8.5.3). |
@@ -3025,8 +3025,8 @@ lines on a phone.
   greeting "Sveiki, …" stays as text. The addresses and what each holds:
   - **"Profilis" (`/paskyra`)**, the first screen: what others may see of the person and what they say of themself. The
     level and roles, the display name (6.2), "Apie mane" and the switch "Viešas profilis" with the link to the public page
-    while it is on (8.25), party support (5.2; whether it may also be shown publicly is the designer's proposal of
-    8.25.9, not built).
+    while it is on (8.25), party support (5.2), with the box "Rodyti viešame profilyje" while the profile is public
+    (8.25.9, owner 2026-11-17).
   - **"Sekimas ir laiškai" (`/paskyra/sekimas`)**: what the person follows and the email switches (`#sekami`), then how often the emails come (`#laisku-daznis`, 8.24).
   - **"Dalyvavimas" (`/paskyra/dalyvavimas`)**: the MP part (8.5), organisations, the invitation code (`#my-invitation`),
     and the staff part (the role's activation; the staff links in a staff session, or in their place the link to the staff
@@ -3758,7 +3758,7 @@ page is indexed and the person can be followed.
   by the page's address, without script, as the responses are (8.5.6).
 - **What it never shows:** the person's own sides; "Man svarbu"; the "Sutinku" they gave [the designer's proposal: each is
   visible beside its comment, but a list of everything a person agreed with is a profile of opinions nobody asked to
-  publish as a list]; what they follow; party support; invitations; organisations they represent; anything written as
+  publish as a list]; what they follow; party support, unless the person ticks it to be shown (8.25.9); invitations; organisations they represent; anything written as
   an organisation or an MP; hidden, waiting or withdrawn texts, and texts on a bill whose record is hidden; any count or
   statistic about the person's texts ("12 argumentų, 9 už"); any ranking; who follows them.
 - **On a sheet** (8.16): the name, the number and "Apie mane" on one, the list on another.
@@ -3902,13 +3902,15 @@ those"); it replaces the designer's proposal of its own milestone after comments
 comments were built, the same day. The lawyer reads the
 profile with the other texts once, before going live (8.22).
 
-#### 8.25.9 The party shown publicly [the designer's proposal, awaiting the owner; not built]
+#### 8.25.9 The party shown publicly
+
+**[Decided by the owner on 2026-11-17: "Add party to public profile." The designer's proposal below is built as written.]**
 
 The owner asked whether the "Profilis" screen could hold a party "which you could select to show publicly" ("probably").
 What exists: `identity.party_support` (5.2), one party per person from the parties that nominated sitting MPs, set on
 "Profilis" with its own explicit consent (kind `party-support`, because a party preference is a political opinion);
 private; read only through `IPartySupporters` for the summaries' group numbers of at least 20 (6.3); the MP's own account
-declares none (8.5.4). The proposal:
+declares none (8.5.4). The rule:
 
 - **Which party:** the one the member already marked as supported, not a free field. One fact, one place: a free field
   would let a person publish one party and support another, and it is what "Apie mane" is already for ("Partijos X narys"
@@ -3926,7 +3928,27 @@ declares none (8.5.4). The proposal:
   person's stated party beside the sides their arguments were written for; nothing more than the person published. No
   count of people per party is shown anywhere (the profile list does not exist and nothing is listed by party).
 
-If the answer is no, the party stays private on "Profilis" as it is now and nothing else changes.
+[changed while building (2026-11-17):
+- **Where it stands:** on the profile's own page only, one line under the name, "Palaikoma partija: {party}" (the name after
+  a colon, never declined); never in the card beside a text (8.25.4), beside an argument or comment, in the texts' answer or
+  in any list.
+- **The box is offered only while the profile is public** and a party is chosen; with the profile off the party's part says
+  in one line that it can be shown once the profile is on ("Partiją rodyti viešame profilyje galima tik jį įjungus."). The
+  box's sentence, said before the consent is given and versioned with it (`2026-11-17`): "Partiją matys visi, kas atvers
+  jūsų viešo profilio puslapį, ją gali rodyti ir paieškos sistemos; nuėmus žymę, pašalinus ar pakeitus partiją arba
+  išjungus profilį, ji iš karto nebebus rodoma."
+- **Changing the party withdraws it too [the designer's reading of "removing the party"]:** the consent covered the party
+  it was given for, so a different party is shown only after the box is ticked again (the form re-sends it when the box is
+  still ticked beside the new choice, so the person sees what is published).
+- **API:** `GET /api/v1/me/party-support` adds `public`, `profilePublic` and `consentVersion`; `PUT
+  /api/v1/me/party-support/public` (`consentVersion`) gives `party-public` (`party.consent-outdated`, `party.none`,
+  `party.profile-off`, `mp.takes-no-part`); `DELETE` the same address withdraws it and is open behind the terms (8.22.2,
+  `TermsExemptions`). `GET /api/v1/members/{id}` carries `party`, null unless shown. The page reads it through
+  `IPublicProfiles.ShownPartyAsync`, which answers only for a public profile with the consent in force.
+- **Data:** no new table: the consent row in `identity.consent` (kind `party-public`) is the box; withdrawn rows stay as
+  the other consents do. In the export (`partySupport.shownOnPublicProfile` and the consent among the consents); gone
+  with the account. Audited `party.public-on` and `party.public-off` with why (`box`, `party`, `profile`), never the
+  party.]
 
 #### 8.25.8 Done when
 
@@ -4526,12 +4548,18 @@ Decided for comments, the email rhythm and public profiles (8.23-8.25; all three
 - "The menu could not just scroll, but it would be split into several forms? Starting with name, about me and probably a
   party": the account area is four screens, `/paskyra` ("Profilis": the name, "Apie mane", "Viešas profilis", party
   support), `/paskyra/sekimas`, `/paskyra/dalyvavimas`, `/paskyra/saugumas`, with the row of parts as navigation between them
-  (8.21). Whether the party may be shown publicly is the designer's proposal of 8.25.9, not built.
+  (8.21). The party shown publicly was then the designer's proposal of 8.25.9; the owner decided it on 2026-11-17 (below).
 - "The url sveiki reads strange, change it": the account's screens are `/paskyra`, `/paskyra/sekimas`,
   `/paskyra/dalyvavimas`, `/paskyra/saugumas`; `/sveiki` goes with no redirect (8.21).
 - A member's public address carries the name: `/nariai/{name-slug}-{id}`, the id deciding, any other name part
   redirecting permanently to the current address (8.25.2). The owner suggested the name alone; the id stays (names are
   neither unique nor stable), and the owner did not object.
+
+**Decided by the owner on 2026-11-17: the party on the public profile**
+
+- "Add party to public profile": 8.25.9 as proposed: the supported party, by its own box "Rodyti viešame profilyje" and
+  consent `party-public`, only while the profile is public; withdrawn at once with the box, the party or the profile and not
+  given back by switching the profile on again; nothing for the MP's account; the "at least 20" rule unchanged.
 
 **Decided by the owner on 2026-11-16: the analytics page (8.26)**
 
@@ -4653,11 +4681,11 @@ search engine's copy outlives switching the profile off. With follower numbers b
 | "Apie mane" only with a public profile (8.25.1) | **Proposed:** yes, one switch and one explanation. Or: "Apie mane" shown (in a card) also for members without a page. | Before M2d |
 | "Apie mane": a personal code (8.25.3) | **Proposed:** refused, as everywhere. Or: allowed like the person's own contacts. | Before M2d |
 | Following a member: what it sends (8.25.5) | **Proposed (built so):** a line when the member publishes an argument or a comment in their own voice, never the text, by the follower's rhythm, with its own switch. Or: arguments only. | Before M2d |
-| Public profile: the party shown (8.25.9) | **Proposed:** the supported party already on "Profilis" (not a free field), shown on the public page only with its own box and consent (`party-public`), never by "Viešas profilis" alone; withdrawn at once with the box, the party or the profile; nothing for the MP's account; the "at least 20" rule unchanged. Or: no; the party stays private. | Before it is built |
+| Public profile: the party shown (8.25.9) | **Decided by the owner, 2026-11-17 ("Add party to public profile"), built:** the supported party already on "Profilis" (not a free field), shown on the public page only with its own box and consent (`party-public`), never by "Viešas profilis" alone; withdrawn at once with the box, the party or the profile; nothing for the MP's account; the "at least 20" rule unchanged. Still the designer's reading: changing the party withdraws it as removing does. | Done |
 | Public profile: a display name to switch it on (8.25.6) | **Proposed (built so):** "Viešas profilis" needs a display name, and the name cannot be emptied while the profile is public (`profile.name-required`). Or: a page without a name, titled "Narys". | Before going live |
 | Public profile: no cache, 410 and 404 marked `noindex` (8.25.2) | **Proposed (built so):** the page is `no-cache` for everyone so switching off is at once; the 410 and 404 answers carry `X-Robots-Tag: noindex`. Or: ordinary caching. | Before going live |
 | A comment in an organisation's name when its last representative's account is deleted (8.23.7, 8.14.14) | Open, found while connecting comments and profiles: 8.23.7 says a comment written in an organisation's name stays when its writer's account is deleted (as statements do), but deleting the last representative's account closes the organisation (8.14.14), which withdraws its statements, and a withdrawn statement takes its comments with it (8.23.7). The code does both as written; since an organisation comments only under its own statement (8.23.2), the comments of the last representative go with the statements when the account is deleted, and the rule "stays" holds only while another representative remains. Either: keep it so (the closing decides); or keep a closed organisation's statements and their comments; or move the comment's rule to "stays unless its organisation is closed". | Before going live |
-| Public profile: the party shown (8.25.9) – not built | Still only the designer's proposal of 8.25.9 (the row above); nothing of it is built: the party stays private on "Profilis". | Before going live |
+| Public profile: the party shown (8.25.9) – the texts | Built 2026-11-17 (the row above). The box's sentence (`UiText` `Party.PublicText`, version 2026-11-17), the page's line ("Palaikoma partija: …"), `Party.Text`, and the privacy notice's `Privacy.Data.Fact7.Value`, `Privacy.Data.Fact12.Value`, `Privacy.Rights.Fact3.Value`, the terms' `Terms.Publish.6` and the methodology's `Method.Privacy.Follow` go to the native reader and the lawyer's one reading with the others. | Before going live |
 
 **Risks**
 

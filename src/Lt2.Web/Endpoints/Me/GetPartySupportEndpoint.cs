@@ -8,7 +8,10 @@ using Lt2.Web.Services;
 
 namespace Lt2.Web.Endpoints.Me;
 
-/// <summary><c>GET /api/v1/me/party-support</c>: the caller's own party (or none) and the parties to choose from.</summary>
+/// <summary>
+/// <c>GET /api/v1/me/party-support</c>: the caller's own party (or none), the parties to choose from, and whether it is shown on
+/// the public profile (design 8.25.9).
+/// </summary>
 internal static class GetPartySupportEndpoint
 {
     public static void Map(IEndpointRouteBuilder api) =>
@@ -22,7 +25,7 @@ internal static class GetPartySupportEndpoint
     {
         var result = await identity.GetPartySupportAsync(user, cancellationToken);
         return result.IsSuccess
-            ? TypedResults.Ok(new PartySupportResponse(result.Value, await mps.PartiesAsync(cancellationToken)))
+            ? TypedResults.Ok(Mapping.ToResponse(result.Value!, await mps.PartiesAsync(cancellationToken)))
             : errors.ToResult(result.Error!);
     }
 }

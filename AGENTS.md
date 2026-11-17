@@ -15,7 +15,7 @@ product code. What is being built, in order:
 | **M2a Appeals without sending** | People take a side on a Seimas bill and give reasons; summaries for MPs are generated as previews only. |
 | **M2a+ Reasons to come** | The agenda page (`/darbotvarke`) and the front page built on it, following bills and MPs with emails, the AI draft of a description (Claude API, off until configured), the share line (design 8.11). Its asking for an appeal and appeals opened by moderators were replaced by M2a++. |
 | **M2a++ One object** | Every active bill open at once, one page per bill, no proposals, requests or approval; lists and agenda on participation; moderation after the fact (design 8.12). Then descriptions with their labels and the AI summary job (8.13). |
-| **M2d Profiles** | (Owner, 2026-11-16: before comments.) The account area as four screens; public profiles by the member's choice, "Apie mane", the name's card, following a member, follower numbers on every followed thing's own page (design 8.21, 8.25, 8.11.2). The public party is a designer's proposal (8.25.9), not built. |
+| **M2d Profiles** | (Owner, 2026-11-16: before comments.) The account area as four screens; public profiles by the member's choice, "Apie mane", the name's card, following a member, follower numbers on every followed thing's own page (design 8.21, 8.25, 8.11.2); the supported party on the public page by its own box and consent (8.25.9, owner 2026-11-17). |
 | **Email rhythm** | (Owner, 2026-11-16.) How often a member's emails come, one delivery for every member email kind, the gathered email (design 8.24). |
 | **M2c Comments** | (Owner, 2026-11-16: after M2d.) "Aptarimas" under arguments, statements and responses, "Sutinku", moderation, the argument author's notice in the rhythm; names link to public profiles (design 8.23, 8.25). |
 | **M2b Sending** | Real summary emails to MPs, MP preferences, profile take-over, MP responses. Built first (owner, 2026-11-15): the link of design 8.5.1–8.5.4 (recognised at once, the take-over, the office), then the response (8.5.5–8.5.7). Then (2026-11-16) sending itself, design 8.19: `Digest:Sending`, approval, the real email, preferences without an account, the introduction letter, the suppression list; off by default. Then (2026-11-16) design 8.20: the followers' email about MPs' answers and known browsers for sign-in. |
@@ -382,9 +382,18 @@ written by hand. A visitor sent to sign in from one comes back to it (`LandingPa
   nowhere until the person writes another.
 - The page (`Lt2.Web/Components/Members/MemberPage`, composed by the host from Identity, Notifications and Appeals) shows the
   name, "Apie mane", the follower number and the member's texts (`IMemberTexts`, Appeals): published arguments and the
-  comments they wrote in their own voice that the bill's page shows, on bills whose record is not hidden, newest first, 10 and "Rodyti daugiau" by `?rodyti=` (no script). Never sides, "Man svarbu", follows, party, invitations,
+  comments they wrote in their own voice that the bill's page shows, on bills whose record is not hidden, newest first, 10 and "Rodyti daugiau" by `?rodyti=` (no script). Never sides, "Man svarbu", follows, invitations,
   organisations, anything written as an organisation or MP, "Sutinku" (the designer's proposal), counts of the person's
   texts, or who follows.
+- **The party on the page (design 8.25.9, owner 2026-11-17).** The party already on "Profilis" (`identity.party_support`,
+  `MyPartySupport`), never a free field, shown as "Palaikoma partija: …" on `/nariai/…` only while the profile is public and
+  the box "Rodyti viešame profilyje" is on: its own versioned consent `party-public` (`PartyPublicConsent`, SharedKernel; the
+  form's `PartyPublicLimits.ConsentVersion`), `PUT|DELETE /me/party-support/public` (`PartySupportHandlers.ShowAsync|HideAsync`;
+  the DELETE is on `TermsExemptions.Routes`), read for the page only through `IPublicProfiles.ShownPartyAsync`
+  (`MemberProfileResponse.Party`, null otherwise). Unticking, removing or changing the party and switching the profile off
+  (`ProfileHandlers.SwitchOffAsync`, also on deletion and take-over) withdraw it at once; switching on again does not bring it
+  back. Never in the card, beside a text or in any list; nothing for the MP's own account (`mp.takes-no-part`); the "at least
+  20" rule and `IPartySupporters` unchanged. Audited `party.public-on|off` without the party; in the export.
 - Beside an argument, a comment and a "Sutinku" name, the name of a member with a public profile is a link with a card
   (`js/lt2-cards.js`; `RecordReasons` with one `<template>` per profile id from `BillRecordResponse.Cards`, `CommentThread`
   with one per person and thread from `CommentThreadResponse.Cards`); `ReasonResponse.AuthorProfileId`,

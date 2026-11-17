@@ -91,6 +91,15 @@ public sealed class ProfileRuleTests
     public void The_consent_the_form_shows_is_the_version_the_server_takes() =>
         ProfileLimits.ConsentVersion.ShouldBe(PublicProfileConsent.TextVersion);
 
+    /// <summary>Design 8.25.9: the party's box sends the version of the text it showed, the one the server takes.</summary>
+    [Fact]
+    public void The_party_box_shows_the_version_the_server_takes()
+    {
+        PartyPublicLimits.ConsentVersion.ShouldBe(PartyPublicConsent.TextVersion);
+        PartyPublicConsent.Kind.ShouldBe("party-public");
+        new PartySupportResponse(null, []).ConsentVersion.ShouldBe(PartyPublicConsent.TextVersion);
+    }
+
     [Fact]
     public void A_profile_report_offers_impersonation_first() =>
         ProfileLimits.ReportGrounds.ShouldBe(Lt2.Identity.ProfileReportGrounds.All);
